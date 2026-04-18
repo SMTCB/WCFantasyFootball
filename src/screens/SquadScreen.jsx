@@ -115,7 +115,10 @@ export default function SquadScreen() {
       let pitchPlayers = mappedPlayers.filter(p => !p.isBench);
       let benchPlayers = mappedPlayers.filter(p => p.isBench);
 
-      // 3. Add Substitutes from fallback if bench is empty
+      // 3. Add Fallbacks from mock if DB is empty/partial
+      if (pitchPlayers.length === 0) {
+        pitchPlayers = fallbackSquad.players.map(p => ({ ...p, points: 0, isBench: false }));
+      }
       if (benchPlayers.length === 0) {
         benchPlayers = fallbackSquad.bench.map(p => ({ ...p, points: 0, isBench: true }));
       }
@@ -123,7 +126,7 @@ export default function SquadScreen() {
       setSquadData({
         squadId:        squad.id,
         budget:         fallbackSquad.budget,
-        captainId:      squad.captain_id,
+        captainId:      squad.captain_id || 'p1', // Mbappé
         players:        pitchPlayers,
         bench:          benchPlayers,
         isWildcard:     squad.is_wildcard,
