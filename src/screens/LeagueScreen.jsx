@@ -378,61 +378,126 @@ export default function LeagueScreen() {
          )}
 
          {view === 'chat' && (
-           <div className="flex-1 min-h-[60vh] flex flex-col bg-[#0D0D0D]">
-             <div className="bg-[#111111] px-4 py-2 border-b border-[#1E1E1E] flex items-center gap-2">
-               <span className="text-[10px]">📌</span>
-               <span className="text-[11px] font-bold text-[#9E9E9E]">Auction deadline is tonight at 21:00.</span>
-             </div>
-             <div className="flex-1 overflow-y-auto px-4 py-6 flex flex-col gap-5">
-               <div className="flex flex-col gap-1 w-[80%]">
-                  <div className="bg-[#161616] text-white text-[14px] px-4 py-2.5 rounded-2xl rounded-tl-sm border border-[#1E1E1E]">
-                    Did anyone else captain Mbappe? Need this fast.
-                  </div>
-               </div>
-               <div className="flex flex-col gap-1 w-[80%] self-end items-end">
-                  <div className="bg-[#1E1E1E] text-white text-[14px] px-4 py-2.5 rounded-2xl rounded-tr-sm border border-[#2A2A2A]">
-                    I literally transferred him out yesterday. I'm sick.
-                  </div>
-               </div>
-             </div>
-             <div className="p-4 bg-[#111111] border-t border-[#1E1E1E]">
-                <input type="text" placeholder="Roast your rivals..." className="w-full bg-[#1A1A1A] border border-[#2A2A2A] rounded-full px-4 py-3 text-sm text-white outline-none" />
-             </div>
-           </div>
-         )}
+            <div className="flex-1 min-h-[60vh] flex flex-col bg-[#0D0D0D]">
+              <div className="bg-[#111111] px-4 py-2 border-b border-[#1E1E1E] flex items-center gap-2">
+                <span className="text-[10px]">📌</span>
+                <span className="text-[11px] font-bold text-[#9E9E9E]">Auction deadline is tonight at 21:00.</span>
+              </div>
+              <div className="flex-1 overflow-y-auto px-4 py-6 flex flex-col gap-5">
+                <div className="flex flex-col gap-1 w-[85%] animate-in slide-in-from-left">
+                   <div className="text-[10px] text-text-tertiary font-black uppercase tracking-wider mb-1 ml-2">João (Rank #1)</div>
+                   <div className="bg-[#161616] text-white text-[14px] px-4 py-2.5 rounded-2xl rounded-tl-sm border border-[#1E1E1E]">
+                     Did anyone else captain Mbappe? Need this fast.
+                   </div>
+                   <div className="text-[9px] text-text-tertiary mt-1 ml-2">10:42 PM</div>
+                </div>
+                <div className="flex flex-col gap-1 w-[85%] self-end items-end animate-in slide-in-from-right">
+                   <div className="text-[10px] text-cyan font-black uppercase tracking-wider mb-1 mr-2 text-right">You (Rank #2)</div>
+                   <div className="bg-cyan/10 text-white text-[14px] px-4 py-2.5 rounded-2xl rounded-tr-sm border border-cyan/20">
+                     I literally transferred him out yesterday. I'm sick.
+                   </div>
+                   <div className="text-[9px] text-text-tertiary mt-1 mr-2 text-right">10:45 PM</div>
+                </div>
+                <div className="flex flex-col gap-1 w-[85%] animate-in slide-in-from-left">
+                   <div className="text-[10px] text-text-tertiary font-black uppercase tracking-wider mb-1 ml-2">Ana (Rank #4)</div>
+                   <div className="bg-[#161616] text-white text-[14px] px-4 py-2.5 rounded-2xl rounded-tl-sm border border-[#1E1E1E]">
+                     Wait, is Mbappe out of the next game? I should sell.
+                   </div>
+                   <div className="text-[9px] text-text-tertiary mt-1 ml-2">10:48 PM</div>
+                </div>
+              </div>
+              <div className="p-4 bg-[#111111] border-t border-[#1E1E1E]">
+                 <div className="bg-[#1A1A1A] border border-[#2A2A2A] rounded-full flex items-center px-4 py-1">
+                    <input type="text" placeholder="Roast your rivals..." className="flex-1 bg-transparent py-3 text-sm text-white outline-none" />
+                    <button className="w-8 h-8 rounded-full bg-cyan text-black flex items-center justify-center font-bold">↑</button>
+                 </div>
+              </div>
+            </div>
+          )}
 
          {view === 'stats' && (
-           <div className="p-5 space-y-6 bg-bg min-h-[60vh]">
-              <div className="fz-card p-5 border-cyan/20 bg-cyan/5">
-                 <div className="fz-label text-cyan mb-2">League Intelligence</div>
-                 <div className="text-xl font-bold text-white mb-4">Total Squad Value</div>
-                 <div className="flex items-end gap-3 text-white">
-                    <span className="text-3xl font-black">€1.4B</span>
-                    <span className="text-positive text-sm font-bold">+12%</span>
-                 </div>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                 <div className="fz-card p-4">
-                    <div className="text-[10px] font-black uppercase text-text-tertiary mb-2">Top Scorer</div>
-                    <div className="text-white font-bold">Mbappé</div>
-                 </div>
-                 <div className="fz-card p-4">
-                    <div className="text-[10px] font-black uppercase text-text-tertiary mb-2">Duo of the week</div>
-                    <div className="text-white font-bold">KDB & Vini</div>
-                 </div>
-              </div>
-              <div className="bg-[#111111] border border-[#2A2A2A] rounded-lg p-5">
-                 <div className="text-[10px] font-black uppercase tracking-widest text-[#9E9E9E] mb-4">Biggest Risers</div>
-                 <div className="flex items-center justify-between">
-                    <div className="flex gap-2 items-center">
-                      <div className="text-2xl font-black text-positive tracking-tighter">↑2</div>
-                      <div className="font-bold text-white text-[14px]">Ana</div>
+            <div className="p-5 space-y-5 bg-bg min-h-[60vh] pb-10">
+               <div className="fz-card p-5 border-cyan/20 bg-cyan/5">
+                  <div className="fz-label text-cyan mb-2">League Intelligence</div>
+                  <div className="text-xl font-bold text-white mb-4">Total Squad Value</div>
+                  <div className="flex items-end gap-3 text-white">
+                     <span className="text-3xl font-black">€1.4B</span>
+                     <span className="text-positive text-sm font-bold">+12%</span>
+                  </div>
+                  <div className="mt-4 h-1 w-full bg-[#1A1A1A] rounded-full overflow-hidden">
+                    <div className="h-full bg-cyan w-2/3" />
+                  </div>
+                  <div className="flex justify-between mt-2 text-[10px] font-bold text-[#555] uppercase tracking-widest">
+                    <span>Low: €0.8B</span>
+                    <span>High: €1.5B</span>
+                  </div>
+               </div>
+
+               <div className="grid grid-cols-2 gap-4">
+                  <div className="bg-[#111111] border border-[#1E1E1E] p-4 rounded-xl shadow-lg">
+                    <div className="flex items-center gap-2 mb-3">
+                      <span className="text-lg">🔥</span>
+                      <span className="text-[10px] font-black uppercase text-text-tertiary tracking-widest leading-none">Top Scorer</span>
                     </div>
-                    <div className="text-[12px] font-bold text-[#9E9E9E]">jumped to 3rd</div>
-                 </div>
-              </div>
-           </div>
-         )}
+                    <div className="text-xl font-black text-white leading-tight">Mbappé</div>
+                    <div className="text-[12px] font-bold text-positive mt-1">424 Points</div>
+                  </div>
+                  <div className="bg-[#111111] border border-[#1E1E1E] p-4 rounded-xl shadow-lg">
+                    <div className="flex items-center gap-2 mb-3">
+                      <span className="text-lg">💰</span>
+                      <span className="text-[10px] font-black uppercase text-text-tertiary tracking-widest leading-none">Net Value</span>
+                    </div>
+                    <div className="text-xl font-black text-white leading-tight">€42M</div>
+                    <div className="text-[12px] font-bold text-positive mt-1">↑ €2.5M</div>
+                  </div>
+               </div>
+
+               <div className="bg-[#111111] border border-[#2A2A2A] rounded-xl p-5 shadow-xl relative overflow-hidden">
+                  <div className="absolute right-[-20px] top-[-20px] w-32 h-32 bg-cyan/5 rounded-full blur-3xl" />
+                  <div className="text-[10px] font-black uppercase tracking-widest text-cyan mb-5 flex items-center gap-2">
+                    <span className="w-1 h-1 rounded-full bg-cyan shadow-[0_0_8px_cyan]" />
+                    Performance Breakdown
+                  </div>
+                  
+                  <div className="space-y-4">
+                    {[
+                      { label: 'Avg. Transfer Cost', val: '€12.4M', color: 'bg-cyan' },
+                      { label: 'Clean Sheets (League)', val: '14', color: 'bg-positive' },
+                      { label: 'Yellow Cards', val: '22', color: 'bg-yellow-500' },
+                      { label: 'MD 17 High Score', val: '84 pts', color: 'bg-purple-500' },
+                    ].map((s, idx) => (
+                      <div key={idx} className="flex items-center justify-between border-b border-white/5 pb-2">
+                        <div className="flex items-center gap-3">
+                          <div className={`w-1.5 h-1.5 rounded-full ${s.color}`} />
+                          <span className="text-[13px] font-bold text-[#9E9E9E]">{s.label}</span>
+                        </div>
+                        <span className="text-[15px] font-black text-white">{s.val}</span>
+                      </div>
+                    ))}
+                  </div>
+               </div>
+
+               <div className="bg-[#111111] border border-[#2A2A2A] rounded-xl p-5">
+                  <div className="text-[10px] font-black uppercase tracking-widest text-[#9E9E9E] mb-4">Biggest Risers this Matchday</div>
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between p-2 bg-positive/5 border border-positive/10 rounded-lg">
+                       <span className="text-[13px] font-bold text-white">Ana</span>
+                       <div className="flex items-center gap-2">
+                          <span className="text-positive font-black">↑ 2</span>
+                          <span className="text-[10px] text-positive/50">84 pts</span>
+                       </div>
+                    </div>
+                    <div className="flex items-center justify-between p-2 bg-white/5 border border-white/5 rounded-lg opacity-60">
+                       <span className="text-[13px] font-bold text-white">Ricardo</span>
+                       <div className="flex items-center gap-2">
+                          <span className="text-[#555] font-black">- 0</span>
+                          <span className="text-[10px] text-[#555]">62 pts</span>
+                       </div>
+                    </div>
+                  </div>
+               </div>
+            </div>
+          )}
 
          {/* ── MODALS ─────────────────────────────────────────────────────── */}
          
@@ -479,9 +544,9 @@ export default function LeagueScreen() {
                       <div className="text-[#2A2A2A] text-xl mt-6 flex justify-center">↔</div>
                       <div className="flex flex-col gap-2">
                         <label className="text-[9px] font-black text-[#9E9E9E] uppercase tracking-widest text-center">THEIR PLAYER</label>
-                        <select value={tradeTheirPlayer?.id || ''} onChange={(e) => setTradeTheirPlayer(MOCK_RIVAL_PLAYERS.find(p => p.id === e.target.value))} className="bg-[#111111] border border-[#2A2A2A] p-3 rounded-lg text-white text-[12px] font-bold outline-none text-center">
+                        <select value={tradeTheirPlayer?.id || ''} onChange={(e) => setTradeTheirPlayer(MOCK_PLAYERS_POOL.find(p => p.id === e.target.value))} className="bg-[#111111] border border-[#2A2A2A] p-3 rounded-lg text-white text-[12px] font-bold outline-none text-center text-ellipsis overflow-hidden">
                            <option value="">(None)</option>
-                           {MOCK_RIVAL_PLAYERS.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                           {MOCK_PLAYERS_POOL.map(p => <option key={p.id} value={p.id}>{p.name} ({p.club})</option>)}
                         </select>
                       </div>
                     </div>
