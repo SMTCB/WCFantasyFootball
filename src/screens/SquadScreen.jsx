@@ -99,28 +99,42 @@ export default function SquadScreen() {
       const { data: intelData } = await supabase
         .from('player_status').select('*').in('player_id', squad.players);
 
-      const mappedPlayers = (players || []).map(p => {
-        const pitchMatch = fallbackSquad.players.find(mp => mp.id === p.id);
+      const mappedPlayers = (players || []).map((p, idx) => {
+        const pitchMatch = fallbackSquad.players.find(mp => mp.id === p.id) || 
+                           fallbackSquad.bench.find(mp => mp.id === p.id);
         const playerIntel = intelData?.find(i => i.player_id === p.id);
+        
+        // Starters are the first 11 in the array if not specified
+        const isStarter = idx < 11;
+        
         return {
           ...p,
           points: 0,
           intel: normalizeIntelligence(playerIntel),
           color: pitchMatch?.color || '#333',
-          gridClass: pitchMatch?.gridClass || '',
-          isBench: !pitchMatch,
+          // Use gridClass from mock match if available, otherwise use a default grid pos based on index for starters
+          gridClass: pitchMatch?.gridClass || (isStarter ? `col-start-${(idx % 5) + 1} row-start-${Math.floor(idx / 5) + 1}` : ''),
+          isBench: !isStarter,
         };
       });
 
       let pitchPlayers = mappedPlayers.filter(p => !p.isBench);
       let benchPlayers = mappedPlayers.filter(p => p.isBench);
 
-      // 3. Add Fallbacks from mock if DB is empty/partial
-      if (pitchPlayers.length === 0) {
-        pitchPlayers = fallbackSquad.players.map(p => ({ ...p, points: 0, isBench: false }));
+      // 3. Add Fallbacks from mock if DB is empty or partial (demo requirement: always 11 on field)
+      if (pitchPlayers.length < 11) {
+        const existingIds = new Set(pitchPlayers.map(p => p.id));
+        const fillers = fallbackSquad.players
+          .filter(p => !existingIds.has(p.id))
+          .map(p => ({ ...p, points: 0, isBench: false }));
+        pitchPlayers = [...pitchPlayers, ...fillers].slice(0, 11);
       }
-      if (benchPlayers.length === 0) {
-        benchPlayers = fallbackSquad.bench.map(p => ({ ...p, points: 0, isBench: true }));
+      if (benchPlayers.length < 4) {
+        const existingIds = new Set([...pitchPlayers, ...benchPlayers].map(p => p.id));
+        const fillers = fallbackSquad.bench
+          .filter(p => !existingIds.has(p.id))
+          .map(p => ({ ...p, points: 0, isBench: true }));
+        benchPlayers = [...benchPlayers, ...fillers].slice(0, 4);
       }
 
       setSquadData({
