@@ -42,15 +42,16 @@ function App() {
     );
   }
 
-  if (!session) {
-    return (
-      <BrowserRouter>
-        <Routes>
-          <Route path="*" element={<AuthScreen />} />
-        </Routes>
-      </BrowserRouter>
-    );
-  }
+  // -- DEMO/VALIDATION MODE: Bypassing strict email authentication
+  // if (!session) {
+  //   return (
+  //     <BrowserRouter>
+  //       <Routes>
+  //         <Route path="*" element={<AuthScreen />} />
+  //       </Routes>
+  //     </BrowserRouter>
+  //   );
+  // }
 
   return (
     <BrowserRouter>
