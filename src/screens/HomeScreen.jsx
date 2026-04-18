@@ -41,7 +41,17 @@ export default function HomeScreen() {
 
   const fetchFixtures = async () => {
     const { data } = await supabase.from('fixtures').select('*').order('kickoff_at', { ascending: true });
-    setFixtures(data || []);
+    
+    // -- DEMO FALLBACK: If DB is empty, show vibrant live matches
+    if (!data || data.length === 0) {
+      setFixtures([
+        { id: 'f1', home_team: 'Brazil', away_team: 'Korea', status: 'live', minute: '64', kickoff_at: new Date().toISOString() },
+        { id: 'f2', home_team: 'France', away_team: 'England', status: 'scheduled', kickoff_at: new Date(Date.now() + 1000 * 60 * 60 * 2).toISOString() },
+        { id: 'f3', home_team: 'Portugal', away_team: 'Morocco', status: 'scheduled', kickoff_at: new Date(Date.now() + 1000 * 60 * 60 * 4).toISOString() },
+      ]);
+      return;
+    }
+    setFixtures(data);
   };
 
   const fetchUserStats = async (userId) => {

@@ -116,6 +116,21 @@ export default function LeagueScreen() {
         .eq('user_id', userId);
         
       if (error) throw error;
+      
+      // -- DEMO FALLBACK: If DB is empty, show fake rivals
+      if (!data || data.length === 0) {
+        setLeagues([{ 
+          league_id: 'L1', 
+          leagues: { id: 'L1', name: 'World Cup Official', format: 'classic' } 
+        }]);
+        setMembers([
+          { user_id: userId, total_points: 215, rank: 3, users: { username: 'You (Demo)' } },
+          { user_id: 'd1', total_points: 242, rank: 1, users: { username: 'AlexTactics' } },
+          { user_id: 'd2', total_points: 228, rank: 2, users: { username: 'JordanFC' } },
+          { user_id: 'd3', total_points: 195, rank: 4, users: { username: 'Taylor United' } },
+        ]);
+        return;
+      }
       setLeagues(data || []);
     } catch (err) {
       console.error(err);
