@@ -6,20 +6,38 @@ import SectionHeader from '../components/SectionHeader';
 import H2HSheet from '../components/H2HSheet';
 
 // ─── Shared Mock Data ────────────────────────────────────────────────────────
-const MOCK_SQUAD_PLAYERS = [
-  { id: 'p1', name: 'Neymar Jr', club: 'BRA', position: 'FWD', price: 21.5 },
-  { id: 'p2', name: 'Bellingham', club: 'ENG', position: 'MID', price: 24.0 },
-  { id: 'p3', name: 'Vinícius Jr', club: 'BRA', position: 'FWD', price: 19.5 },
-  { id: 'p4', name: 'Pedri', club: 'ESP', position: 'MID', price: 12.0 },
+const MOCK_PLAYERS_POOL = [
+  { id: 'p1', name: 'Alisson', club: 'BRA', position: 'GK', price: 6.0 },
+  { id: 'p2', name: 'E. Martínez', club: 'ARG', position: 'GK', price: 6.0 },
+  { id: 'p3', name: 'Courtois', club: 'BEL', position: 'GK', price: 6.0 },
+  { id: 'p12', name: 'Hakimi', club: 'MAR', position: 'DEF', price: 6.0 },
+  { id: 'p13', name: 'Rúben Dias', club: 'POR', position: 'DEF', price: 6.0 },
+  { id: 'p14', name: 'V. van Dijk', club: 'NED', position: 'DEF', price: 6.5 },
+  { id: 'p15', name: 'Saliba', club: 'FRA', position: 'DEF', price: 5.5 },
+  { id: 'p16', name: 'A. Arnold', club: 'ENG', position: 'DEF', price: 6.0 },
+  { id: 'p17', name: 'Cancelo', club: 'POR', position: 'DEF', price: 6.0 },
+  { id: 'p18', name: 'Theo', club: 'FRA', position: 'DEF', price: 5.5 },
+  { id: 'p21', name: 'Bellingham', club: 'ENG', position: 'MID', price: 10.5 },
+  { id: 'p22', name: 'Pedri', club: 'ESP', position: 'MID', price: 8.5 },
+  { id: 'p23', name: 'De Bruyne', club: 'BEL', position: 'MID', price: 11.0 },
+  { id: 'p24', name: 'Valverde', club: 'URU', position: 'MID', price: 9.0 },
+  { id: 'p25', name: 'Musiala', club: 'GER', position: 'MID', price: 9.0 },
+  { id: 'p26', name: 'Rodri', club: 'ESP', position: 'MID', price: 9.5 },
+  { id: 'p27', name: 'Bruno F.', club: 'POR', position: 'MID', price: 9.0 },
+  { id: 'p31', name: 'Mbappé', club: 'FRA', position: 'FWD', price: 12.5 },
+  { id: 'p32', name: 'Vinícius Jr', club: 'BRA', position: 'FWD', price: 12.0 },
+  { id: 'p33', name: 'Haaland', club: 'NOR', position: 'FWD', price: 13.5 },
+  { id: 'p34', name: 'Messi', club: 'ARG', position: 'FWD', price: 11.5 },
+  { id: 'p35', name: 'Kane', club: 'ENG', position: 'FWD', price: 11.0 },
+  { id: 'p36', name: 'Salah', club: 'EGY', position: 'FWD', price: 11.0 },
+  { id: 'p37', name: 'Neymar', club: 'BRA', position: 'FWD', price: 10.5 },
 ];
 
-const MOCK_RIVAL_PLAYERS = [
-  { id: 'rp1', name: 'K. De Bruyne', club: 'BEL', position: 'MID', price: 28.5 },
-  { id: 'rp2', name: 'L. Messi', club: 'ARG', position: 'FWD', price: 26.0 },
-  { id: 'rp3', name: 'H. Kane', club: 'ENG', position: 'FWD', price: 24.5 },
-  { id: 'rp4', name: 'Cristiano Ronaldo', club: 'POR', position: 'FWD', price: 18.0 },
-  { id: 'rp5', name: 'Salah', club: 'EGY', position: 'FWD', price: 16.5 },
-];
+const MOCK_SQUAD_PLAYERS = MOCK_PLAYERS_POOL.slice(0, 11);
+const MOCK_RIVAL_PLAYERS_L1 = MOCK_PLAYERS_POOL.slice(5, 16);
+const MOCK_RIVAL_PLAYERS_L2 = MOCK_PLAYERS_POOL.slice(8, 19);
+const MOCK_RIVAL_PLAYERS_L3 = MOCK_PLAYERS_POOL.slice(12, 23);
+
 
 export default function LeagueScreen() {
   const navigate = useNavigate();
@@ -309,23 +327,52 @@ export default function LeagueScreen() {
 
          {view === 'frontpage' && (
            <div className="bg-[#f2f2f2] text-[#1a1a1a] min-h-screen">
-             <div className="px-6 py-8 border-b-2 border-black text-center">
+             <div className="px-6 py-8 border-b-2 border-black flex flex-col items-center text-center">
                 <div className="text-[10px] font-black uppercase tracking-[0.4em] mb-2 font-serif underline decoration-2 underline-offset-4">The Official Gazette</div>
                 <h1 className="font-serif text-4xl font-black italic tracking-tighter leading-none mb-1">FORZA TIMES</h1>
+                <div className="w-full flex justify-between border-t border-b border-black/10 mt-4 py-1 text-[9px] font-bold uppercase tracking-widest">
+                   <span>VOL. MCXXIV</span>
+                   <span>DOHA • {new Date().toLocaleDateString()}</span>
+                   <span>EDITION #42</span>
+                </div>
              </div>
+
              <div className="p-6">
-                <div className="bg-red-600 text-white inline-block px-2 py-0.5 text-[9px] font-black uppercase mb-3 animate-pulse">Breaking News</div>
-                <h2 className="font-serif text-3xl font-black leading-tight mb-3">Kylian Mbappé Injured; Due to Miss Quarter-Finals</h2>
+                <div className="bg-red-600 text-white inline-block px-2 py-0.5 text-[9px] font-black uppercase tracking-widest mb-3 animate-pulse">Breaking News</div>
+                <h2 className="font-serif text-3xl font-black leading-tight mb-3 tracking-tight">Kylian Mbappé Injured; Due to Miss Quarter-Finals</h2>
+                <p className="text-[14px] leading-relaxed font-medium mb-6 italic opacity-80">"It's a heavy blow for the champions," says Deschamps as results confirmed a tear.</p>
                 <div className="grid grid-cols-2 gap-6 border-t border-black/20 pt-6">
                    <div>
-                      <h3 className="font-serif text-xl font-bold mb-2">Alex Tactics beats João</h3>
-                      <p className="text-[11px]">A dominant 42-point victory this matchday.</p>
+                      <div className="text-[9px] font-black uppercase text-red-600 mb-1">League Recap</div>
+                      <h3 className="font-serif text-xl font-bold leading-tight mb-2">Alex Tactics beats João</h3>
+                      <p className="text-[11px] leading-relaxed">A dominant 42-point victory this matchday.</p>
+                   </div>
+                   <div className="border-l border-black/20 pl-4">
+                      <div className="text-[9px] font-black uppercase text-blue-600 mb-1">Transfer Bomba</div>
+                      <h3 className="font-serif text-xl font-bold leading-tight mb-2">Big Trade Confirmed</h3>
+                      <p className="text-[11px] leading-relaxed">Neymar for Messi swap deal shakes up the leaderboards.</p>
                    </div>
                 </div>
              </div>
+
              <div className="px-6 py-4 border-t-4 border-black bg-black text-white">
-                <div className="fz-label text-cyan text-[8px] mb-2">WARZONE HIGHLIGHTS</div>
-                <p className="text-[11px] leading-tight font-medium italic opacity-70">"Wait, did you guys see Taylor United just cashed out 50pts for Ronaldo? Risky business..."</p>
+                <div className="fz-label text-cyan text-[8px] mb-2 brightness-150">WARZONE HIGHLIGHTS</div>
+                <div className="space-y-3">
+                  <div className="flex gap-2">
+                    <span className="text-[#555] font-black">@Ana_K:</span>
+                    <span className="text-[11px] leading-tight font-medium italic opacity-70">"Wait, did you guys see Taylor United just cashed out 50pts for Ronaldo? Risky business..."</span>
+                  </div>
+                  <div className="flex gap-2">
+                    <span className="text-[#555] font-black">@GamerX:</span>
+                    <span className="text-[11px] leading-tight font-medium italic opacity-70">"I'm keeping my Joker for the Morocco game. Trust the process."</span>
+                  </div>
+                </div>
+             </div>
+
+             <div className="p-8 text-center bg-[#f2f2f2] border-t-2 border-dashed border-black/20">
+                <div className="w-12 h-1 bg-black mx-auto mb-4" />
+                <div className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40">End of Morning Edition</div>
+                <div className="text-[8px] mt-2 italic opacity-30">All data generated by Forza Intelligence Agency (FIA)</div>
              </div>
            </div>
          )}
@@ -358,9 +405,30 @@ export default function LeagueScreen() {
            <div className="p-5 space-y-6 bg-bg min-h-[60vh]">
               <div className="fz-card p-5 border-cyan/20 bg-cyan/5">
                  <div className="fz-label text-cyan mb-2">League Intelligence</div>
+                 <div className="text-xl font-bold text-white mb-4">Total Squad Value</div>
                  <div className="flex items-end gap-3 text-white">
                     <span className="text-3xl font-black">€1.4B</span>
                     <span className="text-positive text-sm font-bold">+12%</span>
+                 </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                 <div className="fz-card p-4">
+                    <div className="text-[10px] font-black uppercase text-text-tertiary mb-2">Top Scorer</div>
+                    <div className="text-white font-bold">Mbappé</div>
+                 </div>
+                 <div className="fz-card p-4">
+                    <div className="text-[10px] font-black uppercase text-text-tertiary mb-2">Duo of the week</div>
+                    <div className="text-white font-bold">KDB & Vini</div>
+                 </div>
+              </div>
+              <div className="bg-[#111111] border border-[#2A2A2A] rounded-lg p-5">
+                 <div className="text-[10px] font-black uppercase tracking-widest text-[#9E9E9E] mb-4">Biggest Risers</div>
+                 <div className="flex items-center justify-between">
+                    <div className="flex gap-2 items-center">
+                      <div className="text-2xl font-black text-positive tracking-tighter">↑2</div>
+                      <div className="font-bold text-white text-[14px]">Ana</div>
+                    </div>
+                    <div className="text-[12px] font-bold text-[#9E9E9E]">jumped to 3rd</div>
                  </div>
               </div>
            </div>
@@ -389,20 +457,64 @@ export default function LeagueScreen() {
          )}
 
          {showTradeBuilder && tradeTarget && (
-            <div className="fixed inset-0 z-50 flex items-end bg-black/80" onClick={() => setShowTradeBuilder(false)}>
-               <div className="w-full h-[80vh] bg-[#0D0D0D] rounded-t-2xl p-6 flex flex-col border-t border-[#2A2A2A]" onClick={e => e.stopPropagation()}>
-                  <h2 className="text-white font-bold text-lg mb-6 uppercase tracking-widest">Trade with {tradeTarget.name}</h2>
-                  <div className="space-y-6">
-                     <select className="w-full bg-[#1A1A1A] border border-[#2A2A2A] p-4 text-white rounded-lg">
-                        <option>Select your player...</option>
-                        {MOCK_SQUAD_PLAYERS.map(p => <option key={p.id}>{p.name}</option>)}
-                     </select>
-                     <select className="w-full bg-[#1A1A1A] border border-[#2A2A2A] p-4 text-white rounded-lg">
-                        <option>Select their player...</option>
-                        {MOCK_RIVAL_PLAYERS.map(p => <option key={p.id}>{p.name}</option>)}
-                     </select>
+            <div className="fixed inset-0 z-50 flex items-end outline-none bg-black/80 animate-in fade-in" onClick={() => setShowTradeBuilder(false)}>
+               <div className="w-full h-[90vh] bg-[#0D0D0D] rounded-t-2xl flex flex-col animate-in slide-in-from-bottom border-t border-[#2A2A2A] relative" onClick={e => e.stopPropagation()}>
+                  <div className="w-full flex justify-center py-3"><div className="w-12 h-1.5 bg-[#2A2A2A] rounded-full" /></div>
+                  <div className="px-6 py-4 border-b border-[#1E1E1E] flex justify-between items-center">
+                    <div>
+                      <div className="text-[10px] text-[#1E88E5] font-black uppercase tracking-[.14em] mb-1">NEGOTIATION TABLE</div>
+                      <h2 className="text-xl font-bold text-white">Trade with {tradeTarget.name}</h2>
+                    </div>
+                    <button onClick={() => setShowTradeBuilder(false)} className="text-[#9E9E9E] hover:text-white transition-colors">✕</button>
                   </div>
-                  <button onClick={() => setShowTradeBuilder(false)} className="w-full mt-auto mb-6 py-4 bg-cyan text-black font-black uppercase tracking-widest rounded transition-transform active:scale-95">Send Proposal</button>
+                  <div className="flex-1 overflow-y-auto px-6 py-8 flex flex-col gap-8 no-scrollbar">
+                    <div className="grid grid-cols-[1fr_40px_1fr] items-center gap-2">
+                      <div className="flex flex-col gap-2">
+                        <label className="text-[9px] font-black text-[#9E9E9E] uppercase tracking-widest text-center">MY PLAYER</label>
+                        <select value={tradeMyPlayer?.id || ''} onChange={(e) => setTradeMyPlayer(MOCK_SQUAD_PLAYERS.find(p => p.id === e.target.value))} className="bg-[#111111] border border-[#2A2A2A] p-3 rounded-lg text-white text-[12px] font-bold outline-none text-center">
+                           <option value="">(None)</option>
+                           {MOCK_SQUAD_PLAYERS.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                        </select>
+                      </div>
+                      <div className="text-[#2A2A2A] text-xl mt-6 flex justify-center">↔</div>
+                      <div className="flex flex-col gap-2">
+                        <label className="text-[9px] font-black text-[#9E9E9E] uppercase tracking-widest text-center">THEIR PLAYER</label>
+                        <select value={tradeTheirPlayer?.id || ''} onChange={(e) => setTradeTheirPlayer(MOCK_RIVAL_PLAYERS.find(p => p.id === e.target.value))} className="bg-[#111111] border border-[#2A2A2A] p-3 rounded-lg text-white text-[12px] font-bold outline-none text-center">
+                           <option value="">(None)</option>
+                           {MOCK_RIVAL_PLAYERS.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                        </select>
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-4 pt-6 border-t border-[#1E1E1E]">
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="text-[12px] font-bold text-white">Add Cash Sweetener</span>
+                        <span className="text-[14px] font-black text-positive">€{tradeCash.toFixed(1)}M</span>
+                      </div>
+                      <div className="flex items-center gap-4">
+                        <span className="text-[10px] text-[#9E9E9E]">€0M</span>
+                        <input type="range" min="-10" max="10" step="0.5" value={tradeCash} onChange={e => setTradeCash(parseFloat(e.target.value))} className="flex-1 accent-cyan" />
+                        <span className="text-[10px] text-[#9E9E9E]">€10M</span>
+                      </div>
+                      <p className="text-[10px] text-[#9E9E9E] italic text-center">Shift budget caps to balance unequal player values.</p>
+                    </div>
+
+                    <div className="space-y-4 pt-6 border-t border-[#1E1E1E]">
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="text-[12px] font-bold text-white">Add Points Penalty</span>
+                        <span className="text-[14px] font-black text-[#E53935]">{tradePoints} pts</span>
+                      </div>
+                      <div className="flex items-center gap-4">
+                        <span className="text-[10px] text-[#9E9E9E]">0</span>
+                        <input type="range" min="0" max="50" step="5" value={tradePoints} onChange={e => setTradePoints(parseInt(e.target.value))} className="flex-1 accent-[#E53935]" />
+                        <span className="text-[10px] text-[#9E9E9E]">50</span>
+                      </div>
+                      <p className="text-[10px] text-[#9E9E9E] italic text-center">Give up raw ranking points to secure a star player.</p>
+                    </div>
+                  </div>
+                  <div className="p-6 border-t border-[#1E1E1E] bg-[#0D0D0D]">
+                    <button onClick={() => { alert('Proposal Sent!'); setShowTradeBuilder(false); }} className="w-full py-4 bg-cyan text-black text-[13px] font-black uppercase tracking-widest rounded active:scale-95 shadow-[0_0_15px_rgba(0,180,216,0.3)]">Broadcast Proposal</button>
+                  </div>
                </div>
             </div>
          )}
@@ -410,18 +522,27 @@ export default function LeagueScreen() {
          {managerTeamView && (
            <div className="fixed inset-0 z-50 flex items-end bg-black/80" onClick={() => setManagerTeamView(null)}>
              <div className="w-full h-[80vh] bg-[#0D0D0D] rounded-t-2xl flex flex-col border-t border-[#2A2A2A]" onClick={e => e.stopPropagation()}>
-               <div className="p-6 border-b border-[#1E1E1E]">
-                 <h2 className="text-white font-bold text-lg">{managerTeamView.name}'s Roster</h2>
+               <div className="p-6 border-b border-[#1E1E1E] flex justify-between items-center">
+                 <div>
+                    <h2 className="text-white font-bold text-lg">{managerTeamView.name}'s Roster</h2>
+                    <p className="text-[10px] text-text-tertiary uppercase tracking-widest">Full 11-Man Tactical Squad</p>
+                 </div>
+                 <button onClick={() => setManagerTeamView(null)} className="text-[#555]">✕</button>
                </div>
-               <div className="flex-1 overflow-y-auto p-6 space-y-4">
-                 {MOCK_RIVAL_PLAYERS.map((p, i) => (
-                   <div key={i} className="flex items-center gap-4 bg-[#111111] p-3 border border-[#2A2A2A] rounded-lg">
-                     <div className="w-10 h-10 rounded bg-[#1A1A1A] flex items-center justify-center text-[10px] font-bold text-[#555] overflow-hidden grayscale"><img src={`https://media.api-sports.io/football/players/${p.id.includes('rp') ? '629' : '569'}.png`} className="w-full h-full object-cover" /></div>
+               <div className="flex-1 overflow-y-auto p-6 space-y-3 no-scrollbar">
+                 {(managerTeamView.name === 'João' ? MOCK_RIVAL_PLAYERS_L1 : managerTeamView.name === 'Ricardo' ? MOCK_RIVAL_PLAYERS_L2 : MOCK_RIVAL_PLAYERS_L3).map((p, i) => (
+                   <div key={i} className="flex items-center gap-4 bg-[#111111] p-3 border border-[#2A2A2A] rounded-lg relative overflow-hidden group">
+                     <div className="absolute left-0 top-0 bottom-0 w-1 bg-cyan/20 group-hover:bg-cyan transition-colors" />
+                     <div className="w-10 h-10 rounded bg-[#1A1A1A] flex items-center justify-center text-[10px] font-bold text-[#555] overflow-hidden grayscale"><img src={`https://media.api-sports.io/football/players/${(i % 10) + 600}.png`} className="w-full h-full object-cover" /></div>
                      <div className="flex-1">
-                       <div className="text-[11px] font-black text-cyan uppercase">{p.position}</div>
-                       <div className="text-[14px] font-bold text-white">{p.name}</div>
+                       <div className="text-[10px] font-black text-white/40 uppercase tracking-tighter">{p.club} · {p.position}</div>
+                       <div className="text-[15px] font-bold text-white tracking-tight">{p.name}</div>
                      </div>
-                     <button onClick={() => { setTradeTarget({ id: managerTeamView.id, name: managerTeamView.name }); setTradeTheirPlayer(p); setManagerTeamView(null); setShowTradeBuilder(true); }} className="w-8 h-8 rounded-full bg-cyan/10 border border-cyan/20 flex items-center justify-center">🔄</button>
+                     <div className="text-right mr-2">
+                        <div className="text-[12px] font-black text-white">€{p.price}M</div>
+                        <div className="text-[9px] text-positive font-bold">READY</div>
+                     </div>
+                     <button onClick={() => { setTradeTarget({ id: managerTeamView.id, name: managerTeamView.name }); setTradeTheirPlayer(p); setManagerTeamView(null); setShowTradeBuilder(true); }} className="w-9 h-9 rounded-full bg-cyan text-black flex items-center justify-center font-bold active:scale-90 transition-transform shadow-[0_4px_10px_rgba(0,180,216,0.3)]">🔄</button>
                    </div>
                  ))}
                </div>

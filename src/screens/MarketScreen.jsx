@@ -34,8 +34,9 @@ export default function MarketScreen() {
   const fetchMarketParams = async () => {
     try {
       setLoading(true);
-      const userId = '00000000-0000-0000-0000-000000000000';
-      setCurrentUser({ id: userId });
+      const { data: authData } = await supabase.auth.getUser();
+      const userId = authData?.user?.id || '00000000-0000-0000-0000-000000000000';
+
       const { data: pData } = await supabase.from('players').select('*').order('price', { ascending: false });
       const { data: intelData } = await supabase.from('player_status').select('*');
 
@@ -53,6 +54,11 @@ export default function MarketScreen() {
           { id: 'p108', name: 'L. Modric', club: 'CRO', position: 'MID', price: 8.0 },
           { id: 'p109', name: 'H. Kane', club: 'ENG', position: 'FWD', price: 11.0 },
           { id: 'p110', name: 'Achraf Hakimi', club: 'MAR', position: 'DEF', price: 6.0 },
+          { id: 'p111', name: 'Neymar Jr', club: 'BRA', position: 'FWD', price: 10.0 },
+          { id: 'p112', name: 'Rodri', club: 'ESP', position: 'MID', price: 9.0 },
+          { id: 'p113', name: 'Vinícius Jr', club: 'BRA', position: 'FWD', price: 11.5 },
+          { id: 'p114', name: 'Pedri', club: 'ESP', position: 'MID', price: 7.5 },
+          { id: 'p115', name: 'Mbappé', club: 'FRA', position: 'FWD', price: 13.0 },
         ];
       } else {
         finalPlayers = pData;
@@ -64,13 +70,13 @@ export default function MarketScreen() {
       }));
       setPlayers(playersWithIntel);
 
-      const { data: sData } = await supabase.from('squads').select('*').eq('user_id', user.id).single();
-      const { data: jData } = await supabase.from('daily_jokers').select('player_id').eq('user_id', user.id).eq('match_date', new Date().toISOString().split('T')[0]).maybeSingle();
+      const { data: sData } = await supabase.from('squads').select('*').eq('user_id', userId).maybeSingle();
+      const { data: jData } = await supabase.from('daily_jokers').select('player_id').eq('user_id', userId).eq('match_date', new Date().toISOString().split('T')[0]).maybeSingle();
       setTodayJokerId(jData?.player_id || null);
 
       if (sData) {
         setMySquad(sData);
-        const ownedPrices = (pData || []).filter(p => sData.players.includes(p.id)).reduce((acc, curr) => acc + Number(curr.price || 0), 0);
+        const ownedPrices = (finalPlayers || []).filter(p => sData.players.includes(p.id)).reduce((acc, curr) => acc + Number(curr.price || 0), 0);
         setBudget(100.0 - ownedPrices);
       } else {
         setMySquad({ id: null, players: [] });
