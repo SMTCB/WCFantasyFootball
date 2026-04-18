@@ -1,0 +1,190 @@
+@import "tailwindcss";
+
+@theme {
+  /* ── Forza Backgrounds ───────────────────────────────────── */
+  --color-bg:          #080A0E;
+  --color-surface:     #0F1218;
+  --color-surface-2:   #161B25;
+  --color-surface-3:   #1E2535;
+  --color-surface-elevated: #161B25;
+
+  /* ── Forza Borders ──────────────────────────────────────── */
+  --color-border:   rgba(255,255,255,0.06);
+  --color-border-2: rgba(255,255,255,0.10);
+
+  /* ── Forza Text ─────────────────────────────────────────── */
+  --color-text-primary:   #FFFFFF;
+  --color-text-secondary: #8B95A1;
+  --color-text-tertiary:  #4A5568;
+
+  /* ── Forza Accents ──────────────────────────────────────── */
+  --color-cyan:     #00B4D8;
+  --color-gold:     #E0A800;
+  --color-positive: #22C55E;
+  --color-negative: #EF4444;
+  --color-live:     #EF4444;
+  --color-purple:   #A855F7;
+
+  /* ── Typography ─────────────────────────────────────────── */
+  --font-display: 'Barlow Condensed', system-ui, sans-serif;
+  --font-body:    'DM Sans', system-ui, sans-serif;
+  --font-inter:   'DM Sans', system-ui, sans-serif;
+}
+
+/* ── Global Base ─────────────────────────────────────────────── */
+:root {
+  background-color: #080A0E;
+  color: #FFFFFF;
+  font-family: 'DM Sans', system-ui, sans-serif;
+  color-scheme: dark;
+}
+
+body {
+  margin: 0;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: #080A0E;
+  touch-action: manipulation;
+  overscroll-behavior-y: none;
+}
+
+/* ── Scrollbar ───────────────────────────────────────────────── */
+::-webkit-scrollbar { display: none; }
+* {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* ── Forza Typography Utilities ──────────────────────────────── */
+.fz-display {
+  font-family: 'Barlow Condensed', system-ui, sans-serif;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: -0.01em;
+}
+
+.fz-heading {
+  font-family: 'Barlow Condensed', system-ui, sans-serif;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.fz-label {
+  font-family: 'DM Sans', system-ui, sans-serif;
+  font-weight: 600;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: #8B95A1;
+}
+
+.fz-num {
+  font-family: 'Barlow Condensed', system-ui, sans-serif;
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Forza Surface Utilities ─────────────────────────────────── */
+.fz-surface {
+  background: #0F1218;
+  border: 1px solid rgba(255,255,255,0.06);
+}
+
+.fz-surface-elevated {
+  background: #161B25;
+  border: 1px solid rgba(255,255,255,0.08);
+}
+
+.fz-card {
+  background: #0F1218;
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 2px;
+}
+
+/* ── Forza Accent Line (left border accent) ──────────────────── */
+.fz-accentline {
+  border-left: 2px solid #00B4D8;
+  padding-left: 12px;
+}
+
+.fz-accentline-gold {
+  border-left: 2px solid #E0A800;
+  padding-left: 12px;
+}
+
+/* ── Tooltip (hover) ─────────────────────────────────────────── */
+.fz-tooltip {
+  position: relative;
+}
+.fz-tooltip:hover::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: #161B25;
+  border: 1px solid rgba(255,255,255,0.1);
+  color: #fff;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 11px;
+  font-weight: 500;
+  white-space: nowrap;
+  padding: 4px 8px;
+  border-radius: 2px;
+  z-index: 100;
+  pointer-events: none;
+}
+
+/* ── Position colour coding ──────────────────────────────────── */
+.pos-gk  { background: rgba(224,168,0,0.12);  color: #E0A800; }
+.pos-def { background: rgba(0,180,216,0.12);  color: #00B4D8; }
+.pos-mid { background: rgba(168,85,247,0.12); color: #A855F7; }
+.pos-fwd { background: rgba(239,68,68,0.12);  color: #EF4444; }
+
+/* ── Animations ──────────────────────────────────────────────── */
+@keyframes livePulse {
+  0%   { opacity: 1; transform: scale(1); }
+  50%  { opacity: 0.5; transform: scale(1.2); }
+  100% { opacity: 1; transform: scale(1); }
+}
+.animate-live-pulse {
+  animation: livePulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes slideUpFade {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.animate-slide-up {
+  animation: slideUpFade 0.25s ease-out forwards;
+}
+
+@keyframes scanPulse {
+  0%, 100% { opacity: 0.6; }
+  50%       { opacity: 1; }
+}
+.animate-scan {
+  animation: scanPulse 2s ease-in-out infinite;
+}
+
+@keyframes pointsFlash {
+  0%   { color: #00B4D8; transform: scale(1.15); }
+  100% { color: inherit; transform: scale(1); }
+}
+.animate-points-flash {
+  animation: pointsFlash 0.4s ease-out;
+}
+
+/* ── Tabular nums ────────────────────────────────────────────── */
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Forza Cyan glow helpers ─────────────────────────────────── */
+.glow-cyan {
+  box-shadow: 0 0 12px rgba(0,180,216,0.3);
+}
+.glow-gold {
+  box-shadow: 0 0 12px rgba(224,168,0,0.3);
+}

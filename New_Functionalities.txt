@@ -1,0 +1,1603 @@
+## 01 — PREDICTED LINEUPS & INJURY ALERTS
+ 
+```
+# FantasyKit — Predicted Lineups & Injury Alerts
+## Antigravity Build Prompt
+ 
+You are building a pre-match intelligence layer that shows users which players are likely to start, and which are injury doubts, before squad lock.
+ 
+---
+ 
+### PREDICTED LINEUPS
+ 
+WHAT IT IS
+24–48 hours before kick-off, show AI-predicted starting XI for each team playing that matchday. Sourced from the API-Football lineup prediction endpoint. This is one of the highest-value pieces of information in fantasy football — users currently leave your app to check Forza or ESPN for this.
+ 
+WHERE IT APPEARS
+1. In the player search screen — each player card shows a small badge: 🟢 "likely starter" (confidence > 75%) or 🟡 "likely bench" (confidence < 50%) or empty (50-75% confidence)
+2. In the squad builder pitch view — owned players who are injury doubts or bench predictions get a visual warning (amber border around the player card on the pitch)
+3. On the home screen, above the match list — for each match with predicted lineups available: "Starting lineups predicted for BRA vs KOR — 98 players confirmed"
+ 
+DESIGN
+- Badge placement: top-right of player card in search / player selector
+- Badge style: 11px text, emoji + label, pill shape with 100px border-radius
+- Confidence levels: >75% = green bg + white text ("likely starter"), 50-75% = grey (neutral), <50% = amber + dark text ("likely bench")
+- Squad builder warning: amber left border (2px) on the player card if <60% confidence
+- Pitch view note: "Updated 24h ago · API-Football" in 10px muted grey at the bottom of the predicted lineups banner
+ 
+DATA MODEL
+Prediction: id, fixture_id, team_id, player_id, position, confidence_score (0-100), updated_at
+ 
+API INTEGRATION
+Call API-Football lineup prediction endpoint 36 hours before each match. Cache predictions in Supabase. Update once daily. If predictions aren't available for a match, hide all badges for that match and show a neutral state.
+ 
+---
+ 
+### INJURY ALERTS
+ 
+WHAT IT IS
+Real-time player status updates — injuries, suspensions, doubts, and returns. Sourced from API-Football player injuries endpoint. Displayed as visual warnings in the squad builder and search screens.
+ 
+INJURY STATES (use these exact labels)
+- 🟢 Fit — player available
+- 🟡 Doubt — player is training but not confirmed fit (50/50)
+- 🔴 Out — ruled out for this matchday (injury or suspension)
+- 🟠 Returning — expected back next matchday (monitor them)
+ 
+WHERE INJURY STATUS APPEARS
+1. In the player search screen — injury badge shown next to the player name (red "OUT" pill if unavailable)
+2. In the squad builder — "DANGER ZONE" collapsible section at the top listing all squad members with injury status != fit. Shows: player name + status + returning matchday (if applicable)
+3. In the squad builder player card (on pitch) — red "INJURED" badge if status = out
+4. On the home screen, in a notification banner — "⚠️ 3 players in your squad are injury doubts (tap to review)" — appears 24h before squad lock if any owned players are doubts
+ 
+DESIGN
+- Injury badge: 11px, pill-shaped, emoji + status label, high contrast (red for OUT, amber for DOUBT)
+- Danger Zone section: expands from the top of the squad builder, light red background (#FCEBEB or similar), 1px left border red, shows all at-risk players in a sortable list (sort by: likely to play first, then by importance to your squad)
+- Push notification: sent 24h before lock if any squad member is a doubt or out — "⚠️ [Player] is an injury doubt. Confirm or transfer."
+- Transfer CTA: "Transfer out now" button in the Danger Zone section — tapping opens the player swap flow with suggestions for replacements at the same position + same price range
+ 
+DATA MODEL
+PlayerStatus: id, player_id, fixture_id, status (fit|doubt|out|returning), return_date (null if not applicable), last_updated_at
+ 
+API INTEGRATION
+Call API-Football injuries endpoint daily (ideally every 8 hours during match week). Store in Supabase. When a player's status changes, trigger a push notification to users who own them in active leagues.
+ 
+LOGIC RULES
+- If a player is marked OUT, they cannot be selected in the squad builder (grayed out in the picker)
+- If a player is DOUBT, allow selection but show the amber warning
+- Update the "DANGER ZONE" section in real-time if the user is viewing the squad builder while injury news breaks
+- When squad locks, if an OUT player is still in the squad, the system auto-transfers them out to the highest-rated available replacement at the same position (and notifies the user: "Your transfer was auto-filled: [Player] → [Replacement]")
+ 
+---
+ 
+### MOCK DATA TO BUILD WITH
+ 
+Match: BRA vs KOR · Matchday 4
+ 
+Predicted lineups (API-Football response):
+- Vinicius Jr. (BRA, LW) · confidence 89% → 🟢 likely starter
+- Mbappé (FRA, FW) · confidence 78% → 🟢 likely starter
+- Bellingham (ENG, MF) · confidence 68% → neutral
+- Pedri (ESP, MF) · confidence 52% → neutral
+- Salah (EGY, FW) · confidence 42% → 🟡 likely bench
+ 
+Injuries (as of 24h before lock):
+- Neymar (BRA, LW) · status: OUT (ankle) · return: Matchday 5
+- De Bruyne (BEL, MF) · status: DOUBT · fitness: 60%
+- Hakimi (MAR, DF) · status: FIT
+ 
+Squad builder with Danger Zone:
+Your squad contains 2 players with injury status != fit:
+1. De Bruyne (MF) — DOUBT (60% fit) — you own · Transfer options: [Bellingham] [Pedri]
+2. (optional) Neymar (LW) — OUT until MD5 — you own · Transfer out immediately
+ 
+---
+ 
+### START HERE
+ 
+Build the Danger Zone section first — it's the most-used feature. Then add the predicted lineup badges to the player search screen. Finally, integrate the auto-transfer logic for OUT players at squad lock.
+ 
+The injury alerts are the foundation that makes the predicted lineups feel real — they work together to create a complete pre-match intelligence layer.
+```
+ 
+---
+ 
+## 02 — MATCHDAY RECAP CARD (Shareable)
+ 
+```
+# FantasyKit — Matchday Recap Card (Shareable)
+## Antigravity Build Prompt
+ 
+You are building the post-matchday recap card — a personal summary of each user's performance that can be shared as an image to WhatsApp, Instagram, Twitter, or saved as a screenshot.
+ 
+---
+ 
+### WHAT IT IS
+ 
+After each matchday finishes (all matches complete), every user receives a personalized recap card that appears on their home screen. The card summarizes: points scored, rank movement, best player, captain performance, and league position.
+ 
+The card is shareable — it's also a static image (generated server-side or client-side via canvas) that users can send to their league group chat or social media.
+ 
+### WHEN IT APPEARS
+ 
+- Automatically generated and displayed on the home screen 10 minutes after the last fixture of the matchday ends
+- Lives in a prominent card above the match list: "YOUR MATCHDAY 4 RECAP — Tap to share"
+- Tapping the card opens a full-screen view with share buttons at the bottom
+ 
+### CARD ANATOMY (in-app view)
+ 
+[ Header: "MATCHDAY 4 RECAP" · your league name · date ]
+[ Your league rank: "2nd · 74 pts this matchday" — large numbers ]
+[ Rank movement: "↑ 1 place" or "↓ 2 places" — green/red ]
+[ Best player: with small photo · name · position · points (e.g. "Vinicius Jr. · LW · 15 pts") ]
+[ Captain performance: "Captain: Mbappé · 10 pts (multiplied = 20 pts)" — highlight if captain scored 5+ pts ]
+[ Other stats: "Joker played: Pedri (5 pts)" if applicable, "Transfers made: 2" ]
+[ Bottom CTA: "Share your recap" button — green, opens share sheet ]
+ 
+### SHAREABLE IMAGE (static PNG)
+ 
+Dimensions: 1080×1920px (Instagram story size) — optimised for mobile share.
+ 
+Layout:
+- Background: dark gradient (your team's primary colour fading to black) — OR solid dark (#0D0D0D) with a thin coloured top stripe (team colour)
+- Top section (40% of image):
+  - League name + your username in large serif font (24px)
+  - Matchday number "MATCHDAY 4"
+  - Date of the matchday
+  
+- Middle section (40%):
+  - Your final rank in the league: "2ND" in massive sans-serif (72px)
+  - Points: "74 POINTS THIS WEEK" in 28px
+  - Rank change arrow + number: "↑ 1 PLACE" in 24px
+  
+- Bottom section (20%):
+  - Best player card: small circular photo + name + position + pts
+  - Captain score: "CAPTAIN: Mbappé · 20 pts"
+  - League logo / FantasyKit branding in corner (small)
+ 
+Text colours: white primary, 80% opacity grey for secondary info. No shadows, flat design.
+ 
+### HOW TO GENERATE THE IMAGE
+ 
+Option 1 (client-side, simple):
+Use html-to-canvas or canvas2image library in the browser. Create an invisible div with the recap HTML, render it to a canvas, export as PNG. Fast and requires no backend call.
+ 
+Option 2 (server-side, scalable):
+Use a service like Puppeteer or headless Chrome on Cloudflare Workers to render the recap HTML and return a PNG. More reliable, works offline.
+ 
+For PoC: use client-side. Later, add server-side rendering if you want to cache images or add dynamic elements.
+ 
+### SHARE DESTINATIONS
+ 
+Buttons on the share sheet:
+- 📱 WhatsApp (opens WhatsApp with caption: "Check my Matchday 4 result in FantasyKit! [app link]" + attaches image)
+- 📸 Instagram Stories (copies image to clipboard + opens Instagram, user pastes)
+- 𝕏 Twitter (opens Twitter with caption: "Just scored 74 pts in Matchday 4 of FantasyKit. Rank: 2nd in [league name]. [app link]" + prompt to attach image)
+- 💾 Save to photos (iOS/Android, saves to local gallery)
+- 📋 Copy link (generates a unique short URL — e.g. fantasykit.app/recap/abc123 — that shows the recap card in-app without sharing the image)
+ 
+### DATA MODEL
+ 
+MatchdayRecap: id, league_id, user_id, matchday_id, final_rank, final_points, points_breakdown (by player), rank_change, best_player_id, captain_id, captain_points, joker_player_id (nullable), transfers_made, image_url (generated on demand), created_at
+ 
+### LOGIC
+ 
+Generate the recap 10 minutes after the last fixture of the matchday ends.
+- Final rank and points: query the final standings table
+- Best player: query the user's squad and find player with highest points
+- Captain: query captain_id and captain_points
+- Rank change: compare previous matchday rank to current rank
+- Image generation: trigger on creation OR on first share (lazy generation)
+ 
+The image should be cached (stored in Supabase Storage or similar) after first generation. Include an expiry — reuse the same image for 30 days, then regenerate if the user reshares.
+ 
+### MOCK RECAP TO BUILD WITH
+ 
+User: João | League: "World Cup Legends" | Matchday: 4
+ 
+Recap content:
+- Final rank: 1st (was 2nd) → "↑ 1 PLACE"
+- Final points: 87 (matchday), 312 (season)
+- Best player: Vinicius Jr. (LW) · 15 pts
+- Captain: Mbappé · 10 pts → doubled to 20 pts
+- Joker: Pedri · 5 pts
+- Transfers: 2 made
+ 
+Shareable image:
+[ Dark background with blue stripe (Brazil colours) ]
+[ "MATCHDAY 4" · "World Cup Legends" ]
+[ "1ST · 87 POINTS" in huge numbers ]
+[ "↑ 1 PLACE" in green ]
+[ Best: Vinicius Jr. LW 15 pts ]
+[ Captain: Mbappé 20 pts ]
+[ FantasyKit logo bottom right ]
+ 
+---
+ 
+### START HERE
+ 
+Build the in-app recap card view first (no share functionality) — just the layout with mock data. Then add the shareable image generation. Test the image export on mobile (iOS + Android) to ensure the share sheet integration works smoothly.
+ 
+The recap card is the single highest-ROI growth feature — every shared card is an organic ad for your app. Don't ship without it.
+```
+ 
+---
+ 
+## 03 — LIVE PROJECTIONS
+ 
+```
+# FantasyKit — Live Projections
+## Antigravity Build Prompt
+ 
+You are building a live projection system that shows each user's projected final score during a live matchday, updating every few minutes as players accumulate points.
+ 
+---
+ 
+### WHAT IT IS
+ 
+During a live match, show a secondary projected score for each user: their current live points + an estimated additional points based on remaining time and each player's average points-per-90 rate.
+ 
+Example: "You: 74 pts live → projected 91 pts at FT"
+ 
+The projection updates every 5 minutes, changes colour (green if projected to go up, red if going down from the previous projection), and sits directly below the live score on the leaderboard and the user's home screen card.
+ 
+### WHERE PROJECTIONS APPEAR
+ 
+1. **Leaderboard during live matches** — under each user's live score in grey text (slightly smaller font)
+2. **Home screen match card** — below the live score: "Live: 74 pts → Projected: 91 pts at FT"
+3. **Your live feed** — a sticky card at the top showing your projection: "Your score: 74 live | Projected finish: 91 pts (↑ from 88)"
+4. **Match detail screen** — all players on the pitch with remaining minutes, shown as a % progress bar
+ 
+### PROJECTION FORMULA
+ 
+For each user's squad:
+ 
+```
+projected_total = current_points + sum(projected_remaining_points)
+ 
+projected_remaining_points = 
+  for each player still on pitch (minutes_played < 90):
+    minutes_remaining = 90 - minutes_played
+    minutes_remaining_normalized = minutes_remaining / 90
+    expected_points_per_90 = (player_season_avg_points_per_match) OR (position_avg) if no season data
+    
+    projected_points = expected_points_per_90 * minutes_remaining_normalized
+ 
+example:
+- Vinicius Jr. (80' played, 45 pts in season, 8 matches = 5.6 pts/match)
+- minutes_remaining = 10, normalized = 0.11
+- expected = 5.6 * 0.11 = 0.62 pts → round to 0.5 or 1 pt
+- final estimate: current_score + 0.5
+```
+ 
+The formula is simple and conservative on purpose — it should never be more than ±3 pts off actual final. If data is missing, default to position average: GK 2.1 pts/90, DF 2.8, MF 3.2, FW 4.1.
+ 
+### DESIGN
+ 
+- Projected score text: same size as live score but 70% opacity, grey (#999999)
+- Projection icon: small upward/downward arrow emoji next to the projected number (green ↑ or red ↓)
+- Change indicator: "↑ from 88" or "↓ from 92" in 10px, appears on the sticky card if the projection went up/down since the last update (5 min ago)
+- Update frequency: every 5 minutes during active matches, live score updates happen as events occur (goals, cards) and projection updates follow within 30 seconds
+- Leaderboard: projection colour shifts based on direction: green-tinted if projected up this cycle, red-tinted if down, neutral if flat
+ 
+### DATA & REFRESH
+ 
+Projection is calculated server-side (not client-side) to ensure consistency.
+ 
+Refresh logic:
+- Every 5 minutes, a Cloudflare Worker queries the live match state (current minute, current points by user)
+- Calculates projections using the formula above
+- Broadcasts updated projections via Supabase Realtime to all league members viewing that match
+- When a scoring event happens (goal, card, sub), recalculate immediately for affected players
+ 
+Store projections in a temporary table (ProjectionSnapshot) to track history — this helps you validate the formula accuracy and shows users their projection history as a sparkline later (if someone wants to see how their projection moved during the match).
+ 
+### PSYCHOLOGICAL RULES
+ 
+This feature is incredibly engaging but can cause anxiety if not handled carefully:
+ 
+1. Never let a projection go negative — if remaining minutes can't realistically add points, show the current score, not a projection
+2. Show confidence: if a user's projection hasn't changed in 10 minutes, add a "stable" indicator
+3. Be conservative: better to undershoot and surprise users with a higher final score than overshoot and disappoint
+4. Dampen extreme swings: if a projection jumps by >5 pts in one cycle, smooth it (show the change over 2-3 updates instead of 1)
+ 
+### MOCK MATCH STATE TO BUILD WITH
+ 
+Match: BRA 2–0 KOR · Minute 72
+ 
+User: João (team: 3 players on pitch)
+- Vinicius Jr. (LW, 72' played, 15 pts scored so far) → 18 remaining minutes
+  - season avg: 5.6 pts/match
+  - projected remaining: 5.6 * (18/90) = 1.1 pts → 1 pt
+  
+- Bellingham (MF, 72' played, 8 pts scored) → 18 remaining
+  - season avg: 3.8 pts/match
+  - projected remaining: 3.8 * (18/90) = 0.76 → 0.5 pt
+  
+- Ederson (GK, 72' played, 4 pts + clean sheet 4 pts = 8 pts) → 18 remaining
+  - season avg (GK): 2.1 pts/match
+  - projected remaining: 2.1 * (18/90) = 0.42 → 0 pt
+  - clean sheet still intact so assume it holds → +4 pts likely
+ 
+Current live score: 74 pts
+Projected remaining: 1 + 0.5 + 4 = 5.5 → round to 5 pts
+**Projected final: 79 pts**
+ 
+Display:
+"Live: 74 pts → Projected: 79 pts ↑" (if it was 78 last cycle, show ↑)
+ 
+---
+ 
+### START HERE
+ 
+Build the projection card on the home screen first (mock data). Then integrate the real formula with the live match state. Finally, add the leaderboard projection column and the sticky card on the live feed.
+ 
+Test the projection accuracy against historical matches — measure how often the final projection is within ±2 pts of actual final score. Iterate the formula if needed (e.g. adjust GK/DF/MF/FW position averages).
+ 
+This feature is ESPN's single most-cited engagement tool — users watch the projection ticker as much as they watch the match. The implementation looks simple but the psychological impact is enormous.
+```
+ 
+---
+ 
+## 04 — VAR HANDLING
+ 
+```
+# FantasyKit — VAR (Video Assistant Referee) Handling
+## Antigravity Build Prompt
+ 
+You are building a robust VAR event system that handles the emotional and scoring complexity of VAR decisions. This is critical because VAR can award or reverse points, and if handled poorly, it creates massive user frustration.
+ 
+---
+ 
+### THE PROBLEM VAR SOLVES
+ 
+In fantasy football, when VAR reviews a goal, the points are awarded before the decision is final. If VAR reverses a goal, the points disappear. This is confusing and frustrating if not handled explicitly. Users need to know: did the goal stand, is it under review, or was it cancelled?
+ 
+### VAR STATES
+ 
+Every goal has these possible states:
+ 
+1. **GOAL AWARDED** — goal is confirmed, points awarded (normal flow)
+2. **UNDER REVIEW** — goal is under VAR review, points temporarily shown but marked as pending, not locked
+3. **GOAL STANDS** — VAR confirmed the goal, points are locked in
+4. **GOAL REVERSED** — VAR cancelled the goal, points are removed, user sees a reversal notification
+ 
+### VISUAL DESIGN FOR EACH STATE
+ 
+**GOAL AWARDED (before VAR check, if applicable)**
+- Event feed item: ⚽ Player name scored 45' — points +5 shown in green
+- Leaderboard: user's score updates immediately
+- Status: no badge, assume it will stand unless VAR is reviewing
+ 
+**UNDER REVIEW**
+- Event feed item: ⚽ Player name scored 45' — points +5 shown in yellow, with a small badge: "📺 UNDER REVIEW"
+- Leaderboard: user's score shows the provisional points but in 50% opacity, with a small icon next to it: 📺
+- Live feed sticky card: "Your score: 74 (provisional, +1 under review)" — the under-review points are coloured yellow
+- Countdown timer: if the review takes >60 seconds, show "Review in progress — estimated 30s more"
+ 
+**GOAL STANDS**
+- Event feed item: the yellow badge changes to green: ✅ CONFIRMED
+- Leaderboard: score fully opaque, points locked in
+- Notification: brief toast at top of screen: "✅ Vinicius goal confirmed — +5 pts locked in"
+ 
+**GOAL REVERSED**
+- Event feed item: shows a strikethrough version of the goal: ~~⚽ Vinicius scored~~ — points crossed out
+- New item appears right below: ❌ Goal cancelled by VAR — points reversed
+- Leaderboard: score decreases, shows a red "−5" badge briefly
+- Notification: prominent red banner at top: "⚠️ Vinicius goal cancelled by VAR — you lost 5 pts (was 74, now 69)"
+- User's rank may drop — show this in real-time with an animated downward rank number
+ 
+### RANKING IMPACT DURING VAR
+ 
+If a goal reversal causes a rank change (e.g. you drop from 2nd to 3rd), show this immediately:
+- Rank number animates red for 2 seconds
+- Downward arrow appears (↓)
+- The activity wall registers the rank change: "📉 You dropped 1 place (goal cancelled)"
+ 
+### CRITICAL RULES
+ 
+1. **Never silently remove points.** Always create an explicit event that shows the removal.
+2. **Provisional points are always visually distinct** from locked points. Use opacity, badges, or colour.
+3. **Reversals always trigger a notification.** Loud red banner at the top, not a subtle event feed item.
+4. **Show the context.** When points are reversed, tell the user why: "Goal reversed — offside detected by VAR" or "Goal reversed — handball in buildup."
+5. **Timestamp VAR decisions.** Show how long the review took: "Review took 2m 14s" — adds legitimacy.
+ 
+### API INTEGRATION
+ 
+API-Football returns VAR events in the match event feed with `type: "var"` and `detail: "goal_cancelled"` or `detail: "goal_confirmed"`.
+ 
+Flow:
+1. Goal event comes in (type: goal) → mark as GOAL AWARDED, award points
+2. VAR event comes in with goal_confirmed detail → change state to GOAL STANDS, badge updates
+3. VAR event comes in with goal_cancelled detail → change state to GOAL REVERSED, remove points, fire notification
+ 
+### DATA MODEL
+ 
+Goal: id, fixture_id, player_id, minute, type, var_status (none|under_review|confirmed|reversed), var_decision_minute (nullable), var_reason (nullable)
+ 
+When var_status changes, trigger:
+- Event log entry (for the activity wall)
+- Points recalculation for affected squads
+- Push notification to affected users
+- Rank recalculation and broadcast
+ 
+### MOCK VAR SEQUENCE TO BUILD WITH
+ 
+Minute 45: Vinicius Jr. scores for BRA
+- Event: ⚽ Goal awarded, +5 pts to João
+- João's rank: 2nd, 74 pts
+- Activity wall: "⚽ Vinicius scored BRA · João +5 pts"
+ 
+Minute 45+30s: VAR review starts
+- Event: 📺 UNDER REVIEW badge appears on goal
+- João's event: goal badge shows yellow "📺 UNDER REVIEW"
+- João's score: still shows 74 but in reduced opacity
+- Activity wall: "📺 Goal under review — Vinicius / BRA (expected 30s)"
+ 
+Minute 46+15s: VAR confirms
+- Event: ✅ GOAL STANDS
+- João's score: back to full opacity, +5 locked in
+- Notification: "✅ Vinicius goal confirmed — +5 pts locked"
+- Activity wall: yellow badge becomes green ✅
+ 
+Alternative scenario (minute 46+30s): VAR cancels
+- Event: ❌ GOAL REVERSED — offside
+- João's score: 74 → 69 (red animation)
+- João's rank: 2nd → 3rd (red downward animation)
+- Prominent notification: "⚠️ Vinicius goal cancelled — offside. You lost 5 pts. Now 3rd."
+- Activity wall: new event appears: "❌ Vinicius goal reversed (offside) · João −5 pts"
+ 
+---
+ 
+### START HERE
+ 
+Build the UNDER REVIEW → GOAL STANDS flow first. This is the happy path and the most common case. Then add the GOAL REVERSED flow with the notification logic.
+ 
+Test with a recorded match that had a VAR incident — pull the real event data from API-Football and walk through the state changes to ensure they're clear and unambiguous.
+ 
+VAR handling is not glamorous, but getting it wrong is one of the fastest ways to lose user trust. A user who watches +5 pts become −5 pts without understanding why will disable your app's notifications and never play again.
+```
+ 
+---
+ 
+## 05 — HEAD-TO-HEAD RECORD
+ 
+```
+# FantasyKit — Head-to-Head Record
+## Antigravity Build Prompt
+ 
+You are building a persistent H2H record view that tracks every matchday between two users across an entire tournament, creating a personal rivalry narrative.
+ 
+---
+ 
+### WHAT IT IS
+ 
+A H2H record lives inside the league and shows the matchday-by-matchday history between you and any rival: wins, draws, losses, points for/against, biggest win, current streak, and a detailed matchday table.
+ 
+Think of it as the league memory — it turns abstract leaderboard positions into personal stories: "I'm 4–2 against Ricardo this season."
+ 
+### WHERE IT APPEARS
+ 
+1. **From the leaderboard** — tap any rival's name/rank → opens their H2H card (bottom sheet)
+2. **From the activity wall** — tap any call-out card or rival event → shows the H2H record with that user
+3. **League stats section** — a "Rivalries" tab showing your record against each opponent (sortable by win/loss/streak)
+ 
+### H2H CARD ANATOMY
+ 
+[ Header: your avatar + name vs. rival's avatar + name ]
+[ Overall record: "4–2–1" (wins–losses–draws) · total matchdays played ]
+[ Stat boxes: Points for (320) · Points against (298) · Biggest win (+45 pts) · Current streak (2 wins) ]
+[ Detailed table: matchday-by-matchday breakdown (see below) ]
+[ Timeline: sparkline showing your points (blue) vs. their points (red) across all matchdays ]
+ 
+### DETAILED MATCHDAY TABLE
+ 
+For each matchday you both played in (in reverse chronological order):
+ 
+| Matchday | You | Rival | Outcome | Your top player | Their top player |
+|----------|-----|-------|---------|-----------------|-----------------|
+| 4 | 74 pts (rank 2) | 87 pts (rank 1) | Loss | Vinicius 15 pts | Mbappé 18 pts |
+| 3 | 92 pts (rank 1) | 68 pts (rank 4) | Win | Bellingham 12 pts | De Bruyne 9 pts |
+| 2 | 71 pts (rank 3) | 71 pts (rank 3) | Draw | Salah 10 pts | Pedri 10 pts |
+ 
+Each row is tappable → expands to show full squad matchup (your squad vs. their squad, position by position, comparing points)
+ 
+### STAT CALCULATIONS
+ 
+H2H Record:
+- Wins: count matchdays where your_points > rival_points
+- Losses: count matchdays where your_points < rival_points
+- Draws: count matchdays where your_points == rival_points
+- Head-to-head matchdays: sum of all three
+ 
+Points for/against:
+- Points for: sum of your points across all H2H matchdays
+- Points against: sum of rival's points across all H2H matchdays
+- Average per matchday: points for / matchdays
+ 
+Biggest win: max(your_points − rival_points) in a single matchday
+Biggest loss: max(rival_points − your_points) in a single matchday (shown as a negative stat)
+ 
+Current streak:
+- Sequence of wins/losses from most recent matchday backwards
+- Display as: "2 wins in a row" or "Lost last 3" — if streak is ≥3, highlight it in the card header
+ 
+### DATA MODEL
+ 
+HeadToHeadRecord: id, league_id, user_a_id, user_b_id, matchday_id, user_a_points, user_b_points, winner (a|b|draw)
+ 
+Derived stats (cached and recalculated after each matchday):
+- wins_a, losses_a, draws_a
+- points_for_a, points_against_a
+- biggest_win_a, biggest_loss_a
+- current_streak_a (calculated from latest matchdays)
+ 
+### SPARKLINE VISUALIZATION
+ 
+On the H2H card, show a mini sparkline (100px × 40px) with:
+- X-axis: matchdays (MD1 to MD4)
+- Y-axis: points (0 to max of the two users' highest scores)
+- Blue line: your points
+- Red line: rival's points
+- Intersections marked with a dot
+- Hover/tap a point → shows the matchday number and the exact points
+ 
+Simple implementation: use a lightweight charting library (Recharts) or SVG path.
+ 
+### STREAK INDICATORS
+ 
+If you're on a winning streak ≥2, add a small badge: "🔥 2 wins"
+If you're on a losing streak ≥2, show: "📉 Lost 2 in a row"
+If you've never beaten this opponent: "0–N record" in a neutral grey
+If you've never lost to them: "N–0 record" in a bold green
+ 
+### ACTIVITY WALL INTEGRATION
+ 
+When a matchday ends and ranks are calculated, the activity wall can optionally generate H2H events for the biggest rivals:
+ 
+"🏆 You beat Ricardo 81–72 — your record: 3–2 against him"
+"⚠️ You lost to João 87–74 — record: 2–4, he's on a 2-game streak"
+ 
+These are auto-generated only if it's a rival you've played at least 2 matchdays against (to avoid noise for one-off matchups).
+ 
+---
+ 
+### MOCK H2H RECORD TO BUILD WITH
+ 
+User: João vs. Rival: Ricardo · League: "World Cup Legends"
+ 
+Overall: 4–2–0 (4 wins, 2 losses, 0 draws)
+ 
+Matchdays:
+| MD | João | Ricardo | Outcome | João best | Ricardo best |
+|----|------|---------|---------|-----------|--------------|
+| 4 | 87 | 74 | Win (+13) | Vinicius 15 | Bellingham 10 |
+| 3 | 72 | 68 | Win (+4) | Salah 12 | De Bruyne 11 |
+| 2 | 65 | 78 | Loss (−13) | Pedri 9 | Mbappé 14 |
+| 1 | 81 | 70 | Win (+11) | Ederson clean sheet 4 + Vinicius 10 | Hakimi 8 |
+| (earlier) | ... | ... | Win | ... | ... |
+| (earlier) | ... | ... | Loss | ... | ... |
+ 
+Stats:
+- Points for (João): 305 · avg 61 per MD
+- Points against (Ricardo): 290 · avg 58 per MD
+- Biggest win: 87–74 (MD4, +13 pts)
+- Biggest loss: 65–78 (MD2, −13 pts)
+- Current streak: 2 wins (MD3–4)
+ 
+Sparkline: blue line trending up last 2 matchdays, red line flatish
+ 
+---
+ 
+### START HERE
+ 
+Build the H2H record card as a bottom sheet from the leaderboard. Mock data first. Then add the detailed matchday table. Finally, integrate the sparkline and the activity wall generation logic.
+ 
+H2H records are the memory of competitive friendships — they're what makes users come back. Every "I'm 4–2 against you" is a reason to play the next matchday.
+```
+ 
+---
+ 
+## 06 — BRACKET CHALLENGE
+ 
+```
+# FantasyKit — Bracket Challenge
+## Antigravity Build Prompt
+ 
+You are building a separate mini-game mode where users predict tournament knockout brackets before they start. This is a zero-commitment companion to the main fantasy league.
+ 
+---
+ 
+### WHAT IT IS
+ 
+A visual bracket predictor for tournament knockout stages (World Cup round-of-16 onwards, or domestic league cup knockout). Users fill in the bracket before the first knockout match. Each correct prediction awards points. It's a parallel game to the main fantasy league — you can play the bracket without playing the fantasy league, or both simultaneously.
+ 
+The bracket lives in a dedicated tab: "BRACKET CHALLENGE" separate from the main league screens.
+ 
+### HOW IT WORKS
+ 
+1. **User creates or joins a public bracket challenge** — either a private league-specific bracket or a public app-wide bracket
+2. **Before R16 kicks off, user predicts** — they tap through each matchup and predict the winner
+3. **As results come in, points are awarded** — correct R16 prediction = +2 pts, correct QF = +4, correct SF = +8, correct final = +16
+4. **Leaderboard updates live** — shows all bracket players ranked by current bracket score
+5. **After tournament ends, prizes** (optional) are awarded to top finishers
+ 
+### BRACKET PREDICTION INTERFACE
+ 
+Visual bracketing tree (like ESPN's March Madness):
+ 
+```
+           ┌─ Team A ─┐
+          ─┤          ├─ [predict winner]
+           └─ Team B ─┘
+           
+           ┌─ Team C ─┐
+          ─┤          ├─ [predict winner]
+           └─ Team D ─┘
+           
+           [QF winner A]
+          ─┤          ├─ [predict winner]
+           [QF winner B]
+           
+                    [SF winner A]
+                   ─┤          ├─ [predict winner]
+                    [SF winner B]
+```
+ 
+**User flow:**
+1. Home screen shows bracket bracket preview: "8 teams left · 16 QF matchups predicted · 2 wrong so far"
+2. Tap → full bracket view
+3. Each unpredicted matchup is a button: tap to predict the winner
+4. Prediction modal: team photo + team name on left, vs. on centre, team photo + name on right — large tappable areas
+5. Tap a team → prediction is saved instantly, matchup updates with your pick highlighted
+6. Completed matchups show: your pick (highlighted) vs. actual result (if it's happened), with a ✓ (correct) or ✗ (wrong) badge
+ 
+### PREDICTION POINTS TABLE
+ 
+```
+Round | Matches | Pts/correct | Max points
+------|---------|-------------|----------
+R16   | 8       | 2 pts       | 16 pts
+QF    | 4       | 4 pts       | 16 pts
+SF    | 2       | 8 pts       | 16 pts
+Final | 1       | 16 pts      | 16 pts
+------|---------|-------------|----------
+Total | 15      | —           | 64 pts
+```
+ 
+### BRACKET CHALLENGE SCREENS
+ 
+**SCREEN 1 — Bracket Hub**
+- "Active bracket challenges" list: public app-wide bracket, league-specific brackets
+- Each challenge card shows: name, participants count, your current rank, points
+- CTA: "Start new bracket" button
+ 
+**SCREEN 2 — Bracket view**
+- Full visual tree
+- Unpredicted matchups: button state (tappable)
+- Predicted matchups: your pick highlighted + badge (✓ correct / ✗ wrong / ⏳ pending)
+- Completed matchups: both teams + winner highlighted + your prediction accuracy
+- Top of screen: "Your score: 24/64 pts · Rank 2/8 players" — sticky
+ 
+**SCREEN 3 — Prediction modal**
+- Large team selection UI: team A (left side) vs. team B (right side)
+- Team photos (large, 80px), team name, flag emoji
+- Tappable areas: tap left for team A, tap right for team B
+- Close button → returns to bracket
+- Animated feedback: selected team blinks green for 500ms
+ 
+**SCREEN 4 — Leaderboard**
+- Ranked list of all bracket players: rank · username · score · accuracy percentage
+- Your row highlighted
+- Tapping a player shows their bracket predictions (read-only)
+ 
+### DATA MODEL
+ 
+BracketChallenge: id, name, tournament_id, challenge_type (public|private_league), league_id (nullable), created_by, status (open|in_progress|finished), created_at, ended_at
+ 
+BracketPrediction: id, challenge_id, user_id, matchup_id, predicted_winner_id, is_correct (null while pending), points_awarded (null while pending)
+ 
+Matchup: id, bracket_challenge_id, round, team_a_id, team_b_id, actual_winner_id (null until match is played), match_date
+ 
+### LOGIC
+ 
+Auto-update predictions:
+- When a knockout match ends, query the actual result
+- Check all predictions for that matchup
+- Mark correct predictions with ✓, incorrect with ✗
+- Award points to users who predicted correctly
+- Update leaderboard rankings in real-time via Supabase Realtime
+ 
+If a user doesn't predict a matchup before it's played:
+- Their prediction is locked (greyed out)
+- They get 0 points for that matchup
+- The matchup shows as "skipped" on their bracket
+ 
+### PUSH NOTIFICATIONS
+ 
+- "🏆 Bracket open: predict the R16 winners before Friday 15:00"
+- "⚽ R16 matches start in 1 hour — check your bracket predictions"
+- "✅ 2 of your R16 predictions correct! You're on pace for 48 pts"
+- "❌ You missed 3 in a row — your streak is broken"
+- After tournament ends: "🏆 [Username] wins the bracket with 58/64 pts!"
+ 
+### MOCK BRACKET CHALLENGE TO BUILD WITH
+ 
+World Cup 2026 Round of 16:
+ 
+Teams: BRA, FRA, ENG, ESP, GER, NED, ARG, POR, BEL, ITA, MEX, USA, JPN, SEN, KOR, MAR
+ 
+User: João
+ 
+R16 predictions (8 matchups):
+1. BRA vs MEX → João predicts BRA ✓ (correct)
+2. FRA vs KOR → João predicts FRA ✓ (correct)
+3. ENG vs USA → João predicts ENG ✗ (USA won)
+4. ESP vs SEN → João predicts ESP ✓ (correct)
+5. GER vs JPN → João predicts GER ✓ (correct)
+6. NED vs ARG → Not yet predicted (match pending)
+7. ITA vs BEL → Not yet predicted (match pending)
+8. POR vs MAR → Not yet predicted (match pending)
+ 
+Score: 8 pts / 16 possible (4 correct, 1 wrong, 3 pending)
+Accuracy: 80% (4/5 predicted matches correct)
+Rank: 2/8 players in the challenge
+ 
+Leaderboard:
+1. Ricardo · 14 pts · 93% (6/6 correct) — waiting on final 2 matches
+2. João · 8 pts · 80% (4/5 correct)
+3. Ana · 6 pts · 67% (2/3 predicted)
+4. (others) · ...
+ 
+---
+ 
+### START HERE
+ 
+Build the bracket tree visualisation first — use SVG or HTML/CSS. Then add the prediction modal. Finally, integrate the real match results and scoring logic.
+ 
+The bracket challenge is a growth tool — it requires no league setup, only a tournament. You can launch it with a public app-wide bracket on day one of any tournament, and onboard users who won't commit to a full fantasy league.
+```
+ 
+---
+ 
+## 07 — TOP SCORER PREDICTION
+ 
+```
+# FantasyKit — Top Scorer Prediction
+## Antigravity Build Prompt
+ 
+You are building a lightweight daily prediction mechanic where users guess which player will score the most goals in a matchday before lock.
+ 
+---
+ 
+### WHAT IT IS
+ 
+Before each matchday locks, users make a single prediction: which player will score the most goals (or assist the most if it's a low-scoring matchday) in that round. If they're correct, +5 points are added to their fantasy score. It's a zero-commitment, 10-second daily action.
+ 
+This is the simplest engagement mechanic in fantasy sports — one pick, one outcome, one notification.
+ 
+### WHERE IT APPEARS
+ 
+1. **Home screen** — "Daily Prediction" card above the match list (only during the pre-lock window)
+   - Shows: "Which player will score the most goals in Matchday 4?"
+   - Current prediction (if made): "You picked: Mbappé" with a tappable change button
+   - Countdown to lock: "Deadline: 1h 42m"
+ 
+2. **Quick pick modal** — tapping the card opens a fast selector
+   - Search bar at top (pre-filtered to this matchday's top-form players)
+   - Sorted by: goal prediction this matchday (using form + fixture difficulty model)
+   - Each player row: photo + name + club + "2 goals predicted" from the model
+   - Tap a player → prediction saved, card closes
+ 
+3. **Notification** — after the matchday ends
+   - "✅ You predicted Mbappé · He scored 3 goals · +5 pts added"
+   - OR "❌ You predicted Salah (1 goal) · Mbappé scored 2 · 0 pts"
+   - The correct top scorer is shown in the notification
+ 
+### PREDICTION LOGIC
+ 
+Determine the "top scorer" based on actual goals (not assists):
+ 
+- Count goals scored by each player in the matchday
+- The player with the most goals wins the prediction
+- If there's a tie (e.g. 2 players both scored 2 goals), the one with more assists wins; if still tied, the prediction is a draw (no points awarded, but no loss either — "Tied prediction · 0 pts")
+ 
+### SCORING
+ 
+Correct prediction: +5 pts added to matchday total
+Incorrect prediction: 0 pts
+Tied prediction (tie-breaker applies): 0 pts (neutral)
+ 
+Points are awarded immediately after the matchday ends (10 minutes after the last match finishes). The user sees a notification and the points are added to their league score.
+ 
+### DATA MODEL
+ 
+TopScorerPrediction: id, league_id, user_id, matchday_id, predicted_player_id, actual_top_scorer_id (null until matchday ends), is_correct (null until matchday ends), points_awarded (null until matchday ends), created_at
+ 
+### UI DESIGN
+ 
+Home screen card:
+```
+┌─────────────────────────────────┐
+│ 🎯 DAILY PREDICTION             │
+│                                 │
+│ Which player will score the     │
+│ most goals in Matchday 4?       │
+│                                 │
+│ ✓ You picked: Mbappé           │ [change]
+│                                 │
+│ Deadline: 1h 42m                │
+│ ─────────────────────────────── │
+│ [Make your prediction]           │
+└─────────────────────────────────┘
+```
+ 
+If not yet predicted:
+```
+┌─────────────────────────────────┐
+│ 🎯 DAILY PREDICTION             │
+│ Which player will score the     │
+│ most goals in Matchday 4?       │
+│                                 │
+│ [ No prediction yet ]            │
+│                                 │
+│ Deadline: 1h 42m                │
+│ ─────────────────────────────── │
+│ [Make your prediction]           │
+└─────────────────────────────────┘
+```
+ 
+Quick pick modal:
+```
+┌─────────────────────────────────┐
+│ 🎯 Pick the top scorer          │ [close]
+│                                 │
+│ [search players...]             │
+│                                 │
+│ 1. Mbappé (FRA, FW)            │
+│    1.8 goals predicted          │ [tap]
+│                                 │
+│ 2. Vinicius Jr. (BRA, LW)       │
+│    1.5 goals predicted          │ [tap]
+│                                 │
+│ 3. Bellingham (ENG, MF)         │
+│    0.9 goals predicted          │ [tap]
+│                                 │
+│ 4. Salah (EGY, FW)              │
+│    0.7 goals predicted          │ [tap]
+│                                 │
+│ [show all players in matchday]   │
+└─────────────────────────────────┘
+```
+ 
+### PREDICTION MODEL (optional, for smart suggestions)
+ 
+Pre-populate the search list with predicted top scorers using a simple model:
+ 
+```
+predicted_goals = 
+  player_season_avg_goals * 
+  form_multiplier (last 3 matches) * 
+  fixture_difficulty (opponent's defensive rating)
+```
+ 
+Example:
+- Mbappé: 1.2 goals/match (season) × 1.4 (hot form) × 1.1 (weak opponent) = 1.8 predicted
+- Salah: 0.9 goals/match × 1.0 (average form) × 0.8 (strong opponent) = 0.72 predicted
+ 
+This helps new users see "smart" suggestions without needing to know every player. If the model isn't available for PoC, just sort by recent goals or season average.
+ 
+### NOTIFICATIONS
+ 
+Before lock (24h before):
+- 📍 "Daily prediction available: Which player will score the most goals in Matchday 4? Make your pick."
+ 
+At lock (2h before):
+- ⏰ "Matchday 4 squad deadline in 2 hours — don't forget your daily prediction!"
+ 
+After matchday ends:
+- ✅ "You predicted Mbappé · He scored 3 goals · +5 pts added to your total"
+- ❌ "You predicted Salah (1 goal) · Mbappé was the top scorer (3 goals) · 0 pts"
+ 
+### MOCK PREDICTION TO BUILD WITH
+ 
+Matchday 4 · 8 matches scheduled
+ 
+User: João
+ 
+Prediction state before lock:
+- "Which player will score the most goals in Matchday 4?"
+- João picked: Mbappé
+- Deadline: 18:00 today (1h 42m remaining)
+ 
+After matchday ends:
+ 
+Player goal tallies:
+- Mbappé: 3 goals ← TOP SCORER
+- Vinicius Jr.: 2 goals
+- Bellingham: 1 goal
+- Salah: 1 goal
+ 
+João's prediction: ✅ Correct (Mbappé scored 3, most in the matchday)
+Result: +5 pts added to João's matchday score
+Notification: "✅ You predicted Mbappé · He scored 3 goals · +5 pts added"
+Activity wall: "🎯 João nailed the daily prediction: Mbappé (3 goals)"
+ 
+---
+ 
+### START HERE
+ 
+Build the home screen card first with mock data. Then add the quick pick modal with a static list of players. Finally, integrate the real matchday player list and the prediction scoring logic.
+ 
+This feature requires almost no backend complexity but drives an app open every matchday — that's the highest ROI per line of code in the entire product.
+```
+ 
+---
+ 
+## 08 — CAPTAIN ROULETTE MODE
+ 
+```
+# FantasyKit — Captain Roulette Mode
+## Antigravity Build Prompt
+ 
+You are building an optional chaos mechanic where captains are randomly assigned each matchday by the system, removing the captain decision from skilled players and levelling the playing field for everyone.
+ 
+---
+ 
+### WHAT IT IS
+ 
+An optional league rule (selectable at league creation): instead of each user choosing their own captain, the system randomly assigns a captain from each user's squad before lock. This removes the skill gap, creates unpredictability, and generates banter.
+ 
+Example: João's squad has Vinicius Jr., Bellingham, and Salah. System randomly picks Bellingham as his captain. If Bellingham scores, it's a lucky cap-pick. If he doesn't, João blames the system, not his own decision. This is chaos, and friend groups love it.
+ 
+### CAPTAIN ROULETTE RULES
+ 
+1. Only players in the locked squad are eligible for random captain assignment
+2. Assignment happens exactly at squad lock time for that matchday
+3. Assignment is random and independent per user — your assigned captain has no relation to anyone else's
+4. Once assigned, the captain cannot be changed (it's locked like the squad)
+5. The system notifies each user who their assigned captain is (via toast + notification + activity wall) immediately after lock
+ 
+### WHERE IT'S CONFIGURED
+ 
+At league creation, in the league settings:
+ 
+```
+┌──────────────────────────────────┐
+│ League Format: [Classic]         │
+│                                  │
+│ Squad size: [11 starters + 4 bench]
+│                                  │
+│ Optional Rules:                  │
+│ ☐ No-Duplicate mode              │
+│ ☐ Auction mode                   │
+│ ☑ Captain Roulette               │
+│   (captains are randomly assigned)
+│                                  │
+│ [Create League]                  │
+└──────────────────────────────────┘
+```
+ 
+If toggled on during league creation, a note appears: "Captain Roulette active — captains assigned randomly at squad lock for each matchday. All captains score 2× points."
+ 
+### USER EXPERIENCE
+ 
+**Before lock:**
+- Squad builder shows: "Captain Roulette mode ON — your captain will be randomly assigned at lock"
+- No captain picker visible (greyed out or hidden)
+- Player cards show a small 🎲 icon instead of the captain selector
+ 
+**At lock (exactly at the deadline):**
+- System picks a random player from the user's 11 starters
+- Notification: "🎲 Your captain for Matchday 4: Bellingham · 2× points!"
+- Activity wall item: "🎲 João's captain assigned: Bellingham"
+- User sees their captain badge appear on the pitch view instantly
+ 
+**During the match:**
+- Captain badge is locked (cannot be changed)
+- Captain points are doubled as normal
+ 
+**Post-match:**
+- If the roulette captain did well, user feels lucky: "I can't take credit, but I'll take the points 😂"
+- If the roulette captain did badly, user blames the system: "System gave me the worst captain"
+- This generates massive banter on the activity wall
+ 
+### DATA MODEL
+ 
+LeagueSetting: id, league_id, captain_roulette_enabled (boolean)
+ 
+When a squad is locked (at lock time):
+- Query user's squad for this matchday
+- Get list of 11 starters
+- Randomly pick one
+- Update the squad record: captain_id = randomly_picked_player
+- Log the assignment in the event_log for the activity wall
+- Send notification to user
+ 
+### CAPTAIN ROULETTE RANDOMIZATION
+ 
+Use a cryptographic random function to pick the captain:
+ 
+```
+eligible_starters = squad.players.filter(p => p.in_starting_eleven)
+random_index = crypto.getRandomValues(new Uint32Array(1))[0] % eligible_starters.length
+assigned_captain = eligible_starters[random_index]
+```
+ 
+This ensures each player has an equal chance. No weighting by position or form — pure chaos.
+ 
+### ACTIVITY WALL INTEGRATION
+ 
+When a captain is assigned, the activity wall shows:
+ 
+Before lock: "🎲 Captain Roulette active — João's captain will be assigned at lock"
+After lock: "🎲 João assigned: Bellingham (MF) as captain"
+During match (if captain scores): "⚽ João's roulette captain Bellingham scored · +10 pts (doubled)"
+ 
+### PUSH NOTIFICATIONS
+ 
+At squad lock:
+- "🎲 Your Captain Roulette assignment for Matchday 4: Bellingham. 2× points active!"
+ 
+If roulette captain scores a goal during match:
+- "⚽ Your roulette captain Bellingham just scored! +10 pts!"
+ 
+### PSYCHOLOGICAL EFFECT
+ 
+Captain Roulette does two things:
+1. It removes the skill gap (new players can't lose on captain choice decisions)
+2. It creates shared destiny (the entire league is subject to the same randomness, so losses feel less personal)
+ 
+This is especially powerful in leagues where one skilled user is dominating — roulette gives everyone else a fighting chance and keeps engagement high for the whole group.
+ 
+### MOCK CAPTAIN ROULETTE SEQUENCE TO BUILD WITH
+ 
+League: "World Cup Friends" · Captain Roulette ON
+ 
+Matchday 4 · Squad lock at 18:00
+ 
+João's squad (11 starters):
+- Ederson (GK), Rúben (DF), Saliba (DF), Hakimi (DF), Bellingham (MF), Vinicius Jr. (MF), De Bruyne (MF), Mbappé (FW), Osimhen (FW), Salah (FW), Pedri (MF)
+ 
+At lock (18:00):
+- System randomly picks: Bellingham
+- Notification: "🎲 Your Captain Roulette assignment: Bellingham (MF) — 2× points this matchday!"
+- Activity wall: "🎲 João's captain assigned: Bellingham"
+ 
+During the match (minute 35):
+- Bellingham scores
+- Notification: "⚽ Bellingham just scored! Your roulette captain · +10 pts!"
+- João's activity wall item: "⚽ João's roulette captain Bellingham scored (35') · +10 pts"
+ 
+League chat:
+- Ricardo: "lol João got the best midfielder as captain 😂"
+- João: "Pure luck, mate. System got me"
+- Ana: "I got stuck with Pedri. This is chaos."
+ 
+---
+ 
+### START HERE
+ 
+Build the league creation settings UI first — add the toggle switch for Captain Roulette. Then implement the randomization logic at squad lock. Finally, add the notifications and activity wall integration.
+ 
+This is a fun, low-complexity feature that dramatically improves the experience for groups with skill disparities.
+```
+ 
+---
+ 
+## 09 — WILDCARD MATCHDAY
+ 
+```
+# FantasyKit — Wildcard Matchday
+## Antigravity Build Prompt
+ 
+You are building the Wildcard Matchday chip — a power-up that allows a user unlimited free transfers for one matchday, usable once per tournament.
+ 
+---
+ 
+### WHAT IT IS
+ 
+Once per tournament, each user can activate their Wildcard — for that matchday only, they can make unlimited free transfers (instead of the usual 1–2 free transfers + paid extras). It's a classic FPL mechanic that creates strategic depth and a memorable moment for the league.
+ 
+### WILDCARD RULES
+ 
+1. One-time use per tournament per user
+2. Can be activated anytime before squad lock (no deadline-at-lock rule, unlike FPL)
+3. When activated, users get unlimited free transfers until lock
+4. After lock, wildcard is consumed and unavailable for the rest of the tournament
+5. Cannot be transferred to another matchday — use it or lose it
+6. The activity wall announces when someone uses their wildcard (high engagement)
+ 
+### WHERE WILDCARD APPEARS
+ 
+1. **Transfer screen** — a prominent button: "🃏 PLAY WILDCARD" with description: "Unlimited free transfers until lock" + countdown to lock
+2. **Squad builder** — if wildcard is available, a banner at the top: "🃏 Use your Wildcard this matchday? Unlimited transfers."
+3. **Home screen** — once activated, a badge shows: "🃏 WILDCARD ACTIVE · Unlimited transfers until lock"
+ 
+### USER FLOW
+ 
+**Before activation:**
+- User taps "🃏 PLAY WILDCARD" button
+- Confirmation modal: "Activate your Wildcard for Matchday 4? You can make unlimited free transfers until lock. This chip can only be used once this tournament."
+- CTA: "Confirm" (green) / "Cancel"
+ 
+**After activation:**
+- Squad builder is updated: all transfer costs are 0 for the rest of this matchday
+- Transfer counter shows: "Unlimited transfers" instead of "1 free / 2 paid"
+- Banner on home screen: "🃏 WILDCARD ACTIVE — unlimited transfers until [time]"
+- Activity wall announces: "🃏 João activated their Wildcard!"
+- Push notification sent to league: "🃏 João is using their Wildcard — full squad overhaul incoming"
+ 
+**During active wildcard:**
+- Users can swap players in and out freely without cost
+- Each transfer still requires lock time (squad must be finalized before cutoff)
+- Points are still deducted for extra transfers made after the mandatory limit (if any), but the first N transfers are free
+ 
+**After lock:**
+- Wildcard is consumed and unavailable for rest of tournament
+- User's squad is locked
+- Activity wall shows: "🃏 João's Wildcard results: [X transfers made, best pick: Bellingham]"
+ 
+### STRATEGIC CONTEXT
+ 
+Wildcards are meant to be played when:
+- Many of your squad are injured (use it to rebuild quickly)
+- You need to take a big risk (swap in high-form players before a must-win matchday)
+- You've made poor transfers and need to reset
+ 
+The activity wall announcement is critical — when someone plays their wildcard, the entire league notices and reacts. It creates drama and engagement.
+ 
+### DATA MODEL
+ 
+LeagueMember: id, league_id, user_id, wildcard_used (boolean), wildcard_used_on_matchday (nullable)
+ 
+When wildcard is activated:
+- Update wildcard_used = true
+- Update wildcard_used_on_matchday = current_matchday_id
+- Log event to event_log for activity wall
+- Broadcast to league via Supabase Realtime
+ 
+### TRANSFER COST OVERRIDE
+ 
+When wildcard is active:
+- Query the squad.transfers_made count
+- For this matchday only, set transfer_cost = 0 for all transfers
+- After lock, resume normal transfer cost logic for next matchday
+ 
+### NOTIFICATIONS
+ 
+When activated:
+- Toast on home screen: "🃏 Wildcard activated! Unlimited transfers until [time]."
+- Push to user: "🃏 Wildcard active for Matchday 4 — time to rebuild your squad"
+- Activity wall: "🃏 João activated Wildcard"
+ 
+Sent to league:
+- Push to all league members: "🃏 João is using their Wildcard this matchday"
+ 
+After lock:
+- User toast: "🃏 Wildcard locked in — 4 transfers made"
+- Activity wall summary: "🃏 João's Wildcard: 4 transfers, swapped in Bellingham (5 pts), best pick ✓"
+ 
+### MOCK WILDCARD SEQUENCE TO BUILD WITH
+ 
+League: "World Cup Friends" · Matchday 3
+ 
+João's squad (current):
+- Mbappé (captain, 12 pts so far) · Vinicius Jr. · Salah · Bellingham · Ederson · etc.
+ 
+João decides to use his wildcard because:
+- Neymar is injured (he owns him)
+- His squad isn't performing (mostly in bottom half of the league)
+- Wants to make a big push in Matchday 3
+ 
+Sequence:
+ 
+**Before lock:**
+João taps "🃏 PLAY WILDCARD"
+Confirmation: "Activate Wildcard for Matchday 3? Unlimited free transfers until 18:00."
+João taps "Confirm"
+ 
+Notification: "🃏 Wildcard activated! Unlimited transfers until lock (2h)"
+Activity wall: "🃏 João activated Wildcard" — league members see this
+ 
+**João makes transfers (all free):**
+1. Out: Neymar (injured) → In: Pedri
+2. Out: Salah (underperforming) → In: De Bruyne
+3. Out: Bellingham → In: Vinicius Jr. (captain instead)
+ 
+João's transfer log shows: "3 transfers made (Wildcard: all free)"
+ 
+**At lock (18:00):**
+Squad is locked with new players
+Activity wall shows: "🃏 João's Wildcard results: 3 transfers, brought in De Bruyne, Pedri, Vinicius (captain)"
+Push to João: "🃏 Wildcard locked in — 3 transfers made"
+ 
+**During the match:**
+If De Bruyne scores: "De Bruyne just scored · João's Wildcard pick pays off · +5 pts"
+League chat: "João's wildcard is paying off 🔥" or "still cooked 😂"
+ 
+---
+ 
+### START HERE
+ 
+Build the "PLAY WILDCARD" button on the transfer screen first. Add the confirmation modal. Then implement the transfer cost override logic (set transfer_cost = 0 when wildcard is active). Finally, integrate the activity wall announcement and post-lock summary.
+ 
+The wildcard is the most anticipated single event in fantasy football — it's the moment when a user tries to make a dramatic comeback. Make sure the announcement is prominent and the activity wall captures the drama.
+```
+ 
+---
+ 
+## 10 — TRIPLE CAPTAIN CHIP
+ 
+```
+# FantasyKit — Triple Captain Chip
+## Antigravity Build Prompt
+ 
+You are building the Triple Captain power-up — a one-time chip that makes your captain score 3× instead of 2× for a matchday.
+ 
+---
+ 
+### WHAT IT IS
+ 
+Once per tournament, a user can activate the Triple Captain chip — their chosen captain scores 3× points instead of the normal 2×. It's a high-risk, high-reward play. If the captain scores big, you win the matchday. If they're on the bench, you lose massively.
+ 
+Example: You pick Mbappé as captain, he scores 3 goals (15 pts × 3 = 45 pts). Game over, you've won. Or: you pick Salah, he doesn't start. 0 pts instead of the normal bench points.
+ 
+### TRIPLE CAPTAIN RULES
+ 
+1. One-time use per tournament per user
+2. Must be activated before squad lock
+3. Can only be used by a player who is in the squad's starting XI
+4. If the TC captain doesn't play (benched or injured), zero points are awarded for that player (unlike normal subs who give reduced points)
+5. Cannot be combined with Wildcard on the same matchday (if you wildcard, you can't TC that round — forces a choice)
+ 
+### WHERE TC APPEARS
+ 
+1. **Squad builder, on the captain selector** — a small option: "🔥 TRIPLE CAPTAIN" toggle next to the normal captain picker
+2. **Captain card on the pitch** — if TC is active, the badge shows: 🔥 "3×" instead of just "C"
+3. **Home screen** — once activated, a prominent badge: "🔥 TRIPLE CAPTAIN ACTIVE · Matchday 4"
+ 
+### USER FLOW
+ 
+**Before activation:**
+- User selects a captain normally (tap a player, they get the 2× captain badge)
+- A toggle appears below the captain picker: "🔥 Activate Triple Captain for this captain?"
+- If toggled on: confirmation modal shows "Confirm Triple Captain on [Player]? 3× points if they score, 0 pts if they don't play. One use per tournament."
+- User taps "Confirm"
+ 
+**After activation:**
+- Captain badge on pitch changes from "C" to "🔥 3×"
+- Home screen shows: "🔥 TRIPLE CAPTAIN ACTIVE on [Player]"
+- Activity wall announces: "🔥 João is playing Triple Captain on Mbappé"
+- League notification: "🔥 João is going all-in: Triple Captain on Mbappé"
+ 
+**During the match:**
+- If TC captain scores: notification is extra celebratory: "⚡ 🔥 TRIPLE CAPTAIN DELIVERS! Mbappé scored · +45 pts!"
+- If TC captain doesn't play: silent until full-time, then a sombre notification: "⚠️ Mbappé was benched — your Triple Captain scored 0 pts"
+- If TC captain plays but doesn't score: normal scoring (0 pts from goals, but clean sheet / minutes may apply)
+ 
+**Post-match:**
+- Activity wall highlights TC performances (win or loss)
+- If TC paid off: "🔥 João's Triple Captain Mbappé: 3 goals · +45 pts · Matchday won"
+- If TC flopped: "⚠️ João's Triple Captain Mbappé: benched · 0 pts · Rank dropped 2 places"
+ 
+### STRATEGIC CONTEXT
+ 
+TC is meant to be a panic play: when you're behind and need to gamble, or when you have a high-confidence captain pick.
+ 
+Unlike Wildcard (which is a safety reset), TC is a bet. The activity wall shouldn't sugar-coat it — both wins and losses should be visible, generating banter.
+ 
+### DATA MODEL
+ 
+LeagueMember: id, league_id, user_id, triple_captain_used (boolean), triple_captain_used_on_matchday (nullable)
+ 
+Squad: id, user_id, league_id, matchday_id, captain_id, triple_captain_active (boolean)
+ 
+When TC is activated:
+- Update squad.triple_captain_active = true
+- Store the captain_id being TC'd
+- Log event to event_log
+- Broadcast to league
+ 
+### SCORING OVERRIDE
+ 
+When calculating captain points:
+```
+if (squad.triple_captain_active && player_id == squad.captain_id):
+  captain_points = player_points * 3
+else:
+  captain_points = player_points * 2
+```
+ 
+If the TC captain doesn't play:
+```
+if (minutes_played == 0):
+  captain_points = 0
+```
+ 
+This is harsh — you get nothing if they don't start. That's the risk.
+ 
+### NOTIFICATIONS
+ 
+When activated:
+- Toast: "🔥 Triple Captain activated on Mbappé — 3× captain points!"
+- Push to user: "🔥 You're going big: Triple Captain on Mbappé for Matchday 4"
+- Activity wall: "🔥 João playing Triple Captain on Mbappé"
+ 
+If TC captain scores:
+- Celebratory push: "⚡ 🔥 TRIPLE CAPTAIN! Mbappé scored 3 goals · +45 pts!"
+- Activity wall: "🔥 João's Triple Captain Mbappé: 3 goals (45 pts) — HUGE!"
+ 
+If TC captain doesn't play:
+- Sombre push: "⚠️ Mbappé was benched — your Triple Captain scored 0 pts. Current rank: 5th"
+- Activity wall: "⚠️ João's Triple Captain whiff: Mbappé benched"
+ 
+### MOCK TC SEQUENCE TO BUILD WITH
+ 
+League: "World Cup Friends" · Matchday 3
+ 
+João's squad:
+- Currently 5th place, 4 pts behind 1st
+- Captain: Mbappé (12 pts in season, high form)
+ 
+At 30 minutes before lock, João is behind and decides to activate TC on Mbappé.
+ 
+Notification: "🔥 Triple Captain activated on Mbappé for Matchday 4"
+Activity wall: "🔥 João is playing Triple Captain on Mbappé — going all-in!"
+League chat instantly lights up: "💀 João's going for it", "big bet", "respect the gamble"
+ 
+**Match happens:**
+ 
+**Scenario 1 (TC wins):**
+- Mbappé scores 3 goals = 15 pts
+- With Triple Captain: 15 × 3 = 45 pts for João
+- Final score: João 92 pts (Mbappé alone = 45, rest of squad = 47)
+- Result: João wins the matchday (1st place)
+- Notification: "⚡ 🔥 TRIPLE CAPTAIN! Mbappé scored 3 goals · +45 pts — YOU WIN MATCHDAY!"
+- Activity wall: "🔥 João's Triple Captain Mbappé: 3 goals (45 pts) — LEGENDARY! Won Matchday 4"
+- League chat: "😱 João did it!", "MADMAN", "that was insane"
+ 
+**Scenario 2 (TC loses):**
+- Mbappé doesn't start (benched, manager chooses someone else)
+- TC captain = 0 pts
+- Final score: João 38 pts (Mbappé = 0, rest of squad = 38)
+- Result: João drops to 7th place
+- Notification: "⚠️ Mbappé benched — Triple Captain scored 0 pts. You're now 7th (dropped 2)."
+- Activity wall: "⚠️ João's Triple Captain whiff: Mbappé benched · 0 pts"
+- League chat: "🪦 rip", "ouch", "told you he might be benched"
+ 
+---
+ 
+### START HERE
+ 
+Build the TC toggle below the captain picker first. Add the confirmation modal. Then implement the scoring override (×3 instead of ×2). Finally, integrate the celebrations + failure notifications and the activity wall drama.
+ 
+Triple Captain is the most shareable moment in fantasy football — both wins and losses. Make sure every TC play is visible in the league, because the banter is the entire point.
+```
+ 
+---
+ 
+## 11 — LEAGUE ANALYTICS DASHBOARD
+ 
+```
+# FantasyKit — League Analytics Dashboard
+## Antigravity Build Prompt
+ 
+You are building a stats dashboard that shows aggregate league data, updated after each matchday, rewarding users for checking it.
+ 
+---
+ 
+### WHAT IT IS
+ 
+A Stats tab inside the league view that shows the league-wide analytics: most captained player, average points per matchday, biggest rank swings, transfer trends, most improved user, and more. It's updated after each matchday and requires zero user action to populate.
+ 
+Analytics dashboards are pure retention — they reward engagement with insight and make users feel like the league is being chronicled.
+ 
+### STATS SECTIONS
+ 
+**1. THIS MATCHDAY SUMMARY**
+- Highest score: João · 87 pts
+- Lowest score: Ana · 52 pts
+- Average score: 71 pts
+- Most captained player: Mbappé (5/8 users)
+- Top scorer of the matchday: Bellingham (4 goals)
+- Most transferred-in player: De Bruyne (6 users brought him in)
+- Most transferred-out player: Salah (4 users sold)
+- Biggest rank swing: Ricardo · 7th → 2nd (↑ 5 places)
+ 
+**2. SEASON STATS (accumulated)**
+- Season leader: João · 312 pts
+- Points per matchday average (by user): bar chart
+  - João: avg 78 pts/MD
+  - Ricardo: avg 74 pts/MD
+  - Ana: avg 68 pts/MD
+  - etc.
+- Most improved player: Ana (avg 55 → avg 71, +16 pts)
+- Least improved: (bottom user)
+- Total transfers made (league-wide): 47 transfers
+- Most active trader: João (12 transfers in 4 matchdays)
+- Captain success rate (by user): % of matchdays where captain scored >5 pts
+  - João: 75% (3/4 captains scored)
+  - Ricardo: 50% (2/4)
+  - Ana: 25% (1/4)
+ 
+**3. LEAGUE TRENDS**
+- Most popular captain (all time): Mbappé (captained 12 times in league history)
+- Least popular captain: Pedri (0 times)
+- Average squad value: €98M
+- Most expensive squad in league: João · €104M
+- Cheapest squad: Ana · €87M
+- Transfer frequency (avg transfers per user per MD): 2.1 transfers
+- Average captain score: 8.2 pts
+ 
+**4. INTERACTIVE SPARKLINES**
+- Season points curve (by user): each user's cumulative points over all matchdays
+  - X-axis: Matchdays 1–4
+  - Y-axis: Cumulative points (0–312)
+  - Multiple coloured lines (one per user)
+  - Hover/tap a line → shows exact points at that matchday
+- Rank movement (by user): each user's rank position over time
+  - X-axis: Matchdays
+  - Y-axis: Rank (1–8)
+  - Lines trending down = improving, trending up = declining
+ 
+**5. HEAD-TO-HEAD MATCHUPS**
+- Best matchup rivalry: João vs Ricardo (4–2 record)
+- Closest matchup ever: João vs Ana (71 pts vs 71 pts, draw in MD2)
+- Biggest upset: Ana beat João 81–64 in MD3 (João was favoured)
+ 
+### WHERE STATS APPEAR
+ 
+A dedicated **Stats** tab inside the League screen (alongside Leaderboard, Activity Wall, Chat).
+ 
+Tab bar:
+```
+[ Leaderboard ] [ Activity ] [ Chat ] [ Stats ]
+```
+ 
+Stats screen layout (vertical scroll):
+1. "THIS MATCHDAY" section (collapsible)
+2. "SEASON STANDINGS" bar chart
+3. "CAPTAIN EFFICIENCY" by user
+4. "MOST IMPROVED" badge
+5. "TRANSFER TRENDS" section
+6. "SPARKLINE" — cumulative points curve
+7. "RANK MOVEMENT" — line chart of rank over time
+8. "HEAD-TO-HEAD RECORDS" — best/worst/closest matchups
+ 
+### DATA MODEL
+ 
+MatchdayStats: id, league_id, matchday_id, highest_score, lowest_score, avg_score, most_captained_player_id, top_scorer_id, updated_at
+ 
+TransferHistory: id, league_id, user_id, matchday_id, from_player_id, to_player_id, transfer_cost, created_at
+ 
+CaptainHistory: id, league_id, user_id, matchday_id, captain_id, points_scored
+ 
+LeagueStats (cached, recalculated after each matchday):
+- total_transfers_made
+- most_active_trader_user_id
+- captain_success_rate (by user)
+- most_improved_user_id
+- season_points_by_user (cumulative, sorted)
+- rank_history (by user, per matchday)
+ 
+### UPDATE LOGIC
+ 
+After each matchday ends:
+1. Calculate all stats
+2. Store in MatchdayStats table
+3. Broadcast update to league via Supabase Realtime
+4. Users see updated Stats tab instantly
+ 
+### UI COMPONENTS
+ 
+**Stat card:**
+Large number + label, colour-coded by category (e.g. green for positive, red for negative)
+ 
+**Bar chart:**
+Recharts bar chart showing points-per-matchday by user (colour-coded per user)
+ 
+**Sparkline:**
+Recharts line chart showing cumulative points (multi-line, one per user)
+ 
+**Badge:**
+"Most improved: Ana · +16 pts this season" — highlighted card
+ 
+### EXAMPLE STATS SCREEN (Matchday 4)
+ 
+```
+┌──────────────────────────────────────┐
+│ STATS | Leaderboard | Activity | Chat │
+│                                      │
+│ ───── THIS MATCHDAY ─────────────── │
+│                                      │
+│ Highest score: João · 87 pts        │
+│ Lowest score: Ana · 52 pts          │
+│ Average: 71 pts                     │
+│ Most captained: Mbappé (5 users)    │
+│ Top scorer: Bellingham (4 goals)    │
+│                                      │
+│ ───── SEASON STANDINGS ─────────── │
+│                                      │
+│ [ Bar chart: pts/MD by user ]       │
+│ João:    ███████ 78 avg            │
+│ Ricardo: ██████  74 avg            │
+│ Ana:     █████   68 avg            │
+│ (others)                            │
+│                                      │
+│ ───── CAPTAIN EFFICIENCY ───────── │
+│ João:    75% (3/4 captains scored) │
+│ Ricardo: 50% (2/4)                 │
+│ Ana:     25% (1/4)                 │
+│                                      │
+│ ───── MOST IMPROVED ──────────── │
+│ Ana · +16 pts vs last matchday    │
+│                                      │
+│ [ scroll for more... ]              │
+└──────────────────────────────────────┘
+```
+ 
+### MOCK STATS DATASET TO BUILD WITH
+ 
+League: "World Cup Legends" · 4 matchdays played
+ 
+Users: João, Ricardo, Ana, (others)
+ 
+Matchday 4 stats:
+- Highest: João · 87 pts
+- Lowest: Ana · 52 pts
+- Avg: 71 pts
+- Most captained: Mbappé (5/8 users)
+- Top scorer: Bellingham (4 goals)
+- Most transferred-in: De Bruyne (6 users)
+- Most transferred-out: Salah (4 users)
+ 
+Season cumulative:
+- João: 312 pts (MD1: 78, MD2: 71, MD3: 76, MD4: 87)
+- Ricardo: 290 pts (MD1: 70, MD2: 73, MD3: 73, MD4: 74)
+- Ana: 268 pts (MD1: 52, MD2: 64, MD3: 100, MD4: 52) ← most volatile
+- (others)
+ 
+Captain efficiency:
+- João: 75% (3/4 matchdays captain scored >5 pts)
+- Ricardo: 50% (2/4)
+- Ana: 25% (1/4) ← room for improvement
+ 
+Most improved: Ana (MD3 performance was amazing, MD4 dropped; trend analysis shows potential)
+ 
+Sparkline data (cumulative):
+- MD1: João 78, Ricardo 70, Ana 52
+- MD2: João 149, Ricardo 143, Ana 116
+- MD3: João 225, Ricardo 216, Ana 216 (Ana caught up!)
+- MD4: João 312, Ricardo 290, Ana 268 (João pulled away)
+ 
+---
+ 
+### START HERE
+ 
+Build the "THIS MATCHDAY" section first with mock data. Then add the "SEASON STANDINGS" bar chart. Finally, add the sparklines and the caching logic for performance.
+ 
+Analytics dashboards are pure retention infrastructure. Users who check the stats tab open the app significantly more often. Make sure the stats update are broadcast live when a matchday ends — watching the numbers recalculate in real-time is addictive.
+```
+ 
+---
+ 
+## HOW TO USE THESE PROMPTS
+ 
+1. **Copy the entire prompt for the feature you want to build**
+2. **Paste it directly into Antigravity**
+3. **Antigravity will handle the build** — design, logic, data model, mock data, everything is specified
+Each prompt is self-contained and can be built independently. They're modular — if you build predicted lineups, you don't need to have built the squad builder first (though they work better together).
+ 
+**Suggested build order** (for maximum early retention):
+1. Matchday recap card (organic growth)
+2. Live projections (engagement during matches)
+3. Predicted lineups + injury alerts (pre-match info layer)
+4. VAR handling (correctness)
+5. Top scorer prediction (daily engagement)
+6. Captain roulette (optional, for friend groups with skill gaps)
+7. Wildcard matchday (strategic depth)
+8. Triple captain chip (high-engagement moments)
+9. Head-to-head records (social memory)
+10. League analytics dashboard (retention intelligence)
+11. Bracket challenge (onboarding alternative for non-league players)
