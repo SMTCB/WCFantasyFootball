@@ -124,10 +124,14 @@ export default function LeagueScreen() {
           leagues: { id: 'L1', name: 'World Cup Official', format: 'classic' } 
         }]);
         setMembers([
-          { user_id: userId, total_points: 215, rank: 3, users: { username: 'You (Demo)' } },
+          { user_id: userId, total_points: 215, rank: 4, users: { username: 'You (Demo)' } },
           { user_id: 'd1', total_points: 242, rank: 1, users: { username: 'AlexTactics' } },
-          { user_id: 'd2', total_points: 228, rank: 2, users: { username: 'JordanFC' } },
-          { user_id: 'd3', total_points: 195, rank: 4, users: { username: 'Taylor United' } },
+          { user_id: 'd2', total_points: 238, rank: 2, users: { username: 'JordanFC' } },
+          { user_id: 'd3', total_points: 221, rank: 3, users: { username: 'Taylor United' } },
+          { user_id: 'd4', total_points: 195, rank: 5, users: { username: 'Ana_K' } },
+          { user_id: 'd5', total_points: 188, rank: 6, users: { username: 'GamerX' } },
+          { user_id: 'd6', total_points: 172, rank: 7, users: { username: 'Zidane_Vibes' } },
+          { user_id: 'd7', total_points: 154, rank: 8, users: { username: 'League_Ghost' } },
         ]);
         return;
       }

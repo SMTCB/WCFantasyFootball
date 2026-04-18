@@ -115,15 +115,9 @@ export default function SquadScreen() {
       let pitchPlayers = mappedPlayers.filter(p => !p.isBench);
       let benchPlayers = mappedPlayers.filter(p => p.isBench);
 
-      // 3. Add Dummy Subs if bench is empty
-      if (benchPlayers.length < 4) {
-        const dummySubs = [
-          { id: 'd1', name: 'Reserve GK', position: 'GK', club: 'SUB', price: 4.0, isDummy: true },
-          { id: 'd2', name: 'Reserve DEF', position: 'DEF', club: 'SUB', price: 4.0, isDummy: true },
-          { id: 'd3', name: 'Reserve MID', position: 'MID', club: 'SUB', price: 4.5, isDummy: true },
-          { id: 'd4', name: 'Reserve FWD', position: 'FWD', club: 'SUB', price: 5.0, isDummy: true },
-        ].slice(0, 4 - benchPlayers.length);
-        benchPlayers = [...benchPlayers, ...dummySubs];
+      // 3. Add Substitutes from fallback if bench is empty
+      if (benchPlayers.length === 0) {
+        benchPlayers = fallbackSquad.bench.map(p => ({ ...p, points: 0, isBench: true }));
       }
 
       setSquadData({
