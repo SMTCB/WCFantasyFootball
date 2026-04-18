@@ -123,11 +123,13 @@ export default function MarketScreen() {
   };
 
   const upsertSquadPlayers = async (newPlayerArray) => {
-    const { data: { user } } = await supabase.auth.getUser();
+    const { data: authData } = await supabase.auth.getUser();
+    const userId = authData?.user?.id || '00000000-0000-0000-0000-000000000000';
+    
     if (mySquad.id) {
       await supabase.from('squads').update({ players: newPlayerArray }).eq('id', mySquad.id);
     } else {
-      const res = await supabase.from('squads').insert({ user_id: user.id, league_id: null, matchday_id: 'md1', players: newPlayerArray }).select().single();
+      const res = await supabase.from('squads').insert({ user_id: userId, league_id: null, matchday_id: 'md1', players: newPlayerArray }).select().single();
       if (res.data) setMySquad(res.data);
     }
     setMySquad(prev => ({ ...prev, players: newPlayerArray }));
