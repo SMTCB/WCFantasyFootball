@@ -16,6 +16,9 @@ const MOCK_SQUAD_PLAYERS = [
 const MOCK_RIVAL_PLAYERS = [
   { id: 'rp1', name: 'K. De Bruyne', club: 'BEL', position: 'MID', price: 28.5 },
   { id: 'rp2', name: 'L. Messi', club: 'ARG', position: 'FWD', price: 26.0 },
+  { id: 'rp3', name: 'H. Kane', club: 'ENG', position: 'FWD', price: 24.5 },
+  { id: 'rp4', name: 'Cristiano Ronaldo', club: 'POR', position: 'FWD', price: 18.0 },
+  { id: 'rp5', name: 'Salah', club: 'EGY', position: 'FWD', price: 16.5 },
 ];
 
 export default function LeagueScreen() {
@@ -388,22 +391,42 @@ export default function LeagueScreen() {
                        <div className="text-[9px] font-black uppercase text-red-600 mb-1">League Recap</div>
                        <h3 className="font-serif text-xl font-bold leading-tight mb-2">Alex Tactics beats JordanFC by a Landslide</h3>
                        <p className="text-[11px] leading-relaxed">
-                         A clinical captaincy choice on Vinicius Jr sealed a dominant 42-point victory this matchday.
+                         A clinical captaincy choice on Vinicius Jr sealed a dominant 42-point victory this matchday. "He's just on another level," admitted a frustrated JordanFC.
                        </p>
                     </div>
                     <div className="border-l border-black/20 pl-4">
                        <div className="text-[9px] font-black uppercase text-blue-600 mb-1">Transfer Bomba</div>
                        <h3 className="font-serif text-xl font-bold leading-tight mb-2">Market Heats Up: Big Trade Confirmed</h3>
                        <p className="text-[11px] leading-relaxed">
-                         Alex Tactics and Taylor United swap Neymar for Messi in a record-breaking multi-asset deal.
+                         Alex Tactics and Taylor United swap Neymar for Messi in a record-breaking multi-asset deal. Experts suggest Ana_K is the dark horse after this trade.
                        </p>
                     </div>
                  </div>
               </div>
 
-              {/* SMALLER STORIES */}
-              <div className="px-6 py-4 bg-black/5 space-y-4 font-serif">
-                 <div className="flex gap-4 items-center group cursor-pointer border-b border-black/10 pb-4">
+              {/* CHAT BANTER / ACTIVITY HIGHLIGHTS */}
+              <div className="px-6 py-4 border-t-4 border-black bg-black text-white">
+                 <div className="fz-label text-cyan text-[8px] mb-2 brightness-150">WARZONE HIGHLIGHTS</div>
+                 <div className="space-y-3">
+                   <div className="flex gap-2">
+                     <span className="text-[#555] font-black">@Ana_K:</span>
+                     <span className="text-[11px] leading-tight font-medium italic">"Wait, did you guys see Taylor United just cashed out 50pts for Ronaldo? Risky business..."</span>
+                   </div>
+                   <div className="flex gap-2">
+                     <span className="text-[#555] font-black">@GamerX:</span>
+                     <span className="text-[11px] leading-tight font-medium italic">"I'm keeping my Joker for the Morocco game. Trust the process."</span>
+                   </div>
+                 </div>
+              </div>
+
+              {/* EDITOR'S PICK / SMALLER STORIES */}
+              <div className="px-6 py-6 bg-white space-y-6 font-serif">
+                 <div>
+                   <h4 className="text-[18px] font-black leading-none mb-2 underline">The "Morocco Miracle" Explained</h4>
+                   <p className="text-[12px] leading-snug">Scouting reports suggest Al-Nesyri is currently the highest value-to-point ratio in the World Cup.</p>
+                 </div>
+                 
+                 <div className="flex gap-4 items-center group cursor-pointer border-t border-black/10 pt-4">
                     <div className="w-16 h-16 bg-black shrink-0 grayscale group-hover:grayscale-0 transition-all overflow-hidden rounded-sm">
                        <img src="https://media.api-sports.io/football/players/276.png" className="w-full h-full object-cover opacity-80" />
                     </div>
@@ -412,20 +435,21 @@ export default function LeagueScreen() {
                        <h4 className="text-[13px] font-bold leading-tight">Neymar value drops -2.5% ahead of knockout stage.</h4>
                     </div>
                  </div>
-                 <div className="flex gap-4 items-center group cursor-pointer">
+                 <div className="flex gap-4 items-center group cursor-pointer border-t border-black/10 pt-4">
                     <div className="w-16 h-16 bg-black shrink-0 grayscale group-hover:grayscale-0 transition-all overflow-hidden rounded-sm">
                        <img src="https://media.api-sports.io/football/players/642.png" className="w-full h-full object-cover opacity-80" />
                     </div>
                     <div className="flex-1">
                        <div className="text-[8px] font-black uppercase tracking-widest opacity-50">Speculation</div>
-                       <h4 className="text-[13px] font-bold leading-tight">Ronaldo spotted training alone. Bench start pending?</h4>
+                       <h4 className="text-[13px] font-bold leading-tight">Cristiano Ronaldo spotted training alone. Bench start pending for @Taylor United?</h4>
                     </div>
                  </div>
               </div>
 
-              <div className="p-8 text-center bg-[#f2f2f2]">
+              <div className="p-8 text-center bg-[#f2f2f2] border-t-2 border-dashed border-black/20">
                  <div className="w-12 h-1 bg-black mx-auto mb-4" />
-                 <div className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40">End of Edition</div>
+                 <div className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40">End of Morning Edition</div>
+                 <div className="text-[8px] mt-2 italic opacity-30">All data generated by Forza Intelligence Agency (FIA)</div>
               </div>
             </div>
           )}
