@@ -42,13 +42,13 @@ export default function AdminSeedScreen() {
 
       setStatus('Creating default league...');
       // 3. Create a default league
-      const { data: { user } } = await supabase.auth.getUser();
+      const userId = '00000000-0000-0000-0000-000000000000';
       const { data: newLeague, error: lErr } = await supabase
         .from('leagues')
         .insert({
           name: 'World Cup Official',
           format: 'classic',
-          created_by: user.id
+          created_by: userId
         })
         .select()
         .single();
@@ -60,7 +60,7 @@ export default function AdminSeedScreen() {
       
       await supabase.from('league_members').upsert({
         league_id: leagueId,
-        user_id: user.id,
+        user_id: userId,
         rank: 3,
         total_points: 42
       });
@@ -69,7 +69,7 @@ export default function AdminSeedScreen() {
       // 4. Create default squad
       const { error: sErr } = await supabase.from('squads').upsert({
         league_id: leagueId,
-        user_id: user.id,
+        user_id: userId,
         matchday_id: 'md1',
         players: mockSquad.players.map(p => p.id),
         captain_id: mockSquad.captainId,

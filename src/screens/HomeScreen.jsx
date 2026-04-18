@@ -26,8 +26,8 @@ export default function HomeScreen() {
   const fetchInitialData = async () => {
     try {
       setLoading(true);
-      const { data: authData } = await supabase.auth.getUser();
-      const userId = authData?.user?.id || '00000000-0000-0000-0000-000000000000';
+      // -- DEMO MODE: Hardcoded guest user ID
+      const userId = '00000000-0000-0000-0000-000000000000';
       await Promise.all([
         fetchFixtures(),
         fetchUserStats(userId),

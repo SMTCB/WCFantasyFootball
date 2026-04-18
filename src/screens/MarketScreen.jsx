@@ -34,8 +34,8 @@ export default function MarketScreen() {
   const fetchMarketParams = async () => {
     try {
       setLoading(true);
-      const { data: { user } } = await supabase.auth.getUser();
-
+      const userId = '00000000-0000-0000-0000-000000000000';
+      setCurrentUser({ id: userId });
       const { data: pData } = await supabase.from('players').select('*').order('price', { ascending: false });
       const { data: intelData } = await supabase.from('player_status').select('*');
 

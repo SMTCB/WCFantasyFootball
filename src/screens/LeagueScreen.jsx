@@ -101,8 +101,9 @@ export default function LeagueScreen() {
   const fetchLeagues = async () => {
     try {
       setLoading(true);
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      const { data: authData } = await supabase.auth.getUser();
+      const user = authData?.user;
+      const userId = user?.id || '00000000-0000-0000-0000-000000000000';
       
       const { data, error } = await supabase
         .from('league_members')
@@ -112,7 +113,7 @@ export default function LeagueScreen() {
           total_points,
           leagues ( id, name, format )
         `)
-        .eq('user_id', user.id);
+        .eq('user_id', userId);
         
       if (error) throw error;
       setLeagues(data || []);

@@ -20,8 +20,7 @@ export default function RecapScreen() {
   const fetchRecap = async () => {
     try {
       setLoading(true);
-      const { data: authData } = await supabase.auth.getUser();
-      const userId = authData?.user?.id || '00000000-0000-0000-0000-000000000000';
+      const userId = '00000000-0000-0000-0000-000000000000';
 
       const { data, error } = await supabase
         .from('matchday_recaps')
