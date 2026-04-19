@@ -403,25 +403,39 @@ export default function SquadScreen() {
     <div className="min-h-screen bg-bg">
 
       {/* ── Page Header ───────────────────────────────────────── */}
-      <div className="sticky top-0 z-40 bg-surface border-b border-border flex items-center justify-between px-5 py-3">
+      <div
+        className="sticky top-0 z-40 flex items-center justify-between px-5 py-3"
+        style={{
+          background: 'rgba(13,17,23,0.97)',
+          backdropFilter: 'blur(20px)',
+          WebkitBackdropFilter: 'blur(20px)',
+          borderBottom: '1px solid rgba(255,255,255,0.07)',
+        }}
+      >
         <div>
-          <div className="fz-label text-text-tertiary">Tactical Sheet</div>
-          <div className="fz-display text-[22px] text-white leading-tight">MY SQUAD</div>
+          <div className="fz-label" style={{ color: '#3D4B5C' }}>Tactical Sheet</div>
+          <div
+            className="text-[24px] font-black uppercase leading-tight tracking-tight"
+            style={{ fontFamily: 'Barlow Condensed, sans-serif', color: '#F0F2F5' }}
+          >
+            My Squad
+          </div>
         </div>
         <div className="flex items-center gap-4">
           {locked_at && (
             <div
-              className="text-[9px] font-black text-negative uppercase tracking-widest border border-negative/30 px-2 py-1 rounded-sm"
+              className="text-[9px] font-black uppercase tracking-widest px-2 py-1 rounded-sm"
+              style={{ color: '#F03A3A', border: '1px solid rgba(240,58,58,0.3)', fontFamily: 'Barlow Condensed, sans-serif' }}
               title="Squad locked — no changes until next matchday"
             >
               🔒 Locked
             </div>
           )}
           <div className="text-right">
-            <div className="fz-label text-text-tertiary">Budget</div>
+            <div className="fz-label" style={{ color: '#3D4B5C' }}>Budget</div>
             <div
-              className="text-[20px] font-black text-white leading-tight tabular-nums"
-              style={{ fontFamily: 'Barlow Condensed, sans-serif' }}
+              className="text-[20px] font-black leading-tight tabular-nums"
+              style={{ fontFamily: 'Barlow Condensed, sans-serif', color: '#F0F2F5' }}
             >
               ${Number((budget.total - budget.current).toFixed(1))}M
             </div>
@@ -549,7 +563,7 @@ export default function SquadScreen() {
         </div>
 
         {/* ══ RIGHT COLUMN — Desktop sidebar ═══════════════════ */}
-        <div className="hidden lg:flex lg:flex-col w-[300px] border-l border-border shrink-0">
+        <div className="hidden lg:flex lg:flex-col w-[300px] shrink-0" style={{ borderLeft: '1px solid rgba(255,255,255,0.07)' }}>
 
           {/* Chips */}
           <div className="border-b border-border">
@@ -583,30 +597,54 @@ export default function SquadScreen() {
 
       {/* ══ PLAYER ACTION BOTTOM SHEET ═══════════════════════════ */}
       {selectedPlayer && !swapMode && !isRouletteSpinning && (
-        <div className="fixed bottom-0 left-0 right-0 lg:bottom-0 lg:left-[200px] bg-surface-2 border-t border-border z-50 shadow-2xl animate-slide-up">
-          <div className="max-w-2xl mx-auto px-5 py-4">
+        <div
+          className="fixed bottom-0 left-0 right-0 lg:left-[220px] z-50 animate-slide-up"
+          style={{
+            background: 'rgba(20,26,36,0.98)',
+            backdropFilter: 'blur(24px)',
+            WebkitBackdropFilter: 'blur(24px)',
+            borderTop: '1px solid rgba(255,255,255,0.1)',
+            boxShadow: '0 -8px 40px rgba(0,0,0,0.6)',
+            paddingBottom: 'env(safe-area-inset-bottom)',
+          }}
+        >
+          <div className="max-w-2xl mx-auto px-5 pt-4 pb-5">
+
+            {/* Handle bar */}
+            <div className="flex justify-center mb-3">
+              <div className="w-10 h-1 rounded-full" style={{ background: 'rgba(255,255,255,0.15)' }} />
+            </div>
 
             {/* Player info header */}
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-3">
                 <div
-                  className="w-12 h-12 rounded-full border border-border-2 flex items-center justify-center font-bold text-[11px] uppercase"
-                  style={{ background: selectedPlayer.color || '#1E2535' }}
+                  className="w-12 h-12 rounded-full flex items-center justify-center font-black text-[11px] uppercase"
+                  style={{
+                    background: selectedPlayer.color || '#1C2333',
+                    border: '1.5px solid rgba(255,255,255,0.12)',
+                    color: '#F0F2F5',
+                    fontFamily: 'Barlow Condensed, sans-serif',
+                  }}
                 >
                   {selectedPlayer.club}
                 </div>
                 <div>
-                  <div className="text-[16px] font-bold text-white" style={{ fontFamily: 'DM Sans, sans-serif' }}>
+                  <div
+                    className="text-[16px] font-semibold leading-tight"
+                    style={{ fontFamily: 'DM Sans, sans-serif', color: '#F0F2F5' }}
+                  >
                     {selectedPlayer.name}
                   </div>
-                  <div className="fz-label text-text-secondary">
+                  <div className="fz-label mt-0.5" style={{ color: '#7D8A96' }}>
                     {selectedPlayer.position} · ${selectedPlayer.price}M
                   </div>
                 </div>
               </div>
               <button
                 onClick={() => setSelectedPlayer(null)}
-                className="w-8 h-8 rounded-full bg-surface border border-border flex items-center justify-center text-text-secondary hover:text-white transition-colors text-lg"
+                className="w-8 h-8 rounded-full flex items-center justify-center transition-colors text-lg"
+                style={{ background: 'rgba(255,255,255,0.06)', color: '#7D8A96' }}
               >
                 ×
               </button>
@@ -618,38 +656,68 @@ export default function SquadScreen() {
                 <button
                   onClick={setCaptain}
                   disabled={saving || captainId === selectedPlayer.id}
-                  title="Make this player your squad captain — they earn 2× points"
-                  className="flex-1 py-2.5 bg-gold text-black font-bold text-[11px] uppercase tracking-widest rounded-sm disabled:opacity-30 active:scale-95 transition-transform"
-                  style={{ fontFamily: 'Barlow Condensed, sans-serif' }}
+                  className="flex-1 py-2.5 rounded-sm transition-all active:scale-95 disabled:opacity-30"
+                  style={{
+                    background: captainId === selectedPlayer.id ? 'rgba(240,180,0,0.15)' : '#F0B400',
+                    color: captainId === selectedPlayer.id ? '#F0B400' : '#000',
+                    border: captainId === selectedPlayer.id ? '1px solid rgba(240,180,0,0.3)' : 'none',
+                    fontFamily: 'Barlow Condensed, sans-serif',
+                    fontSize: '11px',
+                    fontWeight: 800,
+                    letterSpacing: '0.1em',
+                    textTransform: 'uppercase',
+                  }}
                 >
                   {captainId === selectedPlayer.id ? '✓ Captain' : 'Make Captain'}
                 </button>
               )}
               <button
                 onClick={() => setSwapMode(true)}
-                title={selectedIsBench ? 'Sub this player into the starting XI' : 'Sub this player out to the bench'}
-                className="flex-1 py-2.5 bg-surface border border-border-2 text-white font-bold text-[11px] uppercase tracking-widest rounded-sm active:scale-95 transition-transform"
-                style={{ fontFamily: 'Barlow Condensed, sans-serif' }}
+                className="flex-1 py-2.5 rounded-sm transition-all active:scale-95"
+                style={{
+                  background: 'rgba(255,255,255,0.06)',
+                  color: '#F0F2F5',
+                  border: '1px solid rgba(255,255,255,0.1)',
+                  fontFamily: 'Barlow Condensed, sans-serif',
+                  fontSize: '11px',
+                  fontWeight: 800,
+                  letterSpacing: '0.1em',
+                  textTransform: 'uppercase',
+                }}
               >
                 {selectedIsBench ? '↑ Sub In' : '↓ Sub Out'}
               </button>
               <button
                 onClick={handleSellPlayer}
                 disabled={saving}
-                title="Permanently remove this player from your squad and reclaim their transfer value"
-                className="px-5 py-2.5 bg-negative/15 text-negative font-bold text-[11px] uppercase tracking-widest rounded-sm active:scale-95 transition-transform"
-                style={{ fontFamily: 'Barlow Condensed, sans-serif' }}
+                className="px-5 py-2.5 rounded-sm transition-all active:scale-95"
+                style={{
+                  background: 'rgba(240,58,58,0.12)',
+                  color: '#F03A3A',
+                  border: '1px solid rgba(240,58,58,0.2)',
+                  fontFamily: 'Barlow Condensed, sans-serif',
+                  fontSize: '11px',
+                  fontWeight: 800,
+                  letterSpacing: '0.1em',
+                  textTransform: 'uppercase',
+                }}
               >
                 Sell
               </button>
             </div>
 
             {/* Joker section */}
-            <div className="border-t border-border pt-3">
+            <div className="pt-3" style={{ borderTop: '1px solid rgba(255,255,255,0.07)' }}>
               {todayJokerId ? (
-                <div className="flex items-center gap-2 p-2.5 bg-purple/10 border border-purple/20 rounded-sm">
+                <div
+                  className="flex items-center gap-2 p-2.5 rounded-sm"
+                  style={{ background: 'rgba(157,95,245,0.08)', border: '1px solid rgba(157,95,245,0.2)' }}
+                >
                   <span>🔒</span>
-                  <div className="text-[10px] font-bold uppercase tracking-widest text-purple" style={{ fontFamily: 'Barlow Condensed, sans-serif' }}>
+                  <div
+                    className="text-[10px] font-bold uppercase tracking-widest"
+                    style={{ color: '#9D5FF5', fontFamily: 'Barlow Condensed, sans-serif' }}
+                  >
                     Joker already locked for today
                   </div>
                 </div>
@@ -658,19 +726,28 @@ export default function SquadScreen() {
                   <button
                     onClick={handleActivateJoker}
                     disabled={saving || !playingTodayTeams.includes(selectedPlayer.club)}
-                    title="Activate the Daily Joker for this player — they become exempt from the 3-per-country limit today"
-                    className={`w-full py-3 text-[11px] font-black uppercase tracking-widest rounded-sm transition-all ${
-                      playingTodayTeams.includes(selectedPlayer.club)
-                        ? 'bg-purple text-white hover:bg-purple/90 shadow-[0_0_12px_rgba(168,85,247,0.3)]'
-                        : 'bg-surface border border-border text-text-tertiary cursor-not-allowed opacity-50'
-                    }`}
-                    style={{ fontFamily: 'Barlow Condensed, sans-serif' }}
+                    className="w-full py-3 rounded-sm transition-all active:scale-95"
+                    style={{
+                      background: playingTodayTeams.includes(selectedPlayer.club) ? '#9D5FF5' : 'rgba(255,255,255,0.04)',
+                      color: playingTodayTeams.includes(selectedPlayer.club) ? '#fff' : '#3D4B5C',
+                      border: playingTodayTeams.includes(selectedPlayer.club) ? 'none' : '1px solid rgba(255,255,255,0.07)',
+                      fontFamily: 'Barlow Condensed, sans-serif',
+                      fontSize: '11px',
+                      fontWeight: 800,
+                      letterSpacing: '0.1em',
+                      textTransform: 'uppercase',
+                      cursor: playingTodayTeams.includes(selectedPlayer.club) ? 'pointer' : 'not-allowed',
+                      boxShadow: playingTodayTeams.includes(selectedPlayer.club) ? '0 0 12px rgba(157,95,245,0.3)' : 'none',
+                    }}
                   >
                     {playingTodayTeams.includes(selectedPlayer.club)
                       ? '🃏 Activate Daily Joker'
-                      : '❌ Not Playing Today'}
+                      : '✗ Not Playing Today'}
                   </button>
-                  <p className="mt-1.5 text-[9px] text-center text-text-tertiary uppercase tracking-normal">
+                  <p
+                    className="mt-1.5 text-[9px] text-center uppercase tracking-wide"
+                    style={{ color: '#3D4B5C', fontFamily: 'DM Sans, sans-serif' }}
+                  >
                     1 Joker per day · Country limit exempt · Locked once set
                   </p>
                 </>
@@ -682,16 +759,28 @@ export default function SquadScreen() {
 
       {/* ── Swap mode banner ──────────────────────────────────── */}
       {swapMode && (
-        <div className="fixed bottom-0 left-0 right-0 lg:left-[200px] bg-positive text-black z-50 px-5 py-3 flex justify-between items-center shadow-2xl">
+        <div
+          className="fixed bottom-0 left-0 right-0 lg:left-[220px] z-50 px-5 py-3 flex justify-between items-center"
+          style={{
+            background: '#18C96B',
+            color: '#000',
+            boxShadow: '0 -4px 20px rgba(24,201,107,0.4)',
+            paddingBottom: 'calc(12px + env(safe-area-inset-bottom))',
+          }}
+        >
           <div>
-            <div className="font-black text-[11px] uppercase tracking-widest" style={{ fontFamily: 'Barlow Condensed, sans-serif' }}>
+            <div
+              className="font-black text-[11px] uppercase tracking-widest"
+              style={{ fontFamily: 'Barlow Condensed, sans-serif' }}
+            >
               Select a {selectedIsBench ? 'starter' : 'bench player'} to swap
             </div>
-            <div className="text-[10px] opacity-70 mt-0.5">Swapping: {selectedPlayer?.name}</div>
+            <div className="text-[10px] opacity-60 mt-0.5">Swapping: {selectedPlayer?.name}</div>
           </div>
           <button
             onClick={() => { setSwapMode(false); setSelectedPlayer(null); }}
-            className="px-4 py-1.5 bg-black/20 font-bold uppercase text-[10px] tracking-widest rounded-sm"
+            className="px-4 py-1.5 rounded-sm font-bold uppercase text-[10px] tracking-widest"
+            style={{ background: 'rgba(0,0,0,0.2)', fontFamily: 'Barlow Condensed, sans-serif' }}
           >
             Cancel
           </button>

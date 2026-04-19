@@ -8,46 +8,79 @@ export default function PitchView({
   jokerPlayerId
 }) {
   return (
-    <div className="relative w-full aspect-[3/2] overflow-hidden select-none" style={{ background: '#051A0A' }}>
+    <div
+      className="relative w-full select-none overflow-hidden"
+      style={{
+        aspectRatio: '3/2',
+        background: 'linear-gradient(180deg, #041A08 0%, #062310 40%, #041A08 100%)',
+      }}
+    >
+      {/* ── Alternating pitch stripe texture ─────────────────── */}
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          backgroundImage: `repeating-linear-gradient(
+            180deg,
+            rgba(255,255,255,0.025) 0px,
+            rgba(255,255,255,0.025) 24px,
+            rgba(0,0,0,0.06) 24px,
+            rgba(0,0,0,0.06) 48px
+          )`,
+        }}
+      />
 
-      {/* ── Pitch markings ───────────────────────────────────── */}
+      {/* ── Pitch markings SVG ────────────────────────────────── */}
       <svg
-        className="absolute inset-0 w-full h-full"
+        className="absolute inset-0 w-full h-full pointer-events-none"
         viewBox="0 0 300 200"
         preserveAspectRatio="none"
-        style={{ opacity: 0.15 }}
+        style={{ opacity: 0.22 }}
       >
         {/* Outer border */}
-        <rect x="10" y="10" width="280" height="180" fill="none" stroke="white" strokeWidth="1" />
+        <rect x="8" y="8" width="284" height="184" fill="none" stroke="white" strokeWidth="1.2" rx="0.5" />
+
         {/* Centre line */}
-        <line x1="150" y1="10" x2="150" y2="190" stroke="white" strokeWidth="1" />
+        <line x1="150" y1="8" x2="150" y2="192" stroke="white" strokeWidth="0.8" />
+
         {/* Centre circle */}
-        <circle cx="150" cy="100" r="28" fill="none" stroke="white" strokeWidth="1" />
+        <circle cx="150" cy="100" r="30" fill="none" stroke="white" strokeWidth="0.8" />
         <circle cx="150" cy="100" r="2" fill="white" />
+
         {/* Top penalty box */}
-        <rect x="90" y="10" width="120" height="36" fill="none" stroke="white" strokeWidth="1" />
+        <rect x="85" y="8" width="130" height="42" fill="none" stroke="white" strokeWidth="0.8" />
         {/* Top 6-yard box */}
-        <rect x="120" y="10" width="60" height="14" fill="none" stroke="white" strokeWidth="1" />
+        <rect x="118" y="8" width="64" height="16" fill="none" stroke="white" strokeWidth="0.8" />
         {/* Top penalty spot */}
-        <circle cx="150" cy="35" r="1.5" fill="white" />
+        <circle cx="150" cy="38" r="1.5" fill="white" />
+        {/* Top penalty arc */}
+        <path d="M 130 50 A 28 28 0 0 1 170 50" fill="none" stroke="white" strokeWidth="0.8" />
+
         {/* Bottom penalty box */}
-        <rect x="90" y="154" width="120" height="36" fill="none" stroke="white" strokeWidth="1" />
+        <rect x="85" y="150" width="130" height="42" fill="none" stroke="white" strokeWidth="0.8" />
         {/* Bottom 6-yard box */}
-        <rect x="120" y="176" width="60" height="14" fill="none" stroke="white" strokeWidth="1" />
+        <rect x="118" y="176" width="64" height="16" fill="none" stroke="white" strokeWidth="0.8" />
         {/* Bottom penalty spot */}
-        <circle cx="150" cy="165" r="1.5" fill="white" />
+        <circle cx="150" cy="162" r="1.5" fill="white" />
+        {/* Bottom penalty arc */}
+        <path d="M 130 150 A 28 28 0 0 0 170 150" fill="none" stroke="white" strokeWidth="0.8" />
+
+        {/* Corner arcs */}
+        <path d="M 8 16 A 8 8 0 0 1 16 8" fill="none" stroke="white" strokeWidth="0.6" />
+        <path d="M 284 16 A 8 8 0 0 0 292 8" fill="none" stroke="white" strokeWidth="0.6" />
+        <path d="M 8 184 A 8 8 0 0 0 16 192" fill="none" stroke="white" strokeWidth="0.6" />
+        <path d="M 284 184 A 8 8 0 0 1 292 192" fill="none" stroke="white" strokeWidth="0.6" />
       </svg>
 
-      {/* ── Subtle pitch texture gradient ─────────────────────── */}
+      {/* ── Gradient vignette ─────────────────────────────────── */}
       <div
-        className="absolute inset-0"
+        className="absolute inset-0 pointer-events-none"
         style={{
-          background: 'repeating-linear-gradient(0deg, transparent, transparent 22px, rgba(0,0,0,0.08) 22px, rgba(0,0,0,0.08) 44px)'
+          background: 'radial-gradient(ellipse at center, transparent 60%, rgba(0,0,0,0.35) 100%)',
         }}
       />
 
       {/* ── Player Grid ──────────────────────────────────────── */}
-      <div className="absolute inset-0 px-2 pt-6 pb-2 z-10 grid grid-cols-5 grid-rows-4 items-center justify-items-center">
+      <div className="absolute inset-0 px-3 pt-6 pb-3 z-10 grid grid-cols-5 grid-rows-4 items-center justify-items-center">
         {squad.players.map(player => (
           <PlayerCard
             key={player.id}
@@ -62,33 +95,50 @@ export default function PitchView({
             showIntelligence
           />
         ))}
-
-        {/* 🃏 Daily Joker Slot (Extra 12th Man) */}
-        {!swapMode && (
-          <div className="absolute right-4 top-4 flex flex-col items-center">
-            {squad.joker ? (
-              <PlayerCard
-                player={{...squad.joker, gridClass: ''}}
-                variant="pitch"
-                isJoker={true}
-                onClick={onPlayerClick}
-                isSelected={selectedPlayerId === squad.joker.id}
-                showIntelligence
-              />
-            ) : (
-              <button
-                onClick={() => onPlayerClick({ id: 'joker-empty', isJokerSlot: true })}
-                className="w-12 h-12 rounded-full border-2 border-dashed border-purple/40 bg-purple/10 flex items-center justify-center group hover:border-purple transition-all shadow-[0_0_15px_rgba(168,85,247,0.2)]"
-              >
-                <div className="flex flex-col items-center gap-0">
-                  <span className="text-purple text-xl font-bold group-hover:scale-125 transition-transform">+</span>
-                  <span className="text-[7px] font-black text-purple/80 tracking-tighter -mt-1" style={{ fontFamily: 'Barlow Condensed, sans-serif' }}>JOKER</span>
-                </div>
-              </button>
-            )}
-          </div>
-        )}
       </div>
+
+      {/* ── Daily Joker Slot ──────────────────────────────────── */}
+      {!swapMode && (
+        <div className="absolute right-3 top-3 z-20 flex flex-col items-center">
+          {squad.joker ? (
+            <PlayerCard
+              player={{ ...squad.joker, gridClass: '' }}
+              variant="pitch"
+              isJoker={true}
+              onClick={onPlayerClick}
+              isSelected={selectedPlayerId === squad.joker.id}
+              showIntelligence
+            />
+          ) : (
+            <button
+              onClick={() => onPlayerClick({ id: 'joker-empty', isJokerSlot: true })}
+              className="flex flex-col items-center gap-0.5 group"
+            >
+              <div
+                className="w-[46px] h-[46px] rounded-full flex items-center justify-center transition-all"
+                style={{
+                  border: '2px dashed rgba(157,95,245,0.45)',
+                  background: 'rgba(157,95,245,0.08)',
+                  boxShadow: '0 0 16px rgba(157,95,245,0.15)',
+                }}
+              >
+                <span
+                  className="text-[18px] font-black leading-none"
+                  style={{ color: '#9D5FF5' }}
+                >
+                  +
+                </span>
+              </div>
+              <div
+                className="text-[7.5px] font-black uppercase mt-1.5"
+                style={{ color: 'rgba(157,95,245,0.7)', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '0.1em' }}
+              >
+                Joker
+              </div>
+            </button>
+          )}
+        </div>
+      )}
     </div>
   );
 }

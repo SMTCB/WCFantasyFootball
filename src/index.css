@@ -1,29 +1,30 @@
 @import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800;900&family=DM+Sans:wght@300;400;500;600;700&display=swap');
 
 @theme {
   /* ── Forza Backgrounds ───────────────────────────────────── */
   --color-bg:          #080A0E;
-  --color-surface:     #0F1218;
-  --color-surface-2:   #161B25;
-  --color-surface-3:   #1E2535;
-  --color-surface-elevated: #161B25;
+  --color-surface:     #0D1117;
+  --color-surface-2:   #141A24;
+  --color-surface-3:   #1C2333;
+  --color-surface-elevated: #1C2333;
 
   /* ── Forza Borders ──────────────────────────────────────── */
-  --color-border:   rgba(255,255,255,0.06);
-  --color-border-2: rgba(255,255,255,0.10);
+  --color-border:   rgba(255,255,255,0.07);
+  --color-border-2: rgba(255,255,255,0.12);
 
   /* ── Forza Text ─────────────────────────────────────────── */
-  --color-text-primary:   #FFFFFF;
-  --color-text-secondary: #8B95A1;
-  --color-text-tertiary:  #4A5568;
+  --color-text-primary:   #F0F2F5;
+  --color-text-secondary: #7D8A96;
+  --color-text-tertiary:  #3D4B5C;
 
   /* ── Forza Accents ──────────────────────────────────────── */
-  --color-cyan:     #00B4D8;
-  --color-gold:     #E0A800;
-  --color-positive: #22C55E;
-  --color-negative: #EF4444;
-  --color-live:     #EF4444;
-  --color-purple:   #A855F7;
+  --color-cyan:     #00C4E8;
+  --color-gold:     #F0B400;
+  --color-positive: #18C96B;
+  --color-negative: #F03A3A;
+  --color-live:     #F03A3A;
+  --color-purple:   #9D5FF5;
 
   /* ── Typography ─────────────────────────────────────────── */
   --font-display: 'Barlow Condensed', system-ui, sans-serif;
@@ -34,9 +35,15 @@
 /* ── Global Base ─────────────────────────────────────────────── */
 :root {
   background-color: #080A0E;
-  color: #FFFFFF;
+  color: #F0F2F5;
   font-family: 'DM Sans', system-ui, sans-serif;
   color-scheme: dark;
+}
+
+html {
+  height: 100%;
+  /* iOS momentum scroll */
+  -webkit-overflow-scrolling: touch;
 }
 
 body {
@@ -46,6 +53,8 @@ body {
   background-color: #080A0E;
   touch-action: manipulation;
   overscroll-behavior-y: none;
+  /* Safe area support */
+  padding-bottom: env(safe-area-inset-bottom);
 }
 
 /* ── Scrollbar ───────────────────────────────────────────────── */
@@ -53,9 +62,18 @@ body {
 * {
   -ms-overflow-style: none;
   scrollbar-width: none;
+  box-sizing: border-box;
 }
 
-/* ── Forza Typography Utilities ──────────────────────────────── */
+/* ── Safe-area helpers ────────────────────────────────────────── */
+.safe-bottom {
+  padding-bottom: max(12px, env(safe-area-inset-bottom));
+}
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* ── Forza Typography ─────────────────────────────────────────── */
 .fz-display {
   font-family: 'Barlow Condensed', system-ui, sans-serif;
   font-weight: 900;
@@ -67,7 +85,7 @@ body {
   font-family: 'Barlow Condensed', system-ui, sans-serif;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.04em;
 }
 
 .fz-label {
@@ -75,8 +93,8 @@ body {
   font-weight: 600;
   font-size: 10px;
   text-transform: uppercase;
-  letter-spacing: 0.15em;
-  color: #8B95A1;
+  letter-spacing: 0.14em;
+  color: #7D8A96;
 }
 
 .fz-num {
@@ -87,29 +105,28 @@ body {
 
 /* ── Forza Surface Utilities ─────────────────────────────────── */
 .fz-surface {
-  background: #0F1218;
-  border: 1px solid rgba(255,255,255,0.06);
+  background: #0D1117;
+  border: 1px solid rgba(255,255,255,0.07);
 }
 
 .fz-surface-elevated {
-  background: #161B25;
-  border: 1px solid rgba(255,255,255,0.08);
+  background: #1C2333;
+  border: 1px solid rgba(255,255,255,0.09);
 }
 
 .fz-card {
-  background: #0F1218;
-  border: 1px solid rgba(255,255,255,0.06);
-  border-radius: 2px;
+  background: #0D1117;
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 4px;
 }
 
-/* ── Forza Accent Line (left border accent) ──────────────────── */
+/* ── Forza Accent Lines ──────────────────────────────────────── */
 .fz-accentline {
-  border-left: 2px solid #00B4D8;
+  border-left: 2px solid #00C4E8;
   padding-left: 12px;
 }
-
 .fz-accentline-gold {
-  border-left: 2px solid #E0A800;
+  border-left: 2px solid #F0B400;
   padding-left: 12px;
 }
 
@@ -123,45 +140,66 @@ body {
   bottom: calc(100% + 6px);
   left: 50%;
   transform: translateX(-50%);
-  background: #161B25;
-  border: 1px solid rgba(255,255,255,0.1);
+  background: #1C2333;
+  border: 1px solid rgba(255,255,255,0.12);
   color: #fff;
   font-family: 'DM Sans', sans-serif;
   font-size: 11px;
   font-weight: 500;
   white-space: nowrap;
   padding: 4px 8px;
-  border-radius: 2px;
+  border-radius: 3px;
   z-index: 100;
   pointer-events: none;
 }
 
 /* ── Position colour coding ──────────────────────────────────── */
-.pos-gk  { background: rgba(224,168,0,0.12);  color: #E0A800; }
-.pos-def { background: rgba(0,180,216,0.12);  color: #00B4D8; }
-.pos-mid { background: rgba(168,85,247,0.12); color: #A855F7; }
-.pos-fwd { background: rgba(239,68,68,0.12);  color: #EF4444; }
+.pos-gk  { background: rgba(240,180,0,0.14);  color: #F0B400; }
+.pos-def { background: rgba(0,196,232,0.14);  color: #00C4E8; }
+.pos-mid { background: rgba(157,95,245,0.14); color: #9D5FF5; }
+.pos-fwd { background: rgba(240,58,58,0.14);  color: #F03A3A; }
+
+/* ── Status Pills ─────────────────────────────────────────────── */
+.fz-pill {
+  display: inline-flex;
+  align-items: center;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 800;
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  padding: 2px 6px;
+  border-radius: 2px;
+}
 
 /* ── Animations ──────────────────────────────────────────────── */
 @keyframes livePulse {
   0%   { opacity: 1; transform: scale(1); }
-  50%  { opacity: 0.5; transform: scale(1.2); }
+  50%  { opacity: 0.45; transform: scale(1.25); }
   100% { opacity: 1; transform: scale(1); }
 }
 .animate-live-pulse {
-  animation: livePulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  animation: livePulse 1.4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
 @keyframes slideUpFade {
-  from { opacity: 0; transform: translateY(16px); }
+  from { opacity: 0; transform: translateY(20px); }
   to   { opacity: 1; transform: translateY(0); }
 }
 .animate-slide-up {
-  animation: slideUpFade 0.25s ease-out forwards;
+  animation: slideUpFade 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes pageEnter {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.animate-page-enter {
+  animation: pageEnter 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 @keyframes scanPulse {
-  0%, 100% { opacity: 0.6; }
+  0%, 100% { opacity: 0.5; }
   50%       { opacity: 1; }
 }
 .animate-scan {
@@ -169,11 +207,36 @@ body {
 }
 
 @keyframes pointsFlash {
-  0%   { color: #00B4D8; transform: scale(1.15); }
+  0%   { color: #00C4E8; transform: scale(1.2); }
   100% { color: inherit; transform: scale(1); }
 }
 .animate-points-flash {
   animation: pointsFlash 0.4s ease-out;
+}
+
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.animate-shimmer {
+  background: linear-gradient(90deg, #141A24 25%, #1C2333 50%, #141A24 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+}
+
+@keyframes ripple {
+  0%   { transform: scale(0); opacity: 0.6; }
+  100% { transform: scale(3); opacity: 0; }
+}
+
+/* ── Live badge ──────────────────────────────────────────────── */
+@keyframes liveRing {
+  0%   { box-shadow: 0 0 0 0 rgba(240,58,58,0.6); }
+  70%  { box-shadow: 0 0 0 6px rgba(240,58,58,0); }
+  100% { box-shadow: 0 0 0 0 rgba(240,58,58,0); }
+}
+.animate-live-ring {
+  animation: liveRing 1.8s ease-out infinite;
 }
 
 /* ── Tabular nums ────────────────────────────────────────────── */
@@ -181,10 +244,18 @@ body {
   font-variant-numeric: tabular-nums;
 }
 
-/* ── Forza Cyan glow helpers ─────────────────────────────────── */
-.glow-cyan {
-  box-shadow: 0 0 12px rgba(0,180,216,0.3);
+/* ── Glow helpers ────────────────────────────────────────────── */
+.glow-cyan  { box-shadow: 0 0 16px rgba(0,196,232,0.28); }
+.glow-gold  { box-shadow: 0 0 16px rgba(240,180,0,0.28); }
+.glow-green { box-shadow: 0 0 16px rgba(24,201,107,0.28); }
+
+/* ── Interactive base ─────────────────────────────────────────── */
+button, a {
+  -webkit-tap-highlight-color: transparent;
 }
-.glow-gold {
-  box-shadow: 0 0 12px rgba(224,168,0,0.3);
+
+/* ── Focus visible ────────────────────────────────────────────── */
+:focus-visible {
+  outline: 2px solid rgba(0,196,232,0.6);
+  outline-offset: 2px;
 }
