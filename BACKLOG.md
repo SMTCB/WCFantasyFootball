@@ -1041,4 +1041,545 @@ League chat (FB-021)
 
 ---
 
+## Epic: App Logic Gaps & Broken Flows
+*Items below were identified in a full code audit (April 2026). These are existing screens with broken or missing backend wiring, not new features.*
+
+---
+
+### FB-041
+**Title:** Wire real authentication — remove hardcoded user ID from all screens
+
+**Priority:** P0
+
+**User Story:** As a user, I want the app to recognise me specifically so that my squad, points, and league data are mine and mine alone.
+
+**Acceptance Criteria:**
+- Hardcoded `userId = '00000000-0000-0000-0000-000000000000'` removed from all 9 screens
+- Every data fetch and write uses `supabase.auth.getUser()` to retrieve the real session user ID
+- Auth guard in `App.jsx` re-enabled; unauthenticated users redirected to the Auth screen
+- Session restored on page reload (Supabase `onAuthStateChange` listener)
+- All screens tested with two separate real user accounts to confirm data isolation
+
+**Complexity:** M
+
+**Dependencies:** Supabase Auth configured, FB-039 (email flow), FB-040 (username)
+
+**Source:** Code audit — affects every screen
+
+**Notes:** This is the single most critical gap in the entire codebase. Without it, the app cannot be used by more than one person. The fix touches every screen's `useEffect` data fetch — plan a coordinated change across HomeScreen, SquadScreen, MarketScreen, LeagueScreen, LiveScreen, RecapScreen. Use a `useAuth()` custom hook to avoid repeating `supabase.auth.getUser()` everywhere.
+
+---
+
+### FB-042
+**Title:** Fix Supabase client environment variable configuration
+
+**Priority:** P0
+
+**User Story:** As a developer deploying the app, I want Supabase credentials loaded from environment variables so that no secrets are hardcoded in source code.
+
+**Acceptance Criteria:**
+- `lib/supabase.js` uses `import.meta.env.VITE_SUPABASE_URL` and `import.meta.env.VITE_SUPABASE_ANON_KEY`
+- `.env.local` created locally (gitignored); `.env.example` committed with placeholder values
+- Vercel project has `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` set as environment variables for production and preview
+- App fails fast with a clear console error if env vars are missing at boot
+- No credentials appear in the built JS bundle (verify with `grep` on dist output)
+
+**Complexity:** XS
+
+**Dependencies:** Vercel project access
+
+**Source:** Code audit — `lib/supabase.js` has `'placeholder_key'` hardcoded
+
+**Notes:** Quick fix but a security prerequisite. Do this before any real user data is written. The anon key is safe to commit only in `.env.example` with a fake value.
+
+---
+
+### FB-043
+**Title:** Squad budget — server-tracked, not client-computed from fallback data
+
+**Priority:** P0
+
+**User Story:** As a player, I want my remaining transfer budget to be accurate and server-enforced so that I cannot accidentally spend more than my allowance.
+
+**Acceptance Criteria:**
+- `squads.budget_remaining` column stores the authoritative budget value in the DB
+- Budget decrements on buy and increments on sell via the server-side transfer handler
+- Client reads `budget_remaining` from the DB; never computes it from fallback data
+- If budget would go negative, the transfer is rejected server-side with a clear error
+- Budget displayed consistently across Squad screen, Market screen, and Admin screen
+
+**Complexity:** S
+
+**Dependencies:** FB-041 (real auth), `squads` table schema
+
+**Source:** Code audit — MarketScreen computes budget by summing fallback player prices, never reads a real persisted value
+
+**Notes:** Currently `MarketScreen` sums prices from whatever player array happens to be loaded (often fallback data) and subtracts from 100. This means budget can show as £100M even after purchases. Add `budget_remaining NUMERIC DEFAULT 100` to the `squads` table. Update on every transfer upsert.
+
+---
+
+### FB-044
+**Title:** Persist top-scorer prediction to database
+
+**Priority:** P1
+
+**User Story:** As a player, I want my match predictions to be saved so that I can earn prediction points and track my streak after results come in.
+
+**Acceptance Criteria:**
+- PredictionModal `onSave` handler inserts/upserts a row in `top_scorer_predictions` table
+- Prediction locked at match kick-off (server-side check, not just UI disabled state)
+- Saved prediction displayed on Home screen without requiring a page reload
+- If prediction already exists for this matchday, it is updated not duplicated
+- Prediction points calculated post-match and credited to a `prediction_points` column on `league_members`
+
+**Complexity:** S
+
+**Dependencies:** FB-041 (real auth), `top_scorer_predictions` table, matchday fixture data
+
+**Source:** Code audit — HomeScreen `handlePredictionSaved` only updates local React state; nothing is written to Supabase
+
+**Notes:** The modal UI and local state flow already work. This is purely a missing `supabase.from('top_scorer_predictions').upsert(...)` call in the save handler. Lock time (`LOCK_TIME_LABEL`) must also be dynamic — see FB-051.
+
+---
+
+### FB-045
+**Title:** Sell/remove player validation — captain and joker safety checks
+
+**Priority:** P1
+
+**User Story:** As a player selling a player from my squad, I want the app to warn me if I'm removing my captain or active joker so that I don't accidentally break my squad state.
+
+**Acceptance Criteria:**
+- If user attempts to sell the current captain, a confirmation modal warns: "This player is your captain. Selling them will remove your captain assignment. Continue?"
+- If user attempts to sell the active Daily Joker pick, same confirmation prompt shown
+- Confirmation modal shows player name and the consequence clearly
+- On confirm, captain/joker assignment is cleared in DB before the transfer completes
+- Cancel returns user to the market with no changes made
+
+**Complexity:** S
+
+**Dependencies:** FB-041 (real auth), squad state, transfer system
+
+**Source:** Code audit — MarketScreen `handleSell` has no captain/joker check; selling captain leaves an orphaned captain_id in the DB
+
+**Notes:** This is a correctness bug, not just a UX gap. An orphaned `captain_id` referencing a non-squad player will break the scoring engine. Fix defensively: the scoring engine should also validate captain is in squad before applying multiplier.
+
+---
+
+### FB-046
+**Title:** Squad swap — enforce formation and position limits after substitution
+
+**Priority:** P1
+
+**User Story:** As a player making a substitution, I want the app to prevent invalid formations so that I cannot field a squad with zero goalkeepers or five forwards.
+
+**Acceptance Criteria:**
+- Before confirming a swap, validate the resulting formation: min 1 GK, 3 DEF, 2 MID, 1 FWD on pitch
+- If swap would produce an invalid formation, show a clear error: "This swap would leave you with no goalkeeper on the pitch"
+- Validation runs both client-side (for instant feedback) and server-side (for integrity)
+- Bench composition is not formation-restricted; any position can sit on the bench
+- Swap confirmation screen shows the before/after formation visually
+
+**Complexity:** S
+
+**Dependencies:** Squad screen swap flow, server-side transfer validation
+
+**Source:** Code audit — SquadScreen `handleSwap` swaps positions in state with no formation validation; an alert string exists but doesn't prevent the action
+
+**Notes:** The current code has `alert('Invalid swap')` that fires but does not `return` early — the swap proceeds anyway. Two-line fix for the early return; the formation validation logic is the meaningful work.
+
+---
+
+### FB-047
+**Title:** Transfer window lock state — disable buy/sell UI when squad is locked
+
+**Priority:** P0
+
+**User Story:** As a player after the transfer deadline, I want the market to be visually and functionally locked so that I understand no changes are possible and don't waste time trying.
+
+**Acceptance Criteria:**
+- After matchday deadline, all buy/sell buttons in MarketScreen are disabled with a "Squad Locked" state
+- Locked state derived from server time compared to `matchday_deadlines` table (not client clock)
+- Squad screen also shows a lock banner when locked
+- Players who attempt a buy/sell during locked state receive a clear message: "Transfers are locked until after the match"
+- Locked state lifts automatically after results are published (configurable per matchday in Admin)
+
+**Complexity:** S
+
+**Dependencies:** `matchday_deadlines` table, FB-002 (deadline enforcement), FB-041 (real auth)
+
+**Source:** Code audit — MarketScreen `handleBuy` has no check for squad lock status
+
+**Notes:** This is both a UX gap and a fairness issue. Even if FB-002 (server-side lock) is in place, users attempting transfers during lock will see confusing 403 errors rather than clear lock messaging. Implement client lock state first (fast, visible), server enforcement second (FB-002).
+
+---
+
+### FB-048
+**Title:** Bracket predictor — save predictions to DB and calculate scores
+
+**Priority:** P2
+
+**User Story:** As a player using the Bracket screen, I want my knockout predictions to be saved and scored against real results so that the bracket is a real competition, not a decorative UI.
+
+**Acceptance Criteria:**
+- Bracket fixtures loaded from `fixtures` table (knockout rounds only), not hardcoded
+- Tapping a team in the bracket records the prediction in `bracket_predictions` table
+- Bracket state persists across sessions (reload shows saved picks)
+- After each knockout match, predictions are auto-scored: correct winner = 1pt, correct scoreline = 3pts
+- Bracket leaderboard tab in League screen shows all managers' bracket scores
+
+**Complexity:** M
+
+**Dependencies:** FB-041 (real auth), knockout fixture data, `bracket_predictions` table
+
+**Source:** Code audit — BracketScreen is entirely static UI with hardcoded teams and no click handlers; "Save Bracket" button has no onClick
+
+**Notes:** The bracket UI layout already exists and looks good. The entire feature is cosmetic — teams are hardcoded (BRA, FRA, ENG, KOR), the winner (Brazil) is hardcoded, and no predictions are persisted. This needs a full backend wiring pass. Schedule for P2 (Round of 16 phase) when knockout data is available.
+
+---
+
+### FB-049
+**Title:** Recap screen — replace hardcoded league name, username, and player points with real data
+
+**Priority:** P1
+
+**User Story:** As a player viewing my Recap card, I want to see my actual username, league name, and real point totals so that the card is worth sharing.
+
+**Acceptance Criteria:**
+- League name sourced from `leagues` table via the user's league membership, not hardcoded "World Cup Legends"
+- Username sourced from `profiles.username` via `supabase.auth.getUser()`, not hardcoded "João"
+- Best player points, captain points, and joker points sourced from `fantasy_points` table, not hardcoded 15/10/5
+- If no recap exists yet for the current matchday, show a "Results pending…" state rather than stale hardcoded data
+- All data paths tested end-to-end with a real matchday result in the DB
+
+**Complexity:** S
+
+**Dependencies:** FB-041 (real auth), `matchday_recaps` table populated by scoring engine, `fantasy_points` table
+
+**Source:** Code audit — RecapScreen has `leagueName = 'World Cup Legends'` and `username = 'João'` hardcoded; points are literals 15, 10, 5
+
+**Notes:** The Gazette card is the app's primary social sharing mechanic. A card that says "João scored 15 pts for World Cup Legends" when the real user is "Marco" in "Pub FC" will never be shared. Fix before launch.
+
+---
+
+### FB-050
+**Title:** Live screen projections — use real squad data and per-player averages
+
+**Priority:** P1
+
+**User Story:** As a player on the Live screen, I want my score projection to be based on my actual squad and real player form, not a generic estimate based on position averages.
+
+**Acceptance Criteria:**
+- Projection calculation uses the authenticated user's actual squad (not a generic position average)
+- Per-player `season_avg_points` sourced from `player_stats` table (or computed from `fantasy_points`)
+- Rival live scores projected using their actual squads (read-only, post-deadline)
+- Projection refreshes every 60 seconds during a live match window, not every 5 minutes
+- "Projection confidence" label shown: "Based on X players in active matches"
+
+**Complexity:** M
+
+**Dependencies:** FB-041 (real auth), scoring data per player, Supabase Realtime
+
+**Source:** Code audit — LiveScreen uses `POSITION_AVG` constants (GK=6, DEF=5, MID=7, FWD=8) for all players regardless of form; `mySquadPlayers` lacks `seasonAvg` field
+
+**Notes:** The projection engine logic (lines 67–79 of LiveScreen) is sound in structure but fed generic inputs. The fix is: (1) fetch squad players with a join to get their stats, (2) pass real per-player averages to the existing calculation. No architecture change needed.
+
+---
+
+### FB-051
+**Title:** Unify player data model across all screens
+
+**Priority:** P0
+
+**User Story:** As a developer, I want a single consistent player data shape used across all screens so that I don't introduce bugs from mismatched field names when moving player data between components.
+
+**Acceptance Criteria:**
+- A canonical player type is defined (TypeScript interface or JSDoc typedef): `{ id, name, position, club, price, points, gridClass, intel, ownership_pct }`
+- All screens (HomeScreen, SquadScreen, MarketScreen, LeagueScreen, LiveScreen, RecapScreen) use this shape
+- Fallback data in `src/data/squad.js` conforms to the canonical shape
+- Any field mismatch between DB response and canonical shape is normalised in a single `normalisePlayer(raw)` utility function
+- No screen manually re-maps player fields (no ad-hoc `{ id: p.player_id, name: p.player_name }` patterns)
+
+**Complexity:** S
+
+**Dependencies:** None (refactor, no new tables)
+
+**Source:** Code audit — player objects have 4 different shapes across screens: squad.js adds `gridClass`+`intel`, MarketScreen omits both, LiveScreen omits `price`, LeagueScreen mocks have their own structure
+
+**Notes:** This is a correctness and maintainability fix. Write `normalisePlayer()` in `src/lib/players.js`, import in every screen. This also makes it easy to add new fields (e.g. `form_score`, `fdr`) in one place later.
+
+---
+
+### FB-052
+**Title:** League creation — post-creation invite flow and error handling
+
+**Priority:** P1
+
+**User Story:** As a user who just created a league, I want to immediately be shown how to invite friends so that my league doesn't sit empty.
+
+**Acceptance Criteria:**
+- After successful league creation, a success screen/modal appears with the league join code and a "Share Invite" button (linking to FB-023)
+- If league creation fails (DB error), the user sees a specific error message, not a silent failure
+- Creator is automatically added as the first `league_member` with `role: 'commissioner'`
+- League join code is a human-readable 6-character alphanumeric string (not a UUID), auto-generated on creation
+- "Copy join code" button copies to clipboard with a "Copied!" confirmation
+
+**Complexity:** S
+
+**Dependencies:** FB-023 (invite cards), `leagues` table, `league_members` table
+
+**Source:** Code audit — LeagueScreen league creation `handleCreateLeague` has no error feedback and no post-creation invite prompt; the insert may fail silently
+
+**Notes:** The current flow inserts into `leagues` then `league_members` in sequence — if the second insert fails, the league exists without a commissioner. Wrap both in a Supabase transaction or a single edge function call.
+
+---
+
+### FB-053
+**Title:** Trade system — build backend or replace UI with a structured offer flow
+
+**Priority:** P2
+
+**User Story:** As a league member, I want to propose and accept player trades with my rivals so that the transfer market has a social negotiation layer.
+
+**Acceptance Criteria:**
+- Trade offer stored in `trade_offers` table: proposer_id, target_id, offered_players[], requested_players[], cash_adjustment, status (pending/accepted/rejected/expired)
+- Target user receives a push notification when a trade is proposed
+- Trade offer visible in League screen with Accept / Reject buttons
+- On acceptance, squads are updated atomically (both sides simultaneously in a DB transaction)
+- Trades expire after 48 hours if not responded to
+- Trades cannot be proposed after the transfer deadline for the current matchday
+
+**Complexity:** L
+
+**Dependencies:** FB-041 (real auth), FB-003 (push notifications), `trade_offers` table
+
+**Source:** Code audit — LeagueScreen trade UI is cosmetic; "João wants to trade…" text is hardcoded; no DB table or backend exists; the trade proposal modal saves nothing
+
+**Notes:** Until this is built, the trade UI in LeagueScreen should be hidden or replaced with a "Coming Soon" state to avoid confusing users. Do not ship a non-functional trade UI to real users.
+
+---
+
+### FB-054
+**Title:** Confirmation dialogs for all destructive squad actions
+
+**Priority:** P1
+
+**User Story:** As a player, I want to be asked to confirm before I sell a player, use a chip, or activate Captain Roulette so that I don't accidentally make irreversible changes.
+
+**Acceptance Criteria:**
+- Sell player: "Sell [Player Name] for £Xm?" → Confirm / Cancel
+- Chip activation (Wildcard, Triple Captain, Bench Boost): "Use [Chip Name]? This cannot be undone for this matchday." → Confirm / Cancel
+- Captain Roulette spin: "Spin Captain Roulette? Your captain will be randomly assigned from your squad." → Confirm / Cancel
+- Confirmation modal shows the consequence in plain language (not just "Are you sure?")
+- After confirmation, action is irreversible; the modal does not reappear for the same action
+
+**Complexity:** XS
+
+**Dependencies:** SquadScreen, MarketScreen chip/captain flows
+
+**Source:** Code audit — chips can be toggled without confirmation; Captain Roulette spins immediately; sell has no confirmation
+
+**Notes:** Build a single reusable `ConfirmModal` component to avoid duplicating modal code across screens. This prevents the most common user complaints ("I accidentally sold my captain") and reduces support burden.
+
+---
+
+### FB-055
+**Title:** Joker picker modal — handle empty state when no fixtures exist
+
+**Priority:** P1
+
+**User Story:** As a player trying to pick a Daily Joker, I want to see a helpful message if no matches are scheduled today rather than a blank modal.
+
+**Acceptance Criteria:**
+- If `playingTodayTeams` is empty (no fixtures today), modal shows: "No matches today — check back on the next matchday"
+- If DB fetch for players fails, modal shows a retry button rather than a blank screen
+- If no players from today's fixture teams are in the user's squad, modal shows: "None of your players are in today's matches"
+- Loading state shown while player list is being fetched (skeleton or spinner)
+- Error state includes the specific reason (no fixtures / no squad players / DB error) to help debugging
+
+**Complexity:** XS
+
+**Dependencies:** SquadScreen joker flow, fixture data
+
+**Source:** Code audit — SquadScreen joker picker modal renders blank if `playingTodayTeams` is empty or DB fetch fails, with no fallback or error state
+
+**Notes:** Quick UX fix. All three empty states are one-line conditional renders. The real work is defining the priority order of which state to show (no fixtures > DB error > no squad overlap).
+
+---
+
+### FB-056
+**Title:** Dynamic transfer deadline time — replace hardcoded "18:00 today" label
+
+**Priority:** P1
+
+**User Story:** As a player, I want the deadline time shown on the Home screen to reflect the actual next matchday deadline so that I plan my transfers correctly.
+
+**Acceptance Criteria:**
+- `LOCK_TIME_LABEL` in HomeScreen replaced with a value fetched from `matchday_deadlines` table
+- Deadline shown in user's local timezone with timezone label (e.g., "18:00 BST" or "10:00 PDT")
+- If no upcoming deadline exists (between tournaments), deadline label is hidden
+- Deadline time updates automatically as matchdays progress
+- Shown consistently across HomeScreen countdown widget and Squad screen header
+
+**Complexity:** XS
+
+**Dependencies:** `matchday_deadlines` table, FB-010 (countdown UX)
+
+**Source:** Code audit — HomeScreen line 7: `const LOCK_TIME_LABEL = '18:00 today'` is a hardcoded string constant
+
+**Notes:** Trivial fix once `matchday_deadlines` table exists. Use `Intl.DateTimeFormat` for timezone conversion — do not build a custom timezone library.
+
+---
+
+### FB-057
+**Title:** League stats view — replace hardcoded numbers with real calculated data
+
+**Priority:** P2
+
+**User Story:** As a league member viewing the Stats tab, I want to see real league statistics so that the numbers are meaningful rather than cosmetic.
+
+**Acceptance Criteria:**
+- Total squad value: sum of all player prices across all squads in the league (computed from DB)
+- Top scorer in league: player with highest points across all league members' squads
+- Most transferred player: player bought most often across the league this week (from `transfers` table)
+- Most captained player: player selected as captain most often this matchday
+- League average score: mean total points across all active league members
+- Stats refresh after each matchday finalisation
+
+**Complexity:** M
+
+**Dependencies:** FB-041 (real auth), scoring data, `transfers` table, `squads` table
+
+**Source:** Code audit — LeagueScreen stats view shows "€1.4B squad value", "424 pts Mbappé" and other completely hardcoded numbers with no DB queries
+
+**Notes:** These stats are high-sharability content ("Mbappe was captained by 6 of 8 managers this week!"). Implement as Supabase views or materialised queries triggered post-matchday. Do not compute live on every page load at scale.
+
+---
+
+### FB-058
+**Title:** League chat — wire real-time messaging (replace static mock thread)
+
+**Priority:** P1
+
+**User Story:** As a league member, I want to send and receive messages in the league chat so that I can communicate with my rivals inside the app.
+
+**Acceptance Criteria:**
+- Message input field in League chat tab is functional (currently renders but has no onChange/onSubmit handler)
+- Messages sent via Supabase Realtime and stored in `league_chat_messages` table
+- New messages from other users appear in real time without a page refresh
+- Message history loads last 50 messages on tab open; older messages load on scroll up
+- Sender's username and avatar initial shown on each message
+
+**Complexity:** M
+
+**Dependencies:** FB-021 (chat system design), FB-041 (real auth), Supabase Realtime
+
+**Source:** Code audit — LeagueScreen "chat" view tab renders a static array of hardcoded messages; the text input has no handler and sends nothing
+
+**Notes:** This is the same implementation as FB-021 — the UI shell already exists in LeagueScreen. FB-021 defines the full spec; this item specifically tracks wiring the existing UI to the real backend. Do not duplicate effort — close this item when FB-021 is shipped.
+
+---
+
+### FB-059
+**Title:** Live screen — wire Supabase Realtime for actual live event streaming
+
+**Priority:** P1
+
+**User Story:** As a player watching the Live screen, I want match events (goals, cards, substitutions) to appear in real time so that I can follow the action as it happens.
+
+**Acceptance Criteria:**
+- `match_events` table subscribed via Supabase Realtime channel on Live screen mount
+- New events (goal, yellow_card, red_card, sub) appear in activity feed within 60 seconds
+- Events auto-filtered to show only events involving the user's squad players (toggle: "My Players" vs "All Matches")
+- Feed auto-scrolls to newest event (with a "Pause scroll" button for users reading older events)
+- Subscription teardown cleanly on unmount to prevent memory leaks
+
+**Complexity:** M
+
+**Dependencies:** FB-001 (Realtime), `match_events` table, live data provider (FB-020)
+
+**Source:** Code audit — LiveScreen fetches `match_events` once on mount; there is no Supabase Realtime subscription; the 5-minute refresh interval is too slow for live events; events shown are usually mock data
+
+**Notes:** The LiveScreen already has a `setInterval` polling pattern. Replace with a Supabase Realtime `channel.on('postgres_changes', ...)` subscription on the `match_events` table filtered to the current matchday's fixture IDs. This will require the live data provider to be writing to `match_events` (FB-020 dependency).
+
+---
+
+### FB-060
+**Title:** H2H league view — show rival's real squad (post-deadline read-only)
+
+**Priority:** P2
+
+**User Story:** As a player in an H2H matchup, I want to see my rival's full squad after the transfer deadline so that I can analyse their picks and enjoy the head-to-head tension.
+
+**Acceptance Criteria:**
+- H2H squad view in League screen shows opponent's 11-player pitch view (read-only, no actions)
+- Opponent's squad only visible after the matchday deadline has passed (before deadline, show "Locked — reveal at kick-off")
+- Captain and chip selections visible in opponent view
+- Points scored by each opponent player update live during the match
+- Toggling between "My Squad" and "Rival Squad" with a tab or swipe gesture
+
+**Complexity:** M
+
+**Dependencies:** FB-011 (H2H system), FB-041 (real auth), deadline lock (FB-002)
+
+**Source:** Code audit — LeagueScreen H2H sheet renders players via array indexing (`managerTeamView` state) with no real squad data; rival squads are hardcoded from `MOCK_SQUAD_PLAYERS`
+
+**Notes:** Rival squad visibility is a deliberate design choice — must not be visible before deadline to prevent copying. RLS policy: `squads` rows are readable by league members only after `matchday_deadlines.deadline_at < now()`. This is also a privacy consideration — only league members should see each other's squads.
+
+---
+
+## Updated Summary: Launch Readiness Checklist
+
+| Priority | Count | Target Completion |
+|----------|-------|-------------------|
+| **P0 (Pre-launch blockers)** | **17 items** | May 31, 2026 |
+| **P1 (Launch window)** | **22 items** | June 14, 2026 (GW1) |
+| **P2 (Post-launch, group stage)** | **15 items** | June 28, 2026 (R16) |
+| **P3 (Future / v2)** | **1 item** | Post-tournament |
+
+### P0 Items (must ship before June 2026 launch)
+FB-001 · FB-002 · FB-003 · FB-004 · FB-005 · FB-006 · FB-007 · FB-016 · FB-027 · FB-037 · FB-038 · FB-039 · FB-040 · **FB-041 · FB-042 · FB-043 · FB-047 · FB-051**
+
+### New P0 Additions (from code audit)
+- **FB-041** — Wire real authentication (remove hardcoded user ID) — *affects every screen*
+- **FB-042** — Fix Supabase env var config (remove placeholder key) — *app cannot connect to DB without this*
+- **FB-043** — Server-tracked squad budget — *budget is always showing fallback value*
+- **FB-047** — Transfer window lock state in UI — *users can attempt buys after deadline*
+- **FB-051** — Unify player data model — *inconsistent shapes cause silent bugs across screens*
+
+### Critical Path Dependencies (updated)
+```
+Auth + RLS (FB-004, FB-039, FB-040, FB-041, FB-042)
+  └── Player data model (FB-051)
+        └── Budget tracking (FB-043)
+              └── Transfer lock UI (FB-047)
+                    └── Deadline enforcement (FB-002)
+                          └── Transfer countdown (FB-010)
+Supabase Realtime (FB-001)
+  └── Live event streaming (FB-059)
+        └── Live scoring screen (FB-016)
+              └── H2H live view (FB-017)
+Push infrastructure (FB-003)
+  └── Deadline notifications (FB-010)
+  └── Daily notification loop (FB-030)
+League chat (FB-021 / FB-058)
+  └── Auto-transaction cards (FB-022)
+Scoring engine (external)
+  └── Recap real data (FB-049)
+  └── Live projections (FB-050)
+  └── League stats (FB-057)
+```
+
+### Known Risks (updated)
+1. **Live data feed** — FB-016, FB-020, FB-031, FB-059 all depend on a real-time sports data provider. Evaluate and contract a provider (Sportmonks / API-Football) by May 1, 2026.
+2. **iOS push notifications** — Web push on iOS requires iOS 16.4+ and the app added to Home Screen. Communicate this limitation clearly in onboarding.
+3. **Supabase Realtime scale** — Free/Pro tier has concurrent connection limits. Load test at 100 concurrent users on match day before launch.
+4. **Server-side card rendering** — Gazette and Stats cards using html2canvas are fragile. Migrate to `@vercel/og` edge function before launch (FB-019 notes).
+5. **Trade system is non-functional** — FB-053. The trade UI in LeagueScreen must be hidden from real users until the backend is built. Shipping a cosmetic trade modal to production will destroy trust.
+6. **Bracket predictions not saved** — FB-048. The Bracket screen looks functional but saves nothing. Either build the backend (P2) or clearly label it "Preview — predictions coming soon" at launch.
+7. **Recap card shows wrong user data** — FB-049. "João scored 15 pts for World Cup Legends" will never be shared by a real user named something else. Fix before launch.
+
+---
+
 *Backlog maintained by: Product / Engineering | Next review: Sprint planning, week of May 4, 2026*
+*Code audit conducted: April 20, 2026 — 20 gaps identified across all 9 screens, added as FB-041 through FB-060*
