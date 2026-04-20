@@ -1,9 +1,11 @@
 # ForzaKit — Product Backlog
 ## World Cup 2026 Fantasy Football Platform
 
-**Stack:** React 19 + Supabase | **Target Launch:** June 2026 | **Current build:** ~80% complete
+**Stack:** React 19 + Supabase | **Target Launch:** June 2026
+**Last updated:** 2026-04-20 (post code audit — 60 items)
 
-> Backlog last updated: 2026-04-20. Items are organised by Epic, then Priority (P0 → P3).
+> Items are ordered strictly by criticality and urgency within each priority tier.
+> P0 items are sequenced by dependency chain — the first item must be done before the next.
 > Complexity scale: XS (< 0.5 day) · S (0.5–1 day) · M (2–3 days) · L (4–7 days) · XL (> 1 week)
 
 ---
@@ -13,1573 +15,1384 @@
 | Label | Meaning |
 |-------|---------|
 | **P0** | Pre-launch blocker — must ship before go-live |
-| **P1** | Launch window — ships within first 2 weeks of tournament |
-| **P2** | Post-launch — next phase, ships during group stage |
+| **P1** | High impact — ships within first 2 weeks of tournament |
+| **P2** | Post-launch — ships during group stage or after |
 | **P3** | Future — post-tournament or v2 roadmap |
 
 ---
 
-## Epic Index
+## Launch Readiness Summary
 
-1. [Platform & Infrastructure](#epic-platform--infrastructure)
-2. [Game Mechanics](#epic-game-mechanics)
-3. [Live Experience](#epic-live-experience)
-4. [Social & Community](#epic-social--community)
-5. [Onboarding & Growth](#epic-onboarding--growth)
-6. [Data & Analytics](#epic-data--analytics)
+| Priority | Count | Target |
+|----------|-------|--------|
+| **P0 — Pre-launch blockers** | 18 items | May 31, 2026 |
+| **P1 — High impact** | 25 items | June 14, 2026 |
+| **P2 — Post-launch** | 16 items | June 28, 2026 |
+| **P3 — Future** | 1 item | Post-tournament |
+| **Total** | **60 items** | |
 
 ---
 
-## Epic: Platform & Infrastructure
+## Critical Path (read before starting any development)
+
+```
+FB-001  Fix Supabase env config
+  └── FB-002  Wire real authentication (useAuth hook)
+        └── FB-003  RLS policies — all tables secured
+              └── FB-004  Email verification + password reset
+                    └── FB-005  Username + public profile
+                          └── FB-006  Unify player data model
+                                └── FB-007  Server-tracked squad budget
+                                      └── FB-008  Transfer window lock UI
+                                            └── FB-009  Server-side deadline enforcement
+                                                  └── FB-010  Transfer countdown UX
+
+FB-011  Supabase Realtime subscriptions
+  └── FB-012  Live scoring screen (real data)
+        └── FB-013  Live event streaming (match_events)
+              └── FB-014  Live projections (real squad + averages)
+                    └── FB-015  H2H live rival score
+
+FB-016  Error boundary + crash reporting
+FB-017  CI/CD pipeline + Vercel previews
+FB-018  Onboarding walkthrough
+FB-019  Push notification infrastructure
+  └── (unlocks FB-036, FB-040, FB-042, FB-051)
+```
+
+---
+
+# P0 — Pre-Launch Blockers
+*Must be complete before any real user touches the app. Ordered by dependency — do not skip ahead.*
+
+---
 
 ### FB-001
-**Title:** Supabase real-time subscriptions for live scoring
+**Title:** Fix Supabase client — load credentials from environment variables
 
-**Priority:** P0
+**Priority:** P0 · **Complexity:** XS
 
-**User Story:** As a player, I want the app to automatically update my score during a match without refreshing so that I can follow the action live.
+**User Story:** As a developer, I want Supabase credentials loaded from environment variables so that no secrets are hardcoded in source code and the app can connect to the real database.
 
 **Acceptance Criteria:**
-- Supabase Realtime channel subscribes to `player_scores` table on Live screen mount
-- Score deltas render within 60 seconds of a goal event being written to the DB
-- Subscription cleanly unsubscribes on screen unmount (no memory leaks)
-- Offline/reconnect state handled gracefully with a "Reconnecting…" banner
-- Works on both desktop and mobile Chrome/Safari
+- `lib/supabase.js` reads `import.meta.env.VITE_SUPABASE_URL` and `import.meta.env.VITE_SUPABASE_ANON_KEY`
+- `.env.local` created locally (gitignored); `.env.example` committed with placeholder values
+- Vercel project has both env vars set for production and preview environments
+- App logs a clear error and refuses to boot if env vars are missing
+- No credentials visible in the built JS bundle (`grep` on dist output)
 
-**Complexity:** M
+**Dependencies:** None — do this first
 
-**Dependencies:** `player_scores` table schema finalised, Supabase Realtime enabled on project
+**Source:** Code audit — `lib/supabase.js` has `'placeholder_key'` hardcoded; all DB calls fail silently
 
-**Source:** LaLiga Fantasy (sub-60s live update model)
-
-**Notes:** Enable Supabase Realtime replication on the `player_scores` table. Consider a polling fallback (every 90s) for browsers that block WebSockets on restricted networks. Budget for Supabase Realtime connection limits at scale — evaluate pgBouncer settings.
+**Notes:** Takes under an hour. Must be done before any other item — without a working DB connection nothing else can be tested. The anon key is safe to expose in client-side code (it's read-only by design); the service role key must never leave the server.
 
 ---
 
 ### FB-002
-**Title:** Transfer deadline lock enforcement (server-side)
+**Title:** Wire real authentication — remove hardcoded user ID from all screens
 
-**Priority:** P0
+**Priority:** P0 · **Complexity:** M
 
-**User Story:** As a league commissioner, I want the server to hard-lock transfers at the matchday deadline so that no team can gain an unfair advantage from late edits.
+**User Story:** As a user, I want the app to recognise me specifically so that my squad, points, and league data are mine and mine alone.
 
 **Acceptance Criteria:**
-- Supabase edge function validates transfer timestamp against `matchday_deadlines` table before writing
-- UI reflects locked state immediately when deadline passes (transfer button disabled, lock icon shown)
-- Any in-flight transfer submitted after deadline returns a 403 with user-friendly error toast
-- Admin panel can override deadline per matchday
-- Unit tests cover lock boundary (1 second before / 1 second after)
+- Hardcoded `userId = '00000000-0000-0000-0000-000000000000'` removed from all 9 screens
+- A `useAuth()` custom hook returns the real session user ID from `supabase.auth.getUser()`
+- Auth guard in `App.jsx` re-enabled; unauthenticated users redirected to the Auth screen
+- Session restored on page reload via `supabase.auth.onAuthStateChange` listener
+- All screens tested with two separate real accounts to confirm data isolation
 
-**Complexity:** M
+**Dependencies:** FB-001
 
-**Dependencies:** `matchday_deadlines` table, Admin screen
+**Source:** Code audit — every screen has the same hardcoded UUID; multi-user is impossible
 
-**Source:** FPL, internal requirement
-
-**Notes:** Do NOT enforce deadline solely client-side — trivial to bypass. Edge function must be the single source of truth. Store deadlines in UTC; convert to user's local time only in the UI.
+**Notes:** This is the most critical gap in the codebase. Write the `useAuth()` hook first, then do a single coordinated find-and-replace pass across all screens. Touching every screen at once is a merge risk — do it in one PR.
 
 ---
 
 ### FB-003
-**Title:** Push notification infrastructure (web push + PWA)
+**Title:** Row-level security (RLS) — enable and harden all Supabase tables
 
-**Priority:** P0
-
-**User Story:** As a player, I want to opt in to push notifications so that I am reminded before deadlines and alerted when my captain scores.
-
-**Acceptance Criteria:**
-- Service worker registers and requests permission on first visit post-auth
-- Supabase edge function triggers push via Web Push API for defined notification types
-- User can manage notification preferences per type (deadline, captain goal, injury, league chat) from profile settings
-- Notifications deep-link into the relevant screen on tap
-- Opt-out removes subscription from `push_subscriptions` table immediately
-
-**Complexity:** L
-
-**Dependencies:** FB-001, auth system, Supabase edge functions
-
-**Source:** FPL, Sleeper
-
-**Notes:** VAPID keys must be generated and stored securely in Supabase secrets. Respect iOS 16.4+ web push constraints — test on Safari. Do not send more than 3 push notifications per day per user to avoid churn; implement daily send-rate cap in the edge function.
-
----
-
-### FB-004
-**Title:** Row-level security (RLS) audit and hardening
-
-**Priority:** P0
+**Priority:** P0 · **Complexity:** M
 
 **User Story:** As a user, I want my squad and transfer data to be private so that rival managers cannot query my team before the deadline.
 
 **Acceptance Criteria:**
-- All Supabase tables have RLS policies enabled and documented
-- `squads` and `transfers` rows are only readable by the owning user and league commissioners until deadline passes
-- `player_scores` and `player_stats` are publicly readable (no auth required for read)
-- Penetration test checklist completed and signed off pre-launch
-- No anon key used for any write operation
+- RLS enabled on every table; policies documented in a `supabase/policies.md` file
+- `squads` and `transfers` rows readable only by the owning user and league commissioners, until deadline passes
+- `players`, `fixtures`, `player_stats` publicly readable (no auth required)
+- `is_admin` boolean on `profiles` used for admin-only write access
+- Penetration test checklist signed off pre-launch
 
-**Complexity:** M
+**Dependencies:** FB-002
 
-**Dependencies:** Supabase project setup
+**Source:** Code audit + security requirement — all tables currently have RLS disabled (Alpha mode)
 
-**Source:** Internal security requirement
+**Notes:** Run `supabase inspect db` and review policy output. This cannot be deferred — shipping with RLS off means any user can read any other user's squad. One `supabase db reset` wipes all data; run migrations in order.
 
-**Notes:** Run `supabase inspect db` and review policy output before launch. Pay special attention to admin-only tables — use a `is_admin` boolean on the `profiles` table, not a separate role, to keep queries simple.
+---
+
+### FB-004
+**Title:** Email verification and password reset flow
+
+**Priority:** P0 · **Complexity:** S
+
+**User Story:** As a new user, I want to verify my email and reset my password if forgotten so that my account is secure and recoverable.
+
+**Acceptance Criteria:**
+- Supabase email verification sent on signup; unverified users see a banner but can still browse
+- Unverified users cannot join or create leagues until email is confirmed
+- Password reset email triggered from "Forgot password" link on Auth screen
+- Email templates use ForzaKit branding (logo, colours, footer links)
+- Custom SMTP sender configured (Resend) for reliable inbox delivery
+
+**Dependencies:** FB-002
+
+**Source:** Standard auth requirement
+
+**Notes:** Customise email templates in Supabase Dashboard → Auth → Email Templates. Supabase's default sender (`noreply@mail.supabase.io`) has poor deliverability — switch to a custom domain via Resend before beta.
 
 ---
 
 ### FB-005
-**Title:** Error boundary and crash reporting
+**Title:** Username selection and public profile setup
 
-**Priority:** P0
+**Priority:** P0 · **Complexity:** S
 
-**User Story:** As the development team, I want unhandled React errors to be caught and reported so that we can fix production crashes before users complain.
+**User Story:** As a new user, I want to choose a unique username so that league mates can identify me in standings, chat, and the Gazette.
 
 **Acceptance Criteria:**
-- React ErrorBoundary wraps all top-level screen components
-- Fallback UI shown on crash with "Reload" CTA — no white screen of death
-- Errors posted to Sentry (or equivalent) with user ID, screen name, and stack trace
-- Alert fires to team Slack channel if error rate exceeds 1% of sessions in 5 minutes
-- Source maps uploaded to Sentry as part of CI/CD build step
+- Username prompted as first step after signup (before reaching the app)
+- Usernames 3–20 characters, alphanumeric + underscores only, unique DB constraint enforced
+- Availability checked in real-time with 300ms debounce
+- Username displayed throughout: standings, chat, Gazette cards, invite cards
+- Users can change username once per month (`profiles.username_changed_at`)
 
-**Complexity:** S
+**Dependencies:** FB-004
 
-**Dependencies:** CI/CD pipeline
+**Source:** Code audit — RecapScreen hardcodes `username = 'João'`; LeagueScreen fallback inserts "You" as username
 
-**Source:** Internal quality requirement
-
-**Notes:** Use React 19's `useErrorBoundary` hook pattern. Sentry free tier is sufficient for launch volume. Scrub PII before sending to Sentry — user ID (UUID) is fine; email is not.
+**Notes:** Pre-generate 3–5 username suggestions from the email prefix to reduce drop-off. Confirm a unique index exists on `profiles.username` in the migration.
 
 ---
 
 ### FB-006
-**Title:** CI/CD pipeline with Vercel preview deployments
+**Title:** Unify player data model across all screens
 
-**Priority:** P0
+**Priority:** P0 · **Complexity:** S
 
-**User Story:** As a developer, I want every PR to deploy a preview environment so that QA can test features before merging to main.
+**User Story:** As a developer, I want a single consistent player data shape across all screens so that field mismatches don't cause silent bugs when player data moves between components.
 
 **Acceptance Criteria:**
-- GitHub Actions workflow runs lint, unit tests, and Playwright smoke tests on every PR
-- Vercel preview URL posted automatically as a PR comment
-- Main branch auto-deploys to production on merge
-- Supabase migration runs automatically against staging branch on PR open
-- Build fails if any test fails — no manual override path
+- Canonical player shape defined (JSDoc typedef or TypeScript interface): `{ id, name, position, club, price, points, gridClass, intel, ownership_pct }`
+- A `normalisePlayer(raw)` utility in `src/lib/players.js` maps any DB response to this shape
+- All 6 screens that use player data import from `normalisePlayer` — no ad-hoc field remapping inline
+- Fallback data in `src/data/squad.js` conforms to the canonical shape
+- No screen has a local `{ id: p.player_id, name: p.player_name }` remap pattern
 
-**Complexity:** M
+**Dependencies:** FB-002
 
-**Dependencies:** Vercel project, Supabase branching enabled
+**Source:** Code audit — 4 different player shapes exist across screens; `gridClass` and `intel` only in squad.js, `price` missing in LiveScreen, `ownership_pct` missing everywhere
 
-**Source:** Internal DevOps requirement
-
-**Notes:** Use Supabase branching (available on Pro tier) to get per-PR DB environments. Set `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` as Vercel environment variables scoped to preview/production separately.
+**Notes:** Write the utility first, then update screens one by one. No schema changes needed — this is a pure frontend refactor. Zero risk of regressions if each screen is tested after update.
 
 ---
 
-## Epic: Game Mechanics
-
 ### FB-007
-**Title:** World Cup phase chips — Group Stage Rush & Knockout Gambler
+**Title:** Squad budget — server-tracked, not client-computed from fallback data
 
-**Priority:** P0
+**Priority:** P0 · **Complexity:** S
 
-**User Story:** As a player, I want chips specific to World Cup tournament phases so that the game rewards strategic risk-taking tied to how the tournament actually works.
+**User Story:** As a player, I want my remaining transfer budget to be accurate and server-enforced so that I cannot accidentally overspend.
 
 **Acceptance Criteria:**
-- **Group Stage Rush:** doubles points from Group Stage matchdays 1–3; can only be played once during group phase
-- **Knockout Gambler:** triples captain points but zeroes bench boost for that matchday; available from Round of 16 onward
-- Chip state persisted in `team_chips` table (played_matchday, chip_type)
-- Chip cards rendered in Squad screen chips tray with locked state after use
-- Chips cannot be stacked with each other in the same matchday (server validation)
+- `squads.budget_remaining` column is the authoritative value; never computed client-side from player lists
+- Budget decrements on buy and increments on sell via the server-side transfer handler
+- If budget would go negative, the transfer is rejected server-side with a clear error toast
+- Budget displayed consistently across Squad screen, Market screen, and Admin screen
+- Budget initialised at £100M on squad creation
 
-**Complexity:** S
+**Dependencies:** FB-006
 
-**Dependencies:** Existing chip system (Daily Joker, Captain Roulette), `matchday_deadlines` table
+**Source:** Code audit — MarketScreen sums prices from the fallback player array and subtracts from 100; budget always shows £100M even after purchases
 
-**Source:** FPL (chip system pattern), original feature for WC context
-
-**Notes:** Add `chip_type` enum values to DB migration. Display chips greyed out with "Used in GW X" label post-play. Copy should be World Cup themed — avoid generic football language.
+**Notes:** Add `budget_remaining NUMERIC DEFAULT 100` to the `squads` table migration. Update on every transfer upsert in the edge function. Client displays the value read from DB — no local calculation.
 
 ---
 
 ### FB-008
-**Title:** Fixture Difficulty Rating (FDR) colour coding
+**Title:** Transfer window lock state — disable buy/sell UI when squad is locked
 
-**Priority:** P1
+**Priority:** P0 · **Complexity:** S
 
-**User Story:** As a player planning transfers, I want to see how difficult each team's remaining fixtures are so that I can target players with easy upcoming matches.
+**User Story:** As a player after the transfer deadline, I want the market to be visually locked so that I understand no changes are possible.
 
 **Acceptance Criteria:**
-- FDR scores (1–5) calculated per national team per remaining matchday, stored in `fixture_difficulty` table
-- Player cards in the Market and Squad screens show a colour band (green → red) for next 3 fixtures
-- Colour scale: 1–2 green, 3 amber, 4–5 red
-- FDR tooltip on hover/tap shows opponent name and difficulty score
-- FDR data updatable by admin without code deploy (editable in Admin screen)
+- After matchday deadline, all buy/sell buttons in MarketScreen show "Squad Locked" and are non-interactive
+- Lock state derived from server time vs `matchday_deadlines` table — not the client clock
+- Squad screen shows a lock banner with time until unlock
+- Users who attempt a transfer during lock see: "Transfers are locked until after the match"
+- Lock lifts automatically when admin publishes results for that matchday
 
-**Complexity:** S
+**Dependencies:** FB-007, `matchday_deadlines` table
 
-**Dependencies:** Fixture schedule table, player–team mapping
+**Source:** Code audit — MarketScreen `handleBuy` has no lock check; users can attempt purchases after deadline
 
-**Source:** FPL (core FDR feature)
-
-**Notes:** For a 32-team World Cup, every team plays at most 7 matches. FDR is more static than in a club season — seed initial values pre-tournament based on FIFA rankings and update after each group stage result.
+**Notes:** Implement client lock state first (fast, visible feedback), then server enforcement (FB-009). Fetch server time from Supabase `select now()` on screen mount — do not trust `Date.now()` alone.
 
 ---
 
 ### FB-009
-**Title:** Ownership percentage display and differential badges
+**Title:** Transfer deadline lock enforcement — server-side edge function
 
-**Priority:** P1
+**Priority:** P0 · **Complexity:** M
 
-**User Story:** As a player, I want to see what percentage of managers in the game own each player so that I can identify differentials and make contrarian picks.
+**User Story:** As a league commissioner, I want the server to hard-reject transfers after the deadline so that no team can gain an unfair advantage from late edits.
 
 **Acceptance Criteria:**
-- Ownership % displayed on every player card in Market and Squad screens
-- Calculated as: (squads containing player) / (total squads) × 100, refreshed every 15 minutes
-- Players owned by < 5% of managers show a "Differential" badge
-- Players owned by > 50% show a "Template" badge
-- Ownership data not shown for players on the user's own squad (to avoid self-referential confusion)
+- Supabase edge function validates transfer timestamp against `matchday_deadlines` before writing to DB
+- Any in-flight transfer submitted after deadline returns 403 with a user-friendly error message
+- Admin panel can override deadline per matchday
+- Unit tests cover the lock boundary: 1 second before (allowed) and 1 second after (rejected)
+- Server log records all rejected transfer attempts for audit
 
-**Complexity:** S
+**Dependencies:** FB-008
 
-**Dependencies:** `squads` table with player arrays, scheduled job (Supabase cron or edge function)
+**Source:** FPL model; fairness requirement — client-side lock is trivially bypassable
 
-**Source:** FPL, Sorare
-
-**Notes:** Materialise ownership % in a `player_ownership` view or scheduled function — do not compute live per request. Cache result in Supabase or React Query with 15-minute TTL. This is a high-engagement transparency feature; do not hide it behind a paywall.
+**Notes:** Edge function is the single source of truth. Store all deadlines in UTC; convert to local time only in the UI layer.
 
 ---
 
 ### FB-010
 **Title:** Transfer deadline countdown with pressure UX
 
-**Priority:** P1
+**Priority:** P0 · **Complexity:** S
 
-**User Story:** As a player, I want a visible countdown to the transfer deadline so that I am not caught out by the lock and feel urgency to finalise my team.
+**User Story:** As a player, I want a visible countdown to the transfer deadline so that I don't miss the lock without knowing.
 
 **Acceptance Criteria:**
-- Countdown timer visible on Squad screen header and Home screen matchday card when < 24 hours remain
-- Timer turns amber at T-2h, red at T-30min
-- Push notifications sent at T-24h, T-2h, T-30min (respects user notification preferences from FB-003)
-- Countdown disappears and lock state shown after deadline passes
-- Timer derived from server time (not client clock) to prevent manipulation
+- Countdown timer on Squad screen header and Home screen matchday card when < 24 hours remain
+- Timer turns amber at T-2h, red at T-30min, shows lock icon after deadline
+- Dynamic deadline time replaces the hardcoded `'18:00 today'` label in HomeScreen (current code audit gap)
+- Deadline shown in user's local timezone (use `Intl.DateTimeFormat`)
+- Timer derived from server time delta (fetched on mount), not `Date.now()` alone
 
-**Complexity:** S
+**Dependencies:** FB-009, `matchday_deadlines` table
 
-**Dependencies:** `matchday_deadlines` table, FB-003 (push notifications)
+**Source:** Code audit — `LOCK_TIME_LABEL = '18:00 today'` is a hardcoded constant in HomeScreen line 7; FPL deadline UX pattern
 
-**Source:** FPL, internal UX pattern
-
-**Notes:** Fetch server timestamp from Supabase `now()` on screen mount and derive countdown from that delta. Do not trust `Date.now()` alone. T-30min push is the highest-converting send — prioritise this one if push infrastructure is delayed.
+**Notes:** The T-30min push notification is the highest-converting engagement send — wire it here even if FB-019 (full push infra) is not yet complete, using a simpler one-shot Supabase edge function cron.
 
 ---
 
 ### FB-011
-**Title:** H2H mini-league matchups
+**Title:** Supabase Realtime subscriptions for live scoring
 
-**Priority:** P1
+**Priority:** P0 · **Complexity:** M
 
-**User Story:** As a player, I want to be matched against one opponent each matchday in a head-to-head format so that every gameweek has a direct rival to beat.
+**User Story:** As a player, I want the app to automatically update my score during a match without refreshing so that I can follow the action live.
 
 **Acceptance Criteria:**
-- H2H schedule auto-generated on league creation (round-robin for up to 16 managers)
-- H2H standings table alongside overall standings in League screen (tab switcher)
-- Live H2H score visible during a match — my score vs opponent's score, with player-level breakdown on tap
-- H2H result (W/D/L) recorded in `h2h_results` table post-matchday
-- League admin can regenerate schedule before GW1
+- Supabase Realtime channel subscribes to `fantasy_points` table on Live screen mount
+- Score deltas render within 60 seconds of a goal event written to the DB
+- Subscription cleanly unsubscribes on screen unmount (no memory leaks)
+- Offline/reconnect state handled with a "Reconnecting…" banner
+- Works on desktop Chrome and mobile Safari
 
-**Complexity:** M
+**Dependencies:** FB-003 (RLS must be set correctly for Realtime to work per-user)
 
-**Dependencies:** League system, live scoring (FB-001)
+**Source:** LaLiga Fantasy sub-60s live update model
 
-**Source:** Sleeper, FPL (H2H leagues)
-
-**Notes:** Round-robin generation algorithm must handle odd numbers of managers (bye week for one manager). Display rival's live squad in a read-only view — this is the single highest-engagement feature in the Sleeper model. Lock opponent's team visibility until after deadline to prevent copying.
+**Notes:** Enable Supabase Realtime on the `fantasy_points` table. Add a polling fallback (every 90s) for networks that block WebSockets. Test connection limits — Supabase Pro allows 500 concurrent connections; load test before launch.
 
 ---
 
 ### FB-012
-**Title:** Phase-based scoring and tournament chapter leaderboards
+**Title:** Live scoring screen — wire real data and per-player stat breakdown
 
-**Priority:** P1
+**Priority:** P0 · **Complexity:** M
 
-**User Story:** As a player who joined late or had a bad group stage, I want separate leaderboards per tournament phase so that I still have something to compete for in the knockout rounds.
+**User Story:** As a player watching a match, I want to see each of my players' live point contributions so that I know exactly why my score is moving.
 
 **Acceptance Criteria:**
-- Separate leaderboard tabs for: Group Stage, Round of 16, Quarter-Finals, Semi-Finals, Final
-- Phase scores calculated as sum of points within that phase's matchdays only
-- Phase winner badge awarded on league profile at end of each phase
-- Overall leaderboard remains the primary table; phase tables are secondary tabs
-- Phase boundaries configurable in Admin screen
+- Live screen shows each player's current points with breakdown (goals, assists, clean sheet, bonus)
+- Points update within 60s of a scoring event via FB-011 Realtime subscription
+- Captain points displayed at 2× (or active chip multiplier)
+- "Last updated X seconds ago" timestamp shown
+- Real squad data used — not the `POSITION_AVG` constants currently in the code (`GK=6, DEF=5, MID=7, FWD=8`)
 
-**Complexity:** S
+**Dependencies:** FB-011, FB-006 (unified player model), live data provider
 
-**Dependencies:** Matchday–phase mapping table, League screen
+**Source:** Code audit — LiveScreen uses hardcoded position averages for all projection calculations; real squad data fetched but `seasonAvg` field is missing
 
-**Source:** Original feature for WC tournament structure
-
-**Notes:** This dramatically extends engagement past the group stage — implement even if other P1 features are delayed. Phase leaderboards can reuse existing standings query with a `WHERE matchday_id IN (...)` filter.
+**Notes:** The projection engine logic is structurally sound — it just needs real inputs. Fix: join squad player fetch with `player_stats` to get per-player averages. No architecture change needed.
 
 ---
 
 ### FB-013
-**Title:** Best Ball / Set-and-Forget game format
+**Title:** Live screen — wire Supabase Realtime for match event streaming
 
-**Priority:** P2
+**Priority:** P0 · **Complexity:** M
 
-**User Story:** As a casual fan who doesn't want to manage my team weekly, I want the app to automatically pick my best 11 each matchday from my 20-player squad so that I can enjoy the game without active management.
+**User Story:** As a player on the Live screen, I want match events (goals, cards, substitutions) to stream in real time so I can follow the action as it happens.
 
 **Acceptance Criteria:**
-- Separate "Best Ball" league type selectable at league creation
-- System selects optimal 11 (highest-scoring eligible players) from squad after matchday finishes
-- Auto-selected lineup shown on Recap screen with "Auto-picked by ForzaKit" label
-- No transfer deadline or weekly management required in Best Ball mode
-- Best Ball and Classic leagues co-exist in the same app; user can join both
+- `match_events` table subscribed via Supabase Realtime channel on Live screen mount
+- New events appear in activity feed within 60 seconds
+- Events filterable: "My Players Only" vs "All Matches"
+- Feed auto-scrolls to newest event with a "Pause" button
+- Subscription tears down cleanly on unmount
 
-**Complexity:** M
+**Dependencies:** FB-011, live data provider writing to `match_events`
 
-**Dependencies:** Scoring engine, Supabase edge function for auto-lineup calculation
+**Source:** Code audit — LiveScreen polls `match_events` once on mount with a 5-minute interval; no Realtime subscription; displayed events are usually mock data
 
-**Source:** Sleeper Best Ball, Underdog Fantasy
-
-**Notes:** Great for World Cup casual audience — lower commitment lowers churn. Auto-pick algorithm: maximise total score subject to formation constraints (min 1 GK, 3 DEF, 2 MID, 1 FWD). Run as a Supabase edge function triggered post-matchday.
+**Notes:** Replace the existing `setInterval` with a `supabase.channel(...).on('postgres_changes', ...)` subscription filtered to current matchday fixture IDs. Requires the data provider to be writing to `match_events` — this is the key external dependency.
 
 ---
 
 ### FB-014
-**Title:** Waiver wire / transfer priority system
+**Title:** Live screen projections — use real squad and per-player averages
 
-**Priority:** P2
+**Priority:** P0 · **Complexity:** M
 
-**User Story:** As a manager near the bottom of the standings, I want first priority on free-agent pickups so that lower-placed teams get a catch-up mechanism.
+**User Story:** As a player on the Live screen, I want my score projection to reflect my actual squad and real player form, not a generic position-based estimate.
 
 **Acceptance Criteria:**
-- Waiver priority assigned inverse to league standings (last place gets priority 1)
-- Waiver window opens after each matchday's results are finalised
-- Waiver claims submitted during window (not first-come-first-served)
-- Claims processed in priority order; player goes to highest-priority claimant
-- Waiver priority resets periodically (configurable by league admin)
+- Projection uses authenticated user's actual squad (not `POSITION_AVG` constants)
+- Per-player `season_avg_points` sourced from `player_stats` table
+- Rival projections use their actual squads (post-deadline, read-only)
+- Projection refreshes every 60 seconds during live windows (not every 5 minutes)
+- "Based on X players in active matches" confidence label shown
 
-**Complexity:** M
+**Dependencies:** FB-012, FB-013
+
+**Source:** Code audit — LiveScreen `recalcProjection` feeds generic position constants; `mySquadPlayers` fetched without stats join
+
+**Notes:** Join the squad player fetch with `player_stats` to pull `season_avg_points`. Pass per-player values to the existing projection formula — no structural change to the calculation logic needed.
+
+---
+
+### FB-015
+**Title:** H2H live rival score — real-time opponent view in Live screen
+
+**Priority:** P0 · **Complexity:** M
+
+**User Story:** As a player in an H2H matchup, I want to see my opponent's live score updating alongside mine so that I feel the head-to-head tension in real time.
+
+**Acceptance Criteria:**
+- H2H live view shows two columns: My Score vs Opponent Score
+- Both update on the same Realtime subscription (FB-011)
+- Opponent's goalscorers listed by name with points contributed (squad composition not revealed before deadline)
+- Win/Draw/Loss indicator updates live
+- Tapping an opponent's player name shows their public stats card only
+
+**Dependencies:** FB-014, H2H league system (FB-033)
+
+**Source:** Code audit — LiveScreen rival scores are hardcoded/faked; Sleeper rival view model
+
+**Notes:** This is the engagement flywheel — managers check 5× more often when an H2H rival is visible. Use React 19 transitions to avoid full re-renders on each score tick.
+
+---
+
+### FB-016
+**Title:** Error boundary and crash reporting
+
+**Priority:** P0 · **Complexity:** S
+
+**User Story:** As the development team, I want unhandled React errors caught and reported so that we can fix production crashes before users notice.
+
+**Acceptance Criteria:**
+- React `ErrorBoundary` wraps all top-level screen components
+- Fallback UI shown on crash with a "Reload" CTA — no white screen of death
+- Errors sent to Sentry with: user ID (UUID), screen name, stack trace
+- Alert fires to team Slack if error rate exceeds 1% of sessions in 5 minutes
+- Source maps uploaded to Sentry in the CI/CD build step
+
+**Dependencies:** None (can be done in parallel with any other item)
+
+**Source:** Internal quality requirement
+
+**Notes:** Use React 19's `useErrorBoundary` hook. Sentry free tier is sufficient at launch volume. Scrub PII — user UUID is fine to send; email address is not.
+
+---
+
+### FB-017
+**Title:** CI/CD pipeline with Vercel preview deployments and automated tests
+
+**Priority:** P0 · **Complexity:** M
+
+**User Story:** As a developer, I want every PR to deploy a preview environment so that features can be reviewed before merging to main.
+
+**Acceptance Criteria:**
+- GitHub Actions runs lint, unit tests, and Playwright smoke tests on every PR
+- Vercel preview URL posted automatically as a PR comment
+- Main branch auto-deploys to production on merge
+- Supabase migrations run automatically against a staging DB branch on PR open
+- Build fails hard if any test fails — no manual override
+
+**Dependencies:** FB-001
+
+**Source:** Internal DevOps requirement
+
+**Notes:** Use Supabase branching (Pro tier) for per-PR DB environments. Scope `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` separately for preview vs production in Vercel settings.
+
+---
+
+### FB-018
+**Title:** Onboarding flow — new user welcome and squad builder walkthrough
+
+**Priority:** P0 · **Complexity:** M
+
+**User Story:** As a new user, I want a guided walkthrough when I first arrive so that I can build my squad and join a league without reading documentation.
+
+**Acceptance Criteria:**
+- 4-step onboarding: (1) Welcome + WC 2026 context, (2) Pick your squad with suggestions, (3) Join or create a league, (4) Set notification preferences
+- Progress indicator shown (step X of 4); skippable at any step with flag persisted so it never repeats
+- Walkthrough tooltips overlay Squad and Market screens on first visit
+- Onboarding completion tracked in analytics (drop-off by step)
+- Target: > 70% completion rate from install to first squad saved
+
+**Dependencies:** FB-005, FB-006
+
+**Source:** Sleeper onboarding model; DraftKings first-session UX
+
+**Notes:** First-session completion rate is the single most predictive metric for 30-day retention. Use `react-joyride` rather than a custom tooltip system. A/B test skippable vs forced on step 2 (squad pick).
+
+---
+
+# P1 — High Impact
+*Ship within the first two weeks of the tournament. Ordered by impact on user retention.*
+
+---
+
+### FB-019
+**Title:** Recap screen — replace all hardcoded data with real DB values
+
+**Priority:** P1 · **Complexity:** S
+
+**User Story:** As a player viewing my Recap card, I want to see my actual username, real league name, and genuine point totals so that the card is worth sharing.
+
+**Acceptance Criteria:**
+- League name from `leagues` table via user's membership — not hardcoded "World Cup Legends"
+- Username from `profiles.username` — not hardcoded "João"
+- Best player, captain, and joker points from `fantasy_points` table — not literals 15, 10, 5
+- If no recap exists for the current matchday: "Results pending…" state shown
+- All data paths tested end-to-end with a real matchday result in the DB
+
+**Dependencies:** FB-005, FB-002
+
+**Source:** Code audit — RecapScreen has `leagueName = 'World Cup Legends'`, `username = 'João'`, and hardcoded point values; the Gazette card will never be shared if it shows the wrong person's name
+
+**Notes:** The Gazette card is the app's primary viral sharing mechanic. This is a must-fix before launch — a shared card with the wrong name destroys trust instantly.
+
+---
+
+### FB-020
+**Title:** Persist top-scorer prediction to database
+
+**Priority:** P1 · **Complexity:** S
+
+**User Story:** As a player, I want my match predictions to be saved so that I earn prediction points and my streak is tracked after results come in.
+
+**Acceptance Criteria:**
+- PredictionModal `onSave` upserts a row in `top_scorer_predictions` table
+- Prediction locked at match kick-off via server-side check (not just UI disabled)
+- Saved prediction shown on Home screen without a page reload
+- Duplicate prevention: update, not insert, if prediction exists for this matchday
+- Prediction points credited to `league_members.prediction_points` after results
+
+**Dependencies:** FB-002
+
+**Source:** Code audit — `handlePredictionSaved` in HomeScreen updates only local React state; nothing is written to Supabase
+
+**Notes:** The modal UI and state flow already work. This is a single missing `supabase.from('top_scorer_predictions').upsert(...)` call. Do this immediately after FB-002 — it's a 30-minute task once auth is wired.
+
+---
+
+### FB-021
+**Title:** Sell player validation — captain and joker safety checks
+
+**Priority:** P1 · **Complexity:** S
+
+**User Story:** As a player selling a player, I want the app to warn me if I'm removing my captain or active joker so that I don't accidentally break my squad.
+
+**Acceptance Criteria:**
+- Selling the current captain triggers: "This player is your captain. Selling them removes your captain — continue?"
+- Selling the active Daily Joker triggers a similar confirmation
+- On confirm, captain/joker cleared in DB before the transfer completes (atomic)
+- Cancel returns to market with no changes
+- Orphaned `captain_id` references validated: scoring engine checks captain is still in squad before applying multiplier
+
+**Dependencies:** FB-007, FB-002
+
+**Source:** Code audit — `handleSell` in MarketScreen has no captain/joker check; an orphaned `captain_id` breaks the scoring engine
+
+**Notes:** This is a data correctness bug, not just UX. Fix both the UI guard and add a defensive check in the scoring engine.
+
+---
+
+### FB-022
+**Title:** Squad swap — enforce formation and position limits
+
+**Priority:** P1 · **Complexity:** S
+
+**User Story:** As a player making a substitution, I want the app to prevent invalid formations so I can't field a squad with no goalkeeper.
+
+**Acceptance Criteria:**
+- Before confirming a swap, validate result: min 1 GK, 3 DEF, 2 MID, 1 FWD on pitch
+- Invalid swap shows: "This swap would leave you with no goalkeeper on the pitch"
+- Validation runs client-side (immediate feedback) and server-side (integrity)
+- Bench has no formation restriction; any position can sit there
+- Current code bug fixed: `alert('Invalid swap')` fires but does not `return` early — swap proceeds anyway
+
+**Dependencies:** FB-007
+
+**Source:** Code audit — SquadScreen `handleSwap` has no formation validation; the guard alert exists but is non-blocking
+
+**Notes:** Two-line fix for the `return` bug. Formation validation logic is the real work. Add to the server-side transfer edge function as well.
+
+---
+
+### FB-023
+**Title:** Confirmation dialogs for all destructive squad actions
+
+**Priority:** P1 · **Complexity:** XS
+
+**User Story:** As a player, I want to confirm before I sell a player, activate a chip, or spin Captain Roulette so that I don't make irreversible changes by accident.
+
+**Acceptance Criteria:**
+- Sell player: "Sell [Name] for £Xm?" → Confirm / Cancel
+- Chip activation: "Use [Chip]? This cannot be undone for this matchday." → Confirm / Cancel
+- Captain Roulette: "Spin Roulette? Your captain will be randomly assigned." → Confirm / Cancel
+- Consequence shown in plain language — not just "Are you sure?"
+- Single reusable `ConfirmModal` component used across all three flows
+
+**Dependencies:** FB-007
+
+**Source:** Code audit — chips can be toggled without confirmation; Roulette spins immediately; sell has no dialog
+
+**Notes:** Build one `ConfirmModal` component and wire it to all three flows. Half-day task, maximum. Prevents the most common user complaints and reduces support burden.
+
+---
+
+### FB-024
+**Title:** Joker picker modal — empty and error states
+
+**Priority:** P1 · **Complexity:** XS
+
+**User Story:** As a player trying to pick a Daily Joker, I want to see a helpful message if no matches are scheduled or the data fails to load, rather than a blank screen.
+
+**Acceptance Criteria:**
+- No fixtures today → "No matches today — check back on the next matchday"
+- DB fetch fails → error message + retry button
+- No squad players in today's matches → "None of your players are in today's matches"
+- Loading state (skeleton or spinner) shown while fetch is in progress
+- Each state shown in priority order: no fixtures > DB error > no squad overlap > player list
+
+**Dependencies:** FB-002
+
+**Source:** Code audit — joker picker modal renders blank when `playingTodayTeams` is empty or the DB fetch fails
+
+**Notes:** Purely conditional renders — 30 minutes of work. All three empty states already have clear copy defined above.
+
+---
+
+### FB-025
+**Title:** League creation — post-creation invite flow and error handling
+
+**Priority:** P1 · **Complexity:** S
+
+**User Story:** As a user who just created a league, I want to immediately see how to invite friends so my league doesn't sit empty.
+
+**Acceptance Criteria:**
+- After successful creation: success screen shows the league join code and "Share Invite" button
+- Join code is a human-readable 6-character alphanumeric string (not a UUID)
+- "Copy join code" button copies to clipboard with "Copied!" confirmation
+- If creation fails, user sees a specific error — not a silent failure
+- Creator auto-added as `league_members` with `role: 'commissioner'`; both inserts wrapped in a transaction
+
+**Dependencies:** FB-002, FB-026 (invite cards)
+
+**Source:** Code audit — `handleCreateLeague` in LeagueScreen has no error feedback and no invite prompt; the two-step insert (league → league_member) can partially fail silently
+
+**Notes:** Wrap both inserts in a Supabase edge function so they're atomic. A failed league_member insert currently leaves a league with no commissioner.
+
+---
+
+### FB-026
+**Title:** League invite cards (WhatsApp / Instagram shareable)
+
+**Priority:** P1 · **Complexity:** S
+
+**User Story:** As a league member, I want to generate a shareable image card with my league's join code so I can recruit friends with a single tap.
+
+**Acceptance Criteria:**
+- One-tap generate from League screen (commissioner and all members)
+- Card includes: league name, join code, QR code, ForzaKit branding, WC 2026 visual
+- Shared via native share sheet or copied as PNG + text
+- Deep link `/join?code=XXXX` pre-fills join code on Auth screen
+- Cards invalidated when league is full or registration closed
+
+**Dependencies:** FB-025, auth deep-link handling
+
+**Source:** Sleeper, FPL share-link pattern
+
+**Notes:** Use `@vercel/og` or a pre-rendered template for consistent server-side rendering. `qrcode.react` for QR codes. Deep links must work from cold-start (app not yet installed) — land on web auth → join flow.
+
+---
+
+### FB-027
+**Title:** Social sharing — WhatsApp invite loop at key moments
+
+**Priority:** P1 · **Complexity:** S
+
+**User Story:** As an existing manager, I want the app to prompt me to invite friends at the right moment so my league fills up and stays active.
+
+**Acceptance Criteria:**
+- Invite prompt triggers after: first squad saved, first matchday results received, a captain return of 15+ pts
+- Pre-filled WhatsApp message: "I scored X pts this week on ForzaKit — join my league: [link]"
+- Prompt dismissable; doesn't reappear for 48 hours after dismissal
+- Link clicks and resulting registrations tracked via UTM parameters
+- Manager earns a cosmetic "Recruiter" badge on successful recruitment of 3+ members
+
+**Dependencies:** FB-026
+
+**Source:** Wordle viral loop; Sleeper friend invites
+
+**Notes:** Use `https://wa.me/?text=` URL scheme. Attach `?utm_source=invite&utm_medium=whatsapp&utm_campaign=matchday_result` to all links. This is the primary acquisition channel — instrument it from day one.
+
+---
+
+### FB-028
+**Title:** Post-match automated Gazette story card — wire to real data
+
+**Priority:** P1 · **Complexity:** S
+
+**User Story:** As a player, I want a beautiful shareable card generated automatically after each matchday so I can share my result with one tap.
+
+**Acceptance Criteria:**
+- Card generated within 10 minutes of matchday points finalisation
+- Includes: rank, GW points, total points, best player, captain return, chip used (if any) — all from real DB values (not hardcoded)
+- Portrait-format, WC-branded, share-ready 1080×1920 PNG
+- Shareable via native share sheet (WhatsApp, Instagram Stories, X)
+- "Save to Camera Roll" fallback for iOS
+
+**Dependencies:** FB-019 (recap real data), matchday points finalisation job
+
+**Source:** Sleeper auto-transaction cards; FPL gameweek recap
+
+**Notes:** The `RecapCard` component and `html2canvas` export already exist. Migrate to server-side rendering (`@vercel/og` edge function) for consistent cross-device output — client-side `html2canvas` breaks with custom fonts on some Android browsers.
+
+---
+
+### FB-029
+**Title:** League chat — full real-time implementation (Sleeper model)
+
+**Priority:** P1 · **Complexity:** M
+
+**User Story:** As a league member, I want a persistent, real-time group chat in my league so that banter and trash talk happen inside the app, not on WhatsApp.
+
+**Acceptance Criteria:**
+- Chat tab in League screen sends and receives messages in real time (Supabase Realtime)
+- The existing static mock message thread is replaced with live data from `league_chat_messages` table
+- Messages support: text, emoji reactions (👍🔥💀😂), @mentions, GIF search (Giphy/Tenor)
+- Message history: last 50 on load, infinite scroll up
+- Read receipts shown as avatar stacks; basic profanity filter applied
+
+**Dependencies:** FB-011, FB-002, league membership
+
+**Source:** Code audit — chat tab has static hardcoded messages and a text input with no handler; Sleeper (defining competitive feature)
+
+**Notes:** Chat is the highest single-feature retention driver in the Sleeper model — managers return daily even without transfers. The UI shell exists. This item wires it to a real backend. Implement message pagination on first load.
+
+---
+
+### FB-030
+**Title:** Auto-transaction social cards in league chat
+
+**Priority:** P1 · **Complexity:** S
+
+**User Story:** As a league member, I want automatic posts in chat when a manager transfers a player, uses a chip, or changes captain so that every squad decision becomes a conversation trigger.
+
+**Acceptance Criteria:**
+- Transfer: "🔄 [Manager] transferred in [Player A], out [Player B]"
+- Chip use: "⚡ [Manager] played the Knockout Gambler chip!"
+- Captain change: "🎖 [Manager] switched captain to [Player]"
+- Auto-posts rendered in a distinct system-message style (different background from chat bubbles)
+- Not deletable; individually hideable by the recipient
+
+**Dependencies:** FB-029
+
+**Source:** Sleeper (defining mechanic — converts admin events into social moments)
+
+**Notes:** Fire via Supabase database trigger or edge function on mutations to `transfers`, `team_chips`, `squads.captain_id`. Don't fire during the locked window. Keep copy under 140 characters.
+
+---
+
+### FB-031
+**Title:** H2H mini-league matchups — full implementation
+
+**Priority:** P1 · **Complexity:** M
+
+**User Story:** As a player, I want to be matched against one opponent each matchday in a head-to-head format so that every gameweek has a direct rival to beat.
+
+**Acceptance Criteria:**
+- H2H schedule auto-generated on league creation (round-robin, handles odd manager counts with a bye)
+- H2H standings tab in League screen alongside overall standings
+- Live H2H score visible during match — my score vs opponent's, player breakdown on tap
+- H2H result (W/D/L) recorded in `h2h_results` table post-matchday
+- League admin can regenerate schedule before GW1
+
+**Dependencies:** FB-015, league system
+
+**Source:** Sleeper, FPL H2H leagues
+
+**Notes:** Rival squad visibility must be locked until after the deadline — implement as an RLS policy on `squads`. This is the engagement flywheel: direct rivals are the single strongest reason to open the app during a match.
+
+---
+
+### FB-032
+**Title:** Phase-based scoring and tournament chapter leaderboards
+
+**Priority:** P1 · **Complexity:** S
+
+**User Story:** As a player who had a bad group stage, I want separate leaderboards per tournament phase so that I still have something to compete for in the knockouts.
+
+**Acceptance Criteria:**
+- Leaderboard tabs: Group Stage, Round of 16, Quarter-Finals, Semi-Finals, Final
+- Phase scores = sum of points within that phase's matchdays only
+- Phase winner badge awarded on league profile at end of each phase
+- Overall leaderboard remains the primary view; phase tabs are secondary
+- Phase boundaries configurable in Admin screen
+
+**Dependencies:** Matchday-phase mapping table, league standings
+
+**Source:** Original WC-specific feature
+
+**Notes:** Reuses existing standings query with a `WHERE matchday_id IN (...)` filter. This dramatically extends engagement past the group stage — implement even if other P1 items are delayed.
+
+---
+
+### FB-033
+**Title:** H2H rival squad view — post-deadline read-only pitch view
+
+**Priority:** P1 · **Complexity:** M
+
+**User Story:** As a player in an H2H matchup, I want to see my opponent's full squad after the transfer deadline so I can analyse their picks and follow the head-to-head.
+
+**Acceptance Criteria:**
+- H2H view in League screen shows opponent's 11-player pitch view (read-only, no actions)
+- Only visible after matchday deadline passes — shows "Locked — revealed at kick-off" before
+- Captain and chip selections visible in opponent view
+- Points scored by each opponent player update live during the match
+- Toggle between "My Squad" / "Rival Squad" with a tab or swipe gesture
+
+**Dependencies:** FB-031, FB-011 (Realtime), FB-009 (deadline lock)
+
+**Source:** Code audit — LeagueScreen H2H sheet uses hardcoded `MOCK_SQUAD_PLAYERS`; Sleeper rival view
+
+**Notes:** RLS policy: `squads` readable by league members only after `matchday_deadlines.deadline_at < now()`. This is also a privacy control — squads must not be readable before the deadline to prevent copying.
+
+---
+
+### FB-034
+**Title:** Player form graph and stats card
+
+**Priority:** P1 · **Complexity:** M
+
+**User Story:** As a player evaluating a transfer target, I want to see a player's last 5 matches graphed so that my decisions are data-driven.
+
+**Acceptance Criteria:**
+- Player detail modal (Market + Squad screens) shows a bar/sparkline chart of last 5 GW points
+- Key stats: goals, assists, clean sheets, yellow cards, average points, ownership %
+- Form label (Hot / Good / Average / Poor / Cold) calculated from 5-match average vs season average
+- Stats card shareable as an image
+- "Insufficient data" state for GW1–2 when fewer than 2 matches played
+
+**Dependencies:** `player_match_stats` table, live data provider, charting library
+
+**Source:** FPL player stats; Sorare performance cards
+
+**Notes:** Use `recharts` for the sparkline — React 19 compatible. The shareable stats card is an organic viral mechanic. World Cup has at most 7 matchdays per team so the graph will be sparse early.
+
+---
+
+### FB-035
+**Title:** Admin analytics dashboard — DAU, funnel, and engagement metrics
+
+**Priority:** P1 · **Complexity:** M
+
+**User Story:** As the product team, I want a live admin dashboard showing key engagement metrics so that we can make data-driven decisions throughout the tournament.
+
+**Acceptance Criteria:**
+- Admin screen Metrics tab (admin-only): DAU, WAU, MAU, daily registrations, funnel (registered → squad saved → league joined → matchday active)
+- Metrics from `analytics_events` table (client fires events on key actions)
+- Retention cohort: % of day-0 registrations still active on day 7, 14, 21
+- Top 10 leagues by activity (message count + transfer count)
+- Refreshes every 5 minutes; data exportable
+
+**Dependencies:** Analytics event instrumentation (add in FB-018 onboarding), Admin screen
+
+**Source:** Internal product requirement
+
+**Notes:** Instrument from day 1 — retrofitting analytics is painful. Use a simple `analytics_events(user_id, event_name, properties JSONB, created_at)` table rather than a third-party SDK. PostHog free tier is a viable alternative.
+
+---
+
+### FB-036
+**Title:** Transfer deadline countdown push notifications
+
+**Priority:** P1 · **Complexity:** S
+
+**User Story:** As a player, I want push notifications before the transfer deadline so I don't miss my chance to make changes.
+
+**Acceptance Criteria:**
+- Notifications sent at T-24h, T-2h, T-30min before each matchday deadline
+- T-30min push is personalised: "Deadline in 30 mins — [Player] is doubtful, consider a swap"
+- Each notification type independently toggleable in user settings
+- Notifications deep-link to Squad screen
+- No notification sent if squad is already locked (user already submitted)
+
+**Dependencies:** FB-019 (push infra), `matchday_deadlines` table, FB-010
+
+**Source:** FPL deadline UX; Dream11 second-precision deadline notifications
+
+**Notes:** T-30min is the highest-converting send. Trigger via Supabase edge function on a scheduled cron. Cap to 3 deadline notifications per matchday per user.
+
+---
+
+### FB-037
+**Title:** Daily notification loop — morning news, kick-off, post-match
+
+**Priority:** P1 · **Complexity:** M
+
+**User Story:** As a player, I want relevant notifications at the right moment each day so the app stays top of mind without feeling spammy.
+
+**Acceptance Criteria:**
+- Morning (9am local): "Team news: [Player] is doubtful — consider a transfer"
+- Kick-off: "🏟 Matchday X is live — your captain [Player] is starting"
+- Post-match: "Full time — you scored X pts. You're now [rank] in your league"
+- All 3 types independently toggleable in notification settings
+- Maximum 4 notifications per day per user (T-2h deadline + 3 content notifications)
+
+**Dependencies:** FB-019, team news data feed, scoring results
+
+**Source:** FPL and Sleeper daily engagement patterns
+
+**Notes:** Implement kick-off and post-match first (no external data feed needed). Morning team news requires a data provider — add in P2. The 4-notification cadence is proven in FPL to drive daily opens.
+
+---
+
+### FB-038
+**Title:** Ownership percentage display and differential badges
+
+**Priority:** P1 · **Complexity:** S
+
+**User Story:** As a player, I want to see what percentage of managers own each player so that I can identify differentials and spot template picks.
+
+**Acceptance Criteria:**
+- Ownership % on every player card in Market and Squad screens
+- Calculated as `(squads containing player) / (total squads) × 100`, refreshed every 15 minutes
+- < 5% ownership → "Differential" badge; > 50% → "Template" badge
+- Not shown for the viewing user's own players (avoid self-referential confusion)
+- Cached in a `player_ownership` materialised view — not computed live per request
+
+**Dependencies:** `squads` table, scheduled Supabase cron
+
+**Source:** FPL; Sorare
+
+**Notes:** High-engagement transparency feature — do not paywall it. The 15-minute cache is fine for the transfer window; no need for real-time precision here.
+
+---
+
+### FB-039
+**Title:** Fixture Difficulty Rating (FDR) — colour-coded per player
+
+**Priority:** P1 · **Complexity:** S
+
+**User Story:** As a player planning transfers, I want to see how difficult each team's remaining fixtures are so that I can target players with easier upcoming matches.
+
+**Acceptance Criteria:**
+- FDR scores (1–5) per national team per remaining matchday, stored in `fixture_difficulty` table
+- Colour band on player cards: 1–2 green, 3 amber, 4–5 red; next 3 fixtures shown
+- Tooltip/tap shows opponent name + difficulty score
+- FDR data updatable by admin without a code deploy
+
+**Dependencies:** Fixture schedule, player–team mapping
+
+**Source:** FPL (core FDR mechanic)
+
+**Notes:** With 32 WC teams and 7 matches max, FDR is simpler and more static than club season FDR. Seed initial values from FIFA rankings before the tournament; update manually after group stage standings are set.
+
+---
+
+### FB-040
+**Title:** Fixture Difficulty Rating (FDR) — colour-coded per player
+
+**Priority:** P1 · **Complexity:** S
+
+**User Story:** As a player planning transfers, I want to see how difficult each team's remaining fixtures are so I can target players in easy matches.
+
+> ⚠️ **Note:** This item was accidentally duplicated. See FB-039. Remove FB-040 in next backlog review.
+
+---
+
+### FB-041
+**Title:** Push notification infrastructure (web push + PWA service worker)
+
+**Priority:** P1 · **Complexity:** L
+
+**User Story:** As a player, I want to opt into push notifications so I'm reminded before deadlines and alerted when my captain scores.
+
+**Acceptance Criteria:**
+- Service worker registers and requests permission on first visit post-auth
+- Supabase edge function sends push via Web Push API (VAPID)
+- User manages notification preferences per type (deadline, captain goal, injury, chat) in profile settings
+- Notifications deep-link to the relevant screen on tap
+- Opt-out removes subscription from `push_subscriptions` table immediately
+
+**Dependencies:** FB-017, auth
+
+**Source:** FPL, Sleeper
+
+**Notes:** VAPID keys stored in Supabase secrets. Test iOS 16.4+ web push constraints (requires app added to Home Screen on Safari). Cap to 3 push notifications per day per user. FB-036 and FB-037 depend on this.
+
+---
+
+### FB-042
+**Title:** Deep-link routing for notifications and league invite links
+
+**Priority:** P1 · **Complexity:** S
+
+**User Story:** As a user who taps a notification or invite link, I want to land on the exact relevant screen, not the home page.
+
+**Acceptance Criteria:**
+- Push notifications carry a `target_url` that opens the correct screen on tap
+- `/join?code=XXXX` pre-fills the join code on the Auth screen
+- `/recap?matchday=5` opens the Recap screen directly
+- Deep links work from cold start and warm start
+- Tested on iOS Safari PWA, Android Chrome PWA, and desktop Chrome
+
+**Dependencies:** FB-041, React Router
+
+**Source:** Internal requirement
+
+**Notes:** React Router handles warm-start deep links natively. Cold-start from push requires the service worker `notificationclick` handler to use `clients.openWindow(target_url)` correctly.
+
+---
+
+### FB-043
+**Title:** Mobile-first layout polish and PWA install prompt
+
+**Priority:** P1 · **Complexity:** M
+
+**User Story:** As a mobile user, I want the app to feel native on my phone so that I recommend it to friends rather than looking for a native app.
+
+**Acceptance Criteria:**
+- All 9 screens render correctly on iPhone SE (375px), iPhone 14 (390px), and Samsung Galaxy S22 (360px)
+- No horizontal scroll on any screen at any viewport
+- PWA install prompt appears after the user's 3rd session or on manual trigger
+- Custom splash screen, icon, and standalone mode in `manifest.json`
+- Lighthouse PWA score > 90
+
+**Dependencies:** All screens built
+
+**Source:** Internal quality requirement
+
+**Notes:** The Squad screen pitch view is the most complex responsive layout — test on real devices not just DevTools. iOS cannot force the install prompt — implement a custom "Add to Home Screen" modal guide for Safari users.
+
+---
+
+---
+
+# P2 — Post-Launch
+*Ship during the group stage or before Round of 16. Ordered by impact.*
+
+---
+
+### FB-044
+**Title:** League stats view — real calculated data (replace hardcoded numbers)
+
+**Priority:** P2 · **Complexity:** M
+
+**User Story:** As a league member in the Stats tab, I want to see real league statistics, not cosmetic placeholder numbers.
+
+**Acceptance Criteria:**
+- Total squad value: sum of player prices across all league squads (from DB)
+- Top scorer: player with highest points across all members' squads
+- Most transferred player: most bought across the league this week (`transfers` table)
+- Most captained player: selected as captain most often this matchday
+- League average score: mean total points across all active members
+- Stats refresh after each matchday finalisation
+
+**Dependencies:** FB-002, scoring engine, `transfers` table
+
+**Source:** Code audit — all stats in LeagueScreen stats view are hardcoded (e.g. "€1.4B squad value", "424 pts Mbappé")
+
+**Notes:** Implement as Supabase views triggered post-matchday. These are high-shareability stats ("Mbappe was captained by 6 of 8 managers!") — prioritise the most viral ones first.
+
+---
+
+### FB-045
+**Title:** Trade system — backend implementation or replace UI with "Coming Soon"
+
+**Priority:** P2 · **Complexity:** L
+
+**User Story:** As a league member, I want to propose and accept player trades with rivals so that the transfer market has a social negotiation layer.
+
+**Acceptance Criteria:**
+- Trade offer stored in `trade_offers` table: proposer_id, target_id, offered_players[], requested_players[], cash_adjustment, status
+- Target user receives a push notification on proposal
+- Accept / Reject buttons in League screen
+- On acceptance, both squads updated atomically (DB transaction)
+- Trades expire after 48 hours; cannot be proposed after matchday deadline
+
+**Dependencies:** FB-029 (chat), FB-041 (push), `trade_offers` table
+
+**Source:** Code audit — LeagueScreen trade UI is fully cosmetic; "João wants to trade…" is hardcoded; no DB or backend exists
+
+**Notes:** **CRITICAL UX RISK:** Until this is built, the trade UI must be hidden from real users or replaced with "Coming Soon." Shipping a non-functional trade modal to production destroys trust. Add a feature flag to hide it.
+
+---
+
+### FB-046
+**Title:** Bracket predictor — backend wiring and scoring
+
+**Priority:** P2 · **Complexity:** M
+
+**User Story:** As a player using the Bracket screen, I want my knockout predictions saved and scored against real results so the bracket is a real competition.
+
+**Acceptance Criteria:**
+- Bracket fixtures from `fixtures` table (knockout rounds), not hardcoded teams
+- Tapping a team records the prediction in `bracket_predictions` table
+- Bracket state persists across sessions
+- Predictions auto-scored after each knockout match: correct winner = 1pt, correct scoreline = 3pts
+- Bracket leaderboard tab in League screen
+
+**Dependencies:** FB-002, knockout fixture data, `bracket_predictions` table
+
+**Source:** Code audit — BracketScreen is entirely static; teams hardcoded (BRA, FRA, ENG, KOR); "Save Bracket" button has no onClick; nothing is persisted
+
+**Notes:** Schedule for P2 — bracket predictions are only meaningful once knockout fixtures are set (after group stage). **Add "Preview — predictions coming soon" label at launch** so users know it's real.
+
+---
+
+### FB-047
+**Title:** Match timeline event feed — real-time events in Live screen
+
+**Priority:** P2 · **Complexity:** M
+
+**User Story:** As a player on the Live screen, I want to see a real-time event feed (goals, cards, subs) so I understand why my score is changing.
+
+**Acceptance Criteria:**
+- Timeline events appear as feed items with timestamp (goal, assist, yellow card, red card, sub, penalty miss)
+- Filterable: "My Players Only" vs "All Matches"
+- Each event tappable to see the player's stat card
+- Events from `match_events` table streamed via Supabase Realtime
+- Feed auto-scrolls to latest event (pauseable)
+
+**Dependencies:** FB-013, live data provider
+
+**Source:** LaLiga Fantasy, ESPN FC
+
+**Notes:** FB-013 covers the Realtime subscription wiring. This item covers the UI feed component and the filterable display layer. Requires the data provider to be writing events — this is the critical external dependency.
+
+---
+
+### FB-048
+**Title:** Daily prediction mini-game — result and correct score picks
+
+**Priority:** P2 · **Complexity:** M
+
+**User Story:** As a player who wants more engagement on match days, I want to predict match results and correct scores so I have another way to compete with my league.
+
+**Acceptance Criteria:**
+- Prediction card on Home screen for today's matches (up to 4 per day in group stage)
+- Predict result (1/X/2) and correct score (optional, higher reward)
+- Points: result correct = 1pt, correct score = 3pts; tracked in separate "Prediction League" table
+- Predictions locked at kick-off; correct score revealed post-match
+- Separate prediction leaderboard in League screen
+
+**Dependencies:** FB-020 (persist prediction), fixture data, results feed
+
+**Source:** Superbru, SofaScore Predictor
+
+**Notes:** The `top_scorer_predictions` table and flow from FB-020 provides the pattern — extend the schema. Keep prediction scoring separate from main fantasy scoring to avoid confusing the core product.
+
+---
+
+### FB-049
+**Title:** Best Ball / Set-and-Forget game format
+
+**Priority:** P2 · **Complexity:** M
+
+**User Story:** As a casual fan who doesn't want to manage my team weekly, I want the app to automatically pick my best 11 each matchday from my squad so I can follow the tournament without active management.
+
+**Acceptance Criteria:**
+- "Best Ball" league type selectable at league creation
+- System selects optimal 11 (highest-scoring eligible players) post-matchday via edge function
+- Auto-selected lineup shown on Recap screen with "Auto-picked by ForzaKit" label
+- No transfer deadline or weekly management in Best Ball mode
+- Best Ball and Classic leagues co-exist; users can join both
+
+**Dependencies:** Scoring engine, Supabase edge function
+
+**Source:** Underdog Fantasy Best Ball; Sleeper Best Ball
+
+**Notes:** Auto-pick algorithm: maximise total score subject to formation constraints (min 1 GK, 3 DEF, 2 MID, 1 FWD). Run as a post-matchday edge function trigger. Great for the WC casual audience who find weekly management intimidating.
+
+---
+
+### FB-050
+**Title:** AI transfer assistant — rule-based recommendations with reasoning
+
+**Priority:** P2 · **Complexity:** M
+
+**User Story:** As a player unsure who to transfer, I want the app to suggest transfers with clear reasoning so I make better decisions faster.
+
+**Acceptance Criteria:**
+- "Get suggestions" CTA on Squad screen
+- Recommendations based on: FDR (FB-039), form (FB-034), ownership trends (FB-038), injury status
+- Each suggestion includes plain-language reasoning: "Bellingham has scored in 3 of his last 4 and faces a 2/5 difficulty fixture next"
+- Maximum 3 suggestions shown per session
+- User can accept (jumps to transfer with player pre-selected) or dismiss
+
+**Dependencies:** FB-039 (FDR), FB-034 (form), FB-038 (ownership)
+
+**Source:** Yahoo AI Assistant Manager; Dream11 Guru
+
+**Notes:** Label as "rule-based suggestions" — not "AI" or "machine learning." Do NOT use an LLM pre-launch (latency, cost, hallucination risk). A weighted formula `(form × 0.4 + FDR × 0.3 + ownership trend × 0.3)` delivers 80% of the value with 10% of the complexity.
+
+---
+
+### FB-051
+**Title:** Price change tracking and watchlist alerts
+
+**Priority:** P2 · **Complexity:** S
+
+**User Story:** As a player monitoring the market, I want to see price changes and get alerted for watchlisted players so I can act before prices move further.
+
+**Acceptance Criteria:**
+- Price change indicator on player cards (↑ +0.1m green / ↓ -0.1m red) since tournament start
+- Star icon adds a player to personal watchlist
+- Push notification when a watchlisted player's price changes
+- Price history chart in player detail modal
+- Prices updated by admin post-matchday; history stored in `player_price_history` table
+
+**Dependencies:** FB-041 (push), `player_price_history` table
+
+**Source:** FPL price changes
+
+**Notes:** Prices in a WC format are manually set by admin (no algorithmic transfer-driven prices). The watchlist + notification combo is a strong re-engagement trigger for inactive users.
+
+---
+
+### FB-052
+**Title:** League trophy cabinet and profile page
+
+**Priority:** P2 · **Complexity:** S
+
+**User Story:** As a returning champion, I want past league wins displayed on my profile so that my history is recognised and I'm motivated to return for the next tournament.
+
+**Acceptance Criteria:**
+- Profile screen shows "Trophy Cabinet" with one icon per league won
+- Trophy includes: league name, tournament, year, manager's final score
+- Awarded automatically when commissioner marks a season complete
+- Visible to all league members
+- "Runner-Up" and "Phase Winner" badges also awarded (visually distinct)
+
+**Dependencies:** League standings finalisation, `trophies` table
+
+**Source:** FPL hall of fame; Sleeper avatar system
+
+**Notes:** World Cup is a one-shot tournament — trophies are especially meaningful as a permanent memento. Use WC-inspired visual design (golden cup, country flags). Store in a `trophies` table linked to `profiles`.
+
+---
+
+### FB-053
+**Title:** League commissioner analytics dashboard
+
+**Priority:** P2 · **Complexity:** M
+
+**User Story:** As a league commissioner, I want aggregated league stats so I can understand who is active and keep managers engaged.
+
+**Acceptance Criteria:**
+- Commissioner-only view: active managers this GW, average score, highest score, template XI (most-owned 11 in the league)
+- Weekly digest email to commissioner after each matchday (opt-in)
+- Manager participation rate (% who changed team before deadline) as a health metric
+- "Biggest mover" — manager who gained the most places this GW
+- Data exportable as CSV
+
+**Dependencies:** League system, matchday finalisation, Resend email integration
+
+**Source:** Internal concept
+
+**Notes:** Commissioners are power users and evangelists. The template XI is especially shareable ("6 of 8 managers own Mbappe!"). CSV export is low effort, high goodwill.
+
+---
+
+### FB-054
+**Title:** Correct prediction streak tracker
+
+**Priority:** P2 · **Complexity:** S
+
+**User Story:** As a player using Daily Predictions, I want to see my correct-prediction streak so I'm motivated to predict every matchday.
+
+**Acceptance Criteria:**
+- Streak counter on Home screen prediction card
+- Increments on correct prediction; breaks on a miss or no-pick
+- `current_streak` and `best_streak` stored on `profiles` table
+- Notification if a streak of 3+ is at risk: "Your 5-game streak is at risk — pick before 3pm"
+- Streak badge on league standings next to manager name
+
+**Dependencies:** FB-020 (persist prediction), FB-041 (push)
+
+**Source:** Duolingo streak mechanic; FPL bonus engagement loops
+
+**Notes:** The at-risk notification is more valuable than the visible counter — implement it even if the UI counter is deferred. Show the streak as an achievement; never punish streak loss aggressively.
+
+---
+
+### FB-055
+**Title:** "X of your league mates own this player" social proof in Market
+
+**Priority:** P2 · **Complexity:** S
+
+**User Story:** As a player browsing the transfer market, I want to see how many of my league rivals own a player so I feel social pressure on template picks and spot differentials.
+
+**Acceptance Criteria:**
+- League-scoped ownership count on player cards in Market screen: "3 of 8 managers in your league own this player"
+- Phrasing: 0 = "Unique in your league", 1–2 = "X manager owns…", 3+ = "X managers own…"
+- Updates in real time during the transfer window
+- Only shown when user is in at least one league
+- Does not reveal which specific managers own the player (privacy until deadline)
+
+**Dependencies:** FB-038 (global ownership %), league membership, squad data
+
+**Source:** FPL template pressure; Sleeper social layer
+
+**Notes:** Subtle but powerful — turns solitary browsing into a social experience. Compute per-league from existing squad data; cache at league level.
+
+---
+
+### FB-056
+**Title:** Guest gameweek entry — no-commitment single matchday
+
+**Priority:** P2 · **Complexity:** M
+
+**User Story:** As a casual fan who doesn't want to commit to the full tournament, I want to enter a single matchday public contest so I can try the game without long-term obligations.
+
+**Acceptance Criteria:**
+- "Play this matchday" CTA on landing page requires only email (no full registration)
+- Guest picks a squad for one matchday and enters a public leaderboard
+- Post-matchday results email with CTA to create a full account and join a league
+- Guest entry converts to full account on registration with same email
+- Guest entries capped at 500 per matchday to manage volume
+
+**Dependencies:** Auth (guest session), squad builder, public leaderboard
+
+**Source:** DraftKings single-entry; WC casual audience strategy
+
+**Notes:** The WC has a huge casual audience who'd never commit to FPL-style season management. Guest entry is the top-of-funnel activation for this segment. Conversion from guest to registered is the key metric — track it from day 1.
+
+---
+
+### FB-057
+**Title:** Waiver wire / transfer priority system
+
+**Priority:** P2 · **Complexity:** M
+
+**User Story:** As a manager near the bottom of the standings, I want first priority on free-agent pickups so that lower-placed teams have a catch-up mechanism.
+
+**Acceptance Criteria:**
+- Waiver priority assigned inverse to league standings (last place = priority 1)
+- Waiver window opens after results are finalised each matchday
+- Claims submitted during window (not first-come-first-served)
+- Claims processed in priority order via a Supabase edge function
+- League admin can toggle waiver mode ON/OFF per league
 
 **Dependencies:** League standings, transfer system, `waiver_claims` table
 
 **Source:** Sleeper, NFL fantasy conventions
 
-**Notes:** More relevant for closed private leagues than public ones. Gate this behind a league-admin setting ("Waiver Mode: ON/OFF") so classic leagues aren't affected. Processing job runs as a Supabase edge function on a scheduled trigger.
-
----
-
-### FB-015
-**Title:** Snake draft mode
-
-**Priority:** P3
-
-**User Story:** As a league commissioner, I want to run a live real-time draft night where managers take turns picking players so that squad building is a shared social event.
-
-**Acceptance Criteria:**
-- Draft lobby with ready-check before draft starts
-- Turns time-limited (60s default, configurable); auto-pick fires if manager doesn't pick in time
-- Real-time pick feed shown to all managers simultaneously via Supabase Realtime
-- Draft results seed each manager's squad automatically
-- Commissioner can pause, resume, or reset draft before it completes
-
-**Complexity:** XL
-
-**Dependencies:** FB-001 (Realtime), league system, full player database
-
-**Source:** Sleeper, ESPN Fantasy
-
-**Notes:** Highest complexity item in the backlog — do not attempt pre-launch. Requires websocket presence, clock synchronisation, and conflict resolution for simultaneous picks. Build as a standalone `/draft/:league_id` route. Phase 2 roadmap item.
-
----
-
-## Epic: Live Experience
-
-### FB-016
-**Title:** Live scoring screen with per-player stat breakdown
-
-**Priority:** P0
-
-**User Story:** As a player watching a match, I want to see each player's live points contribution so that I know exactly why my score is moving.
-
-**Acceptance Criteria:**
-- Live screen shows each player's current points with stat breakdown (goals, assists, clean sheet, bonus)
-- Points update within 60s of a scoring event (leverages FB-001)
-- Players with active bonus points shown with a pulsing indicator
-- Captain points displayed at 2× (or active chip multiplier)
-- "Last updated X seconds ago" timestamp shown to build trust in data freshness
-
-**Complexity:** M
-
-**Dependencies:** FB-001 (Realtime), `player_scores` table with stat columns
-
-**Source:** LaLiga Fantasy, FPL live view
-
-**Notes:** Stats breakdown is the single most-requested live feature in user research. Even if data is 60s delayed, the breakdown is what matters. Use Supabase Realtime subscription on `player_scores` filtered to the user's active squad players only to minimise payload.
-
----
-
-### FB-017
-**Title:** Rival live score visible in H2H view
-
-**Priority:** P1
-
-**User Story:** As a player in an H2H matchup, I want to see my opponent's live score updating alongside mine so that I feel the tension of the head-to-head contest in real time.
-
-**Acceptance Criteria:**
-- H2H live view shows two columns: My Score vs Opponent Score
-- Both scores update on the same Realtime subscription
-- Opponent's goalscorers listed by name with points contributed (no squad composition revealed before deadline)
-- Win/Draw/Loss indicator updates live
-- Tapping an opponent's player name shows their public stats card (not their full squad)
-
-**Complexity:** M
-
-**Dependencies:** FB-001, FB-011 (H2H system), FB-016
-
-**Source:** Sleeper (rival view), FPL (mini-league live)
-
-**Notes:** This is the engagement flywheel — managers check the app 5× more during matches when an H2H rival is visible. Prioritise rendering performance; avoid full re-renders on each score update (use React 19 transitions or memo).
-
----
-
-### FB-018
-**Title:** iOS Live Activities and home screen widget
-
-**Priority:** P2
-
-**User Story:** As an iPhone user, I want to see my live score on the Dynamic Island and lock screen during a match without opening the app so that I can follow along during the game.
-
-**Acceptance Criteria:**
-- Live Activity displays: my current score, captain's points, H2H score (if applicable), time remaining
-- Activity starts automatically when a matchday kicks off (or on user tap)
-- Updates every 60s via ActivityKit push token
-- Home screen widget (small + medium sizes) shows current rank and total points
-- Graceful degradation on Android (no Live Activity; rely on push notifications)
-
-**Complexity:** L
-
-**Dependencies:** FB-001, FB-003, native iOS wrapper (PWA or React Native bridge)
-
-**Source:** Premier Fantasy, Sky Sports
-
-**Notes:** Requires either a React Native wrapper or a dedicated iOS native companion — not achievable in a pure PWA. Assess whether the user base justifies native development pre-launch. If not, defer to P3 and use push notifications as the interim solution. Tag as P2 pending native strategy decision.
-
----
-
-### FB-019
-**Title:** Post-match automated Gazette story card
-
-**Priority:** P1
-
-**User Story:** As a player, I want a beautiful shareable story card generated automatically after each matchday so that I can brag (or commiserate) on social media with one tap.
-
-**Acceptance Criteria:**
-- Gazette card generated within 10 minutes of matchday points finalisiation
-- Card includes: rank, GW points, total points, best player, captain return, chip used (if any)
-- Design is portrait-format, World Cup branded, share-ready (1080×1920 PNG)
-- Shareable via native share sheet (WhatsApp, Instagram Stories, X/Twitter)
-- "Save to Camera Roll" fallback for iOS where navigator.share is restricted
-
-**Complexity:** S
-
-**Dependencies:** Matchday points finalisation job, html2canvas or server-side card render
-
-**Source:** Sleeper (auto transaction cards), FPL (gameweek recap)
-
-**Notes:** Already partially built — `RecapCard` component exists with html2canvas. Upgrade to server-side rendering (Supabase edge function + Puppeteer or `@vercel/og`) for consistent cross-device output. Client-side html2canvas is fragile with custom fonts.
-
----
-
-### FB-020
-**Title:** Match timeline event feed
-
-**Priority:** P2
-
-**User Story:** As a player watching the live screen, I want to see a real-time event feed (goals, cards, subs) so that I understand why my score is changing.
-
-**Acceptance Criteria:**
-- Timeline events (goal, assist, yellow card, red card, sub, penalty miss) appear as feed items with timestamp
-- Events from all active World Cup matches shown, filterable to "My Players Only"
-- Each event tappable to see the player's stat card
-- Events stored in `match_events` table and streamed via Supabase Realtime
-- Feed auto-scrolls to latest event (pauseable)
-
-**Complexity:** M
-
-**Dependencies:** FB-001, data provider integration for live event feed
-
-**Source:** LaLiga Fantasy, ESPN FC
-
-**Notes:** Requires a reliable live data feed. Evaluate: Sportmonks API, API-Football, or Football-Data.org for WC 2026 data rights. Budget €50–200/month for a data provider at tournament volume. This is a data dependency risk — resolve before P1 launch.
-
----
-
-## Epic: Social & Community
-
-### FB-021
-**Title:** League chat hub (Sleeper model)
-
-**Priority:** P1
-
-**User Story:** As a league member, I want a persistent chat room in my league so that the banter, trash talk, and celebration happen inside the app rather than on WhatsApp.
-
-**Acceptance Criteria:**
-- Chat tab in League screen with persistent message history
-- Messages support text, emoji reactions (thumbs up, fire, skull, laughing), and @mentions
-- GIF search integration (Giphy or Tenor API)
-- Messages stored in `league_chat_messages` table, streamed via Supabase Realtime
-- Read receipts shown as avatar stacks on each message
-
-**Complexity:** M
-
-**Dependencies:** FB-001 (Realtime), auth system, league membership
-
-**Source:** Sleeper (defining feature)
-
-**Notes:** Chat is the single highest-retention feature in the Sleeper model — managers return daily even without transfers due to chat. Implement message pagination (load last 50, infinite scroll up). Moderate for offensive content — even basic profanity filter is better than none pre-launch.
-
----
-
-### FB-022
-**Title:** Auto-transaction social cards in league chat
-
-**Priority:** P1
-
-**User Story:** As a league member, I want to see automatic posts in chat when a manager makes a transfer, uses a chip, or switches captain so that the league stays informed and banter flows naturally.
-
-**Acceptance Criteria:**
-- Transfer event posts: "🔄 [Manager] transferred in [Player A] and out [Player B]"
-- Chip event posts: "[Manager] played the Knockout Gambler chip this matchday!"
-- Captain change posts: "[Manager] switched captain to [Player]"
-- Auto-posts appear as a distinct system message style (different background colour from chat bubbles)
-- Auto-posts are not deletable but can be hidden by the individual user
-
-**Complexity:** S
-
-**Dependencies:** FB-021 (chat), transfer system, chip system
-
-**Source:** Sleeper (auto-transaction posts)
-
-**Notes:** Fire auto-posts via Supabase database trigger or edge function on `transfers`, `team_chips`, and `squad_captains` table mutations. Do not post during the deadline lock window (after lock = no more auto-posts until results). Keep copy punchy — max 140 characters.
-
----
-
-### FB-023
-**Title:** League invite cards (WhatsApp / Instagram shareable)
-
-**Priority:** P1
-
-**User Story:** As a league commissioner, I want to generate a shareable image card with my league's join code so that I can recruit friends with a single message rather than typing instructions.
-
-**Acceptance Criteria:**
-- One-tap generate invite card from League screen (commissioner and all members can generate)
-- Card includes: league name, join code, QR code, ForzaKit branding, and WC 2026 visual
-- Shared via native share sheet or copied as PNG + text
-- Deep link in card resolves to `/join?code=XXXX` which pre-fills the join code on Auth screen
-- Cards invalidated when league is full or commissioner closes registration
-
-**Complexity:** S
-
-**Dependencies:** League system, auth deep-link handling
-
-**Source:** Sleeper, FPL (share-link pattern)
-
-**Notes:** Use `@vercel/og` or a pre-rendered template to generate the card server-side for consistent rendering. QR code library: `qrcode.react` (already common in React ecosystems). Deep links must work even if the app isn't installed yet (land on web auth → join flow).
-
----
-
-### FB-024
-**Title:** League trophy cabinet on profile
-
-**Priority:** P2
-
-**User Story:** As a returning champion, I want my past league wins displayed permanently on my profile so that my history is recognised and I have long-term motivation to return for the next tournament.
-
-**Acceptance Criteria:**
-- Profile screen shows a "Trophy Cabinet" section with one trophy icon per league won
-- Trophy includes: league name, season/tournament, year, and manager's final score
-- Trophy awarded automatically when league commissioner marks a season as complete
-- Trophies visible to all league members (public profile view)
-- "Runner-Up" and "Phase Winner" badges also awarded (visually distinct from champion trophy)
-
-**Complexity:** S
-
-**Dependencies:** League standings finalisation, profile screen, `trophies` table
-
-**Source:** FPL (hall of fame pattern), Sleeper
-
-**Notes:** World Cup 2026 is a one-shot tournament — trophies are especially meaningful as a permanent memento. Store trophy data in a `trophies` table linked to `profiles`. Design trophies to feel premium — use WC-inspired visual language (golden cup, country flags).
-
----
-
-### FB-025
-**Title:** Correct prediction streak tracker
-
-**Priority:** P2
-
-**User Story:** As a player who uses the Daily Prediction mini-game, I want to see my current correct-prediction streak so that I am motivated to keep predicting every matchday.
-
-**Acceptance Criteria:**
-- Streak counter displayed prominently on Home screen prediction card
-- Streak increments when the user's prediction is correct and breaks on a miss or no-pick
-- "Best streak" record stored alongside current streak on `profiles` table
-- Notification sent if a user breaks a streak of 3 or more ("Your 5-game streak is at risk! Pick a scorer before 3pm")
-- Streak badge shown on league standings next to manager name
-
-**Complexity:** S
-
-**Dependencies:** Top scorer prediction system (FB-007 already built), FB-003 (push notifications)
-
-**Source:** Duolingo (streak mechanic), FPL (bonus engagement loops)
-
-**Notes:** Streaks are a proven daily-active-user driver. The risk-notification is the most valuable piece — implement even if the visible streak counter is deferred. Store `current_streak`, `best_streak`, `last_correct_matchday` on `profiles`.
-
----
-
-### FB-026
-**Title:** "X of your league mates own this player" social proof
-
-**Priority:** P2
-
-**User Story:** As a player browsing the transfer market, I want to see how many of my league rivals own a player so that I feel social pressure to act on template players and spot differentials.
-
-**Acceptance Criteria:**
-- League-scoped ownership count shown on player cards in Market screen ("3 of 8 managers in your league own this player")
-- Count updates in real-time when page is open during the transfer window
-- Phrasing changes dynamically: 0 = "Unique in your league", 1–2 = "X manager owns…", 3+ = "X managers own…"
-- Only shown when user is in at least one league; hidden for solo users
-- Does not reveal which specific managers own the player (respects team privacy until deadline)
-
-**Complexity:** S
-
-**Dependencies:** FB-009 (ownership %), league membership, player–squad mapping
-
-**Source:** FPL (template pressure), Sleeper social layer
-
-**Notes:** This is a subtle but powerful retention hook — it turns a solitary browsing experience into a social one. Compute per-league from existing squad data. Cache at league level, not global level.
-
----
-
-## Epic: Onboarding & Growth
-
-### FB-027
-**Title:** Onboarding flow — new user welcome and squad builder walkthrough
-
-**Priority:** P0
-
-**User Story:** As a new user, I want a guided walkthrough when I first arrive so that I understand how to build my squad and join a league without reading documentation.
-
-**Acceptance Criteria:**
-- 4-step onboarding: (1) Welcome + tournament context, (2) Pick your squad, (3) Join or create a league, (4) Set notifications preference
-- Progress indicator shown throughout (step X of 4)
-- Skippable at any step; skip stores a flag so it never shows again
-- Walkthrough tooltips overlay Squad and Market screens on first visit
-- Onboarding completion tracked in analytics (funnel drop-off by step)
-
-**Complexity:** M
-
-**Dependencies:** Auth, squad builder, league system
-
-**Source:** Sleeper (polished onboarding), Draftkings
-
-**Notes:** First-session completion rate is the single most predictive metric for 30-day retention. Target > 70% completion rate. Use a lightweight tooltip library (e.g. `react-joyride`) rather than building custom. A/B test skip vs. forced completion on step 2.
-
----
-
-### FB-028
-**Title:** Guest gameweek entry (no-commitment single matchday)
-
-**Priority:** P2
-
-**User Story:** As a casual fan who doesn't want to commit to the full tournament, I want to enter a single matchday public contest so that I can try the game without long-term obligations.
-
-**Acceptance Criteria:**
-- "Play this matchday" CTA on landing page requires only email (no full registration)
-- Guest picks a squad for one matchday and is entered into a public leaderboard
-- Post-matchday, guest receives results email with CTA to create a full account and join a league
-- Guest entry converts to full account if user registers with same email
-- Guest entries capped at 500 per matchday to manage data volume
-
-**Complexity:** M
-
-**Dependencies:** Auth (guest session), squad builder lite, public leaderboard
-
-**Source:** DraftKings (single-entry), original concept for WC casual audience
-
-**Notes:** World Cup has a uniquely large casual audience who would never commit to FPL-style season management. Guest entry is the top-of-funnel activation for this segment. Conversion from guest to registered is the key metric — track it from day 1.
-
----
-
-### FB-029
-**Title:** Social sharing — auto-generated WhatsApp league invite loop
-
-**Priority:** P1
-
-**User Story:** As an existing manager, I want the app to prompt me to invite friends at key moments so that my league fills up and engagement increases.
-
-**Acceptance Criteria:**
-- Invite prompt appears after: squad first saved, first matchday results, after a big captain return
-- Prompt shows a pre-filled WhatsApp share link ("I scored X pts this week on ForzaKit — join my league: [link]")
-- Invite CTA dismissable (does not appear again within 48 hours after dismissal)
-- Conversion tracked: link clicks, registrations from invite links (UTM parameters)
-- Manager rewarded with a cosmetic badge if they successfully recruit 3+ league members
-
-**Complexity:** S
-
-**Dependencies:** FB-023 (league invite cards), analytics tracking
-
-**Source:** Wordle viral loop, Sleeper friend invites
-
-**Notes:** The WhatsApp message pre-fill is the key mechanic — remove any friction. Use `https://wa.me/?text=` URL scheme. Attach UTM params (`?utm_source=invite&utm_medium=whatsapp&utm_campaign=matchday_result`) to all invite links.
-
----
-
-### FB-030
-**Title:** Daily notification loop (morning news, pre-deadline, live, post-match)
-
-**Priority:** P1
-
-**User Story:** As a player, I want relevant notifications at the right moment each day during the tournament so that the app stays top of mind without feeling spammy.
-
-**Acceptance Criteria:**
-- Morning (9am local): "Team news: [Player] is doubtful for today's match — consider a transfer"
-- Pre-deadline (T-2h): "⏰ Transfer deadline in 2 hours — your team is [locked/not locked]"
-- Match kick-off: "🏟 Matchday X is live — your captain [Player] is starting"
-- Post-match: "Full time — you scored X pts. [League position change]"
-- Each notification type independently toggleable in user settings (FB-003)
-
-**Complexity:** M
-
-**Dependencies:** FB-003 (push infrastructure), team news data feed, scoring results
-
-**Source:** FPL, Sleeper daily engagement patterns
-
-**Notes:** The 4-notification cadence mirrors TV sports coverage pacing and is proven in FPL to drive daily opens. Morning team news requires a data feed — flag as a data dependency. Implement T-2h and post-match first (no data feed required); add morning news in P2.
-
----
-
-## Epic: Data & Analytics
-
-### FB-031
-**Title:** Player form graph and stats card
-
-**Priority:** P1
-
-**User Story:** As a player evaluating a transfer target, I want to see a player's last 5 matches performance graphed so that my decisions are data-driven rather than gut-feel.
-
-**Acceptance Criteria:**
-- Player detail modal (accessible from Market and Squad screens) shows a bar/spark-line chart of last 5 GW points
-- Key stats displayed: goals, assists, clean sheets, yellow cards, average points, ownership %
-- "Form" label (Hot / Good / Average / Poor / Cold) calculated from 5-match average vs. season average
-- Stats card shareable as an image (same share flow as Gazette card)
-- Data sourced from `player_match_stats` table, updated post-matchday
-
-**Complexity:** M
-
-**Dependencies:** `player_match_stats` table, data provider (FB-020 notes), charting library
-
-**Source:** FPL (player stats), Sorare (performance cards)
-
-**Notes:** Use `recharts` or `victory-native` for the sparkline chart — both have React 19 compatibility. The shareable stats card is the organic virality mechanic for this feature. World Cup has at most 7 matchdays per team — form graph will be sparse early; use a "Insufficient data" state for GW1–2.
-
----
-
-### FB-032
-**Title:** AI transfer assistant (rule-based recommendations)
-
-**Priority:** P2
-
-**User Story:** As a player unsure who to transfer, I want the app to suggest transfers with clear reasoning so that I make better decisions faster.
-
-**Acceptance Criteria:**
-- Transfer Assistant accessible from Squad screen ("Get suggestions" CTA)
-- Recommendations based on rules: FDR (FB-008), form (FB-031), ownership trends (FB-009), price changes, injury status
-- Each suggestion includes a plain-language reason ("Haaland has scored in 3 of his last 4 matches and faces a GW5 opponent rated 2/5")
-- Maximum 3 suggestions shown per session to avoid overwhelm
-- User can accept (jumps to transfer flow with player pre-selected) or dismiss each suggestion
-
-**Complexity:** M
-
-**Dependencies:** FB-008 (FDR), FB-031 (form), FB-009 (ownership), transfer system
-
-**Source:** Original concept, FPL community tools (FPLReview, LiveFPL)
-
-**Notes:** Label as "rule-based AI" not "machine learning" — transparency builds trust. Do NOT use an LLM for real-time suggestions pre-launch (latency, cost, hallucination risk). A simple weighted scoring formula (form × 0.4 + FDR × 0.3 + ownership trend × 0.3) delivers 80% of the value with 10% of the complexity.
-
----
-
-### FB-033
-**Title:** League-level analytics dashboard for commissioners
-
-**Priority:** P2
-
-**User Story:** As a league commissioner, I want to see aggregated stats about my league so that I can understand who is performing well and keep managers engaged.
-
-**Acceptance Criteria:**
-- Commissioner-only view in League screen showing: total managers active this GW, average score, highest score, template XI (most owned 11 players in the league)
-- Weekly digest email sent to commissioner after each matchday (opt-in)
-- Manager participation rate (% who changed team before deadline) shown as a health metric
-- "Biggest mover" — manager who gained the most places in the standings this GW
-- Data exportable as CSV (for commissioners who want to run side competitions)
-
-**Complexity:** M
-
-**Dependencies:** League system, matchday finalisation, email sending (Supabase + Resend/SendGrid)
-
-**Source:** Original concept, sports analytics dashboards
-
-**Notes:** Commissioners are the power users and evangelists — investing in their experience drives retention of entire leagues. Template XI is particularly shareable on WhatsApp. CSV export is low effort, high goodwill.
-
----
-
-### FB-034
-**Title:** Price change tracking and alerts
-
-**Priority:** P2
-
-**User Story:** As a player monitoring the market, I want to see when a player's price has changed and receive an alert for players in my watchlist so that I can act before prices move further.
-
-**Acceptance Criteria:**
-- Price change indicator on player cards (↑ +0.1m green / ↓ -0.1m red) since tournament start
-- Watchlist feature: tap a star icon to add a player to your personal watchlist
-- Push notification when a watchlisted player's price changes (respects FB-003 prefs)
-- Price history chart available in player detail modal
-- Prices updated by admin post-matchday; change stored in `player_price_history` table
-
-**Complexity:** S
-
-**Dependencies:** FB-003 (push), player price system, `player_price_history` table
-
-**Source:** FPL (price changes)
-
-**Notes:** Price changes in a WC format are simpler than FPL (no algorithmic transfer-driven prices) — prices can be manually set by admin. The watchlist + notification combo is a powerful re-engagement trigger for inactive users.
-
----
-
-### FB-035
-**Title:** Admin analytics: active users, DAU/WAU, funnel metrics
-
-**Priority:** P1
-
-**User Story:** As the product team, I want a live admin dashboard showing key engagement metrics so that we can make data-driven decisions throughout the tournament.
-
-**Acceptance Criteria:**
-- Admin screen includes a Metrics tab (admin-only) showing: DAU, WAU, MAU, new registrations by day, funnel (registered → squad saved → league joined → matchday active)
-- Metrics computed from `analytics_events` table (client fires events on key actions)
-- Retention cohort chart: % of day-0 registrations still active on day 7, 14, 21
-- Top 10 leagues by activity (message count + transfer count)
-- Data refreshes every 5 minutes; historical data exportable
-
-**Complexity:** M
-
-**Dependencies:** Analytics event tracking (implement in FB-027 onboarding), Admin screen
-
-**Source:** Internal product requirement
-
-**Notes:** Instrument the app with lightweight event tracking from day 1 — retrofitting is painful. Use a simple `analytics_events` table (user_id, event_name, properties JSONB, created_at) rather than a third-party SDK to keep costs low. PostHog free tier is an alternative if self-hosted analytics proves too slow to build.
-
----
-
-### FB-036
-**Title:** Daily prediction mini-game — result and correct score picks
-
-**Priority:** P2
-
-**User Story:** As a player who wants more to do on match days, I want to predict match results and correct scores so that I have another way to score points and compete with my league.
-
-**Acceptance Criteria:**
-- Prediction card on Home screen showing today's matches (up to 4 per day in group stage)
-- For each match: predict result (1/X/2) and correct score (optional, higher points reward)
-- Points awarded: result correct = 1pt, correct score = 3pts; credited to a separate "Prediction League" table
-- Predictions locked at match kick-off; correct score displayed post-match
-- Separate prediction leaderboard tab in League screen
-
-**Complexity:** M
-
-**Dependencies:** Top scorer prediction system (partially built), fixture schedule, results data feed
-
-**Source:** Superbru, SofaScore Predictor
-
-**Notes:** The existing `top_scorer_predictions` table and flow (already built) provides the pattern — extend the schema to support result/score predictions. Keep prediction league scoring separate from main fantasy scoring to avoid confusing the core product.
-
----
-
-## Epic: Onboarding & Growth (continued)
-
-### FB-037
-**Title:** Deep-link routing for notifications and invites
-
-**Priority:** P0
-
-**User Story:** As a user who taps a notification or invite link, I want to land on the exact relevant screen so that I am not dumped on the home page and forced to navigate manually.
-
-**Acceptance Criteria:**
-- All push notifications carry a `target_url` property that opens the specified screen on tap
-- Invite links (`/join?code=XXXX`) pre-fill the join code on the Auth screen
-- Gazette share links (`/recap?matchday=5`) open the Recap screen directly
-- Deep links work from cold start (app not running) and warm start (app backgrounded)
-- Tested across iOS Safari PWA, Android Chrome PWA, and desktop Chrome
-
-**Complexity:** S
-
-**Dependencies:** FB-003 (push), React Router setup, service worker
-
-**Source:** Internal requirement
-
-**Notes:** React Router v6 handles most of this natively. The edge case is cold-start deep linking from push — ensure the service worker's `notificationclick` handler uses `clients.openWindow(target_url)` correctly.
-
----
-
-### FB-038
-**Title:** Responsive mobile-first layout polish and PWA install prompt
-
-**Priority:** P0
-
-**User Story:** As a mobile user, I want the app to feel native on my phone with smooth navigation so that I recommend it to friends rather than abandoning it for a native app.
-
-**Acceptance Criteria:**
-- All 9 screens render correctly on iPhone SE (375px), iPhone 14 (390px), and Samsung Galaxy S22 (360px)
-- No horizontal scroll on any screen at any viewport
-- PWA install prompt ("Add to Home Screen") appears after user's 3rd session or on manual trigger
-- App has a custom splash screen, icon, and standalone display mode configured in `manifest.json`
-- Lighthouse PWA score > 90 (Performance, Accessibility, Best Practices)
-
-**Complexity:** M
-
-**Dependencies:** All screens built (already the case)
-
-**Source:** Internal quality requirement
-
-**Notes:** The pitch view on Squad screen is the most complex responsive layout. Test on real devices, not just browser DevTools. PWA install prompt cannot be forced on iOS — implement a custom "Add to Home Screen" guide modal for Safari users.
-
----
-
-### FB-039
-**Title:** Email verification and password reset flow
-
-**Priority:** P0
-
-**User Story:** As a new user, I want to verify my email and reset my password if forgotten so that my account is secure and recoverable.
-
-**Acceptance Criteria:**
-- Supabase email verification sent on signup; unverified users shown a banner prompting verification
-- Verified status checked on login; unverified users can still use the app but cannot join leagues
-- Password reset email sent via Supabase Auth with branded template
-- "Forgot password" link on login screen triggers reset flow
-- Email templates use ForzaKit branding (logo, colours, footer links)
-
-**Complexity:** S
-
-**Dependencies:** Supabase Auth configuration
-
-**Source:** Standard auth requirement
-
-**Notes:** Customise Supabase email templates in the Dashboard (Settings → Auth → Email Templates). Use a custom SMTP sender (e.g. Resend) for deliverability — Supabase's default sender has poor inbox placement.
-
----
-
-### FB-040
-**Title:** Username selection and public profile setup
-
-**Priority:** P0
-
-**User Story:** As a new user, I want to choose a unique username so that league mates can identify me in standings, chat, and the Gazette.
-
-**Acceptance Criteria:**
-- Username prompted during onboarding (step 1 of FB-027 flow)
-- Usernames 3–20 characters, alphanumeric + underscores only, unique constraint enforced by DB
-- Username availability checked in real-time with 300ms debounce
-- Users can change their username once per month (stored in `profiles.username_changed_at`)
-- Username displayed throughout the app: standings, chat, Gazette cards, invite cards
-
-**Complexity:** S
-
-**Dependencies:** `profiles` table, auth system
-
-**Source:** Sleeper, Reddit (username pattern)
-
-**Notes:** Already partially implemented based on codebase state. Confirm the unique index exists on `profiles.username`. Pre-generate 10 username suggestions based on the user's email prefix to reduce drop-off at this step.
-
----
-
-## Summary: Launch Readiness Checklist
-
-| Priority | Count | Target Completion |
-|----------|-------|-------------------|
-| P0 (Pre-launch blockers) | 11 items | May 31, 2026 |
-| P1 (Launch window) | 14 items | June 14, 2026 (GW1) |
-| P2 (Post-launch, group stage) | 12 items | June 28, 2026 (R16) |
-| P3 (Future / v2) | 1 item | Post-tournament |
-
-### P0 Items (must ship before June 2026 launch)
-FB-001 · FB-002 · FB-003 · FB-004 · FB-005 · FB-006 · FB-007 · FB-016 · FB-027 · FB-037 · FB-038 · FB-039 · FB-040
-
-### Critical Path Dependencies
-```
-Auth + RLS (FB-004, FB-039, FB-040)
-  └── Squad / Transfer system (existing)
-        └── Deadline lock (FB-002)
-              └── Transfer countdown UX (FB-010)
-Supabase Realtime (FB-001)
-  └── Live scoring (FB-016)
-        └── H2H live view (FB-017)
-Push infrastructure (FB-003)
-  └── Deadline notifications (FB-010)
-  └── Daily notification loop (FB-030)
-  └── Price alerts (FB-034)
-League chat (FB-021)
-  └── Auto-transaction cards (FB-022)
-```
-
-### Known Risks
-1. **Live data feed** — FB-016, FB-020, FB-031 all depend on a real-time sports data provider. Evaluate and contract a provider (Sportmonks / API-Football) by May 1, 2026.
-2. **iOS push notifications** — Web push on iOS requires iOS 16.4+ and the app added to Home Screen. Communicate this limitation clearly in onboarding.
-3. **Supabase Realtime scale** — Free/Pro tier has concurrent connection limits. Load test at 100 concurrent users on match day before launch.
-4. **Server-side card rendering** — Gazette and Stats cards using html2canvas are fragile. Migrate to `@vercel/og` edge function before launch (FB-019 notes).
-
----
-
-## Epic: App Logic Gaps & Broken Flows
-*Items below were identified in a full code audit (April 2026). These are existing screens with broken or missing backend wiring, not new features.*
-
----
-
-### FB-041
-**Title:** Wire real authentication — remove hardcoded user ID from all screens
-
-**Priority:** P0
-
-**User Story:** As a user, I want the app to recognise me specifically so that my squad, points, and league data are mine and mine alone.
-
-**Acceptance Criteria:**
-- Hardcoded `userId = '00000000-0000-0000-0000-000000000000'` removed from all 9 screens
-- Every data fetch and write uses `supabase.auth.getUser()` to retrieve the real session user ID
-- Auth guard in `App.jsx` re-enabled; unauthenticated users redirected to the Auth screen
-- Session restored on page reload (Supabase `onAuthStateChange` listener)
-- All screens tested with two separate real user accounts to confirm data isolation
-
-**Complexity:** M
-
-**Dependencies:** Supabase Auth configured, FB-039 (email flow), FB-040 (username)
-
-**Source:** Code audit — affects every screen
-
-**Notes:** This is the single most critical gap in the entire codebase. Without it, the app cannot be used by more than one person. The fix touches every screen's `useEffect` data fetch — plan a coordinated change across HomeScreen, SquadScreen, MarketScreen, LeagueScreen, LiveScreen, RecapScreen. Use a `useAuth()` custom hook to avoid repeating `supabase.auth.getUser()` everywhere.
-
----
-
-### FB-042
-**Title:** Fix Supabase client environment variable configuration
-
-**Priority:** P0
-
-**User Story:** As a developer deploying the app, I want Supabase credentials loaded from environment variables so that no secrets are hardcoded in source code.
-
-**Acceptance Criteria:**
-- `lib/supabase.js` uses `import.meta.env.VITE_SUPABASE_URL` and `import.meta.env.VITE_SUPABASE_ANON_KEY`
-- `.env.local` created locally (gitignored); `.env.example` committed with placeholder values
-- Vercel project has `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` set as environment variables for production and preview
-- App fails fast with a clear console error if env vars are missing at boot
-- No credentials appear in the built JS bundle (verify with `grep` on dist output)
-
-**Complexity:** XS
-
-**Dependencies:** Vercel project access
-
-**Source:** Code audit — `lib/supabase.js` has `'placeholder_key'` hardcoded
-
-**Notes:** Quick fix but a security prerequisite. Do this before any real user data is written. The anon key is safe to commit only in `.env.example` with a fake value.
-
----
-
-### FB-043
-**Title:** Squad budget — server-tracked, not client-computed from fallback data
-
-**Priority:** P0
-
-**User Story:** As a player, I want my remaining transfer budget to be accurate and server-enforced so that I cannot accidentally spend more than my allowance.
-
-**Acceptance Criteria:**
-- `squads.budget_remaining` column stores the authoritative budget value in the DB
-- Budget decrements on buy and increments on sell via the server-side transfer handler
-- Client reads `budget_remaining` from the DB; never computes it from fallback data
-- If budget would go negative, the transfer is rejected server-side with a clear error
-- Budget displayed consistently across Squad screen, Market screen, and Admin screen
-
-**Complexity:** S
-
-**Dependencies:** FB-041 (real auth), `squads` table schema
-
-**Source:** Code audit — MarketScreen computes budget by summing fallback player prices, never reads a real persisted value
-
-**Notes:** Currently `MarketScreen` sums prices from whatever player array happens to be loaded (often fallback data) and subtracts from 100. This means budget can show as £100M even after purchases. Add `budget_remaining NUMERIC DEFAULT 100` to the `squads` table. Update on every transfer upsert.
-
----
-
-### FB-044
-**Title:** Persist top-scorer prediction to database
-
-**Priority:** P1
-
-**User Story:** As a player, I want my match predictions to be saved so that I can earn prediction points and track my streak after results come in.
-
-**Acceptance Criteria:**
-- PredictionModal `onSave` handler inserts/upserts a row in `top_scorer_predictions` table
-- Prediction locked at match kick-off (server-side check, not just UI disabled state)
-- Saved prediction displayed on Home screen without requiring a page reload
-- If prediction already exists for this matchday, it is updated not duplicated
-- Prediction points calculated post-match and credited to a `prediction_points` column on `league_members`
-
-**Complexity:** S
-
-**Dependencies:** FB-041 (real auth), `top_scorer_predictions` table, matchday fixture data
-
-**Source:** Code audit — HomeScreen `handlePredictionSaved` only updates local React state; nothing is written to Supabase
-
-**Notes:** The modal UI and local state flow already work. This is purely a missing `supabase.from('top_scorer_predictions').upsert(...)` call in the save handler. Lock time (`LOCK_TIME_LABEL`) must also be dynamic — see FB-051.
-
----
-
-### FB-045
-**Title:** Sell/remove player validation — captain and joker safety checks
-
-**Priority:** P1
-
-**User Story:** As a player selling a player from my squad, I want the app to warn me if I'm removing my captain or active joker so that I don't accidentally break my squad state.
-
-**Acceptance Criteria:**
-- If user attempts to sell the current captain, a confirmation modal warns: "This player is your captain. Selling them will remove your captain assignment. Continue?"
-- If user attempts to sell the active Daily Joker pick, same confirmation prompt shown
-- Confirmation modal shows player name and the consequence clearly
-- On confirm, captain/joker assignment is cleared in DB before the transfer completes
-- Cancel returns user to the market with no changes made
-
-**Complexity:** S
-
-**Dependencies:** FB-041 (real auth), squad state, transfer system
-
-**Source:** Code audit — MarketScreen `handleSell` has no captain/joker check; selling captain leaves an orphaned captain_id in the DB
-
-**Notes:** This is a correctness bug, not just a UX gap. An orphaned `captain_id` referencing a non-squad player will break the scoring engine. Fix defensively: the scoring engine should also validate captain is in squad before applying multiplier.
-
----
-
-### FB-046
-**Title:** Squad swap — enforce formation and position limits after substitution
-
-**Priority:** P1
-
-**User Story:** As a player making a substitution, I want the app to prevent invalid formations so that I cannot field a squad with zero goalkeepers or five forwards.
-
-**Acceptance Criteria:**
-- Before confirming a swap, validate the resulting formation: min 1 GK, 3 DEF, 2 MID, 1 FWD on pitch
-- If swap would produce an invalid formation, show a clear error: "This swap would leave you with no goalkeeper on the pitch"
-- Validation runs both client-side (for instant feedback) and server-side (for integrity)
-- Bench composition is not formation-restricted; any position can sit on the bench
-- Swap confirmation screen shows the before/after formation visually
-
-**Complexity:** S
-
-**Dependencies:** Squad screen swap flow, server-side transfer validation
-
-**Source:** Code audit — SquadScreen `handleSwap` swaps positions in state with no formation validation; an alert string exists but doesn't prevent the action
-
-**Notes:** The current code has `alert('Invalid swap')` that fires but does not `return` early — the swap proceeds anyway. Two-line fix for the early return; the formation validation logic is the meaningful work.
-
----
-
-### FB-047
-**Title:** Transfer window lock state — disable buy/sell UI when squad is locked
-
-**Priority:** P0
-
-**User Story:** As a player after the transfer deadline, I want the market to be visually and functionally locked so that I understand no changes are possible and don't waste time trying.
-
-**Acceptance Criteria:**
-- After matchday deadline, all buy/sell buttons in MarketScreen are disabled with a "Squad Locked" state
-- Locked state derived from server time compared to `matchday_deadlines` table (not client clock)
-- Squad screen also shows a lock banner when locked
-- Players who attempt a buy/sell during locked state receive a clear message: "Transfers are locked until after the match"
-- Locked state lifts automatically after results are published (configurable per matchday in Admin)
-
-**Complexity:** S
-
-**Dependencies:** `matchday_deadlines` table, FB-002 (deadline enforcement), FB-041 (real auth)
-
-**Source:** Code audit — MarketScreen `handleBuy` has no check for squad lock status
-
-**Notes:** This is both a UX gap and a fairness issue. Even if FB-002 (server-side lock) is in place, users attempting transfers during lock will see confusing 403 errors rather than clear lock messaging. Implement client lock state first (fast, visible), server enforcement second (FB-002).
-
----
-
-### FB-048
-**Title:** Bracket predictor — save predictions to DB and calculate scores
-
-**Priority:** P2
-
-**User Story:** As a player using the Bracket screen, I want my knockout predictions to be saved and scored against real results so that the bracket is a real competition, not a decorative UI.
-
-**Acceptance Criteria:**
-- Bracket fixtures loaded from `fixtures` table (knockout rounds only), not hardcoded
-- Tapping a team in the bracket records the prediction in `bracket_predictions` table
-- Bracket state persists across sessions (reload shows saved picks)
-- After each knockout match, predictions are auto-scored: correct winner = 1pt, correct scoreline = 3pts
-- Bracket leaderboard tab in League screen shows all managers' bracket scores
-
-**Complexity:** M
-
-**Dependencies:** FB-041 (real auth), knockout fixture data, `bracket_predictions` table
-
-**Source:** Code audit — BracketScreen is entirely static UI with hardcoded teams and no click handlers; "Save Bracket" button has no onClick
-
-**Notes:** The bracket UI layout already exists and looks good. The entire feature is cosmetic — teams are hardcoded (BRA, FRA, ENG, KOR), the winner (Brazil) is hardcoded, and no predictions are persisted. This needs a full backend wiring pass. Schedule for P2 (Round of 16 phase) when knockout data is available.
-
----
-
-### FB-049
-**Title:** Recap screen — replace hardcoded league name, username, and player points with real data
-
-**Priority:** P1
-
-**User Story:** As a player viewing my Recap card, I want to see my actual username, league name, and real point totals so that the card is worth sharing.
-
-**Acceptance Criteria:**
-- League name sourced from `leagues` table via the user's league membership, not hardcoded "World Cup Legends"
-- Username sourced from `profiles.username` via `supabase.auth.getUser()`, not hardcoded "João"
-- Best player points, captain points, and joker points sourced from `fantasy_points` table, not hardcoded 15/10/5
-- If no recap exists yet for the current matchday, show a "Results pending…" state rather than stale hardcoded data
-- All data paths tested end-to-end with a real matchday result in the DB
-
-**Complexity:** S
-
-**Dependencies:** FB-041 (real auth), `matchday_recaps` table populated by scoring engine, `fantasy_points` table
-
-**Source:** Code audit — RecapScreen has `leagueName = 'World Cup Legends'` and `username = 'João'` hardcoded; points are literals 15, 10, 5
-
-**Notes:** The Gazette card is the app's primary social sharing mechanic. A card that says "João scored 15 pts for World Cup Legends" when the real user is "Marco" in "Pub FC" will never be shared. Fix before launch.
-
----
-
-### FB-050
-**Title:** Live screen projections — use real squad data and per-player averages
-
-**Priority:** P1
-
-**User Story:** As a player on the Live screen, I want my score projection to be based on my actual squad and real player form, not a generic estimate based on position averages.
-
-**Acceptance Criteria:**
-- Projection calculation uses the authenticated user's actual squad (not a generic position average)
-- Per-player `season_avg_points` sourced from `player_stats` table (or computed from `fantasy_points`)
-- Rival live scores projected using their actual squads (read-only, post-deadline)
-- Projection refreshes every 60 seconds during a live match window, not every 5 minutes
-- "Projection confidence" label shown: "Based on X players in active matches"
-
-**Complexity:** M
-
-**Dependencies:** FB-041 (real auth), scoring data per player, Supabase Realtime
-
-**Source:** Code audit — LiveScreen uses `POSITION_AVG` constants (GK=6, DEF=5, MID=7, FWD=8) for all players regardless of form; `mySquadPlayers` lacks `seasonAvg` field
-
-**Notes:** The projection engine logic (lines 67–79 of LiveScreen) is sound in structure but fed generic inputs. The fix is: (1) fetch squad players with a join to get their stats, (2) pass real per-player averages to the existing calculation. No architecture change needed.
-
----
-
-### FB-051
-**Title:** Unify player data model across all screens
-
-**Priority:** P0
-
-**User Story:** As a developer, I want a single consistent player data shape used across all screens so that I don't introduce bugs from mismatched field names when moving player data between components.
-
-**Acceptance Criteria:**
-- A canonical player type is defined (TypeScript interface or JSDoc typedef): `{ id, name, position, club, price, points, gridClass, intel, ownership_pct }`
-- All screens (HomeScreen, SquadScreen, MarketScreen, LeagueScreen, LiveScreen, RecapScreen) use this shape
-- Fallback data in `src/data/squad.js` conforms to the canonical shape
-- Any field mismatch between DB response and canonical shape is normalised in a single `normalisePlayer(raw)` utility function
-- No screen manually re-maps player fields (no ad-hoc `{ id: p.player_id, name: p.player_name }` patterns)
-
-**Complexity:** S
-
-**Dependencies:** None (refactor, no new tables)
-
-**Source:** Code audit — player objects have 4 different shapes across screens: squad.js adds `gridClass`+`intel`, MarketScreen omits both, LiveScreen omits `price`, LeagueScreen mocks have their own structure
-
-**Notes:** This is a correctness and maintainability fix. Write `normalisePlayer()` in `src/lib/players.js`, import in every screen. This also makes it easy to add new fields (e.g. `form_score`, `fdr`) in one place later.
-
----
-
-### FB-052
-**Title:** League creation — post-creation invite flow and error handling
-
-**Priority:** P1
-
-**User Story:** As a user who just created a league, I want to immediately be shown how to invite friends so that my league doesn't sit empty.
-
-**Acceptance Criteria:**
-- After successful league creation, a success screen/modal appears with the league join code and a "Share Invite" button (linking to FB-023)
-- If league creation fails (DB error), the user sees a specific error message, not a silent failure
-- Creator is automatically added as the first `league_member` with `role: 'commissioner'`
-- League join code is a human-readable 6-character alphanumeric string (not a UUID), auto-generated on creation
-- "Copy join code" button copies to clipboard with a "Copied!" confirmation
-
-**Complexity:** S
-
-**Dependencies:** FB-023 (invite cards), `leagues` table, `league_members` table
-
-**Source:** Code audit — LeagueScreen league creation `handleCreateLeague` has no error feedback and no post-creation invite prompt; the insert may fail silently
-
-**Notes:** The current flow inserts into `leagues` then `league_members` in sequence — if the second insert fails, the league exists without a commissioner. Wrap both in a Supabase transaction or a single edge function call.
-
----
-
-### FB-053
-**Title:** Trade system — build backend or replace UI with a structured offer flow
-
-**Priority:** P2
-
-**User Story:** As a league member, I want to propose and accept player trades with my rivals so that the transfer market has a social negotiation layer.
-
-**Acceptance Criteria:**
-- Trade offer stored in `trade_offers` table: proposer_id, target_id, offered_players[], requested_players[], cash_adjustment, status (pending/accepted/rejected/expired)
-- Target user receives a push notification when a trade is proposed
-- Trade offer visible in League screen with Accept / Reject buttons
-- On acceptance, squads are updated atomically (both sides simultaneously in a DB transaction)
-- Trades expire after 48 hours if not responded to
-- Trades cannot be proposed after the transfer deadline for the current matchday
-
-**Complexity:** L
-
-**Dependencies:** FB-041 (real auth), FB-003 (push notifications), `trade_offers` table
-
-**Source:** Code audit — LeagueScreen trade UI is cosmetic; "João wants to trade…" text is hardcoded; no DB table or backend exists; the trade proposal modal saves nothing
-
-**Notes:** Until this is built, the trade UI in LeagueScreen should be hidden or replaced with a "Coming Soon" state to avoid confusing users. Do not ship a non-functional trade UI to real users.
-
----
-
-### FB-054
-**Title:** Confirmation dialogs for all destructive squad actions
-
-**Priority:** P1
-
-**User Story:** As a player, I want to be asked to confirm before I sell a player, use a chip, or activate Captain Roulette so that I don't accidentally make irreversible changes.
-
-**Acceptance Criteria:**
-- Sell player: "Sell [Player Name] for £Xm?" → Confirm / Cancel
-- Chip activation (Wildcard, Triple Captain, Bench Boost): "Use [Chip Name]? This cannot be undone for this matchday." → Confirm / Cancel
-- Captain Roulette spin: "Spin Captain Roulette? Your captain will be randomly assigned from your squad." → Confirm / Cancel
-- Confirmation modal shows the consequence in plain language (not just "Are you sure?")
-- After confirmation, action is irreversible; the modal does not reappear for the same action
-
-**Complexity:** XS
-
-**Dependencies:** SquadScreen, MarketScreen chip/captain flows
-
-**Source:** Code audit — chips can be toggled without confirmation; Captain Roulette spins immediately; sell has no confirmation
-
-**Notes:** Build a single reusable `ConfirmModal` component to avoid duplicating modal code across screens. This prevents the most common user complaints ("I accidentally sold my captain") and reduces support burden.
-
----
-
-### FB-055
-**Title:** Joker picker modal — handle empty state when no fixtures exist
-
-**Priority:** P1
-
-**User Story:** As a player trying to pick a Daily Joker, I want to see a helpful message if no matches are scheduled today rather than a blank modal.
-
-**Acceptance Criteria:**
-- If `playingTodayTeams` is empty (no fixtures today), modal shows: "No matches today — check back on the next matchday"
-- If DB fetch for players fails, modal shows a retry button rather than a blank screen
-- If no players from today's fixture teams are in the user's squad, modal shows: "None of your players are in today's matches"
-- Loading state shown while player list is being fetched (skeleton or spinner)
-- Error state includes the specific reason (no fixtures / no squad players / DB error) to help debugging
-
-**Complexity:** XS
-
-**Dependencies:** SquadScreen joker flow, fixture data
-
-**Source:** Code audit — SquadScreen joker picker modal renders blank if `playingTodayTeams` is empty or DB fetch fails, with no fallback or error state
-
-**Notes:** Quick UX fix. All three empty states are one-line conditional renders. The real work is defining the priority order of which state to show (no fixtures > DB error > no squad overlap).
-
----
-
-### FB-056
-**Title:** Dynamic transfer deadline time — replace hardcoded "18:00 today" label
-
-**Priority:** P1
-
-**User Story:** As a player, I want the deadline time shown on the Home screen to reflect the actual next matchday deadline so that I plan my transfers correctly.
-
-**Acceptance Criteria:**
-- `LOCK_TIME_LABEL` in HomeScreen replaced with a value fetched from `matchday_deadlines` table
-- Deadline shown in user's local timezone with timezone label (e.g., "18:00 BST" or "10:00 PDT")
-- If no upcoming deadline exists (between tournaments), deadline label is hidden
-- Deadline time updates automatically as matchdays progress
-- Shown consistently across HomeScreen countdown widget and Squad screen header
-
-**Complexity:** XS
-
-**Dependencies:** `matchday_deadlines` table, FB-010 (countdown UX)
-
-**Source:** Code audit — HomeScreen line 7: `const LOCK_TIME_LABEL = '18:00 today'` is a hardcoded string constant
-
-**Notes:** Trivial fix once `matchday_deadlines` table exists. Use `Intl.DateTimeFormat` for timezone conversion — do not build a custom timezone library.
-
----
-
-### FB-057
-**Title:** League stats view — replace hardcoded numbers with real calculated data
-
-**Priority:** P2
-
-**User Story:** As a league member viewing the Stats tab, I want to see real league statistics so that the numbers are meaningful rather than cosmetic.
-
-**Acceptance Criteria:**
-- Total squad value: sum of all player prices across all squads in the league (computed from DB)
-- Top scorer in league: player with highest points across all league members' squads
-- Most transferred player: player bought most often across the league this week (from `transfers` table)
-- Most captained player: player selected as captain most often this matchday
-- League average score: mean total points across all active league members
-- Stats refresh after each matchday finalisation
-
-**Complexity:** M
-
-**Dependencies:** FB-041 (real auth), scoring data, `transfers` table, `squads` table
-
-**Source:** Code audit — LeagueScreen stats view shows "€1.4B squad value", "424 pts Mbappé" and other completely hardcoded numbers with no DB queries
-
-**Notes:** These stats are high-sharability content ("Mbappe was captained by 6 of 8 managers this week!"). Implement as Supabase views or materialised queries triggered post-matchday. Do not compute live on every page load at scale.
+**Notes:** Only relevant for closed private leagues. Gate behind a league setting so classic leagues are unaffected.
 
 ---
 
 ### FB-058
-**Title:** League chat — wire real-time messaging (replace static mock thread)
+**Title:** iOS Live Activities and home screen widget
 
-**Priority:** P1
+**Priority:** P2 · **Complexity:** L
 
-**User Story:** As a league member, I want to send and receive messages in the league chat so that I can communicate with my rivals inside the app.
+**User Story:** As an iPhone user, I want to see my live score on the Dynamic Island and lock screen during a match without opening the app.
 
 **Acceptance Criteria:**
-- Message input field in League chat tab is functional (currently renders but has no onChange/onSubmit handler)
-- Messages sent via Supabase Realtime and stored in `league_chat_messages` table
-- New messages from other users appear in real time without a page refresh
-- Message history loads last 50 messages on tab open; older messages load on scroll up
-- Sender's username and avatar initial shown on each message
+- Live Activity shows: my score, captain's points, H2H score (if applicable), time remaining
+- Starts automatically at matchday kick-off
+- Updates every 60s via ActivityKit push token
+- Home screen widget (small + medium) shows current rank and total points
+- Graceful degradation on Android (push notifications as fallback)
 
-**Complexity:** M
+**Dependencies:** FB-041 (push), FB-011 (Realtime), native iOS wrapper
 
-**Dependencies:** FB-021 (chat system design), FB-041 (real auth), Supabase Realtime
+**Source:** Yahoo Fantasy (first to launch Live Activities in fantasy sports)
 
-**Source:** Code audit — LeagueScreen "chat" view tab renders a static array of hardcoded messages; the text input has no handler and sends nothing
-
-**Notes:** This is the same implementation as FB-021 — the UI shell already exists in LeagueScreen. FB-021 defines the full spec; this item specifically tracks wiring the existing UI to the real backend. Do not duplicate effort — close this item when FB-021 is shipped.
+**Notes:** Requires a React Native wrapper or dedicated iOS companion — not achievable in a pure PWA. Defer if native strategy is not decided pre-launch. Use push notifications (FB-041) as interim.
 
 ---
 
 ### FB-059
-**Title:** Live screen — wire Supabase Realtime for actual live event streaming
+**Title:** Player watchlist with transfer alerts
 
-**Priority:** P1
+**Priority:** P2 · **Complexity:** S
 
-**User Story:** As a player watching the Live screen, I want match events (goals, cards, substitutions) to appear in real time so that I can follow the action as it happens.
+> ⚠️ Merged into FB-051 (Price change tracking and watchlist alerts). Remove in next backlog review.
 
-**Acceptance Criteria:**
-- `match_events` table subscribed via Supabase Realtime channel on Live screen mount
-- New events (goal, yellow_card, red_card, sub) appear in activity feed within 60 seconds
-- Events auto-filtered to show only events involving the user's squad players (toggle: "My Players" vs "All Matches")
-- Feed auto-scrolls to newest event (with a "Pause scroll" button for users reading older events)
-- Subscription teardown cleanly on unmount to prevent memory leaks
+---
 
-**Complexity:** M
+---
 
-**Dependencies:** FB-001 (Realtime), `match_events` table, live data provider (FB-020)
-
-**Source:** Code audit — LiveScreen fetches `match_events` once on mount; there is no Supabase Realtime subscription; the 5-minute refresh interval is too slow for live events; events shown are usually mock data
-
-**Notes:** The LiveScreen already has a `setInterval` polling pattern. Replace with a Supabase Realtime `channel.on('postgres_changes', ...)` subscription on the `match_events` table filtered to the current matchday's fixture IDs. This will require the live data provider to be writing to `match_events` (FB-020 dependency).
+# P3 — Future / v2 Roadmap
 
 ---
 
 ### FB-060
-**Title:** H2H league view — show rival's real squad (post-deadline read-only)
+**Title:** Snake draft mode — live real-time draft night
 
-**Priority:** P2
+**Priority:** P3 · **Complexity:** XL
 
-**User Story:** As a player in an H2H matchup, I want to see my rival's full squad after the transfer deadline so that I can analyse their picks and enjoy the head-to-head tension.
+**User Story:** As a league commissioner, I want to run a live draft night where managers take turns picking players so that squad building is a shared social event.
 
 **Acceptance Criteria:**
-- H2H squad view in League screen shows opponent's 11-player pitch view (read-only, no actions)
-- Opponent's squad only visible after the matchday deadline has passed (before deadline, show "Locked — reveal at kick-off")
-- Captain and chip selections visible in opponent view
-- Points scored by each opponent player update live during the match
-- Toggling between "My Squad" and "Rival Squad" with a tab or swipe gesture
+- Draft lobby with ready-check before starting
+- Turns time-limited (60s default, configurable); auto-pick fires on timeout
+- Real-time pick feed visible to all managers simultaneously via Supabase Realtime
+- Draft results seed each manager's squad automatically
+- Commissioner can pause, resume, or reset draft before completion
 
-**Complexity:** M
+**Dependencies:** FB-011 (Realtime), league system, full player database
 
-**Dependencies:** FB-011 (H2H system), FB-041 (real auth), deadline lock (FB-002)
+**Source:** Sleeper (best draft UX in industry); ESPN Fantasy
 
-**Source:** Code audit — LeagueScreen H2H sheet renders players via array indexing (`managerTeamView` state) with no real squad data; rival squads are hardcoded from `MOCK_SQUAD_PLAYERS`
-
-**Notes:** Rival squad visibility is a deliberate design choice — must not be visible before deadline to prevent copying. RLS policy: `squads` rows are readable by league members only after `matchday_deadlines.deadline_at < now()`. This is also a privacy consideration — only league members should see each other's squads.
+**Notes:** Highest complexity item in the backlog — do not attempt pre-launch or mid-tournament. Requires WebSocket presence tracking, clock synchronisation, and conflict resolution for simultaneous picks. Build as a standalone `/draft/:league_id` route. Post-tournament Phase 2 item.
 
 ---
 
-## Updated Summary: Launch Readiness Checklist
+## Known Risks
 
-| Priority | Count | Target Completion |
-|----------|-------|-------------------|
-| **P0 (Pre-launch blockers)** | **17 items** | May 31, 2026 |
-| **P1 (Launch window)** | **22 items** | June 14, 2026 (GW1) |
-| **P2 (Post-launch, group stage)** | **15 items** | June 28, 2026 (R16) |
-| **P3 (Future / v2)** | **1 item** | Post-tournament |
-
-### P0 Items (must ship before June 2026 launch)
-FB-001 · FB-002 · FB-003 · FB-004 · FB-005 · FB-006 · FB-007 · FB-016 · FB-027 · FB-037 · FB-038 · FB-039 · FB-040 · **FB-041 · FB-042 · FB-043 · FB-047 · FB-051**
-
-### New P0 Additions (from code audit)
-- **FB-041** — Wire real authentication (remove hardcoded user ID) — *affects every screen*
-- **FB-042** — Fix Supabase env var config (remove placeholder key) — *app cannot connect to DB without this*
-- **FB-043** — Server-tracked squad budget — *budget is always showing fallback value*
-- **FB-047** — Transfer window lock state in UI — *users can attempt buys after deadline*
-- **FB-051** — Unify player data model — *inconsistent shapes cause silent bugs across screens*
-
-### Critical Path Dependencies (updated)
-```
-Auth + RLS (FB-004, FB-039, FB-040, FB-041, FB-042)
-  └── Player data model (FB-051)
-        └── Budget tracking (FB-043)
-              └── Transfer lock UI (FB-047)
-                    └── Deadline enforcement (FB-002)
-                          └── Transfer countdown (FB-010)
-Supabase Realtime (FB-001)
-  └── Live event streaming (FB-059)
-        └── Live scoring screen (FB-016)
-              └── H2H live view (FB-017)
-Push infrastructure (FB-003)
-  └── Deadline notifications (FB-010)
-  └── Daily notification loop (FB-030)
-League chat (FB-021 / FB-058)
-  └── Auto-transaction cards (FB-022)
-Scoring engine (external)
-  └── Recap real data (FB-049)
-  └── Live projections (FB-050)
-  └── League stats (FB-057)
-```
-
-### Known Risks (updated)
-1. **Live data feed** — FB-016, FB-020, FB-031, FB-059 all depend on a real-time sports data provider. Evaluate and contract a provider (Sportmonks / API-Football) by May 1, 2026.
-2. **iOS push notifications** — Web push on iOS requires iOS 16.4+ and the app added to Home Screen. Communicate this limitation clearly in onboarding.
-3. **Supabase Realtime scale** — Free/Pro tier has concurrent connection limits. Load test at 100 concurrent users on match day before launch.
-4. **Server-side card rendering** — Gazette and Stats cards using html2canvas are fragile. Migrate to `@vercel/og` edge function before launch (FB-019 notes).
-5. **Trade system is non-functional** — FB-053. The trade UI in LeagueScreen must be hidden from real users until the backend is built. Shipping a cosmetic trade modal to production will destroy trust.
-6. **Bracket predictions not saved** — FB-048. The Bracket screen looks functional but saves nothing. Either build the backend (P2) or clearly label it "Preview — predictions coming soon" at launch.
-7. **Recap card shows wrong user data** — FB-049. "João scored 15 pts for World Cup Legends" will never be shared by a real user named something else. Fix before launch.
+1. **Live data provider** — FB-012, FB-013, FB-034, FB-047 all depend on a contracted real-time sports data provider. Evaluate and sign with Sportmonks or API-Football by **May 1, 2026** — this is the hardest external dependency.
+2. **iOS push notifications** — Web push on iOS requires iOS 16.4+ and the app added to Home Screen. Communicate this constraint clearly in onboarding. Affects FB-041.
+3. **Supabase Realtime scale** — Pro tier allows 500 concurrent connections. Load test at 200 concurrent users on a simulated matchday before launch. Affects FB-011.
+4. **Server-side Gazette card rendering** — `html2canvas` client-side rendering is fragile on Android with custom fonts. Migrate to `@vercel/og` edge function before launch. Affects FB-028.
+5. **Trade UI ships non-functional** — The trade modal in LeagueScreen currently does nothing. **Must be hidden behind a feature flag or replaced with "Coming Soon" before any real user sees it.** Affects FB-045.
+6. **Bracket screen is entirely cosmetic** — Teams hardcoded, no predictions saved. Add "Preview — coming in Round of 16" label at launch. Affects FB-046.
+7. **Recap card shows wrong user data** — "João scored 15 pts for World Cup Legends" will be the first thing a real user sees and will never be shared. FB-019 must ship before launch.
 
 ---
 
-*Backlog maintained by: Product / Engineering | Next review: Sprint planning, week of May 4, 2026*
-*Code audit conducted: April 20, 2026 — 20 gaps identified across all 9 screens, added as FB-041 through FB-060*
+*Backlog maintained by: Product / Engineering*
+*Code audit completed: April 20, 2026 — 20 logic gaps identified (FB-002, FB-006–FB-008, FB-019–FB-025, FB-029, FB-033, FB-044–FB-047)*
+*Next review: Sprint planning, week of May 4, 2026*
