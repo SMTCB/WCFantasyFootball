@@ -153,7 +153,8 @@ test.describe('SquadScreen', () => {
     await page.goto('/squad');
 
     // Wait for pitch — DB fetch or fallback both eventually render it
-    const pitch = page.locator('[data-testid="pitch-view"]');
+    // Use .first() because desktop layout also renders a pitch-view in the hidden lg:flex pane
+    const pitch = page.locator('[data-testid="pitch-view"]').first();
     await pitch.waitFor({ state: 'visible', timeout: 20000 });
     await expect(pitch).toBeVisible();
 
@@ -170,6 +171,9 @@ test.describe('SquadScreen', () => {
     await page.setViewportSize({ width: 375, height: 812 });
     await page.goto('/squad');
     await waitForContent(page);
+    // Chips are in the Tools tab — click it first
+    await page.getByText('⚙ Tools').click();
+    await page.waitForTimeout(300);
     await expect(page.getByText(/wildcard|triple/i).first()).toBeVisible();
   });
 
