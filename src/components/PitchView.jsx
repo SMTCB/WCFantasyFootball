@@ -9,6 +9,7 @@ export default function PitchView({
 }) {
   return (
     <div
+      data-testid="pitch-view"
       className="relative w-full select-none overflow-hidden"
       style={{
         aspectRatio: '3/2',

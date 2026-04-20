@@ -1,5 +1,4 @@
 @import "tailwindcss";
-@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800;900&family=DM+Sans:wght@300;400;500;600;700&display=swap');
 
 @theme {
   /* ── Forza Backgrounds ───────────────────────────────────── */
@@ -42,6 +41,7 @@
 
 html {
   height: 100%;
+  overflow-x: hidden;
   /* iOS momentum scroll */
   -webkit-overflow-scrolling: touch;
 }
@@ -53,6 +53,7 @@ body {
   background-color: #080A0E;
   touch-action: manipulation;
   overscroll-behavior-y: none;
+  overflow-x: hidden;
   /* Safe area support */
   padding-bottom: env(safe-area-inset-bottom);
 }

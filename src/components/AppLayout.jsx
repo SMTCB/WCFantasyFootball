@@ -55,6 +55,7 @@ export default function AppLayout({ children }) {
 
       {/* ── Desktop Left Sidebar ─────────────────────────────── */}
       <nav
+        data-testid="desktop-nav"
         className="hidden lg:flex fixed left-0 top-0 bottom-0 w-[220px] flex-col z-50"
         style={{
           background: 'linear-gradient(180deg, #0D1117 0%, #080A0E 100%)',
@@ -149,7 +150,7 @@ export default function AppLayout({ children }) {
       </nav>
 
       {/* ── Main Content ─────────────────────────────────────── */}
-      <div className="flex-1 lg:ml-[220px] min-h-screen" style={{ paddingBottom: 'calc(64px + env(safe-area-inset-bottom))' }}>
+      <div data-testid="main-content" className="flex-1 min-w-0 lg:ml-[220px] min-h-screen" style={{ paddingBottom: 'calc(64px + env(safe-area-inset-bottom))' }}>
         <div className="animate-page-enter">
           {children}
         </div>
@@ -157,6 +158,7 @@ export default function AppLayout({ children }) {
 
       {/* ── Mobile Bottom Bar ────────────────────────────────── */}
       <nav
+        data-testid="mobile-nav"
         className="lg:hidden fixed bottom-0 left-0 right-0 z-50"
         style={{
           background: 'rgba(13,17,23,0.97)',

@@ -328,7 +328,7 @@ export default function SquadScreen() {
 
   // ── Chips row ──────────────────────────────────────────────────────────────
   const ChipsRow = () => (
-    <div className="flex gap-2 px-4 py-3">
+    <div className="flex gap-1.5 px-3 py-3">
       {/* Wildcard */}
       <button
         onClick={() => toggleChip('wildcard')}
@@ -362,7 +362,7 @@ export default function SquadScreen() {
         onClick={activateRoulette}
         disabled={isRouletteSpinning}
         title="Captain Roulette — Randomly select your captain from your squad"
-        className={`flex-[1.5] py-2.5 px-2 rounded-sm border transition-all flex flex-col items-center gap-1 ${
+        className={`flex-1 py-2.5 px-1 rounded-sm border transition-all flex flex-col items-center gap-1 ${
           isRouletteSpinning
             ? 'bg-gold border-gold text-black animate-pulse'
             : 'bg-surface border-gold/40 text-gold hover:bg-gold/10'
@@ -400,7 +400,7 @@ export default function SquadScreen() {
 
   // ══════════════════════════════════════════════════════════════════════════
   return (
-    <div className="min-h-screen bg-bg">
+    <div className="min-h-screen bg-bg overflow-x-hidden">
 
       {/* ── Page Header ───────────────────────────────────────── */}
       <div
