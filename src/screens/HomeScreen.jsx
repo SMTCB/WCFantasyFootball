@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
+import { useAuth } from '../hooks/useAuth';
 import PredictionModal from '../components/PredictionModal';
 
 const CURRENT_MATCHDAY = 5;
@@ -24,6 +25,7 @@ const TEAM_COLORS = {
 const getTeamColor = (name) => TEAM_COLORS[name] || TEAM_COLORS.default;
 
 export default function HomeScreen() {
+  const { user } = useAuth();
   const [fixtures,   setFixtures]   = useState([]);
   const [userStats,  setUserStats]  = useState({ rank: '-', points: 0 });
   const [prediction, setPrediction] = useState(null);
@@ -31,12 +33,12 @@ export default function HomeScreen() {
   const [showPicker, setShowPicker] = useState(false);
   const [loading,    setLoading]    = useState(true);
 
-  useEffect(() => { fetchInitialData(); }, []);
+  useEffect(() => { fetchInitialData(); }, [user]);
 
   const fetchInitialData = async () => {
     try {
       setLoading(true);
-      const userId = '00000000-0000-0000-0000-000000000000';
+      const userId = user?.id;
       await Promise.all([
         fetchFixtures(),
         fetchUserStats(userId),

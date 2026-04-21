@@ -5,6 +5,7 @@ import {
   formatProjectionDisplay,
 } from '../lib/projections';
 import { normalisePlayers } from '../lib/players';
+import { useAuth } from '../hooks/useAuth';
 
 import SectionHeader from '../components/SectionHeader';
 
@@ -39,6 +40,7 @@ const MOCK_SQUAD_PLAYERS = normalisePlayers([
 const REFRESH_INTERVAL_MS = 5 * 60 * 1000;
 
 export default function LiveScreen() {
+  const { user } = useAuth();
   const [loading,           setLoading]           = useState(true);
   const [liveFixtures,      setLiveFixtures]      = useState([]);
   const [scheduledFixtures, setScheduledFixtures] = useState([]);
@@ -91,7 +93,7 @@ export default function LiveScreen() {
   const fetchLiveData = async () => {
     try {
       setLoading(true);
-      const userId = '00000000-0000-0000-0000-000000000000';
+      const userId = user?.id;
       setCurrentUser({ id: userId });
 
       // 1. Fetch Fixtures

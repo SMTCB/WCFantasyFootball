@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '../lib/supabase';
 import { normalizeIntelligence } from '../lib/intelligence';
 import { normalisePlayer, normalisePlayers } from '../lib/players';
+import { useAuth } from '../hooks/useAuth';
 
 const POS_LIMITS  = { GK: 2, DEF: 5, MID: 5, FWD: 3 };
 const COUNTRY_LIMIT = 3;
@@ -22,6 +23,7 @@ const FLAG_MAP = {
 const POS_FILTER_ORDER = ['ALL', 'GK', 'DEF', 'MID', 'FWD'];
 
 export default function MarketScreen() {
+  const { user } = useAuth();
   const [players,      setPlayers]      = useState([]);
   const [mySquad,      setMySquad]      = useState(null);
   const [todayJokerId, setTodayJokerId] = useState(null);
@@ -37,8 +39,7 @@ export default function MarketScreen() {
   const fetchMarketParams = async () => {
     try {
       setLoading(true);
-      const { data: authData } = await supabase.auth.getUser();
-      const userId = authData?.user?.id || '00000000-0000-0000-0000-000000000000';
+      const userId = user?.id;
 
       // ── Transfer window lock — always use server time, never client clock ──
       const [{ data: nowRow }, { data: deadlineRow }] = await Promise.all([
@@ -134,8 +135,7 @@ export default function MarketScreen() {
   };
 
   const upsertSquadPlayers = async (newPlayerArray, newBudget) => {
-    const { data: authData } = await supabase.auth.getUser();
-    const userId = authData?.user?.id || '00000000-0000-0000-0000-000000000000';
+    const userId = user?.id;
     if (mySquad.id) {
       await supabase.from('squads')
         .update({ players: newPlayerArray, budget_remaining: newBudget })

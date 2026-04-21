@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabase';
 import { squad as fallbackSquad } from '../data/squad';
 import { getDangerZonePlayers, normalizeIntelligence, LINEUP_STATUS } from '../lib/intelligence';
 import { normalisePlayer } from '../lib/players';
+import { useAuth } from '../hooks/useAuth';
 import PitchView from '../components/PitchView';
 import PlayerCard from '../components/PlayerCard';
 import SectionHeader from '../components/SectionHeader';
@@ -39,6 +40,7 @@ const CHIPS = [
 
 // ─────────────────────────────────────────────────────────────────────────────
 export default function SquadScreen() {
+  const { user } = useAuth();
   const [jokerPlayer,        setJokerPlayer]       = useState(null);
   const [isJokerPickerOpen,  setIsJokerPickerOpen] = useState(false);
   const [isRouletteSpinning, setIsRouletteSpinning] = useState(false);
@@ -59,13 +61,12 @@ export default function SquadScreen() {
   const [windowLocked,       setWindowLocked]      = useState(false);
   const [windowDeadline,     setWindowDeadline]    = useState(null);
 
-  useEffect(() => { fetchSquad(); fetchDailyStatus(); }, []);
+  useEffect(() => { fetchSquad(); fetchDailyStatus(); }, [user]);
 
   // ── Data Fetching ─────────────────────────────────────────────────────────
   const fetchDailyStatus = async () => {
     try {
-      const { data: authData } = await supabase.auth.getUser();
-      const userId = authData?.user?.id || '00000000-0000-0000-0000-000000000000';
+      const userId = user?.id;
       const today  = new Date().toISOString().split('T')[0];
       const { data: joker } = await supabase.from('daily_jokers').select('player_id')
         .eq('user_id', userId).eq('match_date', today).maybeSingle();
@@ -80,7 +81,7 @@ export default function SquadScreen() {
   const fetchSquad = async () => {
     try {
       setLoading(true);
-      const userId = '00000000-0000-0000-0000-000000000000';
+      const userId = user?.id;
       const today  = new Date().toISOString().split('T')[0];
 
       // ── Transfer window lock check ──────────────────────────────────────────
@@ -190,8 +191,7 @@ export default function SquadScreen() {
     if (!selectedPlayer) return;
     try {
       setSaving(true);
-      const { data: authData } = await supabase.auth.getUser();
-      const userId = authData?.user?.id || '00000000-0000-0000-0000-000000000000';
+      const userId = user?.id;
       const today  = new Date().toISOString().split('T')[0];
       const { error } = await supabase.from('daily_jokers').insert({ user_id: userId, player_id: selectedPlayer.id, match_date: today });
       if (error) {
@@ -246,8 +246,7 @@ export default function SquadScreen() {
   const handleJokerSelection = async (player) => {
     try {
       setSaving(true);
-      const { data: authData } = await supabase.auth.getUser();
-      const userId = authData?.user?.id || '00000000-0000-0000-0000-000000000000';
+      const userId = user?.id;
       const today  = new Date().toISOString().split('T')[0];
       const { error } = await supabase.from('daily_jokers').insert({ user_id: userId, player_id: player.id, match_date: today });
       if (error) {

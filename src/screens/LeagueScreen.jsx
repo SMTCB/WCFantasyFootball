@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { normalisePlayers } from '../lib/players';
+import { useAuth } from '../hooks/useAuth';
 import SectionHeader from '../components/SectionHeader';
 
 import H2HSheet from '../components/H2HSheet';
@@ -41,6 +42,7 @@ const MOCK_RIVAL_PLAYERS_L3 = MOCK_PLAYERS_POOL.slice(12, 23);
 
 
 export default function LeagueScreen() {
+  const { user } = useAuth();
   const navigate = useNavigate();
   const { leagueId } = useParams();
 
@@ -92,9 +94,9 @@ export default function LeagueScreen() {
   );
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => setCurrentUser(data.user));
+    setCurrentUser(user);
     fetchLeagues();
-  }, []);
+  }, [user]);
 
   useEffect(() => {
     if (leagueId) {
@@ -114,7 +116,7 @@ export default function LeagueScreen() {
       const { data: mData } = await supabase.from('league_members').select('rank, total_points, user_id, users(username)').eq('league_id', id).order('total_points', { ascending: false });
       
       if (!mData || mData.length <= 1) {
-        const userId = currentUser?.id || '00000000-0000-0000-0000-000000000000';
+        const userId = user?.id;
         setMembers([
           { user_id: userId, total_points: 215, rank: 2, users: { username: 'You' } },
           { user_id: 'd1', total_points: 242, rank: 1, users: { username: 'João' } },
@@ -132,9 +134,7 @@ export default function LeagueScreen() {
   const fetchLeagues = async () => {
     try {
       setLoading(true);
-      const { data: authData } = await supabase.auth.getUser();
-      const user = authData?.user;
-      const userId = user?.id || '00000000-0000-0000-0000-000000000000';
+      const userId = user?.id;
       
       const { data, error } = await supabase
         .from('league_members')

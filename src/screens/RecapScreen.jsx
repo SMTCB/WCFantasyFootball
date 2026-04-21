@@ -2,25 +2,23 @@ import { useState, useEffect, useRef, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import html2canvas from 'html2canvas';
 import RecapCard from '../components/RecapCard';
-
-
 import { supabase } from '../lib/supabase';
+import { useAuth } from '../hooks/useAuth';
 
 export default function RecapScreen() {
+  const { user } = useAuth();
   const [recap,   setRecap]   = useState(null);
   const [loading, setLoading] = useState(true);
   const [sharing, setSharing] = useState(false);
   const [copied, setCopied]   = useState(false);
   const cardRef = useRef(null);
 
-  useEffect(() => {
-    fetchRecap();
-  }, []);
+  useEffect(() => { fetchRecap(); }, [user]);
 
   const fetchRecap = async () => {
     try {
       setLoading(true);
-      const userId = '00000000-0000-0000-0000-000000000000';
+      const userId = user?.id;
 
       const { data, error } = await supabase
         .from('matchday_recaps')

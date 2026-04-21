@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import { supabase } from '../lib/supabase';
+import { useAuth } from '../hooks/useAuth';
 import { fixtures as mockFixtures } from '../data/fixtures';
 import { squad as mockSquad } from '../data/squad';
 
 
 export default function AdminSeedScreen() {
+  const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState('');
 
@@ -42,7 +44,7 @@ export default function AdminSeedScreen() {
 
       setStatus('Creating default league...');
       // 3. Create a default league
-      const userId = '00000000-0000-0000-0000-000000000000';
+      const userId = user?.id;
       const { data: newLeague, error: lErr } = await supabase
         .from('leagues')
         .insert({
