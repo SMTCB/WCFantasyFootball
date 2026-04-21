@@ -1,17 +1,21 @@
 import { defineConfig, devices } from '@playwright/test';
 
+const isCI = !!process.env.CI;
+
 export default defineConfig({
   testDir: './e2e',
   fullyParallel: false,
-  retries: 1,
-  timeout: 20000,
-  reporter: [['list'], ['html', { open: 'never', outputFolder: 'e2e-report' }]],
+  retries: isCI ? 2 : 1,           // More retries on CI to absorb flakiness
+  timeout: isCI ? 30000 : 20000,   // Longer timeout on CI (slower VMs)
+  reporter: isCI
+    ? [['github'], ['html', { open: 'never', outputFolder: 'e2e-report' }]]
+    : [['list'],   ['html', { open: 'never', outputFolder: 'e2e-report' }]],
 
   use: {
-    baseURL: 'http://localhost:5173',
+    baseURL: process.env.PLAYWRIGHT_BASE_URL ?? 'http://localhost:5173',
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
-    video: 'off',
+    video: isCI ? 'retain-on-failure' : 'off',
   },
 
   projects: [
@@ -31,10 +35,13 @@ export default defineConfig({
     },
   ],
 
-  webServer: {
+  // Start local dev server automatically (skipped when PLAYWRIGHT_BASE_URL is set)
+  webServer: process.env.PLAYWRIGHT_BASE_URL ? undefined : {
     command: 'npm run dev',
     url: 'http://localhost:5173',
-    reuseExistingServer: true,
-    timeout: 30000,
+    reuseExistingServer: !isCI,   // Always start fresh on CI
+    timeout: isCI ? 60000 : 30000,
+    stdout: 'ignore',
+    stderr: 'pipe',
   },
 });

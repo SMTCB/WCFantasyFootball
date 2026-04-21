@@ -1,0 +1,51 @@
+name: DB Migrate (manual)
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Manual trigger only — never runs automatically against production.
+# Use this to apply pending Supabase migrations after a release.
+#
+# Required secrets (set in GitHub → Settings → Secrets → Actions):
+#   SUPABASE_ACCESS_TOKEN   — Personal access token from app.supabase.com/account/tokens
+#   SUPABASE_PROJECT_REF    — Project ref (e.g. sssmvihxtqtohisghjet)
+#   SUPABASE_DB_PASSWORD    — Database password from Supabase dashboard
+# ─────────────────────────────────────────────────────────────────────────────
+on:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Dry run only (print SQL, do not execute)'
+        required: false
+        default: 'true'
+        type: boolean
+
+jobs:
+  migrate:
+    name: Push DB migrations
+    runs-on: ubuntu-latest
+    environment: production   # Requires manual approval if GitHub environment protection is set
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Link project
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        run: |
+          supabase link \
+            --project-ref ${{ secrets.SUPABASE_PROJECT_REF }} \
+            --password     ${{ secrets.SUPABASE_DB_PASSWORD }}
+
+      - name: Show pending migrations (always)
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        run: supabase db diff --use-migra
+
+      - name: Push migrations
+        if: ${{ inputs.dry_run == false }}
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        run: supabase db push
