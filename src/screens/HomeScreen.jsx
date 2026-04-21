@@ -87,7 +87,28 @@ export default function HomeScreen() {
     } catch {}
   };
 
-  const handlePredictionSaved = (player) => { setPrediction(player); setShowPicker(false); };
+  // FB-020: persist prediction to DB (upsert so re-picking before kick-off updates the row)
+  const handlePredictionSaved = async (player) => {
+    // Optimistic update — UI responds immediately
+    setPrediction({ ...player, correct: null, pts: 0 });
+    setShowPicker(false);
+    try {
+      const userId = user?.id;
+      await supabase.from('top_scorer_predictions').upsert(
+        {
+          user_id:             userId,
+          matchday_id:         String(CURRENT_MATCHDAY),
+          predicted_player_id: player.id,
+          is_correct:          null,
+          points_awarded:      0,
+        },
+        { onConflict: 'user_id,matchday_id' }   // update if already exists
+      );
+    } catch (err) {
+      console.error('[prediction] save failed', err);
+      // Don't revert — the optimistic state is fine for the session
+    }
+  };
 
   const liveCount = fixtures.filter(f => f.status === 'live').length;
 

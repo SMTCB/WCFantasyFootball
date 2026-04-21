@@ -2,7 +2,7 @@
 ## World Cup 2026 Fantasy Football Platform
 
 **Stack:** React 19 + Supabase | **Target Launch:** June 2026
-**Last updated:** 2026-04-21 | **Completed:** FB-001, FB-002 (auth on-hold), FB-003, FB-006, FB-007, FB-008, FB-009, FB-010, FB-016, FB-017, FB-018, FB-021, FB-022, FB-023
+**Last updated:** 2026-04-21 | **Completed:** FB-001, FB-002 (auth on-hold), FB-003, FB-006, FB-007, FB-008, FB-009, FB-010, FB-016, FB-017, FB-018, FB-020, FB-021, FB-022, FB-023, FB-024
 
 > Items are ordered strictly by criticality and urgency within each priority tier.
 > P0 items are sequenced by dependency chain — the first item must be done before the next.
@@ -490,8 +490,8 @@ FB-019  Push notification infrastructure
 
 ---
 
-### FB-020
-**Title:** Persist top-scorer prediction to database
+### FB-020 ✅ DONE
+**Title:** Persist top-scorer prediction to database · **Completed:** 2026-04-21
 
 **Priority:** P1 · **Complexity:** S
 
@@ -578,8 +578,8 @@ FB-019  Push notification infrastructure
 
 ---
 
-### FB-024
-**Title:** Joker picker modal — empty and error states
+### FB-024 ✅ DONE
+**Title:** Joker picker modal — empty and error states · **Completed:** 2026-04-21
 
 **Priority:** P1 · **Complexity:** XS
 

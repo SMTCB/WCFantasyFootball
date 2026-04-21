@@ -1145,16 +1145,24 @@ export default function SquadScreen() {
               </div>
               <button onClick={() => setIsJokerPickerOpen(false)} className="text-text-tertiary hover:text-white text-2xl">×</button>
             </div>
-            <div className="p-3 bg-bg flex items-center gap-2 border-b border-border">
-              <span className="text-[10px] text-text-tertiary uppercase tracking-widest font-black">Playing Today:</span>
-              <div className="flex gap-2 overflow-x-auto pb-1">
-                {playingTodayTeams.map(t => (
-                  <span key={t} className="px-2 py-0.5 bg-surface border border-border rounded-full text-[9px] text-white font-bold shrink-0">{t}</span>
-                ))}
+            {/* Only show team strip when there are fixtures */}
+            {playingTodayTeams.length > 0 && (
+              <div className="p-3 bg-bg flex items-center gap-2 border-b border-border">
+                <span className="text-[10px] text-text-tertiary uppercase tracking-widest font-black shrink-0">Playing Today:</span>
+                <div className="flex gap-2 overflow-x-auto pb-1">
+                  {playingTodayTeams.map(t => (
+                    <span key={t} className="px-2 py-0.5 bg-surface border border-border rounded-full text-[9px] text-white font-bold shrink-0">{t}</span>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
             <div className="flex-1 overflow-y-auto p-2 space-y-2">
-              <JokerList teams={playingTodayTeams} onSelect={handleJokerSelection} saving={saving} />
+              <JokerList
+                teams={playingTodayTeams}
+                squadPlayerIds={[...players, ...bench].map(p => p.id)}
+                onSelect={handleJokerSelection}
+                saving={saving}
+              />
             </div>
             <div className="p-4 border-t border-border bg-surface text-[9px] text-text-tertiary uppercase text-center tracking-widest">
               Independent of your 15-man squad · Ignores country limits
@@ -1166,48 +1174,116 @@ export default function SquadScreen() {
   );
 }
 
-// ── Supporting UI: Joker picker list ─────────────────────────────────────────
-function JokerList({ teams, onSelect, saving }) {
-  const [players, setPlayers] = useState([]);
-  const [loading, setLoading] = useState(true);
+// ── Supporting UI: Joker picker list (FB-024: proper empty/error states) ─────
+function JokerList({ teams, squadPlayerIds, onSelect, saving }) {
+  const [players,    setPlayers]    = useState([]);
+  const [loading,    setLoading]    = useState(true);
+  const [fetchError, setFetchError] = useState(false);
+
+  const load = async () => {
+    setLoading(true);
+    setFetchError(false);
+    try {
+      const { data, error } = await supabase
+        .from('players').select('*')
+        .in('club', teams)
+        .order('price', { ascending: false });
+      if (error) throw error;
+      setPlayers(data || []);
+    } catch (err) {
+      console.error('[JokerList]', err);
+      setFetchError(true);
+    } finally { setLoading(false); }
+  };
 
   useEffect(() => {
-    const fetch = async () => {
-      try {
-        const { data, error } = await supabase.from('players').select('*').in('club', teams).order('price', { ascending: false });
-        if (error) throw error;
-        setPlayers(data || []);
-      } catch (err) { console.error(err); }
-      finally { setLoading(false); }
-    };
-    if (teams.length) fetch(); else setLoading(false);
+    if (teams.length) load(); else setLoading(false);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [teams]);
 
-  if (loading) return <div className="p-10 text-center fz-label text-text-tertiary animate-scan uppercase">Scouting Active Teams…</div>;
-  if (!players.length) return <div className="p-10 text-center fz-label text-text-tertiary uppercase">No matches today</div>;
+  const EmptyState = ({ emoji, title, sub, action }) => (
+    <div className="flex flex-col items-center justify-center gap-3 p-10 text-center">
+      <div style={{ fontSize: '36px' }}>{emoji}</div>
+      <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 800, fontSize: '14px', textTransform: 'uppercase', letterSpacing: '0.08em', color: '#F0F2F5' }}>{title}</div>
+      {sub && <div style={{ fontSize: '12px', color: 'rgba(240,242,245,0.45)', lineHeight: 1.5, maxWidth: '220px' }}>{sub}</div>}
+      {action}
+    </div>
+  );
+
+  if (loading) return (
+    <EmptyState emoji="🔍" title="Scouting Active Teams…" sub={null} action={
+      <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '10px', letterSpacing: '0.15em', color: '#3D4B5C', textTransform: 'uppercase' }} className="animate-scan">Loading</div>
+    } />
+  );
+
+  // FB-024: error state with retry
+  if (fetchError) return (
+    <EmptyState emoji="⚠️" title="Couldn't load players" sub="Check your connection and try again." action={
+      <button onClick={load} style={{ padding: '8px 20px', background: '#F0B400', color: '#0D1117', fontSize: '11px', fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>
+        Retry
+      </button>
+    } />
+  );
+
+  // FB-024: no matches today
+  if (!teams.length) return (
+    <EmptyState emoji="📅" title="No Matches Today" sub="The Daily Joker is only available on matchdays. Check back when fixtures are scheduled." action={null} />
+  );
+
+  // FB-024: none of your squad plays today
+  const playingSquadPlayers = players.filter(p => squadPlayerIds?.includes(p.id));
+  const otherPlayers        = players.filter(p => !squadPlayerIds?.includes(p.id));
+  const noSquadOverlap      = squadPlayerIds?.length && !playingSquadPlayers.length;
+
+  if (!players.length) return (
+    <EmptyState emoji="🏟️" title="None of your players are in today's matches" sub="You can still pick any player from the active squads below as your Joker." action={null} />
+  );
+
+  const PlayerRow = ({ p, highlight }) => (
+    <button
+      key={p.id}
+      onClick={() => onSelect(p)}
+      disabled={saving}
+      className="w-full flex items-center gap-3 p-3 bg-bg border border-border hover:border-purple/50 rounded-sm transition-all group"
+      style={highlight ? { borderColor: 'rgba(157,95,245,0.35)', background: 'rgba(157,95,245,0.05)' } : {}}
+    >
+      <div className="w-10 h-10 rounded-full border border-border flex items-center justify-center font-bold text-[10px] text-white bg-surface shrink-0 group-hover:border-purple/30">
+        {p.club.substring(0, 3)}
+      </div>
+      <div className="flex-1 text-left min-w-0">
+        <div className="text-[13px] font-bold text-white group-hover:text-purple transition-colors truncate">{p.name}</div>
+        <div className="text-[9px] text-text-tertiary uppercase tracking-tighter">
+          {p.position} · {p.club}
+          {highlight && <span style={{ color: '#9D5FF5', marginLeft: '6px' }}>· Your squad</span>}
+        </div>
+      </div>
+      <div className="text-right shrink-0">
+        <div className="text-[13px] font-black text-cyan tabular-nums">${p.price}M</div>
+        <div className="text-[8px] text-positive font-bold uppercase tracking-widest">Pick</div>
+      </div>
+    </button>
+  );
+
+  const SectionLabel = ({ label }) => (
+    <div className="flex items-center gap-2 px-1 py-2">
+      <div className="h-px flex-1" style={{ background: 'rgba(255,255,255,0.07)' }} />
+      <span style={{ fontSize: '9px', fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 800, letterSpacing: '0.15em', textTransform: 'uppercase', color: '#3D4B5C' }}>{label}</span>
+      <div className="h-px flex-1" style={{ background: 'rgba(255,255,255,0.07)' }} />
+    </div>
+  );
 
   return (
     <div className="space-y-1">
-      {players.map(p => (
-        <button
-          key={p.id}
-          onClick={() => onSelect(p)}
-          disabled={saving}
-          className="w-full flex items-center gap-3 p-3 bg-bg border border-border hover:border-purple/50 rounded-sm transition-all group"
-        >
-          <div className="w-10 h-10 rounded-full border border-border flex items-center justify-center font-bold text-[10px] text-white bg-surface shrink-0 group-hover:border-purple/30">
-            {p.club.substring(0, 3)}
-          </div>
-          <div className="flex-1 text-left min-w-0">
-            <div className="text-[13px] font-bold text-white group-hover:text-purple transition-colors truncate">{p.name}</div>
-            <div className="text-[9px] text-text-tertiary uppercase tracking-tighter">{p.position} · {p.club}</div>
-          </div>
-          <div className="text-right shrink-0">
-            <div className="text-[13px] font-black text-cyan tabular-nums">${p.price}M</div>
-            <div className="text-[8px] text-positive font-bold uppercase tracking-widest">Pick</div>
-          </div>
-        </button>
-      ))}
+      {/* Squad players playing today shown first */}
+      {playingSquadPlayers.length > 0 && (
+        <>
+          <SectionLabel label="Your squad — playing today" />
+          {playingSquadPlayers.map(p => <PlayerRow key={p.id} p={p} highlight />)}
+          {otherPlayers.length > 0 && <SectionLabel label="All active players" />}
+        </>
+      )}
+      {noSquadOverlap && <SectionLabel label="None of your squad plays today — pick any Joker" />}
+      {otherPlayers.map(p => <PlayerRow key={p.id} p={p} highlight={false} />)}
     </div>
   );
 }
