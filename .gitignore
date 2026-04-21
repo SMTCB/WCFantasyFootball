@@ -23,6 +23,16 @@ dist-ssr
 *.sln
 *.sw?
 
+# Playwright / test artifacts
+e2e-report/
+test-results/
+playwright-results.txt
+*.png
+.playwright-mcp/
+
+# Claude Code local settings
+.claude/settings.local.json
+
 # Security
 .env
 .env.*
