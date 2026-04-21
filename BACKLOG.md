@@ -2,7 +2,7 @@
 ## World Cup 2026 Fantasy Football Platform
 
 **Stack:** React 19 + Supabase | **Target Launch:** June 2026
-**Last updated:** 2026-04-21 | **Completed:** FB-001, FB-006, FB-007
+**Last updated:** 2026-04-21 | **Completed:** FB-001, FB-006, FB-007, FB-008
 
 > Items are ordered strictly by criticality and urgency within each priority tier.
 > P0 items are sequenced by dependency chain — the first item must be done before the next.
@@ -221,7 +221,7 @@ FB-019  Push notification infrastructure
 
 ---
 
-### FB-008
+### FB-008 ✅ COMPLETED — 2026-04-21
 **Title:** Transfer window lock state — disable buy/sell UI when squad is locked
 
 **Priority:** P0 · **Complexity:** S
