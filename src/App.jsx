@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
+import ErrorBoundary from './components/ErrorBoundary';
 import AppLayout from './components/AppLayout';
 import HomeScreen from './screens/HomeScreen';
 import SquadScreen from './screens/SquadScreen';
@@ -29,15 +30,15 @@ export default function App() {
               <ProtectedRoute>
                 <AppLayout>
                   <Routes>
-                    <Route path="/"               element={<HomeScreen />} />
-                    <Route path="/squad"          element={<SquadScreen />} />
-                    <Route path="/league"         element={<LeagueScreen />} />
-                    <Route path="/league/:leagueId" element={<LeagueScreen />} />
-                    <Route path="/live"           element={<LiveScreen />} />
-                    <Route path="/market"         element={<MarketScreen />} />
-                    <Route path="/recap"          element={<RecapScreen />} />
-                    <Route path="/bracket"        element={<BracketScreen />} />
-                    <Route path="/admin"          element={<AdminSeedScreen />} />
+                    <Route path="/"               element={<ErrorBoundary screen="Home"><HomeScreen /></ErrorBoundary>} />
+                    <Route path="/squad"          element={<ErrorBoundary screen="Squad"><SquadScreen /></ErrorBoundary>} />
+                    <Route path="/league"         element={<ErrorBoundary screen="League"><LeagueScreen /></ErrorBoundary>} />
+                    <Route path="/league/:leagueId" element={<ErrorBoundary screen="League"><LeagueScreen /></ErrorBoundary>} />
+                    <Route path="/live"           element={<ErrorBoundary screen="Live"><LiveScreen /></ErrorBoundary>} />
+                    <Route path="/market"         element={<ErrorBoundary screen="Market"><MarketScreen /></ErrorBoundary>} />
+                    <Route path="/recap"          element={<ErrorBoundary screen="Recap"><RecapScreen /></ErrorBoundary>} />
+                    <Route path="/bracket"        element={<ErrorBoundary screen="Bracket"><BracketScreen /></ErrorBoundary>} />
+                    <Route path="/admin"          element={<ErrorBoundary screen="Admin"><AdminSeedScreen /></ErrorBoundary>} />
                     <Route path="*"               element={<Navigate to="/" replace />} />
                   </Routes>
                 </AppLayout>
