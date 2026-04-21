@@ -2,7 +2,7 @@
 ## World Cup 2026 Fantasy Football Platform
 
 **Stack:** React 19 + Supabase | **Target Launch:** June 2026
-**Last updated:** 2026-04-21 | **Completed:** FB-001, FB-006
+**Last updated:** 2026-04-21 | **Completed:** FB-001, FB-006, FB-007
 
 > Items are ordered strictly by criticality and urgency within each priority tier.
 > P0 items are sequenced by dependency chain — the first item must be done before the next.
@@ -199,7 +199,7 @@ FB-019  Push notification infrastructure
 
 ---
 
-### FB-007
+### FB-007 ✅ COMPLETED — 2026-04-21
 **Title:** Squad budget — server-tracked, not client-computed from fallback data
 
 **Priority:** P0 · **Complexity:** S
