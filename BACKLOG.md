@@ -2,7 +2,7 @@
 ## World Cup 2026 Fantasy Football Platform
 
 **Stack:** React 19 + Supabase | **Target Launch:** June 2026
-**Last updated:** 2026-04-21 | **Completed:** FB-001, FB-002 (auth on-hold), FB-003, FB-006, FB-007, FB-008, FB-009, FB-010, FB-016, FB-017
+**Last updated:** 2026-04-21 | **Completed:** FB-001, FB-002 (auth on-hold), FB-003, FB-006, FB-007, FB-008, FB-009, FB-010, FB-016, FB-017, FB-018
 
 > Items are ordered strictly by criticality and urgency within each priority tier.
 > P0 items are sequenced by dependency chain — the first item must be done before the next.
@@ -441,10 +441,10 @@ FB-019  Push notification infrastructure
 
 ---
 
-### FB-018
+### FB-018 ✅ DONE
 **Title:** Onboarding flow — new user welcome and squad builder walkthrough
 
-**Priority:** P0 · **Complexity:** M
+**Priority:** P0 · **Complexity:** M · **Completed:** 2026-04-21
 
 **User Story:** As a new user, I want a guided walkthrough when I first arrive so that I can build my squad and join a league without reading documentation.
 
