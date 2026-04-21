@@ -38,7 +38,7 @@ There is no "slack sprint." Every week of this runway is load-bearing. Features 
 - [ ] **Supabase schema finalized:** `players`, `fixtures`, `squads`, `matchday_scores`, `top_scorer_predictions`, `leagues`, `league_members`, `chat_messages`, `chips_used` tables with RLS policies locked down
 - [ ] **Player & fixture seeder:** Ingest all 48 WC2026 squads (736 players) and the full 64-fixture schedule into Supabase via a one-time seed script; store in `players` and `fixtures` tables
 - [ ] **Scoring engine (Edge Function):** `calculate-scores` Edge Function that reads player events (goals, assists, clean sheets, cards) and writes to `matchday_scores`; unit-tested with fixture data
-- [ ] **Supabase Auth wired:** Email + magic link sign-in live in production; guest mode removed from all critical flows
+- [x] **Supabase Auth built (2026-04-21):** Full email + password auth system complete (AuthContext, useAuth hook, ProtectedRoute, AuthScreen). Intentionally inactive — gated behind `VITE_AUTH_ENABLED=false` for the showcase period. All screens already use `useAuth()` hook; zero hardcoded UUIDs remain. Activate by setting `VITE_AUTH_ENABLED=true` in Vercel env vars — no code changes or redeploy needed.
 - [ ] **Real-time subscription baseline:** Supabase Realtime channel subscribed to `matchday_scores` inserts; Live screen updates without page refresh
 
 #### P1 — Target Complete

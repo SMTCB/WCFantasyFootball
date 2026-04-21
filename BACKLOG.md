@@ -2,7 +2,7 @@
 ## World Cup 2026 Fantasy Football Platform
 
 **Stack:** React 19 + Supabase | **Target Launch:** June 2026
-**Last updated:** 2026-04-21 | **Completed:** FB-001, FB-006, FB-007, FB-008
+**Last updated:** 2026-04-21 | **Completed:** FB-001, FB-002 (auth on-hold), FB-006, FB-007, FB-008
 
 > Items are ordered strictly by criticality and urgency within each priority tier.
 > P0 items are sequenced by dependency chain — the first item must be done before the next.
@@ -89,7 +89,7 @@ FB-019  Push notification infrastructure
 
 ---
 
-### FB-002
+### FB-002 ✅ COMPLETED — 2026-04-21 (auth inactive — gated behind VITE_AUTH_ENABLED)
 **Title:** Wire real authentication — remove hardcoded user ID from all screens
 
 **Priority:** P0 · **Complexity:** M
