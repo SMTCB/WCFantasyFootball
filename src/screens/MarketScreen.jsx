@@ -5,6 +5,7 @@ import { normalisePlayer, normalisePlayers } from '../lib/players';
 import { useAuth } from '../hooks/useAuth';
 import { useOnboarding } from '../hooks/useOnboarding';
 import OnboardingTour from '../components/OnboardingTour';
+import ConfirmModal from '../components/ConfirmModal';
 
 const POS_LIMITS  = { GK: 2, DEF: 5, MID: 5, FWD: 3 };
 const COUNTRY_LIMIT = 3;
@@ -54,6 +55,7 @@ export default function MarketScreen() {
   const [saving,       setSaving]       = useState(false);
   const [isLocked,     setIsLocked]     = useState(false);
   const [deadlineAt,   setDeadlineAt]   = useState(null);
+  const [confirm,      setConfirm]      = useState(null);
 
   useEffect(() => { fetchMarketParams(); }, []);
 
@@ -147,11 +149,28 @@ export default function MarketScreen() {
     finally { setSaving(false); }
   };
 
-  const handleSell = async (player) => {
-    if (saving) return;
+  // FB-021 + FB-023: captain safety check + confirmation before selling
+  const handleSell = (player) => {
+    if (saving)   return;
     if (isLocked) { alert('Transfers are locked until after the match.'); return; }
-    try { setSaving(true); await processTransfer('sell', player); }
-    finally { setSaving(false); }
+
+    const isCaptain = mySquad?.captain_id === player.id;
+    const isJoker   = todayJokerId === player.id;
+    const warnings  = [];
+    if (isCaptain) warnings.push('This player is your captain — selling them removes the armband.');
+    if (isJoker)   warnings.push('This player is your Daily Joker — selling voids today\'s boost.');
+
+    setConfirm({
+      title:        `Sell ${player.name}?`,
+      body:         `You will receive $${player.price}M back into your budget.`,
+      warning:      warnings.length ? warnings.join(' ') : null,
+      confirmLabel: 'Sell',
+      danger:       true,
+      onConfirm:    async () => {
+        try { setSaving(true); await processTransfer('sell', player); }
+        finally { setSaving(false); }
+      },
+    });
   };
 
   // All transfers go through the Edge Function — server validates the deadline
@@ -190,6 +209,14 @@ export default function MarketScreen() {
 
   return (
     <div className="min-h-screen bg-bg">
+      {/* Confirmation dialog (FB-021 + FB-023) */}
+      {confirm && (
+        <ConfirmModal
+          {...confirm}
+          onCancel={() => setConfirm(null)}
+        />
+      )}
+
       {/* First-visit spotlight tour */}
       {showMarketTour && !loading && (
         <OnboardingTour
