@@ -3,6 +3,8 @@ import { supabase } from '../lib/supabase';
 import { normalizeIntelligence } from '../lib/intelligence';
 import { normalisePlayer, normalisePlayers } from '../lib/players';
 import { useAuth } from '../hooks/useAuth';
+import { useOnboarding } from '../hooks/useOnboarding';
+import OnboardingTour from '../components/OnboardingTour';
 
 const POS_LIMITS  = { GK: 2, DEF: 5, MID: 5, FWD: 3 };
 const COUNTRY_LIMIT = 3;
@@ -22,8 +24,27 @@ const FLAG_MAP = {
 
 const POS_FILTER_ORDER = ['ALL', 'GK', 'DEF', 'MID', 'FWD'];
 
+const MARKET_TOUR_STEPS = [
+  {
+    target: 'market-filters',
+    title:  'Filter by Position',
+    body:   'Tap GK, DEF, MID, or FWD to narrow the list. You need exactly 1 GK, 4 DEF, 4 MID, and 2 FWD in your starting XI.',
+  },
+  {
+    target: 'market-budget',
+    title:  'Your Budget',
+    body:   'Every player you buy deducts from your $100M budget. Sell players back to free up funds — but the window closes before each matchday.',
+  },
+  {
+    target: 'market-player-list',
+    title:  'Buy & Sell',
+    body:   'Tap a player to expand their card, then hit Buy or Sell. Prices update each matchday based on ownership and performance.',
+  },
+];
+
 export default function MarketScreen() {
   const { user } = useAuth();
+  const { showMarketTour, completeMarketTour } = useOnboarding();
   const [players,      setPlayers]      = useState([]);
   const [mySquad,      setMySquad]      = useState(null);
   const [todayJokerId, setTodayJokerId] = useState(null);
@@ -169,6 +190,14 @@ export default function MarketScreen() {
 
   return (
     <div className="min-h-screen bg-bg">
+      {/* First-visit spotlight tour */}
+      {showMarketTour && !loading && (
+        <OnboardingTour
+          steps={MARKET_TOUR_STEPS}
+          onComplete={completeMarketTour}
+          onSkip={completeMarketTour}
+        />
+      )}
 
       {/* ── Transfer Window Lock Banner ─────────────────────── */}
       {isLocked && (
@@ -232,7 +261,7 @@ export default function MarketScreen() {
             </div>
 
             {/* Budget */}
-            <div className="text-right">
+            <div className="text-right" data-tour="market-budget">
               <div className="fz-label" style={{ color: '#3D4B5C' }}>Budget</div>
               <div
                 className="text-[20px] font-black tabular-nums leading-tight"
@@ -311,6 +340,7 @@ export default function MarketScreen() {
         {/* Position filter tabs */}
         <div
           className="flex"
+          data-tour="market-filters"
           style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}
         >
           {POS_FILTER_ORDER.map(pos => {
@@ -360,7 +390,7 @@ export default function MarketScreen() {
           ))}
         </div>
       ) : (
-        <div>
+        <div data-tour="market-player-list">
           {filteredPlayers.map((p, idx) => {
             const isOwned      = mySquad?.players?.includes(p.id);
             const limitReached = stats.posCounts[p.position] >= POS_LIMITS[p.position];

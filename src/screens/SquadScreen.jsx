@@ -5,6 +5,8 @@ import { getDangerZonePlayers, normalizeIntelligence, LINEUP_STATUS } from '../l
 import { normalisePlayer } from '../lib/players';
 import { useAuth } from '../hooks/useAuth';
 import { useDeadlineCountdown } from '../hooks/useDeadlineCountdown';
+import { useOnboarding } from '../hooks/useOnboarding';
+import OnboardingTour from '../components/OnboardingTour';
 import PitchView from '../components/PitchView';
 import PlayerCard from '../components/PlayerCard';
 import SectionHeader from '../components/SectionHeader';
@@ -64,6 +66,27 @@ export default function SquadScreen() {
 
   // Live countdown hook — replaces static window lock badge
   const deadline = useDeadlineCountdown();
+
+  // First-visit tour
+  const { showSquadTour, completeSquadTour } = useOnboarding();
+
+  const SQUAD_TOUR_STEPS = [
+    {
+      target: 'squad-pitch',
+      title:  'Your Pitch',
+      body:   'This is your starting XI laid out on a pitch. Tap any player to see options — swap positions, set captain, or activate your Daily Joker.',
+    },
+    {
+      target: 'squad-budget',
+      title:  'Budget & Deadline',
+      body:   'Your remaining budget and the transfer window countdown live here. When the window closes, no more transfers until the next matchday.',
+    },
+    {
+      target: 'squad-chips',
+      title:  'Chips & Boosts',
+      body:   'Wildcard lets you make unlimited free transfers. Triple Captain scores 3× points — or 0 if they don\'t play. Use them wisely, they\'re one-per-season.',
+    },
+  ];
 
   // Sync live countdown → windowLocked so chip/joker guards stay up to date
   useEffect(() => { if (deadline.isLocked) setWindowLocked(true); }, [deadline.isLocked]);
@@ -519,6 +542,14 @@ export default function SquadScreen() {
   // ─────────────────────────────────────────────────────────────────────────
   return (
     <div className="min-h-screen bg-bg overflow-x-hidden">
+      {/* First-visit spotlight tour */}
+      {showSquadTour && !loading && (
+        <OnboardingTour
+          steps={SQUAD_TOUR_STEPS}
+          onComplete={completeSquadTour}
+          onSkip={completeSquadTour}
+        />
+      )}
 
       {/* ══ STICKY HEADER ═══════════════════════════════════════════════════ */}
       <div
@@ -548,7 +579,7 @@ export default function SquadScreen() {
               </div>
             </div>
           )}
-          <div className="text-right">
+          <div className="text-right" data-tour="squad-budget">
             <div className="fz-label" style={{ color: '#3D4B5C' }}>Budget</div>
             <div className="text-[20px] font-black leading-tight tabular-nums" style={{ fontFamily: 'Barlow Condensed, sans-serif', color: budgetLow ? '#F03A3A' : '#F0F2F5' }}>
               ${budgetLeft}M
@@ -590,7 +621,7 @@ export default function SquadScreen() {
 
         {/* ── PITCH TAB ─────────────────────────────────────────────── */}
         {mobileTab === 'pitch' && (
-          <div>
+          <div data-tour="squad-pitch">
             <DangerBanner />
             {isRouletteSpinning && (
               <div className="absolute inset-0 bg-black/70 z-10 flex flex-col items-center justify-center gap-3" style={{ pointerEvents: 'none' }}>
@@ -660,7 +691,7 @@ export default function SquadScreen() {
               </div>
             )}
 
-            <div className="mt-4">
+            <div className="mt-4" data-tour="squad-chips">
               <SectionHeader title="Power Chips" />
               <div className="mt-3">
                 {CHIPS.map(chip => <ChipCard key={chip.key} chip={chip} />)}
