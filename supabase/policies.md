@@ -77,6 +77,51 @@ OR (auth.role() = 'anon' AND user_id = '00000000-0000-0000-0000-000000000000'::u
 
 ---
 
+## RPC Functions (Postgres Functions with SECURITY DEFINER)
+
+These functions bypass RLS and run as the DB owner. They are granted to the `anon` role so demo mode (unauthenticated) can call them.
+
+### `create_league(p_name TEXT, p_format TEXT, p_user_id UUID) → JSON`
+
+**Purpose:** Atomically create a league and add the creator as commissioner in a single transaction.
+
+**Logic:**
+1. Generates a collision-safe 6-character join code using `md5(random()::text || clock_timestamp()::text)` — up to 10 retry attempts if the code already exists in the `leagues` table.
+2. `INSERT INTO leagues (name, format, join_code, commissioner_id)` with the generated code.
+3. `INSERT INTO league_members (league_id, user_id, role)` with `role = 'commissioner'`.
+4. Returns `{ id, name, format, join_code }` as JSON on success; raises an exception on failure (transaction rolls back).
+
+**Granted to:** `anon`, `authenticated`
+
+**Called from:** `LeagueScreen.jsx` → `supabase.rpc('create_league', { p_name, p_format, p_user_id })`
+
+---
+
+### `join_league_by_code(p_code TEXT, p_user_id UUID) → JSON`
+
+**Purpose:** Atomically validate a join code and add the user to the league.
+
+**Logic:**
+1. Looks up `leagues` by `join_code = upper(trim(p_code))`. Raises `LEAGUE_NOT_FOUND` if not found.
+2. Checks `league_members` for an existing row (`league_id, user_id`). Raises `ALREADY_MEMBER` if present.
+3. Counts current members. Raises `LEAGUE_FULL` if count ≥ 10.
+4. `INSERT INTO league_members (league_id, user_id, role)` with `role = 'member'`.
+5. Returns `{ league_id, name }` as JSON on success.
+
+**Error codes raised (caught in LeagueScreen and translated to user-facing messages):**
+
+| Exception | User message |
+|-----------|-------------|
+| `LEAGUE_NOT_FOUND` | "That code doesn't match any league. Double-check and try again." |
+| `ALREADY_MEMBER` | "You're already in that league!" |
+| `LEAGUE_FULL` | "That league is full (10 managers max)." |
+
+**Granted to:** `anon`, `authenticated`
+
+**Called from:** `LeagueScreen.jsx` → `supabase.rpc('join_league_by_code', { p_code, p_user_id })`
+
+---
+
 ## Activating Realtime with RLS
 
 After enabling RLS, Supabase Realtime requires explicit publication of tables.
