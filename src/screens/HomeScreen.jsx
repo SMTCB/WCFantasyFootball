@@ -2,10 +2,10 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../hooks/useAuth';
+import { useDeadlineCountdown } from '../hooks/useDeadlineCountdown';
 import PredictionModal from '../components/PredictionModal';
 
 const CURRENT_MATCHDAY = 5;
-const LOCK_TIME_LABEL  = '18:00 today';
 
 /* ── Team accent colours (rough national palette) ──────────────── */
 const TEAM_COLORS = {
@@ -26,6 +26,7 @@ const getTeamColor = (name) => TEAM_COLORS[name] || TEAM_COLORS.default;
 
 export default function HomeScreen() {
   const { user } = useAuth();
+  const deadline = useDeadlineCountdown();
   const [fixtures,   setFixtures]   = useState([]);
   const [userStats,  setUserStats]  = useState({ rank: '-', points: 0 });
   const [prediction, setPrediction] = useState(null);
@@ -422,7 +423,9 @@ export default function HomeScreen() {
                         className="text-[10px] font-semibold"
                         style={{ color: '#3D4B5C' }}
                       >
-                        ⏰ Deadline: {LOCK_TIME_LABEL}
+                        <span style={{ color: deadline.color, transition: 'color 0.5s' }}>
+                          {deadline.loading ? '…' : deadline.label}
+                        </span>
                       </div>
                       <button
                         onClick={() => setShowPicker(true)}
@@ -518,7 +521,7 @@ export default function HomeScreen() {
       {showPicker && (
         <PredictionModal
           matchday={CURRENT_MATCHDAY}
-          deadlineLabel={LOCK_TIME_LABEL}
+          deadlineLabel={deadline.label || '…'}
           onClose={() => setShowPicker(false)}
           onSave={handlePredictionSaved}
         />
