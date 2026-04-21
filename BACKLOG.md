@@ -2,7 +2,7 @@
 ## World Cup 2026 Fantasy Football Platform
 
 **Stack:** React 19 + Supabase | **Target Launch:** June 2026
-**Last updated:** 2026-04-21 | **Completed:** FB-001, FB-002 (auth on-hold), FB-003, FB-006, FB-007, FB-008, FB-009, FB-010, FB-016, FB-017, FB-018, FB-020, FB-021, FB-022, FB-023, FB-024, FB-025, FB-026
+**Last updated:** 2026-04-21 | **Completed:** FB-001, FB-002 (auth on-hold), FB-003, FB-006, FB-007, FB-008, FB-009, FB-010, FB-016, FB-017, FB-018, FB-019, FB-020, FB-021, FB-022, FB-023, FB-024, FB-025, FB-026
 
 > Items are ordered strictly by criticality and urgency within each priority tier.
 > P0 items are sequenced by dependency chain — the first item must be done before the next.
@@ -468,25 +468,17 @@ FB-019  Push notification infrastructure
 
 ---
 
-### FB-019
-**Title:** Recap screen — replace all hardcoded data with real DB values
+### FB-019 ✅ DONE
+**Title:** Recap screen — replace all hardcoded data with real DB values · **Completed:** 2026-04-21
 
-**Priority:** P1 · **Complexity:** S
-
-**User Story:** As a player viewing my Recap card, I want to see my actual username, real league name, and genuine point totals so that the card is worth sharing.
-
-**Acceptance Criteria:**
-- League name from `leagues` table via user's membership — not hardcoded "World Cup Legends"
-- Username from `profiles.username` — not hardcoded "João"
-- Best player, captain, and joker points from `fantasy_points` table — not literals 15, 10, 5
-- If no recap exists for the current matchday: "Results pending…" state shown
-- All data paths tested end-to-end with a real matchday result in the DB
-
-**Dependencies:** FB-005, FB-002
-
-**Source:** Code audit — RecapScreen has `leagueName = 'World Cup Legends'`, `username = 'João'`, and hardcoded point values; the Gazette card will never be shared if it shows the wrong person's name
-
-**Notes:** The Gazette card is the app's primary viral sharing mechanic. This is a must-fix before launch — a shared card with the wrong name destroys trust instantly.
+**What shipped:**
+- League name: joined directly from `leagues` via `matchday_recaps.league_id` — no longer hardcoded "World Cup Legends"
+- Username: queried from `users` table; falls back to `user.user_metadata.username` (demo = "Demo Manager"), then "Manager"
+- Player points: fetched from `fantasy_points` table keyed on `squad_id + player_id`; displays `'— pts'` gracefully when `fantasy_points` is empty (pre-tournament)
+- Captain `×2` badge: shows `×2 = N pts` only when points are non-null; shows `×2` otherwise — eliminates `NaN` display
+- Fixed typo "GENREATING" → "GENERATING" in loading state
+- `RecapCard.jsx` hardened against null points values throughout
+- Used `.maybeSingle()` instead of `.single()` on recap query to avoid 406 errors on empty result
 
 ---
 

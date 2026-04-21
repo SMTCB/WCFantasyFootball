@@ -5,6 +5,8 @@ import RecapCard from '../components/RecapCard';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../hooks/useAuth';
 
+const DEMO_USER_ID = '00000000-0000-0000-0000-000000000000';
+
 export default function RecapScreen() {
   const { user } = useAuth();
   const [recap,   setRecap]   = useState(null);
@@ -18,37 +20,90 @@ export default function RecapScreen() {
   const fetchRecap = async () => {
     try {
       setLoading(true);
-      const userId = user?.id;
+      const userId = user?.id ?? DEMO_USER_ID;
 
-      const { data, error } = await supabase
+      // ── 1. Fetch latest recap with player names and league name ────────────
+      const { data: recapRow, error: recapErr } = await supabase
         .from('matchday_recaps')
         .select(`
           *,
           bestPlayer:best_player_id(name, position),
           captain:captain_id(name, position),
-          joker:joker_player_id(name, position)
+          joker:joker_player_id(name, position),
+          league:league_id(name)
         `)
         .eq('user_id', userId)
         .order('created_at', { ascending: false })
         .limit(1)
-        .single();
-      
-      if (data) {
-        // Flatten the Supabase response for the UI
-        setRecap({
-          matchday: data.matchday_id,
-          leagueName: 'World Cup Legends', // In real app, join with leagues
-          username: 'João', 
-          rank: data.final_rank,
-          points: data.final_points,
-          rankChange: data.rank_change,
-          bestPlayer: { ...data.bestPlayer, points: 15 }, // Points would eventually come from fantasy_points
-          captain:    { ...data.captain,    points: 10 },
-          joker:      data.joker ? { ...data.joker, points: 5 } : null,
-          transfersMade: data.transfers_made,
-          date: new Date(data.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }),
-        });
+        .maybeSingle();
+
+      if (recapErr) console.error('[recap] fetch error', recapErr);
+      if (!recapRow) return;
+
+      // ── 2. Fetch username from users table ─────────────────────────────────
+      const { data: userRow } = await supabase
+        .from('users')
+        .select('username')
+        .eq('id', userId)
+        .maybeSingle();
+
+      const username =
+        userRow?.username ??
+        user?.user_metadata?.username ??
+        'Manager';
+
+      // ── 3. Fetch fantasy_points for key players ────────────────────────────
+      //    fantasy_points rows: { squad_id, player_id (text), total }
+      const playerIds = [
+        recapRow.best_player_id,
+        recapRow.captain_id,
+        recapRow.joker_player_id,
+      ].filter(Boolean);
+
+      let pointsMap = {};
+      if (playerIds.length > 0) {
+        // Resolve squad_id for this user
+        const { data: squadRow } = await supabase
+          .from('squads')
+          .select('id')
+          .eq('user_id', userId)
+          .maybeSingle();
+
+        if (squadRow) {
+          const { data: fpRows } = await supabase
+            .from('fantasy_points')
+            .select('player_id, total')
+            .eq('squad_id', squadRow.id)
+            .in('player_id', playerIds);
+
+          if (fpRows) {
+            fpRows.forEach(fp => { pointsMap[fp.player_id] = fp.total; });
+          }
+        }
       }
+
+      // ── 4. Compose recap state ─────────────────────────────────────────────
+      setRecap({
+        matchday:      recapRow.matchday_id,
+        leagueName:    recapRow.league?.name ?? 'My League',
+        username,
+        rank:          recapRow.final_rank,
+        points:        recapRow.final_points,
+        rankChange:    recapRow.rank_change,
+        bestPlayer:    recapRow.bestPlayer
+          ? { ...recapRow.bestPlayer, points: pointsMap[recapRow.best_player_id] ?? null }
+          : null,
+        captain:       recapRow.captain
+          ? { ...recapRow.captain, points: pointsMap[recapRow.captain_id] ?? null }
+          : null,
+        joker:         recapRow.joker
+          ? { ...recapRow.joker, points: pointsMap[recapRow.joker_player_id] ?? null }
+          : null,
+        transfersMade: recapRow.transfers_made,
+        date:          new Date(recapRow.created_at).toLocaleDateString('en-GB', {
+          day: 'numeric', month: 'long', year: 'numeric',
+        }),
+      });
     } catch (err) {
       console.error('Recap fetch error', err);
     } finally {
@@ -58,15 +113,16 @@ export default function RecapScreen() {
 
   const { rankLabel, rankChangeColor, rankChangeText } = useMemo(() => {
     if (!recap) return { rankLabel: '', rankChangeColor: '', rankChangeText: '' };
-    
-    const label = recap.rank === 1 ? '1st' : recap.rank === 2 ? '2nd' : recap.rank === 3 ? '3rd' : `${recap.rank}th`;
+
+    const r = recap.rank;
+    const label = r === 1 ? '1st' : r === 2 ? '2nd' : r === 3 ? '3rd' : `${r}th`;
     const color = recap.rankChange > 0 ? 'text-positive' : recap.rankChange < 0 ? 'text-negative' : 'text-text-tertiary';
     const text  = recap.rankChange > 0
       ? `↑ ${recap.rankChange} place${recap.rankChange > 1 ? 's' : ''}`
       : recap.rankChange < 0
       ? `↓ ${Math.abs(recap.rankChange)} place${Math.abs(recap.rankChange) > 1 ? 's' : ''}`
       : '— Same position';
-      
+
     return { rankLabel: label, rankChangeColor: color, rankChangeText: text };
   }, [recap]);
 
@@ -114,22 +170,41 @@ export default function RecapScreen() {
         if (e.name !== 'AbortError') console.error(e);
       }
     } else {
-      // Fallback: copy text link
+      // Fallback: copy share text
       try {
-        await navigator.clipboard.writeText(`I scored ${recap.points} pts in Matchday ${recap.matchday} of FantasyKit! Rank: ${rankLabel} in ${recap.leagueName}.`);
+        await navigator.clipboard.writeText(
+          `I scored ${recap.points} pts in Matchday ${recap.matchday} of FantasyKit! Rank: ${rankLabel} in ${recap.leagueName}.`
+        );
         setCopied(true);
         setTimeout(() => setCopied(false), 2500);
       } catch {}
     }
   };
 
-  if (loading) return <div className="min-h-screen bg-black flex items-center justify-center text-xs font-bold text-text-tertiary">GENREATING RECAP...</div>;
-  if (!recap) return <div className="min-h-screen bg-black flex flex-col items-center justify-center p-8 text-center">
-    <div className="text-4xl mb-4">🏆</div>
-    <div className="text-lg font-black uppercase">No Recaps Yet</div>
-    <div className="text-xs text-text-tertiary mt-2">Finish a matchday to see your performance summary!</div>
-    <Link to="/" className="mt-8 text-positive text-xs font-black uppercase tracking-widest border border-positive/30 px-6 py-3 rounded-sm">Back to Home</Link>
-  </div>;
+  // ── Helper: display points value or dash ──────────────────────────────────
+  const pts = (val) => val != null ? `${val} pts` : '— pts';
+
+  if (loading) return (
+    <div className="min-h-screen bg-black flex items-center justify-center text-xs font-bold text-text-tertiary">
+      GENERATING RECAP...
+    </div>
+  );
+
+  if (!recap) return (
+    <div className="min-h-screen bg-black flex flex-col items-center justify-center p-8 text-center">
+      <div className="text-4xl mb-4">🏆</div>
+      <div className="text-lg font-black uppercase">No Recaps Yet</div>
+      <div className="text-xs text-text-tertiary mt-2">
+        Finish a matchday to see your performance summary!
+      </div>
+      <Link
+        to="/"
+        className="mt-8 text-positive text-xs font-black uppercase tracking-widest border border-positive/30 px-6 py-3 rounded-sm"
+      >
+        Back to Home
+      </Link>
+    </div>
+  );
 
   return (
     <div className="min-h-screen bg-bg">
@@ -138,54 +213,69 @@ export default function RecapScreen() {
         {/* Header */}
         <div className="bg-[#161616] py-3 px-4 border-b border-white/5 sticky top-0 z-40 flex items-center justify-between">
           <div>
-            <div className="text-[9px] font-black uppercase tracking-[0.2em] text-text-tertiary">{recap.leagueName}</div>
-            <h1 className="text-sm font-black uppercase tracking-wide">Matchday {recap.matchday} Recap</h1>
+            <div className="text-[9px] font-black uppercase tracking-[0.2em] text-text-tertiary">
+              {recap.leagueName}
+            </div>
+            <h1 className="text-sm font-black uppercase tracking-wide">
+              Matchday {recap.matchday} Recap
+            </h1>
           </div>
           <div className="text-[10px] text-text-tertiary font-semibold">{recap.date}</div>
         </div>
 
-        {/* ── Hero Rank Block ─────────────────────────────── */}
+        {/* ── Hero Rank Block ──────────────────────────────────── */}
         <div className="flex flex-col items-center justify-center py-10 px-4 border-b border-white/5 bg-[#0a0a0a] text-center">
-          <div className="text-[9px] font-black uppercase tracking-[0.2em] text-text-tertiary mb-2">Final Rank</div>
+          <div className="text-[9px] font-black uppercase tracking-[0.2em] text-text-tertiary mb-1">
+            {recap.username}
+          </div>
+          <div className="text-[9px] font-black uppercase tracking-[0.2em] text-text-tertiary mb-2">
+            Final Rank
+          </div>
           <div className="text-8xl font-black leading-none tracking-tighter">{rankLabel}</div>
           <div className="text-2xl font-black text-positive mt-4 tracking-tight">{recap.points} pts</div>
           <div className={`text-sm font-bold mt-2 ${rankChangeColor}`}>{rankChangeText}</div>
         </div>
 
-        {/* ── Stat Rows ────────────────────────────────────── */}
+        {/* ── Stat Rows ─────────────────────────────────────────── */}
         <div className="divide-y divide-white/5">
 
           {/* Best Player */}
-          <div className="flex items-center justify-between px-5 py-4">
-            <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-full bg-[#1a1a1a] border border-[#333] flex items-center justify-center text-[11px] font-black text-white/30 uppercase">
-                {recap.bestPlayer.name.substring(0, 2)}
+          {recap.bestPlayer && (
+            <div className="flex items-center justify-between px-5 py-4">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-full bg-[#1a1a1a] border border-[#333] flex items-center justify-center text-[11px] font-black text-white/30 uppercase">
+                  {recap.bestPlayer.name.substring(0, 2)}
+                </div>
+                <div>
+                  <div className="text-[9px] text-text-tertiary font-black uppercase tracking-[0.15em]">Best Player</div>
+                  <div className="text-[14px] font-bold">{recap.bestPlayer.name}</div>
+                </div>
               </div>
-              <div>
-                <div className="text-[9px] text-text-tertiary font-black uppercase tracking-[0.15em]">Best Player</div>
-                <div className="text-[14px] font-bold">{recap.bestPlayer.name}</div>
+              <div className="bg-white text-black text-[11px] font-black px-2.5 py-1 rounded-[3px]">
+                {pts(recap.bestPlayer.points)}
               </div>
             </div>
-            <div className="bg-white text-black text-[11px] font-black px-2.5 py-1 rounded-[3px]">
-              {recap.bestPlayer.points} pts
-            </div>
-          </div>
+          )}
 
           {/* Captain */}
-          <div className="flex items-center justify-between px-5 py-4">
-            <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-full bg-yellow-950/40 border border-yellow-500 flex items-center justify-center text-[11px] font-black text-yellow-400">
-                C
+          {recap.captain && (
+            <div className="flex items-center justify-between px-5 py-4">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-full bg-yellow-950/40 border border-yellow-500 flex items-center justify-center text-[11px] font-black text-yellow-400">
+                  C
+                </div>
+                <div>
+                  <div className="text-[9px] text-text-tertiary font-black uppercase tracking-[0.15em]">Captain</div>
+                  <div className="text-[14px] font-bold">{recap.captain.name}</div>
+                </div>
               </div>
-              <div>
-                <div className="text-[9px] text-text-tertiary font-black uppercase tracking-[0.15em]">Captain</div>
-                <div className="text-[14px] font-bold">{recap.captain.name}</div>
+              <div className="bg-yellow-500 text-black text-[11px] font-black px-2.5 py-1 rounded-[3px]">
+                {recap.captain.points != null
+                  ? `×2 = ${recap.captain.points * 2} pts`
+                  : '×2'}
               </div>
             </div>
-            <div className="bg-yellow-500 text-black text-[11px] font-black px-2.5 py-1 rounded-[3px]">
-              ×2 = {recap.captain.points * 2} pts
-            </div>
-          </div>
+          )}
 
           {/* Joker (conditional) */}
           {recap.joker && (
@@ -200,7 +290,7 @@ export default function RecapScreen() {
                 </div>
               </div>
               <div className="bg-purple-600 text-white text-[11px] font-black px-2.5 py-1 rounded-[3px]">
-                {recap.joker.points} pts
+                {pts(recap.joker.points)}
               </div>
             </div>
           )}
@@ -212,7 +302,7 @@ export default function RecapScreen() {
           </div>
         </div>
 
-        {/* ── Share Actions ─────────────────────────────────── */}
+        {/* ── Share Actions ──────────────────────────────────────── */}
         <div className="p-4 mt-auto">
           <div className="text-[9px] font-black uppercase tracking-[0.2em] text-text-tertiary text-center mb-4">
             Share your recap
@@ -249,7 +339,7 @@ export default function RecapScreen() {
           </div>
         </div>
 
-        {/* ── Off-screen Shareable Card (used by html2canvas) ─ */}
+        {/* ── Off-screen Shareable Card (used by html2canvas) ──── */}
         <div className="absolute -left-[9999px] top-0 opacity-0 pointer-events-none" aria-hidden="true">
           <RecapCard recap={recap} forwardRef={cardRef} />
         </div>
