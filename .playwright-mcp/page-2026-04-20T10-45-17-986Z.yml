@@ -1,0 +1,31 @@
+- generic [ref=e3]:
+  - navigation [ref=e4]:
+    - generic [ref=e5]:
+      - generic [ref=e6]: World Cup 2026
+      - generic [ref=e7]: ForzaKit
+      - generic [ref=e8]: Fantasy League
+    - generic [ref=e9]:
+      - link "Scores" [ref=e10] [cursor=pointer]:
+        - /url: /
+        - img [ref=e12]
+        - generic [ref=e17]: Scores
+      - link "My Squad" [ref=e18] [cursor=pointer]:
+        - /url: /squad
+        - img [ref=e21]
+        - generic [ref=e26]: My Squad
+      - link "League" [ref=e27] [cursor=pointer]:
+        - /url: /league
+        - img [ref=e29]
+        - generic [ref=e32]: League
+      - link "Live" [ref=e33] [cursor=pointer]:
+        - /url: /live
+        - img [ref=e35]
+        - generic [ref=e37]: Live
+      - link "Market" [ref=e39] [cursor=pointer]:
+        - /url: /market
+        - img [ref=e41]
+        - generic [ref=e44]: Market
+    - generic [ref=e46]: Alpha v0.1 · Forza Ecosystem
+  - generic [ref=e50]:
+    - generic [ref=e51]: MY SQUAD
+    - generic [ref=e52]: Loading Tactical Sheet…

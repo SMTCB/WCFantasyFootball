@@ -1,0 +1,31 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run *)",
+      "mcp__plugin_supabase_supabase__list_projects",
+      "mcp__plugin_supabase_supabase__list_tables",
+      "Bash(npm install *)",
+      "mcp__plugin_supabase_supabase__execute_sql",
+      "mcp__plugin_supabase_supabase__apply_migration",
+      "Bash(npx playwright *)",
+      "Bash(echo \"EXIT:$?\")",
+      "Bash(curl -s http://localhost:5173)",
+      "Bash(node -e ' *)",
+      "Bash(npx vite *)",
+      "mcp__plugin_playwright_playwright__browser_navigate",
+      "mcp__plugin_playwright_playwright__browser_resize",
+      "mcp__plugin_playwright_playwright__browser_take_screenshot",
+      "mcp__plugin_playwright_playwright__browser_console_messages",
+      "mcp__plugin_playwright_playwright__browser_run_code",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:5173/)",
+      "WebSearch",
+      "Bash(ls -la .env*)",
+      "Bash(grep -n \"env\" .gitignore)",
+      "mcp__plugin_supabase_supabase__deploy_edge_function",
+      "Bash(gh run *)",
+      "PowerShell(cd \"C:\\\\Users\\\\stcbr\\\\Documents\\\\AI\\\\Forza Fantasy League\\\\.claude\\\\worktrees\\\\mystifying-wescoff-781976\"; $env:VITE_SUPABASE_URL=\"https://sssmvihxtqtohisghjet.supabase.co\"; $env:VITE_SUPABASE_ANON_KEY=\"placeholder\"; $env:VITE_AUTH_ENABLED=\"false\"; npm run build 2>&1 | Select-Object -First 80)",
+      "PowerShell(cd \"C:\\\\Users\\\\stcbr\\\\Documents\\\\AI\\\\Forza Fantasy League\\\\.claude\\\\worktrees\\\\mystifying-wescoff-781976\"; npm run lint 2>&1 | Select-String \"^\\\\s+\\\\d+:\\\\d+\\\\s+\\(error|warning\\)\" | ForEach-Object { $_.ToString\\(\\).Trim\\(\\) })",
+      "PowerShell(cd \"C:\\\\Users\\\\stcbr\\\\Documents\\\\AI\\\\Forza Fantasy League\\\\.claude\\\\worktrees\\\\mystifying-wescoff-781976\"; npm run lint 2>&1 | Select-String \"^\\\\s+\\\\d+:\\\\d+\\\\s+error\" | ForEach-Object { $_.ToString\\(\\).Trim\\(\\) })"
+    ]
+  }
+}

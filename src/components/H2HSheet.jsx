@@ -78,7 +78,7 @@ function StreakBadge({ streak }) {
 // ─── Main Component ───────────────────────────────────────────────────────────
 export default function H2HSheet({ leagueId, myId, rival, myName = 'You', onClose }) {
   const [h2h, setH2h] = useState(DEFAULT_H2H);
-  const [loading, setLoading] = useState(true);
+  const [, setLoading] = useState(true);
 
   useEffect(() => {
     async function fetchH2H() {

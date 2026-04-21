@@ -1,0 +1,2492 @@
+
+Running 84 tests using 2 workers
+
+  ok  2 [mobile-chrome] › e2e\platform.spec.js:24:5 › Screen loading › / loads without blank content or JS crash (6.8s)
+  ok  1 [desktop-chrome] › e2e\platform.spec.js:24:5 › Screen loading › / loads without blank content or JS crash (7.8s)
+  ok  3 [mobile-chrome] › e2e\platform.spec.js:24:5 › Screen loading › /squad loads without blank content or JS crash (7.5s)
+  ok  4 [desktop-chrome] › e2e\platform.spec.js:24:5 › Screen loading › /squad loads without blank content or JS crash (7.2s)
+  ok  6 [desktop-chrome] › e2e\platform.spec.js:24:5 › Screen loading › /league loads without blank content or JS crash (3.4s)
+  ok  5 [mobile-chrome] › e2e\platform.spec.js:24:5 › Screen loading › /league loads without blank content or JS crash (4.8s)
+  ok  7 [desktop-chrome] › e2e\platform.spec.js:24:5 › Screen loading › /live loads without blank content or JS crash (7.3s)
+  ok  8 [mobile-chrome] › e2e\platform.spec.js:24:5 › Screen loading › /live loads without blank content or JS crash (6.7s)
+  ok  9 [desktop-chrome] › e2e\platform.spec.js:24:5 › Screen loading › /market loads without blank content or JS crash (6.7s)
+  ok 10 [mobile-chrome] › e2e\platform.spec.js:24:5 › Screen loading › /market loads without blank content or JS crash (7.0s)
+  ok 11 [desktop-chrome] › e2e\platform.spec.js:24:5 › Screen loading › /recap loads without blank content or JS crash (3.9s)
+  ok 12 [mobile-chrome] › e2e\platform.spec.js:24:5 › Screen loading › /recap loads without blank content or JS crash (4.0s)
+  ok 13 [desktop-chrome] › e2e\platform.spec.js:24:5 › Screen loading › /bracket loads without blank content or JS crash (3.4s)
+  ok 14 [mobile-chrome] › e2e\platform.spec.js:24:5 › Screen loading › /bracket loads without blank content or JS crash (3.5s)
+  ok 15 [desktop-chrome] › e2e\platform.spec.js:43:3 › Navigation › desktop sidebar is visible at 1440px (5.3s)
+  ok 16 [mobile-chrome] › e2e\platform.spec.js:43:3 › Navigation › desktop sidebar is visible at 1440px (6.7s)
+  ok 17 [desktop-chrome] › e2e\platform.spec.js:57:3 › Navigation › mobile bottom nav is visible at 375px (3.7s)
+  ok 18 [mobile-chrome] › e2e\platform.spec.js:57:3 › Navigation › mobile bottom nav is visible at 375px (6.1s)
+  ok 19 [desktop-chrome] › e2e\platform.spec.js:66:3 › Navigation › desktop sidebar navigation works (6.3s)
+  ok 21 [desktop-chrome] › e2e\platform.spec.js:79:3 › Navigation › mobile bottom nav navigation works (7.5s)
+  ok 20 [mobile-chrome] › e2e\platform.spec.js:66:3 › Navigation › desktop sidebar navigation works (9.2s)
+  ok 22 [desktop-chrome] › e2e\platform.spec.js:101:3 › HomeScreen › shows Match Centre heading (6.0s)
+  ok 23 [mobile-chrome] › e2e\platform.spec.js:79:3 › Navigation › mobile bottom nav navigation works (6.2s)
+  ok 24 [desktop-chrome] › e2e\platform.spec.js:105:3 › HomeScreen › renders at least one fixture card (4.4s)
+  ok 25 [mobile-chrome] › e2e\platform.spec.js:101:3 › HomeScreen › shows Match Centre heading (5.2s)
+  ok 26 [desktop-chrome] › e2e\platform.spec.js:112:3 › HomeScreen › shows a live match indicator (4.3s)
+  ok 27 [mobile-chrome] › e2e\platform.spec.js:105:3 › HomeScreen › renders at least one fixture card (4.9s)
+  ok 28 [desktop-chrome] › e2e\platform.spec.js:118:3 › HomeScreen › shows user rank and points in header (4.4s)
+  ok 29 [mobile-chrome] › e2e\platform.spec.js:112:3 › HomeScreen › shows a live match indicator (5.3s)
+  ok 30 [desktop-chrome] › e2e\platform.spec.js:122:3 › HomeScreen › shows Daily Prediction widget (4.1s)
+  ok 31 [mobile-chrome] › e2e\platform.spec.js:118:3 › HomeScreen › shows user rank and points in header (4.9s)
+  ok 32 [desktop-chrome] › e2e\platform.spec.js:126:3 › HomeScreen › mobile — no horizontal overflow (13.2s)
+  ok 33 [mobile-chrome] › e2e\platform.spec.js:122:3 › HomeScreen › shows Daily Prediction widget (10.3s)
+  x  34 [desktop-chrome] › e2e\platform.spec.js:144:3 › SquadScreen › shows My Squad heading (2.7s)
+  x  35 [mobile-chrome] › e2e\platform.spec.js:126:3 › HomeScreen › mobile — no horizontal overflow (2.8s)
+  x  36 [desktop-chrome] › e2e\platform.spec.js:144:3 › SquadScreen › shows My Squad heading (retry #1) (3.0s)
+  x  37 [mobile-chrome] › e2e\platform.spec.js:126:3 › HomeScreen › mobile — no horizontal overflow (retry #1) (3.0s)
+  x  38 [desktop-chrome] › e2e\platform.spec.js:150:3 › SquadScreen › mobile — pitch view renders with players (2.9s)
+  x  39 [mobile-chrome] › e2e\platform.spec.js:144:3 › SquadScreen › shows My Squad heading (3.0s)
+  x  40 [desktop-chrome] › e2e\platform.spec.js:150:3 › SquadScreen › mobile — pitch view renders with players (retry #1) (3.0s)
+  x  41 [mobile-chrome] › e2e\platform.spec.js:144:3 › SquadScreen › shows My Squad heading (retry #1) (3.0s)
+  x  42 [desktop-chrome] › e2e\platform.spec.js:165:3 › SquadScreen › shows budget in header (2.9s)
+  x  43 [mobile-chrome] › e2e\platform.spec.js:150:3 › SquadScreen › mobile — pitch view renders with players (2.9s)
+  x  44 [desktop-chrome] › e2e\platform.spec.js:165:3 › SquadScreen › shows budget in header (retry #1) (3.0s)
+  x  45 [mobile-chrome] › e2e\platform.spec.js:150:3 › SquadScreen › mobile — pitch view renders with players (retry #1) (3.0s)
+  x  46 [desktop-chrome] › e2e\platform.spec.js:169:3 › SquadScreen › chips row is visible (2.9s)
+  x  47 [mobile-chrome] › e2e\platform.spec.js:165:3 › SquadScreen › shows budget in header (2.9s)
+  x  48 [desktop-chrome] › e2e\platform.spec.js:169:3 › SquadScreen › chips row is visible (retry #1) (3.2s)
+  x  49 [mobile-chrome] › e2e\platform.spec.js:165:3 › SquadScreen › shows budget in header (retry #1) (3.2s)
+  x  50 [desktop-chrome] › e2e\platform.spec.js:176:3 › SquadScreen › mobile — no horizontal overflow (2.9s)
+  x  51 [mobile-chrome] › e2e\platform.spec.js:169:3 › SquadScreen › chips row is visible (2.9s)
+  x  52 [desktop-chrome] › e2e\platform.spec.js:176:3 › SquadScreen › mobile — no horizontal overflow (retry #1) (3.0s)
+  x  53 [mobile-chrome] › e2e\platform.spec.js:169:3 › SquadScreen › chips row is visible (retry #1) (3.0s)
+  x  54 [desktop-chrome] › e2e\platform.spec.js:184:3 › SquadScreen › desktop — player roster list is visible (3.1s)
+  x  55 [mobile-chrome] › e2e\platform.spec.js:176:3 › SquadScreen › mobile — no horizontal overflow (3.1s)
+  x  56 [desktop-chrome] › e2e\platform.spec.js:184:3 › SquadScreen › desktop — player roster list is visible (retry #1) (3.3s)
+  x  57 [mobile-chrome] › e2e\platform.spec.js:176:3 › SquadScreen › mobile — no horizontal overflow (retry #1) (3.1s)
+  x  58 [desktop-chrome] › e2e\platform.spec.js:200:3 › MarketScreen › shows Player Market heading (2.9s)
+  x  59 [mobile-chrome] › e2e\platform.spec.js:184:3 › SquadScreen › desktop — player roster list is visible (3.0s)
+  x  60 [desktop-chrome] › e2e\platform.spec.js:200:3 › MarketScreen › shows Player Market heading (retry #1) (3.2s)
+  x  61 [mobile-chrome] › e2e\platform.spec.js:184:3 › SquadScreen › desktop — player roster list is visible (retry #1) (3.1s)
+  x  62 [desktop-chrome] › e2e\platform.spec.js:204:3 › MarketScreen › renders player list with names (2.9s)
+  x  63 [mobile-chrome] › e2e\platform.spec.js:200:3 › MarketScreen › shows Player Market heading (2.9s)
+  x  64 [desktop-chrome] › e2e\platform.spec.js:204:3 › MarketScreen › renders player list with names (retry #1) (3.2s)
+  x  65 [mobile-chrome] › e2e\platform.spec.js:200:3 › MarketScreen › shows Player Market heading (retry #1) (3.4s)
+  x  66 [desktop-chrome] › e2e\platform.spec.js:210:3 › MarketScreen › position filter tabs are clickable (3.0s)
+  x  67 [mobile-chrome] › e2e\platform.spec.js:204:3 › MarketScreen › renders player list with names (3.1s)
+  x  68 [desktop-chrome] › e2e\platform.spec.js:210:3 › MarketScreen › position filter tabs are clickable (retry #1) (3.2s)
+  x  69 [mobile-chrome] › e2e\platform.spec.js:204:3 › MarketScreen › renders player list with names (retry #1) (3.3s)
+  x  70 [desktop-chrome] › e2e\platform.spec.js:219:3 › MarketScreen › shows budget display (3.2s)
+  x  71 [mobile-chrome] › e2e\platform.spec.js:210:3 › MarketScreen › position filter tabs are clickable (3.0s)
+  x  72 [desktop-chrome] › e2e\platform.spec.js:219:3 › MarketScreen › shows budget display (retry #1) (3.2s)
+  x  73 [mobile-chrome] › e2e\platform.spec.js:210:3 › MarketScreen › position filter tabs are clickable (retry #1) (3.1s)
+  x  74 [desktop-chrome] › e2e\platform.spec.js:223:3 › MarketScreen › shows squad slot count (2.9s)
+  x  75 [mobile-chrome] › e2e\platform.spec.js:219:3 › MarketScreen › shows budget display (3.1s)
+  x  76 [desktop-chrome] › e2e\platform.spec.js:223:3 › MarketScreen › shows squad slot count (retry #1) (3.2s)
+  x  77 [mobile-chrome] › e2e\platform.spec.js:219:3 › MarketScreen › shows budget display (retry #1) (3.2s)
+  x  78 [desktop-chrome] › e2e\platform.spec.js:228:3 › MarketScreen › ALL filter shows all positions (2.9s)
+  x  79 [mobile-chrome] › e2e\platform.spec.js:223:3 › MarketScreen › shows squad slot count (3.1s)
+  x  80 [desktop-chrome] › e2e\platform.spec.js:228:3 › MarketScreen › ALL filter shows all positions (retry #1) (3.1s)
+  x  81 [mobile-chrome] › e2e\platform.spec.js:223:3 › MarketScreen › shows squad slot count (retry #1) (3.4s)
+  x  82 [desktop-chrome] › e2e\platform.spec.js:235:3 › MarketScreen › mobile — no horizontal overflow (3.0s)
+  x  83 [mobile-chrome] › e2e\platform.spec.js:228:3 › MarketScreen › ALL filter shows all positions (3.0s)
+  x  84 [desktop-chrome] › e2e\platform.spec.js:235:3 › MarketScreen › mobile — no horizontal overflow (retry #1) (3.4s)
+  x  85 [mobile-chrome] › e2e\platform.spec.js:228:3 › MarketScreen › ALL filter shows all positions (retry #1) (3.4s)
+  x  86 [desktop-chrome] › e2e\platform.spec.js:251:3 › LeagueScreen › shows League heading (3.0s)
+  x  87 [mobile-chrome] › e2e\platform.spec.js:235:3 › MarketScreen › mobile — no horizontal overflow (3.0s)
+  x  88 [desktop-chrome] › e2e\platform.spec.js:251:3 › LeagueScreen › shows League heading (retry #1) (3.1s)
+  x  89 [mobile-chrome] › e2e\platform.spec.js:235:3 › MarketScreen › mobile — no horizontal overflow (retry #1) (3.1s)
+  x  90 [desktop-chrome] › e2e\platform.spec.js:256:3 › LeagueScreen › renders league list or standings (2.9s)
+  x  91 [mobile-chrome] › e2e\platform.spec.js:251:3 › LeagueScreen › shows League heading (2.9s)
+  x  92 [desktop-chrome] › e2e\platform.spec.js:256:3 › LeagueScreen › renders league list or standings (retry #1) (3.1s)
+  x  93 [mobile-chrome] › e2e\platform.spec.js:251:3 › LeagueScreen › shows League heading (retry #1) (3.1s)
+  x  94 [desktop-chrome] › e2e\platform.spec.js:270:3 › LiveScreen › loads without crashing (3.0s)
+  x  95 [mobile-chrome] › e2e\platform.spec.js:256:3 › LeagueScreen › renders league list or standings (3.0s)
+  x  96 [desktop-chrome] › e2e\platform.spec.js:270:3 › LiveScreen › loads without crashing (retry #1) (3.2s)
+  x  97 [mobile-chrome] › e2e\platform.spec.js:256:3 › LeagueScreen › renders league list or standings (retry #1) (3.1s)
+  x  98 [desktop-chrome] › e2e\platform.spec.js:278:3 › LiveScreen › shows Live heading or live content (2.9s)
+  x  99 [mobile-chrome] › e2e\platform.spec.js:270:3 › LiveScreen › loads without crashing (3.1s)
+  x  100 [desktop-chrome] › e2e\platform.spec.js:278:3 › LiveScreen › shows Live heading or live content (retry #1) (3.1s)
+  x  101 [mobile-chrome] › e2e\platform.spec.js:270:3 › LiveScreen › loads without crashing (retry #1) (3.1s)
+  x  102 [desktop-chrome] › e2e\platform.spec.js:283:3 › LiveScreen › shows match or projection content (2.9s)
+  x  103 [mobile-chrome] › e2e\platform.spec.js:278:3 › LiveScreen › shows Live heading or live content (2.9s)
+  x  104 [desktop-chrome] › e2e\platform.spec.js:283:3 › LiveScreen › shows match or projection content (retry #1) (3.1s)
+  x  105 [mobile-chrome] › e2e\platform.spec.js:278:3 › LiveScreen › shows Live heading or live content (retry #1) (3.2s)
+  x  106 [desktop-chrome] › e2e\platform.spec.js:291:3 › RecapScreen › loads without crashing (2.9s)
+  x  107 [mobile-chrome] › e2e\platform.spec.js:283:3 › LiveScreen › shows match or projection content (3.0s)
+  x  108 [desktop-chrome] › e2e\platform.spec.js:291:3 › RecapScreen › loads without crashing (retry #1) (3.1s)
+  x  109 [mobile-chrome] › e2e\platform.spec.js:283:3 › LiveScreen › shows match or projection content (retry #1) (3.4s)
+  x  110 [desktop-chrome] › e2e\platform.spec.js:299:3 › RecapScreen › shows recap content (3.3s)
+  x  111 [mobile-chrome] › e2e\platform.spec.js:291:3 › RecapScreen › loads without crashing (3.1s)
+  x  112 [desktop-chrome] › e2e\platform.spec.js:299:3 › RecapScreen › shows recap content (retry #1) (3.0s)
+  x  113 [mobile-chrome] › e2e\platform.spec.js:291:3 › RecapScreen › loads without crashing (retry #1) (3.1s)
+  x  114 [desktop-chrome] › e2e\platform.spec.js:309:3 › BracketScreen › loads without crashing (2.9s)
+  x  115 [mobile-chrome] › e2e\platform.spec.js:299:3 › RecapScreen › shows recap content (2.9s)
+  x  116 [desktop-chrome] › e2e\platform.spec.js:309:3 › BracketScreen › loads without crashing (retry #1) (3.1s)
+  x  117 [mobile-chrome] › e2e\platform.spec.js:299:3 › RecapScreen › shows recap content (retry #1) (3.0s)
+  x  118 [desktop-chrome] › e2e\platform.spec.js:317:3 › BracketScreen › shows bracket content (3.0s)
+  x  119 [mobile-chrome] › e2e\platform.spec.js:309:3 › BracketScreen › loads without crashing (3.0s)
+  x  120 [desktop-chrome] › e2e\platform.spec.js:317:3 › BracketScreen › shows bracket content (retry #1) (3.1s)
+  x  121 [mobile-chrome] › e2e\platform.spec.js:309:3 › BracketScreen › loads without crashing (retry #1) (3.2s)
+  x  122 [desktop-chrome] › e2e\platform.spec.js:327:3 › Layout consistency › desktop — sidebar left offset applied (content not behind sidebar) (3.2s)
+  ok 123 [mobile-chrome] › e2e\platform.spec.js:317:3 › BracketScreen › shows bracket content (4.7s)
+  ok 124 [desktop-chrome] › e2e\platform.spec.js:327:3 › Layout consistency › desktop — sidebar left offset applied (content not behind sidebar) (retry #1) (4.9s)
+  ok 125 [mobile-chrome] › e2e\platform.spec.js:327:3 › Layout consistency › desktop — sidebar left offset applied (content not behind sidebar) (5.5s)
+  ok 126 [desktop-chrome] › e2e\platform.spec.js:339:3 › Layout consistency › mobile — bottom nav does not obscure content (3.5s)
+  ok 127 [mobile-chrome] › e2e\platform.spec.js:339:3 › Layout consistency › mobile — bottom nav does not obscure content (4.3s)
+  ok 128 [desktop-chrome] › e2e\platform.spec.js:354:3 › Layout consistency › 404 redirect to home (3.5s)
+  ok 129 [mobile-chrome] › e2e\platform.spec.js:354:3 › Layout consistency › 404 redirect to home (3.6s)
+
+
+  1) [desktop-chrome] › e2e\platform.spec.js:144:3 › SquadScreen › shows My Squad heading ──────────
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/squad
+    Call log:
+    [2m  - navigating to "http://localhost:5173/squad", waiting until "load"[22m
+
+
+      138 | test.describe('SquadScreen', () => {
+      139 |   test.beforeEach(async ({ page }) => {
+    > 140 |     await page.goto('/squad');
+          |                ^
+      141 |     await waitForContent(page);
+      142 |   });
+      143 |
+        at C:\Users\stcbr\Documents\AI\Forza Fantasy League\.claude\worktrees\mystifying-wescoff-781976\e2e\platform.spec.js:140:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\platform-SquadScreen-shows-My-Squad-heading-desktop-chrome\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\platform-SquadScreen-shows-My-Squad-heading-desktop-chrome\error-context.md
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/squad
+    Call log:
+    [2m  - navigating to "http://localhost:5173/squad", waiting until "load"[22m
+
+
+      138 | test.describe('SquadScreen', () => {
+      139 |   test.beforeEach(async ({ page }) => {
+    > 140 |     await page.goto('/squad');
+          |                ^
+      141 |     await waitForContent(page);
+      142 |   });
+      143 |
+        at C:\Users\stcbr\Documents\AI\Forza Fantasy League\.claude\worktrees\mystifying-wescoff-781976\e2e\platform.spec.js:140:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\platform-SquadScreen-shows-My-Squad-heading-desktop-chrome-retry1\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\platform-SquadScreen-shows-My-Squad-heading-desktop-chrome-retry1\error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\platform-SquadScreen-shows-My-Squad-heading-desktop-chrome-retry1\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\platform-SquadScreen-shows-My-Squad-heading-desktop-chrome-retry1\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  2) [desktop-chrome] › e2e\platform.spec.js:150:3 › SquadScreen › mobile — pitch view renders with players 
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/squad
+    Call log:
+    [2m  - navigating to "http://localhost:5173/squad", waiting until "load"[22m
+
+
+      138 | test.describe('SquadScreen', () => {
+      139 |   test.beforeEach(async ({ page }) => {
+    > 140 |     await page.goto('/squad');
+          |                ^
+      141 |     await waitForContent(page);
+      142 |   });
+      143 |
+        at C:\Users\stcbr\Documents\AI\Forza Fantasy League\.claude\worktrees\mystifying-wescoff-781976\e2e\platform.spec.js:140:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\platform-SquadScreen-mobil-f1741-h-view-renders-with-players-desktop-chrome\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\platform-SquadScreen-mobil-f1741-h-view-renders-with-players-desktop-chrome\error-context.md
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/squad
+    Call log:
+    [2m  - navigating to "http://localhost:5173/squad", waiting until "load"[22m
+
+
+      138 | test.describe('SquadScreen', () => {
+      139 |   test.beforeEach(async ({ page }) => {
+    > 140 |     await page.goto('/squad');
+          |                ^
+      141 |     await waitForContent(page);
+      142 |   });
+      143 |
+        at C:\Users\stcbr\Documents\AI\Forza Fantasy League\.claude\worktrees\mystifying-wescoff-781976\e2e\platform.spec.js:140:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\platform-SquadScreen-mobil-f1741-h-view-renders-with-players-desktop-chrome-retry1\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\platform-SquadScreen-mobil-f1741-h-view-renders-with-players-desktop-chrome-retry1\error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\platform-SquadScreen-mobil-f1741-h-view-renders-with-players-desktop-chrome-retry1\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\platform-SquadScreen-mobil-f1741-h-view-renders-with-players-desktop-chrome-retry1\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  3) [desktop-chrome] › e2e\platform.spec.js:165:3 › SquadScreen › shows budget in header ──────────
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/squad
+    Call log:
+    [2m  - navigating to "http://localhost:5173/squad", waiting until "load"[22m
+
+
+      138 | test.describe('SquadScreen', () => {
+      139 |   test.beforeEach(async ({ page }) => {
+    > 140 |     await page.goto('/squad');
+          |                ^
+      141 |     await waitForContent(page);
+      142 |   });
+      143 |
+        at C:\Users\stcbr\Documents\AI\Forza Fantasy League\.claude\worktrees\mystifying-wescoff-781976\e2e\platform.spec.js:140:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\platform-SquadScreen-shows-budget-in-header-desktop-chrome\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\platform-SquadScreen-shows-budget-in-header-desktop-chrome\error-context.md
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/squad
+    Call log:
+    [2m  - navigating to "http://localhost:5173/squad", waiting until "load"[22m
+
+
+      138 | test.describe('SquadScreen', () => {
+      139 |   test.beforeEach(async ({ page }) => {
+    > 140 |     await page.goto('/squad');
+          |                ^
+      141 |     await waitForContent(page);
+      142 |   });
+      143 |
+        at C:\Users\stcbr\Documents\AI\Forza Fantasy League\.claude\worktrees\mystifying-wescoff-781976\e2e\platform.spec.js:140:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\platform-SquadScreen-shows-budget-in-header-desktop-chrome-retry1\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\platform-SquadScreen-shows-budget-in-header-desktop-chrome-retry1\error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\platform-SquadScreen-shows-budget-in-header-desktop-chrome-retry1\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\platform-SquadScreen-shows-budget-in-header-desktop-chrome-retry1\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  4) [desktop-chrome] › e2e\platform.spec.js:169:3 › SquadScreen › chips row is visible ────────────
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/squad
+    Call log:
+    [2m  - navigating to "http://localhost:5173/squad", waiting until "load"[22m
+
+
+      138 | test.describe('SquadScreen', () => {
+      139 |   test.beforeEach(async ({ page }) => {
+    > 140 |     await page.goto('/squad');
+          |                ^
+      141 |     await waitForContent(page);
+      142 |   });
+      143 |
+        at C:\Users\stcbr\Documents\AI\Forza Fantasy League\.claude\worktrees\mystifying-wescoff-781976\e2e\platform.spec.js:140:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\platform-SquadScreen-chips-row-is-visible-desktop-chrome\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\platform-SquadScreen-chips-row-is-visible-desktop-chrome\error-context.md
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/squad
+    Call log:
+    [2m  - navigating to "http://localhost:5173/squad", waiting until "load"[22m
+
+
+      138 | test.describe('SquadScreen', () => {
+      139 |   test.beforeEach(async ({ page }) => {
+    > 140 |     await page.goto('/squad');
+          |                ^
+      141 |     await waitForContent(page);
+      142 |   });
+      143 |
+        at C:\Users\stcbr\Documents\AI\Forza Fantasy League\.claude\worktrees\mystifying-wescoff-781976\e2e\platform.spec.js:140:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\platform-SquadScreen-chips-row-is-visible-desktop-chrome-retry1\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\platform-SquadScreen-chips-row-is-visible-desktop-chrome-retry1\error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\platform-SquadScreen-chips-row-is-visible-desktop-chrome-retry1\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\platform-SquadScreen-chips-row-is-visible-desktop-chrome-retry1\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  5) [desktop-chrome] › e2e\platform.spec.js:176:3 › SquadScreen › mobile — no horizontal overflow ─
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/squad
+    Call log:
+    [2m  - navigating to "http://localhost:5173/squad", waiting until "load"[22m
+
+
+      138 | test.describe('SquadScreen', () => {
+      139 |   test.beforeEach(async ({ page }) => {
+    > 140 |     await page.goto('/squad');
+          |                ^
+      141 |     await waitForContent(page);
+      142 |   });
+      143 |
+        at C:\Users\stcbr\Documents\AI\Forza Fantasy League\.claude\worktrees\mystifying-wescoff-781976\e2e\platform.spec.js:140:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\platform-SquadScreen-mobile-—-no-horizontal-overflow-desktop-chrome\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\platform-SquadScreen-mobile-—-no-horizontal-overflow-desktop-chrome\error-context.md
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/squad
+    Call log:
+    [2m  - navigating to "http://localhost:5173/squad", waiting until "load"[22m
+
+
+      138 | test.describe('SquadScreen', () => {
+      139 |   test.beforeEach(async ({ page }) => {
+    > 140 |     await page.goto('/squad');
+          |                ^
+      141 |     await waitForContent(page);
+      142 |   });
+      143 |
+        at C:\Users\stcbr\Documents\AI\Forza Fantasy League\.claude\worktrees\mystifying-wescoff-781976\e2e\platform.spec.js:140:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\platform-SquadScreen-mobile-—-no-horizontal-overflow-desktop-chrome-retry1\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\platform-SquadScreen-mobile-—-no-horizontal-overflow-desktop-chrome-retry1\error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\platform-SquadScreen-mobile-—-no-horizontal-overflow-desktop-chrome-retry1\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\platform-SquadScreen-mobile-—-no-horizontal-overflow-desktop-chrome-retry1\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  6) [desktop-chrome] › e2e\platform.spec.js:184:3 › SquadScreen › desktop — player roster list is visible 
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/squad
+    Call log:
+    [2m  - navigating to "http://localhost:5173/squad", waiting until "load"[22m
+
+
+      138 | test.describe('SquadScreen', () => {
+      139 |   test.beforeEach(async ({ page }) => {
+    > 140 |     await page.goto('/squad');
+          |                ^
+      141 |     await waitForContent(page);
+      142 |   });
+      143 |
+        at C:\Users\stcbr\Documents\AI\Forza Fantasy League\.claude\worktrees\mystifying-wescoff-781976\e2e\platform.spec.js:140:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\platform-SquadScreen-desktop-—-player-roster-list-is-visible-desktop-chrome\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\platform-SquadScreen-desktop-—-player-roster-list-is-visible-desktop-chrome\error-context.md
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/squad
+    Call log:
+    [2m  - navigating to "http://localhost:5173/squad", waiting until "load"[22m
+
+
+      138 | test.describe('SquadScreen', () => {
+      139 |   test.beforeEach(async ({ page }) => {
+    > 140 |     await page.goto('/squad');
+          |                ^
+      141 |     await waitForContent(page);
+      142 |   });
+      143 |
+        at C:\Users\stcbr\Documents\AI\Forza Fantasy League\.claude\worktrees\mystifying-wescoff-781976\e2e\platform.spec.js:140:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\platform-SquadScreen-desktop-—-player-roster-list-is-visible-desktop-chrome-retry1\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\platform-SquadScreen-desktop-—-player-roster-list-is-visible-desktop-chrome-retry1\error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\platform-SquadScreen-desktop-—-player-roster-list-is-visible-desktop-chrome-retry1\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\platform-SquadScreen-desktop-—-player-roster-list-is-visible-desktop-chrome-retry1\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  7) [desktop-chrome] › e2e\platform.spec.js:200:3 › MarketScreen › shows Player Market heading ────
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/market
+    Call log:
+    [2m  - navigating to "http://localhost:5173/market", waiting until "load"[22m
+
+
+      194 | test.describe('MarketScreen', () => {
+      195 |   test.beforeEach(async ({ page }) => {
+    > 196 |     await page.goto('/market');
+          |                ^
+      197 |     await waitForContent(page);
+      198 |   });
+      199 |
+        at C:\Users\stcbr\Documents\AI\Forza Fantasy League\.claude\worktrees\mystifying-wescoff-781976\e2e\platform.spec.js:196:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\platform-MarketScreen-shows-Player-Market-heading-desktop-chrome\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\platform-MarketScreen-shows-Player-Market-heading-desktop-chrome\error-context.md
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/market
+    Call log:
+    [2m  - navigating to "http://localhost:5173/market", waiting until "load"[22m
+
+
+      194 | test.describe('MarketScreen', () => {
+      195 |   test.beforeEach(async ({ page }) => {
+    > 196 |     await page.goto('/market');
+          |                ^
+      197 |     await waitForContent(page);
+      198 |   });
+      199 |
+        at C:\Users\stcbr\Documents\AI\Forza Fantasy League\.claude\worktrees\mystifying-wescoff-781976\e2e\platform.spec.js:196:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\platform-MarketScreen-shows-Player-Market-heading-desktop-chrome-retry1\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\platform-MarketScreen-shows-Player-Market-heading-desktop-chrome-retry1\error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\platform-MarketScreen-shows-Player-Market-heading-desktop-chrome-retry1\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\platform-MarketScreen-shows-Player-Market-heading-desktop-chrome-retry1\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  8) [desktop-chrome] › e2e\platform.spec.js:204:3 › MarketScreen › renders player list with names ─
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/market
+    Call log:
+    [2m  - navigating to "http://localhost:5173/market", waiting until "load"[22m
+
+
+      194 | test.describe('MarketScreen', () => {
+      195 |   test.beforeEach(async ({ page }) => {
+    > 196 |     await page.goto('/market');
+          |                ^
+      197 |     await waitForContent(page);
+      198 |   });
+      199 |
+        at C:\Users\stcbr\Documents\AI\Forza Fantasy League\.claude\worktrees\mystifying-wescoff-781976\e2e\platform.spec.js:196:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\platform-MarketScreen-renders-player-list-with-names-desktop-chrome\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\platform-MarketScreen-renders-player-list-with-names-desktop-chrome\error-context.md
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/market
+    Call log:
+    [2m  - navigating to "http://localhost:5173/market", waiting until "load"[22m
+
+
+      194 | test.describe('MarketScreen', () => {
+      195 |   test.beforeEach(async ({ page }) => {
+    > 196 |     await page.goto('/market');
+          |                ^
+      197 |     await waitForContent(page);
+      198 |   });
+      199 |
+        at C:\Users\stcbr\Documents\AI\Forza Fantasy League\.claude\worktrees\mystifying-wescoff-781976\e2e\platform.spec.js:196:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\platform-MarketScreen-renders-player-list-with-names-desktop-chrome-retry1\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\platform-MarketScreen-renders-player-list-with-names-desktop-chrome-retry1\error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\platform-MarketScreen-renders-player-list-with-names-desktop-chrome-retry1\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\platform-MarketScreen-renders-player-list-with-names-desktop-chrome-retry1\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  9) [desktop-chrome] › e2e\platform.spec.js:210:3 › MarketScreen › position filter tabs are clickable 
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/market
+    Call log:
+    [2m  - navigating to "http://localhost:5173/market", waiting until "load"[22m
+
+
+      194 | test.describe('MarketScreen', () => {
+      195 |   test.beforeEach(async ({ page }) => {
+    > 196 |     await page.goto('/market');
+          |                ^
+      197 |     await waitForContent(page);
+      198 |   });
+      199 |
+        at C:\Users\stcbr\Documents\AI\Forza Fantasy League\.claude\worktrees\mystifying-wescoff-781976\e2e\platform.spec.js:196:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\platform-MarketScreen-position-filter-tabs-are-clickable-desktop-chrome\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\platform-MarketScreen-position-filter-tabs-are-clickable-desktop-chrome\error-context.md
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/market
+    Call log:
+    [2m  - navigating to "http://localhost:5173/market", waiting until "load"[22m
+
+
+      194 | test.describe('MarketScreen', () => {
+      195 |   test.beforeEach(async ({ page }) => {
+    > 196 |     await page.goto('/market');
+          |                ^
+      197 |     await waitForContent(page);
+      198 |   });
+      199 |
+        at C:\Users\stcbr\Documents\AI\Forza Fantasy League\.claude\worktrees\mystifying-wescoff-781976\e2e\platform.spec.js:196:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\platform-MarketScreen-position-filter-tabs-are-clickable-desktop-chrome-retry1\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\platform-MarketScreen-position-filter-tabs-are-clickable-desktop-chrome-retry1\error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\platform-MarketScreen-position-filter-tabs-are-clickable-desktop-chrome-retry1\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\platform-MarketScreen-position-filter-tabs-are-clickable-desktop-chrome-retry1\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  10) [desktop-chrome] › e2e\platform.spec.js:219:3 › MarketScreen › shows budget display ──────────
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/market
+    Call log:
+    [2m  - navigating to "http://localhost:5173/market", waiting until "load"[22m
+
+
+      194 | test.describe('MarketScreen', () => {
+      195 |   test.beforeEach(async ({ page }) => {
+    > 196 |     await page.goto('/market');
+          |                ^
+      197 |     await waitForContent(page);
+      198 |   });
+      199 |
+        at C:\Users\stcbr\Documents\AI\Forza Fantasy League\.claude\worktrees\mystifying-wescoff-781976\e2e\platform.spec.js:196:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\platform-MarketScreen-shows-budget-display-desktop-chrome\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\platform-MarketScreen-shows-budget-display-desktop-chrome\error-context.md
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/market
+    Call log:
+    [2m  - navigating to "http://localhost:5173/market", waiting until "load"[22m
+
+
+      194 | test.describe('MarketScreen', () => {
+      195 |   test.beforeEach(async ({ page }) => {
+    > 196 |     await page.goto('/market');
+          |                ^
+      197 |     await waitForContent(page);
+      198 |   });
+      199 |
+        at C:\Users\stcbr\Documents\AI\Forza Fantasy League\.claude\worktrees\mystifying-wescoff-781976\e2e\platform.spec.js:196:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\platform-MarketScreen-shows-budget-display-desktop-chrome-retry1\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\platform-MarketScreen-shows-budget-display-desktop-chrome-retry1\error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\platform-MarketScreen-shows-budget-display-desktop-chrome-retry1\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\platform-MarketScreen-shows-budget-display-desktop-chrome-retry1\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  11) [desktop-chrome] › e2e\platform.spec.js:223:3 › MarketScreen › shows squad slot count ────────
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/market
+    Call log:
+    [2m  - navigating to "http://localhost:5173/market", waiting until "load"[22m
+
+
+      194 | test.describe('MarketScreen', () => {
+      195 |   test.beforeEach(async ({ page }) => {
+    > 196 |     await page.goto('/market');
+          |                ^
+      197 |     await waitForContent(page);
+      198 |   });
+      199 |
+        at C:\Users\stcbr\Documents\AI\Forza Fantasy League\.claude\worktrees\mystifying-wescoff-781976\e2e\platform.spec.js:196:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\platform-MarketScreen-shows-squad-slot-count-desktop-chrome\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\platform-MarketScreen-shows-squad-slot-count-desktop-chrome\error-context.md
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/market
+    Call log:
+    [2m  - navigating to "http://localhost:5173/market", waiting until "load"[22m
+
+
+      194 | test.describe('MarketScreen', () => {
+      195 |   test.beforeEach(async ({ page }) => {
+    > 196 |     await page.goto('/market');
+          |                ^
+      197 |     await waitForContent(page);
+      198 |   });
+      199 |
+        at C:\Users\stcbr\Documents\AI\Forza Fantasy League\.claude\worktrees\mystifying-wescoff-781976\e2e\platform.spec.js:196:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\platform-MarketScreen-shows-squad-slot-count-desktop-chrome-retry1\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\platform-MarketScreen-shows-squad-slot-count-desktop-chrome-retry1\error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\platform-MarketScreen-shows-squad-slot-count-desktop-chrome-retry1\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\platform-MarketScreen-shows-squad-slot-count-desktop-chrome-retry1\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  12) [desktop-chrome] › e2e\platform.spec.js:228:3 › MarketScreen › ALL filter shows all positions 
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/market
+    Call log:
+    [2m  - navigating to "http://localhost:5173/market", waiting until "load"[22m
+
+
+      194 | test.describe('MarketScreen', () => {
+      195 |   test.beforeEach(async ({ page }) => {
+    > 196 |     await page.goto('/market');
+          |                ^
+      197 |     await waitForContent(page);
+      198 |   });
+      199 |
+        at C:\Users\stcbr\Documents\AI\Forza Fantasy League\.claude\worktrees\mystifying-wescoff-781976\e2e\platform.spec.js:196:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\platform-MarketScreen-ALL-filter-shows-all-positions-desktop-chrome\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\platform-MarketScreen-ALL-filter-shows-all-positions-desktop-chrome\error-context.md
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/market
+    Call log:
+    [2m  - navigating to "http://localhost:5173/market", waiting until "load"[22m
+
+
+      194 | test.describe('MarketScreen', () => {
+      195 |   test.beforeEach(async ({ page }) => {
+    > 196 |     await page.goto('/market');
+          |                ^
+      197 |     await waitForContent(page);
+      198 |   });
+      199 |
+        at C:\Users\stcbr\Documents\AI\Forza Fantasy League\.claude\worktrees\mystifying-wescoff-781976\e2e\platform.spec.js:196:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\platform-MarketScreen-ALL-filter-shows-all-positions-desktop-chrome-retry1\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\platform-MarketScreen-ALL-filter-shows-all-positions-desktop-chrome-retry1\error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\platform-MarketScreen-ALL-filter-shows-all-positions-desktop-chrome-retry1\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\platform-MarketScreen-ALL-filter-shows-all-positions-desktop-chrome-retry1\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  13) [desktop-chrome] › e2e\platform.spec.js:235:3 › MarketScreen › mobile — no horizontal overflow 
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/market
+    Call log:
+    [2m  - navigating to "http://localhost:5173/market", waiting until "load"[22m
+
+
+      194 | test.describe('MarketScreen', () => {
+      195 |   test.beforeEach(async ({ page }) => {
+    > 196 |     await page.goto('/market');
+          |                ^
+      197 |     await waitForContent(page);
+      198 |   });
+      199 |
+        at C:\Users\stcbr\Documents\AI\Forza Fantasy League\.claude\worktrees\mystifying-wescoff-781976\e2e\platform.spec.js:196:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\platform-MarketScreen-mobile-—-no-horizontal-overflow-desktop-chrome\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\platform-MarketScreen-mobile-—-no-horizontal-overflow-desktop-chrome\error-context.md
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/market
+    Call log:
+    [2m  - navigating to "http://localhost:5173/market", waiting until "load"[22m
+
+
+      194 | test.describe('MarketScreen', () => {
+      195 |   test.beforeEach(async ({ page }) => {
+    > 196 |     await page.goto('/market');
+          |                ^
+      197 |     await waitForContent(page);
+      198 |   });
+      199 |
+        at C:\Users\stcbr\Documents\AI\Forza Fantasy League\.claude\worktrees\mystifying-wescoff-781976\e2e\platform.spec.js:196:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\platform-MarketScreen-mobile-—-no-horizontal-overflow-desktop-chrome-retry1\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\platform-MarketScreen-mobile-—-no-horizontal-overflow-desktop-chrome-retry1\error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\platform-MarketScreen-mobile-—-no-horizontal-overflow-desktop-chrome-retry1\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\platform-MarketScreen-mobile-—-no-horizontal-overflow-desktop-chrome-retry1\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  14) [desktop-chrome] › e2e\platform.spec.js:251:3 › LeagueScreen › shows League heading ──────────
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/league
+    Call log:
+    [2m  - navigating to "http://localhost:5173/league", waiting until "load"[22m
+
+
+      245 | test.describe('LeagueScreen', () => {
+      246 |   test.beforeEach(async ({ page }) => {
+    > 247 |     await page.goto('/league');
+          |                ^
+      248 |     await waitForContent(page);
+      249 |   });
+      250 |
+        at C:\Users\stcbr\Documents\AI\Forza Fantasy League\.claude\worktrees\mystifying-wescoff-781976\e2e\platform.spec.js:247:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\platform-LeagueScreen-shows-League-heading-desktop-chrome\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\platform-LeagueScreen-shows-League-heading-desktop-chrome\error-context.md
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/league
+    Call log:
+    [2m  - navigating to "http://localhost:5173/league", waiting until "load"[22m
+
+
+      245 | test.describe('LeagueScreen', () => {
+      246 |   test.beforeEach(async ({ page }) => {
+    > 247 |     await page.goto('/league');
+          |                ^
+      248 |     await waitForContent(page);
+      249 |   });
+      250 |
+        at C:\Users\stcbr\Documents\AI\Forza Fantasy League\.claude\worktrees\mystifying-wescoff-781976\e2e\platform.spec.js:247:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\platform-LeagueScreen-shows-League-heading-desktop-chrome-retry1\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\platform-LeagueScreen-shows-League-heading-desktop-chrome-retry1\error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\platform-LeagueScreen-shows-League-heading-desktop-chrome-retry1\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\platform-LeagueScreen-shows-League-heading-desktop-chrome-retry1\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  15) [desktop-chrome] › e2e\platform.spec.js:256:3 › LeagueScreen › renders league list or standings 
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/league
+    Call log:
+    [2m  - navigating to "http://localhost:5173/league", waiting until "load"[22m
+
+
+      245 | test.describe('LeagueScreen', () => {
+      246 |   test.beforeEach(async ({ page }) => {
+    > 247 |     await page.goto('/league');
+          |                ^
+      248 |     await waitForContent(page);
+      249 |   });
+      250 |
+        at C:\Users\stcbr\Documents\AI\Forza Fantasy League\.claude\worktrees\mystifying-wescoff-781976\e2e\platform.spec.js:247:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\platform-LeagueScreen-renders-league-list-or-standings-desktop-chrome\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\platform-LeagueScreen-renders-league-list-or-standings-desktop-chrome\error-context.md
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/league
+    Call log:
+    [2m  - navigating to "http://localhost:5173/league", waiting until "load"[22m
+
+
+      245 | test.describe('LeagueScreen', () => {
+      246 |   test.beforeEach(async ({ page }) => {
+    > 247 |     await page.goto('/league');
+          |                ^
+      248 |     await waitForContent(page);
+      249 |   });
+      250 |
+        at C:\Users\stcbr\Documents\AI\Forza Fantasy League\.claude\worktrees\mystifying-wescoff-781976\e2e\platform.spec.js:247:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\platform-LeagueScreen-renders-league-list-or-standings-desktop-chrome-retry1\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\platform-LeagueScreen-renders-league-list-or-standings-desktop-chrome-retry1\error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\platform-LeagueScreen-renders-league-list-or-standings-desktop-chrome-retry1\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\platform-LeagueScreen-renders-league-list-or-standings-desktop-chrome-retry1\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  16) [desktop-chrome] › e2e\platform.spec.js:270:3 › LiveScreen › loads without crashing ──────────
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/live
+    Call log:
+    [2m  - navigating to "http://localhost:5173/live", waiting until "load"[22m
+
+
+      264 | test.describe('LiveScreen', () => {
+      265 |   test.beforeEach(async ({ page }) => {
+    > 266 |     await page.goto('/live');
+          |                ^
+      267 |     await waitForContent(page);
+      268 |   });
+      269 |
+        at C:\Users\stcbr\Documents\AI\Forza Fantasy League\.claude\worktrees\mystifying-wescoff-781976\e2e\platform.spec.js:266:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\platform-LiveScreen-loads-without-crashing-desktop-chrome\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\platform-LiveScreen-loads-without-crashing-desktop-chrome\error-context.md
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/live
+    Call log:
+    [2m  - navigating to "http://localhost:5173/live", waiting until "load"[22m
+
+
+      264 | test.describe('LiveScreen', () => {
+      265 |   test.beforeEach(async ({ page }) => {
+    > 266 |     await page.goto('/live');
+          |                ^
+      267 |     await waitForContent(page);
+      268 |   });
+      269 |
+        at C:\Users\stcbr\Documents\AI\Forza Fantasy League\.claude\worktrees\mystifying-wescoff-781976\e2e\platform.spec.js:266:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\platform-LiveScreen-loads-without-crashing-desktop-chrome-retry1\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\platform-LiveScreen-loads-without-crashing-desktop-chrome-retry1\error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\platform-LiveScreen-loads-without-crashing-desktop-chrome-retry1\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\platform-LiveScreen-loads-without-crashing-desktop-chrome-retry1\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  17) [desktop-chrome] › e2e\platform.spec.js:278:3 › LiveScreen › shows Live heading or live content 
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/live
+    Call log:
+    [2m  - navigating to "http://localhost:5173/live", waiting until "load"[22m
+
+
+      264 | test.describe('LiveScreen', () => {
+      265 |   test.beforeEach(async ({ page }) => {
+    > 266 |     await page.goto('/live');
+          |                ^
+      267 |     await waitForContent(page);
+      268 |   });
+      269 |
+        at C:\Users\stcbr\Documents\AI\Forza Fantasy League\.claude\worktrees\mystifying-wescoff-781976\e2e\platform.spec.js:266:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\platform-LiveScreen-shows-Live-heading-or-live-content-desktop-chrome\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\platform-LiveScreen-shows-Live-heading-or-live-content-desktop-chrome\error-context.md
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/live
+    Call log:
+    [2m  - navigating to "http://localhost:5173/live", waiting until "load"[22m
+
+
+      264 | test.describe('LiveScreen', () => {
+      265 |   test.beforeEach(async ({ page }) => {
+    > 266 |     await page.goto('/live');
+          |                ^
+      267 |     await waitForContent(page);
+      268 |   });
+      269 |
+        at C:\Users\stcbr\Documents\AI\Forza Fantasy League\.claude\worktrees\mystifying-wescoff-781976\e2e\platform.spec.js:266:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\platform-LiveScreen-shows-Live-heading-or-live-content-desktop-chrome-retry1\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\platform-LiveScreen-shows-Live-heading-or-live-content-desktop-chrome-retry1\error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\platform-LiveScreen-shows-Live-heading-or-live-content-desktop-chrome-retry1\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\platform-LiveScreen-shows-Live-heading-or-live-content-desktop-chrome-retry1\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  18) [desktop-chrome] › e2e\platform.spec.js:283:3 › LiveScreen › shows match or projection content 
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/live
+    Call log:
+    [2m  - navigating to "http://localhost:5173/live", waiting until "load"[22m
+
+
+      264 | test.describe('LiveScreen', () => {
+      265 |   test.beforeEach(async ({ page }) => {
+    > 266 |     await page.goto('/live');
+          |                ^
+      267 |     await waitForContent(page);
+      268 |   });
+      269 |
+        at C:\Users\stcbr\Documents\AI\Forza Fantasy League\.claude\worktrees\mystifying-wescoff-781976\e2e\platform.spec.js:266:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\platform-LiveScreen-shows-match-or-projection-content-desktop-chrome\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\platform-LiveScreen-shows-match-or-projection-content-desktop-chrome\error-context.md
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/live
+    Call log:
+    [2m  - navigating to "http://localhost:5173/live", waiting until "load"[22m
+
+
+      264 | test.describe('LiveScreen', () => {
+      265 |   test.beforeEach(async ({ page }) => {
+    > 266 |     await page.goto('/live');
+          |                ^
+      267 |     await waitForContent(page);
+      268 |   });
+      269 |
+        at C:\Users\stcbr\Documents\AI\Forza Fantasy League\.claude\worktrees\mystifying-wescoff-781976\e2e\platform.spec.js:266:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\platform-LiveScreen-shows-match-or-projection-content-desktop-chrome-retry1\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\platform-LiveScreen-shows-match-or-projection-content-desktop-chrome-retry1\error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\platform-LiveScreen-shows-match-or-projection-content-desktop-chrome-retry1\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\platform-LiveScreen-shows-match-or-projection-content-desktop-chrome-retry1\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  19) [desktop-chrome] › e2e\platform.spec.js:291:3 › RecapScreen › loads without crashing ─────────
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/recap
+    Call log:
+    [2m  - navigating to "http://localhost:5173/recap", waiting until "load"[22m
+
+
+      292 |     const errors = [];
+      293 |     page.on('pageerror', e => errors.push(e.message));
+    > 294 |     await page.goto('/recap');
+          |                ^
+      295 |     await waitForContent(page);
+      296 |     expect(errors).toHaveLength(0);
+      297 |   });
+        at C:\Users\stcbr\Documents\AI\Forza Fantasy League\.claude\worktrees\mystifying-wescoff-781976\e2e\platform.spec.js:294:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\platform-RecapScreen-loads-without-crashing-desktop-chrome\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\platform-RecapScreen-loads-without-crashing-desktop-chrome\error-context.md
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/recap
+    Call log:
+    [2m  - navigating to "http://localhost:5173/recap", waiting until "load"[22m
+
+
+      292 |     const errors = [];
+      293 |     page.on('pageerror', e => errors.push(e.message));
+    > 294 |     await page.goto('/recap');
+          |                ^
+      295 |     await waitForContent(page);
+      296 |     expect(errors).toHaveLength(0);
+      297 |   });
+        at C:\Users\stcbr\Documents\AI\Forza Fantasy League\.claude\worktrees\mystifying-wescoff-781976\e2e\platform.spec.js:294:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\platform-RecapScreen-loads-without-crashing-desktop-chrome-retry1\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\platform-RecapScreen-loads-without-crashing-desktop-chrome-retry1\error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\platform-RecapScreen-loads-without-crashing-desktop-chrome-retry1\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\platform-RecapScreen-loads-without-crashing-desktop-chrome-retry1\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  20) [desktop-chrome] › e2e\platform.spec.js:299:3 › RecapScreen › shows recap content ────────────
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/recap
+    Call log:
+    [2m  - navigating to "http://localhost:5173/recap", waiting until "load"[22m
+
+
+      298 |
+      299 |   test('shows recap content', async ({ page }) => {
+    > 300 |     await page.goto('/recap');
+          |                ^
+      301 |     await waitForContent(page);
+      302 |     const body = await page.locator('body').innerText();
+      303 |     expect(body.trim().length).toBeGreaterThan(20);
+        at C:\Users\stcbr\Documents\AI\Forza Fantasy League\.claude\worktrees\mystifying-wescoff-781976\e2e\platform.spec.js:300:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\platform-RecapScreen-shows-recap-content-desktop-chrome\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\platform-RecapScreen-shows-recap-content-desktop-chrome\error-context.md
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/recap
+    Call log:
+    [2m  - navigating to "http://localhost:5173/recap", waiting until "load"[22m
+
+
+      298 |
+      299 |   test('shows recap content', async ({ page }) => {
+    > 300 |     await page.goto('/recap');
+          |                ^
+      301 |     await waitForContent(page);
+      302 |     const body = await page.locator('body').innerText();
+      303 |     expect(body.trim().length).toBeGreaterThan(20);
+        at C:\Users\stcbr\Documents\AI\Forza Fantasy League\.claude\worktrees\mystifying-wescoff-781976\e2e\platform.spec.js:300:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\platform-RecapScreen-shows-recap-content-desktop-chrome-retry1\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\platform-RecapScreen-shows-recap-content-desktop-chrome-retry1\error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\platform-RecapScreen-shows-recap-content-desktop-chrome-retry1\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\platform-RecapScreen-shows-recap-content-desktop-chrome-retry1\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  21) [desktop-chrome] › e2e\platform.spec.js:309:3 › BracketScreen › loads without crashing ───────
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/bracket
+    Call log:
+    [2m  - navigating to "http://localhost:5173/bracket", waiting until "load"[22m
+
+
+      310 |     const errors = [];
+      311 |     page.on('pageerror', e => errors.push(e.message));
+    > 312 |     await page.goto('/bracket');
+          |                ^
+      313 |     await waitForContent(page);
+      314 |     expect(errors).toHaveLength(0);
+      315 |   });
+        at C:\Users\stcbr\Documents\AI\Forza Fantasy League\.claude\worktrees\mystifying-wescoff-781976\e2e\platform.spec.js:312:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\platform-BracketScreen-loads-without-crashing-desktop-chrome\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\platform-BracketScreen-loads-without-crashing-desktop-chrome\error-context.md
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/bracket
+    Call log:
+    [2m  - navigating to "http://localhost:5173/bracket", waiting until "load"[22m
+
+
+      310 |     const errors = [];
+      311 |     page.on('pageerror', e => errors.push(e.message));
+    > 312 |     await page.goto('/bracket');
+          |                ^
+      313 |     await waitForContent(page);
+      314 |     expect(errors).toHaveLength(0);
+      315 |   });
+        at C:\Users\stcbr\Documents\AI\Forza Fantasy League\.claude\worktrees\mystifying-wescoff-781976\e2e\platform.spec.js:312:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\platform-BracketScreen-loads-without-crashing-desktop-chrome-retry1\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\platform-BracketScreen-loads-without-crashing-desktop-chrome-retry1\error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\platform-BracketScreen-loads-without-crashing-desktop-chrome-retry1\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\platform-BracketScreen-loads-without-crashing-desktop-chrome-retry1\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  22) [desktop-chrome] › e2e\platform.spec.js:317:3 › BracketScreen › shows bracket content ────────
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/bracket
+    Call log:
+    [2m  - navigating to "http://localhost:5173/bracket", waiting until "load"[22m
+
+
+      316 |
+      317 |   test('shows bracket content', async ({ page }) => {
+    > 318 |     await page.goto('/bracket');
+          |                ^
+      319 |     await waitForContent(page);
+      320 |     const body = await page.locator('body').innerText();
+      321 |     expect(body.trim().length).toBeGreaterThan(20);
+        at C:\Users\stcbr\Documents\AI\Forza Fantasy League\.claude\worktrees\mystifying-wescoff-781976\e2e\platform.spec.js:318:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\platform-BracketScreen-shows-bracket-content-desktop-chrome\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\platform-BracketScreen-shows-bracket-content-desktop-chrome\error-context.md
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/bracket
+    Call log:
+    [2m  - navigating to "http://localhost:5173/bracket", waiting until "load"[22m
+
+
+      316 |
+      317 |   test('shows bracket content', async ({ page }) => {
+    > 318 |     await page.goto('/bracket');
+          |                ^
+      319 |     await waitForContent(page);
+      320 |     const body = await page.locator('body').innerText();
+      321 |     expect(body.trim().length).toBeGreaterThan(20);
+        at C:\Users\stcbr\Documents\AI\Forza Fantasy League\.claude\worktrees\mystifying-wescoff-781976\e2e\platform.spec.js:318:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\platform-BracketScreen-shows-bracket-content-desktop-chrome-retry1\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\platform-BracketScreen-shows-bracket-content-desktop-chrome-retry1\error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\platform-BracketScreen-shows-bracket-content-desktop-chrome-retry1\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\platform-BracketScreen-shows-bracket-content-desktop-chrome-retry1\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  23) [mobile-chrome] › e2e\platform.spec.js:126:3 › HomeScreen › mobile — no horizontal overflow ──
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/
+    Call log:
+    [2m  - navigating to "http://localhost:5173/", waiting until "load"[22m
+
+
+       95 | test.describe('HomeScreen', () => {
+       96 |   test.beforeEach(async ({ page }) => {
+    >  97 |     await page.goto('/');
+          |                ^
+       98 |     await waitForContent(page);
+       99 |   });
+      100 |
+        at C:\Users\stcbr\Documents\AI\Forza Fantasy League\.claude\worktrees\mystifying-wescoff-781976\e2e\platform.spec.js:97:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\platform-HomeScreen-mobile-—-no-horizontal-overflow-mobile-chrome\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\platform-HomeScreen-mobile-—-no-horizontal-overflow-mobile-chrome\error-context.md
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/
+    Call log:
+    [2m  - navigating to "http://localhost:5173/", waiting until "load"[22m
+
+
+       95 | test.describe('HomeScreen', () => {
+       96 |   test.beforeEach(async ({ page }) => {
+    >  97 |     await page.goto('/');
+          |                ^
+       98 |     await waitForContent(page);
+       99 |   });
+      100 |
+        at C:\Users\stcbr\Documents\AI\Forza Fantasy League\.claude\worktrees\mystifying-wescoff-781976\e2e\platform.spec.js:97:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\platform-HomeScreen-mobile-—-no-horizontal-overflow-mobile-chrome-retry1\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\platform-HomeScreen-mobile-—-no-horizontal-overflow-mobile-chrome-retry1\error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\platform-HomeScreen-mobile-—-no-horizontal-overflow-mobile-chrome-retry1\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\platform-HomeScreen-mobile-—-no-horizontal-overflow-mobile-chrome-retry1\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  24) [mobile-chrome] › e2e\platform.spec.js:144:3 › SquadScreen › shows My Squad heading ──────────
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/squad
+    Call log:
+    [2m  - navigating to "http://localhost:5173/squad", waiting until "load"[22m
+
+
+      138 | test.describe('SquadScreen', () => {
+      139 |   test.beforeEach(async ({ page }) => {
+    > 140 |     await page.goto('/squad');
+          |                ^
+      141 |     await waitForContent(page);
+      142 |   });
+      143 |
+        at C:\Users\stcbr\Documents\AI\Forza Fantasy League\.claude\worktrees\mystifying-wescoff-781976\e2e\platform.spec.js:140:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\platform-SquadScreen-shows-My-Squad-heading-mobile-chrome\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\platform-SquadScreen-shows-My-Squad-heading-mobile-chrome\error-context.md
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/squad
+    Call log:
+    [2m  - navigating to "http://localhost:5173/squad", waiting until "load"[22m
+
+
+      138 | test.describe('SquadScreen', () => {
+      139 |   test.beforeEach(async ({ page }) => {
+    > 140 |     await page.goto('/squad');
+          |                ^
+      141 |     await waitForContent(page);
+      142 |   });
+      143 |
+        at C:\Users\stcbr\Documents\AI\Forza Fantasy League\.claude\worktrees\mystifying-wescoff-781976\e2e\platform.spec.js:140:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\platform-SquadScreen-shows-My-Squad-heading-mobile-chrome-retry1\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\platform-SquadScreen-shows-My-Squad-heading-mobile-chrome-retry1\error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\platform-SquadScreen-shows-My-Squad-heading-mobile-chrome-retry1\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\platform-SquadScreen-shows-My-Squad-heading-mobile-chrome-retry1\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  25) [mobile-chrome] › e2e\platform.spec.js:150:3 › SquadScreen › mobile — pitch view renders with players 
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/squad
+    Call log:
+    [2m  - navigating to "http://localhost:5173/squad", waiting until "load"[22m
+
+
+      138 | test.describe('SquadScreen', () => {
+      139 |   test.beforeEach(async ({ page }) => {
+    > 140 |     await page.goto('/squad');
+          |                ^
+      141 |     await waitForContent(page);
+      142 |   });
+      143 |
+        at C:\Users\stcbr\Documents\AI\Forza Fantasy League\.claude\worktrees\mystifying-wescoff-781976\e2e\platform.spec.js:140:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\platform-SquadScreen-mobil-f1741-h-view-renders-with-players-mobile-chrome\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\platform-SquadScreen-mobil-f1741-h-view-renders-with-players-mobile-chrome\error-context.md
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/squad
+    Call log:
+    [2m  - navigating to "http://localhost:5173/squad", waiting until "load"[22m
+
+
+      138 | test.describe('SquadScreen', () => {
+      139 |   test.beforeEach(async ({ page }) => {
+    > 140 |     await page.goto('/squad');
+          |                ^
+      141 |     await waitForContent(page);
+      142 |   });
+      143 |
+        at C:\Users\stcbr\Documents\AI\Forza Fantasy League\.claude\worktrees\mystifying-wescoff-781976\e2e\platform.spec.js:140:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\platform-SquadScreen-mobil-f1741-h-view-renders-with-players-mobile-chrome-retry1\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\platform-SquadScreen-mobil-f1741-h-view-renders-with-players-mobile-chrome-retry1\error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\platform-SquadScreen-mobil-f1741-h-view-renders-with-players-mobile-chrome-retry1\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\platform-SquadScreen-mobil-f1741-h-view-renders-with-players-mobile-chrome-retry1\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  26) [mobile-chrome] › e2e\platform.spec.js:165:3 › SquadScreen › shows budget in header ──────────
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/squad
+    Call log:
+    [2m  - navigating to "http://localhost:5173/squad", waiting until "load"[22m
+
+
+      138 | test.describe('SquadScreen', () => {
+      139 |   test.beforeEach(async ({ page }) => {
+    > 140 |     await page.goto('/squad');
+          |                ^
+      141 |     await waitForContent(page);
+      142 |   });
+      143 |
+        at C:\Users\stcbr\Documents\AI\Forza Fantasy League\.claude\worktrees\mystifying-wescoff-781976\e2e\platform.spec.js:140:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\platform-SquadScreen-shows-budget-in-header-mobile-chrome\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\platform-SquadScreen-shows-budget-in-header-mobile-chrome\error-context.md
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/squad
+    Call log:
+    [2m  - navigating to "http://localhost:5173/squad", waiting until "load"[22m
+
+
+      138 | test.describe('SquadScreen', () => {
+      139 |   test.beforeEach(async ({ page }) => {
+    > 140 |     await page.goto('/squad');
+          |                ^
+      141 |     await waitForContent(page);
+      142 |   });
+      143 |
+        at C:\Users\stcbr\Documents\AI\Forza Fantasy League\.claude\worktrees\mystifying-wescoff-781976\e2e\platform.spec.js:140:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\platform-SquadScreen-shows-budget-in-header-mobile-chrome-retry1\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\platform-SquadScreen-shows-budget-in-header-mobile-chrome-retry1\error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\platform-SquadScreen-shows-budget-in-header-mobile-chrome-retry1\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\platform-SquadScreen-shows-budget-in-header-mobile-chrome-retry1\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  27) [mobile-chrome] › e2e\platform.spec.js:169:3 › SquadScreen › chips row is visible ────────────
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/squad
+    Call log:
+    [2m  - navigating to "http://localhost:5173/squad", waiting until "load"[22m
+
+
+      138 | test.describe('SquadScreen', () => {
+      139 |   test.beforeEach(async ({ page }) => {
+    > 140 |     await page.goto('/squad');
+          |                ^
+      141 |     await waitForContent(page);
+      142 |   });
+      143 |
+        at C:\Users\stcbr\Documents\AI\Forza Fantasy League\.claude\worktrees\mystifying-wescoff-781976\e2e\platform.spec.js:140:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\platform-SquadScreen-chips-row-is-visible-mobile-chrome\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\platform-SquadScreen-chips-row-is-visible-mobile-chrome\error-context.md
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/squad
+    Call log:
+    [2m  - navigating to "http://localhost:5173/squad", waiting until "load"[22m
+
+
+      138 | test.describe('SquadScreen', () => {
+      139 |   test.beforeEach(async ({ page }) => {
+    > 140 |     await page.goto('/squad');
+          |                ^
+      141 |     await waitForContent(page);
+      142 |   });
+      143 |
+        at C:\Users\stcbr\Documents\AI\Forza Fantasy League\.claude\worktrees\mystifying-wescoff-781976\e2e\platform.spec.js:140:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\platform-SquadScreen-chips-row-is-visible-mobile-chrome-retry1\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\platform-SquadScreen-chips-row-is-visible-mobile-chrome-retry1\error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\platform-SquadScreen-chips-row-is-visible-mobile-chrome-retry1\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\platform-SquadScreen-chips-row-is-visible-mobile-chrome-retry1\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  28) [mobile-chrome] › e2e\platform.spec.js:176:3 › SquadScreen › mobile — no horizontal overflow ─
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/squad
+    Call log:
+    [2m  - navigating to "http://localhost:5173/squad", waiting until "load"[22m
+
+
+      138 | test.describe('SquadScreen', () => {
+      139 |   test.beforeEach(async ({ page }) => {
+    > 140 |     await page.goto('/squad');
+          |                ^
+      141 |     await waitForContent(page);
+      142 |   });
+      143 |
+        at C:\Users\stcbr\Documents\AI\Forza Fantasy League\.claude\worktrees\mystifying-wescoff-781976\e2e\platform.spec.js:140:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\platform-SquadScreen-mobile-—-no-horizontal-overflow-mobile-chrome\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\platform-SquadScreen-mobile-—-no-horizontal-overflow-mobile-chrome\error-context.md
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/squad
+    Call log:
+    [2m  - navigating to "http://localhost:5173/squad", waiting until "load"[22m
+
+
+      138 | test.describe('SquadScreen', () => {
+      139 |   test.beforeEach(async ({ page }) => {
+    > 140 |     await page.goto('/squad');
+          |                ^
+      141 |     await waitForContent(page);
+      142 |   });
+      143 |
+        at C:\Users\stcbr\Documents\AI\Forza Fantasy League\.claude\worktrees\mystifying-wescoff-781976\e2e\platform.spec.js:140:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\platform-SquadScreen-mobile-—-no-horizontal-overflow-mobile-chrome-retry1\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\platform-SquadScreen-mobile-—-no-horizontal-overflow-mobile-chrome-retry1\error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\platform-SquadScreen-mobile-—-no-horizontal-overflow-mobile-chrome-retry1\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\platform-SquadScreen-mobile-—-no-horizontal-overflow-mobile-chrome-retry1\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  29) [mobile-chrome] › e2e\platform.spec.js:184:3 › SquadScreen › desktop — player roster list is visible 
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/squad
+    Call log:
+    [2m  - navigating to "http://localhost:5173/squad", waiting until "load"[22m
+
+
+      138 | test.describe('SquadScreen', () => {
+      139 |   test.beforeEach(async ({ page }) => {
+    > 140 |     await page.goto('/squad');
+          |                ^
+      141 |     await waitForContent(page);
+      142 |   });
+      143 |
+        at C:\Users\stcbr\Documents\AI\Forza Fantasy League\.claude\worktrees\mystifying-wescoff-781976\e2e\platform.spec.js:140:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\platform-SquadScreen-desktop-—-player-roster-list-is-visible-mobile-chrome\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\platform-SquadScreen-desktop-—-player-roster-list-is-visible-mobile-chrome\error-context.md
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/squad
+    Call log:
+    [2m  - navigating to "http://localhost:5173/squad", waiting until "load"[22m
+
+
+      138 | test.describe('SquadScreen', () => {
+      139 |   test.beforeEach(async ({ page }) => {
+    > 140 |     await page.goto('/squad');
+          |                ^
+      141 |     await waitForContent(page);
+      142 |   });
+      143 |
+        at C:\Users\stcbr\Documents\AI\Forza Fantasy League\.claude\worktrees\mystifying-wescoff-781976\e2e\platform.spec.js:140:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\platform-SquadScreen-desktop-—-player-roster-list-is-visible-mobile-chrome-retry1\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\platform-SquadScreen-desktop-—-player-roster-list-is-visible-mobile-chrome-retry1\error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\platform-SquadScreen-desktop-—-player-roster-list-is-visible-mobile-chrome-retry1\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\platform-SquadScreen-desktop-—-player-roster-list-is-visible-mobile-chrome-retry1\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  30) [mobile-chrome] › e2e\platform.spec.js:200:3 › MarketScreen › shows Player Market heading ────
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/market
+    Call log:
+    [2m  - navigating to "http://localhost:5173/market", waiting until "load"[22m
+
+
+      194 | test.describe('MarketScreen', () => {
+      195 |   test.beforeEach(async ({ page }) => {
+    > 196 |     await page.goto('/market');
+          |                ^
+      197 |     await waitForContent(page);
+      198 |   });
+      199 |
+        at C:\Users\stcbr\Documents\AI\Forza Fantasy League\.claude\worktrees\mystifying-wescoff-781976\e2e\platform.spec.js:196:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\platform-MarketScreen-shows-Player-Market-heading-mobile-chrome\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\platform-MarketScreen-shows-Player-Market-heading-mobile-chrome\error-context.md
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/market
+    Call log:
+    [2m  - navigating to "http://localhost:5173/market", waiting until "load"[22m
+
+
+      194 | test.describe('MarketScreen', () => {
+      195 |   test.beforeEach(async ({ page }) => {
+    > 196 |     await page.goto('/market');
+          |                ^
+      197 |     await waitForContent(page);
+      198 |   });
+      199 |
+        at C:\Users\stcbr\Documents\AI\Forza Fantasy League\.claude\worktrees\mystifying-wescoff-781976\e2e\platform.spec.js:196:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\platform-MarketScreen-shows-Player-Market-heading-mobile-chrome-retry1\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\platform-MarketScreen-shows-Player-Market-heading-mobile-chrome-retry1\error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\platform-MarketScreen-shows-Player-Market-heading-mobile-chrome-retry1\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\platform-MarketScreen-shows-Player-Market-heading-mobile-chrome-retry1\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  31) [mobile-chrome] › e2e\platform.spec.js:204:3 › MarketScreen › renders player list with names ─
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/market
+    Call log:
+    [2m  - navigating to "http://localhost:5173/market", waiting until "load"[22m
+
+
+      194 | test.describe('MarketScreen', () => {
+      195 |   test.beforeEach(async ({ page }) => {
+    > 196 |     await page.goto('/market');
+          |                ^
+      197 |     await waitForContent(page);
+      198 |   });
+      199 |
+        at C:\Users\stcbr\Documents\AI\Forza Fantasy League\.claude\worktrees\mystifying-wescoff-781976\e2e\platform.spec.js:196:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\platform-MarketScreen-renders-player-list-with-names-mobile-chrome\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\platform-MarketScreen-renders-player-list-with-names-mobile-chrome\error-context.md
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/market
+    Call log:
+    [2m  - navigating to "http://localhost:5173/market", waiting until "load"[22m
+
+
+      194 | test.describe('MarketScreen', () => {
+      195 |   test.beforeEach(async ({ page }) => {
+    > 196 |     await page.goto('/market');
+          |                ^
+      197 |     await waitForContent(page);
+      198 |   });
+      199 |
+        at C:\Users\stcbr\Documents\AI\Forza Fantasy League\.claude\worktrees\mystifying-wescoff-781976\e2e\platform.spec.js:196:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\platform-MarketScreen-renders-player-list-with-names-mobile-chrome-retry1\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\platform-MarketScreen-renders-player-list-with-names-mobile-chrome-retry1\error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\platform-MarketScreen-renders-player-list-with-names-mobile-chrome-retry1\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\platform-MarketScreen-renders-player-list-with-names-mobile-chrome-retry1\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  32) [mobile-chrome] › e2e\platform.spec.js:210:3 › MarketScreen › position filter tabs are clickable 
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/market
+    Call log:
+    [2m  - navigating to "http://localhost:5173/market", waiting until "load"[22m
+
+
+      194 | test.describe('MarketScreen', () => {
+      195 |   test.beforeEach(async ({ page }) => {
+    > 196 |     await page.goto('/market');
+          |                ^
+      197 |     await waitForContent(page);
+      198 |   });
+      199 |
+        at C:\Users\stcbr\Documents\AI\Forza Fantasy League\.claude\worktrees\mystifying-wescoff-781976\e2e\platform.spec.js:196:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\platform-MarketScreen-position-filter-tabs-are-clickable-mobile-chrome\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\platform-MarketScreen-position-filter-tabs-are-clickable-mobile-chrome\error-context.md
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/market
+    Call log:
+    [2m  - navigating to "http://localhost:5173/market", waiting until "load"[22m
+
+
+      194 | test.describe('MarketScreen', () => {
+      195 |   test.beforeEach(async ({ page }) => {
+    > 196 |     await page.goto('/market');
+          |                ^
+      197 |     await waitForContent(page);
+      198 |   });
+      199 |
+        at C:\Users\stcbr\Documents\AI\Forza Fantasy League\.claude\worktrees\mystifying-wescoff-781976\e2e\platform.spec.js:196:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\platform-MarketScreen-position-filter-tabs-are-clickable-mobile-chrome-retry1\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\platform-MarketScreen-position-filter-tabs-are-clickable-mobile-chrome-retry1\error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\platform-MarketScreen-position-filter-tabs-are-clickable-mobile-chrome-retry1\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\platform-MarketScreen-position-filter-tabs-are-clickable-mobile-chrome-retry1\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  33) [mobile-chrome] › e2e\platform.spec.js:219:3 › MarketScreen › shows budget display ───────────
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/market
+    Call log:
+    [2m  - navigating to "http://localhost:5173/market", waiting until "load"[22m
+
+
+      194 | test.describe('MarketScreen', () => {
+      195 |   test.beforeEach(async ({ page }) => {
+    > 196 |     await page.goto('/market');
+          |                ^
+      197 |     await waitForContent(page);
+      198 |   });
+      199 |
+        at C:\Users\stcbr\Documents\AI\Forza Fantasy League\.claude\worktrees\mystifying-wescoff-781976\e2e\platform.spec.js:196:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\platform-MarketScreen-shows-budget-display-mobile-chrome\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\platform-MarketScreen-shows-budget-display-mobile-chrome\error-context.md
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/market
+    Call log:
+    [2m  - navigating to "http://localhost:5173/market", waiting until "load"[22m
+
+
+      194 | test.describe('MarketScreen', () => {
+      195 |   test.beforeEach(async ({ page }) => {
+    > 196 |     await page.goto('/market');
+          |                ^
+      197 |     await waitForContent(page);
+      198 |   });
+      199 |
+        at C:\Users\stcbr\Documents\AI\Forza Fantasy League\.claude\worktrees\mystifying-wescoff-781976\e2e\platform.spec.js:196:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\platform-MarketScreen-shows-budget-display-mobile-chrome-retry1\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\platform-MarketScreen-shows-budget-display-mobile-chrome-retry1\error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\platform-MarketScreen-shows-budget-display-mobile-chrome-retry1\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\platform-MarketScreen-shows-budget-display-mobile-chrome-retry1\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  34) [mobile-chrome] › e2e\platform.spec.js:223:3 › MarketScreen › shows squad slot count ─────────
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/market
+    Call log:
+    [2m  - navigating to "http://localhost:5173/market", waiting until "load"[22m
+
+
+      194 | test.describe('MarketScreen', () => {
+      195 |   test.beforeEach(async ({ page }) => {
+    > 196 |     await page.goto('/market');
+          |                ^
+      197 |     await waitForContent(page);
+      198 |   });
+      199 |
+        at C:\Users\stcbr\Documents\AI\Forza Fantasy League\.claude\worktrees\mystifying-wescoff-781976\e2e\platform.spec.js:196:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\platform-MarketScreen-shows-squad-slot-count-mobile-chrome\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\platform-MarketScreen-shows-squad-slot-count-mobile-chrome\error-context.md
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/market
+    Call log:
+    [2m  - navigating to "http://localhost:5173/market", waiting until "load"[22m
+
+
+      194 | test.describe('MarketScreen', () => {
+      195 |   test.beforeEach(async ({ page }) => {
+    > 196 |     await page.goto('/market');
+          |                ^
+      197 |     await waitForContent(page);
+      198 |   });
+      199 |
+        at C:\Users\stcbr\Documents\AI\Forza Fantasy League\.claude\worktrees\mystifying-wescoff-781976\e2e\platform.spec.js:196:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\platform-MarketScreen-shows-squad-slot-count-mobile-chrome-retry1\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\platform-MarketScreen-shows-squad-slot-count-mobile-chrome-retry1\error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\platform-MarketScreen-shows-squad-slot-count-mobile-chrome-retry1\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\platform-MarketScreen-shows-squad-slot-count-mobile-chrome-retry1\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  35) [mobile-chrome] › e2e\platform.spec.js:228:3 › MarketScreen › ALL filter shows all positions ─
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/market
+    Call log:
+    [2m  - navigating to "http://localhost:5173/market", waiting until "load"[22m
+
+
+      194 | test.describe('MarketScreen', () => {
+      195 |   test.beforeEach(async ({ page }) => {
+    > 196 |     await page.goto('/market');
+          |                ^
+      197 |     await waitForContent(page);
+      198 |   });
+      199 |
+        at C:\Users\stcbr\Documents\AI\Forza Fantasy League\.claude\worktrees\mystifying-wescoff-781976\e2e\platform.spec.js:196:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\platform-MarketScreen-ALL-filter-shows-all-positions-mobile-chrome\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\platform-MarketScreen-ALL-filter-shows-all-positions-mobile-chrome\error-context.md
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/market
+    Call log:
+    [2m  - navigating to "http://localhost:5173/market", waiting until "load"[22m
+
+
+      194 | test.describe('MarketScreen', () => {
+      195 |   test.beforeEach(async ({ page }) => {
+    > 196 |     await page.goto('/market');
+          |                ^
+      197 |     await waitForContent(page);
+      198 |   });
+      199 |
+        at C:\Users\stcbr\Documents\AI\Forza Fantasy League\.claude\worktrees\mystifying-wescoff-781976\e2e\platform.spec.js:196:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\platform-MarketScreen-ALL-filter-shows-all-positions-mobile-chrome-retry1\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\platform-MarketScreen-ALL-filter-shows-all-positions-mobile-chrome-retry1\error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\platform-MarketScreen-ALL-filter-shows-all-positions-mobile-chrome-retry1\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\platform-MarketScreen-ALL-filter-shows-all-positions-mobile-chrome-retry1\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  36) [mobile-chrome] › e2e\platform.spec.js:235:3 › MarketScreen › mobile — no horizontal overflow 
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/market
+    Call log:
+    [2m  - navigating to "http://localhost:5173/market", waiting until "load"[22m
+
+
+      194 | test.describe('MarketScreen', () => {
+      195 |   test.beforeEach(async ({ page }) => {
+    > 196 |     await page.goto('/market');
+          |                ^
+      197 |     await waitForContent(page);
+      198 |   });
+      199 |
+        at C:\Users\stcbr\Documents\AI\Forza Fantasy League\.claude\worktrees\mystifying-wescoff-781976\e2e\platform.spec.js:196:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\platform-MarketScreen-mobile-—-no-horizontal-overflow-mobile-chrome\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\platform-MarketScreen-mobile-—-no-horizontal-overflow-mobile-chrome\error-context.md
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/market
+    Call log:
+    [2m  - navigating to "http://localhost:5173/market", waiting until "load"[22m
+
+
+      194 | test.describe('MarketScreen', () => {
+      195 |   test.beforeEach(async ({ page }) => {
+    > 196 |     await page.goto('/market');
+          |                ^
+      197 |     await waitForContent(page);
+      198 |   });
+      199 |
+        at C:\Users\stcbr\Documents\AI\Forza Fantasy League\.claude\worktrees\mystifying-wescoff-781976\e2e\platform.spec.js:196:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\platform-MarketScreen-mobile-—-no-horizontal-overflow-mobile-chrome-retry1\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\platform-MarketScreen-mobile-—-no-horizontal-overflow-mobile-chrome-retry1\error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\platform-MarketScreen-mobile-—-no-horizontal-overflow-mobile-chrome-retry1\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\platform-MarketScreen-mobile-—-no-horizontal-overflow-mobile-chrome-retry1\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  37) [mobile-chrome] › e2e\platform.spec.js:251:3 › LeagueScreen › shows League heading ───────────
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/league
+    Call log:
+    [2m  - navigating to "http://localhost:5173/league", waiting until "load"[22m
+
+
+      245 | test.describe('LeagueScreen', () => {
+      246 |   test.beforeEach(async ({ page }) => {
+    > 247 |     await page.goto('/league');
+          |                ^
+      248 |     await waitForContent(page);
+      249 |   });
+      250 |
+        at C:\Users\stcbr\Documents\AI\Forza Fantasy League\.claude\worktrees\mystifying-wescoff-781976\e2e\platform.spec.js:247:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\platform-LeagueScreen-shows-League-heading-mobile-chrome\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\platform-LeagueScreen-shows-League-heading-mobile-chrome\error-context.md
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/league
+    Call log:
+    [2m  - navigating to "http://localhost:5173/league", waiting until "load"[22m
+
+
+      245 | test.describe('LeagueScreen', () => {
+      246 |   test.beforeEach(async ({ page }) => {
+    > 247 |     await page.goto('/league');
+          |                ^
+      248 |     await waitForContent(page);
+      249 |   });
+      250 |
+        at C:\Users\stcbr\Documents\AI\Forza Fantasy League\.claude\worktrees\mystifying-wescoff-781976\e2e\platform.spec.js:247:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\platform-LeagueScreen-shows-League-heading-mobile-chrome-retry1\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\platform-LeagueScreen-shows-League-heading-mobile-chrome-retry1\error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\platform-LeagueScreen-shows-League-heading-mobile-chrome-retry1\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\platform-LeagueScreen-shows-League-heading-mobile-chrome-retry1\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  38) [mobile-chrome] › e2e\platform.spec.js:256:3 › LeagueScreen › renders league list or standings 
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/league
+    Call log:
+    [2m  - navigating to "http://localhost:5173/league", waiting until "load"[22m
+
+
+      245 | test.describe('LeagueScreen', () => {
+      246 |   test.beforeEach(async ({ page }) => {
+    > 247 |     await page.goto('/league');
+          |                ^
+      248 |     await waitForContent(page);
+      249 |   });
+      250 |
+        at C:\Users\stcbr\Documents\AI\Forza Fantasy League\.claude\worktrees\mystifying-wescoff-781976\e2e\platform.spec.js:247:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\platform-LeagueScreen-renders-league-list-or-standings-mobile-chrome\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\platform-LeagueScreen-renders-league-list-or-standings-mobile-chrome\error-context.md
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/league
+    Call log:
+    [2m  - navigating to "http://localhost:5173/league", waiting until "load"[22m
+
+
+      245 | test.describe('LeagueScreen', () => {
+      246 |   test.beforeEach(async ({ page }) => {
+    > 247 |     await page.goto('/league');
+          |                ^
+      248 |     await waitForContent(page);
+      249 |   });
+      250 |
+        at C:\Users\stcbr\Documents\AI\Forza Fantasy League\.claude\worktrees\mystifying-wescoff-781976\e2e\platform.spec.js:247:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\platform-LeagueScreen-renders-league-list-or-standings-mobile-chrome-retry1\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\platform-LeagueScreen-renders-league-list-or-standings-mobile-chrome-retry1\error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\platform-LeagueScreen-renders-league-list-or-standings-mobile-chrome-retry1\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\platform-LeagueScreen-renders-league-list-or-standings-mobile-chrome-retry1\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  39) [mobile-chrome] › e2e\platform.spec.js:270:3 › LiveScreen › loads without crashing ───────────
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/live
+    Call log:
+    [2m  - navigating to "http://localhost:5173/live", waiting until "load"[22m
+
+
+      264 | test.describe('LiveScreen', () => {
+      265 |   test.beforeEach(async ({ page }) => {
+    > 266 |     await page.goto('/live');
+          |                ^
+      267 |     await waitForContent(page);
+      268 |   });
+      269 |
+        at C:\Users\stcbr\Documents\AI\Forza Fantasy League\.claude\worktrees\mystifying-wescoff-781976\e2e\platform.spec.js:266:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\platform-LiveScreen-loads-without-crashing-mobile-chrome\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\platform-LiveScreen-loads-without-crashing-mobile-chrome\error-context.md
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/live
+    Call log:
+    [2m  - navigating to "http://localhost:5173/live", waiting until "load"[22m
+
+
+      264 | test.describe('LiveScreen', () => {
+      265 |   test.beforeEach(async ({ page }) => {
+    > 266 |     await page.goto('/live');
+          |                ^
+      267 |     await waitForContent(page);
+      268 |   });
+      269 |
+        at C:\Users\stcbr\Documents\AI\Forza Fantasy League\.claude\worktrees\mystifying-wescoff-781976\e2e\platform.spec.js:266:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\platform-LiveScreen-loads-without-crashing-mobile-chrome-retry1\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\platform-LiveScreen-loads-without-crashing-mobile-chrome-retry1\error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\platform-LiveScreen-loads-without-crashing-mobile-chrome-retry1\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\platform-LiveScreen-loads-without-crashing-mobile-chrome-retry1\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  40) [mobile-chrome] › e2e\platform.spec.js:278:3 › LiveScreen › shows Live heading or live content 
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/live
+    Call log:
+    [2m  - navigating to "http://localhost:5173/live", waiting until "load"[22m
+
+
+      264 | test.describe('LiveScreen', () => {
+      265 |   test.beforeEach(async ({ page }) => {
+    > 266 |     await page.goto('/live');
+          |                ^
+      267 |     await waitForContent(page);
+      268 |   });
+      269 |
+        at C:\Users\stcbr\Documents\AI\Forza Fantasy League\.claude\worktrees\mystifying-wescoff-781976\e2e\platform.spec.js:266:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\platform-LiveScreen-shows-Live-heading-or-live-content-mobile-chrome\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\platform-LiveScreen-shows-Live-heading-or-live-content-mobile-chrome\error-context.md
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/live
+    Call log:
+    [2m  - navigating to "http://localhost:5173/live", waiting until "load"[22m
+
+
+      264 | test.describe('LiveScreen', () => {
+      265 |   test.beforeEach(async ({ page }) => {
+    > 266 |     await page.goto('/live');
+          |                ^
+      267 |     await waitForContent(page);
+      268 |   });
+      269 |
+        at C:\Users\stcbr\Documents\AI\Forza Fantasy League\.claude\worktrees\mystifying-wescoff-781976\e2e\platform.spec.js:266:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\platform-LiveScreen-shows-Live-heading-or-live-content-mobile-chrome-retry1\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\platform-LiveScreen-shows-Live-heading-or-live-content-mobile-chrome-retry1\error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\platform-LiveScreen-shows-Live-heading-or-live-content-mobile-chrome-retry1\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\platform-LiveScreen-shows-Live-heading-or-live-content-mobile-chrome-retry1\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  41) [mobile-chrome] › e2e\platform.spec.js:283:3 › LiveScreen › shows match or projection content 
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/live
+    Call log:
+    [2m  - navigating to "http://localhost:5173/live", waiting until "load"[22m
+
+
+      264 | test.describe('LiveScreen', () => {
+      265 |   test.beforeEach(async ({ page }) => {
+    > 266 |     await page.goto('/live');
+          |                ^
+      267 |     await waitForContent(page);
+      268 |   });
+      269 |
+        at C:\Users\stcbr\Documents\AI\Forza Fantasy League\.claude\worktrees\mystifying-wescoff-781976\e2e\platform.spec.js:266:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\platform-LiveScreen-shows-match-or-projection-content-mobile-chrome\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\platform-LiveScreen-shows-match-or-projection-content-mobile-chrome\error-context.md
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/live
+    Call log:
+    [2m  - navigating to "http://localhost:5173/live", waiting until "load"[22m
+
+
+      264 | test.describe('LiveScreen', () => {
+      265 |   test.beforeEach(async ({ page }) => {
+    > 266 |     await page.goto('/live');
+          |                ^
+      267 |     await waitForContent(page);
+      268 |   });
+      269 |
+        at C:\Users\stcbr\Documents\AI\Forza Fantasy League\.claude\worktrees\mystifying-wescoff-781976\e2e\platform.spec.js:266:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\platform-LiveScreen-shows-match-or-projection-content-mobile-chrome-retry1\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\platform-LiveScreen-shows-match-or-projection-content-mobile-chrome-retry1\error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\platform-LiveScreen-shows-match-or-projection-content-mobile-chrome-retry1\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\platform-LiveScreen-shows-match-or-projection-content-mobile-chrome-retry1\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  42) [mobile-chrome] › e2e\platform.spec.js:291:3 › RecapScreen › loads without crashing ──────────
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/recap
+    Call log:
+    [2m  - navigating to "http://localhost:5173/recap", waiting until "load"[22m
+
+
+      292 |     const errors = [];
+      293 |     page.on('pageerror', e => errors.push(e.message));
+    > 294 |     await page.goto('/recap');
+          |                ^
+      295 |     await waitForContent(page);
+      296 |     expect(errors).toHaveLength(0);
+      297 |   });
+        at C:\Users\stcbr\Documents\AI\Forza Fantasy League\.claude\worktrees\mystifying-wescoff-781976\e2e\platform.spec.js:294:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\platform-RecapScreen-loads-without-crashing-mobile-chrome\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\platform-RecapScreen-loads-without-crashing-mobile-chrome\error-context.md
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/recap
+    Call log:
+    [2m  - navigating to "http://localhost:5173/recap", waiting until "load"[22m
+
+
+      292 |     const errors = [];
+      293 |     page.on('pageerror', e => errors.push(e.message));
+    > 294 |     await page.goto('/recap');
+          |                ^
+      295 |     await waitForContent(page);
+      296 |     expect(errors).toHaveLength(0);
+      297 |   });
+        at C:\Users\stcbr\Documents\AI\Forza Fantasy League\.claude\worktrees\mystifying-wescoff-781976\e2e\platform.spec.js:294:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\platform-RecapScreen-loads-without-crashing-mobile-chrome-retry1\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\platform-RecapScreen-loads-without-crashing-mobile-chrome-retry1\error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\platform-RecapScreen-loads-without-crashing-mobile-chrome-retry1\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\platform-RecapScreen-loads-without-crashing-mobile-chrome-retry1\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  43) [mobile-chrome] › e2e\platform.spec.js:299:3 › RecapScreen › shows recap content ─────────────
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/recap
+    Call log:
+    [2m  - navigating to "http://localhost:5173/recap", waiting until "load"[22m
+
+
+      298 |
+      299 |   test('shows recap content', async ({ page }) => {
+    > 300 |     await page.goto('/recap');
+          |                ^
+      301 |     await waitForContent(page);
+      302 |     const body = await page.locator('body').innerText();
+      303 |     expect(body.trim().length).toBeGreaterThan(20);
+        at C:\Users\stcbr\Documents\AI\Forza Fantasy League\.claude\worktrees\mystifying-wescoff-781976\e2e\platform.spec.js:300:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\platform-RecapScreen-shows-recap-content-mobile-chrome\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\platform-RecapScreen-shows-recap-content-mobile-chrome\error-context.md
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/recap
+    Call log:
+    [2m  - navigating to "http://localhost:5173/recap", waiting until "load"[22m
+
+
+      298 |
+      299 |   test('shows recap content', async ({ page }) => {
+    > 300 |     await page.goto('/recap');
+          |                ^
+      301 |     await waitForContent(page);
+      302 |     const body = await page.locator('body').innerText();
+      303 |     expect(body.trim().length).toBeGreaterThan(20);
+        at C:\Users\stcbr\Documents\AI\Forza Fantasy League\.claude\worktrees\mystifying-wescoff-781976\e2e\platform.spec.js:300:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\platform-RecapScreen-shows-recap-content-mobile-chrome-retry1\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\platform-RecapScreen-shows-recap-content-mobile-chrome-retry1\error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\platform-RecapScreen-shows-recap-content-mobile-chrome-retry1\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\platform-RecapScreen-shows-recap-content-mobile-chrome-retry1\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  44) [mobile-chrome] › e2e\platform.spec.js:309:3 › BracketScreen › loads without crashing ────────
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/bracket
+    Call log:
+    [2m  - navigating to "http://localhost:5173/bracket", waiting until "load"[22m
+
+
+      310 |     const errors = [];
+      311 |     page.on('pageerror', e => errors.push(e.message));
+    > 312 |     await page.goto('/bracket');
+          |                ^
+      313 |     await waitForContent(page);
+      314 |     expect(errors).toHaveLength(0);
+      315 |   });
+        at C:\Users\stcbr\Documents\AI\Forza Fantasy League\.claude\worktrees\mystifying-wescoff-781976\e2e\platform.spec.js:312:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\platform-BracketScreen-loads-without-crashing-mobile-chrome\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\platform-BracketScreen-loads-without-crashing-mobile-chrome\error-context.md
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/bracket
+    Call log:
+    [2m  - navigating to "http://localhost:5173/bracket", waiting until "load"[22m
+
+
+      310 |     const errors = [];
+      311 |     page.on('pageerror', e => errors.push(e.message));
+    > 312 |     await page.goto('/bracket');
+          |                ^
+      313 |     await waitForContent(page);
+      314 |     expect(errors).toHaveLength(0);
+      315 |   });
+        at C:\Users\stcbr\Documents\AI\Forza Fantasy League\.claude\worktrees\mystifying-wescoff-781976\e2e\platform.spec.js:312:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\platform-BracketScreen-loads-without-crashing-mobile-chrome-retry1\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\platform-BracketScreen-loads-without-crashing-mobile-chrome-retry1\error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\platform-BracketScreen-loads-without-crashing-mobile-chrome-retry1\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\platform-BracketScreen-loads-without-crashing-mobile-chrome-retry1\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  45) [desktop-chrome] › e2e\platform.spec.js:327:3 › Layout consistency › desktop — sidebar left offset applied (content not behind sidebar) 
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/
+    Call log:
+    [2m  - navigating to "http://localhost:5173/", waiting until "load"[22m
+
+
+      327 |   test('desktop — sidebar left offset applied (content not behind sidebar)', async ({ page }) => {
+      328 |     await page.setViewportSize({ width: 1440, height: 900 });
+    > 329 |     await page.goto('/');
+          |                ^
+      330 |     await waitForContent(page);
+      331 |
+      332 |     // Main content wrapper should be offset to the right of the 220px sidebar
+        at C:\Users\stcbr\Documents\AI\Forza Fantasy League\.claude\worktrees\mystifying-wescoff-781976\e2e\platform.spec.js:329:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\platform-Layout-consistenc-55676-content-not-behind-sidebar--desktop-chrome\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\platform-Layout-consistenc-55676-content-not-behind-sidebar--desktop-chrome\error-context.md
+
+  44 failed
+    [desktop-chrome] › e2e\platform.spec.js:144:3 › SquadScreen › shows My Squad heading ───────────
+    [desktop-chrome] › e2e\platform.spec.js:150:3 › SquadScreen › mobile — pitch view renders with players 
+    [desktop-chrome] › e2e\platform.spec.js:165:3 › SquadScreen › shows budget in header ───────────
+    [desktop-chrome] › e2e\platform.spec.js:169:3 › SquadScreen › chips row is visible ─────────────
+    [desktop-chrome] › e2e\platform.spec.js:176:3 › SquadScreen › mobile — no horizontal overflow ──
+    [desktop-chrome] › e2e\platform.spec.js:184:3 › SquadScreen › desktop — player roster list is visible 
+    [desktop-chrome] › e2e\platform.spec.js:200:3 › MarketScreen › shows Player Market heading ─────
+    [desktop-chrome] › e2e\platform.spec.js:204:3 › MarketScreen › renders player list with names ──
+    [desktop-chrome] › e2e\platform.spec.js:210:3 › MarketScreen › position filter tabs are clickable 
+    [desktop-chrome] › e2e\platform.spec.js:219:3 › MarketScreen › shows budget display ────────────
+    [desktop-chrome] › e2e\platform.spec.js:223:3 › MarketScreen › shows squad slot count ──────────
+    [desktop-chrome] › e2e\platform.spec.js:228:3 › MarketScreen › ALL filter shows all positions ──
+    [desktop-chrome] › e2e\platform.spec.js:235:3 › MarketScreen › mobile — no horizontal overflow ─
+    [desktop-chrome] › e2e\platform.spec.js:251:3 › LeagueScreen › shows League heading ────────────
+    [desktop-chrome] › e2e\platform.spec.js:256:3 › LeagueScreen › renders league list or standings 
+    [desktop-chrome] › e2e\platform.spec.js:270:3 › LiveScreen › loads without crashing ────────────
+    [desktop-chrome] › e2e\platform.spec.js:278:3 › LiveScreen › shows Live heading or live content 
+    [desktop-chrome] › e2e\platform.spec.js:283:3 › LiveScreen › shows match or projection content ─
+    [desktop-chrome] › e2e\platform.spec.js:291:3 › RecapScreen › loads without crashing ───────────
+    [desktop-chrome] › e2e\platform.spec.js:299:3 › RecapScreen › shows recap content ──────────────
+    [desktop-chrome] › e2e\platform.spec.js:309:3 › BracketScreen › loads without crashing ─────────
+    [desktop-chrome] › e2e\platform.spec.js:317:3 › BracketScreen › shows bracket content ──────────
+    [mobile-chrome] › e2e\platform.spec.js:126:3 › HomeScreen › mobile — no horizontal overflow ────
+    [mobile-chrome] › e2e\platform.spec.js:144:3 › SquadScreen › shows My Squad heading ────────────
+    [mobile-chrome] › e2e\platform.spec.js:150:3 › SquadScreen › mobile — pitch view renders with players 
+    [mobile-chrome] › e2e\platform.spec.js:165:3 › SquadScreen › shows budget in header ────────────
+    [mobile-chrome] › e2e\platform.spec.js:169:3 › SquadScreen › chips row is visible ──────────────
+    [mobile-chrome] › e2e\platform.spec.js:176:3 › SquadScreen › mobile — no horizontal overflow ───
+    [mobile-chrome] › e2e\platform.spec.js:184:3 › SquadScreen › desktop — player roster list is visible 
+    [mobile-chrome] › e2e\platform.spec.js:200:3 › MarketScreen › shows Player Market heading ──────
+    [mobile-chrome] › e2e\platform.spec.js:204:3 › MarketScreen › renders player list with names ───
+    [mobile-chrome] › e2e\platform.spec.js:210:3 › MarketScreen › position filter tabs are clickable 
+    [mobile-chrome] › e2e\platform.spec.js:219:3 › MarketScreen › shows budget display ─────────────
+    [mobile-chrome] › e2e\platform.spec.js:223:3 › MarketScreen › shows squad slot count ───────────
+    [mobile-chrome] › e2e\platform.spec.js:228:3 › MarketScreen › ALL filter shows all positions ───
+    [mobile-chrome] › e2e\platform.spec.js:235:3 › MarketScreen › mobile — no horizontal overflow ──
+    [mobile-chrome] › e2e\platform.spec.js:251:3 › LeagueScreen › shows League heading ─────────────
+    [mobile-chrome] › e2e\platform.spec.js:256:3 › LeagueScreen › renders league list or standings ─
+    [mobile-chrome] › e2e\platform.spec.js:270:3 › LiveScreen › loads without crashing ─────────────
+    [mobile-chrome] › e2e\platform.spec.js:278:3 › LiveScreen › shows Live heading or live content ─
+    [mobile-chrome] › e2e\platform.spec.js:283:3 › LiveScreen › shows match or projection content ──
+    [mobile-chrome] › e2e\platform.spec.js:291:3 › RecapScreen › loads without crashing ────────────
+    [mobile-chrome] › e2e\platform.spec.js:299:3 › RecapScreen › shows recap content ───────────────
+    [mobile-chrome] › e2e\platform.spec.js:309:3 › BracketScreen › loads without crashing ──────────
+  1 flaky
+    [desktop-chrome] › e2e\platform.spec.js:327:3 › Layout consistency › desktop — sidebar left offset applied (content not behind sidebar) 
+  39 passed (6.3m)

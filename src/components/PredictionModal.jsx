@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { supabase } from '../lib/supabase';
 
 // ─── Mock player pool with "predicted goals" for smart sorting ──────────────

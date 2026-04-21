@@ -56,11 +56,12 @@ export default function OnboardingTour({ steps, onComplete, onSkip }) {
     const timers = [100, 300, 600].map(d => setTimeout(measure, d));
     window.addEventListener('resize', measure);
     window.addEventListener('scroll', measure, true);
+    const rafId = rafRef.current;
     return () => {
       timers.forEach(clearTimeout);
       window.removeEventListener('resize', measure);
       window.removeEventListener('scroll', measure, true);
-      cancelAnimationFrame(rafRef.current);
+      cancelAnimationFrame(rafId);
     };
   }, [stepIdx, current.target]);
 
@@ -113,7 +114,6 @@ export default function OnboardingTour({ steps, onComplete, onSkip }) {
     const vw = window.innerWidth;
     const vh = window.innerHeight;
     const spaceBelow = vh - (rect.top + rect.height);
-    const spaceRight = vw - rect.left;
 
     // Prefer below; fallback to above
     if (spaceBelow > 180) {

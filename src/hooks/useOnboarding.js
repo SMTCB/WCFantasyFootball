@@ -14,7 +14,7 @@
  * Swap the `track()` body for your analytics provider when ready.
  */
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 
 const K = {
   wizard:  'forzakit_onboarding_done',
@@ -62,12 +62,13 @@ export function useOnboarding() {
   }, []);
 
   // Dev helper — call window.__resetOnboarding() in console to replay wizard
-  if (typeof window !== 'undefined') {
+  useEffect(() => {
     window.__resetOnboarding = () => {
       Object.values(K).forEach(k => localStorage.removeItem(k));
       window.location.reload();
     };
-  }
+    return () => { delete window.__resetOnboarding; };
+  }, []);
 
   return {
     showWizard:        !wizardDone,
