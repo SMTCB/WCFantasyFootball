@@ -2,7 +2,7 @@
 ## World Cup 2026 Fantasy Football Platform
 
 **Stack:** React 19 + Supabase | **Target Launch:** June 2026
-**Last updated:** 2026-04-21 | **Completed:** FB-001, FB-002 (auth on-hold), FB-003, FB-006, FB-007, FB-008, FB-009, FB-010, FB-016
+**Last updated:** 2026-04-21 | **Completed:** FB-001, FB-002 (auth on-hold), FB-003, FB-006, FB-007, FB-008, FB-009, FB-010, FB-016, FB-017
 
 > Items are ordered strictly by criticality and urgency within each priority tier.
 > P0 items are sequenced by dependency chain — the first item must be done before the next.
@@ -419,10 +419,10 @@ FB-019  Push notification infrastructure
 
 ---
 
-### FB-017
+### FB-017 ✅ DONE
 **Title:** CI/CD pipeline with Vercel preview deployments and automated tests
 
-**Priority:** P0 · **Complexity:** M
+**Priority:** P0 · **Complexity:** M · **Completed:** 2026-04-21
 
 **User Story:** As a developer, I want every PR to deploy a preview environment so that features can be reviewed before merging to main.
 
@@ -437,7 +437,7 @@ FB-019  Push notification infrastructure
 
 **Source:** Internal DevOps requirement
 
-**Notes:** Use Supabase branching (Pro tier) for per-PR DB environments. Scope `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` separately for preview vs production in Vercel settings.
+**Notes:** Vercel preview URLs are posted automatically by the Vercel GitHub App — no custom action needed. Supabase per-PR DB branching requires Pro tier and is deferred. DB migrations are instead triggered manually via `.github/workflows/migrate.yml` (workflow_dispatch) to avoid accidental production writes. Add `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` as GitHub Actions secrets so CI builds can connect to Supabase.
 
 ---
 
