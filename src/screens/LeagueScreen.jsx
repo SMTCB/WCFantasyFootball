@@ -4,7 +4,7 @@ import { supabase } from '../lib/supabase';
 import { normalisePlayers } from '../lib/players';
 import { useAuth } from '../hooks/useAuth';
 import SectionHeader from '../components/SectionHeader';
-
+import LeagueInviteCard from '../components/LeagueInviteCard';
 import H2HSheet from '../components/H2HSheet';
 
 // ─── Shared Mock Data ────────────────────────────────────────────────────────
@@ -67,10 +67,16 @@ export default function LeagueScreen() {
   const [membersLoading, setMembersLoading] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
 
-  // Form state
-  const [leagueName, setLeagueName] = useState('');
+  // Create form state
+  const [leagueName,   setLeagueName]   = useState('');
   const [leagueFormat, setLeagueFormat] = useState('classic');
-  const [formLoading, setFormLoading] = useState(false);
+  const [formLoading,  setFormLoading]  = useState(false);
+  const [newLeague,    setNewLeague]    = useState(null);   // set after creation → shows invite card
+
+  // Join-by-code state
+  const [joinCode,     setJoinCode]     = useState('');
+  const [joinLoading,  setJoinLoading]  = useState(false);
+  const [joinError,    setJoinError]    = useState('');
 
   const renderTabs = () => (
     <div className="flex bg-[#161616] border-b border-[#2A2A2A] sticky top-[60px] z-20">
@@ -163,29 +169,74 @@ export default function LeagueScreen() {
     }
   };
 
+  // FB-025: atomic league creation via RPC (league + commissioner in one transaction)
   const handleCreateLeague = async (e) => {
     e.preventDefault();
-    if (!leagueName) return;
+    if (!leagueName.trim()) return;
     try {
       setFormLoading(true);
-      const { data: newLeague, error: leagueErr } = await supabase
-        .from('leagues')
-        .insert({ name: leagueName, format: leagueFormat, created_by: currentUser.id })
-        .select()
-        .single();
-      if (leagueErr) throw leagueErr;
-      
-      await supabase.from('league_members').insert({ league_id: newLeague.id, user_id: currentUser.id });
-      
-      setView('list');
-      fetchLeagues();
+      const { data, error } = await supabase.rpc('create_league', {
+        p_name:    leagueName.trim(),
+        p_format:  leagueFormat,
+        p_user_id: user?.id,
+      });
+      if (error) throw error;
       setLeagueName('');
+      setNewLeague(data);   // triggers invite card view
+      fetchLeagues();
     } catch (err) {
-      alert("Error: " + err.message);
+      console.error('[createLeague]', err);
+      alert('Could not create league: ' + (err.message || 'Unknown error'));
     } finally {
       setFormLoading(false);
     }
   };
+
+  // FB-025: join a league by code
+  const handleJoinByCode = async (e) => {
+    e.preventDefault();
+    const code = joinCode.trim().toUpperCase();
+    if (!code || code.length < 4) return;
+    try {
+      setJoinLoading(true);
+      setJoinError('');
+      const { data, error } = await supabase.rpc('join_league_by_code', {
+        p_code:    code,
+        p_user_id: user?.id,
+      });
+      if (error) {
+        const msg = error.message || '';
+        if (msg.includes('LEAGUE_NOT_FOUND'))  setJoinError('No league found with that code — check the spelling.');
+        else if (msg.includes('ALREADY_MEMBER')) setJoinError('You\'re already in this league.');
+        else if (msg.includes('LEAGUE_FULL'))    setJoinError('This league is full.');
+        else setJoinError('Something went wrong — please try again.');
+        return;
+      }
+      setJoinCode('');
+      fetchLeagues();
+      // Navigate to the newly joined league
+      if (data?.id) navigate(`/league/${data.id}`);
+    } catch (err) {
+      console.error('[joinLeague]', err);
+      setJoinError('Something went wrong — please try again.');
+    } finally {
+      setJoinLoading(false);
+    }
+  };
+
+  // FB-025/026: Show invite card immediately after league creation
+  if (newLeague) {
+    return (
+      <LeagueInviteCard
+        league={newLeague}
+        onDone={() => {
+          setNewLeague(null);
+          setView('list');
+          if (newLeague.id) navigate(`/league/${newLeague.id}`);
+        }}
+      />
+    );
+  }
 
   if (view === 'create') {
     return (
@@ -198,7 +249,15 @@ export default function LeagueScreen() {
           <div className="flex flex-col gap-2">
             <label className="text-[11px] font-semibold text-text-secondary uppercase tracking-wider">League Name</label>
             <div className="bg-surface border border-border p-1">
-              <input type="text" value={leagueName} onChange={(e) => setLeagueName(e.target.value)} className="w-full bg-transparent px-3 py-3 text-[15px] font-medium outline-none text-white" required />
+              <input
+                type="text"
+                value={leagueName}
+                onChange={(e) => setLeagueName(e.target.value)}
+                className="w-full bg-transparent px-3 py-3 text-[15px] font-medium outline-none text-white"
+                placeholder="e.g. World Cup Legends"
+                maxLength={40}
+                required
+              />
             </div>
           </div>
           <div className="flex flex-col gap-2">
@@ -208,8 +267,8 @@ export default function LeagueScreen() {
               <button type="button" onClick={() => setLeagueFormat('noduplicate')} className={`py-3 border ${leagueFormat === 'noduplicate' ? 'border-white bg-white/5' : 'border-border bg-surface'} text-sm font-bold uppercase`}>Draft</button>
             </div>
           </div>
-          <button type="submit" disabled={formLoading} className="w-full mt-4 bg-cyan text-black font-bold py-4 uppercase tracking-wider disabled:opacity-50">
-            {formLoading ? 'Booting...' : 'Start Season'}
+          <button type="submit" disabled={formLoading || !leagueName.trim()} className="w-full mt-4 bg-cyan text-black font-bold py-4 uppercase tracking-wider disabled:opacity-50">
+            {formLoading ? 'Creating…' : 'Start Season'}
           </button>
         </form>
       </div>
@@ -631,13 +690,25 @@ export default function LeagueScreen() {
   }
 
   return (
-    <div className="pb-16 min-h-screen bg-bg">
+    <div className="pb-24 min-h-screen bg-bg">
+      {/* Header */}
       <div className="p-4 border-b border-border bg-surface flex justify-between items-center sticky top-0 z-10">
         <h1 className="text-[15px] font-bold uppercase tracking-wide">My Leagues</h1>
-        <button onClick={() => setView('create')} className="text-white text-2xl active:scale-95">+</button>
+        <button onClick={() => setView('create')} className="text-white text-2xl active:scale-95" title="Create league">+</button>
       </div>
+
+      {/* League list */}
       {loading ? (
         <div className="p-8 text-center text-xs font-bold uppercase tracking-widest opacity-50">Syncing...</div>
+      ) : leagues.length === 0 ? (
+        <div className="p-8 text-center">
+          <div style={{ fontSize: '36px', marginBottom: '12px' }}>🏆</div>
+          <div className="text-[13px] font-bold uppercase tracking-wide text-white mb-2">No leagues yet</div>
+          <div className="text-[11px] text-text-secondary mb-6">Create a league or enter a friend's invite code below.</div>
+          <button onClick={() => setView('create')} className="px-6 py-3 bg-cyan text-black text-[11px] font-bold uppercase tracking-wider">
+            Create a League
+          </button>
+        </div>
       ) : (
         leagues.map(l => (
           <div key={l.league_id} onClick={() => navigate(`/league/${l.league_id}`)} className="p-4 bg-surface border-b border-border active:bg-surface-elevated flex justify-between items-center cursor-pointer">
@@ -649,6 +720,63 @@ export default function LeagueScreen() {
           </div>
         ))
       )}
+
+      {/* FB-025: Join by code */}
+      <div className="mx-4 mt-6 p-5 rounded-xl" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
+        <div className="text-[11px] font-black uppercase tracking-widest mb-1" style={{ fontFamily: 'Barlow Condensed, sans-serif', color: '#3D4B5C' }}>
+          Have an invite code?
+        </div>
+        <div className="text-[13px] font-bold text-white mb-4">Enter it below to join a friend's league</div>
+        <form onSubmit={handleJoinByCode} className="flex gap-2">
+          <input
+            type="text"
+            value={joinCode}
+            onChange={e => { setJoinCode(e.target.value.toUpperCase()); setJoinError(''); }}
+            placeholder="XXXXXX"
+            maxLength={8}
+            style={{
+              flex:          1,
+              padding:       '10px 14px',
+              background:    'rgba(255,255,255,0.05)',
+              border:        `1px solid ${joinError ? 'rgba(240,58,58,0.5)' : 'rgba(255,255,255,0.10)'}`,
+              borderRadius:  '8px',
+              color:         '#F0F2F5',
+              fontSize:      '16px',
+              fontFamily:    'Barlow Condensed, sans-serif',
+              fontWeight:    800,
+              letterSpacing: '0.2em',
+              textTransform: 'uppercase',
+              outline:       'none',
+            }}
+          />
+          <button
+            type="submit"
+            disabled={joinLoading || joinCode.trim().length < 4}
+            style={{
+              padding:       '10px 20px',
+              background:    '#F0B400',
+              color:         '#0D1117',
+              fontSize:      '12px',
+              fontFamily:    'Barlow Condensed, sans-serif',
+              fontWeight:    800,
+              letterSpacing: '0.08em',
+              textTransform: 'uppercase',
+              border:        'none',
+              borderRadius:  '8px',
+              cursor:        joinLoading ? 'wait' : 'pointer',
+              opacity:       (joinLoading || joinCode.trim().length < 4) ? 0.5 : 1,
+              whiteSpace:    'nowrap',
+            }}
+          >
+            {joinLoading ? '…' : 'Join →'}
+          </button>
+        </form>
+        {joinError && (
+          <div style={{ marginTop: '8px', fontSize: '12px', color: '#F03A3A', fontFamily: 'Barlow Condensed, sans-serif' }}>
+            ⚠️ {joinError}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
