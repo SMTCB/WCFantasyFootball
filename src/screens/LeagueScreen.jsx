@@ -51,7 +51,7 @@ export default function LeagueScreen() {
   const [view, setView] = useState('list'); 
   const [activeLeague, setActiveLeague] = useState(null);
   const [showTradeModal, setShowTradeModal] = useState(false);
-  const [activeEmojiPickerId, setActiveEmojiPickerId] = useState(null);
+  const [_activeEmojiPickerId, _setActiveEmojiPickerId] = useState(null);
   const [showTradeBuilder, setShowTradeBuilder] = useState(false);
   
   const [managerTeamView, setManagerTeamView] = useState(null); // { id, name }

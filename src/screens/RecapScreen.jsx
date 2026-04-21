@@ -177,7 +177,7 @@ export default function RecapScreen() {
         );
         setCopied(true);
         setTimeout(() => setCopied(false), 2500);
-      } catch {}
+      } catch (err) { console.error('[share]', err); }
     }
   };
 

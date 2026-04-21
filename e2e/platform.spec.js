@@ -2,20 +2,12 @@
 import { test, expect } from '@playwright/test';
 
 const ROUTES = ['/', '/squad', '/league', '/live', '/market', '/recap', '/bracket'];
-const isMobile = (page) => page.viewportSize()?.width < 768;
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 async function waitForContent(page) {
   // Wait for React to hydrate — no skeleton loaders or spinners visible
   await page.waitForLoadState('networkidle', { timeout: 8000 }).catch(() => {});
   await page.waitForTimeout(600);
-}
-
-async function noConsoleErrors(page) {
-  const errors = [];
-  page.on('console', msg => { if (msg.type() === 'error') errors.push(msg.text()); });
-  page.on('pageerror', err => errors.push(err.message));
-  return errors;
 }
 
 // ── 1. All routes load without crash ─────────────────────────────────────────

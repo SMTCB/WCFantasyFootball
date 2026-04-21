@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '../lib/supabase';
 import { normalizeIntelligence } from '../lib/intelligence';
-import { normalisePlayer, normalisePlayers } from '../lib/players';
+import { normalisePlayers } from '../lib/players';
 import { useAuth } from '../hooks/useAuth';
 import { useOnboarding } from '../hooks/useOnboarding';
 import OnboardingTour from '../components/OnboardingTour';
@@ -54,7 +54,6 @@ export default function MarketScreen() {
   const [budget,       setBudget]       = useState(100.0);
   const [saving,       setSaving]       = useState(false);
   const [isLocked,     setIsLocked]     = useState(false);
-  const [deadlineAt,   setDeadlineAt]   = useState(null);
   const [confirm,      setConfirm]      = useState(null);
 
   useEffect(() => { fetchMarketParams(); }, []);
@@ -74,7 +73,6 @@ export default function MarketScreen() {
       const deadline   = deadlineRow?.deadline_at ? new Date(deadlineRow.deadline_at) : null;
       const locked     = deadline ? serverNow >= deadline : false;
       setIsLocked(locked);
-      setDeadlineAt(deadline);
 
       const { data: pData }    = await supabase.from('players').select('*').order('price', { ascending: false });
       const { data: intelData } = await supabase.from('player_status').select('*');
@@ -202,10 +200,6 @@ export default function MarketScreen() {
   const filteredPlayers = players.filter(p => filterPos === 'ALL' || p.position === filterPos);
   const squadCount = mySquad?.players?.length || 0;
 
-  // Format deadline for display
-  const deadlineLabel = deadlineAt
-    ? deadlineAt.toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
-    : null;
 
   return (
     <div className="min-h-screen bg-bg">
@@ -418,7 +412,7 @@ export default function MarketScreen() {
         </div>
       ) : (
         <div data-tour="market-player-list">
-          {filteredPlayers.map((p, idx) => {
+          {filteredPlayers.map((p) => {
             const isOwned      = mySquad?.players?.includes(p.id);
             const limitReached = stats.posCounts[p.position] >= POS_LIMITS[p.position];
             const canAfford    = budget >= p.price;

@@ -34,8 +34,6 @@ export default function HomeScreen() {
   const [showPicker, setShowPicker] = useState(false);
   const [loading,    setLoading]    = useState(true);
 
-  useEffect(() => { fetchInitialData(); }, [user]);
-
   const fetchInitialData = async () => {
     try {
       setLoading(true);
@@ -50,6 +48,9 @@ export default function HomeScreen() {
       setLoading(false);
     }
   };
+
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { fetchInitialData(); }, [user]);
 
   const fetchFixtures = async () => {
     const { data } = await supabase.from('fixtures').select('*').order('kickoff_at', { ascending: true });
@@ -77,14 +78,14 @@ export default function HomeScreen() {
         .select('predicted_player_id, is_correct, points_awarded, players(name, club)')
         .eq('user_id', userId).eq('matchday_id', String(CURRENT_MATCHDAY)).maybeSingle();
       if (data) setPrediction({ id: data.predicted_player_id, name: data.players?.name, club: data.players?.club, correct: data.is_correct, pts: data.points_awarded });
-    } catch {}
+    } catch (err) { console.error('[prediction]', err); }
   };
 
   const fetchLatestRecap = async (userId) => {
     try {
       const { data } = await supabase.from('matchday_recaps').select('*').eq('user_id', userId).order('created_at', { ascending: false }).limit(1).maybeSingle();
       if (data) setRecap(data);
-    } catch {}
+    } catch (err) { console.error('[recap]', err); }
   };
 
   // FB-020: persist prediction to DB (upsert so re-picking before kick-off updates the row)

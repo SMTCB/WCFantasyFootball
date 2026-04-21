@@ -10,7 +10,7 @@
  *   ?redirect=/squad     → destination after successful auth
  */
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 
@@ -42,8 +42,8 @@ export default function AuthScreen() {
 
   const redirectTo = searchParams.get('redirect') || '/';
 
-  // Clear messages on tab switch
-  useEffect(() => { setError(''); setSuccess(''); }, [tab]);
+  // Clear messages whenever the active tab changes
+  const switchTab = (t) => { setTab(t); setError(''); setSuccess(''); };
 
   // ── Handlers ────────────────────────────────────────────────────────────────
   const handleSignIn = async (e) => {
@@ -65,7 +65,7 @@ export default function AuthScreen() {
     setLoading(false);
     if (error) { setError(error.message); return; }
     setSuccess('Account created! Check your email to verify, then sign in.');
-    setTab(TAB_SIGNIN);
+    switchTab(TAB_SIGNIN);
   };
 
   const handleReset = async (e) => {
@@ -158,7 +158,7 @@ export default function AuthScreen() {
   if (tab === TAB_RESET) {
     return (
       <AuthShell>
-        <button onClick={() => setTab(TAB_SIGNIN)} style={{ background: 'none', border: 'none', color: '#3D4B5C', fontSize: '11px', fontWeight: 700, cursor: 'pointer', marginBottom: '20px', padding: 0, fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
+        <button onClick={() => switchTab(TAB_SIGNIN)} style={{ background: 'none', border: 'none', color: '#3D4B5C', fontSize: '11px', fontWeight: 700, cursor: 'pointer', marginBottom: '20px', padding: 0, fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
           ← Back to Sign In
         </button>
         <h2 style={{ fontSize: '20px', fontWeight: 900, color: '#F0F2F5', marginBottom: '8px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
@@ -189,7 +189,7 @@ export default function AuthScreen() {
         {[{ id: TAB_SIGNIN, label: 'Sign In' }, { id: TAB_SIGNUP, label: 'Create Account' }].map(t => (
           <button
             key={t.id}
-            onClick={() => setTab(t.id)}
+            onClick={() => switchTab(t.id)}
             style={{
               flex: 1,
               padding: '10px',
@@ -227,7 +227,7 @@ export default function AuthScreen() {
           </button>
           <button
             type="button"
-            onClick={() => setTab(TAB_RESET)}
+            onClick={() => switchTab(TAB_RESET)}
             style={{ background: 'none', border: 'none', color: '#3D4B5C', fontSize: '11px', fontWeight: 600, cursor: 'pointer', padding: '4px 0', fontFamily: 'DM Sans, sans-serif' }}
           >
             Forgot password?
