@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { squad as fallbackSquad } from '../data/squad';
 import { getDangerZonePlayers, normalizeIntelligence, LINEUP_STATUS } from '../lib/intelligence';
+import { normalisePlayer } from '../lib/players';
 import PitchView from '../components/PitchView';
 import PlayerCard from '../components/PlayerCard';
 import SectionHeader from '../components/SectionHeader';
@@ -101,14 +102,14 @@ export default function SquadScreen() {
         const pitchMatch  = fallbackSquad.players.find(mp => mp.id === p.id) || fallbackSquad.bench.find(mp => mp.id === p.id);
         const playerIntel = intelData?.find(i => i.player_id === p.id);
         const isStarter   = idx < 11;
-        return {
+        return normalisePlayer({
           ...p,
           points:    0,
           intel:     normalizeIntelligence(playerIntel),
-          color:     pitchMatch?.color || '#333',
+          color:     pitchMatch?.color,
           gridClass: pitchMatch?.gridClass || (isStarter ? `col-start-${(idx % 5) + 1} row-start-${Math.floor(idx / 5) + 1}` : ''),
           isBench:   !isStarter,
-        };
+        });
       });
 
       let pitchPlayers = mappedPlayers.filter(p => !p.isBench);

@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '../lib/supabase';
 import { normalizeIntelligence } from '../lib/intelligence';
+import { normalisePlayer, normalisePlayers } from '../lib/players';
 
 const POS_LIMITS  = { GK: 2, DEF: 5, MID: 5, FWD: 3 };
 const COUNTRY_LIMIT = 3;
@@ -40,32 +41,27 @@ export default function MarketScreen() {
       const { data: pData }    = await supabase.from('players').select('*').order('price', { ascending: false });
       const { data: intelData } = await supabase.from('player_status').select('*');
 
-      let finalPlayers = [];
-      if (!pData || pData.length === 0) {
-        finalPlayers = [
-          { id: 'p101', name: 'Lionel Messi',    club: 'ARG', position: 'FWD', price: 12.5 },
-          { id: 'p102', name: 'K. De Bruyne',    club: 'BEL', position: 'MID', price: 10.5 },
-          { id: 'p103', name: 'J. Bellingham',   club: 'ENG', position: 'MID', price: 9.5  },
-          { id: 'p104', name: 'Mo Salah',        club: 'EGY', position: 'FWD', price: 11.0 },
-          { id: 'p105', name: 'V. van Dijk',     club: 'NED', position: 'DEF', price: 6.5  },
-          { id: 'p106', name: 'T. Courtois',     club: 'BEL', position: 'GK',  price: 6.0  },
-          { id: 'p107', name: 'A. Griezmann',    club: 'FRA', position: 'MID', price: 8.5  },
-          { id: 'p108', name: 'L. Modric',       club: 'CRO', position: 'MID', price: 8.0  },
-          { id: 'p109', name: 'H. Kane',         club: 'ENG', position: 'FWD', price: 11.0 },
-          { id: 'p110', name: 'A. Hakimi',       club: 'MAR', position: 'DEF', price: 6.0  },
-          { id: 'p111', name: 'Neymar Jr',       club: 'BRA', position: 'FWD', price: 10.0 },
-          { id: 'p112', name: 'Rodri',           club: 'ESP', position: 'MID', price: 9.0  },
-          { id: 'p113', name: 'Vinícius Jr',     club: 'BRA', position: 'FWD', price: 11.5 },
-          { id: 'p114', name: 'Pedri',           club: 'ESP', position: 'MID', price: 7.5  },
-          { id: 'p115', name: 'Mbappé',          club: 'FRA', position: 'FWD', price: 13.0 },
-        ];
-      } else {
-        finalPlayers = pData;
-      }
+      const rawPlayers = (pData && pData.length > 0) ? pData : [
+        { id: 'p101', name: 'Lionel Messi',  club: 'ARG', position: 'FWD', price: 12.5 },
+        { id: 'p102', name: 'K. De Bruyne',  club: 'BEL', position: 'MID', price: 10.5 },
+        { id: 'p103', name: 'J. Bellingham', club: 'ENG', position: 'MID', price: 9.5  },
+        { id: 'p104', name: 'Mo Salah',      club: 'EGY', position: 'FWD', price: 11.0 },
+        { id: 'p105', name: 'V. van Dijk',   club: 'NED', position: 'DEF', price: 6.5  },
+        { id: 'p106', name: 'T. Courtois',   club: 'BEL', position: 'GK',  price: 6.0  },
+        { id: 'p107', name: 'A. Griezmann',  club: 'FRA', position: 'MID', price: 8.5  },
+        { id: 'p108', name: 'L. Modric',     club: 'CRO', position: 'MID', price: 8.0  },
+        { id: 'p109', name: 'H. Kane',       club: 'ENG', position: 'FWD', price: 11.0 },
+        { id: 'p110', name: 'A. Hakimi',     club: 'MAR', position: 'DEF', price: 6.0  },
+        { id: 'p111', name: 'Neymar Jr',     club: 'BRA', position: 'FWD', price: 10.0 },
+        { id: 'p112', name: 'Rodri',         club: 'ESP', position: 'MID', price: 9.0  },
+        { id: 'p113', name: 'Vinícius Jr',   club: 'BRA', position: 'FWD', price: 11.5 },
+        { id: 'p114', name: 'Pedri',         club: 'ESP', position: 'MID', price: 7.5  },
+        { id: 'p115', name: 'Mbappé',        club: 'FRA', position: 'FWD', price: 13.0 },
+      ];
 
-      const playersWithIntel = finalPlayers.map(p => ({
+      const playersWithIntel = normalisePlayers(rawPlayers).map(p => ({
         ...p,
-        intel: normalizeIntelligence(intelData?.find(i => i.player_id === p.id)),
+        intel: normalizeIntelligence(intelData?.find(i => i.player_id === p.id)) ?? p.intel,
       }));
       setPlayers(playersWithIntel);
 

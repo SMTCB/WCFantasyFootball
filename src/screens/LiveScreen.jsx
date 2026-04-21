@@ -4,6 +4,7 @@ import {
   calculateProjection,
   formatProjectionDisplay,
 } from '../lib/projections';
+import { normalisePlayers } from '../lib/players';
 
 import SectionHeader from '../components/SectionHeader';
 
@@ -27,12 +28,12 @@ const MOCK_RIVALS = [
   { rank: 4, user_id: 'r3', username: 'Ana',     total_points: 178, livePoints: 9,  projectedAdd: 4, users: { username: 'Ana' } },
 ];
 
-const MOCK_SQUAD_PLAYERS = [
+const MOCK_SQUAD_PLAYERS = normalisePlayers([
   { id: 'p1', name: 'Alisson', club: 'BRA', position: 'GK' },
   { id: 'p2', name: 'Thiago Silva', club: 'BRA', position: 'DEF' },
   { id: 'p3', name: 'Casemiro', club: 'BRA', position: 'MID' },
   { id: 'p4', name: 'Neymar', club: 'BRA', position: 'FWD' },
-];
+]);
 
 // ─── Refresh interval: 5 minutes in ms ───────────────────────────────────────
 const REFRESH_INTERVAL_MS = 5 * 60 * 1000;

@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
+import { normalisePlayers } from '../lib/players';
 import SectionHeader from '../components/SectionHeader';
 
 import H2HSheet from '../components/H2HSheet';
 
 // ─── Shared Mock Data ────────────────────────────────────────────────────────
-const MOCK_PLAYERS_POOL = [
+const MOCK_PLAYERS_POOL = normalisePlayers([
   { id: 'p1', name: 'Alisson', club: 'BRA', position: 'GK', price: 6.0 },
   { id: 'p2', name: 'E. Martínez', club: 'ARG', position: 'GK', price: 6.0 },
   { id: 'p3', name: 'Courtois', club: 'BEL', position: 'GK', price: 6.0 },
@@ -31,7 +32,7 @@ const MOCK_PLAYERS_POOL = [
   { id: 'p35', name: 'Kane', club: 'ENG', position: 'FWD', price: 11.0 },
   { id: 'p36', name: 'Salah', club: 'EGY', position: 'FWD', price: 11.0 },
   { id: 'p37', name: 'Neymar', club: 'BRA', position: 'FWD', price: 10.5 },
-];
+]);
 
 const MOCK_SQUAD_PLAYERS = MOCK_PLAYERS_POOL.slice(0, 11);
 const MOCK_RIVAL_PLAYERS_L1 = MOCK_PLAYERS_POOL.slice(5, 16);
