@@ -7,6 +7,7 @@ import { useAuth } from '../hooks/useAuth';
 import { useDeadlineCountdown } from '../hooks/useDeadlineCountdown';
 import { useOnboarding } from '../hooks/useOnboarding';
 import OnboardingTour from '../components/OnboardingTour';
+import ConfirmModal from '../components/ConfirmModal';
 import PitchView from '../components/PitchView';
 import PlayerCard from '../components/PlayerCard';
 import SectionHeader from '../components/SectionHeader';
@@ -63,6 +64,8 @@ export default function SquadScreen() {
   // Transfer window lock (from matchday_deadlines table)
   const [windowLocked,       setWindowLocked]      = useState(false);
   const [windowDeadline,     setWindowDeadline]    = useState(null);
+  // Confirmation dialog state (FB-023)
+  const [confirm,            setConfirm]           = useState(null);
 
   // Live countdown hook — replaces static window lock badge
   const deadline = useDeadlineCountdown();
@@ -191,20 +194,47 @@ export default function SquadScreen() {
     setSelectedPlayer(prev => prev?.id === player.id ? null : player);
   };
 
+  // ── FB-022: formation validation ─────────────────────────────────────────
+  const MIN_FORMATION = { GK: 1, DEF: 3, MID: 2, FWD: 1 };
+  const validateFormation = (pitchPlayers) => {
+    const counts = { GK: 0, DEF: 0, MID: 0, FWD: 0 };
+    pitchPlayers.forEach(p => { if (counts[p.position] !== undefined) counts[p.position]++; });
+    for (const [pos, min] of Object.entries(MIN_FORMATION)) {
+      if (counts[pos] < min) return `This swap leaves you with only ${counts[pos]} ${pos} on the pitch (minimum ${min}).`;
+    }
+    return null;
+  };
+
   const handleSwap = async (p1, p2) => {
     try {
       setSaving(true);
       const isP1Bench = squadData.bench.some(b => b.id === p1.id);
       const isP2Bench = squadData.bench.some(b => b.id === p2.id);
-      if (isP1Bench === isP2Bench) { alert('Can only swap between field and bench.'); return; }
-      const pitchPlayer = isP1Bench ? p2 : p1;
-      const benchPlayer = isP1Bench ? p1 : p2;
-      const tempGrid    = pitchPlayer.gridClass;
-      const newPlayers   = squadData.players.map(p => p.id === pitchPlayer.id ? { ...benchPlayer, gridClass: tempGrid } : p);
-      const newBench     = squadData.bench.map(b   => b.id === benchPlayer.id ? { ...pitchPlayer, gridClass: '' }       : b);
+      if (isP1Bench === isP2Bench) {
+        alert('Can only swap between pitch and bench.');
+        return;
+      }
+      const pitchPlayer  = isP1Bench ? p2 : p1;
+      const benchPlayer  = isP1Bench ? p1 : p2;
+      const tempGrid     = pitchPlayer.gridClass;
+      const newPlayers   = squadData.players.map(p =>
+        p.id === pitchPlayer.id ? { ...benchPlayer, gridClass: tempGrid } : p
+      );
+      // FB-022: validate formation before committing
+      const formationError = validateFormation(newPlayers);
+      if (formationError) {
+        alert(formationError);
+        return;
+      }
+      const newBench     = squadData.bench.map(b =>
+        b.id === benchPlayer.id ? { ...pitchPlayer, gridClass: '' } : b
+      );
       const newCaptainId = squadData.captainId === pitchPlayer.id ? benchPlayer.id : squadData.captainId;
       setSquadData({ ...squadData, players: newPlayers, bench: newBench, captainId: newCaptainId });
-      await supabase.from('squads').update({ players: [...newPlayers, ...newBench].map(p => p.id), captain_id: newCaptainId }).eq('id', squadData.squadId);
+      await supabase.from('squads').update({
+        players:    [...newPlayers, ...newBench].map(p => p.id),
+        captain_id: newCaptainId,
+      }).eq('id', squadData.squadId);
     } catch (err) { console.error('Swap failed', err); }
     finally { setSelectedPlayer(null); setSwapMode(false); setSaving(false); }
   };
@@ -232,18 +262,69 @@ export default function SquadScreen() {
     finally { setSaving(false); }
   };
 
-  const handleSellPlayer = async () => {
+  // FB-021 + FB-023: confirm sell with captain/joker safety warnings
+  const handleSellPlayer = () => {
+    if (!selectedPlayer) return;
+    const isCaptain = selectedPlayer.id === squadData.captainId;
+    const isJoker   = selectedPlayer.id === todayJokerId;
+    const warnings  = [];
+    if (isCaptain) warnings.push('This player is your captain — selling them removes the armband.');
+    if (isJoker)   warnings.push('This player is your Daily Joker — selling them voids today\'s boost.');
+
+    setConfirm({
+      title:        `Remove ${selectedPlayer.name}?`,
+      body:         `${selectedPlayer.name} will be removed from your squad. Their slot opens up for a new signing.`,
+      warning:      warnings.length ? warnings.join(' ') : null,
+      confirmLabel: 'Remove',
+      danger:       true,
+      onConfirm:    doSellPlayer,
+    });
+  };
+
+  const doSellPlayer = async () => {
     try {
       setSaving(true);
-      const newPitch = squadData.players.filter(p => p.id !== selectedPlayer.id).map(p => p.id);
-      const newBench = squadData.bench.filter(p => p.id !== selectedPlayer.id).map(p => p.id);
-      await supabase.from('squads').update({ players: [...newPitch, ...newBench] }).eq('id', squadData.squadId);
-      setSquadData({ ...squadData, players: squadData.players.filter(p => p.id !== selectedPlayer.id), bench: squadData.bench.filter(p => p.id !== selectedPlayer.id) });
+      const player   = selectedPlayer;
+      const newPitch = squadData.players.filter(p => p.id !== player.id).map(p => p.id);
+      const newBench = squadData.bench.filter(p  => p.id !== player.id).map(p => p.id);
+      // FB-021: clear captain if selling the captain
+      const newCaptainId = squadData.captainId === player.id ? null : squadData.captainId;
+      await supabase.from('squads').update({
+        players:    [...newPitch, ...newBench],
+        captain_id: newCaptainId,
+      }).eq('id', squadData.squadId);
+      setSquadData({
+        ...squadData,
+        players:   squadData.players.filter(p => p.id !== player.id),
+        bench:     squadData.bench.filter(p  => p.id !== player.id),
+        captainId: newCaptainId,
+      });
+      if (todayJokerId === player.id) setTodayJokerId(null);
     } catch (err) { console.error(err); }
     finally { setSaving(false); setSelectedPlayer(null); }
   };
 
-  const toggleChip = async (chipKey) => {
+  // FB-023: chip toggle with confirmation (activating only — deactivating is safe)
+  const toggleChip = (chipKey) => {
+    const chip   = CHIPS.find(c => c.key === chipKey);
+    const curVal = squadData[chip.stateKey];
+    if (!curVal) {
+      // Activating — show confirm first
+      setConfirm({
+        title:        `Use ${chip.label}?`,
+        body:         chip.description,
+        warning:      'This cannot be undone for this matchday.',
+        confirmLabel: `Activate ${chip.label}`,
+        danger:       false,
+        onConfirm:    () => doToggleChip(chipKey),
+      });
+    } else {
+      // Deactivating is safe — no confirm needed
+      doToggleChip(chipKey);
+    }
+  };
+
+  const doToggleChip = async (chipKey) => {
     const chip   = CHIPS.find(c => c.key === chipKey);
     const curVal = squadData[chip.stateKey];
     try {
@@ -253,8 +334,20 @@ export default function SquadScreen() {
     } finally { setSaving(false); }
   };
 
+  // FB-023: roulette with confirmation
   const activateRoulette = () => {
     if (isRouletteSpinning || !squadData) return;
+    setConfirm({
+      title:        'Spin Captain Roulette?',
+      body:         'Your captain will be randomly selected from your entire squad. The result is final for this matchday.',
+      warning:      null,
+      confirmLabel: '🎰 Spin',
+      danger:       false,
+      onConfirm:    doActivateRoulette,
+    });
+  };
+
+  const doActivateRoulette = () => {
     setIsRouletteSpinning(true);
     const all = [...squadData.players, ...squadData.bench];
     let idx = 0;
@@ -542,6 +635,14 @@ export default function SquadScreen() {
   // ─────────────────────────────────────────────────────────────────────────
   return (
     <div className="min-h-screen bg-bg overflow-x-hidden">
+      {/* Confirmation dialog (FB-023) */}
+      {confirm && (
+        <ConfirmModal
+          {...confirm}
+          onCancel={() => setConfirm(null)}
+        />
+      )}
+
       {/* First-visit spotlight tour */}
       {showSquadTour && !loading && (
         <OnboardingTour
