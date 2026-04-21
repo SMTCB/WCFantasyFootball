@@ -74,10 +74,7 @@ export default function MarketScreen() {
 
       if (sData) {
         setMySquad(sData);
-        const ownedPrices = finalPlayers
-          .filter(p => sData.players.includes(p.id))
-          .reduce((acc, curr) => acc + Number(curr.price || 0), 0);
-        setBudget(100.0 - ownedPrices);
+        setBudget(Number(sData.budget_remaining ?? 100));
       } else {
         setMySquad({ id: null, players: [] });
         setBudget(100.0);
@@ -104,31 +101,37 @@ export default function MarketScreen() {
 
   const handleBuy = async (player) => {
     if (saving) return;
-    if (mySquad.players.length >= 15)           { alert('Squad is full! Sell someone first.'); return; }
-    if (stats.posCounts[player.position] >= POS_LIMITS[player.position]) { alert(`Max ${player.position}s reached.`); return; }
-    if ((stats.countryCounts[player.club] || 0) >= COUNTRY_LIMIT)        { alert(`Max 3 players from ${player.club}.`); return; }
-    if (budget < player.price)                   { alert('Not enough budget.'); return; }
-    try { setSaving(true); await upsertSquadPlayers([...mySquad.players, player.id]); }
+    if (mySquad.players.length >= 15)                                     { alert('Squad is full! Sell someone first.'); return; }
+    if (stats.posCounts[player.position] >= POS_LIMITS[player.position])  { alert(`Max ${player.position}s reached.`); return; }
+    if ((stats.countryCounts[player.club] || 0) >= COUNTRY_LIMIT)         { alert(`Max 3 players from ${player.club}.`); return; }
+    if (budget < player.price)                                             { alert('Not enough budget.'); return; }
+    const newBudget = Math.max(0, +(budget - player.price).toFixed(1));
+    try { setSaving(true); await upsertSquadPlayers([...mySquad.players, player.id], newBudget); }
     finally { setSaving(false); }
   };
 
   const handleSell = async (player) => {
     if (saving) return;
-    try { setSaving(true); await upsertSquadPlayers(mySquad.players.filter(pid => pid !== player.id)); }
+    const newBudget = +(budget + player.price).toFixed(1);
+    try { setSaving(true); await upsertSquadPlayers(mySquad.players.filter(pid => pid !== player.id), newBudget); }
     finally { setSaving(false); }
   };
 
-  const upsertSquadPlayers = async (newPlayerArray) => {
+  const upsertSquadPlayers = async (newPlayerArray, newBudget) => {
     const { data: authData } = await supabase.auth.getUser();
     const userId = authData?.user?.id || '00000000-0000-0000-0000-000000000000';
     if (mySquad.id) {
-      await supabase.from('squads').update({ players: newPlayerArray }).eq('id', mySquad.id);
+      await supabase.from('squads')
+        .update({ players: newPlayerArray, budget_remaining: newBudget })
+        .eq('id', mySquad.id);
     } else {
-      const res = await supabase.from('squads').insert({ user_id: userId, league_id: null, matchday_id: 'md1', players: newPlayerArray }).select().single();
+      const res = await supabase.from('squads')
+        .insert({ user_id: userId, league_id: null, matchday_id: 'md1', players: newPlayerArray, budget_remaining: newBudget })
+        .select().single();
       if (res.data) setMySquad(res.data);
     }
-    setMySquad(prev => ({ ...prev, players: newPlayerArray }));
-    fetchMarketParams();
+    setMySquad(prev => ({ ...prev, players: newPlayerArray, budget_remaining: newBudget }));
+    setBudget(newBudget);
   };
 
   const filteredPlayers = players.filter(p => filterPos === 'ALL' || p.position === filterPos);

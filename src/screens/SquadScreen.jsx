@@ -125,7 +125,7 @@ export default function SquadScreen() {
 
       setSquadData({
         squadId:         squad.id,
-        budget:          fallbackSquad.budget,
+        budget:          { current: Number(squad.budget_remaining ?? 17), total: 100 },
         captainId:       squad.captain_id || 'p1',
         players:         pitchPlayers,
         bench:           benchPlayers,
