@@ -55,6 +55,9 @@ export default function SquadScreen() {
   const [desktopTab,         setDesktopTab]        = useState('bench');
   // Danger banner dismissed on mobile
   const [dangerDismissed,    setDangerDismissed]   = useState(false);
+  // Transfer window lock (from matchday_deadlines table)
+  const [windowLocked,       setWindowLocked]      = useState(false);
+  const [windowDeadline,     setWindowDeadline]    = useState(null);
 
   useEffect(() => { fetchSquad(); fetchDailyStatus(); }, []);
 
@@ -79,6 +82,15 @@ export default function SquadScreen() {
       setLoading(true);
       const userId = '00000000-0000-0000-0000-000000000000';
       const today  = new Date().toISOString().split('T')[0];
+
+      // ── Transfer window lock check ──────────────────────────────────────────
+      const { data: deadlineRow } = await supabase
+        .from('matchday_deadlines').select('deadline_at').eq('matchday_id', 'md1').maybeSingle();
+      if (deadlineRow?.deadline_at) {
+        const deadline = new Date(deadlineRow.deadline_at);
+        setWindowDeadline(deadline);
+        setWindowLocked(new Date() >= deadline);
+      }
 
       const { data: jokerRec } = await supabase.from('daily_jokers').select('player_id')
         .eq('user_id', userId).eq('match_date', today).maybeSingle();
@@ -519,9 +531,9 @@ export default function SquadScreen() {
           </div>
         </div>
         <div className="flex items-center gap-3">
-          {locked_at && (
+          {(locked_at || windowLocked) && (
             <div className="text-[9px] font-black uppercase tracking-widest px-2 py-1 rounded-sm" style={{ color: '#F03A3A', border: '1px solid rgba(240,58,58,0.3)', fontFamily: 'Barlow Condensed, sans-serif' }}>
-              🔒 Locked
+              🔒 {windowLocked ? 'Window Closed' : 'Locked'}
             </div>
           )}
           <div className="text-right">

@@ -29,6 +29,8 @@ export default function MarketScreen() {
   const [filterPos,    setFilterPos]    = useState('ALL');
   const [budget,       setBudget]       = useState(100.0);
   const [saving,       setSaving]       = useState(false);
+  const [isLocked,     setIsLocked]     = useState(false);
+  const [deadlineAt,   setDeadlineAt]   = useState(null);
 
   useEffect(() => { fetchMarketParams(); }, []);
 
@@ -37,6 +39,18 @@ export default function MarketScreen() {
       setLoading(true);
       const { data: authData } = await supabase.auth.getUser();
       const userId = authData?.user?.id || '00000000-0000-0000-0000-000000000000';
+
+      // ── Transfer window lock — always use server time, never client clock ──
+      const [{ data: nowRow }, { data: deadlineRow }] = await Promise.all([
+        supabase.rpc('get_server_time').single().catch(() => ({ data: null })),
+        supabase.from('matchday_deadlines').select('deadline_at').eq('matchday_id', 'md1').maybeSingle(),
+      ]);
+      // Fallback: if RPC not available, use JS Date (acceptable for UI-only lock)
+      const serverNow  = nowRow ? new Date(nowRow) : new Date();
+      const deadline   = deadlineRow?.deadline_at ? new Date(deadlineRow.deadline_at) : null;
+      const locked     = deadline ? serverNow >= deadline : false;
+      setIsLocked(locked);
+      setDeadlineAt(deadline);
 
       const { data: pData }    = await supabase.from('players').select('*').order('price', { ascending: false });
       const { data: intelData } = await supabase.from('player_status').select('*');
@@ -101,6 +115,7 @@ export default function MarketScreen() {
 
   const handleBuy = async (player) => {
     if (saving) return;
+    if (isLocked)                                                          { alert('Transfers are locked until after the match.'); return; }
     if (mySquad.players.length >= 15)                                     { alert('Squad is full! Sell someone first.'); return; }
     if (stats.posCounts[player.position] >= POS_LIMITS[player.position])  { alert(`Max ${player.position}s reached.`); return; }
     if ((stats.countryCounts[player.club] || 0) >= COUNTRY_LIMIT)         { alert(`Max 3 players from ${player.club}.`); return; }
@@ -112,6 +127,7 @@ export default function MarketScreen() {
 
   const handleSell = async (player) => {
     if (saving) return;
+    if (isLocked) { alert('Transfers are locked until after the match.'); return; }
     const newBudget = +(budget + player.price).toFixed(1);
     try { setSaving(true); await upsertSquadPlayers(mySquad.players.filter(pid => pid !== player.id), newBudget); }
     finally { setSaving(false); }
@@ -137,8 +153,34 @@ export default function MarketScreen() {
   const filteredPlayers = players.filter(p => filterPos === 'ALL' || p.position === filterPos);
   const squadCount = mySquad?.players?.length || 0;
 
+  // Format deadline for display
+  const deadlineLabel = deadlineAt
+    ? deadlineAt.toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+    : null;
+
   return (
     <div className="min-h-screen bg-bg">
+
+      {/* ── Transfer Window Lock Banner ─────────────────────── */}
+      {isLocked && (
+        <div
+          className="flex items-center gap-3 px-5 py-3"
+          style={{ background: 'rgba(240,58,58,0.10)', borderBottom: '1px solid rgba(240,58,58,0.25)' }}
+        >
+          <span className="text-base">🔒</span>
+          <div>
+            <div
+              className="text-[11px] font-black uppercase tracking-widest"
+              style={{ color: '#F03A3A', fontFamily: 'Barlow Condensed, sans-serif' }}
+            >
+              Transfer Window Closed
+            </div>
+            <div className="text-[10px]" style={{ color: '#7D8A96' }}>
+              Transfers are locked until the matchday results are published.
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ── Sticky Header ───────────────────────────────────── */}
       <div
@@ -153,7 +195,12 @@ export default function MarketScreen() {
         {/* Title + stats row */}
         <div className="px-5 pt-3.5 pb-2.5 flex items-center justify-between">
           <div>
-            <div className="fz-label" style={{ color: '#3D4B5C' }}>Transfer Window</div>
+            <div
+              className="fz-label"
+              style={{ color: isLocked ? '#F03A3A' : '#3D4B5C' }}
+            >
+              {isLocked ? '🔒 Window Closed' : 'Transfer Window'}
+            </div>
             <div
               className="text-[24px] font-black uppercase leading-tight tracking-tight"
               style={{ fontFamily: 'Barlow Condensed, sans-serif', color: '#F0F2F5' }}
@@ -404,7 +451,24 @@ export default function MarketScreen() {
                     </div>
                   </div>
 
-                  {isOwned ? (
+                  {isLocked ? (
+                    <div
+                      className="min-w-[60px] py-2 px-3 rounded-sm text-center"
+                      style={{
+                        background: 'rgba(240,58,58,0.07)',
+                        border: '1px solid rgba(240,58,58,0.18)',
+                        color: '#F03A3A',
+                        fontFamily: 'Barlow Condensed, sans-serif',
+                        fontSize: '9px',
+                        fontWeight: 800,
+                        letterSpacing: '0.08em',
+                        textTransform: 'uppercase',
+                        opacity: 0.7,
+                      }}
+                    >
+                      🔒
+                    </div>
+                  ) : isOwned ? (
                     <button
                       onClick={() => handleSell(p)}
                       disabled={saving}
