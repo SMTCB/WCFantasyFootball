@@ -2,7 +2,7 @@
 ## World Cup 2026 Fantasy Football Platform
 
 **Stack:** React 19 + Supabase | **Target Launch:** June 2026
-**Last updated:** 2026-04-21 | **Completed:** FB-001, FB-002 (auth on-hold), FB-006, FB-007, FB-008, FB-016
+**Last updated:** 2026-04-21 | **Completed:** FB-001, FB-002 (auth on-hold), FB-003, FB-006, FB-007, FB-008, FB-016
 
 > Items are ordered strictly by criticality and urgency within each priority tier.
 > P0 items are sequenced by dependency chain — the first item must be done before the next.
@@ -111,7 +111,7 @@ FB-019  Push notification infrastructure
 
 ---
 
-### FB-003
+### FB-003 ✅ COMPLETED — 2026-04-21
 **Title:** Row-level security (RLS) — enable and harden all Supabase tables
 
 **Priority:** P0 · **Complexity:** M
