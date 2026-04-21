@@ -4,6 +4,7 @@ import { squad as fallbackSquad } from '../data/squad';
 import { getDangerZonePlayers, normalizeIntelligence, LINEUP_STATUS } from '../lib/intelligence';
 import { normalisePlayer } from '../lib/players';
 import { useAuth } from '../hooks/useAuth';
+import { useDeadlineCountdown } from '../hooks/useDeadlineCountdown';
 import PitchView from '../components/PitchView';
 import PlayerCard from '../components/PlayerCard';
 import SectionHeader from '../components/SectionHeader';
@@ -60,6 +61,12 @@ export default function SquadScreen() {
   // Transfer window lock (from matchday_deadlines table)
   const [windowLocked,       setWindowLocked]      = useState(false);
   const [windowDeadline,     setWindowDeadline]    = useState(null);
+
+  // Live countdown hook — replaces static window lock badge
+  const deadline = useDeadlineCountdown();
+
+  // Sync live countdown → windowLocked so chip/joker guards stay up to date
+  useEffect(() => { if (deadline.isLocked) setWindowLocked(true); }, [deadline.isLocked]);
 
   useEffect(() => { fetchSquad(); fetchDailyStatus(); }, [user]);
 
@@ -530,9 +537,15 @@ export default function SquadScreen() {
           </div>
         </div>
         <div className="flex items-center gap-3">
-          {(locked_at || windowLocked) && (
-            <div className="text-[9px] font-black uppercase tracking-widest px-2 py-1 rounded-sm" style={{ color: '#F03A3A', border: '1px solid rgba(240,58,58,0.3)', fontFamily: 'Barlow Condensed, sans-serif' }}>
-              🔒 {windowLocked ? 'Window Closed' : 'Locked'}
+          {!deadline.loading && (
+            <div className="text-right">
+              <div className="fz-label" style={{ color: '#3D4B5C' }}>Transfers</div>
+              <div
+                className="text-[11px] font-black uppercase leading-tight tabular-nums"
+                style={{ fontFamily: 'Barlow Condensed, sans-serif', color: deadline.color }}
+              >
+                {deadline.isLocked ? '🔒 Closed' : deadline.timeLeft}
+              </div>
             </div>
           )}
           <div className="text-right">
