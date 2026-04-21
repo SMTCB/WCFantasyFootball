@@ -41,11 +41,25 @@ There is no "slack sprint." Every week of this runway is load-bearing. Features 
 - [x] **Supabase Auth built (2026-04-21):** Full email + password auth system complete (AuthContext, useAuth hook, ProtectedRoute, AuthScreen). Intentionally inactive — gated behind `VITE_AUTH_ENABLED=false` for the showcase period. All screens already use `useAuth()` hook; zero hardcoded UUIDs remain. Activate by setting `VITE_AUTH_ENABLED=true` in Vercel env vars — no code changes or redeploy needed.
 - [ ] **Real-time subscription baseline:** Supabase Realtime channel subscribed to `matchday_scores` inserts; Live screen updates without page refresh
 
+#### P0 — Completed Ahead of Schedule
+- [x] **CI/CD pipeline live (2026-04-21 · FB-017):** GitHub Actions workflow (lint → build → Playwright E2E) on every PR/push to `main`. Separate `migrate.yml` for manual DB migrations with dry-run gate. Chromium + mobile-chrome projects. Artifacts on failure. Supabase keys stored as GitHub Secrets.
+- [x] **Formation validation server-guarded (2026-04-21 · FB-022):** Client-side `validateFormation()` blocks illegal swaps (min 1 GK, 3 DEF, 2 MID, 1 FWD on pitch). Consistent with scoring engine rules.
+- [x] **Transfer deadline countdown (2026-04-21 · FB-010):** `useDeadlineCountdown` hook with server-clock drift correction. Live ticking countdown in SquadScreen header; colour-coded urgency (red < 1 h, amber < 24 h).
+- [x] **League create & join — atomic RPCs (2026-04-21 · FB-025):** `create_league()` and `join_league_by_code()` Postgres RPCs with `SECURITY DEFINER`. Collision-safe join-code generation (up to 10 retry attempts). Inline error translation (LEAGUE_NOT_FOUND, ALREADY_MEMBER, LEAGUE_FULL). Full LeagueScreen UI with empty state, create form, join-by-code form.
+- [x] **League invite card (2026-04-21 · FB-026):** `LeagueInviteCard` with large copyable join code, WhatsApp share deep link, "Copy Link," and html2canvas PNG export.
+- [x] **Top Scorer Prediction persistence (2026-04-21 · FB-020):** Prediction upserts to `top_scorer_predictions` table (`user_id, matchday_id` conflict target). Loads from DB on mount; falls back gracefully if empty.
+- [x] **Chip & captain confirm gates (2026-04-21 · FB-023):** All destructive actions (chip activation, Captain Roulette, sell player) gated behind `ConfirmModal` with context-specific warnings for captain/joker conflicts.
+- [x] **Joker market polish (2026-04-21 · FB-024):** Retry on fetch error, empty state, squad overlap detection, player-plays-today highlight, loading skeleton.
+
 #### P1 — Target Complete
 - [ ] Squad screen reads live `squads` table (not mock); `PlayerCard` status dots fed from real `players.status` field
 - [ ] `DangerZone` / injury alerts fed from a manually-curated `player_alerts` table (no external API dependency yet — ops team updates manually pre-match)
 - [ ] Transfer cost logic reads from live `fixtures` (locks when fixture kickoff passes)
 - [ ] Bracket Challenge reads from `fixtures` table (phase, date, teams)
+
+#### P1 — Completed Ahead of Schedule
+- [x] **Onboarding wizard + spotlight tour (2026-04-21 · FB-018):** 4-step `OnboardingWizard` (Welcome → Build Squad → Join League → Ready) with confetti on final step, keyboard navigation, skip. `OnboardingTour` spotlight overlay targeting `data-tour="<id>"` attributes; async element retry (100ms/300ms/600ms). `useOnboarding` hook persists state in localStorage. Tours wired to SquadScreen and MarketScreen.
+- [x] **Sell-player confirm with warnings (2026-04-21 · FB-021):** `handleSellPlayer` shows `ConfirmModal` with amber warning strip when selling captain or today's joker. `doSellPlayer` atomically clears `captain_id` in the squads table when selling the captain.
 
 #### Cut If Behind
 - Captain Roulette mode (entertaining but zero retention impact pre-launch)
@@ -677,5 +691,5 @@ Sep 10  ── CHAMPIONS LEAGUE FANTASY LAUNCH
 ---
 
 *Document owner: VP of Product*
-*Last updated: April 20, 2026*
+*Last updated: April 21, 2026*
 *Next review: May 4, 2026 (Sprint 1 close)*
