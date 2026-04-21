@@ -116,38 +116,47 @@ export default function MarketScreen() {
 
   const handleBuy = async (player) => {
     if (saving) return;
+    // Client-side guards for instant UX feedback (server re-validates everything)
     if (isLocked)                                                          { alert('Transfers are locked until after the match.'); return; }
     if (mySquad.players.length >= 15)                                     { alert('Squad is full! Sell someone first.'); return; }
     if (stats.posCounts[player.position] >= POS_LIMITS[player.position])  { alert(`Max ${player.position}s reached.`); return; }
     if ((stats.countryCounts[player.club] || 0) >= COUNTRY_LIMIT)         { alert(`Max 3 players from ${player.club}.`); return; }
     if (budget < player.price)                                             { alert('Not enough budget.'); return; }
-    const newBudget = Math.max(0, +(budget - player.price).toFixed(1));
-    try { setSaving(true); await upsertSquadPlayers([...mySquad.players, player.id], newBudget); }
+    try { setSaving(true); await processTransfer('buy', player); }
     finally { setSaving(false); }
   };
 
   const handleSell = async (player) => {
     if (saving) return;
     if (isLocked) { alert('Transfers are locked until after the match.'); return; }
-    const newBudget = +(budget + player.price).toFixed(1);
-    try { setSaving(true); await upsertSquadPlayers(mySquad.players.filter(pid => pid !== player.id), newBudget); }
+    try { setSaving(true); await processTransfer('sell', player); }
     finally { setSaving(false); }
   };
 
-  const upsertSquadPlayers = async (newPlayerArray, newBudget) => {
-    const userId = user?.id;
-    if (mySquad.id) {
-      await supabase.from('squads')
-        .update({ players: newPlayerArray, budget_remaining: newBudget })
-        .eq('id', mySquad.id);
-    } else {
-      const res = await supabase.from('squads')
-        .insert({ user_id: userId, league_id: null, matchday_id: 'md1', players: newPlayerArray, budget_remaining: newBudget })
-        .select().single();
-      if (res.data) setMySquad(res.data);
+  // All transfers go through the Edge Function — server validates the deadline
+  // using its own UTC clock (not the client's). This is the hard enforcement gate.
+  const processTransfer = async (action, player) => {
+    const { data, error } = await supabase.functions.invoke('process-transfer', {
+      body: {
+        action,
+        player_id:    player.id,
+        player_price: player.price,
+        matchday_id:  'md1',
+      },
+    });
+
+    if (error || !data?.ok) {
+      const msg  = data?.error  ?? error?.message ?? 'Transfer failed — please try again.';
+      const code = data?.code   ?? '';
+      // If server says window is closed, snap the UI into locked state immediately
+      if (code === 'TRANSFER_WINDOW_CLOSED') setIsLocked(true);
+      alert(msg);
+      return;
     }
-    setMySquad(prev => ({ ...prev, players: newPlayerArray, budget_remaining: newBudget }));
-    setBudget(newBudget);
+
+    // Update local state from server response — single source of truth
+    setMySquad(prev => ({ ...prev, players: data.players, budget_remaining: data.budget_remaining }));
+    setBudget(data.budget_remaining);
   };
 
   const filteredPlayers = players.filter(p => filterPos === 'ALL' || p.position === filterPos);
