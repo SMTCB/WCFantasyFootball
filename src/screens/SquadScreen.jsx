@@ -11,6 +11,7 @@ import ConfirmModal from '../components/ConfirmModal';
 import PitchView from '../components/PitchView';
 import PlayerCard from '../components/PlayerCard';
 import SectionHeader from '../components/SectionHeader';
+import PowerToolCard from '../components/PowerToolCard';
 
 // ── Position order ────────────────────────────────────────────────────────────
 const POS_ORDER = ['GK', 'DEF', 'MID', 'FWD'];
@@ -695,26 +696,34 @@ export default function SquadScreen() {
         {/* Tab strip */}
         <div className="flex" style={{ borderBottom: '1px solid rgba(255,255,255,0.07)', background: '#0D1117' }}>
           {[
-            { id: 'pitch', label: '⚽ Pitch' },
-            { id: 'squad', label: '≡ Squad' },
-            { id: 'tools', label: '⚙ Tools' },
+            { id: 'pitch', label: '⚽', text: 'Pitch' },
+            { id: 'squad', label: '📋', text: 'Squad' },
+            { id: 'tools', label: '⚙️', text: 'Tools' },
           ].map(tab => (
             <button
               key={tab.id}
               onClick={() => setMobileTab(tab.id)}
-              className="flex-1 py-3 text-[11px] font-black uppercase tracking-widest transition-all relative"
+              className="flex-1 py-3 text-center transition-all relative"
               style={{
                 fontFamily: 'Barlow Condensed, sans-serif',
-                color: mobileTab === tab.id ? '#00C4E8' : '#3D4B5C',
-                background: 'transparent',
+                background: mobileTab === tab.id ? 'rgba(0,196,232,0.08)' : 'transparent',
+                borderRadius: mobileTab === tab.id ? '4px 4px 0 0' : '0',
               }}
             >
-              {tab.label}
+              <div style={{ fontSize: '18px', marginBottom: '2px' }}>{tab.label}</div>
+              <div
+                className="text-[9px] font-black uppercase tracking-widest"
+                style={{
+                  color: mobileTab === tab.id ? '#00C4E8' : '#3D4B5C',
+                }}
+              >
+                {tab.text}
+              </div>
               {mobileTab === tab.id && (
-                <div className="absolute bottom-0 left-0 right-0 h-[2px] rounded-t-full" style={{ background: '#00C4E8' }} />
+                <div className="absolute bottom-0 left-0 right-0 h-[3px] rounded-t-full" style={{ background: '#00C4E8' }} />
               )}
               {tab.id === 'tools' && dangerPlayers.length > 0 && (
-                <div className="absolute top-2 right-[calc(50%-18px)] w-1.5 h-1.5 rounded-full" style={{ background: '#F03A3A' }} />
+                <div className="absolute top-1 right-1.5 w-1.5 h-1.5 rounded-full" style={{ background: '#F03A3A' }} />
               )}
             </button>
           ))}
@@ -774,48 +783,165 @@ export default function SquadScreen() {
         {mobileTab === 'tools' && (
           <div className="pb-6">
 
-            {/* Active chips summary */}
-            {(squadData.isWildcard || squadData.isTripleCaptain) && (
-              <div className="mx-4 mt-4 mb-1 flex gap-2">
-                {squadData.isWildcard && (
-                  <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded" style={{ background: 'rgba(24,201,107,0.1)', border: '1px solid rgba(24,201,107,0.25)' }}>
-                    <span className="text-xs">🃏</span>
-                    <span className="text-[9px] font-black uppercase tracking-widest" style={{ color: '#18C96B' }}>Wildcard Active</span>
-                  </div>
-                )}
-                {squadData.isTripleCaptain && (
-                  <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded" style={{ background: 'rgba(240,180,0,0.1)', border: '1px solid rgba(240,180,0,0.25)' }}>
-                    <span className="text-xs">🚀</span>
-                    <span className="text-[9px] font-black uppercase tracking-widest" style={{ color: '#F0B400' }}>Triple Capt. Active</span>
-                  </div>
-                )}
+            {/* Section 1: Active Features Summary */}
+            {(squadData.isWildcard || squadData.isTripleCaptain || jokerPlayer) && (
+              <div className="mx-4 mt-4 mb-4 pb-3 border-b border-white/5">
+                <div className="text-[9px] font-black uppercase tracking-[0.1em]" style={{ color: '#3D4B5C', marginBottom: '8px' }}>
+                  Active Features
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {squadData.isWildcard && (
+                    <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded" style={{ background: 'rgba(24,201,107,0.1)', border: '1px solid rgba(24,201,107,0.25)' }}>
+                      <span className="text-xs">🃏</span>
+                      <span className="text-[8px] font-black uppercase tracking-widest" style={{ color: '#18C96B' }}>Wildcard</span>
+                    </div>
+                  )}
+                  {squadData.isTripleCaptain && (
+                    <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded" style={{ background: 'rgba(240,180,0,0.1)', border: '1px solid rgba(240,180,0,0.25)' }}>
+                      <span className="text-xs">🚀</span>
+                      <span className="text-[8px] font-black uppercase tracking-widest" style={{ color: '#F0B400' }}>Triple Capt.</span>
+                    </div>
+                  )}
+                  {jokerPlayer && (
+                    <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded" style={{ background: 'rgba(157,95,245,0.1)', border: '1px solid rgba(157,95,245,0.25)' }}>
+                      <span className="text-xs">🔒</span>
+                      <span className="text-[8px] font-black uppercase tracking-widest" style={{ color: '#9D5FF5' }}>Joker: {jokerPlayer.name.split(' ')[0]}</span>
+                    </div>
+                  )}
+                </div>
               </div>
             )}
 
-            <div className="mt-4" data-tour="squad-chips">
-              <SectionHeader title="Power Chips" />
-              <div className="mt-3">
-                {CHIPS.map(chip => <ChipCard key={chip.key} chip={chip} />)}
+            {/* Section 2: Power Tools */}
+            <div className="mx-4" data-tour="squad-power-tools">
+              <div className="text-[11px] font-black uppercase tracking-[0.1em] mb-3" style={{ color: '#F0B400' }}>
+                ⚡ Power Tools
+              </div>
+              <div className="grid grid-cols-3 gap-2 mb-4">
+                {/* Wildcard */}
+                <PowerToolCard
+                  icon="🃏"
+                  label="Wildcard"
+                  isActive={squadData.isWildcard}
+                  accentColor="#18C96B"
+                  bgColor="rgba(24,201,107,0.08)"
+                  borderColor="rgba(24,201,107,0.15)"
+                  actionLabel={squadData.isWildcard ? 'Active' : 'Activate'}
+                  onAction={() => {
+                    if (!isLocked) {
+                      setConfirm({
+                        title: squadData.isWildcard ? 'Deactivate Wildcard?' : 'Activate Wildcard?',
+                        message: squadData.isWildcard
+                          ? 'You will no longer have unlimited free transfers.'
+                          : 'You\'ll have unlimited free transfers this matchday. 1 use per season.',
+                        onConfirm: () => handleChipToggle('wildcard'),
+                        confirmLabel: 'Confirm',
+                        warning: squadData.isWildcard ? null : 'This action cannot be undone this gameweek.',
+                      });
+                    }
+                  }}
+                />
+
+                {/* Triple Captain */}
+                <PowerToolCard
+                  icon="🚀"
+                  label="Triple Cap."
+                  isActive={squadData.isTripleCaptain}
+                  accentColor="#F0B400"
+                  bgColor="rgba(240,180,0,0.08)"
+                  borderColor="rgba(240,180,0,0.15)"
+                  actionLabel={squadData.isTripleCaptain ? 'Active' : 'Activate'}
+                  onAction={() => {
+                    if (!isLocked) {
+                      setConfirm({
+                        title: squadData.isTripleCaptain ? 'Deactivate Triple Captain?' : 'Activate Triple Captain?',
+                        message: squadData.isTripleCaptain
+                          ? 'Your captain will earn normal points.'
+                          : 'Your captain will earn 3× points this matchday. 1 use per season.',
+                        onConfirm: () => handleChipToggle('triple_captain'),
+                        confirmLabel: 'Confirm',
+                        warning: squadData.isTripleCaptain ? null : 'This action cannot be undone this gameweek.',
+                      });
+                    }
+                  }}
+                />
+
+                {/* Roulette */}
+                <PowerToolCard
+                  icon="🎰"
+                  label="Roulette"
+                  isActive={false}
+                  accentColor="#F0B400"
+                  bgColor="rgba(240,180,0,0.08)"
+                  borderColor="rgba(240,180,0,0.15)"
+                  actionLabel="Spin"
+                  onAction={() => {
+                    if (!isLocked && captainId) {
+                      handleRouletteStart();
+                    }
+                  }}
+                />
               </div>
             </div>
 
-            <div className="mt-2">
-              <SectionHeader title="Captain Tools" />
-              <div className="mt-3">
-                <RouletteCard />
+            {/* Section 3: Daily Joker */}
+            <div className="mx-4 mb-4">
+              <div className="p-3 rounded-lg" style={{ background: '#0D1117', border: '1.5px solid rgba(157,95,245,0.15)' }}>
+                <div style={{ fontSize: '32px', marginBottom: '4px', textAlign: 'center', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))' }}>
+                  🃏
+                </div>
+                <div style={{
+                  fontSize: '12px',
+                  fontFamily: 'Barlow Condensed, sans-serif',
+                  fontWeight: 900,
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.05em',
+                  color: '#9D5FF5',
+                  textAlign: 'center',
+                  marginBottom: '4px',
+                }}>
+                  Daily Joker – Your 16th Man
+                </div>
+                <div style={{
+                  fontSize: '10px',
+                  color: 'rgba(240,242,245,0.6)',
+                  textAlign: 'center',
+                  marginBottom: '8px',
+                  lineHeight: 1.4,
+                  fontFamily: 'DM Sans, sans-serif',
+                }}>
+                  Pick one extra player outside your 15. Exempt from country limits.
+                </div>
+                <button
+                  onClick={() => setIsJokerPickerOpen(true)}
+                  disabled={isLocked}
+                  style={{
+                    width: '100%',
+                    padding: '8px 12px',
+                    background: jokerPlayer ? 'rgba(157,95,245,0.15)' : 'rgba(157,95,245,0.25)',
+                    color: '#9D5FF5',
+                    border: '1px solid rgba(157,95,245,0.3)',
+                    borderRadius: '6px',
+                    fontSize: '10px',
+                    fontFamily: 'Barlow Condensed, sans-serif',
+                    fontWeight: 700,
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.05em',
+                    cursor: isLocked ? 'not-allowed' : 'pointer',
+                    opacity: isLocked ? 0.5 : 1,
+                  }}
+                >
+                  {jokerPlayer ? `✓ Set: ${jokerPlayer.name}` : 'Pick Joker'}
+                </button>
               </div>
             </div>
 
-            <div className="mt-2">
-              <SectionHeader title="Daily Joker" />
+            {/* Section 4: Player Status */}
+            <div className="mx-4">
+              <SectionHeader title="⚠️ Player Status" accent="red" />
               <div className="mt-3">
-                <JokerCard />
+                <DangerList />
               </div>
-            </div>
-
-            <div className="mt-2">
-              <SectionHeader title="Player Status" accent="gold" />
-              <DangerList />
             </div>
           </div>
         )}

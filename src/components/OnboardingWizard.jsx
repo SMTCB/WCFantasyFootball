@@ -161,17 +161,18 @@ export default function OnboardingWizard({ onComplete, onSkip }) {
   return (
     <div
       style={{
-        position:   'fixed',
-        inset:      0,
-        zIndex:     9999,
-        background: 'rgba(7, 10, 15, 0.97)',
-        display:    'flex',
+        position:      'fixed',
+        inset:         0,
+        zIndex:        9999,
+        background:    'rgba(7, 10, 15, 0.97)',
+        display:       'flex',
         flexDirection: 'column',
-        alignItems: 'center',
+        alignItems:    'center',
         justifyContent: 'center',
-        padding:    '24px',
-        opacity:    visible && !exiting ? 1 : 0,
-        transition: 'opacity 0.35s ease',
+        padding:       '24px',
+        opacity:       visible && !exiting ? 1 : 0,
+        transition:    'opacity 0.35s ease',
+        pointerEvents: visible && !exiting ? 'auto' : 'none',
       }}
     >
       {/* Ambient grid */}

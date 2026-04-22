@@ -156,7 +156,7 @@ export default function OnboardingTour({ steps, onComplete, onSkip }) {
       };
 
   return (
-    <div style={{ opacity: visible ? 1 : 0, transition: 'opacity 0.3s ease' }}>
+    <div style={{ opacity: visible ? 1 : 0, transition: 'opacity 0.3s ease', pointerEvents: visible ? 'auto' : 'none' }}>
       {/* Overlay / cutout */}
       <div style={overlayStyle} />
 

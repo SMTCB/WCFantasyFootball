@@ -4,6 +4,16 @@ import { test, expect } from '@playwright/test';
 const ROUTES = ['/', '/squad', '/league', '/live', '/market', '/recap', '/bracket'];
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
+
+// Skip onboarding wizard by setting localStorage flags BEFORE page loads
+async function skipOnboarding(page) {
+  await page.addInitScript(() => {
+    localStorage.setItem('forzakit_onboarding_done', 'true');
+    localStorage.setItem('forzakit_tour_squad_done', 'true');
+    localStorage.setItem('forzakit_tour_market_done', 'true');
+  });
+}
+
 async function waitForContent(page) {
   // Wait for React to hydrate — no skeleton loaders or spinners visible
   await page.waitForLoadState('networkidle', { timeout: 8000 }).catch(() => {});
@@ -17,6 +27,7 @@ test.describe('Screen loading', () => {
       const errors = [];
       page.on('pageerror', err => errors.push(err.message));
 
+      await skipOnboarding(page);
       await page.goto(route);
       await waitForContent(page);
 
@@ -33,6 +44,7 @@ test.describe('Screen loading', () => {
 // ── 2. Navigation ─────────────────────────────────────────────────────────────
 test.describe('Navigation', () => {
   test('desktop sidebar is visible at 1440px', async ({ page }) => {
+    await skipOnboarding(page);
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.goto('/');
     await waitForContent(page);
@@ -47,6 +59,7 @@ test.describe('Navigation', () => {
   });
 
   test('mobile bottom nav is visible at 375px', async ({ page }) => {
+    await skipOnboarding(page);
     await page.setViewportSize({ width: 375, height: 812 });
     await page.goto('/');
     await waitForContent(page);
@@ -56,6 +69,7 @@ test.describe('Navigation', () => {
   });
 
   test('desktop sidebar navigation works', async ({ page }) => {
+    await skipOnboarding(page);
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.goto('/');
     await waitForContent(page);
@@ -69,6 +83,7 @@ test.describe('Navigation', () => {
   });
 
   test('mobile bottom nav navigation works', async ({ page }) => {
+    await skipOnboarding(page);
     await page.setViewportSize({ width: 375, height: 812 });
     await page.goto('/');
     await waitForContent(page);
@@ -86,6 +101,7 @@ test.describe('Navigation', () => {
 // ── 3. Home Screen ────────────────────────────────────────────────────────────
 test.describe('HomeScreen', () => {
   test.beforeEach(async ({ page }) => {
+    await skipOnboarding(page);
     await page.goto('/');
     await waitForContent(page);
   });
@@ -129,6 +145,7 @@ test.describe('HomeScreen', () => {
 // ── 4. Squad Screen ───────────────────────────────────────────────────────────
 test.describe('SquadScreen', () => {
   test.beforeEach(async ({ page }) => {
+    await skipOnboarding(page);
     await page.goto('/squad');
     await waitForContent(page);
   });
@@ -189,6 +206,7 @@ test.describe('SquadScreen', () => {
 // ── 5. Market Screen ─────────────────────────────────────────────────────────
 test.describe('MarketScreen', () => {
   test.beforeEach(async ({ page }) => {
+    await skipOnboarding(page);
     await page.goto('/market');
     await waitForContent(page);
   });
@@ -240,6 +258,7 @@ test.describe('MarketScreen', () => {
 // ── 6. League Screen ──────────────────────────────────────────────────────────
 test.describe('LeagueScreen', () => {
   test.beforeEach(async ({ page }) => {
+    await skipOnboarding(page);
     await page.goto('/league');
     await waitForContent(page);
   });
@@ -259,6 +278,7 @@ test.describe('LeagueScreen', () => {
 // ── 7. Live Screen ────────────────────────────────────────────────────────────
 test.describe('LiveScreen', () => {
   test.beforeEach(async ({ page }) => {
+    await skipOnboarding(page);
     await page.goto('/live');
     await waitForContent(page);
   });
@@ -285,6 +305,7 @@ test.describe('LiveScreen', () => {
 // ── 8. Recap Screen ───────────────────────────────────────────────────────────
 test.describe('RecapScreen', () => {
   test('loads without crashing', async ({ page }) => {
+    await skipOnboarding(page);
     const errors = [];
     page.on('pageerror', e => errors.push(e.message));
     await page.goto('/recap');
@@ -293,6 +314,7 @@ test.describe('RecapScreen', () => {
   });
 
   test('shows recap content', async ({ page }) => {
+    await skipOnboarding(page);
     await page.goto('/recap');
     await waitForContent(page);
     const body = await page.locator('body').innerText();
@@ -303,6 +325,7 @@ test.describe('RecapScreen', () => {
 // ── 9. Bracket Screen ─────────────────────────────────────────────────────────
 test.describe('BracketScreen', () => {
   test('loads without crashing', async ({ page }) => {
+    await skipOnboarding(page);
     const errors = [];
     page.on('pageerror', e => errors.push(e.message));
     await page.goto('/bracket');
@@ -311,6 +334,7 @@ test.describe('BracketScreen', () => {
   });
 
   test('shows bracket content', async ({ page }) => {
+    await skipOnboarding(page);
     await page.goto('/bracket');
     await waitForContent(page);
     const body = await page.locator('body').innerText();
@@ -321,6 +345,7 @@ test.describe('BracketScreen', () => {
 // ── 10. Layout consistency ────────────────────────────────────────────────────
 test.describe('Layout consistency', () => {
   test('desktop — sidebar left offset applied (content not behind sidebar)', async ({ page }) => {
+    await skipOnboarding(page);
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.goto('/');
     await waitForContent(page);
@@ -333,6 +358,7 @@ test.describe('Layout consistency', () => {
   });
 
   test('mobile — bottom nav does not obscure content', async ({ page }) => {
+    await skipOnboarding(page);
     await page.setViewportSize({ width: 375, height: 812 });
     await page.goto('/market');
     await waitForContent(page);
@@ -348,6 +374,7 @@ test.describe('Layout consistency', () => {
   });
 
   test('404 redirect to home', async ({ page }) => {
+    await skipOnboarding(page);
     await page.goto('/this-route-does-not-exist');
     await waitForContent(page);
     await expect(page).toHaveURL('/');
