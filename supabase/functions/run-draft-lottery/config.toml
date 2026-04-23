@@ -1,0 +1,6 @@
+[functions.run-draft-lottery]
+verify_jwt = false
+
+# This function is invoked by a scheduled DB cron job (see migration below),
+# not directly by the client. verify_jwt=false allows the cron invoker to call
+# it with the service role key without a user JWT.

@@ -394,6 +394,7 @@ export default function SquadScreen() {
   }
 
   const { budget, players, bench, captainId, locked_at } = squadData;
+  const isLocked        = deadline.isLocked;
   const allSquadPlayers = [...players, ...bench];
   const dangerPlayers   = getDangerZonePlayers(allSquadPlayers);
   const selectedIsBench = selectedPlayer && bench.some(b => b.id === selectedPlayer.id);
