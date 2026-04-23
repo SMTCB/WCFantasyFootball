@@ -13,6 +13,8 @@ import MarketScreen from './screens/MarketScreen';
 import LiveScreen from './screens/LiveScreen';
 import RecapScreen from './screens/RecapScreen';
 import BracketScreen from './screens/BracketScreen';
+import DraftScreen from './screens/DraftScreen';
+import DraftRecoveryScreen from './screens/DraftRecoveryScreen';
 import { useOnboarding } from './hooks/useOnboarding';
 
 // ── AppRoutes lives inside BrowserRouter so useNavigate (used by OnboardingWizard) works
@@ -46,6 +48,8 @@ function AppRoutes() {
                   <Route path="/squad"            element={<ErrorBoundary screen="Squad"><SquadScreen /></ErrorBoundary>} />
                   <Route path="/league"           element={<ErrorBoundary screen="League"><LeagueScreen /></ErrorBoundary>} />
                   <Route path="/league/:leagueId" element={<ErrorBoundary screen="League"><LeagueScreen /></ErrorBoundary>} />
+                  <Route path="/league/:leagueId/draft" element={<ErrorBoundary screen="Draft"><DraftScreen /></ErrorBoundary>} />
+                  <Route path="/league/:leagueId/draft/recover" element={<ErrorBoundary screen="DraftRecovery"><DraftRecoveryScreen /></ErrorBoundary>} />
                   <Route path="/live"             element={<ErrorBoundary screen="Live"><LiveScreen /></ErrorBoundary>} />
                   <Route path="/market"           element={<ErrorBoundary screen="Market"><MarketScreen /></ErrorBoundary>} />
                   <Route path="/recap"            element={<ErrorBoundary screen="Recap"><RecapScreen /></ErrorBoundary>} />
