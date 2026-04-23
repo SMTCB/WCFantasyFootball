@@ -395,6 +395,24 @@ export default function LeagueScreen() {
            </div>
          )}
 
+         {/* Manage Squad shortcut */}
+         <div className="px-4 py-2 flex gap-2">
+           <button
+             onClick={() => navigate(`/squad?leagueId=${activeLeague?.league_id}`)}
+             className="flex-1 py-2.5 rounded-lg flex items-center justify-center gap-2 transition-all active:opacity-70"
+             style={{ background: 'rgba(0,196,232,0.08)', border: '1px solid rgba(0,196,232,0.2)', color: '#00C4E8', fontFamily: 'Barlow Condensed, sans-serif', fontSize: '11px', fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase' }}
+           >
+             👥 Manage Squad
+           </button>
+           <button
+             onClick={() => navigate(`/market?leagueId=${activeLeague?.league_id}`)}
+             className="flex-1 py-2.5 rounded-lg flex items-center justify-center gap-2 transition-all active:opacity-70"
+             style={{ background: 'rgba(24,201,107,0.08)', border: '1px solid rgba(24,201,107,0.2)', color: '#18C96B', fontFamily: 'Barlow Condensed, sans-serif', fontSize: '11px', fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase' }}
+           >
+             🛒 Market
+           </button>
+         </div>
+
          {/* Draft gap banner — shown only when manager has unresolved slots */}
          {draftGaps > 0 && (
            <div

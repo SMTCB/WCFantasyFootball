@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { squad as fallbackSquad } from '../data/squad';
 import { getDangerZonePlayers, normalizeIntelligence, LINEUP_STATUS } from '../lib/intelligence';
@@ -6,10 +7,12 @@ import { normalisePlayer } from '../lib/players';
 import { useAuth } from '../hooks/useAuth';
 import { useDeadlineCountdown } from '../hooks/useDeadlineCountdown';
 import { useOnboarding } from '../hooks/useOnboarding';
+import { useTransfer } from '../hooks/useTransfer';
 import OnboardingTour from '../components/OnboardingTour';
 import ConfirmModal from '../components/ConfirmModal';
 import PitchView from '../components/PitchView';
 import PlayerCard from '../components/PlayerCard';
+import PlayerPickerSheet from '../components/PlayerPickerSheet';
 import SectionHeader from '../components/SectionHeader';
 import PowerToolCard from '../components/PowerToolCard';
 
@@ -44,8 +47,12 @@ const CHIPS = [
 ];
 
 // ─────────────────────────────────────────────────────────────────────────────
+const POS_LIMITS = { GK: 2, DEF: 5, MID: 5, FWD: 3 };
+
 export default function SquadScreen() {
   const { user } = useAuth();
+  const [searchParams] = useSearchParams();
+  const leagueId = searchParams.get('leagueId');
   const [jokerPlayer,        setJokerPlayer]       = useState(null);
   const [isJokerPickerOpen,  setIsJokerPickerOpen] = useState(false);
   const [isRouletteSpinning, setIsRouletteSpinning] = useState(false);
@@ -67,6 +74,10 @@ export default function SquadScreen() {
   const [_windowDeadline,    setWindowDeadline]    = useState(null);
   // Confirmation dialog state (FB-023)
   const [confirm,            setConfirm]           = useState(null);
+  const [pickerPos,          setPickerPos]         = useState(null);
+
+  // Transfer hook — league-scoped buy/sell + no-repeat enforcement
+  const { buy, sell, takenMap, isOwnedBy } = useTransfer(leagueId);
 
   // Live countdown hook — replaces static window lock badge
   const deadline = useDeadlineCountdown();
@@ -137,9 +148,10 @@ export default function SquadScreen() {
       setJokerPlayer(jokerP);
       setTodayJokerId(jokerRec?.player_id || null);
 
-      const { data: squad, error } = await supabase.from('squads').select('*')
-        .eq('user_id', userId).limit(1).single();
-      if (error || !squad) { setSquadData(fallbackSquad); return; }
+      const squadQuery = supabase.from('squads').select('*').eq('user_id', userId);
+      if (leagueId) squadQuery.eq('league_id', leagueId);
+      const { data: squad, error } = await squadQuery.limit(1).maybeSingle();
+      if (error || !squad) { setLoading(false); return; }
 
       const { data: players, error: pErr } = await supabase.from('players').select('*').in('id', squad.players);
       if (pErr) throw pErr;
@@ -285,20 +297,17 @@ export default function SquadScreen() {
   const doSellPlayer = async () => {
     try {
       setSaving(true);
-      const player   = selectedPlayer;
-      const newPitch = squadData.players.filter(p => p.id !== player.id).map(p => p.id);
-      const newBench = squadData.bench.filter(p  => p.id !== player.id).map(p => p.id);
+      const player = selectedPlayer;
+      const result = await sell(player);
+      if (!result.ok) { alert(result.error); return; }
       // FB-021: clear captain if selling the captain
       const newCaptainId = squadData.captainId === player.id ? null : squadData.captainId;
-      await supabase.from('squads').update({
-        players:    [...newPitch, ...newBench],
-        captain_id: newCaptainId,
-      }).eq('id', squadData.squadId);
       setSquadData({
         ...squadData,
-        players:   squadData.players.filter(p => p.id !== player.id),
-        bench:     squadData.bench.filter(p  => p.id !== player.id),
-        captainId: newCaptainId,
+        players:          squadData.players.filter(p => p.id !== player.id),
+        bench:            squadData.bench.filter(p  => p.id !== player.id),
+        captainId:        newCaptainId,
+        budget:           { ...squadData.budget, current: result.budget_remaining },
       });
       if (todayJokerId === player.id) setTodayJokerId(null);
     } catch (err) { console.error(err); }
@@ -585,12 +594,31 @@ export default function SquadScreen() {
     );
   };
 
+  const POS_CONFIG_COLORS = {
+    GK:  '#F0B400', DEF: '#00C4E8', MID: '#9D5FF5', FWD: '#F03A3A',
+  };
+
+  const handlePickerBuy = async (player) => {
+    if (!leagueId) { alert('No league selected — open your squad from the League screen.'); return; }
+    const result = await buy(player);
+    if (!result.ok) { alert(result.error); return; }
+    setSquadData(prev => ({
+      ...prev,
+      players: [...prev.players, { ...player, isBench: false, gridClass: '' }],
+      budget:  { ...prev.budget, current: result.budget_remaining },
+    }));
+    setPickerPos(null);
+  };
+
   // Player list grouped by position (row variant)
   const PlayerList = ({ showBench = false }) => (
     <div>
       {POS_ORDER.map(pos => {
-        const posPlayers = players.filter(p => p.position === pos);
-        if (!posPlayers.length) return null;
+        const posPlayers  = players.filter(p => p.position === pos);
+        const limit       = POS_LIMITS[pos] ?? 0;
+        const emptySlots  = Math.max(0, limit - posPlayers.length);
+        const posColor    = POS_CONFIG_COLORS[pos] ?? '#7D8A96';
+        if (!posPlayers.length && !emptySlots) return null;
         return (
           <div key={pos}>
             <SectionHeader title={POS_LABEL[pos]} />
@@ -607,6 +635,34 @@ export default function SquadScreen() {
                 isSwapTarget={swapMode && selectedPlayer?.id !== player.id}
                 showIntelligence
               />
+            ))}
+            {Array.from({ length: emptySlots }).map((_, i) => (
+              <button
+                key={`empty-${pos}-${i}`}
+                onClick={() => leagueId && setPickerPos(pos)}
+                className="w-full flex items-center gap-3 px-5 py-3 transition-all active:opacity-70"
+                style={{
+                  borderBottom:  '1px solid rgba(255,255,255,0.04)',
+                  borderLeft:    `2px dashed ${posColor}40`,
+                  background:    `${posColor}06`,
+                  cursor:        leagueId ? 'pointer' : 'default',
+                }}
+              >
+                <div
+                  className="w-10 h-10 rounded-full flex items-center justify-center text-lg shrink-0"
+                  style={{ background: `${posColor}12`, border: `1.5px dashed ${posColor}50` }}
+                >
+                  +
+                </div>
+                <div className="flex-1 text-left">
+                  <div className="text-[12px] font-bold" style={{ color: posColor, fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '0.06em' }}>
+                    {leagueId ? `ADD ${pos}` : `EMPTY SLOT`}
+                  </div>
+                  <div className="text-[10px] mt-0.5" style={{ color: '#3D4B5C' }}>
+                    {leagueId ? 'Tap to sign a player' : 'Open from League to sign'}
+                  </div>
+                </div>
+              </button>
             ))}
           </div>
         );
@@ -1236,6 +1292,18 @@ export default function SquadScreen() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* ══ PLAYER PICKER SHEET ═════════════════════════════════════════════ */}
+      {pickerPos && (
+        <PlayerPickerSheet
+          position={pickerPos}
+          budget={squadData?.budget?.current ?? 100}
+          takenMap={takenMap}
+          isOwnedBy={isOwnedBy}
+          onSelect={handlePickerBuy}
+          onClose={() => setPickerPos(null)}
+        />
       )}
 
       {/* ══ SWAP MODE BANNER ═════════════════════════════════════════════════ */}
