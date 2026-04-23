@@ -73,6 +73,7 @@ export default function LeagueScreen() {
   const [membersLoading, setMembersLoading] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
   const [draftGaps, setDraftGaps] = useState(0); // unresolved_slots for current user
+  const [draftOpen, setDraftOpen] = useState(false); // deadline in future + no submission yet
   const transferWindow = useTransferWindow(activeLeague?.league_id);
 
   // Create form state
@@ -176,6 +177,20 @@ export default function LeagueScreen() {
         .eq('user_id', user?.id)
         .maybeSingle();
       setDraftGaps(alloc?.unresolved_slots ?? 0);
+
+      // Check if draft is open and manager hasn't submitted yet
+      const deadline = lData?.draft_deadline;
+      if (deadline && new Date(deadline) > new Date()) {
+        const { data: sub } = await supabase
+          .from('draft_submissions')
+          .select('id')
+          .eq('league_id', id)
+          .eq('user_id', user?.id)
+          .maybeSingle();
+        setDraftOpen(!sub);
+      } else {
+        setDraftOpen(false);
+      }
 
       // Load trade listings for the league
       const { data: listings } = await supabase
@@ -366,6 +381,19 @@ export default function LeagueScreen() {
          </div>
 
          <TransferWindowBanner {...transferWindow} />
+
+         {/* Draft open banner — shown when deadline is future and no submission yet */}
+         {draftOpen && (
+           <div
+             onClick={() => navigate(`/league/${activeLeague?.league_id}/draft`)}
+             className="bg-[#1B5E20] text-white px-4 py-3 flex items-center justify-between cursor-pointer active:opacity-80"
+           >
+             <div className="text-[13px] font-bold">
+               🟢 Draft is open — submit your ranked list before the deadline
+             </div>
+             <div className="text-[11px] font-black uppercase tracking-widest opacity-80">→</div>
+           </div>
+         )}
 
          {/* Draft gap banner — shown only when manager has unresolved slots */}
          {draftGaps > 0 && (
