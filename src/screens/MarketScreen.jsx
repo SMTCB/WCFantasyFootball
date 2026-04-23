@@ -66,7 +66,7 @@ export default function MarketScreen() {
       // ── Transfer window lock — always use server time, never client clock ──
       const [{ data: nowRow }, { data: deadlineRow }] = await Promise.all([
         supabase.rpc('get_server_time').single().catch(() => ({ data: null })),
-        supabase.from('matchday_deadlines').select('deadline_at').eq('matchday_id', 'md1').maybeSingle(),
+        supabase.from('matchday_deadlines').select('deadline_at').eq('matchday_id', 'md1').maybeSingle().catch(() => ({ data: null })),
       ]);
       // Fallback: if RPC not available, use JS Date (acceptable for UI-only lock)
       const serverNow  = nowRow ? new Date(nowRow) : new Date();
