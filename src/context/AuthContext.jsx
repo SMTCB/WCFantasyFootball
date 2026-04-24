@@ -11,6 +11,11 @@
 
 import { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
+import { isNative } from '../lib/capacitor';
+
+const MOBILE_REDIRECT = 'com.fantasykit.forzaedition://auth/callback';
+const getRedirectUrl = (path = '') =>
+  isNative ? MOBILE_REDIRECT : `${window.location.origin}${path}`;
 
 // ── Demo user injected when auth is disabled ──────────────────────────────────
 const DEMO_USER = {
@@ -82,7 +87,7 @@ export function AuthProvider({ children }) {
   const resetPassword = async (email) => {
     if (!AUTH_ENABLED) return { error: null };
     return supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/auth?type=recovery`,
+      redirectTo: getRedirectUrl('/auth?type=recovery'),
     });
   };
 
