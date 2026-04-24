@@ -30,8 +30,19 @@ playwright-results.txt
 *.png
 .playwright-mcp/
 
-# Claude Code local settings
+# Claude Code — local settings and ephemeral worktrees
 .claude/settings.local.json
+.claude/worktrees/
+
+# Google Antigravity — local session files
+.antigravity/
+.gemini/
+
+# Claude Code skills (AI tooling, not project code)
+Skills/
+
+# Business communications (sensitive)
+PROVIDER_EMAIL_*.txt
 
 # Security
 .env
@@ -40,4 +51,3 @@ playwright-results.txt
 backend/.env
 node_modules/
 dist/
-

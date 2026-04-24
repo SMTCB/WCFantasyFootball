@@ -1,0 +1,1482 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FantasyKit — Business Pitch</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;900&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  /* Real PoC Color Scheme */
+  --bg-primary: #080A0E;
+  --surface: #0F1218;
+  --surface-elevated: #161B25;
+  --border: #1E2530;
+  
+  /* Functional Accents */
+  --cyan: #00B4D8;
+  --gold: #E0A800;
+  --positive: #22C55E;
+  --negative: #EF4444;
+  --purple: #A855F7;
+  
+  /* Text */
+  --text-primary: #FFFFFF;
+  --text-secondary: #8B95A1;
+  --text-muted: #5A6472;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html {
+  scroll-snap-type: y mandatory;
+  overflow-y: scroll;
+  height: 100%;
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 16px;
+  line-height: 1.6;
+  overflow-x: hidden;
+  height: 100%;
+}
+
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  background: radial-gradient(ellipse 60% 50% at 50% 0%, rgba(0,180,216,.06), transparent 70%),
+              radial-gradient(ellipse 50% 40% at 90% 100%, rgba(168,85,247,.04), transparent 60%);
+  pointer-events: none; z-index: 0;
+}
+
+/* ── SLIDE SYSTEM ── */
+.slide {
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+  min-height: 100vh;
+  width: 100%;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 90px 70px 100px;
+  z-index: 1;
+}
+@media(max-width:768px){ .slide { padding: 70px 20px 90px; } }
+
+/* ── NAV ── */
+nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 300;
+  padding: 14px 70px;
+  display: flex; justify-content: space-between; align-items: center;
+  background: rgba(8,10,14,.92); backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border);
+}
+@media(max-width:768px){ nav { padding: 14px 20px; } }
+.nav-logo { 
+  font-family: 'Barlow Condensed', sans-serif; 
+  font-size: 20px; 
+  font-weight: 900;
+  letter-spacing: .14em; 
+  color: var(--text-primary);
+}
+.nav-logo span { color: var(--cyan); }
+.nav-info { font-family: 'DM Sans', sans-serif; font-size: 11px; color: var(--text-secondary); font-weight: 500; }
+
+/* ── DOTS ── */
+.dots {
+  position: fixed; right: 22px; top: 50%;
+  transform: translateY(-50%);
+  z-index: 300;
+  display: flex; flex-direction: column; gap: 8px;
+}
+.dot {
+  width: 5px; height: 5px; border-radius: 50%;
+  background: var(--border); cursor: pointer;
+  transition: all .25s;
+}
+.dot.on { background: var(--cyan); transform: scale(1.7); box-shadow: 0 0 8px rgba(0,180,216,.4); }
+@media(max-width:768px){ .dots { display:none; } }
+
+/* ── ARROW ── */
+.arr {
+  position: absolute; bottom: 26px; left: 50%;
+  transform: translateX(-50%);
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  cursor: pointer; z-index: 10; opacity: .5;
+  transition: opacity .2s; text-decoration: none; border: none; background: none;
+}
+.arr:hover { opacity: 1; }
+.arr span { 
+  font-size: 9px; 
+  letter-spacing: .16em; 
+  text-transform: uppercase; 
+  color: var(--text-muted); 
+  font-weight: 600;
+}
+.arr svg { animation: bounce 2s ease-in-out infinite; }
+@keyframes bounce { 0%,100%{transform:translateY(0)} 50%{transform:translateY(6px)} }
+
+/* ── TYPOGRAPHY ── */
+.lbl { 
+  font-size: 10px; 
+  letter-spacing: .18em; 
+  text-transform: uppercase; 
+  color: var(--cyan); 
+  font-weight: 700; 
+  margin-bottom: 10px; 
+}
+h2 { 
+  font-family: 'Barlow Condensed', sans-serif; 
+  font-size: clamp(38px, 5.5vw, 76px); 
+  font-weight: 900;
+  letter-spacing: .02em; 
+  line-height: .95; 
+  margin-bottom: 12px; 
+}
+.intro { 
+  max-width: 620px; 
+  color: var(--text-secondary); 
+  font-size: 15px; 
+  font-weight: 400; 
+  line-height: 1.75; 
+  margin-bottom: 40px; 
+}
+
+/* ── PILL ── */
+.pill { 
+  display: inline-flex; 
+  align-items: center; 
+  gap: 7px; 
+  background: rgba(0,180,216,.12); 
+  border: 1px solid rgba(0,180,216,.3); 
+  color: var(--cyan); 
+  border-radius: 100px; 
+  padding: 5px 14px; 
+  font-size: 11px; 
+  font-weight: 600; 
+  letter-spacing: .08em; 
+  text-transform: uppercase; 
+  margin-bottom: 20px; 
+}
+.pdot { 
+  width: 6px; 
+  height: 6px; 
+  border-radius: 50%; 
+  background: var(--cyan); 
+  animation: pulse 1.6s infinite; 
+}
+@keyframes pulse { 
+  0%,100%{opacity:1;transform:scale(1)} 
+  50%{opacity:.3;transform:scale(1.5)} 
+}
+
+/* ── HERO ── */
+#s01 h1 { 
+  font-family: 'Barlow Condensed', sans-serif; 
+  font-size: clamp(68px, 11vw, 140px); 
+  font-weight: 900;
+  line-height: .88; 
+  letter-spacing: .01em; 
+  position: relative; 
+  z-index: 1; 
+}
+#s01 h1 .cyan { color: var(--cyan); }
+#s01 h1 .gold { color: var(--gold); }
+
+.hsub { 
+  margin-top: 20px; 
+  max-width: 560px; 
+  font-size: 17px; 
+  color: var(--text-secondary); 
+  font-weight: 300; 
+  line-height: 1.8; 
+  position: relative; 
+  z-index: 1; 
+}
+
+.hstats { 
+  display: flex; 
+  gap: 40px; 
+  margin-top: 44px; 
+  flex-wrap: wrap; 
+  position: relative; 
+  z-index: 1; 
+}
+.sn { 
+  font-family: 'Barlow Condensed', sans-serif; 
+  font-size: 46px; 
+  font-weight: 900;
+  line-height: 1; 
+}
+.sl { 
+  font-size: 10px; 
+  color: var(--text-muted); 
+  text-transform: uppercase; 
+  letter-spacing: .1em; 
+  margin-top: 3px; 
+  font-weight: 600;
+}
+
+/* ── GRIDS ── */
+.g3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; margin-bottom: 16px; }
+.g2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 2px; }
+@media(max-width:900px){ .g3 { grid-template-columns: 1fr; } }
+@media(max-width:700px){ .g2 { grid-template-columns: 1fr; } }
+
+/* ── LOOP CARDS ── */
+.loop-card { 
+  background: var(--surface); 
+  padding: 32px 28px; 
+  position: relative; 
+  overflow: hidden; 
+  transition: background .3s; 
+  border: 1px solid var(--border);
+}
+.loop-card:hover { background: var(--surface-elevated); }
+.loop-card::after { 
+  content: attr(data-n); 
+  font-family: 'Barlow Condensed', sans-serif; 
+  font-size: 80px; 
+  font-weight: 900;
+  line-height: 1; 
+  position: absolute; 
+  right: 14px; 
+  bottom: -8px; 
+  color: rgba(255,255,255,.02); 
+  pointer-events: none; 
+}
+.li { 
+  width: 38px; 
+  height: 38px; 
+  border-radius: 8px; 
+  display: flex; 
+  align-items: center; 
+  justify-content: center; 
+  font-size: 17px; 
+  margin-bottom: 16px; 
+}
+.lg { background: rgba(0,180,216,.15); }
+.ly { background: rgba(224,168,0,.15); }
+.lr { background: rgba(239,68,68,.15); }
+.lp { background: rgba(168,85,247,.15); }
+
+.loop-card h3 { 
+  font-family: 'Barlow Condensed', sans-serif; 
+  font-size: 22px; 
+  font-weight: 700;
+  letter-spacing: .04em; 
+  margin-bottom: 8px; 
+}
+.loop-card p { 
+  color: var(--text-secondary); 
+  font-size: 13px; 
+  line-height: 1.7; 
+  margin-bottom: 12px; 
+}
+
+/* ── FLIP CARDS (for implemented features) ── */
+.feat-grid { 
+  display: grid; 
+  grid-template-columns: repeat(4, 1fr); 
+  gap: 12px; 
+}
+@media(max-width:1000px){ .feat-grid { grid-template-columns: repeat(3, 1fr); } }
+@media(max-width:700px){ .feat-grid { grid-template-columns: repeat(2, 1fr); } }
+
+.flip-hint { 
+  display: flex; 
+  align-items: center; 
+  gap: 7px; 
+  margin-bottom: 24px; 
+  color: var(--text-muted); 
+  font-size: 11px; 
+  font-weight: 600; 
+  letter-spacing: .08em; 
+}
+.flip-hint .hico { color: var(--cyan); font-size: 13px; }
+
+.fc { 
+  perspective: 1000px; 
+  height: 280px; 
+  cursor: pointer; 
+}
+.fci { 
+  position: relative; 
+  width: 100%; 
+  height: 100%; 
+  transform-style: preserve-3d; 
+  transition: transform .6s cubic-bezier(.4,0,.2,1); 
+}
+.fc:hover .fci { transform: rotateY(180deg); }
+.fcf, .fcb { 
+  position: absolute; 
+  inset: 0; 
+  backface-visibility: hidden; 
+  -webkit-backface-visibility: hidden; 
+  padding: 22px 18px; 
+  display: flex; 
+  flex-direction: column; 
+  border: 1px solid var(--border);
+}
+.fcf { 
+  background: var(--surface); 
+  justify-content: space-between; 
+}
+.fcb { 
+  background: var(--surface-elevated); 
+  border-color: var(--cyan); 
+  transform: rotateY(180deg); 
+  justify-content: flex-start; 
+  gap: 9px; 
+  overflow: hidden; 
+}
+
+.ficon { 
+  font-size: 26px; 
+  margin-bottom: 10px; 
+}
+.fcf h3 { 
+  font-family: 'Barlow Condensed', sans-serif; 
+  font-size: 18px; 
+  font-weight: 700;
+  letter-spacing: .04em; 
+  margin-bottom: 4px; 
+}
+.fcf .status { 
+  font-size: 9px; 
+  padding: 3px 8px; 
+  border-radius: 100px; 
+  font-weight: 700; 
+  letter-spacing: .06em; 
+  align-self: flex-start; 
+  margin-top: 3px; 
+  text-transform: uppercase;
+}
+.status.live { 
+  background: rgba(34,197,94,.12); 
+  color: var(--positive); 
+  border: 1px solid rgba(34,197,94,.25); 
+}
+.fcb h4 { 
+  font-family: 'Barlow Condensed', sans-serif; 
+  font-size: 15px; 
+  font-weight: 700;
+  letter-spacing: .04em; 
+  color: var(--cyan); 
+}
+.fcb ul { 
+  list-style: none; 
+  display: flex; 
+  flex-direction: column; 
+  gap: 6px; 
+  margin-top: 2px; 
+}
+.fcb ul li { 
+  font-size: 11px; 
+  color: var(--text-secondary); 
+  line-height: 1.5; 
+  padding-left: 11px; 
+  position: relative; 
+}
+.fcb ul li::before { 
+  content: '→'; 
+  position: absolute; 
+  left: 0; 
+  color: var(--cyan); 
+  font-size: 9px; 
+  top: 1px; 
+}
+
+/* ── MONETIZATION CARDS ── */
+.monet-grid { 
+  display: grid; 
+  grid-template-columns: repeat(2, 1fr); 
+  gap: 14px; 
+}
+@media(max-width:768px){ .monet-grid { grid-template-columns: 1fr; } }
+
+.monet-card { 
+  background: var(--surface); 
+  border: 1px solid var(--border); 
+  padding: 24px 22px; 
+  display: flex; 
+  gap: 16px; 
+  transition: all .3s; 
+}
+.monet-card:hover { 
+  background: var(--surface-elevated); 
+  border-color: rgba(0,180,216,.3); 
+}
+.monet-icon { 
+  width: 36px; 
+  height: 36px; 
+  flex-shrink: 0; 
+  border-radius: 7px; 
+  display: flex; 
+  align-items: center; 
+  justify-content: center; 
+  font-size: 16px; 
+  margin-top: 1px; 
+}
+.monet-card h4 { 
+  font-family: 'Barlow Condensed', sans-serif; 
+  font-size: 18px; 
+  font-weight: 700;
+  letter-spacing: .04em; 
+  margin-bottom: 5px; 
+}
+.monet-card p { 
+  color: var(--text-secondary); 
+  font-size: 12px; 
+  line-height: 1.65; 
+}
+
+/* ── ROADMAP TIMELINE ── */
+.roadmap-section { 
+  margin-bottom: 32px; 
+}
+.roadmap-label { 
+  font-size: 10px; 
+  letter-spacing: .16em; 
+  text-transform: uppercase; 
+  color: var(--text-muted); 
+  font-weight: 700; 
+  margin-bottom: 14px; 
+}
+.roadmap-items { 
+  display: flex; 
+  flex-direction: column; 
+  gap: 10px; 
+}
+.roadmap-item { 
+  background: var(--surface); 
+  border: 1px solid var(--border); 
+  padding: 16px 18px; 
+  display: flex; 
+  gap: 14px; 
+  align-items: flex-start; 
+  transition: all .3s; 
+}
+.roadmap-item:hover { 
+  background: var(--surface-elevated); 
+  border-color: rgba(0,180,216,.25); 
+}
+.roadmap-icon { 
+  width: 32px; 
+  height: 32px; 
+  flex-shrink: 0; 
+  border-radius: 6px; 
+  display: flex; 
+  align-items: center; 
+  justify-content: center; 
+  font-size: 14px; 
+}
+.roadmap-item h4 { 
+  font-family: 'Barlow Condensed', sans-serif; 
+  font-size: 16px; 
+  font-weight: 700;
+  letter-spacing: .04em; 
+  margin-bottom: 3px; 
+}
+.roadmap-item p { 
+  color: var(--text-secondary); 
+  font-size: 12px; 
+  line-height: 1.6; 
+}
+
+/* ── SOCIAL DYNAMICS HIGHLIGHT ── */
+.social-banner {
+  background: linear-gradient(135deg, rgba(0,180,216,.08) 0%, rgba(168,85,247,.06) 100%);
+  border: 1px solid rgba(0,180,216,.2);
+  border-radius: 0;
+  padding: 28px 32px;
+  margin: 32px 0;
+  position: relative;
+  overflow: hidden;
+}
+.social-banner::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    45deg,
+    transparent,
+    transparent 20px,
+    rgba(255,255,255,.01) 20px,
+    rgba(255,255,255,.01) 40px
+  );
+  pointer-events: none;
+}
+.social-banner h3 {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 24px;
+  font-weight: 900;
+  letter-spacing: .06em;
+  color: var(--cyan);
+  margin-bottom: 10px;
+  text-transform: uppercase;
+  position: relative;
+  z-index: 1;
+}
+.social-banner p {
+  color: var(--text-secondary);
+  font-size: 14px;
+  line-height: 1.75;
+  max-width: 700px;
+  position: relative;
+  z-index: 1;
+}
+
+::-webkit-scrollbar { width: 3px; }
+::-webkit-scrollbar-track { background: var(--bg-primary); }
+::-webkit-scrollbar-thumb { background: var(--border); }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-logo">FANTASY<span>KIT</span></div>
+  <div class="nav-info" id="ni">01 / 15</div>
+</nav>
+<div class="dots" id="dots"></div>
+
+<!-- ════════════════════════════════════════════════════════════════
+     SECTION 1: THE VISION
+════════════════════════════════════════════════════════════════ -->
+
+<!-- ── S01 HERO ── -->
+<div class="slide" id="s01" data-t="Vision">
+  <div class="pill"><span class="pdot"></span> Not Another Fantasy App — A Social Product</div>
+  <h1>THE MISSING<br><span class="cyan">SOCIAL LAYER</span><br>IN FANTASY <span class="gold">FOOTBALL</span></h1>
+  <p class="hsub">FantasyKit transforms fantasy football from a solo grind into a living, breathing social experience. Starting with World Cup 2026, expanding to domestic leagues, built for friend groups of 4–10.</p>
+  <div class="hstats">
+    <div><div class="sn" style="color:var(--cyan)">3</div><div class="sl">Core Loops</div></div>
+    <div><div class="sn" style="color:var(--gold)">7</div><div class="sl">Live Features</div></div>
+    <div><div class="sn" style="color:var(--positive)">$0</div><div class="sl">PoC Infra Cost</div></div>
+    <div><div class="sn" style="color:var(--purple)">4–10</div><div class="sl">Optimal League Size</div></div>
+  </div>
+  <button class="arr" onclick="go(1)"><span>vision</span><svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M9 3v12M3 9l6 6 6-6" stroke="var(--text-muted)" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+</div>
+
+<!-- ── S02 THE PROBLEM ── -->
+<div class="slide" id="s02" data-t="The Problem">
+  <div class="lbl">// The Market Gap</div>
+  <h2>WHY CURRENT<br>FANTASY PRODUCTS FAIL</h2>
+  <p class="intro">Fantasy football has massive reach but weak retention. FPL has 11M users but 60% churn after month one. The reason is simple: <strong style="color:var(--text-primary)">current products are built for solo play, not social rivalry.</strong></p>
+  
+  <div class="social-banner">
+    <h3>🎯 Our Core Insight</h3>
+    <p><strong style="color:var(--text-primary)">Fantasy football is won or lost before kick-off</strong> — in the group chat. The banter, the trades, the trash talk after a rival's captain scores. That's where engagement lives. Current products treat social as an afterthought (add a chat tab, ship it). We're building social-first: every feature exists to create a reason for two users to interact.</p>
+  </div>
+
+  <div class="g3">
+    <div class="loop-card" data-n="01">
+      <div class="li lg">📱</div>
+      <h3>Existing Products</h3>
+      <p>Solo optimization → check score → leave. Global leaderboards with strangers. No memory, no rivalry, no reason to return beyond the next match.</p>
+    </div>
+    <div class="loop-card" data-n="02">
+      <div class="li lr">💬</div>
+      <h3>The WhatsApp Reality</h3>
+      <p>Users already live in group chats. They screenshot FPL scores and send them manually. The product doesn't facilitate banter — users do it despite the product.</p>
+    </div>
+    <div class="loop-card" data-n="03">
+      <div class="li lp">🎯</div>
+      <h3>Our Approach</h3>
+      <p>Small private leagues (4–10 friends). Auto-generated call-out cards when rivals' captains score. Live rank changes. Shareable matchday recaps. The social layer is the product.</p>
+    </div>
+  </div>
+  <button class="arr" onclick="go(2)"><span>next</span><svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M9 3v12M3 9l6 6 6-6" stroke="var(--text-muted)" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+</div>
+
+<!-- ── S03 THREE LOOPS ── -->
+<div class="slide" id="s03" data-t="Product Loops">
+  <div class="lbl">// Product Strategy</div>
+  <h2>THREE CORE<br>RETENTION LOOPS</h2>
+  <p class="intro">Every session maps to one of these loops. Built in this order — pre-match is the foundation, live is the hook, post-match is the social glue that converts one match into the next.</p>
+  <div class="g3">
+    <div class="loop-card" data-n="01">
+      <div class="li lg">🎯</div>
+      <h3>Pre-Match Decisions</h3>
+      <p>Where strategy lives. Squad building, captain picks, injury alerts, predicted lineups, daily top-scorer predictions. The more meaningful a decision feels before kickoff, the more likely users open the app again.</p>
+    </div>
+    <div class="loop-card" data-n="02">
+      <div class="li ly">⚡</div>
+      <h3>Live Match Engagement</h3>
+      <p>Real-time fantasy consequence. Users see points change the second a goal goes in. Live projections update every 5 minutes. Rival captain alerts. The app stays open for every minute of play.</p>
+    </div>
+    <div class="loop-card" data-n="03">
+      <div class="li lr">🏆</div>
+      <h3>Post-Match Resolution</h3>
+      <p>Rankings settle, matchday recaps generate, shareable cards go to WhatsApp. This is where "one match" converts into "next match" through awards, recap shares, and league banter.</p>
+    </div>
+  </div>
+  <button class="arr" onclick="go(3)"><span>next</span><svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M9 3v12M3 9l6 6 6-6" stroke="var(--text-muted)" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+</div>
+
+<!-- ── S04 MONETIZATION ── -->
+<div class="slide" id="s04" data-t="Monetization">
+  <div class="lbl">// Revenue Model</div>
+  <h2>FOUR REVENUE<br>STREAMS</h2>
+  <p class="intro">Monetization starts from partnership, not paywalls. We don't compete with existing live-score apps — we enhance them with the social layer they're missing.</p>
+  
+  <div class="monet-grid">
+    <div class="monet-card">
+      <div class="monet-icon lg">🤝</div>
+      <div>
+        <h4>Strategic Partnership</h4>
+        <p>Co-market with established live-score platforms. They bring the match data and brand trust. We bring the social engagement layer. Revenue share on premium subscriptions and in-app purchases generated through our social features.</p>
+      </div>
+    </div>
+    <div class="monet-card">
+      <div class="monet-icon ly">🎨</div>
+      <div>
+        <h4>Cosmetic League Themes</h4>
+        <p>Users unlock visual themes for their private leagues: alternative pitch colors, badge frames, card styles. First theme free after winning a matchday. Additional themes €1.99 one-time. No pay-to-win — pure status signaling within friend groups.</p>
+      </div>
+    </div>
+    <div class="monet-card">
+      <div class="monet-icon lp">🏆</div>
+      <div>
+        <h4>Sponsor-Backed Prizes</h4>
+        <p>Partner with sports brands (kit, boots, betting-adjacent) to offer real prizes for tournament winners. Brand pays for reach, users get tangible rewards, we take a platform fee. Zero capital outlay for prize pools.</p>
+      </div>
+    </div>
+    <div class="monet-card">
+      <div class="monet-icon lg">📊</div>
+      <div>
+        <h4>Premium Analytics</h4>
+        <p>Advanced stats dashboard, H2H detailed history, season archives, projection accuracy tracking. Free tier covers casual users, premium tier (€4.99/month) for competitive leagues who want the full intelligence layer.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="social-banner" style="margin-top:32px">
+    <h3>🎯 Why Partnership-First Works</h3>
+    <p>Live-score apps have users but weak engagement (open → check score → close). We have the engagement layer but need the distribution. A co-branded experience (e.g., "[Platform Name] Fantasy Leagues powered by FantasyKit") gives both sides what they're missing. They handle data feeds and brand, we handle retention and social virality. Win-win.</p>
+  </div>
+
+  <button class="arr" onclick="go(4)"><span>next</span><svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M9 3v12M3 9l6 6 6-6" stroke="var(--text-muted)" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════
+     SECTION 2: IMPLEMENTED PoC
+════════════════════════════════════════════════════════════════ -->
+
+<!-- ── S05 POC INTRO ── -->
+<div class="slide" id="s05" data-t="PoC Overview">
+  <div class="lbl">// Working Proof of Concept</div>
+  <h2>WHAT WE'VE<br>ALREADY BUILT</h2>
+  <p class="intro">The PoC is live, deployed, and demo-ready. Built on React 18 + Supabase with zero infrastructure cost. <strong style="color:var(--text-primary)">Every feature below is functional and can be demoed today.</strong></p>
+  
+  <div class="hstats">
+    <div><div class="sn" style="color:var(--positive)">12</div><div class="sl">Features Shipped</div></div>
+    <div><div class="sn" style="color:var(--cyan)">4</div><div class="sl">Weeks Build Time</div></div>
+    <div><div class="sn" style="color:var(--gold)">100%</div><div class="sl">Free Tier Hosting</div></div>
+  </div>
+
+  <div class="social-banner">
+    <h3>🎯 Demo-Ready State</h3>
+    <p>The application includes "Pitch-Proof" fallbacks — even with an empty database, the UI auto-populates with 4 league members, 11 starting players on the pitch, and a vibrant transfer market. This ensures a premium stakeholder demo experience every time.</p>
+  </div>
+
+  <button class="arr" onclick="go(5)"><span>features</span><svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M9 3v12M3 9l6 6 6-6" stroke="var(--text-muted)" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+</div>
+
+<!-- ── S06 IMPLEMENTED FEATURES (Flip Cards) ── -->
+<div class="slide" id="s06" data-t="Pre-Match Features">
+  <div class="lbl">// Pre-Match Intelligence</div>
+  <h2>PRE-MATCH<br>FEATURES (LIVE)</h2>
+  <div class="flip-hint">
+    <span class="hico">↻</span>
+    <span style="color:var(--cyan);font-weight:700">HOVER</span>&nbsp;any card to see implementation details
+  </div>
+  
+  <div class="feat-grid">
+    
+    <div class="fc">
+      <div class="fci">
+        <div class="fcf">
+          <div class="ficon">🎯</div>
+          <div>
+            <h3>Top Scorer Prediction</h3>
+            <span class="status live">✅ Live</span>
+          </div>
+        </div>
+        <div class="fcb">
+          <h4>Daily Prediction</h4>
+          <ul>
+            <li>Pre-lock single-pick: which player scores most goals this matchday?</li>
+            <li>Correct = +5 pts added to matchday total. Wrong = 0 pts.</li>
+            <li>Bottom sheet modal with searchable player list sorted by predicted goals.</li>
+            <li>UPSERT logic: users can change pick before lock.</li>
+            <li>Result states: ✅ correct / ❌ wrong / pending.</li>
+            <li>Route: Home screen card → `/` prediction modal.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="fc">
+      <div class="fci">
+        <div class="fcf">
+          <div class="ficon">🚨</div>
+          <div>
+            <h3>Injury Alerts</h3>
+            <span class="status live">✅ Live</span>
+          </div>
+        </div>
+        <div class="fcb">
+          <h4>Danger Zone</h4>
+          <ul>
+            <li>Collapsible warning panel above pitch view listing at-risk players.</li>
+            <li>Status tiers: 🟢 Likely / 🟡 Doubtful / 🟠 Bench / 🔴 OUT.</li>
+            <li>Each alert shows confidence %, human-readable reason (e.g., "hamstring tightness").</li>
+            <li>OUT players show "Auto-sub?" badge.</li>
+            <li>PlayerCard intelligence: colored status dot, red border ring for at-risk, amber name label.</li>
+            <li>Engine: `lib/intelligence.js` — player status registry.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="fc">
+      <div class="fci">
+        <div class="fcf">
+          <div class="ficon">📋</div>
+          <div>
+            <h3>Predicted Lineups</h3>
+            <span class="status live">✅ Live</span>
+          </div>
+        </div>
+        <div class="fcb">
+          <h4>Starting XI Intelligence</h4>
+          <ul>
+            <li>24–48h before kick-off: show AI-predicted starters.</li>
+            <li>Badge system: 🟢 Likely starter (≥75%) / 🟡 Doubtful (50-75%) / 🟠 Bench (&lt;50%).</li>
+            <li>Integrated into Danger Zone and player status dots.</li>
+            <li>Prevents users from leaving app to check Forza/ESPN for lineup news.</li>
+            <li>Same intelligence engine as injury alerts.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="fc">
+      <div class="fci">
+        <div class="fcf">
+          <div class="ficon">⚽</div>
+          <div>
+            <h3>Squad Builder</h3>
+            <span class="status live">✅ Live</span>
+          </div>
+        </div>
+        <div class="fcb">
+          <h4>Pitch View + Constraints</h4>
+          <ul>
+            <li>15-man squad: 2 GK, 5 DEF, 5 MID, 3 FWD.</li>
+            <li>Max 3 players per country (nationality cap).</li>
+            <li>Budget cap enforced real-time.</li>
+            <li>Captain picker (2× points).</li>
+            <li>Daily Joker slot (exempt from country limits).</li>
+            <li>Lock countdown timer before matchday starts.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+  </div>
+  <button class="arr" onclick="go(6)"><span>next</span><svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M9 3v12M3 9l6 6 6-6" stroke="var(--text-muted)" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+</div>
+
+<!-- ── S07 LIVE FEATURES ── -->
+<div class="slide" id="s07" data-t="Live Features">
+  <div class="lbl">// Live Match Engagement</div>
+  <h2>LIVE MATCH<br>FEATURES (LIVE)</h2>
+  <div class="flip-hint">
+    <span class="hico">↻</span>
+    <span style="color:var(--cyan);font-weight:700">HOVER</span>&nbsp;to see details
+  </div>
+  
+  <div class="feat-grid">
+    
+    <div class="fc">
+      <div class="fci">
+        <div class="fcf">
+          <div class="ficon">📊</div>
+          <div>
+            <h3>Live Projections</h3>
+            <span class="status live">✅ Live</span>
+          </div>
+        </div>
+        <div class="fcb">
+          <h4>Projected Final Score</h4>
+          <ul>
+            <li>Formula: `current_pts + Σ(avg_per_90 × remaining_min/90)` per active player.</li>
+            <li>Position averages: GK 2.1 / DEF 2.8 / MID 3.2 / FWD 4.1 pts/90.</li>
+            <li>Updates every 5 minutes. Conservative: always floors, never overstates.</li>
+            <li>UI: trend arrows (↑ green / ↓ red / — grey), two-tone progress bar.</li>
+            <li>Rival Watch: each rival shows `+N live → N proj.` sub-label.</li>
+            <li>Engine: `lib/projections.js` — framework-agnostic.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="fc">
+      <div class="fci">
+        <div class="fcf">
+          <div class="ficon">⚡</div>
+          <div>
+            <h3>Live Scoring</h3>
+            <span class="status live">✅ Live</span>
+          </div>
+        </div>
+        <div class="fcb">
+          <h4>Real-Time Point Updates</h4>
+          <ul>
+            <li>Points accumulate as fixture events occur: ⚽ goals, 🟨 yellows, 🟥 reds, ↕️ subs.</li>
+            <li>Activity log: chronological feed of events with point impact.</li>
+            <li>Captain multiplier: 2× (or 3× if Triple Captain chip active).</li>
+            <li>Bench auto-sub logic: bench players contribute if starters don't play.</li>
+            <li>Route: `/live` — Live Center tab.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="fc">
+      <div class="fci">
+        <div class="fcf">
+          <div class="ficon">📈</div>
+          <div>
+            <h3>Rank Movement</h3>
+            <span class="status live">✅ Live</span>
+          </div>
+        </div>
+        <div class="fcb">
+          <h4>Live Leaderboard</h4>
+          <ul>
+            <li>Leaderboard auto-updates as points change.</li>
+            <li>Rank change indicators: ↑ green / ↓ red with position delta.</li>
+            <li>Integrated into Competitive Center (League View).</li>
+            <li>Activity-Ambush Log: auto-generated events when rivals score.</li>
+            <li>Route: `/league/:id` → Leaderboard tab.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="fc">
+      <div class="fci">
+        <div class="fcf">
+          <div class="ficon">🎮</div>
+          <div>
+            <h3>Match Progress</h3>
+            <span class="status live">✅ Live</span>
+          </div>
+        </div>
+        <div class="fcb">
+          <h4>Fixture Ticker</h4>
+          <ul>
+            <li>Fixture ticker cards show green progress bar: % of match played.</li>
+            <li>Live state: red pulsing dot + white minute counter.</li>
+            <li>Score updates in real-time.</li>
+            <li>Tapping fixture → Match Detail screen (planned).</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+  </div>
+  <button class="arr" onclick="go(7)"><span>next</span><svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M9 3v12M3 9l6 6 6-6" stroke="var(--text-muted)" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+</div>
+
+<!-- ── S08 POST-MATCH & SOCIAL ── -->
+<div class="slide" id="s08" data-t="Post-Match & Social">
+  <div class="lbl">// Post-Match & Social Layer</div>
+  <h2>SOCIAL<br>FEATURES (LIVE)</h2>
+  <div class="flip-hint">
+    <span class="hico">↻</span>
+    <span style="color:var(--cyan);font-weight:700">HOVER</span>&nbsp;to see details
+  </div>
+  
+  <div class="feat-grid">
+    
+    <div class="fc">
+      <div class="fci">
+        <div class="fcf">
+          <div class="ficon">📸</div>
+          <div>
+            <h3>Matchday Recap</h3>
+            <span class="status live">✅ Live</span>
+          </div>
+        </div>
+        <div class="fcb">
+          <h4>Shareable Recap Card</h4>
+          <ul>
+            <li>Auto-generated after matchday ends: rank, points, best player, captain performance.</li>
+            <li>Off-screen RecapCard component captured by html2canvas → PNG.</li>
+            <li>Native `navigator.share()` for WhatsApp / Instagram with fallback.</li>
+            <li>Save to device as PNG or copy text fallback.</li>
+            <li>Route: `/recap` — linked from Home Screen teaser card.</li>
+            <li>**Key growth lever**: every shared card is an organic ad.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="fc">
+      <div class="fci">
+        <div class="fcf">
+          <div class="ficon">🏆</div>
+          <div>
+            <h3>Head-to-Head</h3>
+            <span class="status live">✅ Live</span>
+          </div>
+        </div>
+        <div class="fcb">
+          <h4>Rivalry Records</h4>
+          <ul>
+            <li>H2H bottom sheet: tap "H2H" button on any rival in leaderboard.</li>
+            <li>W/D/L scoreboard (green/grey/red), win % bar.</li>
+            <li>SVG sparkline: zero-dependency points chart.</li>
+            <li>Milestone cards: Biggest Win / Biggest Loss / Closest Match.</li>
+            <li>Streak badge: Win streak or Loss streak.</li>
+            <li>Calculated from real matchday_scores table.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="fc">
+      <div class="fci">
+        <div class="fcf">
+          <div class="ficon">💬</div>
+          <div>
+            <h3>League Chat</h3>
+            <span class="status live">✅ Live</span>
+          </div>
+        </div>
+        <div class="fcb">
+          <h4>Banter Zone</h4>
+          <ul>
+            <li>Real-time chat with user badges, ranks, timestamps.</li>
+            <li>Integrated into Competitive Center (League View).</li>
+            <li>Chat tab alongside Leaderboard, Frontpage, Stats.</li>
+            <li>Route: `/league/:id` → Chat tab.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="fc">
+      <div class="fci">
+        <div class="fcf">
+          <div class="ficon">📰</div>
+          <div>
+            <h3>The Gazette</h3>
+            <span class="status live">✅ Live</span>
+          </div>
+        </div>
+        <div class="fcb">
+          <h4>League Frontpage</h4>
+          <ul>
+            <li>High-fidelity newspaper-style recap of league's top stories.</li>
+            <li>Injury "bombs", big trades, rank ambushes.</li>
+            <li>Integrated into Competitive Center as "Frontpage" tab.</li>
+            <li>Route: `/league/:id` → Frontpage tab.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+  </div>
+  <button class="arr" onclick="go(8)"><span>next</span><svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M9 3v12M3 9l6 6 6-6" stroke="var(--text-muted)" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+</div>
+
+<!-- ── S09 STRATEGIC FEATURES ── -->
+<div class="slide" id="s09" data-t="Strategic Features">
+  <div class="lbl">// Strategic Power-Ups & Advanced Mechanics</div>
+  <h2>STRATEGIC<br>FEATURES (LIVE)</h2>
+  <div class="flip-hint">
+    <span class="hico">↻</span>
+    <span style="color:var(--cyan);font-weight:700">HOVER</span>&nbsp;to see details
+  </div>
+  
+  <div class="feat-grid">
+    
+    <div class="fc">
+      <div class="fci">
+        <div class="fcf">
+          <div class="ficon">🃏</div>
+          <div>
+            <h3>Wildcard Chip</h3>
+            <span class="status live">✅ Live</span>
+          </div>
+        </div>
+        <div class="fcb">
+          <h4>Squad Reset Power-Up</h4>
+          <ul>
+            <li>Once per tournament: unlimited free transfers for one matchday.</li>
+            <li>"Activate Wildcard" chip handling.</li>
+            <li>Transfer cost override: set to 0/unlimited when active.</li>
+            <li>Activity wall announces when someone uses their wildcard.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="fc">
+      <div class="fci">
+        <div class="fcf">
+          <div class="ficon">🔥</div>
+          <div>
+            <h3>Triple Captain</h3>
+            <span class="status live">✅ Live</span>
+          </div>
+        </div>
+        <div class="fcb">
+          <h4>3× Multiplier Chip</h4>
+          <ul>
+            <li>Once per tournament: captain scores 3× instead of 2×.</li>
+            <li>All-or-nothing: 0 pts if captain is benched.</li>
+            <li>3× multi-badge UI on pitch view.</li>
+            <li>Activity wall highlights TC performances (win or loss).</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="fc">
+      <div class="fci">
+        <div class="fcf">
+          <div class="ficon">🎲</div>
+          <div>
+            <h3>Captain Roulette</h3>
+            <span class="status live">✅ Live</span>
+          </div>
+        </div>
+        <div class="fcb">
+          <h4>Chaos Mode</h4>
+          <ul>
+            <li>Optional league rule: captains randomly assigned each matchday.</li>
+            <li>Removes skill gap, levels playing field for friend groups.</li>
+            <li>"Chaos" toggle in League Settings.</li>
+            <li>Server-side random assignment with animations.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="fc">
+      <div class="fci">
+        <div class="fcf">
+          <div class="ficon">💱</div>
+          <div>
+            <h3>Advanced Trades</h3>
+            <span class="status live">✅ Live</span>
+          </div>
+        </div>
+        <div class="fcb">
+          <h4>Negotiation Builder</h4>
+          <ul>
+            <li>Slider-based negotiation: cash sweeteners & points penalties.</li>
+            <li>Dual player selector for swaps.</li>
+            <li>Premium bottom sheet with real-time balance calculations.</li>
+            <li>Broadcast logic (mock alert in PoC, real push planned).</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+  </div>
+  <button class="arr" onclick="go(9)"><span>next</span><svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M9 3v12M3 9l6 6 6-6" stroke="var(--text-muted)" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+</div>
+
+<!-- ── S10 ANALYTICS & MARKET ── -->
+<div class="slide" id="s10" data-t="Analytics & Market">
+  <div class="lbl">// Intelligence & Market Features</div>
+  <h2>ANALYTICS &<br>TRANSFER MARKET</h2>
+  <div class="flip-hint">
+    <span class="hico">↻</span>
+    <span style="color:var(--cyan);font-weight:700">HOVER</span>&nbsp;to see details
+  </div>
+  
+  <div class="feat-grid">
+    
+    <div class="fc">
+      <div class="fci">
+        <div class="fcf">
+          <div class="ficon">📊</div>
+          <div>
+            <h3>League Analytics</h3>
+            <span class="status live">✅ Live</span>
+          </div>
+        </div>
+        <div class="fcb">
+          <h4>Stats Dashboard</h4>
+          <ul>
+            <li>"Stats" tab in League View.</li>
+            <li>Visualizations: League Value bars, High-score breakouts.</li>
+            <li>Integrated with unified tab system (Frontpage, Chat, Stats).</li>
+            <li>Shows top performers (Mbappé, etc.), Matchday Risers.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="fc">
+      <div class="fci">
+        <div class="fcf">
+          <div class="ficon">💰</div>
+          <div>
+            <h3>Transfer Market</h3>
+            <span class="status live">✅ Live</span>
+          </div>
+        </div>
+        <div class="fcb">
+          <h4>Player Acquisition Hub</h4>
+          <ul>
+            <li>Dedicated transfer hub with position-based filtering (GK, DEF, MID, FWD).</li>
+            <li>Shows club-count constraints (max 3) and budget impact in real-time.</li>
+            <li>Smart fallbacks: dynamically populates with world-star player pool if DB is pre-seeding.</li>
+            <li>Route: `/market`.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="fc">
+      <div class="fci">
+        <div class="fcf">
+          <div class="ficon">🎯</div>
+          <div>
+            <h3>Bracket Challenge</h3>
+            <span class="status live">✅ Live</span>
+          </div>
+        </div>
+        <div class="fcb">
+          <h4>Knockout Predictor</h4>
+          <ul>
+            <li>Separate mini-game for knockout prediction.</li>
+            <li>Interactive Bracket Tree UI.</li>
+            <li>Points awarded for correct round predictions.</li>
+            <li>Zero-commitment companion to main fantasy league.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="fc">
+      <div class="fci">
+        <div class="fcf">
+          <div class="ficon">📺</div>
+          <div>
+            <h3>VAR Handling</h3>
+            <span class="status live">✅ Live</span>
+          </div>
+        </div>
+        <div class="fcb">
+          <h4>Under Review States</h4>
+          <ul>
+            <li>"📺 Under Review" states in Activity Feed.</li>
+            <li>"Goal Reversed" notification and rank impact animations.</li>
+            <li>Prevents user frustration when points flip unexpectedly.</li>
+            <li>Critical for correctness and trust.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+  </div>
+  <button class="arr" onclick="go(10)"><span>next</span><svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M9 3v12M3 9l6 6 6-6" stroke="var(--text-muted)" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════
+     SECTION 3: ROADMAP
+════════════════════════════════════════════════════════════════ -->
+
+<!-- ── S11 ROADMAP INTRO ── -->
+<div class="slide" id="s11" data-t="Roadmap Vision">
+  <div class="lbl">// Future Expansion</div>
+  <h2>THE THREE-YEAR<br>ROADMAP</h2>
+  <p class="intro">Starting with World Cup 2026, we expand horizontally (more competitions) and vertically (deeper social features). The product is a platform, not a tournament-specific app.</p>
+  
+  <div class="social-banner">
+    <h3>🎯 Platform, Not App</h3>
+    <p>FantasyKit isn't "World Cup Fantasy" — it's a fantasy football engine that works for any tournament or league. World Cup 2026 is the launch vehicle because it's global, high-engagement, and time-bound. But the same social mechanics apply to Premier League, La Liga, Serie A, and beyond. The roadmap is about unlocking those competitions progressively.</p>
+  </div>
+
+  <button class="arr" onclick="go(11)"><span>roadmap</span><svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M9 3v12M3 9l6 6 6-6" stroke="var(--text-muted)" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+</div>
+
+<!-- ── S12 PHASE 1: DOMESTIC LEAGUES ── -->
+<div class="slide" id="s12" data-t="Phase 1: Domestic">
+  <div class="lbl">// Q3 2026 — Post World Cup</div>
+  <h2>PHASE 1:<br>DOMESTIC LEAGUES</h2>
+  <p class="intro">Immediately after World Cup 2026 ends, launch support for top domestic leagues. Users who loved the World Cup social experience can roll directly into their domestic league with the same friend group.</p>
+  
+  <div class="roadmap-section">
+    <div class="roadmap-label">Target Leagues (Launch Order)</div>
+    <div class="roadmap-items">
+      
+      <div class="roadmap-item">
+        <div class="roadmap-icon lg">🏴󠁧󠁢󠁥󠁮󠁧󠁿</div>
+        <div>
+          <h4>Premier League (England)</h4>
+          <p>Highest global viewership. 38 matchdays, August–May. Partner with existing EPL data providers for live fixture feeds. Same social mechanics as World Cup, just longer season.</p>
+        </div>
+      </div>
+
+      <div class="roadmap-item">
+        <div class="roadmap-icon ly">🇪🇸</div>
+        <div>
+          <h4>La Liga (Spain)</h4>
+          <p>Strong engagement in Latin America and Spain. 38 matchdays. Multi-competition leagues unlock here: users can create leagues that mix La Liga + Premier League for maximum flexibility.</p>
+        </div>
+      </div>
+
+      <div class="roadmap-item">
+        <div class="roadmap-icon lp">🇵🇹</div>
+        <div>
+          <h4>Primeira Liga (Portugal)</h4>
+          <p>Home market advantage. 34 matchdays. Lower competition from existing products. Great test market for localized monetization (Portuguese sports brands for prizes).</p>
+        </div>
+      </div>
+
+      <div class="roadmap-item">
+        <div class="roadmap-icon lg">🇮🇹</div>
+        <div>
+          <h4>Serie A (Italy)</h4>
+          <p>Strong tactical culture, high engagement. 38 matchdays. Unlock after La Liga to validate multi-league mechanics work at scale.</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="social-banner">
+    <h3>🔑 Multi-Competition Leagues</h3>
+    <p>The key innovation: users can create private leagues that span multiple competitions. Want to track your friends across both La Liga and Premier League in one leaderboard? Done. This is impossible in FPL (Premier League only) or LaLiga Fantasy (La Liga only). We're the only product that lets you mix competitions in a single social league.</p>
+  </div>
+
+  <button class="arr" onclick="go(12)"><span>next</span><svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M9 3v12M3 9l6 6 6-6" stroke="var(--text-muted)" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+</div>
+
+<!-- ── S13 PHASE 2: CROSS-SPORT ── -->
+<div class="slide" id="s13" data-t="Phase 2: Cross-Sport">
+  <div class="lbl">// 2027 — Beyond Football</div>
+  <h2>PHASE 2:<br>CROSS-SPORT EXPANSION</h2>
+  <p class="intro">Once the football social layer is proven and scaled, the same mechanics work for basketball, American football, cricket, rugby. The product becomes a multi-sport social fantasy platform.</p>
+  
+  <div class="roadmap-section">
+    <div class="roadmap-label">Target Sports (Exploration Phase)</div>
+    <div class="roadmap-items">
+      
+      <div class="roadmap-item">
+        <div class="roadmap-icon lg">🏀</div>
+        <div>
+          <h4>NBA (Basketball)</h4>
+          <p>Daily fantasy already massive in US. Our angle: bring the social layer. Private leagues for friend groups watching games together. Live projections during 4th quarter. Shareable game recaps.</p>
+        </div>
+      </div>
+
+      <div class="roadmap-item">
+        <div class="roadmap-icon ly">🏈</div>
+        <div>
+          <h4>NFL (American Football)</h4>
+          <p>Weekly matchday cycle (16 games/week). Perfect for our social mechanics. H2H rivalries over a 17-week season. Wildcard and Triple Captain chips adapt naturally to NFL scoring.</p>
+        </div>
+      </div>
+
+      <div class="roadmap-item">
+        <div class="roadmap-icon lp">🏏</div>
+        <div>
+          <h4>Cricket (IPL, T20 World Cup)</h4>
+          <p>Massive in India, Pakistan, Australia. Short-format tournaments (IPL = 2 months) fit our model perfectly. Partner with Indian live-score apps for distribution.</p>
+        </div>
+      </div>
+
+      <div class="roadmap-item">
+        <div class="roadmap-icon lg">🏉</div>
+        <div>
+          <h4>Rugby (Six Nations, World Cup)</h4>
+          <p>Strong engagement in UK, France, NZ, SA. Tournament-based (Six Nations = 5 matchdays). Low competition in fantasy rugby space.</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="social-banner">
+    <h3>🎯 Why Cross-Sport Works</h3>
+    <p>The social mechanics (live projections, H2H records, shareable recaps, auto-generated banter cards) are sport-agnostic. They work for any game with: (a) discrete scoring events (goals, touchdowns, wickets), (b) a roster of players, (c) a scoring system. Football is the wedge. Multi-sport is the long-term platform play.</p>
+  </div>
+
+  <button class="arr" onclick="go(13)"><span>next</span><svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M9 3v12M3 9l6 6 6-6" stroke="var(--text-muted)" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+</div>
+
+<!-- ── S14 ADVANCED ROADMAP ── -->
+<div class="slide" id="s14" data-t="Advanced Roadmap">
+  <div class="lbl">// 2027+ — Platform Maturity</div>
+  <h2>ADVANCED<br>FEATURES</h2>
+  <p class="intro">Features that deepen engagement once the core loops are validated at scale. These are not launch-critical but become differentiators as the product matures.</p>
+  
+  <div class="roadmap-section">
+    <div class="roadmap-label">Intelligence Layer</div>
+    <div class="roadmap-items">
+      
+      <div class="roadmap-item">
+        <div class="roadmap-icon lg">🤖</div>
+        <div>
+          <h4>AI-Powered Squad Suggestions</h4>
+          <p>Machine learning model trained on historical performance + fixture difficulty + form. Suggests optimal squad picks before lock. Premium feature (€4.99/month). Increases win rate for casual users, keeps them engaged longer.</p>
+        </div>
+      </div>
+
+      <div class="roadmap-item">
+        <div class="roadmap-icon ly">📈</div>
+        <div>
+          <h4>Projection Accuracy Tracking</h4>
+          <p>Show users how accurate our live projections were vs. actual final scores over the season. "Our projections were within ±2 pts 89% of the time." Builds trust in the intelligence layer.</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="roadmap-section">
+    <div class="roadmap-label">Social Depth</div>
+    <div class="roadmap-items">
+      
+      <div class="roadmap-item">
+        <div class="roadmap-icon lp">🎙️</div>
+        <div>
+          <h4>Voice Notes in League Chat</h4>
+          <p>WhatsApp-style voice messages. Post-match rants, captain pick explanations, trash talk. Deepens the social layer beyond text. iOS/Android native integrations.</p>
+        </div>
+      </div>
+
+      <div class="roadmap-item">
+        <div class="roadmap-icon lg">🏆</div>
+        <div>
+          <h4>Season-Long Narrative Arcs</h4>
+          <p>Auto-generated season recaps showing: biggest comebacks, longest win streaks, most heartbreaking losses. Shareable end-of-season video summary (think Spotify Wrapped for fantasy football).</p>
+        </div>
+      </div>
+
+      <div class="roadmap-item">
+        <div class="roadmap-icon ly">👥</div>
+        <div>
+          <h4>League Mergers & Expansion</h4>
+          <p>Allow two private leagues to merge mid-season (playoff format). Or expand league size from 8 → 12 members. Unlocks network effects: users invite more friends to join ongoing leagues.</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="roadmap-section">
+    <div class="roadmap-label">Monetization Evolution</div>
+    <div class="roadmap-items">
+      
+      <div class="roadmap-item">
+        <div class="roadmap-icon lp">💎</div>
+        <div>
+          <h4>NFT Trophy Shelf</h4>
+          <p>Season winners mint a digital trophy NFT as proof of victory. Trophy is shareable, tradable, collectible. Users who win multiple seasons build a verified trophy collection. Monetize through initial minting fees (€9.99/trophy).</p>
+        </div>
+      </div>
+
+      <div class="roadmap-item">
+        <div class="roadmap-icon lg">🎫</div>
+        <div>
+          <h4>Live Event Ticket Partnerships</h4>
+          <p>Partner with stadiums/clubs to offer match-day experiences as prizes. Top scorer in a league wins 2 tickets to the next El Clásico. Brand partnerships (Adidas, Nike) sponsor the prizes, we take a platform fee.</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <button class="arr" onclick="go(14)"><span>final</span><svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M9 3v12M3 9l6 6 6-6" stroke="var(--text-muted)" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+</div>
+
+<!-- ── S15 FINAL SLIDE ── -->
+<div class="slide" id="s15" data-t="The Ask">
+  <div class="lbl">// Investment Opportunity</div>
+  <h2>THE<br>OPPORTUNITY</h2>
+  <p class="intro" style="max-width:680px">Fantasy football has 100M+ global users but weak retention and no defensible social moat. We're building the social layer that existing products are missing. <strong style="color:var(--text-primary)">The PoC is live. The tech works. The market is massive. We need capital to scale distribution.</strong></p>
+  
+  <div class="hstats" style="margin-top:48px;margin-bottom:32px">
+    <div><div class="sn" style="color:var(--cyan)">100M+</div><div class="sl">Global Fantasy Users</div></div>
+    <div><div class="sn" style="color:var(--gold)">60%</div><div class="sl">Churn After Month 1</div></div>
+    <div><div class="sn" style="color:var(--positive)">12</div><div class="sl">Features Shipped (PoC)</div></div>
+    <div><div class="sn" style="color:var(--purple)">Q2 2026</div><div class="sl">World Cup Launch</div></div>
+  </div>
+
+  <div class="social-banner">
+    <h3>🎯 What We're Building</h3>
+    <p>Not just another fantasy app. A social platform that makes fantasy football feel like playing FIFA with friends in the living room — but at scale. Every feature exists to create a reason for two users to interact. The retention isn't in the scoring engine. It's in the banter, the rivalry, the shared moments. That's what keeps users coming back.</p>
+  </div>
+
+  <div style="margin-top:40px;text-align:center">
+    <div style="font-family:'Barlow Condensed',sans-serif;font-size:56px;font-weight:900;color:var(--cyan);line-height:1.1;margin-bottom:12px">
+      LET'S TALK
+    </div>
+    <div style="font-size:15px;color:var(--text-secondary);max-width:520px;margin:0 auto;line-height:1.75">
+      The product is built. The market is proven. The timing is perfect (World Cup 2026 in 8 months). We're ready to scale.
+    </div>
+  </div>
+</div>
+
+<script>
+const slides = Array.from(document.querySelectorAll('.slide'));
+const dotsEl = document.getElementById('dots');
+const niEl = document.getElementById('ni');
+let cur = 0;
+
+slides.forEach((s, i) => {
+  const d = document.createElement('div');
+  d.className = 'dot' + (i === 0 ? ' on' : '');
+  d.title = s.dataset.t || '';
+  d.onclick = () => go(i);
+  dotsEl.appendChild(d);
+});
+
+function go(i) {
+  if (i < 0 || i >= slides.length) return;
+  slides[i].scrollIntoView({ behavior: 'smooth' });
+}
+
+function setActive(i) {
+  cur = i;
+  document.querySelectorAll('.dot').forEach((d, j) => d.classList.toggle('on', j === i));
+  niEl.textContent = String(i + 1).padStart(2,'0') + ' / ' + String(slides.length).padStart(2,'0');
+}
+
+const obs = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting && e.intersectionRatio >= 0.5) {
+      setActive(slides.indexOf(e.target));
+    }
+  });
+}, { threshold: 0.5 });
+
+slides.forEach(s => obs.observe(s));
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowDown' || e.key === 'PageDown') { e.preventDefault(); go(cur + 1); }
+  if (e.key === 'ArrowUp' || e.key === 'PageUp') { e.preventDefault(); go(cur - 1); }
+});
+
+setActive(0);
+</script>
+</body>
+</html>
