@@ -1,7 +1,7 @@
 # Forza Fantasy League - Open Issues & Backlog
 
 **Last Updated**: 2026-04-24
-**E2E Test Suite**: 74/84 passing (88.1%) — regression logged below
+**E2E Test Suite**: 82/84 passing (97.6%)
 **Priority Levels**: P0 (Blocking), P1 (High — needed before feature is usable), P2 (Medium), P3 (Low/Polish)
 
 ---
@@ -44,19 +44,12 @@
 
 ## 🔴 P0 — Blocking
 
-### #017: E2E Regression — SquadScreen + MarketScreen (10 tests failing)
-- **Status**: OPEN — detected 2026-04-24 during Capacitor Phase 1
-- **Scope**: Not related to Capacitor work; pre-existing web app bug
-- **Failing tests** (both desktop-chrome + mobile-chrome):
-  - `SquadScreen › mobile — pitch view renders with players`
-  - `SquadScreen › shows budget in header`
-  - `SquadScreen › chips row is visible`
-  - `SquadScreen › desktop — player roster list is visible`
-  - `MarketScreen › renders player list with names`
-- **Root cause indicator**: `supabase.rpc(...).single(...).catch is not a function` in MarketScreen.jsx:145 — likely a Supabase SDK chaining issue introduced in a recent refactor
-- **Count**: 82 → 74 passing (8 newly broken, 2 were already failing)
-- **Next steps**: Check `fetchMarketParams` in MarketScreen.jsx:145 for invalid `.single().catch()` chain; fix to `.then().catch()` or `try/catch`; re-run E2E to confirm SquadScreen tests also recover
-- **Effort**: 1–2 hours
+### #017: E2E Regression — SquadScreen + MarketScreen ✅ RESOLVED
+- **Fixed**: 2026-04-24
+- **Root causes fixed**:
+  1. SquadScreen: missing `setSquadData(fallbackSquad)` on no-squad early return
+  2. MarketScreen + DraftScreen: `.single().catch()` invalid on Supabase SDK thenable
+  3. E2E: `getByText('⚙ Tools')` selector didn't match split icon/label elements
 
 ### #001-E2E: MarketScreen E2E Tests (2 tests still failing)
 - **Status**: OPEN (UX bug fixed; E2E environment issue persists)
