@@ -185,6 +185,7 @@
 - CI fix: `npm ci` → `npm install`
 
 **Session 6 — ESLint / CI Lint Fix**:
+- `eslint.config.js`: excluded `supabase/functions/**`, `.claude/**`, `e2e-report/**`, `Skills/**` from linting — fixes Deno `'Deno' is not defined` errors and stray p5.js file errors
 - `playwright.config.js`: added `/* global process */` declaration
 - `PowerToolCard.jsx`: removed unused `actionLabel`/`colorClass` props from destructure
 - `DraftScreen.jsx`: removed unused `autoSaveTimer` state; named auto-save catch variable
