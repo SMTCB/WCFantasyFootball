@@ -1,6 +1,6 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-04-24
+**Last Updated**: 2026-04-25
 **E2E Test Suite**: 82/84 passing (97.6%)
 **Priority Levels**: P0 (Blocking), P1 (High — needed before feature is usable), P2 (Medium), P3 (Low/Polish)
 
@@ -183,6 +183,15 @@
 - MarketScreen taken-by-manager display + league picker
 - LeagueScreen squad/market shortcut buttons
 - CI fix: `npm ci` → `npm install`
+
+**Session 6 — ESLint / CI Lint Fix**:
+- `playwright.config.js`: added `/* global process */` declaration
+- `PowerToolCard.jsx`: removed unused `actionLabel`/`colorClass` props from destructure
+- `DraftScreen.jsx`: removed unused `autoSaveTimer` state; named auto-save catch variable
+- `LeagueScreen.jsx`: prefixed unreferenced `leagueListings` state with `_`
+- `MarketScreen.jsx`: removed stale `takenMap`/`reloadTaken` from `useTransfer` destructure
+- `SquadScreen.jsx`: added missing `handleChipToggle` and `handleRouletteStart` handler implementations
+- `useTransfer.js`: fixed `useCallback` dependency arrays (`user?.id` → `user`) to satisfy React Compiler
 
 ---
 
