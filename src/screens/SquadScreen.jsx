@@ -8,6 +8,7 @@ import { useAuth } from '../hooks/useAuth';
 import { useDeadlineCountdown } from '../hooks/useDeadlineCountdown';
 import { useOnboarding } from '../hooks/useOnboarding';
 import { useTransfer } from '../hooks/useTransfer';
+import LeagueSelector from '../components/LeagueSelector';
 import OnboardingTour from '../components/OnboardingTour';
 import ConfirmModal from '../components/ConfirmModal';
 import PitchView from '../components/PitchView';
@@ -52,7 +53,7 @@ const POS_LIMITS = { GK: 2, DEF: 5, MID: 5, FWD: 3 };
 export default function SquadScreen() {
   const { user } = useAuth();
   const [searchParams] = useSearchParams();
-  const leagueId = searchParams.get('leagueId');
+  const [leagueId, setLeagueId] = useState(searchParams.get('leagueId'));
   const [jokerPlayer,        setJokerPlayer]       = useState(null);
   const [isJokerPickerOpen,  setIsJokerPickerOpen] = useState(false);
   const [isRouletteSpinning, setIsRouletteSpinning] = useState(false);
@@ -722,8 +723,11 @@ export default function SquadScreen() {
       >
         <div>
           <div className="fz-label" style={{ color: '#3D4B5C' }}>Tactical Sheet</div>
-          <div className="text-[24px] font-black uppercase leading-tight tracking-tight" style={{ fontFamily: 'Barlow Condensed, sans-serif', color: '#F0F2F5' }}>
-            My Squad
+          <div className="flex items-center gap-2 mt-0.5">
+            <div className="text-[24px] font-black uppercase leading-tight tracking-tight" style={{ fontFamily: 'Barlow Condensed, sans-serif', color: '#F0F2F5' }}>
+              My Squad
+            </div>
+            <LeagueSelector value={leagueId} onChange={setLeagueId} />
           </div>
         </div>
         <div className="flex items-center gap-3">

@@ -48,7 +48,7 @@ Deno.serve(async (req) => {
       // First transfer in this league — create the squad row
       const { data: newSquad, error: createErr } = await supabase
         .from('squads')
-        .insert({ user_id: user.id, league_id, players: [], budget_remaining: 100 })
+        .insert({ user_id: user.id, league_id, players: [], budget_remaining: 100, matchday_id: 'current' })
         .select('id, players, budget_remaining')
         .single();
       if (createErr) return json({ ok: false, error: 'Failed to create squad' }, 500, corsHeaders);

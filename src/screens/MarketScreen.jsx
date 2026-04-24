@@ -6,6 +6,7 @@ import { normalisePlayers } from '../lib/players';
 import { useAuth } from '../hooks/useAuth';
 import { useOnboarding } from '../hooks/useOnboarding';
 import { useTransfer } from '../hooks/useTransfer';
+import LeagueSelector from '../components/LeagueSelector';
 import OnboardingTour from '../components/OnboardingTour';
 import ConfirmModal from '../components/ConfirmModal';
 
@@ -287,11 +288,14 @@ export default function MarketScreen() {
             >
               {isLocked ? '🔒 Window Closed' : 'Transfer Window'}
             </div>
-            <div
-              className="text-[24px] font-black uppercase leading-tight tracking-tight"
-              style={{ fontFamily: 'Barlow Condensed, sans-serif', color: '#F0F2F5' }}
-            >
-              Player Market
+            <div className="flex items-center gap-2 mt-0.5">
+              <div
+                className="text-[24px] font-black uppercase leading-tight tracking-tight"
+                style={{ fontFamily: 'Barlow Condensed, sans-serif', color: '#F0F2F5' }}
+              >
+                Player Market
+              </div>
+              <LeagueSelector value={activeLeague} onChange={setActiveLeague} />
             </div>
           </div>
 
@@ -442,12 +446,14 @@ export default function MarketScreen() {
       ) : (
         <div data-tour="market-player-list">
           {filteredPlayers.map((p) => {
-            const isOwned      = isOwnedBy(p.id);
+            const inMySquad    = mySquad?.players?.includes(p.id);
+            const isOwned      = inMySquad || isOwnedBy(p.id);
             const takenByOther = !isOwned && isTaken(p.id);
             const ownerName    = takenBy(p.id);
             const limitReached = stats.posCounts[p.position] >= POS_LIMITS[p.position];
             const canAfford    = budget >= p.price;
-            const canBuy       = !isOwned && !takenByOther && !limitReached && canAfford && (mySquad?.players?.length ?? 0) < 15;
+            const hasLeague    = !!activeLeague;
+            const canBuy       = hasLeague && !isOwned && !takenByOther && !limitReached && canAfford && (mySquad?.players?.length ?? 0) < 15;
             const posCfg       = POS_CONFIG[p.position] || POS_CONFIG.MID;
             const flag         = FLAG_MAP[p.club] ?? '🌍';
             const isJoker      = p.id === todayJokerId;
@@ -591,7 +597,8 @@ export default function MarketScreen() {
                       onClick={() => handleBuy(p)}
                       disabled={saving || !canBuy}
                       title={
-                        !canAfford     ? 'Insufficient budget'
+                        !hasLeague     ? 'Select a league first'
+                        : !canAfford   ? 'Insufficient budget'
                         : limitReached ? `${p.position} slots full`
                         : 'Add to squad'
                       }
