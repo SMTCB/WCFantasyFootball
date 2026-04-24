@@ -4,6 +4,23 @@
 
 ---
 
+## 📱 Mobile Track Update — 2026-04-24
+
+Capacitor iOS + Android development started in parallel with Sprint 1. Handled by Google Antigravity (AI platform).
+
+**Complete**:
+- Capacitor scaffold — `ios/` and `android/` native projects live in repo
+- App ID: `com.fantasykit.forzaedition` (changeable until first store submission)
+- Native plugin init: StatusBar, SplashScreen, app resume handler (`src/lib/capacitor.js`)
+- iOS URL scheme + portrait orientation + arm64 capability
+- Android deep link intent filter + minSdk 26 / targetSdk 36
+- Auth mobile redirect URL (no-op on web, native URL scheme on device)
+
+**Next** (Antigravity): push notifications, app icons, TestFlight / Play Store internal testing  
+**Reference**: `MOBILE_IMPLEMENTATION_GUIDE.md`, `APP_STORE_ASSESSMENT.md`
+
+---
+
 ## Table of Contents
 
 1. [Development Phases & Sprint Plan (7 Weeks to Launch)](#1-development-phases--sprint-plan)

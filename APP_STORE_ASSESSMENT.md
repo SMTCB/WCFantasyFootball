@@ -2,31 +2,39 @@
 ## Forza Fantasy League Mobile App Strategy
 
 **Assessment Date**: 2026-04-22  
-**Current Platform**: React Web App (Vite + Tailwind CSS + Supabase)  
+**Last Updated**: 2026-04-24  
+**Current Platform**: React Web App (Vite + Tailwind CSS + Supabase) + Capacitor (iOS + Android)  
 **Target Platforms**: iOS (App Store) + Android (Play Store)  
-**Status**: Ready for Development Implementation
+**Status**: In Development — Phase 1 & 2 Complete
 
 ---
 
 ## 🚀 Quick Start for Developers
 
-**If you're picking this up for development**, here's what you need to know:
+> **Implementation is underway.** See `MOBILE_IMPLEMENTATION_GUIDE.md` for current status and next steps. Phases 1 & 2 are complete (Capacitor scaffold, native config, OAuth deep links, auth flow). Phase 3 (push notifications, app icons) is next.
 
-1. **Decision Made**: Use **Capacitor** approach (MVP) - 4-6 weeks, ~$64K labor, 95% code reuse
-2. **Prerequisite**: Web app must be production-ready (currently is - 97.6% E2E test coverage)
-3. **Cost**: ~$79K Year 1 total (labor $64K + services/infrastructure $15K)
-4. **Timeline**: 6 weeks from start to both App Store & Play Store
-5. **Team Needed**: 1.5 FTE (1x React/Capacitor dev, 0.5x iOS specialist, 0.5x Android specialist, 0.5x QA)
+**What's done**:
+- ✅ Capacitor installed — `ios/` and `android/` native projects committed
+- ✅ App ID: `com.fantasykit.forzaedition`
+- ✅ iOS URL scheme + portrait lock + arm64
+- ✅ Android deep link intent filter + minSdk 26
+- ✅ StatusBar, SplashScreen, app resume handler wired in React (`src/lib/capacitor.js`)
+- ✅ Auth mobile redirect URL configured
 
-**Critical Sections to Read First**:
-- Executive Summary (below)
-- Part 1: Architecture & Technology (why Capacitor)
-- Part 5: Development Roadmap (6-week phase breakdown)
-- Part 6: Resource & Cost Estimation (labor breakdown by week)
-- Part 7: Technical Checklist (what needs to be ready before starting)
+**What's next**:
+1. Push notifications (Firebase FCM + APNs)
+2. App icons (need 1024×1024 PNG from design)
+3. TestFlight + Play Store internal testing
+4. Store listing copy, screenshots, legal docs
 
-**For Implementation**: Follow Phase 1 (Weeks 1-6) roadmap with hourly breakdown
-**For Troubleshooting**: See Part 11 (Risk Assessment) and Part 8 (Common Issues)
+**Key facts**:
+- **Approach**: Capacitor hybrid — 95% code reuse, web + mobile stay in sync
+- **Workflow**: `npm run build && npx cap sync` after any web change
+- **E2E**: 82/84 passing (97.6%)
+- **Timeline**: 4–6 weeks to both stores from Phase 3 start
+
+**For architecture rationale**: Part 1 (why Capacitor) and Part 5 (6-week roadmap) below  
+**For troubleshooting**: Part 8 & 11
 
 ---
 
