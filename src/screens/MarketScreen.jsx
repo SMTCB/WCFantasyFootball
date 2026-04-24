@@ -1,9 +1,11 @@
 import { useState, useEffect, useMemo } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { normalizeIntelligence } from '../lib/intelligence';
 import { normalisePlayers } from '../lib/players';
 import { useAuth } from '../hooks/useAuth';
 import { useOnboarding } from '../hooks/useOnboarding';
+import { useTransfer } from '../hooks/useTransfer';
 import OnboardingTour from '../components/OnboardingTour';
 import ConfirmModal from '../components/ConfirmModal';
 
@@ -45,18 +47,41 @@ const MARKET_TOUR_STEPS = [
 
 export default function MarketScreen() {
   const { user } = useAuth();
+  const [searchParams] = useSearchParams();
+  const leagueId = searchParams.get('leagueId');
   const { showMarketTour, completeMarketTour } = useOnboarding();
-  const [players,      setPlayers]      = useState([]);
-  const [mySquad,      setMySquad]      = useState(null);
-  const [todayJokerId, setTodayJokerId] = useState(null);
-  const [loading,      setLoading]      = useState(true);
-  const [filterPos,    setFilterPos]    = useState('ALL');
-  const [budget,       setBudget]       = useState(100.0);
-  const [saving,       setSaving]       = useState(false);
-  const [isLocked,     setIsLocked]     = useState(false);
-  const [confirm,      setConfirm]      = useState(null);
+  const [players,       setPlayers]       = useState([]);
+  const [mySquad,       setMySquad]       = useState(null);
+  const [leagues,       setLeagues]       = useState(null);   // null = not yet loaded
+  const [activeLeague,  setActiveLeague]  = useState(leagueId);
+  const [todayJokerId,  setTodayJokerId]  = useState(null);
+  const [loading,       setLoading]       = useState(true);
+  const [filterPos,     setFilterPos]     = useState('ALL');
+  const [budget,        setBudget]        = useState(100.0);
+  const [saving,        setSaving]        = useState(false);
+  const [isLocked,      setIsLocked]      = useState(false);
+  const [confirm,       setConfirm]       = useState(null);
 
-  useEffect(() => { fetchMarketParams(); }, []);
+  // League-scoped transfer state
+  const { buy, sell, takenMap, isTaken, takenBy, isOwnedBy, reload: reloadTaken } = useTransfer(activeLeague);
+
+  // On mount: resolve league context
+  useEffect(() => {
+    const init = async () => {
+      if (leagueId) { setActiveLeague(leagueId); return; }
+      // No leagueId in URL — fetch user's leagues
+      const { data } = await supabase
+        .from('league_members')
+        .select('league_id, leagues(id, name)')
+        .eq('user_id', user?.id);
+      const list = (data ?? []).map(r => ({ id: r.league_id, name: r.leagues?.name ?? r.league_id }));
+      if (list.length === 1) { setActiveLeague(list[0].id); setLeagues([]); }
+      else { setLeagues(list); }
+    };
+    if (user?.id) init();
+  }, [user?.id, leagueId]);
+
+  useEffect(() => { fetchMarketParams(); }, [activeLeague]);
 
   const fetchMarketParams = async () => {
     setLoading(true);
@@ -94,8 +119,10 @@ export default function MarketScreen() {
     try {
       const userId = user?.id;
       if (userId) {
+        const squadQuery = supabase.from('squads').select('*').eq('user_id', userId);
+        if (activeLeague) squadQuery.eq('league_id', activeLeague);
         const [{ data: sData }, { data: jData }] = await Promise.all([
-          supabase.from('squads').select('*').eq('user_id', userId).maybeSingle(),
+          squadQuery.maybeSingle(),
           supabase.from('daily_jokers').select('player_id')
             .eq('user_id', userId)
             .eq('match_date', new Date().toISOString().split('T')[0])
@@ -134,17 +161,20 @@ export default function MarketScreen() {
 
   const handleBuy = async (player) => {
     if (saving) return;
-    // Client-side guards for instant UX feedback (server re-validates everything)
-    if (isLocked)                                                          { alert('Transfers are locked until after the match.'); return; }
-    if (mySquad.players.length >= 15)                                     { alert('Squad is full! Sell someone first.'); return; }
-    if (stats.posCounts[player.position] >= POS_LIMITS[player.position])  { alert(`Max ${player.position}s reached.`); return; }
-    if ((stats.countryCounts[player.club] || 0) >= COUNTRY_LIMIT)         { alert(`Max 3 players from ${player.club}.`); return; }
-    if (budget < player.price)                                             { alert('Not enough budget.'); return; }
-    try { setSaving(true); await processTransfer('buy', player); }
-    finally { setSaving(false); }
+    if (isLocked) { alert('Transfers are locked until after the match.'); return; }
+    if (!activeLeague) { alert('Select a league first.'); return; }
+    if ((mySquad?.players?.length ?? 0) >= 15) { alert('Squad is full — sell a player first.'); return; }
+    if (stats.posCounts[player.position] >= POS_LIMITS[player.position]) { alert(`Max ${player.position}s reached.`); return; }
+    if (budget < player.price) { alert('Not enough budget.'); return; }
+    try {
+      setSaving(true);
+      const result = await buy(player);
+      if (!result.ok) { alert(result.error); return; }
+      setMySquad(prev => ({ ...prev, players: result.players, budget_remaining: result.budget_remaining }));
+      setBudget(result.budget_remaining);
+    } finally { setSaving(false); }
   };
 
-  // FB-021 + FB-023: captain safety check + confirmation before selling
   const handleSell = (player) => {
     if (saving)   return;
     if (isLocked) { alert('Transfers are locked until after the match.'); return; }
@@ -161,42 +191,42 @@ export default function MarketScreen() {
       warning:      warnings.length ? warnings.join(' ') : null,
       confirmLabel: 'Sell',
       danger:       true,
-      onConfirm:    async () => {
-        try { setSaving(true); await processTransfer('sell', player); }
-        finally { setSaving(false); }
+      onConfirm: async () => {
+        try {
+          setSaving(true);
+          const result = await sell(player);
+          if (!result.ok) { alert(result.error); return; }
+          setMySquad(prev => ({ ...prev, players: result.players, budget_remaining: result.budget_remaining }));
+          setBudget(result.budget_remaining);
+        } finally { setSaving(false); }
       },
     });
-  };
-
-  // All transfers go through the Edge Function — server validates the deadline
-  // using its own UTC clock (not the client's). This is the hard enforcement gate.
-  const processTransfer = async (action, player) => {
-    const { data, error } = await supabase.functions.invoke('process-transfer', {
-      body: {
-        action,
-        player_id:    player.id,
-        player_price: player.price,
-        matchday_id:  'md1',
-      },
-    });
-
-    if (error || !data?.ok) {
-      const msg  = data?.error  ?? error?.message ?? 'Transfer failed — please try again.';
-      const code = data?.code   ?? '';
-      // If server says window is closed, snap the UI into locked state immediately
-      if (code === 'TRANSFER_WINDOW_CLOSED') setIsLocked(true);
-      alert(msg);
-      return;
-    }
-
-    // Update local state from server response — single source of truth
-    setMySquad(prev => ({ ...prev, players: data.players, budget_remaining: data.budget_remaining }));
-    setBudget(data.budget_remaining);
   };
 
   const filteredPlayers = players.filter(p => filterPos === 'ALL' || p.position === filterPos);
-  const squadCount = mySquad?.players?.length || 0;
+  const squadCount  = mySquad?.players?.length || 0;
+  const emptySlots  = Math.max(0, 15 - squadCount);
 
+  // League picker — shown when user has multiple leagues and none is selected
+  if (leagues && leagues.length > 1 && !activeLeague) {
+    return (
+      <div className="min-h-screen bg-bg flex flex-col items-center justify-center px-6 gap-4">
+        <div className="text-[13px] font-black uppercase tracking-widest mb-2" style={{ color: '#7D8A96', fontFamily: 'Barlow Condensed, sans-serif' }}>
+          Select a League
+        </div>
+        {leagues.map(l => (
+          <button
+            key={l.id}
+            onClick={() => setActiveLeague(l.id)}
+            className="w-full max-w-sm px-5 py-4 rounded-lg text-left transition-all active:opacity-70"
+            style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#F0F2F5' }}
+          >
+            <div className="text-[14px] font-semibold">{l.name}</div>
+          </button>
+        ))}
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-bg">
@@ -278,19 +308,21 @@ export default function MarketScreen() {
               </div>
             </div>
 
-            {/* Budget */}
+            {/* Budget + empty slots */}
             <div className="text-right" data-tour="market-budget">
               <div className="fz-label" style={{ color: '#3D4B5C' }}>Budget</div>
               <div
                 className="text-[20px] font-black tabular-nums leading-tight"
-                style={{
-                  fontFamily: 'Barlow Condensed, sans-serif',
-                  color: budget < 5 ? '#F03A3A' : '#00C4E8',
-                }}
+                style={{ fontFamily: 'Barlow Condensed, sans-serif', color: budget < 5 ? '#F03A3A' : '#00C4E8' }}
               >
                 ${budget.toFixed(1)}
                 <span className="text-[12px] font-normal" style={{ color: '#3D4B5C' }}>M</span>
               </div>
+              {emptySlots > 0 && (
+                <div className="text-[10px] font-black mt-0.5" style={{ color: '#F0B400', fontFamily: 'Barlow Condensed, sans-serif' }}>
+                  {emptySlots} empty slot{emptySlots !== 1 ? 's' : ''}
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -410,10 +442,12 @@ export default function MarketScreen() {
       ) : (
         <div data-tour="market-player-list">
           {filteredPlayers.map((p) => {
-            const isOwned      = mySquad?.players?.includes(p.id);
+            const isOwned      = isOwnedBy(p.id);
+            const takenByOther = !isOwned && isTaken(p.id);
+            const ownerName    = takenBy(p.id);
             const limitReached = stats.posCounts[p.position] >= POS_LIMITS[p.position];
             const canAfford    = budget >= p.price;
-            const canBuy       = !isOwned && !limitReached && canAfford && (mySquad?.players?.length ?? 0) < 15;
+            const canBuy       = !isOwned && !takenByOther && !limitReached && canAfford && (mySquad?.players?.length ?? 0) < 15;
             const posCfg       = POS_CONFIG[p.position] || POS_CONFIG.MID;
             const flag         = FLAG_MAP[p.club] ?? '🌍';
             const isJoker      = p.id === todayJokerId;
@@ -425,8 +459,9 @@ export default function MarketScreen() {
                 className="flex items-center px-5 py-3 gap-4 transition-all duration-150"
                 style={{
                   borderBottom: '1px solid rgba(255,255,255,0.05)',
-                  background: isOwned ? 'rgba(0,196,232,0.04)' : 'transparent',
-                  borderLeft: isOwned ? '2px solid rgba(0,196,232,0.4)' : '2px solid transparent',
+                  background:   isOwned ? 'rgba(0,196,232,0.04)' : takenByOther ? 'rgba(240,58,58,0.02)' : 'transparent',
+                  borderLeft:   isOwned ? '2px solid rgba(0,196,232,0.4)' : takenByOther ? '2px solid rgba(240,58,58,0.25)' : '2px solid transparent',
+                  opacity:      takenByOther ? 0.65 : 1,
                 }}
               >
                 {/* Avatar */}
@@ -465,6 +500,14 @@ export default function MarketScreen() {
                         style={{ background: 'rgba(0,196,232,0.15)', color: '#00C4E8', fontFamily: 'Barlow Condensed, sans-serif' }}
                       >
                         OWNED
+                      </span>
+                    )}
+                    {takenByOther && (
+                      <span
+                        className="shrink-0 text-[8px] font-black px-1.5 py-0.5 rounded-sm"
+                        style={{ background: 'rgba(240,58,58,0.15)', color: '#F03A3A', fontFamily: 'Barlow Condensed, sans-serif' }}
+                      >
+                        {ownerName ? `TAKEN — ${ownerName}` : 'TAKEN'}
                       </span>
                     )}
                     {isJoker && (
