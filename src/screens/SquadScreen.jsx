@@ -345,6 +345,18 @@ export default function SquadScreen() {
     } finally { setSaving(false); }
   };
 
+  const handleChipToggle = async (type) => {
+    if (!squadData) return;
+    const chip = CHIPS.find(c => c.key === type);
+    if (!chip) return;
+    const newVal = !squadData[chip.stateKey];
+    setSquadData(prev => ({ ...prev, [chip.stateKey]: newVal }));
+    try {
+      setSaving(true);
+      await supabase.from('squads').update({ [chip.dbField]: newVal }).eq('id', squadData.squadId);
+    } finally { setSaving(false); }
+  };
+
   // FB-023: roulette with confirmation
   const activateRoulette = () => {
     if (isRouletteSpinning || !squadData) return;
@@ -357,6 +369,8 @@ export default function SquadScreen() {
       onConfirm:    doActivateRoulette,
     });
   };
+
+  const handleRouletteStart = activateRoulette;
 
   const doActivateRoulette = () => {
     setIsRouletteSpinning(true);

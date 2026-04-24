@@ -54,7 +54,6 @@ export default function DraftScreen() {
   const [posRatio,    setPosRatio]    = useState(DRAFT_POS_CAPS);  // from league_config
   const [lastSaved,   setLastSaved]   = useState(null);  // timestamp of last auto-save
   const [saveError,   setSaveError]   = useState(null);
-  const autoSaveTimer = useState(null);
 
   const countdown = useCountdown(deadline);
   const isClosed  = countdown === 'CLOSED';
@@ -213,7 +212,8 @@ export default function DraftScreen() {
         }, { onConflict: 'league_id,user_id' });
         setLastSaved(new Date());
         setSaveError(null);
-      } catch (err) {
+      } catch (autoSaveErr) {
+        console.warn('Auto-save failed:', autoSaveErr);
         setSaveError('Auto-save failed — check your connection.');
       }
     }, 30000);

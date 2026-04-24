@@ -48,7 +48,7 @@ export function useTransfer(leagueId) {
     } finally {
       setTakenMapLoading(false);
     }
-  }, [leagueId, user?.id]);
+  }, [leagueId, user]);
 
   useEffect(() => { loadTakenMap(); }, [loadTakenMap]);
 
@@ -75,7 +75,7 @@ export function useTransfer(leagueId) {
     }));
 
     return { ok: true, players: data.players, budget_remaining: data.budget_remaining };
-  }, [leagueId, user?.id]);
+  }, [leagueId, user]);
 
   const sell = useCallback(async (player) => {
     const { data, error } = await supabase.functions.invoke('process-transfer', {
@@ -104,7 +104,7 @@ export function useTransfer(leagueId) {
 
   const isTaken    = useCallback((playerId) => !!takenMap[playerId], [takenMap]);
   const takenBy    = useCallback((playerId) => takenMap[playerId]?.managerName ?? null, [takenMap]);
-  const isOwnedBy  = useCallback((playerId) => takenMap[playerId]?.userId === user?.id, [takenMap, user?.id]);
+  const isOwnedBy  = useCallback((playerId) => takenMap[playerId]?.userId === user?.id, [takenMap, user]);
 
   return { takenMap, takenMapLoading, buy, sell, isTaken, takenBy, isOwnedBy, reload: loadTakenMap };
 }
