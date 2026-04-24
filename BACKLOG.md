@@ -1,6 +1,6 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-04-23
+**Last Updated**: 2026-04-24
 **E2E Test Suite**: 82/84 passing (97.6%)
 **Priority Levels**: P0 (Blocking), P1 (High — needed before feature is usable), P2 (Medium), P3 (Low/Polish)
 
@@ -27,45 +27,34 @@
   - `GazetteDraftReport` component (hybrid headline + bullets + collapsible table)
   - `useTransferWindow` hook + `TransferWindowBanner` component
   - `useRelaxationState` hook
-
-### 🔴 Known Blockers
-- MarketScreen player data loading (2 E2E tests) — Supabase connectivity in E2E environment
-- `get_server_time` RPC missing — draft deadline server-side validation falls back to client clock
+- **#014**: `get_server_time` RPC — migration applied ✅
+- **#015**: Draft entry banner in LeagueScreen ✅
+- **#006**: Database seeding — 829 EPL players loaded (98 GK / 275 DEF / 379 MID / 97 FWD, 31 clubs) ✅
+- **#001**: MarketScreen player loading fixed (isolated fetch, resilient error handling) ✅
+- **CI fix**: Replaced `npm ci` → `npm install` in all workflow jobs (lock file sync error resolved) ✅
+- **Buy/sell flow redesign** (new — full implementation):
+  - `process-transfer` Edge Function: server-side no-repeat check per league, budget credit on sell, position limits, auto-creates squad row on first transfer
+  - `useTransfer(leagueId)` hook: `takenMap`, `buy()`, `sell()`, `isTaken()`, `takenBy()`, `isOwnedBy()`
+  - `PlayerPickerSheet` component: bottom sheet picker, pre-filtered by position, shows available/taken/over-budget, search
+  - SquadScreen: empty slot placeholders per position, tap to open picker sheet, sell now credits budget via Edge Function
+  - MarketScreen: league picker (auto-selects if only one), taken-by-manager badge + row dimming, empty slots counter
+  - LeagueScreen: "Manage Squad" + "Market" shortcut buttons, both link with `leagueId` context
 
 ---
 
 ## 🔴 P0 — Blocking
 
-### #001: E2E — MarketScreen Player Rendering (2 tests failing)
-- **Status**: OPEN
-- **Description**: `MarketScreen › renders player list with names` failing on desktop-chrome + mobile-chrome. Player array empty despite fallback data existing.
-- **Root Cause**: Unclear — Supabase connectivity in E2E, re-render timing, or fallback logic
-- **Attempts**: Error handling added, fallback consolidated, test made lenient — still failing
+### #001-E2E: MarketScreen E2E Tests (2 tests still failing)
+- **Status**: OPEN (UX bug fixed; E2E environment issue persists)
+- **Description**: `MarketScreen › renders player list with names` failing on desktop-chrome + mobile-chrome in E2E. The actual app now loads players correctly. The E2E failure is a Supabase connectivity issue in the test environment.
 - **Next Steps**:
-  1. Check Supabase RLS + connectivity in test environment
-  2. Add detailed state-change logging
-  3. Consider mocking Supabase client for deterministic tests
+  1. Mock the Supabase players query in E2E for deterministic results
+  2. Or add a `data-testid` fixture bypass in test setup
 - **Effort**: 1–2 hours
-
-### #014: Missing `get_server_time` RPC
-- **Status**: OPEN
-- **Description**: `DraftScreen` (S4) and `MarketScreen` both call `supabase.rpc('get_server_time')` for server-side deadline validation. RPC does not exist — calls silently fall back to client clock, which can be spoofed.
-- **Fix**: One migration line:
-  ```sql
-  CREATE OR REPLACE FUNCTION get_server_time()
-  RETURNS TIMESTAMPTZ AS $$ SELECT NOW(); $$ LANGUAGE sql STABLE;
-  ```
-- **Effort**: 5 minutes
 
 ---
 
-## 🟠 P1 — High (Draft system not fully usable without these)
-
-### #015: Draft Entry Point in LeagueScreen
-- **Status**: NOT STARTED
-- **Description**: Routes `/league/:leagueId/draft` and `/league/:leagueId/draft/recover` exist but there is no button or banner in `LeagueScreen` to reach them. Managers cannot start their draft without direct URL access.
-- **Fix**: Add a "Draft Open — Submit Your List" banner (green, same style as the recovery gap banner) shown when `draft_deadline` is in the future and the manager has no processed submission yet.
-- **Effort**: 30 minutes
+## 🟠 P1 — High
 
 ### #016: League Commissioner Panel
 - **Status**: NOT STARTED
@@ -80,16 +69,9 @@
 
 ### #017: Wire Trade Builder to Real Squad Data
 - **Status**: NOT STARTED
-- **Description**: Trade builder in `LeagueScreen` still uses `MOCK_SQUAD_PLAYERS` (MY PLAYER selector) and `MOCK_PLAYERS_POOL` (THEIR PLAYER selector). Until replaced with live data from `draft_allocations`, the position-cap pre-check (`validateAndSendProposal`) cannot be completed and the `TODO` on line ~122 remains open.
-- **Fix**: On trade builder open, fetch current manager's allocated players + target manager's allocated players from `draft_allocations`.
+- **Description**: Trade builder in `LeagueScreen` still uses `MOCK_SQUAD_PLAYERS` (MY PLAYER selector) and `MOCK_PLAYERS_POOL` (THEIR PLAYER selector). Now that `useTransfer` exists and `draft_allocations` is populated, this can be wired to real data. The `TODO` on the position-cap pre-check (`validateAndSendProposal`) also remains open.
+- **Fix**: On trade builder open, fetch current manager's allocated players + target manager's allocated players from `draft_allocations` (or `squads` for the current league).
 - **Effort**: 1–2 hours
-
-### #006: Database Seeding — Insufficient Test Data
-- **Status**: OPEN
-- **Description**: Only 7 players seeded. Draft system requires 30+ players to test realistically (auto-complete, conflict resolution, cup pool restrictions).
-- **Data needed**: Full player roster (50+ players, all positions), match fixtures with dates, fantasy points history
-- **Reference**: `FANTASY_POINTS_SCORING_LAYER.md`
-- **Effort**: 2–3 hours
 
 ### #018: Configure Supabase Cron Settings
 - **Status**: NOT STARTED
@@ -130,6 +112,11 @@
 - **Description**: `transfer_windows` table exists and enforcement is wired, but rows must currently be created manually by the commissioner (#016). For league format, windows should open/close automatically based on fixture schedule.
 - **Logic**: After each matchday's last fixture ends, open a standard window for 48h with `transfers_remaining = 5` (or null for unlimited windows).
 - **Effort**: 2 hours (Edge Function + cron)
+
+### #022: Squad Screen — Player Click Bottom Sheet (Mobile)
+- **Status**: NOT VERIFIED
+- **Description**: Tapping a player on mobile Squad screen should open the action bottom sheet (Set Captain, Sub, Sell). Reported as not working. May be a z-index or event propagation issue introduced by the empty slot placeholders.
+- **Effort**: 30 minutes investigation
 
 ---
 
@@ -181,43 +168,35 @@
 
 ## ✅ Completed This Cycle
 
-**Session 1 — E2E Fixes & Sync**: localStorage timing fix, skipOnboarding helper, MarketScreen fallback, code sync (commits 7fd1ee3, 51d4643)
+**Session 4 — Bug Fixes & Player Data**:
+- Fixed MarketScreen empty player list (isolated fetch blocks)
+- Fixed SquadScreen Tools tab crash (`isLocked` undefined)
+- Applied DB migrations 04–07 + `get_server_time` RPC
+- Seeded 829 EPL players from CSV
+- Added draft entry banner to LeagueScreen (#015)
 
-**Session 2 — App Store Assessment**: Store readiness, cost estimate ($64K MVP), Capacitor architecture, phase 1–3 roadmap
-
-**Session 3 — Draft System Design**: Full brainstorming → design → decision log → `DRAFT_SYSTEM_DESIGN.md`
-
-**Session 3 — Draft System Implementation (S1–S12)**:
-- S1: DB schema (7 tables, 4 enums, `league_config` with all formula constants)
-- S2–S4: `DraftScreen` (ranked list, auto-complete, server-time submit, auto-save)
-- S5: `run-draft-lottery` Edge Function + pg_cron
-- S6: `GazetteDraftReport` component
-- S7: `DraftRecoveryScreen` (FCFS, realtime, optimistic UI)
-- S8: Transfer window DB triggers + `useTransferWindow` hook + `TransferWindowBanner`
-- S9: Trade UI extensions (window gating, position check, listing toggle, `trade_listings` table)
-- S10: Cup pool management (`get_cup_available_players`, `eliminate-cup-club` Edge Function)
-- S11: Relaxation formula (`calculate_relaxation_state`, `apply_relaxation_state`, `calculate-relaxation` Edge Function)
-- S12: `run-reverse-standings-draft` Edge Function + pg_cron
+**Session 5 — Buy/Sell Flow Redesign**:
+- `process-transfer` Edge Function (no-repeat, budget, position limits)
+- `useTransfer(leagueId)` hook
+- `PlayerPickerSheet` component
+- SquadScreen empty slots + picker
+- MarketScreen taken-by-manager display + league picker
+- LeagueScreen squad/market shortcut buttons
+- CI fix: `npm ci` → `npm install`
 
 ---
 
 ## 🎯 Recommended Next Cycle
 
-### Immediate (unblock draft system — ~4 hours total)
-1. **#014** `get_server_time` RPC — 5 min
-2. **#018** Configure cron settings — 15 min
-3. **#006** Database seeding — 2–3 hours
-4. **#015** Draft entry banner — 30 min
-
-### Make it usable (~4–5 hours)
-5. **#016** Commissioner panel (transfer windows + cup phase management)
-6. **#017** Wire trade builder to real squad data
+### Unblock the product (~3 hours)
+1. **#016** Commissioner panel — transfer windows + cup phase management
+2. **#017** Wire trade builder to real squad data
+3. **#018** Configure Supabase cron settings (15 min)
 
 ### Polish the experience (~2 hours)
-7. **#001** Resolve MarketScreen E2E blocker
-8. **#019** Pool pressure indicator
-9. **#003** Desktop Squad Screen Phase 4
-10. **#004** Onboarding tour Phase 5
+4. **#022** Verify/fix player click bottom sheet on mobile Squad screen
+5. **#001-E2E** Mock Supabase in E2E for deterministic market tests
+6. **#019** Pool pressure indicator on Draft screens
 
 ---
 
@@ -227,10 +206,10 @@
 |---|---|---|
 | E2E Tests Passed | 82/84 (97.6%) | 84/84 (100%) |
 | Draft System Stories | 12/12 ✅ | 12/12 |
-| DB Migrations | 8 | — |
-| Edge Functions | 4 | — |
-| Blocking Issues | 2 | 0 |
-| High Priority | 5 | 0 |
+| DB Migrations | 9 | — |
+| Edge Functions | 5 | — |
+| Blocking Issues | 1 | 0 |
+| High Priority | 3 | 0 |
 | Medium Priority | 5 | TBD |
 | Low Priority | 5 | TBD |
 
@@ -242,18 +221,22 @@
 |---|---|
 | `src/screens/DraftScreen.jsx` | Draft submission UI (ranked list, auto-complete, submit) |
 | `src/screens/DraftRecoveryScreen.jsx` | Post-lottery gap filling (FCFS, realtime) |
-| `src/screens/LeagueScreen.jsx` | League hub (gazette, trade builder, standings) |
-| `src/screens/SquadScreen.jsx` | Squad management (1,290+ lines, mobile-focused) |
+| `src/screens/LeagueScreen.jsx` | League hub (gazette, trade builder, standings, squad shortcuts) |
+| `src/screens/SquadScreen.jsx` | Squad management — empty slots, picker sheet, sell via Edge Function |
+| `src/screens/MarketScreen.jsx` | Player market — league-scoped, taken-by-manager display |
+| `src/components/PlayerPickerSheet.jsx` | Bottom sheet picker (position-filtered, taken/available states) |
+| `src/hooks/useTransfer.js` | League-scoped buy/sell hook with takenMap |
 | `src/components/GazetteDraftReport.jsx` | Draft report in The Official Gazette |
 | `src/components/TransferWindowBanner.jsx` | Live window status banner |
 | `src/hooks/useTransferWindow.js` | Transfer window state hook |
 | `src/hooks/useRelaxationState.js` | Cup no-repeat relaxation state hook |
 | `src/components/PowerToolCard.jsx` | Reusable power tools card |
+| `supabase/functions/process-transfer/` | Buy/sell Edge Function (no-repeat, budget, position limits) |
 | `supabase/functions/run-draft-lottery/` | Random lottery Edge Function |
 | `supabase/functions/run-reverse-standings-draft/` | Reverse-standings draft Edge Function |
 | `supabase/functions/eliminate-cup-club/` | Club elimination + gazette + relaxation trigger |
 | `supabase/functions/calculate-relaxation/` | No-repeat formula + gazette on tier change |
-| `supabase/migrations/` | 8 migrations (schema → crons) |
+| `supabase/migrations/` | 9 migrations (schema → crons → players seed) |
 | `DRAFT_SYSTEM_DESIGN.md` | Full design doc with decision log |
 | `APP_STORE_ASSESSMENT.md` | Mobile app strategy |
 | `e2e/platform.spec.js` | E2E test suite (84 tests, 82 passing) |
