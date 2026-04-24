@@ -106,8 +106,8 @@ export default function MarketScreen() {
     // ── 2. Transfer window lock ───────────────────────────────────────────────
     try {
       const [{ data: nowRow }, { data: deadlineRow }] = await Promise.all([
-        supabase.rpc('get_server_time').single().catch(() => ({ data: null })),
-        supabase.from('matchday_deadlines').select('deadline_at').eq('matchday_id', 'md1').maybeSingle().catch(() => ({ data: null })),
+        supabase.rpc('get_server_time').single().then(r => r, () => ({ data: null })),
+        supabase.from('matchday_deadlines').select('deadline_at').eq('matchday_id', 'md1').maybeSingle().then(r => r, () => ({ data: null })),
       ]);
       const serverNow = nowRow ? new Date(nowRow) : new Date();
       const deadline  = deadlineRow?.deadline_at ? new Date(deadlineRow.deadline_at) : null;

@@ -180,8 +180,8 @@ test.describe('SquadScreen', () => {
     await page.setViewportSize({ width: 375, height: 812 });
     await page.goto('/squad');
     await waitForContent(page);
-    // Chips are in the Tools tab — click it first
-    await page.getByText('⚙ Tools').click();
+    // Chips are in the Tools tab — click it first (icon and label are separate elements)
+    await page.getByText('Tools').first().click();
     await page.waitForTimeout(300);
     await expect(page.getByText(/wildcard|triple/i).first()).toBeVisible();
   });

@@ -152,7 +152,7 @@ export default function SquadScreen() {
       const squadQuery = supabase.from('squads').select('*').eq('user_id', userId);
       if (leagueId) squadQuery.eq('league_id', leagueId);
       const { data: squad, error } = await squadQuery.limit(1).maybeSingle();
-      if (error || !squad) { setLoading(false); return; }
+      if (error || !squad) { setSquadData(fallbackSquad); setLoading(false); return; }
 
       const { data: players, error: pErr } = await supabase.from('players').select('*').in('id', squad.players);
       if (pErr) throw pErr;

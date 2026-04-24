@@ -226,7 +226,7 @@ export default function DraftScreen() {
     setSaveError(null);
     try {
       // Validate against server time — client clock may be wrong
-      const { data: serverNow } = await supabase.rpc('get_server_time').single().catch(() => ({ data: null }));
+      const { data: serverNow } = await supabase.rpc('get_server_time').single().then(r => r, () => ({ data: null }));
       if (serverNow && deadline && new Date(serverNow) >= new Date(deadline)) {
         setSaveError('Draft deadline has passed — submission rejected.');
         return;
