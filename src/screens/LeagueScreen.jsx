@@ -66,7 +66,7 @@ export default function LeagueScreen() {
   const [tradeTarget,    setTradeTarget]    = useState(null);
   const [tradeError,     setTradeError]     = useState(null);
   const [myListings,     setMyListings]     = useState(new Set()); // player_ids I've listed
-  const [leagueListings, setLeagueListings] = useState([]);        // all listings in league
+  const [_leagueListings, setLeagueListings] = useState([]);        // all listings in league
   const [h2hTarget, setH2hTarget] = useState(null);
   
   const [members, setMembers] = useState([]);

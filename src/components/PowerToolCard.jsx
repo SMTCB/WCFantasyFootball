@@ -14,8 +14,6 @@ export default function PowerToolCard({
   label,
   description,
   isActive = false,
-  actionLabel = 'Activate',
-  colorClass = 'text-cyan',
   accentColor = '#00C4E8',
   bgColor = 'rgba(0,196,232,0.05)',
   borderColor = 'rgba(0,196,232,0.1)',

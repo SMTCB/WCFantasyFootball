@@ -64,7 +64,7 @@ export default function MarketScreen() {
   const [confirm,       setConfirm]       = useState(null);
 
   // League-scoped transfer state
-  const { buy, sell, takenMap, isTaken, takenBy, isOwnedBy, reload: reloadTaken } = useTransfer(activeLeague);
+  const { buy, sell, isTaken, takenBy, isOwnedBy } = useTransfer(activeLeague);
 
   // On mount: resolve league context
   useEffect(() => {
