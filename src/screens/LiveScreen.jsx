@@ -11,15 +11,15 @@ import SectionHeader from '../components/SectionHeader';
 
 // ─── Mock data for Demo Mode ───────────────────────────────────────────────
 const MOCK_LIVE_FIXTURES = [
-  { id: 'mock-1', home_team: 'Brazil', away_team: 'Korea', status: 'live', minute: '64' },
-  { id: 'mock-2', home_team: 'France', away_team: 'England', status: 'scheduled', kickoff_at: new Date().toISOString() },
+  { id: 'mock-1', home_team: 'Man City', away_team: 'Liverpool', status: 'live', minute: '64', homeGoals: 2, awayGoals: 0 },
+  { id: 'mock-2', home_team: 'Arsenal', away_team: 'Chelsea', status: 'scheduled', kickoff_at: new Date().toISOString() },
 ];
 
 const MOCK_EVENTS = [
-  { type: 'var',   minute: '63', team: 'BRA', players: { name: 'Vinícius Júnior' } },
-  { type: 'goal',  minute: '55', team: 'KOR', players: { name: 'Son Heung-min' } },
-  { type: 'goal',  minute: '12', team: 'BRA', players: { name: 'Richarlison' } },
-  { type: 'yellow', minute: '28', team: 'BRA', players: { name: 'Casemiro' } },
+  { type: 'goal',   minute: '55', team: 'Man City', playerName: 'Haaland' },
+  { type: 'assist', minute: '55', team: 'Man City', playerName: 'Foden' },
+  { type: 'goal',   minute: '23', team: 'Man City', playerName: 'Haaland' },
+  { type: 'yellow', minute: '28', team: 'Liverpool', playerName: 'Robertson' },
 ];
 
 const MOCK_RIVALS = [
@@ -30,10 +30,10 @@ const MOCK_RIVALS = [
 ];
 
 const MOCK_SQUAD_PLAYERS = normalisePlayers([
-  { id: 'p1', name: 'Alisson', club: 'BRA', position: 'GK' },
-  { id: 'p2', name: 'Thiago Silva', club: 'BRA', position: 'DEF' },
-  { id: 'p3', name: 'Casemiro', club: 'BRA', position: 'MID' },
-  { id: 'p4', name: 'Neymar', club: 'BRA', position: 'FWD' },
+  { id: 'p1', name: 'Alisson',   club: 'Liverpool', position: 'GK'  },
+  { id: 'p2', name: 'Robertson', club: 'Liverpool', position: 'DEF' },
+  { id: 'p3', name: 'Foden',     club: 'Man City',  position: 'MID' },
+  { id: 'p4', name: 'Haaland',   club: 'Man City',  position: 'FWD' },
 ]);
 
 // ─── Refresh interval: 5 minutes in ms ───────────────────────────────────────
@@ -96,24 +96,46 @@ export default function LiveScreen() {
       const userId = user?.id;
       setCurrentUser({ id: userId });
 
-      // 1. Fetch Fixtures
+      // 1. Fixtures — live + scheduled
       let { data: fixData } = await supabase
         .from('fixtures')
         .select('*')
-        .in('status', ['live', 'scheduled'])
+        .in('status', ['live', 'scheduled', 'finished'])
         .order('kickoff_at', { ascending: true });
-      
-      // Fallback to mock fixtures if DB empty
-      if (!fixData || fixData.length === 0) {
-        fixData = MOCK_LIVE_FIXTURES;
-      }
+      if (!fixData || fixData.length === 0) fixData = MOCK_LIVE_FIXTURES;
 
       const live = [], scheduled = [];
       (fixData || []).forEach(f => f.status === 'live' ? live.push(f) : scheduled.push(f));
-      setLiveFixtures(live);
-      setScheduledFixtures(scheduled);
 
-      // 2. Primary League
+      // 2. Goal counts per fixture (for score display in ticker)
+      const activeFixtureIds = fixData.map(f => f.id);
+      const { data: goalEvents } = await supabase
+        .from('match_events')
+        .select('fixture_id, team, type')
+        .in('fixture_id', activeFixtureIds)
+        .in('type', ['goal', 'own_goal']);
+
+      // Build { fixtureId: { homeGoals, awayGoals } }
+      const scoreMap = {};
+      for (const f of fixData) {
+        scoreMap[f.id] = { homeGoals: 0, awayGoals: 0 };
+      }
+      for (const ev of goalEvents || []) {
+        const fix = fixData.find(f => f.id === ev.fixture_id);
+        if (!fix || !scoreMap[ev.fixture_id]) continue;
+        const isHome = ev.team === fix.home_team;
+        const isOwn  = ev.type === 'own_goal';
+        if (isHome && !isOwn || !isHome && isOwn) scoreMap[ev.fixture_id].homeGoals++;
+        else scoreMap[ev.fixture_id].awayGoals++;
+      }
+
+      // Attach scores to fixtures
+      const enrichedLive      = live.map(f => ({ ...f, ...scoreMap[f.id] }));
+      const enrichedScheduled = scheduled.map(f => ({ ...f, ...scoreMap[f.id] }));
+      setLiveFixtures(enrichedLive);
+      setScheduledFixtures(enrichedScheduled);
+
+      // 3. Primary League
       let { data: membersData } = await supabase
         .from('league_members')
         .select('league_id, rank, total_points, leagues(name)')
@@ -122,62 +144,89 @@ export default function LiveScreen() {
         .limit(1);
 
       if (!membersData || membersData.length === 0) {
-        // Mock fallback for league context
-        setPrimaryLeague({ total_points: 205, leagues: { name: 'World Cup Official (Demo)' } });
+        setPrimaryLeague({ total_points: 205, leagues: { name: 'Fantasy League (Demo)' } });
         setRivals(MOCK_RIVALS);
         setMySquadPlayers(MOCK_SQUAD_PLAYERS);
         setEvents(MOCK_EVENTS);
-        
         const fakeScore = MOCK_EVENTS.reduce((acc, curr) =>
           curr.type === 'goal' ? acc + 5 : curr.type === 'yellow' ? acc - 1 : acc, 0);
         setLiveScoreSum(Math.max(0, fakeScore));
-      } else {
-        const myLeague = membersData[0];
-        setPrimaryLeague(myLeague);
-
-        // Fetch league rivals
-        const { data: rivalData } = await supabase
-          .from('league_members')
-          .select('rank, total_points, user_id, users(username)')
-          .eq('league_id', myLeague.league_id)
-          .order('rank', { ascending: true });
-
-        setRivals(rivalData?.length > 0 ? rivalData : MOCK_RIVALS);
-
-        // 3. Fetch My Squad (for Projections)
-        const { data: squadData } = await supabase
-          .from('squads')
-          .select('players')
-          .eq('user_id', userId)
-          .maybeSingle();
-
-        if (squadData?.players?.length > 0) {
-          const { data: squadPlayers } = await supabase
-            .from('players')
-            .select('id, position, name, club')
-            .in('id', squadData.players);
-          
-          setMySquadPlayers(squadPlayers || MOCK_SQUAD_PLAYERS);
-        } else {
-          setMySquadPlayers(MOCK_SQUAD_PLAYERS);
-        }
-
-        // 4. Match Events
-        const { data: eventData } = await supabase
-          .from('match_events')
-          .select('type, minute, team, players(name)')
-          .order('created_at', { ascending: false })
-          .limit(20);
-
-        const latestEvents = eventData?.length > 0 ? eventData : MOCK_EVENTS;
-        setEvents(latestEvents);
-
-        // 5. Live score from events
-        const realOrFakeEvents = eventData?.length > 0 ? eventData : MOCK_EVENTS;
-        const fakeScore = realOrFakeEvents.reduce((acc, curr) =>
-          curr.type === 'goal' ? acc + 5 : curr.type === 'yellow' ? acc - 1 : acc, 0);
-        setLiveScoreSum(Math.max(0, fakeScore));
+        return;
       }
+
+      const myLeague = membersData[0];
+      setPrimaryLeague(myLeague);
+
+      // 4. League rivals
+      const { data: rivalData } = await supabase
+        .from('league_members')
+        .select('rank, total_points, user_id, users(username)')
+        .eq('league_id', myLeague.league_id)
+        .order('rank', { ascending: true });
+      setRivals(rivalData?.length > 0 ? rivalData : MOCK_RIVALS);
+
+      // 5. Latest squad (most-recent matchday)
+      const { data: squadRow } = await supabase
+        .from('squads')
+        .select('id, players, captain_id, is_triple_captain, matchday_id')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      const squadPlayerIds = squadRow?.players || [];
+
+      // 6. Player details + match stats in parallel
+      const [{ data: squadPlayers }, { data: statsData }, { data: eventData }] = await Promise.all([
+        supabase.from('players').select('id, position, name, club').in('id', squadPlayerIds.length ? squadPlayerIds : ['__none__']),
+        // Points from player_match_stats for this matchday's fixtures
+        supabase.from('player_match_stats')
+          .select('player_id, fantasy_points, fixture_id')
+          .in('player_id', squadPlayerIds.length ? squadPlayerIds : ['__none__']),
+        // Recent match events — player names via separate lookup below
+        supabase.from('match_events')
+          .select('fixture_id, player_id, type, minute, team')
+          .in('fixture_id', activeFixtureIds)
+          .order('minute', { ascending: false })
+          .limit(30),
+      ]);
+
+      // Resolve player names for event feed
+      const eventPlayerIds = [...new Set((eventData || []).map(e => e.player_id).filter(Boolean))];
+      const { data: eventPlayers } = eventPlayerIds.length
+        ? await supabase.from('players').select('id, name').in('id', eventPlayerIds)
+        : { data: [] };
+      const playerNameMap = Object.fromEntries((eventPlayers || []).map(p => [p.id, p.name]));
+
+      const enrichedEvents = (eventData || []).map(e => ({
+        ...e,
+        playerName: playerNameMap[e.player_id] || 'Unknown',
+      }));
+      setEvents(enrichedEvents.length > 0 ? enrichedEvents : MOCK_EVENTS);
+
+      // 7. Compute live score from real player_match_stats
+      const matchdayFixtureIds = new Set(
+        (fixData || []).filter(f => f.id.startsWith(squadRow?.matchday_id || '')).map(f => f.id)
+      );
+      const pointsPerPlayer = {};
+      for (const s of statsData || []) {
+        if (matchdayFixtureIds.has(s.fixture_id)) {
+          pointsPerPlayer[s.player_id] = (pointsPerPlayer[s.player_id] || 0) + Number(s.fantasy_points);
+        }
+      }
+
+      // Enrich squad players with points + captain multiplier
+      const captainId = squadRow?.captain_id;
+      const isTriple  = squadRow?.is_triple_captain;
+      const enrichedSquad = (squadPlayers || MOCK_SQUAD_PLAYERS).map(p => {
+        let pts = pointsPerPlayer[p.id] || 0;
+        if (p.id === captainId) pts *= isTriple ? 3 : 2;
+        return { ...p, points: pts };
+      });
+      setMySquadPlayers(enrichedSquad);
+
+      const totalLive = enrichedSquad.slice(0, 11).reduce((sum, p) => sum + p.points, 0);
+      setLiveScoreSum(Math.round(totalLive * 10) / 10);
 
     } catch (err) {
       console.error('Live fetch error', err);
@@ -239,7 +288,7 @@ export default function LiveScreen() {
                     <div className="text-[10px] font-black text-positive uppercase tracking-widest mb-2">LIVE • {f.minute}'</div>
                     <div className="flex justify-between w-full font-bold text-sm mb-3">
                       <span className="truncate max-w-[40%]">{f.home_team.substring(0, 3).toUpperCase()}</span>
-                      <span className="tabular-nums text-white/60">0 – 0</span>
+                      <span className="tabular-nums text-white/60">{f.homeGoals ?? 0} – {f.awayGoals ?? 0}</span>
                       <span className="truncate max-w-[40%] text-right">{f.away_team.substring(0, 3).toUpperCase()}</span>
                     </div>
                     {/* Match progress bar */}
@@ -400,6 +449,29 @@ export default function LiveScreen() {
                   })}
                 </div>
 
+                {/* ── MY SQUAD BREAKDOWN ──────────────────────── */}
+                {mySquadPlayers.length > 0 && (
+                  <>
+                    <SectionHeader title="MY SQUAD" />
+                    <div className="bg-[#0d0d0d] border-b border-white/5">
+                      {mySquadPlayers.slice(0, 11).map((p, i) => (
+                        <div key={p.id ?? i} className="grid grid-cols-[1fr_auto_auto] gap-x-3 px-4 py-2.5 items-center border-b border-white/5">
+                          <div className="min-w-0">
+                            <div className="text-[13px] font-bold truncate text-white">{p.name}</div>
+                            <div className="text-[10px] text-text-tertiary font-semibold">{p.position} · {p.club}</div>
+                          </div>
+                          <div className="text-[10px] text-text-tertiary font-semibold uppercase">
+                            {p.id === mySquadPlayers[0]?.id ? '' : ''}
+                          </div>
+                          <div className={`text-[14px] font-black tabular-nums w-10 text-right ${p.points > 0 ? 'text-positive' : 'text-text-tertiary'}`}>
+                            {p.points > 0 ? `+${p.points}` : '—'}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                )}
+
                 {/* ── ACTIVITY LOG ─────────────────────────────── */}
                 <SectionHeader title="ACTIVITY LOG" />
                 <div className="bg-[#0d0d0d]">
@@ -412,21 +484,24 @@ export default function LiveScreen() {
                         style={{ animationDelay: `${i * 40}ms` }}
                       >
                         <div className="w-8 flex justify-center shrink-0 text-xl">
-                          {e.type === 'goal'   && '⚽'}
-                          {e.type === 'yellow' && '🟨'}
-                          {e.type === 'red'    && '🟥'}
-                          {e.type === 'sub'    && '↕️'}
-                          {isVar               && '📺'}
+                          {e.type === 'goal'          && '⚽'}
+                          {e.type === 'assist'        && '🅰️'}
+                          {e.type === 'yellow'        && '🟨'}
+                          {e.type === 'red'           && '🟥'}
+                          {e.type === 'sub'           && '↕️'}
+                          {e.type === 'penalty_saved' && '🧤'}
+                          {e.type === 'own_goal'      && '😬'}
+                          {isVar                      && '📺'}
                         </div>
                         <div className="flex-1 min-w-0">
                           {isVar ? (
                             <>
                               <div className="text-[13px] font-bold truncate leading-tight text-[#FFB300] animate-pulse">UNDER REVIEW</div>
-                              <div className="text-[11px] text-[#9E9E9E] truncate">Goal Check — {e.players?.name} ({e.team})</div>
+                              <div className="text-[11px] text-[#9E9E9E] truncate">Goal Check — {e.playerName} ({e.team})</div>
                             </>
                           ) : (
                             <>
-                              <div className="text-[13px] font-bold truncate leading-tight">{e.players?.name}</div>
+                              <div className="text-[13px] font-bold truncate leading-tight">{e.playerName || e.players?.name}</div>
                               <div className="text-[11px] text-text-tertiary truncate">{e.team}</div>
                             </>
                           )}
@@ -435,8 +510,8 @@ export default function LiveScreen() {
                           {isVar ? (
                             <div className="text-[13px] font-black tabular-nums text-[#FFB300]">...</div>
                           ) : (
-                            <div className={`text-[13px] font-black tabular-nums ${e.type === 'goal' ? 'text-positive' : e.type === 'red' ? 'text-negative' : 'text-yellow-400'}`}>
-                              {e.type === 'goal' ? '+6' : e.type === 'yellow' ? '−1' : e.type === 'red' ? '−3' : ''}
+                            <div className={`text-[13px] font-black tabular-nums ${e.type === 'goal' ? 'text-positive' : e.type === 'red' || e.type === 'own_goal' ? 'text-negative' : e.type === 'yellow' ? 'text-yellow-400' : 'text-text-secondary'}`}>
+                              {e.type === 'goal' ? '+6' : e.type === 'assist' ? '+3' : e.type === 'yellow' ? '−1' : e.type === 'red' ? '−3' : e.type === 'penalty_saved' ? '+5' : e.type === 'own_goal' ? '−2' : ''}
                             </div>
                           )}
                           <div className="text-[10px] font-black text-white/30 uppercase tracking-widest">{e.minute}'</div>
