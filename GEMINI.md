@@ -2,79 +2,107 @@
 
 ## Project Overview
 
-**Forza Fantasy League** — EPL fantasy football app.
+**ForzaKit / Forza Fantasy League** — EPL fantasy football app.
 
-- **Web app**: React + Vite + Tailwind CSS 4 + Supabase (production-ready, 97.6% E2E coverage)
-- **Your scope**: iOS and Android mobile apps via **Capacitor** (hybrid wrapper)
-- **Other AI platform**: Claude Code handles web app and backend; do not modify `src/` or `supabase/` without coordination
-- **Implementation guide**: `MOBILE_IMPLEMENTATION_GUIDE.md` (read this first)
+- **Web app**: React 19 + Vite + Tailwind CSS 4 + Supabase (production-ready, 82/84 E2E passing)
+- **Your scope**: iOS and Android native apps via **Capacitor** (scaffold already exists)
+- **Other AI platform**: Claude Code handles web app and backend — coordinate before touching `src/`, `supabase/`, or `backend/`
+- **Implementation guide**: `MOBILE_IMPLEMENTATION_GUIDE.md` — start here, Phase 1 & 2 already done
 
 ---
 
 ## Multi-AI Collaboration Protocol
 
-**Two AI coding platforms share this repository — never simultaneously.**
+**Two AI platforms share this repo — never simultaneously.**
 
-| Platform | Scope | Branch Convention |
+| Platform | Scope | Branch convention |
 |----------|-------|-------------------|
 | Claude Code | Web app, backend, infrastructure | `claude/<slug>` |
 | Google Antigravity (you) | Mobile — Capacitor iOS/Android | `antigravity/<slug>` |
 
-**Rules before starting any session**:
-1. Run `git status` — must be clean (no uncommitted changes)
-2. Run `git pull origin main` — always start from latest `main`
-3. Create a new branch: `git checkout -b antigravity/<feature-name>`
-4. After finishing, open a PR to `main` and do not leave uncommitted work
+**Before starting any session**:
+```bash
+git status                          # must be clean
+git checkout main
+git pull origin main                # always start from latest main
+git checkout -b antigravity/<name>  # create feature branch
+```
+
+**Before ending any session**:
+```bash
+git status          # must be clean
+git push origin antigravity/<name>
+# open PR to main
+```
 
 ---
 
-## Architecture
+## What's Already Done (Do Not Redo)
+
+| Task | Status |
+|------|--------|
+| Capacitor install + `capacitor.config.ts` | ✅ Done |
+| iOS Xcode project (`ios/`) | ✅ Done |
+| Android Studio project (`android/`) | ✅ Done |
+| `viewport-fit=cover` in `index.html` | ✅ Done |
+| StatusBar + SplashScreen init from React (`src/lib/capacitor.js`) | ✅ Done |
+| App resume → Supabase session refresh | ✅ Done |
+| iOS URL scheme for OAuth deep link (`Info.plist`) | ✅ Done |
+| Android deep link intent filter (`AndroidManifest.xml`) | ✅ Done |
+| Android `minSdkVersion` 26, `targetSdk` 36 | ✅ Done |
+| iOS portrait-only orientation + arm64 | ✅ Done |
+| Auth mobile redirect URL (`AuthContext.jsx`) | ✅ Done |
+| Brand colors in Android resources | ✅ Done |
+
+---
+
+## What Remains
+
+See `MOBILE_IMPLEMENTATION_GUIDE.md` Phase 3 onwards:
+
+- Push notifications (Firebase FCM + APNs)
+- App icons (1024×1024 PNG needed from design)
+- Splash screen asset (replace Capacitor default)
+- TestFlight + Play Store internal testing setup
+- Store listing copy, screenshots, privacy policy
+- CI/CD workflow for mobile builds
+
+---
+
+## Repository Structure (Your Domain)
 
 ```
-forza-fantasy-league/
-├── src/                    # React web app — Claude's domain (coordinate before editing)
-├── backend/                # Supabase Edge Functions — Claude's domain
-├── supabase/               # DB migrations — Claude's domain
-├── ios/                    # Capacitor iOS project — YOUR domain
-├── android/                # Capacitor Android project — YOUR domain
-├── capacitor.config.ts     # Capacitor configuration — YOUR domain
-├── e2e/                    # Playwright E2E tests
-├── docs/                   # Technical documentation
-├── .github/workflows/      # CI/CD (coordinate with Claude for new workflows)
-└── public/                 # Static assets
+ios/                    # Xcode project — your primary ownership
+android/                # Android Studio project — your primary ownership
+capacitor.config.ts     # Capacitor config — your ownership
+src/lib/capacitor.js    # Native init — coordinate with Claude before editing
 ```
+
+**Coordinate before touching**: `src/`, `supabase/`, `backend/`, `package.json`
 
 ---
 
 ## Key Commands
 
 ```bash
-npm install               # Install dependencies
-npm run build             # Build web app (required before cap sync)
-npx cap sync              # Sync web build → native projects
-npx cap open ios          # Open Xcode
-npx cap open android      # Open Android Studio
-npx cap run ios           # Run on iOS simulator
-npx cap run android       # Run on Android emulator
+npm install                   # install dependencies
+npm run build                 # build web app (required before cap sync)
+npx cap sync                  # sync dist/ to ios/ and android/
+npx cap open ios              # open Xcode
+npx cap open android          # open Android Studio
+npx cap run ios               # run on iOS simulator
+npx cap run android           # run on Android emulator
 ```
 
----
-
-## Important Files
-
-| File | Purpose |
-|------|---------|
-| `MOBILE_IMPLEMENTATION_GUIDE.md` | **Start here** — full Antigravity implementation guide |
-| `APP_STORE_ASSESSMENT.md` | Architecture decisions, cost, timeline, risk assessment |
-| `BACKLOG.md` | Current known issues |
-| `CLAUDE.md` | Claude Code's instructions (context for what Claude handles) |
+App ID: `com.fantasykit.forzaedition`  
+iOS: Xcode project at `ios/App/App.xcodeproj`  
+Android: project at `android/`
 
 ---
 
 ## Development Guidelines
 
-- **Never commit secrets**: `.env` files are gitignored; use `.env.example` as reference
-- **Build before syncing**: Always `npm run build` before `npx cap sync`
-- **Test on real devices**: Emulators are not sufficient for App Store submission
-- **Preserve web app behaviour**: Capacitor wraps the existing React app — do not modify `src/` without coordinating with the web team
-- **Branch discipline**: Feature branches only; PRs to `main`
+- **Never commit secrets**: `.env` is gitignored; use `.env.example`
+- **Build before sync**: always `npm run build` before `npx cap sync`
+- **Branch discipline**: feature branches only, PRs to `main`
+- **Clean handoffs**: `git status` must be clean when you stop

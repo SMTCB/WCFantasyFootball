@@ -6,6 +6,9 @@ import { useAuth } from '../hooks/useAuth';
 import SectionHeader from '../components/SectionHeader';
 import LeagueInviteCard from '../components/LeagueInviteCard';
 import H2HSheet from '../components/H2HSheet';
+import GazetteDraftReport from '../components/GazetteDraftReport';
+import TransferWindowBanner from '../components/TransferWindowBanner';
+import { useTransferWindow } from '../hooks/useTransferWindow';
 
 // ─── Shared Mock Data ────────────────────────────────────────────────────────
 const MOCK_PLAYERS_POOL = normalisePlayers([
@@ -60,12 +63,18 @@ export default function LeagueScreen() {
   const [tradeCash, setTradeCash] = useState(5.0);
   const [tradePoints, setTradePoints] = useState(0);
   
-  const [tradeTarget, setTradeTarget] = useState(null);
+  const [tradeTarget,    setTradeTarget]    = useState(null);
+  const [tradeError,     setTradeError]     = useState(null);
+  const [myListings,     setMyListings]     = useState(new Set()); // player_ids I've listed
+  const [_leagueListings, setLeagueListings] = useState([]);        // all listings in league
   const [h2hTarget, setH2hTarget] = useState(null);
   
   const [members, setMembers] = useState([]);
   const [membersLoading, setMembersLoading] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
+  const [draftGaps, setDraftGaps] = useState(0); // unresolved_slots for current user
+  const [draftOpen, setDraftOpen] = useState(false); // deadline in future + no submission yet
+  const transferWindow = useTransferWindow(activeLeague?.league_id);
 
   // Create form state
   const [leagueName,   setLeagueName]   = useState('');
@@ -77,6 +86,45 @@ export default function LeagueScreen() {
   const [joinCode,     setJoinCode]     = useState('');
   const [joinLoading,  setJoinLoading]  = useState(false);
   const [joinError,    setJoinError]    = useState('');
+
+  const toggleListing = async (playerId) => {
+    const leagueId = activeLeague?.league_id;
+    if (!leagueId) return;
+    if (myListings.has(playerId)) {
+      await supabase.from('trade_listings').delete()
+        .eq('league_id', leagueId).eq('user_id', user?.id).eq('player_id', playerId);
+      setMyListings(prev => { const s = new Set(prev); s.delete(playerId); return s; });
+      setLeagueListings(prev => prev.filter(l => !(l.user_id === user?.id && l.player_id === playerId)));
+    } else {
+      await supabase.from('trade_listings').upsert(
+        { league_id: leagueId, user_id: user?.id, player_id: playerId },
+        { onConflict: 'league_id,user_id,player_id' }
+      );
+      setMyListings(prev => new Set([...prev, playerId]));
+      setLeagueListings(prev => [...prev, { user_id: user?.id, player_id: playerId }]);
+    }
+  };
+
+  const validateAndSendProposal = async () => {
+    setTradeError(null);
+    if (!tradeMyPlayer || !tradeTheirPlayer) {
+      setTradeError('Select both players before sending.');
+      return;
+    }
+    const myPos    = tradeMyPlayer.position?.toUpperCase().replace('FW','FWD');
+    const theirPos = tradeTheirPlayer.position?.toUpperCase().replace('FW','FWD');
+    const positionChange = myPos !== theirPos;
+
+    // Position-change swaps require an open transfer window
+    if (positionChange && !transferWindow.isOpen) {
+      setTradeError('Position-change swaps require an open transfer window.');
+      return;
+    }
+    // TODO: deeper position-cap check will use live squad data once real squads are wired
+    alert('Proposal Sent!');
+    setShowTradeBuilder(false);
+    setTradeError(null);
+  };
 
   const renderTabs = () => (
     <div className="flex bg-[#161616] border-b border-[#2A2A2A] sticky top-[60px] z-20">
@@ -120,6 +168,37 @@ export default function LeagueScreen() {
       const { data: lData } = await supabase.from('leagues').select('*').eq('id', id).single();
       if (lData) setActiveLeague({ league_id: id, leagues: lData });
       const { data: mData } = await supabase.from('league_members').select('rank, total_points, user_id, users(username)').eq('league_id', id).order('total_points', { ascending: false });
+
+      // Check if current user has an incomplete draft allocation
+      const { data: alloc } = await supabase
+        .from('draft_allocations')
+        .select('unresolved_slots')
+        .eq('league_id', id)
+        .eq('user_id', user?.id)
+        .maybeSingle();
+      setDraftGaps(alloc?.unresolved_slots ?? 0);
+
+      // Check if draft is open and manager hasn't submitted yet
+      const deadline = lData?.draft_deadline;
+      if (deadline && new Date(deadline) > new Date()) {
+        const { data: sub } = await supabase
+          .from('draft_submissions')
+          .select('id')
+          .eq('league_id', id)
+          .eq('user_id', user?.id)
+          .maybeSingle();
+        setDraftOpen(!sub);
+      } else {
+        setDraftOpen(false);
+      }
+
+      // Load trade listings for the league
+      const { data: listings } = await supabase
+        .from('trade_listings')
+        .select('player_id, user_id')
+        .eq('league_id', id);
+      setLeagueListings(listings ?? []);
+      setMyListings(new Set((listings ?? []).filter(l => l.user_id === user?.id).map(l => l.player_id)));
       
       if (!mData || mData.length <= 1) {
         const userId = user?.id;
@@ -301,6 +380,52 @@ export default function LeagueScreen() {
             <div className="text-[13px] font-bold">📨 João wants to trade De Bruyne for your Bellingham. Tap to review.</div>
          </div>
 
+         <TransferWindowBanner {...transferWindow} />
+
+         {/* Draft open banner — shown when deadline is future and no submission yet */}
+         {draftOpen && (
+           <div
+             onClick={() => navigate(`/league/${activeLeague?.league_id}/draft`)}
+             className="bg-[#1B5E20] text-white px-4 py-3 flex items-center justify-between cursor-pointer active:opacity-80"
+           >
+             <div className="text-[13px] font-bold">
+               🟢 Draft is open — submit your ranked list before the deadline
+             </div>
+             <div className="text-[11px] font-black uppercase tracking-widest opacity-80">→</div>
+           </div>
+         )}
+
+         {/* Manage Squad shortcut */}
+         <div className="px-4 py-2 flex gap-2">
+           <button
+             onClick={() => navigate(`/squad?leagueId=${activeLeague?.league_id}`)}
+             className="flex-1 py-2.5 rounded-lg flex items-center justify-center gap-2 transition-all active:opacity-70"
+             style={{ background: 'rgba(0,196,232,0.08)', border: '1px solid rgba(0,196,232,0.2)', color: '#00C4E8', fontFamily: 'Barlow Condensed, sans-serif', fontSize: '11px', fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase' }}
+           >
+             👥 Manage Squad
+           </button>
+           <button
+             onClick={() => navigate(`/market?leagueId=${activeLeague?.league_id}`)}
+             className="flex-1 py-2.5 rounded-lg flex items-center justify-center gap-2 transition-all active:opacity-70"
+             style={{ background: 'rgba(24,201,107,0.08)', border: '1px solid rgba(24,201,107,0.2)', color: '#18C96B', fontFamily: 'Barlow Condensed, sans-serif', fontSize: '11px', fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase' }}
+           >
+             🛒 Market
+           </button>
+         </div>
+
+         {/* Draft gap banner — shown only when manager has unresolved slots */}
+         {draftGaps > 0 && (
+           <div
+             onClick={() => navigate(`/league/${activeLeague?.league_id}/draft/recover`)}
+             className="bg-[#E53935] text-white px-4 py-3 flex items-center justify-between cursor-pointer active:opacity-80"
+           >
+             <div className="text-[13px] font-bold">
+               ⚠ Your squad has {draftGaps} empty slot{draftGaps !== 1 ? 's' : ''} — tap to pick now
+             </div>
+             <div className="text-[11px] font-black uppercase tracking-widest opacity-80">→</div>
+           </div>
+         )}
+
          {renderTabs()}
 
          {/* ── VIEWS ──────────────────────────────────────────────────────── */}
@@ -413,6 +538,9 @@ export default function LeagueScreen() {
                       <p className="text-[11px] leading-relaxed">Neymar for Messi swap deal shakes up the leaderboards.</p>
                    </div>
                 </div>
+
+                {/* Draft report — renders only when a draft_report gazette entry exists */}
+                <GazetteDraftReport leagueId={activeLeague?.league_id} />
              </div>
 
              <div className="px-6 py-4 border-t-4 border-black bg-black text-white">
@@ -600,6 +728,18 @@ export default function LeagueScreen() {
                            <option value="">(None)</option>
                            {MOCK_SQUAD_PLAYERS.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
                         </select>
+                        {tradeMyPlayer && (
+                          <button
+                            onClick={() => toggleListing(tradeMyPlayer.id)}
+                            className={`text-[9px] font-black uppercase tracking-widest px-2 py-1 rounded border transition-all ${
+                              myListings.has(tradeMyPlayer.id)
+                                ? 'border-[#00C853]/40 text-[#00C853] bg-[#00C853]/10'
+                                : 'border-[#2A2A2A] text-[#555]'
+                            }`}
+                          >
+                            {myListings.has(tradeMyPlayer.id) ? '✓ Listed for trade' : '+ List for trade'}
+                          </button>
+                        )}
                       </div>
                       <div className="text-[#2A2A2A] text-xl mt-6 flex justify-center">↔</div>
                       <div className="flex flex-col gap-2">
@@ -637,8 +777,29 @@ export default function LeagueScreen() {
                       <p className="text-[10px] text-[#9E9E9E] italic text-center">Give up raw ranking points to secure a star player.</p>
                     </div>
                   </div>
-                  <div className="p-6 border-t border-[#1E1E1E] bg-[#0D0D0D]">
-                    <button onClick={() => { alert('Proposal Sent!'); setShowTradeBuilder(false); }} className="w-full py-4 bg-cyan text-black text-[13px] font-black uppercase tracking-widest rounded active:scale-95 shadow-[0_0_15px_rgba(0,180,216,0.3)]">Broadcast Proposal</button>
+                  <div className="p-6 border-t border-[#1E1E1E] bg-[#0D0D0D] space-y-3">
+                    {/* Window status inside the builder */}
+                    {transferWindow.status === 'upcoming' && tradeMyPlayer && tradeTheirPlayer &&
+                      tradeMyPlayer.position?.toUpperCase().replace('FW','FWD') !==
+                      tradeTheirPlayer.position?.toUpperCase().replace('FW','FWD') && (
+                      <div className="text-[#FFC107] text-[10px] font-bold text-center">
+                        ⏳ Transfer window opens in{' '}
+                        {transferWindow.opensAt
+                          ? new Date(transferWindow.opensAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                          : 'soon'}
+                        {' '}— position-change swaps blocked until then
+                      </div>
+                    )}
+                    {tradeError && (
+                      <div className="text-[#E53935] text-[10px] font-bold text-center">{tradeError}</div>
+                    )}
+                    <button
+                      onClick={validateAndSendProposal}
+                      className="w-full py-4 bg-cyan text-black text-[13px] font-black uppercase tracking-widest rounded active:scale-95 shadow-[0_0_15px_rgba(0,180,216,0.3)]"
+                      style={{ backgroundColor: '#00B4D8' }}
+                    >
+                      Broadcast Proposal
+                    </button>
                   </div>
                </div>
             </div>

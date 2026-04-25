@@ -1,0 +1,372 @@
+import { useState, useEffect, useMemo } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { supabase } from '../lib/supabase';
+import { normalisePlayers } from '../lib/players';
+import { useAuth } from '../hooks/useAuth';
+
+const POS_CONFIG = {
+  GK:  { label: 'GK',  color: '#F0B400', bg: 'rgba(240,180,0,0.14)'  },
+  DEF: { label: 'DEF', color: '#00C4E8', bg: 'rgba(0,196,232,0.14)'  },
+  MID: { label: 'MID', color: '#9D5FF5', bg: 'rgba(157,95,245,0.14)' },
+  FWD: { label: 'FWD', color: '#F03A3A', bg: 'rgba(240,58,58,0.14)'  },
+};
+
+const SQUAD_POS_CAPS  = { GK: 2, DEF: 5, MID: 5, FWD: 3 };
+const SQUAD_SIZE      = 15;
+const BUDGET_TOTAL    = 100;
+const POS_FILTER_ORDER = ['ALL', 'GK', 'DEF', 'MID', 'FWD'];
+
+function normalisePos(p) {
+  const s = (p ?? '').toUpperCase().trim();
+  if (s === 'FW' || s === 'FWD') return 'FWD';
+  return s || 'MID';
+}
+
+export default function DraftRecoveryScreen() {
+  const { leagueId } = useParams();
+  const navigate     = useNavigate();
+  const { user }     = useAuth();
+
+  const [allocation,  setAllocation]  = useState(null);  // draft_allocations row
+  const [squad,       setSquad]       = useState([]);     // current player objects in squad
+  const [allPlayers,  setAllPlayers]  = useState([]);     // full player pool
+  const [takenIds,    setTakenIds]    = useState(new Set()); // allocated across whole league
+  const [filterPos,   setFilterPos]   = useState('ALL');
+  const [search,      setSearch]      = useState('');
+  const [loading,     setLoading]     = useState(true);
+  const [picking,     setPicking]     = useState(null);   // player id being claimed
+  const [error,       setError]       = useState(null);
+  const [done,        setDone]        = useState(false);
+
+  useEffect(() => { fetchData(); }, [leagueId]);
+
+  // Supabase realtime — update takenIds when another manager claims a player
+  useEffect(() => {
+    if (!leagueId) return;
+    const channel = supabase
+      .channel(`draft-recovery-${leagueId}`)
+      .on('postgres_changes', {
+        event:  '*',
+        schema: 'public',
+        table:  'draft_allocations',
+        filter: `league_id=eq.${leagueId}`,
+      }, () => { refreshTakenIds(); })
+      .subscribe();
+    return () => supabase.removeChannel(channel);
+  }, [leagueId]);
+
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+
+      // Load available players — RPC respects cup pool restriction.
+      // Falls back to full pool for non-cup leagues (no cup_active_clubs rows).
+      const { data: pData } = await supabase
+        .rpc('get_cup_available_players', { p_league_id: leagueId });
+      const players = normalisePlayers(pData ?? []);
+      setAllPlayers(players);
+
+      // Load this manager's allocation
+      const { data: alloc } = await supabase
+        .from('draft_allocations')
+        .select('*')
+        .eq('league_id', leagueId)
+        .eq('user_id', user?.id)
+        .maybeSingle();
+
+      setAllocation(alloc ?? null);
+
+      const myPlayerIds = alloc?.allocated_players ?? [];
+      const myPlayers   = myPlayerIds
+        .map(id => players.find(p => p.id === id))
+        .filter(Boolean)
+        .map(p => ({ ...p, position: normalisePos(p.position) }));
+      setSquad(myPlayers);
+
+      if (myPlayers.length >= SQUAD_SIZE) setDone(true);
+
+      // Load all taken player ids across the league
+      await refreshTakenIds(myPlayerIds);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const refreshTakenIds = async (myIds) => {
+    const { data: allocRows } = await supabase
+      .from('draft_allocations')
+      .select('allocated_players, user_id')
+      .eq('league_id', leagueId);
+
+    const taken = new Set();
+    for (const row of allocRows ?? []) {
+      // Don't mark my own players as taken — I already hold them
+      if (row.user_id === user?.id) continue;
+      for (const pid of row.allocated_players ?? []) taken.add(pid);
+    }
+    // Also mark my own current squad as unavailable to re-add
+    for (const pid of myIds ?? squad.map(p => p.id)) taken.add(pid);
+    setTakenIds(taken);
+  };
+
+  // Derived squad stats
+  const posCounts = useMemo(() =>
+    squad.reduce((acc, p) => {
+      const pos = normalisePos(p.position);
+      return { ...acc, [pos]: (acc[pos] ?? 0) + 1 };
+    }, {}),
+    [squad]
+  );
+
+  const budgetUsed = useMemo(() =>
+    squad.reduce((sum, p) => sum + (p.price ?? 0), 0),
+    [squad]
+  );
+  const budgetLeft  = BUDGET_TOTAL - budgetUsed;
+  const slotsLeft   = SQUAD_SIZE - squad.length;
+
+  // Missing positions (what still needs to be filled)
+  const missingPositions = useMemo(() => {
+    const missing = [];
+    for (const [pos, cap] of Object.entries(SQUAD_POS_CAPS)) {
+      const have = posCounts[pos] ?? 0;
+      const need = cap - have;
+      if (need > 0) missing.push({ pos, need });
+    }
+    return missing;
+  }, [posCounts]);
+
+  // Filtered available pool
+  const available = useMemo(() => {
+    return allPlayers
+      .filter(p => {
+        const pos = normalisePos(p.position);
+        if (takenIds.has(p.id))                    return false;
+        if (filterPos !== 'ALL' && pos !== filterPos) return false;
+        if (search && !p.name.toLowerCase().includes(search.toLowerCase())) return false;
+        return true;
+      })
+      .map(p => ({ ...p, position: normalisePos(p.position) }));
+  }, [allPlayers, takenIds, filterPos, search]);
+
+  const canPick = (player) => {
+    if (squad.length >= SQUAD_SIZE)                              return false;
+    if (budgetLeft < player.price)                              return false;
+    if ((posCounts[player.position] ?? 0) >= SQUAD_POS_CAPS[player.position]) return false;
+    return true;
+  };
+
+  const pickPlayer = async (player) => {
+    if (!canPick(player) || picking) return;
+    setPicking(player.id);
+    setError(null);
+    try {
+      const newPlayerIds = [...squad.map(p => p.id), player.id];
+
+      // Optimistic update
+      setSquad(prev => [...prev, player]);
+      setTakenIds(prev => new Set([...prev, player.id]));
+
+      const { error: err } = await supabase
+        .from('draft_allocations')
+        .upsert({
+          league_id:         leagueId,
+          user_id:           user?.id,
+          allocated_players: newPlayerIds,
+          unresolved_slots:  Math.max(0, SQUAD_SIZE - newPlayerIds.length),
+          allocated_at:      new Date().toISOString(),
+        }, { onConflict: 'league_id,user_id' });
+
+      if (err) {
+        // Rollback optimistic update
+        setSquad(prev => prev.filter(p => p.id !== player.id));
+        setTakenIds(prev => { const s = new Set(prev); s.delete(player.id); return s; });
+        setError('Someone else just picked that player. Choose another.');
+        return;
+      }
+
+      if (newPlayerIds.length >= SQUAD_SIZE) setDone(true);
+    } finally {
+      setPicking(null);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#0A0A0A] flex items-center justify-center">
+        <div className="text-[#9E9E9E] text-[12px] font-bold uppercase tracking-widest animate-pulse">
+          Loading...
+        </div>
+      </div>
+    );
+  }
+
+  if (done) {
+    return (
+      <div className="min-h-screen bg-[#0A0A0A] flex flex-col items-center justify-center px-6 gap-6">
+        <div className="text-[40px]">✅</div>
+        <div className="text-center">
+          <div className="text-white font-black text-xl uppercase tracking-widest mb-2">
+            Squad Complete
+          </div>
+          <div className="text-[#9E9E9E] text-[12px]">
+            All {SQUAD_SIZE} players locked in. Budget used: €{budgetUsed.toFixed(1)}M
+          </div>
+        </div>
+        <button
+          onClick={() => navigate(`/league/${leagueId}`)}
+          className="text-cyan text-[11px] uppercase tracking-widest underline"
+          style={{ color: '#00B4D8' }}
+        >
+          Back to League
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-[#0A0A0A] flex flex-col">
+
+      {/* Header */}
+      <div className="bg-[#111111] border-b border-[#1E1E1E] px-4 pt-10 pb-4 sticky top-0 z-20">
+        <div className="flex items-center justify-between mb-3">
+          <button onClick={() => navigate(`/league/${leagueId}`)} className="text-[#9E9E9E] text-[20px] leading-none">←</button>
+          <div className="text-center">
+            <div className="text-[10px] font-black uppercase tracking-[0.4em] text-[#9E9E9E] font-serif">
+              Draft Recovery
+            </div>
+            <div className="text-white font-black text-[15px] uppercase tracking-wider">
+              Fill Your Gaps
+            </div>
+          </div>
+          <div className="w-6" />
+        </div>
+
+        {/* Status bar */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-1.5">
+            <span className="text-[#FFC107] text-[10px] font-black">{slotsLeft}</span>
+            <span className="text-[#9E9E9E] text-[10px] uppercase tracking-widest">slots remaining</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <span className="text-[#9E9E9E] text-[10px] uppercase tracking-widest">Budget</span>
+            <span className={`text-[10px] font-black ${budgetLeft < 10 ? 'text-[#E53935]' : 'text-[#00C853]'}`}>
+              €{budgetLeft.toFixed(1)}M
+            </span>
+          </div>
+        </div>
+
+        {/* Missing positions */}
+        {missingPositions.length > 0 && (
+          <div className="flex gap-2 mt-2">
+            {missingPositions.map(({ pos, need }) => (
+              <div key={pos} className="flex items-center gap-1">
+                <span
+                  className="text-[9px] font-black px-1.5 py-0.5 rounded-sm"
+                  style={{ color: POS_CONFIG[pos]?.color, background: POS_CONFIG[pos]?.bg }}
+                >
+                  {pos}
+                </span>
+                <span className="text-[#9E9E9E] text-[9px]">×{need}</span>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Alert banner */}
+      {allocation ? (
+        <div className="bg-[#1A1200] border-b border-[#FFC107]/20 px-4 py-2.5">
+          <div className="text-[#FFC107] text-[11px] font-bold">
+            ⚠ {slotsLeft} player{slotsLeft !== 1 ? 's' : ''} couldn't be allocated — pick now, first come first served.
+          </div>
+        </div>
+      ) : (
+        <div className="bg-[#1A0000] border-b border-[#E53935]/20 px-4 py-2.5">
+          <div className="text-[#E53935] text-[11px] font-bold">
+            You missed the draft deadline. Build your squad from what's left — first come first served.
+          </div>
+        </div>
+      )}
+
+      {/* Error */}
+      {error && (
+        <div className="px-4 py-2 bg-[#1A0000] border-b border-[#E53935]/20">
+          <div className="text-[#E53935] text-[11px] font-bold">{error}</div>
+        </div>
+      )}
+
+      {/* Player pool */}
+      <div className="flex-1 flex flex-col overflow-hidden">
+        {/* Search + filter */}
+        <div className="px-4 py-2 border-b border-[#1E1E1E] space-y-2">
+          <input
+            type="text"
+            placeholder="Search available players..."
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            className="w-full bg-[#111] border border-[#2A2A2A] rounded-lg px-3 py-2 text-white text-[12px] outline-none placeholder:text-[#444] focus:border-[#444]"
+          />
+          <div className="flex gap-2">
+            {POS_FILTER_ORDER.map(pos => (
+              <button
+                key={pos}
+                onClick={() => setFilterPos(pos)}
+                className={`flex-1 py-1.5 rounded text-[10px] font-black uppercase tracking-wider transition-all ${
+                  filterPos === pos
+                    ? 'bg-white text-black'
+                    : 'bg-[#111] text-[#555] border border-[#1E1E1E]'
+                }`}
+              >
+                {pos}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Player rows */}
+        <div className="flex-1 overflow-y-auto px-4 py-2 space-y-1.5">
+          {available.length === 0 && (
+            <div className="text-center py-8 text-[#333] text-[11px] font-bold uppercase tracking-widest">
+              No available players
+            </div>
+          )}
+          {available.map(p => {
+            const disabled  = !canPick(p);
+            const isBusy    = picking === p.id;
+            const posAtCap  = (posCounts[p.position] ?? 0) >= SQUAD_POS_CAPS[p.position];
+            const overBudget = budgetLeft < p.price;
+
+            return (
+              <div
+                key={p.id}
+                onClick={() => !disabled && !isBusy && pickPlayer(p)}
+                className={`flex items-center gap-3 bg-[#111] rounded-lg px-3 py-3 transition-all ${
+                  disabled ? 'opacity-35' : 'cursor-pointer active:opacity-70'
+                } ${isBusy ? 'animate-pulse' : ''}`}
+              >
+                <span
+                  className="text-[9px] font-black px-1.5 py-0.5 rounded-sm shrink-0"
+                  style={{ color: POS_CONFIG[p.position]?.color, background: POS_CONFIG[p.position]?.bg }}
+                >
+                  {p.position}
+                </span>
+                <span className="text-white text-[12px] font-bold flex-1 truncate">{p.name}</span>
+                <span className="text-[#555] text-[11px] shrink-0">{p.club}</span>
+                <span className={`text-[11px] font-bold shrink-0 ${overBudget ? 'text-[#E53935]' : 'text-[#9E9E9E]'}`}>
+                  €{p.price}M
+                </span>
+                {!disabled && (
+                  <span className="text-[#00C853] text-[18px] leading-none shrink-0 font-black">+</span>
+                )}
+                {posAtCap && (
+                  <span className="text-[9px] text-[#555] shrink-0 uppercase">cap</span>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}

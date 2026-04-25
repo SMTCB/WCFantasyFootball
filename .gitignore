@@ -38,6 +38,20 @@ playwright-results.txt
 .antigravity/
 .gemini/
 
+# Claude Code skills (AI tooling, not project code)
+Skills/
+
+# Business communications (sensitive)
+PROVIDER_EMAIL_*.txt
+
+# Native build artifacts (iOS / Android)
+ios/App/App/public/
+android/app/src/main/assets/public/
+android/.gradle/
+*.xcuserstate
+*.xcuserdatad
+DerivedData/
+
 # Security
 .env
 .env.*
@@ -45,4 +59,3 @@ playwright-results.txt
 backend/.env
 node_modules/
 dist/
-

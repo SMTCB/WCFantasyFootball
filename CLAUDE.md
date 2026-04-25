@@ -2,33 +2,33 @@
 
 ## Project Overview
 
-**Forza Fantasy League** — EPL fantasy football web app (React + Vite + Tailwind CSS 4 + Supabase).
+**ForzaKit / Forza Fantasy League** — EPL fantasy football web + native mobile app.
 
-- **Web app**: live on Vercel
-- **Backend**: Supabase (PostgreSQL + Auth + Storage + Edge Functions)
-- **Mobile**: Capacitor-based iOS/Android apps in progress (see `APP_STORE_ASSESSMENT.md`)
-- **AI platforms active**: Claude Code (primary) + Google Antigravity (mobile work)
+- **Web app**: React 19 + Vite + Tailwind CSS 4 + Supabase, deployed on Vercel
+- **Mobile**: Capacitor iOS + Android (both native projects live in `ios/` and `android/`)
+- **Backend**: Supabase (PostgreSQL + Auth + Edge Functions + Realtime)
+- **AI platforms**: Claude Code (web/backend) + Google Antigravity (mobile)
 
 ---
 
 ## Multi-AI Collaboration Protocol
 
-**Two AI coding platforms operate on this repository — never simultaneously.**
+**Two AI platforms share this repo — never simultaneously.**
 
-| Platform | Scope | Branch Convention |
+| Platform | Scope | Branch convention |
 |----------|-------|-------------------|
 | Claude Code | Web app, backend, infrastructure | `claude/<slug>` |
-| Google Antigravity | Mobile (iOS/Android Capacitor) | `antigravity/<slug>` |
+| Google Antigravity | Mobile — Capacitor iOS/Android | `antigravity/<slug>` |
 
 **Rules**:
-- Always work from `main` as base; merge PRs to `main` before switching platforms
-- Do not leave uncommitted changes when handing off to the other platform
-- Check `git status` is clean before starting any session
-- Each platform's worktrees/temp files are gitignored (see `.gitignore`)
+- Start every session from clean `main`: `git pull origin main && git status`
+- Never commit directly to `main` — always use a feature branch + PR
+- Never leave uncommitted changes when handing off between platforms
+- Each platform's local files are gitignored (`.claude/worktrees/`, `.antigravity/`, `.gemini/`)
 
-### Claude Code Worktree Behaviour
+### Claude Code Worktree Note
 
-Claude Code creates worktrees under `.claude/worktrees/`. These are ephemeral and gitignored. The `extensions.worktreeConfig` git setting is intentionally **not set** — its presence breaks Google Antigravity's embedded git library. Claude worktrees function correctly without it.
+Claude creates worktrees under `.claude/worktrees/` — ephemeral and gitignored. The `extensions.worktreeConfig` git setting is intentionally **not set**: its presence breaks Google Antigravity's embedded git library. Claude worktrees work fine without it.
 
 ---
 
@@ -36,30 +36,24 @@ Claude Code creates worktrees under `.claude/worktrees/`. These are ephemeral an
 
 ```
 forza-fantasy-league/
-├── src/                          # React web app (Vite)
-│   ├── components/               # UI components
-│   ├── hooks/                    # Custom React hooks
-│   ├── lib/                      # Supabase client, utilities
-│   ├── context/                  # React context providers
-│   ├── data/                     # Static data / constants
-│   └── screens/                  # Route-level screen components
-├── backend/                      # Supabase Edge Functions (Deno)
+├── src/
+│   ├── screens/          # Route-level views (11 screens)
+│   ├── components/       # Shared UI components
+│   ├── hooks/            # Custom React hooks
+│   ├── lib/              # supabase.js, capacitor.js, utilities
+│   ├── context/          # AuthContext
+│   └── data/             # Static fallback data (squad, players)
 ├── supabase/
-│   ├── functions/                # Deployed Edge Functions
-│   └── migrations/               # SQL migrations (numbered sequence)
-├── e2e/                          # Playwright E2E tests
-├── docs/                         # Technical documentation
-│   └── APP_DYNAMICS.md
-├── API/                          # Forza Football API reference
-│   ├── API_INTEGRATION_REFERENCE.md
-│   ├── FORZA_API_KNOWLEDGE.md
-│   ├── API ACCESS DATA.txt
-│   └── forza_data_api_documentation.html
-├── Product Pitch/                # Business pitch materials (HTML)
-├── ios/                          # Capacitor iOS project (to be added)
-├── android/                      # Capacitor Android project (to be added)
-├── .github/workflows/            # CI/CD pipelines
-└── public/                       # Static assets
+│   ├── functions/        # Deployed Edge Functions (Deno)
+│   └── migrations/       # SQL migrations — numbered sequence (01–08)
+├── ios/                  # Capacitor Xcode project
+├── android/              # Capacitor Android Studio project
+├── e2e/                  # Playwright E2E tests (82/84 passing)
+├── backend/              # Legacy Supabase Edge Functions (Deno)
+├── docs/                 # Technical documentation
+├── API/                  # Forza Football API reference materials
+├── Product Pitch/        # Business pitch HTML assets
+└── .github/workflows/    # CI/CD (lint → build → E2E)
 ```
 
 ---
@@ -68,60 +62,80 @@ forza-fantasy-league/
 
 | File | Purpose |
 |------|---------|
-| `BACKLOG.md` | Current issues, priorities, known bugs — update after every session |
-| `APP_STORE_ASSESSMENT.md` | Mobile strategy: architecture decision, cost, 6-week roadmap |
-| `MOBILE_IMPLEMENTATION_GUIDE.md` | Antigravity's step-by-step Capacitor implementation guide |
+| `BACKLOG.md` | Open issues and priorities — **update after every session** |
+| `PIPELINE.md` | Product roadmap and sprint plan |
+| `APP_STORE_ASSESSMENT.md` | Mobile strategy, architecture decision, store submission guide |
+| `MOBILE_IMPLEMENTATION_GUIDE.md` | Capacitor implementation guide (Antigravity's working doc) |
 | `GEMINI.md` | Instructions for Google Antigravity |
 | `DRAFT_SYSTEM_DESIGN.md` | Draft lottery and transfer window system design |
 | `FANTASY_POINTS_SCORING_LAYER.md` | Scoring system design and DB schema |
-| `PRELIMINARY_SCORING_MECHANISM.md` | Early scoring mechanism specification |
-| `SQUAD_SCREEN_IMPROVEMENT_PLAN.md` | Squad screen UX improvement plan |
-| `E2E_TEST_REPORT.md` | E2E test coverage report (82/84 passing) |
-| `PIPELINE.md` | Full development pipeline and feature status |
+| `SQUAD_SCREEN_IMPROVEMENT_PLAN.md` | Squad screen UX plan |
 | `FORZA_API_ASSESSMENT.md` | Forza Football API integration assessment |
-| `API/API_INTEGRATION_REFERENCE.md` | API endpoints, auth, data shapes reference |
-| `docs/APP_DYNAMICS.md` | App dynamics and behaviour documentation |
+| `API/API_INTEGRATION_REFERENCE.md` | API endpoints, auth, data shapes |
 
 ---
 
 ## Key Commands
 
 ```bash
-npm run dev             # Start dev server
-npm run build           # Production build
-npm run lint            # Run ESLint
-npx playwright test     # Run E2E tests (82/84 passing as of 2026-04-24)
-npx cap sync            # Sync web build to native (after Capacitor added)
-npx cap open ios        # Open Xcode
-npx cap open android    # Open Android Studio
+npm run dev              # Dev server (http://localhost:5173)
+npm run build            # Production build → dist/
+npm run lint             # ESLint (CI-enforced)
+npx playwright test      # E2E tests — 82/84 passing
+npm run build && npx cap sync   # Build + sync to native projects
+npx cap open ios         # Open Xcode
+npx cap open android     # Open Android Studio
 ```
 
 ---
 
 ## Supabase Migrations
 
-Migrations are numbered sequentially in `supabase/migrations/`. Always create a new migration file; never modify existing ones.
+Always create a new file — never modify existing migrations.
 
-Current migrations:
-- `01_` — initial schema
-- `02_draft_system.sql`
-- `03_draft_lottery_cron.sql`
-- `04_transfer_window_enforcement.sql`
-- `05_trade_listings.sql`
-- `06_cup_pool_management.sql`
-- `07_relaxation_formula.sql`
-- `08_reverse_draft_cron.sql`
+| # | File | Content |
+|---|------|---------|
+| 01 | `01_*.sql` | Initial schema |
+| 02 | `02_draft_system.sql` | Draft submissions, allocations |
+| 03 | `03_draft_lottery_cron.sql` | Cron for draft lottery |
+| 04 | `04_transfer_window_enforcement.sql` | Window triggers |
+| 05 | `05_trade_listings.sql` | Trade listings table |
+| 06 | `06_cup_pool_management.sql` | Cup pool + active clubs |
+| 07 | `07_relaxation_formula.sql` | No-repeat relaxation |
+| 08 | `08_reverse_draft_cron.sql` | Reverse-standings draft cron |
+| 09 | `09_scoring_schema.sql` | Scoring pipeline + calculate-scores Edge Function |
+| 13 | `13_scoring_schema_align.sql` | player_match_stats scoring columns + unique constraints |
+| 14 | `14_fixtures_pl_clubs.sql` | Replace World Cup dummy fixtures with PL clubs |
+| 15 | `15_player_status_pl_alerts.sql` | Seed player status alerts for real squad |
 
-Next migration should be numbered `09_`.
+**Next migration**: `16_`
+
+---
+
+## Capacitor — Mobile Workflow
+
+```bash
+# After any web app change you want reflected in the native apps:
+npm run build
+npx cap sync
+
+# To run on device/simulator:
+npx cap open ios      # then Build + Run in Xcode
+npx cap open android  # then Run in Android Studio
+```
+
+App ID: `com.fantasykit.forzaedition` (changeable until first store submission)  
+iOS deployment target: 15.0 · Android minSdk: 26 (Android 8.0) · targetSdk: 36
+
+`src/lib/capacitor.js` — all native plugin init (status bar, splash, app resume). Import `isNative` and `platform` from here for platform-detection anywhere in the app.
 
 ---
 
 ## Development Guidelines
 
-- **Tests must pass**: 82/84 E2E tests must remain green; do not break existing tests
-- **Mobile-first UI**: All components tested at 375px viewport minimum
-- **Supabase RLS**: Never bypass Row Level Security in queries
-- **Secrets**: Never commit `.env` files; use `.env.example` as template
-- **Branch discipline**: Always create feature branches; never commit directly to `main`
-- **ESLint**: CI enforces lint — run `npm run lint` before pushing; Deno functions in `supabase/functions/` are excluded from ESLint
+- **E2E**: 82/84 tests must stay green — run `npx playwright test` before merging
+- **Mobile-first**: All UI tested at 375px viewport minimum
+- **RLS**: Never bypass Supabase Row Level Security
+- **Secrets**: Never commit `.env`; use `.env.example` as template
+- **ESLint**: Enforced in CI — `supabase/functions/` excluded (Deno)
 - **No `--no-verify`**: Never skip git hooks

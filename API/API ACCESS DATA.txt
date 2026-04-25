@@ -1,0 +1,11 @@
+Access Token
+
+DoRy9PNpYN4Ubg3FQkwEqxXQu2MytxzG
+
+EPL Tournament ID
+
+426
+
+EXAMPLE
+
+https://api.forzafootball.com/v1/tournaments/426/matches?access_token=DoRy9PNpYN4Ubg3FQkwEqxXQu2MytxzG
