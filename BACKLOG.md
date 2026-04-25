@@ -1,6 +1,6 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-04-22  
+**Last Updated**: 2026-04-25  
 **Status**: Ready for Next Development Cycle  
 **E2E Test Suite**: 82/84 passing (97.6% success rate)  
 **Priority Levels**: P0 (Blocking), P1 (High), P2 (Medium), P3 (Low/Polish)
@@ -15,6 +15,10 @@
 - ✅ Code sync main → worktree (all changes committed)
 - ✅ Mobile responsive design verified (375px to 1440px)
 - ✅ Navigation working on both desktop sidebar and mobile bottom nav
+- ✅ #022: Mobile bottom sheet z-index fix (z-[60] above mobile nav bar)
+- ✅ #003: Desktop chips tab now uses PowerToolCard for visual parity with mobile
+- ✅ #004: Onboarding tour step added for squad-power-tools
+- ✅ Fixed pre-existing bug: handleChipToggle references replaced with correct doToggleChip
 
 ### 🔴 **Known Blockers**
 - MarketScreen player data loading (2 E2E tests) - Supabase connectivity in E2E environment
@@ -73,7 +77,7 @@
 ## 🟠 P1 - High Priority
 
 ### Issue #003: Optional Squad Screen Desktop Enhancement (Phase 4)
-- **Status**: NOT STARTED
+- **Status**: ✅ COMPLETE (2026-04-25)
 - **Description**: Enhance desktop sidebar to use PowerToolCard components for consistency
 - **Location**: src/screens/SquadScreen.jsx lines ~1092-1098 (CHIPS TAB)
 - **Changes Required**:
@@ -87,7 +91,7 @@
 - **Effort**: 45 minutes
 
 ### Issue #004: Update Onboarding Tour (Phase 5)
-- **Status**: NOT STARTED
+- **Status**: ✅ COMPLETE (2026-04-25)
 - **Description**: Add tour steps to highlight new Power Tools section
 - **Location**: src/screens/SquadScreen.jsx lines ~77-93 (SQUAD_TOUR_STEPS)
 - **Changes Required**:
