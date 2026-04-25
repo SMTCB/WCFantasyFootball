@@ -36,6 +36,39 @@ Deno.serve(async (req) => {
 
     const price = Number(player_price ?? 0);
 
+    // ── Transfer window enforcement ───────────────────────────────────────────
+    // 1. Reject if past the active matchday deadline
+    const { data: deadline } = await supabase
+      .from('matchday_deadlines')
+      .select('deadline_at, label')
+      .order('deadline_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (deadline && new Date() > new Date(deadline.deadline_at)) {
+      return json({
+        ok:    false,
+        code:  'WINDOW_CLOSED',
+        error: `Transfer window closed — ${deadline.label ?? 'matchday'} deadline has passed`,
+      }, 403, corsHeaders);
+    }
+
+    // 2. Reject if any fixture is currently live (kickoff has passed)
+    const { data: liveFixture } = await supabase
+      .from('fixtures')
+      .select('id, home_team, away_team')
+      .eq('status', 'live')
+      .limit(1)
+      .maybeSingle();
+
+    if (liveFixture) {
+      return json({
+        ok:    false,
+        code:  'WINDOW_LOCKED',
+        error: `Transfers locked while ${liveFixture.home_team} vs ${liveFixture.away_team} is in progress`,
+      }, 403, corsHeaders);
+    }
+
     // ── Fetch or create the manager's squad for this league ──────────────────
     let { data: squad } = await supabase
       .from('squads')
