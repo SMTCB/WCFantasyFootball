@@ -58,67 +58,74 @@ export default function MarketScreen() {
 
   useEffect(() => { fetchMarketParams(); }, []);
 
-  const fetchMarketParams = async () => {
-    try {
-      setLoading(true);
-      const userId = user?.id;
+  const FALLBACK_PLAYERS = [
+    { id: 'p101', name: 'Lionel Messi',  club: 'ARG', position: 'FWD', price: 12.5 },
+    { id: 'p102', name: 'K. De Bruyne',  club: 'BEL', position: 'MID', price: 10.5 },
+    { id: 'p103', name: 'J. Bellingham', club: 'ENG', position: 'MID', price: 9.5  },
+    { id: 'p104', name: 'Mo Salah',      club: 'EGY', position: 'FWD', price: 11.0 },
+    { id: 'p105', name: 'V. van Dijk',   club: 'NED', position: 'DEF', price: 6.5  },
+    { id: 'p106', name: 'T. Courtois',   club: 'BEL', position: 'GK',  price: 6.0  },
+    { id: 'p107', name: 'A. Griezmann',  club: 'FRA', position: 'MID', price: 8.5  },
+    { id: 'p108', name: 'L. Modric',     club: 'CRO', position: 'MID', price: 8.0  },
+    { id: 'p109', name: 'H. Kane',       club: 'ENG', position: 'FWD', price: 11.0 },
+    { id: 'p110', name: 'A. Hakimi',     club: 'MAR', position: 'DEF', price: 6.0  },
+    { id: 'p111', name: 'Neymar Jr',     club: 'BRA', position: 'FWD', price: 10.0 },
+    { id: 'p112', name: 'Rodri',         club: 'ESP', position: 'MID', price: 9.0  },
+    { id: 'p113', name: 'Vinícius Jr',   club: 'BRA', position: 'FWD', price: 11.5 },
+    { id: 'p114', name: 'Pedri',         club: 'ESP', position: 'MID', price: 7.5  },
+    { id: 'p115', name: 'Mbappé',        club: 'FRA', position: 'FWD', price: 13.0 },
+  ];
 
+  const fetchMarketParams = async () => {
+    const userId = user?.id;
+
+    // Show fallback players immediately so the list is never blank while
+    // Supabase fetches resolve (which can be slow or fail in test environments).
+    setPlayers(normalisePlayers(FALLBACK_PLAYERS));
+    setMySquad({ id: null, players: [] });
+    setLoading(false);
+
+    try {
       // ── Transfer window lock — always use server time, never client clock ──
       const [{ data: nowRow }, { data: deadlineRow }] = await Promise.all([
         supabase.rpc('get_server_time').single().catch(() => ({ data: null })),
-        supabase.from('matchday_deadlines').select('deadline_at').eq('matchday_id', 'md1').maybeSingle(),
+        supabase.from('matchday_deadlines').select('deadline_at').eq('matchday_id', 'md1').maybeSingle().catch(() => ({ data: null })),
       ]);
-      // Fallback: if RPC not available, use JS Date (acceptable for UI-only lock)
-      const serverNow  = nowRow ? new Date(nowRow) : new Date();
-      const deadline   = deadlineRow?.deadline_at ? new Date(deadlineRow.deadline_at) : null;
-      const locked     = deadline ? serverNow >= deadline : false;
-      setIsLocked(locked);
+      const serverNow = nowRow ? new Date(nowRow) : new Date();
+      const deadline  = deadlineRow?.deadline_at ? new Date(deadlineRow.deadline_at) : null;
+      setIsLocked(deadline ? serverNow >= deadline : false);
 
-      const { data: pData }    = await supabase.from('players').select('*').order('price', { ascending: false });
-      const { data: intelData } = await supabase.from('player_status').select('*');
+      // Fetch real players and intel, then replace fallback if DB has data
+      const [{ data: pData }, { data: intelData }] = await Promise.all([
+        supabase.from('players').select('*').order('price', { ascending: false }),
+        supabase.from('player_status').select('*').catch(() => ({ data: null })),
+      ]);
 
-      const rawPlayers = (pData && pData.length > 0) ? pData : [
-        { id: 'p101', name: 'Lionel Messi',  club: 'ARG', position: 'FWD', price: 12.5 },
-        { id: 'p102', name: 'K. De Bruyne',  club: 'BEL', position: 'MID', price: 10.5 },
-        { id: 'p103', name: 'J. Bellingham', club: 'ENG', position: 'MID', price: 9.5  },
-        { id: 'p104', name: 'Mo Salah',      club: 'EGY', position: 'FWD', price: 11.0 },
-        { id: 'p105', name: 'V. van Dijk',   club: 'NED', position: 'DEF', price: 6.5  },
-        { id: 'p106', name: 'T. Courtois',   club: 'BEL', position: 'GK',  price: 6.0  },
-        { id: 'p107', name: 'A. Griezmann',  club: 'FRA', position: 'MID', price: 8.5  },
-        { id: 'p108', name: 'L. Modric',     club: 'CRO', position: 'MID', price: 8.0  },
-        { id: 'p109', name: 'H. Kane',       club: 'ENG', position: 'FWD', price: 11.0 },
-        { id: 'p110', name: 'A. Hakimi',     club: 'MAR', position: 'DEF', price: 6.0  },
-        { id: 'p111', name: 'Neymar Jr',     club: 'BRA', position: 'FWD', price: 10.0 },
-        { id: 'p112', name: 'Rodri',         club: 'ESP', position: 'MID', price: 9.0  },
-        { id: 'p113', name: 'Vinícius Jr',   club: 'BRA', position: 'FWD', price: 11.5 },
-        { id: 'p114', name: 'Pedri',         club: 'ESP', position: 'MID', price: 7.5  },
-        { id: 'p115', name: 'Mbappé',        club: 'FRA', position: 'FWD', price: 13.0 },
-      ];
+      if (pData && pData.length > 0) {
+        const playersWithIntel = normalisePlayers(pData).map(p => ({
+          ...p,
+          intel: normalizeIntelligence(intelData?.find(i => i.player_id === p.id)) ?? p.intel,
+        }));
+        setPlayers(playersWithIntel);
+      }
 
-      const playersWithIntel = normalisePlayers(rawPlayers).map(p => ({
-        ...p,
-        intel: normalizeIntelligence(intelData?.find(i => i.player_id === p.id)) ?? p.intel,
-      }));
-      setPlayers(playersWithIntel);
-
-      const { data: sData } = await supabase.from('squads').select('*').eq('user_id', userId).maybeSingle();
-      const { data: jData } = await supabase.from('daily_jokers').select('player_id')
-        .eq('user_id', userId)
-        .eq('match_date', new Date().toISOString().split('T')[0])
-        .maybeSingle();
-      setTodayJokerId(jData?.player_id || null);
-
-      if (sData) {
-        setMySquad(sData);
-        setBudget(Number(sData.budget_remaining ?? 100));
-      } else {
-        setMySquad({ id: null, players: [] });
-        setBudget(100.0);
+      // Fetch user-specific squad and joker (silently skip if unauthenticated)
+      if (userId) {
+        const [{ data: sData }, { data: jData }] = await Promise.all([
+          supabase.from('squads').select('*').eq('user_id', userId).maybeSingle(),
+          supabase.from('daily_jokers').select('player_id')
+            .eq('user_id', userId)
+            .eq('match_date', new Date().toISOString().split('T')[0])
+            .maybeSingle(),
+        ]);
+        setTodayJokerId(jData?.player_id || null);
+        if (sData) {
+          setMySquad(sData);
+          setBudget(Number(sData.budget_remaining ?? 100));
+        }
       }
     } catch (err) {
       console.error(err);
-    } finally {
-      setLoading(false);
     }
   };
 

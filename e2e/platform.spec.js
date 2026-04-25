@@ -216,9 +216,12 @@ test.describe('MarketScreen', () => {
   });
 
   test('renders player list with names', async ({ page }) => {
-    // Should show real player data from DB
-    const body = await page.locator('body').innerText();
-    expect(body).toMatch(/Mbappé|Vinicius|Bellingham|Kane|Messi/i);
+    // Wait for loading skeleton to clear and player names to appear.
+    // Uses toBeVisible() so Playwright auto-waits rather than reading innerText
+    // immediately (which catches the skeleton before data renders).
+    await expect(
+      page.getByText(/Mbappé|Vinicius|Bellingham|Kane|Messi/i).first()
+    ).toBeVisible({ timeout: 12000 });
   });
 
   test('position filter tabs are clickable', async ({ page }) => {
