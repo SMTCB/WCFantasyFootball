@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+/* global process */
 // simulate-matchday.js
 // Seeds a fixture as live, inserts match events, calls calculate-scores,
 // then reads back player_match_stats and fantasy_points.
