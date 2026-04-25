@@ -76,6 +76,15 @@ export default function LeagueScreen() {
   const [draftOpen, setDraftOpen] = useState(false); // deadline in future + no submission yet
   const transferWindow = useTransferWindow(activeLeague?.league_id);
 
+  // Commissioner panel state
+  const [commLoading,   setCommLoading]   = useState(false);
+  const [commMsg,       setCommMsg]       = useState(null); // { type: 'ok'|'err', text }
+  const [windowOpensAt, setWindowOpensAt] = useState('');
+  const [windowClosesAt,setWindowClosesAt]= useState('');
+  const [windowTransfers,setWindowTransfers]=useState('');
+  const [draftDeadline, setDraftDeadline] = useState('');
+  const [scoreFixtureId,setScoreFixtureId]=useState('test-live');
+
   // Create form state
   const [leagueName,   setLeagueName]   = useState('');
   const [leagueFormat, setLeagueFormat] = useState('classic');
@@ -126,9 +135,64 @@ export default function LeagueScreen() {
     setTradeError(null);
   };
 
+  const isCommissioner = activeLeague?.leagues?.created_by === currentUser?.id;
+
+  const commAction = async (fn) => {
+    setCommLoading(true);
+    setCommMsg(null);
+    try {
+      await fn();
+    } catch (e) {
+      setCommMsg({ type: 'err', text: e.message || 'Action failed' });
+    } finally {
+      setCommLoading(false);
+    }
+  };
+
+  const openTransferWindow = () => commAction(async () => {
+    const lid = activeLeague?.league_id;
+    const opens  = windowOpensAt  || new Date().toISOString();
+    const closes = windowClosesAt || new Date(Date.now() + 48 * 3600 * 1000).toISOString();
+    const { error } = await supabase.from('transfer_windows').insert({
+      league_id: lid,
+      opens_at:  opens,
+      closes_at: closes,
+      transfers_remaining: windowTransfers ? Number(windowTransfers) : null,
+    });
+    if (error) throw new Error(error.message);
+    setCommMsg({ type: 'ok', text: 'Transfer window opened.' });
+  });
+
+  const closeTransferWindow = () => commAction(async () => {
+    const lid = activeLeague?.league_id;
+    const { error } = await supabase.from('transfer_windows')
+      .update({ closes_at: new Date().toISOString() })
+      .eq('league_id', lid)
+      .gt('closes_at', new Date().toISOString());
+    if (error) throw new Error(error.message);
+    setCommMsg({ type: 'ok', text: 'Transfer window closed.' });
+  });
+
+  const triggerScores = () => commAction(async () => {
+    const { data, error } = await supabase.functions.invoke('calculate-scores', {
+      body: { fixture_id: scoreFixtureId },
+    });
+    if (error) throw new Error(error.message);
+    setCommMsg({ type: 'ok', text: `Scores updated — ${data?.updated_squads ?? 0} squads, ${data?.player_stats ?? 0} player stats.` });
+  });
+
+  const setLeagueDraftDeadline = () => commAction(async () => {
+    if (!draftDeadline) throw new Error('Enter a deadline date/time.');
+    const { error } = await supabase.from('leagues')
+      .update({ draft_deadline: draftDeadline })
+      .eq('id', activeLeague?.league_id);
+    if (error) throw new Error(error.message);
+    setCommMsg({ type: 'ok', text: 'Draft deadline set.' });
+  });
+
   const renderTabs = () => (
     <div className="flex bg-[#161616] border-b border-[#2A2A2A] sticky top-[60px] z-20">
-      {['leaderboard', 'frontpage', 'chat', 'stats'].map((t) => (
+      {['leaderboard', 'frontpage', 'chat', 'stats', ...(isCommissioner ? ['commissioner'] : [])].map((t) => (
         <button
           key={t}
           onClick={() => setView(t === 'leaderboard' ? 'detail' : t)}
@@ -138,7 +202,7 @@ export default function LeagueScreen() {
               : 'text-[#555] hover:text-[#9E9E9E]'
           }`}
         >
-          {t === 'leaderboard' ? 'Leaderboard' : t}
+          {t === 'leaderboard' ? 'Leaderboard' : t === 'commissioner' ? '⚙ Admin' : t}
           {((view === 'detail' && t === 'leaderboard') || view === t) && (
             <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-cyan" />
           )}
@@ -686,6 +750,133 @@ export default function LeagueScreen() {
                </div>
             </div>
           )}
+
+         {/* ── COMMISSIONER PANEL ─────────────────────────────────────────── */}
+         {view === 'commissioner' && isCommissioner && (
+           <div className="p-4 space-y-4 pb-20">
+             <div className="text-[9px] font-black uppercase tracking-[0.2em] text-text-tertiary pt-2">Commissioner Controls</div>
+
+             {/* Feedback message */}
+             {commMsg && (
+               <div className={`px-4 py-3 rounded-sm text-[12px] font-bold flex items-center justify-between ${commMsg.type === 'ok' ? 'bg-positive/10 border border-positive/30 text-positive' : 'bg-negative/10 border border-negative/30 text-negative'}`}>
+                 <span>{commMsg.text}</span>
+                 <button onClick={() => setCommMsg(null)} className="opacity-60 hover:opacity-100 ml-3">✕</button>
+               </div>
+             )}
+
+             {/* ── Transfer Window ─────────────────────────────────────────── */}
+             <div className="bg-[#111] border border-[#1e1e1e] rounded-sm p-4 space-y-3">
+               <div className="text-[10px] font-black uppercase tracking-[0.15em] text-text-tertiary">Transfer Window</div>
+               <div className="grid grid-cols-2 gap-2">
+                 <div className="flex flex-col gap-1">
+                   <label className="text-[9px] text-text-tertiary font-bold uppercase tracking-widest">Opens at</label>
+                   <input
+                     type="datetime-local"
+                     value={windowOpensAt}
+                     onChange={e => setWindowOpensAt(e.target.value)}
+                     className="bg-[#1a1a1a] border border-[#2a2a2a] text-white text-[11px] px-2 py-2 rounded-sm outline-none focus:border-cyan/40"
+                   />
+                 </div>
+                 <div className="flex flex-col gap-1">
+                   <label className="text-[9px] text-text-tertiary font-bold uppercase tracking-widest">Closes at</label>
+                   <input
+                     type="datetime-local"
+                     value={windowClosesAt}
+                     onChange={e => setWindowClosesAt(e.target.value)}
+                     className="bg-[#1a1a1a] border border-[#2a2a2a] text-white text-[11px] px-2 py-2 rounded-sm outline-none focus:border-cyan/40"
+                   />
+                 </div>
+               </div>
+               <div className="flex flex-col gap-1">
+                 <label className="text-[9px] text-text-tertiary font-bold uppercase tracking-widest">Transfers allowed (blank = unlimited)</label>
+                 <input
+                   type="number"
+                   min="1"
+                   value={windowTransfers}
+                   onChange={e => setWindowTransfers(e.target.value)}
+                   placeholder="e.g. 5"
+                   className="bg-[#1a1a1a] border border-[#2a2a2a] text-white text-[11px] px-2 py-2 rounded-sm outline-none focus:border-cyan/40"
+                 />
+               </div>
+               <div className="grid grid-cols-2 gap-2">
+                 <button
+                   onClick={openTransferWindow}
+                   disabled={commLoading}
+                   className="py-3 bg-positive text-black text-[11px] font-black uppercase tracking-widest rounded-sm disabled:opacity-50"
+                 >
+                   Open Window
+                 </button>
+                 <button
+                   onClick={closeTransferWindow}
+                   disabled={commLoading}
+                   className="py-3 bg-[#1e1e1e] border border-[#2a2a2a] text-white text-[11px] font-black uppercase tracking-widest rounded-sm disabled:opacity-50"
+                 >
+                   Close Now
+                 </button>
+               </div>
+             </div>
+
+             {/* ── Draft Deadline ───────────────────────────────────────────── */}
+             <div className="bg-[#111] border border-[#1e1e1e] rounded-sm p-4 space-y-3">
+               <div className="text-[10px] font-black uppercase tracking-[0.15em] text-text-tertiary">Draft Deadline</div>
+               <div className="flex flex-col gap-1">
+                 <label className="text-[9px] text-text-tertiary font-bold uppercase tracking-widest">Deadline (date & time)</label>
+                 <input
+                   type="datetime-local"
+                   value={draftDeadline}
+                   onChange={e => setDraftDeadline(e.target.value)}
+                   className="bg-[#1a1a1a] border border-[#2a2a2a] text-white text-[11px] px-2 py-2 rounded-sm outline-none focus:border-cyan/40"
+                 />
+               </div>
+               <button
+                 onClick={setLeagueDraftDeadline}
+                 disabled={commLoading}
+                 className="w-full py-3 bg-[#1B5E20] text-white text-[11px] font-black uppercase tracking-widest rounded-sm disabled:opacity-50"
+               >
+                 Set Draft Deadline
+               </button>
+             </div>
+
+             {/* ── Score Recalculation ──────────────────────────────────────── */}
+             <div className="bg-[#111] border border-[#1e1e1e] rounded-sm p-4 space-y-3">
+               <div className="text-[10px] font-black uppercase tracking-[0.15em] text-text-tertiary">Score Recalculation</div>
+               <div className="flex flex-col gap-1">
+                 <label className="text-[9px] text-text-tertiary font-bold uppercase tracking-widest">Fixture ID</label>
+                 <input
+                   type="text"
+                   value={scoreFixtureId}
+                   onChange={e => setScoreFixtureId(e.target.value)}
+                   placeholder="e.g. test-live, md1-f1"
+                   className="bg-[#1a1a1a] border border-[#2a2a2a] text-white text-[11px] px-2 py-2 rounded-sm outline-none focus:border-cyan/40"
+                 />
+               </div>
+               <button
+                 onClick={triggerScores}
+                 disabled={commLoading || !scoreFixtureId}
+                 className="w-full py-3 bg-yellow-600 text-black text-[11px] font-black uppercase tracking-widest rounded-sm disabled:opacity-50"
+               >
+                 {commLoading ? 'Running…' : 'Recalculate Scores'}
+               </button>
+             </div>
+
+             {/* ── Cup Phase ───────────────────────────────────────────────── */}
+             <div className="bg-[#111] border border-[#1e1e1e] rounded-sm p-4 space-y-3">
+               <div className="text-[10px] font-black uppercase tracking-[0.15em] text-text-tertiary">Cup Phase</div>
+               <p className="text-[11px] text-text-tertiary">Seeding cup clubs activates the no-repeat pool. Use after draft allocations are set.</p>
+               <button
+                 onClick={() => commAction(async () => {
+                   const { error } = await supabase.rpc('seed_cup_clubs', { p_league_id: activeLeague?.league_id });
+                   if (error) throw new Error(error.message);
+                   setCommMsg({ type: 'ok', text: 'Cup clubs seeded.' });
+                 })}
+                 disabled={commLoading}
+                 className="w-full py-3 bg-purple-700 text-white text-[11px] font-black uppercase tracking-widest rounded-sm disabled:opacity-50"
+               >
+                 Seed Cup Clubs
+               </button>
+             </div>
+           </div>
+         )}
 
          {/* ── MODALS ─────────────────────────────────────────────────────── */}
          
