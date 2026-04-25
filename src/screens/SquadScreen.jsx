@@ -71,7 +71,6 @@ export default function SquadScreen() {
   // Danger banner dismissed on mobile
   const [dangerDismissed,    setDangerDismissed]   = useState(false);
   // Transfer window lock (from matchday_deadlines table)
-  const [isLocked,           setWindowLocked]      = useState(false);
   const [_windowDeadline,    setWindowDeadline]    = useState(null);
   // Confirmation dialog state (FB-023)
   const [confirm,            setConfirm]           = useState(null);
@@ -110,8 +109,6 @@ export default function SquadScreen() {
     },
   ];
 
-  // Sync live countdown → windowLocked so chip/joker guards stay up to date
-  useEffect(() => { if (deadline.isLocked) setWindowLocked(true); }, [deadline.isLocked]);
 
   useEffect(() => { fetchSquad(); fetchDailyStatus(); }, [user]);
 
@@ -142,7 +139,6 @@ export default function SquadScreen() {
       if (deadlineRow?.deadline_at) {
         const deadline = new Date(deadlineRow.deadline_at);
         setWindowDeadline(deadline);
-        setWindowLocked(new Date() >= deadline);
       }
 
       const { data: jokerRec } = await supabase.from('daily_jokers').select('player_id')
@@ -378,7 +374,7 @@ export default function SquadScreen() {
     } finally { setSaving(false); }
   };
 
-  const handleChipToggle = async (type) => {
+  const _handleChipToggle = async (type) => {
     if (!squadData) return;
     const chip = CHIPS.find(c => c.key === type);
     if (!chip) return;
