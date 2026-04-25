@@ -86,6 +86,11 @@ export default function SquadScreen() {
       body:   'Your remaining budget and the transfer window countdown live here. When the window closes, no more transfers until the next matchday.',
     },
     {
+      target: 'squad-power-tools',
+      title:  'Power Tools',
+      body:   'Wildcard, Triple Captain, Roulette, and Daily Joker live here. Each is one-use — activate carefully.',
+    },
+    {
       target: 'squad-chips',
       title:  'Chips & Boosts',
       body:   'Wildcard lets you make unlimited free transfers. Triple Captain scores 3× points — or 0 if they don\'t play. Use them wisely, they\'re one-per-season.',
@@ -834,7 +839,7 @@ export default function SquadScreen() {
                         message: squadData.isWildcard
                           ? 'You will no longer have unlimited free transfers.'
                           : 'You\'ll have unlimited free transfers this matchday. 1 use per season.',
-                        onConfirm: () => handleChipToggle('wildcard'),
+                        onConfirm: () => doToggleChip('wildcard'),
                         confirmLabel: 'Confirm',
                         warning: squadData.isWildcard ? null : 'This action cannot be undone this gameweek.',
                       });
@@ -858,7 +863,7 @@ export default function SquadScreen() {
                         message: squadData.isTripleCaptain
                           ? 'Your captain will earn normal points.'
                           : 'Your captain will earn 3× points this matchday. 1 use per season.',
-                        onConfirm: () => handleChipToggle('triple_captain'),
+                        onConfirm: () => doToggleChip('triple'),
                         confirmLabel: 'Confirm',
                         warning: squadData.isTripleCaptain ? null : 'This action cannot be undone this gameweek.',
                       });
@@ -1090,9 +1095,54 @@ export default function SquadScreen() {
 
             {/* CHIPS TAB */}
             {desktopTab === 'chips' && (
-              <div className="pt-4">
-                {CHIPS.map(chip => <ChipCard key={chip.key} chip={chip} />)}
-                <RouletteCard />
+              <div className="pt-4 mx-4">
+                <div className="grid grid-cols-3 gap-2 mb-4">
+                  <PowerToolCard
+                    icon="🃏"
+                    label="Wildcard"
+                    isActive={squadData.isWildcard}
+                    accentColor="#18C96B"
+                    bgColor="rgba(24,201,107,0.08)"
+                    borderColor="rgba(24,201,107,0.15)"
+                    actionLabel={squadData.isWildcard ? 'Active' : 'Activate'}
+                    onAction={() => {
+                      if (!isLocked) {
+                        setConfirm({
+                          title: squadData.isWildcard ? 'Deactivate Wildcard?' : 'Activate Wildcard?',
+                          message: squadData.isWildcard
+                            ? 'You will no longer have unlimited free transfers.'
+                            : 'You\'ll have unlimited free transfers this matchday. 1 use per season.',
+                          onConfirm: () => doToggleChip('wildcard'),
+                          confirmLabel: 'Confirm',
+                          warning: squadData.isWildcard ? null : 'This action cannot be undone this gameweek.',
+                        });
+                      }
+                    }}
+                  />
+                  <PowerToolCard
+                    icon="🚀"
+                    label="Triple Cap."
+                    isActive={squadData.isTripleCaptain}
+                    accentColor="#F0B400"
+                    bgColor="rgba(240,180,0,0.08)"
+                    borderColor="rgba(240,180,0,0.15)"
+                    actionLabel={squadData.isTripleCaptain ? 'Active' : 'Activate'}
+                    onAction={() => {
+                      if (!isLocked) {
+                        setConfirm({
+                          title: squadData.isTripleCaptain ? 'Deactivate Triple Captain?' : 'Activate Triple Captain?',
+                          message: squadData.isTripleCaptain
+                            ? 'Your captain will earn normal points.'
+                            : 'Your captain will earn 3× points this matchday. 1 use per season.',
+                          onConfirm: () => doToggleChip('triple'),
+                          confirmLabel: 'Confirm',
+                          warning: squadData.isTripleCaptain ? null : 'This action cannot be undone this gameweek.',
+                        });
+                      }
+                    }}
+                  />
+                  <RouletteCard />
+                </div>
                 <JokerCard />
               </div>
             )}
@@ -1127,7 +1177,7 @@ export default function SquadScreen() {
       {/* ══ PLAYER ACTION BOTTOM SHEET ═══════════════════════════════════════ */}
       {selectedPlayer && !swapMode && !isRouletteSpinning && (
         <div
-          className="fixed bottom-0 left-0 right-0 lg:left-[220px] z-50 animate-slide-up"
+          className="fixed bottom-0 left-0 right-0 lg:left-[220px] z-[60] animate-slide-up"
           style={{
             background: 'rgba(20,26,36,0.98)',
             backdropFilter: 'blur(24px)',
@@ -1240,7 +1290,7 @@ export default function SquadScreen() {
       {/* ══ SWAP MODE BANNER ═════════════════════════════════════════════════ */}
       {swapMode && (
         <div
-          className="fixed bottom-0 left-0 right-0 lg:left-[220px] z-50 px-5 py-3 flex justify-between items-center"
+          className="fixed bottom-0 left-0 right-0 lg:left-[220px] z-[60] px-5 py-3 flex justify-between items-center"
           style={{ background: '#18C96B', color: '#000', boxShadow: '0 -4px 20px rgba(24,201,107,0.4)', paddingBottom: 'calc(12px + env(safe-area-inset-bottom))' }}
         >
           <div>
