@@ -270,10 +270,10 @@ Deno.serve(async (req) => {
       }
 
       fantasyPointsUpserts.push({
-        squad_id: squad.id,
-        matchday_id: squad.matchday_id || 'current',
-        total: Math.round(total * 100) / 100,
-        breakdown: { fixture_id, player_count: pitchPlayers.length },
+        squad_id:         squad.id,
+        matchday_id:      squad.matchday_id || 'current',
+        total:            Math.round(total * 100) / 100,
+        points_breakdown: { fixture_id, player_count: pitchPlayers.length },
       });
     }
 
