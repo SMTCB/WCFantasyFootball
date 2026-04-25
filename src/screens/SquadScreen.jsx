@@ -125,9 +125,9 @@ export default function SquadScreen() {
       const userId = user?.id;
       const today  = new Date().toISOString().split('T')[0];
 
-      // ── Transfer window lock check ──────────────────────────────────────────
+      // ── Transfer window lock check — use latest matchday deadline ──────────
       const { data: deadlineRow } = await supabase
-        .from('matchday_deadlines').select('deadline_at').eq('matchday_id', 'md1').maybeSingle();
+        .from('matchday_deadlines').select('deadline_at').order('deadline_at', { ascending: false }).limit(1).maybeSingle();
       if (deadlineRow?.deadline_at) {
         const deadline = new Date(deadlineRow.deadline_at);
         setWindowDeadline(deadline);
@@ -144,45 +144,58 @@ export default function SquadScreen() {
       setJokerPlayer(jokerP);
       setTodayJokerId(jokerRec?.player_id || null);
 
+      // Most-recent squad first — ensures we get the live matchday squad, not an older one
       const { data: squad, error } = await supabase.from('squads').select('*')
-        .eq('user_id', userId).limit(1).single();
-      if (!squad && !error) { setSquadData(fallbackSquad); return; } // new user — no squad yet
+        .eq('user_id', userId).order('created_at', { ascending: false }).limit(1).maybeSingle();
+      if (!squad) { setSquadData(fallbackSquad); return; } // new user or no squad yet
       if (error) { setFetchError('Could not load your squad. Showing demo data.'); setSquadData(fallbackSquad); return; }
 
-      const { data: players, error: pErr } = await supabase.from('players').select('*').in('id', squad.players);
+      const playerIds = squad.players || [];
+      const [
+        { data: players,   error: pErr },
+        { data: intelData },
+        { data: statsData },
+        { data: fixtures  },
+      ] = await Promise.all([
+        supabase.from('players').select('*').in('id', playerIds),
+        supabase.from('player_status').select('*').in('player_id', playerIds),
+        // Points from all finished/live fixtures for this matchday
+        supabase.from('player_match_stats')
+          .select('player_id, fantasy_points, fixture_id')
+          .in('player_id', playerIds),
+        supabase.from('fixtures').select('id').eq('status', 'finished').like('id', `${squad.matchday_id}%`),
+      ]);
       if (pErr) throw pErr;
-      const { data: intelData } = await supabase.from('player_status').select('*').in('player_id', squad.players);
+
+      // Sum fantasy_points across all finished fixtures for this matchday
+      const finishedFixtureIds = new Set((fixtures || []).map(f => f.id));
+      const pointsMap = {};
+      for (const s of statsData || []) {
+        if (finishedFixtureIds.has(s.fixture_id)) {
+          pointsMap[s.player_id] = (pointsMap[s.player_id] || 0) + Number(s.fantasy_points);
+        }
+      }
 
       const mappedPlayers = (players || []).map((p, idx) => {
-        const pitchMatch  = fallbackSquad.players.find(mp => mp.id === p.id) || fallbackSquad.bench.find(mp => mp.id === p.id);
         const playerIntel = intelData?.find(i => i.player_id === p.id);
         const isStarter   = idx < 11;
         return normalisePlayer({
           ...p,
-          points:    0,
+          points:    pointsMap[p.id] ?? 0,
           intel:     normalizeIntelligence(playerIntel),
-          color:     pitchMatch?.color,
-          gridClass: pitchMatch?.gridClass || (isStarter ? `col-start-${(idx % 5) + 1} row-start-${Math.floor(idx / 5) + 1}` : ''),
           isBench:   !isStarter,
         });
       });
 
-      let pitchPlayers = mappedPlayers.filter(p => !p.isBench);
-      let benchPlayers = mappedPlayers.filter(p => p.isBench);
-      if (pitchPlayers.length < 11) {
-        const ids = new Set(pitchPlayers.map(p => p.id));
-        pitchPlayers = [...pitchPlayers, ...fallbackSquad.players.filter(p => !ids.has(p.id)).map(p => ({ ...p, points: 0, isBench: false }))].slice(0, 11);
-      }
-      if (benchPlayers.length < 4) {
-        const ids = new Set([...pitchPlayers, ...benchPlayers].map(p => p.id));
-        benchPlayers = [...benchPlayers, ...fallbackSquad.bench.filter(p => !ids.has(p.id)).map(p => ({ ...p, points: 0, isBench: true }))].slice(0, 4);
-      }
+      const pitchPlayers = mappedPlayers.filter(p => !p.isBench);
+      const benchPlayers = mappedPlayers.filter(p => p.isBench);
 
       setSquadData({
         squadId:         squad.id,
         leagueId:        squad.league_id,
+        matchdayId:      squad.matchday_id,
         budget:          { current: Number(squad.budget_remaining ?? 17), total: 100 },
-        captainId:       squad.captain_id || 'p1',
+        captainId:       squad.captain_id || playerIds[0] || '',
         players:         pitchPlayers,
         bench:           benchPlayers,
         isWildcard:      squad.is_wildcard,
