@@ -19,15 +19,21 @@
 - ✅ #003: Desktop chips tab now uses PowerToolCard for visual parity with mobile
 - ✅ #004: Onboarding tour step added for squad-power-tools
 - ✅ Fixed pre-existing bug: handleChipToggle references replaced with correct doToggleChip
+- ✅ Mobile CI pipeline (.github/workflows/mobile.yml) — iOS simulator + Android APK builds
+- ✅ Sprint 1 P0: Migration 09 — daily_jokers, matchday_deadlines, player_match_stats tables + get_server_time() RPC
+- ✅ Sprint 1 P0: calculate-scores Edge Function — full scoring engine (position rules, BPS, captain/chip multipliers, Realtime broadcast)
+- ✅ Sprint 1 P0: LiveScreen real-time subscriptions — replaces 5-min poll with match_events + scores broadcast + fixtures channels
+- ✅ Sprint 1 P0: 25+ additional players seeded (GK/DEF/MID/FWD, WC2026 nations)
 
 ### 🔴 **Known Blockers**
-- MarketScreen player data loading (2 E2E tests) - Supabase connectivity in E2E environment
+- MarketScreen player data loading (2 E2E tests) — Supabase legacy API key issue, not a code bug
+- calculate-scores not yet on a cron — must be called manually or wired to a match event trigger
 
-### 🔧 **Available for Next Cycle**
-- Phase 4: Desktop power tools enhancement
-- Phase 5: Onboarding tour updates  
-- Database seeding improvements
-- Mobile rendering verification
+### 🔧 **Sprint 1 Remaining (P0)**
+- Squad screen reads live squads table (not mock fallbackSquad for real users)
+- player_alerts table + DangerZone fed from real data (currently static)
+- Transfer cost locks from live fixtures at kickoff time
+- Real-time scoring simulation end-to-end test (seed events → trigger Edge Function → verify LiveScreen updates)
 - Polish/optimization tasks
 
 ---
@@ -167,6 +173,13 @@
 ---
 
 ## ✅ Completed This Cycle
+
+**Session 4 - Sprint 1 P0 Backend (2026-04-25)**:
+- [x] Migration 09: daily_jokers + matchday_deadlines + player_match_stats + get_server_time() + calculate_player_points() SQL function
+- [x] calculate-scores Edge Function: full scoring pipeline with BPS, captain/chip multipliers, Realtime broadcast
+- [x] LiveScreen: replaced 5-min polling with Supabase Realtime subscriptions (3 channels)
+- [x] Player seed expanded from 7 → 32 players (all positions, WC2026 nations)
+- [x] mobile.yml CI: iOS simulator + Android APK builds on every PR
 
 **Session 3 - Squad Screen Backlog (2026-04-25)**:
 - [x] #022: Bottom sheet z-index fix — renders above mobile nav (z-[60])
