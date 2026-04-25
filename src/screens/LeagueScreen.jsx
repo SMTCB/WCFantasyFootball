@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
-import { normalisePlayers } from '../lib/players';
 import { useAuth } from '../hooks/useAuth';
 import SectionHeader from '../components/SectionHeader';
 import LeagueInviteCard from '../components/LeagueInviteCard';
@@ -9,39 +8,6 @@ import H2HSheet from '../components/H2HSheet';
 import GazetteDraftReport from '../components/GazetteDraftReport';
 import TransferWindowBanner from '../components/TransferWindowBanner';
 import { useTransferWindow } from '../hooks/useTransferWindow';
-
-// ─── Shared Mock Data ────────────────────────────────────────────────────────
-const MOCK_PLAYERS_POOL = normalisePlayers([
-  { id: 'p1', name: 'Alisson', club: 'BRA', position: 'GK', price: 6.0 },
-  { id: 'p2', name: 'E. Martínez', club: 'ARG', position: 'GK', price: 6.0 },
-  { id: 'p3', name: 'Courtois', club: 'BEL', position: 'GK', price: 6.0 },
-  { id: 'p12', name: 'Hakimi', club: 'MAR', position: 'DEF', price: 6.0 },
-  { id: 'p13', name: 'Rúben Dias', club: 'POR', position: 'DEF', price: 6.0 },
-  { id: 'p14', name: 'V. van Dijk', club: 'NED', position: 'DEF', price: 6.5 },
-  { id: 'p15', name: 'Saliba', club: 'FRA', position: 'DEF', price: 5.5 },
-  { id: 'p16', name: 'A. Arnold', club: 'ENG', position: 'DEF', price: 6.0 },
-  { id: 'p17', name: 'Cancelo', club: 'POR', position: 'DEF', price: 6.0 },
-  { id: 'p18', name: 'Theo', club: 'FRA', position: 'DEF', price: 5.5 },
-  { id: 'p21', name: 'Bellingham', club: 'ENG', position: 'MID', price: 10.5 },
-  { id: 'p22', name: 'Pedri', club: 'ESP', position: 'MID', price: 8.5 },
-  { id: 'p23', name: 'De Bruyne', club: 'BEL', position: 'MID', price: 11.0 },
-  { id: 'p24', name: 'Valverde', club: 'URU', position: 'MID', price: 9.0 },
-  { id: 'p25', name: 'Musiala', club: 'GER', position: 'MID', price: 9.0 },
-  { id: 'p26', name: 'Rodri', club: 'ESP', position: 'MID', price: 9.5 },
-  { id: 'p27', name: 'Bruno F.', club: 'POR', position: 'MID', price: 9.0 },
-  { id: 'p31', name: 'Mbappé', club: 'FRA', position: 'FWD', price: 12.5 },
-  { id: 'p32', name: 'Vinícius Jr', club: 'BRA', position: 'FWD', price: 12.0 },
-  { id: 'p33', name: 'Haaland', club: 'NOR', position: 'FWD', price: 13.5 },
-  { id: 'p34', name: 'Messi', club: 'ARG', position: 'FWD', price: 11.5 },
-  { id: 'p35', name: 'Kane', club: 'ENG', position: 'FWD', price: 11.0 },
-  { id: 'p36', name: 'Salah', club: 'EGY', position: 'FWD', price: 11.0 },
-  { id: 'p37', name: 'Neymar', club: 'BRA', position: 'FWD', price: 10.5 },
-]);
-
-const MOCK_SQUAD_PLAYERS = MOCK_PLAYERS_POOL.slice(0, 11);
-const MOCK_RIVAL_PLAYERS_L1 = MOCK_PLAYERS_POOL.slice(5, 16);
-const MOCK_RIVAL_PLAYERS_L2 = MOCK_PLAYERS_POOL.slice(8, 19);
-const MOCK_RIVAL_PLAYERS_L3 = MOCK_PLAYERS_POOL.slice(12, 23);
 
 
 export default function LeagueScreen() {
@@ -68,6 +34,11 @@ export default function LeagueScreen() {
   const [myListings,     setMyListings]     = useState(new Set()); // player_ids I've listed
   const [_leagueListings, setLeagueListings] = useState([]);        // all listings in league
   const [h2hTarget, setH2hTarget] = useState(null);
+
+  // Real squad data for trade builder
+  const [mySquadPlayers,   setMySquadPlayers]   = useState([]);
+  const [theirSquadPlayers,setTheirSquadPlayers] = useState([]);
+  const [managerRoster,    setManagerRoster]    = useState([]);
   
   const [members, setMembers] = useState([]);
   const [membersLoading, setMembersLoading] = useState(false);
@@ -112,6 +83,36 @@ export default function LeagueScreen() {
       setMyListings(prev => new Set([...prev, playerId]));
       setLeagueListings(prev => [...prev, { user_id: user?.id, player_id: playerId }]);
     }
+  };
+
+  const loadTradeSquads = async (targetUserId) => {
+    const lid = activeLeague?.league_id;
+    if (!lid || !user?.id) return;
+    setMySquadPlayers([]);
+    setTheirSquadPlayers([]);
+    const [{ data: myAlloc }, { data: theirAlloc }] = await Promise.all([
+      supabase.from('draft_allocations').select('allocated_players').eq('league_id', lid).eq('user_id', user.id).maybeSingle(),
+      supabase.from('draft_allocations').select('allocated_players').eq('league_id', lid).eq('user_id', targetUserId).maybeSingle(),
+    ]);
+    const myIds    = myAlloc?.allocated_players    ?? [];
+    const theirIds = theirAlloc?.allocated_players ?? [];
+    const allIds   = [...new Set([...myIds, ...theirIds])];
+    if (!allIds.length) return;
+    const { data: playerRows } = await supabase.from('players').select('id,name,position,club,price').in('id', allIds);
+    const byId = Object.fromEntries((playerRows ?? []).map(p => [p.id, p]));
+    setMySquadPlayers(myIds.map(id => byId[id]).filter(Boolean));
+    setTheirSquadPlayers(theirIds.map(id => byId[id]).filter(Boolean));
+  };
+
+  const loadManagerRoster = async (targetUserId) => {
+    const lid = activeLeague?.league_id;
+    if (!lid || !targetUserId) return;
+    setManagerRoster([]);
+    const { data: alloc } = await supabase.from('draft_allocations').select('allocated_players').eq('league_id', lid).eq('user_id', targetUserId).maybeSingle();
+    const ids = alloc?.allocated_players ?? [];
+    if (!ids.length) return;
+    const { data: rows } = await supabase.from('players').select('id,name,position,club,price').in('id', ids);
+    setManagerRoster(rows ?? []);
   };
 
   const validateAndSendProposal = async () => {
@@ -523,7 +524,7 @@ export default function LeagueScreen() {
                         <span className="truncate">{mName}</span>
                         {!isMe && (
                           <div className="flex gap-1">
-                            <button onClick={() => { setTradeTarget({...m, name: mName}); setShowTradeBuilder(true); }} className="text-[8px] text-[#1E88E5] border border-[#1E88E5]/30 px-1.5 py-0.5 rounded-sm uppercase tracking-tighter">Trade</button>
+                            <button onClick={() => { const t = {...m, name: mName}; setTradeTarget(t); loadTradeSquads(m.user_id); setShowTradeBuilder(true); }} className="text-[8px] text-[#1E88E5] border border-[#1E88E5]/30 px-1.5 py-0.5 rounded-sm uppercase tracking-tighter">Trade</button>
                             <button onClick={() => setH2hTarget({...m, name: mName})} className="text-[8px] text-text-tertiary border border-white/10 px-1.5 py-0.5 rounded-sm uppercase tracking-tighter">&#x2694; H2H</button>
                           </div>
                         )}
@@ -531,7 +532,7 @@ export default function LeagueScreen() {
                     </div>
                     <div className="w-12 text-right shrink-0 text-[13px] font-bold text-[#9E9E9E]">-</div>
                     <div className="w-12 text-right shrink-0 text-[13px] font-black text-white">{m.total_points}</div>
-                    <button onClick={() => setManagerTeamView({ id: m.user_id, name: mName })} className="ml-3 w-8 h-8 rounded-full bg-surface-elevated flex items-center justify-center text-xs active:scale-95">🔍</button>
+                    <button onClick={() => { setManagerTeamView({ user_id: m.user_id, name: mName }); loadManagerRoster(m.user_id); }} className="ml-3 w-8 h-8 rounded-full bg-surface-elevated flex items-center justify-center text-xs active:scale-95">🔍</button>
                   </div>
                 )
               }))}
@@ -915,9 +916,9 @@ export default function LeagueScreen() {
                     <div className="grid grid-cols-[1fr_40px_1fr] items-center gap-2">
                       <div className="flex flex-col gap-2">
                         <label className="text-[9px] font-black text-[#9E9E9E] uppercase tracking-widest text-center">MY PLAYER</label>
-                        <select value={tradeMyPlayer?.id || ''} onChange={(e) => setTradeMyPlayer(MOCK_SQUAD_PLAYERS.find(p => p.id === e.target.value))} className="bg-[#111111] border border-[#2A2A2A] p-3 rounded-lg text-white text-[12px] font-bold outline-none text-center">
-                           <option value="">(None)</option>
-                           {MOCK_SQUAD_PLAYERS.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                        <select value={tradeMyPlayer?.id || ''} onChange={(e) => setTradeMyPlayer(mySquadPlayers.find(p => p.id === e.target.value))} className="bg-[#111111] border border-[#2A2A2A] p-3 rounded-lg text-white text-[12px] font-bold outline-none text-center">
+                           <option value="">{mySquadPlayers.length ? '(None)' : 'Loading…'}</option>
+                           {mySquadPlayers.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
                         </select>
                         {tradeMyPlayer && (
                           <button
@@ -935,9 +936,9 @@ export default function LeagueScreen() {
                       <div className="text-[#2A2A2A] text-xl mt-6 flex justify-center">↔</div>
                       <div className="flex flex-col gap-2">
                         <label className="text-[9px] font-black text-[#9E9E9E] uppercase tracking-widest text-center">THEIR PLAYER</label>
-                        <select value={tradeTheirPlayer?.id || ''} onChange={(e) => setTradeTheirPlayer(MOCK_PLAYERS_POOL.find(p => p.id === e.target.value))} className="bg-[#111111] border border-[#2A2A2A] p-3 rounded-lg text-white text-[12px] font-bold outline-none text-center text-ellipsis overflow-hidden">
-                           <option value="">(None)</option>
-                           {MOCK_PLAYERS_POOL.map(p => <option key={p.id} value={p.id}>{p.name} ({p.club})</option>)}
+                        <select value={tradeTheirPlayer?.id || ''} onChange={(e) => setTradeTheirPlayer(theirSquadPlayers.find(p => p.id === e.target.value))} className="bg-[#111111] border border-[#2A2A2A] p-3 rounded-lg text-white text-[12px] font-bold outline-none text-center text-ellipsis overflow-hidden">
+                           <option value="">{theirSquadPlayers.length ? '(None)' : 'Loading…'}</option>
+                           {theirSquadPlayers.map(p => <option key={p.id} value={p.id}>{p.name} ({p.club})</option>)}
                         </select>
                       </div>
                     </div>
@@ -1007,7 +1008,10 @@ export default function LeagueScreen() {
                  <button onClick={() => setManagerTeamView(null)} className="text-[#555]">✕</button>
                </div>
                <div className="flex-1 overflow-y-auto p-6 space-y-3 no-scrollbar">
-                 {(managerTeamView.name === 'João' ? MOCK_RIVAL_PLAYERS_L1 : managerTeamView.name === 'Ricardo' ? MOCK_RIVAL_PLAYERS_L2 : MOCK_RIVAL_PLAYERS_L3).map((p, i) => (
+                 {!managerRoster.length && (
+                   <div className="text-center text-[12px] text-text-tertiary py-8">Loading roster…</div>
+                 )}
+                 {managerRoster.map((p, i) => (
                    <div key={i} className="flex items-center gap-4 bg-[#111111] p-3 border border-[#2A2A2A] rounded-lg relative overflow-hidden group">
                      <div className="absolute left-0 top-0 bottom-0 w-1 bg-cyan/20 group-hover:bg-cyan transition-colors" />
                      <div className="w-10 h-10 rounded bg-[#1A1A1A] flex items-center justify-center text-[10px] font-bold text-[#555] overflow-hidden grayscale"><img src={`https://media.api-sports.io/football/players/${(i % 10) + 600}.png`} className="w-full h-full object-cover" /></div>
@@ -1019,7 +1023,7 @@ export default function LeagueScreen() {
                         <div className="text-[12px] font-black text-white">€{p.price}M</div>
                         <div className="text-[9px] text-positive font-bold">READY</div>
                      </div>
-                     <button onClick={() => { setTradeTarget({ id: managerTeamView.id, name: managerTeamView.name }); setTradeTheirPlayer(p); setManagerTeamView(null); setShowTradeBuilder(true); }} className="w-9 h-9 rounded-full bg-cyan text-black flex items-center justify-center font-bold active:scale-90 transition-transform shadow-[0_4px_10px_rgba(0,180,216,0.3)]">🔄</button>
+                     <button onClick={() => { const t = { ...managerTeamView, name: managerTeamView.name }; setTradeTarget(t); setTradeTheirPlayer(p); loadTradeSquads(managerTeamView.user_id); setManagerTeamView(null); setShowTradeBuilder(true); }} className="w-9 h-9 rounded-full bg-cyan text-black flex items-center justify-center font-bold active:scale-90 transition-transform shadow-[0_4px_10px_rgba(0,180,216,0.3)]">🔄</button>
                    </div>
                  ))}
                </div>
