@@ -180,6 +180,7 @@ export default function SquadScreen() {
 
       setSquadData({
         squadId:         squad.id,
+        leagueId:        squad.league_id,
         budget:          { current: Number(squad.budget_remaining ?? 17), total: 100 },
         captainId:       squad.captain_id || 'p1',
         players:         pitchPlayers,
@@ -335,12 +336,24 @@ export default function SquadScreen() {
   };
 
   const doToggleChip = async (chipKey) => {
-    const chip   = CHIPS.find(c => c.key === chipKey);
-    const curVal = squadData[chip.stateKey];
+    const chip = CHIPS.find(c => c.key === chipKey);
     try {
       setSaving(true);
-      await supabase.from('squads').update({ [chip.dbField]: !curVal }).eq('id', squadData.squadId);
-      setSquadData({ ...squadData, [chip.stateKey]: !curVal });
+      const { data, error } = await supabase.rpc('activate_chip', {
+        p_user_id:   user?.id,
+        p_league_id: squadData.leagueId,
+        p_chip_type: chipKey,
+      });
+      if (error) throw error;
+      if (!data?.ok) {
+        if (data?.code === 'CHIP_ALREADY_USED') {
+          setFetchError(`${chip.label} has already been used this season and cannot be reactivated.`);
+        } else {
+          setFetchError(data?.error || 'Failed to toggle chip.');
+        }
+        return;
+      }
+      setSquadData({ ...squadData, [chip.stateKey]: data.active });
     } finally { setSaving(false); }
   };
 
