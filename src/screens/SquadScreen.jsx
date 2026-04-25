@@ -67,6 +67,8 @@ export default function SquadScreen() {
   const [_windowDeadline,    setWindowDeadline]    = useState(null);
   // Confirmation dialog state (FB-023)
   const [confirm,            setConfirm]           = useState(null);
+  // Non-blocking fetch error banner
+  const [fetchError,         setFetchError]        = useState(null);
 
   // Live countdown hook — replaces static window lock badge
   const deadline = useDeadlineCountdown();
@@ -144,7 +146,8 @@ export default function SquadScreen() {
 
       const { data: squad, error } = await supabase.from('squads').select('*')
         .eq('user_id', userId).limit(1).single();
-      if (error || !squad) { setSquadData(fallbackSquad); return; }
+      if (!squad && !error) { setSquadData(fallbackSquad); return; } // new user — no squad yet
+      if (error) { setFetchError('Could not load your squad. Showing demo data.'); setSquadData(fallbackSquad); return; }
 
       const { data: players, error: pErr } = await supabase.from('players').select('*').in('id', squad.players);
       if (pErr) throw pErr;
@@ -187,6 +190,7 @@ export default function SquadScreen() {
       });
     } catch (err) {
       console.error(err);
+      setFetchError('Could not load your squad. Showing demo data.');
       setSquadData(fallbackSquad);
     } finally {
       setLoading(false);
@@ -641,6 +645,23 @@ export default function SquadScreen() {
   // ─────────────────────────────────────────────────────────────────────────
   return (
     <div className="min-h-screen bg-bg overflow-x-hidden">
+
+      {/* ── Fetch error banner ──────────────────────────────────────────────── */}
+      {fetchError && (
+        <div
+          className="fixed top-0 left-0 right-0 z-[70] flex items-center gap-3 px-4 py-3 lg:left-[220px]"
+          style={{ background: 'rgba(240,58,58,0.92)', backdropFilter: 'blur(8px)' }}
+        >
+          <span className="text-white text-[11px] font-bold uppercase tracking-widest flex-1">{fetchError}</span>
+          <button
+            onClick={() => { setFetchError(null); fetchSquad(); }}
+            className="text-white text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-sm transition-opacity hover:opacity-70"
+            style={{ background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.25)' }}
+          >Retry</button>
+          <button onClick={() => setFetchError(null)} className="text-white opacity-60 hover:opacity-100 text-lg leading-none">×</button>
+        </div>
+      )}
+
       {/* Confirmation dialog (FB-023) */}
       {confirm && (
         <ConfirmModal
