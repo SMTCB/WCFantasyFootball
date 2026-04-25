@@ -5,8 +5,6 @@ import RecapCard from '../components/RecapCard';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../hooks/useAuth';
 
-const DEMO_USER_ID = '00000000-0000-0000-0000-000000000000';
-
 export default function RecapScreen() {
   const { user } = useAuth();
   const [recap,   setRecap]   = useState(null);
@@ -20,87 +18,91 @@ export default function RecapScreen() {
   const fetchRecap = async () => {
     try {
       setLoading(true);
-      const userId = user?.id ?? DEMO_USER_ID;
+      const userId = user?.id;
 
-      // ── 1. Fetch latest recap with player names and league name ────────────
-      const { data: recapRow, error: recapErr } = await supabase
-        .from('matchday_recaps')
-        .select(`
-          *,
-          bestPlayer:best_player_id(name, position),
-          captain:captain_id(name, position),
-          joker:joker_player_id(name, position),
-          league:league_id(name)
-        `)
-        .eq('user_id', userId)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .maybeSingle();
-
-      if (recapErr) console.error('[recap] fetch error', recapErr);
-      if (!recapRow) return;
-
-      // ── 2. Fetch username from users table ─────────────────────────────────
-      const { data: userRow } = await supabase
-        .from('users')
-        .select('username')
-        .eq('id', userId)
-        .maybeSingle();
-
-      const username =
-        userRow?.username ??
-        user?.user_metadata?.username ??
-        'Manager';
-
-      // ── 3. Fetch fantasy_points for key players ────────────────────────────
-      //    fantasy_points rows: { squad_id, player_id (text), total }
-      const playerIds = [
-        recapRow.best_player_id,
-        recapRow.captain_id,
-        recapRow.joker_player_id,
-      ].filter(Boolean);
-
-      let pointsMap = {};
-      if (playerIds.length > 0) {
-        // Resolve squad_id for this user
-        const { data: squadRow } = await supabase
-          .from('squads')
-          .select('id')
+      // 1. Latest squad + league membership in parallel
+      const [{ data: squadRow }, { data: memberRow }] = await Promise.all([
+        supabase.from('squads').select('id, matchday_id, players, captain_id')
           .eq('user_id', userId)
-          .maybeSingle();
+          .order('created_at', { ascending: false })
+          .limit(1).maybeSingle(),
+        supabase.from('league_members')
+          .select('league_id, rank, total_points, leagues(name)')
+          .eq('user_id', userId)
+          .order('rank', { ascending: true })
+          .limit(1).maybeSingle(),
+      ]);
 
-        if (squadRow) {
-          const { data: fpRows } = await supabase
-            .from('fantasy_points')
-            .select('player_id, total')
-            .eq('squad_id', squadRow.id)
-            .in('player_id', playerIds);
+      if (!squadRow) return; // no squad yet
 
-          if (fpRows) {
-            fpRows.forEach(fp => { pointsMap[fp.player_id] = fp.total; });
-          }
-        }
+      const matchdayId  = squadRow.matchday_id || 'md2';
+      const playerIds   = squadRow.players || [];
+      const captainId   = squadRow.captain_id;
+
+      // 2. Per-player stats across this matchday's finished fixtures
+      const { data: fixtures } = await supabase.from('fixtures')
+        .select('id').eq('status', 'finished').like('id', `${matchdayId}%`);
+      const finishedIds = (fixtures || []).map(f => f.id);
+
+      const [{ data: statsRows }, { data: playerRows }, { data: userRow }] = await Promise.all([
+        finishedIds.length
+          ? supabase.from('player_match_stats')
+              .select('player_id, fantasy_points, fixture_id')
+              .in('player_id', playerIds)
+              .in('fixture_id', finishedIds)
+          : { data: [] },
+        supabase.from('players').select('id, name, position, club').in('id', playerIds),
+        supabase.from('users').select('username').eq('id', userId).maybeSingle(),
+      ]);
+
+      // 3. Sum points per player across all finished fixtures
+      const pointsMap = {};
+      for (const s of statsRows || []) {
+        pointsMap[s.player_id] = (pointsMap[s.player_id] || 0) + Number(s.fantasy_points);
       }
 
-      // ── 4. Compose recap state ─────────────────────────────────────────────
+      // Captain gets 2× applied to their base points for display
+      const playerMap = Object.fromEntries((playerRows || []).map(p => [p.id, p]));
+
+      // 4. Derive best player (highest points in starting XI)
+      const startingIds = playerIds.slice(0, 11);
+      let bestPlayerId  = null;
+      let bestPts       = -Infinity;
+      for (const pid of startingIds) {
+        const pts = pointsMap[pid] || 0;
+        if (pts > bestPts) { bestPts = pts; bestPlayerId = pid; }
+      }
+
+      // 5. Total matchday points from fantasy_points table
+      const { data: fpRow } = await supabase.from('fantasy_points')
+        .select('total').eq('squad_id', squadRow.id).eq('matchday_id', matchdayId).maybeSingle();
+      const totalPoints = fpRow?.total ?? Object.values(pointsMap).reduce((s, v) => s + v, 0);
+
+      const username = userRow?.username ?? user?.user_metadata?.username ?? 'Manager';
+      const rank     = memberRow?.rank ?? null;
+      const leagueName = memberRow?.leagues?.name ?? 'My League';
+
       setRecap({
-        matchday:      recapRow.matchday_id,
-        leagueName:    recapRow.league?.name ?? 'My League',
+        matchday:   matchdayId.toUpperCase(),
+        leagueName,
         username,
-        rank:          recapRow.final_rank,
-        points:        recapRow.final_points,
-        rankChange:    recapRow.rank_change,
-        bestPlayer:    recapRow.bestPlayer
-          ? { ...recapRow.bestPlayer, points: pointsMap[recapRow.best_player_id] ?? null }
+        rank,
+        points:     Math.round(totalPoints * 10) / 10,
+        rankChange: null, // would need prior-matchday data
+        bestPlayer: bestPlayerId && playerMap[bestPlayerId]
+          ? { ...playerMap[bestPlayerId], points: pointsMap[bestPlayerId] ?? 0 }
           : null,
-        captain:       recapRow.captain
-          ? { ...recapRow.captain, points: pointsMap[recapRow.captain_id] ?? null }
+        captain: captainId && playerMap[captainId]
+          ? { ...playerMap[captainId], points: pointsMap[captainId] ?? 0 }
           : null,
-        joker:         recapRow.joker
-          ? { ...recapRow.joker, points: pointsMap[recapRow.joker_player_id] ?? null }
-          : null,
-        transfersMade: recapRow.transfers_made,
-        date:          new Date(recapRow.created_at).toLocaleDateString('en-GB', {
+        joker:         null, // daily joker tracking — future work
+        transfersMade: 0,    // transfer log not yet tracked
+        topScorers: startingIds
+          .map(id => ({ ...playerMap[id], points: pointsMap[id] || 0 }))
+          .filter(p => p.name && p.points > 0)
+          .sort((a, b) => b.points - a.points)
+          .slice(0, 5),
+        date: new Date().toLocaleDateString('en-GB', {
           day: 'numeric', month: 'long', year: 'numeric',
         }),
       });
@@ -295,11 +297,28 @@ export default function RecapScreen() {
             </div>
           )}
 
-          {/* Transfers */}
-          <div className="flex items-center justify-between px-5 py-4">
-            <div className="text-[11px] text-text-tertiary font-black uppercase tracking-[0.15em]">Transfers Made</div>
-            <div className="text-[14px] font-bold tabular-nums">{recap.transfersMade}</div>
-          </div>
+          {/* Top Scorers */}
+          {recap.topScorers?.length > 0 && (
+            <div className="px-5 py-4">
+              <div className="text-[9px] text-text-tertiary font-black uppercase tracking-[0.15em] mb-3">Top Scorers</div>
+              <div className="space-y-2">
+                {recap.topScorers.map((p, i) => (
+                  <div key={p.id ?? i} className="flex items-center justify-between">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <div className="w-5 h-5 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-[9px] font-black text-text-tertiary shrink-0">
+                        {i + 1}
+                      </div>
+                      <div className="text-[13px] font-bold truncate">{p.name}</div>
+                      <div className="text-[10px] text-text-tertiary shrink-0">{p.position}</div>
+                    </div>
+                    <div className="text-[13px] font-black tabular-nums text-positive ml-3 shrink-0">
+                      +{p.points}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* ── Share Actions ──────────────────────────────────────── */}
