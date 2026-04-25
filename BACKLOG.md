@@ -168,6 +168,12 @@
 
 ## ✅ Completed This Cycle
 
+**Session 3 - Squad Screen Backlog (2026-04-25)**:
+- [x] #022: Bottom sheet z-index fix — renders above mobile nav (z-[60])
+- [x] #003: Desktop Chips tab replaced with PowerToolCard grid (visual parity with mobile)
+- [x] #004: squad-power-tools onboarding tour step added
+- [x] Bug fix: handleChipToggle undefined — replaced with doToggleChip throughout
+
 **Session 1 - E2E Fixes & Sync**:
 - [x] E2E test localStorage timing fix (main directory) - 10 tests failing → 4 tests failing
 - [x] skipOnboarding() helper synced to worktree
@@ -195,13 +201,10 @@
   - Consider mocking approach for deterministic tests
   - Estimated effort: 1-2 hours
 
-### Priority 2: Complete Squad Screen (1.5 hours)
-- [ ] Issue #003: Desktop power tools enhancement (Phase 4) - 45 min
-  - Add PowerToolCard components to Chips tab
-  - Verify visual parity with mobile
-- [ ] Issue #004: Update onboarding tour (Phase 5) - 30 min
-  - Add tour steps highlighting new Power Tools section
-  - Update SQUAD_TOUR_STEPS with data-tour attributes
+### Priority 2: Squad Screen Polish
+- [x] Issue #003: Desktop power tools enhancement — COMPLETE (2026-04-25)
+- [x] Issue #004: Onboarding tour power tools step — COMPLETE (2026-04-25)
+- [x] Issue #022: Mobile bottom sheet z-index — COMPLETE (2026-04-25)
 - [ ] Issue #005: Verify mobile rendering - 20 min
   - Test on 375px viewport
   - Confirm grid layouts and interactions
