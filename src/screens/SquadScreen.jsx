@@ -63,7 +63,7 @@ export default function SquadScreen() {
   // Danger banner dismissed on mobile
   const [dangerDismissed,    setDangerDismissed]   = useState(false);
   // Transfer window lock (from matchday_deadlines table)
-  const [_windowLocked,      setWindowLocked]      = useState(false);
+  const [isLocked,           setWindowLocked]      = useState(false);
   const [_windowDeadline,    setWindowDeadline]    = useState(null);
   // Confirmation dialog state (FB-023)
   const [confirm,            setConfirm]           = useState(null);
