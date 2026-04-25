@@ -103,8 +103,12 @@ Always create a new file — never modify existing migrations.
 | 06 | `06_cup_pool_management.sql` | Cup pool + active clubs |
 | 07 | `07_relaxation_formula.sql` | No-repeat relaxation |
 | 08 | `08_reverse_draft_cron.sql` | Reverse-standings draft cron |
+| 09 | `09_scoring_schema.sql` | Scoring pipeline + calculate-scores Edge Function |
+| 13 | `13_scoring_schema_align.sql` | player_match_stats scoring columns + unique constraints |
+| 14 | `14_fixtures_pl_clubs.sql` | Replace World Cup dummy fixtures with PL clubs |
+| 15 | `15_player_status_pl_alerts.sql` | Seed player status alerts for real squad |
 
-**Next migration**: `09_`
+**Next migration**: `16_`
 
 ---
 

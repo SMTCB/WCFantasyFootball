@@ -1,6 +1,6 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-04-24
+**Last Updated**: 2026-04-25
 **E2E Test Suite**: 82/84 passing (97.6%)
 **Priority Levels**: P0 (Blocking), P1 (High — needed before feature is usable), P2 (Medium), P3 (Low/Polish)
 
@@ -39,6 +39,15 @@
   - SquadScreen: empty slot placeholders per position, tap to open picker sheet, sell now credits budget via Edge Function
   - MarketScreen: league picker (auto-selects if only one), taken-by-manager badge + row dimming, empty slots counter
   - LeagueScreen: "Manage Squad" + "Market" shortcut buttons, both link with `leagueId` context
+- **Scoring Layer — Sprint 1**:
+  - Migration 09: `daily_jokers`, `matchday_deadlines`, `player_match_stats` tables + `get_server_time()` RPC + `calculate_player_points()` SQL
+  - `calculate-scores` Edge Function: full scoring pipeline (BPS, captain/chip multipliers, Realtime broadcast)
+  - Migrations 13–15: scoring columns on `player_match_stats`, unique constraints, PL fixture data, player status alerts
+  - SquadScreen (#101): reads live squads table with real player points from `player_match_stats`
+  - LiveScreen (#102): real goal scores in ticker, real player points, real event feed with player names
+  - RecapScreen (#103): derived from real `fantasy_points` + `player_match_stats` (no `matchday_recaps` table needed)
+  - DangerZone (#104): 4 real player alerts seeded (doubt/out/returning) for current squad
+  - Fixtures: all World Cup dummy data replaced with Premier League clubs (md1–md6 + test-live)
 
 ---
 
@@ -86,20 +95,38 @@
 - **Fix**: Set via Supabase dashboard → Database → Extensions → pg_cron, or via `ALTER DATABASE ... SET app.supabase_url = '...'`
 - **Effort**: 15 minutes (config, not code)
 
+### #105: Transfer Cost Lock at Kickoff
+- **Status**: NOT STARTED
+- **Description**: Player transfer costs should lock at kickoff of their first fixture each matchday. Currently no enforcement — players can be bought/sold at any price during live matches.
+- **Fix**: `process-transfer` Edge Function should check `fixtures` table for kickoff time; reject transfers for in-progress fixture players.
+- **Effort**: 1 hour
+
+### #106: Manual Scoring Trigger
+- **Status**: NOT STARTED
+- **Description**: `calculate-scores` Edge Function exists but is not on a cron. Needs a commissioner UI button in LeagueScreen or a pg_cron job.
+- **Fix**: Add "Recalculate Scores" button to commissioner panel (#016), or add pg_cron job calling every 5 minutes during live matchdays.
+- **Effort**: 30 minutes (if combined with #016)
+
 ---
 
 ## 🟡 P2 — Medium
 
 ### #003: Squad Screen — Desktop Enhancement (Phase 4)
-- **Status**: NOT STARTED
-- **Description**: Enhance desktop sidebar Chips tab to use `PowerToolCard` components for visual parity with mobile.
-- **Location**: `src/screens/SquadScreen.jsx` ~lines 1092–1098
-- **Effort**: 45 minutes
+- **Status**: ✅ COMPLETE (2026-04-25)
+- **Description**: Desktop sidebar Chips tab now uses `PowerToolCard` components for visual parity with mobile.
 
 ### #004: Squad Screen — Onboarding Tour Update (Phase 5)
+- **Status**: ✅ COMPLETE (2026-04-25)
+- **Description**: Tour step added for `data-tour="squad-power-tools"` highlighting the 3 power tool cards.
+
+### #107: BracketScreen — Wire to Real Fixtures
 - **Status**: NOT STARTED
-- **Description**: Add tour step for `data-tour="squad-power-tools"` highlighting the 3 power tool cards.
-- **Location**: `src/screens/SquadScreen.jsx` ~lines 77–93 (`SQUAD_TOUR_STEPS`)
+- **Description**: BracketScreen uses hardcoded placeholder data. Should read from `fixtures` table filtered by cup phase.
+- **Effort**: 1–2 hours
+
+### #108: HomeScreen — PL Club Fallback Data
+- **Status**: NOT STARTED
+- **Description**: HomeScreen may still reference World Cup team names in fallback/static data. Needs alignment with PL clubs.
 - **Effort**: 30 minutes
 
 ### #019: Pool Pressure Indicator in Draft & Squad Screens
