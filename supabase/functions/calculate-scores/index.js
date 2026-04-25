@@ -228,9 +228,10 @@ Deno.serve(async (req) => {
       };
     });
 
-    await supabase
+    const { error: upsertErr } = await supabase
       .from('player_match_stats')
       .upsert(playerStatUpserts, { onConflict: 'fixture_id,player_id' });
+    if (upsertErr) console.error('player_match_stats upsert error:', JSON.stringify(upsertErr));
 
     // 7. Build player_id → fantasy_points lookup
     const pointsLookup = {};
@@ -277,9 +278,10 @@ Deno.serve(async (req) => {
       });
     }
 
-    await supabase
+    const { error: fpErr } = await supabase
       .from('fantasy_points')
       .upsert(fantasyPointsUpserts, { onConflict: 'squad_id,matchday_id' });
+    if (fpErr) console.error('fantasy_points upsert error:', JSON.stringify(fpErr));
 
     // 9. Update league_members total_points from sum of fantasy_points
     for (const squad of squads) {
