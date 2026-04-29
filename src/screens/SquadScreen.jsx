@@ -818,8 +818,8 @@ export default function SquadScreen() {
         <div className="flex" style={{ borderBottom: '1px solid rgba(255,255,255,0.07)', background: '#0D1117' }}>
           {[
             { id: 'pitch', label: '⚽', text: 'Pitch' },
-            { id: 'squad', label: '📋', text: 'Squad' },
-            { id: 'tools', label: '⚙️', text: 'Tools' },
+            { id: 'squad', label: '👥', text: 'Squad' },
+            { id: 'tools', label: '⚡', text: 'Tools' },
           ].map(tab => (
             <button
               key={tab.id}
@@ -943,6 +943,7 @@ export default function SquadScreen() {
                 <PowerToolCard
                   icon="🃏"
                   label="Wildcard"
+                  description="Unlimited free transfers this matchday"
                   isActive={squadData.isWildcard}
                   accentColor="#18C96B"
                   bgColor="rgba(24,201,107,0.08)"
@@ -967,6 +968,7 @@ export default function SquadScreen() {
                 <PowerToolCard
                   icon="🚀"
                   label="Triple Cap."
+                  description="3× captain points — or 0 if they don't play"
                   isActive={squadData.isTripleCaptain}
                   accentColor="#F0B400"
                   bgColor="rgba(240,180,0,0.08)"
@@ -991,6 +993,7 @@ export default function SquadScreen() {
                 <PowerToolCard
                   icon="🎰"
                   label="Roulette"
+                  description="Random captain picker — spin to decide"
                   isActive={false}
                   accentColor="#F0B400"
                   bgColor="rgba(240,180,0,0.08)"
@@ -1216,6 +1219,7 @@ export default function SquadScreen() {
                   <PowerToolCard
                     icon="🃏"
                     label="Wildcard"
+                    description="Unlimited free transfers this matchday"
                     isActive={squadData.isWildcard}
                     accentColor="#18C96B"
                     bgColor="rgba(24,201,107,0.08)"
@@ -1238,6 +1242,7 @@ export default function SquadScreen() {
                   <PowerToolCard
                     icon="🚀"
                     label="Triple Cap."
+                    description="3× captain points — or 0 if they don't play"
                     isActive={squadData.isTripleCaptain}
                     accentColor="#F0B400"
                     bgColor="rgba(240,180,0,0.08)"
