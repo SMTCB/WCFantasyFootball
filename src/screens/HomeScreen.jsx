@@ -9,17 +9,19 @@ const CURRENT_MATCHDAY = 5;
 
 /* ── Team accent colours (rough national palette) ──────────────── */
 const TEAM_COLORS = {
-  Brazil:   { primary: '#009C3B', secondary: '#FFDF00' },
-  France:   { primary: '#002395', secondary: '#ED2939' },
-  England:  { primary: '#CF081F', secondary: '#FFFFFF' },
-  Portugal: { primary: '#006600', secondary: '#FF0000' },
-  Morocco:  { primary: '#C1272D', secondary: '#006233' },
-  Spain:    { primary: '#AA151B', secondary: '#F1BF00' },
-  Germany:  { primary: '#000000', secondary: '#DD0000' },
-  Argentina:{ primary: '#74ACDF', secondary: '#FFFFFF' },
-  Korea:    { primary: '#C60C30', secondary: '#003478' },
-  Italy:    { primary: '#009246', secondary: '#003DA5' },
-  default:  { primary: '#1C2333', secondary: '#3D4B5C' },
+  Arsenal:      { primary: '#EF0107', secondary: '#9C824A' },
+  Chelsea:      { primary: '#034694', secondary: '#DBA111' },
+  'Man City':   { primary: '#6CABDD', secondary: '#1C2C5B' },
+  Liverpool:    { primary: '#C8102E', secondary: '#F6EB61' },
+  Spurs:        { primary: '#132257', secondary: '#FFFFFF' },
+  'Man Utd':    { primary: '#DA291C', secondary: '#FBE122' },
+  'Aston Villa':{ primary: '#670E36', secondary: '#95BFE5' },
+  Newcastle:    { primary: '#241F20', secondary: '#41B6E6' },
+  Brighton:     { primary: '#0057B8', secondary: '#FFCD00' },
+  'West Ham':   { primary: '#7A263A', secondary: '#1BB1E7' },
+  Everton:      { primary: '#003399', secondary: '#FFFFFF' },
+  Wolves:       { primary: '#FDB913', secondary: '#231F20' },
+  default:      { primary: '#1C2333', secondary: '#3D4B5C' },
 };
 
 const getTeamColor = (name) => TEAM_COLORS[name] || TEAM_COLORS.default;
@@ -56,10 +58,10 @@ export default function HomeScreen() {
     const { data } = await supabase.from('fixtures').select('*').order('kickoff_at', { ascending: true });
     if (!data || data.length === 0) {
       setFixtures([
-        { id: 'f1', home_team: 'Brazil', away_team: 'Korea',    status: 'live',      minute: '64', kickoff_at: new Date().toISOString(), home_score: 2, away_score: 1 },
-        { id: 'f2', home_team: 'France', away_team: 'England',  status: 'scheduled', kickoff_at: new Date(Date.now() + 1000*60*60*2).toISOString() },
-        { id: 'f3', home_team: 'Portugal', away_team: 'Morocco',status: 'scheduled', kickoff_at: new Date(Date.now() + 1000*60*60*4).toISOString() },
-        { id: 'f4', home_team: 'Spain', away_team: 'Germany',   status: 'finished',  kickoff_at: new Date(Date.now() - 1000*60*60*3).toISOString(), home_score: 1, away_score: 2 },
+        { id: 'f1', home_team: 'Man City',  away_team: 'Liverpool', status: 'live',      minute: '64', kickoff_at: new Date().toISOString(), home_score: 2, away_score: 1, competition: 'Premier League • GW2' },
+        { id: 'f2', home_team: 'Arsenal',   away_team: 'Chelsea',   status: 'scheduled', kickoff_at: new Date(Date.now() + 1000*60*60*2).toISOString(), competition: 'Premier League • GW2' },
+        { id: 'f3', home_team: 'Spurs',     away_team: 'Man Utd',   status: 'scheduled', kickoff_at: new Date(Date.now() + 1000*60*60*4).toISOString(), competition: 'Premier League • GW2' },
+        { id: 'f4', home_team: 'Newcastle', away_team: 'Aston Villa', status: 'finished', kickoff_at: new Date(Date.now() - 1000*60*60*3).toISOString(), home_score: 1, away_score: 2, competition: 'Premier League • GW1' },
       ]);
       return;
     }
@@ -268,7 +270,7 @@ export default function HomeScreen() {
         }}
       >
         <div>
-          <div className="fz-label" style={{ color: '#3D4B5C' }}>World Cup 2026</div>
+          <div className="fz-label" style={{ color: '#3D4B5C' }}>Premier League 2025/26</div>
           <div
             className="text-[24px] font-black uppercase leading-tight tracking-tight"
             style={{ fontFamily: 'Barlow Condensed, sans-serif', color: '#F0F2F5' }}
