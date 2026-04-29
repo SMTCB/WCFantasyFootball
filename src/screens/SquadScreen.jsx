@@ -818,8 +818,8 @@ export default function SquadScreen() {
         <div className="flex" style={{ borderBottom: '1px solid rgba(255,255,255,0.07)', background: '#0D1117' }}>
           {[
             { id: 'pitch', label: '⚽', text: 'Pitch' },
-            { id: 'squad', label: '📋', text: 'Squad' },
-            { id: 'tools', label: '⚙️', text: 'Tools' },
+            { id: 'squad', label: '👥', text: 'Squad' },
+            { id: 'tools', label: '⚡', text: 'Tools' },
           ].map(tab => (
             <button
               key={tab.id}
