@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { normalisePlayers } from '../lib/players';
 import { useAuth } from '../hooks/useAuth';
+import { useRelaxationState } from '../hooks/useRelaxationState';
 
 const POS_CONFIG = {
   GK:  { label: 'GK',  color: '#F0B400', bg: 'rgba(240,180,0,0.14)'  },
@@ -26,6 +27,7 @@ export default function DraftRecoveryScreen() {
   const { leagueId } = useParams();
   const navigate     = useNavigate();
   const { user }     = useAuth();
+  const relaxation   = useRelaxationState(leagueId);
 
   const [allocation,  setAllocation]  = useState(null);  // draft_allocations row
   const [squad,       setSquad]       = useState([]);     // current player objects in squad
@@ -273,6 +275,45 @@ export default function DraftRecoveryScreen() {
           </div>
         )}
       </div>
+
+      {/* Pool pressure banner — cup leagues only */}
+      {!relaxation.loading && relaxation.availablePool !== null && (
+        <div
+          className="px-4 py-2.5 flex items-center justify-between gap-3 text-[11px] font-bold"
+          style={{
+            background: relaxation.pressure >= 90
+              ? 'rgba(240,58,58,0.12)'
+              : relaxation.pressure >= 70
+              ? 'rgba(255,193,7,0.10)'
+              : 'rgba(24,201,107,0.08)',
+            borderBottom: '1px solid rgba(255,255,255,0.06)',
+          }}
+        >
+          <div className="flex items-center gap-2">
+            <span style={{ color: relaxation.pressure >= 90 ? '#F03A3A' : relaxation.pressure >= 70 ? '#FFC107' : '#18C96B' }}>
+              {relaxation.pressure >= 90 ? '🔴' : relaxation.pressure >= 70 ? '🟡' : '🟢'}
+            </span>
+            <span style={{ color: '#9E9E9E' }}>
+              Pool pressure{' '}
+              <span style={{
+                color: relaxation.pressure >= 90 ? '#F03A3A' : relaxation.pressure >= 70 ? '#FFC107' : '#18C96B',
+                fontFamily: 'Barlow Condensed, sans-serif',
+                fontWeight: 900,
+              }}>
+                {Math.round(relaxation.pressure)}%
+              </span>
+              {relaxation.repeatsAllowed > 0
+                ? ` — ${relaxation.repeatsAllowed} repeat(s) allowed per squad`
+                : relaxation.repeatsAllowed === null
+                ? ' — no-repeat rule lifted'
+                : ' — strict no-repeat'}
+            </span>
+          </div>
+          <span style={{ color: '#555', fontFamily: 'Barlow Condensed, sans-serif', fontSize: '10px' }}>
+            {relaxation.availablePool} available
+          </span>
+        </div>
+      )}
 
       {/* Alert banner */}
       {allocation ? (
