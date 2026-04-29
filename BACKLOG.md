@@ -60,20 +60,15 @@
   2. MarketScreen + DraftScreen: `.single().catch()` invalid on Supabase SDK thenable
   3. E2E: `getByText('⚙ Tools')` selector didn't match split icon/label elements
 
-### #001-E2E: MarketScreen E2E Tests (2 tests still failing)
-- **Status**: OPEN (UX bug fixed; E2E environment issue persists)
-- **Description**: `MarketScreen › renders player list with names` failing on desktop-chrome + mobile-chrome in E2E. The actual app now loads players correctly. The E2E failure is a Supabase connectivity issue in the test environment.
-- **Next Steps**:
-  1. Mock the Supabase players query in E2E for deterministic results
-  2. Or add a `data-testid` fixture bypass in test setup
-- **Effort**: 1–2 hours
+### #001-E2E: MarketScreen E2E Tests ✅ RESOLVED
+- **Status**: DONE — `page.route('**/rest/v1/players**')` intercepts Supabase REST in E2E and returns fixture PL player data. Test now looks for `Salah|Haaland|Kane|De Bruyne|Saka`. DB-independent.
 
 ---
 
 ## 🟠 P1 — High
 
 ### #016: League Commissioner Panel
-- **Status**: NOT STARTED
+- **Status**: ✅ DONE — Commissioner-only tab in LeagueScreen (visible to `leagues.created_by`). Covers: transfer window open/close (with datetime inputs), draft deadline setter, score recalculation by fixture ID, cup phase seed trigger.
 - **Description**: Several backend capabilities have no admin surface:
   - Open/close transfer windows (insert rows into `transfer_windows`)
   - Advance cup phase (`cup_phase` enum transitions)
@@ -84,10 +79,7 @@
 - **Effort**: 2–3 hours
 
 ### #017: Wire Trade Builder to Real Squad Data
-- **Status**: NOT STARTED
-- **Description**: Trade builder in `LeagueScreen` still uses `MOCK_SQUAD_PLAYERS` (MY PLAYER selector) and `MOCK_PLAYERS_POOL` (THEIR PLAYER selector). Now that `useTransfer` exists and `draft_allocations` is populated, this can be wired to real data. The `TODO` on the position-cap pre-check (`validateAndSendProposal`) also remains open.
-- **Fix**: On trade builder open, fetch current manager's allocated players + target manager's allocated players from `draft_allocations` (or `squads` for the current league).
-- **Effort**: 1–2 hours
+- **Status**: ✅ DONE — All mock player arrays removed from LeagueScreen. `loadTradeSquads()` fetches both managers' `draft_allocations` and resolves via `players` table. `loadManagerRoster()` populates the roster sheet.
 
 ### #018: Configure Supabase Cron Settings
 - **Status**: NOT STARTED
@@ -130,10 +122,7 @@
 - **Effort**: 30 minutes
 
 ### #019: Pool Pressure Indicator in Draft & Squad Screens
-- **Status**: NOT STARTED
-- **Description**: `useRelaxationState` hook is built and functional but not surfaced anywhere. Managers in cup leagues have no visibility into the current no-repeat rule status.
-- **Fix**: Small banner or badge on `DraftScreen` and `DraftRecoveryScreen`: e.g. "Pool pressure 94% — 1 repeated player allowed per squad."
-- **Effort**: 45 minutes
+- **Status**: ✅ DONE — Colour-coded banner (green/amber/red at 70%/90%) added to `DraftScreen` and `DraftRecoveryScreen`. Shows pressure %, repeat allowance count, and pool size. Hidden for non-cup leagues (`availablePool === null`).
 
 ### #020: Draft Deadline Notifications
 - **Status**: NOT STARTED
@@ -148,9 +137,7 @@
 - **Effort**: 2 hours (Edge Function + cron)
 
 ### #022: Squad Screen — Player Click Bottom Sheet (Mobile)
-- **Status**: NOT VERIFIED
-- **Description**: Tapping a player on mobile Squad screen should open the action bottom sheet (Set Captain, Sub, Sell). Reported as not working. May be a z-index or event propagation issue introduced by the empty slot placeholders.
-- **Effort**: 30 minutes investigation
+- **Status**: ✅ DONE — Root cause was `<div onClick>` in `PlayerCard` (both pitch + row variants). Converted to `<button type="button">`. Also added dismiss backdrop behind action sheet. iOS Safari touch events now fire reliably.
 
 ---
 
