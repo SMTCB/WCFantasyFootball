@@ -1,7 +1,7 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-04-25
-**E2E Test Suite**: 82/84 passing (97.6%)
+**Last Updated**: 2026-04-29
+**E2E Test Suite**: 116/116 passing (100%) — scoring.spec.js (32) + platform.spec.js (84)
 **Priority Levels**: P0 (Blocking), P1 (High — needed before feature is usable), P2 (Medium), P3 (Low/Polish)
 
 ---
@@ -112,14 +112,10 @@
 - **Description**: Tour step added for `data-tour="squad-power-tools"` highlighting the 3 power tool cards.
 
 ### #107: BracketScreen — Wire to Real Fixtures
-- **Status**: NOT STARTED
-- **Description**: BracketScreen uses hardcoded placeholder data. Should read from `fixtures` table filtered by cup phase.
-- **Effort**: 1–2 hours
+- **Status**: ✅ DONE — Full rewrite. Fetches real fixtures from Supabase, grouped by gameweek. Fixture Challenge mini-game: Home/Draw/Away predictions per match, stored in localStorage. Result feedback (✓/✗) on finished matches. Accuracy % in header. Falls back to 8 PL fixture rows if DB empty.
 
 ### #108: HomeScreen — PL Club Fallback Data
-- **Status**: NOT STARTED
-- **Description**: HomeScreen may still reference World Cup team names in fallback/static data. Needs alignment with PL clubs.
-- **Effort**: 30 minutes
+- **Status**: ✅ DONE — Header label updated ("World Cup 2026" → "Premier League 2025/26"). TEAM_COLORS replaced (9 national teams → 12 PL clubs with real brand colours). Fallback fixtures updated to PL clubs.
 
 ### #019: Pool Pressure Indicator in Draft & Squad Screens
 - **Status**: ✅ DONE — Colour-coded banner (green/amber/red at 70%/90%) added to `DraftScreen` and `DraftRecoveryScreen`. Shows pressure %, repeat allowance count, and pool size. Hidden for non-cup leagues (`availablePool === null`).
@@ -161,7 +157,7 @@
 
 ### #005: Verify Mobile PowerToolCard Rendering
 - **Status**: NEEDS VERIFICATION
-- **Steps**: `/squad` on 375px → Tools tab → confirm 3 cards render, interactions work, confirm modals appear
+- **Steps**: `/squad` on 375px → Tools tab → confirm 3 cards render with descriptions, interactions work, confirm modals appear
 - **Effort**: 20 minutes
 
 ### #007: Mobile Tab Icon Refinement
@@ -170,15 +166,10 @@
 - **Effort**: 15 minutes
 
 ### #008: Onboarding Tour — Hardcoded Delays
-- **Status**: OPEN
-- **Location**: `src/components/OnboardingTour.jsx` line ~56
-- **Fix**: Replace `setTimeout` with `waitFor()`
-- **Effort**: 20 minutes
+- **Status**: ✅ DONE — Replaced 3× setTimeout retry (100/300/600ms) with `waitForElement()` using MutationObserver. Fires the exact tick the target element appears. Removed unused rafRef.
 
 ### #009: PowerToolCard — Description Prop
-- **Status**: NOT USED
-- **Description**: Component supports `description` prop — add: Wildcard "Unlimited free transfers", Triple Captain "3× captain points", Roulette "Random captain picker"
-- **Effort**: 15 minutes
+- **Status**: ✅ DONE — Description prop added to all 5 PowerToolCard usages (mobile × 3, desktop × 2): Wildcard "Unlimited free transfers this matchday", Triple Cap "3× captain points — or 0 if they don't play", Roulette "Random captain picker — spin to decide".
 
 ### #010: CSS Animation Performance
 - **Status**: REVIEW
@@ -219,15 +210,15 @@
 
 ## 🎯 Recommended Next Cycle
 
-### Unblock the product (~3 hours)
-1. **#016** Commissioner panel — transfer windows + cup phase management
-2. **#017** Wire trade builder to real squad data
-3. **#018** Configure Supabase cron settings (15 min)
+### Unblock the product
+1. **#018** Configure Supabase cron settings (15 min — dashboard config only)
+2. **#105** Transfer cost lock at kickoff — Edge Function update
+3. **#106** Wire scoring cron or confirm commissioner button calls Edge Function
 
-### Polish the experience (~2 hours)
-4. **#022** Verify/fix player click bottom sheet on mobile Squad screen
-5. **#001-E2E** Mock Supabase in E2E for deterministic market tests
-6. **#019** Pool pressure indicator on Draft screens
+### Polish / roadmap
+4. **#005** Verify mobile PowerToolCard rendering at 375px (visual check)
+5. **#021** Transfer window auto-scheduler (Edge Function + cron)
+6. **#020** Draft deadline push notifications
 
 ---
 
@@ -235,14 +226,14 @@
 
 | Category | Current | Target |
 |---|---|---|
-| E2E Tests Passed | 82/84 (97.6%) | 84/84 (100%) |
+| E2E Tests Passed | 116/116 (100%) ✅ | 116/116 |
 | Draft System Stories | 12/12 ✅ | 12/12 |
-| DB Migrations | 9 | — |
-| Edge Functions | 5 | — |
-| Blocking Issues | 1 | 0 |
-| High Priority | 3 | 0 |
-| Medium Priority | 5 | TBD |
-| Low Priority | 5 | TBD |
+| DB Migrations | 15 | — |
+| Edge Functions | 6 | — |
+| Blocking Issues | 0 ✅ | 0 |
+| High Priority Open | 3 | 0 |
+| Medium Priority Open | 2 | TBD |
+| Low Priority Open | 2 | TBD |
 
 ---
 
