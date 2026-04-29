@@ -71,11 +71,11 @@ export default function SquadScreen() {
   // Danger banner dismissed on mobile
   const [dangerDismissed,    setDangerDismissed]   = useState(false);
   // Transfer window lock (from matchday_deadlines table)
-  const [_windowLocked,      setWindowLocked]      = useState(false);
   const [_windowDeadline,    setWindowDeadline]    = useState(null);
   // Confirmation dialog state (FB-023)
   const [confirm,            setConfirm]           = useState(null);
   const [pickerPos,          setPickerPos]         = useState(null);
+  const [fetchError,         setFetchError]        = useState(null);
 
   // Transfer hook — league-scoped buy/sell + no-repeat enforcement
   const { buy, sell, takenMap, isOwnedBy } = useTransfer(leagueId);
@@ -98,14 +98,17 @@ export default function SquadScreen() {
       body:   'Your remaining budget and the transfer window countdown live here. When the window closes, no more transfers until the next matchday.',
     },
     {
+      target: 'squad-power-tools',
+      title:  'Power Tools',
+      body:   'Wildcard, Triple Captain, Roulette, and Daily Joker live here. Each is one-use — activate carefully.',
+    },
+    {
       target: 'squad-chips',
       title:  'Chips & Boosts',
       body:   'Wildcard lets you make unlimited free transfers. Triple Captain scores 3× points — or 0 if they don\'t play. Use them wisely, they\'re one-per-season.',
     },
   ];
 
-  // Sync live countdown → windowLocked so chip/joker guards stay up to date
-  useEffect(() => { if (deadline.isLocked) setWindowLocked(true); }, [deadline.isLocked]);
 
   useEffect(() => { fetchSquad(); fetchDailyStatus(); }, [user]);
 
@@ -130,13 +133,12 @@ export default function SquadScreen() {
       const userId = user?.id;
       const today  = new Date().toISOString().split('T')[0];
 
-      // ── Transfer window lock check ──────────────────────────────────────────
+      // ── Transfer window lock check — use latest matchday deadline ──────────
       const { data: deadlineRow } = await supabase
-        .from('matchday_deadlines').select('deadline_at').eq('matchday_id', 'md1').maybeSingle();
+        .from('matchday_deadlines').select('deadline_at').order('deadline_at', { ascending: false }).limit(1).maybeSingle();
       if (deadlineRow?.deadline_at) {
         const deadline = new Date(deadlineRow.deadline_at);
         setWindowDeadline(deadline);
-        setWindowLocked(new Date() >= deadline);
       }
 
       const { data: jokerRec } = await supabase.from('daily_jokers').select('player_id')
@@ -149,44 +151,58 @@ export default function SquadScreen() {
       setJokerPlayer(jokerP);
       setTodayJokerId(jokerRec?.player_id || null);
 
+      // Most-recent squad first — ensures we get the live matchday squad, not an older one
       const squadQuery = supabase.from('squads').select('*').eq('user_id', userId);
       if (leagueId) squadQuery.eq('league_id', leagueId);
-      const { data: squad, error } = await squadQuery.limit(1).maybeSingle();
+      const { data: squad, error } = await squadQuery.order('created_at', { ascending: false }).limit(1).maybeSingle();
       if (error || !squad) { setSquadData(fallbackSquad); setLoading(false); return; }
 
-      const { data: players, error: pErr } = await supabase.from('players').select('*').in('id', squad.players);
+      const playerIds = squad.players || [];
+      const [
+        { data: players,   error: pErr },
+        { data: intelData },
+        { data: statsData },
+        { data: fixtures  },
+      ] = await Promise.all([
+        supabase.from('players').select('*').in('id', playerIds),
+        supabase.from('player_status').select('*').in('player_id', playerIds),
+        // Points from all finished/live fixtures for this matchday
+        supabase.from('player_match_stats')
+          .select('player_id, fantasy_points, fixture_id')
+          .in('player_id', playerIds),
+        supabase.from('fixtures').select('id').eq('status', 'finished').like('id', `${squad.matchday_id}%`),
+      ]);
       if (pErr) throw pErr;
-      const { data: intelData } = await supabase.from('player_status').select('*').in('player_id', squad.players);
+
+      // Sum fantasy_points across all finished fixtures for this matchday
+      const finishedFixtureIds = new Set((fixtures || []).map(f => f.id));
+      const pointsMap = {};
+      for (const s of statsData || []) {
+        if (finishedFixtureIds.has(s.fixture_id)) {
+          pointsMap[s.player_id] = (pointsMap[s.player_id] || 0) + Number(s.fantasy_points);
+        }
+      }
 
       const mappedPlayers = (players || []).map((p, idx) => {
-        const pitchMatch  = fallbackSquad.players.find(mp => mp.id === p.id) || fallbackSquad.bench.find(mp => mp.id === p.id);
         const playerIntel = intelData?.find(i => i.player_id === p.id);
         const isStarter   = idx < 11;
         return normalisePlayer({
           ...p,
-          points:    0,
+          points:    pointsMap[p.id] ?? 0,
           intel:     normalizeIntelligence(playerIntel),
-          color:     pitchMatch?.color,
-          gridClass: pitchMatch?.gridClass || (isStarter ? `col-start-${(idx % 5) + 1} row-start-${Math.floor(idx / 5) + 1}` : ''),
           isBench:   !isStarter,
         });
       });
 
-      let pitchPlayers = mappedPlayers.filter(p => !p.isBench);
-      let benchPlayers = mappedPlayers.filter(p => p.isBench);
-      if (pitchPlayers.length < 11) {
-        const ids = new Set(pitchPlayers.map(p => p.id));
-        pitchPlayers = [...pitchPlayers, ...fallbackSquad.players.filter(p => !ids.has(p.id)).map(p => ({ ...p, points: 0, isBench: false }))].slice(0, 11);
-      }
-      if (benchPlayers.length < 4) {
-        const ids = new Set([...pitchPlayers, ...benchPlayers].map(p => p.id));
-        benchPlayers = [...benchPlayers, ...fallbackSquad.bench.filter(p => !ids.has(p.id)).map(p => ({ ...p, points: 0, isBench: true }))].slice(0, 4);
-      }
+      const pitchPlayers = mappedPlayers.filter(p => !p.isBench);
+      const benchPlayers = mappedPlayers.filter(p => p.isBench);
 
       setSquadData({
         squadId:         squad.id,
+        leagueId:        squad.league_id,
+        matchdayId:      squad.matchday_id,
         budget:          { current: Number(squad.budget_remaining ?? 17), total: 100 },
-        captainId:       squad.captain_id || 'p1',
+        captainId:       squad.captain_id || playerIds[0] || '',
         players:         pitchPlayers,
         bench:           benchPlayers,
         isWildcard:      squad.is_wildcard,
@@ -195,6 +211,7 @@ export default function SquadScreen() {
       });
     } catch (err) {
       console.error(err);
+      setFetchError('Could not load your squad. Showing demo data.');
       setSquadData(fallbackSquad);
     } finally {
       setLoading(false);
@@ -336,16 +353,28 @@ export default function SquadScreen() {
   };
 
   const doToggleChip = async (chipKey) => {
-    const chip   = CHIPS.find(c => c.key === chipKey);
-    const curVal = squadData[chip.stateKey];
+    const chip = CHIPS.find(c => c.key === chipKey);
     try {
       setSaving(true);
-      await supabase.from('squads').update({ [chip.dbField]: !curVal }).eq('id', squadData.squadId);
-      setSquadData({ ...squadData, [chip.stateKey]: !curVal });
+      const { data, error } = await supabase.rpc('activate_chip', {
+        p_user_id:   user?.id,
+        p_league_id: squadData.leagueId,
+        p_chip_type: chipKey,
+      });
+      if (error) throw error;
+      if (!data?.ok) {
+        if (data?.code === 'CHIP_ALREADY_USED') {
+          setFetchError(`${chip.label} has already been used this season and cannot be reactivated.`);
+        } else {
+          setFetchError(data?.error || 'Failed to toggle chip.');
+        }
+        return;
+      }
+      setSquadData({ ...squadData, [chip.stateKey]: data.active });
     } finally { setSaving(false); }
   };
 
-  const handleChipToggle = async (type) => {
+  const _handleChipToggle = async (type) => {
     if (!squadData) return;
     const chip = CHIPS.find(c => c.key === type);
     if (!chip) return;
@@ -708,6 +737,23 @@ export default function SquadScreen() {
   // ─────────────────────────────────────────────────────────────────────────
   return (
     <div className="min-h-screen bg-bg overflow-x-hidden">
+
+      {/* ── Fetch error banner ──────────────────────────────────────────────── */}
+      {fetchError && (
+        <div
+          className="fixed top-0 left-0 right-0 z-[70] flex items-center gap-3 px-4 py-3 lg:left-[220px]"
+          style={{ background: 'rgba(240,58,58,0.92)', backdropFilter: 'blur(8px)' }}
+        >
+          <span className="text-white text-[11px] font-bold uppercase tracking-widest flex-1">{fetchError}</span>
+          <button
+            onClick={() => { setFetchError(null); fetchSquad(); }}
+            className="text-white text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-sm transition-opacity hover:opacity-70"
+            style={{ background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.25)' }}
+          >Retry</button>
+          <button onClick={() => setFetchError(null)} className="text-white opacity-60 hover:opacity-100 text-lg leading-none">×</button>
+        </div>
+      )}
+
       {/* Confirmation dialog (FB-023) */}
       {confirm && (
         <ConfirmModal
@@ -772,8 +818,8 @@ export default function SquadScreen() {
         <div className="flex" style={{ borderBottom: '1px solid rgba(255,255,255,0.07)', background: '#0D1117' }}>
           {[
             { id: 'pitch', label: '⚽', text: 'Pitch' },
-            { id: 'squad', label: '📋', text: 'Squad' },
-            { id: 'tools', label: '⚙️', text: 'Tools' },
+            { id: 'squad', label: '👥', text: 'Squad' },
+            { id: 'tools', label: '⚡', text: 'Tools' },
           ].map(tab => (
             <button
               key={tab.id}
@@ -897,6 +943,7 @@ export default function SquadScreen() {
                 <PowerToolCard
                   icon="🃏"
                   label="Wildcard"
+                  description="Unlimited free transfers this matchday"
                   isActive={squadData.isWildcard}
                   accentColor="#18C96B"
                   bgColor="rgba(24,201,107,0.08)"
@@ -909,7 +956,7 @@ export default function SquadScreen() {
                         message: squadData.isWildcard
                           ? 'You will no longer have unlimited free transfers.'
                           : 'You\'ll have unlimited free transfers this matchday. 1 use per season.',
-                        onConfirm: () => handleChipToggle('wildcard'),
+                        onConfirm: () => doToggleChip('wildcard'),
                         confirmLabel: 'Confirm',
                         warning: squadData.isWildcard ? null : 'This action cannot be undone this gameweek.',
                       });
@@ -921,6 +968,7 @@ export default function SquadScreen() {
                 <PowerToolCard
                   icon="🚀"
                   label="Triple Cap."
+                  description="3× captain points — or 0 if they don't play"
                   isActive={squadData.isTripleCaptain}
                   accentColor="#F0B400"
                   bgColor="rgba(240,180,0,0.08)"
@@ -933,7 +981,7 @@ export default function SquadScreen() {
                         message: squadData.isTripleCaptain
                           ? 'Your captain will earn normal points.'
                           : 'Your captain will earn 3× points this matchday. 1 use per season.',
-                        onConfirm: () => handleChipToggle('triple_captain'),
+                        onConfirm: () => doToggleChip('triple'),
                         confirmLabel: 'Confirm',
                         warning: squadData.isTripleCaptain ? null : 'This action cannot be undone this gameweek.',
                       });
@@ -945,6 +993,7 @@ export default function SquadScreen() {
                 <PowerToolCard
                   icon="🎰"
                   label="Roulette"
+                  description="Random captain picker — spin to decide"
                   isActive={false}
                   accentColor="#F0B400"
                   bgColor="rgba(240,180,0,0.08)"
@@ -1165,9 +1214,56 @@ export default function SquadScreen() {
 
             {/* CHIPS TAB */}
             {desktopTab === 'chips' && (
-              <div className="pt-4">
-                {CHIPS.map(chip => <ChipCard key={chip.key} chip={chip} />)}
-                <RouletteCard />
+              <div className="pt-4 mx-4">
+                <div className="grid grid-cols-3 gap-2 mb-4">
+                  <PowerToolCard
+                    icon="🃏"
+                    label="Wildcard"
+                    description="Unlimited free transfers this matchday"
+                    isActive={squadData.isWildcard}
+                    accentColor="#18C96B"
+                    bgColor="rgba(24,201,107,0.08)"
+                    borderColor="rgba(24,201,107,0.15)"
+                    actionLabel={squadData.isWildcard ? 'Active' : 'Activate'}
+                    onAction={() => {
+                      if (!isLocked) {
+                        setConfirm({
+                          title: squadData.isWildcard ? 'Deactivate Wildcard?' : 'Activate Wildcard?',
+                          message: squadData.isWildcard
+                            ? 'You will no longer have unlimited free transfers.'
+                            : 'You\'ll have unlimited free transfers this matchday. 1 use per season.',
+                          onConfirm: () => doToggleChip('wildcard'),
+                          confirmLabel: 'Confirm',
+                          warning: squadData.isWildcard ? null : 'This action cannot be undone this gameweek.',
+                        });
+                      }
+                    }}
+                  />
+                  <PowerToolCard
+                    icon="🚀"
+                    label="Triple Cap."
+                    description="3× captain points — or 0 if they don't play"
+                    isActive={squadData.isTripleCaptain}
+                    accentColor="#F0B400"
+                    bgColor="rgba(240,180,0,0.08)"
+                    borderColor="rgba(240,180,0,0.15)"
+                    actionLabel={squadData.isTripleCaptain ? 'Active' : 'Activate'}
+                    onAction={() => {
+                      if (!isLocked) {
+                        setConfirm({
+                          title: squadData.isTripleCaptain ? 'Deactivate Triple Captain?' : 'Activate Triple Captain?',
+                          message: squadData.isTripleCaptain
+                            ? 'Your captain will earn normal points.'
+                            : 'Your captain will earn 3× points this matchday. 1 use per season.',
+                          onConfirm: () => doToggleChip('triple'),
+                          confirmLabel: 'Confirm',
+                          warning: squadData.isTripleCaptain ? null : 'This action cannot be undone this gameweek.',
+                        });
+                      }
+                    }}
+                  />
+                  <RouletteCard />
+                </div>
                 <JokerCard />
               </div>
             )}
@@ -1201,8 +1297,15 @@ export default function SquadScreen() {
 
       {/* ══ PLAYER ACTION BOTTOM SHEET ═══════════════════════════════════════ */}
       {selectedPlayer && !swapMode && !isRouletteSpinning && (
+        <>
+          {/* Backdrop — tap outside to dismiss */}
+          <div
+            className="fixed inset-0 z-[59] lg:left-[220px]"
+            onClick={() => setSelectedPlayer(null)}
+            style={{ background: 'rgba(0,0,0,0.3)' }}
+          />
         <div
-          className="fixed bottom-0 left-0 right-0 lg:left-[220px] z-50 animate-slide-up"
+          className="fixed bottom-0 left-0 right-0 lg:left-[220px] z-[60] animate-slide-up"
           style={{
             background: 'rgba(20,26,36,0.98)',
             backdropFilter: 'blur(24px)',
@@ -1310,6 +1413,7 @@ export default function SquadScreen() {
             </div>
           </div>
         </div>
+        </>
       )}
 
       {/* ══ PLAYER PICKER SHEET ═════════════════════════════════════════════ */}
@@ -1327,7 +1431,7 @@ export default function SquadScreen() {
       {/* ══ SWAP MODE BANNER ═════════════════════════════════════════════════ */}
       {swapMode && (
         <div
-          className="fixed bottom-0 left-0 right-0 lg:left-[220px] z-50 px-5 py-3 flex justify-between items-center"
+          className="fixed bottom-0 left-0 right-0 lg:left-[220px] z-[60] px-5 py-3 flex justify-between items-center"
           style={{ background: '#18C96B', color: '#000', boxShadow: '0 -4px 20px rgba(24,201,107,0.4)', paddingBottom: 'calc(12px + env(safe-area-inset-bottom))' }}
         >
           <div>

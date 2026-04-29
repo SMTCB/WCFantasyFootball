@@ -113,8 +113,8 @@ test.describe('HomeScreen', () => {
   test('renders at least one fixture card', async ({ page }) => {
     // Fixture cards contain team names separated by a score or VS
     const fixtureArea = page.locator('body');
-    // Should contain at least one known team name from seeded data
-    await expect(fixtureArea).toContainText(/Brazil|France|England|Portugal/i);
+    // Should contain at least one known PL club name from seeded fixtures
+    await expect(fixtureArea).toContainText(/Arsenal|Chelsea|Liverpool|Man City|Spurs|Man Utd/i);
   });
 
   test('shows a live match indicator', async ({ page }) => {
@@ -180,8 +180,8 @@ test.describe('SquadScreen', () => {
     await page.setViewportSize({ width: 375, height: 812 });
     await page.goto('/squad');
     await waitForContent(page);
-    // Chips are in the Tools tab — click it first (icon and label are separate elements)
-    await page.getByText('Tools').first().click();
+    // Chips are in the Tools tab — label is '⚙️' and 'Tools' in separate divs
+    await page.getByRole('button', { name: /tools/i }).click();
     await page.waitForTimeout(300);
     await expect(page.getByText(/wildcard|triple/i).first()).toBeVisible();
   });
@@ -203,10 +203,34 @@ test.describe('SquadScreen', () => {
   });
 });
 
+// ── Fixture player data injected via route mock (avoids DB dependency) ────────
+const FIXTURE_PLAYERS = [
+  { id: 'e2e-1', name: 'Salah',      position: 'MID', club: 'ENG', price: 13.0, points: 12, ownership_pct: 72 },
+  { id: 'e2e-2', name: 'Haaland',    position: 'FWD', club: 'NOR', price: 14.0, points: 15, ownership_pct: 68 },
+  { id: 'e2e-3', name: 'De Bruyne',  position: 'MID', club: 'BEL', price: 10.5, points:  9, ownership_pct: 55 },
+  { id: 'e2e-4', name: 'Alexander-Arnold', position: 'DEF', club: 'ENG', price: 8.5, points: 8, ownership_pct: 48 },
+  { id: 'e2e-5', name: 'Alisson',    position: 'GK',  club: 'BRA', price: 6.0, points:  7, ownership_pct: 40 },
+  { id: 'e2e-6', name: 'Saka',       position: 'MID', club: 'ENG', price: 9.0, points:  8, ownership_pct: 52 },
+  { id: 'e2e-7', name: 'Kane',       position: 'FWD', club: 'ENG', price: 11.5, points: 11, ownership_pct: 60 },
+];
+
+async function mockPlayersApi(page) {
+  // Intercept Supabase REST /players endpoint and return fixture data
+  await page.route('**/rest/v1/players**', route => {
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      headers: { 'Content-Range': '0-6/7' },
+      body: JSON.stringify(FIXTURE_PLAYERS),
+    });
+  });
+}
+
 // ── 5. Market Screen ─────────────────────────────────────────────────────────
 test.describe('MarketScreen', () => {
   test.beforeEach(async ({ page }) => {
     await skipOnboarding(page);
+    await mockPlayersApi(page);
     await page.goto('/market');
     await waitForContent(page);
   });
@@ -216,9 +240,10 @@ test.describe('MarketScreen', () => {
   });
 
   test('renders player list with names', async ({ page }) => {
-    // Should show real player data from DB
-    const body = await page.locator('body').innerText();
-    expect(body).toMatch(/Mbappé|Vinicius|Bellingham|Kane|Messi/i);
+    // Route mock injects fixture PL players — no DB dependency
+    await expect(
+      page.getByText(/Salah|Haaland|De Bruyne|Kane|Saka/i).first()
+    ).toBeVisible({ timeout: 12000 });
   });
 
   test('position filter tabs are clickable', async ({ page }) => {

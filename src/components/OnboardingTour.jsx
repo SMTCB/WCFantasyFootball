@@ -19,7 +19,7 @@
  * The host element needs: data-tour="pitch-view" (no #, no dot).
  */
 
-import { useState, useEffect, useLayoutEffect, useRef } from 'react';
+import { useState, useEffect, useLayoutEffect } from 'react';
 
 const PADDING = 10;   // px around highlighted element
 const TOOLTIP_W = 300;
@@ -37,31 +37,50 @@ function getRect(target) {
   };
 }
 
+/**
+ * Resolves as soon as `[data-tour="${target}"]` exists in the DOM.
+ * Uses MutationObserver — no arbitrary delay, fires on the exact render tick.
+ * Falls back after `timeout` ms if the element never appears.
+ */
+function waitForElement(target, timeout = 2000) {
+  return new Promise(resolve => {
+    const sel = `[data-tour="${target}"]`;
+    const existing = document.querySelector(sel);
+    if (existing) { resolve(existing); return; }
+
+    const observer = new MutationObserver(() => {
+      const el = document.querySelector(sel);
+      if (el) { observer.disconnect(); resolve(el); }
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+    setTimeout(() => { observer.disconnect(); resolve(null); }, timeout);
+  });
+}
+
 export default function OnboardingTour({ steps, onComplete, onSkip }) {
   const [stepIdx, setStepIdx] = useState(0);
   const [rect,    setRect]    = useState(null);
   const [visible, setVisible] = useState(false);
-  const rafRef = useRef(null);
 
   const current = steps[stepIdx];
   const isLast  = stepIdx === steps.length - 1;
 
   // Track target element position (handles scroll / resize)
   useLayoutEffect(() => {
+    let cancelled = false;
     function measure() {
       setRect(getRect(current.target));
     }
-    measure();
-    // Retry a few times in case the element renders asynchronously
-    const timers = [100, 300, 600].map(d => setTimeout(measure, d));
+    // Wait for element to appear (MutationObserver — no arbitrary delays)
+    waitForElement(current.target).then(() => {
+      if (!cancelled) measure();
+    });
     window.addEventListener('resize', measure);
     window.addEventListener('scroll', measure, true);
-    const rafId = rafRef.current;
     return () => {
-      timers.forEach(clearTimeout);
+      cancelled = true;
       window.removeEventListener('resize', measure);
       window.removeEventListener('scroll', measure, true);
-      cancelAnimationFrame(rafId);
     };
   }, [stepIdx, current.target]);
 
