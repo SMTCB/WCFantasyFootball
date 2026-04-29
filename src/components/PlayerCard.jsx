@@ -62,9 +62,10 @@ export default function PlayerCard({
   ════════════════════════════════════════════════════════════════════════════ */
   if (variant === 'row') {
     return (
-      <div
+      <button
+        type="button"
         onClick={() => onClick?.(player)}
-        className="relative flex items-center gap-3 px-4 py-3 transition-all duration-150 cursor-pointer"
+        className="w-full text-left relative flex items-center gap-3 px-4 py-3 transition-all duration-150 cursor-pointer"
         style={{
           borderBottom: '1px solid rgba(255,255,255,0.06)',
           background: isSelected
@@ -181,7 +182,7 @@ export default function PlayerCard({
         <svg className="w-3 h-3 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" style={{ color: '#3D4B5C' }}>
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
         </svg>
-      </div>
+      </button>
     );
   }
 
@@ -203,9 +204,11 @@ export default function PlayerCard({
     : 'rgba(255,255,255,0.18)';
 
   return (
-    <div
+    <button
+      type="button"
       onClick={() => !isDummy && onClick?.(player)}
-      className={`flex flex-col items-center -space-y-0.5 ${!isDummy && onClick ? 'cursor-pointer' : ''} ${player.gridClass || ''}`}
+      disabled={isDummy || !onClick}
+      className={`flex flex-col items-center -space-y-0.5 bg-transparent border-0 p-0 ${!isDummy && onClick ? 'cursor-pointer' : ''} ${player.gridClass || ''}`}
       style={{ transition: 'transform 0.12s ease' }}
       onMouseEnter={e => { if (!isDummy && onClick) e.currentTarget.style.transform = 'scale(1.06)'; }}
       onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)'; }}
@@ -359,6 +362,6 @@ export default function PlayerCard({
           </div>
         )}
       </div>
-    </div>
+    </button>
   );
 }

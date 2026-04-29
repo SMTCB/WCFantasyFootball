@@ -1292,6 +1292,13 @@ export default function SquadScreen() {
 
       {/* ══ PLAYER ACTION BOTTOM SHEET ═══════════════════════════════════════ */}
       {selectedPlayer && !swapMode && !isRouletteSpinning && (
+        <>
+          {/* Backdrop — tap outside to dismiss */}
+          <div
+            className="fixed inset-0 z-[59] lg:left-[220px]"
+            onClick={() => setSelectedPlayer(null)}
+            style={{ background: 'rgba(0,0,0,0.3)' }}
+          />
         <div
           className="fixed bottom-0 left-0 right-0 lg:left-[220px] z-[60] animate-slide-up"
           style={{
@@ -1401,6 +1408,7 @@ export default function SquadScreen() {
             </div>
           </div>
         </div>
+        </>
       )}
 
       {/* ══ PLAYER PICKER SHEET ═════════════════════════════════════════════ */}
