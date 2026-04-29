@@ -113,8 +113,8 @@ test.describe('HomeScreen', () => {
   test('renders at least one fixture card', async ({ page }) => {
     // Fixture cards contain team names separated by a score or VS
     const fixtureArea = page.locator('body');
-    // Should contain at least one known team name from seeded data
-    await expect(fixtureArea).toContainText(/Brazil|France|England|Portugal/i);
+    // Should contain at least one known PL club name from seeded fixtures
+    await expect(fixtureArea).toContainText(/Arsenal|Chelsea|Liverpool|Man City|Spurs|Man Utd/i);
   });
 
   test('shows a live match indicator', async ({ page }) => {
