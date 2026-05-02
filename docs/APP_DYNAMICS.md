@@ -35,7 +35,7 @@ FantasyKit operates in a three-phase cycle:
 - **Live Projections** ✅ *LIVE — `/live` screen*:
     - During each matchday, the app calculates a **projected final score** for the user and all rivals.
     - **Engine** (`lib/projections.js`): `projected = current_pts + Σ(player_avg_per_90 × remaining_min / 90)` per active player. Conservative: always floors, never overstates.
-    - **Position Averages**: GK 2.1 / DEF 2.8 / MID 3.2 / FWD 4.1 pts per 90 min.
+    - **Position Averages (current fallback)**: GK 2.1 / DEF 2.8 / MID 3.2 / FWD 4.1 pts per 90 min. The engine accepts an optional `seasonAvg` (pts per 90) per player, which will replace the position average once Forza's season statistics endpoint is available. Until then, all players of the same position project identically.
     - **UI**: Large "Projected FT" number next to live score, with trend arrow (↑ green / ↓ red / — grey). A two-tone progress bar visualises the live vs projected gap. Automatically refreshes every 5 minutes; smooths extreme swings (±5 pts cap per cycle).
     - **Rival Watch**: Each rival row shows `+N live` pill and `→ N proj.` sub-label.
     - **Match Progress**: Fixture ticker cards show a green progress bar for % of match played.

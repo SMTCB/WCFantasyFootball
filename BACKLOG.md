@@ -1,7 +1,7 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-04-29
-**E2E Test Suite**: 116/116 passing (100%) — scoring.spec.js (32) + platform.spec.js (84)
+**Last Updated**: 2026-05-02
+**E2E Test Suite**: 84/84 passing (100%) — platform.spec.js (84)
 **Priority Levels**: P0 (Blocking), P1 (High — needed before feature is usable), P2 (Medium), P3 (Low/Polish)
 
 ---
@@ -137,6 +137,41 @@
 
 ---
 
+## 🟡 P2 — Data Pipeline (added 2026-05-02)
+
+### #109: BPS pass-completion term is always zero
+- **Status**: NOT STARTED
+- **Description**: `calcBPS()` in `calculate-scores` computes `(accurate_passes / total_passes) * 100 * 0.1` but `player_match_stats` has no `accurate_passes` or `total_passes` columns, and `ingest-match-events` never fetches them from E10. The term always evaluates to 0.
+- **Impact**: Low — BPS ranking is still correct in relative terms (same handicap for all players). Bonus allocation (+3/+2/+1) may occasionally favour the wrong player at the margin. No effect on base points.
+- **Fix**: (a) Confirm E10 stat key names for passes (likely `accurate_passes` and `passes`). (b) Add columns to `player_match_stats` via migration. (c) Map in `flattenPlayerStats()` in `ingest-match-events`. (d) Remove the dead-code check in `calcBPS`.
+- **Effort**: 1 hour
+- **Dependency**: Confirm E10 field names with Forza (quick API test)
+
+### #110: `rollupSquads` recalculates all squads regardless of tournament
+- **Status**: NOT STARTED
+- **Description**: `rollupSquads()` in `calculate-scores` fetches every row from `squads` with no `WHERE` clause. When EPL dry run and World Cup are live simultaneously, a Matchday 36 EPL goal triggers a `fantasy_points` upsert for every WC squad (writing 0 pts, harmless but noisy) and a sequential `league_members` update loop across all leagues.
+- **Impact**: None during single-tournament dry run. Becomes a performance and cost issue once two tournaments are live concurrently.
+- **Fix**: Pass `tournament_id` from the fixture into `rollupSquads`, then filter via `squads → league_id → leagues.tournament_id`.
+- **Effort**: 30 minutes
+- **Blocking**: Before World Cup launch (not before dry run)
+
+### #111: `matchday_id` null fallback may cause silent points overwrite
+- **Status**: NEEDS VERIFICATION
+- **Description**: `rollupSquads` writes `fantasy_points` rows keyed on `(squad_id, matchday_id)`. If a squad has `matchday_id = null`, the fallback `'current'` is used — meaning every fixture for that squad writes to the same row and overwrites rather than accumulates. League totals would reflect only the most recent fixture's contribution.
+- **Impact**: Silent — scores would look plausible but be wrong.
+- **Fix**: Verify no squads have `matchday_id = null` before dry run go-live. Query: `SELECT id, matchday_id FROM squads WHERE matchday_id IS NULL;`. If any exist, trace how `matchday_id` is assigned at squad creation.
+- **Effort**: 15-minute verification; fix depends on root cause
+
+### #112: Projected score is position-average only — no per-player historical data
+- **Status**: BY DESIGN (pending Forza endpoint)
+- **Description**: `src/lib/projections.js` uses `player.seasonAvg ?? POSITION_AVG[position]` to project remaining points. The `seasonAvg` field is intended to be populated from Forza's per-player season statistics endpoint, which the provider confirmed is "coming soon" but has not been delivered. Until it arrives, all projections fall back to the same position-wide average (GK 2.1 / DEF 2.8 / MID 3.2 / FWD 4.1 pts per 90 min).
+- **Impact**: Projections work and display correctly. They are less personalized — Haaland and a 5th-choice striker project identically. Users may notice star players project lower than expected.
+- **Fix**: When Forza delivers the season stats endpoint, map `pts_per_90` per player into a lookup and pass as `seasonAvg` into `calculateProjection()`. The engine is already wired to use it — no structural changes needed.
+- **Effort**: ~2 hours once the endpoint is live
+- **Dependency**: Forza season stats endpoint (ETA unknown)
+
+---
+
 ## 🔵 Roadmap — Future Features
 
 ### #012: Gazette — Extended Dynamic Content
@@ -228,11 +263,11 @@
 |---|---|---|
 | E2E Tests Passed | 116/116 (100%) ✅ | 116/116 |
 | Draft System Stories | 12/12 ✅ | 12/12 |
-| DB Migrations | 15 | — |
-| Edge Functions | 6 | — |
+| DB Migrations | 17 | — |
+| Edge Functions | 10 | — |
 | Blocking Issues | 0 ✅ | 0 |
 | High Priority Open | 3 | 0 |
-| Medium Priority Open | 2 | TBD |
+| Medium Priority Open | 6 | TBD |
 | Low Priority Open | 2 | TBD |
 
 ---
@@ -258,7 +293,15 @@
 | `supabase/functions/run-reverse-standings-draft/` | Reverse-standings draft Edge Function |
 | `supabase/functions/eliminate-cup-club/` | Club elimination + gazette + relaxation trigger |
 | `supabase/functions/calculate-relaxation/` | No-repeat formula + gazette on tier change |
-| `supabase/migrations/` | 9 migrations (schema → crons → players seed) |
+| `supabase/functions/sync-fixtures/` | Forza → fixtures + matchday_deadlines tables |
+| `supabase/functions/sync-players/` | Forza → teams + players tables |
+| `supabase/functions/sync-player-status/` | Forza → player_status (injury/suspension) |
+| `supabase/functions/ingest-match-events/` | Live match data → player_match_stats + match_events |
+| `supabase/functions/calculate-scores/` | Fantasy points engine (BPS, chips, Realtime broadcast) |
+| `supabase/migrations/` | 17 migrations (schema → crons → players seed → Forza integration) |
+| `DATA_PIPELINE_RUNBOOK.md` | End-to-end runbook: activation steps, cron setup, WC launch |
+| `API/FIT_GAP_ANALYSIS.md` | Scoring rule vs Forza API data availability audit |
+| `API/FORZA_API_KNOWLEDGE.md` | Full API endpoint reference with field documentation |
 | `DRAFT_SYSTEM_DESIGN.md` | Full design doc with decision log |
 | `APP_STORE_ASSESSMENT.md` | Mobile app strategy |
 | `e2e/platform.spec.js` | E2E test suite (84 tests, 82 passing) |
