@@ -139,6 +139,11 @@
 
 ## 🟡 P2 — Data Pipeline (added 2026-05-02)
 
+### #113: Player uniqueness was global, not per-tournament ✅ FIXED 2026-05-02
+- **Status**: RESOLVED
+- **Description**: `players_forza_player_id_idx` enforced `UNIQUE(forza_player_id)` globally. Forza player IDs are real-person identifiers — Bukayo Saka has the same ID whether appearing in EPL (Arsenal) or WC (England). Syncing both would overwrite EPL players with WC data.
+- **Fix**: Migration 18 drops the global index and adds `UNIQUE(forza_player_id, tournament_id)`. `sync-players` now sets `id = 'fp-{forza_player_id}-{tournament_id}'` and upserts on `forza_player_id,tournament_id`. `ingest-match-events` player lookup now also filters by `tournament_id`.
+
 ### #109: BPS pass-completion term is always zero
 - **Status**: NOT STARTED
 - **Description**: `calcBPS()` in `calculate-scores` computes `(accurate_passes / total_passes) * 100 * 0.1` but `player_match_stats` has no `accurate_passes` or `total_passes` columns, and `ingest-match-events` never fetches them from E10. The term always evaluates to 0.

@@ -56,11 +56,13 @@ Run these steps in order. Each is a one-time setup task.
 
 ### Step 0 — Run migrations
 ```sql
--- Apply migrations 16 and 17 to your Supabase project
+-- Apply migrations 16, 17, and 18 to your Supabase project
 -- Via Supabase Dashboard → SQL Editor, or via CLI: supabase db push
 --
 -- Migration 16: tournaments, teams, fixtures/players/matchday_deadlines schema additions
 -- Migration 17: player_match_stats.penalty_scored column + EPL player price seeds
+-- Migration 18: player uniqueness fixed to (forza_player_id, tournament_id) composite
+--               so EPL and WC players with the same Forza player ID coexist correctly
 ```
 
 ### Step 1 — Add Forza token to Edge Function secrets

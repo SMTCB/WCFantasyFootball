@@ -101,8 +101,10 @@ Deno.serve(async (req) => {
               : [p.first_name, p.last_name].filter(Boolean).join(' ');
 
             return {
-              // Internal ID: prefix 'fp-' to avoid clashes with existing mock UUIDs
-              id:               `fp-${p.id}`,
+              // Internal ID: tournament-scoped so the same player (same forza_player_id)
+              // can exist in multiple tournaments (EPL as Arsenal + WC as England).
+              // Format: 'fp-{forza_player_id}-{tournament_id}'
+              id:               `fp-${p.id}-${forza_id}`,
               name,
               position:         POSITION_MAP[p.position] ?? 'MID',
               nationality:      p.region?.name ?? null,   // Forza uses region for nationality
@@ -119,7 +121,7 @@ Deno.serve(async (req) => {
 
           const { error: pErr } = await supabase
             .from('players')
-            .upsert(playerRows, { onConflict: 'forza_player_id' });
+            .upsert(playerRows, { onConflict: 'forza_player_id,tournament_id' });
 
           if (pErr) {
             console.error(`players upsert for team ${team.name}:`, JSON.stringify(pErr));

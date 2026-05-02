@@ -206,10 +206,14 @@ Deno.serve(async (req) => {
     const homeId = fixture.home_team_forza_id;
     const awayId = fixture.away_team_forza_id;
 
+    // Filter by tournament_id so the same forza_player_id in two different
+    // tournaments (e.g. Saka as Arsenal/EPL AND Saka as England/WC) resolves
+    // to the correct tournament-scoped internal player row.
     const { data: players } = await supabase
       .from('players')
       .select('id, forza_player_id, position')
-      .in('forza_team_id', [homeId, awayId].filter(Boolean));
+      .in('forza_team_id', [homeId, awayId].filter(Boolean))
+      .eq('tournament_id', fixture.tournament_id);
 
     const playerLookup = {};   // forza_player_id → { id, position }
     for (const p of players ?? []) {
