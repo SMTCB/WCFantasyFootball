@@ -46,6 +46,7 @@ Both use the **same Supabase project and codebase**. Leagues in the dry run use 
 
 ### Must resolve before World Cup launch
 - [ ] **World Cup tournament ID** — Confirm with Forza provider. Insert the row (see migration 16 commented block) before running any WC sync.
+- [ ] **National team squad scoping** — Confirm with Forza how `/v1/teams/{id}/squad` behaves for international tournaments. Two possible models: (A) each WC team registration has its own tournament-scoped `team_id` and squad of 26, or (B) national teams have a global `team_id` and the squad reflects their current roster at sync time. Model A means `sync-players` can run any time after squads are submitted (June 2026). Model B means timing matters — run after the final squad announcement deadline. **Ask the provider before opening WC squad-building.**
 - [ ] **Season statistics endpoint** — Awaiting Forza. Will be used for the live projections engine (`projected = current_pts + player_avg × remaining_min / 90`). Currently uses position averages as fallback (GK 2.1 / DEF 2.8 / MID 3.2 / FWD 4.1 pts per 90 min). The engine (`src/lib/projections.js`) already accepts a per-player `seasonAvg` field — no structural changes needed when the endpoint arrives. Tracked as backlog #112.
 
 ---

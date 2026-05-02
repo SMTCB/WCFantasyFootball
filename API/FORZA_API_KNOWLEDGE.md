@@ -207,3 +207,7 @@ After our own testing, asked two questions:
 
 ### Open items
 1. **Season statistics** — timeline still unknown, not answered yet
+2. **National team squad scoping** — critical for World Cup squad-building. Unconfirmed whether:
+   - `/v1/tournaments/{wc_id}/teams` returns tournament-specific team registrations (each with a WC-scoped team_id and a squad of exactly the 26 submitted players), OR
+   - National teams have a single global team_id and `/v1/teams/{id}/squad` returns their current roster at time of call (sync timing would then determine which players appear)
+   Need to confirm before squad-building can open for the WC. This determines when and how to run `sync-players` for the WC tournament.
