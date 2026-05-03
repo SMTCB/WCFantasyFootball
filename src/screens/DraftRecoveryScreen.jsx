@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabase';
 import { normalisePlayers } from '../lib/players';
 import { useAuth } from '../hooks/useAuth';
 import { useRelaxationState } from '../hooks/useRelaxationState';
+import { useLeagueConfig } from '../hooks/useLeagueConfig';
 
 const POS_CONFIG = {
   GK:  { label: 'GK',  color: '#F0B400', bg: 'rgba(240,180,0,0.14)'  },
@@ -12,9 +13,6 @@ const POS_CONFIG = {
   FWD: { label: 'FWD', color: '#F03A3A', bg: 'rgba(240,58,58,0.14)'  },
 };
 
-const SQUAD_POS_CAPS  = { GK: 2, DEF: 5, MID: 5, FWD: 3 };
-const SQUAD_SIZE      = 15;
-const BUDGET_TOTAL    = 100;
 const POS_FILTER_ORDER = ['ALL', 'GK', 'DEF', 'MID', 'FWD'];
 
 function normalisePos(p) {
@@ -28,6 +26,12 @@ export default function DraftRecoveryScreen() {
   const navigate     = useNavigate();
   const { user }     = useAuth();
   const relaxation   = useRelaxationState(leagueId);
+
+  // Competition-agnostic config from the leagues row
+  const cfg           = useLeagueConfig(leagueId);
+  const SQUAD_POS_CAPS  = cfg.positionLimits;
+  const SQUAD_SIZE      = cfg.squadSize;
+  const BUDGET_TOTAL    = cfg.budgetTotal;
 
   const [allocation,  setAllocation]  = useState(null);  // draft_allocations row
   const [squad,       setSquad]       = useState([]);     // current player objects in squad

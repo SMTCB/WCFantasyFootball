@@ -8,6 +8,7 @@ import { useAuth } from '../hooks/useAuth';
 import { useDeadlineCountdown } from '../hooks/useDeadlineCountdown';
 import { useOnboarding } from '../hooks/useOnboarding';
 import { useTransfer } from '../hooks/useTransfer';
+import { useLeagueConfig } from '../hooks/useLeagueConfig';
 import LeagueSelector from '../components/LeagueSelector';
 import OnboardingTour from '../components/OnboardingTour';
 import ConfirmModal from '../components/ConfirmModal';
@@ -48,7 +49,6 @@ const CHIPS = [
 ];
 
 // ─────────────────────────────────────────────────────────────────────────────
-const POS_LIMITS = { GK: 2, DEF: 5, MID: 5, FWD: 3 };
 
 export default function SquadScreen() {
   const { user } = useAuth();
@@ -76,6 +76,10 @@ export default function SquadScreen() {
   const [confirm,            setConfirm]           = useState(null);
   const [pickerPos,          setPickerPos]         = useState(null);
   const [fetchError,         setFetchError]        = useState(null);
+
+  // Competition-agnostic config from the selected league row
+  const cfg = useLeagueConfig(leagueId);
+  const POS_LIMITS = cfg.positionLimits;
 
   // Transfer hook — league-scoped buy/sell + no-repeat enforcement
   const { buy, sell, takenMap, isOwnedBy } = useTransfer(leagueId);
@@ -201,7 +205,7 @@ export default function SquadScreen() {
         squadId:         squad.id,
         leagueId:        squad.league_id,
         matchdayId:      squad.matchday_id,
-        budget:          { current: Number(squad.budget_remaining ?? 17), total: 100 },
+        budget:          { current: Number(squad.budget_remaining ?? cfg.budgetTotal), total: cfg.budgetTotal },
         captainId:       squad.captain_id || playerIds[0] || '',
         players:         pitchPlayers,
         bench:           benchPlayers,
@@ -226,8 +230,8 @@ export default function SquadScreen() {
   };
 
   // ── FB-022: formation validation ─────────────────────────────────────────
-  const MIN_FORMATION = { GK: 1, DEF: 3, MID: 2, FWD: 1 };
   const validateFormation = (pitchPlayers) => {
+    const MIN_FORMATION = cfg.minFormation;
     const counts = { GK: 0, DEF: 0, MID: 0, FWD: 0 };
     pitchPlayers.forEach(p => { if (counts[p.position] !== undefined) counts[p.position]++; });
     for (const [pos, min] of Object.entries(MIN_FORMATION)) {

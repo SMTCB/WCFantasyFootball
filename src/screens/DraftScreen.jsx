@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabase';
 import { normalisePlayers } from '../lib/players';
 import { useAuth } from '../hooks/useAuth';
 import { useRelaxationState } from '../hooks/useRelaxationState';
+import { useLeagueConfig } from '../hooks/useLeagueConfig';
 
 const POS_CONFIG = {
   GK:  { label: 'GK',  color: '#F0B400', bg: 'rgba(240,180,0,0.14)'  },
@@ -11,11 +12,6 @@ const POS_CONFIG = {
   MID: { label: 'MID', color: '#9D5FF5', bg: 'rgba(157,95,245,0.14)' },
   FWD: { label: 'FWD', color: '#F03A3A', bg: 'rgba(240,58,58,0.14)'  },
 };
-
-// Draft list position caps (scaled for 30-slot list, not 15-slot squad)
-const DRAFT_POS_CAPS = { GK: 4, DEF: 10, MID: 10, FWD: 6 };
-const DRAFT_LIST_SIZE = 30;
-const MIN_SUBMIT = 15;
 
 const POS_FILTER_ORDER = ['ALL', 'GK', 'DEF', 'MID', 'FWD'];
 
@@ -52,13 +48,18 @@ export default function DraftScreen() {
   const [submitted,   setSubmitted]   = useState(false);
   const [deadline,    setDeadline]    = useState(null);
   const [expandedId,  setExpandedId]  = useState(null);
-  const [posRatio,    setPosRatio]    = useState(DRAFT_POS_CAPS);  // from league_config
   const [lastSaved,   setLastSaved]   = useState(null);  // timestamp of last auto-save
   const [saveError,   setSaveError]   = useState(null);
 
   const countdown   = useCountdown(deadline);
   const isClosed    = countdown === 'CLOSED';
   const relaxation  = useRelaxationState(leagueId);
+
+  // Competition-agnostic config from the leagues row
+  const cfg           = useLeagueConfig(leagueId);
+  const DRAFT_POS_CAPS  = cfg.draftPositionCaps;
+  const DRAFT_LIST_SIZE = cfg.draftListSize;
+  const MIN_SUBMIT      = cfg.squadSize;
 
   useEffect(() => { fetchData(); }, [leagueId]);
 
@@ -73,15 +74,6 @@ export default function DraftScreen() {
         .eq('id', leagueId)
         .maybeSingle();
       setDeadline(league?.draft_deadline ?? null);
-
-      // Load league_config ratio (falls back to DRAFT_POS_CAPS if not seeded yet)
-      const { data: cfgRows } = await supabase
-        .from('league_config')
-        .select('config_key, config_value')
-        .eq('league_id', leagueId)
-        .eq('config_key', 'draft_auto_complete_ratio')
-        .maybeSingle();
-      if (cfgRows?.config_value) setPosRatio(cfgRows.config_value);
 
       // Load players — RPC respects cup pool restriction.
       // For non-cup leagues returns the full pool.

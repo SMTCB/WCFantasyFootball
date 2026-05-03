@@ -6,11 +6,11 @@ import { normalisePlayers } from '../lib/players';
 import { useAuth } from '../hooks/useAuth';
 import { useOnboarding } from '../hooks/useOnboarding';
 import { useTransfer } from '../hooks/useTransfer';
+import { useLeagueConfig } from '../hooks/useLeagueConfig';
 import LeagueSelector from '../components/LeagueSelector';
 import OnboardingTour from '../components/OnboardingTour';
 import ConfirmModal from '../components/ConfirmModal';
 
-const POS_LIMITS  = { GK: 2, DEF: 5, MID: 5, FWD: 3 };
 const COUNTRY_LIMIT = 3;
 
 const POS_CONFIG = {
@@ -58,10 +58,15 @@ export default function MarketScreen() {
   const [todayJokerId,  setTodayJokerId]  = useState(null);
   const [loading,       setLoading]       = useState(true);
   const [filterPos,     setFilterPos]     = useState('ALL');
-  const [budget,        setBudget]        = useState(100.0);
+  const [budget,        setBudget]        = useState(null);   // loaded from league config
   const [saving,        setSaving]        = useState(false);
   const [isLocked,      setIsLocked]      = useState(false);
   const [confirm,       setConfirm]       = useState(null);
+
+  // Competition-agnostic config from the selected league row
+  const cfg = useLeagueConfig(activeLeague);
+  const POS_LIMITS = cfg.positionLimits;
+  const squadSize  = cfg.squadSize;
 
   // League-scoped transfer state
   const { buy, sell, isTaken, takenBy, isOwnedBy } = useTransfer(activeLeague);
@@ -132,9 +137,10 @@ export default function MarketScreen() {
         setTodayJokerId(jData?.player_id || null);
         if (sData) {
           setMySquad(sData);
-          setBudget(Number(sData.budget_remaining ?? 100));
+          setBudget(Number(sData.budget_remaining ?? cfg.budgetTotal));
         } else {
           setMySquad({ id: null, players: [] });
+          setBudget(cfg.budgetTotal);
         }
       } else {
         setMySquad({ id: null, players: [] });
@@ -164,7 +170,7 @@ export default function MarketScreen() {
     if (saving) return;
     if (isLocked) { alert('Transfers are locked until after the match.'); return; }
     if (!activeLeague) { alert('Select a league first.'); return; }
-    if ((mySquad?.players?.length ?? 0) >= 15) { alert('Squad is full — sell a player first.'); return; }
+    if ((mySquad?.players?.length ?? 0) >= squadSize) { alert('Squad is full — sell a player first.'); return; }
     if (stats.posCounts[player.position] >= POS_LIMITS[player.position]) { alert(`Max ${player.position}s reached.`); return; }
     if (budget < player.price) { alert('Not enough budget.'); return; }
     try {
@@ -206,7 +212,7 @@ export default function MarketScreen() {
 
   const filteredPlayers = players.filter(p => filterPos === 'ALL' || p.position === filterPos);
   const squadCount  = mySquad?.players?.length || 0;
-  const emptySlots  = Math.max(0, 15 - squadCount);
+  const emptySlots  = Math.max(0, squadSize - squadCount);
 
   // League picker — shown when user has multiple leagues and none is selected
   if (leagues && leagues.length > 1 && !activeLeague) {
@@ -305,10 +311,10 @@ export default function MarketScreen() {
               <div className="fz-label" style={{ color: '#3D4B5C' }}>Squad</div>
               <div
                 className="text-[20px] font-black tabular-nums leading-tight"
-                style={{ fontFamily: 'Barlow Condensed, sans-serif', color: squadCount >= 15 ? '#18C96B' : '#F0F2F5' }}
+                style={{ fontFamily: 'Barlow Condensed, sans-serif', color: squadCount >= squadSize ? '#18C96B' : '#F0F2F5' }}
               >
                 {squadCount}
-                <span className="text-[12px] font-normal" style={{ color: '#3D4B5C' }}>/15</span>
+                <span className="text-[12px] font-normal" style={{ color: '#3D4B5C' }}>/{squadSize}</span>
               </div>
             </div>
 
@@ -453,7 +459,7 @@ export default function MarketScreen() {
             const limitReached = stats.posCounts[p.position] >= POS_LIMITS[p.position];
             const canAfford    = budget >= p.price;
             const hasLeague    = !!activeLeague;
-            const canBuy       = hasLeague && !isOwned && !takenByOther && !limitReached && canAfford && (mySquad?.players?.length ?? 0) < 15;
+            const canBuy       = hasLeague && !isOwned && !takenByOther && !limitReached && canAfford && (mySquad?.players?.length ?? 0) < squadSize;
             const posCfg       = POS_CONFIG[p.position] || POS_CONFIG.MID;
             const flag         = FLAG_MAP[p.club] ?? '🌍';
             const isJoker      = p.id === todayJokerId;
@@ -644,7 +650,7 @@ export default function MarketScreen() {
           className="text-[9px] font-semibold uppercase tracking-wider"
           style={{ color: '#3D4B5C', fontFamily: 'DM Sans, sans-serif' }}
         >
-          Max 3 per country (Joker exempt) · Max 15 players · $100M budget
+          Max {COUNTRY_LIMIT} per club (Joker exempt) · Max {squadSize} players · ${cfg.budgetTotal}M budget
         </span>
       </div>
     </div>
