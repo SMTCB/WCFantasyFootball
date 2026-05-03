@@ -14,6 +14,9 @@
  */
 
 // ─── Position averages (pts per 90min) ───────────────────────────────────────
+// These are sensible defaults applicable to any football competition.
+// Individual leagues can override via the leagues.position_avg JSONB column
+// (read by useLeagueConfig); screens should prefer league-specific values when available.
 export const POSITION_AVG = {
   GK:  2.1,
   DEF: 2.8,

@@ -2,16 +2,10 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 
-/* ── Fallback fixtures (PL clubs) — used when DB is empty ─────────────────── */
+/* ── Fallback fixtures — generic placeholders, no competition branding ──────── */
 const FALLBACK_FIXTURES = [
-  { id: 'md1-f1', home_team: 'Arsenal',      away_team: 'Chelsea',      status: 'finished',  home_score: 2, away_score: 1, kickoff_at: new Date(Date.now() - 1000*60*60*72).toISOString(), competition: 'Premier League • GW1' },
-  { id: 'md1-f2', home_team: 'Man City',      away_team: 'Liverpool',    status: 'finished',  home_score: 1, away_score: 1, kickoff_at: new Date(Date.now() - 1000*60*60*71).toISOString(), competition: 'Premier League • GW1' },
-  { id: 'md1-f3', home_team: 'Spurs',         away_team: 'Man Utd',      status: 'finished',  home_score: 0, away_score: 2, kickoff_at: new Date(Date.now() - 1000*60*60*70).toISOString(), competition: 'Premier League • GW1' },
-  { id: 'md2-f1', home_team: 'Man City',      away_team: 'Arsenal',      status: 'live',      minute: '64',  home_score: 2, away_score: 0, kickoff_at: new Date().toISOString(),                                           competition: 'Premier League • GW2' },
-  { id: 'md2-f2', home_team: 'Chelsea',       away_team: 'Spurs',        status: 'scheduled', kickoff_at: new Date(Date.now() + 1000*60*60*2).toISOString(),  competition: 'Premier League • GW2' },
-  { id: 'md2-f3', home_team: 'Liverpool',     away_team: 'Man Utd',      status: 'scheduled', kickoff_at: new Date(Date.now() + 1000*60*60*4).toISOString(),  competition: 'Premier League • GW2' },
-  { id: 'md3-f1', home_team: 'Arsenal',       away_team: 'Liverpool',    status: 'scheduled', kickoff_at: new Date(Date.now() + 1000*60*60*96).toISOString(), competition: 'Premier League • GW3' },
-  { id: 'md3-f2', home_team: 'Chelsea',       away_team: 'Man City',     status: 'scheduled', kickoff_at: new Date(Date.now() + 1000*60*60*97).toISOString(), competition: 'Premier League • GW3' },
+  { id: 'f1', home_team: 'Home Team A', away_team: 'Away Team B', status: 'scheduled', kickoff_at: new Date(Date.now() + 1000*60*60*2).toISOString(),  competition: 'Matchday 1' },
+  { id: 'f2', home_team: 'Home Team C', away_team: 'Away Team D', status: 'scheduled', kickoff_at: new Date(Date.now() + 1000*60*60*4).toISOString(),  competition: 'Matchday 1' },
 ];
 
 /* ── Prediction result — scored against actual ────────────────────────────── */
@@ -59,7 +53,7 @@ function FixtureCard({ fixture, prediction, onPredict }) {
           className="text-[9px] font-black uppercase tracking-widest"
           style={{ color: '#3D4B5C', fontFamily: 'Barlow Condensed, sans-serif' }}
         >
-          {fixture.competition?.replace('Premier League • ', '') ?? ''}
+          {fixture.competition ?? ''}
         </span>
         {isLive && (
           <span
@@ -262,7 +256,7 @@ export default function BracketScreen() {
               className="text-[9px] font-black uppercase tracking-[0.35em]"
               style={{ color: '#9E9E9E', fontFamily: 'Barlow Condensed, sans-serif' }}
             >
-              Premier League 2025/26
+              Fixture Challenge
             </div>
             <div
               className="text-[20px] font-black uppercase leading-tight tracking-wider"

@@ -5,8 +5,6 @@ import { useAuth } from '../hooks/useAuth';
 import { useDeadlineCountdown } from '../hooks/useDeadlineCountdown';
 import PredictionModal from '../components/PredictionModal';
 
-const CURRENT_MATCHDAY = 5;
-
 /* ── Team accent colours (rough national palette) ──────────────── */
 const TEAM_COLORS = {
   Arsenal:      { primary: '#EF0107', secondary: '#9C824A' },
@@ -29,21 +27,23 @@ const getTeamColor = (name) => TEAM_COLORS[name] || TEAM_COLORS.default;
 export default function HomeScreen() {
   const { user } = useAuth();
   const deadline = useDeadlineCountdown();
-  const [fixtures,   setFixtures]   = useState([]);
-  const [userStats,  setUserStats]  = useState({ rank: '-', points: 0 });
-  const [prediction, setPrediction] = useState(null);
-  const [recap,      setRecap]      = useState(null);
-  const [showPicker, setShowPicker] = useState(false);
-  const [loading,    setLoading]    = useState(true);
+  const [fixtures,        setFixtures]        = useState([]);
+  const [userStats,       setUserStats]       = useState({ rank: '-', points: 0 });
+  const [prediction,      setPrediction]      = useState(null);
+  const [recap,           setRecap]           = useState(null);
+  const [showPicker,      setShowPicker]      = useState(false);
+  const [loading,         setLoading]         = useState(true);
+  const [currentMatchday, setCurrentMatchday] = useState(null);
+  const [competitionName, setCompetitionName] = useState('');
 
   const fetchInitialData = async () => {
     try {
       setLoading(true);
       const userId = user?.id;
       await Promise.all([
+        fetchCompetitionContext(userId),
         fetchFixtures(),
         fetchUserStats(userId),
-        fetchTodayPrediction(userId),
         fetchLatestRecap(userId),
       ]);
     } finally {
@@ -54,14 +54,50 @@ export default function HomeScreen() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { fetchInitialData(); }, [user]);
 
+  // Derive competition name + current matchday from user's league → tournament → fixtures
+  const fetchCompetitionContext = async (userId) => {
+    try {
+      if (!userId) return;
+      // Get user's first league
+      const { data: membership } = await supabase
+        .from('league_members')
+        .select('leagues(tournament_id)')
+        .eq('user_id', userId)
+        .limit(1)
+        .maybeSingle();
+
+      const tournamentId = membership?.leagues?.tournament_id;
+      if (!tournamentId) return;
+
+      // Load tournament name
+      const { data: tournament } = await supabase
+        .from('tournaments')
+        .select('name')
+        .eq('forza_id', tournamentId)
+        .maybeSingle();
+
+      if (tournament?.name) setCompetitionName(tournament.name);
+
+      // Derive current matchday from the latest round in fixtures
+      const { data: latestFixture } = await supabase
+        .from('fixtures')
+        .select('round')
+        .eq('tournament_id', tournamentId)
+        .order('round', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (latestFixture?.round != null) setCurrentMatchday(latestFixture.round);
+    } catch (err) { console.error('[competition context]', err); }
+  };
+
   const fetchFixtures = async () => {
     const { data } = await supabase.from('fixtures').select('*').order('kickoff_at', { ascending: true });
     if (!data || data.length === 0) {
+      // Generic placeholder fixtures — no club names hardcoded
       setFixtures([
-        { id: 'f1', home_team: 'Man City',  away_team: 'Liverpool', status: 'live',      minute: '64', kickoff_at: new Date().toISOString(), home_score: 2, away_score: 1, competition: 'Premier League • GW2' },
-        { id: 'f2', home_team: 'Arsenal',   away_team: 'Chelsea',   status: 'scheduled', kickoff_at: new Date(Date.now() + 1000*60*60*2).toISOString(), competition: 'Premier League • GW2' },
-        { id: 'f3', home_team: 'Spurs',     away_team: 'Man Utd',   status: 'scheduled', kickoff_at: new Date(Date.now() + 1000*60*60*4).toISOString(), competition: 'Premier League • GW2' },
-        { id: 'f4', home_team: 'Newcastle', away_team: 'Aston Villa', status: 'finished', kickoff_at: new Date(Date.now() - 1000*60*60*3).toISOString(), home_score: 1, away_score: 2, competition: 'Premier League • GW1' },
+        { id: 'f1', home_team: 'Home Team',  away_team: 'Away Team', status: 'scheduled', kickoff_at: new Date(Date.now() + 1000*60*60*2).toISOString(), competition: 'Matchday 1' },
+        { id: 'f2', home_team: 'Home Team',  away_team: 'Away Team', status: 'scheduled', kickoff_at: new Date(Date.now() + 1000*60*60*4).toISOString(), competition: 'Matchday 1' },
       ]);
       return;
     }
@@ -73,12 +109,13 @@ export default function HomeScreen() {
     if (data) setUserStats({ rank: data.rank, points: data.total_points });
   };
 
-  const fetchTodayPrediction = async (userId) => {
+  const fetchTodayPrediction = async (userId, matchday) => {
     try {
+      if (!matchday) return;
       const { data } = await supabase
         .from('top_scorer_predictions')
         .select('predicted_player_id, is_correct, points_awarded, players(name, club)')
-        .eq('user_id', userId).eq('matchday_id', String(CURRENT_MATCHDAY)).maybeSingle();
+        .eq('user_id', userId).eq('matchday_id', String(matchday)).maybeSingle();
       if (data) setPrediction({ id: data.predicted_player_id, name: data.players?.name, club: data.players?.club, correct: data.is_correct, pts: data.points_awarded });
     } catch (err) { console.error('[prediction]', err); }
   };
@@ -90,6 +127,12 @@ export default function HomeScreen() {
     } catch (err) { console.error('[recap]', err); }
   };
 
+  // Fetch prediction once matchday resolves
+  useEffect(() => {
+    if (user?.id && currentMatchday != null) fetchTodayPrediction(user.id, currentMatchday);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id, currentMatchday]);
+
   // FB-020: persist prediction to DB (upsert so re-picking before kick-off updates the row)
   const handlePredictionSaved = async (player) => {
     // Optimistic update — UI responds immediately
@@ -100,7 +143,7 @@ export default function HomeScreen() {
       await supabase.from('top_scorer_predictions').upsert(
         {
           user_id:             userId,
-          matchday_id:         String(CURRENT_MATCHDAY),
+          matchday_id:         String(currentMatchday ?? 'current'),
           predicted_player_id: player.id,
           is_correct:          null,
           points_awarded:      0,
@@ -270,7 +313,7 @@ export default function HomeScreen() {
         }}
       >
         <div>
-          <div className="fz-label" style={{ color: '#3D4B5C' }}>Premier League 2025/26</div>
+          <div className="fz-label" style={{ color: '#3D4B5C' }}>{competitionName || 'Fantasy Football'}</div>
           <div
             className="text-[24px] font-black uppercase leading-tight tracking-tight"
             style={{ fontFamily: 'Barlow Condensed, sans-serif', color: '#F0F2F5' }}
@@ -317,7 +360,7 @@ export default function HomeScreen() {
                 className="text-[11px] font-bold uppercase tracking-[0.18em]"
                 style={{ color: '#7D8A96', fontFamily: 'Barlow Condensed, sans-serif' }}
               >
-                Matchday {CURRENT_MATCHDAY} · Fixtures
+                {currentMatchday != null ? `Matchday ${currentMatchday} · Fixtures` : 'Fixtures'}
               </span>
             </div>
             {liveCount > 0 && (
@@ -373,7 +416,7 @@ export default function HomeScreen() {
                 className="text-[11px] font-bold uppercase tracking-[0.18em]"
                 style={{ color: '#7D8A96', fontFamily: 'Barlow Condensed, sans-serif' }}
               >
-                Top Scorer · MD{CURRENT_MATCHDAY}
+                Top Scorer{currentMatchday != null ? ` · MD${currentMatchday}` : ''}
               </span>
             </div>
 
@@ -440,7 +483,7 @@ export default function HomeScreen() {
                       className="text-[12px] mb-3 leading-relaxed"
                       style={{ color: '#7D8A96' }}
                     >
-                      Who scores the most goals in Matchday {CURRENT_MATCHDAY}?
+                      Who scores the most goals{currentMatchday != null ? ` in Matchday ${currentMatchday}` : ' this matchday'}?
                     </div>
                     <div className="flex items-center justify-between">
                       <div
@@ -544,7 +587,7 @@ export default function HomeScreen() {
       {/* Prediction modal */}
       {showPicker && (
         <PredictionModal
-          matchday={CURRENT_MATCHDAY}
+          matchday={currentMatchday ?? 'current'}
           deadlineLabel={deadline.label || '…'}
           onClose={() => setShowPicker(false)}
           onSave={handlePredictionSaved}

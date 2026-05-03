@@ -17,12 +17,34 @@
 
 const DEFAULT_INTEL = { status: 'fit', confidence: 100, risk: 0, reason: null };
 
-// Nation colours — extend as needed for all 48 WC 2026 nations
+// Nation colours — covers all likely WC 2026 nations (48 slots) plus common European leagues.
+// For club-based competitions the color field falls back to '#7D8A96' (neutral grey),
+// since club codes don't match 3-letter nation codes.
 const NATION_COLORS = {
-  ARG: '#74ACDF', BEL: '#ED2939', BRA: '#FFDF00', CRO: '#FF0000',
-  ENG: '#FFFFFF', ESP: '#AA151B', FRA: '#002395', GER: '#000000',
-  ITA: '#0064AA', MAR: '#C1272D', NED: '#FF6600', NOR: '#EF2B2D',
-  POR: '#FF0000', SEN: '#00853F', URU: '#0038A8', USA: '#B22234',
+  // South America
+  ARG: '#74ACDF', BRA: '#FFDF00', URU: '#0038A8', COL: '#FCD116',
+  ECU: '#FFD100', CHI: '#D52B1E', BOL: '#007A3D', VEN: '#CF142B',
+  PAR: '#D52B1E', PER: '#D91023',
+  // CONCACAF
+  USA: '#B22234', MEX: '#006847', CAN: '#FF0000', PAN: '#005293',
+  CRC: '#002B7F', HON: '#0073CF', JAM: '#000000', SLV: '#0F47AF',
+  // Europe
+  ENG: '#FFFFFF', FRA: '#002395', GER: '#000000', ESP: '#AA151B',
+  POR: '#FF0000', NED: '#FF6600', BEL: '#ED2939', CRO: '#FF0000',
+  ITA: '#0064AA', SUI: '#FF0000', AUT: '#ED2939', DEN: '#C60C30',
+  NOR: '#EF2B2D', SWE: '#006AA7', POL: '#DC143C', CZE: '#D7141A',
+  SRB: '#C6363C', HUN: '#CE2939', ROU: '#002B7F', UKR: '#005BBB',
+  WAL: '#D01012', SCO: '#003087', SVN: '#003DA5', SVK: '#FFFFFF',
+  GRE: '#0D5EAF', TUR: '#E30A17', GEO: '#FF0000', ALB: '#E41E20',
+  FIN: '#003580', ISL: '#003897',
+  // Africa
+  MAR: '#C1272D', SEN: '#00853F', NGA: '#008751', CMR: '#007A5E',
+  GHA: '#006B3F', EGY: '#CE1126', ALG: '#006233', TUN: '#E70013',
+  CIV: '#F77F00', MLI: '#14B53A', COD: '#007FFF', ZAF: '#007A4D',
+  // Asia / Oceania
+  JPN: '#BC002D', KOR: '#003478', IRN: '#239F40', SAU: '#006C35',
+  AUS: '#00008B', QAT: '#8D1B3D', IRQ: '#007A3D', JOR: '#007A3D',
+  UZB: '#1EB53A', THA: '#A51931', IND: '#FF9933', PHI: '#0038A8',
 };
 
 /**

@@ -2,10 +2,14 @@
  * OnboardingWizard — full-screen 4-step overlay shown to first-time users.
  *
  * Steps:
- *   1. Welcome       — what ForzaKit is, WC 2026 context
- *   2. Build Squad   — $100M budget, 15 players, pick on Market
+ *   1. Welcome       — what ForzaKit is, competition context
+ *   2. Build Squad   — budget, squad size, pick on Market
  *   3. Join League   — H2H mini-leagues with friends
  *   4. Ready         — confetti moment, what to do first
+ *
+ * Accepts an optional `config` prop:
+ *   { competitionName, budgetTotal, squadSize, teamCount }
+ * Falls back to generic defaults when not provided.
  *
  * Skippable at any step. On skip/complete the wizard never shows again
  * (localStorage flag set via useOnboarding hook).
@@ -14,47 +18,53 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-const STEPS = [
-  {
-    id:       'welcome',
-    emoji:    '🏆',
-    kicker:   'World Cup 2026',
-    heading:  'Welcome to\nForzaKit',
-    body:     'The fantasy football league built for the biggest tournament on the planet. 48 matches. 32 nations. One champion. Pick your squad, beat your friends, own every matchday.',
-    cta:      "Let's go",
-    skip:     'Skip intro',
-  },
-  {
-    id:       'squad',
-    emoji:    '⚽',
-    kicker:   'Step 1 of 3',
-    heading:  'Build your\nDream Squad',
-    body:     'You have a $100M budget to pick 15 players across all 32 nations — 1 GK, 4 DEF, 4 MID, 2 FWD in your starting XI, plus 4 bench cover. Every transfer costs budget, so choose wisely.',
-    cta:      'Go to Market →',
-    skip:     'Skip for now',
-    ctaRoute: '/market',
-  },
-  {
-    id:       'league',
-    emoji:    '🥇',
-    kicker:   'Step 2 of 3',
-    heading:  'Join a\nPrivate League',
-    body:     'Create a league or enter a friend\'s invite code to go head-to-head every matchday. Your points are live — every goal, assist, and clean sheet counts in real time.',
-    cta:      'Set up my league →',
-    skip:     'Skip for now',
-    ctaRoute: '/league',
-  },
-  {
-    id:       'ready',
-    emoji:    '🚀',
-    kicker:   'You\'re all set',
-    heading:  'First stop:\nthe Market',
-    body:     'Pick your 15 players before the transfer window closes. The deadline countdown is live in your squad header — don\'t miss it.',
-    cta:      'Open Market',
-    skip:     null,
-    ctaRoute: '/market',
-  },
-];
+function buildSteps({ competitionName, budgetTotal, squadSize }) {
+  const comp   = competitionName || 'Fantasy Football';
+  const budget = budgetTotal     || 100;
+  const size   = squadSize       || 15;
+
+  return [
+    {
+      id:       'welcome',
+      emoji:    '🏆',
+      kicker:   comp,
+      heading:  'Welcome to\nForzaKit',
+      body:     `The fantasy football league built for ${comp}. Pick your squad, beat your friends, own every matchday.`,
+      cta:      "Let's go",
+      skip:     'Skip intro',
+    },
+    {
+      id:       'squad',
+      emoji:    '⚽',
+      kicker:   'Step 1 of 3',
+      heading:  'Build your\nDream Squad',
+      body:     `You have a $${budget}M budget to pick ${size} players — 1 GK, 4 DEF, 4 MID, 2 FWD in your starting XI, plus bench cover. Every transfer costs budget, so choose wisely.`,
+      cta:      'Go to Market →',
+      skip:     'Skip for now',
+      ctaRoute: '/market',
+    },
+    {
+      id:       'league',
+      emoji:    '🥇',
+      kicker:   'Step 2 of 3',
+      heading:  'Join a\nPrivate League',
+      body:     "Create a league or enter a friend's invite code to go head-to-head every matchday. Your points are live — every goal, assist, and clean sheet counts in real time.",
+      cta:      'Set up my league →',
+      skip:     'Skip for now',
+      ctaRoute: '/league',
+    },
+    {
+      id:       'ready',
+      emoji:    '🚀',
+      kicker:   "You're all set",
+      heading:  'First stop:\nthe Market',
+      body:     `Pick your ${size} players before the transfer window closes. The deadline countdown is live in your squad header — don't miss it.`,
+      cta:      'Open Market',
+      skip:     null,
+      ctaRoute: '/market',
+    },
+  ];
+}
 
 // ── Confetti particle (pure CSS) ─────────────────────────────────────────────
 function Confetti() {
@@ -110,7 +120,8 @@ function ProgressDots({ current, total }) {
 }
 
 // ── Main component ────────────────────────────────────────────────────────────
-export default function OnboardingWizard({ onComplete, onSkip }) {
+export default function OnboardingWizard({ onComplete, onSkip, config = {} }) {
+  const STEPS = buildSteps(config);
   const [step,    setStep]    = useState(0);
   const [exiting, setExiting] = useState(false);
   const [visible, setVisible] = useState(false);
