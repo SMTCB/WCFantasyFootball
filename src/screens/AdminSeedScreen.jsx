@@ -730,6 +730,126 @@ function StatsOverride({ tournamentId }) {
   );
 }
 
+// ─── Scoring Rules Editor ────────────────────────────────────────────────────
+// Loads scoring_rules rows for the tournament and lets the commissioner edit
+// per-position multipliers inline. Saves back to DB on Save.
+
+const SCORING_POSITIONS = ['GK', 'DEF', 'MID', 'FWD'];
+const UNIVERSAL_FIELDS  = ['minute_per_90', 'own_goal', 'yellow_card', 'red_card', 'penalty_missed'];
+const POSITION_FIELDS   = ['goal', 'assist', 'clean_sheet', 'conceded_per_goal', 'penalty_saved', 'tackle', 'interception', 'penalty_scored'];
+
+const FIELD_LABEL = {
+  goal: 'Goal', assist: 'Assist', clean_sheet: 'Clean sheet',
+  conceded_per_goal: 'Per goal conceded (GK)', penalty_saved: 'Penalty saved',
+  tackle: 'Tackle won', interception: 'Interception', penalty_scored: 'Penalty scored',
+  minute_per_90: 'Per 90 min played', own_goal: 'Own goal',
+  yellow_card: 'Yellow card', red_card: 'Red card', penalty_missed: 'Penalty missed',
+};
+
+function ScoringRulesEditor({ tournamentId }) {
+  const [rules,   setRules]   = useState({});   // { GK: {...}, DEF: {...}, ..., UNIVERSAL: {...} }
+  const [loading, setLoading] = useState(true);
+  const [saving,  setSaving]  = useState(false);
+  const [status,  setStatus]  = useState('');
+
+  useEffect(() => {
+    if (!tournamentId) return;
+    const load = async () => {
+      setLoading(true);
+      const { data } = await supabase
+        .from('scoring_rules')
+        .select('position, rules')
+        .eq('tournament_id', tournamentId);
+
+      const map = {};
+      for (const row of data ?? []) map[row.position] = { ...row.rules };
+      setRules(map);
+      setLoading(false);
+    };
+    load();
+  }, [tournamentId]);
+
+  const setField = (pos, field, val) => {
+    setRules(prev => ({
+      ...prev,
+      [pos]: { ...prev[pos], [field]: val === '' ? '' : Number(val) },
+    }));
+  };
+
+  const save = async () => {
+    setSaving(true);
+    setStatus('');
+    const upserts = Object.entries(rules).map(([position, r]) => ({
+      tournament_id: tournamentId,
+      position,
+      rules: r,
+    }));
+    const { error } = await supabase
+      .from('scoring_rules')
+      .upsert(upserts, { onConflict: 'tournament_id,position' });
+    setSaving(false);
+    setStatus(error ? `Error: ${error.message}` : '✓ Scoring rules saved');
+  };
+
+  if (loading) return <p className="text-xs text-text-secondary">Loading scoring rules…</p>;
+
+  return (
+    <Section title="Scoring Rules" sub="Edit per-position point multipliers. Changes take effect on the next Score run.">
+      {/* Universal row */}
+      <div className="mb-4">
+        <p className="text-[9px] font-black uppercase tracking-widest text-text-secondary mb-2">Universal (all positions)</p>
+        <div className="grid grid-cols-2 gap-2">
+          {UNIVERSAL_FIELDS.map(f => (
+            <label key={f} className="flex flex-col gap-0.5">
+              <span className="text-[9px] text-text-secondary">{FIELD_LABEL[f] ?? f}</span>
+              <input
+                type="number" step="0.25"
+                value={rules['UNIVERSAL']?.[f] ?? ''}
+                onChange={e => setField('UNIVERSAL', f, e.target.value)}
+                className="border border-border bg-bg text-xs px-2 py-1.5 w-full font-mono"
+              />
+            </label>
+          ))}
+        </div>
+      </div>
+
+      {/* Per-position grid */}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        {SCORING_POSITIONS.map(pos => (
+          <div key={pos} className="border border-border p-3">
+            <p className="text-[9px] font-black uppercase tracking-widest text-text-secondary mb-2">{pos}</p>
+            <div className="flex flex-col gap-1.5">
+              {POSITION_FIELDS.map(f => (
+                <label key={f} className="flex items-center justify-between gap-2">
+                  <span className="text-[9px] text-text-secondary flex-1 truncate">{FIELD_LABEL[f] ?? f}</span>
+                  <input
+                    type="number" step="0.25"
+                    value={rules[pos]?.[f] ?? ''}
+                    onChange={e => setField(pos, f, e.target.value)}
+                    className="border border-border bg-bg text-xs px-2 py-1 w-16 font-mono text-right"
+                  />
+                </label>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <button
+        onClick={save} disabled={saving}
+        className="mt-4 w-full border border-positive/40 text-positive bg-positive/10 font-black py-2.5 uppercase tracking-widest text-xs disabled:opacity-40 hover:bg-positive/20"
+      >
+        {saving ? 'Saving…' : 'Save Scoring Rules'}
+      </button>
+      {status && (
+        <p className={`mt-2 text-xs font-mono text-center ${status.startsWith('Error') ? 'text-negative' : 'text-positive'}`}>
+          {status}
+        </p>
+      )}
+    </Section>
+  );
+}
+
 // ─── Root ─────────────────────────────────────────────────────────────────────
 
 export default function AdminSeedScreen() {
@@ -867,6 +987,7 @@ export default function AdminSeedScreen() {
         <>
           <LeagueControls league={league} tournament={tournament} onRefresh={() => loadLeague(selectedId)} />
           <MatchdayDeadlines tournamentId={league.tournament_id} />
+          <ScoringRulesEditor tournamentId={league.tournament_id} />
           <DataSync forzaId={league.tournament_id} />
           <MatchIngestion tournamentId={league.tournament_id} />
           <EventEditor tournamentId={league.tournament_id} />

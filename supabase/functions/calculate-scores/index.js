@@ -1,4 +1,4 @@
-// Edge Function: calculate-scores
+// Edge Function: calculate-scores  (v6)
 // Calculates fantasy points for all squads for a given fixture.
 // Called by ingest-match-events (Forza live path) or directly (mock/manual path).
 //
@@ -18,9 +18,9 @@
 //   (the original behaviour, unchanged).
 //
 // ─── Scoring source of truth ────────────────────────────────────────────────────
-//   FANTASY_POINTS_SCORING_LAYER.md is the settled spec. PIPELINE.md Appendix A
-//   was a superseded draft and should be ignored. The POINTS constants below
-//   match the settled spec exactly.
+//   Scoring rules are loaded from the scoring_rules table (keyed by tournament_id
+//   + position). Hard-coded defaults below are used only if no DB rows exist,
+//   ensuring scoring is always competition-agnostic without code changes.
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
@@ -29,26 +29,52 @@ const supabase = createClient(
   Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
 );
 
-// ─── Scoring constants ─────────────────────────────────────────────────────────
-// Source of truth: FANTASY_POINTS_SCORING_LAYER.md
+// ─── Hard-coded fallback scoring (used only if scoring_rules table is empty) ───
+// These match the EPL 2025/26 season rules exactly.
 
-const POINTS = {
-  GK:  { goal: 5, assist: 0, clean_sheet: 4, conceded_per_goal: -1, penalty_saved: 5 },
-  DEF: { goal: 4, assist: 1, clean_sheet: 4, conceded_per_goal:  0, penalty_saved: 0, tackle: 0.5, interception: 0.25 },
-  MID: { goal: 5, assist: 1, clean_sheet: 1, conceded_per_goal:  0, penalty_saved: 0, tackle: 0.5, interception: 0.25 },
-  FWD: { goal: 3, assist: 1, clean_sheet: 0, conceded_per_goal:  0, penalty_saved: 0, penalty_scored: 1 },
+const FALLBACK_POINTS = {
+  GK:  { goal: 5, assist: 0, clean_sheet: 4, conceded_per_goal: -1, penalty_saved: 5, tackle: 0, interception: 0, penalty_scored: 0 },
+  DEF: { goal: 4, assist: 1, clean_sheet: 4, conceded_per_goal:  0, penalty_saved: 0, tackle: 0.5, interception: 0.25, penalty_scored: 0 },
+  MID: { goal: 5, assist: 1, clean_sheet: 1, conceded_per_goal:  0, penalty_saved: 0, tackle: 0.5, interception: 0.25, penalty_scored: 0 },
+  FWD: { goal: 3, assist: 1, clean_sheet: 0, conceded_per_goal:  0, penalty_saved: 0, tackle: 0, interception: 0, penalty_scored: 1 },
 };
 
-const UNIVERSAL = {
-  minute_per_90:   1,
-  own_goal:       -2,
-  yellow_card:    -1,
-  red_card:       -3,
+const FALLBACK_UNIVERSAL = {
+  minute_per_90: 1,
+  own_goal:      -2,
+  yellow_card:   -1,
+  red_card:      -3,
   penalty_missed: -1,
 };
 
+// ─── Load scoring rules from DB ────────────────────────────────────────────────
+
+async function loadScoringRules(tournament_id) {
+  const { data: rows, error } = await supabase
+    .from('scoring_rules')
+    .select('position, rules')
+    .eq('tournament_id', tournament_id);
+
+  if (error || !rows?.length) {
+    console.warn(`[calculate-scores] No scoring_rules found for tournament ${tournament_id} — using fallback constants`);
+    return { POINTS: FALLBACK_POINTS, UNIVERSAL: FALLBACK_UNIVERSAL };
+  }
+
+  const POINTS    = { ...FALLBACK_POINTS };
+  let   UNIVERSAL = { ...FALLBACK_UNIVERSAL };
+
+  for (const row of rows) {
+    if (row.position === 'UNIVERSAL') {
+      UNIVERSAL = { ...FALLBACK_UNIVERSAL, ...row.rules };
+    } else if (['GK', 'DEF', 'MID', 'FWD'].includes(row.position)) {
+      POINTS[row.position] = { ...FALLBACK_POINTS[row.position], ...row.rules };
+    }
+  }
+
+  return { POINTS, UNIVERSAL };
+}
+
 // ─── BPS ranking ───────────────────────────────────────────────────────────────
-// When Forza data is available, shots_on_target and pass_completion are also used.
 
 function calcBPS(stats) {
   const passCompletion = stats.total_passes > 0
@@ -74,7 +100,7 @@ function assignBonus(playerStatsList) {
 
 // ─── Core scoring function ─────────────────────────────────────────────────────
 
-function scorePlayer(stats, position) {
+function scorePlayer(stats, position, POINTS, UNIVERSAL) {
   const pos   = (position || 'MID').toUpperCase();
   const rules = POINTS[pos] || POINTS.MID;
   const mins  = stats.minutes_played ?? stats.minutes ?? 0;
@@ -88,51 +114,47 @@ function scorePlayer(stats, position) {
     pts += rules.clean_sheet;
   }
 
-  // GK: -1 per goal conceded (only if played ≥60 min)
+  // GK: conceded_per_goal (only if played ≥60 min)
   if (pos === 'GK' && mins >= 60) {
     pts += Math.floor(stats.goals_conceded ?? 0) * rules.conceded_per_goal;
   }
 
-  pts += (stats.penalty_saved  ?? 0) * rules.penalty_saved;
+  pts += (stats.penalty_saved  ?? 0) * (rules.penalty_saved  ?? 0);
   pts += (stats.own_goals      ?? 0) * UNIVERSAL.own_goal;
   pts += (stats.yellow_cards   ?? 0) * UNIVERSAL.yellow_card;
   pts += (stats.red_cards      ?? 0) * UNIVERSAL.red_card;
   pts += (stats.penalty_missed ?? 0) * UNIVERSAL.penalty_missed;
 
-  // DEF/MID: tackle (+0.5) and interception (+0.25)
-  if (pos === 'DEF' || pos === 'MID') {
-    pts += (stats.tackles_won   ?? 0) * rules.tackle;
-    pts += (stats.interceptions ?? 0) * rules.interception;
-  }
+  // Tackle + interception bonus (DEF/MID by default; rules.tackle/interception are 0 for others)
+  pts += (stats.tackles_won   ?? 0) * (rules.tackle        ?? 0);
+  pts += (stats.interceptions ?? 0) * (rules.interception  ?? 0);
 
-  // FWD: +1 bonus per penalty scored (on top of the goal points)
-  if (pos === 'FWD') {
-    pts += (stats.penalty_scored ?? 0) * rules.penalty_scored;
-  }
+  // Penalty scored bonus (FWD by default; 0 for others)
+  pts += (stats.penalty_scored ?? 0) * (rules.penalty_scored ?? 0);
 
   pts += stats.bonus ?? 0;
 
   return Math.round(pts * 100) / 100;
 }
 
-function buildBreakdown(stats, pos) {
+function buildBreakdown(stats, pos, POINTS, UNIVERSAL) {
   const p     = (pos || 'MID').toUpperCase();
   const rules = POINTS[p] || POINTS.MID;
   const mins  = stats.minutes_played ?? stats.minutes ?? 0;
   return {
-    minutes:         Math.round((mins / 90) * 100) / 100,
-    goals:           (stats.goals   ?? 0) * rules.goal,
-    assists:         (stats.assists ?? 0) * rules.assist,
-    clean_sheet:     (stats.clean_sheet && mins >= 60) ? rules.clean_sheet : 0,
-    own_goals:       (stats.own_goals    ?? 0) * UNIVERSAL.own_goal,
-    yellow_cards:    (stats.yellow_cards ?? 0) * UNIVERSAL.yellow_card,
-    red_cards:       (stats.red_cards    ?? 0) * UNIVERSAL.red_card,
-    penalty_saved:   (stats.penalty_saved  ?? 0) * rules.penalty_saved,
-    penalty_scored:  (p === 'FWD') ? (stats.penalty_scored ?? 0) * (rules.penalty_scored ?? 0) : 0,
-    penalty_missed:  (stats.penalty_missed ?? 0) * UNIVERSAL.penalty_missed,
-    tackles:         (p === 'DEF' || p === 'MID') ? (stats.tackles_won   ?? 0) * (rules.tackle       ?? 0) : 0,
-    interceptions:   (p === 'DEF' || p === 'MID') ? (stats.interceptions ?? 0) * (rules.interception ?? 0) : 0,
-    bonus:           stats.bonus ?? 0,
+    minutes:        Math.round((mins / 90) * UNIVERSAL.minute_per_90 * 100) / 100,
+    goals:          (stats.goals   ?? 0) * rules.goal,
+    assists:        (stats.assists ?? 0) * rules.assist,
+    clean_sheet:    (stats.clean_sheet && mins >= 60) ? rules.clean_sheet : 0,
+    own_goals:      (stats.own_goals    ?? 0) * UNIVERSAL.own_goal,
+    yellow_cards:   (stats.yellow_cards ?? 0) * UNIVERSAL.yellow_card,
+    red_cards:      (stats.red_cards    ?? 0) * UNIVERSAL.red_card,
+    penalty_saved:  (stats.penalty_saved  ?? 0) * (rules.penalty_saved  ?? 0),
+    penalty_scored: (stats.penalty_scored ?? 0) * (rules.penalty_scored ?? 0),
+    penalty_missed: (stats.penalty_missed ?? 0) * UNIVERSAL.penalty_missed,
+    tackles:        (stats.tackles_won   ?? 0) * (rules.tackle        ?? 0),
+    interceptions:  (stats.interceptions ?? 0) * (rules.interception  ?? 0),
+    bonus:          stats.bonus ?? 0,
   };
 }
 
@@ -153,16 +175,19 @@ Deno.serve(async (req) => {
   if (!fixture_id) return respond(400, { error: 'fixture_id required' });
 
   try {
-    // ── Load fixture ──────────────────────────────────────────────────────────
+    // ── Load fixture (including tournament_id for scoring rules lookup) ────────
     const { data: fixture, error: fixErr } = await supabase
       .from('fixtures')
-      .select('id, home_team, away_team, status')
+      .select('id, home_team, away_team, status, tournament_id')
       .eq('id', fixture_id)
       .single();
 
     if (fixErr || !fixture) return respond(404, { error: 'Fixture not found' });
 
-    // ── Detect which path to use ──────────────────────────────────────────────
+    // ── Load scoring rules for this tournament ─────────────────────────────────
+    const { POINTS, UNIVERSAL } = await loadScoringRules(fixture.tournament_id ?? '');
+
+    // ── Detect which path to use ───────────────────────────────────────────────
     const { data: forzaRows } = await supabase
       .from('player_match_stats')
       .select('id')
@@ -178,14 +203,7 @@ Deno.serve(async (req) => {
     if (useForzaPath) {
       const { data: rows } = await supabase
         .from('player_match_stats')
-        .select(`
-          id, fixture_id, player_id, forza_match_id,
-          minutes_played, goals, assists, own_goals,
-          yellow_cards, red_cards, penalty_saved, penalty_missed, penalty_scored,
-          clean_sheet, goals_conceded,
-          saves, shots_on_target, tackles_won, interceptions, xg, xa,
-          players ( id, position )
-        `)
+        .select('*')
         .eq('fixture_id', fixture_id)
         .not('forza_match_id', 'is', null);
 
@@ -193,27 +211,37 @@ Deno.serve(async (req) => {
         return respond(200, { ok: true, message: 'No Forza stats yet', updated_squads: 0, player_stats: 0, source: 'forza' });
       }
 
+      // Fetch player positions separately
+      const playerIds = rows.map(r => r.player_id);
+      const { data: playerRows } = await supabase
+        .from('players')
+        .select('id, position')
+        .in('id', playerIds);
+
+      const positionMap = {};
+      for (const p of playerRows ?? []) positionMap[p.id] = p.position;
+
       // BPS + bonus
       const withBps = rows.map(r => ({
         ...r,
-        position:   r.players?.position ?? 'MID',
-        bps:        calcBPS(r),
-        bonus:      0,
+        position: positionMap[r.player_id] ?? 'MID',
+        bps:      calcBPS(r),
+        bonus:    0,
       }));
       assignBonus(withBps);
 
       // Score each player and write back bps_score, bonus_points, fantasy_points
       const statUpserts = withBps.map(r => {
-        const pts = scorePlayer({ ...r, bonus: r.bonus }, r.position);
+        const pts = scorePlayer({ ...r, bonus: r.bonus }, r.position, POINTS, UNIVERSAL);
         return {
-          id:            r.id,
-          fixture_id:    r.fixture_id,
-          player_id:     r.player_id,
-          bps_score:     r.bps,
-          bonus_points:  r.bonus,
+          id:             r.id,
+          fixture_id:     r.fixture_id,
+          player_id:      r.player_id,
+          bps_score:      r.bps,
+          bonus_points:   r.bonus,
           fantasy_points: pts,
-          breakdown:     buildBreakdown({ ...r, bonus: r.bonus }, r.position),
-          updated_at:    new Date().toISOString(),
+          breakdown:      buildBreakdown({ ...r, bonus: r.bonus }, r.position, POINTS, UNIVERSAL),
+          updated_at:     new Date().toISOString(),
         };
       });
 
@@ -226,8 +254,7 @@ Deno.serve(async (req) => {
       // Build points lookup for squad rollup
       const pointsLookup = {};
       for (const r of withBps) {
-        const pts = scorePlayer({ ...r, bonus: r.bonus }, r.position);
-        pointsLookup[r.player_id] = pts;
+        pointsLookup[r.player_id] = scorePlayer({ ...r, bonus: r.bonus }, r.position, POINTS, UNIVERSAL);
       }
 
       const updatedSquads = await rollupSquads(fixture_id, pointsLookup);
@@ -252,7 +279,7 @@ Deno.serve(async (req) => {
       return respond(200, { ok: true, message: 'No events yet', updated_squads: 0, player_stats: 0, source: 'manual' });
     }
 
-    const statsMap = {};
+    const statsMap    = {};
     const goalsPerTeam = {};
 
     for (const ev of events) {
@@ -284,21 +311,27 @@ Deno.serve(async (req) => {
     }
 
     const playerIds = Object.keys(statsMap);
-    const { data: playerRows } = await supabase
+    const { data: playerRowsB } = await supabase
       .from('players')
       .select('id, position, club')
       .in('id', playerIds);
 
     const positionMap = {};
     const clubMap     = {};
-    for (const p of playerRows ?? []) {
+    for (const p of playerRowsB ?? []) {
       positionMap[p.id] = p.position;
       clubMap[p.id]     = p.club;
     }
 
+    // Determine clubs in match
+    const clubsInMatch = [...new Set(Object.values(clubMap))];
+
     for (const [pid, stats] of Object.entries(statsMap)) {
-      const club           = clubMap[pid];
-      const goalsAgainst   = goalsPerTeam[club] || 0;
+      const club         = clubMap[pid];
+      // Goals conceded = goals scored by all OTHER clubs in the match
+      const goalsAgainst = clubsInMatch
+        .filter(c => c !== club)
+        .reduce((sum, c) => sum + (goalsPerTeam[c] || 0), 0);
       stats.goals_conceded = goalsAgainst;
       stats.clean_sheet    = goalsAgainst === 0;
     }
@@ -309,7 +342,7 @@ Deno.serve(async (req) => {
 
     const playerStatUpserts = statsList.map(s => {
       const pos = positionMap[s.player_id] || 'MID';
-      const pts = scorePlayer(s, pos);
+      const pts = scorePlayer(s, pos, POINTS, UNIVERSAL);
       return {
         fixture_id,
         player_id:      s.player_id,
@@ -326,7 +359,7 @@ Deno.serve(async (req) => {
         bps_score:      s.bps,
         bonus_points:   s.bonus,
         fantasy_points: pts,
-        breakdown:      buildBreakdown(s, pos),
+        breakdown:      buildBreakdown(s, pos, POINTS, UNIVERSAL),
         updated_at:     new Date().toISOString(),
       };
     });
