@@ -1,6 +1,10 @@
-# FantasyKit — Application Dynamics & Overview
+# ForzaKit — Application Dynamics & Overview
 
-This document provides a technical and functional blueprint of how FantasyKit operates. It serves as the source of truth for generating instruction manuals and onboarding users.
+This document provides a technical and functional blueprint of how ForzaKit operates. It serves as the source of truth for generating instruction manuals and onboarding users.
+
+> **Competition-agnostic:** ForzaKit is designed to run any football competition — EPL, World Cup, UCL, La Liga, etc. — without code changes. All competition-specific config (budget, squad size, scoring rules, matchday deadlines) lives in the database. See `docs/PIPELINE.md` for the full backend architecture.
+
+Last updated: 2026-05-03
 
 ---
 
@@ -78,8 +82,32 @@ FantasyKit operates in a three-phase cycle:
 
 ---
 
+---
+
+## ⚙️ COMPETITION-AGNOSTIC CONFIG
+
+All competition-specific values are DB-driven, never hardcoded:
+
+| What | Where | Default (EPL) |
+|------|-------|---------------|
+| Budget | `leagues.budget_total` | £100M |
+| Squad size | `leagues.squad_size` | 15 |
+| Position limits | `leagues.position_limits` (JSONB) | GK:2 DEF:5 MID:5 FWD:3 |
+| Min formation | `leagues.min_formation` (JSONB) | GK:1 DEF:3 MID:2 FWD:1 |
+| Scoring rules | `scoring_rules` table, per position | EPL matrix |
+| Competition name | `tournaments.name` (resolved at runtime) | — |
+| Current matchday | `MAX(round_number)` from `fixtures` | — |
+
+The `useLeagueConfig` hook (`src/hooks/useLeagueConfig.js`) centralises all config reads with EPL fallback defaults. Every squad-management screen uses this hook instead of hardcoded constants.
+
+Scoring rules (goal pts, assist pts, clean sheet pts, etc.) are editable via the **Admin Panel → Scoring Rules** without any code deploy.
+
+---
+
 ## 📂 DIRECTORY STRUCTURE FOR DEVELOPERS
-- `/src/screens`: UI screens (Squad, Market, Live, etc.)
-- `/src/components`: UI atoms like `PlayerCard` and `PitchView`.
-- `/src/lib`: Database/Supabase client logic.
-- `/supabase/migrations`: Database schema (Players, Squads, Fixtures).
+- `/src/screens`: UI screens (Squad, Market, Live, Admin, etc.)
+- `/src/components`: UI atoms like `PlayerCard`, `PitchView`, `OnboardingWizard`.
+- `/src/lib`: Utility libraries (`players.js`, `projections.js`, `supabase.js`).
+- `/src/hooks`: Shared hooks — `useLeagueConfig.js`, `useOnboarding.js`.
+- `/supabase/functions`: Edge Functions — `ingest-match-events`, `calculate-scores`, `sync-fixtures`, `sync-players`, `sync-player-status`.
+- `/docs`: Technical documentation — `APP_DYNAMICS.md`, `PIPELINE.md`.
