@@ -68,7 +68,7 @@ export default function AppLayout({ children }) {
             className="text-[9px] font-bold uppercase tracking-[0.25em] mb-1"
             style={{ color: '#3D4B5C', fontFamily: 'DM Sans, sans-serif' }}
           >
-            World Cup 2026
+            Fantasy Football
           </div>
           <div
             className="text-[28px] leading-none font-black uppercase tracking-tight"

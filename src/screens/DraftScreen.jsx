@@ -61,47 +61,48 @@ export default function DraftScreen() {
   const DRAFT_LIST_SIZE = cfg.draftListSize;
   const MIN_SUBMIT      = cfg.squadSize;
 
-  useEffect(() => { fetchData(); }, [leagueId]);
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
 
-  const fetchData = async () => {
-    try {
-      setLoading(true);
+        // Load league for deadline
+        const { data: league } = await supabase
+          .from('leagues')
+          .select('draft_deadline')
+          .eq('id', leagueId)
+          .maybeSingle();
+        setDeadline(league?.draft_deadline ?? null);
 
-      // Load league for deadline
-      const { data: league } = await supabase
-        .from('leagues')
-        .select('draft_deadline')
-        .eq('id', leagueId)
-        .maybeSingle();
-      setDeadline(league?.draft_deadline ?? null);
+        // Load players — RPC respects cup pool restriction.
+        // For non-cup leagues returns the full pool.
+        const { data: pData } = await supabase
+          .rpc('get_cup_available_players', { p_league_id: leagueId });
+        setPlayers(normalisePlayers(pData ?? []));
 
-      // Load players — RPC respects cup pool restriction.
-      // For non-cup leagues returns the full pool.
-      const { data: pData } = await supabase
-        .rpc('get_cup_available_players', { p_league_id: leagueId });
-      setPlayers(normalisePlayers(pData ?? []));
+        // Load existing submission if any
+        const { data: sub } = await supabase
+          .from('draft_submissions')
+          .select('*')
+          .eq('league_id', leagueId)
+          .eq('user_id', user?.id)
+          .maybeSingle();
 
-      // Load existing submission if any
-      const { data: sub } = await supabase
-        .from('draft_submissions')
-        .select('*')
-        .eq('league_id', leagueId)
-        .eq('user_id', user?.id)
-        .maybeSingle();
-
-      if (sub?.player_ids?.length) {
-        const ordered = sub.player_ids
-          .map(id => normalisePlayers(pData ?? []).find(p => p.id === id))
-          .filter(Boolean);
-        setList(ordered);
-        if (sub.status === 'processed') setSubmitted(true);
+        if (sub?.player_ids?.length) {
+          const ordered = sub.player_ids
+            .map(id => normalisePlayers(pData ?? []).find(p => p.id === id))
+            .filter(Boolean);
+          setList(ordered);
+          if (sub.status === 'processed') setSubmitted(true);
+        }
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
       }
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
+    };
+    fetchData();
+  }, [leagueId, user?.id]);
 
   // Position counts in current list
   const posCounts = useMemo(() =>
@@ -161,7 +162,7 @@ export default function DraftScreen() {
     );
 
     // How many more of each position we still need to reach the target ratio
-    const slotsNeeded = Object.entries(posRatio).reduce((acc, [pos, target]) => {
+    const slotsNeeded = Object.entries(DRAFT_POS_CAPS).reduce((acc, [pos, target]) => {
       const have = currentCounts[pos] ?? 0;
       const need = Math.max(0, target - have);
       if (need > 0) acc[pos] = need;
@@ -212,7 +213,7 @@ export default function DraftScreen() {
       }
     }, 30000);
     return () => clearTimeout(timer);
-  }, [list, submitted, isClosed]);
+  }, [list, submitted, isClosed, leagueId, user?.id]);
 
   const handleSubmit = async () => {
     if (list.length < MIN_SUBMIT || saving || isClosed) return;

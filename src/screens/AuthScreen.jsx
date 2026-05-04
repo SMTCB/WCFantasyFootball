@@ -271,7 +271,7 @@ function AuthShell({ children }) {
           Forza<span style={{ color: '#00C4E8' }}>Kit</span>
         </div>
         <div style={{ fontSize: '9px', fontWeight: 800, letterSpacing: '0.25em', textTransform: 'uppercase', color: '#3D4B5C', marginTop: '6px', fontFamily: 'Barlow Condensed, sans-serif' }}>
-          World Cup 2026 Fantasy
+          Fantasy Football League
         </div>
       </div>
 

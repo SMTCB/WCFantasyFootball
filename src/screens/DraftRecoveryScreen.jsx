@@ -44,7 +44,47 @@ export default function DraftRecoveryScreen() {
   const [error,       setError]       = useState(null);
   const [done,        setDone]        = useState(false);
 
-  useEffect(() => { fetchData(); }, [leagueId]);
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+
+        // Load available players — RPC respects cup pool restriction.
+        // Falls back to full pool for non-cup leagues (no cup_active_clubs rows).
+        const { data: pData } = await supabase
+          .rpc('get_cup_available_players', { p_league_id: leagueId });
+        const players = normalisePlayers(pData ?? []);
+        setAllPlayers(players);
+
+        // Load this manager's allocation
+        const { data: alloc } = await supabase
+          .from('draft_allocations')
+          .select('*')
+          .eq('league_id', leagueId)
+          .eq('user_id', user?.id)
+          .maybeSingle();
+
+        setAllocation(alloc ?? null);
+
+        const myPlayerIds = alloc?.allocated_players ?? [];
+        const myPlayers   = myPlayerIds
+          .map(id => players.find(p => p.id === id))
+          .filter(Boolean)
+          .map(p => ({ ...p, position: normalisePos(p.position) }));
+        setSquad(myPlayers);
+
+        if (myPlayers.length >= SQUAD_SIZE) setDone(true);
+
+        // Load all taken player ids across the league
+        await refreshTakenIds(myPlayerIds);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  // refreshTakenIds is stable (no deps change its identity); SQUAD_SIZE derives from leagueId
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [leagueId, user?.id]);
 
   // Supabase realtime — update takenIds when another manager claims a player
   useEffect(() => {
@@ -59,44 +99,8 @@ export default function DraftRecoveryScreen() {
       }, () => { refreshTakenIds(); })
       .subscribe();
     return () => supabase.removeChannel(channel);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [leagueId]);
-
-  const fetchData = async () => {
-    try {
-      setLoading(true);
-
-      // Load available players — RPC respects cup pool restriction.
-      // Falls back to full pool for non-cup leagues (no cup_active_clubs rows).
-      const { data: pData } = await supabase
-        .rpc('get_cup_available_players', { p_league_id: leagueId });
-      const players = normalisePlayers(pData ?? []);
-      setAllPlayers(players);
-
-      // Load this manager's allocation
-      const { data: alloc } = await supabase
-        .from('draft_allocations')
-        .select('*')
-        .eq('league_id', leagueId)
-        .eq('user_id', user?.id)
-        .maybeSingle();
-
-      setAllocation(alloc ?? null);
-
-      const myPlayerIds = alloc?.allocated_players ?? [];
-      const myPlayers   = myPlayerIds
-        .map(id => players.find(p => p.id === id))
-        .filter(Boolean)
-        .map(p => ({ ...p, position: normalisePos(p.position) }));
-      setSquad(myPlayers);
-
-      if (myPlayers.length >= SQUAD_SIZE) setDone(true);
-
-      // Load all taken player ids across the league
-      await refreshTakenIds(myPlayerIds);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const refreshTakenIds = async (myIds) => {
     const { data: allocRows } = await supabase

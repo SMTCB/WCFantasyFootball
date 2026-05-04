@@ -299,7 +299,7 @@ export default function LeagueScreen() {
       if (!data || data.length === 0) {
         setLeagues([{ 
           league_id: 'L1', 
-          leagues: { id: 'L1', name: 'World Cup Official', format: 'classic' },
+          leagues: { id: 'L1', name: 'My League', format: 'classic' },
           rank: 2,
           total_points: 215
         }]);
@@ -398,7 +398,7 @@ export default function LeagueScreen() {
                 value={leagueName}
                 onChange={(e) => setLeagueName(e.target.value)}
                 className="w-full bg-transparent px-3 py-3 text-[15px] font-medium outline-none text-white"
-                placeholder="e.g. World Cup Legends"
+                placeholder="e.g. Champions Draft League"
                 maxLength={40}
                 required
               />
