@@ -391,9 +391,47 @@ export default function LeagueScreen() {
           </div>
           <div className="flex flex-col gap-2">
             <label className="text-[11px] font-semibold text-text-secondary uppercase tracking-wider">Format</label>
-            <div className="grid grid-cols-2 gap-2">
-              <button type="button" onClick={() => setLeagueFormat('classic')} className={`py-3 border ${leagueFormat === 'classic' ? 'border-white bg-white/5' : 'border-border bg-surface'} text-sm font-bold uppercase`}>Classic</button>
-              <button type="button" onClick={() => setLeagueFormat('noduplicate')} className={`py-3 border ${leagueFormat === 'noduplicate' ? 'border-white bg-white/5' : 'border-border bg-surface'} text-sm font-bold uppercase`}>Draft</button>
+            <div className="grid grid-cols-2 gap-3">
+              {/* Classic */}
+              <button
+                type="button"
+                onClick={() => setLeagueFormat('classic')}
+                className={`flex flex-col items-start gap-2 p-3 border rounded text-left transition-colors ${
+                  leagueFormat === 'classic'
+                    ? 'border-white bg-white/5'
+                    : 'border-border bg-surface hover:border-white/30'
+                }`}
+              >
+                <span className="text-[11px] font-bold uppercase tracking-wider text-white">Classic</span>
+                <span className="text-[11px] text-text-secondary leading-snug">Everyone builds freely — no player restrictions across squads.</span>
+                <ul className="flex flex-col gap-[3px]">
+                  <li className="text-[10px] text-text-tertiary">• Any player, any manager</li>
+                  <li className="text-[10px] text-text-tertiary">• 5 transfers per round</li>
+                  <li className="text-[10px] text-text-tertiary">• Quick to set up</li>
+                </ul>
+              </button>
+
+              {/* Draft (noduplicate) */}
+              <button
+                type="button"
+                onClick={() => setLeagueFormat('noduplicate')}
+                className={`flex flex-col items-start gap-2 p-3 border rounded text-left transition-colors ${
+                  leagueFormat === 'noduplicate'
+                    ? 'border-cyan bg-cyan/5'
+                    : 'border-border bg-surface hover:border-cyan/40'
+                }`}
+              >
+                <div className="flex items-center gap-2 w-full">
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-white">Draft</span>
+                  <span className="text-[9px] font-bold uppercase tracking-wider text-cyan border border-cyan/40 rounded px-1 py-[1px] leading-none">Recommended</span>
+                </div>
+                <span className="text-[11px] text-text-secondary leading-snug">No two managers can own the same player.</span>
+                <ul className="flex flex-col gap-[3px]">
+                  <li className="text-[10px] text-text-tertiary">• Submit ranked wishlist pre-season</li>
+                  <li className="text-[10px] text-text-tertiary">• Lottery resolves contested picks</li>
+                  <li className="text-[10px] text-text-tertiary">• 5 transfers/round · unlimited at halfway</li>
+                </ul>
+              </button>
             </div>
           </div>
           <button type="submit" disabled={formLoading || !leagueName.trim()} className="w-full mt-4 bg-cyan text-black font-bold py-4 uppercase tracking-wider disabled:opacity-50">
