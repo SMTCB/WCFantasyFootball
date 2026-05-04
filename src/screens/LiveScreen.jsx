@@ -4,37 +4,11 @@ import {
   calculateProjection,
   formatProjectionDisplay,
 } from '../lib/projections';
-import { normalisePlayers } from '../lib/players';
 import { useAuth } from '../hooks/useAuth';
 
 import SectionHeader from '../components/SectionHeader';
 
-// ─── Mock data for Demo Mode ───────────────────────────────────────────────
-const MOCK_LIVE_FIXTURES = [
-  { id: 'mock-1', home_team: 'Man City', away_team: 'Liverpool', status: 'live', minute: '64', homeGoals: 2, awayGoals: 0 },
-  { id: 'mock-2', home_team: 'Arsenal', away_team: 'Chelsea', status: 'scheduled', kickoff_at: new Date().toISOString() },
-];
-
-const MOCK_EVENTS = [
-  { type: 'goal',   minute: '55', team: 'Man City', playerName: 'Haaland' },
-  { type: 'assist', minute: '55', team: 'Man City', playerName: 'Foden' },
-  { type: 'goal',   minute: '23', team: 'Man City', playerName: 'Haaland' },
-  { type: 'yellow', minute: '28', team: 'Liverpool', playerName: 'Robertson' },
-];
-
-const MOCK_RIVALS = [
-  { rank: 1, user_id: 'r1', username: 'Ricardo', total_points: 218, livePoints: 12, projectedAdd: 8, users: { username: 'Ricardo' } },
-  { rank: 2, user_id: 'me', username: 'You',     total_points: 205, livePoints: null, projectedAdd: null, users: { username: 'You' } },
-  { rank: 3, user_id: 'r2', username: 'João',    total_points: 190, livePoints: 6,  projectedAdd: 5, users: { username: 'João' } },
-  { rank: 4, user_id: 'r3', username: 'Ana',     total_points: 178, livePoints: 9,  projectedAdd: 4, users: { username: 'Ana' } },
-];
-
-const MOCK_SQUAD_PLAYERS = normalisePlayers([
-  { id: 'p1', name: 'Alisson',   club: 'Liverpool', position: 'GK'  },
-  { id: 'p2', name: 'Robertson', club: 'Liverpool', position: 'DEF' },
-  { id: 'p3', name: 'Foden',     club: 'Man City',  position: 'MID' },
-  { id: 'p4', name: 'Haaland',   club: 'Man City',  position: 'FWD' },
-]);
+// No mock data — screens show real DB data or empty states
 
 // ─── Refresh interval: 5 minutes in ms ───────────────────────────────────────
 const REFRESH_INTERVAL_MS = 5 * 60 * 1000;
@@ -102,7 +76,7 @@ export default function LiveScreen() {
         .select('*')
         .in('status', ['live', 'scheduled', 'finished'])
         .order('kickoff_at', { ascending: true });
-      if (!fixData || fixData.length === 0) fixData = MOCK_LIVE_FIXTURES;
+      if (!fixData || fixData.length === 0) fixData = [];
 
       const live = [], scheduled = [];
       (fixData || []).forEach(f => f.status === 'live' ? live.push(f) : scheduled.push(f));
@@ -144,13 +118,11 @@ export default function LiveScreen() {
         .limit(1);
 
       if (!membersData || membersData.length === 0) {
-        setPrimaryLeague({ total_points: 205, leagues: { name: 'Fantasy League (Demo)' } });
-        setRivals(MOCK_RIVALS);
-        setMySquadPlayers(MOCK_SQUAD_PLAYERS);
-        setEvents(MOCK_EVENTS);
-        const fakeScore = MOCK_EVENTS.reduce((acc, curr) =>
-          curr.type === 'goal' ? acc + 5 : curr.type === 'yellow' ? acc - 1 : acc, 0);
-        setLiveScoreSum(Math.max(0, fakeScore));
+        setPrimaryLeague(null);
+        setRivals([]);
+        setMySquadPlayers([]);
+        setEvents([]);
+        setLiveScoreSum(0);
         return;
       }
 
@@ -163,7 +135,7 @@ export default function LiveScreen() {
         .select('rank, total_points, user_id, users(username)')
         .eq('league_id', myLeague.league_id)
         .order('rank', { ascending: true });
-      setRivals(rivalData?.length > 0 ? rivalData : MOCK_RIVALS);
+      setRivals(rivalData || []);
 
       // 5. Latest squad (most-recent matchday)
       const { data: squadRow } = await supabase
@@ -202,7 +174,7 @@ export default function LiveScreen() {
         ...e,
         playerName: playerNameMap[e.player_id] || 'Unknown',
       }));
-      setEvents(enrichedEvents.length > 0 ? enrichedEvents : MOCK_EVENTS);
+      setEvents(enrichedEvents);
 
       // 7. Compute live score from real player_match_stats
       const matchdayFixtureIds = new Set(
@@ -218,7 +190,7 @@ export default function LiveScreen() {
       // Enrich squad players with points + captain multiplier
       const captainId = squadRow?.captain_id;
       const isTriple  = squadRow?.is_triple_captain;
-      const enrichedSquad = (squadPlayers || MOCK_SQUAD_PLAYERS).map(p => {
+      const enrichedSquad = (squadPlayers || []).map(p => {
         let pts = pointsPerPlayer[p.id] || 0;
         if (p.id === captainId) pts *= isTriple ? 3 : 2;
         return { ...p, points: pts };
@@ -407,12 +379,12 @@ export default function LiveScreen() {
                 {/* ── RIVAL WATCH + PROJECTIONS ─────────────────── */}
                 <SectionHeader title="RIVAL WATCH" />
                 <div className="bg-[#0d0d0d] border-b border-white/5">
-                  {(rivals.length > 0 ? rivals : MOCK_RIVALS).map((r, i) => {
+                  {rivals.map((r, i) => {
                     const isMe = r.user_id === currentUser?.id || r.username === 'You';
-                    const livePts = isMe ? liveScoreSum : (MOCK_RIVALS[i % MOCK_RIVALS.length]?.livePoints ?? 0);
+                    const livePts = isMe ? liveScoreSum : (r.livePoints ?? 0);
                     const projAdd = isMe
                       ? (projection ? projection.projected - liveScoreSum : 0)
-                      : (MOCK_RIVALS[i % MOCK_RIVALS.length]?.projectedAdd ?? 0);
+                      : (r.projectedAdd ?? 0);
                     const projTotal = (r.total_points ?? 0) + livePts + projAdd;
 
                     return (

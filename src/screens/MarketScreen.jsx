@@ -58,7 +58,7 @@ export default function MarketScreen() {
   const [todayJokerId,  setTodayJokerId]  = useState(null);
   const [loading,       setLoading]       = useState(true);
   const [filterPos,     setFilterPos]     = useState('ALL');
-  const [budget,        setBudget]        = useState(null);   // loaded from league config
+  const [budget,        setBudget]        = useState(0);      // loaded from league config
   const [saving,        setSaving]        = useState(false);
   const [isLocked,      setIsLocked]      = useState(false);
   const [confirm,       setConfirm]       = useState(null);
@@ -323,9 +323,9 @@ export default function MarketScreen() {
               <div className="fz-label" style={{ color: '#3D4B5C' }}>Budget</div>
               <div
                 className="text-[20px] font-black tabular-nums leading-tight"
-                style={{ fontFamily: 'Barlow Condensed, sans-serif', color: budget < 5 ? '#F03A3A' : '#00C4E8' }}
+                style={{ fontFamily: 'Barlow Condensed, sans-serif', color: (budget ?? 0) < 5 ? '#F03A3A' : '#00C4E8' }}
               >
-                ${budget.toFixed(1)}
+                ${(budget ?? 0).toFixed(1)}
                 <span className="text-[12px] font-normal" style={{ color: '#3D4B5C' }}>M</span>
               </div>
               {emptySlots > 0 && (

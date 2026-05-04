@@ -265,17 +265,7 @@ export default function LeagueScreen() {
       setLeagueListings(listings ?? []);
       setMyListings(new Set((listings ?? []).filter(l => l.user_id === user?.id).map(l => l.player_id)));
       
-      if (!mData || mData.length <= 1) {
-        const userId = user?.id;
-        setMembers([
-          { user_id: userId, total_points: 215, rank: 2, users: { username: 'You' } },
-          { user_id: 'd1', total_points: 242, rank: 1, users: { username: 'João' } },
-          { user_id: 'd2', total_points: 201, rank: 3, users: { username: 'Ricardo' } },
-          { user_id: 'd3', total_points: 195, rank: 4, users: { username: 'Ana' } },
-        ]);
-      } else {
-        setMembers(mData || []);
-      }
+      setMembers(mData || []);
     } finally {
       setMembersLoading(false);
     }
@@ -297,12 +287,7 @@ export default function LeagueScreen() {
       if (error) throw error;
       
       if (!data || data.length === 0) {
-        setLeagues([{ 
-          league_id: 'L1', 
-          leagues: { id: 'L1', name: 'My League', format: 'classic' },
-          rank: 2,
-          total_points: 215
-        }]);
+        setLeagues([]);
         return;
       }
       setLeagues(data || []);

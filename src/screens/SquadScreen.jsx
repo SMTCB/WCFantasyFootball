@@ -1,7 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
-import { squad as fallbackSquad } from '../data/squad';
+// Empty squad shown when user has no squad yet (instead of demo data)
+const EMPTY_SQUAD = {
+  budget: { current: 100, total: 100 },
+  captainId: null,
+  players: [],
+  bench: [],
+};
 import { getDangerZonePlayers, normalizeIntelligence, LINEUP_STATUS } from '../lib/intelligence';
 import { normalisePlayer } from '../lib/players';
 import { useAuth } from '../hooks/useAuth';
@@ -159,7 +165,7 @@ export default function SquadScreen() {
       const squadQuery = supabase.from('squads').select('*').eq('user_id', userId);
       if (leagueId) squadQuery.eq('league_id', leagueId);
       const { data: squad, error } = await squadQuery.order('created_at', { ascending: false }).limit(1).maybeSingle();
-      if (error || !squad) { setSquadData(fallbackSquad); setLoading(false); return; }
+      if (error || !squad) { setSquadData(EMPTY_SQUAD); setLoading(false); return; }
 
       const playerIds = squad.players || [];
       const [
@@ -216,7 +222,7 @@ export default function SquadScreen() {
     } catch (err) {
       console.error(err);
       setFetchError('Could not load your squad. Showing demo data.');
-      setSquadData(fallbackSquad);
+      setSquadData(EMPTY_SQUAD);
     } finally {
       setLoading(false);
     }
@@ -942,7 +948,7 @@ export default function SquadScreen() {
               <div className="text-[11px] font-black uppercase tracking-[0.1em] mb-3" style={{ color: '#F0B400' }}>
                 ⚡ Power Tools
               </div>
-              <div className="grid grid-cols-3 gap-2 mb-4">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-4">
                 {/* Wildcard */}
                 <PowerToolCard
                   icon="🃏"
@@ -1219,7 +1225,7 @@ export default function SquadScreen() {
             {/* CHIPS TAB */}
             {desktopTab === 'chips' && (
               <div className="pt-4 mx-4">
-                <div className="grid grid-cols-3 gap-2 mb-4">
+                <div className="grid grid-cols-2 xl:grid-cols-3 gap-2 mb-4">
                   <PowerToolCard
                     icon="🃏"
                     label="Wildcard"
