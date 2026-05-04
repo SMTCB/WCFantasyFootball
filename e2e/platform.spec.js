@@ -224,6 +224,76 @@ async function mockPlayersApi(page) {
       body: JSON.stringify(FIXTURE_PLAYERS),
     });
   });
+
+  // Mock player_status to avoid errors
+  await page.route('**/rest/v1/player_status**', route => {
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      headers: { 'Content-Range': '0-0/0' },
+      body: JSON.stringify([]),
+    });
+  });
+
+  // Mock squads fetch (empty list — user has no squad yet)
+  await page.route('**/rest/v1/squads**', route => {
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      headers: { 'Content-Range': '0-0/0' },
+      body: JSON.stringify([]),
+    });
+  });
+
+  // Mock daily_jokers fetch (empty list)
+  await page.route('**/rest/v1/daily_jokers**', route => {
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      headers: { 'Content-Range': '0-0/0' },
+      body: JSON.stringify([]),
+    });
+  });
+
+  // Mock matchday_deadlines
+  await page.route('**/rest/v1/matchday_deadlines**', route => {
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      headers: { 'Content-Range': '0-0/0' },
+      body: JSON.stringify([]),
+    });
+  });
+
+  // Mock leagues fetch for league config (useLeagueConfig hook)
+  await page.route('**/rest/v1/leagues**', route => {
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      headers: { 'Content-Range': '0-0/1' },
+      body: JSON.stringify([
+        {
+          id: 'test-league-123',
+          name: 'Test League',
+          tournament_id: 'da21be11-32be-429f-ae68-c01b13ba54c9',
+          budget_total: null,
+          squad_size: null,
+          position_limits: null,
+          min_formation: null,
+        }
+      ]),
+    });
+  });
+
+  // Mock scoring_rules fetch (empty — will use EPL defaults)
+  await page.route('**/rest/v1/scoring_rules**', route => {
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      headers: { 'Content-Range': '0-0/0' },
+      body: JSON.stringify([]),
+    });
+  });
 }
 
 // ── 5. Market Screen ─────────────────────────────────────────────────────────
@@ -231,7 +301,19 @@ test.describe('MarketScreen', () => {
   test.beforeEach(async ({ page }) => {
     await skipOnboarding(page);
     await mockPlayersApi(page);
-    await page.goto('/market');
+    // Mock leagues API so test doesn't need real DB data
+    await page.route('**/rest/v1/league_members**', route => {
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        headers: { 'Content-Range': '0-0/1' },
+        body: JSON.stringify([
+          { league_id: 'test-league-123', leagues: { id: 'test-league-123', name: 'Test League', tournament_id: 'da21be11-32be-429f-ae68-c01b13ba54c9' } }
+        ]),
+      });
+    });
+    // Go directly to market with leagueId to avoid league picker
+    await page.goto('/market?leagueId=test-league-123');
     await waitForContent(page);
   });
 
