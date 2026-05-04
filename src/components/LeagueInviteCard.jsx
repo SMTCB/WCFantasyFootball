@@ -13,8 +13,9 @@
  *   onDone   () => void  — called when user clicks "Go to my league"
  */
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import html2canvas from 'html2canvas';
+import { supabase } from '../lib/supabase';
 
 const BASE_URL = window.location.origin;
 
@@ -22,11 +23,31 @@ export default function LeagueInviteCard({ league, onDone }) {
   const [copied,       setCopied]       = useState(false);
   const [linkCopied,   setLinkCopied]   = useState(false);
   const [exporting,    setExporting]    = useState(false);
+  const [tournamentName, setTournamentName] = useState('Fantasy Football');
   const cardRef = useRef(null);
+
+  // Load tournament name if league has a tournament_id
+  useEffect(() => {
+    const loadTournament = async () => {
+      if (league.tournament_id) {
+        try {
+          const { data } = await supabase
+            .from('tournaments')
+            .select('name')
+            .eq('id', league.tournament_id)
+            .single();
+          if (data) setTournamentName(data.name);
+        } catch (err) {
+          console.error('Failed to load tournament name', err);
+        }
+      }
+    };
+    loadTournament();
+  }, [league.tournament_id]);
 
   const joinUrl     = `${BASE_URL}/join?code=${league.join_code}`;
   const waMessage   = encodeURIComponent(
-    `🏆 Join my ForzaKit World Cup 2026 fantasy league!\n\nLeague: ${league.name}\nJoin code: ${league.join_code}\n\nSign up & enter the code at: ${joinUrl}`
+    `🏆 Join my ForzaKit ${tournamentName} fantasy league!\n\nLeague: ${league.name}\nJoin code: ${league.join_code}\n\nSign up & enter the code at: ${joinUrl}`
   );
   const waUrl = `https://wa.me/?text=${waMessage}`;
 
@@ -110,7 +131,7 @@ export default function LeagueInviteCard({ league, onDone }) {
             <span style={{ fontSize: '28px' }}>🏆</span>
             <div>
               <div style={{ fontSize: '10px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '0.18em', color: '#18C96B', textTransform: 'uppercase', fontWeight: 800 }}>
-                ForzaKit · WC 2026
+                ForzaKit · {tournamentName}
               </div>
               <div style={{ fontSize: '11px', color: 'rgba(240,242,245,0.4)', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '0.08em' }}>
                 Fantasy Football

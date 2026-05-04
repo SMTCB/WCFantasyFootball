@@ -1,6 +1,7 @@
 # ForzaKit — Fantasy League Platform
 
-EPL fantasy football web app with iOS and Android native apps via Capacitor.
+Competition-agnostic fantasy football platform with web, iOS, and Android apps via Capacitor.  
+Run any football league (EPL, World Cup, Champions League, etc.) without code changes.
 
 **Stack**: React 19 · Vite · Tailwind CSS 4 · Supabase · Capacitor
 
@@ -52,15 +53,21 @@ App ID: `com.fantasykit.forzaedition`
 
 ## Project Docs
 
+**Start here:**
 | File | Purpose |
 |------|---------|
-| `BACKLOG.md` | Open issues and priorities |
-| `PIPELINE.md` | Product roadmap and sprint plan |
-| `APP_STORE_ASSESSMENT.md` | Mobile strategy and store submission guide |
-| `MOBILE_IMPLEMENTATION_GUIDE.md` | Capacitor implementation guide (for Antigravity) |
-| `DRAFT_SYSTEM_DESIGN.md` | Draft lottery and transfer window design |
-| `FANTASY_POINTS_SCORING_LAYER.md` | Scoring system and DB schema |
-| `CLAUDE.md` | Instructions for Claude Code |
+| `docs/APP_DYNAMICS.md` | Application features, matchday cycle, UI flows — for users & onboarding |
+| `docs/PIPELINE.md` | Backend architecture, Edge Functions, DB schema — for developers |
+
+**Reference:**
+| File | Purpose |
+|------|---------|
+| `DATA_PIPELINE_RUNBOOK.md` | Step-by-step guide to activating fixtures, players, and scoring for any tournament |
+| `DRAFT_SYSTEM_DESIGN.md` | Draft lottery and transfer window mechanics |
+| `FANTASY_POINTS_SCORING_LAYER.md` | Scoring rules and calculation engine |
+| `BACKLOG.md` | Open issues and technical debt |
+| `MOBILE_IMPLEMENTATION_GUIDE.md` | Capacitor setup for iOS/Android |
+| `CLAUDE.md` | Instructions for Claude development |
 | `GEMINI.md` | Instructions for Google Antigravity |
 | `API/` | Forza Football API reference |
 
