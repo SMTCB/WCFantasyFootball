@@ -97,9 +97,9 @@ export default function AuthScreen() {
     borderRadius: '4px',
     padding: '12px 16px',
     fontSize: '14px',
-    color: '#F0F2F5',
+    color: 'var(--paper)',
     outline: 'none',
-    fontFamily: 'DM Sans, sans-serif',
+    fontFamily: 'Archivo, sans-serif',
   };
 
   const labelStyle = {
@@ -108,15 +108,15 @@ export default function AuthScreen() {
     fontWeight: 800,
     letterSpacing: '0.15em',
     textTransform: 'uppercase',
-    color: '#3D4B5C',
+    color: 'var(--mute)',
     marginBottom: '6px',
-    fontFamily: 'Barlow Condensed, sans-serif',
+    fontFamily: 'Archivo Black, sans-serif',
   };
 
   const btnPrimary = {
     width: '100%',
     padding: '14px',
-    background: '#00C4E8',
+    background: 'var(--cyan)',
     color: '#000',
     border: 'none',
     borderRadius: '4px',
@@ -126,7 +126,7 @@ export default function AuthScreen() {
     textTransform: 'uppercase',
     cursor: loading ? 'not-allowed' : 'pointer',
     opacity: loading ? 0.6 : 1,
-    fontFamily: 'Barlow Condensed, sans-serif',
+    fontFamily: 'Archivo Black, sans-serif',
     transition: 'opacity 0.15s',
   };
 
@@ -134,7 +134,7 @@ export default function AuthScreen() {
   if (tab === TAB_RECOVER) {
     return (
       <AuthShell>
-        <h2 style={{ fontSize: '20px', fontWeight: 900, color: '#F0F2F5', marginBottom: '24px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+        <h2 style={{ fontSize: '20px', fontWeight: 900, color: 'var(--paper)', marginBottom: '24px', fontFamily: 'Archivo Black, sans-serif', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
           Set New Password
         </h2>
         <form onSubmit={handleUpdatePassword} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
@@ -158,13 +158,13 @@ export default function AuthScreen() {
   if (tab === TAB_RESET) {
     return (
       <AuthShell>
-        <button onClick={() => switchTab(TAB_SIGNIN)} style={{ background: 'none', border: 'none', color: '#3D4B5C', fontSize: '11px', fontWeight: 700, cursor: 'pointer', marginBottom: '20px', padding: 0, fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
+        <button onClick={() => switchTab(TAB_SIGNIN)} style={{ background: 'none', border: 'none', color: 'var(--mute)', fontSize: '11px', fontWeight: 700, cursor: 'pointer', marginBottom: '20px', padding: 0, fontFamily: 'Archivo Black, sans-serif', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
           ← Back to Sign In
         </button>
-        <h2 style={{ fontSize: '20px', fontWeight: 900, color: '#F0F2F5', marginBottom: '8px', fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+        <h2 style={{ fontSize: '20px', fontWeight: 900, color: 'var(--paper)', marginBottom: '8px', fontFamily: 'Archivo Black, sans-serif', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
           Reset Password
         </h2>
-        <p style={{ fontSize: '13px', color: '#7D8A96', marginBottom: '24px' }}>
+        <p style={{ fontSize: '13px', color: 'var(--mute)', marginBottom: '24px' }}>
           Enter your email and we'll send a reset link.
         </p>
         <form onSubmit={handleReset} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
@@ -196,13 +196,13 @@ export default function AuthScreen() {
               background: 'none',
               border: 'none',
               borderBottom: tab === t.id ? '2px solid #00C4E8' : '2px solid transparent',
-              color: tab === t.id ? '#F0F2F5' : '#3D4B5C',
+              color: tab === t.id ? 'var(--paper)' : 'var(--mute)',
               fontSize: '11px',
               fontWeight: 800,
               letterSpacing: '0.12em',
               textTransform: 'uppercase',
               cursor: 'pointer',
-              fontFamily: 'Barlow Condensed, sans-serif',
+              fontFamily: 'Archivo Black, sans-serif',
               transition: 'color 0.15s',
             }}
           >
@@ -228,7 +228,7 @@ export default function AuthScreen() {
           <button
             type="button"
             onClick={() => switchTab(TAB_RESET)}
-            style={{ background: 'none', border: 'none', color: '#3D4B5C', fontSize: '11px', fontWeight: 600, cursor: 'pointer', padding: '4px 0', fontFamily: 'DM Sans, sans-serif' }}
+            style={{ background: 'none', border: 'none', color: 'var(--mute)', fontSize: '11px', fontWeight: 600, cursor: 'pointer', padding: '4px 0', fontFamily: 'Archivo, sans-serif' }}
           >
             Forgot password?
           </button>
@@ -267,16 +267,16 @@ function AuthShell({ children }) {
     <div style={{ minHeight: '100svh', background: '#080A0E', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '24px' }}>
       {/* Logo */}
       <div style={{ marginBottom: '40px', textAlign: 'center' }}>
-        <div style={{ fontSize: '32px', fontWeight: 900, fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '0.05em', color: '#F0F2F5', lineHeight: 1 }}>
-          Forza<span style={{ color: '#00C4E8' }}>Kit</span>
+        <div style={{ fontSize: '32px', fontWeight: 900, fontFamily: 'Archivo Black, sans-serif', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--paper)', lineHeight: 1 }}>
+          Forza<span style={{ color: 'var(--cyan)' }}>Kit</span>
         </div>
-        <div style={{ fontSize: '9px', fontWeight: 800, letterSpacing: '0.25em', textTransform: 'uppercase', color: '#3D4B5C', marginTop: '6px', fontFamily: 'Barlow Condensed, sans-serif' }}>
+        <div style={{ fontSize: '9px', fontWeight: 800, letterSpacing: '0.25em', textTransform: 'uppercase', color: 'var(--mute)', marginTop: '6px', fontFamily: 'Archivo Black, sans-serif' }}>
           Fantasy Football League
         </div>
       </div>
 
       {/* Card */}
-      <div style={{ width: '100%', maxWidth: '400px', background: '#0D1117', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '8px', padding: '32px' }}>
+      <div style={{ width: '100%', maxWidth: '400px', background: 'var(--ink-2)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '8px', padding: '32px' }}>
         {children}
       </div>
     </div>
@@ -300,9 +300,9 @@ function Msg({ type, children }) {
       borderRadius: '4px',
       fontSize: '12px',
       fontWeight: 600,
-      fontFamily: 'DM Sans, sans-serif',
+      fontFamily: 'Archivo, sans-serif',
       background: isError ? 'rgba(240,58,58,0.1)' : 'rgba(24,201,107,0.1)',
-      color:      isError ? '#F03A3A'              : '#18C96B',
+      color:      isError ? 'var(--danger)'              : 'var(--positive)',
       border:     `1px solid ${isError ? 'rgba(240,58,58,0.25)' : 'rgba(24,201,107,0.25)'}`,
     }}>
       {children}

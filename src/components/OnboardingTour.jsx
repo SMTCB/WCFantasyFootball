@@ -182,7 +182,7 @@ export default function OnboardingTour({ steps, onComplete, onSkip }) {
       {/* Tooltip card */}
       <div style={{
         ...tooltipStyle,
-        background:   '#0D1117',
+        background:   'var(--ink-2)',
         border:       '1px solid rgba(255,255,255,0.1)',
         borderRadius: '12px',
         padding:      '20px',
@@ -191,9 +191,9 @@ export default function OnboardingTour({ steps, onComplete, onSkip }) {
         {/* Step counter */}
         <div style={{
           fontSize:      '10px',
-          fontFamily:    'Barlow Condensed, sans-serif',
+          fontFamily:    'Archivo Black, sans-serif',
           letterSpacing: '0.12em',
-          color:         '#F0B400',
+          color:         'var(--gold)',
           textTransform: 'uppercase',
           marginBottom:  '6px',
         }}>
@@ -203,9 +203,9 @@ export default function OnboardingTour({ steps, onComplete, onSkip }) {
         {/* Title */}
         <div style={{
           fontSize:     '18px',
-          fontFamily:   'Barlow Condensed, sans-serif',
+          fontFamily:   'Archivo Black, sans-serif',
           fontWeight:   800,
-          color:        '#F0F2F5',
+          color:        'var(--paper)',
           textTransform: 'uppercase',
           lineHeight:   1.1,
           marginBottom: '8px',
@@ -233,7 +233,7 @@ export default function OnboardingTour({ steps, onComplete, onSkip }) {
               background: 'none',
               border:     'none',
               cursor:     'pointer',
-              fontFamily: 'Barlow Condensed, sans-serif',
+              fontFamily: 'Archivo Black, sans-serif',
               letterSpacing: '0.05em',
             }}
           >
@@ -243,10 +243,10 @@ export default function OnboardingTour({ steps, onComplete, onSkip }) {
             onClick={handleNext}
             style={{
               padding:       '8px 18px',
-              background:    '#F0B400',
-              color:         '#0D1117',
+              background:    'var(--gold)',
+              color:         'var(--ink-2)',
               fontSize:      '11px',
-              fontFamily:    'Barlow Condensed, sans-serif',
+              fontFamily:    'Archivo Black, sans-serif',
               fontWeight:    800,
               letterSpacing: '0.1em',
               textTransform: 'uppercase',

@@ -35,8 +35,8 @@ export default function ConfirmModal({
     return () => window.removeEventListener('keydown', onKey);
   }, [onCancel]);
 
-  const confirmBg    = danger ? '#F03A3A' : '#F0B400';
-  const confirmColor = danger ? '#fff'    : '#0D1117';
+  const confirmBg    = danger ? 'var(--danger)' : 'var(--gold)';
+  const confirmColor = danger ? '#fff'    : 'var(--ink-2)';
 
   return (
     /* Backdrop */
@@ -60,7 +60,7 @@ export default function ConfirmModal({
         style={{
           width:        '100%',
           maxWidth:     '360px',
-          background:   '#0D1117',
+          background:   'var(--ink-2)',
           border:       '1px solid rgba(255,255,255,0.10)',
           borderRadius: '12px',
           padding:      '28px 24px 24px',
@@ -70,10 +70,10 @@ export default function ConfirmModal({
         {/* Title */}
         <div style={{
           fontSize:      '20px',
-          fontFamily:    'Barlow Condensed, sans-serif',
+          fontFamily:    'Archivo Black, sans-serif',
           fontWeight:    900,
           textTransform: 'uppercase',
-          color:         '#F0F2F5',
+          color:         'var(--paper)',
           letterSpacing: '-0.01em',
           lineHeight:    1.1,
           marginBottom:  '10px',
@@ -107,7 +107,7 @@ export default function ConfirmModal({
             <p style={{
               fontSize:   '12px',
               lineHeight: 1.55,
-              color:      '#F0B400',
+              color:      'var(--gold)',
               margin:     0,
             }}>
               {warning}
@@ -127,7 +127,7 @@ export default function ConfirmModal({
               borderRadius:  '7px',
               color:         'rgba(240,242,245,0.6)',
               fontSize:      '12px',
-              fontFamily:    'Barlow Condensed, sans-serif',
+              fontFamily:    'Archivo Black, sans-serif',
               fontWeight:    700,
               letterSpacing: '0.08em',
               textTransform: 'uppercase',
@@ -150,7 +150,7 @@ export default function ConfirmModal({
               borderRadius:  '7px',
               color:         confirmColor,
               fontSize:      '12px',
-              fontFamily:    'Barlow Condensed, sans-serif',
+              fontFamily:    'Archivo Black, sans-serif',
               fontWeight:    800,
               letterSpacing: '0.08em',
               textTransform: 'uppercase',

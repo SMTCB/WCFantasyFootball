@@ -42,10 +42,10 @@ function formatTimeLeft(ms) {
 }
 
 function urgencyColor(msLeft) {
-  if (msLeft <= 0)              return '#F03A3A';   // locked — red
-  if (msLeft <= 30 * 60 * 1000) return '#F03A3A';   // ≤ 30 min — red
-  if (msLeft <= 2 * 3600 * 1000) return '#F0B400';  // ≤ 2 h — amber
-  return '#3D4B5C';                                  // > 2 h — dim
+  if (msLeft <= 0)              return 'var(--danger)';   // locked — red
+  if (msLeft <= 30 * 60 * 1000) return 'var(--danger)';   // ≤ 30 min — red
+  if (msLeft <= 2 * 3600 * 1000) return 'var(--gold)';  // ≤ 2 h — amber
+  return 'var(--mute)';                                  // > 2 h — dim
 }
 
 export function useDeadlineCountdown() {
@@ -53,7 +53,7 @@ export function useDeadlineCountdown() {
     timeLeft:   '',
     isLocked:   false,
     deadlineAt: null,
-    color:      '#3D4B5C',
+    color:      'var(--mute)',
     label:      '',
     loading:    true,
   });

@@ -1,48 +1,91 @@
 @import "tailwindcss";
 
 @theme {
-  /* ── Forza Backgrounds ───────────────────────────────────── */
-  --color-bg:          #080A0E;
-  --color-surface:     #0D1117;
-  --color-surface-2:   #141A24;
-  --color-surface-3:   #1C2333;
-  --color-surface-elevated: #1C2333;
+  /* ── FORZAKIT Surfaces ───────────────────────────────────────── */
+  --color-ink:   #080A0E;
+  --color-ink-2: #0F1218;
+  --color-ink-3: #161B25;
+  --color-rule:  #1E2530;
 
-  /* ── Forza Borders ──────────────────────────────────────── */
-  --color-border:   rgba(255,255,255,0.07);
-  --color-border-2: rgba(255,255,255,0.12);
+  /* ── Backward-compat aliases ─────────────────────────────────── */
+  --color-bg:               #080A0E;
+  --color-surface:          #0F1218;
+  --color-surface-2:        #161B25;
+  --color-surface-3:        #161B25;
+  --color-surface-elevated: #161B25;
+  --color-border:           #1E2530;
+  --color-border-2:         #1E2530;
 
-  /* ── Forza Text ─────────────────────────────────────────── */
-  --color-text-primary:   #F0F2F5;
-  --color-text-secondary: #7D8A96;
+  /* ── Foreground ─────────────────────────────────────────────── */
+  --color-paper: #F2EEE5;
+  --color-mute:  #8B95A1;
+
+  /* ── Backward-compat text aliases ───────────────────────────── */
+  --color-text-primary:   #F2EEE5;
+  --color-text-secondary: #8B95A1;
   --color-text-tertiary:  #3D4B5C;
 
-  /* ── Forza Accents ──────────────────────────────────────── */
-  --color-cyan:     #00C4E8;
-  --color-gold:     #F0B400;
-  --color-positive: #18C96B;
-  --color-negative: #F03A3A;
-  --color-live:     #F03A3A;
-  --color-purple:   #9D5FF5;
+  /* ── Accents ────────────────────────────────────────────────── */
+  --color-cyan:     #00B4D8;
+  --color-gold:     #E0A800;
+  --color-positive: #22C55E;
+  --color-warn:     #F59E0B;
+  --color-danger:   #EF4444;
 
-  /* ── Typography ─────────────────────────────────────────── */
-  --font-display: 'Barlow Condensed', system-ui, sans-serif;
-  --font-body:    'DM Sans', system-ui, sans-serif;
-  --font-inter:   'DM Sans', system-ui, sans-serif;
+  /* ── Backward-compat accent aliases ─────────────────────────── */
+  --color-negative: #EF4444;
+  --color-live:     #EF4444;
+  --color-purple:   #A855F7;
+
+  /* ── Position tones ─────────────────────────────────────────── */
+  --color-pos-gk:  #A855F7;
+  --color-pos-def: #00B4D8;
+  --color-pos-mid: #E0A800;
+  --color-pos-fwd: #EF4444;
+
+  /* ── Typography ─────────────────────────────────────────────── */
+  --font-display: 'Archivo Black', sans-serif;
+  --font-body:    'Archivo', sans-serif;
+  --font-mono:    'JetBrains Mono', monospace;
+
+  /* ── Backward-compat font aliases ───────────────────────────── */
+  --font-inter: 'Archivo', sans-serif;
+
+  /* ── Radii — keep sharp ─────────────────────────────────────── */
+  --radius-sm: 2px;
+  --radius-md: 4px;
 }
 
-/* ── Global Base ─────────────────────────────────────────────── */
+/* ── CSS custom properties (non-Tailwind — used in inline styles) ── */
+:root {
+  --ink:      #080A0E;
+  --ink-2:    #0F1218;
+  --ink-3:    #161B25;
+  --rule:     #1E2530;
+  --paper:    #F2EEE5;
+  --mute:     #8B95A1;
+  --cyan:     #00B4D8;
+  --gold:     #E0A800;
+  --positive: #22C55E;
+  --warn:     #F59E0B;
+  --danger:   #EF4444;
+  --pos-gk:   #A855F7;
+  --pos-def:  #00B4D8;
+  --pos-mid:  #E0A800;
+  --pos-fwd:  #EF4444;
+}
+
+/* ── Global Base ─────────────────────────────────────────────────── */
 :root {
   background-color: #080A0E;
-  color: #F0F2F5;
-  font-family: 'DM Sans', system-ui, sans-serif;
+  color: #F2EEE5;
+  font-family: 'Archivo', sans-serif;
   color-scheme: dark;
 }
 
 html {
   height: 100%;
   overflow-x: hidden;
-  /* iOS momentum scroll */
   -webkit-overflow-scrolling: touch;
 }
 
@@ -54,11 +97,10 @@ body {
   touch-action: manipulation;
   overscroll-behavior-y: none;
   overflow-x: hidden;
-  /* Safe area support */
   padding-bottom: env(safe-area-inset-bottom);
 }
 
-/* ── Scrollbar ───────────────────────────────────────────────── */
+/* ── Scrollbar ───────────────────────────────────────────────────── */
 ::-webkit-scrollbar { display: none; }
 * {
   -ms-overflow-style: none;
@@ -66,7 +108,7 @@ body {
   box-sizing: border-box;
 }
 
-/* ── Safe-area helpers ────────────────────────────────────────── */
+/* ── Safe-area helpers ────────────────────────────────────────────── */
 .safe-bottom {
   padding-bottom: max(12px, env(safe-area-inset-bottom));
 }
@@ -74,64 +116,98 @@ body {
   padding-bottom: env(safe-area-inset-bottom);
 }
 
-/* ── Forza Typography ─────────────────────────────────────────── */
+/* ── FORZAKIT Typography ──────────────────────────────────────────── */
+
+/* Archivo Black: headlines, names, numbers that matter */
+.fk-display {
+  font-family: 'Archivo Black', sans-serif;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: -0.02em;
+  line-height: 0.9;
+}
+
+/* JetBrains Mono: labels, metadata, eyebrows, buttons */
+.fk-mono {
+  font-family: 'JetBrains Mono', monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+}
+
+/* JetBrains Mono eyebrow — always above a page title */
+.fk-eyebrow {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--mute);
+  font-weight: 500;
+}
+
+/* 1px rule divider */
+.fk-rule {
+  height: 1px;
+  background: var(--rule);
+  border: 0;
+}
+
+/* ── Legacy fz- classes — remapped to new fonts ──────────────────── */
 .fz-display {
-  font-family: 'Barlow Condensed', system-ui, sans-serif;
+  font-family: 'Archivo Black', sans-serif;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: -0.02em;
+}
+
+.fz-heading {
+  font-family: 'Archivo Black', sans-serif;
   font-weight: 900;
   text-transform: uppercase;
   letter-spacing: -0.01em;
 }
 
-.fz-heading {
-  font-family: 'Barlow Condensed', system-ui, sans-serif;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
-
 .fz-label {
-  font-family: 'DM Sans', system-ui, sans-serif;
-  font-weight: 600;
+  font-family: 'JetBrains Mono', monospace;
   font-size: 10px;
   text-transform: uppercase;
-  letter-spacing: 0.14em;
-  color: #7D8A96;
+  letter-spacing: 0.18em;
+  color: var(--mute);
 }
 
 .fz-num {
-  font-family: 'Barlow Condensed', system-ui, sans-serif;
+  font-family: 'Archivo Black', sans-serif;
   font-weight: 900;
   font-variant-numeric: tabular-nums;
 }
 
-/* ── Forza Surface Utilities ─────────────────────────────────── */
+/* ── Surface Utilities ───────────────────────────────────────────── */
 .fz-surface {
-  background: #0D1117;
-  border: 1px solid rgba(255,255,255,0.07);
+  background: var(--ink-2);
+  border: 1px solid var(--rule);
 }
 
 .fz-surface-elevated {
-  background: #1C2333;
-  border: 1px solid rgba(255,255,255,0.09);
+  background: var(--ink-3);
+  border: 1px solid var(--rule);
 }
 
 .fz-card {
-  background: #0D1117;
-  border: 1px solid rgba(255,255,255,0.07);
+  background: var(--ink-2);
+  border: 1px solid var(--rule);
   border-radius: 4px;
 }
 
-/* ── Forza Accent Lines ──────────────────────────────────────── */
+/* ── Accent Lines ────────────────────────────────────────────────── */
 .fz-accentline {
-  border-left: 2px solid #00C4E8;
+  border-left: 3px solid var(--cyan);
   padding-left: 12px;
 }
 .fz-accentline-gold {
-  border-left: 2px solid #F0B400;
+  border-left: 3px solid var(--gold);
   padding-left: 12px;
 }
 
-/* ── Tooltip (hover) ─────────────────────────────────────────── */
+/* ── Tooltip (hover) ─────────────────────────────────────────────── */
 .fz-tooltip {
   position: relative;
 }
@@ -141,39 +217,39 @@ body {
   bottom: calc(100% + 6px);
   left: 50%;
   transform: translateX(-50%);
-  background: #1C2333;
-  border: 1px solid rgba(255,255,255,0.12);
-  color: #fff;
-  font-family: 'DM Sans', sans-serif;
-  font-size: 11px;
-  font-weight: 500;
+  background: var(--ink-3);
+  border: 1px solid var(--rule);
+  color: var(--paper);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
   white-space: nowrap;
   padding: 4px 8px;
-  border-radius: 3px;
+  border-radius: 2px;
   z-index: 100;
   pointer-events: none;
 }
 
-/* ── Position colour coding ──────────────────────────────────── */
-.pos-gk  { background: rgba(240,180,0,0.14);  color: #F0B400; }
-.pos-def { background: rgba(0,196,232,0.14);  color: #00C4E8; }
-.pos-mid { background: rgba(157,95,245,0.14); color: #9D5FF5; }
-.pos-fwd { background: rgba(240,58,58,0.14);  color: #F03A3A; }
+/* ── Position colour coding ──────────────────────────────────────── */
+.pos-gk  { background: rgba(168,85,247,0.14);  color: var(--pos-gk); }
+.pos-def { background: rgba(0,180,216,0.14);   color: var(--pos-def); }
+.pos-mid { background: rgba(224,168,0,0.14);   color: var(--pos-mid); }
+.pos-fwd { background: rgba(239,68,68,0.14);   color: var(--pos-fwd); }
 
-/* ── Status Pills ─────────────────────────────────────────────── */
+/* ── Status Pills ─────────────────────────────────────────────────── */
 .fz-pill {
   display: inline-flex;
   align-items: center;
-  font-family: 'Barlow Condensed', sans-serif;
-  font-weight: 800;
+  font-family: 'JetBrains Mono', monospace;
   font-size: 9px;
   text-transform: uppercase;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.14em;
   padding: 2px 6px;
   border-radius: 2px;
 }
 
-/* ── Animations ──────────────────────────────────────────────── */
+/* ── Animations ──────────────────────────────────────────────────── */
 @keyframes livePulse {
   0%   { opacity: 1; transform: scale(1); }
   50%  { opacity: 0.45; transform: scale(1.25); }
@@ -208,7 +284,7 @@ body {
 }
 
 @keyframes pointsFlash {
-  0%   { color: #00C4E8; transform: scale(1.2); }
+  0%   { color: var(--cyan); transform: scale(1.2); }
   100% { color: inherit; transform: scale(1); }
 }
 .animate-points-flash {
@@ -220,7 +296,7 @@ body {
   100% { background-position: 200% 0; }
 }
 .animate-shimmer {
-  background: linear-gradient(90deg, #141A24 25%, #1C2333 50%, #141A24 75%);
+  background: linear-gradient(90deg, var(--ink-2) 25%, var(--ink-3) 50%, var(--ink-2) 75%);
   background-size: 200% 100%;
   animation: shimmer 1.5s ease-in-out infinite;
 }
@@ -230,33 +306,33 @@ body {
   100% { transform: scale(3); opacity: 0; }
 }
 
-/* ── Live badge ──────────────────────────────────────────────── */
+/* ── Live badge ──────────────────────────────────────────────────── */
 @keyframes liveRing {
-  0%   { box-shadow: 0 0 0 0 rgba(240,58,58,0.6); }
-  70%  { box-shadow: 0 0 0 6px rgba(240,58,58,0); }
-  100% { box-shadow: 0 0 0 0 rgba(240,58,58,0); }
+  0%   { box-shadow: 0 0 0 0 rgba(239,68,68,0.6); }
+  70%  { box-shadow: 0 0 0 6px rgba(239,68,68,0); }
+  100% { box-shadow: 0 0 0 0 rgba(239,68,68,0); }
 }
 .animate-live-ring {
   animation: liveRing 1.8s ease-out infinite;
 }
 
-/* ── Tabular nums ────────────────────────────────────────────── */
+/* ── Tabular nums ────────────────────────────────────────────────── */
 .tabular-nums {
   font-variant-numeric: tabular-nums;
 }
 
-/* ── Glow helpers ────────────────────────────────────────────── */
-.glow-cyan  { box-shadow: 0 0 16px rgba(0,196,232,0.28); }
-.glow-gold  { box-shadow: 0 0 16px rgba(240,180,0,0.28); }
-.glow-green { box-shadow: 0 0 16px rgba(24,201,107,0.28); }
+/* ── Glow helpers ────────────────────────────────────────────────── */
+.glow-cyan  { box-shadow: 0 0 16px rgba(0,180,216,0.28); }
+.glow-gold  { box-shadow: 0 0 16px rgba(224,168,0,0.28); }
+.glow-green { box-shadow: 0 0 16px rgba(34,197,94,0.28); }
 
-/* ── Interactive base ─────────────────────────────────────────── */
+/* ── Interactive base ─────────────────────────────────────────────── */
 button, a {
   -webkit-tap-highlight-color: transparent;
 }
 
-/* ── Focus visible ────────────────────────────────────────────── */
+/* ── Focus visible ────────────────────────────────────────────────── */
 :focus-visible {
-  outline: 2px solid rgba(0,196,232,0.6);
+  outline: 2px solid rgba(0,180,216,0.6);
   outline-offset: 2px;
 }

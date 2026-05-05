@@ -24,13 +24,13 @@ export default function ProtectedRoute({ children }) {
         <div className="text-center">
           <div
             className="text-[32px] font-black uppercase tracking-tight mb-2"
-            style={{ fontFamily: 'Barlow Condensed, sans-serif', color: '#F0F2F5' }}
+            style={{ fontFamily: 'Archivo Black, sans-serif', color: 'var(--paper)' }}
           >
-            Forza<span style={{ color: '#00C4E8' }}>Kit</span>
+            Forza<span style={{ color: 'var(--cyan)' }}>Kit</span>
           </div>
           <div
             className="text-[10px] font-black uppercase tracking-[0.2em] animate-pulse"
-            style={{ color: '#3D4B5C', fontFamily: 'Barlow Condensed, sans-serif' }}
+            style={{ color: 'var(--mute)', fontFamily: 'Archivo Black, sans-serif' }}
           >
             Loading…
           </div>

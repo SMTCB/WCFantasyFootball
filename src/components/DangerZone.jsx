@@ -11,7 +11,7 @@ export default function DangerZone({ players = [], onSelectPlayer }) {
         <div className="w-1.5 h-1.5 rounded-full bg-positive shrink-0" />
         <div
           className="text-[11px] font-semibold text-positive/70 uppercase tracking-widest"
-          style={{ fontFamily: 'DM Sans, sans-serif' }}
+          style={{ fontFamily: 'Archivo, sans-serif' }}
         >
           All clear — No injury alerts
         </div>
@@ -29,7 +29,7 @@ export default function DangerZone({ players = [], onSelectPlayer }) {
         <div className="w-0.5 h-4 bg-negative shrink-0 rounded-full" />
         <span
           className="text-[11px] font-black uppercase tracking-[0.2em] text-negative"
-          style={{ fontFamily: 'Barlow Condensed, sans-serif' }}
+          style={{ fontFamily: 'Archivo Black, sans-serif' }}
         >
           Danger Zone
         </span>
@@ -64,13 +64,13 @@ export default function DangerZone({ players = [], onSelectPlayer }) {
               <div className="text-left">
                 <div
                   className="text-[11px] font-bold text-white leading-tight"
-                  style={{ fontFamily: 'DM Sans, sans-serif' }}
+                  style={{ fontFamily: 'Archivo, sans-serif' }}
                 >
                   {player.name.split(' ').pop()}
                 </div>
                 <div
                   className="text-[9px] font-black uppercase tracking-wider"
-                  style={{ color: cfg.color, fontFamily: 'Barlow Condensed, sans-serif' }}
+                  style={{ color: cfg.color, fontFamily: 'Archivo Black, sans-serif' }}
                 >
                   {cfg.label}
                 </div>

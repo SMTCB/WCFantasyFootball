@@ -69,7 +69,7 @@ function buildSteps({ competitionName, budgetTotal, squadSize }) {
 // ── Confetti particle (pure CSS) ─────────────────────────────────────────────
 function Confetti() {
   const pieces = Array.from({ length: 28 }, (_, i) => i);
-  const colors = ['#F0B400', '#18C96B', '#F03A3A', '#3B9EFF', '#F0F2F5'];
+  const colors = ['var(--gold)', 'var(--positive)', 'var(--danger)', '#3B9EFF', 'var(--paper)'];
   return (
     <div className="pointer-events-none absolute inset-0 overflow-hidden">
       {pieces.map(i => (
@@ -110,7 +110,7 @@ function ProgressDots({ current, total }) {
             width:      i === current ? '20px' : '6px',
             height:     '6px',
             borderRadius: '3px',
-            background: i === current ? '#F0B400' : 'rgba(255,255,255,0.2)',
+            background: i === current ? 'var(--gold)' : 'rgba(255,255,255,0.2)',
             transition: 'all 0.3s ease',
           }}
         />
@@ -207,7 +207,7 @@ export default function OnboardingWizard({ onComplete, onSkip, config = {} }) {
           position:     'relative',
           width:        '100%',
           maxWidth:     '440px',
-          background:   '#0D1117',
+          background:   'var(--ink-2)',
           border:       '1px solid rgba(255,255,255,0.08)',
           borderRadius: '16px',
           padding:      '40px 36px 32px',
@@ -224,7 +224,7 @@ export default function OnboardingWizard({ onComplete, onSkip, config = {} }) {
                 fontSize:      '11px',
                 color:         'rgba(255,255,255,0.35)',
                 letterSpacing: '0.05em',
-                fontFamily:    'Barlow Condensed, sans-serif',
+                fontFamily:    'Archivo Black, sans-serif',
                 background:    'none',
                 border:        'none',
                 cursor:        'pointer',
@@ -252,9 +252,9 @@ export default function OnboardingWizard({ onComplete, onSkip, config = {} }) {
         <div
           style={{
             fontSize:      '10px',
-            fontFamily:    'Barlow Condensed, sans-serif',
+            fontFamily:    'Archivo Black, sans-serif',
             letterSpacing: '0.15em',
-            color:         '#F0B400',
+            color:         'var(--gold)',
             textTransform: 'uppercase',
             marginBottom:  '8px',
           }}
@@ -266,10 +266,10 @@ export default function OnboardingWizard({ onComplete, onSkip, config = {} }) {
         <h1
           style={{
             fontSize:     'clamp(32px, 8vw, 44px)',
-            fontFamily:   'Barlow Condensed, sans-serif',
+            fontFamily:   'Archivo Black, sans-serif',
             fontWeight:   900,
             lineHeight:   1.05,
-            color:        '#F0F2F5',
+            color:        'var(--paper)',
             textTransform: 'uppercase',
             letterSpacing: '-0.01em',
             marginBottom: '20px',
@@ -297,10 +297,10 @@ export default function OnboardingWizard({ onComplete, onSkip, config = {} }) {
           style={{
             width:         '100%',
             padding:       '14px 24px',
-            background:    '#F0B400',
-            color:         '#0D1117',
+            background:    'var(--gold)',
+            color:         'var(--ink-2)',
             fontSize:      '13px',
-            fontFamily:    'Barlow Condensed, sans-serif',
+            fontFamily:    'Archivo Black, sans-serif',
             fontWeight:    800,
             letterSpacing: '0.08em',
             textTransform: 'uppercase',
@@ -322,7 +322,7 @@ export default function OnboardingWizard({ onComplete, onSkip, config = {} }) {
             marginTop:     '20px',
             fontSize:      '10px',
             color:         'rgba(255,255,255,0.2)',
-            fontFamily:    'Barlow Condensed, sans-serif',
+            fontFamily:    'Archivo Black, sans-serif',
             letterSpacing: '0.1em',
           }}
         >
@@ -336,7 +336,7 @@ export default function OnboardingWizard({ onComplete, onSkip, config = {} }) {
           marginTop:     '20px',
           fontSize:      '11px',
           color:         'rgba(255,255,255,0.18)',
-          fontFamily:    'Barlow Condensed, sans-serif',
+          fontFamily:    'Archivo Black, sans-serif',
           letterSpacing: '0.08em',
         }}
       >

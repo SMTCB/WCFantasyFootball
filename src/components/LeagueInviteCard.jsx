@@ -68,7 +68,7 @@ export default function LeagueInviteCard({ league, onDone }) {
     setExporting(true);
     try {
       const canvas = await html2canvas(cardRef.current, {
-        backgroundColor: '#0D1117',
+        backgroundColor: 'var(--ink-2)',
         scale: 2,
         logging: false,
       });
@@ -130,25 +130,25 @@ export default function LeagueInviteCard({ league, onDone }) {
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '28px' }}>
             <span style={{ fontSize: '28px' }}>🏆</span>
             <div>
-              <div style={{ fontSize: '10px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '0.18em', color: '#18C96B', textTransform: 'uppercase', fontWeight: 800 }}>
+              <div style={{ fontSize: '10px', fontFamily: 'Archivo Black, sans-serif', letterSpacing: '0.18em', color: 'var(--positive)', textTransform: 'uppercase', fontWeight: 800 }}>
                 ForzaKit · {tournamentName}
               </div>
-              <div style={{ fontSize: '11px', color: 'rgba(240,242,245,0.4)', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '0.08em' }}>
+              <div style={{ fontSize: '11px', color: 'rgba(240,242,245,0.4)', fontFamily: 'Archivo Black, sans-serif', letterSpacing: '0.08em' }}>
                 Fantasy Football
               </div>
             </div>
           </div>
 
           {/* League created */}
-          <div style={{ fontSize: '11px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '0.14em', color: '#18C96B', textTransform: 'uppercase', marginBottom: '6px' }}>
+          <div style={{ fontSize: '11px', fontFamily: 'Archivo Black, sans-serif', letterSpacing: '0.14em', color: 'var(--positive)', textTransform: 'uppercase', marginBottom: '6px' }}>
             League created ✓
           </div>
           <div style={{
             fontSize: 'clamp(24px, 7vw, 34px)',
-            fontFamily: 'Barlow Condensed, sans-serif',
+            fontFamily: 'Archivo Black, sans-serif',
             fontWeight: 900,
             textTransform: 'uppercase',
-            color: '#F0F2F5',
+            color: 'var(--paper)',
             lineHeight: 1.05,
             letterSpacing: '-0.01em',
             marginBottom: '28px',
@@ -157,7 +157,7 @@ export default function LeagueInviteCard({ league, onDone }) {
           </div>
 
           {/* Join code */}
-          <div style={{ marginBottom: '8px', fontSize: '10px', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '0.15em', color: 'rgba(240,242,245,0.4)', textTransform: 'uppercase' }}>
+          <div style={{ marginBottom: '8px', fontSize: '10px', fontFamily: 'Archivo Black, sans-serif', letterSpacing: '0.15em', color: 'rgba(240,242,245,0.4)', textTransform: 'uppercase' }}>
             Join Code
           </div>
           <button
@@ -181,10 +181,10 @@ export default function LeagueInviteCard({ league, onDone }) {
           >
             <span style={{
               fontSize:     '36px',
-              fontFamily:   'Barlow Condensed, sans-serif',
+              fontFamily:   'Archivo Black, sans-serif',
               fontWeight:   900,
               letterSpacing: '0.18em',
-              color:        '#18C96B',
+              color:        'var(--positive)',
               lineHeight:   1,
             }}>
               {league.join_code}
@@ -193,21 +193,21 @@ export default function LeagueInviteCard({ league, onDone }) {
               {copied ? '✓' : '📋'}
             </span>
           </button>
-          <div style={{ fontSize: '11px', color: 'rgba(240,242,245,0.3)', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '0.05em', textAlign: 'center' }}>
+          <div style={{ fontSize: '11px', color: 'rgba(240,242,245,0.3)', fontFamily: 'Archivo Black, sans-serif', letterSpacing: '0.05em', textAlign: 'center' }}>
             {copied ? '✓ Copied!' : 'Tap code to copy'}
           </div>
 
           {/* Format badge */}
           <div style={{ marginTop: '20px', display: 'flex', alignItems: 'center', gap: '8px' }}>
             <div style={{
-              fontSize: '9px', fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 800,
+              fontSize: '9px', fontFamily: 'Archivo Black, sans-serif', fontWeight: 800,
               letterSpacing: '0.14em', textTransform: 'uppercase',
               padding: '3px 8px', borderRadius: '4px',
               background: 'rgba(255,255,255,0.06)', color: 'rgba(240,242,245,0.4)',
             }}>
               {league.format === 'noduplicate' ? 'Draft' : 'Classic'} format
             </div>
-            <div style={{ fontSize: '9px', color: 'rgba(240,242,245,0.25)', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '0.08em' }}>
+            <div style={{ fontSize: '9px', color: 'rgba(240,242,245,0.25)', fontFamily: 'Archivo Black, sans-serif', letterSpacing: '0.08em' }}>
               · Up to 10 managers
             </div>
           </div>
@@ -231,7 +231,7 @@ export default function LeagueInviteCard({ league, onDone }) {
               borderRadius:   '10px',
               color:          '#fff',
               fontSize:       '13px',
-              fontFamily:     'Barlow Condensed, sans-serif',
+              fontFamily:     'Archivo Black, sans-serif',
               fontWeight:     800,
               letterSpacing:  '0.08em',
               textTransform:  'uppercase',
@@ -255,9 +255,9 @@ export default function LeagueInviteCard({ league, onDone }) {
                 background:    'rgba(255,255,255,0.06)',
                 border:        '1px solid rgba(255,255,255,0.10)',
                 borderRadius:  '10px',
-                color:         linkCopied ? '#18C96B' : 'rgba(240,242,245,0.7)',
+                color:         linkCopied ? 'var(--positive)' : 'rgba(240,242,245,0.7)',
                 fontSize:      '12px',
-                fontFamily:    'Barlow Condensed, sans-serif',
+                fontFamily:    'Archivo Black, sans-serif',
                 fontWeight:    700,
                 letterSpacing: '0.07em',
                 textTransform: 'uppercase',
@@ -279,7 +279,7 @@ export default function LeagueInviteCard({ league, onDone }) {
                 borderRadius:  '10px',
                 color:         'rgba(240,242,245,0.7)',
                 fontSize:      '12px',
-                fontFamily:    'Barlow Condensed, sans-serif',
+                fontFamily:    'Archivo Black, sans-serif',
                 fontWeight:    700,
                 letterSpacing: '0.07em',
                 textTransform: 'uppercase',
@@ -302,7 +302,7 @@ export default function LeagueInviteCard({ league, onDone }) {
               borderRadius:   '10px',
               color:          'rgba(240,242,245,0.45)',
               fontSize:       '12px',
-              fontFamily:     'Barlow Condensed, sans-serif',
+              fontFamily:     'Archivo Black, sans-serif',
               fontWeight:     700,
               letterSpacing:  '0.08em',
               textTransform:  'uppercase',
@@ -310,7 +310,7 @@ export default function LeagueInviteCard({ league, onDone }) {
               transition:     'color 0.15s',
               marginTop:      '4px',
             }}
-            onMouseEnter={e => e.currentTarget.style.color = '#F0F2F5'}
+            onMouseEnter={e => e.currentTarget.style.color = 'var(--paper)'}
             onMouseLeave={e => e.currentTarget.style.color = 'rgba(240,242,245,0.45)'}
           >
             Go to my league →

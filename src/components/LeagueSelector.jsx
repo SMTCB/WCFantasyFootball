@@ -32,7 +32,7 @@ export default function LeagueSelector({ value, onChange }) {
     return (
       <span
         className="text-[11px] font-black uppercase tracking-wide px-2 py-1 rounded"
-        style={{ background: 'rgba(0,196,232,0.10)', color: '#00C4E8', fontFamily: 'Barlow Condensed, sans-serif' }}
+        style={{ background: 'rgba(0,196,232,0.10)', color: 'var(--cyan)', fontFamily: 'Archivo Black, sans-serif' }}
       >
         {leagues[0].name}
       </span>
@@ -47,15 +47,15 @@ export default function LeagueSelector({ value, onChange }) {
       style={{
         background:   'rgba(0,196,232,0.10)',
         border:       '1px solid rgba(0,196,232,0.25)',
-        color:        '#00C4E8',
-        fontFamily:   'Barlow Condensed, sans-serif',
+        color:        'var(--cyan)',
+        fontFamily:   'Archivo Black, sans-serif',
         outline:      'none',
         letterSpacing: '0.06em',
       }}
     >
-      <option value="" disabled style={{ background: '#0D1117' }}>Select league…</option>
+      <option value="" disabled style={{ background: 'var(--ink-2)' }}>Select league…</option>
       {leagues.map(l => (
-        <option key={l.id} value={l.id} style={{ background: '#0D1117', color: '#F0F2F5' }}>
+        <option key={l.id} value={l.id} style={{ background: 'var(--ink-2)', color: 'var(--paper)' }}>
           {l.name}
         </option>
       ))}

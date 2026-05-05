@@ -94,12 +94,12 @@ export default class ErrorBoundary extends Component {
         {/* Heading */}
         <div
           style={{
-            fontFamily: 'Barlow Condensed, sans-serif',
+            fontFamily: 'Archivo Black, sans-serif',
             fontSize: '22px',
             fontWeight: 900,
             textTransform: 'uppercase',
             letterSpacing: '0.05em',
-            color: '#F0F2F5',
+            color: 'var(--paper)',
             marginBottom: '8px',
           }}
         >
@@ -110,8 +110,8 @@ export default class ErrorBoundary extends Component {
         <div
           style={{
             fontSize: '13px',
-            color: '#7D8A96',
-            fontFamily: 'DM Sans, sans-serif',
+            color: 'var(--mute)',
+            fontFamily: 'Archivo, sans-serif',
             maxWidth: '300px',
             lineHeight: 1.5,
             marginBottom: '28px',
@@ -140,8 +140,8 @@ export default class ErrorBoundary extends Component {
                 fontWeight: 800,
                 letterSpacing: '0.15em',
                 textTransform: 'uppercase',
-                color: '#F03A3A',
-                fontFamily: 'Barlow Condensed, sans-serif',
+                color: 'var(--danger)',
+                fontFamily: 'Archivo Black, sans-serif',
                 marginBottom: '6px',
               }}
             >
@@ -150,7 +150,7 @@ export default class ErrorBoundary extends Component {
             <pre
               style={{
                 fontSize: '11px',
-                color: '#F03A3A',
+                color: 'var(--danger)',
                 fontFamily: 'monospace',
                 whiteSpace: 'pre-wrap',
                 wordBreak: 'break-word',
@@ -168,7 +168,7 @@ export default class ErrorBoundary extends Component {
             onClick={this.handleReload}
             style={{
               padding: '12px 28px',
-              background: '#00C4E8',
+              background: 'var(--cyan)',
               color: '#000',
               border: 'none',
               borderRadius: '4px',
@@ -177,7 +177,7 @@ export default class ErrorBoundary extends Component {
               letterSpacing: '0.12em',
               textTransform: 'uppercase',
               cursor: 'pointer',
-              fontFamily: 'Barlow Condensed, sans-serif',
+              fontFamily: 'Archivo Black, sans-serif',
             }}
           >
             Reload
@@ -187,7 +187,7 @@ export default class ErrorBoundary extends Component {
             style={{
               padding: '12px 28px',
               background: 'transparent',
-              color: '#7D8A96',
+              color: 'var(--mute)',
               border: '1px solid rgba(255,255,255,0.1)',
               borderRadius: '4px',
               fontSize: '11px',
@@ -195,7 +195,7 @@ export default class ErrorBoundary extends Component {
               letterSpacing: '0.12em',
               textTransform: 'uppercase',
               cursor: 'pointer',
-              fontFamily: 'Barlow Condensed, sans-serif',
+              fontFamily: 'Archivo Black, sans-serif',
             }}
           >
             Go Home

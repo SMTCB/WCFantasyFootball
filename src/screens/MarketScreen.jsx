@@ -14,10 +14,10 @@ import ConfirmModal from '../components/ConfirmModal';
 const COUNTRY_LIMIT = 3;
 
 const POS_CONFIG = {
-  GK:  { label: 'GK',  color: '#F0B400', bg: 'rgba(240,180,0,0.14)'  },
-  DEF: { label: 'DEF', color: '#00C4E8', bg: 'rgba(0,196,232,0.14)'  },
-  MID: { label: 'MID', color: '#9D5FF5', bg: 'rgba(157,95,245,0.14)' },
-  FWD: { label: 'FWD', color: '#F03A3A', bg: 'rgba(240,58,58,0.14)'  },
+  GK:  { label: 'GK',  color: 'var(--gold)', bg: 'rgba(240,180,0,0.14)'  },
+  DEF: { label: 'DEF', color: 'var(--cyan)', bg: 'rgba(0,196,232,0.14)'  },
+  MID: { label: 'MID', color: 'var(--pos-gk)', bg: 'rgba(157,95,245,0.14)' },
+  FWD: { label: 'FWD', color: 'var(--danger)', bg: 'rgba(240,58,58,0.14)'  },
 };
 
 const FLAG_MAP = {
@@ -218,7 +218,7 @@ export default function MarketScreen() {
   if (leagues && leagues.length > 1 && !activeLeague) {
     return (
       <div className="min-h-screen bg-bg flex flex-col items-center justify-center px-6 gap-4">
-        <div className="text-[13px] font-black uppercase tracking-widest mb-2" style={{ color: '#7D8A96', fontFamily: 'Barlow Condensed, sans-serif' }}>
+        <div className="text-[13px] font-black uppercase tracking-widest mb-2" style={{ color: 'var(--mute)', fontFamily: 'Archivo Black, sans-serif' }}>
           Select a League
         </div>
         {leagues.map(l => (
@@ -226,7 +226,7 @@ export default function MarketScreen() {
             key={l.id}
             onClick={() => setActiveLeague(l.id)}
             className="w-full max-w-sm px-5 py-4 rounded-lg text-left transition-all active:opacity-70"
-            style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#F0F2F5' }}
+            style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'var(--paper)' }}
           >
             <div className="text-[14px] font-semibold">{l.name}</div>
           </button>
@@ -264,11 +264,11 @@ export default function MarketScreen() {
           <div>
             <div
               className="text-[11px] font-black uppercase tracking-widest"
-              style={{ color: '#F03A3A', fontFamily: 'Barlow Condensed, sans-serif' }}
+              style={{ color: 'var(--danger)', fontFamily: 'Archivo Black, sans-serif' }}
             >
               Transfer Window Closed
             </div>
-            <div className="text-[10px]" style={{ color: '#7D8A96' }}>
+            <div className="text-[10px]" style={{ color: 'var(--mute)' }}>
               Transfers are locked until the matchday results are published.
             </div>
           </div>
@@ -290,14 +290,14 @@ export default function MarketScreen() {
           <div>
             <div
               className="fz-label"
-              style={{ color: isLocked ? '#F03A3A' : '#3D4B5C' }}
+              style={{ color: isLocked ? 'var(--danger)' : 'var(--mute)' }}
             >
               {isLocked ? '🔒 Window Closed' : 'Transfer Window'}
             </div>
             <div className="flex items-center gap-2 mt-0.5">
               <div
                 className="text-[24px] font-black uppercase leading-tight tracking-tight"
-                style={{ fontFamily: 'Barlow Condensed, sans-serif', color: '#F0F2F5' }}
+                style={{ fontFamily: 'Archivo Black, sans-serif', color: 'var(--paper)' }}
               >
                 Player Market
               </div>
@@ -308,28 +308,28 @@ export default function MarketScreen() {
           <div className="flex items-center gap-5">
             {/* Squad count */}
             <div className="text-right">
-              <div className="fz-label" style={{ color: '#3D4B5C' }}>Squad</div>
+              <div className="fz-label" style={{ color: 'var(--mute)' }}>Squad</div>
               <div
                 className="text-[20px] font-black tabular-nums leading-tight"
-                style={{ fontFamily: 'Barlow Condensed, sans-serif', color: squadCount >= squadSize ? '#18C96B' : '#F0F2F5' }}
+                style={{ fontFamily: 'Archivo Black, sans-serif', color: squadCount >= squadSize ? 'var(--positive)' : 'var(--paper)' }}
               >
                 {squadCount}
-                <span className="text-[12px] font-normal" style={{ color: '#3D4B5C' }}>/{squadSize}</span>
+                <span className="text-[12px] font-normal" style={{ color: 'var(--mute)' }}>/{squadSize}</span>
               </div>
             </div>
 
             {/* Budget + empty slots */}
             <div className="text-right" data-tour="market-budget">
-              <div className="fz-label" style={{ color: '#3D4B5C' }}>Budget</div>
+              <div className="fz-label" style={{ color: 'var(--mute)' }}>Budget</div>
               <div
                 className="text-[20px] font-black tabular-nums leading-tight"
-                style={{ fontFamily: 'Barlow Condensed, sans-serif', color: (budget ?? 0) < 5 ? '#F03A3A' : '#00C4E8' }}
+                style={{ fontFamily: 'Archivo Black, sans-serif', color: (budget ?? 0) < 5 ? 'var(--danger)' : 'var(--cyan)' }}
               >
                 ${(budget ?? 0).toFixed(1)}
-                <span className="text-[12px] font-normal" style={{ color: '#3D4B5C' }}>M</span>
+                <span className="text-[12px] font-normal" style={{ color: 'var(--mute)' }}>M</span>
               </div>
               {emptySlots > 0 && (
-                <div className="text-[10px] font-black mt-0.5" style={{ color: '#F0B400', fontFamily: 'Barlow Condensed, sans-serif' }}>
+                <div className="text-[10px] font-black mt-0.5" style={{ color: 'var(--gold)', fontFamily: 'Archivo Black, sans-serif' }}>
                   {emptySlots} empty slot{emptySlots !== 1 ? 's' : ''}
                 </div>
               )}
@@ -365,13 +365,13 @@ export default function MarketScreen() {
                 >
                   <span
                     className="text-[8px] font-black uppercase"
-                    style={{ color: full ? cfg.color : '#3D4B5C', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '0.08em' }}
+                    style={{ color: full ? cfg.color : 'var(--mute)', fontFamily: 'Archivo Black, sans-serif', letterSpacing: '0.08em' }}
                   >
                     {pos}
                   </span>
                   <span
                     className="text-[8px] font-bold tabular-nums"
-                    style={{ color: full ? cfg.color : '#3D4B5C', fontFamily: 'Barlow Condensed, sans-serif' }}
+                    style={{ color: full ? cfg.color : 'var(--mute)', fontFamily: 'Archivo Black, sans-serif' }}
                   >
                     {count}/{max}
                   </span>
@@ -389,7 +389,7 @@ export default function MarketScreen() {
               <span className="text-[8px]">∞</span>
               <span
                 className="text-[8px] font-black uppercase"
-                style={{ color: '#18C96B', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '0.08em' }}
+                style={{ color: 'var(--positive)', fontFamily: 'Archivo Black, sans-serif', letterSpacing: '0.08em' }}
               >
                 WC
               </span>
@@ -406,19 +406,19 @@ export default function MarketScreen() {
           {POS_FILTER_ORDER.map(pos => {
             const isActive = filterPos === pos;
             const cfg = pos !== 'ALL' ? POS_CONFIG[pos] : null;
-            const activeColor = cfg?.color ?? '#F0F2F5';
+            const activeColor = cfg?.color ?? 'var(--paper)';
             return (
               <button
                 key={pos}
                 onClick={() => setFilterPos(pos)}
                 className="flex-1 min-w-0 py-2.5 transition-all duration-150 relative"
                 style={{
-                  fontFamily: 'Barlow Condensed, sans-serif',
+                  fontFamily: 'Archivo Black, sans-serif',
                   fontSize: '11px',
                   fontWeight: 800,
                   letterSpacing: '0.1em',
                   textTransform: 'uppercase',
-                  color: isActive ? activeColor : '#3D4B5C',
+                  color: isActive ? activeColor : 'var(--mute)',
                   background: isActive ? `${activeColor}0F` : 'transparent',
                 }}
               >
@@ -484,7 +484,7 @@ export default function MarketScreen() {
                       background: posCfg.bg,
                       border: `1.5px solid ${posCfg.color}50`,
                       color: posCfg.color,
-                      fontFamily: 'Barlow Condensed, sans-serif',
+                      fontFamily: 'Archivo Black, sans-serif',
                     }}
                   >
                     {p.club?.substring(0, 3)}
@@ -502,14 +502,14 @@ export default function MarketScreen() {
                   <div className="flex items-center gap-1.5 flex-wrap">
                     <span
                       className="text-[13.5px] font-semibold truncate"
-                      style={{ color: '#F0F2F5', fontFamily: 'DM Sans, sans-serif' }}
+                      style={{ color: 'var(--paper)', fontFamily: 'Archivo, sans-serif' }}
                     >
                       {p.name}
                     </span>
                     {isOwned && (
                       <span
                         className="shrink-0 text-[8px] font-black px-1.5 py-0.5 rounded-sm"
-                        style={{ background: 'rgba(0,196,232,0.15)', color: '#00C4E8', fontFamily: 'Barlow Condensed, sans-serif' }}
+                        style={{ background: 'rgba(0,196,232,0.15)', color: 'var(--cyan)', fontFamily: 'Archivo Black, sans-serif' }}
                       >
                         OWNED
                       </span>
@@ -517,7 +517,7 @@ export default function MarketScreen() {
                     {takenByOther && (
                       <span
                         className="shrink-0 text-[8px] font-black px-1.5 py-0.5 rounded-sm"
-                        style={{ background: 'rgba(240,58,58,0.15)', color: '#F03A3A', fontFamily: 'Barlow Condensed, sans-serif' }}
+                        style={{ background: 'rgba(240,58,58,0.15)', color: 'var(--danger)', fontFamily: 'Archivo Black, sans-serif' }}
                       >
                         {ownerName ? `TAKEN — ${ownerName}` : 'TAKEN'}
                       </span>
@@ -525,7 +525,7 @@ export default function MarketScreen() {
                     {isJoker && (
                       <span
                         className="shrink-0 text-[8px] font-black px-1.5 py-0.5 rounded-sm"
-                        style={{ background: 'rgba(157,95,245,0.15)', color: '#9D5FF5', fontFamily: 'Barlow Condensed, sans-serif' }}
+                        style={{ background: 'rgba(157,95,245,0.15)', color: 'var(--pos-gk)', fontFamily: 'Archivo Black, sans-serif' }}
                       >
                         JOKER
                       </span>
@@ -535,15 +535,15 @@ export default function MarketScreen() {
                   <div className="flex items-center gap-2 mt-0.5">
                     <span
                       className="text-[9px] font-black px-1.5 py-[2px] rounded-sm"
-                      style={{ color: posCfg.color, background: posCfg.bg, fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '0.06em' }}
+                      style={{ color: posCfg.color, background: posCfg.bg, fontFamily: 'Archivo Black, sans-serif', letterSpacing: '0.06em' }}
                     >
                       {p.position}
                     </span>
-                    <span className="text-[10px] font-medium" style={{ color: '#3D4B5C' }}>{p.club}</span>
+                    <span className="text-[10px] font-medium" style={{ color: 'var(--mute)' }}>{p.club}</span>
                     {intel?.status && intel.status !== 'fit' && (
                       <span
                         className="text-[8px] font-black px-1 py-0.5 rounded-sm uppercase"
-                        style={{ color: '#F03A3A', background: 'rgba(240,58,58,0.12)', fontFamily: 'Barlow Condensed, sans-serif' }}
+                        style={{ color: 'var(--danger)', background: 'rgba(240,58,58,0.12)', fontFamily: 'Archivo Black, sans-serif' }}
                       >
                         {intel.status}
                       </span>
@@ -556,10 +556,10 @@ export default function MarketScreen() {
                   <div className="text-right">
                     <div
                       className="text-[16px] font-black tabular-nums leading-tight"
-                      style={{ fontFamily: 'Barlow Condensed, sans-serif', color: canAfford || isOwned ? '#F0F2F5' : '#F03A3A' }}
+                      style={{ fontFamily: 'Archivo Black, sans-serif', color: canAfford || isOwned ? 'var(--paper)' : 'var(--danger)' }}
                     >
                       ${p.price}
-                      <span className="text-[10px] font-normal" style={{ color: '#3D4B5C' }}>M</span>
+                      <span className="text-[10px] font-normal" style={{ color: 'var(--mute)' }}>M</span>
                     </div>
                   </div>
 
@@ -569,8 +569,8 @@ export default function MarketScreen() {
                       style={{
                         background: 'rgba(240,58,58,0.07)',
                         border: '1px solid rgba(240,58,58,0.18)',
-                        color: '#F03A3A',
-                        fontFamily: 'Barlow Condensed, sans-serif',
+                        color: 'var(--danger)',
+                        fontFamily: 'Archivo Black, sans-serif',
                         fontSize: '9px',
                         fontWeight: 800,
                         letterSpacing: '0.08em',
@@ -587,9 +587,9 @@ export default function MarketScreen() {
                       className="min-w-[60px] py-2 px-3 rounded-sm transition-all active:scale-95 disabled:opacity-40"
                       style={{
                         background: 'rgba(240,58,58,0.12)',
-                        color: '#F03A3A',
+                        color: 'var(--danger)',
                         border: '1px solid rgba(240,58,58,0.25)',
-                        fontFamily: 'Barlow Condensed, sans-serif',
+                        fontFamily: 'Archivo Black, sans-serif',
                         fontSize: '10px',
                         fontWeight: 800,
                         letterSpacing: '0.08em',
@@ -610,10 +610,10 @@ export default function MarketScreen() {
                       }
                       className="min-w-[60px] py-2 px-3 rounded-sm transition-all active:scale-95"
                       style={{
-                        background: canBuy ? '#18C96B' : 'rgba(255,255,255,0.04)',
-                        color: canBuy ? '#000' : '#3D4B5C',
+                        background: canBuy ? 'var(--positive)' : 'rgba(255,255,255,0.04)',
+                        color: canBuy ? '#000' : 'var(--mute)',
                         border: canBuy ? 'none' : '1px solid rgba(255,255,255,0.07)',
-                        fontFamily: 'Barlow Condensed, sans-serif',
+                        fontFamily: 'Archivo Black, sans-serif',
                         fontSize: '10px',
                         fontWeight: 800,
                         letterSpacing: '0.08em',
@@ -633,7 +633,7 @@ export default function MarketScreen() {
           {filteredPlayers.length === 0 && !loading && (
             <div className="p-12 text-center">
               <div className="text-3xl mb-3 opacity-20">🔍</div>
-              <p className="text-sm font-medium" style={{ color: '#7D8A96' }}>
+              <p className="text-sm font-medium" style={{ color: 'var(--mute)' }}>
                 No players found for this position.
               </p>
             </div>
@@ -648,7 +648,7 @@ export default function MarketScreen() {
       >
         <span
           className="text-[9px] font-semibold uppercase tracking-wider"
-          style={{ color: '#3D4B5C', fontFamily: 'DM Sans, sans-serif' }}
+          style={{ color: 'var(--mute)', fontFamily: 'Archivo, sans-serif' }}
         >
           Max {COUNTRY_LIMIT} per club (Joker exempt) · Max {squadSize} players · ${cfg.budgetTotal}M budget
         </span>

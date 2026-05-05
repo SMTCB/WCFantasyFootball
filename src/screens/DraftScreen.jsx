@@ -7,10 +7,10 @@ import { useRelaxationState } from '../hooks/useRelaxationState';
 import { useLeagueConfig } from '../hooks/useLeagueConfig';
 
 const POS_CONFIG = {
-  GK:  { label: 'GK',  color: '#F0B400', bg: 'rgba(240,180,0,0.14)'  },
-  DEF: { label: 'DEF', color: '#00C4E8', bg: 'rgba(0,196,232,0.14)'  },
-  MID: { label: 'MID', color: '#9D5FF5', bg: 'rgba(157,95,245,0.14)' },
-  FWD: { label: 'FWD', color: '#F03A3A', bg: 'rgba(240,58,58,0.14)'  },
+  GK:  { label: 'GK',  color: 'var(--gold)', bg: 'rgba(240,180,0,0.14)'  },
+  DEF: { label: 'DEF', color: 'var(--cyan)', bg: 'rgba(0,196,232,0.14)'  },
+  MID: { label: 'MID', color: 'var(--pos-gk)', bg: 'rgba(157,95,245,0.14)' },
+  FWD: { label: 'FWD', color: 'var(--danger)', bg: 'rgba(240,58,58,0.14)'  },
 };
 
 const POS_FILTER_ORDER = ['ALL', 'GK', 'DEF', 'MID', 'FWD'];
@@ -358,19 +358,19 @@ export default function DraftScreen() {
         >
           <div className="flex items-center gap-2">
             <span style={{
-              color: relaxation.pressure >= 90 ? '#F03A3A'
+              color: relaxation.pressure >= 90 ? 'var(--danger)'
                    : relaxation.pressure >= 70 ? '#FFC107'
-                   : '#18C96B',
+                   : 'var(--positive)',
             }}>
               {relaxation.pressure >= 90 ? '🔴' : relaxation.pressure >= 70 ? '🟡' : '🟢'}
             </span>
             <span style={{ color: '#9E9E9E' }}>
               Pool pressure{' '}
               <span style={{
-                color: relaxation.pressure >= 90 ? '#F03A3A'
+                color: relaxation.pressure >= 90 ? 'var(--danger)'
                      : relaxation.pressure >= 70 ? '#FFC107'
-                     : '#18C96B',
-                fontFamily: 'Barlow Condensed, sans-serif',
+                     : 'var(--positive)',
+                fontFamily: 'Archivo Black, sans-serif',
                 fontWeight: 900,
               }}>
                 {Math.round(relaxation.pressure)}%
@@ -382,7 +382,7 @@ export default function DraftScreen() {
                 : ' — strict no-repeat'}
             </span>
           </div>
-          <span style={{ color: '#555', fontFamily: 'Barlow Condensed, sans-serif', fontSize: '10px' }}>
+          <span style={{ color: '#555', fontFamily: 'Archivo Black, sans-serif', fontSize: '10px' }}>
             {relaxation.availablePool} players available
           </span>
         </div>

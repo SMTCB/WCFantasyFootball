@@ -14,7 +14,7 @@ export default function PowerToolCard({
   label,
   description,
   isActive = false,
-  accentColor = '#00C4E8',
+  accentColor = 'var(--cyan)',
   bgColor = 'rgba(0,196,232,0.05)',
   borderColor = 'rgba(0,196,232,0.1)',
   onAction
@@ -24,7 +24,7 @@ export default function PowerToolCard({
       onClick={onAction}
       className="w-full h-full min-h-[100px] rounded-lg border transition-all duration-200 hover:scale-105 active:scale-95"
       style={{
-        background: isActive ? `${bgColor}` : '#0D1117',
+        background: isActive ? `${bgColor}` : 'var(--ink-2)',
         border: `1.5px solid ${isActive ? accentColor : borderColor}`,
         padding: '12px',
         display: 'flex',
@@ -48,11 +48,11 @@ export default function PowerToolCard({
       <div
         style={{
           fontSize: '12px',
-          fontFamily: 'Barlow Condensed, sans-serif',
+          fontFamily: 'Archivo Black, sans-serif',
           fontWeight: 900,
           textTransform: 'uppercase',
           letterSpacing: '0.05em',
-          color: isActive ? accentColor : '#F0F2F5',
+          color: isActive ? accentColor : 'var(--paper)',
           lineHeight: 1.2,
           textAlign: 'center',
         }}
@@ -69,7 +69,7 @@ export default function PowerToolCard({
             lineHeight: 1.3,
             textAlign: 'center',
             maxWidth: '100%',
-            fontFamily: 'DM Sans, sans-serif',
+            fontFamily: 'Archivo, sans-serif',
             fontWeight: 400,
           }}
         >

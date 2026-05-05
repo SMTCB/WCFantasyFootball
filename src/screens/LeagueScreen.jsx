@@ -488,14 +488,14 @@ export default function LeagueScreen() {
            <button
              onClick={() => navigate(`/squad?leagueId=${activeLeague?.league_id}`)}
              className="flex-1 py-2.5 rounded-lg flex items-center justify-center gap-2 transition-all active:opacity-70"
-             style={{ background: 'rgba(0,196,232,0.08)', border: '1px solid rgba(0,196,232,0.2)', color: '#00C4E8', fontFamily: 'Barlow Condensed, sans-serif', fontSize: '11px', fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase' }}
+             style={{ background: 'rgba(0,196,232,0.08)', border: '1px solid rgba(0,196,232,0.2)', color: 'var(--cyan)', fontFamily: 'Archivo Black, sans-serif', fontSize: '11px', fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase' }}
            >
              👥 Manage Squad
            </button>
            <button
              onClick={() => navigate(`/market?leagueId=${activeLeague?.league_id}`)}
              className="flex-1 py-2.5 rounded-lg flex items-center justify-center gap-2 transition-all active:opacity-70"
-             style={{ background: 'rgba(24,201,107,0.08)', border: '1px solid rgba(24,201,107,0.2)', color: '#18C96B', fontFamily: 'Barlow Condensed, sans-serif', fontSize: '11px', fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase' }}
+             style={{ background: 'rgba(24,201,107,0.08)', border: '1px solid rgba(24,201,107,0.2)', color: 'var(--positive)', fontFamily: 'Archivo Black, sans-serif', fontSize: '11px', fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase' }}
            >
              🛒 Market
            </button>
@@ -1102,7 +1102,7 @@ export default function LeagueScreen() {
 
       {/* FB-025: Join by code */}
       <div className="mx-4 mt-6 p-5 rounded-xl" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
-        <div className="text-[11px] font-black uppercase tracking-widest mb-1" style={{ fontFamily: 'Barlow Condensed, sans-serif', color: '#3D4B5C' }}>
+        <div className="text-[11px] font-black uppercase tracking-widest mb-1" style={{ fontFamily: 'Archivo Black, sans-serif', color: 'var(--mute)' }}>
           Have an invite code?
         </div>
         <div className="text-[13px] font-bold text-white mb-4">Enter it below to join a friend's league</div>
@@ -1119,9 +1119,9 @@ export default function LeagueScreen() {
               background:    'rgba(255,255,255,0.05)',
               border:        `1px solid ${joinError ? 'rgba(240,58,58,0.5)' : 'rgba(255,255,255,0.10)'}`,
               borderRadius:  '8px',
-              color:         '#F0F2F5',
+              color:         'var(--paper)',
               fontSize:      '16px',
-              fontFamily:    'Barlow Condensed, sans-serif',
+              fontFamily:    'Archivo Black, sans-serif',
               fontWeight:    800,
               letterSpacing: '0.2em',
               textTransform: 'uppercase',
@@ -1133,10 +1133,10 @@ export default function LeagueScreen() {
             disabled={joinLoading || joinCode.trim().length < 4}
             style={{
               padding:       '10px 20px',
-              background:    '#F0B400',
-              color:         '#0D1117',
+              background:    'var(--gold)',
+              color:         'var(--ink-2)',
               fontSize:      '12px',
-              fontFamily:    'Barlow Condensed, sans-serif',
+              fontFamily:    'Archivo Black, sans-serif',
               fontWeight:    800,
               letterSpacing: '0.08em',
               textTransform: 'uppercase',
@@ -1151,7 +1151,7 @@ export default function LeagueScreen() {
           </button>
         </form>
         {joinError && (
-          <div style={{ marginTop: '8px', fontSize: '12px', color: '#F03A3A', fontFamily: 'Barlow Condensed, sans-serif' }}>
+          <div style={{ marginTop: '8px', fontSize: '12px', color: 'var(--danger)', fontFamily: 'Archivo Black, sans-serif' }}>
             ⚠️ {joinError}
           </div>
         )}

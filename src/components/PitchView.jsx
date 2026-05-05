@@ -125,14 +125,14 @@ export default function PitchView({
               >
                 <span
                   className="text-[18px] font-black leading-none"
-                  style={{ color: '#9D5FF5' }}
+                  style={{ color: 'var(--pos-gk)' }}
                 >
                   +
                 </span>
               </div>
               <div
                 className="text-[7.5px] font-black uppercase mt-1.5"
-                style={{ color: 'rgba(157,95,245,0.7)', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '0.1em' }}
+                style={{ color: 'rgba(157,95,245,0.7)', fontFamily: 'Archivo Black, sans-serif', letterSpacing: '0.1em' }}
               >
                 Joker
               </div>
