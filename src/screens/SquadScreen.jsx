@@ -195,12 +195,13 @@ export default function SquadScreen() {
       const mappedPlayers = (players || []).map((p) => {
         const playerIntel = intelData?.find(i => i.player_id === p.id);
         const isStarter   = starterIds.has(p.id);
-        return normalisePlayer({
+        // normalisePlayer strips unknown keys — set isBench after the call
+        const normalised  = normalisePlayer({
           ...p,
-          points:    pointsMap[p.id] ?? 0,
-          intel:     normalizeIntelligence(playerIntel),
-          isBench:   !isStarter,
+          points: pointsMap[p.id] ?? 0,
+          intel:  normalizeIntelligence(playerIntel),
         });
+        return { ...normalised, isBench: !isStarter };
       });
 
       const pitchPlayers = mappedPlayers.filter(p => !p.isBench);
