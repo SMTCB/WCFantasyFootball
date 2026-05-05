@@ -1147,7 +1147,7 @@ export default function SquadScreen() {
 
         {/* ── RIGHT PANE: Tabbed sidebar ────────────────────────────────── */}
         <div
-          className="w-[300px] shrink-0 flex flex-col"
+          className="w-[360px] shrink-0 flex flex-col"
           style={{ borderLeft: '1px solid rgba(255,255,255,0.07)' }}
         >
           {/* Tab strip */}
@@ -1208,56 +1208,9 @@ export default function SquadScreen() {
 
             {/* CHIPS TAB */}
             {desktopTab === 'chips' && (
-              <div className="pt-4 mx-4">
-                <div className="grid grid-cols-2 xl:grid-cols-3 gap-2 mb-4">
-                  <PowerToolCard
-                    
-                    label="Wildcard"
-                    description="Unlimited free transfers this matchday"
-                    isActive={squadData.isWildcard}
-                    accentColor="var(--positive)"
-                    bgColor="rgba(24,201,107,0.08)"
-                    borderColor="rgba(24,201,107,0.15)"
-                    actionLabel={squadData.isWildcard ? 'Active' : 'Activate'}
-                    onAction={() => {
-                      if (!isLocked) {
-                        setConfirm({
-                          title: squadData.isWildcard ? 'Deactivate Wildcard?' : 'Activate Wildcard?',
-                          message: squadData.isWildcard
-                            ? 'You will no longer have unlimited free transfers.'
-                            : 'You\'ll have unlimited free transfers this matchday. 1 use per season.',
-                          onConfirm: () => doToggleChip('wildcard'),
-                          confirmLabel: 'Confirm',
-                          warning: squadData.isWildcard ? null : 'This action cannot be undone this gameweek.',
-                        });
-                      }
-                    }}
-                  />
-                  <PowerToolCard
-                    
-                    label="Triple Cap."
-                    description="3× captain points — or 0 if they don't play"
-                    isActive={squadData.isTripleCaptain}
-                    accentColor="var(--gold)"
-                    bgColor="rgba(240,180,0,0.08)"
-                    borderColor="rgba(240,180,0,0.15)"
-                    actionLabel={squadData.isTripleCaptain ? 'Active' : 'Activate'}
-                    onAction={() => {
-                      if (!isLocked) {
-                        setConfirm({
-                          title: squadData.isTripleCaptain ? 'Deactivate Triple Captain?' : 'Activate Triple Captain?',
-                          message: squadData.isTripleCaptain
-                            ? 'Your captain will earn normal points.'
-                            : 'Your captain will earn 3× points this matchday. 1 use per season.',
-                          onConfirm: () => doToggleChip('triple'),
-                          confirmLabel: 'Confirm',
-                          warning: squadData.isTripleCaptain ? null : 'This action cannot be undone this gameweek.',
-                        });
-                      }
-                    }}
-                  />
-                  <RouletteCard />
-                </div>
+              <div className="pt-2">
+                {CHIPS.map(chip => <ChipCard key={chip.key} chip={chip} />)}
+                <RouletteCard />
                 <JokerCard />
               </div>
             )}

@@ -22,7 +22,7 @@
 import { useState, useEffect, useLayoutEffect } from 'react';
 
 const PADDING = 10;   // px around highlighted element
-const TOOLTIP_W = 300;
+const TOOLTIP_W = 280;
 
 function getRect(target) {
   const el = document.querySelector(`[data-tour="${target}"]`);
@@ -138,13 +138,21 @@ export default function OnboardingTour({ steps, onComplete, onSkip }) {
     if (spaceBelow > 180) {
       tooltipStyle.top  = `${rect.top + rect.height + 12}px`;
     } else {
-      tooltipStyle.bottom = `${vh - rect.top + 12}px`;
+      tooltipStyle.top = `${Math.max(12, rect.top - 12)}px`;
     }
 
-    // Prefer aligned to left of highlight; clamp to viewport
-    const preferredLeft = rect.left;
-    const maxLeft = vw - TOOLTIP_W - 16;
-    tooltipStyle.left = `${Math.max(16, Math.min(preferredLeft, maxLeft))}px`;
+    // If target is in the right half of screen, anchor tooltip to its right edge (opens leftward)
+    const targetCenterX = rect.left + rect.width / 2;
+    if (targetCenterX > vw / 2) {
+      // Right-side target: align tooltip right edge to target right edge, clamp to viewport
+      const rightEdge = rect.left + rect.width + PADDING;
+      const tooltipLeft = Math.min(rightEdge - TOOLTIP_W, vw - TOOLTIP_W - 16);
+      tooltipStyle.left = `${Math.max(16, tooltipLeft)}px`;
+    } else {
+      // Left-side target: align tooltip left edge to target left, clamp to viewport
+      const maxLeft = vw - TOOLTIP_W - 16;
+      tooltipStyle.left = `${Math.max(16, Math.min(rect.left, maxLeft))}px`;
+    }
   } else {
     // Fallback: center screen
     tooltipStyle.top  = '50%';
