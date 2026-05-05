@@ -643,11 +643,19 @@ export default function SquadScreen() {
     if (!leagueId) { alert('No league selected — open your squad from the League screen.'); return; }
     const result = await buy(player);
     if (!result.ok) { alert(result.error); return; }
-    setSquadData(prev => ({
-      ...prev,
-      players: [...prev.players, { ...player, isBench: false, gridClass: '' }],
-      budget:  { ...prev.budget, current: result.budget_remaining },
-    }));
+    setSquadData(prev => {
+      const startersFull = prev.players.length >= 11;
+      return {
+        ...prev,
+        players: startersFull
+          ? prev.players
+          : [...prev.players, { ...player, isBench: false, gridClass: '' }],
+        bench: startersFull
+          ? [...prev.bench, { ...player, isBench: true }]
+          : prev.bench,
+        budget: { ...prev.budget, current: result.budget_remaining },
+      };
+    });
   };
 
   // Player list grouped by position (row variant)
