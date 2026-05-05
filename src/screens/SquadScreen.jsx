@@ -70,8 +70,8 @@ export default function SquadScreen() {
   const [saving,             setSaving]            = useState(false);
   // Mobile tab: 'pitch' | 'squad' | 'tools'
   const [mobileTab,          setMobileTab]         = useState('pitch');
-  // Desktop right-pane tab: 'bench' | 'chips' | 'status'
-  const [desktopTab,         setDesktopTab]        = useState('bench');
+  // Desktop sub-tab: 'pitch' | 'list' | 'chips' | 'status'
+  const [desktopTab,         setDesktopTab]        = useState('pitch');
   // Danger banner dismissed on mobile
   const [dangerDismissed,    setDangerDismissed]   = useState(false);
   // Transfer window lock (from matchday_deadlines table)
@@ -777,31 +777,37 @@ export default function SquadScreen() {
           borderBottom: '1px solid rgba(255,255,255,0.07)',
         }}
       >
+        {/* Left: eyebrow + title only — no extra pills */}
         <div>
-          <div className="fz-label" style={{ color: 'var(--mute)' }}>Tactical Sheet</div>
-          <div className="flex items-center gap-2 mt-0.5">
-            <div className="text-[24px] font-black uppercase leading-tight tracking-tight" style={{ fontFamily: 'Archivo Black, sans-serif', color: 'var(--paper)' }}>
-              My Squad
-            </div>
-            <LeagueSelector value={leagueId} onChange={setLeagueId} />
+          <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 10, color: 'var(--mute)', letterSpacing: '.14em', textTransform: 'uppercase' }}>
+            Tactical Sheet
+          </div>
+          <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 34, color: 'var(--paper)', lineHeight: 1.05, letterSpacing: '-0.01em' }}>
+            My Squad
           </div>
         </div>
-        <div className="flex items-center gap-3">
+
+        {/* Right: KPI cluster — Transfers · Squad · Budget */}
+        <div className="flex items-center gap-5">
           {!deadline.loading && (
             <div className="text-right">
-              <div className="fz-label" style={{ color: 'var(--mute)' }}>Transfers</div>
-              <div
-                className="text-[11px] font-black uppercase leading-tight tabular-nums"
-                style={{ fontFamily: 'Archivo Black, sans-serif', color: deadline.color }}
-              >
+              <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 9, color: 'var(--mute)', letterSpacing: '.14em', textTransform: 'uppercase' }}>Transfers</div>
+              <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 14, color: deadline.color, letterSpacing: '-0.01em' }}>
                 {deadline.isLocked ? 'CLOSED' : deadline.timeLeft}
               </div>
             </div>
           )}
+          <div className="text-right">
+            <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 9, color: 'var(--mute)', letterSpacing: '.14em', textTransform: 'uppercase' }}>Squad</div>
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: 1 }}>
+              <span style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 20, color: 'var(--paper)', lineHeight: 1 }}>{allSquadPlayers.length}</span>
+              <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 11, color: 'var(--mute)', letterSpacing: '.05em' }}>/15</span>
+            </div>
+          </div>
           <div className="text-right" data-tour="squad-budget">
-            <div className="fz-label" style={{ color: 'var(--mute)' }}>Budget</div>
-            <div className="text-[20px] font-black leading-tight tabular-nums" style={{ fontFamily: 'Archivo Black, sans-serif', color: budgetLow ? 'var(--danger)' : 'var(--paper)' }}>
-              ${budgetLeft}M
+            <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 9, color: 'var(--mute)', letterSpacing: '.14em', textTransform: 'uppercase' }}>Budget</div>
+            <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 20, color: budgetLow ? 'var(--danger)' : 'var(--cyan)', lineHeight: 1 }}>
+              £{budgetLeft}M
             </div>
           </div>
         </div>
@@ -848,15 +854,15 @@ export default function SquadScreen() {
 
         {/* ── PITCH TAB ─────────────────────────────────────────────── */}
         {mobileTab === 'pitch' && (
-          <div data-tour="squad-pitch">
+          <div>
             <DangerBanner />
             {isRouletteSpinning && (
               <div className="absolute inset-0 bg-black/70 z-10 flex flex-col items-center justify-center gap-3" style={{ pointerEvents: 'none' }}>
                 <div className="fk-display text-[20px]" style={{color:"var(--gold)"}}>ROULETTE</div>
-                <div className="fz-display text-[14px] text-gold tracking-[0.2em]">Roulette Active…</div>
               </div>
             )}
             <PitchView
+              variant="mobile"
               squad={{ players, captainId, isTripleCaptain: squadData.isTripleCaptain, joker: jokerPlayer }}
               onPlayerClick={isRouletteSpinning ? () => {} : handlePlayerClick}
               selectedPlayerId={selectedPlayer?.id}
@@ -1066,120 +1072,92 @@ export default function SquadScreen() {
       </div>
 
       {/* ══ DESKTOP LAYOUT ══════════════════════════════════════════════════ */}
-      <div className="hidden lg:flex" style={{ height: 'calc(100vh - 57px)' }}>
+      <div className="hidden lg:flex flex-col" style={{ height: 'calc(100vh - 88px)' }}>
 
-        {/* ── LEFT PANE: Pitch + roster list ────────────────────────────── */}
-        <div className="flex-1 min-w-0 overflow-y-auto">
-
-          {/* Roulette overlay */}
-          {isRouletteSpinning && (
-            <div className="fixed inset-0 bg-black/60 z-30 flex items-center justify-center pointer-events-none">
-              <div className="text-center">
-                <div className="fk-display text-[32px] mb-4" style={{color:"var(--gold)"}}>ROULETTE</div>
-                <div className="fz-display text-[20px] text-gold tracking-[0.25em]">Roulette Active…</div>
-              </div>
-            </div>
-          )}
-
-          {/* Pitch view — constrained width so it doesn't fill the entire pane */}
-          <div className="pt-4 pb-2 max-w-[680px] mx-auto w-full">
-            {/* Active chip badges */}
-            {(squadData.isWildcard || squadData.isTripleCaptain) && (
-              <div className="flex gap-2 mb-2 px-4">
-                {squadData.isWildcard && (
-                  <div className="flex items-center gap-1.5 px-2.5 py-1 rounded" style={{ background: 'rgba(24,201,107,0.1)', border: '1px solid rgba(24,201,107,0.25)' }}>
-                    <span className="text-[9px] font-black uppercase tracking-widest" style={{ color: 'var(--positive)' }}>Wildcard Active</span>
-                  </div>
-                )}
-                {squadData.isTripleCaptain && (
-                  <div className="flex items-center gap-1.5 px-2.5 py-1 rounded" style={{ background: 'rgba(240,180,0,0.1)', border: '1px solid rgba(240,180,0,0.25)' }}>
-                    <span className="text-[9px] font-black uppercase tracking-widest" style={{ color: 'var(--gold)' }}>Triple Captain Active</span>
-                  </div>
-                )}
-              </div>
-            )}
-            <PitchView
-              squad={{ players, captainId, isTripleCaptain: squadData.isTripleCaptain, joker: jokerPlayer }}
-              onPlayerClick={isRouletteSpinning ? () => {} : handlePlayerClick}
-              selectedPlayerId={selectedPlayer?.id}
-              swapMode={swapMode}
-              jokerPlayerId={todayJokerId}
-            />
-          </div>
-
-          {/* Player list grouped by position */}
-          <div className="border-t border-border">
-            <div className="px-0">
-              {/* Daily Joker row */}
-              <SectionHeader title="Daily Joker" accent="purple" />
-              {jokerPlayer ? (
-                <PlayerCard
-                  player={jokerPlayer}
-                  variant="row"
-                  isJoker={true}
-                  onClick={handlePlayerClick}
-                  isSelected={selectedPlayer?.id === jokerPlayer.id}
-                  showIntelligence
-                />
-              ) : (
-                <button
-                  onClick={() => setIsJokerPickerOpen(true)}
-                  className="w-full flex items-center gap-3 px-4 py-3 border-b border-border hover:bg-purple/5 group transition-all"
-                >
-                  <div className="w-8 h-8 rounded-full border-2 border-dashed border-purple/30 flex items-center justify-center text-purple font-black group-hover:border-purple">+</div>
-                  <div className="flex-1 text-left">
-                    <div className="text-[12px] font-black uppercase tracking-widest" style={{ color: 'var(--pos-gk)', fontFamily: 'Archivo Black, sans-serif' }}>
-                      Select 16th Man
-                    </div>
-                    <div className="text-[10px] mt-0.5" style={{ color: 'var(--mute)' }}>Exempt from country limit rules today</div>
-                  </div>
-                </button>
+        {/* ── Sub-tab row: Pitch / List / Chips / Status ─────────────────── */}
+        <div className="flex shrink-0" style={{ borderBottom: '1px solid var(--rule)', background: 'var(--ink-2)' }}>
+          {[
+            { id: 'pitch',  label: 'Pitch'  },
+            { id: 'list',   label: 'List'   },
+            { id: 'chips',  label: 'Chips'  },
+            { id: 'status', label: 'Status' },
+          ].map(tab => (
+            <button
+              key={tab.id}
+              onClick={() => setDesktopTab(tab.id)}
+              className="relative px-6 py-3 text-[10px] font-black uppercase tracking-widest transition-all"
+              style={{
+                fontFamily: 'Archivo Black, sans-serif',
+                color: desktopTab === tab.id ? 'var(--cyan)' : 'var(--mute)',
+                background: 'transparent',
+              }}
+            >
+              {tab.label}
+              {desktopTab === tab.id && (
+                <div className="absolute bottom-0 left-0 right-0 h-[2px]" style={{ background: 'var(--cyan)' }} />
               )}
-
-              <PlayerList showBench={false} />
-            </div>
-          </div>
+              {tab.id === 'status' && dangerPlayers.length > 0 && (
+                <div className="absolute top-2 right-2 w-1.5 h-1.5 rounded-full" style={{ background: 'var(--danger)' }} />
+              )}
+            </button>
+          ))}
         </div>
 
-        {/* ── RIGHT PANE: Tabbed sidebar ────────────────────────────────── */}
-        <div
-          className="w-[360px] shrink-0 flex flex-col"
-          style={{ borderLeft: '1px solid rgba(255,255,255,0.07)' }}
-        >
-          {/* Tab strip */}
-          <div className="flex shrink-0" style={{ borderBottom: '1px solid rgba(255,255,255,0.07)', background: 'var(--ink-2)' }}>
-            {[
-              { id: 'bench',  label: 'Bench' },
-              { id: 'chips',  label: 'Chips' },
-              { id: 'status', label: 'Status' },
-            ].map(tab => (
-              <button
-                key={tab.id}
-                onClick={() => setDesktopTab(tab.id)}
-                className="flex-1 py-3 text-[10px] font-black uppercase tracking-widest transition-all relative"
-                style={{
-                  fontFamily: 'Archivo Black, sans-serif',
-                  color: desktopTab === tab.id ? 'var(--cyan)' : 'var(--mute)',
-                  background: 'transparent',
-                }}
-              >
-                {tab.label}
-                {desktopTab === tab.id && (
-                  <div className="absolute bottom-0 left-0 right-0 h-[2px] rounded-t-full" style={{ background: 'var(--cyan)' }} />
-                )}
-                {tab.id === 'status' && dangerPlayers.length > 0 && (
-                  <div className="absolute top-2 right-[calc(50%-14px)] w-1.5 h-1.5 rounded-full" style={{ background: 'var(--danger)' }} />
-                )}
-              </button>
-            ))}
-          </div>
+        {/* ── Tab content ────────────────────────────────────────────────── */}
+        <div className="flex-1 overflow-hidden flex">
 
-          {/* Tab content — scrollable */}
-          <div className="flex-1 overflow-y-auto">
+          {/* ── PITCH TAB — full width, no right rail ──────────────────── */}
+          {desktopTab === 'pitch' && (
+            <>
+              {isRouletteSpinning && (
+                <div className="fixed inset-0 bg-black/60 z-30 flex items-center justify-center pointer-events-none">
+                  <div className="text-center">
+                    <div className="fk-display text-[32px] mb-4" style={{ color: 'var(--gold)' }}>ROULETTE</div>
+                  </div>
+                </div>
+              )}
+              <PitchView
+                variant="desktop"
+                squad={{ players, captainId, isTripleCaptain: squadData.isTripleCaptain, joker: jokerPlayer }}
+                onPlayerClick={isRouletteSpinning ? () => {} : handlePlayerClick}
+                selectedPlayerId={selectedPlayer?.id}
+                swapMode={swapMode}
+                jokerPlayerId={todayJokerId}
+                matchdayLabel={squadData.matchdayId ? `GW · ${squadData.matchdayId}` : ''}
+              />
+            </>
+          )}
 
-            {/* BENCH TAB */}
-            {desktopTab === 'bench' && (
-              <div>
+          {/* ── LIST TAB — player list + bench panel ───────────────────── */}
+          {desktopTab === 'list' && (
+            <>
+              <div className="flex-1 min-w-0 overflow-y-auto">
+                <SectionHeader title="Daily Joker" accent="purple" />
+                {jokerPlayer ? (
+                  <PlayerCard
+                    player={jokerPlayer}
+                    variant="row"
+                    isJoker={true}
+                    onClick={handlePlayerClick}
+                    isSelected={selectedPlayer?.id === jokerPlayer.id}
+                    showIntelligence
+                  />
+                ) : (
+                  <button
+                    onClick={() => setIsJokerPickerOpen(true)}
+                    className="w-full flex items-center gap-3 px-4 py-3 border-b border-border hover:opacity-80 transition-all"
+                  >
+                    <div className="w-8 h-8 border-2 border-dashed flex items-center justify-center font-black" style={{ borderColor: 'var(--pos-gk)', color: 'var(--pos-gk)' }}>+</div>
+                    <div className="flex-1 text-left">
+                      <div className="text-[12px] font-black uppercase tracking-widest" style={{ color: 'var(--pos-gk)', fontFamily: 'Archivo Black, sans-serif' }}>Select 16th Man</div>
+                      <div className="text-[10px] mt-0.5" style={{ color: 'var(--mute)' }}>Exempt from country limit rules today</div>
+                    </div>
+                  </button>
+                )}
+                <PlayerList showBench={false} />
+              </div>
+              {/* Bench panel — 320px right rail */}
+              <div className="w-[320px] shrink-0 overflow-y-auto" style={{ borderLeft: '1px solid var(--rule)' }}>
                 <SectionHeader title="Substitutes" />
                 {bench.map(player => (
                   <PlayerCard
@@ -1194,47 +1172,47 @@ export default function SquadScreen() {
                     showIntelligence
                   />
                 ))}
-                <div className="px-4 py-3 mt-2">
+                <div className="px-4 py-3">
                   <p className="text-[10px] leading-relaxed" style={{ color: 'var(--mute)' }}>
-                    Tap a player on the pitch or in the list to sub them in or out. You can also swap players within starters or within bench.
+                    Tap a player on the pitch or in the list to sub them in or out.
                   </p>
                 </div>
               </div>
-            )}
+            </>
+          )}
 
-            {/* CHIPS TAB */}
-            {desktopTab === 'chips' && (
-              <div className="pt-2">
-                {CHIPS.map(chip => <ChipCard key={chip.key} chip={chip} />)}
-                <RouletteCard />
-                <JokerCard />
-              </div>
-            )}
+          {/* ── CHIPS TAB ──────────────────────────────────────────────── */}
+          {desktopTab === 'chips' && (
+            <div className="flex-1 overflow-y-auto pt-2 max-w-xl">
+              {CHIPS.map(chip => <ChipCard key={chip.key} chip={chip} />)}
+              <RouletteCard />
+              <JokerCard />
+            </div>
+          )}
 
-            {/* STATUS TAB */}
-            {desktopTab === 'status' && (
-              <div>
-                <SectionHeader title="Player Status" accent="gold" />
-                <DangerList />
-                <div className="mt-4">
-                  <SectionHeader title="Captain" />
-                  {(() => {
-                    const cap = allSquadPlayers.find(p => p.id === captainId);
-                    if (!cap) return null;
-                    return (
-                      <div className="px-4 py-3 flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-black shrink-0" style={{ background: 'rgba(240,180,0,0.15)', border: '1px solid rgba(240,180,0,0.4)', color: 'var(--gold)' }}>C</div>
-                        <div className="flex-1 min-w-0">
-                          <div className="text-[13px] font-semibold text-white truncate">{cap.name}</div>
-                          <div className="text-[10px] mt-0.5" style={{ color: 'var(--mute)' }}>{cap.position} · {cap.club} · ${cap.price}M</div>
-                        </div>
+          {/* ── STATUS TAB ─────────────────────────────────────────────── */}
+          {desktopTab === 'status' && (
+            <div className="flex-1 overflow-y-auto max-w-xl">
+              <SectionHeader title="Player Status" accent="gold" />
+              <DangerList />
+              <div className="mt-4">
+                <SectionHeader title="Captain" />
+                {(() => {
+                  const cap = allSquadPlayers.find(p => p.id === captainId);
+                  if (!cap) return null;
+                  return (
+                    <div className="px-4 py-3 flex items-center gap-3">
+                      <div className="w-8 h-8 flex items-center justify-center text-[10px] font-black shrink-0" style={{ background: 'rgba(224,168,0,0.15)', border: '1px solid rgba(224,168,0,0.4)', color: 'var(--gold)' }}>C</div>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-[13px] font-semibold text-white truncate">{cap.name}</div>
+                        <div className="text-[10px] mt-0.5" style={{ color: 'var(--mute)' }}>{cap.position} · {cap.club} · £{cap.price}M</div>
                       </div>
-                    );
-                  })()}
-                </div>
+                    </div>
+                  );
+                })()}
               </div>
-            )}
-          </div>
+            </div>
+          )}
         </div>
       </div>
 
