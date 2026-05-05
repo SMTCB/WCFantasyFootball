@@ -12,7 +12,7 @@ export default function AppLayout({ children }) {
   const location = useLocation();
 
   return (
-    <div className="min-h-screen flex" style={{ background: 'var(--ink)' }}>
+    <div className="min-h-screen flex items-start" style={{ background: 'var(--ink)' }}>
 
       {/* ── Desktop Left Sidebar ─────────────────────────────────────── */}
       <nav
@@ -105,12 +105,8 @@ export default function AppLayout({ children }) {
       {/* ── Main Content ─────────────────────────────────────────────── */}
       <div
         data-testid="main-content"
-        className="flex-1 min-w-0 lg:ml-[220px]"
-        style={{
-          minHeight: '100dvh',
-          overflowY: 'auto',
-          paddingBottom: 'calc(64px + env(safe-area-inset-bottom))',
-        }}
+        className="flex-1 min-w-0 lg:ml-[220px] min-h-screen"
+        style={{ paddingBottom: 'calc(64px + env(safe-area-inset-bottom))' }}
       >
         <div className="animate-page-enter">
           {children}

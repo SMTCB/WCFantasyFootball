@@ -141,18 +141,10 @@ export default function OnboardingTour({ steps, onComplete, onSkip }) {
       tooltipStyle.top = `${Math.max(12, rect.top - 12)}px`;
     }
 
-    // If target is in the right half of screen, anchor tooltip to its right edge (opens leftward)
+    // Horizontal: align to target center, hard-clamp so tooltip never exits viewport
     const targetCenterX = rect.left + rect.width / 2;
-    if (targetCenterX > vw / 2) {
-      // Right-side target: align tooltip right edge to target right edge, clamp to viewport
-      const rightEdge = rect.left + rect.width + PADDING;
-      const tooltipLeft = Math.min(rightEdge - TOOLTIP_W, vw - TOOLTIP_W - 16);
-      tooltipStyle.left = `${Math.max(16, tooltipLeft)}px`;
-    } else {
-      // Left-side target: align tooltip left edge to target left, clamp to viewport
-      const maxLeft = vw - TOOLTIP_W - 16;
-      tooltipStyle.left = `${Math.max(16, Math.min(rect.left, maxLeft))}px`;
-    }
+    const idealLeft     = targetCenterX - TOOLTIP_W / 2;
+    tooltipStyle.left   = `${Math.max(8, Math.min(idealLeft, vw - TOOLTIP_W - 8))}px`;
   } else {
     // Fallback: center screen
     tooltipStyle.top  = '50%';

@@ -191,9 +191,10 @@ export default function SquadScreen() {
         }
       }
 
-      const mappedPlayers = (players || []).map((p, idx) => {
+      const starterIds    = new Set(playerIds.slice(0, 11));
+      const mappedPlayers = (players || []).map((p) => {
         const playerIntel = intelData?.find(i => i.player_id === p.id);
-        const isStarter   = idx < 11;
+        const isStarter   = starterIds.has(p.id);
         return normalisePlayer({
           ...p,
           points:    pointsMap[p.id] ?? 0,
@@ -652,6 +653,11 @@ export default function SquadScreen() {
   // Player list grouped by position (row variant)
   const PlayerList = ({ showBench = false }) => (
     <div>
+      {/* Starting XI label */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 16px 4px' }}>
+        <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 9, color: 'var(--cyan)', letterSpacing: '0.18em', textTransform: 'uppercase' }}>Starting XI</div>
+        <div style={{ flex: 1, height: 1, background: 'rgba(0,180,216,0.2)' }} />
+      </div>
       {POS_ORDER.map(pos => {
         const posPlayers  = players.filter(p => p.position === pos);
         const limit       = POS_LIMITS[pos] ?? 0;
@@ -662,19 +668,18 @@ export default function SquadScreen() {
           <div key={pos}>
             <SectionHeader title={POS_LABEL[pos]} />
             {posPlayers.map(player => (
-              <div key={player.id} style={{ borderLeft: '2px solid var(--cyan)' }}>
-                <PlayerCard
-                  player={player}
-                  variant="row"
-                  isCaptain={player.id === captainId}
-                  isTripleCaptain={squadData.isTripleCaptain}
-                  isJoker={player.id === todayJokerId}
-                  onClick={isRouletteSpinning ? () => {} : handlePlayerClick}
-                  isSelected={selectedPlayer?.id === player.id}
-                  isSwapTarget={swapMode && selectedPlayer?.id !== player.id}
-                  showIntelligence
-                />
-              </div>
+              <PlayerCard
+                key={player.id}
+                player={player}
+                variant="row"
+                isCaptain={player.id === captainId}
+                isTripleCaptain={squadData.isTripleCaptain}
+                isJoker={player.id === todayJokerId}
+                onClick={isRouletteSpinning ? () => {} : handlePlayerClick}
+                isSelected={selectedPlayer?.id === player.id}
+                isSwapTarget={swapMode && selectedPlayer?.id !== player.id}
+                showIntelligence
+              />
             ))}
             {Array.from({ length: emptySlots }).map((_, i) => (
               <button
@@ -1403,11 +1408,10 @@ export default function SquadScreen() {
       {/* ══ PLAYER ACTION BOTTOM SHEET ═══════════════════════════════════════ */}
       {selectedPlayer && !swapMode && !isRouletteSpinning && (
         <>
-          {/* Backdrop — tap outside to dismiss */}
+          {/* Tap-outside dismiss — no background dim */}
           <div
             className="fixed inset-0 z-[59] lg:left-[220px]"
             onClick={() => setSelectedPlayer(null)}
-            style={{ background: 'rgba(0,0,0,0.3)' }}
           />
         <div
           className="fixed bottom-0 left-0 right-0 lg:left-[220px] z-[60] animate-slide-up"
