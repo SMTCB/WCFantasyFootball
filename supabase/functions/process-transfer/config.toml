@@ -1,0 +1,6 @@
+[functions.process-transfer]
+verify_jwt = false
+
+# JWT is verified manually inside the function body via supabase.auth.getUser().
+# Setting verify_jwt=false removes the platform-level check which was returning
+# 401 before the function body could run. Auth is still enforced inside the function.

@@ -459,7 +459,7 @@ export default function SquadScreen() {
   const allSquadPlayers = [...players, ...bench];
   const dangerPlayers   = getDangerZonePlayers(allSquadPlayers);
   const selectedIsBench = selectedPlayer && bench.some(b => b.id === selectedPlayer.id);
-  const budgetLeft      = Number((budget.total - budget.current).toFixed(1));
+  const budgetLeft      = Number(budget.current.toFixed(1));
   const budgetLow       = budgetLeft < 5;
 
   // ─────────────────────────────────────────────────────────────────────────
@@ -1081,34 +1081,30 @@ export default function SquadScreen() {
             </div>
           )}
 
-          {/* Pitch view */}
-          <div className="px-6 pt-6 pb-4">
-            <div className="max-w-xl mx-auto">
-              {/* Active chip badges */}
-              {(squadData.isWildcard || squadData.isTripleCaptain) && (
-                <div className="flex gap-2 mb-3">
-                  {squadData.isWildcard && (
-                    <div className="flex items-center gap-1.5 px-2.5 py-1 rounded" style={{ background: 'rgba(24,201,107,0.1)', border: '1px solid rgba(24,201,107,0.25)' }}>
-                      
-                      <span className="text-[9px] font-black uppercase tracking-widest" style={{ color: 'var(--positive)' }}>Wildcard Active</span>
-                    </div>
-                  )}
-                  {squadData.isTripleCaptain && (
-                    <div className="flex items-center gap-1.5 px-2.5 py-1 rounded" style={{ background: 'rgba(240,180,0,0.1)', border: '1px solid rgba(240,180,0,0.25)' }}>
-                      
-                      <span className="text-[9px] font-black uppercase tracking-widest" style={{ color: 'var(--gold)' }}>Triple Captain Active</span>
-                    </div>
-                  )}
-                </div>
-              )}
-              <PitchView
-                squad={{ players, captainId, isTripleCaptain: squadData.isTripleCaptain, joker: jokerPlayer }}
-                onPlayerClick={isRouletteSpinning ? () => {} : handlePlayerClick}
-                selectedPlayerId={selectedPlayer?.id}
-                swapMode={swapMode}
-                jokerPlayerId={todayJokerId}
-              />
-            </div>
+          {/* Pitch view — full width, no horizontal padding */}
+          <div className="pt-4 pb-2">
+            {/* Active chip badges */}
+            {(squadData.isWildcard || squadData.isTripleCaptain) && (
+              <div className="flex gap-2 mb-2 px-4">
+                {squadData.isWildcard && (
+                  <div className="flex items-center gap-1.5 px-2.5 py-1 rounded" style={{ background: 'rgba(24,201,107,0.1)', border: '1px solid rgba(24,201,107,0.25)' }}>
+                    <span className="text-[9px] font-black uppercase tracking-widest" style={{ color: 'var(--positive)' }}>Wildcard Active</span>
+                  </div>
+                )}
+                {squadData.isTripleCaptain && (
+                  <div className="flex items-center gap-1.5 px-2.5 py-1 rounded" style={{ background: 'rgba(240,180,0,0.1)', border: '1px solid rgba(240,180,0,0.25)' }}>
+                    <span className="text-[9px] font-black uppercase tracking-widest" style={{ color: 'var(--gold)' }}>Triple Captain Active</span>
+                  </div>
+                )}
+              </div>
+            )}
+            <PitchView
+              squad={{ players, captainId, isTripleCaptain: squadData.isTripleCaptain, joker: jokerPlayer }}
+              onPlayerClick={isRouletteSpinning ? () => {} : handlePlayerClick}
+              selectedPlayerId={selectedPlayer?.id}
+              swapMode={swapMode}
+              jokerPlayerId={todayJokerId}
+            />
           </div>
 
           {/* Player list grouped by position */}
