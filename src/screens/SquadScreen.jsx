@@ -1081,8 +1081,8 @@ export default function SquadScreen() {
             </div>
           )}
 
-          {/* Pitch view — full width, no horizontal padding */}
-          <div className="pt-4 pb-2">
+          {/* Pitch view — constrained width so it doesn't fill the entire pane */}
+          <div className="pt-4 pb-2 max-w-[680px] mx-auto w-full">
             {/* Active chip badges */}
             {(squadData.isWildcard || squadData.isTripleCaptain) && (
               <div className="flex gap-2 mb-2 px-4">
