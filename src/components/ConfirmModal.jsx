@@ -103,7 +103,7 @@ export default function ConfirmModal({
             border:       '1px solid rgba(240,180,0,0.25)',
             marginBottom: '24px',
           }}>
-            <span style={{ fontSize: '14px', flexShrink: 0 }}>⚠️</span>
+            <span className="fk-mono" style={{ fontSize: '9px', color: 'var(--gold)', flexShrink: 0 }}>!</span>
             <p style={{
               fontSize:   '12px',
               lineHeight: 1.55,

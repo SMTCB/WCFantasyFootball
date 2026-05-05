@@ -111,8 +111,8 @@ export default function RecapCard({ recap, forwardRef }) {
         {joker && (
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: '#160020', border: '1px solid #a855f7', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '14px' }}>
-                🃏
+              <div className="fk-mono" style={{ width: '32px', height: '32px', border: '1px solid var(--pos-gk)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '8px', color: 'var(--pos-gk)' }}>
+                JKR
               </div>
               <div>
                 <div style={{ fontSize: '10px', color: '#555', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.15em' }}>Joker Played</div>

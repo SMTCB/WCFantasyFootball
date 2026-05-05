@@ -236,16 +236,17 @@ export default function OnboardingWizard({ onComplete, onSkip, config = {} }) {
           )}
         </div>
 
-        {/* Emoji */}
+        {/* Step icon */}
         <div
+          className="fk-display"
           style={{
-            fontSize:     '52px',
+            fontSize:     '36px',
             lineHeight:   1,
             marginBottom: '20px',
-            filter:       'drop-shadow(0 4px 16px rgba(240,180,0,0.3))',
+            color:        'var(--gold)',
           }}
         >
-          {current.emoji}
+          {current.id === 'welcome' ? 'FFL' : current.id === 'squad' ? 'SQD' : current.id === 'league' ? 'LGE' : 'GO'}
         </div>
 
         {/* Kicker */}

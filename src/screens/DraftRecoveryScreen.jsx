@@ -354,7 +354,7 @@ export default function DraftRecoveryScreen() {
             placeholder="Search available players..."
             value={search}
             onChange={e => setSearch(e.target.value)}
-            className="w-full bg-[#111] border border-[#2A2A2A] rounded-lg px-3 py-2 text-white text-[12px] outline-none placeholder:text-[#444] focus:border-[#444]"
+            className="w-full bg-[#111] border border-[#2A2A2A] rounded-sm px-3 py-2 text-white text-[12px] outline-none placeholder:text-[#444] focus:border-[#444]"
           />
           <div className="flex gap-2">
             {POS_FILTER_ORDER.map(pos => (
@@ -390,7 +390,7 @@ export default function DraftRecoveryScreen() {
               <div
                 key={p.id}
                 onClick={() => !disabled && !isBusy && pickPlayer(p)}
-                className={`flex items-center gap-3 bg-[#111] rounded-lg px-3 py-3 transition-all ${
+                className={`flex items-center gap-3 bg-[#111] rounded-sm px-3 py-3 transition-all ${
                   disabled ? 'opacity-35' : 'cursor-pointer active:opacity-70'
                 } ${isBusy ? 'animate-pulse' : ''}`}
               >

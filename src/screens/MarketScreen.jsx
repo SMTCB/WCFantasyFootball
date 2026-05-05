@@ -227,7 +227,7 @@ export default function MarketScreen() {
           <button
             key={l.id}
             onClick={() => setActiveLeague(l.id)}
-            className="w-full max-w-sm px-5 py-4 rounded-lg text-left transition-all active:opacity-70"
+            className="w-full max-w-sm px-5 py-4 rounded-sm text-left transition-all active:opacity-70"
             style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'var(--paper)' }}
           >
             <div className="text-[14px] font-semibold">{l.name}</div>
@@ -262,7 +262,7 @@ export default function MarketScreen() {
           className="flex items-center gap-3 px-5 py-3"
           style={{ background: 'rgba(240,58,58,0.10)', borderBottom: '1px solid rgba(240,58,58,0.25)' }}
         >
-          <span className="text-base">🔒</span>
+          <span className="fk-mono" style={{ fontSize: 9, color: 'var(--danger)' }}>LCK</span>
           <div>
             <div
               className="text-[11px] font-black uppercase tracking-widest"
@@ -294,7 +294,7 @@ export default function MarketScreen() {
               className="fz-label"
               style={{ color: isLocked ? 'var(--danger)' : 'var(--mute)' }}
             >
-              {isLocked ? '🔒 Window Closed' : 'Transfer Window'}
+              {isLocked ? 'WINDOW CLOSED' : 'Transfer Window'}
             </div>
             <div className="flex items-center gap-2 mt-0.5">
               <div
@@ -583,7 +583,7 @@ export default function MarketScreen() {
 
           {filteredPlayers.length === 0 && !loading && (
             <div className="p-12 text-center">
-              <div className="text-3xl mb-3 opacity-20">🔍</div>
+              <div className="fk-mono mb-3" style={{ fontSize: 9, color: 'var(--mute)' }}>NO RESULTS</div>
               <p className="text-sm font-medium" style={{ color: 'var(--mute)' }}>
                 No players found for this position.
               </p>

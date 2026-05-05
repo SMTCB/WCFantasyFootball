@@ -311,7 +311,7 @@ export default function BracketScreen() {
       {loading ? (
         <div className="flex flex-col gap-3 px-4 mt-2">
           {[1,2,3].map(i => (
-            <div key={i} className="h-[110px] rounded-lg bg-[#111] animate-pulse" />
+            <div key={i} className="h-[110px] rounded-sm bg-[#111] animate-pulse" />
           ))}
         </div>
       ) : (

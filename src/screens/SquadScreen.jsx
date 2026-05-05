@@ -32,7 +32,6 @@ const POS_LABEL = { GK: 'Goalkeeper', DEF: 'Defenders', MID: 'Midfielders', FWD:
 const CHIPS = [
   {
     key:         'wildcard',
-    icon:        '🃏',
     label:       'Wildcard',
     description: 'Make unlimited free transfers this matchday. No point penalties.',
     stateKey:    'isWildcard',
@@ -43,7 +42,6 @@ const CHIPS = [
   },
   {
     key:         'triple',
-    icon:        '🚀',
     label:       'Triple Captain',
     description: 'All-or-Nothing: your captain scores 3× points — but 0 if they don\'t play.',
     stateKey:    'isTripleCaptain',
@@ -403,7 +401,7 @@ export default function SquadScreen() {
       title:        'Spin Captain Roulette?',
       body:         'Your captain will be randomly selected from your entire squad. The result is final for this matchday.',
       warning:      null,
-      confirmLabel: '🎰 Spin',
+      confirmLabel: 'SPIN',
       danger:       false,
       onConfirm:    doActivateRoulette,
     });
@@ -476,22 +474,20 @@ export default function SquadScreen() {
         className="mx-4 mb-3 rounded p-4 border transition-all"
         style={isActive ? chip.activeStyle : chip.inactiveStyle}
       >
-        <div className="flex items-start gap-3">
-          <span className="text-2xl shrink-0 mt-0.5">{chip.icon}</span>
-          <div className="flex-1 min-w-0">
+        <div className="flex-1 min-w-0">
             <div className="flex items-center justify-between gap-2 mb-1">
               <span
-                className="text-[12px] font-black uppercase tracking-wide"
-                style={{ fontFamily: 'Archivo Black, sans-serif', color: isActive ? chip.activeColor : 'var(--paper)' }}
+                className="fk-display text-[12px]"
+                style={{ color: isActive ? chip.activeColor : 'var(--paper)' }}
               >
-                {chip.label}
+                {chip.label.toUpperCase()}
               </span>
               {isActive && (
                 <span
-                  className="text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full"
-                  style={{ background: chip.activeColor + '22', color: chip.activeColor, border: `1px solid ${chip.activeColor}44` }}
+                  className="fk-mono text-[8px] px-2 py-0.5"
+                  style={{ color: chip.activeColor, border: `1px solid ${chip.activeColor}` }}
                 >
-                  Active
+                  ACTIVE
                 </span>
               )}
             </div>
@@ -511,18 +507,15 @@ export default function SquadScreen() {
             </button>
           </div>
         </div>
-      </div>
     );
   };
 
   // Captain Roulette card
   const RouletteCard = () => (
     <div className="mx-4 mb-3 rounded p-4 border" style={{ borderColor: 'rgba(240,180,0,0.2)', background: 'rgba(240,180,0,0.04)' }}>
-      <div className="flex items-start gap-3">
-        <span className="text-2xl shrink-0 mt-0.5">🎰</span>
-        <div className="flex-1 min-w-0">
-          <div className="text-[12px] font-black uppercase tracking-wide mb-1" style={{ fontFamily: 'Archivo Black, sans-serif', color: 'var(--gold)' }}>
-            Captain Roulette
+      <div className="flex-1 min-w-0">
+          <div className="fk-display text-[12px] mb-1" style={{ color: 'var(--gold)' }}>
+            CAPTAIN ROULETTE
           </div>
           <p className="text-[11px] leading-relaxed mb-3" style={{ color: 'var(--mute)' }}>
             Can't decide? Let fate choose your captain. Randomly picks from your full 15-man squad.
@@ -537,31 +530,25 @@ export default function SquadScreen() {
               border: '1px solid rgba(240,180,0,0.3)',
             }}
           >
-            {isRouletteSpinning ? '🎰 Spinning…' : 'Spin the Roulette'}
+            {isRouletteSpinning ? 'SPINNING...' : 'SPIN ROULETTE'}
           </button>
         </div>
       </div>
-    </div>
   );
 
   // Daily Joker card
   const JokerCard = () => (
     <div className="mx-4 mb-3 rounded p-4 border" style={{ borderColor: 'rgba(157,95,245,0.2)', background: 'rgba(157,95,245,0.04)' }}>
-      <div className="flex items-start gap-3">
-        <span className="text-2xl shrink-0 mt-0.5">🃏</span>
-        <div className="flex-1 min-w-0">
-          <div className="text-[12px] font-black uppercase tracking-wide mb-1" style={{ fontFamily: 'Archivo Black, sans-serif', color: 'var(--pos-gk)' }}>
-            Daily Joker
+      <div className="flex-1 min-w-0">
+          <div className="fk-display text-[12px] mb-1" style={{ color: 'var(--pos-gk)' }}>
+            DAILY JOKER
           </div>
-          <p className="text-[11px] leading-relaxed mb-3" style={{ color: 'var(--mute)' }}>
+          <p className="text-[11px] leading-relaxed mb-3" style={{ color: 'var(--mute)', fontFamily: 'Archivo, sans-serif' }}>
             Pick a 16th man today — exempt from country limit rules. Choose any player currently playing. Locked once set.
           </p>
           {todayJokerId ? (
-            <div className="flex items-center gap-2 py-2 px-3 rounded" style={{ background: 'rgba(157,95,245,0.1)', border: '1px solid rgba(157,95,245,0.2)' }}>
-              <span className="text-xs">🔒</span>
-              <span className="text-[10px] font-black uppercase tracking-widest" style={{ color: 'var(--pos-gk)' }}>
-                Joker locked for today
-              </span>
+            <div className="fk-mono flex items-center gap-2 py-2 px-3" style={{ background: 'rgba(168,85,247,0.08)', border: '1px solid var(--pos-gk)', color: 'var(--pos-gk)', fontSize: 9 }}>
+              JOKER LOCKED FOR TODAY
             </div>
           ) : (
             <button
@@ -574,7 +561,6 @@ export default function SquadScreen() {
           )}
         </div>
       </div>
-    </div>
   );
 
   // Danger Zone vertical list (for sidebar / tools tab)
@@ -601,7 +587,7 @@ export default function SquadScreen() {
               className="w-full flex items-center gap-3 p-3 rounded text-left transition-all hover:brightness-110"
               style={{ background: cfg.bg, border: `1px solid ${cfg.color}30` }}
             >
-              <span className="text-base shrink-0">{cfg.emoji}</span>
+              
               <div className="flex-1 min-w-0">
                 <div className="text-[12px] font-semibold text-white truncate">{p.name}</div>
                 <div className="text-[9px] font-black uppercase tracking-wider mt-0.5" style={{ color: cfg.color }}>
@@ -623,7 +609,7 @@ export default function SquadScreen() {
     const doubtCount  = dangerPlayers.filter(p => p.intel?.status === 'doubt').length;
     return (
       <div className="flex items-center gap-2 px-4 py-2.5" style={{ background: 'rgba(240,58,58,0.1)', borderBottom: '1px solid rgba(240,58,58,0.2)' }}>
-        <span className="text-sm shrink-0">⚠️</span>
+        
         <div className="flex-1 min-w-0 flex items-center gap-2 flex-wrap">
           {outCount > 0 && (
             <span className="text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded" style={{ background: 'rgba(240,58,58,0.2)', color: 'var(--danger)' }}>
@@ -808,7 +794,7 @@ export default function SquadScreen() {
                 className="text-[11px] font-black uppercase leading-tight tabular-nums"
                 style={{ fontFamily: 'Archivo Black, sans-serif', color: deadline.color }}
               >
-                {deadline.isLocked ? '🔒 Closed' : deadline.timeLeft}
+                {deadline.isLocked ? 'CLOSED' : deadline.timeLeft}
               </div>
             </div>
           )}
@@ -827,9 +813,9 @@ export default function SquadScreen() {
         {/* Tab strip */}
         <div className="flex" style={{ borderBottom: '1px solid rgba(255,255,255,0.07)', background: 'var(--ink-2)' }}>
           {[
-            { id: 'pitch', label: '⚽', text: 'Pitch' },
-            { id: 'squad', label: '👥', text: 'Squad' },
-            { id: 'tools', label: '⚡', text: 'Tools' },
+            { id: 'pitch', label: 'PCH', text: 'Pitch' },
+            { id: 'squad', label: 'SQD', text: 'Squad' },
+            { id: 'tools', label: 'TLS', text: 'Tools' },
           ].map(tab => (
             <button
               key={tab.id}
@@ -841,7 +827,7 @@ export default function SquadScreen() {
                 borderRadius: mobileTab === tab.id ? '4px 4px 0 0' : '0',
               }}
             >
-              <div style={{ fontSize: '18px', marginBottom: '2px' }}>{tab.label}</div>
+              <div className="fk-mono" style={{ fontSize: 9, marginBottom: '2px', color: mobileTab === tab.id ? 'var(--cyan)' : 'var(--mute)' }}>{tab.label}</div>
               <div
                 className="text-[9px] font-black uppercase tracking-widest"
                 style={{
@@ -866,7 +852,7 @@ export default function SquadScreen() {
             <DangerBanner />
             {isRouletteSpinning && (
               <div className="absolute inset-0 bg-black/70 z-10 flex flex-col items-center justify-center gap-3" style={{ pointerEvents: 'none' }}>
-                <div className="text-4xl animate-bounce">🎰</div>
+                <div className="fk-display text-[20px]" style={{color:"var(--gold)"}}>ROULETTE</div>
                 <div className="fz-display text-[14px] text-gold tracking-[0.2em]">Roulette Active…</div>
               </div>
             )}
@@ -923,19 +909,19 @@ export default function SquadScreen() {
                 <div className="flex flex-wrap gap-2">
                   {squadData.isWildcard && (
                     <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded" style={{ background: 'rgba(24,201,107,0.1)', border: '1px solid rgba(24,201,107,0.25)' }}>
-                      <span className="text-xs">🃏</span>
+                      
                       <span className="text-[8px] font-black uppercase tracking-widest" style={{ color: 'var(--positive)' }}>Wildcard</span>
                     </div>
                   )}
                   {squadData.isTripleCaptain && (
                     <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded" style={{ background: 'rgba(240,180,0,0.1)', border: '1px solid rgba(240,180,0,0.25)' }}>
-                      <span className="text-xs">🚀</span>
+                      
                       <span className="text-[8px] font-black uppercase tracking-widest" style={{ color: 'var(--gold)' }}>Triple Capt.</span>
                     </div>
                   )}
                   {jokerPlayer && (
                     <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded" style={{ background: 'rgba(157,95,245,0.1)', border: '1px solid rgba(157,95,245,0.25)' }}>
-                      <span className="text-xs">🔒</span>
+                      
                       <span className="text-[8px] font-black uppercase tracking-widest" style={{ color: 'var(--pos-gk)' }}>Joker: {jokerPlayer.name.split(' ')[0]}</span>
                     </div>
                   )}
@@ -946,12 +932,12 @@ export default function SquadScreen() {
             {/* Section 2: Power Tools */}
             <div className="mx-4" data-tour="squad-power-tools">
               <div className="text-[11px] font-black uppercase tracking-[0.1em] mb-3" style={{ color: 'var(--gold)' }}>
-                ⚡ Power Tools
+                POWER TOOLS
               </div>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-4">
                 {/* Wildcard */}
                 <PowerToolCard
-                  icon="🃏"
+                  
                   label="Wildcard"
                   description="Unlimited free transfers this matchday"
                   isActive={squadData.isWildcard}
@@ -976,7 +962,7 @@ export default function SquadScreen() {
 
                 {/* Triple Captain */}
                 <PowerToolCard
-                  icon="🚀"
+                  
                   label="Triple Cap."
                   description="3× captain points — or 0 if they don't play"
                   isActive={squadData.isTripleCaptain}
@@ -1001,7 +987,7 @@ export default function SquadScreen() {
 
                 {/* Roulette */}
                 <PowerToolCard
-                  icon="🎰"
+                  
                   label="Roulette"
                   description="Random captain picker — spin to decide"
                   isActive={false}
@@ -1020,10 +1006,8 @@ export default function SquadScreen() {
 
             {/* Section 3: Daily Joker */}
             <div className="mx-4 mb-4">
-              <div className="p-3 rounded-lg" style={{ background: 'var(--ink-2)', border: '1.5px solid rgba(157,95,245,0.15)' }}>
-                <div style={{ fontSize: '32px', marginBottom: '4px', textAlign: 'center', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))' }}>
-                  🃏
-                </div>
+              <div className="p-3 rounded-sm" style={{ background: 'var(--ink-2)', border: '1.5px solid rgba(157,95,245,0.15)' }}>
+                <div className="fk-display" style={{ fontSize: 16, textAlign: 'center', color: 'var(--pos-gk)', marginBottom: '4px' }}>JOKER</div>
                 <div style={{
                   fontSize: '12px',
                   fontFamily: 'Archivo Black, sans-serif',
@@ -1072,7 +1056,7 @@ export default function SquadScreen() {
 
             {/* Section 4: Player Status */}
             <div className="mx-4">
-              <SectionHeader title="⚠️ Player Status" accent="red" />
+              <SectionHeader title="PLAYER STATUS" accent="red" />
               <div className="mt-3">
                 <DangerList />
               </div>
@@ -1091,7 +1075,7 @@ export default function SquadScreen() {
           {isRouletteSpinning && (
             <div className="fixed inset-0 bg-black/60 z-30 flex items-center justify-center pointer-events-none">
               <div className="text-center">
-                <div className="text-6xl animate-bounce mb-4">🎰</div>
+                <div className="fk-display text-[32px] mb-4" style={{color:"var(--gold)"}}>ROULETTE</div>
                 <div className="fz-display text-[20px] text-gold tracking-[0.25em]">Roulette Active…</div>
               </div>
             </div>
@@ -1105,13 +1089,13 @@ export default function SquadScreen() {
                 <div className="flex gap-2 mb-3">
                   {squadData.isWildcard && (
                     <div className="flex items-center gap-1.5 px-2.5 py-1 rounded" style={{ background: 'rgba(24,201,107,0.1)', border: '1px solid rgba(24,201,107,0.25)' }}>
-                      <span className="text-xs">🃏</span>
+                      
                       <span className="text-[9px] font-black uppercase tracking-widest" style={{ color: 'var(--positive)' }}>Wildcard Active</span>
                     </div>
                   )}
                   {squadData.isTripleCaptain && (
                     <div className="flex items-center gap-1.5 px-2.5 py-1 rounded" style={{ background: 'rgba(240,180,0,0.1)', border: '1px solid rgba(240,180,0,0.25)' }}>
-                      <span className="text-xs">🚀</span>
+                      
                       <span className="text-[9px] font-black uppercase tracking-widest" style={{ color: 'var(--gold)' }}>Triple Captain Active</span>
                     </div>
                   )}
@@ -1227,7 +1211,7 @@ export default function SquadScreen() {
               <div className="pt-4 mx-4">
                 <div className="grid grid-cols-2 xl:grid-cols-3 gap-2 mb-4">
                   <PowerToolCard
-                    icon="🃏"
+                    
                     label="Wildcard"
                     description="Unlimited free transfers this matchday"
                     isActive={squadData.isWildcard}
@@ -1250,7 +1234,7 @@ export default function SquadScreen() {
                     }}
                   />
                   <PowerToolCard
-                    icon="🚀"
+                    
                     label="Triple Cap."
                     description="3× captain points — or 0 if they don't play"
                     isActive={squadData.isTripleCaptain}
@@ -1346,7 +1330,7 @@ export default function SquadScreen() {
                   <div className="fz-label mt-0.5" style={{ color: 'var(--mute)' }}>
                     {selectedPlayer.position} · ${selectedPlayer.price}M
                     {selectedPlayer.id === captainId && <span className="ml-2 text-gold">★ Captain</span>}
-                    {selectedPlayer.id === todayJokerId && <span className="ml-2" style={{ color: 'var(--pos-gk)' }}>🃏 Joker</span>}
+                    {selectedPlayer.id === todayJokerId && <span className="ml-2" style={{ color: 'var(--pos-gk)' }}>JOKER</span>}
                   </div>
                 </div>
               </div>
@@ -1393,7 +1377,7 @@ export default function SquadScreen() {
             <div className="pt-3" style={{ borderTop: '1px solid rgba(255,255,255,0.07)' }}>
               {todayJokerId ? (
                 <div className="flex items-center gap-2 p-2.5 rounded-sm" style={{ background: 'rgba(157,95,245,0.08)', border: '1px solid rgba(157,95,245,0.2)' }}>
-                  <span>🔒</span>
+                  
                   <div className="text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--pos-gk)', fontFamily: 'Archivo Black, sans-serif' }}>
                     Joker already locked for today
                   </div>
@@ -1413,7 +1397,7 @@ export default function SquadScreen() {
                       boxShadow: playingTodayTeams.includes(selectedPlayer.club) ? '0 0 12px rgba(157,95,245,0.3)' : 'none',
                     }}
                   >
-                    {playingTodayTeams.includes(selectedPlayer.club) ? '🃏 Activate Daily Joker' : '✗ Not Playing Today'}
+                    {playingTodayTeams.includes(selectedPlayer.club) ? 'ACTIVATE JOKER' : '✗ Not Playing Today'}
                   </button>
                   <p className="mt-1.5 text-[9px] text-center uppercase tracking-wide" style={{ color: 'var(--mute)', fontFamily: 'Archivo, sans-serif' }}>
                     1 Joker per day · Country limit exempt · Locked once set
@@ -1538,14 +1522,14 @@ function JokerList({ teams, squadPlayerIds, onSelect, saving }) {
   );
 
   if (loading) return (
-    <EmptyState emoji="🔍" title="Scouting Active Teams…" sub={null} action={
+    <EmptyState title="Scouting Active Teams…" sub={null} action={
       <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: '10px', letterSpacing: '0.15em', color: 'var(--mute)', textTransform: 'uppercase' }} className="animate-scan">Loading</div>
     } />
   );
 
   // FB-024: error state with retry
   if (fetchError) return (
-    <EmptyState emoji="⚠️" title="Couldn't load players" sub="Check your connection and try again." action={
+    <EmptyState title="Couldn't load players" sub="Check your connection and try again." action={
       <button onClick={load} style={{ padding: '8px 20px', background: 'var(--gold)', color: 'var(--ink-2)', fontSize: '11px', fontFamily: 'Archivo Black, sans-serif', fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>
         Retry
       </button>
@@ -1554,7 +1538,7 @@ function JokerList({ teams, squadPlayerIds, onSelect, saving }) {
 
   // FB-024: no matches today
   if (!teams.length) return (
-    <EmptyState emoji="📅" title="No Matches Today" sub="The Daily Joker is only available on matchdays. Check back when fixtures are scheduled." action={null} />
+    <EmptyState title="No Matches Today" sub="The Daily Joker is only available on matchdays. Check back when fixtures are scheduled." action={null} />
   );
 
   // FB-024: none of your squad plays today

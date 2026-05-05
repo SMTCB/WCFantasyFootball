@@ -70,7 +70,7 @@ function StreakBadge({ streak }) {
         backgroundColor: isWin ? '#22c55e' : '#ef4444',
       }}
     >
-      {isWin ? `🔥 ${streak.count}W` : `↓ ${streak.count}L`} streak
+      {isWin ? `${streak.count}W` : `↓ ${streak.count}L`} streak
     </span>
   );
 }
@@ -192,7 +192,7 @@ export default function H2HSheet({ leagueId, myId, rival, myName = 'You', onClos
             </div>
             <button
               onClick={onClose}
-              className="w-8 h-8 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-text-tertiary hover:text-white transition-colors text-lg"
+              className="fk-mono w-8 h-8 flex items-center justify-center text-text-tertiary hover:text-white transition-colors" style={{ border: '1px solid var(--rule)', fontSize: 14 }}
             >
               ×
             </button>
@@ -254,7 +254,7 @@ export default function H2HSheet({ leagueId, myId, rival, myName = 'You', onClos
             {h2h.biggestWin && (
               <div className="flex items-center justify-between px-5 py-3.5">
                 <div>
-                  <div className="text-[9px] font-black uppercase tracking-[0.15em] text-positive mb-0.5">🏆 Biggest Win</div>
+                  <div className="text-[9px] font-black uppercase tracking-[0.15em] text-positive mb-0.5">Biggest Win</div>
                   <div className="text-[12px] font-bold">Matchday {h2h.biggestWin.matchday}</div>
                 </div>
                 <div className="text-right">
@@ -271,7 +271,7 @@ export default function H2HSheet({ leagueId, myId, rival, myName = 'You', onClos
             {h2h.biggestLoss && (
               <div className="flex items-center justify-between px-5 py-3.5">
                 <div>
-                  <div className="text-[9px] font-black uppercase tracking-[0.15em] text-negative mb-0.5">💔 Biggest Loss</div>
+                  <div className="text-[9px] font-black uppercase tracking-[0.15em] text-negative mb-0.5">Biggest Loss</div>
                   <div className="text-[12px] font-bold">Matchday {h2h.biggestLoss.matchday}</div>
                 </div>
                 <div className="text-right">
@@ -288,7 +288,7 @@ export default function H2HSheet({ leagueId, myId, rival, myName = 'You', onClos
             {h2h.closest && (
               <div className="flex items-center justify-between px-5 py-3.5">
                 <div>
-                  <div className="text-[9px] font-black uppercase tracking-[0.15em] text-text-tertiary mb-0.5">⚡ Closest Match</div>
+                  <div className="text-[9px] font-black uppercase tracking-[0.15em] text-text-tertiary mb-0.5">Closest Match</div>
                   <div className="text-[12px] font-bold">Matchday {h2h.closest.matchday}</div>
                 </div>
                 <div className="text-right">

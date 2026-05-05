@@ -194,7 +194,7 @@ export default function RecapScreen() {
 
   if (!recap) return (
     <div className="min-h-screen bg-black flex flex-col items-center justify-center p-8 text-center">
-      <div className="text-4xl mb-4">🏆</div>
+      <div className="fk-display mb-4" style={{ fontSize: 24, color: 'var(--gold)' }}>FFL</div>
       <div className="text-lg font-black uppercase">No Recaps Yet</div>
       <div className="text-xs text-text-tertiary mt-2">
         Finish a matchday to see your performance summary!
@@ -245,8 +245,8 @@ export default function RecapScreen() {
           {recap.bestPlayer && (
             <div className="flex items-center justify-between px-5 py-4">
               <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-full bg-[#1a1a1a] border border-[#333] flex items-center justify-center text-[11px] font-black text-white/30 uppercase">
-                  {recap.bestPlayer.name.substring(0, 2)}
+                <div className="fk-mono flex items-center justify-center shrink-0" style={{ width: 36, height: 36, border: '1px solid var(--rule)', color: 'var(--mute)', fontSize: 9 }}>
+                  {recap.bestPlayer.name.substring(0, 3)}
                 </div>
                 <div>
                   <div className="text-[9px] text-text-tertiary font-black uppercase tracking-[0.15em]">Best Player</div>
@@ -263,7 +263,7 @@ export default function RecapScreen() {
           {recap.captain && (
             <div className="flex items-center justify-between px-5 py-4">
               <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-full bg-yellow-950/40 border border-yellow-500 flex items-center justify-center text-[11px] font-black text-yellow-400">
+                <div className="fk-mono flex items-center justify-center shrink-0" style={{ width: 36, height: 36, border: '1px solid var(--gold)', color: 'var(--gold)', fontSize: 11 }}>
                   C
                 </div>
                 <div>
@@ -283,8 +283,8 @@ export default function RecapScreen() {
           {recap.joker && (
             <div className="flex items-center justify-between px-5 py-4">
               <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-full bg-purple-950/40 border border-purple-500 flex items-center justify-center text-[16px]">
-                  🃏
+                <div className="fk-mono flex items-center justify-center shrink-0" style={{ width: 36, height: 36, border: '1px solid var(--pos-gk)', color: 'var(--pos-gk)', fontSize: 9 }}>
+                  JKR
                 </div>
                 <div>
                   <div className="text-[9px] text-text-tertiary font-black uppercase tracking-[0.15em]">Joker Played</div>
@@ -305,7 +305,7 @@ export default function RecapScreen() {
                 {recap.topScorers.map((p, i) => (
                   <div key={p.id ?? i} className="flex items-center justify-between">
                     <div className="flex items-center gap-2 min-w-0">
-                      <div className="w-5 h-5 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-[9px] font-black text-text-tertiary shrink-0">
+                      <div className="fk-mono flex items-center justify-center shrink-0" style={{ width: 20, height: 20, border: '1px solid var(--rule)', color: 'var(--mute)', fontSize: 9 }}>
                         {i + 1}
                       </div>
                       <div className="text-[13px] font-bold truncate">{p.name}</div>

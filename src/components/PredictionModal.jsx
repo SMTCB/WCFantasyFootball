@@ -88,7 +88,7 @@ export default function PredictionModal({ matchday, deadlineLabel, onClose, onSa
         {/* Search */}
         <div className="px-4 py-3 border-b border-white/5">
           <div className="relative">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-text-tertiary text-sm">🔍</span>
+            <span className="fk-mono absolute left-3 top-1/2 -translate-y-1/2" style={{ fontSize: 9, color: 'var(--mute)' }}>SR</span>
             <input
               type="text"
               placeholder="Search players..."

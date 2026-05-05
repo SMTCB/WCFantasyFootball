@@ -235,7 +235,7 @@ export default function LiveScreen() {
             {/* ── VAR CHECK BANNER ───────────────────────────── */}
             {events[0]?.type === 'var' && (
               <div className="bg-[#1a1100] border-l-4 border-[#FFB300] py-3 px-4 flex items-center gap-3">
-                 <div className="text-2xl animate-pulse">📺</div>
+                 <div className="fk-mono animate-pulse" style={{ fontSize: 9, color: 'var(--gold)' }}>VAR</div>
                  <div>
                     <div className="text-[10px] font-black text-[#FFB300] uppercase tracking-[0.15em] mb-0.5">VAR Review in Progress</div>
                     <div className="text-[12px] font-bold text-white">Goal Check: {events[0].players?.name}</div>
@@ -455,15 +455,15 @@ export default function LiveScreen() {
                         className={`flex px-4 py-3.5 border-b gap-3 items-center ${isVar ? 'border-[#FFB300]/30 bg-[#FFB300]/5' : 'border-white/5'}`}
                         style={{ animationDelay: `${i * 40}ms` }}
                       >
-                        <div className="w-8 flex justify-center shrink-0 text-xl">
-                          {e.type === 'goal'          && '⚽'}
-                          {e.type === 'assist'        && '🅰️'}
-                          {e.type === 'yellow'        && '🟨'}
-                          {e.type === 'red'           && '🟥'}
-                          {e.type === 'sub'           && '↕️'}
-                          {e.type === 'penalty_saved' && '🧤'}
-                          {e.type === 'own_goal'      && '😬'}
-                          {isVar                      && '📺'}
+                        <div className="fk-mono w-8 flex justify-center shrink-0" style={{ fontSize: 8, color: 'var(--mute)' }}>
+                          {e.type === 'goal'          && 'GL'}
+                          {e.type === 'assist'        && 'AS'}
+                          {e.type === 'yellow'        && 'YC'}
+                          {e.type === 'red'           && 'RC'}
+                          {e.type === 'sub'           && 'SB'}
+                          {e.type === 'penalty_saved' && 'PS'}
+                          {e.type === 'own_goal'      && 'OG'}
+                          {isVar                      && 'VAR'}
                         </div>
                         <div className="flex-1 min-w-0">
                           {isVar ? (

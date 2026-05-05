@@ -451,10 +451,10 @@ export default function HomeScreen() {
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <div
-                        className="w-10 h-10 rounded-full flex items-center justify-center text-[11px] font-black uppercase shrink-0"
-                        style={{ background: '#1C2333', border: '1px solid rgba(255,255,255,0.08)', color: 'var(--mute)' }}
+                        className="fk-mono flex items-center justify-center shrink-0"
+                        style={{ width: 40, height: 40, border: '1px solid var(--rule)', color: 'var(--mute)', fontSize: 9 }}
                       >
-                        {prediction.name?.substring(0, 2)}
+                        {prediction.name?.split(' ').map(w => w[0]).join('').substring(0, 3)}
                       </div>
                       <div>
                         {prediction.correct === null  && <div className="fz-label mb-0.5" style={{ color: 'var(--cyan)' }}>Your pick</div>}
@@ -530,10 +530,10 @@ export default function HomeScreen() {
                   style={{ background: 'var(--ink-2)', border: '1px solid rgba(240,180,0,0.2)' }}
                 >
                   <div
-                    className="w-12 h-12 rounded-full flex items-center justify-center text-xl shrink-0"
-                    style={{ background: 'rgba(240,180,0,0.1)', border: '1px solid rgba(240,180,0,0.2)' }}
+                    className="fk-mono flex items-center justify-center shrink-0"
+                    style={{ width: 48, height: 48, border: '1px solid var(--rule)', color: 'var(--gold)', fontSize: 9 }}
                   >
-                    📊
+                    RCP
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="fz-label mb-0.5" style={{ color: 'var(--gold)' }}>
@@ -562,10 +562,10 @@ export default function HomeScreen() {
                 style={{ background: 'rgba(240,180,0,0.05)', border: '1px solid rgba(240,180,0,0.18)' }}
               >
                 <div
-                  className="w-10 h-10 rounded-full flex items-center justify-center text-xl shrink-0"
-                  style={{ background: 'rgba(240,180,0,0.12)', border: '1px solid rgba(240,180,0,0.2)' }}
+                  className="fk-mono flex items-center justify-center shrink-0"
+                  style={{ width: 40, height: 40, border: '1px solid var(--rule)', color: 'var(--gold)', fontSize: 9 }}
                 >
-                  🏆
+                  BKT
                 </div>
                 <div>
                   <div className="fz-label mb-0.5" style={{ color: 'var(--gold)' }}>Bracket Challenge</div>

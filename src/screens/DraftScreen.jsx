@@ -270,7 +270,7 @@ export default function DraftScreen() {
         </div>
         <div className="w-full max-w-sm space-y-2">
           {list.map((p, i) => (
-            <div key={p.id} className="flex items-center gap-3 bg-[#111] rounded-lg px-3 py-2">
+            <div key={p.id} className="flex items-center gap-3 bg-[#111] rounded-sm px-3 py-2">
               <span className="text-[#555] text-[11px] font-black w-5">{i + 1}</span>
               <span
                 className="text-[9px] font-black px-1.5 py-0.5 rounded-sm"
@@ -404,13 +404,13 @@ export default function DraftScreen() {
           </div>
 
           {list.length === 0 ? (
-            <div className="text-center py-4 text-[#333] text-[11px] font-bold uppercase tracking-widest border border-dashed border-[#222] rounded-lg">
+            <div className="text-center py-4 text-[#333] text-[11px] font-bold uppercase tracking-widest border border-dashed border-[#222] rounded-sm">
               Add players below — #1 is your highest priority
             </div>
           ) : (
             <div className="space-y-1.5 max-h-[240px] overflow-y-auto pr-1">
               {list.map((p, idx) => (
-                <div key={p.id} className="flex items-center gap-2 bg-[#111] rounded-lg px-2 py-2">
+                <div key={p.id} className="flex items-center gap-2 bg-[#111] rounded-sm px-2 py-2">
                   <span className="text-[#444] text-[10px] font-black w-4 text-right shrink-0">{idx + 1}</span>
                   <span
                     className="text-[9px] font-black px-1.5 py-0.5 rounded-sm shrink-0"
@@ -452,7 +452,7 @@ export default function DraftScreen() {
               placeholder="Search players..."
               value={search}
               onChange={e => setSearch(e.target.value)}
-              className="w-full bg-[#111] border border-[#2A2A2A] rounded-lg px-3 py-2 text-white text-[12px] outline-none placeholder:text-[#444] focus:border-[#444]"
+              className="w-full bg-[#111] border border-[#2A2A2A] rounded-sm px-3 py-2 text-white text-[12px] outline-none placeholder:text-[#444] focus:border-[#444]"
             />
             <div className="flex gap-2">
               {POS_FILTER_ORDER.map(pos => (
@@ -487,7 +487,7 @@ export default function DraftScreen() {
               return (
                 <div key={p.id}>
                   <div
-                    className={`flex items-center gap-3 bg-[#111] rounded-lg px-3 py-2.5 cursor-pointer transition-opacity ${disabled ? 'opacity-40' : 'active:opacity-70'}`}
+                    className={`flex items-center gap-3 bg-[#111] rounded-sm px-3 py-2.5 cursor-pointer transition-opacity ${disabled ? 'opacity-40' : 'active:opacity-70'}`}
                     onClick={() => !disabled && setExpandedId(isExpanded ? null : p.id)}
                   >
                     <span

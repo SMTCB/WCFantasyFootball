@@ -240,7 +240,7 @@ function MatchdayDeadlines({ tournamentId }) {
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
                   <span className="text-xs font-black font-mono">{d.matchday_id}</span>
-                  {locked && <span className="text-[9px] text-[#FFB300] font-black uppercase">🔒 Locked</span>}
+                  {locked && <span className="fk-mono text-[9px] uppercase" style={{ color: 'var(--gold)' }}>LOCKED</span>}
                 </div>
                 <button onClick={() => setEditing(isEdit ? null : { ...d, deadline_at: d.deadline_at?.slice(0,16), unlocks_at: d.unlocks_at?.slice(0,16) ?? '' })}
                   className="text-[9px] font-black uppercase px-2 py-1 border border-border hover:border-white/40">
