@@ -13,22 +13,34 @@ export default function PitchView({
       className="relative w-full select-none overflow-hidden"
       style={{
         aspectRatio: '3/2',
-        background: 'linear-gradient(180deg, #041A08 0%, #062310 40%, #041A08 100%)',
+        background: 'linear-gradient(180deg, #0E1218 0%, #0A0D12 100%)',
       }}
     >
-      {/* ── Alternating pitch stripe texture ─────────────────── */}
+      {/* ── Faint cyan position-lane lines (FWD / MID / DEF / GK) ── */}
       <div
         className="absolute inset-0 pointer-events-none"
         style={{
           backgroundImage: `repeating-linear-gradient(
             180deg,
-            rgba(255,255,255,0.025) 0px,
-            rgba(255,255,255,0.025) 24px,
-            rgba(0,0,0,0.06) 24px,
-            rgba(0,0,0,0.06) 48px
+            rgba(0,180,216,0.07) 0px,
+            rgba(0,180,216,0.07) 1px,
+            transparent 1px,
+            transparent 25%
           )`,
         }}
       />
+      {/* Position lane labels */}
+      <div className="absolute inset-0 pointer-events-none flex flex-col justify-around py-6 pl-2">
+        {['FWD', 'MID', 'DEF', 'GK'].map(pos => (
+          <div
+            key={pos}
+            className="fk-mono"
+            style={{ fontSize: 8, color: 'rgba(0,180,216,0.3)', letterSpacing: '0.14em' }}
+          >
+            {pos}
+          </div>
+        ))}
+      </div>
 
       {/* ── Pitch markings SVG ────────────────────────────────── */}
       <svg

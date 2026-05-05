@@ -7,9 +7,11 @@ import { useAuth } from '../hooks/useAuth';
 import { useOnboarding } from '../hooks/useOnboarding';
 import { useTransfer } from '../hooks/useTransfer';
 import { useLeagueConfig } from '../hooks/useLeagueConfig';
-import LeagueSelector from '../components/LeagueSelector';
-import OnboardingTour from '../components/OnboardingTour';
-import ConfirmModal from '../components/ConfirmModal';
+import LeagueSelector  from '../components/LeagueSelector';
+import OnboardingTour  from '../components/OnboardingTour';
+import ConfirmModal    from '../components/ConfirmModal';
+import PositionChip    from '../components/PositionChip';
+import StatusDot       from '../components/StatusDot';
 
 const COUNTRY_LIMIT = 3;
 
@@ -460,94 +462,55 @@ export default function MarketScreen() {
             const canAfford    = budget >= p.price;
             const hasLeague    = !!activeLeague;
             const canBuy       = hasLeague && !isOwned && !takenByOther && !limitReached && canAfford && (mySquad?.players?.length ?? 0) < squadSize;
-            const posCfg       = POS_CONFIG[p.position] || POS_CONFIG.MID;
-            const flag         = FLAG_MAP[p.club] ?? '🌍';
             const isJoker      = p.id === todayJokerId;
             const intel        = p.intel;
 
             return (
               <div
                 key={p.id}
-                className="flex items-center px-5 py-3 gap-4 transition-all duration-150"
+                className="flex items-center px-4 py-2.5 gap-3 transition-all duration-150"
                 style={{
-                  borderBottom: '1px solid rgba(255,255,255,0.05)',
-                  background:   isOwned ? 'rgba(0,196,232,0.04)' : takenByOther ? 'rgba(240,58,58,0.02)' : 'transparent',
-                  borderLeft:   isOwned ? '2px solid rgba(0,196,232,0.4)' : takenByOther ? '2px solid rgba(240,58,58,0.25)' : '2px solid transparent',
+                  borderBottom: '1px solid var(--rule)',
+                  background:   isOwned ? 'rgba(0,180,216,0.05)' : takenByOther ? 'rgba(239,68,68,0.02)' : 'transparent',
+                  borderLeft:   isOwned ? '2px solid var(--cyan)' : takenByOther ? '2px solid rgba(239,68,68,0.3)' : '2px solid transparent',
                   opacity:      takenByOther ? 0.65 : 1,
                 }}
               >
-                {/* Avatar */}
-                <div className="relative shrink-0">
-                  <div
-                    className="w-11 h-11 rounded-full flex items-center justify-center font-black text-[11px] uppercase"
-                    style={{
-                      background: posCfg.bg,
-                      border: `1.5px solid ${posCfg.color}50`,
-                      color: posCfg.color,
-                      fontFamily: 'Archivo Black, sans-serif',
-                    }}
-                  >
-                    {p.club?.substring(0, 3)}
-                  </div>
-                  <div
-                    className="absolute -bottom-0.5 -right-0.5 w-[18px] h-[18px] rounded-full flex items-center justify-center shadow-sm text-[10px]"
-                    style={{ background: '#1C2333', border: '1.5px solid #080A0E' }}
-                  >
-                    {flag}
-                  </div>
-                </div>
+                {/* Position chip — replaces circle avatar */}
+                <PositionChip pos={p.position} />
 
-                {/* Info */}
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-1.5 flex-wrap">
-                    <span
-                      className="text-[13.5px] font-semibold truncate"
-                      style={{ color: 'var(--paper)', fontFamily: 'Archivo, sans-serif' }}
-                    >
-                      {p.name}
-                    </span>
-                    {isOwned && (
+                {/* Status dot + name block */}
+                <div className="flex-1 min-w-0 flex items-center gap-2">
+                  {intel && <StatusDot status={intel.status ?? 'fit'} />}
+                  <div className="min-w-0">
+                    {/* Name */}
+                    <div className="flex items-center flex-wrap gap-1.5">
                       <span
-                        className="shrink-0 text-[8px] font-black px-1.5 py-0.5 rounded-sm"
-                        style={{ background: 'rgba(0,196,232,0.15)', color: 'var(--cyan)', fontFamily: 'Archivo Black, sans-serif' }}
+                        className="fk-display truncate"
+                        style={{ fontSize: 13, color: 'var(--paper)', letterSpacing: '-0.01em' }}
                       >
-                        OWNED
+                        {p.name.toUpperCase()}
                       </span>
-                    )}
-                    {takenByOther && (
-                      <span
-                        className="shrink-0 text-[8px] font-black px-1.5 py-0.5 rounded-sm"
-                        style={{ background: 'rgba(240,58,58,0.15)', color: 'var(--danger)', fontFamily: 'Archivo Black, sans-serif' }}
-                      >
-                        {ownerName ? `TAKEN — ${ownerName}` : 'TAKEN'}
-                      </span>
-                    )}
-                    {isJoker && (
-                      <span
-                        className="shrink-0 text-[8px] font-black px-1.5 py-0.5 rounded-sm"
-                        style={{ background: 'rgba(157,95,245,0.15)', color: 'var(--pos-gk)', fontFamily: 'Archivo Black, sans-serif' }}
-                      >
-                        JOKER
-                      </span>
-                    )}
-                  </div>
-
-                  <div className="flex items-center gap-2 mt-0.5">
-                    <span
-                      className="text-[9px] font-black px-1.5 py-[2px] rounded-sm"
-                      style={{ color: posCfg.color, background: posCfg.bg, fontFamily: 'Archivo Black, sans-serif', letterSpacing: '0.06em' }}
-                    >
-                      {p.position}
-                    </span>
-                    <span className="text-[10px] font-medium" style={{ color: 'var(--mute)' }}>{p.club}</span>
-                    {intel?.status && intel.status !== 'fit' && (
-                      <span
-                        className="text-[8px] font-black px-1 py-0.5 rounded-sm uppercase"
-                        style={{ color: 'var(--danger)', background: 'rgba(240,58,58,0.12)', fontFamily: 'Archivo Black, sans-serif' }}
-                      >
-                        {intel.status}
-                      </span>
-                    )}
+                      {isOwned && (
+                        <span className="fk-mono shrink-0" style={{ fontSize: 8, color: 'var(--cyan)', border: '1px solid var(--cyan)', padding: '1px 5px' }}>
+                          OWNED
+                        </span>
+                      )}
+                      {takenByOther && (
+                        <span className="fk-mono shrink-0" style={{ fontSize: 8, color: 'var(--danger)', border: '1px solid var(--danger)', padding: '1px 5px' }}>
+                          {ownerName ? `TAKEN · ${ownerName}` : 'TAKEN'}
+                        </span>
+                      )}
+                      {isJoker && (
+                        <span className="fk-mono shrink-0" style={{ fontSize: 8, color: 'var(--pos-gk)', border: '1px solid var(--pos-gk)', padding: '1px 5px' }}>
+                          JOKER
+                        </span>
+                      )}
+                    </div>
+                    {/* Metadata */}
+                    <div className="fk-mono mt-0.5" style={{ fontSize: 9, color: 'var(--mute)', letterSpacing: '0.14em' }}>
+                      {p.club}{p.country ? ` · ${p.country}` : ''}
+                    </div>
                   </div>
                 </div>
 
@@ -555,48 +518,39 @@ export default function MarketScreen() {
                 <div className="shrink-0 flex items-center gap-3">
                   <div className="text-right">
                     <div
-                      className="text-[16px] font-black tabular-nums leading-tight"
-                      style={{ fontFamily: 'Archivo Black, sans-serif', color: canAfford || isOwned ? 'var(--paper)' : 'var(--danger)' }}
+                      className="fk-display tabular-nums"
+                      style={{ fontSize: 16, color: canAfford || isOwned ? 'var(--paper)' : 'var(--danger)', letterSpacing: '-0.02em' }}
                     >
                       ${p.price}
-                      <span className="text-[10px] font-normal" style={{ color: 'var(--mute)' }}>M</span>
+                      <span className="fk-mono" style={{ fontSize: 9, color: 'var(--mute)', fontWeight: 400 }}>M</span>
                     </div>
                   </div>
 
                   {isLocked ? (
                     <div
-                      className="min-w-[60px] py-2 px-3 rounded-sm text-center"
+                      className="fk-mono"
                       style={{
-                        background: 'rgba(240,58,58,0.07)',
-                        border: '1px solid rgba(240,58,58,0.18)',
-                        color: 'var(--danger)',
-                        fontFamily: 'Archivo Black, sans-serif',
-                        fontSize: '9px',
-                        fontWeight: 800,
-                        letterSpacing: '0.08em',
-                        textTransform: 'uppercase',
-                        opacity: 0.7,
+                        minWidth: 52, padding: '6px 10px', textAlign: 'center',
+                        border: '1px solid var(--rule)', color: 'var(--mute)',
+                        fontSize: 9, opacity: 0.6,
                       }}
                     >
-                      🔒
+                      LOCKED
                     </div>
                   ) : isOwned ? (
                     <button
                       onClick={() => handleSell(p)}
                       disabled={saving}
-                      className="min-w-[60px] py-2 px-3 rounded-sm transition-all active:scale-95 disabled:opacity-40"
+                      className="fk-mono transition-all active:scale-95 disabled:opacity-40"
                       style={{
-                        background: 'rgba(240,58,58,0.12)',
+                        minWidth: 52, padding: '6px 10px',
+                        border: '1px solid var(--danger)',
                         color: 'var(--danger)',
-                        border: '1px solid rgba(240,58,58,0.25)',
-                        fontFamily: 'Archivo Black, sans-serif',
-                        fontSize: '10px',
-                        fontWeight: 800,
-                        letterSpacing: '0.08em',
-                        textTransform: 'uppercase',
+                        background: 'transparent',
+                        fontSize: 9, letterSpacing: '0.18em',
                       }}
                     >
-                      Sell
+                      SELL
                     </button>
                   ) : (
                     <button
@@ -608,21 +562,18 @@ export default function MarketScreen() {
                         : limitReached ? `${p.position} slots full`
                         : 'Add to squad'
                       }
-                      className="min-w-[60px] py-2 px-3 rounded-sm transition-all active:scale-95"
+                      className="fk-mono transition-all active:scale-95"
                       style={{
-                        background: canBuy ? 'var(--positive)' : 'rgba(255,255,255,0.04)',
-                        color: canBuy ? '#000' : 'var(--mute)',
-                        border: canBuy ? 'none' : '1px solid rgba(255,255,255,0.07)',
-                        fontFamily: 'Archivo Black, sans-serif',
-                        fontSize: '10px',
-                        fontWeight: 800,
-                        letterSpacing: '0.08em',
-                        textTransform: 'uppercase',
+                        minWidth: 52, padding: '6px 10px',
+                        border: `1px solid ${canBuy ? 'var(--cyan)' : 'var(--rule)'}`,
+                        color: canBuy ? 'var(--cyan)' : 'var(--mute)',
+                        background: 'transparent',
+                        fontSize: 9, letterSpacing: '0.18em',
                         cursor: canBuy ? 'pointer' : 'not-allowed',
                         opacity: saving ? 0.5 : 1,
                       }}
                     >
-                      Buy
+                      BUY
                     </button>
                   )}
                 </div>
