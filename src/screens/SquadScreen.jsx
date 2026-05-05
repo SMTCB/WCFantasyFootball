@@ -647,7 +647,6 @@ export default function SquadScreen() {
       players: [...prev.players, { ...player, isBench: false, gridClass: '' }],
       budget:  { ...prev.budget, current: result.budget_remaining },
     }));
-    setPickerPos(null);
   };
 
   // Player list grouped by position (row variant)
@@ -1242,29 +1241,51 @@ export default function SquadScreen() {
               <div className="w-10 h-1 rounded-full" style={{ background: 'rgba(255,255,255,0.15)' }} />
             </div>
             {/* Player info */}
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-3">
-                <div
-                  className="w-12 h-12 rounded-full flex items-center justify-center font-black text-[11px] uppercase"
-                  style={{ background: selectedPlayer.color || '#1C2333', border: '1.5px solid rgba(255,255,255,0.12)', color: 'var(--paper)', fontFamily: 'Archivo Black, sans-serif' }}
-                >
-                  {selectedPlayer.club}
+            <div className="flex items-start justify-between mb-4 gap-3">
+              <div className="flex items-start gap-3">
+                {/* Position badge — matches player list row style */}
+                <div style={{
+                  width: 44,
+                  height: 44,
+                  flexShrink: 0,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  background: 'rgba(255,255,255,0.05)',
+                  border: `1.5px solid ${
+                    selectedPlayer.position === 'GK' ? 'var(--pos-gk)' :
+                    selectedPlayer.position === 'DEF' ? 'var(--pos-def)' :
+                    selectedPlayer.position === 'MID' ? 'var(--pos-mid)' :
+                    'var(--pos-fwd)'
+                  }`,
+                  color: selectedPlayer.position === 'GK' ? 'var(--pos-gk)' :
+                    selectedPlayer.position === 'DEF' ? 'var(--pos-def)' :
+                    selectedPlayer.position === 'MID' ? 'var(--pos-mid)' :
+                    'var(--pos-fwd)',
+                  fontFamily: 'Archivo Black, sans-serif',
+                  fontSize: 10,
+                  letterSpacing: '0.08em',
+                }}>
+                  {selectedPlayer.position}
                 </div>
                 <div>
-                  <div className="text-[16px] font-semibold leading-tight" style={{ fontFamily: 'Archivo, sans-serif', color: 'var(--paper)' }}>
+                  <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 18, color: 'var(--paper)', lineHeight: 1.1 }}>
                     {selectedPlayer.name}
                   </div>
-                  <div className="fz-label mt-0.5" style={{ color: 'var(--mute)' }}>
-                    {selectedPlayer.position} · ${selectedPlayer.price}M
-                    {selectedPlayer.id === captainId && <span className="ml-2 text-gold">★ Captain</span>}
-                    {selectedPlayer.id === todayJokerId && <span className="ml-2" style={{ color: 'var(--pos-gk)' }}>JOKER</span>}
+                  <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 10, color: 'var(--mute)', letterSpacing: '0.14em', marginTop: 4, display: 'flex', alignItems: 'center', gap: 8 }}>
+                    {selectedPlayer.club} · £{selectedPlayer.price}M
+                    {selectedPlayer.id === captainId && (
+                      <span style={{ color: 'var(--gold)', background: 'rgba(224,168,0,0.12)', border: '1px solid rgba(224,168,0,0.3)', padding: '1px 6px', borderRadius: 2 }}>CAPTAIN</span>
+                    )}
+                    {selectedPlayer.id === todayJokerId && (
+                      <span style={{ color: 'var(--pos-gk)', background: 'rgba(157,95,245,0.1)', border: '1px solid rgba(157,95,245,0.3)', padding: '1px 6px', borderRadius: 2 }}>JOKER</span>
+                    )}
                   </div>
                 </div>
               </div>
               <button
                 onClick={() => setSelectedPlayer(null)}
-                className="w-8 h-8 rounded-full flex items-center justify-center transition-colors text-lg"
-                style={{ background: 'rgba(255,255,255,0.06)', color: 'var(--mute)' }}
+                style={{ width: 28, height: 28, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.08)', color: 'var(--mute)', fontSize: 16, cursor: 'pointer' }}
               >×</button>
             </div>
             {/* Actions */}
@@ -1275,29 +1296,29 @@ export default function SquadScreen() {
                   disabled={saving || captainId === selectedPlayer.id}
                   className="flex-1 py-2.5 rounded-sm transition-all active:scale-95 disabled:opacity-30"
                   style={{
-                    background: captainId === selectedPlayer.id ? 'rgba(240,180,0,0.15)' : 'var(--gold)',
-                    color: captainId === selectedPlayer.id ? 'var(--gold)' : '#000',
-                    border: captainId === selectedPlayer.id ? '1px solid rgba(240,180,0,0.3)' : 'none',
-                    fontFamily: 'Archivo Black, sans-serif', fontSize: '11px', fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase',
+                    background: captainId === selectedPlayer.id ? 'rgba(224,168,0,0.12)' : 'var(--gold)',
+                    color: captainId === selectedPlayer.id ? 'var(--gold)' : '#0A0A0A',
+                    border: captainId === selectedPlayer.id ? '1px solid rgba(224,168,0,0.35)' : '1px solid var(--gold)',
+                    fontFamily: 'Archivo Black, sans-serif', fontSize: '11px', letterSpacing: '0.12em', textTransform: 'uppercase',
                   }}
                 >
-                  {captainId === selectedPlayer.id ? '✓ Captain' : 'Make Captain'}
+                  {captainId === selectedPlayer.id ? 'CAPTAIN' : 'CAPTAIN'}
                 </button>
               )}
               <button
                 onClick={() => setSwapMode(true)}
                 className="flex-1 py-2.5 rounded-sm transition-all active:scale-95"
-                style={{ background: 'rgba(255,255,255,0.06)', color: 'var(--paper)', border: '1px solid rgba(255,255,255,0.1)', fontFamily: 'Archivo Black, sans-serif', fontSize: '11px', fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase' }}
+                style={{ background: 'transparent', color: 'var(--cyan)', border: '1px solid var(--cyan)', fontFamily: 'Archivo Black, sans-serif', fontSize: '11px', letterSpacing: '0.12em', textTransform: 'uppercase' }}
               >
-                {selectedIsBench ? '↑ Sub In' : '↓ Sub Out'}
+                {selectedIsBench ? 'SUB IN' : 'SUB OUT'}
               </button>
               <button
                 onClick={handleSellPlayer}
                 disabled={saving}
-                className="px-5 py-2.5 rounded-sm transition-all active:scale-95"
-                style={{ background: 'rgba(240,58,58,0.12)', color: 'var(--danger)', border: '1px solid rgba(240,58,58,0.2)', fontFamily: 'Archivo Black, sans-serif', fontSize: '11px', fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase' }}
+                className="px-5 py-2.5 rounded-sm transition-all active:scale-95 disabled:opacity-40"
+                style={{ background: 'transparent', color: 'var(--danger)', border: '1px solid var(--danger)', fontFamily: 'Archivo Black, sans-serif', fontSize: '11px', letterSpacing: '0.12em', textTransform: 'uppercase' }}
               >
-                Sell
+                SELL
               </button>
             </div>
             {/* Daily Joker section */}
