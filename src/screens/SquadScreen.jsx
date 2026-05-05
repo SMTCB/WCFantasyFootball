@@ -69,7 +69,7 @@ export default function SquadScreen() {
   const [swapMode,           setSwapMode]          = useState(false);
   const [saving,             setSaving]            = useState(false);
   // Mobile tab: 'pitch' | 'squad' | 'tools'
-  const [mobileTab,          setMobileTab]         = useState('squad');
+  const [mobileTab,          setMobileTab]         = useState('pitch');
   // Desktop sub-tab: 'pitch' | 'list' | 'chips' | 'status'
   const [desktopTab,         setDesktopTab]        = useState('pitch');
   // Danger banner dismissed on mobile
@@ -662,18 +662,19 @@ export default function SquadScreen() {
           <div key={pos}>
             <SectionHeader title={POS_LABEL[pos]} />
             {posPlayers.map(player => (
-              <PlayerCard
-                key={player.id}
-                player={player}
-                variant="row"
-                isCaptain={player.id === captainId}
-                isTripleCaptain={squadData.isTripleCaptain}
-                isJoker={player.id === todayJokerId}
-                onClick={isRouletteSpinning ? () => {} : handlePlayerClick}
-                isSelected={selectedPlayer?.id === player.id}
-                isSwapTarget={swapMode && selectedPlayer?.id !== player.id}
-                showIntelligence
-              />
+              <div key={player.id} style={{ borderLeft: '2px solid var(--cyan)' }}>
+                <PlayerCard
+                  player={player}
+                  variant="row"
+                  isCaptain={player.id === captainId}
+                  isTripleCaptain={squadData.isTripleCaptain}
+                  isJoker={player.id === todayJokerId}
+                  onClick={isRouletteSpinning ? () => {} : handlePlayerClick}
+                  isSelected={selectedPlayer?.id === player.id}
+                  isSwapTarget={swapMode && selectedPlayer?.id !== player.id}
+                  showIntelligence
+                />
+              </div>
             ))}
             {Array.from({ length: emptySlots }).map((_, i) => (
               <button
@@ -815,145 +816,233 @@ export default function SquadScreen() {
       {/* ══ MOBILE LAYOUT ═══════════════════════════════════════════════════ */}
       <div className="lg:hidden">
 
-        {/* Tab strip */}
-        <div className="flex" style={{ borderBottom: '1px solid rgba(255,255,255,0.07)', background: 'var(--ink-2)' }}>
+        {/* Tab strip — 4 tabs matching desktop */}
+        <div className="flex" style={{ borderBottom: '1px solid var(--rule)', background: 'var(--ink-2)' }}>
           {[
-            { id: 'squad', label: 'LIST', text: 'List' },
-            { id: 'tools', label: 'TLS', text: 'Tools' },
+            { id: 'pitch',  label: 'PITCH'  },
+            { id: 'squad',  label: 'LIST'   },
+            { id: 'chips',  label: 'CHIPS'  },
+            { id: 'status', label: 'STATUS' },
           ].map(tab => (
             <button
               key={tab.id}
               onClick={() => setMobileTab(tab.id)}
-              className="flex-1 py-3 text-center transition-all relative"
+              className="flex-1 py-2.5 text-center transition-all relative"
               style={{
                 fontFamily: 'Archivo Black, sans-serif',
-                background: mobileTab === tab.id ? 'rgba(0,196,232,0.08)' : 'transparent',
-                borderRadius: mobileTab === tab.id ? '4px 4px 0 0' : '0',
+                fontSize: 9,
+                letterSpacing: '0.14em',
+                textTransform: 'uppercase',
+                color: mobileTab === tab.id ? 'var(--cyan)' : 'var(--mute)',
+                background: 'transparent',
               }}
             >
-              <div className="fk-mono" style={{ fontSize: 9, marginBottom: '2px', color: mobileTab === tab.id ? 'var(--cyan)' : 'var(--mute)' }}>{tab.label}</div>
-              <div
-                className="text-[9px] font-black uppercase tracking-widest"
-                style={{
-                  color: mobileTab === tab.id ? 'var(--cyan)' : 'var(--mute)',
-                }}
-              >
-                {tab.text}
-              </div>
+              {tab.label}
               {mobileTab === tab.id && (
-                <div className="absolute bottom-0 left-0 right-0 h-[3px] rounded-t-full" style={{ background: 'var(--cyan)' }} />
+                <div className="absolute bottom-0 left-0 right-0 h-[2px]" style={{ background: 'var(--cyan)' }} />
               )}
-              {tab.id === 'tools' && dangerPlayers.length > 0 && (
-                <div className="absolute top-1 right-1.5 w-1.5 h-1.5 rounded-full" style={{ background: 'var(--danger)' }} />
+              {tab.id === 'status' && dangerPlayers.length > 0 && (
+                <div className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full" style={{ background: 'var(--danger)' }} />
               )}
             </button>
           ))}
         </div>
 
-        {/* ── SQUAD TAB / LIST ──────────────────────────────────────── */}
-        {mobileTab === 'squad' && (
-          <div className="pb-24">
-            {/* Starters by position */}
-            {['GK', 'DEF', 'MID', 'FWD'].map(pos => {
-              const posPlayers = players.filter(p => p.position === pos);
-              if (!posPlayers.length) return null;
-              const posColor = pos === 'GK' ? 'var(--pos-gk)' : pos === 'DEF' ? 'var(--pos-def)' : pos === 'MID' ? 'var(--pos-mid)' : 'var(--pos-fwd)';
-              const posLabel = pos === 'GK' ? 'Goalkeeper' : pos === 'DEF' ? 'Defenders' : pos === 'MID' ? 'Midfielders' : 'Forwards';
-              return (
-                <div key={pos}>
-                  <div style={{ padding: '10px 16px 6px', display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <div style={{ width: 3, height: 14, background: posColor, flexShrink: 0 }} />
-                    <span style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 9, color: posColor, letterSpacing: '0.16em', textTransform: 'uppercase' }}>{posLabel}</span>
-                  </div>
-                  {posPlayers.map(player => (
-                    <button
-                      key={player.id}
-                      onClick={() => handlePlayerClick(player)}
-                      style={{
-                        width: '100%', display: 'flex', alignItems: 'center', gap: 12,
-                        padding: '10px 16px', background: selectedPlayer?.id === player.id ? 'rgba(0,180,216,0.06)' : 'transparent',
-                        borderBottom: '1px solid var(--rule)', borderLeft: player.id === captainId ? '2px solid var(--gold)' : '2px solid transparent',
-                        cursor: 'pointer', textAlign: 'left',
-                      }}
-                    >
-                      {/* Position badge */}
-                      <div style={{
-                        width: 36, height: 36, flexShrink: 0,
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        border: `1.5px solid ${posColor}`, color: posColor,
-                        fontFamily: 'Archivo Black, sans-serif', fontSize: 9, letterSpacing: '0.08em',
-                        background: 'rgba(255,255,255,0.03)',
-                      }}>{pos}</div>
-                      {/* Name + metadata */}
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 13, color: 'var(--paper)', letterSpacing: '-0.01em', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: 6 }}>
-                          <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{player.name.split(' ').slice(-1)[0]}</span>
-                          {player.id === captainId && <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 8, color: 'var(--gold)', border: '1px solid rgba(224,168,0,0.4)', padding: '0 4px' }}>C</span>}
-                          {player.id === todayJokerId && <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 8, color: 'var(--pos-gk)', border: '1px solid rgba(157,95,245,0.4)', padding: '0 4px' }}>J</span>}
-                        </div>
-                        <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 9, color: 'var(--mute)', letterSpacing: '0.12em', marginTop: 2 }}>
-                          {player.club} · £{player.price}M
-                        </div>
-                      </div>
-                      {/* Points */}
-                      <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 18, color: 'var(--paper)', letterSpacing: '-0.02em', flexShrink: 0 }}>
-                        {player.points ?? 0}
-                        <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 8, color: 'var(--mute)', marginLeft: 2 }}>PTS</span>
-                      </div>
-                    </button>
-                  ))}
+        {/* ── PITCH TAB — numbered list of 11 starters ─────────────── */}
+        {mobileTab === 'pitch' && (() => {
+          const captain = allSquadPlayers.find(p => p.id === captainId);
+          const def = players.filter(p => p.position === 'DEF').length;
+          const mid = players.filter(p => p.position === 'MID').length;
+          const fwd = players.filter(p => p.position === 'FWD').length;
+          const formation = [def, mid, fwd].filter(n => n > 0).join('-') || '—';
+          const POS_LABEL_PITCH = { GK: 'Goalkeeper', DEF: 'Defence', MID: 'Midfield', FWD: 'Attack' };
+          let no = 0;
+          return (
+            <div className="pb-24">
+              {/* Section header */}
+              <div style={{ padding: '16px 16px 12px', borderBottom: '1px solid var(--rule)' }}>
+                <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 9, color: 'var(--mute)', letterSpacing: '0.2em', textTransform: 'uppercase', marginBottom: 4 }}>Tactical Sheet</div>
+                <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 28, color: 'var(--paper)', lineHeight: 1, letterSpacing: '-0.01em' }}>MY SQUAD</div>
+                <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 9, color: 'var(--mute)', letterSpacing: '0.14em', marginTop: 6 }}>
+                  {formation}
+                  {captain ? ` · CAPTAIN ${captain.name.split(' ').slice(-1)[0].toUpperCase()}` : ''}
+                  {squadData.matchdayId ? ` · GW ${squadData.matchdayId}` : ''}
                 </div>
-              );
-            })}
-            {/* Bench */}
-            {bench.length > 0 && (
-              <div>
-                <div style={{ padding: '10px 16px 6px', display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <div style={{ width: 3, height: 14, background: 'var(--mute)', flexShrink: 0 }} />
-                  <span style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 9, color: 'var(--mute)', letterSpacing: '0.16em', textTransform: 'uppercase' }}>Substitutes</span>
-                </div>
-                {bench.map(player => {
-                  const pos = player.position;
-                  const posColor = pos === 'GK' ? 'var(--pos-gk)' : pos === 'DEF' ? 'var(--pos-def)' : pos === 'MID' ? 'var(--pos-mid)' : 'var(--pos-fwd)';
-                  return (
-                    <button
-                      key={player.id}
-                      onClick={() => handlePlayerClick(player)}
-                      style={{
-                        width: '100%', display: 'flex', alignItems: 'center', gap: 12,
-                        padding: '10px 16px', background: 'rgba(255,255,255,0.015)',
-                        borderBottom: '1px solid var(--rule)', borderLeft: '2px solid transparent',
-                        cursor: 'pointer', textAlign: 'left', opacity: 0.7,
-                      }}
-                    >
-                      <div style={{
-                        width: 36, height: 36, flexShrink: 0,
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        border: `1.5px solid ${posColor}60`, color: `${posColor}90`,
-                        fontFamily: 'Archivo Black, sans-serif', fontSize: 9, letterSpacing: '0.08em',
-                        background: 'rgba(255,255,255,0.02)',
-                      }}>{pos}</div>
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 13, color: 'var(--mute)', letterSpacing: '-0.01em', textTransform: 'uppercase', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                          {player.name.split(' ').slice(-1)[0]}
-                        </div>
-                        <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 9, color: 'var(--mute)', letterSpacing: '0.12em', marginTop: 2, opacity: 0.7 }}>
-                          {player.club} · £{player.price}M
-                        </div>
-                      </div>
-                      <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 18, color: 'var(--mute)', letterSpacing: '-0.02em', flexShrink: 0 }}>
-                        {player.points ?? 0}
-                        <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 8, color: 'var(--mute)', marginLeft: 2 }}>PTS</span>
-                      </div>
-                    </button>
-                  );
-                })}
               </div>
-            )}
+              {/* Players grouped by position */}
+              {['GK', 'DEF', 'MID', 'FWD'].map(pos => {
+                const posPlayers = players.filter(p => p.position === pos);
+                if (!posPlayers.length) return null;
+                const posColor = pos === 'GK' ? 'var(--pos-gk)' : pos === 'DEF' ? 'var(--pos-def)' : pos === 'MID' ? 'var(--pos-mid)' : 'var(--pos-fwd)';
+                return (
+                  <div key={pos}>
+                    {/* Position group header */}
+                    <div style={{ padding: '8px 16px 4px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <span style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 9, color: posColor, letterSpacing: '0.16em', textTransform: 'uppercase' }}>{POS_LABEL_PITCH[pos]}</span>
+                      <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 9, color: 'var(--mute)', letterSpacing: '0.1em' }}>{posPlayers.length}</span>
+                    </div>
+                    {posPlayers.map(player => {
+                      no++;
+                      const surname = player.name?.split(' ').slice(-1)[0]?.toUpperCase() ?? player.name?.toUpperCase() ?? '?';
+                      const sc = player.intel?.status === 'out' || player.intel?.status === 'injured' || player.intel?.status === 'suspended'
+                        ? 'var(--danger)' : player.intel?.status === 'doubt' || player.intel?.status === 'doubtful'
+                        ? 'var(--gold)' : 'var(--positive)';
+                      return (
+                        <button
+                          key={player.id}
+                          onClick={() => handlePlayerClick(player)}
+                          style={{
+                            width: '100%', display: 'flex', alignItems: 'center', gap: 12,
+                            padding: '9px 16px',
+                            background: selectedPlayer?.id === player.id ? 'rgba(0,180,216,0.05)' : 'transparent',
+                            borderBottom: '1px solid var(--rule)',
+                            borderLeft: '2px solid transparent',
+                            cursor: 'pointer', textAlign: 'left',
+                          }}
+                        >
+                          {/* Jersey number */}
+                          <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 10, color: 'var(--mute)', letterSpacing: '0.05em', width: 28, flexShrink: 0, textAlign: 'right' }}>#{String(no).padStart(2, '0')}</div>
+                          {/* Status dot */}
+                          <div style={{ width: 7, height: 7, borderRadius: '50%', background: sc, flexShrink: 0 }} />
+                          {/* Surname + captain badge */}
+                          <div style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: 6 }}>
+                            <span style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 14, color: 'var(--paper)', letterSpacing: '-0.01em', textTransform: 'uppercase', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{surname}</span>
+                            {player.id === captainId && (
+                              <div style={{ width: 16, height: 16, borderRadius: '50%', background: 'var(--gold)', color: '#0A0A0A', fontFamily: 'Archivo Black, sans-serif', fontSize: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>C</div>
+                            )}
+                          </div>
+                          {/* Club */}
+                          <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 9, color: 'var(--mute)', letterSpacing: '0.12em', flexShrink: 0, minWidth: 28, textAlign: 'right' }}>{(player.club ?? '').substring(0, 3).toUpperCase()}</div>
+                          {/* Points */}
+                          <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 16, color: 'var(--paper)', letterSpacing: '-0.02em', flexShrink: 0, minWidth: 24, textAlign: 'right' }}>{player.points ?? 0}</div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                );
+              })}
+            </div>
+          );
+        })()}
+
+        {/* ── LIST TAB — full squad with empty slots + SIGN buttons ─── */}
+        {mobileTab === 'squad' && (() => {
+          const totalSigned = allSquadPlayers.length;
+          const squadSize   = Object.values(POS_LIMITS).reduce((a, b) => a + b, 0);
+          const emptySlots  = Math.max(0, squadSize - totalSigned);
+          const POS_LABEL_LIST  = { GK: 'Goalkeeper', DEF: 'Defenders', MID: 'Midfielders', FWD: 'Forwards' };
+          return (
+            <div className="pb-24">
+              {/* Section header */}
+              <div style={{ padding: '16px 16px 12px', borderBottom: '1px solid var(--rule)' }}>
+                <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 9, color: 'var(--mute)', letterSpacing: '0.2em', textTransform: 'uppercase', marginBottom: 4 }}>Tactical Sheet</div>
+                <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 28, color: 'var(--paper)', lineHeight: 1, letterSpacing: '-0.01em' }}>MY SQUAD</div>
+                <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 9, color: 'var(--mute)', letterSpacing: '0.14em', marginTop: 6 }}>
+                  {totalSigned}/{squadSize} SIGNED{emptySlots > 0 ? ` · ${emptySlots} EMPTY SLOT${emptySlots !== 1 ? 'S' : ''}` : ''}
+                </div>
+              </div>
+              {/* Starters + bench grouped by position */}
+              {['GK', 'DEF', 'MID', 'FWD'].map(pos => {
+                const limit       = POS_LIMITS[pos] ?? 0;
+                const posStarters = players.filter(p => p.position === pos);
+                const posBench    = bench.filter(p => p.position === pos);
+                const allPos      = [...posStarters, ...posBench];
+                const emptyCount  = Math.max(0, limit - allPos.length);
+                const posColor    = pos === 'GK' ? 'var(--pos-gk)' : pos === 'DEF' ? 'var(--pos-def)' : pos === 'MID' ? 'var(--pos-mid)' : 'var(--pos-fwd)';
+                return (
+                  <div key={pos}>
+                    {/* Position group header */}
+                    <div style={{ padding: '10px 16px 5px', display: 'flex', alignItems: 'center', gap: 8, borderLeft: `3px solid ${posColor}` }}>
+                      <span style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 9, color: posColor, letterSpacing: '0.16em', textTransform: 'uppercase', flex: 1 }}>{POS_LABEL_LIST[pos]}</span>
+                      <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 9, color: 'var(--mute)' }}>{allPos.length}/{limit}</span>
+                    </div>
+                    {/* Signed players */}
+                    {allPos.map(player => {
+                      const isStarter = posStarters.some(p => p.id === player.id);
+                      const sc = player.intel?.status === 'out' || player.intel?.status === 'injured' || player.intel?.status === 'suspended'
+                        ? 'var(--danger)' : player.intel?.status === 'doubt' || player.intel?.status === 'doubtful'
+                        ? 'var(--gold)' : 'var(--positive)';
+                      return (
+                        <button
+                          key={player.id}
+                          onClick={() => handlePlayerClick(player)}
+                          style={{
+                            width: '100%', display: 'flex', alignItems: 'center', gap: 10,
+                            padding: '9px 16px',
+                            background: isStarter ? 'transparent' : 'rgba(255,255,255,0.015)',
+                            borderBottom: '1px solid var(--rule)',
+                            borderLeft: isStarter ? '2px solid var(--cyan)' : '2px solid transparent',
+                            opacity: isStarter ? 1 : 0.65,
+                            cursor: 'pointer', textAlign: 'left',
+                          }}
+                        >
+                          {/* Position badge */}
+                          <div style={{ width: 34, height: 34, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', border: `1.5px solid ${posColor}`, color: posColor, fontFamily: 'Archivo Black, sans-serif', fontSize: 9, letterSpacing: '0.08em', background: 'rgba(255,255,255,0.03)' }}>{pos}</div>
+                          {/* Status dot */}
+                          <div style={{ width: 7, height: 7, borderRadius: '50%', background: sc, flexShrink: 0 }} />
+                          {/* Name + meta */}
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                              <span style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 13, color: 'var(--paper)', letterSpacing: '-0.01em', textTransform: 'uppercase', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{player.name.split(' ').slice(-1)[0]}</span>
+                              {player.id === captainId && <div style={{ width: 14, height: 14, borderRadius: '50%', background: 'var(--gold)', color: '#0A0A0A', fontFamily: 'Archivo Black, sans-serif', fontSize: 7, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>C</div>}
+                              {!isStarter && <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 7, color: 'var(--mute)', border: '1px solid var(--rule)', padding: '0 3px', flexShrink: 0 }}>SUB</span>}
+                            </div>
+                            <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 8, color: 'var(--mute)', letterSpacing: '0.12em', marginTop: 1 }}>{(player.club ?? '').substring(0, 3).toUpperCase()} · £{player.price}M</div>
+                          </div>
+                          {/* Points */}
+                          <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 16, color: 'var(--paper)', letterSpacing: '-0.02em', flexShrink: 0 }}>{player.points ?? 0}</div>
+                        </button>
+                      );
+                    })}
+                    {/* Empty slots */}
+                    {Array.from({ length: emptyCount }).map((_, i) => (
+                      <div
+                        key={`empty-${pos}-${i}`}
+                        style={{
+                          display: 'flex', alignItems: 'center', gap: 10,
+                          padding: '9px 16px',
+                          borderBottom: '1px solid var(--rule)',
+                          borderLeft: '2px solid transparent',
+                        }}
+                      >
+                        <div style={{ width: 34, height: 34, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', border: `1.5px dashed ${posColor}40`, color: `${posColor}60`, fontFamily: 'Archivo Black, sans-serif', fontSize: 9 }}>{pos}</div>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 11, color: 'var(--mute)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>Empty Slot</div>
+                          <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 8, color: 'var(--mute)', letterSpacing: '0.1em', marginTop: 1, opacity: 0.6 }}>Open Market to Sign</div>
+                        </div>
+                        <button
+                          onClick={() => setPickerPos(pos)}
+                          style={{ padding: '5px 12px', border: '1px solid var(--cyan)', color: 'var(--cyan)', fontFamily: 'Archivo Black, sans-serif', fontSize: 9, letterSpacing: '0.14em', textTransform: 'uppercase', background: 'transparent', cursor: 'pointer', flexShrink: 0 }}
+                        >
+                          SIGN
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                );
+              })}
+            </div>
+          );
+        })()}
+
+        {/* ── CHIPS TAB ─────────────────────────────────────────────── */}
+        {mobileTab === 'chips' && (
+          <div className="pb-24 pt-2">
+            {CHIPS.map(chip => <ChipCard key={chip.key} chip={chip} />)}
+            <RouletteCard />
+            <JokerCard />
           </div>
         )}
 
-        {/* ── TOOLS TAB ─────────────────────────────────────────────── */}
+        {/* ── STATUS TAB ────────────────────────────────────────────── */}
+        {mobileTab === 'status' && (
+          <div className="pb-24">
+            <SectionHeader title="Player Status" accent="gold" />
+            <DangerList />
+          </div>
+        )}
+
+        {/* ── TOOLS TAB (legacy fallback — now unused) ──────────────── */}
         {mobileTab === 'tools' && (
           <div className="pb-6">
 
