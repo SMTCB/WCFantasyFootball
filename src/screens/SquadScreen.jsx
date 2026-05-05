@@ -1168,7 +1168,7 @@ export default function SquadScreen() {
                 </div>
               )}
               {/* Pitch — flex:1 to fill most of the height */}
-              <div style={{ flex: 1, minHeight: 0 }}>
+              <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
                 <PitchView
                   variant="desktop"
                   squad={{ players, captainId, isTripleCaptain: squadData.isTripleCaptain, joker: jokerPlayer }}
