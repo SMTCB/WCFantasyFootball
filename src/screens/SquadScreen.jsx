@@ -69,7 +69,7 @@ export default function SquadScreen() {
   const [swapMode,           setSwapMode]          = useState(false);
   const [saving,             setSaving]            = useState(false);
   // Mobile tab: 'pitch' | 'squad' | 'tools'
-  const [mobileTab,          setMobileTab]         = useState('pitch');
+  const [mobileTab,          setMobileTab]         = useState('squad');
   // Desktop sub-tab: 'pitch' | 'list' | 'chips' | 'status'
   const [desktopTab,         setDesktopTab]        = useState('pitch');
   // Danger banner dismissed on mobile
@@ -818,8 +818,7 @@ export default function SquadScreen() {
         {/* Tab strip */}
         <div className="flex" style={{ borderBottom: '1px solid rgba(255,255,255,0.07)', background: 'var(--ink-2)' }}>
           {[
-            { id: 'pitch', label: 'PCH', text: 'Pitch' },
-            { id: 'squad', label: 'SQD', text: 'Squad' },
+            { id: 'squad', label: 'LIST', text: 'List' },
             { id: 'tools', label: 'TLS', text: 'Tools' },
           ].map(tab => (
             <button
@@ -851,53 +850,106 @@ export default function SquadScreen() {
           ))}
         </div>
 
-        {/* ── PITCH TAB ─────────────────────────────────────────────── */}
-        {mobileTab === 'pitch' && (
-          <div>
-            <DangerBanner />
-            {isRouletteSpinning && (
-              <div className="absolute inset-0 bg-black/70 z-10 flex flex-col items-center justify-center gap-3" style={{ pointerEvents: 'none' }}>
-                <div className="fk-display text-[20px]" style={{color:"var(--gold)"}}>ROULETTE</div>
+        {/* ── SQUAD TAB / LIST ──────────────────────────────────────── */}
+        {mobileTab === 'squad' && (
+          <div className="pb-24">
+            {/* Starters by position */}
+            {['GK', 'DEF', 'MID', 'FWD'].map(pos => {
+              const posPlayers = players.filter(p => p.position === pos);
+              if (!posPlayers.length) return null;
+              const posColor = pos === 'GK' ? 'var(--pos-gk)' : pos === 'DEF' ? 'var(--pos-def)' : pos === 'MID' ? 'var(--pos-mid)' : 'var(--pos-fwd)';
+              const posLabel = pos === 'GK' ? 'Goalkeeper' : pos === 'DEF' ? 'Defenders' : pos === 'MID' ? 'Midfielders' : 'Forwards';
+              return (
+                <div key={pos}>
+                  <div style={{ padding: '10px 16px 6px', display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <div style={{ width: 3, height: 14, background: posColor, flexShrink: 0 }} />
+                    <span style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 9, color: posColor, letterSpacing: '0.16em', textTransform: 'uppercase' }}>{posLabel}</span>
+                  </div>
+                  {posPlayers.map(player => (
+                    <button
+                      key={player.id}
+                      onClick={() => handlePlayerClick(player)}
+                      style={{
+                        width: '100%', display: 'flex', alignItems: 'center', gap: 12,
+                        padding: '10px 16px', background: selectedPlayer?.id === player.id ? 'rgba(0,180,216,0.06)' : 'transparent',
+                        borderBottom: '1px solid var(--rule)', borderLeft: player.id === captainId ? '2px solid var(--gold)' : '2px solid transparent',
+                        cursor: 'pointer', textAlign: 'left',
+                      }}
+                    >
+                      {/* Position badge */}
+                      <div style={{
+                        width: 36, height: 36, flexShrink: 0,
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        border: `1.5px solid ${posColor}`, color: posColor,
+                        fontFamily: 'Archivo Black, sans-serif', fontSize: 9, letterSpacing: '0.08em',
+                        background: 'rgba(255,255,255,0.03)',
+                      }}>{pos}</div>
+                      {/* Name + metadata */}
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 13, color: 'var(--paper)', letterSpacing: '-0.01em', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: 6 }}>
+                          <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{player.name.split(' ').slice(-1)[0]}</span>
+                          {player.id === captainId && <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 8, color: 'var(--gold)', border: '1px solid rgba(224,168,0,0.4)', padding: '0 4px' }}>C</span>}
+                          {player.id === todayJokerId && <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 8, color: 'var(--pos-gk)', border: '1px solid rgba(157,95,245,0.4)', padding: '0 4px' }}>J</span>}
+                        </div>
+                        <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 9, color: 'var(--mute)', letterSpacing: '0.12em', marginTop: 2 }}>
+                          {player.club} · £{player.price}M
+                        </div>
+                      </div>
+                      {/* Points */}
+                      <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 18, color: 'var(--paper)', letterSpacing: '-0.02em', flexShrink: 0 }}>
+                        {player.points ?? 0}
+                        <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 8, color: 'var(--mute)', marginLeft: 2 }}>PTS</span>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              );
+            })}
+            {/* Bench */}
+            {bench.length > 0 && (
+              <div>
+                <div style={{ padding: '10px 16px 6px', display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <div style={{ width: 3, height: 14, background: 'var(--mute)', flexShrink: 0 }} />
+                  <span style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 9, color: 'var(--mute)', letterSpacing: '0.16em', textTransform: 'uppercase' }}>Substitutes</span>
+                </div>
+                {bench.map(player => {
+                  const pos = player.position;
+                  const posColor = pos === 'GK' ? 'var(--pos-gk)' : pos === 'DEF' ? 'var(--pos-def)' : pos === 'MID' ? 'var(--pos-mid)' : 'var(--pos-fwd)';
+                  return (
+                    <button
+                      key={player.id}
+                      onClick={() => handlePlayerClick(player)}
+                      style={{
+                        width: '100%', display: 'flex', alignItems: 'center', gap: 12,
+                        padding: '10px 16px', background: 'rgba(255,255,255,0.015)',
+                        borderBottom: '1px solid var(--rule)', borderLeft: '2px solid transparent',
+                        cursor: 'pointer', textAlign: 'left', opacity: 0.7,
+                      }}
+                    >
+                      <div style={{
+                        width: 36, height: 36, flexShrink: 0,
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        border: `1.5px solid ${posColor}60`, color: `${posColor}90`,
+                        fontFamily: 'Archivo Black, sans-serif', fontSize: 9, letterSpacing: '0.08em',
+                        background: 'rgba(255,255,255,0.02)',
+                      }}>{pos}</div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 13, color: 'var(--mute)', letterSpacing: '-0.01em', textTransform: 'uppercase', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {player.name.split(' ').slice(-1)[0]}
+                        </div>
+                        <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 9, color: 'var(--mute)', letterSpacing: '0.12em', marginTop: 2, opacity: 0.7 }}>
+                          {player.club} · £{player.price}M
+                        </div>
+                      </div>
+                      <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 18, color: 'var(--mute)', letterSpacing: '-0.02em', flexShrink: 0 }}>
+                        {player.points ?? 0}
+                        <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 8, color: 'var(--mute)', marginLeft: 2 }}>PTS</span>
+                      </div>
+                    </button>
+                  );
+                })}
               </div>
             )}
-            <PitchView
-              variant="mobile"
-              squad={{ players, captainId, isTripleCaptain: squadData.isTripleCaptain, joker: jokerPlayer }}
-              onPlayerClick={isRouletteSpinning ? () => {} : handlePlayerClick}
-              selectedPlayerId={selectedPlayer?.id}
-              swapMode={swapMode}
-              jokerPlayerId={todayJokerId}
-            />
-            {/* Bench in pitch format below the pitch */}
-            <div className="mt-2 mb-4 px-4">
-              <div className="flex items-center gap-2 mb-3">
-                <div className="h-px flex-1" style={{ background: 'rgba(255,255,255,0.07)' }} />
-                <span className="text-[9px] font-black uppercase tracking-[0.2em]" style={{ color: 'var(--mute)', fontFamily: 'Archivo Black, sans-serif' }}>Substitutes</span>
-                <div className="h-px flex-1" style={{ background: 'rgba(255,255,255,0.07)' }} />
-              </div>
-              <div className="flex justify-around">
-                {bench.map(player => (
-                  <PlayerCard
-                    key={player.id}
-                    player={player}
-                    variant="pitch"
-                    isCaptain={player.id === captainId}
-                    isJoker={player.id === todayJokerId}
-                    onClick={handlePlayerClick}
-                    isSelected={selectedPlayer?.id === player.id}
-                    isSwapTarget={swapMode && selectedPlayer?.id !== player.id}
-                    showIntelligence
-                  />
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* ── SQUAD TAB ─────────────────────────────────────────────── */}
-        {mobileTab === 'squad' && (
-          <div className="pb-6">
-            <PlayerList showBench />
           </div>
         )}
 
@@ -1105,9 +1157,9 @@ export default function SquadScreen() {
         {/* ── Tab content ────────────────────────────────────────────────── */}
         <div className="flex-1 overflow-hidden flex">
 
-          {/* ── PITCH TAB — full width, no right rail ──────────────────── */}
+          {/* ── PITCH TAB — XI on pitch + bench strip below ────────────── */}
           {desktopTab === 'pitch' && (
-            <>
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
               {isRouletteSpinning && (
                 <div className="fixed inset-0 bg-black/60 z-30 flex items-center justify-center pointer-events-none">
                   <div className="text-center">
@@ -1115,16 +1167,60 @@ export default function SquadScreen() {
                   </div>
                 </div>
               )}
-              <PitchView
-                variant="desktop"
-                squad={{ players, captainId, isTripleCaptain: squadData.isTripleCaptain, joker: jokerPlayer }}
-                onPlayerClick={isRouletteSpinning ? () => {} : handlePlayerClick}
-                selectedPlayerId={selectedPlayer?.id}
-                swapMode={swapMode}
-                jokerPlayerId={todayJokerId}
-                matchdayLabel={squadData.matchdayId ? `GW · ${squadData.matchdayId}` : ''}
-              />
-            </>
+              {/* Pitch — flex:1 to fill most of the height */}
+              <div style={{ flex: 1, minHeight: 0 }}>
+                <PitchView
+                  variant="desktop"
+                  squad={{ players, captainId, isTripleCaptain: squadData.isTripleCaptain, joker: jokerPlayer }}
+                  onPlayerClick={isRouletteSpinning ? () => {} : handlePlayerClick}
+                  selectedPlayerId={selectedPlayer?.id}
+                  swapMode={swapMode}
+                  jokerPlayerId={todayJokerId}
+                  matchdayLabel={squadData.matchdayId ? `GW · ${squadData.matchdayId}` : ''}
+                />
+              </div>
+              {/* Bench strip — single row of HybridToken-style pills */}
+              {bench.length > 0 && (
+                <div style={{
+                  flexShrink: 0, borderTop: '1px solid var(--rule)',
+                  background: 'rgba(8,9,12,0.95)', padding: '12px 40px',
+                  display: 'flex', alignItems: 'center', gap: 12,
+                }}>
+                  <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 9, color: 'var(--mute)', letterSpacing: '0.18em', flexShrink: 0 }}>BENCH</div>
+                  <div style={{ flex: 1, display: 'flex', gap: 10, flexWrap: 'nowrap', overflow: 'hidden' }}>
+                    {bench.map((player) => {
+                      const pos = player.position;
+                      const posColor = pos === 'GK' ? 'var(--pos-gk)' : pos === 'DEF' ? 'var(--pos-def)' : pos === 'MID' ? 'var(--pos-mid)' : 'var(--pos-fwd)';
+                      const surname = player.name?.split(' ').slice(-1)[0]?.toUpperCase() ?? '?';
+                      return (
+                        <button
+                          key={player.id}
+                          onClick={() => handlePlayerClick(player)}
+                          style={{
+                            display: 'flex', alignItems: 'center', gap: 8,
+                            padding: '6px 10px 6px 8px',
+                            background: selectedPlayer?.id === player.id ? 'rgba(0,180,216,0.08)' : 'rgba(15,18,24,0.92)',
+                            border: `1px solid ${selectedPlayer?.id === player.id ? 'var(--cyan)' : 'var(--rule)'}`,
+                            borderRadius: 4, cursor: 'pointer', flexShrink: 0,
+                          }}
+                        >
+                          <div style={{
+                            width: 28, height: 28, flexShrink: 0,
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            border: `1.5px solid ${posColor}`, color: posColor,
+                            fontFamily: 'Archivo Black, sans-serif', fontSize: 9,
+                          }}>{pos}</div>
+                          <div>
+                            <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 11, color: 'var(--paper)', letterSpacing: '-0.01em' }}>{surname}</div>
+                            <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 8, color: 'var(--mute)', letterSpacing: '0.1em' }}>{player.club} · {player.points ?? 0} PTS</div>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
           )}
 
           {/* ── LIST TAB — player list + bench panel ───────────────────── */}
