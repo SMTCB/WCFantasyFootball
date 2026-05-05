@@ -150,6 +150,7 @@ export default function MarketScreen() {
     } catch (err) {
       console.error('MarketScreen: squad fetch failed', err);
       setMySquad({ id: null, players: [] });
+      setBudget(cfg.budgetTotal);
     }
 
     setLoading(false);

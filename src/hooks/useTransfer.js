@@ -63,8 +63,17 @@ export function useTransfer(leagueId) {
     });
 
     if (error || !data?.ok) {
-      const msg  = data?.error ?? error?.message ?? 'Transfer failed';
-      const code = data?.code  ?? '';
+      // Supabase SDK puts non-2xx response body in error.context, not data
+      let msg  = data?.error;
+      let code = data?.code ?? '';
+      if (!msg && error?.context) {
+        try {
+          const body = typeof error.context === 'string' ? JSON.parse(error.context) : error.context;
+          msg  = body?.error;
+          code = body?.code ?? code;
+        } catch { /* ignore parse errors */ }
+      }
+      msg = msg ?? error?.message ?? 'Transfer failed';
       return { ok: false, error: msg, code };
     }
 
@@ -88,7 +97,14 @@ export function useTransfer(leagueId) {
     });
 
     if (error || !data?.ok) {
-      const msg = data?.error ?? error?.message ?? 'Transfer failed';
+      let msg = data?.error;
+      if (!msg && error?.context) {
+        try {
+          const body = typeof error.context === 'string' ? JSON.parse(error.context) : error.context;
+          msg = body?.error;
+        } catch { /* ignore */ }
+      }
+      msg = msg ?? error?.message ?? 'Transfer failed';
       return { ok: false, error: msg };
     }
 

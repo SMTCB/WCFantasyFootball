@@ -40,7 +40,7 @@ Deno.serve(async (req) => {
     // 1. Reject if past the active matchday deadline
     const { data: deadline } = await supabase
       .from('matchday_deadlines')
-      .select('deadline_at, label')
+      .select('deadline_at, matchday_id')
       .order('deadline_at', { ascending: false })
       .limit(1)
       .maybeSingle();
@@ -49,7 +49,7 @@ Deno.serve(async (req) => {
       return json({
         ok:    false,
         code:  'WINDOW_CLOSED',
-        error: `Transfer window closed — ${deadline.label ?? 'matchday'} deadline has passed`,
+        error: `Transfer window closed — matchday ${deadline.matchday_id ?? ''} deadline has passed`,
       }, 403, corsHeaders);
     }
 
