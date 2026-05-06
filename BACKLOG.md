@@ -180,6 +180,86 @@ All feature code complete. One remaining infrastructure task:
 - **Effort**: Completed (1-1.5 hours coding + hook refactor)
 - **Priority**: Feature complete; awaiting realtime activation
 
+### #027-Extended: League Chat Enhancements (Post-MVP)
+- **Status**: NOT STARTED (feature parity planned for future sprints)
+- **Description**: Additional chat features to enhance user engagement and functionality. Core realtime messaging is complete; these are nice-to-have enhancements.
+- **Missing Features** (Priority-ordered):
+  
+  **High Priority**:
+  1. **Chat Notifications/Unread Badge** (1 hour)
+     - Show unread message count on Chat tab
+     - Persist unread state in `league_members.unread_chat_count`
+     - Mark as read on view
+     - Separate hook: `useChatUnreadCount(leagueId)`
+  
+  2. **Typing Indicators** (1.5 hours)
+     - "User is typing..." display while composing
+     - Broadcast typing via Supabase Broadcast (not DB writes)
+     - Auto-clear after 3 seconds of inactivity
+     - `chat_typing_indicator` realtime channel
+  
+  3. **Message Delete/Edit UI** (1.5 hours)
+     - Right-click/long-press context menu on messages
+     - "Delete" option for own messages
+     - "Edit" option for own messages (store edited_at, edit_count)
+     - Requires: migration to add `edited_at`, `is_deleted` columns
+  
+  **Medium Priority**:
+  4. **Inline User Mentions** (1.5 hours)
+     - Type `@username` to mention other league members
+     - Autocomplete dropdown
+     - Mentioned users get notification (when #020 notifications added)
+     - Parse mentions in message display (@username → clickable link)
+  
+  5. **Chat Search** (1.5 hours)
+     - Search bar in chat header
+     - Search across message text + user names
+     - Highlight matches in message history
+     - Full-text search via Supabase full_text_search or pg_trgm
+  
+  6. **Message Pinning/Replies** (2 hours)
+     - Pin important messages to top of chat
+     - Reply to specific message (threading UI)
+     - Show parent message on replies
+     - Requires: migration for `parent_message_id`, `is_pinned`
+  
+  **Low Priority** (Post-Launch):
+  7. **Emoji Reactions** (1 hour)
+     - React to messages with emoji
+     - Show reaction counts
+     - Requires: `message_reactions(message_id, user_id, emoji)`
+  
+  8. **Chat Moderation** (2 hours)
+     - Commissioner: ban users from chat
+     - Mute/report messages
+     - Filter swear words (optional)
+     - Audit log for deleted/edited messages
+  
+  9. **Message Archiving** (1 hour)
+     - Archive messages older than 90 days (cron job)
+     - Query from `chat_messages_archive` table if needed
+     - Keeps chat_messages table lean for realtime performance
+  
+  10. **File/Image Sharing** (2+ hours)
+      - Upload images/files to Supabase Storage
+      - Display inline in chat
+      - File size limits (5MB images, 10MB files)
+      - Thumbnail generation for images
+
+- **Database Changes Needed**:
+  - `ALTER TABLE chat_messages ADD edited_at, is_deleted, parent_message_id COLUMNS;`
+  - `CREATE TABLE message_reactions (message_id, user_id, emoji, created_at);`
+  - `CREATE TABLE chat_pins (league_id, message_id, pinned_at);`
+  - `CREATE TABLE chat_messages_archive (like chat_messages);` (for archival)
+  - `ALTER TABLE league_members ADD unread_chat_count INTEGER DEFAULT 0;`
+
+- **Implementation Phases**:
+  - **Sprint 2 (Soon)**: Notifications (#027a) + Typing Indicators (#027b) — high engagement impact
+  - **Sprint 3 (Later)**: Delete/Edit + Mentions + Search — quality of life
+  - **Sprint 4+ (Post-Launch)**: Reactions, Moderation, Archiving, Files — nice-to-have polish
+
+- **Current Status**: Core messaging works. Activate realtime first, then plan enhancements.
+
 ### #028: League Analytics Dashboard
 - **Status**: NOT STARTED
 - **Description**: Sparkline charts for cumulative points over matchdays, manager head-to-head records, squad stability (transfer activity), most active traders. Defer to post-launch per `PIPELINE.md`.
