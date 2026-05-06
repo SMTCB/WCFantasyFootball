@@ -15,6 +15,7 @@ import { useDeadlineCountdown } from '../hooks/useDeadlineCountdown';
 import { useOnboarding } from '../hooks/useOnboarding';
 import { useTransfer } from '../hooks/useTransfer';
 import { useLeagueConfig } from '../hooks/useLeagueConfig';
+import { useAvailabilityFlag } from '../hooks/useAvailabilityFlag';
 import LeagueSelector from '../components/LeagueSelector';
 import OnboardingTour from '../components/OnboardingTour';
 import ConfirmModal from '../components/ConfirmModal';
@@ -23,6 +24,7 @@ import PlayerCard from '../components/PlayerCard';
 import PlayerPickerSheet from '../components/PlayerPickerSheet';
 import SectionHeader from '../components/SectionHeader';
 import PowerToolCard from '../components/PowerToolCard';
+import { AvailabilityBadge } from '../components/AvailabilityBadge';
 
 // ── Position order ────────────────────────────────────────────────────────────
 const POS_ORDER = ['GK', 'DEF', 'MID', 'FWD'];
@@ -87,6 +89,9 @@ export default function SquadScreen() {
 
   // Transfer hook — league-scoped buy/sell + no-repeat enforcement
   const { buy, sell, takenMap, isOwnedBy } = useTransfer(leagueId);
+
+  // Availability flags hook — league-scoped player flags for trade offers
+  const { flagMap, toggleFlag } = useAvailabilityFlag(leagueId);
 
   // Live countdown hook — replaces static window lock badge
   const deadline = useDeadlineCountdown();
@@ -717,6 +722,16 @@ export default function SquadScreen() {
                       }}
                     >
                       {isBench ? 'BENCH' : 'START'}
+                    </div>
+
+                    {/* Availability flag badge — bottom-right */}
+                    <div className="absolute right-4 -bottom-2 pointer-events-auto">
+                      <AvailabilityBadge
+                        playerId={player.id}
+                        isFlagged={!!flagMap[player.id]}
+                        isOwn={true}
+                        onToggle={() => toggleFlag(squadData.squadId, player.id)}
+                      />
                     </div>
                   </div>
                 );

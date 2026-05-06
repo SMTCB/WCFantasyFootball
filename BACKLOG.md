@@ -19,6 +19,9 @@
 - ✅ **#106 Score Recalculation Trigger**: Verified existing implementation in LeagueScreen commissioner panel
 - ✅ **#109 BPS Pass Completion**: Created migration 20 with accurate_passes/total_passes; updated calcBPS() with null-safety
 - ✅ **#111 Null matchday_id Verification**: Confirmed zero squads with null matchday_id (query verified)
+- ✅ **#110 rollupSquads Tournament Filtering**: Filter squad updates to only affect squads in matching tournament (fixes multi-tournament issue)
+- ✅ **#007 Mobile Tab Icons**: Added emoji icons to main nav (📊 SCORES, 👥 SQUAD, 🏆 LEAGUE, 🔴 LIVE, 💰 MARKET) and squad tabs (⚽ PITCH, 📋 LIST, ⚡ CHIPS, ⚠️ STATUS)
+- ✅ **#026 Player Availability Flags**: Full implementation with DB schema, hook, component, and SquadScreen integration
 
 ### ✅ Completed Previous Sessions
 - Draft System — full implementation (S1–S12)
@@ -131,13 +134,21 @@ All feature code complete. One remaining infrastructure task:
 - **Effort**: Medium-large — new UI flow + bidding state machine + resolution logic
 - **Database**: `auction_listings` table (similar to `trade_listings` structure)
 
-### #026: Player "Open for Proposals" / "Available for Acquisition" Broadcast ⭐ NEW
-- **Status**: NOT STARTED
-- **Description**: Manager can flag a player on their squad as "open for proposals" — broadcasting to other managers in the league that they're willing to discuss trades/offers for that player. Appears as badge on LeagueScreen standings/squad view. Reduces unsolicited trade spam.
-- **Suggested UI**: Toggle on PlayerCard in squad view ("Flag as Available"); appears as badge (e.g., "🔓 AVAILABLE") in league standings and when viewing other managers' squads. Others can then initiate formal trade request.
-- **Dependency**: Trade builder UI (already exists)
-- **Effort**: Medium — DB table (`player_availability_flags`), toggles, UI badges, notification
-- **Database**: `player_availability_flags(squad_id, player_id, flagged_at, expires_at)` — allows temporary flagging
+### #026: Player "Open for Proposals" / "Available for Acquisition" Broadcast
+- **Status**: ✅ DONE (2026-05-06)
+- **Description**: Manager can flag a player on their squad as "open for proposals" — broadcasting to other managers in the league that they're willing to discuss trades/offers for that player. Appears as badge on Squad LIST tab. Reduces unsolicited trade spam.
+- **Implementation**:
+  - Database: Migration 23 `player_availability_flags` table with RLS policies
+  - Hook: `useAvailabilityFlag(leagueId)` — manages flag state for a league
+  - Component: `<AvailabilityBadge>` — displays toggle-able badge (🔓 AVAILABLE / 🔒 UNAVAILABLE)
+  - Integration: Added to SquadScreen LIST tab; click to flag/unflag players
+- **Features**:
+  - Flags auto-expire after 14 days
+  - RLS policies ensure only squad owner can toggle their own flags
+  - League members can view all active flags for trade negotiation
+  - Flags visible on player rows with click-to-toggle interaction
+- **Effort**: 2 hours (DB + hook + component + integration)
+- **Database**: `player_availability_flags(squad_id, player_id, league_id, flagged_at, expires_at, created_by)` with RLS
 
 ---
 
