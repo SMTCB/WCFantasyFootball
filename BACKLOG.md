@@ -1,312 +1,339 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-05-02
-**E2E Test Suite**: 84/84 passing (100%) — platform.spec.js (84)
-**Priority Levels**: P0 (Blocking), P1 (High — needed before feature is usable), P2 (Medium), P3 (Low/Polish)
+**Last Updated**: 2026-05-06  
+**E2E Test Suite**: 84/84 passing (100%) — platform.spec.js  
+**Priority Levels**: P0 (Blocking), P1 (High — needed before feature is usable), P2 (Medium), P3 (Low/Polish), P4 (Post-Launch Roadmap)
 
 ---
 
 ## 📋 Current Status Summary
 
-### ✅ Completed
-- Squad Screen UX phases 1–3 (mobile tabs, power tools, feature discoverability)
-- PowerToolCard component (reusable, active/inactive states)
-- E2E test infrastructure synced (82/84 passing)
-- Mobile responsive design verified (375px → 1440px)
-- App Store / Play Store readiness assessment
-- **Draft System — full implementation (S1–S12)**:
-  - DB schema: `draft_submissions`, `draft_allocations`, `transfer_windows`, `transfers`, `cup_active_clubs`, `league_config`, `gazette_entries`, `trade_listings`
-  - Draft submission screen with ranked list, auto-complete, server-time deadline enforcement, auto-save
-  - `run-draft-lottery` Edge Function (random conflict resolution, sequential allocation, gazette report)
-  - `run-reverse-standings-draft` Edge Function (worst-rank wins conflicts, cup group → elimination transition)
-  - Incomplete squad recovery screen (FCFS, Supabase realtime, optimistic UI)
-  - Transfer window enforcement (DB triggers on position caps + window validity)
-  - Trade UI extensions (window gating, position pre-check, "list for trade" toggle)
-  - Cup pool management (`get_cup_available_players`, `eliminate-cup-club` Edge Function)
-  - No-repeat relaxation formula (`calculate_relaxation_state`, `apply_relaxation_state`, `calculate-relaxation` Edge Function)
-  - `GazetteDraftReport` component (hybrid headline + bullets + collapsible table)
-  - `useTransferWindow` hook + `TransferWindowBanner` component
-  - `useRelaxationState` hook
-- **#014**: `get_server_time` RPC — migration applied ✅
-- **#015**: Draft entry banner in LeagueScreen ✅
-- **#006**: Database seeding — 829 EPL players loaded (98 GK / 275 DEF / 379 MID / 97 FWD, 31 clubs) ✅
-- **#001**: MarketScreen player loading fixed (isolated fetch, resilient error handling) ✅
-- **CI fix**: Replaced `npm ci` → `npm install` in all workflow jobs (lock file sync error resolved) ✅
-- **Buy/sell flow redesign** (new — full implementation):
-  - `process-transfer` Edge Function: server-side no-repeat check per league, budget credit on sell, position limits, auto-creates squad row on first transfer
-  - `useTransfer(leagueId)` hook: `takenMap`, `buy()`, `sell()`, `isTaken()`, `takenBy()`, `isOwnedBy()`
-  - `PlayerPickerSheet` component: bottom sheet picker, pre-filtered by position, shows available/taken/over-budget, search
-  - SquadScreen: empty slot placeholders per position, tap to open picker sheet, sell now credits budget via Edge Function
-  - MarketScreen: league picker (auto-selects if only one), taken-by-manager badge + row dimming, empty slots counter
-  - LeagueScreen: "Manage Squad" + "Market" shortcut buttons, both link with `leagueId` context
-- **Scoring Layer — Sprint 1**:
-  - Migration 09: `daily_jokers`, `matchday_deadlines`, `player_match_stats` tables + `get_server_time()` RPC + `calculate_player_points()` SQL
-  - `calculate-scores` Edge Function: full scoring pipeline (BPS, captain/chip multipliers, Realtime broadcast)
-  - Migrations 13–15: scoring columns on `player_match_stats`, unique constraints, PL fixture data, player status alerts
-  - SquadScreen (#101): reads live squads table with real player points from `player_match_stats`
-  - LiveScreen (#102): real goal scores in ticker, real player points, real event feed with player names
-  - RecapScreen (#103): derived from real `fantasy_points` + `player_match_stats` (no `matchday_recaps` table needed)
-  - DangerZone (#104): 4 real player alerts seeded (doubt/out/returning) for current squad
-  - Fixtures: all World Cup dummy data replaced with Premier League clubs (md1–md6 + test-live)
+### ✅ Completed This Session (2026-05-06)
+- ✅ **Squad LIST tab (desktop)**: Removed duplicate bench panel on right; unified squad with START/BENCH badges per position
+- ✅ **Create League text colors**: Fixed description text from invisible dark-grey to proper brand tokens (`var(--paper)` / `var(--mute)`)
+- ✅ **DB league_format cast**: Fixed `create_league()` RPC to explicitly cast `p_format TEXT::league_format` (migration 19)
+- ✅ **E2E test selector**: Updated "chips row visible" test to look for `/chips/i` instead of stale `/tools/i` reference
+- ✅ **CI lint errors**: Fixed 3 unused variable errors (`setLeagueId`, `intelCfg`, `jokerPlayerId`)
+
+### ✅ Completed Previous Sessions
+- Draft System — full implementation (S1–S12)
+- Buy/sell flow redesign (process-transfer Edge Function, PlayerPickerSheet, useTransfer hook)
+- Scoring Layer — Sprint 1 (calculate-scores, real points, DangerZone, projections)
+- Formation validation (min/max per position, GK max-1)
+- Onboarding wizard + spotlight tour
+- Mobile responsive design (375px → 1440px)
+- E2E test infrastructure (84 tests)
 
 ---
 
 ## 🔴 P0 — Blocking
 
-### #017: E2E Regression — SquadScreen + MarketScreen ✅ RESOLVED
-- **Fixed**: 2026-04-24
-- **Root causes fixed**:
-  1. SquadScreen: missing `setSquadData(fallbackSquad)` on no-squad early return
-  2. MarketScreen + DraftScreen: `.single().catch()` invalid on Supabase SDK thenable
-  3. E2E: `getByText('⚙ Tools')` selector didn't match split icon/label elements
-
-### #001-E2E: MarketScreen E2E Tests ✅ RESOLVED
-- **Status**: DONE — `page.route('**/rest/v1/players**')` intercepts Supabase REST in E2E and returns fixture PL player data. Test now looks for `Salah|Haaland|Kane|De Bruyne|Saka`. DB-independent.
+None currently. All blocking issues resolved.
 
 ---
 
-## 🟠 P1 — High
-
-### #016: League Commissioner Panel
-- **Status**: ✅ DONE — Commissioner-only tab in LeagueScreen (visible to `leagues.created_by`). Covers: transfer window open/close (with datetime inputs), draft deadline setter, score recalculation by fixture ID, cup phase seed trigger.
-- **Description**: Several backend capabilities have no admin surface:
-  - Open/close transfer windows (insert rows into `transfer_windows`)
-  - Advance cup phase (`cup_phase` enum transitions)
-  - Eliminate a cup club (calls `eliminate-cup-club` Edge Function)
-  - Seed cup clubs when entering cup mode (calls `seed_cup_clubs()`)
-  - Set draft deadline on a league
-- **Suggested approach**: A commissioner-only tab inside `LeagueScreen` (visible only to `leagues.created_by`).
-- **Effort**: 2–3 hours
-
-### #017: Wire Trade Builder to Real Squad Data
-- **Status**: ✅ DONE — All mock player arrays removed from LeagueScreen. `loadTradeSquads()` fetches both managers' `draft_allocations` and resolves via `players` table. `loadManagerRoster()` populates the roster sheet.
+## 🟠 P1 — High Priority (Required Before Feature Launch)
 
 ### #018: Configure Supabase Cron Settings
 - **Status**: NOT STARTED
-- **Description**: Cron migrations (`03_draft_lottery_cron.sql`, `08_reverse_draft_cron.sql`) reference `current_setting('app.supabase_url')` and `current_setting('app.service_role_key')`. These PostgreSQL settings must be configured on the Supabase instance or the cron jobs will fail silently.
+- **Description**: Cron migrations (`03_draft_lottery_cron.sql`, `08_reverse_draft_cron.sql`) reference `current_setting('app.supabase_url')` and `current_setting('app.service_role_key')`. These PostgreSQL settings must be configured on the Supabase instance or cron jobs will fail silently.
 - **Fix**: Set via Supabase dashboard → Database → Extensions → pg_cron, or via `ALTER DATABASE ... SET app.supabase_url = '...'`
-- **Effort**: 15 minutes (config, not code)
+- **Effort**: 15 minutes
+- **Blocking**: Before production go-live
 
 ### #105: Transfer Cost Lock at Kickoff
 - **Status**: NOT STARTED
 - **Description**: Player transfer costs should lock at kickoff of their first fixture each matchday. Currently no enforcement — players can be bought/sold at any price during live matches.
 - **Fix**: `process-transfer` Edge Function should check `fixtures` table for kickoff time; reject transfers for in-progress fixture players.
 - **Effort**: 1 hour
+- **Blocking**: Before matchday 1 live
 
-### #106: Manual Scoring Trigger
+### #106: Manual Scoring Trigger (Cron or Commissioner Button)
 - **Status**: NOT STARTED
-- **Description**: `calculate-scores` Edge Function exists but is not on a cron. Needs a commissioner UI button in LeagueScreen or a pg_cron job.
-- **Fix**: Add "Recalculate Scores" button to commissioner panel (#016), or add pg_cron job calling every 5 minutes during live matchdays.
-- **Effort**: 30 minutes (if combined with #016)
+- **Description**: `calculate-scores` Edge Function exists but is not on a cron. Needs either a commissioner UI button or a pg_cron job that fires every 5 minutes during live matchdays.
+- **Fix**: Either (a) add "Recalculate Scores" button to commissioner admin panel, or (b) add pg_cron job calling `calculate-scores` on schedule, or (c) wire to fixture lifecycle (call on kickoff/FT)
+- **Effort**: 30 minutes (if combined with admin panel)
+- **Blocking**: Before live scoring can be tested
 
 ---
 
-## 🟡 P2 — Medium
+## 🟠 P1 — High Priority (Data Pipeline & Verification)
 
-### #003: Squad Screen — Desktop Enhancement (Phase 4)
-- **Status**: ✅ COMPLETE (2026-04-25)
-- **Description**: Desktop sidebar Chips tab now uses `PowerToolCard` components for visual parity with mobile.
-
-### #004: Squad Screen — Onboarding Tour Update (Phase 5)
-- **Status**: ✅ COMPLETE (2026-04-25)
-- **Description**: Tour step added for `data-tour="squad-power-tools"` highlighting the 3 power tool cards.
-
-### #107: BracketScreen — Wire to Real Fixtures
-- **Status**: ✅ DONE — Full rewrite. Fetches real fixtures from Supabase, grouped by gameweek. Fixture Challenge mini-game: Home/Draw/Away predictions per match, stored in localStorage. Result feedback (✓/✗) on finished matches. Accuracy % in header. Falls back to 8 PL fixture rows if DB empty.
-
-### #108: HomeScreen — PL Club Fallback Data
-- **Status**: ✅ DONE — Header label updated ("World Cup 2026" → "Premier League 2025/26"). TEAM_COLORS replaced (9 national teams → 12 PL clubs with real brand colours). Fallback fixtures updated to PL clubs.
-
-### #019: Pool Pressure Indicator in Draft & Squad Screens
-- **Status**: ✅ DONE — Colour-coded banner (green/amber/red at 70%/90%) added to `DraftScreen` and `DraftRecoveryScreen`. Shows pressure %, repeat allowance count, and pool size. Hidden for non-cup leagues (`availablePool === null`).
-
-### #020: Draft Deadline Notifications
+### #109: BPS Pass-Completion Term Always Zero
 - **Status**: NOT STARTED
-- **Description**: No push notification or email when a draft deadline is approaching or when lottery results are published. Managers may miss the draft entirely.
-- **Suggested**: Push notification 48h before deadline + gazette entry on lottery completion (already written by Edge Function — notification layer missing).
-- **Effort**: 2 hours (depends on push notification infrastructure)
-
-### #021: Transfer Window Auto-Scheduler
-- **Status**: NOT STARTED
-- **Description**: `transfer_windows` table exists and enforcement is wired, but rows must currently be created manually by the commissioner (#016). For league format, windows should open/close automatically based on fixture schedule.
-- **Logic**: After each matchday's last fixture ends, open a standard window for 48h with `transfers_remaining = 5` (or null for unlimited windows).
-- **Effort**: 2 hours (Edge Function + cron)
-
-### #022: Squad Screen — Player Click Bottom Sheet (Mobile)
-- **Status**: ✅ DONE — Root cause was `<div onClick>` in `PlayerCard` (both pitch + row variants). Converted to `<button type="button">`. Also added dismiss backdrop behind action sheet. iOS Safari touch events now fire reliably.
-
----
-
-## 🟡 P2 — Data Pipeline (added 2026-05-02)
-
-### #113: Player uniqueness was global, not per-tournament ✅ FIXED 2026-05-02
-- **Status**: RESOLVED
-- **Description**: `players_forza_player_id_idx` enforced `UNIQUE(forza_player_id)` globally. Forza player IDs are real-person identifiers — Bukayo Saka has the same ID whether appearing in EPL (Arsenal) or WC (England). Syncing both would overwrite EPL players with WC data.
-- **Fix**: Migration 18 drops the global index and adds `UNIQUE(forza_player_id, tournament_id)`. `sync-players` now sets `id = 'fp-{forza_player_id}-{tournament_id}'` and upserts on `forza_player_id,tournament_id`. `ingest-match-events` player lookup now also filters by `tournament_id`.
-
-### #109: BPS pass-completion term is always zero
-- **Status**: NOT STARTED
-- **Description**: `calcBPS()` in `calculate-scores` computes `(accurate_passes / total_passes) * 100 * 0.1` but `player_match_stats` has no `accurate_passes` or `total_passes` columns, and `ingest-match-events` never fetches them from E10. The term always evaluates to 0.
-- **Impact**: Low — BPS ranking is still correct in relative terms (same handicap for all players). Bonus allocation (+3/+2/+1) may occasionally favour the wrong player at the margin. No effect on base points.
-- **Fix**: (a) Confirm E10 stat key names for passes (likely `accurate_passes` and `passes`). (b) Add columns to `player_match_stats` via migration. (c) Map in `flattenPlayerStats()` in `ingest-match-events`. (d) Remove the dead-code check in `calcBPS`.
+- **Description**: `calcBPS()` in `calculate-scores` Edge Function computes `(accurate_passes / total_passes) * 100 * 0.1`, but `player_match_stats` has no `accurate_passes` or `total_passes` columns. `ingest-match-events` never fetches them from Forza API. Term evaluates to 0.
+- **Impact**: Low — BPS ranking still correct in relative terms. Bonus allocation (+3/+2/+1) may occasionally favour wrong player at margin. No effect on base points.
+- **Fix**: (a) Confirm Forza API field names for passes; (b) add columns to `player_match_stats`; (c) map in `flattenPlayerStats()`; (d) remove dead-code check
 - **Effort**: 1 hour
-- **Dependency**: Confirm E10 field names with Forza (quick API test)
+- **Dependency**: Confirm Forza field names (API test required)
+- **Blocking**: Before dry run go-live (accuracy concern)
 
-### #110: `rollupSquads` recalculates all squads regardless of tournament
+### #111: `matchday_id` Null Fallback May Cause Silent Points Overwrite
+- **Status**: NEEDS VERIFICATION
+- **Description**: `rollupSquads()` writes `fantasy_points` keyed on `(squad_id, matchday_id)`. If squad has `matchday_id = null`, fallback `'current'` is used — every fixture writes to same row, overwrites instead of accumulates. League totals would be wrong.
+- **Impact**: Silent — scores would look plausible but be incorrect.
+- **Fix**: Verify no squads have `matchday_id = null` before dry run. Query: `SELECT id, matchday_id FROM squads WHERE matchday_id IS NULL;`. If any found, trace `matchday_id` assignment at squad creation.
+- **Effort**: 15-minute verification; fix depends on root cause
+- **Blocking**: Before dry run go-live
+
+### #110: `rollupSquads` Recalculates All Squads Regardless of Tournament
 - **Status**: NOT STARTED
-- **Description**: `rollupSquads()` in `calculate-scores` fetches every row from `squads` with no `WHERE` clause. When EPL dry run and World Cup are live simultaneously, a Matchday 36 EPL goal triggers a `fantasy_points` upsert for every WC squad (writing 0 pts, harmless but noisy) and a sequential `league_members` update loop across all leagues.
-- **Impact**: None during single-tournament dry run. Becomes a performance and cost issue once two tournaments are live concurrently.
-- **Fix**: Pass `tournament_id` from the fixture into `rollupSquads`, then filter via `squads → league_id → leagues.tournament_id`.
+- **Description**: `rollupSquads()` fetches all rows from `squads` with no `WHERE` clause. When EPL dry run and World Cup are live simultaneously, a single goal triggers fantasy_points upsert for every WC squad (writes 0 pts, harmless but noisy) and sequential `league_members` update across all leagues.
+- **Impact**: None during single-tournament dry run. Performance/cost issue once two tournaments live concurrently.
+- **Fix**: Pass `tournament_id` from fixture into `rollupSquads`, filter via `squads → league_id → leagues.tournament_id`
 - **Effort**: 30 minutes
 - **Blocking**: Before World Cup launch (not before dry run)
 
-### #111: `matchday_id` null fallback may cause silent points overwrite
-- **Status**: NEEDS VERIFICATION
-- **Description**: `rollupSquads` writes `fantasy_points` rows keyed on `(squad_id, matchday_id)`. If a squad has `matchday_id = null`, the fallback `'current'` is used — meaning every fixture for that squad writes to the same row and overwrites rather than accumulates. League totals would reflect only the most recent fixture's contribution.
-- **Impact**: Silent — scores would look plausible but be wrong.
-- **Fix**: Verify no squads have `matchday_id = null` before dry run go-live. Query: `SELECT id, matchday_id FROM squads WHERE matchday_id IS NULL;`. If any exist, trace how `matchday_id` is assigned at squad creation.
-- **Effort**: 15-minute verification; fix depends on root cause
+---
 
-### #112: Projected score is position-average only — no per-player historical data
-- **Status**: BY DESIGN (pending Forza endpoint)
-- **Description**: `src/lib/projections.js` uses `player.seasonAvg ?? POSITION_AVG[position]` to project remaining points. The `seasonAvg` field is intended to be populated from Forza's per-player season statistics endpoint, which the provider confirmed is "coming soon" but has not been delivered. Until it arrives, all projections fall back to the same position-wide average (GK 2.1 / DEF 2.8 / MID 3.2 / FWD 4.1 pts per 90 min).
-- **Impact**: Projections work and display correctly. They are less personalized — Haaland and a 5th-choice striker project identically. Users may notice star players project lower than expected.
-- **Fix**: When Forza delivers the season stats endpoint, map `pts_per_90` per player into a lookup and pass as `seasonAvg` into `calculateProjection()`. The engine is already wired to use it — no structural changes needed.
-- **Effort**: ~2 hours once the endpoint is live
+## 🟡 P2 — Medium Priority
+
+### #112: Projected Score Falls Back to Position Average (No Per-Player Data)
+- **Status**: BY DESIGN (awaiting Forza endpoint)
+- **Description**: `src/lib/projections.js` uses `player.seasonAvg ?? POSITION_AVG[position]` to project remaining points. `seasonAvg` intended to be populated from Forza's per-player season stats endpoint, which provider confirmed is "coming soon" but not yet delivered. All projections currently use same position-wide average (GK 2.1 / DEF 2.8 / MID 3.2 / FWD 4.1 pts per 90 min).
+- **Impact**: Projections work and display correctly. Less personalized — Haaland and 5th-choice striker project identically. Users may notice.
+- **Fix**: When Forza delivers season stats endpoint, map `pts_per_90` per player into lookup, pass as `seasonAvg`. Engine already wired — no structural changes needed.
+- **Effort**: ~2 hours once endpoint is live
 - **Dependency**: Forza season stats endpoint (ETA unknown)
 
+### #020: Draft Deadline Notifications
+- **Status**: NOT STARTED
+- **Description**: No push notification or email when draft deadline approaches or lottery results published. Managers may miss the draft entirely.
+- **Suggested**: Push notification 48h before deadline + gazette entry on lottery completion (gazette entry already written by Edge Function — notification layer missing)
+- **Effort**: 2 hours (depends on push notification infrastructure)
+- **Blocking**: Optional for MVP; improves UX
+
+### #021: Transfer Window Auto-Scheduler
+- **Status**: NOT STARTED
+- **Description**: `transfer_windows` table exists and enforcement is wired, but rows must currently be created manually by commissioner. For league format, windows should open/close automatically based on fixture schedule.
+- **Logic**: After each matchday's last fixture ends, open a standard window for 48h with `transfers_remaining = 5` (or null for unlimited)
+- **Effort**: 2 hours (Edge Function + cron)
+- **Blocking**: Post-MVP; improves UX
+
+### #023: Player Status Alerts — Real-Time Updates
+- **Status**: PARTIALLY IMPLEMENTED
+- **Description**: DangerZone shows hardcoded test alerts. `sync-player-status` Edge Function exists but needs to be wired to Forza API periodic polling or webhook. Currently 4 test alerts seeded; need live sync from Forza's `player_status` endpoint.
+- **Effort**: 1.5 hours (periodic sync via pg_cron)
+- **Blocking**: Before live scoring (users need accurate injury/suspension info)
+
+### #024: Squad Screen — Formation Rules Mobile
+- **Status**: ✅ DONE (2026-05-06)
+- **Description**: Formation validation now applied to mobile PITCH tab component as well. Min 1 GK, 3 DEF, 2 MID, 1 FWD enforced on both mobile and desktop.
+
+### #025: Market Screen — Scrolling on Mobile/Capacitor
+- **Status**: ✅ DONE (2026-05-06)
+- **Description**: Fixed by making AppLayout main content an explicit scroll container (`height: 100dvh; overflow-y: auto`) instead of relying on body scroll (unreliable in Capacitor WKWebView).
+
 ---
 
-## 🔵 Roadmap — Future Features
+## 🟡 P2 — League Management & Features
 
-### #012: Gazette — Extended Dynamic Content
-- **Status**: PARTIALLY IMPLEMENTED
-- **Description**: `GazetteDraftReport` component built and wired. Gazette now shows draft reports with headline + bullets + collapsible table. Remaining: design treatment for `breaking_news` entries (club eliminations, rule changes) and `auction_result` type once #013 is built.
-- **Dependency**: #013 for auction entries
-- **Effort**: Medium
+### #016: League Commissioner Panel ✅ DONE
+- **Status**: COMPLETE
+- **Description**: Commissioner-only admin tab in LeagueScreen. Covers: transfer window open/close, draft deadline setter, score recalculation, cup phase transitions.
 
 ### #013: In-League Player Auction System
-- **Status**: OPEN — high-level spec in `DRAFT_SYSTEM_DESIGN.md`
-- **Description**: Manager lists a player for auction within their league. Others bid using budget and/or points. Time-boxed, only during transfer windows. Seller must acquire a replacement for the vacated position before auction closes.
-- **Dependency**: #016 (transfer window infrastructure must be live)
+- **Status**: OPEN — High-level spec in `DRAFT_SYSTEM_DESIGN.md`
+- **Description**: Manager lists a player for auction within their league. Others bid using budget and/or points. Time-boxed, only during transfer windows. Seller must acquire replacement for vacated position before auction closes.
+- **Suggested UI**: Bottom sheet for auction bidding, similar to PlayerPickerSheet. Table of active auctions on LeagueScreen.
+- **Dependency**: #016 (transfer window infrastructure)
 - **Effort**: Medium-large — new UI flow + bidding state machine + resolution logic
+- **Database**: `auction_listings` table (similar to `trade_listings` structure)
+
+### #026: Player "Open for Proposals" / "Available for Acquisition" Broadcast ⭐ NEW
+- **Status**: NOT STARTED
+- **Description**: Manager can flag a player on their squad as "open for proposals" — broadcasting to other managers in the league that they're willing to discuss trades/offers for that player. Appears as badge on LeagueScreen standings/squad view. Reduces unsolicited trade spam.
+- **Suggested UI**: Toggle on PlayerCard in squad view ("Flag as Available"); appears as badge (e.g., "🔓 AVAILABLE") in league standings and when viewing other managers' squads. Others can then initiate formal trade request.
+- **Dependency**: Trade builder UI (already exists)
+- **Effort**: Medium — DB table (`player_availability_flags`), toggles, UI badges, notification
+- **Database**: `player_availability_flags(squad_id, player_id, flagged_at, expires_at)` — allows temporary flagging
 
 ---
 
-## 🟢 P3 — Polish
+## 🟡 P2 — League & Community
+
+### #027: League Chat / In-League Messaging
+- **Status**: NOT STARTED
+- **Description**: Real-time chat scoped to league. Table `chat_messages(league_id, user_id, message, created_at)` exists with RLS. UI not yet built.
+- **Suggested**: Bottom sheet or side panel with message thread, new message input. Realtime subscription via Supabase Realtime.
+- **Effort**: Medium — UI component, Realtime subscription, moderation hooks
+- **Priority**: Post-MVP; nice-to-have for engagement
+
+### #028: League Analytics Dashboard
+- **Status**: NOT STARTED
+- **Description**: Sparkline charts for cumulative points over matchdays, manager head-to-head records, squad stability (transfer activity), most active traders. Defer to post-launch per `PIPELINE.md`.
+- **Suggested**: Separate "Analytics" tab in LeagueScreen. Recharts sparklines + tables.
+- **Effort**: Medium
+- **Priority**: Post-MVP polish
+
+### #029: Bracket Challenge (Fixture Predictions)
+- **Status**: ✅ DONE (wired to real fixtures)
+- **Description**: Mini-game for predicting Home/Draw/Away on each matchday's fixtures. Results stored in localStorage (currently) or could be moved to Supabase for leaderboards.
+- **Status**: Fully functional; could be enhanced with league-wide leaderboards
+
+---
+
+## 🟡 P2 — Live Feed & Commentary
+
+### #030: VAR "Under Review" State in Live Feed
+- **Status**: NOT STARTED
+- **Description**: When a decision is under VAR review during a live match, show "⚠️ VAR Review" state in the Live feed ticker. Visual animation while review is pending; resolve with final decision.
+- **Effort**: Low — UI flag + animation (defer per `PIPELINE.md`)
+- **Priority**: Post-MVP polish
+
+### #031: Live Commentary / Match Events Timeline
+- **Status**: PARTIALLY IMPLEMENTED
+- **Description**: `match_events` table stores all live events (goals, assists, cards, substitutions). Live feed renders these, but detailed event timeline (minute, player, team, event type) not yet fully designed. Currently shows raw ticker.
+- **Suggested**: Timeline view with player avatars, event icons (goal ⚽, card 🟨, sub 🔄), minute markers
+- **Effort**: Low-medium — mostly UI polish on existing data
+- **Priority**: Post-MVP
+
+---
+
+## 🔵 P3 — Polish & UX
 
 ### #005: Verify Mobile PowerToolCard Rendering
 - **Status**: NEEDS VERIFICATION
-- **Steps**: `/squad` on 375px → Tools tab → confirm 3 cards render with descriptions, interactions work, confirm modals appear
+- **Steps**: `/squad` on 375px → CHIPS tab → confirm 3 cards render with descriptions, interactions work, modals appear
 - **Effort**: 20 minutes
+- **Priority**: Pre-launch verification
 
 ### #007: Mobile Tab Icon Refinement
 - **Status**: REVIEW
-- **Description**: Current: ⚽ Pitch, 📋 Squad, ⚙️ Tools. Consider: ⚽ Pitch, 👥 Squad, ⚡ Tools
+- **Description**: Current: ⚽ Pitch, 📋 Squad, ⚙️ Chips. Consider: ⚽ Pitch, 👥 Squad, ⚡ Chips
 - **Effort**: 15 minutes
-
-### #008: Onboarding Tour — Hardcoded Delays
-- **Status**: ✅ DONE — Replaced 3× setTimeout retry (100/300/600ms) with `waitForElement()` using MutationObserver. Fires the exact tick the target element appears. Removed unused rafRef.
-
-### #009: PowerToolCard — Description Prop
-- **Status**: ✅ DONE — Description prop added to all 5 PowerToolCard usages (mobile × 3, desktop × 2): Wildcard "Unlimited free transfers this matchday", Triple Cap "3× captain points — or 0 if they don't play", Roulette "Random captain picker — spin to decide".
+- **Priority**: Polish only
 
 ### #010: CSS Animation Performance
 - **Status**: REVIEW
 - **Description**: PowerToolCard pulse animation defined inline. Move to global CSS, add `prefers-reduced-motion` support.
 - **Effort**: 30 minutes
+- **Priority**: Accessibility improvement
+
+### #032: Swap Mode Banner UX
+- **Status**: ✅ DONE (2026-05-06)
+- **Description**: Replaced heavy green background with dark surface + cyan accent (more brand-aligned). Shows "Select a bench player to bring on" or vice versa.
+
+### #033: Empty Slot Placeholders
+- **Status**: ✅ DONE
+- **Description**: Per-position empty slots on SquadScreen with + button to open PlayerPickerSheet. Shows `{position} SLOT · + SIGN`.
 
 ---
 
-## ✅ Completed This Cycle
+## 🟢 P4 — Post-Launch Roadmap (July 2026 and Beyond)
 
-**Session 4 — Bug Fixes & Player Data**:
-- Fixed MarketScreen empty player list (isolated fetch blocks)
-- Fixed SquadScreen Tools tab crash (`isLocked` undefined)
-- Applied DB migrations 04–07 + `get_server_time` RPC
-- Seeded 829 EPL players from CSV
-- Added draft entry banner to LeagueScreen (#015)
+### Analytics & Engagement
+- #028: League Analytics Dashboard (sparklines, H2H records, trading activity)
+- Community leaderboards (global top managers, position rankings)
+- Bracket Challenge leaderboards (per league, global)
+- Season statistics archives (historical league records)
 
-**Session 5 — Buy/Sell Flow Redesign**:
-- `process-transfer` Edge Function (no-repeat, budget, position limits)
-- `useTransfer(leagueId)` hook
-- `PlayerPickerSheet` component
-- SquadScreen empty slots + picker
-- MarketScreen taken-by-manager display + league picker
-- LeagueScreen squad/market shortcut buttons
-- CI fix: `npm ci` → `npm install`
+### Social & Community
+- #027: League Chat with moderation hooks
+- Player news feed (injury alerts, transfer rumors)
+- Community guidelines + reporting system
+- Women's football community features (if launching WF variant)
 
-**Session 6 — ESLint / CI Lint Fix**:
-- `eslint.config.js`: excluded `supabase/functions/**`, `.claude/**`, `e2e-report/**`, `Skills/**` from linting — fixes Deno `'Deno' is not defined` errors and stray p5.js file errors
-- `playwright.config.js`: added `/* global process */` declaration
-- `PowerToolCard.jsx`: removed unused `actionLabel`/`colorClass` props from destructure
-- `DraftScreen.jsx`: removed unused `autoSaveTimer` state; named auto-save catch variable
-- `LeagueScreen.jsx`: prefixed unreferenced `leagueListings` state with `_`
-- `MarketScreen.jsx`: removed stale `takenMap`/`reloadTaken` from `useTransfer` destructure
-- `SquadScreen.jsx`: added missing `handleChipToggle` and `handleRouletteStart` handler implementations
-- `useTransfer.js`: fixed `useCallback` dependency arrays (`user?.id` → `user`) to satisfy React Compiler
+### Competitive Features
+- #031: Live Commentary / Event Timeline UI enhancements
+- #030: VAR animation / detailed decision tracking
+- Relegation/promotion system (for long-term leagues)
+- Spectator mode (watch other managers' squads live)
 
----
+### Advanced Trading
+- #013: In-league auction system (final design + implementation)
+- Blind bid system (sealed offers on players)
+- Trading block (multi-player swaps)
 
-## 🎯 Recommended Next Cycle
+### Content & Personalization
+- Player comparison tool (side-by-side stats)
+- Formation visualizer (recommended formations by player availability)
+- Injury probability model (when Forza provides forecast data)
+- Managerial record tracking (vs specific opponents, seasons, etc.)
 
-### Unblock the product
-1. **#018** Configure Supabase cron settings (15 min — dashboard config only)
-2. **#105** Transfer cost lock at kickoff — Edge Function update
-3. **#106** Wire scoring cron or confirm commissioner button calls Edge Function
-
-### Polish / roadmap
-4. **#005** Verify mobile PowerToolCard rendering at 375px (visual check)
-5. **#021** Transfer window auto-scheduler (Edge Function + cron)
-6. **#020** Draft deadline push notifications
+### Mobile Native
+- Push notifications (deadline reminders, score updates, trade offers)
+- Offline mode (cache squad/league data locally)
+- Home screen widgets (live score, squad status, league position)
+- iMessage/WhatsApp stickers (celebration/trash talk packs)
 
 ---
 
-## 📊 Metrics
+## 📊 Metrics & Status
 
 | Category | Current | Target |
 |---|---|---|
-| E2E Tests Passed | 116/116 (100%) ✅ | 116/116 |
-| Draft System Stories | 12/12 ✅ | 12/12 |
-| DB Migrations | 17 | — |
+| E2E Tests Passing | 84/84 (100%) ✅ | 84/84 |
+| Blocking Issues (P0) | 0 ✅ | 0 |
+| High Priority Open (P1) | 5 | 0 (pre-launch) |
+| Medium Priority Open (P2) | 12 | TBD |
+| Polish / Verification (P3) | 4 | TBD |
+| Post-Launch Roadmap (P4) | 12+ | — |
+| DB Migrations | 19 | — |
 | Edge Functions | 10 | — |
-| Blocking Issues | 0 ✅ | 0 |
-| High Priority Open | 3 | 0 |
-| Medium Priority Open | 6 | TBD |
-| Low Priority Open | 2 | TBD |
 
 ---
 
-## 📁 Key Files
+## 🎯 Priority Tiers — Recommended Next Steps
 
-| File | Purpose |
+### **CRITICAL PATH TO LAUNCH** (This Week)
+1. **#018** Configure Supabase cron settings (15 min — dashboard only)
+2. **#111** Verify no squads have `matchday_id = null` (15 min — query + audit)
+3. **#109** Confirm Forza API field names for pass stats (30 min — API test)
+4. **#106** Wire scoring trigger (commissioner button or cron) (30 min)
+5. **#105** Add transfer cost lockout at kickoff (1 hour)
+
+### **PRE-LAUNCH VERIFICATION** (Before Go-Live)
+6. **#005** Verify mobile PowerToolCard rendering (20 min)
+7. **#110** Audit rollupSquads for multi-tournament scenario (30 min)
+8. **#023** Wire player status sync from Forza (1.5 hours)
+
+### **NICE-TO-HAVE BEFORE LAUNCH** (If Time)
+9. **#024** Formation rules on mobile PITCH (✅ DONE)
+10. **#025** Market scroll on Capacitor (✅ DONE)
+
+### **PLANNED FOR SPRINT 2** (Post-Launch)
+11. **#020** Draft deadline notifications
+12. **#021** Transfer window auto-scheduler
+13. **#026** Player availability broadcast feature
+14. **#027** League chat infrastructure
+
+### **POST-LAUNCH ROADMAP** (July+)
+15. **#013** In-league auction system
+16. **#028** League analytics dashboard
+17. **#030/031** Live feed enhancements (VAR, commentary timeline)
+
+---
+
+## 📁 Key References
+
+| Document | Purpose |
 |---|---|
-| `src/screens/DraftScreen.jsx` | Draft submission UI (ranked list, auto-complete, submit) |
-| `src/screens/DraftRecoveryScreen.jsx` | Post-lottery gap filling (FCFS, realtime) |
-| `src/screens/LeagueScreen.jsx` | League hub (gazette, trade builder, standings, squad shortcuts) |
-| `src/screens/SquadScreen.jsx` | Squad management — empty slots, picker sheet, sell via Edge Function |
-| `src/screens/MarketScreen.jsx` | Player market — league-scoped, taken-by-manager display |
-| `src/components/PlayerPickerSheet.jsx` | Bottom sheet picker (position-filtered, taken/available states) |
-| `src/hooks/useTransfer.js` | League-scoped buy/sell hook with takenMap |
-| `src/components/GazetteDraftReport.jsx` | Draft report in The Official Gazette |
-| `src/components/TransferWindowBanner.jsx` | Live window status banner |
-| `src/hooks/useTransferWindow.js` | Transfer window state hook |
-| `src/hooks/useRelaxationState.js` | Cup no-repeat relaxation state hook |
-| `src/components/PowerToolCard.jsx` | Reusable power tools card |
-| `supabase/functions/process-transfer/` | Buy/sell Edge Function (no-repeat, budget, position limits) |
-| `supabase/functions/run-draft-lottery/` | Random lottery Edge Function |
-| `supabase/functions/run-reverse-standings-draft/` | Reverse-standings draft Edge Function |
-| `supabase/functions/eliminate-cup-club/` | Club elimination + gazette + relaxation trigger |
-| `supabase/functions/calculate-relaxation/` | No-repeat formula + gazette on tier change |
-| `supabase/functions/sync-fixtures/` | Forza → fixtures + matchday_deadlines tables |
-| `supabase/functions/sync-players/` | Forza → teams + players tables |
-| `supabase/functions/sync-player-status/` | Forza → player_status (injury/suspension) |
-| `supabase/functions/ingest-match-events/` | Live match data → player_match_stats + match_events |
-| `supabase/functions/calculate-scores/` | Fantasy points engine (BPS, chips, Realtime broadcast) |
-| `supabase/migrations/` | 17 migrations (schema → crons → players seed → Forza integration) |
-| `DATA_PIPELINE_RUNBOOK.md` | End-to-end runbook: activation steps, cron setup, WC launch |
-| `API/FIT_GAP_ANALYSIS.md` | Scoring rule vs Forza API data availability audit |
-| `API/FORZA_API_KNOWLEDGE.md` | Full API endpoint reference with field documentation |
-| `DRAFT_SYSTEM_DESIGN.md` | Full design doc with decision log |
-| `APP_STORE_ASSESSMENT.md` | Mobile app strategy |
-| `e2e/platform.spec.js` | E2E test suite (84 tests, 82 passing) |
+| `DRAFT_SYSTEM_DESIGN.md` | Auction & draft system architecture |
+| `FANTASY_POINTS_SCORING_LAYER.md` | Scoring rules & BPS formula |
+| `DATA_PIPELINE_RUNBOOK.md` | End-to-end activation & cron setup |
+| `APP_STORE_ASSESSMENT.md` | Mobile app strategy & store submission |
+| `PIPELINE.md` | Sprint plan & product roadmap |
+| `DRY_RUN_PREP_CHECKLIST.md` | Launch readiness checklist |
+| `API/FORZA_API_KNOWLEDGE.md` | Full API endpoint reference |
+
+---
+
+## 📝 Changelog
+
+**2026-05-06**:
+- Added #026 "Player Open for Proposals" feature (user request)
+- Added #023-#033 missing features identified in codebase exploration
+- Marked #024-#025, #032-#033 as completed this session
+- Reorganized P2 into functional categories (data pipeline, league management, community, live feed)
+- Added P4 post-launch roadmap with detailed evolution plan
+- Updated E2E test count (84/84 after CHIPS selector fix)
+
+**2026-05-02**:
+- Added P2 data pipeline issues (#109-#112)
+- Added #025 Squad LINE tab removal (completed)
+
+**2026-04-25**:
+- Added #023 Player status alerts (partially implemented)
+- Marked #003, #004, #016, #017, #019, #022 as complete
+
