@@ -403,11 +403,11 @@ export default function LeagueScreen() {
                 }`}
               >
                 <span className="text-[11px] font-bold uppercase tracking-wider text-white">Classic</span>
-                <span className="text-[11px] text-text-secondary leading-snug">Everyone builds freely — no player restrictions across squads.</span>
+                <span className="text-[11px] leading-snug" style={{ color: 'var(--paper)' }}>Everyone builds freely — no player restrictions across squads.</span>
                 <ul className="flex flex-col gap-[3px]">
-                  <li className="text-[10px] text-text-tertiary">• Any player, any manager</li>
-                  <li className="text-[10px] text-text-tertiary">• 5 transfers per round</li>
-                  <li className="text-[10px] text-text-tertiary">• Quick to set up</li>
+                  <li className="text-[10px]" style={{ color: 'var(--mute)' }}>• Any player, any manager</li>
+                  <li className="text-[10px]" style={{ color: 'var(--mute)' }}>• 5 transfers per round</li>
+                  <li className="text-[10px]" style={{ color: 'var(--mute)' }}>• Quick to set up</li>
                 </ul>
               </button>
 
@@ -425,11 +425,11 @@ export default function LeagueScreen() {
                   <span className="text-[11px] font-bold uppercase tracking-wider text-white">Draft</span>
                   <span className="text-[9px] font-bold uppercase tracking-wider text-cyan border border-cyan/40 rounded px-1 py-[1px] leading-none">Recommended</span>
                 </div>
-                <span className="text-[11px] text-text-secondary leading-snug">No two managers can own the same player.</span>
+                <span className="text-[11px] leading-snug" style={{ color: 'var(--paper)' }}>No two managers can own the same player.</span>
                 <ul className="flex flex-col gap-[3px]">
-                  <li className="text-[10px] text-text-tertiary">• Submit ranked wishlist pre-season</li>
-                  <li className="text-[10px] text-text-tertiary">• Lottery resolves contested picks</li>
-                  <li className="text-[10px] text-text-tertiary">• 5 transfers/round · unlimited at halfway</li>
+                  <li className="text-[10px]" style={{ color: 'var(--mute)' }}>• Submit ranked wishlist pre-season</li>
+                  <li className="text-[10px]" style={{ color: 'var(--mute)' }}>• Lottery resolves contested picks</li>
+                  <li className="text-[10px]" style={{ color: 'var(--mute)' }}>• 5 transfers/round · unlimited at halfway</li>
                 </ul>
               </button>
             </div>

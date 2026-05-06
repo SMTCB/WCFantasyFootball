@@ -1405,28 +1405,6 @@ export default function SquadScreen() {
                 )}
                 <PlayerList />
               </div>
-              {/* Bench panel — 320px right rail */}
-              <div className="w-[320px] shrink-0 overflow-y-auto" style={{ borderLeft: '1px solid var(--rule)' }}>
-                <SectionHeader title="Substitutes" />
-                {bench.map(player => (
-                  <PlayerCard
-                    key={player.id}
-                    player={player}
-                    variant="row"
-                    isCaptain={player.id === captainId}
-                    isJoker={player.id === todayJokerId}
-                    onClick={isRouletteSpinning ? () => {} : handlePlayerClick}
-                    isSelected={selectedPlayer?.id === player.id}
-                    isSwapTarget={swapMode && selectedPlayer?.id !== player.id}
-                    showIntelligence
-                  />
-                ))}
-                <div className="px-4 py-3">
-                  <p className="text-[10px] leading-relaxed" style={{ color: 'var(--mute)' }}>
-                    Tap a player on the pitch or in the list to sub them in or out.
-                  </p>
-                </div>
-              </div>
             </>
           )}
 
