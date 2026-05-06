@@ -7,6 +7,7 @@ import {
 import { useAuth } from '../hooks/useAuth';
 
 import SectionHeader from '../components/SectionHeader';
+import { EventTimeline } from '../components/EventTimeline';
 
 // No mock data — screens show real DB data or empty states
 
@@ -444,59 +445,9 @@ export default function LiveScreen() {
                   </>
                 )}
 
-                {/* ── ACTIVITY LOG ─────────────────────────────── */}
-                <SectionHeader title="ACTIVITY LOG" />
-                <div className="bg-[#0d0d0d]">
-                  {events.map((e, i) => {
-                    const isVar = e.type === 'var';
-                    return (
-                      <div
-                        key={i}
-                        className={`flex px-4 py-3.5 border-b gap-3 items-center ${isVar ? 'border-[#FFB300]/30 bg-[#FFB300]/5' : 'border-white/5'}`}
-                        style={{ animationDelay: `${i * 40}ms` }}
-                      >
-                        <div className="fk-mono w-8 flex justify-center shrink-0" style={{ fontSize: 8, color: 'var(--mute)' }}>
-                          {e.type === 'goal'          && 'GL'}
-                          {e.type === 'assist'        && 'AS'}
-                          {e.type === 'yellow'        && 'YC'}
-                          {e.type === 'red'           && 'RC'}
-                          {e.type === 'sub'           && 'SB'}
-                          {e.type === 'penalty_saved' && 'PS'}
-                          {e.type === 'own_goal'      && 'OG'}
-                          {isVar                      && 'VAR'}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          {isVar ? (
-                            <>
-                              <div className="text-[13px] font-bold truncate leading-tight text-[#FFB300] animate-pulse">UNDER REVIEW</div>
-                              <div className="text-[11px] text-[#9E9E9E] truncate">Goal Check — {e.playerName} ({e.team})</div>
-                            </>
-                          ) : (
-                            <>
-                              <div className="text-[13px] font-bold truncate leading-tight">{e.playerName || e.players?.name}</div>
-                              <div className="text-[11px] text-text-tertiary truncate">{e.team}</div>
-                            </>
-                          )}
-                        </div>
-                        <div className="shrink-0 text-right flex flex-col items-end gap-0.5">
-                          {isVar ? (
-                            <div className="text-[13px] font-black tabular-nums text-[#FFB300]">...</div>
-                          ) : (
-                            <div className={`text-[13px] font-black tabular-nums ${e.type === 'goal' ? 'text-positive' : e.type === 'red' || e.type === 'own_goal' ? 'text-negative' : e.type === 'yellow' ? 'text-yellow-400' : 'text-text-secondary'}`}>
-                              {e.type === 'goal' ? '+6' : e.type === 'assist' ? '+3' : e.type === 'yellow' ? '−1' : e.type === 'red' ? '−3' : e.type === 'penalty_saved' ? '+5' : e.type === 'own_goal' ? '−2' : ''}
-                            </div>
-                          )}
-                          <div className="text-[10px] font-black text-white/30 uppercase tracking-widest">{e.minute}'</div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                  {events.length === 0 && (
-                    <div className="p-8 text-center text-xs text-text-tertiary font-bold uppercase tracking-widest">
-                      Awaiting Kickoff...
-                    </div>
-                  )}
-                </div>
+                {/* ── MATCH EVENTS TIMELINE ─────────────────────────────── */}
+                <SectionHeader title="MATCH EVENTS" />
+                <EventTimeline events={events} loading={loading} />
               </>
             )}
           </>
