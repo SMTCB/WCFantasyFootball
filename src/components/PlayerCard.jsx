@@ -36,7 +36,6 @@ export default function PlayerCard({
   if (!player) return null;
 
   const intel    = showIntelligence ? player.intel : null;
-  const intelCfg = intel ? LINEUP_STATUS[intel.status] : null;
   const status   = intel?.status ?? 'fit';
   const isDummy  = player.isDummy;
   const toneColor = POS_TONE[player.position] ?? 'var(--mute)';

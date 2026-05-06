@@ -149,7 +149,6 @@ export default function PitchView({
   onPlayerClick,
   selectedPlayerId,
   swapMode,
-  jokerPlayerId,
   variant = 'desktop',   // 'desktop' | 'mobile'
   matchdayLabel = '',
 }) {

@@ -57,7 +57,7 @@ const CHIPS = [
 export default function SquadScreen() {
   const { user } = useAuth();
   const [searchParams] = useSearchParams();
-  const [leagueId, setLeagueId] = useState(searchParams.get('leagueId'));
+  const [leagueId] = useState(searchParams.get('leagueId'));
   const [jokerPlayer,        setJokerPlayer]       = useState(null);
   const [isJokerPickerOpen,  setIsJokerPickerOpen] = useState(false);
   const [isRouletteSpinning, setIsRouletteSpinning] = useState(false);
