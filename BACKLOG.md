@@ -81,9 +81,17 @@ All feature code complete. One remaining infrastructure task:
 - **Blocking**: Optional for MVP; improves UX
 
 ### #021: Transfer Window Auto-Scheduler
-- **Status**: NOT STARTED
-- **Description**: `transfer_windows` table exists and enforcement is wired, but rows must currently be created manually by commissioner. For league format, windows should open/close automatically based on fixture schedule.
-- **Logic**: After each matchday's last fixture ends, open a standard window for 48h with `transfers_remaining = 5` (or null for unlimited)
+- **Status**: ✅ DONE (2026-05-06)
+- **Description**: Automatic transfer window creation when matchday ends. `auto-open-transfer-window` Edge Function monitors completed fixtures and creates windows for next round (48h, 5 transfers). Runs every 2 hours via pg_cron.
+- **Implementation**: 
+  - Edge Function: `supabase/functions/auto-open-transfer-window/index.js`
+  - Cron Job: Migration 22
+- **Logic**: 
+  1. Find latest finished round_number from fixtures
+  2. Check if window exists for next round (idempotent)
+  3. If not, create window: opens_at=now, closes_at=now+48h, transfers_remaining=5
+  4. Applies to all active leagues
+- **Impact**: Eliminates manual commissioner action; consistent, reliable window scheduling
 - **Effort**: 2 hours (Edge Function + cron)
 - **Blocking**: Post-MVP; improves UX
 

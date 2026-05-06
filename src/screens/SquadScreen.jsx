@@ -847,10 +847,10 @@ export default function SquadScreen() {
         {/* Tab strip — 4 tabs matching desktop */}
         <div className="flex" style={{ borderBottom: '1px solid var(--rule)', background: 'var(--ink-2)' }}>
           {[
-            { id: 'pitch',  label: 'PITCH'  },
-            { id: 'squad',  label: 'LIST'   },
-            { id: 'chips',  label: 'CHIPS'  },
-            { id: 'status', label: 'STATUS' },
+            { id: 'pitch',  label: '⚽ PITCH'  },
+            { id: 'squad',  label: '📋 LIST'   },
+            { id: 'chips',  label: '⚡ CHIPS'  },
+            { id: 'status', label: '⚠️ STATUS' },
           ].map(tab => (
             <button
               key={tab.id}

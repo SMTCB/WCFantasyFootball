@@ -260,7 +260,7 @@ Deno.serve(async (req) => {
         pointsLookup[r.player_id] = scorePlayer({ ...r, bonus: r.bonus }, r.position, POINTS, UNIVERSAL);
       }
 
-      const updatedSquads = await rollupSquads(fixture_id, pointsLookup);
+      const updatedSquads = await rollupSquads(fixture_id, pointsLookup, fixture.tournament_id ?? '');
       await broadcastUpdate(fixture_id);
 
       return respond(200, {
@@ -374,7 +374,7 @@ Deno.serve(async (req) => {
     const pointsLookup = {};
     for (const u of playerStatUpserts) pointsLookup[u.player_id] = u.fantasy_points;
 
-    const updatedSquads = await rollupSquads(fixture_id, pointsLookup);
+    const updatedSquads = await rollupSquads(fixture_id, pointsLookup, fixture.tournament_id ?? '');
     await broadcastUpdate(fixture_id);
 
     return respond(200, {
@@ -391,10 +391,13 @@ Deno.serve(async (req) => {
 
 // ─── Shared helpers ────────────────────────────────────────────────────────────
 
-async function rollupSquads(fixture_id, pointsLookup) {
+async function rollupSquads(fixture_id, pointsLookup, tournament_id) {
+  // (#110) Filter squads to only those in leagues matching this tournament
+  // Prevents unnecessary writes to squads in other tournaments when multiple tournaments are live
   const { data: squads } = await supabase
     .from('squads')
-    .select('id, user_id, league_id, matchday_id, players, captain_id, is_triple_captain, is_wildcard');
+    .select('id, user_id, league_id, matchday_id, players, captain_id, is_triple_captain, is_wildcard, leagues!inner(tournament_id)')
+    .eq('leagues.tournament_id', tournament_id || '');
 
   if (!squads?.length) return 0;
 
