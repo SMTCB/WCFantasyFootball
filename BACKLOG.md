@@ -22,6 +22,7 @@
 - ✅ **#110 rollupSquads Tournament Filtering**: Filter squad updates to only affect squads in matching tournament (fixes multi-tournament issue)
 - ✅ **#007 Mobile Tab Icons**: Added emoji icons to main nav (📊 SCORES, 👥 SQUAD, 🏆 LEAGUE, 🔴 LIVE, 💰 MARKET) and squad tabs (⚽ PITCH, 📋 LIST, ⚡ CHIPS, ⚠️ STATUS)
 - ✅ **#026 Player Availability Flags**: Full implementation with DB schema, hook, component, and SquadScreen integration
+- ✅ **#031 Match Events Timeline**: Enhanced visual timeline with event icons, minute markers, color coding, and improved UX
 
 ### ✅ Completed Previous Sessions
 - Draft System — full implementation (S1–S12)
@@ -184,11 +185,21 @@ All feature code complete. One remaining infrastructure task:
 - **Priority**: Post-MVP polish
 
 ### #031: Live Commentary / Match Events Timeline
-- **Status**: PARTIALLY IMPLEMENTED
-- **Description**: `match_events` table stores all live events (goals, assists, cards, substitutions). Live feed renders these, but detailed event timeline (minute, player, team, event type) not yet fully designed. Currently shows raw ticker.
-- **Suggested**: Timeline view with player avatars, event icons (goal ⚽, card 🟨, sub 🔄), minute markers
-- **Effort**: Low-medium — mostly UI polish on existing data
-- **Priority**: Post-MVP
+- **Status**: ✅ DONE (2026-05-06)
+- **Description**: Enhanced event timeline showing match events in visual format with timeline, icons, and minute markers.
+- **Implementation**:
+  - New `EventTimeline` component with:
+    - Event icons (⚽ goal, 🅰️ assist, 🟨 yellow, 🔴 red, 🔄 sub, 🥅 save, ⚫ own goal, ⚠️ VAR)
+    - Vertical timeline with minute markers and glowing dots
+    - Color-coded events (green goals, red cards, yellow warnings, etc.)
+    - Left-aligned minute display
+    - Points value for each event
+    - Event count footer
+  - Integrated into LiveScreen replacing old Activity Log
+  - Responsive design for mobile + desktop
+- **Impact**: Significantly improved UX during live matches; users can now clearly understand match flow and event timeline
+- **Effort**: 45 minutes (component + integration + styling)
+- **Priority**: Polish feature completed
 
 ---
 
