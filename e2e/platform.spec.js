@@ -175,8 +175,8 @@ test.describe('SquadScreen', () => {
     await page.setViewportSize({ width: 375, height: 812 });
     await page.goto('/squad');
     await waitForContent(page);
-    // Chips are in the Tools tab — label is '⚙️' and 'Tools' in separate divs
-    await page.getByRole('button', { name: /tools/i }).click();
+    // Chips are in the CHIPS tab
+    await page.getByRole('button', { name: /chips/i }).click();
     await page.waitForTimeout(300);
     await expect(page.getByText(/wildcard|triple/i).first()).toBeVisible();
   });
