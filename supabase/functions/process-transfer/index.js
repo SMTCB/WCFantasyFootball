@@ -69,6 +69,39 @@ Deno.serve(async (req) => {
       }, 403, corsHeaders);
     }
 
+    // 3. (#105) Reject if the player's team fixture is in progress or later (cost-lock at kickoff)
+    // Only check for BUY actions (selling is always allowed)
+    if (action === 'buy') {
+      const { data: playerRow } = await supabase
+        .from('players')
+        .select('forza_team_id')
+        .eq('id', player_id)
+        .maybeSingle();
+
+      if (playerRow?.forza_team_id) {
+        const now = new Date();
+        // Check if this player's team has any fixture that is live or past kickoff
+        const { data: playerFixture } = await supabase
+          .from('fixtures')
+          .select('id, home_team, away_team, kickoff_at, status')
+          .or(`home_forza_team_id.eq.${playerRow.forza_team_id},away_forza_team_id.eq.${playerRow.forza_team_id}`)
+          .limit(1)
+          .maybeSingle();
+
+        // If fixture exists and is live OR kickoff has already passed, reject
+        if (playerFixture) {
+          const kickoffTime = playerFixture.kickoff_at ? new Date(playerFixture.kickoff_at) : null;
+          if (playerFixture.status === 'live' || (kickoffTime && now >= kickoffTime)) {
+            return json({
+              ok:    false,
+              code:  'TRANSFER_LOCKED',
+              error: `Transfer cost locked — ${playerFixture.home_team} vs ${playerFixture.away_team} has started (cost locked at kickoff)`,
+            }, 403, corsHeaders);
+          }
+        }
+      }
+    }
+
     // ── Fetch or create the manager's squad for this league ──────────────────
     let { data: squad } = await supabase
       .from('squads')

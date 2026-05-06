@@ -77,8 +77,11 @@ async function loadScoringRules(tournament_id) {
 // ─── BPS ranking ───────────────────────────────────────────────────────────────
 
 function calcBPS(stats) {
-  const passCompletion = stats.total_passes > 0
-    ? (stats.accurate_passes / stats.total_passes) * 100
+  // Pass completion: only calculate if we have both accurate and total passes
+  const totalPasses = stats.total_passes ?? 0;
+  const accuratePasses = stats.accurate_passes ?? 0;
+  const passCompletion = totalPasses > 0
+    ? (accuratePasses / totalPasses) * 100
     : 0;
 
   return (
