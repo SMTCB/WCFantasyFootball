@@ -8,6 +8,7 @@ import { useAuth } from '../hooks/useAuth';
 
 import SectionHeader from '../components/SectionHeader';
 import { EventTimeline } from '../components/EventTimeline';
+import { VARReviewBanner } from '../components/VARReviewBanner';
 
 // No mock data — screens show real DB data or empty states
 
@@ -233,17 +234,11 @@ export default function LiveScreen() {
           </div>
         ) : (
           <>
-            {/* ── VAR CHECK BANNER ───────────────────────────── */}
-            {events[0]?.type === 'var' && (
-              <div className="bg-[#1a1100] border-l-4 border-[#FFB300] py-3 px-4 flex items-center gap-3">
-                 <div className="fk-mono animate-pulse" style={{ fontSize: 9, color: 'var(--gold)' }}>VAR</div>
-                 <div>
-                    <div className="text-[10px] font-black text-[#FFB300] uppercase tracking-[0.15em] mb-0.5">VAR Review in Progress</div>
-                    <div className="text-[12px] font-bold text-white">Goal Check: {events[0].players?.name}</div>
-                    <div className="text-[9px] text-[#9E9E9E] mt-0.5">Projections locked until review completes.</div>
-                 </div>
-              </div>
-            )}
+            {/* ── VAR REVIEW BANNER ─────────────────────────────── */}
+            <VARReviewBanner
+              event={events[0]}
+              isVisible={events[0]?.type === 'var'}
+            />
             
             {/* ── Match Ticker ─────────────────────────────── */}
             <div className="py-4 bg-[#111] border-b border-white/5 overflow-x-auto snap-x flex px-4 gap-3">
@@ -255,10 +250,39 @@ export default function LiveScreen() {
 
               {liveFixtures.map(f => {
                 const pct = Math.min(100, ((parseInt(f.minute) || 0) / 90) * 100);
+                const hasVAR = events[0]?.type === 'var';
                 return (
-                  <div key={f.id} className="snap-center min-w-[200px] shrink-0 bg-[#0a1a0a] border border-positive/30 rounded-sm p-3 flex flex-col items-center relative overflow-hidden">
-                    <div className="absolute top-0 w-full h-[2px] bg-positive animate-pulse" />
-                    <div className="text-[10px] font-black text-positive uppercase tracking-widest mb-2">LIVE • {f.minute}'</div>
+                  <div
+                    key={f.id}
+                    className="snap-center min-w-[200px] shrink-0 rounded-sm p-3 flex flex-col items-center relative overflow-hidden transition-colors"
+                    style={{
+                      background: hasVAR ? 'rgba(255,179,0,0.08)' : 'rgb(10,26,10)',
+                      border: hasVAR ? '1px solid rgba(255,179,0,0.4)' : '1px solid rgba(34,197,94,0.3)',
+                    }}
+                  >
+                    {/* Top indicator line */}
+                    <div
+                      className="absolute top-0 w-full h-[2px]"
+                      style={{
+                        background: hasVAR ? '#FFB300' : 'var(--positive)',
+                        animation: hasVAR ? 'pulse 1s ease-in-out infinite' : 'pulse 2s ease-in-out infinite',
+                      }}
+                    />
+
+                    {/* VAR indicator badge */}
+                    {hasVAR && (
+                      <div className="absolute top-2 right-2 flex items-center gap-1 px-2 py-1 rounded-sm bg-[#FFB300] text-[#1a1100]">
+                        <span className="text-[10px]">⚠️</span>
+                        <span className="text-[9px] font-black uppercase tracking-wider">VAR</span>
+                      </div>
+                    )}
+
+                    <div
+                      className="text-[10px] font-black uppercase tracking-widest mb-2"
+                      style={{ color: hasVAR ? '#FFB300' : 'var(--positive)' }}
+                    >
+                      {hasVAR ? 'REVIEW' : `LIVE • ${f.minute}'`}
+                    </div>
                     <div className="flex justify-between w-full font-bold text-sm mb-3">
                       <span className="truncate max-w-[40%]">{f.home_team.substring(0, 3).toUpperCase()}</span>
                       <span className="tabular-nums text-white/60">{f.homeGoals ?? 0} – {f.awayGoals ?? 0}</span>
