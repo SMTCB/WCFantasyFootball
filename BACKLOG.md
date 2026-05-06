@@ -182,8 +182,8 @@ All feature code complete. One remaining infrastructure task:
 - **Priority**: Polish only
 
 ### #010: CSS Animation Performance
-- **Status**: REVIEW
-- **Description**: PowerToolCard pulse animation defined inline. Move to global CSS, add `prefers-reduced-motion` support.
+- **Status**: ✅ DONE (2026-05-06)
+- **Description**: Added `prefers-reduced-motion: reduce` support to all animation classes (live-pulse, slide-up, page-enter, scan-pulse, points-flash, shimmer, live-ring). Users with motion preferences set to "reduce" now see static states instead of animations.
 - **Effort**: 30 minutes
 - **Priority**: Accessibility improvement
 
