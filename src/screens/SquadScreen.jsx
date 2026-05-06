@@ -240,6 +240,7 @@ export default function SquadScreen() {
     const MIN_FORMATION = cfg.minFormation;
     const counts = { GK: 0, DEF: 0, MID: 0, FWD: 0 };
     pitchPlayers.forEach(p => { if (counts[p.position] !== undefined) counts[p.position]++; });
+    if (counts['GK'] > 1) return 'Only 1 GK allowed in the starting XI.';
     for (const [pos, min] of Object.entries(MIN_FORMATION)) {
       if (counts[pos] < min) return `This swap leaves you with only ${counts[pos]} ${pos} on the pitch (minimum ${min}).`;
     }
@@ -247,14 +248,13 @@ export default function SquadScreen() {
   };
 
   const handleSwap = async (p1, p2) => {
+    const isP1Bench = squadData.bench.some(b => b.id === p1.id);
+    const isP2Bench = squadData.bench.some(b => b.id === p2.id);
+    // Same zone tap — stay in swap mode, let user pick a valid target
+    if (isP1Bench === isP2Bench) return;
+
     try {
       setSaving(true);
-      const isP1Bench = squadData.bench.some(b => b.id === p1.id);
-      const isP2Bench = squadData.bench.some(b => b.id === p2.id);
-      if (isP1Bench === isP2Bench) {
-        alert('Can only swap between pitch and bench.');
-        return;
-      }
       const pitchPlayer  = isP1Bench ? p2 : p1;
       const benchPlayer  = isP1Bench ? p1 : p2;
       const tempGrid     = pitchPlayer.gridClass;
@@ -265,19 +265,21 @@ export default function SquadScreen() {
       const formationError = validateFormation(newPlayers);
       if (formationError) {
         alert(formationError);
-        return;
+        return; // stay in swap mode so user can try again
       }
       const newBench     = squadData.bench.map(b =>
         b.id === benchPlayer.id ? { ...pitchPlayer, gridClass: '' } : b
       );
       const newCaptainId = squadData.captainId === pitchPlayer.id ? benchPlayer.id : squadData.captainId;
       setSquadData({ ...squadData, players: newPlayers, bench: newBench, captainId: newCaptainId });
+      setSelectedPlayer(null);
+      setSwapMode(false);
       await supabase.from('squads').update({
         players:    [...newPlayers, ...newBench].map(p => p.id),
         captain_id: newCaptainId,
       }).eq('id', squadData.squadId);
     } catch (err) { console.error('Swap failed', err); }
-    finally { setSelectedPlayer(null); setSwapMode(false); setSaving(false); }
+    finally { setSaving(false); }
   };
 
   const setCaptain = async () => {
@@ -659,88 +661,90 @@ export default function SquadScreen() {
     });
   };
 
-  // Player list grouped by position (row variant)
-  const PlayerList = ({ showBench = false }) => (
-    <div>
-      {/* Starting XI label */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 16px 4px' }}>
-        <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 9, color: 'var(--cyan)', letterSpacing: '0.18em', textTransform: 'uppercase' }}>Starting XI</div>
-        <div style={{ flex: 1, height: 1, background: 'rgba(0,180,216,0.2)' }} />
-      </div>
-      {POS_ORDER.map(pos => {
-        const posPlayers  = players.filter(p => p.position === pos);
-        const limit       = POS_LIMITS[pos] ?? 0;
-        const emptySlots  = Math.max(0, limit - posPlayers.length);
-        const posColor    = POS_CONFIG_COLORS[pos] ?? 'var(--mute)';
-        if (!posPlayers.length && !emptySlots) return null;
-        return (
-          <div key={pos}>
-            <SectionHeader title={POS_LABEL[pos]} />
-            {posPlayers.map(player => (
-              <PlayerCard
-                key={player.id}
-                player={player}
-                variant="row"
-                isCaptain={player.id === captainId}
-                isTripleCaptain={squadData.isTripleCaptain}
-                isJoker={player.id === todayJokerId}
-                onClick={isRouletteSpinning ? () => {} : handlePlayerClick}
-                isSelected={selectedPlayer?.id === player.id}
-                isSwapTarget={swapMode && selectedPlayer?.id !== player.id}
-                showIntelligence
-              />
-            ))}
-            {Array.from({ length: emptySlots }).map((_, i) => (
-              <button
-                key={`empty-${pos}-${i}`}
-                onClick={() => leagueId && setPickerPos(pos)}
-                className="w-full flex items-center gap-3 px-5 py-3 transition-all active:opacity-70"
-                style={{
-                  borderBottom:  '1px solid rgba(255,255,255,0.04)',
-                  borderLeft:    `2px dashed ${posColor}40`,
-                  background:    `${posColor}06`,
-                  cursor:        leagueId ? 'pointer' : 'default',
-                }}
-              >
-                <div
-                  className="w-10 h-10 rounded-full flex items-center justify-center text-lg shrink-0"
-                  style={{ background: `${posColor}12`, border: `1.5px dashed ${posColor}50` }}
+  // Player list grouped by position — starters + bench unified, with START/BENCH badge
+  const PlayerList = () => {
+    const benchIds = new Set(bench.map(b => b.id));
+    return (
+      <div>
+        {POS_ORDER.map(pos => {
+          const posStarters = players.filter(p => p.position === pos);
+          const posBench    = bench.filter(p => p.position === pos);
+          const allPos      = [...posStarters, ...posBench];
+          const limit       = POS_LIMITS[pos] ?? 0;
+          const emptySlots  = Math.max(0, limit - allPos.length);
+          const posColor    = POS_CONFIG_COLORS[pos] ?? 'var(--mute)';
+          if (!allPos.length && !emptySlots) return null;
+          return (
+            <div key={pos}>
+              <SectionHeader title={POS_LABEL[pos]} />
+              {allPos.map(player => {
+                const isBench = benchIds.has(player.id);
+                return (
+                  <div key={player.id} className="relative">
+                    <PlayerCard
+                      player={player}
+                      variant="row"
+                      isCaptain={player.id === captainId}
+                      isTripleCaptain={squadData.isTripleCaptain}
+                      isJoker={player.id === todayJokerId}
+                      onClick={isRouletteSpinning ? () => {} : handlePlayerClick}
+                      isSelected={selectedPlayer?.id === player.id}
+                      isSwapTarget={swapMode && selectedPlayer?.id !== player.id}
+                      showIntelligence
+                    />
+                    {/* START / BENCH badge — top-right of the row */}
+                    <div
+                      className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none"
+                      style={{
+                        fontFamily: 'JetBrains Mono, monospace',
+                        fontSize: 7,
+                        letterSpacing: '0.14em',
+                        textTransform: 'uppercase',
+                        padding: '2px 5px',
+                        border: isBench ? '1px solid var(--rule)' : '1px solid rgba(0,180,216,0.3)',
+                        color: isBench ? 'var(--mute)' : 'var(--cyan)',
+                        background: isBench ? 'transparent' : 'rgba(0,180,216,0.06)',
+                      }}
+                    >
+                      {isBench ? 'BENCH' : 'START'}
+                    </div>
+                  </div>
+                );
+              })}
+              {Array.from({ length: emptySlots }).map((_, i) => (
+                <button
+                  key={`empty-${pos}-${i}`}
+                  onClick={() => leagueId && setPickerPos(pos)}
+                  className="w-full flex items-center gap-3 px-5 py-3 transition-all active:opacity-70"
+                  style={{
+                    borderBottom:  '1px solid rgba(255,255,255,0.04)',
+                    borderLeft:    `2px dashed ${posColor}40`,
+                    background:    `${posColor}06`,
+                    cursor:        leagueId ? 'pointer' : 'default',
+                  }}
                 >
-                  +
-                </div>
-                <div className="flex-1 text-left">
-                  <div className="text-[12px] font-bold" style={{ color: posColor, fontFamily: 'Archivo Black, sans-serif', letterSpacing: '0.06em' }}>
-                    {leagueId ? `ADD ${pos}` : `EMPTY SLOT`}
+                  <div
+                    className="w-10 h-10 rounded-full flex items-center justify-center text-lg shrink-0"
+                    style={{ background: `${posColor}12`, border: `1.5px dashed ${posColor}50` }}
+                  >
+                    +
                   </div>
-                  <div className="text-[10px] mt-0.5" style={{ color: 'var(--mute)' }}>
-                    {leagueId ? 'Tap to sign a player' : 'Open from League to sign'}
+                  <div className="flex-1 text-left">
+                    <div className="text-[12px] font-bold" style={{ color: posColor, fontFamily: 'Archivo Black, sans-serif', letterSpacing: '0.06em' }}>
+                      {leagueId ? `ADD ${pos}` : `EMPTY SLOT`}
+                    </div>
+                    <div className="text-[10px] mt-0.5" style={{ color: 'var(--mute)' }}>
+                      {leagueId ? 'Tap to sign a player' : 'Open from League to sign'}
+                    </div>
                   </div>
-                </div>
-              </button>
-            ))}
-          </div>
-        );
-      })}
-      {showBench && (
-        <div>
-          <SectionHeader title="Substitutes" />
-          {bench.map(player => (
-            <PlayerCard
-              key={player.id}
-              player={player}
-              variant="row"
-              isCaptain={player.id === captainId}
-              isJoker={player.id === todayJokerId}
-              onClick={isRouletteSpinning ? () => {} : handlePlayerClick}
-              isSelected={selectedPlayer?.id === player.id}
-              isSwapTarget={swapMode && selectedPlayer?.id !== player.id}
-              showIntelligence
-            />
-          ))}
-        </div>
-      )}
-    </div>
-  );
+                </button>
+              ))}
+            </div>
+          );
+        })}
+      </div>
+    );
+  };
 
   // ─────────────────────────────────────────────────────────────────────────
   // ── RENDER ────────────────────────────────────────────────────────────────
@@ -1352,7 +1356,7 @@ export default function SquadScreen() {
                     </div>
                   </button>
                 )}
-                <PlayerList showBench={false} />
+                <PlayerList />
               </div>
               {/* Bench panel — 320px right rail */}
               <div className="w-[320px] shrink-0 overflow-y-auto" style={{ borderLeft: '1px solid var(--rule)' }}>
@@ -1572,18 +1576,27 @@ export default function SquadScreen() {
       {swapMode && (
         <div
           className="fixed bottom-0 left-0 right-0 lg:left-[220px] z-[60] px-5 py-3 flex justify-between items-center"
-          style={{ background: 'var(--positive)', color: '#000', boxShadow: '0 -4px 20px rgba(24,201,107,0.4)', paddingBottom: 'calc(12px + env(safe-area-inset-bottom))' }}
+          style={{
+            background: 'rgba(8,10,14,0.97)',
+            backdropFilter: 'blur(20px)',
+            WebkitBackdropFilter: 'blur(20px)',
+            borderTop: '2px solid var(--cyan)',
+            boxShadow: '0 -4px 24px rgba(0,180,216,0.12)',
+            paddingBottom: 'calc(12px + env(safe-area-inset-bottom))',
+          }}
         >
           <div>
-            <div className="font-black text-[11px] uppercase tracking-widest" style={{ fontFamily: 'Archivo Black, sans-serif' }}>
-              Select a {selectedIsBench ? 'starter' : 'bench player'} to swap
+            <div className="font-black text-[11px] uppercase tracking-widest" style={{ fontFamily: 'Archivo Black, sans-serif', color: 'var(--cyan)' }}>
+              {selectedIsBench ? 'Select a starter to replace' : 'Select a bench player to bring on'}
             </div>
-            <div className="text-[10px] opacity-60 mt-0.5">Swapping: {selectedPlayer?.name}</div>
+            <div className="text-[10px] mt-0.5" style={{ color: 'var(--mute)', fontFamily: 'JetBrains Mono, monospace' }}>
+              Swapping out: {selectedPlayer?.name}
+            </div>
           </div>
           <button
             onClick={() => { setSwapMode(false); setSelectedPlayer(null); }}
             className="px-4 py-1.5 rounded-sm font-bold uppercase text-[10px] tracking-widest"
-            style={{ background: 'rgba(0,0,0,0.2)', fontFamily: 'Archivo Black, sans-serif' }}
+            style={{ background: 'rgba(255,255,255,0.06)', color: 'var(--paper)', border: '1px solid rgba(255,255,255,0.1)', fontFamily: 'Archivo Black, sans-serif' }}
           >
             Cancel
           </button>
