@@ -644,6 +644,16 @@ export default function SquadScreen() {
 
   const handlePickerBuy = async (player) => {
     if (!leagueId) { alert('No league selected — open your squad from the League screen.'); return; }
+
+    // FB-022: Validate that buying this player won't violate formation rules (especially max 1 GK on pitch)
+    // Simulate adding to pitch if there's room, then check formation
+    const startersFull = squadData.players.length >= 11;
+    if (!startersFull) {
+      const simulatedPitch = [...squadData.players, player];
+      const formationError = validateFormation(simulatedPitch);
+      if (formationError) { alert(formationError); return; }
+    }
+
     const result = await buy(player);
     if (!result.ok) { alert(result.error); return; }
     setSquadData(prev => {

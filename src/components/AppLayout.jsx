@@ -153,7 +153,7 @@ export default function AppLayout({ children }) {
                   className="fk-mono leading-none"
                   style={{ fontSize: '9px', letterSpacing: '0.18em' }}
                 >
-                  {item.name === 'SCORES' ? 'SCORE' : item.name.length > 5 ? item.name.slice(0, 5) : item.name}
+                  {item.name === 'SCORES' ? 'SCORE' : item.name.length > 6 ? item.name.slice(0, 6) : item.name}
                 </span>
 
                 {/* Live dot */}
