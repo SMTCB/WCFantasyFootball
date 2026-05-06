@@ -352,7 +352,11 @@ test.describe('MarketScreen', () => {
   });
 
   test('ALL filter shows all positions', async ({ page }) => {
-    await page.getByText('ALL').first().click();
+    // Wait for market filters to be visible
+    await page.locator('[data-tour="market-filters"]').waitFor({ state: 'visible', timeout: 5000 });
+    // Click the ALL filter button (first button in filter bar with "ALL" text)
+    const filterContainer = page.locator('[data-tour="market-filters"]');
+    await filterContainer.locator('button', { hasText: 'ALL' }).click();
     await page.waitForTimeout(300);
     const body = await page.locator('body').innerText();
     expect(body).toMatch(/GK|DEF|MID|FWD/);
