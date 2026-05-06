@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../hooks/useAuth';
+import { useChatMessages } from '../hooks/useChatMessages';
 import SectionHeader from '../components/SectionHeader';
 import LeagueInviteCard from '../components/LeagueInviteCard';
 import H2HSheet from '../components/H2HSheet';
@@ -66,6 +67,11 @@ export default function LeagueScreen() {
   const [joinCode,     setJoinCode]     = useState('');
   const [joinLoading,  setJoinLoading]  = useState(false);
   const [joinError,    setJoinError]    = useState('');
+
+  // Chat state
+  const [chatInput, setChatInput] = useState('');
+  const [chatSending, setChatSending] = useState(false);
+  const { messages, loading: chatLoading, sendMessage, scrollEndRef } = useChatMessages(activeLeague?.league_id);
 
   const toggleListing = async (playerId) => {
     const leagueId = activeLeague?.league_id;
@@ -656,37 +662,76 @@ export default function LeagueScreen() {
          {view === 'chat' && (
             <div className="flex-1 min-h-[60vh] flex flex-col bg-[var(--ink)]">
               <div className="bg-[var(--ink)] px-4 py-2 border-b border-[var(--rule)] flex items-center gap-2">
-                <span className="text-[10px]">📌</span>
-                <span className="text-[11px] font-bold text-[var(--mute)]">Auction deadline is tonight at 21:00.</span>
+                <span className="text-[10px]">💬</span>
+                <span className="text-[11px] font-bold text-[var(--mute)]">League Chat</span>
               </div>
               <div className="flex-1 overflow-y-auto px-4 py-6 flex flex-col gap-5">
-                <div className="flex flex-col gap-1 w-[85%] animate-in slide-in-from-left">
-                   <div className="text-[10px] text-text-tertiary font-black uppercase tracking-wider mb-1 ml-2">João (Rank #1)</div>
-                   <div className="bg-[var(--ink-2)] text-white text-[14px] px-4 py-2.5 rounded-sm rounded-tl-sm border border-[var(--rule)]">
-                     Did anyone else captain Mbappe? Need this fast.
-                   </div>
-                   <div className="text-[9px] text-text-tertiary mt-1 ml-2">10:42 PM</div>
-                </div>
-                <div className="flex flex-col gap-1 w-[85%] self-end items-end animate-in slide-in-from-right">
-                   <div className="text-[10px] text-cyan font-black uppercase tracking-wider mb-1 mr-2 text-right">You (Rank #2)</div>
-                   <div className="bg-cyan/10 text-white text-[14px] px-4 py-2.5 rounded-sm rounded-tr-sm border border-cyan/20">
-                     I literally transferred him out yesterday. I'm sick.
-                   </div>
-                   <div className="text-[9px] text-text-tertiary mt-1 mr-2 text-right">10:45 PM</div>
-                </div>
-                <div className="flex flex-col gap-1 w-[85%] animate-in slide-in-from-left">
-                   <div className="text-[10px] text-text-tertiary font-black uppercase tracking-wider mb-1 ml-2">Ana (Rank #4)</div>
-                   <div className="bg-[var(--ink-2)] text-white text-[14px] px-4 py-2.5 rounded-sm rounded-tl-sm border border-[var(--rule)]">
-                     Wait, is Mbappe out of the next game? I should sell.
-                   </div>
-                   <div className="text-[9px] text-text-tertiary mt-1 ml-2">10:48 PM</div>
-                </div>
+                {chatLoading && (
+                  <div className="flex justify-center items-center h-20">
+                    <span className="text-[12px] text-[var(--mute)]">Loading messages...</span>
+                  </div>
+                )}
+                {!chatLoading && messages.length === 0 && (
+                  <div className="flex justify-center items-center h-20">
+                    <span className="text-[12px] text-[var(--mute)]">No messages yet. Start the conversation!</span>
+                  </div>
+                )}
+                {messages.map((msg) => (
+                  <div
+                    key={msg.id}
+                    className={`flex flex-col gap-1 w-[85%] ${msg.isOwnMessage ? 'self-end items-end' : ''} animate-in ${msg.isOwnMessage ? 'slide-in-from-right' : 'slide-in-from-left'}`}
+                  >
+                    <div className={`text-[10px] font-black uppercase tracking-wider mb-1 ${msg.isOwnMessage ? 'text-cyan mr-2 text-right' : 'text-text-tertiary ml-2'}`}>
+                      {msg.isOwnMessage ? 'You' : msg.userName} (Rank {msg.userRank})
+                    </div>
+                    <div className={`text-[14px] px-4 py-2.5 rounded-sm border ${
+                      msg.isOwnMessage
+                        ? 'bg-cyan/10 text-white border-cyan/20 rounded-tr-sm'
+                        : 'bg-[var(--ink-2)] text-white border-[var(--rule)] rounded-tl-sm'
+                    }`}>
+                      {msg.message}
+                    </div>
+                    <div className={`text-[9px] text-text-tertiary mt-1 ${msg.isOwnMessage ? 'mr-2 text-right' : 'ml-2'}`}>
+                      {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </div>
+                  </div>
+                ))}
+                <div ref={scrollEndRef} />
               </div>
               <div className="p-4 bg-[var(--ink)] border-t border-[var(--rule)]">
-                 <div className="bg-[var(--ink-2)] border border-[var(--rule)] rounded-full flex items-center px-4 py-1">
-                    <input type="text" placeholder="Roast your rivals..." className="flex-1 bg-transparent py-3 text-sm text-white outline-none" />
-                    <button className="w-8 h-8 rounded-full bg-cyan text-black flex items-center justify-center font-bold">↑</button>
-                 </div>
+                 <form
+                   onSubmit={async (e) => {
+                     e.preventDefault();
+                     if (!chatInput.trim() || chatSending) return;
+                     setChatSending(true);
+                     const result = await sendMessage(chatInput);
+                     if (result.ok) {
+                       setChatInput('');
+                     } else {
+                       console.error('Failed to send message:', result.error);
+                     }
+                     setChatSending(false);
+                   }}
+                   className="w-full"
+                 >
+                   <div className="bg-[var(--ink-2)] border border-[var(--rule)] rounded-full flex items-center px-4 py-1">
+                      <input
+                        type="text"
+                        placeholder="Roast your rivals..."
+                        value={chatInput}
+                        onChange={(e) => setChatInput(e.target.value)}
+                        disabled={chatSending}
+                        className="flex-1 bg-transparent py-3 text-sm text-white outline-none placeholder-[var(--mute)] disabled:opacity-50"
+                      />
+                      <button
+                        type="submit"
+                        disabled={!chatInput.trim() || chatSending}
+                        className="w-8 h-8 rounded-full bg-cyan text-black flex items-center justify-center font-bold disabled:opacity-50 disabled:cursor-not-allowed transition-opacity"
+                      >
+                        {chatSending ? '...' : '↑'}
+                      </button>
+                   </div>
+                 </form>
               </div>
             </div>
           )}
