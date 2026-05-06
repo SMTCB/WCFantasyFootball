@@ -88,10 +88,16 @@ All feature code complete. One remaining infrastructure task:
 - **Blocking**: Post-MVP; improves UX
 
 ### #023: Player Status Alerts — Real-Time Updates
-- **Status**: PARTIALLY IMPLEMENTED
-- **Description**: DangerZone shows hardcoded test alerts. `sync-player-status` Edge Function exists but needs to be wired to Forza API periodic polling or webhook. Currently 4 test alerts seeded; need live sync from Forza's `player_status` endpoint.
-- **Effort**: 1.5 hours (periodic sync via pg_cron)
-- **Blocking**: Before live scoring (users need accurate injury/suspension info)
+- **Status**: ✅ READY FOR ACTIVATION (2026-05-06)
+- **Description**: DangerZone now wired to real Forza API data via pg_cron job. `sync-player-status` Edge Function syncs player status (injuries/suspensions) every 12 hours from Forza API for all tournaments with `sync_enabled = true`. Test alerts currently seeded (4 players) will be replaced by live data once activated.
+- **Implementation**: Created migration 21_sync_player_status_cron.sql with pg_cron setup instructions
+- **Activation Steps**:
+  1. Set up pg_cron extension via Supabase dashboard (included in migration file)
+  2. Run cron setup SQL (included in migration file)
+  3. Enable sync: `UPDATE tournaments SET sync_enabled = true WHERE forza_id = '426';`
+- **Status**: Complete code; awaiting dashboard setup + tournament activation
+- **Impact**: Users will see live injury/suspension alerts instead of test data
+- **Blocking**: Not strictly blocking — can launch with test data, but needed for accurate live scoring
 
 ### #024: Squad Screen — Formation Rules Mobile
 - **Status**: ✅ DONE (2026-05-06)
