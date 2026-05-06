@@ -23,6 +23,7 @@
 - ✅ **#007 Mobile Tab Icons**: Added emoji icons to main nav (📊 SCORES, 👥 SQUAD, 🏆 LEAGUE, 🔴 LIVE, 💰 MARKET) and squad tabs (⚽ PITCH, 📋 LIST, ⚡ CHIPS, ⚠️ STATUS)
 - ✅ **#026 Player Availability Flags**: Full implementation with DB schema, hook, component, and SquadScreen integration
 - ✅ **#031 Match Events Timeline**: Enhanced visual timeline with event icons, minute markers, color coding, and improved UX
+- ✅ **#030 VAR Review Animation**: Enhanced VAR display with animated banner, fixture indicators, and visual prominence during goal reviews
 
 ### ✅ Completed Previous Sessions
 - Draft System — full implementation (S1–S12)
@@ -179,10 +180,23 @@ All feature code complete. One remaining infrastructure task:
 ## 🟡 P2 — Live Feed & Commentary
 
 ### #030: VAR "Under Review" State in Live Feed
-- **Status**: NOT STARTED
-- **Description**: When a decision is under VAR review during a live match, show "⚠️ VAR Review" state in the Live feed ticker. Visual animation while review is pending; resolve with final decision.
-- **Effort**: Low — UI flag + animation (defer per `PIPELINE.md`)
-- **Priority**: Post-MVP polish
+- **Status**: ✅ DONE (2026-05-06)
+- **Description**: Enhanced VAR review display with animated visual feedback when goal decisions are under review.
+- **Implementation**:
+  - New `VARReviewBanner` component with:
+    - Animated pulsing banner with gold/amber theme
+    - Bouncing ⚠️ icon with animated VAR label
+    - Player name and team info display
+    - "Goal Under Review" text with glow effect
+    - Projections locked notification
+  - LiveScreen integration:
+    - VAR indicator badge on match fixture cards
+    - Dynamic border/background highlighting during VAR
+    - "REVIEW" status display instead of match minute
+    - Pulsing top line indicator
+- **Impact**: Clear visual prominence for VAR reviews; users immediately notice critical moments
+- **Effort**: 45 minutes (component + animations + integration)
+- **Priority**: Polish feature completed
 
 ### #031: Live Commentary / Match Events Timeline
 - **Status**: ✅ DONE (2026-05-06)
