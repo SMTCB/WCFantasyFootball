@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-**ForzaKit / Forza Fantasy League** — EPL fantasy football web + native mobile app.
+**Forza Fantasy League** — Elite fantasy football web + native mobile app.
 
 - **Web app**: React 19 + Vite + Tailwind CSS 4 + Supabase, deployed on Vercel
 - **Mobile**: Capacitor iOS + Android (both native projects live in `ios/` and `android/`)

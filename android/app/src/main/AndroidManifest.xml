@@ -22,12 +22,12 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
 
-            <!-- Deep link: handles com.fantasykit.forzaedition://auth/callback (OAuth) -->
+            <!-- Deep link: handles com.forza.fantasyleague://auth/callback (OAuth) -->
             <intent-filter android:autoVerify="true">
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="com.fantasykit.forzaedition" />
+                <data android:scheme="com.forza.fantasyleague" />
             </intent-filter>
 
         </activity>

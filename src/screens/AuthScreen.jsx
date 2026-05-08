@@ -13,6 +13,7 @@
 import { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
+import BrandMark from '../components/BrandMark';
 
 // ── Tab types ──────────────────────────────────────────────────────────────────
 const TAB_SIGNIN  = 'signin';
@@ -265,14 +266,9 @@ export default function AuthScreen() {
 function AuthShell({ children }) {
   return (
     <div style={{ minHeight: '100svh', background: '#080A0E', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '24px' }}>
-      {/* Logo */}
-      <div style={{ marginBottom: '40px', textAlign: 'center' }}>
-        <div style={{ fontSize: '32px', fontWeight: 900, fontFamily: 'Archivo Black, sans-serif', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--paper)', lineHeight: 1 }}>
-          Forza<span style={{ color: 'var(--cyan)' }}>Kit</span>
-        </div>
-        <div style={{ fontSize: '9px', fontWeight: 800, letterSpacing: '0.25em', textTransform: 'uppercase', color: 'var(--mute)', marginTop: '6px', fontFamily: 'Archivo Black, sans-serif' }}>
-          Fantasy Football League
-        </div>
+      {/* Brandmark */}
+      <div style={{ marginBottom: '40px', textAlign: 'center', display: 'flex', justifyContent: 'center' }}>
+        <BrandMark theme="dark" scale={0.9} compact={false} />
       </div>
 
       {/* Card */}

@@ -1,4 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
+import BrandMark from './BrandMark';
 
 const NAV_ITEMS = [
   { name: '📊 SCORES',  path: '/',       label: 'Match Scores & Fixtures' },
@@ -20,26 +21,9 @@ export default function AppLayout({ children }) {
         className="hidden lg:flex fixed left-0 top-0 bottom-0 w-[220px] flex-col z-50"
         style={{ background: 'var(--ink-2)', borderRight: '1px solid var(--rule)' }}
       >
-        {/* Wordmark */}
+        {/* Brandmark */}
         <div className="px-6 pt-6 pb-5" style={{ borderBottom: '1px solid var(--rule)' }}>
-          <div
-            className="fk-eyebrow mb-1"
-            style={{ color: 'var(--mute)', fontSize: '9px' }}
-          >
-            Fantasy Football
-          </div>
-          <div
-            className="fk-display leading-none"
-            style={{ fontSize: '28px', color: 'var(--paper)' }}
-          >
-            Forza<span style={{ color: 'var(--cyan)' }}>Kit</span>
-          </div>
-          <div
-            className="fk-eyebrow mt-1.5"
-            style={{ color: 'var(--mute)', fontSize: '9px' }}
-          >
-            Fantasy League
-          </div>
+          <BrandMark theme="dark" scale={0.75} />
         </div>
 
         {/* Nav Links */}
