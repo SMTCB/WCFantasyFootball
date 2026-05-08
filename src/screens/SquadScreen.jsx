@@ -209,8 +209,16 @@ export default function SquadScreen() {
         return { ...normalised, isBench: !isStarter };
       });
 
-      const pitchPlayers = mappedPlayers.filter(p => !p.isBench);
-      const benchPlayers = mappedPlayers.filter(p => p.isBench);
+      // Enforce max 1 GK on pitch — demote any extra GKs to bench
+      let pitchPlayers = mappedPlayers.filter(p => !p.isBench);
+      let benchPlayers = mappedPlayers.filter(p => p.isBench);
+      const gkStarters = pitchPlayers.filter(p => p.position === 'GK');
+      if (gkStarters.length > 1) {
+        const extraGks = gkStarters.slice(1);
+        const extraGkIds = new Set(extraGks.map(p => p.id));
+        pitchPlayers = pitchPlayers.filter(p => !extraGkIds.has(p.id));
+        benchPlayers = [...benchPlayers, ...extraGks.map(p => ({ ...p, isBench: true }))];
+      }
 
       setSquadData({
         squadId:         squad.id,
@@ -266,11 +274,13 @@ export default function SquadScreen() {
       const newPlayers   = squadData.players.map(p =>
         p.id === pitchPlayer.id ? { ...benchPlayer, gridClass: tempGrid } : p
       );
-      // FB-022: validate formation before committing
+      // Validate formation — only block if it's actually a formation violation
       const formationError = validateFormation(newPlayers);
       if (formationError) {
         alert(formationError);
-        return; // stay in swap mode so user can try again
+        setSwapMode(false);
+        setSelectedPlayer(null);
+        return;
       }
       const newBench     = squadData.bench.map(b =>
         b.id === benchPlayer.id ? { ...pitchPlayer, gridClass: '' } : b
@@ -694,22 +704,9 @@ export default function SquadScreen() {
               <SectionHeader title={POS_LABEL[pos]} />
               {allPos.map(player => {
                 const isBench = benchIds.has(player.id);
-                return (
-                  <div key={player.id} className="relative">
-                    <PlayerCard
-                      player={player}
-                      variant="row"
-                      isCaptain={player.id === captainId}
-                      isTripleCaptain={squadData.isTripleCaptain}
-                      isJoker={player.id === todayJokerId}
-                      onClick={isRouletteSpinning ? () => {} : handlePlayerClick}
-                      isSelected={selectedPlayer?.id === player.id}
-                      isSwapTarget={swapMode && selectedPlayer?.id !== player.id}
-                      showIntelligence
-                    />
-                    {/* START / BENCH badge — top-right of the row */}
-                    <div
-                      className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none"
+                const rowAction = (
+                  <div className="flex flex-col items-end gap-1" onClick={e => e.stopPropagation()}>
+                    <span
                       style={{
                         fontFamily: 'JetBrains Mono, monospace',
                         fontSize: 7,
@@ -719,21 +716,34 @@ export default function SquadScreen() {
                         border: isBench ? '1px solid var(--rule)' : '1px solid rgba(0,180,216,0.3)',
                         color: isBench ? 'var(--mute)' : 'var(--cyan)',
                         background: isBench ? 'transparent' : 'rgba(0,180,216,0.06)',
+                        flexShrink: 0,
+                        pointerEvents: 'none',
                       }}
                     >
                       {isBench ? 'BENCH' : 'START'}
-                    </div>
-
-                    {/* Availability flag badge — bottom-right */}
-                    <div className="absolute right-4 -bottom-2 pointer-events-auto">
-                      <AvailabilityBadge
-                        playerId={player.id}
-                        isFlagged={!!flagMap[player.id]}
-                        isOwn={true}
-                        onToggle={() => toggleFlag(squadData.squadId, player.id)}
-                      />
-                    </div>
+                    </span>
+                    <AvailabilityBadge
+                      playerId={player.id}
+                      isFlagged={!!flagMap[player.id]}
+                      isOwn={true}
+                      onToggle={() => toggleFlag(squadData.squadId, player.id)}
+                    />
                   </div>
+                );
+                return (
+                  <PlayerCard
+                    key={player.id}
+                    player={player}
+                    variant="row"
+                    isCaptain={player.id === captainId}
+                    isTripleCaptain={squadData.isTripleCaptain}
+                    isJoker={player.id === todayJokerId}
+                    onClick={isRouletteSpinning ? () => {} : handlePlayerClick}
+                    isSelected={selectedPlayer?.id === player.id}
+                    isSwapTarget={swapMode && selectedPlayer?.id !== player.id}
+                    showIntelligence
+                    action={rowAction}
+                  />
                 );
               })}
               {Array.from({ length: emptySlots }).map((_, i) => (
@@ -907,7 +917,7 @@ export default function SquadScreen() {
           };
           let no = 0;
           return (
-            <div className="pb-24">
+            <div style={{ paddingBottom: swapMode ? '120px' : '96px' }}>
               {/* Section header */}
               <div style={{ padding: '16px 16px 12px', borderBottom: '1px solid var(--rule)' }}>
                 <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 9, color: 'var(--mute)', letterSpacing: '0.2em', textTransform: 'uppercase', marginBottom: 4 }}>Starting XI</div>

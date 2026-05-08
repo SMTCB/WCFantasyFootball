@@ -1,6 +1,6 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-05-06 (session 5)  
+**Last Updated**: 2026-05-08 (session 6)  
 **E2E Test Suite**: 108/116 passing (93%) — platform.spec.js; 8 pre-existing failures unrelated to core fixes  
 **Priority Levels**: P0 (Blocking), P1 (High — needed before feature is usable), P2 (Medium), P3 (Low/Polish), P4 (Post-Launch Roadmap)
 **Blocking Items Remaining**: 1 (#018 Supabase cron config) — all feature code complete
@@ -353,6 +353,61 @@ All feature code complete. One remaining infrastructure task:
 
 ---
 
+## 🟡 P2 — New Items (2026-05-08)
+
+### #034: Move Special Bets from Scores Screen to League Section
+- **Status**: NOT STARTED
+- **Description**: The Scores (Home) screen should show only match fixtures — clean match centre without betting widgets. Move the "special bets" (Top Scorer predictions, Daily Prediction widget) to the League section, where they belong contextually (manager engagement within a league).
+- **Effort**: 1 hour (UI reorganisation)
+- **Priority**: UX clarity — Scores screen should be a pure fixture view
+
+### #035: Point Boost Section (Matchday Special Categories)
+- **Status**: NOT STARTED
+- **Description**: A new "Point Boost" section on the My Squad tab (alongside the existing Chips), providing special bonus-point categories per matchday/tournament phase. Designed around the World Cup structure:
+  - **Group Stage**: One special category per matchday group (MD1: Top Scorer, MD2: MVP, MD3: TBD). "Matchday" here means the collection of all group matches in that round — not a single calendar day.
+  - **Knockout Phase**: One special category per round (R16, QF, SF, Final).
+  - **Format**: One category per matchday; user makes a single selection per period. Intentionally light — drives daily engagement without overwhelming.
+  - **Goal**: Give users a reason to open the app every matchday without burying them in options.
+- **Effort**: Medium — new DB table (`point_boost_entries`), category config, pick UI, admin seeding
+- **Priority**: High for World Cup launch — core differentiator
+- **Blocking**: Category definitions must be confirmed before implementation
+
+### #036: Chips Revamp — Remove Roulette, Adjust Joker, Add Opponent Block
+- **Status**: NOT STARTED
+- **Description**: Three changes to the Chips tab on My Squad:
+
+  **1. Remove Captain Roulette**
+  - The "Spin Roulette" chip doesn't make sense as a standalone chip.
+  - Auto-complete team selection should be offered contextually when the user is building their squad (not as a chip in a separate tab).
+  - Remove from Chips tab entirely.
+
+  **2. Revamp Daily Joker rules**
+  - The Joker allows the manager to select an **extra (16th) player** for a single matchday.
+  - New rules:
+    - (i) Exempt from all restrictions: country limit, position limits, "already in another squad in draft leagues"
+    - (ii) Can be selected at any point during the matchday window (not just before kick-off) — e.g., if a matchday spans 7 days, the Joker can be picked on day 5
+    - (iii) Once selected, it is **locked** and cannot be changed
+    - (iv) The Joker **cannot be set as captain**
+  - Update chip description and enforcement logic accordingly.
+
+  **3. New Chip — Opponent Block**
+  - Allows the manager to block a player on any other team's squad in the league for one matchday.
+  - Rules:
+    - (i) Blocks the targeted player: they score 0 points for their manager that matchday
+    - (ii) One-use only (per season)
+    - (iii) Manager selects the target team and target player from within the league
+    - (iv) The block activates on the **next game** of the blocked player's club (not immediately)
+    - (v) The block applies to the **club's next fixture**, not the player's participation — even if the player doesn't appear, the block is consumed
+    - (vi) The blocked manager receives two notifications:
+      a. A League screen alert (similar to the trade offer banner): "Manager X just blocked [Player] for the next matchday"
+      b. A Status tab alert on their Squad screen
+    - (vii) A player can only be blocked once per league per season
+  - **DB**: New `opponent_blocks` table; `league_members` notification field or separate notifications table
+  - **Effort**: Medium-large (new chip type + notifications + enforcement in scoring engine)
+  - **Priority**: Nice-to-have pre-launch; very engaging social mechanic
+
+---
+
 ## 🟢 P4 — Post-Launch Roadmap (July 2026 and Beyond)
 
 ### Analytics & Engagement
@@ -402,7 +457,7 @@ All feature code complete. One remaining infrastructure task:
 | Medium Priority Open (P2) | 11 | TBD |
 | Feature Complete (P2-3) | 18 | — |
 | Post-Launch Roadmap (P4) | 12+ | — |
-| DB Migrations | 24 | — |
+| DB Migrations | 25 | — |
 | Edge Functions | 10+ | — |
 
 ---
@@ -453,6 +508,16 @@ All feature code complete. One remaining infrastructure task:
 ---
 
 ## 📝 Changelog
+
+**2026-05-08 (Session 6)**:
+- ✅ **Onboarding wizard fix**: Removed mid-step navigation (root cause of step 2 going off-screen); made container scrollable on small screens
+- ✅ **Live tab**: Removed "UPCOMING" scheduled fixtures from match ticker; harmonised My Squad list with Squad tab style (position-grouped, status dot, START/SUB indicator)
+- ✅ **2-GK pitch bug**: Enforced max 1 GK in starters at squad load time; any extra GKs auto-demoted to bench
+- ✅ **Swap bug**: Formation error now clears swap mode + selected player so UI is never stuck
+- ✅ **Migration 25**: Widened `league_members_role_check` constraint to include 'commissioner' — fixes "Could not create league" error
+- ✅ **Swap bar overlap**: Added 120px bottom padding in pitch tab when swap mode is active so bench players remain scrollable
+- ✅ **Squad List overlap**: BENCH/START badges moved from absolute positioning to `action` prop in PlayerRow — eliminates overlap with points/status columns
+- 📋 **Backlog**: Added #034 (Scores → League special bets move), #035 (Point Boost), #036 (Chips revamp: remove roulette, adjust Joker, add Opponent Block)
 
 **2026-05-06 (Session 5 - Extended)**:
 - ✅ **#027 League Chat Backend**: Completed `useChatMessages` hook, realtime subscription, message send, LeagueScreen integration

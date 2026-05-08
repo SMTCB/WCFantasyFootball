@@ -300,16 +300,7 @@ export default function LiveScreen() {
                 );
               })}
 
-              {scheduledFixtures.map(f => (
-                <div key={f.id} className="snap-center min-w-[160px] shrink-0 bg-[#0d0d0d] border border-white/5 rounded-sm p-3 flex flex-col items-center">
-                  <div className="text-[10px] font-semibold text-text-secondary uppercase tracking-widest mb-2">UPCOMING</div>
-                  <div className="flex justify-between w-full font-bold text-xs text-text-secondary">
-                    <span className="truncate max-w-[40%]">{f.home_team.substring(0, 3).toUpperCase()}</span>
-                    <span className="mx-2">vs</span>
-                    <span className="truncate max-w-[40%] text-right">{f.away_team.substring(0, 3).toUpperCase()}</span>
-                  </div>
-                </div>
-              ))}
+              {/* Scheduled fixtures are not shown in the live ticker */}
             </div>
 
             {!primaryLeague ? (
@@ -451,20 +442,47 @@ export default function LiveScreen() {
                   <>
                     <SectionHeader title="MY SQUAD" />
                     <div className="bg-[#0d0d0d] border-b border-white/5">
-                      {mySquadPlayers.slice(0, 11).map((p, i) => (
-                        <div key={p.id ?? i} className="grid grid-cols-[1fr_auto_auto] gap-x-3 px-4 py-2.5 items-center border-b border-white/5">
-                          <div className="min-w-0">
-                            <div className="text-[13px] font-bold truncate text-white">{p.name}</div>
-                            <div className="text-[10px] text-text-tertiary font-semibold">{p.position} · {p.club}</div>
+                      {['GK', 'DEF', 'MID', 'FWD'].map(pos => {
+                        const posPlayers = mySquadPlayers.filter(p => p.position === pos);
+                        if (!posPlayers.length) return null;
+                        const posColor = pos === 'GK' ? 'var(--pos-gk)' : pos === 'DEF' ? 'var(--pos-def)' : pos === 'MID' ? 'var(--pos-mid)' : 'var(--pos-fwd)';
+                        return (
+                          <div key={pos}>
+                            <div style={{ padding: '8px 16px 4px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
+                              <span style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 9, color: posColor, letterSpacing: '0.16em', textTransform: 'uppercase' }}>{pos}</span>
+                            </div>
+                            {posPlayers.map((p, i) => {
+                              const surname = p.name?.split(' ').slice(-1)[0]?.toUpperCase() ?? p.name?.toUpperCase() ?? '?';
+                              const isStarter = mySquadPlayers.indexOf(p) < 11;
+                              return (
+                                <div
+                                  key={p.id ?? i}
+                                  style={{
+                                    display: 'flex', alignItems: 'center', gap: 10,
+                                    padding: '9px 16px',
+                                    borderBottom: '1px solid rgba(255,255,255,0.04)',
+                                    background: isStarter ? 'transparent' : 'rgba(255,255,255,0.015)',
+                                    borderLeft: isStarter ? '2px solid var(--cyan)' : '2px solid transparent',
+                                    opacity: isStarter ? 1 : 0.6,
+                                  }}
+                                >
+                                  {/* Status dot */}
+                                  <div style={{ width: 7, height: 7, borderRadius: '50%', background: 'var(--positive)', flexShrink: 0 }} />
+                                  {/* Name + club */}
+                                  <div style={{ flex: 1, minWidth: 0 }}>
+                                    <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 13, color: 'var(--paper)', textTransform: 'uppercase', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{surname}</div>
+                                    <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 8, color: 'var(--mute)', letterSpacing: '0.12em', marginTop: 1 }}>{(p.club ?? '').substring(0, 3).toUpperCase()}{!isStarter ? ' · SUB' : ''}</div>
+                                  </div>
+                                  {/* Points */}
+                                  <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 16, color: p.points > 0 ? 'var(--positive)' : 'var(--mute)', letterSpacing: '-0.02em', flexShrink: 0, minWidth: 28, textAlign: 'right' }}>
+                                    {p.points > 0 ? `+${p.points}` : '—'}
+                                  </div>
+                                </div>
+                              );
+                            })}
                           </div>
-                          <div className="text-[10px] text-text-tertiary font-semibold uppercase">
-                            {p.id === mySquadPlayers[0]?.id ? '' : ''}
-                          </div>
-                          <div className={`text-[14px] font-black tabular-nums w-10 text-right ${p.points > 0 ? 'text-positive' : 'text-text-tertiary'}`}>
-                            {p.points > 0 ? `+${p.points}` : '—'}
-                          </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   </>
                 )}
