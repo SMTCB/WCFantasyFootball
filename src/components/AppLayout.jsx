@@ -35,7 +35,7 @@ export default function AppLayout({ children }) {
 
         {/* Nav Links */}
         <div className="flex-1 py-4 space-y-px">
-          {NAV_ITEMS.map(({ key, label, path, Icon, desc, isLive }) => {
+          {NAV_ITEMS.map(({ key, label, path, Icon, desc, isLive }) => { // eslint-disable-line no-unused-vars
             const isActive = location.pathname === path ||
               (path !== '/' && location.pathname.startsWith(path));
             const liveColor = 'var(--danger)';
@@ -125,7 +125,7 @@ export default function AppLayout({ children }) {
         }}
       >
         <div className="flex items-stretch h-16">
-          {NAV_ITEMS.map(({ key, label, path, Icon, isLive }) => {
+          {NAV_ITEMS.map(({ key, label, path, Icon, isLive }) => { // eslint-disable-line no-unused-vars
             const isActive = location.pathname === path ||
               (path !== '/' && location.pathname.startsWith(path));
             const activeColor = isLive ? 'var(--danger)' : 'var(--cyan)';
