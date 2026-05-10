@@ -1463,7 +1463,7 @@ export default function SquadScreen() {
 
           {/* ── CHIPS TAB ──────────────────────────────────────────────── */}
           {desktopTab === 'chips' && (
-            <div className="flex-1 overflow-y-auto pt-2 max-w-xl">
+            <div className="flex-1 overflow-y-auto pt-2 max-w-xl" data-tour="squad-chips">
               {CHIPS.map(chip => <ChipCard key={chip.key} chip={chip} />)}
               <RouletteCard />
               <JokerCard />
