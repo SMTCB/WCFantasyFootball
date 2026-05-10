@@ -1,6 +1,6 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-05-08 (session 6)  
+**Last Updated**: 2026-05-10 (session 7)  
 **E2E Test Suite**: 108/116 passing (93%) — platform.spec.js; 8 pre-existing failures unrelated to core fixes  
 **Priority Levels**: P0 (Blocking), P1 (High — needed before feature is usable), P2 (Medium), P3 (Low/Polish), P4 (Post-Launch Roadmap)
 **Blocking Items Remaining**: 1 (#018 Supabase cron config) — all feature code complete
@@ -9,7 +9,10 @@
 
 ## 📋 Current Status Summary
 
-### ✅ Completed This Session (2026-05-06)
+### ✅ Completed This Session (2026-05-10)
+- ✅ **Squad Sub-In Logic Bug**: Fixed "SUB IN" button entering swap mode when squad < 11 starters. Now shows "ADD TO PITCH" for direct promotion when starters are below capacity.
+
+### ✅ Completed Previous Session (2026-05-06)
 - ✅ **Squad LIST tab (desktop)**: Removed duplicate bench panel on right; unified squad with START/BENCH badges per position
 - ✅ **Create League text colors**: Fixed description text from invisible dark-grey to proper brand tokens (`var(--paper)` / `var(--mute)`)
 - ✅ **DB league_format cast**: Fixed `create_league()` RPC to explicitly cast `p_format TEXT::league_format` (migration 19)
