@@ -1,4 +1,4 @@
-﻿package com.forza.fantasyleague;
+package com.forza.fantasyleague;
 
 import com.getcapacitor.BridgeActivity;
 
