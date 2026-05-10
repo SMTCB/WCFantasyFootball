@@ -179,7 +179,7 @@ export default function OnboardingWizard({ onComplete, onSkip, config = {} }) {
         display:       'flex',
         flexDirection: 'column',
         alignItems:    'center',
-        justifyContent: 'flex-start',
+        justifyContent: 'center',
         overflowY:     'auto',
         padding:       '24px',
         paddingTop:    'max(24px, env(safe-area-inset-top))',

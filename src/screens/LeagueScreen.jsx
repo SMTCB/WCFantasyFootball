@@ -464,7 +464,14 @@ export default function LeagueScreen() {
               </h1>
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setNewLeague(activeLeague?.leagues || activeLeague)}
+              className="fz-label text-cyan hover:text-cyan/80 transition-colors"
+              title="Show invite code"
+            >
+              📤 INVITE
+            </button>
             <div className="w-2 h-2 rounded-full bg-positive animate-live-pulse" />
             <div className="fz-label text-text-secondary">LIVE</div>
           </div>
@@ -606,56 +613,78 @@ export default function LeagueScreen() {
 
          {view === 'frontpage' && (
            <div className="bg-[#f2f2f2] text-[#1a1a1a] min-h-screen">
-             <div className="px-6 py-8 border-b-2 border-black flex flex-col items-center text-center">
-                <div className="text-[10px] font-black uppercase tracking-[0.4em] mb-2 font-serif underline decoration-2 underline-offset-4">The Official Gazette</div>
-                <h1 className="font-serif text-4xl font-black italic tracking-tighter leading-none mb-1">FORZA TIMES</h1>
-                <div className="w-full flex justify-between border-t border-b border-black/10 mt-4 py-1 text-[9px] font-bold uppercase tracking-widest">
-                   <span>VOL. MCXXIV</span>
-                   <span>DOHA • {new Date().toLocaleDateString()}</span>
-                   <span>EDITION #42</span>
-                </div>
-             </div>
+             {members && members.length <= 1 ? (
+               // Empty state for newly created leagues
+               <div className="min-h-screen flex items-center justify-center p-8">
+                 <div className="text-center">
+                   <h1 className="font-serif text-5xl font-black mb-4">⚽</h1>
+                   <h2 className="font-serif text-3xl font-black mb-3">League Created!</h2>
+                   <p className="text-[15px] leading-relaxed mb-6 max-w-md mx-auto opacity-70">
+                     Your league is ready. Invite friends via the INVITE button, set up transfer windows in the COMMISSIONER tab, and activity will appear here as the competition begins.
+                   </p>
+                   <button
+                     onClick={() => setNewLeague(activeLeague?.leagues || activeLeague)}
+                     className="bg-black text-white px-6 py-2 rounded text-[13px] font-bold hover:bg-[#1a1a1a] transition"
+                   >
+                     📤 Show Invite Code
+                   </button>
+                 </div>
+               </div>
+             ) : (
+               // Full gazette for active leagues
+               <>
+                 <div className="px-6 py-8 border-b-2 border-black flex flex-col items-center text-center">
+                    <div className="text-[10px] font-black uppercase tracking-[0.4em] mb-2 font-serif underline decoration-2 underline-offset-4">The Official Gazette</div>
+                    <h1 className="font-serif text-4xl font-black italic tracking-tighter leading-none mb-1">FORZA TIMES</h1>
+                    <div className="w-full flex justify-between border-t border-b border-black/10 mt-4 py-1 text-[9px] font-bold uppercase tracking-widest">
+                       <span>VOL. MCXXIV</span>
+                       <span>DOHA • {new Date().toLocaleDateString()}</span>
+                       <span>EDITION #42</span>
+                    </div>
+                 </div>
 
-             <div className="p-6">
-                <div className="bg-red-600 text-white inline-block px-2 py-0.5 text-[9px] font-black uppercase tracking-widest mb-3 animate-pulse">Breaking News</div>
-                <h2 className="font-serif text-3xl font-black leading-tight mb-3 tracking-tight">Kylian Mbappé Injured; Due to Miss Quarter-Finals</h2>
-                <p className="text-[14px] leading-relaxed font-medium mb-6 italic opacity-80">"It's a heavy blow for the champions," says Deschamps as results confirmed a tear.</p>
-                <div className="grid grid-cols-2 gap-6 border-t border-black/20 pt-6">
-                   <div>
-                      <div className="text-[9px] font-black uppercase text-red-600 mb-1">League Recap</div>
-                      <h3 className="font-serif text-xl font-bold leading-tight mb-2">Alex Tactics beats João</h3>
-                      <p className="text-[11px] leading-relaxed">A dominant 42-point victory this matchday.</p>
-                   </div>
-                   <div className="border-l border-black/20 pl-4">
-                      <div className="text-[9px] font-black uppercase text-blue-600 mb-1">Transfer Bomba</div>
-                      <h3 className="font-serif text-xl font-bold leading-tight mb-2">Big Trade Confirmed</h3>
-                      <p className="text-[11px] leading-relaxed">Neymar for Messi swap deal shakes up the leaderboards.</p>
-                   </div>
-                </div>
+                 <div className="p-6">
+                    <div className="bg-red-600 text-white inline-block px-2 py-0.5 text-[9px] font-black uppercase tracking-widest mb-3 animate-pulse">Breaking News</div>
+                    <h2 className="font-serif text-3xl font-black leading-tight mb-3 tracking-tight">Kylian Mbappé Injured; Due to Miss Quarter-Finals</h2>
+                    <p className="text-[14px] leading-relaxed font-medium mb-6 italic opacity-80">"It's a heavy blow for the champions," says Deschamps as results confirmed a tear.</p>
+                    <div className="grid grid-cols-2 gap-6 border-t border-black/20 pt-6">
+                       <div>
+                          <div className="text-[9px] font-black uppercase text-red-600 mb-1">League Recap</div>
+                          <h3 className="font-serif text-xl font-bold leading-tight mb-2">Alex Tactics beats João</h3>
+                          <p className="text-[11px] leading-relaxed">A dominant 42-point victory this matchday.</p>
+                       </div>
+                       <div className="border-l border-black/20 pl-4">
+                          <div className="text-[9px] font-black uppercase text-blue-600 mb-1">Transfer Bomba</div>
+                          <h3 className="font-serif text-xl font-bold leading-tight mb-2">Big Trade Confirmed</h3>
+                          <p className="text-[11px] leading-relaxed">Neymar for Messi swap deal shakes up the leaderboards.</p>
+                       </div>
+                    </div>
 
-                {/* Draft report — renders only when a draft_report gazette entry exists */}
-                <GazetteDraftReport leagueId={activeLeague?.league_id} />
-             </div>
+                    {/* Draft report — renders only when a draft_report gazette entry exists */}
+                    <GazetteDraftReport leagueId={activeLeague?.league_id} />
+                 </div>
 
-             <div className="px-6 py-4 border-t-4 border-black bg-black text-white">
-                <div className="fz-label text-cyan text-[8px] mb-2 brightness-150">WARZONE HIGHLIGHTS</div>
-                <div className="space-y-3">
-                  <div className="flex gap-2">
-                    <span className="text-[#555] font-black">@Ana_K:</span>
-                    <span className="text-[11px] leading-tight font-medium italic opacity-70">"Wait, did you guys see Taylor United just cashed out 50pts for Ronaldo? Risky business..."</span>
-                  </div>
-                  <div className="flex gap-2">
-                    <span className="text-[#555] font-black">@GamerX:</span>
-                    <span className="text-[11px] leading-tight font-medium italic opacity-70">"I'm keeping my Joker for the Morocco game. Trust the process."</span>
-                  </div>
-                </div>
-             </div>
+                 <div className="px-6 py-4 border-t-4 border-black bg-black text-white">
+                    <div className="fz-label text-cyan text-[8px] mb-2 brightness-150">WARZONE HIGHLIGHTS</div>
+                    <div className="space-y-3">
+                      <div className="flex gap-2">
+                        <span className="text-[#555] font-black">@Ana_K:</span>
+                        <span className="text-[11px] leading-tight font-medium italic opacity-70">"Wait, did you guys see Taylor United just cashed out 50pts for Ronaldo? Risky business..."</span>
+                      </div>
+                      <div className="flex gap-2">
+                        <span className="text-[#555] font-black">@GamerX:</span>
+                        <span className="text-[11px] leading-tight font-medium italic opacity-70">"I'm keeping my Joker for the Morocco game. Trust the process."</span>
+                      </div>
+                    </div>
+                 </div>
 
-             <div className="p-8 text-center bg-[#f2f2f2] border-t-2 border-dashed border-black/20">
-                <div className="w-12 h-1 bg-black mx-auto mb-4" />
-                <div className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40">End of Morning Edition</div>
-                <div className="text-[8px] mt-2 italic opacity-30">All data generated by Forza Intelligence Agency (FIA)</div>
-             </div>
+                 <div className="p-8 text-center bg-[#f2f2f2] border-t-2 border-dashed border-black/20">
+                    <div className="w-12 h-1 bg-black mx-auto mb-4" />
+                    <div className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40">End of Morning Edition</div>
+                    <div className="text-[8px] mt-2 italic opacity-30">All data generated by Forza Intelligence Agency (FIA)</div>
+                 </div>
+               </>
+             )}
            </div>
          )}
 
