@@ -1584,13 +1584,41 @@ export default function SquadScreen() {
                   {captainId === selectedPlayer.id ? 'CAPTAIN' : 'CAPTAIN'}
                 </button>
               )}
-              <button
-                onClick={() => setSwapMode(true)}
-                className="flex-1 py-2.5 rounded-sm transition-all active:scale-95"
-                style={{ background: 'transparent', color: 'var(--cyan)', border: '1px solid var(--cyan)', fontFamily: 'Archivo Black, sans-serif', fontSize: '11px', letterSpacing: '0.12em', textTransform: 'uppercase' }}
-              >
-                {selectedIsBench ? 'SUB IN' : 'SUB OUT'}
-              </button>
+              {selectedIsBench && squadData.players.length < 11 ? (
+                // Direct promotion: if starters < 11, just add bench player to pitch without swapping anyone out
+                <button
+                  onClick={async () => {
+                    try {
+                      setSaving(true);
+                      const benchP = selectedPlayer;
+                      const newPlayers = [...squadData.players, benchP];
+                      const formationError = validateFormation(newPlayers);
+                      if (formationError) { alert(formationError); return; }
+                      const newBench = squadData.bench.filter(b => b.id !== benchP.id);
+                      setSquadData({ ...squadData, players: newPlayers, bench: newBench });
+                      setSelectedPlayer(null);
+                      await supabase.from('squads').update({
+                        players: [...newPlayers, ...newBench].map(p => p.id),
+                      }).eq('id', squadData.squadId);
+                    } finally { setSaving(false); }
+                  }}
+                  disabled={saving}
+                  className="flex-1 py-2.5 rounded-sm transition-all active:scale-95 disabled:opacity-40"
+                  style={{ background: 'var(--cyan)', color: '#0A0A0A', border: '1px solid var(--cyan)', fontFamily: 'Archivo Black, sans-serif', fontSize: '11px', letterSpacing: '0.12em', textTransform: 'uppercase' }}
+                >
+                  ADD TO PITCH
+                </button>
+              ) : (
+                // Swap mode: only if starters = 11 and user wants to swap
+                <button
+                  onClick={() => setSwapMode(true)}
+                  disabled={saving || (selectedIsBench && squadData.players.length >= 11 && squadData.bench.length === 1)}
+                  className="flex-1 py-2.5 rounded-sm transition-all active:scale-95 disabled:opacity-40"
+                  style={{ background: 'transparent', color: 'var(--cyan)', border: '1px solid var(--cyan)', fontFamily: 'Archivo Black, sans-serif', fontSize: '11px', letterSpacing: '0.12em', textTransform: 'uppercase' }}
+                >
+                  {selectedIsBench ? 'SUB IN' : 'SUB OUT'}
+                </button>
+              )}
               <button
                 onClick={handleSellPlayer}
                 disabled={saving}
