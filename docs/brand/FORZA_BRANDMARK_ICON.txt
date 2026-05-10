@@ -1,0 +1,232 @@
+import React from 'react';
+
+const ASSETS = {
+  colors: {
+    ink: '#080A0E',
+    ink2: '#0F1218',
+    paper: '#F2EEE5',
+    cyan: '#00B4D8',
+    mute: '#8B95A1',
+    rule: '#1E2530',
+    danger: '#EF4444' // Red for live-warning as per Rule 4
+  }
+};
+
+const TacticalIcon = ({ size = 52, theme = 'dark' }) => {
+  return (
+    <svg width={size} height={size} viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect x="10" y="28" width="80" height="12" rx="2" fill={ASSETS.colors.cyan} />
+      <rect x="10" y="44" width="50" height="12" rx="2" fill={theme === 'dark' ? ASSETS.colors.paper : ASSETS.colors.ink} />
+      <rect x="10" y="60" width="22" height="12" rx="2" fill={ASSETS.colors.mute} />
+    </svg>
+  );
+};
+
+// --- TACTICAL NAV SET ---
+
+const NavIconScores = ({ size = 24 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    {/* Scores: Timeline with scoreboard markers */}
+    <rect x="2" y="7" width="20" height="1.5" rx="0.75" fill={ASSETS.colors.mute} opacity="0.2" />
+    <rect x="6" y="11" width="12" height="2" rx="1" fill={ASSETS.colors.cyan} />
+    <rect x="2" y="15" width="20" height="1.5" rx="0.75" fill={ASSETS.colors.mute} opacity="0.2" />
+    <rect x="11" y="10" width="2" height="4" rx="1" fill={ASSETS.colors.paper} />
+  </svg>
+);
+
+const NavIconSquad = ({ size = 24 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    {/* Squad: Tactical Field Schematic */}
+    {/* Top line (Attack) */}
+    <rect x="4" y="6" width="16" height="2" rx="1" fill={ASSETS.colors.cyan} />
+    
+    {/* Middle line (Midfield) with center circle simulation */}
+    <rect x="4" y="11" width="6.5" height="2" rx="1" fill={ASSETS.colors.paper} />
+    <rect x="13.5" y="11" width="6.5" height="2" rx="1" fill={ASSETS.colors.paper} />
+    <circle cx="12" cy="12" r="1.5" fill={ASSETS.colors.paper} />
+    
+    {/* Bottom line (Defense) */}
+    <rect x="4" y="16" width="16" height="2" rx="1" fill={ASSETS.colors.mute} />
+  </svg>
+);
+
+const NavIconMarket = ({ size = 24 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    {/* Market: Exchange / Flow schematic */}
+    <rect x="4" y="8" width="10" height="2" rx="1" fill={ASSETS.colors.cyan} />
+    <rect x="10" y="14" width="10" height="2" rx="1" fill={ASSETS.colors.mute} />
+    <path d="M16 7L18 9L16 11" stroke={ASSETS.colors.cyan} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M8 13L6 15L8 17" stroke={ASSETS.colors.mute} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
+
+const NavIconLeagues = ({ size = 24 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    {/* Leagues: Stacked Rank schematic */}
+    <rect x="10" y="5" width="4" height="2" rx="1" fill={ASSETS.colors.cyan} />
+    <rect x="7" y="11" width="10" height="2" rx="1" fill={ASSETS.colors.paper} />
+    <rect x="4" y="17" width="16" height="2" rx="1" fill={ASSETS.colors.mute} />
+  </svg>
+);
+
+const NavIconLive = ({ size = 24 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    {/* Live: Signal pulse schematic */}
+    <rect x="2" y="7" width="8" height="2" rx="1" fill={ASSETS.colors.mute} opacity="0.2" />
+    <rect x="12" y="7" width="10" height="2" rx="1" fill={ASSETS.colors.mute} opacity="0.2" />
+    <rect x="4" y="11" width="16" height="2" rx="1" fill={ASSETS.colors.danger} />
+    <rect x="2" y="15" width="12" height="2" rx="1" fill={ASSETS.colors.mute} opacity="0.2" />
+    <rect x="16" y="15" width="6" height="2" rx="1" fill={ASSETS.colors.mute} opacity="0.2" />
+  </svg>
+);
+
+const EditorialBrandmark = ({ theme = 'dark', scale = 1 }) => {
+  const isDark = theme === 'dark';
+  const primaryText = isDark ? 'text-white' : 'text-[#080A0E]';
+  const secondaryText = isDark ? 'text-[#F2EEE5]' : 'text-[#8B95A1]';
+  
+  return (
+    <div className="flex items-baseline" style={{ transform: `scale(${scale})`, transformOrigin: 'left' }}>
+      <span 
+        style={{ fontFamily: 'Archivo Black, sans-serif' }} 
+        className={`text-4xl ${primaryText} uppercase tracking-tighter italic leading-none`}
+      >
+        FORZA
+      </span>
+      <div className="w-[3px] h-9 bg-[#00B4D8] mx-3 rotate-[15deg] self-center"></div>
+      <div className="flex flex-col leading-[0.9]">
+        <span style={{ fontFamily: 'Archivo Black, sans-serif' }} className={`text-lg ${secondaryText} uppercase tracking-tighter`}>FANTASY</span>
+        <span style={{ fontFamily: 'Archivo Black, sans-serif' }} className={`text-lg ${secondaryText} uppercase tracking-tighter`}>LEAGUE</span>
+      </div>
+    </div>
+  );
+};
+
+const DisplayCard = ({ title, bg, children, border = true }) => (
+  <div className="flex flex-col gap-3">
+    <div className="font-mono text-[10px] text-[#5A6472] uppercase tracking-widest font-bold">
+      {title}
+    </div>
+    <div className={`rounded-lg flex items-center justify-center p-12 min-h-[200px] ${bg} ${border ? 'border border-[#1E2530]' : ''}`}>
+      {children}
+    </div>
+  </div>
+);
+
+export default function App() {
+  return (
+    <div className="min-h-screen bg-[#080A0E] p-8 md:p-16 text-white font-sans selection:bg-[#00B4D8] selection:text-[#080A0E]">
+      <header className="mb-16 border-b border-[#1E2530] pb-8">
+        <h1 className="text-sm font-mono text-[#00B4D8] uppercase tracking-[0.4em] font-bold mb-2">
+          Final Brand Assets · v1.9
+        </h1>
+        <p className="text-[#8B95A1] max-w-lg font-medium">
+          The official identity system for Forza Fantasy League, featuring the revised tactical navigation set.
+        </p>
+      </header>
+
+      {/* SECTION 1: THE BRANDMARK */}
+      <section className="mb-20">
+        <div className="mb-8">
+          <h2 className="text-xl font-black uppercase tracking-tight italic" style={{ fontFamily: 'Archivo Black' }}>
+            01. Editorial Brandmark
+          </h2>
+          <p className="text-xs font-mono text-[#5A6472] mt-1">Main Logo / Website Header</p>
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <DisplayCard title="Standard (On Ink)" bg="bg-[#080A0E]">
+            <EditorialBrandmark theme="dark" />
+          </DisplayCard>
+          <DisplayCard title="Alternative (On Paper)" bg="bg-[#F2EEE5]">
+            <EditorialBrandmark theme="light" />
+          </DisplayCard>
+        </div>
+      </section>
+
+      {/* SECTION 2: THE NAVIGATION ICONS */}
+      <section className="mb-20">
+        <div className="mb-8">
+          <h2 className="text-xl font-black uppercase tracking-tight italic" style={{ fontFamily: 'Archivo Black' }}>
+            02. Tactical Navigation Set (Revised)
+          </h2>
+          <p className="text-xs font-mono text-[#5A6472] mt-1">Schematic set representing formation density and match data.</p>
+        </div>
+        
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+          <div className="bg-[#0F1218] border border-[#1E2530] p-6 rounded flex flex-col items-center gap-4 group hover:border-[#00B4D8] transition-colors">
+            <NavIconScores size={32} />
+            <span className="font-mono text-[10px] text-[#8B95A1] group-hover:text-[#00B4D8] uppercase tracking-widest">Scores</span>
+          </div>
+          <div className="bg-[#0F1218] border border-[#1E2530] p-6 rounded flex flex-col items-center gap-4 group hover:border-[#00B4D8] transition-colors">
+            <NavIconSquad size={32} />
+            <span className="font-mono text-[10px] text-[#8B95A1] group-hover:text-[#00B4D8] uppercase tracking-widest">Squad</span>
+          </div>
+          <div className="bg-[#0F1218] border border-[#1E2530] p-6 rounded flex flex-col items-center gap-4 group hover:border-[#00B4D8] transition-colors">
+            <NavIconMarket size={32} />
+            <span className="font-mono text-[10px] text-[#8B95A1] group-hover:text-[#00B4D8] uppercase tracking-widest">Market</span>
+          </div>
+          <div className="bg-[#0F1218] border border-[#1E2530] p-6 rounded flex flex-col items-center gap-4 group hover:border-[#00B4D8] transition-colors">
+            <NavIconLeagues size={32} />
+            <span className="font-mono text-[10px] text-[#8B95A1] group-hover:text-[#00B4D8] uppercase tracking-widest">Leagues</span>
+          </div>
+          <div className="bg-[#0F1218] border border-[#1E2530] p-6 rounded flex flex-col items-center gap-4 group hover:border-[#EF4444] transition-colors">
+            <NavIconLive size={32} />
+            <span className="font-mono text-[10px] text-[#EF4444] uppercase tracking-widest font-bold">Live</span>
+          </div>
+        </div>
+      </section>
+
+      {/* SECTION 3: THE MAIN ICON */}
+      <section className="mb-20">
+        <div className="mb-8">
+          <h2 className="text-xl font-black uppercase tracking-tight italic" style={{ fontFamily: 'Archivo Black' }}>
+            03. App Icon System
+          </h2>
+          <p className="text-xs font-mono text-[#5A6472] mt-1">The primary 'F' shorthand identity</p>
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <DisplayCard title="App Icon" bg="bg-[#0F1218]">
+            <div className="bg-[#080A0E] p-6 rounded-[22%] border border-[#1E2530] shadow-2xl">
+              <TacticalIcon size={80} />
+            </div>
+          </DisplayCard>
+          
+          <DisplayCard title="Browser Tab (Favicon)" bg="bg-[#1E2530]">
+            <div className="flex items-center gap-3 bg-[#080A0E] px-4 py-2 rounded border border-[#1E2530]">
+              <TacticalIcon size={16} />
+              <span className="font-mono text-[11px] text-[#8B95A1]">forzafantasyleague.com</span>
+            </div>
+          </DisplayCard>
+
+          <DisplayCard title="UI Shorthand" bg="bg-[#080A0E]">
+            <TacticalIcon size={52} />
+          </DisplayCard>
+        </div>
+      </section>
+
+      {/* SECTION 4: SPECS */}
+      <footer className="pt-12 border-t border-[#1E2530]">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+          <div>
+            <div className="font-mono text-[10px] text-[#5A6472] uppercase tracking-widest mb-3 font-bold">Primary Font</div>
+            <div className="text-lg font-black italic uppercase leading-none" style={{ fontFamily: 'Archivo Black' }}>Archivo Black</div>
+          </div>
+          <div>
+            <div className="font-mono text-[10px] text-[#5A6472] uppercase tracking-widest mb-3 font-bold">Mono Font</div>
+            <div className="text-lg font-bold uppercase tracking-widest leading-none" style={{ fontFamily: 'JetBrains Mono' }}>JetBrains Mono</div>
+          </div>
+          <div>
+            <div className="font-mono text-[10px] text-[#5A6472] uppercase tracking-widest mb-3 font-bold">Slash Spec</div>
+            <div className="text-lg font-bold text-[#00B4D8] leading-none">15° / 3PX</div>
+          </div>
+          <div className="text-right">
+            <div className="font-mono text-[10px] text-[#5A6472] uppercase tracking-widest mb-3 font-bold">Status</div>
+            <div className="text-lg font-bold text-[#22C55E] leading-none">LOCKED</div>
+          </div>
+        </div>
+      </footer>
+    </div>
+  );
+}
