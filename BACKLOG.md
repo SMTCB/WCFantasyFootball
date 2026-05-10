@@ -11,9 +11,10 @@
 
 ### ✅ Completed This Session (2026-05-10)
 - ✅ **Squad Sub-In Logic Bug**: Fixed "SUB IN" button entering swap mode when squad < 11 starters. Now shows "ADD TO PITCH" for direct promotion when starters are below capacity.
-- ✅ **Onboarding Tour Tooltip Clipping**: Fixed spotlight tooltip clipping off-screen on desktop. Now uses sidebar-aware viewport clamping (`document.documentElement.clientWidth` + 220px sidebar offset).
+- ✅ **Onboarding Tour Tooltip Clipping (Desktop)**: Fixed spotlight tooltip clipping off-screen on right side. Now uses `right: 8px` anchor for right-side elements (like budget KPI), `left`-based clamping for left/center elements.
 - ✅ **Swap Mode Banner Overlap**: Fixed swap mode banner covering bench players on desktop. Container now shrinks by 64px when swap mode is active so bench strip remains clickable.
 - ✅ **LeagueScreen Dummy Data**: Removed all hardcoded fake data — activity feed (auction events), frontpage gazette (Mbappé news, @Ana_K/@GamerX comments), stats tab (€1.4B, Mbappé 424pts), and dummy trade modal (João/Bellingham/De Bruyne). Replaced with appropriate empty states.
+- 📋 **#037 Auto-Fill Squad Feature**: Added to P3 backlog as a UX enhancement for quickly completing squads below 11 players.
 
 ### ✅ Completed Previous Session (2026-05-06)
 - ✅ **Squad LIST tab (desktop)**: Removed duplicate bench panel on right; unified squad with START/BENCH badges per position
@@ -356,6 +357,33 @@ All feature code complete. One remaining infrastructure task:
 ### #033: Empty Slot Placeholders
 - **Status**: ✅ DONE
 - **Description**: Per-position empty slots on SquadScreen with + button to open PlayerPickerSheet. Shows `{position} SLOT · + SIGN`.
+
+### #037: Auto-Fill Squad Feature
+- **Status**: NOT STARTED
+- **Description**: Add an "Auto-Fill" button on SquadScreen (PITCH tab) that automatically selects eligible players from the market to complete a squad below 11 players. Useful for new users or when quickly building a squad.
+- **Rules**:
+  - Only works when squad has fewer than 11 starters
+  - Selects lowest-cost eligible players for each empty position slot
+  - Respects formation rules: 1 GK, 3–5 DEF, 2–4 MID, 1–2 FWD
+  - Respects budget: stops if insufficient budget to fill remaining slots
+  - Avoid duplicate players: don't select same player twice
+  - Update budget display in real-time as players are added
+  - Show success/error state (e.g., "Squad full" or "Insufficient budget for remaining positions")
+- **Implementation**:
+  - New button in SquadScreen PITCH tab header: "Quick Fill"
+  - Call new `auto-fill` function that:
+    1. Queries market (players not yet taken)
+    2. Sorts by price (lowest first) per position
+    3. Validates formation rules
+    4. Adds players to squad state
+    5. Updates Supabase in batches
+  - Hook: `useAutoFill(leagueId, squadData)` returns `{ fill, isFilling, error }`
+- **UI Feedback**:
+  - Loading state during fill
+  - Toast notification on success (e.g., "Added 4 players, budget remaining: £2.1M")
+  - Toast error if insufficient budget or no eligible players available
+- **Effort**: 1.5 hours (hook + button integration + error handling)
+- **Priority**: UX improvement; useful for onboarding flow
 
 ---
 
