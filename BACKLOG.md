@@ -11,6 +11,9 @@
 
 ### ✅ Completed This Session (2026-05-10)
 - ✅ **Squad Sub-In Logic Bug**: Fixed "SUB IN" button entering swap mode when squad < 11 starters. Now shows "ADD TO PITCH" for direct promotion when starters are below capacity.
+- ✅ **Onboarding Tour Tooltip Clipping**: Fixed spotlight tooltip clipping off-screen on desktop. Now uses sidebar-aware viewport clamping (`document.documentElement.clientWidth` + 220px sidebar offset).
+- ✅ **Swap Mode Banner Overlap**: Fixed swap mode banner covering bench players on desktop. Container now shrinks by 64px when swap mode is active so bench strip remains clickable.
+- ✅ **LeagueScreen Dummy Data**: Removed all hardcoded fake data — activity feed (auction events), frontpage gazette (Mbappé news, @Ana_K/@GamerX comments), stats tab (€1.4B, Mbappé 424pts), and dummy trade modal (João/Bellingham/De Bruyne). Replaced with appropriate empty states.
 
 ### ✅ Completed Previous Session (2026-05-06)
 - ✅ **Squad LIST tab (desktop)**: Removed duplicate bench panel on right; unified squad with START/BENCH badges per position
