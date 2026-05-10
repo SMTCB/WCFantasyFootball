@@ -32,46 +32,144 @@ Claude creates worktrees under `.claude/worktrees/` — ephemeral and gitignored
 
 ---
 
+## Git Workflow & Version Control
+
+### Branch Strategy (Solo Developer Pre-Launch)
+
+**Branch Model**: Simple feature-branch model
+- **`main`** — production-ready code, auto-deployed to Vercel, always stable
+- **`claude/<kebab-case-description>`** — feature branches for each session
+  - Created fresh from `main` at session start
+  - Deleted immediately after PR merge
+  - Example: `claude/fix-squad-formation-bug`, `claude/implement-league-chat`
+
+### Session Workflow
+
+**Before starting work:**
+```bash
+git pull origin main                          # Sync latest
+git checkout -b claude/feature-description   # Create feature branch
+```
+
+**During development:**
+- Commit frequently with atomic, well-described messages
+- Run tests before pushing: `npx playwright test`
+- Keep commits focused (one logical change per commit)
+
+**Before merging:**
+```bash
+npm run lint                 # Check code quality
+npx playwright test          # Run E2E tests
+git push origin claude/...   # Push to remote
+# Create PR on GitHub, ensure all checks pass
+# Merge via GitHub (use squash for cleaner history)
+git branch -D claude/...     # DELETE local branch immediately
+git pull origin main         # Pull latest
+```
+
+### Commit Message Format
+
+Follow this convention for consistency:
+- **Features**: `#XXX: Description` (e.g., `#027: Implement League Chat Backend`)
+- **Fixes**: `Fix: Description` (e.g., `Fix: Remove unused playerId param`)
+- **Docs**: `Update BACKLOG: ...` or `docs: ...`
+- **Refactoring**: `Refactor: Description`
+
+Each commit should be **atomic**: one logical change, no mixing features.
+
+### Important Rules
+
+- ✅ **Always create a feature branch** — never commit directly to `main`
+- ✅ **Delete branches after merging** — keeps repo clean
+- ✅ **Pull before starting** — avoid merge conflicts
+- ✅ **Run tests before pushing** — catch issues early
+- ✅ **Never use `--no-verify`** — git hooks exist to help
+- ✅ **Keep main always deployable** — every commit on main should work
+
+---
+
 ## Repository Structure
 
 ```
 forza-fantasy-league/
-├── src/
-│   ├── screens/          # Route-level views (11 screens)
-│   ├── components/       # Shared UI components
-│   ├── hooks/            # Custom React hooks
-│   ├── lib/              # supabase.js, capacitor.js, utilities
-│   ├── context/          # AuthContext
-│   └── data/             # Static fallback data (squad, players)
+├── src/                              # React application source
+│   ├── screens/                      # 11 route-level views
+│   ├── components/                   # Reusable UI components
+│   ├── hooks/                        # Custom React hooks
+│   ├── lib/                          # supabase.js, capacitor.js, utils
+│   ├── context/                      # AuthContext
+│   └── data/                         # Fallback demo data
 ├── supabase/
-│   ├── functions/        # Deployed Edge Functions (Deno)
-│   └── migrations/       # SQL migrations — numbered sequence (01–08)
-├── ios/                  # Capacitor Xcode project
-├── android/              # Capacitor Android Studio project
-├── e2e/                  # Playwright E2E tests (82/84 passing)
-├── backend/              # Legacy Supabase Edge Functions (Deno)
-├── docs/                 # Technical documentation
-├── API/                  # Forza Football API reference materials
-├── Product Pitch/        # Business pitch HTML assets
-└── .github/workflows/    # CI/CD (lint → build → E2E)
+│   ├── functions/                    # Deployed Edge Functions (Deno)
+│   └── migrations/                   # SQL migrations (numbered 01–25)
+├── public/                           # Static assets (SVG brandmark, icons)
+├── docs/                             # Documentation (organized by topic)
+│   ├── architecture/                 # System design, scoring, draft system
+│   ├── api/                          # Forza Football API reference
+│   ├── brand/                        # Branding guidelines, brandmark
+│   ├── deployment/                   # Launch checklist, deployment runbook
+│   └── APP_DYNAMICS.md               # Live-match and real-time architecture
+├── ios/                              # Capacitor Xcode project
+├── android/                          # Capacitor Android Studio project
+├── e2e/                              # Playwright E2E tests (116 tests)
+├── .github/workflows/                # CI/CD pipelines (lint → build → E2E)
+├── .claude/                          # Claude Code internal (gitignored)
+│   └── worktrees/                    # Ephemeral session worktrees
+├── BACKLOG.md                        # Issues, priorities, progress **update weekly**
+├── PIPELINE.md                       # Product roadmap & sprint plan
+├── APP_STORE_ASSESSMENT.md           # Mobile store strategy
+└── package.json                      # Dependencies & scripts
 ```
+
+**Key Points:**
+- `docs/` is organized by topic (not chronological) for easy reference
+- Build outputs (`dist/`, `e2e-report/`) are gitignored
+- Worktrees in `.claude/worktrees/` are ephemeral — not tracked
+- `.env.local` is gitignored; use `.env.example` as template
 
 ---
 
 ## Key Reference Documents
 
+**Root-level (always updated):**
 | File | Purpose |
 |------|---------|
-| `BACKLOG.md` | Open issues and priorities — **update after every session** |
-| `PIPELINE.md` | Product roadmap and sprint plan |
-| `APP_STORE_ASSESSMENT.md` | Mobile strategy, architecture decision, store submission guide |
-| `MOBILE_IMPLEMENTATION_GUIDE.md` | Capacitor implementation guide (Antigravity's working doc) |
-| `GEMINI.md` | Instructions for Google Antigravity |
-| `DRAFT_SYSTEM_DESIGN.md` | Draft lottery and transfer window system design |
-| `FANTASY_POINTS_SCORING_LAYER.md` | Scoring system design and DB schema |
-| `SQUAD_SCREEN_IMPROVEMENT_PLAN.md` | Squad screen UX plan |
-| `FORZA_API_ASSESSMENT.md` | Forza Football API integration assessment |
-| `API/API_INTEGRATION_REFERENCE.md` | API endpoints, auth, data shapes |
+| `BACKLOG.md` | Open issues, priorities, session notes — **UPDATE WEEKLY** |
+| `PIPELINE.md` | Product roadmap, sprint plan, timeline |
+| `APP_STORE_ASSESSMENT.md` | Mobile store strategy & launch readiness |
+| `MOBILE_IMPLEMENTATION_GUIDE.md` | Capacitor setup & native plugin docs |
+
+**Architecture Docs** (`docs/architecture/`):
+| File | Purpose |
+|------|---------|
+| `DRAFT_SYSTEM_DESIGN.md` | Draft lottery & transfer window rules |
+| `FANTASY_POINTS_SCORING_LAYER.md` | Scoring formula & database schema |
+| `APP_DYNAMICS.md` | Live-match, real-time, Realtime subscriptions |
+
+**API Docs** (`docs/api/`):
+| File | Purpose |
+|------|---------|
+| `FORZA_API_ASSESSMENT.md` | Forza Football API assessment & gaps |
+| `API_INTEGRATION_REFERENCE.md` | Endpoints, auth, data shapes |
+| `FIT_GAP_ANALYSIS.md` | Feature coverage & missing endpoints |
+
+**Brand Docs** (`docs/brand/`):
+| File | Purpose |
+|------|---------|
+| `BRANDING.md` | Brand identity, colors, typography |
+| `FORZAKIT-UI-Overhaul.md` | UI design overhaul notes |
+
+**Deployment** (`docs/deployment/`):
+| File | Purpose |
+|------|---------|
+| `DATA_PIPELINE_RUNBOOK.md` | Supabase cron setup & data activation |
+| `DRY_RUN_PREP_CHECKLIST.md` | Pre-launch verification checklist |
+
+**Special Docs:**
+| File | Purpose |
+|------|---------|
+| `GEMINI.md` | Instructions for Google Antigravity (mobile AI) |
+| `E2E_TEST_REPORT.md` | Latest test results & coverage |
 
 ---
 
