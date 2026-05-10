@@ -1329,7 +1329,8 @@ export default function SquadScreen() {
       </div>
 
       {/* ══ DESKTOP LAYOUT ══════════════════════════════════════════════════ */}
-      <div className="hidden lg:flex flex-col" style={{ height: 'calc(100vh - 88px)' }}>
+      {/* Shrink container by swap-banner height (≈64px) so bench strip stays above the fixed banner */}
+      <div className="hidden lg:flex flex-col" style={{ height: swapMode ? 'calc(100vh - 88px - 64px)' : 'calc(100vh - 88px)' }}>
 
         {/* ── Sub-tab row: Pitch / List / Chips / Status ─────────────────── */}
         <div className="flex shrink-0" style={{ borderBottom: '1px solid var(--rule)', background: 'var(--ink-2)' }}>

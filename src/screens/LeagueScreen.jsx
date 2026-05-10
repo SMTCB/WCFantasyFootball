@@ -20,7 +20,6 @@ export default function LeagueScreen() {
   const [loading, setLoading] = useState(true);
   const [view, setView] = useState('list'); 
   const [activeLeague, setActiveLeague] = useState(null);
-  const [showTradeModal, setShowTradeModal] = useState(false);
   const [_activeEmojiPickerId, _setActiveEmojiPickerId] = useState(null);
   const [showTradeBuilder, setShowTradeBuilder] = useState(false);
   
@@ -477,10 +476,6 @@ export default function LeagueScreen() {
           </div>
         </div>
 
-         <div onClick={() => setShowTradeModal(true)} className="bg-[#FFC107] text-black px-4 py-3 flex items-center justify-between cursor-pointer active:opacity-80">
-            <div className="text-[13px] font-bold">📨 João wants to trade De Bruyne for your Bellingham. Tap to review.</div>
-         </div>
-
          <TransferWindowBanner {...transferWindow} />
 
          {/* Draft open banner — shown when deadline is future and no submission yet */}
@@ -577,36 +572,10 @@ export default function LeagueScreen() {
              <div className="px-4 py-1.5 bg-[var(--ink)] border-b border-[var(--rule)]">
                 <span className="text-[11px] font-bold text-[var(--mute)] uppercase tracking-[.14em]">Activity</span>
              </div>
-             
-             <div className="bg-[var(--ink)] min-h-[40vh]">
-               <div className="w-full relative px-4 py-4 bg-[var(--ink-2)] border-b border-[var(--rule)]">
-                 <div className="absolute left-0 top-0 bottom-0 w-[3px] bg-negative" />
-                 <div className="text-[9px] text-[#E53935] uppercase tracking-[.14em] font-black mb-1">RANK AMBUSH</div>
-                 <div className="text-[16px] font-bold text-white mb-1 leading-snug">Ricardo's Mbappé just happened to you.</div>
-                 <div className="text-[12px] text-[var(--mute)] mb-3 font-medium">FRA scored 74' · FRA 1-0 DEN</div>
-                 <div className="flex justify-between items-center">
-                     <div className="flex items-center gap-2">
-                       <div className="fk-mono flex items-center justify-center shrink-0" style={{ width: 24, height: 24, border: '1px solid var(--rule)', color: 'var(--mute)', fontSize: 8 }}>RI</div>
-                       <span className="text-[12px] font-bold text-[var(--mute)]">Ricardo</span>
-                     </div>
-                     <div className="flex gap-1.5">
-                        <button className="fk-mono px-3 py-1.5" style={{ border: '1px solid var(--rule)', color: 'var(--paper)', fontSize: 9 }}>GG 2</button>
-                        <button className="fk-mono px-3 py-1.5" style={{ border: '1px solid var(--rule)', color: 'var(--mute)', fontSize: 9 }}>RIP 1</button>
-                     </div>
-                 </div>
-               </div>
-               {[
-                 { id: 1, icon: '📈', text: 'You moved from 3rd to 2nd after Vinicius Jr. scored', delta: '+10', dColor: 'text-positive' },
-                 { id: 2, icon: '🔨', text: 'Ricardo won the Bellingham auction', delta: '€24M', dColor: 'text-text-tertiary' },
-                 { id: 3, icon: '🟨', text: 'Hakimi yellow card (MAR)', delta: '-1', dColor: 'text-negative' },
-               ].map(e => (
-                 <div key={e.id} className="flex px-4 py-3 border-b border-[var(--rule)] items-center gap-3">
-                   <div className="fk-mono flex items-center justify-center shrink-0" style={{ width: 32, height: 32, border: '1px solid var(--rule)', color: 'var(--mute)', fontSize: 8 }}>EVT</div>
-                   <div className="flex-1 text-[13px] font-bold text-white leading-snug">{e.text}</div>
-                   <div className={`font-mono text-[14px] font-bold ${e.dColor}`}>{e.delta}</div>
-                 </div>
-               ))}
-               <div className="p-8 text-center text-[11px] text-[#555] font-bold uppercase tracking-widest">End of Activity</div>
+             <div className="bg-[var(--ink)] min-h-[20vh] flex flex-col items-center justify-center gap-2 py-12">
+               <div className="text-[28px]">⚽</div>
+               <div className="text-[11px] font-black uppercase tracking-widest" style={{ color: 'var(--mute)' }}>No activity yet</div>
+               <div className="text-[11px] text-center max-w-xs" style={{ color: 'var(--mute)', opacity: 0.6 }}>Match events, rank changes, and league news will appear here once the season starts.</div>
              </div>
            </>
          )}
@@ -631,59 +600,27 @@ export default function LeagueScreen() {
                  </div>
                </div>
              ) : (
-               // Full gazette for active leagues
-               <>
+               // Active league — show draft report; matchday gazette content coming once season starts
+               <div className="bg-[#f2f2f2] text-[#1a1a1a]">
                  <div className="px-6 py-8 border-b-2 border-black flex flex-col items-center text-center">
                     <div className="text-[10px] font-black uppercase tracking-[0.4em] mb-2 font-serif underline decoration-2 underline-offset-4">The Official Gazette</div>
                     <h1 className="font-serif text-4xl font-black italic tracking-tighter leading-none mb-1">FORZA TIMES</h1>
                     <div className="w-full flex justify-between border-t border-b border-black/10 mt-4 py-1 text-[9px] font-bold uppercase tracking-widest">
-                       <span>VOL. MCXXIV</span>
-                       <span>DOHA • {new Date().toLocaleDateString()}</span>
-                       <span>EDITION #42</span>
+                       <span>VOL. I</span>
+                       <span>{new Date().toLocaleDateString()}</span>
+                       <span>EDITION #1</span>
                     </div>
                  </div>
-
+                 {/* Draft report — renders only when a draft_report gazette entry exists */}
                  <div className="p-6">
-                    <div className="bg-red-600 text-white inline-block px-2 py-0.5 text-[9px] font-black uppercase tracking-widest mb-3 animate-pulse">Breaking News</div>
-                    <h2 className="font-serif text-3xl font-black leading-tight mb-3 tracking-tight">Kylian Mbappé Injured; Due to Miss Quarter-Finals</h2>
-                    <p className="text-[14px] leading-relaxed font-medium mb-6 italic opacity-80">"It's a heavy blow for the champions," says Deschamps as results confirmed a tear.</p>
-                    <div className="grid grid-cols-2 gap-6 border-t border-black/20 pt-6">
-                       <div>
-                          <div className="text-[9px] font-black uppercase text-red-600 mb-1">League Recap</div>
-                          <h3 className="font-serif text-xl font-bold leading-tight mb-2">Alex Tactics beats João</h3>
-                          <p className="text-[11px] leading-relaxed">A dominant 42-point victory this matchday.</p>
-                       </div>
-                       <div className="border-l border-black/20 pl-4">
-                          <div className="text-[9px] font-black uppercase text-blue-600 mb-1">Transfer Bomba</div>
-                          <h3 className="font-serif text-xl font-bold leading-tight mb-2">Big Trade Confirmed</h3>
-                          <p className="text-[11px] leading-relaxed">Neymar for Messi swap deal shakes up the leaderboards.</p>
-                       </div>
-                    </div>
-
-                    {/* Draft report — renders only when a draft_report gazette entry exists */}
-                    <GazetteDraftReport leagueId={activeLeague?.league_id} />
+                   <GazetteDraftReport leagueId={activeLeague?.league_id} />
                  </div>
-
-                 <div className="px-6 py-4 border-t-4 border-black bg-black text-white">
-                    <div className="fz-label text-cyan text-[8px] mb-2 brightness-150">WARZONE HIGHLIGHTS</div>
-                    <div className="space-y-3">
-                      <div className="flex gap-2">
-                        <span className="text-[#555] font-black">@Ana_K:</span>
-                        <span className="text-[11px] leading-tight font-medium italic opacity-70">"Wait, did you guys see Taylor United just cashed out 50pts for Ronaldo? Risky business..."</span>
-                      </div>
-                      <div className="flex gap-2">
-                        <span className="text-[#555] font-black">@GamerX:</span>
-                        <span className="text-[11px] leading-tight font-medium italic opacity-70">"I'm keeping my Joker for the Morocco game. Trust the process."</span>
-                      </div>
-                    </div>
-                 </div>
-
-                 <div className="p-8 text-center bg-[#f2f2f2] border-t-2 border-dashed border-black/20">
+                 <div className="p-8 text-center border-t-2 border-dashed border-black/20">
                     <div className="w-12 h-1 bg-black mx-auto mb-4" />
-                    <div className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40">End of Morning Edition</div>
-                    <div className="text-[8px] mt-2 italic opacity-30">All data generated by Forza Intelligence Agency (FIA)</div>
+                    <div className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40">Season hasn't started yet</div>
+                    <div className="text-[11px] mt-2 opacity-50">Match recaps, league news, and highlights will appear here once the competition begins.</div>
                  </div>
-               </>
+               </div>
              )}
            </div>
          )}
@@ -766,86 +703,12 @@ export default function LeagueScreen() {
           )}
 
          {view === 'stats' && (
-            <div className="p-5 space-y-5 bg-bg min-h-[60vh] pb-10">
-               <div className="fz-card p-5 border-cyan/20 bg-cyan/5">
-                  <div className="fz-label text-cyan mb-2">League Intelligence</div>
-                  <div className="text-xl font-bold text-white mb-4">Total Squad Value</div>
-                  <div className="flex items-end gap-3 text-white">
-                     <span className="text-3xl font-black">€1.4B</span>
-                     <span className="text-positive text-sm font-bold">+12%</span>
-                  </div>
-                  <div className="mt-4 h-1 w-full bg-[var(--ink-2)] rounded-full overflow-hidden">
-                    <div className="h-full bg-cyan w-2/3" />
-                  </div>
-                  <div className="flex justify-between mt-2 text-[10px] font-bold text-[#555] uppercase tracking-widest">
-                    <span>Low: €0.8B</span>
-                    <span>High: €1.5B</span>
-                  </div>
-               </div>
-
-               <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-[var(--ink)] border border-[var(--rule)] p-4 rounded-sm ">
-                    <div className="flex items-center gap-2 mb-3">
-                      <span className="fk-mono" style={{ fontSize: 9, color: 'var(--gold)' }}>TOP</span>
-                      <span className="text-[10px] font-black uppercase text-text-tertiary tracking-widest leading-none">Top Scorer</span>
-                    </div>
-                    <div className="text-xl font-black text-white leading-tight">Mbappé</div>
-                    <div className="text-[12px] font-bold text-positive mt-1">424 Points</div>
-                  </div>
-                  <div className="bg-[var(--ink)] border border-[var(--rule)] p-4 rounded-sm ">
-                    <div className="flex items-center gap-2 mb-3">
-                      <span className="text-lg">💰</span>
-                      <span className="text-[10px] font-black uppercase text-text-tertiary tracking-widest leading-none">Net Value</span>
-                    </div>
-                    <div className="text-xl font-black text-white leading-tight">€42M</div>
-                    <div className="text-[12px] font-bold text-positive mt-1">↑ €2.5M</div>
-                  </div>
-               </div>
-
-               <div className="bg-[var(--ink)] border border-[var(--rule)] rounded-sm p-5  relative overflow-hidden">
-                  <div className="absolute right-[-20px] top-[-20px] w-32 h-32 bg-cyan/5 rounded-full blur-3xl" />
-                  <div className="text-[10px] font-black uppercase tracking-widest text-cyan mb-5 flex items-center gap-2">
-                    <span className="w-1 h-1 rounded-full bg-cyan shadow-[0_0_8px_cyan]" />
-                    Performance Breakdown
-                  </div>
-                  
-                  <div className="space-y-4">
-                    {[
-                      { label: 'Avg. Transfer Cost', val: '€12.4M', color: 'bg-cyan' },
-                      { label: 'Clean Sheets (League)', val: '14', color: 'bg-positive' },
-                      { label: 'Yellow Cards', val: '22', color: 'bg-yellow-500' },
-                      { label: 'MD 17 High Score', val: '84 pts', color: 'bg-purple-500' },
-                    ].map((s, idx) => (
-                      <div key={idx} className="flex items-center justify-between border-b border-white/5 pb-2">
-                        <div className="flex items-center gap-3">
-                          <div className={`w-1.5 h-1.5 rounded-full ${s.color}`} />
-                          <span className="text-[13px] font-bold text-[var(--mute)]">{s.label}</span>
-                        </div>
-                        <span className="text-[15px] font-black text-white">{s.val}</span>
-                      </div>
-                    ))}
-                  </div>
-               </div>
-
-               <div className="bg-[var(--ink)] border border-[var(--rule)] rounded-sm p-5">
-                  <div className="text-[10px] font-black uppercase tracking-widest text-[var(--mute)] mb-4">Biggest Risers this Matchday</div>
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between p-2 bg-positive/5 border border-positive/10 rounded-sm">
-                       <span className="text-[13px] font-bold text-white">Ana</span>
-                       <div className="flex items-center gap-2">
-                          <span className="text-positive font-black">↑ 2</span>
-                          <span className="text-[10px] text-positive/50">84 pts</span>
-                       </div>
-                    </div>
-                    <div className="flex items-center justify-between p-2 bg-white/5 border border-white/5 rounded-sm opacity-60">
-                       <span className="text-[13px] font-bold text-white">Ricardo</span>
-                       <div className="flex items-center gap-2">
-                          <span className="text-[#555] font-black">- 0</span>
-                          <span className="text-[10px] text-[#555]">62 pts</span>
-                       </div>
-                    </div>
-                  </div>
-               </div>
+            <div className="flex flex-col items-center justify-center min-h-[60vh] p-8 text-center">
+              <div className="text-3xl mb-4 opacity-40">📊</div>
+              <div className="text-[11px] font-black uppercase tracking-[0.2em] text-text-tertiary mb-2">League Stats</div>
+              <p className="text-[13px] text-[var(--mute)] max-w-xs">
+                Stats will appear here once the season is underway and matches have been played.
+              </p>
             </div>
           )}
 
@@ -978,26 +841,6 @@ export default function LeagueScreen() {
 
          {/* ── MODALS ─────────────────────────────────────────────────────── */}
          
-         {showTradeModal && (
-           <div className="fixed inset-0 z-50 flex items-end bg-black/80" onClick={() => setShowTradeModal(false)}>
-             <div className="w-full h-[70vh] bg-[var(--ink)] rounded-t-xl p-6 flex flex-col border-t border-[var(--rule)]" onClick={e => e.stopPropagation()}>
-               <h2 className="text-xl font-bold text-white mb-6">João's Offer</h2>
-               <div className="flex-1 flex flex-col gap-4">
-                 <div className="bg-[var(--ink)] p-4 rounded-sm flex justify-between items-center text-white font-bold">
-                    <span>YOU GIVE: Bellingham</span>
-                    <span className="text-[#1E88E5]">↔</span>
-                    <span>YOU GET: De Bruyne</span>
-                 </div>
-                 <div className="text-positive font-black">+ €5.0M</div>
-               </div>
-               <div className="flex gap-3 mt-auto pb-6">
-                 <button onClick={() => setShowTradeModal(false)} className="flex-1 py-4 bg-[var(--ink)] text-white font-black rounded">DECLINE</button>
-                 <button onClick={() => setShowTradeModal(false)} className="flex-1 py-4 bg-[#00C853] text-white font-black rounded">ACCEPT</button>
-               </div>
-             </div>
-           </div>
-         )}
-
          {showTradeBuilder && tradeTarget && (
             <div className="fixed inset-0 z-50 flex items-end outline-none bg-black/80 animate-in fade-in" onClick={() => setShowTradeBuilder(false)}>
                <div className="w-full h-[90vh] bg-[var(--ink)] rounded-t-2xl flex flex-col animate-in slide-in-from-bottom border-t border-[var(--rule)] relative" onClick={e => e.stopPropagation()}>
