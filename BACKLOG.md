@@ -14,6 +14,7 @@
 - ✅ **Onboarding Tour Tooltip Clipping (Desktop)**: Fixed spotlight tooltip clipping off-screen on right side. Now uses `right: 8px` anchor for right-side elements (like budget KPI), `left`-based clamping for left/center elements.
 - ✅ **Swap Mode Banner Overlap**: Fixed swap mode banner covering bench players on desktop. Container now shrinks by 64px when swap mode is active so bench strip remains clickable.
 - ✅ **LeagueScreen Dummy Data**: Removed all hardcoded fake data — activity feed (auction events), frontpage gazette (Mbappé news, @Ana_K/@GamerX comments), stats tab (€1.4B, Mbappé 424pts), and dummy trade modal (João/Bellingham/De Bruyne). Replaced with appropriate empty states.
+- ✅ **Onboarding Tour Step 4 Missing**: Fixed missing `data-tour="squad-chips"` attribute on SquadScreen CHIPS tab. Tour step 4 ("Chips & Boosts") now displays correctly instead of showing blank overlay.
 - 📋 **#037 Auto-Fill Squad Feature**: Added to P3 backlog as a UX enhancement for quickly completing squads below 11 players.
 
 ### ✅ Completed Previous Session (2026-05-06)
