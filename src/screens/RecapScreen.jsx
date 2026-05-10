@@ -150,7 +150,7 @@ export default function RecapScreen() {
     const dataUrl = await generateImage();
     if (!dataUrl) return;
     const link = document.createElement('a');
-    link.download = `fantasykit-matchday-${recap.matchday}-recap.png`;
+    link.download = `forza-fantasy-league-matchday-${recap.matchday}-recap.png`;
     link.href = dataUrl;
     link.click();
   };
@@ -159,13 +159,13 @@ export default function RecapScreen() {
     const dataUrl = await generateImage();
     if (!dataUrl) return;
     const blob = await (await fetch(dataUrl)).blob();
-    const file  = new File([blob], `fantasykit-md${recap.matchday}.png`, { type: 'image/png' });
+    const file  = new File([blob], `forza-fantasy-league-md${recap.matchday}.png`, { type: 'image/png' });
 
     if (navigator.canShare?.({ files: [file] })) {
       try {
         await navigator.share({
           files: [file],
-          title: `FantasyKit — Matchday ${recap.matchday} Recap`,
+          title: `Forza Fantasy League — Matchday ${recap.matchday} Recap`,
           text: `I scored ${recap.points} pts and finished ${rankLabel} in Matchday ${recap.matchday}! 🏆`,
         });
       } catch (e) {
@@ -175,7 +175,7 @@ export default function RecapScreen() {
       // Fallback: copy share text
       try {
         await navigator.clipboard.writeText(
-          `I scored ${recap.points} pts in Matchday ${recap.matchday} of FantasyKit! Rank: ${rankLabel} in ${recap.leagueName}.`
+          `I scored ${recap.points} pts in Matchday ${recap.matchday} of Forza Fantasy League! Rank: ${rankLabel} in ${recap.leagueName}.`
         );
         setCopied(true);
         setTimeout(() => setCopied(false), 2500);

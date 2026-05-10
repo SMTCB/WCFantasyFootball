@@ -1,0 +1,21 @@
+<svg width="400" height="200" viewBox="0 0 400 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Editorial Brandmark: FORZA / FANTASY / LEAGUE -->
+  <!-- Background for visibility -->
+  <rect width="400" height="200" fill="#080A0E"/>
+
+  <!-- FORZA text -->
+  <text x="20" y="80" font-family="Archivo Black, sans-serif" font-size="72" font-weight="900" font-style="italic" fill="white" letter-spacing="-2" text-anchor="start">
+    FORZA
+  </text>
+
+  <!-- The Aligned Slash -->
+  <g transform="translate(310, 40)">
+    <rect width="3" height="60" fill="#00B4D8" transform="rotate(15)"/>
+  </g>
+
+  <!-- FANTASY LEAGUE stack -->
+  <g transform="translate(340, 20)">
+    <text x="0" y="0" font-family="Archivo Black, sans-serif" font-size="24" font-weight="900" fill="#F2EEE5" letter-spacing="-1">FANTASY</text>
+    <text x="0" y="35" font-family="Archivo Black, sans-serif" font-size="24" font-weight="900" fill="#F2EEE5" letter-spacing="-1">LEAGUE</text>
+  </g>
+</svg>

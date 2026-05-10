@@ -135,7 +135,7 @@ export default function RecapCard({ recap, forwardRef }) {
       {/* Footer / Branding */}
       <div style={{ padding: '14px 24px', background: '#080808', borderTop: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div style={{ fontSize: '11px', fontWeight: 900, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#333' }}>
-          FantasyKit
+          Forza Fantasy League
         </div>
         <div style={{ fontSize: '10px', color: '#333', fontWeight: 600 }}>
           {username}

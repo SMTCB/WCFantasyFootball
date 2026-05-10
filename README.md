@@ -1,7 +1,7 @@
-# ForzaKit — Fantasy League Platform
+# Forza Fantasy League — Competition Platform
 
-Competition-agnostic fantasy football platform with web, iOS, and Android apps via Capacitor.  
-Run any football league (EPL, World Cup, Champions League, etc.) without code changes.
+Elite fantasy football platform with web, iOS, and Android apps via Capacitor.  
+Support for EPL, World Cup, Champions League, and other major football competitions.
 
 **Stack**: React 19 · Vite · Tailwind CSS 4 · Supabase · Capacitor
 
@@ -35,7 +35,20 @@ npx cap open ios      # Xcode
 npx cap open android  # Android Studio
 ```
 
-App ID: `com.fantasykit.forzaedition`
+App ID: `com.forza.fantasyleague`
+
+### App Icons
+
+Generate app icons for both platforms from the base tactical icon SVG:
+
+```bash
+npm install  # installs sharp for image processing
+npm run icons:generate
+```
+
+This creates optimized icons in:
+- `ios/App/App/Assets.xcassets/AppIcon.appiconset/` (17 sizes)
+- `android/app/src/main/res/mipmap-*/` (6 densities)
 
 ---
 
