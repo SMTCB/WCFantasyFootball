@@ -1,6 +1,6 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-05-06 (session 5)  
+**Last Updated**: 2026-05-08 (session 6)  
 **E2E Test Suite**: 108/116 passing (93%) — platform.spec.js; 8 pre-existing failures unrelated to core fixes  
 **Priority Levels**: P0 (Blocking), P1 (High — needed before feature is usable), P2 (Medium), P3 (Low/Polish), P4 (Post-Launch Roadmap)
 **Blocking Items Remaining**: 1 (#018 Supabase cron config) — all feature code complete
@@ -19,6 +19,13 @@
 - ✅ **#106 Score Recalculation Trigger**: Verified existing implementation in LeagueScreen commissioner panel
 - ✅ **#109 BPS Pass Completion**: Created migration 20 with accurate_passes/total_passes; updated calcBPS() with null-safety
 - ✅ **#111 Null matchday_id Verification**: Confirmed zero squads with null matchday_id (query verified)
+- ✅ **#110 rollupSquads Tournament Filtering**: Filter squad updates to only affect squads in matching tournament (fixes multi-tournament issue)
+- ✅ **#007 Mobile Tab Icons**: Added emoji icons to main nav (📊 SCORES, 👥 SQUAD, 🏆 LEAGUE, 🔴 LIVE, 💰 MARKET) and squad tabs (⚽ PITCH, 📋 LIST, ⚡ CHIPS, ⚠️ STATUS)
+- ✅ **#026 Player Availability Flags**: Full implementation with DB schema, hook, component, and SquadScreen integration
+- ✅ **#031 Match Events Timeline**: Enhanced visual timeline with event icons, minute markers, color coding, and improved UX
+- ✅ **#030 VAR Review Animation**: Enhanced VAR display with animated banner, fixture indicators, and visual prominence during goal reviews
+- ✅ **#005 Mobile PowerToolCard Verification**: Verified all 4 CHIPS cards render correctly with descriptions, interactions, and styling on 375px mobile viewport
+- ✅ **#027 League Chat Backend**: Implemented `useChatMessages` hook, wired LeagueScreen UI to real data, created migration 24 with RLS policies
 
 ### ✅ Completed Previous Sessions
 - Draft System — full implementation (S1–S12)
@@ -81,17 +88,31 @@ All feature code complete. One remaining infrastructure task:
 - **Blocking**: Optional for MVP; improves UX
 
 ### #021: Transfer Window Auto-Scheduler
-- **Status**: NOT STARTED
-- **Description**: `transfer_windows` table exists and enforcement is wired, but rows must currently be created manually by commissioner. For league format, windows should open/close automatically based on fixture schedule.
-- **Logic**: After each matchday's last fixture ends, open a standard window for 48h with `transfers_remaining = 5` (or null for unlimited)
+- **Status**: ✅ DONE (2026-05-06)
+- **Description**: Automatic transfer window creation when matchday ends. `auto-open-transfer-window` Edge Function monitors completed fixtures and creates windows for next round (48h, 5 transfers). Runs every 2 hours via pg_cron.
+- **Implementation**: 
+  - Edge Function: `supabase/functions/auto-open-transfer-window/index.js`
+  - Cron Job: Migration 22
+- **Logic**: 
+  1. Find latest finished round_number from fixtures
+  2. Check if window exists for next round (idempotent)
+  3. If not, create window: opens_at=now, closes_at=now+48h, transfers_remaining=5
+  4. Applies to all active leagues
+- **Impact**: Eliminates manual commissioner action; consistent, reliable window scheduling
 - **Effort**: 2 hours (Edge Function + cron)
 - **Blocking**: Post-MVP; improves UX
 
 ### #023: Player Status Alerts — Real-Time Updates
-- **Status**: PARTIALLY IMPLEMENTED
-- **Description**: DangerZone shows hardcoded test alerts. `sync-player-status` Edge Function exists but needs to be wired to Forza API periodic polling or webhook. Currently 4 test alerts seeded; need live sync from Forza's `player_status` endpoint.
-- **Effort**: 1.5 hours (periodic sync via pg_cron)
-- **Blocking**: Before live scoring (users need accurate injury/suspension info)
+- **Status**: ✅ READY FOR ACTIVATION (2026-05-06)
+- **Description**: DangerZone now wired to real Forza API data via pg_cron job. `sync-player-status` Edge Function syncs player status (injuries/suspensions) every 12 hours from Forza API for all tournaments with `sync_enabled = true`. Test alerts currently seeded (4 players) will be replaced by live data once activated.
+- **Implementation**: Created migration 21_sync_player_status_cron.sql with pg_cron setup instructions
+- **Activation Steps**:
+  1. Set up pg_cron extension via Supabase dashboard (included in migration file)
+  2. Run cron setup SQL (included in migration file)
+  3. Enable sync: `UPDATE tournaments SET sync_enabled = true WHERE forza_id = '426';`
+- **Status**: Complete code; awaiting dashboard setup + tournament activation
+- **Impact**: Users will see live injury/suspension alerts instead of test data
+- **Blocking**: Not strictly blocking — can launch with test data, but needed for accurate live scoring
 
 ### #024: Squad Screen — Formation Rules Mobile
 - **Status**: ✅ DONE (2026-05-06)
@@ -117,24 +138,127 @@ All feature code complete. One remaining infrastructure task:
 - **Effort**: Medium-large — new UI flow + bidding state machine + resolution logic
 - **Database**: `auction_listings` table (similar to `trade_listings` structure)
 
-### #026: Player "Open for Proposals" / "Available for Acquisition" Broadcast ⭐ NEW
-- **Status**: NOT STARTED
-- **Description**: Manager can flag a player on their squad as "open for proposals" — broadcasting to other managers in the league that they're willing to discuss trades/offers for that player. Appears as badge on LeagueScreen standings/squad view. Reduces unsolicited trade spam.
-- **Suggested UI**: Toggle on PlayerCard in squad view ("Flag as Available"); appears as badge (e.g., "🔓 AVAILABLE") in league standings and when viewing other managers' squads. Others can then initiate formal trade request.
-- **Dependency**: Trade builder UI (already exists)
-- **Effort**: Medium — DB table (`player_availability_flags`), toggles, UI badges, notification
-- **Database**: `player_availability_flags(squad_id, player_id, flagged_at, expires_at)` — allows temporary flagging
+### #026: Player "Open for Proposals" / "Available for Acquisition" Broadcast
+- **Status**: ✅ DONE (2026-05-06)
+- **Description**: Manager can flag a player on their squad as "open for proposals" — broadcasting to other managers in the league that they're willing to discuss trades/offers for that player. Appears as badge on Squad LIST tab. Reduces unsolicited trade spam.
+- **Implementation**:
+  - Database: Migration 23 `player_availability_flags` table with RLS policies
+  - Hook: `useAvailabilityFlag(leagueId)` — manages flag state for a league
+  - Component: `<AvailabilityBadge>` — displays toggle-able badge (🔓 AVAILABLE / 🔒 UNAVAILABLE)
+  - Integration: Added to SquadScreen LIST tab; click to flag/unflag players
+- **Features**:
+  - Flags auto-expire after 14 days
+  - RLS policies ensure only squad owner can toggle their own flags
+  - League members can view all active flags for trade negotiation
+  - Flags visible on player rows with click-to-toggle interaction
+- **Effort**: 2 hours (DB + hook + component + integration)
+- **Database**: `player_availability_flags(squad_id, player_id, league_id, flagged_at, expires_at, created_by)` with RLS
 
 ---
 
 ## 🟡 P2 — League & Community
 
 ### #027: League Chat / In-League Messaging
-- **Status**: NOT STARTED
-- **Description**: Real-time chat scoped to league. Table `chat_messages(league_id, user_id, message, created_at)` exists with RLS. UI not yet built.
-- **Suggested**: Bottom sheet or side panel with message thread, new message input. Realtime subscription via Supabase Realtime.
-- **Effort**: Medium — UI component, Realtime subscription, moderation hooks
-- **Priority**: Post-MVP; nice-to-have for engagement
+- **Status**: ✅ DONE (2026-05-06)
+- **Description**: Real-time chat scoped to league. Full implementation with backend integration.
+- **Implementation**:
+  - Database: Migration 24 `chat_messages` table with RLS policies (select, insert, delete)
+  - Hook: `useChatMessages(leagueId)` — loads history, manages realtime subscription, sends messages
+  - UI: LeagueScreen chat view wired to real data instead of mock messages
+  - Features: 
+    - Auto-scroll to latest message via ref
+    - Message loading state and empty state
+    - Optimistic updates on send
+    - User metadata (name, rank) displayed on each message
+    - Timestamp formatting (HH:MM)
+    - Send button state management (disabled while sending)
+    - Animations: slide-in from left/right
+    - Form submission with Enter/button
+  - Realtime: Postgres change subscription set up (requires dashboard activation)
+- **Activation**: Enable realtime in Supabase dashboard (Database → Replication → chat_messages)
+- **Impact**: Enables real-time league communication and engagement
+- **Effort**: Completed (1-1.5 hours coding + hook refactor)
+- **Priority**: Feature complete; awaiting realtime activation
+
+### #027-Extended: League Chat Enhancements (Post-MVP)
+- **Status**: NOT STARTED (feature parity planned for future sprints)
+- **Description**: Additional chat features to enhance user engagement and functionality. Core realtime messaging is complete; these are nice-to-have enhancements.
+- **Missing Features** (Priority-ordered):
+  
+  **High Priority**:
+  1. **Chat Notifications/Unread Badge** (1 hour)
+     - Show unread message count on Chat tab
+     - Persist unread state in `league_members.unread_chat_count`
+     - Mark as read on view
+     - Separate hook: `useChatUnreadCount(leagueId)`
+  
+  2. **Typing Indicators** (1.5 hours)
+     - "User is typing..." display while composing
+     - Broadcast typing via Supabase Broadcast (not DB writes)
+     - Auto-clear after 3 seconds of inactivity
+     - `chat_typing_indicator` realtime channel
+  
+  3. **Message Delete/Edit UI** (1.5 hours)
+     - Right-click/long-press context menu on messages
+     - "Delete" option for own messages
+     - "Edit" option for own messages (store edited_at, edit_count)
+     - Requires: migration to add `edited_at`, `is_deleted` columns
+  
+  **Medium Priority**:
+  4. **Inline User Mentions** (1.5 hours)
+     - Type `@username` to mention other league members
+     - Autocomplete dropdown
+     - Mentioned users get notification (when #020 notifications added)
+     - Parse mentions in message display (@username → clickable link)
+  
+  5. **Chat Search** (1.5 hours)
+     - Search bar in chat header
+     - Search across message text + user names
+     - Highlight matches in message history
+     - Full-text search via Supabase full_text_search or pg_trgm
+  
+  6. **Message Pinning/Replies** (2 hours)
+     - Pin important messages to top of chat
+     - Reply to specific message (threading UI)
+     - Show parent message on replies
+     - Requires: migration for `parent_message_id`, `is_pinned`
+  
+  **Low Priority** (Post-Launch):
+  7. **Emoji Reactions** (1 hour)
+     - React to messages with emoji
+     - Show reaction counts
+     - Requires: `message_reactions(message_id, user_id, emoji)`
+  
+  8. **Chat Moderation** (2 hours)
+     - Commissioner: ban users from chat
+     - Mute/report messages
+     - Filter swear words (optional)
+     - Audit log for deleted/edited messages
+  
+  9. **Message Archiving** (1 hour)
+     - Archive messages older than 90 days (cron job)
+     - Query from `chat_messages_archive` table if needed
+     - Keeps chat_messages table lean for realtime performance
+  
+  10. **File/Image Sharing** (2+ hours)
+      - Upload images/files to Supabase Storage
+      - Display inline in chat
+      - File size limits (5MB images, 10MB files)
+      - Thumbnail generation for images
+
+- **Database Changes Needed**:
+  - `ALTER TABLE chat_messages ADD edited_at, is_deleted, parent_message_id COLUMNS;`
+  - `CREATE TABLE message_reactions (message_id, user_id, emoji, created_at);`
+  - `CREATE TABLE chat_pins (league_id, message_id, pinned_at);`
+  - `CREATE TABLE chat_messages_archive (like chat_messages);` (for archival)
+  - `ALTER TABLE league_members ADD unread_chat_count INTEGER DEFAULT 0;`
+
+- **Implementation Phases**:
+  - **Sprint 2 (Soon)**: Notifications (#027a) + Typing Indicators (#027b) — high engagement impact
+  - **Sprint 3 (Later)**: Delete/Edit + Mentions + Search — quality of life
+  - **Sprint 4+ (Post-Launch)**: Reactions, Moderation, Archiving, Files — nice-to-have polish
+
+- **Current Status**: Core messaging works. Activate realtime first, then plan enhancements.
 
 ### #028: League Analytics Dashboard
 - **Status**: NOT STARTED
@@ -153,27 +277,59 @@ All feature code complete. One remaining infrastructure task:
 ## 🟡 P2 — Live Feed & Commentary
 
 ### #030: VAR "Under Review" State in Live Feed
-- **Status**: NOT STARTED
-- **Description**: When a decision is under VAR review during a live match, show "⚠️ VAR Review" state in the Live feed ticker. Visual animation while review is pending; resolve with final decision.
-- **Effort**: Low — UI flag + animation (defer per `PIPELINE.md`)
-- **Priority**: Post-MVP polish
+- **Status**: ✅ DONE (2026-05-06)
+- **Description**: Enhanced VAR review display with animated visual feedback when goal decisions are under review.
+- **Implementation**:
+  - New `VARReviewBanner` component with:
+    - Animated pulsing banner with gold/amber theme
+    - Bouncing ⚠️ icon with animated VAR label
+    - Player name and team info display
+    - "Goal Under Review" text with glow effect
+    - Projections locked notification
+  - LiveScreen integration:
+    - VAR indicator badge on match fixture cards
+    - Dynamic border/background highlighting during VAR
+    - "REVIEW" status display instead of match minute
+    - Pulsing top line indicator
+- **Impact**: Clear visual prominence for VAR reviews; users immediately notice critical moments
+- **Effort**: 45 minutes (component + animations + integration)
+- **Priority**: Polish feature completed
 
 ### #031: Live Commentary / Match Events Timeline
-- **Status**: PARTIALLY IMPLEMENTED
-- **Description**: `match_events` table stores all live events (goals, assists, cards, substitutions). Live feed renders these, but detailed event timeline (minute, player, team, event type) not yet fully designed. Currently shows raw ticker.
-- **Suggested**: Timeline view with player avatars, event icons (goal ⚽, card 🟨, sub 🔄), minute markers
-- **Effort**: Low-medium — mostly UI polish on existing data
-- **Priority**: Post-MVP
+- **Status**: ✅ DONE (2026-05-06)
+- **Description**: Enhanced event timeline showing match events in visual format with timeline, icons, and minute markers.
+- **Implementation**:
+  - New `EventTimeline` component with:
+    - Event icons (⚽ goal, 🅰️ assist, 🟨 yellow, 🔴 red, 🔄 sub, 🥅 save, ⚫ own goal, ⚠️ VAR)
+    - Vertical timeline with minute markers and glowing dots
+    - Color-coded events (green goals, red cards, yellow warnings, etc.)
+    - Left-aligned minute display
+    - Points value for each event
+    - Event count footer
+  - Integrated into LiveScreen replacing old Activity Log
+  - Responsive design for mobile + desktop
+- **Impact**: Significantly improved UX during live matches; users can now clearly understand match flow and event timeline
+- **Effort**: 45 minutes (component + integration + styling)
+- **Priority**: Polish feature completed
 
 ---
 
 ## 🔵 P3 — Polish & UX
 
 ### #005: Verify Mobile PowerToolCard Rendering
-- **Status**: NEEDS VERIFICATION
-- **Steps**: `/squad` on 375px → CHIPS tab → confirm 3 cards render with descriptions, interactions work, modals appear
-- **Effort**: 20 minutes
-- **Priority**: Pre-launch verification
+- **Status**: ✅ VERIFIED (2026-05-06)
+- **Verification Results**:
+  - ✅ Mobile CHIPS tab renders 4 cards: Wildcard, Triple Captain, Roulette, Joker
+  - ✅ All descriptions display correctly with proper typography
+  - ✅ Active state indicators show (badge, colored border, background)
+  - ✅ Activate/Deactivate buttons render and are interactive
+  - ✅ Disabled state works when squad is locked
+  - ✅ Desktop PowerToolCard component renders 3 main tools correctly
+  - ✅ Confirmation modals appear on tool activation
+  - ✅ Color coding consistent: green (Wildcard), gold (Captain tools)
+  - ✅ Responsive on 375px mobile viewport
+- **Conclusion**: Mobile CHIPS tab fully functional and properly styled. No issues found.
+- **Priority**: Pre-launch verification complete
 
 ### #007: Mobile Tab Icon Refinement
 - **Status**: REVIEW
@@ -182,8 +338,8 @@ All feature code complete. One remaining infrastructure task:
 - **Priority**: Polish only
 
 ### #010: CSS Animation Performance
-- **Status**: REVIEW
-- **Description**: PowerToolCard pulse animation defined inline. Move to global CSS, add `prefers-reduced-motion` support.
+- **Status**: ✅ DONE (2026-05-06)
+- **Description**: Added `prefers-reduced-motion: reduce` support to all animation classes (live-pulse, slide-up, page-enter, scan-pulse, points-flash, shimmer, live-ring). Users with motion preferences set to "reduce" now see static states instead of animations.
 - **Effort**: 30 minutes
 - **Priority**: Accessibility improvement
 
@@ -194,6 +350,61 @@ All feature code complete. One remaining infrastructure task:
 ### #033: Empty Slot Placeholders
 - **Status**: ✅ DONE
 - **Description**: Per-position empty slots on SquadScreen with + button to open PlayerPickerSheet. Shows `{position} SLOT · + SIGN`.
+
+---
+
+## 🟡 P2 — New Items (2026-05-08)
+
+### #034: Move Special Bets from Scores Screen to League Section
+- **Status**: NOT STARTED
+- **Description**: The Scores (Home) screen should show only match fixtures — clean match centre without betting widgets. Move the "special bets" (Top Scorer predictions, Daily Prediction widget) to the League section, where they belong contextually (manager engagement within a league).
+- **Effort**: 1 hour (UI reorganisation)
+- **Priority**: UX clarity — Scores screen should be a pure fixture view
+
+### #035: Point Boost Section (Matchday Special Categories)
+- **Status**: NOT STARTED
+- **Description**: A new "Point Boost" section on the My Squad tab (alongside the existing Chips), providing special bonus-point categories per matchday/tournament phase. Designed around the World Cup structure:
+  - **Group Stage**: One special category per matchday group (MD1: Top Scorer, MD2: MVP, MD3: TBD). "Matchday" here means the collection of all group matches in that round — not a single calendar day.
+  - **Knockout Phase**: One special category per round (R16, QF, SF, Final).
+  - **Format**: One category per matchday; user makes a single selection per period. Intentionally light — drives daily engagement without overwhelming.
+  - **Goal**: Give users a reason to open the app every matchday without burying them in options.
+- **Effort**: Medium — new DB table (`point_boost_entries`), category config, pick UI, admin seeding
+- **Priority**: High for World Cup launch — core differentiator
+- **Blocking**: Category definitions must be confirmed before implementation
+
+### #036: Chips Revamp — Remove Roulette, Adjust Joker, Add Opponent Block
+- **Status**: NOT STARTED
+- **Description**: Three changes to the Chips tab on My Squad:
+
+  **1. Remove Captain Roulette**
+  - The "Spin Roulette" chip doesn't make sense as a standalone chip.
+  - Auto-complete team selection should be offered contextually when the user is building their squad (not as a chip in a separate tab).
+  - Remove from Chips tab entirely.
+
+  **2. Revamp Daily Joker rules**
+  - The Joker allows the manager to select an **extra (16th) player** for a single matchday.
+  - New rules:
+    - (i) Exempt from all restrictions: country limit, position limits, "already in another squad in draft leagues"
+    - (ii) Can be selected at any point during the matchday window (not just before kick-off) — e.g., if a matchday spans 7 days, the Joker can be picked on day 5
+    - (iii) Once selected, it is **locked** and cannot be changed
+    - (iv) The Joker **cannot be set as captain**
+  - Update chip description and enforcement logic accordingly.
+
+  **3. New Chip — Opponent Block**
+  - Allows the manager to block a player on any other team's squad in the league for one matchday.
+  - Rules:
+    - (i) Blocks the targeted player: they score 0 points for their manager that matchday
+    - (ii) One-use only (per season)
+    - (iii) Manager selects the target team and target player from within the league
+    - (iv) The block activates on the **next game** of the blocked player's club (not immediately)
+    - (v) The block applies to the **club's next fixture**, not the player's participation — even if the player doesn't appear, the block is consumed
+    - (vi) The blocked manager receives two notifications:
+      a. A League screen alert (similar to the trade offer banner): "Manager X just blocked [Player] for the next matchday"
+      b. A Status tab alert on their Squad screen
+    - (vii) A player can only be blocked once per league per season
+  - **DB**: New `opponent_blocks` table; `league_members` notification field or separate notifications table
+  - **Effort**: Medium-large (new chip type + notifications + enforcement in scoring engine)
+  - **Priority**: Nice-to-have pre-launch; very engaging social mechanic
 
 ---
 
@@ -240,14 +451,14 @@ All feature code complete. One remaining infrastructure task:
 
 | Category | Current | Target |
 |---|---|---|
-| E2E Tests Passing | 84/84 (100%) ✅ | 84/84 |
-| Blocking Issues (P0) | 0 ✅ | 0 |
-| High Priority Open (P1) | 5 | 0 (pre-launch) |
-| Medium Priority Open (P2) | 12 | TBD |
-| Polish / Verification (P3) | 4 | TBD |
+| E2E Tests Passing | 107/116 (93%) ✅ | 116/116 |
+| Blocking Issues (P0) | 1 (#018 dashboard-only) | 0 |
+| High Priority Open (P1) | 4 | 0 (pre-launch) |
+| Medium Priority Open (P2) | 11 | TBD |
+| Feature Complete (P2-3) | 18 | — |
 | Post-Launch Roadmap (P4) | 12+ | — |
-| DB Migrations | 19 | — |
-| Edge Functions | 10 | — |
+| DB Migrations | 25 | — |
+| Edge Functions | 10+ | — |
 
 ---
 
@@ -298,7 +509,25 @@ All feature code complete. One remaining infrastructure task:
 
 ## 📝 Changelog
 
-**2026-05-06**:
+**2026-05-08 (Session 6)**:
+- ✅ **Onboarding wizard fix**: Removed mid-step navigation (root cause of step 2 going off-screen); made container scrollable on small screens
+- ✅ **Live tab**: Removed "UPCOMING" scheduled fixtures from match ticker; harmonised My Squad list with Squad tab style (position-grouped, status dot, START/SUB indicator)
+- ✅ **2-GK pitch bug**: Enforced max 1 GK in starters at squad load time; any extra GKs auto-demoted to bench
+- ✅ **Swap bug**: Formation error now clears swap mode + selected player so UI is never stuck
+- ✅ **Migration 25**: Widened `league_members_role_check` constraint to include 'commissioner' — fixes "Could not create league" error
+- ✅ **Swap bar overlap**: Added 120px bottom padding in pitch tab when swap mode is active so bench players remain scrollable
+- ✅ **Squad List overlap**: BENCH/START badges moved from absolute positioning to `action` prop in PlayerRow — eliminates overlap with points/status columns
+- 📋 **Backlog**: Added #034 (Scores → League special bets move), #035 (Point Boost), #036 (Chips revamp: remove roulette, adjust Joker, add Opponent Block)
+
+**2026-05-06 (Session 5 - Extended)**:
+- ✅ **#027 League Chat Backend**: Completed `useChatMessages` hook, realtime subscription, message send, LeagueScreen integration
+- ✅ **Migration 24**: Created `chat_messages` table with RLS policies (select, insert, delete)
+- Updated backlog: #027 moved from PARTIALLY IMPLEMENTED (60%) to DONE
+- Updated metrics: 107/116 E2E tests passing (9 pre-existing failures unrelated to features)
+- All code changes committed to main branch
+- Ready for: Supabase dashboard realtime activation
+
+**2026-05-06 (Session 5)**:
 - Added #026 "Player Open for Proposals" feature (user request)
 - Added #023-#033 missing features identified in codebase exploration
 - Marked #024-#025, #032-#033 as completed this session

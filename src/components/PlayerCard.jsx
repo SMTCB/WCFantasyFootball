@@ -31,6 +31,7 @@ export default function PlayerCard({
   isSelected      = false,
   isSwapTarget    = false,
   showIntelligence = false,
+  action          = null,
   variant         = 'pitch',
 }) {
   if (!player) return null;
@@ -50,7 +51,8 @@ export default function PlayerCard({
         isSelected={isSelected}
         isSwapTarget={isSwapTarget}
         showPoints
-        showStatus={showIntelligence}
+        showStatus={false}
+        action={action}
         onClick={onClick}
       />
     );

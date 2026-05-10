@@ -1,11 +1,11 @@
 import { Link, useLocation } from 'react-router-dom';
 
 const NAV_ITEMS = [
-  { name: 'SCORES',  path: '/',       label: 'Match Scores & Fixtures' },
-  { name: 'SQUAD',   path: '/squad',  label: 'Your Tactical Sheet' },
-  { name: 'LEAGUE',  path: '/league', label: 'League Standings & Chat' },
-  { name: 'LIVE',    path: '/live',   label: 'Live Points & Projections' },
-  { name: 'MARKET',  path: '/market', label: 'Player Transfer Market' },
+  { name: '📊 SCORES',  path: '/',       label: 'Match Scores & Fixtures' },
+  { name: '👥 SQUAD',   path: '/squad',  label: 'Your Tactical Sheet' },
+  { name: '🏆 LEAGUE',  path: '/league', label: 'League Standings & Chat' },
+  { name: '🔴 LIVE',    path: '/live',   label: 'Live Points & Projections' },
+  { name: '💰 MARKET',  path: '/market', label: 'Player Transfer Market' },
 ];
 
 export default function AppLayout({ children }) {
@@ -153,7 +153,7 @@ export default function AppLayout({ children }) {
                   className="fk-mono leading-none"
                   style={{ fontSize: '9px', letterSpacing: '0.18em' }}
                 >
-                  {item.name === 'SCORES' ? 'SCORE' : item.name.length > 6 ? item.name.slice(0, 6) : item.name}
+                  {item.name === '📊 SCORES' ? '📊 SCORE' : item.name}
                 </span>
 
                 {/* Live dot */}

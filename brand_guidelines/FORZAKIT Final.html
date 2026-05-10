@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>FORZAKIT — Squad + Market (Final)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Archivo:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="squad-shared.css">
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel" src="design-canvas.jsx"></script>
+<script type="text/babel" src="squad-data.jsx"></script>
+<script type="text/babel" src="market-data.jsx"></script>
+<script type="text/babel" src="final-squad-desktop.jsx"></script>
+<script type="text/babel" src="final-squad-mobile.jsx"></script>
+<script type="text/babel" src="squad-list.jsx"></script>
+<script type="text/babel" src="market-screens.jsx"></script>
+
+<script type="text/babel" data-presets="react">
+function App(){
+  return (
+    <DesignCanvas
+      title="FORZAKIT · Final Screens"
+      subtitle="Hybrid pitch on desktop, Editorial roster on mobile, with a harmonized Player Market across both breakpoints."
+    >
+      <DCSection id="system" title="System notes">
+        <DCArtboard id="notes" label="Harmonization rules" width={1200} height={420} background="#0F1218">
+          <div style={{padding:'36px 48px',color:'var(--paper)',background:'#0F1218',fontFamily:'Archivo,sans-serif',height:'100%',display:'flex',flexDirection:'column',gap:14}}>
+            <div className="eyebrow">SYSTEM · Squad + Market</div>
+            <div className="display" style={{fontSize:36,letterSpacing:'-0.02em'}}>One language across screens.</div>
+            <div style={{display:'grid',gridTemplateColumns:'repeat(4, 1fr)',gap:24,marginTop:8,fontSize:13,lineHeight:1.55,color:'#C9CDD3'}}>
+              <div><div className="mono" style={{fontSize:10,color:'var(--cyan)',marginBottom:6}}>NAV</div>Sidebar nav with single cyan-bar active state. Replaces the old icon-led sidebar everywhere.</div>
+              <div><div className="mono" style={{fontSize:10,color:'var(--cyan)',marginBottom:6}}>HEADER</div>Mono eyebrow + Archivo Black title. Right-aligned KPIs with mono labels.</div>
+              <div><div className="mono" style={{fontSize:10,color:'var(--cyan)',marginBottom:6}}>STATUS</div>One dot, three colours: green fit / gold doubt / red out. No more competing rings.</div>
+              <div><div className="mono" style={{fontSize:10,color:'var(--cyan)',marginBottom:6}}>POSITION CHIP</div>Outlined rectangle, position-tinted (GK purple, DEF cyan, MID gold, FWD red). Used in market + bench.</div>
+            </div>
+          </div>
+        </DCArtboard>
+      </DCSection>
+
+      <DCSection id="squad" title="My Squad — Pitch view">
+        <DCArtboard id="squad-d" label="Desktop · Hybrid pitch" width={1280} height={780} background="#06070A">
+          <FinalSquadDesktop/>
+        </DCArtboard>
+        <DCArtboard id="squad-m" label="Mobile · Editorial roster (dark)" width={390} height={780} background="#06070A">
+          <FinalSquadMobile/>
+        </DCArtboard>
+      </DCSection>
+
+      <DCSection id="squad-list" title="My Squad — List view">
+        <DCArtboard id="squad-list-d" label="Desktop · Squad list" width={1280} height={780} background="#06070A">
+          <SquadListDesktop/>
+        </DCArtboard>
+        <DCArtboard id="squad-list-m" label="Mobile · Squad list" width={390} height={780} background="#06070A">
+          <SquadListMobile/>
+        </DCArtboard>
+      </DCSection>
+
+      <DCSection id="market" title="Player Market">
+        <DCArtboard id="market-d" label="Desktop · Market" width={1280} height={780} background="#06070A">
+          <MarketDesktop/>
+        </DCArtboard>
+        <DCArtboard id="market-m" label="Mobile · Market" width={390} height={780} background="#06070A">
+          <MarketMobile/>
+        </DCArtboard>
+      </DCSection>
+    </DesignCanvas>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>

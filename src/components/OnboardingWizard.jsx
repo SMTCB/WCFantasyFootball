@@ -152,7 +152,7 @@ export default function OnboardingWizard({ onComplete, onSkip, config = {} }) {
       handleFinish(route);
     } else {
       setStep(s => s + 1);
-      if (route) navigate(route);
+      // Don't navigate mid-wizard — let user navigate after completing
     }
   }
 
@@ -179,8 +179,11 @@ export default function OnboardingWizard({ onComplete, onSkip, config = {} }) {
         display:       'flex',
         flexDirection: 'column',
         alignItems:    'center',
-        justifyContent: 'center',
+        justifyContent: 'flex-start',
+        overflowY:     'auto',
         padding:       '24px',
+        paddingTop:    'max(24px, env(safe-area-inset-top))',
+        paddingBottom: 'max(24px, env(safe-area-inset-bottom))',
         opacity:       visible && !exiting ? 1 : 0,
         transition:    'opacity 0.35s ease',
         pointerEvents: visible && !exiting ? 'auto' : 'none',
@@ -207,6 +210,7 @@ export default function OnboardingWizard({ onComplete, onSkip, config = {} }) {
           position:     'relative',
           width:        '100%',
           maxWidth:     '440px',
+          flexShrink:   0,
           background:   'var(--ink-2)',
           border:       '1px solid rgba(255,255,255,0.08)',
           borderRadius: '16px',

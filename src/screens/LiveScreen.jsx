@@ -7,6 +7,8 @@ import {
 import { useAuth } from '../hooks/useAuth';
 
 import SectionHeader from '../components/SectionHeader';
+import { EventTimeline } from '../components/EventTimeline';
+import { VARReviewBanner } from '../components/VARReviewBanner';
 
 // No mock data — screens show real DB data or empty states
 
@@ -232,17 +234,11 @@ export default function LiveScreen() {
           </div>
         ) : (
           <>
-            {/* ── VAR CHECK BANNER ───────────────────────────── */}
-            {events[0]?.type === 'var' && (
-              <div className="bg-[#1a1100] border-l-4 border-[#FFB300] py-3 px-4 flex items-center gap-3">
-                 <div className="fk-mono animate-pulse" style={{ fontSize: 9, color: 'var(--gold)' }}>VAR</div>
-                 <div>
-                    <div className="text-[10px] font-black text-[#FFB300] uppercase tracking-[0.15em] mb-0.5">VAR Review in Progress</div>
-                    <div className="text-[12px] font-bold text-white">Goal Check: {events[0].players?.name}</div>
-                    <div className="text-[9px] text-[#9E9E9E] mt-0.5">Projections locked until review completes.</div>
-                 </div>
-              </div>
-            )}
+            {/* ── VAR REVIEW BANNER ─────────────────────────────── */}
+            <VARReviewBanner
+              event={events[0]}
+              isVisible={events[0]?.type === 'var'}
+            />
             
             {/* ── Match Ticker ─────────────────────────────── */}
             <div className="py-4 bg-[#111] border-b border-white/5 overflow-x-auto snap-x flex px-4 gap-3">
@@ -254,10 +250,39 @@ export default function LiveScreen() {
 
               {liveFixtures.map(f => {
                 const pct = Math.min(100, ((parseInt(f.minute) || 0) / 90) * 100);
+                const hasVAR = events[0]?.type === 'var';
                 return (
-                  <div key={f.id} className="snap-center min-w-[200px] shrink-0 bg-[#0a1a0a] border border-positive/30 rounded-sm p-3 flex flex-col items-center relative overflow-hidden">
-                    <div className="absolute top-0 w-full h-[2px] bg-positive animate-pulse" />
-                    <div className="text-[10px] font-black text-positive uppercase tracking-widest mb-2">LIVE • {f.minute}'</div>
+                  <div
+                    key={f.id}
+                    className="snap-center min-w-[200px] shrink-0 rounded-sm p-3 flex flex-col items-center relative overflow-hidden transition-colors"
+                    style={{
+                      background: hasVAR ? 'rgba(255,179,0,0.08)' : 'rgb(10,26,10)',
+                      border: hasVAR ? '1px solid rgba(255,179,0,0.4)' : '1px solid rgba(34,197,94,0.3)',
+                    }}
+                  >
+                    {/* Top indicator line */}
+                    <div
+                      className="absolute top-0 w-full h-[2px]"
+                      style={{
+                        background: hasVAR ? '#FFB300' : 'var(--positive)',
+                        animation: hasVAR ? 'pulse 1s ease-in-out infinite' : 'pulse 2s ease-in-out infinite',
+                      }}
+                    />
+
+                    {/* VAR indicator badge */}
+                    {hasVAR && (
+                      <div className="absolute top-2 right-2 flex items-center gap-1 px-2 py-1 rounded-sm bg-[#FFB300] text-[#1a1100]">
+                        <span className="text-[10px]">⚠️</span>
+                        <span className="text-[9px] font-black uppercase tracking-wider">VAR</span>
+                      </div>
+                    )}
+
+                    <div
+                      className="text-[10px] font-black uppercase tracking-widest mb-2"
+                      style={{ color: hasVAR ? '#FFB300' : 'var(--positive)' }}
+                    >
+                      {hasVAR ? 'REVIEW' : `LIVE • ${f.minute}'`}
+                    </div>
                     <div className="flex justify-between w-full font-bold text-sm mb-3">
                       <span className="truncate max-w-[40%]">{f.home_team.substring(0, 3).toUpperCase()}</span>
                       <span className="tabular-nums text-white/60">{f.homeGoals ?? 0} – {f.awayGoals ?? 0}</span>
@@ -275,16 +300,7 @@ export default function LiveScreen() {
                 );
               })}
 
-              {scheduledFixtures.map(f => (
-                <div key={f.id} className="snap-center min-w-[160px] shrink-0 bg-[#0d0d0d] border border-white/5 rounded-sm p-3 flex flex-col items-center">
-                  <div className="text-[10px] font-semibold text-text-secondary uppercase tracking-widest mb-2">UPCOMING</div>
-                  <div className="flex justify-between w-full font-bold text-xs text-text-secondary">
-                    <span className="truncate max-w-[40%]">{f.home_team.substring(0, 3).toUpperCase()}</span>
-                    <span className="mx-2">vs</span>
-                    <span className="truncate max-w-[40%] text-right">{f.away_team.substring(0, 3).toUpperCase()}</span>
-                  </div>
-                </div>
-              ))}
+              {/* Scheduled fixtures are not shown in the live ticker */}
             </div>
 
             {!primaryLeague ? (
@@ -426,77 +442,54 @@ export default function LiveScreen() {
                   <>
                     <SectionHeader title="MY SQUAD" />
                     <div className="bg-[#0d0d0d] border-b border-white/5">
-                      {mySquadPlayers.slice(0, 11).map((p, i) => (
-                        <div key={p.id ?? i} className="grid grid-cols-[1fr_auto_auto] gap-x-3 px-4 py-2.5 items-center border-b border-white/5">
-                          <div className="min-w-0">
-                            <div className="text-[13px] font-bold truncate text-white">{p.name}</div>
-                            <div className="text-[10px] text-text-tertiary font-semibold">{p.position} · {p.club}</div>
+                      {['GK', 'DEF', 'MID', 'FWD'].map(pos => {
+                        const posPlayers = mySquadPlayers.filter(p => p.position === pos);
+                        if (!posPlayers.length) return null;
+                        const posColor = pos === 'GK' ? 'var(--pos-gk)' : pos === 'DEF' ? 'var(--pos-def)' : pos === 'MID' ? 'var(--pos-mid)' : 'var(--pos-fwd)';
+                        return (
+                          <div key={pos}>
+                            <div style={{ padding: '8px 16px 4px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
+                              <span style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 9, color: posColor, letterSpacing: '0.16em', textTransform: 'uppercase' }}>{pos}</span>
+                            </div>
+                            {posPlayers.map((p, i) => {
+                              const surname = p.name?.split(' ').slice(-1)[0]?.toUpperCase() ?? p.name?.toUpperCase() ?? '?';
+                              const isStarter = mySquadPlayers.indexOf(p) < 11;
+                              return (
+                                <div
+                                  key={p.id ?? i}
+                                  style={{
+                                    display: 'flex', alignItems: 'center', gap: 10,
+                                    padding: '9px 16px',
+                                    borderBottom: '1px solid rgba(255,255,255,0.04)',
+                                    background: isStarter ? 'transparent' : 'rgba(255,255,255,0.015)',
+                                    borderLeft: isStarter ? '2px solid var(--cyan)' : '2px solid transparent',
+                                    opacity: isStarter ? 1 : 0.6,
+                                  }}
+                                >
+                                  {/* Status dot */}
+                                  <div style={{ width: 7, height: 7, borderRadius: '50%', background: 'var(--positive)', flexShrink: 0 }} />
+                                  {/* Name + club */}
+                                  <div style={{ flex: 1, minWidth: 0 }}>
+                                    <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 13, color: 'var(--paper)', textTransform: 'uppercase', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{surname}</div>
+                                    <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 8, color: 'var(--mute)', letterSpacing: '0.12em', marginTop: 1 }}>{(p.club ?? '').substring(0, 3).toUpperCase()}{!isStarter ? ' · SUB' : ''}</div>
+                                  </div>
+                                  {/* Points */}
+                                  <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 16, color: p.points > 0 ? 'var(--positive)' : 'var(--mute)', letterSpacing: '-0.02em', flexShrink: 0, minWidth: 28, textAlign: 'right' }}>
+                                    {p.points > 0 ? `+${p.points}` : '—'}
+                                  </div>
+                                </div>
+                              );
+                            })}
                           </div>
-                          <div className="text-[10px] text-text-tertiary font-semibold uppercase">
-                            {p.id === mySquadPlayers[0]?.id ? '' : ''}
-                          </div>
-                          <div className={`text-[14px] font-black tabular-nums w-10 text-right ${p.points > 0 ? 'text-positive' : 'text-text-tertiary'}`}>
-                            {p.points > 0 ? `+${p.points}` : '—'}
-                          </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   </>
                 )}
 
-                {/* ── ACTIVITY LOG ─────────────────────────────── */}
-                <SectionHeader title="ACTIVITY LOG" />
-                <div className="bg-[#0d0d0d]">
-                  {events.map((e, i) => {
-                    const isVar = e.type === 'var';
-                    return (
-                      <div
-                        key={i}
-                        className={`flex px-4 py-3.5 border-b gap-3 items-center ${isVar ? 'border-[#FFB300]/30 bg-[#FFB300]/5' : 'border-white/5'}`}
-                        style={{ animationDelay: `${i * 40}ms` }}
-                      >
-                        <div className="fk-mono w-8 flex justify-center shrink-0" style={{ fontSize: 8, color: 'var(--mute)' }}>
-                          {e.type === 'goal'          && 'GL'}
-                          {e.type === 'assist'        && 'AS'}
-                          {e.type === 'yellow'        && 'YC'}
-                          {e.type === 'red'           && 'RC'}
-                          {e.type === 'sub'           && 'SB'}
-                          {e.type === 'penalty_saved' && 'PS'}
-                          {e.type === 'own_goal'      && 'OG'}
-                          {isVar                      && 'VAR'}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          {isVar ? (
-                            <>
-                              <div className="text-[13px] font-bold truncate leading-tight text-[#FFB300] animate-pulse">UNDER REVIEW</div>
-                              <div className="text-[11px] text-[#9E9E9E] truncate">Goal Check — {e.playerName} ({e.team})</div>
-                            </>
-                          ) : (
-                            <>
-                              <div className="text-[13px] font-bold truncate leading-tight">{e.playerName || e.players?.name}</div>
-                              <div className="text-[11px] text-text-tertiary truncate">{e.team}</div>
-                            </>
-                          )}
-                        </div>
-                        <div className="shrink-0 text-right flex flex-col items-end gap-0.5">
-                          {isVar ? (
-                            <div className="text-[13px] font-black tabular-nums text-[#FFB300]">...</div>
-                          ) : (
-                            <div className={`text-[13px] font-black tabular-nums ${e.type === 'goal' ? 'text-positive' : e.type === 'red' || e.type === 'own_goal' ? 'text-negative' : e.type === 'yellow' ? 'text-yellow-400' : 'text-text-secondary'}`}>
-                              {e.type === 'goal' ? '+6' : e.type === 'assist' ? '+3' : e.type === 'yellow' ? '−1' : e.type === 'red' ? '−3' : e.type === 'penalty_saved' ? '+5' : e.type === 'own_goal' ? '−2' : ''}
-                            </div>
-                          )}
-                          <div className="text-[10px] font-black text-white/30 uppercase tracking-widest">{e.minute}'</div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                  {events.length === 0 && (
-                    <div className="p-8 text-center text-xs text-text-tertiary font-bold uppercase tracking-widest">
-                      Awaiting Kickoff...
-                    </div>
-                  )}
-                </div>
+                {/* ── MATCH EVENTS TIMELINE ─────────────────────────────── */}
+                <SectionHeader title="MATCH EVENTS" />
+                <EventTimeline events={events} loading={loading} />
               </>
             )}
           </>
