@@ -3,7 +3,7 @@
  * Displays "🔓 AVAILABLE" badge for flagged players.
  * When isOwn=true, click to toggle flag on/off.
  */
-export function AvailabilityBadge({ playerId, isFlagged, isOwn, onToggle, loading = false }) {
+export function AvailabilityBadge({ isFlagged, isOwn, onToggle, loading = false }) {
   if (!isFlagged && !isOwn) return null;
 
   const handleClick = (e) => {
