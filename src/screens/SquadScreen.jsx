@@ -216,7 +216,6 @@ export default function SquadScreen() {
 
       // Group by position
       const gks = pitchPlayers.filter(p => p.position === 'GK');
-      const fwds = pitchPlayers.filter(p => p.position === 'FWD');
 
       // Enforce rules: must have exactly 1 GK
       if (gks.length > 1) {

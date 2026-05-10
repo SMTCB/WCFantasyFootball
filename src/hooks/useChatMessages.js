@@ -126,7 +126,7 @@ export function useChatMessages(leagueId) {
     }
 
     try {
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('chat_messages')
         .insert([{
           league_id: leagueId,
