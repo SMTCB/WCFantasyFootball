@@ -1,4 +1,4 @@
-# ForzaKit — Product Development & Evolution Pipeline
+# Forza Fantasy League — Product Development & Evolution Pipeline
 **Operating Document | April 2026 – December 2027**
 **Owner:** VP of Product | Status: Living Document — update after each sprint review
 
@@ -482,17 +482,17 @@ CREATE TABLE tournaments (
 #### UEFA Euro 2028 (England, June–July 2028)
 
 - Largest European tournament; England hosting = English-speaking audience peak
-- **By 2028, ForzaKit should be the default fantasy platform for international tournaments** — not a challenger
+- **By 2028, Forza Fantasy League should be the default fantasy platform for international tournaments** — not a challenger
 - This is a growth multiplier event, not a launch event. The product should be mature by this point.
 - Native apps should be live. Revenue model should be established.
 
 ### Platform vs Product Decision
 
-**The question:** Do you remain a consumer product (ForzaKit the app) or do you become the infrastructure that other fantasy games are built on (ForzaKit the platform)?
+**The question:** Do you remain a consumer product (Forza Fantasy League the app) or do you become the infrastructure that other fantasy games are built on (Forza Fantasy League the platform)?
 
 **The platform play would mean:**
 - White-label fantasy engine licensed to sports media companies, broadcasters, betting operators
-- API-first: `POST /leagues`, `POST /squads`, `GET /scores` — any front-end can use ForzaKit's scoring and social layer
+- API-first: `POST /leagues`, `POST /squads`, `GET /scores` — any front-end can use Forza Fantasy League's scoring and social layer
 - Revenue: B2B SaaS (per-active-user licensing) instead of or in addition to B2C
 
 **Decision framework — when to evaluate:**

@@ -14,48 +14,48 @@ export default function GazetteDraftReport({ leagueId }) {
 
   useEffect(() => {
     if (!leagueId) return;
+
+    const fetchReport = async () => {
+      try {
+        const { data: entryData } = await supabase
+          .from('gazette_entries')
+          .select('*')
+          .eq('league_id', leagueId)
+          .eq('entry_type', 'draft_report')
+          .order('published_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        if (!entryData) return;
+        setEntry(entryData);
+
+        const bullets  = parseBullets(entryData.bullets);
+        const fullData = parseFullData(entryData.full_data);
+
+        const playerIds = bullets.filter(b => b.player_id).map(b => b.player_id);
+        const userIds   = [
+          ...bullets.filter(b => b.winner_id).map(b => b.winner_id),
+          ...(fullData?.allocations ?? []).map(a => a.user_id),
+        ];
+
+        const [{ data: pRows }, { data: uRows }] = await Promise.all([
+          playerIds.length
+            ? supabase.from('players').select('id, name').in('id', playerIds)
+            : Promise.resolve({ data: [] }),
+          userIds.length
+            ? supabase.from('users').select('id, username').in('id', [...new Set(userIds)])
+            : Promise.resolve({ data: [] }),
+        ]);
+
+        setPlayers(Object.fromEntries((pRows ?? []).map(p => [p.id, p.name])));
+        setMembers(Object.fromEntries((uRows ?? []).map(u => [u.id, u.username])));
+      } finally {
+        setLoading(false);
+      }
+    };
+
     fetchReport();
   }, [leagueId]);
-
-  const fetchReport = async () => {
-    try {
-      const { data: entryData } = await supabase
-        .from('gazette_entries')
-        .select('*')
-        .eq('league_id', leagueId)
-        .eq('entry_type', 'draft_report')
-        .order('published_at', { ascending: false })
-        .limit(1)
-        .maybeSingle();
-
-      if (!entryData) return;
-      setEntry(entryData);
-
-      // Resolve player names for bullet items
-      const bullets  = parseBullets(entryData.bullets);
-      const fullData = parseFullData(entryData.full_data);
-
-      const playerIds = bullets.filter(b => b.player_id).map(b => b.player_id);
-      const userIds   = [
-        ...bullets.filter(b => b.winner_id).map(b => b.winner_id),
-        ...(fullData?.allocations ?? []).map(a => a.user_id),
-      ];
-
-      const [{ data: pRows }, { data: uRows }] = await Promise.all([
-        playerIds.length
-          ? supabase.from('players').select('id, name').in('id', playerIds)
-          : Promise.resolve({ data: [] }),
-        userIds.length
-          ? supabase.from('users').select('id, username').in('id', [...new Set(userIds)])
-          : Promise.resolve({ data: [] }),
-      ]);
-
-      setPlayers(Object.fromEntries((pRows ?? []).map(p => [p.id, p.name])));
-      setMembers(Object.fromEntries((uRows ?? []).map(u => [u.id, u.username])));
-    } finally {
-      setLoading(false);
-    }
-  };
 
   if (loading || !entry) return null;
 

@@ -1,11 +1,19 @@
 import { Link, useLocation } from 'react-router-dom';
+import BrandMark from './BrandMark';
+import {
+  NavIconScores,
+  NavIconSquad,
+  NavIconLeagues,
+  NavIconLive,
+  NavIconMarket,
+} from './NavIcons';
 
 const NAV_ITEMS = [
-  { name: '📊 SCORES',  path: '/',       label: 'Match Scores & Fixtures' },
-  { name: '👥 SQUAD',   path: '/squad',  label: 'Your Tactical Sheet' },
-  { name: '🏆 LEAGUE',  path: '/league', label: 'League Standings & Chat' },
-  { name: '🔴 LIVE',    path: '/live',   label: 'Live Points & Projections' },
-  { name: '💰 MARKET',  path: '/market', label: 'Player Transfer Market' },
+  { key: 'scores',  label: 'SCORES',  path: '/',       Icon: NavIconScores,  desc: 'Match Scores & Fixtures' },
+  { key: 'squad',   label: 'SQUAD',   path: '/squad',  Icon: NavIconSquad,   desc: 'Your Tactical Sheet' },
+  { key: 'league',  label: 'LEAGUE',  path: '/league', Icon: NavIconLeagues, desc: 'League Standings & Chat' },
+  { key: 'live',    label: 'LIVE',    path: '/live',   Icon: NavIconLive,    desc: 'Live Points & Projections', isLive: true },
+  { key: 'market',  label: 'MARKET',  path: '/market', Icon: NavIconMarket,  desc: 'Player Transfer Market' },
 ];
 
 export default function AppLayout({ children }) {
@@ -20,67 +28,57 @@ export default function AppLayout({ children }) {
         className="hidden lg:flex fixed left-0 top-0 bottom-0 w-[220px] flex-col z-50"
         style={{ background: 'var(--ink-2)', borderRight: '1px solid var(--rule)' }}
       >
-        {/* Wordmark */}
-        <div className="px-6 pt-6 pb-5" style={{ borderBottom: '1px solid var(--rule)' }}>
-          <div
-            className="fk-eyebrow mb-1"
-            style={{ color: 'var(--mute)', fontSize: '9px' }}
-          >
-            Fantasy Football
-          </div>
-          <div
-            className="fk-display leading-none"
-            style={{ fontSize: '28px', color: 'var(--paper)' }}
-          >
-            Forza<span style={{ color: 'var(--cyan)' }}>Kit</span>
-          </div>
-          <div
-            className="fk-eyebrow mt-1.5"
-            style={{ color: 'var(--mute)', fontSize: '9px' }}
-          >
-            Fantasy League
-          </div>
+        {/* Editorial Brandmark */}
+        <div className="px-5 pt-6 pb-5" style={{ borderBottom: '1px solid var(--rule)' }}>
+          <BrandMark theme="dark" scale={0.72} />
         </div>
 
         {/* Nav Links */}
         <div className="flex-1 py-4 space-y-px">
-          {NAV_ITEMS.map(item => {
-            const isActive = location.pathname === item.path ||
-              (item.path !== '/' && location.pathname.startsWith(item.path));
+          {NAV_ITEMS.map(({ key, label, path, Icon, desc, isLive }) => { // eslint-disable-line no-unused-vars
+            const isActive = location.pathname === path ||
+              (path !== '/' && location.pathname.startsWith(path));
+            const liveColor = 'var(--danger)';
+            const activeColor = isLive ? liveColor : 'var(--cyan)';
+
             return (
               <Link
-                key={item.path}
-                to={item.path}
-                title={item.label}
+                key={key}
+                to={path}
+                title={desc}
                 className="relative flex items-center gap-3 mx-3 px-3 py-2.5 transition-all duration-150"
                 style={{
-                  background:  isActive ? 'rgba(0,180,216,0.08)' : 'transparent',
-                  color:       isActive ? 'var(--cyan)' : 'var(--paper)',
-                  borderLeft:  isActive ? '2px solid var(--cyan)' : '2px solid transparent',
-                  marginLeft:  isActive ? '12px' : '12px',
+                  background:  isActive ? (isLive ? 'rgba(239,68,68,0.08)' : 'rgba(0,180,216,0.08)') : 'transparent',
+                  color:       isActive ? activeColor : 'var(--mute)',
+                  borderLeft:  isActive ? `2px solid ${activeColor}` : '2px solid transparent',
                 }}
                 onMouseEnter={e => {
                   if (!isActive) {
                     e.currentTarget.style.background = 'rgba(242,238,229,0.04)';
-                    e.currentTarget.style.color = 'var(--paper)';
+                    e.currentTarget.style.color = isLive ? liveColor : 'var(--paper)';
                   }
                 }}
                 onMouseLeave={e => {
                   if (!isActive) {
                     e.currentTarget.style.background = 'transparent';
-                    e.currentTarget.style.color = 'var(--paper)';
+                    e.currentTarget.style.color = 'var(--mute)';
                   }
                 }}
               >
+                <Icon size={18} />
                 <span
-                  className="fk-mono text-[11px]"
-                  style={{ letterSpacing: '0.18em' }}
+                  style={{
+                    fontFamily:    'JetBrains Mono, monospace',
+                    fontSize:      '10px',
+                    letterSpacing: '0.18em',
+                    fontWeight:    600,
+                  }}
                 >
-                  {item.name}
+                  {label}
                 </span>
 
-                {/* Live indicator */}
-                {item.path === '/live' && (
+                {/* Live pulse dot */}
+                {isLive && (
                   <div
                     className="ml-auto w-1.5 h-1.5 rounded-full shrink-0 animate-live-pulse"
                     style={{ background: 'var(--danger)' }}
@@ -93,10 +91,7 @@ export default function AppLayout({ children }) {
 
         {/* Footer */}
         <div className="px-6 py-4" style={{ borderTop: '1px solid var(--rule)' }}>
-          <div
-            className="fk-eyebrow"
-            style={{ fontSize: '9px', color: 'var(--mute)' }}
-          >
+          <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '9px', letterSpacing: '0.15em', color: 'var(--mute)', textTransform: 'uppercase' }}>
             Alpha v0.1
           </div>
         </div>
@@ -130,34 +125,40 @@ export default function AppLayout({ children }) {
         }}
       >
         <div className="flex items-stretch h-16">
-          {NAV_ITEMS.map(item => {
-            const isActive = location.pathname === item.path ||
-              (item.path !== '/' && location.pathname.startsWith(item.path));
+          {NAV_ITEMS.map(({ key, label, path, Icon, isLive }) => { // eslint-disable-line no-unused-vars
+            const isActive = location.pathname === path ||
+              (path !== '/' && location.pathname.startsWith(path));
+            const activeColor = isLive ? 'var(--danger)' : 'var(--cyan)';
+
             return (
               <Link
-                key={item.path}
-                to={item.path}
+                key={key}
+                to={path}
                 className="relative flex-1 flex flex-col items-center justify-center gap-1 transition-all"
-                style={{ color: isActive ? 'var(--cyan)' : 'var(--mute)' }}
+                style={{ color: isActive ? activeColor : 'var(--mute)' }}
               >
-                {/* Top active underline */}
+                {/* Top active bar */}
                 {isActive && (
                   <div
                     className="absolute top-0 left-1/2 -translate-x-1/2"
-                    style={{ width: '28px', height: '2px', background: 'var(--cyan)' }}
+                    style={{ width: '28px', height: '2px', background: activeColor }}
                   />
                 )}
 
-                {/* Label */}
-                <span
-                  className="fk-mono leading-none"
-                  style={{ fontSize: '9px', letterSpacing: '0.18em' }}
-                >
-                  {item.name === '📊 SCORES' ? '📊 SCORE' : item.name}
+                <Icon size={20} />
+
+                <span style={{
+                  fontFamily:    'JetBrains Mono, monospace',
+                  fontSize:      '8px',
+                  letterSpacing: '0.15em',
+                  fontWeight:    600,
+                  lineHeight:    1,
+                }}>
+                  {label}
                 </span>
 
-                {/* Live dot */}
-                {item.path === '/live' && !isActive && (
+                {/* Live pulse dot (inactive state) */}
+                {isLive && !isActive && (
                   <div
                     className="absolute top-2 right-[calc(50%-14px)] w-1.5 h-1.5 rounded-full animate-live-pulse"
                     style={{ background: 'var(--danger)' }}

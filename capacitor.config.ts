@@ -1,7 +1,7 @@
 import { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'com.fantasykit.forzaedition',
+  appId: 'com.forza.fantasyleague',
   appName: 'Forza Fantasy League',
   webDir: 'dist',
   server: {

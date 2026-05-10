@@ -2,7 +2,7 @@
  * OnboardingWizard — full-screen 4-step overlay shown to first-time users.
  *
  * Steps:
- *   1. Welcome       — what ForzaKit is, competition context
+ *   1. Welcome       — what Forza Fantasy League is, competition context
  *   2. Build Squad   — budget, squad size, pick on Market
  *   3. Join League   — H2H mini-leagues with friends
  *   4. Ready         — confetti moment, what to do first
@@ -19,7 +19,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 function buildSteps({ competitionName, budgetTotal, squadSize }) {
-  const comp   = competitionName || 'Fantasy Football';
+  const comp   = competitionName || 'Fantasy League';
   const budget = budgetTotal     || 100;
   const size   = squadSize       || 15;
 
@@ -28,7 +28,7 @@ function buildSteps({ competitionName, budgetTotal, squadSize }) {
       id:       'welcome',
       emoji:    '🏆',
       kicker:   comp,
-      heading:  'Welcome to\nForzaKit',
+      heading:  'Welcome to\nForza Fantasy League',
       body:     `The fantasy football league built for ${comp}. Pick your squad, beat your friends, own every matchday.`,
       cta:      "Let's go",
       skip:     'Skip intro',
@@ -179,7 +179,7 @@ export default function OnboardingWizard({ onComplete, onSkip, config = {} }) {
         display:       'flex',
         flexDirection: 'column',
         alignItems:    'center',
-        justifyContent: 'flex-start',
+        justifyContent: 'center',
         overflowY:     'auto',
         padding:       '24px',
         paddingTop:    'max(24px, env(safe-area-inset-top))',

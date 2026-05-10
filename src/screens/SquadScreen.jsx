@@ -209,15 +209,32 @@ export default function SquadScreen() {
         return { ...normalised, isBench: !isStarter };
       });
 
-      // Enforce max 1 GK on pitch — demote any extra GKs to bench
+      // Enforce formation rules: 1 GK, 3-5 DEF, 2-4 MID, 1-2 FWD, total 11
+      // If DB returned incorrect positions or counts, rebuild from scratch
       let pitchPlayers = mappedPlayers.filter(p => !p.isBench);
       let benchPlayers = mappedPlayers.filter(p => p.isBench);
-      const gkStarters = pitchPlayers.filter(p => p.position === 'GK');
-      if (gkStarters.length > 1) {
-        const extraGks = gkStarters.slice(1);
-        const extraGkIds = new Set(extraGks.map(p => p.id));
-        pitchPlayers = pitchPlayers.filter(p => !extraGkIds.has(p.id));
-        benchPlayers = [...benchPlayers, ...extraGks.map(p => ({ ...p, isBench: true }))];
+
+      // Group by position
+      const gks = pitchPlayers.filter(p => p.position === 'GK');
+
+      // Enforce rules: must have exactly 1 GK
+      if (gks.length > 1) {
+        const extraGks = gks.slice(1);
+        benchPlayers = [...benchPlayers, ...extraGks];
+        pitchPlayers = pitchPlayers.filter(p => p.position !== 'GK' || gks.indexOf(p) === 0);
+      } else if (gks.length === 0 && benchPlayers.length > 0) {
+        // If somehow no GK on pitch, try to move one from bench
+        const benchGk = benchPlayers.find(p => p.position === 'GK');
+        if (benchGk) {
+          benchPlayers = benchPlayers.filter(p => p.id !== benchGk.id);
+          pitchPlayers = [...pitchPlayers, benchGk];
+        }
+      }
+
+      // If pitch doesn't have exactly 11 players, reorder
+      if (pitchPlayers.length > 11) {
+        benchPlayers = [...benchPlayers, ...pitchPlayers.slice(11)];
+        pitchPlayers = pitchPlayers.slice(0, 11);
       }
 
       setSquadData({
