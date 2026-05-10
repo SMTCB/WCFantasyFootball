@@ -19,7 +19,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 function buildSteps({ competitionName, budgetTotal, squadSize }) {
-  const comp   = competitionName || 'Fantasy Football';
+  const comp   = competitionName || 'Fantasy League';
   const budget = budgetTotal     || 100;
   const size   = squadSize       || 15;
 

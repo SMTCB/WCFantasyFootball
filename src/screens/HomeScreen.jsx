@@ -313,7 +313,7 @@ export default function HomeScreen() {
         }}
       >
         <div>
-          <div className="fz-label" style={{ color: 'var(--mute)' }}>{competitionName || 'Fantasy Football'}</div>
+          <div className="fz-label" style={{ color: 'var(--mute)' }}>{competitionName || 'Fantasy League'}</div>
           <div
             className="text-[24px] font-black uppercase leading-tight tracking-tight"
             style={{ fontFamily: 'Archivo Black, sans-serif', color: 'var(--paper)' }}

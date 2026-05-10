@@ -23,7 +23,7 @@ export default function LeagueInviteCard({ league, onDone }) {
   const [copied,       setCopied]       = useState(false);
   const [linkCopied,   setLinkCopied]   = useState(false);
   const [exporting,    setExporting]    = useState(false);
-  const [tournamentName, setTournamentName] = useState('Fantasy Football');
+  const [tournamentName, setTournamentName] = useState('Fantasy League');
   const cardRef = useRef(null);
 
   // Load tournament name if league has a tournament_id
@@ -134,7 +134,7 @@ export default function LeagueInviteCard({ league, onDone }) {
                 Forza Fantasy League · {tournamentName}
               </div>
               <div style={{ fontSize: '11px', color: 'rgba(240,242,245,0.4)', fontFamily: 'Archivo Black, sans-serif', letterSpacing: '0.08em' }}>
-                Fantasy Football
+                Fantasy League
               </div>
             </div>
           </div>
