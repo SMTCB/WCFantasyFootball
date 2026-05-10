@@ -126,7 +126,7 @@ export default function OnboardingTour({ steps, onComplete, onSkip }) {
     position:   'fixed',
     width:      `${TOOLTIP_W}px`,
     zIndex:     10001,
-    transition: 'top 0.25s ease, left 0.25s ease',
+    transition: 'top 0.25s ease, left 0.25s ease, right 0.25s ease',
   };
 
   if (rect) {
@@ -144,11 +144,16 @@ export default function OnboardingTour({ steps, onComplete, onSkip }) {
       tooltipStyle.top = `${Math.max(12, rect.top - 12)}px`;
     }
 
-    // Horizontal: align to target center, hard-clamp within the usable content area
+    // Horizontal: right-anchor when target is in the right half, left-anchor otherwise
     const targetCenterX = rect.left + rect.width / 2;
-    const idealLeft     = targetCenterX - TOOLTIP_W / 2;
-    const maxLeft       = sidebarW + usableW - TOOLTIP_W - 8;
-    tooltipStyle.left   = `${Math.max(sidebarW + 8, Math.min(idealLeft, maxLeft))}px`;
+    if (targetCenterX > sidebarW + usableW / 2) {
+      // Right-side element — pin tooltip to the right edge so it never overflows
+      tooltipStyle.right = '8px';
+    } else {
+      const idealLeft = targetCenterX - TOOLTIP_W / 2;
+      const maxLeft   = vw - TOOLTIP_W - 8;
+      tooltipStyle.left = `${Math.max(sidebarW + 8, Math.min(idealLeft, maxLeft))}px`;
+    }
   } else {
     // Fallback: center screen
     tooltipStyle.top  = '50%';
