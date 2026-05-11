@@ -1,6 +1,6 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-05-11 (session 10 — #038 onboarding fix, #023 confirmed active, #110 confirmed done)  
+**Last Updated**: 2026-05-11 (session 10 — #038, #023, #110 resolved; #020 draft deadline banner, #037 auto-fill squad implemented)  
 **E2E Test Suite**: 108/116 passing (93%) — platform.spec.js; 8 pre-existing failures unrelated to core fixes  
 **Priority Levels**: P0 (Blocking), P1 (High — needed before feature is usable), P2 (Medium), P3 (Low/Polish), P4 (Post-Launch Roadmap)
 **Blocking Items Remaining**: 0 — all P0 issues resolved ✅  
@@ -106,12 +106,11 @@
 - **Effort**: ~2 hours once endpoint is live
 - **Dependency**: Forza season stats endpoint (ETA unknown)
 
-### #020: Draft Deadline Notifications
-- **Status**: NOT STARTED
-- **Description**: No push notification or email when draft deadline approaches or lottery results published. Managers may miss the draft entirely.
-- **Suggested**: Push notification 48h before deadline + gazette entry on lottery completion (gazette entry already written by Edge Function — notification layer missing)
-- **Effort**: 2 hours (depends on push notification infrastructure)
-- **Blocking**: Optional for MVP; improves UX
+### ✅ #020: Draft Deadline Notifications — In-App Banner (2026-05-11)
+- **Status**: DONE (in-app banner implemented; push/email deferred post-MVP)
+- **Description**: LeagueScreen now shows an urgency-aware banner when a draft deadline is approaching and the manager hasn't submitted yet. Banner colour shifts: green (>48h) → amber (24–48h) → red (<24h) with countdown text. Gazette entry on lottery completion was already written by `run-draft-lottery`.
+- **Remaining**: Native push notifications (Capacitor) and email alerts are post-MVP. The in-app banner covers the critical case for pilot.
+- **Code**: `src/screens/LeagueScreen.jsx` — `draftDeadlineDate` state + urgency banner
 
 ### #021: Transfer Window Auto-Scheduler
 - **Status**: ✅ DONE (2026-05-06)
@@ -373,32 +372,10 @@
 ### ✅ #038: Onboarding Wizard Step Counter — RESOLVED (2026-05-11)
 - **Fix**: Updated `src/components/OnboardingWizard.jsx` lines 39 and 49 from "Step N of 3" to "Step N of 4" to match the actual 4-step flow (welcome, squad, league, ready).
 
-### #037: Auto-Fill Squad Feature
-- **Status**: NOT STARTED
-- **Description**: Add an "Auto-Fill" button on SquadScreen (PITCH tab) that automatically selects eligible players from the market to complete a squad below 11 players. Useful for new users or when quickly building a squad.
-- **Rules**:
-  - Only works when squad has fewer than 11 starters
-  - Selects lowest-cost eligible players for each empty position slot
-  - Respects formation rules: 1 GK, 3–5 DEF, 2–4 MID, 1–2 FWD
-  - Respects budget: stops if insufficient budget to fill remaining slots
-  - Avoid duplicate players: don't select same player twice
-  - Update budget display in real-time as players are added
-  - Show success/error state (e.g., "Squad full" or "Insufficient budget for remaining positions")
-- **Implementation**:
-  - New button in SquadScreen PITCH tab header: "Quick Fill"
-  - Call new `auto-fill` function that:
-    1. Queries market (players not yet taken)
-    2. Sorts by price (lowest first) per position
-    3. Validates formation rules
-    4. Adds players to squad state
-    5. Updates Supabase in batches
-  - Hook: `useAutoFill(leagueId, squadData)` returns `{ fill, isFilling, error }`
-- **UI Feedback**:
-  - Loading state during fill
-  - Toast notification on success (e.g., "Added 4 players, budget remaining: £2.1M")
-  - Toast error if insufficient budget or no eligible players available
-- **Effort**: 1.5 hours (hook + button integration + error handling)
-- **Priority**: UX improvement; useful for onboarding flow
+### ✅ #037: Auto-Fill Squad Feature — DONE (2026-05-11)
+- **Status**: DONE
+- **Implementation**: `⚡ QUICK FILL` button appears in SquadScreen PITCH tab header when starters < 11. `handleAutoFill()` function queries cheapest available players per position (GK→DEF→MID→FWD), skips taken players, respects budget, calls `buy()` sequentially. Fills minimum formation requirements first (1 GK, 3 DEF, 2 MID, 1 FWD), then distributes remaining slots evenly between DEF/MID. Shows "FILLING…" loading state and "Added N players · £Xm left" confirmation message on success.
+- **Code**: `src/screens/SquadScreen.jsx` — `handleAutoFill()` + header button
 
 ---
 
@@ -501,44 +478,43 @@
 | Category | Current | Target |
 |---|---|---|
 | E2E Tests Passing | 107/116 (93%) ✅ | 116/116 |
-| Blocking Issues (P0) | 1 (#018 dashboard-only) | 0 |
-| High Priority Open (P1) | 4 | 0 (pre-launch) |
-| Medium Priority Open (P2) | 11 | TBD |
-| Feature Complete (P2-3) | 18 | — |
+| Blocking Issues (P0) | 0 ✅ | 0 |
+| High Priority Open (P1) | 0 ✅ | 0 (pre-launch) |
+| Medium Priority Open (P2) | 7 | TBD |
+| Feature Complete (P2-3) | 22 | — |
 | Post-Launch Roadmap (P4) | 12+ | — |
-| DB Migrations | 25 | — |
+| DB Migrations | 26 | — |
 | Edge Functions | 10+ | — |
+
+---
+
+## ⚠️ Pending Manual Steps (Dashboard / One-Time)
+
+These cannot be automated via code — require manual action in Supabase dashboard or SQL editor:
+
+| Step | Action | Impact |
+|---|---|---|
+| **Cron auth** | Supabase Dashboard → SQL Editor: `SELECT set_config('app.service_role_key', '<key>', false);` — key at Project Settings → API → service_role | Activates all 5 cron jobs (sync-player-status, auto-open-transfer-window, calculate-scores-daily, sync-players-daily, run-draft-lottery) |
+| **Realtime chat** | Supabase Dashboard → Database → Replication → toggle `chat_messages` ON | Enables real-time message delivery in league chat |
 
 ---
 
 ## 🎯 Priority Tiers — Recommended Next Steps
 
-### **CRITICAL PATH TO LAUNCH** (This Week)
-1. **#018** Configure Supabase cron settings (15 min — dashboard only)
-2. **#111** Verify no squads have `matchday_id = null` (15 min — query + audit)
-3. **#109** Confirm Forza API field names for pass stats (30 min — API test)
-4. **#106** Wire scoring trigger (commissioner button or cron) (30 min)
-5. **#105** Add transfer cost lockout at kickoff (1 hour)
+### **PILOT LAUNCH READY** (Code complete ✅)
+- All P0 and P1 code items resolved
+- Manual steps: set service_role_key + enable chat_messages replication (see above)
+- Deploy: push to `main` → Vercel auto-deploys
 
-### **PRE-LAUNCH VERIFICATION** (Before Go-Live)
-6. **#005** Verify mobile PowerToolCard rendering (20 min)
-7. **#110** Audit rollupSquads for multi-tournament scenario (30 min)
-8. **#023** Wire player status sync from Forza (1.5 hours)
-
-### **NICE-TO-HAVE BEFORE LAUNCH** (If Time)
-9. **#024** Formation rules on mobile PITCH (✅ DONE)
-10. **#025** Market scroll on Capacitor (✅ DONE)
-
-### **PLANNED FOR SPRINT 2** (Post-Launch)
-11. **#020** Draft deadline notifications
-12. **#021** Transfer window auto-scheduler
-13. **#026** Player availability broadcast feature
-14. **#027** League chat infrastructure
+### **NICE-TO-HAVE SOON** (Post-pilot, Sprint 2)
+1. **#036** Chips revamp — remove Roulette, update Joker rules, add Opponent Block
+2. **#035** Point Boost section — matchday special categories (needs category definitions first)
+3. **#013** In-league auction system
 
 ### **POST-LAUNCH ROADMAP** (July+)
-15. **#013** In-league auction system
-16. **#028** League analytics dashboard
-17. **#030/031** Live feed enhancements (VAR, commentary timeline)
+4. **#028** League analytics dashboard
+5. **#030/031** Live feed enhancements (VAR, commentary timeline)
+6. Native push notifications (Capacitor)
 
 ---
 
