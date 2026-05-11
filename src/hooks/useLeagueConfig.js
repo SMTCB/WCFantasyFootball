@@ -23,6 +23,7 @@ const DEFAULTS = {
   positionLimits:    { GK: 2, DEF: 5, MID: 5, FWD: 3 },
   draftPositionCaps: { GK: 4, DEF: 10, MID: 10, FWD: 6 },
   minFormation:      { GK: 1, DEF: 3, MID: 2, FWD: 1 },
+  isDraftLeague:     false,
 };
 
 export function useLeagueConfig(leagueId) {
@@ -40,7 +41,7 @@ export function useLeagueConfig(leagueId) {
       const { data, error } = await supabase
         .from('leagues')
         .select(
-          'budget_total, squad_size, draft_list_size, position_limits, draft_position_caps, min_formation'
+          'budget_total, squad_size, draft_list_size, position_limits, draft_position_caps, min_formation, draft_deadline'
         )
         .eq('id', leagueId)
         .maybeSingle();
@@ -59,6 +60,7 @@ export function useLeagueConfig(leagueId) {
         positionLimits:    data.position_limits     ?? DEFAULTS.positionLimits,
         draftPositionCaps: data.draft_position_caps ?? DEFAULTS.draftPositionCaps,
         minFormation:      data.min_formation       ?? DEFAULTS.minFormation,
+        isDraftLeague:     !!data.draft_deadline,
         loading: false,
       });
     })();

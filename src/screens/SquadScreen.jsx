@@ -502,6 +502,11 @@ export default function SquadScreen() {
   const { budget, players, bench, captainId, locked_at } = squadData;
   const isLocked        = deadline.isLocked;
   const allSquadPlayers = [...players, ...bench];
+
+  // Auto-fill targets — PITCH fills 11 starters (4-4-2); LIST fills the full squad or draft list
+  const STARTER_CAPS    = { GK: 1, DEF: 4, MID: 4, FWD: 2 };
+  const fullSquadCaps   = cfg.isDraftLeague ? cfg.draftPositionCaps : cfg.positionLimits;
+  const fullSquadTarget = Object.values(fullSquadCaps).reduce((a, b) => a + b, 0);
   const dangerPlayers   = getDangerZonePlayers(allSquadPlayers);
   const selectedIsBench = selectedPlayer && bench.some(b => b.id === selectedPlayer.id);
   const budgetLeft      = Number(budget.current.toFixed(1));
@@ -956,7 +961,7 @@ export default function SquadScreen() {
                 </div>
                 {players.length < 11 && !isLocked && (
                   <button
-                    onClick={() => autoFill(fetchSquad)}
+                    onClick={() => autoFill(STARTER_CAPS, players, fetchSquad)}
                     disabled={isFilling}
                     style={{
                       marginTop: 4,
@@ -1092,19 +1097,56 @@ export default function SquadScreen() {
         {/* ── LIST TAB — full squad with empty slots + SIGN buttons ─── */}
         {mobileTab === 'squad' && (() => {
           const totalSigned = allSquadPlayers.length;
-          const squadSize   = Object.values(POS_LIMITS).reduce((a, b) => a + b, 0);
-          const emptySlots  = Math.max(0, squadSize - totalSigned);
+          const emptySlots  = Math.max(0, fullSquadTarget - totalSigned);
           const POS_LABEL_LIST  = { GK: 'Goalkeeper', DEF: 'Defenders', MID: 'Midfielders', FWD: 'Forwards' };
           return (
             <div className="pb-24">
               {/* Section header */}
-              <div style={{ padding: '16px 16px 12px', borderBottom: '1px solid var(--rule)' }}>
-                <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 9, color: 'var(--mute)', letterSpacing: '0.2em', textTransform: 'uppercase', marginBottom: 4 }}>Tactical Sheet</div>
-                <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 28, color: 'var(--paper)', lineHeight: 1, letterSpacing: '-0.01em' }}>MY SQUAD</div>
-                <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 9, color: 'var(--mute)', letterSpacing: '0.14em', marginTop: 6 }}>
-                  {totalSigned}/{squadSize} SIGNED{emptySlots > 0 ? ` · ${emptySlots} EMPTY SLOT${emptySlots !== 1 ? 'S' : ''}` : ''}
+              <div style={{ padding: '16px 16px 12px', borderBottom: '1px solid var(--rule)', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
+                <div>
+                  <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 9, color: 'var(--mute)', letterSpacing: '0.2em', textTransform: 'uppercase', marginBottom: 4 }}>Tactical Sheet</div>
+                  <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 28, color: 'var(--paper)', lineHeight: 1, letterSpacing: '-0.01em' }}>MY SQUAD</div>
+                  <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 9, color: 'var(--mute)', letterSpacing: '0.14em', marginTop: 6 }}>
+                    {totalSigned}/{fullSquadTarget} SIGNED{emptySlots > 0 ? ` · ${emptySlots} EMPTY SLOT${emptySlots !== 1 ? 'S' : ''}` : ''}
+                  </div>
                 </div>
+                {allSquadPlayers.length < fullSquadTarget && !isLocked && (
+                  <button
+                    onClick={() => autoFill(fullSquadCaps, allSquadPlayers, fetchSquad)}
+                    disabled={isFilling}
+                    style={{
+                      marginTop: 4,
+                      padding: '7px 12px',
+                      background: isFilling ? 'rgba(0,180,216,0.06)' : 'rgba(0,180,216,0.12)',
+                      border: '1px solid rgba(0,180,216,0.35)',
+                      borderRadius: 4,
+                      color: 'var(--cyan)',
+                      fontFamily: 'Archivo Black, sans-serif',
+                      fontSize: 9,
+                      letterSpacing: '0.12em',
+                      textTransform: 'uppercase',
+                      cursor: isFilling ? 'not-allowed' : 'pointer',
+                      opacity: isFilling ? 0.6 : 1,
+                      flexShrink: 0,
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    {isFilling ? '…Filling' : '⚡ Quick Fill'}
+                  </button>
+                )}
               </div>
+              {fillMessage && (
+                <div style={{
+                  padding: '8px 16px',
+                  fontFamily: 'JetBrains Mono, monospace',
+                  fontSize: 10,
+                  color: fillMessage.error ? 'var(--danger)' : 'var(--positive)',
+                  borderBottom: '1px solid var(--rule)',
+                  background: fillMessage.error ? 'rgba(240,58,58,0.06)' : 'rgba(24,201,107,0.06)',
+                }}>
+                  {fillMessage.text}
+                </div>
+              )}
               {/* Starters + bench grouped by position */}
               {['GK', 'DEF', 'MID', 'FWD'].map(pos => {
                 const limit       = POS_LIMITS[pos] ?? 0;
@@ -1432,7 +1474,7 @@ export default function SquadScreen() {
                     </span>
                   )}
                   <button
-                    onClick={() => autoFill(fetchSquad)}
+                    onClick={() => autoFill(STARTER_CAPS, players, fetchSquad)}
                     disabled={isFilling}
                     style={{
                       padding: '6px 14px',
