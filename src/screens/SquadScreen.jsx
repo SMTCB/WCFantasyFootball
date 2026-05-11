@@ -16,6 +16,7 @@ import { useOnboarding } from '../hooks/useOnboarding';
 import { useTransfer } from '../hooks/useTransfer';
 import { useLeagueConfig } from '../hooks/useLeagueConfig';
 import { useAvailabilityFlag } from '../hooks/useAvailabilityFlag';
+import { useAutoFill } from '../hooks/useAutoFill';
 import LeagueSelector from '../components/LeagueSelector';
 import OnboardingTour from '../components/OnboardingTour';
 import ConfirmModal from '../components/ConfirmModal';
@@ -92,6 +93,14 @@ export default function SquadScreen() {
 
   // Availability flags hook — league-scoped player flags for trade offers
   const { flagMap, toggleFlag } = useAvailabilityFlag(leagueId);
+
+  // Auto-fill hook — fills empty starter slots with cheapest available players
+  const { autoFill, isFilling, fillMessage } = useAutoFill({
+    leagueId,
+    squadData,
+    takenMap,
+    buy,
+  });
 
   // Live countdown hook — replaces static window lock badge
   const deadline = useDeadlineCountdown();
@@ -936,14 +945,52 @@ export default function SquadScreen() {
           return (
             <div style={{ paddingBottom: swapMode ? '120px' : '96px' }}>
               {/* Section header */}
-              <div style={{ padding: '16px 16px 12px', borderBottom: '1px solid var(--rule)' }}>
-                <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 9, color: 'var(--mute)', letterSpacing: '0.2em', textTransform: 'uppercase', marginBottom: 4 }}>Starting XI</div>
-                <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 28, color: 'var(--paper)', lineHeight: 1, letterSpacing: '-0.01em' }}>{formation || 'NO SQUAD'}</div>
-                <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 9, color: 'var(--mute)', letterSpacing: '0.14em', marginTop: 6 }}>
-                  {captain ? `CAPTAIN ${captain.name.split(' ').slice(-1)[0].toUpperCase()}` : 'NO CAPTAIN'}
-                  {squadData.matchdayId ? ` · GW ${squadData.matchdayId}` : ''}
+              <div style={{ padding: '16px 16px 12px', borderBottom: '1px solid var(--rule)', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
+                <div>
+                  <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 9, color: 'var(--mute)', letterSpacing: '0.2em', textTransform: 'uppercase', marginBottom: 4 }}>Starting XI</div>
+                  <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 28, color: 'var(--paper)', lineHeight: 1, letterSpacing: '-0.01em' }}>{formation || 'NO SQUAD'}</div>
+                  <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 9, color: 'var(--mute)', letterSpacing: '0.14em', marginTop: 6 }}>
+                    {captain ? `CAPTAIN ${captain.name.split(' ').slice(-1)[0].toUpperCase()}` : 'NO CAPTAIN'}
+                    {squadData.matchdayId ? ` · GW ${squadData.matchdayId}` : ''}
+                  </div>
                 </div>
+                {players.length < 11 && !isLocked && (
+                  <button
+                    onClick={() => autoFill(fetchSquad)}
+                    disabled={isFilling}
+                    style={{
+                      marginTop: 4,
+                      padding: '7px 12px',
+                      background: isFilling ? 'rgba(0,180,216,0.06)' : 'rgba(0,180,216,0.12)',
+                      border: '1px solid rgba(0,180,216,0.35)',
+                      borderRadius: 4,
+                      color: 'var(--cyan)',
+                      fontFamily: 'Archivo Black, sans-serif',
+                      fontSize: 9,
+                      letterSpacing: '0.12em',
+                      textTransform: 'uppercase',
+                      cursor: isFilling ? 'not-allowed' : 'pointer',
+                      opacity: isFilling ? 0.6 : 1,
+                      flexShrink: 0,
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    {isFilling ? '…Filling' : '⚡ Quick Fill'}
+                  </button>
+                )}
               </div>
+              {fillMessage && (
+                <div style={{
+                  padding: '8px 16px',
+                  fontFamily: 'JetBrains Mono, monospace',
+                  fontSize: 10,
+                  color: fillMessage.error ? 'var(--danger)' : 'var(--positive)',
+                  borderBottom: '1px solid var(--rule)',
+                  background: fillMessage.error ? 'rgba(240,58,58,0.06)' : 'rgba(24,201,107,0.06)',
+                }}>
+                  {fillMessage.text}
+                </div>
+              )}
 
               {/* Starting XI — grouped by position */}
               {['GK', 'DEF', 'MID', 'FWD'].map(pos => {
@@ -1371,6 +1418,38 @@ export default function SquadScreen() {
                   <div className="text-center">
                     <div className="fk-display text-[32px] mb-4" style={{ color: 'var(--gold)' }}>ROULETTE</div>
                   </div>
+                </div>
+              )}
+              {/* Quick Fill bar — desktop, visible when squad is incomplete */}
+              {players.length < 11 && !isLocked && (
+                <div style={{ flexShrink: 0, padding: '8px 20px', borderBottom: '1px solid var(--rule)', display: 'flex', alignItems: 'center', gap: 12, background: 'rgba(0,180,216,0.04)' }}>
+                  <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 9, color: 'var(--mute)', letterSpacing: '0.14em', flex: 1 }}>
+                    {players.length}/11 starters · {11 - players.length} slot{11 - players.length !== 1 ? 's' : ''} empty
+                  </span>
+                  {fillMessage && (
+                    <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 10, color: fillMessage.error ? 'var(--danger)' : 'var(--positive)' }}>
+                      {fillMessage.text}
+                    </span>
+                  )}
+                  <button
+                    onClick={() => autoFill(fetchSquad)}
+                    disabled={isFilling}
+                    style={{
+                      padding: '6px 14px',
+                      background: isFilling ? 'rgba(0,180,216,0.06)' : 'rgba(0,180,216,0.12)',
+                      border: '1px solid rgba(0,180,216,0.35)',
+                      borderRadius: 4,
+                      color: 'var(--cyan)',
+                      fontFamily: 'Archivo Black, sans-serif',
+                      fontSize: 9,
+                      letterSpacing: '0.12em',
+                      textTransform: 'uppercase',
+                      cursor: isFilling ? 'not-allowed' : 'pointer',
+                      opacity: isFilling ? 0.6 : 1,
+                    }}
+                  >
+                    {isFilling ? '…Filling' : '⚡ Quick Fill'}
+                  </button>
                 </div>
               )}
               {/* Pitch — flex:1 to fill most of the height */}
