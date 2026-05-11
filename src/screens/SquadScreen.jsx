@@ -1329,7 +1329,8 @@ export default function SquadScreen() {
       </div>
 
       {/* ══ DESKTOP LAYOUT ══════════════════════════════════════════════════ */}
-      <div className="hidden lg:flex flex-col" style={{ height: 'calc(100vh - 88px)' }}>
+      {/* Shrink container by swap-banner height (≈64px) so bench strip stays above the fixed banner */}
+      <div className="hidden lg:flex flex-col" style={{ height: swapMode ? 'calc(100vh - 88px - 64px)' : 'calc(100vh - 88px)' }}>
 
         {/* ── Sub-tab row: Pitch / List / Chips / Status ─────────────────── */}
         <div className="flex shrink-0" style={{ borderBottom: '1px solid var(--rule)', background: 'var(--ink-2)' }}>
@@ -1462,7 +1463,7 @@ export default function SquadScreen() {
 
           {/* ── CHIPS TAB ──────────────────────────────────────────────── */}
           {desktopTab === 'chips' && (
-            <div className="flex-1 overflow-y-auto pt-2 max-w-xl">
+            <div className="flex-1 overflow-y-auto pt-2 max-w-xl" data-tour="squad-chips">
               {CHIPS.map(chip => <ChipCard key={chip.key} chip={chip} />)}
               <RouletteCard />
               <JokerCard />
@@ -1584,13 +1585,41 @@ export default function SquadScreen() {
                   {captainId === selectedPlayer.id ? 'CAPTAIN' : 'CAPTAIN'}
                 </button>
               )}
-              <button
-                onClick={() => setSwapMode(true)}
-                className="flex-1 py-2.5 rounded-sm transition-all active:scale-95"
-                style={{ background: 'transparent', color: 'var(--cyan)', border: '1px solid var(--cyan)', fontFamily: 'Archivo Black, sans-serif', fontSize: '11px', letterSpacing: '0.12em', textTransform: 'uppercase' }}
-              >
-                {selectedIsBench ? 'SUB IN' : 'SUB OUT'}
-              </button>
+              {selectedIsBench && squadData.players.length < 11 ? (
+                // Direct promotion: if starters < 11, just add bench player to pitch without swapping anyone out
+                <button
+                  onClick={async () => {
+                    try {
+                      setSaving(true);
+                      const benchP = selectedPlayer;
+                      const newPlayers = [...squadData.players, benchP];
+                      const formationError = validateFormation(newPlayers);
+                      if (formationError) { alert(formationError); return; }
+                      const newBench = squadData.bench.filter(b => b.id !== benchP.id);
+                      setSquadData({ ...squadData, players: newPlayers, bench: newBench });
+                      setSelectedPlayer(null);
+                      await supabase.from('squads').update({
+                        players: [...newPlayers, ...newBench].map(p => p.id),
+                      }).eq('id', squadData.squadId);
+                    } finally { setSaving(false); }
+                  }}
+                  disabled={saving}
+                  className="flex-1 py-2.5 rounded-sm transition-all active:scale-95 disabled:opacity-40"
+                  style={{ background: 'var(--cyan)', color: '#0A0A0A', border: '1px solid var(--cyan)', fontFamily: 'Archivo Black, sans-serif', fontSize: '11px', letterSpacing: '0.12em', textTransform: 'uppercase' }}
+                >
+                  ADD TO PITCH
+                </button>
+              ) : (
+                // Swap mode: only if starters = 11 and user wants to swap
+                <button
+                  onClick={() => setSwapMode(true)}
+                  disabled={saving || (selectedIsBench && squadData.players.length >= 11 && squadData.bench.length === 1)}
+                  className="flex-1 py-2.5 rounded-sm transition-all active:scale-95 disabled:opacity-40"
+                  style={{ background: 'transparent', color: 'var(--cyan)', border: '1px solid var(--cyan)', fontFamily: 'Archivo Black, sans-serif', fontSize: '11px', letterSpacing: '0.12em', textTransform: 'uppercase' }}
+                >
+                  {selectedIsBench ? 'SUB IN' : 'SUB OUT'}
+                </button>
+              )}
               <button
                 onClick={handleSellPlayer}
                 disabled={saving}

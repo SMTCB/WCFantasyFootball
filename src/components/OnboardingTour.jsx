@@ -126,11 +126,14 @@ export default function OnboardingTour({ steps, onComplete, onSkip }) {
     position:   'fixed',
     width:      `${TOOLTIP_W}px`,
     zIndex:     10001,
-    transition: 'top 0.25s ease, left 0.25s ease',
+    transition: 'top 0.25s ease, left 0.25s ease, right 0.25s ease',
   };
 
   if (rect) {
-    const vw = window.innerWidth;
+    // Use clientWidth (excludes scrollbar) and subtract sidebar on desktop (lg breakpoint = 1024px)
+    const vw = document.documentElement.clientWidth;
+    const sidebarW = vw >= 1024 ? 220 : 0;
+    const usableW  = vw - sidebarW;
     const vh = window.innerHeight;
     const spaceBelow = vh - (rect.top + rect.height);
 
@@ -141,10 +144,16 @@ export default function OnboardingTour({ steps, onComplete, onSkip }) {
       tooltipStyle.top = `${Math.max(12, rect.top - 12)}px`;
     }
 
-    // Horizontal: align to target center, hard-clamp so tooltip never exits viewport
+    // Horizontal: right-anchor when target is in the right half, left-anchor otherwise
     const targetCenterX = rect.left + rect.width / 2;
-    const idealLeft     = targetCenterX - TOOLTIP_W / 2;
-    tooltipStyle.left   = `${Math.max(8, Math.min(idealLeft, vw - TOOLTIP_W - 8))}px`;
+    if (targetCenterX > sidebarW + usableW / 2) {
+      // Right-side element — pin tooltip to the right edge so it never overflows
+      tooltipStyle.right = '8px';
+    } else {
+      const idealLeft = targetCenterX - TOOLTIP_W / 2;
+      const maxLeft   = vw - TOOLTIP_W - 8;
+      tooltipStyle.left = `${Math.max(sidebarW + 8, Math.min(idealLeft, maxLeft))}px`;
+    }
   } else {
     // Fallback: center screen
     tooltipStyle.top  = '50%';
