@@ -36,7 +36,7 @@ function buildSteps({ competitionName, budgetTotal, squadSize }) {
     {
       id:       'squad',
       emoji:    '⚽',
-      kicker:   'Step 1 of 3',
+      kicker:   'Step 1 of 4',
       heading:  'Build your\nDream Squad',
       body:     `You have a $${budget}M budget to pick ${size} players — 1 GK, 4 DEF, 4 MID, 2 FWD in your starting XI, plus bench cover. Every transfer costs budget, so choose wisely.`,
       cta:      'Go to Market →',
@@ -46,7 +46,7 @@ function buildSteps({ competitionName, budgetTotal, squadSize }) {
     {
       id:       'league',
       emoji:    '🥇',
-      kicker:   'Step 2 of 3',
+      kicker:   'Step 2 of 4',
       heading:  'Join a\nPrivate League',
       body:     "Create a league or enter a friend's invite code to go head-to-head every matchday. Your points are live — every goal, assist, and clean sheet counts in real time.",
       cta:      'Set up my league →',
