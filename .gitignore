@@ -46,11 +46,19 @@ PROVIDER_EMAIL_*.txt
 
 # Native build artifacts (iOS / Android)
 ios/App/App/public/
+ios/Pods/
+ios/build/
 android/app/src/main/assets/public/
 android/.gradle/
+android/build/
+android/app/build/
+android/gradle/wrapper/gradle-wrapper.jar
+android/gradlew
+android/gradlew.bat
 *.xcuserstate
 *.xcuserdatad
 DerivedData/
+build/
 
 # Security
 .env
