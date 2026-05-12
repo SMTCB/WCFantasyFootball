@@ -34,6 +34,8 @@ Claude creates worktrees under `.claude/worktrees/` — ephemeral and gitignored
 
 ## Git Workflow & Version Control
 
+**📖 For non-technical overview: see [GIT_AND_CODE_WALKTHROUGH.md](GIT_AND_CODE_WALKTHROUGH.md)**
+
 ### Branch Strategy (Solo Developer Pre-Launch)
 
 **Branch Model**: Simple feature-branch model
