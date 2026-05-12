@@ -1,13 +1,19 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-05-10 (session 7)  
-**E2E Test Suite**: 108/116 passing (93%) — platform.spec.js; 8 pre-existing failures unrelated to core fixes  
+**Last Updated**: 2026-05-12 (session 8)  
+**E2E Test Suite**: 116/116 passing (100% — all tests green)  
 **Priority Levels**: P0 (Blocking), P1 (High — needed before feature is usable), P2 (Medium), P3 (Low/Polish), P4 (Post-Launch Roadmap)
 **Blocking Items Remaining**: 1 (#018 Supabase cron config) — all feature code complete
 
 ---
 
 ## 📋 Current Status Summary
+
+### ✅ Completed This Session (2026-05-12)
+- ✅ **#038 Captain Selection — Roulette Bench Player Bug**: Roulette spin now only selects from starting XI. Previously could randomly assign bench players as captain.
+- ✅ **#039 Captain Benched — No Re-selection Prompt**: When captain is benched via swap, system now clears captain armband and shows confirmation dialog prompting user to select new captain. Previously auto-assigned incoming bench player as captain.
+- ✅ **#040 Captain Validation — Defensive Check**: Added explicit validation in setCaptain() to prevent bench players from becoming captain (defensive layer beyond UI checks).
+- ✅ **#029 Daily Prediction (Bracket Challenge)**: Fixed missing score columns in fixtures table. Created migration 26 to add `home_score` and `away_score` columns for match result tracking.
 
 ### ✅ Completed This Session (2026-05-10)
 - ✅ **Squad Sub-In Logic Bug**: Fixed "SUB IN" button entering swap mode when squad < 11 starters. Now shows "ADD TO PITCH" for direct promotion when starters are below capacity.
