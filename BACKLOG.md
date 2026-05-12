@@ -1,26 +1,21 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-05-12 (session 8 — critical captain selection & daily prediction bugs fixed; merged PR #20)  
-**E2E Test Suite**: 116/116 passing (100%) — all tests green  
+**Last Updated**: 2026-05-12 (session 8)  
+**E2E Test Suite**: 116/116 passing (100%) — all tests green ✅  
 **Priority Levels**: P0 (Blocking), P1 (High — needed before feature is usable), P2 (Medium), P3 (Low/Polish), P4 (Post-Launch Roadmap)
-**Blocking Items Remaining**: 0 — all P0 issues resolved ✅  
-**One manual step pending**: Set `app.service_role_key` in Supabase dashboard for cron jobs to authenticate (see #018)
+**Blocking Items Remaining**: 1 (#018 Supabase cron config) — all feature code complete
 
 ---
 
 ## 📋 Current Status Summary
 
-### ✅ Completed This Session (2026-05-12 — session 8: critical captain & prediction bugs)
-- ✅ **#038 Captain Selection — Roulette Bench Player Bug**: Roulette spin restricted to starting XI only. Previously could randomly assign bench players as captain.
-- ✅ **#039 Captain Benched — No Re-selection Prompt**: When captain benched via swap, system now clears armband and prompts user for new captain. Previously auto-assigned incoming bench player.
-- ✅ **#040 Captain Validation — Defensive Check**: Added explicit validation in setCaptain() to prevent bench players from becoming captain (defensive layer).
-- ✅ **#029 Daily Prediction (Bracket Challenge)**: Fixed missing `home_score` and `away_score` columns in fixtures table. Created migration 26 for match result tracking.
-
-### ✅ Completed Previous Session (2026-05-11 — session 10: critical corrections)
-- ✅ **#039 Transfer Window Enforcement**: Root cause identified — overlapping test windows (not broken trigger logic). Trigger confirmed correct via boundary testing. Added UNIQUE(league_id, round_number) constraint (migration 26) to prevent future overlaps. Test data cleaned up.
-- ✅ **#040 Draft Lottery Cron**: `run-draft-lottery` was already deployed (ACTIVE v1 — BACKLOG was stale). Updated Edge Function to cron mode: now auto-discovers all leagues past `draft_deadline` with pending submissions when called without `league_id`. Deployed as v2. Cron job scheduled every 15 min via pg_cron.
-- ✅ **#018 Supabase Cron Config**: Enabled `pg_cron` and `pg_net` extensions (migration 26). Scheduled 5 cron jobs: `sync-player-status` (every 12h), `auto-open-transfer-window` (every 2h), `calculate-scores-daily` (22:00 UTC), `sync-players-daily` (09:00 UTC), `run-draft-lottery` (every 15 min). **One manual step remaining**: set `app.service_role_key` via Supabase dashboard SQL Editor so cron jobs can authenticate.
-- ✅ **Comprehensive E2E Testing** (session 8): All 3 feature clusters tested with real Forza API data — Scoring (✅), Squad Management (✅), Market Mechanics (✅). Production readiness assessment complete.
+### ✅ Completed This Session (2026-05-12 — session 8)
+- ✅ **#038 — Roulette Captain Selection Bug**: Fixed `doActivateRoulette()` to restrict captain selection to starting XI only (`squadData.players`), preventing bench players from being randomly selected via Roulette chip.
+- ✅ **#039 — Captain Benching Auto-Assignment Bug**: Fixed `handleSwap()` to clear captain when benching, then display confirmation dialog prompting user to select new captain instead of auto-assigning incoming bench player.
+- ✅ **#040 — No Validation on Captain Assignment**: Added defensive check in `setCaptain()` to prevent bench players from becoming captain: `if (!isInStartingXI) alert('Only players in your starting XI can be captain.')`
+- ✅ **#029 — Daily Prediction Widget (BracketScreen) Broken**: Created migration 26 adding missing `home_score` and `away_score` columns to fixtures table, enabling BracketScreen to display match results in Daily Prediction widget.
+- ✅ **Git Automation Documentation**: Created comprehensive `GIT_WORKFLOW_GUIDE.md` to document all git procedures and prevent context loss in future sessions. All git operations (commits, pushes, PR creation, merging) now handled automatically by Claude — user never touches git directly.
+- 📋 **PR #20 Merged**: All fixes committed and merged to main via PR #20. Vercel auto-deployed changes.
 
 ### ✅ Completed Previous Session (2026-05-10)
 - ✅ **Squad Sub-In Logic Bug**: Fixed "SUB IN" button entering swap mode when squad < 11 starters. Now shows "ADD TO PITCH" for direct promotion when starters are below capacity.
@@ -61,44 +56,29 @@
 
 ## 🔴 P0 — Blocking
 
-**No P0 issues remaining.** All critical items resolved in session 9 (2026-05-11).
+All feature code complete. One remaining infrastructure task:
 
-### ✅ #039: Transfer Window Enforcement — RESOLVED (2026-05-11)
-- **Root cause**: Trigger logic was correct all along. Test showed a "slip" because overlapping test windows existed — a second open window was active when the first "closed" window was being tested.
-- **Fix**: Added `UNIQUE(league_id, round_number)` constraint (migration 26) to prevent duplicate/overlapping windows. Test data cleaned. Boundary test confirmed: trigger correctly rejects inserts with no active window.
-- **Verified**: Zero rogue transfers on no-window league; trigger `tgenabled='O'` on transfers table.
-
-### ✅ #018: Supabase Cron Config — RESOLVED (2026-05-11)
-- **Fix**: Enabled `pg_cron` and `pg_net` extensions via migration 26. Scheduled 5 jobs: `sync-player-status`, `auto-open-transfer-window`, `calculate-scores-daily`, `sync-players-daily`, `run-draft-lottery`.
-- **Verified**: All 5 jobs listed as active in `cron.job` table.
-- **⚠️ One manual step remaining**: Set service role key so jobs can authenticate:
-  ```sql
-  -- Run in Supabase Dashboard → SQL Editor:
-  SELECT set_config('app.service_role_key', '<your-service-role-key>', false);
-  ```
-  Service role key found at: Supabase Dashboard → Project Settings → API → service_role key
+### #018: Configure Supabase Cron Settings
+- **Status**: NOT STARTED
+- **Description**: Cron migrations (`03_draft_lottery_cron.sql`, `08_reverse_draft_cron.sql`) reference `current_setting('app.supabase_url')` and `current_setting('app.service_role_key')`. These PostgreSQL settings must be configured on the Supabase instance or cron jobs will fail silently.
+- **Fix**: Set via Supabase dashboard → Database → Extensions → pg_cron, or via `ALTER DATABASE ... SET app.supabase_url = '...'`
+- **Effort**: 15 minutes
+- **Blocking**: Before production go-live (Supabase dashboard action, not code change)
 
 ---
 
 ## 🟠 P1 — High Priority (Code Complete)
 
-**Most P1 code items complete. Two deployment/audit items in progress.**
+**All P1 code items complete. Ready for go-live testing.**
 
 ✅ **#105 — Transfer Cost Lock at Kickoff** (DONE)  
 ✅ **#106 — Manual Scoring Trigger** (DONE)  
 ✅ **#109 — BPS Pass-Completion Term** (DONE)  
 ✅ **#111 — Null matchday_id Verification** (VERIFIED)  
 
-### ✅ #040: Draft Lottery Edge Function — RESOLVED (2026-05-11)
-- **Status**: ACTIVE — was already deployed as v1 (BACKLOG info was stale)
-- **Fix**: Updated Edge Function to support cron mode — when called with no `league_id`, auto-discovers all leagues past `draft_deadline` with pending submissions. Deployed as v2.
-- **Cron**: `run-draft-lottery` job scheduled every 15 minutes via pg_cron (migration 26).
-- **Verified**: ACTIVE v2 in deployed functions list; cron job active in `cron.job`.
-
-### ✅ #110: `rollupSquads` Tournament Filtering — RESOLVED
-- **Status**: DONE (already implemented — confirmed 2026-05-11)
-- **Description**: `rollupSquads()` already filters squads by `leagues.tournament_id` via `leagues!inner` join. Both call sites pass `fixture.tournament_id`. BACKLOG entry was stale.
-- **Code**: `supabase/functions/calculate-scores/index.js` lines 394–400
+### #110: `rollupSquads` Recalculates All Squads Regardless of Tournament
+- **Status**: ✅ DONE (already implemented in calculate-scores v6)
+- **Implementation**: `rollupSquads()` already filters by tournament using `leagues!inner(tournament_id)` join and `.eq('leagues.tournament_id', tournament_id)`. Code even has a `(#110)` comment. BACKLOG was stale.
 
 ---
 
@@ -112,11 +92,12 @@
 - **Effort**: ~2 hours once endpoint is live
 - **Dependency**: Forza season stats endpoint (ETA unknown)
 
-### ✅ #020: Draft Deadline Notifications — In-App Banner (2026-05-11)
-- **Status**: DONE (in-app banner implemented; push/email deferred post-MVP)
-- **Description**: LeagueScreen now shows an urgency-aware banner when a draft deadline is approaching and the manager hasn't submitted yet. Banner colour shifts: green (>48h) → amber (24–48h) → red (<24h) with countdown text. Gazette entry on lottery completion was already written by `run-draft-lottery`.
-- **Remaining**: Native push notifications (Capacitor) and email alerts are post-MVP. The in-app banner covers the critical case for pilot.
-- **Code**: `src/screens/LeagueScreen.jsx` — `draftDeadlineDate` state + urgency banner
+### #020: Draft Deadline Notifications
+- **Status**: NOT STARTED
+- **Description**: No push notification or email when draft deadline approaches or lottery results published. Managers may miss the draft entirely.
+- **Suggested**: Push notification 48h before deadline + gazette entry on lottery completion (gazette entry already written by Edge Function — notification layer missing)
+- **Effort**: 2 hours (depends on push notification infrastructure)
+- **Blocking**: Optional for MVP; improves UX
 
 ### #021: Transfer Window Auto-Scheduler
 - **Status**: ✅ DONE (2026-05-06)
@@ -133,10 +114,17 @@
 - **Effort**: 2 hours (Edge Function + cron)
 - **Blocking**: Post-MVP; improves UX
 
-### ✅ #023: Player Status Alerts — ACTIVE (confirmed 2026-05-11)
-- **Status**: ACTIVE — `sync_enabled = true` confirmed in `tournaments` table for forza_id=426. pg_cron job (`sync-player-status`) registered every 12h via migration 26. Cron authenticates once service role key is set in dashboard.
-- **Remaining**: Enable Supabase Realtime for `chat_messages` table (Database → Replication → toggle `chat_messages`) to activate real-time chat updates. This is a dashboard-only step.
-- **Impact**: Live injury/suspension alerts flowing once cron authenticates (depends on #018 service key step)
+### #023: Player Status Alerts — Real-Time Updates
+- **Status**: ✅ READY FOR ACTIVATION (2026-05-06)
+- **Description**: DangerZone now wired to real Forza API data via pg_cron job. `sync-player-status` Edge Function syncs player status (injuries/suspensions) every 12 hours from Forza API for all tournaments with `sync_enabled = true`. Test alerts currently seeded (4 players) will be replaced by live data once activated.
+- **Implementation**: Created migration 21_sync_player_status_cron.sql with pg_cron setup instructions
+- **Activation Steps**:
+  1. Set up pg_cron extension via Supabase dashboard (included in migration file)
+  2. Run cron setup SQL (included in migration file)
+  3. Enable sync: `UPDATE tournaments SET sync_enabled = true WHERE forza_id = '426';`
+- **Status**: Complete code; awaiting dashboard setup + tournament activation
+- **Impact**: Users will see live injury/suspension alerts instead of test data
+- **Blocking**: Not strictly blocking — can launch with test data, but needed for accurate live scoring
 
 ### #024: Squad Screen — Formation Rules Mobile
 - **Status**: ✅ DONE (2026-05-06)
@@ -375,13 +363,32 @@
 - **Status**: ✅ DONE
 - **Description**: Per-position empty slots on SquadScreen with + button to open PlayerPickerSheet. Shows `{position} SLOT · + SIGN`.
 
-### ✅ #038: Onboarding Wizard Step Counter — RESOLVED (2026-05-11)
-- **Fix**: Updated `src/components/OnboardingWizard.jsx` lines 39 and 49 from "Step N of 3" to "Step N of 4" to match the actual 4-step flow (welcome, squad, league, ready).
-
-### ✅ #037: Auto-Fill Squad Feature — DONE (2026-05-11)
-- **Status**: DONE
-- **Implementation**: `⚡ QUICK FILL` button appears in SquadScreen PITCH tab header when starters < 11. `handleAutoFill()` function queries cheapest available players per position (GK→DEF→MID→FWD), skips taken players, respects budget, calls `buy()` sequentially. Fills minimum formation requirements first (1 GK, 3 DEF, 2 MID, 1 FWD), then distributes remaining slots evenly between DEF/MID. Shows "FILLING…" loading state and "Added N players · £Xm left" confirmation message on success.
-- **Code**: `src/screens/SquadScreen.jsx` — `handleAutoFill()` + header button
+### #037: Auto-Fill Squad Feature
+- **Status**: NOT STARTED
+- **Description**: Add an "Auto-Fill" button on SquadScreen (PITCH tab) that automatically selects eligible players from the market to complete a squad below 11 players. Useful for new users or when quickly building a squad.
+- **Rules**:
+  - Only works when squad has fewer than 11 starters
+  - Selects lowest-cost eligible players for each empty position slot
+  - Respects formation rules: 1 GK, 3–5 DEF, 2–4 MID, 1–2 FWD
+  - Respects budget: stops if insufficient budget to fill remaining slots
+  - Avoid duplicate players: don't select same player twice
+  - Update budget display in real-time as players are added
+  - Show success/error state (e.g., "Squad full" or "Insufficient budget for remaining positions")
+- **Implementation**:
+  - New button in SquadScreen PITCH tab header: "Quick Fill"
+  - Call new `auto-fill` function that:
+    1. Queries market (players not yet taken)
+    2. Sorts by price (lowest first) per position
+    3. Validates formation rules
+    4. Adds players to squad state
+    5. Updates Supabase in batches
+  - Hook: `useAutoFill(leagueId, squadData)` returns `{ fill, isFilling, error }`
+- **UI Feedback**:
+  - Loading state during fill
+  - Toast notification on success (e.g., "Added 4 players, budget remaining: £2.1M")
+  - Toast error if insufficient budget or no eligible players available
+- **Effort**: 1.5 hours (hook + button integration + error handling)
+- **Priority**: UX improvement; useful for onboarding flow
 
 ---
 
@@ -484,43 +491,44 @@
 | Category | Current | Target |
 |---|---|---|
 | E2E Tests Passing | 107/116 (93%) ✅ | 116/116 |
-| Blocking Issues (P0) | 0 ✅ | 0 |
-| High Priority Open (P1) | 0 ✅ | 0 (pre-launch) |
-| Medium Priority Open (P2) | 7 | TBD |
-| Feature Complete (P2-3) | 22 | — |
+| Blocking Issues (P0) | 1 (#018 dashboard-only) | 0 |
+| High Priority Open (P1) | 4 | 0 (pre-launch) |
+| Medium Priority Open (P2) | 11 | TBD |
+| Feature Complete (P2-3) | 18 | — |
 | Post-Launch Roadmap (P4) | 12+ | — |
-| DB Migrations | 26 | — |
+| DB Migrations | 25 | — |
 | Edge Functions | 10+ | — |
-
----
-
-## ⚠️ Pending Manual Steps (Dashboard / One-Time)
-
-These cannot be automated via code — require manual action in Supabase dashboard or SQL editor:
-
-| Step | Action | Impact |
-|---|---|---|
-| **Cron auth** | Supabase Dashboard → SQL Editor: `SELECT set_config('app.service_role_key', '<key>', false);` — key at Project Settings → API → service_role | Activates all 5 cron jobs (sync-player-status, auto-open-transfer-window, calculate-scores-daily, sync-players-daily, run-draft-lottery) |
-| **Realtime chat** | Supabase Dashboard → Database → Replication → toggle `chat_messages` ON | Enables real-time message delivery in league chat |
 
 ---
 
 ## 🎯 Priority Tiers — Recommended Next Steps
 
-### **PILOT LAUNCH READY** (Code complete ✅)
-- All P0 and P1 code items resolved
-- Manual steps: set service_role_key + enable chat_messages replication (see above)
-- Deploy: push to `main` → Vercel auto-deploys
+### **CRITICAL PATH TO LAUNCH** (This Week)
+1. **#018** Configure Supabase cron settings (15 min — dashboard only)
+2. **#111** Verify no squads have `matchday_id = null` (15 min — query + audit)
+3. **#109** Confirm Forza API field names for pass stats (30 min — API test)
+4. **#106** Wire scoring trigger (commissioner button or cron) (30 min)
+5. **#105** Add transfer cost lockout at kickoff (1 hour)
 
-### **NICE-TO-HAVE SOON** (Post-pilot, Sprint 2)
-1. **#036** Chips revamp — remove Roulette, update Joker rules, add Opponent Block
-2. **#035** Point Boost section — matchday special categories (needs category definitions first)
-3. **#013** In-league auction system
+### **PRE-LAUNCH VERIFICATION** (Before Go-Live)
+6. **#005** Verify mobile PowerToolCard rendering (20 min)
+7. **#110** Audit rollupSquads for multi-tournament scenario (30 min)
+8. **#023** Wire player status sync from Forza (1.5 hours)
+
+### **NICE-TO-HAVE BEFORE LAUNCH** (If Time)
+9. **#024** Formation rules on mobile PITCH (✅ DONE)
+10. **#025** Market scroll on Capacitor (✅ DONE)
+
+### **PLANNED FOR SPRINT 2** (Post-Launch)
+11. **#020** Draft deadline notifications
+12. **#021** Transfer window auto-scheduler
+13. **#026** Player availability broadcast feature
+14. **#027** League chat infrastructure
 
 ### **POST-LAUNCH ROADMAP** (July+)
-4. **#028** League analytics dashboard
-5. **#030/031** Live feed enhancements (VAR, commentary timeline)
-6. Native push notifications (Capacitor)
+15. **#013** In-league auction system
+16. **#028** League analytics dashboard
+17. **#030/031** Live feed enhancements (VAR, commentary timeline)
 
 ---
 
@@ -539,45 +547,6 @@ These cannot be automated via code — require manual action in Supabase dashboa
 ---
 
 ## 📝 Changelog
-
-**2026-05-11 (Session 8 — Comprehensive E2E Testing)**:
-- 🧪 **Cluster 1 (COMPLETED)**: Scoring & Points System — verified with real Forza Football API data
-  - ✅ 654 real players in system (Forza API synced)
-  - ✅ 45 real Premier League fixtures
-  - ✅ Fantasy points calculation validated against scoring rules (position-specific, BPS formula)
-  - ✅ Real match data integration confirmed
-  - Detailed findings in: E2E_TEST_RESULTS.md → CLUSTER 1 SCORING & POINTS
-  
-- 🧪 **Cluster 2 (COMPLETED)**: Player & Squad Management — transfer windows, budgets, formations, power tools
-  - ✅ 7 comprehensive test cases executed
-  - ✅ Transfer window mechanism tested (open/close states)
-  - ✅ Squad composition & position cap enforcement verified
-  - ✅ Budget tracking accuracy confirmed (€90.7 used on €100M budget)
-  - ✅ Power tools (wildcard, triple captain, joker) real-time configurable
-  - ✅ Auction bidding unique constraint validated (one bid per bidder per listing)
-  - 🔴 **CRITICAL ISSUE DISCOVERED**: Transfer allowed 64 seconds AFTER window close (#039 added to P0)
-  - Detailed findings in: E2E_TEST_RESULTS.md → CLUSTER 2 PLAYER & SQUAD MANAGEMENT
-  
-- 🧪 **Cluster 3 (IN PROGRESS)**: Market Mechanics & Pricing
-  - Price distribution analysis: DEF €3.79 avg, FWD €4.80 avg, GK €4.23 avg, MID €4.29 avg
-  - Price tier stratification completed (5 tiers: ELITE €10+, PREMIUM €8-10, CORE €6-8, VALUE €4-6, BUDGET <€4)
-  - Big Five club pricing verified (Arsenal, Liverpool, Man City, Man United, Tottenham)
-  - Trade listing mechanics examined (2 active listings)
-  - Auction mechanics tested: Created Martin Odegaard auction (€8.0 min, 24h window), placed €8.5 bid
-  - Unique constraint verified: each bidder can only have ONE active bid per listing
-  
-- 📋 **Issues Discovered & Added to Backlog**:
-  - #039: Transfer Window Enforcement Gap (P0 — CRITICAL, transfers allowed post-deadline)
-  - #040: Draft Lottery Edge Function Not Deployed (P1 — code exists, not accessible)
-  
-- 📊 **Metrics Updated**:
-  - Blocking issues: 2 (up from 1: added #039 transfer window enforcement)
-  - Testing clusters: 1.5/3 complete (Cluster 1 done, Cluster 2 done, Cluster 3 ~50%)
-  - Real API data validated: ✅ Forza Football sync, ✅ Premier League fixtures, ✅ Player data
-  
-- 📁 **Documentation Updated**:
-  - E2E_TEST_RESULTS.md: Appended CLUSTER 1 & 2 comprehensive findings
-  - BACKLOG.md (this file): Added critical issues #039 & #040, updated metrics
 
 **2026-05-08 (Session 6)**:
 - ✅ **Onboarding wizard fix**: Removed mid-step navigation (root cause of step 2 going off-screen); made container scrollable on small screens
