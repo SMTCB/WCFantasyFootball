@@ -65,7 +65,6 @@ export default function SquadScreen() {
   const [leagueId] = useState(searchParams.get('leagueId'));
   const [jokerPlayer,        setJokerPlayer]       = useState(null);
   const [isJokerPickerOpen,  setIsJokerPickerOpen] = useState(false);
-  const [isRouletteSpinning, setIsRouletteSpinning] = useState(false);
   const [squadData,          setSquadData]         = useState(null);
   const [loading,            setLoading]           = useState(true);
   const [todayJokerId,       setTodayJokerId]      = useState(null);
@@ -123,7 +122,7 @@ export default function SquadScreen() {
     {
       target: 'squad-power-tools',
       title:  'Power Tools',
-      body:   'Wildcard, Triple Captain, Roulette, and Daily Joker live here. Each is one-use — activate carefully.',
+      body:   'Wildcard, Triple Captain, and Daily Joker live here. Each is one-use — activate carefully.',
     },
     {
       target: 'squad-chips',
@@ -535,40 +534,6 @@ export default function SquadScreen() {
     } finally { setSaving(false); }
   };
 
-  // FB-023: roulette with confirmation
-  const activateRoulette = () => {
-    if (isRouletteSpinning || !squadData) return;
-    setConfirm({
-      title:        'Spin Captain Roulette?',
-      body:         'Your captain will be randomly selected from your entire squad. The result is final for this matchday.',
-      warning:      null,
-      confirmLabel: 'SPIN',
-      danger:       false,
-      onConfirm:    doActivateRoulette,
-    });
-  };
-
-  const handleRouletteStart = activateRoulette;
-
-  const doActivateRoulette = () => {
-    setIsRouletteSpinning(true);
-    const startersOnly = squadData.players;
-    let idx = 0;
-    const interval = setInterval(() => { setSelectedPlayer(startersOnly[idx++ % startersOnly.length]); }, 80);
-    setTimeout(() => {
-      clearInterval(interval);
-      const winner = startersOnly[Math.floor(Math.random() * startersOnly.length)];
-      setSelectedPlayer(winner);
-      setTimeout(async () => {
-        try {
-          setSaving(true);
-          setSquadData(prev => ({ ...prev, captainId: winner.id }));
-          await supabase.from('squads').update({ captain_id: winner.id }).eq('id', squadData.squadId);
-        } finally { setSaving(false); setIsRouletteSpinning(false); }
-      }, 400);
-    }, 2500);
-  };
-
   const handleJokerSelection = async (player) => {
     try {
       setSaving(true);
@@ -650,32 +615,6 @@ export default function SquadScreen() {
         </div>
     );
   };
-
-  // Captain Roulette card
-  const RouletteCard = () => (
-    <div className="mx-4 mb-3 rounded p-4 border" style={{ borderColor: 'rgba(240,180,0,0.2)', background: 'rgba(240,180,0,0.04)' }}>
-      <div className="flex-1 min-w-0">
-          <div className="fk-display text-[12px] mb-1" style={{ color: 'var(--gold)' }}>
-            CAPTAIN ROULETTE
-          </div>
-          <p className="text-[11px] leading-relaxed mb-3" style={{ color: 'var(--mute)' }}>
-            Can't decide? Let fate choose your captain. Randomly picks from your full 15-man squad.
-          </p>
-          <button
-            onClick={activateRoulette}
-            disabled={isRouletteSpinning || saving || !!locked_at}
-            className="w-full py-2 rounded text-[10px] font-black uppercase tracking-widest transition-all active:scale-95 disabled:opacity-40"
-            style={{
-              background: isRouletteSpinning ? 'var(--gold)' : 'rgba(240,180,0,0.1)',
-              color: isRouletteSpinning ? '#000' : 'var(--gold)',
-              border: '1px solid rgba(240,180,0,0.3)',
-            }}
-          >
-            {isRouletteSpinning ? 'SPINNING...' : 'SPIN ROULETTE'}
-          </button>
-        </div>
-      </div>
-  );
 
   // Daily Joker card
   const JokerCard = () => (
@@ -894,7 +833,7 @@ export default function SquadScreen() {
                     isCaptain={player.id === captainId}
                     isTripleCaptain={squadData.isTripleCaptain}
                     isJoker={player.id === todayJokerId}
-                    onClick={isRouletteSpinning ? () => {} : handlePlayerClick}
+                    onClick={handlePlayerClick}
                     isSelected={selectedPlayer?.id === player.id}
                     isSwapTarget={swapMode && selectedPlayer?.id !== player.id}
                     showIntelligence
@@ -1301,7 +1240,6 @@ export default function SquadScreen() {
         {mobileTab === 'chips' && (
           <div className="pb-24 pt-2">
             {CHIPS.map(chip => <ChipCard key={chip.key} chip={chip} />)}
-            <RouletteCard />
             <JokerCard />
           </div>
         )}
@@ -1403,22 +1341,6 @@ export default function SquadScreen() {
                   }}
                 />
 
-                {/* Roulette */}
-                <PowerToolCard
-                  
-                  label="Roulette"
-                  description="Random captain picker — spin to decide"
-                  isActive={false}
-                  accentColor="var(--gold)"
-                  bgColor="rgba(240,180,0,0.08)"
-                  borderColor="rgba(240,180,0,0.15)"
-                  actionLabel="Spin"
-                  onAction={() => {
-                    if (!isLocked && captainId) {
-                      handleRouletteStart();
-                    }
-                  }}
-                />
               </div>
             </div>
 
@@ -1522,19 +1444,12 @@ export default function SquadScreen() {
           {/* ── PITCH TAB — XI on pitch + bench strip below ────────────── */}
           {desktopTab === 'pitch' && (
             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-              {isRouletteSpinning && (
-                <div className="fixed inset-0 bg-black/60 z-30 flex items-center justify-center pointer-events-none">
-                  <div className="text-center">
-                    <div className="fk-display text-[32px] mb-4" style={{ color: 'var(--gold)' }}>ROULETTE</div>
-                  </div>
-                </div>
-              )}
               {/* Pitch — flex:1 to fill most of the height */}
               <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
                 <PitchView
                   variant="desktop"
                   squad={{ players, captainId, isTripleCaptain: squadData.isTripleCaptain, joker: jokerPlayer }}
-                  onPlayerClick={isRouletteSpinning ? () => {} : handlePlayerClick}
+                  onPlayerClick={handlePlayerClick}
                   selectedPlayerId={selectedPlayer?.id}
                   swapMode={swapMode}
                   jokerPlayerId={todayJokerId}
@@ -1620,7 +1535,6 @@ export default function SquadScreen() {
           {desktopTab === 'chips' && (
             <div className="flex-1 overflow-y-auto pt-2 max-w-xl" data-tour="squad-chips">
               {CHIPS.map(chip => <ChipCard key={chip.key} chip={chip} />)}
-              <RouletteCard />
               <JokerCard />
             </div>
           )}
@@ -1652,7 +1566,7 @@ export default function SquadScreen() {
       </div>
 
       {/* ══ PLAYER ACTION BOTTOM SHEET ═══════════════════════════════════════ */}
-      {selectedPlayer && !swapMode && !isRouletteSpinning && (
+      {selectedPlayer && !swapMode && (
         <>
           {/* Tap-outside dismiss — no background dim */}
           <div
