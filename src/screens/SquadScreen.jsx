@@ -380,7 +380,8 @@ export default function SquadScreen() {
       const newBench     = squadData.bench.map(b =>
         b.id === benchPlayer.id ? { ...pitchPlayer, gridClass: '' } : b
       );
-      const newCaptainId = squadData.captainId === pitchPlayer.id ? benchPlayer.id : squadData.captainId;
+      const captainBeingBenched = squadData.captainId === pitchPlayer.id;
+      const newCaptainId = captainBeingBenched ? null : squadData.captainId;
       setSquadData({ ...squadData, players: newPlayers, bench: newBench, captainId: newCaptainId });
       setSelectedPlayer(null);
       setSwapMode(false);
@@ -388,12 +389,31 @@ export default function SquadScreen() {
         players:    [...newPlayers, ...newBench].map(p => p.id),
         captain_id: newCaptainId,
       }).eq('id', squadData.squadId);
+      if (captainBeingBenched) {
+        setConfirm({
+          title:        'Captain benched',
+          body:         `${pitchPlayer.name} was your captain. Select a new captain from your starting XI.`,
+          warning:      null,
+          confirmLabel: 'Select Captain',
+          danger:       false,
+          onConfirm:    () => {
+            setConfirm(null);
+            if (newPlayers.length > 0) setSelectedPlayer(newPlayers[0]);
+          },
+        });
+      }
     } catch (err) { console.error('Swap failed', err); }
     finally { setSaving(false); }
   };
 
   const setCaptain = async () => {
     try {
+      if (!selectedPlayer) return;
+      const isInStartingXI = squadData.players.some(p => p.id === selectedPlayer.id);
+      if (!isInStartingXI) {
+        alert('Only players in your starting XI can be captain.');
+        return;
+      }
       setSaving(true);
       setSquadData({ ...squadData, captainId: selectedPlayer.id });
       await supabase.from('squads').update({ captain_id: selectedPlayer.id }).eq('id', squadData.squadId);
@@ -525,12 +545,12 @@ export default function SquadScreen() {
 
   const doActivateRoulette = () => {
     setIsRouletteSpinning(true);
-    const all = [...squadData.players, ...squadData.bench];
+    const startersOnly = squadData.players;
     let idx = 0;
-    const interval = setInterval(() => { setSelectedPlayer(all[idx++ % all.length]); }, 80);
+    const interval = setInterval(() => { setSelectedPlayer(startersOnly[idx++ % startersOnly.length]); }, 80);
     setTimeout(() => {
       clearInterval(interval);
-      const winner = all[Math.floor(Math.random() * all.length)];
+      const winner = startersOnly[Math.floor(Math.random() * startersOnly.length)];
       setSelectedPlayer(winner);
       setTimeout(async () => {
         try {

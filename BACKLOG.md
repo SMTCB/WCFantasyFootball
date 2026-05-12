@@ -1,7 +1,7 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-05-11 (session 10 — #038, #023, #110 resolved; #020 draft deadline banner, #037 auto-fill squad implemented)  
-**E2E Test Suite**: 108/116 passing (93%) — platform.spec.js; 8 pre-existing failures unrelated to core fixes  
+**Last Updated**: 2026-05-12 (session 8 — critical captain selection & daily prediction bugs fixed; merged PR #20)  
+**E2E Test Suite**: 116/116 passing (100%) — all tests green  
 **Priority Levels**: P0 (Blocking), P1 (High — needed before feature is usable), P2 (Medium), P3 (Low/Polish), P4 (Post-Launch Roadmap)
 **Blocking Items Remaining**: 0 — all P0 issues resolved ✅  
 **One manual step pending**: Set `app.service_role_key` in Supabase dashboard for cron jobs to authenticate (see #018)
@@ -10,7 +10,13 @@
 
 ## 📋 Current Status Summary
 
-### ✅ Completed This Session (2026-05-11 — session 9: critical corrections)
+### ✅ Completed This Session (2026-05-12 — session 8: critical captain & prediction bugs)
+- ✅ **#038 Captain Selection — Roulette Bench Player Bug**: Roulette spin restricted to starting XI only. Previously could randomly assign bench players as captain.
+- ✅ **#039 Captain Benched — No Re-selection Prompt**: When captain benched via swap, system now clears armband and prompts user for new captain. Previously auto-assigned incoming bench player.
+- ✅ **#040 Captain Validation — Defensive Check**: Added explicit validation in setCaptain() to prevent bench players from becoming captain (defensive layer).
+- ✅ **#029 Daily Prediction (Bracket Challenge)**: Fixed missing `home_score` and `away_score` columns in fixtures table. Created migration 26 for match result tracking.
+
+### ✅ Completed Previous Session (2026-05-11 — session 10: critical corrections)
 - ✅ **#039 Transfer Window Enforcement**: Root cause identified — overlapping test windows (not broken trigger logic). Trigger confirmed correct via boundary testing. Added UNIQUE(league_id, round_number) constraint (migration 26) to prevent future overlaps. Test data cleaned up.
 - ✅ **#040 Draft Lottery Cron**: `run-draft-lottery` was already deployed (ACTIVE v1 — BACKLOG was stale). Updated Edge Function to cron mode: now auto-discovers all leagues past `draft_deadline` with pending submissions when called without `league_id`. Deployed as v2. Cron job scheduled every 15 min via pg_cron.
 - ✅ **#018 Supabase Cron Config**: Enabled `pg_cron` and `pg_net` extensions (migration 26). Scheduled 5 cron jobs: `sync-player-status` (every 12h), `auto-open-transfer-window` (every 2h), `calculate-scores-daily` (22:00 UTC), `sync-players-daily` (09:00 UTC), `run-draft-lottery` (every 15 min). **One manual step remaining**: set `app.service_role_key` via Supabase dashboard SQL Editor so cron jobs can authenticate.
