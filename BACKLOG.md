@@ -14,7 +14,7 @@
 **Part 1: Validation & Critical Path** (30 min)
 - ✅ **E2E Test Suite** — 129/150 passing, no new regressions
 - ✅ **Manual Bets E2E Test** — Ready (BETS_E2E_TEST_PLAN.md)
-- ⚠️ **Migration 30 & 31** — Require manual Supabase SQL editor application
+- ✅ **Migrations 11-31** — Applied via Supabase SQL editor (2026-05-12)
 
 **Part 2: #027-Extended Chat Enhancements** (2.5h)
 
@@ -133,14 +133,12 @@ Stale BACKLOG caused wasted time. This audit prevents future duplicate work. Kee
 - ✅ Test plan documented (`BETS_E2E_TEST_PLAN.md`)
 - ✅ Working tree clean, all changes committed
 
-**Remaining work (37/37 features shipped, ready for validation/launch):**
+**Remaining work (37/37 features shipped, migrations applied, ready for validation/launch):**
 1. **Manual E2E Testing** — Follow BETS_E2E_TEST_PLAN.md (15 min walkthrough)
    - Verify bet creation → submission → resolution → points aggregation → realtime updates
 2. **Mobile Testing** — iOS/Android builds with Bets + Resolution + Unread badge (1-2h per platform)
    - Test Capacitor sync + native rendering for all new features
-3. **Migration 30 Application** — Run chat read status migration in Supabase SQL editor
-   - Creates `league_chat_read_status` table + RPCs for unread tracking
-4. **Launch Prep**: Final checklist, app store submission readiness
+3. **Launch Prep**: Final checklist, app store submission readiness
    - Verify all 37/37 features in production build
    - Check E2E test coverage (currently 129/150 passing)
 
