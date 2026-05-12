@@ -2,8 +2,6 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../hooks/useAuth';
-import { useDeadlineCountdown } from '../hooks/useDeadlineCountdown';
-import PredictionModal from '../components/PredictionModal';
 
 /* ── Team accent colours (rough national palette) ──────────────── */
 const TEAM_COLORS = {
@@ -26,12 +24,9 @@ const getTeamColor = (name) => TEAM_COLORS[name] || TEAM_COLORS.default;
 
 export default function HomeScreen() {
   const { user } = useAuth();
-  const deadline = useDeadlineCountdown();
   const [fixtures,        setFixtures]        = useState([]);
   const [userStats,       setUserStats]       = useState({ rank: '-', points: 0 });
-  const [prediction,      setPrediction]      = useState(null);
   const [recap,           setRecap]           = useState(null);
-  const [showPicker,      setShowPicker]      = useState(false);
   const [loading,         setLoading]         = useState(true);
   const [currentMatchday, setCurrentMatchday] = useState(null);
   const [competitionName, setCompetitionName] = useState('');
@@ -46,6 +41,7 @@ export default function HomeScreen() {
         fetchUserStats(userId),
         fetchLatestRecap(userId),
       ]);
+
     } finally {
       setLoading(false);
     }
@@ -109,51 +105,11 @@ export default function HomeScreen() {
     if (data) setUserStats({ rank: data.rank, points: data.total_points });
   };
 
-  const fetchTodayPrediction = async (userId, matchday) => {
-    try {
-      if (!matchday) return;
-      const { data } = await supabase
-        .from('top_scorer_predictions')
-        .select('predicted_player_id, is_correct, points_awarded, players(name, club)')
-        .eq('user_id', userId).eq('matchday_id', String(matchday)).maybeSingle();
-      if (data) setPrediction({ id: data.predicted_player_id, name: data.players?.name, club: data.players?.club, correct: data.is_correct, pts: data.points_awarded });
-    } catch (err) { console.error('[prediction]', err); }
-  };
-
   const fetchLatestRecap = async (userId) => {
     try {
       const { data } = await supabase.from('matchday_recaps').select('*').eq('user_id', userId).order('created_at', { ascending: false }).limit(1).maybeSingle();
       if (data) setRecap(data);
     } catch (err) { console.error('[recap]', err); }
-  };
-
-  // Fetch prediction once matchday resolves
-  useEffect(() => {
-    if (user?.id && currentMatchday != null) fetchTodayPrediction(user.id, currentMatchday);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user?.id, currentMatchday]);
-
-  // FB-020: persist prediction to DB (upsert so re-picking before kick-off updates the row)
-  const handlePredictionSaved = async (player) => {
-    // Optimistic update — UI responds immediately
-    setPrediction({ ...player, correct: null, pts: 0 });
-    setShowPicker(false);
-    try {
-      const userId = user?.id;
-      await supabase.from('top_scorer_predictions').upsert(
-        {
-          user_id:             userId,
-          matchday_id:         String(currentMatchday ?? 'current'),
-          predicted_player_id: player.id,
-          is_correct:          null,
-          points_awarded:      0,
-        },
-        { onConflict: 'user_id,matchday_id' }   // update if already exists
-      );
-    } catch (err) {
-      console.error('[prediction] save failed', err);
-      // Don't revert — the optimistic state is fine for the session
-    }
   };
 
   const liveCount = fixtures.filter(f => f.status === 'live').length;
@@ -408,110 +364,6 @@ export default function HomeScreen() {
           style={{ borderLeft: '1px solid rgba(255,255,255,0.06)' }}
         >
 
-          {/* Daily Prediction Widget */}
-          <div className="px-4 pt-4 pb-2">
-            <div className="flex items-center gap-2 mb-3">
-              <div className="w-[3px] h-4 rounded-full" style={{ background: 'var(--cyan)' }} />
-              <span
-                className="text-[11px] font-bold uppercase tracking-[0.18em]"
-                style={{ color: 'var(--mute)', fontFamily: 'Archivo Black, sans-serif' }}
-              >
-                Top Scorer{currentMatchday != null ? ` · MD${currentMatchday}` : ''}
-              </span>
-            </div>
-
-            <div
-              className="rounded-md overflow-hidden"
-              style={{ background: 'var(--ink-2)', border: '1px solid rgba(0,196,232,0.18)' }}
-            >
-              {/* Widget header */}
-              <div
-                className="px-4 py-2.5 flex items-center justify-between"
-                style={{ background: 'rgba(0,196,232,0.06)', borderBottom: '1px solid rgba(255,255,255,0.06)' }}
-              >
-                <div className="flex items-center gap-2">
-                  <span className="text-[14px]">🎯</span>
-                  <span
-                    className="text-[10px] font-bold uppercase tracking-widest"
-                    style={{ color: 'var(--cyan)', fontFamily: 'Archivo Black, sans-serif' }}
-                  >
-                    Daily Prediction
-                  </span>
-                </div>
-                <div
-                  className="text-[9px] font-bold px-2 py-0.5 rounded-sm"
-                  style={{ color: 'var(--positive)', background: 'rgba(24,201,107,0.1)', fontFamily: 'Archivo Black, sans-serif' }}
-                >
-                  +5 pts
-                </div>
-              </div>
-
-              <div className="px-4 py-3">
-                {prediction ? (
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div
-                        className="fk-mono flex items-center justify-center shrink-0"
-                        style={{ width: 40, height: 40, border: '1px solid var(--rule)', color: 'var(--mute)', fontSize: 9 }}
-                      >
-                        {prediction.name?.split(' ').map(w => w[0]).join('').substring(0, 3)}
-                      </div>
-                      <div>
-                        {prediction.correct === null  && <div className="fz-label mb-0.5" style={{ color: 'var(--cyan)' }}>Your pick</div>}
-                        {prediction.correct === true  && <div className="fz-label mb-0.5" style={{ color: 'var(--positive)' }}>✓ +{prediction.pts}pts</div>}
-                        {prediction.correct === false && <div className="fz-label mb-0.5" style={{ color: 'var(--danger)' }}>✗ Wrong pick</div>}
-                        <div className="text-[14px] font-semibold" style={{ color: 'var(--paper)' }}>{prediction.name}</div>
-                      </div>
-                    </div>
-                    {prediction.correct === null && (
-                      <button
-                        onClick={() => setShowPicker(true)}
-                        className="text-[10px] font-bold uppercase tracking-widest px-3 py-1.5 rounded-sm transition-all active:scale-95"
-                        style={{
-                          color: 'var(--cyan)',
-                          border: '1px solid rgba(0,196,232,0.3)',
-                          fontFamily: 'Archivo Black, sans-serif',
-                        }}
-                      >
-                        Change
-                      </button>
-                    )}
-                  </div>
-                ) : (
-                  <div>
-                    <div
-                      className="text-[12px] mb-3 leading-relaxed"
-                      style={{ color: 'var(--mute)' }}
-                    >
-                      Who scores the most goals{currentMatchday != null ? ` in Matchday ${currentMatchday}` : ' this matchday'}?
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <div
-                        className="text-[10px] font-semibold"
-                        style={{ color: 'var(--mute)' }}
-                      >
-                        <span style={{ color: deadline.color, transition: 'color 0.5s' }}>
-                          {deadline.loading ? '…' : deadline.label}
-                        </span>
-                      </div>
-                      <button
-                        onClick={() => setShowPicker(true)}
-                        className="text-[12px] font-black uppercase tracking-widest px-4 py-2 rounded-sm transition-all active:scale-95"
-                        style={{
-                          background: 'var(--cyan)',
-                          color: '#000',
-                          fontFamily: 'Archivo Black, sans-serif',
-                        }}
-                      >
-                        Make Pick
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-
           {/* Recap Teaser */}
           {recap && (
             <div className="px-4 pb-2 pt-2">
@@ -584,15 +436,6 @@ export default function HomeScreen() {
         </div>
       </div>
 
-      {/* Prediction modal */}
-      {showPicker && (
-        <PredictionModal
-          matchday={currentMatchday ?? 'current'}
-          deadlineLabel={deadline.label || '…'}
-          onClose={() => setShowPicker(false)}
-          onSave={handlePredictionSaved}
-        />
-      )}
     </div>
   );
 }
