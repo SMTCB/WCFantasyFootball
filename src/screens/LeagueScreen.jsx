@@ -78,6 +78,8 @@ export default function LeagueScreen() {
   const [resolutionBetsLoading, setResolutionBetsLoading] = useState(false);
   const [selectedBetForResolution, setSelectedBetForResolution] = useState(null);
   const [betResolutionAnswer, setBetResolutionAnswer] = useState('');
+  const [betSubmissions, setBetSubmissions] = useState([]);
+  const [answerGrouped, setAnswerGrouped] = useState({});
 
   // Create form state
   const [leagueName,   setLeagueName]   = useState('');
@@ -265,9 +267,38 @@ export default function LeagueScreen() {
     }
   };
 
+  const fetchBetSubmissions = async (betId) => {
+    if (!betId) {
+      setBetSubmissions([]);
+      setAnswerGrouped({});
+      return;
+    }
+    try {
+      const { data, error } = await supabase
+        .from('bet_submissions')
+        .select('answer, user_id, users(username)')
+        .eq('bet_instance_id', betId);
+      if (error) throw error;
+
+      setBetSubmissions(data || []);
+
+      // Group by answer with counts
+      const grouped = {};
+      (data || []).forEach(sub => {
+        if (!grouped[sub.answer]) {
+          grouped[sub.answer] = [];
+        }
+        grouped[sub.answer].push(sub.users?.username || 'Unknown');
+      });
+      setAnswerGrouped(grouped);
+    } catch (err) {
+      console.error('Failed to fetch submissions:', err);
+    }
+  };
+
   const resolveBet = () => commAction(async () => {
     if (!selectedBetForResolution) throw new Error('Select a bet to resolve.');
-    if (!betResolutionAnswer) throw new Error('Enter the correct answer.');
+    if (!betResolutionAnswer) throw new Error('Select the correct answer.');
     const { data, error } = await supabase.rpc('resolve_bet', {
       p_instance_id: selectedBetForResolution.id,
       p_correct_answer: betResolutionAnswer,
@@ -276,6 +307,8 @@ export default function LeagueScreen() {
     setCommMsg({ type: 'ok', text: `Bet resolved — ${data?.submissions_updated ?? 0} submissions graded.` });
     setBetResolutionAnswer('');
     setSelectedBetForResolution(null);
+    setBetSubmissions([]);
+    setAnswerGrouped({});
     await fetchOpenBets();
   });
 
@@ -1146,6 +1179,7 @@ export default function LeagueScreen() {
                          const bet = openBets.find(b => b.id === e.target.value);
                          setSelectedBetForResolution(bet);
                          setBetResolutionAnswer('');
+                         fetchBetSubmissions(bet?.id || null);
                        }}
                        className="bg-[#1a1a1a] border border-[#2a2a2a] text-white text-[11px] px-2 py-2 rounded-sm outline-none focus:border-cyan/40"
                      >
@@ -1169,15 +1203,46 @@ export default function LeagueScreen() {
                          </div>
                        </div>
 
-                       <div className="flex flex-col gap-1">
-                         <label className="text-[9px] text-text-tertiary font-bold uppercase tracking-widest">Correct Answer</label>
-                         <input
-                           type="text"
-                           value={betResolutionAnswer}
-                           onChange={e => setBetResolutionAnswer(e.target.value)}
-                           placeholder="e.g. player_id, team_name, or Y/N"
-                           className="bg-[#1a1a1a] border border-[#2a2a2a] text-white text-[11px] px-2 py-2 rounded-sm outline-none focus:border-cyan/40"
-                         />
+                       <div className="flex flex-col gap-2">
+                         <label className="text-[9px] text-text-tertiary font-bold uppercase tracking-widest">Select Correct Answer</label>
+
+                         {betSubmissions.length === 0 ? (
+                           <div className="text-[10px] text-text-secondary italic">No submissions yet</div>
+                         ) : (
+                           <div className="flex flex-col gap-2">
+                             {Object.entries(answerGrouped).map(([answer, users]) => (
+                               <button
+                                 key={answer}
+                                 onClick={() => setBetResolutionAnswer(answer)}
+                                 className={`p-2 rounded-sm text-[11px] font-bold uppercase tracking-widest transition-all text-left ${
+                                   betResolutionAnswer === answer
+                                     ? 'bg-green-700/60 border border-green-600 text-white'
+                                     : 'bg-[#1a1a1a] border border-[#2a2a2a] text-text-secondary hover:border-[#3a3a3a]'
+                                 }`}
+                               >
+                                 <div>{answer}</div>
+                                 <div className="text-[9px] text-text-tertiary">{users.length} submission{users.length !== 1 ? 's' : ''}</div>
+                               </button>
+                             ))}
+                           </div>
+                         )}
+
+                         {/* Fallback: manual entry if answer not in submissions */}
+                         {betResolutionAnswer && !answerGrouped[betResolutionAnswer] && (
+                           <div className="bg-yellow-900/30 border border-yellow-700/50 p-2 rounded-sm text-[10px] text-yellow-200">
+                             Custom answer: "{betResolutionAnswer}" (not in submissions)
+                           </div>
+                         )}
+
+                         {!betResolutionAnswer && betSubmissions.length > 0 && (
+                           <input
+                             type="text"
+                             placeholder="Or type custom answer..."
+                             onChange={e => setBetResolutionAnswer(e.target.value)}
+                             value=""
+                             className="bg-[#1a1a1a] border border-[#2a2a2a] text-white text-[11px] px-2 py-2 rounded-sm outline-none focus:border-cyan/40 text-text-secondary"
+                           />
+                         )}
                        </div>
                      </>
                    )}
