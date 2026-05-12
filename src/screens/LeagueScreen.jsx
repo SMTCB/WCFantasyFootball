@@ -45,6 +45,7 @@ export default function LeagueScreen() {
   const [currentUser, setCurrentUser] = useState(null);
   const [draftGaps, setDraftGaps] = useState(0); // unresolved_slots for current user
   const [draftOpen, setDraftOpen] = useState(false); // deadline in future + no submission yet
+  const [draftDeadlineDate, setDraftDeadlineDate] = useState(null); // for countdown banner
   const transferWindow = useTransferWindow(activeLeague?.league_id);
 
   // Commissioner panel state
@@ -250,7 +251,9 @@ export default function LeagueScreen() {
 
       // Check if draft is open and manager hasn't submitted yet
       const deadline = lData?.draft_deadline;
-      if (deadline && new Date(deadline) > new Date()) {
+      const deadlineDate = deadline ? new Date(deadline) : null;
+      if (deadlineDate && deadlineDate > new Date()) {
+        setDraftDeadlineDate(deadlineDate);
         const { data: sub } = await supabase
           .from('draft_submissions')
           .select('id')
@@ -259,6 +262,7 @@ export default function LeagueScreen() {
           .maybeSingle();
         setDraftOpen(!sub);
       } else {
+        setDraftDeadlineDate(null);
         setDraftOpen(false);
       }
 
@@ -478,18 +482,35 @@ export default function LeagueScreen() {
 
          <TransferWindowBanner {...transferWindow} />
 
-         {/* Draft open banner — shown when deadline is future and no submission yet */}
-         {draftOpen && (
-           <div
-             onClick={() => navigate(`/league/${activeLeague?.league_id}/draft`)}
-             className="bg-[#1B5E20] text-white px-4 py-3 flex items-center justify-between cursor-pointer active:opacity-80"
-           >
-             <div className="text-[13px] font-bold">
-               🟢 Draft is open — submit your ranked list before the deadline
+         {/* Draft open banner — urgency colour shifts at 48h and 24h */}
+         {draftOpen && (() => {
+           const msLeft = draftDeadlineDate ? draftDeadlineDate.getTime() - Date.now() : Infinity;
+           const hoursLeft = msLeft / 3_600_000;
+           const isCritical = hoursLeft < 24;
+           const isWarning  = hoursLeft < 48;
+           const bg    = isCritical ? '#B71C1C' : isWarning ? '#E65100' : '#1B5E20';
+           const icon  = isCritical ? '🔴' : isWarning ? '🟡' : '🟢';
+           const label = isCritical
+             ? `${Math.max(0, Math.floor(hoursLeft))}h left — submit now!`
+             : isWarning
+             ? `${Math.floor(hoursLeft)}h left`
+             : 'Draft is open';
+           return (
+             <div
+               onClick={() => navigate(`/league/${activeLeague?.league_id}/draft`)}
+               className="px-4 py-3 flex items-center justify-between cursor-pointer active:opacity-80"
+               style={{ background: bg, color: 'white' }}
+             >
+               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                 <span className="text-[13px] font-bold">{icon} {label}</span>
+                 <span className="text-[11px] opacity-70" style={{ fontFamily: 'JetBrains Mono, monospace' }}>
+                   — submit your ranked list before the deadline
+                 </span>
+               </div>
+               <div className="text-[11px] font-black uppercase tracking-widest opacity-80">→</div>
              </div>
-             <div className="text-[11px] font-black uppercase tracking-widest opacity-80">→</div>
-           </div>
-         )}
+           );
+         })()}
 
          {/* Manage Squad shortcut */}
          <div className="px-4 py-2 flex gap-2">
