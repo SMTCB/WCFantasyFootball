@@ -52,9 +52,10 @@ android/app/src/main/assets/public/
 android/.gradle/
 android/build/
 android/app/build/
-android/gradle/wrapper/gradle-wrapper.jar
-android/gradlew
-android/gradlew.bat
+# NOTE: gradle-wrapper.jar and gradlew scripts MUST be committed for CI/CD to work
+# Do NOT exclude: android/gradle/wrapper/gradle-wrapper.jar
+# Do NOT exclude: android/gradlew
+# Do NOT exclude: android/gradlew.bat
 *.xcuserstate
 *.xcuserdatad
 DerivedData/
