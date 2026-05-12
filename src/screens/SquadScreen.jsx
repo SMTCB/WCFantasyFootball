@@ -330,6 +330,12 @@ export default function SquadScreen() {
 
   const setCaptain = async () => {
     try {
+      if (!selectedPlayer) return;
+      const isInStartingXI = squadData.players.some(p => p.id === selectedPlayer.id);
+      if (!isInStartingXI) {
+        alert('Only players in your starting XI can be captain.');
+        return;
+      }
       setSaving(true);
       setSquadData({ ...squadData, captainId: selectedPlayer.id });
       await supabase.from('squads').update({ captain_id: selectedPlayer.id }).eq('id', squadData.squadId);
