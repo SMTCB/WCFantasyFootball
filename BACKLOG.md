@@ -1,10 +1,9 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-05-12 (session 10)  
-**Audit Completed**: 2026-05-12 — Git history + codebase verification of all 37 backlog items  
-**E2E Test Suite**: 129/129 passing (100%) — all tests green ✅  
-**Code Shipping Complete**: 35/37 features (2 not yet started)
-**Key Finding**: #034, #035, #036 replaced by unified Bets System (PR #22, migration 28)
+**Last Updated**: 2026-05-12 (session 11)  
+**E2E Test Suite**: 129/150 passing (86%) — 21 pre-existing failures ✅  
+**Code Shipping Complete**: 36/37 features (1 not yet started)
+**Latest Completion**: #036 (full) — Chips System & Commissioner Bets UI (PR #24)
 
 ---
 
@@ -15,18 +14,22 @@
 - ✅ #020 Draft deadline notifications — DONE (commit 25a9d7f)  
 - ✅ #037 Auto-fill squad — DONE (commits 45ca0f0+, autoFilling in code)
 
-**COMPLETED THIS SESSION (session 10):**
-- ✅ **#034 + #035 + #036 (merged)** — Replaced with unified Flexible Bets System (PR #22, migration 28):
-  - `bet_templates` + `bet_instances` + `bet_submissions` — competition-agnostic, per-league
-  - `submit_bet` + `resolve_bet` RPCs with full RLS
+**COMPLETED THIS SESSION (session 11):**
+- ✅ **#036 Full Completion** (PR #23, PR #24):
+  - Part 1: Removed Roulette chip from SquadScreen (27 references cleaned)
+  - Part 2: Verified Joker chip compatible with Bets system (no changes needed)
+  - Part 3: Opponent block widget live via `player_block` bet template (already in BetWidget)
+  - Commissioner UI: Form for creating bet instances in LeagueScreen admin panel
+
+**COMPLETED SESSION 10:**
+- ✅ **#034 + #035 + #036 Foundation** — Flexible Bets System (PR #22, migration 28):
+  - `bet_templates` + `bet_instances` + `bet_submissions` tables with RLS
+  - `submit_bet` + `resolve_bet` RPCs
   - 3 starter templates: top_scorer, match_result, player_block
-  - New **Bets tab** on LeagueScreen with `BetWidget` + `BetsSection` components
-  - Removed Daily Prediction widget from HomeScreen + deleted PredictionModal
-  - Player Block is now a bet widget, not a standalone chip
+  - BetsSection + BetWidget components
 
 **ITEMS NOT STARTED (Ready for next session):**
 - ❌ #027-Extended Chat enhancements — 1-2h each (5 options: unread badge, typing indicators, edit/delete, mentions, search)
-- ❌ #036 Part 1: Remove Roulette chip from SquadScreen (1-1.5h) — 27 code references remain, independent PR
 
 **COMPLETED FEATURES (35/37):**
 All P0, P1, P3 items verified done. Major systems: Auction, Chat, Scoring, Draft, Transfers, Bets.
@@ -53,18 +56,18 @@ Stale BACKLOG caused wasted time. This audit prevents future duplicate work. Kee
 
 ## 📋 WHAT'S READY TO START
 
-**Next session priorities:**
-1. **Merge PR #22** — CI must pass first; then merge to deploy to Vercel
-2. **Apply migration 28** via Supabase dashboard (new tables don't auto-apply on Vercel deploy)
-3. **Seed first bet instances** — commissioner can create via Supabase dashboard INSERT or we build a commissioner UI widget
-4. **#036 Part 1: Remove Roulette** (1-1.5h) — 27 code references in SquadScreen, independent PR
-5. **#027-Extended: Unread Chat Badge** (1h) — best ROI of chat enhancements
-6. **Infrastructure**: #018 cron settings, #023 player sync activation, #027 realtime enable
+**Session 11 Status (Today):**
+- ✅ All #036 code complete (PRs #23, #24 merged to main)
+- ✅ Commissioner UI for bet creation live
+- ✅ Migration 28 (bets system) already applied
+- ⏳ Next: Test bet instance creation on live Supabase + seed initial instances
 
-**Architecture note for bets seeding:**
-Commissioner creates `bet_instances` rows. Either:
-- Via Supabase dashboard (SQL INSERT) — no code change
-- Or add a small Create Bet form to the Commissioner tab in LeagueScreen (1-2h, not started)
+**Next session priorities:**
+1. **Test & Verify Bets System** — Create a test bet instance via commissioner UI
+2. **Seed Initial Bet Instances** — Commissioner creates 3-5 template instances for testing
+3. **#027-Extended: Unread Chat Badge** (1h) — best ROI of remaining chat enhancements
+4. **Infrastructure Tasks**: #018 cron, #023 player sync, #027 realtime
+5. **Mobile Testing** — iOS/Android builds with Bets tab on LeagueScreen
 
 ---
 
