@@ -1,25 +1,53 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-05-12 (session 13)  
+**Last Updated**: 2026-05-12 (session 13 continued)  
 **E2E Test Suite**: 129/150 passing (86%) — 21 pre-existing failures ✅  
-**Code Shipping Complete**: 37/37 features
-**Latest Completion**: Unread Chat Badge + Bet System (37 of 37 COMPLETE)
+**Code Shipping Complete**: 37/37 core features + Chat Polish (3/5 #027-Extended done)
+**Latest Completion**: Chat Polish - Typing Indicators + Edit/Delete Messages
 
 ---
 
 ## 📊 SESSION 13 COMPLETION (2026-05-12)
 
 **COMPLETED THIS SESSION (session 13):**
-- ✅ **#027-Extended: Unread Chat Badge** (1h, commit 33dff5e):
-  - Created `league_chat_read_status` table to track user's last read time per league
-  - Added `mark_league_chat_read(p_league_id)` RPC to update read timestamp
-  - Added `get_unread_chat_count(p_league_id)` RPC to count unread messages since last read
-  - Updated `useChatMessages` hook to fetch unread count on mount
-  - Added `markChatAsRead()` function that triggers when chat tab becomes active
-  - Display badge with unread count on 'chat' tab (red badge, top-right)
-  - Badge disappears when user views chat (realtime: appears instantly with new messages)
-  - **Migration 30**: `league_chat_read_status` table + RLS policies + 2 RPCs
-  - **Status**: Ready — requires manual migration application in Supabase SQL editor
+
+**Part 1: Validation & Critical Path** (30 min)
+- ✅ **E2E Test Suite** — 129/150 passing, no new regressions
+- ✅ **Manual Bets E2E Test** — Ready (BETS_E2E_TEST_PLAN.md)
+- ⚠️ **Migration 30 & 31** — Require manual Supabase SQL editor application
+
+**Part 2: #027-Extended Chat Enhancements** (2.5h)
+
+1. **Unread Chat Badge** (commit 33dff5e):
+   - Created `league_chat_read_status` table to track last read time per league
+   - Added `mark_league_chat_read()` + `get_unread_chat_count()` RPCs
+   - Updated `useChatMessages` hook to fetch unread count and auto-clear when viewing chat
+   - Display red badge with count on 'chat' tab, disappears when user clicks chat
+   - **Migration 30**: `league_chat_read_status` table + RLS + 2 RPCs
+
+2. **Typing Indicators** (commit fad6a37):
+   - Broadcast typing status via Realtime (ephemeral, no DB persistence)
+   - Show "User X is typing..." above chat input while user types
+   - Auto-clear typing status after 3 seconds of inactivity
+   - Updated `useChatMessages` hook with `broadcastTyping()` + `typingUsers` state
+   - Integration in LeagueScreen: call `broadcastTyping()` on input change
+
+3. **Edit/Delete Messages** (commit fad6a37):
+   - Added `is_deleted`, `edited_at`, `edited_by` columns to chat_messages
+   - Created `edit_chat_message()` + `delete_chat_message()` RPCs (soft-delete)
+   - Hover-reveal edit (✏️) and delete (🗑️) buttons on own messages only
+   - Inline edit form: type new text → Save/Cancel buttons
+   - Show "[deleted]" placeholder for deleted messages
+   - Display "(edited)" indicator on messages modified after creation
+   - Updated `useChatMessages` hook with `editMessage()` + `deleteMessage()` functions
+   - **Migration 31**: Edit/delete columns + RLS policy for message ownership + 2 RPCs
+
+**3/5 #027-Extended Features Complete:**
+- ✅ Unread Badge
+- ✅ Typing Indicators
+- ✅ Edit/Delete Messages
+- ⬜ Mentions (@username) — deferred to post-launch
+- ⬜ Search Chat — deferred to post-launch
 
 ---
 
@@ -68,11 +96,9 @@
   - 3 starter templates: top_scorer, match_result, player_block
   - BetsSection + BetWidget components
 
-**REMAINING CHAT ENHANCEMENTS (Ready for next session):**
-- ⬜ Typing indicators — Show "User is typing..." (1-2h)
-- ⬜ Edit/Delete messages — Update/remove own messages (1-2h)
-- ⬜ Mentions (@username) — Tag specific users (1-2h)
-- ⬜ Search chat — Filter messages by keyword (1-2h)
+**REMAINING CHAT ENHANCEMENTS (Post-Launch Roadmap):**
+- ⬜ Message search — Filter/find in chat thread (1-2h, medium ROI)
+- ⬜ Mentions (@username) — Notify & tag specific users (1-2h, engagement)
 
 **COMPLETED FEATURES (37/37):**
 All P0, P1, P3 items verified done. Major systems: Auction, Chat (w/ unread badge), Scoring, Draft, Transfers, Bets.
