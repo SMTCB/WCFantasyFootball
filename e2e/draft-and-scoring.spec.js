@@ -117,7 +117,7 @@ test.describe('Draft System - Player Allocation Logic', () => {
     console.log('Position caps enforced post-allocation');
   });
 
-  test('managers with incomplete squads see recovery flow', async ({ page }) => {
+  test('managers with incomplete squads see recovery flow', async () => {
     // VERIFICATION POINTS:
     // If draft_allocations.unresolved_slots > 0:
     // 1. Manager sees "Incomplete Squad" UI on league screen
@@ -132,7 +132,7 @@ test.describe('Draft System - Player Allocation Logic', () => {
 
 // ── 3. API INTEGRATION: Forza Football Data Fetching ──────────────────────────
 test.describe('API Integration - Forza Football', () => {
-  test('player master data loaded from Forza API', async ({ page }) => {
+  test('player master data loaded from Forza API', async () => {
     // VERIFICATION POINTS:
     // 1. Players shown in draft list come from Forza Football API
     // 2. Each player has: id, name, position, club, price, availability
@@ -147,7 +147,7 @@ test.describe('API Integration - Forza Football', () => {
     console.log('Player data sourced from Forza Football API');
   });
 
-  test('match fixtures and lineups fetched correctly', async ({ page }) => {
+  test('match fixtures and lineups fetched correctly', async () => {
     // VERIFICATION POINTS:
     // 1. Scores screen shows upcoming fixtures
     // 2. Live matches display current score and events
@@ -162,7 +162,7 @@ test.describe('API Integration - Forza Football', () => {
     console.log('Match fixtures and lineups loaded from Forza API');
   });
 
-  test('player availability alerts synced from Forza API', async ({ page }) => {
+  test('player availability alerts synced from Forza API', async () => {
     // VERIFICATION POINTS:
     // 1. Injury/suspension alerts pulled from Forza data
     // 2. Status shown in player cards: "fit" / "doubtful" / "unavailable"
@@ -175,7 +175,7 @@ test.describe('API Integration - Forza Football', () => {
 
 // ── 4. SCORING SYSTEM: Fantasy Points Calculation ──────────────────────────────
 test.describe('Scoring System - Fantasy Points', () => {
-  test('fantasy points calculated from match events', async ({ page }) => {
+  test('fantasy points calculated from match events', async () => {
     // VERIFICATION POINTS:
     // Scoring rules (from FANTASY_POINTS_SCORING_LAYER.md):
     //
@@ -214,7 +214,7 @@ test.describe('Scoring System - Fantasy Points', () => {
     console.log('Fantasy points: calculated from match event data');
   });
 
-  test('weekly points aggregated per player', async ({ page }) => {
+  test('weekly points aggregated per player', async () => {
     // VERIFICATION POINTS:
     // 1. calculate-scores Edge Function runs post-match
     // 2. Each player's match events aggregated into weekly points
@@ -227,7 +227,7 @@ test.describe('Scoring System - Fantasy Points', () => {
     console.log('Weekly points aggregation: per-player scoring');
   });
 
-  test('real Premier League data from previous matchdays', async ({ page }) => {
+  test('real Premier League data from previous matchdays', async () => {
     // VERIFICATION POINTS:
     // Using actual data from recent Premier League rounds:
     // 1. Fixture results are real (not demo/dummy data)
@@ -246,7 +246,7 @@ test.describe('Scoring System - Fantasy Points', () => {
     console.log('Real match data: Premier League fixtures and results');
   });
 
-  test('squad points display shows scoring breakdown', async ({ page }) => {
+  test('squad points display shows scoring breakdown', async () => {
     // VERIFICATION POINTS:
     // 1. Squad screen shows each player's weekly points
     // 2. Breakdown visible: "4 pts (goal) + 4 pts (90min) + 1 (BPS) = 9 pts"
@@ -256,7 +256,7 @@ test.describe('Scoring System - Fantasy Points', () => {
     console.log('Scoring breakdown: visible in squad view');
   });
 
-  test('league standings reflect correct cumulative points', async ({ page }) => {
+  test('league standings reflect correct cumulative points', async () => {
     // VERIFICATION POINTS:
     // 1. League standings table shows Manager | Points | Rank
     // 2. Points are sum of all player points across all weeks
@@ -269,7 +269,7 @@ test.describe('Scoring System - Fantasy Points', () => {
 
 // ── Summary Test: End-to-End Draft → Allocation → Scoring ──────────────────────
 test.describe('End-to-End: Draft Submission to Final Squad', () => {
-  test('full flow: submit draft → lottery runs → squad formed → points calculated', async ({ page }) => {
+  test('full flow: submit draft → lottery runs → squad formed → points calculated', async () => {
     // FULL SCENARIO:
     // 1. Create league with draft format
     // 2. Manager A submits ranked list of 30 players
