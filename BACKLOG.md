@@ -1,9 +1,9 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-05-12 (session 11)  
+**Last Updated**: 2026-05-12 (session 12)  
 **E2E Test Suite**: 129/150 passing (86%) — 21 pre-existing failures ✅  
 **Code Shipping Complete**: 36/37 features (1 not yet started)
-**Latest Completion**: #036 (full) — Chips System & Commissioner Bets UI (PR #24)
+**Latest Completion**: Bet Reward Integration + Resolution UI
 
 ---
 
@@ -14,7 +14,18 @@
 - ✅ #020 Draft deadline notifications — DONE (commit 25a9d7f)  
 - ✅ #037 Auto-fill squad — DONE (commits 45ca0f0+, autoFilling in code)
 
-**COMPLETED THIS SESSION (session 11):**
+**COMPLETED THIS SESSION (session 12):**
+- ✅ **Bet Reward Integration** (PR #25, migration 29):
+  - `aggregate_league_member_points(league_id, user_id)` RPC: sums fantasy points + bet rewards
+  - Trigger on `bet_submissions.reward_awarded`: auto-recalculates points when bets resolve
+  - Updated `calculate-scores` to use aggregation RPC for league standings
+- ✅ **Bet Resolution UI** (commit 40ddbc9):
+  - Commissioner panel section in LeagueScreen to resolve open/closed bets
+  - Bet dropdown selector, correct answer input, resolve button
+  - Auto-fetches open bets when commissioner tab active
+  - Calls `resolve_bet` RPC to mark correct answers and award rewards
+
+**COMPLETED SESSION 11:**
 - ✅ **#036 Full Completion** (PR #23, PR #24):
   - Part 1: Removed Roulette chip from SquadScreen (27 references cleaned)
   - Part 2: Verified Joker chip compatible with Bets system (no changes needed)
@@ -56,18 +67,18 @@ Stale BACKLOG caused wasted time. This audit prevents future duplicate work. Kee
 
 ## 📋 WHAT'S READY TO START
 
-**Session 11 Status (Today):**
-- ✅ All #036 code complete (PRs #23, #24 merged to main)
-- ✅ Commissioner UI for bet creation live
-- ✅ Migration 28 (bets system) already applied
-- ⏳ Next: Test bet instance creation on live Supabase + seed initial instances
+**Session 12 Status (Today):**
+- ✅ Bet Reward Integration complete — fantasy + betting points now combined in league standings
+- ✅ Bet Resolution UI live — commissioners can resolve bets and grade submissions
+- ✅ Migration 29 (reward aggregation) applied to Supabase
+- ⏳ Ready to: Seed test bets + test resolution flow end-to-end
 
 **Next session priorities:**
-1. **Test & Verify Bets System** — Create a test bet instance via commissioner UI
-2. **Seed Initial Bet Instances** — Commissioner creates 3-5 template instances for testing
-3. **#027-Extended: Unread Chat Badge** (1h) — best ROI of remaining chat enhancements
-4. **Infrastructure Tasks**: #018 cron, #023 player sync, #027 realtime
-5. **Mobile Testing** — iOS/Android builds with Bets tab on LeagueScreen
+1. **Seed Initial Bet Instances** (0.5h) — Create 3-5 test bets for manual verification
+2. **End-to-End Test** — Create bet → submit answers → resolve → verify rewards in standings
+3. **Realtime Updates for Bets** (1h) — Live subscriptions for bet status changes
+4. **#027-Extended: Unread Chat Badge** (1h) — best ROI of remaining chat enhancements
+5. **Mobile Testing** — iOS/Android builds with Bets + Resolution tabs
 
 ---
 
