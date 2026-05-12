@@ -34,6 +34,8 @@ Claude creates worktrees under `.claude/worktrees/` — ephemeral and gitignored
 
 ## Git Workflow & Version Control
 
+**📖 For non-technical overview: see [GIT_AND_CODE_WALKTHROUGH.md](GIT_AND_CODE_WALKTHROUGH.md)**
+
 ### Branch Strategy (Solo Developer Pre-Launch)
 
 **Branch Model**: Simple feature-branch model
@@ -85,6 +87,21 @@ Each commit should be **atomic**: one logical change, no mixing features.
 - ✅ **Run tests before pushing** — catch issues early
 - ✅ **Never use `--no-verify`** — git hooks exist to help
 - ✅ **Keep main always deployable** — every commit on main should work
+
+### 🔴 CRITICAL: Merge to Main for Every Feature or Bug Fix
+
+**This is the step that makes your live app on Vercel update.**
+
+Every time Claude completes a feature or bug fix:
+1. A PR is created
+2. GitHub tests pass automatically
+3. **PR is merged to `main`** ← THIS IS REQUIRED
+4. Vercel auto-deploys (30–60 seconds)
+5. Your live app updates
+
+**Without step 3 (merge to main), your code stays in a feature branch and NEVER reaches your live app.**
+
+If you notice your Vercel app isn't updated with the latest fixes, the most common cause is a pending PR that hasn't been merged to `main` yet. Always check: are there open PRs waiting to merge?
 
 ---
 

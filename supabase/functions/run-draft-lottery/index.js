@@ -16,11 +16,30 @@ const SQUAD_SIZE = 15;
 
 Deno.serve(async (req) => {
   try {
-    const { league_id } = await req.json();
-    if (!league_id) return respond(400, { error: 'league_id required' });
+    const body = await req.json().catch(() => ({}));
+    const { league_id } = body;
 
-    const result = await runLottery(league_id);
-    return respond(200, result);
+    if (league_id) {
+      // Direct call with specific league
+      const result = await runLottery(league_id);
+      return respond(200, result);
+    }
+
+    // Cron mode: find leagues with pending submissions past their draft_deadline
+    const { data: pendingLeagues } = await supabase
+      .from('draft_submissions')
+      .select('league_id, leagues!inner(draft_deadline)')
+      .eq('status', 'pending')
+      .lte('leagues.draft_deadline', new Date().toISOString());
+
+    const leagueIds = [...new Set((pendingLeagues ?? []).map(r => r.league_id))];
+
+    if (!leagueIds.length) {
+      return respond(200, { message: 'No leagues past deadline with pending submissions' });
+    }
+
+    const results = await Promise.all(leagueIds.map(id => runLottery(id)));
+    return respond(200, { processed: results });
   } catch (err) {
     console.error(err);
     return respond(500, { error: err.message });
