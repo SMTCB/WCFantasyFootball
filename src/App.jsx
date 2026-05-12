@@ -16,6 +16,7 @@ import BracketScreen from './screens/BracketScreen';
 import DraftScreen from './screens/DraftScreen';
 import DraftRecoveryScreen from './screens/DraftRecoveryScreen';
 import { useOnboarding } from './hooks/useOnboarding';
+import { ToastProvider } from './components/Toast';
 
 // ── AppRoutes lives inside BrowserRouter so useNavigate (used by OnboardingWizard) works
 function AppRoutes() {
@@ -70,7 +71,9 @@ export default function App() {
   return (
     <AuthProvider>
       <BrowserRouter>
-        <AppRoutes />
+        <ToastProvider>
+          <AppRoutes />
+        </ToastProvider>
       </BrowserRouter>
     </AuthProvider>
   );

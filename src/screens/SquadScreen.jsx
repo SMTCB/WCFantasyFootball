@@ -16,6 +16,8 @@ import { useOnboarding } from '../hooks/useOnboarding';
 import { useTransfer } from '../hooks/useTransfer';
 import { useLeagueConfig } from '../hooks/useLeagueConfig';
 import { useAvailabilityFlag } from '../hooks/useAvailabilityFlag';
+import { useAuctions } from '../hooks/useAuctions';
+import { useToast } from '../hooks/useToast';
 import LeagueSelector from '../components/LeagueSelector';
 import OnboardingTour from '../components/OnboardingTour';
 import ConfirmModal from '../components/ConfirmModal';
@@ -58,6 +60,7 @@ const CHIPS = [
 
 export default function SquadScreen() {
   const { user } = useAuth();
+  const { show: showToast } = useToast();
   const [searchParams] = useSearchParams();
   const [leagueId] = useState(searchParams.get('leagueId'));
   const [jokerPlayer,        setJokerPlayer]       = useState(null);
@@ -95,6 +98,10 @@ export default function SquadScreen() {
 
   // Availability flags hook — league-scoped player flags for trade offers
   const { flagMap, toggleFlag } = useAvailabilityFlag(leagueId);
+
+  // Auction hook — list players for auction in the current league
+  const { listPlayer: listForAuction, auctions: activeAuctions } = useAuctions(leagueId, squadData?.squadId);
+  const [auctionBusy, setAuctionBusy] = useState(null); // playerId being listed
 
   // Live countdown hook — replaces static window lock badge
   const deadline = useDeadlineCountdown();
@@ -372,7 +379,7 @@ export default function SquadScreen() {
       // Validate formation — only block if it's actually a formation violation
       const formationError = validateFormation(newPlayers);
       if (formationError) {
-        alert(formationError);
+        showToast(formationError, 'warning');
         setSwapMode(false);
         setSelectedPlayer(null);
         return;
@@ -411,7 +418,7 @@ export default function SquadScreen() {
       if (!selectedPlayer) return;
       const isInStartingXI = squadData.players.some(p => p.id === selectedPlayer.id);
       if (!isInStartingXI) {
-        alert('Only players in your starting XI can be captain.');
+        showToast('Only players in your starting XI can be captain.', 'warning');
         return;
       }
       setSaving(true);
@@ -428,10 +435,10 @@ export default function SquadScreen() {
       const today  = new Date().toISOString().split('T')[0];
       const { error } = await supabase.from('daily_jokers').insert({ user_id: userId, player_id: selectedPlayer.id, match_date: today });
       if (error) {
-        if (error.code === '23505') alert('You already used your daily Joker today!');
+        if (error.code === '23505') showToast('You already used your daily Joker today!', 'warning');
         else throw error;
       } else { setTodayJokerId(selectedPlayer.id); setSelectedPlayer(null); }
-    } catch (err) { console.error(err); alert('Failed to set Joker: ' + err.message); }
+    } catch (err) { console.error(err); showToast('Failed to set Joker: ' + err.message, 'error'); }
     finally { setSaving(false); }
   };
 
@@ -459,7 +466,7 @@ export default function SquadScreen() {
       setSaving(true);
       const player = selectedPlayer;
       const result = await sell(player);
-      if (!result.ok) { alert(result.error); return; }
+      if (!result.ok) { showToast(result.error, 'error'); return; }
       // FB-021: clear captain if selling the captain
       const newCaptainId = squadData.captainId === player.id ? null : squadData.captainId;
       setSquadData({
@@ -569,10 +576,10 @@ export default function SquadScreen() {
       const today  = new Date().toISOString().split('T')[0];
       const { error } = await supabase.from('daily_jokers').insert({ user_id: userId, player_id: player.id, match_date: today });
       if (error) {
-        if (error.code === '23505') alert('You already have a Joker for today!');
+        if (error.code === '23505') showToast('You already have a Joker for today!', 'warning');
         else throw error;
       } else { setJokerPlayer(player); setTodayJokerId(player.id); setIsJokerPickerOpen(false); }
-    } catch (err) { console.error(err); alert('Failed to set Joker'); }
+    } catch (err) { console.error(err); showToast('Failed to set Joker', 'error'); }
     finally { setSaving(false); }
   };
 
@@ -773,7 +780,7 @@ export default function SquadScreen() {
   };
 
   const handlePickerBuy = async (player) => {
-    if (!leagueId) { alert('No league selected — open your squad from the League screen.'); return; }
+    if (!leagueId) { showToast('No league selected — open your squad from the League screen.', 'warning'); return; }
 
     // FB-022: Validate that buying this player won't violate formation rules (especially max 1 GK on pitch)
     // Simulate adding to pitch if there's room, then check formation
@@ -781,11 +788,11 @@ export default function SquadScreen() {
     if (!startersFull) {
       const simulatedPitch = [...squadData.players, player];
       const formationError = validateFormation(simulatedPitch);
-      if (formationError) { alert(formationError); return; }
+      if (formationError) { showToast(formationError, 'warning'); return; }
     }
 
     const result = await buy(player);
-    if (!result.ok) { alert(result.error); return; }
+    if (!result.ok) { showToast(result.error, 'error'); return; }
     setSquadData(prev => {
       const startersFull = prev.players.length >= 11;
       return {
@@ -819,6 +826,7 @@ export default function SquadScreen() {
               <SectionHeader title={POS_LABEL[pos]} />
               {allPos.map(player => {
                 const isBench = benchIds.has(player.id);
+                const isListed = activeAuctions.some(a => a.player_id === player.id);
                 const rowAction = (
                   <div className="flex flex-col items-end gap-1" onClick={e => e.stopPropagation()}>
                     <span
@@ -843,6 +851,39 @@ export default function SquadScreen() {
                       isOwn={true}
                       onToggle={() => toggleFlag(squadData.squadId, player.id)}
                     />
+                    {leagueId && !isListed && (
+                      <button
+                        disabled={auctionBusy === player.id}
+                        onClick={async () => {
+                          const bid = parseFloat(player.price ?? 0);
+                          setAuctionBusy(player.id);
+                          const res = await listForAuction(player.id, bid);
+                          setAuctionBusy(null);
+                          if (!res.ok) showToast(res.error, 'error');
+                          else showToast(`${player.name} listed for auction`, 'success');
+                        }}
+                        style={{
+                          fontFamily: 'JetBrains Mono, monospace',
+                          fontSize: 7,
+                          letterSpacing: '0.1em',
+                          textTransform: 'uppercase',
+                          padding: '2px 5px',
+                          border: '1px solid rgba(240,180,0,0.3)',
+                          color: 'var(--gold)',
+                          background: 'rgba(240,180,0,0.06)',
+                          flexShrink: 0,
+                          cursor: 'pointer',
+                          opacity: auctionBusy === player.id ? 0.5 : 1,
+                        }}
+                      >
+                        {auctionBusy === player.id ? '…' : 'Auction'}
+                      </button>
+                    )}
+                    {leagueId && isListed && (
+                      <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 7, letterSpacing: '0.1em', textTransform: 'uppercase', padding: '2px 5px', border: '1px solid rgba(240,180,0,0.4)', color: 'var(--gold)', background: 'rgba(240,180,0,0.1)', flexShrink: 0 }}>
+                        On auction
+                      </span>
+                    )}
                   </div>
                 );
                 return (
@@ -1708,7 +1749,7 @@ export default function SquadScreen() {
                       const benchP = selectedPlayer;
                       const newPlayers = [...squadData.players, benchP];
                       const formationError = validateFormation(newPlayers);
-                      if (formationError) { alert(formationError); return; }
+                      if (formationError) { showToast(formationError, 'warning'); return; }
                       const newBench = squadData.bench.filter(b => b.id !== benchP.id);
                       setSquadData({ ...squadData, players: newPlayers, bench: newBench });
                       setSelectedPlayer(null);
