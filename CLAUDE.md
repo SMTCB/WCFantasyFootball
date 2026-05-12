@@ -11,6 +11,27 @@
 
 ---
 
+## 🚀 SESSION START — READ THIS FIRST
+
+**Before doing anything else**, follow this 3-step process:
+
+1. **Read `.working-docs/SESSION_WORKFLOW.md`** — Session checklist (5 min)
+2. **Read `BACKLOG.md`** — Priorities and what was done last session (5 min)
+3. **Read `.working-docs/BEHAVIORAL_RULES.md`** — How to approach work (5 min)
+
+**Then start working.** At session end: update BACKLOG.md + merge PR (no hanging work).
+
+### Why `.working-docs/`?
+All behavioral instructions are now in one place to prevent confusion:
+- `SESSION_WORKFLOW.md` — How to structure each session
+- `BEHAVIORAL_RULES.md` — Rules for decision-making and what NOT to do
+- `GIT_WORKFLOW_GUIDE.md` — Detailed git procedures (reference only, usually not needed)
+- `WORKSPACE_GUIDE.md` — How the entire workspace is organized
+
+**This prevents the "16 markdown files scattered around" problem from recurring.**
+
+---
+
 ## Multi-AI Collaboration Protocol
 
 **Two AI platforms share this repo — never simultaneously.**
@@ -33,6 +54,10 @@ Claude creates worktrees under `.claude/worktrees/` — ephemeral and gitignored
 ---
 
 ## Git Workflow & Version Control
+
+**📖 Detailed instructions**: See [`.working-docs/GIT_WORKFLOW_GUIDE.md`](.working-docs/GIT_WORKFLOW_GUIDE.md)
+
+**Key principle**: All git operations are automated by Claude. User never touches git directly.
 
 ### Branch Strategy (Solo Developer Pre-Launch)
 

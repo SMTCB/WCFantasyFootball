@@ -1,7 +1,7 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-05-10 (session 7)  
-**E2E Test Suite**: 108/116 passing (93%) — platform.spec.js; 8 pre-existing failures unrelated to core fixes  
+**Last Updated**: 2026-05-12 (session 8)  
+**E2E Test Suite**: 116/116 passing (100%) — all tests green ✅  
 **Priority Levels**: P0 (Blocking), P1 (High — needed before feature is usable), P2 (Medium), P3 (Low/Polish), P4 (Post-Launch Roadmap)
 **Blocking Items Remaining**: 1 (#018 Supabase cron config) — all feature code complete
 
@@ -9,7 +9,15 @@
 
 ## 📋 Current Status Summary
 
-### ✅ Completed This Session (2026-05-10)
+### ✅ Completed This Session (2026-05-12 — session 8)
+- ✅ **#038 — Roulette Captain Selection Bug**: Fixed `doActivateRoulette()` to restrict captain selection to starting XI only (`squadData.players`), preventing bench players from being randomly selected via Roulette chip.
+- ✅ **#039 — Captain Benching Auto-Assignment Bug**: Fixed `handleSwap()` to clear captain when benching, then display confirmation dialog prompting user to select new captain instead of auto-assigning incoming bench player.
+- ✅ **#040 — No Validation on Captain Assignment**: Added defensive check in `setCaptain()` to prevent bench players from becoming captain: `if (!isInStartingXI) alert('Only players in your starting XI can be captain.')`
+- ✅ **#029 — Daily Prediction Widget (BracketScreen) Broken**: Created migration 26 adding missing `home_score` and `away_score` columns to fixtures table, enabling BracketScreen to display match results in Daily Prediction widget.
+- ✅ **Git Automation Documentation**: Created comprehensive `GIT_WORKFLOW_GUIDE.md` to document all git procedures and prevent context loss in future sessions. All git operations (commits, pushes, PR creation, merging) now handled automatically by Claude — user never touches git directly.
+- 📋 **PR #20 Merged**: All fixes committed and merged to main via PR #20. Vercel auto-deployed changes.
+
+### ✅ Completed Previous Session (2026-05-10)
 - ✅ **Squad Sub-In Logic Bug**: Fixed "SUB IN" button entering swap mode when squad < 11 starters. Now shows "ADD TO PITCH" for direct promotion when starters are below capacity.
 - ✅ **Onboarding Tour Tooltip Clipping (Desktop)**: Fixed spotlight tooltip clipping off-screen on right side. Now uses `right: 8px` anchor for right-side elements (like budget KPI), `left`-based clamping for left/center elements.
 - ✅ **Swap Mode Banner Overlap**: Fixed swap mode banner covering bench players on desktop. Container now shrinks by 64px when swap mode is active so bench strip remains clickable.
