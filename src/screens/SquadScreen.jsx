@@ -302,7 +302,8 @@ export default function SquadScreen() {
       const newBench     = squadData.bench.map(b =>
         b.id === benchPlayer.id ? { ...pitchPlayer, gridClass: '' } : b
       );
-      const newCaptainId = squadData.captainId === pitchPlayer.id ? benchPlayer.id : squadData.captainId;
+      const captainBeingBenched = squadData.captainId === pitchPlayer.id;
+      const newCaptainId = captainBeingBenched ? null : squadData.captainId;
       setSquadData({ ...squadData, players: newPlayers, bench: newBench, captainId: newCaptainId });
       setSelectedPlayer(null);
       setSwapMode(false);
@@ -310,6 +311,19 @@ export default function SquadScreen() {
         players:    [...newPlayers, ...newBench].map(p => p.id),
         captain_id: newCaptainId,
       }).eq('id', squadData.squadId);
+      if (captainBeingBenched) {
+        setConfirm({
+          title:        'Captain benched',
+          body:         `${pitchPlayer.name} was your captain. Select a new captain from your starting XI.`,
+          warning:      null,
+          confirmLabel: 'Select Captain',
+          danger:       false,
+          onConfirm:    () => {
+            setConfirm(null);
+            if (newPlayers.length > 0) setSelectedPlayer(newPlayers[0]);
+          },
+        });
+      }
     } catch (err) { console.error('Swap failed', err); }
     finally { setSaving(false); }
   };
