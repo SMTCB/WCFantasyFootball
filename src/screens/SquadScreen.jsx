@@ -447,12 +447,12 @@ export default function SquadScreen() {
 
   const doActivateRoulette = () => {
     setIsRouletteSpinning(true);
-    const all = [...squadData.players, ...squadData.bench];
+    const startersOnly = squadData.players;
     let idx = 0;
-    const interval = setInterval(() => { setSelectedPlayer(all[idx++ % all.length]); }, 80);
+    const interval = setInterval(() => { setSelectedPlayer(startersOnly[idx++ % startersOnly.length]); }, 80);
     setTimeout(() => {
       clearInterval(interval);
-      const winner = all[Math.floor(Math.random() * all.length)];
+      const winner = startersOnly[Math.floor(Math.random() * startersOnly.length)];
       setSelectedPlayer(winner);
       setTimeout(async () => {
         try {
