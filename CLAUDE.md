@@ -36,37 +36,75 @@ Claude creates worktrees under `.claude/worktrees/` — ephemeral and gitignored
 
 **📖 For non-technical overview: see [GIT_AND_CODE_WALKTHROUGH.md](GIT_AND_CODE_WALKTHROUGH.md)**
 
+### 🚨 CRITICAL RULE: NEVER COMMIT DIRECTLY TO `main`
+
+**Violations cause:**
+- GitHub error emails (branch protection failures)
+- CI/CD pipeline failures
+- Deployment issues
+- Confusion about what commits should be merged vs. directly pushed
+
+**The rule is absolute.** Every single change — even small doc updates — must go through a feature branch + PR + review + merge. No exceptions.
+
 ### Branch Strategy (Solo Developer Pre-Launch)
 
 **Branch Model**: Simple feature-branch model
 - **`main`** — production-ready code, auto-deployed to Vercel, always stable
+  - Only receives commits via PR merges from feature branches
+  - Never accepts direct commits or force pushes
+  - Always deployable; every commit works
 - **`claude/<kebab-case-description>`** — feature branches for each session
   - Created fresh from `main` at session start
   - Deleted immediately after PR merge
   - Example: `claude/fix-squad-formation-bug`, `claude/implement-league-chat`
 
-### Session Workflow
+### Session Workflow (Step-by-Step)
 
-**Before starting work:**
+**Step 1: Start Session**
 ```bash
-git pull origin main                          # Sync latest
-git checkout -b claude/feature-description   # Create feature branch
+git pull origin main                          # Fetch latest from remote
+git status                                    # Verify clean working tree
 ```
+**Expected output:** `nothing to commit, working tree clean` and `Your branch is up to date with 'origin/main'`
 
-**During development:**
-- Commit frequently with atomic, well-described messages
+**Step 2: Create Feature Branch (Before Any Changes)**
+```bash
+git checkout -b claude/your-feature-slug     # e.g. claude/fix-chat-lag
+```
+**Do this FIRST.** Never make changes on `main`.
+
+**Step 3: During Development**
+- Work normally; commit frequently with atomic, well-described messages
 - Run tests before pushing: `npx playwright test`
 - Keep commits focused (one logical change per commit)
 
-**Before merging:**
+**Step 4: Before Pushing**
 ```bash
-npm run lint                 # Check code quality
-npx playwright test          # Run E2E tests
-git push origin claude/...   # Push to remote
-# Create PR on GitHub, ensure all checks pass
-# Merge via GitHub (use squash for cleaner history)
-git branch -D claude/...     # DELETE local branch immediately
-git pull origin main         # Pull latest
+npm run lint                 # Must pass (enforced in CI)
+npx playwright test          # Should stay green
+```
+
+**Step 5: Push to Remote**
+```bash
+git push origin claude/your-feature-slug     # Pushes branch to GitHub
+```
+
+**Step 6: Create PR on GitHub**
+- Go to the GitHub PR link from the push output
+- Fill in title (concise, e.g. "Implement chat unread badge")
+- Fill in description (what changed, why)
+- Ensure CI checks pass (auto-run on PR)
+
+**Step 7: Merge PR**
+- Click "Merge pull request" on GitHub (prefer "Squash and merge" for cleaner history)
+- Confirm the merge
+- **Delete the branch** on GitHub (button appears after merge)
+
+**Step 8: Clean Up Local Branch**
+```bash
+git checkout main                             # Switch back to main
+git pull origin main                          # Pull the merged commit
+git branch -D claude/your-feature-slug        # Delete local feature branch
 ```
 
 ### Commit Message Format
@@ -81,12 +119,43 @@ Each commit should be **atomic**: one logical change, no mixing features.
 
 ### Important Rules
 
-- ✅ **Always create a feature branch** — never commit directly to `main`
+- ✅ **Always create a feature branch FIRST** — before making any changes
+- ✅ **Never commit to `main` directly** — always via PR
 - ✅ **Delete branches after merging** — keeps repo clean
-- ✅ **Pull before starting** — avoid merge conflicts
+- ✅ **Pull before starting each session** — stay up to date
 - ✅ **Run tests before pushing** — catch issues early
 - ✅ **Never use `--no-verify`** — git hooks exist to help
-- ✅ **Keep main always deployable** — every commit on main should work
+- ✅ **Keep `main` always deployable** — every commit on main should work
+
+### Troubleshooting: What Went Wrong
+
+**"I committed to `main` by mistake!"**
+```bash
+git reset --soft HEAD~1            # Undo the commit, keep changes staged
+git checkout -b claude/fix-branch  # Create proper feature branch
+git push origin claude/fix-branch  # Push feature branch
+# Then create PR on GitHub
+```
+
+**"I'm on `main` but haven't committed yet"**
+```bash
+git status                                    # Confirm which branch you're on
+git checkout -b claude/your-feature-slug     # Create feature branch
+# Now make your changes and commit
+```
+
+**"Branch is behind `main`"**
+```bash
+git rebase main                    # Rebase feature branch onto latest main
+git push --force-with-lease origin claude/your-feature-slug
+```
+
+**"Feature branch exists but worktree is on `main`"**
+```bash
+git checkout claude/existing-branch           # Switch worktree to correct branch
+git rebase main                    # Ensure up to date
+git stash pop                      # Restore any stashed changes
+```
 
 ### 🔴 CRITICAL: Merge to Main for Every Feature or Bug Fix
 
