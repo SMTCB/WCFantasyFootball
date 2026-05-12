@@ -11,24 +11,94 @@
 
 ---
 
-## 🚀 SESSION START — READ THIS FIRST
+## 🚀 SESSION START — EXACT READING ORDER
 
-**Before doing anything else**, follow this 3-step process:
+**Do this NOW, before any other work:**
 
-1. **Read `.working-docs/SESSION_WORKFLOW.md`** — Session checklist (5 min)
-2. **Read `BACKLOG.md`** — Priorities and what was done last session (5 min)
-3. **Read `.working-docs/BEHAVIORAL_RULES.md`** — How to approach work (5 min)
+### Step 1: Understand Project Status (2 min)
+**Read**: This file you're reading (CLAUDE.md)  
+**Extract**: Project tech stack, current implementation status, which AI is working on what  
+**Action**: You now know what technology this is built with  
 
-**Then start working.** At session end: update BACKLOG.md + merge PR (no hanging work).
+### Step 2: Understand Priorities (3 min)
+**Read**: `BACKLOG.md` (this directory, root level)  
+**Extract**: What was completed last session? What should you work on today? Any blockers?  
+**Action**: You now know what to build/fix  
 
-### Why `.working-docs/`?
-All behavioral instructions are now in one place to prevent confusion:
-- `SESSION_WORKFLOW.md` — How to structure each session
-- `BEHAVIORAL_RULES.md` — Rules for decision-making and what NOT to do
-- `GIT_WORKFLOW_GUIDE.md` — Detailed git procedures (reference only, usually not needed)
-- `WORKSPACE_GUIDE.md` — How the entire workspace is organized
+### Step 3: Understand Session Mechanics (3 min)
+**Read**: `.working-docs/SESSION_WORKFLOW.md` (hidden folder, root level)  
+**Extract**: How to structure this session (start → during → end), what to do when done  
+**Action**: You now know HOW to work (commit strategy, testing, PR process)  
 
-**This prevents the "16 markdown files scattered around" problem from recurring.**
+### Step 4: Understand Decision Rules (3 min)
+**Read**: `.working-docs/BEHAVIORAL_RULES.md` (hidden folder, root level)  
+**Extract**: Rules for how to approach code decisions, what NOT to do, when to ask user  
+**Action**: You now know WHEN and HOW to make decisions  
+
+### THEN (and only then):
+✅ Start the actual work  
+✅ At session end: update BACKLOG.md + merge PR (no hanging work)
+
+---
+
+## 📁 Quick File Reference
+
+**In This Directory (Root):**
+| File | Purpose | When to Read |
+|------|---------|--------------|
+| `CLAUDE.md` | Project tech + overview | SESSION START (you're reading it) |
+| `BACKLOG.md` | Priorities + session history | SESSION START (step 2) |
+| `README.md` | Project summary | First time only |
+| `GEMINI.md` | Instructions for Google Antigravity (mobile AI) | Never (unless mobile work) |
+
+**In `.working-docs/` (Hidden Folder):**
+| File | Purpose | When to Read |
+|------|---------|--------------|
+| `SESSION_WORKFLOW.md` | Session checklist + procedures | SESSION START (step 3) |
+| `BEHAVIORAL_RULES.md` | Decision rules + what NOT to do | SESSION START (step 4) |
+| `GIT_WORKFLOW_GUIDE.md` | Detailed git procedures | Only if stuck on git |
+| `WORKSPACE_GUIDE.md` | Explains workspace organization | Only if understanding structure |
+
+**In `docs/` (Organized by Topic):**
+- `docs/api/` — API integration details
+- `docs/architecture/` — System design documents
+- `docs/brand/` — Brand & design guidelines
+- `docs/deployment/` — Launch & infrastructure
+
+Use these only when you need specific details (e.g., "How does scoring work?" → read `docs/architecture/FANTASY_POINTS_SCORING_LAYER.md`)
+
+---
+
+## 🧠 Mental Model: What You Need to Know
+
+**This is a fantasy football app. Two parts:**
+
+1. **Web App** (your job — Claude Code):
+   - React 19 frontend, Vite bundler, Tailwind CSS styling
+   - Deployed on Vercel (auto-deploys from `main` branch)
+   - 116 E2E tests (Playwright) — must stay green
+   - Supabase backend (PostgreSQL database)
+
+2. **Mobile App** (different AI — Google Antigravity):
+   - Capacitor wrapper (same React code, native iOS/Android)
+   - ios/ and android/ folders have native configs
+   - Built separately, never work on simultaneously
+
+**Your Rules:**
+- ✅ Always work on feature branches (`claude/fix-something`)
+- ✅ Always merge PR to main when done (I handle this automatically)
+- ✅ Always run tests before pushing (`npx playwright test`)
+- ✅ Always update BACKLOG.md at session end
+- ❌ Never leave hanging PRs (merge or document why)
+- ❌ Never commit directly to main
+
+**Your Workflow Each Session:**
+1. Read files above (CLAUDE.md → BACKLOG.md → .working-docs/SESSION_WORKFLOW.md → .working-docs/BEHAVIORAL_RULES.md)
+2. Understand what to build/fix (from BACKLOG.md)
+3. Write code, test locally, commit atomically
+4. Push to feature branch, create PR, merge to main
+5. Update BACKLOG.md with what you did
+6. Done ✅
 
 ---
 
