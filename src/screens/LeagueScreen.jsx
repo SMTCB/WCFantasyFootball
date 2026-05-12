@@ -3,16 +3,20 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../hooks/useAuth';
 import { useChatMessages } from '../hooks/useChatMessages';
+import { useToast } from '../hooks/useToast';
+import { useAuctions } from '../hooks/useAuctions';
 import SectionHeader from '../components/SectionHeader';
 import LeagueInviteCard from '../components/LeagueInviteCard';
 import H2HSheet from '../components/H2HSheet';
 import GazetteDraftReport from '../components/GazetteDraftReport';
 import TransferWindowBanner from '../components/TransferWindowBanner';
+import AuctionCard from '../components/AuctionCard';
 import { useTransferWindow } from '../hooks/useTransferWindow';
 
 
 export default function LeagueScreen() {
   const { user } = useAuth();
+  const { show: showToast } = useToast();
   const navigate = useNavigate();
   const { leagueId } = useParams();
 
@@ -34,6 +38,7 @@ export default function LeagueScreen() {
   const [myListings,     setMyListings]     = useState(new Set()); // player_ids I've listed
   const [_leagueListings, setLeagueListings] = useState([]);        // all listings in league
   const [h2hTarget, setH2hTarget] = useState(null);
+  const [mySquadId, setMySquadId] = useState(null);
 
   // Real squad data for trade builder
   const [mySquadPlayers,   setMySquadPlayers]   = useState([]);
@@ -47,6 +52,7 @@ export default function LeagueScreen() {
   const [draftOpen, setDraftOpen] = useState(false); // deadline in future + no submission yet
   const [draftDeadlineDate, setDraftDeadlineDate] = useState(null); // for countdown banner
   const transferWindow = useTransferWindow(activeLeague?.league_id);
+  const { auctions, loading: auctionsLoading, placeBid, cancelListing } = useAuctions(activeLeague?.league_id, mySquadId);
 
   // Commissioner panel state
   const [commLoading,   setCommLoading]   = useState(false);
@@ -137,7 +143,7 @@ export default function LeagueScreen() {
       return;
     }
     // TODO: deeper position-cap check will use live squad data once real squads are wired
-    alert('Proposal Sent!');
+    showToast('Proposal sent!', 'success');
     setShowTradeBuilder(false);
     setTradeError(null);
   };
@@ -199,7 +205,7 @@ export default function LeagueScreen() {
 
   const renderTabs = () => (
     <div className="flex bg-[var(--ink-2)] border-b border-[var(--rule)] sticky top-[60px] z-20">
-      {['leaderboard', 'frontpage', 'chat', 'stats', ...(isCommissioner ? ['commissioner'] : [])].map((t) => (
+      {['leaderboard', 'frontpage', 'auctions', 'chat', 'stats', ...(isCommissioner ? ['commissioner'] : [])].map((t) => (
         <button
           key={t}
           onClick={() => setView(t === 'leaderboard' ? 'detail' : t)}
@@ -266,6 +272,15 @@ export default function LeagueScreen() {
         setDraftOpen(false);
       }
 
+      // Fetch current user's squadId in this league
+      const { data: squadRow } = await supabase
+        .from('squads')
+        .select('id')
+        .eq('league_id', id)
+        .eq('user_id', user?.id)
+        .maybeSingle();
+      setMySquadId(squadRow?.id ?? null);
+
       // Load trade listings for the league
       const { data: listings } = await supabase
         .from('trade_listings')
@@ -324,7 +339,7 @@ export default function LeagueScreen() {
       fetchLeagues();
     } catch (err) {
       console.error('[createLeague]', err);
-      alert('Could not create league: ' + (err.message || 'Unknown error'));
+      showToast('Could not create league: ' + (err.message || 'Unknown error'), 'error');
     } finally {
       setFormLoading(false);
     }
@@ -722,6 +737,53 @@ export default function LeagueScreen() {
               </div>
             </div>
           )}
+
+         {view === 'auctions' && (
+           <div className="bg-[var(--ink)] min-h-[60vh]">
+             <div className="px-4 py-3 border-b border-[var(--rule)] flex items-center justify-between">
+               <div>
+                 <div className="text-[11px] font-black uppercase tracking-[0.15em] text-[var(--mute)]">Auction House</div>
+                 <div className="text-[12px] text-[var(--mute)] mt-0.5">
+                   {auctions.length ? `${auctions.length} active listing${auctions.length !== 1 ? 's' : ''}` : 'No active auctions'}
+                 </div>
+               </div>
+               <div className="text-[9px] font-bold uppercase tracking-widest text-[var(--mute)]">
+                 {auctionsLoading ? 'Syncing…' : 'Live'}
+               </div>
+             </div>
+             {auctionsLoading && (
+               <div className="flex items-center justify-center py-12">
+                 <div className="w-5 h-5 border-2 border-cyan/30 border-t-cyan rounded-full animate-spin" />
+               </div>
+             )}
+             {!auctionsLoading && auctions.length === 0 && (
+               <div className="flex flex-col items-center justify-center py-16 px-8 text-center gap-3">
+                 <div className="text-[28px]">🔨</div>
+                 <div className="text-[11px] font-black uppercase tracking-widest text-[var(--mute)]">No active auctions</div>
+                 <div className="text-[11px] text-[var(--mute)] opacity-60 max-w-xs">
+                   List a player for auction from your Squad screen to start bidding.
+                 </div>
+               </div>
+             )}
+             {auctions.map(auction => (
+               <AuctionCard
+                 key={auction.id}
+                 auction={auction}
+                 mySquadId={mySquadId}
+                 onBid={async (id, amount) => {
+                   const res = await placeBid(id, amount);
+                   if (res.ok) showToast('Bid placed!', 'success');
+                   return res;
+                 }}
+                 onCancel={async (id) => {
+                   const res = await cancelListing(id);
+                   if (res.ok) showToast('Listing cancelled.', 'info');
+                   return res;
+                 }}
+               />
+             ))}
+           </div>
+         )}
 
          {view === 'stats' && (
             <div className="flex flex-col items-center justify-center min-h-[60vh] p-8 text-center">

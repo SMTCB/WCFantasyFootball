@@ -7,6 +7,7 @@ import { useAuth } from '../hooks/useAuth';
 import { useOnboarding } from '../hooks/useOnboarding';
 import { useTransfer } from '../hooks/useTransfer';
 import { useLeagueConfig } from '../hooks/useLeagueConfig';
+import { useToast } from '../hooks/useToast';
 import LeagueSelector  from '../components/LeagueSelector';
 import OnboardingTour  from '../components/OnboardingTour';
 import ConfirmModal    from '../components/ConfirmModal';
@@ -50,6 +51,7 @@ const MARKET_TOUR_STEPS = [
 
 export default function MarketScreen() {
   const { user } = useAuth();
+  const { show: showToast } = useToast();
   const [searchParams] = useSearchParams();
   const leagueId = searchParams.get('leagueId');
   const { showMarketTour, completeMarketTour } = useOnboarding();
@@ -171,15 +173,15 @@ export default function MarketScreen() {
 
   const handleBuy = async (player) => {
     if (saving) return;
-    if (isLocked) { alert('Transfers are locked until after the match.'); return; }
-    if (!activeLeague) { alert('Select a league first.'); return; }
-    if ((mySquad?.players?.length ?? 0) >= squadSize) { alert('Squad is full — sell a player first.'); return; }
-    if (stats.posCounts[player.position] >= POS_LIMITS[player.position]) { alert(`Max ${player.position}s reached.`); return; }
-    if (budget < player.price) { alert('Not enough budget.'); return; }
+    if (isLocked) { showToast('Transfers are locked until after the match.', 'warning'); return; }
+    if (!activeLeague) { showToast('Select a league first.', 'warning'); return; }
+    if ((mySquad?.players?.length ?? 0) >= squadSize) { showToast('Squad is full — sell a player first.', 'warning'); return; }
+    if (stats.posCounts[player.position] >= POS_LIMITS[player.position]) { showToast(`Max ${player.position}s reached.`, 'warning'); return; }
+    if (budget < player.price) { showToast('Not enough budget.', 'error'); return; }
     try {
       setSaving(true);
       const result = await buy(player);
-      if (!result.ok) { alert(result.error); return; }
+      if (!result.ok) { showToast(result.error, 'error'); return; }
       setMySquad(prev => ({ ...prev, players: result.players, budget_remaining: result.budget_remaining }));
       setBudget(result.budget_remaining);
     } finally { setSaving(false); }
@@ -187,7 +189,7 @@ export default function MarketScreen() {
 
   const handleSell = (player) => {
     if (saving)   return;
-    if (isLocked) { alert('Transfers are locked until after the match.'); return; }
+    if (isLocked) { showToast('Transfers are locked until after the match.', 'warning'); return; }
 
     const isCaptain = mySquad?.captain_id === player.id;
     const isJoker   = todayJokerId === player.id;
@@ -205,7 +207,7 @@ export default function MarketScreen() {
         try {
           setSaving(true);
           const result = await sell(player);
-          if (!result.ok) { alert(result.error); return; }
+          if (!result.ok) { showToast(result.error, 'error'); return; }
           setMySquad(prev => ({ ...prev, players: result.players, budget_remaining: result.budget_remaining }));
           setBudget(result.budget_remaining);
         } finally { setSaving(false); }
