@@ -426,20 +426,22 @@ async function rollupSquads(fixture_id, pointsLookup, tournament_id) {
 
   if (fpErr) console.error('fantasy_points upsert error:', JSON.stringify(fpErr));
 
-  // Update league_members totals
+  // Update league_members totals (including bet rewards via aggregate_league_member_points RPC)
+  const processedUsers = new Set();
   for (const squad of squads) {
-    const { data: totalRows } = await supabase
-      .from('fantasy_points')
-      .select('total')
-      .eq('squad_id', squad.id);
+    const key = `${squad.league_id}:${squad.user_id}`;
+    if (processedUsers.has(key)) continue;
+    processedUsers.add(key);
 
-    const grandTotal = (totalRows || []).reduce((sum, r) => sum + (r.total || 0), 0);
+    const { error: aggErr } = await supabase
+      .rpc('aggregate_league_member_points', {
+        p_league_id: squad.league_id,
+        p_user_id: squad.user_id,
+      });
 
-    await supabase
-      .from('league_members')
-      .update({ total_points: Math.round(grandTotal * 100) / 100 })
-      .eq('user_id', squad.user_id)
-      .eq('league_id', squad.league_id);
+    if (aggErr) {
+      console.error(`aggregate_league_member_points failed for ${squad.user_id} in ${squad.league_id}:`, JSON.stringify(aggErr));
+    }
   }
 
   return squads.length;
