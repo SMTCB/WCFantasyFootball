@@ -1,9 +1,25 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-05-12 (session 12)  
+**Last Updated**: 2026-05-12 (session 13)  
 **E2E Test Suite**: 129/150 passing (86%) — 21 pre-existing failures ✅  
-**Code Shipping Complete**: 36/37 features (1 not yet started)
-**Latest Completion**: Bet Reward Integration + Resolution UI
+**Code Shipping Complete**: 37/37 features
+**Latest Completion**: Unread Chat Badge + Bet System (37 of 37 COMPLETE)
+
+---
+
+## 📊 SESSION 13 COMPLETION (2026-05-12)
+
+**COMPLETED THIS SESSION (session 13):**
+- ✅ **#027-Extended: Unread Chat Badge** (1h, commit 33dff5e):
+  - Created `league_chat_read_status` table to track user's last read time per league
+  - Added `mark_league_chat_read(p_league_id)` RPC to update read timestamp
+  - Added `get_unread_chat_count(p_league_id)` RPC to count unread messages since last read
+  - Updated `useChatMessages` hook to fetch unread count on mount
+  - Added `markChatAsRead()` function that triggers when chat tab becomes active
+  - Display badge with unread count on 'chat' tab (red badge, top-right)
+  - Badge disappears when user views chat (realtime: appears instantly with new messages)
+  - **Migration 30**: `league_chat_read_status` table + RLS policies + 2 RPCs
+  - **Status**: Ready — requires manual migration application in Supabase SQL editor
 
 ---
 
@@ -52,11 +68,14 @@
   - 3 starter templates: top_scorer, match_result, player_block
   - BetsSection + BetWidget components
 
-**ITEMS NOT STARTED (Ready for next session):**
-- ❌ #027-Extended Chat enhancements — 1-2h each (5 options: unread badge, typing indicators, edit/delete, mentions, search)
+**REMAINING CHAT ENHANCEMENTS (Ready for next session):**
+- ⬜ Typing indicators — Show "User is typing..." (1-2h)
+- ⬜ Edit/Delete messages — Update/remove own messages (1-2h)
+- ⬜ Mentions (@username) — Tag specific users (1-2h)
+- ⬜ Search chat — Filter messages by keyword (1-2h)
 
-**COMPLETED FEATURES (35/37):**
-All P0, P1, P3 items verified done. Major systems: Auction, Chat, Scoring, Draft, Transfers, Bets.
+**COMPLETED FEATURES (37/37):**
+All P0, P1, P3 items verified done. Major systems: Auction, Chat (w/ unread badge), Scoring, Draft, Transfers, Bets.
 
 ---
 
@@ -90,9 +109,14 @@ Stale BACKLOG caused wasted time. This audit prevents future duplicate work. Kee
 
 **Remaining work (37/37 features shipped, ready for validation/launch):**
 1. **Manual E2E Testing** — Follow BETS_E2E_TEST_PLAN.md (15 min walkthrough)
-2. **Mobile Testing** — iOS/Android builds with Bets + Resolution tabs (1-2h per platform)
-3. **#027-Extended: Unread Chat Badge** (1h) — best ROI of remaining chat enhancements
-4. **Launch prep**: Final checklist, app store submission readiness
+   - Verify bet creation → submission → resolution → points aggregation → realtime updates
+2. **Mobile Testing** — iOS/Android builds with Bets + Resolution + Unread badge (1-2h per platform)
+   - Test Capacitor sync + native rendering for all new features
+3. **Migration 30 Application** — Run chat read status migration in Supabase SQL editor
+   - Creates `league_chat_read_status` table + RPCs for unread tracking
+4. **Launch Prep**: Final checklist, app store submission readiness
+   - Verify all 37/37 features in production build
+   - Check E2E test coverage (currently 129/150 passing)
 
 ---
 
