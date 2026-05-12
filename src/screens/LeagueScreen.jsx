@@ -95,7 +95,7 @@ export default function LeagueScreen() {
   // Chat state
   const [chatInput, setChatInput] = useState('');
   const [chatSending, setChatSending] = useState(false);
-  const { messages, loading: chatLoading, sendMessage, scrollEndRef } = useChatMessages(activeLeague?.league_id);
+  const { messages, loading: chatLoading, unreadCount, sendMessage, markChatAsRead, scrollEndRef } = useChatMessages(activeLeague?.league_id);
 
   const toggleListing = async (playerId) => {
     const leagueId = activeLeague?.league_id;
@@ -325,6 +325,11 @@ export default function LeagueScreen() {
           }`}
         >
           {t === 'leaderboard' ? 'Leaderboard' : t === 'commissioner' ? '⚙ Admin' : t}
+          {t === 'chat' && unreadCount > 0 && (
+            <span className="absolute top-1 right-1 bg-red-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full">
+              {unreadCount}
+            </span>
+          )}
           {((view === 'detail' && t === 'leaderboard') || view === t) && (
             <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-cyan" />
           )}
@@ -352,6 +357,12 @@ export default function LeagueScreen() {
       fetchOpenBets();
     }
   }, [view, activeLeague?.league_id]);
+
+  useEffect(() => {
+    if (view === 'chat' && activeLeague?.league_id) {
+      markChatAsRead();
+    }
+  }, [view, activeLeague?.league_id, markChatAsRead]);
 
   // Realtime subscription: league standings (total_points updates from bet rewards)
   useEffect(() => {

@@ -4,12 +4,13 @@ import { useAuth } from './useAuth';
 
 /**
  * Manages league chat messages with realtime updates.
- * Provides messages array, loading state, send function, and auto-scroll ref.
+ * Provides messages array, loading state, send function, unread count, and auto-scroll ref.
  */
 export function useChatMessages(leagueId) {
   const { user } = useAuth();
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
   const scrollEndRef = useRef(null);
   const subscriptionRef = useRef(null);
 
@@ -17,6 +18,25 @@ export function useChatMessages(leagueId) {
   const scrollToBottom = useCallback(() => {
     scrollEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, []);
+
+  // Fetch unread message count
+  const fetchUnreadCount = useCallback(async () => {
+    if (!leagueId) return;
+    try {
+      const { data, error } = await supabase.rpc('get_unread_chat_count', {
+        p_league_id: leagueId,
+      });
+
+      if (error) {
+        console.error('useChatMessages: fetchUnreadCount failed', error);
+        return;
+      }
+
+      setUnreadCount(data || 0);
+    } catch (err) {
+      console.error('useChatMessages: fetchUnreadCount exception', err);
+    }
+  }, [leagueId]);
 
   // Load initial chat history
   const loadMessages = useCallback(async () => {
@@ -60,9 +80,29 @@ export function useChatMessages(leagueId) {
     }
   }, [leagueId, user?.id]);
 
+  // Mark chat as read
+  const markChatAsRead = useCallback(async () => {
+    if (!leagueId) return;
+    try {
+      const { error } = await supabase.rpc('mark_league_chat_read', {
+        p_league_id: leagueId,
+      });
+
+      if (error) {
+        console.error('useChatMessages: markChatAsRead failed', error);
+        return;
+      }
+
+      setUnreadCount(0);
+    } catch (err) {
+      console.error('useChatMessages: markChatAsRead exception', err);
+    }
+  }, [leagueId]);
+
   // Setup realtime subscription on mount
   useEffect(() => {
     loadMessages();
+    fetchUnreadCount();
 
     if (!leagueId) return;
 
@@ -112,7 +152,7 @@ export function useChatMessages(leagueId) {
         supabase.removeChannel(subscriptionRef.current);
       }
     };
-  }, [leagueId, loadMessages, user?.id]);
+  }, [leagueId, loadMessages, user?.id, fetchUnreadCount]);
 
   // Auto-scroll to bottom when messages change
   useEffect(() => {
@@ -152,7 +192,9 @@ export function useChatMessages(leagueId) {
   return {
     messages,
     loading,
+    unreadCount,
     sendMessage,
+    markChatAsRead,
     scrollEndRef,
   };
 }
