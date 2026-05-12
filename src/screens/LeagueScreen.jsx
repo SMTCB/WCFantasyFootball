@@ -64,6 +64,15 @@ export default function LeagueScreen() {
   const [draftDeadline, setDraftDeadline] = useState('');
   const [scoreFixtureId,setScoreFixtureId]=useState('test-live');
 
+  // Bet instance creation state
+  const [betTemplateId, setBetTemplateId] = useState('');
+  const [betTitle, setBetTitle] = useState('');
+  const [betPrompt, setBetPrompt] = useState('');
+  const [betDeadline, setBetDeadline] = useState('');
+  const [betRewardValue, setBetRewardValue] = useState('5');
+  const [betScopeType, setBetScopeType] = useState('matchday');
+  const [betScopeRef, setBetScopeRef] = useState('');
+
   // Create form state
   const [leagueName,   setLeagueName]   = useState('');
   const [leagueFormat, setLeagueFormat] = useState('classic');
@@ -202,6 +211,32 @@ export default function LeagueScreen() {
       .eq('id', activeLeague?.league_id);
     if (error) throw new Error(error.message);
     setCommMsg({ type: 'ok', text: 'Draft deadline set.' });
+  });
+
+  const createBetInstance = () => commAction(async () => {
+    if (!betTitle) throw new Error('Enter a bet title.');
+    if (!betPrompt) throw new Error('Enter a bet prompt/question.');
+    if (!betDeadline) throw new Error('Set a deadline.');
+    const { error } = await supabase.from('bet_instances').insert({
+      league_id: activeLeague?.league_id,
+      template_id: betTemplateId || null,
+      title: betTitle,
+      prompt: betPrompt,
+      options: [],
+      deadline_at: betDeadline,
+      reward_value: Number(betRewardValue) || 5,
+      scope_type: betScopeType,
+      scope_ref: betScopeRef || null,
+    });
+    if (error) throw new Error(error.message);
+    setCommMsg({ type: 'ok', text: 'Bet instance created.' });
+    setBetTitle('');
+    setBetPrompt('');
+    setBetDeadline('');
+    setBetRewardValue('5');
+    setBetScopeType('matchday');
+    setBetScopeRef('');
+    setBetTemplateId('');
   });
 
   const renderTabs = () => (
@@ -928,6 +963,95 @@ export default function LeagueScreen() {
                  className="w-full py-3 bg-purple-700 text-white text-[11px] font-black uppercase tracking-widest rounded-sm disabled:opacity-50"
                >
                  Seed Cup Clubs
+               </button>
+             </div>
+
+             {/* ── Create Bet Instance ────────────────────────────────────────── */}
+             <div className="bg-[#111] border border-[#1e1e1e] rounded-sm p-4 space-y-3">
+               <div className="text-[10px] font-black uppercase tracking-[0.15em] text-text-tertiary">Create Bet Instance</div>
+               <div className="flex flex-col gap-1">
+                 <label className="text-[9px] text-text-tertiary font-bold uppercase tracking-widest">Template (optional)</label>
+                 <select
+                   value={betTemplateId}
+                   onChange={e => setBetTemplateId(e.target.value)}
+                   className="bg-[#1a1a1a] border border-[#2a2a2a] text-white text-[11px] px-2 py-2 rounded-sm outline-none focus:border-cyan/40"
+                 >
+                   <option value="">None</option>
+                   <option value="top_scorer">Matchday Top Scorer</option>
+                   <option value="match_result">Match Result</option>
+                   <option value="player_block">Player Block</option>
+                 </select>
+               </div>
+               <div className="flex flex-col gap-1">
+                 <label className="text-[9px] text-text-tertiary font-bold uppercase tracking-widest">Title</label>
+                 <input
+                   type="text"
+                   value={betTitle}
+                   onChange={e => setBetTitle(e.target.value)}
+                   placeholder="e.g. Who scores first?"
+                   className="bg-[#1a1a1a] border border-[#2a2a2a] text-white text-[11px] px-2 py-2 rounded-sm outline-none focus:border-cyan/40"
+                 />
+               </div>
+               <div className="flex flex-col gap-1">
+                 <label className="text-[9px] text-text-tertiary font-bold uppercase tracking-widest">Prompt/Question</label>
+                 <textarea
+                   value={betPrompt}
+                   onChange={e => setBetPrompt(e.target.value)}
+                   placeholder="e.g. Which player will score the most goals?"
+                   className="bg-[#1a1a1a] border border-[#2a2a2a] text-white text-[11px] px-2 py-2 rounded-sm outline-none focus:border-cyan/40 resize-none h-[60px]"
+                 />
+               </div>
+               <div className="grid grid-cols-2 gap-2">
+                 <div className="flex flex-col gap-1">
+                   <label className="text-[9px] text-text-tertiary font-bold uppercase tracking-widest">Deadline</label>
+                   <input
+                     type="datetime-local"
+                     value={betDeadline}
+                     onChange={e => setBetDeadline(e.target.value)}
+                     className="bg-[#1a1a1a] border border-[#2a2a2a] text-white text-[11px] px-2 py-2 rounded-sm outline-none focus:border-cyan/40"
+                   />
+                 </div>
+                 <div className="flex flex-col gap-1">
+                   <label className="text-[9px] text-text-tertiary font-bold uppercase tracking-widest">Reward Value</label>
+                   <input
+                     type="number"
+                     value={betRewardValue}
+                     onChange={e => setBetRewardValue(e.target.value)}
+                     min="1"
+                     className="bg-[#1a1a1a] border border-[#2a2a2a] text-white text-[11px] px-2 py-2 rounded-sm outline-none focus:border-cyan/40"
+                   />
+                 </div>
+               </div>
+               <div className="grid grid-cols-2 gap-2">
+                 <div className="flex flex-col gap-1">
+                   <label className="text-[9px] text-text-tertiary font-bold uppercase tracking-widest">Scope Type</label>
+                   <select
+                     value={betScopeType}
+                     onChange={e => setBetScopeType(e.target.value)}
+                     className="bg-[#1a1a1a] border border-[#2a2a2a] text-white text-[11px] px-2 py-2 rounded-sm outline-none focus:border-cyan/40"
+                   >
+                     <option value="matchday">Matchday</option>
+                     <option value="match">Match</option>
+                     <option value="season">Season</option>
+                   </select>
+                 </div>
+                 <div className="flex flex-col gap-1">
+                   <label className="text-[9px] text-text-tertiary font-bold uppercase tracking-widest">Scope Ref (optional)</label>
+                   <input
+                     type="text"
+                     value={betScopeRef}
+                     onChange={e => setBetScopeRef(e.target.value)}
+                     placeholder="e.g. MD4, f-123"
+                     className="bg-[#1a1a1a] border border-[#2a2a2a] text-white text-[11px] px-2 py-2 rounded-sm outline-none focus:border-cyan/40"
+                   />
+                 </div>
+               </div>
+               <button
+                 onClick={createBetInstance}
+                 disabled={commLoading}
+                 className="w-full py-3 bg-[#FF6B00] text-black text-[11px] font-black uppercase tracking-widest rounded-sm disabled:opacity-50"
+               >
+                 Create Bet Instance
                </button>
              </div>
            </div>
