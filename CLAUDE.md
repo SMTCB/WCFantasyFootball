@@ -1,5 +1,29 @@
 # Claude Code — Project Instructions
 
+---
+
+## ⚡ TL;DR — DO THIS NOW (Before Anything Else)
+
+**You have 15 minutes to get oriented. Follow these 4 steps in order:**
+
+```
+1. Finish reading THIS file (CLAUDE.md)       [← you are here now]
+2. Read BACKLOG.md (root folder)              [what to work on today]
+3. Read .working-docs/SESSION_WORKFLOW.md     [how to structure work]
+4. Read .working-docs/BEHAVIORAL_RULES.md     [rules & decision-making]
+```
+
+**After those 4 reads, you will know:**
+- ✅ What this project is (fantasy football app)
+- ✅ What tech stack it uses (React + Vite + Supabase)
+- ✅ What to work on (from BACKLOG.md)
+- ✅ How to work (commit → test → PR → merge)
+- ✅ Rules for decisions (when to ask, what NOT to do)
+
+**Then start coding. At session end: merge PR + update BACKLOG.md.**
+
+---
+
 ## Project Overview
 
 **Forza Fantasy League** — Elite fantasy football web + native mobile app.
