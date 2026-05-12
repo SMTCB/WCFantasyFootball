@@ -73,6 +73,12 @@ export default function LeagueScreen() {
   const [betScopeType, setBetScopeType] = useState('matchday');
   const [betScopeRef, setBetScopeRef] = useState('');
 
+  // Bet resolution state
+  const [openBets, setOpenBets] = useState([]);
+  const [resolutionBetsLoading, setResolutionBetsLoading] = useState(false);
+  const [selectedBetForResolution, setSelectedBetForResolution] = useState(null);
+  const [betResolutionAnswer, setBetResolutionAnswer] = useState('');
+
   // Create form state
   const [leagueName,   setLeagueName]   = useState('');
   const [leagueFormat, setLeagueFormat] = useState('classic');
@@ -237,6 +243,40 @@ export default function LeagueScreen() {
     setBetScopeType('matchday');
     setBetScopeRef('');
     setBetTemplateId('');
+    await fetchOpenBets();
+  });
+
+  const fetchOpenBets = async () => {
+    if (!activeLeague?.league_id) return;
+    setResolutionBetsLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('bet_instances')
+        .select('*')
+        .eq('league_id', activeLeague.league_id)
+        .neq('status', 'resolved')
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      setOpenBets(data || []);
+    } catch (err) {
+      console.error('Failed to fetch open bets:', err);
+    } finally {
+      setResolutionBetsLoading(false);
+    }
+  };
+
+  const resolveBet = () => commAction(async () => {
+    if (!selectedBetForResolution) throw new Error('Select a bet to resolve.');
+    if (!betResolutionAnswer) throw new Error('Enter the correct answer.');
+    const { data, error } = await supabase.rpc('resolve_bet', {
+      p_instance_id: selectedBetForResolution.id,
+      p_correct_answer: betResolutionAnswer,
+    });
+    if (error) throw new Error(error.message);
+    setCommMsg({ type: 'ok', text: `Bet resolved — ${data?.submissions_updated ?? 0} submissions graded.` });
+    setBetResolutionAnswer('');
+    setSelectedBetForResolution(null);
+    await fetchOpenBets();
   });
 
   const renderTabs = () => (
@@ -273,6 +313,12 @@ export default function LeagueScreen() {
       setMembers([]);
     }
   }, [leagueId]);
+
+  useEffect(() => {
+    if (view === 'commissioner' && activeLeague?.league_id) {
+      fetchOpenBets();
+    }
+  }, [view, activeLeague?.league_id]);
 
   const loadLeagueById = async (id) => {
     try {
@@ -1053,6 +1099,71 @@ export default function LeagueScreen() {
                >
                  Create Bet Instance
                </button>
+             </div>
+
+             {/* ── Resolve Bet Instance ────────────────────────────────────────── */}
+             <div className="bg-[#111] border border-[#1e1e1e] rounded-sm p-4 space-y-3">
+               <div className="text-[10px] font-black uppercase tracking-[0.15em] text-text-tertiary">Resolve Bet Instance</div>
+
+               {resolutionBetsLoading ? (
+                 <div className="text-[11px] text-text-secondary">Loading open bets...</div>
+               ) : openBets.length === 0 ? (
+                 <div className="text-[11px] text-text-secondary">No open or closed bets to resolve.</div>
+               ) : (
+                 <>
+                   <div className="flex flex-col gap-1">
+                     <label className="text-[9px] text-text-tertiary font-bold uppercase tracking-widest">Select Bet</label>
+                     <select
+                       value={selectedBetForResolution?.id || ''}
+                       onChange={e => {
+                         const bet = openBets.find(b => b.id === e.target.value);
+                         setSelectedBetForResolution(bet);
+                         setBetResolutionAnswer('');
+                       }}
+                       className="bg-[#1a1a1a] border border-[#2a2a2a] text-white text-[11px] px-2 py-2 rounded-sm outline-none focus:border-cyan/40"
+                     >
+                       <option value="">None</option>
+                       {openBets.map(bet => (
+                         <option key={bet.id} value={bet.id}>
+                           {bet.title} ({bet.status})
+                         </option>
+                       ))}
+                     </select>
+                   </div>
+
+                   {selectedBetForResolution && (
+                     <>
+                       <div className="bg-[#1a1a1a] p-3 rounded-sm space-y-2 border border-[#2a2a2a]">
+                         <div className="text-[10px] font-bold text-text-secondary">Prompt:</div>
+                         <div className="text-[11px] text-white">{selectedBetForResolution.prompt}</div>
+                         <div className="text-[10px] font-bold text-text-secondary mt-2">Reward:</div>
+                         <div className="text-[11px] text-white">
+                           {selectedBetForResolution.reward_value} {selectedBetForResolution.reward_type === 'points' ? 'pts' : '£M'}
+                         </div>
+                       </div>
+
+                       <div className="flex flex-col gap-1">
+                         <label className="text-[9px] text-text-tertiary font-bold uppercase tracking-widest">Correct Answer</label>
+                         <input
+                           type="text"
+                           value={betResolutionAnswer}
+                           onChange={e => setBetResolutionAnswer(e.target.value)}
+                           placeholder="e.g. player_id, team_name, or Y/N"
+                           className="bg-[#1a1a1a] border border-[#2a2a2a] text-white text-[11px] px-2 py-2 rounded-sm outline-none focus:border-cyan/40"
+                         />
+                       </div>
+                     </>
+                   )}
+
+                   <button
+                     onClick={resolveBet}
+                     disabled={commLoading || !selectedBetForResolution || !betResolutionAnswer}
+                     className="w-full py-3 bg-purple-700 text-white text-[11px] font-black uppercase tracking-widest rounded-sm disabled:opacity-50"
+                   >
+                     Resolve Bet
+                   </button>
+                 </>
+               )}
              </div>
            </div>
          )}
