@@ -320,6 +320,33 @@ export default function LeagueScreen() {
     }
   }, [view, activeLeague?.league_id]);
 
+  // Realtime subscription: league standings (total_points updates from bet rewards)
+  useEffect(() => {
+    if (!activeLeague?.league_id) return;
+
+    const membersSub = supabase
+      .channel(`league_members:league_id=eq.${activeLeague.league_id}`)
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'league_members', filter: `league_id=eq.${activeLeague.league_id}` },
+        (payload) => {
+          // Update the specific member in the members list with new total_points
+          setMembers(prev => {
+            const idx = prev.findIndex(m => m.user_id === payload.new.user_id);
+            if (idx >= 0) {
+              const updated = [...prev];
+              updated[idx] = { ...updated[idx], total_points: payload.new.total_points };
+              return updated.sort((a, b) => (b.total_points || 0) - (a.total_points || 0));
+            }
+            return prev;
+          });
+        }
+      )
+      .subscribe();
+
+    return () => { membersSub.unsubscribe(); };
+  }, [activeLeague?.league_id]);
+
   const loadLeagueById = async (id) => {
     try {
       setMembersLoading(true);

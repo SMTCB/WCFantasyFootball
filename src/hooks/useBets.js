@@ -56,7 +56,44 @@ export function useBets(leagueId, squadId) {
     }
   }, [leagueId, squadId]);
 
-  useEffect(() => { fetchBets(); }, [fetchBets]);
+  useEffect(() => {
+    fetchBets();
+  }, [fetchBets]);
+
+  // Subscribe to realtime changes
+  useEffect(() => {
+    if (!leagueId) return;
+
+    // Listen for bet_instances changes (status, resolved, correct_answer)
+    const instanceSub = supabase
+      .channel(`bet_instances:league_id=eq.${leagueId}`)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'bet_instances', filter: `league_id=eq.${leagueId}` },
+        () => { fetchBets(); }
+      )
+      .subscribe();
+
+    // Listen for bet_submissions changes (new submissions, resolved rewards)
+    const submissionSub = supabase
+      .channel(`bet_submissions:league_id_filter`)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'bet_submissions' },
+        (payload) => {
+          // Only re-fetch if this submission relates to our squad or league
+          if (squadId && payload.new?.squad_id === squadId) {
+            fetchBets();
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      instanceSub.unsubscribe();
+      submissionSub.unsubscribe();
+    };
+  }, [leagueId, squadId, fetchBets]);
 
   return { bets, loading, error, refetch: fetchBets };
 }
