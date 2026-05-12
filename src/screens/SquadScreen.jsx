@@ -354,7 +354,7 @@ export default function SquadScreen() {
       } else {
         setAutoFillMsg('No affordable players available');
       }
-    } catch (err) {
+    } catch {
       setAutoFillMsg('Auto-fill failed — try again');
     } finally {
       setAutoFilling(false);

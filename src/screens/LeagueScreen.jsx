@@ -11,6 +11,7 @@ import H2HSheet from '../components/H2HSheet';
 import GazetteDraftReport from '../components/GazetteDraftReport';
 import TransferWindowBanner from '../components/TransferWindowBanner';
 import AuctionCard from '../components/AuctionCard';
+import BetsSection from '../components/BetsSection';
 import { useTransferWindow } from '../hooks/useTransferWindow';
 
 
@@ -205,7 +206,7 @@ export default function LeagueScreen() {
 
   const renderTabs = () => (
     <div className="flex bg-[var(--ink-2)] border-b border-[var(--rule)] sticky top-[60px] z-20">
-      {['leaderboard', 'frontpage', 'auctions', 'chat', 'stats', ...(isCommissioner ? ['commissioner'] : [])].map((t) => (
+      {['leaderboard', 'frontpage', 'bets', 'auctions', 'chat', 'stats', ...(isCommissioner ? ['commissioner'] : [])].map((t) => (
         <button
           key={t}
           onClick={() => setView(t === 'leaderboard' ? 'detail' : t)}
@@ -737,6 +738,16 @@ export default function LeagueScreen() {
               </div>
             </div>
           )}
+
+         {view === 'bets' && (
+           <div className="bg-[var(--ink)] min-h-[60vh]">
+             <div className="px-4 py-3 border-b border-[var(--rule)]">
+               <div className="text-[11px] font-black uppercase tracking-[0.15em] text-[var(--mute)]">Bets & Predictions</div>
+               <div className="text-[12px] text-[var(--mute)] mt-0.5">Make your picks before the deadline</div>
+             </div>
+             <BetsSection leagueId={activeLeague?.league_id} squadId={mySquadId} />
+           </div>
+         )}
 
          {view === 'auctions' && (
            <div className="bg-[var(--ink)] min-h-[60vh]">

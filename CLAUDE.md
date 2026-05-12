@@ -548,3 +548,39 @@ iOS deployment target: 15.0 · Android minSdk: 26 (Android 8.0) · targetSdk: 36
 - **Responsive Design**: Use Tailwind breakpoints, test on mobile/tablet/desktop
 - **Database Migrations**: Always create new numbered files, never modify existing ones
 - **Comments**: Only explain WHY, not WHAT — code names should be self-documenting
+
+## BACKLOG Maintenance & Audit Methodology
+
+**Why This Matters:**
+Stale BACKLOG entries cause duplicate work and wasted time. Before planning any session, verify that BACKLOG status matches actual code state.
+
+**When to Audit:**
+- Start of each new session (quick 10-minute check)
+- Before planning medium/large features (ensure no duplicates exist)
+- If uncertain whether a feature is done or not
+
+**How to Audit (Quick Method):**
+```bash
+# Search git history for feature commits
+git log --all --oneline | grep -i "#034\|#035\|Auction\|Chat"
+
+# Search codebase for code presence
+grep -r "useAuctions\|PointBoost\|opponent_block" src/ supabase/ --include="*.js" --include="*.jsx" --include="*.sql"
+```
+
+**Audit Result Classification:**
+- **✅ DONE**: Found in git history (commits) AND code is present
+- **❌ NOT STARTED**: No git history AND no code found
+- **🔄 IN PROGRESS**: Git history exists but code not yet visible
+- **⚠️ PARTIAL**: Feature partially done
+
+**Real Example (2026-05-12):**
+- #037 Auto-fill marked "NOT STARTED" → Audit found commits + code → Corrected to DONE
+- #020 Notifications marked "NOT STARTED" → Audit found commit 25a9d7f → Corrected to DONE
+- **Result**: 10-minute audit prevented hours of duplicate work
+
+**Keep BACKLOG Accurate:**
+- When completing feature: Update BACKLOG before merging PR
+- When starting work: Audit first to verify not already done
+- When stale entries found: Fix them immediately (one git commit)
+- **Golden Rule**: If not in BACKLOG + git history, it doesn't exist
