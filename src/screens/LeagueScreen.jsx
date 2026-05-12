@@ -95,7 +95,9 @@ export default function LeagueScreen() {
   // Chat state
   const [chatInput, setChatInput] = useState('');
   const [chatSending, setChatSending] = useState(false);
-  const { messages, loading: chatLoading, unreadCount, sendMessage, markChatAsRead, scrollEndRef } = useChatMessages(activeLeague?.league_id);
+  const [editingMessageId, setEditingMessageId] = useState(null);
+  const [editingText, setEditingText] = useState('');
+  const { messages, loading: chatLoading, unreadCount, typingUsers, sendMessage, editMessage, deleteMessage, broadcastTyping, markChatAsRead, scrollEndRef } = useChatMessages(activeLeague?.league_id);
 
   const toggleListing = async (playerId) => {
     const leagueId = activeLeague?.league_id;
@@ -834,18 +836,73 @@ export default function LeagueScreen() {
                 {messages.map((msg) => (
                   <div
                     key={msg.id}
-                    className={`flex flex-col gap-1 w-[85%] ${msg.isOwnMessage ? 'self-end items-end' : ''} animate-in ${msg.isOwnMessage ? 'slide-in-from-right' : 'slide-in-from-left'}`}
+                    className={`flex flex-col gap-1 w-[85%] ${msg.isOwnMessage ? 'self-end items-end' : ''} animate-in ${msg.isOwnMessage ? 'slide-in-from-right' : 'slide-in-from-left'} group`}
                   >
                     <div className={`text-[10px] font-black uppercase tracking-wider mb-1 ${msg.isOwnMessage ? 'text-cyan mr-2 text-right' : 'text-text-tertiary ml-2'}`}>
                       {msg.isOwnMessage ? 'You' : msg.userName} (Rank {msg.userRank})
                     </div>
-                    <div className={`text-[14px] px-4 py-2.5 rounded-sm border ${
-                      msg.isOwnMessage
-                        ? 'bg-cyan/10 text-white border-cyan/20 rounded-tr-sm'
-                        : 'bg-[var(--ink-2)] text-white border-[var(--rule)] rounded-tl-sm'
-                    }`}>
-                      {msg.message}
-                    </div>
+                    {editingMessageId === msg.id ? (
+                      <div className="flex gap-2 items-center w-full">
+                        <input
+                          type="text"
+                          value={editingText}
+                          onChange={(e) => setEditingText(e.target.value)}
+                          className="flex-1 bg-[var(--ink-2)] border border-cyan rounded px-2 py-1 text-sm text-white"
+                          autoFocus
+                        />
+                        <button
+                          onClick={async () => {
+                            const result = await editMessage(msg.id, editingText);
+                            if (result.ok) setEditingMessageId(null);
+                          }}
+                          className="px-2 py-1 bg-cyan text-black text-xs font-bold rounded"
+                        >
+                          Save
+                        </button>
+                        <button
+                          onClick={() => setEditingMessageId(null)}
+                          className="px-2 py-1 bg-[var(--rule)] text-white text-xs rounded"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    ) : (
+                      <>
+                        <div className={`text-[14px] px-4 py-2.5 rounded-sm border ${
+                          msg.isOwnMessage
+                            ? 'bg-cyan/10 text-white border-cyan/20 rounded-tr-sm'
+                            : 'bg-[var(--ink-2)] text-white border-[var(--rule)] rounded-tl-sm'
+                        } relative group/msg`}>
+                          {msg.isDeleted ? <span className="italic text-[var(--mute)]">[deleted]</span> : msg.message}
+                          {msg.isOwnMessage && !msg.isDeleted && (
+                            <div className="absolute -right-20 top-0 flex gap-1 opacity-0 group-hover/msg:opacity-100 transition-opacity">
+                              <button
+                                onClick={() => {
+                                  setEditingMessageId(msg.id);
+                                  setEditingText(msg.message);
+                                }}
+                                className="px-1.5 py-0.5 bg-[var(--rule)] text-white text-xs rounded hover:bg-cyan hover:text-black"
+                                title="Edit"
+                              >
+                                ✏️
+                              </button>
+                              <button
+                                onClick={() => deleteMessage(msg.id)}
+                                className="px-1.5 py-0.5 bg-[var(--rule)] text-white text-xs rounded hover:bg-red-600"
+                                title="Delete"
+                              >
+                                🗑️
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                        {msg.editedAt && !msg.isDeleted && (
+                          <div className="text-[9px] text-[var(--mute)]">
+                            (edited)
+                          </div>
+                        )}
+                      </>
+                    )}
                     <div className={`text-[9px] text-text-tertiary mt-1 ${msg.isOwnMessage ? 'mr-2 text-right' : 'ml-2'}`}>
                       {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </div>
@@ -854,6 +911,11 @@ export default function LeagueScreen() {
                 <div ref={scrollEndRef} />
               </div>
               <div className="p-4 bg-[var(--ink)] border-t border-[var(--rule)]">
+                {Object.values(typingUsers).length > 0 && (
+                  <div className="text-[11px] text-[var(--mute)] mb-2 italic">
+                    {Object.values(typingUsers).map(t => t.name).join(', ')} {Object.keys(typingUsers).length === 1 ? 'is' : 'are'} typing...
+                  </div>
+                )}
                  <form
                    onSubmit={async (e) => {
                      e.preventDefault();
@@ -874,7 +936,10 @@ export default function LeagueScreen() {
                         type="text"
                         placeholder="Roast your rivals..."
                         value={chatInput}
-                        onChange={(e) => setChatInput(e.target.value)}
+                        onChange={(e) => {
+                          setChatInput(e.target.value);
+                          broadcastTyping();
+                        }}
                         disabled={chatSending}
                         className="flex-1 bg-transparent py-3 text-sm text-white outline-none placeholder-[var(--mute)] disabled:opacity-50"
                       />

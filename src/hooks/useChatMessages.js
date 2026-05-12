@@ -4,15 +4,18 @@ import { useAuth } from './useAuth';
 
 /**
  * Manages league chat messages with realtime updates.
- * Provides messages array, loading state, send function, unread count, and auto-scroll ref.
+ * Provides messages array, loading state, send function, unread count, typing indicators, and auto-scroll ref.
  */
 export function useChatMessages(leagueId) {
   const { user } = useAuth();
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [typingUsers, setTypingUsers] = useState({}); // { userId: { name, typingAt } }
   const scrollEndRef = useRef(null);
   const subscriptionRef = useRef(null);
+  const typingTimeoutRef = useRef(null);
+  const typingChannelRef = useRef(null);
 
   // Scroll to latest message
   const scrollToBottom = useCallback(() => {
@@ -51,6 +54,8 @@ export function useChatMessages(leagueId) {
           user_id,
           message,
           created_at,
+          is_deleted,
+          edited_at,
           users!inner(id, email, user_metadata)
         `)
         .eq('league_id', leagueId)
@@ -69,6 +74,8 @@ export function useChatMessages(leagueId) {
         userRank: msg.users?.user_metadata?.rank || '—',
         message: msg.message,
         createdAt: msg.created_at,
+        isDeleted: msg.is_deleted,
+        editedAt: msg.edited_at,
         isOwnMessage: msg.user_id === user?.id,
       }));
 
@@ -99,6 +106,36 @@ export function useChatMessages(leagueId) {
     }
   }, [leagueId]);
 
+  // Broadcast typing status via Realtime
+  const broadcastTyping = useCallback(() => {
+    if (!leagueId || !user?.id || !typingChannelRef.current) return;
+
+    try {
+      typingChannelRef.current.send({
+        type: 'broadcast',
+        event: 'typing',
+        payload: {
+          userId: user.id,
+          userName: user.user_metadata?.display_name || user.email?.split('@')[0] || 'User',
+        },
+      });
+
+      // Reset typing timeout
+      if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+      typingTimeoutRef.current = setTimeout(() => {
+        if (typingChannelRef.current) {
+          typingChannelRef.current.send({
+            type: 'broadcast',
+            event: 'typing_stop',
+            payload: { userId: user.id },
+          });
+        }
+      }, 3000); // Clear after 3 seconds of inactivity
+    } catch (err) {
+      console.error('useChatMessages: broadcastTyping error', err);
+    }
+  }, [leagueId, user?.id, user?.email, user?.user_metadata]);
+
   // Setup realtime subscription on mount
   useEffect(() => {
     loadMessages();
@@ -106,7 +143,7 @@ export function useChatMessages(leagueId) {
 
     if (!leagueId) return;
 
-    // Subscribe to new messages
+    // Subscribe to new messages and typing status
     const channel = supabase
       .channel(`chat:${leagueId}`)
       .on(
@@ -118,10 +155,8 @@ export function useChatMessages(leagueId) {
           filter: `league_id=eq.${leagueId}`,
         },
         async (payload) => {
-          // New message arrived — fetch full user data for this message
           const newMsg = payload.new;
 
-          // Fetch user metadata for this message
           const { data: userData } = await supabase
             .from('users')
             .select('user_metadata')
@@ -139,18 +174,38 @@ export function useChatMessages(leagueId) {
             userRank,
             message: newMsg.message,
             createdAt: newMsg.created_at,
+            isDeleted: newMsg.is_deleted,
+            editedAt: newMsg.edited_at,
             isOwnMessage: newMsg.user_id === user?.id,
           }]);
         }
       )
+      .on('broadcast', { event: 'typing' }, (payload) => {
+        const { userId, userName } = payload.payload;
+        if (userId === user?.id) return; // Don't show own typing
+        setTypingUsers(prev => ({
+          ...prev,
+          [userId]: { name: userName, typingAt: Date.now() },
+        }));
+      })
+      .on('broadcast', { event: 'typing_stop' }, (payload) => {
+        const { userId } = payload.payload;
+        setTypingUsers(prev => {
+          const updated = { ...prev };
+          delete updated[userId];
+          return updated;
+        });
+      })
       .subscribe();
 
     subscriptionRef.current = channel;
+    typingChannelRef.current = channel;
 
     return () => {
       if (subscriptionRef.current) {
         supabase.removeChannel(subscriptionRef.current);
       }
+      if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
     };
   }, [leagueId, loadMessages, user?.id, fetchUnreadCount]);
 
@@ -181,7 +236,6 @@ export function useChatMessages(leagueId) {
         return { ok: false, error: error.message };
       }
 
-      // Message will be added via realtime subscription
       return { ok: true };
     } catch (err) {
       console.error('useChatMessages: sendMessage exception', err);
@@ -189,11 +243,66 @@ export function useChatMessages(leagueId) {
     }
   }, [leagueId, user?.id]);
 
+  // Edit a message
+  const editMessage = useCallback(async (messageId, newText) => {
+    if (!newText.trim()) return { ok: false, error: 'Message cannot be empty' };
+
+    try {
+      const { error } = await supabase.rpc('edit_chat_message', {
+        p_message_id: messageId,
+        p_new_text: newText.trim(),
+      });
+
+      if (error) {
+        console.error('useChatMessages: editMessage failed', error);
+        return { ok: false, error: error.message };
+      }
+
+      // Update local message state
+      setMessages(prev => prev.map(m =>
+        m.id === messageId ? { ...m, message: newText.trim(), editedAt: new Date().toISOString() } : m
+      ));
+
+      return { ok: true };
+    } catch (err) {
+      console.error('useChatMessages: editMessage exception', err);
+      return { ok: false, error: err.message };
+    }
+  }, []);
+
+  // Delete a message
+  const deleteMessage = useCallback(async (messageId) => {
+    try {
+      const { error } = await supabase.rpc('delete_chat_message', {
+        p_message_id: messageId,
+      });
+
+      if (error) {
+        console.error('useChatMessages: deleteMessage failed', error);
+        return { ok: false, error: error.message };
+      }
+
+      // Update local message state to show as deleted
+      setMessages(prev => prev.map(m =>
+        m.id === messageId ? { ...m, isDeleted: true } : m
+      ));
+
+      return { ok: true };
+    } catch (err) {
+      console.error('useChatMessages: deleteMessage exception', err);
+      return { ok: false, error: err.message };
+    }
+  }, []);
+
   return {
     messages,
     loading,
     unreadCount,
+    typingUsers,
     sendMessage,
+    editMessage,
+    deleteMessage,
+    broadcastTyping,
     markChatAsRead,
     scrollEndRef,
   };
