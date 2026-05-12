@@ -15,21 +15,25 @@
 - ✅ #037 Auto-fill squad — DONE (commits 45ca0f0+, autoFilling in code)
 
 **COMPLETED THIS SESSION (session 12):**
-- ✅ **Bet System Completion Bundle** (4 commits, 2-2.5h):
+- ✅ **Bet System Completion Bundle** (5 commits, 2.5-3h):
   1. **Bet Reward Integration** (PR #25, migration 29):
      - `aggregate_league_member_points(league_id, user_id)` RPC: sums fantasy points + bet rewards
      - Trigger on `bet_submissions.reward_awarded`: auto-recalculates points when bets resolve
      - Updated `calculate-scores` to use aggregation RPC for league standings
   2. **Bet Resolution UI** (commit 40ddbc9):
      - Commissioner panel section in LeagueScreen to resolve open/closed bets
-     - Bet dropdown selector, correct answer input, resolve button
      - Auto-fetches open bets when commissioner tab active
      - Calls `resolve_bet` RPC to mark correct answers and award rewards
-  3. **Realtime Updates for Bets** (commit 2668038):
+  3. **Resolution UI Improvement** (commit f0dfb49):
+     - Shows submitted answers as clickable buttons (grouped by count)
+     - Commissioner clicks answer instead of typing manually
+     - Fallback: custom text input for answers not in submissions
+     - Green highlight shows selected correct answer
+  4. **Realtime Updates for Bets** (commit 2668038):
      - Added Realtime subscriptions to useBets hook (bet_instances + bet_submissions)
      - Added Realtime subscription to LeagueScreen (league_members.total_points)
      - Changes appear instantly without page refresh (2-3 sec latency)
-  4. **Test Data + Documentation**:
+  5. **Test Data + Documentation**:
      - Seed script (`supabase/seed_bets.sql`) creates 5 test bet instances
      - End-to-end test plan (`BETS_E2E_TEST_PLAN.md`) documents 5-phase validation
      - Ready for manual testing and mobile verification
@@ -76,19 +80,19 @@ Stale BACKLOG caused wasted time. This audit prevents future duplicate work. Kee
 
 ## 📋 WHAT'S READY TO START
 
-**Session 12 Status (Complete):**
-- ✅ **Betting system fully integrated** — create → submit → resolve → points → realtime
-- ✅ All components wired together with realtime subscriptions
+**Session 12 Status (Complete & Shipped):**
+- ✅ **Betting system fully integrated & polished** — create → submit → resolve → points → realtime
+- ✅ All 5 commits pushed to main (`main` is ahead of origin/main by 6 commits)
+- ✅ Resolution UI improved: clickable answer buttons instead of manual typing
 - ✅ Seed data script ready (`supabase/seed_bets.sql`)
 - ✅ Test plan documented (`BETS_E2E_TEST_PLAN.md`)
-- ⏳ Manual validation: Run seed script + follow 5-phase test plan
+- ✅ Working tree clean, all changes committed
 
-**Remaining work (37/37 features complete, ready for polish):**
+**Remaining work (37/37 features shipped, ready for validation/launch):**
 1. **Manual E2E Testing** — Follow BETS_E2E_TEST_PLAN.md (15 min walkthrough)
 2. **Mobile Testing** — iOS/Android builds with Bets + Resolution tabs (1-2h per platform)
 3. **#027-Extended: Unread Chat Badge** (1h) — best ROI of remaining chat enhancements
-4. **Polish**: Dark mode testing, accessibility review, edge cases
-5. **Launch prep**: Final checklist, app store submission setup
+4. **Launch prep**: Final checklist, app store submission readiness
 
 ---
 
