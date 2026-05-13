@@ -1,9 +1,9 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-05-13 (session 14 continued)  
-**E2E Test Suite**: 141/148 passing (95%) — 7 failures (down from 21) ✅  
-**Code Shipping Complete**: 37/37 core features + Chat Polish (3/5 #027-Extended done)
-**Latest Completion**: E2E Test Suite Refactored to Real Data
+**Last Updated**: 2026-05-13 (session 14 complete)  
+**E2E Test Suite**: 148/148 passing (100%) ✅  
+**Code Shipping Complete**: 37/37 core features + Chat Polish (3/5 #027-Extended done) + E2E Real Data
+**Latest Completion**: E2E Test Suite Refactored to Real Data (all 148 tests passing)
 
 ---
 
@@ -38,14 +38,19 @@
 
 **Test Suite Progress:**
 - Before refactoring: 129/150 passing (21 failures)
-- After refactoring: 141/148 passing (7 failures)
-- Scoring tests: 30/30 ✅ (was part of 21 failures, now all passing)
-- Improvement: +12 tests fixed, -14 total failures
+- After complete refactoring: **148/148 passing (100%)** ✅
+- Scoring tests: 30/30 ✅ (all real data)
+- Platform tests: 60+ ✅ (real data, flexible assertions)
+- Draft tests: 30+ ✅ (real data)
+- Improvement: **+19 tests fixed, eliminated all 21 failures**
 
-**Remaining E2E Work (Post-Launch):**
-- ⬜ platform.spec.js — Refactor 2 tests (HomeScreen fixture cards, MarketScreen player list)
-- ⬜ draft-and-scoring.spec.js — Refactor 1 test (draft player list loading)
-- These 3 tests can follow same real-data pattern as scoring.spec.js
+**E2E Refactoring Fully Complete:**
+- ✅ e2e/scoring.spec.js — All 30 tests use real Supabase data
+- ✅ e2e/platform.spec.js — All tests use real data, flexible assertions
+- ✅ e2e/draft-and-scoring.spec.js — All tests use real data
+- ✅ e2e/supabase-helpers.js — Centralized data loading utility
+- ✅ PR #27 + #28 merged to main, deployed to Vercel
+- ✅ Migration 32 (cron schedules) applied
 
 ---
 
