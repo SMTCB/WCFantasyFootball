@@ -7,6 +7,7 @@ import { useAuth } from '../hooks/useAuth';
 import { useOnboarding } from '../hooks/useOnboarding';
 import { useTransfer } from '../hooks/useTransfer';
 import { useLeagueConfig } from '../hooks/useLeagueConfig';
+import { useAutoFill } from '../hooks/useAutoFill';
 import { useToast } from '../hooks/useToast';
 import LeagueSelector  from '../components/LeagueSelector';
 import OnboardingTour  from '../components/OnboardingTour';
@@ -74,6 +75,30 @@ export default function MarketScreen() {
 
   // League-scoped transfer state
   const { buy, sell, isTaken, takenBy, isOwnedBy } = useTransfer(activeLeague);
+
+  // Fetch squad for auto-fill
+  const fetchSquad = async () => {
+    try {
+      const userId = user?.id;
+      if (userId) {
+        const { data: sData } = await supabase
+          .from('squads')
+          .select('*')
+          .eq('user_id', userId)
+          .eq('league_id', activeLeague)
+          .maybeSingle();
+        if (sData) {
+          setMySquad(sData);
+          setBudget(Number(sData.budget_remaining ?? cfg.budgetTotal));
+        }
+      }
+    } catch (err) {
+      console.error('MarketScreen: squad refresh failed', err);
+    }
+  };
+
+  // Auto-fill hook — reusable across screens
+  const { handleAutoFill, autoFilling, autoFillMsg } = useAutoFill(activeLeague, mySquad, fetchSquad);
 
   // On mount: resolve league context
   useEffect(() => {
@@ -339,8 +364,36 @@ export default function MarketScreen() {
                 </div>
               )}
             </div>
+
+            {/* Auto-fill button */}
+            <button
+              onClick={handleAutoFill}
+              disabled={autoFilling}
+              style={{
+                padding: '8px 12px',
+                background: 'rgba(0,196,232,0.08)',
+                border: '1px solid rgba(0,196,232,0.25)',
+                color: autoFilling ? 'var(--mute)' : 'var(--cyan)',
+                fontFamily: 'Archivo Black, sans-serif',
+                fontSize: 9,
+                letterSpacing: '0.1em',
+                textTransform: 'uppercase',
+                borderRadius: 2,
+                cursor: autoFilling ? 'wait' : 'pointer',
+                flexShrink: 0,
+              }}
+            >
+              {autoFilling ? 'FILLING…' : '⚡ QUICK FILL'}
+            </button>
           </div>
         </div>
+
+        {/* Auto-fill feedback message */}
+        {autoFillMsg && (
+          <div style={{ padding: '0 20px 8px', color: 'var(--mute)', fontFamily: 'JetBrains Mono, monospace', fontSize: 10 }}>
+            {autoFillMsg}
+          </div>
+        )}
 
         {/* Position quota row */}
         <div className="flex gap-1.5 px-5 pb-2.5">
