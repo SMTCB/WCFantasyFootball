@@ -61,6 +61,7 @@ export default function LeagueScreen() {
   const { auctions, loading: auctionsLoading, placeBid, cancelListing } = useAuctions(activeLeague?.league_id, mySquadId);
   const { topScorers, teamMetrics, loading: statsLoading } = useLeagueStats(activeLeague?.league_id);
   const { leaderboard, loading: betLoading } = useBettingLeaderboard(activeLeague?.league_id);
+<<<<<<< HEAD
 
   // Build squad data for auto-fill from available state
   const squadData = mySquadPlayers.length > 0 ? {
