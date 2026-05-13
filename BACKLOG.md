@@ -3,7 +3,7 @@
 **Last Updated**: 2026-05-13 (comprehensive audit completed)  
 **Audit Status**: ✅ Code state verified against BACKLOG  
 **E2E Test Suite**: 148/148 passing (100%) ✅  
-**Code Shipping Complete**: 37/37 core features + Chat Polish (6/8 #027-Extended done)
+**Code Shipping Complete**: 37/37 core features + Chat Polish (7/8 #027-Extended done)
 
 ---
 
@@ -22,7 +22,7 @@
 ## 🎯 REMAINING WORK (What's Actually Left)
 
 ### Chat Enhancements (1/8 remaining)
-- ✅ **@Mentions** — SHIPPED this session  
+- ✅ **@Mentions** — SHIPPED (PR #29 merged 2026-05-13)  
 - ❌ **Message Search** (1.5-2h) — Full-text search in chat history
 
 ### Everything Else
