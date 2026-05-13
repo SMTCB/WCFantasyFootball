@@ -3,7 +3,7 @@
 **Last Updated**: 2026-05-13 (comprehensive audit completed)  
 **Audit Status**: ✅ Code state verified against BACKLOG  
 **E2E Test Suite**: 148/148 passing (100%) ✅  
-**Code Shipping Complete**: 37/37 core features + Chat Polish (6/8 #027-Extended done)
+**Code Shipping Complete**: 37/37 core features + Chat Polish (8/8 #027-Extended COMPLETE ✅)
 
 ---
 
@@ -18,16 +18,24 @@
   - Message display: @mentions styled as cyan highlighted links
   - All 148 E2E tests passing (74 desktop + 74 mobile) ✅
   - Migration applied to Supabase ✅
+  - PR #29 merged to main ✅
+- ✅ **Message Search (#027-Extended)** — Full-text chat history search
+  - useMessageSearch hook: client-side filtering (case-insensitive substring match)
+  - Search UI: input box + result counter + clear button in chat header
+  - Real-time filtering as user types, "no match" state displayed
+  - All 148 E2E tests passing (0 regressions) ✅
+  - PR #31 merged to main ✅
+- ✅ **Chat Polish Complete** — 8/8 enhancements shipped (unread badge, typing, edit/delete, @mentions, message search)
 
 ## 🎯 REMAINING WORK (What's Actually Left)
 
-### Chat Enhancements (1/8 remaining)
-- ✅ **@Mentions** — SHIPPED this session  
-- ❌ **Message Search** (1.5-2h) — Full-text search in chat history
+### Chat Enhancements (0/8 remaining) — ALL COMPLETE ✅
+- ✅ **@Mentions** — SHIPPED (PR #29 merged 2026-05-13)
+- ✅ **Message Search** — SHIPPED (PR #31 merged 2026-05-13)
 
 ### Everything Else
 ✅ **37/37 core features complete** — Draft, Auctions, Bets, Scoring, Transfers, etc.  
-✅ **Chat Polish** — 7/8 done (unread badge, typing, edit/delete, @mentions shipped)  
+✅ **Chat Polish** — 8/8 COMPLETE (all enhancements shipped)  
 ✅ **E2E Tests** — 148/148 passing, real data  
 ✅ **Database** — 35 migrations applied, scoring pipeline active
 
