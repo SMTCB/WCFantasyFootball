@@ -1,9 +1,23 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-05-13 (session 14 complete)  
+**Last Updated**: 2026-05-13 (comprehensive audit completed)  
+**Audit Status**: ✅ Code state verified against BACKLOG  
 **E2E Test Suite**: 148/148 passing (100%) ✅  
-**Code Shipping Complete**: 37/37 core features + Chat Polish (3/5 #027-Extended done) + E2E Real Data
-**Latest Completion**: E2E Test Suite Refactored to Real Data (all 148 tests passing)
+**Code Shipping Complete**: 37/37 core features + Chat Polish (6/8 #027-Extended done)
+
+---
+
+## 🎯 REMAINING WORK (What's Actually Left)
+
+### Chat Enhancements (2/8 remaining)
+- ❌ **@Mentions** (1.5-2h) — @username tagging + notifications  
+- ❌ **Message Search** (1.5-2h) — Full-text search in chat history
+
+### Everything Else
+✅ **37/37 core features complete** — Draft, Auctions, Bets, Scoring, Transfers, etc.  
+✅ **Chat Polish** — 6/8 done (unread badge, typing, edit/delete shipped)  
+✅ **E2E Tests** — 148/148 passing, real data  
+✅ **Database** — 34 migrations applied, scoring pipeline active
 
 ---
 
