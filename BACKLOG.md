@@ -27,6 +27,18 @@
   - PR #31 merged to main ✅
 - ✅ **Chat Polish Complete** — 8/8 enhancements shipped (unread badge, typing, edit/delete, @mentions, message search)
 
+## 📊 SESSION 16 PROGRESS (2026-05-13)
+
+**🚀 COMPLETED THIS SESSION:**
+- ✅ **Betting System Cleanup** — Removed orphaned Bracket Challenge from HomeScreen
+- ✅ **Auto-Close Bets Cron** (Migration 34) — Every 6h: transitions expired bets open→closed
+  - Ensures correct status for scoring/resolution
+  - Prevents stale bets blocking points aggregation
+  - Pending manual application via Supabase dashboard
+  - Identified 5 other gaps (notifications, auto-options, edge cases) — deferred post-launch
+
+---
+
 ## 🎯 REMAINING WORK (What's Actually Left)
 
 ### Chat Enhancements (0/8 remaining) — ALL COMPLETE ✅
