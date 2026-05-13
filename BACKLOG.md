@@ -7,17 +7,29 @@
 
 ---
 
+## 📊 SESSION 15 PROGRESS (2026-05-13)
+
+**🚀 COMPLETED THIS SESSION:**
+- ✅ **Comprehensive Codebase Audit** — Verified 37/37 core features + state of chat polish
+- ✅ **@Mentions Feature (#027-Extended)** — Full implementation with autocomplete
+  - Migration 33: `mentioned_user_ids` column + GPC index + RPCs
+  - useMentions hook: parsing, autocomplete, mention tracking
+  - LeagueScreen integration: keyboard nav (↑↓ Enter), mention dropdown UI
+  - Message display: @mentions styled as cyan highlighted links
+  - All 148 E2E tests passing (74 desktop + 74 mobile) ✅
+  - Migration applied to Supabase ✅
+
 ## 🎯 REMAINING WORK (What's Actually Left)
 
-### Chat Enhancements (2/8 remaining)
-- ❌ **@Mentions** (1.5-2h) — @username tagging + notifications  
+### Chat Enhancements (1/8 remaining)
+- ✅ **@Mentions** — SHIPPED this session  
 - ❌ **Message Search** (1.5-2h) — Full-text search in chat history
 
 ### Everything Else
 ✅ **37/37 core features complete** — Draft, Auctions, Bets, Scoring, Transfers, etc.  
-✅ **Chat Polish** — 6/8 done (unread badge, typing, edit/delete shipped)  
+✅ **Chat Polish** — 7/8 done (unread badge, typing, edit/delete, @mentions shipped)  
 ✅ **E2E Tests** — 148/148 passing, real data  
-✅ **Database** — 34 migrations applied, scoring pipeline active
+✅ **Database** — 35 migrations applied, scoring pipeline active
 
 ---
 
