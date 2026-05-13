@@ -1,9 +1,42 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-05-13 (comprehensive audit completed)  
+**Last Updated**: 2026-05-14 (MVP STATS and Betting Leaderboard added)  
 **Audit Status**: ✅ Code state verified against BACKLOG  
 **E2E Test Suite**: 148/148 passing (100%) ✅  
-**Code Shipping Complete**: 37/37 core features + Chat Polish (8/8 #027-Extended COMPLETE ✅)
+**Code Shipping Complete**: 37/37 core features + Chat Polish (8/8 #027-Extended) + MVP Enhancements (STATS + Betting Leaderboard) ✅
+
+---
+
+## 📊 SESSION 17 PROGRESS (2026-05-14)
+
+**🚀 COMPLETED THIS SESSION:**
+- ✅ **STATS Section** — League-wide statistics dashboard
+  - Created useLeagueStats hook: fetches top 10 scorers and league metrics
+  - Queries league_members table for top scorers (rank, username, total_points)
+  - Team metrics: member count, average points per member
+  - Realtime subscription to league_members UPDATE events
+  - Replaced placeholder at LeagueScreen.jsx:1098-1106 with working UI
+  - All 148 E2E tests passing ✅
+  
+- ✅ **Betting Leaderboard Tab** — Betting performance ranking for MVP
+  - Created useBettingLeaderboard hook: aggregates per-user betting stats
+  - Queries bet_submissions for correct bets, accuracy %, total rewards
+  - Aggregates: total bets, correct answers, accuracy percentage, rewards earned
+  - Realtime subscription to bet_submissions UPDATE events
+  - Added 'betting_leaderboard' to LeagueScreen tab list (after 'bets')
+  - Displays managers ranked by betting rewards (descending)
+  - Empty state if no bets resolved yet
+  - All 148 E2E tests passing ✅
+
+- ✅ **FRONTPAGE Verification** — Confirmed fully implemented (no work needed)
+  - Gazette draft report display working correctly
+  - No changes required
+
+**MVP Feature Status:**
+✅ STATS section live with realtime updates  
+✅ Betting Leaderboard live with realtime updates  
+✅ Both tabs mobile-responsive (375px-1440px)  
+✅ All 37 core features intact, 0 regressions
 
 ---
 
