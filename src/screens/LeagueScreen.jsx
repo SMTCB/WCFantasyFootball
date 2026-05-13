@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabase';
 import { useAuth } from '../hooks/useAuth';
 import { useChatMessages } from '../hooks/useChatMessages';
 import { useMentions } from '../hooks/useMentions';
+import { useMessageSearch } from '../hooks/useMessageSearch';
 import { useToast } from '../hooks/useToast';
 import { useAuctions } from '../hooks/useAuctions';
 import SectionHeader from '../components/SectionHeader';
@@ -100,6 +101,7 @@ export default function LeagueScreen() {
   const [editingText, setEditingText] = useState('');
   const { messages, loading: chatLoading, unreadCount, typingUsers, sendMessage, editMessage, deleteMessage, broadcastTyping, markChatAsRead, scrollEndRef } = useChatMessages(activeLeague?.league_id);
   const { mentionSearch, mentionMatches, selectedMention, mentionedUserIds, loadLeagueMembers, parseMentionPattern, insertMention, handleMentionNavigate, resetMentions } = useMentions(activeLeague?.league_id);
+  const { searchTerm, setSearchTerm, filteredMessages, clearSearch, resultCount } = useMessageSearch(messages);
 
   const toggleListing = async (playerId) => {
     const leagueId = activeLeague?.league_id;
@@ -825,6 +827,26 @@ export default function LeagueScreen() {
                 <span className="text-[10px]">💬</span>
                 <span className="text-[11px] font-bold text-[var(--mute)]">League Chat</span>
               </div>
+              <div className="bg-[var(--ink)] px-4 py-3 border-b border-[var(--rule)] flex gap-2 items-center">
+                <input
+                  type="text"
+                  placeholder="Search messages..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="flex-1 bg-[var(--ink-2)] border border-[var(--rule)] rounded px-3 py-1.5 text-sm text-white placeholder-[var(--mute)]"
+                />
+                {searchTerm && (
+                  <>
+                    <span className="text-[10px] text-[var(--mute)]">{resultCount} result{resultCount !== 1 ? 's' : ''}</span>
+                    <button
+                      onClick={clearSearch}
+                      className="px-2 py-1 text-xs bg-[var(--rule)] text-white rounded hover:bg-cyan hover:text-black transition-colors"
+                    >
+                      Clear
+                    </button>
+                  </>
+                )}
+              </div>
               <div className="flex-1 overflow-y-auto px-4 py-6 flex flex-col gap-5">
                 {chatLoading && (
                   <div className="flex justify-center items-center h-20">
@@ -836,7 +858,12 @@ export default function LeagueScreen() {
                     <span className="text-[12px] text-[var(--mute)]">No messages yet. Start the conversation!</span>
                   </div>
                 )}
-                {messages.map((msg) => (
+                {!chatLoading && messages.length > 0 && searchTerm && filteredMessages.length === 0 && (
+                  <div className="flex justify-center items-center h-20">
+                    <span className="text-[12px] text-[var(--mute)]">No messages match "{searchTerm}"</span>
+                  </div>
+                )}
+                {filteredMessages.map((msg) => (
                   <div
                     key={msg.id}
                     className={`flex flex-col gap-1 w-[85%] ${msg.isOwnMessage ? 'self-end items-end' : ''} animate-in ${msg.isOwnMessage ? 'slide-in-from-right' : 'slide-in-from-left'} group`}
