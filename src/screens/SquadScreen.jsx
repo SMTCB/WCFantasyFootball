@@ -17,6 +17,7 @@ import { useTransfer } from '../hooks/useTransfer';
 import { useLeagueConfig } from '../hooks/useLeagueConfig';
 import { useAvailabilityFlag } from '../hooks/useAvailabilityFlag';
 import { useAuctions } from '../hooks/useAuctions';
+import { useAutoFill } from '../hooks/useAutoFill';
 import { useToast } from '../hooks/useToast';
 import LeagueSelector from '../components/LeagueSelector';
 import OnboardingTour from '../components/OnboardingTour';
@@ -84,9 +85,6 @@ export default function SquadScreen() {
   const [confirm,            setConfirm]           = useState(null);
   const [pickerPos,          setPickerPos]         = useState(null);
   const [fetchError,         setFetchError]        = useState(null);
-  // Auto-fill state (#037)
-  const [autoFilling,        setAutoFilling]       = useState(false);
-  const [autoFillMsg,        setAutoFillMsg]       = useState(null);
 
   // Competition-agnostic config from the selected league row
   const cfg = useLeagueConfig(leagueId);
@@ -101,6 +99,9 @@ export default function SquadScreen() {
   // Auction hook — list players for auction in the current league
   const { listPlayer: listForAuction, auctions: activeAuctions } = useAuctions(leagueId, squadData?.squadId);
   const [auctionBusy, setAuctionBusy] = useState(null); // playerId being listed
+
+  // Auto-fill hook — reusable across Squad, Market, League screens
+  const { handleAutoFill, autoFilling, autoFillMsg } = useAutoFill(leagueId, squadData, fetchSquad);
 
   // Live countdown hook — replaces static window lock badge
   const deadline = useDeadlineCountdown();
@@ -286,80 +287,6 @@ export default function SquadScreen() {
     return null;
   };
 
-  // ── #037: Auto-fill empty starter slots with cheapest available players ──────
-  const handleAutoFill = async () => {
-    if (autoFilling) return;
-    setAutoFilling(true);
-    setAutoFillMsg(null);
-    try {
-      const starters = squadData?.players || [];
-      const slotsNeeded = 11 - starters.length;
-      if (slotsNeeded <= 0) { setAutoFillMsg('Squad is already full'); return; }
-
-      const myIds = new Set([
-        ...starters.map(p => p.id),
-        ...(squadData.bench || []).map(p => p.id),
-      ]);
-      const allTakenIds = new Set(Object.keys(takenMap));
-
-      // Count current starters by position
-      const have = { GK: 0, DEF: 0, MID: 0, FWD: 0 };
-      for (const p of starters) {
-        const pos = p.position?.toUpperCase().replace('FW', 'FWD');
-        if (have[pos] !== undefined) have[pos]++;
-      }
-
-      // Slots needed per position: fill minimums first (1 GK, 3 DEF, 2 MID, 1 FWD)
-      const need = {
-        GK:  Math.max(0, 1 - have.GK),
-        DEF: Math.max(0, 3 - have.DEF),
-        MID: Math.max(0, 2 - have.MID),
-        FWD: Math.max(0, 1 - have.FWD),
-      };
-      let extra = slotsNeeded - Object.values(need).reduce((s, n) => s + n, 0);
-      // Distribute extra slots evenly between DEF and MID
-      need.DEF += Math.ceil(extra / 2);
-      need.MID += Math.floor(extra / 2);
-
-      let budgetLeft = squadData.budget.current;
-      let added = 0;
-
-      for (const pos of ['GK', 'DEF', 'MID', 'FWD']) {
-        if (!need[pos]) continue;
-        const dbPos = pos === 'FWD' ? ['FWD', 'FW'] : [pos];
-        const { data: pool } = await supabase
-          .from('players')
-          .select('id, name, position, club, price')
-          .in('position', dbPos)
-          .lte('price', budgetLeft)
-          .order('price', { ascending: true })
-          .limit(50);
-
-        const candidates = (pool || []).filter(p => !myIds.has(p.id) && !allTakenIds.has(p.id));
-        for (let i = 0; i < need[pos] && i < candidates.length; i++) {
-          const result = await buy(candidates[i]);
-          if (result.ok) {
-            added++;
-            budgetLeft = result.budget_remaining ?? budgetLeft - candidates[i].price;
-            myIds.add(candidates[i].id);
-            allTakenIds.add(candidates[i].id);
-          }
-        }
-      }
-
-      if (added > 0) {
-        setAutoFillMsg(`Added ${added} player${added !== 1 ? 's' : ''} · £${budgetLeft.toFixed(1)}M left`);
-        await fetchSquad();
-      } else {
-        setAutoFillMsg('No affordable players available');
-      }
-    } catch {
-      setAutoFillMsg('Auto-fill failed — try again');
-    } finally {
-      setAutoFilling(false);
-      setTimeout(() => setAutoFillMsg(null), 5000);
-    }
-  };
 
   const handleSwap = async (p1, p2) => {
     const isP1Bench = squadData.bench.some(b => b.id === p1.id);
@@ -1020,15 +947,13 @@ export default function SquadScreen() {
                     <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 9, color: 'var(--mute)', letterSpacing: '0.2em', textTransform: 'uppercase', marginBottom: 4 }}>Starting XI</div>
                     <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 28, color: 'var(--paper)', lineHeight: 1, letterSpacing: '-0.01em' }}>{formation || 'NO SQUAD'}</div>
                   </div>
-                  {players.length < 11 && (
-                    <button
-                      onClick={handleAutoFill}
-                      disabled={autoFilling}
-                      style={{ padding: '8px 12px', background: 'rgba(0,196,232,0.08)', border: '1px solid rgba(0,196,232,0.25)', color: autoFilling ? 'var(--mute)' : 'var(--cyan)', fontFamily: 'Archivo Black, sans-serif', fontSize: 9, letterSpacing: '0.1em', textTransform: 'uppercase', borderRadius: 2, cursor: autoFilling ? 'wait' : 'pointer', flexShrink: 0 }}
-                    >
-                      {autoFilling ? 'FILLING…' : '⚡ QUICK FILL'}
-                    </button>
-                  )}
+                  <button
+                    onClick={handleAutoFill}
+                    disabled={autoFilling}
+                    style={{ padding: '8px 12px', background: 'rgba(0,196,232,0.08)', border: '1px solid rgba(0,196,232,0.25)', color: autoFilling ? 'var(--mute)' : 'var(--cyan)', fontFamily: 'Archivo Black, sans-serif', fontSize: 9, letterSpacing: '0.1em', textTransform: 'uppercase', borderRadius: 2, cursor: autoFilling ? 'wait' : 'pointer', flexShrink: 0 }}
+                  >
+                    {autoFilling ? 'FILLING…' : '⚡ QUICK FILL'}
+                  </button>
                 </div>
                 <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 9, color: 'var(--mute)', letterSpacing: '0.14em', marginTop: 6 }}>
                   {captain ? `CAPTAIN ${captain.name.split(' ').slice(-1)[0].toUpperCase()}` : 'NO CAPTAIN'}

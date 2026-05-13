@@ -9,6 +9,7 @@ import { useToast } from '../hooks/useToast';
 import { useAuctions } from '../hooks/useAuctions';
 import { useLeagueStats } from '../hooks/useLeagueStats';
 import { useBettingLeaderboard } from '../hooks/useBettingLeaderboard';
+import { useAutoFill } from '../hooks/useAutoFill';
 import SectionHeader from '../components/SectionHeader';
 import LeagueInviteCard from '../components/LeagueInviteCard';
 import H2HSheet from '../components/H2HSheet';
@@ -60,6 +61,39 @@ export default function LeagueScreen() {
   const { auctions, loading: auctionsLoading, placeBid, cancelListing } = useAuctions(activeLeague?.league_id, mySquadId);
   const { topScorers, teamMetrics, loading: statsLoading } = useLeagueStats(activeLeague?.league_id);
   const { leaderboard, loading: betLoading } = useBettingLeaderboard(activeLeague?.league_id);
+<<<<<<< HEAD
+
+  // Build squad data for auto-fill from available state
+  const squadData = mySquadPlayers.length > 0 ? {
+    players: mySquadPlayers,
+    bench: [],
+    budget: { current: 100, total: 100 }, // Fallback budget — auto-fill will fetch real value
+  } : null;
+
+  // Fetch current user's full squad for auto-fill
+  const fetchSquad = async () => {
+    if (!user?.id || !activeLeague?.league_id) return;
+    try {
+      const { data: squad } = await supabase
+        .from('draft_allocations')
+        .select('allocated_players')
+        .eq('league_id', activeLeague.league_id)
+        .eq('user_id', user.id)
+        .maybeSingle();
+      if (squad?.allocated_players?.length > 0) {
+        const ids = squad.allocated_players;
+        const { data: players } = await supabase
+          .from('players')
+          .select('*')
+          .in('id', ids);
+        setMySquadPlayers(players || []);
+      }
+    } catch (err) {
+      console.error('LeagueScreen: squad fetch failed', err);
+    }
+  };
+
+  const { handleAutoFill, autoFilling, autoFillMsg } = useAutoFill(activeLeague?.league_id, squadData, fetchSquad);
 
   // Commissioner panel state
   const [commLoading,   setCommLoading]   = useState(false);
@@ -729,6 +763,31 @@ export default function LeagueScreen() {
          {view === 'detail' && (
            <>
              <div className="bg-[var(--ink)] border-b border-[var(--rule)]">
+               {/* Auto-fill button in standings header */}
+               <div className="flex items-center gap-2 px-4 py-3 border-b border-[var(--rule)]">
+                 <button
+                   onClick={handleAutoFill}
+                   disabled={autoFilling || !squadData}
+                   style={{
+                     padding: '6px 10px',
+                     background: 'rgba(0,196,232,0.08)',
+                     border: '1px solid rgba(0,196,232,0.25)',
+                     color: autoFilling ? 'var(--mute)' : 'var(--cyan)',
+                     fontFamily: 'Archivo Black, sans-serif',
+                     fontSize: 9,
+                     letterSpacing: '0.1em',
+                     textTransform: 'uppercase',
+                     borderRadius: 2,
+                     cursor: (autoFilling || !squadData) ? 'default' : 'pointer',
+                     opacity: !squadData ? 0.5 : 1,
+                   }}
+                   title={!squadData ? 'Load your squad first' : ''}
+                 >
+                   {autoFilling ? 'FILLING…' : '⚡ QUICK FILL'}
+                 </button>
+                 {autoFillMsg && <span className="text-[10px] text-[var(--mute)]">{autoFillMsg}</span>}
+               </div>
+
                <div className="flex text-[10px] text-[var(--mute)] font-semibold uppercase tracking-widest px-4 py-2 border-b border-[var(--rule)]">
                  <div className="w-8 text-center shrink-0">#</div>
                  <div className="flex-1 px-3">Manager</div>
