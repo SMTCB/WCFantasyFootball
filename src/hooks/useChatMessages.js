@@ -215,7 +215,7 @@ export function useChatMessages(leagueId) {
   }, [messages, scrollToBottom]);
 
   // Send a message
-  const sendMessage = useCallback(async (messageText) => {
+  const sendMessage = useCallback(async (messageText, mentionedUserIds = []) => {
     if (!leagueId || !user?.id || !messageText.trim()) {
       return { ok: false, error: 'Invalid input' };
     }
@@ -227,6 +227,7 @@ export function useChatMessages(leagueId) {
           league_id: leagueId,
           user_id: user.id,
           message: messageText.trim(),
+          mentioned_user_ids: mentionedUserIds.length > 0 ? mentionedUserIds : [],
         }])
         .select()
         .single();
