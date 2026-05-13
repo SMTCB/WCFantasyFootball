@@ -7,6 +7,8 @@ import { useMentions } from '../hooks/useMentions';
 import { useMessageSearch } from '../hooks/useMessageSearch';
 import { useToast } from '../hooks/useToast';
 import { useAuctions } from '../hooks/useAuctions';
+import { useLeagueStats } from '../hooks/useLeagueStats';
+import { useBettingLeaderboard } from '../hooks/useBettingLeaderboard';
 import SectionHeader from '../components/SectionHeader';
 import LeagueInviteCard from '../components/LeagueInviteCard';
 import H2HSheet from '../components/H2HSheet';
@@ -56,6 +58,8 @@ export default function LeagueScreen() {
   const [draftDeadlineDate, setDraftDeadlineDate] = useState(null); // for countdown banner
   const transferWindow = useTransferWindow(activeLeague?.league_id);
   const { auctions, loading: auctionsLoading, placeBid, cancelListing } = useAuctions(activeLeague?.league_id, mySquadId);
+  const { topScorers, teamMetrics, loading: statsLoading } = useLeagueStats(activeLeague?.league_id);
+  const { leaderboard, loading: betLoading } = useBettingLeaderboard(activeLeague?.league_id);
 
   // Commissioner panel state
   const [commLoading,   setCommLoading]   = useState(false);
@@ -320,7 +324,7 @@ export default function LeagueScreen() {
 
   const renderTabs = () => (
     <div className="flex bg-[var(--ink-2)] border-b border-[var(--rule)] sticky top-[60px] z-20">
-      {['leaderboard', 'frontpage', 'bets', 'auctions', 'chat', 'stats', ...(isCommissioner ? ['commissioner'] : [])].map((t) => (
+      {['leaderboard', 'frontpage', 'bets', 'betting_leaderboard', 'auctions', 'chat', 'stats', ...(isCommissioner ? ['commissioner'] : [])].map((t) => (
         <button
           key={t}
           onClick={() => setView(t === 'leaderboard' ? 'detail' : t)}
@@ -330,7 +334,7 @@ export default function LeagueScreen() {
               : 'text-[#555] hover:text-[var(--mute)]'
           }`}
         >
-          {t === 'leaderboard' ? 'Leaderboard' : t === 'commissioner' ? '⚙ Admin' : t}
+          {t === 'leaderboard' ? 'Leaderboard' : t === 'commissioner' ? '⚙ Admin' : t === 'betting_leaderboard' ? 'Betting' : t}
           {t === 'chat' && unreadCount > 0 && (
             <span className="absolute top-1 right-1 bg-red-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full">
               {unreadCount}
@@ -1096,12 +1100,72 @@ export default function LeagueScreen() {
          )}
 
          {view === 'stats' && (
-            <div className="flex flex-col items-center justify-center min-h-[60vh] p-8 text-center">
-              <div className="text-3xl mb-4 opacity-40">📊</div>
-              <div className="text-[11px] font-black uppercase tracking-[0.2em] text-text-tertiary mb-2">League Stats</div>
-              <p className="text-[13px] text-[var(--mute)] max-w-xs">
-                Stats will appear here once the season is underway and matches have been played.
-              </p>
+            <div className="min-h-[60vh] p-6 bg-[var(--ink)]">
+              <h2 className="text-[13px] font-black uppercase tracking-widest mb-6 text-[var(--mute)]">📊 League Stats</h2>
+              {statsLoading ? (
+                <div className="text-center text-[var(--mute)]">Loading...</div>
+              ) : (
+                <>
+                  {/* Top Scorers Section */}
+                  <div className="mb-8">
+                    <h3 className="text-[11px] font-bold uppercase mb-4 text-white">Top Scorers</h3>
+                    <div className="space-y-2">
+                      {topScorers?.map((scorer, i) => (
+                        <div key={scorer.user_id} className="flex gap-3 px-4 py-2 rounded bg-[var(--ink-2)] border border-[var(--rule)]">
+                          <span className="text-[11px] font-black text-[var(--mute)] w-6">{i + 1}</span>
+                          <span className="text-[11px] font-bold flex-1">{scorer.username}</span>
+                          <span className="text-[11px] font-bold text-[var(--cyan)]">{scorer.total_points} pts</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Team Metrics Section */}
+                  <div>
+                    <h3 className="text-[11px] font-bold uppercase mb-4 text-white">League Overview</h3>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="px-4 py-3 rounded bg-[var(--ink-2)] border border-[var(--rule)] text-center">
+                        <div className="text-[9px] text-[var(--mute)] uppercase tracking-widest mb-1">Members</div>
+                        <div className="text-[16px] font-black text-white">{teamMetrics?.member_count}</div>
+                      </div>
+                      <div className="px-4 py-3 rounded bg-[var(--ink-2)] border border-[var(--rule)] text-center">
+                        <div className="text-[9px] text-[var(--mute)] uppercase tracking-widest mb-1">Avg Points</div>
+                        <div className="text-[16px] font-black text-white">{teamMetrics?.avg_points?.toFixed(0)}</div>
+                      </div>
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+
+         {view === 'betting_leaderboard' && (
+            <div className="min-h-[60vh] p-6 bg-[var(--ink)]">
+              <h2 className="text-[13px] font-black uppercase tracking-widest mb-6 text-[var(--mute)]">🎯 Betting Performance</h2>
+              {betLoading ? (
+                <div className="text-center text-[var(--mute)]">Loading...</div>
+              ) : leaderboard?.length === 0 ? (
+                <div className="text-center text-[var(--mute)] py-8">No resolved bets yet</div>
+              ) : (
+                <div className="space-y-2">
+                  {leaderboard?.map((entry, i) => (
+                    <div key={entry.user_id} className="flex gap-3 px-4 py-3 rounded bg-[var(--ink-2)] border border-[var(--rule)] items-center">
+                      <span className="text-[11px] font-black text-[var(--mute)] w-6">{i + 1}</span>
+                      <span className="text-[11px] font-bold flex-1">{entry.username}</span>
+                      <div className="flex gap-3 text-[10px]">
+                        <div className="text-right">
+                          <div className="text-[var(--mute)]">{entry.correct_bets}/{entry.total_bets}</div>
+                          <div className="text-[var(--cyan)] font-bold">{entry.accuracy_pct}%</div>
+                        </div>
+                        <div className="text-right">
+                          <div className="text-[var(--mute)]">Rewards</div>
+                          <div className="text-[var(--positive)] font-bold">+{entry.total_rewards}</div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
 

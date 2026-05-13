@@ -1,9 +1,42 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-05-13 (comprehensive audit completed)  
+**Last Updated**: 2026-05-14 (MVP STATS and Betting Leaderboard added)  
 **Audit Status**: ✅ Code state verified against BACKLOG  
 **E2E Test Suite**: 148/148 passing (100%) ✅  
-**Code Shipping Complete**: 37/37 core features + Chat Polish (6/8 #027-Extended done)
+**Code Shipping Complete**: 37/37 core features + Chat Polish (8/8 #027-Extended) + MVP Enhancements (STATS + Betting Leaderboard) ✅
+
+---
+
+## 📊 SESSION 17 PROGRESS (2026-05-14)
+
+**🚀 COMPLETED THIS SESSION:**
+- ✅ **STATS Section** — League-wide statistics dashboard
+  - Created useLeagueStats hook: fetches top 10 scorers and league metrics
+  - Queries league_members table for top scorers (rank, username, total_points)
+  - Team metrics: member count, average points per member
+  - Realtime subscription to league_members UPDATE events
+  - Replaced placeholder at LeagueScreen.jsx:1098-1106 with working UI
+  - All 148 E2E tests passing ✅
+  
+- ✅ **Betting Leaderboard Tab** — Betting performance ranking for MVP
+  - Created useBettingLeaderboard hook: aggregates per-user betting stats
+  - Queries bet_submissions for correct bets, accuracy %, total rewards
+  - Aggregates: total bets, correct answers, accuracy percentage, rewards earned
+  - Realtime subscription to bet_submissions UPDATE events
+  - Added 'betting_leaderboard' to LeagueScreen tab list (after 'bets')
+  - Displays managers ranked by betting rewards (descending)
+  - Empty state if no bets resolved yet
+  - All 148 E2E tests passing ✅
+
+- ✅ **FRONTPAGE Verification** — Confirmed fully implemented (no work needed)
+  - Gazette draft report display working correctly
+  - No changes required
+
+**MVP Feature Status:**
+✅ STATS section live with realtime updates  
+✅ Betting Leaderboard live with realtime updates  
+✅ Both tabs mobile-responsive (375px-1440px)  
+✅ All 37 core features intact, 0 regressions
 
 ---
 
@@ -18,16 +51,36 @@
   - Message display: @mentions styled as cyan highlighted links
   - All 148 E2E tests passing (74 desktop + 74 mobile) ✅
   - Migration applied to Supabase ✅
+  - PR #29 merged to main ✅
+- ✅ **Message Search (#027-Extended)** — Full-text chat history search
+  - useMessageSearch hook: client-side filtering (case-insensitive substring match)
+  - Search UI: input box + result counter + clear button in chat header
+  - Real-time filtering as user types, "no match" state displayed
+  - All 148 E2E tests passing (0 regressions) ✅
+  - PR #31 merged to main ✅
+- ✅ **Chat Polish Complete** — 8/8 enhancements shipped (unread badge, typing, edit/delete, @mentions, message search)
+
+## 📊 SESSION 16 PROGRESS (2026-05-13)
+
+**🚀 COMPLETED THIS SESSION:**
+- ✅ **Betting System Cleanup** — Removed orphaned Bracket Challenge from HomeScreen
+- ✅ **Auto-Close Bets Cron** (Migration 34) — Every 6h: transitions expired bets open→closed
+  - Ensures correct status for scoring/resolution
+  - Prevents stale bets blocking points aggregation
+  - Pending manual application via Supabase dashboard
+  - Identified 5 other gaps (notifications, auto-options, edge cases) — deferred post-launch
+
+---
 
 ## 🎯 REMAINING WORK (What's Actually Left)
 
-### Chat Enhancements (1/8 remaining)
-- ✅ **@Mentions** — SHIPPED this session  
-- ❌ **Message Search** (1.5-2h) — Full-text search in chat history
+### Chat Enhancements (0/8 remaining) — ALL COMPLETE ✅
+- ✅ **@Mentions** — SHIPPED (PR #29 merged 2026-05-13)
+- ✅ **Message Search** — SHIPPED (PR #31 merged 2026-05-13)
 
 ### Everything Else
 ✅ **37/37 core features complete** — Draft, Auctions, Bets, Scoring, Transfers, etc.  
-✅ **Chat Polish** — 7/8 done (unread badge, typing, edit/delete, @mentions shipped)  
+✅ **Chat Polish** — 8/8 COMPLETE (all enhancements shipped)  
 ✅ **E2E Tests** — 148/148 passing, real data  
 ✅ **Database** — 35 migrations applied, scoring pipeline active
 

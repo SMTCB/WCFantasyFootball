@@ -406,33 +406,6 @@ export default function HomeScreen() {
             </div>
           )}
 
-          {/* Bracket Challenge */}
-          <div className="px-4 pb-4 pt-2">
-            <Link to="/bracket">
-              <div
-                className="rounded-md p-4 flex items-center gap-4 transition-all active:scale-[0.98]"
-                style={{ background: 'rgba(240,180,0,0.05)', border: '1px solid rgba(240,180,0,0.18)' }}
-              >
-                <div
-                  className="fk-mono flex items-center justify-center shrink-0"
-                  style={{ width: 40, height: 40, border: '1px solid var(--rule)', color: 'var(--gold)', fontSize: 9 }}
-                >
-                  BKT
-                </div>
-                <div>
-                  <div className="fz-label mb-0.5" style={{ color: 'var(--gold)' }}>Bracket Challenge</div>
-                  <div
-                    className="text-[15px] font-black"
-                    style={{ fontFamily: 'Archivo Black, sans-serif', color: 'var(--paper)' }}
-                  >
-                    Predict the Knockouts
-                  </div>
-                  <div className="text-[11px] mt-0.5" style={{ color: 'var(--mute)' }}>Earn bonus points →</div>
-                </div>
-              </div>
-            </Link>
-          </div>
-
         </div>
       </div>
 
