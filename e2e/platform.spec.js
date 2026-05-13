@@ -137,8 +137,6 @@ test.describe('HomeScreen', () => {
   });
 
   test('shows a live match indicator or no matches message', async ({ page }) => {
-    // Scope to main content to avoid matching hidden desktop sidebar "Live" nav label
-    const main = page.locator('[data-testid="main-content"]');
     const bodyText = await page.locator('body').innerText();
     // Should show Live label or a message about fixtures
     expect(bodyText.toUpperCase()).toMatch(/LIVE|MATCH|FIXTURE|SCORES/);

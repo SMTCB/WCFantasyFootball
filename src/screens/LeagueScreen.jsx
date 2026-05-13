@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../hooks/useAuth';
 import { useChatMessages } from '../hooks/useChatMessages';
+import { useMentions } from '../hooks/useMentions';
 import { useToast } from '../hooks/useToast';
 import { useAuctions } from '../hooks/useAuctions';
 import SectionHeader from '../components/SectionHeader';
@@ -98,6 +99,7 @@ export default function LeagueScreen() {
   const [editingMessageId, setEditingMessageId] = useState(null);
   const [editingText, setEditingText] = useState('');
   const { messages, loading: chatLoading, unreadCount, typingUsers, sendMessage, editMessage, deleteMessage, broadcastTyping, markChatAsRead, scrollEndRef } = useChatMessages(activeLeague?.league_id);
+  const { mentionSearch, mentionMatches, selectedMention, mentionedUserIds, loadLeagueMembers, parseMentionPattern, insertMention, handleMentionNavigate, resetMentions } = useMentions(activeLeague?.league_id);
 
   const toggleListing = async (playerId) => {
     const leagueId = activeLeague?.league_id;
@@ -363,8 +365,9 @@ export default function LeagueScreen() {
   useEffect(() => {
     if (view === 'chat' && activeLeague?.league_id) {
       markChatAsRead();
+      loadLeagueMembers();
     }
-  }, [view, activeLeague?.league_id, markChatAsRead]);
+  }, [view, activeLeague?.league_id, markChatAsRead, loadLeagueMembers]);
 
   // Realtime subscription: league standings (total_points updates from bet rewards)
   useEffect(() => {
@@ -873,7 +876,19 @@ export default function LeagueScreen() {
                             ? 'bg-cyan/10 text-white border-cyan/20 rounded-tr-sm'
                             : 'bg-[var(--ink-2)] text-white border-[var(--rule)] rounded-tl-sm'
                         } relative group/msg`}>
-                          {msg.isDeleted ? <span className="italic text-[var(--mute)]">[deleted]</span> : msg.message}
+                          {msg.isDeleted ? (
+                            <span className="italic text-[var(--mute)]">[deleted]</span>
+                          ) : (
+                            <span>
+                              {msg.message.split(/(@\w+)/g).map((part, idx) =>
+                                part.startsWith('@') ? (
+                                  <span key={idx} className="font-semibold text-cyan">{part}</span>
+                                ) : (
+                                  <span key={idx}>{part}</span>
+                                )
+                              )}
+                            </span>
+                          )}
                           {msg.isOwnMessage && !msg.isDeleted && (
                             <div className="absolute -right-20 top-0 flex gap-1 opacity-0 group-hover/msg:opacity-100 transition-opacity">
                               <button
@@ -921,24 +936,42 @@ export default function LeagueScreen() {
                      e.preventDefault();
                      if (!chatInput.trim() || chatSending) return;
                      setChatSending(true);
-                     const result = await sendMessage(chatInput);
+                     const result = await sendMessage(chatInput, mentionedUserIds);
                      if (result.ok) {
                        setChatInput('');
+                       resetMentions();
                      } else {
                        console.error('Failed to send message:', result.error);
                      }
                      setChatSending(false);
                    }}
-                   className="w-full"
+                   className="w-full relative"
                  >
-                   <div className="bg-[var(--ink-2)] border border-[var(--rule)] rounded-full flex items-center px-4 py-1">
+                   <div className="bg-[var(--ink-2)] border border-[var(--rule)] rounded-lg flex items-center px-4 py-1">
                       <input
                         type="text"
-                        placeholder="Roast your rivals..."
+                        placeholder="Roast your rivals... (try @username)"
                         value={chatInput}
                         onChange={(e) => {
-                          setChatInput(e.target.value);
+                          const newVal = e.target.value;
+                          setChatInput(newVal);
+                          parseMentionPattern(newVal);
                           broadcastTyping();
+                        }}
+                        onKeyDown={(e) => {
+                          if (mentionMatches.length > 0) {
+                            if (e.key === 'ArrowDown') {
+                              e.preventDefault();
+                              handleMentionNavigate(1);
+                            } else if (e.key === 'ArrowUp') {
+                              e.preventDefault();
+                              handleMentionNavigate(-1);
+                            } else if (e.key === 'Enter' && selectedMention) {
+                              e.preventDefault();
+                              const newText = insertMention(chatInput, selectedMention);
+                              setChatInput(newText);
+                            }
+                          }
                         }}
                         disabled={chatSending}
                         className="flex-1 bg-transparent py-3 text-sm text-white outline-none placeholder-[var(--mute)] disabled:opacity-50"
@@ -951,6 +984,28 @@ export default function LeagueScreen() {
                         {chatSending ? '...' : '↑'}
                       </button>
                    </div>
+
+                   {/* Mention autocomplete dropdown */}
+                   {mentionMatches.length > 0 && mentionSearch && (
+                     <div className="absolute bottom-12 left-4 right-4 bg-[var(--ink-3)] border border-[var(--rule)] rounded-lg shadow-lg z-50 max-h-48 overflow-y-auto">
+                       {mentionMatches.map((member) => (
+                         <button
+                           key={member.id}
+                           type="button"
+                           onClick={() => {
+                             const newText = insertMention(chatInput, member);
+                             setChatInput(newText);
+                           }}
+                           className={`w-full text-left px-4 py-2 text-sm transition-colors ${
+                             selectedMention?.id === member.id ? 'bg-cyan text-black' : 'hover:bg-[var(--ink-2)] text-white'
+                           }`}
+                         >
+                           <span className="font-semibold">@{member.name}</span>
+                           <span className="text-[var(--mute)] text-xs ml-2">{member.email}</span>
+                         </button>
+                       ))}
+                     </div>
+                   )}
                  </form>
               </div>
             </div>

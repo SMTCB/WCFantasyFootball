@@ -1,9 +1,35 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-05-13 (session 14 complete)  
+**Last Updated**: 2026-05-13 (comprehensive audit completed)  
+**Audit Status**: ✅ Code state verified against BACKLOG  
 **E2E Test Suite**: 148/148 passing (100%) ✅  
-**Code Shipping Complete**: 37/37 core features + Chat Polish (3/5 #027-Extended done) + E2E Real Data
-**Latest Completion**: E2E Test Suite Refactored to Real Data (all 148 tests passing)
+**Code Shipping Complete**: 37/37 core features + Chat Polish (6/8 #027-Extended done)
+
+---
+
+## 📊 SESSION 15 PROGRESS (2026-05-13)
+
+**🚀 COMPLETED THIS SESSION:**
+- ✅ **Comprehensive Codebase Audit** — Verified 37/37 core features + state of chat polish
+- ✅ **@Mentions Feature (#027-Extended)** — Full implementation with autocomplete
+  - Migration 33: `mentioned_user_ids` column + GPC index + RPCs
+  - useMentions hook: parsing, autocomplete, mention tracking
+  - LeagueScreen integration: keyboard nav (↑↓ Enter), mention dropdown UI
+  - Message display: @mentions styled as cyan highlighted links
+  - All 148 E2E tests passing (74 desktop + 74 mobile) ✅
+  - Migration applied to Supabase ✅
+
+## 🎯 REMAINING WORK (What's Actually Left)
+
+### Chat Enhancements (1/8 remaining)
+- ✅ **@Mentions** — SHIPPED this session  
+- ❌ **Message Search** (1.5-2h) — Full-text search in chat history
+
+### Everything Else
+✅ **37/37 core features complete** — Draft, Auctions, Bets, Scoring, Transfers, etc.  
+✅ **Chat Polish** — 7/8 done (unread badge, typing, edit/delete, @mentions shipped)  
+✅ **E2E Tests** — 148/148 passing, real data  
+✅ **Database** — 35 migrations applied, scoring pipeline active
 
 ---
 
