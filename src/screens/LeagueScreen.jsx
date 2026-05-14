@@ -5,6 +5,7 @@ import { useAuth } from '../hooks/useAuth';
 import { useChatMessages } from '../hooks/useChatMessages';
 import { useMentions } from '../hooks/useMentions';
 import { useMessageSearch } from '../hooks/useMessageSearch';
+import { useNotifications } from '../hooks/useNotifications';
 import { useToast } from '../hooks/useToast';
 import { useAuctions } from '../hooks/useAuctions';
 import { useLeagueStats } from '../hooks/useLeagueStats';
@@ -17,6 +18,7 @@ import GazetteDraftReport from '../components/GazetteDraftReport';
 import TransferWindowBanner from '../components/TransferWindowBanner';
 import AuctionCard from '../components/AuctionCard';
 import BetsSection from '../components/BetsSection';
+import NotificationPanel from '../components/NotificationPanel';
 import { useTransferWindow } from '../hooks/useTransferWindow';
 
 
@@ -137,6 +139,7 @@ export default function LeagueScreen() {
   const [editingMessageId, setEditingMessageId] = useState(null);
   const [editingText, setEditingText] = useState('');
   const { messages, loading: chatLoading, unreadCount, typingUsers, sendMessage, editMessage, deleteMessage, broadcastTyping, markChatAsRead, scrollEndRef } = useChatMessages(activeLeague?.league_id);
+  const { notifications, unreadCount: notificationCount, markAsRead: markNotificationAsRead, clearAll: clearAllNotifications } = useNotifications(activeLeague?.league_id);
   const { mentionSearch, mentionMatches, selectedMention, mentionedUserIds, loadLeagueMembers, parseMentionPattern, insertMention, handleMentionNavigate, resetMentions } = useMentions(activeLeague?.league_id);
   const { searchTerm, setSearchTerm, filteredMessages, clearSearch, resultCount } = useMessageSearch(messages);
 
@@ -373,6 +376,11 @@ export default function LeagueScreen() {
               {unreadCount}
             </span>
           )}
+          {t === 'bets' && notificationCount > 0 && (
+            <span className="absolute top-1 right-1 bg-red-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full">
+              {notificationCount}
+            </span>
+          )}
           {((view === 'detail' && t === 'leaderboard') || view === t) && (
             <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-cyan" />
           )}
@@ -407,6 +415,13 @@ export default function LeagueScreen() {
       loadLeagueMembers();
     }
   }, [view, activeLeague?.league_id, markChatAsRead, loadLeagueMembers]);
+
+  // Auto-clear notification badge when viewing bets tab
+  useEffect(() => {
+    if (view === 'bets' && activeLeague?.league_id && notificationCount > 0) {
+      clearAllNotifications();
+    }
+  }, [view, activeLeague?.league_id, notificationCount, clearAllNotifications]);
 
   // Realtime subscription: league standings (total_points updates from bet rewards)
   useEffect(() => {
@@ -680,6 +695,12 @@ export default function LeagueScreen() {
             </div>
           </div>
           <div className="flex items-center gap-3">
+            <NotificationPanel
+              notifications={notifications}
+              unreadCount={notificationCount}
+              onMarkAsRead={markNotificationAsRead}
+              onClearAll={clearAllNotifications}
+            />
             <button
               onClick={() => setNewLeague(activeLeague?.leagues || activeLeague)}
               className="fz-label text-cyan hover:text-cyan/80 transition-colors"
