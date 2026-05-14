@@ -5,6 +5,7 @@ import { useToast } from '../hooks/useToast';
 // ── helpers ───────────────────────────────────────────────────────────────────
 
 function timeLeft(deadlineAt) {
+  if (!deadlineAt) return { label: 'Open', expired: false, color: 'var(--mute)' };
   const diff = new Date(deadlineAt) - Date.now();
   if (diff <= 0) return { label: 'Deadline passed', expired: true, color: 'var(--danger)' };
   const h = Math.floor(diff / 3_600_000);

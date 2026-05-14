@@ -59,7 +59,7 @@ export default function DraftScreen() {
   const cfg           = useLeagueConfig(leagueId);
   const DRAFT_POS_CAPS  = cfg.draftPositionCaps;
   const DRAFT_LIST_SIZE = cfg.draftListSize;
-  const MIN_SUBMIT      = cfg.squadSize;
+  const MIN_SUBMIT      = cfg.draftListSize;
 
   useEffect(() => {
     const fetchData = async () => {
