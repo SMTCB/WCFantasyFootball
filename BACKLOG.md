@@ -1,9 +1,35 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-05-14 (MVP STATS and Betting Leaderboard added)  
+**Last Updated**: 2026-05-14 (Multi-screen auto-fill button shipped)  
 **Audit Status**: ✅ Code state verified against BACKLOG  
 **E2E Test Suite**: 148/148 passing (100%) ✅  
-**Code Shipping Complete**: 37/37 core features + Chat Polish (8/8 #027-Extended) + MVP Enhancements (STATS + Betting Leaderboard) ✅
+**Code Shipping Complete**: 37/37 core features + Chat Polish (8/8 #027-Extended) + MVP Enhancements (STATS + Betting Leaderboard) + Multi-Screen Auto-Fill ✅
+
+---
+
+## 📊 SESSION 18 PROGRESS (2026-05-14)
+
+**🚀 COMPLETED THIS SESSION:**
+- ✅ **Multi-Screen Auto-Fill Button (#037 Completion)**
+  - Created reusable `useAutoFill` hook extracting auto-fill logic from SquadScreen
+  - Updated SquadScreen: hook replaces inline function, button always visible (removed incomplete squad condition)
+  - Added to MarketScreen: button in header, fetchSquad callback for squad refresh
+  - Added to LeagueScreen: button in standings view, fetchSquad callback queries draft_allocations
+  - Fixed ESLint exhaustive-deps warning in useAutoFill hook
+  - Fixed function declaration order in MarketScreen (fetchMarketParams before useEffect call)
+  - Resolved merge conflicts during PR #33 rebase
+  - Fixed incomplete conflict marker in LeagueScreen
+  - All 148 E2E tests passing ✅
+  - Build verified locally and on Vercel ✅
+  - PR #33 + #34 (hotfix) merged to main ✅
+
+**Feature Status:**
+✅ Button always visible on SquadScreen (including full squads)  
+✅ Button accessible on MarketScreen header  
+✅ Button accessible on LeagueScreen standings  
+✅ Auto-fill respects position limits and budget constraints  
+✅ Mobile-responsive at 375px+ viewport  
+✅ Realtime squad updates after auto-fill
 
 ---
 
