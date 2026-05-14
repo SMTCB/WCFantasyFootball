@@ -116,8 +116,6 @@ export default function MarketScreen() {
     if (user?.id) init();
   }, [user?.id, leagueId]);
 
-  useEffect(() => { fetchMarketParams(); }, [activeLeague]);
-
   const fetchMarketParams = async () => {
     setLoading(true);
 
@@ -182,6 +180,8 @@ export default function MarketScreen() {
 
     setLoading(false);
   };
+
+  useEffect(() => { fetchMarketParams(); }, [activeLeague]);
 
   const stats = useMemo(() => {
     const posCounts = { GK: 0, DEF: 0, MID: 0, FWD: 0 };
