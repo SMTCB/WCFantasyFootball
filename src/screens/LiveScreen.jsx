@@ -14,7 +14,7 @@ export default function LiveScreen() {
   const [events,         setEvents]         = useState([]);
   const [liveScoreSum,   setLiveScoreSum]   = useState(0);
   const [mySquadPlayers, setMySquadPlayers] = useState([]);
-  const [leagueNames,    setLeagueNames]    = useState({}); // playerId → leagueName (when in multiple)
+  const [, setLeagueNames] = useState({}); // playerId → leagueName — set for event enrichment, not read directly
   const [multiLeague,    setMultiLeague]    = useState(false);
 
   const [projection,    setProjection]    = useState(null);
@@ -99,7 +99,6 @@ export default function LiveScreen() {
       // ── 3. Squad players for each league (collect all) ─────────────────────────
       const allPlayerIds   = new Set();
       const playerLeagueMap = {}; // playerId → leagueName
-      let   firstLeaguePts = 0;
       let   firstSquadRows = [];
 
       for (const membership of memberships) {
@@ -119,7 +118,6 @@ export default function LiveScreen() {
         });
 
         if (memberships.indexOf(membership) === 0) {
-          firstLeaguePts = membership.total_points ?? 0;
           firstSquadRows = [{ squadRow, membership }];
         }
       }
