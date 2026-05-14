@@ -1,9 +1,40 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-05-14 (Multi-screen auto-fill button shipped)  
+**Last Updated**: 2026-05-14 (Bet notifications system complete)  
 **Audit Status**: ✅ Code state verified against BACKLOG  
 **E2E Test Suite**: 148/148 passing (100%) ✅  
-**Code Shipping Complete**: 37/37 core features + Chat Polish (8/8 #027-Extended) + MVP Enhancements (STATS + Betting Leaderboard) + Multi-Screen Auto-Fill ✅
+**Code Shipping Complete**: 37/37 core features + Chat Polish (8/8 #027-Extended) + MVP Enhancements (STATS + Betting Leaderboard) + Multi-Screen Auto-Fill + Bet Notifications ✅
+
+---
+
+## 📊 SESSION 19 PROGRESS (2026-05-14)
+
+**🚀 COMPLETED THIS SESSION:**
+- ✅ **Bet Notifications System (#035)**
+  - Created Migration 35: `league_notifications` table with RLS, RPCs, database trigger
+  - Created useNotifications hook: fetch notifications, realtime subscriptions, mark as read/clear all
+  - Created NotificationPanel component: bell icon dropdown with unread badge
+  - Integrated into LeagueScreen: notifications badge on 'bets' tab, dropdown in header
+  - Auto-clear notifications when user navigates to betting view
+  - Database trigger auto-generates notifications on bet creation (excludes commissioner)
+  - Realtime delivery via postgres_changes INSERT/UPDATE subscriptions
+  - All 148 E2E tests passing (0 regressions) ✅
+  - Build verified: `npm run build` succeeds ✅
+  - PR `claude/bet-notifications` created and pushed ✅
+
+**Feature Status:**
+✅ Commissioners create bet → all league members see notification in real-time  
+✅ Unread count displayed on 'bets' tab badge  
+✅ Notification dropdown shows title, description, relative timestamp  
+✅ Click notification to mark as read (individual or "Clear All")  
+✅ Notifications persist across page refreshes  
+✅ Mobile-responsive at 375px+ viewport  
+✅ Matches existing chat notification pattern
+
+**Next Steps (User Action Required):**
+1. Apply Migration 35 to Supabase dashboard (copy SQL from migration file)
+2. Create PR from `claude/bet-notifications` branch on GitHub
+3. Merge PR to main for live deployment on Vercel
 
 ---
 
