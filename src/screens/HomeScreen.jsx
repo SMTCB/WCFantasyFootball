@@ -215,9 +215,9 @@ export default function HomeScreen() {
                   letterSpacing: '0.05em',
                 }}
               >
-                {match.home_score ?? 0}
+                {match.home_score ?? match.scores?.home ?? (isLive ? 0 : '?')}
                 <span style={{ color: 'var(--mute)', margin: '0 3px' }}>–</span>
-                {match.away_score ?? 0}
+                {match.away_score ?? match.scores?.away ?? (isLive ? 0 : '?')}
               </div>
             ) : (
               <div

@@ -194,11 +194,14 @@ Deno.serve(async (req) => {
     if (!matchData) return respond(200, { ok: true, message: 'Match data not available yet', players_ingested: 0, events_written: 0 });
 
     // ── 3. Update fixture status and score ────────────────────────────────────
+    // Forza API uses 'matchData.score.current', not 'matchData.scores.current'
     await supabase.from('fixtures').update({
       status:        matchData.status === 'live' ? 'live' : matchData.status === 'after' ? 'finished' : 'scheduled',
       status_detail: matchData.status_detail ?? null,
-      scores:        matchData.scores?.current
-                       ? { home: matchData.scores.current[0], away: matchData.scores.current[1] }
+      home_score:    matchData.score?.current?.[0] ?? null,
+      away_score:    matchData.score?.current?.[1] ?? null,
+      scores:        matchData.score?.current
+                       ? { home: matchData.score.current[0], away: matchData.score.current[1] }
                        : null,
     }).eq('id', fixture.id);
 
@@ -256,8 +259,8 @@ Deno.serve(async (req) => {
 
     // ── 8. Derive clean sheets ────────────────────────────────────────────────
     // clean sheet = player's team conceded 0 goals AND player played ≥ 60 min
-    const homeScore = matchData.scores?.current?.[0] ?? 0;
-    const awayScore = matchData.scores?.current?.[1] ?? 0;
+    const homeScore = matchData.score?.current?.[0] ?? 0;
+    const awayScore = matchData.score?.current?.[1] ?? 0;
     // Home team conceded = away score; away team conceded = home score
     const concededByTeam = {
       [homeId]: awayScore,

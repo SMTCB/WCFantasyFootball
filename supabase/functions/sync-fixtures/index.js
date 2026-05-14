@@ -84,8 +84,11 @@ Deno.serve(async (req) => {
       competition:          `${tournament.name} · Round ${m.round ?? '?'}`,
       status:               mapStatus(m.status),
       status_detail:        m.status_detail ?? null,
-      scores: m.scores?.current
-        ? { home: m.scores.current[0], away: m.scores.current[1] }
+      // Forza API uses 'm.score.current', not 'm.scores.current'
+      home_score:  m.score?.current?.[0] ?? null,
+      away_score:  m.score?.current?.[1] ?? null,
+      scores: m.score?.current
+        ? { home: m.score.current[0], away: m.score.current[1] }
         : null,
     }));
 
