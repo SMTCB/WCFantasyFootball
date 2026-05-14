@@ -15,7 +15,7 @@ export function useAuctions(leagueId, squadId) {
         players(id, name, position, club, price)
       `)
       .eq('league_id', leagueId)
-      .eq('status', 'active')
+      .eq('status', 'open')
       .order('deadline_at', { ascending: true });
     setAuctions(data ?? []);
     setLoading(false);
@@ -28,7 +28,7 @@ export function useAuctions(leagueId, squadId) {
     const deadline_at = new Date(Date.now() + hoursOpen * 3600_000).toISOString();
     const { error } = await supabase.from('auction_listings').insert({
       league_id: leagueId, seller_id: squadId, player_id: playerId,
-      starting_bid: minBid, current_bid: minBid, deadline_at,
+      starting_bid: minBid, current_bid: minBid, deadline_at, status: 'open',
     });
     if (error) return { ok: false, error: error.message };
     await load();
@@ -38,9 +38,8 @@ export function useAuctions(leagueId, squadId) {
   const placeBid = useCallback(async (auctionId, amount) => {
     if (!squadId) return { ok: false, error: 'No squad selected.' };
     const { data, error } = await supabase.rpc('place_bid', {
-      p_auction_id:   auctionId,
-      p_bidder_squad: squadId,
-      p_amount:       amount,
+      p_listing_id: auctionId,
+      p_bid_amount: amount,
     });
     if (error) return { ok: false, error: error.message };
     if (!data?.ok) return { ok: false, error: data?.error ?? 'Bid failed.' };
