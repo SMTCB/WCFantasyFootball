@@ -12,7 +12,7 @@ function timeLeft(endsAt) {
   return `${m}m`;
 }
 
-export default function AuctionCard({ auction, mySquadId, onBid, onCancel }) {
+export default function AuctionCard({ auction, mySquadId, onBid, onCancel, onSellNow }) {
   const [amount, setAmount] = useState('');
   const [busy,   setBusy]   = useState(false);
   const [err,    setErr]    = useState(null);
@@ -85,14 +85,27 @@ export default function AuctionCard({ auction, mySquadId, onBid, onCancel }) {
       {!isEnded && (
         <div className="px-4 pb-3 flex items-center gap-2">
           {isMine ? (
-            <button
-              onClick={async () => { setBusy(true); const r = await onCancel(auction.id); setBusy(false); if (!r.ok) setErr(r.error); }}
-              disabled={busy}
-              className="text-[10px] font-black uppercase tracking-wider px-3 py-1.5 disabled:opacity-40"
-              style={{ border: '1px solid rgba(240,58,58,0.3)', color: '#f04040', background: 'rgba(240,58,58,0.06)' }}
-            >
-              {busy ? '…' : 'Cancel listing'}
-            </button>
+            <div className="flex items-center gap-2">
+              {/* Sell Now — only shown when at least one bid exists */}
+              {auction.highest_bidder_id && onSellNow && (
+                <button
+                  onClick={async () => { setBusy(true); const r = await onSellNow(auction.id); setBusy(false); if (!r.ok) setErr(r.error); }}
+                  disabled={busy}
+                  className="text-[10px] font-black uppercase tracking-wider px-3 py-1.5 disabled:opacity-40"
+                  style={{ border: '1px solid rgba(24,201,107,0.35)', color: '#18c96b', background: 'rgba(24,201,107,0.08)' }}
+                >
+                  {busy ? '…' : `Sell Now · £${(auction.current_bid ?? 0).toFixed(1)}M`}
+                </button>
+              )}
+              <button
+                onClick={async () => { setBusy(true); const r = await onCancel(auction.id); setBusy(false); if (!r.ok) setErr(r.error); }}
+                disabled={busy}
+                className="text-[10px] font-black uppercase tracking-wider px-3 py-1.5 disabled:opacity-40"
+                style={{ border: '1px solid rgba(240,58,58,0.3)', color: '#f04040', background: 'rgba(240,58,58,0.06)' }}
+              >
+                {busy ? '…' : 'Cancel'}
+              </button>
+            </div>
           ) : (
             <>
               <input

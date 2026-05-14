@@ -58,5 +58,13 @@ export function useAuctions(leagueId, squadId) {
     return { ok: true };
   }, [squadId, load]);
 
-  return { auctions, loading, listPlayer, placeBid, cancelListing, reload: load };
+  const sellNow = useCallback(async (auctionId) => {
+    const { data, error } = await supabase.rpc('sell_now', { p_listing_id: auctionId });
+    if (error) return { ok: false, error: error.message };
+    if (!data?.ok) return { ok: false, error: data?.error ?? 'Sell failed.' };
+    await load();
+    return { ok: true };
+  }, [load]);
+
+  return { auctions, loading, listPlayer, placeBid, cancelListing, sellNow, reload: load };
 }
