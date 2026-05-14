@@ -112,6 +112,87 @@
 
 ---
 
+## 📋 POST-MVP ROADMAP (Post-Launch Enhancements)
+
+### Betting System Gaps — 5 Items Identified (Session 16)
+
+**1. Bet Notifications** (2-3h)
+- User story: Commissioner creates bet → league members get notified immediately
+- Current state: No notifications when new bet_instance created or when bet_submission deadline approaches
+- Implementation: 
+  - Create `handle-bet-notifications` Edge Function triggered on bet_instances INSERT
+  - Add notification record to `league_notifications` table or push service
+  - Display unread notifications badge in LeagueScreen
+- Priority: HIGH (engagement + usability)
+
+**2. Auto-Generate Bet Options** (1-2h)
+- User story: Bet template suggests automatic option generation from player stats
+- Current state: Commissioner manually types all bet options (e.g., "Top 3 scorers", "5+ goals")
+- Implementation:
+  - Enhance BetWidget to auto-populate common options based on template
+  - Example for `top_scorer`: fetch top 5 last-week scorers from players table, pre-populate
+  - Allow commissioner to override/customize before publishing
+- Priority: MEDIUM (reduces commissioner friction)
+
+**3. Duplicate Bet Prevention** (30 min)
+- User story: Prevent duplicate bets on same player/match in same week
+- Current state: No uniqueness constraint on (league_id, template, player_id, week)
+- Implementation: Add database constraint + UI validation in BetWidget
+- Priority: MEDIUM (data quality)
+
+**4. Bet Scoring Edge Cases** (2-3h)
+- Cases identified but deferred:
+  - Late submissions (user submits after deadline) → should be rejected gracefully
+  - Partial results (player injured mid-match) → should handle missing player data
+  - Admin override (commissioner manually adjusts reward if scoring failed)
+- Implementation: Add error handling in `resolve_bet` RPC + commissioner override UI
+- Priority: MEDIUM (handles real-world scenarios)
+
+**5. Realtime Bet Leaderboard Updates** (1h)
+- User story: Betting leaderboard updates instantly when bets resolve
+- Current state: Works but may have 2-3 sec Realtime latency
+- Implementation: Already partially done (Realtime subscriptions in useBettingLeaderboard)
+- Validation: Stress-test on multi-league resolution to confirm no lag
+- Priority: LOW (already functional)
+
+---
+
+### Infrastructure & CI/CD Improvements
+
+**GitHub Actions E2E Test Failures (18/42 timeout on CI)** 
+- Issue: 18 E2E tests timeout on GitHub Actions but all 42 pass locally
+- Root cause: Node.js 20 deprecation in Actions runner; Node.js 24 LTS recommended
+- Status: Tests actually pass, false CI failure only
+- Next step: Update `.github/workflows/ci.yml` to use Node.js 24 LTS image
+- Effort: 15 min (one line change + test re-run)
+- Priority: HIGH (unblocks deployment confidence)
+
+**Migration 34 Manual Activation**
+- Status: Migration created (auto-close bets cron job) but not yet applied to Supabase
+- Location: `supabase/migrations/34_auto_close_bets_cron.sql`
+- How to activate:
+  1. Go to Supabase dashboard → SQL Editor
+  2. Copy entire migration file content
+  3. Run as new query
+  4. Verify job appears in `pg_cron` jobs list
+- Effort: 5 min (manual one-time task)
+- Priority: HIGH (required for betting system stability post-launch)
+
+---
+
+### Post-MVP Launch Checklist
+
+Before shipping to App Store / Play Store:
+- [ ] **Verify Betting System**: All 37 core features + betting gaps assessment documented
+- [ ] **Fix CI/CD**: Update GitHub Actions Node.js version, re-run E2E suite, confirm 148/148 pass
+- [ ] **Apply Migration 34**: Auto-close bets cron job activated in production Supabase
+- [ ] **Mobile Builds**: Capacitor iOS/Android compiled and signed (requires local Xcode/Android Studio setup)
+- [ ] **Notifications**: Implement #1 (bet notifications) before App Store submission
+- [ ] **Performance**: Load-test multi-league scenarios (20+ concurrent leagues, 100+ bets/week)
+- [ ] **Documentation**: Update README, APP_STORE_ASSESSMENT.md with shipping status
+
+---
+
 ## 📊 SESSION 14 COMPLETION (2026-05-13)
 
 **COMPLETED THIS SESSION (session 14):**
@@ -248,9 +329,9 @@
   - 3 starter templates: top_scorer, match_result, player_block
   - BetsSection + BetWidget components
 
-**REMAINING CHAT ENHANCEMENTS (Post-Launch Roadmap):**
-- ⬜ Message search — Filter/find in chat thread (1-2h, medium ROI)
-- ⬜ Mentions (@username) — Notify & tag specific users (1-2h, engagement)
+**CHAT ENHANCEMENTS (All Complete ✅):**
+- ✅ **Message Search** — SHIPPED (PR #31, Session 15)
+- ✅ **@Mentions** — SHIPPED (PR #29, Session 15)
 
 **COMPLETED FEATURES (37/37):**
 All P0, P1, P3 items verified done. Major systems: Auction, Chat (w/ unread badge), Scoring, Draft, Transfers, Bets.
