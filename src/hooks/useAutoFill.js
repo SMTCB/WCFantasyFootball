@@ -36,17 +36,24 @@ export function useAutoFill(leagueId, squadData, fetchSquad) {
         if (have[pos] !== undefined) have[pos]++;
       }
 
-      // Slots needed per position: fill minimums first (1 GK, 3 DEF, 2 MID, 1 FWD)
-      const need = {
-        GK: Math.max(0, 1 - have.GK),
-        DEF: Math.max(0, 3 - have.DEF),
-        MID: Math.max(0, 2 - have.MID),
-        FWD: Math.max(0, 1 - have.FWD),
-      };
+      const minPer = cfg.minFormation ?? { GK: 1, DEF: 3, MID: 2, FWD: 1 };
+      const maxPer = POS_LIMITS      ?? { GK: 2, DEF: 5, MID: 5, FWD: 3 };
+
+      // Slots needed per position: fill minimums first
+      const need = {};
+      for (const pos of ['GK', 'DEF', 'MID', 'FWD']) {
+        need[pos] = Math.max(0, (minPer[pos] ?? 0) - have[pos]);
+      }
+
+      // Distribute remaining slots to positions that still have capacity
       let extra = slotsNeeded - Object.values(need).reduce((s, n) => s + n, 0);
-      // Distribute extra slots evenly between DEF and MID
-      need.DEF += Math.ceil(extra / 2);
-      need.MID += Math.floor(extra / 2);
+      for (const pos of ['DEF', 'MID', 'FWD', 'GK']) {
+        if (extra <= 0) break;
+        const capacity = Math.max(0, (maxPer[pos] ?? 5) - have[pos] - need[pos]);
+        const give = Math.min(extra, capacity);
+        need[pos] += give;
+        extra -= give;
+      }
 
       let budgetLeft = squadData.budget.current;
       let added = 0;
