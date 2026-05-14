@@ -180,16 +180,20 @@
 
 ---
 
-### Post-MVP Launch Checklist
+### Web MVP Launch Checklist
 
-Before shipping to App Store / Play Store:
-- [ ] **Verify Betting System**: All 37 core features + betting gaps assessment documented
-- [ ] **Fix CI/CD**: Update GitHub Actions Node.js version, re-run E2E suite, confirm 148/148 pass
-- [ ] **Apply Migration 34**: Auto-close bets cron job activated in production Supabase
-- [ ] **Mobile Builds**: Capacitor iOS/Android compiled and signed (requires local Xcode/Android Studio setup)
-- [ ] **Notifications**: Implement #1 (bet notifications) before App Store submission
-- [ ] **Performance**: Load-test multi-league scenarios (20+ concurrent leagues, 100+ bets/week)
-- [ ] **Documentation**: Update README, APP_STORE_ASSESSMENT.md with shipping status
+Before shipping to production:
+- [x] **Verify Betting System**: All 37 core features + betting gaps assessment documented ✅
+- [x] **CI/CD Pipeline**: Node.js 24 LTS configured, 148/148 E2E tests passing ✅
+- [ ] **Apply Migration 34**: Auto-close bets cron job activated in production Supabase (manual Supabase dashboard task)
+- [ ] **Implement Bet Notifications** (HIGH priority): Commissioner creation → league alerts
+- [ ] **Performance Testing**: Load-test multi-league scenarios (20+ concurrent leagues, 100+ bets/week)
+- [ ] **Final Verification**: All 37 core features + scoring pipeline tested in staging
+
+### Post-MVP (Phase 2) — Mobile App & Notifications
+- **On Hold**: Capacitor iOS/Android builds deferred — MVP is web-only
+- **Post-Launch**: Implement bet notifications + mobile app builds after web launch validates market demand
+- **Mobile Strategy**: Re-evaluate based on web app adoption metrics before investing in native builds
 
 ---
 
