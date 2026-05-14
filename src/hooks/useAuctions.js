@@ -11,13 +11,12 @@ export function useAuctions(leagueId, squadId) {
     const { data } = await supabase
       .from('auction_listings')
       .select(`
-        id, player_id, seller_squad_id, min_bid, current_bid, bidder_squad_id, ends_at, status, created_at,
-        players(id, name, position, club, price),
-        seller:squads!seller_squad_id(id, user_id)
+        id, player_id, seller_id, starting_bid, current_bid, highest_bidder_id, deadline_at, status, created_at,
+        players(id, name, position, club, price)
       `)
       .eq('league_id', leagueId)
-      .eq('status', 'active')
-      .order('ends_at', { ascending: true });
+      .eq('status', 'open')
+      .order('deadline_at', { ascending: true });
     setAuctions(data ?? []);
     setLoading(false);
   }, [leagueId]);
@@ -26,10 +25,10 @@ export function useAuctions(leagueId, squadId) {
 
   const listPlayer = useCallback(async (playerId, minBid, hoursOpen = 48) => {
     if (!leagueId || !squadId) return { ok: false, error: 'No league or squad selected.' };
-    const ends_at = new Date(Date.now() + hoursOpen * 3600_000).toISOString();
+    const deadline_at = new Date(Date.now() + hoursOpen * 3600_000).toISOString();
     const { error } = await supabase.from('auction_listings').insert({
-      league_id: leagueId, seller_squad_id: squadId, player_id: playerId,
-      min_bid: minBid, ends_at,
+      league_id: leagueId, seller_id: squadId, player_id: playerId,
+      starting_bid: minBid, current_bid: minBid, deadline_at, status: 'open',
     });
     if (error) return { ok: false, error: error.message };
     await load();
@@ -39,9 +38,8 @@ export function useAuctions(leagueId, squadId) {
   const placeBid = useCallback(async (auctionId, amount) => {
     if (!squadId) return { ok: false, error: 'No squad selected.' };
     const { data, error } = await supabase.rpc('place_bid', {
-      p_auction_id:   auctionId,
-      p_bidder_squad: squadId,
-      p_amount:       amount,
+      p_listing_id: auctionId,
+      p_bid_amount: amount,
     });
     if (error) return { ok: false, error: error.message };
     if (!data?.ok) return { ok: false, error: data?.error ?? 'Bid failed.' };
@@ -54,7 +52,7 @@ export function useAuctions(leagueId, squadId) {
       .from('auction_listings')
       .update({ status: 'cancelled' })
       .eq('id', auctionId)
-      .eq('seller_squad_id', squadId);
+      .eq('seller_id', squadId);
     if (error) return { ok: false, error: error.message };
     await load();
     return { ok: true };

@@ -146,7 +146,7 @@ export function EventTimeline({ events = [], loading = false }) {
                       <div className="text-[13px] font-bold truncate leading-tight">
                         {e.playerName || e.players?.name}
                       </div>
-                      <div className="text-[11px] text-text-tertiary mt-0.5 flex items-center gap-2">
+                      <div className="text-[11px] text-text-tertiary mt-0.5 flex items-center gap-2 flex-wrap">
                         <span>{e.team}</span>
                         <span className="text-white/30">·</span>
                         <span
@@ -155,6 +155,14 @@ export function EventTimeline({ events = [], loading = false }) {
                         >
                           {info.label}
                         </span>
+                        {e.leagueName && (
+                          <>
+                            <span className="text-white/30">·</span>
+                            <span className="text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-sm" style={{ background: 'rgba(0,180,216,0.12)', color: 'var(--cyan)' }}>
+                              {e.leagueName}
+                            </span>
+                          </>
+                        )}
                       </div>
                     </>
                   )}

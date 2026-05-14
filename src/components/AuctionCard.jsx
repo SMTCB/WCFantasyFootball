@@ -19,10 +19,10 @@ export default function AuctionCard({ auction, mySquadId, onBid, onCancel }) {
 
   const player      = auction.players;
   const posColor    = POS_COLOR[player?.position] ?? 'var(--mute)';
-  const isMine      = auction.seller_squad_id === mySquadId;
+  const isMine      = auction.seller_id === mySquadId;
   const currentBid  = auction.current_bid ?? null;
-  const minNext     = currentBid != null ? currentBid + 0.1 : auction.min_bid;
-  const timeStr     = timeLeft(auction.ends_at);
+  const minNext     = currentBid != null ? currentBid + 0.1 : auction.starting_bid;
+  const timeStr     = timeLeft(auction.deadline_at);
   const isEnded     = timeStr === 'Ended';
 
   const handleBid = async () => {
@@ -73,7 +73,7 @@ export default function AuctionCard({ auction, mySquadId, onBid, onCancel }) {
             {timeStr}
           </div>
           <div className="text-[12px] font-black text-white mt-0.5">
-            {currentBid != null ? `£${currentBid.toFixed(1)}M` : `from £${auction.min_bid.toFixed(1)}M`}
+            {currentBid != null ? `£${currentBid.toFixed(1)}M` : `from £${auction.starting_bid.toFixed(1)}M`}
           </div>
           {currentBid != null && (
             <div className="text-[9px]" style={{ color: 'var(--mute)' }}>current bid</div>
