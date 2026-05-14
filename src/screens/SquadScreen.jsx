@@ -947,21 +947,11 @@ export default function SquadScreen() {
                     <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 9, color: 'var(--mute)', letterSpacing: '0.2em', textTransform: 'uppercase', marginBottom: 4 }}>Starting XI</div>
                     <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 28, color: 'var(--paper)', lineHeight: 1, letterSpacing: '-0.01em' }}>{formation || 'NO SQUAD'}</div>
                   </div>
-                  <button
-                    onClick={handleAutoFill}
-                    disabled={autoFilling}
-                    style={{ padding: '8px 12px', background: 'rgba(0,196,232,0.08)', border: '1px solid rgba(0,196,232,0.25)', color: autoFilling ? 'var(--mute)' : 'var(--cyan)', fontFamily: 'Archivo Black, sans-serif', fontSize: 9, letterSpacing: '0.1em', textTransform: 'uppercase', borderRadius: 2, cursor: autoFilling ? 'wait' : 'pointer', flexShrink: 0 }}
-                  >
-                    {autoFilling ? 'FILLING…' : '⚡ QUICK FILL'}
-                  </button>
                 </div>
                 <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 9, color: 'var(--mute)', letterSpacing: '0.14em', marginTop: 6 }}>
                   {captain ? `CAPTAIN ${captain.name.split(' ').slice(-1)[0].toUpperCase()}` : 'NO CAPTAIN'}
                   {squadData.matchdayId ? ` · GW ${squadData.matchdayId}` : ''}
                 </div>
-                {autoFillMsg && (
-                  <div style={{ marginTop: 6, fontFamily: 'JetBrains Mono, monospace', fontSize: 9, color: 'var(--positive)', letterSpacing: '0.08em' }}>{autoFillMsg}</div>
-                )}
               </div>
 
               {/* Starting XI — grouped by position */}
@@ -1429,6 +1419,19 @@ export default function SquadScreen() {
           {desktopTab === 'list' && (
             <>
               <div className="flex-1 min-w-0 overflow-y-auto">
+                <div style={{ padding: '12px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid var(--rule)' }}>
+                  <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 14, color: 'var(--paper)', letterSpacing: '0.02em' }}>Squad List</div>
+                  <button
+                    onClick={handleAutoFill}
+                    disabled={autoFilling}
+                    style={{ padding: '8px 12px', background: 'rgba(0,196,232,0.08)', border: '1px solid rgba(0,196,232,0.25)', color: autoFilling ? 'var(--mute)' : 'var(--cyan)', fontFamily: 'Archivo Black, sans-serif', fontSize: 9, letterSpacing: '0.1em', textTransform: 'uppercase', borderRadius: 2, cursor: autoFilling ? 'wait' : 'pointer', flexShrink: 0 }}
+                  >
+                    {autoFilling ? 'FILLING…' : '⚡ QUICK FILL'}
+                  </button>
+                </div>
+                {autoFillMsg && (
+                  <div style={{ padding: '6px 16px', fontFamily: 'JetBrains Mono, monospace', fontSize: 9, color: 'var(--positive)', borderBottom: '1px solid var(--rule)' }}>{autoFillMsg}</div>
+                )}
                 <SectionHeader title="Daily Joker" accent="purple" />
                 {jokerPlayer ? (
                   <PlayerCard
