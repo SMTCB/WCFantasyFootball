@@ -60,7 +60,7 @@ export default function LeagueScreen() {
   const [draftOpen, setDraftOpen] = useState(false); // deadline in future + no submission yet
   const [draftDeadlineDate, setDraftDeadlineDate] = useState(null); // for countdown banner
   const transferWindow = useTransferWindow(activeLeague?.league_id);
-  const { auctions, loading: auctionsLoading, placeBid, cancelListing } = useAuctions(activeLeague?.league_id, mySquadId);
+  const { auctions, loading: auctionsLoading, placeBid, cancelListing, sellNow } = useAuctions(activeLeague?.league_id, mySquadId);
   const { topScorers, teamMetrics, loading: statsLoading } = useLeagueStats(activeLeague?.league_id);
   const { leaderboard, loading: betLoading } = useBettingLeaderboard(activeLeague?.league_id);
 
@@ -1171,6 +1171,11 @@ export default function LeagueScreen() {
                  onCancel={async (id) => {
                    const res = await cancelListing(id);
                    if (res.ok) showToast('Listing cancelled.', 'info');
+                   return res;
+                 }}
+                 onSellNow={async (id) => {
+                   const res = await sellNow(id);
+                   if (res.ok) showToast('Player sold!', 'success');
                    return res;
                  }}
                />

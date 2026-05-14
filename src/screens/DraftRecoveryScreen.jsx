@@ -133,7 +133,14 @@ export default function DraftRecoveryScreen() {
     [squad]
   );
   const budgetLeft  = BUDGET_TOTAL - budgetUsed;
-  const slotsLeft   = SQUAD_SIZE - squad.length;
+  // slotsLeft drives canPick() logic — always computed from live squad state.
+  // displaySlots uses the DB-authoritative unresolved_slots when no picks have
+  // been made yet, which avoids showing SQUAD_SIZE (15) when player-ID
+  // mismatches prevent allocated players from resolving in the local pool.
+  const slotsLeft    = SQUAD_SIZE - squad.length;
+  const displaySlots = allocation
+    ? Math.min(slotsLeft, allocation.unresolved_slots ?? slotsLeft)
+    : slotsLeft;
 
   // Missing positions (what still needs to be filled)
   const missingPositions = useMemo(() => {
@@ -195,7 +202,21 @@ export default function DraftRecoveryScreen() {
         return;
       }
 
-      if (newPlayerIds.length >= SQUAD_SIZE) setDone(true);
+      // When the squad is complete, persist it to the squads table so it is
+      // available in the Squad screen and for scoring. matchday_id='current'
+      // is the app-wide convention for "the active squad" in a league.
+      if (newPlayerIds.length >= SQUAD_SIZE) {
+        const newBudgetRemaining = BUDGET_TOTAL - [...squad, player]
+          .reduce((sum, p) => sum + (p.price ?? 0), 0);
+        await supabase.from('squads').upsert({
+          league_id:        leagueId,
+          user_id:          user?.id,
+          matchday_id:      'current',
+          players:          newPlayerIds,
+          budget_remaining: Math.max(0, newBudgetRemaining),
+        }, { onConflict: 'league_id,user_id,matchday_id' });
+        setDone(true);
+      }
     } finally {
       setPicking(null);
     }
@@ -255,7 +276,7 @@ export default function DraftRecoveryScreen() {
         {/* Status bar */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-1.5">
-            <span className="text-[#FFC107] text-[10px] font-black">{slotsLeft}</span>
+            <span className="text-[#FFC107] text-[10px] font-black">{displaySlots}</span>
             <span className="text-[#9E9E9E] text-[10px] uppercase tracking-widest">slots remaining</span>
           </div>
           <div className="flex items-center gap-1.5">
@@ -327,13 +348,13 @@ export default function DraftRecoveryScreen() {
       {allocation ? (
         <div className="bg-[#1A1200] border-b border-[#FFC107]/20 px-4 py-2.5">
           <div className="text-[#FFC107] text-[11px] font-bold">
-            ⚠ {slotsLeft} player{slotsLeft !== 1 ? 's' : ''} couldn't be allocated — pick now, first come first served.
+            ⚠ {displaySlots} player{displaySlots !== 1 ? 's' : ''} couldn't be auto-allocated during the draft — pick them now, first come first served.
           </div>
         </div>
       ) : (
         <div className="bg-[#1A0000] border-b border-[#E53935]/20 px-4 py-2.5">
           <div className="text-[#E53935] text-[11px] font-bold">
-            You missed the draft deadline. Build your squad from what's left — first come first served.
+            You missed the draft deadline. Build your full squad from what's available — first come first served.
           </div>
         </div>
       )}
