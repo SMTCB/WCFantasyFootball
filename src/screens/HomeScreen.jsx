@@ -25,7 +25,6 @@ const getTeamColor = (name) => TEAM_COLORS[name] || TEAM_COLORS.default;
 export default function HomeScreen() {
   const { user } = useAuth();
   const [fixtures,        setFixtures]        = useState([]);
-  const [userStats,       setUserStats]       = useState({ rank: '-', points: 0 });
   const [recap,           setRecap]           = useState(null);
   const [loading,         setLoading]         = useState(true);
   const [currentMatchday, setCurrentMatchday] = useState(null);
@@ -38,7 +37,6 @@ export default function HomeScreen() {
       await Promise.all([
         fetchCompetitionContext(userId),
         fetchFixtures(),
-        fetchUserStats(userId),
         fetchLatestRecap(userId),
       ]);
 
@@ -49,6 +47,16 @@ export default function HomeScreen() {
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { fetchInitialData(); }, [user]);
+
+  useEffect(() => {
+    const channel = supabase
+      .channel('home-fixtures')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'fixtures' }, () => {
+        fetchFixtures();
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, []);
 
   // Derive competition name + current matchday from user's league → tournament → fixtures
   const fetchCompetitionContext = async (userId) => {
@@ -98,11 +106,6 @@ export default function HomeScreen() {
       return;
     }
     setFixtures(data);
-  };
-
-  const fetchUserStats = async (userId) => {
-    const { data } = await supabase.from('league_members').select('rank, total_points').eq('user_id', userId).limit(1).single();
-    if (data) setUserStats({ rank: data.rank, points: data.total_points });
   };
 
   const fetchLatestRecap = async (userId) => {
@@ -278,26 +281,6 @@ export default function HomeScreen() {
           </div>
         </div>
 
-        <div className="flex items-center gap-5">
-          <div className="text-right">
-            <div className="fz-label" style={{ color: 'var(--mute)' }}>Rank</div>
-            <div
-              className="text-[20px] font-black tabular-nums leading-tight"
-              style={{ fontFamily: 'Archivo Black, sans-serif', color: 'var(--paper)' }}
-            >
-              #{userStats.rank}
-            </div>
-          </div>
-          <div className="text-right">
-            <div className="fz-label" style={{ color: 'var(--mute)' }}>Points</div>
-            <div
-              className="text-[20px] font-black tabular-nums leading-tight"
-              style={{ fontFamily: 'Archivo Black, sans-serif', color: 'var(--cyan)' }}
-            >
-              {userStats.points}
-            </div>
-          </div>
-        </div>
       </div>
 
       {/* ── Two-column desktop layout ─────────────────────────── */}

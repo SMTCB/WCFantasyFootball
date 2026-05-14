@@ -100,56 +100,7 @@ export default function SquadScreen() {
   const { listPlayer: listForAuction, auctions: activeAuctions } = useAuctions(leagueId, squadData?.squadId);
   const [auctionBusy, setAuctionBusy] = useState(null); // playerId being listed
 
-  // Auto-fill hook — reusable across Squad, Market, League screens
-  const { handleAutoFill, autoFilling, autoFillMsg } = useAutoFill(leagueId, squadData, fetchSquad);
-
-  // Live countdown hook — replaces static window lock badge
-  const deadline = useDeadlineCountdown();
-
-  // First-visit tour
-  const { showSquadTour, completeSquadTour } = useOnboarding();
-
-  const SQUAD_TOUR_STEPS = [
-    {
-      target: 'squad-pitch',
-      title:  'Your Pitch',
-      body:   'This is your starting XI laid out on a pitch. Tap any player to see options — swap positions, set captain, or activate your Daily Joker.',
-    },
-    {
-      target: 'squad-budget',
-      title:  'Budget & Deadline',
-      body:   'Your remaining budget and the transfer window countdown live here. When the window closes, no more transfers until the next matchday.',
-    },
-    {
-      target: 'squad-power-tools',
-      title:  'Power Tools',
-      body:   'Wildcard, Triple Captain, and Daily Joker live here. Each is one-use — activate carefully.',
-    },
-    {
-      target: 'squad-chips',
-      title:  'Chips & Boosts',
-      body:   'Wildcard lets you make unlimited free transfers. Triple Captain scores 3× points — or 0 if they don\'t play. Use them wisely, they\'re one-per-season.',
-    },
-  ];
-
-
-  useEffect(() => { fetchSquad(); fetchDailyStatus(); }, [user]);
-
   // ── Data Fetching ─────────────────────────────────────────────────────────
-  const fetchDailyStatus = async () => {
-    try {
-      const userId = user?.id;
-      const today  = new Date().toISOString().split('T')[0];
-      const { data: joker } = await supabase.from('daily_jokers').select('player_id')
-        .eq('user_id', userId).eq('match_date', today).maybeSingle();
-      if (joker) setTodayJokerId(joker.player_id);
-      const { data: fixtures } = await supabase.from('fixtures').select('home_team, away_team');
-      const teams = new Set();
-      fixtures?.forEach(f => { teams.add(f.home_team); teams.add(f.away_team); });
-      setPlayingTodayTeams(Array.from(teams));
-    } catch (err) { console.error('Daily status error', err); }
-  };
-
   const fetchSquad = async () => {
     try {
       setLoading(true);
@@ -266,6 +217,55 @@ export default function SquadScreen() {
     } finally {
       setLoading(false);
     }
+  };
+
+  // Auto-fill hook — reusable across Squad, Market, League screens
+  const { handleAutoFill, autoFilling, autoFillMsg } = useAutoFill(leagueId, squadData, fetchSquad);
+
+  // Live countdown hook — replaces static window lock badge
+  const deadline = useDeadlineCountdown();
+
+  // First-visit tour
+  const { showSquadTour, completeSquadTour } = useOnboarding();
+
+  const SQUAD_TOUR_STEPS = [
+    {
+      target: 'squad-pitch',
+      title:  'Your Pitch',
+      body:   'This is your starting XI laid out on a pitch. Tap any player to see options — swap positions, set captain, or activate your Daily Joker.',
+    },
+    {
+      target: 'squad-budget',
+      title:  'Budget & Deadline',
+      body:   'Your remaining budget and the transfer window countdown live here. When the window closes, no more transfers until the next matchday.',
+    },
+    {
+      target: 'squad-power-tools',
+      title:  'Power Tools',
+      body:   'Wildcard, Triple Captain, and Daily Joker live here. Each is one-use — activate carefully.',
+    },
+    {
+      target: 'squad-chips',
+      title:  'Chips & Boosts',
+      body:   'Wildcard lets you make unlimited free transfers. Triple Captain scores 3× points — or 0 if they don\'t play. Use them wisely, they\'re one-per-season.',
+    },
+  ];
+
+
+  useEffect(() => { fetchSquad(); fetchDailyStatus(); }, [user]);
+
+  const fetchDailyStatus = async () => {
+    try {
+      const userId = user?.id;
+      const today  = new Date().toISOString().split('T')[0];
+      const { data: joker } = await supabase.from('daily_jokers').select('player_id')
+        .eq('user_id', userId).eq('match_date', today).maybeSingle();
+      if (joker) setTodayJokerId(joker.player_id);
+      const { data: fixtures } = await supabase.from('fixtures').select('home_team, away_team');
+      const teams = new Set();
+      fixtures?.forEach(f => { teams.add(f.home_team); teams.add(f.away_team); });
+      setPlayingTodayTeams(Array.from(teams));
+    } catch (err) { console.error('Daily status error', err); }
   };
 
   // ── Actions ───────────────────────────────────────────────────────────────
