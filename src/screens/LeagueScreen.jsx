@@ -61,6 +61,39 @@ export default function LeagueScreen() {
   const { auctions, loading: auctionsLoading, placeBid, cancelListing } = useAuctions(activeLeague?.league_id, mySquadId);
   const { topScorers, teamMetrics, loading: statsLoading } = useLeagueStats(activeLeague?.league_id);
   const { leaderboard, loading: betLoading } = useBettingLeaderboard(activeLeague?.league_id);
+<<<<<<< HEAD
+
+  // Build squad data for auto-fill from available state
+  const squadData = mySquadPlayers.length > 0 ? {
+    players: mySquadPlayers,
+    bench: [],
+    budget: { current: 100, total: 100 }, // Fallback budget — auto-fill will fetch real value
+  } : null;
+
+  // Fetch current user's full squad for auto-fill
+  const fetchSquad = async () => {
+    if (!user?.id || !activeLeague?.league_id) return;
+    try {
+      const { data: squad } = await supabase
+        .from('draft_allocations')
+        .select('allocated_players')
+        .eq('league_id', activeLeague.league_id)
+        .eq('user_id', user.id)
+        .maybeSingle();
+      if (squad?.allocated_players?.length > 0) {
+        const ids = squad.allocated_players;
+        const { data: players } = await supabase
+          .from('players')
+          .select('*')
+          .in('id', ids);
+        setMySquadPlayers(players || []);
+      }
+    } catch (err) {
+      console.error('LeagueScreen: squad fetch failed', err);
+    }
+  };
+
+  const { handleAutoFill, autoFilling, autoFillMsg } = useAutoFill(activeLeague?.league_id, squadData, fetchSquad);
 
   // Build squad data for auto-fill from available state
   const squadData = mySquadPlayers.length > 0 ? {
