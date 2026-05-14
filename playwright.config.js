@@ -13,7 +13,7 @@ export default defineConfig({
     : [['list'],   ['html', { open: 'never', outputFolder: 'e2e-report' }]],
 
   use: {
-    baseURL: process.env.PLAYWRIGHT_BASE_URL ?? 'http://localhost:5173',
+    baseURL: process.env.PLAYWRIGHT_BASE_URL ?? 'http://localhost:5174',
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
     video: isCI ? 'retain-on-failure' : 'off',
@@ -36,13 +36,19 @@ export default defineConfig({
     },
   ],
 
-  // Start local dev server automatically (skipped when PLAYWRIGHT_BASE_URL is set)
+  // Start local dev server automatically (skipped when PLAYWRIGHT_BASE_URL is set).
+  // Uses port 5174 (separate from the dev server on 5173) with auth disabled so
+  // E2E tests run against demo mode — no Supabase auth session required.
   webServer: process.env.PLAYWRIGHT_BASE_URL ? undefined : {
-    command: 'npm run dev',
-    url: 'http://localhost:5173',
+    command: 'npm run dev -- --port 5174',
+    url: 'http://localhost:5174',
     reuseExistingServer: !isCI,   // Always start fresh on CI
     timeout: isCI ? 60000 : 30000,
     stdout: 'ignore',
     stderr: 'pipe',
+    env: {
+      ...process.env,
+      VITE_AUTH_ENABLED: 'false',   // Demo mode: bypass auth for all E2E tests
+    },
   },
 });
