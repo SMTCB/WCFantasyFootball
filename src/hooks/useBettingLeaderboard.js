@@ -22,8 +22,9 @@ export function useBettingLeaderboard(leagueId) {
         .from('bet_submissions')
         .select(`
           user_id,
-          users(username),
-          bet_instances(league_id),
+          squad_id,
+          squads!squad_id(users!user_id(username)),
+          bet_instances!bet_instance_id(league_id),
           is_correct,
           reward_awarded
         `)
@@ -39,7 +40,7 @@ export function useBettingLeaderboard(leagueId) {
         if (!userStats[userId]) {
           userStats[userId] = {
             user_id: userId,
-            username: entry.users?.username || 'Unknown',
+            username: entry.squads?.users?.username || 'Unknown',
             total_bets: 0,
             correct_bets: 0,
             total_rewards: 0,

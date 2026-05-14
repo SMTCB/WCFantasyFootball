@@ -322,7 +322,7 @@ export default function LeagueScreen() {
     try {
       const { data, error } = await supabase
         .from('bet_submissions')
-        .select('answer, user_id, users(username)')
+        .select('answer, user_id, squads!squad_id(users!user_id(username))')
         .eq('bet_instance_id', betId);
       if (error) throw error;
 
@@ -334,7 +334,7 @@ export default function LeagueScreen() {
         if (!grouped[sub.answer]) {
           grouped[sub.answer] = [];
         }
-        grouped[sub.answer].push(sub.users?.username || 'Unknown');
+        grouped[sub.answer].push(sub.squads?.users?.username || 'Unknown');
       });
       setAnswerGrouped(grouped);
     } catch (err) {

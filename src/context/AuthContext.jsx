@@ -18,15 +18,13 @@ const getRedirectUrl = (path = '') =>
   isNative ? MOBILE_REDIRECT : `${window.location.origin}${path}`;
 
 // ── Demo user injected when auth is disabled ──────────────────────────────────
-// TEST MODE: points at s.t.c.braganca so all real league/squad data is visible
 const DEMO_USER = {
-  id:            'd0f0cb5a-2327-45f0-aec2-4086dff07402',
-  email:         's.t.c.braganca@gmail.com',
+  id:            '00000000-0000-0000-0000-000000000000',
+  email:         'demo@forzakit.app',
   user_metadata: { username: 'Demo Manager' },
 };
 
-// Auth disabled for E2E testing — will be re-enabled before production merge
-const AUTH_ENABLED = false;
+const AUTH_ENABLED = import.meta.env.VITE_AUTH_ENABLED === 'true';
 
 // ── Context ───────────────────────────────────────────────────────────────────
 const AuthContext = createContext(null);
