@@ -90,6 +90,7 @@ export function useAutoFill(leagueId, squadData, fetchSquad) {
       setAutoFilling(false);
       setTimeout(() => setAutoFillMsg(null), 5000);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [leagueId, squadData, buy, takenMap, fetchSquad]);
 
   return { handleAutoFill, autoFilling, autoFillMsg };
