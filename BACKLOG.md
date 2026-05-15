@@ -30,11 +30,11 @@
 
 **Notion BACKLOG**: `[BUG] Code Review` → Done
 
-**Next session candidates** (from Phase 1 of review):
-- Fix auction RLS seller spoofing (Critical Security, 1h)
-- Add `ON CONFLICT DO NOTHING` to match_events insert (Critical Data Integrity, 1h)
-- Add timeouts + retry to Forza API calls (Critical Reliability, 4h)
-- Enable RLS on core tables (`players`, `fixtures`, `leagues`, `squads`, `users`) (Critical Security, 6h)
+**Phase 1 Critical Fixes in progress**: [PR #63](https://github.com/SMTCB/WCFantasyFootball/pull/63) — 7 fixes (security, data integrity, reliability, UX)
+
+**Remaining Phase 1 items** (not in PR #63):
+- Enable RLS on core tables (`players`, `fixtures`, `leagues`, `squads`, `users`) — 6h — deferred, needs careful policy design
+- Wire Edge Function errors to monitoring (Sentry/Logflare) — 1d — needs external service setup
 
 ---
 
