@@ -72,143 +72,77 @@ Claude creates worktrees under `.claude/worktrees/` — ephemeral and gitignored
 
 ## Git Workflow & Version Control
 
-**📖 For non-technical overview: see [GIT_AND_CODE_WALKTHROUGH.md](GIT_AND_CODE_WALKTHROUGH.md)**
+### The Two Rules (non-negotiable)
 
-### 🚨 CRITICAL RULE: NEVER COMMIT DIRECTLY TO `main`
+1. **Never commit directly to `main`** — always feature branch → PR → merge
+2. **Delete branches immediately after merging** — stale branches accumulate fast
 
-**Violations cause:**
-- GitHub error emails (branch protection failures)
-- CI/CD pipeline failures
-- Deployment issues
-- Confusion about what commits should be merged vs. directly pushed
+`main` auto-deploys to Vercel. Everything that lands on main ships live.
 
-**The rule is absolute.** Every single change — even small doc updates — must go through a feature branch + PR + review + merge. No exceptions.
+### Session Pattern
 
-### Branch Strategy (Solo Developer Pre-Launch)
-
-**Branch Model**: Simple feature-branch model
-- **`main`** — production-ready code, auto-deployed to Vercel, always stable
-  - Only receives commits via PR merges from feature branches
-  - Never accepts direct commits or force pushes
-  - Always deployable; every commit works
-- **`claude/<kebab-case-description>`** — feature branches for each session
-  - Created fresh from `main` at session start
-  - Deleted immediately after PR merge
-  - Example: `claude/fix-squad-formation-bug`, `claude/implement-league-chat`
-
-### Session Workflow (Step-by-Step)
-
-**Step 1: Start Session**
 ```bash
-git pull origin main                          # Fetch latest from remote
-git status                                    # Verify clean working tree
-```
-**Expected output:** `nothing to commit, working tree clean` and `Your branch is up to date with 'origin/main'`
+# 1. Start clean
+git pull origin main
 
-**Step 2: Create Feature Branch (Before Any Changes)**
-```bash
-git checkout -b claude/your-feature-slug     # e.g. claude/fix-chat-lag
-```
-**Do this FIRST.** Never make changes on `main`.
+# 2. Create feature branch (do this FIRST, before any changes)
+git checkout -b claude/description-of-work
 
-**Step 3: During Development**
-- Work normally; commit frequently with atomic, well-described messages
-- Run tests before pushing: `npx playwright test`
-- Keep commits focused (one logical change per commit)
+# 3. Develop, commit, push
+git add <files>
+git commit -m "feat/fix/chore: description"
+git push origin claude/description-of-work
 
-**Step 4: Before Pushing**
-```bash
-npm run lint                 # Must pass (enforced in CI)
-npx playwright test          # Should stay green
+# 4. Create PR (via gh CLI)
+gh pr create --title "..." --body "..."
+
+# 5. Merge PR
+gh pr merge <number> --squash --delete-branch
+
+# 6. Pull merged commit, clean up local branch
+git checkout main
+git pull origin main
+git branch -D claude/description-of-work
 ```
 
-**Step 5: Push to Remote**
-```bash
-git push origin claude/your-feature-slug     # Pushes branch to GitHub
-```
-
-**Step 6: Create PR on GitHub**
-- Go to the GitHub PR link from the push output
-- Fill in title (concise, e.g. "Implement chat unread badge")
-- Fill in description (what changed, why)
-- Ensure CI checks pass (auto-run on PR)
-
-**Step 7: Merge PR**
-- Click "Merge pull request" on GitHub (prefer "Squash and merge" for cleaner history)
-- Confirm the merge
-- **Delete the branch** on GitHub (button appears after merge)
-
-**Step 8: Clean Up Local Branch**
-```bash
-git checkout main                             # Switch back to main
-git pull origin main                          # Pull the merged commit
-git branch -D claude/your-feature-slug        # Delete local feature branch
-```
+Steps 5 and 6 must happen **every time**. Unmerged PRs = app doesn't update on Vercel. Undeleted branches = repo accumulates junk.
 
 ### Commit Message Format
 
-Follow this convention for consistency:
-- **Features**: `#XXX: Description` (e.g., `#027: Implement League Chat Backend`)
-- **Fixes**: `Fix: Description` (e.g., `Fix: Remove unused playerId param`)
-- **Docs**: `Update BACKLOG: ...` or `docs: ...`
-- **Refactoring**: `Refactor: Description`
+- `feat: description` — new feature
+- `fix: description` — bug fix
+- `chore: description` — maintenance (docs, gitignore, cleanup)
+- `#XXX: description` — when referencing a BACKLOG item number
 
-Each commit should be **atomic**: one logical change, no mixing features.
+### Branch Health — Run Periodically
 
-### Important Rules
+Stale branches pile up fast. When the branch list gets messy, run:
 
-- ✅ **Always create a feature branch FIRST** — before making any changes
-- ✅ **Never commit to `main` directly** — always via PR
-- ✅ **Delete branches after merging** — keeps repo clean
-- ✅ **Pull before starting each session** — stay up to date
-- ✅ **Run tests before pushing** — catch issues early
-- ✅ **Never use `--no-verify`** — git hooks exist to help
-- ✅ **Keep `main` always deployable** — every commit on main should work
-
-### Troubleshooting: What Went Wrong
-
-**"I committed to `main` by mistake!"**
 ```bash
-git reset --soft HEAD~1            # Undo the commit, keep changes staged
-git checkout -b claude/fix-branch  # Create proper feature branch
-git push origin claude/fix-branch  # Push feature branch
-# Then create PR on GitHub
+# Delete all local branches already merged into main
+git branch --merged origin/main | grep "claude/" | xargs git branch -d
+
+# Delete local branches that were squash-merged (not caught above)
+git branch | grep "claude/" | grep -v "active-branch-name" | xargs git branch -D
+
+# Delete stale remote branches
+git branch -r | grep "origin/claude/" | grep -v "active" | sed 's|origin/||' | xargs -I{} git push origin --delete {}
+
+# Prune stale remote-tracking refs
+git remote prune origin
 ```
 
-**"I'm on `main` but haven't committed yet"**
+### If Branch is Behind Main (after someone else merged)
+
 ```bash
-git status                                    # Confirm which branch you're on
-git checkout -b claude/your-feature-slug     # Create feature branch
-# Now make your changes and commit
+git fetch origin
+git rebase origin/main
+git push --force-with-lease origin claude/your-branch
 ```
 
-**"Branch is behind `main`"**
-```bash
-git rebase main                    # Rebase feature branch onto latest main
-git push --force-with-lease origin claude/your-feature-slug
-```
+### Worktrees (Claude Code creates these automatically)
 
-**"Feature branch exists but worktree is on `main`"**
-```bash
-git checkout claude/existing-branch           # Switch worktree to correct branch
-git rebase main                    # Ensure up to date
-git stash pop                      # Restore any stashed changes
-```
-
-### 🔴 CRITICAL: Merge to Main for Every Feature or Bug Fix
-
-**This is the step that makes your live app on Vercel update.**
-
-Every time Claude completes a feature or bug fix:
-1. A PR is created
-2. GitHub tests pass automatically
-3. **PR is merged to `main`** ← THIS IS REQUIRED
-4. Vercel auto-deploys (30–60 seconds)
-5. Your live app updates
-
-**Without step 3 (merge to main), your code stays in a feature branch and NEVER reaches your live app.**
-
-If you notice your Vercel app isn't updated with the latest fixes, the most common cause is a pending PR that hasn't been merged to `main` yet. Always check: are there open PRs waiting to merge?
+Claude Code creates worktrees under `.claude/worktrees/` — these are gitignored and ephemeral. After a session ends, run `git worktree prune` to clean dead refs. Active worktrees are listed with `git worktree list`.
 
 ---
 

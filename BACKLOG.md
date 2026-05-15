@@ -1,9 +1,21 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-05-15 (Tech debt completion: Node.js 24 + E2E edge case tests)  
-**Audit Status**: ✅ Code state verified against BACKLOG  
-**E2E Test Suite**: 178/178 passing (100%) ✅ — 148 original + 30 edge cases  
-**Code Shipping Complete**: 37/37 core features + Chat Polish (8/8 #027-Extended) + MVP Enhancements (STATS + Betting Leaderboard) + Multi-Screen Auto-Fill + Bet Notifications ✅
+**Last Updated**: 2026-05-15 (Session 22: UX tours + git housekeeping)  
+**E2E Test Suite**: 178/178 passing (100%) ✅  
+**Live App**: https://wc-fantasy-football.vercel.app
+
+---
+
+## 📊 SESSION 22 PROGRESS (2026-05-15)
+
+**🚀 COMPLETED THIS SESSION:**
+- ✅ **PR #55 — Live Centre redesign** (merged): Split pitch/events desktop layout + league cards mobile
+- ✅ **PR #56 — Desktop pitch height fix** (merged): `height: 100dvh` on desktop container, `clamp()` on pitch
+- ✅ **PR #57 — Guided tour pop-ups** (open, CI pending): League, Bets & Commissioner tours + replay "?" buttons on all 5 tour screens (Squad, Market, League, Bets, Admin)
+- ✅ **Git housekeeping**: 58 branches → 5; removed orphaned worktrees; deleted 15 stale remote branches; cleaned root folder (removed 5 stale session docs); updated .gitignore; simplified git section in CLAUDE.md
+
+**What's open:**
+- PR #57 (guided tours) — needs CI green + merge
 
 ---
 
