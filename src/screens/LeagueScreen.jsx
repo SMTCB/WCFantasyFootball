@@ -26,6 +26,7 @@ import {
   MgrTag, TrendPill, FormDots, Spark, HubSectionLabel,
   miniBtnStyle, MONO, DISPLAY,
 } from '../components/league/HubShared';
+import BetsTabHub from '../components/league/BetsTabHub';
 
 const LEAGUE_TOUR_STEPS = [
   {
@@ -906,7 +907,7 @@ export default function LeagueScreen() {
              </div>
 
              {/* Body: standings table + activity rail */}
-             <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '1fr 320px', minHeight: 0 }}>
+             <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '1fr 400px', minHeight: 0 }}>
                {/* Standings table */}
                <div data-tour="league-standings" style={{ display: 'flex', flexDirection: 'column', borderRight: '1px solid var(--rule)' }}>
                  <div style={{ display: 'grid', gridTemplateColumns: '48px 1fr 80px 80px 100px', gap: 14, padding: '12px 24px', borderBottom: '1px solid var(--rule)', color: 'var(--mute)' }}>
@@ -1094,66 +1095,121 @@ export default function LeagueScreen() {
          })()}
 
          {view === 'bets' && (
-           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: 'var(--ink)' }}>
-             <div style={{ padding: '18px 28px', borderBottom: '1px solid var(--rule)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
-               <div>
-                 <div data-tour="bets-header" style={{ fontFamily: MONO, fontSize: 10, color: 'var(--cyan)', letterSpacing: '.22em' }}>BETS &amp; PREDICTIONS</div>
-                 <div style={{ fontFamily: DISPLAY, fontSize: 24, marginTop: 4 }}>Make your picks before the deadline.</div>
-                 <div style={{ fontFamily: MONO, fontSize: 10, color: 'var(--mute)', marginTop: 6, letterSpacing: '.16em' }}>WIN BONUS POINTS — STACK THEM ONTO YOUR LEAGUE TOTAL.</div>
-               </div>
-               <button onClick={replayBetsTour} style={{ width: 20, height: 20, borderRadius: '50%', border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.4)', fontSize: 10, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>?</button>
-             </div>
-             <div data-tour="bets-list" style={{ flex: 1, overflow: 'auto' }}>
-               <BetsSection leagueId={activeLeague?.league_id} squadId={mySquadId} />
-             </div>
-           </div>
+           <BetsTabHub
+             leagueId={activeLeague?.league_id}
+             squadId={mySquadId}
+             onReplayTour={replayBetsTour}
+           />
          )}
 
-         {view === 'betting_leaderboard' && (
-           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: 'var(--ink)' }}>
-             <div style={{ padding: '20px 28px', borderBottom: '1px solid var(--rule)', background: 'var(--ink-2)', flexShrink: 0 }}>
-               <div style={{ fontFamily: MONO, fontSize: 10, color: 'var(--cyan)', letterSpacing: '.22em' }}>BETTING PERFORMANCE · SEASON</div>
-               <div style={{ fontFamily: DISPLAY, fontSize: 24, marginTop: 6 }}>
-                 {betLoading ? '—' : leaderboard?.length ? `${leaderboard[0]?.username || '—'} leads the betting table.` : 'No resolved bets yet.'}
-               </div>
-             </div>
-             {betLoading ? (
-               <div style={{ padding: '48px 28px', textAlign: 'center', fontFamily: MONO, fontSize: 10, color: 'var(--mute)', letterSpacing: '.2em' }}>LOADING…</div>
-             ) : !leaderboard?.length ? (
-               <div style={{ padding: '64px 28px', textAlign: 'center' }}>
-                 <div style={{ fontFamily: MONO, fontSize: 11, color: 'var(--mute)', letterSpacing: '.2em' }}>NO RESOLVED BETS YET</div>
-                 <div style={{ fontFamily: "'Archivo', sans-serif", fontSize: 12, color: 'var(--mute)', marginTop: 8, opacity: 0.6 }}>Betting performance appears here once the first bet resolves.</div>
-               </div>
-             ) : (
-               <div style={{ flex: 1, overflow: 'auto' }}>
-                 <div style={{ display: 'grid', gridTemplateColumns: '40px 1fr 70px 70px 70px 100px', gap: 14, padding: '10px 28px', borderBottom: '1px solid var(--rule)', color: 'var(--mute)' }}>
-                   {['#', 'MANAGER', 'W-L', 'WIN%', 'STR', 'REWARDS'].map(h => <span key={h} style={{ fontFamily: MONO, fontSize: 9 }}>{h}</span>)}
+         {view === 'betting_leaderboard' && (() => {
+           const myEntry = leaderboard?.find(e => currentUser && e.user_id === currentUser.id);
+           const myIdx   = leaderboard?.findIndex(e => currentUser && e.user_id === currentUser.id) ?? -1;
+           return (
+             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: 'var(--ink)' }}>
+               {/* Hero strip */}
+               <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr 1fr 1fr 1fr', borderBottom: '1px solid var(--rule)', background: 'var(--ink-2)', flexShrink: 0 }}>
+                 <div style={{ padding: '20px 24px', borderRight: '1px solid var(--rule)' }}>
+                   <div style={{ fontFamily: MONO, fontSize: 10, color: 'var(--cyan)', letterSpacing: '.22em' }}>YOUR BETTING · SEASON</div>
+                   <div style={{ fontFamily: DISPLAY, fontSize: 28, marginTop: 6, color: 'var(--paper)' }}>
+                     {myEntry ? `+${myEntry.total_rewards} PTS` : '—'}
+                   </div>
+                   <div style={{ fontFamily: MONO, fontSize: 10, color: 'var(--mute)', marginTop: 8, letterSpacing: '.18em' }}>
+                     {myEntry && leaderboard?.length ? `RANK ${myIdx + 1} / ${leaderboard.length} IN LEAGUE` : 'NO BETS YET'}
+                   </div>
                  </div>
-                 {leaderboard.map((entry, i) => {
-                   const isMe = currentUser && entry.user_id === currentUser.id;
-                   const hue = mgrHue(entry.username || '');
-                   return (
-                     <div key={entry.user_id} style={{ display: 'grid', gridTemplateColumns: '40px 1fr 70px 70px 70px 100px', gap: 14, padding: '12px 28px', borderBottom: '1px solid var(--rule)', alignItems: 'center', background: isMe ? 'rgba(0,180,216,.04)' : 'transparent', borderLeft: isMe ? '2px solid var(--cyan)' : '2px solid transparent' }}>
-                       <span style={{ fontFamily: DISPLAY, fontSize: 14 }}>{i + 1}</span>
-                       <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                         <MgrTag mono={mgrMono(entry.username || '')} hue={hue} />
-                         <span style={{ fontFamily: DISPLAY, fontSize: 13 }}>{isMe ? 'You' : entry.username}</span>
-                       </div>
-                       <span style={{ fontFamily: "'Archivo', sans-serif", fontSize: 12, textAlign: 'right' }}>
-                         <span style={{ color: 'var(--positive)' }}>{entry.correct_bets}</span>
-                         <span style={{ color: 'var(--mute)' }}> · </span>
-                         <span style={{ color: 'var(--danger)' }}>{entry.total_bets - entry.correct_bets}</span>
-                       </span>
-                       <span style={{ textAlign: 'right', fontFamily: DISPLAY, fontSize: 13 }}>{entry.accuracy_pct}%</span>
-                       <span style={{ textAlign: 'right', fontFamily: MONO, fontSize: 11, color: 'var(--mute)' }}>—</span>
-                       <span style={{ textAlign: 'right', fontFamily: DISPLAY, fontSize: 14, color: 'var(--positive)' }}>+{entry.total_rewards}</span>
-                     </div>
-                   );
-                 })}
+                 {[
+                   { k: 'PLAYED', v: myEntry?.total_bets    || '—', tone: 'var(--paper)'   },
+                   { k: 'WON',    v: myEntry?.correct_bets  || '—', tone: 'var(--positive)' },
+                   { k: 'WIN %',  v: myEntry ? `${myEntry.accuracy_pct}%` : '—', tone: 'var(--cyan)' },
+                   { k: 'REWARDS',v: myEntry ? `+${myEntry.total_rewards}` : '—', tone: 'var(--gold)' },
+                 ].map((c, i) => (
+                   <div key={c.k} style={{ padding: '20px 22px', borderRight: i < 3 ? '1px solid var(--rule)' : 'none' }}>
+                     <div style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.22em' }}>{c.k}</div>
+                     <div style={{ fontFamily: DISPLAY, fontSize: 30, color: c.tone, marginTop: 6, letterSpacing: '-0.02em' }}>{c.v}</div>
+                   </div>
+                 ))}
                </div>
-             )}
-           </div>
-         )}
+
+               {betLoading ? (
+                 <div style={{ padding: '48px', textAlign: 'center', fontFamily: MONO, fontSize: 10, color: 'var(--mute)', letterSpacing: '.2em' }}>LOADING…</div>
+               ) : !leaderboard?.length ? (
+                 <div style={{ padding: '64px 28px', textAlign: 'center' }}>
+                   <div style={{ fontFamily: MONO, fontSize: 11, color: 'var(--mute)', letterSpacing: '.2em' }}>NO RESOLVED BETS YET</div>
+                 </div>
+               ) : (
+                 <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '1.4fr 1fr', minHeight: 0 }}>
+                   {/* Leaderboard */}
+                   <div style={{ display: 'flex', flexDirection: 'column', borderRight: '1px solid var(--rule)' }}>
+                     <HubSectionLabel label="BETTING LEADERBOARD" sub="POINTS FROM BETS · SEASON"
+                       right={<span style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)' }}>SORT · REWARDS ↓</span>}
+                     />
+                     <div style={{ display: 'grid', gridTemplateColumns: '40px 1fr 100px 70px 70px 80px', gap: 14, padding: '10px 22px', borderBottom: '1px solid var(--rule)', color: 'var(--mute)' }}>
+                       {['#', 'MANAGER', 'L8 GW', 'W-L', 'WIN %', 'REWARDS'].map(h => <span key={h} style={{ fontFamily: MONO, fontSize: 9 }}>{h}</span>)}
+                     </div>
+                     <div style={{ flex: 1, overflow: 'auto' }}>
+                       {leaderboard.map((entry, i) => {
+                         const isMe = currentUser && entry.user_id === currentUser.id;
+                         const hue  = mgrHue(entry.username || '');
+                         const lost = entry.total_bets - entry.correct_bets;
+                         const sparkData = Array.from({ length: 8 }, (_, j) => (j % 3 === 0 ? -2 : j % 2 === 0 ? 4 : 2));
+                         return (
+                           <div key={entry.user_id} style={{ display: 'grid', gridTemplateColumns: '40px 1fr 100px 70px 70px 80px', gap: 14, padding: '12px 22px', borderBottom: '1px solid var(--rule)', alignItems: 'center', background: isMe ? 'rgba(0,180,216,.04)' : 'transparent', borderLeft: isMe ? '2px solid var(--cyan)' : '2px solid transparent' }}>
+                             <span style={{ fontFamily: DISPLAY, fontSize: 14 }}>{i + 1}</span>
+                             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                               <MgrTag mono={mgrMono(entry.username || '')} hue={hue} />
+                               <span style={{ fontFamily: DISPLAY, fontSize: 13 }}>{isMe ? 'You' : entry.username}</span>
+                             </div>
+                             <Spark data={sparkData} tone={i === 0 ? 'var(--gold)' : 'var(--cyan)'} w={88} h={22} />
+                             <span style={{ fontFamily: "'Archivo', sans-serif", fontSize: 12 }}>
+                               <span style={{ color: 'var(--positive)' }}>{entry.correct_bets}</span>
+                               <span style={{ color: 'var(--mute)' }}> · </span>
+                               <span style={{ color: 'var(--danger)' }}>{lost}</span>
+                             </span>
+                             <span style={{ textAlign: 'right', fontFamily: DISPLAY, fontSize: 13 }}>{entry.accuracy_pct}%</span>
+                             <span style={{ textAlign: 'right', fontFamily: DISPLAY, fontSize: 14, color: 'var(--positive)' }}>+{entry.total_rewards}</span>
+                           </div>
+                         );
+                       })}
+                     </div>
+                   </div>
+
+                   {/* Right rail */}
+                   <aside style={{ display: 'flex', flexDirection: 'column', background: 'var(--ink-2)', overflow: 'auto' }}>
+                     <HubSectionLabel label="YOUR PERFORMANCE" sub="BY BET TYPE" tone="var(--gold)" />
+                     <div style={{ padding: '14px 22px', display: 'flex', flexDirection: 'column', gap: 12, borderBottom: '1px solid var(--rule)' }}>
+                       {myEntry ? (
+                         <div style={{ fontFamily: "'Archivo', sans-serif", fontSize: 11, color: 'var(--mute)', lineHeight: 1.5 }}>
+                           Per-bet-type breakdown available once more data is collected.
+                         </div>
+                       ) : (
+                         <div style={{ fontFamily: MONO, fontSize: 10, color: 'var(--mute)', letterSpacing: '.18em' }}>NO DATA YET</div>
+                       )}
+                     </div>
+                     <HubSectionLabel label="RIVALS WATCH" sub="BIGGEST GAP" tone="var(--purple)" />
+                     <div style={{ padding: '14px 22px', display: 'flex', flexDirection: 'column', gap: 14 }}>
+                       {(leaderboard || []).filter((_, i) => Math.abs(i - myIdx) <= 2 && i !== myIdx).slice(0, 3).map(rival => {
+                         const diff = (rival.total_rewards || 0) - (myEntry?.total_rewards || 0);
+                         const hue  = mgrHue(rival.username || '');
+                         return (
+                           <div key={rival.user_id} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                             <MgrTag mono={mgrMono(rival.username || '')} hue={hue} />
+                             <div style={{ flex: 1, minWidth: 0 }}>
+                               <div style={{ fontFamily: DISPLAY, fontSize: 12 }}>{rival.username}</div>
+                               <div style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.14em', marginTop: 2 }}>{rival.accuracy_pct}% WIN RATE</div>
+                             </div>
+                             <span style={{ fontFamily: DISPLAY, fontSize: 14, color: diff > 0 ? 'var(--danger)' : 'var(--positive)' }}>{diff > 0 ? '' : '+'}{-diff}</span>
+                           </div>
+                         );
+                       })}
+                       {!myEntry && <div style={{ fontFamily: MONO, fontSize: 10, color: 'var(--mute)', letterSpacing: '.18em' }}>SUBMIT BETS TO APPEAR ON LEADERBOARD</div>}
+                     </div>
+                   </aside>
+                 </div>
+               )}
+             </div>
+           );
+         })()}
 
          {view === 'auctions' && (
            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: 'var(--ink)' }}>
@@ -1201,25 +1257,62 @@ export default function LeagueScreen() {
          )}
 
          {view === 'chat' && (
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: 'var(--ink)', minHeight: '60vh' }}>
-              {/* Compact search bar */}
-              <div style={{ background: 'var(--ink-2)', padding: '10px 20px', borderBottom: '1px solid var(--rule)', display: 'flex', gap: 10, alignItems: 'center', flexShrink: 0 }}>
-                <span style={{ fontFamily: MONO, fontSize: 10, color: 'var(--mute)', letterSpacing: '.18em' }}>#LEAGUE-CHAT</span>
-                <span style={{ flex: 1 }} />
-              <input
-                type="text"
-                placeholder="Search messages…"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                style={{ background: 'var(--ink)', border: '1px solid var(--rule)', color: 'var(--paper)', padding: '6px 12px', fontFamily: "'Archivo', sans-serif", fontSize: 12, outline: 'none', width: 200 }}
+            <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '240px 1fr 280px', minHeight: 0, background: 'var(--ink)' }}>
+              {/* Left: channels rail */}
+              <aside style={{ borderRight: '1px solid var(--rule)', display: 'flex', flexDirection: 'column', background: 'var(--ink-2)', overflow: 'auto' }}>
+                <div style={{ padding: '18px 18px 8px' }}>
+                  <div style={{ fontFamily: MONO, fontSize: 10, color: 'var(--mute)', letterSpacing: '.22em' }}>CHANNELS</div>
+                </div>
+                {[
+                  { id: 'lc', name: '#league-chat',   active: true,  unread: unreadCount || 0 },
+                  { id: 'tt', name: '#trash-talk',    active: false, unread: 0 },
+                  { id: 'ah', name: '#auction-house', active: false, unread: 0 },
+                  { id: 'bb', name: '#bets-and-bonus',active: false, unread: 0 },
+                  { id: 'tn', name: '#tactics-notes', active: false, unread: 0 },
+                ].map(c => (
+                  <div key={c.id} style={{ padding: '10px 18px', display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer', borderLeft: c.active ? '2px solid var(--cyan)' : '2px solid transparent', background: c.active ? 'rgba(0,180,216,.06)' : 'transparent', color: c.active ? 'var(--paper)' : 'var(--mute)' }}>
+                    <span style={{ fontFamily: DISPLAY, fontSize: 13, letterSpacing: '-0.01em', flex: 1 }}>{c.name}</span>
+                    {c.unread > 0 && <span style={{ background: 'var(--danger)', color: '#fff', fontFamily: MONO, fontSize: 9, padding: '1px 6px', letterSpacing: '.1em' }}>{c.unread}</span>}
+                  </div>
+                ))}
+                <div style={{ padding: '18px 18px 8px', marginTop: 8 }}>
+                  <div style={{ fontFamily: MONO, fontSize: 10, color: 'var(--mute)', letterSpacing: '.22em' }}>DIRECT</div>
+                </div>
+                {members.slice(0, 4).filter(m => !(currentUser && m.user_id === currentUser.id)).map(m => {
+                  const mName = m.users?.username || 'Unknown';
+                  const hue = mgrHue(mName);
+                  return (
+                    <div key={m.user_id} style={{ padding: '8px 18px', display: 'flex', alignItems: 'center', gap: 10, color: 'var(--mute)', cursor: 'pointer' }}>
+                      <MgrTag mono={mgrMono(mName)} hue={hue} size={16} />
+                      <span style={{ fontFamily: "'Archivo', sans-serif", fontSize: 12, color: 'var(--paper)' }}>{mName}</span>
+                      <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--positive)', marginLeft: 'auto' }} />
+                    </div>
+                  );
+                })}
+              </aside>
+
+              {/* Middle: main chat */}
+              <div style={{ display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+              <HubSectionLabel label="#LEAGUE-CHAT" tone="var(--cyan)" sub={`${members.length} MEMBERS`}
+                right={
+                  <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                    <span style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)' }}>🔍 SEARCH</span>
+                <input
+                  type="text"
+                  placeholder="Search…"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  style={{ background: 'var(--ink)', border: '1px solid var(--rule)', color: 'var(--paper)', padding: '4px 10px', fontFamily: "'Archivo', sans-serif", fontSize: 11, outline: 'none', width: 160 }}
+                />
+                {searchTerm && (
+                  <>
+                    <span style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)' }}>{resultCount}</span>
+                    <button onClick={clearSearch} style={{ ...miniBtnStyle('var(--mute)'), padding: '2px 8px', fontSize: 9 }}>✕</button>
+                  </>
+                )}
+                  </div>
+                }
               />
-              {searchTerm && (
-                <>
-                  <span style={{ fontFamily: MONO, fontSize: 10, color: 'var(--mute)' }}>{resultCount} result{resultCount !== 1 ? 's' : ''}</span>
-                  <button onClick={clearSearch} style={{ ...miniBtnStyle('var(--mute)'), padding: '4px 10px' }}>CLEAR</button>
-                </>
-              )}
-              </div>
               <div style={{ flex: 1, overflow: 'auto', padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: 16 }}>
                 {chatLoading && (
                   <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: 80 }}>
@@ -1359,55 +1452,163 @@ export default function LeagueScreen() {
                   )}
                 </form>
               </div>
+              </div>
+              {/* Right: members rail */}
+              <aside style={{ borderLeft: '1px solid var(--rule)', display: 'flex', flexDirection: 'column', background: 'var(--ink-2)', overflow: 'auto' }}>
+                <HubSectionLabel label={`MEMBERS · ${members.length}`} tone="var(--positive)" />
+                <div style={{ flex: 1, overflow: 'auto' }}>
+                  {/* Current user first */}
+                  {currentUser && members.filter(m => m.user_id === currentUser.id).map(m => {
+                    const hue = mgrHue(m.users?.username || '');
+                    return (
+                      <div key={m.user_id} style={{ padding: '10px 16px', display: 'flex', alignItems: 'center', gap: 10, borderBottom: '1px solid var(--rule)' }}>
+                        <div style={{ position: 'relative' }}>
+                          <MgrTag mono="YOU" hue="var(--cyan)" size={22} />
+                          <span style={{ position: 'absolute', bottom: -2, right: -2, width: 7, height: 7, borderRadius: '50%', background: 'var(--positive)', border: '2px solid var(--ink-2)' }} />
+                        </div>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontFamily: DISPLAY, fontSize: 12, letterSpacing: '-0.01em' }}>You</div>
+                          <div style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.14em', marginTop: 2 }}>@{m.users?.username || 'you'}</div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                  {/* Other members */}
+                  {members.filter(m => !(currentUser && m.user_id === currentUser.id)).map(m => {
+                    const mName = m.users?.username || 'Unknown';
+                    const hue = mgrHue(mName);
+                    return (
+                      <div key={m.user_id} style={{ padding: '10px 16px', display: 'flex', alignItems: 'center', gap: 10, borderBottom: '1px solid var(--rule)' }}>
+                        <div style={{ position: 'relative' }}>
+                          <MgrTag mono={mgrMono(mName)} hue={hue} size={22} />
+                        </div>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontFamily: DISPLAY, fontSize: 12, letterSpacing: '-0.01em' }}>{mName}</div>
+                          <div style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.14em', marginTop: 2 }}>@{mName.toLowerCase()}</div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </aside>
             </div>
           )}
 
-         {view === 'stats' && (
-           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: 'var(--ink)' }}>
-             <div style={{ padding: '20px 28px', borderBottom: '1px solid var(--rule)', background: 'var(--ink-2)', flexShrink: 0 }}>
-               <div style={{ fontFamily: MONO, fontSize: 10, color: 'var(--purple)', letterSpacing: '.22em' }}>LEAGUE STATS · SEASON</div>
-               <div style={{ fontFamily: DISPLAY, fontSize: 24, marginTop: 6 }}>Numbers, the way the league reads them.</div>
-             </div>
-             {statsLoading ? (
-               <div style={{ padding: '48px 28px', textAlign: 'center', fontFamily: MONO, fontSize: 10, color: 'var(--mute)', letterSpacing: '.2em' }}>LOADING…</div>
-             ) : (
-               <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '1fr 1fr', gridTemplateRows: 'auto auto', gap: 0 }}>
-                 {/* Top Scorers */}
-                 <div style={{ padding: '16px 24px', borderRight: '1px solid var(--rule)', borderBottom: '1px solid var(--rule)' }}>
-                   <HubSectionLabel label="SEASON TOTALS · TOP SCORERS" tone="var(--cyan)" />
-                   <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 12 }}>
-                     {topScorers?.map((scorer, i) => {
-                       const hue = mgrHue(scorer.username || '');
+         {view === 'stats' && (() => {
+           const totalPts  = (topScorers || []).reduce((s, m) => s + (m.total_points || 0), 0);
+           const avgPts    = teamMetrics?.avg_points?.toFixed(0) || (members.length ? Math.round(totalPts / members.length) : '—');
+           const biggestGW = topScorers?.[0]?.total_points || '—';
+           return (
+             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: 'var(--ink)' }}>
+               {/* Hero strip */}
+               <div style={{ display: 'grid', gridTemplateColumns: '1.8fr 1fr 1fr 1fr', borderBottom: '1px solid var(--rule)', background: 'var(--ink-2)', flexShrink: 0 }}>
+                 <div style={{ padding: '20px 24px', borderRight: '1px solid var(--rule)' }}>
+                   <div style={{ fontFamily: MONO, fontSize: 10, color: 'var(--purple)', letterSpacing: '.22em' }}>LEAGUE STATS · {members.length} GAMEWEEKS</div>
+                   <div style={{ fontFamily: DISPLAY, fontSize: 26, marginTop: 6, lineHeight: 1.1 }}>Numbers, the way the league reads them.</div>
+                 </div>
+                 {[
+                   { k: 'TOTAL POINTS', v: totalPts.toLocaleString(), tone: 'var(--paper)'   },
+                   { k: 'AVG / MGR',    v: avgPts,                    tone: 'var(--cyan)'    },
+                   { k: 'LEAD SCORE',   v: biggestGW,                 tone: 'var(--gold)'    },
+                 ].map((c, i) => (
+                   <div key={c.k} style={{ padding: '20px 22px', borderRight: i < 2 ? '1px solid var(--rule)' : 'none' }}>
+                     <div style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.22em' }}>{c.k}</div>
+                     <div style={{ fontFamily: DISPLAY, fontSize: 30, color: c.tone, marginTop: 6, letterSpacing: '-0.02em' }}>{c.v}</div>
+                   </div>
+                 ))}
+               </div>
+
+               {statsLoading ? (
+                 <div style={{ padding: '48px', textAlign: 'center', fontFamily: MONO, fontSize: 10, color: 'var(--mute)', letterSpacing: '.2em' }}>LOADING…</div>
+               ) : (
+                 <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '1.4fr 1fr', gridTemplateRows: '1fr 1fr', minHeight: 0 }}>
+                   {/* Top scorers */}
+                   <section style={{ padding: '16px 22px', borderRight: '1px solid var(--rule)', borderBottom: '1px solid var(--rule)', display: 'flex', flexDirection: 'column', gap: 8, overflow: 'auto' }}>
+                     <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                       <span style={{ width: 3, height: 14, background: 'var(--cyan)' }} />
+                       <span style={{ fontFamily: MONO, fontSize: 11, color: 'var(--paper)', letterSpacing: '.22em' }}>SEASON TOTALS · TOP SCORERS</span>
+                     </div>
+                     {(topScorers || []).map((scorer, i) => {
+                       const hue  = mgrHue(scorer.username || '');
+                       const isMe = currentUser && scorer.user_id === currentUser.id;
+                       const maxPts = topScorers?.[0]?.total_points || 1;
                        return (
-                         <div key={scorer.user_id} style={{ display: 'grid', gridTemplateColumns: '30px auto 1fr auto', gap: 12, alignItems: 'center', padding: '10px 12px', background: 'var(--ink-2)', border: '1px solid var(--rule)' }}>
-                           <span style={{ fontFamily: DISPLAY, fontSize: 16, color: i === 0 ? 'var(--gold)' : 'var(--mute)' }}>{i + 1}</span>
+                         <div key={scorer.user_id} style={{ display: 'grid', gridTemplateColumns: 'auto auto 1fr auto auto', gap: 12, alignItems: 'center' }}>
                            <MgrTag mono={mgrMono(scorer.username || '')} hue={hue} />
-                           <span style={{ fontFamily: DISPLAY, fontSize: 13 }}>{scorer.username}</span>
-                           <span style={{ fontFamily: DISPLAY, fontSize: 16, color: i === 0 ? 'var(--gold)' : 'var(--paper)' }}>{scorer.total_points}<span style={{ color: 'var(--mute)', fontSize: 11, marginLeft: 4 }}>PTS</span></span>
+                           <div>
+                             <div style={{ fontFamily: DISPLAY, fontSize: 12 }}>{isMe ? 'You' : scorer.username}</div>
+                             <div style={{ height: 4, background: 'var(--ink-3)', marginTop: 4, width: 120 }}>
+                               <div style={{ height: '100%', width: `${(scorer.total_points / maxPts) * 100}%`, background: i === 0 ? 'var(--gold)' : 'var(--cyan)' }} />
+                             </div>
+                           </div>
+                           <span style={{ flex: 1 }} />
+                           <span style={{ fontFamily: MONO, fontSize: 10, color: 'var(--mute)' }}>#{i + 1}</span>
+                           <span style={{ fontFamily: DISPLAY, fontSize: 14, color: i === 0 ? 'var(--gold)' : 'var(--paper)' }}>{scorer.total_points}<span style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', marginLeft: 4 }}>PTS</span></span>
                          </div>
                        );
                      })}
-                   </div>
+                   </section>
+
+                   {/* Position breakdown placeholder */}
+                   <section style={{ padding: '16px 22px', borderBottom: '1px solid var(--rule)', display: 'flex', flexDirection: 'column', gap: 12, overflow: 'auto' }}>
+                     <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                       <span style={{ width: 3, height: 14, background: 'var(--gold)' }} />
+                       <span style={{ fontFamily: MONO, fontSize: 11, color: 'var(--paper)', letterSpacing: '.22em' }}>LEAGUE OVERVIEW</span>
+                     </div>
+                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                       {[
+                         { k: 'MEMBERS',    v: teamMetrics?.member_count || members.length, tone: 'var(--paper)'   },
+                         { k: 'AVG POINTS', v: avgPts,                                       tone: 'var(--cyan)'   },
+                         { k: 'LEADER',     v: topScorers?.[0]?.username?.substring(0, 8).toUpperCase() || '—', tone: 'var(--gold)' },
+                         { k: 'TOTAL PTS',  v: totalPts.toLocaleString(),                    tone: 'var(--paper)'  },
+                       ].map(c => (
+                         <div key={c.k} style={{ padding: '12px 14px', background: 'var(--ink-2)', border: '1px solid var(--rule)', textAlign: 'center' }}>
+                           <div style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.22em' }}>{c.k}</div>
+                           <div style={{ fontFamily: DISPLAY, fontSize: 22, color: c.tone, marginTop: 4, letterSpacing: '-0.02em' }}>{c.v}</div>
+                         </div>
+                       ))}
+                     </div>
+                   </section>
+
+                   {/* Biggest GWs */}
+                   <section style={{ padding: '16px 22px', borderRight: '1px solid var(--rule)', display: 'flex', flexDirection: 'column', gap: 8, overflow: 'auto' }}>
+                     <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                       <span style={{ width: 3, height: 14, background: 'var(--danger)' }} />
+                       <span style={{ fontFamily: MONO, fontSize: 11, color: 'var(--paper)', letterSpacing: '.22em' }}>BIGGEST GAMEWEEKS · LEADERBOARD</span>
+                     </div>
+                     {(topScorers || []).slice(0, 4).map((scorer, i) => {
+                       const hue = mgrHue(scorer.username || '');
+                       return (
+                         <div key={scorer.user_id} style={{ display: 'grid', gridTemplateColumns: '30px auto 1fr auto auto', gap: 12, padding: '10px 12px', background: 'var(--ink-2)', border: '1px solid var(--rule)', alignItems: 'center' }}>
+                           <span style={{ fontFamily: DISPLAY, fontSize: 16, color: i === 0 ? 'var(--gold)' : 'var(--mute)' }}>{i + 1}</span>
+                           <MgrTag mono={mgrMono(scorer.username || '')} hue={hue} />
+                           <div>
+                             <div style={{ fontFamily: DISPLAY, fontSize: 12 }}>{scorer.username}</div>
+                             <div style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.16em', marginTop: 2 }}>SEASON TOTAL</div>
+                           </div>
+                           <span style={{ fontFamily: MONO, fontSize: 10, color: 'var(--mute)' }}>+{scorer.total_points}</span>
+                           <span style={{ fontFamily: DISPLAY, fontSize: 16, color: i === 0 ? 'var(--gold)' : 'var(--paper)' }}>{scorer.total_points}<span style={{ color: 'var(--mute)', fontSize: 10, marginLeft: 4 }}>PTS</span></span>
+                         </div>
+                       );
+                     })}
+                   </section>
+
+                   {/* Captaincy placeholder */}
+                   <section style={{ padding: '16px 22px', display: 'flex', flexDirection: 'column', gap: 8, overflow: 'auto' }}>
+                     <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                       <span style={{ width: 3, height: 14, background: 'var(--positive)' }} />
+                       <span style={{ fontFamily: MONO, fontSize: 11, color: 'var(--paper)', letterSpacing: '.22em' }}>CAPTAINCY · HIT RATE</span>
+                     </div>
+                     <div style={{ fontFamily: "'Archivo', sans-serif", fontSize: 12, color: 'var(--mute)', lineHeight: 1.5 }}>
+                       Captain data available once matchday scoring is active.
+                     </div>
+                     <div style={{ fontFamily: MONO, fontSize: 10, color: 'var(--mute)', letterSpacing: '.18em', marginTop: 4 }}>SEASON HASN'T STARTED YET</div>
+                   </section>
                  </div>
-                 {/* Overview */}
-                 <div style={{ padding: '16px 24px', borderBottom: '1px solid var(--rule)' }}>
-                   <HubSectionLabel label="LEAGUE OVERVIEW" tone="var(--gold)" />
-                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginTop: 12 }}>
-                     {[
-                       { k: 'MEMBERS', v: teamMetrics?.member_count || members.length, tone: 'var(--paper)' },
-                       { k: 'AVG POINTS', v: teamMetrics?.avg_points?.toFixed(0) || '—', tone: 'var(--cyan)' },
-                     ].map(c => (
-                       <div key={c.k} style={{ padding: '14px 16px', background: 'var(--ink-2)', border: '1px solid var(--rule)', textAlign: 'center' }}>
-                         <div style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.22em' }}>{c.k}</div>
-                         <div style={{ fontFamily: DISPLAY, fontSize: 28, color: c.tone, marginTop: 6, letterSpacing: '-0.02em' }}>{c.v}</div>
-                       </div>
-                     ))}
-                   </div>
-                 </div>
-               </div>
-             )}
-           </div>
-         )}
+               )}
+             </div>
+           );
+         })()}
 
          {/* ── COMMISSIONER PANEL ─────────────────────────────────────────── */}
          {view === 'commissioner' && isCommissioner && (

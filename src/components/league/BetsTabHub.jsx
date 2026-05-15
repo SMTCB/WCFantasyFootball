@@ -1,0 +1,130 @@
+import { useBets } from '../../hooks/useBets';
+import BetWidget from '../BetWidget';
+import { HubSectionLabel, MONO, DISPLAY } from './HubShared';
+
+const KIND = {
+  top_scorer:   { g: '◉', tone: 'var(--cyan)'   },
+  player_block: { g: '⛌', tone: 'var(--danger)' },
+  match_result: { g: '◈', tone: 'var(--paper)'  },
+  over_under:   { g: '≷', tone: 'var(--gold)'   },
+  h2h:          { g: '⚔', tone: 'var(--purple)' },
+};
+
+function kindOf(bet) {
+  const slug = bet.template?.slug || '';
+  if (slug.includes('block')) return KIND.player_block;
+  if (slug.includes('top_scorer') || slug.includes('scorer')) return KIND.top_scorer;
+  if (slug.includes('match') || slug.includes('result')) return KIND.match_result;
+  if (slug.includes('over') || slug.includes('under')) return KIND.over_under;
+  if (slug.includes('h2h')) return KIND.h2h;
+  return KIND.match_result;
+}
+
+function BetSection({ label, sub, tone, bets, squadId, onSubmitted }) {
+  if (!bets.length) return null;
+  return (
+    <div>
+      <HubSectionLabel label={label} sub={sub} tone={tone} right={
+        <span style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.18em' }}>{bets.length} TOTAL</span>
+      } />
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
+        {bets.map(bet => {
+          const k = kindOf(bet);
+          return (
+            <div key={bet.id} style={{
+              margin: '10px 24px',
+              background: 'var(--ink-2)',
+              border: '1px solid var(--rule)',
+              borderLeft: `3px solid ${bet.status === 'resolved' ? (bet.mySubmission?.is_correct ? 'var(--positive)' : bet.mySubmission ? 'var(--danger)' : 'var(--rule)') : k.tone}`,
+              display: 'grid', gridTemplateColumns: '1fr auto',
+            }}>
+              {/* Body */}
+              <div style={{ padding: '14px 18px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {/* Title row */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <span style={{ width: 22, height: 22, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', color: k.tone, fontFamily: DISPLAY, fontSize: 13, background: `${k.tone}15`, border: `1px solid ${k.tone}55` }}>{k.g}</span>
+                  <span style={{ fontFamily: DISPLAY, fontSize: 14, color: k.tone, letterSpacing: '-0.01em' }}>{bet.title?.toUpperCase()}</span>
+                  {bet.scope_ref && <span style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.18em' }}>· MD{bet.scope_ref}</span>}
+                  <span style={{ flex: 1 }} />
+                  {bet.status !== 'resolved' && (
+                    <span style={{ fontFamily: MONO, fontSize: 10, color: 'var(--positive)', padding: '3px 7px', border: '1px solid rgba(34,197,94,.55)', background: 'rgba(34,197,94,.08)', letterSpacing: '.18em' }}>
+                      +{bet.reward_value} {bet.reward_type === 'budget' ? 'M' : 'PTS'}
+                    </span>
+                  )}
+                </div>
+                {/* Prompt */}
+                <div style={{ fontFamily: "'Archivo', sans-serif", fontSize: 13, color: 'var(--paper)', lineHeight: 1.5 }}>{bet.prompt}</div>
+                {/* BetWidget handles all interaction */}
+                <BetWidget bet={bet} squadId={squadId} onSubmitted={onSubmitted} />
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+export default function BetsTabHub({ leagueId, squadId, onReplayTour }) {
+  const { bets, loading, error, refetch } = useBets(leagueId, squadId);
+
+  const open     = bets.filter(b => b.status === 'open');
+  const pending  = bets.filter(b => b.status === 'closed');
+  const resolved = bets.filter(b => b.status === 'resolved');
+  const ptsBanked = resolved.reduce((sum, b) => sum + (b.mySubmission?.is_correct ? (b.reward_value || 0) : 0), 0);
+
+  return (
+    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: 'var(--ink)' }}>
+      {/* Hero strip */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1.6fr 1fr 1fr 1fr', borderBottom: '1px solid var(--rule)', background: 'var(--ink-2)', flexShrink: 0 }}>
+        <div data-tour="bets-header" style={{ padding: '20px 24px', borderRight: '1px solid var(--rule)' }}>
+          <div style={{ fontFamily: MONO, fontSize: 10, color: 'var(--cyan)', letterSpacing: '.22em' }}>BETS &amp; PREDICTIONS · GW—</div>
+          <div style={{ fontFamily: DISPLAY, fontSize: 26, marginTop: 6, lineHeight: 1.1 }}>Make your picks before the deadline.</div>
+          <div style={{ fontFamily: MONO, fontSize: 10, color: 'var(--mute)', marginTop: 8, letterSpacing: '.16em' }}>WIN BONUS POINTS — STACK THEM ONTO YOUR LEAGUE TOTAL.</div>
+        </div>
+        {[
+          { k: 'OPEN',    v: open.length,    sub: 'Picks required',   tone: 'var(--cyan)'     },
+          { k: 'PENDING', v: pending.length, sub: 'Awaiting result',  tone: 'var(--gold)'     },
+          { k: 'THIS GW', v: `+${ptsBanked}`,sub: 'Pts banked',       tone: 'var(--positive)' },
+        ].map((c, i) => (
+          <div key={c.k} style={{ padding: '20px 22px', borderRight: i < 2 ? '1px solid var(--rule)' : 'none', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+            <div style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.22em' }}>{c.k}</div>
+            <div style={{ fontFamily: DISPLAY, fontSize: 32, color: c.tone, marginTop: 6, letterSpacing: '-0.02em' }}>{c.v}</div>
+            <div style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', marginTop: 6, letterSpacing: '.16em' }}>{c.sub}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* Sections */}
+      <div data-tour="bets-list" style={{ flex: 1, overflow: 'auto', paddingBottom: 80 }}>
+        {loading && (
+          <div style={{ padding: '48px 24px', textAlign: 'center', fontFamily: MONO, fontSize: 10, color: 'var(--mute)', letterSpacing: '.2em' }}>LOADING BETS…</div>
+        )}
+        {error && (
+          <div style={{ padding: '24px', fontFamily: MONO, fontSize: 10, color: 'var(--danger)', letterSpacing: '.18em' }}>FAILED TO LOAD: {error}</div>
+        )}
+        {!loading && !error && bets.length === 0 && (
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '64px 28px', gap: 12 }}>
+            <div style={{ fontSize: 28 }}>🎯</div>
+            <div style={{ fontFamily: MONO, fontSize: 11, color: 'var(--mute)', letterSpacing: '.2em' }}>NO BETS YET</div>
+            <div style={{ fontFamily: "'Archivo', sans-serif", fontSize: 12, color: 'var(--mute)', opacity: 0.6, maxWidth: 320, textAlign: 'center' }}>The commissioner can create prediction widgets from the Admin tab.</div>
+          </div>
+        )}
+        {!loading && !error && bets.length > 0 && (
+          <>
+            <BetSection label="OPEN" sub="MAKE YOUR PICKS" tone="var(--cyan)"   bets={open}     squadId={squadId} onSubmitted={refetch} />
+            <BetSection label="PENDING RESULTS" sub="WAITING ON THE PITCH" tone="var(--gold)" bets={pending}  squadId={squadId} onSubmitted={refetch} />
+            <BetSection label="RESULTS" sub="HISTORY" tone="var(--mute)"        bets={resolved} squadId={squadId} onSubmitted={refetch} />
+          </>
+        )}
+      </div>
+
+      {/* Tour replay */}
+      {onReplayTour && (
+        <div style={{ position: 'fixed', bottom: 80, right: 20, zIndex: 10 }}>
+          <button onClick={onReplayTour} style={{ width: 28, height: 28, borderRadius: '50%', border: '1px solid rgba(255,255,255,0.2)', background: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.5)', fontSize: 12, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>?</button>
+        </div>
+      )}
+    </div>
+  );
+}
