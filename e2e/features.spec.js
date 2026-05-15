@@ -225,13 +225,6 @@ test.describe('Transfer Market - Buy & Sell', () => {
     await page.goto('/squad');
     await waitForContent(page);
 
-<<<<<<< HEAD
-=======
-    // Count players before sell
-    const playerCards = page.locator('[class*="player"], [class*="card"]');
-    const countBefore = await playerCards.count();
-
->>>>>>> d36a11f (test: add E2E edge case coverage for Joker, Betting, Transfers, Chat (30 new tests))
     // Look for sell button on a player
     const sellButton = page.locator('button:has-text("Sell")').first();
 
@@ -269,19 +262,11 @@ test.describe('League Chat - Messages, Mentions, Search', () => {
     await waitForContent(page);
 
     // Check for unread badge on Chat tab
-<<<<<<< HEAD
     const unreadBadge = page.locator('[class*="badge"], [class*="count"]').filter({ hasText: /[0-9]+/ }).first();
 
     if (await unreadBadge.isVisible().catch(() => false)) {
       const badgeText = await unreadBadge.innerText();
       expect(/[0-9]+/.test(badgeText)).toBe(true);
-=======
-    const unreadBadge = page.locator('[class*="badge"], [class*="count"]').filter({ hasText: /\d+/ }).first();
-
-    if (await unreadBadge.isVisible().catch(() => false)) {
-      const badgeText = await unreadBadge.innerText();
-      expect(/\d+/.test(badgeText)).toBe(true);
->>>>>>> d36a11f (test: add E2E edge case coverage for Joker, Betting, Transfers, Chat (30 new tests))
     }
   });
 
@@ -305,11 +290,7 @@ test.describe('League Chat - Messages, Mentions, Search', () => {
         await page.waitForTimeout(500);
 
         // Search results should filter or show count
-<<<<<<< HEAD
         const resultCount = page.locator('text=/[0-9]+ match|no results/i').first();
-=======
-        const resultCount = page.locator('text=/\d+ match|no results/i').first();
->>>>>>> d36a11f (test: add E2E edge case coverage for Joker, Betting, Transfers, Chat (30 new tests))
 
         if (await resultCount.isVisible().catch(() => false)) {
           await expect(resultCount).toBeVisible();

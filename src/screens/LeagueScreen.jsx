@@ -113,6 +113,8 @@ export default function LeagueScreen() {
   const [betRewardValue, setBetRewardValue] = useState('5');
   const [betScopeType, setBetScopeType] = useState('matchday');
   const [betScopeRef, setBetScopeRef] = useState('');
+  const [betOptionDraft, setBetOptionDraft] = useState('');
+  const [betOptions, setBetOptions] = useState([]);   // [{ key, label }]
 
   // Bet resolution state
   const [openBets, setOpenBets] = useState([]);
@@ -271,12 +273,13 @@ export default function LeagueScreen() {
     if (!betTitle) throw new Error('Enter a bet title.');
     if (!betPrompt) throw new Error('Enter a bet prompt/question.');
     if (!betDeadline) throw new Error('Set a deadline.');
+    if (betOptions.length < 2) throw new Error('Add at least 2 answer options.');
     const { error } = await supabase.from('bet_instances').insert({
       league_id: activeLeague?.league_id,
       template_id: betTemplateId || null,
       title: betTitle,
       prompt: betPrompt,
-      options: [],
+      options: betOptions,
       deadline_at: betDeadline,
       reward_value: Number(betRewardValue) || 5,
       scope_type: betScopeType,
@@ -291,8 +294,67 @@ export default function LeagueScreen() {
     setBetScopeType('matchday');
     setBetScopeRef('');
     setBetTemplateId('');
+    setBetOptions([]);
+    setBetOptionDraft('');
     await fetchOpenBets();
   });
+
+  const autoGenerateBetOptions = async () => {
+    if (!betTemplateId) {
+      setCommMsg({ type: 'err', text: 'Select a template to auto-generate options.' });
+      return;
+    }
+    try {
+      setCommLoading(true);
+      let generated = [];
+
+      if (betTemplateId === 'top_scorer' || betTemplateId === 'player_block') {
+        // Fetch top 8 forwards/midfielders by price (highest-value = likely top scorers)
+        const { data: players } = await supabase
+          .from('players')
+          .select('id, name, position, club')
+          .in('position', ['FWD', 'FW', 'MID'])
+          .order('price', { ascending: false })
+          .limit(8);
+        generated = (players || []).map(p => ({
+          key: p.id,
+          label: p.name,
+          meta: { club: p.club, pos: p.position },
+        }));
+      } else if (betTemplateId === 'match_result') {
+        // Upcoming fixtures — home win / draw / away win
+        const { data: fixtures } = await supabase
+          .from('fixtures')
+          .select('id, home_team, away_team')
+          .in('status', ['scheduled', 'upcoming'])
+          .order('kickoff_at', { ascending: true })
+          .limit(6);
+        generated = (fixtures || []).flatMap(f => [
+          { key: `${f.id}_home`, label: `${f.home_team} Win` },
+          { key: `${f.id}_draw`, label: 'Draw' },
+          { key: `${f.id}_away`, label: `${f.away_team} Win` },
+        ]);
+        if (generated.length === 0) {
+          generated = [
+            { key: 'home_win', label: 'Home Win' },
+            { key: 'draw',     label: 'Draw'     },
+            { key: 'away_win', label: 'Away Win'  },
+          ];
+        }
+      }
+
+      if (generated.length === 0) {
+        setCommMsg({ type: 'err', text: 'No options could be generated for this template.' });
+        return;
+      }
+      setBetOptions(generated);
+      setCommMsg({ type: 'ok', text: `Auto-generated ${generated.length} options — review and customise before creating.` });
+    } catch (err) {
+      setCommMsg({ type: 'err', text: err.message || 'Auto-generate failed.' });
+    } finally {
+      setCommLoading(false);
+    }
+  };
 
   const fetchOpenBets = async () => {
     if (!activeLeague?.league_id) return;
@@ -1383,16 +1445,29 @@ export default function LeagueScreen() {
                <div className="text-[10px] font-black uppercase tracking-[0.15em] text-text-tertiary">Create Bet Instance</div>
                <div className="flex flex-col gap-1">
                  <label className="text-[9px] text-text-tertiary font-bold uppercase tracking-widest">Template (optional)</label>
-                 <select
-                   value={betTemplateId}
-                   onChange={e => setBetTemplateId(e.target.value)}
-                   className="bg-[#1a1a1a] border border-[#2a2a2a] text-white text-[11px] px-2 py-2 rounded-sm outline-none focus:border-cyan/40"
-                 >
-                   <option value="">None</option>
-                   <option value="top_scorer">Matchday Top Scorer</option>
-                   <option value="match_result">Match Result</option>
-                   <option value="player_block">Player Block</option>
-                 </select>
+                 <div className="flex gap-1.5">
+                   <select
+                     value={betTemplateId}
+                     onChange={e => setBetTemplateId(e.target.value)}
+                     className="flex-1 bg-[#1a1a1a] border border-[#2a2a2a] text-white text-[11px] px-2 py-2 rounded-sm outline-none focus:border-cyan/40"
+                   >
+                     <option value="">None</option>
+                     <option value="top_scorer">Matchday Top Scorer</option>
+                     <option value="match_result">Match Result</option>
+                     <option value="player_block">Player Block</option>
+                   </select>
+                   {betTemplateId && (
+                     <button
+                       onClick={autoGenerateBetOptions}
+                       disabled={commLoading}
+                       title="Auto-populate options from this template"
+                       className="px-2.5 py-1.5 text-[9px] font-black uppercase tracking-widest rounded-sm disabled:opacity-50 shrink-0"
+                       style={{ background: 'rgba(0,196,232,0.15)', color: 'var(--cyan)', border: '1px solid rgba(0,196,232,0.3)' }}
+                     >
+                       ⚡ Auto
+                     </button>
+                   )}
+                 </div>
                </div>
                <div className="flex flex-col gap-1">
                  <label className="text-[9px] text-text-tertiary font-bold uppercase tracking-widest">Title</label>
@@ -1458,6 +1533,61 @@ export default function LeagueScreen() {
                    />
                  </div>
                </div>
+               {/* ── Answer Options (required) ── */}
+               <div className="flex flex-col gap-1.5">
+                 <label className="text-[9px] text-text-tertiary font-bold uppercase tracking-widest">
+                   Answer Options <span style={{ color: 'var(--danger)' }}>*</span>
+                 </label>
+                 {/* Existing options list */}
+                 {betOptions.length > 0 && (
+                   <div className="flex flex-col gap-1 mb-1">
+                     {betOptions.map((opt, idx) => (
+                       <div key={opt.key} className="flex items-center gap-2 bg-[#1a1a1a] border border-[#2a2a2a] px-2 py-1.5 rounded-sm">
+                         <span className="text-[9px] text-white/30 w-4 shrink-0">{idx + 1}.</span>
+                         <span className="text-[11px] text-white flex-1">{opt.label}</span>
+                         <button
+                           onClick={() => setBetOptions(prev => prev.filter((_, i) => i !== idx))}
+                           className="text-[10px] text-danger/60 hover:text-danger transition-colors shrink-0"
+                         >✕</button>
+                       </div>
+                     ))}
+                   </div>
+                 )}
+                 {/* Add option input */}
+                 <div className="flex gap-1.5">
+                   <input
+                     type="text"
+                     value={betOptionDraft}
+                     onChange={e => setBetOptionDraft(e.target.value)}
+                     onKeyDown={e => {
+                       if (e.key === 'Enter' && betOptionDraft.trim()) {
+                         const label = betOptionDraft.trim();
+                         const key   = label.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
+                         setBetOptions(prev => [...prev, { key: key || `opt_${prev.length + 1}`, label }]);
+                         setBetOptionDraft('');
+                       }
+                     }}
+                     placeholder="Type option, press Enter or Add"
+                     className="flex-1 bg-[#1a1a1a] border border-[#2a2a2a] text-white text-[11px] px-2 py-2 rounded-sm outline-none focus:border-cyan/40"
+                   />
+                   <button
+                     onClick={() => {
+                       const label = betOptionDraft.trim();
+                       if (!label) return;
+                       const key = label.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
+                       setBetOptions(prev => [...prev, { key: key || `opt_${prev.length + 1}`, label }]);
+                       setBetOptionDraft('');
+                     }}
+                     className="px-3 py-2 bg-[#2a2a2a] text-white text-[10px] font-black uppercase tracking-widest rounded-sm hover:bg-[#3a3a3a] transition-colors"
+                   >
+                     Add
+                   </button>
+                 </div>
+                 {betOptions.length < 2 && (
+                   <span className="text-[9px]" style={{ color: 'var(--mute)' }}>Minimum 2 options required.</span>
+                 )}
+               </div>
+
                <button
                  onClick={createBetInstance}
                  disabled={commLoading}
@@ -1512,42 +1642,81 @@ export default function LeagueScreen() {
                        <div className="flex flex-col gap-2">
                          <label className="text-[9px] text-text-tertiary font-bold uppercase tracking-widest">Select Correct Answer</label>
 
-                         {betSubmissions.length === 0 ? (
-                           <div className="text-[10px] text-text-secondary italic">No submissions yet</div>
-                         ) : (
-                           <div className="flex flex-col gap-2">
-                             {Object.entries(answerGrouped).map(([answer, users]) => (
-                               <button
-                                 key={answer}
-                                 onClick={() => setBetResolutionAnswer(answer)}
-                                 className={`p-2 rounded-sm text-[11px] font-bold uppercase tracking-widest transition-all text-left ${
-                                   betResolutionAnswer === answer
-                                     ? 'bg-green-700/60 border border-green-600 text-white'
-                                     : 'bg-[#1a1a1a] border border-[#2a2a2a] text-text-secondary hover:border-[#3a3a3a]'
-                                 }`}
-                               >
-                                 <div>{answer}</div>
-                                 <div className="text-[9px] text-text-tertiary">{users.length} submission{users.length !== 1 ? 's' : ''}</div>
-                               </button>
-                             ))}
-                           </div>
+                         {/* Bet's own options (selectable even if no one submitted them) */}
+                         {Array.isArray(selectedBetForResolution.options) && selectedBetForResolution.options.length > 0 && (
+                           <>
+                             <div className="text-[8px] uppercase tracking-widest" style={{ color: 'var(--mute)' }}>Bet options</div>
+                             <div className="flex flex-col gap-1">
+                               {selectedBetForResolution.options.map(opt => {
+                                 const optKey = opt.key ?? opt;
+                                 const optLabel = opt.label ?? opt;
+                                 const subCount = answerGrouped[optKey]?.length ?? 0;
+                                 const isSelected = betResolutionAnswer === optKey;
+                                 return (
+                                   <button
+                                     key={optKey}
+                                     onClick={() => setBetResolutionAnswer(optKey)}
+                                     className={`p-2 rounded-sm text-[11px] font-bold transition-all text-left ${
+                                       isSelected
+                                         ? 'bg-green-700/60 border border-green-600 text-white'
+                                         : 'bg-[#1a1a1a] border border-[#2a2a2a] text-text-secondary hover:border-[#3a3a3a]'
+                                     }`}
+                                   >
+                                     <div>{optLabel}</div>
+                                     <div className="text-[9px] text-text-tertiary">
+                                       {subCount > 0 ? `${subCount} submission${subCount !== 1 ? 's' : ''}` : 'No submissions'}
+                                     </div>
+                                   </button>
+                                 );
+                               })}
+                             </div>
+                           </>
                          )}
 
-                         {/* Fallback: manual entry if answer not in submissions */}
-                         {betResolutionAnswer && !answerGrouped[betResolutionAnswer] && (
+                         {/* Submitted answers (shows answers outside the options list) */}
+                         {betSubmissions.length > 0 && Object.keys(answerGrouped).some(a =>
+                           !selectedBetForResolution.options?.some(o => (o.key ?? o) === a)
+                         ) && (
+                           <>
+                             <div className="text-[8px] uppercase tracking-widest mt-1" style={{ color: 'var(--mute)' }}>Submitted answers</div>
+                             <div className="flex flex-col gap-1">
+                               {Object.entries(answerGrouped)
+                                 .filter(([a]) => !selectedBetForResolution.options?.some(o => (o.key ?? o) === a))
+                                 .map(([answer, users]) => (
+                                   <button
+                                     key={answer}
+                                     onClick={() => setBetResolutionAnswer(answer)}
+                                     className={`p-2 rounded-sm text-[11px] font-bold transition-all text-left ${
+                                       betResolutionAnswer === answer
+                                         ? 'bg-green-700/60 border border-green-600 text-white'
+                                         : 'bg-[#1a1a1a] border border-[#2a2a2a] text-text-secondary hover:border-[#3a3a3a]'
+                                     }`}
+                                   >
+                                     <div>{answer}</div>
+                                     <div className="text-[9px] text-text-tertiary">{users.length} submission{users.length !== 1 ? 's' : ''}</div>
+                                   </button>
+                                 ))}
+                             </div>
+                           </>
+                         )}
+
+                         {betSubmissions.length === 0 && (!selectedBetForResolution.options || selectedBetForResolution.options.length === 0) && (
+                           <div className="text-[10px] text-text-secondary italic">No submissions and no options defined.</div>
+                         )}
+
+                         {/* Manual override — always available for partial-result / edge cases */}
+                         <div className="text-[8px] uppercase tracking-widest mt-1" style={{ color: 'var(--mute)' }}>Manual override</div>
+                         <input
+                           type="text"
+                           placeholder="Type custom correct answer…"
+                           onChange={e => setBetResolutionAnswer(e.target.value)}
+                           value={betResolutionAnswer && !selectedBetForResolution.options?.some(o => (o.key ?? o) === betResolutionAnswer) && !answerGrouped[betResolutionAnswer] ? betResolutionAnswer : ''}
+                           className="bg-[#1a1a1a] border border-[#2a2a2a] text-white text-[11px] px-2 py-2 rounded-sm outline-none focus:border-cyan/40"
+                         />
+                         {betResolutionAnswer && !answerGrouped[betResolutionAnswer] && !selectedBetForResolution.options?.some(o => (o.key ?? o) === betResolutionAnswer) && (
                            <div className="bg-yellow-900/30 border border-yellow-700/50 p-2 rounded-sm text-[10px] text-yellow-200">
-                             Custom answer: "{betResolutionAnswer}" (not in submissions)
+                             ⚠ Override: "{betResolutionAnswer}" — not in submissions or options. This will award reward only to exact matches.
                            </div>
-                         )}
-
-                         {!betResolutionAnswer && betSubmissions.length > 0 && (
-                           <input
-                             type="text"
-                             placeholder="Or type custom answer..."
-                             onChange={e => setBetResolutionAnswer(e.target.value)}
-                             value=""
-                             className="bg-[#1a1a1a] border border-[#2a2a2a] text-white text-[11px] px-2 py-2 rounded-sm outline-none focus:border-cyan/40 text-text-secondary"
-                           />
                          )}
                        </div>
                      </>

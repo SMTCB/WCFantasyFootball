@@ -51,7 +51,7 @@ export default function NotificationPanel({ notifications, unreadCount, onMarkAs
       {isOpen && (
         <div
           className="absolute top-full right-0 mt-2 w-80 rounded-md shadow-2xl z-50 overflow-hidden"
-          style={{ background: 'var(--ink-2)', border: '1px solid rgba(255,255,255,0.08)' }}
+          style={{ background: '#0F1218', border: '1px solid rgba(255,255,255,0.15)', isolation: 'isolate' }}
         >
           {/* Header */}
           <div

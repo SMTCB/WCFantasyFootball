@@ -22,7 +22,10 @@ export function useBetSubmit() {
 
       onSuccess?.();
     } catch (err) {
-      onError?.(err.message);
+      // Surface duplicate-submission constraint as a friendly message
+      const msg = err.message ?? '';
+      const isDuplicate = msg.includes('bet_submissions_unique_squad_bet') || msg.includes('duplicate');
+      onError?.(isDuplicate ? 'You already submitted a pick for this bet.' : msg);
     } finally {
       setSubmitting(false);
     }

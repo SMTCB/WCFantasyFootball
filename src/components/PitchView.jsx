@@ -42,11 +42,77 @@ function xPositions(n) {
 }
 
 // ── HybridToken — the only token style (spec §Token spec) ─────────────────────
-function HybridToken({ player, no, x, y, isCaptain, onClick, isSelected }) {
+function HybridToken({ player, no, x, y, isCaptain, onClick, isSelected, compact }) {
   const surname = player.name?.split(' ').slice(-1)[0]?.toUpperCase() ?? player.name?.toUpperCase() ?? '?';
   const club    = (player.club ?? '').substring(0, 3).toUpperCase();
   const pts     = player.points ?? 0;
   const sc      = STATUS_COLOR[player.intel?.status] ?? 'var(--positive)';
+
+  if (compact) {
+    // Compact token: position-coloured pill, surname, pts — no number badge
+    const posColor = player.position === 'GK' ? 'var(--pos-gk)'
+      : player.position === 'DEF' ? 'var(--pos-def)'
+      : player.position === 'MID' ? 'var(--pos-mid)'
+      : 'var(--pos-fwd)';
+    return (
+      <div
+        data-testid={`token-${player.id}`}
+        onClick={() => onClick(player)}
+        style={{
+          position:    'absolute',
+          left:        `${x}%`,
+          top:         `${y}%`,
+          transform:   'translate(-50%, -50%)',
+          display:     'flex',
+          flexDirection: 'column',
+          alignItems:  'center',
+          gap:         2,
+          cursor:      'pointer',
+          zIndex:      10,
+          userSelect:  'none',
+        }}
+      >
+        <div style={{
+          padding:      '3px 7px',
+          background:   'rgba(15,18,24,.92)',
+          border:       `1px solid ${isSelected ? 'var(--cyan)' : posColor}`,
+          borderRadius: 3,
+          fontFamily:   'Archivo Black, sans-serif',
+          fontSize:     10,
+          letterSpacing: '-0.01em',
+          textTransform: 'uppercase',
+          color:        'var(--paper)',
+          whiteSpace:   'nowrap',
+        }}>
+          {surname}
+        </div>
+        <div style={{
+          fontFamily:   'JetBrains Mono, monospace',
+          fontSize:     8,
+          color:        pts > 0 ? 'var(--positive)' : 'var(--mute)',
+          letterSpacing: '.1em',
+        }}>
+          {pts > 0 ? `+${pts}` : club}
+        </div>
+        {isCaptain && (
+          <div style={{
+            position:    'absolute',
+            top: -6, right: -6,
+            width: 14, height: 14,
+            borderRadius: '50%',
+            background:  'var(--gold)',
+            color:       '#0A0A0A',
+            fontFamily:  'Archivo Black, sans-serif',
+            fontSize:    7,
+            display:     'flex',
+            alignItems:  'center',
+            justifyContent: 'center',
+            border:      '1.5px solid var(--ink)',
+          }}>C</div>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div
@@ -149,9 +215,10 @@ export default function PitchView({
   onPlayerClick,
   selectedPlayerId,
   swapMode,
-  variant = 'desktop',   // 'desktop' | 'mobile'
+  variant = 'desktop',   // 'desktop' | 'mobile' | 'compact'
   matchdayLabel = '',
 }) {
+  const isCompact = variant === 'compact';
   // Group players by position
   const byPos = { GK: [], DEF: [], MID: [], FWD: [] };
   for (const p of (squad.players ?? [])) {
@@ -181,7 +248,9 @@ export default function PitchView({
   const formation = [def, mid, fwd].filter(n => n > 0).join('-') || '—';
 
   // Outer container sizing
-  const outerStyle = variant === 'desktop'
+  const outerStyle = isCompact
+    ? { position: 'relative', width: '100%', height: 220, background: '#08090C', padding: '12px 16px 14px' }
+    : variant === 'desktop'
     ? { flex: 1, position: 'relative', background: '#08090C', padding: '28px 40px 32px' }
     : {
         position:    'relative',
@@ -191,7 +260,9 @@ export default function PitchView({
         padding:     '16px 20px 20px',
       };
 
-  const insetStyle = variant === 'desktop'
+  const insetStyle = isCompact
+    ? { position: 'absolute', inset: '12px 16px 14px' }
+    : variant === 'desktop'
     ? { position: 'absolute', inset: '28px 40px 32px' }
     : { position: 'absolute', inset: '16px 20px 20px' };
 
@@ -295,8 +366,9 @@ export default function PitchView({
             x={x}
             y={y}
             isCaptain={isCaptain}
-            onClick={swapMode ? () => {} : onPlayerClick}
+            onClick={swapMode ? () => {} : (onPlayerClick ?? (() => {}))}
             isSelected={selectedPlayerId === player.id}
+            compact={isCompact}
           />
         ))}
       </div>
