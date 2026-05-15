@@ -539,7 +539,7 @@ export default function LiveScreen() {
     <div style={{ display: 'flex', flex: 1, flexDirection: 'column', background: 'var(--ink)', color: 'var(--paper)', fontFamily: 'Archivo, sans-serif', minHeight: 0 }}>
 
       {/* ── DESKTOP ─────────────────────────────────────────────────────────── */}
-      <div className="hidden lg:flex flex-col" style={{ flex: 1, minHeight: 0 }}>
+      <div className="hidden lg:flex flex-col" style={{ height: '100dvh', overflow: 'hidden' }}>
 
         {/* Header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', padding: '24px 32px 16px', borderBottom: '1px solid var(--rule)' }}>
@@ -603,7 +603,7 @@ export default function LiveScreen() {
                 {squadPlayers.filter(p => p.live).length} ACTIVE NOW
               </div>
             </div>
-            <div style={{ flex: 1, minHeight: 200 }}>
+            <div style={{ flex: 1, minHeight: 'clamp(340px, calc(100dvh - 340px), 700px)' }}>
               {loading ? (
                 <div className="mono" style={{ fontSize: 10, color: 'var(--mute)', padding: 20 }}>Loading squad…</div>
               ) : squadPlayers.length === 0 ? (
