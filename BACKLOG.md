@@ -1,9 +1,30 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-05-14 (Bet notifications system complete)  
+**Last Updated**: 2026-05-15 (Notion backlog integration + E2E fixes complete)  
 **Audit Status**: ✅ Code state verified against BACKLOG  
 **E2E Test Suite**: 148/148 passing (100%) ✅  
 **Code Shipping Complete**: 37/37 core features + Chat Polish (8/8 #027-Extended) + MVP Enhancements (STATS + Betting Leaderboard) + Multi-Screen Auto-Fill + Bet Notifications ✅
+
+---
+
+## 📊 NOTION BACKLOG INTEGRATION (2026-05-15)
+
+**New System**: Notion BACKLOG database now serves as the real-time kanban board for open items.  
+**Link**: https://www.notion.so/361fe9c7e4c2803c9fc7c898a0c4bbac
+
+**Why**: Centralizes task visibility, enables sprint planning, and maintains [CATEGORY] headers (Bug/Feature/Tech Debt/Docs) for better organization.
+
+**Open Items** (8 cards created in Notion):
+- ✅ **Bet Notifications System** [FEATURE] — HIGH priority, 2-3h
+- ✅ **Auto-Generate Bet Options** [FEATURE] — MEDIUM priority, 1-2h
+- ✅ **Duplicate Bet Prevention** [FEATURE] — MEDIUM priority, 30min
+- ✅ **Bet Scoring Edge Cases** [FEATURE] — MEDIUM priority, 2-3h
+- ✅ **Realtime Bet Leaderboard Optimization** [FEATURE] — LOW priority, 1h
+- ✅ **Update CI/CD to Node.js 24 LTS** [TECH DEBT] — HIGH priority, 15min
+- ✅ **Apply Migration 34 - Auto-Close Bets Cron** [TECH DEBT] — HIGH priority, 5min
+- ✅ **E2E Test Coverage Expansion** [TECH DEBT] — MEDIUM priority, 2-3h
+
+**Updated CLAUDE.md** with full Notion integration workflow and session checklist updates.
 
 ---
 

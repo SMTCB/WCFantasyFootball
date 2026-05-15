@@ -411,7 +411,8 @@ e2e-report/                     # Test artifacts
 **Root-level (always updated):**
 | File | Purpose |
 |------|---------|
-| `BACKLOG.md` | Open issues, priorities, session notes — **UPDATE WEEKLY** |
+| `BACKLOG.md` | Session progress, completed features, post-MVP gaps — **UPDATE WEEKLY** |
+| **Notion BACKLOG** | **https://www.notion.so/361fe9c7e4c2803c9fc7c898a0c4bbac** — Kanban board for task prioritization & tracking |
 | `PIPELINE.md` | Product roadmap, sprint plan, timeline |
 | `APP_STORE_ASSESSMENT.md` | Mobile store strategy & launch readiness |
 | `MOBILE_IMPLEMENTATION_GUIDE.md` | Capacitor setup & native plugin docs |
@@ -581,33 +582,38 @@ iOS deployment target: 15.0 · Android minSdk: 26 (Android 8.0) · targetSdk: 36
 **Every time you start a new session, do this:**
 
 1. **Read this file (CLAUDE.md)** to understand the tech stack and current state
-2. **Check BACKLOG.md** for open issues and priorities
-3. **Sync with main**:
+2. **Check BACKLOG.md** for session notes and completed items
+3. **Review Notion BACKLOG** board for open/in-progress items:
+   - Navigate to: https://www.notion.so/361fe9c7e4c2803c9fc7c898a0c4bbac
+   - Check "Not started" column for priorities (HIGH priority first)
+   - Move a card to "In progress" if starting work on it
+4. **Sync with main**:
    ```bash
    git pull origin main
    git status  # Should be clean
    ```
-4. **Create feature branch**:
+5. **Create feature branch**:
    ```bash
    git checkout -b claude/your-feature-description
    ```
-5. **Understand the task** by reading BACKLOG, PIPELINE, or the GitHub issue
-6. **Run dev server** to test locally:
+6. **Understand the task** by reading BACKLOG.md, Notion card, or the GitHub issue
+7. **Run dev server** to test locally:
    ```bash
    npm run dev  # http://localhost:5173
    ```
-7. **Develop, commit, push, PR, merge** per Git Workflow rules above
-8. **Always test before pushing**:
+8. **Develop, commit, push, PR, merge** per Git Workflow rules above
+9. **Always test before pushing**:
    ```bash
    npm run lint        # Must pass
    npx playwright test # Should stay green
    ```
+10. **After completing work, move Notion card to "Done"** and update BACKLOG.md
 
 ---
 
 ## Development Guidelines
 
-- **E2E**: 116 tests must stay green — run `npx playwright test` before merging
+- **E2E**: 148 tests must stay green — run `npx playwright test` before merging (CI enforces this)
 - **Mobile-first**: All UI tested at 375px viewport minimum (use DevTools device emulation)
 - **RLS**: Never bypass Supabase Row Level Security — always filter by `auth.uid()`
 - **Secrets**: Never commit `.env.local` or credentials — use `.env.example` as template
@@ -617,8 +623,85 @@ iOS deployment target: 15.0 · Android minSdk: 26 (Android 8.0) · targetSdk: 36
 - **Responsive Design**: Use Tailwind breakpoints, test on mobile/tablet/desktop
 - **Database Migrations**: Always create new numbered files, never modify existing ones
 - **Comments**: Only explain WHY, not WHAT — code names should be self-documenting
+- **Notion Backlog**: When bugs/gaps found during dev, immediately create a Notion card with [CATEGORY] header (see BACKLOG Management section)
 
-## BACKLOG Maintenance & Audit Methodology
+## BACKLOG Management — Markdown + Notion Sync
+
+**Two-tier system for task tracking:**
+
+### 1. **BACKLOG.md** (Source of Truth)
+- **Location**: Root project file (`BACKLOG.md`)
+- **Purpose**: Primary record of completed/in-progress work, session notes, audit history
+- **Update Timing**: After every major milestone or session completion
+- **Key Rule**: If it's done and merged to main, it must be in BACKLOG.md
+
+### 2. **Notion BACKLOG Database** (Open Items Board)
+- **Location**: https://www.notion.so/361fe9c7e4c2803c9fc7c898a0c4bbac
+- **Purpose**: Visual kanban board for prioritization, sprint planning, and real-time status tracking
+- **Columns**: "Not started" | "In progress" | "Done"
+- **Card Format**:
+  ```
+  [CATEGORY] Card Title
+  
+  Description
+  ---
+  Priority: HIGH/MEDIUM/LOW
+  Effort: Xh (estimated hours)
+  Status: Not started / In progress / Done
+  Assigned: [optional user]
+  ```
+  **CATEGORY options:**
+  - **[FEATURE]** — New functionality or capability
+  - **[BUG]** — Defect or issue to fix
+  - **[TECH DEBT]** — Refactoring, performance, infrastructure
+  - **[DOCS]** — Documentation updates
+
+#### When to Create a Notion Card
+
+1. **New bugs discovered during development/testing**:
+   - Title: `[BUG] Brief description`
+   - Include: Steps to reproduce, expected vs. actual behavior, severity
+   - Status: "Not started" (unless you're fixing immediately)
+
+2. **Post-MVP backlog items** identified during feature work:
+   - Title: `[FEATURE] Brief description` or `[TECH DEBT] Brief description`
+   - Include: Implementation approach, effort estimate, priority
+   - Status: "Not started"
+
+3. **Ideas or gaps found during code review**:
+   - Title: `[FEATURE] Description` or `[BUG] Description`
+   - Include: Why it matters, acceptance criteria
+   - Status: "Not started"
+
+#### Notion Card Template
+
+For each new backlog item, create a card in the Notion BACKLOG database with:
+
+```
+Title: [CATEGORY] Description (e.g., "[BUG] Fix auto-fill not respecting budget")
+
+Description:
+- What is the current state?
+- What should happen instead?
+- Why does it matter?
+
+Implementation (if known):
+- Suggested approach
+- Affected files/systems
+- Estimated complexity
+
+Acceptance Criteria:
+- [x] Clear, testable outcomes
+
+Priority: HIGH / MEDIUM / LOW
+Effort: Xh (estimated development time)
+Type: Bug / Feature / Tech Debt / Docs
+Assign: [optional Claude / team member]
+```
+
+---
+
+## BACKLOG.md Maintenance & Audit Methodology
 
 **Why This Matters:**
 Stale BACKLOG entries cause duplicate work and wasted time. Before planning any session, verify that BACKLOG status matches actual code state.
@@ -649,7 +732,38 @@ grep -r "useAuctions\|PointBoost\|opponent_block" src/ supabase/ --include="*.js
 - **Result**: 10-minute audit prevented hours of duplicate work
 
 **Keep BACKLOG Accurate:**
-- When completing feature: Update BACKLOG before merging PR
+- When completing feature: Update BACKLOG.md before merging PR
 - When starting work: Audit first to verify not already done
 - When stale entries found: Fix them immediately (one git commit)
-- **Golden Rule**: If not in BACKLOG + git history, it doesn't exist
+- **Golden Rule**: If it's done and merged to main, it must be in both BACKLOG.md AND moved to "Done" in Notion
+
+---
+
+## Workflow: From Issue Discovery to Notion Card
+
+**Step 1: Issue Found**
+During dev/testing, you discover a bug or gap.
+
+**Step 2: Create Notion Card**
+- Go to https://www.notion.so/361fe9c7e4c2803c9fc7c898a0c4bbac
+- Click "New" → fill in card with [CATEGORY] title and details
+- Set status to "Not started"
+- Assign priority + effort
+
+**Step 3: If Fixing Immediately**
+- Move card to "In progress"
+- Create PR with prefix matching category:
+  - `Fix: [description]` for [BUG]
+  - `#XXX: [description]` for [FEATURE]
+  - `Refactor: [description]` for [TECH DEBT]
+- Update BACKLOG.md with session notes
+
+**Step 4: After PR Merge**
+- Move Notion card to "Done"
+- Update BACKLOG.md to reflect completion
+- Link PR/commit in card for audit trail
+
+**Step 5: If Deferring**
+- Card stays "Not started" in Notion
+- Add note: "Deferred to Phase 2" or "Post-MVP"
+- Reference in BACKLOG.md under appropriate section
