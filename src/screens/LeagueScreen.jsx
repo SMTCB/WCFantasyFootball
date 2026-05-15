@@ -124,30 +124,53 @@ export default function LeagueScreen() {
   const { topScorers, teamMetrics, loading: statsLoading } = useLeagueStats(activeLeague?.league_id);
   const { leaderboard, loading: betLoading } = useBettingLeaderboard(activeLeague?.league_id);
 
+  const [mySquadBudget, setMySquadBudget] = useState(100);
+
   // Build squad data for auto-fill from available state
   const squadData = mySquadPlayers.length > 0 ? {
     players: mySquadPlayers,
     bench: [],
-    budget: { current: 100, total: 100 }, // Fallback budget — auto-fill will fetch real value
+    budget_remaining: mySquadBudget,
   } : null;
 
   // Fetch current user's full squad for auto-fill
   const fetchSquad = async () => {
     if (!user?.id || !activeLeague?.league_id) return;
     try {
-      const { data: squad } = await supabase
+      // Try draft_allocations first (draft-based leagues)
+      const { data: alloc } = await supabase
         .from('draft_allocations')
         .select('allocated_players')
         .eq('league_id', activeLeague.league_id)
         .eq('user_id', user.id)
         .maybeSingle();
-      if (squad?.allocated_players?.length > 0) {
-        const ids = squad.allocated_players;
+      if (alloc?.allocated_players?.length > 0) {
+        const ids = alloc.allocated_players;
         const { data: players } = await supabase
           .from('players')
           .select('*')
           .in('id', ids);
         setMySquadPlayers(players || []);
+        return;
+      }
+      // Fallback: classic squads table
+      const { data: squad } = await supabase
+        .from('squads')
+        .select('players, budget_remaining')
+        .eq('league_id', activeLeague.league_id)
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (squad?.players?.length > 0) {
+        const { data: players } = await supabase
+          .from('players')
+          .select('*')
+          .in('id', squad.players);
+        setMySquadPlayers(players || []);
+        if (squad.budget_remaining != null) {
+          setMySquadBudget(Number(squad.budget_remaining));
+        }
       }
     } catch (err) {
       console.error('LeagueScreen: squad fetch failed', err);
@@ -544,6 +567,14 @@ export default function LeagueScreen() {
       clearAllNotifications();
     }
   }, [view, activeLeague?.league_id, notificationCount, clearAllNotifications]);
+
+  // Load current user's squad for auto-fill whenever the active league changes
+  useEffect(() => {
+    if (user?.id && activeLeague?.league_id) {
+      fetchSquad();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id, activeLeague?.league_id]);
 
   // Realtime subscription: league standings (total_points updates from bet rewards)
   useEffect(() => {

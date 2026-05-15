@@ -89,6 +89,8 @@ export function useAutoFill(leagueId, squadData, fetchSquad) {
         ?? cfg.budgetTotal
         ?? 100;
       let added = 0;
+      let hasCandidates = false;
+      let lastTransferError = null;
 
       for (const pos of ['GK', 'DEF', 'MID', 'FWD']) {
         if (!need[pos]) continue;
@@ -104,6 +106,7 @@ export function useAutoFill(leagueId, squadData, fetchSquad) {
         const candidates = (pool || []).filter(
           p => !myIds.has(p.id) && !allTakenIds.has(p.id)
         );
+        if (candidates.length > 0) hasCandidates = true;
         for (let i = 0; i < need[pos] && i < candidates.length; i++) {
           const result = await buy(candidates[i]);
           if (result.ok) {
@@ -111,6 +114,8 @@ export function useAutoFill(leagueId, squadData, fetchSquad) {
             budgetLeft = result.budget_remaining ?? budgetLeft - candidates[i].price;
             myIds.add(candidates[i].id);
             allTakenIds.add(candidates[i].id);
+          } else {
+            lastTransferError = result.error;
           }
         }
       }
@@ -120,8 +125,10 @@ export function useAutoFill(leagueId, squadData, fetchSquad) {
           `Added ${added} player${added !== 1 ? 's' : ''} · £${budgetLeft.toFixed(1)}M left`
         );
         if (fetchSquad) await fetchSquad();
-      } else {
+      } else if (!hasCandidates) {
         setAutoFillMsg('No affordable players available');
+      } else {
+        setAutoFillMsg(lastTransferError || 'Transfer failed — check the transfer window is open');
       }
     } catch {
       setAutoFillMsg('Auto-fill failed — try again');

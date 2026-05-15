@@ -1,7 +1,7 @@
 /**
  * AvailabilityBadge
- * Displays "🔓 AVAILABLE" badge for flagged players.
- * When isOwn=true, click to toggle flag on/off.
+ * Displays trade-availability status on player cards.
+ * When isOwn=true, click to toggle the trade-listing flag on/off.
  */
 export function AvailabilityBadge({ isFlagged, isOwn, onToggle, loading = false }) {
   if (!isFlagged && !isOwn) return null;
@@ -23,9 +23,9 @@ export function AvailabilityBadge({ isFlagged, isOwn, onToggle, loading = false 
             : 'bg-paper border border-rule text-mute'
         }`}
         onClick={isOwn ? handleClick : undefined}
-        title={isOwn ? 'Click to remove availability flag' : `Open for proposals (not yours)`}
+        title={isOwn ? 'Listed for trade — click to remove' : 'Open for trade proposals'}
       >
-        <span>🔓 AVAILABLE</span>
+        <span>🔓 OPEN FOR TRADE</span>
       </div>
     );
   }
@@ -41,9 +41,9 @@ export function AvailabilityBadge({ isFlagged, isOwn, onToggle, loading = false 
             ? 'bg-rule text-mute cursor-not-allowed'
             : 'bg-ink-3 text-mute hover:bg-ink-2 hover:text-paper'
         }`}
-        title="Click to flag as available for trades"
+        title="Tap to list this player as open for trade proposals"
       >
-        <span>🔒 UNAVAILABLE</span>
+        <span>📋 LIST FOR TRADE</span>
       </button>
     );
   }
