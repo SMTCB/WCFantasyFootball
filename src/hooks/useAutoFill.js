@@ -9,7 +9,7 @@ export function useAutoFill(leagueId, squadData, fetchSquad) {
 
   const cfg = useLeagueConfig(leagueId);
   const POS_LIMITS = cfg.positionLimits;
-  const { buy, takenMap } = useTransfer(leagueId);
+  const { buy } = useTransfer(leagueId);
 
   const handleAutoFill = useCallback(async () => {
     if (autoFilling) return;
@@ -42,7 +42,6 @@ export function useAutoFill(leagueId, squadData, fetchSquad) {
         ...playerObjects.map(p => p.id ?? p),
         ...benchPlayers.map(p => p.id ?? p),
       ]);
-      const allTakenIds = new Set(Object.keys(takenMap));
 
       // Count current squad players by position
       const have = { GK: 0, DEF: 0, MID: 0, FWD: 0 };
@@ -103,17 +102,15 @@ export function useAutoFill(leagueId, squadData, fetchSquad) {
           .order('price', { ascending: true })
           .limit(50);
 
-        const candidates = (pool || []).filter(
-          p => !myIds.has(p.id) && !allTakenIds.has(p.id)
-        );
+        // Exclude only MY own players — same player can be on multiple squads (FPL-style)
+        const candidates = (pool || []).filter(p => !myIds.has(p.id));
         if (candidates.length > 0) hasCandidates = true;
         for (let i = 0; i < need[pos] && i < candidates.length; i++) {
           const result = await buy(candidates[i]);
           if (result.ok) {
             added++;
             budgetLeft = result.budget_remaining ?? budgetLeft - candidates[i].price;
-            myIds.add(candidates[i].id);
-            allTakenIds.add(candidates[i].id);
+            myIds.add(candidates[i].id); // prevent double-buying same player in this run
           } else {
             lastTransferError = result.error;
           }
@@ -137,7 +134,7 @@ export function useAutoFill(leagueId, squadData, fetchSquad) {
       setTimeout(() => setAutoFillMsg(null), 5000);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [leagueId, squadData, buy, takenMap, fetchSquad]);
+  }, [leagueId, squadData, buy, fetchSquad]);
 
   return { handleAutoFill, autoFilling, autoFillMsg };
 }
