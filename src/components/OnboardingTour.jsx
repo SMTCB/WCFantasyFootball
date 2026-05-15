@@ -69,11 +69,20 @@ export default function OnboardingTour({ steps, onComplete, onSkip }) {
   useLayoutEffect(() => {
     let cancelled = false;
     function measure() {
-      setRect(getRect(current.target));
+      const r = getRect(current.target);
+      // Reject zero-height rects (element exists but has no rendered content)
+      if (r && r.height <= PADDING * 2 + 2) { setRect(null); return; }
+      setRect(r);
     }
-    // Wait for element to appear (MutationObserver — no arbitrary delays)
-    waitForElement(current.target).then(() => {
-      if (!cancelled) measure();
+    // Wait for element to appear, then allow smooth-scroll to settle before measuring
+    waitForElement(current.target, 3000).then((el) => {
+      if (cancelled) return;
+      if (el) {
+        // Delay gives scrollIntoView (smooth) time to finish before we measure
+        setTimeout(() => { if (!cancelled) measure(); }, 350);
+      } else {
+        setRect(null);
+      }
     });
     window.addEventListener('resize', measure);
     window.addEventListener('scroll', measure, true);
@@ -162,6 +171,8 @@ export default function OnboardingTour({ steps, onComplete, onSkip }) {
   }
 
   // ── Overlay cutout via box-shadow ───────────────────────────────────────────
+  // When rect is null (element not found / zero-height), show NO overlay rather
+  // than a full-screen dark block — the tooltip still renders centered.
   const overlayStyle = rect
     ? {
         position:  'fixed',
@@ -175,18 +186,12 @@ export default function OnboardingTour({ steps, onComplete, onSkip }) {
         pointerEvents: 'none',
         transition: 'top 0.25s ease, left 0.25s ease, width 0.25s ease, height 0.25s ease',
       }
-    : {
-        position: 'fixed',
-        inset:    0,
-        background: 'rgba(7, 10, 15, 0.82)',
-        zIndex:   10000,
-        pointerEvents: 'none',
-      };
+    : null;
 
   return (
     <div style={{ opacity: visible ? 1 : 0, transition: 'opacity 0.3s ease', pointerEvents: visible ? 'auto' : 'none' }}>
-      {/* Overlay / cutout */}
-      <div style={overlayStyle} />
+      {/* Overlay / cutout — only rendered when element found */}
+      {overlayStyle && <div style={overlayStyle} />}
 
       {/* Tooltip card */}
       <div style={{

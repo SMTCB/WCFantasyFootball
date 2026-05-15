@@ -16,22 +16,37 @@ export function useAutoFill(leagueId, squadData, fetchSquad) {
     setAutoFilling(true);
     setAutoFillMsg(null);
     try {
-      const starters = squadData?.players || [];
-      const slotsNeeded = 11 - starters.length;
+      const rawPlayers = squadData?.players || [];
+      const squadSize  = cfg.squadSize ?? 15;
+      const slotsNeeded = squadSize - rawPlayers.length;
       if (slotsNeeded <= 0) {
         setAutoFillMsg('Squad is already full');
         return;
       }
 
+      // Normalise player entries: DB rows give UUID strings, SquadScreen gives objects.
+      // Fetch full player objects when we only have IDs so position counts are accurate.
+      let playerObjects = rawPlayers;
+      if (rawPlayers.length > 0 && typeof rawPlayers[0] === 'string') {
+        const { data: fetched } = await supabase
+          .from('players')
+          .select('id, position')
+          .in('id', rawPlayers);
+        playerObjects = fetched || [];
+      }
+
+      // Bench players: SquadScreen provides squadData.bench; raw DB row has no bench field.
+      const benchPlayers = squadData?.bench || [];
+
       const myIds = new Set([
-        ...starters.map(p => p.id),
-        ...(squadData.bench || []).map(p => p.id),
+        ...playerObjects.map(p => p.id ?? p),
+        ...benchPlayers.map(p => p.id ?? p),
       ]);
       const allTakenIds = new Set(Object.keys(takenMap));
 
-      // Count current starters by position
+      // Count current squad players by position
       const have = { GK: 0, DEF: 0, MID: 0, FWD: 0 };
-      for (const p of starters) {
+      for (const p of playerObjects) {
         const pos = p.position?.toUpperCase().replace('FW', 'FWD');
         if (have[pos] !== undefined) have[pos]++;
       }
@@ -39,10 +54,23 @@ export function useAutoFill(leagueId, squadData, fetchSquad) {
       const minPer = cfg.minFormation ?? { GK: 1, DEF: 3, MID: 2, FWD: 1 };
       const maxPer = POS_LIMITS      ?? { GK: 2, DEF: 5, MID: 5, FWD: 3 };
 
-      // Slots needed per position: fill minimums first
+      // Slots needed per position: fill minimums first, capped to slotsNeeded total
       const need = {};
       for (const pos of ['GK', 'DEF', 'MID', 'FWD']) {
         need[pos] = Math.max(0, (minPer[pos] ?? 0) - have[pos]);
+      }
+
+      // Cap min-fill slots to actual slots available
+      let minTotal = Object.values(need).reduce((s, n) => s + n, 0);
+      if (minTotal > slotsNeeded) {
+        // Trim excess from most-filled positions first
+        let excess = minTotal - slotsNeeded;
+        for (const pos of ['FWD', 'MID', 'DEF', 'GK']) {
+          if (excess <= 0) break;
+          const trim = Math.min(excess, need[pos]);
+          need[pos] -= trim;
+          excess -= trim;
+        }
       }
 
       // Distribute remaining slots to positions that still have capacity
@@ -55,7 +83,11 @@ export function useAutoFill(leagueId, squadData, fetchSquad) {
         extra -= give;
       }
 
-      let budgetLeft = squadData.budget.current;
+      // Support both budget shapes: enriched {budget:{current}} and raw {budget_remaining}
+      let budgetLeft = squadData?.budget?.current
+        ?? squadData?.budget_remaining
+        ?? cfg.budgetTotal
+        ?? 100;
       let added = 0;
 
       for (const pos of ['GK', 'DEF', 'MID', 'FWD']) {

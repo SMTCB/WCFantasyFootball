@@ -4,6 +4,7 @@ import { calculateProjection, formatProjectionDisplay } from '../lib/projections
 import { useAuth } from '../hooks/useAuth';
 import { EventTimeline } from '../components/EventTimeline';
 import { VARReviewBanner } from '../components/VARReviewBanner';
+import PitchView from '../components/PitchView';
 
 const REFRESH_INTERVAL_MS = 5 * 60 * 1000;
 
@@ -310,7 +311,7 @@ export default function LiveScreen() {
             </div>
           )}
 
-          {/* ── My squad (compact) ───────────────────────────────── */}
+          {/* ── My squad — compact pitch view ────────────────────── */}
           {mySquadPlayers.length > 0 && (
             <div className="border-b" style={{ borderColor: 'rgba(255,255,255,0.05)' }}>
               <div className="px-5 pt-3 pb-1 flex items-center gap-2">
@@ -319,30 +320,11 @@ export default function LiveScreen() {
                   My Squad
                 </span>
               </div>
-              <div className="grid grid-cols-2 gap-px" style={{ background: 'rgba(255,255,255,0.04)' }}>
-                {mySquadPlayers.slice(0, 11).map((p, i) => {
-                  const surname = p.name?.split(' ').slice(-1)[0]?.toUpperCase() ?? '?';
-                  const posColor = p.position === 'GK' ? 'var(--pos-gk)' : p.position === 'DEF' ? 'var(--pos-def)' : p.position === 'MID' ? 'var(--pos-mid)' : 'var(--pos-fwd)';
-                  return (
-                    <div
-                      key={p.id ?? i}
-                      className="flex items-center gap-2 px-4 py-2"
-                      style={{ background: 'var(--ink-2)' }}
-                    >
-                      <span className="text-[9px] font-black w-6 shrink-0" style={{ color: posColor, fontFamily: 'Archivo Black, sans-serif' }}>
-                        {p.position}
-                      </span>
-                      <span className="text-[12px] font-bold flex-1 truncate" style={{ color: 'var(--paper)' }}>{surname}</span>
-                      <span
-                        className="text-[12px] font-black tabular-nums shrink-0"
-                        style={{ color: p.points > 0 ? 'var(--positive)' : 'var(--mute)', fontFamily: 'Archivo Black, sans-serif' }}
-                      >
-                        {p.points > 0 ? `+${p.points}` : '—'}
-                      </span>
-                    </div>
-                  );
-                })}
-              </div>
+              <PitchView
+                squad={{ players: mySquadPlayers.slice(0, 11), captainId: null }}
+                variant="compact"
+                onPlayerClick={() => {}}
+              />
             </div>
           )}
 
