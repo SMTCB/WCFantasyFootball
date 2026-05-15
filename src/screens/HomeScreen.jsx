@@ -9,10 +9,10 @@ const COMPS = {
   FAC: { code: 'FAC', name: 'FA CUP',           tone: '#EF4444' },
 };
 
-const DAYS   = ['SUN','MON','TUE','WED','THU','FRI','SAT'];
-const MONTHS = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+const DAYS         = ['SUN','MON','TUE','WED','THU','FRI','SAT'];
+const MONTHS_SHORT = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+const MONTHS_LONG  = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 
-// Known 3-letter codes for PL clubs
 const TEAM_CODES = {
   'Arsenal': 'ARS', 'Chelsea': 'CHE', 'Liverpool': 'LIV',
   'Man City': 'MCI', 'Manchester City': 'MCI',
@@ -35,15 +35,6 @@ function teamCode(name) {
   return TEAM_CODES[name] || name.substring(0, 3).toUpperCase();
 }
 
-// Extract GW number from "Premier League • GW3" or fixture id "md3-f1"
-function parseGW(competition, fixtureId) {
-  const m = competition && competition.match(/GW\s*(\d+)/i);
-  if (m) return parseInt(m[1], 10);
-  const m2 = fixtureId && fixtureId.match(/^md(\d+)-/);
-  if (m2) return parseInt(m2[1], 10);
-  return 1;
-}
-
 function detectComp(competition) {
   if (!competition) return 'EPL';
   const lc = competition.toLowerCase();
@@ -61,10 +52,10 @@ function normalizeFixture(f) {
     date:    f.kickoff_at ? d.toISOString().split('T')[0] : '1970-01-01',
     day:     DAYS[d.getDay()],
     dnum:    String(d.getDate()),
-    dlong:   `${d.getDate()} ${MONTHS[d.getMonth()]}`,
+    dlong:   `${d.getDate()} ${MONTHS_SHORT[d.getMonth()]}`,
     kickoff: d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }),
     comp:    detectComp(f.competition),
-    gw:      parseGW(f.competition, f.id),
+    gw:      f.round_number ?? 1,   // use the DB column directly
     status:  f.status === 'finished' ? 'FT' : f.status === 'live' ? 'LIVE' : 'KO',
     live:    f.status === 'live' ? (f.minute ? `${f.minute}'` : 'LIVE') : undefined,
     home:    { name: f.home_team, code: teamCode(f.home_team) },
@@ -144,8 +135,8 @@ function ScoreBlock({ f, big }) {
       </div>
     );
   }
-  const [h, a]   = f.score;
-  const isLive   = f.status === 'LIVE';
+  const [h, a]    = f.score;
+  const isLive    = f.status === 'LIVE';
   const homeColor = isLive ? 'var(--paper)' : h > a ? 'var(--paper)' : 'var(--mute)';
   const awayColor = isLive ? 'var(--paper)' : a > h ? 'var(--paper)' : 'var(--mute)';
   return (
@@ -180,7 +171,6 @@ function FixtureRow({ f, showComp = false }) {
       borderLeft:  f.status === 'LIVE' ? '2px solid var(--danger)' : '2px solid transparent',
     }}>
       <StatusPill f={f} />
-      {/* Home — right aligned */}
       <div style={{ textAlign: 'right', minWidth: 0, overflow: 'hidden' }}>
         <div style={{
           fontFamily: 'Archivo Black, sans-serif', fontSize: 14,
@@ -194,7 +184,6 @@ function FixtureRow({ f, showComp = false }) {
         }}>{f.home.code}</div>
       </div>
       <ScoreBlock f={f} big />
-      {/* Away — left aligned */}
       <div style={{ minWidth: 0, overflow: 'hidden' }}>
         <div style={{
           fontFamily: 'Archivo Black, sans-serif', fontSize: 14,
@@ -341,7 +330,8 @@ function AllChip({ active, count, onClick }) {
   );
 }
 
-function GameweekPager({ gw, dateRange, onPrev, onNext, disablePrev, disableNext }) {
+// GW pager — no date range, just "GW N"
+function GameweekPager({ gw, onPrev, onNext, disablePrev, disableNext }) {
   return (
     <div style={{
       display: 'inline-flex', alignItems: 'center',
@@ -357,24 +347,16 @@ function GameweekPager({ gw, dateRange, onPrev, onNext, disablePrev, disableNext
       <div style={{
         padding: '0 16px', height: 34,
         display: 'flex', flexDirection: 'column',
-        justifyContent: 'center', alignItems: 'center', minWidth: 140,
+        justifyContent: 'center', alignItems: 'center', minWidth: 96,
       }}>
         <div style={{
           fontFamily: 'JetBrains Mono, monospace',
           fontSize: 9, color: 'var(--mute)', letterSpacing: '.22em',
         }}>GAMEWEEK</div>
-        <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginTop: 2 }}>
-          <div style={{
-            fontFamily: 'Archivo Black, sans-serif',
-            fontSize: 14, letterSpacing: '-0.01em',
-          }}>GW {gw}</div>
-          {dateRange && (
-            <div style={{
-              fontFamily: 'JetBrains Mono, monospace',
-              fontSize: 9, color: 'var(--mute)',
-            }}>{dateRange}</div>
-          )}
-        </div>
+        <div style={{
+          fontFamily: 'Archivo Black, sans-serif',
+          fontSize: 14, letterSpacing: '-0.01em', marginTop: 2,
+        }}>GW {gw}</div>
       </div>
       <button onClick={onNext} disabled={disableNext} style={{
         width: 34, height: 34, background: 'transparent', border: 'none',
@@ -387,13 +369,147 @@ function GameweekPager({ gw, dateRange, onPrev, onNext, disablePrev, disableNext
   );
 }
 
+// ── Month Calendar View ───────────────────────────────────────────────────────
+function MonthView({ fixtures, month, year, onPrev, onNext }) {
+  const firstDow    = (new Date(year, month, 1).getDay() + 6) % 7; // 0=Mon
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+  // Index fixtures by day-of-month for this month
+  const byDay = {};
+  for (const f of fixtures) {
+    const [fy, fm, fd] = f.date.split('-').map(Number);
+    if (fy === year && fm - 1 === month) {
+      if (!byDay[fd]) byDay[fd] = [];
+      byDay[fd].push(f);
+    }
+  }
+
+  const now    = new Date();
+  const todayY = now.getFullYear();
+  const todayM = now.getMonth();
+  const todayD = now.getDate();
+
+  // Build 7-col grid cells (null = empty padding cell)
+  const cells = [];
+  for (let i = 0; i < firstDow; i++) cells.push(null);
+  for (let d = 1; d <= daysInMonth; d++) cells.push(d);
+  while (cells.length % 7 !== 0) cells.push(null);
+
+  return (
+    <>
+      {/* Month navigator */}
+      <div style={{
+        display: 'flex', alignItems: 'center', gap: 16,
+        padding: '12px 32px', borderBottom: '1px solid var(--rule)', flexShrink: 0,
+      }}>
+        <button onClick={onPrev} style={{
+          width: 30, height: 30, background: 'transparent',
+          border: '1px solid var(--rule)',
+          color: 'var(--paper)', fontFamily: 'JetBrains Mono, monospace', fontSize: 14,
+          cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+        }}>‹</button>
+        <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 16, letterSpacing: '-0.01em' }}>
+          {MONTHS_LONG[month].toUpperCase()}{' '}
+          <span style={{
+            fontFamily: 'JetBrains Mono, monospace', fontSize: 11,
+            color: 'var(--mute)', letterSpacing: '.14em',
+          }}>{year}</span>
+        </div>
+        <button onClick={onNext} style={{
+          width: 30, height: 30, background: 'transparent',
+          border: '1px solid var(--rule)',
+          color: 'var(--paper)', fontFamily: 'JetBrains Mono, monospace', fontSize: 14,
+          cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+        }}>›</button>
+      </div>
+
+      {/* Calendar */}
+      <div style={{ flex: 1, overflowY: 'auto', padding: '0 24px 24px' }}>
+        {/* Day-of-week header row */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)' }}>
+          {['MON','TUE','WED','THU','FRI','SAT','SUN'].map(dw => (
+            <div key={dw} style={{
+              padding: '8px 6px', textAlign: 'center',
+              fontFamily: 'JetBrains Mono, monospace', fontSize: 9,
+              color: 'var(--mute)', letterSpacing: '.18em',
+            }}>{dw}</div>
+          ))}
+        </div>
+
+        {/* Grid */}
+        <div style={{
+          display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)',
+          gap: 1, background: 'var(--rule)', border: '1px solid var(--rule)',
+        }}>
+          {cells.map((day, i) => {
+            if (!day) {
+              return <div key={i} style={{ background: 'var(--ink)', minHeight: 90 }} />;
+            }
+            const fixs    = byDay[day] || [];
+            const isToday = todayY === year && todayM === month && todayD === day;
+            const hasLive = fixs.some(f => f.status === 'LIVE');
+
+            return (
+              <div key={i} style={{
+                background: 'var(--ink-2)', minHeight: 90, padding: '6px 8px',
+                borderTop: `2px solid ${isToday ? 'var(--cyan)' : 'transparent'}`,
+              }}>
+                {/* Day number + live dot */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginBottom: 5 }}>
+                  <span style={{
+                    fontFamily: 'JetBrains Mono, monospace', fontSize: 11, letterSpacing: '.04em',
+                    color: isToday ? 'var(--cyan)' : fixs.length ? 'var(--paper)' : 'var(--mute)',
+                  }}>{day}</span>
+                  {hasLive && (
+                    <span style={{
+                      width: 5, height: 5, background: 'var(--danger)',
+                      borderRadius: '50%', animation: 'fkPulse 1.2s infinite', flexShrink: 0,
+                    }} />
+                  )}
+                </div>
+
+                {/* Fixture pills */}
+                {fixs.slice(0, 5).map(f => {
+                  const tone      = (COMPS[f.comp] || COMPS.EPL).tone;
+                  const scoreStr  = f.score ? `${f.score[0]}–${f.score[1]}` : f.kickoff;
+                  return (
+                    <div key={f.id} style={{ display: 'flex', alignItems: 'center', gap: 3, marginBottom: 3 }}>
+                      <span style={{ width: 3, height: 3, background: tone, borderRadius: '50%', flexShrink: 0 }} />
+                      <span style={{
+                        fontFamily: 'Archivo Black, sans-serif', fontSize: 8.5,
+                        letterSpacing: '-0.01em', color: 'var(--paper)',
+                        whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                        lineHeight: 1.3,
+                      }}>{f.home.code} {scoreStr} {f.away.code}</span>
+                    </div>
+                  );
+                })}
+                {fixs.length > 5 && (
+                  <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 8, color: 'var(--mute)' }}>
+                    +{fixs.length - 5}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </>
+  );
+}
+
 // ── Main screen ───────────────────────────────────────────────────────────────
 export default function HomeScreen() {
   const [allFixtures, setAllFixtures] = useState([]);
   const [loading,     setLoading]     = useState(true);
-  const [view,        setView]        = useState('date'); // 'date' | 'comp'
+  const [viewMode,    setViewMode]    = useState('list');  // 'list' | 'month'
+  const [view,        setView]        = useState('date');  // 'date' | 'comp'  (list only)
   const [filter,      setFilter]      = useState('ALL');
   const [gw,          setGw]          = useState(null);
+  const [calMonth,    setCalMonth]    = useState(() => {
+    const now = new Date();
+    return { year: now.getFullYear(), month: now.getMonth() };
+  });
 
   const fetchFixtures = useCallback(async () => {
     const { data } = await supabase
@@ -415,14 +531,14 @@ export default function HomeScreen() {
     return () => supabase.removeChannel(ch);
   }, [fetchFixtures]);
 
-  // LIVE polling every 30s — only when live fixtures exist
+  // LIVE polling every 30s
   useEffect(() => {
     if (!allFixtures.some(f => f.status === 'LIVE')) return;
     const t = setInterval(fetchFixtures, 30000);
     return () => clearInterval(t);
   }, [allFixtures, fetchFixtures]);
 
-  // ── Gameweek derivation ──────────────────────────────────────────
+  // ── Gameweek derivation ───────────────────────────────────────────
   const rounds = useMemo(
     () => [...new Set(allFixtures.map(f => f.gw))].sort((a, b) => a - b),
     [allFixtures],
@@ -430,31 +546,34 @@ export default function HomeScreen() {
   const minRound = useMemo(() => rounds[0]  ?? 1, [rounds]);
   const maxRound = useMemo(() => rounds[rounds.length - 1] ?? 1, [rounds]);
 
-  // Auto-select latest GW on first load
+  // Auto-select the current/active GW: first GW whose latest fixture date >= today
   useEffect(() => {
-    if (gw === null && rounds.length > 0) setGw(maxRound);
-  }, [rounds, gw, maxRound]);
+    if (gw !== null || !rounds.length) return;
+    const todayStr = new Date().toISOString().split('T')[0];
+    let selected = maxRound;
+    for (const r of rounds) {
+      const gwFx   = allFixtures.filter(f => f.gw === r);
+      const maxDate = gwFx.reduce((m, f) => (f.date > m ? f.date : m), '');
+      if (maxDate >= todayStr) { selected = r; break; }
+    }
+    setGw(selected);
+  }, [rounds, gw, maxRound, allFixtures]);
 
-  // ── Derived view data ────────────────────────────────────────────
+  // ── Derived view data ─────────────────────────────────────────────
   const gwFixtures = useMemo(
-    () => gw !== null ? allFixtures.filter(f => f.gw === gw) : allFixtures,
+    () => (gw !== null ? allFixtures.filter(f => f.gw === gw) : allFixtures),
     [allFixtures, gw],
   );
 
-  const gwDateRange = useMemo(() => {
-    if (!gwFixtures.length) return '';
-    const sorted = [...gwFixtures].sort((a, b) => a.date.localeCompare(b.date));
-    const first = sorted[0], last = sorted[sorted.length - 1];
-    if (first.date === last.date) return first.dlong;
-    const fm = parseInt(first.date.split('-')[1], 10);
-    const lm = parseInt(last.date.split('-')[1],  10);
-    if (fm === lm) return `${first.dnum}–${last.dnum} ${MONTHS[fm - 1]}`;
-    return `${first.dlong}–${last.dlong}`;
-  }, [gwFixtures]);
-
   const filtered = useMemo(
-    () => filter === 'ALL' ? gwFixtures : gwFixtures.filter(f => f.comp === filter),
+    () => (filter === 'ALL' ? gwFixtures : gwFixtures.filter(f => f.comp === filter)),
     [gwFixtures, filter],
+  );
+
+  // Month view uses all fixtures (no GW filter), just comp filter
+  const monthFixtures = useMemo(
+    () => (filter === 'ALL' ? allFixtures : allFixtures.filter(f => f.comp === filter)),
+    [allFixtures, filter],
   );
 
   const counts         = useMemo(() => countByComp(gwFixtures), [gwFixtures]);
@@ -526,63 +645,50 @@ export default function HomeScreen() {
         </div>
       </div>
 
-      {/* ── Band 2: Sub-tabs ──────────────────────────────────────── */}
-      <div style={{
-        display: 'flex', gap: 24, padding: '14px 32px',
-        borderBottom: '1px solid var(--rule)', flexShrink: 0,
-      }}>
-        {['SCORES', 'RESULTS', 'LIVE', 'TABLES'].map(t => (
-          <div key={t} style={{
-            fontFamily: 'JetBrains Mono, monospace', fontSize: 11,
-            letterSpacing: '.18em', paddingBottom: 6, position: 'relative',
-            color: t === 'SCORES' ? 'var(--paper)' : 'var(--mute)',
-            cursor: 'default',
-          }}>
-            {t}
-            {t === 'LIVE' && (
-              <span style={{
-                display: 'inline-block', width: 5, height: 5,
-                borderRadius: '50%', background: 'var(--danger)',
-                marginLeft: 6, verticalAlign: 'middle',
-              }} />
-            )}
-            {t === 'SCORES' && (
-              <span style={{
-                position: 'absolute', left: 0, right: 0,
-                bottom: -15, height: 2, background: 'var(--cyan)',
-              }} />
-            )}
-          </div>
-        ))}
-      </div>
-
-      {/* ── Band 3: Controls — Desktop ───────────────────────────── */}
+      {/* ── Band 2: Controls — Desktop ───────────────────────────── */}
       <div className="hidden lg:flex" style={{
         alignItems: 'center', justifyContent: 'space-between',
         gap: 24, padding: '14px 32px',
         borderBottom: '1px solid var(--rule)', flexShrink: 0,
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 18, minWidth: 0, overflow: 'hidden' }}>
-          {/* Group-by label */}
-          <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 9, color: 'var(--mute)', letterSpacing: '.22em', flexShrink: 0 }}>
-            GROUP BY
-          </div>
-          {/* Segmented toggle */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 14, minWidth: 0, overflow: 'hidden' }}>
+          {/* View mode: LIST | MONTH */}
           <div style={{ display: 'inline-flex', border: '1px solid var(--rule)', flexShrink: 0 }}>
-            {[{ id: 'date', label: 'DATE' }, { id: 'comp', label: 'COMPETITION' }].map((o, i) => (
-              <button key={o.id} onClick={() => setView(o.id)} style={{
+            {[{ id: 'list', label: 'LIST' }, { id: 'month', label: 'MONTH' }].map((o, i) => (
+              <button key={o.id} onClick={() => setViewMode(o.id)} style={{
                 padding: '7px 14px',
-                background: view === o.id ? 'rgba(0,180,216,.08)' : 'transparent',
-                color: view === o.id ? 'var(--cyan)' : 'var(--mute)',
+                background: viewMode === o.id ? 'rgba(0,180,216,.08)' : 'transparent',
+                color: viewMode === o.id ? 'var(--cyan)' : 'var(--mute)',
                 border: 'none', borderRight: i === 0 ? '1px solid var(--rule)' : 'none',
                 fontFamily: 'JetBrains Mono, monospace', fontSize: 10,
                 letterSpacing: '.18em', cursor: 'pointer',
               }}>{o.label}</button>
             ))}
           </div>
+
+          {/* Group-by: DATE | COMPETITION (list mode only) */}
+          {viewMode === 'list' && (
+            <>
+              <div style={{ width: 1, height: 20, background: 'var(--rule)', flexShrink: 0 }} />
+              <div style={{ display: 'inline-flex', border: '1px solid var(--rule)', flexShrink: 0 }}>
+                {[{ id: 'date', label: 'DATE' }, { id: 'comp', label: 'COMPETITION' }].map((o, i) => (
+                  <button key={o.id} onClick={() => setView(o.id)} style={{
+                    padding: '7px 14px',
+                    background: view === o.id ? 'rgba(0,180,216,.08)' : 'transparent',
+                    color: view === o.id ? 'var(--cyan)' : 'var(--mute)',
+                    border: 'none', borderRight: i === 0 ? '1px solid var(--rule)' : 'none',
+                    fontFamily: 'JetBrains Mono, monospace', fontSize: 10,
+                    letterSpacing: '.18em', cursor: 'pointer',
+                  }}>{o.label}</button>
+                ))}
+              </div>
+            </>
+          )}
+
           {/* Divider */}
-          <div style={{ width: 1, height: 20, background: 'var(--rule)', margin: '0 6px', flexShrink: 0 }} />
-          {/* Comp chips */}
+          <div style={{ width: 1, height: 20, background: 'var(--rule)', flexShrink: 0 }} />
+
+          {/* Comp filter chips */}
           <div style={{ display: 'flex', gap: 8, alignItems: 'center', overflowX: 'auto' }}>
             <AllChip active={filter === 'ALL'} count={gwFixtures.length} onClick={() => setFilter('ALL')} />
             {availableComps.map(c => (
@@ -595,10 +701,11 @@ export default function HomeScreen() {
             ))}
           </div>
         </div>
-        {/* Gameweek pager */}
-        {rounds.length > 0 && gw !== null && (
+
+        {/* GW pager (list mode only) */}
+        {viewMode === 'list' && rounds.length > 0 && gw !== null && (
           <GameweekPager
-            gw={gw} dateRange={gwDateRange}
+            gw={gw}
             onPrev={() => setGw(g => Math.max(minRound, g - 1))}
             onNext={() => setGw(g => Math.min(maxRound, g + 1))}
             disablePrev={gw <= minRound}
@@ -607,57 +714,79 @@ export default function HomeScreen() {
         )}
       </div>
 
-      {/* ── Band 3: Controls — Mobile (2 rows) ───────────────────── */}
+      {/* ── Band 2: Controls — Mobile (2 rows) ───────────────────── */}
       <div className="lg:hidden" style={{
         padding: '12px 18px 10px',
         borderBottom: '1px solid var(--rule)', flexShrink: 0,
       }}>
-        {/* Row A: toggle + compact pager */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginBottom: 10 }}>
-          <div style={{ display: 'inline-flex', border: '1px solid var(--rule)', flex: 1 }}>
-            {[{ id: 'date', label: 'BY DATE' }, { id: 'comp', label: 'BY COMP' }].map((o, i) => (
-              <button key={o.id} onClick={() => setView(o.id)} style={{
-                flex: 1, padding: '6px 0',
-                background: view === o.id ? 'rgba(0,180,216,.08)' : 'transparent',
-                color: view === o.id ? 'var(--cyan)' : 'var(--mute)',
+        {/* Row A: view mode + grouping + GW pager */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+          {/* LIST | MONTH */}
+          <div style={{ display: 'inline-flex', border: '1px solid var(--rule)', flexShrink: 0 }}>
+            {[{ id: 'list', label: 'LIST' }, { id: 'month', label: 'MONTH' }].map((o, i) => (
+              <button key={o.id} onClick={() => setViewMode(o.id)} style={{
+                padding: '6px 10px',
+                background: viewMode === o.id ? 'rgba(0,180,216,.08)' : 'transparent',
+                color: viewMode === o.id ? 'var(--cyan)' : 'var(--mute)',
                 border: 'none', borderRight: i === 0 ? '1px solid var(--rule)' : 'none',
                 fontFamily: 'JetBrains Mono, monospace', fontSize: 9,
                 letterSpacing: '.18em', cursor: 'pointer',
               }}>{o.label}</button>
             ))}
           </div>
-          {rounds.length > 0 && gw !== null && (
-            <div style={{ display: 'inline-flex', border: '1px solid var(--rule)', flexShrink: 0 }}>
-              <button
-                onClick={() => setGw(g => Math.max(minRound, g - 1))}
-                disabled={gw <= minRound}
-                style={{
-                  width: 28, height: 28, background: 'transparent', border: 'none',
-                  borderRight: '1px solid var(--rule)',
-                  color: gw <= minRound ? 'var(--mute)' : 'var(--paper)',
-                  fontFamily: 'JetBrains Mono, monospace', fontSize: 12,
-                  cursor: gw <= minRound ? 'default' : 'pointer',
-                }}
-              >‹</button>
-              <div style={{ padding: '0 10px', height: 28, display: 'flex', alignItems: 'center', gap: 6 }}>
-                <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 9, color: 'var(--mute)' }}>GW</div>
-                <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 11 }}>{gw}</div>
+
+          {viewMode === 'list' && (
+            <>
+              {/* DATE | COMP */}
+              <div style={{ display: 'inline-flex', border: '1px solid var(--rule)', flex: 1 }}>
+                {[{ id: 'date', label: 'DATE' }, { id: 'comp', label: 'COMP' }].map((o, i) => (
+                  <button key={o.id} onClick={() => setView(o.id)} style={{
+                    flex: 1, padding: '6px 0',
+                    background: view === o.id ? 'rgba(0,180,216,.08)' : 'transparent',
+                    color: view === o.id ? 'var(--cyan)' : 'var(--mute)',
+                    border: 'none', borderRight: i === 0 ? '1px solid var(--rule)' : 'none',
+                    fontFamily: 'JetBrains Mono, monospace', fontSize: 9,
+                    letterSpacing: '.18em', cursor: 'pointer',
+                  }}>{o.label}</button>
+                ))}
               </div>
-              <button
-                onClick={() => setGw(g => Math.min(maxRound, g + 1))}
-                disabled={gw >= maxRound}
-                style={{
-                  width: 28, height: 28, background: 'transparent', border: 'none',
-                  borderLeft: '1px solid var(--rule)',
-                  color: gw >= maxRound ? 'var(--mute)' : 'var(--paper)',
-                  fontFamily: 'JetBrains Mono, monospace', fontSize: 12,
-                  cursor: gw >= maxRound ? 'default' : 'pointer',
-                }}
-              >›</button>
-            </div>
+
+              {/* GW mini pager */}
+              {rounds.length > 0 && gw !== null && (
+                <div style={{ display: 'inline-flex', border: '1px solid var(--rule)', flexShrink: 0 }}>
+                  <button
+                    onClick={() => setGw(g => Math.max(minRound, g - 1))}
+                    disabled={gw <= minRound}
+                    style={{
+                      width: 28, height: 28, background: 'transparent', border: 'none',
+                      borderRight: '1px solid var(--rule)',
+                      color: gw <= minRound ? 'var(--mute)' : 'var(--paper)',
+                      fontFamily: 'JetBrains Mono, monospace', fontSize: 12,
+                      cursor: gw <= minRound ? 'default' : 'pointer',
+                    }}
+                  >‹</button>
+                  <div style={{ padding: '0 8px', height: 28, display: 'flex', alignItems: 'center', gap: 4 }}>
+                    <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 9, color: 'var(--mute)' }}>GW</div>
+                    <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 11 }}>{gw}</div>
+                  </div>
+                  <button
+                    onClick={() => setGw(g => Math.min(maxRound, g + 1))}
+                    disabled={gw >= maxRound}
+                    style={{
+                      width: 28, height: 28, background: 'transparent', border: 'none',
+                      borderLeft: '1px solid var(--rule)',
+                      color: gw >= maxRound ? 'var(--mute)' : 'var(--paper)',
+                      fontFamily: 'JetBrains Mono, monospace', fontSize: 12,
+                      cursor: gw >= maxRound ? 'default' : 'pointer',
+                    }}
+                  >›</button>
+                </div>
+              )}
+            </>
           )}
         </div>
-        {/* Row B: scrollable comp chips */}
+
+        {/* Row B: comp chips */}
         <div style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 2 }}>
           <AllChip active={filter === 'ALL'} count={gwFixtures.length} onClick={() => setFilter('ALL')} />
           {availableComps.map(c => (
@@ -671,52 +800,75 @@ export default function HomeScreen() {
         </div>
       </div>
 
-      {/* ── Body: fixture groups ──────────────────────────────────── */}
-      <div style={{ flex: 1, overflowY: 'auto' }}>
-        {filtered.length === 0 && (
-          <div style={{ padding: '48px 32px', textAlign: 'center' }}>
-            <div style={{
-              fontFamily: 'JetBrains Mono, monospace',
-              fontSize: 10, color: 'var(--mute)', letterSpacing: '.22em', marginBottom: 10,
-            }}>NO FIXTURES</div>
-            <div style={{
-              fontFamily: 'Archivo Black, sans-serif',
-              fontSize: 22, letterSpacing: '-0.02em',
-            }}>Nothing scheduled</div>
-          </div>
+      {/* ── Body ─────────────────────────────────────────────────── */}
+      <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
+
+        {/* Month view */}
+        {viewMode === 'month' && (
+          <MonthView
+            fixtures={monthFixtures}
+            month={calMonth.month}
+            year={calMonth.year}
+            onPrev={() => setCalMonth(cm => {
+              const d = new Date(cm.year, cm.month - 1, 1);
+              return { year: d.getFullYear(), month: d.getMonth() };
+            })}
+            onNext={() => setCalMonth(cm => {
+              const d = new Date(cm.year, cm.month + 1, 1);
+              return { year: d.getFullYear(), month: d.getMonth() };
+            })}
+          />
         )}
 
-        {/* Desktop */}
-        <div className="hidden lg:block">
-          {view === 'date' && dateGroups.map(g => (
-            <section key={g.date}>
-              <DateBand g={g} />
-              {g.fixtures.map(f => <FixtureRow key={f.id} f={f} showComp />)}
-            </section>
-          ))}
-          {view === 'comp' && compGroups.map(g => (
-            <section key={g.code}>
-              <CompBand comp={g} count={g.fixtures.length} />
-              {g.fixtures.map(f => <FixtureRow key={f.id} f={f} />)}
-            </section>
-          ))}
-        </div>
+        {/* List view */}
+        {viewMode === 'list' && (
+          <>
+            {filtered.length === 0 && (
+              <div style={{ padding: '48px 32px', textAlign: 'center' }}>
+                <div style={{
+                  fontFamily: 'JetBrains Mono, monospace',
+                  fontSize: 10, color: 'var(--mute)', letterSpacing: '.22em', marginBottom: 10,
+                }}>NO FIXTURES</div>
+                <div style={{
+                  fontFamily: 'Archivo Black, sans-serif',
+                  fontSize: 22, letterSpacing: '-0.02em',
+                }}>Nothing scheduled</div>
+              </div>
+            )}
 
-        {/* Mobile */}
-        <div className="lg:hidden">
-          {view === 'date' && dateGroups.map(g => (
-            <section key={g.date}>
-              <DateBand g={g} mini />
-              {g.fixtures.map(f => <MobileFixtureRow key={f.id} f={f} />)}
-            </section>
-          ))}
-          {view === 'comp' && compGroups.map(g => (
-            <section key={g.code}>
-              <CompBand comp={g} count={g.fixtures.length} mini />
-              {g.fixtures.map(f => <MobileFixtureRow key={f.id} f={f} />)}
-            </section>
-          ))}
-        </div>
+            {/* Desktop */}
+            <div className="hidden lg:block">
+              {view === 'date' && dateGroups.map(g => (
+                <section key={g.date}>
+                  <DateBand g={g} />
+                  {g.fixtures.map(f => <FixtureRow key={f.id} f={f} showComp />)}
+                </section>
+              ))}
+              {view === 'comp' && compGroups.map(g => (
+                <section key={g.code}>
+                  <CompBand comp={g} count={g.fixtures.length} />
+                  {g.fixtures.map(f => <FixtureRow key={f.id} f={f} />)}
+                </section>
+              ))}
+            </div>
+
+            {/* Mobile */}
+            <div className="lg:hidden">
+              {view === 'date' && dateGroups.map(g => (
+                <section key={g.date}>
+                  <DateBand g={g} mini />
+                  {g.fixtures.map(f => <MobileFixtureRow key={f.id} f={f} />)}
+                </section>
+              ))}
+              {view === 'comp' && compGroups.map(g => (
+                <section key={g.code}>
+                  <CompBand comp={g} count={g.fixtures.length} mini />
+                  {g.fixtures.map(f => <MobileFixtureRow key={f.id} f={f} />)}
+                </section>
+              ))}
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
