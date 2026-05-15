@@ -38,6 +38,7 @@ playwright-results.txt
 # Design reference files (large HTML/JSX mock-ups, local only)
 docs/brand/LIVE/
 docs/brand/SCORES/
+docs/brand/LEAGUES/
 
 # Google Antigravity — local session files
 .antigravity/

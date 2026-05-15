@@ -1,8 +1,31 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-05-15 (Session 22: UX tours + git housekeeping)  
+**Last Updated**: 2026-05-15 (Session 23: Bug fixes — auto-fill, badges, leaderboard)  
 **E2E Test Suite**: 178/178 passing (100%) ✅  
 **Live App**: https://wc-fantasy-football.vercel.app
+
+---
+
+## 📊 SESSION 23 PROGRESS (2026-05-15)
+
+**🚀 COMPLETED THIS SESSION:**
+
+- ✅ **PR #59 — Bug fix trio** (merged):
+  - **Auto-fill silent failure (League tab)**: `fetchSquad` was never called on mount → `squadData = null` → Quick Fill button permanently disabled with no feedback. Fixed with proper useEffect trigger + fallback from `draft_allocations` to `squads` table + real budget read.
+  - **Misleading auto-fill error**: Transfer failure now shows the actual server error instead of always saying "No affordable players available".
+  - **UNAVAILABLE badge confusion**: Renamed `🔒 UNAVAILABLE` → `📋 LIST FOR TRADE` and `🔓 AVAILABLE` → `🔓 OPEN FOR TRADE` so trade-listing context is obvious.
+
+- ✅ **PR #60 — Auto-fill root cause + Leaderboard cleanup** (merged):
+  - **Quick Fill on Leaderboard removed**: Button was incorrectly sitting in the competitive standings header. Cleaned up all related unused state (useAutoFill, fetchSquad, squadData, mySquadBudget) from LeagueScreen.
+  - **Candidates filter fixed**: Auto-fill was excluding ALL players owned by any other manager (`allTakenIds`), causing zero candidates even with £57.6M budget. Game uses FPL-style shared ownership — now only filters out the current user's own players.
+
+- ✅ **Git housekeeping**: Deleted 3 stale local branches (`busy-hofstadter`, `modest-beaver`, `youthful-saha`); deleted remote `claude/wizardly-pare-8a442b`; pruned remote refs. Remote is clean — only `origin/main`.
+
+- ✅ **Notion BUG TRACKING**: `[Error] Auto-fill error` and `[?] Unavailable tag` moved to Done with comments.
+
+**What's open:**
+- Nothing from this session — all bugs resolved and merged.
+- Remaining BUG TRACKING items (not started): `Leagues modes`, `Match Center rank`, `Match Center stale`, `Bet dropdown` and TEST items — deferred to next session.
 
 ---
 
@@ -11,11 +34,8 @@
 **🚀 COMPLETED THIS SESSION:**
 - ✅ **PR #55 — Live Centre redesign** (merged): Split pitch/events desktop layout + league cards mobile
 - ✅ **PR #56 — Desktop pitch height fix** (merged): `height: 100dvh` on desktop container, `clamp()` on pitch
-- ✅ **PR #57 — Guided tour pop-ups** (open, CI pending): League, Bets & Commissioner tours + replay "?" buttons on all 5 tour screens (Squad, Market, League, Bets, Admin)
-- ✅ **Git housekeeping**: 58 branches → 5; removed orphaned worktrees; deleted 15 stale remote branches; cleaned root folder (removed 5 stale session docs); updated .gitignore; simplified git section in CLAUDE.md
-
-**What's open:**
-- PR #57 (guided tours) — needs CI green + merge
+- ✅ **PR #57 — Guided tour pop-ups** (merged): League, Bets & Commissioner tours + replay "?" buttons on all 5 tour screens (Squad, Market, League, Bets, Admin)
+- ✅ **PR #58 — Git housekeeping** (merged): 58 branches → 5; removed orphaned worktrees; deleted stale remote branches; cleaned root folder; updated .gitignore; simplified CLAUDE.md git section
 
 ---
 
