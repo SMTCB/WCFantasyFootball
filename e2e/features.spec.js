@@ -9,8 +9,6 @@ import { createClient } from '@supabase/supabase-js';
 const SUPABASE_URL = 'https://sssmvihxtqtohisghjet.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNzc212aWh4dHF0b2hpc2doamV0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MDgyOTc5ODcsImV4cCI6MTcyMzg3Mzk4N30.LAeWx39REi6K2L46bY2g3PlvEaWM7p7TJdEZxtvXq8c';
 
-const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
 async function skipOnboarding(page) {
@@ -231,10 +229,6 @@ test.describe('Transfer Market - Buy & Sell', () => {
     await page.goto('/squad');
     await waitForContent(page);
 
-    // Count players before sell
-    const playerCards = page.locator('[class*="player"], [class*="card"]');
-    const countBefore = await playerCards.count();
-
     // Look for sell button on a player
     const sellButton = page.locator('button:has-text("Sell")').first();
 
@@ -272,11 +266,11 @@ test.describe('League Chat - Messages, Mentions, Search', () => {
     await waitForContent(page);
 
     // Check for unread badge on Chat tab
-    const unreadBadge = page.locator('[class*="badge"], [class*="count"]').filter({ hasText: /\d+/ }).first();
+    const unreadBadge = page.locator('[class*="badge"], [class*="count"]').filter({ hasText: /[0-9]+/ }).first();
 
     if (await unreadBadge.isVisible().catch(() => false)) {
       const badgeText = await unreadBadge.innerText();
-      expect(/\d+/.test(badgeText)).toBe(true);
+      expect(/[0-9]+/.test(badgeText)).toBe(true);
     }
   });
 
@@ -300,7 +294,7 @@ test.describe('League Chat - Messages, Mentions, Search', () => {
         await page.waitForTimeout(500);
 
         // Search results should filter or show count
-        const resultCount = page.locator('text=/\d+ match|no results/i').first();
+        const resultCount = page.locator('text=/[0-9]+ match|no results/i').first();
 
         if (await resultCount.isVisible().catch(() => false)) {
           await expect(resultCount).toBeVisible();
