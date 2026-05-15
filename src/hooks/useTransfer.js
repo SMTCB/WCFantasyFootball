@@ -10,6 +10,7 @@ export function useTransfer(leagueId) {
   const { user } = useAuth();
   const [takenMap,        setTakenMap]        = useState({});
   const [takenMapLoading, setTakenMapLoading] = useState(false);
+  const [takenMapError,   setTakenMapError]   = useState(null);
 
   // Build takenMap from all squads in this league
   const loadTakenMap = useCallback(async () => {
@@ -45,6 +46,7 @@ export function useTransfer(leagueId) {
       setTakenMap(map);
     } catch (err) {
       console.error('useTransfer: loadTakenMap failed', err);
+      setTakenMapError('Could not load squad data — some players may appear available.');
     } finally {
       setTakenMapLoading(false);
     }
@@ -124,5 +126,5 @@ export function useTransfer(leagueId) {
   const takenBy    = useCallback((playerId) => takenMap[playerId]?.managerName ?? null, [takenMap]);
   const isOwnedBy  = useCallback((playerId) => takenMap[playerId]?.userId === user?.id, [takenMap, user]);
 
-  return { takenMap, takenMapLoading, buy, sell, isTaken, takenBy, isOwnedBy, reload: loadTakenMap };
+  return { takenMap, takenMapLoading, takenMapError, buy, sell, isTaken, takenBy, isOwnedBy, reload: loadTakenMap };
 }
