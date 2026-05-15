@@ -1,5 +1,7 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
+import { useEffect } from 'react';
 import { AuthProvider } from './context/AuthContext';
+import { useAuth } from './hooks/useAuth';
 import ProtectedRoute from './components/ProtectedRoute';
 import ErrorBoundary from './components/ErrorBoundary';
 import AppLayout from './components/AppLayout';
@@ -18,12 +20,26 @@ import DraftRecoveryScreen from './screens/DraftRecoveryScreen';
 import { useOnboarding } from './hooks/useOnboarding';
 import { ToastProvider } from './components/Toast';
 
+// Redirect to set-password form when Supabase fires a PASSWORD_RECOVERY event.
+// This fires regardless of which URL the recovery link lands on.
+function RecoveryRedirect() {
+  const { recoveryMode } = useAuth();
+  const navigate = useNavigate();
+  useEffect(() => {
+    if (recoveryMode) navigate('/auth?type=recovery', { replace: true });
+  }, [recoveryMode, navigate]);
+  return null;
+}
+
 // ── AppRoutes lives inside BrowserRouter so useNavigate (used by OnboardingWizard) works
 function AppRoutes() {
   const { showWizard, completeWizard, skipWizard } = useOnboarding();
 
   return (
     <>
+      {/* Redirect to set-password form when PASSWORD_RECOVERY event fires */}
+      <RecoveryRedirect />
+
       {/* One-time onboarding wizard — shown until completed or skipped */}
       {showWizard && (
         <OnboardingWizard

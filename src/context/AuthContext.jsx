@@ -31,9 +31,10 @@ const AuthContext = createContext(null);
 
 // ── Provider ──────────────────────────────────────────────────────────────────
 export function AuthProvider({ children }) {
-  const [user,    setUser]    = useState(AUTH_ENABLED ? null : DEMO_USER);
-  const [session, setSession] = useState(null);
-  const [loading, setLoading] = useState(AUTH_ENABLED);   // demo mode never loads
+  const [user,         setUser]         = useState(AUTH_ENABLED ? null : DEMO_USER);
+  const [session,      setSession]      = useState(null);
+  const [loading,      setLoading]      = useState(AUTH_ENABLED);   // demo mode never loads
+  const [recoveryMode, setRecoveryMode] = useState(false);
 
   useEffect(() => {
     if (!AUTH_ENABLED) return;   // demo mode — nothing to subscribe to
@@ -46,10 +47,14 @@ export function AuthProvider({ children }) {
     });
 
     // React to sign-in / sign-out / token refresh
+    // PASSWORD_RECOVERY must be handled explicitly — without this, Supabase v2 PKCE
+    // silently signs the user in after a reset link click without ever showing the
+    // set-new-password form.
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
+      (event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
+        setRecoveryMode(event === 'PASSWORD_RECOVERY');
       }
     );
 
@@ -86,14 +91,18 @@ export function AuthProvider({ children }) {
 
   const resetPassword = async (email) => {
     if (!AUTH_ENABLED) return { error: null };
+    // Redirect to site root — the PASSWORD_RECOVERY event in onAuthStateChange
+    // handles navigating to the set-password form regardless of where the user lands.
     return supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: getRedirectUrl('/auth?type=recovery'),
+      redirectTo: getRedirectUrl('/'),
     });
   };
 
   const updatePassword = async (newPassword) => {
     if (!AUTH_ENABLED) return { error: null };
-    return supabase.auth.updateUser({ password: newPassword });
+    const result = await supabase.auth.updateUser({ password: newPassword });
+    if (!result.error) setRecoveryMode(false);
+    return result;
   };
 
   return (
@@ -102,6 +111,7 @@ export function AuthProvider({ children }) {
         user,
         session,
         loading,
+        recoveryMode,
         authEnabled: AUTH_ENABLED,
         signIn,
         signUp,
