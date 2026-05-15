@@ -74,7 +74,7 @@ export default function MarketScreen() {
   const squadSize  = cfg.squadSize;
 
   // League-scoped transfer state
-  const { buy, sell, isTaken, takenBy, isOwnedBy } = useTransfer(activeLeague);
+  const { buy, sell, isTaken, takenBy, isOwnedBy, takenMapError } = useTransfer(activeLeague);
 
   // Fetch squad for auto-fill
   const fetchSquad = async () => {
@@ -282,6 +282,16 @@ export default function MarketScreen() {
           onComplete={completeMarketTour}
           onSkip={completeMarketTour}
         />
+      )}
+
+      {/* ── Squad data load error ─────────────────────────── */}
+      {takenMapError && (
+        <div
+          className="flex items-center gap-3 px-5 py-3"
+          style={{ background: 'rgba(240,58,58,0.10)', borderBottom: '1px solid rgba(240,58,58,0.25)' }}
+        >
+          <span style={{ color: 'var(--danger)', fontSize: 13 }}>⚠ {takenMapError}</span>
+        </div>
       )}
 
       {/* ── Transfer Window Lock Banner ─────────────────────── */}

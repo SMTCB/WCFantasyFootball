@@ -32,11 +32,26 @@ const FORZA_TOKEN     = Deno.env.get('FORZA_ACCESS_TOKEN');
 const SELF_BASE_URL   = Deno.env.get('SUPABASE_URL');
 const SELF_ANON_KEY   = Deno.env.get('SUPABASE_ANON_KEY');
 
-async function forza(path) {
-  const res = await fetch(`${FORZA_BASE}${path}?access_token=${FORZA_TOKEN}`);
-  if (res.status === 204) return null;           // no content (lineups not yet available)
-  if (!res.ok) throw new Error(`Forza ${path} → HTTP ${res.status}`);
-  return res.json();
+async function forza(path, retries = 3) {
+  const url = `${FORZA_BASE}${path}?access_token=${FORZA_TOKEN}`;
+  let lastErr;
+  for (let attempt = 1; attempt <= retries; attempt++) {
+    try {
+      const res = await fetch(url, { signal: AbortSignal.timeout(10_000) });
+      if (res.status === 204) return null;
+      if (res.status === 429 || (res.status >= 500 && res.status < 600)) {
+        lastErr = new Error(`Forza ${path} → HTTP ${res.status}`);
+        if (attempt < retries) await new Promise(r => setTimeout(r, attempt * 1_000));
+        continue;
+      }
+      if (!res.ok) throw new Error(`Forza ${path} → HTTP ${res.status}`);
+      return res.json();
+    } catch (err) {
+      lastErr = err;
+      if (attempt < retries) await new Promise(r => setTimeout(r, attempt * 1_000));
+    }
+  }
+  throw lastErr;
 }
 
 function respond(status, body) {
@@ -340,20 +355,14 @@ Deno.serve(async (req) => {
     }
 
     // ── 10. Write activity feed events to match_events ────────────────────────
-    // This powers the Live screen event log. We only write events once per event
-    // (idempotency via the fixture_id + type + minute + player_id combo, handled
-    // by upsert). Since match_events has no unique constraint on those fields, we
-    // delete and re-insert to stay idempotent on re-runs.
+    // This powers the Live screen event log. Events with a player_id use upsert
+    // (ON CONFLICT DO NOTHING) backed by the unique index on
+    // (fixture_id, type, minute, player_id) added in migration 46 — making
+    // concurrent runs idempotent. Sub events with null player_id fall back to
+    // plain insert (rare, low scoring impact).
     let eventsWritten = 0;
 
     if (periodsResult.activityEvents.length > 0) {
-      // Delete existing Forza-sourced events for this fixture before re-inserting
-      await supabase
-        .from('match_events')
-        .delete()
-        .eq('fixture_id', fixture.id)
-        .neq('type', 'var');      // preserve any manually added VAR events
-
       const eventRows = [];
       for (const ev of periodsResult.activityEvents) {
         const mainPid = ev.player_forza_id ? playerLookup[ev.player_forza_id]?.id : null;
@@ -394,25 +403,54 @@ Deno.serve(async (req) => {
       }
 
       if (eventRows.length) {
-        const { error: evErr } = await supabase
-          .from('match_events')
-          .insert(eventRows);
+        // Upsert events that have a player_id — idempotent via migration 46 unique index
+        const withPlayer    = eventRows.filter(r => r.player_id != null);
+        const withoutPlayer = eventRows.filter(r => r.player_id == null);
 
-        if (evErr) console.error('match_events insert error:', JSON.stringify(evErr));
-        else eventsWritten = eventRows.length;
+        if (withPlayer.length) {
+          const { error: evErr } = await supabase
+            .from('match_events')
+            .upsert(withPlayer, {
+              onConflict:       'fixture_id,type,minute,player_id',
+              ignoreDuplicates: true,
+            });
+          if (evErr) console.error('match_events upsert error:', JSON.stringify(evErr));
+          else eventsWritten += withPlayer.length;
+        }
+
+        // Sub events with no player_id: insert only (not idempotent, but low impact)
+        if (withoutPlayer.length) {
+          const { error: evErr } = await supabase
+            .from('match_events')
+            .insert(withoutPlayer);
+          if (evErr) console.error('match_events insert (no-player) error:', JSON.stringify(evErr));
+          else eventsWritten += withoutPlayer.length;
+        }
       }
     }
 
-    // ── 11. Trigger calculate-scores ──────────────────────────────────────────
-    // Fire-and-forget via self-invoke so this function returns quickly.
-    fetch(`${SELF_BASE_URL}/functions/v1/calculate-scores`, {
-      method:  'POST',
-      headers: {
-        'Content-Type':  'application/json',
-        'Authorization': `Bearer ${SELF_ANON_KEY}`,
-      },
-      body: JSON.stringify({ fixture_id: fixture.id }),
-    }).catch(e => console.error('calculate-scores invoke error:', e.message));
+    // ── 11. Invoke calculate-scores (awaited, with retry) ─────────────────────
+    // Awaiting ensures failures are visible in logs and the caller gets a 207
+    // if scoring couldn't run. Three attempts with exponential backoff.
+    let scoringErr = null;
+    for (let attempt = 1; attempt <= 3; attempt++) {
+      try {
+        const res = await fetch(`${SELF_BASE_URL}/functions/v1/calculate-scores`, {
+          method:  'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${SELF_ANON_KEY}` },
+          body:    JSON.stringify({ fixture_id: fixture.id }),
+          signal:  AbortSignal.timeout(30_000),
+        });
+        if (res.ok) { scoringErr = null; break; }
+        scoringErr = `HTTP ${res.status}`;
+      } catch (e) {
+        scoringErr = e.message;
+      }
+      if (attempt < 3) await new Promise(r => setTimeout(r, attempt * 2_000));
+    }
+    if (scoringErr) {
+      console.error(`calculate-scores failed after 3 attempts (fixture ${fixture.id}): ${scoringErr}`);
+    }
 
     return respond(200, {
       ok:               true,

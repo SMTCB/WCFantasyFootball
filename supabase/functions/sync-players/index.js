@@ -19,10 +19,26 @@ const supabase = createClient(
 const FORZA_BASE  = 'https://api.forzafootball.com';
 const FORZA_TOKEN = Deno.env.get('FORZA_ACCESS_TOKEN');
 
-async function forza(path) {
-  const res = await fetch(`${FORZA_BASE}${path}?access_token=${FORZA_TOKEN}`);
-  if (!res.ok) throw new Error(`Forza ${path} → HTTP ${res.status}`);
-  return res.json();
+async function forza(path, retries = 3) {
+  const url = `${FORZA_BASE}${path}?access_token=${FORZA_TOKEN}`;
+  let lastErr;
+  for (let attempt = 1; attempt <= retries; attempt++) {
+    try {
+      const res = await fetch(url, { signal: AbortSignal.timeout(10_000) });
+      if (res.status === 204) return null;
+      if (res.status === 429 || (res.status >= 500 && res.status < 600)) {
+        lastErr = new Error(`Forza ${path} → HTTP ${res.status}`);
+        if (attempt < retries) await new Promise(r => setTimeout(r, attempt * 1_000));
+        continue;
+      }
+      if (!res.ok) throw new Error(`Forza ${path} → HTTP ${res.status}`);
+      return res.json();
+    } catch (err) {
+      lastErr = err;
+      if (attempt < retries) await new Promise(r => setTimeout(r, attempt * 1_000));
+    }
+  }
+  throw lastErr;
 }
 
 function respond(status, body) {
