@@ -1,5 +1,43 @@
 # Claude Code — Project Instructions
 
+⚠️ **NOTE TO USER**: This document is instructions FOR Claude Code (the AI). You should NOT need to run any git commands, terminal commands, or technical operations. Claude handles all of that automatically. Your role is to describe what you want built, and Claude manages the development workflow, testing, git operations, and deployment.
+
+---
+
+## Ways of Working
+
+### Your Role (Non-Technical User)
+✅ **What you do:**
+- Describe features you want: "Add user authentication" or "Fix the squad screen layout"
+- Review Notion BACKLOG board to see what's open
+- Provide direction and priorities: "Do the notifications system next"
+- Answer clarification questions when Claude needs them
+- Test the live app at https://wc-fantasy-football.vercel.app and report issues
+
+❌ **What you DON'T do:**
+- Run git commands (`git pull`, `git push`, `git checkout`, etc.)
+- Run terminal commands (`npm install`, `npm run build`, etc.)
+- Open code editors or modify code files directly
+- Handle database migrations or schema changes manually
+- Deploy or manage infrastructure
+
+### Claude's Role (All Technical Operations)
+✅ **What Claude does:**
+- Read your requirements and translate them to tasks
+- Pull latest code from main branch
+- Create feature branches automatically
+- Write and test code
+- Run test suites (E2E, ESLint, build verification)
+- Commit changes with clear messages
+- Create pull requests on GitHub
+- Merge PRs when ready
+- Update Notion BACKLOG cards
+- Handle all git operations (you never type git commands)
+
+**Result**: You stay focused on product decisions. Claude handles all the technical execution.
+
+---
+
 ## Project Overview
 
 **Forza Fantasy League** — Elite fantasy football web + native mobile app.
@@ -579,7 +617,7 @@ iOS deployment target: 15.0 · Android minSdk: 26 (Android 8.0) · targetSdk: 36
 
 ## Session Start Checklist
 
-**Every time you start a new session, do this:**
+**CLAUDE CODE: Do this automatically every session. User should NOT run any of these commands — that's Claude's job.**
 
 1. **Read this file (CLAUDE.md)** to understand the tech stack and current state
 2. **Check BACKLOG.md** for session notes and completed items
@@ -587,12 +625,12 @@ iOS deployment target: 15.0 · Android minSdk: 26 (Android 8.0) · targetSdk: 36
    - Navigate to: https://www.notion.so/361fe9c7e4c2803c9fc7c898a0c4bbac
    - Check "Not started" column for priorities (HIGH priority first)
    - Move a card to "In progress" if starting work on it
-4. **Sync with main**:
+4. **Sync with main** (Claude does this):
    ```bash
    git pull origin main
    git status  # Should be clean
    ```
-5. **Create feature branch**:
+5. **Create feature branch** (Claude does this):
    ```bash
    git checkout -b claude/your-feature-description
    ```
@@ -601,13 +639,13 @@ iOS deployment target: 15.0 · Android minSdk: 26 (Android 8.0) · targetSdk: 36
    ```bash
    npm run dev  # http://localhost:5173
    ```
-8. **Develop, commit, push, PR, merge** per Git Workflow rules above
-9. **Always test before pushing**:
+8. **Develop, commit, push, PR, merge** (Claude does all git operations) per Git Workflow rules above
+9. **Always test before pushing** (Claude does this automatically):
    ```bash
    npm run lint        # Must pass
    npx playwright test # Should stay green
    ```
-10. **After completing work, move Notion card to "Done"** and update BACKLOG.md
+10. **After completing work, move Notion card to "Done"** (Claude does this) and update BACKLOG.md
 
 ---
 
