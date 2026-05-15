@@ -226,7 +226,7 @@ export default function SquadScreen() {
   const deadline = useDeadlineCountdown();
 
   // First-visit tour
-  const { showSquadTour, completeSquadTour } = useOnboarding();
+  const { showSquadTour, completeSquadTour, replaySquadTour } = useOnboarding();
 
   const SQUAD_TOUR_STEPS = [
     {
@@ -852,13 +852,28 @@ export default function SquadScreen() {
           borderBottom: '1px solid rgba(255,255,255,0.07)',
         }}
       >
-        {/* Left: eyebrow + title only — no extra pills */}
+        {/* Left: eyebrow + title + tour replay */}
         <div>
           <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 10, color: 'var(--mute)', letterSpacing: '.14em', textTransform: 'uppercase' }}>
             Tactical Sheet
           </div>
-          <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 34, color: 'var(--paper)', lineHeight: 1.05, letterSpacing: '-0.01em' }}>
-            My Squad
+          <div className="flex items-center gap-2">
+            <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 34, color: 'var(--paper)', lineHeight: 1.05, letterSpacing: '-0.01em' }}>
+              My Squad
+            </div>
+            <button
+              onClick={replaySquadTour}
+              title="Replay squad tour"
+              style={{
+                width: 22, height: 22, borderRadius: '50%',
+                border: '1px solid rgba(255,255,255,0.15)',
+                background: 'rgba(255,255,255,0.05)',
+                color: 'rgba(255,255,255,0.4)',
+                fontSize: 11, fontWeight: 700, cursor: 'pointer',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                flexShrink: 0, marginTop: 6,
+              }}
+            >?</button>
           </div>
         </div>
 

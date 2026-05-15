@@ -20,13 +20,73 @@ import AuctionCard from '../components/AuctionCard';
 import BetsSection from '../components/BetsSection';
 import NotificationPanel from '../components/NotificationPanel';
 import { useTransferWindow } from '../hooks/useTransferWindow';
+import { useOnboarding } from '../hooks/useOnboarding';
+import OnboardingTour from '../components/OnboardingTour';
 
+const LEAGUE_TOUR_STEPS = [
+  {
+    target: 'league-standings',
+    title:  'League Standings',
+    body:   'See every manager\'s rank and total points. Tap a name to view their squad, propose a trade, or check your head-to-head record.',
+  },
+  {
+    target: 'league-tabs',
+    title:  'League Tabs',
+    body:   'Switch between Standings, Front Page, Bets, Auctions, Chat, and Stats. Commissioners also see an Admin tab.',
+  },
+  {
+    target: 'league-invite',
+    title:  'Invite Your Mates',
+    body:   'Share your league\'s invite code to bring new managers in. Once they join, the draft order is set automatically.',
+  },
+];
+
+const BETS_TOUR_STEPS = [
+  {
+    target: 'bets-header',
+    title:  'Bets & Predictions',
+    body:   'The Commissioner posts weekly challenges here — predict outcomes to earn bonus points. Picks lock at the deadline.',
+  },
+  {
+    target: 'bets-list',
+    title:  'Open Bets',
+    body:   'Each card shows the question, the options, and how many points you\'ll win. Tap an option to submit your pick.',
+  },
+];
+
+const COMMISSIONER_TOUR_STEPS = [
+  {
+    target: 'comm-transfer-window',
+    title:  'Transfer Window',
+    body:   'Set when the window opens and closes, and cap the number of transfers allowed per manager this matchday.',
+  },
+  {
+    target: 'comm-draft-deadline',
+    title:  'Draft Deadline',
+    body:   'Managers must submit their draft before this date. After it passes, the lottery runs automatically.',
+  },
+  {
+    target: 'comm-score-recalc',
+    title:  'Score Recalculation',
+    body:   'Re-run the scoring engine for any fixture by ID. Use this if a match result was corrected after the fact.',
+  },
+  {
+    target: 'comm-bets',
+    title:  'Create Bets',
+    body:   'Post prediction challenges for your league. Choose a template or write a custom question, then set options and a deadline.',
+  },
+];
 
 export default function LeagueScreen() {
   const { user } = useAuth();
   const { show: showToast } = useToast();
   const navigate = useNavigate();
   const { leagueId } = useParams();
+  const {
+    showLeagueTour, completeLeagueTour, replayLeagueTour,
+    showCommissionerTour, completeCommissionerTour, replayCommissionerTour,
+    showBetsTour, completeBetsTour, replayBetsTour,
+  } = useOnboarding();
 
   const [leagues, setLeagues] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -421,7 +481,7 @@ export default function LeagueScreen() {
   });
 
   const renderTabs = () => (
-    <div className="flex bg-[var(--ink-2)] border-b border-[var(--rule)] sticky top-[60px] z-20">
+    <div data-tour="league-tabs" className="flex bg-[var(--ink-2)] border-b border-[var(--rule)] sticky top-[60px] z-20">
       {['leaderboard', 'frontpage', 'bets', 'betting_leaderboard', 'auctions', 'chat', 'stats', ...(isCommissioner ? ['commissioner'] : [])].map((t) => (
         <button
           key={t}
@@ -744,6 +804,29 @@ export default function LeagueScreen() {
     const name = activeLeague?.leagues?.name || activeLeague?.name || 'SYNCING...';
     return (
        <div className="pb-0 min-h-screen bg-bg">
+
+        {/* ── Guided tours ──────────────────────────────────────────────────── */}
+        {showLeagueTour && !loading && view === 'detail' && (
+          <OnboardingTour
+            steps={LEAGUE_TOUR_STEPS}
+            onComplete={completeLeagueTour}
+            onSkip={completeLeagueTour}
+          />
+        )}
+        {showBetsTour && view === 'bets' && (
+          <OnboardingTour
+            steps={BETS_TOUR_STEPS}
+            onComplete={completeBetsTour}
+            onSkip={completeBetsTour}
+          />
+        )}
+        {showCommissionerTour && view === 'commissioner' && isCommissioner && (
+          <OnboardingTour
+            steps={COMMISSIONER_TOUR_STEPS}
+            onComplete={completeCommissionerTour}
+            onSkip={completeCommissionerTour}
+          />
+        )}
         <div className="flex justify-between items-center px-5 py-3 border-b border-border bg-surface sticky top-0 z-20">
           <div className="flex flex-col">
             <button onClick={() => navigate('/league')} className="fz-label text-text-tertiary mb-0.5 text-left hover:text-cyan transition-colors group">
@@ -767,9 +850,23 @@ export default function LeagueScreen() {
               onClick={() => setNewLeague(activeLeague?.leagues || activeLeague)}
               className="fz-label text-cyan hover:text-cyan/80 transition-colors"
               title="Show invite code"
+              data-tour="league-invite"
             >
               📤 INVITE
             </button>
+            <button
+              onClick={replayLeagueTour}
+              title="Replay league tour"
+              style={{
+                width: 20, height: 20, borderRadius: '50%',
+                border: '1px solid rgba(255,255,255,0.15)',
+                background: 'rgba(255,255,255,0.05)',
+                color: 'rgba(255,255,255,0.4)',
+                fontSize: 10, fontWeight: 700, cursor: 'pointer',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                flexShrink: 0,
+              }}
+            >?</button>
             <div className="w-2 h-2 rounded-full bg-positive animate-live-pulse" />
             <div className="fz-label text-text-secondary">LIVE</div>
           </div>
@@ -844,7 +941,7 @@ export default function LeagueScreen() {
          
          {view === 'detail' && (
            <>
-             <div className="bg-[var(--ink)] border-b border-[var(--rule)]">
+             <div data-tour="league-standings" className="bg-[var(--ink)] border-b border-[var(--rule)]">
                {/* Auto-fill button in standings header */}
                <div className="flex items-center gap-2 px-4 py-3 border-b border-[var(--rule)]">
                  <button
@@ -1185,11 +1282,28 @@ export default function LeagueScreen() {
 
          {view === 'bets' && (
            <div className="bg-[var(--ink)] min-h-[60vh]">
-             <div className="px-4 py-3 border-b border-[var(--rule)]">
-               <div className="text-[11px] font-black uppercase tracking-[0.15em] text-[var(--mute)]">Bets & Predictions</div>
-               <div className="text-[12px] text-[var(--mute)] mt-0.5">Make your picks before the deadline</div>
+             <div data-tour="bets-header" className="px-4 py-3 border-b border-[var(--rule)] flex items-center justify-between">
+               <div>
+                 <div className="text-[11px] font-black uppercase tracking-[0.15em] text-[var(--mute)]">Bets & Predictions</div>
+                 <div className="text-[12px] text-[var(--mute)] mt-0.5">Make your picks before the deadline</div>
+               </div>
+               <button
+                 onClick={replayBetsTour}
+                 title="Replay bets tour"
+                 style={{
+                   width: 20, height: 20, borderRadius: '50%',
+                   border: '1px solid rgba(255,255,255,0.15)',
+                   background: 'rgba(255,255,255,0.05)',
+                   color: 'rgba(255,255,255,0.4)',
+                   fontSize: 10, fontWeight: 700, cursor: 'pointer',
+                   display: 'flex', alignItems: 'center', justifyContent: 'center',
+                   flexShrink: 0,
+                 }}
+               >?</button>
              </div>
-             <BetsSection leagueId={activeLeague?.league_id} squadId={mySquadId} />
+             <div data-tour="bets-list">
+               <BetsSection leagueId={activeLeague?.league_id} squadId={mySquadId} />
+             </div>
            </div>
          )}
 
@@ -1318,7 +1432,22 @@ export default function LeagueScreen() {
          {/* ── COMMISSIONER PANEL ─────────────────────────────────────────── */}
          {view === 'commissioner' && isCommissioner && (
            <div className="p-4 space-y-4 pb-20">
-             <div className="text-[9px] font-black uppercase tracking-[0.2em] text-text-tertiary pt-2">Commissioner Controls</div>
+             <div className="flex items-center justify-between pt-2">
+               <div className="text-[9px] font-black uppercase tracking-[0.2em] text-text-tertiary">Commissioner Controls</div>
+               <button
+                 onClick={replayCommissionerTour}
+                 title="Replay admin tour"
+                 style={{
+                   width: 20, height: 20, borderRadius: '50%',
+                   border: '1px solid rgba(255,255,255,0.15)',
+                   background: 'rgba(255,255,255,0.05)',
+                   color: 'rgba(255,255,255,0.4)',
+                   fontSize: 10, fontWeight: 700, cursor: 'pointer',
+                   display: 'flex', alignItems: 'center', justifyContent: 'center',
+                   flexShrink: 0,
+                 }}
+               >?</button>
+             </div>
 
              {/* Feedback message */}
              {commMsg && (
@@ -1329,7 +1458,7 @@ export default function LeagueScreen() {
              )}
 
              {/* ── Transfer Window ─────────────────────────────────────────── */}
-             <div className="bg-[#111] border border-[#1e1e1e] rounded-sm p-4 space-y-3">
+             <div data-tour="comm-transfer-window" className="bg-[#111] border border-[#1e1e1e] rounded-sm p-4 space-y-3">
                <div className="text-[10px] font-black uppercase tracking-[0.15em] text-text-tertiary">Transfer Window</div>
                <div className="grid grid-cols-2 gap-2">
                  <div className="flex flex-col gap-1">
@@ -1381,7 +1510,7 @@ export default function LeagueScreen() {
              </div>
 
              {/* ── Draft Deadline ───────────────────────────────────────────── */}
-             <div className="bg-[#111] border border-[#1e1e1e] rounded-sm p-4 space-y-3">
+             <div data-tour="comm-draft-deadline" className="bg-[#111] border border-[#1e1e1e] rounded-sm p-4 space-y-3">
                <div className="text-[10px] font-black uppercase tracking-[0.15em] text-text-tertiary">Draft Deadline</div>
                <div className="flex flex-col gap-1">
                  <label className="text-[9px] text-text-tertiary font-bold uppercase tracking-widest">Deadline (date & time)</label>
@@ -1402,7 +1531,7 @@ export default function LeagueScreen() {
              </div>
 
              {/* ── Score Recalculation ──────────────────────────────────────── */}
-             <div className="bg-[#111] border border-[#1e1e1e] rounded-sm p-4 space-y-3">
+             <div data-tour="comm-score-recalc" className="bg-[#111] border border-[#1e1e1e] rounded-sm p-4 space-y-3">
                <div className="text-[10px] font-black uppercase tracking-[0.15em] text-text-tertiary">Score Recalculation</div>
                <div className="flex flex-col gap-1">
                  <label className="text-[9px] text-text-tertiary font-bold uppercase tracking-widest">Fixture ID</label>
@@ -1441,7 +1570,7 @@ export default function LeagueScreen() {
              </div>
 
              {/* ── Create Bet Instance ────────────────────────────────────────── */}
-             <div className="bg-[#111] border border-[#1e1e1e] rounded-sm p-4 space-y-3">
+             <div data-tour="comm-bets" className="bg-[#111] border border-[#1e1e1e] rounded-sm p-4 space-y-3">
                <div className="text-[10px] font-black uppercase tracking-[0.15em] text-text-tertiary">Create Bet Instance</div>
                <div className="flex flex-col gap-1">
                  <label className="text-[9px] text-text-tertiary font-bold uppercase tracking-widest">Template (optional)</label>
