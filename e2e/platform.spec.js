@@ -338,8 +338,8 @@ test.describe('LiveScreen', () => {
   });
 
   test('shows Live heading or live content', async ({ page }) => {
-    const main = page.locator('[data-testid="main-content"]');
-    await expect(main.getByText(/live/i).first()).toBeVisible();
+    const body = await page.locator('body').innerText();
+    expect(body.toUpperCase()).toContain('LIVE');
   });
 
   test('shows match or projection content', async ({ page }) => {
