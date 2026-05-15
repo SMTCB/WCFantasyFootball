@@ -21,6 +21,11 @@ import NotificationPanel from '../components/NotificationPanel';
 import { useTransferWindow } from '../hooks/useTransferWindow';
 import { useOnboarding } from '../hooks/useOnboarding';
 import OnboardingTour from '../components/OnboardingTour';
+import {
+  HubTopbar, HubActionBar, HubTabs,
+  MgrTag, TrendPill, FormDots, Spark, HubSectionLabel,
+  miniBtnStyle, MONO, DISPLAY,
+} from '../components/league/HubShared';
 
 const LEAGUE_TOUR_STEPS = [
   {
@@ -447,36 +452,29 @@ export default function LeagueScreen() {
     await fetchOpenBets();
   });
 
-  const renderTabs = () => (
-    <div data-tour="league-tabs" className="flex bg-[var(--ink-2)] border-b border-[var(--rule)] sticky top-[60px] z-20">
-      {['leaderboard', 'frontpage', 'bets', 'betting_leaderboard', 'auctions', 'chat', 'stats', ...(isCommissioner ? ['commissioner'] : [])].map((t) => (
-        <button
-          key={t}
-          onClick={() => setView(t === 'leaderboard' ? 'detail' : t)}
-          className={`flex-1 py-3 text-[10px] font-black uppercase tracking-[.15em] transition-all relative ${
-            (view === 'detail' && t === 'leaderboard') || view === t
-              ? 'text-white'
-              : 'text-[#555] hover:text-[var(--mute)]'
-          }`}
-        >
-          {t === 'leaderboard' ? 'Leaderboard' : t === 'commissioner' ? '⚙ Admin' : t === 'betting_leaderboard' ? 'Betting' : t}
-          {t === 'chat' && unreadCount > 0 && (
-            <span className="absolute top-1 right-1 bg-red-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full">
-              {unreadCount}
-            </span>
-          )}
-          {t === 'bets' && notificationCount > 0 && (
-            <span className="absolute top-1 right-1 bg-red-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full">
-              {notificationCount}
-            </span>
-          )}
-          {((view === 'detail' && t === 'leaderboard') || view === t) && (
-            <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-cyan" />
-          )}
-        </button>
-      ))}
-    </div>
-  );
+  // ── Hub helpers ────────────────────────────────────────────────────
+  const MANAGER_HUES = [
+    '#00B4D8','#E0A800','#A855F7','#22C55E','#EF4444',
+    '#F59E0B','#34D399','#7DD3FC','#FB7185','#FCD34D','#C4B5FD','#67E8F9',
+  ];
+  const mgrHue = (str = '') => {
+    let h = 0;
+    for (let i = 0; i < str.length; i++) h = (h * 31 + str.charCodeAt(i)) & 0xffff;
+    return MANAGER_HUES[h % MANAGER_HUES.length];
+  };
+  const mgrMono = (username = '') => username.substring(0, 3).toUpperCase() || '???';
+  const viewToTab = (v) => {
+    if (v === 'detail') return 'leaderboard';
+    if (v === 'betting_leaderboard') return 'betting';
+    if (v === 'commissioner') return 'admin';
+    return v;
+  };
+  const tabToView = (t) => {
+    if (t === 'leaderboard') return 'detail';
+    if (t === 'betting') return 'betting_leaderboard';
+    if (t === 'admin') return 'commissioner';
+    return t;
+  };
 
   useEffect(() => {
     setCurrentUser(user);
@@ -770,7 +768,7 @@ export default function LeagueScreen() {
   if (leagueId) {
     const name = activeLeague?.leagues?.name || activeLeague?.name || 'SYNCING...';
     return (
-       <div className="pb-0 min-h-screen bg-bg">
+      <div style={{ display: 'flex', flexDirection: 'column', background: 'var(--ink)', color: 'var(--paper)', minHeight: '100vh', fontFamily: "'Archivo', sans-serif" }}>
 
         {/* ── Guided tours ──────────────────────────────────────────────────── */}
         {showLeagueTour && !loading && view === 'detail' && (
@@ -794,266 +792,465 @@ export default function LeagueScreen() {
             onSkip={completeCommissionerTour}
           />
         )}
-        <div className="flex justify-between items-center px-5 py-3 border-b border-border bg-surface sticky top-0 z-20">
-          <div className="flex flex-col">
-            <button onClick={() => navigate('/league')} className="fz-label text-text-tertiary mb-0.5 text-left hover:text-cyan transition-colors group">
-              <span className="group-hover:-translate-x-1 transition-transform inline-block mr-1">←</span> Back
-            </button>
-            <div>
-              <div className="fz-label text-text-tertiary">Competitive Center</div>
-              <h1 className={`${activeLeague ? '' : 'animate-pulse'} fz-display text-[22px] text-white leading-tight uppercase truncate max-w-[200px]`}>
-                {name}
-              </h1>
+        <HubTopbar
+          leagueName={name}
+          memberCount={members.length}
+          gw="—"
+          isLive={false}
+          onBack={() => navigate('/league')}
+          rightSlot={
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <NotificationPanel
+                notifications={notifications}
+                unreadCount={notificationCount}
+                onMarkAsRead={markNotificationAsRead}
+                onClearAll={clearAllNotifications}
+              />
+              <button
+                onClick={() => setNewLeague(activeLeague?.leagues || activeLeague)}
+                data-tour="league-invite"
+                style={{ background: 'transparent', border: '1px solid rgba(0,180,216,.4)', color: 'var(--cyan)', padding: '6px 12px', fontFamily: MONO, fontSize: 10, letterSpacing: '.2em', cursor: 'pointer' }}
+              >+ INVITE</button>
+              <button
+                onClick={replayLeagueTour}
+                style={{ width: 20, height: 20, borderRadius: '50%', border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.4)', fontSize: 10, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+              >?</button>
             </div>
+          }
+        />
+
+        <HubActionBar
+          onManageSquad={() => navigate(`/squad?leagueId=${activeLeague?.league_id}`)}
+          onMarket={() => navigate(`/market?leagueId=${activeLeague?.league_id}`)}
+        />
+
+        <TransferWindowBanner {...transferWindow} />
+
+        {draftOpen && (() => {
+          const msLeft = draftDeadlineDate ? draftDeadlineDate.getTime() - Date.now() : Infinity;
+          const hoursLeft = msLeft / 3_600_000;
+          const isCritical = hoursLeft < 24;
+          const isWarning = hoursLeft < 48;
+          const bg = isCritical ? '#B71C1C' : isWarning ? '#E65100' : '#1B5E20';
+          return (
+            <div onClick={() => navigate(`/league/${activeLeague?.league_id}/draft`)} style={{ background: bg, color: 'white', padding: '10px 28px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer', flexShrink: 0 }}>
+              <span style={{ fontFamily: MONO, fontSize: 11, letterSpacing: '.18em' }}>
+                {isCritical ? '🔴' : isWarning ? '🟡' : '🟢'} DRAFT {isCritical ? `${Math.max(0, Math.floor(hoursLeft))}H LEFT — SUBMIT NOW` : isWarning ? `${Math.floor(hoursLeft)}H LEFT` : 'IS OPEN'} — SUBMIT YOUR RANKED LIST
+              </span>
+              <span style={{ fontFamily: MONO, fontSize: 11, letterSpacing: '.18em' }}>→</span>
+            </div>
+          );
+        })()}
+
+        {draftGaps > 0 && (
+          <div onClick={() => navigate(`/league/${activeLeague?.league_id}/draft/recover`)} style={{ background: '#B71C1C', color: 'white', padding: '10px 28px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer', flexShrink: 0 }}>
+            <span style={{ fontFamily: MONO, fontSize: 11, letterSpacing: '.18em' }}>⚠ YOUR SQUAD HAS {draftGaps} EMPTY SLOT{draftGaps !== 1 ? 'S' : ''} — TAP TO PICK NOW</span>
+            <span style={{ fontFamily: MONO, fontSize: 11 }}>→</span>
           </div>
-          <div className="flex items-center gap-3">
-            <NotificationPanel
-              notifications={notifications}
-              unreadCount={notificationCount}
-              onMarkAsRead={markNotificationAsRead}
-              onClearAll={clearAllNotifications}
-            />
-            <button
-              onClick={() => setNewLeague(activeLeague?.leagues || activeLeague)}
-              className="fz-label text-cyan hover:text-cyan/80 transition-colors"
-              title="Show invite code"
-              data-tour="league-invite"
-            >
-              📤 INVITE
-            </button>
-            <button
-              onClick={replayLeagueTour}
-              title="Replay league tour"
-              style={{
-                width: 20, height: 20, borderRadius: '50%',
-                border: '1px solid rgba(255,255,255,0.15)',
-                background: 'rgba(255,255,255,0.05)',
-                color: 'rgba(255,255,255,0.4)',
-                fontSize: 10, fontWeight: 700, cursor: 'pointer',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                flexShrink: 0,
-              }}
-            >?</button>
-            <div className="w-2 h-2 rounded-full bg-positive animate-live-pulse" />
-            <div className="fz-label text-text-secondary">LIVE</div>
-          </div>
+        )}
+
+        <div data-tour="league-tabs">
+          <HubTabs
+            active={viewToTab(view)}
+            onTab={t => setView(tabToView(t))}
+            isCommissioner={isCommissioner}
+            unreadChat={unreadCount}
+            notifyBets={notificationCount > 0}
+          />
         </div>
 
-         <TransferWindowBanner {...transferWindow} />
+         {/* ── VIEWS ──────────────────────────────────────────────────────── */}
 
-         {/* Draft open banner — urgency colour shifts at 48h and 24h */}
-         {draftOpen && (() => {
-           const msLeft = draftDeadlineDate ? draftDeadlineDate.getTime() - Date.now() : Infinity;
-           const hoursLeft = msLeft / 3_600_000;
-           const isCritical = hoursLeft < 24;
-           const isWarning  = hoursLeft < 48;
-           const bg    = isCritical ? '#B71C1C' : isWarning ? '#E65100' : '#1B5E20';
-           const icon  = isCritical ? '🔴' : isWarning ? '🟡' : '🟢';
-           const label = isCritical
-             ? `${Math.max(0, Math.floor(hoursLeft))}h left — submit now!`
-             : isWarning
-             ? `${Math.floor(hoursLeft)}h left`
-             : 'Draft is open';
-           return (
-             <div
-               onClick={() => navigate(`/league/${activeLeague?.league_id}/draft`)}
-               className="px-4 py-3 flex items-center justify-between cursor-pointer active:opacity-80"
-               style={{ background: bg, color: 'white' }}
-             >
-               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                 <span className="text-[13px] font-bold">{icon} {label}</span>
-                 <span className="text-[11px] opacity-70" style={{ fontFamily: 'JetBrains Mono, monospace' }}>
-                   — submit your ranked list before the deadline
-                 </span>
+         {view === 'detail' && (
+           <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+             {/* Spotlight strip: top 3 podium */}
+             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', borderBottom: '1px solid var(--rule)', flexShrink: 0 }}>
+               {/* GW card */}
+               <div style={{ padding: '18px 22px', borderRight: '1px solid var(--rule)', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+                 <div>
+                   <div style={{ fontFamily: MONO, fontSize: 10, color: 'var(--cyan)', letterSpacing: '.22em' }}>LEAGUE · SEASON</div>
+                   <div style={{ fontFamily: DISPLAY, fontSize: 28, marginTop: 4, letterSpacing: '-0.02em' }}>GW —</div>
+                   <div style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', marginTop: 6, letterSpacing: '.16em' }}>{members.length} MANAGERS · STANDINGS</div>
+                 </div>
+                 {members[0] && (
+                   <div style={{ textAlign: 'right' }}>
+                     <div style={{ fontFamily: DISPLAY, fontSize: 16, color: 'var(--positive)' }}>{members[0].total_points}</div>
+                     <div style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.18em', marginTop: 4 }}>LEAD SCORE</div>
+                   </div>
+                 )}
                </div>
-               <div className="text-[11px] font-black uppercase tracking-widest opacity-80">→</div>
+               {/* Podium 1-3 */}
+               {members.slice(0, 3).map((m, idx) => {
+                 const mName = (currentUser && m.user_id === currentUser.id) ? 'You' : (m.users?.username || 'Unknown');
+                 const hue = mgrHue(m.users?.username || '');
+                 const medal = ['var(--gold)', '#C0C0C0', '#CD7F32'][idx];
+                 return (
+                   <div key={m.user_id} style={{ padding: '18px 22px', borderRight: idx < 2 ? '1px solid var(--rule)' : 'none', display: 'flex', gap: 14, alignItems: 'center' }}>
+                     <div style={{ width: 42, height: 42, display: 'flex', alignItems: 'center', justifyContent: 'center', background: `${medal}18`, border: `1px solid ${medal}66`, fontFamily: DISPLAY, fontSize: 22, color: medal }}>
+                       {idx + 1}
+                     </div>
+                     <div style={{ flex: 1, minWidth: 0 }}>
+                       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                         <MgrTag mono={mgrMono(mName)} hue={hue} />
+                         <div style={{ fontFamily: DISPLAY, fontSize: 13, letterSpacing: '-0.01em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{mName}</div>
+                       </div>
+                       <div style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', marginTop: 4, letterSpacing: '.14em' }}>RANK #{idx + 1}</div>
+                     </div>
+                     <div style={{ textAlign: 'right' }}>
+                       <div style={{ fontFamily: DISPLAY, fontSize: 16, color: 'var(--positive)' }}>{m.total_points}</div>
+                       <div style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', marginTop: 4, letterSpacing: '.18em' }}>TOT</div>
+                     </div>
+                   </div>
+                 );
+               })}
+             </div>
+
+             {/* Body: standings table + activity rail */}
+             <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '1fr 320px', minHeight: 0 }}>
+               {/* Standings table */}
+               <div data-tour="league-standings" style={{ display: 'flex', flexDirection: 'column', borderRight: '1px solid var(--rule)' }}>
+                 <div style={{ display: 'grid', gridTemplateColumns: '48px 1fr 80px 80px 100px', gap: 14, padding: '12px 24px', borderBottom: '1px solid var(--rule)', color: 'var(--mute)' }}>
+                   <div style={{ fontFamily: MONO, fontSize: 9 }}>#</div>
+                   <div style={{ fontFamily: MONO, fontSize: 9 }}>MANAGER</div>
+                   <div style={{ fontFamily: MONO, fontSize: 9, textAlign: 'right' }}>MD</div>
+                   <div style={{ fontFamily: MONO, fontSize: 9, textAlign: 'right' }}>TOT</div>
+                   <div />
+                 </div>
+                 <div style={{ flex: 1, overflow: 'auto' }}>
+                   {membersLoading && members.length === 0 ? (
+                     <div style={{ padding: '48px 24px', textAlign: 'center' }}>
+                       <div style={{ fontFamily: MONO, fontSize: 10, color: 'var(--mute)', letterSpacing: '.2em' }}>SYNCING STANDINGS…</div>
+                     </div>
+                   ) : members.map((m) => {
+                     const isMe = currentUser && m.user_id === currentUser.id;
+                     const mName = isMe ? 'You' : (m.users?.username || 'Unknown');
+                     const hue = mgrHue(m.users?.username || '');
+                     return (
+                       <div key={m.user_id} style={{
+                         display: 'grid', gridTemplateColumns: '48px 1fr 80px 80px 100px', gap: 14, alignItems: 'center',
+                         padding: '12px 24px', borderBottom: '1px solid var(--rule)',
+                         borderLeft: isMe ? '2px solid var(--cyan)' : '2px solid transparent',
+                         background: isMe ? 'rgba(0,180,216,.04)' : 'transparent',
+                       }}>
+                         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                           <span style={{ fontFamily: DISPLAY, fontSize: 14, minWidth: 18 }}>{m.rank || '—'}</span>
+                           <TrendPill trend={0} />
+                         </div>
+                         <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
+                           <MgrTag mono={mgrMono(mName)} hue={hue} />
+                           <div style={{ minWidth: 0 }}>
+                             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                               <span style={{ fontFamily: DISPLAY, fontSize: 13, letterSpacing: '-0.01em', whiteSpace: 'nowrap' }}>{mName}</span>
+                               {m.rank === 1 && <span style={{ fontFamily: DISPLAY, fontSize: 8, background: 'var(--gold)', color: 'var(--ink)', padding: '1px 4px', letterSpacing: '.1em' }}>LEADER</span>}
+                             </div>
+                           </div>
+                         </div>
+                         <div style={{ textAlign: 'right', fontFamily: DISPLAY, fontSize: 13, color: 'var(--mute)' }}>—</div>
+                         <div style={{ textAlign: 'right', fontFamily: DISPLAY, fontSize: 13 }}>{m.total_points}</div>
+                         <div style={{ display: 'flex', gap: 4, justifyContent: 'flex-end' }}>
+                           {!isMe && (
+                             <>
+                               <button onClick={() => setH2hTarget({ ...m, name: mName })} style={miniBtnStyle('var(--cyan)')}>H2H</button>
+                               <button onClick={() => { setManagerTeamView({ user_id: m.user_id, name: mName }); loadManagerRoster(m.user_id); }} style={miniBtnStyle('var(--mute)')}>VIEW</button>
+                             </>
+                           )}
+                           {isMe && <button onClick={() => { setManagerTeamView({ user_id: m.user_id, name: mName }); loadManagerRoster(m.user_id); }} style={miniBtnStyle('var(--cyan)')}>VIEW</button>}
+                         </div>
+                       </div>
+                     );
+                   })}
+                 </div>
+               </div>
+
+               {/* Activity rail */}
+               <aside style={{ display: 'flex', flexDirection: 'column', background: 'var(--ink-2)' }}>
+                 <HubSectionLabel label="LEAGUE ACTIVITY" sub="LIVE" tone="var(--gold)" right={<span style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)' }}>LAST 24H</span>} />
+                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '32px 18px', gap: 8 }}>
+                   <div style={{ fontSize: 24 }}>⚽</div>
+                   <div style={{ fontFamily: MONO, fontSize: 10, color: 'var(--mute)', letterSpacing: '.2em', textAlign: 'center' }}>NO ACTIVITY YET</div>
+                   <div style={{ fontFamily: "'Archivo', sans-serif", fontSize: 11, color: 'var(--mute)', opacity: 0.6, textAlign: 'center', lineHeight: 1.5 }}>Match events, rank changes, and league news will appear here once the season starts.</div>
+                 </div>
+                 <div style={{ padding: '12px 18px', borderTop: '1px solid var(--rule)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                   <span style={{ fontFamily: MONO, fontSize: 10, color: 'var(--mute)', letterSpacing: '.18em' }}>FILTER</span>
+                   <div style={{ display: 'flex', gap: 6 }}>
+                     {['ALL', 'GAME', 'BETS', 'TRADES'].map((f, i) => (
+                       <span key={f} style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.18em', padding: '3px 6px', border: `1px solid ${i === 0 ? 'var(--cyan)' : 'var(--rule)'}`, color: i === 0 ? 'var(--cyan)' : 'var(--mute)' }}>{f}</span>
+                     ))}
+                   </div>
+                 </div>
+               </aside>
+             </div>
+           </div>
+         )}
+
+         {view === 'frontpage' && (() => {
+           const FT_PAPER = '#F2EEE5', FT_INK = '#0A0E14', FT_RULE = '#D8D2C6', FT_MUTE = '#5A6470', FT_RED = '#B0271E';
+           const ftSerif = "'Playfair Display', 'Times New Roman', serif";
+           const ftMono = "'JetBrains Mono', monospace";
+           const today = new Date().toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'long', year: 'numeric' });
+           return (
+             <div style={{ flex: 1, overflow: 'auto', padding: '20px 28px 40px', background: 'var(--ink)' }}>
+               {members && members.length <= 1 ? (
+                 /* Empty state */
+                 <div style={{ background: FT_PAPER, color: FT_INK, padding: '48px', textAlign: 'center', boxShadow: '0 30px 60px -20px rgba(0,0,0,.5)' }}>
+                   <div style={{ fontFamily: ftSerif, fontWeight: 900, fontStyle: 'italic', fontSize: 64, lineHeight: 0.9, color: FT_INK }}>FORZA TIMES</div>
+                   <div style={{ fontFamily: ftMono, fontSize: 11, color: FT_MUTE, letterSpacing: '.18em', marginTop: 16 }}>The Official Gazette</div>
+                   <div style={{ height: 1, background: FT_INK, margin: '20px 0 6px' }} />
+                   <div style={{ height: 4, background: FT_INK, marginBottom: 28 }} />
+                   <div style={{ fontFamily: ftSerif, fontSize: 22, color: FT_INK, marginBottom: 12 }}>League Created!</div>
+                   <p style={{ fontFamily: ftSerif, fontSize: 14, color: FT_MUTE, lineHeight: 1.6, maxWidth: 480, margin: '0 auto 24px' }}>
+                     Your league is ready. Invite friends via the INVITE button above, set up transfer windows in the Admin tab, and your Forza Times will come to life as the season unfolds.
+                   </p>
+                   <button onClick={() => setNewLeague(activeLeague?.leagues || activeLeague)} style={{ background: FT_INK, color: FT_PAPER, border: 'none', padding: '10px 24px', fontFamily: ftMono, fontSize: 11, letterSpacing: '.2em', cursor: 'pointer' }}>
+                     SHOW INVITE CODE →
+                   </button>
+                 </div>
+               ) : (
+                 /* Newspaper layout */
+                 <div style={{ background: FT_PAPER, color: FT_INK, boxShadow: '0 30px 60px -20px rgba(0,0,0,.5), 0 2px 0 0 #C9C2B3', padding: '34px 44px' }}>
+                   {/* Masthead */}
+                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', fontFamily: ftMono, fontSize: 11, letterSpacing: '.18em', color: FT_INK }}>
+                     <span>VOL · I</span>
+                     <span style={{ fontFamily: ftSerif, fontStyle: 'italic', fontSize: 14, letterSpacing: 0 }}>The Official Gazette of {name}</span>
+                     <span>EDITION · #1</span>
+                   </div>
+                   <div style={{ textAlign: 'center', marginTop: 6 }}>
+                     <div style={{ fontFamily: ftSerif, fontWeight: 900, fontStyle: 'italic', fontSize: 72, letterSpacing: '-0.03em', lineHeight: 0.9, color: FT_INK }}>FORZA TIMES</div>
+                     <div style={{ fontFamily: ftSerif, fontStyle: 'italic', fontSize: 13, color: FT_MUTE, marginTop: 6 }}>
+                       "All the points that's fit to print" · {today} · £0.00 to subscribers
+                     </div>
+                   </div>
+                   <div style={{ border: 0, height: 1, background: FT_INK, margin: '18px 0 4px' }} />
+                   <div style={{ height: 4, background: FT_INK, margin: '0 0 22px' }} />
+
+                   {/* Cover grid */}
+                   <div style={{ display: 'grid', gridTemplateColumns: '2.1fr 1fr 1.2fr', gap: 28 }}>
+                     {/* Lead story — standings snapshot */}
+                     <article>
+                       <div style={{ fontFamily: ftMono, fontSize: 10, letterSpacing: '.22em', color: FT_RED, marginBottom: 8 }}>LEAGUE STANDINGS · LATEST</div>
+                       <h1 style={{ fontFamily: ftSerif, fontWeight: 900, fontSize: 44, lineHeight: 0.98, letterSpacing: '-0.025em', color: FT_INK, marginBottom: 14 }}>
+                         {members[0] ? `${(members[0].users?.username || 'Unknown').toUpperCase()} leads the table.` : 'The season is yet to begin.'}
+                       </h1>
+                       {/* Placeholder image */}
+                       <div style={{ height: 180, background: `repeating-linear-gradient(135deg, ${FT_INK} 0 1px, transparent 1px 12px), #D6CFBF`, border: `1px solid ${FT_INK}`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                         <span style={{ fontFamily: ftMono, fontSize: 10, letterSpacing: '.22em', color: FT_INK, background: FT_PAPER, padding: '4px 8px', border: `1px solid ${FT_INK}` }}>LEAGUE PHOTO · MATCHDAY</span>
+                       </div>
+                       <p style={{ fontFamily: ftSerif, fontSize: 16, lineHeight: 1.5, color: FT_INK, marginTop: 14 }}>
+                         <span style={{ float: 'left', fontFamily: ftSerif, fontWeight: 900, fontSize: 52, lineHeight: 0.85, paddingRight: 8, paddingTop: 4, color: FT_INK }}>{members[0] ? (members[0].users?.username?.[0] || 'T').toUpperCase() : 'T'}</span>
+                         {members[0] ? `he ${name} is underway with ${members.length} managers fighting for glory. ${members[0].users?.username || 'The leader'} currently tops the table with ${members[0].total_points} points, setting the pace for the rest of the field.` : 'he season hasn\'t started yet. Invite your rivals and prepare for battle.'}
+                       </p>
+                       <div style={{ fontFamily: ftMono, fontSize: 10, letterSpacing: '.18em', color: FT_MUTE, marginTop: 12, textTransform: 'uppercase' }}>By the Forza Times Desk · {today}</div>
+                     </article>
+
+                     {/* Secondary column */}
+                     <div style={{ borderLeft: `1px solid ${FT_RULE}`, borderRight: `1px solid ${FT_RULE}`, padding: '0 22px' }}>
+                       <div style={{ fontFamily: ftMono, fontSize: 9, letterSpacing: '.22em', color: FT_RED }}>DRAFT REPORT</div>
+                       <h2 style={{ fontFamily: ftSerif, fontWeight: 800, fontSize: 22, lineHeight: 1.02, letterSpacing: '-0.02em', color: FT_INK, marginTop: 6 }}>Squad allocations & latest picks</h2>
+                       <div style={{ marginTop: 12 }}>
+                         <GazetteDraftReport leagueId={activeLeague?.league_id} />
+                       </div>
+                     </div>
+
+                     {/* Sidebar */}
+                     <aside>
+                       {/* Standings box */}
+                       <div style={{ border: `2px solid ${FT_INK}`, padding: '14px 16px', background: '#EFEAE0' }}>
+                         <div style={{ fontFamily: ftMono, fontSize: 9, letterSpacing: '.22em', color: FT_INK }}>STANDINGS · LATEST</div>
+                         <div style={{ fontFamily: ftSerif, fontWeight: 900, fontStyle: 'italic', fontSize: 18, color: FT_INK, marginTop: 2 }}>Table at a glance</div>
+                         <table style={{ width: '100%', marginTop: 8, borderCollapse: 'collapse', fontFamily: ftMono, fontSize: 11, color: FT_INK }}>
+                           <tbody>
+                             {members.slice(0, 6).map((m, i) => {
+                               const mName = (currentUser && m.user_id === currentUser.id) ? 'You' : (m.users?.username || 'Unknown');
+                               return (
+                                 <tr key={m.user_id} style={{ borderTop: i === 0 ? 'none' : `1px solid ${FT_RULE}` }}>
+                                   <td style={{ padding: '5px 4px', width: 18 }}>{i + 1}</td>
+                                   <td style={{ padding: '5px 4px', fontFamily: ftSerif, fontSize: 12 }}>{mName}</td>
+                                   <td style={{ padding: '5px 4px', textAlign: 'right', fontWeight: 600 }}>{m.total_points}</td>
+                                 </tr>
+                               );
+                             })}
+                           </tbody>
+                         </table>
+                       </div>
+                       {/* Quote */}
+                       <div style={{ paddingLeft: 16, borderLeft: `4px solid ${FT_INK}`, marginTop: 18 }}>
+                         <div style={{ fontFamily: ftMono, fontSize: 9, letterSpacing: '.22em', color: FT_RED }}>THIS WEEK IN LEAGUE CHAT</div>
+                         <blockquote style={{ fontFamily: ftSerif, fontStyle: 'italic', fontSize: 18, lineHeight: 1.2, color: FT_INK, marginTop: 6 }}>
+                           "May the best manager win."
+                         </blockquote>
+                       </div>
+                     </aside>
+                   </div>
+
+                   <div style={{ height: 1, background: FT_INK, margin: '24px 0 12px' }} />
+                   <div style={{ display: 'flex', justifyContent: 'space-between', fontFamily: ftMono, fontSize: 9, letterSpacing: '.22em', color: FT_MUTE }}>
+                     <span>EDITED BY THE FORZA TIMES DESK · {name.toUpperCase()}</span>
+                     <span>P. 01 OF 01</span>
+                   </div>
+                 </div>
+               )}
              </div>
            );
          })()}
 
-         {/* Manage Squad shortcut */}
-         <div className="px-4 py-2 flex gap-2">
-           <button
-             onClick={() => navigate(`/squad?leagueId=${activeLeague?.league_id}`)}
-             className="flex-1 py-2.5 rounded-sm flex items-center justify-center gap-2 transition-all active:opacity-70"
-             style={{ background: 'rgba(0,196,232,0.08)', border: '1px solid rgba(0,196,232,0.2)', color: 'var(--cyan)', fontFamily: 'Archivo Black, sans-serif', fontSize: '11px', fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase' }}
-           >
-             👥 Manage Squad
-           </button>
-           <button
-             onClick={() => navigate(`/market?leagueId=${activeLeague?.league_id}`)}
-             className="flex-1 py-2.5 rounded-sm flex items-center justify-center gap-2 transition-all active:opacity-70"
-             style={{ background: 'rgba(24,201,107,0.08)', border: '1px solid rgba(24,201,107,0.2)', color: 'var(--positive)', fontFamily: 'Archivo Black, sans-serif', fontSize: '11px', fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase' }}
-           >
-             🛒 Market
-           </button>
-         </div>
-
-         {/* Draft gap banner — shown only when manager has unresolved slots */}
-         {draftGaps > 0 && (
-           <div
-             onClick={() => navigate(`/league/${activeLeague?.league_id}/draft/recover`)}
-             className="bg-[#E53935] text-white px-4 py-3 flex items-center justify-between cursor-pointer active:opacity-80"
-           >
-             <div className="text-[13px] font-bold">
-               ⚠ Your squad has {draftGaps} empty slot{draftGaps !== 1 ? 's' : ''} — tap to pick now
+         {view === 'bets' && (
+           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: 'var(--ink)' }}>
+             <div style={{ padding: '18px 28px', borderBottom: '1px solid var(--rule)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
+               <div>
+                 <div data-tour="bets-header" style={{ fontFamily: MONO, fontSize: 10, color: 'var(--cyan)', letterSpacing: '.22em' }}>BETS &amp; PREDICTIONS</div>
+                 <div style={{ fontFamily: DISPLAY, fontSize: 24, marginTop: 4 }}>Make your picks before the deadline.</div>
+                 <div style={{ fontFamily: MONO, fontSize: 10, color: 'var(--mute)', marginTop: 6, letterSpacing: '.16em' }}>WIN BONUS POINTS — STACK THEM ONTO YOUR LEAGUE TOTAL.</div>
+               </div>
+               <button onClick={replayBetsTour} style={{ width: 20, height: 20, borderRadius: '50%', border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.4)', fontSize: 10, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>?</button>
              </div>
-             <div className="text-[11px] font-black uppercase tracking-widest opacity-80">→</div>
+             <div data-tour="bets-list" style={{ flex: 1, overflow: 'auto' }}>
+               <BetsSection leagueId={activeLeague?.league_id} squadId={mySquadId} />
+             </div>
            </div>
          )}
 
-         {renderTabs()}
-
-         {/* ── VIEWS ──────────────────────────────────────────────────────── */}
-         
-         {view === 'detail' && (
-           <>
-             <div data-tour="league-standings" className="bg-[var(--ink)] border-b border-[var(--rule)]">
-               <div className="flex text-[10px] text-[var(--mute)] font-semibold uppercase tracking-widest px-4 py-2 border-b border-[var(--rule)]">
-                 <div className="w-8 text-center shrink-0">#</div>
-                 <div className="flex-1 px-3">Manager</div>
-                 <div className="w-12 text-right shrink-0">MD</div>
-                 <div className="w-12 text-right shrink-0">TOT</div>
+         {view === 'betting_leaderboard' && (
+           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: 'var(--ink)' }}>
+             <div style={{ padding: '20px 28px', borderBottom: '1px solid var(--rule)', background: 'var(--ink-2)', flexShrink: 0 }}>
+               <div style={{ fontFamily: MONO, fontSize: 10, color: 'var(--cyan)', letterSpacing: '.22em' }}>BETTING PERFORMANCE · SEASON</div>
+               <div style={{ fontFamily: DISPLAY, fontSize: 24, marginTop: 6 }}>
+                 {betLoading ? '—' : leaderboard?.length ? `${leaderboard[0]?.username || '—'} leads the betting table.` : 'No resolved bets yet.'}
                </div>
-
-              {membersLoading && members.length === 0 ? (
-                <div className="p-12 text-center">
-                  <div className="inline-block w-6 h-6 border-2 border-cyan/30 border-t-cyan rounded-full animate-spin mb-3" />
-                  <div className="fz-label text-text-tertiary animate-pulse tracking-[0.2em]">Syncing Standings...</div>
-                </div>
-              ) : (
-                members.map((m) => {
-                const isMe = currentUser && m.user_id === currentUser.id;
-                const mName = isMe ? 'You' : (m.users?.username || 'Unknown');
-                return (
-                  <div key={m.user_id} className={`flex items-center px-4 py-3 border-b border-[var(--rule)] relative ${isMe ? 'bg-[var(--ink-2)]' : ''}`}>
-                    {isMe && <div className="absolute left-0 top-0 bottom-0 w-1 bg-white" />}
-                    <div className="w-8 text-center shrink-0 text-[13px] font-black text-white">{m.rank}</div>
-                    <div className="flex-1 px-3 flex items-center gap-2 min-w-0">
-                      <div className="fk-mono flex items-center justify-center shrink-0" style={{ width: 24, height: 24, border: '1px solid var(--rule)', color: 'var(--mute)', fontSize: 8 }}>{mName.substring(0,3)}</div>
-                      <div className="font-bold text-[14px] text-white flex items-center gap-1.5 min-w-0">
-                        <span className="truncate">{mName}</span>
-                        {!isMe && (
-                          <div className="flex gap-1">
-                            <button onClick={() => { const t = {...m, name: mName}; setTradeTarget(t); loadTradeSquads(m.user_id); setShowTradeBuilder(true); }} className="text-[8px] text-[#1E88E5] border border-[#1E88E5]/30 px-1.5 py-0.5 rounded-sm uppercase tracking-tighter">Trade</button>
-                            <button onClick={() => setH2hTarget({...m, name: mName})} className="text-[8px] text-text-tertiary border border-white/10 px-1.5 py-0.5 rounded-sm uppercase tracking-tighter">&#x2694; H2H</button>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                    <div className="w-12 text-right shrink-0 text-[13px] font-bold text-[var(--mute)]">-</div>
-                    <div className="w-12 text-right shrink-0 text-[13px] font-black text-white">{m.total_points}</div>
-                    <button onClick={() => { setManagerTeamView({ user_id: m.user_id, name: mName }); loadManagerRoster(m.user_id); }} className="fk-mono ml-3 active:scale-95" style={{ width: 32, height: 32, border: '1px solid var(--rule)', color: 'var(--mute)', fontSize: 8 }}>VIEW</button>
-                  </div>
-                )
-              }))}
              </div>
-
-             <div className="px-4 py-1.5 bg-[var(--ink)] border-b border-[var(--rule)]">
-                <span className="text-[11px] font-bold text-[var(--mute)] uppercase tracking-[.14em]">Activity</span>
-             </div>
-             <div className="bg-[var(--ink)] min-h-[20vh] flex flex-col items-center justify-center gap-2 py-12">
-               <div className="text-[28px]">⚽</div>
-               <div className="text-[11px] font-black uppercase tracking-widest" style={{ color: 'var(--mute)' }}>No activity yet</div>
-               <div className="text-[11px] text-center max-w-xs" style={{ color: 'var(--mute)', opacity: 0.6 }}>Match events, rank changes, and league news will appear here once the season starts.</div>
-             </div>
-           </>
-         )}
-
-         {view === 'frontpage' && (
-           <div className="bg-[#f2f2f2] text-[#1a1a1a] min-h-screen">
-             {members && members.length <= 1 ? (
-               // Empty state for newly created leagues
-               <div className="min-h-screen flex items-center justify-center p-8">
-                 <div className="text-center">
-                   <h1 className="font-serif text-5xl font-black mb-4">⚽</h1>
-                   <h2 className="font-serif text-3xl font-black mb-3">League Created!</h2>
-                   <p className="text-[15px] leading-relaxed mb-6 max-w-md mx-auto opacity-70">
-                     Your league is ready. Invite friends via the INVITE button, set up transfer windows in the COMMISSIONER tab, and activity will appear here as the competition begins.
-                   </p>
-                   <button
-                     onClick={() => setNewLeague(activeLeague?.leagues || activeLeague)}
-                     className="bg-black text-white px-6 py-2 rounded text-[13px] font-bold hover:bg-[#1a1a1a] transition"
-                   >
-                     📤 Show Invite Code
-                   </button>
-                 </div>
+             {betLoading ? (
+               <div style={{ padding: '48px 28px', textAlign: 'center', fontFamily: MONO, fontSize: 10, color: 'var(--mute)', letterSpacing: '.2em' }}>LOADING…</div>
+             ) : !leaderboard?.length ? (
+               <div style={{ padding: '64px 28px', textAlign: 'center' }}>
+                 <div style={{ fontFamily: MONO, fontSize: 11, color: 'var(--mute)', letterSpacing: '.2em' }}>NO RESOLVED BETS YET</div>
+                 <div style={{ fontFamily: "'Archivo', sans-serif", fontSize: 12, color: 'var(--mute)', marginTop: 8, opacity: 0.6 }}>Betting performance appears here once the first bet resolves.</div>
                </div>
              ) : (
-               // Active league — show draft report; matchday gazette content coming once season starts
-               <div className="bg-[#f2f2f2] text-[#1a1a1a]">
-                 <div className="px-6 py-8 border-b-2 border-black flex flex-col items-center text-center">
-                    <div className="text-[10px] font-black uppercase tracking-[0.4em] mb-2 font-serif underline decoration-2 underline-offset-4">The Official Gazette</div>
-                    <h1 className="font-serif text-4xl font-black italic tracking-tighter leading-none mb-1">FORZA TIMES</h1>
-                    <div className="w-full flex justify-between border-t border-b border-black/10 mt-4 py-1 text-[9px] font-bold uppercase tracking-widest">
-                       <span>VOL. I</span>
-                       <span>{new Date().toLocaleDateString()}</span>
-                       <span>EDITION #1</span>
-                    </div>
+               <div style={{ flex: 1, overflow: 'auto' }}>
+                 <div style={{ display: 'grid', gridTemplateColumns: '40px 1fr 70px 70px 70px 100px', gap: 14, padding: '10px 28px', borderBottom: '1px solid var(--rule)', color: 'var(--mute)' }}>
+                   {['#', 'MANAGER', 'W-L', 'WIN%', 'STR', 'REWARDS'].map(h => <span key={h} style={{ fontFamily: MONO, fontSize: 9 }}>{h}</span>)}
                  </div>
-                 {/* Draft report — renders only when a draft_report gazette entry exists */}
-                 <div className="p-6">
-                   <GazetteDraftReport leagueId={activeLeague?.league_id} />
-                 </div>
-                 <div className="p-8 text-center border-t-2 border-dashed border-black/20">
-                    <div className="w-12 h-1 bg-black mx-auto mb-4" />
-                    <div className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40">Season hasn't started yet</div>
-                    <div className="text-[11px] mt-2 opacity-50">Match recaps, league news, and highlights will appear here once the competition begins.</div>
-                 </div>
+                 {leaderboard.map((entry, i) => {
+                   const isMe = currentUser && entry.user_id === currentUser.id;
+                   const hue = mgrHue(entry.username || '');
+                   return (
+                     <div key={entry.user_id} style={{ display: 'grid', gridTemplateColumns: '40px 1fr 70px 70px 70px 100px', gap: 14, padding: '12px 28px', borderBottom: '1px solid var(--rule)', alignItems: 'center', background: isMe ? 'rgba(0,180,216,.04)' : 'transparent', borderLeft: isMe ? '2px solid var(--cyan)' : '2px solid transparent' }}>
+                       <span style={{ fontFamily: DISPLAY, fontSize: 14 }}>{i + 1}</span>
+                       <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                         <MgrTag mono={mgrMono(entry.username || '')} hue={hue} />
+                         <span style={{ fontFamily: DISPLAY, fontSize: 13 }}>{isMe ? 'You' : entry.username}</span>
+                       </div>
+                       <span style={{ fontFamily: "'Archivo', sans-serif", fontSize: 12, textAlign: 'right' }}>
+                         <span style={{ color: 'var(--positive)' }}>{entry.correct_bets}</span>
+                         <span style={{ color: 'var(--mute)' }}> · </span>
+                         <span style={{ color: 'var(--danger)' }}>{entry.total_bets - entry.correct_bets}</span>
+                       </span>
+                       <span style={{ textAlign: 'right', fontFamily: DISPLAY, fontSize: 13 }}>{entry.accuracy_pct}%</span>
+                       <span style={{ textAlign: 'right', fontFamily: MONO, fontSize: 11, color: 'var(--mute)' }}>—</span>
+                       <span style={{ textAlign: 'right', fontFamily: DISPLAY, fontSize: 14, color: 'var(--positive)' }}>+{entry.total_rewards}</span>
+                     </div>
+                   );
+                 })}
                </div>
              )}
            </div>
          )}
 
+         {view === 'auctions' && (
+           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: 'var(--ink)' }}>
+             <div style={{ padding: '20px 28px', borderBottom: '1px solid var(--rule)', background: 'var(--ink-2)', display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr', flexShrink: 0 }}>
+               <div style={{ borderRight: '1px solid var(--rule)', paddingRight: 24 }}>
+                 <div style={{ fontFamily: MONO, fontSize: 10, color: 'var(--gold)', letterSpacing: '.22em' }}>AUCTION HOUSE · {name.toUpperCase()}</div>
+                 <div style={{ fontFamily: DISPLAY, fontSize: 24, marginTop: 6 }}>Open bids. No two managers own the same player.</div>
+               </div>
+               {[
+                 { k: 'LIVE', v: auctions.filter(a => a.status === 'active').length, tone: 'var(--danger)' },
+                 { k: 'LISTED', v: auctions.length, tone: 'var(--gold)' },
+                 { k: 'STATUS', v: auctionsLoading ? '…' : 'LIVE', tone: 'var(--cyan)' },
+               ].map((c, i) => (
+                 <div key={c.k} style={{ padding: '0 22px', borderRight: i < 2 ? '1px solid var(--rule)' : 'none' }}>
+                   <div style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.22em' }}>{c.k}</div>
+                   <div style={{ fontFamily: DISPLAY, fontSize: 28, color: c.tone, marginTop: 6, letterSpacing: '-0.02em' }}>{c.v}</div>
+                 </div>
+               ))}
+             </div>
+             <div style={{ flex: 1, overflow: 'auto', padding: '0 0 80px' }}>
+               {auctionsLoading && (
+                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '64px 28px' }}>
+                   <div style={{ fontFamily: MONO, fontSize: 10, color: 'var(--mute)', letterSpacing: '.2em' }}>SYNCING AUCTIONS…</div>
+                 </div>
+               )}
+               {!auctionsLoading && auctions.length === 0 && (
+                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '64px 28px', gap: 12 }}>
+                   <div style={{ fontSize: 28 }}>🔨</div>
+                   <div style={{ fontFamily: MONO, fontSize: 11, color: 'var(--mute)', letterSpacing: '.2em' }}>NO ACTIVE AUCTIONS</div>
+                   <div style={{ fontFamily: "'Archivo', sans-serif", fontSize: 11, color: 'var(--mute)', opacity: 0.6, maxWidth: 320, textAlign: 'center' }}>List a player for auction from your Squad screen to start bidding.</div>
+                 </div>
+               )}
+               {auctions.map(auction => (
+                 <AuctionCard
+                   key={auction.id}
+                   auction={auction}
+                   mySquadId={mySquadId}
+                   onBid={async (id, amount) => { const res = await placeBid(id, amount); if (res.ok) showToast('Bid placed!', 'success'); return res; }}
+                   onCancel={async (id) => { const res = await cancelListing(id); if (res.ok) showToast('Listing cancelled.', 'info'); return res; }}
+                   onSellNow={async (id) => { const res = await sellNow(id); if (res.ok) showToast('Player sold!', 'success'); return res; }}
+                 />
+               ))}
+             </div>
+           </div>
+         )}
+
          {view === 'chat' && (
-            <div className="flex-1 min-h-[60vh] flex flex-col bg-[var(--ink)]">
-              <div className="bg-[var(--ink)] px-4 py-2 border-b border-[var(--rule)] flex items-center gap-2">
-                <span className="text-[10px]">💬</span>
-                <span className="text-[11px] font-bold text-[var(--mute)]">League Chat</span>
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: 'var(--ink)', minHeight: '60vh' }}>
+              {/* Compact search bar */}
+              <div style={{ background: 'var(--ink-2)', padding: '10px 20px', borderBottom: '1px solid var(--rule)', display: 'flex', gap: 10, alignItems: 'center', flexShrink: 0 }}>
+                <span style={{ fontFamily: MONO, fontSize: 10, color: 'var(--mute)', letterSpacing: '.18em' }}>#LEAGUE-CHAT</span>
+                <span style={{ flex: 1 }} />
+              <input
+                type="text"
+                placeholder="Search messages…"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                style={{ background: 'var(--ink)', border: '1px solid var(--rule)', color: 'var(--paper)', padding: '6px 12px', fontFamily: "'Archivo', sans-serif", fontSize: 12, outline: 'none', width: 200 }}
+              />
+              {searchTerm && (
+                <>
+                  <span style={{ fontFamily: MONO, fontSize: 10, color: 'var(--mute)' }}>{resultCount} result{resultCount !== 1 ? 's' : ''}</span>
+                  <button onClick={clearSearch} style={{ ...miniBtnStyle('var(--mute)'), padding: '4px 10px' }}>CLEAR</button>
+                </>
+              )}
               </div>
-              <div className="bg-[var(--ink)] px-4 py-3 border-b border-[var(--rule)] flex gap-2 items-center">
-                <input
-                  type="text"
-                  placeholder="Search messages..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="flex-1 bg-[var(--ink-2)] border border-[var(--rule)] rounded px-3 py-1.5 text-sm text-white placeholder-[var(--mute)]"
-                />
-                {searchTerm && (
-                  <>
-                    <span className="text-[10px] text-[var(--mute)]">{resultCount} result{resultCount !== 1 ? 's' : ''}</span>
-                    <button
-                      onClick={clearSearch}
-                      className="px-2 py-1 text-xs bg-[var(--rule)] text-white rounded hover:bg-cyan hover:text-black transition-colors"
-                    >
-                      Clear
-                    </button>
-                  </>
-                )}
-              </div>
-              <div className="flex-1 overflow-y-auto px-4 py-6 flex flex-col gap-5">
+              <div style={{ flex: 1, overflow: 'auto', padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: 16 }}>
                 {chatLoading && (
-                  <div className="flex justify-center items-center h-20">
-                    <span className="text-[12px] text-[var(--mute)]">Loading messages...</span>
+                  <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: 80 }}>
+                    <span style={{ fontFamily: MONO, fontSize: 11, color: 'var(--mute)', letterSpacing: '.18em' }}>LOADING MESSAGES…</span>
                   </div>
                 )}
                 {!chatLoading && messages.length === 0 && (
-                  <div className="flex justify-center items-center h-20">
-                    <span className="text-[12px] text-[var(--mute)]">No messages yet. Start the conversation!</span>
+                  <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: 80 }}>
+                    <span style={{ fontFamily: "'Archivo', sans-serif", fontSize: 12, color: 'var(--mute)' }}>No messages yet. Start the conversation!</span>
                   </div>
                 )}
                 {!chatLoading && messages.length > 0 && searchTerm && filteredMessages.length === 0 && (
-                  <div className="flex justify-center items-center h-20">
-                    <span className="text-[12px] text-[var(--mute)]">No messages match "{searchTerm}"</span>
+                  <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: 80 }}>
+                    <span style={{ fontFamily: "'Archivo', sans-serif", fontSize: 12, color: 'var(--mute)' }}>No messages match &ldquo;{searchTerm}&rdquo;</span>
                   </div>
                 )}
-                {filteredMessages.map((msg) => (
+                {filteredMessages.map((msg) => {
+                  const msgHue = mgrHue(msg.userName || '');
+                  return (
                   <div
                     key={msg.id}
-                    className={`flex flex-col gap-1 w-[85%] ${msg.isOwnMessage ? 'self-end items-end' : ''} animate-in ${msg.isOwnMessage ? 'slide-in-from-right' : 'slide-in-from-left'} group`}
+                    style={{ display: 'grid', gridTemplateColumns: '38px 1fr', gap: 12, alignItems: 'flex-start' }}
                   >
-                    <div className={`text-[10px] font-black uppercase tracking-wider mb-1 ${msg.isOwnMessage ? 'text-cyan mr-2 text-right' : 'text-text-tertiary ml-2'}`}>
-                      {msg.isOwnMessage ? 'You' : msg.userName} (Rank {msg.userRank})
+                    <div style={{ paddingTop: 2 }}>
+                      <MgrTag mono={mgrMono(msg.isOwnMessage ? 'You' : (msg.userName || ''))} hue={msg.isOwnMessage ? 'var(--cyan)' : msgHue} size={22} />
+                    </div>
+                    <div>
+                    <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 3 }}>
+                      <span style={{ fontFamily: DISPLAY, fontSize: 13, color: msg.isOwnMessage ? 'var(--cyan)' : msgHue, letterSpacing: '-0.01em' }}>{msg.isOwnMessage ? 'You' : msg.userName}</span>
+                      <span style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.16em' }}>{new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                      {msg.userRank && <span style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)' }}>· RANK {msg.userRank}</span>}
                     </div>
                     {editingMessageId === msg.id ? (
                       <div className="flex gap-2 items-center w-full">
@@ -1082,314 +1279,143 @@ export default function LeagueScreen() {
                       </div>
                     ) : (
                       <>
-                        <div className={`text-[14px] px-4 py-2.5 rounded-sm border ${
-                          msg.isOwnMessage
-                            ? 'bg-cyan/10 text-white border-cyan/20 rounded-tr-sm'
-                            : 'bg-[var(--ink-2)] text-white border-[var(--rule)] rounded-tl-sm'
-                        } relative group/msg`}>
+                        <div style={{ fontFamily: "'Archivo', sans-serif", fontSize: 13, color: 'var(--paper)', lineHeight: 1.45 }}>
                           {msg.isDeleted ? (
-                            <span className="italic text-[var(--mute)]">[deleted]</span>
+                            <span style={{ fontStyle: 'italic', color: 'var(--mute)' }}>[deleted]</span>
                           ) : (
-                            <span>
-                              {msg.message.split(/(@\w+)/g).map((part, idx) =>
-                                part.startsWith('@') ? (
-                                  <span key={idx} className="font-semibold text-cyan">{part}</span>
-                                ) : (
-                                  <span key={idx}>{part}</span>
-                                )
-                              )}
-                            </span>
-                          )}
-                          {msg.isOwnMessage && !msg.isDeleted && (
-                            <div className="absolute -right-20 top-0 flex gap-1 opacity-0 group-hover/msg:opacity-100 transition-opacity">
-                              <button
-                                onClick={() => {
-                                  setEditingMessageId(msg.id);
-                                  setEditingText(msg.message);
-                                }}
-                                className="px-1.5 py-0.5 bg-[var(--rule)] text-white text-xs rounded hover:bg-cyan hover:text-black"
-                                title="Edit"
-                              >
-                                ✏️
-                              </button>
-                              <button
-                                onClick={() => deleteMessage(msg.id)}
-                                className="px-1.5 py-0.5 bg-[var(--rule)] text-white text-xs rounded hover:bg-red-600"
-                                title="Delete"
-                              >
-                                🗑️
-                              </button>
-                            </div>
+                            msg.message.split(/(@\w+)/g).map((part, idx) =>
+                              part.startsWith('@') ? (
+                                <span key={idx} style={{ color: 'var(--cyan)', fontFamily: MONO, fontSize: 12, padding: '0 2px', background: 'rgba(0,180,216,.08)' }}>{part}</span>
+                              ) : (
+                                <span key={idx}>{part}</span>
+                              )
+                            )
                           )}
                         </div>
                         {msg.editedAt && !msg.isDeleted && (
-                          <div className="text-[9px] text-[var(--mute)]">
-                            (edited)
+                          <div style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', marginTop: 2 }}>(edited)</div>
+                        )}
+                        {msg.isOwnMessage && !msg.isDeleted && (
+                          <div style={{ display: 'flex', gap: 6, marginTop: 4 }}>
+                            <button onClick={() => { setEditingMessageId(msg.id); setEditingText(msg.message); }} style={miniBtnStyle('var(--mute)')}>EDIT</button>
+                            <button onClick={() => deleteMessage(msg.id)} style={miniBtnStyle('var(--danger)')}>DEL</button>
                           </div>
                         )}
                       </>
                     )}
-                    <div className={`text-[9px] text-text-tertiary mt-1 ${msg.isOwnMessage ? 'mr-2 text-right' : 'ml-2'}`}>
-                      {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </div>
                   </div>
-                ))}
+                  );
+                })}
                 <div ref={scrollEndRef} />
               </div>
-              <div className="p-4 bg-[var(--ink)] border-t border-[var(--rule)]">
+              <div style={{ borderTop: '1px solid var(--rule)', padding: '14px 20px', background: 'var(--ink-2)', flexShrink: 0 }}>
                 {Object.values(typingUsers).length > 0 && (
-                  <div className="text-[11px] text-[var(--mute)] mb-2 italic">
-                    {Object.values(typingUsers).map(t => t.name).join(', ')} {Object.keys(typingUsers).length === 1 ? 'is' : 'are'} typing...
+                  <div style={{ fontFamily: "'Archivo', sans-serif", fontSize: 11, color: 'var(--mute)', marginBottom: 8, fontStyle: 'italic' }}>
+                    {Object.values(typingUsers).map(t => t.name).join(', ')} {Object.keys(typingUsers).length === 1 ? 'is' : 'are'} typing…
                   </div>
                 )}
-                 <form
-                   onSubmit={async (e) => {
-                     e.preventDefault();
-                     if (!chatInput.trim() || chatSending) return;
-                     setChatSending(true);
-                     const result = await sendMessage(chatInput, mentionedUserIds);
-                     if (result.ok) {
-                       setChatInput('');
-                       resetMentions();
-                     } else {
-                       console.error('Failed to send message:', result.error);
-                     }
-                     setChatSending(false);
-                   }}
-                   className="w-full relative"
-                 >
-                   <div className="bg-[var(--ink-2)] border border-[var(--rule)] rounded-lg flex items-center px-4 py-1">
-                      <input
-                        type="text"
-                        placeholder="Roast your rivals... (try @username)"
-                        value={chatInput}
-                        onChange={(e) => {
-                          const newVal = e.target.value;
-                          setChatInput(newVal);
-                          parseMentionPattern(newVal);
-                          broadcastTyping();
-                        }}
-                        onKeyDown={(e) => {
-                          if (mentionMatches.length > 0) {
-                            if (e.key === 'ArrowDown') {
-                              e.preventDefault();
-                              handleMentionNavigate(1);
-                            } else if (e.key === 'ArrowUp') {
-                              e.preventDefault();
-                              handleMentionNavigate(-1);
-                            } else if (e.key === 'Enter' && selectedMention) {
-                              e.preventDefault();
-                              const newText = insertMention(chatInput, selectedMention);
-                              setChatInput(newText);
-                            }
-                          }
-                        }}
-                        disabled={chatSending}
-                        className="flex-1 bg-transparent py-3 text-sm text-white outline-none placeholder-[var(--mute)] disabled:opacity-50"
-                      />
-                      <button
-                        type="submit"
-                        disabled={!chatInput.trim() || chatSending}
-                        className="w-8 h-8 rounded-full bg-cyan text-black flex items-center justify-center font-bold disabled:opacity-50 disabled:cursor-not-allowed transition-opacity"
-                      >
-                        {chatSending ? '...' : '↑'}
-                      </button>
-                   </div>
-
-                   {/* Mention autocomplete dropdown */}
-                   {mentionMatches.length > 0 && mentionSearch && (
-                     <div className="absolute bottom-12 left-4 right-4 bg-[var(--ink-3)] border border-[var(--rule)] rounded-lg shadow-lg z-50 max-h-48 overflow-y-auto">
-                       {mentionMatches.map((member) => (
-                         <button
-                           key={member.id}
-                           type="button"
-                           onClick={() => {
-                             const newText = insertMention(chatInput, member);
-                             setChatInput(newText);
-                           }}
-                           className={`w-full text-left px-4 py-2 text-sm transition-colors ${
-                             selectedMention?.id === member.id ? 'bg-cyan text-black' : 'hover:bg-[var(--ink-2)] text-white'
-                           }`}
-                         >
-                           <span className="font-semibold">@{member.name}</span>
-                           <span className="text-[var(--mute)] text-xs ml-2">{member.email}</span>
-                         </button>
-                       ))}
-                     </div>
-                   )}
-                 </form>
+                <form
+                  onSubmit={async (e) => {
+                    e.preventDefault();
+                    if (!chatInput.trim() || chatSending) return;
+                    setChatSending(true);
+                    const result = await sendMessage(chatInput, mentionedUserIds);
+                    if (result.ok) { setChatInput(''); resetMentions(); }
+                    else console.error('Failed to send message:', result.error);
+                    setChatSending(false);
+                  }}
+                  style={{ width: '100%', position: 'relative' }}
+                >
+                  <div style={{ background: 'var(--ink)', border: '1px solid var(--rule)', display: 'flex', alignItems: 'center', padding: '0 14px' }}>
+                    <input
+                      type="text"
+                      placeholder="Roast your rivals… (try @username · /bet · /trade)"
+                      value={chatInput}
+                      onChange={(e) => { const v = e.target.value; setChatInput(v); parseMentionPattern(v); broadcastTyping(); }}
+                      onKeyDown={(e) => {
+                        if (mentionMatches.length > 0) {
+                          if (e.key === 'ArrowDown') { e.preventDefault(); handleMentionNavigate(1); }
+                          else if (e.key === 'ArrowUp') { e.preventDefault(); handleMentionNavigate(-1); }
+                          else if (e.key === 'Enter' && selectedMention) { e.preventDefault(); setChatInput(insertMention(chatInput, selectedMention)); }
+                        }
+                      }}
+                      disabled={chatSending}
+                      style={{ flex: 1, background: 'transparent', padding: '12px 0', fontFamily: "'Archivo', sans-serif", fontSize: 13, color: 'var(--paper)', outline: 'none', opacity: chatSending ? 0.5 : 1 }}
+                    />
+                    <button type="submit" disabled={!chatInput.trim() || chatSending} style={{ background: 'var(--cyan)', color: 'var(--ink)', border: 'none', padding: '8px 14px', fontFamily: DISPLAY, fontSize: 12, letterSpacing: '.18em', cursor: 'pointer', opacity: (!chatInput.trim() || chatSending) ? 0.5 : 1 }}>
+                      {chatSending ? '…' : 'SEND ↵'}
+                    </button>
+                  </div>
+                  {mentionMatches.length > 0 && mentionSearch && (
+                    <div style={{ position: 'absolute', bottom: '100%', left: 0, right: 0, background: 'var(--ink-3)', border: '1px solid var(--rule)', zIndex: 50, maxHeight: 192, overflow: 'auto' }}>
+                      {mentionMatches.map((member) => (
+                        <button key={member.id} type="button" onClick={() => setChatInput(insertMention(chatInput, member))} style={{ width: '100%', textAlign: 'left', padding: '8px 16px', fontFamily: "'Archivo', sans-serif", fontSize: 12, color: selectedMention?.id === member.id ? 'var(--ink)' : 'var(--paper)', background: selectedMention?.id === member.id ? 'var(--cyan)' : 'transparent', border: 'none', cursor: 'pointer' }}>
+                          <span style={{ fontWeight: 700 }}>@{member.name}</span>
+                          <span style={{ color: 'var(--mute)', fontSize: 10, marginLeft: 8 }}>{member.email}</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </form>
               </div>
             </div>
           )}
 
-         {view === 'bets' && (
-           <div className="bg-[var(--ink)] min-h-[60vh]">
-             <div data-tour="bets-header" className="px-4 py-3 border-b border-[var(--rule)] flex items-center justify-between">
-               <div>
-                 <div className="text-[11px] font-black uppercase tracking-[0.15em] text-[var(--mute)]">Bets & Predictions</div>
-                 <div className="text-[12px] text-[var(--mute)] mt-0.5">Make your picks before the deadline</div>
-               </div>
-               <button
-                 onClick={replayBetsTour}
-                 title="Replay bets tour"
-                 style={{
-                   width: 20, height: 20, borderRadius: '50%',
-                   border: '1px solid rgba(255,255,255,0.15)',
-                   background: 'rgba(255,255,255,0.05)',
-                   color: 'rgba(255,255,255,0.4)',
-                   fontSize: 10, fontWeight: 700, cursor: 'pointer',
-                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                   flexShrink: 0,
-                 }}
-               >?</button>
-             </div>
-             <div data-tour="bets-list">
-               <BetsSection leagueId={activeLeague?.league_id} squadId={mySquadId} />
-             </div>
-           </div>
-         )}
-
-         {view === 'auctions' && (
-           <div className="bg-[var(--ink)] min-h-[60vh]">
-             <div className="px-4 py-3 border-b border-[var(--rule)] flex items-center justify-between">
-               <div>
-                 <div className="text-[11px] font-black uppercase tracking-[0.15em] text-[var(--mute)]">Auction House</div>
-                 <div className="text-[12px] text-[var(--mute)] mt-0.5">
-                   {auctions.length ? `${auctions.length} active listing${auctions.length !== 1 ? 's' : ''}` : 'No active auctions'}
-                 </div>
-               </div>
-               <div className="text-[9px] font-bold uppercase tracking-widest text-[var(--mute)]">
-                 {auctionsLoading ? 'Syncing…' : 'Live'}
-               </div>
-             </div>
-             {auctionsLoading && (
-               <div className="flex items-center justify-center py-12">
-                 <div className="w-5 h-5 border-2 border-cyan/30 border-t-cyan rounded-full animate-spin" />
-               </div>
-             )}
-             {!auctionsLoading && auctions.length === 0 && (
-               <div className="flex flex-col items-center justify-center py-16 px-8 text-center gap-3">
-                 <div className="text-[28px]">🔨</div>
-                 <div className="text-[11px] font-black uppercase tracking-widest text-[var(--mute)]">No active auctions</div>
-                 <div className="text-[11px] text-[var(--mute)] opacity-60 max-w-xs">
-                   List a player for auction from your Squad screen to start bidding.
-                 </div>
-               </div>
-             )}
-             {auctions.map(auction => (
-               <AuctionCard
-                 key={auction.id}
-                 auction={auction}
-                 mySquadId={mySquadId}
-                 onBid={async (id, amount) => {
-                   const res = await placeBid(id, amount);
-                   if (res.ok) showToast('Bid placed!', 'success');
-                   return res;
-                 }}
-                 onCancel={async (id) => {
-                   const res = await cancelListing(id);
-                   if (res.ok) showToast('Listing cancelled.', 'info');
-                   return res;
-                 }}
-                 onSellNow={async (id) => {
-                   const res = await sellNow(id);
-                   if (res.ok) showToast('Player sold!', 'success');
-                   return res;
-                 }}
-               />
-             ))}
-           </div>
-         )}
-
          {view === 'stats' && (
-            <div className="min-h-[60vh] p-6 bg-[var(--ink)]">
-              <h2 className="text-[13px] font-black uppercase tracking-widest mb-6 text-[var(--mute)]">📊 League Stats</h2>
-              {statsLoading ? (
-                <div className="text-center text-[var(--mute)]">Loading...</div>
-              ) : (
-                <>
-                  {/* Top Scorers Section */}
-                  <div className="mb-8">
-                    <h3 className="text-[11px] font-bold uppercase mb-4 text-white">Top Scorers</h3>
-                    <div className="space-y-2">
-                      {topScorers?.map((scorer, i) => (
-                        <div key={scorer.user_id} className="flex gap-3 px-4 py-2 rounded bg-[var(--ink-2)] border border-[var(--rule)]">
-                          <span className="text-[11px] font-black text-[var(--mute)] w-6">{i + 1}</span>
-                          <span className="text-[11px] font-bold flex-1">{scorer.username}</span>
-                          <span className="text-[11px] font-bold text-[var(--cyan)]">{scorer.total_points} pts</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Team Metrics Section */}
-                  <div>
-                    <h3 className="text-[11px] font-bold uppercase mb-4 text-white">League Overview</h3>
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="px-4 py-3 rounded bg-[var(--ink-2)] border border-[var(--rule)] text-center">
-                        <div className="text-[9px] text-[var(--mute)] uppercase tracking-widest mb-1">Members</div>
-                        <div className="text-[16px] font-black text-white">{teamMetrics?.member_count}</div>
-                      </div>
-                      <div className="px-4 py-3 rounded bg-[var(--ink-2)] border border-[var(--rule)] text-center">
-                        <div className="text-[9px] text-[var(--mute)] uppercase tracking-widest mb-1">Avg Points</div>
-                        <div className="text-[16px] font-black text-white">{teamMetrics?.avg_points?.toFixed(0)}</div>
-                      </div>
-                    </div>
-                  </div>
-                </>
-              )}
-            </div>
-          )}
-
-         {view === 'betting_leaderboard' && (
-            <div className="min-h-[60vh] p-6 bg-[var(--ink)]">
-              <h2 className="text-[13px] font-black uppercase tracking-widest mb-6 text-[var(--mute)]">🎯 Betting Performance</h2>
-              {betLoading ? (
-                <div className="text-center text-[var(--mute)]">Loading...</div>
-              ) : leaderboard?.length === 0 ? (
-                <div className="text-center text-[var(--mute)] py-8">No resolved bets yet</div>
-              ) : (
-                <div className="space-y-2">
-                  {leaderboard?.map((entry, i) => (
-                    <div key={entry.user_id} className="flex gap-3 px-4 py-3 rounded bg-[var(--ink-2)] border border-[var(--rule)] items-center">
-                      <span className="text-[11px] font-black text-[var(--mute)] w-6">{i + 1}</span>
-                      <span className="text-[11px] font-bold flex-1">{entry.username}</span>
-                      <div className="flex gap-3 text-[10px]">
-                        <div className="text-right">
-                          <div className="text-[var(--mute)]">{entry.correct_bets}/{entry.total_bets}</div>
-                          <div className="text-[var(--cyan)] font-bold">{entry.accuracy_pct}%</div>
-                        </div>
-                        <div className="text-right">
-                          <div className="text-[var(--mute)]">Rewards</div>
-                          <div className="text-[var(--positive)] font-bold">+{entry.total_rewards}</div>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
+           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: 'var(--ink)' }}>
+             <div style={{ padding: '20px 28px', borderBottom: '1px solid var(--rule)', background: 'var(--ink-2)', flexShrink: 0 }}>
+               <div style={{ fontFamily: MONO, fontSize: 10, color: 'var(--purple)', letterSpacing: '.22em' }}>LEAGUE STATS · SEASON</div>
+               <div style={{ fontFamily: DISPLAY, fontSize: 24, marginTop: 6 }}>Numbers, the way the league reads them.</div>
+             </div>
+             {statsLoading ? (
+               <div style={{ padding: '48px 28px', textAlign: 'center', fontFamily: MONO, fontSize: 10, color: 'var(--mute)', letterSpacing: '.2em' }}>LOADING…</div>
+             ) : (
+               <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '1fr 1fr', gridTemplateRows: 'auto auto', gap: 0 }}>
+                 {/* Top Scorers */}
+                 <div style={{ padding: '16px 24px', borderRight: '1px solid var(--rule)', borderBottom: '1px solid var(--rule)' }}>
+                   <HubSectionLabel label="SEASON TOTALS · TOP SCORERS" tone="var(--cyan)" />
+                   <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 12 }}>
+                     {topScorers?.map((scorer, i) => {
+                       const hue = mgrHue(scorer.username || '');
+                       return (
+                         <div key={scorer.user_id} style={{ display: 'grid', gridTemplateColumns: '30px auto 1fr auto', gap: 12, alignItems: 'center', padding: '10px 12px', background: 'var(--ink-2)', border: '1px solid var(--rule)' }}>
+                           <span style={{ fontFamily: DISPLAY, fontSize: 16, color: i === 0 ? 'var(--gold)' : 'var(--mute)' }}>{i + 1}</span>
+                           <MgrTag mono={mgrMono(scorer.username || '')} hue={hue} />
+                           <span style={{ fontFamily: DISPLAY, fontSize: 13 }}>{scorer.username}</span>
+                           <span style={{ fontFamily: DISPLAY, fontSize: 16, color: i === 0 ? 'var(--gold)' : 'var(--paper)' }}>{scorer.total_points}<span style={{ color: 'var(--mute)', fontSize: 11, marginLeft: 4 }}>PTS</span></span>
+                         </div>
+                       );
+                     })}
+                   </div>
+                 </div>
+                 {/* Overview */}
+                 <div style={{ padding: '16px 24px', borderBottom: '1px solid var(--rule)' }}>
+                   <HubSectionLabel label="LEAGUE OVERVIEW" tone="var(--gold)" />
+                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginTop: 12 }}>
+                     {[
+                       { k: 'MEMBERS', v: teamMetrics?.member_count || members.length, tone: 'var(--paper)' },
+                       { k: 'AVG POINTS', v: teamMetrics?.avg_points?.toFixed(0) || '—', tone: 'var(--cyan)' },
+                     ].map(c => (
+                       <div key={c.k} style={{ padding: '14px 16px', background: 'var(--ink-2)', border: '1px solid var(--rule)', textAlign: 'center' }}>
+                         <div style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.22em' }}>{c.k}</div>
+                         <div style={{ fontFamily: DISPLAY, fontSize: 28, color: c.tone, marginTop: 6, letterSpacing: '-0.02em' }}>{c.v}</div>
+                       </div>
+                     ))}
+                   </div>
+                 </div>
+               </div>
+             )}
+           </div>
+         )}
 
          {/* ── COMMISSIONER PANEL ─────────────────────────────────────────── */}
          {view === 'commissioner' && isCommissioner && (
-           <div className="p-4 space-y-4 pb-20">
-             <div className="flex items-center justify-between pt-2">
-               <div className="text-[9px] font-black uppercase tracking-[0.2em] text-text-tertiary">Commissioner Controls</div>
-               <button
-                 onClick={replayCommissionerTour}
-                 title="Replay admin tour"
-                 style={{
-                   width: 20, height: 20, borderRadius: '50%',
-                   border: '1px solid rgba(255,255,255,0.15)',
-                   background: 'rgba(255,255,255,0.05)',
-                   color: 'rgba(255,255,255,0.4)',
-                   fontSize: 10, fontWeight: 700, cursor: 'pointer',
-                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                   flexShrink: 0,
-                 }}
-               >?</button>
-             </div>
+           <div style={{ flex: 1, overflow: 'auto', background: 'var(--ink)' }}>
+             <HubSectionLabel label="COMMISSIONER CONTROLS" sub="ADMIN ONLY" tone="var(--purple)"
+               right={<button onClick={replayCommissionerTour} data-tour="comm-transfer-window" style={{ width: 20, height: 20, borderRadius: '50%', border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.4)', fontSize: 10, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>?</button>}
+             />
+             <div style={{ padding: '16px 28px', display: 'flex', flexDirection: 'column', gap: 16, paddingBottom: 80 }}>
 
              {/* Feedback message */}
              {commMsg && (
@@ -1804,6 +1830,7 @@ export default function LeagueScreen() {
                )}
              </div>
            </div>
+           </div>
          )}
 
          {/* ── MODALS ─────────────────────────────────────────────────────── */}
@@ -1948,7 +1975,7 @@ export default function LeagueScreen() {
            />
          )}
 
-       </div>
+      </div>
     );
   }
 
