@@ -85,11 +85,11 @@ async function goToLive(page) {
 
 // ── 1. Page structure ─────────────────────────────────────────────────────────
 
-test.describe('Live Center — page structure', () => {
-  test('renders LIVE CENTER heading', async ({ page }) => {
+test.describe('Live Centre — page structure', () => {
+  test('renders LIVE CENTRE heading', async ({ page }) => {
     await goToLive(page);
     const body = await page.locator('body').innerText();
-    expect(body.toUpperCase()).toContain('LIVE CENTER');
+    expect(body.toUpperCase()).toContain('LIVE CENTRE');
   });
 
   test('no JS errors on load', async ({ page }) => {
@@ -116,8 +116,8 @@ test.describe('Live Center — match ticker (real data)', () => {
       // Real fixture: check for team abbreviations
       expect(body).toMatch(/[A-Z]{2,3}\s*vs\s*[A-Z]{2,3}|[A-Z]{2,3}\s*[0-9]/i);
     } else {
-      // No fixture: check that Live Center still renders
-      expect(body.toUpperCase()).toContain('LIVE CENTER');
+      // No fixture: check that Live Centre still renders
+      expect(body.toUpperCase()).toContain('LIVE CENTRE');
     }
   });
 
@@ -150,7 +150,7 @@ test.describe('Live Center — event feed (real data)', () => {
       expect(hasPlayerNames || body.toUpperCase().includes('EVENT'), 'Event feed not found').toBe(true);
     } else {
       // No events: verify page still loads
-      expect(body.toUpperCase()).toContain('LIVE CENTER');
+      expect(body.toUpperCase()).toContain('LIVE CENTRE');
     }
   });
 
@@ -224,7 +224,7 @@ test.describe('Live Center — mobile viewport', () => {
     await goToLive(page);
 
     const body = await page.locator('body').innerText();
-    expect(body.toUpperCase()).toContain('LIVE CENTER');
+    expect(body.toUpperCase()).toContain('LIVE CENTRE');
     expect(errors, `JS errors at 375px: ${errors.join(', ')}`).toHaveLength(0);
   });
 
@@ -245,8 +245,8 @@ test.describe('Live Center — mobile viewport', () => {
     // or the LIVE CENTER heading itself — all indicate the screen rendered correctly
     const upper = body.toUpperCase();
     expect(
-      upper.includes('LIVE PTS') || upper.includes('NO LIVE') || upper.includes('LIVE CENTER'),
-      'Expected live score panel, no-live-matches message, or LIVE CENTER heading'
+      upper.includes('LIVE PTS') || upper.includes('NO LIVE') || upper.includes('LIVE CENTRE'),
+      'Expected live score panel, no-live-matches message, or LIVE CENTRE heading'
     ).toBe(true);
   });
 });
