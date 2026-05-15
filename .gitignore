@@ -33,6 +33,11 @@ playwright-results.txt
 # Claude Code — local settings and ephemeral worktrees
 .claude/settings.local.json
 .claude/worktrees/
+.claude/memory/
+
+# Design reference files (large HTML/JSX mock-ups, local only)
+docs/brand/LIVE/
+docs/brand/SCORES/
 
 # Google Antigravity — local session files
 .antigravity/
