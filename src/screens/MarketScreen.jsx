@@ -55,7 +55,7 @@ export default function MarketScreen() {
   const { show: showToast } = useToast();
   const [searchParams] = useSearchParams();
   const leagueId = searchParams.get('leagueId');
-  const { showMarketTour, completeMarketTour } = useOnboarding();
+  const { showMarketTour, completeMarketTour, replayMarketTour } = useOnboarding();
   const [players,       setPlayers]       = useState([]);
   const [mySquad,       setMySquad]       = useState(null);
   const [leagues,       setLeagues]       = useState(null);   // null = not yet loaded
@@ -331,6 +331,19 @@ export default function MarketScreen() {
               >
                 Player Market
               </div>
+              <button
+                onClick={replayMarketTour}
+                title="Replay market tour"
+                style={{
+                  width: 20, height: 20, borderRadius: '50%',
+                  border: '1px solid rgba(255,255,255,0.15)',
+                  background: 'rgba(255,255,255,0.05)',
+                  color: 'rgba(255,255,255,0.4)',
+                  fontSize: 10, fontWeight: 700, cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  flexShrink: 0,
+                }}
+              >?</button>
               <LeagueSelector value={activeLeague} onChange={setActiveLeague} />
             </div>
           </div>
