@@ -1,8 +1,40 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-05-15 (Session 23: Bug fixes — auto-fill, badges, leaderboard)  
+**Last Updated**: 2026-05-16 (Session 24: Comprehensive Code Review)  
 **E2E Test Suite**: 178/178 passing (100%) ✅  
 **Live App**: https://wc-fantasy-football.vercel.app
+
+---
+
+## 📊 SESSION 24 PROGRESS (2026-05-16)
+
+**🚀 COMPLETED THIS SESSION:**
+
+- ✅ **PR #62 — Comprehensive code review** (open for review):
+  - Full-stack assessment per `CODE_REVIEW_PROMPT.md` covering schema, hooks, screens, Edge Functions, E2E suite
+  - Parallel investigation by 4 specialist agents (database, frontend, components, backend)
+  - Deliverable: `CODE_REVIEW_REPORT.md` (443 lines) with file:line citations for every finding
+  - **3 Critical Production Risks** identified:
+    - Auction RLS allows seller spoofing of others' squads
+    - `ingest-match-events` non-idempotent (concurrent runs can drop events)
+    - No timeouts on Forza API calls (upstream hang stalls every Edge Function)
+  - **3 Multi-Competition Blockers** identified:
+    - `squads` table missing `tournament_id` (blocks cross-league squads, ~40h refactor)
+    - `transfers` table cannot validate cross-tournament ownership
+    - Cron jobs hardcode `tournament_id: "426"` (EPL)
+  - **10 improvements, 8 corner cases, 10 silent errors** documented with effort estimates
+  - **3-phase prioritized action plan**:
+    - Phase 1 (Critical, ~3 weeks): production hardening
+    - Phase 2 (Refactor, 2-4 weeks): multi-competition foundation
+    - Phase 3 (Future-proofing): multi-provider API, scoring templates, cross-league mode
+
+**Notion BACKLOG**: `[BUG] Code Review` → Done
+
+**Next session candidates** (from Phase 1 of review):
+- Fix auction RLS seller spoofing (Critical Security, 1h)
+- Add `ON CONFLICT DO NOTHING` to match_events insert (Critical Data Integrity, 1h)
+- Add timeouts + retry to Forza API calls (Critical Reliability, 4h)
+- Enable RLS on core tables (`players`, `fixtures`, `leagues`, `squads`, `users`) (Critical Security, 6h)
 
 ---
 
