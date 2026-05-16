@@ -24,9 +24,13 @@ import OnboardingTour from '../components/OnboardingTour';
 import {
   HubTopbar, HubActionBar, HubTabs,
   MgrTag, TrendPill, FormDots, Spark, HubSectionLabel,
-  miniBtnStyle, MONO, DISPLAY,
+  miniBtnStyle, MONO, DISPLAY, mgrHue, mgrMono,
 } from '../components/league/HubShared';
-import BetsTabHub from '../components/league/BetsTabHub';
+import BetsTabHub          from '../components/league/BetsTabHub';
+import LeagueDetailView    from '../components/league/LeagueDetailView';
+import BettingLeaderboardView from '../components/league/BettingLeaderboardView';
+import AuctionsView        from '../components/league/AuctionsView';
+import StatsView           from '../components/league/StatsView';
 
 const LEAGUE_TOUR_STEPS = [
   {
@@ -453,17 +457,7 @@ export default function LeagueScreen() {
     await fetchOpenBets();
   });
 
-  // ── Hub helpers ────────────────────────────────────────────────────
-  const MANAGER_HUES = [
-    '#00B4D8','#E0A800','#A855F7','#22C55E','#EF4444',
-    '#F59E0B','#34D399','#7DD3FC','#FB7185','#FCD34D','#C4B5FD','#67E8F9',
-  ];
-  const mgrHue = (str = '') => {
-    let h = 0;
-    for (let i = 0; i < str.length; i++) h = (h * 31 + str.charCodeAt(i)) & 0xffff;
-    return MANAGER_HUES[h % MANAGER_HUES.length];
-  };
-  const mgrMono = (username = '') => username.substring(0, 3).toUpperCase() || '???';
+  // mgrHue / mgrMono imported from HubShared — no local definition needed
   const viewToTab = (v) => {
     if (v === 'detail') return 'leaderboard';
     if (v === 'betting_leaderboard') return 'betting';
@@ -863,6 +857,15 @@ export default function LeagueScreen() {
          {/* ── VIEWS ──────────────────────────────────────────────────────── */}
 
          {view === 'detail' && (
+           <LeagueDetailView
+             members={members}
+             currentUser={currentUser}
+             membersLoading={membersLoading}
+             onH2h={setH2hTarget}
+             onViewManager={(mgr) => { setManagerTeamView(mgr); loadManagerRoster(mgr.user_id); }}
+           />
+         )}
+         {view === 'detail_REMOVED_INLINE' && (
            <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
              {/* Spotlight strip: top 3 podium */}
              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', borderBottom: '1px solid var(--rule)', flexShrink: 0 }}>
@@ -1102,7 +1105,10 @@ export default function LeagueScreen() {
            />
          )}
 
-         {view === 'betting_leaderboard' && (() => {
+         {view === 'betting_leaderboard' && (
+           <BettingLeaderboardView leaderboard={leaderboard} currentUser={currentUser} betLoading={betLoading} />
+         )}
+         {view === 'betting_leaderboard__old' && (() => {
            const myEntry = leaderboard?.find(e => currentUser && e.user_id === currentUser.id);
            const myIdx   = leaderboard?.findIndex(e => currentUser && e.user_id === currentUser.id) ?? -1;
            return (
@@ -1212,6 +1218,18 @@ export default function LeagueScreen() {
          })()}
 
          {view === 'auctions' && (
+           <AuctionsView
+             auctions={auctions}
+             auctionsLoading={auctionsLoading}
+             name={name}
+             mySquadId={mySquadId}
+             placeBid={placeBid}
+             cancelListing={cancelListing}
+             sellNow={sellNow}
+             onToast={showToast}
+           />
+         )}
+         {view === 'auctions__old' && (
            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: 'var(--ink)' }}>
              <div style={{ padding: '20px 28px', borderBottom: '1px solid var(--rule)', background: 'var(--ink-2)', display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr', flexShrink: 0 }}>
                <div style={{ borderRight: '1px solid var(--rule)', paddingRight: 24 }}>
@@ -1494,7 +1512,16 @@ export default function LeagueScreen() {
             </div>
           )}
 
-         {view === 'stats' && (() => {
+         {view === 'stats' && (
+           <StatsView
+             topScorers={topScorers}
+             teamMetrics={teamMetrics}
+             members={members}
+             currentUser={currentUser}
+             statsLoading={statsLoading}
+           />
+         )}
+         {view === 'stats_REMOVED' && (() => {
            const totalPts  = (topScorers || []).reduce((s, m) => s + (m.total_points || 0), 0);
            const avgPts    = teamMetrics?.avg_points?.toFixed(0) || (members.length ? Math.round(totalPts / members.length) : '—');
            const biggestGW = topScorers?.[0]?.total_points || '—';

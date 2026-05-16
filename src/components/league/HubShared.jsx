@@ -218,4 +218,16 @@ export const miniBtnStyle = (color) => ({
   cursor: 'pointer',
 });
 
+// Manager identity helpers — deterministic hue + 3-char monogram from username
+const MANAGER_HUES = [
+  '#00B4D8','#E0A800','#A855F7','#22C55E','#F59E0B',
+  '#34D399','#7DD3FC','#FB7185','#FCD34D','#C4B5FD','#67E8F9',
+];
+export function mgrHue(str = '') {
+  let h = 0;
+  for (let i = 0; i < str.length; i++) h = (h * 31 + str.charCodeAt(i)) & 0xffff;
+  return MANAGER_HUES[h % MANAGER_HUES.length];
+}
+export const mgrMono = (username = '') => username.substring(0, 3).toUpperCase() || '???';
+
 export { MONO, DISPLAY, BODY };
