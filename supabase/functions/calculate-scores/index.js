@@ -29,6 +29,16 @@ const supabase = createClient(
   Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
 );
 
+// Write critical failures to edge_function_errors table (queryable via dashboard).
+// Never throws — logging errors must not crash the function.
+async function logError(severity, message, context = {}) {
+  try {
+    await supabase.from('edge_function_errors').insert({
+      function: 'calculate-scores', severity, message, context,
+    });
+  } catch { /* silent */ }
+}
+
 // ─── Hard-coded fallback scoring (used only if scoring_rules table is empty) ───
 // These match the EPL 2025/26 season rules exactly.
 
@@ -252,7 +262,10 @@ Deno.serve(async (req) => {
         .from('player_match_stats')
         .upsert(statUpserts, { onConflict: 'fixture_id,player_id' });
 
-      if (statErr) console.error('player_match_stats scoring upsert:', JSON.stringify(statErr));
+      if (statErr) {
+        console.error('player_match_stats scoring upsert:', JSON.stringify(statErr));
+        await logError('error', 'player_match_stats upsert failed', { fixture_id, error: statErr });
+      }
 
       // Build points lookup for squad rollup
       const pointsLookup = {};
@@ -424,7 +437,10 @@ async function rollupSquads(fixture_id, pointsLookup, tournament_id) {
     .from('fantasy_points')
     .upsert(fantasyPointsUpserts, { onConflict: 'squad_id,matchday_id' });
 
-  if (fpErr) console.error('fantasy_points upsert error:', JSON.stringify(fpErr));
+  if (fpErr) {
+    console.error('fantasy_points upsert error:', JSON.stringify(fpErr));
+    await logError('critical', 'fantasy_points upsert failed — scores not saved', { fixture_id, error: fpErr });
+  }
 
   // Update league_members totals (including bet rewards via aggregate_league_member_points RPC)
   const processedUsers = new Set();
@@ -441,6 +457,7 @@ async function rollupSquads(fixture_id, pointsLookup, tournament_id) {
 
     if (aggErr) {
       console.error(`aggregate_league_member_points failed for ${squad.user_id} in ${squad.league_id}:`, JSON.stringify(aggErr));
+      await logError('error', 'aggregate_league_member_points failed', { league_id: squad.league_id, user_id: squad.user_id, error: aggErr });
     }
   }
 
