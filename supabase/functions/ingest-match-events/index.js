@@ -32,6 +32,14 @@ const FORZA_TOKEN     = Deno.env.get('FORZA_ACCESS_TOKEN');
 const SELF_BASE_URL   = Deno.env.get('SUPABASE_URL');
 const SELF_ANON_KEY   = Deno.env.get('SUPABASE_ANON_KEY');
 
+async function logError(severity, message, context = {}) {
+  try {
+    await supabase.from('edge_function_errors').insert({
+      function: 'ingest-match-events', severity, message, context,
+    });
+  } catch { /* silent */ }
+}
+
 async function forza(path, retries = 3) {
   const url = `${FORZA_BASE}${path}?access_token=${FORZA_TOKEN}`;
   let lastErr;
@@ -450,6 +458,7 @@ Deno.serve(async (req) => {
     }
     if (scoringErr) {
       console.error(`calculate-scores failed after 3 attempts (fixture ${fixture.id}): ${scoringErr}`);
+      await logError('critical', 'calculate-scores invoke failed after 3 retries', { fixture_id: fixture.id, error: scoringErr });
     }
 
     return respond(200, {
