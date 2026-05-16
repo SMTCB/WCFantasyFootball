@@ -34,6 +34,13 @@
 - [PR #63](https://github.com/SMTCB/WCFantasyFootball/pull/63): Auction RLS, transfer window race, event idempotency, Forza timeouts/retry, scoring invoke retry, transfer hook error state
 - [PR #64](https://github.com/SMTCB/WCFantasyFootball/pull/64): RLS on 6 core tables (migrations 47–48), edge_function_errors log table, critical error instrumentation in calculate-scores + ingest-match-events
 
+**Phase 2 Improvements — 7/9 COMPLETE** ✅
+- [PR #66](https://github.com/SMTCB/WCFantasyFootball/pull/66): useChatMessages N+1 cache, useBets merge-in-place + server-side filter, migrations 49-51 (tournament_id on squads/transfers, dynamic cron jobs), src/lib/formations.js centralized position constants, error banners on SquadScreen + LiveScreen
+
+**Phase 2 Remaining (2 items — deferred):**
+- **Item 5**: LeagueScreen decomposition (2273 lines → sub-components) — dedicated session needed
+- **Item 9**: E2E coverage expansion (auth flows, late bets, multi-league switching) — dedicated test PR needed
+
 ---
 
 ## 📊 SESSION 23 PROGRESS (2026-05-15)
