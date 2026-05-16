@@ -16,6 +16,9 @@ export function useChatMessages(leagueId) {
   const subscriptionRef = useRef(null);
   const typingTimeoutRef = useRef(null);
   const typingChannelRef = useRef(null);
+  // Cache user display info keyed by user_id — eliminates N+1 on Realtime events.
+  // Populated from the initial loadMessages join; fetched on-demand for new authors.
+  const userMetaCache = useRef({});
 
   // Scroll to latest message
   const scrollToBottom = useCallback(() => {
@@ -67,17 +70,23 @@ export function useChatMessages(leagueId) {
         return;
       }
 
-      const formattedMsgs = (msgs || []).map(msg => ({
-        id: msg.id,
-        userId: msg.user_id,
-        userName: msg.users?.user_metadata?.display_name || msg.users?.email?.split('@')[0] || 'Unknown',
-        userRank: msg.users?.user_metadata?.rank || '—',
-        message: msg.message,
-        createdAt: msg.created_at,
-        isDeleted: msg.is_deleted,
-        editedAt: msg.edited_at,
-        isOwnMessage: msg.user_id === user?.id,
-      }));
+      const formattedMsgs = (msgs || []).map(msg => {
+        const displayName = msg.users?.user_metadata?.display_name || msg.users?.email?.split('@')[0] || 'Unknown';
+        const rank = msg.users?.user_metadata?.rank || '—';
+        // Seed cache from join data so Realtime callbacks don't need to refetch known authors
+        if (msg.user_id) userMetaCache.current[msg.user_id] = { displayName, rank };
+        return {
+          id: msg.id,
+          userId: msg.user_id,
+          userName: displayName,
+          userRank: rank,
+          message: msg.message,
+          createdAt: msg.created_at,
+          isDeleted: msg.is_deleted,
+          editedAt: msg.edited_at,
+          isOwnMessage: msg.user_id === user?.id,
+        };
+      });
 
       setMessages(formattedMsgs);
     } catch (err) {
@@ -157,15 +166,24 @@ export function useChatMessages(leagueId) {
         async (payload) => {
           const newMsg = payload.new;
 
-          const { data: userData } = await supabase
-            .from('users')
-            .select('user_metadata')
-            .eq('id', newMsg.user_id)
-            .single()
-            .catch(() => ({ data: null }));
+          // Check cache first — eliminates N+1 for known authors
+          let meta = userMetaCache.current[newMsg.user_id];
+          if (!meta) {
+            const { data: userData } = await supabase
+              .from('users')
+              .select('user_metadata, email')
+              .eq('id', newMsg.user_id)
+              .single()
+              .catch(() => ({ data: null }));
+            meta = {
+              displayName: userData?.user_metadata?.display_name || userData?.email?.split('@')[0] || 'Unknown',
+              rank: userData?.user_metadata?.rank || '—',
+            };
+            if (newMsg.user_id) userMetaCache.current[newMsg.user_id] = meta;
+          }
 
-          const userName = userData?.user_metadata?.display_name || 'Unknown';
-          const userRank = userData?.user_metadata?.rank || '—';
+          const userName = meta.displayName;
+          const userRank = meta.rank;
 
           setMessages(prev => [...prev, {
             id: newMsg.id,
