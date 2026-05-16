@@ -38,11 +38,11 @@
 - [PR #66](https://github.com/SMTCB/WCFantasyFootball/pull/66): useChatMessages N+1 cache, useBets merge-in-place + server-side filter, migrations 49-51 (tournament_id on squads/transfers, dynamic cron jobs), src/lib/formations.js centralized position constants, error banners on SquadScreen + LiveScreen
 - [PR #68](https://github.com/SMTCB/WCFantasyFootball/pull/68): LeagueScreen decomposed into LeagueDetailView, BettingLeaderboardView, AuctionsView, StatsView + mgrHue/mgrMono promoted to HubShared. New e2e/multi-league-and-bets.spec.js (10 tests: multi-league switching, bet edge cases, auth edge cases)
 
-**Phase 3 — In progress:**
-- ✅ [PR #70](https://github.com/SMTCB/WCFantasyFootball/pull/70): CI E2E timeout 15→20 min, src/lib/fixtures.js centralized, useCommissioner hook (26 state vars + 9 handlers extracted from LeagueScreen)
+**Phase 3 — Complete (items 1+2+3):**
+- ✅ [PR #70](https://github.com/SMTCB/WCFantasyFootball/pull/70): CI E2E timeout 15→20 min, src/lib/fixtures.js centralized, useCommissioner hook (26 state vars + 9 handlers)
+- ✅ [PR #72](https://github.com/SMTCB/WCFantasyFootball/pull/72): ChatView.jsx + CommissionerPanel.jsx extracted — LeagueScreen drops from ~2273 → ~950 lines
 
 **Phase 3 — Remaining:**
-- CommissionerPanel.jsx + ChatView.jsx extraction from LeagueScreen (~400 lines JSX each)
 - Audit log table (transfers, bets, auctions) — compliance + debugging
 - Scoring templates table (competition-aware rule engine) — multi-comp blocker
 - Cross-league squad mode (squad_players join table) — headline Phase 3 feature
