@@ -30,11 +30,9 @@
 
 **Notion BACKLOG**: `[BUG] Code Review` → Done
 
-**Phase 1 Critical Fixes in progress**: [PR #63](https://github.com/SMTCB/WCFantasyFootball/pull/63) — 7 fixes (security, data integrity, reliability, UX)
-
-**Remaining Phase 1 items** (not in PR #63):
-- Enable RLS on core tables (`players`, `fixtures`, `leagues`, `squads`, `users`) — 6h — deferred, needs careful policy design
-- Wire Edge Function errors to monitoring (Sentry/Logflare) — 1d — needs external service setup
+**Phase 1 Critical Fixes — ALL COMPLETE** ✅
+- [PR #63](https://github.com/SMTCB/WCFantasyFootball/pull/63): Auction RLS, transfer window race, event idempotency, Forza timeouts/retry, scoring invoke retry, transfer hook error state
+- [PR #64](https://github.com/SMTCB/WCFantasyFootball/pull/64): RLS on 6 core tables (migrations 47–48), edge_function_errors log table, critical error instrumentation in calculate-scores + ingest-match-events
 
 ---
 
