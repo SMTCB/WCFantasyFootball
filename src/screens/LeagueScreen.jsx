@@ -27,11 +27,13 @@ import {
   MgrTag, TrendPill, FormDots, Spark, HubSectionLabel,
   miniBtnStyle, MONO, DISPLAY, mgrHue, mgrMono,
 } from '../components/league/HubShared';
-import BetsTabHub          from '../components/league/BetsTabHub';
-import LeagueDetailView    from '../components/league/LeagueDetailView';
+import BetsTabHub             from '../components/league/BetsTabHub';
+import LeagueDetailView       from '../components/league/LeagueDetailView';
 import BettingLeaderboardView from '../components/league/BettingLeaderboardView';
-import AuctionsView        from '../components/league/AuctionsView';
-import StatsView           from '../components/league/StatsView';
+import AuctionsView           from '../components/league/AuctionsView';
+import StatsView              from '../components/league/StatsView';
+import ChatView               from '../components/league/ChatView';
+import CommissionerPanel      from '../components/league/CommissionerPanel';
 
 const LEAGUE_TOUR_STEPS = [
   {
@@ -134,7 +136,10 @@ export default function LeagueScreen() {
   const { topScorers, teamMetrics, loading: statsLoading } = useLeagueStats(activeLeague?.league_id);
   const { leaderboard, loading: betLoading } = useBettingLeaderboard(activeLeague?.league_id);
 
-  // Commissioner state + handlers consolidated into a single hook
+  // Commissioner state + handlers consolidated into a single hook.
+  // The whole object is passed to CommissionerPanel; named vars kept for any
+  // remaining inline references (e.g. fetchOpenBets on view change).
+  const commissioner = useCommissioner(activeLeague?.league_id, user, showToast);
   const {
     commLoading, commMsg, setCommMsg, commAction,
     windowOpensAt, setWindowOpensAt,
@@ -158,7 +163,7 @@ export default function LeagueScreen() {
     betResolutionAnswer, setBetResolutionAnswer,
     betSubmissions, answerGrouped,
     fetchOpenBets, fetchBetSubmissions, resolveBet,
-  } = useCommissioner(activeLeague?.league_id, user, showToast);
+  } = commissioner;
 
   // Create form state
   const [leagueName,   setLeagueName]   = useState('');
@@ -171,11 +176,7 @@ export default function LeagueScreen() {
   const [joinLoading,  setJoinLoading]  = useState(false);
   const [joinError,    setJoinError]    = useState('');
 
-  // Chat state
-  const [chatInput, setChatInput] = useState('');
-  const [chatSending, setChatSending] = useState(false);
-  const [editingMessageId, setEditingMessageId] = useState(null);
-  const [editingText, setEditingText] = useState('');
+  // Chat input state lives in ChatView — not needed here
   const { messages, loading: chatLoading, unreadCount, typingUsers, sendMessage, editMessage, deleteMessage, broadcastTyping, markChatAsRead, scrollEndRef } = useChatMessages(activeLeague?.league_id);
   const { notifications, unreadCount: notificationCount, markAsRead: markNotificationAsRead, clearAll: clearAllNotifications } = useNotifications(activeLeague?.league_id);
   const { mentionSearch, mentionMatches, selectedMention, mentionedUserIds, loadLeagueMembers, parseMentionPattern, insertMention, handleMentionNavigate, resetMentions } = useMentions(activeLeague?.league_id);
@@ -1072,6 +1073,34 @@ export default function LeagueScreen() {
          )}
 
          {view === 'chat' && (
+           <ChatView
+             members={members}
+             currentUser={currentUser}
+             messages={messages}
+             chatLoading={chatLoading}
+             unreadCount={unreadCount}
+             typingUsers={typingUsers}
+             sendMessage={sendMessage}
+             editMessage={editMessage}
+             deleteMessage={deleteMessage}
+             broadcastTyping={broadcastTyping}
+             scrollEndRef={scrollEndRef}
+             mentionSearch={mentionSearch}
+             mentionMatches={mentionMatches}
+             selectedMention={selectedMention}
+             mentionedUserIds={mentionedUserIds}
+             parseMentionPattern={parseMentionPattern}
+             insertMention={insertMention}
+             handleMentionNavigate={handleMentionNavigate}
+             resetMentions={resetMentions}
+             searchTerm={searchTerm}
+             setSearchTerm={setSearchTerm}
+             filteredMessages={filteredMessages}
+             clearSearch={clearSearch}
+             resultCount={resultCount}
+           />
+         )}
+         {view === 'chat_REMOVED' && (
             <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '240px 1fr 280px', minHeight: 0, background: 'var(--ink)' }}>
               {/* Left: channels rail */}
               <aside style={{ borderRight: '1px solid var(--rule)', display: 'flex', flexDirection: 'column', background: 'var(--ink-2)', overflow: 'auto' }}>
@@ -1436,6 +1465,13 @@ export default function LeagueScreen() {
 
          {/* ── COMMISSIONER PANEL ─────────────────────────────────────────── */}
          {view === 'commissioner' && isCommissioner && (
+           <CommissionerPanel
+             commissioner={commissioner}
+             leagueId={activeLeague?.league_id}
+             replayCommissionerTour={replayCommissionerTour}
+           />
+         )}
+         {view === 'commissioner_REMOVED' && isCommissioner && (
            <div style={{ flex: 1, overflow: 'auto', background: 'var(--ink)' }}>
              <HubSectionLabel label="COMMISSIONER CONTROLS" sub="ADMIN ONLY" tone="var(--purple)"
                right={<button onClick={replayCommissionerTour} data-tour="comm-transfer-window" style={{ width: 20, height: 20, borderRadius: '50%', border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.4)', fontSize: 10, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>?</button>}
