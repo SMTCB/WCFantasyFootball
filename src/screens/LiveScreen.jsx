@@ -9,6 +9,7 @@ const REFRESH_MS = 5 * 60 * 1000;
 const LEAGUE_TONES = ['#00B4D8', '#E0A800', '#A855F7', '#22C55E', '#F59E0B'];
 
 import { POS_ORDER, POS_PITCH_Y as POS_Y } from '../lib/formations';
+import { teamCode } from '../lib/fixtures';
 const POS_TONE = { FWD: 'var(--danger)', MID: 'var(--gold)', DEF: 'var(--cyan)', GK: '#A855F7' };
 
 // ── Point estimation ─────────────────────────────────────────────────────────
@@ -587,9 +588,9 @@ export default function LiveScreen() {
               <LivePill />
               <span className="mono" style={{ fontSize: 11, color: 'var(--mute)', letterSpacing: '.18em' }}>{f.minute ? `${f.minute}'` : '—'}</span>
               <span style={{ fontFamily: 'Archivo Black', fontSize: 14, letterSpacing: '-0.01em', marginLeft: 'auto' }}>
-                {(f.home_team || '').substring(0, 3).toUpperCase()}
+                {teamCode(f.home_team)}
                 <span style={{ color: 'var(--cyan)', margin: '0 8px' }}>{f.homeGoals ?? 0}–{f.awayGoals ?? 0}</span>
-                {(f.away_team || '').substring(0, 3).toUpperCase()}
+                {teamCode(f.away_team)}
               </span>
             </div>
           ))}
@@ -722,9 +723,9 @@ export default function LiveScreen() {
               <span className="animate-live-pulse" style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--danger)' }} />
               <span className="mono" style={{ fontSize: 10, color: 'var(--mute)', letterSpacing: '.18em' }}>{f.minute ? `${f.minute}'` : '—'}</span>
               <span style={{ fontFamily: 'Archivo Black', fontSize: 14, marginLeft: 'auto' }}>
-                {(f.home_team || '').substring(0, 3).toUpperCase()}
+                {teamCode(f.home_team)}
                 <span style={{ color: 'var(--cyan)', margin: '0 6px' }}>{f.homeGoals ?? 0}–{f.awayGoals ?? 0}</span>
-                {(f.away_team || '').substring(0, 3).toUpperCase()}
+                {teamCode(f.away_team)}
               </span>
             </div>
           ))}
