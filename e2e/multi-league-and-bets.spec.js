@@ -35,15 +35,16 @@ test.describe('Multi-League Switching', () => {
     await page.goto('/league');
     await waitForContent(page);
 
-    // Find all league cards/buttons
-    const leagueButtons = page.locator('button, [role="button"]').filter({ hasText: /league|join|create/i });
+    // Find clickable league cards (exclude disabled controls like the Join button)
+    const leagueButtons = page
+      .locator('button:not([disabled]), [role="button"]:not([aria-disabled="true"])')
+      .filter({ hasText: /league|enter|standings/i });
     const count = await leagueButtons.count();
 
     if (count >= 2) {
       // Click first league
       await leagueButtons.first().click();
       await waitForContent(page);
-      const firstText = await page.locator('body').innerText();
 
       // Navigate back
       const backBtn = page.locator('button').filter({ hasText: /back|←/i }).first();
@@ -56,7 +57,9 @@ test.describe('Multi-League Switching', () => {
       }
 
       // Click second league (if exists)
-      const freshButtons = page.locator('button, [role="button"]').filter({ hasText: /league|join|create/i });
+      const freshButtons = page
+        .locator('button:not([disabled]), [role="button"]:not([aria-disabled="true"])')
+        .filter({ hasText: /league|enter|standings/i });
       if (await freshButtons.count() >= 2) {
         await freshButtons.nth(1).click();
         await waitForContent(page);

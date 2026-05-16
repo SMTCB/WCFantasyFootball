@@ -1,8 +1,32 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-05-16 (Session 24: Comprehensive Code Review)  
-**E2E Test Suite**: 178/178 passing (100%) ✅  
+**Last Updated**: 2026-05-16 (Session 25: E2E Test Overhaul)  
+**E2E Test Suite**: 201 desktop tests passing (~402 total across desktop + mobile) ✅  
 **Live App**: https://wc-fantasy-football.vercel.app
+
+---
+
+## 📊 SESSION 25 PROGRESS (2026-05-16)
+
+**🚀 COMPLETED THIS SESSION:**
+
+- ✅ **E2E Test Overhaul** (per `E2E_TEST_OVERHAUL_PROMPT.MD`):
+  - **Fixture infrastructure** (`e2e/fixtures/`): managers, leagues, squads, matches, api-mocks + barrel export
+  - **Helper utilities** (`e2e/helpers/`): auth (skipOnboarding, loginAs, openSecondaryTab), timing (waitForContent, captureConsoleErrors, isVisibleWithin, waitForRealtime, waitForCondition), league (goToLeaguesPage, switchLeagueTab, readStandings, countLeagueCards), data (Supabase client + 10 query helpers)
+  - **7 new spec files** (101 new test definitions × 2 viewports = 202 instances):
+    - `chat.spec.js` (14 tests) — single + multi-tab chat, emoji/long-message edge cases
+    - `multi-league.spec.js` (14 tests) — league list, tab switching, isolation, concurrent tabs
+    - `draft-allocation.spec.js` (12 tests) — squad builder, data layer schema, edge cases
+    - `auctions.spec.js` (13 tests) — auction UI, bid validation, concurrent tabs
+    - `betting.spec.js` (18 tests) — bet surfaces, data layer, edge cases, notifications
+    - `leagues-frontpage.spec.js` (9 tests) — overview, interactions, pagination
+    - `live-activity.spec.js` (21 tests) — joker chip, API mocks (quiet/active/500/429/abort), real data
+  - **Pre-existing flake fix**: `multi-league-and-bets.spec.js` "switching between leagues" was clicking a disabled Join button — locator now excludes disabled controls
+  - **E2E README**: `e2e/README.md` — quick start, structure, authoring guide, mocking patterns, troubleshooting table
+  - **Test coverage**: 95 existing → 196 test definitions (~2.1×); 201 desktop tests passing (2.9 min runtime)
+  - **Lint**: `npx eslint e2e/` clean (no errors, no warnings)
+
+**Notion BACKLOG**: `E2E Tests Revision` → In progress → Done
 
 ---
 
