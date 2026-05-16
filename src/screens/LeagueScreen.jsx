@@ -19,6 +19,7 @@ import AuctionCard from '../components/AuctionCard';
 import BetsSection from '../components/BetsSection';
 import NotificationPanel from '../components/NotificationPanel';
 import { useTransferWindow } from '../hooks/useTransferWindow';
+import { useCommissioner }   from '../hooks/useCommissioner';
 import { useOnboarding } from '../hooks/useOnboarding';
 import OnboardingTour from '../components/OnboardingTour';
 import {
@@ -133,33 +134,31 @@ export default function LeagueScreen() {
   const { topScorers, teamMetrics, loading: statsLoading } = useLeagueStats(activeLeague?.league_id);
   const { leaderboard, loading: betLoading } = useBettingLeaderboard(activeLeague?.league_id);
 
-  // Commissioner panel state
-  const [commLoading,   setCommLoading]   = useState(false);
-  const [commMsg,       setCommMsg]       = useState(null); // { type: 'ok'|'err', text }
-  const [windowOpensAt, setWindowOpensAt] = useState('');
-  const [windowClosesAt,setWindowClosesAt]= useState('');
-  const [windowTransfers,setWindowTransfers]=useState('');
-  const [draftDeadline, setDraftDeadline] = useState('');
-  const [scoreFixtureId,setScoreFixtureId]=useState('test-live');
-
-  // Bet instance creation state
-  const [betTemplateId, setBetTemplateId] = useState('');
-  const [betTitle, setBetTitle] = useState('');
-  const [betPrompt, setBetPrompt] = useState('');
-  const [betDeadline, setBetDeadline] = useState('');
-  const [betRewardValue, setBetRewardValue] = useState('5');
-  const [betScopeType, setBetScopeType] = useState('matchday');
-  const [betScopeRef, setBetScopeRef] = useState('');
-  const [betOptionDraft, setBetOptionDraft] = useState('');
-  const [betOptions, setBetOptions] = useState([]);   // [{ key, label }]
-
-  // Bet resolution state
-  const [openBets, setOpenBets] = useState([]);
-  const [resolutionBetsLoading, setResolutionBetsLoading] = useState(false);
-  const [selectedBetForResolution, setSelectedBetForResolution] = useState(null);
-  const [betResolutionAnswer, setBetResolutionAnswer] = useState('');
-  const [betSubmissions, setBetSubmissions] = useState([]);
-  const [answerGrouped, setAnswerGrouped] = useState({});
+  // Commissioner state + handlers consolidated into a single hook
+  const {
+    commLoading, commMsg, setCommMsg, commAction,
+    windowOpensAt, setWindowOpensAt,
+    windowClosesAt, setWindowClosesAt,
+    windowTransfers, setWindowTransfers,
+    openTransferWindow, closeTransferWindow,
+    draftDeadline, setDraftDeadline, setLeagueDraftDeadline,
+    scoreFixtureId, setScoreFixtureId, triggerScores,
+    betTemplateId, setBetTemplateId,
+    betTitle, setBetTitle,
+    betPrompt, setBetPrompt,
+    betDeadline, setBetDeadline,
+    betRewardValue, setBetRewardValue,
+    betScopeType, setBetScopeType,
+    betScopeRef, setBetScopeRef,
+    betOptionDraft, setBetOptionDraft,
+    betOptions, setBetOptions,
+    autoGenerateBetOptions, createBetInstance,
+    openBets, resolutionBetsLoading,
+    selectedBetForResolution, setSelectedBetForResolution,
+    betResolutionAnswer, setBetResolutionAnswer,
+    betSubmissions, answerGrouped,
+    fetchOpenBets, fetchBetSubmissions, resolveBet,
+  } = useCommissioner(activeLeague?.league_id, user, showToast);
 
   // Create form state
   const [leagueName,   setLeagueName]   = useState('');
@@ -253,211 +252,9 @@ export default function LeagueScreen() {
 
   const isCommissioner = activeLeague?.leagues?.created_by === currentUser?.id;
 
-  const commAction = async (fn) => {
-    setCommLoading(true);
-    setCommMsg(null);
-    try {
-      await fn();
-    } catch (e) {
-      setCommMsg({ type: 'err', text: e.message || 'Action failed' });
-    } finally {
-      setCommLoading(false);
-    }
-  };
-
-  const openTransferWindow = () => commAction(async () => {
-    const lid = activeLeague?.league_id;
-    const opens  = windowOpensAt  || new Date().toISOString();
-    const closes = windowClosesAt || new Date(Date.now() + 48 * 3600 * 1000).toISOString();
-    const { error } = await supabase.from('transfer_windows').insert({
-      league_id: lid,
-      opens_at:  opens,
-      closes_at: closes,
-      transfers_remaining: windowTransfers ? Number(windowTransfers) : null,
-    });
-    if (error) throw new Error(error.message);
-    setCommMsg({ type: 'ok', text: 'Transfer window opened.' });
-  });
-
-  const closeTransferWindow = () => commAction(async () => {
-    const lid = activeLeague?.league_id;
-    const { error } = await supabase.from('transfer_windows')
-      .update({ closes_at: new Date().toISOString() })
-      .eq('league_id', lid)
-      .gt('closes_at', new Date().toISOString());
-    if (error) throw new Error(error.message);
-    setCommMsg({ type: 'ok', text: 'Transfer window closed.' });
-  });
-
-  const triggerScores = () => commAction(async () => {
-    const { data, error } = await supabase.functions.invoke('calculate-scores', {
-      body: { fixture_id: scoreFixtureId },
-    });
-    if (error) throw new Error(error.message);
-    setCommMsg({ type: 'ok', text: `Scores updated — ${data?.updated_squads ?? 0} squads, ${data?.player_stats ?? 0} player stats.` });
-  });
-
-  const setLeagueDraftDeadline = () => commAction(async () => {
-    if (!draftDeadline) throw new Error('Enter a deadline date/time.');
-    const { error } = await supabase.from('leagues')
-      .update({ draft_deadline: draftDeadline })
-      .eq('id', activeLeague?.league_id);
-    if (error) throw new Error(error.message);
-    setCommMsg({ type: 'ok', text: 'Draft deadline set.' });
-  });
-
-  const createBetInstance = () => commAction(async () => {
-    if (!betTitle) throw new Error('Enter a bet title.');
-    if (!betPrompt) throw new Error('Enter a bet prompt/question.');
-    if (!betDeadline) throw new Error('Set a deadline.');
-    if (betOptions.length < 2) throw new Error('Add at least 2 answer options.');
-    const { error } = await supabase.from('bet_instances').insert({
-      league_id: activeLeague?.league_id,
-      template_id: betTemplateId || null,
-      title: betTitle,
-      prompt: betPrompt,
-      options: betOptions,
-      deadline_at: betDeadline,
-      reward_value: Number(betRewardValue) || 5,
-      scope_type: betScopeType,
-      scope_ref: betScopeRef || null,
-    });
-    if (error) throw new Error(error.message);
-    setCommMsg({ type: 'ok', text: 'Bet instance created.' });
-    setBetTitle('');
-    setBetPrompt('');
-    setBetDeadline('');
-    setBetRewardValue('5');
-    setBetScopeType('matchday');
-    setBetScopeRef('');
-    setBetTemplateId('');
-    setBetOptions([]);
-    setBetOptionDraft('');
-    await fetchOpenBets();
-  });
-
-  const autoGenerateBetOptions = async () => {
-    if (!betTemplateId) {
-      setCommMsg({ type: 'err', text: 'Select a template to auto-generate options.' });
-      return;
-    }
-    try {
-      setCommLoading(true);
-      let generated = [];
-
-      if (betTemplateId === 'top_scorer' || betTemplateId === 'player_block') {
-        // Fetch top 8 forwards/midfielders by price (highest-value = likely top scorers)
-        const { data: players } = await supabase
-          .from('players')
-          .select('id, name, position, club')
-          .in('position', ['FWD', 'FW', 'MID'])
-          .order('price', { ascending: false })
-          .limit(8);
-        generated = (players || []).map(p => ({
-          key: p.id,
-          label: p.name,
-          meta: { club: p.club, pos: p.position },
-        }));
-      } else if (betTemplateId === 'match_result') {
-        // Upcoming fixtures — home win / draw / away win
-        const { data: fixtures } = await supabase
-          .from('fixtures')
-          .select('id, home_team, away_team')
-          .in('status', ['scheduled', 'upcoming'])
-          .order('kickoff_at', { ascending: true })
-          .limit(6);
-        generated = (fixtures || []).flatMap(f => [
-          { key: `${f.id}_home`, label: `${f.home_team} Win` },
-          { key: `${f.id}_draw`, label: 'Draw' },
-          { key: `${f.id}_away`, label: `${f.away_team} Win` },
-        ]);
-        if (generated.length === 0) {
-          generated = [
-            { key: 'home_win', label: 'Home Win' },
-            { key: 'draw',     label: 'Draw'     },
-            { key: 'away_win', label: 'Away Win'  },
-          ];
-        }
-      }
-
-      if (generated.length === 0) {
-        setCommMsg({ type: 'err', text: 'No options could be generated for this template.' });
-        return;
-      }
-      setBetOptions(generated);
-      setCommMsg({ type: 'ok', text: `Auto-generated ${generated.length} options — review and customise before creating.` });
-    } catch (err) {
-      setCommMsg({ type: 'err', text: err.message || 'Auto-generate failed.' });
-    } finally {
-      setCommLoading(false);
-    }
-  };
-
-  const fetchOpenBets = async () => {
-    if (!activeLeague?.league_id) return;
-    setResolutionBetsLoading(true);
-    try {
-      const { data, error } = await supabase
-        .from('bet_instances')
-        .select('*')
-        .eq('league_id', activeLeague.league_id)
-        .neq('status', 'resolved')
-        .order('created_at', { ascending: false });
-      if (error) throw error;
-      setOpenBets(data || []);
-    } catch (err) {
-      console.error('Failed to fetch open bets:', err);
-    } finally {
-      setResolutionBetsLoading(false);
-    }
-  };
-
-  const fetchBetSubmissions = async (betId) => {
-    if (!betId) {
-      setBetSubmissions([]);
-      setAnswerGrouped({});
-      return;
-    }
-    try {
-      const { data, error } = await supabase
-        .from('bet_submissions')
-        .select('answer, user_id, squads!squad_id(users!user_id(username))')
-        .eq('bet_instance_id', betId);
-      if (error) throw error;
-
-      setBetSubmissions(data || []);
-
-      // Group by answer with counts
-      const grouped = {};
-      (data || []).forEach(sub => {
-        if (!grouped[sub.answer]) {
-          grouped[sub.answer] = [];
-        }
-        grouped[sub.answer].push(sub.squads?.users?.username || 'Unknown');
-      });
-      setAnswerGrouped(grouped);
-    } catch (err) {
-      console.error('Failed to fetch submissions:', err);
-    }
-  };
-
-  const resolveBet = () => commAction(async () => {
-    if (!selectedBetForResolution) throw new Error('Select a bet to resolve.');
-    if (!betResolutionAnswer) throw new Error('Select the correct answer.');
-    const { data, error } = await supabase.rpc('resolve_bet', {
-      p_instance_id: selectedBetForResolution.id,
-      p_correct_answer: betResolutionAnswer,
-    });
-    if (error) throw new Error(error.message);
-    setCommMsg({ type: 'ok', text: `Bet resolved — ${data?.submissions_updated ?? 0} submissions graded.` });
-    setBetResolutionAnswer('');
-    setSelectedBetForResolution(null);
-    setBetSubmissions([]);
-    setAnswerGrouped({});
-    await fetchOpenBets();
-  });
-
-  // mgrHue / mgrMono imported from HubShared — no local definition needed
+  // commAction, openTransferWindow, closeTransferWindow, triggerScores,
+  // setLeagueDraftDeadline, createBetInstance, autoGenerateBetOptions,
+  // fetchOpenBets, fetchBetSubmissions, resolveBet — all from useCommissioner above.
   const viewToTab = (v) => {
     if (v === 'detail') return 'leaderboard';
     if (v === 'betting_leaderboard') return 'betting';
