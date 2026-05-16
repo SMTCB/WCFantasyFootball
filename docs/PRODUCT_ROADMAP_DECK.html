@@ -1,0 +1,1335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Forza Fantasy League — Strategic Product Roadmap</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --gold: #D4A574;
+            --gold-soft: #e8c896;
+            --ink: #1a1a1a;
+            --light: #f5f3f0;
+            --white: #ffffff;
+            --text-primary: #2d2d2d;
+            --text-secondary: #666666;
+            --border: #e0e0e0;
+
+            --accent-blue: #2b5aa0;
+            --accent-blue-soft: #dbeafe;
+            --accent-green: #4a9d6f;
+            --accent-green-soft: #d1fae5;
+            --accent-purple: #7c3aed;
+            --accent-purple-soft: #f3e8ff;
+            --accent-orange: #ea580c;
+            --accent-orange-soft: #fef3c7;
+            --accent-red: #dc2626;
+            --accent-red-soft: #fee2e2;
+        }
+
+        html, body {
+            height: 100%;
+            overflow: hidden;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: var(--white);
+            color: var(--text-primary);
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .deck-container {
+            display: flex;
+            height: 100vh;
+            background: linear-gradient(135deg, #f5f3f0 0%, #ffffff 100%);
+        }
+
+        /* ─────────────────  SIDEBAR  ───────────────── */
+        .nav-sidebar {
+            width: 280px;
+            background: linear-gradient(180deg, #1a1a1a 0%, #2a2a2a 100%);
+            color: var(--white);
+            display: flex;
+            flex-direction: column;
+            box-shadow: 5px 0 15px rgba(0,0,0,0.15);
+            z-index: 100;
+            flex-shrink: 0;
+        }
+
+        .nav-header {
+            padding: 28px 24px 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+        }
+
+        .nav-header h3 {
+            font-size: 1.2em;
+            font-weight: 700;
+            color: var(--gold);
+            margin-bottom: 4px;
+            letter-spacing: 0.5px;
+        }
+
+        .nav-header p {
+            font-size: 0.78em;
+            color: rgba(255,255,255,0.5);
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        #nav-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px 0;
+        }
+
+        .nav-item {
+            padding: 12px 24px;
+            font-size: 0.92em;
+            cursor: pointer;
+            border-left: 3px solid transparent;
+            transition: all 0.25s ease;
+            color: rgba(255,255,255,0.7);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .nav-item:hover {
+            background: rgba(212,165,116,0.08);
+            color: var(--white);
+            border-left-color: rgba(212,165,116,0.4);
+        }
+
+        .nav-item.active {
+            background: linear-gradient(90deg, rgba(212,165,116,0.18) 0%, transparent 100%);
+            color: var(--gold);
+            border-left-color: var(--gold);
+            font-weight: 600;
+        }
+
+        .nav-item-num {
+            font-size: 0.75em;
+            opacity: 0.6;
+            min-width: 18px;
+        }
+
+        .nav-footer {
+            padding: 16px 24px;
+            border-top: 1px solid rgba(255,255,255,0.08);
+            font-size: 0.72em;
+            color: rgba(255,255,255,0.4);
+            letter-spacing: 0.5px;
+        }
+
+        .controls {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 20px;
+            background: rgba(0,0,0,0.3);
+            gap: 8px;
+        }
+
+        .controls button {
+            background: rgba(255,255,255,0.08);
+            color: var(--white);
+            border: 1px solid rgba(255,255,255,0.12);
+            padding: 8px 14px;
+            border-radius: 6px;
+            font-size: 0.82em;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: inherit;
+        }
+
+        .controls button:hover:not(:disabled) {
+            background: var(--gold);
+            color: var(--ink);
+            border-color: var(--gold);
+        }
+
+        .controls button:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        .slide-counter {
+            font-size: 0.82em;
+            color: rgba(255,255,255,0.6);
+            letter-spacing: 0.5px;
+        }
+
+        .slide-counter span { color: var(--gold); font-weight: 600; }
+
+        /* ─────────────────  SLIDES  ───────────────── */
+        .slides-wrapper {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+            background: var(--white);
+        }
+
+        .slide {
+            position: absolute;
+            inset: 0;
+            opacity: 0;
+            transform: translateX(60px);
+            transition: opacity 0.5s ease, transform 0.5s ease;
+            overflow-y: auto;
+            padding: 60px 80px;
+            pointer-events: none;
+        }
+
+        .slide.active {
+            opacity: 1;
+            transform: translateX(0);
+            pointer-events: auto;
+            z-index: 10;
+        }
+
+        .slide-inner {
+            max-width: 980px;
+            margin: 0 auto;
+        }
+
+        /* Typography */
+        h1.slide-title {
+            font-size: 3.4em;
+            font-weight: 700;
+            color: var(--ink);
+            line-height: 1.1;
+            margin-bottom: 16px;
+            letter-spacing: -1.5px;
+        }
+
+        h2.slide-heading {
+            font-size: 2.4em;
+            font-weight: 700;
+            color: var(--ink);
+            line-height: 1.15;
+            margin-bottom: 18px;
+            letter-spacing: -0.8px;
+        }
+
+        h3.section-heading {
+            font-size: 1.15em;
+            font-weight: 700;
+            color: var(--ink);
+            margin-bottom: 14px;
+            letter-spacing: 0.3px;
+            text-transform: uppercase;
+            font-size: 0.85em;
+        }
+
+        .slide-subtitle {
+            font-size: 1.25em;
+            color: var(--text-secondary);
+            margin-bottom: 32px;
+            font-weight: 400;
+            line-height: 1.5;
+        }
+
+        .intro-paragraph {
+            font-size: 1.1em;
+            line-height: 1.7;
+            color: var(--text-primary);
+            margin-bottom: 32px;
+            max-width: 780px;
+        }
+
+        /* Badges */
+        .phase-badge {
+            display: inline-block;
+            padding: 8px 18px;
+            border-radius: 24px;
+            font-size: 0.82em;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            margin-bottom: 18px;
+        }
+
+        .phase-badge.phase-1 { background: var(--accent-orange-soft); color: var(--accent-orange); }
+        .phase-badge.phase-2 { background: var(--accent-blue-soft); color: var(--accent-blue); }
+        .phase-badge.phase-3 { background: var(--accent-green-soft); color: var(--accent-green); }
+        .phase-badge.phase-4 { background: var(--accent-purple-soft); color: var(--accent-purple); }
+
+        /* Cards */
+        .card-grid {
+            display: grid;
+            gap: 20px;
+            margin: 24px 0;
+        }
+
+        .card-grid.cols-2 { grid-template-columns: 1fr 1fr; }
+        .card-grid.cols-3 { grid-template-columns: repeat(3, 1fr); }
+        .card-grid.cols-5 { grid-template-columns: repeat(5, 1fr); }
+
+        .card {
+            background: linear-gradient(135deg, #fafafa 0%, #ffffff 100%);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 24px;
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+            border-color: var(--gold);
+        }
+
+        .card-icon {
+            font-size: 1.8em;
+            margin-bottom: 12px;
+        }
+
+        .card-title {
+            font-size: 1.05em;
+            font-weight: 700;
+            color: var(--ink);
+            margin-bottom: 8px;
+        }
+
+        .card-desc {
+            font-size: 0.92em;
+            line-height: 1.55;
+            color: var(--text-secondary);
+        }
+
+        /* Stat cards (cover slide) */
+        .stat-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 24px;
+            margin-top: 56px;
+        }
+
+        .stat-card {
+            background: var(--white);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 28px;
+            text-align: center;
+            box-shadow: 0 4px 14px rgba(0,0,0,0.04);
+            transition: transform 0.3s ease;
+        }
+
+        .stat-card:hover { transform: translateY(-4px); }
+
+        .stat-icon { font-size: 2.2em; margin-bottom: 10px; }
+        .stat-metric { font-size: 1.4em; font-weight: 700; color: var(--gold); margin-bottom: 6px; }
+        .stat-desc { font-size: 0.92em; color: var(--text-secondary); }
+
+        /* Two-column section */
+        .two-column {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 32px;
+            margin: 28px 0;
+        }
+
+        .column-block {
+            background: #fafafa;
+            border-left: 4px solid var(--gold);
+            border-radius: 8px;
+            padding: 24px;
+        }
+
+        .column-block.accent-blue { border-left-color: var(--accent-blue); }
+        .column-block.accent-green { border-left-color: var(--accent-green); }
+        .column-block.accent-purple { border-left-color: var(--accent-purple); }
+        .column-block.accent-orange { border-left-color: var(--accent-orange); }
+
+        .column-block ul { list-style: none; padding: 0; }
+        .column-block li {
+            padding: 6px 0;
+            font-size: 0.95em;
+            line-height: 1.55;
+            color: var(--text-primary);
+            display: flex;
+            gap: 8px;
+            align-items: flex-start;
+        }
+        .column-block li::before {
+            content: "✓";
+            color: var(--gold);
+            font-weight: 700;
+            margin-top: 1px;
+            flex-shrink: 0;
+        }
+
+        .column-block.accent-blue li::before { color: var(--accent-blue); }
+        .column-block.accent-green li::before { color: var(--accent-green); }
+        .column-block.accent-purple li::before { color: var(--accent-purple); }
+
+        /* Callout boxes */
+        .callout {
+            border-radius: 12px;
+            padding: 24px 28px;
+            margin: 28px 0;
+            font-size: 1.0em;
+            line-height: 1.7;
+        }
+
+        .callout.gold { background: linear-gradient(135deg, #faf3e6 0%, #f7ead3 100%); border-left: 5px solid var(--gold); }
+        .callout.blue { background: linear-gradient(135deg, #eaf2fc 0%, #dbeafe 100%); border-left: 5px solid var(--accent-blue); }
+        .callout.green { background: linear-gradient(135deg, #e7f6ec 0%, #d1fae5 100%); border-left: 5px solid var(--accent-green); }
+        .callout.purple { background: linear-gradient(135deg, #f3e8ff 0%, #ede0ff 100%); border-left: 5px solid var(--accent-purple); }
+        .callout.orange { background: linear-gradient(135deg, #fff4e6 0%, #ffe9cc 100%); border-left: 5px solid var(--accent-orange); }
+        .callout.dark { background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%); color: var(--white); border-left: 5px solid var(--gold); }
+        .callout.dark .callout-title { color: var(--gold); }
+        .callout.dark ol, .callout.dark ul { padding-left: 18px; }
+        .callout.dark li { color: rgba(255,255,255,0.9); padding: 4px 0; }
+
+        .callout-title {
+            font-size: 1.05em;
+            font-weight: 700;
+            color: var(--ink);
+            margin-bottom: 8px;
+        }
+
+        /* Sports grid */
+        .sports-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 14px;
+            margin: 24px 0;
+        }
+
+        .sport-card {
+            background: linear-gradient(135deg, #fafafa 0%, #ffffff 100%);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 18px 12px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .sport-card:hover {
+            transform: translateY(-3px);
+            border-color: var(--gold);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.06);
+        }
+
+        .sport-icon { font-size: 2em; margin-bottom: 8px; }
+        .sport-name { font-size: 0.92em; font-weight: 700; color: var(--ink); margin-bottom: 4px; }
+        .sport-fans { font-size: 0.78em; color: var(--text-secondary); }
+
+        /* Comparison table */
+        .comparison-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin: 24px 0;
+            font-size: 0.92em;
+            background: #fafafa;
+            border-radius: 10px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+        }
+
+        .comparison-table th {
+            background: var(--ink);
+            color: var(--white);
+            padding: 14px 18px;
+            text-align: left;
+            font-size: 0.85em;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        .comparison-table td {
+            padding: 14px 18px;
+            border-bottom: 1px solid var(--border);
+            line-height: 1.5;
+            color: var(--text-primary);
+        }
+
+        .comparison-table tr:last-child td { border-bottom: none; }
+        .comparison-table tr:hover td { background: rgba(212,165,116,0.05); }
+
+        /* Matrix grid */
+        .matrix-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin: 24px 0;
+        }
+
+        .matrix-cell {
+            border-radius: 12px;
+            padding: 22px;
+            border: 2px solid;
+        }
+
+        .matrix-cell.red { background: var(--accent-red-soft); border-color: var(--accent-red); }
+        .matrix-cell.green { background: var(--accent-green-soft); border-color: var(--accent-green); }
+        .matrix-cell.yellow { background: var(--accent-orange-soft); border-color: var(--accent-orange); }
+        .matrix-cell.blue { background: var(--accent-blue-soft); border-color: var(--accent-blue); }
+
+        .matrix-cell .cell-title {
+            font-size: 1.0em;
+            font-weight: 700;
+            color: var(--ink);
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .matrix-cell .cell-desc {
+            font-size: 0.9em;
+            line-height: 1.55;
+            color: var(--text-primary);
+        }
+
+        .matrix-cell .cell-action {
+            font-size: 0.82em;
+            font-weight: 600;
+            color: var(--ink);
+            margin-top: 8px;
+            opacity: 0.85;
+        }
+
+        /* Timeline */
+        .timeline {
+            position: relative;
+            margin: 32px 0;
+            padding-left: 32px;
+        }
+
+        .timeline::before {
+            content: "";
+            position: absolute;
+            left: 8px;
+            top: 4px;
+            bottom: 4px;
+            width: 2px;
+            background: linear-gradient(180deg, var(--gold) 0%, rgba(212,165,116,0.2) 100%);
+        }
+
+        .timeline-item {
+            position: relative;
+            padding-bottom: 24px;
+        }
+
+        .timeline-item::before {
+            content: "";
+            position: absolute;
+            left: -32px;
+            top: 6px;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: var(--gold);
+            border: 3px solid var(--white);
+            box-shadow: 0 0 0 2px var(--gold);
+        }
+
+        .timeline-period {
+            font-size: 1.0em;
+            font-weight: 700;
+            color: var(--ink);
+            margin-bottom: 4px;
+        }
+
+        .timeline-period .period-label {
+            color: var(--gold);
+            font-size: 0.85em;
+            margin-right: 8px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .timeline-desc {
+            font-size: 0.95em;
+            line-height: 1.6;
+            color: var(--text-secondary);
+            max-width: 720px;
+        }
+
+        /* Revenue blocks */
+        .revenue-section {
+            margin: 22px 0;
+        }
+
+        .revenue-section-header {
+            font-size: 0.92em;
+            font-weight: 700;
+            color: var(--ink);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .revenue-cards {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+        }
+
+        .revenue-card {
+            background: #fafafa;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 18px;
+        }
+
+        .revenue-amount {
+            font-size: 1.1em;
+            font-weight: 700;
+            color: var(--gold);
+            margin-bottom: 4px;
+        }
+
+        .revenue-desc {
+            font-size: 0.9em;
+            line-height: 1.5;
+            color: var(--text-secondary);
+        }
+
+        /* Cover/closing slide */
+        .cover-slide {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: calc(100vh - 120px);
+            text-align: center;
+            padding: 40px 20px;
+        }
+
+        .cover-slide h1.slide-title {
+            font-size: 4.5em;
+            background: linear-gradient(135deg, var(--ink) 0%, #4a4a4a 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .cover-slide .slide-subtitle {
+            font-size: 1.55em;
+            max-width: 720px;
+            margin-bottom: 20px;
+        }
+
+        .cover-mark {
+            font-size: 0.8em;
+            color: var(--gold);
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            margin-bottom: 24px;
+            font-weight: 700;
+        }
+
+        .gold-rule {
+            width: 60px;
+            height: 3px;
+            background: var(--gold);
+            margin: 24px auto;
+            border-radius: 2px;
+        }
+
+        /* Helper: small/secondary text */
+        .why-this {
+            font-size: 0.82em;
+            color: var(--text-secondary);
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        /* Section labels */
+        .section-label {
+            font-size: 0.78em;
+            font-weight: 700;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            color: var(--gold);
+            margin-bottom: 12px;
+        }
+
+        /* Scrollbar styling */
+        .slide::-webkit-scrollbar,
+        #nav-list::-webkit-scrollbar { width: 6px; }
+        .slide::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.15); border-radius: 3px; }
+        #nav-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 3px; }
+        .slide::-webkit-scrollbar-track { background: transparent; }
+
+        /* ─────────────────  RESPONSIVE  ───────────────── */
+        @media (max-width: 1024px) {
+            .nav-sidebar { width: 220px; }
+            .slide { padding: 40px 50px; }
+            h1.slide-title { font-size: 2.6em; }
+            h2.slide-heading { font-size: 1.9em; }
+            .card-grid.cols-3, .card-grid.cols-5 { grid-template-columns: repeat(2, 1fr); }
+            .sports-grid { grid-template-columns: repeat(3, 1fr); }
+            .stat-grid { grid-template-columns: 1fr; }
+        }
+
+        @media (max-width: 768px) {
+            .deck-container { flex-direction: column; }
+            .nav-sidebar {
+                width: 100%;
+                max-height: 200px;
+                flex-direction: row;
+                flex-wrap: wrap;
+            }
+            .nav-header { width: 100%; }
+            #nav-list { display: none; }
+            .controls { width: 100%; }
+            .slide { padding: 32px 24px; }
+            .two-column, .card-grid.cols-2, .matrix-grid, .revenue-cards {
+                grid-template-columns: 1fr !important;
+            }
+            h1.slide-title { font-size: 2.2em; }
+            h2.slide-heading { font-size: 1.6em; }
+            .cover-slide h1.slide-title { font-size: 2.8em; }
+        }
+    </style>
+</head>
+<body>
+    <div class="deck-container">
+
+        <!-- ─────  SIDEBAR  ───── -->
+        <aside class="nav-sidebar">
+            <div class="nav-header">
+                <h3>FORZA</h3>
+                <p>Strategic Roadmap</p>
+            </div>
+
+            <nav id="nav-list">
+                <div class="nav-item active" data-slide="0"><span class="nav-item-num">00</span> Overview</div>
+                <div class="nav-item" data-slide="1"><span class="nav-item-num">01</span> Our Approach</div>
+                <div class="nav-item" data-slide="2"><span class="nav-item-num">02</span> Phase 1 — Foundation</div>
+                <div class="nav-item" data-slide="3"><span class="nav-item-num">03</span> Phase 2 — Multi-Sport</div>
+                <div class="nav-item" data-slide="4"><span class="nav-item-num">04</span> Phase 3 — Enterprise</div>
+                <div class="nav-item" data-slide="5"><span class="nav-item-num">05</span> Phase 4 — Ecosystem</div>
+                <div class="nav-item" data-slide="6"><span class="nav-item-num">06</span> Revenue Model</div>
+                <div class="nav-item" data-slide="7"><span class="nav-item-num">07</span> White-Label Strategy</div>
+                <div class="nav-item" data-slide="8"><span class="nav-item-num">08</span> Real Sports Bridge</div>
+                <div class="nav-item" data-slide="9"><span class="nav-item-num">09</span> Risks &amp; Opportunities</div>
+                <div class="nav-item" data-slide="10"><span class="nav-item-num">10</span> 12-Month Roadmap</div>
+                <div class="nav-item" data-slide="11"><span class="nav-item-num">11</span> Closing</div>
+            </nav>
+
+            <div class="nav-footer">
+                Forza Fantasy League · May 2026
+            </div>
+
+            <div class="controls">
+                <button id="prev-btn" onclick="previousSlide()">← Prev</button>
+                <span class="slide-counter"><span id="current">1</span> / <span id="total">12</span></span>
+                <button id="next-btn" onclick="nextSlide()">Next →</button>
+            </div>
+        </aside>
+
+        <!-- ─────  SLIDES  ───── -->
+        <main class="slides-wrapper">
+
+            <!-- ── Slide 0: Cover ── -->
+            <section class="slide active">
+                <div class="slide-inner cover-slide">
+                    <div class="cover-mark">Strategic Product Roadmap</div>
+                    <h1 class="slide-title">Forza Fantasy League</h1>
+                    <div class="gold-rule"></div>
+                    <p class="slide-subtitle">From Niche Fantasy App<br>to Global Sports Platform</p>
+                    <div class="stat-grid">
+                        <div class="stat-card">
+                            <div class="stat-icon">⏱️</div>
+                            <div class="stat-metric">4-Year Horizon</div>
+                            <div class="stat-desc">Phase 1 → 4 Evolution<br>2026 — 2029+</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon">💰</div>
+                            <div class="stat-metric">$5M+ ARR</div>
+                            <div class="stat-desc">Multi-stream revenue<br>Consumer · Enterprise · Ecosystem</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon">🌍</div>
+                            <div class="stat-metric">Global Scale</div>
+                            <div class="stat-desc">50+ sports, 100+ leagues<br>3B+ addressable fans</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ── Slide 1: IDEO Approach ── -->
+            <section class="slide">
+                <div class="slide-inner">
+                    <div class="section-label">Our Methodology</div>
+                    <h2 class="slide-heading">Human-Centered Product Evolution</h2>
+                    <p class="intro-paragraph">We apply IDEO design thinking to a four-phase evolution. Each phase ships a complete, valuable product on its own — while quietly laying the rails for the next.</p>
+
+                    <div class="card-grid cols-3">
+                        <div class="card">
+                            <div class="card-icon">🔍</div>
+                            <div class="card-title">Empathize</div>
+                            <div class="card-desc">Understand fantasy sports fans across sports, geographies, and engagement levels. What keeps them coming back week after week?</div>
+                        </div>
+                        <div class="card">
+                            <div class="card-icon">💡</div>
+                            <div class="card-title">Define</div>
+                            <div class="card-desc">The core problem is fragmentation — fans use a different app per sport. We unify the experience under one brand.</div>
+                        </div>
+                        <div class="card">
+                            <div class="card-icon">🎨</div>
+                            <div class="card-title">Ideate</div>
+                            <div class="card-desc">Explore platform models: single-sport mastery → multi-sport hub → white-label infrastructure → real sports ecosystem.</div>
+                        </div>
+                    </div>
+
+                    <div class="card-grid cols-2" style="margin-top: 12px;">
+                        <div class="card">
+                            <div class="card-icon">🛠️</div>
+                            <div class="card-title">Prototype</div>
+                            <div class="card-desc">Test each phase with real users. Run multi-sport in beta during Phase 2 before pursuing enterprise customers in Phase 3.</div>
+                        </div>
+                        <div class="card">
+                            <div class="card-icon">📊</div>
+                            <div class="card-title">Test &amp; Measure</div>
+                            <div class="card-desc">Validate revenue models and retention. Data — not opinion — informs every phase-gate decision.</div>
+                        </div>
+                    </div>
+
+                    <div class="callout gold">
+                        <div class="callout-title">Guiding Principle</div>
+                        Each phase is a complete, valuable product on its own. We don't force users into Phase N+1 features — we delight them with Phase N experiences while building toward what's next.
+                    </div>
+                </div>
+            </section>
+
+            <!-- ── Slide 2: Phase 1 ── -->
+            <section class="slide">
+                <div class="slide-inner">
+                    <div class="phase-badge phase-1">Phase 1 · 2026 · Current</div>
+                    <h2 class="slide-heading">Single-Sport Mastery</h2>
+                    <p class="intro-paragraph">Establish Forza Fantasy League as the premier Premier League fantasy football app. Build a loyal, engaged user base with exceptional UX — and lay the data infrastructure for everything that comes next.</p>
+
+                    <div class="two-column">
+                        <div class="column-block accent-orange">
+                            <h3 class="section-heading">Functional Goals</h3>
+                            <ul>
+                                <li>11-player squad builder with formation validation</li>
+                                <li>Real-time league standings &amp; H2H scoring</li>
+                                <li>Live match updates with Joker chip</li>
+                                <li>League chat &amp; community features</li>
+                                <li>Mobile-native iOS / Android (Capacitor)</li>
+                                <li>Cross-platform sync (web + mobile)</li>
+                            </ul>
+                        </div>
+                        <div class="column-block accent-orange">
+                            <h3 class="section-heading">Business Goals</h3>
+                            <ul>
+                                <li>50K active users (year-end target)</li>
+                                <li>$2–5/user/month on premium tiers</li>
+                                <li>40%+ retention after onboarding</li>
+                                <li>Launch seasonal leagues (auto-refresh)</li>
+                                <li>Establish brand in UK &amp; Europe</li>
+                                <li>Prove product-market fit</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="callout blue">
+                        <div class="callout-title">Why This Phase</div>
+                        Perfect the core fantasy football experience. Build a brand known for quality. Establish the data infrastructure and behavioural insights that make multi-sport expansion possible without re-platforming.
+                    </div>
+                </div>
+            </section>
+
+            <!-- ── Slide 3: Phase 2 ── -->
+            <section class="slide">
+                <div class="slide-inner">
+                    <div class="phase-badge phase-2">Phase 2 · 2027 – 2028 · 12 – 18 Months</div>
+                    <h2 class="slide-heading">Multi-Sport Platform</h2>
+                    <p class="intro-paragraph">Expand to 5–10 additional sports. Enable fans to manage fantasy teams across cricket, basketball, NFL, La Liga and more — from a single unified app, with a single squad-management mental model.</p>
+
+                    <div class="sports-grid">
+                        <div class="sport-card"><div class="sport-icon">🏏</div><div class="sport-name">Cricket</div><div class="sport-fans">1.1B fans</div></div>
+                        <div class="sport-card"><div class="sport-icon">⚽</div><div class="sport-name">La Liga</div><div class="sport-fans">500M fans</div></div>
+                        <div class="sport-card"><div class="sport-icon">🏈</div><div class="sport-name">NFL</div><div class="sport-fans">115M fans</div></div>
+                        <div class="sport-card"><div class="sport-icon">⚾</div><div class="sport-name">MLB</div><div class="sport-fans">80M fans</div></div>
+                        <div class="sport-card"><div class="sport-icon">🏀</div><div class="sport-name">NBA</div><div class="sport-fans">20M fans</div></div>
+                    </div>
+
+                    <div class="two-column">
+                        <div class="column-block accent-blue">
+                            <h3 class="section-heading">Product Features</h3>
+                            <ul>
+                                <li>Unified dashboard across sports</li>
+                                <li>Cross-sport leagues (mix players across codes)</li>
+                                <li>Sport-specific scoring algorithms (pluggable)</li>
+                                <li>Shared chat across mixed-league users</li>
+                                <li>Bankroll management (cross-sport budget)</li>
+                                <li>Sport-aware notifications &amp; injury alerts</li>
+                            </ul>
+                        </div>
+                        <div class="column-block accent-blue">
+                            <h3 class="section-heading">Success Metrics</h3>
+                            <ul>
+                                <li>200K+ total active users</li>
+                                <li>15%+ monthly active rate (MAU/registered)</li>
+                                <li>$1M+ MRR across multi-sport</li>
+                                <li>5+ sports live and scoring reliably</li>
+                                <li>Available in 50+ countries</li>
+                                <li>≥35% Day-90 retention on portfolio users</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ── Slide 4: Phase 3 ── -->
+            <section class="slide">
+                <div class="slide-inner">
+                    <div class="phase-badge phase-3">Phase 3 · 2028 – 2029 · Enterprise</div>
+                    <h2 class="slide-heading">Enterprise &amp; White-Label</h2>
+                    <p class="intro-paragraph">Become the infrastructure platform for fantasy sports. License our white-label solution to official leagues, broadcasters, and operators — turning their passive fans into engaged players, with first-party data flowing back to them.</p>
+
+                    <div class="card-grid cols-3">
+                        <div class="card">
+                            <div class="card-icon">🏆</div>
+                            <div class="card-title">Leagues</div>
+                            <div class="card-desc">LaLiga, Premier League — official fantasy platform delivered white-label, fully branded.</div>
+                        </div>
+                        <div class="card">
+                            <div class="card-icon">📺</div>
+                            <div class="card-title">Broadcasters</div>
+                            <div class="card-desc">ESPN, Sky Sports — integrate fantasy directly into broadcast ecosystems and second-screen apps.</div>
+                        </div>
+                        <div class="card">
+                            <div class="card-icon">🎰</div>
+                            <div class="card-title">Operators</div>
+                            <div class="card-desc">Betting operators — white-label fantasy as a top-of-funnel for sports betting platforms.</div>
+                        </div>
+                    </div>
+
+                    <table class="comparison-table">
+                        <thead>
+                            <tr>
+                                <th>Component</th>
+                                <th>Configuration</th>
+                                <th>Customer Control</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td><strong>Branding</strong></td><td>Logos, colors, custom domain</td><td>100% customer</td></tr>
+                            <tr><td><strong>League Rules</strong></td><td>Configurable scoring, constraints, chips</td><td>Customer-defined</td></tr>
+                            <tr><td><strong>Monetization</strong></td><td>Premium tiers, pass-through ad network</td><td>70 / 30 split</td></tr>
+                            <tr><td><strong>Data Integration</strong></td><td>Real-time stats feeds for any sport</td><td>Customer provides API</td></tr>
+                            <tr><td><strong>User Auth</strong></td><td>OAuth SSO with customer identity</td><td>100% customer</td></tr>
+                        </tbody>
+                    </table>
+
+                    <div class="two-column">
+                        <div class="column-block accent-green">
+                            <h3 class="section-heading">Enterprise Revenue</h3>
+                            <ul>
+                                <li>$500K – $2M annual licenses</li>
+                                <li>30 – 40% revenue share on user spend</li>
+                                <li>Custom API &amp; integration fees</li>
+                                <li>Per-active-user SaaS pricing</li>
+                            </ul>
+                        </div>
+                        <div class="column-block accent-green">
+                            <h3 class="section-heading">Target State</h3>
+                            <ul>
+                                <li>$3M+ ARR from enterprise alone</li>
+                                <li>5 – 10 enterprise customers live</li>
+                                <li>5M+ users on white-label deployments</li>
+                                <li>Platform scales to 100+ leagues</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ── Slide 5: Phase 4 ── -->
+            <section class="slide">
+                <div class="slide-inner">
+                    <div class="phase-badge phase-4">Phase 4 · 2029 + · Ecosystem</div>
+                    <h2 class="slide-heading">College Sports &amp; Real Sports Integration</h2>
+                    <p class="intro-paragraph">Enter untapped markets and bridge from fantasy into the wider sports betting and engagement ecosystem — without taking on the regulatory weight of becoming a sportsbook ourselves.</p>
+
+                    <div class="two-column">
+                        <div class="column-block accent-purple">
+                            <div class="why-this">College Sports Initiative</div>
+                            <p style="margin-bottom: 12px; font-size: 0.95em; color: var(--text-primary);">10M+ college sports fans. Zero unified fantasy platform.</p>
+                            <ul>
+                                <li>College football (NCAA FBS)</li>
+                                <li>College basketball (March Madness)</li>
+                                <li>Esports (League of Legends, Valorant)</li>
+                                <li>Internal admin app for coaches</li>
+                                <li>Player performance tracking tool (B2B2C)</li>
+                            </ul>
+                        </div>
+                        <div class="column-block accent-purple">
+                            <div class="why-this">Real Sports Bridge</div>
+                            <p style="margin-bottom: 12px; font-size: 0.95em; color: var(--text-primary);">Integrate real sports betting through licensed partners.</p>
+                            <ul>
+                                <li>Affiliate partnerships (DraftKings, FanDuel)</li>
+                                <li>Fantasy-to-betting conversion funnel</li>
+                                <li>Unified wallet (fantasy + real money)</li>
+                                <li>Responsible gaming tools built-in</li>
+                                <li>Revenue share from referrals</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="callout purple">
+                        <div class="callout-title">Revenue Potential</div>
+                        College sports + betting partnerships unlock <strong>$5M – $10M+ ARR</strong>. Fantasy becomes the discovery layer for a <strong>$150B+ global sports betting market</strong> — with regulated, partner-led economics rather than operator risk.
+                    </div>
+                </div>
+            </section>
+
+            <!-- ── Slide 6: Revenue Model ── -->
+            <section class="slide">
+                <div class="slide-inner">
+                    <div class="section-label">Revenue Architecture</div>
+                    <h2 class="slide-heading">Multiple Revenue Streams</h2>
+                    <p class="intro-paragraph">A diversified, defensible revenue portfolio. No single stream exceeds 40% of total — by design, for resilience.</p>
+
+                    <div class="revenue-section">
+                        <div class="revenue-section-header">💚 Consumer (Direct)</div>
+                        <div class="revenue-cards">
+                            <div class="revenue-card">
+                                <div class="revenue-amount">$500K – $1M ARR</div>
+                                <div class="revenue-desc"><strong>Premium Tiers</strong> — $2–5/mo for ad-free experience, advanced stats, chip-coaching recommendations.</div>
+                            </div>
+                            <div class="revenue-card">
+                                <div class="revenue-amount">$300K – $700K ARR</div>
+                                <div class="revenue-desc"><strong>Pass-Through Ads</strong> — Sports betting and DFS platform referrals (CPC / CPA / hybrid).</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="revenue-section">
+                        <div class="revenue-section-header">💼 Enterprise (B2B)</div>
+                        <div class="revenue-cards">
+                            <div class="revenue-card">
+                                <div class="revenue-amount">$2M – $3M ARR</div>
+                                <div class="revenue-desc"><strong>White-Label Licenses</strong> — $500K–$2M per league/operator annually + 30% revenue share on user transactions.</div>
+                            </div>
+                            <div class="revenue-card">
+                                <div class="revenue-amount">$500K – $1M ARR</div>
+                                <div class="revenue-desc"><strong>Custom Integration</strong> — APIs, data feeds, branded mobile apps. $100K+ per client.</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="revenue-section">
+                        <div class="revenue-section-header">🎓 Ecosystem (Strategic)</div>
+                        <div class="revenue-cards">
+                            <div class="revenue-card">
+                                <div class="revenue-amount">$1M – $2M ARR</div>
+                                <div class="revenue-desc"><strong>Betting Affiliate Revenue</strong> — CPA &amp; revenue share with DraftKings, FanDuel, Kambi.</div>
+                            </div>
+                            <div class="revenue-card">
+                                <div class="revenue-amount">$500K – $1M ARR</div>
+                                <div class="revenue-desc"><strong>College Sports Licensing</strong> — NCAA, conference partnerships, internal admin tools (B2B2C).</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="callout green">
+                        <div class="callout-title">💰 Total Target: $5M – $8M ARR by 2029</div>
+                        No single revenue stream exceeds 40% of total → portfolio resilience. Diversification protects against platform, regulatory, and partner concentration risk.
+                    </div>
+                </div>
+            </section>
+
+            <!-- ── Slide 7: White-Label Strategy ── -->
+            <section class="slide">
+                <div class="slide-inner">
+                    <div class="section-label">Strategic Lever</div>
+                    <h2 class="slide-heading">White-Label Strategy</h2>
+                    <p class="intro-paragraph">Licensing Forza's platform to official leagues and major broadcasters is our most leveraged path to enterprise-scale revenue.</p>
+
+                    <div class="two-column">
+                        <div class="column-block accent-blue">
+                            <h3 class="section-heading">Why Leagues Buy</h3>
+                            <ul>
+                                <li>📱 Turn passive fans into engaged users</li>
+                                <li>💰 Revenue share (30–40% of user spend)</li>
+                                <li>📊 First-party data on fan behaviour</li>
+                                <li>⏱️ Launch in 6 months (not 2+ years)</li>
+                                <li>🎯 Focus on core (broadcast/teams) vs tech</li>
+                            </ul>
+                        </div>
+                        <div class="column-block accent-green">
+                            <h3 class="section-heading">Why Forza Wins</h3>
+                            <ul>
+                                <li>📈 Recurring $500K–$2M per customer</li>
+                                <li>🔁 60%+ platform margins (not COGS)</li>
+                                <li>🌍 Scales across 100+ leagues globally</li>
+                                <li>🏆 Defensible: league-data moat</li>
+                                <li>💼 Enterprise relationships → upsell path</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="callout orange">
+                        <div class="callout-title">Target Customers (Phase 3 – 4)</div>
+                        <strong>LaLiga</strong> — 500M global fans · <strong>NBA</strong> — 1.5B digital reach · <strong>ESL (Esports)</strong> — 500M+ esports fans · <strong>BT Sport</strong> — UK broadcaster
+                    </div>
+
+                    <div class="matrix-grid">
+                        <div class="matrix-cell yellow">
+                            <div class="cell-title">🚀 High Impact · Lower Effort</div>
+                            <div class="cell-desc">NBA white-label · ESL partnership · Cricket Board (India)</div>
+                            <div class="cell-action">→ Pursue aggressively</div>
+                        </div>
+                        <div class="matrix-cell blue">
+                            <div class="cell-title">💎 High Impact · High Effort</div>
+                            <div class="cell-desc">LaLiga platform · NFL gaming integration · Disney+ integration</div>
+                            <div class="cell-action">→ Strategic — fund deliberately</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ── Slide 8: Real Sports / Betting ── -->
+            <section class="slide">
+                <div class="slide-inner">
+                    <div class="section-label">Ecosystem Bridge</div>
+                    <h2 class="slide-heading">Real Sports &amp; Betting Integration</h2>
+                    <p class="intro-paragraph">A measured, partner-led bridge from fantasy into the $150B+ global sports betting market — capturing economics without operator risk.</p>
+
+                    <div class="why-this" style="margin-top: 8px;">Why This Matters</div>
+                    <p style="font-size: 1.0em; line-height: 1.6; margin-bottom: 24px; color: var(--text-primary);">Fantasy sports fans are <strong>4 – 6× more likely</strong> to bet on the same sport. Our platform becomes the discovery and funnel layer into betting — earning on the conversion, not on the wagers themselves.</p>
+
+                    <div class="two-column">
+                        <div class="column-block accent-orange">
+                            <h3 class="section-heading">Fantasy User</h3>
+                            <p style="font-size: 0.95em; line-height: 1.6; color: var(--text-primary);">Engaged. Game-playing mindset. Understands odds. Already invested in player &amp; team outcomes.</p>
+                        </div>
+                        <div class="column-block accent-blue">
+                            <h3 class="section-heading">Perfect Betting Customer</h3>
+                            <p style="font-size: 0.95em; line-height: 1.6; color: var(--text-primary);">Ready to place real-money bets on the same sport — once trust, context, and timing align.</p>
+                        </div>
+                    </div>
+
+                    <div class="two-column">
+                        <div class="column-block accent-green">
+                            <h3 class="section-heading">Affiliate Revenue</h3>
+                            <ul>
+                                <li>$15 – $30 CPA per acquisition</li>
+                                <li>20% of first deposit (DraftKings)</li>
+                                <li>5 – 15% revenue share (FanDuel)</li>
+                                <li>Target: $1 – $2M ARR at scale</li>
+                            </ul>
+                        </div>
+                        <div class="column-block accent-purple">
+                            <h3 class="section-heading">Responsible Gaming</h3>
+                            <ul>
+                                <li>Loss limits &amp; cool-off periods</li>
+                                <li>Age verification (21+)</li>
+                                <li>Self-exclusion tools</li>
+                                <li>Comply with all regional regulations</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="callout purple">
+                        <div class="callout-title">Key Insight</div>
+                        We don't become a sportsbook. We remain the engagement layer and earn from partnerships. Risk is mitigated; upside is massive.
+                    </div>
+                </div>
+            </section>
+
+            <!-- ── Slide 9: Risks & Opportunities ── -->
+            <section class="slide">
+                <div class="slide-inner">
+                    <div class="section-label">Strategic Reality Check</div>
+                    <h2 class="slide-heading">Risks &amp; Opportunities</h2>
+                    <p class="intro-paragraph">The honest picture: what could break the plan, and what could break it open.</p>
+
+                    <div class="two-column">
+                        <div>
+                            <h3 class="section-heading" style="color: var(--accent-red);">🔴 Critical Risks</h3>
+                            <div class="matrix-grid" style="grid-template-columns: 1fr; gap: 12px;">
+                                <div class="matrix-cell red">
+                                    <div class="cell-title">Regulatory Risk</div>
+                                    <div class="cell-desc">Gambling regulations vary by jurisdiction. College sports especially fraught (NCAA, state-by-state).</div>
+                                </div>
+                                <div class="matrix-cell red">
+                                    <div class="cell-title">API / Data Risk</div>
+                                    <div class="cell-desc">Heavy dependence on official sports APIs. Provider cuts access → product breaks.</div>
+                                </div>
+                                <div class="matrix-cell red">
+                                    <div class="cell-title">Competitive Pressure</div>
+                                    <div class="cell-desc">ESPN, DraftKings, FanDuel could build similar white-label, with bigger balance sheets.</div>
+                                </div>
+                                <div class="matrix-cell red">
+                                    <div class="cell-title">Multi-Sport Retention</div>
+                                    <div class="cell-desc">Harder to retain casual users across 10 sports than 1. Engagement fragments.</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <h3 class="section-heading" style="color: var(--accent-green);">🟢 Key Opportunities</h3>
+                            <div class="matrix-grid" style="grid-template-columns: 1fr; gap: 12px;">
+                                <div class="matrix-cell green">
+                                    <div class="cell-title">International Expansion</div>
+                                    <div class="cell-desc">Cricket (India, Pakistan), La Liga (Spain), EPL (UK/global) = 3B+ addressable market.</div>
+                                </div>
+                                <div class="matrix-cell yellow">
+                                    <div class="cell-title">Esports Dominance</div>
+                                    <div class="cell-desc">No unified fantasy esports platform yet. First-mover advantage is real.</div>
+                                </div>
+                                <div class="matrix-cell green">
+                                    <div class="cell-title">Inbound White-Label Demand</div>
+                                    <div class="cell-desc">LaLiga, NBA actively seeking partners. The "build vs buy" lean is shifting to buy.</div>
+                                </div>
+                                <div class="matrix-cell yellow">
+                                    <div class="cell-title">Betting Partner Moats</div>
+                                    <div class="cell-desc">Exclusive affiliate deals with DraftKings/FanDuel can lock competitors out of channels.</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="callout gold">
+                        <div class="callout-title">Mitigation Strategy</div>
+                        <strong>Regulatory:</strong> Partner with local legal counsel. Start in regulated geographies (UK, NJ, NY). · <strong>Data:</strong> Build redundant API relationships early; consider custom integrations where needed. · <strong>Competition:</strong> Move fast to white-label (2028). Lock in league partnerships before larger players notice. · <strong>Retention:</strong> Design for casual users — sport-specific communities matter; not all users need all sports.
+                    </div>
+                </div>
+            </section>
+
+            <!-- ── Slide 10: 12-Month Roadmap ── -->
+            <section class="slide">
+                <div class="slide-inner">
+                    <div class="section-label">Tactical View</div>
+                    <h2 class="slide-heading">Next 12 Months: Roadmap</h2>
+                    <p class="intro-paragraph">A measurable, gated, quarter-by-quarter plan from Phase 1 → Phase 2 transition.</p>
+
+                    <div class="timeline">
+                        <div class="timeline-item">
+                            <div class="timeline-period"><span class="period-label">Q2 2026</span>Foundation (Now)</div>
+                            <div class="timeline-desc">Launch Phase 1 (PL fantasy at production scale). Hit 10K active users. Establish product-market fit metrics. Begin white-label business development conversations.</div>
+                        </div>
+                        <div class="timeline-item">
+                            <div class="timeline-period"><span class="period-label">Q3 2026</span>Growth &amp; Testing</div>
+                            <div class="timeline-desc">Reach 25K active users. Test Phase 2 prototype with 1–2 additional sports (likely NBA + Cricket). Begin enterprise conversations with 3–5 leagues.</div>
+                        </div>
+                        <div class="timeline-item">
+                            <div class="timeline-period"><span class="period-label">Q4 2026</span>Scale &amp; Validate</div>
+                            <div class="timeline-desc">Hit 50K users. Launch Phase 2 beta (multi-sport). Sign first white-label customer (pilot agreement). Begin college sports technical planning.</div>
+                        </div>
+                        <div class="timeline-item">
+                            <div class="timeline-period"><span class="period-label">Q1 2027</span>Enterprise Lock-In</div>
+                            <div class="timeline-desc">100K+ users across platform. 2–3 white-label deployments live. Begin college sports build. Revenue to $250K MRR.</div>
+                        </div>
+                    </div>
+
+                    <div class="callout orange">
+                        <div class="callout-title">Decision Gate — Q2 2027</div>
+                        Assess Phase 2 metrics. <strong>If 80K+ users and retention &gt;35%</strong>, commit to Phase 3 (white-label at scale). If not, pivot to single-sport dominance plus niche enterprise (e.g. college-only) and re-time multi-sport.
+                    </div>
+                </div>
+            </section>
+
+            <!-- ── Slide 11: Closing ── -->
+            <section class="slide">
+                <div class="slide-inner cover-slide">
+                    <div class="cover-mark">Closing</div>
+                    <h1 class="slide-title">From Fantasy<br>to Platform</h1>
+                    <div class="gold-rule"></div>
+                    <p class="slide-subtitle">A four-phase evolution powered by user obsession,<br>IDEO thinking, and capital efficiency.</p>
+
+                    <div class="stat-grid" style="margin-top: 40px;">
+                        <div class="stat-card">
+                            <div class="stat-icon">🎯</div>
+                            <div class="stat-metric">Product-Driven</div>
+                            <div class="stat-desc">Each phase is complete,<br>valuable, defensible.</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon">💰</div>
+                            <div class="stat-metric">Multi-Revenue</div>
+                            <div class="stat-desc">Consumer + Enterprise<br>+ Ecosystem = $5–8M ARR.</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon">🌍</div>
+                            <div class="stat-metric">Global Scale</div>
+                            <div class="stat-desc">50+ sports, 100+ leagues,<br>3B+ addressable market.</div>
+                        </div>
+                    </div>
+
+                    <div class="callout dark" style="margin-top: 48px; text-align: left; max-width: 720px;">
+                        <div class="callout-title">Questions to Answer Before Phase 2</div>
+                        <ol style="margin-top: 8px;">
+                            <li>Can we hit 50K+ users in PL fantasy by Q4 2026?</li>
+                            <li>Do white-label conversations validate real customer demand?</li>
+                            <li>Can we manage multi-sport data &amp; scoring reliably at scale?</li>
+                            <li>What is our college-sports technical &amp; regulatory approach?</li>
+                            <li>Which betting partner alignment is best for our brand?</li>
+                        </ol>
+                    </div>
+
+                    <p style="margin-top: 32px; font-size: 0.9em; color: var(--text-secondary); letter-spacing: 0.5px;">Let's build the future of fantasy sports. · Forza Fantasy League · May 2026</p>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <script>
+        let currentSlide = 0;
+        const slides = document.querySelectorAll('.slide');
+        const navItems = document.querySelectorAll('.nav-item');
+        const totalSlides = slides.length;
+
+        document.getElementById('total').textContent = totalSlides;
+
+        function showSlide(n) {
+            if (n < 0) n = 0;
+            if (n >= totalSlides) n = totalSlides - 1;
+            currentSlide = n;
+
+            slides.forEach((slide, i) => {
+                slide.classList.toggle('active', i === currentSlide);
+            });
+            navItems.forEach((item, i) => {
+                item.classList.toggle('active', i === currentSlide);
+            });
+
+            // scroll slide content to top
+            const active = slides[currentSlide];
+            if (active) active.scrollTop = 0;
+
+            document.getElementById('current').textContent = currentSlide + 1;
+            document.getElementById('prev-btn').disabled = currentSlide === 0;
+            document.getElementById('next-btn').disabled = currentSlide === totalSlides - 1;
+        }
+
+        function nextSlide() { showSlide(currentSlide + 1); }
+        function previousSlide() { showSlide(currentSlide - 1); }
+
+        navItems.forEach(item => {
+            item.addEventListener('click', () => {
+                const idx = parseInt(item.dataset.slide, 10);
+                if (!Number.isNaN(idx)) showSlide(idx);
+            });
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight' || e.key === 'PageDown') { e.preventDefault(); nextSlide(); }
+            else if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); previousSlide(); }
+            else if (e.key === 'Home') { e.preventDefault(); showSlide(0); }
+            else if (e.key === 'End') { e.preventDefault(); showSlide(totalSlides - 1); }
+        });
+
+        // init
+        showSlide(0);
+    </script>
+</body>
+</html>
