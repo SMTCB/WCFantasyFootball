@@ -8,9 +8,8 @@ const REFRESH_MS = 5 * 60 * 1000;
 
 const LEAGUE_TONES = ['#00B4D8', '#E0A800', '#A855F7', '#22C55E', '#F59E0B'];
 
+import { POS_ORDER, POS_PITCH_Y as POS_Y } from '../lib/formations';
 const POS_TONE = { FWD: 'var(--danger)', MID: 'var(--gold)', DEF: 'var(--cyan)', GK: '#A855F7' };
-const POS_Y    = { FWD: 14, MID: 38, DEF: 64, GK: 88 };
-const POS_ORDER = ['GK', 'DEF', 'MID', 'FWD'];
 
 // ── Point estimation ─────────────────────────────────────────────────────────
 
@@ -298,6 +297,7 @@ export default function LiveScreen() {
   const { user } = useAuth();
 
   const [loading,      setLoading]      = useState(true);
+  const [liveError,    setLiveError]    = useState(null);
   const [liveFixtures, setLiveFixtures] = useState([]);
   const [userLeagues,  setUserLeagues]  = useState([]);
   const [squadPlayers, setSquadPlayers] = useState([]);
@@ -475,6 +475,7 @@ export default function LiveScreen() {
 
     } catch (err) {
       console.error('LiveScreen fetch error', err);
+      setLiveError('Live data could not be loaded. Scores may be stale.');
     } finally {
       setLoading(false);
     }
@@ -537,6 +538,17 @@ export default function LiveScreen() {
 
   return (
     <div style={{ display: 'flex', flex: 1, flexDirection: 'column', background: 'var(--ink)', color: 'var(--paper)', fontFamily: 'Archivo, sans-serif', minHeight: 0 }}>
+
+      {/* Live data error banner */}
+      {liveError && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 20px', background: 'rgba(240,58,58,0.12)', borderBottom: '1px solid rgba(240,58,58,0.25)' }}>
+          <span style={{ color: 'var(--danger)', fontSize: 12 }}>⚠ {liveError}</span>
+          <button
+            onClick={() => { setLiveError(null); fetchAll(); }}
+            style={{ marginLeft: 'auto', fontSize: 10, color: 'var(--danger)', background: 'rgba(240,58,58,0.18)', border: '1px solid rgba(240,58,58,0.35)', borderRadius: 4, padding: '3px 10px', cursor: 'pointer', letterSpacing: '.1em' }}
+          >RETRY</button>
+        </div>
+      )}
 
       {/* ── DESKTOP ─────────────────────────────────────────────────────────── */}
       <div className="hidden lg:flex flex-col" style={{ height: '100dvh', overflow: 'hidden' }}>

@@ -28,10 +28,7 @@ import PlayerPickerSheet from '../components/PlayerPickerSheet';
 import SectionHeader from '../components/SectionHeader';
 import PowerToolCard from '../components/PowerToolCard';
 import { AvailabilityBadge } from '../components/AvailabilityBadge';
-
-// ── Position order ────────────────────────────────────────────────────────────
-const POS_ORDER = ['GK', 'DEF', 'MID', 'FWD'];
-const POS_LABEL = { GK: 'Goalkeeper', DEF: 'Defenders', MID: 'Midfielders', FWD: 'Forwards' };
+import { POS_ORDER, POS_LABEL, POS_BADGE_COLOR } from '../lib/formations';
 
 // ── Chip config ───────────────────────────────────────────────────────────────
 const CHIPS = [
@@ -129,7 +126,11 @@ export default function SquadScreen() {
       const squadQuery = supabase.from('squads').select('*').eq('user_id', userId);
       if (leagueId) squadQuery.eq('league_id', leagueId);
       const { data: squad, error } = await squadQuery.order('created_at', { ascending: false }).limit(1).maybeSingle();
-      if (error || !squad) { setSquadData(EMPTY_SQUAD); setLoading(false); return; }
+      if (error) {
+        setFetchError('Could not load your squad. Tap Retry to try again.');
+        setSquadData(EMPTY_SQUAD); setLoading(false); return;
+      }
+      if (!squad) { setSquadData(EMPTY_SQUAD); setLoading(false); return; }
 
       const playerIds = squad.players || [];
       const [
@@ -641,9 +642,7 @@ export default function SquadScreen() {
     );
   };
 
-  const POS_CONFIG_COLORS = {
-    GK:  'var(--gold)', DEF: 'var(--cyan)', MID: 'var(--pos-gk)', FWD: 'var(--danger)',
-  };
+  const POS_CONFIG_COLORS = POS_BADGE_COLOR;
 
   const handlePickerBuy = async (player) => {
     if (!leagueId) { showToast('No league selected — open your squad from the League screen.', 'warning'); return; }

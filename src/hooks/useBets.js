@@ -64,34 +64,63 @@ export function useBets(leagueId, squadId) {
   useEffect(() => {
     if (!leagueId) return;
 
-    // Listen for bet_instances changes (status, resolved, correct_answer)
+    // Bet instance changes: merge UPDATEs in place; full refetch only on INSERT
+    // (INSERT needs the template join which Realtime payload doesn't include)
     const instanceSub = supabase
       .channel(`bet_instances:league_id=eq.${leagueId}`)
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'bet_instances', filter: `league_id=eq.${leagueId}` },
-        () => { fetchBets(); }
-      )
-      .subscribe();
-
-    // Listen for bet_submissions changes (new submissions, resolved rewards)
-    const submissionSub = supabase
-      .channel(`bet_submissions:league_id_filter`)
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'bet_submissions' },
         (payload) => {
-          // Only re-fetch if this submission relates to our squad or league
-          if (squadId && payload.new?.squad_id === squadId) {
-            fetchBets();
+          if (payload.eventType === 'INSERT') {
+            fetchBets(); // needs template join — full fetch required
+          } else if (payload.eventType === 'UPDATE' && payload.new) {
+            setBets(prev => prev.map(b =>
+              b.id === payload.new.id ? { ...b, ...payload.new } : b
+            ));
           }
         }
       )
       .subscribe();
 
+    // Bet submissions: filter by squad_id server-side so only this squad's events
+    // arrive. Merge the new submission into state without a full refetch.
+    const submissionSub = squadId
+      ? supabase
+          .channel(`bet_submissions:squad_id=eq.${squadId}`)
+          .on(
+            'postgres_changes',
+            {
+              event: '*',
+              schema: 'public',
+              table: 'bet_submissions',
+              filter: `squad_id=eq.${squadId}`,
+            },
+            (payload) => {
+              const sub = payload.new;
+              if (!sub) return;
+              setBets(prev => prev.map(bet =>
+                bet.id === sub.bet_instance_id
+                  ? {
+                      ...bet,
+                      mySubmission: {
+                        bet_instance_id: sub.bet_instance_id,
+                        answer:          sub.answer,
+                        is_correct:      sub.is_correct,
+                        reward_awarded:  sub.reward_awarded,
+                        submitted_at:    sub.submitted_at,
+                      },
+                    }
+                  : bet
+              ));
+            }
+          )
+          .subscribe()
+      : null;
+
     return () => {
       instanceSub.unsubscribe();
-      submissionSub.unsubscribe();
+      submissionSub?.unsubscribe();
     };
   }, [leagueId, squadId, fetchBets]);
 

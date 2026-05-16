@@ -4,12 +4,7 @@ import PositionChip from './PositionChip';
 import StatusDot    from './StatusDot';
 import CaptainPill  from './CaptainPill';
 
-const POS_TONE = {
-  GK:  'var(--pos-gk)',
-  DEF: 'var(--pos-def)',
-  MID: 'var(--pos-mid)',
-  FWD: 'var(--pos-fwd)',
-};
+import { POS_TONE } from '../lib/formations';
 
 const lastName = (name = '') => {
   const parts = name.trim().split(' ');

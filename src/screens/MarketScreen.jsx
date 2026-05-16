@@ -14,23 +14,15 @@ import OnboardingTour  from '../components/OnboardingTour';
 import ConfirmModal    from '../components/ConfirmModal';
 import PositionChip    from '../components/PositionChip';
 import StatusDot       from '../components/StatusDot';
+import { POS_CONFIG, POS_FILTER_ORDER } from '../lib/formations';
 
 const COUNTRY_LIMIT = 3;
-
-const POS_CONFIG = {
-  GK:  { label: 'GK',  color: 'var(--gold)', bg: 'rgba(240,180,0,0.14)'  },
-  DEF: { label: 'DEF', color: 'var(--cyan)', bg: 'rgba(0,196,232,0.14)'  },
-  MID: { label: 'MID', color: 'var(--pos-gk)', bg: 'rgba(157,95,245,0.14)' },
-  FWD: { label: 'FWD', color: 'var(--danger)', bg: 'rgba(240,58,58,0.14)'  },
-};
 
 const FLAG_MAP = {
   FRA: '🇫🇷', BRA: '🇧🇷', ENG: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', ESP: '🇪🇸', BEL: '🇧🇪', POR: '🇵🇹',
   MAR: '🇲🇦', URU: '🇺🇾', ITA: '🇮🇹', NOR: '🇳🇴', GER: '🇩🇪', ARG: '🇦🇷',
   EGY: '🇪🇬', NED: '🇳🇱', CRO: '🇭🇷',
 };
-
-const POS_FILTER_ORDER = ['ALL', 'GK', 'DEF', 'MID', 'FWD'];
 
 const MARKET_TOUR_STEPS = [
   {
