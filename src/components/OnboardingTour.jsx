@@ -242,13 +242,16 @@ export default function OnboardingTour({ steps, onComplete, onSkip }) {
           <button
             onClick={handleSkip}
             style={{
-              fontSize:   '11px',
-              color:      'rgba(255,255,255,0.3)',
+              minHeight:  '44px',
+              padding:    '12px 14px',
+              fontSize:   '12px',
+              color:      'rgba(255,255,255,0.55)',
               background: 'none',
               border:     'none',
               cursor:     'pointer',
               fontFamily: 'Archivo Black, sans-serif',
-              letterSpacing: '0.05em',
+              letterSpacing: '0.08em',
+              textTransform: 'uppercase',
             }}
           >
             Skip tour
@@ -256,10 +259,11 @@ export default function OnboardingTour({ steps, onComplete, onSkip }) {
           <button
             onClick={handleNext}
             style={{
-              padding:       '8px 18px',
+              minHeight:     '44px',
+              padding:       '12px 22px',
               background:    'var(--gold)',
               color:         'var(--ink-2)',
-              fontSize:      '11px',
+              fontSize:      '12px',
               fontFamily:    'Archivo Black, sans-serif',
               fontWeight:    800,
               letterSpacing: '0.1em',

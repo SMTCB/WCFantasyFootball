@@ -820,7 +820,12 @@ export default function SquadScreen() {
             className="text-white text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-sm transition-opacity hover:opacity-70"
             style={{ background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.25)' }}
           >Retry</button>
-          <button onClick={() => setFetchError(null)} className="text-white opacity-60 hover:opacity-100 text-lg leading-none">×</button>
+          <button
+            onClick={() => setFetchError(null)}
+            aria-label="Dismiss error"
+            className="text-white opacity-60 hover:opacity-100 text-lg leading-none"
+            style={{ minWidth: '32px', minHeight: '32px' }}
+          ><span aria-hidden="true">×</span></button>
         </div>
       )}
 
