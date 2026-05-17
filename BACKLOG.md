@@ -47,12 +47,42 @@
   - Reduces friction: users retry without re-clicking the failed action
   - Result: Better UX for handling transient failures (network, server errors)
 
-**Week 1 Status (Budget: 20h):**
-- Completed: ST9 (2h), S2 (1.5h), S3 (3h), S1 (4h), S5 (3h) = **13.5h used**
-- Remaining budget: **6.5h** for S6 (4h) or stretch goals
-- All 5 PRs merged with squash commits, Notion cards updated to "Done"
+- ✅ **PR #93 — S6: WCAG AA Color Contrast Audit** (merged):
+  - Fixed AvailabilityBadge button: changed text color from `text-mute` to `text-paper` on `bg-ink-3` background
+  - Before fix: 4.07:1 contrast ratio (fails WCAG AA 4.5:1 requirement)
+  - After fix: 6.37:1 contrast ratio (passes requirement)
+  - Added audit-contrast.js script to test all color token combinations against WCAG AA standards
+  - Audit result: 11/12 combinations pass; mute+ink-3 theoretical failure no longer used in codebase
+  - Result: Accessibility compliance ensured, audit tool created for future color changes
 
-**E2E Tests**: 198/200 passing (no regressions from Week 1 changes)
+**Week 1 Status (Budget: 20h) — COMPLETE** ✅
+- **Completed**: ST9 (2h), S2 (1.5h), S3 (3h), S1 (4h), S5 (3h), S6 (4h) = **17.5h used**
+- **Remaining**: 2.5h (no additional tasks started to avoid partial work)
+- **PRs Merged**: 6 total (all with squash commits)
+  - PR #85 (ST9 color tokens)
+  - PR #86 (S2 market search)
+  - PR #87 (S3 market persistence)
+  - PR #89 (S1 back affordance)
+  - PR #91 (S5 retry toasts)
+  - PR #93 (S6 WCAG audit + accessibility fix)
+- **Notion**: All 6 cards updated to "Done"
+- **Code Quality**: 0 errors, 56 warnings (pre-existing only)
+- **E2E Tests**: 198/200 passing (no regressions)
+
+**Week 1 Summary:**
+Foundation and quick-wins phase complete. Achieved: color system standardization, market filtering/persistence, mobile navigation improvements, better error handling, and accessibility audit tooling. User-facing polish focused on search UX and nested route navigation.
+
+**Bug Investigation (Post-Week 1):**
+- ✅ Auto-fill button not working 100% → Status: DONE (resolved)
+- ✅ Button Manage Squad not working → Status: DONE (resolved)
+- ✅ Bets not working → Status: DONE (resolved)
+- **Result**: No active blocking issues. Week 1 changes introduced zero regressions. All reported bugs pre-existed and have been fixed.
+
+**Week 2 Recommendations (Next Sprint):**
+- **S7: Keyboard shortcuts (8h)** — High ROI, power-user feature (g+s, g+l, g+m nav shortcuts, ?/help cheatsheet)
+- **S4: Settings restructure (6h)** — UX debt, reorganize user preferences screen
+- Consider: S8 (Command Palette) for Phase 2 if Week 2 budget allows
+- **Blocked by**: None. App is stable and ready to ship.
 
 ---
 
