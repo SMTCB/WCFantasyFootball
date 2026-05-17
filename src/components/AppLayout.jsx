@@ -104,6 +104,16 @@ export default function AppLayout({ children }) {
 
         {/* Footer */}
         <div className="px-6 py-4" style={{ borderTop: '1px solid var(--rule)' }}>
+          <Link
+            to="/settings"
+            title="Settings"
+            className="block mb-3 text-xs font-semibold uppercase tracking-wider transition-colors"
+            style={{ color: 'var(--mute)', fontFamily: 'JetBrains Mono, monospace', letterSpacing: '0.15em' }}
+            onMouseEnter={(e) => e.currentTarget.style.color = 'var(--cyan)'}
+            onMouseLeave={(e) => e.currentTarget.style.color = 'var(--mute)'}
+          >
+            ⚙ Settings
+          </Link>
           <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '9px', letterSpacing: '0.15em', color: 'var(--mute)', textTransform: 'uppercase' }}>
             Alpha v0.1
           </div>
