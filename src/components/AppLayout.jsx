@@ -1,5 +1,6 @@
 import { Link, useLocation } from 'react-router-dom';
 import BrandMark from './BrandMark';
+import SkipToContent from './SkipToContent';
 import {
   NavIconScores,
   NavIconSquad,
@@ -21,6 +22,7 @@ export default function AppLayout({ children }) {
 
   return (
     <div className="min-h-screen flex items-start" style={{ background: 'var(--ink)' }}>
+      <SkipToContent targetId="main-content" />
 
       {/* ── Desktop Left Sidebar ─────────────────────────────────────── */}
       <nav
