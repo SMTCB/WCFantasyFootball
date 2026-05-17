@@ -246,9 +246,7 @@ export function useChatMessages(leagueId) {
           user_id: user.id,
           message: messageText.trim(),
           mentioned_user_ids: mentionedUserIds.length > 0 ? mentionedUserIds : [],
-        }])
-        .select()
-        .single();
+        }]);
 
       if (error) {
         console.error('useChatMessages: sendMessage failed', error);
