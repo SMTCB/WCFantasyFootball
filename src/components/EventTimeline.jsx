@@ -12,23 +12,23 @@
  */
 export function EventTimeline({ events = [], loading = false }) {
   const EVENT_ICONS = {
-    goal: { emoji: '⚽', label: 'GOAL', color: 'var(--positive)', bgColor: 'rgba(34,197,94,0.1)' },
-    assist: { emoji: '🅰️', label: 'ASSIST', color: '#4ADE80', bgColor: 'rgba(74,222,128,0.08)' },
-    yellow: { emoji: '🟨', label: 'YELLOW', color: '#FCD34D', bgColor: 'rgba(253,211,77,0.08)' },
-    red: { emoji: '🔴', label: 'RED', color: 'var(--negative)', bgColor: 'rgba(239,68,68,0.1)' },
-    sub: { emoji: '🔄', label: 'SUBSTITUTION', color: '#60A5FA', bgColor: 'rgba(96,165,250,0.08)' },
-    penalty_saved: { emoji: '🥅', label: 'PENALTY SAVED', color: '#06B6D4', bgColor: 'rgba(6,182,212,0.08)' },
-    own_goal: { emoji: '⚫', label: 'OWN GOAL', color: 'var(--negative)', bgColor: 'rgba(239,68,68,0.1)' },
-    var: { emoji: '⚠️', label: 'VAR REVIEW', color: '#FFB300', bgColor: 'rgba(255,179,0,0.08)' },
+    goal: { emoji: '⚽', label: 'GOAL', color: 'var(--positive)', bgColor: 'rgba(34,197,86,0.1)' },
+    assist: { emoji: '🅰️', label: 'ASSIST', color: 'var(--positive)', bgColor: 'rgba(34,197,86,0.08)' },
+    yellow: { emoji: '🟨', label: 'YELLOW', color: 'var(--warn)', bgColor: 'rgba(245,158,11,0.08)' },
+    red: { emoji: '🔴', label: 'RED', color: 'var(--danger)', bgColor: 'rgba(239,68,68,0.1)' },
+    sub: { emoji: '🔄', label: 'SUBSTITUTION', color: 'var(--cyan)', bgColor: 'rgba(0,180,216,0.08)' },
+    penalty_saved: { emoji: '🥅', label: 'PENALTY SAVED', color: 'var(--cyan)', bgColor: 'rgba(0,180,216,0.08)' },
+    own_goal: { emoji: '⚫', label: 'OWN GOAL', color: 'var(--danger)', bgColor: 'rgba(239,68,68,0.1)' },
+    var: { emoji: '⚠️', label: 'VAR REVIEW', color: 'var(--warn)', bgColor: 'rgba(245,158,11,0.08)' },
   };
 
   const getEventInfo = (type) => EVENT_ICONS[type] || { emoji: '•', label: 'EVENT', color: 'var(--mute)', bgColor: 'rgba(255,255,255,0.03)' };
 
   const getPointsColor = (type) => {
     if (type === 'goal' || type === 'penalty_saved') return 'var(--positive)';
-    if (type === 'red' || type === 'own_goal') return 'var(--negative)';
-    if (type === 'yellow') return '#FCD34D';
-    return 'var(--text-secondary)';
+    if (type === 'red' || type === 'own_goal') return 'var(--danger)';
+    if (type === 'yellow') return 'var(--warn)';
+    return 'var(--mute)';
   };
 
   const getPoints = (type) => {

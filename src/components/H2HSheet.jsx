@@ -23,7 +23,7 @@ const DEFAULT_H2H = {
 };
 
 // ─── Tiny Sparkline (pure SVG — no extra deps) ───────────────────────────────
-function Sparkline({ data, myColor = '#22c55e', rivalColor = '#ef4444', width = 280, height = 60 }) {
+function Sparkline({ data, myColor = 'var(--positive)', rivalColor = 'var(--danger)', width = 280, height = 60 }) {
   if (!data || data.length === 0) return null;
 
   const allValues = data.flatMap(d => [d.me, d.them]);
@@ -66,8 +66,8 @@ function StreakBadge({ streak }) {
     <span
       className="text-[9px] font-black uppercase tracking-widest px-2 py-1 rounded-sm ml-2"
       style={{
-        color:           isWin ? '#0D0D0D' : '#fff',
-        backgroundColor: isWin ? '#22c55e' : '#ef4444',
+        color:           isWin ? 'var(--ink)' : 'white',
+        backgroundColor: isWin ? 'var(--positive)' : 'var(--danger)',
       }}
     >
       {isWin ? `${streak.count}W` : `↓ ${streak.count}L`} streak
@@ -170,7 +170,7 @@ export default function H2HSheet({ leagueId, myId, rival, myName = 'You', onClos
       <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50" onClick={onClose} />
 
       {/* Sheet */}
-      <div className="fixed bottom-0 left-0 right-0 z-50 max-w-md mx-auto bg-[#0d0d0d] border-t border-white/8 rounded-t-2xl pb-safe shadow-2xl max-h-[90vh] flex flex-col">
+      <div className="fixed bottom-0 left-0 right-0 z-50 max-w-md mx-auto rounded-t-2xl pb-safe shadow-2xl max-h-[90vh] flex flex-col" style={{ background: 'var(--ink)', borderTopColor: 'rgba(255,255,255,0.08)' }}>
         {/* Handle */}
         <div className="flex justify-center pt-3 pb-1 shrink-0">
           <div className="w-10 h-1 rounded-full bg-white/10" />
@@ -205,9 +205,9 @@ export default function H2HSheet({ leagueId, myId, rival, myName = 'You', onClos
           {/* ── W / D / L scoreboard ─────────────────────── */}
           <div className="grid grid-cols-3 divide-x divide-white/5 border-b border-white/5">
             {[
-              { label: 'Wins',   value: h2h.wins,   color: '#22c55e' },
-              { label: 'Draws',  value: h2h.draws,  color: '#9e9e9e' },
-              { label: 'Losses', value: h2h.losses, color: '#ef4444' },
+              { label: 'Wins',   value: h2h.wins,   color: 'var(--positive)' },
+              { label: 'Draws',  value: h2h.draws,  color: 'var(--mute)' },
+              { label: 'Losses', value: h2h.losses, color: 'var(--danger)' },
             ].map(({ label, value, color }) => (
               <div key={label} className="flex flex-col items-center py-5 gap-1">
                 <div className="text-4xl font-black tabular-nums" style={{ color }}>{value}</div>

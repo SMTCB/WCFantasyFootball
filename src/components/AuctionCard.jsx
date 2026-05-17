@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-const POS_COLOR = { GK: '#f0b400', DEF: '#00b4d8', MID: '#18c96b', FWD: '#f04040' };
+const POS_COLOR = { GK: 'var(--gold)', DEF: 'var(--cyan)', MID: 'var(--positive)', FWD: 'var(--danger)' };
 
 function timeLeft(endsAt) {
   const ms = new Date(endsAt) - Date.now();
@@ -68,7 +68,7 @@ export default function AuctionCard({ auction, mySquadId, onBid, onCancel, onSel
         <div className="text-right shrink-0">
           <div
             className="text-[10px] font-black uppercase"
-            style={{ color: isEnded ? 'var(--mute)' : timeStr.includes('m') && !timeStr.includes('h') ? '#f04040' : 'var(--positive)' }}
+            style={{ color: isEnded ? 'var(--mute)' : timeStr.includes('m') && !timeStr.includes('h') ? 'var(--danger)' : 'var(--positive)' }}
           >
             {timeStr}
           </div>
@@ -92,7 +92,7 @@ export default function AuctionCard({ auction, mySquadId, onBid, onCancel, onSel
                   onClick={async () => { setBusy(true); const r = await onSellNow(auction.id); setBusy(false); if (!r.ok) setErr(r.error); }}
                   disabled={busy}
                   className="text-[10px] font-black uppercase tracking-wider px-3 py-1.5 disabled:opacity-40"
-                  style={{ border: '1px solid rgba(24,201,107,0.35)', color: '#18c96b', background: 'rgba(24,201,107,0.08)' }}
+                  style={{ border: '1px solid rgba(34,197,86,0.35)', color: 'var(--positive)', background: 'rgba(34,197,86,0.08)' }}
                 >
                   {busy ? '…' : `Sell Now · £${(auction.current_bid ?? 0).toFixed(1)}M`}
                 </button>
@@ -101,7 +101,7 @@ export default function AuctionCard({ auction, mySquadId, onBid, onCancel, onSel
                 onClick={async () => { setBusy(true); const r = await onCancel(auction.id); setBusy(false); if (!r.ok) setErr(r.error); }}
                 disabled={busy}
                 className="text-[10px] font-black uppercase tracking-wider px-3 py-1.5 disabled:opacity-40"
-                style={{ border: '1px solid rgba(240,58,58,0.3)', color: '#f04040', background: 'rgba(240,58,58,0.06)' }}
+                style={{ border: '1px solid rgba(239,68,68,0.3)', color: 'var(--danger)', background: 'rgba(239,68,68,0.06)' }}
               >
                 {busy ? '…' : 'Cancel'}
               </button>
@@ -128,7 +128,7 @@ export default function AuctionCard({ auction, mySquadId, onBid, onCancel, onSel
               </button>
             </>
           )}
-          {err && <span className="text-[10px] font-bold" style={{ color: '#f04040' }}>{err}</span>}
+          {err && <span className="text-[10px] font-bold" style={{ color: 'var(--danger)' }}>{err}</span>}
         </div>
       )}
     </div>

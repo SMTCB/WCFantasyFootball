@@ -26,15 +26,15 @@ export default function RecapCard({ recap, forwardRef }) {
     ? `↓ ${Math.abs(rankChange)} place${Math.abs(rankChange) > 1 ? 's' : ''}`
     : '— Same position';
 
-  const rankChangeColor = rankChange > 0 ? '#22c55e' : rankChange < 0 ? '#ef4444' : '#9e9e9e';
+  const rankChangeColor = rankChange > 0 ? 'var(--positive)' : rankChange < 0 ? 'var(--danger)' : 'var(--mute)';
 
   return (
     <div
       ref={forwardRef}
       style={{
         width: '360px',
-        background: '#0D0D0D',
-        color: '#fff',
+        background: 'var(--ink)',
+        color: 'white',
         fontFamily: "'Inter', 'Helvetica Neue', sans-serif",
         position: 'relative',
         overflow: 'hidden',
@@ -44,28 +44,28 @@ export default function RecapCard({ recap, forwardRef }) {
       }}
     >
       {/* Top accent stripe */}
-      <div style={{ height: '3px', background: 'linear-gradient(90deg, #22c55e, #16a34a)', width: '100%' }} />
+      <div style={{ height: '3px', background: 'linear-gradient(90deg, var(--positive), #16a34a)', width: '100%' }} />
 
       {/* Header */}
       <div style={{ padding: '24px 24px 16px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-        <div style={{ fontSize: '9px', letterSpacing: '0.25em', color: '#666', textTransform: 'uppercase', fontWeight: 900, marginBottom: '4px' }}>
+        <div style={{ fontSize: '9px', letterSpacing: '0.25em', color: 'var(--mute)', textTransform: 'uppercase', fontWeight: 900, marginBottom: '4px' }}>
           {leagueName}
         </div>
         <div style={{ fontSize: '20px', fontWeight: 900, letterSpacing: '-0.02em', textTransform: 'uppercase' }}>
           Matchday {matchday} Recap
         </div>
-        <div style={{ fontSize: '10px', color: '#555', marginTop: '4px', fontWeight: 600 }}>{date}</div>
+        <div style={{ fontSize: '10px', color: 'var(--mute)', marginTop: '4px', fontWeight: 600 }}>{date}</div>
       </div>
 
       {/* Rank Highlight */}
       <div style={{ padding: '28px 24px', borderBottom: '1px solid rgba(255,255,255,0.06)', textAlign: 'center', background: 'rgba(255,255,255,0.02)' }}>
-        <div style={{ fontSize: '9px', letterSpacing: '0.2em', color: '#555', textTransform: 'uppercase', fontWeight: 900, marginBottom: '8px' }}>
+        <div style={{ fontSize: '9px', letterSpacing: '0.2em', color: 'var(--mute)', textTransform: 'uppercase', fontWeight: 900, marginBottom: '8px' }}>
           Final Rank
         </div>
         <div style={{ fontSize: '64px', fontWeight: 900, lineHeight: 1, letterSpacing: '-0.04em' }}>
           {rank}{rank === 1 ? 'st' : rank === 2 ? 'nd' : rank === 3 ? 'rd' : 'th'}
         </div>
-        <div style={{ fontSize: '22px', fontWeight: 700, color: '#22c55e', marginTop: '8px', letterSpacing: '0.02em' }}>
+        <div style={{ fontSize: '22px', fontWeight: 700, color: 'var(--positive)', marginTop: '8px', letterSpacing: '0.02em' }}>
           {points} pts this matchday
         </div>
         <div style={{ fontSize: '14px', fontWeight: 700, color: rankChangeColor, marginTop: '6px' }}>
@@ -78,15 +78,15 @@ export default function RecapCard({ recap, forwardRef }) {
         {/* Best Player */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: '#1a1a1a', border: '1px solid #333', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', fontWeight: 900, color: '#888' }}>
+            <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'var(--ink-2)', border: '1px solid var(--rule)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', fontWeight: 900, color: 'var(--mute)' }}>
               {bestPlayer?.name?.substring(0, 2).toUpperCase()}
             </div>
             <div>
-              <div style={{ fontSize: '10px', color: '#555', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.15em' }}>Best Player</div>
+              <div style={{ fontSize: '10px', color: 'var(--mute)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.15em' }}>Best Player</div>
               <div style={{ fontSize: '13px', fontWeight: 700 }}>{bestPlayer?.name}</div>
             </div>
           </div>
-          <div style={{ background: '#fff', color: '#000', fontSize: '12px', fontWeight: 900, padding: '3px 8px', borderRadius: '3px' }}>
+          <div style={{ background: 'white', color: 'var(--ink)', fontSize: '12px', fontWeight: 900, padding: '3px 8px', borderRadius: '3px' }}>
             {bestPlayer?.points != null ? `${bestPlayer.points} pts` : '— pts'}
           </div>
         </div>
@@ -94,15 +94,15 @@ export default function RecapCard({ recap, forwardRef }) {
         {/* Captain */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: '#1a1a00', border: '1px solid #eab308', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', fontWeight: 900, color: '#eab308' }}>
+            <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'rgba(224,168,0,0.15)', border: '1px solid var(--gold)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', fontWeight: 900, color: 'var(--gold)' }}>
               C
             </div>
             <div>
-              <div style={{ fontSize: '10px', color: '#555', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.15em' }}>Captain</div>
+              <div style={{ fontSize: '10px', color: 'var(--mute)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.15em' }}>Captain</div>
               <div style={{ fontSize: '13px', fontWeight: 700 }}>{captain?.name}</div>
             </div>
           </div>
-          <div style={{ background: '#eab308', color: '#000', fontSize: '12px', fontWeight: 900, padding: '3px 8px', borderRadius: '3px' }}>
+          <div style={{ background: 'var(--gold)', color: 'var(--ink)', fontSize: '12px', fontWeight: 900, padding: '3px 8px', borderRadius: '3px' }}>
             {captain?.points != null ? `×2 = ${captain.points * 2} pts` : '×2'}
           </div>
         </div>
