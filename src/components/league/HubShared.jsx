@@ -102,7 +102,10 @@ export function HubTabs({ active = 'leaderboard', onTab, isCommissioner = false,
     { id: 'auctions',    label: 'AUCTIONS', notify: notifyAuctions },
     { id: 'chat',        label: 'CHAT',     count: unreadChat },
     { id: 'stats',       label: 'STATS' },
-    ...(isCommissioner ? [{ id: 'admin', label: '⚙ ADMIN', dim: true }] : []),
+    ...(isCommissioner ? [
+      { id: 'audit', label: '📋 AUDIT', dim: true },
+      { id: 'admin', label: '⚙ ADMIN', dim: true },
+    ] : []),
   ];
 
   return (

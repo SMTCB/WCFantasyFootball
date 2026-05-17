@@ -34,6 +34,7 @@ import AuctionsView           from '../components/league/AuctionsView';
 import StatsView              from '../components/league/StatsView';
 import ChatView               from '../components/league/ChatView';
 import CommissionerPanel      from '../components/league/CommissionerPanel';
+import AuditHistoryTab        from '../components/AuditHistoryTab';
 
 const LEAGUE_TOUR_STEPS = [
   {
@@ -1346,6 +1347,11 @@ export default function LeagueScreen() {
              currentUser={currentUser}
              statsLoading={statsLoading}
            />
+         )}
+         {view === 'audit' && (
+           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: 'var(--ink)', padding: '24px' }}>
+             <AuditHistoryTab leagueId={activeLeague?.league_id} leagueMembers={members} />
+           </div>
          )}
          {view === 'stats_REMOVED' && (() => {
            const totalPts  = (topScorers || []).reduce((s, m) => s + (m.total_points || 0), 0);
