@@ -20,6 +20,7 @@
  */
 
 import { useState, useEffect, useLayoutEffect } from 'react';
+import Button from './Button';
 
 const PADDING = 10;   // px around highlighted element
 const TOOLTIP_W = 280;
@@ -239,42 +240,12 @@ export default function OnboardingTour({ steps, onComplete, onSkip }) {
 
         {/* Actions */}
         <div className="flex items-center justify-between gap-2">
-          <button
-            onClick={handleSkip}
-            style={{
-              minHeight:  '44px',
-              padding:    '12px 14px',
-              fontSize:   '12px',
-              color:      'rgba(255,255,255,0.55)',
-              background: 'none',
-              border:     'none',
-              cursor:     'pointer',
-              fontFamily: 'Archivo Black, sans-serif',
-              letterSpacing: '0.08em',
-              textTransform: 'uppercase',
-            }}
-          >
+          <Button variant="ghost" size="md" onClick={handleSkip}>
             Skip tour
-          </button>
-          <button
-            onClick={handleNext}
-            style={{
-              minHeight:     '44px',
-              padding:       '12px 22px',
-              background:    'var(--gold)',
-              color:         'var(--ink-2)',
-              fontSize:      '12px',
-              fontFamily:    'Archivo Black, sans-serif',
-              fontWeight:    800,
-              letterSpacing: '0.1em',
-              textTransform: 'uppercase',
-              border:        'none',
-              borderRadius:  '6px',
-              cursor:        'pointer',
-            }}
-          >
+          </Button>
+          <Button variant="gold" size="md" onClick={handleNext}>
             {isLast ? 'Got it ✓' : 'Next →'}
-          </button>
+          </Button>
         </div>
       </div>
     </div>

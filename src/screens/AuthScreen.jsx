@@ -14,6 +14,7 @@ import { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import BrandMark from '../components/BrandMark';
+import Button from '../components/Button';
 
 // ── Tab types ──────────────────────────────────────────────────────────────────
 const TAB_SIGNIN  = 'signin';
@@ -114,22 +115,6 @@ export default function AuthScreen() {
     fontFamily: 'Archivo Black, sans-serif',
   };
 
-  const btnPrimary = {
-    width: '100%',
-    padding: '14px',
-    background: 'var(--cyan)',
-    color: '#000',
-    border: 'none',
-    borderRadius: '4px',
-    fontSize: '12px',
-    fontWeight: 800,
-    letterSpacing: '0.12em',
-    textTransform: 'uppercase',
-    cursor: loading ? 'not-allowed' : 'pointer',
-    opacity: loading ? 0.6 : 1,
-    fontFamily: 'Archivo Black, sans-serif',
-    transition: 'opacity 0.15s',
-  };
 
   // ── Recover password form (from email link) ──────────────────────────────────
   if (tab === TAB_RECOVER) {
@@ -147,9 +132,9 @@ export default function AuthScreen() {
           </Field>
           {error   && <Msg type="error">{error}</Msg>}
           {success && <Msg type="success">{success}</Msg>}
-          <button type="submit" style={btnPrimary} disabled={loading}>
+          <Button type="submit" size="lg" fullWidth loading={loading}>
             {loading ? 'Saving…' : 'Update Password'}
-          </button>
+          </Button>
         </form>
       </AuthShell>
     );
@@ -159,9 +144,15 @@ export default function AuthScreen() {
   if (tab === TAB_RESET) {
     return (
       <AuthShell>
-        <button onClick={() => switchTab(TAB_SIGNIN)} style={{ background: 'none', border: 'none', color: 'var(--mute)', fontSize: '11px', fontWeight: 700, cursor: 'pointer', marginBottom: '20px', padding: 0, fontFamily: 'Archivo Black, sans-serif', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
-          ← Back to Sign In
-        </button>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => switchTab(TAB_SIGNIN)}
+          leftIcon={<span aria-hidden="true">←</span>}
+          style={{ marginBottom: '20px', alignSelf: 'flex-start' }}
+        >
+          Back to Sign In
+        </Button>
         <h2 style={{ fontSize: '20px', fontWeight: 900, color: 'var(--paper)', marginBottom: '8px', fontFamily: 'Archivo Black, sans-serif', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
           Reset Password
         </h2>
@@ -174,9 +165,9 @@ export default function AuthScreen() {
           </Field>
           {error   && <Msg type="error">{error}</Msg>}
           {success && <Msg type="success">{success}</Msg>}
-          <button type="submit" style={btnPrimary} disabled={loading}>
+          <Button type="submit" size="lg" fullWidth loading={loading}>
             {loading ? 'Sending…' : 'Send Reset Link'}
-          </button>
+          </Button>
         </form>
       </AuthShell>
     );
@@ -223,16 +214,17 @@ export default function AuthScreen() {
           </Field>
           {error   && <Msg type="error">{error}</Msg>}
           {success && <Msg type="success">{success}</Msg>}
-          <button type="submit" style={btnPrimary} disabled={loading}>
+          <Button type="submit" size="lg" fullWidth loading={loading}>
             {loading ? 'Signing in…' : 'Sign In'}
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
+            variant="ghost"
+            size="sm"
             onClick={() => switchTab(TAB_RESET)}
-            style={{ background: 'none', border: 'none', color: 'var(--mute)', fontSize: '11px', fontWeight: 600, cursor: 'pointer', padding: '4px 0', fontFamily: 'Archivo, sans-serif' }}
           >
             Forgot password?
-          </button>
+          </Button>
         </form>
       )}
 
@@ -253,9 +245,9 @@ export default function AuthScreen() {
           </Field>
           {error   && <Msg type="error">{error}</Msg>}
           {success && <Msg type="success">{success}</Msg>}
-          <button type="submit" style={btnPrimary} disabled={loading}>
+          <Button type="submit" size="lg" fullWidth loading={loading}>
             {loading ? 'Creating account…' : 'Create Account'}
-          </button>
+          </Button>
         </form>
       )}
     </AuthShell>
