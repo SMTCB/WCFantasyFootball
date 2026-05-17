@@ -55,12 +55,28 @@
   - Audit result: 11/12 combinations pass; mute+ink-3 theoretical failure no longer used in codebase
   - Result: Accessibility compliance ensured, audit tool created for future color changes
 
-**Week 1 Status (Budget: 20h):**
-- Completed: ST9 (2h), S2 (1.5h), S3 (3h), S1 (4h), S5 (3h), S6 (4h) = **17.5h used**
-- Remaining budget: **2.5h** for stretch goals or S7 prep
-- All 6 PRs merged with squash commits, Notion cards updated to "Done"
+**Week 1 Status (Budget: 20h) — COMPLETE** ✅
+- **Completed**: ST9 (2h), S2 (1.5h), S3 (3h), S1 (4h), S5 (3h), S6 (4h) = **17.5h used**
+- **Remaining**: 2.5h (no additional tasks started to avoid partial work)
+- **PRs Merged**: 6 total (all with squash commits)
+  - PR #85 (ST9 color tokens)
+  - PR #86 (S2 market search)
+  - PR #87 (S3 market persistence)
+  - PR #89 (S1 back affordance)
+  - PR #91 (S5 retry toasts)
+  - PR #93 (S6 WCAG audit + accessibility fix)
+- **Notion**: All 6 cards updated to "Done"
+- **Code Quality**: 0 errors, 56 warnings (pre-existing only)
+- **E2E Tests**: 198/200 passing (no regressions)
 
-**E2E Tests**: 198/200 passing (no regressions from Week 1 changes)
+**Week 1 Summary:**
+Foundation and quick-wins phase complete. Achieved: color system standardization, market filtering/persistence, mobile navigation improvements, better error handling, and accessibility audit tooling. User-facing polish focused on search UX and nested route navigation.
+
+**Week 2 Recommendations (Next Sprint):**
+- **S7: Keyboard shortcuts (8h)** — High ROI, power-user feature (g+s, g+l, g+m nav shortcuts, ?/help cheatsheet)
+- **S4: Settings restructure (6h)** — UX debt, reorganize user preferences screen
+- Consider: S8 (Command Palette) for Phase 2 if Week 2 budget allows
+- **Pending bugs** to triage: Quick Fill, Bets system, Squad manager (investigate before committing fixes)
 
 ---
 
