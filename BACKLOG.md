@@ -1,8 +1,30 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-05-17 (Session 26: House Cleaning & CI Fixes)  
+**Last Updated**: 2026-05-17 (Session 27: Quick Wins Polish Bundle)  
 **E2E Test Suite**: 198/200 passing (99%) ✅ (2 pre-existing UI timeouts in multi-league test)  
 **Live App**: https://wc-fantasy-football.vercel.app
+
+---
+
+## 📊 SESSION 27 PROGRESS (2026-05-17 — Quick Wins Polish Bundle)
+
+**🚀 COMPLETED THIS SESSION:**
+
+- ✅ **PR #81 — Quick Wins Polish Bundle** (merged):
+  - **AuthScreen cyan fix**: Replaced hardcoded `#00C4E8` with `var(--cyan)` on tab border (line 199) for design token consistency
+  - **Migration 34 verification**: Auto-close bets cron already in codebase (`supabase/migrations/34_auto_close_bets_cron.sql`), ready for Supabase dashboard activation
+  - **Betting section tutorial audit**: Confirmed already fully implemented (Session 22, PR #57) with:
+    - `BETS_TOUR_STEPS` defined with 2 steps (Bets header, Open bets list)
+    - Tour replay button (?) in BetsTabHub
+    - Conditional rendering on LeagueScreen `view === 'bets'`
+  - **Result**: 1 code fix merged, 2 features verified as complete
+  - **Notion cards updated**: All 3 items marked "Done" in backlog
+
+**ROI Analysis Applied:**
+- Scanned Notion BACKLOG (25+ open items)
+- Ranked by: effort (hours) vs. value (engagement/completion)
+- Selected top 3 highest-ROI tasks for this session
+- All three identified as either quick-win polish or already-complete
 
 ---
 
