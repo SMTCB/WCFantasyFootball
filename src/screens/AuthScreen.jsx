@@ -196,7 +196,7 @@ export default function AuthScreen() {
               padding: '10px',
               background: 'none',
               border: 'none',
-              borderBottom: tab === t.id ? '2px solid #00C4E8' : '2px solid transparent',
+              borderBottom: tab === t.id ? '2px solid var(--cyan)' : '2px solid transparent',
               color: tab === t.id ? 'var(--paper)' : 'var(--mute)',
               fontSize: '11px',
               fontWeight: 800,
