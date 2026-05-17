@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { normalizeIntelligence } from '../lib/intelligence';
@@ -54,12 +54,13 @@ export default function MarketScreen() {
   const [activeLeague,  setActiveLeague]  = useState(leagueId);
   const [todayJokerId,  setTodayJokerId]  = useState(null);
   const [loading,       setLoading]       = useState(true);
-  const [filterPos,     setFilterPos]     = useState('ALL');
-  const [searchQuery,   setSearchQuery]   = useState('');
+  const [filterPos,     setFilterPos]     = useState(() => localStorage.getItem('market_filterPos') || 'ALL');
+  const [searchQuery,   setSearchQuery]   = useState(() => localStorage.getItem('market_searchQuery') || '');
   const [budget,        setBudget]        = useState(0);      // loaded from league config
   const [saving,        setSaving]        = useState(false);
   const [isLocked,      setIsLocked]      = useState(false);
   const [confirm,       setConfirm]       = useState(null);
+  const marketListRef   = useRef(null);
 
   // Competition-agnostic config from the selected league row
   const cfg = useLeagueConfig(activeLeague);
@@ -175,6 +176,35 @@ export default function MarketScreen() {
   };
 
   useEffect(() => { fetchMarketParams(); }, [activeLeague]);
+
+  // Persist filter position to localStorage
+  useEffect(() => {
+    localStorage.setItem('market_filterPos', filterPos);
+  }, [filterPos]);
+
+  // Persist search query to localStorage
+  useEffect(() => {
+    localStorage.setItem('market_searchQuery', searchQuery);
+  }, [searchQuery]);
+
+  // Save scroll position on navigate away
+  useEffect(() => {
+    const saveScrollPosition = () => {
+      if (marketListRef.current) {
+        localStorage.setItem('market_scrollPos', marketListRef.current.scrollTop);
+      }
+    };
+    window.addEventListener('pagehide', saveScrollPosition);
+    return () => window.removeEventListener('pagehide', saveScrollPosition);
+  }, []);
+
+  // Restore scroll position on mount
+  useEffect(() => {
+    const savedScrollPos = localStorage.getItem('market_scrollPos');
+    if (savedScrollPos && marketListRef.current) {
+      marketListRef.current.scrollTop = parseInt(savedScrollPos, 10);
+    }
+  }, [activeLeague]);
 
   const stats = useMemo(() => {
     const posCounts = { GK: 0, DEF: 0, MID: 0, FWD: 0 };
@@ -548,7 +578,7 @@ export default function MarketScreen() {
           ))}
         </div>
       ) : (
-        <div data-tour="market-player-list" className="pb-24 lg:pb-6">
+        <div ref={marketListRef} data-tour="market-player-list" className="pb-24 lg:pb-6" style={{ scrollBehavior: 'auto' }}>
           {filteredPlayers.map((p) => {
             const inMySquad    = mySquad?.players?.includes(p.id);
             const isOwned      = inMySquad || isOwnedBy(p.id);
