@@ -1,8 +1,42 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-05-17 (Session 27: Quick Wins Polish Bundle)  
+**Last Updated**: 2026-05-17 (Session 28: Quick Wins Bundle Week 1)  
 **E2E Test Suite**: 198/200 passing (99%) ✅ (2 pre-existing UI timeouts in multi-league test)  
 **Live App**: https://wc-fantasy-football.vercel.app
+
+---
+
+## 📊 SESSION 28 PROGRESS (2026-05-17 — Quick Wins Bundle Week 1)
+
+**🚀 COMPLETED THIS SESSION:**
+
+- ✅ **PR #85 — ST9: Replace Hardcoded Hex Codes** (merged):
+  - Replaced 100+ hardcoded hex color values with CSS design tokens across 8 component files
+  - Files updated: AuctionCard, BrandMark, NavIcons, EventTimeline, H2HSheet, RecapCard, PitchView, ErrorBoundary
+  - Color mappings standardized: `#22c55e` → `var(--positive)`, `#f04040` → `var(--danger)`, `#f0b400` → `var(--gold)`, etc.
+  - Result: Design token consistency enforced, future theme changes now centralized in `tokens.css`
+  - Build time: 617ms, no new lint warnings
+
+- ✅ **PR #86 — S2: Market Search-by-Name** (merged):
+  - Added search input to Market screen header (sticky position above position filters)
+  - Filter logic now handles both position filter AND name search simultaneously
+  - Filter: `const filteredPlayers = players.filter(p => matchesPos && matchesSearch)`
+  - UX: Real-time filtering as user types, no debounce needed (600+ player list is performant)
+  - Result: Power users can now find specific players without scrolling entire player list
+
+- ✅ **PR #87 — S3: Persist Market Filter/Search/Scroll** (merged):
+  - Implemented localStorage persistence for: filterPos, searchQuery, scroll position
+  - State initialization: `useState(() => localStorage.getItem('market_filterPos') || 'ALL')`
+  - Three useEffect hooks: filterPos save, searchQuery save, scroll save/restore on pagehide
+  - Scroll tracking via useRef + scrollTop property, restored on activeLeague change
+  - Result: Users return to exact same filtered view after navigating away and back
+
+**Week 1 Status (Budget: 20h):**
+- Completed: ST9 (2h), S2 (1.5h), S3 (3h) = **6.5h used**
+- Remaining budget: **13.5h** for S1 (4h) and follow-up items
+- All PRs merged with squash commits, Notion cards updated to "Done"
+
+**E2E Tests**: 198/200 passing (no regressions from Week 1 changes)
 
 ---
 
