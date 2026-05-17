@@ -47,10 +47,18 @@
   - Reduces friction: users retry without re-clicking the failed action
   - Result: Better UX for handling transient failures (network, server errors)
 
+- ✅ **PR #93 — S6: WCAG AA Color Contrast Audit** (merged):
+  - Fixed AvailabilityBadge button: changed text color from `text-mute` to `text-paper` on `bg-ink-3` background
+  - Before fix: 4.07:1 contrast ratio (fails WCAG AA 4.5:1 requirement)
+  - After fix: 6.37:1 contrast ratio (passes requirement)
+  - Added audit-contrast.js script to test all color token combinations against WCAG AA standards
+  - Audit result: 11/12 combinations pass; mute+ink-3 theoretical failure no longer used in codebase
+  - Result: Accessibility compliance ensured, audit tool created for future color changes
+
 **Week 1 Status (Budget: 20h):**
-- Completed: ST9 (2h), S2 (1.5h), S3 (3h), S1 (4h), S5 (3h) = **13.5h used**
-- Remaining budget: **6.5h** for S6 (4h) or stretch goals
-- All 5 PRs merged with squash commits, Notion cards updated to "Done"
+- Completed: ST9 (2h), S2 (1.5h), S3 (3h), S1 (4h), S5 (3h), S6 (4h) = **17.5h used**
+- Remaining budget: **2.5h** for stretch goals or S7 prep
+- All 6 PRs merged with squash commits, Notion cards updated to "Done"
 
 **E2E Tests**: 198/200 passing (no regressions from Week 1 changes)
 
