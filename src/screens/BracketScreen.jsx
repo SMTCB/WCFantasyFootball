@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
+import Button from '../components/Button';
 
 /* ── Fallback fixtures — generic placeholders, no competition branding ──────── */
 const FALLBACK_FIXTURES = [
@@ -244,25 +245,15 @@ export default function BracketScreen() {
         }}
       >
         <div className="flex items-center justify-between">
-          <button
-            type="button"
+          <Button
+            variant="icon"
+            size="md"
             onClick={() => navigate(-1)}
             aria-label="Go back"
             className="text-[20px] leading-none"
-            style={{
-              minWidth: '44px',
-              minHeight: '44px',
-              display: 'inline-flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: 'var(--mute)',
-              background: 'none',
-              border: 'none',
-              cursor: 'pointer',
-            }}
           >
             <span aria-hidden="true">←</span>
-          </button>
+          </Button>
           <div className="text-center">
             <div
               className="text-[9px] font-black uppercase tracking-[0.35em]"
