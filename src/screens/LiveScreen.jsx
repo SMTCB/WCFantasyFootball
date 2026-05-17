@@ -300,6 +300,7 @@ export default function LiveScreen() {
   const [loading,      setLoading]      = useState(true);
   const [liveError,    setLiveError]    = useState(null);
   const [liveFixtures, setLiveFixtures] = useState([]);
+  const [nextFixture,  setNextFixture]  = useState(null);
   const [userLeagues,  setUserLeagues]  = useState([]);
   const [squadPlayers, setSquadPlayers] = useState([]);
   const [events,       setEvents]       = useState([]);
@@ -340,6 +341,20 @@ export default function LiveScreen() {
       }
       const enrichedFix = (fixData || []).map(f => ({ ...f, ...scoreMap[f.id] }));
       setLiveFixtures(enrichedFix);
+
+      // Fetch next upcoming fixture if no live matches
+      if (!activeFixIds.length) {
+        const { data: upcomingData = [] } = await supabase
+          .from('fixtures')
+          .select('id, home_team, away_team, status, kickoff_at')
+          .eq('status', 'scheduled')
+          .gt('kickoff_at', new Date().toISOString())
+          .order('kickoff_at', { ascending: true })
+          .limit(1);
+        if (upcomingData?.length) setNextFixture(upcomingData[0]);
+      } else {
+        setNextFixture(null);
+      }
 
       // Set GW label from fixture data (use earliest kickoff year/month as proxy)
       if (fixData?.length) setCurrentGW('LIVE');
@@ -580,8 +595,24 @@ export default function LiveScreen() {
         {/* Fixtures strip */}
         <div style={{ display: 'flex', gap: 0, borderBottom: '1px solid var(--rule)' }}>
           {liveFixtures.length === 0 ? (
-            <div className="mono" style={{ padding: '12px 20px', fontSize: 10, color: 'var(--mute)' }}>
-              {loading ? 'Connecting…' : 'No live fixtures'}
+            <div style={{ padding: '12px 20px', fontSize: 11, color: 'var(--paper)', display: 'flex', alignItems: 'center', gap: 12, width: '100%' }}>
+              {loading ? (
+                <span className="mono" style={{ color: 'var(--mute)' }}>Connecting…</span>
+              ) : nextFixture ? (
+                <>
+                  <span className="mono" style={{ color: 'var(--mute)', fontSize: 10, letterSpacing: '.18em' }}>NEXT</span>
+                  <span style={{ fontFamily: 'Archivo Black', fontSize: 14, letterSpacing: '-0.01em' }}>
+                    {teamCode(nextFixture.home_team)}
+                    <span style={{ color: 'var(--mute)', margin: '0 8px' }}>vs</span>
+                    {teamCode(nextFixture.away_team)}
+                  </span>
+                  <span className="mono" style={{ color: 'var(--mute)', fontSize: 10, marginLeft: 'auto' }}>
+                    {nextFixture.kickoff_at ? new Date(nextFixture.kickoff_at).toLocaleDateString('en-GB', { weekday: 'short', hour: '2-digit', minute: '2-digit' }) : '—'}
+                  </span>
+                </>
+              ) : (
+                <span className="mono" style={{ color: 'var(--mute)' }}>No upcoming matches</span>
+              )}
             </div>
           ) : liveFixtures.map((f, i) => (
             <div key={f.id} style={{ flex: 1, padding: '10px 16px', borderLeft: i ? '1px solid var(--rule)' : 'none', display: 'flex', alignItems: 'center', gap: 14 }}>
@@ -714,9 +745,23 @@ export default function LiveScreen() {
         <div style={{ borderTop: '1px solid var(--rule)', borderBottom: '1px solid var(--rule)' }}>
           {liveFixtures.length === 0 ? (
             <div style={{ padding: '10px 18px', display: 'flex', alignItems: 'center', gap: 10 }}>
-              <span className="mono" style={{ fontSize: 10, color: 'var(--mute)' }}>
-                {loading ? 'Connecting…' : 'No live fixtures right now'}
-              </span>
+              {loading ? (
+                <span className="mono" style={{ fontSize: 10, color: 'var(--mute)' }}>Connecting…</span>
+              ) : nextFixture ? (
+                <>
+                  <span className="mono" style={{ fontSize: 9, color: 'var(--mute)', letterSpacing: '.18em' }}>NEXT</span>
+                  <span style={{ fontFamily: 'Archivo Black', fontSize: 12, letterSpacing: '-0.01em' }}>
+                    {teamCode(nextFixture.home_team)} vs {teamCode(nextFixture.away_team)}
+                  </span>
+                  {nextFixture.kickoff_at && (
+                    <span className="mono" style={{ fontSize: 9, color: 'var(--mute)', marginLeft: 'auto' }}>
+                      {new Date(nextFixture.kickoff_at).toLocaleDateString('en-GB', { weekday: 'short', hour: '2-digit', minute: '2-digit' })}
+                    </span>
+                  )}
+                </>
+              ) : (
+                <span className="mono" style={{ fontSize: 10, color: 'var(--mute)' }}>No upcoming matches</span>
+              )}
             </div>
           ) : liveFixtures.map((f, i) => (
             <div key={f.id} style={{ padding: '10px 18px', display: 'flex', alignItems: 'center', gap: 12, borderTop: i ? '1px solid var(--rule)' : 'none' }}>
