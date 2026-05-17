@@ -1,4 +1,4 @@
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import BrandMark from './BrandMark';
 import SkipToContent from './SkipToContent';
 import {
@@ -19,6 +19,17 @@ const NAV_ITEMS = [
 
 export default function AppLayout({ children }) {
   const location = useLocation();
+  const navigate = useNavigate();
+
+  // Show back button on deeply nested routes (not main nav routes, not single-param routes like /league/:id)
+  const isMainRoute =
+    location.pathname === '/' ||
+    location.pathname === '/squad' ||
+    location.pathname === '/league' ||
+    location.pathname === '/live' ||
+    location.pathname === '/market' ||
+    /^\/league\/[^/]+$/.test(location.pathname); // /league/:leagueId (single param, no nested path)
+  const showBackButton = !isMainRoute;
 
   return (
     <div className="min-h-screen flex items-start" style={{ background: 'var(--ink)' }}>
@@ -109,6 +120,25 @@ export default function AppLayout({ children }) {
           WebkitOverflowScrolling: 'touch',
         }}
       >
+        {/* Back affordance — mobile only, nested routes only */}
+        {showBackButton && (
+          <div className="lg:hidden sticky top-0 z-40 px-4 py-3" style={{ background: 'var(--ink)', borderBottom: '1px solid var(--rule)' }}>
+            <button
+              onClick={() => navigate(-1)}
+              aria-label="Go back"
+              className="flex items-center gap-2 px-2 py-1.5 transition-colors"
+              style={{ color: 'var(--cyan)', cursor: 'pointer' }}
+              onMouseEnter={(e) => e.currentTarget.style.color = 'var(--paper)'}
+              onMouseLeave={(e) => e.currentTarget.style.color = 'var(--cyan)'}
+            >
+              <span style={{ fontSize: '16px' }}>←</span>
+              <span style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: '11px', fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+                Back
+              </span>
+            </button>
+          </div>
+        )}
+
         <div className="animate-page-enter">
           {children}
         </div>
