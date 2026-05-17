@@ -39,10 +39,18 @@
   - Styled with cyan → paper hover effect, matches design tokens
   - Result: Mobile users can navigate out of nested screens without dead ends
 
+- ✅ **PR #91 — S5: Inline Retry on Error Toasts** (merged):
+  - Extended Toast system to support optional onRetry callback parameter
+  - Error toasts now display inline Retry button when callback provided
+  - Implemented on Market buy/sell operations as example pattern
+  - Retry button shows loading state during operation, auto-dismisses on success
+  - Reduces friction: users retry without re-clicking the failed action
+  - Result: Better UX for handling transient failures (network, server errors)
+
 **Week 1 Status (Budget: 20h):**
-- Completed: ST9 (2h), S2 (1.5h), S3 (3h), S1 (4h) = **10.5h used**
-- Remaining budget: **9.5h** for follow-up items or stretch goals
-- All 4 PRs merged with squash commits, Notion cards updated to "Done"
+- Completed: ST9 (2h), S2 (1.5h), S3 (3h), S1 (4h), S5 (3h) = **13.5h used**
+- Remaining budget: **6.5h** for S6 (4h) or stretch goals
+- All 5 PRs merged with squash commits, Notion cards updated to "Done"
 
 **E2E Tests**: 198/200 passing (no regressions from Week 1 changes)
 
