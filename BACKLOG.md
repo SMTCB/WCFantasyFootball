@@ -72,11 +72,17 @@
 **Week 1 Summary:**
 Foundation and quick-wins phase complete. Achieved: color system standardization, market filtering/persistence, mobile navigation improvements, better error handling, and accessibility audit tooling. User-facing polish focused on search UX and nested route navigation.
 
+**Bug Investigation (Post-Week 1):**
+- ✅ Auto-fill button not working 100% → Status: DONE (resolved)
+- ✅ Button Manage Squad not working → Status: DONE (resolved)
+- ✅ Bets not working → Status: DONE (resolved)
+- **Result**: No active blocking issues. Week 1 changes introduced zero regressions. All reported bugs pre-existed and have been fixed.
+
 **Week 2 Recommendations (Next Sprint):**
 - **S7: Keyboard shortcuts (8h)** — High ROI, power-user feature (g+s, g+l, g+m nav shortcuts, ?/help cheatsheet)
 - **S4: Settings restructure (6h)** — UX debt, reorganize user preferences screen
 - Consider: S8 (Command Palette) for Phase 2 if Week 2 budget allows
-- **Pending bugs** to triage: Quick Fill, Bets system, Squad manager (investigate before committing fixes)
+- **Blocked by**: None. App is stable and ready to ship.
 
 ---
 
