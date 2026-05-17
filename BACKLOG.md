@@ -120,18 +120,32 @@ Foundation and quick-wins phase complete. Achieved: color system standardization
 - ✅ Zero regressions from Week 1 work
 - ✅ App stable and production-ready
 
+- ✅ **PR #96 — ST4: TextInput + Select Form Components** (merged):
+  - **TextInput component**: Input with built-in label, error state, helper text, full accessibility
+  - **Select component**: Dropdown following same pattern as TextInput for consistency
+  - **Features**: Focus/blur styling, ARIA labels (aria-invalid, aria-describedby), design token integration
+  - **Integration**: Refactored SettingsScreen password fields to use TextInput (reduced ~70 lines of inline styling)
+  - **Accessibility**: Full WCAG support with label association, error announcements, helper text descriptions
+  - **Ready for migration**: AuthScreen, LeagueScreen, AdminSeedScreen all use similar inline form patterns
+  - Build: ✓ Verified, Preview: ✓ Form validation tested
+
 **Week 2 Status (Budget: 20h):**
-- Completed: S7 (8h) + ST5 (6h) = **14h used**
-- Remaining: **6h** for additional tasks or ROI re-evaluation
-- **PRs Merged**: 2 total (all squash commits)
+- Completed: S7 (8h) + ST5 (6h) + ST4 (4h) = **18h used**
+- Remaining: **2h** (end of budget cycle)
+- **PRs Merged**: 3 total (all squash commits)
   - PR #94 (S7 keyboard shortcuts)
   - PR #95 (ST5 settings screen)
-- **Notion**: S7, ST5 cards updated to "Done"
+  - PR #96 (ST4 form components)
+- **Notion**: S7, ST5, ST4 cards updated to "Done"
 - **Code Quality**: 0 errors, 56 warnings (pre-existing only)
 - **E2E Tests**: 198/200 passing (no regressions)
 
+**Week 2 Summary:**
+Foundation work phase complete. Delivered 3 major features: keyboard navigation, settings management, and reusable form components. All work shipped production-ready with zero regressions. App stable.
+
 **Next Recommendations:**
-- Reassess ROI for remaining 6h budget: S4 (6h) or multiple smaller tasks
+- Form component library ready for migration to other screens (2-3h effort per screen)
+- Remaining 2h insufficient for next major feature — recommend pausing Week 2 here
 - **Blocked by**: None. App is stable and ready to ship.
 
 ---
@@ -464,6 +478,75 @@ Foundation and quick-wins phase complete. Achieved: color system standardization
   - Prevents stale bets blocking points aggregation
   - Pending manual application via Supabase dashboard
   - Identified 5 other gaps (notifications, auto-options, edge cases) — deferred post-launch
+
+---
+
+## 🎯 CRITICAL GAPS & BLOCKERS (URGENT)
+
+### 🚨 **[BLOCKER] Forza API Data Pipeline Missing (Discovered 2026-05-17)**
+
+**Status**: ❌ Not Implemented | **Priority**: CRITICAL (app functionality depends on this) | **Estimated Effort**: 12-16h
+
+**The Issue:**
+The Forza Football API integration is fully documented and analyzed (see `docs/api/API_INTEGRATION_REFERENCE.md`, `FIT_GAP_ANALYSIS.md`) but **no active data pipeline exists**. All fixture and player data is statically seeded. The app appears functional only because demo data is hardcoded.
+
+**What's Missing:**
+1. **Fixture polling** — No Edge Function or cron job fetches `/v1/tournaments/426/matches` to populate `fixtures` table
+2. **Player roster sync** — No automation fetches `/v1/teams/:id/squad` to keep `players` table current
+3. **Player availability sync** — No job calls `/v2/players/:id/availability` to update injury/suspension status
+4. **Live score polling** — HomeScreen polls every 30s but table has no data to poll (hardcoded static)
+5. **Match events ingestion** — No Edge Function processes `/v2/matches/:id/periods` (goals, assists, cards, subs)
+6. **Player stats ingestion** — No job calls `/v2/matches/:id/player_statistics` after match ends for scoring
+
+**Why This Matters:**
+- Fixtures table has fake EPL clubs (seeded in migration 14); real live data never updates
+- Players don't reflect real availability (injuries, suspensions shown as static)
+- Scoring pipeline runs on dummy data — fantasy points calculations are never tested with real Forza events
+- App fails immediately in production where no demo data exists
+- Test data refreshes manually; no automation to keep season current
+
+**What's Already Done:**
+- ✅ API endpoints fully documented (16 endpoints, E1–E16)
+- ✅ Scoring requirements mapped to API fields (FIT_GAP_ANALYSIS.md: 21/22 rules covered; only season averages missing)
+- ✅ Supabase schema ready (fixtures, players, player_status, player_match_stats tables exist)
+- ✅ Edge Function stubs exist (e.g., `calculate-scores` is ready; `ingest-match-events` shell exists)
+
+**Implementation Plan:**
+
+**Phase 1: Fixture & Player Data Sync (6-8h)**
+- Create Edge Function `fetch-fixtures`: runs daily at 06:00 UTC
+  - Calls E2: `/v1/tournaments/426/matches` 
+  - Upserts into `fixtures` table (id, kickoff_at, round, status, home_team, away_team, scores)
+- Create Edge Function `sync-player-roster`: runs daily at 06:30 UTC
+  - Calls E3: `/v1/tournaments/426/teams` → E15: `/v1/teams/:id/squad` for each team
+  - Upserts into `players` table (id, name, position, team_id, shirt_number)
+- Create Edge Function `sync-player-status`: runs every 12h
+  - Calls E13: `/v2/players/:id/availability` for all players
+  - Upserts into `player_status` table (player_id, suspension_type, absence_type, expected_return)
+- Add Supabase cron job entries to trigger these functions
+
+**Phase 2: Live Score & Event Ingestion (4-6h)**
+- Modify `ingest-match-events` Edge Function (currently a stub): processes E9 response
+  - Parse period events: goals, assists, cards, substitutions, own goals, penalties
+  - Call calculate-scores RPC when match status changes from LIVE → after
+- Modify `calculate-scores` Edge Function: polls E10 `/v2/matches/:id/player_statistics` after match ends
+  - Transform API stats into `player_match_stats` (minutes_played, goals, assists, yellow_cards, red_cards, etc.)
+  - Run fantasy points calculation
+- Create HTTP webhook trigger: when HomeScreen detects match status = LIVE, POST to `ingest-match-events`
+
+**Phase 3: Validation & Error Handling (2-2h)**
+- Add retry logic: Forza API calls timeout after 5s, retry up to 3x with exponential backoff
+- Add logging: edge_function_errors table tracks failed API calls
+- Test with real Forza data for 2-3 live matches (dry run before production)
+
+**Unblocks:**
+- ✅ Live Score Feed (HomeScreen scores update in real-time, not static)
+- ✅ Injury Alerts (MarketScreen shows current availability)
+- ✅ Scoring Accuracy (fantasy points calculated from real match events)
+- ✅ Season Progression (fixtures advance naturally as matches complete)
+- ✅ Production Readiness (app can go live without hardcoded demo data)
+
+**Notion Card Created**: [BLOCKER] Forza API Data Pipeline (Critical)
 
 ---
 
