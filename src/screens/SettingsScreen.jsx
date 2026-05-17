@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { useToast } from '../hooks/useToast';
+import TextInput from '../components/TextInput';
 import { supabase } from '../lib/supabase';
 
 export default function SettingsScreen() {
@@ -146,70 +147,21 @@ export default function SettingsScreen() {
             Change Password
           </h2>
           <form onSubmit={handlePasswordChange} style={{ display: 'grid', gap: 12 }}>
-            <div>
-              <label style={{
-                fontFamily: 'JetBrains Mono, monospace',
-                fontSize: 10,
-                color: 'var(--mute)',
-                textTransform: 'uppercase',
-                letterSpacing: '0.08em',
-                display: 'block',
-                marginBottom: 4,
-              }}>
-                New Password
-              </label>
-              <input
-                type="password"
-                value={passwordForm.new}
-                onChange={(e) => setPasswordForm({ ...passwordForm, new: e.target.value })}
-                placeholder="At least 8 characters"
-                style={{
-                  width: '100%',
-                  fontFamily: 'JetBrains Mono, monospace',
-                  fontSize: 12,
-                  color: 'var(--paper)',
-                  padding: '8px 12px',
-                  background: 'rgba(242, 238, 229, 0.04)',
-                  border: '1px solid var(--rule)',
-                  borderRadius: 4,
-                  outline: 'none',
-                }}
-                onFocus={(e) => e.currentTarget.style.borderColor = 'var(--cyan)'}
-                onBlur={(e) => e.currentTarget.style.borderColor = 'var(--rule)'}
-              />
-            </div>
-            <div>
-              <label style={{
-                fontFamily: 'JetBrains Mono, monospace',
-                fontSize: 10,
-                color: 'var(--mute)',
-                textTransform: 'uppercase',
-                letterSpacing: '0.08em',
-                display: 'block',
-                marginBottom: 4,
-              }}>
-                Confirm Password
-              </label>
-              <input
-                type="password"
-                value={passwordForm.confirm}
-                onChange={(e) => setPasswordForm({ ...passwordForm, confirm: e.target.value })}
-                placeholder="Confirm new password"
-                style={{
-                  width: '100%',
-                  fontFamily: 'JetBrains Mono, monospace',
-                  fontSize: 12,
-                  color: 'var(--paper)',
-                  padding: '8px 12px',
-                  background: 'rgba(242, 238, 229, 0.04)',
-                  border: '1px solid var(--rule)',
-                  borderRadius: 4,
-                  outline: 'none',
-                }}
-                onFocus={(e) => e.currentTarget.style.borderColor = 'var(--cyan)'}
-                onBlur={(e) => e.currentTarget.style.borderColor = 'var(--rule)'}
-              />
-            </div>
+            <TextInput
+              label="New Password"
+              type="password"
+              value={passwordForm.new}
+              onChange={(e) => setPasswordForm({ ...passwordForm, new: e.target.value })}
+              placeholder="At least 8 characters"
+              helperText="Minimum 8 characters"
+            />
+            <TextInput
+              label="Confirm Password"
+              type="password"
+              value={passwordForm.confirm}
+              onChange={(e) => setPasswordForm({ ...passwordForm, confirm: e.target.value })}
+              placeholder="Repeat your password"
+            />
             <button
               type="submit"
               disabled={isChangingPassword}
