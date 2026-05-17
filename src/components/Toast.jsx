@@ -11,6 +11,21 @@ const STYLES = {
 
 function ToastItem({ toast, onDismiss }) {
   const s = STYLES[toast.type] ?? STYLES.info;
+  const [isRetrying, setIsRetrying] = useState(false);
+
+  const handleRetry = async (e) => {
+    e.stopPropagation();
+    if (toast.onRetry && !isRetrying) {
+      setIsRetrying(true);
+      try {
+        await toast.onRetry();
+        onDismiss(toast.id);
+      } finally {
+        setIsRetrying(false);
+      }
+    }
+  };
+
   return (
     <div
       onClick={() => onDismiss(toast.id)}
@@ -24,7 +39,6 @@ function ToastItem({ toast, onDismiss }) {
         background: s.bg,
         backdropFilter: 'blur(12px)',
         WebkitBackdropFilter: 'blur(12px)',
-        cursor: 'pointer',
         animation: 'toast-in 0.18s ease-out',
         minWidth: 220,
         maxWidth: 360,
@@ -33,6 +47,29 @@ function ToastItem({ toast, onDismiss }) {
     >
       <span style={{ fontSize: 12, fontWeight: 900, color: s.color, flexShrink: 0 }}>{ICONS[toast.type]}</span>
       <span style={{ fontSize: 13, fontWeight: 600, color: '#fff', flex: 1, lineHeight: 1.3 }}>{toast.message}</span>
+      {toast.onRetry && (
+        <button
+          onClick={handleRetry}
+          disabled={isRetrying}
+          style={{
+            padding: '4px 10px',
+            background: s.color,
+            color: '#000',
+            border: 'none',
+            borderRadius: 2,
+            fontSize: 11,
+            fontWeight: 700,
+            cursor: isRetrying ? 'wait' : 'pointer',
+            opacity: isRetrying ? 0.6 : 1,
+            flexShrink: 0,
+            fontFamily: 'Archivo Black, sans-serif',
+            letterSpacing: '0.08em',
+            textTransform: 'uppercase',
+          }}
+        >
+          {isRetrying ? '...' : 'RETRY'}
+        </button>
+      )}
     </div>
   );
 }
@@ -53,10 +90,12 @@ function ToastStack({ toasts, onDismiss }) {
 export function ToastProvider({ children }) {
   const [toasts, setToasts] = useState([]);
 
-  const show = useCallback((message, type = 'info', duration = 3500) => {
+  const show = useCallback((message, type = 'info', duration = 3500, onRetry = null) => {
     const id = Date.now() + Math.random();
-    setToasts(prev => [...prev, { id, message, type }]);
-    setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), duration);
+    setToasts(prev => [...prev, { id, message, type, onRetry }]);
+    if (!onRetry) {
+      setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), duration);
+    }
   }, []);
 
   const dismiss = useCallback((id) => {

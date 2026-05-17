@@ -229,7 +229,10 @@ export default function MarketScreen() {
     try {
       setSaving(true);
       const result = await buy(player);
-      if (!result.ok) { showToast(result.error, 'error'); return; }
+      if (!result.ok) {
+        showToast(result.error, 'error', 5000, () => handleBuy(player));
+        return;
+      }
       setMySquad(prev => ({ ...prev, players: result.players, budget_remaining: result.budget_remaining }));
       setBudget(result.budget_remaining);
     } finally { setSaving(false); }
@@ -255,7 +258,10 @@ export default function MarketScreen() {
         try {
           setSaving(true);
           const result = await sell(player);
-          if (!result.ok) { showToast(result.error, 'error'); return; }
+          if (!result.ok) {
+            showToast(result.error, 'error', 5000, () => handleSell(player));
+            return;
+          }
           setMySquad(prev => ({ ...prev, players: result.players, budget_remaining: result.budget_remaining }));
           setBudget(result.budget_remaining);
         } finally { setSaving(false); }
