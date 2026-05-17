@@ -39,7 +39,7 @@ export function AvailabilityBadge({ isFlagged, isOwn, onToggle, loading = false 
         className={`inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-semibold transition-colors ${
           loading
             ? 'bg-rule text-mute cursor-not-allowed'
-            : 'bg-ink-3 text-mute hover:bg-ink-2 hover:text-paper'
+            : 'bg-ink-3 text-paper hover:bg-ink-2 hover:text-paper'
         }`}
         title="Tap to list this player as open for trade proposals"
       >
