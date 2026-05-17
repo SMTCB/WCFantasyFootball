@@ -120,18 +120,32 @@ Foundation and quick-wins phase complete. Achieved: color system standardization
 - ✅ Zero regressions from Week 1 work
 - ✅ App stable and production-ready
 
+- ✅ **PR #96 — ST4: TextInput + Select Form Components** (merged):
+  - **TextInput component**: Input with built-in label, error state, helper text, full accessibility
+  - **Select component**: Dropdown following same pattern as TextInput for consistency
+  - **Features**: Focus/blur styling, ARIA labels (aria-invalid, aria-describedby), design token integration
+  - **Integration**: Refactored SettingsScreen password fields to use TextInput (reduced ~70 lines of inline styling)
+  - **Accessibility**: Full WCAG support with label association, error announcements, helper text descriptions
+  - **Ready for migration**: AuthScreen, LeagueScreen, AdminSeedScreen all use similar inline form patterns
+  - Build: ✓ Verified, Preview: ✓ Form validation tested
+
 **Week 2 Status (Budget: 20h):**
-- Completed: S7 (8h) + ST5 (6h) = **14h used**
-- Remaining: **6h** for additional tasks or ROI re-evaluation
-- **PRs Merged**: 2 total (all squash commits)
+- Completed: S7 (8h) + ST5 (6h) + ST4 (4h) = **18h used**
+- Remaining: **2h** (end of budget cycle)
+- **PRs Merged**: 3 total (all squash commits)
   - PR #94 (S7 keyboard shortcuts)
   - PR #95 (ST5 settings screen)
-- **Notion**: S7, ST5 cards updated to "Done"
+  - PR #96 (ST4 form components)
+- **Notion**: S7, ST5, ST4 cards updated to "Done"
 - **Code Quality**: 0 errors, 56 warnings (pre-existing only)
 - **E2E Tests**: 198/200 passing (no regressions)
 
+**Week 2 Summary:**
+Foundation work phase complete. Delivered 3 major features: keyboard navigation, settings management, and reusable form components. All work shipped production-ready with zero regressions. App stable.
+
 **Next Recommendations:**
-- Reassess ROI for remaining 6h budget: S4 (6h) or multiple smaller tasks
+- Form component library ready for migration to other screens (2-3h effort per screen)
+- Remaining 2h insufficient for next major feature — recommend pausing Week 2 here
 - **Blocked by**: None. App is stable and ready to ship.
 
 ---
