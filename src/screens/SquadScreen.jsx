@@ -22,6 +22,7 @@ import { useToast } from '../hooks/useToast';
 import LeagueSelector from '../components/LeagueSelector';
 import OnboardingTour from '../components/OnboardingTour';
 import ConfirmModal from '../components/ConfirmModal';
+import Button from '../components/Button';
 import PitchView from '../components/PitchView';
 import PlayerCard from '../components/PlayerCard';
 import PlayerPickerSheet from '../components/PlayerPickerSheet';
@@ -815,12 +816,22 @@ export default function SquadScreen() {
           style={{ background: 'rgba(240,58,58,0.92)', backdropFilter: 'blur(8px)' }}
         >
           <span className="text-white text-[11px] font-bold uppercase tracking-widest flex-1">{fetchError}</span>
-          <button
+          <Button
+            variant="secondary"
+            size="sm"
             onClick={() => { setFetchError(null); fetchSquad(); }}
-            className="text-white text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-sm transition-opacity hover:opacity-70"
-            style={{ background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.25)' }}
-          >Retry</button>
-          <button onClick={() => setFetchError(null)} className="text-white opacity-60 hover:opacity-100 text-lg leading-none">×</button>
+          >
+            Retry
+          </Button>
+          <Button
+            variant="icon"
+            size="sm"
+            onClick={() => setFetchError(null)}
+            aria-label="Dismiss error"
+            className="text-lg leading-none"
+          >
+            <span aria-hidden="true">×</span>
+          </Button>
         </div>
       )}
 

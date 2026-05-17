@@ -378,12 +378,123 @@ button, a {
 }
 
 /* ── Focus visible ────────────────────────────────────────────────── */
+/* Cyan ring with translucent halo. Uses box-shadow as a fallback in case an
+   inline style on a button sets outline:none. Wide-target box-shadow remains
+   visible even when the element has overflow:hidden or a tight clip. */
 :focus-visible {
-  outline: 2px solid rgba(0,180,216,0.6);
+  outline: 2px solid var(--cyan) !important;
   outline-offset: 2px;
+  box-shadow: 0 0 0 4px rgba(0, 180, 216, 0.28);
+  border-radius: 4px;
 }
 
 @keyframes toast-in {
   from { opacity: 0; transform: translateY(12px); }
   to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Button system ───────────────────────────────────────────────────────── */
+/* Used by <Button> in src/components/Button.jsx.
+   Compose with .ffl-btn + a variant + a size class.
+   States (:hover, :focus-visible, :disabled, [data-loading]) are handled here
+   so the React component stays purely structural. */
+.ffl-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  font-family: 'Archivo Black', sans-serif;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease, opacity 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+.ffl-btn:disabled,
+.ffl-btn[aria-disabled="true"] {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+.ffl-btn[data-loading="true"] {
+  cursor: wait;
+  pointer-events: none;
+}
+.ffl-btn[data-full-width="true"] {
+  width: 100%;
+}
+
+/* Sizes — minHeight always >= 44px on md/lg (WCAG 2.1 AA touch target) */
+.ffl-btn--sm { min-height: 36px; padding:  8px 12px; font-size: 11px; }
+.ffl-btn--md { min-height: 44px; padding: 12px 16px; font-size: 12px; }
+.ffl-btn--lg { min-height: 52px; padding: 14px 20px; font-size: 13px; }
+
+/* Variants */
+.ffl-btn--primary {
+  background: var(--cyan);
+  color: var(--ink);
+}
+.ffl-btn--primary:hover { background: #1ec3e3; }
+
+.ffl-btn--secondary {
+  background: transparent;
+  color: var(--paper);
+  border-color: var(--rule);
+}
+.ffl-btn--secondary:hover {
+  background: rgba(242, 238, 229, 0.06);
+  border-color: rgba(242, 238, 229, 0.2);
+}
+
+.ffl-btn--ghost {
+  background: transparent;
+  color: var(--mute);
+}
+.ffl-btn--ghost:hover { color: var(--paper); }
+
+.ffl-btn--danger {
+  background: var(--danger);
+  color: var(--paper);
+}
+.ffl-btn--danger:hover { background: #f25c5c; }
+
+.ffl-btn--gold {
+  background: var(--gold);
+  color: var(--ink);
+}
+.ffl-btn--gold:hover { background: #f0b91a; }
+
+/* Icon-only — square footprint, no internal letter-spacing weirdness */
+.ffl-btn--icon {
+  background: transparent;
+  color: var(--mute);
+  padding: 0;
+  letter-spacing: 0;
+  aspect-ratio: 1 / 1;
+  min-width: 44px;
+}
+.ffl-btn--icon:hover {
+  background: rgba(242, 238, 229, 0.06);
+  color: var(--paper);
+}
+
+/* Spinner used in loading state */
+.ffl-btn__spinner {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid currentColor;
+  border-top-color: transparent;
+  animation: ffl-btn-spin 0.7s linear infinite;
+}
+@keyframes ffl-btn-spin {
+  to { transform: rotate(360deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ffl-btn__spinner { animation: none; opacity: 0.7; }
 }

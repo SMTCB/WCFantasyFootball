@@ -17,6 +17,7 @@
  */
 
 import { useEffect } from 'react';
+import Button from './Button';
 
 export default function ConfirmModal({
   title,
@@ -35,8 +36,7 @@ export default function ConfirmModal({
     return () => window.removeEventListener('keydown', onKey);
   }, [onCancel]);
 
-  const confirmBg    = danger ? 'var(--danger)' : 'var(--gold)';
-  const confirmColor = danger ? '#fff'    : 'var(--ink-2)';
+  const confirmVariant = danger ? 'danger' : 'gold';
 
   return (
     /* Backdrop */
@@ -117,51 +117,23 @@ export default function ConfirmModal({
 
         {/* Actions */}
         <div style={{ display: 'flex', gap: '10px' }}>
-          <button
+          <Button
+            variant="secondary"
+            size="md"
+            fullWidth
             onClick={onCancel}
-            style={{
-              flex:          1,
-              padding:       '11px',
-              background:    'rgba(255,255,255,0.05)',
-              border:        '1px solid rgba(255,255,255,0.10)',
-              borderRadius:  '7px',
-              color:         'rgba(240,242,245,0.6)',
-              fontSize:      '12px',
-              fontFamily:    'Archivo Black, sans-serif',
-              fontWeight:    700,
-              letterSpacing: '0.08em',
-              textTransform: 'uppercase',
-              cursor:        'pointer',
-              transition:    'background 0.15s',
-            }}
-            onMouseEnter={e => e.target.style.background = 'rgba(255,255,255,0.09)'}
-            onMouseLeave={e => e.target.style.background = 'rgba(255,255,255,0.05)'}
           >
             {cancelLabel}
-          </button>
+          </Button>
 
-          <button
+          <Button
+            variant={confirmVariant}
+            size="md"
+            fullWidth
             onClick={() => { onConfirm(); onCancel(); }}
-            style={{
-              flex:          1,
-              padding:       '11px',
-              background:    confirmBg,
-              border:        'none',
-              borderRadius:  '7px',
-              color:         confirmColor,
-              fontSize:      '12px',
-              fontFamily:    'Archivo Black, sans-serif',
-              fontWeight:    800,
-              letterSpacing: '0.08em',
-              textTransform: 'uppercase',
-              cursor:        'pointer',
-              transition:    'opacity 0.15s',
-            }}
-            onMouseEnter={e => e.target.style.opacity = '0.85'}
-            onMouseLeave={e => e.target.style.opacity = '1'}
           >
             {confirmLabel}
-          </button>
+          </Button>
         </div>
       </div>
     </div>
