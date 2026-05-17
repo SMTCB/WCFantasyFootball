@@ -481,6 +481,75 @@ Foundation work phase complete. Delivered 3 major features: keyboard navigation,
 
 ---
 
+## 🎯 CRITICAL GAPS & BLOCKERS (URGENT)
+
+### 🚨 **[BLOCKER] Forza API Data Pipeline Missing (Discovered 2026-05-17)**
+
+**Status**: ❌ Not Implemented | **Priority**: CRITICAL (app functionality depends on this) | **Estimated Effort**: 12-16h
+
+**The Issue:**
+The Forza Football API integration is fully documented and analyzed (see `docs/api/API_INTEGRATION_REFERENCE.md`, `FIT_GAP_ANALYSIS.md`) but **no active data pipeline exists**. All fixture and player data is statically seeded. The app appears functional only because demo data is hardcoded.
+
+**What's Missing:**
+1. **Fixture polling** — No Edge Function or cron job fetches `/v1/tournaments/426/matches` to populate `fixtures` table
+2. **Player roster sync** — No automation fetches `/v1/teams/:id/squad` to keep `players` table current
+3. **Player availability sync** — No job calls `/v2/players/:id/availability` to update injury/suspension status
+4. **Live score polling** — HomeScreen polls every 30s but table has no data to poll (hardcoded static)
+5. **Match events ingestion** — No Edge Function processes `/v2/matches/:id/periods` (goals, assists, cards, subs)
+6. **Player stats ingestion** — No job calls `/v2/matches/:id/player_statistics` after match ends for scoring
+
+**Why This Matters:**
+- Fixtures table has fake EPL clubs (seeded in migration 14); real live data never updates
+- Players don't reflect real availability (injuries, suspensions shown as static)
+- Scoring pipeline runs on dummy data — fantasy points calculations are never tested with real Forza events
+- App fails immediately in production where no demo data exists
+- Test data refreshes manually; no automation to keep season current
+
+**What's Already Done:**
+- ✅ API endpoints fully documented (16 endpoints, E1–E16)
+- ✅ Scoring requirements mapped to API fields (FIT_GAP_ANALYSIS.md: 21/22 rules covered; only season averages missing)
+- ✅ Supabase schema ready (fixtures, players, player_status, player_match_stats tables exist)
+- ✅ Edge Function stubs exist (e.g., `calculate-scores` is ready; `ingest-match-events` shell exists)
+
+**Implementation Plan:**
+
+**Phase 1: Fixture & Player Data Sync (6-8h)**
+- Create Edge Function `fetch-fixtures`: runs daily at 06:00 UTC
+  - Calls E2: `/v1/tournaments/426/matches` 
+  - Upserts into `fixtures` table (id, kickoff_at, round, status, home_team, away_team, scores)
+- Create Edge Function `sync-player-roster`: runs daily at 06:30 UTC
+  - Calls E3: `/v1/tournaments/426/teams` → E15: `/v1/teams/:id/squad` for each team
+  - Upserts into `players` table (id, name, position, team_id, shirt_number)
+- Create Edge Function `sync-player-status`: runs every 12h
+  - Calls E13: `/v2/players/:id/availability` for all players
+  - Upserts into `player_status` table (player_id, suspension_type, absence_type, expected_return)
+- Add Supabase cron job entries to trigger these functions
+
+**Phase 2: Live Score & Event Ingestion (4-6h)**
+- Modify `ingest-match-events` Edge Function (currently a stub): processes E9 response
+  - Parse period events: goals, assists, cards, substitutions, own goals, penalties
+  - Call calculate-scores RPC when match status changes from LIVE → after
+- Modify `calculate-scores` Edge Function: polls E10 `/v2/matches/:id/player_statistics` after match ends
+  - Transform API stats into `player_match_stats` (minutes_played, goals, assists, yellow_cards, red_cards, etc.)
+  - Run fantasy points calculation
+- Create HTTP webhook trigger: when HomeScreen detects match status = LIVE, POST to `ingest-match-events`
+
+**Phase 3: Validation & Error Handling (2-2h)**
+- Add retry logic: Forza API calls timeout after 5s, retry up to 3x with exponential backoff
+- Add logging: edge_function_errors table tracks failed API calls
+- Test with real Forza data for 2-3 live matches (dry run before production)
+
+**Unblocks:**
+- ✅ Live Score Feed (HomeScreen scores update in real-time, not static)
+- ✅ Injury Alerts (MarketScreen shows current availability)
+- ✅ Scoring Accuracy (fantasy points calculated from real match events)
+- ✅ Season Progression (fixtures advance naturally as matches complete)
+- ✅ Production Readiness (app can go live without hardcoded demo data)
+
+**Notion Card Created**: [BLOCKER] Forza API Data Pipeline (Critical)
+
+---
+
 ## 🎯 REMAINING WORK (What's Actually Left)
 
 ### Chat Enhancements (0/8 remaining) — ALL COMPLETE ✅
