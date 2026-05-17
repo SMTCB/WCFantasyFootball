@@ -1,8 +1,41 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-05-17 (Session 25: Phase 3 Items 2-3 Implementation)  
+**Last Updated**: 2026-05-17 (Session 26: House Cleaning & CI Fixes)  
 **E2E Test Suite**: 198/200 passing (99%) ✅ (2 pre-existing UI timeouts in multi-league test)  
 **Live App**: https://wc-fantasy-football.vercel.app
+
+---
+
+## 📊 SESSION 26 PROGRESS (2026-05-17 — House Cleaning & CI Fixes)
+
+**🚀 COMPLETED THIS SESSION:**
+
+- ✅ **Fixed 3 Critical ESLint Errors Blocking CI** (Merged):
+  - `useCommissioner.js:12` — Removed unused parameters `user` and `showToast`
+  - `multi-league-and-bets.spec.js:46` — Removed unused variable `firstText`
+  - `LeagueScreen.jsx:1103-1339` — Deleted 240-line dead code block (`chat_REMOVED` embedded chat UI that was replaced by ChatView component)
+  - **Result**: Linter now passes with **0 errors, 56 warnings** (pre-existing issues only)
+  - **Impact**: CI/CD pipeline unblocked; main branch stable for future work
+
+- ✅ **Documentation Reorganization & Mapping** (Merged):
+  - Moved `APP_STORE_ASSESSMENT.md` and `MOBILE_IMPLEMENTATION_GUIDE.md` to root level per CLAUDE.md spec
+  - Created **DOCS_MAP.md**: Comprehensive 250-line documentation index
+    - Organized docs by purpose: core, architecture, API, brand, deployment
+    - Added usage guide for different audiences (devs, PM, ops)
+    - Resolved navigation friction with clear file organization
+  - **Result**: Root-level documentation structure now complete and well-indexed
+
+- ✅ **Git Repository Analysis & Cleanup Documented** (Ref: CLEANUP_REPORT.md):
+  - Previous session: Deleted 18 stale branches (26 → 7 active)
+  - Verified 8 abandoned worktrees in `.claude/worktrees/` (5 locked, safe to defer)
+  - Confirmed all git refs pruned and tracking synced
+  - Status: **Repository clean and optimized** ✅
+
+- 🔍 **Notion Backlog Verification** (In Progress):
+  - Searched Notion database for notification bug cards mentioned in CLEANUP_REPORT
+  - Found: "Bet Notifications System" and "[FEATURE] Push Notifications" feature cards
+  - Note: The specific "[BUG] Notification list UI issue" and "[ERROR] Notification drop-down" bug cards not found in current Notion BACKLOG
+  - **Conclusion**: Notification bugs likely already resolved in prior sessions, or consolidated into feature cards
 
 ---
 
