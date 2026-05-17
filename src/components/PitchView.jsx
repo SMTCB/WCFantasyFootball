@@ -101,7 +101,7 @@ function HybridToken({ player, no, x, y, isCaptain, onClick, isSelected, compact
             width: 14, height: 14,
             borderRadius: '50%',
             background:  'var(--gold)',
-            color:       '#0A0A0A',
+            color:       'var(--ink)',
             fontFamily:  'Archivo Black, sans-serif',
             fontSize:    7,
             display:     'flex',
@@ -148,7 +148,7 @@ function HybridToken({ player, no, x, y, isCaptain, onClick, isSelected, compact
         justifyContent:  'center',
         background:      isCaptain ? 'var(--gold)' : 'transparent',
         border:          `1.5px solid ${isCaptain ? 'var(--gold)' : 'var(--cyan)'}`,
-        color:           isCaptain ? '#0A0A0A' : 'var(--cyan)',
+        color:           isCaptain ? 'var(--ink)' : 'var(--cyan)',
         fontFamily:      'Archivo Black, sans-serif',
         fontSize:        14,
       }}>
@@ -194,7 +194,7 @@ function HybridToken({ player, no, x, y, isCaptain, onClick, isSelected, compact
           height:         18,
           borderRadius:   '50%',
           background:     'var(--gold)',
-          color:          '#0A0A0A',
+          color:          'var(--ink)',
           fontFamily:     'Archivo Black, sans-serif',
           fontSize:       9,
           display:        'flex',
@@ -249,14 +249,14 @@ export default function PitchView({
 
   // Outer container sizing
   const outerStyle = isCompact
-    ? { position: 'relative', width: '100%', height: 220, background: '#08090C', padding: '12px 16px 14px' }
+    ? { position: 'relative', width: '100%', height: 220, background: 'var(--ink)', padding: '12px 16px 14px' }
     : variant === 'desktop'
-    ? { flex: 1, position: 'relative', background: '#08090C', padding: '28px 40px 32px' }
+    ? { flex: 1, position: 'relative', background: 'var(--ink)', padding: '28px 40px 32px' }
     : {
         position:    'relative',
         width:       '100%',
         aspectRatio: '3/2',
-        background:  '#08090C',
+        background:  'var(--ink)',
         padding:     '16px 20px 20px',
       };
 
@@ -274,7 +274,7 @@ export default function PitchView({
     >
       <div style={{
         ...insetStyle,
-        background:   'linear-gradient(180deg, #0E1218 0%, #0A0D12 100%)',
+        background:   'linear-gradient(180deg, var(--ink-2) 0%, var(--ink) 100%)',
         borderRadius: 8,
         overflow:     'hidden',
         boxShadow:    'inset 0 0 0 1px var(--rule)',
