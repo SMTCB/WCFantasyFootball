@@ -12,7 +12,6 @@ export default function SettingsScreen() {
 
   const [passwordForm, setPasswordForm] = useState({ current: '', new: '', confirm: '' });
   const [isChangingPassword, setIsChangingPassword] = useState(false);
-  const [showOnboarding, setShowOnboarding] = useState(false);
 
   const handlePasswordChange = async (e) => {
     e.preventDefault();
@@ -40,7 +39,7 @@ export default function SettingsScreen() {
         showToast('Password updated successfully', 'success');
         setPasswordForm({ current: '', new: '', confirm: '' });
       }
-    } catch (err) {
+    } catch {
       showToast('Error updating password', 'error');
     } finally {
       setIsChangingPassword(false);
@@ -52,14 +51,13 @@ export default function SettingsScreen() {
       await logout();
       showToast('Logged out successfully', 'success');
       navigate('/auth', { replace: true });
-    } catch (err) {
+    } catch {
       showToast('Error logging out', 'error');
     }
   };
 
   const handleReplayTour = () => {
     localStorage.removeItem('onboardingCompleted');
-    setShowOnboarding(true);
     showToast('Onboarding reset — refresh to see tour', 'info');
   };
 
