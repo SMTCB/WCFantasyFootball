@@ -31,10 +31,18 @@
   - Scroll tracking via useRef + scrollTop property, restored on activeLeague change
   - Result: Users return to exact same filtered view after navigating away and back
 
+- ✅ **PR #89 — S1: Global Back Affordance** (merged):
+  - Added sticky back button (← BACK) on nested routes like /league/:leagueId/draft
+  - Mobile-only (lg:hidden), preserves desktop sidebar navigation
+  - Route detection: shows on all non-main routes (/draft, /recover, /recap, /bracket, /admin)
+  - Uses React Router's useNavigate(-1) for native browser back behavior
+  - Styled with cyan → paper hover effect, matches design tokens
+  - Result: Mobile users can navigate out of nested screens without dead ends
+
 **Week 1 Status (Budget: 20h):**
-- Completed: ST9 (2h), S2 (1.5h), S3 (3h) = **6.5h used**
-- Remaining budget: **13.5h** for S1 (4h) and follow-up items
-- All PRs merged with squash commits, Notion cards updated to "Done"
+- Completed: ST9 (2h), S2 (1.5h), S3 (3h), S1 (4h) = **10.5h used**
+- Remaining budget: **9.5h** for follow-up items or stretch goals
+- All 4 PRs merged with squash commits, Notion cards updated to "Done"
 
 **E2E Tests**: 198/200 passing (no regressions from Week 1 changes)
 
