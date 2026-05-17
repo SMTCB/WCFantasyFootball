@@ -204,7 +204,7 @@ export default function SquadScreen() {
         squadId:         squad.id,
         leagueId:        squad.league_id,
         matchdayId:      squad.matchday_id,
-        budget:          { current: Number(squad.budget_remaining ?? cfg.budgetTotal), total: cfg.budgetTotal },
+        budget:          { current: Number(squad.budget_remaining ?? cfg.budgetTotal ?? 100), total: cfg.budgetTotal ?? 100 },
         captainId:       squad.captain_id || playerIds[0] || '',
         players:         pitchPlayers,
         bench:           benchPlayers,
