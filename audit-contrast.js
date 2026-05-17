@@ -1,8 +1,11 @@
+/* eslint-disable no-undef */
 /**
  * WCAG AA Color Contrast Audit
  * Checks if all color combinations meet WCAG AA standards:
  * - Normal text: 4.5:1 minimum
  * - Large text (18pt+ or 14pt+ bold): 3:1 minimum
+ *
+ * Run with: node audit-contrast.js
  */
 
 const colors = {
