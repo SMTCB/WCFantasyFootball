@@ -99,23 +99,39 @@ Foundation and quick-wins phase complete. Achieved: color system standardization
     - Power-user lever, differentiates from FPL/Sleeper
   - Build: ✓ Verified, Lint: ✓ Passed (no new errors), UX: ✓ Tested
 
+- ✅ **PR #95 — ST5: Build /settings Screen** (merged):
+  - New route `/settings` with four core features:
+    1. **Profile section**: Display authenticated user email via `useAuth()` hook
+    2. **Change Password form**: Input validation (8+ chars, confirmation match), Supabase `updateUser()` integration
+    3. **Logout button**: Clears session, redirects to `/auth`
+    4. **Replay Tour button**: Clears `localStorage.onboardingCompleted`, resets wizard state for next reload
+  - **UX Details:**
+    - Form validation before API calls: empty field check, length check (8+ chars), confirmation match check
+    - Toast notifications: success/error feedback with clear messages
+    - Error handling: graceful Supabase error display to user
+    - Mobile-first responsive (375px+), brand-matched styling (design tokens, inline styles)
+  - **Integration:**
+    - AppLayout sidebar: Added Settings link (⚙ icon) to footer navigation
+    - App.jsx: Added SettingsScreen import and `/settings` route before wildcard
+  - Build: ✓ Verified, UX: ✓ Full interactive test (password validation, form submission)
+
 **Post-Week 1 Investigation Results:**
 - ✅ All 3 reported bugs verified as pre-existing and resolved
 - ✅ Zero regressions from Week 1 work
 - ✅ App stable and production-ready
 
 **Week 2 Status (Budget: 20h):**
-- Completed: S7 (8h) = **8h used**
-- Remaining: **12h** for S4 (6h) or stretch goals
-- **PRs Merged**: 1 total (all squash commits)
+- Completed: S7 (8h) + ST5 (6h) = **14h used**
+- Remaining: **6h** for additional tasks or ROI re-evaluation
+- **PRs Merged**: 2 total (all squash commits)
   - PR #94 (S7 keyboard shortcuts)
-- **Notion**: S7 card updated to "Done"
+  - PR #95 (ST5 settings screen)
+- **Notion**: S7, ST5 cards updated to "Done"
 - **Code Quality**: 0 errors, 56 warnings (pre-existing only)
 - **E2E Tests**: 198/200 passing (no regressions)
 
 **Next Recommendations:**
-- **S4: Settings restructure (6h)** — UX debt, reorganize user preferences screen (next priority)
-- Consider: S8 (Command Palette) for Phase 2 if budget allows (12h effort)
+- Reassess ROI for remaining 6h budget: S4 (6h) or multiple smaller tasks
 - **Blocked by**: None. App is stable and ready to ship.
 
 ---
