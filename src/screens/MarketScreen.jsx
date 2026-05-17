@@ -55,6 +55,7 @@ export default function MarketScreen() {
   const [todayJokerId,  setTodayJokerId]  = useState(null);
   const [loading,       setLoading]       = useState(true);
   const [filterPos,     setFilterPos]     = useState('ALL');
+  const [searchQuery,   setSearchQuery]   = useState('');
   const [budget,        setBudget]        = useState(0);      // loaded from league config
   const [saving,        setSaving]        = useState(false);
   const [isLocked,      setIsLocked]      = useState(false);
@@ -232,7 +233,11 @@ export default function MarketScreen() {
     });
   };
 
-  const filteredPlayers = players.filter(p => filterPos === 'ALL' || p.position === filterPos);
+  const filteredPlayers = players.filter(p => {
+    const matchesPos = filterPos === 'ALL' || p.position === filterPos;
+    const matchesSearch = !searchQuery || p.name?.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchesPos && matchesSearch;
+  });
   const squadCount  = mySquad?.players?.length || 0;
   const emptySlots  = Math.max(0, squadSize - squadCount);
 
@@ -468,6 +473,26 @@ export default function MarketScreen() {
               </span>
             </div>
           )}
+        </div>
+
+        {/* Search input */}
+        <div className="px-5 py-2.5 border-t" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
+          <input
+            type="text"
+            placeholder="Search player name…"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full outline-none text-[13px]"
+            style={{
+              padding: '8px 12px',
+              background: 'rgba(255,255,255,0.04)',
+              border: '1px solid rgba(255,255,255,0.1)',
+              borderRadius: '4px',
+              color: 'var(--paper)',
+              fontFamily: 'Archivo, sans-serif',
+              caretColor: 'var(--cyan)',
+            }}
+          />
         </div>
 
         {/* Position filter tabs */}
