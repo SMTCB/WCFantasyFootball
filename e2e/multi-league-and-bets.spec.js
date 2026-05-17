@@ -35,10 +35,6 @@ test.describe('Multi-League Switching', () => {
     await page.goto('/league');
     await waitForContent(page);
 
-    // Look for league list container or league cards
-    const leagueContainer = page.locator('[class*="league"]').first();
-    const containerExists = await leagueContainer.isVisible().catch(() => false);
-
     // Find actual league clickable items (cards, rows, or list items)
     // Look for elements that are likely league entries (div/li with league info)
     const leagueItems = page.locator('[class*="league-item"], [class*="league-card"], [data-testid*="league"], li').filter({
