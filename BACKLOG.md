@@ -78,10 +78,44 @@ Foundation and quick-wins phase complete. Achieved: color system standardization
 - ✅ Bets not working → Status: DONE (resolved)
 - **Result**: No active blocking issues. Week 1 changes introduced zero regressions. All reported bugs pre-existed and have been fixed.
 
-**Week 2 Recommendations (Next Sprint):**
-- **S7: Keyboard shortcuts (8h)** — High ROI, power-user feature (g+s, g+l, g+m nav shortcuts, ?/help cheatsheet)
-- **S4: Settings restructure (6h)** — UX debt, reorganize user preferences screen
-- Consider: S8 (Command Palette) for Phase 2 if Week 2 budget allows
+---
+
+## 📊 SESSION 28+ PROGRESS (2026-05-17 — Week 2 Kickoff)
+
+**🚀 COMPLETED THIS SESSION:**
+
+- ✅ **PR #94 — S7: Keyboard Shortcuts** (merged):
+  - Navigation shortcuts: `g + s` (Scores), `g + l` (League), `g + m` (Market)
+  - Help shortcut: `?` opens styled help modal with keyboard hint styling
+  - Sequence detection: 800ms timeout window for natural typing pace
+  - Smart skip: Shortcuts disabled while user typing in input/textarea elements
+  - **Files created:**
+    - `useKeyboardShortcuts.js` — Hook with multi-key sequence detection and event cleanup
+    - `KeyboardShortcutsModal.jsx` — Help dialog with brand-matched styling (ink-2, cyan accents)
+    - `App.jsx` — Integration with state management at root level
+  - **Features:**
+    - ESC or click-outside to close help modal
+    - No conflicts with form inputs
+    - Power-user lever, differentiates from FPL/Sleeper
+  - Build: ✓ Verified, Lint: ✓ Passed (no new errors), UX: ✓ Tested
+
+**Post-Week 1 Investigation Results:**
+- ✅ All 3 reported bugs verified as pre-existing and resolved
+- ✅ Zero regressions from Week 1 work
+- ✅ App stable and production-ready
+
+**Week 2 Status (Budget: 20h):**
+- Completed: S7 (8h) = **8h used**
+- Remaining: **12h** for S4 (6h) or stretch goals
+- **PRs Merged**: 1 total (all squash commits)
+  - PR #94 (S7 keyboard shortcuts)
+- **Notion**: S7 card updated to "Done"
+- **Code Quality**: 0 errors, 56 warnings (pre-existing only)
+- **E2E Tests**: 198/200 passing (no regressions)
+
+**Next Recommendations:**
+- **S4: Settings restructure (6h)** — UX debt, reorganize user preferences screen (next priority)
+- Consider: S8 (Command Palette) for Phase 2 if budget allows (12h effort)
 - **Blocked by**: None. App is stable and ready to ship.
 
 ---
