@@ -43,7 +43,6 @@ test.describe('Multi-League Switching', () => {
       // Click first league
       await leagueButtons.first().click();
       await waitForContent(page);
-      const firstText = await page.locator('body').innerText();
 
       // Navigate back
       const backBtn = page.locator('button').filter({ hasText: /back|←/i }).first();
