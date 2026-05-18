@@ -84,22 +84,35 @@ Foundation and quick-wins phase complete. Achieved: color system standardization
 
 **🚀 COMPLETED THIS SESSION:**
 
-- ✅ **PR #112 — Chat Functionality Restore** (merged):
-  - **Issue**: Chat messages failed to load due to incorrect database column queries
-  - **Root Cause**: useChatMessages.js and useMentions.js were trying to query `email` and `user_metadata` columns which don't exist in the users table
-  - **Database Reality**: users table only has: id, username, avatar_url, xp, badges, created_at
-  - **Impact**: Chat messages wouldn't load, message sending broke, mention autocomplete failed, Realtime subscriptions errored
-  - **Fix**:
-    - Updated useChatMessages.js to query `users(id, username)` instead of non-existent columns
-    - Updated useMentions.js to query only username field for member lookups
-    - Removed email display from ChatView mention dropdown
-    - Changed currentUser display in composer to use username instead of email
+- ✅ **PR #114 — Fix Chat Message Loading (Ambiguous Relationship Error)** (merged):
+  - **Issue**: Chat messages failed to load completely; users see no messages when sending or opening chat
+  - **Root Cause**: PGRST201 error — `useChatMessages.loadMessages()` used `.select('...users!inner(id, username)...')` which failed because `chat_messages` table has multiple implicit relationships with `users` table, making the join ambiguous
+  - **Database Structure**: 
+    - `chat_messages` has `user_id` → `users.id` (one-to-one)
+    - `chat_messages` has `mentioned_user_ids` (array) → creates implicit relationship
+    - This ambiguity breaks the `!inner` join syntax
+  - **Original Approach (Session 1)**: Tried to fix column names (email, user_metadata) — this was wrong, actual error was relationship ambiguity
+  - **Correct Solution** (This PR):
+    1. Removed the `.users!inner()` join from SELECT
+    2. Fetch messages independently: `select('id, league_id, user_id, message, created_at, is_deleted, edited_at')`
+    3. Extract uncached user IDs from messages
+    4. Fetch usernames separately via `.in('id', uncachedUserIds)` query
+    5. Populate `userMetaCache` before formatting messages
+  - **Architecture**: 
+    - Separates concerns: message data vs. user metadata
+    - Maintains existing `userMetaCache` mechanism (prevents N+1 on Realtime events)
+    - Only fetches uncached usernames, no duplicate queries
   - **Verification**: 
-    - Build: ✓ Passed (1.86s)
-    - Lint: ✓ Passed (pre-existing warnings only)
-    - Query Test: ✓ Verified against live database
-    - No new console errors
-  - **Status**: Deployed to main, live on https://wc-fantasy-football.vercel.app
+    - ✓ All 8 League Chat E2E tests passing (desktop + mobile):
+      - Chat messages display in real-time
+      - Unread chat badge displays count
+      - Message search filters chat history
+      - @mention autocomplete works in chat input
+    - ✓ Build: Passed (1.86s)
+    - ✓ Lint: Passed (pre-existing warnings only)
+    - ✓ No regressions in other E2E tests
+  - **Status**: Deployed to main (PR #114), live on https://wc-fantasy-football.vercel.app
+  - **Impact**: Chat fully functional again; users can send/receive messages in real-time
 
 ---
 
