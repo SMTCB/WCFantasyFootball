@@ -248,9 +248,16 @@ export function useChatMessages(leagueId) {
     };
   }, [leagueId, loadMessages, user?.id, fetchUnreadCount]);
 
-  // Auto-scroll to bottom when messages change
+  // Auto-scroll to bottom only if user is already at the bottom
+  // This prevents jarring scroll jumps when polling updates messages while user is reading history
   useEffect(() => {
-    scrollToBottom();
+    const container = scrollEndRef.current?.parentElement;
+    if (!container) return;
+    // Only scroll if user is within 100px of the bottom (threshold for manual scrolling)
+    const isAtBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 100;
+    if (isAtBottom) {
+      scrollToBottom();
+    }
   }, [messages, scrollToBottom]);
 
   // Fallback: Periodically requery messages if Realtime fails (poll every 3 seconds)
