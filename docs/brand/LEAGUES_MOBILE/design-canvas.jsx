@@ -1,3 +1,4 @@
+import React from 'react';
 
 // DesignCanvas.jsx — Figma-ish design canvas wrapper
 // Warm gray grid bg + Sections + Artboards + PostIt notes.
