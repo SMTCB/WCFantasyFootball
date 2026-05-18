@@ -52,6 +52,7 @@ export default function MarketScreen() {
   const [mySquad,       setMySquad]       = useState(null);
   const [leagues,       setLeagues]       = useState(null);   // null = not yet loaded
   const [activeLeague,  setActiveLeague]  = useState(leagueId);
+  const [tournamentId,  setTournamentId]  = useState(null);
   const [todayJokerId,  setTodayJokerId]  = useState(null);
   const [loading,       setLoading]       = useState(true);
   const [filterPos,     setFilterPos]     = useState(() => localStorage.getItem('market_filterPos') || 'ALL');
@@ -94,18 +95,36 @@ export default function MarketScreen() {
   // Auto-fill hook — reusable across screens
   const { handleAutoFill, autoFilling, autoFillMsg } = useAutoFill(activeLeague, mySquad, fetchSquad);
 
+  const resolveLeagueTournament = async (lid) => {
+    const { data } = await supabase
+      .from('leagues')
+      .select('tournament_id')
+      .eq('id', lid)
+      .maybeSingle();
+    if (data?.tournament_id) setTournamentId(data.tournament_id);
+  };
+
   // On mount: resolve league context
   useEffect(() => {
     const init = async () => {
-      if (leagueId) { setActiveLeague(leagueId); return; }
+      if (leagueId) {
+        setActiveLeague(leagueId);
+        resolveLeagueTournament(leagueId);
+        return;
+      }
       // No leagueId in URL — fetch user's leagues
       const { data } = await supabase
         .from('league_members')
-        .select('league_id, leagues(id, name)')
+        .select('league_id, leagues(id, name, tournament_id)')
         .eq('user_id', user?.id);
-      const list = (data ?? []).map(r => ({ id: r.league_id, name: r.leagues?.name ?? r.league_id }));
-      if (list.length === 1) { setActiveLeague(list[0].id); setLeagues([]); }
-      else { setLeagues(list); }
+      const list = (data ?? []).map(r => ({ id: r.league_id, name: r.leagues?.name ?? r.league_id, tournament_id: r.leagues?.tournament_id }));
+      if (list.length === 1) {
+        setActiveLeague(list[0].id);
+        if (list[0].tournament_id) setTournamentId(list[0].tournament_id);
+        setLeagues([]);
+      } else {
+        setLeagues(list);
+      }
     };
     if (user?.id) init();
   }, [user?.id, leagueId]);
@@ -113,10 +132,12 @@ export default function MarketScreen() {
   const fetchMarketParams = async () => {
     setLoading(true);
 
-    // ── 1. Players — isolated, always loads ──────────────────────────────────
+    // ── 1. Players — filtered by competition when known ──────────────────────
     try {
+      let playersQuery = supabase.from('players').select('*').order('price', { ascending: false });
+      if (tournamentId) playersQuery = playersQuery.eq('tournament_id', tournamentId);
       const [{ data: pData }, { data: intelData }] = await Promise.all([
-        supabase.from('players').select('*').order('price', { ascending: false }),
+        playersQuery,
         supabase.from('player_status').select('*'),
       ]);
       const rawPlayers = (pData && pData.length > 0) ? pData : [];
@@ -175,7 +196,7 @@ export default function MarketScreen() {
     setLoading(false);
   };
 
-  useEffect(() => { fetchMarketParams(); }, [activeLeague]);
+  useEffect(() => { fetchMarketParams(); }, [activeLeague, tournamentId]);
 
   // Persist filter position to localStorage
   useEffect(() => {
@@ -287,7 +308,7 @@ export default function MarketScreen() {
         {leagues.map(l => (
           <button
             key={l.id}
-            onClick={() => setActiveLeague(l.id)}
+            onClick={() => { setActiveLeague(l.id); if (l.tournament_id) setTournamentId(l.tournament_id); else resolveLeagueTournament(l.id); }}
             className="w-full max-w-sm px-5 py-4 rounded-sm text-left transition-all active:opacity-70"
             style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'var(--paper)' }}
           >

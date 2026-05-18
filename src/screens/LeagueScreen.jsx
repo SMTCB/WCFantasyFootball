@@ -166,10 +166,12 @@ export default function LeagueScreen() {
   } = commissioner;
 
   // Create form state
-  const [leagueName,   setLeagueName]   = useState('');
-  const [leagueFormat, setLeagueFormat] = useState('classic');
-  const [formLoading,  setFormLoading]  = useState(false);
-  const [newLeague,    setNewLeague]    = useState(null);   // set after creation → shows invite card
+  const [leagueName,       setLeagueName]       = useState('');
+  const [leagueFormat,     setLeagueFormat]     = useState('classic');
+  const [leagueTournament, setLeagueTournament] = useState('426');
+  const [tournaments,      setTournaments]      = useState([]);
+  const [formLoading,      setFormLoading]      = useState(false);
+  const [newLeague,        setNewLeague]        = useState(null);   // set after creation → shows invite card
 
   // Join-by-code state
   const [joinCode,     setJoinCode]     = useState('');
@@ -272,7 +274,20 @@ export default function LeagueScreen() {
   useEffect(() => {
     setCurrentUser(user);
     fetchLeagues();
+    fetchTournaments();
   }, [user]);
+
+  const fetchTournaments = async () => {
+    const { data } = await supabase
+      .from('tournaments')
+      .select('forza_id, name')
+      .eq('sync_enabled', true)
+      .order('name');
+    if (data?.length) {
+      setTournaments(data);
+      setLeagueTournament(data[0].forza_id);
+    }
+  };
 
   useEffect(() => {
     if (leagueId) {
@@ -396,7 +411,7 @@ export default function LeagueScreen() {
         .from('league_members')
         .select(`
           league_id, rank, total_points,
-          leagues ( id, name, format )
+          leagues ( id, name, format, tournament_id )
         `)
         .eq('user_id', userId);
         
@@ -421,9 +436,10 @@ export default function LeagueScreen() {
     try {
       setFormLoading(true);
       const { data, error } = await supabase.rpc('create_league', {
-        p_name:    leagueName.trim(),
-        p_format:  leagueFormat,
-        p_user_id: user?.id,
+        p_name:          leagueName.trim(),
+        p_format:        leagueFormat,
+        p_user_id:       user?.id,
+        p_tournament_id: leagueTournament,
       });
       if (error) throw error;
       setLeagueName('');
@@ -504,6 +520,32 @@ export default function LeagueScreen() {
                 required
               />
             </div>
+          </div>
+          <div className="flex flex-col gap-2">
+            <label className="text-[11px] font-semibold text-text-secondary uppercase tracking-wider">Competition</label>
+            {tournaments.length > 0 ? (
+              <div className="flex flex-col gap-2">
+                {tournaments.map(t => (
+                  <button
+                    key={t.forza_id}
+                    type="button"
+                    onClick={() => setLeagueTournament(t.forza_id)}
+                    className={`flex items-center justify-between p-3 border text-left transition-colors ${
+                      leagueTournament === t.forza_id
+                        ? 'border-cyan bg-cyan/5'
+                        : 'border-border bg-surface hover:border-cyan/40'
+                    }`}
+                  >
+                    <span className="text-[13px] font-bold uppercase tracking-wider text-white">{t.name}</span>
+                    {leagueTournament === t.forza_id && (
+                      <span className="text-[9px] font-bold uppercase tracking-wider text-cyan border border-cyan/40 px-1 py-[1px] leading-none">Selected</span>
+                    )}
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <p className="text-[11px] text-text-secondary">Loading competitions…</p>
+            )}
           </div>
           <div className="flex flex-col gap-2">
             <label className="text-[11px] font-semibold text-text-secondary uppercase tracking-wider">Format</label>
