@@ -4,21 +4,24 @@ import { MONO, DISPLAY } from './HubShared';
 export default function AuctionsView({ auctions, auctionsLoading, name, mySquadId, placeBid, cancelListing, sellNow, onToast }) {
   return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: 'var(--ink)' }}>
-      <div style={{ padding: '20px 28px', borderBottom: '1px solid var(--rule)', background: 'var(--ink-2)', display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr', flexShrink: 0 }}>
-        <div style={{ borderRight: '1px solid var(--rule)', paddingRight: 24 }}>
-          <div style={{ fontFamily: MONO, fontSize: 10, color: 'var(--gold)', letterSpacing: '.22em' }}>AUCTION HOUSE · {name.toUpperCase()}</div>
-          <div style={{ fontFamily: DISPLAY, fontSize: 24, marginTop: 6 }}>Open bids. No two managers own the same player.</div>
+      {/* Hero strip — title + stats, responsive */}
+      <div style={{ borderBottom: '1px solid var(--rule)', background: 'var(--ink-2)', flexShrink: 0 }}>
+        <div style={{ padding: 'clamp(12px, 2vw, 20px) clamp(14px, 3vw, 28px)', borderBottom: '1px solid var(--rule)' }}>
+          <div style={{ fontFamily: MONO, fontSize: 'clamp(9px, 1.8vw, 10px)', color: 'var(--gold)', letterSpacing: '.22em' }}>AUCTION HOUSE · {name.toUpperCase()}</div>
+          <div style={{ fontFamily: DISPLAY, fontSize: 'clamp(18px, 4vw, 24px)', marginTop: 6 }}>Open bids. No two managers own the same player.</div>
         </div>
-        {[
-          { k: 'LIVE',   v: auctions.filter(a => a.status === 'active').length, tone: 'var(--danger)' },
-          { k: 'LISTED', v: auctions.length,                                    tone: 'var(--gold)'   },
-          { k: 'STATUS', v: auctionsLoading ? '…' : 'LIVE',                    tone: 'var(--cyan)'   },
-        ].map((c, i) => (
-          <div key={c.k} style={{ padding: '0 22px', borderRight: i < 2 ? '1px solid var(--rule)' : 'none' }}>
-            <div style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.22em' }}>{c.k}</div>
-            <div style={{ fontFamily: DISPLAY, fontSize: 28, color: c.tone, marginTop: 6, letterSpacing: '-0.02em' }}>{c.v}</div>
-          </div>
-        ))}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr' }}>
+          {[
+            { k: 'LIVE',   v: auctions.filter(a => a.status === 'active').length, tone: 'var(--danger)' },
+            { k: 'LISTED', v: auctions.length,                                    tone: 'var(--gold)'   },
+            { k: 'STATUS', v: auctionsLoading ? '…' : 'LIVE',                    tone: 'var(--cyan)'   },
+          ].map((c, i) => (
+            <div key={c.k} style={{ padding: 'clamp(8px, 2vw, 16px) clamp(10px, 2.5vw, 22px)', borderRight: i < 2 ? '1px solid var(--rule)' : 'none' }}>
+              <div style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.22em' }}>{c.k}</div>
+              <div style={{ fontFamily: DISPLAY, fontSize: 'clamp(20px, 4vw, 28px)', color: c.tone, marginTop: 4, letterSpacing: '-0.02em' }}>{c.v}</div>
+            </div>
+          ))}
+        </div>
       </div>
 
       <div style={{ flex: 1, overflow: 'auto', padding: '0 0 80px' }}>

@@ -230,4 +230,97 @@ export function mgrHue(str = '') {
 }
 export const mgrMono = (username = '') => username.substring(0, 3).toUpperCase() || '???';
 
+// ─── Mobile components ────────────────────────────────────────────────────────
+
+// Mobile hub league header — replaces HubTopbar on mobile viewports.
+export function HubLeagueHeader({ leagueName = 'LOADING…', memberCount = 0, gw = '—', backable = false, backTitle = '', onBack, rightSlot }) {
+  return (
+    <div style={{ padding: '10px max(18px, 4vw) 8px', borderBottom: '1px solid var(--rule)', background: 'var(--ink)', flexShrink: 0 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+        {backable ? (
+          <button onClick={onBack} style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontFamily: MONO, fontSize: 10, color: 'var(--mute)', letterSpacing: '.22em' }}>← BACK</button>
+        ) : (
+          <>
+            <span style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.22em' }}>COMPETITIVE</span>
+            <span style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)' }}>·</span>
+            <span style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.22em' }}>{memberCount}M</span>
+            <span style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.22em', marginLeft: 'auto' }}>GW {gw}</span>
+          </>
+        )}
+        {rightSlot && <div style={{ marginLeft: 'auto' }}>{rightSlot}</div>}
+      </div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 6 }}>
+        <span style={{ width: 7, height: 7, borderRadius: '50%', background: 'var(--cyan)', flexShrink: 0 }} />
+        <span style={{ fontFamily: DISPLAY, fontSize: backable ? 18 : 22, letterSpacing: '-0.02em', color: 'var(--paper)' }}>
+          {backable ? backTitle : leagueName.toUpperCase()}
+        </span>
+      </div>
+    </div>
+  );
+}
+
+// Mobile horizontal-scroll hub tab pills — replaces HubTabs on mobile viewports.
+export function HubTabPills({ active = 'leaderboard', onTab, isCommissioner = false, unreadChat = 0, notifyBets = false, notifyAuctions = false }) {
+  const tabs = [
+    { id: 'leaderboard', label: 'BOARD' },
+    { id: 'frontpage',   label: 'FRONTPAGE' },
+    { id: 'bets',        label: 'BETS',     notify: notifyBets },
+    { id: 'betting',     label: 'BETTING' },
+    { id: 'auctions',    label: 'AUCTIONS', notify: notifyAuctions },
+    { id: 'chat',        label: 'CHAT',     count: unreadChat },
+    { id: 'stats',       label: 'STATS' },
+    ...(isCommissioner ? [{ id: 'admin', label: 'ADMIN' }] : []),
+  ];
+  return (
+    <div style={{ display: 'flex', gap: 6, padding: '10px 18px', overflowX: 'auto', borderBottom: '1px solid var(--rule)', background: 'var(--ink)', flexShrink: 0, scrollbarWidth: 'none' }}>
+      {tabs.map(t => {
+        const isActive = t.id === active;
+        return (
+          <button key={t.id} onClick={() => onTab(t.id)} style={{
+            flex: '0 0 auto', padding: '7px 12px', cursor: 'pointer', whiteSpace: 'nowrap',
+            background: isActive ? 'var(--cyan)' : 'transparent',
+            border: isActive ? '1px solid var(--cyan)' : '1px solid var(--rule)',
+            color: isActive ? 'var(--ink)' : 'var(--mute)',
+            fontFamily: MONO, fontSize: 10, letterSpacing: '.18em', fontWeight: 600,
+            display: 'inline-flex', alignItems: 'center', gap: 5,
+          }}>
+            {t.label}
+            {t.notify && !isActive && <span style={{ width: 5, height: 5, borderRadius: '50%', background: 'var(--danger)', flexShrink: 0 }} />}
+            {!!t.count && !isActive && <span style={{ color: 'var(--cyan)', fontSize: 9 }}>{t.count}</span>}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+// Mobile 3-dot form indicator — compact subset of FormDots for tight rows.
+export function MobFormDots({ form = [], max = 3 }) {
+  const tone = { W: 'var(--positive)', D: 'var(--mute)', L: 'var(--danger)' };
+  return (
+    <span style={{ display: 'inline-flex', gap: 2 }}>
+      {form.slice(0, max).map((f, i) => (
+        <span key={i} style={{
+          width: 12, height: 12, display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+          background: `${tone[f] || 'var(--mute)'}22`, border: `1px solid ${tone[f] || 'var(--mute)'}55`,
+          fontFamily: MONO, fontSize: 8, color: tone[f] || 'var(--mute)', fontWeight: 600,
+        }}>{f}</span>
+      ))}
+    </span>
+  );
+}
+
+// Mobile slim section header — no full-width background, used inside scrolling lists.
+export function MobSection({ label, sub, tone = 'var(--cyan)', right }) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '14px 18px 6px' }}>
+      <span style={{ width: 3, height: 12, background: tone, flexShrink: 0 }} />
+      <span style={{ fontFamily: MONO, fontSize: 10, color: 'var(--paper)', letterSpacing: '.22em' }}>{label}</span>
+      {sub && <span style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.16em' }}>· {sub}</span>}
+      <span style={{ flex: 1 }} />
+      {right}
+    </div>
+  );
+}
+
 export { MONO, DISPLAY, BODY };

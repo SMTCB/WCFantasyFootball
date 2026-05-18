@@ -1,6 +1,6 @@
 import { useBets } from '../../hooks/useBets';
 import BetWidget from '../BetWidget';
-import { HubSectionLabel, MONO, DISPLAY } from './HubShared';
+import { HubSectionLabel, MobSection, MONO, DISPLAY } from './HubShared';
 
 const KIND = {
   top_scorer:   { g: '◉', tone: 'var(--cyan)'   },
@@ -24,30 +24,41 @@ function BetSection({ label, sub, tone, bets, squadId, onSubmitted }) {
   if (!bets.length) return null;
   return (
     <div>
-      <HubSectionLabel label={label} sub={sub} tone={tone} right={
-        <span style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.18em' }}>{bets.length} TOTAL</span>
-      } />
+      {/* Desktop section label */}
+      <div className="hidden lg:block">
+        <HubSectionLabel label={label} sub={sub} tone={tone} right={
+          <span style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.18em' }}>{bets.length} TOTAL</span>
+        } />
+      </div>
+      {/* Mobile section label */}
+      <div className="lg:hidden">
+        <MobSection label={label} sub={sub} tone={tone}
+          right={<span style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.14em' }}>{bets.length}</span>}
+        />
+      </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
         {bets.map(bet => {
           const k = kindOf(bet);
+          const accentTone = bet.status === 'resolved'
+            ? (bet.mySubmission?.is_correct ? 'var(--positive)' : bet.mySubmission ? 'var(--danger)' : 'var(--rule)')
+            : k.tone;
           return (
             <div key={bet.id} style={{
-              margin: '10px 24px',
+              margin: 'clamp(6px, 2vw, 10px) clamp(12px, 4vw, 24px)',
               background: 'var(--ink-2)',
               border: '1px solid var(--rule)',
-              borderLeft: `3px solid ${bet.status === 'resolved' ? (bet.mySubmission?.is_correct ? 'var(--positive)' : bet.mySubmission ? 'var(--danger)' : 'var(--rule)') : k.tone}`,
-              display: 'grid', gridTemplateColumns: '1fr auto',
+              borderLeft: `3px solid ${accentTone}`,
+              display: 'flex', flexDirection: 'column',
             }}>
               {/* Body */}
-              <div style={{ padding: '14px 18px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <div style={{ padding: 'clamp(10px, 2vw, 14px) clamp(12px, 3vw, 18px)', display: 'flex', flexDirection: 'column', gap: 8 }}>
                 {/* Title row */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                  <span style={{ width: 22, height: 22, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', color: k.tone, fontFamily: DISPLAY, fontSize: 13, background: `${k.tone}15`, border: `1px solid ${k.tone}55` }}>{k.g}</span>
-                  <span style={{ fontFamily: DISPLAY, fontSize: 14, color: k.tone, letterSpacing: '-0.01em' }}>{bet.title?.toUpperCase()}</span>
-                  {bet.scope_ref && <span style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.18em' }}>· MD{bet.scope_ref}</span>}
-                  <span style={{ flex: 1 }} />
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+                  <span style={{ width: 22, height: 22, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', color: k.tone, fontFamily: DISPLAY, fontSize: 13, background: `${k.tone}15`, border: `1px solid ${k.tone}55`, flexShrink: 0 }}>{k.g}</span>
+                  <span style={{ fontFamily: DISPLAY, fontSize: 'clamp(12px, 3vw, 14px)', color: k.tone, letterSpacing: '-0.01em', minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>{bet.title?.toUpperCase()}</span>
+                  {bet.scope_ref && <span style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.18em', flexShrink: 0 }}>· MD{bet.scope_ref}</span>}
                   {bet.status !== 'resolved' && (
-                    <span style={{ fontFamily: MONO, fontSize: 10, color: 'var(--positive)', padding: '3px 7px', border: '1px solid rgba(34,197,94,.55)', background: 'rgba(34,197,94,.08)', letterSpacing: '.18em' }}>
+                    <span style={{ fontFamily: MONO, fontSize: 10, color: 'var(--positive)', padding: '3px 7px', border: '1px solid rgba(34,197,94,.55)', background: 'rgba(34,197,94,.08)', letterSpacing: '.18em', flexShrink: 0 }}>
                       +{bet.reward_value} {bet.reward_type === 'budget' ? 'M' : 'PTS'}
                     </span>
                   )}
@@ -75,24 +86,26 @@ export default function BetsTabHub({ leagueId, squadId, onReplayTour }) {
 
   return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: 'var(--ink)' }}>
-      {/* Hero strip */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1.6fr 1fr 1fr 1fr', borderBottom: '1px solid var(--rule)', background: 'var(--ink-2)', flexShrink: 0 }}>
-        <div data-tour="bets-header" style={{ padding: '20px 24px', borderRight: '1px solid var(--rule)' }}>
-          <div style={{ fontFamily: MONO, fontSize: 10, color: 'var(--cyan)', letterSpacing: '.22em' }}>BETS &amp; PREDICTIONS · GW—</div>
-          <div style={{ fontFamily: DISPLAY, fontSize: 26, marginTop: 6, lineHeight: 1.1 }}>Make your picks before the deadline.</div>
-          <div style={{ fontFamily: MONO, fontSize: 10, color: 'var(--mute)', marginTop: 8, letterSpacing: '.16em' }}>WIN BONUS POINTS — STACK THEM ONTO YOUR LEAGUE TOTAL.</div>
+      {/* Hero strip — desktop 4-col, mobile stacked */}
+      <div data-tour="bets-header" style={{ borderBottom: '1px solid var(--rule)', background: 'var(--ink-2)', flexShrink: 0 }}>
+        {/* Top section: title + mini stats */}
+        <div style={{ padding: 'clamp(12px, 2vw, 20px) clamp(14px, 3vw, 24px)', borderBottom: '1px solid var(--rule)' }}>
+          <div style={{ fontFamily: MONO, fontSize: 'clamp(9px, 1.8vw, 10px)', color: 'var(--cyan)', letterSpacing: '.22em' }}>BETS &amp; PREDICTIONS · GW—</div>
+          <div style={{ fontFamily: DISPLAY, fontSize: 'clamp(18px, 4vw, 26px)', marginTop: 6, lineHeight: 1.1 }}>Make your picks before the deadline.</div>
         </div>
-        {[
-          { k: 'OPEN',    v: open.length,    sub: 'Picks required',   tone: 'var(--cyan)'     },
-          { k: 'PENDING', v: pending.length, sub: 'Awaiting result',  tone: 'var(--gold)'     },
-          { k: 'THIS GW', v: `+${ptsBanked}`,sub: 'Pts banked',       tone: 'var(--positive)' },
-        ].map((c, i) => (
-          <div key={c.k} style={{ padding: '20px 22px', borderRight: i < 2 ? '1px solid var(--rule)' : 'none', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-            <div style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.22em' }}>{c.k}</div>
-            <div style={{ fontFamily: DISPLAY, fontSize: 32, color: c.tone, marginTop: 6, letterSpacing: '-0.02em' }}>{c.v}</div>
-            <div style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', marginTop: 6, letterSpacing: '.16em' }}>{c.sub}</div>
-          </div>
-        ))}
+        {/* Stats row */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr' }}>
+          {[
+            { k: 'OPEN',    v: open.length,     tone: 'var(--cyan)'     },
+            { k: 'PENDING', v: pending.length,  tone: 'var(--gold)'     },
+            { k: 'BANKED',  v: `+${ptsBanked}`, tone: 'var(--positive)' },
+          ].map((c, i) => (
+            <div key={c.k} style={{ padding: 'clamp(8px, 2vw, 16px) clamp(10px, 2.5vw, 20px)', borderRight: i < 2 ? '1px solid var(--rule)' : 'none' }}>
+              <div style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.22em' }}>{c.k}</div>
+              <div style={{ fontFamily: DISPLAY, fontSize: 'clamp(20px, 4vw, 30px)', color: c.tone, marginTop: 4, letterSpacing: '-0.02em' }}>{c.v}</div>
+            </div>
+          ))}
+        </div>
       </div>
 
       {/* Sections */}

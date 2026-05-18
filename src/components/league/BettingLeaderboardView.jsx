@@ -6,28 +6,30 @@ export default function BettingLeaderboardView({ leaderboard, currentUser, betLo
 
   return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: 'var(--ink)' }}>
-      {/* Hero strip */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr 1fr 1fr 1fr', borderBottom: '1px solid var(--rule)', background: 'var(--ink-2)', flexShrink: 0 }}>
-        <div style={{ padding: '20px 24px', borderRight: '1px solid var(--rule)' }}>
-          <div style={{ fontFamily: MONO, fontSize: 10, color: 'var(--cyan)', letterSpacing: '.22em' }}>YOUR BETTING · SEASON</div>
-          <div style={{ fontFamily: DISPLAY, fontSize: 28, marginTop: 6, color: 'var(--paper)' }}>
+      {/* Hero strip — responsive */}
+      <div style={{ borderBottom: '1px solid var(--rule)', background: 'var(--ink-2)', flexShrink: 0 }}>
+        <div style={{ padding: 'clamp(12px, 2vw, 20px) clamp(14px, 3vw, 24px)', borderBottom: '1px solid var(--rule)' }}>
+          <div style={{ fontFamily: MONO, fontSize: 'clamp(9px, 1.8vw, 10px)', color: 'var(--cyan)', letterSpacing: '.22em' }}>YOUR BETTING · SEASON</div>
+          <div style={{ fontFamily: DISPLAY, fontSize: 'clamp(20px, 4vw, 28px)', marginTop: 6, color: 'var(--paper)' }}>
             {myEntry ? `+${myEntry.total_rewards} PTS` : '—'}
           </div>
-          <div style={{ fontFamily: MONO, fontSize: 10, color: 'var(--mute)', marginTop: 8, letterSpacing: '.18em' }}>
+          <div style={{ fontFamily: MONO, fontSize: 10, color: 'var(--mute)', marginTop: 6, letterSpacing: '.18em' }}>
             {myEntry && leaderboard?.length ? `RANK ${myIdx + 1} / ${leaderboard.length} IN LEAGUE` : 'NO BETS YET'}
           </div>
         </div>
-        {[
-          { k: 'PLAYED',  v: myEntry?.total_bets    || '—', tone: 'var(--paper)'   },
-          { k: 'WON',     v: myEntry?.correct_bets  || '—', tone: 'var(--positive)' },
-          { k: 'WIN %',   v: myEntry ? `${myEntry.accuracy_pct}%` : '—', tone: 'var(--cyan)' },
-          { k: 'REWARDS', v: myEntry ? `+${myEntry.total_rewards}` : '—', tone: 'var(--gold)' },
-        ].map((c, i) => (
-          <div key={c.k} style={{ padding: '20px 22px', borderRight: i < 3 ? '1px solid var(--rule)' : 'none' }}>
-            <div style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.22em' }}>{c.k}</div>
-            <div style={{ fontFamily: DISPLAY, fontSize: 30, color: c.tone, marginTop: 6, letterSpacing: '-0.02em' }}>{c.v}</div>
-          </div>
-        ))}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr' }}>
+          {[
+            { k: 'PLAYED',  v: myEntry?.total_bets    || '—', tone: 'var(--paper)'    },
+            { k: 'WON',     v: myEntry?.correct_bets  || '—', tone: 'var(--positive)' },
+            { k: 'WIN %',   v: myEntry ? `${myEntry.accuracy_pct}%` : '—', tone: 'var(--cyan)' },
+            { k: 'REWARDS', v: myEntry ? `+${myEntry.total_rewards}` : '—', tone: 'var(--gold)' },
+          ].map((c, i) => (
+            <div key={c.k} style={{ padding: 'clamp(8px, 2vw, 16px) clamp(8px, 2vw, 20px)', borderRight: i < 3 ? '1px solid var(--rule)' : 'none' }}>
+              <div style={{ fontFamily: MONO, fontSize: 'clamp(8px, 1.5vw, 9px)', color: 'var(--mute)', letterSpacing: '.22em' }}>{c.k}</div>
+              <div style={{ fontFamily: DISPLAY, fontSize: 'clamp(18px, 3.5vw, 28px)', color: c.tone, marginTop: 4, letterSpacing: '-0.02em' }}>{c.v}</div>
+            </div>
+          ))}
+        </div>
       </div>
 
       {betLoading ? (

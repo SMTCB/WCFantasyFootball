@@ -24,6 +24,7 @@ import { useOnboarding } from '../hooks/useOnboarding';
 import OnboardingTour from '../components/OnboardingTour';
 import {
   HubTopbar, HubActionBar, HubTabs,
+  HubLeagueHeader, HubTabPills,
   MgrTag, TrendPill, FormDots, Spark, HubSectionLabel,
   miniBtnStyle, MONO, DISPLAY, mgrHue, mgrMono,
 } from '../components/league/HubShared';
@@ -585,37 +586,64 @@ export default function LeagueScreen() {
             onSkip={completeCommissionerTour}
           />
         )}
-        <HubTopbar
-          leagueName={name}
-          memberCount={members.length}
-          gw="—"
-          isLive={false}
-          onBack={() => navigate('/league')}
-          rightSlot={
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <NotificationPanel
-                notifications={notifications}
-                unreadCount={notificationCount}
-                onMarkAsRead={markNotificationAsRead}
-                onClearAll={clearAllNotifications}
-              />
-              <button
-                onClick={() => setNewLeague(activeLeague?.leagues || activeLeague)}
-                data-tour="league-invite"
-                style={{ background: 'transparent', border: '1px solid rgba(0,180,216,.4)', color: 'var(--cyan)', padding: '6px 12px', fontFamily: MONO, fontSize: 10, letterSpacing: '.2em', cursor: 'pointer' }}
-              >+ INVITE</button>
-              <button
-                onClick={replayLeagueTour}
-                style={{ width: 20, height: 20, borderRadius: '50%', border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.4)', fontSize: 10, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-              >?</button>
-            </div>
-          }
-        />
+        {/* ── Desktop chrome (hidden on mobile) ─────────────────────────── */}
+        <div className="hidden lg:block">
+          <HubTopbar
+            leagueName={name}
+            memberCount={members.length}
+            gw="—"
+            isLive={false}
+            onBack={() => navigate('/league')}
+            rightSlot={
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <NotificationPanel
+                  notifications={notifications}
+                  unreadCount={notificationCount}
+                  onMarkAsRead={markNotificationAsRead}
+                  onClearAll={clearAllNotifications}
+                />
+                <button
+                  onClick={() => setNewLeague(activeLeague?.leagues || activeLeague)}
+                  data-tour="league-invite"
+                  style={{ background: 'transparent', border: '1px solid rgba(0,180,216,.4)', color: 'var(--cyan)', padding: '6px 12px', fontFamily: MONO, fontSize: 10, letterSpacing: '.2em', cursor: 'pointer' }}
+                >+ INVITE</button>
+                <button
+                  onClick={replayLeagueTour}
+                  style={{ width: 20, height: 20, borderRadius: '50%', border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.4)', fontSize: 10, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                >?</button>
+              </div>
+            }
+          />
+          <HubActionBar
+            onManageSquad={() => navigate(`/squad?leagueId=${activeLeague?.league_id}`)}
+            onMarket={() => navigate(`/market?leagueId=${activeLeague?.league_id}`)}
+          />
+        </div>
 
-        <HubActionBar
-          onManageSquad={() => navigate(`/squad?leagueId=${activeLeague?.league_id}`)}
-          onMarket={() => navigate(`/market?leagueId=${activeLeague?.league_id}`)}
-        />
+        {/* ── Mobile chrome (hidden on desktop) ─────────────────────────── */}
+        <div className="lg:hidden">
+          <HubLeagueHeader
+            leagueName={name}
+            memberCount={members.length}
+            gw="—"
+            onBack={() => navigate('/league')}
+            rightSlot={
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <NotificationPanel
+                  notifications={notifications}
+                  unreadCount={notificationCount}
+                  onMarkAsRead={markNotificationAsRead}
+                  onClearAll={clearAllNotifications}
+                />
+                <button
+                  onClick={() => setNewLeague(activeLeague?.leagues || activeLeague)}
+                  data-tour="league-invite"
+                  style={{ background: 'transparent', border: '1px solid rgba(0,180,216,.4)', color: 'var(--cyan)', padding: '4px 8px', fontFamily: MONO, fontSize: 9, letterSpacing: '.2em', cursor: 'pointer' }}
+                >+ INVITE</button>
+              </div>
+            }
+          />
+        </div>
 
         <TransferWindowBanner {...transferWindow} />
 
@@ -642,8 +670,20 @@ export default function LeagueScreen() {
           </div>
         )}
 
-        <div data-tour="league-tabs">
+        {/* ── Desktop tabs (hidden on mobile) ───────────────────────────── */}
+        <div className="hidden lg:block" data-tour="league-tabs">
           <HubTabs
+            active={viewToTab(view)}
+            onTab={t => setView(tabToView(t))}
+            isCommissioner={isCommissioner}
+            unreadChat={unreadCount}
+            notifyBets={notificationCount > 0}
+          />
+        </div>
+
+        {/* ── Mobile tab pills (hidden on desktop) ──────────────────────── */}
+        <div className="lg:hidden" data-tour="league-tabs">
+          <HubTabPills
             active={viewToTab(view)}
             onTab={t => setView(tabToView(t))}
             isCommissioner={isCommissioner}
@@ -791,7 +831,7 @@ export default function LeagueScreen() {
            const ftMono = "'JetBrains Mono', monospace";
            const today = new Date().toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'long', year: 'numeric' });
            return (
-             <div style={{ flex: 1, overflow: 'auto', padding: '20px 28px 40px', background: 'var(--ink)' }}>
+             <div style={{ flex: 1, overflow: 'auto', padding: 'clamp(8px, 3vw, 20px) clamp(8px, 3vw, 28px) 40px', background: 'var(--ink)' }}>
                {members && members.length <= 1 ? (
                  /* Empty state */
                  <div style={{ background: FT_PAPER, color: FT_INK, padding: '48px', textAlign: 'center', boxShadow: '0 30px 60px -20px rgba(0,0,0,.5)' }}>
@@ -809,28 +849,28 @@ export default function LeagueScreen() {
                  </div>
                ) : (
                  /* Newspaper layout */
-                 <div style={{ background: FT_PAPER, color: FT_INK, boxShadow: '0 30px 60px -20px rgba(0,0,0,.5), 0 2px 0 0 #C9C2B3', padding: '34px 44px' }}>
+                 <div style={{ background: FT_PAPER, color: FT_INK, boxShadow: '0 30px 60px -20px rgba(0,0,0,.5), 0 2px 0 0 #C9C2B3', padding: 'clamp(16px, 5vw, 34px) clamp(14px, 5vw, 44px)' }}>
                    {/* Masthead */}
-                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', fontFamily: ftMono, fontSize: 11, letterSpacing: '.18em', color: FT_INK }}>
+                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', fontFamily: ftMono, fontSize: 'clamp(8px, 2vw, 11px)', letterSpacing: '.18em', color: FT_INK, flexWrap: 'wrap', gap: 4 }}>
                      <span>VOL · I</span>
-                     <span style={{ fontFamily: ftSerif, fontStyle: 'italic', fontSize: 14, letterSpacing: 0 }}>The Official Gazette of {name}</span>
+                     <span style={{ fontFamily: ftSerif, fontStyle: 'italic', fontSize: 'clamp(10px, 2.5vw, 14px)', letterSpacing: 0 }}>The Official Gazette of {name}</span>
                      <span>EDITION · #1</span>
                    </div>
                    <div style={{ textAlign: 'center', marginTop: 6 }}>
-                     <div style={{ fontFamily: ftSerif, fontWeight: 900, fontStyle: 'italic', fontSize: 72, letterSpacing: '-0.03em', lineHeight: 0.9, color: FT_INK }}>FORZA TIMES</div>
-                     <div style={{ fontFamily: ftSerif, fontStyle: 'italic', fontSize: 13, color: FT_MUTE, marginTop: 6 }}>
+                     <div style={{ fontFamily: ftSerif, fontWeight: 900, fontStyle: 'italic', fontSize: 'clamp(38px, 10vw, 72px)', letterSpacing: '-0.03em', lineHeight: 0.9, color: FT_INK }}>FORZA TIMES</div>
+                     <div style={{ fontFamily: ftSerif, fontStyle: 'italic', fontSize: 'clamp(10px, 2vw, 13px)', color: FT_MUTE, marginTop: 6 }}>
                        "All the points that's fit to print" · {today} · £0.00 to subscribers
                      </div>
                    </div>
                    <div style={{ border: 0, height: 1, background: FT_INK, margin: '18px 0 4px' }} />
                    <div style={{ height: 4, background: FT_INK, margin: '0 0 22px' }} />
 
-                   {/* Cover grid */}
-                   <div style={{ display: 'grid', gridTemplateColumns: '2.1fr 1fr 1.2fr', gap: 28 }}>
+                   {/* Cover grid — 3-col on desktop, single col on mobile */}
+                   <div className="grid grid-cols-1 lg:grid-cols-3" style={{ gap: 28 }}>
                      {/* Lead story — standings snapshot */}
                      <article>
                        <div style={{ fontFamily: ftMono, fontSize: 10, letterSpacing: '.22em', color: FT_RED, marginBottom: 8 }}>LEAGUE STANDINGS · LATEST</div>
-                       <h1 style={{ fontFamily: ftSerif, fontWeight: 900, fontSize: 44, lineHeight: 0.98, letterSpacing: '-0.025em', color: FT_INK, marginBottom: 14 }}>
+                       <h1 style={{ fontFamily: ftSerif, fontWeight: 900, fontSize: 'clamp(24px, 6vw, 44px)', lineHeight: 0.98, letterSpacing: '-0.025em', color: FT_INK, marginBottom: 14 }}>
                          {members[0] ? `${(members[0].users?.username || 'Unknown').toUpperCase()} leads the table.` : 'The season is yet to begin.'}
                        </h1>
                        {/* Placeholder image */}
@@ -1026,50 +1066,6 @@ export default function LeagueScreen() {
              sellNow={sellNow}
              onToast={showToast}
            />
-         )}
-         {view === 'auctions__old' && (
-           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: 'var(--ink)' }}>
-             <div style={{ padding: '20px 28px', borderBottom: '1px solid var(--rule)', background: 'var(--ink-2)', display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr', flexShrink: 0 }}>
-               <div style={{ borderRight: '1px solid var(--rule)', paddingRight: 24 }}>
-                 <div style={{ fontFamily: MONO, fontSize: 10, color: 'var(--gold)', letterSpacing: '.22em' }}>AUCTION HOUSE · {name.toUpperCase()}</div>
-                 <div style={{ fontFamily: DISPLAY, fontSize: 24, marginTop: 6 }}>Open bids. No two managers own the same player.</div>
-               </div>
-               {[
-                 { k: 'LIVE', v: auctions.filter(a => a.status === 'active').length, tone: 'var(--danger)' },
-                 { k: 'LISTED', v: auctions.length, tone: 'var(--gold)' },
-                 { k: 'STATUS', v: auctionsLoading ? '…' : 'LIVE', tone: 'var(--cyan)' },
-               ].map((c, i) => (
-                 <div key={c.k} style={{ padding: '0 22px', borderRight: i < 2 ? '1px solid var(--rule)' : 'none' }}>
-                   <div style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.22em' }}>{c.k}</div>
-                   <div style={{ fontFamily: DISPLAY, fontSize: 28, color: c.tone, marginTop: 6, letterSpacing: '-0.02em' }}>{c.v}</div>
-                 </div>
-               ))}
-             </div>
-             <div style={{ flex: 1, overflow: 'auto', padding: '0 0 80px' }}>
-               {auctionsLoading && (
-                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '64px 28px' }}>
-                   <div style={{ fontFamily: MONO, fontSize: 10, color: 'var(--mute)', letterSpacing: '.2em' }}>SYNCING AUCTIONS…</div>
-                 </div>
-               )}
-               {!auctionsLoading && auctions.length === 0 && (
-                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '64px 28px', gap: 12 }}>
-                   <div style={{ fontSize: 28 }}>🔨</div>
-                   <div style={{ fontFamily: MONO, fontSize: 11, color: 'var(--mute)', letterSpacing: '.2em' }}>NO ACTIVE AUCTIONS</div>
-                   <div style={{ fontFamily: "'Archivo', sans-serif", fontSize: 11, color: 'var(--mute)', opacity: 0.6, maxWidth: 320, textAlign: 'center' }}>List a player for auction from your Squad screen to start bidding.</div>
-                 </div>
-               )}
-               {auctions.map(auction => (
-                 <AuctionCard
-                   key={auction.id}
-                   auction={auction}
-                   mySquadId={mySquadId}
-                   onBid={async (id, amount) => { const res = await placeBid(id, amount); if (res.ok) showToast('Bid placed!', 'success'); return res; }}
-                   onCancel={async (id) => { const res = await cancelListing(id); if (res.ok) showToast('Listing cancelled.', 'info'); return res; }}
-                   onSellNow={async (id) => { const res = await sellNow(id); if (res.ok) showToast('Player sold!', 'success'); return res; }}
-                 />
-               ))}
-             </div>
-           </div>
          )}
 
          {view === 'chat' && (
