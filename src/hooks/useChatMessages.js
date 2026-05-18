@@ -235,11 +235,13 @@ export function useChatMessages(leagueId) {
   // Send a message
   const sendMessage = useCallback(async (messageText, mentionedUserIds = []) => {
     if (!leagueId || !user?.id || !messageText.trim()) {
+      console.warn('[useChatMessages] sendMessage: Invalid input', { leagueId, userId: user?.id, msgLength: messageText?.trim?.()?.length });
       return { ok: false, error: 'Invalid input' };
     }
 
     try {
-      const { error } = await supabase
+      console.log('[useChatMessages] Sending message:', { leagueId, userId: user.id, message: messageText.trim() });
+      const { data, error } = await supabase
         .from('chat_messages')
         .insert([{
           league_id: leagueId,
@@ -249,13 +251,14 @@ export function useChatMessages(leagueId) {
         }]);
 
       if (error) {
-        console.error('useChatMessages: sendMessage failed', error);
+        console.error('[useChatMessages] sendMessage failed - Supabase error:', { code: error.code, message: error.message, details: error.details, hint: error.hint });
         return { ok: false, error: error.message };
       }
 
+      console.log('[useChatMessages] Message sent successfully, data:', data);
       return { ok: true };
     } catch (err) {
-      console.error('useChatMessages: sendMessage exception', err);
+      console.error('[useChatMessages] sendMessage exception:', err);
       return { ok: false, error: err.message };
     }
   }, [leagueId, user?.id]);
