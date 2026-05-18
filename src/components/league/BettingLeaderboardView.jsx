@@ -39,13 +39,13 @@ export default function BettingLeaderboardView({ leaderboard, currentUser, betLo
           <div style={{ fontFamily: MONO, fontSize: 11, color: 'var(--mute)', letterSpacing: '.2em' }}>NO RESOLVED BETS YET</div>
         </div>
       ) : (
-        <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '1.4fr 1fr', minHeight: 0 }}>
+        <div className="hidden lg:grid lg:grid-cols-2 lg:min-h-0" style={{ flex: 1, display: 'grid', gridTemplateColumns: '1fr', minHeight: 0 }}>
           {/* Leaderboard */}
-          <div style={{ display: 'flex', flexDirection: 'column', borderRight: '1px solid var(--rule)' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', borderRight: '1px solid var(--rule)', borderBottom: '1px solid var(--rule)' }} className="lg:border-b-0">
             <HubSectionLabel label="BETTING LEADERBOARD" sub="POINTS FROM BETS · SEASON"
               right={<span style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)' }}>SORT · REWARDS ↓</span>}
             />
-            <div style={{ display: 'grid', gridTemplateColumns: '40px 1fr 100px 70px 70px 80px', gap: 14, padding: '10px 22px', borderBottom: '1px solid var(--rule)', color: 'var(--mute)' }}>
+            <div className="hidden lg:grid" style={{ display: 'grid', gridTemplateColumns: '40px 1fr 100px 70px 70px 80px', gap: 14, padding: '10px 22px', borderBottom: '1px solid var(--rule)', color: 'var(--mute)' }}>
               {['#', 'MANAGER', 'L8 GW', 'W-L', 'WIN %', 'REWARDS'].map(h => <span key={h} style={{ fontFamily: MONO, fontSize: 9 }}>{h}</span>)}
             </div>
             <div style={{ flex: 1, overflow: 'auto' }}>
@@ -55,28 +55,41 @@ export default function BettingLeaderboardView({ leaderboard, currentUser, betLo
                 const lost = entry.total_bets - entry.correct_bets;
                 const sparkData = Array.from({ length: 8 }, (_, j) => (j % 3 === 0 ? -2 : j % 2 === 0 ? 4 : 2));
                 return (
-                  <div key={entry.user_id} style={{ display: 'grid', gridTemplateColumns: '40px 1fr 100px 70px 70px 80px', gap: 14, padding: '12px 22px', borderBottom: '1px solid var(--rule)', alignItems: 'center', background: isMe ? 'rgba(0,180,216,.04)' : 'transparent', borderLeft: isMe ? '2px solid var(--cyan)' : '2px solid transparent' }}>
-                    <span style={{ fontFamily: DISPLAY, fontSize: 14 }}>{i + 1}</span>
+                  <div key={entry.user_id} className="lg:grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 8, padding: '12px 14px', borderBottom: '1px solid var(--rule)', alignItems: 'center', background: isMe ? 'rgba(0,180,216,.04)' : 'transparent', borderLeft: isMe ? '2px solid var(--cyan)' : '2px solid transparent' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                      <span style={{ fontFamily: DISPLAY, fontSize: 12, color: 'var(--mute)' }}>#{i + 1}</span>
                       <MgrTag mono={mgrMono(entry.username || '')} hue={hue} />
                       <span style={{ fontFamily: DISPLAY, fontSize: 13 }}>{isMe ? 'You' : entry.username}</span>
                     </div>
-                    <Spark data={sparkData} tone={i === 0 ? 'var(--gold)' : 'var(--cyan)'} w={88} h={22} />
-                    <span style={{ fontFamily: "'Archivo', sans-serif", fontSize: 12 }}>
-                      <span style={{ color: 'var(--positive)' }}>{entry.correct_bets}</span>
-                      <span style={{ color: 'var(--mute)' }}> · </span>
-                      <span style={{ color: 'var(--danger)' }}>{lost}</span>
-                    </span>
-                    <span style={{ textAlign: 'right', fontFamily: DISPLAY, fontSize: 13 }}>{entry.accuracy_pct}%</span>
-                    <span style={{ textAlign: 'right', fontFamily: DISPLAY, fontSize: 14, color: 'var(--positive)' }}>+{entry.total_rewards}</span>
+                    <div className="hidden lg:flex" style={{ display: 'flex', alignItems: 'center' }}>
+                      <Spark data={sparkData} tone={i === 0 ? 'var(--gold)' : 'var(--cyan)'} w={88} h={22} />
+                    </div>
+                    <div style={{ display: 'flex', gap: 12, alignItems: 'center', marginTop: '6px' }}>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontFamily: MONO, fontSize: 8, color: 'var(--mute)', letterSpacing: '.1em' }}>WIN RATE</div>
+                        <div style={{ fontFamily: DISPLAY, fontSize: 13, color: 'var(--cyan)' }}>{entry.accuracy_pct}%</div>
+                      </div>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontFamily: MONO, fontSize: 8, color: 'var(--mute)', letterSpacing: '.1em' }}>RECORD</div>
+                        <div style={{ fontFamily: "'Archivo', sans-serif", fontSize: 12 }}>
+                          <span style={{ color: 'var(--positive)' }}>{entry.correct_bets}</span>
+                          <span style={{ color: 'var(--mute)' }}>-</span>
+                          <span style={{ color: 'var(--danger)' }}>{lost}</span>
+                        </div>
+                      </div>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontFamily: MONO, fontSize: 8, color: 'var(--mute)', letterSpacing: '.1em' }}>REWARDS</div>
+                        <div style={{ fontFamily: DISPLAY, fontSize: 14, color: 'var(--positive)' }}>+{entry.total_rewards}</div>
+                      </div>
+                    </div>
                   </div>
                 );
               })}
             </div>
           </div>
 
-          {/* Right rail */}
-          <aside style={{ display: 'flex', flexDirection: 'column', background: 'var(--ink-2)', overflow: 'auto' }}>
+          {/* Right rail — desktop only */}
+          <aside className="hidden lg:flex" style={{ display: 'flex', flexDirection: 'column', background: 'var(--ink-2)', overflow: 'auto' }}>
             <HubSectionLabel label="YOUR PERFORMANCE" sub="BY BET TYPE" tone="var(--gold)" />
             <div style={{ padding: '14px 22px', display: 'flex', flexDirection: 'column', gap: 12, borderBottom: '1px solid var(--rule)' }}>
               {myEntry ? (
