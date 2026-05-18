@@ -153,7 +153,23 @@ export function useAutoFill(leagueId, squadData, fetchSquad, takenMap = {}) {
           query = query.eq('tournament_id', tournamentId);
         }
 
-        const { data: pool } = await query;
+        let { data: pool } = await query;
+
+        // Fallback: if tournament filter returned no results, try without tournament filter
+        // This handles case where tournament_id column exists but isn't populated on players
+        if (!pool?.length && tournamentId) {
+          const fallbackQuery = supabase
+            .from('players')
+            .select('id, name, position, club, price')
+            .in('position', dbPos)
+            .lte('price', budgetLeft)
+            .order('price', { ascending: true })
+            .limit(500);
+
+          const { data: fallbackPool } = await fallbackQuery;
+          pool = fallbackPool;
+        }
+
         if (!pool?.length) continue;
 
         // Pre-filter: remove my own players AND players taken by other managers
