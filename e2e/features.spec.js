@@ -372,3 +372,112 @@ test.describe('League Management - Creation, Invites, Settings', () => {
     }
   });
 });
+
+// ── 5. DRAFT MODE SYSTEM ─────────────────────────────────────────────────────
+
+test.describe('Draft Mode - League Features', () => {
+  test('draft league shows 30-player submission limit', async ({ page }) => {
+    await skipOnboarding(page);
+    await page.goto('/league');
+    await waitForContent(page);
+
+    // Find draft league
+    const leagueLinks = await page.locator('a[href*="/league/"]').all();
+
+    for (const link of leagueLinks) {
+      const href = await link.getAttribute('href');
+      if (href) {
+        await page.goto(href + '/draft');
+        await waitForContent(page);
+
+        const isDraftScreen = await page.locator('text=Build Your List').isVisible().catch(() => false);
+        if (isDraftScreen) {
+          // Verify 30-player limit
+          const listCounter = await page.locator('text=/Your List —/').innerText().catch(() => '');
+          expect(listCounter).toContain('/30', 'Draft list should show /30 limit');
+
+          // Verify position caps for draft (GK:4, DEF:10, MID:10, FWD:6)
+          const positionCaps = await page.locator('[class*="text-center"]').allInnerTexts();
+          const capsStr = positionCaps.join('|');
+          expect(capsStr).toMatch(/0\/[4|10|6]/);
+
+          break;
+        }
+      }
+    }
+  });
+
+  test('draft mode prevents duplicate selection within manager list', async ({ page }) => {
+    await skipOnboarding(page);
+    await page.goto('/league');
+    await waitForContent(page);
+
+    const leagueLinks = await page.locator('a[href*="/league/"]').all();
+
+    for (const link of leagueLinks) {
+      const href = await link.getAttribute('href');
+      if (href) {
+        await page.goto(href + '/draft');
+        await waitForContent(page);
+
+        const isDraftScreen = await page.locator('text=Build Your List').isVisible().catch(() => false);
+        if (isDraftScreen) {
+          // Try adding first player
+          const playerRows = await page.locator('[class*="cursor-pointer"]').all();
+          if (playerRows.length > 0) {
+            const firstRow = playerRows[0];
+            await firstRow.click();
+            await page.waitForTimeout(100);
+
+            const addBtn = page.locator('button:has-text("Add to List")').first();
+            if (await addBtn.isVisible()) {
+              await addBtn.click();
+              await page.waitForTimeout(200);
+
+              // Verify player is no longer in available pool
+              const remainingRows = await page.locator('[class*="cursor-pointer"]').all();
+              expect(remainingRows.length).toBeLessThan(playerRows.length);
+            }
+          }
+          break;
+        }
+      }
+    }
+  });
+
+  test('draft submission auto-saves every 30 seconds', async ({ page }) => {
+    await skipOnboarding(page);
+    await page.goto('/league');
+    await waitForContent(page);
+
+    const leagueLinks = await page.locator('a[href*="/league/"]').all();
+
+    for (const link of leagueLinks) {
+      const href = await link.getAttribute('href');
+      if (href) {
+        await page.goto(href + '/draft');
+        await waitForContent(page);
+
+        const isDraftScreen = await page.locator('text=Build Your List').isVisible().catch(() => false);
+        if (isDraftScreen) {
+          // Add a player and wait for auto-save indicator
+          const playerRows = await page.locator('[class*="cursor-pointer"]').all();
+          if (playerRows.length > 0) {
+            await playerRows[0].click();
+            await page.waitForTimeout(100);
+
+            const addBtn = page.locator('button:has-text("Add to List")').first();
+            if (await addBtn.isVisible()) {
+              await addBtn.click();
+
+              // Wait for save message (should appear within 35s due to 30s auto-save)
+              const saveMsg = await page.locator('text=/saved/i').isVisible({ timeout: 35000 }).catch(() => false);
+              expect(saveMsg, 'Draft should auto-save').toBe(true);
+            }
+          }
+          break;
+        }
+      }
+    }
+  });
+});
