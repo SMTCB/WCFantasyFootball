@@ -144,9 +144,14 @@ export function useAutoFill(leagueId, squadData, fetchSquad, takenMap = {}) {
       let lastBuyError    = null;
       let anyPoolFound    = false;
 
+      console.log('[useAutoFill] need:', need, 'have:', have, 'budgetLeft:', budgetLeft);
+
       // ── Fill each position ───────────────────────────────────────────────
       for (const pos of ['GK', 'DEF', 'MID', 'FWD']) {
-        if (!need[pos]) continue;
+        if (!need[pos]) {
+          console.log(`[useAutoFill] ${pos} skipped - need[${pos}] is 0`);
+          continue;
+        }
 
         const dbPos = pos === 'FWD' ? ['FWD', 'FW'] : [pos];
 
