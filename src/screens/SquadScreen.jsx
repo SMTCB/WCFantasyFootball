@@ -972,7 +972,17 @@ export default function SquadScreen() {
                     <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 9, color: 'var(--mute)', letterSpacing: '0.2em', textTransform: 'uppercase', marginBottom: 4 }}>Starting XI</div>
                     <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 28, color: 'var(--paper)', lineHeight: 1, letterSpacing: '-0.01em' }}>{formation || 'NO SQUAD'}</div>
                   </div>
+                  <button
+                    onClick={handleAutoFill}
+                    disabled={autoFilling}
+                    style={{ marginTop: 4, padding: '6px 10px', background: 'rgba(0,196,232,0.08)', border: '1px solid rgba(0,196,232,0.25)', color: autoFilling ? 'var(--mute)' : 'var(--cyan)', fontFamily: 'Archivo Black, sans-serif', fontSize: 8, letterSpacing: '0.1em', textTransform: 'uppercase', cursor: autoFilling ? 'wait' : 'pointer', flexShrink: 0, whiteSpace: 'nowrap' }}
+                  >
+                    {autoFilling ? 'FILLING…' : '⚡ QUICK FILL'}
+                  </button>
                 </div>
+                {autoFillMsg && (
+                  <div style={{ marginTop: 6, fontFamily: 'JetBrains Mono, monospace', fontSize: 9, color: 'var(--positive)' }}>{autoFillMsg}</div>
+                )}
                 <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 9, color: 'var(--mute)', letterSpacing: '0.14em', marginTop: 6 }}>
                   {captain ? `CAPTAIN ${captain.name.split(' ').slice(-1)[0].toUpperCase()}` : 'NO CAPTAIN'}
                   {squadData.matchdayId ? ` · GW ${squadData.matchdayId}` : ''}

@@ -69,7 +69,7 @@ export default function MarketScreen() {
   const squadSize  = cfg.squadSize;
 
   // League-scoped transfer state
-  const { buy, sell, isTaken, takenBy, isOwnedBy, takenMapError } = useTransfer(activeLeague);
+  const { buy, sell, isTaken, takenBy, isOwnedBy, takenMapError, takenMap } = useTransfer(activeLeague);
 
   // Fetch squad for auto-fill
   const fetchSquad = async () => {
@@ -93,7 +93,7 @@ export default function MarketScreen() {
   };
 
   // Auto-fill hook — reusable across screens
-  const { handleAutoFill, autoFilling, autoFillMsg } = useAutoFill(activeLeague, mySquad, fetchSquad);
+  const { handleAutoFill, autoFilling, autoFillMsg } = useAutoFill(activeLeague, mySquad, fetchSquad, takenMap);
 
   const resolveLeagueTournament = async (lid) => {
     const { data } = await supabase
