@@ -3,7 +3,7 @@ import { supabase } from '../lib/supabase';
 import { useTransfer } from './useTransfer';
 import { useLeagueConfig } from './useLeagueConfig';
 
-export function useAutoFill(leagueId, squadData, fetchSquad, takenMap = {}) {
+export function useAutoFill(leagueId, squadData, fetchSquad) {
   const [autoFilling, setAutoFilling] = useState(false);
   const [autoFillMsg, setAutoFillMsg] = useState(null);
 
@@ -25,7 +25,6 @@ export function useAutoFill(leagueId, squadData, fetchSquad, takenMap = {}) {
       }
 
       // Normalise player entries: DB rows give UUID strings, SquadScreen gives objects.
-      // Fetch full player objects when we only have IDs so position counts are accurate.
       let playerObjects = rawPlayers;
       if (rawPlayers.length > 0 && typeof rawPlayers[0] === 'string') {
         const { data: fetched } = await supabase
@@ -35,9 +34,9 @@ export function useAutoFill(leagueId, squadData, fetchSquad, takenMap = {}) {
         playerObjects = fetched || [];
       }
 
-      // Bench players: SquadScreen provides squadData.bench; raw DB row has no bench field.
       const benchPlayers = squadData?.bench || [];
 
+      // Build set of my own player IDs to avoid double-buying
       const myIds = new Set([
         ...playerObjects.map(p => p.id ?? p),
         ...benchPlayers.map(p => p.id ?? p),
@@ -59,10 +58,8 @@ export function useAutoFill(leagueId, squadData, fetchSquad, takenMap = {}) {
         need[pos] = Math.max(0, (minPer[pos] ?? 0) - have[pos]);
       }
 
-      // Cap min-fill slots to actual slots available
       let minTotal = Object.values(need).reduce((s, n) => s + n, 0);
       if (minTotal > slotsNeeded) {
-        // Trim excess from most-filled positions first
         let excess = minTotal - slotsNeeded;
         for (const pos of ['FWD', 'MID', 'DEF', 'GK']) {
           if (excess <= 0) break;
@@ -82,7 +79,6 @@ export function useAutoFill(leagueId, squadData, fetchSquad, takenMap = {}) {
         extra -= give;
       }
 
-      // Support both budget shapes: enriched {budget:{current}} and raw {budget_remaining}
       let budgetLeft = squadData?.budget?.current
         ?? squadData?.budget_remaining
         ?? cfg.budgetTotal
@@ -100,17 +96,21 @@ export function useAutoFill(leagueId, squadData, fetchSquad, takenMap = {}) {
           .in('position', dbPos)
           .lte('price', budgetLeft)
           .order('price', { ascending: true })
-          .limit(50);
+          .limit(200); // Fetch more so taken players don't exhaust the pool
 
-        // Exclude my own players + any player already taken by another manager in this league
-        const candidates = (pool || []).filter(p => !myIds.has(p.id) && !takenMap[p.id]);
+        // Exclude only MY own players — league-uniqueness is enforced by the transfer API
+        const candidates = (pool || []).filter(p => !myIds.has(p.id));
         if (candidates.length > 0) hasCandidates = true;
-        for (let i = 0; i < need[pos] && i < candidates.length; i++) {
+
+        // Try each candidate until need[pos] are successfully purchased
+        let bought = 0;
+        for (let i = 0; i < candidates.length && bought < need[pos]; i++) {
           const result = await buy(candidates[i]);
           if (result.ok) {
+            bought++;
             added++;
             budgetLeft = result.budget_remaining ?? budgetLeft - candidates[i].price;
-            myIds.add(candidates[i].id); // prevent double-buying same player in this run
+            myIds.add(candidates[i].id);
           } else {
             lastTransferError = result.error;
           }
@@ -126,19 +126,20 @@ export function useAutoFill(leagueId, squadData, fetchSquad, takenMap = {}) {
         if (budgetLeft < 5) {
           setAutoFillMsg('Insufficient budget — sell players to free up funds');
         } else {
-          setAutoFillMsg('All available players in needed positions are taken or above budget');
+          setAutoFillMsg('No players found in these positions within your budget');
         }
       } else {
-        setAutoFillMsg(lastTransferError || 'Transfer failed — check the transfer window is open');
+        // Candidates existed but all buys failed — likely all taken by other managers
+        setAutoFillMsg(lastTransferError || 'Could not sign players — they may already be taken. Refresh and try again.');
       }
     } catch {
       setAutoFillMsg('Auto-fill failed — try again');
     } finally {
       setAutoFilling(false);
-      setTimeout(() => setAutoFillMsg(null), 5000);
+      setTimeout(() => setAutoFillMsg(null), 6000);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [leagueId, squadData, buy, fetchSquad, takenMap]);
+  }, [leagueId, squadData, buy, fetchSquad]);
 
   return { handleAutoFill, autoFilling, autoFillMsg };
 }
