@@ -52,16 +52,7 @@ export function useChatMessages(leagueId) {
     try {
       const { data: msgs, error } = await supabase
         .from('chat_messages')
-        .select(`
-          id,
-          league_id,
-          user_id,
-          message,
-          created_at,
-          is_deleted,
-          edited_at,
-          users!inner(id, username)
-        `)
+        .select('id, league_id, user_id, message, created_at, is_deleted, edited_at')
         .eq('league_id', leagueId)
         .order('created_at', { ascending: true })
         .limit(100);
@@ -72,10 +63,25 @@ export function useChatMessages(leagueId) {
       }
 
       console.log('[useChatMessages] Loaded', (msgs || []).length, 'messages from database');
+
+      // Fetch usernames for any uncached users
+      const uncachedUserIds = (msgs || [])
+        .map(m => m.user_id)
+        .filter(id => id && !userMetaCache.current[id]);
+
+      if (uncachedUserIds.length > 0) {
+        const { data: users } = await supabase
+          .from('users')
+          .select('id, username')
+          .in('id', uncachedUserIds);
+
+        (users || []).forEach(u => {
+          userMetaCache.current[u.id] = { displayName: u.username || 'Unknown' };
+        });
+      }
+
       const formattedMsgs = (msgs || []).map(msg => {
-        const displayName = msg.users?.username || 'Unknown';
-        // Seed cache from join data so Realtime callbacks don't need to refetch known authors
-        if (msg.user_id) userMetaCache.current[msg.user_id] = { displayName };
+        const displayName = userMetaCache.current[msg.user_id]?.displayName || 'Unknown';
         return {
           id: msg.id,
           userId: msg.user_id,
