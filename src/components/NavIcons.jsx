@@ -4,10 +4,10 @@
  * Schematic set representing formation density and match data.
  */
 
-const CYAN   = '#00B4D8';
-const PAPER  = '#F2EEE5';
-const MUTE   = '#8B95A1';
-const DANGER = '#EF4444';
+const CYAN   = 'var(--cyan)';
+const PAPER  = 'var(--paper)';
+const MUTE   = 'var(--mute)';
+const DANGER = 'var(--danger)';
 
 export const NavIconScores = ({ size = 24 }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">

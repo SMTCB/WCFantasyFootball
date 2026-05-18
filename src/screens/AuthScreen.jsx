@@ -14,6 +14,7 @@ import { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import BrandMark from '../components/BrandMark';
+import Button from '../components/Button';
 
 // ── Tab types ──────────────────────────────────────────────────────────────────
 const TAB_SIGNIN  = 'signin';
@@ -114,22 +115,6 @@ export default function AuthScreen() {
     fontFamily: 'Archivo Black, sans-serif',
   };
 
-  const btnPrimary = {
-    width: '100%',
-    padding: '14px',
-    background: 'var(--cyan)',
-    color: '#000',
-    border: 'none',
-    borderRadius: '4px',
-    fontSize: '12px',
-    fontWeight: 800,
-    letterSpacing: '0.12em',
-    textTransform: 'uppercase',
-    cursor: loading ? 'not-allowed' : 'pointer',
-    opacity: loading ? 0.6 : 1,
-    fontFamily: 'Archivo Black, sans-serif',
-    transition: 'opacity 0.15s',
-  };
 
   // ── Recover password form (from email link) ──────────────────────────────────
   if (tab === TAB_RECOVER) {
@@ -139,17 +124,17 @@ export default function AuthScreen() {
           Set New Password
         </h2>
         <form onSubmit={handleUpdatePassword} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          <Field label="New Password" style={fieldStyle} labelStyle={labelStyle}>
-            <input type="password" style={fieldStyle} value={password} onChange={e => setPassword(e.target.value)} required minLength={8} placeholder="Min. 8 characters" />
+          <Field label="New Password" labelStyle={labelStyle} htmlFor="auth-recover-password">
+            <input id="auth-recover-password" type="password" style={fieldStyle} value={password} onChange={e => setPassword(e.target.value)} required minLength={8} placeholder="Min. 8 characters" />
           </Field>
-          <Field label="Confirm Password" style={fieldStyle} labelStyle={labelStyle}>
-            <input type="password" style={fieldStyle} value={confirm} onChange={e => setConfirm(e.target.value)} required placeholder="Repeat password" />
+          <Field label="Confirm Password" labelStyle={labelStyle} htmlFor="auth-recover-confirm">
+            <input id="auth-recover-confirm" type="password" style={fieldStyle} value={confirm} onChange={e => setConfirm(e.target.value)} required placeholder="Repeat password" />
           </Field>
           {error   && <Msg type="error">{error}</Msg>}
           {success && <Msg type="success">{success}</Msg>}
-          <button type="submit" style={btnPrimary} disabled={loading}>
+          <Button type="submit" size="lg" fullWidth loading={loading}>
             {loading ? 'Saving…' : 'Update Password'}
-          </button>
+          </Button>
         </form>
       </AuthShell>
     );
@@ -159,9 +144,15 @@ export default function AuthScreen() {
   if (tab === TAB_RESET) {
     return (
       <AuthShell>
-        <button onClick={() => switchTab(TAB_SIGNIN)} style={{ background: 'none', border: 'none', color: 'var(--mute)', fontSize: '11px', fontWeight: 700, cursor: 'pointer', marginBottom: '20px', padding: 0, fontFamily: 'Archivo Black, sans-serif', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
-          ← Back to Sign In
-        </button>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => switchTab(TAB_SIGNIN)}
+          leftIcon={<span aria-hidden="true">←</span>}
+          style={{ marginBottom: '20px', alignSelf: 'flex-start' }}
+        >
+          Back to Sign In
+        </Button>
         <h2 style={{ fontSize: '20px', fontWeight: 900, color: 'var(--paper)', marginBottom: '8px', fontFamily: 'Archivo Black, sans-serif', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
           Reset Password
         </h2>
@@ -169,14 +160,14 @@ export default function AuthScreen() {
           Enter your email and we'll send a reset link.
         </p>
         <form onSubmit={handleReset} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          <Field label="Email" labelStyle={labelStyle}>
-            <input type="email" style={fieldStyle} value={email} onChange={e => setEmail(e.target.value)} required placeholder="your@email.com" />
+          <Field label="Email" labelStyle={labelStyle} htmlFor="auth-reset-email">
+            <input id="auth-reset-email" type="email" style={fieldStyle} value={email} onChange={e => setEmail(e.target.value)} required placeholder="your@email.com" autoComplete="email" />
           </Field>
           {error   && <Msg type="error">{error}</Msg>}
           {success && <Msg type="success">{success}</Msg>}
-          <button type="submit" style={btnPrimary} disabled={loading}>
+          <Button type="submit" size="lg" fullWidth loading={loading}>
             {loading ? 'Sending…' : 'Send Reset Link'}
-          </button>
+          </Button>
         </form>
       </AuthShell>
     );
@@ -196,7 +187,7 @@ export default function AuthScreen() {
               padding: '10px',
               background: 'none',
               border: 'none',
-              borderBottom: tab === t.id ? '2px solid #00C4E8' : '2px solid transparent',
+              borderBottom: tab === t.id ? '2px solid var(--cyan)' : '2px solid transparent',
               color: tab === t.id ? 'var(--paper)' : 'var(--mute)',
               fontSize: '11px',
               fontWeight: 800,
@@ -215,47 +206,48 @@ export default function AuthScreen() {
       {/* Sign In */}
       {tab === TAB_SIGNIN && (
         <form onSubmit={handleSignIn} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          <Field label="Email" labelStyle={labelStyle}>
-            <input type="email" style={fieldStyle} value={email} onChange={e => setEmail(e.target.value)} required placeholder="your@email.com" autoComplete="email" />
+          <Field label="Email" labelStyle={labelStyle} htmlFor="auth-signin-email">
+            <input id="auth-signin-email" type="email" style={fieldStyle} value={email} onChange={e => setEmail(e.target.value)} required placeholder="your@email.com" autoComplete="email" />
           </Field>
-          <Field label="Password" labelStyle={labelStyle}>
-            <input type="password" style={fieldStyle} value={password} onChange={e => setPassword(e.target.value)} required placeholder="••••••••" autoComplete="current-password" />
+          <Field label="Password" labelStyle={labelStyle} htmlFor="auth-signin-password">
+            <input id="auth-signin-password" type="password" style={fieldStyle} value={password} onChange={e => setPassword(e.target.value)} required placeholder="••••••••" autoComplete="current-password" />
           </Field>
           {error   && <Msg type="error">{error}</Msg>}
           {success && <Msg type="success">{success}</Msg>}
-          <button type="submit" style={btnPrimary} disabled={loading}>
+          <Button type="submit" size="lg" fullWidth loading={loading}>
             {loading ? 'Signing in…' : 'Sign In'}
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
+            variant="ghost"
+            size="sm"
             onClick={() => switchTab(TAB_RESET)}
-            style={{ background: 'none', border: 'none', color: 'var(--mute)', fontSize: '11px', fontWeight: 600, cursor: 'pointer', padding: '4px 0', fontFamily: 'Archivo, sans-serif' }}
           >
             Forgot password?
-          </button>
+          </Button>
         </form>
       )}
 
       {/* Sign Up */}
       {tab === TAB_SIGNUP && (
         <form onSubmit={handleSignUp} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          <Field label="Username" labelStyle={labelStyle}>
-            <input type="text" style={fieldStyle} value={username} onChange={e => setUsername(e.target.value)} required placeholder="Your manager name" autoComplete="username" />
+          <Field label="Username" labelStyle={labelStyle} htmlFor="auth-signup-username">
+            <input id="auth-signup-username" type="text" style={fieldStyle} value={username} onChange={e => setUsername(e.target.value)} required placeholder="Your manager name" autoComplete="username" />
           </Field>
-          <Field label="Email" labelStyle={labelStyle}>
-            <input type="email" style={fieldStyle} value={email} onChange={e => setEmail(e.target.value)} required placeholder="your@email.com" autoComplete="email" />
+          <Field label="Email" labelStyle={labelStyle} htmlFor="auth-signup-email">
+            <input id="auth-signup-email" type="email" style={fieldStyle} value={email} onChange={e => setEmail(e.target.value)} required placeholder="your@email.com" autoComplete="email" />
           </Field>
-          <Field label="Password" labelStyle={labelStyle}>
-            <input type="password" style={fieldStyle} value={password} onChange={e => setPassword(e.target.value)} required placeholder="Min. 8 characters" autoComplete="new-password" minLength={8} />
+          <Field label="Password" labelStyle={labelStyle} htmlFor="auth-signup-password">
+            <input id="auth-signup-password" type="password" style={fieldStyle} value={password} onChange={e => setPassword(e.target.value)} required placeholder="Min. 8 characters" autoComplete="new-password" minLength={8} />
           </Field>
-          <Field label="Confirm Password" labelStyle={labelStyle}>
-            <input type="password" style={fieldStyle} value={confirm} onChange={e => setConfirm(e.target.value)} required placeholder="Repeat password" autoComplete="new-password" />
+          <Field label="Confirm Password" labelStyle={labelStyle} htmlFor="auth-signup-confirm">
+            <input id="auth-signup-confirm" type="password" style={fieldStyle} value={confirm} onChange={e => setConfirm(e.target.value)} required placeholder="Repeat password" autoComplete="new-password" />
           </Field>
           {error   && <Msg type="error">{error}</Msg>}
           {success && <Msg type="success">{success}</Msg>}
-          <button type="submit" style={btnPrimary} disabled={loading}>
+          <Button type="submit" size="lg" fullWidth loading={loading}>
             {loading ? 'Creating account…' : 'Create Account'}
-          </button>
+          </Button>
         </form>
       )}
     </AuthShell>
@@ -279,10 +271,10 @@ function AuthShell({ children }) {
   );
 }
 
-function Field({ label, labelStyle, children }) {
+function Field({ label, labelStyle, htmlFor, children }) {
   return (
     <div>
-      <label style={labelStyle}>{label}</label>
+      <label style={labelStyle} htmlFor={htmlFor}>{label}</label>
       {children}
     </div>
   );

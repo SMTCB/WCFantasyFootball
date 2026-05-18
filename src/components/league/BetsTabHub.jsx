@@ -109,7 +109,7 @@ export default function BetsTabHub({ leagueId, squadId, onReplayTour }) {
       </div>
 
       {/* Sections */}
-      <div data-tour="bets-list" style={{ flex: 1, overflow: 'auto', paddingBottom: 80 }}>
+      <div data-tour="bets-list" style={{ flex: 1, minHeight: 60, overflow: 'auto', paddingBottom: 80 }}>
         {loading && (
           <div style={{ padding: '48px 24px', textAlign: 'center', fontFamily: MONO, fontSize: 10, color: 'var(--mute)', letterSpacing: '.2em' }}>LOADING BETS…</div>
         )}

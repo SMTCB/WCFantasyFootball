@@ -6,10 +6,10 @@ import { supabase } from '../lib/supabase';
  * into a single hook. Extracted from LeagueScreen to reduce its complexity.
  *
  * Usage:
- *   const commissioner = useCommissioner(leagueId, user, showToast);
+ *   const commissioner = useCommissioner(leagueId);
  *   // then pass commissioner to <CommissionerPanel commissioner={commissioner} />
  */
-export function useCommissioner(leagueId, user, showToast) {
+export function useCommissioner(leagueId) {
   // ── Shared state ─────────────────────────────────────────────────────────
   const [commLoading, setCommLoading] = useState(false);
   const [commMsg,     setCommMsg]     = useState(null); // { type: 'ok'|'err', text }

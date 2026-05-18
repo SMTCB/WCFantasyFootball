@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { normalizeIntelligence } from '../lib/intelligence';
@@ -54,11 +54,13 @@ export default function MarketScreen() {
   const [activeLeague,  setActiveLeague]  = useState(leagueId);
   const [todayJokerId,  setTodayJokerId]  = useState(null);
   const [loading,       setLoading]       = useState(true);
-  const [filterPos,     setFilterPos]     = useState('ALL');
+  const [filterPos,     setFilterPos]     = useState(() => localStorage.getItem('market_filterPos') || 'ALL');
+  const [searchQuery,   setSearchQuery]   = useState(() => localStorage.getItem('market_searchQuery') || '');
   const [budget,        setBudget]        = useState(0);      // loaded from league config
   const [saving,        setSaving]        = useState(false);
   const [isLocked,      setIsLocked]      = useState(false);
   const [confirm,       setConfirm]       = useState(null);
+  const marketListRef   = useRef(null);
 
   // Competition-agnostic config from the selected league row
   const cfg = useLeagueConfig(activeLeague);
@@ -175,6 +177,35 @@ export default function MarketScreen() {
 
   useEffect(() => { fetchMarketParams(); }, [activeLeague]);
 
+  // Persist filter position to localStorage
+  useEffect(() => {
+    localStorage.setItem('market_filterPos', filterPos);
+  }, [filterPos]);
+
+  // Persist search query to localStorage
+  useEffect(() => {
+    localStorage.setItem('market_searchQuery', searchQuery);
+  }, [searchQuery]);
+
+  // Save scroll position on navigate away
+  useEffect(() => {
+    const saveScrollPosition = () => {
+      if (marketListRef.current) {
+        localStorage.setItem('market_scrollPos', marketListRef.current.scrollTop);
+      }
+    };
+    window.addEventListener('pagehide', saveScrollPosition);
+    return () => window.removeEventListener('pagehide', saveScrollPosition);
+  }, []);
+
+  // Restore scroll position on mount
+  useEffect(() => {
+    const savedScrollPos = localStorage.getItem('market_scrollPos');
+    if (savedScrollPos && marketListRef.current) {
+      marketListRef.current.scrollTop = parseInt(savedScrollPos, 10);
+    }
+  }, [activeLeague]);
+
   const stats = useMemo(() => {
     const posCounts = { GK: 0, DEF: 0, MID: 0, FWD: 0 };
     const countryCounts = {};
@@ -198,7 +229,10 @@ export default function MarketScreen() {
     try {
       setSaving(true);
       const result = await buy(player);
-      if (!result.ok) { showToast(result.error, 'error'); return; }
+      if (!result.ok) {
+        showToast(result.error, 'error', 5000, () => handleBuy(player));
+        return;
+      }
       setMySquad(prev => ({ ...prev, players: result.players, budget_remaining: result.budget_remaining }));
       setBudget(result.budget_remaining);
     } finally { setSaving(false); }
@@ -224,7 +258,10 @@ export default function MarketScreen() {
         try {
           setSaving(true);
           const result = await sell(player);
-          if (!result.ok) { showToast(result.error, 'error'); return; }
+          if (!result.ok) {
+            showToast(result.error, 'error', 5000, () => handleSell(player));
+            return;
+          }
           setMySquad(prev => ({ ...prev, players: result.players, budget_remaining: result.budget_remaining }));
           setBudget(result.budget_remaining);
         } finally { setSaving(false); }
@@ -232,7 +269,11 @@ export default function MarketScreen() {
     });
   };
 
-  const filteredPlayers = players.filter(p => filterPos === 'ALL' || p.position === filterPos);
+  const filteredPlayers = players.filter(p => {
+    const matchesPos = filterPos === 'ALL' || p.position === filterPos;
+    const matchesSearch = !searchQuery || p.name?.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchesPos && matchesSearch;
+  });
   const squadCount  = mySquad?.players?.length || 0;
   const emptySlots  = Math.max(0, squadSize - squadCount);
 
@@ -318,7 +359,7 @@ export default function MarketScreen() {
         }}
       >
         {/* Title + stats row */}
-        <div className="px-5 pt-3.5 pb-2.5 flex items-center justify-between">
+        <div className="px-5 pt-3.5 pb-2.5 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
           <div>
             <div
               className="fz-label"
@@ -328,7 +369,7 @@ export default function MarketScreen() {
             </div>
             <div className="flex items-center gap-2 mt-0.5">
               <div
-                className="text-[24px] font-black uppercase leading-tight tracking-tight"
+                className="text-[18px] lg:text-[24px] font-black uppercase leading-tight tracking-tight"
                 style={{ fontFamily: 'Archivo Black, sans-serif', color: 'var(--paper)' }}
               >
                 Player Market
@@ -350,32 +391,32 @@ export default function MarketScreen() {
             </div>
           </div>
 
-          <div className="flex items-center gap-5">
+          <div className="flex items-center gap-3 lg:gap-5 flex-wrap lg:flex-nowrap">
             {/* Squad count */}
             <div className="text-right">
-              <div className="fz-label" style={{ color: 'var(--mute)' }}>Squad</div>
+              <div className="fz-label" style={{ color: 'var(--mute)', fontSize: 10 }}>Squad</div>
               <div
-                className="text-[20px] font-black tabular-nums leading-tight"
+                className="text-[16px] lg:text-[20px] font-black tabular-nums leading-tight"
                 style={{ fontFamily: 'Archivo Black, sans-serif', color: squadCount >= squadSize ? 'var(--positive)' : 'var(--paper)' }}
               >
                 {squadCount}
-                <span className="text-[12px] font-normal" style={{ color: 'var(--mute)' }}>/{squadSize}</span>
+                <span className="text-[10px] lg:text-[12px] font-normal" style={{ color: 'var(--mute)' }}>/{squadSize}</span>
               </div>
             </div>
 
             {/* Budget + empty slots */}
             <div className="text-right" data-tour="market-budget">
-              <div className="fz-label" style={{ color: 'var(--mute)' }}>Budget</div>
+              <div className="fz-label" style={{ color: 'var(--mute)', fontSize: 10 }}>Budget</div>
               <div
-                className="text-[20px] font-black tabular-nums leading-tight"
+                className="text-[16px] lg:text-[20px] font-black tabular-nums leading-tight"
                 style={{ fontFamily: 'Archivo Black, sans-serif', color: (budget ?? 0) < 5 ? 'var(--danger)' : 'var(--cyan)' }}
               >
                 £{(budget ?? 0).toFixed(1)}
-                <span className="text-[12px] font-normal" style={{ color: 'var(--mute)' }}>M</span>
+                <span className="text-[10px] lg:text-[12px] font-normal" style={{ color: 'var(--mute)' }}>M</span>
               </div>
               {emptySlots > 0 && (
-                <div className="text-[10px] font-black mt-0.5" style={{ color: 'var(--gold)', fontFamily: 'Archivo Black, sans-serif' }}>
-                  {emptySlots} empty slot{emptySlots !== 1 ? 's' : ''}
+                <div className="text-[9px] font-black mt-0.5" style={{ color: 'var(--gold)', fontFamily: 'Archivo Black, sans-serif' }}>
+                  {emptySlots} empty
                 </div>
               )}
             </div>
@@ -385,20 +426,21 @@ export default function MarketScreen() {
               onClick={handleAutoFill}
               disabled={autoFilling}
               style={{
-                padding: '8px 12px',
+                padding: '6px 10px',
                 background: 'rgba(0,196,232,0.08)',
                 border: '1px solid rgba(0,196,232,0.25)',
                 color: autoFilling ? 'var(--mute)' : 'var(--cyan)',
                 fontFamily: 'Archivo Black, sans-serif',
-                fontSize: 9,
+                fontSize: 8,
                 letterSpacing: '0.1em',
                 textTransform: 'uppercase',
                 borderRadius: 2,
                 cursor: autoFilling ? 'wait' : 'pointer',
                 flexShrink: 0,
+                whiteSpace: 'nowrap',
               }}
             >
-              {autoFilling ? 'FILLING…' : '⚡ QUICK FILL'}
+              {autoFilling ? 'FILLING' : '⚡ FILL'}
             </button>
           </div>
         </div>
@@ -470,6 +512,26 @@ export default function MarketScreen() {
           )}
         </div>
 
+        {/* Search input */}
+        <div className="px-5 py-2.5 border-t" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
+          <input
+            type="text"
+            placeholder="Search player name…"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full outline-none text-[13px]"
+            style={{
+              padding: '8px 12px',
+              background: 'rgba(255,255,255,0.04)',
+              border: '1px solid rgba(255,255,255,0.1)',
+              borderRadius: '4px',
+              color: 'var(--paper)',
+              fontFamily: 'Archivo, sans-serif',
+              caretColor: 'var(--cyan)',
+            }}
+          />
+        </div>
+
         {/* Position filter tabs */}
         <div
           className="flex"
@@ -523,7 +585,7 @@ export default function MarketScreen() {
           ))}
         </div>
       ) : (
-        <div data-tour="market-player-list" className="pb-24 lg:pb-6">
+        <div ref={marketListRef} data-tour="market-player-list" className="pb-24 lg:pb-6" style={{ scrollBehavior: 'auto' }}>
           {filteredPlayers.map((p) => {
             const inMySquad    = mySquad?.players?.includes(p.id);
             const isOwned      = inMySquad || isOwnedBy(p.id);

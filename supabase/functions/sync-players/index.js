@@ -1,13 +1,15 @@
 // Edge Function: sync-players
-// Fetches every team in a tournament from Forza, then fetches each team's
-// full squad and upserts the results into the teams and players tables.
+// Fetches teams from fixtures table, then fetches each team's squad from Forza
+// and upserts into teams (global) and players (per-tournament) tables.
 //
-// POST body: { forza_id: string }
+// POST body: { forza_id: string }   — Forza tournament ID, e.g. '426' or '429'
 // Returns:   { ok: true, teams_upserted: N, players_upserted: N }
 //
-// DOES NOT run unless tournaments.sync_enabled = true.
-// Run sync-fixtures first so tournament row exists.
-// Run this function again before each matchday to catch transfers/call-ups.
+// NOTE: Forza's /v1/tournaments/:id/teams endpoint is CloudFront-blocked from
+// direct access, so teams are derived from fixtures table instead. Run
+// sync-fixtures first to ensure fixture rows exist for the tournament.
+//
+// DOES NOT run unless tournaments.sync_enabled = true for this forza_id.
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
@@ -48,13 +50,22 @@ function respond(status, body) {
   });
 }
 
-// Forza position → our internal position code
 const POSITION_MAP = {
   goalkeeper: 'GK',
   defender:   'DEF',
   midfielder: 'MID',
   attacker:   'FWD',
 };
+
+// Skip placeholder fixture entries (e.g. '1E', 'W101', '3A/3B/3C/3D/3F')
+function isRealTeam(name) {
+  if (!name || name.length <= 2) return false;
+  if (name.includes('/')) return false;
+  if (name.startsWith('W') && /^\d/.test(name.slice(1))) return false;
+  if (name.startsWith('RU')) return false;
+  if (/^\d/.test(name)) return false;
+  return true;
+}
 
 Deno.serve(async (req) => {
   if (req.method !== 'POST') return respond(405, { error: 'POST required' });
@@ -64,7 +75,7 @@ Deno.serve(async (req) => {
   catch { return respond(400, { error: 'Invalid JSON body' }); }
   if (!forza_id) return respond(400, { error: 'forza_id required' });
 
-  // ── 1. Check tournament + plug ─────────────────────────────────────────────
+  // ── 1. Check tournament exists and sync is enabled ─────────────────────────
   const { data: tournament } = await supabase
     .from('tournaments')
     .select('forza_id, name, sync_enabled')
@@ -77,61 +88,83 @@ Deno.serve(async (req) => {
   }
 
   try {
-    // ── 2. Fetch all teams in tournament ────────────────────────────────────
-    const { teams: forzaTeams } = await forza(`/v1/tournaments/${forza_id}/teams`);
-    if (!forzaTeams?.length) return respond(200, { ok: true, teams_upserted: 0, players_upserted: 0 });
+    // ── 2. Extract unique real teams from fixtures ──────────────────────────
+    // Forza's /v1/tournaments/:id/teams endpoint is blocked by CloudFront from
+    // outside Supabase IPs, so we derive teams from fixture data instead.
+    const { data: fixtures, error: fErr } = await supabase
+      .from('fixtures')
+      .select('home_team_forza_id, away_team_forza_id, home_team, away_team')
+      .eq('tournament_id', forza_id);
 
-    // ── 3. Upsert teams ──────────────────────────────────────────────────────
-    const teamRows = forzaTeams.map(t => ({
-      forza_team_id: String(t.id),
+    if (fErr) return respond(500, { error: `fixtures query: ${fErr.message}` });
+
+    const teamMap = {};
+    for (const f of fixtures ?? []) {
+      if (f.home_team_forza_id && isRealTeam(f.home_team))
+        teamMap[f.home_team_forza_id] = f.home_team;
+      if (f.away_team_forza_id && isRealTeam(f.away_team))
+        teamMap[f.away_team_forza_id] = f.away_team;
+    }
+
+    const teamEntries = Object.entries(teamMap);
+    if (!teamEntries.length) {
+      return respond(200, {
+        ok: true, teams_upserted: 0, players_upserted: 0,
+        note: 'No fixtures found — run sync-fixtures first',
+      });
+    }
+
+    // ── 3. Upsert teams (global — one row per team across all tournaments) ──
+    // Teams are shared across tournaments (e.g. Arsenal in EPL + Champions League).
+    // Unique constraint is on forza_team_id only. tournament_id records which
+    // tournament most recently synced this team.
+    const teamRows = teamEntries.map(([teamId, teamName]) => ({
+      forza_team_id: String(teamId),
+      name:          teamName,
       tournament_id: forza_id,
-      name:          t.name,
-      abbreviation:  t.abbreviation ?? null,
-      region:        t.region?.name ?? null,
     }));
 
     const { error: teamErr } = await supabase
       .from('teams')
       .upsert(teamRows, { onConflict: 'forza_team_id' });
 
-    if (teamErr) throw new Error(`teams upsert: ${JSON.stringify(teamErr)}`);
+    if (teamErr) {
+      console.error('teams upsert error:', JSON.stringify(teamErr));
+    }
 
-    // ── 4. Fetch each team's squad and upsert players ────────────────────────
-    // Concurrency: batch teams in groups of 5 to avoid overwhelming Forza.
+    // ── 4. Fetch each team's squad and upsert players (per-tournament) ──────
+    // Players are scoped per-tournament: same player can have different fantasy
+    // contexts (e.g. Mbappe for PSG in Ligue 1, for France in WC2026).
+    // ID format: 'fp-{forza_player_id}-{tournament_id}'
     const BATCH = 5;
     let totalPlayers = 0;
     const errors = [];
 
-    for (let i = 0; i < forzaTeams.length; i += BATCH) {
-      const batch = forzaTeams.slice(i, i + BATCH);
+    for (let i = 0; i < teamEntries.length; i += BATCH) {
+      const batch = teamEntries.slice(i, i + BATCH);
 
-      await Promise.all(batch.map(async (team) => {
+      await Promise.all(batch.map(async ([teamId, teamName]) => {
         try {
-          const { players: squad } = await forza(`/v1/teams/${team.id}/squad`);
-          if (!squad?.length) return;
+          const data = await forza(`/v1/teams/${teamId}/squad`);
+          const squad = data?.players ?? data?.squad ?? [];
+          if (!squad.length) return;
 
           const playerRows = squad.map(p => {
-            // Forza player name: prefer nickname, else first+last
             const name = p.nickname
               ? p.nickname
               : [p.first_name, p.last_name].filter(Boolean).join(' ');
-
             return {
-              // Internal ID: tournament-scoped so the same player (same forza_player_id)
-              // can exist in multiple tournaments (EPL as Arsenal + WC as England).
-              // Format: 'fp-{forza_player_id}-{tournament_id}'
-              id:               `fp-${p.id}-${forza_id}`,
+              id:              `fp-${p.id}-${forza_id}`,
               name,
-              position:         POSITION_MAP[p.position] ?? 'MID',
-              nationality:      p.region?.name ?? null,   // Forza uses region for nationality
-              club:             team.name,
-              forza_player_id:  String(p.id),
-              forza_team_id:    String(team.id),
-              tournament_id:    forza_id,
-              birthdate:        p.birthdate ?? null,
-              height:           p.height ?? null,
-              // price: not available from Forza — left as null, seed separately
-              price:            null,
+              position:        POSITION_MAP[p.position] ?? 'MID',
+              nationality:     p.region?.name ?? null,
+              club:            teamName,
+              forza_player_id: String(p.id),
+              forza_team_id:   String(teamId),
+              tournament_id:   forza_id,
+              birthdate:       p.birthdate ?? null,
+              height:          p.height ?? null,
+              price:           null,
             };
           });
 
@@ -140,24 +173,23 @@ Deno.serve(async (req) => {
             .upsert(playerRows, { onConflict: 'forza_player_id,tournament_id' });
 
           if (pErr) {
-            console.error(`players upsert for team ${team.name}:`, JSON.stringify(pErr));
-            errors.push(`${team.name}: ${pErr.message}`);
+            console.error(`players upsert for team ${teamName}:`, JSON.stringify(pErr));
+            errors.push(`${teamName}: ${pErr.message}`);
           } else {
             totalPlayers += playerRows.length;
           }
         } catch (e) {
-          console.error(`Failed to fetch squad for team ${team.id} (${team.name}):`, e.message);
-          errors.push(`${team.name}: ${e.message}`);
+          console.error(`Failed to fetch squad for team ${teamId} (${teamName}):`, e.message);
+          errors.push(`${teamName}: ${e.message}`);
         }
       }));
     }
 
     return respond(200, {
-      ok: true,
-      teams_upserted:   teamRows.length,
+      ok:              true,
+      teams_upserted:  teamEntries.length,
       players_upserted: totalPlayers,
-      errors:           errors.length ? errors : undefined,
-      note: 'player.price is null — seed valuations separately via 17_player_valuations.sql',
+      errors:          errors.length ? errors : undefined,
     });
 
   } catch (err) {

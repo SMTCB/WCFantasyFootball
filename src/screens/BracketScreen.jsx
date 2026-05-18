@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
+import Button from '../components/Button';
 
 /* ── Fallback fixtures — generic placeholders, no competition branding ──────── */
 const FALLBACK_FIXTURES = [
@@ -35,7 +36,7 @@ function FixtureCard({ fixture, prediction, onPredict }) {
     <div
       className="rounded-lg overflow-hidden"
       style={{
-        background: '#111',
+        background: 'var(--ink-2)',
         border: result === 'correct'
           ? '1px solid rgba(24,201,107,0.35)'
           : result === 'wrong'
@@ -60,7 +61,7 @@ function FixtureCard({ fixture, prediction, onPredict }) {
             className="flex items-center gap-1 text-[9px] font-black uppercase"
             style={{ color: 'var(--positive)', fontFamily: 'Archivo Black, sans-serif' }}
           >
-            <span className="w-[5px] h-[5px] rounded-full bg-[#18C96B] animate-pulse inline-block" />
+            <span className="w-[5px] h-[5px] rounded-full animate-pulse inline-block" style={{ background: 'var(--positive)' }} />
             {fixture.minute}'
           </span>
         )}
@@ -90,7 +91,7 @@ function FixtureCard({ fixture, prediction, onPredict }) {
             className="font-black text-[14px] truncate"
             style={{
               fontFamily: 'Archivo Black, sans-serif',
-              color: (isFinished || isLive) && h > a ? 'var(--paper)' : '#9E9E9E',
+              color: (isFinished || isLive) && h > a ? 'var(--paper)' : 'var(--mute)',
             }}
           >
             {fixture.home_team}
@@ -122,7 +123,7 @@ function FixtureCard({ fixture, prediction, onPredict }) {
             className="font-black text-[14px] truncate"
             style={{
               fontFamily: 'Archivo Black, sans-serif',
-              color: (isFinished || isLive) && a > h ? 'var(--paper)' : '#9E9E9E',
+              color: (isFinished || isLive) && a > h ? 'var(--paper)' : 'var(--mute)',
             }}
           >
             {fixture.away_team}
@@ -165,13 +166,13 @@ function FixtureCard({ fixture, prediction, onPredict }) {
                 style={{
                   fontFamily: 'Archivo Black, sans-serif',
                   background: prediction === key
-                    ? isLive ? 'rgba(255,193,7,0.15)' : 'rgba(0,196,232,0.15)'
+                    ? isLive ? 'rgba(245,158,11,0.15)' : 'rgba(0,180,216,0.15)'
                     : 'rgba(255,255,255,0.04)',
                   color: prediction === key
-                    ? isLive ? '#FFC107' : 'var(--cyan)'
-                    : '#555',
+                    ? isLive ? 'var(--warn)' : 'var(--cyan)'
+                    : 'var(--mute)',
                   border: prediction === key
-                    ? isLive ? '1px solid rgba(255,193,7,0.3)' : '1px solid rgba(0,196,232,0.3)'
+                    ? isLive ? '1px solid rgba(245,158,11,0.3)' : '1px solid rgba(0,180,216,0.3)'
                     : '1px solid transparent',
                   cursor: isLive ? 'not-allowed' : 'pointer',
                 }}
@@ -232,29 +233,31 @@ export default function BracketScreen() {
   const accuracy = predicted.length ? Math.round((correct.length / predicted.length) * 100) : null;
 
   return (
-    <div className="min-h-screen bg-[#0A0A0A]" data-testid="main-content" style={{ paddingBottom: '80px' }}>
+    <div className="min-h-screen" data-testid="main-content" style={{ background: 'var(--ink)', paddingBottom: '80px' }}>
 
       {/* Header */}
       <div
         className="sticky top-0 z-20 px-4 pt-10 pb-4"
         style={{
-          background: 'rgba(10,10,10,0.95)',
+          background: 'rgba(8,10,14,0.95)',
           backdropFilter: 'blur(20px)',
-          borderBottom: '1px solid rgba(255,255,255,0.06)',
+          borderBottom: '1px solid var(--rule)',
         }}
       >
         <div className="flex items-center justify-between">
-          <button
-            type="button"
+          <Button
+            variant="icon"
+            size="md"
             onClick={() => navigate(-1)}
-            className="text-[#9E9E9E] text-[20px] leading-none"
+            aria-label="Go back"
+            className="text-[20px] leading-none"
           >
-            ←
-          </button>
+            <span aria-hidden="true">←</span>
+          </Button>
           <div className="text-center">
             <div
               className="text-[9px] font-black uppercase tracking-[0.35em]"
-              style={{ color: '#9E9E9E', fontFamily: 'Archivo Black, sans-serif' }}
+              style={{ color: 'var(--mute)', fontFamily: 'Archivo Black, sans-serif' }}
             >
               Fixture Challenge
             </div>
@@ -292,7 +295,7 @@ export default function BracketScreen() {
             <span style={{ color: 'var(--mute)' }}>·</span>
             <span style={{ color: 'var(--danger)' }}>✗ {predicted.length - correct.length} wrong</span>
             <span style={{ color: 'var(--mute)' }}>·</span>
-            <span style={{ color: '#555' }}>{finished.length - predicted.length} unpredicted</span>
+            <span style={{ color: 'var(--mute)' }}>{finished.length - predicted.length} unpredicted</span>
           </div>
         )}
       </div>
@@ -301,7 +304,7 @@ export default function BracketScreen() {
       <div className="px-4 py-3">
         <p
           className="text-[11px] leading-relaxed text-center"
-          style={{ color: '#555', fontFamily: 'Archivo, sans-serif' }}
+          style={{ color: 'var(--mute)', fontFamily: 'Archivo, sans-serif' }}
         >
           Pick a result for each fixture before kick-off. Locked once the match goes live.
         </p>
@@ -311,7 +314,7 @@ export default function BracketScreen() {
       {loading ? (
         <div className="flex flex-col gap-3 px-4 mt-2">
           {[1,2,3].map(i => (
-            <div key={i} className="h-[110px] rounded-sm bg-[#111] animate-pulse" />
+            <div key={i} className="h-[110px] rounded-sm animate-pulse" style={{ background: 'var(--ink-2)' }} />
           ))}
         </div>
       ) : (
@@ -343,7 +346,7 @@ export default function BracketScreen() {
               <div className="text-3xl mb-3">📅</div>
               <div
                 className="text-[13px] font-bold"
-                style={{ color: '#555', fontFamily: 'Archivo Black, sans-serif' }}
+                style={{ color: 'var(--mute)', fontFamily: 'Archivo Black, sans-serif' }}
               >
                 No fixtures scheduled yet
               </div>

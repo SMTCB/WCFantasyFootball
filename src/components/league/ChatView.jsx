@@ -51,7 +51,7 @@ export default function ChatView({
           const mName = m.users?.username || 'Unknown';
           const hue = mgrHue(mName);
           return (
-            <div key={m.user_id} style={{ padding: '8px 18px', display: 'flex', alignItems: 'center', gap: 10, color: 'var(--mute)', cursor: 'pointer' }}>
+            <div key={m.user_id} onClick={() => console.log(`Open DM with ${mName}`)} style={{ padding: '8px 18px', display: 'flex', alignItems: 'center', gap: 10, color: 'var(--mute)', cursor: 'pointer', transition: 'background 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255,255,255,.04)'} onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}>
               <MgrTag mono={mgrMono(mName)} hue={hue} size={16} />
               <span style={{ fontFamily: "'Archivo', sans-serif", fontSize: 12, color: 'var(--paper)' }}>{mName}</span>
               <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--positive)', marginLeft: 'auto' }} />

@@ -8,6 +8,7 @@ export const COMPS = {
   UCL: { code: 'UCL', name: 'CHAMPIONS LEAGUE', tone: '#E0A800' },
   UEL: { code: 'UEL', name: 'EUROPA LEAGUE',    tone: '#A855F7' },
   FAC: { code: 'FAC', name: 'FA CUP',           tone: '#EF4444' },
+  WC:  { code: 'WC',  name: 'FIFA WORLD CUP',   tone: '#C9A227' },
 };
 
 // ── Date formatting ───────────────────────────────────────────────────────────
@@ -43,6 +44,7 @@ export function teamCode(name = '') {
 export function detectComp(competition) {
   if (!competition) return 'EPL';
   const lc = competition.toLowerCase();
+  if (lc.includes('world cup') || lc.includes('fifa')) return 'WC';
   if (lc.includes('champions')) return 'UCL';
   if (lc.includes('europa'))    return 'UEL';
   if (lc.includes('fa cup'))    return 'FAC';

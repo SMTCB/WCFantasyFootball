@@ -4,6 +4,20 @@
 
 ---
 
+## 🚀 Quick Navigation — Start Here
+
+**First time in this project?** Use these guides in order:
+
+| Resource | Purpose | Link |
+|----------|---------|------|
+| **📋 DOCS_MAP** | Complete index of all documentation | [DOCS_MAP.md](DOCS_MAP.md) — Read this first to understand what docs exist |
+| **⚙️ Architecture Overview** | How the app is built (tech stack, components, systems) | See [Technical Stack & Architecture](#technical-stack--architecture) below |
+| **🌳 Repository Structure** | File organization and folder layout | See [Repository Structure](#repository-structure) below |
+| **📖 Ways of Working** | How Claude Code and you collaborate | See [Ways of Working](#ways-of-working) below |
+| **📊 Current Progress** | What's done, what's in progress | [BACKLOG.md](BACKLOG.md) + [Notion BACKLOG](https://www.notion.so/361fe9c7e4c2803c9fc7c898a0c4bbac) |
+
+---
+
 ## Ways of Working
 
 ### Your Role (Non-Technical User)
@@ -553,33 +567,75 @@ iOS deployment target: 15.0 · Android minSdk: 26 (Android 8.0) · targetSdk: 36
 
 **CLAUDE CODE: Do this automatically every session. User should NOT run any of these commands — that's Claude's job.**
 
-1. **Read this file (CLAUDE.md)** to understand the tech stack and current state
-2. **Check BACKLOG.md** for session notes and completed items
-3. **Review Notion BACKLOG** board for open/in-progress items:
-   - Navigate to: https://www.notion.so/361fe9c7e4c2803c9fc7c898a0c4bbac
-   - Check "Not started" column for priorities (HIGH priority first)
+1. **Orient yourself** (read in this order):
+   - This file (**CLAUDE.md**) — you're reading it now ✓
+   - [**DOCS_MAP.md**](DOCS_MAP.md) — understand what docs exist and where
+   - [**BACKLOG.md**](BACKLOG.md) — see what's completed and what's pending
+   
+2. **Review current priorities**:
+   - Check [Notion BACKLOG](https://www.notion.so/361fe9c7e4c2803c9fc7c898a0c4bbac) board for open/in-progress items
+   - "Not started" column shows priorities (HIGH first)
    - Move a card to "In progress" if starting work on it
-4. **Sync with main** (Claude does this):
+   
+3. **Sync with main** (Claude does this):
    ```bash
    git pull origin main
    git status  # Should be clean
    ```
-5. **Create feature branch** (Claude does this):
+   
+4. **Create feature branch** (Claude does this):
    ```bash
    git checkout -b claude/your-feature-description
    ```
-6. **Understand the task** by reading BACKLOG.md, Notion card, or the GitHub issue
-7. **Run dev server** to test locally:
+   
+5. **Understand the task** from BACKLOG.md, Notion card, or GitHub issue
+
+6. **Run dev server** to test locally:
    ```bash
    npm run dev  # http://localhost:5173
    ```
-8. **Develop, commit, push, PR, merge** (Claude does all git operations) per Git Workflow rules above
-9. **Always test before pushing** (Claude does this automatically):
+   
+7. **Develop, commit, push, PR, merge** (Claude does all git operations) per [Git Workflow](#git-workflow--version-control) rules
+
+8. **Test before pushing** (Claude does this automatically):
    ```bash
    npm run lint        # Must pass
    npx playwright test # Should stay green
    ```
-10. **After completing work, move Notion card to "Done"** (Claude does this) and update BACKLOG.md
+   
+9. **After completing work**: Move Notion card to "Done" and update BACKLOG.md
+
+---
+
+## 📂 Root-Level Files Reference
+
+**Project critical** (read first):
+- `CLAUDE.md` ← You are here (project instructions)
+- `DOCS_MAP.md` ← Documentation index (read after this file)
+- `BACKLOG.md` ← Session progress & completed work
+- `README.md` ← Project overview
+- `PIPELINE.md` ← Roadmap & strategy
+
+**Reference docs**:
+- `E2E_TEST_REPORT.md` — Test results & coverage
+- `CODE_REVIEW_REPORT.md` — Recent code quality assessment
+- `APP_STORE_ASSESSMENT.md` — Mobile launch readiness
+- `MOBILE_IMPLEMENTATION_GUIDE.md` — Capacitor setup & native plugins
+- `CLEANUP_REPORT.md` — Git/docs organization audit
+- `GEMINI.md` — Google Antigravity mobile AI instructions
+
+**Archived/Stale** (reference only, don't use for decisions):
+- `GIT_AND_CODE_WALKTHROUGH.md` — Superseded by CLAUDE.md and DOCS_MAP.md
+
+**Configuration** (build tools — don't edit):
+- `package.json`, `package-lock.json` — Dependencies
+- `vite.config.js` — Web bundler
+- `eslint.config.js` — Code linting
+- `playwright.config.js` — E2E tests
+- `capacitor.config.ts` — Native app configuration
+- `vercel.json` — Deployment settings
+- `.env.example` — Environment template
+- `index.html` — Entry point
 
 ---
 

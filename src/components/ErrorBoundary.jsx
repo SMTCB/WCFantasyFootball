@@ -79,7 +79,7 @@ export default class ErrorBoundary extends Component {
       <div
         style={{
           minHeight: '100svh',
-          background: '#080A0E',
+          background: 'var(--ink)',
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
@@ -126,8 +126,8 @@ export default class ErrorBoundary extends Component {
             style={{
               width: '100%',
               maxWidth: '500px',
-              background: 'rgba(240,58,58,0.07)',
-              border: '1px solid rgba(240,58,58,0.2)',
+              background: 'rgba(239,68,68,0.07)',
+              border: '1px solid rgba(239,68,68,0.2)',
               borderRadius: '6px',
               padding: '12px 16px',
               marginBottom: '24px',
@@ -169,7 +169,7 @@ export default class ErrorBoundary extends Component {
             style={{
               padding: '12px 28px',
               background: 'var(--cyan)',
-              color: '#000',
+              color: 'var(--ink)',
               border: 'none',
               borderRadius: '4px',
               fontSize: '11px',

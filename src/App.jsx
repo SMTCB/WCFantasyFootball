@@ -1,11 +1,12 @@
 import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { AuthProvider } from './context/AuthContext';
 import { useAuth } from './hooks/useAuth';
 import ProtectedRoute from './components/ProtectedRoute';
 import ErrorBoundary from './components/ErrorBoundary';
 import AppLayout from './components/AppLayout';
 import OnboardingWizard from './components/OnboardingWizard';
+import { KeyboardShortcutsModal } from './components/KeyboardShortcutsModal';
 import HomeScreen from './screens/HomeScreen';
 import SquadScreen from './screens/SquadScreen';
 import AuthScreen from './screens/AuthScreen';
@@ -17,7 +18,9 @@ import RecapScreen from './screens/RecapScreen';
 import BracketScreen from './screens/BracketScreen';
 import DraftScreen from './screens/DraftScreen';
 import DraftRecoveryScreen from './screens/DraftRecoveryScreen';
+import SettingsScreen from './screens/SettingsScreen';
 import { useOnboarding } from './hooks/useOnboarding';
+import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 import { ToastProvider } from './components/Toast';
 
 // Redirect to set-password form when Supabase fires a PASSWORD_RECOVERY event.
@@ -34,9 +37,14 @@ function RecoveryRedirect() {
 // ── AppRoutes lives inside BrowserRouter so useNavigate (used by OnboardingWizard) works
 function AppRoutes() {
   const { showWizard, completeWizard, skipWizard } = useOnboarding();
+  const [showHelpModal, setShowHelpModal] = useState(false);
+  useKeyboardShortcuts(() => setShowHelpModal(true));
 
   return (
     <>
+      {/* Keyboard shortcuts help modal */}
+      <KeyboardShortcutsModal isOpen={showHelpModal} onClose={() => setShowHelpModal(false)} />
+
       {/* Redirect to set-password form when PASSWORD_RECOVERY event fires */}
       <RecoveryRedirect />
 
@@ -72,6 +80,7 @@ function AppRoutes() {
                   <Route path="/recap"            element={<ErrorBoundary screen="Recap"><RecapScreen /></ErrorBoundary>} />
                   <Route path="/bracket"          element={<ErrorBoundary screen="Bracket"><BracketScreen /></ErrorBoundary>} />
                   <Route path="/admin"            element={<ErrorBoundary screen="Admin"><AdminSeedScreen /></ErrorBoundary>} />
+                  <Route path="/settings"         element={<ErrorBoundary screen="Settings"><SettingsScreen /></ErrorBoundary>} />
                   <Route path="*"                 element={<Navigate to="/" replace />} />
                 </Routes>
               </AppLayout>
