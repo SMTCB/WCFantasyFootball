@@ -4,12 +4,12 @@ import { createClient } from '@supabase/supabase-js';
 
 // ── Real Supabase Client ─────────────────────────────────────────────────────
 
-const SUPABASE_URL = 'https://sssmvihxtqtohisghjet.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNzc212aWh4dHF0b2hpc2doamV0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MDgyOTc5ODcsImV4cCI6MTcyMzg3Mzk4N30.LAeWx39REi6K2L46bY2g3PlvEaWM7p7TJdEZxtvXq8c';
-const SERVICE_ROLE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNzc212aWh4dHF0b2hpc2doamV0Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTcwODI5Nzk4NywiZXhwIjoxNzIzODczOTg3fQ.8VjMWc7Lf3hXFx4X0X-0X0X0X0X0X0X0X0X0X0X0X0';
+const SUPABASE_URL = process.env.SUPABASE_URL || 'https://sssmvihxtqtohisghjet.supabase.co';
+const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNzc212aWh4dHF0b2hpc2doamV0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MDgyOTc5ODcsImV4cCI6MTcyMzg3Mzk4N30.LAeWx39REi6K2L46bY2g3PlvEaWM7p7TJdEZxtvXq8c';
+const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 const anonSupabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-const serviceSupabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
+const serviceSupabase = SERVICE_ROLE_KEY ? createClient(SUPABASE_URL, SERVICE_ROLE_KEY) : null;
 
 let REAL_PLAYERS = [];
 
@@ -161,6 +161,12 @@ test.describe('Draft Mode - Complete Flow', () => {
     // Manually trigger run-draft-lottery
     // Verify each gets 15 allocated
 
+    if (!serviceSupabase) {
+      console.warn('⚠️ SKIPPING: SERVICE_ROLE_KEY not available in environment');
+      test.skip();
+      return;
+    }
+
     console.log('✅ SCENARIO 1: Testing draft allocation with full submissions');
 
     const { data: testLeague, error: createError } = await serviceSupabase
@@ -238,6 +244,12 @@ test.describe('Draft Mode - Complete Flow', () => {
     // Have managers submit: 30, 25, 20 players
     // Verify allocation respects submission lengths
 
+    if (!serviceSupabase) {
+      console.warn('⚠️ SKIPPING: SERVICE_ROLE_KEY not available in environment');
+      test.skip();
+      return;
+    }
+
     console.log('✅ SCENARIO 2: Testing draft allocation with partial submissions');
 
     const { data: testLeague } = await serviceSupabase
@@ -300,6 +312,12 @@ test.describe('Draft Mode - Complete Flow', () => {
   test('Draft allocation job: Scenario 3 - Some managers haven\'t submitted', async () => {
     // Have 1 manager submit 30, others don't submit
     // Verify cron only processes submitted managers
+
+    if (!serviceSupabase) {
+      console.warn('⚠️ SKIPPING: SERVICE_ROLE_KEY not available in environment');
+      test.skip();
+      return;
+    }
 
     console.log('✅ SCENARIO 3: Testing draft allocation with missing submissions');
 
