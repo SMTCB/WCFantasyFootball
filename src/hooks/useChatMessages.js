@@ -89,6 +89,7 @@ export function useChatMessages(leagueId) {
       });
 
       console.log('[useChatMessages] Setting messages state with', formattedMsgs.length, 'formatted messages');
+      console.log('[useChatMessages] Message IDs:', formattedMsgs.map(m => m.id).join(', '));
       setMessages(formattedMsgs);
     } catch (err) {
       console.error('useChatMessages: loadMessages exception', err);
