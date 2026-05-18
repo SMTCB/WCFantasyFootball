@@ -24,6 +24,7 @@ import { useOnboarding } from '../hooks/useOnboarding';
 import OnboardingTour from '../components/OnboardingTour';
 import {
   HubTopbar, HubActionBar, HubTabs,
+  HubLeagueHeader, HubTabPills,
   MgrTag, TrendPill, FormDots, Spark, HubSectionLabel,
   miniBtnStyle, MONO, DISPLAY, mgrHue, mgrMono,
 } from '../components/league/HubShared';
@@ -585,37 +586,64 @@ export default function LeagueScreen() {
             onSkip={completeCommissionerTour}
           />
         )}
-        <HubTopbar
-          leagueName={name}
-          memberCount={members.length}
-          gw="—"
-          isLive={false}
-          onBack={() => navigate('/league')}
-          rightSlot={
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <NotificationPanel
-                notifications={notifications}
-                unreadCount={notificationCount}
-                onMarkAsRead={markNotificationAsRead}
-                onClearAll={clearAllNotifications}
-              />
-              <button
-                onClick={() => setNewLeague(activeLeague?.leagues || activeLeague)}
-                data-tour="league-invite"
-                style={{ background: 'transparent', border: '1px solid rgba(0,180,216,.4)', color: 'var(--cyan)', padding: '6px 12px', fontFamily: MONO, fontSize: 10, letterSpacing: '.2em', cursor: 'pointer' }}
-              >+ INVITE</button>
-              <button
-                onClick={replayLeagueTour}
-                style={{ width: 20, height: 20, borderRadius: '50%', border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.4)', fontSize: 10, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-              >?</button>
-            </div>
-          }
-        />
+        {/* ── Desktop chrome (hidden on mobile) ─────────────────────────── */}
+        <div className="hidden lg:block">
+          <HubTopbar
+            leagueName={name}
+            memberCount={members.length}
+            gw="—"
+            isLive={false}
+            onBack={() => navigate('/league')}
+            rightSlot={
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <NotificationPanel
+                  notifications={notifications}
+                  unreadCount={notificationCount}
+                  onMarkAsRead={markNotificationAsRead}
+                  onClearAll={clearAllNotifications}
+                />
+                <button
+                  onClick={() => setNewLeague(activeLeague?.leagues || activeLeague)}
+                  data-tour="league-invite"
+                  style={{ background: 'transparent', border: '1px solid rgba(0,180,216,.4)', color: 'var(--cyan)', padding: '6px 12px', fontFamily: MONO, fontSize: 10, letterSpacing: '.2em', cursor: 'pointer' }}
+                >+ INVITE</button>
+                <button
+                  onClick={replayLeagueTour}
+                  style={{ width: 20, height: 20, borderRadius: '50%', border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.4)', fontSize: 10, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                >?</button>
+              </div>
+            }
+          />
+          <HubActionBar
+            onManageSquad={() => navigate(`/squad?leagueId=${activeLeague?.league_id}`)}
+            onMarket={() => navigate(`/market?leagueId=${activeLeague?.league_id}`)}
+          />
+        </div>
 
-        <HubActionBar
-          onManageSquad={() => navigate(`/squad?leagueId=${activeLeague?.league_id}`)}
-          onMarket={() => navigate(`/market?leagueId=${activeLeague?.league_id}`)}
-        />
+        {/* ── Mobile chrome (hidden on desktop) ─────────────────────────── */}
+        <div className="lg:hidden">
+          <HubLeagueHeader
+            leagueName={name}
+            memberCount={members.length}
+            gw="—"
+            onBack={() => navigate('/league')}
+            rightSlot={
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <NotificationPanel
+                  notifications={notifications}
+                  unreadCount={notificationCount}
+                  onMarkAsRead={markNotificationAsRead}
+                  onClearAll={clearAllNotifications}
+                />
+                <button
+                  onClick={() => setNewLeague(activeLeague?.leagues || activeLeague)}
+                  data-tour="league-invite"
+                  style={{ background: 'transparent', border: '1px solid rgba(0,180,216,.4)', color: 'var(--cyan)', padding: '4px 8px', fontFamily: MONO, fontSize: 9, letterSpacing: '.2em', cursor: 'pointer' }}
+                >+ INVITE</button>
+              </div>
+            }
+          />
+        </div>
 
         <TransferWindowBanner {...transferWindow} />
 
@@ -642,8 +670,20 @@ export default function LeagueScreen() {
           </div>
         )}
 
-        <div data-tour="league-tabs">
+        {/* ── Desktop tabs (hidden on mobile) ───────────────────────────── */}
+        <div className="hidden lg:block" data-tour="league-tabs">
           <HubTabs
+            active={viewToTab(view)}
+            onTab={t => setView(tabToView(t))}
+            isCommissioner={isCommissioner}
+            unreadChat={unreadCount}
+            notifyBets={notificationCount > 0}
+          />
+        </div>
+
+        {/* ── Mobile tab pills (hidden on desktop) ──────────────────────── */}
+        <div className="lg:hidden" data-tour="league-tabs">
+          <HubTabPills
             active={viewToTab(view)}
             onTab={t => setView(tabToView(t))}
             isCommissioner={isCommissioner}
@@ -791,7 +831,7 @@ export default function LeagueScreen() {
            const ftMono = "'JetBrains Mono', monospace";
            const today = new Date().toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'long', year: 'numeric' });
            return (
-             <div style={{ flex: 1, overflow: 'auto', padding: '20px 28px 40px', background: 'var(--ink)' }}>
+             <div style={{ flex: 1, overflow: 'auto', padding: 'clamp(8px, 3vw, 20px) clamp(8px, 3vw, 28px) 40px', background: 'var(--ink)' }}>
                {members && members.length <= 1 ? (
                  /* Empty state */
                  <div style={{ background: FT_PAPER, color: FT_INK, padding: '48px', textAlign: 'center', boxShadow: '0 30px 60px -20px rgba(0,0,0,.5)' }}>
@@ -809,28 +849,28 @@ export default function LeagueScreen() {
                  </div>
                ) : (
                  /* Newspaper layout */
-                 <div style={{ background: FT_PAPER, color: FT_INK, boxShadow: '0 30px 60px -20px rgba(0,0,0,.5), 0 2px 0 0 #C9C2B3', padding: '34px 44px' }}>
+                 <div style={{ background: FT_PAPER, color: FT_INK, boxShadow: '0 30px 60px -20px rgba(0,0,0,.5), 0 2px 0 0 #C9C2B3', padding: 'clamp(16px, 5vw, 34px) clamp(14px, 5vw, 44px)' }}>
                    {/* Masthead */}
-                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', fontFamily: ftMono, fontSize: 11, letterSpacing: '.18em', color: FT_INK }}>
+                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', fontFamily: ftMono, fontSize: 'clamp(8px, 2vw, 11px)', letterSpacing: '.18em', color: FT_INK, flexWrap: 'wrap', gap: 4 }}>
                      <span>VOL · I</span>
-                     <span style={{ fontFamily: ftSerif, fontStyle: 'italic', fontSize: 14, letterSpacing: 0 }}>The Official Gazette of {name}</span>
+                     <span style={{ fontFamily: ftSerif, fontStyle: 'italic', fontSize: 'clamp(10px, 2.5vw, 14px)', letterSpacing: 0 }}>The Official Gazette of {name}</span>
                      <span>EDITION · #1</span>
                    </div>
                    <div style={{ textAlign: 'center', marginTop: 6 }}>
-                     <div style={{ fontFamily: ftSerif, fontWeight: 900, fontStyle: 'italic', fontSize: 72, letterSpacing: '-0.03em', lineHeight: 0.9, color: FT_INK }}>FORZA TIMES</div>
-                     <div style={{ fontFamily: ftSerif, fontStyle: 'italic', fontSize: 13, color: FT_MUTE, marginTop: 6 }}>
+                     <div style={{ fontFamily: ftSerif, fontWeight: 900, fontStyle: 'italic', fontSize: 'clamp(38px, 10vw, 72px)', letterSpacing: '-0.03em', lineHeight: 0.9, color: FT_INK }}>FORZA TIMES</div>
+                     <div style={{ fontFamily: ftSerif, fontStyle: 'italic', fontSize: 'clamp(10px, 2vw, 13px)', color: FT_MUTE, marginTop: 6 }}>
                        "All the points that's fit to print" · {today} · £0.00 to subscribers
                      </div>
                    </div>
                    <div style={{ border: 0, height: 1, background: FT_INK, margin: '18px 0 4px' }} />
                    <div style={{ height: 4, background: FT_INK, margin: '0 0 22px' }} />
 
-                   {/* Cover grid */}
-                   <div style={{ display: 'grid', gridTemplateColumns: '2.1fr 1fr 1.2fr', gap: 28 }}>
+                   {/* Cover grid — 3-col on desktop, single col on mobile */}
+                   <div className="grid grid-cols-1 lg:grid-cols-3" style={{ gap: 28 }}>
                      {/* Lead story — standings snapshot */}
                      <article>
                        <div style={{ fontFamily: ftMono, fontSize: 10, letterSpacing: '.22em', color: FT_RED, marginBottom: 8 }}>LEAGUE STANDINGS · LATEST</div>
-                       <h1 style={{ fontFamily: ftSerif, fontWeight: 900, fontSize: 44, lineHeight: 0.98, letterSpacing: '-0.025em', color: FT_INK, marginBottom: 14 }}>
+                       <h1 style={{ fontFamily: ftSerif, fontWeight: 900, fontSize: 'clamp(24px, 6vw, 44px)', lineHeight: 0.98, letterSpacing: '-0.025em', color: FT_INK, marginBottom: 14 }}>
                          {members[0] ? `${(members[0].users?.username || 'Unknown').toUpperCase()} leads the table.` : 'The season is yet to begin.'}
                        </h1>
                        {/* Placeholder image */}
@@ -1027,50 +1067,6 @@ export default function LeagueScreen() {
              onToast={showToast}
            />
          )}
-         {view === 'auctions__old' && (
-           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: 'var(--ink)' }}>
-             <div style={{ padding: '20px 28px', borderBottom: '1px solid var(--rule)', background: 'var(--ink-2)', display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr', flexShrink: 0 }}>
-               <div style={{ borderRight: '1px solid var(--rule)', paddingRight: 24 }}>
-                 <div style={{ fontFamily: MONO, fontSize: 10, color: 'var(--gold)', letterSpacing: '.22em' }}>AUCTION HOUSE · {name.toUpperCase()}</div>
-                 <div style={{ fontFamily: DISPLAY, fontSize: 24, marginTop: 6 }}>Open bids. No two managers own the same player.</div>
-               </div>
-               {[
-                 { k: 'LIVE', v: auctions.filter(a => a.status === 'active').length, tone: 'var(--danger)' },
-                 { k: 'LISTED', v: auctions.length, tone: 'var(--gold)' },
-                 { k: 'STATUS', v: auctionsLoading ? '…' : 'LIVE', tone: 'var(--cyan)' },
-               ].map((c, i) => (
-                 <div key={c.k} style={{ padding: '0 22px', borderRight: i < 2 ? '1px solid var(--rule)' : 'none' }}>
-                   <div style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.22em' }}>{c.k}</div>
-                   <div style={{ fontFamily: DISPLAY, fontSize: 28, color: c.tone, marginTop: 6, letterSpacing: '-0.02em' }}>{c.v}</div>
-                 </div>
-               ))}
-             </div>
-             <div style={{ flex: 1, overflow: 'auto', padding: '0 0 80px' }}>
-               {auctionsLoading && (
-                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '64px 28px' }}>
-                   <div style={{ fontFamily: MONO, fontSize: 10, color: 'var(--mute)', letterSpacing: '.2em' }}>SYNCING AUCTIONS…</div>
-                 </div>
-               )}
-               {!auctionsLoading && auctions.length === 0 && (
-                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '64px 28px', gap: 12 }}>
-                   <div style={{ fontSize: 28 }}>🔨</div>
-                   <div style={{ fontFamily: MONO, fontSize: 11, color: 'var(--mute)', letterSpacing: '.2em' }}>NO ACTIVE AUCTIONS</div>
-                   <div style={{ fontFamily: "'Archivo', sans-serif", fontSize: 11, color: 'var(--mute)', opacity: 0.6, maxWidth: 320, textAlign: 'center' }}>List a player for auction from your Squad screen to start bidding.</div>
-                 </div>
-               )}
-               {auctions.map(auction => (
-                 <AuctionCard
-                   key={auction.id}
-                   auction={auction}
-                   mySquadId={mySquadId}
-                   onBid={async (id, amount) => { const res = await placeBid(id, amount); if (res.ok) showToast('Bid placed!', 'success'); return res; }}
-                   onCancel={async (id) => { const res = await cancelListing(id); if (res.ok) showToast('Listing cancelled.', 'info'); return res; }}
-                   onSellNow={async (id) => { const res = await sellNow(id); if (res.ok) showToast('Player sold!', 'success'); return res; }}
-                 />
-               ))}
-             </div>
-           </div>
-         )}
 
          {view === 'chat' && (
            <ChatView
@@ -1100,243 +1096,6 @@ export default function LeagueScreen() {
              resultCount={resultCount}
            />
          )}
-         {view === 'chat_REMOVED' && (
-            <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '240px 1fr 280px', minHeight: 0, background: 'var(--ink)' }}>
-              {/* Left: channels rail */}
-              <aside style={{ borderRight: '1px solid var(--rule)', display: 'flex', flexDirection: 'column', background: 'var(--ink-2)', overflow: 'auto' }}>
-                <div style={{ padding: '18px 18px 8px' }}>
-                  <div style={{ fontFamily: MONO, fontSize: 10, color: 'var(--mute)', letterSpacing: '.22em' }}>CHANNELS</div>
-                </div>
-                {[
-                  { id: 'lc', name: '#league-chat',   active: true,  unread: unreadCount || 0 },
-                  { id: 'tt', name: '#trash-talk',    active: false, unread: 0 },
-                  { id: 'ah', name: '#auction-house', active: false, unread: 0 },
-                  { id: 'bb', name: '#bets-and-bonus',active: false, unread: 0 },
-                  { id: 'tn', name: '#tactics-notes', active: false, unread: 0 },
-                ].map(c => (
-                  <div key={c.id} style={{ padding: '10px 18px', display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer', borderLeft: c.active ? '2px solid var(--cyan)' : '2px solid transparent', background: c.active ? 'rgba(0,180,216,.06)' : 'transparent', color: c.active ? 'var(--paper)' : 'var(--mute)' }}>
-                    <span style={{ fontFamily: DISPLAY, fontSize: 13, letterSpacing: '-0.01em', flex: 1 }}>{c.name}</span>
-                    {c.unread > 0 && <span style={{ background: 'var(--danger)', color: '#fff', fontFamily: MONO, fontSize: 9, padding: '1px 6px', letterSpacing: '.1em' }}>{c.unread}</span>}
-                  </div>
-                ))}
-                <div style={{ padding: '18px 18px 8px', marginTop: 8 }}>
-                  <div style={{ fontFamily: MONO, fontSize: 10, color: 'var(--mute)', letterSpacing: '.22em' }}>DIRECT</div>
-                </div>
-                {members.slice(0, 4).filter(m => !(currentUser && m.user_id === currentUser.id)).map(m => {
-                  const mName = m.users?.username || 'Unknown';
-                  const hue = mgrHue(mName);
-                  return (
-                    <div key={m.user_id} style={{ padding: '8px 18px', display: 'flex', alignItems: 'center', gap: 10, color: 'var(--mute)', cursor: 'pointer' }}>
-                      <MgrTag mono={mgrMono(mName)} hue={hue} size={16} />
-                      <span style={{ fontFamily: "'Archivo', sans-serif", fontSize: 12, color: 'var(--paper)' }}>{mName}</span>
-                      <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--positive)', marginLeft: 'auto' }} />
-                    </div>
-                  );
-                })}
-              </aside>
-
-              {/* Middle: main chat */}
-              <div style={{ display: 'flex', flexDirection: 'column', minHeight: 0 }}>
-              <HubSectionLabel label="#LEAGUE-CHAT" tone="var(--cyan)" sub={`${members.length} MEMBERS`}
-                right={
-                  <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                    <span style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)' }}>🔍 SEARCH</span>
-                <input
-                  type="text"
-                  placeholder="Search…"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  style={{ background: 'var(--ink)', border: '1px solid var(--rule)', color: 'var(--paper)', padding: '4px 10px', fontFamily: "'Archivo', sans-serif", fontSize: 11, outline: 'none', width: 160 }}
-                />
-                {searchTerm && (
-                  <>
-                    <span style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)' }}>{resultCount}</span>
-                    <button onClick={clearSearch} style={{ ...miniBtnStyle('var(--mute)'), padding: '2px 8px', fontSize: 9 }}>✕</button>
-                  </>
-                )}
-                  </div>
-                }
-              />
-              <div style={{ flex: 1, overflow: 'auto', padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: 16 }}>
-                {chatLoading && (
-                  <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: 80 }}>
-                    <span style={{ fontFamily: MONO, fontSize: 11, color: 'var(--mute)', letterSpacing: '.18em' }}>LOADING MESSAGES…</span>
-                  </div>
-                )}
-                {!chatLoading && messages.length === 0 && (
-                  <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: 80 }}>
-                    <span style={{ fontFamily: "'Archivo', sans-serif", fontSize: 12, color: 'var(--mute)' }}>No messages yet. Start the conversation!</span>
-                  </div>
-                )}
-                {!chatLoading && messages.length > 0 && searchTerm && filteredMessages.length === 0 && (
-                  <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: 80 }}>
-                    <span style={{ fontFamily: "'Archivo', sans-serif", fontSize: 12, color: 'var(--mute)' }}>No messages match &ldquo;{searchTerm}&rdquo;</span>
-                  </div>
-                )}
-                {filteredMessages.map((msg) => {
-                  const msgHue = mgrHue(msg.userName || '');
-                  return (
-                  <div
-                    key={msg.id}
-                    style={{ display: 'grid', gridTemplateColumns: '38px 1fr', gap: 12, alignItems: 'flex-start' }}
-                  >
-                    <div style={{ paddingTop: 2 }}>
-                      <MgrTag mono={mgrMono(msg.isOwnMessage ? 'You' : (msg.userName || ''))} hue={msg.isOwnMessage ? 'var(--cyan)' : msgHue} size={22} />
-                    </div>
-                    <div>
-                    <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 3 }}>
-                      <span style={{ fontFamily: DISPLAY, fontSize: 13, color: msg.isOwnMessage ? 'var(--cyan)' : msgHue, letterSpacing: '-0.01em' }}>{msg.isOwnMessage ? 'You' : msg.userName}</span>
-                      <span style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.16em' }}>{new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                      {msg.userRank && <span style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)' }}>· RANK {msg.userRank}</span>}
-                    </div>
-                    {editingMessageId === msg.id ? (
-                      <div className="flex gap-2 items-center w-full">
-                        <input
-                          type="text"
-                          value={editingText}
-                          onChange={(e) => setEditingText(e.target.value)}
-                          className="flex-1 bg-[var(--ink-2)] border border-cyan rounded px-2 py-1 text-sm text-white"
-                          autoFocus
-                        />
-                        <button
-                          onClick={async () => {
-                            const result = await editMessage(msg.id, editingText);
-                            if (result.ok) setEditingMessageId(null);
-                          }}
-                          className="px-2 py-1 bg-cyan text-black text-xs font-bold rounded"
-                        >
-                          Save
-                        </button>
-                        <button
-                          onClick={() => setEditingMessageId(null)}
-                          className="px-2 py-1 bg-[var(--rule)] text-white text-xs rounded"
-                        >
-                          Cancel
-                        </button>
-                      </div>
-                    ) : (
-                      <>
-                        <div style={{ fontFamily: "'Archivo', sans-serif", fontSize: 13, color: 'var(--paper)', lineHeight: 1.45 }}>
-                          {msg.isDeleted ? (
-                            <span style={{ fontStyle: 'italic', color: 'var(--mute)' }}>[deleted]</span>
-                          ) : (
-                            msg.message.split(/(@\w+)/g).map((part, idx) =>
-                              part.startsWith('@') ? (
-                                <span key={idx} style={{ color: 'var(--cyan)', fontFamily: MONO, fontSize: 12, padding: '0 2px', background: 'rgba(0,180,216,.08)' }}>{part}</span>
-                              ) : (
-                                <span key={idx}>{part}</span>
-                              )
-                            )
-                          )}
-                        </div>
-                        {msg.editedAt && !msg.isDeleted && (
-                          <div style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', marginTop: 2 }}>(edited)</div>
-                        )}
-                        {msg.isOwnMessage && !msg.isDeleted && (
-                          <div style={{ display: 'flex', gap: 6, marginTop: 4 }}>
-                            <button onClick={() => { setEditingMessageId(msg.id); setEditingText(msg.message); }} style={miniBtnStyle('var(--mute)')}>EDIT</button>
-                            <button onClick={() => deleteMessage(msg.id)} style={miniBtnStyle('var(--danger)')}>DEL</button>
-                          </div>
-                        )}
-                      </>
-                    )}
-                    </div>
-                  </div>
-                  );
-                })}
-                <div ref={scrollEndRef} />
-              </div>
-              <div style={{ borderTop: '1px solid var(--rule)', padding: '14px 20px', background: 'var(--ink-2)', flexShrink: 0 }}>
-                {Object.values(typingUsers).length > 0 && (
-                  <div style={{ fontFamily: "'Archivo', sans-serif", fontSize: 11, color: 'var(--mute)', marginBottom: 8, fontStyle: 'italic' }}>
-                    {Object.values(typingUsers).map(t => t.name).join(', ')} {Object.keys(typingUsers).length === 1 ? 'is' : 'are'} typing…
-                  </div>
-                )}
-                <form
-                  onSubmit={async (e) => {
-                    e.preventDefault();
-                    if (!chatInput.trim() || chatSending) return;
-                    setChatSending(true);
-                    const result = await sendMessage(chatInput, mentionedUserIds);
-                    if (result.ok) { setChatInput(''); resetMentions(); }
-                    else console.error('Failed to send message:', result.error);
-                    setChatSending(false);
-                  }}
-                  style={{ width: '100%', position: 'relative' }}
-                >
-                  <div style={{ background: 'var(--ink)', border: '1px solid var(--rule)', display: 'flex', alignItems: 'center', padding: '0 14px' }}>
-                    <input
-                      type="text"
-                      placeholder="Roast your rivals… (try @username · /bet · /trade)"
-                      value={chatInput}
-                      onChange={(e) => { const v = e.target.value; setChatInput(v); parseMentionPattern(v); broadcastTyping(); }}
-                      onKeyDown={(e) => {
-                        if (mentionMatches.length > 0) {
-                          if (e.key === 'ArrowDown') { e.preventDefault(); handleMentionNavigate(1); }
-                          else if (e.key === 'ArrowUp') { e.preventDefault(); handleMentionNavigate(-1); }
-                          else if (e.key === 'Enter' && selectedMention) { e.preventDefault(); setChatInput(insertMention(chatInput, selectedMention)); }
-                        }
-                      }}
-                      disabled={chatSending}
-                      style={{ flex: 1, background: 'transparent', padding: '12px 0', fontFamily: "'Archivo', sans-serif", fontSize: 13, color: 'var(--paper)', outline: 'none', opacity: chatSending ? 0.5 : 1 }}
-                    />
-                    <button type="submit" disabled={!chatInput.trim() || chatSending} style={{ background: 'var(--cyan)', color: 'var(--ink)', border: 'none', padding: '8px 14px', fontFamily: DISPLAY, fontSize: 12, letterSpacing: '.18em', cursor: 'pointer', opacity: (!chatInput.trim() || chatSending) ? 0.5 : 1 }}>
-                      {chatSending ? '…' : 'SEND ↵'}
-                    </button>
-                  </div>
-                  {mentionMatches.length > 0 && mentionSearch && (
-                    <div style={{ position: 'absolute', bottom: '100%', left: 0, right: 0, background: 'var(--ink-3)', border: '1px solid var(--rule)', zIndex: 50, maxHeight: 192, overflow: 'auto' }}>
-                      {mentionMatches.map((member) => (
-                        <button key={member.id} type="button" onClick={() => setChatInput(insertMention(chatInput, member))} style={{ width: '100%', textAlign: 'left', padding: '8px 16px', fontFamily: "'Archivo', sans-serif", fontSize: 12, color: selectedMention?.id === member.id ? 'var(--ink)' : 'var(--paper)', background: selectedMention?.id === member.id ? 'var(--cyan)' : 'transparent', border: 'none', cursor: 'pointer' }}>
-                          <span style={{ fontWeight: 700 }}>@{member.name}</span>
-                          <span style={{ color: 'var(--mute)', fontSize: 10, marginLeft: 8 }}>{member.email}</span>
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </form>
-              </div>
-              </div>
-              {/* Right: members rail */}
-              <aside style={{ borderLeft: '1px solid var(--rule)', display: 'flex', flexDirection: 'column', background: 'var(--ink-2)', overflow: 'auto' }}>
-                <HubSectionLabel label={`MEMBERS · ${members.length}`} tone="var(--positive)" />
-                <div style={{ flex: 1, overflow: 'auto' }}>
-                  {/* Current user first */}
-                  {currentUser && members.filter(m => m.user_id === currentUser.id).map(m => {
-                    const hue = mgrHue(m.users?.username || '');
-                    return (
-                      <div key={m.user_id} style={{ padding: '10px 16px', display: 'flex', alignItems: 'center', gap: 10, borderBottom: '1px solid var(--rule)' }}>
-                        <div style={{ position: 'relative' }}>
-                          <MgrTag mono="YOU" hue="var(--cyan)" size={22} />
-                          <span style={{ position: 'absolute', bottom: -2, right: -2, width: 7, height: 7, borderRadius: '50%', background: 'var(--positive)', border: '2px solid var(--ink-2)' }} />
-                        </div>
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ fontFamily: DISPLAY, fontSize: 12, letterSpacing: '-0.01em' }}>You</div>
-                          <div style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.14em', marginTop: 2 }}>@{m.users?.username || 'you'}</div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                  {/* Other members */}
-                  {members.filter(m => !(currentUser && m.user_id === currentUser.id)).map(m => {
-                    const mName = m.users?.username || 'Unknown';
-                    const hue = mgrHue(mName);
-                    return (
-                      <div key={m.user_id} style={{ padding: '10px 16px', display: 'flex', alignItems: 'center', gap: 10, borderBottom: '1px solid var(--rule)' }}>
-                        <div style={{ position: 'relative' }}>
-                          <MgrTag mono={mgrMono(mName)} hue={hue} size={22} />
-                        </div>
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ fontFamily: DISPLAY, fontSize: 12, letterSpacing: '-0.01em' }}>{mName}</div>
-                          <div style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.14em', marginTop: 2 }}>@{mName.toLowerCase()}</div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </aside>
-            </div>
-          )}
 
          {view === 'stats' && (
            <StatsView

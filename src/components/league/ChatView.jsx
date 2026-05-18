@@ -23,20 +23,22 @@ export default function ChatView({
   const [editingMessageId, setEditingMessageId] = useState(null);
   const [editingText,      setEditingText]      = useState('');
 
+  const channels = [
+    { id: 'lc', name: '#league-chat',    active: true,  unread: unreadCount || 0 },
+    { id: 'tt', name: '#trash-talk',     active: false, unread: 0 },
+    { id: 'ah', name: '#auction-house',  active: false, unread: 0 },
+    { id: 'bb', name: '#bets-and-bonus', active: false, unread: 0 },
+    { id: 'tn', name: '#tactics-notes',  active: false, unread: 0 },
+  ];
+
   return (
-    <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '240px 1fr 280px', minHeight: 0, background: 'var(--ink)' }}>
-      {/* Left: channels rail */}
-      <aside style={{ borderRight: '1px solid var(--rule)', display: 'flex', flexDirection: 'column', background: 'var(--ink-2)', overflow: 'auto' }}>
+    <div style={{ flex: 1, display: 'flex', minHeight: 0, background: 'var(--ink)' }}>
+      {/* Left: channels rail — desktop only */}
+      <aside className="hidden lg:flex" style={{ borderRight: '1px solid var(--rule)', flexDirection: 'column', background: 'var(--ink-2)', overflow: 'auto', width: 240, flexShrink: 0 }}>
         <div style={{ padding: '18px 18px 8px' }}>
           <div style={{ fontFamily: MONO, fontSize: 10, color: 'var(--mute)', letterSpacing: '.22em' }}>CHANNELS</div>
         </div>
-        {[
-          { id: 'lc', name: '#league-chat',    active: true,  unread: unreadCount || 0 },
-          { id: 'tt', name: '#trash-talk',     active: false, unread: 0 },
-          { id: 'ah', name: '#auction-house',  active: false, unread: 0 },
-          { id: 'bb', name: '#bets-and-bonus', active: false, unread: 0 },
-          { id: 'tn', name: '#tactics-notes',  active: false, unread: 0 },
-        ].map(c => (
+        {channels.map(c => (
           <div key={c.id} style={{ padding: '10px 18px', display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer', borderLeft: c.active ? '2px solid var(--cyan)' : '2px solid transparent', background: c.active ? 'rgba(0,180,216,.06)' : 'transparent', color: c.active ? 'var(--paper)' : 'var(--mute)' }}>
             <span style={{ fontFamily: DISPLAY, fontSize: 13, letterSpacing: '-0.01em', flex: 1 }}>{c.name}</span>
             {c.unread > 0 && <span style={{ background: 'var(--danger)', color: '#fff', fontFamily: MONO, fontSize: 9, padding: '1px 6px', letterSpacing: '.1em' }}>{c.unread}</span>}
@@ -59,7 +61,23 @@ export default function ChatView({
       </aside>
 
       {/* Middle: main chat */}
-      <div style={{ display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+        {/* Mobile: channel pills — hidden on desktop */}
+        <div className="lg:hidden" style={{ display: 'flex', gap: 6, padding: '8px 14px', overflowX: 'auto', borderBottom: '1px solid var(--rule)', background: 'var(--ink-2)', flexShrink: 0, scrollbarWidth: 'none' }}>
+          {channels.map(c => (
+            <span key={c.id} style={{
+              flex: '0 0 auto', padding: '5px 10px', whiteSpace: 'nowrap',
+              background: c.active ? 'rgba(0,180,216,.08)' : 'transparent',
+              border: c.active ? '1px solid var(--cyan)' : '1px solid var(--rule)',
+              color: c.active ? 'var(--cyan)' : 'var(--mute)',
+              fontFamily: DISPLAY, fontSize: 11, letterSpacing: '-0.01em',
+              display: 'inline-flex', alignItems: 'center', gap: 5,
+            }}>
+              {c.name}
+              {c.unread > 0 && <span style={{ background: 'var(--danger)', color: '#fff', fontFamily: MONO, fontSize: 8, padding: '0 4px', letterSpacing: '.1em' }}>{c.unread}</span>}
+            </span>
+          ))}
+        </div>
         <HubSectionLabel label="#LEAGUE-CHAT" tone="var(--cyan)" sub={`${members.length} MEMBERS`}
           right={
             <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
@@ -210,8 +228,8 @@ export default function ChatView({
         </div>
       </div>
 
-      {/* Right: members rail */}
-      <aside style={{ borderLeft: '1px solid var(--rule)', display: 'flex', flexDirection: 'column', background: 'var(--ink-2)', overflow: 'auto' }}>
+      {/* Right: members rail — desktop only */}
+      <aside className="hidden lg:flex" style={{ borderLeft: '1px solid var(--rule)', flexDirection: 'column', background: 'var(--ink-2)', overflow: 'auto', width: 280, flexShrink: 0 }}>
         <HubSectionLabel label={`MEMBERS · ${members.length}`} tone="var(--positive)" />
         <div style={{ flex: 1, overflow: 'auto' }}>
           {currentUser && members.filter(m => m.user_id === currentUser.id).map(m => (

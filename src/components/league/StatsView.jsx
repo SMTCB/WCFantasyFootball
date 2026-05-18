@@ -7,30 +7,32 @@ export default function StatsView({ topScorers, teamMetrics, members, currentUse
 
   return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: 'var(--ink)' }}>
-      {/* Hero strip */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1.8fr 1fr 1fr 1fr', borderBottom: '1px solid var(--rule)', background: 'var(--ink-2)', flexShrink: 0 }}>
-        <div style={{ padding: '20px 24px', borderRight: '1px solid var(--rule)' }}>
-          <div style={{ fontFamily: MONO, fontSize: 10, color: 'var(--purple)', letterSpacing: '.22em' }}>LEAGUE STATS · {members.length} GAMEWEEKS</div>
-          <div style={{ fontFamily: DISPLAY, fontSize: 26, marginTop: 6, lineHeight: 1.1 }}>Numbers, the way the league reads them.</div>
+      {/* Hero strip — responsive */}
+      <div style={{ borderBottom: '1px solid var(--rule)', background: 'var(--ink-2)', flexShrink: 0 }}>
+        <div style={{ padding: 'clamp(12px, 2vw, 20px) clamp(14px, 3vw, 24px)', borderBottom: '1px solid var(--rule)' }}>
+          <div style={{ fontFamily: MONO, fontSize: 'clamp(9px, 1.8vw, 10px)', color: 'var(--purple)', letterSpacing: '.22em' }}>LEAGUE STATS · {members.length} GAMEWEEKS</div>
+          <div style={{ fontFamily: DISPLAY, fontSize: 'clamp(18px, 4vw, 26px)', marginTop: 6, lineHeight: 1.1 }}>Numbers, the way the league reads them.</div>
         </div>
-        {[
-          { k: 'TOTAL POINTS', v: totalPts.toLocaleString(), tone: 'var(--paper)'   },
-          { k: 'AVG / MGR',    v: avgPts,                    tone: 'var(--cyan)'    },
-          { k: 'LEAD SCORE',   v: biggestGW,                 tone: 'var(--gold)'    },
-        ].map((c, i) => (
-          <div key={c.k} style={{ padding: '20px 22px', borderRight: i < 2 ? '1px solid var(--rule)' : 'none' }}>
-            <div style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.22em' }}>{c.k}</div>
-            <div style={{ fontFamily: DISPLAY, fontSize: 30, color: c.tone, marginTop: 6, letterSpacing: '-0.02em' }}>{c.v}</div>
-          </div>
-        ))}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr' }}>
+          {[
+            { k: 'TOTAL', v: totalPts.toLocaleString(), tone: 'var(--paper)' },
+            { k: 'AVG',   v: avgPts,                    tone: 'var(--cyan)'  },
+            { k: 'LEAD',  v: biggestGW,                 tone: 'var(--gold)'  },
+          ].map((c, i) => (
+            <div key={c.k} style={{ padding: 'clamp(8px, 2vw, 16px) clamp(10px, 2.5vw, 22px)', borderRight: i < 2 ? '1px solid var(--rule)' : 'none' }}>
+              <div style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.22em' }}>{c.k}</div>
+              <div style={{ fontFamily: DISPLAY, fontSize: 'clamp(20px, 4vw, 30px)', color: c.tone, marginTop: 4, letterSpacing: '-0.02em' }}>{c.v}</div>
+            </div>
+          ))}
+        </div>
       </div>
 
       {statsLoading ? (
         <div style={{ padding: '48px', textAlign: 'center', fontFamily: MONO, fontSize: 10, color: 'var(--mute)', letterSpacing: '.2em' }}>LOADING…</div>
       ) : (
-        <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '1.4fr 1fr', gridTemplateRows: '1fr 1fr', minHeight: 0 }}>
+        <div className="flex flex-col lg:grid lg:grid-cols-2" style={{ flex: 1, minHeight: 0, overflow: 'auto' }}>
           {/* Top scorers */}
-          <section style={{ padding: '16px 22px', borderRight: '1px solid var(--rule)', borderBottom: '1px solid var(--rule)', display: 'flex', flexDirection: 'column', gap: 8, overflow: 'auto' }}>
+          <section style={{ padding: '16px 22px', borderRight: '1px solid var(--rule)', borderBottom: '1px solid var(--rule)', display: 'flex', flexDirection: 'column', gap: 8, overflow: 'visible' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
               <span style={{ width: 3, height: 14, background: 'var(--cyan)' }} />
               <span style={{ fontFamily: MONO, fontSize: 11, color: 'var(--paper)', letterSpacing: '.22em' }}>SEASON TOTALS · TOP SCORERS</span>
