@@ -1,6 +1,6 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-05-17 (Session 28: Quick Wins Bundle Week 1)  
+**Last Updated**: 2026-05-18 (Chat functionality restored)  
 **E2E Test Suite**: 198/200 passing (99%) ✅ (2 pre-existing UI timeouts in multi-league test)  
 **Live App**: https://wc-fantasy-football.vercel.app
 
@@ -77,6 +77,29 @@ Foundation and quick-wins phase complete. Achieved: color system standardization
 - ✅ Button Manage Squad not working → Status: DONE (resolved)
 - ✅ Bets not working → Status: DONE (resolved)
 - **Result**: No active blocking issues. Week 1 changes introduced zero regressions. All reported bugs pre-existed and have been fixed.
+
+---
+
+## 📊 HOTFIX SESSION (2026-05-18 — Chat Functionality Restoration)
+
+**🚀 COMPLETED THIS SESSION:**
+
+- ✅ **PR #112 — Chat Functionality Restore** (merged):
+  - **Issue**: Chat messages failed to load due to incorrect database column queries
+  - **Root Cause**: useChatMessages.js and useMentions.js were trying to query `email` and `user_metadata` columns which don't exist in the users table
+  - **Database Reality**: users table only has: id, username, avatar_url, xp, badges, created_at
+  - **Impact**: Chat messages wouldn't load, message sending broke, mention autocomplete failed, Realtime subscriptions errored
+  - **Fix**:
+    - Updated useChatMessages.js to query `users(id, username)` instead of non-existent columns
+    - Updated useMentions.js to query only username field for member lookups
+    - Removed email display from ChatView mention dropdown
+    - Changed currentUser display in composer to use username instead of email
+  - **Verification**: 
+    - Build: ✓ Passed (1.86s)
+    - Lint: ✓ Passed (pre-existing warnings only)
+    - Query Test: ✓ Verified against live database
+    - No new console errors
+  - **Status**: Deployed to main, live on https://wc-fantasy-football.vercel.app
 
 ---
 
