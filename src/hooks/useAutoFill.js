@@ -3,7 +3,7 @@ import { supabase } from '../lib/supabase';
 import { useTransfer } from './useTransfer';
 import { useLeagueConfig } from './useLeagueConfig';
 
-export function useAutoFill(leagueId, squadData, fetchSquad) {
+export function useAutoFill(leagueId, squadData, fetchSquad, takenMap = {}) {
   const [autoFilling, setAutoFilling] = useState(false);
   const [autoFillMsg, setAutoFillMsg] = useState(null);
 
@@ -102,8 +102,8 @@ export function useAutoFill(leagueId, squadData, fetchSquad) {
           .order('price', { ascending: true })
           .limit(50);
 
-        // Exclude only MY own players — same player can be on multiple squads (FPL-style)
-        const candidates = (pool || []).filter(p => !myIds.has(p.id));
+        // Exclude my own players + any player already taken by another manager in this league
+        const candidates = (pool || []).filter(p => !myIds.has(p.id) && !takenMap[p.id]);
         if (candidates.length > 0) hasCandidates = true;
         for (let i = 0; i < need[pos] && i < candidates.length; i++) {
           const result = await buy(candidates[i]);
@@ -138,7 +138,7 @@ export function useAutoFill(leagueId, squadData, fetchSquad) {
       setTimeout(() => setAutoFillMsg(null), 5000);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [leagueId, squadData, buy, fetchSquad]);
+  }, [leagueId, squadData, buy, fetchSquad, takenMap]);
 
   return { handleAutoFill, autoFilling, autoFillMsg };
 }

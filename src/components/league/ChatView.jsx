@@ -78,27 +78,53 @@ export default function ChatView({
             </span>
           ))}
         </div>
-        <HubSectionLabel label="#LEAGUE-CHAT" tone="var(--cyan)" sub={`${members.length} MEMBERS`}
-          right={
-            <div className="hidden lg:flex" style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-              <span style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)' }}>🔍 SEARCH</span>
-              <input
-                type="text"
-                placeholder="Search…"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                style={{ background: 'var(--ink)', border: '1px solid var(--rule)', color: 'var(--paper)', padding: '4px 10px', fontFamily: "'Archivo', sans-serif", fontSize: 11, outline: 'none', width: 160 }}
-              />
-              {searchTerm && (
-                <>
-                  <span style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)' }}>{resultCount}</span>
-                  <button onClick={clearSearch} style={{ ...miniBtnStyle('var(--mute)'), padding: '2px 8px', fontSize: 9 }}>✕</button>
-                </>
-              )}
-            </div>
-          }
-        />
-        <div style={{ flex: 1, overflow: 'auto', padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: 16 }}>
+        {/* Section header — desktop only */}
+        <div className="hidden lg:block">
+          <HubSectionLabel label="#LEAGUE-CHAT" tone="var(--cyan)" sub={`${members.length} MEMBERS`}
+            right={
+              <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                <span style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)' }}>🔍 SEARCH</span>
+                <input
+                  type="text"
+                  placeholder="Search…"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  style={{ background: 'var(--ink)', border: '1px solid var(--rule)', color: 'var(--paper)', padding: '4px 10px', fontFamily: "'Archivo', sans-serif", fontSize: 11, outline: 'none', width: 160 }}
+                />
+                {searchTerm && (
+                  <>
+                    <span style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)' }}>{resultCount}</span>
+                    <button onClick={clearSearch} style={{ ...miniBtnStyle('var(--mute)'), padding: '2px 8px', fontSize: 9 }}>✕</button>
+                  </>
+                )}
+              </div>
+            }
+          />
+        </div>
+        {/* Mobile search bar */}
+        {searchTerm !== undefined && (
+          <div className="lg:hidden" style={{ padding: '6px 14px', background: 'var(--ink-2)', borderBottom: '1px solid var(--rule)', display: 'flex', gap: 6, alignItems: 'center' }}>
+            <input
+              type="text"
+              placeholder="Search messages…"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              style={{ flex: 1, background: 'var(--ink)', border: '1px solid var(--rule)', color: 'var(--paper)', padding: '6px 10px', fontFamily: "'Archivo', sans-serif", fontSize: 12, outline: 'none' }}
+            />
+            {searchTerm && (
+              <button onClick={clearSearch} style={{ ...miniBtnStyle('var(--mute)'), padding: '4px 8px' }}>✕</button>
+            )}
+          </div>
+        )}
+        {/* Date divider */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 18px 4px' }}>
+          <div style={{ flex: 1, height: 1, background: 'var(--rule)' }} />
+          <span style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.22em' }}>
+            {new Date().toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' }).toUpperCase()}
+          </span>
+          <div style={{ flex: 1, height: 1, background: 'var(--rule)' }} />
+        </div>
+        <div style={{ flex: 1, overflow: 'auto', padding: 'clamp(8px, 2vw, 16px) clamp(14px, 3vw, 20px)', display: 'flex', flexDirection: 'column', gap: 12 }}>
           {chatLoading && (
             <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: 80 }}>
               <span style={{ fontFamily: MONO, fontSize: 11, color: 'var(--mute)', letterSpacing: '.18em' }}>LOADING MESSAGES…</span>
@@ -117,7 +143,7 @@ export default function ChatView({
           {filteredMessages.map((msg) => {
             const msgHue = mgrHue(msg.userName || '');
             return (
-              <div key={msg.id} style={{ display: 'grid', gridTemplateColumns: '38px 1fr', gap: 12, alignItems: 'flex-start' }}>
+              <div key={msg.id} style={{ display: 'grid', gridTemplateColumns: 'clamp(26px, 5vw, 38px) 1fr', gap: 'clamp(8px, 2vw, 12px)', alignItems: 'flex-start' }}>
                 <div style={{ paddingTop: 2 }}>
                   <MgrTag mono={mgrMono(msg.isOwnMessage ? 'You' : (msg.userName || ''))} hue={msg.isOwnMessage ? 'var(--cyan)' : msgHue} size={22} />
                 </div>
