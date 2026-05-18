@@ -282,7 +282,7 @@ export default function LeagueScreen() {
     const { data } = await supabase
       .from('tournaments')
       .select('forza_id, name')
-      .eq('sync_enabled', true)
+      .eq('available_for_league_creation', true)
       .order('name');
     if (data?.length) {
       setTournaments(data);
