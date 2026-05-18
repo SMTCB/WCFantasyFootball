@@ -359,7 +359,7 @@ export default function MarketScreen() {
         }}
       >
         {/* Title + stats row */}
-        <div className="px-5 pt-3.5 pb-2.5 flex items-center justify-between">
+        <div className="px-5 pt-3.5 pb-2.5 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
           <div>
             <div
               className="fz-label"
@@ -369,7 +369,7 @@ export default function MarketScreen() {
             </div>
             <div className="flex items-center gap-2 mt-0.5">
               <div
-                className="text-[24px] font-black uppercase leading-tight tracking-tight"
+                className="text-[18px] lg:text-[24px] font-black uppercase leading-tight tracking-tight"
                 style={{ fontFamily: 'Archivo Black, sans-serif', color: 'var(--paper)' }}
               >
                 Player Market
@@ -391,32 +391,32 @@ export default function MarketScreen() {
             </div>
           </div>
 
-          <div className="flex items-center gap-5">
+          <div className="flex items-center gap-3 lg:gap-5 flex-wrap lg:flex-nowrap">
             {/* Squad count */}
             <div className="text-right">
-              <div className="fz-label" style={{ color: 'var(--mute)' }}>Squad</div>
+              <div className="fz-label" style={{ color: 'var(--mute)', fontSize: 10 }}>Squad</div>
               <div
-                className="text-[20px] font-black tabular-nums leading-tight"
+                className="text-[16px] lg:text-[20px] font-black tabular-nums leading-tight"
                 style={{ fontFamily: 'Archivo Black, sans-serif', color: squadCount >= squadSize ? 'var(--positive)' : 'var(--paper)' }}
               >
                 {squadCount}
-                <span className="text-[12px] font-normal" style={{ color: 'var(--mute)' }}>/{squadSize}</span>
+                <span className="text-[10px] lg:text-[12px] font-normal" style={{ color: 'var(--mute)' }}>/{squadSize}</span>
               </div>
             </div>
 
             {/* Budget + empty slots */}
             <div className="text-right" data-tour="market-budget">
-              <div className="fz-label" style={{ color: 'var(--mute)' }}>Budget</div>
+              <div className="fz-label" style={{ color: 'var(--mute)', fontSize: 10 }}>Budget</div>
               <div
-                className="text-[20px] font-black tabular-nums leading-tight"
+                className="text-[16px] lg:text-[20px] font-black tabular-nums leading-tight"
                 style={{ fontFamily: 'Archivo Black, sans-serif', color: (budget ?? 0) < 5 ? 'var(--danger)' : 'var(--cyan)' }}
               >
                 £{(budget ?? 0).toFixed(1)}
-                <span className="text-[12px] font-normal" style={{ color: 'var(--mute)' }}>M</span>
+                <span className="text-[10px] lg:text-[12px] font-normal" style={{ color: 'var(--mute)' }}>M</span>
               </div>
               {emptySlots > 0 && (
-                <div className="text-[10px] font-black mt-0.5" style={{ color: 'var(--gold)', fontFamily: 'Archivo Black, sans-serif' }}>
-                  {emptySlots} empty slot{emptySlots !== 1 ? 's' : ''}
+                <div className="text-[9px] font-black mt-0.5" style={{ color: 'var(--gold)', fontFamily: 'Archivo Black, sans-serif' }}>
+                  {emptySlots} empty
                 </div>
               )}
             </div>
@@ -426,20 +426,21 @@ export default function MarketScreen() {
               onClick={handleAutoFill}
               disabled={autoFilling}
               style={{
-                padding: '8px 12px',
+                padding: '6px 10px',
                 background: 'rgba(0,196,232,0.08)',
                 border: '1px solid rgba(0,196,232,0.25)',
                 color: autoFilling ? 'var(--mute)' : 'var(--cyan)',
                 fontFamily: 'Archivo Black, sans-serif',
-                fontSize: 9,
+                fontSize: 8,
                 letterSpacing: '0.1em',
                 textTransform: 'uppercase',
                 borderRadius: 2,
                 cursor: autoFilling ? 'wait' : 'pointer',
                 flexShrink: 0,
+                whiteSpace: 'nowrap',
               }}
             >
-              {autoFilling ? 'FILLING…' : '⚡ QUICK FILL'}
+              {autoFilling ? 'FILLING' : '⚡ FILL'}
             </button>
           </div>
         </div>

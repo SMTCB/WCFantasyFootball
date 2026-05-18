@@ -123,7 +123,11 @@ export function useAutoFill(leagueId, squadData, fetchSquad) {
         );
         if (fetchSquad) await fetchSquad();
       } else if (!hasCandidates) {
-        setAutoFillMsg('No affordable players available');
+        if (budgetLeft < 5) {
+          setAutoFillMsg('Insufficient budget — sell players to free up funds');
+        } else {
+          setAutoFillMsg('All available players in needed positions are taken or above budget');
+        }
       } else {
         setAutoFillMsg(lastTransferError || 'Transfer failed — check the transfer window is open');
       }
