@@ -80,7 +80,7 @@ export default function ChatView({
         </div>
         <HubSectionLabel label="#LEAGUE-CHAT" tone="var(--cyan)" sub={`${members.length} MEMBERS`}
           right={
-            <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+            <div className="hidden lg:flex" style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
               <span style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)' }}>🔍 SEARCH</span>
               <input
                 type="text"
