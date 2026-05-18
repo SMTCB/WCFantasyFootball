@@ -26,32 +26,32 @@ export function MgrTag({ mono = '???', hue = '#8B95A1', size = 18, dim = false }
 export function HubTopbar({ leagueName = 'LOADING…', memberCount = 0, gw = '—', rightSlot, onBack, isLive = false }) {
   return (
     <div style={{
-      display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-      padding: '18px 28px', borderBottom: '1px solid var(--rule)',
-      background: 'var(--ink)', flexShrink: 0,
+      display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap',
+      padding: 'max(12px, 2vw) max(16px, 4vw)', borderBottom: '1px solid var(--rule)',
+      background: 'var(--ink)', flexShrink: 0, gap: 12,
     }}>
-      <div>
+      <div style={{ minWidth: 0, flex: '1 1 auto' }}>
         <button
           onClick={onBack}
           style={{
             background: 'none', border: 'none', padding: 0, cursor: 'pointer',
-            fontFamily: MONO, fontSize: 10, color: 'var(--mute)', letterSpacing: '.2em',
+            fontFamily: MONO, fontSize: 'clamp(8px, 2vw, 10px)', color: 'var(--mute)', letterSpacing: '.2em',
           }}
-        >← BACK · COMPETITIVE CENTER</button>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginTop: 6 }}>
-          <span style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--cyan)', flexShrink: 0 }} />
-          <div style={{ fontFamily: DISPLAY, fontSize: 28, letterSpacing: '-0.02em', color: 'var(--paper)' }}>
+        >← BACK</button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 'max(8px, 1.5vw)', marginTop: 6, minWidth: 0, flexWrap: 'wrap' }}>
+          <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--cyan)', flexShrink: 0 }} />
+          <div style={{ fontFamily: DISPLAY, fontSize: 'clamp(18px, 5vw, 28px)', letterSpacing: '-0.02em', color: 'var(--paper)', minWidth: 0 }}>
             {leagueName.toUpperCase()}
           </div>
-          <span style={{ fontFamily: MONO, fontSize: 10, color: 'var(--mute)', letterSpacing: '.2em' }}>
-            · {memberCount} MEMBERS · GW{gw}
+          <span style={{ fontFamily: MONO, fontSize: 'clamp(8px, 2vw, 10px)', color: 'var(--mute)', letterSpacing: '.2em', whiteSpace: 'nowrap' }}>
+            {memberCount}M · GW{gw}
           </span>
         </div>
       </div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 18 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 'max(10px, 2vw)', flexShrink: 0 }}>
         {rightSlot}
         {isLive && (
-          <span style={{ fontFamily: MONO, fontSize: 10, color: 'var(--danger)', letterSpacing: '.22em' }}>● LIVE</span>
+          <span style={{ fontFamily: MONO, fontSize: 'clamp(8px, 2vw, 10px)', color: 'var(--danger)', letterSpacing: '.22em', whiteSpace: 'nowrap' }}>● LIVE</span>
         )}
       </div>
     </div>
@@ -106,31 +106,31 @@ export function HubTabs({ active = 'leaderboard', onTab, isCommissioner = false,
   ];
 
   return (
-    <div style={{ display: 'flex', borderBottom: '1px solid var(--rule)', padding: '0 28px', background: 'var(--ink)', flexShrink: 0, overflowX: 'auto' }}>
+    <div style={{ display: 'flex', borderBottom: '1px solid var(--rule)', padding: '0 max(16px, 3vw)', background: 'var(--ink)', flexShrink: 0, overflowX: 'auto', overflowY: 'hidden' }}>
       {tabs.map(t => (
         <button
           key={t.id}
           onClick={() => onTab(t.id)}
           style={{
-            padding: '14px 22px', position: 'relative', flexShrink: 0,
-            fontFamily: MONO, fontSize: 11, letterSpacing: '.22em',
+            padding: 'clamp(10px, 2vw, 14px) clamp(12px, 2.5vw, 22px)', position: 'relative', flexShrink: 0,
+            fontFamily: MONO, fontSize: 'clamp(8px, 1.8vw, 11px)', letterSpacing: '.22em',
             color: t.id === active ? 'var(--paper)' : 'var(--mute)',
             fontWeight: t.id === active ? 600 : 400,
-            cursor: 'pointer', background: 'none', border: 'none',
+            cursor: 'pointer', background: 'none', border: 'none', whiteSpace: 'nowrap',
           }}
         >
           {t.label}
           {!!t.count && (
-            <span style={{ marginLeft: 8, color: 'var(--cyan)', fontSize: 10, fontFamily: MONO }}>{t.count}</span>
+            <span style={{ marginLeft: 4, color: 'var(--cyan)', fontSize: 'clamp(7px, 1.5vw, 10px)', fontFamily: MONO }}>{t.count}</span>
           )}
           {t.notify && (
             <span style={{
-              display: 'inline-block', width: 5, height: 5, borderRadius: '50%',
-              background: 'var(--danger)', marginLeft: 6, verticalAlign: 'middle',
+              display: 'inline-block', width: 4, height: 4, borderRadius: '50%',
+              background: 'var(--danger)', marginLeft: 4, verticalAlign: 'middle',
             }} />
           )}
           {t.id === active && (
-            <span style={{ position: 'absolute', left: 14, right: 14, bottom: -1, height: 2, background: 'var(--cyan)' }} />
+            <span style={{ position: 'absolute', left: '10%', right: '10%', bottom: -1, height: 2, background: 'var(--cyan)' }} />
           )}
         </button>
       ))}
