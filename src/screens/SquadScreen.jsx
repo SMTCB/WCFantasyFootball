@@ -83,6 +83,23 @@ export default function SquadScreen() {
   const [confirm,            setConfirm]           = useState(null);
   const [pickerPos,          setPickerPos]         = useState(null);
   const [fetchError,         setFetchError]        = useState(null);
+  const [tournamentId,       setTournamentId]      = useState(null);
+
+  // Fetch tournament_id from the league
+  useEffect(() => {
+    if (!leagueId) return;
+    const fetchTournament = async () => {
+      const { data } = await supabase
+        .from('leagues')
+        .select('tournament_id')
+        .eq('id', leagueId)
+        .single();
+      if (data?.tournament_id) {
+        setTournamentId(data.tournament_id);
+      }
+    };
+    fetchTournament();
+  }, [leagueId]);
 
   // Competition-agnostic config from the selected league row
   const cfg = useLeagueConfig(leagueId);
@@ -1719,6 +1736,7 @@ export default function SquadScreen() {
           isOwnedBy={isOwnedBy}
           onSelect={handlePickerBuy}
           onClose={() => setPickerPos(null)}
+          tournamentId={tournamentId}
         />
       )}
 

@@ -13,9 +13,9 @@ const POS_LABEL = { GK: 'Goalkeeper', DEF: 'Defender', MID: 'Midfielder', FWD: '
 
 /**
  * Bottom sheet for picking a player to buy.
- * Pre-filtered to `position`, shows taken/available state.
+ * Pre-filtered to `position` and `tournament_id`, shows taken/available state.
  */
-export default function PlayerPickerSheet({ position, budget, takenMap, isOwnedBy, onSelect, onClose }) {
+export default function PlayerPickerSheet({ position, budget, takenMap, isOwnedBy, onSelect, onClose, tournamentId }) {
   const [players,  setPlayers]  = useState([]);
   const [loading,  setLoading]  = useState(true);
   const [search,   setSearch]   = useState('');
@@ -25,11 +25,17 @@ export default function PlayerPickerSheet({ position, budget, takenMap, isOwnedB
     let cancelled = false;
     const load = async () => {
       setLoading(true);
-      const { data } = await supabase
+      let query = supabase
         .from('players')
         .select('*')
-        .eq('position', position)
-        .order('price', { ascending: false });
+        .eq('position', position);
+
+      // Filter by tournament if provided
+      if (tournamentId) {
+        query = query.eq('tournament_id', tournamentId);
+      }
+
+      const { data } = await query.order('price', { ascending: false });
       if (!cancelled) {
         setPlayers(normalisePlayers(data ?? []));
         setLoading(false);
@@ -37,7 +43,7 @@ export default function PlayerPickerSheet({ position, budget, takenMap, isOwnedB
     };
     load();
     return () => { cancelled = true; };
-  }, [position]);
+  }, [position, tournamentId]);
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase();
