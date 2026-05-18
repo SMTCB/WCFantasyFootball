@@ -59,7 +59,7 @@ export function useChatMessages(leagueId) {
           created_at,
           is_deleted,
           edited_at,
-          users!inner(id, email, user_metadata)
+          users!inner(id, username)
         `)
         .eq('league_id', leagueId)
         .order('created_at', { ascending: true })
@@ -71,15 +71,13 @@ export function useChatMessages(leagueId) {
       }
 
       const formattedMsgs = (msgs || []).map(msg => {
-        const displayName = msg.users?.user_metadata?.display_name || msg.users?.email?.split('@')[0] || 'Unknown';
-        const rank = msg.users?.user_metadata?.rank || '—';
+        const displayName = msg.users?.username || 'Unknown';
         // Seed cache from join data so Realtime callbacks don't need to refetch known authors
-        if (msg.user_id) userMetaCache.current[msg.user_id] = { displayName, rank };
+        if (msg.user_id) userMetaCache.current[msg.user_id] = { displayName };
         return {
           id: msg.id,
           userId: msg.user_id,
           userName: displayName,
-          userRank: rank,
           message: msg.message,
           createdAt: msg.created_at,
           isDeleted: msg.is_deleted,
@@ -125,7 +123,7 @@ export function useChatMessages(leagueId) {
         event: 'typing',
         payload: {
           userId: user.id,
-          userName: user.user_metadata?.display_name || user.email?.split('@')[0] || 'User',
+          userName: user.user_metadata?.display_name || user.username || 'User',
         },
       });
 
@@ -143,7 +141,7 @@ export function useChatMessages(leagueId) {
     } catch (err) {
       console.error('useChatMessages: broadcastTyping error', err);
     }
-  }, [leagueId, user?.id, user?.email, user?.user_metadata]);
+  }, [leagueId, user?.id, user?.username, user?.user_metadata]);
 
   // Setup realtime subscription on mount
   useEffect(() => {
@@ -171,25 +169,22 @@ export function useChatMessages(leagueId) {
           if (!meta) {
             const { data: userData } = await supabase
               .from('users')
-              .select('user_metadata, email')
+              .select('username')
               .eq('id', newMsg.user_id)
               .single()
               .catch(() => ({ data: null }));
             meta = {
-              displayName: userData?.user_metadata?.display_name || userData?.email?.split('@')[0] || 'Unknown',
-              rank: userData?.user_metadata?.rank || '—',
+              displayName: userData?.username || 'Unknown',
             };
             if (newMsg.user_id) userMetaCache.current[newMsg.user_id] = meta;
           }
 
           const userName = meta.displayName;
-          const userRank = meta.rank;
 
           setMessages(prev => [...prev, {
             id: newMsg.id,
             userId: newMsg.user_id,
             userName,
-            userRank,
             message: newMsg.message,
             createdAt: newMsg.created_at,
             isDeleted: newMsg.is_deleted,

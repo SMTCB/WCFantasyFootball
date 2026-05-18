@@ -253,7 +253,6 @@ export default function ChatView({
                   {mentionMatches.map((member) => (
                     <button key={member.id} type="button" onClick={() => setChatInput(insertMention(chatInput, member))} style={{ width: '100%', textAlign: 'left', padding: '8px 16px', fontFamily: "'Archivo', sans-serif", fontSize: 12, color: selectedMention?.id === member.id ? 'var(--ink)' : 'var(--paper)', background: selectedMention?.id === member.id ? 'var(--cyan)' : 'transparent', border: 'none', cursor: 'pointer' }}>
                       <span style={{ fontWeight: 700 }}>@{member.name}</span>
-                      <span style={{ color: 'var(--mute)', fontSize: 10, marginLeft: 8 }}>{member.email}</span>
                     </button>
                   ))}
                 </div>
@@ -398,7 +397,7 @@ export default function ChatView({
         )}
         <div style={{ display: 'flex', gap: 8, alignItems: 'center', position: 'relative' }}>
           <MgrTag
-            mono={mgrMono(currentUser?.email || 'You')}
+            mono={mgrMono(currentUser?.username || 'You')}
             hue="var(--cyan)"
             size={20}
           />

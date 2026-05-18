@@ -20,7 +20,7 @@ export function useMentions(leagueId) {
         .from('league_members')
         .select(`
           user_id,
-          users!inner(id, email, user_metadata)
+          users!inner(id, username)
         `)
         .eq('league_id', leagueId);
 
@@ -31,8 +31,7 @@ export function useMentions(leagueId) {
 
       const members = (data || []).map(m => ({
         id: m.user_id,
-        name: m.users?.user_metadata?.display_name || m.users?.email?.split('@')[0] || 'User',
-        email: m.users?.email,
+        name: m.users?.username || 'User',
       }));
 
       setLeagueMembers(members);
@@ -50,8 +49,7 @@ export function useMentions(leagueId) {
 
       // Filter members by search term
       const matches = leagueMembers.filter(m =>
-        m.name.toLowerCase().startsWith(searchTerm) ||
-        m.email?.toLowerCase().startsWith(searchTerm)
+        m.name.toLowerCase().startsWith(searchTerm)
       );
 
       setMentionMatches(matches);
