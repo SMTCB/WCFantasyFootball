@@ -273,12 +273,14 @@ export default function LeagueScreen() {
   };
 
   useEffect(() => {
-    setCurrentUser(user);
-    fetchLeagues();
-    fetchTournaments();
-  }, [user]);
+    if (user?.id) {
+      setCurrentUser(user);
+      fetchLeagues();
+      fetchTournaments();
+    }
+  }, [user, fetchLeagues, fetchTournaments]);
 
-  const fetchTournaments = async () => {
+  const fetchTournaments = useCallback(async () => {
     const { data } = await supabase
       .from('tournaments')
       .select('forza_id, name')
@@ -288,7 +290,7 @@ export default function LeagueScreen() {
       setTournaments(data);
       setLeagueTournament(data[0].forza_id);
     }
-  };
+  }, []);
 
   useEffect(() => {
     if (leagueId) {
@@ -297,7 +299,7 @@ export default function LeagueScreen() {
       setActiveLeague(null);
       setMembers([]);
     }
-  }, [leagueId]);
+  }, [leagueId, loadLeagueById]);
 
   useEffect(() => {
     if (view === 'commissioner' && activeLeague?.league_id) {
@@ -346,7 +348,7 @@ export default function LeagueScreen() {
     return () => { membersSub.unsubscribe(); };
   }, [activeLeague?.league_id]);
 
-  const loadLeagueById = async (id) => {
+  const loadLeagueById = useCallback(async (id) => {
     try {
       setMembersLoading(true);
       if (view === 'list') setView('detail');
@@ -396,18 +398,18 @@ export default function LeagueScreen() {
         .eq('league_id', id);
       setLeagueListings(listings ?? []);
       setMyListings(new Set((listings ?? []).filter(l => l.user_id === user?.id).map(l => l.player_id)));
-      
+
       setMembers(mData || []);
     } finally {
       setMembersLoading(false);
     }
-  };
+  }, [user?.id, view]);
 
-  const fetchLeagues = async () => {
+  const fetchLeagues = useCallback(async () => {
     try {
       setLoading(true);
       const userId = user?.id;
-      
+
       const { data, error } = await supabase
         .from('league_members')
         .select(`
@@ -415,9 +417,9 @@ export default function LeagueScreen() {
           leagues ( id, name, format, tournament_id )
         `)
         .eq('user_id', userId);
-        
+
       if (error) throw error;
-      
+
       if (!data || data.length === 0) {
         setLeagues([]);
         return;
@@ -428,7 +430,7 @@ export default function LeagueScreen() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user?.id]);
 
   // FB-025: atomic league creation via RPC (league + commissioner in one transaction)
   const handleCreateLeague = async (e) => {
