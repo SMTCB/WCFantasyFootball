@@ -608,14 +608,33 @@ export default function HomeScreen() {
   }, [selectedDate, allDates]);
 
   // ── Derived fixture sets ──────────────────────────────────────────
+  // Calculate week dates for WEEK view
+  const getWeekDates = useCallback((date) => {
+    const d = new Date(date + 'T00:00:00Z');
+    const dayOfWeek = d.getUTCDay();
+    const weekStart = new Date(d);
+    weekStart.setUTCDate(d.getUTCDate() - dayOfWeek);
+    const weekEnd = new Date(weekStart);
+    weekEnd.setUTCDate(weekStart.getUTCDate() + 6);
+
+    const start = weekStart.toISOString().split('T')[0];
+    const end = weekEnd.toISOString().split('T')[0];
+    return { start, end };
+  }, []);
+
   // When in DATE view, show all fixtures for that date regardless of GW
-  // When in COMP view, filter by GW for consistency with other views
+  // When in WEEK view, show all fixtures for that week
+  // Otherwise show all fixtures
   const baseFixtures = useMemo(() => {
-    if (view === 'date') {
+    if (viewMode === 'date' || view === 'date') {
       return allFixtures.filter(f => f.date === selectedDate);
     }
+    if (viewMode === 'week') {
+      const { start, end } = getWeekDates(selectedDate);
+      return allFixtures.filter(f => f.date >= start && f.date <= end);
+    }
     return allFixtures;
-  }, [allFixtures, view, selectedDate]);
+  }, [allFixtures, viewMode, view, selectedDate, getWeekDates]);
 
   // Comp-filtered fixtures for list/week views
   const filtered = useMemo(
