@@ -623,9 +623,6 @@ export default function HomeScreen() {
     [baseFixtures, filter],
   );
 
-  // For chip counts and other displays, use all fixtures
-  const gwFixtures = allFixtures;
-
   // All fixtures in the selected calendar month (unfiltered for chip counts)
   const allMonthFixtures = useMemo(() => {
     const { year, month } = calMonth;
@@ -859,9 +856,9 @@ export default function HomeScreen() {
         </div>
         {/* Row B: comp chips */}
         <div style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 2 }}>
-          <AllChip active={filter === 'ALL'} count={gwFixtures.length} onClick={() => setFilter('ALL')} />
-          {Object.keys(gwCounts).map(k => COMPS[k] || { code: k, name: k, tone: '#00B4D8' }).map(c => (
-            <CompChip key={c.code} comp={c} count={gwCounts[c.code] || 0} active={filter === c.code} onClick={() => setFilter(c.code)} />
+          <AllChip active={filter === 'ALL'} count={filtered.length} onClick={() => setFilter('ALL')} />
+          {Object.keys(counts).map(k => COMPS[k] || { code: k, name: k, tone: '#00B4D8' }).map(c => (
+            <CompChip key={c.code} comp={c} count={counts[c.code] || 0} active={filter === c.code} onClick={() => setFilter(c.code)} />
           ))}
         </div>
       </div>
