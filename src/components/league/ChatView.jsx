@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { MgrTag, HubSectionLabel, MONO, DISPLAY, miniBtnStyle, mgrHue, mgrMono } from './HubShared';
+import { useHashtags } from '../../hooks/useHashtags';
 
 /**
  * League chat view — responsive layout.
@@ -67,6 +68,7 @@ export default function ChatView({
   const [editingMessageId, setEditingMessageId] = useState(null);
   const [editingText,      setEditingText]      = useState('');
   const isDesktop = useIsDesktop();
+  const trendingHashtags = useHashtags(messages);
 
   const handleHashtagClick = useCallback((tag) => {
     setSearchTerm(tag);
@@ -261,38 +263,76 @@ export default function ChatView({
           </div>
         </div>
 
-        {/* Members rail */}
-        <aside style={{ borderLeft: '1px solid var(--rule)', display: 'flex', flexDirection: 'column', background: 'var(--ink-2)', overflow: 'auto' }}>
-          <HubSectionLabel label={`MEMBERS · ${members.length}`} tone="var(--positive)" />
-          <div style={{ flex: 1, overflow: 'auto' }}>
-            {/* Current user first */}
-            {currentUser && members.filter(m => m.user_id === currentUser.id).map(m => (
-              <div key={m.user_id} style={{ padding: '10px 16px', display: 'flex', alignItems: 'center', gap: 10, borderBottom: '1px solid var(--rule)' }}>
-                <div style={{ position: 'relative' }}>
-                  <MgrTag mono="YOU" hue="var(--cyan)" size={22} />
-                  <span style={{ position: 'absolute', bottom: -2, right: -2, width: 7, height: 7, borderRadius: '50%', background: 'var(--positive)', border: '2px solid var(--ink-2)' }} />
-                </div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontFamily: DISPLAY, fontSize: 12, letterSpacing: '-0.01em' }}>You</div>
-                  <div style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.14em', marginTop: 2 }}>@{m.users?.username || 'you'}</div>
-                </div>
-              </div>
-            ))}
-            {members.filter(m => !(currentUser && m.user_id === currentUser.id)).map(m => {
-              const mName = m.users?.username || 'Unknown';
-              const hue = mgrHue(mName);
-              return (
+        {/* Members + Hashtags rail */}
+        <aside style={{ borderLeft: '1px solid var(--rule)', display: 'flex', flexDirection: 'column', background: 'var(--ink-2)', minWidth: 0 }}>
+          {/* Trending Hashtags Section */}
+          <div style={{ borderBottom: '1px solid var(--rule)', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+            <HubSectionLabel label={`TRENDING · ${trendingHashtags.length}`} tone="var(--cyan)" />
+            <div style={{ padding: '8px 12px', display: 'flex', flexDirection: 'column', gap: 6, maxHeight: 200, overflow: 'auto' }}>
+              {trendingHashtags.length === 0 ? (
+                <span style={{ fontFamily: "'Archivo', sans-serif", fontSize: 11, color: 'var(--mute)', padding: '8px' }}>No hashtags yet</span>
+              ) : (
+                trendingHashtags.slice(0, 10).map(({ tag, count }) => (
+                  <button
+                    key={tag}
+                    onClick={() => handleHashtagClick(tag)}
+                    style={{
+                      textAlign: 'left',
+                      padding: '6px 8px',
+                      background: searchTerm === tag ? 'rgba(0,180,216,.15)' : 'transparent',
+                      border: `1px solid ${searchTerm === tag ? 'var(--cyan)' : 'var(--rule)'}`,
+                      borderRadius: 3,
+                      color: searchTerm === tag ? 'var(--cyan)' : 'var(--paper)',
+                      fontFamily: MONO,
+                      fontSize: 10,
+                      cursor: 'pointer',
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      gap: 4,
+                    }}
+                  >
+                    <span>{tag}</span>
+                    <span style={{ color: 'var(--mute)', fontSize: 9 }}>{count}</span>
+                  </button>
+                ))
+              )}
+            </div>
+          </div>
+
+          {/* Members Section */}
+          <div style={{ flex: 1, overflow: 'auto', display: 'flex', flexDirection: 'column' }}>
+            <HubSectionLabel label={`MEMBERS · ${members.length}`} tone="var(--positive)" />
+            <div style={{ overflow: 'auto' }}>
+              {/* Current user first */}
+              {currentUser && members.filter(m => m.user_id === currentUser.id).map(m => (
                 <div key={m.user_id} style={{ padding: '10px 16px', display: 'flex', alignItems: 'center', gap: 10, borderBottom: '1px solid var(--rule)' }}>
                   <div style={{ position: 'relative' }}>
-                    <MgrTag mono={mgrMono(mName)} hue={hue} size={22} />
+                    <MgrTag mono="YOU" hue="var(--cyan)" size={22} />
+                    <span style={{ position: 'absolute', bottom: -2, right: -2, width: 7, height: 7, borderRadius: '50%', background: 'var(--positive)', border: '2px solid var(--ink-2)' }} />
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontFamily: DISPLAY, fontSize: 12, letterSpacing: '-0.01em' }}>{mName}</div>
-                    <div style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.14em', marginTop: 2 }}>@{mName.toLowerCase()}</div>
+                    <div style={{ fontFamily: DISPLAY, fontSize: 12, letterSpacing: '-0.01em' }}>You</div>
+                    <div style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.14em', marginTop: 2 }}>@{m.users?.username || 'you'}</div>
                   </div>
                 </div>
-              );
-            })}
+              ))}
+              {members.filter(m => !(currentUser && m.user_id === currentUser.id)).map(m => {
+                const mName = m.users?.username || 'Unknown';
+                const hue = mgrHue(mName);
+                return (
+                  <div key={m.user_id} style={{ padding: '10px 16px', display: 'flex', alignItems: 'center', gap: 10, borderBottom: '1px solid var(--rule)' }}>
+                    <div style={{ position: 'relative' }}>
+                      <MgrTag mono={mgrMono(mName)} hue={hue} size={22} />
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontFamily: DISPLAY, fontSize: 12, letterSpacing: '-0.01em' }}>{mName}</div>
+                      <div style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.14em', marginTop: 2 }}>@{mName.toLowerCase()}</div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         </aside>
 
@@ -324,6 +364,31 @@ export default function ChatView({
             <button onClick={clearSearch} style={{ background: 'none', border: 'none', color: 'var(--mute)', fontFamily: MONO, fontSize: 9, cursor: 'pointer', padding: 0 }}>✕</button>
           )}
         </div>
+        {/* Mobile trending hashtags */}
+        {trendingHashtags.length > 0 && (
+          <div style={{ display: 'flex', gap: 4, padding: '0 16px 8px', overflowX: 'auto', scrollbarWidth: 'none', flex: '0 0 auto' }}>
+            {trendingHashtags.slice(0, 6).map(({ tag, count }) => (
+              <button
+                key={tag}
+                onClick={() => handleHashtagClick(tag)}
+                style={{
+                  flex: '0 0 auto',
+                  padding: '4px 8px',
+                  background: searchTerm === tag ? 'rgba(0,180,216,.15)' : 'transparent',
+                  border: `1px solid ${searchTerm === tag ? 'var(--cyan)' : 'var(--rule)'}`,
+                  borderRadius: 3,
+                  color: searchTerm === tag ? 'var(--cyan)' : 'var(--paper)',
+                  fontFamily: MONO,
+                  fontSize: 9,
+                  cursor: 'pointer',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                {tag} <span style={{ fontSize: 8, color: 'var(--mute)' }}>({count})</span>
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Pinned banner */}

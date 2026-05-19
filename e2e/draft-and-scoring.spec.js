@@ -181,23 +181,106 @@ test.describe('Draft System - Player List', () => {
     expect(errors, `Draft screen threw JS errors: ${errors.join(', ')}`).toHaveLength(0);
   });
 
-  test('draft list enforces position caps (GK:2, DEF:5, MID:5, FWD:3)', async () => {
+  test('draft list enforces position caps (GK:4, DEF:10, MID:10, FWD:6) during submission', async ({ page }) => {
     // VERIFICATION POINTS:
-    // 1. Position count display: "0/2" for GK, "0/5" for DEF, etc.
-    // 2. Cannot add 3rd GK when only 2 allowed
-    // 3. Cannot add 6th DEF when only 5 allowed
-    // 4. Disabled state on player row when position cap reached
+    // 1. Position count display shows current/cap (e.g., "0/4" for GK, "0/10" for DEF)
+    // 2. Cannot add 5th GK when only 4 allowed during draft
+    // 3. Cannot add 11th DEF when only 10 allowed during draft
+    // 4. Player row disabled when position cap reached
 
-    console.log('Position caps enforced: GK=2, DEF=5, MID=5, FWD=3');
+    const errors = [];
+    page.on('pageerror', err => errors.push(err.message));
+
+    await skipOnboarding(page);
+    await page.goto('/league');
+    await waitForContent(page);
+
+    // Find draft league
+    const leagueLinks = await page.locator('a[href*="/league/"]').all();
+    let foundDraftScreen = false;
+
+    for (const link of leagueLinks) {
+      const href = await link.getAttribute('href');
+      if (href) {
+        await page.goto(href + '/draft');
+        await waitForContent(page);
+
+        const isDraftScreen = await page.locator('text=Build Your List').isVisible().catch(() => false);
+        if (isDraftScreen) {
+          foundDraftScreen = true;
+
+          // Get position cap display (should show GK:4, DEF:10, MID:10, FWD:6)
+          const posCapTexts = await page.locator('[class*="text-center"]').allInnerTexts();
+          const posCapStr = posCapTexts.join('|');
+
+          // Should contain caps for GK, DEF, MID, FWD
+          expect(posCapStr).toMatch(/4.*GK|GK.*4/i);  // GK cap = 4
+          expect(posCapStr).toMatch(/10.*DEF|DEF.*10/i);  // DEF cap = 10
+          expect(posCapStr).toMatch(/10.*MID|MID.*10/i);  // MID cap = 10
+          expect(posCapStr).toMatch(/6.*FWD|FWD.*6/i);  // FWD cap = 6
+
+          break;
+        }
+      }
+    }
+
+    expect(foundDraftScreen, 'Should find draft screen with position caps').toBe(true);
+    expect(errors).toHaveLength(0);
   });
 
-  test('draft list prevents duplicate players within same manager list', async () => {
+  test('draft list prevents duplicate players within same manager list', async ({ page }) => {
     // VERIFICATION POINTS:
     // 1. Once a player is in "Your List", they disappear from the searchable pool
     // 2. Cannot add same player twice
     // 3. filteredPlayers excludes listedIds
 
-    console.log('No-duplicate enforcement: per-manager list deduplication');
+    const errors = [];
+    page.on('pageerror', err => errors.push(err.message));
+
+    await skipOnboarding(page);
+    await page.goto('/league');
+    await waitForContent(page);
+
+    const leagueLinks = await page.locator('a[href*="/league/"]').all();
+    let testPassed = false;
+
+    for (const link of leagueLinks) {
+      const href = await link.getAttribute('href');
+      if (href) {
+        await page.goto(href + '/draft');
+        await waitForContent(page);
+
+        const isDraftScreen = await page.locator('text=Build Your List').isVisible().catch(() => false);
+        if (isDraftScreen) {
+          // Add first player
+          const playerRows = await page.locator('[class*="bg-\\[#111\\]"][class*="cursor-pointer"]').all();
+          if (playerRows.length > 0) {
+            const firstPlayer = playerRows[0];
+            const firstName = await firstPlayer.locator('[class*="text-white"]').first().innerText();
+
+            // Expand and add player
+            await firstPlayer.click();
+            await page.waitForTimeout(100);
+            const addBtn = page.locator('button:has-text("Add to List")').first();
+            if (await addBtn.isVisible()) {
+              await addBtn.click();
+              await page.waitForTimeout(200);
+
+              // Verify player no longer appears in available pool
+              const remainingRows = await page.locator('[class*="bg-\\[#111\\]"][class*="cursor-pointer"]').all();
+              const playerNames = await Promise.all(remainingRows.map(r => r.locator('[class*="text-white"]').first().innerText().catch(() => '')));
+
+              expect(playerNames).not.toContain(firstName, 'Added player should not appear in available pool');
+              testPassed = true;
+            }
+          }
+          break;
+        }
+      }
+    }
+
+    expect(testPassed, 'Should test duplicate prevention logic').toBe(true);
+    expect(errors).toHaveLength(0);
   });
 });
 
