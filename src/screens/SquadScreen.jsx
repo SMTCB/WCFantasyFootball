@@ -183,6 +183,16 @@ export default function SquadScreen() {
       if (!squad) { setSquadData(EMPTY_SQUAD); setLoading(false); return; }
 
       const playerIds = squad.players || [];
+
+      // Build fixture query — handle missing matchday_id for some tournaments
+      let fixturesQuery = supabase.from('fixtures').select('id').eq('status', 'finished');
+      if (squad.matchday_id) {
+        fixturesQuery = fixturesQuery.like('id', `${squad.matchday_id}%`);
+      } else {
+        // No matchday — return empty set so points calculation doesn't crash
+        fixturesQuery = fixturesQuery.eq('id', 'null_no_matchday');
+      }
+
       const [
         { data: players,   error: pErr },
         { data: intelData },
@@ -195,7 +205,7 @@ export default function SquadScreen() {
         supabase.from('player_match_stats')
           .select('player_id, fantasy_points, fixture_id')
           .in('player_id', playerIds),
-        supabase.from('fixtures').select('id').eq('status', 'finished').like('id', `${squad.matchday_id}%`),
+        fixturesQuery,
       ]);
       if (pErr) throw pErr;
 
