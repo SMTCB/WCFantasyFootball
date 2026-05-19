@@ -260,16 +260,6 @@ export function useChatMessages(leagueId) {
     }
   }, [messages, scrollToBottom]);
 
-  // Fallback: Periodically requery messages if Realtime fails (poll every 3 seconds)
-  useEffect(() => {
-    if (!leagueId) return;
-    console.log('[useChatMessages] Setting up polling interval (3s)');
-    const pollInterval = setInterval(() => {
-      console.log('[useChatMessages] Polling: calling loadMessages');
-      loadMessages();
-    }, 3000);
-    return () => clearInterval(pollInterval);
-  }, [leagueId, loadMessages]);
 
   // Send a message
   const sendMessage = useCallback(async (messageText, mentionedUserIds = []) => {
