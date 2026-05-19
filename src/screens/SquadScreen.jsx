@@ -726,7 +726,7 @@ export default function SquadScreen() {
   const POS_CONFIG_COLORS = POS_BADGE_COLOR;
 
   const handlePickerBuy = async (player) => {
-    if (!leagueId) { showToast('No league selected — open your squad from the League screen.', 'warning'); return; }
+    if (!activeLeague) { showToast('No league selected — open your squad from the League screen.', 'warning'); return; }
 
     // FB-022: Validate that buying this player won't violate formation rules (especially max 1 GK on pitch)
     // Simulate adding to pitch if there's room, then check formation
@@ -797,7 +797,7 @@ export default function SquadScreen() {
                       isOwn={true}
                       onToggle={() => toggleFlag(squadData.squadId, player.id)}
                     />
-                    {leagueId && !isListed && (cfg.format === 'auction' || cfg.format === 'hybrid') && (
+                    {activeLeague && !isListed && (cfg.format === 'auction' || cfg.format === 'hybrid') && (
                       <button
                         disabled={auctionBusy === player.id}
                         onClick={async () => {
@@ -825,7 +825,7 @@ export default function SquadScreen() {
                         {auctionBusy === player.id ? '…' : 'Auction'}
                       </button>
                     )}
-                    {leagueId && isListed && (cfg.format === 'auction' || cfg.format === 'hybrid') && (
+                    {activeLeague && isListed && (cfg.format === 'auction' || cfg.format === 'hybrid') && (
                       <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 7, letterSpacing: '0.1em', textTransform: 'uppercase', padding: '2px 5px', border: '1px solid rgba(240,180,0,0.4)', color: 'var(--gold)', background: 'rgba(240,180,0,0.1)', flexShrink: 0 }}>
                         On auction
                       </span>
@@ -851,13 +851,13 @@ export default function SquadScreen() {
               {Array.from({ length: emptySlots }).map((_, i) => (
                 <button
                   key={`empty-${pos}-${i}`}
-                  onClick={() => leagueId && setPickerPos(pos)}
+                  onClick={() => activeLeague && setPickerPos(pos)}
                   className="w-full flex items-center gap-3 px-5 py-3 transition-all active:opacity-70"
                   style={{
                     borderBottom:  '1px solid rgba(255,255,255,0.04)',
                     borderLeft:    `2px dashed ${posColor}40`,
                     background:    `${posColor}06`,
-                    cursor:        leagueId ? 'pointer' : 'default',
+                    cursor:        activeLeague ? 'pointer' : 'default',
                   }}
                 >
                   <div
@@ -868,10 +868,10 @@ export default function SquadScreen() {
                   </div>
                   <div className="flex-1 text-left">
                     <div className="text-[12px] font-bold" style={{ color: posColor, fontFamily: 'Archivo Black, sans-serif', letterSpacing: '0.06em' }}>
-                      {leagueId ? `ADD ${pos}` : `EMPTY SLOT`}
+                      {activeLeague ? `ADD ${pos}` : `EMPTY SLOT`}
                     </div>
                     <div className="text-[10px] mt-0.5" style={{ color: 'var(--mute)' }}>
-                      {leagueId ? 'Tap to sign a player' : 'Open from League to sign'}
+                      {activeLeague ? 'Tap to sign a player' : 'Open from League to sign'}
                     </div>
                   </div>
                 </button>
