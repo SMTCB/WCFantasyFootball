@@ -1,4 +1,5 @@
 // @ts-check
+/* global process */
 import { test, expect } from '@playwright/test';
 import { createClient } from '@supabase/supabase-js';
 
@@ -102,7 +103,7 @@ test.describe('Draft Mode - Complete Flow', () => {
     expect(errors, `Draft screen threw JS errors: ${errors.join(', ')}`).toHaveLength(0);
   });
 
-  test('Draft submission prevents duplicate players across managers', async ({ page, context }) => {
+  test('Draft submission prevents duplicate players across managers', async ({ page }) => {
     // SCENARIO: Two managers submit draft lists
     // Manager 1 picks players A, B, C (30 players)
     // Manager 2 cannot pick the same players
@@ -114,7 +115,7 @@ test.describe('Draft Mode - Complete Flow', () => {
     // Get a draft league
     const leagueLinks = await page.locator('a[href*="/league/"]').all();
     let draftLeagueId = null;
-    let draftUrl = null;
+    let _draftUrl = null;
 
     for (const link of leagueLinks) {
       const href = await link.getAttribute('href');
@@ -124,14 +125,14 @@ test.describe('Draft Mode - Complete Flow', () => {
 
         const isDraftScreen = await page.locator('text=Build Your List').isVisible().catch(() => false);
         if (isDraftScreen) {
-          draftLeagueId = href.match(/\/league\/([^\/]+)/)?.[1];
-          draftUrl = href + '/draft';
+          draftLeagueId = href.match(/\/league\/([^/]+)/)?.[1];
+          _draftUrl = href + '/draft';
           break;
         }
       }
     }
 
-    if (!draftLeagueId || !draftUrl) {
+    if (!draftLeagueId || !_draftUrl) {
       test.skip();
       return;
     }
@@ -435,7 +436,7 @@ test.describe('Draft Mode - Complete Flow', () => {
 
     const leagueLinks = await page.locator('a[href*="/league/"]').all();
     let draftLeagueId = null;
-    let draftUrl = null;
+    let _draftUrl = null;
 
     for (const link of leagueLinks) {
       const href = await link.getAttribute('href');
@@ -445,8 +446,8 @@ test.describe('Draft Mode - Complete Flow', () => {
 
         const isDraftScreen = await page.locator('text=Build Your List').isVisible().catch(() => false);
         if (isDraftScreen) {
-          draftLeagueId = href.match(/\/league\/([^\/]+)/)?.[1];
-          draftUrl = href + '/draft';
+          draftLeagueId = href.match(/\/league\/([^/]+)/)?.[1];
+          _draftUrl = href + '/draft';
           break;
         }
       }
