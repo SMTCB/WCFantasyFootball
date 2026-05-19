@@ -1,8 +1,41 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-05-18 (Chat functionality restored)  
+**Last Updated**: 2026-05-19 (Auto-fill & League screen fixes)  
 **E2E Test Suite**: 198/200 passing (99%) ✅ (2 pre-existing UI timeouts in multi-league test)  
 **Live App**: https://wc-fantasy-football.vercel.app
+
+---
+
+## 📊 HOTFIX SESSION (2026-05-19 — League Screen & Auto-Fill Crash Fixes)
+
+**🚀 COMPLETED THIS SESSION:**
+
+- ✅ **PR #127 — Fix League Screen "Cannot access 'gn' before initialization" Crash** (merged):
+  - **Issue**: Clicking on Leagues tab crashes with temporal dead zone error
+  - **Root Cause**: `useCommissioner` hook signature updated to accept `(leagueId, tournamentId)` but LeagueScreen.jsx was calling it with 3 arguments `(leagueId, user, showToast)` causing parameter mismatch
+  - **Fix**: Updated LeagueScreen line 143 to pass correct parameters: `useCommissioner(activeLeague?.league_id, activeLeague?.tournament_id)`
+  - **Status**: Deployed to main, verified working ✓
+
+- ✅ **PR #128 — Fix useCommissioner Hook Parameter Signature** (merged):
+  - Confirmed hook signature change to `(leagueId, tournamentId)` and updated all call sites
+  - Resolved temporal dead zone issue blocking League screen access
+
+- ✅ **PR #129 — Fix Auto-Fill 403 Forbidden Error** (merged):
+  - **Issue**: Auto-fill feature fails silently with 403 Forbidden when calling `process-transfer` Edge Function
+  - **Root Cause**: Migration 12 seeds test fixture `md2-f3` (Bayern vs AC Milan) with status `'live'`, which triggers transfer window enforcement check in `process-transfer` function and blocks all transfers with 403 error
+  - **Transfer Window Enforcement Logic** (in Edge Function):
+    1. Check for live fixtures — if any fixture is `status='live'`, reject all transfers (403)
+    2. Check matchday deadline — if past deadline, reject transfers (403)
+    3. Check player's team kickoff — if player's team fixture has started, lock player cost (403)
+  - **Fix**: Created migration 63 to update `md2-f3` fixture status from `'live'` to `'finished'`
+  - **Verification**: Auto-fill now successfully buys players without 403 errors ✓
+  - **Status**: Deployed to main
+
+**Session Summary:**
+- Fixed 2 critical blocking issues preventing core functionality (League access, Auto-fill)
+- Root causes: Parameter mismatch + test data fixture state blocking transfers
+- All PRs merged with CI passing (except pre-existing ESLint warnings in LeagueScreen)
+- Zero E2E test regressions
 
 ---
 
