@@ -140,7 +140,7 @@ export default function LeagueScreen() {
   // Commissioner state + handlers consolidated into a single hook.
   // The whole object is passed to CommissionerPanel; named vars kept for any
   // remaining inline references (e.g. fetchOpenBets on view change).
-  const commissioner = useCommissioner(activeLeague?.league_id, user, showToast);
+  const commissioner = useCommissioner(activeLeague?.league_id, activeLeague?.tournament_id);
   const {
     commLoading, commMsg, setCommMsg, commAction,
     windowOpensAt, setWindowOpensAt,
