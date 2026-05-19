@@ -61,7 +61,9 @@ export default function SquadScreen() {
   const { user } = useAuth();
   const { show: showToast } = useToast();
   const [searchParams] = useSearchParams();
-  const [leagueId] = useState(searchParams.get('leagueId'));
+  const leagueIdParam = searchParams.get('leagueId');
+  const [activeLeague,       setActiveLeague]      = useState(leagueIdParam);
+  const [leagues,            setLeagues]           = useState(null);   // null = not yet loaded
   const [jokerPlayer,        setJokerPlayer]       = useState(null);
   const [isJokerPickerOpen,  setIsJokerPickerOpen] = useState(false);
   const [squadData,          setSquadData]         = useState(null);
@@ -85,34 +87,64 @@ export default function SquadScreen() {
   const [fetchError,         setFetchError]        = useState(null);
   const [tournamentId,       setTournamentId]      = useState(null);
 
-  // Fetch tournament_id from the league
+  // On mount: resolve league context
   useEffect(() => {
-    if (!leagueId) return;
+    const init = async () => {
+      if (leagueIdParam) {
+        setActiveLeague(leagueIdParam);
+        const { data } = await supabase
+          .from('leagues')
+          .select('tournament_id')
+          .eq('id', leagueIdParam)
+          .maybeSingle();
+        if (data?.tournament_id) setTournamentId(data.tournament_id);
+        return;
+      }
+      // No leagueId in URL — fetch user's leagues
+      const { data } = await supabase
+        .from('league_members')
+        .select('league_id, leagues(id, name, tournament_id)')
+        .eq('user_id', user?.id);
+      const list = (data ?? []).map(r => ({ id: r.league_id, name: r.leagues?.name ?? r.league_id, tournament_id: r.leagues?.tournament_id }));
+      if (list.length === 1) {
+        setActiveLeague(list[0].id);
+        if (list[0].tournament_id) setTournamentId(list[0].tournament_id);
+        setLeagues([]);
+      } else {
+        setLeagues(list);
+      }
+    };
+    if (user?.id) init();
+  }, [user?.id, leagueIdParam]);
+
+  // Fetch tournament_id when activeLeague changes (after selection)
+  useEffect(() => {
+    if (!activeLeague || leagueIdParam) return; // Skip if came from URL (already handled above)
     const fetchTournament = async () => {
       const { data } = await supabase
         .from('leagues')
         .select('tournament_id')
-        .eq('id', leagueId)
-        .single();
+        .eq('id', activeLeague)
+        .maybeSingle();
       if (data?.tournament_id) {
         setTournamentId(data.tournament_id);
       }
     };
     fetchTournament();
-  }, [leagueId]);
+  }, [activeLeague, leagueIdParam]);
 
   // Competition-agnostic config from the selected league row
-  const cfg = useLeagueConfig(leagueId);
+  const cfg = useLeagueConfig(activeLeague);
   const POS_LIMITS = cfg.positionLimits;
 
   // Transfer hook — league-scoped buy/sell + no-repeat enforcement
-  const { buy, sell, takenMap, isOwnedBy } = useTransfer(leagueId);
+  const { buy, sell, takenMap, isOwnedBy } = useTransfer(activeLeague);
 
   // Availability flags hook — league-scoped player flags for trade offers
-  const { flagMap, toggleFlag } = useAvailabilityFlag(leagueId);
+  const { flagMap, toggleFlag } = useAvailabilityFlag(activeLeague);
 
   // Auction hook — list players for auction in the current league
-  const { listPlayer: listForAuction, auctions: activeAuctions } = useAuctions(leagueId, squadData?.squadId);
+  const { listPlayer: listForAuction, auctions: activeAuctions } = useAuctions(activeLeague, squadData?.squadId);
   const [auctionBusy, setAuctionBusy] = useState(null); // playerId being listed
 
   // ── Data Fetching ─────────────────────────────────────────────────────────
@@ -142,7 +174,7 @@ export default function SquadScreen() {
 
       // Most-recent squad first — ensures we get the live matchday squad, not an older one
       const squadQuery = supabase.from('squads').select('*').eq('user_id', userId);
-      if (leagueId) squadQuery.eq('league_id', leagueId);
+      if (activeLeague) squadQuery.eq('league_id', activeLeague);
       const { data: squad, error } = await squadQuery.order('created_at', { ascending: false }).limit(1).maybeSingle();
       if (error) {
         setFetchError('Could not load your squad. Tap Retry to try again.');
@@ -239,7 +271,7 @@ export default function SquadScreen() {
   };
 
   // Auto-fill hook — reusable across Squad, Market, League screens
-  const { handleAutoFill, autoFilling, autoFillMsg } = useAutoFill(leagueId, squadData, fetchSquad, takenMap);
+  const { handleAutoFill, autoFilling, autoFillMsg } = useAutoFill(activeLeague, squadData, fetchSquad, takenMap);
 
   // Live countdown hook — replaces static window lock badge
   const deadline = useDeadlineCountdown();
@@ -271,7 +303,7 @@ export default function SquadScreen() {
   ];
 
 
-  useEffect(() => { fetchSquad(); fetchDailyStatus(); }, [user]);
+  useEffect(() => { if (activeLeague) { fetchSquad(); fetchDailyStatus(); } }, [user, activeLeague]);
 
   const fetchDailyStatus = async () => {
     try {
@@ -493,6 +525,27 @@ export default function SquadScreen() {
     } catch (err) { console.error(err); showToast('Failed to set Joker', 'error'); }
     finally { setSaving(false); }
   };
+
+  // League picker — shown when user has multiple leagues and none is selected
+  if (leagues && leagues.length > 1 && !activeLeague) {
+    return (
+      <div className="min-h-screen bg-bg flex flex-col items-center justify-center px-6 gap-4">
+        <div className="text-[13px] font-black uppercase tracking-widest mb-2" style={{ color: 'var(--mute)', fontFamily: 'Archivo Black, sans-serif' }}>
+          Select a League
+        </div>
+        {leagues.map(l => (
+          <button
+            key={l.id}
+            onClick={() => { setActiveLeague(l.id); if (l.tournament_id) setTournamentId(l.tournament_id); }}
+            className="w-full max-w-sm px-5 py-4 rounded-sm text-left transition-all active:opacity-70"
+            style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'var(--paper)' }}
+          >
+            <div className="text-[14px] font-semibold">{l.name}</div>
+          </button>
+        ))}
+      </div>
+    );
+  }
 
   // ── Loading ───────────────────────────────────────────────────────────────
   if (loading || !squadData) {
@@ -1114,8 +1167,14 @@ export default function SquadScreen() {
               {/* Section header */}
               <div style={{ padding: '16px 16px 12px', borderBottom: '1px solid var(--rule)' }}>
                 <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 9, color: 'var(--mute)', letterSpacing: '0.2em', textTransform: 'uppercase', marginBottom: 4 }}>Tactical Sheet</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 28, color: 'var(--paper)', lineHeight: 1, letterSpacing: '-0.01em' }}>MY SQUAD</div>
+                  </div>
+                  <LeagueSelector value={activeLeague} onChange={setActiveLeague} />
+                </div>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
-                  <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 28, color: 'var(--paper)', lineHeight: 1, letterSpacing: '-0.01em' }}>MY SQUAD</div>
+                  <div />
                   <button
                     onClick={handleAutoFill}
                     disabled={autoFilling}
