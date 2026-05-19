@@ -17,6 +17,7 @@ import GazetteDraftReport from '../components/GazetteDraftReport';
 import TransferWindowBanner from '../components/TransferWindowBanner';
 import AuctionCard from '../components/AuctionCard';
 import BetsSection from '../components/BetsSection';
+import BetCreatorPanel from '../components/league/BetCreatorPanel';
 import NotificationPanel from '../components/NotificationPanel';
 import { useTransferWindow } from '../hooks/useTransferWindow';
 import { useCommissioner }   from '../hooks/useCommissioner';
@@ -140,7 +141,7 @@ export default function LeagueScreen() {
   // Commissioner state + handlers consolidated into a single hook.
   // The whole object is passed to CommissionerPanel; named vars kept for any
   // remaining inline references (e.g. fetchOpenBets on view change).
-  const commissioner = useCommissioner(activeLeague?.league_id, user, showToast);
+  const commissioner = useCommissioner(activeLeague?.league_id, activeLeague?.tournament_id);
   const {
     commLoading, commMsg, setCommMsg, commAction,
     windowOpensAt, setWindowOpensAt,
@@ -1400,160 +1401,15 @@ export default function LeagueScreen() {
              </div>
 
              {/* ── Create Bet Instance ────────────────────────────────────────── */}
-             <div data-tour="comm-bets" className="bg-[#111] border border-[#1e1e1e] rounded-sm p-4 space-y-3">
-               <div className="text-[10px] font-black uppercase tracking-[0.15em] text-text-tertiary">Create Bet Instance</div>
-               <div className="flex flex-col gap-1">
-                 <label className="text-[9px] text-text-tertiary font-bold uppercase tracking-widest">Template (optional)</label>
-                 <div className="flex gap-1.5">
-                   <select
-                     value={betTemplateId}
-                     onChange={e => setBetTemplateId(e.target.value)}
-                     className="flex-1 bg-[#1a1a1a] border border-[#2a2a2a] text-white text-[11px] px-2 py-2 rounded-sm outline-none focus:border-cyan/40"
-                   >
-                     <option value="">None</option>
-                     <option value="top_scorer">Matchday Top Scorer</option>
-                     <option value="match_result">Match Result</option>
-                     <option value="player_block">Player Block</option>
-                   </select>
-                   {betTemplateId && (
-                     <button
-                       onClick={autoGenerateBetOptions}
-                       disabled={commLoading}
-                       title="Auto-populate options from this template"
-                       className="px-2.5 py-1.5 text-[9px] font-black uppercase tracking-widest rounded-sm disabled:opacity-50 shrink-0"
-                       style={{ background: 'rgba(0,196,232,0.15)', color: 'var(--cyan)', border: '1px solid rgba(0,196,232,0.3)' }}
-                     >
-                       ⚡ Auto
-                     </button>
-                   )}
-                 </div>
-               </div>
-               <div className="flex flex-col gap-1">
-                 <label className="text-[9px] text-text-tertiary font-bold uppercase tracking-widest">Title</label>
-                 <input
-                   type="text"
-                   value={betTitle}
-                   onChange={e => setBetTitle(e.target.value)}
-                   placeholder="e.g. Who scores first?"
-                   className="bg-[#1a1a1a] border border-[#2a2a2a] text-white text-[11px] px-2 py-2 rounded-sm outline-none focus:border-cyan/40"
-                 />
-               </div>
-               <div className="flex flex-col gap-1">
-                 <label className="text-[9px] text-text-tertiary font-bold uppercase tracking-widest">Prompt/Question</label>
-                 <textarea
-                   value={betPrompt}
-                   onChange={e => setBetPrompt(e.target.value)}
-                   placeholder="e.g. Which player will score the most goals?"
-                   className="bg-[#1a1a1a] border border-[#2a2a2a] text-white text-[11px] px-2 py-2 rounded-sm outline-none focus:border-cyan/40 resize-none h-[60px]"
-                 />
-               </div>
-               <div className="grid grid-cols-2 gap-2">
-                 <div className="flex flex-col gap-1">
-                   <label className="text-[9px] text-text-tertiary font-bold uppercase tracking-widest">Deadline</label>
-                   <input
-                     type="datetime-local"
-                     value={betDeadline}
-                     onChange={e => setBetDeadline(e.target.value)}
-                     className="bg-[#1a1a1a] border border-[#2a2a2a] text-white text-[11px] px-2 py-2 rounded-sm outline-none focus:border-cyan/40"
-                   />
-                 </div>
-                 <div className="flex flex-col gap-1">
-                   <label className="text-[9px] text-text-tertiary font-bold uppercase tracking-widest">Reward Value</label>
-                   <input
-                     type="number"
-                     value={betRewardValue}
-                     onChange={e => setBetRewardValue(e.target.value)}
-                     min="1"
-                     className="bg-[#1a1a1a] border border-[#2a2a2a] text-white text-[11px] px-2 py-2 rounded-sm outline-none focus:border-cyan/40"
-                   />
-                 </div>
-               </div>
-               <div className="grid grid-cols-2 gap-2">
-                 <div className="flex flex-col gap-1">
-                   <label className="text-[9px] text-text-tertiary font-bold uppercase tracking-widest">Scope Type</label>
-                   <select
-                     value={betScopeType}
-                     onChange={e => setBetScopeType(e.target.value)}
-                     className="bg-[#1a1a1a] border border-[#2a2a2a] text-white text-[11px] px-2 py-2 rounded-sm outline-none focus:border-cyan/40"
-                   >
-                     <option value="matchday">Matchday</option>
-                     <option value="match">Match</option>
-                     <option value="season">Season</option>
-                   </select>
-                 </div>
-                 <div className="flex flex-col gap-1">
-                   <label className="text-[9px] text-text-tertiary font-bold uppercase tracking-widest">Scope Ref (optional)</label>
-                   <input
-                     type="text"
-                     value={betScopeRef}
-                     onChange={e => setBetScopeRef(e.target.value)}
-                     placeholder="e.g. MD4, f-123"
-                     className="bg-[#1a1a1a] border border-[#2a2a2a] text-white text-[11px] px-2 py-2 rounded-sm outline-none focus:border-cyan/40"
-                   />
-                 </div>
-               </div>
-               {/* ── Answer Options (required) ── */}
-               <div className="flex flex-col gap-1.5">
-                 <label className="text-[9px] text-text-tertiary font-bold uppercase tracking-widest">
-                   Answer Options <span style={{ color: 'var(--danger)' }}>*</span>
-                 </label>
-                 {/* Existing options list */}
-                 {betOptions.length > 0 && (
-                   <div className="flex flex-col gap-1 mb-1">
-                     {betOptions.map((opt, idx) => (
-                       <div key={opt.key} className="flex items-center gap-2 bg-[#1a1a1a] border border-[#2a2a2a] px-2 py-1.5 rounded-sm">
-                         <span className="text-[9px] text-white/30 w-4 shrink-0">{idx + 1}.</span>
-                         <span className="text-[11px] text-white flex-1">{opt.label}</span>
-                         <button
-                           onClick={() => setBetOptions(prev => prev.filter((_, i) => i !== idx))}
-                           className="text-[10px] text-danger/60 hover:text-danger transition-colors shrink-0"
-                         >✕</button>
-                       </div>
-                     ))}
-                   </div>
-                 )}
-                 {/* Add option input */}
-                 <div className="flex gap-1.5">
-                   <input
-                     type="text"
-                     value={betOptionDraft}
-                     onChange={e => setBetOptionDraft(e.target.value)}
-                     onKeyDown={e => {
-                       if (e.key === 'Enter' && betOptionDraft.trim()) {
-                         const label = betOptionDraft.trim();
-                         const key   = label.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
-                         setBetOptions(prev => [...prev, { key: key || `opt_${prev.length + 1}`, label }]);
-                         setBetOptionDraft('');
-                       }
-                     }}
-                     placeholder="Type option, press Enter or Add"
-                     className="flex-1 bg-[#1a1a1a] border border-[#2a2a2a] text-white text-[11px] px-2 py-2 rounded-sm outline-none focus:border-cyan/40"
-                   />
-                   <button
-                     onClick={() => {
-                       const label = betOptionDraft.trim();
-                       if (!label) return;
-                       const key = label.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
-                       setBetOptions(prev => [...prev, { key: key || `opt_${prev.length + 1}`, label }]);
-                       setBetOptionDraft('');
-                     }}
-                     className="px-3 py-2 bg-[#2a2a2a] text-white text-[10px] font-black uppercase tracking-widest rounded-sm hover:bg-[#3a3a3a] transition-colors"
-                   >
-                     Add
-                   </button>
-                 </div>
-                 {betOptions.length < 2 && (
-                   <span className="text-[9px]" style={{ color: 'var(--mute)' }}>Minimum 2 options required.</span>
-                 )}
-               </div>
-
-               <button
-                 onClick={createBetInstance}
-                 disabled={commLoading}
-                 className="w-full py-3 bg-[#FF6B00] text-black text-[11px] font-black uppercase tracking-widest rounded-sm disabled:opacity-50"
-               >
-                 Create Bet Instance
-               </button>
+             <div data-tour="comm-bets" className="bg-[#111] border border-[#1e1e1e] rounded-sm p-4">
+               <div className="text-[10px] font-black uppercase tracking-[0.15em] text-text-tertiary mb-4">Create Bet</div>
+               <BetCreatorPanel
+                 leagueId={activeLeague?.league_id}
+                 tournamentId={activeLeague?.tournament_id}
+                 onCreated={fetchOpenBets}
+                 commLoading={commLoading}
+                 setCommMsg={setCommMsg}
+               />
              </div>
 
              {/* ── Resolve Bet Instance ────────────────────────────────────────── */}
