@@ -1,6 +1,12 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '../../lib/supabase';
 import { MONO, DISPLAY } from './HubShared';
+
+const TEMPLATE_UUID = {
+  top_scorer:   '912e7b5f-1c15-4747-bc0b-2da9678627ea',
+  match_result: '63a7de4f-5153-4e12-b6c5-4d5f3fc199fc',
+  player_block: 'b1828846-4ed6-47d6-9430-944768d87ae8',
+};
 
 const TEMPLATES = [
   {
@@ -11,6 +17,7 @@ const TEMPLATES = [
     answerType:  'player',
     scopeType:   'matchday',
     promptHint:  'Who will score the most goals this matchday?',
+    defaultPos:  'FWD',
   },
   {
     slug:        'match_result',
@@ -20,6 +27,7 @@ const TEMPLATES = [
     answerType:  'fixture',
     scopeType:   'match',
     promptHint:  'Predict the result of this match.',
+    defaultPos:  'ALL',
   },
   {
     slug:        'player_block',
@@ -29,19 +37,21 @@ const TEMPLATES = [
     answerType:  'player',
     scopeType:   'matchday',
     promptHint:  'Pick a player to block this matchday.',
+    defaultPos:  'ALL',
   },
 ];
+
+// ── Sub-components ────────────────────────────────────────────────────────────
 
 function TemplateCard({ t, selected, onClick }) {
   return (
     <button
       onClick={() => onClick(t)}
       style={{
-        flex: 1, minWidth: 100, padding: '12px 10px',
+        flex: 1, minWidth: 90, padding: '12px 8px',
         background: selected ? 'rgba(0,196,232,0.12)' : 'rgba(255,255,255,0.03)',
         border: `1px solid ${selected ? 'rgba(0,196,232,0.5)' : 'rgba(255,255,255,0.08)'}`,
-        borderRadius: 4, cursor: 'pointer', textAlign: 'center',
-        transition: 'all 0.15s',
+        borderRadius: 4, cursor: 'pointer', textAlign: 'center', transition: 'all 0.15s',
       }}
     >
       <div style={{ fontSize: 20, marginBottom: 4 }}>{t.icon}</div>
@@ -68,8 +78,7 @@ function PlayerOption({ player, selected, onClick }) {
         background: selected ? 'rgba(0,196,232,0.2)' : 'rgba(255,255,255,0.06)',
         border: `1px solid ${selected ? 'rgba(0,196,232,0.5)' : 'rgba(255,255,255,0.1)'}`,
         display: 'flex', alignItems: 'center', justifyContent: 'center',
-        fontFamily: MONO, fontSize: 8, color: selected ? 'var(--cyan)' : 'var(--mute)',
-        fontWeight: 700,
+        fontFamily: MONO, fontSize: 8, color: selected ? 'var(--cyan)' : 'var(--mute)', fontWeight: 700,
       }}>
         {player.position?.substring(0, 3)}
       </div>
@@ -99,10 +108,10 @@ function FixtureOption({ fixture, selected, onClick }) {
       }}
     >
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6, flex: 1, minWidth: 0 }}>
-          <span style={{ fontFamily: DISPLAY, fontSize: 12, color: selected ? 'var(--cyan)' : 'var(--paper)' }}>{fixture.home_team}</span>
-          <span style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)' }}>vs</span>
-          <span style={{ fontFamily: DISPLAY, fontSize: 12, color: selected ? 'var(--cyan)' : 'var(--paper)' }}>{fixture.away_team}</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 1, minWidth: 0 }}>
+          <span style={{ fontFamily: DISPLAY, fontSize: 13, color: selected ? 'var(--cyan)' : 'var(--paper)' }}>{fixture.home_team}</span>
+          <span style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', flexShrink: 0 }}>vs</span>
+          <span style={{ fontFamily: DISPLAY, fontSize: 13, color: selected ? 'var(--cyan)' : 'var(--paper)' }}>{fixture.away_team}</span>
         </div>
         {selected && <span style={{ color: 'var(--cyan)', fontSize: 14, flexShrink: 0 }}>✓</span>}
       </div>
@@ -111,61 +120,123 @@ function FixtureOption({ fixture, selected, onClick }) {
   );
 }
 
+// ── Main panel ────────────────────────────────────────────────────────────────
+
 export default function BetCreatorPanel({ leagueId, tournamentId, onCreated, commLoading, setCommMsg }) {
-  const [template,      setTemplate]      = useState(null);
-  const [deadline,      setDeadline]      = useState('');
-  const [rewardValue,   setRewardValue]   = useState('5');
-  const [rewardType,    setRewardType]    = useState('points');
-  const [title,         setTitle]         = useState('');
-  const [prompt,        setPrompt]        = useState('');
-  const [selectedOpts,  setSelectedOpts]  = useState([]);
+  const [template,     setTemplate]     = useState(null);
+  const [windowFrom,   setWindowFrom]   = useState('');   // optional match window start
+  const [deadline,     setDeadline]     = useState('');   // submission cutoff + fixture end
+  const [rewardValue,  setRewardValue]  = useState('5');
+  const [rewardType,   setRewardType]   = useState('points');
+  const [title,        setTitle]        = useState('');
+  const [prompt,       setPrompt]       = useState('');
+  const [selectedOpts, setSelectedOpts] = useState([]);
 
-  // Data for option pickers
-  const [players,   setPlayers]   = useState([]);
-  const [fixtures,  setFixtures]  = useState([]);
-  const [loading,   setLoading]   = useState(false);
-  const [search,    setSearch]    = useState('');
-  const [posFilter, setPosFilter] = useState('ALL');
+  const [players,    setPlayers]    = useState([]);
+  const [fixtures,   setFixtures]   = useState([]);
+  const [loading,    setLoading]    = useState(false);
+  const [search,     setSearch]     = useState('');
+  const [posFilter,  setPosFilter]  = useState('ALL');
+  const [saving,     setSaving]     = useState(false);
 
-  // Submitting state
-  const [saving, setSaving] = useState(false);
+  // Track if the user has manually edited title/prompt so we don't overwrite them
+  const titleEdited  = useRef(false);
+  const promptEdited = useRef(false);
 
-  // Fetch players or fixtures when template + deadline changes
-  const fetchOptions = useCallback(async () => {
-    if (!template || !tournamentId) return;
+  const resetForm = (picked) => {
+    setTemplate(picked);
+    setSelectedOpts([]);
+    setSearch('');
+    setPosFilter(picked?.defaultPos || 'ALL');
+    titleEdited.current  = false;
+    promptEdited.current = false;
+    if (picked) {
+      setTitle(picked.label);
+      setPrompt(picked.promptHint);
+    }
+  };
+
+  // When a fixture is selected for match_result, auto-update title if not manually edited
+  const updateTitleFromFixture = useCallback((fixture) => {
+    if (!titleEdited.current) {
+      setTitle(`${fixture.home_team} vs ${fixture.away_team}`);
+    }
+    if (!promptEdited.current) {
+      setPrompt(`Predict the result of ${fixture.home_team} vs ${fixture.away_team}.`);
+    }
+  }, []);
+
+  // ── Fetch: players filtered by clubs playing in the window ────────────────
+  const fetchPlayers = useCallback(async () => {
+    if (!tournamentId) return;
     setLoading(true);
     try {
-      if (template.answerType === 'player') {
-        const { data } = await supabase
-          .from('players')
-          .select('id, name, position, club')
-          .eq('tournament_id', tournamentId)
-          .in('position', ['FWD', 'MID', 'DEF'])
-          .order('price', { ascending: false })
-          .limit(60);
-        setPlayers(data || []);
-      } else if (template.answerType === 'fixture') {
-        let q = supabase
+      // If a date window is set, find clubs with scheduled fixtures in that range
+      // then limit players to only those clubs
+      let clubFilter = null;
+      if (windowFrom || deadline) {
+        let fq = supabase
           .from('fixtures')
-          .select('id, home_team, away_team, kickoff_at')
+          .select('home_team, away_team')
           .eq('tournament_id', tournamentId)
-          .eq('status', 'scheduled')
-          .order('kickoff_at', { ascending: true })
-          .limit(20);
-        // Only show fixtures before the deadline if one is set
-        if (deadline) q = q.lte('kickoff_at', new Date(deadline).toISOString());
-        const { data } = await q;
-        setFixtures(data || []);
+          .eq('status', 'scheduled');
+        if (windowFrom) fq = fq.gte('kickoff_at', new Date(windowFrom).toISOString());
+        if (deadline)   fq = fq.lte('kickoff_at', new Date(deadline).toISOString());
+        const { data: fx } = await fq.limit(30);
+        if (fx?.length) {
+          clubFilter = [...new Set(fx.flatMap(f => [f.home_team, f.away_team]))];
+        }
       }
+
+      let pq = supabase
+        .from('players')
+        .select('id, name, position, club')
+        .eq('tournament_id', tournamentId)
+        .in('position', ['FWD', 'MID', 'DEF'])
+        .order('price', { ascending: false })
+        .limit(80);
+
+      if (clubFilter?.length) pq = pq.in('club', clubFilter);
+
+      const { data } = await pq;
+      setPlayers(data || []);
     } catch (e) {
-      console.error('BetCreatorPanel fetch error:', e);
+      console.error('BetCreatorPanel player fetch error:', e);
     } finally {
       setLoading(false);
     }
-  }, [template, tournamentId, deadline]);
+  }, [tournamentId, windowFrom, deadline]);
 
-  useEffect(() => { fetchOptions(); }, [fetchOptions]);
+  // ── Fetch: fixtures in the window ─────────────────────────────────────────
+  const fetchFixtures = useCallback(async () => {
+    if (!tournamentId) return;
+    setLoading(true);
+    try {
+      let q = supabase
+        .from('fixtures')
+        .select('id, home_team, away_team, kickoff_at')
+        .eq('tournament_id', tournamentId)
+        .eq('status', 'scheduled')
+        .order('kickoff_at', { ascending: true })
+        .limit(20);
+      if (windowFrom) q = q.gte('kickoff_at', new Date(windowFrom).toISOString());
+      if (deadline)   q = q.lte('kickoff_at', new Date(deadline).toISOString());
+      const { data } = await q;
+      setFixtures(data || []);
+    } catch (e) {
+      console.error('BetCreatorPanel fixture fetch error:', e);
+    } finally {
+      setLoading(false);
+    }
+  }, [tournamentId, windowFrom, deadline]);
 
+  useEffect(() => {
+    if (!template) return;
+    if (template.answerType === 'player')  fetchPlayers();
+    if (template.answerType === 'fixture') fetchFixtures();
+  }, [template, fetchPlayers, fetchFixtures]);
+
+  // ── Option toggles ────────────────────────────────────────────────────────
   const togglePlayer = (player) => {
     setSelectedOpts(prev => {
       const exists = prev.find(o => o.key === player.id);
@@ -174,15 +245,17 @@ export default function BetCreatorPanel({ leagueId, tournamentId, onCreated, com
     });
   };
 
-  // Selecting a fixture adds all 3 outcome options for that fixture
   const toggleFixture = (fixture) => {
     const homeKey = `${fixture.id}_home`;
     const drawKey = `${fixture.id}_draw`;
     const awayKey = `${fixture.id}_away`;
     const isSelected = selectedOpts.some(o => o.key === homeKey);
     if (isSelected) {
+      // deselect — also clear title if it was auto-set from this fixture
       setSelectedOpts(prev => prev.filter(o => o.key !== homeKey && o.key !== drawKey && o.key !== awayKey));
     } else {
+      // select — auto-fill title from this fixture
+      updateTitleFromFixture(fixture);
       setSelectedOpts(prev => [
         ...prev,
         { key: homeKey, label: `${fixture.home_team} Win`, meta: {} },
@@ -192,23 +265,20 @@ export default function BetCreatorPanel({ leagueId, tournamentId, onCreated, com
     }
   };
 
+  // ── Create ────────────────────────────────────────────────────────────────
   const handleCreate = async () => {
     try {
       setSaving(true);
       setCommMsg(null);
-      if (!template)              throw new Error('Choose a bet type.');
-      if (!title.trim())          throw new Error('Enter a title.');
-      if (!prompt.trim())         throw new Error('Enter a question/prompt.');
-      if (!deadline)              throw new Error('Set a submission deadline.');
+      if (!template)               throw new Error('Choose a bet type.');
+      if (!title.trim())           throw new Error('Enter a title.');
+      if (!prompt.trim())          throw new Error('Enter a question/prompt.');
+      if (!deadline)               throw new Error('Set a submission deadline.');
       if (selectedOpts.length < 2) throw new Error('Select at least 2 options.');
 
       const { error } = await supabase.from('bet_instances').insert({
         league_id:    leagueId,
-        template_id:  {
-          top_scorer:   '912e7b5f-1c15-4747-bc0b-2da9678627ea',
-          match_result: '63a7de4f-5153-4e12-b6c5-4d5f3fc199fc',
-          player_block: 'b1828846-4ed6-47d6-9430-944768d87ae8',
-        }[template.slug] || null,
+        template_id:  TEMPLATE_UUID[template.slug] || null,
         title:        title.trim(),
         prompt:       prompt.trim(),
         options:      selectedOpts,
@@ -220,15 +290,14 @@ export default function BetCreatorPanel({ leagueId, tournamentId, onCreated, com
       });
       if (error) throw new Error(error.message);
 
-      setCommMsg({ type: 'ok', text: `✓ "${title}" created with ${selectedOpts.length} options.` });
-      // Reset
-      setTemplate(null);
+      setCommMsg({ type: 'ok', text: `✓ "${title.trim()}" created with ${selectedOpts.length} options.` });
+      resetForm(null);
       setDeadline('');
+      setWindowFrom('');
       setRewardValue('5');
       setRewardType('points');
-      setTitle('');
-      setPrompt('');
-      setSelectedOpts([]);
+      setPlayers([]);
+      setFixtures([]);
       onCreated?.();
     } catch (e) {
       setCommMsg({ type: 'err', text: e.message });
@@ -237,101 +306,157 @@ export default function BetCreatorPanel({ leagueId, tournamentId, onCreated, com
     }
   };
 
+  // ── Filtered player list ──────────────────────────────────────────────────
   const filteredPlayers = players.filter(p => {
-    const matchesSearch = !search || p.name.toLowerCase().includes(search.toLowerCase()) || p.club.toLowerCase().includes(search.toLowerCase());
+    const q = search.toLowerCase();
+    const matchesSearch = !q || p.name.toLowerCase().includes(q) || (p.club || '').toLowerCase().includes(q);
     const matchesPos    = posFilter === 'ALL' || p.position === posFilter;
     return matchesSearch && matchesPos;
   });
 
-  const isPlayerSelected = (id) => selectedOpts.some(o => o.key === id);
+  const isPlayerSelected  = (id)  => selectedOpts.some(o => o.key === id);
   const isFixtureSelected = (fid) => selectedOpts.some(o => o.key === `${fid}_home`);
 
+  const isPlayerBet  = template?.answerType === 'player';
+  const isFixtureBet = template?.answerType === 'fixture';
+
+  const windowHint = (windowFrom && deadline)
+    ? `Showing players from clubs with matches ${new Date(windowFrom).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })} – ${new Date(deadline).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}`
+    : deadline
+      ? `Showing players from clubs with matches before ${new Date(deadline).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}`
+      : 'All players shown · set a date window to filter by upcoming matches';
+
+  const canCreate = !saving && !commLoading && !!template && !!deadline && selectedOpts.length >= 2 && !!title.trim();
+
+  // ── Render ────────────────────────────────────────────────────────────────
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-      {/* Step 1: Template */}
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+
+      {/* Step 1 — Bet type */}
       <div>
         <div style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.2em', marginBottom: 8 }}>1 · BET TYPE</div>
         <div style={{ display: 'flex', gap: 8 }}>
           {TEMPLATES.map(t => (
-            <TemplateCard
-            key={t.slug} t={t} selected={template?.slug === t.slug}
-            onClick={(picked) => {
-              setTemplate(picked);
-              setTitle(picked.label);
-              setPrompt(picked.promptHint);
-              setSelectedOpts([]);
-              setSearch('');
-              setPosFilter('ALL');
-            }}
-          />
+            <TemplateCard key={t.slug} t={t} selected={template?.slug === t.slug} onClick={resetForm} />
           ))}
         </div>
       </div>
 
       {template && (
         <>
-          {/* Step 2: Deadline (affects which fixtures appear) */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-            <div>
-              <div style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.2em', marginBottom: 6 }}>2 · SUBMISSION DEADLINE</div>
-              <input
-                type="datetime-local"
-                value={deadline}
-                onChange={e => setDeadline(e.target.value)}
-                style={{
-                  width: '100%', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)',
-                  color: 'var(--paper)', fontSize: 11, padding: '8px 10px', borderRadius: 3, outline: 'none',
-                  colorScheme: 'dark',
-                }}
-              />
-              <div style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', marginTop: 4, letterSpacing: '.1em' }}>
-                {template.answerType === 'fixture' ? 'Only matches before this date are shown.' : 'When picks lock.'}
-              </div>
-            </div>
-            <div>
-              <div style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.2em', marginBottom: 6 }}>REWARD</div>
-              <div style={{ display: 'flex', gap: 6 }}>
-                <input
-                  type="number"
-                  value={rewardValue}
-                  onChange={e => setRewardValue(e.target.value)}
-                  min="1"
-                  style={{
-                    flex: 1, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)',
-                    color: 'var(--paper)', fontSize: 11, padding: '8px 8px', borderRadius: 3, outline: 'none',
-                  }}
-                />
-                <select
-                  value={rewardType}
-                  onChange={e => setRewardType(e.target.value)}
-                  style={{
-                    background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)',
-                    color: 'var(--paper)', fontSize: 11, padding: '8px 6px', borderRadius: 3, outline: 'none',
-                  }}
-                >
-                  <option value="points">pts</option>
-                  <option value="budget">£M</option>
-                </select>
-              </div>
-            </div>
-          </div>
-
-          {/* Step 3: Pick options */}
+          {/* Step 2 — Date window + Reward */}
           <div>
             <div style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.2em', marginBottom: 8 }}>
-              3 · {template.answerType === 'player' ? 'SELECT PLAYERS' : 'SELECT MATCH'}
+              2 · {isPlayerBet ? 'MATCH WINDOW & DEADLINE' : 'DEADLINE & REWARD'}
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: isPlayerBet ? '1fr 1fr 1fr' : '1fr 1fr', gap: 8 }}>
+
+              {/* From date — only relevant for player bets to filter clubs */}
+              {isPlayerBet && (
+                <div>
+                  <div style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.15em', marginBottom: 5 }}>FROM (optional)</div>
+                  <input
+                    type="datetime-local"
+                    value={windowFrom}
+                    onChange={e => setWindowFrom(e.target.value)}
+                    style={{
+                      width: '100%', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)',
+                      color: 'var(--paper)', fontSize: 11, padding: '7px 8px', borderRadius: 3, outline: 'none', colorScheme: 'dark',
+                    }}
+                  />
+                </div>
+              )}
+
+              {/* Deadline */}
+              <div>
+                <div style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.15em', marginBottom: 5 }}>
+                  {isPlayerBet ? 'PICKS CLOSE' : 'DEADLINE'}
+                </div>
+                <input
+                  type="datetime-local"
+                  value={deadline}
+                  onChange={e => setDeadline(e.target.value)}
+                  style={{
+                    width: '100%', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)',
+                    color: deadline ? 'var(--paper)' : 'var(--danger)',
+                    fontSize: 11, padding: '7px 8px', borderRadius: 3, outline: 'none', colorScheme: 'dark',
+                  }}
+                />
+              </div>
+
+              {/* Reward */}
+              <div>
+                <div style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.15em', marginBottom: 5 }}>REWARD</div>
+                <div style={{ display: 'flex', gap: 5 }}>
+                  <input
+                    type="number"
+                    value={rewardValue}
+                    onChange={e => setRewardValue(e.target.value)}
+                    min="1"
+                    style={{
+                      flex: 1, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)',
+                      color: 'var(--paper)', fontSize: 11, padding: '7px 6px', borderRadius: 3, outline: 'none',
+                    }}
+                  />
+                  <select
+                    value={rewardType}
+                    onChange={e => setRewardType(e.target.value)}
+                    style={{
+                      background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)',
+                      color: 'var(--paper)', fontSize: 11, padding: '7px 4px', borderRadius: 3, outline: 'none',
+                    }}
+                  >
+                    <option value="points">pts</option>
+                    <option value="budget">£M</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            {/* Window hint for player bets */}
+            {isPlayerBet && (
+              <div style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', marginTop: 6, letterSpacing: '.1em' }}>
+                {windowHint}
+              </div>
+            )}
+            {isFixtureBet && !deadline && (
+              <div style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', marginTop: 6, letterSpacing: '.1em' }}>
+                Set a deadline to see scheduled matches before that date.
+              </div>
+            )}
+          </div>
+
+          {/* Step 3 — Options */}
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+              <div style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.2em' }}>
+                3 · {isPlayerBet ? 'SELECT PLAYERS' : 'SELECT MATCH'}
+                {selectedOpts.length > 0 && (
+                  <span style={{ color: 'var(--cyan)', marginLeft: 8 }}>
+                    {isPlayerBet
+                      ? `${selectedOpts.length} selected`
+                      : `${Math.floor(selectedOpts.length / 3)} match · ${selectedOpts.length} options`}
+                  </span>
+                )}
+              </div>
               {selectedOpts.length > 0 && (
-                <span style={{ color: 'var(--cyan)', marginLeft: 8 }}>
-                  {template.answerType === 'player' ? `${selectedOpts.length} selected` : `${selectedOpts.length / 3 | 0} match(es) · ${selectedOpts.length} options`}
-                </span>
+                <button
+                  onClick={() => setSelectedOpts([])}
+                  style={{
+                    fontFamily: MONO, fontSize: 9, color: 'var(--danger)', letterSpacing: '.15em',
+                    background: 'none', border: 'none', cursor: 'pointer', padding: '2px 0',
+                  }}
+                >
+                  CLEAR
+                </button>
               )}
             </div>
 
             {loading ? (
               <div style={{ fontFamily: MONO, fontSize: 10, color: 'var(--mute)', padding: '20px 0', textAlign: 'center', letterSpacing: '.2em' }}>LOADING…</div>
-            ) : template.answerType === 'player' ? (
+            ) : isPlayerBet ? (
               <>
-                {/* Player search + filter */}
+                {/* Position filter + search */}
                 <div style={{ display: 'flex', gap: 6, marginBottom: 8 }}>
                   <input
                     type="text"
@@ -357,32 +482,45 @@ export default function BetCreatorPanel({ leagueId, tournamentId, onCreated, com
                     >{pos}</button>
                   ))}
                 </div>
-                {players.length === 0 && !loading && (
-                  <div style={{ fontFamily: MONO, fontSize: 10, color: 'var(--mute)', padding: '16px 0', textAlign: 'center', letterSpacing: '.18em' }}>
-                    {deadline ? 'NO PLAYERS FOUND FOR THIS TOURNAMENT' : 'SET A DEADLINE FIRST TO LOAD PLAYERS'}
+
+                {players.length === 0 ? (
+                  <div style={{ fontFamily: MONO, fontSize: 10, color: 'var(--mute)', padding: '20px 0', textAlign: 'center', letterSpacing: '.18em' }}>
+                    NO PLAYERS FOUND FOR THIS WINDOW
                   </div>
-                )}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 4, maxHeight: 240, overflowY: 'auto' }}>
+                ) : filteredPlayers.length === 0 ? (
+                  <div style={{ fontFamily: MONO, fontSize: 10, color: 'var(--mute)', padding: '12px 0', textAlign: 'center', letterSpacing: '.18em' }}>
+                    NO RESULTS — TRY A DIFFERENT FILTER
+                  </div>
+                ) : null}
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 4, maxHeight: 260, overflowY: 'auto' }}>
                   {filteredPlayers.map(p => (
                     <PlayerOption key={p.id} player={p} selected={isPlayerSelected(p.id)} onClick={togglePlayer} />
                   ))}
                 </div>
               </>
             ) : (
+              /* Fixture picker */
               <>
-                {fixtures.length === 0 && !loading && (
-                  <div style={{ fontFamily: MONO, fontSize: 10, color: 'var(--mute)', padding: '16px 0', textAlign: 'center', letterSpacing: '.18em' }}>
-                    {deadline ? 'NO SCHEDULED MATCHES BEFORE DEADLINE' : 'SET A DEADLINE FIRST TO SEE MATCHES'}
+                {!deadline ? (
+                  <div style={{ fontFamily: MONO, fontSize: 10, color: 'var(--mute)', padding: '20px 0', textAlign: 'center', letterSpacing: '.18em' }}>
+                    SET A DEADLINE ABOVE TO SEE UPCOMING MATCHES
                   </div>
-                )}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 4, maxHeight: 240, overflowY: 'auto' }}>
+                ) : fixtures.length === 0 ? (
+                  <div style={{ fontFamily: MONO, fontSize: 10, color: 'var(--mute)', padding: '20px 0', textAlign: 'center', letterSpacing: '.18em' }}>
+                    NO SCHEDULED MATCHES BEFORE THIS DEADLINE
+                  </div>
+                ) : null}
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 4, maxHeight: 260, overflowY: 'auto' }}>
                   {fixtures.map(f => (
                     <FixtureOption key={f.id} fixture={f} selected={isFixtureSelected(f.id)} onClick={toggleFixture} />
                   ))}
                 </div>
+
                 {selectedOpts.length > 0 && (
                   <div style={{ marginTop: 8, padding: '8px 10px', background: 'rgba(0,196,232,0.06)', border: '1px solid rgba(0,196,232,0.2)', borderRadius: 3 }}>
-                    <div style={{ fontFamily: MONO, fontSize: 9, color: 'var(--cyan)', letterSpacing: '.18em', marginBottom: 4 }}>OPTIONS THAT WILL BE CREATED:</div>
+                    <div style={{ fontFamily: MONO, fontSize: 9, color: 'var(--cyan)', letterSpacing: '.18em', marginBottom: 4 }}>OPTIONS CREATED:</div>
                     {selectedOpts.map(o => (
                       <div key={o.key} style={{ fontFamily: "'Archivo', sans-serif", fontSize: 11, color: 'var(--paper)', padding: '2px 0' }}>· {o.label}</div>
                     ))}
@@ -392,23 +530,24 @@ export default function BetCreatorPanel({ leagueId, tournamentId, onCreated, com
             )}
           </div>
 
-          {/* Step 4: Title + Prompt */}
+          {/* Step 4 — Title + Prompt */}
           <div>
             <div style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.2em', marginBottom: 8 }}>4 · TITLE &amp; QUESTION</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
               <input
                 type="text"
                 value={title}
-                onChange={e => setTitle(e.target.value)}
-                placeholder="Bet title (auto-filled)"
+                onChange={e => { setTitle(e.target.value); titleEdited.current = true; }}
+                placeholder="Bet title (auto-filled from template / match)"
                 style={{
                   background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)',
-                  color: 'var(--paper)', fontSize: 11, padding: '8px 10px', borderRadius: 3, outline: 'none',
+                  color: title ? 'var(--paper)' : 'var(--danger)',
+                  fontSize: 11, padding: '8px 10px', borderRadius: 3, outline: 'none',
                 }}
               />
               <textarea
                 value={prompt}
-                onChange={e => setPrompt(e.target.value)}
+                onChange={e => { setPrompt(e.target.value); promptEdited.current = true; }}
                 placeholder="Question shown to players (auto-filled)"
                 rows={2}
                 style={{
@@ -420,25 +559,28 @@ export default function BetCreatorPanel({ leagueId, tournamentId, onCreated, com
             </div>
           </div>
 
-          {/* Validation summary */}
-          {selectedOpts.length > 0 && selectedOpts.length < 2 && (
-            <div style={{ fontFamily: MONO, fontSize: 9, color: 'var(--danger)', letterSpacing: '.15em' }}>Select at least 2 options.</div>
-          )}
-
-          {/* Create button */}
-          <button
-            onClick={handleCreate}
-            disabled={saving || commLoading || !template || !deadline || selectedOpts.length < 2 || !title.trim()}
-            style={{
-              padding: '13px', borderRadius: 3, cursor: 'pointer', width: '100%',
-              background: 'var(--cyan)', color: '#000',
-              fontFamily: DISPLAY, fontSize: 12, fontWeight: 900, letterSpacing: '.08em',
-              border: 'none', transition: 'opacity 0.15s',
-              opacity: (saving || commLoading || !template || !deadline || selectedOpts.length < 2 || !title.trim()) ? 0.4 : 1,
-            }}
-          >
-            {saving ? 'CREATING…' : `CREATE BET · ${selectedOpts.length} OPTIONS`}
-          </button>
+          {/* Create button + inline validation hint */}
+          <div>
+            {!canCreate && (
+              <div style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.15em', marginBottom: 8 }}>
+                {!deadline          ? '· Set a deadline'           : ''}
+                {selectedOpts.length < 2 ? ' · Select at least 2 options' : ''}
+                {!title.trim()      ? ' · Add a title'             : ''}
+              </div>
+            )}
+            <button
+              onClick={handleCreate}
+              disabled={!canCreate}
+              style={{
+                padding: '13px', borderRadius: 3, cursor: canCreate ? 'pointer' : 'default', width: '100%',
+                background: 'var(--cyan)', color: '#000',
+                fontFamily: DISPLAY, fontSize: 12, fontWeight: 900, letterSpacing: '.08em',
+                border: 'none', transition: 'opacity 0.15s', opacity: canCreate ? 1 : 0.35,
+              }}
+            >
+              {saving ? 'CREATING…' : `CREATE BET · ${selectedOpts.length || 0} OPTIONS`}
+            </button>
+          </div>
         </>
       )}
     </div>
