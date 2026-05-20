@@ -562,7 +562,10 @@ export default function HomeScreen() {
   const [viewMode,    setViewMode]    = useState('list');  // 'list' | 'week' | 'month'
   const [view,        setView]        = useState('date');  // 'date' | 'comp' (list only)
   const [filter,      setFilter]      = useState('ALL');
-  const [selectedDate,setSelectedDate] = useState(() => new Date().toISOString().split('T')[0]);
+  const [selectedDate,setSelectedDate] = useState(() => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  });
   const [calMonth,    setCalMonth]    = useState(() => {
     const now = new Date();
     return { year: now.getFullYear(), month: now.getMonth() };
@@ -622,19 +625,18 @@ export default function HomeScreen() {
     return { start, end };
   }, []);
 
-  // When in DATE view, show all fixtures for that date regardless of GW
-  // When in WEEK view, show all fixtures for that week
-  // Otherwise show all fixtures
+  // WEEK mode: all fixtures in the 7-day window containing selectedDate.
+  // List mode (date or comp grouping): only fixtures on the selected date.
+  // viewMode === 'week' MUST be checked first — 'view' defaults to 'date' and would
+  // otherwise always match the single-day branch, preventing the week view from ever
+  // receiving more than one day of fixtures.
   const baseFixtures = useMemo(() => {
-    if (viewMode === 'date' || view === 'date') {
-      return allFixtures.filter(f => f.date === selectedDate);
-    }
     if (viewMode === 'week') {
       const { start, end } = getWeekDates(selectedDate);
       return allFixtures.filter(f => f.date >= start && f.date <= end);
     }
-    return allFixtures;
-  }, [allFixtures, viewMode, view, selectedDate, getWeekDates]);
+    return allFixtures.filter(f => f.date === selectedDate);
+  }, [allFixtures, viewMode, selectedDate, getWeekDates]);
 
   // Comp-filtered fixtures for list/week views
   const filtered = useMemo(
