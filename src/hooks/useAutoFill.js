@@ -15,6 +15,8 @@ import { useLeagueConfig } from './useLeagueConfig';
  *     the player pool to that competition only.
  *   - Pool size: fetches 500 players per position (ordered cheapest-first,
  *     within budget) so there are enough candidates after filtering.
+ *   - Bail-on-fatal-error: stops immediately on auth/window/squad-full errors
+ *     instead of hammering the API with 500+ doomed requests.
  *
  * @param {string}   leagueId  - Active league UUID
  * @param {object}   squadData - Squad object (from SquadScreen or MarketScreen)
@@ -35,6 +37,12 @@ export function useAutoFill(leagueId, squadData, fetchSquad, takenMap = {}) {
     setAutoFillMsg(null);
 
     try {
+      // Guard: league required for transfers
+      if (!leagueId) {
+        setAutoFillMsg('No league selected — open your squad from the League screen');
+        return;
+      }
+
       const rawPlayers  = squadData?.players || [];
       const squadSize   = cfg.squadSize ?? 15;
       const slotsNeeded = squadSize - rawPlayers.length;
@@ -63,25 +71,20 @@ export function useAutoFill(leagueId, squadData, fetchSquad, takenMap = {}) {
       ]);
 
       // ── Build taken-by-others set from takenMap ──────────────────────────
-      // takenMap keys are player IDs taken by ANY manager in this league.
-      // Pre-filtering these avoids wasted API calls and "all taken" false errors.
       const othersIds = new Set(
         Object.entries(takenMap || {})
-          .filter(([, v]) => v?.userId !== undefined)  // valid entries only
+          .filter(([, v]) => v?.userId !== undefined)
           .map(([id]) => id)
       );
 
       // ── Fetch this league's tournament_id ────────────────────────────────
-      // Used to restrict the player pool to the correct competition.
       let tournamentId = null;
-      if (leagueId) {
-        const { data: leagueRow } = await supabase
-          .from('leagues')
-          .select('tournament_id')
-          .eq('id', leagueId)
-          .maybeSingle();
-        tournamentId = leagueRow?.tournament_id ?? null;
-      }
+      const { data: leagueRow } = await supabase
+        .from('leagues')
+        .select('tournament_id')
+        .eq('id', leagueId)
+        .maybeSingle();
+      tournamentId = leagueRow?.tournament_id ?? null;
 
       // ── Count current positions ──────────────────────────────────────────
       const have = { GK: 0, DEF: 0, MID: 0, FWD: 0 };
@@ -132,15 +135,14 @@ export function useAutoFill(leagueId, squadData, fetchSquad, takenMap = {}) {
       let skippedTaken    = 0;
       let lastBuyError    = null;
       let anyPoolFound    = false;
+      let criticalError   = null; // auth/window errors that abort all positions
 
       // ── Fill each position ───────────────────────────────────────────────
       for (const pos of ['GK', 'DEF', 'MID', 'FWD']) {
-        if (!need[pos]) continue;
+        if (!need[pos] || criticalError) continue;
 
         const dbPos = pos === 'FWD' ? ['FWD', 'FW'] : [pos];
 
-        // Fetch a large pool: 500 per position, cheapest first, within budget.
-        // The large limit ensures enough candidates survive after filtering.
         let query = supabase
           .from('players')
           .select('id, name, position, club, price')
@@ -155,18 +157,15 @@ export function useAutoFill(leagueId, squadData, fetchSquad, takenMap = {}) {
 
         let { data: pool } = await query;
 
-        // Fallback: if tournament filter returned no results, try without tournament filter
-        // This handles case where tournament_id column exists but isn't populated on players
+        // Fallback: retry without tournament filter if no results
         if (!pool?.length && tournamentId) {
-          const fallbackQuery = supabase
+          const { data: fallbackPool } = await supabase
             .from('players')
             .select('id, name, position, club, price')
             .in('position', dbPos)
             .lte('price', budgetLeft)
             .order('price', { ascending: true })
             .limit(500);
-
-          const { data: fallbackPool } = await fallbackQuery;
           pool = fallbackPool;
         }
 
@@ -178,23 +177,80 @@ export function useAutoFill(leagueId, squadData, fetchSquad, takenMap = {}) {
 
         if (candidates.length > 0) anyPoolFound = true;
 
-        // Try each candidate until need[pos] slots are filled
-        let bought = 0;
+        // Try each candidate until need[pos] slots are filled.
+        // Bail immediately on errors that won't resolve with a different player.
+        let bought             = 0;
+        let consecutiveFailures = 0;
+        const MAX_CONSECUTIVE  = 5;
+
         for (let i = 0; i < candidates.length && bought < need[pos]; i++) {
           const result = await buy(candidates[i]);
+
           if (result.ok) {
             bought++;
+            consecutiveFailures = 0;
             added++;
             budgetLeft = result.budget_remaining ?? (budgetLeft - (candidates[i].price || 0));
             myIds.add(candidates[i].id);
           } else {
-            lastBuyError = result.error;
+            const errMsg = result.error ?? '';
+            const errCode = result.code ?? '';
+
+            // "Already own this player" → add to myIds and continue (stale local state)
+            if (errMsg.includes('already own')) {
+              myIds.add(candidates[i].id);
+              continue;
+            }
+
+            consecutiveFailures++;
+            lastBuyError = errMsg;
+
+            // Fatal errors: abort everything — retrying other players won't help
+            if (
+              errMsg.includes('Unauthorised') ||
+              errMsg.includes('unauthorized') ||
+              errCode === 'WINDOW_CLOSED' ||
+              errCode === 'WINDOW_LOCKED' ||
+              errCode === 'TRANSFER_LOCKED' ||
+              errMsg.includes('Transfer window closed') ||
+              errMsg.includes('Transfers locked') ||
+              errMsg.includes('Transfer cost locked') ||
+              errMsg.includes('Missing required fields')
+            ) {
+              criticalError = errMsg;
+              break;
+            }
+
+            // Squad-level errors: abort this position (other positions also affected)
+            if (errMsg.includes('Squad is full')) {
+              lastBuyError = errMsg;
+              break;
+            }
+
+            // Budget exhausted: no point trying more (players are cheapest-first)
+            if (errMsg.includes('Insufficient budget') || errMsg.includes('budget')) {
+              budgetLeft = 0;
+              break;
+            }
+
+            // Generic safety net: bail after too many consecutive failures
+            if (consecutiveFailures >= MAX_CONSECUTIVE) {
+              break;
+            }
           }
         }
       }
 
       // ── Result message ───────────────────────────────────────────────────
-      if (added > 0) {
+      if (criticalError) {
+        if (criticalError.includes('Unauthorised') || criticalError.includes('unauthorized')) {
+          setAutoFillMsg('Session expired — please refresh the page and try again');
+        } else if (criticalError.includes('window') || criticalError.includes('locked') || criticalError.includes('WINDOW') || criticalError.includes('LOCKED')) {
+          setAutoFillMsg(criticalError);
+        } else {
+          setAutoFillMsg('Auto-fill blocked — ' + criticalError);
+        }
+      } else if (added > 0) {
         const skippedNote = skippedTaken > 0 ? ` · skipped ${skippedTaken} taken` : '';
         setAutoFillMsg(`Added ${added} player${added !== 1 ? 's' : ''} · £${Number(budgetLeft).toFixed(1)}M left${skippedNote}`);
         if (fetchSquad) await fetchSquad();
@@ -205,7 +261,6 @@ export function useAutoFill(leagueId, squadData, fetchSquad, takenMap = {}) {
           setAutoFillMsg('No players available for these positions within your budget');
         }
       } else {
-        // Candidates existed but all buy attempts failed
         setAutoFillMsg(
           lastBuyError?.includes('taken')
             ? 'All candidates in this range are taken — try refreshing'
