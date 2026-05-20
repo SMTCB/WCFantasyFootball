@@ -12,6 +12,7 @@
 
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
+import BrandMark from './BrandMark';
 
 export default function ProtectedRoute({ children }) {
   const { user, loading } = useAuth();
@@ -21,13 +22,8 @@ export default function ProtectedRoute({ children }) {
   if (loading) {
     return (
       <div className="min-h-screen bg-bg flex items-center justify-center">
-        <div className="text-center">
-          <div
-            className="text-[32px] font-black uppercase tracking-tight mb-2"
-            style={{ fontFamily: 'Archivo Black, sans-serif', color: 'var(--paper)' }}
-          >
-            Forza<span style={{ color: 'var(--cyan)' }}>Kit</span>
-          </div>
+        <div className="flex flex-col items-center gap-4">
+          <BrandMark theme="dark" scale={1.1} />
           <div
             className="text-[10px] font-black uppercase tracking-[0.2em] animate-pulse"
             style={{ color: 'var(--mute)', fontFamily: 'Archivo Black, sans-serif' }}
