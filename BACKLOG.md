@@ -1,8 +1,20 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-05-20 (Auto-fill 403 + League screen crash fixed)  
-**E2E Test Suite**: 212/212 passing (100%) ✅  
+**Last Updated**: 2026-05-20 (League screen TDZ crash — 4th occurrence — permanently fixed)  
+**E2E Test Suite**: 84/84 platform tests passing ✅  
 **Live App**: https://wc-fantasy-football.vercel.app
+
+---
+
+## 📊 SESSION 30 PROGRESS (2026-05-20 — TDZ hook ordering fix)
+
+**🚀 COMPLETED THIS SESSION:**
+
+- ✅ **PR #147 — Fix TDZ crash on League screen (hook declaration order)** (merged):
+  - **Root cause**: `fetchTournaments`, `fetchLeagues`, and `loadLeagueById` were all declared with `useCallback` AFTER the `useEffect` hooks that listed them in dependency arrays. Vite v8 / Rolldown evaluates `const`/`let` strictly in source order; putting them after their `useEffect` consumers places them in the Temporal Dead Zone in the production bundle.
+  - **Fix**: Moved all three `useCallback` declarations before the `useEffect` hooks that reference them. No logic changed — pure reorder.
+  - **Verified**: `npm run lint` (0 errors), `npm run build` (clean), 84/84 platform E2E tests pass, no JS errors from production preview.
+  - This is the fourth and final TDZ occurrence. The pattern is now documented in CLAUDE.md under "Vite v8 / Rolldown — TDZ Rule".
 
 ---
 
