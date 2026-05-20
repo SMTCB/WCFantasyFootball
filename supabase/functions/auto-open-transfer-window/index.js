@@ -30,10 +30,11 @@ Deno.serve(async (req) => {
 
   try {
     // ── 1. Get all active leagues ────────────────────────────────────────────
+    // leagues has no 'status' column — filter by is_dry_run=false to skip test leagues
     const { data: leagues } = await supabase
       .from('leagues')
       .select('id, tournament_id')
-      .eq('status', 'active');
+      .eq('is_dry_run', false);
 
     if (!leagues?.length) {
       return respond(200, { ok: true, created: 0, note: 'No active leagues' });

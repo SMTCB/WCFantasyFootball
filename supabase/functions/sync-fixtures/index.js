@@ -127,7 +127,6 @@ Deno.serve(async (req) => {
 
     const deadlineRows = Object.entries(deadlineMap).map(([round, kickoff]) => ({
       matchday_id:   `${forza_id}-r${round}`,   // e.g. '426-r35'
-      label:         `Round ${round}`,
       deadline_at:   kickoff,                    // squad lock = first kickoff of the round
       tournament_id: forza_id,
     }));
