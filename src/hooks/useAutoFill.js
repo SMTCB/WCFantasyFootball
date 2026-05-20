@@ -1,6 +1,5 @@
 import { useState, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
-import { useTransfer } from './useTransfer';
 import { useLeagueConfig } from './useLeagueConfig';
 
 /**
@@ -16,18 +15,18 @@ import { useLeagueConfig } from './useLeagueConfig';
  *   - Pool size: fetches 500 players per position (ordered cheapest-first,
  *     within budget) so there are enough candidates after filtering.
  *
- * @param {string}   leagueId  - Active league UUID
- * @param {object}   squadData - Squad object (from SquadScreen or MarketScreen)
+ * @param {string}   leagueId   - Active league UUID
+ * @param {object}   squadData  - Squad object (from SquadScreen or MarketScreen)
  * @param {function} fetchSquad - Callback to refresh squad after successful fill
- * @param {object}   takenMap  - { [playerId]: { userId, managerName } } from useTransfer
+ * @param {object}   takenMap   - { [playerId]: { userId, managerName } } from useTransfer
+ * @param {function} buy        - buy(player) from useTransfer — passed in to avoid duplicate hook instance
  */
-export function useAutoFill(leagueId, squadData, fetchSquad, takenMap = {}) {
+export function useAutoFill(leagueId, squadData, fetchSquad, takenMap = {}, buy) {
   const [autoFilling, setAutoFilling] = useState(false);
   const [autoFillMsg, setAutoFillMsg] = useState(null);
 
-  const cfg      = useLeagueConfig(leagueId);
+  const cfg        = useLeagueConfig(leagueId);
   const POS_LIMITS = cfg.positionLimits;
-  const { buy }  = useTransfer(leagueId);
 
   const handleAutoFill = useCallback(async () => {
     if (autoFilling) return;
@@ -35,21 +34,11 @@ export function useAutoFill(leagueId, squadData, fetchSquad, takenMap = {}) {
     setAutoFillMsg(null);
 
     try {
-      console.log('[useAutoFill] ===== START AUTO-FILL =====');
-      console.log('[useAutoFill] leagueId:', leagueId);
-      console.log('[useAutoFill] squadData:', squadData);
-      console.log('[useAutoFill] cfg:', cfg);
-
       const rawPlayers  = squadData?.players || [];
       const squadSize   = cfg.squadSize ?? 15;
       const slotsNeeded = squadSize - rawPlayers.length;
 
-      console.log('[useAutoFill] rawPlayers.length:', rawPlayers.length);
-      console.log('[useAutoFill] squadSize:', squadSize);
-      console.log('[useAutoFill] slotsNeeded:', slotsNeeded);
-
       if (slotsNeeded <= 0) {
-        console.log('[useAutoFill] Squad is full, returning');
         setAutoFillMsg('Squad is already full');
         return;
       }
@@ -91,7 +80,6 @@ export function useAutoFill(leagueId, squadData, fetchSquad, takenMap = {}) {
           .eq('id', leagueId)
           .maybeSingle();
         tournamentId = leagueRow?.tournament_id ?? null;
-        console.log('[useAutoFill] league tournament_id:', tournamentId, 'leagueRow:', leagueRow);
       }
 
       // ── Count current positions ──────────────────────────────────────────
@@ -144,14 +132,9 @@ export function useAutoFill(leagueId, squadData, fetchSquad, takenMap = {}) {
       let lastBuyError    = null;
       let anyPoolFound    = false;
 
-      console.log('[useAutoFill] need:', need, 'have:', have, 'budgetLeft:', budgetLeft);
-
       // ── Fill each position ───────────────────────────────────────────────
       for (const pos of ['GK', 'DEF', 'MID', 'FWD']) {
-        if (!need[pos]) {
-          console.log(`[useAutoFill] ${pos} skipped - need[${pos}] is 0`);
-          continue;
-        }
+        if (!need[pos]) continue;
 
         const dbPos = pos === 'FWD' ? ['FWD', 'FW'] : [pos];
 
@@ -170,12 +153,10 @@ export function useAutoFill(leagueId, squadData, fetchSquad, takenMap = {}) {
         }
 
         let { data: pool } = await query;
-        console.log(`[useAutoFill] ${pos} pool size (with tournament):`, pool?.length);
 
         // Fallback: if tournament filter returned no results, try without tournament filter
         // This handles case where tournament_id column exists but isn't populated on players
         if (!pool?.length && tournamentId) {
-          console.log(`[useAutoFill] ${pos} fallback triggered (tournament filter returned 0)`);
           const fallbackQuery = supabase
             .from('players')
             .select('id, name, position, club, price')
@@ -186,18 +167,13 @@ export function useAutoFill(leagueId, squadData, fetchSquad, takenMap = {}) {
 
           const { data: fallbackPool } = await fallbackQuery;
           pool = fallbackPool;
-          console.log(`[useAutoFill] ${pos} pool size (fallback):`, pool?.length);
         }
 
-        if (!pool?.length) {
-          console.log(`[useAutoFill] ${pos} skipped - no players available`);
-          continue;
-        }
+        if (!pool?.length) continue;
 
         // Pre-filter: remove my own players AND players taken by other managers
         const candidates = pool.filter(p => !myIds.has(p.id) && !othersIds.has(p.id));
         skippedTaken += pool.length - candidates.length;
-        console.log(`[useAutoFill] ${pos} candidates after filtering:`, candidates.length, 'pool:', pool.length, 'myIds:', myIds.size, 'othersIds:', othersIds.size);
 
         if (candidates.length > 0) anyPoolFound = true;
 
@@ -217,7 +193,6 @@ export function useAutoFill(leagueId, squadData, fetchSquad, takenMap = {}) {
       }
 
       // ── Result message ───────────────────────────────────────────────────
-      console.log('[useAutoFill] final result - added:', added, 'anyPoolFound:', anyPoolFound, 'budgetLeft:', budgetLeft);
       if (added > 0) {
         const skippedNote = skippedTaken > 0 ? ` · skipped ${skippedTaken} taken` : '';
         setAutoFillMsg(`Added ${added} player${added !== 1 ? 's' : ''} · £${Number(budgetLeft).toFixed(1)}M left${skippedNote}`);
@@ -238,13 +213,12 @@ export function useAutoFill(leagueId, squadData, fetchSquad, takenMap = {}) {
       }
 
     } catch (err) {
-      console.error('[useAutoFill] ERROR:', err);
+      console.error('[useAutoFill]', err);
       setAutoFillMsg('Auto-fill failed — try again');
     } finally {
       setAutoFilling(false);
       setTimeout(() => setAutoFillMsg(null), 7000);
     }
-    console.log('[useAutoFill] ===== END AUTO-FILL =====');
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [leagueId, squadData, buy, fetchSquad, takenMap, cfg]);
 

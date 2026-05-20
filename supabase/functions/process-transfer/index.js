@@ -53,11 +53,13 @@ Deno.serve(async (req) => {
       }, 403, corsHeaders);
     }
 
-    // 2. Reject if any fixture is currently live (kickoff has passed)
+    // 2. Reject if any fixture is currently live (kickoff within last 3 hours — guards against stale 'live' status)
+    const threeHoursAgo = new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString();
     const { data: liveFixture } = await supabase
       .from('fixtures')
-      .select('id, home_team, away_team')
+      .select('id, home_team, away_team, kickoff_at')
       .eq('status', 'live')
+      .gte('kickoff_at', threeHoursAgo)
       .limit(1)
       .maybeSingle();
 
@@ -69,8 +71,9 @@ Deno.serve(async (req) => {
       }, 403, corsHeaders);
     }
 
-    // 3. (#105) Reject if the player's team fixture is in progress or later (cost-lock at kickoff)
+    // 3. (#105) Reject if the player's team fixture is currently in progress (cost-lock at kickoff)
     // Only check for BUY actions (selling is always allowed)
+    // Only consider fixtures within the last 3 hours to guard against stale 'live' status
     if (action === 'buy') {
       const { data: playerRow } = await supabase
         .from('players')
@@ -79,25 +82,21 @@ Deno.serve(async (req) => {
         .maybeSingle();
 
       if (playerRow?.forza_team_id) {
-        const now = new Date();
-        // Check if this player's team has any fixture that is live or past kickoff
         const { data: playerFixture } = await supabase
           .from('fixtures')
           .select('id, home_team, away_team, kickoff_at, status')
-          .or(`home_forza_team_id.eq.${playerRow.forza_team_id},away_forza_team_id.eq.${playerRow.forza_team_id}`)
+          .or(`home_team_forza_id.eq.${playerRow.forza_team_id},away_team_forza_id.eq.${playerRow.forza_team_id}`)
+          .eq('status', 'live')
+          .gte('kickoff_at', threeHoursAgo)
           .limit(1)
           .maybeSingle();
 
-        // If fixture exists and is live OR kickoff has already passed, reject
         if (playerFixture) {
-          const kickoffTime = playerFixture.kickoff_at ? new Date(playerFixture.kickoff_at) : null;
-          if (playerFixture.status === 'live' || (kickoffTime && now >= kickoffTime)) {
-            return json({
-              ok:    false,
-              code:  'TRANSFER_LOCKED',
-              error: `Transfer cost locked — ${playerFixture.home_team} vs ${playerFixture.away_team} has started (cost locked at kickoff)`,
-            }, 403, corsHeaders);
-          }
+          return json({
+            ok:    false,
+            code:  'TRANSFER_LOCKED',
+            error: `Transfer cost locked — ${playerFixture.home_team} vs ${playerFixture.away_team} has started (cost locked at kickoff)`,
+          }, 403, corsHeaders);
         }
       }
     }

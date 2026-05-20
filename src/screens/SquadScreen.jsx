@@ -281,7 +281,7 @@ export default function SquadScreen() {
   };
 
   // Auto-fill hook — reusable across Squad, Market, League screens
-  const { handleAutoFill, autoFilling, autoFillMsg } = useAutoFill(activeLeague, squadData, fetchSquad, takenMap);
+  const { handleAutoFill, autoFilling, autoFillMsg } = useAutoFill(activeLeague, squadData, fetchSquad, takenMap, buy);
 
   // Live countdown hook — replaces static window lock badge
   const deadline = useDeadlineCountdown();
