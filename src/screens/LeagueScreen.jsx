@@ -263,14 +263,6 @@ export default function LeagueScreen() {
     return t;
   };
 
-  useEffect(() => {
-    if (user?.id) {
-      setCurrentUser(user);
-      fetchLeagues();
-      fetchTournaments();
-    }
-  }, [user, fetchLeagues, fetchTournaments]);
-
   const fetchTournaments = useCallback(async () => {
     const { data } = await supabase
       .from('tournaments')
@@ -283,61 +275,40 @@ export default function LeagueScreen() {
     }
   }, []);
 
-  useEffect(() => {
-    if (leagueId) {
-      loadLeagueById(leagueId);
-    } else {
-      setActiveLeague(null);
-      setMembers([]);
+  const fetchLeagues = useCallback(async () => {
+    try {
+      setLoading(true);
+      const userId = user?.id;
+
+      const { data, error } = await supabase
+        .from('league_members')
+        .select(`
+          league_id, rank, total_points,
+          leagues ( id, name, format, tournament_id )
+        `)
+        .eq('user_id', userId);
+
+      if (error) throw error;
+
+      if (!data || data.length === 0) {
+        setLeagues([]);
+        return;
+      }
+      setLeagues(data || []);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
     }
-  }, [leagueId, loadLeagueById]);
+  }, [user?.id]);
 
   useEffect(() => {
-    if (view === 'commissioner' && activeLeague?.league_id) {
-      fetchOpenBets();
+    if (user?.id) {
+      setCurrentUser(user);
+      fetchLeagues();
+      fetchTournaments();
     }
-  }, [view, activeLeague?.league_id]);
-
-  useEffect(() => {
-    if (view === 'chat' && activeLeague?.league_id) {
-      markChatAsRead();
-      loadLeagueMembers();
-    }
-  }, [view, activeLeague?.league_id, markChatAsRead, loadLeagueMembers]);
-
-  // Auto-clear notification badge when viewing bets tab
-  useEffect(() => {
-    if (view === 'bets' && activeLeague?.league_id && notificationCount > 0) {
-      clearAllNotifications();
-    }
-  }, [view, activeLeague?.league_id, notificationCount, clearAllNotifications]);
-
-  // Realtime subscription: league standings (total_points updates from bet rewards)
-  useEffect(() => {
-    if (!activeLeague?.league_id) return;
-
-    const membersSub = supabase
-      .channel(`league_members:league_id=eq.${activeLeague.league_id}`)
-      .on(
-        'postgres_changes',
-        { event: 'UPDATE', schema: 'public', table: 'league_members', filter: `league_id=eq.${activeLeague.league_id}` },
-        (payload) => {
-          // Update the specific member in the members list with new total_points
-          setMembers(prev => {
-            const idx = prev.findIndex(m => m.user_id === payload.new.user_id);
-            if (idx >= 0) {
-              const updated = [...prev];
-              updated[idx] = { ...updated[idx], total_points: payload.new.total_points };
-              return updated.sort((a, b) => (b.total_points || 0) - (a.total_points || 0));
-            }
-            return prev;
-          });
-        }
-      )
-      .subscribe();
-
-    return () => { membersSub.unsubscribe(); };
-  }, [activeLeague?.league_id]);
+  }, [user, fetchLeagues, fetchTournaments]);
 
   const loadLeagueById = useCallback(async (id) => {
     try {
@@ -396,32 +367,61 @@ export default function LeagueScreen() {
     }
   }, [user?.id, view]);
 
-  const fetchLeagues = useCallback(async () => {
-    try {
-      setLoading(true);
-      const userId = user?.id;
-
-      const { data, error } = await supabase
-        .from('league_members')
-        .select(`
-          league_id, rank, total_points,
-          leagues ( id, name, format, tournament_id )
-        `)
-        .eq('user_id', userId);
-
-      if (error) throw error;
-
-      if (!data || data.length === 0) {
-        setLeagues([]);
-        return;
-      }
-      setLeagues(data || []);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
+  useEffect(() => {
+    if (leagueId) {
+      loadLeagueById(leagueId);
+    } else {
+      setActiveLeague(null);
+      setMembers([]);
     }
-  }, [user?.id]);
+  }, [leagueId, loadLeagueById]);
+
+  useEffect(() => {
+    if (view === 'commissioner' && activeLeague?.league_id) {
+      fetchOpenBets();
+    }
+  }, [view, activeLeague?.league_id]);
+
+  useEffect(() => {
+    if (view === 'chat' && activeLeague?.league_id) {
+      markChatAsRead();
+      loadLeagueMembers();
+    }
+  }, [view, activeLeague?.league_id, markChatAsRead, loadLeagueMembers]);
+
+  // Auto-clear notification badge when viewing bets tab
+  useEffect(() => {
+    if (view === 'bets' && activeLeague?.league_id && notificationCount > 0) {
+      clearAllNotifications();
+    }
+  }, [view, activeLeague?.league_id, notificationCount, clearAllNotifications]);
+
+  // Realtime subscription: league standings (total_points updates from bet rewards)
+  useEffect(() => {
+    if (!activeLeague?.league_id) return;
+
+    const membersSub = supabase
+      .channel(`league_members:league_id=eq.${activeLeague.league_id}`)
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'league_members', filter: `league_id=eq.${activeLeague.league_id}` },
+        (payload) => {
+          // Update the specific member in the members list with new total_points
+          setMembers(prev => {
+            const idx = prev.findIndex(m => m.user_id === payload.new.user_id);
+            if (idx >= 0) {
+              const updated = [...prev];
+              updated[idx] = { ...updated[idx], total_points: payload.new.total_points };
+              return updated.sort((a, b) => (b.total_points || 0) - (a.total_points || 0));
+            }
+            return prev;
+          });
+        }
+      )
+      .subscribe();
+
+    return () => { membersSub.unsubscribe(); };
+  }, [activeLeague?.league_id]);
 
   // FB-025: atomic league creation via RPC (league + commissioner in one transaction)
   const handleCreateLeague = async (e) => {
