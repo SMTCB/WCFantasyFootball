@@ -65,41 +65,32 @@ test.describe('Draft Mode - Complete Flow', () => {
     page.on('pageerror', err => errors.push(err.message));
 
     await skipOnboarding(page);
-    await page.goto('/league');
+
+    // Navigate directly to the known league's draft URL (demo mode doesn't render
+    // league list links, so searching the /league page would find nothing)
+    const KNOWN_LEAGUE_ID = 'aaaaaaaa-0000-0000-0000-000000000001';
+    await page.goto(`/league/${KNOWN_LEAGUE_ID}/draft`);
     await waitForContent(page);
+    // Give the async data load a little extra time
+    await page.waitForSelector('text=Build Your List', { timeout: 8000 }).catch(() => {});
 
-    // Find draft league
-    const leagueLinks = await page.locator('a[href*="/league/"]').all();
-    let foundDraftScreen = false;
+    const isDraftScreen = await page.locator('text=Build Your List').isVisible().catch(() => false);
+    expect(isDraftScreen, 'Should find draft screen with Build Your List heading').toBe(true);
 
-    for (const link of leagueLinks) {
-      const href = await link.getAttribute('href');
-      if (href) {
-        await page.goto(href + '/draft');
-        await waitForContent(page);
+    if (isDraftScreen) {
+      // ✅ TEST: Verify list shows 30-player limit
+      const listCounter = await page.locator('text=/Your List —/').innerText().catch(() => '');
+      expect(listCounter).toContain('/30', 'Draft list should display /30 limit, not /15');
 
-        const isDraftScreen = await page.locator('text=Build Your List').isVisible().catch(() => false);
-        if (isDraftScreen) {
-          foundDraftScreen = true;
-
-          // ✅ TEST: Verify list shows 30-player limit
-          const listCounter = await page.locator('text=/Your List —/').innerText();
-          expect(listCounter).toContain('/30', 'Draft list should display /30 limit, not /15');
-
-          // ✅ TEST: Verify position caps are for draft (GK:4, DEF:10, MID:10, FWD:6)
-          const positionCaps = await page.locator('[class*="text-center"]').all();
-          const hasExpectedCaps = await Promise.all(positionCaps.map(async (cap) => {
-            const text = await cap.innerText();
-            return text.includes('0/4') || text.includes('0/10') || text.includes('0/6');
-          }));
-          expect(hasExpectedCaps.some(x => x), 'Should display draft position caps (GK:4, DEF:10, MID:10, FWD:6)').toBe(true);
-
-          break;
-        }
-      }
+      // ✅ TEST: Verify position caps are for draft (GK:4, DEF:10, MID:10, FWD:6)
+      const positionCaps = await page.locator('[class*="text-center"]').all();
+      const hasExpectedCaps = await Promise.all(positionCaps.map(async (cap) => {
+        const text = await cap.innerText().catch(() => '');
+        return text.includes('0/4') || text.includes('0/10') || text.includes('0/6');
+      }));
+      expect(hasExpectedCaps.some(x => x), 'Should display draft position caps (GK:4, DEF:10, MID:10, FWD:6)').toBe(true);
     }
 
-    expect(foundDraftScreen, 'Should find a draft league to test').toBe(true);
     expect(errors, `Draft screen threw JS errors: ${errors.join(', ')}`).toHaveLength(0);
   });
 
@@ -109,33 +100,19 @@ test.describe('Draft Mode - Complete Flow', () => {
     // Manager 2 cannot pick the same players
 
     await skipOnboarding(page);
-    await page.goto('/league');
+
+    const KNOWN_LEAGUE_ID = 'aaaaaaaa-0000-0000-0000-000000000001';
+    await page.goto(`/league/${KNOWN_LEAGUE_ID}/draft`);
     await waitForContent(page);
+    await page.waitForSelector('text=Build Your List', { timeout: 8000 }).catch(() => {});
 
-    // Get a draft league
-    const leagueLinks = await page.locator('a[href*="/league/"]').all();
-    let draftLeagueId = null;
-    let _draftUrl = null;
-
-    for (const link of leagueLinks) {
-      const href = await link.getAttribute('href');
-      if (href) {
-        await page.goto(href + '/draft');
-        await waitForContent(page);
-
-        const isDraftScreen = await page.locator('text=Build Your List').isVisible().catch(() => false);
-        if (isDraftScreen) {
-          draftLeagueId = href.match(/\/league\/([^/]+)/)?.[1];
-          _draftUrl = href + '/draft';
-          break;
-        }
-      }
-    }
-
-    if (!draftLeagueId || !_draftUrl) {
+    const isDraftScreen = await page.locator('text=Build Your List').isVisible().catch(() => false);
+    if (!isDraftScreen) {
       test.skip();
       return;
     }
+
+    const draftLeagueId = KNOWN_LEAGUE_ID;
 
     // ✅ TEST: Verify draft_submissions table enforces no duplicates across managers
     const { data: submissions } = await anonSupabase
