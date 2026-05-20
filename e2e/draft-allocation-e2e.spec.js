@@ -734,10 +734,7 @@ test.describe('Draft vs Classic — mode detection', () => {
       const classicOption = page.locator('text=/Classic/i').first();
       await expect(classicOption).toBeVisible({ timeout: 3000 });
     } else {
-      // Already in a league — navigate to the creation form
-      await page.goto('/league');
-      const pageText = await page.locator('body').innerText();
-      // The page text should mention both formats somewhere (in league details or creation)
+      // Already in a league — creation wizard not directly accessible
       console.log('League creation wizard not directly accessible in current state');
       test.skip();
     }

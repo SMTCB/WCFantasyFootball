@@ -121,7 +121,7 @@ export default function DraftScreen() {
     });
   }, [players, listedIds, filterPos, search]);
 
-  const canAdd = (player) => {
+  const canAdd = () => {
     if (list.length >= DRAFT_LIST_SIZE) return false;
     return true;
   };
