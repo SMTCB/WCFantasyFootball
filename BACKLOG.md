@@ -1,8 +1,25 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-05-18 (Chat functionality restored)  
-**E2E Test Suite**: 198/200 passing (99%) ✅ (2 pre-existing UI timeouts in multi-league test)  
+**Last Updated**: 2026-05-20 (Auto-fill 403 + League screen crash fixed)  
+**E2E Test Suite**: 212/212 passing (100%) ✅  
 **Live App**: https://wc-fantasy-football.vercel.app
+
+---
+
+## 📊 SESSION 29 PROGRESS (2026-05-20 — Auto-fill deep fix)
+
+**🚀 COMPLETED THIS SESSION:**
+
+- ✅ **PR #130 — Fix auto-fill 403 and League screen initialization crash** (merged):
+  - **Root cause 1 (403)**: Fixture `Newcastle vs West Ham` (kickoff 2026-05-17) stuck at `status='live'` for 3 days — `process-transfer` edge function blocks ALL transfers when any live fixture exists. Fixed stale record in DB; edge function now only counts fixtures as "live" if kickoff was within the last 3 hours.
+  - **Root cause 2 (wrong column names)**: Check #3 in edge function used `home_forza_team_id` / `away_forza_team_id` (non-existent); actual columns are `home_team_forza_id` / `away_team_forza_id`. Fixed column names and added same 3-hour time guard.
+  - **Root cause 3 (TDZ crash / "Cannot access X before initialization")**: `useAutoFill` was internally calling `useTransfer(leagueId)` — a duplicate of the call already in `SquadScreen` / `MarketScreen`. This created two separate hook instances and produced a `ReferenceError` in the production bundle. Fixed by removing the internal `useTransfer` import and accepting `buy` as a parameter from the caller instead.
+  - Edge function redeployed (version 13).
+
+- ✅ **PR #131 — Fix draft E2E tests (212/212 passing)** (merged):
+  - 6 draft tests were failing because they searched for league links on `/league`, but demo mode doesn't render league list as `<a>` tags. Fixed by navigating directly to the known seeded league's draft URL.
+  - Position-cap regex fixed (was using `.` which doesn't cross newlines in `0/4\nGK` text).
+  - Result: 212/212 passing, 0 failures (up from 204/210 = 6 failing).
 
 ---
 
