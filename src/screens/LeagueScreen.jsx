@@ -17,7 +17,7 @@ import GazetteDraftReport from '../components/GazetteDraftReport';
 import TransferWindowBanner from '../components/TransferWindowBanner';
 import AuctionCard from '../components/AuctionCard';
 import BetsSection from '../components/BetsSection';
-import BetCreatorPanel from '../components/league/BetCreatorPanel';
+
 import NotificationPanel from '../components/NotificationPanel';
 import { useTransferWindow } from '../hooks/useTransferWindow';
 import { useCommissioner }   from '../hooks/useCommissioner';
@@ -1393,17 +1393,7 @@ export default function LeagueScreen() {
                </button>
              </div>
 
-             {/* ── Create Bet Instance ────────────────────────────────────────── */}
-             <div data-tour="comm-bets" className="bg-[#111] border border-[#1e1e1e] rounded-sm p-4">
-               <div className="text-[10px] font-black uppercase tracking-[0.15em] text-text-tertiary mb-4">Create Bet</div>
-               <BetCreatorPanel
-                 leagueId={activeLeague?.league_id}
-                 tournamentId={activeLeague?.tournament_id}
-                 onCreated={fetchOpenBets}
-                 commLoading={commLoading}
-                 setCommMsg={setCommMsg}
-               />
-             </div>
+             {/* ── Create Bet Instance — now rendered inside CommissionerPanel ── */}
 
              {/* ── Resolve Bet Instance ────────────────────────────────────────── */}
              <div className="bg-[#111] border border-[#1e1e1e] rounded-sm p-4 space-y-3">
