@@ -641,7 +641,41 @@ iOS deployment target: 15.0 · Android minSdk: 26 (Android 8.0) · targetSdk: 36
 
 ## Development Guidelines
 
-- **E2E**: 148 tests must stay green — run `npx playwright test` before merging (CI enforces this)
+### ⚠️ Vite v8 / Rolldown — TDZ Rule (read before touching any import)
+
+This project uses **Vite v8**, which switched from Rollup to **Rolldown** (Rust bundler). Rolldown is stricter about module evaluation order. A known crash pattern has occurred **three times** in this codebase:
+
+> **`ReferenceError: Cannot access 'X' before initialization`** on a screen — triggered whenever the same module is imported both **directly** by a screen and **transitively** through one of its children.
+
+**How it happens:**
+```
+LeagueScreen → HubShared              ← direct import (depth 1)
+LeagueScreen → CommissionerPanel → BetCreatorPanel → HubShared  ← same module at depth 3
+```
+Rolldown sees the same module at two depths and can emit it in an order that puts it in TDZ when the screen first runs. Rollup (Vite v6/v7) was lenient about this; Rolldown is not.
+
+**The rule — check BEFORE adding any new import:**
+1. If you add an `import X from './SomeModule'` to a **child component** of LeagueScreen (or any other large screen), first `grep` whether `LeagueScreen.jsx` already imports that module.
+2. If it does → **do NOT add the import to the child**. Instead: inline the value, pass it as a prop, or restructure so the module is only imported at one depth.
+3. Run `npm run build` and verify the bundle builds cleanly. A TDZ crash only surfaces in **production** (minified), not dev mode.
+
+**Past occurrences:**
+| Crash | Module | Fix |
+|---|---|---|
+| 1 | `useTransfer` — called inside `useAutoFill` + by `SquadScreen` | Pass `buy` as prop instead |
+| 2 | `BetCreatorPanel` — imported by `LeagueScreen` dead-code AND `CommissionerPanel` | Removed dead-code import from `LeagueScreen` |
+| 3 | `HubShared` — imported by `LeagueScreen` (69×) AND `CommissionerPanel→BetCreatorPanel` | Inlined `MONO`/`DISPLAY` as local constants in `BetCreatorPanel` |
+
+**Quick check command** (run before merging any PR that adds imports to league components):
+```bash
+npx madge --circular src/
+# and manually check: does the new import's module already appear in LeagueScreen.jsx?
+grep -n "^import" src/screens/LeagueScreen.jsx
+```
+
+---
+
+- **E2E**: 232 tests must stay green — run `npx playwright test` before merging (CI enforces this)
 - **Mobile-first**: All UI tested at 375px viewport minimum (use DevTools device emulation)
 - **RLS**: Never bypass Supabase Row Level Security — always filter by `auth.uid()`
 - **Secrets**: Never commit `.env.local` or credentials — use `.env.example` as template
