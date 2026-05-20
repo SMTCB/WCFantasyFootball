@@ -82,13 +82,14 @@ test.describe('Draft Mode - Complete Flow', () => {
       const listCounter = await page.locator('text=/Your List —/').innerText().catch(() => '');
       expect(listCounter).toContain('/30', 'Draft list should display /30 limit, not /15');
 
-      // ✅ TEST: Verify position caps are for draft (GK:4, DEF:10, MID:10, FWD:6)
-      const positionCaps = await page.locator('[class*="text-center"]').all();
-      const hasExpectedCaps = await Promise.all(positionCaps.map(async (cap) => {
-        const text = await cap.innerText().catch(() => '');
-        return text.includes('0/4') || text.includes('0/10') || text.includes('0/6');
-      }));
-      expect(hasExpectedCaps.some(x => x), 'Should display draft position caps (GK:4, DEF:10, MID:10, FWD:6)').toBe(true);
+      // ✅ TEST: Verify informational position counters are visible (GK, DEF, MID, FWD)
+      // Note: caps were removed from list-building by design — the header now shows
+      // plain counts ("0 GK") with no /N enforcement. The allocation job enforces caps.
+      const pageText = await page.locator('body').innerText();
+      expect(pageText).toMatch(/\bGK\b/);
+      expect(pageText).toMatch(/\bDEF\b/);
+      expect(pageText).toMatch(/\bMID\b/);
+      expect(pageText).toMatch(/\bFWD\b/);
     }
 
     expect(errors, `Draft screen threw JS errors: ${errors.join(', ')}`).toHaveLength(0);

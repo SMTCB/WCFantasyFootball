@@ -181,64 +181,84 @@ test.describe('Draft System - Player List', () => {
     expect(errors, `Draft screen threw JS errors: ${errors.join(', ')}`).toHaveLength(0);
   });
 
-  test('draft list enforces position caps (GK:4, DEF:10, MID:10, FWD:6) during submission', async ({ page }) => {
+  test('draft list: no position caps enforced during list-building (caps apply only at allocation)', async ({ page }) => {
+    // Position cap enforcement was intentionally removed from list-building.
+    // The header now shows informational counts ("0 GK", "0 DEF" etc.) without /cap.
+    // Allocation-time caps (GK≤2, DEF≤5, MID≤5, FWD≤3) are enforced by run-draft-lottery.
     const errors = [];
     page.on('pageerror', err => errors.push(err.message));
 
     await skipOnboarding(page);
-    // Navigate directly — demo mode doesn't render league list links
     const KNOWN_LEAGUE_ID = 'aaaaaaaa-0000-0000-0000-000000000001';
     await page.goto(`/league/${KNOWN_LEAGUE_ID}/draft`);
     await waitForContent(page);
     await page.waitForSelector('text=Build Your List', { timeout: 8000 }).catch(() => {});
 
     const isDraftScreen = await page.locator('text=Build Your List').isVisible().catch(() => false);
-    expect(isDraftScreen, 'Should find draft screen with position caps').toBe(true);
+    expect(isDraftScreen, 'Should find draft screen').toBe(true);
 
     if (isDraftScreen) {
-      // The position caps in the draft header show "0/4\nGK", "0/10\nDEF" etc.
-      // Check for the /N cap text directly (e.g., "/4", "/10", "/6")
       const pageText = await page.locator('body').innerText();
-      expect(pageText).toMatch(/\/4/);   // GK cap
-      expect(pageText).toMatch(/\/10/);  // DEF or MID cap
-      expect(pageText).toMatch(/\/6/);   // FWD cap
+      // Informational position labels visible but no /N cap format
+      expect(pageText).toMatch(/\bGK\b/);
+      expect(pageText).toMatch(/\bDEF\b/);
+      expect(pageText).toMatch(/\bMID\b/);
+      // The old cap format ("0/4", "0/10") should NOT appear in the header
+      const headerText = await page.locator('[class*="sticky"]').first().innerText().catch(() => '');
+      expect(headerText).not.toMatch(/0\/4/);
+      expect(headerText).not.toMatch(/0\/10/);
     }
 
     expect(errors).toHaveLength(0);
   });
 
   test('draft list prevents duplicate players within same manager list', async ({ page }) => {
+    // Strategy: search for a specific player → add them → search again → pool shows 0 results.
+    // Avoids reading the full 2000+ player DOM which causes CI timeouts.
     const errors = [];
     page.on('pageerror', err => errors.push(err.message));
 
     await skipOnboarding(page);
     const KNOWN_LEAGUE_ID = 'aaaaaaaa-0000-0000-0000-000000000001';
     await page.goto(`/league/${KNOWN_LEAGUE_ID}/draft`);
-    await waitForContent(page);
-    await page.waitForSelector('text=Build Your List', { timeout: 8000 }).catch(() => {});
+    await page.waitForSelector('text=Build Your List', { timeout: 10000 });
+    await page.waitForTimeout(1500); // let players load
 
     const isDraftScreen = await page.locator('text=Build Your List').isVisible().catch(() => false);
     if (!isDraftScreen) { test.skip(); return; }
 
-    // Add first player and verify it disappears from the available pool
-    const playerRows = await page.locator('[class*="bg-\\[#111\\]"][class*="cursor-pointer"]').all();
-    if (playerRows.length > 0) {
-      const firstPlayer = playerRows[0];
-      const firstName = await firstPlayer.locator('[class*="text-white"]').first().innerText().catch(() => '');
+    // Search for a specific, unique player name to get exactly 1 result
+    const TARGET = 'Alexander Isak';
+    const searchInput = page.locator('input[placeholder*="Search"]');
+    if (!await searchInput.isVisible({ timeout: 2000 }).catch(() => false)) { test.skip(); return; }
 
-      await firstPlayer.click();
-      await page.waitForTimeout(100);
-      const addBtn = page.locator('button:has-text("Add to List")').first();
-      if (await addBtn.isVisible()) {
-        await addBtn.click();
-        await page.waitForTimeout(200);
+    await searchInput.fill(TARGET);
+    await page.waitForTimeout(400);
 
-        const remainingRows = await page.locator('[class*="bg-\\[#111\\]"][class*="cursor-pointer"]').all();
-        const playerNames = await Promise.all(remainingRows.map(r => r.locator('[class*="text-white"]').first().innerText().catch(() => '')));
+    // ✅ Player appears in pool
+    const firstRow = page.locator('[class*="cursor-pointer"]').first();
+    const rowVisible = await firstRow.isVisible({ timeout: 2000 }).catch(() => false);
+    if (!rowVisible) { test.skip(); return; } // player not in this tournament's pool
 
-        expect(playerNames).not.toContain(firstName, 'Added player should not appear in available pool');
-      }
-    }
+    // Add the player
+    await firstRow.click();
+    await page.waitForTimeout(150);
+    const addBtn = page.locator('button:has-text("Add to List")').first();
+    if (!await addBtn.isVisible({ timeout: 1000 }).catch(() => false)) { test.skip(); return; }
+    await addBtn.click();
+    await page.waitForTimeout(300);
+
+    // ✅ List counter incremented
+    const listText = await page.locator('text=/Your List —/').innerText().catch(() => '');
+    expect(parseInt(listText.match(/(\d+)\/30/)?.[1] ?? '0')).toBeGreaterThan(0);
+
+    // ✅ Player no longer in pool — same search now returns 0 rows or "NO RESULTS"
+    await searchInput.fill(TARGET);
+    await page.waitForTimeout(400);
+    const poolRows = await page.locator('[class*="cursor-pointer"]').count();
+    const noResults = await page.locator('text=/NO RESULTS/i').isVisible({ timeout: 500 }).catch(() => false);
+    expect(poolRows === 0 || noResults,
+      `${TARGET} should have been removed from the available pool`).toBe(true);
 
     expect(errors).toHaveLength(0);
   });
