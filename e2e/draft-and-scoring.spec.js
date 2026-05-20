@@ -246,17 +246,30 @@ test.describe('Draft System - Player List', () => {
     const addBtn = page.locator('button:has-text("Add to List")').first();
     if (!await addBtn.isVisible({ timeout: 1000 }).catch(() => false)) { test.skip(); return; }
     await addBtn.click();
-    await page.waitForTimeout(300);
+
+    // Wait for React to update list state — poll until counter shows ≥ 1 player
+    await page.waitForFunction(
+      () => {
+        const el = [...document.querySelectorAll('span,div')].find(e => /Your List\s*—\s*\d+\/30/.test(e.textContent));
+        if (!el) return false;
+        const m = el.textContent.match(/(\d+)\/30/);
+        return m && parseInt(m[1]) > 0;
+      },
+      { timeout: 5000 }
+    ).catch(() => {}); // don't throw — the expect below will surface the failure
 
     // ✅ List counter incremented
     const listText = await page.locator('text=/Your List —/').innerText().catch(() => '');
     expect(parseInt(listText.match(/(\d+)\/30/)?.[1] ?? '0')).toBeGreaterThan(0);
 
-    // ✅ Player no longer in pool — same search now returns 0 rows or "NO RESULTS"
+    // ✅ Player no longer in pool — clear then re-fill search to force React onChange
+    // (re-filling with the same string after the list update may not trigger onChange)
+    await searchInput.fill('');
+    await page.waitForTimeout(200);
     await searchInput.fill(TARGET);
-    await page.waitForTimeout(400);
+    await page.waitForTimeout(500);
     const poolRows = await page.locator('[class*="cursor-pointer"]').count();
-    const noResults = await page.locator('text=/NO RESULTS/i').isVisible({ timeout: 500 }).catch(() => false);
+    const noResults = await page.locator('text=/NO RESULTS/i').isVisible({ timeout: 1000 }).catch(() => false);
     expect(poolRows === 0 || noResults,
       `${TARGET} should have been removed from the available pool`).toBe(true);
 
