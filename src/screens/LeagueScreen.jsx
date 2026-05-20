@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../hooks/useAuth';
@@ -150,16 +150,6 @@ export default function LeagueScreen() {
     openTransferWindow, closeTransferWindow,
     draftDeadline, setDraftDeadline, setLeagueDraftDeadline,
     scoreFixtureId, setScoreFixtureId, triggerScores,
-    betTemplateId, setBetTemplateId,
-    betTitle, setBetTitle,
-    betPrompt, setBetPrompt,
-    betDeadline, setBetDeadline,
-    betRewardValue, setBetRewardValue,
-    betScopeType, setBetScopeType,
-    betScopeRef, setBetScopeRef,
-    betOptionDraft, setBetOptionDraft,
-    betOptions, setBetOptions,
-    autoGenerateBetOptions, createBetInstance,
     openBets, resolutionBetsLoading,
     selectedBetForResolution, setSelectedBetForResolution,
     betResolutionAnswer, setBetResolutionAnswer,
