@@ -154,7 +154,7 @@ async function runLottery(leagueId) {
 
   await supabase
     .from('squads')
-    .upsert(squadRows, { onConflict: 'user_id,league_id' });
+    .upsert(squadRows, { onConflict: 'league_id,user_id,matchday_id' });
 
   // 7. Mark submissions as processed
   await supabase
