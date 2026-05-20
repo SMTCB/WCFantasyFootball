@@ -1,8 +1,53 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-05-20 (League screen TDZ crash — 4th occurrence — permanently fixed)  
+**Last Updated**: 2026-05-20 (Scoring pipeline validation — full GW35 test with 6 managers)  
 **E2E Test Suite**: 84/84 platform tests passing ✅  
 **Live App**: https://wc-fantasy-football.vercel.app
+
+---
+
+## 📊 SESSION 31 PROGRESS (2026-05-20 — Scoring Pipeline Validation)
+
+**Goal**: End-to-end test of the scoring engine using real EPL GW35 data — full gameday, 6 managers.
+
+**🚀 COMPLETED THIS SESSION:**
+
+- ✅ **PR #149 — Two critical scoring pipeline bugs fixed** (merged):
+
+  **Bug 1 — Forza v1 match wrapper** (`ingest-match-events`):
+  - `/v1/matches/:id` returns `{ match: {...} }` but code accessed `matchData.score` directly
+  - Result: `home_score` always null → all players got `goals_conceded=0`, `clean_sheet=true` regardless of result
+  - Fix: `const matchInfo = matchData.match ?? matchData`
+
+  **Bug 2 — `penalty_scored` phantom column** (`ingest-match-events`):
+  - Upsert payload included `penalty_scored` which doesn't exist in `player_match_stats`
+  - PostgREST rejected entire batch silently → `calculate-scores` always used 12-player fallback
+  - Fix: removed `penalty_scored` from upsert payload
+
+  **Migration 63 — `fantasy_points` unique constraint**:
+  - Added `UNIQUE (squad_id, matchday_id)` so rollup upsert updates existing rows correctly
+
+**Full GW35 validation (all 10 EPL fixtures, 6-manager league "EPL GW35 Full Test"):**
+
+| Pos | Manager | Pts | Top scorer |
+|-----|---------|-----|-----------|
+| 1 | s.t.c.braganca | 49 | Gyökeres 10.7, Saka 6.5©, White 5.7 (Arsenal CS) |
+| 2 | TacticsTom | 28 | Damsgaard 9.2, Collins 5.8 (Brentford CS) |
+| 3 | Demo | 15 | Calvert-Lewin 5.0©, Garner 4.0 |
+| 4 | Zidane_99 | 12 | Haaland 4.0© |
+| 5 | admin | 11 | Senesi 5.5 (Bournemouth CS), Porro 3.3 |
+| 6 | GoalMachine | 1 | Donnarumma -3.0 (GK conceded 3) |
+
+**Scoring verified correct:**
+  - Arsenal clean sheet: Raya (GK) 5pts, Saliba/White/Gabriel (DEF) ~5-5.7pts each ✅
+  - Brentford clean sheet: Kelleher (GK) 5pts, Collins (DEF) 5.75pts ✅
+  - Everton 3-3 Man City: Pickford (GK) -2pts (conceded 3), Donnarumma -3pts ✅
+  - Liam Delap (Chelsea FWD) -0.49pts (appearance minus yellow) ✅
+  - BPS bonus system working across all 10 matches ✅
+
+**Known remaining issues:**
+  - Squad rollup `total` per fixture overwrites instead of accumulates (multi-fixture gameweek bug)
+  - Some players absent from all E10 stat categories get `minutes_played=0` → 0 pts
 
 ---
 
@@ -11,10 +56,9 @@
 **🚀 COMPLETED THIS SESSION:**
 
 - ✅ **PR #147 — Fix TDZ crash on League screen (hook declaration order)** (merged):
-  - **Root cause**: `fetchTournaments`, `fetchLeagues`, and `loadLeagueById` were all declared with `useCallback` AFTER the `useEffect` hooks that listed them in dependency arrays. Vite v8 / Rolldown evaluates `const`/`let` strictly in source order; putting them after their `useEffect` consumers places them in the Temporal Dead Zone in the production bundle.
-  - **Fix**: Moved all three `useCallback` declarations before the `useEffect` hooks that reference them. No logic changed — pure reorder.
-  - **Verified**: `npm run lint` (0 errors), `npm run build` (clean), 84/84 platform E2E tests pass, no JS errors from production preview.
-  - This is the fourth and final TDZ occurrence. The pattern is now documented in CLAUDE.md under "Vite v8 / Rolldown — TDZ Rule".
+  - **Root cause**: `fetchTournaments`, `fetchLeagues`, and `loadLeagueById` declared with `useCallback` AFTER `useEffect` hooks that list them in dependency arrays. Vite v8 / Rolldown places them in the Temporal Dead Zone in the production bundle.
+  - **Fix**: Moved all three `useCallback` declarations before the `useEffect` hooks. No logic changed.
+  - This is the fourth and final TDZ occurrence. Pattern now documented in CLAUDE.md.
 
 ---
 
@@ -23,15 +67,12 @@
 **🚀 COMPLETED THIS SESSION:**
 
 - ✅ **PR #130 — Fix auto-fill 403 and League screen initialization crash** (merged):
-  - **Root cause 1 (403)**: Fixture `Newcastle vs West Ham` (kickoff 2026-05-17) stuck at `status='live'` for 3 days — `process-transfer` edge function blocks ALL transfers when any live fixture exists. Fixed stale record in DB; edge function now only counts fixtures as "live" if kickoff was within the last 3 hours.
-  - **Root cause 2 (wrong column names)**: Check #3 in edge function used `home_forza_team_id` / `away_forza_team_id` (non-existent); actual columns are `home_team_forza_id` / `away_team_forza_id`. Fixed column names and added same 3-hour time guard.
-  - **Root cause 3 (TDZ crash / "Cannot access X before initialization")**: `useAutoFill` was internally calling `useTransfer(leagueId)` — a duplicate of the call already in `SquadScreen` / `MarketScreen`. This created two separate hook instances and produced a `ReferenceError` in the production bundle. Fixed by removing the internal `useTransfer` import and accepting `buy` as a parameter from the caller instead.
+  - Fixed stale fixture stuck at `status='live'` blocking all transfers
+  - Fixed wrong column names in edge function (`home_forza_team_id` → `home_team_forza_id`)
+  - Fixed TDZ crash from duplicate `useTransfer` hook instances
   - Edge function redeployed (version 13).
 
-- ✅ **PR #131 — Fix draft E2E tests (212/212 passing)** (merged):
-  - 6 draft tests were failing because they searched for league links on `/league`, but demo mode doesn't render league list as `<a>` tags. Fixed by navigating directly to the known seeded league's draft URL.
-  - Position-cap regex fixed (was using `.` which doesn't cross newlines in `0/4\nGK` text).
-  - Result: 212/212 passing, 0 failures (up from 204/210 = 6 failing).
+- ✅ **PR #131 — Fix draft E2E tests (212/212 passing)** (merged)
 
 ---
 

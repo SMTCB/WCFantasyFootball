@@ -216,15 +216,17 @@ Deno.serve(async (req) => {
 
     if (!matchData) return respond(200, { ok: true, message: 'Match data not available yet', players_ingested: 0, events_written: 0 });
 
+    // Forza v1 wraps the response: { match: { status, score, home_team, ... } }
+    const matchInfo = matchData.match ?? matchData;
+
     // ── 3. Update fixture status and score ────────────────────────────────────
-    // Forza API uses 'matchData.score.current', not 'matchData.scores.current'
     await supabase.from('fixtures').update({
-      status:        matchData.status === 'live' ? 'live' : matchData.status === 'after' ? 'finished' : 'scheduled',
-      status_detail: matchData.status_detail ?? null,
-      home_score:    matchData.score?.current?.[0] ?? null,
-      away_score:    matchData.score?.current?.[1] ?? null,
-      scores:        matchData.score?.current
-                       ? { home: matchData.score.current[0], away: matchData.score.current[1] }
+      status:        matchInfo.status === 'live' ? 'live' : matchInfo.status === 'after' ? 'finished' : 'scheduled',
+      status_detail: matchInfo.status_detail ?? null,
+      home_score:    matchInfo.score?.current?.[0] ?? null,
+      away_score:    matchInfo.score?.current?.[1] ?? null,
+      scores:        matchInfo.score?.current
+                       ? { home: matchInfo.score.current[0], away: matchInfo.score.current[1] }
                        : null,
     }).eq('id', fixture.id);
 
@@ -282,8 +284,8 @@ Deno.serve(async (req) => {
 
     // ── 8. Derive clean sheets ────────────────────────────────────────────────
     // clean sheet = player's team conceded 0 goals AND player played ≥ 60 min
-    const homeScore = matchData.score?.current?.[0] ?? 0;
-    const awayScore = matchData.score?.current?.[1] ?? 0;
+    const homeScore = matchInfo.score?.current?.[0] ?? 0;
+    const awayScore = matchInfo.score?.current?.[1] ?? 0;
     // Home team conceded = away score; away team conceded = home score
     const concededByTeam = {
       [homeId]: awayScore,
@@ -337,7 +339,7 @@ Deno.serve(async (req) => {
         red_cards:       periodsResult.redCards.has(fpid)      ? 1 : 0,
         penalty_missed:  periodsResult.penaltyMissed.has(fpid) ? 1 : 0,
         penalty_saved:   penaltySaved,
-        penalty_scored:  periodsResult.penaltyScoredMap[fpid]  ?? 0,
+        // penalty_scored omitted — column does not exist in player_match_stats
 
         // From E5 EventDigest — only source for own goals
         own_goals:       ownGoalMap[fpid] ?? 0,
@@ -404,8 +406,8 @@ Deno.serve(async (req) => {
           player_id:  mainPid,
           minute:     ev.minute,
           team:       ev.team_side === 'home'
-                        ? (matchData.home_team?.name ?? 'Home')
-                        : (matchData.away_team?.name ?? 'Away'),
+                        ? (matchInfo.home_team?.name ?? 'Home')
+                        : (matchInfo.away_team?.name ?? 'Away'),
           outcome:    Object.keys(outcome).length ? outcome : null,
         });
       }
