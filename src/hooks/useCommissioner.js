@@ -97,6 +97,21 @@ export function useCommissioner(leagueId, tournamentId) {
     setCommMsg({ type: 'ok', text: 'Draft deadline set.' });
   }), [commAction, leagueId, draftDeadline]);
 
+  // ── Run draft allocation ──────────────────────────────────────────────────
+  const triggerDraftAllocation = useCallback(() => commAction(async () => {
+    const { data, error } = await supabase.functions.invoke('run-draft-lottery', {
+      body: { league_id: leagueId },
+    });
+    if (error) throw new Error(error.message);
+    const managed = data?.managersProcessed ?? 0;
+    const contested = data?.contestedPlayers ?? 0;
+    const incomplete = data?.incomplete?.length ?? 0;
+    setCommMsg({
+      type: 'ok',
+      text: `Allocation complete — ${managed} squad${managed !== 1 ? 's' : ''} allocated, ${contested} conflict${contested !== 1 ? 's' : ''} resolved${incomplete > 0 ? `, ${incomplete} incomplete` : ''}.`,
+    });
+  }), [commAction, leagueId]);
+
   // ── Fetch open/unresolved bets — declared first so createBetDirect can use it ──
   const fetchOpenBets = useCallback(async () => {
     if (!leagueId) return;
@@ -265,7 +280,7 @@ export function useCommissioner(leagueId, tournamentId) {
     windowClosesAt, setWindowClosesAt,
     windowTransfers, setWindowTransfers,
     openTransferWindow, closeTransferWindow,
-    draftDeadline, setDraftDeadline, setLeagueDraftDeadline,
+    draftDeadline, setDraftDeadline, setLeagueDraftDeadline, triggerDraftAllocation,
     scoreFixtureId, setScoreFixtureId, triggerScores,
     betTemplateId, setBetTemplateId,
     betTitle, setBetTitle,

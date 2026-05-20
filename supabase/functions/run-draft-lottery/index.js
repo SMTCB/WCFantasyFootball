@@ -143,6 +143,19 @@ async function runLottery(leagueId) {
     .from('draft_allocations')
     .upsert(allocationRows, { onConflict: 'league_id,user_id' });
 
+  // 6b. Write allocated squads to the squads table so the Squad screen shows them
+  const squadRows = Object.entries(allocations).map(([userId, data]) => ({
+    user_id:          userId,
+    league_id:        leagueId,
+    players:          data.allocated_players,
+    budget_remaining: Math.round((100 - data.budget_used) * 10) / 10,
+    matchday_id:      'current',
+  }));
+
+  await supabase
+    .from('squads')
+    .upsert(squadRows, { onConflict: 'user_id,league_id' });
+
   // 7. Mark submissions as processed
   await supabase
     .from('draft_submissions')

@@ -56,10 +56,10 @@ export default function DraftScreen() {
   const relaxation  = useRelaxationState(leagueId);
 
   // Competition-agnostic config from the leagues row
-  const cfg           = useLeagueConfig(leagueId);
-  const DRAFT_POS_CAPS  = cfg.draftPositionCaps;
+  const cfg             = useLeagueConfig(leagueId);
+  const DRAFT_POS_CAPS  = cfg.draftPositionCaps;   // kept for display info only — not enforced
   const DRAFT_LIST_SIZE = cfg.draftListSize;
-  const MIN_SUBMIT      = cfg.draftListSize;
+  const MIN_SUBMIT      = 1;                        // any size list can be submitted
 
   useEffect(() => {
     const fetchData = async () => {
@@ -123,7 +123,6 @@ export default function DraftScreen() {
 
   const canAdd = (player) => {
     if (list.length >= DRAFT_LIST_SIZE) return false;
-    if ((posCounts[player.position] ?? 0) >= DRAFT_POS_CAPS[player.position]) return false;
     return true;
   };
 
@@ -156,40 +155,14 @@ export default function DraftScreen() {
   };
 
   const autoComplete = () => {
-    const currentIds  = new Set(list.map(p => p.id));
-    const currentCounts = list.reduce(
-      (acc, p) => ({ ...acc, [p.position]: (acc[p.position] ?? 0) + 1 }), {}
-    );
+    const currentIds = new Set(list.map(p => p.id));
+    const remaining  = DRAFT_LIST_SIZE - list.length;
+    if (remaining <= 0) return;
 
-    // How many more of each position we still need to reach the target ratio
-    const slotsNeeded = Object.entries(DRAFT_POS_CAPS).reduce((acc, [pos, target]) => {
-      const have = currentCounts[pos] ?? 0;
-      const need = Math.max(0, target - have);
-      if (need > 0) acc[pos] = need;
-      return acc;
-    }, {});
-
-    const totalNeeded = Math.min(
-      Object.values(slotsNeeded).reduce((a, b) => a + b, 0),
-      DRAFT_LIST_SIZE - list.length
-    );
-    if (totalNeeded === 0) return;
-
-    // Proportionally scale down if we have fewer open slots than needed
-    const totalWanted = Object.values(slotsNeeded).reduce((a, b) => a + b, 0);
-    const scale = totalNeeded / totalWanted;
-
-    const picks = [];
-    for (const [pos, need] of Object.entries(slotsNeeded)) {
-      const count   = Math.round(need * scale);
-      const pool    = players.filter(p => p.position === pos && !currentIds.has(p.id));
-      // Fisher-Yates shuffle then take first `count`
-      const shuffled = [...pool].sort(() => Math.random() - 0.5);
-      shuffled.slice(0, count).forEach(p => {
-        currentIds.add(p.id);
-        picks.push(p);
-      });
-    }
+    // No position or budget constraints — pick any available players (shuffled for variety)
+    const available = players.filter(p => !currentIds.has(p.id));
+    const shuffled  = [...available].sort(() => Math.random() - 0.5);
+    const picks     = shuffled.slice(0, remaining);
 
     setList(prev => [...prev, ...picks]);
   };
@@ -216,7 +189,7 @@ export default function DraftScreen() {
   }, [list, submitted, isClosed, leagueId, user?.id]);
 
   const handleSubmit = async () => {
-    if (list.length < MIN_SUBMIT || saving || isClosed) return;
+    if (list.length === 0 || saving || isClosed) return;
     setSaving(true);
     setSaveError(null);
     try {
@@ -331,10 +304,10 @@ export default function DraftScreen() {
             }
           </div>
           <div className="flex gap-3">
-            {Object.entries(DRAFT_POS_CAPS).map(([pos, cap]) => (
+            {Object.keys(DRAFT_POS_CAPS).map(pos => (
               <div key={pos} className="text-center">
                 <div className="text-[9px] font-black" style={{ color: POS_CONFIG[pos].color }}>
-                  {posCounts[pos] ?? 0}/{cap}
+                  {posCounts[pos] ?? 0}
                 </div>
                 <div className="text-[8px] text-[#555] uppercase">{pos}</div>
               </div>
@@ -396,16 +369,16 @@ export default function DraftScreen() {
             <span className="text-[10px] font-black uppercase tracking-widest text-[#9E9E9E]">
               Your List — {list.length}/{DRAFT_LIST_SIZE}
             </span>
-            {list.length < MIN_SUBMIT && (
+            {list.length === 0 && (
               <span className="text-[9px] text-[#E53935] font-bold">
-                Min {MIN_SUBMIT} to submit
+                Add at least 1 player to submit
               </span>
             )}
           </div>
 
           {list.length === 0 ? (
             <div className="text-center py-4 text-[#333] text-[11px] font-bold uppercase tracking-widest border border-dashed border-[#222] rounded-sm">
-              Add players below — #1 is your highest priority
+              Add up to {DRAFT_LIST_SIZE} players — #1 is your highest priority
             </div>
           ) : (
             <div className="space-y-1.5 max-h-[240px] overflow-y-auto pr-1">
@@ -479,9 +452,8 @@ export default function DraftScreen() {
               </div>
             )}
             {filtered.map(p => {
-              const posAtCap = (posCounts[p.position] ?? 0) >= DRAFT_POS_CAPS[p.position];
               const listFull = list.length >= DRAFT_LIST_SIZE;
-              const disabled = posAtCap || listFull || isClosed;
+              const disabled = listFull || isClosed;
               const isExpanded = expandedId === p.id;
 
               return (
@@ -546,15 +518,15 @@ export default function DraftScreen() {
         </button>
         <button
           onClick={handleSubmit}
-          disabled={list.length < MIN_SUBMIT || saving || isClosed}
+          disabled={list.length === 0 || saving || isClosed}
           className="flex-1 py-3.5 text-[11px] font-black uppercase tracking-widest rounded transition-all disabled:opacity-30 disabled:cursor-not-allowed active:scale-95"
           style={{
-            background: list.length >= MIN_SUBMIT && !isClosed ? '#00C853' : undefined,
-            color:      list.length >= MIN_SUBMIT && !isClosed ? '#000' : '#555',
-            backgroundColor: list.length < MIN_SUBMIT || isClosed ? '#1A1A1A' : undefined,
+            background:      list.length > 0 && !isClosed ? '#00C853' : undefined,
+            color:           list.length > 0 && !isClosed ? '#000'    : '#555',
+            backgroundColor: list.length === 0 || isClosed ? '#1A1A1A' : undefined,
           }}
         >
-          {saving ? 'Saving...' : isClosed ? 'Draft Closed' : `Submit (${list.length}/${MIN_SUBMIT})`}
+          {saving ? 'Saving...' : isClosed ? 'Draft Closed' : list.length === 0 ? 'Submit' : `Submit List (${list.length})`}
         </button>
       </div>
     </div>

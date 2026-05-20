@@ -13,7 +13,7 @@ export default function CommissionerPanel({ commissioner, leagueId, replayCommis
     windowClosesAt, setWindowClosesAt,
     windowTransfers, setWindowTransfers,
     openTransferWindow, closeTransferWindow,
-    draftDeadline, setDraftDeadline, setLeagueDraftDeadline,
+    draftDeadline, setDraftDeadline, setLeagueDraftDeadline, triggerDraftAllocation,
     scoreFixtureId, setScoreFixtureId, triggerScores,
     betTemplateId, setBetTemplateId,
     betTitle, setBetTitle,
@@ -78,6 +78,20 @@ export default function CommissionerPanel({ commissioner, leagueId, replayCommis
             <input type="datetime-local" value={draftDeadline} onChange={e => setDraftDeadline(e.target.value)} className="bg-[#1a1a1a] border border-[#2a2a2a] text-white text-[11px] px-2 py-2 rounded-sm outline-none focus:border-cyan/40" />
           </div>
           <button onClick={setLeagueDraftDeadline} disabled={commLoading} className="w-full py-3 bg-[#1B5E20] text-white text-[11px] font-black uppercase tracking-widest rounded-sm disabled:opacity-50">Set Draft Deadline</button>
+        </div>
+
+        {/* ── Run Draft Allocation ──────────────────────────────────── */}
+        <div className="bg-[#111] border border-[#1e1e1e] rounded-sm p-4 space-y-3">
+          <div className="text-[10px] font-black uppercase tracking-[0.15em] text-text-tertiary">Run Draft Allocation</div>
+          <p className="text-[11px] text-text-tertiary">Resolve conflicts via lottery and allocate 15 players to each manager's squad. Enforces budget (£100M) and position limits (GK≤2, DEF≤5, MID≤5, FWD≤3).</p>
+          <button
+            onClick={triggerDraftAllocation}
+            disabled={commLoading}
+            className="w-full py-3 text-black text-[11px] font-black uppercase tracking-widest rounded-sm disabled:opacity-50"
+            style={{ background: commLoading ? undefined : 'var(--gold)' }}
+          >
+            {commLoading ? 'Running…' : 'Run Allocation Now'}
+          </button>
         </div>
 
         {/* ── Score Recalculation ───────────────────────────────────── */}
