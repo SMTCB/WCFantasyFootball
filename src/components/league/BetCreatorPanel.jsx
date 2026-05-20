@@ -168,13 +168,12 @@ export default function BetCreatorPanel({ leagueId, tournamentId, onCreated, com
 
   // ── Fetch: players filtered by clubs playing in the window ────────────────
   const fetchPlayers = useCallback(async () => {
-    if (!tournamentId) return;
     setLoading(true);
     try {
-      // If a date window is set, find clubs with scheduled fixtures in that range
-      // then limit players to only those clubs
+      // If a date window is set and we have a tournament, find clubs with
+      // scheduled fixtures in that range then limit players to those clubs
       let clubFilter = null;
-      if (windowFrom || deadline) {
+      if (tournamentId && (windowFrom || deadline)) {
         let fq = supabase
           .from('fixtures')
           .select('home_team, away_team')
@@ -191,11 +190,12 @@ export default function BetCreatorPanel({ leagueId, tournamentId, onCreated, com
       let pq = supabase
         .from('players')
         .select('id, name, position, club')
-        .eq('tournament_id', tournamentId)
         .in('position', ['FWD', 'MID', 'DEF'])
         .order('price', { ascending: false })
         .limit(80);
 
+      // Only filter by tournament when we have one
+      if (tournamentId) pq = pq.eq('tournament_id', tournamentId);
       if (clubFilter?.length) pq = pq.in('club', clubFilter);
 
       const { data } = await pq;

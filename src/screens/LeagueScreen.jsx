@@ -1262,6 +1262,7 @@ export default function LeagueScreen() {
            <CommissionerPanel
              commissioner={commissioner}
              leagueId={activeLeague?.league_id}
+             tournamentId={activeLeague?.tournament_id ?? commissioner?.tournamentId}
              replayCommissionerTour={replayCommissionerTour}
            />
          )}
