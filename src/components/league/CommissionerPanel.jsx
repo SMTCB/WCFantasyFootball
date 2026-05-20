@@ -35,7 +35,7 @@ export default function CommissionerPanel({ commissioner, leagueId, replayCommis
   return (
     <div style={{ flex: 1, overflow: 'auto', background: 'var(--ink)' }}>
       <HubSectionLabel label="COMMISSIONER CONTROLS" sub="ADMIN ONLY" tone="var(--purple)"
-        right={<button onClick={replayCommissionerTour} data-tour="comm-transfer-window" style={{ width: 20, height: 20, borderRadius: '50%', border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.4)', fontSize: 10, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>?</button>}
+        right={<button onClick={replayCommissionerTour} style={{ width: 20, height: 20, borderRadius: '50%', border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.4)', fontSize: 10, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>?</button>}
       />
       <div style={{ padding: '16px 28px', display: 'flex', flexDirection: 'column', gap: 16, paddingBottom: 80 }}>
 
