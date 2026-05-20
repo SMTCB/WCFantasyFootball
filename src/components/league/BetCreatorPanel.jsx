@@ -1,6 +1,10 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '../../lib/supabase';
-import { MONO, DISPLAY } from './HubShared';
+// Inline font constants — avoids importing HubShared here. LeagueScreen imports HubShared
+// directly, and CommissionerPanel→BetCreatorPanel also importing it creates a competing
+// module-evaluation path that causes a TDZ crash in Vite/Rolldown's production bundle.
+const MONO    = "'JetBrains Mono', monospace";
+const DISPLAY = "'Archivo Black', sans-serif";
 
 const TEMPLATE_UUID = {
   top_scorer:   '912e7b5f-1c15-4747-bc0b-2da9678627ea',
