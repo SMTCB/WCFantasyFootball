@@ -50,7 +50,6 @@ function BetSection({ label, sub, tone, bets, squadId, onSubmitted }) {
               borderLeft: `3px solid ${accentTone}`,
               display: 'flex', flexDirection: 'column',
             }}>
-              {/* Body */}
               <div style={{ padding: 'clamp(10px, 2vw, 14px) clamp(12px, 3vw, 18px)', display: 'flex', flexDirection: 'column', gap: 8 }}>
                 {/* Title row */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
@@ -65,7 +64,7 @@ function BetSection({ label, sub, tone, bets, squadId, onSubmitted }) {
                 </div>
                 {/* Prompt */}
                 <div style={{ fontFamily: "'Archivo', sans-serif", fontSize: 13, color: 'var(--paper)', lineHeight: 1.5 }}>{bet.prompt}</div>
-                {/* BetWidget handles all interaction */}
+                {/* BetWidget renders inline options directly — no nested card */}
                 <BetWidget bet={bet} squadId={squadId} onSubmitted={onSubmitted} />
               </div>
             </div>

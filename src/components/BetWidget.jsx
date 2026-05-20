@@ -15,11 +15,6 @@ function timeLeft(deadlineAt) {
   return { label: `${m}m left`, expired: false, color: 'var(--danger)' };
 }
 
-function rewardLabel(type, value) {
-  if (type === 'budget') return `+£${value}M`;
-  return `+${value} pts`;
-}
-
 // ── PlayerPicker ──────────────────────────────────────────────────────────────
 // Bottom-sheet player/team picker shared by player_pick and team_pick bets.
 
@@ -86,6 +81,110 @@ function OptionPicker({ options, onSelect, onClose }) {
   );
 }
 
+// ── InlineOptions ─────────────────────────────────────────────────────────────
+// Renders selectable options directly on the card.
+// For 2–3 options (e.g. home/draw/away), shows side-by-side buttons.
+// For many options (players), shows a compact scrollable list with search.
+
+function InlineOptions({ options, onSelect, submitting, selectedKey }) {
+  const [search, setSearch] = useState('');
+
+  const isMatch = options.length <= 3;
+
+  const filtered = isMatch
+    ? options
+    : options.filter(o =>
+        !search ||
+        o.label.toLowerCase().includes(search.toLowerCase()) ||
+        (o.meta?.club ?? '').toLowerCase().includes(search.toLowerCase())
+      );
+
+  if (isMatch) {
+    return (
+      <div style={{ display: 'flex', gap: 6, marginTop: 4 }}>
+        {options.map(opt => {
+          const isSelected = selectedKey === opt.key;
+          return (
+            <button
+              key={opt.key}
+              onClick={() => onSelect(opt)}
+              disabled={submitting}
+              style={{
+                flex: 1, padding: '9px 6px', borderRadius: 4, cursor: submitting ? 'default' : 'pointer',
+                background: isSelected ? 'rgba(0,196,232,0.18)' : 'rgba(255,255,255,0.04)',
+                border: `1px solid ${isSelected ? 'rgba(0,196,232,0.55)' : 'rgba(255,255,255,0.1)'}`,
+                color: isSelected ? 'var(--cyan)' : 'var(--paper)',
+                fontFamily: 'Archivo Black, sans-serif', fontSize: 11, fontWeight: 900,
+                letterSpacing: '.04em', textAlign: 'center', transition: 'all 0.12s',
+                opacity: submitting ? 0.5 : 1,
+              }}
+            >
+              {opt.label}
+            </button>
+          );
+        })}
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ marginTop: 6 }}>
+      <input
+        type="text"
+        placeholder="Search player or club…"
+        value={search}
+        onChange={e => setSearch(e.target.value)}
+        style={{
+          width: '100%', marginBottom: 6, background: 'rgba(255,255,255,0.04)',
+          border: '1px solid rgba(255,255,255,0.1)', borderRadius: 3,
+          color: 'var(--paper)', fontSize: 11, padding: '7px 10px', outline: 'none',
+          boxSizing: 'border-box',
+        }}
+      />
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 3, maxHeight: 200, overflowY: 'auto' }}>
+        {filtered.length === 0 && (
+          <div style={{ fontSize: 11, color: 'var(--mute)', padding: '10px 0', textAlign: 'center' }}>No results</div>
+        )}
+        {filtered.map(opt => {
+          const isSelected = selectedKey === opt.key;
+          return (
+            <button
+              key={opt.key}
+              onClick={() => onSelect(opt)}
+              disabled={submitting}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 8, width: '100%',
+                padding: '7px 9px', textAlign: 'left', cursor: submitting ? 'default' : 'pointer',
+                background: isSelected ? 'rgba(0,196,232,0.1)' : 'rgba(255,255,255,0.03)',
+                border: `1px solid ${isSelected ? 'rgba(0,196,232,0.4)' : 'rgba(255,255,255,0.07)'}`,
+                borderRadius: 3, transition: 'all 0.1s', opacity: submitting ? 0.5 : 1,
+              }}
+            >
+              <div style={{
+                width: 26, height: 26, borderRadius: '50%', flexShrink: 0,
+                background: isSelected ? 'rgba(0,196,232,0.2)' : 'rgba(255,255,255,0.06)',
+                border: `1px solid ${isSelected ? 'rgba(0,196,232,0.5)' : 'rgba(255,255,255,0.1)'}`,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: 8, color: isSelected ? 'var(--cyan)' : 'var(--mute)', fontWeight: 700,
+                fontFamily: 'monospace',
+              }}>
+                {opt.meta?.pos?.substring(0, 3) ?? opt.label.substring(0, 2).toUpperCase()}
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 12, color: isSelected ? 'var(--cyan)' : 'var(--paper)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{opt.label}</div>
+                {opt.meta?.club && (
+                  <div style={{ fontSize: 9, color: 'var(--mute)', letterSpacing: '.1em' }}>{opt.meta.club}</div>
+                )}
+              </div>
+              {isSelected && <span style={{ color: 'var(--cyan)', fontSize: 13, flexShrink: 0 }}>✓</span>}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 // ── BetWidget ─────────────────────────────────────────────────────────────────
 
 export default function BetWidget({ bet, squadId, onSubmitted }) {
@@ -137,107 +236,66 @@ export default function BetWidget({ bet, squadId, onSubmitted }) {
 
   return (
     <>
-      <div
-        className="rounded-md overflow-hidden"
-        style={{ background: 'var(--ink-2)', border: `1px solid ${isResolved ? 'rgba(255,255,255,0.06)' : 'rgba(0,196,232,0.18)'}` }}
-      >
-        {/* Header */}
-        <div
-          className="px-4 py-2.5 flex items-center justify-between"
-          style={{ background: isResolved ? 'rgba(255,255,255,0.03)' : 'rgba(0,196,232,0.06)', borderBottom: '1px solid rgba(255,255,255,0.06)' }}
-        >
-          <div className="flex items-center gap-2">
-            <span className="text-[13px]">
-              {bet.template?.slug === 'player_block' ? '🛡️' : bet.template?.slug === 'match_result' ? '⚽' : '🎯'}
-            </span>
-            <span className="text-[10px] font-black uppercase tracking-widest" style={{ color: 'var(--cyan)', fontFamily: 'Archivo Black, sans-serif' }}>
-              {bet.title}
-            </span>
-            {bet.scope_ref && (
-              <span className="text-[9px] text-white/30 uppercase tracking-wider">· MD{bet.scope_ref}</span>
-            )}
-          </div>
-          <div className="flex items-center gap-2">
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+        {/* Resolved: show correct answer */}
+        {isResolved && (
+          <div className="flex items-center gap-3">
+            <div className="text-[10px] uppercase tracking-wider font-semibold" style={{ color: 'var(--mute)' }}>Answer:</div>
+            <div className="text-[13px] font-black" style={{ color: 'var(--paper)' }}>{correctLabel ?? bet.correct_answer}</div>
             {resultBadge()}
-            {!isResolved && (
-              <div className="text-[9px] font-bold px-2 py-0.5 rounded-sm" style={{ color: 'var(--positive)', background: 'rgba(24,201,107,0.1)', fontFamily: 'Archivo Black, sans-serif' }}>
-                {rewardLabel(bet.reward_type, bet.reward_value)}
+          </div>
+        )}
+
+        {/* Submitted answer */}
+        {submission && (
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-full bg-[#1e1e1e] border border-[#333] flex items-center justify-center text-[10px] font-black text-white/40 uppercase">
+                {answerLabel?.substring(0, 2)}
               </div>
+              <div>
+                <div className="text-[10px] font-semibold mb-0.5" style={{ color: isResolved ? (submission.is_correct ? 'var(--positive)' : 'var(--danger)') : 'var(--cyan)' }}>
+                  {isResolved ? (submission.is_correct ? '✓ Correct' : '✗ Wrong') : 'Your pick'}
+                </div>
+                <div className="text-[13px] font-semibold" style={{ color: 'var(--paper)' }}>{answerLabel}</div>
+              </div>
+            </div>
+            {!isPastDeadline && !isResolved && (
+              <div className="text-[9px] font-semibold" style={{ color: 'var(--mute)' }}>Tap below to change</div>
             )}
           </div>
-        </div>
+        )}
 
-        {/* Body */}
-        <div className="px-4 py-3">
-          <div className="text-[12px] mb-3 leading-relaxed" style={{ color: 'var(--mute)' }}>
-            {bet.prompt}
+        {/* Inline options — shown when open and not yet resolved */}
+        {!isPastDeadline && options.length > 0 && (
+          <>
+            <div className="flex items-center justify-between mt-1">
+              <span style={{ color: deadline.color, fontSize: 10, fontWeight: 600 }}>{deadline.label}</span>
+              {submitting && <span style={{ fontSize: 10, color: 'var(--mute)' }}>Saving…</span>}
+            </div>
+            <InlineOptions
+              options={options}
+              onSelect={handleSelect}
+              submitting={submitting}
+              selectedKey={submission?.answer ?? null}
+            />
+          </>
+        )}
+
+        {/* No submission + deadline passed */}
+        {!submission && isPastDeadline && (
+          <div className="text-[11px]" style={{ color: 'var(--mute)' }}>
+            {isResolved ? 'You did not submit a pick.' : 'Deadline passed — no pick submitted.'}
           </div>
+        )}
 
-          {/* Resolved: show correct answer */}
-          {isResolved && (
-            <div className="flex items-center gap-3 mb-2">
-              <div className="text-[10px] uppercase tracking-wider font-semibold" style={{ color: 'var(--mute)' }}>Answer:</div>
-              <div className="text-[13px] font-black" style={{ color: 'var(--paper)' }}>{correctLabel ?? bet.correct_answer}</div>
-            </div>
-          )}
-
-          {/* Submitted answer */}
-          {submission && (
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-full bg-[#1e1e1e] border border-[#333] flex items-center justify-center text-[11px] font-black text-white/40 uppercase">
-                  {answerLabel?.substring(0, 2)}
-                </div>
-                <div>
-                  <div className="text-[10px] font-semibold mb-0.5" style={{ color: isResolved ? (submission.is_correct ? 'var(--positive)' : 'var(--danger)') : 'var(--cyan)' }}>
-                    {isResolved ? (submission.is_correct ? '✓ Correct' : '✗ Wrong') : 'Your pick'}
-                  </div>
-                  <div className="text-[14px] font-semibold" style={{ color: 'var(--paper)' }}>{answerLabel}</div>
-                </div>
-              </div>
-              {!isPastDeadline && (
-                <button
-                  onClick={() => setShowPicker(true)}
-                  className="text-[10px] font-bold uppercase tracking-widest px-3 py-1.5 rounded-sm transition-all active:scale-95"
-                  style={{ color: 'var(--cyan)', border: '1px solid rgba(0,196,232,0.3)', fontFamily: 'Archivo Black, sans-serif' }}
-                >
-                  Change
-                </button>
-              )}
-            </div>
-          )}
-
-          {/* No submission yet + deadline not passed */}
-          {!submission && !isPastDeadline && options.length > 0 && (
-            <div className="flex items-center justify-between">
-              <span style={{ color: deadline.color, fontSize: 10, fontWeight: 600 }}>
-                {deadline.label}
-              </span>
-              <button
-                onClick={() => setShowPicker(true)}
-                disabled={submitting}
-                className="text-[12px] font-black uppercase tracking-widest px-4 py-2 rounded-sm transition-all active:scale-95 disabled:opacity-40"
-                style={{ background: 'var(--cyan)', color: '#000', fontFamily: 'Archivo Black, sans-serif' }}
-              >
-                {submitting ? 'Saving…' : 'Make Pick'}
-              </button>
-            </div>
-          )}
-
-          {/* No submission + deadline passed */}
-          {!submission && isPastDeadline && (
-            <div className="text-[11px]" style={{ color: 'var(--mute)' }}>
-              {isResolved ? 'You did not submit a pick.' : 'Deadline passed — no pick submitted.'}
-            </div>
-          )}
-
-          {/* Deadline timer when not yet submitted */}
-          {!submission && !isPastDeadline && options.length === 0 && (
-            <div className="text-[11px]" style={{ color: 'var(--mute)' }}>No options available yet.</div>
-          )}
-        </div>
+        {/* No options available */}
+        {!submission && !isPastDeadline && options.length === 0 && (
+          <div className="text-[11px]" style={{ color: 'var(--mute)' }}>No options available yet.</div>
+        )}
       </div>
 
+      {/* Legacy picker — kept for "Change" flow when many options exist and submission already made */}
       {showPicker && options.length > 0 && (
         <OptionPicker
           options={options}
