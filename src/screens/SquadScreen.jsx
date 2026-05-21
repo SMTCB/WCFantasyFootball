@@ -317,12 +317,15 @@ export default function SquadScreen() {
     if (activeLeague) {
       fetchSquad();
       fetchDailyStatus();
-    } else if (!activeLeague && squadData === null && leagues !== null) {
-      // No active league selected after leagues have loaded â€” show demo/empty state
+    } else if (leagues !== null) {
+      // No active league selected after leagues have loaded — show empty state.
+      // squadData intentionally NOT in deps: including it caused an infinite loop
+      // because fetchSquad sets squadData → effect reruns → fetchSquad again.
       setSquadData(EMPTY_SQUAD);
       setLoading(false);
     }
-  }, [user, activeLeague, leagues, squadData]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, activeLeague, leagues]);
 
   const fetchDailyStatus = async () => {
     try {
