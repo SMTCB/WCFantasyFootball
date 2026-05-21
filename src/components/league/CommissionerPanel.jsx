@@ -23,21 +23,14 @@ const ghostBtn = {
   fontFamily: MONO, fontWeight: 600,
 };
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Mock data — TODO: replace with live fixture / player queries
-// ─────────────────────────────────────────────────────────────────────────────
-const MOCK_FIXTURES = [
-  { id: 'mci-bha', label: 'Man City · Brighton', kickoff: 'Sat 14:00', md: 'MD5' },
-  { id: 'che-liv', label: 'Chelsea · Liverpool',  kickoff: 'Sat 16:30', md: 'MD5' },
-  { id: 'ars-tot', label: 'Arsenal · Tottenham',  kickoff: 'Sun 16:30', md: 'MD5' },
-  { id: 'avl-eve', label: 'Aston Villa · Everton', kickoff: 'Sun 14:00', md: 'MD5' },
-  { id: 'whu-new', label: 'West Ham · Newcastle',  kickoff: 'Mon 20:00', md: 'MD5' },
-];
-
-const MOCK_PLAYERS = [
-  'Haaland (MCI)', 'Palmer (CHE)', 'Salah (LIV)', 'Saka (ARS)',
-  'Watkins (AVL)', 'Isak (NEW)', 'Son (TOT)', 'Mitoma (BHA)',
-];
+// Format a kickoff ISO timestamp to a short readable string
+function fmtKickoff(iso) {
+  if (!iso) return '';
+  return new Date(iso).toLocaleDateString('en-GB', {
+    weekday: 'short', day: 'numeric', month: 'short',
+    hour: '2-digit', minute: '2-digit',
+  });
+}
 
 const BET_TYPES = [
   { id: 'top-scorer',   label: 'TOP SCORER',   glyph: '◉', tone: 'var(--cyan)',     templateId: 'top_scorer',   hint: 'Who scores the most goals across the fixture / gameweek?', body: 'Auto-resolves at final whistle. Tie-break: assists → minutes.' },
@@ -160,21 +153,32 @@ function NextBar({ onBack, onNext, canNext, hint }) {
   );
 }
 
-function PlayerChipPool({ selected, onChange }) {
+function PlayerChipPool({ selected, onChange, onAddCustom }) {
   return (
     <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-      {MOCK_PLAYERS.map(p => {
-        const on = selected.includes(p);
-        return (
-          <button key={p} onClick={() => onChange(on ? selected.filter(x => x !== p) : [...selected, p])} style={{
-            padding: '6px 10px', cursor: 'pointer',
-            background: on ? 'rgba(0,180,216,.08)' : 'var(--ink)',
-            border: on ? '1px solid var(--cyan)' : '1px solid var(--rule)',
-            color: on ? 'var(--cyan)' : 'var(--paper)',
-            fontFamily: MONO, fontSize: 10, letterSpacing: '.12em',
-          }}>{on ? '✓ ' : '+ '}{p}</button>
-        );
-      })}
+      {selected.map(p => (
+        <button key={p.id} onClick={() => onChange(selected.filter(x => x.id !== p.id))} style={{
+          padding: '6px 10px', cursor: 'pointer',
+          background: 'rgba(0,180,216,.08)',
+          border: '1px solid var(--cyan)',
+          color: 'var(--cyan)',
+          fontFamily: MONO, fontSize: 10, letterSpacing: '.12em',
+          display: 'flex', alignItems: 'center', gap: 4,
+        }}>
+          <span>✓ {p.name}</span>
+          <span style={{ opacity: 0.55, fontSize: 8 }}>{(p.club || '').substring(0, 3).toUpperCase()}</span>
+          <span style={{ opacity: 0.5, marginLeft: 2 }}>✕</span>
+        </button>
+      ))}
+      {selected.length < 8 && (
+        <button onClick={onAddCustom} style={{
+          padding: '6px 10px', cursor: 'pointer',
+          background: 'rgba(224,168,0,.04)',
+          border: '1px dashed rgba(224,168,0,.5)',
+          color: 'var(--gold)',
+          fontFamily: MONO, fontSize: 10, letterSpacing: '.12em',
+        }}>+ SELECT PLAYER</button>
+      )}
     </div>
   );
 }
@@ -189,7 +193,7 @@ function RewardStepper({ value, onChange }) {
   );
 }
 
-function BetCardPreview({ betType, title, reward, closes, fixture, players, blockPlayer }) {
+function BetCardPreview({ betType, title, reward, closes, fixtureObj, players, blockPlayer }) {
   const meta = BET_TYPES.find(t => t.id === betType);
   if (!meta) {
     return (
@@ -200,10 +204,10 @@ function BetCardPreview({ betType, title, reward, closes, fixture, players, bloc
     );
   }
   const options = betType === 'match-result'
-    ? (fixture ? [fixture.label.split(' · ')[0], 'DRAW', fixture.label.split(' · ')[1]] : ['HOME', 'DRAW', 'AWAY'])
+    ? (fixtureObj ? [`${fixtureObj.home_team} Win`, 'DRAW', `${fixtureObj.away_team} Win`] : ['HOME', 'DRAW', 'AWAY'])
     : betType === 'top-scorer'
-      ? players.slice(0, 4).map(p => p.split(' (')[0])
-      : blockPlayer ? [blockPlayer.split(' (')[0]] : [];
+      ? players.slice(0, 4).map(p => typeof p === 'object' ? p.name : p.split(' (')[0])
+      : blockPlayer ? [typeof blockPlayer === 'object' ? blockPlayer.name : blockPlayer.split(' (')[0]] : [];
 
   return (
     <div style={{ background: 'var(--ink)', border: '1px solid var(--rule)', borderLeft: `3px solid ${meta.tone}`, padding: '14px', display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -235,55 +239,167 @@ function BetCardPreview({ betType, title, reward, closes, fixture, players, bloc
 // ─────────────────────────────────────────────────────────────────────────────
 // Create Bet Wizard (Zone B left)
 // ─────────────────────────────────────────────────────────────────────────────
-function CreateBetWizard({ onPublish, commLoading, memberCount }) {
+function CreateBetWizard({ onPublish, commLoading, memberCount, tournamentId }) {
   const [step,        setStep]   = useState(1);
   const [betType,     setBetType] = useState(null);
-  const [fixture,     setFixture] = useState('');
-  const [players,     setPlayers] = useState(['Haaland (MCI)', 'Palmer (CHE)', 'Salah (LIV)', 'Saka (ARS)', 'Watkins (AVL)']);
-  const [blockPlayer, setBlock]   = useState('');
+  const [fixture,     setFixture] = useState('');      // single fixture id (match-result / player-block)
+  const [selectedFixtures, setSelectedFixtures] = useState([]); // multi-fixture ids for top-scorer (max 4)
+  const [players,     setPlayers] = useState([]);      // selected player objects for top-scorer
+  const [blockPlayer, setBlock]   = useState(null);    // player object for player-block
   const [reward,      setReward]  = useState(5);
   const [closes,      setCloses]  = useState('');
   const [title,       setTitle]   = useState('');
 
+  // DB data
+  const [dbFixtures,    setDbFixtures]    = useState([]);  // next-gameday scheduled fixtures
+  const [allDbFixtures, setAllDbFixtures] = useState([]);  // all future scheduled fixtures
+  const [allPlayers,    setAllPlayers]    = useState([]);  // all players in tournament
+  const [dataLoading,   setDataLoading]   = useState(false);
+
+  // Modal state
+  const [showPlayerModal,  setShowPlayerModal]  = useState(false);
+  const [playerSearch,     setPlayerSearch]     = useState('');
+  const [showFixtureModal, setShowFixtureModal] = useState(false);
+  const [fixtureSearch,    setFixtureSearch]    = useState('');
+
+  // Load real fixtures + players from DB when tournamentId is available
+  useEffect(() => {
+    if (!tournamentId) return;
+    setDataLoading(true);
+    const now = new Date().toISOString();
+    Promise.all([
+      supabase.from('fixtures')
+        .select('id, home_team, away_team, kickoff_at')
+        .eq('tournament_id', tournamentId)
+        .eq('status', 'scheduled')
+        .gte('kickoff_at', now)
+        .order('kickoff_at', { ascending: true })
+        .limit(40),
+      supabase.from('players')
+        .select('id, name, position, club')
+        .eq('tournament_id', tournamentId)
+        .in('position', ['FWD', 'MID', 'DEF', 'GK'])
+        .order('price', { ascending: false })
+        .limit(300),
+    ]).then(([{ data: fx }, { data: pl }]) => {
+      const allFx = fx || [];
+      // Group to next gameday: fixtures within 7 days of the first one
+      let nextGameday = allFx;
+      if (allFx.length > 0) {
+        const first = new Date(allFx[0].kickoff_at).getTime();
+        const cutoff = first + 7 * 24 * 60 * 60 * 1000;
+        nextGameday = allFx.filter(f => new Date(f.kickoff_at).getTime() <= cutoff);
+      }
+      setDbFixtures(nextGameday);
+      setAllDbFixtures(allFx);
+
+      const allPl = pl || [];
+      setAllPlayers(allPl);
+      // Default top-scorer pool: top 5 FWD+MID by price
+      setPlayers(allPl.filter(p => ['FWD', 'MID'].includes(p.position)).slice(0, 5));
+    }).catch(e => console.error('[CreateBetWizard] data load error:', e))
+      .finally(() => setDataLoading(false));
+  }, [tournamentId]);
+
   const typeMeta    = BET_TYPES.find(t => t.id === betType) || null;
-  const fixtureMeta = MOCK_FIXTURES.find(f => f.id === fixture) || null;
+  const fixtureMeta = allDbFixtures.find(f => f.id === fixture) || null;
 
   const autoTitle = (() => {
     if (!typeMeta) return '';
-    if (betType === 'top-scorer')   return fixtureMeta ? `Top scorer · ${fixtureMeta.label}` : 'Top scorer · GW28';
-    if (betType === 'match-result') return fixtureMeta ? `Result · ${fixtureMeta.label}` : 'Match result';
-    if (betType === 'player-block') return blockPlayer ? `Block · ${blockPlayer}` : 'Player block';
+    if (betType === 'top-scorer') {
+      const fxObjs = allDbFixtures.filter(f => selectedFixtures.includes(f.id));
+      const scope = fxObjs.length === 1
+        ? `${fxObjs[0].home_team} vs ${fxObjs[0].away_team}`
+        : fxObjs.length > 1 ? `${fxObjs.length} matches` : 'Matchday';
+      return `Top scorer · ${scope}`;
+    }
+    if (betType === 'match-result') return fixtureMeta ? `Result · ${fixtureMeta.home_team} vs ${fixtureMeta.away_team}` : 'Match result';
+    if (betType === 'player-block') return blockPlayer ? `Block · ${blockPlayer.name}` : 'Player block';
     return '';
   })();
   const computedTitle = title || autoTitle;
 
   const canStep2 = !!betType;
-  const canStep3 = !!fixture && (betType !== 'player-block' || !!blockPlayer);
+  const canStep3 = betType === 'top-scorer'
+    ? players.length >= 2
+    : !!fixture && (betType !== 'player-block' || !!blockPlayer);
   const canStep4 = !!reward && !!closes;
 
   const reset = () => {
-    setStep(1); setBetType(null); setFixture(''); setBlock('');
+    setStep(1); setBetType(null); setFixture(''); setBlock(null);
+    setSelectedFixtures([]);
     setReward(5); setCloses(''); setTitle('');
+    setPlayers(allPlayers.filter(p => ['FWD', 'MID'].includes(p.position)).slice(0, 5));
   };
 
   const handlePublish = () => {
-    const options =
-      betType === 'match-result' ? [{ key: 'home', label: 'HOME' }, { key: 'draw', label: 'DRAW' }, { key: 'away', label: 'AWAY' }]
-      : betType === 'top-scorer' ? players.map(p => ({ key: p.toLowerCase().replace(/[^a-z0-9]/g, '_'), label: p }))
-      : [{ key: 'block', label: blockPlayer }];
+    let options = [];
+    let scopeType = 'match';
+    let scopeRef  = null;
+
+    if (betType === 'match-result') {
+      options = [
+        { key: `${fixture}_home`, label: `${fixtureMeta?.home_team || 'Home'} Win`, meta: {} },
+        { key: `${fixture}_draw`, label: 'Draw', meta: {} },
+        { key: `${fixture}_away`, label: `${fixtureMeta?.away_team || 'Away'} Win`, meta: {} },
+      ];
+      scopeRef = fixture || null;
+    } else if (betType === 'top-scorer') {
+      options   = players.map(p => ({ key: p.id, label: p.name, meta: { club: p.club, pos: p.position } }));
+      scopeType = 'matchday';
+      scopeRef  = selectedFixtures.join(',') || null;
+    } else if (betType === 'player-block') {
+      options  = blockPlayer
+        ? [{ key: blockPlayer.id, label: blockPlayer.name, meta: { club: blockPlayer.club, pos: blockPlayer.position } }]
+        : [];
+      scopeRef = fixture || null;
+    }
 
     onPublish({
-      title:      computedTitle,
-      prompt:     computedTitle,
-      deadline:   closes,
+      title:       computedTitle,
+      prompt:      computedTitle,
+      deadline:    closes,
       rewardValue: String(reward),
-      scopeType:  'match',
-      scopeRef:   fixture || null,
-      templateId: typeMeta.templateId,
+      scopeType,
+      scopeRef,
+      templateId:  typeMeta.templateId,
       options,
     });
     reset();
   };
+
+  // Shared fixture picker (single-select) used by match-result and player-block
+  const SingleFixturePicker = ({ accentColor = 'var(--cyan)' }) => (
+    <WizField label="Fixture · Next gameday" sub="Bet will resolve at this match's final whistle.">
+      {dataLoading ? (
+        <div style={{ fontFamily: MONO, fontSize: 10, color: 'var(--mute)', letterSpacing: '.18em' }}>LOADING FIXTURES…</div>
+      ) : dbFixtures.length === 0 ? (
+        <div style={{ fontFamily: MONO, fontSize: 10, color: 'var(--danger)', letterSpacing: '.16em', padding: '10px 0' }}>
+          {allDbFixtures.length > 0 ? 'NO FIXTURES IN NEXT 7 DAYS — TRY A DIFFERENT ROUND' : 'NO UPCOMING SCHEDULED FIXTURES FOUND'}
+        </div>
+      ) : (
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+          {dbFixtures.map(f => {
+            const picked = fixture === f.id;
+            return (
+              <button key={f.id} onClick={() => setFixture(f.id)} style={{
+                textAlign: 'left', cursor: 'pointer',
+                background: picked ? `${accentColor}15` : 'var(--ink)',
+                border: picked ? `1px solid ${accentColor}` : '1px solid var(--rule)',
+                padding: '10px 12px', display: 'flex', alignItems: 'center', gap: 10,
+              }}>
+                <span style={{ width: 12, height: 12, borderRadius: '50%', border: `1.5px solid ${picked ? accentColor : 'var(--rule)'}`, background: picked ? accentColor : 'transparent', flexShrink: 0 }} />
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 2, flex: 1, minWidth: 0 }}>
+                  <span style={{ fontFamily: DISPLAY, fontSize: 12, color: 'var(--paper)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{f.home_team} vs {f.away_team}</span>
+                  <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.14em', color: 'var(--mute)' }}>{fmtKickoff(f.kickoff_at)}</span>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </WizField>
+  );
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: 0 }}>
@@ -300,7 +416,7 @@ function CreateBetWizard({ onPublish, commLoading, memberCount }) {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', borderBottom: '1px solid var(--rule)', background: 'var(--ink)', flexShrink: 0 }}>
         {[
           { n: 1, label: 'TYPE',      reached: true,     done: !!betType },
-          { n: 2, label: 'CONFIGURE', reached: canStep2, done: !!fixture },
+          { n: 2, label: 'CONFIGURE', reached: canStep2, done: canStep3  },
           { n: 3, label: 'REWARD',    reached: canStep3, done: canStep4  },
           { n: 4, label: 'PUBLISH',   reached: canStep4, done: false     },
         ].map(s => {
@@ -342,6 +458,7 @@ function CreateBetWizard({ onPublish, commLoading, memberCount }) {
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 300px', minHeight: 0, flex: 1 }}>
         <div style={{ padding: '22px 24px', display: 'flex', flexDirection: 'column', gap: 18, borderRight: '1px solid var(--rule)', overflow: 'auto' }}>
 
+          {/* ── Step 1: Bet type ── */}
           {step === 1 && (
             <>
               <WizHelp num="01" label="WHAT KIND OF BET?" hint="Each type uses a different resolution rule. Pick one — you can change it before publishing." />
@@ -368,65 +485,122 @@ function CreateBetWizard({ onPublish, commLoading, memberCount }) {
             </>
           )}
 
+          {/* ── Step 2: Configure ── */}
           {step === 2 && (
             <>
-              <WizHelp num="02" label="WHICH FIXTURE?" hint={typeMeta?.body || 'Configure the resolution scope.'} />
-              <WizField label="Fixture · GW28" sub="Bet will resolve at this match's final whistle.">
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-                  {MOCK_FIXTURES.map(f => {
-                    const picked = fixture === f.id;
-                    return (
-                      <button key={f.id} onClick={() => setFixture(f.id)} style={{
-                        textAlign: 'left', cursor: 'pointer',
-                        background: picked ? 'rgba(0,180,216,.08)' : 'var(--ink)',
-                        border: picked ? '1px solid var(--cyan)' : '1px solid var(--rule)',
-                        padding: '10px 12px', display: 'flex', alignItems: 'center', gap: 10,
-                      }}>
-                        <span style={{ width: 14, height: 14, borderRadius: '50%', border: `1.5px solid ${picked ? 'var(--cyan)' : 'var(--rule)'}`, background: picked ? 'var(--cyan)' : 'transparent', flexShrink: 0 }} />
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: 2, flex: 1, minWidth: 0 }}>
-                          <span style={{ fontFamily: DISPLAY, fontSize: 12, color: 'var(--paper)' }}>{f.label}</span>
-                          <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.16em', color: 'var(--mute)' }}>{f.md} · {f.kickoff}</span>
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
-              </WizField>
+              <WizHelp num="02" label="CONFIGURE" hint={typeMeta?.body || 'Set up the bet details.'} />
 
-              {betType === 'top-scorer' && (
-                <WizField label="Player pool" sub="Managers pick one. Add or remove — 3 to 8 work best.">
-                  <PlayerChipPool selected={players} onChange={setPlayers} />
-                </WizField>
-              )}
-
-              {betType === 'player-block' && (
-                <WizField label="Block target" sub="Managers will pick this player to block (flop = points).">
-                  <select value={blockPlayer} onChange={e => setBlock(e.target.value)} style={inputStyle}>
-                    <option value="">— Choose a player —</option>
-                    {MOCK_PLAYERS.map(p => <option key={p} value={p}>{p}</option>)}
-                  </select>
-                </WizField>
-              )}
-
+              {/* Match Result: single fixture */}
               {betType === 'match-result' && (
-                <div style={{ padding: '10px 12px', background: 'var(--ink)', border: '1px solid var(--rule)', fontFamily: BODY, fontSize: 11, lineHeight: 1.5, color: 'var(--mute)' }}>
-                  <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.2em', color: 'var(--positive)' }}>● AUTO</span>{' '}
-                  Options are generated from the fixture: <b style={{ color: 'var(--paper)' }}>HOME · DRAW · AWAY</b>. No further config needed.
-                </div>
+                <>
+                  <SingleFixturePicker accentColor="var(--cyan)" />
+                  <div style={{ padding: '10px 12px', background: 'var(--ink)', border: '1px solid var(--rule)', fontFamily: BODY, fontSize: 11, lineHeight: 1.5, color: 'var(--mute)' }}>
+                    <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.2em', color: 'var(--positive)' }}>● AUTO</span>{' '}
+                    Options: <b style={{ color: 'var(--paper)' }}>{fixtureMeta?.home_team || 'HOME'} WIN · DRAW · {fixtureMeta?.away_team || 'AWAY'} WIN</b>
+                  </div>
+                </>
               )}
 
-              <NextBar onBack={() => setStep(1)} onNext={() => setStep(3)} canNext={canStep3} hint={!fixture ? 'Pick a fixture to continue.' : ''} />
+              {/* Top Scorer: multi-fixture scope + player pool */}
+              {betType === 'top-scorer' && (
+                <>
+                  <WizField label={`Match scope · ${selectedFixtures.length}/4 selected`} sub="Goals count across these matches. Leave empty for the full matchday.">
+                    {dataLoading ? (
+                      <div style={{ fontFamily: MONO, fontSize: 10, color: 'var(--mute)', letterSpacing: '.18em' }}>LOADING FIXTURES…</div>
+                    ) : dbFixtures.length === 0 ? (
+                      <div style={{ fontFamily: MONO, fontSize: 10, color: 'var(--mute)', letterSpacing: '.16em', padding: '10px 0' }}>NO UPCOMING FIXTURES FOUND</div>
+                    ) : (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                        {dbFixtures.map(f => {
+                          const on     = selectedFixtures.includes(f.id);
+                          const atMax  = !on && selectedFixtures.length >= 4;
+                          return (
+                            <button key={f.id} onClick={() => {
+                              if (on) setSelectedFixtures(prev => prev.filter(x => x !== f.id));
+                              else if (!atMax) setSelectedFixtures(prev => [...prev, f.id]);
+                            }} style={{
+                              textAlign: 'left', cursor: atMax ? 'not-allowed' : 'pointer',
+                              background: on ? 'rgba(0,180,216,.08)' : 'var(--ink)',
+                              border: on ? '1px solid var(--cyan)' : '1px solid var(--rule)',
+                              padding: '8px 10px', display: 'flex', alignItems: 'center', gap: 8,
+                              opacity: atMax ? 0.4 : 1,
+                            }}>
+                              <span style={{ width: 14, height: 14, border: `1.5px solid ${on ? 'var(--cyan)' : 'var(--rule)'}`, background: on ? 'var(--cyan)' : 'transparent', flexShrink: 0, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontFamily: MONO, fontSize: 9, color: 'var(--ink)' }}>{on ? '✓' : ''}</span>
+                              <div style={{ flex: 1, minWidth: 0 }}>
+                                <div style={{ fontFamily: DISPLAY, fontSize: 12, color: 'var(--paper)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{f.home_team} vs {f.away_team}</div>
+                                <div style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.12em' }}>{fmtKickoff(f.kickoff_at)}</div>
+                              </div>
+                            </button>
+                          );
+                        })}
+                        {selectedFixtures.length < 4 && (
+                          <button onClick={() => setShowFixtureModal(true)} style={{
+                            padding: '8px 10px', cursor: 'pointer', textAlign: 'left',
+                            background: 'rgba(224,168,0,.04)', border: '1px dashed rgba(224,168,0,.4)',
+                            color: 'var(--gold)', fontFamily: MONO, fontSize: 10, letterSpacing: '.14em',
+                          }}>+ ADD MATCH FROM ANOTHER ROUND</button>
+                        )}
+                      </div>
+                    )}
+                  </WizField>
+
+                  <WizField label={`Player pool · ${players.length}/8`} sub="Managers pick one. Click a chip to remove.">
+                    <PlayerChipPool selected={players} onChange={setPlayers} onAddCustom={() => setShowPlayerModal(true)} />
+                    {players.length < 2 && (
+                      <div style={{ fontFamily: MONO, fontSize: 9, color: 'var(--danger)', letterSpacing: '.16em', marginTop: 6 }}>ADD AT LEAST 2 PLAYERS</div>
+                    )}
+                  </WizField>
+                </>
+              )}
+
+              {/* Player Block: single player + single fixture */}
+              {betType === 'player-block' && (
+                <>
+                  <WizField label="Block target" sub="Managers pick this player to block — if they flop, they earn points.">
+                    {blockPlayer ? (
+                      <div style={{ display: 'flex', gap: 10, alignItems: 'center', padding: '10px 12px', background: 'rgba(239,68,68,.06)', border: '1px solid rgba(239,68,68,.3)' }}>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontFamily: DISPLAY, fontSize: 13, color: 'var(--danger)' }}>{blockPlayer.name}</div>
+                          <div style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.14em' }}>{blockPlayer.club} · {blockPlayer.position}</div>
+                        </div>
+                        <button onClick={() => setBlock(null)} style={{ background: 'none', border: 'none', color: 'var(--danger)', cursor: 'pointer', fontSize: 16, lineHeight: 1 }}>✕</button>
+                      </div>
+                    ) : (
+                      <button onClick={() => setShowPlayerModal(true)} style={{
+                        padding: '12px', cursor: 'pointer', width: '100%', textAlign: 'center',
+                        background: 'rgba(239,68,68,.04)', border: '1px dashed rgba(239,68,68,.4)',
+                        color: 'var(--danger)', fontFamily: MONO, fontSize: 10, letterSpacing: '.18em',
+                      }}>SELECT PLAYER TO BLOCK →</button>
+                    )}
+                  </WizField>
+                  <SingleFixturePicker accentColor="var(--danger)" />
+                </>
+              )}
+
+              <NextBar
+                onBack={() => setStep(1)}
+                onNext={() => setStep(3)}
+                canNext={canStep3}
+                hint={
+                  betType === 'top-scorer'
+                    ? (players.length < 2 ? 'Add at least 2 players to continue.' : '')
+                    : !fixture
+                      ? 'Pick a fixture to continue.'
+                      : (betType === 'player-block' && !blockPlayer ? 'Select a block target too.' : '')
+                }
+              />
             </>
           )}
 
+          {/* ── Step 3: Reward ── */}
           {step === 3 && (
             <>
               <WizHelp num="03" label="HOW MUCH IS IT WORTH?" hint="Reward in points. Tougher bets pay more. Closes-at locks picks; after that no manager can change." />
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
-                <WizField label="Reward · base points" sub="Multipliers apply per-pick based on league spread.">
+                <WizField label="Reward · base points" sub="Awarded to every manager who gets it right.">
                   <RewardStepper value={reward} onChange={setReward} />
                 </WizField>
-                <WizField label="Picks close at" sub="Default = 30 min before kickoff.">
+                <WizField label="Picks close at" sub="Set before the first kickoff.">
                   <input type="datetime-local" value={closes} onChange={e => setCloses(e.target.value)} style={inputStyle} />
                 </WizField>
               </div>
@@ -437,22 +611,30 @@ function CreateBetWizard({ onPublish, commLoading, memberCount }) {
             </>
           )}
 
+          {/* ── Step 4: Publish ── */}
           {step === 4 && (
             <>
               <WizHelp num="04" label="REVIEW & PUBLISH" hint="The preview on the right is exactly what every manager will see in the BETS tab. Publishing notifies the league." />
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                 <SummaryRow k="TYPE"    v={typeMeta?.label} />
-                <SummaryRow k="FIXTURE" v={fixtureMeta?.label} sub={fixtureMeta && `${fixtureMeta.md} · ${fixtureMeta.kickoff}`} />
-                {betType === 'top-scorer'   && <SummaryRow k="PLAYER POOL" v={`${players.length} players`} />}
-                {betType === 'player-block' && <SummaryRow k="BLOCK TARGET" v={blockPlayer} />}
-                {betType === 'match-result' && <SummaryRow k="OPTIONS" v="HOME · DRAW · AWAY" />}
+                {betType !== 'top-scorer' && fixtureMeta && (
+                  <SummaryRow k="FIXTURE" v={`${fixtureMeta.home_team} vs ${fixtureMeta.away_team}`} sub={fmtKickoff(fixtureMeta.kickoff_at)} />
+                )}
+                {betType === 'top-scorer' && (
+                  <>
+                    <SummaryRow k="PLAYER POOL" v={`${players.length} players`} sub={players.map(p => p.name).join(', ')} />
+                    <SummaryRow k="MATCH SCOPE" v={selectedFixtures.length === 0 ? 'Full matchday' : `${selectedFixtures.length} match${selectedFixtures.length > 1 ? 'es' : ''}`} />
+                  </>
+                )}
+                {betType === 'player-block' && <SummaryRow k="BLOCK TARGET" v={blockPlayer?.name || '—'} sub={blockPlayer ? `${blockPlayer.club} · ${blockPlayer.position}` : ''} />}
+                {betType === 'match-result' && <SummaryRow k="OPTIONS" v={`${fixtureMeta?.home_team || 'Home'} Win · Draw · ${fixtureMeta?.away_team || 'Away'} Win`} />}
                 <SummaryRow k="REWARD" v={`+${reward} PTS`} tone="var(--positive)" />
-                <SummaryRow k="LOCKS"  v={closes} />
+                <SummaryRow k="LOCKS"  v={closes ? new Date(closes).toLocaleString('en-GB') : '—'} />
                 <SummaryRow k="TITLE"  v={computedTitle} />
               </div>
               <div style={{ padding: '10px 12px', background: 'rgba(224,168,0,.06)', border: '1px solid rgba(224,168,0,.33)', fontFamily: BODY, fontSize: 11, lineHeight: 1.5, color: 'var(--paper)' }}>
                 <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.22em', color: 'var(--gold)' }}>● NOTE</span>{' '}
-                Publishing pushes a notification to <b>{memberCount} managers</b> and opens picks immediately. You can edit until the first manager picks.
+                Publishing pushes a notification to <b>{memberCount} managers</b> and opens picks immediately.
               </div>
               <div style={{ display: 'flex', gap: 10 }}>
                 <button onClick={() => setStep(3)} style={ghostBtn}>← BACK</button>
@@ -476,7 +658,7 @@ function CreateBetWizard({ onPublish, commLoading, memberCount }) {
             title={computedTitle}
             reward={reward}
             closes={closes}
-            fixture={fixtureMeta}
+            fixtureObj={fixtureMeta}
             players={players}
             blockPlayer={blockPlayer}
           />
@@ -485,6 +667,122 @@ function CreateBetWizard({ onPublish, commLoading, memberCount }) {
           </span>
         </aside>
       </div>
+
+      {/* ── Player picker modal ── */}
+      {showPlayerModal && (
+        <div
+          style={{ position: 'fixed', inset: 0, zIndex: 300, background: 'rgba(0,0,0,0.85)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+          onClick={e => { if (e.target === e.currentTarget) { setShowPlayerModal(false); setPlayerSearch(''); } }}
+        >
+          <div style={{ background: 'var(--ink)', border: '1px solid var(--rule)', width: 380, maxHeight: '80vh', display: 'flex', flexDirection: 'column', boxShadow: '0 20px 60px rgba(0,0,0,0.6)' }}>
+            <div style={{ padding: '12px 14px', borderBottom: '1px solid var(--rule)', display: 'flex', alignItems: 'center', gap: 10 }}>
+              <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.22em', color: 'var(--cyan)', flex: 1 }}>SELECT PLAYER</span>
+              <button onClick={() => { setShowPlayerModal(false); setPlayerSearch(''); }} style={{ background: 'none', border: 'none', color: 'var(--mute)', cursor: 'pointer', fontSize: 18, lineHeight: 1 }}>✕</button>
+            </div>
+            <div style={{ padding: '8px 10px', borderBottom: '1px solid var(--rule)' }}>
+              <input
+                autoFocus
+                type="text"
+                placeholder="Search by name or club…"
+                value={playerSearch}
+                onChange={e => setPlayerSearch(e.target.value)}
+                style={{ width: '100%', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', color: 'var(--paper)', fontSize: 12, padding: '8px 10px', outline: 'none', boxSizing: 'border-box' }}
+              />
+            </div>
+            <div style={{ flex: 1, overflowY: 'auto' }}>
+              {allPlayers
+                .filter(p => {
+                  const q = playerSearch.toLowerCase();
+                  return !q || p.name.toLowerCase().includes(q) || (p.club || '').toLowerCase().includes(q);
+                })
+                .slice(0, 60)
+                .map(p => (
+                  <button key={p.id} onClick={() => {
+                    if (betType === 'player-block') {
+                      setBlock(p);
+                    } else {
+                      // Top scorer: add to front of list, cap at 8 (last is dropped)
+                      setPlayers(prev => {
+                        if (prev.find(x => x.id === p.id)) return prev;
+                        return [p, ...prev.slice(0, 7)];
+                      });
+                    }
+                    setShowPlayerModal(false);
+                    setPlayerSearch('');
+                  }} style={{
+                    width: '100%', textAlign: 'left', padding: '10px 14px',
+                    background: 'transparent', border: 0,
+                    borderBottom: '1px solid rgba(255,255,255,0.04)',
+                    cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 10, color: 'var(--paper)',
+                  }}>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontFamily: DISPLAY, fontSize: 12, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name}</div>
+                      <div style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.12em' }}>{p.club}</div>
+                    </div>
+                    <span style={{ fontFamily: MONO, fontSize: 9, color: 'var(--cyan)', letterSpacing: '.14em', flexShrink: 0 }}>{p.position}</span>
+                  </button>
+                ))}
+              {allPlayers.length === 0 && !dataLoading && (
+                <div style={{ padding: '20px', fontFamily: MONO, fontSize: 10, color: 'var(--mute)', textAlign: 'center', letterSpacing: '.18em' }}>NO PLAYERS FOUND · CHECK TOURNAMENT</div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Additional fixture picker modal (for top-scorer "Add Match") ── */}
+      {showFixtureModal && (
+        <div
+          style={{ position: 'fixed', inset: 0, zIndex: 300, background: 'rgba(0,0,0,0.85)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+          onClick={e => { if (e.target === e.currentTarget) { setShowFixtureModal(false); setFixtureSearch(''); } }}
+        >
+          <div style={{ background: 'var(--ink)', border: '1px solid var(--rule)', width: 400, maxHeight: '80vh', display: 'flex', flexDirection: 'column', boxShadow: '0 20px 60px rgba(0,0,0,0.6)' }}>
+            <div style={{ padding: '12px 14px', borderBottom: '1px solid var(--rule)', display: 'flex', alignItems: 'center', gap: 10 }}>
+              <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.22em', color: 'var(--gold)', flex: 1 }}>ADD MATCH FROM ANOTHER ROUND</span>
+              <button onClick={() => { setShowFixtureModal(false); setFixtureSearch(''); }} style={{ background: 'none', border: 'none', color: 'var(--mute)', cursor: 'pointer', fontSize: 18, lineHeight: 1 }}>✕</button>
+            </div>
+            <div style={{ padding: '8px 10px', borderBottom: '1px solid var(--rule)' }}>
+              <input
+                autoFocus
+                type="text"
+                placeholder="Search team…"
+                value={fixtureSearch}
+                onChange={e => setFixtureSearch(e.target.value)}
+                style={{ width: '100%', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', color: 'var(--paper)', fontSize: 12, padding: '8px 10px', outline: 'none', boxSizing: 'border-box' }}
+              />
+            </div>
+            <div style={{ flex: 1, overflowY: 'auto' }}>
+              {allDbFixtures
+                .filter(f => !selectedFixtures.includes(f.id))
+                .filter(f => {
+                  const q = fixtureSearch.toLowerCase();
+                  return !q || f.home_team.toLowerCase().includes(q) || f.away_team.toLowerCase().includes(q);
+                })
+                .slice(0, 40)
+                .map(f => (
+                  <button key={f.id} onClick={() => {
+                    if (selectedFixtures.length < 4) {
+                      setSelectedFixtures(prev => [...prev, f.id]);
+                    }
+                    setShowFixtureModal(false);
+                    setFixtureSearch('');
+                  }} style={{
+                    width: '100%', textAlign: 'left', padding: '10px 14px',
+                    background: 'transparent', border: 0,
+                    borderBottom: '1px solid rgba(255,255,255,0.04)',
+                    cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: 2, color: 'var(--paper)',
+                  }}>
+                    <div style={{ fontFamily: DISPLAY, fontSize: 12 }}>{f.home_team} vs {f.away_team}</div>
+                    <div style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.12em' }}>{fmtKickoff(f.kickoff_at)}</div>
+                  </button>
+                ))}
+              {allDbFixtures.length === 0 && !dataLoading && (
+                <div style={{ padding: '20px', fontFamily: MONO, fontSize: 10, color: 'var(--mute)', textAlign: 'center', letterSpacing: '.18em' }}>NO UPCOMING FIXTURES FOUND</div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -920,7 +1218,7 @@ function CommMsg({ msg, onDismiss }) {
 // ─────────────────────────────────────────────────────────────────────────────
 // Root export
 // ─────────────────────────────────────────────────────────────────────────────
-export default function CommissionerPanel({ commissioner, leagueId, memberCount = 0, leagueName = 'LEAGUE' }) {
+export default function CommissionerPanel({ commissioner, leagueId, tournamentId, memberCount = 0, leagueName = 'LEAGUE' }) {
   const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' && window.innerWidth < 1024);
 
   useEffect(() => {
@@ -965,7 +1263,7 @@ export default function CommissionerPanel({ commissioner, leagueId, memberCount 
         {/* Create bet (mobile) */}
         <MobSectionHeader label="CREATE BET" sub="GUIDED · 4 STEPS" tone="var(--cyan)" />
         <div style={{ padding: '14px 18px' }}>
-          <CreateBetWizard onPublish={handlePublish} commLoading={commLoading} memberCount={memberCount} />
+          <CreateBetWizard onPublish={handlePublish} commLoading={commLoading} memberCount={memberCount} tournamentId={tournamentId} />
         </div>
 
         {/* Resolve bets (mobile) */}
@@ -1046,7 +1344,7 @@ export default function CommissionerPanel({ commissioner, leagueId, memberCount 
       {/* Zone B — Bet management (two columns) */}
       <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', borderBottom: '1px solid var(--rule)', minHeight: 600 }}>
         <div style={{ borderRight: '1px solid var(--rule)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-          <CreateBetWizard onPublish={handlePublish} commLoading={commLoading} memberCount={memberCount} />
+          <CreateBetWizard onPublish={handlePublish} commLoading={commLoading} memberCount={memberCount} tournamentId={tournamentId} />
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
           <ResolvePendingBets
