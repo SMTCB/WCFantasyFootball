@@ -1,22 +1,8 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-05-21 (E2E test fix — SquadScreen offline mode)  
+**Last Updated**: 2026-05-21 (Admin Tab redesign + system audit — all critical/high bugs fixed, GW38 ready)  
 **E2E Test Suite**: 84/84 platform tests passing ✅ + `scoring-pipeline.spec.js` added  
 **Live App**: https://wc-fantasy-football.vercel.app
-
----
-
-## 📊 SESSION 33 PROGRESS (2026-05-21 — E2E Test Fix)
-
-**Goal**: Fix failing E2E tests after Admin Tab merge.
-
-**🚀 COMPLETED THIS SESSION:**
-
-- ✅ **PR #158 — SquadScreen loading state fix** (merged):
-  - Root cause: SquadScreen relied on `activeLeague` being set to fetch squad data. In test environment (offline-fallback Supabase), no league is loaded, so `activeLeague` stays null, so `fetchSquad()` never runs, so component stays in loading state forever
-  - Fix: When league data loads but no league is selected, show `EMPTY_SQUAD` demo state instead of loading indefinitely
-  - Result: Budget header and all UI elements now render in test/offline mode
-  - E2E impact: All 84 tests passing (was: budget tests timing out)
 
 ---
 
