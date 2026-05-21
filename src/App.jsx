@@ -1,7 +1,9 @@
 import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
-import { AuthProvider } from './context/AuthContext';
-import { useAuth } from './hooks/useAuth';
+// Import both AuthProvider and useAuthContext from the same module — avoids
+// the Rolldown TDZ crash caused by App importing AuthContext directly AND
+// transitively via hooks/useAuth (which is a pure re-export from AuthContext).
+import { AuthProvider, useAuthContext as useAuth } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import ErrorBoundary from './components/ErrorBoundary';
 import AppLayout from './components/AppLayout';
