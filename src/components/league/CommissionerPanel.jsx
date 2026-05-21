@@ -239,7 +239,7 @@ function BetCardPreview({ betType, title, reward, closes, fixtureObj, players, b
 // ─────────────────────────────────────────────────────────────────────────────
 // Create Bet Wizard (Zone B left)
 // ─────────────────────────────────────────────────────────────────────────────
-function CreateBetWizard({ onPublish, commLoading, memberCount, tournamentId }) {
+function CreateBetWizard({ onPublish, commLoading, memberCount, tournamentId, isMobile = false }) {
   const [step,        setStep]   = useState(1);
   const [betType,     setBetType] = useState(null);
   const [fixture,     setFixture] = useState('');      // single fixture id (match-result / player-block)
@@ -415,10 +415,10 @@ function CreateBetWizard({ onPublish, commLoading, memberCount, tournamentId }) 
       {/* Step rail */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', borderBottom: '1px solid var(--rule)', background: 'var(--ink)', flexShrink: 0 }}>
         {[
-          { n: 1, label: 'TYPE',      reached: true,     done: !!betType },
-          { n: 2, label: 'CONFIGURE', reached: canStep2, done: canStep3  },
-          { n: 3, label: 'REWARD',    reached: canStep3, done: canStep4  },
-          { n: 4, label: 'PUBLISH',   reached: canStep4, done: false     },
+          { n: 1, label: 'TYPE',    reached: true,     done: !!betType },
+          { n: 2, label: 'CONFIG',  reached: canStep2, done: canStep3  },
+          { n: 3, label: 'REWARD',  reached: canStep3, done: canStep4  },
+          { n: 4, label: 'PUBLISH', reached: canStep4, done: false     },
         ].map(s => {
           const active = step === s.n;
           const railTone = !s.reached ? 'var(--mute)' : (active ? 'var(--cyan)' : (s.done ? 'var(--positive)' : 'var(--paper)'));
@@ -432,37 +432,42 @@ function CreateBetWizard({ onPublish, commLoading, memberCount, tournamentId }) 
                 borderBottom: active ? `2px solid ${railTone}` : '2px solid transparent',
                 borderLeft: 'none',
                 borderRight: s.n < 4 ? '1px solid var(--rule)' : 'none',
-                padding: '14px 16px', cursor: s.reached ? 'pointer' : 'not-allowed',
-                color: railTone, textAlign: 'left',
-                display: 'flex', alignItems: 'center', gap: 10,
+                padding: isMobile ? '10px 6px' : '14px 16px',
+                cursor: s.reached ? 'pointer' : 'not-allowed',
+                color: railTone,
+                display: 'flex', alignItems: 'center', justifyContent: isMobile ? 'center' : 'flex-start', gap: isMobile ? 4 : 10,
               }}
             >
               <span style={{
-                width: 22, height: 22, borderRadius: '50%',
+                width: 20, height: 20, borderRadius: '50%', flexShrink: 0,
                 border: `1.5px solid ${railTone}`,
                 background: s.done ? railTone : 'transparent',
                 color: s.done ? 'var(--ink)' : railTone,
                 display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                fontFamily: MONO, fontSize: 10, fontWeight: 600, flexShrink: 0,
+                fontFamily: MONO, fontSize: 9, fontWeight: 600,
               }}>{s.done ? '✓' : s.n}</span>
-              <span style={{ display: 'flex', flexDirection: 'column' }}>
-                <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.22em', color: 'var(--mute)' }}>STEP {s.n}</span>
-                <span style={{ fontFamily: MONO, fontSize: 11, letterSpacing: '.18em', color: railTone }}>{s.label}</span>
-              </span>
+              {isMobile ? (
+                <span style={{ fontFamily: MONO, fontSize: 8, letterSpacing: '.14em', color: railTone }}>{s.label}</span>
+              ) : (
+                <span style={{ display: 'flex', flexDirection: 'column' }}>
+                  <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.22em', color: 'var(--mute)' }}>STEP {s.n}</span>
+                  <span style={{ fontFamily: MONO, fontSize: 11, letterSpacing: '.18em', color: railTone }}>{s.label}</span>
+                </span>
+              )}
             </button>
           );
         })}
       </div>
 
-      {/* Body: form left, live preview right */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 300px', minHeight: 0, flex: 1 }}>
-        <div style={{ padding: '22px 24px', display: 'flex', flexDirection: 'column', gap: 18, borderRight: '1px solid var(--rule)', overflow: 'auto' }}>
+      {/* Body: form left, live preview right (preview hidden on mobile) */}
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 300px', minHeight: 0, flex: 1 }}>
+        <div style={{ padding: isMobile ? '16px 14px' : '22px 24px', display: 'flex', flexDirection: 'column', gap: 16, borderRight: isMobile ? 'none' : '1px solid var(--rule)', overflow: 'auto' }}>
 
           {/* ── Step 1: Bet type ── */}
           {step === 1 && (
             <>
               <WizHelp num="01" label="WHAT KIND OF BET?" hint="Each type uses a different resolution rule. Pick one — you can change it before publishing." />
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', gap: 8 }}>
                 {BET_TYPES.map(t => {
                   const picked = betType === t.id;
                   return (
@@ -471,7 +476,11 @@ function CreateBetWizard({ onPublish, commLoading, memberCount, tournamentId }) 
                       background: picked ? `${t.tone}10` : 'var(--ink-2)',
                       border: picked ? `1px solid ${t.tone}` : '1px solid var(--rule)',
                       borderLeft: picked ? `3px solid ${t.tone}` : '3px solid transparent',
-                      padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 8, minHeight: 140,
+                      padding: isMobile ? '12px 14px' : '14px 16px',
+                      display: 'flex', flexDirection: isMobile ? 'row' : 'column',
+                      alignItems: isMobile ? 'center' : 'flex-start',
+                      gap: isMobile ? 12 : 8,
+                      minHeight: isMobile ? 0 : 140,
                     }}>
                       <span style={{ width: 30, height: 30, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: `${t.tone}18`, border: `1px solid ${t.tone}55`, fontFamily: DISPLAY, fontSize: 15, color: t.tone }}>{t.glyph}</span>
                       <span style={{ fontFamily: DISPLAY, fontSize: 14, letterSpacing: '-0.01em', color: 'var(--paper)' }}>{t.label}</span>
@@ -650,8 +659,8 @@ function CreateBetWizard({ onPublish, commLoading, memberCount, tournamentId }) 
           )}
         </div>
 
-        {/* Live preview panel */}
-        <aside style={{ padding: '18px', background: 'var(--ink-2)', display: 'flex', flexDirection: 'column', gap: 10, overflow: 'auto' }}>
+        {/* Live preview panel — desktop only */}
+        {!isMobile && <aside style={{ padding: '18px', background: 'var(--ink-2)', display: 'flex', flexDirection: 'column', gap: 10, overflow: 'auto' }}>
           <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.22em', color: 'var(--mute)' }}>LIVE PREVIEW · WHAT MANAGERS WILL SEE</span>
           <BetCardPreview
             betType={betType}
@@ -665,7 +674,7 @@ function CreateBetWizard({ onPublish, commLoading, memberCount, tournamentId }) 
           <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.16em', color: 'var(--mute)', lineHeight: 1.5 }}>
             UPDATES AS YOU EDIT. THIS CARD APPEARS IN THE <b style={{ color: 'var(--cyan)' }}>BETS TAB</b> FOR EVERY MANAGER ONCE PUBLISHED.
           </span>
-        </aside>
+        </aside>}
       </div>
 
       {/* ── Player picker modal ── */}
@@ -674,7 +683,7 @@ function CreateBetWizard({ onPublish, commLoading, memberCount, tournamentId }) 
           style={{ position: 'fixed', inset: 0, zIndex: 300, background: 'rgba(0,0,0,0.85)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
           onClick={e => { if (e.target === e.currentTarget) { setShowPlayerModal(false); setPlayerSearch(''); } }}
         >
-          <div style={{ background: 'var(--ink)', border: '1px solid var(--rule)', width: 380, maxHeight: '80vh', display: 'flex', flexDirection: 'column', boxShadow: '0 20px 60px rgba(0,0,0,0.6)' }}>
+          <div style={{ background: 'var(--ink)', border: '1px solid var(--rule)', width: isMobile ? 'calc(100vw - 32px)' : 380, maxHeight: '80vh', display: 'flex', flexDirection: 'column', boxShadow: '0 20px 60px rgba(0,0,0,0.6)' }}>
             <div style={{ padding: '12px 14px', borderBottom: '1px solid var(--rule)', display: 'flex', alignItems: 'center', gap: 10 }}>
               <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.22em', color: 'var(--cyan)', flex: 1 }}>SELECT PLAYER</span>
               <button onClick={() => { setShowPlayerModal(false); setPlayerSearch(''); }} style={{ background: 'none', border: 'none', color: 'var(--mute)', cursor: 'pointer', fontSize: 18, lineHeight: 1 }}>✕</button>
@@ -736,7 +745,7 @@ function CreateBetWizard({ onPublish, commLoading, memberCount, tournamentId }) 
           style={{ position: 'fixed', inset: 0, zIndex: 300, background: 'rgba(0,0,0,0.85)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
           onClick={e => { if (e.target === e.currentTarget) { setShowFixtureModal(false); setFixtureSearch(''); } }}
         >
-          <div style={{ background: 'var(--ink)', border: '1px solid var(--rule)', width: 400, maxHeight: '80vh', display: 'flex', flexDirection: 'column', boxShadow: '0 20px 60px rgba(0,0,0,0.6)' }}>
+          <div style={{ background: 'var(--ink)', border: '1px solid var(--rule)', width: isMobile ? 'calc(100vw - 32px)' : 400, maxHeight: '80vh', display: 'flex', flexDirection: 'column', boxShadow: '0 20px 60px rgba(0,0,0,0.6)' }}>
             <div style={{ padding: '12px 14px', borderBottom: '1px solid var(--rule)', display: 'flex', alignItems: 'center', gap: 10 }}>
               <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.22em', color: 'var(--gold)', flex: 1 }}>ADD MATCH FROM ANOTHER ROUND</span>
               <button onClick={() => { setShowFixtureModal(false); setFixtureSearch(''); }} style={{ background: 'none', border: 'none', color: 'var(--mute)', cursor: 'pointer', fontSize: 18, lineHeight: 1 }}>✕</button>
@@ -1157,11 +1166,12 @@ function MobSeasonStepper() {
   );
 }
 
+// ── MobLifecycleCard: collapsible with 14px side gutters (matches brand spec) ──
 function MobLifecycleCard({ title, status, tone, children, when, defaultOpen = false }) {
   const [open, setOpen] = useState(defaultOpen);
   return (
-    <div style={{ background: 'var(--ink-2)', border: '1px solid var(--rule)', borderLeft: `3px solid ${tone}` }}>
-      <button onClick={() => setOpen(!open)} style={{ background: 'transparent', border: 0, padding: '12px 16px', width: '100%', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 10, textAlign: 'left' }}>
+    <div style={{ background: 'var(--ink-2)', border: '1px solid var(--rule)', borderLeft: `3px solid ${tone}`, margin: '0 14px' }}>
+      <button onClick={() => setOpen(!open)} style={{ background: 'transparent', border: 0, padding: '12px 14px', width: '100%', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 10, textAlign: 'left' }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 2, flex: 1, minWidth: 0 }}>
           <span style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '.22em', color: 'var(--paper)' }}>{title}</span>
           <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.18em', color: tone }}>● {status}</span>
@@ -1169,7 +1179,7 @@ function MobLifecycleCard({ title, status, tone, children, when, defaultOpen = f
         <span style={{ color: 'var(--mute)', fontFamily: MONO, fontSize: 14 }}>{open ? '−' : '+'}</span>
       </button>
       {open && (
-        <div style={{ padding: '4px 16px 16px', display: 'flex', flexDirection: 'column', gap: 10, borderTop: '1px solid var(--rule)' }}>
+        <div style={{ padding: '4px 14px 14px', display: 'flex', flexDirection: 'column', gap: 10, borderTop: '1px solid var(--rule)' }}>
           {children}
           {when && (
             <div style={{ padding: '6px 8px', background: 'var(--ink)', border: '1px solid var(--rule)', fontFamily: BODY, fontSize: 10, color: 'var(--mute)', lineHeight: 1.4 }}>
@@ -1182,14 +1192,423 @@ function MobLifecycleCard({ title, status, tone, children, when, defaultOpen = f
   );
 }
 
+// ── Slim section header (matches brand MobSection) ─────────────────────────────
 function MobSectionHeader({ label, sub, tone }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 18px', borderBottom: '1px solid var(--rule)', background: 'var(--ink-2)' }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '14px 18px 6px' }}>
       <span style={{ width: 3, height: 12, background: tone, flexShrink: 0 }} />
-      <div>
-        <span style={{ fontFamily: MONO, fontSize: 11, letterSpacing: '.22em', color: 'var(--paper)' }}>{label}</span>
-        {sub && <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.18em', color: 'var(--mute)', marginLeft: 8 }}>{sub}</span>}
+      <span style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '.22em', color: 'var(--paper)' }}>{label}</span>
+      {sub && <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.16em', color: 'var(--mute)' }}>· {sub}</span>}
+    </div>
+  );
+}
+
+// ── Mobile accordion wizard step header ───────────────────────────────────────
+function MobStepHeader({ n, label, state, onClick, summary }) {
+  const tone = state === 'done' ? 'var(--positive)' : state === 'active' ? 'var(--cyan)' : 'var(--mute)';
+  return (
+    <button onClick={onClick} style={{
+      background: 'transparent', border: 0, padding: '12px 16px', width: '100%',
+      cursor: state === 'todo' ? 'not-allowed' : 'pointer',
+      display: 'flex', alignItems: 'center', gap: 10, textAlign: 'left',
+      borderBottom: '1px solid var(--rule)',
+    }}>
+      <span style={{
+        width: 22, height: 22, borderRadius: '50%', flexShrink: 0,
+        border: `1.5px solid ${tone}`,
+        background: state === 'done' ? tone : 'transparent',
+        color: state === 'done' ? 'var(--ink)' : tone,
+        display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+        fontFamily: MONO, fontSize: 10, fontWeight: 600,
+      }}>{state === 'done' ? '✓' : n}</span>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 2, flex: 1, minWidth: 0 }}>
+        <span style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '.22em', color: tone }}>STEP {n} · {label}</span>
+        {summary && <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.16em', color: 'var(--mute)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{summary}</span>}
       </div>
+      <span style={{ color: tone, fontFamily: MONO, fontSize: 14 }}>{state === 'active' ? '−' : '+'}</span>
+    </button>
+  );
+}
+
+// ── Mobile bet preview (shown in Step 4) ──────────────────────────────────────
+function MobBetPreview({ betType, title, reward, closes, fixtureObj, players, blockPlayer }) {
+  const meta = BET_TYPES.find(t => t.id === betType);
+  if (!meta) return (
+    <div style={{ padding: '16px', border: '1px dashed var(--rule)', textAlign: 'center' }}>
+      <span style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '.22em', color: 'var(--mute)' }}>NO BET YET</span>
+    </div>
+  );
+  const opts = betType === 'match-result'
+    ? (fixtureObj ? [`${fixtureObj.home_team} Win`, 'Draw', `${fixtureObj.away_team} Win`] : ['HOME', 'DRAW', 'AWAY'])
+    : betType === 'top-scorer'
+      ? players.slice(0, 4).map(p => typeof p === 'object' ? p.name : p)
+      : blockPlayer ? [typeof blockPlayer === 'object' ? blockPlayer.name : blockPlayer] : [];
+  return (
+    <div>
+      <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.22em', color: 'var(--mute)' }}>LIVE PREVIEW · MANAGER VIEW</span>
+      <div style={{ marginTop: 8, background: 'var(--ink)', border: '1px solid var(--rule)', borderLeft: `3px solid ${meta.tone}`, padding: '12px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span style={{ width: 22, height: 22, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: `${meta.tone}15`, border: `1px solid ${meta.tone}55`, fontFamily: DISPLAY, fontSize: 12, color: meta.tone }}>{meta.glyph}</span>
+          <span style={{ fontFamily: DISPLAY, fontSize: 12, color: meta.tone }}>{meta.label}</span>
+          <span style={{ flex: 1 }} />
+          <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.18em', color: 'var(--positive)', padding: '2px 6px', border: '1px solid rgba(34,197,94,.55)' }}>+{reward} PTS</span>
+        </div>
+        <div style={{ fontFamily: "'Archivo', sans-serif", fontSize: 12, color: title ? 'var(--paper)' : 'var(--mute)', lineHeight: 1.4 }}>{title || '(title pending)'}</div>
+        {opts.length > 0 && (
+          <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}>
+            {opts.map(o => <span key={o} style={{ padding: '4px 8px', fontFamily: DISPLAY, fontSize: 10, border: '1px solid var(--rule)', color: 'var(--paper)' }}>{o}</span>)}
+          </div>
+        )}
+        {closes && <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.18em', color: 'var(--mute)' }}>● LOCKS {new Date(closes).toLocaleString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</span>}
+      </div>
+    </div>
+  );
+}
+
+// ── Mobile accordion Create Bet wizard ─────────────────────────────────────────
+function MobCreateBet({ tournamentId, onPublish, commLoading, memberCount }) {
+  const [step, setStep]               = useState(1);
+  const [betType, setBetType]         = useState(null);
+  const [fixture, setFixture]         = useState('');
+  const [selectedFixtures, setSelectedFixtures] = useState([]);
+  const [players, setPlayers]         = useState([]);
+  const [blockPlayer, setBlock]       = useState(null);
+  const [reward, setReward]           = useState(5);
+  const [closes, setCloses]           = useState('');
+  const [title, setTitle]             = useState('');
+
+  const [dbFixtures, setDbFixtures]       = useState([]);
+  const [allDbFixtures, setAllDbFixtures] = useState([]);
+  const [allPlayers, setAllPlayers]       = useState([]);
+  const [dataLoading, setDataLoading]     = useState(false);
+  const [showPlayerModal, setShowPlayerModal]   = useState(false);
+  const [playerSearch, setPlayerSearch]         = useState('');
+  const [showFixtureModal, setShowFixtureModal] = useState(false);
+  const [fixtureSearch, setFixtureSearch]       = useState('');
+
+  useEffect(() => {
+    if (!tournamentId) return;
+    setDataLoading(true);
+    const now = new Date().toISOString();
+    Promise.all([
+      supabase.from('fixtures').select('id, home_team, away_team, kickoff_at')
+        .eq('tournament_id', tournamentId).eq('status', 'scheduled').gte('kickoff_at', now)
+        .order('kickoff_at', { ascending: true }).limit(40),
+      supabase.from('players').select('id, name, position, club')
+        .eq('tournament_id', tournamentId).in('position', ['FWD', 'MID', 'DEF', 'GK'])
+        .order('price', { ascending: false }).limit(300),
+    ]).then(([{ data: fx }, { data: pl }]) => {
+      const allFx = fx || [];
+      let nextDay = allFx;
+      if (allFx.length) {
+        const cutoff = new Date(allFx[0].kickoff_at).getTime() + 7 * 24 * 60 * 60 * 1000;
+        nextDay = allFx.filter(f => new Date(f.kickoff_at).getTime() <= cutoff);
+      }
+      setDbFixtures(nextDay);
+      setAllDbFixtures(allFx);
+      const allPl = pl || [];
+      setAllPlayers(allPl);
+      setPlayers(allPl.filter(p => ['FWD', 'MID'].includes(p.position)).slice(0, 5));
+    }).finally(() => setDataLoading(false));
+  }, [tournamentId]);
+
+  const typeMeta = BET_TYPES.find(t => t.id === betType) || null;
+  const fixtureMeta = allDbFixtures.find(f => f.id === fixture) || null;
+
+  const autoTitle = (() => {
+    if (!typeMeta) return '';
+    if (betType === 'top-scorer') {
+      const fxObjs = allDbFixtures.filter(f => selectedFixtures.includes(f.id));
+      const scope = fxObjs.length === 1 ? `${fxObjs[0].home_team} vs ${fxObjs[0].away_team}` : fxObjs.length > 1 ? `${fxObjs.length} matches` : 'Matchday';
+      return `Top scorer · ${scope}`;
+    }
+    if (betType === 'match-result') return fixtureMeta ? `Result · ${fixtureMeta.home_team} vs ${fixtureMeta.away_team}` : 'Match result';
+    if (betType === 'player-block') return blockPlayer ? `Block · ${blockPlayer.name}` : 'Player block';
+    return '';
+  })();
+  const computedTitle = title || autoTitle;
+
+  const canTo = (n) => {
+    if (n === 1) return true;
+    if (n === 2) return !!betType;
+    if (n === 3) return betType === 'top-scorer' ? players.length >= 2 : !!fixture && (betType !== 'player-block' || !!blockPlayer);
+    if (n === 4) return canTo(3) && !!reward && !!closes;
+    return false;
+  };
+  const stepState = (n) => n === step ? 'active' : n < step ? 'done' : 'todo';
+
+  const handlePublish = () => {
+    let options = [], scopeType = 'match', scopeRef = null;
+    if (betType === 'match-result') {
+      options = [
+        { key: `${fixture}_home`, label: `${fixtureMeta?.home_team || 'Home'} Win`, meta: {} },
+        { key: `${fixture}_draw`, label: 'Draw', meta: {} },
+        { key: `${fixture}_away`, label: `${fixtureMeta?.away_team || 'Away'} Win`, meta: {} },
+      ];
+      scopeRef = fixture || null;
+    } else if (betType === 'top-scorer') {
+      options = players.map(p => ({ key: p.id, label: p.name, meta: { club: p.club, pos: p.position } }));
+      scopeType = 'matchday'; scopeRef = selectedFixtures.join(',') || null;
+    } else if (betType === 'player-block') {
+      options = blockPlayer ? [{ key: blockPlayer.id, label: blockPlayer.name, meta: { club: blockPlayer.club, pos: blockPlayer.position } }] : [];
+      scopeRef = fixture || null;
+    }
+    onPublish({ title: computedTitle, prompt: computedTitle, deadline: closes, rewardValue: String(reward), scopeType, scopeRef, templateId: typeMeta.templateId, options });
+    setStep(1); setBetType(null); setFixture(''); setSelectedFixtures([]); setBlock(null);
+    setReward(5); setCloses(''); setTitle('');
+    setPlayers(allPlayers.filter(p => ['FWD', 'MID'].includes(p.position)).slice(0, 5));
+  };
+
+  // Step summaries (shown in done step headers)
+  const step2Summary = (() => {
+    if (betType === 'top-scorer') return `${players.length} players${selectedFixtures.length ? ` · ${selectedFixtures.length} matches` : ''}`;
+    const f = allDbFixtures.find(x => x.id === fixture);
+    return f ? `${f.home_team} vs ${f.away_team}` : null;
+  })();
+
+  const mobInputStyle = { ...inputStyle, colorScheme: 'dark', width: '100%', boxSizing: 'border-box' };
+  const mobNextBtn = (enabled) => ({
+    flex: 1, padding: '12px 14px', border: 0,
+    cursor: enabled ? 'pointer' : 'not-allowed',
+    fontFamily: DISPLAY, fontSize: 12, letterSpacing: '.18em',
+    background: enabled ? 'var(--cyan)' : 'var(--ink-3)',
+    color: enabled ? 'var(--ink)' : 'var(--mute)',
+  });
+  const mobBackBtn = {
+    padding: '12px 14px', border: '1px solid var(--rule)', cursor: 'pointer',
+    background: 'transparent', color: 'var(--mute)',
+    fontFamily: MONO, fontWeight: 600, fontSize: 11, letterSpacing: '.22em',
+  };
+
+  return (
+    <div style={{ background: 'var(--ink-2)', border: '1px solid var(--rule)', margin: '0 14px', display: 'flex', flexDirection: 'column' }}>
+
+      {/* Step 1 — TYPE */}
+      <MobStepHeader n="1" label="TYPE" state={stepState(1)} onClick={() => setStep(1)} summary={step > 1 ? typeMeta?.label : null} />
+      {step === 1 && (
+        <div style={{ padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 8, borderBottom: '1px solid var(--rule)' }}>
+          {BET_TYPES.map(t => {
+            const picked = betType === t.id;
+            return (
+              <button key={t.id} onClick={() => setBetType(t.id)} style={{
+                background: picked ? `${t.tone}10` : 'var(--ink)',
+                border: picked ? `1px solid ${t.tone}` : '1px solid var(--rule)',
+                borderLeft: picked ? `3px solid ${t.tone}` : '3px solid transparent',
+                padding: '12px 14px', textAlign: 'left', cursor: 'pointer',
+                display: 'flex', alignItems: 'center', gap: 12,
+              }}>
+                <span style={{ width: 28, height: 28, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: `${t.tone}18`, border: `1px solid ${t.tone}55`, fontFamily: DISPLAY, fontSize: 13, color: t.tone, flexShrink: 0 }}>{t.glyph}</span>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 2, flex: 1, minWidth: 0 }}>
+                  <span style={{ fontFamily: DISPLAY, fontSize: 13, color: 'var(--paper)', letterSpacing: '-0.01em' }}>{t.label}</span>
+                  <span style={{ fontSize: 11, color: 'var(--mute)', fontFamily: "'Archivo', sans-serif" }}>{t.description}</span>
+                </div>
+                {picked && <span style={{ color: t.tone, fontFamily: MONO, fontSize: 13 }}>✓</span>}
+              </button>
+            );
+          })}
+          <button disabled={!canTo(2)} onClick={() => canTo(2) && setStep(2)} style={{ ...mobNextBtn(canTo(2)), marginTop: 4 }}>NEXT →</button>
+        </div>
+      )}
+
+      {/* Step 2 — CONFIGURE */}
+      <MobStepHeader n="2" label="CONFIGURE" state={stepState(2)} onClick={() => canTo(2) && setStep(2)} summary={step > 2 ? step2Summary : null} />
+      {step === 2 && (
+        <div style={{ padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 14, borderBottom: '1px solid var(--rule)' }}>
+          {/* Fixture / match scope */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            <span style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '.22em', color: 'var(--paper)' }}>
+              {betType === 'top-scorer' ? `MATCH SCOPE · ${selectedFixtures.length}/4 (OPTIONAL)` : 'FIXTURE · NEXT GAMEDAY'}
+            </span>
+            {dataLoading ? (
+              <span style={{ fontFamily: MONO, fontSize: 10, color: 'var(--mute)', letterSpacing: '.18em' }}>LOADING…</span>
+            ) : dbFixtures.length === 0 ? (
+              <span style={{ fontFamily: MONO, fontSize: 10, color: 'var(--danger)', letterSpacing: '.16em' }}>NO UPCOMING FIXTURES FOUND</span>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                {dbFixtures.map(f => {
+                  const isMulti = betType === 'top-scorer';
+                  const picked  = isMulti ? selectedFixtures.includes(f.id) : fixture === f.id;
+                  const atMax   = isMulti && !picked && selectedFixtures.length >= 4;
+                  return (
+                    <button key={f.id} onClick={() => {
+                      if (isMulti) {
+                        if (picked) setSelectedFixtures(p => p.filter(x => x !== f.id));
+                        else if (!atMax) setSelectedFixtures(p => [...p, f.id]);
+                      } else setFixture(f.id);
+                    }} style={{
+                      background: picked ? 'rgba(0,180,216,.08)' : 'var(--ink)',
+                      border: picked ? '1px solid var(--cyan)' : '1px solid var(--rule)',
+                      padding: '10px 12px', cursor: atMax ? 'not-allowed' : 'pointer',
+                      display: 'flex', alignItems: 'center', gap: 10, textAlign: 'left',
+                      opacity: atMax ? 0.4 : 1,
+                    }}>
+                      <span style={{
+                        width: 14, height: 14,
+                        borderRadius: isMulti ? 0 : '50%',
+                        border: `1.5px solid ${picked ? 'var(--cyan)' : 'var(--rule)'}`,
+                        background: picked ? 'var(--cyan)' : 'transparent',
+                        flexShrink: 0,
+                        display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                        fontFamily: MONO, fontSize: 9, color: 'var(--ink)',
+                      }}>{isMulti && picked ? '✓' : ''}</span>
+                      <span style={{ fontFamily: DISPLAY, fontSize: 12, color: 'var(--paper)', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{f.home_team} vs {f.away_team}</span>
+                      <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.14em', color: 'var(--mute)', flexShrink: 0 }}>{fmtKickoff(f.kickoff_at)}</span>
+                    </button>
+                  );
+                })}
+                {betType === 'top-scorer' && selectedFixtures.length < 4 && (
+                  <button onClick={() => setShowFixtureModal(true)} style={{ padding: '10px 12px', cursor: 'pointer', textAlign: 'left', background: 'rgba(224,168,0,.04)', border: '1px dashed rgba(224,168,0,.4)', color: 'var(--gold)', fontFamily: MONO, fontSize: 10, letterSpacing: '.14em' }}>
+                    + ADD MATCH FROM ANOTHER ROUND
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Top scorer player pool */}
+          {betType === 'top-scorer' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              <span style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '.22em', color: 'var(--paper)' }}>PLAYER POOL · {players.length}/8</span>
+              <PlayerChipPool selected={players} onChange={setPlayers} onAddCustom={() => setShowPlayerModal(true)} />
+              {players.length < 2 && <span style={{ fontFamily: MONO, fontSize: 9, color: 'var(--danger)', letterSpacing: '.16em' }}>ADD AT LEAST 2 PLAYERS</span>}
+            </div>
+          )}
+
+          {/* Player block target */}
+          {betType === 'player-block' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              <span style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '.22em', color: 'var(--paper)' }}>BLOCK TARGET</span>
+              {blockPlayer ? (
+                <div style={{ display: 'flex', gap: 10, alignItems: 'center', padding: '10px 12px', background: 'rgba(239,68,68,.06)', border: '1px solid rgba(239,68,68,.3)' }}>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontFamily: DISPLAY, fontSize: 13, color: 'var(--danger)' }}>{blockPlayer.name}</div>
+                    <div style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.12em' }}>{blockPlayer.club} · {blockPlayer.position}</div>
+                  </div>
+                  <button onClick={() => setBlock(null)} style={{ background: 'none', border: 'none', color: 'var(--danger)', cursor: 'pointer', fontSize: 16, lineHeight: 1 }}>✕</button>
+                </div>
+              ) : (
+                <button onClick={() => setShowPlayerModal(true)} style={{ padding: '12px', cursor: 'pointer', width: '100%', textAlign: 'center', background: 'rgba(239,68,68,.04)', border: '1px dashed rgba(239,68,68,.4)', color: 'var(--danger)', fontFamily: MONO, fontSize: 10, letterSpacing: '.18em' }}>
+                  SELECT PLAYER TO BLOCK →
+                </button>
+              )}
+            </div>
+          )}
+
+          {/* Match result auto note */}
+          {betType === 'match-result' && fixture && (
+            <div style={{ padding: '10px 12px', background: 'var(--ink)', border: '1px solid var(--rule)', fontSize: 11, color: 'var(--mute)', fontFamily: "'Archivo', sans-serif", lineHeight: 1.5 }}>
+              <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.2em', color: 'var(--positive)' }}>● AUTO</span>{' '}
+              Options: <b style={{ color: 'var(--paper)' }}>{fixtureMeta?.home_team || 'HOME'} WIN · DRAW · {fixtureMeta?.away_team || 'AWAY'} WIN</b>
+            </div>
+          )}
+
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button onClick={() => setStep(1)} style={mobBackBtn}>← BACK</button>
+            <button disabled={!canTo(3)} onClick={() => canTo(3) && setStep(3)} style={mobNextBtn(canTo(3))}>NEXT →</button>
+          </div>
+        </div>
+      )}
+
+      {/* Step 3 — REWARD & LOCK */}
+      <MobStepHeader n="3" label="REWARD & LOCK" state={stepState(3)} onClick={() => canTo(3) && setStep(3)} summary={step > 3 && reward && closes ? `+${reward} pts · locks ${new Date(closes).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}` : null} />
+      {step === 3 && (
+        <div style={{ padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 14, borderBottom: '1px solid var(--rule)' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            <span style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '.22em', color: 'var(--paper)' }}>REWARD · POINTS</span>
+            <div style={{ display: 'flex', border: '1px solid var(--rule)', background: 'var(--ink)', width: 'fit-content' }}>
+              <button onClick={() => setReward(Math.max(1, reward - 1))} style={{ background: 'transparent', border: 0, color: 'var(--paper)', padding: '10px 18px', fontSize: 16, cursor: 'pointer', borderRight: '1px solid var(--rule)' }}>−</button>
+              <span style={{ padding: '10px 22px', fontFamily: DISPLAY, fontSize: 18, color: 'var(--positive)', minWidth: 70, textAlign: 'center' }}>+{reward}</span>
+              <button onClick={() => setReward(reward + 1)} style={{ background: 'transparent', border: 0, color: 'var(--paper)', padding: '10px 18px', fontSize: 16, cursor: 'pointer', borderLeft: '1px solid var(--rule)' }}>+</button>
+            </div>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            <span style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '.22em', color: 'var(--paper)' }}>PICKS LOCK AT</span>
+            <input type="datetime-local" value={closes} onChange={e => setCloses(e.target.value)} style={mobInputStyle} />
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            <span style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '.22em', color: 'var(--paper)' }}>TITLE</span>
+            <input type="text" value={title} onChange={e => setTitle(e.target.value)} placeholder={autoTitle || 'Auto-derived title'} style={mobInputStyle} />
+          </div>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button onClick={() => setStep(2)} style={mobBackBtn}>← BACK</button>
+            <button disabled={!canTo(4)} onClick={() => canTo(4) && setStep(4)} style={mobNextBtn(canTo(4))}>NEXT →</button>
+          </div>
+        </div>
+      )}
+
+      {/* Step 4 — REVIEW & PUBLISH */}
+      <MobStepHeader n="4" label="REVIEW & PUBLISH" state={stepState(4)} onClick={() => canTo(4) && setStep(4)} summary={null} />
+      {step === 4 && (
+        <div style={{ padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <MobBetPreview betType={betType} title={computedTitle} reward={reward} closes={closes} fixtureObj={fixtureMeta} players={players} blockPlayer={blockPlayer} />
+          <div style={{ padding: '10px 12px', background: 'rgba(224,168,0,.06)', border: '1px solid rgba(224,168,0,.55)', fontSize: 11, lineHeight: 1.5, color: 'var(--paper)', fontFamily: "'Archivo', sans-serif" }}>
+            <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.22em', color: 'var(--gold)' }}>● NOTE</span>{' '}
+            Publishing notifies <b>{memberCount} managers</b> and opens picks immediately.
+          </div>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button onClick={() => setStep(3)} style={mobBackBtn}>← BACK</button>
+            <button onClick={handlePublish} disabled={commLoading} style={{ flex: 1, padding: '12px 14px', border: 0, cursor: commLoading ? 'not-allowed' : 'pointer', fontFamily: DISPLAY, fontSize: 12, letterSpacing: '.18em', background: commLoading ? 'var(--ink-3)' : 'var(--positive)', color: commLoading ? 'var(--mute)' : 'var(--ink)' }}>
+              {commLoading ? 'PUBLISHING…' : 'PUBLISH BET →'}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Player picker modal */}
+      {showPlayerModal && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 300, background: 'rgba(0,0,0,0.85)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+          onClick={e => { if (e.target === e.currentTarget) { setShowPlayerModal(false); setPlayerSearch(''); } }}>
+          <div style={{ background: 'var(--ink)', border: '1px solid var(--rule)', width: 'calc(100vw - 32px)', maxWidth: 400, maxHeight: '80vh', display: 'flex', flexDirection: 'column' }}>
+            <div style={{ padding: '12px 14px', borderBottom: '1px solid var(--rule)', display: 'flex', alignItems: 'center', gap: 10 }}>
+              <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.22em', color: 'var(--cyan)', flex: 1 }}>SELECT PLAYER</span>
+              <button onClick={() => { setShowPlayerModal(false); setPlayerSearch(''); }} style={{ background: 'none', border: 'none', color: 'var(--mute)', cursor: 'pointer', fontSize: 18, lineHeight: 1 }}>✕</button>
+            </div>
+            <div style={{ padding: '8px 10px', borderBottom: '1px solid var(--rule)' }}>
+              <input autoFocus type="text" placeholder="Search by name or club…" value={playerSearch} onChange={e => setPlayerSearch(e.target.value)} style={{ width: '100%', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', color: 'var(--paper)', fontSize: 12, padding: '8px 10px', outline: 'none', boxSizing: 'border-box' }} />
+            </div>
+            <div style={{ flex: 1, overflowY: 'auto' }}>
+              {allPlayers.filter(p => { const q = playerSearch.toLowerCase(); return !q || p.name.toLowerCase().includes(q) || (p.club || '').toLowerCase().includes(q); }).slice(0, 60).map(p => (
+                <button key={p.id} onClick={() => {
+                  if (betType === 'player-block') { setBlock(p); }
+                  else { setPlayers(prev => prev.find(x => x.id === p.id) ? prev : [p, ...prev.slice(0, 7)]); }
+                  setShowPlayerModal(false); setPlayerSearch('');
+                }} style={{ width: '100%', textAlign: 'left', padding: '10px 14px', background: 'transparent', border: 0, borderBottom: '1px solid rgba(255,255,255,0.04)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 10, color: 'var(--paper)' }}>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontFamily: DISPLAY, fontSize: 12, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name}</div>
+                    <div style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.12em' }}>{p.club}</div>
+                  </div>
+                  <span style={{ fontFamily: MONO, fontSize: 9, color: 'var(--cyan)', letterSpacing: '.14em', flexShrink: 0 }}>{p.position}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Additional fixture modal */}
+      {showFixtureModal && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 300, background: 'rgba(0,0,0,0.85)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+          onClick={e => { if (e.target === e.currentTarget) { setShowFixtureModal(false); setFixtureSearch(''); } }}>
+          <div style={{ background: 'var(--ink)', border: '1px solid var(--rule)', width: 'calc(100vw - 32px)', maxWidth: 420, maxHeight: '80vh', display: 'flex', flexDirection: 'column' }}>
+            <div style={{ padding: '12px 14px', borderBottom: '1px solid var(--rule)', display: 'flex', alignItems: 'center', gap: 10 }}>
+              <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.22em', color: 'var(--gold)', flex: 1 }}>ADD MATCH</span>
+              <button onClick={() => { setShowFixtureModal(false); setFixtureSearch(''); }} style={{ background: 'none', border: 'none', color: 'var(--mute)', cursor: 'pointer', fontSize: 18, lineHeight: 1 }}>✕</button>
+            </div>
+            <div style={{ padding: '8px 10px', borderBottom: '1px solid var(--rule)' }}>
+              <input autoFocus type="text" placeholder="Search team…" value={fixtureSearch} onChange={e => setFixtureSearch(e.target.value)} style={{ width: '100%', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', color: 'var(--paper)', fontSize: 12, padding: '8px 10px', outline: 'none', boxSizing: 'border-box' }} />
+            </div>
+            <div style={{ flex: 1, overflowY: 'auto' }}>
+              {allDbFixtures.filter(f => !selectedFixtures.includes(f.id)).filter(f => { const q = fixtureSearch.toLowerCase(); return !q || f.home_team.toLowerCase().includes(q) || f.away_team.toLowerCase().includes(q); }).slice(0, 40).map(f => (
+                <button key={f.id} onClick={() => { if (selectedFixtures.length < 4) setSelectedFixtures(p => [...p, f.id]); setShowFixtureModal(false); setFixtureSearch(''); }}
+                  style={{ width: '100%', textAlign: 'left', padding: '10px 14px', background: 'transparent', border: 0, borderBottom: '1px solid rgba(255,255,255,0.04)', cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: 2, color: 'var(--paper)' }}>
+                  <div style={{ fontFamily: DISPLAY, fontSize: 12 }}>{f.home_team} vs {f.away_team}</div>
+                  <div style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.12em' }}>{fmtKickoff(f.kickoff_at)}</div>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -1202,7 +1621,7 @@ function CommMsg({ msg, onDismiss }) {
   const ok = msg.type === 'ok';
   return (
     <div style={{
-      margin: '12px 24px 0', padding: '10px 14px',
+      margin: '12px 16px 0', padding: '10px 14px',
       background: ok ? 'rgba(34,197,94,.08)' : 'rgba(239,68,68,.08)',
       border: `1px solid ${ok ? 'rgba(34,197,94,.3)' : 'rgba(239,68,68,.3)'}`,
       color: ok ? 'var(--positive)' : 'var(--danger)',
@@ -1260,15 +1679,18 @@ export default function CommissionerPanel({ commissioner, leagueId, tournamentId
         <CommMsg msg={commMsg} onDismiss={() => setCommMsg(null)} />
         <MobSeasonStepper />
 
-        {/* Create bet (mobile) */}
+        {/* Create bet (mobile) — accordion wizard */}
         <MobSectionHeader label="CREATE BET" sub="GUIDED · 4 STEPS" tone="var(--cyan)" />
-        <div style={{ padding: '14px 18px' }}>
-          <CreateBetWizard onPublish={handlePublish} commLoading={commLoading} memberCount={memberCount} tournamentId={tournamentId} />
-        </div>
+        <MobCreateBet
+          tournamentId={tournamentId}
+          onPublish={handlePublish}
+          commLoading={commLoading}
+          memberCount={memberCount}
+        />
 
         {/* Resolve bets (mobile) */}
         <MobSectionHeader label="RESOLVE PENDING" sub="WAITING ON YOU" tone="var(--gold)" />
-        <div style={{ padding: '14px 18px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+        <div style={{ padding: '0 14px', display: 'flex', flexDirection: 'column', gap: 8 }}>
           <ResolvePendingBets
             openBets={openBets}
             resolutionBetsLoading={resolutionBetsLoading}
@@ -1284,9 +1706,9 @@ export default function CommissionerPanel({ commissioner, leagueId, tournamentId
           />
         </div>
 
-        {/* Lifecycle ops (mobile) */}
+        {/* Lifecycle ops (mobile) — cards have margin: 0 14px built in */}
         <MobSectionHeader label="LIFECYCLE OPERATIONS" sub="SEASON CONTROLS" tone="var(--purple)" />
-        <div style={{ padding: '14px 18px', display: 'flex', flexDirection: 'column', gap: 8, paddingBottom: 80 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, paddingBottom: 80 }}>
           <MobLifecycleCard title="TRANSFER WINDOW" status="CLOSED" tone="var(--danger)" when="Open between gameweeks. Close 1h before MD kickoff.">
             <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
               <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.2em', color: 'var(--mute)' }}>OPENS</span>
