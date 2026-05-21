@@ -2,9 +2,14 @@
 // Shared chrome primitives for the League Hub.
 // All components use inline styles + CSS custom properties to match the design spec exactly.
 
-const MONO = "'JetBrains Mono', monospace";
-const DISPLAY = "'Archivo Black', sans-serif";
-const BODY = "'Archivo', sans-serif";
+// var (not const) — LeagueScreen imports HubShared directly AND all 6 of its
+// child view components (AuctionsView, BetsTabHub, BettingLeaderboardView,
+// ChatView, LeagueDetailView, StatsView) also import HubShared. This multi-depth
+// pattern causes Rolldown to sometimes evaluate a child module before HubShared,
+// putting const MONO/DISPLAY in TDZ. var is hoisted and can never TDZ.
+var MONO = "'JetBrains Mono', monospace";
+var DISPLAY = "'Archivo Black', sans-serif";
+var BODY = "'Archivo', sans-serif";
 
 // 3-char monogram badge. `hue` is the manager's identity colour.
 export function MgrTag({ mono = '???', hue = '#8B95A1', size = 18, dim = false }) {
@@ -219,7 +224,7 @@ export const miniBtnStyle = (color) => ({
 });
 
 // Manager identity helpers — deterministic hue + 3-char monogram from username
-const MANAGER_HUES = [
+var MANAGER_HUES = [
   '#00B4D8','#E0A800','#A855F7','#22C55E','#F59E0B',
   '#34D399','#7DD3FC','#FB7185','#FCD34D','#C4B5FD','#67E8F9',
 ];
