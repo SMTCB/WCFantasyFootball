@@ -313,7 +313,16 @@ export default function SquadScreen() {
   ];
 
 
-  useEffect(() => { if (activeLeague) { fetchSquad(); fetchDailyStatus(); } }, [user, activeLeague]);
+  useEffect(() => {
+    if (activeLeague) {
+      fetchSquad();
+      fetchDailyStatus();
+    } else if (!activeLeague && squadData === null && leagues !== null) {
+      // No active league selected after leagues have loaded — show demo/empty state
+      setSquadData(EMPTY_SQUAD);
+      setLoading(false);
+    }
+  }, [user, activeLeague, leagues, squadData]);
 
   const fetchDailyStatus = async () => {
     try {
