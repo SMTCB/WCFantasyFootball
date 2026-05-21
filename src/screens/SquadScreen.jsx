@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 // Empty squad shown when user has no squad yet (instead of demo data)
@@ -31,7 +31,7 @@ import PowerToolCard from '../components/PowerToolCard';
 import { AvailabilityBadge } from '../components/AvailabilityBadge';
 import { POS_ORDER, POS_LABEL, POS_BADGE_COLOR } from '../lib/formations';
 
-// ── Chip config ───────────────────────────────────────────────────────────────
+// â”€â”€ Chip config â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const CHIPS = [
   {
     key:         'wildcard',
@@ -46,7 +46,7 @@ const CHIPS = [
   {
     key:         'triple',
     label:       'Triple Captain',
-    description: 'All-or-Nothing: your captain scores 3× points — but 0 if they don\'t play.',
+    description: 'All-or-Nothing: your captain scores 3Ã— points â€” but 0 if they don\'t play.',
     stateKey:    'isTripleCaptain',
     dbField:     'is_triple_captain',
     activeColor: 'var(--gold)',
@@ -55,7 +55,7 @@ const CHIPS = [
   },
 ];
 
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export default function SquadScreen() {
   const { user } = useAuth();
@@ -100,7 +100,7 @@ export default function SquadScreen() {
         if (data?.tournament_id) setTournamentId(data.tournament_id);
         return;
       }
-      // No leagueId in URL — fetch user's leagues
+      // No leagueId in URL â€” fetch user's leagues
       const { data } = await supabase
         .from('league_members')
         .select('league_id, leagues(id, name, tournament_id)')
@@ -137,24 +137,24 @@ export default function SquadScreen() {
   const cfg = useLeagueConfig(activeLeague);
   const POS_LIMITS = cfg.positionLimits;
 
-  // Transfer hook — league-scoped buy/sell + no-repeat enforcement
+  // Transfer hook â€” league-scoped buy/sell + no-repeat enforcement
   const { buy, sell, takenMap, isOwnedBy } = useTransfer(activeLeague);
 
-  // Availability flags hook — league-scoped player flags for trade offers
+  // Availability flags hook â€” league-scoped player flags for trade offers
   const { flagMap, toggleFlag } = useAvailabilityFlag(activeLeague);
 
-  // Auction hook — list players for auction in the current league
+  // Auction hook â€” list players for auction in the current league
   const { listPlayer: listForAuction, auctions: activeAuctions } = useAuctions(activeLeague, squadData?.squadId);
   const [auctionBusy, setAuctionBusy] = useState(null); // playerId being listed
 
-  // ── Data Fetching ─────────────────────────────────────────────────────────
+  // â”€â”€ Data Fetching â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const fetchSquad = async () => {
     try {
       setLoading(true);
       const userId = user?.id;
       const today  = new Date().toISOString().split('T')[0];
 
-      // ── Transfer window lock check — use latest matchday deadline ──────────
+      // â”€â”€ Transfer window lock check â€” use latest matchday deadline â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
       const { data: deadlineRow } = await supabase
         .from('matchday_deadlines').select('deadline_at').order('deadline_at', { ascending: false }).limit(1).maybeSingle();
       if (deadlineRow?.deadline_at) {
@@ -163,7 +163,7 @@ export default function SquadScreen() {
       }
 
       const { data: jokerRec } = await supabase.from('daily_jokers').select('player_id')
-        .eq('user_id', userId).eq('match_date', today).maybeSingle();
+        .eq('user_id', userId).eq('joker_date', today).maybeSingle();
       let jokerP = null;
       if (jokerRec?.player_id) {
         const { data: jp } = await supabase.from('players').select('*').eq('id', jokerRec.player_id).single();
@@ -172,7 +172,7 @@ export default function SquadScreen() {
       setJokerPlayer(jokerP);
       setTodayJokerId(jokerRec?.player_id || null);
 
-      // Most-recent squad first — ensures we get the live matchday squad, not an older one
+      // Most-recent squad first â€” ensures we get the live matchday squad, not an older one
       const squadQuery = supabase.from('squads').select('*').eq('user_id', userId);
       if (activeLeague) squadQuery.eq('league_id', activeLeague);
       const { data: squad, error } = await squadQuery.order('created_at', { ascending: false }).limit(1).maybeSingle();
@@ -184,12 +184,12 @@ export default function SquadScreen() {
 
       const playerIds = squad.players || [];
 
-      // Build fixture query — handle missing matchday_id for some tournaments
+      // Build fixture query â€” handle missing matchday_id for some tournaments
       let fixturesQuery = supabase.from('fixtures').select('id').eq('status', 'finished');
       if (squad.matchday_id) {
         fixturesQuery = fixturesQuery.like('id', `${squad.matchday_id}%`);
       } else {
-        // No matchday — return empty set so points calculation doesn't crash
+        // No matchday â€” return empty set so points calculation doesn't crash
         fixturesQuery = fixturesQuery.eq('id', 'null_no_matchday');
       }
 
@@ -222,7 +222,7 @@ export default function SquadScreen() {
       const mappedPlayers = (players || []).map((p) => {
         const playerIntel = intelData?.find(i => i.player_id === p.id);
         const isStarter   = starterIds.has(p.id);
-        // normalisePlayer strips unknown keys — set isBench after the call
+        // normalisePlayer strips unknown keys â€” set isBench after the call
         const normalised  = normalisePlayer({
           ...p,
           points: pointsMap[p.id] ?? 0,
@@ -280,10 +280,10 @@ export default function SquadScreen() {
     }
   };
 
-  // Auto-fill hook — reusable across Squad, Market, League screens
+  // Auto-fill hook â€” reusable across Squad, Market, League screens
   const { handleAutoFill, autoFilling, autoFillMsg } = useAutoFill(activeLeague, squadData, fetchSquad, takenMap, buy);
 
-  // Live countdown hook — replaces static window lock badge
+  // Live countdown hook â€” replaces static window lock badge
   const deadline = useDeadlineCountdown();
 
   // First-visit tour
@@ -293,7 +293,7 @@ export default function SquadScreen() {
     {
       target: 'squad-pitch',
       title:  'Your Pitch',
-      body:   'This is your starting XI laid out on a pitch. Tap any player to see options — swap positions, set captain, or activate your Daily Joker.',
+      body:   'This is your starting XI laid out on a pitch. Tap any player to see options â€” swap positions, set captain, or activate your Daily Joker.',
     },
     {
       target: 'squad-budget',
@@ -303,12 +303,12 @@ export default function SquadScreen() {
     {
       target: 'squad-power-tools',
       title:  'Power Tools',
-      body:   'Wildcard, Triple Captain, and Daily Joker live here. Each is one-use — activate carefully.',
+      body:   'Wildcard, Triple Captain, and Daily Joker live here. Each is one-use â€” activate carefully.',
     },
     {
       target: 'squad-chips',
       title:  'Chips & Boosts',
-      body:   'Wildcard lets you make unlimited free transfers. Triple Captain scores 3× points — or 0 if they don\'t play. Use them wisely, they\'re one-per-season.',
+      body:   'Wildcard lets you make unlimited free transfers. Triple Captain scores 3Ã— points â€” or 0 if they don\'t play. Use them wisely, they\'re one-per-season.',
     },
   ];
 
@@ -318,7 +318,7 @@ export default function SquadScreen() {
       fetchSquad();
       fetchDailyStatus();
     } else if (!activeLeague && squadData === null && leagues !== null) {
-      // No active league selected after leagues have loaded — show demo/empty state
+      // No active league selected after leagues have loaded â€” show demo/empty state
       setSquadData(EMPTY_SQUAD);
       setLoading(false);
     }
@@ -329,7 +329,7 @@ export default function SquadScreen() {
       const userId = user?.id;
       const today  = new Date().toISOString().split('T')[0];
       const { data: joker } = await supabase.from('daily_jokers').select('player_id')
-        .eq('user_id', userId).eq('match_date', today).maybeSingle();
+        .eq('user_id', userId).eq('joker_date', today).maybeSingle();
       if (joker) setTodayJokerId(joker.player_id);
       const { data: fixtures } = await supabase.from('fixtures').select('home_team, away_team');
       const teams = new Set();
@@ -338,14 +338,14 @@ export default function SquadScreen() {
     } catch (err) { console.error('Daily status error', err); }
   };
 
-  // ── Actions ───────────────────────────────────────────────────────────────
+  // â”€â”€ Actions â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const handlePlayerClick = (player) => {
     if (player.isJokerSlot) { setIsJokerPickerOpen(true); return; }
     if (swapMode && selectedPlayer) { handleSwap(selectedPlayer, player); return; }
     setSelectedPlayer(prev => prev?.id === player.id ? null : player);
   };
 
-  // ── FB-022: formation validation ─────────────────────────────────────────
+  // â”€â”€ FB-022: formation validation â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const validateFormation = (pitchPlayers) => {
     const MIN_FORMATION = cfg.minFormation;
     const counts = { GK: 0, DEF: 0, MID: 0, FWD: 0 };
@@ -361,7 +361,7 @@ export default function SquadScreen() {
   const handleSwap = async (p1, p2) => {
     const isP1Bench = squadData.bench.some(b => b.id === p1.id);
     const isP2Bench = squadData.bench.some(b => b.id === p2.id);
-    // Same zone tap — stay in swap mode, let user pick a valid target
+    // Same zone tap â€” stay in swap mode, let user pick a valid target
     if (isP1Bench === isP2Bench) return;
 
     try {
@@ -372,7 +372,7 @@ export default function SquadScreen() {
       const newPlayers   = squadData.players.map(p =>
         p.id === pitchPlayer.id ? { ...benchPlayer, gridClass: tempGrid } : p
       );
-      // Validate formation — only block if it's actually a formation violation
+      // Validate formation â€” only block if it's actually a formation violation
       const formationError = validateFormation(newPlayers);
       if (formationError) {
         showToast(formationError, 'warning');
@@ -429,7 +429,7 @@ export default function SquadScreen() {
       setSaving(true);
       const userId = user?.id;
       const today  = new Date().toISOString().split('T')[0];
-      const { error } = await supabase.from('daily_jokers').insert({ user_id: userId, player_id: selectedPlayer.id, match_date: today });
+      const { error } = await supabase.from('daily_jokers').insert({ user_id: userId, player_id: selectedPlayer.id, joker_date: today });
       if (error) {
         if (error.code === '23505') showToast('You already used your daily Joker today!', 'warning');
         else throw error;
@@ -444,8 +444,8 @@ export default function SquadScreen() {
     const isCaptain = selectedPlayer.id === squadData.captainId;
     const isJoker   = selectedPlayer.id === todayJokerId;
     const warnings  = [];
-    if (isCaptain) warnings.push('This player is your captain — selling them removes the armband.');
-    if (isJoker)   warnings.push('This player is your Daily Joker — selling them voids today\'s boost.');
+    if (isCaptain) warnings.push('This player is your captain â€” selling them removes the armband.');
+    if (isJoker)   warnings.push('This player is your Daily Joker â€” selling them voids today\'s boost.');
 
     setConfirm({
       title:        `Remove ${selectedPlayer.name}?`,
@@ -477,12 +477,12 @@ export default function SquadScreen() {
     finally { setSaving(false); setSelectedPlayer(null); }
   };
 
-  // FB-023: chip toggle with confirmation (activating only — deactivating is safe)
+  // FB-023: chip toggle with confirmation (activating only â€” deactivating is safe)
   const toggleChip = (chipKey) => {
     const chip   = CHIPS.find(c => c.key === chipKey);
     const curVal = squadData[chip.stateKey];
     if (!curVal) {
-      // Activating — show confirm first
+      // Activating â€” show confirm first
       setConfirm({
         title:        `Use ${chip.label}?`,
         body:         chip.description,
@@ -492,7 +492,7 @@ export default function SquadScreen() {
         onConfirm:    () => doToggleChip(chipKey),
       });
     } else {
-      // Deactivating is safe — no confirm needed
+      // Deactivating is safe â€” no confirm needed
       doToggleChip(chipKey);
     }
   };
@@ -536,7 +536,7 @@ export default function SquadScreen() {
       setSaving(true);
       const userId = user?.id;
       const today  = new Date().toISOString().split('T')[0];
-      const { error } = await supabase.from('daily_jokers').insert({ user_id: userId, player_id: player.id, match_date: today });
+      const { error } = await supabase.from('daily_jokers').insert({ user_id: userId, player_id: player.id, joker_date: today });
       if (error) {
         if (error.code === '23505') showToast('You already have a Joker for today!', 'warning');
         else throw error;
@@ -545,7 +545,7 @@ export default function SquadScreen() {
     finally { setSaving(false); }
   };
 
-  // League picker — shown when user has multiple leagues and none is selected
+  // League picker â€” shown when user has multiple leagues and none is selected
   if (leagues && leagues.length > 1 && !activeLeague) {
     return (
       <div className="min-h-screen bg-bg flex flex-col items-center justify-center px-6 gap-4">
@@ -566,13 +566,13 @@ export default function SquadScreen() {
     );
   }
 
-  // ── Loading ───────────────────────────────────────────────────────────────
+  // â”€â”€ Loading â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   if (loading || !squadData) {
     return (
       <div className="min-h-screen bg-bg flex items-center justify-center">
         <div className="text-center">
           <div className="fz-display text-[32px] text-cyan mb-2">MY SQUAD</div>
-          <div className="fz-label text-text-tertiary animate-scan">Loading Tactical Sheet…</div>
+          <div className="fz-label text-text-tertiary animate-scan">Loading Tactical Sheetâ€¦</div>
         </div>
       </div>
     );
@@ -586,9 +586,9 @@ export default function SquadScreen() {
   const budgetLeft      = Number(budget.current.toFixed(1));
   const budgetLow       = budgetLeft < 5;
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // ── Sub-components defined inside render for squad closure access ─────────
-  // ─────────────────────────────────────────────────────────────────────────
+  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // â”€â”€ Sub-components defined inside render for squad closure access â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   // Chip card (full description, toggle button)
   const ChipCard = ({ chip }) => {
@@ -642,7 +642,7 @@ export default function SquadScreen() {
             DAILY JOKER
           </div>
           <p className="text-[11px] leading-relaxed mb-3" style={{ color: 'var(--mute)', fontFamily: 'Archivo, sans-serif' }}>
-            Pick a 16th man today — exempt from country limit rules. Choose any player currently playing. Locked once set.
+            Pick a 16th man today â€” exempt from country limit rules. Choose any player currently playing. Locked once set.
           </p>
           {todayJokerId ? (
             <div className="fk-mono flex items-center gap-2 py-2 px-3" style={{ background: 'rgba(168,85,247,0.08)', border: '1px solid var(--pos-gk)', color: 'var(--pos-gk)', fontSize: 9 }}>
@@ -668,7 +668,7 @@ export default function SquadScreen() {
         <div className="mx-4 my-3 flex items-center gap-2.5 p-3 rounded" style={{ background: 'rgba(24,201,107,0.06)', border: '1px solid rgba(24,201,107,0.15)' }}>
           <div className="w-2 h-2 rounded-full shrink-0" style={{ background: 'var(--positive)' }} />
           <span className="text-[11px] font-semibold uppercase tracking-wider" style={{ color: 'rgba(24,201,107,0.8)' }}>
-            All clear — no injury alerts
+            All clear â€” no injury alerts
           </span>
         </div>
       );
@@ -700,7 +700,7 @@ export default function SquadScreen() {
     );
   };
 
-  // Danger banner (mobile — slim strip above pitch)
+  // Danger banner (mobile â€” slim strip above pitch)
   const DangerBanner = () => {
     if (!dangerPlayers.length || dangerDismissed) return null;
     const outCount    = dangerPlayers.filter(p => p.intel?.status === 'out').length;
@@ -727,7 +727,7 @@ export default function SquadScreen() {
         <button onClick={() => { setDangerDismissed(true); setMobileTab('tools'); }} className="text-[9px] font-black uppercase tracking-widest shrink-0 px-2 py-1 rounded" style={{ color: 'var(--danger)', background: 'rgba(240,58,58,0.12)' }}>
           View
         </button>
-        <button onClick={() => setDangerDismissed(true)} className="text-[16px] leading-none shrink-0" style={{ color: 'rgba(255,255,255,0.3)' }}>×</button>
+        <button onClick={() => setDangerDismissed(true)} className="text-[16px] leading-none shrink-0" style={{ color: 'rgba(255,255,255,0.3)' }}>Ã—</button>
       </div>
     );
   };
@@ -735,7 +735,7 @@ export default function SquadScreen() {
   const POS_CONFIG_COLORS = POS_BADGE_COLOR;
 
   const handlePickerBuy = async (player) => {
-    if (!activeLeague) { showToast('No league selected — open your squad from the League screen.', 'warning'); return; }
+    if (!activeLeague) { showToast('No league selected â€” open your squad from the League screen.', 'warning'); return; }
 
     // FB-022: Validate that buying this player won't violate formation rules (especially max 1 GK on pitch)
     // Simulate adding to pitch if there's room, then check formation
@@ -763,7 +763,7 @@ export default function SquadScreen() {
     });
   };
 
-  // Player list grouped by position — starters + bench unified, with START/BENCH badge
+  // Player list grouped by position â€” starters + bench unified, with START/BENCH badge
   const PlayerList = () => {
     const benchIds = new Set(bench.map(b => b.id));
     return (
@@ -831,7 +831,7 @@ export default function SquadScreen() {
                           opacity: auctionBusy === player.id ? 0.5 : 1,
                         }}
                       >
-                        {auctionBusy === player.id ? '…' : 'Auction'}
+                        {auctionBusy === player.id ? 'â€¦' : 'Auction'}
                       </button>
                     )}
                     {activeLeague && isListed && (cfg.format === 'auction' || cfg.format === 'hybrid') && (
@@ -892,13 +892,13 @@ export default function SquadScreen() {
     );
   };
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // ── RENDER ────────────────────────────────────────────────────────────────
-  // ─────────────────────────────────────────────────────────────────────────
+  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // â”€â”€ RENDER â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   return (
     <div className="min-h-screen bg-bg overflow-x-hidden">
 
-      {/* ── Fetch error banner ──────────────────────────────────────────────── */}
+      {/* â”€â”€ Fetch error banner â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       {fetchError && (
         <div
           className="fixed top-0 left-0 right-0 z-[70] flex items-center gap-3 px-4 py-3 lg:left-[220px]"
@@ -919,7 +919,7 @@ export default function SquadScreen() {
             aria-label="Dismiss error"
             className="text-lg leading-none"
           >
-            <span aria-hidden="true">×</span>
+            <span aria-hidden="true">Ã—</span>
           </Button>
         </div>
       )}
@@ -941,7 +941,7 @@ export default function SquadScreen() {
         />
       )}
 
-      {/* ══ STICKY HEADER ═══════════════════════════════════════════════════ */}
+      {/* â•â• STICKY HEADER â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
       <div
         className="sticky top-0 z-40 flex items-center justify-between px-5 py-3"
         style={{
@@ -976,7 +976,7 @@ export default function SquadScreen() {
           </div>
         </div>
 
-        {/* Right: KPI cluster — Transfers · Squad · Budget */}
+        {/* Right: KPI cluster â€” Transfers Â· Squad Â· Budget */}
         <div className="flex items-center gap-5">
           {!deadline.loading && (
             <div className="text-right">
@@ -996,22 +996,22 @@ export default function SquadScreen() {
           <div className="text-right" data-tour="squad-budget">
             <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 9, color: 'var(--mute)', letterSpacing: '.14em', textTransform: 'uppercase' }}>Budget</div>
             <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 20, color: budgetLow ? 'var(--danger)' : 'var(--cyan)', lineHeight: 1 }}>
-              £{budgetLeft}M
+              Â£{budgetLeft}M
             </div>
           </div>
         </div>
       </div>
 
-      {/* ══ MOBILE LAYOUT ═══════════════════════════════════════════════════ */}
+      {/* â•â• MOBILE LAYOUT â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
       <div className="lg:hidden">
 
-        {/* Tab strip — 4 tabs matching desktop */}
+        {/* Tab strip â€” 4 tabs matching desktop */}
         <div className="flex" style={{ borderBottom: '1px solid var(--rule)', background: 'var(--ink-2)' }}>
           {[
-            { id: 'pitch',  label: '⚽ PITCH'  },
-            { id: 'squad',  label: '📋 LIST'   },
-            { id: 'chips',  label: '⚡ CHIPS'  },
-            { id: 'status', label: '⚠️ STATUS' },
+            { id: 'pitch',  label: 'âš½ PITCH'  },
+            { id: 'squad',  label: 'ðŸ“‹ LIST'   },
+            { id: 'chips',  label: 'âš¡ CHIPS'  },
+            { id: 'status', label: 'âš ï¸ STATUS' },
           ].map(tab => (
             <button
               key={tab.id}
@@ -1037,13 +1037,13 @@ export default function SquadScreen() {
           ))}
         </div>
 
-        {/* ── PITCH TAB — starting XI + bench strip for sub management ── */}
+        {/* â”€â”€ PITCH TAB â€” starting XI + bench strip for sub management â”€â”€ */}
         {mobileTab === 'pitch' && (() => {
           const captain = allSquadPlayers.find(p => p.id === captainId);
           const def = players.filter(p => p.position === 'DEF').length;
           const mid = players.filter(p => p.position === 'MID').length;
           const fwd = players.filter(p => p.position === 'FWD').length;
-          const formation = [def, mid, fwd].filter(n => n > 0).join('-') || '—';
+          const formation = [def, mid, fwd].filter(n => n > 0).join('-') || 'â€”';
           const POS_LABEL_PITCH = { GK: 'Goalkeeper', DEF: 'Defence', MID: 'Midfield', FWD: 'Attack' };
           const statusColor = p => {
             const s = p.intel?.status;
@@ -1066,7 +1066,7 @@ export default function SquadScreen() {
                     disabled={autoFilling}
                     style={{ marginTop: 4, padding: '6px 10px', background: 'rgba(0,196,232,0.08)', border: '1px solid rgba(0,196,232,0.25)', color: autoFilling ? 'var(--mute)' : 'var(--cyan)', fontFamily: 'Archivo Black, sans-serif', fontSize: 8, letterSpacing: '0.1em', textTransform: 'uppercase', cursor: autoFilling ? 'wait' : 'pointer', flexShrink: 0, whiteSpace: 'nowrap' }}
                   >
-                    {autoFilling ? 'FILLING…' : '⚡ QUICK FILL'}
+                    {autoFilling ? 'FILLINGâ€¦' : 'âš¡ QUICK FILL'}
                   </button>
                 </div>
                 {autoFillMsg && (
@@ -1074,11 +1074,11 @@ export default function SquadScreen() {
                 )}
                 <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 9, color: 'var(--mute)', letterSpacing: '0.14em', marginTop: 6 }}>
                   {captain ? `CAPTAIN ${captain.name.split(' ').slice(-1)[0].toUpperCase()}` : 'NO CAPTAIN'}
-                  {squadData.matchdayId ? ` · GW ${squadData.matchdayId}` : ''}
+                  {squadData.matchdayId ? ` Â· GW ${squadData.matchdayId}` : ''}
                 </div>
               </div>
 
-              {/* Starting XI — grouped by position */}
+              {/* Starting XI â€” grouped by position */}
               {['GK', 'DEF', 'MID', 'FWD'].map(pos => {
                 const posPlayers = players.filter(p => p.position === pos);
                 if (!posPlayers.length) return null;
@@ -1127,7 +1127,7 @@ export default function SquadScreen() {
                 );
               })}
 
-              {/* Bench strip — always visible so sub-in/out can be completed */}
+              {/* Bench strip â€” always visible so sub-in/out can be completed */}
               {bench.length > 0 && (
                 <>
                   {/* Bench divider */}
@@ -1175,7 +1175,7 @@ export default function SquadScreen() {
           );
         })()}
 
-        {/* ── LIST TAB — full squad with empty slots + SIGN buttons ─── */}
+        {/* â”€â”€ LIST TAB â€” full squad with empty slots + SIGN buttons â”€â”€â”€ */}
         {mobileTab === 'squad' && (() => {
           const totalSigned = allSquadPlayers.length;
           const squadSize   = Object.values(POS_LIMITS).reduce((a, b) => a + b, 0);
@@ -1199,11 +1199,11 @@ export default function SquadScreen() {
                     disabled={autoFilling}
                     style={{ padding: '6px 10px', background: 'rgba(0,196,232,0.08)', border: '1px solid rgba(0,196,232,0.25)', color: autoFilling ? 'var(--mute)' : 'var(--cyan)', fontFamily: 'Archivo Black, sans-serif', fontSize: 8, letterSpacing: '0.1em', textTransform: 'uppercase', borderRadius: 2, cursor: autoFilling ? 'wait' : 'pointer', flexShrink: 0, whiteSpace: 'nowrap' }}
                   >
-                    {autoFilling ? 'FILLING…' : '⚡ FILL'}
+                    {autoFilling ? 'FILLINGâ€¦' : 'âš¡ FILL'}
                   </button>
                 </div>
                 <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 9, color: 'var(--mute)', letterSpacing: '0.14em', marginTop: 6 }}>
-                  {totalSigned}/{squadSize} SIGNED{emptySlots > 0 ? ` · ${emptySlots} EMPTY SLOT${emptySlots !== 1 ? 'S' : ''}` : ''}
+                  {totalSigned}/{squadSize} SIGNED{emptySlots > 0 ? ` Â· ${emptySlots} EMPTY SLOT${emptySlots !== 1 ? 'S' : ''}` : ''}
                 </div>
               </div>
               {autoFillMsg && (
@@ -1255,7 +1255,7 @@ export default function SquadScreen() {
                               {player.id === captainId && <div style={{ width: 14, height: 14, borderRadius: '50%', background: 'var(--gold)', color: '#0A0A0A', fontFamily: 'Archivo Black, sans-serif', fontSize: 7, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>C</div>}
                               {!isStarter && <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 7, color: 'var(--mute)', border: '1px solid var(--rule)', padding: '0 3px', flexShrink: 0 }}>SUB</span>}
                             </div>
-                            <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 8, color: 'var(--mute)', letterSpacing: '0.12em', marginTop: 1 }}>{(player.club ?? '').substring(0, 3).toUpperCase()} · £{player.price}M</div>
+                            <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 8, color: 'var(--mute)', letterSpacing: '0.12em', marginTop: 1 }}>{(player.club ?? '').substring(0, 3).toUpperCase()} Â· Â£{player.price}M</div>
                           </div>
                           {/* Points */}
                           <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 16, color: 'var(--paper)', letterSpacing: '-0.02em', flexShrink: 0 }}>{player.points ?? 0}</div>
@@ -1293,7 +1293,7 @@ export default function SquadScreen() {
           );
         })()}
 
-        {/* ── CHIPS TAB ─────────────────────────────────────────────── */}
+        {/* â”€â”€ CHIPS TAB â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
         {mobileTab === 'chips' && (
           <div className="pb-24 pt-2">
             {CHIPS.map(chip => <ChipCard key={chip.key} chip={chip} />)}
@@ -1301,7 +1301,7 @@ export default function SquadScreen() {
           </div>
         )}
 
-        {/* ── STATUS TAB ────────────────────────────────────────────── */}
+        {/* â”€â”€ STATUS TAB â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
         {mobileTab === 'status' && (
           <div className="pb-24">
             <SectionHeader title="Player Status" accent="gold" />
@@ -1309,7 +1309,7 @@ export default function SquadScreen() {
           </div>
         )}
 
-        {/* ── TOOLS TAB (legacy fallback — now unused) ──────────────── */}
+        {/* â”€â”€ TOOLS TAB (legacy fallback â€” now unused) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
         {mobileTab === 'tools' && (
           <div className="pb-6">
 
@@ -1377,7 +1377,7 @@ export default function SquadScreen() {
                 <PowerToolCard
                   
                   label="Triple Cap."
-                  description="3× captain points — or 0 if they don't play"
+                  description="3Ã— captain points â€” or 0 if they don't play"
                   isActive={squadData.isTripleCaptain}
                   accentColor="var(--gold)"
                   bgColor="rgba(240,180,0,0.08)"
@@ -1389,7 +1389,7 @@ export default function SquadScreen() {
                         title: squadData.isTripleCaptain ? 'Deactivate Triple Captain?' : 'Activate Triple Captain?',
                         message: squadData.isTripleCaptain
                           ? 'Your captain will earn normal points.'
-                          : 'Your captain will earn 3× points this matchday. 1 use per season.',
+                          : 'Your captain will earn 3Ã— points this matchday. 1 use per season.',
                         onConfirm: () => doToggleChip('triple'),
                         confirmLabel: 'Confirm',
                         warning: squadData.isTripleCaptain ? null : 'This action cannot be undone this gameweek.',
@@ -1415,7 +1415,7 @@ export default function SquadScreen() {
                   textAlign: 'center',
                   marginBottom: '4px',
                 }}>
-                  Daily Joker – Your 16th Man
+                  Daily Joker â€“ Your 16th Man
                 </div>
                 <div style={{
                   fontSize: '10px',
@@ -1446,7 +1446,7 @@ export default function SquadScreen() {
                     opacity: isLocked ? 0.5 : 1,
                   }}
                 >
-                  {jokerPlayer ? `✓ Set: ${jokerPlayer.name}` : 'Pick Joker'}
+                  {jokerPlayer ? `âœ“ Set: ${jokerPlayer.name}` : 'Pick Joker'}
                 </button>
               </div>
             </div>
@@ -1462,11 +1462,11 @@ export default function SquadScreen() {
         )}
       </div>
 
-      {/* ══ DESKTOP LAYOUT ══════════════════════════════════════════════════ */}
-      {/* Shrink container by swap-banner height (≈64px) so bench strip stays above the fixed banner */}
+      {/* â•â• DESKTOP LAYOUT â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
+      {/* Shrink container by swap-banner height (â‰ˆ64px) so bench strip stays above the fixed banner */}
       <div className="hidden lg:flex flex-col" style={{ height: swapMode ? 'calc(100vh - 88px - 64px)' : 'calc(100vh - 88px)' }}>
 
-        {/* ── Sub-tab row: Pitch / List / Chips / Status ─────────────────── */}
+        {/* â”€â”€ Sub-tab row: Pitch / List / Chips / Status â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
         <div className="flex shrink-0" style={{ borderBottom: '1px solid var(--rule)', background: 'var(--ink-2)' }}>
           {[
             { id: 'pitch',  label: 'Pitch'  },
@@ -1495,13 +1495,13 @@ export default function SquadScreen() {
           ))}
         </div>
 
-        {/* ── Tab content ────────────────────────────────────────────────── */}
+        {/* â”€â”€ Tab content â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
         <div className="flex-1 overflow-hidden flex">
 
-          {/* ── PITCH TAB — XI on pitch + bench strip below ────────────── */}
+          {/* â”€â”€ PITCH TAB â€” XI on pitch + bench strip below â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
           {desktopTab === 'pitch' && (
             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-              {/* Pitch — flex:1 to fill most of the height */}
+              {/* Pitch â€” flex:1 to fill most of the height */}
               <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
                 <PitchView
                   variant="desktop"
@@ -1510,10 +1510,10 @@ export default function SquadScreen() {
                   selectedPlayerId={selectedPlayer?.id}
                   swapMode={swapMode}
                   jokerPlayerId={todayJokerId}
-                  matchdayLabel={squadData.matchdayId ? `GW · ${squadData.matchdayId}` : ''}
+                  matchdayLabel={squadData.matchdayId ? `GW Â· ${squadData.matchdayId}` : ''}
                 />
               </div>
-              {/* Bench strip — single row of HybridToken-style pills */}
+              {/* Bench strip â€” single row of HybridToken-style pills */}
               {bench.length > 0 && (
                 <div style={{
                   flexShrink: 0, borderTop: '1px solid var(--rule)',
@@ -1546,7 +1546,7 @@ export default function SquadScreen() {
                           }}>{pos}</div>
                           <div>
                             <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 11, color: 'var(--paper)', letterSpacing: '-0.01em' }}>{surname}</div>
-                            <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 8, color: 'var(--mute)', letterSpacing: '0.1em' }}>{player.club} · {player.points ?? 0} PTS</div>
+                            <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 8, color: 'var(--mute)', letterSpacing: '0.1em' }}>{player.club} Â· {player.points ?? 0} PTS</div>
                           </div>
                         </button>
                       );
@@ -1557,7 +1557,7 @@ export default function SquadScreen() {
             </div>
           )}
 
-          {/* ── LIST TAB — player list + bench panel ───────────────────── */}
+          {/* â”€â”€ LIST TAB â€” player list + bench panel â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
           {desktopTab === 'list' && (
             <>
               <div className="flex-1 min-w-0 overflow-y-auto">
@@ -1568,7 +1568,7 @@ export default function SquadScreen() {
                     disabled={autoFilling}
                     style={{ padding: '8px 12px', background: 'rgba(0,196,232,0.08)', border: '1px solid rgba(0,196,232,0.25)', color: autoFilling ? 'var(--mute)' : 'var(--cyan)', fontFamily: 'Archivo Black, sans-serif', fontSize: 9, letterSpacing: '0.1em', textTransform: 'uppercase', borderRadius: 2, cursor: autoFilling ? 'wait' : 'pointer', flexShrink: 0 }}
                   >
-                    {autoFilling ? 'FILLING…' : '⚡ QUICK FILL'}
+                    {autoFilling ? 'FILLINGâ€¦' : 'âš¡ QUICK FILL'}
                   </button>
                 </div>
                 {autoFillMsg && (
@@ -1601,7 +1601,7 @@ export default function SquadScreen() {
             </>
           )}
 
-          {/* ── CHIPS TAB ──────────────────────────────────────────────── */}
+          {/* â”€â”€ CHIPS TAB â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
           {desktopTab === 'chips' && (
             <div className="flex-1 overflow-y-auto pt-2 max-w-xl" data-tour="squad-chips">
               {CHIPS.map(chip => <ChipCard key={chip.key} chip={chip} />)}
@@ -1609,7 +1609,7 @@ export default function SquadScreen() {
             </div>
           )}
 
-          {/* ── STATUS TAB ─────────────────────────────────────────────── */}
+          {/* â”€â”€ STATUS TAB â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
           {desktopTab === 'status' && (
             <div className="flex-1 overflow-y-auto max-w-xl">
               <SectionHeader title="Player Status" accent="gold" />
@@ -1624,7 +1624,7 @@ export default function SquadScreen() {
                       <div className="w-8 h-8 flex items-center justify-center text-[10px] font-black shrink-0" style={{ background: 'rgba(224,168,0,0.15)', border: '1px solid rgba(224,168,0,0.4)', color: 'var(--gold)' }}>C</div>
                       <div className="flex-1 min-w-0">
                         <div className="text-[13px] font-semibold text-white truncate">{cap.name}</div>
-                        <div className="text-[10px] mt-0.5" style={{ color: 'var(--mute)' }}>{cap.position} · {cap.club} · £{cap.price}M</div>
+                        <div className="text-[10px] mt-0.5" style={{ color: 'var(--mute)' }}>{cap.position} Â· {cap.club} Â· Â£{cap.price}M</div>
                       </div>
                     </div>
                   );
@@ -1635,10 +1635,10 @@ export default function SquadScreen() {
         </div>
       </div>
 
-      {/* ══ PLAYER ACTION BOTTOM SHEET ═══════════════════════════════════════ */}
+      {/* â•â• PLAYER ACTION BOTTOM SHEET â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
       {selectedPlayer && !swapMode && (
         <>
-          {/* Tap-outside dismiss — no background dim */}
+          {/* Tap-outside dismiss â€” no background dim */}
           <div
             className="fixed inset-0 z-[59] lg:left-[220px]"
             onClick={() => setSelectedPlayer(null)}
@@ -1662,7 +1662,7 @@ export default function SquadScreen() {
             {/* Player info */}
             <div className="flex items-start justify-between mb-4 gap-3">
               <div className="flex items-start gap-3">
-                {/* Position badge — matches player list row style */}
+                {/* Position badge â€” matches player list row style */}
                 <div style={{
                   width: 44,
                   height: 44,
@@ -1692,7 +1692,7 @@ export default function SquadScreen() {
                     {selectedPlayer.name}
                   </div>
                   <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 10, color: 'var(--mute)', letterSpacing: '0.14em', marginTop: 4, display: 'flex', alignItems: 'center', gap: 8 }}>
-                    {selectedPlayer.club} · £{selectedPlayer.price}M
+                    {selectedPlayer.club} Â· Â£{selectedPlayer.price}M
                     {selectedPlayer.id === captainId && (
                       <span style={{ color: 'var(--gold)', background: 'rgba(224,168,0,0.12)', border: '1px solid rgba(224,168,0,0.3)', padding: '1px 6px', borderRadius: 2 }}>CAPTAIN</span>
                     )}
@@ -1705,7 +1705,7 @@ export default function SquadScreen() {
               <button
                 onClick={() => setSelectedPlayer(null)}
                 style={{ width: 28, height: 28, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.08)', color: 'var(--mute)', fontSize: 16, cursor: 'pointer' }}
-              >×</button>
+              >Ã—</button>
             </div>
             {/* Actions */}
             <div className="flex gap-2 mb-3">
@@ -1792,10 +1792,10 @@ export default function SquadScreen() {
                       boxShadow: playingTodayTeams.includes(selectedPlayer.club) ? '0 0 12px rgba(157,95,245,0.3)' : 'none',
                     }}
                   >
-                    {playingTodayTeams.includes(selectedPlayer.club) ? 'ACTIVATE JOKER' : '✗ Not Playing Today'}
+                    {playingTodayTeams.includes(selectedPlayer.club) ? 'ACTIVATE JOKER' : 'âœ— Not Playing Today'}
                   </button>
                   <p className="mt-1.5 text-[9px] text-center uppercase tracking-wide" style={{ color: 'var(--mute)', fontFamily: 'Archivo, sans-serif' }}>
-                    1 Joker per day · Country limit exempt · Locked once set
+                    1 Joker per day Â· Country limit exempt Â· Locked once set
                   </p>
                 </>
               )}
@@ -1805,7 +1805,7 @@ export default function SquadScreen() {
         </>
       )}
 
-      {/* ══ PLAYER PICKER SHEET ═════════════════════════════════════════════ */}
+      {/* â•â• PLAYER PICKER SHEET â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
       {pickerPos && (
         <PlayerPickerSheet
           position={pickerPos}
@@ -1818,7 +1818,7 @@ export default function SquadScreen() {
         />
       )}
 
-      {/* ══ SWAP MODE BANNER ═════════════════════════════════════════════════ */}
+      {/* â•â• SWAP MODE BANNER â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
       {swapMode && (
         <div
           className="fixed bottom-0 left-0 right-0 lg:left-[220px] z-[60] px-5 py-3 flex justify-between items-center"
@@ -1849,7 +1849,7 @@ export default function SquadScreen() {
         </div>
       )}
 
-      {/* ══ JOKER PICKER MODAL ═══════════════════════════════════════════════ */}
+      {/* â•â• JOKER PICKER MODAL â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
       {isJokerPickerOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/90 backdrop-blur-sm" onClick={() => setIsJokerPickerOpen(false)} />
@@ -1859,7 +1859,7 @@ export default function SquadScreen() {
                 <div className="fz-label text-purple">Daily Joker Selection</div>
                 <div className="fz-display text-lg text-white">CHOOSE YOUR 16TH MAN</div>
               </div>
-              <button onClick={() => setIsJokerPickerOpen(false)} className="text-text-tertiary hover:text-white text-2xl">×</button>
+              <button onClick={() => setIsJokerPickerOpen(false)} className="text-text-tertiary hover:text-white text-2xl">Ã—</button>
             </div>
             {/* Only show team strip when there are fixtures */}
             {playingTodayTeams.length > 0 && (
@@ -1881,7 +1881,7 @@ export default function SquadScreen() {
               />
             </div>
             <div className="p-4 border-t border-border bg-surface text-[9px] text-text-tertiary uppercase text-center tracking-widest">
-              Independent of your 15-man squad · Ignores country limits
+              Independent of your 15-man squad Â· Ignores country limits
             </div>
           </div>
         </div>
@@ -1890,7 +1890,7 @@ export default function SquadScreen() {
   );
 }
 
-// ── Supporting UI: Joker picker list (FB-024: proper empty/error states) ─────
+// â”€â”€ Supporting UI: Joker picker list (FB-024: proper empty/error states) â”€â”€â”€â”€â”€
 function JokerList({ teams, squadPlayerIds, onSelect, saving }) {
   const [players,    setPlayers]    = useState([]);
   const [loading,    setLoading]    = useState(true);
@@ -1927,7 +1927,7 @@ function JokerList({ teams, squadPlayerIds, onSelect, saving }) {
   );
 
   if (loading) return (
-    <EmptyState title="Scouting Active Teams…" sub={null} action={
+    <EmptyState title="Scouting Active Teamsâ€¦" sub={null} action={
       <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: '10px', letterSpacing: '0.15em', color: 'var(--mute)', textTransform: 'uppercase' }} className="animate-scan">Loading</div>
     } />
   );
@@ -1952,7 +1952,7 @@ function JokerList({ teams, squadPlayerIds, onSelect, saving }) {
   const noSquadOverlap      = squadPlayerIds?.length && !playingSquadPlayers.length;
 
   if (!players.length) return (
-    <EmptyState emoji="🏟️" title="None of your players are in today's matches" sub="You can still pick any player from the active squads below as your Joker." action={null} />
+    <EmptyState emoji="ðŸŸï¸" title="None of your players are in today's matches" sub="You can still pick any player from the active squads below as your Joker." action={null} />
   );
 
   const PlayerRow = ({ p, highlight }) => (
@@ -1969,8 +1969,8 @@ function JokerList({ teams, squadPlayerIds, onSelect, saving }) {
       <div className="flex-1 text-left min-w-0">
         <div className="text-[13px] font-bold text-white group-hover:text-purple transition-colors truncate">{p.name}</div>
         <div className="text-[9px] text-text-tertiary uppercase tracking-tighter">
-          {p.position} · {p.club}
-          {highlight && <span style={{ color: 'var(--pos-gk)', marginLeft: '6px' }}>· Your squad</span>}
+          {p.position} Â· {p.club}
+          {highlight && <span style={{ color: 'var(--pos-gk)', marginLeft: '6px' }}>Â· Your squad</span>}
         </div>
       </div>
       <div className="text-right shrink-0">
@@ -1993,12 +1993,12 @@ function JokerList({ teams, squadPlayerIds, onSelect, saving }) {
       {/* Squad players playing today shown first */}
       {playingSquadPlayers.length > 0 && (
         <>
-          <SectionLabel label="Your squad — playing today" />
+          <SectionLabel label="Your squad â€” playing today" />
           {playingSquadPlayers.map(p => <PlayerRow key={p.id} p={p} highlight />)}
           {otherPlayers.length > 0 && <SectionLabel label="All active players" />}
         </>
       )}
-      {noSquadOverlap && <SectionLabel label="None of your squad plays today — pick any Joker" />}
+      {noSquadOverlap && <SectionLabel label="None of your squad plays today â€” pick any Joker" />}
       {otherPlayers.map(p => <PlayerRow key={p.id} p={p} highlight={false} />)}
     </div>
   );

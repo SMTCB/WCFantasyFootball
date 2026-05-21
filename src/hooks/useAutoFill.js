@@ -226,6 +226,12 @@ export function useAutoFill(leagueId, squadData, fetchSquad, takenMap = {}, buy)
               break;
             }
 
+            // Position limit reached — no point retrying other players in same position
+            if (errMsg.includes('Maximum') && errMsg.includes('players reached')) {
+              lastBuyError = errMsg;
+              break;
+            }
+
             // Budget exhausted: no point trying more (players are cheapest-first)
             if (errMsg.includes('Insufficient budget') || errMsg.includes('budget')) {
               budgetLeft = 0;

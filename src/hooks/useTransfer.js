@@ -66,12 +66,20 @@ export function useTransfer(leagueId) {
     });
 
     if (error || !data?.ok) {
-      // Supabase SDK puts non-2xx response body in error.context, not data
+      // Supabase SDK puts non-2xx response body in error.context (a Response object)
       let msg  = data?.error;
       let code = data?.code ?? '';
       if (!msg && error?.context) {
         try {
-          const body = typeof error.context === 'string' ? JSON.parse(error.context) : error.context;
+          let body;
+          if (typeof error.context?.json === 'function') {
+            // error.context is a Response object — read it async
+            body = await error.context.json();
+          } else if (typeof error.context === 'string') {
+            body = JSON.parse(error.context);
+          } else {
+            body = error.context;
+          }
           msg  = body?.error;
           code = body?.code ?? code;
         } catch { /* ignore parse errors */ }

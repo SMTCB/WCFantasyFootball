@@ -245,16 +245,30 @@ export function useCommissioner(leagueId, tournamentId) {
     if (!prompt)          throw new Error('Enter a bet prompt.');
     if (!deadline)        throw new Error('Set a deadline.');
     if (!options || options.length < 2) throw new Error('Add at least 2 answer options.');
+
+    // Look up the real UUID for this template slug (templateId is a slug string like 'match_result')
+    let resolvedTemplateId = null;
+    if (templateId) {
+      const { data: tmpl } = await supabase
+        .from('bet_templates')
+        .select('id')
+        .eq('slug', templateId)
+        .maybeSingle();
+      resolvedTemplateId = tmpl?.id ?? null;
+    }
+
     const { error } = await supabase.from('bet_instances').insert({
       league_id:    leagueId,
-      template_id:  templateId || null,
+      template_id:  resolvedTemplateId,
       title,
       prompt,
       options,
-      deadline_at:  deadline,
+      deadline_at:  new Date(deadline).toISOString(),
       reward_value: Number(rewardValue) || 5,
+      reward_type:  'points',
       scope_type:   scopeType || 'matchday',
       scope_ref:    scopeRef || null,
+      status:       'open',
     });
     if (error) throw new Error(error.message);
     setCommMsg({ type: 'ok', text: 'Bet created and published to the league.' });
