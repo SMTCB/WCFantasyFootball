@@ -469,8 +469,15 @@ Always create a new file — never modify existing migrations.
 | 13 | `13_scoring_schema_align.sql` | player_match_stats scoring columns + unique constraints |
 | 14 | `14_fixtures_pl_clubs.sql` | Replace World Cup dummy fixtures with PL clubs |
 | 15 | `15_player_status_pl_alerts.sql` | Seed player status alerts for real squad |
+| 16–62 | `16_forza_integration.sql` → `62_*.sql` | Forza API integration, EPL/WC setup, scoring, auctions, bets, chat |
+| 63 | `63_fantasy_points_unique_constraint.sql` | UNIQUE (squad_id, matchday_id) on fantasy_points — enables correct upsert per round |
 
-**Next migration**: `16_`
+**Next migration**: `64_`
+
+**Key pipeline facts (2026-05-21):**
+- `calculate-scores` uses `scoring_rules` table (not `scoring_templates`) keyed by `tournament_id`
+- `fantasy_points.matchday_id` format: `'{tournament_id}-r{round}'` e.g. `'426-r35'`
+- `matchday_deadlines.matchday_id` format: `'426-rN'` (canonical, written by `sync-fixtures`)
 
 ---
 
