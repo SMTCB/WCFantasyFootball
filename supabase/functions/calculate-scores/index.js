@@ -405,8 +405,45 @@ Deno.serve(async (req) => {
 // ─── Shared helpers ────────────────────────────────────────────────────────────
 
 async function rollupSquads(fixture_id, pointsLookup, tournament_id) {
+  // Build a full-round lookup so squad totals accumulate correctly across all
+  // gameday fixtures (not just the one fixture calculate-scores was called for).
+  // Strategy: start with the current fixture's freshly-computed scores, then
+  // merge in already-stored fantasy_points from every other fixture in the
+  // same round. A player only plays once per round so there is no double-counting.
+  const fullRoundLookup = { ...pointsLookup };
+
+  // Identify the fixture's round
+  const { data: fix } = await supabase
+    .from('fixtures').select('round_number').eq('id', fixture_id).single();
+
+  if (fix?.round_number && tournament_id) {
+    // Get IDs of all other fixtures in the same round
+    const { data: roundFixtures } = await supabase
+      .from('fixtures')
+      .select('id')
+      .eq('round_number', fix.round_number)
+      .eq('tournament_id', tournament_id)
+      .neq('id', fixture_id);
+
+    const roundFixtureIds = (roundFixtures ?? []).map(f => f.id);
+
+    if (roundFixtureIds.length > 0) {
+      const { data: otherStats } = await supabase
+        .from('player_match_stats')
+        .select('player_id, fantasy_points')
+        .in('fixture_id', roundFixtureIds)
+        .not('fantasy_points', 'is', null);
+
+      for (const r of otherStats ?? []) {
+        // Don't overwrite current fixture's fresh scores
+        if (!(r.player_id in fullRoundLookup)) {
+          fullRoundLookup[r.player_id] = r.fantasy_points ?? 0;
+        }
+      }
+    }
+  }
+
   // (#110) Filter squads to only those in leagues matching this tournament
-  // Prevents unnecessary writes to squads in other tournaments when multiple tournaments are live
   const { data: squads } = await supabase
     .from('squads')
     .select('id, user_id, league_id, matchday_id, players, captain_id, is_triple_captain, is_wildcard, leagues!inner(tournament_id)')
@@ -419,7 +456,7 @@ async function rollupSquads(fixture_id, pointsLookup, tournament_id) {
     let total = 0;
 
     for (const pid of pitchPlayers) {
-      let pts = pointsLookup[pid] || 0;
+      let pts = fullRoundLookup[pid] || 0;
       if (pid === squad.captain_id)  pts *= squad.is_triple_captain ? 3 : 2;
       if (squad.is_wildcard)         pts = Math.round(pts * 1.1 * 100) / 100;
       total += pts;
