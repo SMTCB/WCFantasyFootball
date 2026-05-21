@@ -237,6 +237,30 @@ export function useCommissioner(leagueId, tournamentId) {
   }), [commAction, leagueId, betTemplateId, betTitle, betPrompt, betDeadline,
        betRewardValue, betScopeType, betScopeRef, betOptions, fetchOpenBets]);
 
+  // Wizard-driven create: accepts pre-assembled data so wizard state doesn't
+  // need to be synced into hook state before calling.
+  const createBetFromData = useCallback((data) => commAction(async () => {
+    const { title, prompt, deadline, rewardValue, scopeType, scopeRef, templateId, options } = data;
+    if (!title)           throw new Error('Enter a bet title.');
+    if (!prompt)          throw new Error('Enter a bet prompt.');
+    if (!deadline)        throw new Error('Set a deadline.');
+    if (!options || options.length < 2) throw new Error('Add at least 2 answer options.');
+    const { error } = await supabase.from('bet_instances').insert({
+      league_id:    leagueId,
+      template_id:  templateId || null,
+      title,
+      prompt,
+      options,
+      deadline_at:  deadline,
+      reward_value: Number(rewardValue) || 5,
+      scope_type:   scopeType || 'matchday',
+      scope_ref:    scopeRef || null,
+    });
+    if (error) throw new Error(error.message);
+    setCommMsg({ type: 'ok', text: 'Bet created and published to the league.' });
+    await fetchOpenBets();
+  }), [commAction, leagueId, fetchOpenBets]);
+
   // ── Bet resolution ────────────────────────────────────────────────────────
   const fetchBetSubmissions = useCallback(async (betId) => {
     if (!betId) { setBetSubmissions([]); setAnswerGrouped({}); return; }
@@ -291,7 +315,7 @@ export function useCommissioner(leagueId, tournamentId) {
     betScopeRef, setBetScopeRef,
     betOptionDraft, setBetOptionDraft,
     betOptions, setBetOptions,
-    autoGenerateBetOptions, createBetInstance, createBetDirect,
+    autoGenerateBetOptions, createBetInstance, createBetDirect, createBetFromData,
     openBets, resolutionBetsLoading,
     selectedBetForResolution, setSelectedBetForResolution,
     betResolutionAnswer, setBetResolutionAnswer,

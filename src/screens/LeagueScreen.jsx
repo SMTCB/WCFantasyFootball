@@ -150,6 +150,16 @@ export default function LeagueScreen() {
     openTransferWindow, closeTransferWindow,
     draftDeadline, setDraftDeadline, setLeagueDraftDeadline,
     scoreFixtureId, setScoreFixtureId, triggerScores,
+    betTemplateId, setBetTemplateId,
+    betTitle, setBetTitle,
+    betPrompt, setBetPrompt,
+    betDeadline, setBetDeadline,
+    betRewardValue, setBetRewardValue,
+    betScopeType, setBetScopeType,
+    betScopeRef, setBetScopeRef,
+    betOptionDraft, setBetOptionDraft,
+    betOptions, setBetOptions,
+    autoGenerateBetOptions, createBetInstance,
     openBets, resolutionBetsLoading,
     selectedBetForResolution, setSelectedBetForResolution,
     betResolutionAnswer, setBetResolutionAnswer,
@@ -1264,6 +1274,8 @@ export default function LeagueScreen() {
              leagueId={activeLeague?.league_id}
              tournamentId={activeLeague?.tournament_id ?? commissioner?.tournamentId}
              replayCommissionerTour={replayCommissionerTour}
+             memberCount={members.length}
+             leagueName={activeLeague?.leagues?.name || activeLeague?.name || 'LEAGUE'}
            />
          )}
          {view === 'commissioner_REMOVED' && isCommissioner && (
