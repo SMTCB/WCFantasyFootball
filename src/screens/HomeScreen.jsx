@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 import { COMPS, DAYS, MONTHS_SHORT, MONTHS_LONG, normalizeFixture } from '../lib/fixtures';
 
@@ -555,6 +555,13 @@ function MonthView({ fixtures, month, year }) {
   );
 }
 
+// ── Date arithmetic (UTC-safe, avoids DST off-by-one) ─────────────────────────
+function addDays(dateStr, n) {
+  const [y, m, d] = dateStr.split('-').map(Number);
+  const result = new Date(Date.UTC(y, m - 1, d + n));
+  return result.toISOString().split('T')[0];
+}
+
 // ── Main screen ───────────────────────────────────────────────────────────────
 export default function HomeScreen() {
   const [allFixtures, setAllFixtures] = useState([]);
@@ -596,19 +603,28 @@ export default function HomeScreen() {
     return () => clearInterval(t);
   }, [allFixtures, fetchFixtures]);
 
-  // ── Date navigation ──────────────────────────────────────────────
-  const allDates = useMemo(
-    () => [...new Set(allFixtures.map(f => f.date))].sort(),
-    [allFixtures],
-  );
+  // ── Calendar-based navigation (not fixture-locked) ───────────────
+  // List mode: ±1 day.  Week mode: ±7 days (prev/next whole week).
+  const calInputRef = useRef(null);
+
   const datePrev = useCallback(() => {
-    const idx = allDates.indexOf(selectedDate);
-    if (idx > 0) setSelectedDate(allDates[idx - 1]);
-  }, [selectedDate, allDates]);
+    setSelectedDate(prev => addDays(prev, viewMode === 'week' ? -7 : -1));
+  }, [viewMode]);
+
   const dateNext = useCallback(() => {
-    const idx = allDates.indexOf(selectedDate);
-    if (idx < allDates.length - 1) setSelectedDate(allDates[idx + 1]);
-  }, [selectedDate, allDates]);
+    setSelectedDate(prev => addDays(prev, viewMode === 'week' ? 7 : 1));
+  }, [viewMode]);
+
+  // Human-readable week range label, e.g. "19–25 May" or "30 May – 5 Jun"
+  const weekRange = useMemo(() => {
+    const { start, end } = getWeekDates(selectedDate);
+    const s = new Date(start + 'T12:00:00Z');
+    const e = new Date(end   + 'T12:00:00Z');
+    const sm = MONTHS_SHORT[s.getUTCMonth()];
+    const em = MONTHS_SHORT[e.getUTCMonth()];
+    if (sm === em) return `${s.getUTCDate()}–${e.getUTCDate()} ${sm}`;
+    return `${s.getUTCDate()} ${sm} – ${e.getUTCDate()} ${em}`;
+  }, [selectedDate, getWeekDates]);
 
   // ── Derived fixture sets ──────────────────────────────────────────
   // Calculate week dates for WEEK view
@@ -739,7 +755,7 @@ export default function HomeScreen() {
           <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 10, color: 'var(--mute)', letterSpacing: '.22em' }}>MATCH CENTRE</div>
           <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 34, marginTop: 4, letterSpacing: '-0.02em' }}>Scores</div>
         </div>
-        <div style={{ display: 'flex', gap: 32, alignItems: 'flex-end' }}>
+        <div style={{ display: 'flex', gap: 24, alignItems: 'flex-end' }}>
           <div style={{ textAlign: 'right' }}>
             <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 9, color: 'var(--mute)', letterSpacing: '.18em' }}>FIXTURES</div>
             <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 20, marginTop: 2 }}>{filtered.length}</div>
@@ -754,6 +770,25 @@ export default function HomeScreen() {
               {liveCount > 0 && <span style={{ width: 8, height: 8, background: 'var(--danger)', borderRadius: '50%', display: 'inline-block', animation: 'fkPulse 1.2s infinite' }} />}
               {liveCount}
             </div>
+          </div>
+          {/* Calendar date-jump button — transparent input overlaid so native picker opens on click */}
+          <div style={{ position: 'relative', display: 'inline-flex', alignSelf: 'flex-end' }} title="Jump to date">
+            <div style={{
+              width: 34, height: 34, border: '1px solid var(--rule)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              color: 'var(--mute)', cursor: 'pointer',
+              fontFamily: 'JetBrains Mono, monospace', fontSize: 13, userSelect: 'none',
+            }}>⊟</div>
+            <input
+              ref={calInputRef}
+              type="date"
+              value={selectedDate}
+              onChange={e => { if (e.target.value) setSelectedDate(e.target.value); }}
+              style={{
+                position: 'absolute', inset: 0, opacity: 0, cursor: 'pointer',
+                width: '100%', height: '100%', padding: 0, margin: 0, border: 0,
+              }}
+            />
           </div>
         </div>
       </div>
@@ -810,26 +845,31 @@ export default function HomeScreen() {
           </div>
         </div>
 
-        {/* Right pager — Date for list/week, Month for month */}
-        {viewMode !== 'month' && view === 'date' && allDates.length > 0 && (
+        {/* Right pager — calendar-based, not fixture-locked */}
+        {viewMode !== 'month' && (
           <div style={{ display: 'inline-flex', alignItems: 'stretch', border: '1px solid var(--rule)', flexShrink: 0 }}>
-            <button onClick={datePrev} disabled={selectedDate === allDates[0]} style={{
+            <button onClick={datePrev} style={{
               width: 34, height: 34, background: 'transparent', border: 'none',
               borderRight: '1px solid var(--rule)',
-              color: selectedDate === allDates[0] ? 'var(--mute)' : 'var(--paper)',
-              fontFamily: 'JetBrains Mono, monospace', fontSize: 14,
-              cursor: selectedDate === allDates[0] ? 'default' : 'pointer',
+              color: 'var(--paper)', fontFamily: 'JetBrains Mono, monospace', fontSize: 14, cursor: 'pointer',
             }}>‹</button>
-            <div style={{ padding: '0 14px', height: 34, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', minWidth: 120 }}>
-              <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 9, color: 'var(--mute)', letterSpacing: '.22em' }}>DATE</div>
-              <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 12, letterSpacing: '-0.01em', marginTop: 2 }}>{selectedDate.split('-').reverse().join('/')}</div>
+            <div style={{ padding: '0 14px', height: 34, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', minWidth: 140 }}>
+              {viewMode === 'week' ? (
+                <>
+                  <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 9, color: 'var(--mute)', letterSpacing: '.22em' }}>WEEK</div>
+                  <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 12, letterSpacing: '-0.01em', marginTop: 2 }}>{weekRange}</div>
+                </>
+              ) : (
+                <>
+                  <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 9, color: 'var(--mute)', letterSpacing: '.22em' }}>DATE</div>
+                  <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 12, letterSpacing: '-0.01em', marginTop: 2 }}>{selectedDate.split('-').reverse().join('/')}</div>
+                </>
+              )}
             </div>
-            <button onClick={dateNext} disabled={selectedDate === allDates[allDates.length - 1]} style={{
+            <button onClick={dateNext} style={{
               width: 34, height: 34, background: 'transparent', border: 'none',
               borderLeft: '1px solid var(--rule)',
-              color: selectedDate === allDates[allDates.length - 1] ? 'var(--mute)' : 'var(--paper)',
-              fontFamily: 'JetBrains Mono, monospace', fontSize: 14,
-              cursor: selectedDate === allDates[allDates.length - 1] ? 'default' : 'pointer',
+              color: 'var(--paper)', fontFamily: 'JetBrains Mono, monospace', fontSize: 14, cursor: 'pointer',
             }}>›</button>
           </div>
         )}
@@ -840,7 +880,7 @@ export default function HomeScreen() {
 
       {/* ── Band 2: Controls — Mobile (list only; week/month are desktop-only) ── */}
       <div className="lg:hidden" style={{ padding: '12px 18px 10px', borderBottom: '1px solid var(--rule)', flexShrink: 0 }}>
-        {/* Row A: DATE|COMP toggle */}
+        {/* Row A: DATE|COMP toggle + date pager + calendar picker */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
           <div style={{ display: 'inline-flex', border: '1px solid var(--rule)', flex: 1 }}>
             {[{ id: 'date', label: 'DATE' }, { id: 'comp', label: 'COMP' }].map((o, i) => (
@@ -853,27 +893,41 @@ export default function HomeScreen() {
               }}>{o.label}</button>
             ))}
           </div>
-          {view === 'date' && allDates.length > 0 && (
+          {view === 'date' && (
             <div style={{ display: 'inline-flex', border: '1px solid var(--rule)', flexShrink: 0 }}>
-              <button onClick={datePrev} disabled={selectedDate === allDates[0]} style={{
+              <button onClick={datePrev} style={{
                 width: 28, height: 28, background: 'transparent', border: 'none',
                 borderRight: '1px solid var(--rule)',
-                color: selectedDate === allDates[0] ? 'var(--mute)' : 'var(--paper)',
-                fontFamily: 'JetBrains Mono, monospace', fontSize: 12,
-                cursor: selectedDate === allDates[0] ? 'default' : 'pointer',
+                color: 'var(--paper)', fontFamily: 'JetBrains Mono, monospace', fontSize: 12, cursor: 'pointer',
               }}>‹</button>
-              <div style={{ padding: '0 6px', height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9 }}>
+              <div style={{ padding: '0 6px', height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, minWidth: 72 }}>
                 <div style={{ fontFamily: 'Archivo Black, sans-serif' }}>{selectedDate.split('-').reverse().join('/')}</div>
               </div>
-              <button onClick={dateNext} disabled={selectedDate === allDates[allDates.length - 1]} style={{
+              <button onClick={dateNext} style={{
                 width: 28, height: 28, background: 'transparent', border: 'none',
                 borderLeft: '1px solid var(--rule)',
-                color: selectedDate === allDates[allDates.length - 1] ? 'var(--mute)' : 'var(--paper)',
-                fontFamily: 'JetBrains Mono, monospace', fontSize: 12,
-                cursor: selectedDate === allDates[allDates.length - 1] ? 'default' : 'pointer',
+                color: 'var(--paper)', fontFamily: 'JetBrains Mono, monospace', fontSize: 12, cursor: 'pointer',
               }}>›</button>
             </div>
           )}
+          {/* Mobile calendar picker icon */}
+          <div style={{ position: 'relative', display: 'inline-flex', flexShrink: 0 }} title="Jump to date">
+            <div style={{
+              width: 28, height: 28, border: '1px solid var(--rule)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              color: 'var(--mute)', cursor: 'pointer',
+              fontFamily: 'JetBrains Mono, monospace', fontSize: 12,
+            }}>⊟</div>
+            <input
+              type="date"
+              value={selectedDate}
+              onChange={e => { if (e.target.value) setSelectedDate(e.target.value); }}
+              style={{
+                position: 'absolute', inset: 0, opacity: 0, cursor: 'pointer',
+                width: '100%', height: '100%', padding: 0, margin: 0, border: 0,
+              }}
+            />
+          </div>
         </div>
         {/* Row B: comp chips */}
         <div style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 2 }}>
