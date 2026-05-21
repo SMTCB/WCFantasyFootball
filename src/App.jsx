@@ -1,14 +1,13 @@
 import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
-// Import both AuthProvider and useAuthContext from the same module — avoids
-// the Rolldown TDZ crash caused by App importing AuthContext directly AND
-// transitively via hooks/useAuth (which is a pure re-export from AuthContext).
-import { AuthProvider, useAuthContext as useAuth } from './context/AuthContext';
-// capacitor initNative is called here (not in main.jsx) because main.jsx
-// importing capacitor.js directly AND App→AuthContext→capacitor is a depth-2
-// Rolldown TDZ at the bundle entry point.
+import { AuthProvider } from './context/AuthContext';
+// useAuth is now a proper function wrapper (not a re-export), so importing it
+// alongside AuthProvider no longer creates a TDZ live binding.
+import { useAuth } from './hooks/useAuth';
+// initNative lives here (not in main.jsx): main importing capacitor.js directly
+// AND App→AuthContext→capacitor created a Rolldown TDZ at the entry point.
 import { initNative } from './lib/capacitor';
-initNative(); // run immediately at module evaluation time (before React renders)
+initNative();
 import ProtectedRoute from './components/ProtectedRoute';
 import ErrorBoundary from './components/ErrorBoundary';
 import AppLayout from './components/AppLayout';
