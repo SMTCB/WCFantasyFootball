@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
-import { HubSectionLabel, MgrTag, mgrHue, mgrMono } from './HubShared';
+// HubShared is NOT imported here — LeagueScreen imports it directly, and
+// CommissionerPanel→HubShared at depth 2 causes a Rolldown TDZ crash in
+// the production bundle. All four exports are inlined below instead.
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Design tokens (mirrors docs/brand/ADMIN TAB/tokens.css)
@@ -8,6 +10,27 @@ import { HubSectionLabel, MgrTag, mgrHue, mgrMono } from './HubShared';
 const MONO    = "'JetBrains Mono', monospace";
 const DISPLAY = "'Archivo Black', sans-serif";
 const BODY    = "'Archivo', sans-serif";
+
+// ── Inlined from HubShared (TDZ-safe copies) ─────────────────────────────────
+function HubSectionLabel({ label, sub, tone = 'var(--cyan)', right }) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 20px', borderBottom: '1px solid var(--rule)', background: 'var(--ink-2)', flexShrink: 0 }}>
+      <span style={{ width: 3, height: 14, background: tone, flexShrink: 0 }} />
+      <span style={{ fontFamily: MONO, fontSize: 11, color: 'var(--paper)', letterSpacing: '.22em' }}>{label}</span>
+      {sub && <span style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.18em' }}>· {sub}</span>}
+      <span style={{ flex: 1 }} />
+      {right}
+    </div>
+  );
+}
+function MgrTag({ mono = '???', hue = '#8B95A1', size = 18, dim = false }) {
+  return (
+    <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', minWidth: size + 10, height: size, padding: '0 4px', background: dim ? 'transparent' : `${hue}18`, border: `1px solid ${hue}${dim ? '44' : '66'}`, color: hue, fontFamily: MONO, fontSize: size <= 16 ? 9 : 10, letterSpacing: '.12em', fontWeight: 600, lineHeight: 1, flexShrink: 0 }}>{mono}</span>
+  );
+}
+const _HUES = ['#00B4D8','#E0A800','#A855F7','#22C55E','#F59E0B','#34D399','#7DD3FC','#FB7185','#FCD34D','#C4B5FD','#67E8F9'];
+function mgrHue(str = '') { let h = 0; for (let i = 0; i < str.length; i++) h = (h * 31 + str.charCodeAt(i)) & 0xffff; return _HUES[h % _HUES.length]; }
+const mgrMono = (u = '') => u.substring(0, 3).toUpperCase() || '???';
 
 const inputStyle = {
   background: 'var(--ink)', border: '1px solid var(--rule)', color: 'var(--paper)',
