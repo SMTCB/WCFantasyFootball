@@ -1,6 +1,6 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-05-21 (Full system audit — all critical/high bugs fixed, GW38 ready)  
+**Last Updated**: 2026-05-21 (Admin Tab redesign + system audit — all critical/high bugs fixed, GW38 ready)  
 **E2E Test Suite**: 84/84 platform tests passing ✅ + `scoring-pipeline.spec.js` added  
 **Live App**: https://wc-fantasy-football.vercel.app
 
@@ -33,6 +33,47 @@
 - Player prices are null → no meaningful budget constraint in the market (Forza API doesn't provide valuations; needs external data decision)
 - `transfer_windows` table created but never read by `process-transfer` (existing enforcement via `matchday_deadlines` works correctly)
 - Sub events with null `player_id` not idempotent (minor Live screen cosmetics)
+
+---
+
+## 📊 SESSION 29 PROGRESS (2026-05-21 — Admin Tab redesign + bet lifecycle)
+
+**🚀 COMPLETED THIS SESSION:**
+
+- ✅ **PR #152 — Admin Tab redesign** (merged):
+  - Rewrote `CommissionerPanel.jsx` to match ADMIN TAB design spec (docs/brand/ADMIN TAB/)
+  - Zone A: Season-state stepper — 5 phases (Transfer Window → Draft → Allocation → Cup → In Season)
+  - Zone B: 4-step guided Create Bet wizard (TYPE→CONFIGURE→REWARD→PUBLISH) with live BetCardPreview; Resolve Pending Bets with expandable cards, who-picked-what monograms, answer chip selection
+  - Zone C: 4-column Lifecycle Operations (Transfer Window, Draft, Cup Phase, Score Recalculation) with WHEN TO RUN hints and confirm dialogs on one-way actions
+  - Mobile: full accordion layout below 1024px
+  - Hook: added `createBetFromData()` to `useCommissioner` for direct wizard publish path
+
+- ✅ **Migration 16 — Bet backend fixes** (applied to production):
+  - **FK fix**: `bet_submissions.user_id` re-pointed from `auth.users` → `public.users ON DELETE CASCADE`. Mock/seeded users (Demo, TacticsTom, etc.) can now submit bet picks.
+  - **Dead trigger removed**: `bet_submissions_reward_update` trigger and `trigger_bet_reward_update()` function were a no-op (called PERFORM and discarded result). Removed. Only the real trigger (`bet_resolution_update_points`) remains.
+
+- ✅ **Points backfill** (applied to production):
+  - Found 2 `league_members.total_points` records with drift in Premier Fantasy League
+  - `s.t.c.braganca`: 0 → 3 (Chelsea vs Tottenham bet reward never propagated — bet was resolved before trigger existed)
+  - `admin`: 287 → 0 (orphaned test data, no squad/fantasy_points/submissions in this league)
+  - Zero drift remaining across all league members
+
+**🧪 BET LIFECYCLE TESTS (run against real Supabase data):**
+
+| Stage | Test | Result |
+|---|---|---|
+| Create | 3 bet types with correct deadline flags | ✅ |
+| Submit | Picks on open bets | ✅ |
+| Deadline | `submit_bet()` rejects past-deadline | ✅ `"Deadline has passed."` |
+| Resolve | Both bets, 2 submissions each | ✅ `submissions_updated=2` |
+| Classify | Correct picks → `is_correct=true`, `reward_awarded=reward_value` | ✅ |
+| Classify | Wrong picks → `is_correct=false`, `reward_awarded=0` | ✅ |
+| Points | `league_members.total_points` updated by trigger | ✅ 15 pts (10+5) |
+| Guard | Double-resolve rejected | ✅ `"Already resolved."` |
+| Guard | Aggregate computed = stored | ✅ |
+| FK fix | Mock user (Demo) submits after migration 16 | ✅ |
+| Integrity | Real resolved bet data intact after migration | ✅ |
+| Drift | Zero drifted members after backfill | ✅ |
 
 ---
 
@@ -92,7 +133,7 @@
 
 ---
 
-## 📊 SESSION 29 PROGRESS (2026-05-20 — Auto-fill deep fix)
+## 📊 SESSION 29 (earlier) PROGRESS (2026-05-20 — Auto-fill deep fix)
 
 **🚀 COMPLETED THIS SESSION:**
 
