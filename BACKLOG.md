@@ -1,8 +1,38 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-05-20 (Scoring pipeline validation — full GW35 test with 6 managers)  
-**E2E Test Suite**: 84/84 platform tests passing ✅  
+**Last Updated**: 2026-05-21 (Full system audit — all critical/high bugs fixed, GW38 ready)  
+**E2E Test Suite**: 84/84 platform tests passing ✅ + `scoring-pipeline.spec.js` added  
 **Live App**: https://wc-fantasy-football.vercel.app
+
+---
+
+## 📊 SESSION 32 PROGRESS (2026-05-21 — System Audit & Bug Fixes)
+
+**Goal**: Full API/DB audit + fix all critical and high issues identified.
+
+**🚀 COMPLETED THIS SESSION:**
+
+- ✅ **PR #154 — `rollupSquads` full-gameweek accumulation** (merged):
+  - Root cause: `calculate-scores` is called per fixture; `rollupSquads` used only that fixture's `pointsLookup` and overwrote squad total → all totals reset to near-zero after last fixture
+  - Fix: build `fullRoundLookup` by merging all other fixtures' stored `fantasy_points` from the same round
+  - GW35 standings verified: 49/28/15/12/11/1
+
+- ✅ **PR #156 — 4 critical/high issues from system audit** (merged):
+  - **Season total tracking** (Critical): `fantasy_points` now writes `matchday_id='426-r35'` (round-based) instead of squad's static value. Each gameweek creates its own row; `aggregate_league_member_points` sums correctly for season total
+  - **Cron ordering** (High): `calculate-scores-live` now fires at odd minutes (`1-59/2`), `ingest-match-events-live` at even minutes (`*/2`). Ingest always runs before score
+  - **GK scoring** (High): GKs absent from E10 stats (no saves/goals/cards) now get correct `minutes_played` from E5 lineup data and substitution events. Starting GKs no longer silently score 0 pts
+  - **Duplicate deadlines** (High): 38 `epl-2526-rN` duplicate `matchday_deadlines` rows deleted. `426-rN` is now the sole canonical format
+
+- ✅ **E2E test suite extended**: `e2e/scoring-pipeline.spec.js` added — covers ingest integrity, scoring correctness, season total tracking, transfer window enforcement, and Live screen event feed
+
+- ✅ **WC parity complete**: scoring_rules seeded for WC (429), `sync-wc-player-status` cron added, WC cron body key fixed (`tournament_id` → `forza_id`)
+
+- ✅ **`docs/deployment/ADDING_A_NEW_TOURNAMENT.md`** created — 8-step checklist for onboarding any new competition without code changes
+
+**Known remaining issues (not blocking GW38):**
+- Player prices are null → no meaningful budget constraint in the market (Forza API doesn't provide valuations; needs external data decision)
+- `transfer_windows` table created but never read by `process-transfer` (existing enforcement via `matchday_deadlines` works correctly)
+- Sub events with null `player_id` not idempotent (minor Live screen cosmetics)
 
 ---
 
