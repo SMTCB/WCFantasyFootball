@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+﻿import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../hooks/useAuth';
@@ -15,7 +15,6 @@ import LeagueInviteCard from '../components/LeagueInviteCard';
 import H2HSheet from '../components/H2HSheet';
 import GazetteDraftReport from '../components/GazetteDraftReport';
 import TransferWindowBanner from '../components/TransferWindowBanner';
-import AuctionCard from '../components/AuctionCard';
 import BetsSection from '../components/BetsSection';
 
 import NotificationPanel from '../components/NotificationPanel';
@@ -59,7 +58,7 @@ const BETS_TOUR_STEPS = [
   {
     target: 'bets-header',
     title:  'Bets & Predictions',
-    body:   'The Commissioner posts weekly challenges here — predict outcomes to earn bonus points. Picks lock at the deadline.',
+    body:   'The Commissioner posts weekly challenges here â€” predict outcomes to earn bonus points. Picks lock at the deadline.',
   },
   {
     target: 'bets-list',
@@ -163,14 +162,14 @@ export default function LeagueScreen() {
   const [leagueTournament, setLeagueTournament] = useState('426');
   const [tournaments,      setTournaments]      = useState([]);
   const [formLoading,      setFormLoading]      = useState(false);
-  const [newLeague,        setNewLeague]        = useState(null);   // set after creation → shows invite card
+  const [newLeague,        setNewLeague]        = useState(null);   // set after creation â†’ shows invite card
 
   // Join-by-code state
   const [joinCode,     setJoinCode]     = useState('');
   const [joinLoading,  setJoinLoading]  = useState(false);
   const [joinError,    setJoinError]    = useState('');
 
-  // Chat input state lives in ChatView — not needed here
+  // Chat input state lives in ChatView â€” not needed here
   const { messages, loading: chatLoading, unreadCount, typingUsers, sendMessage, editMessage, deleteMessage, broadcastTyping, markChatAsRead, scrollEndRef } = useChatMessages(activeLeague?.league_id);
   const { notifications, unreadCount: notificationCount, markAsRead: markNotificationAsRead, clearAll: clearAllNotifications } = useNotifications(activeLeague?.league_id);
   const { mentionSearch, mentionMatches, selectedMention, mentionedUserIds, loadLeagueMembers, parseMentionPattern, insertMention, handleMentionNavigate, resetMentions } = useMentions(activeLeague?.league_id);
@@ -249,7 +248,7 @@ export default function LeagueScreen() {
 
   // commAction, openTransferWindow, closeTransferWindow, triggerScores,
   // setLeagueDraftDeadline, createBetInstance, autoGenerateBetOptions,
-  // fetchOpenBets, fetchBetSubmissions, resolveBet — all from useCommissioner above.
+  // fetchOpenBets, fetchBetSubmissions, resolveBet â€” all from useCommissioner above.
   const viewToTab = (v) => {
     if (v === 'detail') return 'leaderboard';
     if (v === 'betting_leaderboard') return 'betting';
@@ -461,10 +460,10 @@ export default function LeagueScreen() {
       });
       if (error) {
         const msg = error.message || '';
-        if (msg.includes('LEAGUE_NOT_FOUND'))  setJoinError('No league found with that code — check the spelling.');
+        if (msg.includes('LEAGUE_NOT_FOUND'))  setJoinError('No league found with that code â€” check the spelling.');
         else if (msg.includes('ALREADY_MEMBER')) setJoinError('You\'re already in this league.');
         else if (msg.includes('LEAGUE_FULL'))    setJoinError('This league is full.');
-        else setJoinError('Something went wrong — please try again.');
+        else setJoinError('Something went wrong â€” please try again.');
         return;
       }
       setJoinCode('');
@@ -473,7 +472,7 @@ export default function LeagueScreen() {
       if (data?.id) navigate(`/league/${data.id}`);
     } catch (err) {
       console.error('[joinLeague]', err);
-      setJoinError('Something went wrong — please try again.');
+      setJoinError('Something went wrong â€” please try again.');
     } finally {
       setJoinLoading(false);
     }
@@ -497,7 +496,7 @@ export default function LeagueScreen() {
     return (
       <div className="pb-16 min-h-screen bg-bg">
         <div className="flex items-center p-4 border-b border-border bg-surface sticky top-0 z-10">
-          <button onClick={() => setView('list')} className="text-xl mr-4 text-text-secondary">←</button>
+          <button onClick={() => setView('list')} className="text-xl mr-4 text-text-secondary">â†</button>
           <h1 className="fz-display text-white text-[18px]">Initialize Campaign</h1>
         </div>
         <form onSubmit={handleCreateLeague} className="p-4 flex flex-col gap-6 mt-4">
@@ -538,7 +537,7 @@ export default function LeagueScreen() {
                 ))}
               </div>
             ) : (
-              <p className="text-[11px] text-text-secondary">Loading competitions…</p>
+              <p className="text-[11px] text-text-secondary">Loading competitionsâ€¦</p>
             )}
           </div>
           <div className="flex flex-col gap-2">
@@ -555,11 +554,11 @@ export default function LeagueScreen() {
                 }`}
               >
                 <span className="text-[11px] font-bold uppercase tracking-wider text-white">Classic</span>
-                <span className="text-[11px] leading-snug" style={{ color: 'var(--paper)' }}>Everyone builds freely — no player restrictions across squads.</span>
+                <span className="text-[11px] leading-snug" style={{ color: 'var(--paper)' }}>Everyone builds freely â€” no player restrictions across squads.</span>
                 <ul className="flex flex-col gap-[3px]">
-                  <li className="text-[10px]" style={{ color: 'var(--mute)' }}>• Any player, any manager</li>
-                  <li className="text-[10px]" style={{ color: 'var(--mute)' }}>• 5 transfers per round</li>
-                  <li className="text-[10px]" style={{ color: 'var(--mute)' }}>• Quick to set up</li>
+                  <li className="text-[10px]" style={{ color: 'var(--mute)' }}>â€¢ Any player, any manager</li>
+                  <li className="text-[10px]" style={{ color: 'var(--mute)' }}>â€¢ 5 transfers per round</li>
+                  <li className="text-[10px]" style={{ color: 'var(--mute)' }}>â€¢ Quick to set up</li>
                 </ul>
               </button>
 
@@ -579,15 +578,15 @@ export default function LeagueScreen() {
                 </div>
                 <span className="text-[11px] leading-snug" style={{ color: 'var(--paper)' }}>No two managers can own the same player.</span>
                 <ul className="flex flex-col gap-[3px]">
-                  <li className="text-[10px]" style={{ color: 'var(--mute)' }}>• Submit ranked wishlist pre-season</li>
-                  <li className="text-[10px]" style={{ color: 'var(--mute)' }}>• Lottery resolves contested picks</li>
-                  <li className="text-[10px]" style={{ color: 'var(--mute)' }}>• 5 transfers/round · unlimited at halfway</li>
+                  <li className="text-[10px]" style={{ color: 'var(--mute)' }}>â€¢ Submit ranked wishlist pre-season</li>
+                  <li className="text-[10px]" style={{ color: 'var(--mute)' }}>â€¢ Lottery resolves contested picks</li>
+                  <li className="text-[10px]" style={{ color: 'var(--mute)' }}>â€¢ 5 transfers/round Â· unlimited at halfway</li>
                 </ul>
               </button>
             </div>
           </div>
           <button type="submit" disabled={formLoading || !leagueName.trim()} className="w-full mt-4 bg-cyan text-black font-bold py-4 uppercase tracking-wider disabled:opacity-50">
-            {formLoading ? 'Creating…' : 'Start Season'}
+            {formLoading ? 'Creatingâ€¦' : 'Start Season'}
           </button>
         </form>
       </div>
@@ -599,7 +598,7 @@ export default function LeagueScreen() {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', background: 'var(--ink)', color: 'var(--paper)', minHeight: '100vh', fontFamily: "'Archivo', sans-serif" }}>
 
-        {/* ── Guided tours ──────────────────────────────────────────────────── */}
+        {/* â”€â”€ Guided tours â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
         {showLeagueTour && !loading && view === 'detail' && (
           <OnboardingTour
             steps={LEAGUE_TOUR_STEPS}
@@ -621,12 +620,12 @@ export default function LeagueScreen() {
             onSkip={completeCommissionerTour}
           />
         )}
-        {/* ── Desktop chrome (hidden on mobile) ─────────────────────────── */}
+        {/* â”€â”€ Desktop chrome (hidden on mobile) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
         <div className="hidden lg:block">
           <HubTopbar
             leagueName={name}
             memberCount={members.length}
-            gw="—"
+            gw="â€”"
             isLive={false}
             onBack={() => navigate('/league')}
             rightSlot={
@@ -655,12 +654,12 @@ export default function LeagueScreen() {
           />
         </div>
 
-        {/* ── Mobile chrome (hidden on desktop) ─────────────────────────── */}
+        {/* â”€â”€ Mobile chrome (hidden on desktop) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
         <div className="lg:hidden">
           <HubLeagueHeader
             leagueName={name}
             memberCount={members.length}
-            gw="—"
+            gw="â€”"
             onBack={() => navigate('/league')}
             rightSlot={
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -691,21 +690,21 @@ export default function LeagueScreen() {
           return (
             <div onClick={() => navigate(`/league/${activeLeague?.league_id}/draft`)} style={{ background: bg, color: 'white', padding: '10px 28px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer', flexShrink: 0 }}>
               <span style={{ fontFamily: MONO, fontSize: 11, letterSpacing: '.18em' }}>
-                {isCritical ? '🔴' : isWarning ? '🟡' : '🟢'} DRAFT {isCritical ? `${Math.max(0, Math.floor(hoursLeft))}H LEFT — SUBMIT NOW` : isWarning ? `${Math.floor(hoursLeft)}H LEFT` : 'IS OPEN'} — SUBMIT YOUR RANKED LIST
+                {isCritical ? 'ðŸ”´' : isWarning ? 'ðŸŸ¡' : 'ðŸŸ¢'} DRAFT {isCritical ? `${Math.max(0, Math.floor(hoursLeft))}H LEFT â€” SUBMIT NOW` : isWarning ? `${Math.floor(hoursLeft)}H LEFT` : 'IS OPEN'} â€” SUBMIT YOUR RANKED LIST
               </span>
-              <span style={{ fontFamily: MONO, fontSize: 11, letterSpacing: '.18em' }}>→</span>
+              <span style={{ fontFamily: MONO, fontSize: 11, letterSpacing: '.18em' }}>â†’</span>
             </div>
           );
         })()}
 
         {draftGaps > 0 && (
           <div onClick={() => navigate(`/league/${activeLeague?.league_id}/draft/recover`)} style={{ background: '#B71C1C', color: 'white', padding: '10px 28px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer', flexShrink: 0 }}>
-            <span style={{ fontFamily: MONO, fontSize: 11, letterSpacing: '.18em' }}>⚠ YOUR SQUAD HAS {draftGaps} EMPTY SLOT{draftGaps !== 1 ? 'S' : ''} — TAP TO PICK NOW</span>
-            <span style={{ fontFamily: MONO, fontSize: 11 }}>→</span>
+            <span style={{ fontFamily: MONO, fontSize: 11, letterSpacing: '.18em' }}>âš  YOUR SQUAD HAS {draftGaps} EMPTY SLOT{draftGaps !== 1 ? 'S' : ''} â€” TAP TO PICK NOW</span>
+            <span style={{ fontFamily: MONO, fontSize: 11 }}>â†’</span>
           </div>
         )}
 
-        {/* ── Desktop tabs (hidden on mobile) ───────────────────────────── */}
+        {/* â”€â”€ Desktop tabs (hidden on mobile) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
         <div className="hidden lg:block" data-tour="league-tabs">
           <HubTabs
             active={viewToTab(view)}
@@ -716,7 +715,7 @@ export default function LeagueScreen() {
           />
         </div>
 
-        {/* ── Mobile tab pills (hidden on desktop) ──────────────────────── */}
+        {/* â”€â”€ Mobile tab pills (hidden on desktop) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
         <div className="lg:hidden" data-tour="league-tabs">
           <HubTabPills
             active={viewToTab(view)}
@@ -727,7 +726,7 @@ export default function LeagueScreen() {
           />
         </div>
 
-         {/* ── VIEWS ──────────────────────────────────────────────────────── */}
+         {/* â”€â”€ VIEWS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
 
          {view === 'detail' && (
            <LeagueDetailView
@@ -745,9 +744,9 @@ export default function LeagueScreen() {
                {/* GW card */}
                <div style={{ padding: '18px 22px', borderRight: '1px solid var(--rule)', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
                  <div>
-                   <div style={{ fontFamily: MONO, fontSize: 10, color: 'var(--cyan)', letterSpacing: '.22em' }}>LEAGUE · SEASON</div>
-                   <div style={{ fontFamily: DISPLAY, fontSize: 28, marginTop: 4, letterSpacing: '-0.02em' }}>GW —</div>
-                   <div style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', marginTop: 6, letterSpacing: '.16em' }}>{members.length} MANAGERS · STANDINGS</div>
+                   <div style={{ fontFamily: MONO, fontSize: 10, color: 'var(--cyan)', letterSpacing: '.22em' }}>LEAGUE Â· SEASON</div>
+                   <div style={{ fontFamily: DISPLAY, fontSize: 28, marginTop: 4, letterSpacing: '-0.02em' }}>GW â€”</div>
+                   <div style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', marginTop: 6, letterSpacing: '.16em' }}>{members.length} MANAGERS Â· STANDINGS</div>
                  </div>
                  {members[0] && (
                    <div style={{ textAlign: 'right' }}>
@@ -796,7 +795,7 @@ export default function LeagueScreen() {
                  <div style={{ flex: 1, overflow: 'auto' }}>
                    {membersLoading && members.length === 0 ? (
                      <div style={{ padding: '48px 24px', textAlign: 'center' }}>
-                       <div style={{ fontFamily: MONO, fontSize: 10, color: 'var(--mute)', letterSpacing: '.2em' }}>SYNCING STANDINGS…</div>
+                       <div style={{ fontFamily: MONO, fontSize: 10, color: 'var(--mute)', letterSpacing: '.2em' }}>SYNCING STANDINGSâ€¦</div>
                      </div>
                    ) : members.map((m) => {
                      const isMe = currentUser && m.user_id === currentUser.id;
@@ -810,7 +809,7 @@ export default function LeagueScreen() {
                          background: isMe ? 'rgba(0,180,216,.04)' : 'transparent',
                        }}>
                          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                           <span style={{ fontFamily: DISPLAY, fontSize: 14, minWidth: 18 }}>{m.rank || '—'}</span>
+                           <span style={{ fontFamily: DISPLAY, fontSize: 14, minWidth: 18 }}>{m.rank || 'â€”'}</span>
                            <TrendPill trend={0} />
                          </div>
                          <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
@@ -822,7 +821,7 @@ export default function LeagueScreen() {
                              </div>
                            </div>
                          </div>
-                         <div style={{ textAlign: 'right', fontFamily: DISPLAY, fontSize: 13, color: 'var(--mute)' }}>—</div>
+                         <div style={{ textAlign: 'right', fontFamily: DISPLAY, fontSize: 13, color: 'var(--mute)' }}>â€”</div>
                          <div style={{ textAlign: 'right', fontFamily: DISPLAY, fontSize: 13 }}>{m.total_points}</div>
                          <div style={{ display: 'flex', gap: 4, justifyContent: 'flex-end' }}>
                            {!isMe && (
@@ -843,7 +842,7 @@ export default function LeagueScreen() {
                <aside style={{ display: 'flex', flexDirection: 'column', background: 'var(--ink-2)' }}>
                  <HubSectionLabel label="LEAGUE ACTIVITY" sub="LIVE" tone="var(--gold)" right={<span style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)' }}>LAST 24H</span>} />
                  <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '32px 18px', gap: 8 }}>
-                   <div style={{ fontSize: 24 }}>⚽</div>
+                   <div style={{ fontSize: 24 }}>âš½</div>
                    <div style={{ fontFamily: MONO, fontSize: 10, color: 'var(--mute)', letterSpacing: '.2em', textAlign: 'center' }}>NO ACTIVITY YET</div>
                    <div style={{ fontFamily: "'Archivo', sans-serif", fontSize: 11, color: 'var(--mute)', opacity: 0.6, textAlign: 'center', lineHeight: 1.5 }}>Match events, rank changes, and league news will appear here once the season starts.</div>
                  </div>
@@ -879,7 +878,7 @@ export default function LeagueScreen() {
                      Your league is ready. Invite friends via the INVITE button above, set up transfer windows in the Admin tab, and your Forza Times will come to life as the season unfolds.
                    </p>
                    <button onClick={() => setNewLeague(activeLeague?.leagues || activeLeague)} style={{ background: FT_INK, color: FT_PAPER, border: 'none', padding: '10px 24px', fontFamily: ftMono, fontSize: 11, letterSpacing: '.2em', cursor: 'pointer' }}>
-                     SHOW INVITE CODE →
+                     SHOW INVITE CODE â†’
                    </button>
                  </div>
                ) : (
@@ -887,36 +886,36 @@ export default function LeagueScreen() {
                  <div style={{ background: FT_PAPER, color: FT_INK, boxShadow: '0 30px 60px -20px rgba(0,0,0,.5), 0 2px 0 0 #C9C2B3', padding: 'clamp(16px, 5vw, 34px) clamp(14px, 5vw, 44px)' }}>
                    {/* Masthead */}
                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', fontFamily: ftMono, fontSize: 'clamp(8px, 2vw, 11px)', letterSpacing: '.18em', color: FT_INK, flexWrap: 'wrap', gap: 4 }}>
-                     <span>VOL · I</span>
+                     <span>VOL Â· I</span>
                      <span style={{ fontFamily: ftSerif, fontStyle: 'italic', fontSize: 'clamp(10px, 2.5vw, 14px)', letterSpacing: 0 }}>The Official Gazette of {name}</span>
-                     <span>EDITION · #1</span>
+                     <span>EDITION Â· #1</span>
                    </div>
                    <div style={{ textAlign: 'center', marginTop: 6 }}>
                      <div style={{ fontFamily: ftSerif, fontWeight: 900, fontStyle: 'italic', fontSize: 'clamp(38px, 10vw, 72px)', letterSpacing: '-0.03em', lineHeight: 0.9, color: FT_INK }}>FORZA TIMES</div>
                      <div style={{ fontFamily: ftSerif, fontStyle: 'italic', fontSize: 'clamp(10px, 2vw, 13px)', color: FT_MUTE, marginTop: 6 }}>
-                       "All the points that's fit to print" · {today} · £0.00 to subscribers
+                       "All the points that's fit to print" Â· {today} Â· Â£0.00 to subscribers
                      </div>
                    </div>
                    <div style={{ border: 0, height: 1, background: FT_INK, margin: '18px 0 4px' }} />
                    <div style={{ height: 4, background: FT_INK, margin: '0 0 22px' }} />
 
-                   {/* Cover grid — 3-col on desktop, single col on mobile */}
+                   {/* Cover grid â€” 3-col on desktop, single col on mobile */}
                    <div className="grid grid-cols-1 lg:grid-cols-3" style={{ gap: 28 }}>
-                     {/* Lead story — standings snapshot */}
+                     {/* Lead story â€” standings snapshot */}
                      <article>
-                       <div style={{ fontFamily: ftMono, fontSize: 10, letterSpacing: '.22em', color: FT_RED, marginBottom: 8 }}>LEAGUE STANDINGS · LATEST</div>
+                       <div style={{ fontFamily: ftMono, fontSize: 10, letterSpacing: '.22em', color: FT_RED, marginBottom: 8 }}>LEAGUE STANDINGS Â· LATEST</div>
                        <h1 style={{ fontFamily: ftSerif, fontWeight: 900, fontSize: 'clamp(24px, 6vw, 44px)', lineHeight: 0.98, letterSpacing: '-0.025em', color: FT_INK, marginBottom: 14 }}>
                          {members[0] ? `${(members[0].users?.username || 'Unknown').toUpperCase()} leads the table.` : 'The season is yet to begin.'}
                        </h1>
                        {/* Placeholder image */}
                        <div style={{ height: 180, background: `repeating-linear-gradient(135deg, ${FT_INK} 0 1px, transparent 1px 12px), #D6CFBF`, border: `1px solid ${FT_INK}`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                         <span style={{ fontFamily: ftMono, fontSize: 10, letterSpacing: '.22em', color: FT_INK, background: FT_PAPER, padding: '4px 8px', border: `1px solid ${FT_INK}` }}>LEAGUE PHOTO · MATCHDAY</span>
+                         <span style={{ fontFamily: ftMono, fontSize: 10, letterSpacing: '.22em', color: FT_INK, background: FT_PAPER, padding: '4px 8px', border: `1px solid ${FT_INK}` }}>LEAGUE PHOTO Â· MATCHDAY</span>
                        </div>
                        <p style={{ fontFamily: ftSerif, fontSize: 16, lineHeight: 1.5, color: FT_INK, marginTop: 14 }}>
                          <span style={{ float: 'left', fontFamily: ftSerif, fontWeight: 900, fontSize: 52, lineHeight: 0.85, paddingRight: 8, paddingTop: 4, color: FT_INK }}>{members[0] ? (members[0].users?.username?.[0] || 'T').toUpperCase() : 'T'}</span>
                          {members[0] ? `he ${name} is underway with ${members.length} managers fighting for glory. ${members[0].users?.username || 'The leader'} currently tops the table with ${members[0].total_points} points, setting the pace for the rest of the field.` : 'he season hasn\'t started yet. Invite your rivals and prepare for battle.'}
                        </p>
-                       <div style={{ fontFamily: ftMono, fontSize: 10, letterSpacing: '.18em', color: FT_MUTE, marginTop: 12, textTransform: 'uppercase' }}>By the Forza Times Desk · {today}</div>
+                       <div style={{ fontFamily: ftMono, fontSize: 10, letterSpacing: '.18em', color: FT_MUTE, marginTop: 12, textTransform: 'uppercase' }}>By the Forza Times Desk Â· {today}</div>
                      </article>
 
                      {/* Secondary column */}
@@ -932,7 +931,7 @@ export default function LeagueScreen() {
                      <aside>
                        {/* Standings box */}
                        <div style={{ border: `2px solid ${FT_INK}`, padding: '14px 16px', background: '#EFEAE0' }}>
-                         <div style={{ fontFamily: ftMono, fontSize: 9, letterSpacing: '.22em', color: FT_INK }}>STANDINGS · LATEST</div>
+                         <div style={{ fontFamily: ftMono, fontSize: 9, letterSpacing: '.22em', color: FT_INK }}>STANDINGS Â· LATEST</div>
                          <div style={{ fontFamily: ftSerif, fontWeight: 900, fontStyle: 'italic', fontSize: 18, color: FT_INK, marginTop: 2 }}>Table at a glance</div>
                          <table style={{ width: '100%', marginTop: 8, borderCollapse: 'collapse', fontFamily: ftMono, fontSize: 11, color: FT_INK }}>
                            <tbody>
@@ -961,7 +960,7 @@ export default function LeagueScreen() {
 
                    <div style={{ height: 1, background: FT_INK, margin: '24px 0 12px' }} />
                    <div style={{ display: 'flex', justifyContent: 'space-between', fontFamily: ftMono, fontSize: 9, letterSpacing: '.22em', color: FT_MUTE }}>
-                     <span>EDITED BY THE FORZA TIMES DESK · {name.toUpperCase()}</span>
+                     <span>EDITED BY THE FORZA TIMES DESK Â· {name.toUpperCase()}</span>
                      <span>P. 01 OF 01</span>
                    </div>
                  </div>
@@ -989,19 +988,19 @@ export default function LeagueScreen() {
                {/* Hero strip */}
                <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr 1fr 1fr 1fr', borderBottom: '1px solid var(--rule)', background: 'var(--ink-2)', flexShrink: 0 }}>
                  <div style={{ padding: '20px 24px', borderRight: '1px solid var(--rule)' }}>
-                   <div style={{ fontFamily: MONO, fontSize: 10, color: 'var(--cyan)', letterSpacing: '.22em' }}>YOUR BETTING · SEASON</div>
+                   <div style={{ fontFamily: MONO, fontSize: 10, color: 'var(--cyan)', letterSpacing: '.22em' }}>YOUR BETTING Â· SEASON</div>
                    <div style={{ fontFamily: DISPLAY, fontSize: 28, marginTop: 6, color: 'var(--paper)' }}>
-                     {myEntry ? `+${myEntry.total_rewards} PTS` : '—'}
+                     {myEntry ? `+${myEntry.total_rewards} PTS` : 'â€”'}
                    </div>
                    <div style={{ fontFamily: MONO, fontSize: 10, color: 'var(--mute)', marginTop: 8, letterSpacing: '.18em' }}>
                      {myEntry && leaderboard?.length ? `RANK ${myIdx + 1} / ${leaderboard.length} IN LEAGUE` : 'NO BETS YET'}
                    </div>
                  </div>
                  {[
-                   { k: 'PLAYED', v: myEntry?.total_bets    || '—', tone: 'var(--paper)'   },
-                   { k: 'WON',    v: myEntry?.correct_bets  || '—', tone: 'var(--positive)' },
-                   { k: 'WIN %',  v: myEntry ? `${myEntry.accuracy_pct}%` : '—', tone: 'var(--cyan)' },
-                   { k: 'REWARDS',v: myEntry ? `+${myEntry.total_rewards}` : '—', tone: 'var(--gold)' },
+                   { k: 'PLAYED', v: myEntry?.total_bets    || 'â€”', tone: 'var(--paper)'   },
+                   { k: 'WON',    v: myEntry?.correct_bets  || 'â€”', tone: 'var(--positive)' },
+                   { k: 'WIN %',  v: myEntry ? `${myEntry.accuracy_pct}%` : 'â€”', tone: 'var(--cyan)' },
+                   { k: 'REWARDS',v: myEntry ? `+${myEntry.total_rewards}` : 'â€”', tone: 'var(--gold)' },
                  ].map((c, i) => (
                    <div key={c.k} style={{ padding: '20px 22px', borderRight: i < 3 ? '1px solid var(--rule)' : 'none' }}>
                      <div style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.22em' }}>{c.k}</div>
@@ -1011,7 +1010,7 @@ export default function LeagueScreen() {
                </div>
 
                {betLoading ? (
-                 <div style={{ padding: '48px', textAlign: 'center', fontFamily: MONO, fontSize: 10, color: 'var(--mute)', letterSpacing: '.2em' }}>LOADING…</div>
+                 <div style={{ padding: '48px', textAlign: 'center', fontFamily: MONO, fontSize: 10, color: 'var(--mute)', letterSpacing: '.2em' }}>LOADINGâ€¦</div>
                ) : !leaderboard?.length ? (
                  <div style={{ padding: '64px 28px', textAlign: 'center' }}>
                    <div style={{ fontFamily: MONO, fontSize: 11, color: 'var(--mute)', letterSpacing: '.2em' }}>NO RESOLVED BETS YET</div>
@@ -1020,8 +1019,8 @@ export default function LeagueScreen() {
                  <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '1.4fr 1fr', minHeight: 0 }}>
                    {/* Leaderboard */}
                    <div style={{ display: 'flex', flexDirection: 'column', borderRight: '1px solid var(--rule)' }}>
-                     <HubSectionLabel label="BETTING LEADERBOARD" sub="POINTS FROM BETS · SEASON"
-                       right={<span style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)' }}>SORT · REWARDS ↓</span>}
+                     <HubSectionLabel label="BETTING LEADERBOARD" sub="POINTS FROM BETS Â· SEASON"
+                       right={<span style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)' }}>SORT Â· REWARDS â†“</span>}
                      />
                      <div style={{ display: 'grid', gridTemplateColumns: '40px 1fr 100px 70px 70px 80px', gap: 14, padding: '10px 22px', borderBottom: '1px solid var(--rule)', color: 'var(--mute)' }}>
                        {['#', 'MANAGER', 'L8 GW', 'W-L', 'WIN %', 'REWARDS'].map(h => <span key={h} style={{ fontFamily: MONO, fontSize: 9 }}>{h}</span>)}
@@ -1042,7 +1041,7 @@ export default function LeagueScreen() {
                              <Spark data={sparkData} tone={i === 0 ? 'var(--gold)' : 'var(--cyan)'} w={88} h={22} />
                              <span style={{ fontFamily: "'Archivo', sans-serif", fontSize: 12 }}>
                                <span style={{ color: 'var(--positive)' }}>{entry.correct_bets}</span>
-                               <span style={{ color: 'var(--mute)' }}> · </span>
+                               <span style={{ color: 'var(--mute)' }}> Â· </span>
                                <span style={{ color: 'var(--danger)' }}>{lost}</span>
                              </span>
                              <span style={{ textAlign: 'right', fontFamily: DISPLAY, fontSize: 13 }}>{entry.accuracy_pct}%</span>
@@ -1143,14 +1142,14 @@ export default function LeagueScreen() {
          )}
          {view === 'stats_REMOVED' && (() => {
            const totalPts  = (topScorers || []).reduce((s, m) => s + (m.total_points || 0), 0);
-           const avgPts    = teamMetrics?.avg_points?.toFixed(0) || (members.length ? Math.round(totalPts / members.length) : '—');
-           const biggestGW = topScorers?.[0]?.total_points || '—';
+           const avgPts    = teamMetrics?.avg_points?.toFixed(0) || (members.length ? Math.round(totalPts / members.length) : 'â€”');
+           const biggestGW = topScorers?.[0]?.total_points || 'â€”';
            return (
              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: 'var(--ink)' }}>
                {/* Hero strip */}
                <div style={{ display: 'grid', gridTemplateColumns: '1.8fr 1fr 1fr 1fr', borderBottom: '1px solid var(--rule)', background: 'var(--ink-2)', flexShrink: 0 }}>
                  <div style={{ padding: '20px 24px', borderRight: '1px solid var(--rule)' }}>
-                   <div style={{ fontFamily: MONO, fontSize: 10, color: 'var(--purple)', letterSpacing: '.22em' }}>LEAGUE STATS · {members.length} GAMEWEEKS</div>
+                   <div style={{ fontFamily: MONO, fontSize: 10, color: 'var(--purple)', letterSpacing: '.22em' }}>LEAGUE STATS Â· {members.length} GAMEWEEKS</div>
                    <div style={{ fontFamily: DISPLAY, fontSize: 26, marginTop: 6, lineHeight: 1.1 }}>Numbers, the way the league reads them.</div>
                  </div>
                  {[
@@ -1166,14 +1165,14 @@ export default function LeagueScreen() {
                </div>
 
                {statsLoading ? (
-                 <div style={{ padding: '48px', textAlign: 'center', fontFamily: MONO, fontSize: 10, color: 'var(--mute)', letterSpacing: '.2em' }}>LOADING…</div>
+                 <div style={{ padding: '48px', textAlign: 'center', fontFamily: MONO, fontSize: 10, color: 'var(--mute)', letterSpacing: '.2em' }}>LOADINGâ€¦</div>
                ) : (
                  <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '1.4fr 1fr', gridTemplateRows: '1fr 1fr', minHeight: 0 }}>
                    {/* Top scorers */}
                    <section style={{ padding: '16px 22px', borderRight: '1px solid var(--rule)', borderBottom: '1px solid var(--rule)', display: 'flex', flexDirection: 'column', gap: 8, overflow: 'auto' }}>
                      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                        <span style={{ width: 3, height: 14, background: 'var(--cyan)' }} />
-                       <span style={{ fontFamily: MONO, fontSize: 11, color: 'var(--paper)', letterSpacing: '.22em' }}>SEASON TOTALS · TOP SCORERS</span>
+                       <span style={{ fontFamily: MONO, fontSize: 11, color: 'var(--paper)', letterSpacing: '.22em' }}>SEASON TOTALS Â· TOP SCORERS</span>
                      </div>
                      {(topScorers || []).map((scorer, i) => {
                        const hue  = mgrHue(scorer.username || '');
@@ -1206,7 +1205,7 @@ export default function LeagueScreen() {
                        {[
                          { k: 'MEMBERS',    v: teamMetrics?.member_count || members.length, tone: 'var(--paper)'   },
                          { k: 'AVG POINTS', v: avgPts,                                       tone: 'var(--cyan)'   },
-                         { k: 'LEADER',     v: topScorers?.[0]?.username?.substring(0, 8).toUpperCase() || '—', tone: 'var(--gold)' },
+                         { k: 'LEADER',     v: topScorers?.[0]?.username?.substring(0, 8).toUpperCase() || 'â€”', tone: 'var(--gold)' },
                          { k: 'TOTAL PTS',  v: totalPts.toLocaleString(),                    tone: 'var(--paper)'  },
                        ].map(c => (
                          <div key={c.k} style={{ padding: '12px 14px', background: 'var(--ink-2)', border: '1px solid var(--rule)', textAlign: 'center' }}>
@@ -1221,7 +1220,7 @@ export default function LeagueScreen() {
                    <section style={{ padding: '16px 22px', borderRight: '1px solid var(--rule)', display: 'flex', flexDirection: 'column', gap: 8, overflow: 'auto' }}>
                      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                        <span style={{ width: 3, height: 14, background: 'var(--danger)' }} />
-                       <span style={{ fontFamily: MONO, fontSize: 11, color: 'var(--paper)', letterSpacing: '.22em' }}>BIGGEST GAMEWEEKS · LEADERBOARD</span>
+                       <span style={{ fontFamily: MONO, fontSize: 11, color: 'var(--paper)', letterSpacing: '.22em' }}>BIGGEST GAMEWEEKS Â· LEADERBOARD</span>
                      </div>
                      {(topScorers || []).slice(0, 4).map((scorer, i) => {
                        const hue = mgrHue(scorer.username || '');
@@ -1244,7 +1243,7 @@ export default function LeagueScreen() {
                    <section style={{ padding: '16px 22px', display: 'flex', flexDirection: 'column', gap: 8, overflow: 'auto' }}>
                      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                        <span style={{ width: 3, height: 14, background: 'var(--positive)' }} />
-                       <span style={{ fontFamily: MONO, fontSize: 11, color: 'var(--paper)', letterSpacing: '.22em' }}>CAPTAINCY · HIT RATE</span>
+                       <span style={{ fontFamily: MONO, fontSize: 11, color: 'var(--paper)', letterSpacing: '.22em' }}>CAPTAINCY Â· HIT RATE</span>
                      </div>
                      <div style={{ fontFamily: "'Archivo', sans-serif", fontSize: 12, color: 'var(--mute)', lineHeight: 1.5 }}>
                        Captain data available once matchday scoring is active.
@@ -1257,7 +1256,7 @@ export default function LeagueScreen() {
            );
          })()}
 
-         {/* ── COMMISSIONER PANEL ─────────────────────────────────────────── */}
+         {/* â”€â”€ COMMISSIONER PANEL â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
          {view === 'commissioner' && isCommissioner && (
            <CommissionerPanel
              commissioner={commissioner}
@@ -1279,11 +1278,11 @@ export default function LeagueScreen() {
              {commMsg && (
                <div className={`px-4 py-3 rounded-sm text-[12px] font-bold flex items-center justify-between ${commMsg.type === 'ok' ? 'bg-positive/10 border border-positive/30 text-positive' : 'bg-negative/10 border border-negative/30 text-negative'}`}>
                  <span>{commMsg.text}</span>
-                 <button onClick={() => setCommMsg(null)} className="opacity-60 hover:opacity-100 ml-3">✕</button>
+                 <button onClick={() => setCommMsg(null)} className="opacity-60 hover:opacity-100 ml-3">âœ•</button>
                </div>
              )}
 
-             {/* ── Transfer Window ─────────────────────────────────────────── */}
+             {/* â”€â”€ Transfer Window â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
              <div data-tour="comm-transfer-window" className="bg-[#111] border border-[#1e1e1e] rounded-sm p-4 space-y-3">
                <div className="text-[10px] font-black uppercase tracking-[0.15em] text-text-tertiary">Transfer Window</div>
                <div className="grid grid-cols-2 gap-2">
@@ -1335,7 +1334,7 @@ export default function LeagueScreen() {
                </div>
              </div>
 
-             {/* ── Draft Deadline ───────────────────────────────────────────── */}
+             {/* â”€â”€ Draft Deadline â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
              <div data-tour="comm-draft-deadline" className="bg-[#111] border border-[#1e1e1e] rounded-sm p-4 space-y-3">
                <div className="text-[10px] font-black uppercase tracking-[0.15em] text-text-tertiary">Draft Deadline</div>
                <div className="flex flex-col gap-1">
@@ -1356,7 +1355,7 @@ export default function LeagueScreen() {
                </button>
              </div>
 
-             {/* ── Score Recalculation ──────────────────────────────────────── */}
+             {/* â”€â”€ Score Recalculation â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
              <div data-tour="comm-score-recalc" className="bg-[#111] border border-[#1e1e1e] rounded-sm p-4 space-y-3">
                <div className="text-[10px] font-black uppercase tracking-[0.15em] text-text-tertiary">Score Recalculation</div>
                <div className="flex flex-col gap-1">
@@ -1374,11 +1373,11 @@ export default function LeagueScreen() {
                  disabled={commLoading || !scoreFixtureId}
                  className="w-full py-3 bg-yellow-600 text-black text-[11px] font-black uppercase tracking-widest rounded-sm disabled:opacity-50"
                >
-                 {commLoading ? 'Running…' : 'Recalculate Scores'}
+                 {commLoading ? 'Runningâ€¦' : 'Recalculate Scores'}
                </button>
              </div>
 
-             {/* ── Cup Phase ───────────────────────────────────────────────── */}
+             {/* â”€â”€ Cup Phase â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
              <div className="bg-[#111] border border-[#1e1e1e] rounded-sm p-4 space-y-3">
                <div className="text-[10px] font-black uppercase tracking-[0.15em] text-text-tertiary">Cup Phase</div>
                <p className="text-[11px] text-text-tertiary">Seeding cup clubs activates the no-repeat pool. Use after draft allocations are set.</p>
@@ -1395,9 +1394,9 @@ export default function LeagueScreen() {
                </button>
              </div>
 
-             {/* ── Create Bet Instance — now rendered inside CommissionerPanel ── */}
+             {/* â”€â”€ Create Bet Instance â€” now rendered inside CommissionerPanel â”€â”€ */}
 
-             {/* ── Resolve Bet Instance ────────────────────────────────────────── */}
+             {/* â”€â”€ Resolve Bet Instance â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
              <div className="bg-[#111] border border-[#1e1e1e] rounded-sm p-4 space-y-3">
                <div className="text-[10px] font-black uppercase tracking-[0.15em] text-text-tertiary">Resolve Bet Instance</div>
 
@@ -1435,7 +1434,7 @@ export default function LeagueScreen() {
                          <div className="text-[11px] text-white">{selectedBetForResolution.prompt}</div>
                          <div className="text-[10px] font-bold text-text-secondary mt-2">Reward:</div>
                          <div className="text-[11px] text-white">
-                           {selectedBetForResolution.reward_value} {selectedBetForResolution.reward_type === 'points' ? 'pts' : '£M'}
+                           {selectedBetForResolution.reward_value} {selectedBetForResolution.reward_type === 'points' ? 'pts' : 'Â£M'}
                          </div>
                        </div>
 
@@ -1504,18 +1503,18 @@ export default function LeagueScreen() {
                            <div className="text-[10px] text-text-secondary italic">No submissions and no options defined.</div>
                          )}
 
-                         {/* Manual override — always available for partial-result / edge cases */}
+                         {/* Manual override â€” always available for partial-result / edge cases */}
                          <div className="text-[8px] uppercase tracking-widest mt-1" style={{ color: 'var(--mute)' }}>Manual override</div>
                          <input
                            type="text"
-                           placeholder="Type custom correct answer…"
+                           placeholder="Type custom correct answerâ€¦"
                            onChange={e => setBetResolutionAnswer(e.target.value)}
                            value={betResolutionAnswer && !selectedBetForResolution.options?.some(o => (o.key ?? o) === betResolutionAnswer) && !answerGrouped[betResolutionAnswer] ? betResolutionAnswer : ''}
                            className="bg-[#1a1a1a] border border-[#2a2a2a] text-white text-[11px] px-2 py-2 rounded-sm outline-none focus:border-cyan/40"
                          />
                          {betResolutionAnswer && !answerGrouped[betResolutionAnswer] && !selectedBetForResolution.options?.some(o => (o.key ?? o) === betResolutionAnswer) && (
                            <div className="bg-yellow-900/30 border border-yellow-700/50 p-2 rounded-sm text-[10px] text-yellow-200">
-                             ⚠ Override: "{betResolutionAnswer}" — not in submissions or options. This will award reward only to exact matches.
+                             âš  Override: "{betResolutionAnswer}" â€” not in submissions or options. This will award reward only to exact matches.
                            </div>
                          )}
                        </div>
@@ -1536,7 +1535,7 @@ export default function LeagueScreen() {
            </div>
          )}
 
-         {/* ── MODALS ─────────────────────────────────────────────────────── */}
+         {/* â”€â”€ MODALS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
          
          {showTradeBuilder && tradeTarget && (
             <div className="fixed inset-0 z-50 flex items-end outline-none bg-black/80 animate-in fade-in" onClick={() => setShowTradeBuilder(false)}>
@@ -1547,14 +1546,14 @@ export default function LeagueScreen() {
                       <div className="text-[10px] text-[#1E88E5] font-black uppercase tracking-[.14em] mb-1">NEGOTIATION TABLE</div>
                       <h2 className="text-xl font-bold text-white">Trade with {tradeTarget.name}</h2>
                     </div>
-                    <button onClick={() => setShowTradeBuilder(false)} className="text-[var(--mute)] hover:text-white transition-colors">✕</button>
+                    <button onClick={() => setShowTradeBuilder(false)} className="text-[var(--mute)] hover:text-white transition-colors">âœ•</button>
                   </div>
                   <div className="flex-1 overflow-y-auto px-6 py-8 flex flex-col gap-8 no-scrollbar">
                     <div className="grid grid-cols-[1fr_40px_1fr] items-center gap-2">
                       <div className="flex flex-col gap-2">
                         <label className="text-[9px] font-black text-[var(--mute)] uppercase tracking-widest text-center">MY PLAYER</label>
                         <select value={tradeMyPlayer?.id || ''} onChange={(e) => setTradeMyPlayer(mySquadPlayers.find(p => p.id === e.target.value))} className="bg-[var(--ink)] border border-[var(--rule)] p-3 rounded-sm text-white text-[12px] font-bold outline-none text-center">
-                           <option value="">{mySquadPlayers.length ? '(None)' : 'Loading…'}</option>
+                           <option value="">{mySquadPlayers.length ? '(None)' : 'Loadingâ€¦'}</option>
                            {mySquadPlayers.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
                         </select>
                         {tradeMyPlayer && (
@@ -1566,15 +1565,15 @@ export default function LeagueScreen() {
                                 : 'border-[var(--rule)] text-[#555]'
                             }`}
                           >
-                            {myListings.has(tradeMyPlayer.id) ? '✓ Listed for trade' : '+ List for trade'}
+                            {myListings.has(tradeMyPlayer.id) ? 'âœ“ Listed for trade' : '+ List for trade'}
                           </button>
                         )}
                       </div>
-                      <div className="text-[#2A2A2A] text-xl mt-6 flex justify-center">↔</div>
+                      <div className="text-[#2A2A2A] text-xl mt-6 flex justify-center">â†”</div>
                       <div className="flex flex-col gap-2">
                         <label className="text-[9px] font-black text-[var(--mute)] uppercase tracking-widest text-center">THEIR PLAYER</label>
                         <select value={tradeTheirPlayer?.id || ''} onChange={(e) => setTradeTheirPlayer(theirSquadPlayers.find(p => p.id === e.target.value))} className="bg-[var(--ink)] border border-[var(--rule)] p-3 rounded-sm text-white text-[12px] font-bold outline-none text-center text-ellipsis overflow-hidden">
-                           <option value="">{theirSquadPlayers.length ? '(None)' : 'Loading…'}</option>
+                           <option value="">{theirSquadPlayers.length ? '(None)' : 'Loadingâ€¦'}</option>
                            {theirSquadPlayers.map(p => <option key={p.id} value={p.id}>{p.name} ({p.club})</option>)}
                         </select>
                       </div>
@@ -1583,12 +1582,12 @@ export default function LeagueScreen() {
                     <div className="space-y-4 pt-6 border-t border-[var(--rule)]">
                       <div className="flex justify-between items-center mb-2">
                         <span className="text-[12px] font-bold text-white">Add Cash Sweetener</span>
-                        <span className="text-[14px] font-black text-positive">€{tradeCash.toFixed(1)}M</span>
+                        <span className="text-[14px] font-black text-positive">â‚¬{tradeCash.toFixed(1)}M</span>
                       </div>
                       <div className="flex items-center gap-4">
-                        <span className="text-[10px] text-[var(--mute)]">€0M</span>
+                        <span className="text-[10px] text-[var(--mute)]">â‚¬0M</span>
                         <input type="range" min="-10" max="10" step="0.5" value={tradeCash} onChange={e => setTradeCash(parseFloat(e.target.value))} className="flex-1 accent-cyan" />
-                        <span className="text-[10px] text-[var(--mute)]">€10M</span>
+                        <span className="text-[10px] text-[var(--mute)]">â‚¬10M</span>
                       </div>
                       <p className="text-[10px] text-[var(--mute)] italic text-center">Shift budget caps to balance unequal player values.</p>
                     </div>
@@ -1612,11 +1611,11 @@ export default function LeagueScreen() {
                       tradeMyPlayer.position?.toUpperCase().replace('FW','FWD') !==
                       tradeTheirPlayer.position?.toUpperCase().replace('FW','FWD') && (
                       <div className="text-[#FFC107] text-[10px] font-bold text-center">
-                        ⏳ Transfer window opens in{' '}
+                        â³ Transfer window opens in{' '}
                         {transferWindow.opensAt
                           ? new Date(transferWindow.opensAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
                           : 'soon'}
-                        {' '}— position-change swaps blocked until then
+                        {' '}â€” position-change swaps blocked until then
                       </div>
                     )}
                     {tradeError && (
@@ -1642,25 +1641,25 @@ export default function LeagueScreen() {
                     <h2 className="text-white font-bold text-lg">{managerTeamView.name}'s Roster</h2>
                     <p className="text-[10px] text-text-tertiary uppercase tracking-widest">Full 11-Man Tactical Squad</p>
                  </div>
-                 <button onClick={() => setManagerTeamView(null)} className="text-[#555]">✕</button>
+                 <button onClick={() => setManagerTeamView(null)} className="text-[#555]">âœ•</button>
                </div>
                <div className="flex-1 overflow-y-auto p-6 space-y-3 no-scrollbar">
                  {!managerRoster.length && (
-                   <div className="text-center text-[12px] text-text-tertiary py-8">Loading roster…</div>
+                   <div className="text-center text-[12px] text-text-tertiary py-8">Loading rosterâ€¦</div>
                  )}
                  {managerRoster.map((p, i) => (
                    <div key={i} className="flex items-center gap-4 bg-[var(--ink)] p-3 border border-[var(--rule)] rounded-sm relative overflow-hidden group">
                      <div className="absolute left-0 top-0 bottom-0 w-1 bg-cyan/20 group-hover:bg-cyan transition-colors" />
                      <div className="w-10 h-10 rounded bg-[var(--ink-2)] flex items-center justify-center text-[10px] font-bold text-[#555] overflow-hidden grayscale"><img src={`https://media.api-sports.io/football/players/${(i % 10) + 600}.png`} className="w-full h-full object-cover" /></div>
                      <div className="flex-1">
-                       <div className="text-[10px] font-black text-white/40 uppercase tracking-tighter">{p.club} · {p.position}</div>
+                       <div className="text-[10px] font-black text-white/40 uppercase tracking-tighter">{p.club} Â· {p.position}</div>
                        <div className="text-[15px] font-bold text-white tracking-tight">{p.name}</div>
                      </div>
                      <div className="text-right mr-2">
-                        <div className="text-[12px] font-black text-white">€{p.price}M</div>
+                        <div className="text-[12px] font-black text-white">â‚¬{p.price}M</div>
                         <div className="text-[9px] text-positive font-bold">READY</div>
                      </div>
-                     <button onClick={() => { const t = { ...managerTeamView, name: managerTeamView.name }; setTradeTarget(t); setTradeTheirPlayer(p); loadTradeSquads(managerTeamView.user_id); setManagerTeamView(null); setShowTradeBuilder(true); }} className="w-9 h-9 rounded-full bg-cyan text-black flex items-center justify-center font-bold active:scale-90 transition-transform shadow-[0_4px_10px_rgba(0,180,216,0.3)]">🔄</button>
+                     <button onClick={() => { const t = { ...managerTeamView, name: managerTeamView.name }; setTradeTarget(t); setTradeTheirPlayer(p); loadTradeSquads(managerTeamView.user_id); setManagerTeamView(null); setShowTradeBuilder(true); }} className="w-9 h-9 rounded-full bg-cyan text-black flex items-center justify-center font-bold active:scale-90 transition-transform shadow-[0_4px_10px_rgba(0,180,216,0.3)]">ðŸ”„</button>
                    </div>
                  ))}
                </div>
@@ -1761,7 +1760,7 @@ export default function LeagueScreen() {
               whiteSpace:    'nowrap',
             }}
           >
-            {joinLoading ? '…' : 'Join →'}
+            {joinLoading ? 'â€¦' : 'Join â†’'}
           </button>
         </form>
         {joinError && (
