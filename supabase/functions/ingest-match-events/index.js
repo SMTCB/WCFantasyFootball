@@ -250,37 +250,74 @@ Deno.serve(async (req) => {
       }
     }
 
-    // ── 5. Supplement positions from lineups (E5) if not yet in our DB ────────
-    // Also extract own_goal_count from EventDigest (only source for own goals)
-    const ownGoalMap = {};  // forza_player_id → count
+    // ── 5. Supplement positions, minutes, and team_id from lineups (E5) ────────
+    // E10 player_statistics only includes players with at least one non-zero stat.
+    // GKs with no saves/goals/cards are absent from E10, causing them to receive
+    // minutes_played=0 and 0 pts even when they played the full match.
+    // Fix: build fallback maps from E5 so any player absent from E10 still gets
+    // correct minutes, team, and therefore correct clean_sheet/goals_conceded.
+    const ownGoalMap    = {};  // forza_player_id → own_goal count
+    const minutesMap    = {};  // forza_player_id → minutes_played (E5 fallback)
+    const lineupTeamMap = {};  // forza_player_id → forza_team_id  (E5 fallback)
+
     if (lineupsData?.lineups) {
       for (const side of ['home', 'away']) {
-        const lineup = lineupsData.lineups[side];
+        const lineup      = lineupsData.lineups[side];
+        const teamForzaId = side === 'home' ? homeId : awayId;
         if (!lineup) continue;
-        for (const p of [...(lineup.pitch_players ?? []), ...(lineup.bench_players ?? [])]) {
+
+        for (const p of (lineup.pitch_players ?? [])) {
           if (!p.player_id) continue;
           const fpid = String(p.player_id);
-
-          // Fill in position if missing from our lookup
-          if (!playerLookup[fpid] && p.position) {
+          minutesMap[fpid]    = 90;           // starters play 90 unless subbed off
+          lineupTeamMap[fpid] = teamForzaId;
+          if (!playerLookup[fpid] && p.position)
             playerLookup[fpid] = { id: null, position: POSITION_MAP[p.position] ?? 'MID' };
-          } else if (playerLookup[fpid] && !playerLookup[fpid].position && p.position) {
+          else if (playerLookup[fpid] && !playerLookup[fpid].position && p.position)
             playerLookup[fpid].position = POSITION_MAP[p.position] ?? 'MID';
-          }
-
-          // Own goals from EventDigest
-          if (p.event_digest?.own_goal_count) {
+          if (p.event_digest?.own_goal_count)
             ownGoalMap[fpid] = p.event_digest.own_goal_count;
-          }
         }
+
+        for (const p of (lineup.bench_players ?? [])) {
+          if (!p.player_id) continue;
+          const fpid = String(p.player_id);
+          if (minutesMap[fpid] === undefined) minutesMap[fpid] = 0;  // bench default 0
+          lineupTeamMap[fpid] = teamForzaId;
+          if (!playerLookup[fpid] && p.position)
+            playerLookup[fpid] = { id: null, position: POSITION_MAP[p.position] ?? 'MID' };
+          else if (playerLookup[fpid] && !playerLookup[fpid].position && p.position)
+            playerLookup[fpid].position = POSITION_MAP[p.position] ?? 'MID';
+        }
+      }
+    }
+
+    // ── 5b. Adjust minutesMap using substitution events from E9 ─────────────────
+    // Already have activityEvents from processPeriodsData (called below in step 7).
+    // We process periods now just for substitutions, then re-use the full result.
+    const periodsForSubs = processPeriodsData(periodsData, homeId);
+    for (const ev of periodsForSubs.activityEvents) {
+      if (ev.type !== 'sub') continue;
+      const minInt = parseInt(ev.minute) || 0;
+      if (minInt <= 0) continue;
+      // Player subbed OUT: played until this minute
+      if (ev.player_forza_id && minutesMap[ev.player_forza_id] !== undefined) {
+        minutesMap[ev.player_forza_id] = Math.min(minutesMap[ev.player_forza_id], minInt);
+      }
+      // Player subbed IN: played from this minute to 90
+      if (ev.player_in_forza_id) {
+        minutesMap[ev.player_in_forza_id] = Math.max(
+          minutesMap[ev.player_in_forza_id] ?? 0,
+          90 - minInt
+        );
       }
     }
 
     // ── 6. Flatten E10 stats ──────────────────────────────────────────────────
     const statsMap = flattenPlayerStats(statsData);
 
-    // ── 7. Process periods for red cards, penalty events, activity feed ────────
-    const periodsResult = processPeriodsData(periodsData, homeId);
+    // ── 7. Reuse the periods result already built in step 5b ─────────────────
+    const periodsResult = periodsForSubs;
 
     // ── 8. Derive clean sheets ────────────────────────────────────────────────
     // clean sheet = player's team conceded 0 goals AND player played ≥ 60 min
@@ -306,9 +343,10 @@ Deno.serve(async (req) => {
       if (!internal?.id) continue;    // player not in our DB — skip
 
       const s        = statsMap[fpid] ?? {};
-      const teamId   = s.forza_team_id ?? null;
+      // Fall back to lineup-derived values for players absent from E10 (e.g. GKs with no stats)
+      const teamId   = s.forza_team_id ?? lineupTeamMap[fpid] ?? null;
       const conceded = teamId ? (concededByTeam[teamId] ?? 0) : 0;
-      const mins     = s.minutes_played ?? 0;
+      const mins     = s.minutes_played ?? minutesMap[fpid] ?? 0;
 
       // Penalty save: GKs only. If the opposing team missed a penalty, this GK saved it.
       // (Approximation: can't distinguish save from post/bar, but saves are the vast majority.)

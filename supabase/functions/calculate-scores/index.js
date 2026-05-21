@@ -462,9 +462,17 @@ async function rollupSquads(fixture_id, pointsLookup, tournament_id) {
       total += pts;
     }
 
+    // Use round-based matchday_id (e.g. '426-r35') so each gameweek creates its
+    // own fantasy_points row and season totals accumulate correctly via
+    // aggregate_league_member_points. Fall back to squad.matchday_id only when
+    // round_number is unavailable (legacy / non-round fixtures).
+    const roundMatchdayId = (fix?.round_number && tournament_id)
+      ? `${tournament_id}-r${fix.round_number}`
+      : squad.matchday_id || 'current';
+
     return {
       squad_id:         squad.id,
-      matchday_id:      squad.matchday_id || 'current',
+      matchday_id:      roundMatchdayId,
       total:            Math.round(total * 100) / 100,
       points_breakdown: { fixture_id, player_count: pitchPlayers.length },
     };
