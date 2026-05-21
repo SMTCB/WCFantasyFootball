@@ -239,7 +239,7 @@ function BetCardPreview({ betType, title, reward, closes, fixtureObj, players, b
 // ─────────────────────────────────────────────────────────────────────────────
 // Create Bet Wizard (Zone B left)
 // ─────────────────────────────────────────────────────────────────────────────
-function CreateBetWizard({ onPublish, commLoading, memberCount, tournamentId }) {
+function CreateBetWizard({ onPublish, commLoading, memberCount, tournamentId, isMobile = false }) {
   const [step,        setStep]   = useState(1);
   const [betType,     setBetType] = useState(null);
   const [fixture,     setFixture] = useState('');      // single fixture id (match-result / player-block)
@@ -415,10 +415,10 @@ function CreateBetWizard({ onPublish, commLoading, memberCount, tournamentId }) 
       {/* Step rail */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', borderBottom: '1px solid var(--rule)', background: 'var(--ink)', flexShrink: 0 }}>
         {[
-          { n: 1, label: 'TYPE',      reached: true,     done: !!betType },
-          { n: 2, label: 'CONFIGURE', reached: canStep2, done: canStep3  },
-          { n: 3, label: 'REWARD',    reached: canStep3, done: canStep4  },
-          { n: 4, label: 'PUBLISH',   reached: canStep4, done: false     },
+          { n: 1, label: 'TYPE',    reached: true,     done: !!betType },
+          { n: 2, label: 'CONFIG',  reached: canStep2, done: canStep3  },
+          { n: 3, label: 'REWARD',  reached: canStep3, done: canStep4  },
+          { n: 4, label: 'PUBLISH', reached: canStep4, done: false     },
         ].map(s => {
           const active = step === s.n;
           const railTone = !s.reached ? 'var(--mute)' : (active ? 'var(--cyan)' : (s.done ? 'var(--positive)' : 'var(--paper)'));
@@ -432,37 +432,42 @@ function CreateBetWizard({ onPublish, commLoading, memberCount, tournamentId }) 
                 borderBottom: active ? `2px solid ${railTone}` : '2px solid transparent',
                 borderLeft: 'none',
                 borderRight: s.n < 4 ? '1px solid var(--rule)' : 'none',
-                padding: '14px 16px', cursor: s.reached ? 'pointer' : 'not-allowed',
-                color: railTone, textAlign: 'left',
-                display: 'flex', alignItems: 'center', gap: 10,
+                padding: isMobile ? '10px 6px' : '14px 16px',
+                cursor: s.reached ? 'pointer' : 'not-allowed',
+                color: railTone,
+                display: 'flex', alignItems: 'center', justifyContent: isMobile ? 'center' : 'flex-start', gap: isMobile ? 4 : 10,
               }}
             >
               <span style={{
-                width: 22, height: 22, borderRadius: '50%',
+                width: 20, height: 20, borderRadius: '50%', flexShrink: 0,
                 border: `1.5px solid ${railTone}`,
                 background: s.done ? railTone : 'transparent',
                 color: s.done ? 'var(--ink)' : railTone,
                 display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                fontFamily: MONO, fontSize: 10, fontWeight: 600, flexShrink: 0,
+                fontFamily: MONO, fontSize: 9, fontWeight: 600,
               }}>{s.done ? '✓' : s.n}</span>
-              <span style={{ display: 'flex', flexDirection: 'column' }}>
-                <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.22em', color: 'var(--mute)' }}>STEP {s.n}</span>
-                <span style={{ fontFamily: MONO, fontSize: 11, letterSpacing: '.18em', color: railTone }}>{s.label}</span>
-              </span>
+              {isMobile ? (
+                <span style={{ fontFamily: MONO, fontSize: 8, letterSpacing: '.14em', color: railTone }}>{s.label}</span>
+              ) : (
+                <span style={{ display: 'flex', flexDirection: 'column' }}>
+                  <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.22em', color: 'var(--mute)' }}>STEP {s.n}</span>
+                  <span style={{ fontFamily: MONO, fontSize: 11, letterSpacing: '.18em', color: railTone }}>{s.label}</span>
+                </span>
+              )}
             </button>
           );
         })}
       </div>
 
-      {/* Body: form left, live preview right */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 300px', minHeight: 0, flex: 1 }}>
-        <div style={{ padding: '22px 24px', display: 'flex', flexDirection: 'column', gap: 18, borderRight: '1px solid var(--rule)', overflow: 'auto' }}>
+      {/* Body: form left, live preview right (preview hidden on mobile) */}
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 300px', minHeight: 0, flex: 1 }}>
+        <div style={{ padding: isMobile ? '16px 14px' : '22px 24px', display: 'flex', flexDirection: 'column', gap: 16, borderRight: isMobile ? 'none' : '1px solid var(--rule)', overflow: 'auto' }}>
 
           {/* ── Step 1: Bet type ── */}
           {step === 1 && (
             <>
               <WizHelp num="01" label="WHAT KIND OF BET?" hint="Each type uses a different resolution rule. Pick one — you can change it before publishing." />
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', gap: 8 }}>
                 {BET_TYPES.map(t => {
                   const picked = betType === t.id;
                   return (
@@ -471,7 +476,11 @@ function CreateBetWizard({ onPublish, commLoading, memberCount, tournamentId }) 
                       background: picked ? `${t.tone}10` : 'var(--ink-2)',
                       border: picked ? `1px solid ${t.tone}` : '1px solid var(--rule)',
                       borderLeft: picked ? `3px solid ${t.tone}` : '3px solid transparent',
-                      padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 8, minHeight: 140,
+                      padding: isMobile ? '12px 14px' : '14px 16px',
+                      display: 'flex', flexDirection: isMobile ? 'row' : 'column',
+                      alignItems: isMobile ? 'center' : 'flex-start',
+                      gap: isMobile ? 12 : 8,
+                      minHeight: isMobile ? 0 : 140,
                     }}>
                       <span style={{ width: 30, height: 30, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: `${t.tone}18`, border: `1px solid ${t.tone}55`, fontFamily: DISPLAY, fontSize: 15, color: t.tone }}>{t.glyph}</span>
                       <span style={{ fontFamily: DISPLAY, fontSize: 14, letterSpacing: '-0.01em', color: 'var(--paper)' }}>{t.label}</span>
@@ -650,8 +659,8 @@ function CreateBetWizard({ onPublish, commLoading, memberCount, tournamentId }) 
           )}
         </div>
 
-        {/* Live preview panel */}
-        <aside style={{ padding: '18px', background: 'var(--ink-2)', display: 'flex', flexDirection: 'column', gap: 10, overflow: 'auto' }}>
+        {/* Live preview panel — desktop only */}
+        {!isMobile && <aside style={{ padding: '18px', background: 'var(--ink-2)', display: 'flex', flexDirection: 'column', gap: 10, overflow: 'auto' }}>
           <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.22em', color: 'var(--mute)' }}>LIVE PREVIEW · WHAT MANAGERS WILL SEE</span>
           <BetCardPreview
             betType={betType}
@@ -665,7 +674,7 @@ function CreateBetWizard({ onPublish, commLoading, memberCount, tournamentId }) 
           <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.16em', color: 'var(--mute)', lineHeight: 1.5 }}>
             UPDATES AS YOU EDIT. THIS CARD APPEARS IN THE <b style={{ color: 'var(--cyan)' }}>BETS TAB</b> FOR EVERY MANAGER ONCE PUBLISHED.
           </span>
-        </aside>
+        </aside>}
       </div>
 
       {/* ── Player picker modal ── */}
@@ -674,7 +683,7 @@ function CreateBetWizard({ onPublish, commLoading, memberCount, tournamentId }) 
           style={{ position: 'fixed', inset: 0, zIndex: 300, background: 'rgba(0,0,0,0.85)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
           onClick={e => { if (e.target === e.currentTarget) { setShowPlayerModal(false); setPlayerSearch(''); } }}
         >
-          <div style={{ background: 'var(--ink)', border: '1px solid var(--rule)', width: 380, maxHeight: '80vh', display: 'flex', flexDirection: 'column', boxShadow: '0 20px 60px rgba(0,0,0,0.6)' }}>
+          <div style={{ background: 'var(--ink)', border: '1px solid var(--rule)', width: isMobile ? 'calc(100vw - 32px)' : 380, maxHeight: '80vh', display: 'flex', flexDirection: 'column', boxShadow: '0 20px 60px rgba(0,0,0,0.6)' }}>
             <div style={{ padding: '12px 14px', borderBottom: '1px solid var(--rule)', display: 'flex', alignItems: 'center', gap: 10 }}>
               <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.22em', color: 'var(--cyan)', flex: 1 }}>SELECT PLAYER</span>
               <button onClick={() => { setShowPlayerModal(false); setPlayerSearch(''); }} style={{ background: 'none', border: 'none', color: 'var(--mute)', cursor: 'pointer', fontSize: 18, lineHeight: 1 }}>✕</button>
@@ -736,7 +745,7 @@ function CreateBetWizard({ onPublish, commLoading, memberCount, tournamentId }) 
           style={{ position: 'fixed', inset: 0, zIndex: 300, background: 'rgba(0,0,0,0.85)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
           onClick={e => { if (e.target === e.currentTarget) { setShowFixtureModal(false); setFixtureSearch(''); } }}
         >
-          <div style={{ background: 'var(--ink)', border: '1px solid var(--rule)', width: 400, maxHeight: '80vh', display: 'flex', flexDirection: 'column', boxShadow: '0 20px 60px rgba(0,0,0,0.6)' }}>
+          <div style={{ background: 'var(--ink)', border: '1px solid var(--rule)', width: isMobile ? 'calc(100vw - 32px)' : 400, maxHeight: '80vh', display: 'flex', flexDirection: 'column', boxShadow: '0 20px 60px rgba(0,0,0,0.6)' }}>
             <div style={{ padding: '12px 14px', borderBottom: '1px solid var(--rule)', display: 'flex', alignItems: 'center', gap: 10 }}>
               <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.22em', color: 'var(--gold)', flex: 1 }}>ADD MATCH FROM ANOTHER ROUND</span>
               <button onClick={() => { setShowFixtureModal(false); setFixtureSearch(''); }} style={{ background: 'none', border: 'none', color: 'var(--mute)', cursor: 'pointer', fontSize: 18, lineHeight: 1 }}>✕</button>
@@ -1202,7 +1211,7 @@ function CommMsg({ msg, onDismiss }) {
   const ok = msg.type === 'ok';
   return (
     <div style={{
-      margin: '12px 24px 0', padding: '10px 14px',
+      margin: '12px 16px 0', padding: '10px 14px',
       background: ok ? 'rgba(34,197,94,.08)' : 'rgba(239,68,68,.08)',
       border: `1px solid ${ok ? 'rgba(34,197,94,.3)' : 'rgba(239,68,68,.3)'}`,
       color: ok ? 'var(--positive)' : 'var(--danger)',
@@ -1262,8 +1271,8 @@ export default function CommissionerPanel({ commissioner, leagueId, tournamentId
 
         {/* Create bet (mobile) */}
         <MobSectionHeader label="CREATE BET" sub="GUIDED · 4 STEPS" tone="var(--cyan)" />
-        <div style={{ padding: '14px 18px' }}>
-          <CreateBetWizard onPublish={handlePublish} commLoading={commLoading} memberCount={memberCount} tournamentId={tournamentId} />
+        <div style={{ padding: '0' }}>
+          <CreateBetWizard onPublish={handlePublish} commLoading={commLoading} memberCount={memberCount} tournamentId={tournamentId} isMobile={true} />
         </div>
 
         {/* Resolve bets (mobile) */}
