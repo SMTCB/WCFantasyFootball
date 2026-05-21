@@ -4,6 +4,11 @@ import { useEffect, useState } from 'react';
 // the Rolldown TDZ crash caused by App importing AuthContext directly AND
 // transitively via hooks/useAuth (which is a pure re-export from AuthContext).
 import { AuthProvider, useAuthContext as useAuth } from './context/AuthContext';
+// capacitor initNative is called here (not in main.jsx) because main.jsx
+// importing capacitor.js directly AND App→AuthContext→capacitor is a depth-2
+// Rolldown TDZ at the bundle entry point.
+import { initNative } from './lib/capacitor';
+initNative(); // run immediately at module evaluation time (before React renders)
 import ProtectedRoute from './components/ProtectedRoute';
 import ErrorBoundary from './components/ErrorBoundary';
 import AppLayout from './components/AppLayout';
