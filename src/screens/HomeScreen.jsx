@@ -615,17 +615,6 @@ export default function HomeScreen() {
     setSelectedDate(prev => addDays(prev, viewMode === 'week' ? 7 : 1));
   }, [viewMode]);
 
-  // Human-readable week range label, e.g. "19–25 May" or "30 May – 5 Jun"
-  const weekRange = useMemo(() => {
-    const { start, end } = getWeekDates(selectedDate);
-    const s = new Date(start + 'T12:00:00Z');
-    const e = new Date(end   + 'T12:00:00Z');
-    const sm = MONTHS_SHORT[s.getUTCMonth()];
-    const em = MONTHS_SHORT[e.getUTCMonth()];
-    if (sm === em) return `${s.getUTCDate()}–${e.getUTCDate()} ${sm}`;
-    return `${s.getUTCDate()} ${sm} – ${e.getUTCDate()} ${em}`;
-  }, [selectedDate, getWeekDates]);
-
   // ── Derived fixture sets ──────────────────────────────────────────
   // Calculate week dates for WEEK view
   const getWeekDates = useCallback((date) => {
@@ -640,6 +629,19 @@ export default function HomeScreen() {
     const end = weekEnd.toISOString().split('T')[0];
     return { start, end };
   }, []);
+
+  // Human-readable week range label — declared AFTER getWeekDates to avoid TDZ.
+  // weekRange referenced getWeekDates in its dep array before getWeekDates was
+  // declared (line 619 vs 631), which Rolldown minified to 'b' in TDZ.
+  const weekRange = useMemo(() => {
+    const { start, end } = getWeekDates(selectedDate);
+    const s = new Date(start + 'T12:00:00Z');
+    const e = new Date(end   + 'T12:00:00Z');
+    const sm = MONTHS_SHORT[s.getUTCMonth()];
+    const em = MONTHS_SHORT[e.getUTCMonth()];
+    if (sm === em) return `${s.getUTCDate()}–${e.getUTCDate()} ${sm}`;
+    return `${s.getUTCDate()} ${sm} – ${e.getUTCDate()} ${em}`;
+  }, [selectedDate, getWeekDates]);
 
   // WEEK mode: all fixtures in the 7-day window containing selectedDate.
   // List mode (date or comp grouping): only fixtures on the selected date.
