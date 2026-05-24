@@ -106,11 +106,13 @@ $$;
 -- SEC-5: resolve_bet — verify caller is commissioner of the bet's league.
 -- ════════════════════════════════════════════════════════════════════════════════
 
--- Only patch if the function already exists (migration 34+).
+-- Must DROP first: existing function uses param name p_instance_id and PostgreSQL
+-- disallows renaming parameters via CREATE OR REPLACE.
+DROP FUNCTION IF EXISTS resolve_bet(uuid, text);
+
 DO $$ BEGIN
-  IF EXISTS (SELECT 1 FROM pg_proc WHERE proname = 'resolve_bet') THEN
-    -- Recreate with commissioner check injected at the top.
-    EXECUTE $func$
+  -- Recreate unconditionally (drop above handles missing-function case).
+  EXECUTE $func$
     CREATE OR REPLACE FUNCTION resolve_bet(
       p_bet_id         UUID,
       p_correct_answer TEXT
@@ -158,7 +160,6 @@ DO $$ BEGIN
     END;
     $inner$
     $func$;
-  END IF;
 END $$;
 
 
