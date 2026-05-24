@@ -31,7 +31,7 @@ DO $$ BEGIN
     SELECT 1 FROM information_schema.columns
     WHERE table_schema = 'public' AND table_name = 'squads' AND column_name = 'captain_id'
   ) THEN
-    GRANT UPDATE (captain_id, formation, joker_player_id, joker_used, is_wildcard, is_triple_captain)
+    GRANT UPDATE (captain_id, joker_player_id, is_wildcard, is_triple_captain)
       ON public.squads TO authenticated;
   END IF;
 END $$;
