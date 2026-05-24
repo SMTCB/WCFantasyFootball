@@ -474,8 +474,10 @@ Always create a new file — never modify existing migrations.
 | 66 | `66_security_hardening.sql` | Sprint 0: SEC-1–7, L3.1/3.2, L1.1, DATA-1/3/11/12, I1 |
 | 67 | `67_ingest_events_cron.sql` | Sprint 0: live ingest cron (every 5 min), post-match score cron (22:30 UTC) |
 | 68 | `68_wc_cron_key_fix.sql` | Sprint 0: WC crons corrected to send forza_id key |
+| 69 | `69_rank_trigger.sql` | Sprint 1: recompute_league_ranks() + AFTER UPDATE OF total_points trigger |
+| 70 | `70_scoring_fixes.sql` | Sprint 1: aggregate_league_member_points (UUID,UUID) signature + L3.7 reward_type filter |
 
-**Next migration**: `69_`
+**Next migration**: `71_`
 
 **Key pipeline facts (2026-05-24):**
 - `calculate-scores` uses `scoring_rules` table (not `scoring_templates`) keyed by `tournament_id`

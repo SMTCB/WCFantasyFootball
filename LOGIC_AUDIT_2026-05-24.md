@@ -10,7 +10,13 @@
 | ID | Status | Notes |
 |----|--------|-------|
 | L1.1 | ✅ Done | scoring_rules table created with JSONB shape; EPL (426) seeded |
-| L1.2–L1.8 | ⏳ Sprint 1 | Scoring math correctness (GK clean sheets, sub events, penalty_missed, mins≥60) |
+| L1.2 | ✅ Done | GK conceded_per_goal = floor(n/2)×rule; FPL-style (session 35) |
+| L1.3 | ✅ Done | rollupSquads \|\| → ?? + NaN guard (session 35) |
+| L1.4 | ✅ Done | Wildcard multiplier applied once after loop total (session 35) |
+| L1.5 | ✅ Done | Joker chip wired: joker_player_id doubles player points (session 35) |
+| L1.6 | ✅ Done | Path B handles 'sub' and 'sub_off' event types (session 35) |
+| L1.7 | ✅ Done | ingest-match-events typeMap penalty_missed fixed (session 35) |
+| L1.8 | ✅ Done | Path B clean_sheet includes mins≥60 gate (session 35) |
 | L2.1 | ⏳ Sprint 1 | resolve_bet validates correct_answer is in options |
 | L2.4 | ⏳ Sprint 1 | Auto-resolver edge function + cron |
 | L3.1 | ✅ Done | aggregate_league_member_points UPDATE clause restored |

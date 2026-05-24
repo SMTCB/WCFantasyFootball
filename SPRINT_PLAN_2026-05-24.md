@@ -102,16 +102,16 @@ A small number of items must land in a specific order:
 
 ## Scoring math
 
-- **L1.4** · Resolve wildcard chip semantics (stacks with captain ×2 currently)
-- **L1.5** · Joker chip — either ship scoring or remove from UI (links to U7)
-- **L1.2** · GK `conceded_per_goal` — decide per-goal vs per-2-goals
-- **L1.3** · Replace `||` with `??` in `rollupSquads`; add NaN guard
-- **L1.6** · Path B accept both `'sub'` and `'sub_off'` event types
-- **L1.7** · `penalty_missed` events tagged correctly in `match_events`
-- **L1.8** · Apply `mins >= 60` at clean_sheet derivation in Path B
-- **DATA-6** · `calculate-scores` tournament-id fallback fix
-- **DATA-5** · `process-transfer` filter squad by active `matchday_id`
-- **DATA-4** · `process-transfer` deadline scoped to tournament
+- ✅ **L1.4** · Wildcard 1.1× applied to squad total once (not per-player stacking)
+- ✅ **L1.5** · Joker chip wired: joker_player_id doubles that player's points
+- ✅ **L1.2** · GK conceded_per_goal → floor(n/2)×rule (FPL-style)
+- ✅ **L1.3** · `||` → `??` + NaN guard in `rollupSquads`
+- ✅ **L1.6** · Path B handles both `'sub'` and `'sub_off'` event types
+- ✅ **L1.7** · `ingest-match-events` typeMap: penalty_missed → 'penalty_missed'
+- ✅ **L1.8** · Path B clean_sheet includes mins≥60 gate
+- ✅ **DATA-6** · `rollupSquads` hard-fail on missing round_number/tournament_id; never writes 'current'
+- ✅ **DATA-5** · `process-transfer` squad query filtered by active matchday_id
+- ✅ **DATA-4** · `process-transfer` deadline scoped to league's tournament_id
 
 ## Aggregation
 
@@ -136,9 +136,9 @@ A small number of items must land in a specific order:
 - ✅ **FRONT-9** · `useNotifications` `removeChannel` fix
 - ✅ **FRONT-10** · `useAuctions` cancelRef added (Realtime subscription replacing polling deferred to Sprint 2)
 - ✅ **FRONT-11** · `loadLeagueById` guard on `user?.id`
-- **U10** · `DraftRecoveryScreen` stop writing `matchday_id='current'`
-- **U11** · `SquadScreen.fetchSquad` filter by active matchday
-- **U12** · `RecapScreen` resolve matchday from `matchday_deadlines` (drop `'md2'`)
+- ✅ **U10** · `DraftRecoveryScreen` derives active matchday_id from matchday_deadlines
+- ✅ **U11** · `SquadScreen.fetchSquad` scoped to active matchday_id
+- ✅ **U12** · `RecapScreen` resolves matchday from `matchday_deadlines` via tournament_id
 - **U13** · `RecapScreen` captain math convention (pick base or effective)
 - **U6** · `LiveScreen` Realtime subscription (replaces 5-min poll)
 
