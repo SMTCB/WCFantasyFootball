@@ -96,7 +96,7 @@ export function useNotifications(leagueId) {
       .subscribe();
 
     return () => {
-      subscription.unsubscribe();
+      supabase.removeChannel(subscription);
     };
   }, [leagueId]);
 

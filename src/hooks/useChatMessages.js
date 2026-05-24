@@ -241,12 +241,13 @@ export function useChatMessages(leagueId) {
     typingChannelRef.current = channel;
 
     return () => {
-      if (subscriptionRef.current) {
-        supabase.removeChannel(subscriptionRef.current);
-      }
+      if (subscriptionRef.current) { supabase.removeChannel(subscriptionRef.current); subscriptionRef.current = null; }
+      typingChannelRef.current = null;
       if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
     };
-  }, [leagueId, loadMessages, user?.id, fetchUnreadCount]);
+  // loadMessages and fetchUnreadCount are stable across token refreshes (keyed on same primitives)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [leagueId, user?.id]);
 
   // Auto-scroll to bottom only if user is already at the bottom
   // This prevents jarring scroll jumps when polling updates messages while user is reading history
