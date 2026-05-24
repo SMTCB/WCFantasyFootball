@@ -1,6 +1,10 @@
 /* eslint-disable react-refresh/only-export-components */
 // Shared chrome primitives for the League Hub.
 // All components use inline styles + CSS custom properties to match the design spec exactly.
+//
+// IMPORTANT: string constants (MONO, DISPLAY, mgrMono, miniBtnStyle) live in
+// HubConstants.js (a leaf module with no React). Import constants from there in
+// any child panel to avoid Rolldown TDZ crashes (see CLAUDE.md TDZ Rule).
 
 // var (not const) — LeagueScreen imports HubShared directly AND all 6 of its
 // child view components (AuctionsView, BetsTabHub, BettingLeaderboardView,
@@ -328,4 +332,3 @@ export function MobSection({ label, sub, tone = 'var(--cyan)', right }) {
   );
 }
 
-export { MONO, DISPLAY, BODY };

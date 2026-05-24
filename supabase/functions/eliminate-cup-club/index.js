@@ -6,15 +6,37 @@
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
-const supabase = createClient(
-  Deno.env.get('SUPABASE_URL'),
-  Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
-);
+const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
+const SERVICE_KEY  = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+const ANON_KEY     = Deno.env.get('SUPABASE_ANON_KEY');
+
+const supabase = createClient(SUPABASE_URL, SERVICE_KEY);
 
 Deno.serve(async (req) => {
   try {
     const { league_id, club_id, club_name } = await req.json();
     if (!league_id || !club_id) return respond(400, { error: 'league_id and club_id required' });
+
+    // Verify caller is a commissioner of this league.
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) return respond(401, { error: 'Unauthorized' });
+
+    const userClient = createClient(SUPABASE_URL, ANON_KEY, {
+      global: { headers: { Authorization: authHeader } },
+    });
+    const { data: { user }, error: authErr } = await userClient.auth.getUser();
+    if (authErr || !user) return respond(401, { error: 'Unauthorized' });
+
+    const { data: membership } = await supabase
+      .from('league_members')
+      .select('role')
+      .eq('league_id', league_id)
+      .eq('user_id', user.id)
+      .maybeSingle();
+
+    if (!membership || membership.role !== 'commissioner') {
+      return respond(403, { error: 'Forbidden — commissioner only' });
+    }
 
     // Eliminate
     const { error: elimErr } = await supabase.rpc('eliminate_cup_club', {

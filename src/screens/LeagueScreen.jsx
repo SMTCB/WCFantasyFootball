@@ -310,11 +310,18 @@ export default function LeagueScreen() {
   }, [user, fetchLeagues, fetchTournaments]);
 
   const loadLeagueById = useCallback(async (id) => {
+    if (!id || !user?.id) return;
     try {
       setMembersLoading(true);
       if (view === 'list') setView('detail');
       const { data: lData } = await supabase.from('leagues').select('*').eq('id', id).single();
-      if (lData) setActiveLeague({ league_id: id, leagues: lData });
+      if (!lData) {
+        // League doesn't exist or RLS denied — redirect to list view.
+        setView('list');
+        setMembersLoading(false);
+        return;
+      }
+      setActiveLeague({ league_id: id, leagues: lData });
       const { data: mData } = await supabase.from('league_members').select('rank, total_points, user_id, users(username)').eq('league_id', id).order('total_points', { ascending: false });
 
       // Check if current user has an incomplete draft allocation

@@ -1,4 +1,5 @@
-import { MgrTag, HubSectionLabel, Spark, MONO, DISPLAY, mgrHue, mgrMono } from './HubShared';
+import { MgrTag, HubSectionLabel, Spark } from './HubShared';
+import { MONO, DISPLAY, mgrHue, mgrMono } from './HubConstants';
 
 export default function BettingLeaderboardView({ leaderboard, currentUser, betLoading }) {
   const myEntry = leaderboard?.find(e => currentUser && e.user_id === currentUser.id);

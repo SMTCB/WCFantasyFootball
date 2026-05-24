@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
-import { MgrTag, HubSectionLabel, MONO, DISPLAY, miniBtnStyle, mgrHue, mgrMono } from './HubShared';
+import { MgrTag, HubSectionLabel } from './HubShared';
+import { MONO, DISPLAY, miniBtnStyle, mgrHue, mgrMono } from './HubConstants';
 import { useHashtags } from '../../hooks/useHashtags';
 
 /**

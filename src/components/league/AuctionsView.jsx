@@ -1,5 +1,5 @@
 import AuctionCard from '../AuctionCard';
-import { MONO, DISPLAY } from './HubShared';
+import { MONO, DISPLAY } from './HubConstants';
 
 export default function AuctionsView({ auctions, auctionsLoading, name, mySquadId, placeBid, cancelListing, sellNow, onToast }) {
   return (

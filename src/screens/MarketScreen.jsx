@@ -150,15 +150,21 @@ export default function MarketScreen() {
       console.error('MarketScreen: players fetch failed', err);
     }
 
-    // â”€â”€ 2. Transfer window lock â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ── 2. Transfer window lock — use canonical matchday_id from tournament ──
     try {
-      const [{ data: nowRow }, { data: deadlineRow }] = await Promise.all([
-        supabase.rpc('get_server_time').single().then(r => r, () => ({ data: null })),
-        supabase.from('matchday_deadlines').select('deadline_at').eq('matchday_id', 'md1').maybeSingle().then(r => r, () => ({ data: null })),
-      ]);
-      const serverNow = nowRow ? new Date(nowRow) : new Date();
-      const deadline  = deadlineRow?.deadline_at ? new Date(deadlineRow.deadline_at) : null;
-      setIsLocked(deadline ? serverNow >= deadline : false);
+      let deadlineQuery = supabase
+        .from('matchday_deadlines')
+        .select('deadline_at')
+        .gt('deadline_at', new Date().toISOString())
+        .order('deadline_at', { ascending: true });
+
+      if (tournamentId) {
+        deadlineQuery = deadlineQuery.eq('tournament_id', tournamentId);
+      }
+
+      const { data: deadlineRow } = await deadlineQuery.limit(1).maybeSingle();
+      const deadline = deadlineRow?.deadline_at ? new Date(deadlineRow.deadline_at) : null;
+      setIsLocked(deadline ? new Date() >= deadline : false);
     } catch (err) {
       console.error('MarketScreen: deadline fetch failed', err);
     }

@@ -20,8 +20,17 @@ export async function initNative() {
   // Hide splash after React has rendered
   await SplashScreen.hide();
 
-  // Refresh Supabase session whenever app returns from background
+  // Refresh Supabase session whenever app returns from background.
   App.addListener('appStateChange', ({ isActive }) => {
     if (isActive) supabase.auth.getSession();
+  });
+
+  // Android hardware back button: navigate back in history, or exit app at root.
+  App.addListener('backButton', () => {
+    if (window.history.length > 1) {
+      window.history.back();
+    } else {
+      App.exitApp();
+    }
   });
 }

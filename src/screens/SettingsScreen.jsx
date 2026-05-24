@@ -7,7 +7,7 @@ import { supabase } from '../lib/supabase';
 
 export default function SettingsScreen() {
   const navigate = useNavigate();
-  const { user, logout } = useAuth();
+  const { user, signOut } = useAuth();
   const { show: showToast } = useToast();
 
   const [passwordForm, setPasswordForm] = useState({ current: '', new: '', confirm: '' });
@@ -48,7 +48,7 @@ export default function SettingsScreen() {
 
   const handleLogout = async () => {
     try {
-      await logout();
+      await signOut();
       showToast('Logged out successfully', 'success');
       navigate('/auth', { replace: true });
     } catch {

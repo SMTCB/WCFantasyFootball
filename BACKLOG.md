@@ -1,8 +1,72 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-05-21 (Admin Tab redesign + system audit — all critical/high bugs fixed, GW38 ready)  
+**Last Updated**: 2026-05-24 (Sprint 0 — all release blockers resolved)  
 **E2E Test Suite**: 84/84 platform tests passing ✅ + `scoring-pipeline.spec.js` added  
 **Live App**: https://wc-fantasy-football.vercel.app
+
+---
+
+## 📊 SESSION 33 PROGRESS (2026-05-24 — Sprint 0: Release Blockers)
+
+**Goal**: Execute all Sprint 0 items from the 2026-05-24 code audit (~310 findings across 5 audits). Sprint 0 = "nothing here can be live when test users touch the platform."
+
+**🚀 COMPLETED THIS SESSION:**
+
+- ✅ **PR `claude/sprint-0-release-blockers`** — 35 files, 3 new SQL migrations
+
+**Security (SEC-1 → SEC-7):**
+- Column-restricted `squads` UPDATE policy (captain, formation, joker only — no self-minting budget)
+- JWT + commissioner auth gates on `run-draft-lottery`, `run-reverse-standings-draft`, `eliminate-cup-club`
+- `process-transfer` reads price/position from DB; validates league membership before any mutation
+- `place_bid` ownership check; `resolve_bet` commissioner check
+- RLS enabled on 18 gameplay tables (previously open to any authenticated user)
+- `users` SELECT restricted to own row; `user_profiles` view created for safe cross-user lookups
+
+**Scoring / Data integrity:**
+- `aggregate_league_member_points` restored UPDATE clause — season totals were INSERT-only and frozen
+- `league_members.total_points` widened to `NUMERIC(10,2)` to prevent decimal truncation
+- `scoring_rules` table created with correct JSONB shape; EPL (tournament 426) seeded
+- Draft upsert `onConflict` fixed; `tournament_id` added; invalid cron expression unscheduled
+- Duplicate `fantasy_points` UNIQUE constraint removed
+
+**Frontend — Rolldown TDZ (FRONT-1):**
+- `MONO`, `DISPLAY`, `mgrMono`, `miniBtnStyle` extracted to `HubConstants.js` (leaf module, no React)
+- All 7 child panels import constants from `HubConstants.js` directly — TDZ crash eliminated
+- Duplicate `export { MONO, DISPLAY, BODY }` at line 312 of HubShared removed (was breaking build)
+
+**Ingest / Crons:**
+- `ingest-match-events` cron completely rewritten: now iterates live fixtures and fires per `forza_match_id`
+- `calculate-scores-post-match` cron added at 22:30 UTC daily
+- WC sync crons corrected: `tournament_id` → `forza_id` key
+- Draft lottery: crypto-random for fairness, idempotency gate, per-league budget/tournament from DB, canonical matchday_id from deadlines table
+- Reverse draft: per-league config (budget, squad_size, tournament_id); deterministic tiebreaker
+
+**UX fixes:**
+- `SettingsScreen` `logout` → `signOut` (sign-out was completely broken)
+- `OnboardingWizard` gated behind auth (was rendering over login screen)
+- `HashRouter` for Capacitor native builds; Android `backButton` listener
+- `useDeadlineCountdown` dynamic by `tournamentId` — no more hardcoded `'md1'`
+- `TransferWindowBanner` wired up on SquadScreen; MarketScreen deadline uses `tournamentId`
+- `loadLeagueById` null guard prevents infinite hang on deep links
+
+**Relaxation system:**
+- L6.1: `process-transfer` reads `relaxation_state.current_repeats_allowed` — repeats banner is now backed by real enforcement
+- L6.2: Pool pressure thresholds corrected (0–1 ratio not 0–100); `Math.round(pressure * 100)%` so "75%" renders instead of "1%"
+
+**DevOps:**
+- `e2e-setup.mjs` credentials moved to env vars with production guard; canonical version at `scripts/e2e-setup.mjs`
+- `docs/**` added to ESLint ignore list (design canvas files were failing lint)
+
+**📋 SQL MIGRATIONS TO RUN ON SUPABASE (in order):**
+1. `supabase/migrations/66_security_hardening.sql`
+2. `supabase/migrations/67_ingest_events_cron.sql`
+3. `supabase/migrations/68_wc_cron_key_fix.sql`
+
+**📋 NEXT: Sprint 1 items** — see `SPRINT_PLAN_2026-05-24.md` Sprint 1 section. Key priorities:
+- FRONT-2/3/4: `useChatMessages` channel leak, LeagueScreen re-render loop
+- L1.2–L1.8: scoring math correctness (GK clean sheets, substitution events, etc.)
+- L3.3: `recompute_league_ranks` trigger so standings update live
+- DATA-4/5: `process-transfer` deadline scoped to tournament; filter squad by active matchday
 
 ---
 

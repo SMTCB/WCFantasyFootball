@@ -12,6 +12,8 @@ import { getDangerZonePlayers, normalizeIntelligence, LINEUP_STATUS } from '../l
 import { normalisePlayer } from '../lib/players';
 import { useAuth } from '../hooks/useAuth';
 import { useDeadlineCountdown } from '../hooks/useDeadlineCountdown';
+import { useTransferWindow } from '../hooks/useTransferWindow';
+import TransferWindowBanner from '../components/TransferWindowBanner';
 import { useOnboarding } from '../hooks/useOnboarding';
 import { useTransfer } from '../hooks/useTransfer';
 import { useLeagueConfig } from '../hooks/useLeagueConfig';
@@ -283,8 +285,10 @@ export default function SquadScreen() {
   // Auto-fill hook â€” reusable across Squad, Market, League screens
   const { handleAutoFill, autoFilling, autoFillMsg } = useAutoFill(activeLeague, squadData, fetchSquad, takenMap, buy);
 
-  // Live countdown hook â€” replaces static window lock badge
-  const deadline = useDeadlineCountdown();
+  // Live countdown hook — pass tournamentId so it finds the correct deadline row.
+  const deadline = useDeadlineCountdown({ tournamentId });
+  // Transfer window status for the sticky banner (open / upcoming / no_window).
+  const transferWindow = useTransferWindow(activeLeague);
 
   // First-visit tour
   const { showSquadTour, completeSquadTour, replaySquadTour } = useOnboarding();
@@ -901,7 +905,16 @@ export default function SquadScreen() {
   return (
     <div className="min-h-screen bg-bg overflow-x-hidden">
 
-      {/* â”€â”€ Fetch error banner â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+      {/* ── Transfer window status banner (U5) ──────────────────────────────── */}
+      <TransferWindowBanner
+        status={transferWindow.status}
+        closesAt={transferWindow.closesAt}
+        opensAt={transferWindow.opensAt}
+        transfersRemaining={transferWindow.transfersRemaining}
+        isUnlimited={transferWindow.isUnlimited}
+      />
+
+      {/* ── Fetch error banner ──────────────────────────────────────────────── */}
       {fetchError && (
         <div
           className="fixed top-0 left-0 right-0 z-[70] flex items-center gap-3 px-4 py-3 lg:left-[220px]"
