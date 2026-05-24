@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from 'react';
+﻿import { useState, useEffect, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 // Empty squad shown when user has no squad yet (instead of demo data)
@@ -150,7 +150,7 @@ export default function SquadScreen() {
   const [auctionBusy, setAuctionBusy] = useState(null); // playerId being listed
 
   // â”€â”€ Data Fetching â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-  const fetchSquad = async () => {
+  const fetchSquad = useCallback(async () => {
     try {
       setLoading(true);
       const userId = user?.id;
@@ -280,7 +280,8 @@ export default function SquadScreen() {
     } finally {
       setLoading(false);
     }
-  };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id, activeLeague]);
 
   // Auto-fill hook â€” reusable across Squad, Market, League screens
   const { handleAutoFill, autoFilling, autoFillMsg } = useAutoFill(activeLeague, squadData, fetchSquad, takenMap, buy);
@@ -329,7 +330,7 @@ export default function SquadScreen() {
       setLoading(false);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user, activeLeague, leagues]);
+  }, [user?.id, activeLeague, leagues]);
 
   const fetchDailyStatus = async () => {
     try {

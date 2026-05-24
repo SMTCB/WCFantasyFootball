@@ -26,8 +26,8 @@ import {
   HubTopbar, HubActionBar, HubTabs,
   HubLeagueHeader, HubTabPills,
   MgrTag, TrendPill, FormDots, Spark, HubSectionLabel,
-  miniBtnStyle, MONO, DISPLAY, mgrHue, mgrMono,
 } from '../components/league/HubShared';
+import { miniBtnStyle, MONO, DISPLAY, mgrHue, mgrMono } from '../components/league/HubConstants';
 import BetsTabHub             from '../components/league/BetsTabHub';
 import LeagueDetailView       from '../components/league/LeagueDetailView';
 import BettingLeaderboardView from '../components/league/BettingLeaderboardView';
@@ -307,7 +307,9 @@ export default function LeagueScreen() {
       fetchLeagues();
       fetchTournaments();
     }
-  }, [user, fetchLeagues, fetchTournaments]);
+  // user.id is the stable identity; user object reference changes on token refresh
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id, fetchLeagues, fetchTournaments]);
 
   const loadLeagueById = useCallback(async (id) => {
     if (!id || !user?.id) return;
@@ -374,13 +376,13 @@ export default function LeagueScreen() {
   }, [user?.id, view]);
 
   useEffect(() => {
-    if (leagueId) {
+    if (leagueId && user?.id) {
       loadLeagueById(leagueId);
-    } else {
+    } else if (!leagueId) {
       setActiveLeague(null);
       setMembers([]);
     }
-  }, [leagueId, loadLeagueById]);
+  }, [leagueId, user?.id, loadLeagueById]);
 
   useEffect(() => {
     if (view === 'commissioner' && activeLeague?.league_id) {
@@ -426,7 +428,7 @@ export default function LeagueScreen() {
       )
       .subscribe();
 
-    return () => { membersSub.unsubscribe(); };
+    return () => { supabase.removeChannel(membersSub); };
   }, [activeLeague?.league_id]);
 
   // FB-025: atomic league creation via RPC (league + commissioner in one transaction)

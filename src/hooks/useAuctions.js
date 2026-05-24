@@ -1,12 +1,14 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 
 export function useAuctions(leagueId, squadId) {
   const [auctions, setAuctions]   = useState([]);
   const [loading, setLoading]     = useState(false);
+  const cancelRef = useRef(false);
 
   const load = useCallback(async () => {
     if (!leagueId) return;
+    cancelRef.current = false;
     setLoading(true);
     const { data } = await supabase
       .from('auction_listings')
@@ -17,11 +19,13 @@ export function useAuctions(leagueId, squadId) {
       .eq('league_id', leagueId)
       .eq('status', 'open')
       .order('deadline_at', { ascending: true });
-    setAuctions(data ?? []);
-    setLoading(false);
+    if (!cancelRef.current) { setAuctions(data ?? []); setLoading(false); }
   }, [leagueId]);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => {
+    load();
+    return () => { cancelRef.current = true; };
+  }, [load]);
 
   const listPlayer = useCallback(async (playerId, minBid, hoursOpen = 48) => {
     if (!leagueId || !squadId) return { ok: false, error: 'No league or squad selected.' };
