@@ -34,10 +34,10 @@ Deno.serve(async (req) => {
       return json({ ok: false, error: 'Missing required fields' }, 400, corsHeaders);
     }
 
-    // Verify caller is a member of the league (SEC-3).
+    // Verify caller is a member of the league (SEC-3); fetch tournament_id in same query (DATA-4).
     const { data: membership } = await supabase
       .from('league_members')
-      .select('user_id')
+      .select('user_id, leagues(tournament_id)')
       .eq('league_id', league_id)
       .eq('user_id', user.id)
       .maybeSingle();
@@ -45,6 +45,8 @@ Deno.serve(async (req) => {
     if (!membership) {
       return json({ ok: false, error: 'You are not a member of this league' }, 403, corsHeaders);
     }
+
+    const tournamentId = membership?.leagues?.tournament_id ?? null;
 
     // Read price from DB — never trust the client-supplied value (SEC-3).
     const { data: playerData, error: playerErr } = await supabase
@@ -60,19 +62,23 @@ Deno.serve(async (req) => {
     const price = Number(playerData.price ?? 0);
 
     // ── Transfer window enforcement ───────────────────────────────────────────
-    // 1. Reject if past the active matchday deadline
-    const { data: deadline } = await supabase
+    // 1. Reject if past the active matchday deadline.
+    //    DATA-4: scope to this league's tournament so cross-tournament deadlines don't bleed through.
+    let deadlineQuery = supabase
       .from('matchday_deadlines')
       .select('deadline_at, matchday_id')
       .order('deadline_at', { ascending: false })
-      .limit(1)
-      .maybeSingle();
+      .limit(1);
+    if (tournamentId) deadlineQuery = deadlineQuery.eq('tournament_id', tournamentId);
+    const { data: deadline } = await deadlineQuery.maybeSingle();
+
+    const activeMatchdayId = deadline?.matchday_id ?? null;
 
     if (deadline && new Date() > new Date(deadline.deadline_at)) {
       return json({
         ok:    false,
         code:  'WINDOW_CLOSED',
-        error: `Transfer window closed — matchday ${deadline.matchday_id ?? ''} deadline has passed`,
+        error: `Transfer window closed — matchday ${activeMatchdayId ?? ''} deadline has passed`,
       }, 403, corsHeaders);
     }
 
@@ -125,18 +131,21 @@ Deno.serve(async (req) => {
     }
 
     // ── Fetch or create the manager's squad for this league ──────────────────
-    let { data: squad } = await supabase
+    // DATA-5: filter by active matchday_id so a user with multiple squad rows
+    //         (one per gameweek) always lands on the correct active row.
+    let squadQuery = supabase
       .from('squads')
       .select('id, players, budget_remaining')
       .eq('user_id', user.id)
-      .eq('league_id', league_id)
-      .maybeSingle();
+      .eq('league_id', league_id);
+    if (activeMatchdayId) squadQuery = squadQuery.eq('matchday_id', activeMatchdayId);
+    let { data: squad } = await squadQuery.maybeSingle();
 
     if (!squad) {
-      // First transfer in this league — create the squad row
+      // First transfer in this league — create the squad row for the active matchday.
       const { data: newSquad, error: createErr } = await supabase
         .from('squads')
-        .insert({ user_id: user.id, league_id, players: [], budget_remaining: 100, matchday_id: 'current' })
+        .insert({ user_id: user.id, league_id, players: [], budget_remaining: 100, matchday_id: activeMatchdayId })
         .select('id, players, budget_remaining')
         .single();
       if (createErr) return json({ ok: false, error: 'Failed to create squad' }, 500, corsHeaders);

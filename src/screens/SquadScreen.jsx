@@ -157,12 +157,15 @@ export default function SquadScreen() {
       const today  = new Date().toISOString().split('T')[0];
 
       // â”€â”€ Transfer window lock check â€” use latest matchday deadline â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-      const { data: deadlineRow } = await supabase
-        .from('matchday_deadlines').select('deadline_at').order('deadline_at', { ascending: false }).limit(1).maybeSingle();
+      // U11: scope deadline check to this league's tournament; capture matchday_id for squad filter
+      let dlQuery = supabase
+        .from('matchday_deadlines').select('deadline_at, matchday_id').order('deadline_at', { ascending: false }).limit(1);
+      if (tournamentId) dlQuery = dlQuery.eq('tournament_id', tournamentId);
+      const { data: deadlineRow } = await dlQuery.maybeSingle();
       if (deadlineRow?.deadline_at) {
-        const deadline = new Date(deadlineRow.deadline_at);
-        setWindowDeadline(deadline);
+        setWindowDeadline(new Date(deadlineRow.deadline_at));
       }
+      const activeMatchdayId = deadlineRow?.matchday_id ?? null;
 
       const { data: jokerRec } = await supabase.from('daily_jokers').select('player_id')
         .eq('user_id', userId).eq('joker_date', today).maybeSingle();
@@ -175,8 +178,10 @@ export default function SquadScreen() {
       setTodayJokerId(jokerRec?.player_id || null);
 
       // Most-recent squad first â€” ensures we get the live matchday squad, not an older one
-      const squadQuery = supabase.from('squads').select('*').eq('user_id', userId);
-      if (activeLeague) squadQuery.eq('league_id', activeLeague);
+      // U11: filter squad by active matchday when known; fall back to newest row otherwise
+      let squadQuery = supabase.from('squads').select('*').eq('user_id', userId);
+      if (activeLeague)      squadQuery = squadQuery.eq('league_id', activeLeague);
+      if (activeMatchdayId)  squadQuery = squadQuery.eq('matchday_id', activeMatchdayId);
       const { data: squad, error } = await squadQuery.order('created_at', { ascending: false }).limit(1).maybeSingle();
       if (error) {
         setFetchError('Could not load your squad. Tap Retry to try again.');
@@ -281,7 +286,7 @@ export default function SquadScreen() {
       setLoading(false);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user?.id, activeLeague]);
+  }, [user?.id, activeLeague, tournamentId]);
 
   // Auto-fill hook â€” reusable across Squad, Market, League screens
   const { handleAutoFill, autoFilling, autoFillMsg } = useAutoFill(activeLeague, squadData, fetchSquad, takenMap, buy);

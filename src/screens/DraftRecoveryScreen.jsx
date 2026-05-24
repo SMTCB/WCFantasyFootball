@@ -203,15 +203,29 @@ export default function DraftRecoveryScreen() {
       }
 
       // When the squad is complete, persist it to the squads table so it is
-      // available in the Squad screen and for scoring. matchday_id='current'
-      // is the app-wide convention for "the active squad" in a league.
+      // available in the Squad screen and for scoring.
+      // U10: resolve the canonical matchday_id from matchday_deadlines — never write 'current'.
       if (newPlayerIds.length >= SQUAD_SIZE) {
         const newBudgetRemaining = BUDGET_TOTAL - [...squad, player]
           .reduce((sum, p) => sum + (p.price ?? 0), 0);
+
+        let activeMatchdayId = null;
+        const tournamentId = cfg.tournamentId;
+        if (tournamentId) {
+          const { data: md } = await supabase
+            .from('matchday_deadlines')
+            .select('matchday_id')
+            .eq('tournament_id', tournamentId)
+            .order('deadline_at', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+          activeMatchdayId = md?.matchday_id ?? null;
+        }
+
         await supabase.from('squads').upsert({
           league_id:        leagueId,
           user_id:          user?.id,
-          matchday_id:      'current',
+          matchday_id:      activeMatchdayId,
           players:          newPlayerIds,
           budget_remaining: Math.max(0, newBudgetRemaining),
         }, { onConflict: 'league_id,user_id,matchday_id' });
