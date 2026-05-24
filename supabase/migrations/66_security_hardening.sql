@@ -169,6 +169,17 @@ END $$;
 -- policies only restrict direct browser-client queries.
 -- ════════════════════════════════════════════════════════════════════════════════
 
+-- Ensure is_league_member helper exists (defined in migration 47, re-declared
+-- here so this migration is self-contained even if 47 was not applied).
+CREATE OR REPLACE FUNCTION public.is_league_member(p_league_id UUID)
+RETURNS BOOLEAN LANGUAGE sql STABLE SECURITY DEFINER AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM public.league_members
+    WHERE league_id = p_league_id
+      AND user_id   = auth.uid()
+  );
+$$;
+
 -- fantasy_points
 ALTER TABLE IF EXISTS public.fantasy_points ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "league members read fantasy_points" ON public.fantasy_points;
