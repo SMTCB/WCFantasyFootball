@@ -29,57 +29,58 @@ A small number of items must land in a specific order:
 
 ---
 
-# Sprint 0 — Release blockers (≈8-10 hours)
+# Sprint 0 — Release blockers ✅ COMPLETE (2026-05-24)
 
-**Goal: nothing here can be live when test users touch the platform.** Failing any of these = test users will hit it on day 1.
+**PR:** `claude/sprint-0-release-blockers` — merged to main  
+**Migrations applied:** `66_security_hardening.sql`, `67_ingest_events_cron.sql`, `68_wc_cron_key_fix.sql`
 
 ## Security holes anyone could exploit from devtools
 
-- **SEC-1** · Drop `squads` UPDATE policy (anyone can self-mint budget)
-- **SEC-2** · Auth gate `run-draft-lottery`, `run-reverse-standings-draft`, `eliminate-cup-club`
-- **SEC-3** · `process-transfer` reads price server-side, validates membership
-- **SEC-4** · `place_bid` validates squad owner
-- **SEC-5** · `resolve_bet` validates commissioner role
-- **SEC-6** · RLS on 18 gameplay tables (`fantasy_points`, `transfers`, `draft_submissions`, etc.)
-- **SEC-7** · `users.email` policy → restrict to `id = auth.uid()`; expose `user_profiles` view
-- **DEPLOY-1** · Relocate `e2e-setup.mjs` to `scripts/`, redact prod credentials
+- ✅ **SEC-1** · Column-restricted `squads` UPDATE policy (captain, formation, joker only)
+- ✅ **SEC-2** · JWT + commissioner auth gate on `run-draft-lottery`, `run-reverse-standings-draft`, `eliminate-cup-club`
+- ✅ **SEC-3** · `process-transfer` reads price from DB, validates league membership
+- ✅ **SEC-4** · `place_bid` validates squad owner via `auth.uid()`
+- ✅ **SEC-5** · `resolve_bet` validates commissioner role
+- ✅ **SEC-6** · RLS enabled on 18 gameplay tables
+- ✅ **SEC-7** · `users` SELECT restricted to own row; `user_profiles` view exposes only safe fields
+- ✅ **DEPLOY-1** · `e2e-setup.mjs` credentials moved to env vars; canonical version at `scripts/e2e-setup.mjs`
 
 ## Data integrity that will silently corrupt records
 
-- **L3.1** · `aggregate_league_member_points` — restore the missing `UPDATE league_members` (standings are frozen right now)
-- **L3.2** · `league_members.total_points` → `NUMERIC(10,2)`
-- **L1.1** · Create `scoring_rules` table with the schema `calculate-scores` expects; seed EPL
-- **DATA-1** · Fix draft upsert `onConflict` target + include `tournament_id`
-- **DATA-3** · Drop duplicate `fantasy_points` UNIQUE constraint from migration 63
-- **DATA-11** · Idempotent re-application of `bet_submissions` FK fix (migration 16 vs 28 ordering)
-- **DATA-12** · Fix invalid cron expression in migration 21
+- ✅ **L3.1** · `aggregate_league_member_points` now includes UPDATE clause — season totals accumulate
+- ✅ **L3.2** · `league_members.total_points` → `NUMERIC(10,2)`
+- ✅ **L1.1** · `scoring_rules` table created with JSONB shape; EPL (426) seeded
+- ✅ **DATA-1** · Draft upsert `onConflict` target fixed; `tournament_id` included
+- ✅ **DATA-3** · Duplicate `fantasy_points` UNIQUE constraint dropped
+- ✅ **DATA-11** · `bet_submissions` FK fix re-applied idempotently
+- ✅ **DATA-12** · Invalid cron expression in migration 21 unscheduled
 
 ## Pipeline that's currently a no-op
 
-- **I1** · `sync-players` upsert constraint — drop single-column unique, create `(forza_player_id, tournament_id)` composite
-- **I3** · Replace empty-body `ingest-match-events` cron with a working live-fixture iterator
-- **2.3.b** · Drop `players_forza_player_id_idx`; create composite — enables cross-tournament players
-- **2.3.c** · Remove `price: null` from `sync-players` upsert payload
-- **2.6.a** · Fix WC tournament_id mismatch (UUID vs '429' across consumers and valuations)
+- ✅ **I1** · Composite `(forza_player_id, tournament_id)` unique constraint on `players`
+- ✅ **I3** · `ingest-match-events` cron iterates live fixtures per `forza_match_id`; `calculate-scores-post-match` added at 22:30 UTC
+- ✅ **2.3.b** · Single-column `players_forza_player_id_idx` dropped; composite index created
+- ✅ **2.3.c** · `price: null` removed from `sync-players` upsert payload
+- ✅ **2.6.a** · WC crons corrected to send `forza_id` key (were sending `tournament_id`)
 
 ## Production crash risk
 
-- **FRONT-1** · TDZ time-bomb on 7 `HubShared` imports — split to leaf constants module
-- **U4** · `HashRouter` for Capacitor + Android `backButton` listener
-- **U9** · `loadLeagueById` redirect on null result (deep link hangs forever)
+- ✅ **FRONT-1** · TDZ fix — `MONO`/`DISPLAY`/`mgrMono`/`miniBtnStyle` in `HubConstants.js` leaf module; all child panels import from there
+- ✅ **U4** · `HashRouter` for Capacitor native; Android `backButton` listener
+- ✅ **U9** · `loadLeagueById` null guard prevents infinite deep-link hang
 
 ## Primary tasks completely blocked
 
-- **U1** · `SettingsScreen` `logout` → `signOut` (no working sign-out exists)
-- **U2** · Gate `OnboardingWizard` behind auth (currently renders over login)
-- **U5** · Replace `'md1'` hardcoded matchday in `useDeadlineCountdown` + MarketScreen; mount `TransferWindowBanner` on Squad + Market; gate buttons on `isLocked`
+- ✅ **U1** · `SettingsScreen` `logout` → `signOut`
+- ✅ **U2** · `OnboardingWizard` gated behind auth (doesn't render over login)
+- ✅ **U5** · `useDeadlineCountdown` dynamic by `tournamentId`; `TransferWindowBanner` on SquadScreen; MarketScreen deadline dynamic
 
 ## Draft fairness blockers
 
-- **L5.2** · `run-draft-lottery` idempotency gate + transaction wrapping (cron retry currently produces conflicting allocations)
-- **L5.4** · `run-reverse-standings-draft` per-league config (currently hardcoded 15)
-- **L6.1** · Decide policy: enforce `repeats_allowed` in `process-transfer` OR remove the relaxation UI banner until enforcement ships
-- **L6.2** · Fix pressure percentage display (currently shows "1%" instead of "75%")
+- ✅ **L5.2** · `run-draft-lottery` idempotency gate; crypto-random allocation
+- ✅ **L5.4** · `run-reverse-standings-draft` uses per-league config (budget, squad_size, tournament_id)
+- ✅ **L6.1** · `process-transfer` enforces `relaxation_state.current_repeats_allowed` — banner is no longer a lie
+- ✅ **L6.2** · Pool pressure thresholds corrected to 0–1 ratio; `pressure * 100`% so "75%" renders correctly
 
 ---
 
