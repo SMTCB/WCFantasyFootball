@@ -1,8 +1,66 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-05-24 (Sprint 1 — channel leaks + rank trigger started)  
+**Last Updated**: 2026-05-24 (Sprint 1 — scoring math + transfer fixes + matchday_id correctness)  
 **E2E Test Suite**: 84/84 platform tests passing ✅ + `scoring-pipeline.spec.js` added  
 **Live App**: https://wc-fantasy-football.vercel.app
+
+---
+
+## 📊 SESSION 35 PROGRESS (2026-05-24 — Sprint 1: Scoring math, transfer fixes, matchday_id)
+
+**Goal**: Sprint 1 scoring correctness (L1.x), transfer scoping (DATA-4/5), matchday_id accuracy (U10/U11/U12).
+
+**🚀 COMPLETED THIS SESSION:**
+
+- ✅ **PR #171 `claude/sprint-1-scoring-math-transfer-fixes`** — 12 files (8 source + 4 docs) merged to main
+
+**Scoring math (calculate-scores Edge Function):**
+- L1.2: GK conceded formula now FPL-style: `floor(n/2) × rule` instead of `n × rule`
+- L1.3: `||` → `??` in rollupSquads + NaN guard — negative scores (red cards) no longer zeroed out
+- L1.4: Wildcard 1.1× applied once to squad total after loop — was incorrectly stacking per-player with captain
+- L1.5: Joker chip wired — `joker_player_id` doubles that player's raw points
+- L1.6: Path B sub events handle both `'sub'` and `'sub_off'` types
+- L1.7: `ingest-match-events` typeMap: `penalty_missed` now stored as `'penalty_missed'` (was `'goal'`)
+- L1.8: Path B clean sheet requires mins≥60 gate
+- L3.4/DATA-6: `rollupSquads` hard-fails (returns 0, logs critical) if `round_number` or `tournament_id` missing — never writes `'current'` matchday_id again
+
+**Transfer scoping (process-transfer Edge Function):**
+- DATA-4: Deadline query scoped to `leagues.tournament_id` — no cross-tournament bleed
+- DATA-5: Squad query filtered by `activeMatchdayId` from deadlines table — no stale matchday rows
+
+**matchday_id correctness (Frontend):**
+- U10: `DraftRecoveryScreen` — squad upsert uses real matchday_id from `matchday_deadlines`
+- U11: `SquadScreen` — deadline + squad query scoped to `tournamentId`; squad filter uses `activeMatchdayId`
+- U12: `RecapScreen` — active matchday resolved from `matchday_deadlines` via `tournament_id`
+- `useLeagueConfig`: exposes `tournamentId` to all consumers
+
+**DB (Migration 70):**
+- `aggregate_league_member_points(UUID, UUID)` — correct signature replacing broken `(UUID, TEXT)`
+- Joins through `squads` (since `bet_submissions` has no `user_id`)
+- Filters to `reward_type = 'points'` only
+
+**📋 SQL MIGRATIONS TO RUN ON SUPABASE:**
+1. `supabase/migrations/70_scoring_fixes.sql` — run after merging PR
+
+**📋 EDGE FUNCTIONS TO REDEPLOY:**
+```
+supabase functions deploy calculate-scores
+supabase functions deploy ingest-match-events
+supabase functions deploy process-transfer
+```
+
+**📋 REMAINING Sprint 1 items (still open):**
+- L2.1: `resolve_bet` validates `p_correct_answer` against options
+- L2.4: Auto-resolver edge function + cron
+- U3: `/join?code=` route handler
+- U6: LiveScreen Realtime subscription (replaces 5-min poll)
+- U7: Joker chip UI (scoring done; UI wiring needed)
+- U8: Trade proposals — hide or wire to DB
+- U13: RecapScreen captain math (×2 display)
+- U30: Realtime standings handles INSERT (new members invisible)
+- O1-O5: Observability (logError helper, client_errors table, admin view)
+- I2/I4/DATA-2/7/8/9/10: Pipeline cleanup items
+- L3.5/3.7: rollupSquads captain-on-bench policy
 
 ---
 
