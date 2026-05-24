@@ -471,13 +471,18 @@ Always create a new file — never modify existing migrations.
 | 15 | `15_player_status_pl_alerts.sql` | Seed player status alerts for real squad |
 | 16–62 | `16_forza_integration.sql` → `62_*.sql` | Forza API integration, EPL/WC setup, scoring, auctions, bets, chat |
 | 63 | `63_fantasy_points_unique_constraint.sql` | UNIQUE (squad_id, matchday_id) on fantasy_points — enables correct upsert per round |
+| 66 | `66_security_hardening.sql` | Sprint 0: SEC-1–7, L3.1/3.2, L1.1, DATA-1/3/11/12, I1 |
+| 67 | `67_ingest_events_cron.sql` | Sprint 0: live ingest cron (every 5 min), post-match score cron (22:30 UTC) |
+| 68 | `68_wc_cron_key_fix.sql` | Sprint 0: WC crons corrected to send forza_id key |
 
-**Next migration**: `64_`
+**Next migration**: `69_`
 
-**Key pipeline facts (2026-05-21):**
+**Key pipeline facts (2026-05-24):**
 - `calculate-scores` uses `scoring_rules` table (not `scoring_templates`) keyed by `tournament_id`
 - `fantasy_points.matchday_id` format: `'{tournament_id}-r{round}'` e.g. `'426-r35'`
 - `matchday_deadlines.matchday_id` format: `'426-rN'` (canonical, written by `sync-fixtures`)
+- `bet_submissions` uses `bet_instance_id` column (not `bet_id`) — references `bet_instances(id)`
+- `squads` updatable columns (via RLS): `captain_id`, `joker_player_id`, `is_wildcard`, `is_triple_captain`
 
 ---
 
