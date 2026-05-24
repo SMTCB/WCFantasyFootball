@@ -27,7 +27,7 @@ export default function RecapScreen() {
           .order('created_at', { ascending: false })
           .limit(1).maybeSingle(),
         supabase.from('league_members')
-          .select('league_id, rank, total_points, leagues(name)')
+          .select('league_id, rank, total_points, leagues(name, tournament_id)')
           .eq('user_id', userId)
           .order('rank', { ascending: true })
           .limit(1).maybeSingle(),
@@ -35,7 +35,24 @@ export default function RecapScreen() {
 
       if (!squadRow) return; // no squad yet
 
-      const matchdayId  = squadRow.matchday_id || 'md2';
+      // U12: derive matchday_id from matchday_deadlines instead of relying on
+      //      squad.matchday_id (which may be null, 'current', or 'md2' legacy values).
+      const tournamentId = memberRow?.leagues?.tournament_id ?? null;
+      let matchdayId = squadRow.matchday_id;
+
+      if (tournamentId) {
+        const { data: md } = await supabase
+          .from('matchday_deadlines')
+          .select('matchday_id')
+          .eq('tournament_id', tournamentId)
+          .order('deadline_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        if (md?.matchday_id) matchdayId = md.matchday_id;
+      }
+
+      // Last-resort fallback — only if DB has no deadline rows at all
+      if (!matchdayId) matchdayId = squadRow.matchday_id;
       const playerIds   = squadRow.players || [];
       const captainId   = squadRow.captain_id;
 

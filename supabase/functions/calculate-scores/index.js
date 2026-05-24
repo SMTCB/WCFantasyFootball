@@ -127,9 +127,9 @@ function scorePlayer(stats, position, POINTS, UNIVERSAL) {
     pts += rules.clean_sheet;
   }
 
-  // GK: conceded_per_goal (only if played ≥60 min)
+  // GK: -1 per 2 goals conceded, FPL-style (only if played ≥60 min) (L1.2)
   if (pos === 'GK' && mins >= 60) {
-    pts += Math.floor(stats.goals_conceded ?? 0) * rules.conceded_per_goal;
+    pts += Math.floor((stats.goals_conceded ?? 0) / 2) * rules.conceded_per_goal;
   }
 
   pts += (stats.penalty_saved  ?? 0) * (rules.penalty_saved  ?? 0);
@@ -322,7 +322,8 @@ Deno.serve(async (req) => {
         case 'red':            s.red_cards++;      break;
         case 'penalty_saved':  s.penalty_saved++;  break;
         case 'penalty_missed': s.penalty_missed++; break;
-        case 'sub_off':        s.minutes_played = parseInt(ev.minute) || s.minutes_played; break;
+        case 'sub_off':
+        case 'sub':            s.minutes_played = parseInt(ev.minute) || s.minutes_played; break;
       }
     }
 
@@ -349,7 +350,7 @@ Deno.serve(async (req) => {
         .filter(c => c !== club)
         .reduce((sum, c) => sum + (goalsPerTeam[c] || 0), 0);
       stats.goals_conceded = goalsAgainst;
-      stats.clean_sheet    = goalsAgainst === 0;
+      stats.clean_sheet    = (goalsAgainst === 0) && (stats.minutes_played >= 60); // L1.8: mirror Path A's mins≥60 gate
     }
 
     const statsList = Object.values(statsMap);
@@ -405,78 +406,77 @@ Deno.serve(async (req) => {
 // ─── Shared helpers ────────────────────────────────────────────────────────────
 
 async function rollupSquads(fixture_id, pointsLookup, tournament_id) {
-  // Build a full-round lookup so squad totals accumulate correctly across all
-  // gameday fixtures (not just the one fixture calculate-scores was called for).
-  // Strategy: start with the current fixture's freshly-computed scores, then
-  // merge in already-stored fantasy_points from every other fixture in the
-  // same round. A player only plays once per round so there is no double-counting.
   const fullRoundLookup = { ...pointsLookup };
 
-  // Identify the fixture's round
+  // Load fixture round — hard-fail if missing so we never write matchday_id='current' (L3.4 / DATA-6)
   const { data: fix } = await supabase
     .from('fixtures').select('round_number').eq('id', fixture_id).single();
 
-  if (fix?.round_number && tournament_id) {
-    // Get IDs of all other fixtures in the same round
-    const { data: roundFixtures } = await supabase
-      .from('fixtures')
-      .select('id')
-      .eq('round_number', fix.round_number)
-      .eq('tournament_id', tournament_id)
-      .neq('id', fixture_id);
+  if (!fix?.round_number || !tournament_id) {
+    await logError('critical', 'Cannot derive matchday_id — missing round_number or tournament_id; rollup skipped', { fixture_id, tournament_id });
+    return 0;
+  }
 
-    const roundFixtureIds = (roundFixtures ?? []).map(f => f.id);
+  const roundMatchdayId = `${tournament_id}-r${fix.round_number}`;
 
-    if (roundFixtureIds.length > 0) {
-      const { data: otherStats } = await supabase
-        .from('player_match_stats')
-        .select('player_id, fantasy_points')
-        .in('fixture_id', roundFixtureIds)
-        .not('fantasy_points', 'is', null);
+  // Merge already-stored fantasy_points from other fixtures in the same round
+  const { data: roundFixtures } = await supabase
+    .from('fixtures')
+    .select('id')
+    .eq('round_number', fix.round_number)
+    .eq('tournament_id', tournament_id)
+    .neq('id', fixture_id);
 
-      for (const r of otherStats ?? []) {
-        // Don't overwrite current fixture's fresh scores
-        if (!(r.player_id in fullRoundLookup)) {
-          fullRoundLookup[r.player_id] = r.fantasy_points ?? 0;
-        }
+  const roundFixtureIds = (roundFixtures ?? []).map(f => f.id);
+
+  if (roundFixtureIds.length > 0) {
+    const { data: otherStats } = await supabase
+      .from('player_match_stats')
+      .select('player_id, fantasy_points')
+      .in('fixture_id', roundFixtureIds)
+      .not('fantasy_points', 'is', null);
+
+    for (const r of otherStats ?? []) {
+      if (!(r.player_id in fullRoundLookup)) {
+        fullRoundLookup[r.player_id] = r.fantasy_points ?? 0;
       }
     }
   }
 
-  // (#110) Filter squads to only those in leagues matching this tournament
   const { data: squads } = await supabase
     .from('squads')
-    .select('id, user_id, league_id, matchday_id, players, captain_id, is_triple_captain, is_wildcard, leagues!inner(tournament_id)')
-    .eq('leagues.tournament_id', tournament_id || '');
+    .select('id, user_id, league_id, matchday_id, players, captain_id, joker_player_id, is_triple_captain, is_wildcard, leagues!inner(tournament_id)')
+    .eq('leagues.tournament_id', tournament_id);
 
   if (!squads?.length) return 0;
 
-  const fantasyPointsUpserts = squads.map(squad => {
+  // Build fantasy_points upserts — one row per squad per matchday (L1.3 / L1.4 / L1.5)
+  const fantasyPointsUpserts = [];
+  for (const squad of squads) {
     const pitchPlayers = (squad.players || []).slice(0, 11);
     let total = 0;
 
     for (const pid of pitchPlayers) {
-      let pts = fullRoundLookup[pid] || 0;
-      if (pid === squad.captain_id)  pts *= squad.is_triple_captain ? 3 : 2;
-      if (squad.is_wildcard)         pts = Math.round(pts * 1.1 * 100) / 100;
+      let pts = fullRoundLookup[pid] ?? 0;   // ?? preserves legitimate negative scores (L1.3)
+      if (Number.isNaN(pts)) {
+        pts = 0;
+        logError('error', 'NaN in points lookup', { fixture_id, player_id: pid }); // fire-and-forget
+      }
+      if (pid === squad.captain_id)      pts *= squad.is_triple_captain ? 3 : 2;
+      if (pid === squad.joker_player_id) pts *= 2;  // Joker doubles one player's points (L1.5)
       total += pts;
     }
+    // Wildcard applies to the whole squad total once — not per-player (L1.4)
+    if (squad.is_wildcard) total *= 1.1;
+    total = Math.round(total * 100) / 100;
 
-    // Use round-based matchday_id (e.g. '426-r35') so each gameweek creates its
-    // own fantasy_points row and season totals accumulate correctly via
-    // aggregate_league_member_points. Fall back to squad.matchday_id only when
-    // round_number is unavailable (legacy / non-round fixtures).
-    const roundMatchdayId = (fix?.round_number && tournament_id)
-      ? `${tournament_id}-r${fix.round_number}`
-      : squad.matchday_id || 'current';
-
-    return {
+    fantasyPointsUpserts.push({
       squad_id:         squad.id,
       matchday_id:      roundMatchdayId,
-      total:            Math.round(total * 100) / 100,
+      total,
       points_breakdown: { fixture_id, player_count: pitchPlayers.length },
-    };
-  });
+    });
+  }
 
   const { error: fpErr } = await supabase
     .from('fantasy_points')
@@ -487,7 +487,7 @@ async function rollupSquads(fixture_id, pointsLookup, tournament_id) {
     await logError('critical', 'fantasy_points upsert failed — scores not saved', { fixture_id, error: fpErr });
   }
 
-  // Update league_members totals (including bet rewards via aggregate_league_member_points RPC)
+  // Update league_members totals via aggregate_league_member_points RPC
   const processedUsers = new Set();
   for (const squad of squads) {
     const key = `${squad.league_id}:${squad.user_id}`;
@@ -497,7 +497,7 @@ async function rollupSquads(fixture_id, pointsLookup, tournament_id) {
     const { error: aggErr } = await supabase
       .rpc('aggregate_league_member_points', {
         p_league_id: squad.league_id,
-        p_user_id: squad.user_id,
+        p_user_id:   squad.user_id,
       });
 
     if (aggErr) {

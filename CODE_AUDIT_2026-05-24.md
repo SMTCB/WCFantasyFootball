@@ -37,9 +37,19 @@
 | FRONT-10 | ✅ Done (partial) | useAuctions: cancelRef added. Realtime subscription (replacing polling) deferred to Sprint 2 |
 | FRONT-11 | ✅ Done | loadLeagueById effect guards on user?.id |
 | L3.3 | ✅ Done | migration 69_rank_trigger.sql: recompute_league_ranks() + AFTER UPDATE OF total_points trigger. Applied to Supabase production. |
-| L1.2–L1.8 | ⏳ Sprint 1 | Scoring math correctness — next batch |
-| DATA-4, DATA-5 | ⏳ Sprint 1 | process-transfer deadline + matchday scoping — next batch |
-| U10, U11, U12 | ⏳ Sprint 1 | DraftRecoveryScreen/SquadScreen/RecapScreen matchday_id fixes — next batch |
+| L1.2 | ✅ Done | GK conceded_per_goal → floor(n/2)×rule (FPL-style, session 35) |
+| L1.3 | ✅ Done | rollupSquads: \|\| → ?? + NaN guard (session 35) |
+| L1.4 | ✅ Done | Wildcard 1.1× applied to squad total once, not per-player (session 35) |
+| L1.5 | ✅ Done | Joker chip wired: joker_player_id doubles that player's score (session 35) |
+| L1.6 | ✅ Done | Path B switch handles both 'sub' and 'sub_off' (session 35) |
+| L1.7 | ✅ Done | ingest-match-events typeMap: penalty_missed → 'penalty_missed' not 'goal' (session 35) |
+| L1.8 | ✅ Done | Path B clean_sheet derivation includes mins≥60 gate (session 35) |
+| DATA-4 | ✅ Done | process-transfer deadline check scoped to league tournament_id (session 35) |
+| DATA-5 | ✅ Done | process-transfer squad query filtered by active matchday_id (session 35) |
+| DATA-6 | ✅ Done | rollupSquads hard-fail on missing round_number/tournament_id; never writes 'current' (session 35) |
+| U10 | ✅ Done | DraftRecoveryScreen derives active matchday from matchday_deadlines (session 35) |
+| U11 | ✅ Done | SquadScreen.fetchSquad scoped to active matchday_id (session 35) |
+| U12 | ✅ Done | RecapScreen resolves matchday from matchday_deadlines via tournament_id (session 35) |
 
 **Schema corrections discovered during migration:**
 - `squads` has no `formation` or `joker_used` columns

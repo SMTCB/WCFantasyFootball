@@ -421,7 +421,7 @@ Deno.serve(async (req) => {
           yellow:         'yellow',
           red:            'red',
           sub:            'sub',
-          penalty_missed: 'goal',   // stored as goal with negative outcome in outcome JSONB
+          penalty_missed: 'penalty_missed',  // L1.7: must be distinct from 'goal' for Path B scoring
         };
 
         const outcome = {};
