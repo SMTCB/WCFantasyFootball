@@ -26,8 +26,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 
-const MATCHDAY_ID = 'md1';
-
 function pad(n) { return String(Math.floor(n)).padStart(2, '0'); }
 
 function formatTimeLeft(ms) {
@@ -48,7 +46,9 @@ function urgencyColor(msLeft) {
   return 'var(--mute)';                                  // > 2 h — dim
 }
 
-export function useDeadlineCountdown() {
+// matchdayId: pass a canonical ID like '426-r35', or omit to auto-pick the
+// next upcoming deadline row for this tournamentId.
+export function useDeadlineCountdown({ matchdayId, tournamentId } = {}) {
   const [state, setState] = useState({
     timeLeft:   '',
     isLocked:   false,
@@ -66,13 +66,29 @@ export function useDeadlineCountdown() {
 
     const init = async () => {
       try {
-        // Fetch deadline + approximate server time in one round-trip
+        // Fetch deadline + approximate server time in one round-trip.
+        // If a specific matchdayId is given, look up that row.
+        // Otherwise find the next upcoming deadline for the tournament.
         const fetchStart = Date.now();
-        const { data } = await supabase
+        let query = supabase
           .from('matchday_deadlines')
-          .select('deadline_at')
-          .eq('matchday_id', MATCHDAY_ID)
-          .maybeSingle();
+          .select('deadline_at, matchday_id');
+
+        if (matchdayId) {
+          query = query.eq('matchday_id', matchdayId);
+        } else if (tournamentId) {
+          query = query
+            .eq('tournament_id', tournamentId)
+            .gt('deadline_at', new Date().toISOString())
+            .order('deadline_at', { ascending: true });
+        } else {
+          // No hint — pick the next upcoming deadline globally.
+          query = query
+            .gt('deadline_at', new Date().toISOString())
+            .order('deadline_at', { ascending: true });
+        }
+
+        const { data } = await query.maybeSingle();
         const fetchEnd = Date.now();
 
         if (cancelled) return;
@@ -138,7 +154,7 @@ export function useDeadlineCountdown() {
       cancelled = true;
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
-  }, []);
+  }, [matchdayId, tournamentId]);
 
   return state;
 }

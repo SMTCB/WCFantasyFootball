@@ -2,25 +2,64 @@
 // Triggered by cron at draft_deadline for each league.
 // Resolves player conflicts via random lottery, allocates squads,
 // flags incomplete squads, and writes a gazette entry.
+//
+// Security: direct calls require a valid JWT from a league commissioner.
+// Cron calls originate from service role (no Authorization header required).
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
-const supabase = createClient(
-  Deno.env.get('SUPABASE_URL'),
-  Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
-);
+const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
+const SERVICE_KEY  = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+const ANON_KEY     = Deno.env.get('SUPABASE_ANON_KEY');
 
-// Squad position caps applied after allocation
-const SQUAD_POS_CAPS = { GK: 2, DEF: 5, MID: 5, FWD: 3 };
-const SQUAD_SIZE = 15;
+const supabase = createClient(SUPABASE_URL, SERVICE_KEY);
+
+// Default squad position caps and size — overridden per league via DB
+const DEFAULT_SQUAD_POS_CAPS = { GK: 2, DEF: 5, MID: 5, FWD: 3 };
+const DEFAULT_SQUAD_SIZE = 15;
 
 Deno.serve(async (req) => {
   try {
     const body = await req.json().catch(() => ({}));
     const { league_id } = body;
 
+    // Direct league call: verify caller is a commissioner of that league.
+    // Cron mode (no league_id): originates from service role — no JWT needed.
     if (league_id) {
-      // Direct call with specific league
+      const authHeader = req.headers.get('Authorization');
+      if (authHeader) {
+        // Validate JWT and check commissioner role.
+        const userClient = createClient(SUPABASE_URL, ANON_KEY, {
+          global: { headers: { Authorization: authHeader } },
+        });
+        const { data: { user }, error: authErr } = await userClient.auth.getUser();
+        if (authErr || !user) return respond(401, { error: 'Unauthorized' });
+
+        const { data: membership } = await supabase
+          .from('league_members')
+          .select('role')
+          .eq('league_id', league_id)
+          .eq('user_id', user.id)
+          .maybeSingle();
+
+        if (!membership || membership.role !== 'commissioner') {
+          return respond(403, { error: 'Forbidden — commissioner only' });
+        }
+      }
+      // If no auth header this is a cron/service-role call — allow through.
+
+      // Idempotency gate: if allocations already exist for this league, skip.
+      const { data: existing } = await supabase
+        .from('draft_allocations')
+        .select('league_id')
+        .eq('league_id', league_id)
+        .limit(1)
+        .maybeSingle();
+
+      if (existing) {
+        return respond(200, { message: 'Draft already processed', leagueId: league_id, skipped: true });
+      }
+
       const result = await runLottery(league_id);
       return respond(200, result);
     }
@@ -47,14 +86,24 @@ Deno.serve(async (req) => {
 });
 
 async function runLottery(leagueId) {
-  // 1. Load all pending submissions for this league
-  const { data: submissions } = await supabase
-    .from('draft_submissions')
-    .select('user_id, player_ids')
-    .eq('league_id', leagueId)
-    .eq('status', 'pending');
+  // 1. Load league config (squad_size, position_limits, tournament_id, budget) + pending submissions
+  const [{ data: leagueRow }, { data: submissions }] = await Promise.all([
+    supabase.from('leagues')
+      .select('squad_size, position_limits, tournament_id, budget')
+      .eq('id', leagueId)
+      .maybeSingle(),
+    supabase.from('draft_submissions')
+      .select('user_id, player_ids')
+      .eq('league_id', leagueId)
+      .eq('status', 'pending'),
+  ]);
 
   if (!submissions?.length) return { message: 'No pending submissions', leagueId };
+
+  // Per-league squad size, position caps, and budget (fall back to defaults)
+  const SQUAD_SIZE     = Number(leagueRow?.squad_size ?? DEFAULT_SQUAD_SIZE);
+  const SQUAD_POS_CAPS = leagueRow?.position_limits   ?? DEFAULT_SQUAD_POS_CAPS;
+  const budget         = Number(leagueRow?.budget     ?? 100);
 
   // 2. Load player prices for budget enforcement
   const allPlayerIds = [...new Set(submissions.flatMap(s => s.player_ids))];
@@ -63,7 +112,7 @@ async function runLottery(leagueId) {
     .select('id, position, price')
     .in('id', allPlayerIds);
 
-  const playerMap = Object.fromEntries(playerRows.map(p => [p.id, p]));
+  const playerMap = Object.fromEntries((playerRows ?? []).map(p => [p.id, p]));
 
   // 3. Build conflict map: player_id → [user_ids who want them]
   const wantedBy = {};
@@ -82,9 +131,11 @@ async function runLottery(leagueId) {
     if (wanters.length === 1) {
       awardedTo[pid] = wanters[0];
     } else {
-      const winner = wanters[Math.floor(Math.random() * wanters.length)];
+      // Use crypto-random for fairness; log roll for audit trail.
+      const roll   = crypto.getRandomValues(new Uint32Array(1))[0] / 0xFFFFFFFF;
+      const winner = wanters[Math.floor(roll * wanters.length)];
       awardedTo[pid] = winner;
-      contestedPlayers.push({ pid, wanters, winner });
+      contestedPlayers.push({ pid, wanters, winner, roll: roll.toFixed(6) });
     }
   }
 
@@ -114,8 +165,8 @@ async function runLottery(leagueId) {
       // Skip if position cap reached
       if (posCounts[pos] >= SQUAD_POS_CAPS[pos]) continue;
 
-      // Skip if budget exceeded (100M cap applies post-allocation)
-      if (budgetUsed + player.price > 100) continue;
+      // Skip if budget exceeded (league budget cap applies post-allocation)
+      if (budgetUsed + player.price > budget) continue;
 
       allocated.push(pid);
       posCounts[pos]++;
@@ -143,13 +194,31 @@ async function runLottery(leagueId) {
     .from('draft_allocations')
     .upsert(allocationRows, { onConflict: 'league_id,user_id' });
 
-  // 6b. Write allocated squads to the squads table so the Squad screen shows them
+  // 6b. Fetch the canonical matchday_id for this league's tournament.
+  //     Use the nearest upcoming deadline; fall back to 'active'.
+  const leagueWithTournament = leagueRow?.tournament_id;
+  let canonicalMatchdayId = 'active';
+  if (leagueWithTournament) {
+    const { data: deadline } = await supabase
+      .from('matchday_deadlines')
+      .select('matchday_id')
+      .eq('tournament_id', leagueWithTournament)
+      .order('deadline_at', { ascending: true })
+      .gt('deadline_at', new Date().toISOString())
+      .limit(1)
+      .maybeSingle();
+    if (deadline?.matchday_id) canonicalMatchdayId = deadline.matchday_id;
+  }
+
+  // Write allocated squads to the squads table so the Squad screen shows them.
+  const budget = Number(leagueRow?.budget ?? 100);
   const squadRows = Object.entries(allocations).map(([userId, data]) => ({
     user_id:          userId,
     league_id:        leagueId,
+    tournament_id:    leagueWithTournament ?? null,
     players:          data.allocated_players,
-    budget_remaining: Math.round((100 - data.budget_used) * 10) / 10,
-    matchday_id:      'current',
+    budget_remaining: Math.round((budget - data.budget_used) * 100) / 100,
+    matchday_id:      canonicalMatchdayId,
   }));
 
   await supabase

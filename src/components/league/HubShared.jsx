@@ -1,10 +1,13 @@
 /* eslint-disable react-refresh/only-export-components */
 // Shared chrome primitives for the League Hub.
 // All components use inline styles + CSS custom properties to match the design spec exactly.
+//
+// IMPORTANT: string constants (MONO, DISPLAY, mgrMono, miniBtnStyle) live in
+// HubConstants.js (a leaf module with no React). Import constants from there in
+// any child panel to avoid Rolldown TDZ crashes (see CLAUDE.md TDZ Rule).
 
-const MONO = "'JetBrains Mono', monospace";
-const DISPLAY = "'Archivo Black', sans-serif";
-const BODY = "'Archivo', sans-serif";
+export { MONO, DISPLAY, BODY, mgrHue, mgrMono, miniBtnStyle } from './HubConstants';
+import { MONO, DISPLAY } from './HubConstants';
 
 // 3-char monogram badge. `hue` is the manager's identity colour.
 export function MgrTag({ mono = '???', hue = '#8B95A1', size = 18, dim = false }) {
@@ -211,24 +214,7 @@ export function HubSectionLabel({ label, sub, tone = 'var(--cyan)', right }) {
   );
 }
 
-// Mini button style helper
-export const miniBtnStyle = (color) => ({
-  background: 'transparent', border: `1px solid ${color}55`, color,
-  padding: '4px 8px', fontFamily: MONO, fontSize: 9, letterSpacing: '.18em',
-  cursor: 'pointer',
-});
-
-// Manager identity helpers — deterministic hue + 3-char monogram from username
-const MANAGER_HUES = [
-  '#00B4D8','#E0A800','#A855F7','#22C55E','#F59E0B',
-  '#34D399','#7DD3FC','#FB7185','#FCD34D','#C4B5FD','#67E8F9',
-];
-export function mgrHue(str = '') {
-  let h = 0;
-  for (let i = 0; i < str.length; i++) h = (h * 31 + str.charCodeAt(i)) & 0xffff;
-  return MANAGER_HUES[h % MANAGER_HUES.length];
-}
-export const mgrMono = (username = '') => username.substring(0, 3).toUpperCase() || '???';
+// miniBtnStyle, mgrHue, mgrMono are re-exported from HubConstants.js above.
 
 // ─── Mobile components ────────────────────────────────────────────────────────
 
@@ -323,4 +309,3 @@ export function MobSection({ label, sub, tone = 'var(--cyan)', right }) {
   );
 }
 
-export { MONO, DISPLAY, BODY };

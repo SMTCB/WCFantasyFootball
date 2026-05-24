@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
-import { HubSectionLabel, MgrTag, mgrHue, mgrMono } from './HubShared';
+import { HubSectionLabel, MgrTag } from './HubShared';
+import { mgrHue, mgrMono } from './HubConstants';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Design tokens (mirrors docs/brand/ADMIN TAB/tokens.css)

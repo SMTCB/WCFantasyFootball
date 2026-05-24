@@ -1,4 +1,5 @@
-import { MgrTag, HubSectionLabel, MONO, DISPLAY, mgrHue, mgrMono } from './HubShared';
+import { MgrTag, HubSectionLabel } from './HubShared';
+import { MONO, DISPLAY, mgrHue, mgrMono } from './HubConstants';
 
 export default function StatsView({ topScorers, teamMetrics, members, currentUser, statsLoading }) {
   const totalPts  = (topScorers || []).reduce((s, m) => s + (m.total_points || 0), 0);

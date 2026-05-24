@@ -28,13 +28,36 @@ Deno.serve(async (req) => {
     );
     if (authErr || !user) return json({ ok: false, error: 'Unauthorised' }, 401, corsHeaders);
 
-    const { action, player_id, player_price, league_id } = await req.json();
+    const { action, player_id, league_id } = await req.json();
 
     if (!action || !player_id || !league_id) {
       return json({ ok: false, error: 'Missing required fields' }, 400, corsHeaders);
     }
 
-    const price = Number(player_price ?? 0);
+    // Verify caller is a member of the league (SEC-3).
+    const { data: membership } = await supabase
+      .from('league_members')
+      .select('user_id')
+      .eq('league_id', league_id)
+      .eq('user_id', user.id)
+      .maybeSingle();
+
+    if (!membership) {
+      return json({ ok: false, error: 'You are not a member of this league' }, 403, corsHeaders);
+    }
+
+    // Read price from DB — never trust the client-supplied value (SEC-3).
+    const { data: playerData, error: playerErr } = await supabase
+      .from('players')
+      .select('price, position')
+      .eq('id', player_id)
+      .maybeSingle();
+
+    if (playerErr || !playerData) {
+      return json({ ok: false, error: 'Player not found' }, 400, corsHeaders);
+    }
+
+    const price = Number(playerData.price ?? 0);
 
     // ── Transfer window enforcement ───────────────────────────────────────────
     // 1. Reject if past the active matchday deadline
@@ -149,27 +172,35 @@ Deno.serve(async (req) => {
         return json({ ok: false, error: 'You already own this player' }, 400, corsHeaders);
       }
 
-      // 2. No-repeat: check if any other squad in this league has this player
-      const { data: takenRow } = await supabase
+      // 2. No-repeat / relaxation check: count other squads holding this player,
+      //    then compare against current repeats_allowed tier (L6.1).
+      const { data: takenRows, count: takenCount } = await supabase
         .from('squads')
-        .select('user_id')
+        .select('user_id', { count: 'exact' })
         .eq('league_id', league_id)
         .contains('players', [player_id])
-        .neq('user_id', user.id)
+        .neq('user_id', user.id);
+
+      const { data: relaxState } = await supabase
+        .from('relaxation_state')
+        .select('current_repeats_allowed')
+        .eq('league_id', league_id)
         .maybeSingle();
 
-      if (takenRow) {
-        // Get the manager's username for the UI
-        const { data: ownerProfile } = await supabase
-          .from('users')
-          .select('username')
-          .eq('id', takenRow.user_id)
-          .maybeSingle();
+      const repeatsAllowed = relaxState?.current_repeats_allowed ?? 0;
+
+      if ((takenCount ?? 0) > repeatsAllowed) {
+        const firstOwner = takenRows?.[0];
+        const { data: ownerProfile } = firstOwner
+          ? await supabase.from('users').select('username').eq('id', firstOwner.user_id).maybeSingle()
+          : { data: null };
 
         return json({
           ok:      false,
           code:    'PLAYER_TAKEN',
-          error:   `This player is already owned by ${ownerProfile?.username ?? 'another manager'} in this league`,
+          error:   repeatsAllowed > 0
+            ? `Player already in ${takenCount} squad(s) — max ${repeatsAllowed} repeat(s) allowed currently`
+            : `This player is already owned by ${ownerProfile?.username ?? 'another manager'} in this league`,
           takenBy: ownerProfile?.username ?? 'another manager',
         }, 409, corsHeaders);
       }
@@ -184,14 +215,8 @@ Deno.serve(async (req) => {
         return json({ ok: false, error: 'Insufficient budget' }, 400, corsHeaders);
       }
 
-      // 5. Position limit
-      const { data: playerRow } = await supabase
-        .from('players')
-        .select('position')
-        .eq('id', player_id)
-        .maybeSingle();
-
-      const position  = playerRow?.position;
+      // 5. Position limit (use playerData already fetched above).
+      const position  = playerData.position;
       const posLimit  = POS_LIMITS[position] ?? 99;
 
       if (position && posLimit < 99) {

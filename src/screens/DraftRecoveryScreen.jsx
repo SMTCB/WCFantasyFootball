@@ -310,26 +310,26 @@ export default function DraftRecoveryScreen() {
         <div
           className="px-4 py-2.5 flex items-center justify-between gap-3 text-[11px] font-bold"
           style={{
-            background: relaxation.pressure >= 90
+            background: relaxation.pressure >= 0.9
               ? 'rgba(240,58,58,0.12)'
-              : relaxation.pressure >= 70
+              : relaxation.pressure >= 0.7
               ? 'rgba(255,193,7,0.10)'
               : 'rgba(24,201,107,0.08)',
             borderBottom: '1px solid rgba(255,255,255,0.06)',
           }}
         >
           <div className="flex items-center gap-2">
-            <span style={{ color: relaxation.pressure >= 90 ? 'var(--danger)' : relaxation.pressure >= 70 ? '#FFC107' : 'var(--positive)' }}>
-              {relaxation.pressure >= 90 ? '🔴' : relaxation.pressure >= 70 ? '🟡' : '🟢'}
+            <span style={{ color: relaxation.pressure >= 0.9 ? 'var(--danger)' : relaxation.pressure >= 0.7 ? '#FFC107' : 'var(--positive)' }}>
+              {relaxation.pressure >= 0.9 ? '🔴' : relaxation.pressure >= 0.7 ? '🟡' : '🟢'}
             </span>
             <span style={{ color: '#9E9E9E' }}>
               Pool pressure{' '}
               <span style={{
-                color: relaxation.pressure >= 90 ? 'var(--danger)' : relaxation.pressure >= 70 ? '#FFC107' : 'var(--positive)',
+                color: relaxation.pressure >= 0.9 ? 'var(--danger)' : relaxation.pressure >= 0.7 ? '#FFC107' : 'var(--positive)',
                 fontFamily: 'Archivo Black, sans-serif',
                 fontWeight: 900,
               }}>
-                {Math.round(relaxation.pressure)}%
+                {Math.round(relaxation.pressure * 100)}%
               </span>
               {relaxation.repeatsAllowed > 0
                 ? ` — ${relaxation.repeatsAllowed} repeat(s) allowed per squad`

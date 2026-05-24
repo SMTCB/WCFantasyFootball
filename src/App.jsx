@@ -1,5 +1,6 @@
-import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
+import { BrowserRouter, HashRouter, Routes, Route, Navigate, useNavigate, useSearchParams } from 'react-router-dom';
 import { useEffect, useState } from 'react';
+import { isNative } from './lib/capacitor';
 import { AuthProvider } from './context/AuthContext';
 import { useAuth } from './hooks/useAuth';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -34,8 +35,18 @@ function RecoveryRedirect() {
   return null;
 }
 
-// ── AppRoutes lives inside BrowserRouter so useNavigate (used by OnboardingWizard) works
+// JoinRoute: reads ?code= from query, redirects to LeagueScreen with code pre-filled.
+// If unauthenticated, bounces to /auth preserving the return destination.
+function JoinRoute() {
+  const [searchParams] = useSearchParams();
+  const code = searchParams.get('code') ?? '';
+  // Pass the join code through to LeagueScreen via query param.
+  return <Navigate to={`/league?joinCode=${code}`} replace />;
+}
+
+// ── AppRoutes lives inside Router so useNavigate (used by OnboardingWizard) works
 function AppRoutes() {
+  const { user, authEnabled } = useAuth();
   const { showWizard, completeWizard, skipWizard } = useOnboarding();
   const [showHelpModal, setShowHelpModal] = useState(false);
   useKeyboardShortcuts(() => setShowHelpModal(true));
@@ -48,8 +59,8 @@ function AppRoutes() {
       {/* Redirect to set-password form when PASSWORD_RECOVERY event fires */}
       <RecoveryRedirect />
 
-      {/* One-time onboarding wizard — shown until completed or skipped */}
-      {showWizard && (
+      {/* One-time onboarding wizard — only shown after auth is confirmed (U2) */}
+      {showWizard && (!authEnabled || user) && (
         <OnboardingWizard
           onComplete={completeWizard}
           onSkip={skipWizard}
@@ -81,6 +92,7 @@ function AppRoutes() {
                   <Route path="/bracket"          element={<ErrorBoundary screen="Bracket"><BracketScreen /></ErrorBoundary>} />
                   <Route path="/admin"            element={<ErrorBoundary screen="Admin"><AdminSeedScreen /></ErrorBoundary>} />
                   <Route path="/settings"         element={<ErrorBoundary screen="Settings"><SettingsScreen /></ErrorBoundary>} />
+                  <Route path="/join"             element={<JoinRoute />} />
                   <Route path="*"                 element={<Navigate to="/" replace />} />
                 </Routes>
               </AppLayout>
@@ -92,14 +104,18 @@ function AppRoutes() {
   );
 }
 
+// Use HashRouter for Capacitor native builds (file:// / capacitor:// origins),
+// BrowserRouter for web. CLAUDE.md specifies "hash-based for Capacitor compatibility".
+const Router = isNative ? HashRouter : BrowserRouter;
+
 export default function App() {
   return (
     <AuthProvider>
-      <BrowserRouter>
+      <Router>
         <ToastProvider>
           <AppRoutes />
         </ToastProvider>
-      </BrowserRouter>
+      </Router>
     </AuthProvider>
   );
 }

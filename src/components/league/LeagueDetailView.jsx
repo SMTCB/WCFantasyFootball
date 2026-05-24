@@ -1,4 +1,5 @@
-import { MgrTag, TrendPill, HubSectionLabel, MobFormDots, MobSection, MONO, DISPLAY, miniBtnStyle, mgrHue, mgrMono } from './HubShared';
+import { MgrTag, TrendPill, HubSectionLabel, MobFormDots, MobSection } from './HubShared';
+import { MONO, DISPLAY, miniBtnStyle, mgrHue, mgrMono } from './HubConstants';
 
 export default function LeagueDetailView({ members, currentUser, membersLoading, onH2h, onViewManager }) {
   const myEntry   = members.find(m => currentUser && m.user_id === currentUser.id);

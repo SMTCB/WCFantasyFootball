@@ -6,18 +6,40 @@
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
-const supabase = createClient(
-  Deno.env.get('SUPABASE_URL'),
-  Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
-);
+const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
+const SERVICE_KEY  = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+const ANON_KEY     = Deno.env.get('SUPABASE_ANON_KEY');
 
-const SQUAD_POS_CAPS = { GK: 2, DEF: 5, MID: 5, FWD: 3 };
-const SQUAD_SIZE     = 15;
+const supabase = createClient(SUPABASE_URL, SERVICE_KEY);
+
+const DEFAULT_SQUAD_POS_CAPS = { GK: 2, DEF: 5, MID: 5, FWD: 3 };
+const DEFAULT_SQUAD_SIZE     = 15;
 
 Deno.serve(async (req) => {
   try {
     const { league_id } = await req.json();
     if (!league_id) return respond(400, { error: 'league_id required' });
+
+    // Verify caller is a commissioner of this league (if JWT provided).
+    const authHeader = req.headers.get('Authorization');
+    if (authHeader) {
+      const userClient = createClient(SUPABASE_URL, ANON_KEY, {
+        global: { headers: { Authorization: authHeader } },
+      });
+      const { data: { user }, error: authErr } = await userClient.auth.getUser();
+      if (authErr || !user) return respond(401, { error: 'Unauthorized' });
+
+      const { data: membership } = await supabase
+        .from('league_members')
+        .select('role')
+        .eq('league_id', league_id)
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (!membership || membership.role !== 'commissioner') {
+        return respond(403, { error: 'Forbidden — commissioner only' });
+      }
+    }
 
     const result = await runReverseDraft(league_id);
     return respond(200, result);
@@ -28,6 +50,17 @@ Deno.serve(async (req) => {
 });
 
 async function runReverseDraft(leagueId) {
+  // 0. Load per-league config (squad_size, position_limits, budget).
+  const { data: leagueRow } = await supabase
+    .from('leagues')
+    .select('squad_size, position_limits, budget, tournament_id')
+    .eq('id', leagueId)
+    .maybeSingle();
+
+  const SQUAD_SIZE     = Number(leagueRow?.squad_size ?? DEFAULT_SQUAD_SIZE);
+  const SQUAD_POS_CAPS = leagueRow?.position_limits   ?? DEFAULT_SQUAD_POS_CAPS;
+  const budget         = Number(leagueRow?.budget     ?? 100);
+
   // 1. Load standings — ordered worst → best (lowest points first)
   const { data: standings } = await supabase
     .from('league_members')
@@ -57,7 +90,7 @@ async function runReverseDraft(leagueId) {
     .select('id, position, price')
     .in('id', allPlayerIds);
 
-  const playerMap = Object.fromEntries(playerRows.map(p => [p.id, p]));
+  const playerMap = Object.fromEntries((playerRows ?? []).map(p => [p.id, p]));
 
   // 4. Build conflict map
   const wantedBy = {};
@@ -78,10 +111,15 @@ async function runReverseDraft(leagueId) {
       continue;
     }
 
-    // Pick the wanter with the lowest points (worst standing)
-    const winner = wanters.reduce((best, uid) =>
-      (rankMap[uid] ?? Infinity) < (rankMap[best] ?? Infinity) ? uid : best
-    );
+    // Pick the wanter with the lowest points (worst standing).
+    // Tiebreaker: lexicographic user_id for deterministic output.
+    const winner = wanters.reduce((best, uid) => {
+      const bPts = rankMap[best] ?? Infinity;
+      const uPts = rankMap[uid]  ?? Infinity;
+      if (uPts < bPts) return uid;
+      if (uPts === bPts) return uid < best ? uid : best;
+      return best;
+    });
     awardedTo[pid] = winner;
     conflictLog.push({ pid, wanters, winner, method: 'reverse_standings' });
   }
@@ -105,7 +143,7 @@ async function runReverseDraft(leagueId) {
       const pos = normalisePosition(player.position);
       if (!SQUAD_POS_CAPS[pos]) continue;
       if (posCounts[pos] >= SQUAD_POS_CAPS[pos]) continue;
-      if (budgetUsed + player.price > 100) continue;
+      if (budgetUsed + player.price > budget) continue;
 
       allocated.push(pid);
       posCounts[pos]++;

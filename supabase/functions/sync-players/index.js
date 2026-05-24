@@ -164,7 +164,7 @@ Deno.serve(async (req) => {
               tournament_id:   forza_id,
               birthdate:       p.birthdate ?? null,
               height:          p.height ?? null,
-              price:           null,
+              // price intentionally omitted — preserve existing valuations on conflict.
             };
           });
 

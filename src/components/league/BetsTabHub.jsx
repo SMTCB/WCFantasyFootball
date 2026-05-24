@@ -1,6 +1,7 @@
 import { useBets } from '../../hooks/useBets';
 import BetWidget from '../BetWidget';
-import { HubSectionLabel, MobSection, MONO, DISPLAY } from './HubShared';
+import { HubSectionLabel, MobSection } from './HubShared';
+import { MONO, DISPLAY } from './HubConstants';
 
 const KIND = {
   top_scorer:   { g: '◉', tone: 'var(--cyan)'   },
