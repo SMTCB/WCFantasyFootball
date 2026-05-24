@@ -1,8 +1,41 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-05-24 (Sprint 0 — all release blockers resolved)  
+**Last Updated**: 2026-05-24 (Sprint 1 — channel leaks + rank trigger started)  
 **E2E Test Suite**: 84/84 platform tests passing ✅ + `scoring-pipeline.spec.js` added  
 **Live App**: https://wc-fantasy-football.vercel.app
+
+---
+
+## 📊 SESSION 34 PROGRESS (2026-05-24 — Sprint 1: Channel leaks + rank trigger)
+
+**Goal**: Sprint 1 frontend stability hot spots (FRONT-2/3/4/7/9/10/11) + L3.3 rank trigger.
+
+**🚀 COMPLETED THIS SESSION:**
+
+- ✅ **PR `claude/sprint-1-front-fixes`** — 5 source files + migration 69
+
+**Frontend channel leaks fixed (FRONT-2/3/4/7/9/10/11):**
+- `useChatMessages`: null `subscriptionRef`/`typingChannelRef` in cleanup; deps slimmed to `[leagueId, user?.id]` — stops dozens of stale channels accumulating after ~55 min of use
+- `LeagueScreen`: `removeChannel()` instead of `unsubscribe()` for standings sub (v2 `unsubscribe()` leaves channels in the registry)
+- `LeagueScreen`: `user?.id` dep instead of `user` object — stops token-refresh refetches every 55 min
+- `SquadScreen`: `fetchSquad` wrapped in `useCallback` — stable reference for `useAutoFill`, stops unnecessary churn
+- `useNotifications`: `removeChannel()` instead of `unsubscribe()`
+- `useAuctions`: `cancelRef` prevents stale fetch from updating state after component unmounts
+- `LeagueScreen loadLeagueById` effect: guards on `user?.id` — prevents RLS-empty "No members" flash before auth is ready
+
+**Build fix (Sprint 0 oversight):**
+- `LeagueScreen` imports `MONO`/`DISPLAY`/`miniBtnStyle`/`mgrHue`/`mgrMono` from `HubConstants.js` — Sprint 0 FRONT-1 created `HubConstants.js` but didn't update the import in `LeagueScreen.jsx`. Production build was silently failing.
+
+**Rank aggregation (L3.3):**
+- Migration `69_rank_trigger.sql`: `recompute_league_ranks()` function + `AFTER UPDATE OF total_points` trigger — `league_members.rank` now recomputes automatically on every points change; no longer frozen at seed value
+
+**📋 SQL MIGRATIONS TO RUN ON SUPABASE:**
+1. `supabase/migrations/69_rank_trigger.sql` — deploy after merging PR
+
+**📋 NEXT: Continue Sprint 1** — see `SPRINT_PLAN_2026-05-24.md`:
+- L1.x: scoring math (GK clean sheets, wildcard chip, NaN guard, substitution events)
+- DATA-4/5: `process-transfer` deadline scoped to tournament; filter squad by active matchday
+- U10/U11/U12: `DraftRecoveryScreen`/`SquadScreen`/`RecapScreen` matchday_id fixes
 
 ---
 
