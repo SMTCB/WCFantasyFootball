@@ -4,6 +4,33 @@
 **Methodology:** Five parallel review agents covering different surfaces, cross-referenced against `CLAUDE.md` contracts and recent git history.
 
 ---
+## Sprint 0 Status — updated 2026-05-24
+
+| ID | Status | Notes |
+|----|--------|-------|
+| SEC-1 | ✅ Done | Column-restricted squads UPDATE policy |
+| SEC-2 | ✅ Done | JWT + commissioner auth on draft-lottery, reverse-draft, eliminate-cup-club |
+| SEC-3 | ✅ Done | process-transfer reads price from DB, validates league membership |
+| SEC-4 | ✅ Done | place_bid ownership check via auth.uid() |
+| SEC-5 | ✅ Done | resolve_bet commissioner check (also fixed param rename: p_instance_id → p_bet_id) |
+| SEC-6 | ✅ Done | RLS enabled on 18 gameplay tables (guarded by table-existence checks) |
+| SEC-7 | ✅ Done | users SELECT restricted to own row; user_profiles view created |
+| DEPLOY-1 | ✅ Done | e2e credentials in env vars; canonical version at scripts/e2e-setup.mjs |
+| DATA-1 | ✅ Done | Draft upsert onConflict fixed; tournament_id included |
+| DATA-3 | ✅ Done | Duplicate fantasy_points UNIQUE constraint dropped |
+| DATA-11 | ✅ Done | bet_submissions FK fixed (column is bet_instance_id not bet_id) |
+| DATA-12 | ✅ Done | Invalid cron expression in migration 21 unscheduled |
+| FRONT-1 | ✅ Done | HubConstants.js leaf module; TDZ crash eliminated |
+| LOW-* | ⏳ Sprint 2+ | Lower-priority items deferred |
+
+**Schema corrections discovered during migration:**
+- `squads` has no `formation` or `joker_used` columns
+- `bet_submissions` column is `bet_instance_id` (not `bet_id`)
+- `relaxation_state` table does not yet exist in production instance
+
+---
+
+---
 
 ## Executive Summary
 

@@ -3,6 +3,31 @@
 **Scope:** Deep trace of three intertwined flows:
 1. **Rating** — how player points are computed from match events / Forza stats.
 2. **Bet correction** — how submitted predictions become rewards.
+
+---
+## Sprint 0 Status — updated 2026-05-24
+
+| ID | Status | Notes |
+|----|--------|-------|
+| L1.1 | ✅ Done | scoring_rules table created with JSONB shape; EPL (426) seeded |
+| L1.2–L1.8 | ⏳ Sprint 1 | Scoring math correctness (GK clean sheets, sub events, penalty_missed, mins≥60) |
+| L2.1 | ⏳ Sprint 1 | resolve_bet validates correct_answer is in options |
+| L2.4 | ⏳ Sprint 1 | Auto-resolver edge function + cron |
+| L3.1 | ✅ Done | aggregate_league_member_points UPDATE clause restored |
+| L3.2 | ✅ Done | league_members.total_points → NUMERIC(10,2) |
+| L3.3 | ⏳ Sprint 1 | recompute_league_ranks trigger on total_points change |
+| L3.4 | ⏳ Sprint 1 | rollupSquads hard-fail on missing round_number / tournament_id |
+| L3.5 | ⏳ Sprint 1 | Captain-on-bench policy |
+| L3.7 | ⏳ Sprint 1 | aggregate_league_member_points filter to reward_type='points' only |
+| L5.2 | ✅ Done | run-draft-lottery idempotency gate + crypto-random allocation |
+| L5.4 | ✅ Done | run-reverse-standings-draft per-league config (budget, squad_size, tournament_id) |
+| L5.6 | ✅ Done | Deterministic tiebreaker (lexicographic user_id when points equal) |
+| L5.7 | ✅ Done | Null guard on playerRows in reverse-standings-draft |
+| L5.8 | ✅ Done | Uses league budget from DB (not hardcoded 100) |
+| L6.1 | ✅ Done | process-transfer enforces relaxation_state.current_repeats_allowed |
+| L6.2 | ✅ Done | Pool pressure thresholds corrected to 0–1 ratio; Math.round(pressure*100)% |
+
+---
 3. **Aggregation** — how individual player points + bet rewards roll up into league standings.
 
 This is a companion to [CODE_AUDIT_2026-05-24.md](CODE_AUDIT_2026-05-24.md). Findings here are **logic / mathematical correctness** issues — not security, not infrastructure. Many show up as "data looks fine but totals are wrong" — the worst kind of bug.

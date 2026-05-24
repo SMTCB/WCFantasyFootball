@@ -3,6 +3,24 @@
 **Scope:**
 1. Forza API → Supabase data pipeline consistency.
 2. Inventory of every cron job: scheduled / broken / duplicated / missing.
+
+---
+## Sprint 0 Status — updated 2026-05-24
+
+| ID | Status | Notes |
+|----|--------|-------|
+| I1 / 2.3.b | ✅ Done | Composite (forza_player_id, tournament_id) unique constraint on players; single-column index dropped |
+| I3 | ✅ Done | ingest-match-events cron rewrites: iterates live fixtures per forza_match_id; calculate-scores-post-match at 22:30 UTC |
+| 2.3.c | ✅ Done | price: null removed from sync-players upsert payload |
+| 2.6.a | ✅ Done | WC crons corrected to send forza_id key (was tournament_id) — migration 68 |
+| I2 | ✅ Done | Broken ingest crons unscheduled — migration 67 |
+| I4 | ⏳ Sprint 1 | Unschedule duplicate orchestrator + hardcoded sync crons |
+| 2.4.b | ⏳ Sprint 1 | sync-player-status set _type='suspension' |
+| 3.2 | ⏳ Sprint 1 | Bet TEMPLATE_UUID slug→id runtime lookup |
+| 3.3 | ⏳ Sprint 1 | BetCreatorPanel writes scope_ref = fixture.id for match_result |
+| 3.4 | ⏳ Sprint 1 | Schedule resolve-bets cron |
+
+---
 3. Bet data flow: what data must be present and where the wiring is broken.
 4. Hard-coded / placeholder data still in the production codepath.
 
