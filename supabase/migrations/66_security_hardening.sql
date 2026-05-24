@@ -146,11 +146,11 @@ DO $$ BEGIN
       UPDATE bet_submissions
       SET is_correct = (answer = p_correct_answer),
           reward_awarded = CASE WHEN answer = p_correct_answer THEN v_bet.reward_points ELSE NULL END
-      WHERE bet_id = p_bet_id;
+      WHERE bet_instance_id = p_bet_id;
 
       GET DIAGNOSTICS v_total = ROW_COUNT;
       SELECT COUNT(*) INTO v_winners FROM bet_submissions
-      WHERE bet_id = p_bet_id AND is_correct = true;
+      WHERE bet_instance_id = p_bet_id AND is_correct = true;
 
       UPDATE bet_instances
       SET status = 'resolved', correct_answer = p_correct_answer
@@ -414,7 +414,7 @@ BEGIN
     -- Sum bet reward points for this user in the league.
     SELECT COALESCE(SUM(bs.reward_awarded), 0) INTO v_bet
     FROM bet_submissions bs
-    JOIN bet_instances   bi ON bi.id = bs.bet_id
+    JOIN bet_instances   bi ON bi.id = bs.bet_instance_id
     WHERE bi.league_id = p_league_id
       AND bs.user_id   = v_member.user_id
       AND bs.reward_awarded IS NOT NULL;
@@ -558,12 +558,12 @@ END $$;
 DO $$ BEGIN
   IF NOT EXISTS (
     SELECT 1 FROM pg_constraint
-    WHERE conname = 'bet_submissions_bet_id_fkey'
+    WHERE conname = 'bet_submissions_bet_instance_id_fkey'
       AND conrelid = 'bet_submissions'::regclass
   ) THEN
     ALTER TABLE public.bet_submissions
-      ADD CONSTRAINT bet_submissions_bet_id_fkey
-        FOREIGN KEY (bet_id) REFERENCES bet_instances(id) ON DELETE CASCADE;
+      ADD CONSTRAINT bet_submissions_bet_instance_id_fkey
+        FOREIGN KEY (bet_instance_id) REFERENCES bet_instances(id) ON DELETE CASCADE;
   END IF;
 END $$;
 
