@@ -15,7 +15,7 @@
 | L2.4 | ⏳ Sprint 1 | Auto-resolver edge function + cron |
 | L3.1 | ✅ Done | aggregate_league_member_points UPDATE clause restored |
 | L3.2 | ✅ Done | league_members.total_points → NUMERIC(10,2) |
-| L3.3 | ⏳ Sprint 1 | recompute_league_ranks trigger on total_points change |
+| L3.3 | ✅ Done | migration 69_rank_trigger.sql: recompute_league_ranks() + AFTER UPDATE OF total_points trigger applied to production |
 | L3.4 | ⏳ Sprint 1 | rollupSquads hard-fail on missing round_number / tournament_id |
 | L3.5 | ⏳ Sprint 1 | Captain-on-bench policy |
 | L3.7 | ⏳ Sprint 1 | aggregate_league_member_points filter to reward_type='points' only |
