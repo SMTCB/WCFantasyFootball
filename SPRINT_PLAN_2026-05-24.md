@@ -115,7 +115,7 @@ A small number of items must land in a specific order:
 
 ## Aggregation
 
-- **L3.3** · `recompute_league_ranks` function + trigger on `total_points` change
+- ✅ **L3.3** · `recompute_league_ranks` function + trigger on `total_points` change — migration 69 applied to production
 - **L3.4** · `rollupSquads` hard-fail on missing `round_number` / `tournament_id`
 - **L3.5** · Captain-on-bench policy — DB constraint or vice-captain logic
 - **L3.7** · `aggregate_league_member_points` filter to `reward_type='points'` only
@@ -129,13 +129,13 @@ A small number of items must land in a specific order:
 
 ## Frontend stability hot spots
 
-- **FRONT-2** · `useChatMessages` channel leak fix (subscriptions degrade hourly)
-- **FRONT-3** · `LeagueScreen` use `removeChannel` not `unsubscribe()`
-- **FRONT-4** · `LeagueScreen` `user.id` dep instead of `user` object (re-render loop)
-- **FRONT-7** · `SquadScreen.fetchSquad` race + `useCallback` wrapping
-- **FRONT-9** · `useNotifications` `removeChannel` fix
-- **FRONT-10** · `useAuctions` no-abort + duplicate mount
-- **FRONT-11** · `loadLeagueById` guard on `user?.id`
+- ✅ **FRONT-2** · `useChatMessages` channel leak fix (subscriptions degrade hourly)
+- ✅ **FRONT-3** · `LeagueScreen` use `removeChannel` not `unsubscribe()`
+- ✅ **FRONT-4** · `LeagueScreen` `user.id` dep instead of `user` object (re-render loop)
+- ✅ **FRONT-7** · `SquadScreen.fetchSquad` `useCallback` wrapping + `user?.id` dep (full AbortController race fix deferred to Sprint 3)
+- ✅ **FRONT-9** · `useNotifications` `removeChannel` fix
+- ✅ **FRONT-10** · `useAuctions` cancelRef added (Realtime subscription replacing polling deferred to Sprint 2)
+- ✅ **FRONT-11** · `loadLeagueById` guard on `user?.id`
 - **U10** · `DraftRecoveryScreen` stop writing `matchday_id='current'`
 - **U11** · `SquadScreen.fetchSquad` filter by active matchday
 - **U12** · `RecapScreen` resolve matchday from `matchday_deadlines` (drop `'md2'`)

@@ -20,8 +20,26 @@
 | DATA-3 | ✅ Done | Duplicate fantasy_points UNIQUE constraint dropped |
 | DATA-11 | ✅ Done | bet_submissions FK fixed (column is bet_instance_id not bet_id) |
 | DATA-12 | ✅ Done | Invalid cron expression in migration 21 unscheduled |
-| FRONT-1 | ✅ Done | HubConstants.js leaf module; TDZ crash eliminated |
+| FRONT-1 | ✅ Done | HubConstants.js leaf module; TDZ crash eliminated. Note: LeagueScreen import was also fixed in Sprint 1 (import pointed at HubShared instead of HubConstants — was a silent prod build failure) |
 | LOW-* | ⏳ Sprint 2+ | Lower-priority items deferred |
+
+---
+
+## Sprint 1 Status — updated 2026-05-24
+
+| ID | Status | Notes |
+|----|--------|-------|
+| FRONT-2 | ✅ Done | useChatMessages: null subscriptionRef/typingChannelRef in cleanup; deps slimmed to [leagueId, user?.id] |
+| FRONT-3 | ✅ Done | LeagueScreen: removeChannel() for standings sub |
+| FRONT-4 | ✅ Done | LeagueScreen: user?.id dep instead of user object — stops token-refresh refetches |
+| FRONT-7 | ✅ Done | SquadScreen: fetchSquad in useCallback; user→user?.id dep. Full AbortController deferred to Sprint 3 (FRONT-7 remainder) |
+| FRONT-9 | ✅ Done | useNotifications: removeChannel() |
+| FRONT-10 | ✅ Done (partial) | useAuctions: cancelRef added. Realtime subscription (replacing polling) deferred to Sprint 2 |
+| FRONT-11 | ✅ Done | loadLeagueById effect guards on user?.id |
+| L3.3 | ✅ Done | migration 69_rank_trigger.sql: recompute_league_ranks() + AFTER UPDATE OF total_points trigger. Applied to Supabase production. |
+| L1.2–L1.8 | ⏳ Sprint 1 | Scoring math correctness — next batch |
+| DATA-4, DATA-5 | ⏳ Sprint 1 | process-transfer deadline + matchday scoping — next batch |
+| U10, U11, U12 | ⏳ Sprint 1 | DraftRecoveryScreen/SquadScreen/RecapScreen matchday_id fixes — next batch |
 
 **Schema corrections discovered during migration:**
 - `squads` has no `formation` or `joker_used` columns
