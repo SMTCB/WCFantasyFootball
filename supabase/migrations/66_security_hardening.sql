@@ -180,124 +180,183 @@ RETURNS BOOLEAN LANGUAGE sql STABLE SECURITY DEFINER AS $$
   );
 $$;
 
--- fantasy_points
-ALTER TABLE IF EXISTS public.fantasy_points ENABLE ROW LEVEL SECURITY;
-DROP POLICY IF EXISTS "league members read fantasy_points" ON public.fantasy_points;
-CREATE POLICY "league members read fantasy_points"
-  ON public.fantasy_points FOR SELECT TO authenticated
-  USING (is_league_member(
-    (SELECT league_id FROM squads WHERE id = fantasy_points.squad_id LIMIT 1)
-  ));
+-- Apply RLS + policies only for tables that actually exist in this instance.
+-- DROP POLICY IF EXISTS still errors when the TABLE is missing, so we guard
+-- every block with an information_schema existence check.
+DO $sec6$
+DECLARE
+  tbl TEXT;
+BEGIN
 
--- transfers
-ALTER TABLE IF EXISTS public.transfers ENABLE ROW LEVEL SECURITY;
-DROP POLICY IF EXISTS "users read own transfers" ON public.transfers;
-CREATE POLICY "users read own transfers"
-  ON public.transfers FOR SELECT TO authenticated
-  USING (user_id = auth.uid());
+  -- fantasy_points
+  tbl := 'fantasy_points';
+  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema='public' AND table_name=tbl) THEN
+    EXECUTE format('ALTER TABLE public.%I ENABLE ROW LEVEL SECURITY', tbl);
+    EXECUTE format('DROP POLICY IF EXISTS "league members read fantasy_points" ON public.%I', tbl);
+    EXECUTE format($p$
+      CREATE POLICY "league members read fantasy_points"
+        ON public.fantasy_points FOR SELECT TO authenticated
+        USING (is_league_member(
+          (SELECT league_id FROM squads WHERE id = fantasy_points.squad_id LIMIT 1)
+        ))
+    $p$);
+  END IF;
 
--- draft_submissions
-ALTER TABLE IF EXISTS public.draft_submissions ENABLE ROW LEVEL SECURITY;
-DROP POLICY IF EXISTS "users manage own draft_submissions" ON public.draft_submissions;
-CREATE POLICY "users manage own draft_submissions"
-  ON public.draft_submissions FOR ALL TO authenticated
-  USING (user_id = auth.uid()) WITH CHECK (user_id = auth.uid());
+  -- transfers
+  tbl := 'transfers';
+  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema='public' AND table_name=tbl) THEN
+    EXECUTE format('ALTER TABLE public.%I ENABLE ROW LEVEL SECURITY', tbl);
+    EXECUTE format('DROP POLICY IF EXISTS "users read own transfers" ON public.%I', tbl);
+    EXECUTE $p$ CREATE POLICY "users read own transfers"
+      ON public.transfers FOR SELECT TO authenticated USING (user_id = auth.uid()) $p$;
+  END IF;
 
--- draft_allocations
-ALTER TABLE IF EXISTS public.draft_allocations ENABLE ROW LEVEL SECURITY;
-DROP POLICY IF EXISTS "league members read draft_allocations" ON public.draft_allocations;
-CREATE POLICY "league members read draft_allocations"
-  ON public.draft_allocations FOR SELECT TO authenticated
-  USING (is_league_member(league_id));
+  -- draft_submissions
+  tbl := 'draft_submissions';
+  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema='public' AND table_name=tbl) THEN
+    EXECUTE format('ALTER TABLE public.%I ENABLE ROW LEVEL SECURITY', tbl);
+    EXECUTE format('DROP POLICY IF EXISTS "users manage own draft_submissions" ON public.%I', tbl);
+    EXECUTE $p$ CREATE POLICY "users manage own draft_submissions"
+      ON public.draft_submissions FOR ALL TO authenticated
+      USING (user_id = auth.uid()) WITH CHECK (user_id = auth.uid()) $p$;
+  END IF;
 
--- gazette_entries
-ALTER TABLE IF EXISTS public.gazette_entries ENABLE ROW LEVEL SECURITY;
-DROP POLICY IF EXISTS "league members read gazette_entries" ON public.gazette_entries;
-CREATE POLICY "league members read gazette_entries"
-  ON public.gazette_entries FOR SELECT TO authenticated
-  USING (is_league_member(league_id));
+  -- draft_allocations
+  tbl := 'draft_allocations';
+  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema='public' AND table_name=tbl) THEN
+    EXECUTE format('ALTER TABLE public.%I ENABLE ROW LEVEL SECURITY', tbl);
+    EXECUTE format('DROP POLICY IF EXISTS "league members read draft_allocations" ON public.%I', tbl);
+    EXECUTE $p$ CREATE POLICY "league members read draft_allocations"
+      ON public.draft_allocations FOR SELECT TO authenticated
+      USING (is_league_member(league_id)) $p$;
+  END IF;
 
--- bet_instances
-ALTER TABLE IF EXISTS public.bet_instances ENABLE ROW LEVEL SECURITY;
-DROP POLICY IF EXISTS "league members read bet_instances" ON public.bet_instances;
-CREATE POLICY "league members read bet_instances"
-  ON public.bet_instances FOR SELECT TO authenticated
-  USING (is_league_member(league_id));
+  -- gazette_entries
+  tbl := 'gazette_entries';
+  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema='public' AND table_name=tbl) THEN
+    EXECUTE format('ALTER TABLE public.%I ENABLE ROW LEVEL SECURITY', tbl);
+    EXECUTE format('DROP POLICY IF EXISTS "league members read gazette_entries" ON public.%I', tbl);
+    EXECUTE $p$ CREATE POLICY "league members read gazette_entries"
+      ON public.gazette_entries FOR SELECT TO authenticated
+      USING (is_league_member(league_id)) $p$;
+  END IF;
 
--- bet_submissions
-ALTER TABLE IF EXISTS public.bet_submissions ENABLE ROW LEVEL SECURITY;
-DROP POLICY IF EXISTS "users manage own bet_submissions" ON public.bet_submissions;
-CREATE POLICY "users manage own bet_submissions"
-  ON public.bet_submissions FOR ALL TO authenticated
-  USING (user_id = auth.uid()) WITH CHECK (user_id = auth.uid());
+  -- bet_instances
+  tbl := 'bet_instances';
+  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema='public' AND table_name=tbl) THEN
+    EXECUTE format('ALTER TABLE public.%I ENABLE ROW LEVEL SECURITY', tbl);
+    EXECUTE format('DROP POLICY IF EXISTS "league members read bet_instances" ON public.%I', tbl);
+    EXECUTE $p$ CREATE POLICY "league members read bet_instances"
+      ON public.bet_instances FOR SELECT TO authenticated
+      USING (is_league_member(league_id)) $p$;
+  END IF;
 
--- match_events
-ALTER TABLE IF EXISTS public.match_events ENABLE ROW LEVEL SECURITY;
-DROP POLICY IF EXISTS "authenticated read match_events" ON public.match_events;
-CREATE POLICY "authenticated read match_events"
-  ON public.match_events FOR SELECT TO authenticated USING (true);
+  -- bet_submissions
+  tbl := 'bet_submissions';
+  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema='public' AND table_name=tbl) THEN
+    EXECUTE format('ALTER TABLE public.%I ENABLE ROW LEVEL SECURITY', tbl);
+    EXECUTE format('DROP POLICY IF EXISTS "users manage own bet_submissions" ON public.%I', tbl);
+    EXECUTE $p$ CREATE POLICY "users manage own bet_submissions"
+      ON public.bet_submissions FOR ALL TO authenticated
+      USING (user_id = auth.uid()) WITH CHECK (user_id = auth.uid()) $p$;
+  END IF;
 
--- player_match_stats
-ALTER TABLE IF EXISTS public.player_match_stats ENABLE ROW LEVEL SECURITY;
-DROP POLICY IF EXISTS "authenticated read player_match_stats" ON public.player_match_stats;
-CREATE POLICY "authenticated read player_match_stats"
-  ON public.player_match_stats FOR SELECT TO authenticated USING (true);
+  -- match_events
+  tbl := 'match_events';
+  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema='public' AND table_name=tbl) THEN
+    EXECUTE format('ALTER TABLE public.%I ENABLE ROW LEVEL SECURITY', tbl);
+    EXECUTE format('DROP POLICY IF EXISTS "authenticated read match_events" ON public.%I', tbl);
+    EXECUTE $p$ CREATE POLICY "authenticated read match_events"
+      ON public.match_events FOR SELECT TO authenticated USING (true) $p$;
+  END IF;
 
--- cup_active_clubs
-ALTER TABLE IF EXISTS public.cup_active_clubs ENABLE ROW LEVEL SECURITY;
-DROP POLICY IF EXISTS "league members read cup_active_clubs" ON public.cup_active_clubs;
-CREATE POLICY "league members read cup_active_clubs"
-  ON public.cup_active_clubs FOR SELECT TO authenticated
-  USING (is_league_member(league_id));
+  -- player_match_stats
+  tbl := 'player_match_stats';
+  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema='public' AND table_name=tbl) THEN
+    EXECUTE format('ALTER TABLE public.%I ENABLE ROW LEVEL SECURITY', tbl);
+    EXECUTE format('DROP POLICY IF EXISTS "authenticated read player_match_stats" ON public.%I', tbl);
+    EXECUTE $p$ CREATE POLICY "authenticated read player_match_stats"
+      ON public.player_match_stats FOR SELECT TO authenticated USING (true) $p$;
+  END IF;
 
--- relaxation_state
-ALTER TABLE IF EXISTS public.relaxation_state ENABLE ROW LEVEL SECURITY;
-DROP POLICY IF EXISTS "league members read relaxation_state" ON public.relaxation_state;
-CREATE POLICY "league members read relaxation_state"
-  ON public.relaxation_state FOR SELECT TO authenticated
-  USING (is_league_member(league_id));
+  -- cup_active_clubs
+  tbl := 'cup_active_clubs';
+  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema='public' AND table_name=tbl) THEN
+    EXECUTE format('ALTER TABLE public.%I ENABLE ROW LEVEL SECURITY', tbl);
+    EXECUTE format('DROP POLICY IF EXISTS "league members read cup_active_clubs" ON public.%I', tbl);
+    EXECUTE $p$ CREATE POLICY "league members read cup_active_clubs"
+      ON public.cup_active_clubs FOR SELECT TO authenticated
+      USING (is_league_member(league_id)) $p$;
+  END IF;
 
--- trade_listings
-ALTER TABLE IF EXISTS public.trade_listings ENABLE ROW LEVEL SECURITY;
-DROP POLICY IF EXISTS "league members manage trade_listings" ON public.trade_listings;
-CREATE POLICY "league members manage trade_listings"
-  ON public.trade_listings FOR ALL TO authenticated
-  USING (is_league_member(league_id)) WITH CHECK (is_league_member(league_id));
+  -- relaxation_state
+  tbl := 'relaxation_state';
+  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema='public' AND table_name=tbl) THEN
+    EXECUTE format('ALTER TABLE public.%I ENABLE ROW LEVEL SECURITY', tbl);
+    EXECUTE format('DROP POLICY IF EXISTS "league members read relaxation_state" ON public.%I', tbl);
+    EXECUTE $p$ CREATE POLICY "league members read relaxation_state"
+      ON public.relaxation_state FOR SELECT TO authenticated
+      USING (is_league_member(league_id)) $p$;
+  END IF;
 
--- daily_jokers
-ALTER TABLE IF EXISTS public.daily_jokers ENABLE ROW LEVEL SECURITY;
-DROP POLICY IF EXISTS "users manage own daily_jokers" ON public.daily_jokers;
-CREATE POLICY "users manage own daily_jokers"
-  ON public.daily_jokers FOR ALL TO authenticated
-  USING (user_id = auth.uid()) WITH CHECK (user_id = auth.uid());
+  -- trade_listings
+  tbl := 'trade_listings';
+  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema='public' AND table_name=tbl) THEN
+    EXECUTE format('ALTER TABLE public.%I ENABLE ROW LEVEL SECURITY', tbl);
+    EXECUTE format('DROP POLICY IF EXISTS "league members manage trade_listings" ON public.%I', tbl);
+    EXECUTE $p$ CREATE POLICY "league members manage trade_listings"
+      ON public.trade_listings FOR ALL TO authenticated
+      USING (is_league_member(league_id)) WITH CHECK (is_league_member(league_id)) $p$;
+  END IF;
 
--- matchday_deadlines
-ALTER TABLE IF EXISTS public.matchday_deadlines ENABLE ROW LEVEL SECURITY;
-DROP POLICY IF EXISTS "authenticated read matchday_deadlines" ON public.matchday_deadlines;
-CREATE POLICY "authenticated read matchday_deadlines"
-  ON public.matchday_deadlines FOR SELECT TO authenticated USING (true);
+  -- daily_jokers
+  tbl := 'daily_jokers';
+  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema='public' AND table_name=tbl) THEN
+    EXECUTE format('ALTER TABLE public.%I ENABLE ROW LEVEL SECURITY', tbl);
+    EXECUTE format('DROP POLICY IF EXISTS "users manage own daily_jokers" ON public.%I', tbl);
+    EXECUTE $p$ CREATE POLICY "users manage own daily_jokers"
+      ON public.daily_jokers FOR ALL TO authenticated
+      USING (user_id = auth.uid()) WITH CHECK (user_id = auth.uid()) $p$;
+  END IF;
 
--- edge_function_errors
-ALTER TABLE IF EXISTS public.edge_function_errors ENABLE ROW LEVEL SECURITY;
-DROP POLICY IF EXISTS "service role only edge_function_errors" ON public.edge_function_errors;
--- Only service role (Edge Functions) writes; no browser reads needed.
--- No CREATE POLICY → no authenticated access to error table.
+  -- matchday_deadlines
+  tbl := 'matchday_deadlines';
+  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema='public' AND table_name=tbl) THEN
+    EXECUTE format('ALTER TABLE public.%I ENABLE ROW LEVEL SECURITY', tbl);
+    EXECUTE format('DROP POLICY IF EXISTS "authenticated read matchday_deadlines" ON public.%I', tbl);
+    EXECUTE $p$ CREATE POLICY "authenticated read matchday_deadlines"
+      ON public.matchday_deadlines FOR SELECT TO authenticated USING (true) $p$;
+  END IF;
 
--- transfer_windows
-ALTER TABLE IF EXISTS public.transfer_windows ENABLE ROW LEVEL SECURITY;
-DROP POLICY IF EXISTS "league members read transfer_windows" ON public.transfer_windows;
-CREATE POLICY "league members read transfer_windows"
-  ON public.transfer_windows FOR SELECT TO authenticated
-  USING (is_league_member(league_id));
+  -- edge_function_errors (service role only — no SELECT policy for browsers)
+  tbl := 'edge_function_errors';
+  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema='public' AND table_name=tbl) THEN
+    EXECUTE format('ALTER TABLE public.%I ENABLE ROW LEVEL SECURITY', tbl);
+    EXECUTE format('DROP POLICY IF EXISTS "service role only edge_function_errors" ON public.%I', tbl);
+  END IF;
 
--- scoring_rules (created below)
--- RLS enabled in the CREATE TABLE statement.
+  -- transfer_windows
+  tbl := 'transfer_windows';
+  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema='public' AND table_name=tbl) THEN
+    EXECUTE format('ALTER TABLE public.%I ENABLE ROW LEVEL SECURITY', tbl);
+    EXECUTE format('DROP POLICY IF EXISTS "league members read transfer_windows" ON public.%I', tbl);
+    EXECUTE $p$ CREATE POLICY "league members read transfer_windows"
+      ON public.transfer_windows FOR SELECT TO authenticated
+      USING (is_league_member(league_id)) $p$;
+  END IF;
 
--- teams
-ALTER TABLE IF EXISTS public.teams ENABLE ROW LEVEL SECURITY;
-DROP POLICY IF EXISTS "authenticated read teams" ON public.teams;
-CREATE POLICY "authenticated read teams"
-  ON public.teams FOR SELECT TO authenticated USING (true);
+  -- teams
+  tbl := 'teams';
+  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema='public' AND table_name=tbl) THEN
+    EXECUTE format('ALTER TABLE public.%I ENABLE ROW LEVEL SECURITY', tbl);
+    EXECUTE format('DROP POLICY IF EXISTS "authenticated read teams" ON public.%I', tbl);
+    EXECUTE $p$ CREATE POLICY "authenticated read teams"
+      ON public.teams FOR SELECT TO authenticated USING (true) $p$;
+  END IF;
+
+END $sec6$;
+
+-- scoring_rules RLS is handled in the CREATE TABLE block below.
 
 
 -- ════════════════════════════════════════════════════════════════════════════════
