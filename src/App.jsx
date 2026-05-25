@@ -96,7 +96,8 @@ function AppRoutes() {
                   <Route path="/live"             element={<ErrorBoundary screen="Live"><LiveScreen /></ErrorBoundary>} />
                   <Route path="/market"           element={<ErrorBoundary screen="Market"><MarketScreen /></ErrorBoundary>} />
                   <Route path="/recap"            element={<ErrorBoundary screen="Recap"><RecapScreen /></ErrorBoundary>} />
-                  <Route path="/bracket"          element={<ErrorBoundary screen="Bracket"><BracketScreen /></ErrorBoundary>} />
+                  <Route path="/predictions"      element={<ErrorBoundary screen="Bracket"><BracketScreen /></ErrorBoundary>} />
+                  <Route path="/bracket"          element={<Navigate to="/predictions" replace />} />
                   <Route path="/admin"            element={<ErrorBoundary screen="Admin"><AdminSeedScreen /></ErrorBoundary>} />
                   <Route path="/settings"         element={<ErrorBoundary screen="Settings"><SettingsScreen /></ErrorBoundary>} />
                   <Route path="/join"             element={<JoinRoute />} />

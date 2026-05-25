@@ -10,9 +10,12 @@ Deno.serve(async (req) => {
     console.log(`Token present: ${FORZA_TOKEN ? 'YES' : 'NO'}`);
     console.log(`Token (first 20 chars): ${FORZA_TOKEN ? FORZA_TOKEN.substring(0, 20) + '...' : 'NONE'}`);
 
+    // DATA-17: redact token from any logged or returned URLs
+    const redactUrl = (u) => String(u).replace(/access_token=[^&\s"']*/gi, 'access_token=REDACTED');
+
     // Test 1: Known tournament (EPL = 426)
     const testUrl = `${FORZA_API_BASE}/v1/tournaments/426?access_token=${FORZA_TOKEN}`;
-    console.log(`\nTest URL: ${testUrl}`);
+    console.log(`\nTest URL: ${redactUrl(testUrl)}`);
 
     const response = await fetch(testUrl, { signal: AbortSignal.timeout(10_000) });
 
@@ -29,7 +32,7 @@ Deno.serve(async (req) => {
         ok: response.ok,
         token_set: !!FORZA_TOKEN,
         body: body.substring(0, 1000),
-        url: testUrl,
+        url: redactUrl(testUrl),  // DATA-17: never return raw token in response
       }),
       {
         status: 200,

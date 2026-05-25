@@ -71,6 +71,17 @@ const POSITION_MAP = {
   attacker:   'FWD',
 };
 
+// 2.5.c: parse added-time minutes e.g. "45+2" → 47, "90+3" → 93
+function parseMinute(s) {
+  if (s == null) return 0;
+  const str = String(s);
+  const plusIdx = str.indexOf('+');
+  if (plusIdx === -1) return parseInt(str) || 0;
+  const base  = parseInt(str.slice(0, plusIdx))  || 0;
+  const extra = parseInt(str.slice(plusIdx + 1)) || 0;
+  return base + extra;
+}
+
 // ── Build a flat player stats map from E10 player_statistics ─────────────────
 // E10 shape: { player_statistics: { goals: [{player_id, team_id, value, rank}…], … } }
 // Returns: { [forza_player_id]: { goals, assists, minutes_played, … } }
@@ -293,7 +304,7 @@ Deno.serve(async (req) => {
     const periodsForSubs = processPeriodsData(periodsData, homeId);
     for (const ev of periodsForSubs.activityEvents) {
       if (ev.type !== 'sub') continue;
-      const minInt = parseInt(ev.minute) || 0;
+      const minInt = parseMinute(ev.minute); // 2.5.c: handles "45+2" added-time format
       if (minInt <= 0) continue;
       // Player subbed OUT: played until this minute
       if (ev.player_forza_id && minutesMap[ev.player_forza_id] !== undefined) {
@@ -305,6 +316,35 @@ Deno.serve(async (req) => {
           minutesMap[ev.player_in_forza_id] ?? 0,
           90 - minInt
         );
+      }
+    }
+
+    // ── 5c. 2.5.d: wider player lookup — fall back to tournament-wide search ─────
+    // Players absent from the team-scoped query (e.g., recently transferred) would
+    // otherwise be silently skipped. Scan E10 player IDs not yet in playerLookup and
+    // do a single tournament-wide batch fetch.
+    if (statsData?.player_statistics) {
+      const allE10Fpids = new Set();
+      for (const entries of Object.values(statsData.player_statistics ?? {})) {
+        for (const entry of (Array.isArray(entries) ? entries : [])) {
+          if (entry?.player_id) allE10Fpids.add(String(entry.player_id));
+        }
+      }
+      const missingFpids = [...allE10Fpids].filter(fpid => !playerLookup[fpid]);
+      if (missingFpids.length) {
+        const { data: fallbackPlayers } = await supabase
+          .from('players')
+          .select('id, forza_player_id, position')
+          .in('forza_player_id', missingFpids)
+          .eq('tournament_id', fixture.tournament_id);
+        for (const p of fallbackPlayers ?? []) {
+          if (p.forza_player_id && !playerLookup[p.forza_player_id]) {
+            playerLookup[p.forza_player_id] = { id: p.id, position: p.position };
+          }
+        }
+        if (fallbackPlayers?.length) {
+          console.log(`[ingest-match-events] 2.5.d: resolved ${fallbackPlayers.length} player(s) via tournament-wide fallback lookup`);
+        }
       }
     }
 

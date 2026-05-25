@@ -109,8 +109,11 @@ Deno.serve(async (req) => {
     if (!teams?.length) return respond(200, { ok: true, updated: 0, cleared: 0, note: 'No teams found — run sync-players first' });
 
     // ── 3. Fetch unavailability for all teams (batched) ───────────────────────
+    // DATA-15: collect all forza_player_ids first, then do one batch lookup —
+    // replaces per-player individual queries (N+1 anti-pattern).
     const unavailablePlayerForzaIds = new Set();
-    const statusRows = [];
+    // Raw absence/suspension records before player ID resolution
+    const rawStatusEntries = [];
     const BATCH = 5;
 
     for (let i = 0; i < teams.length; i += BATCH) {
@@ -120,71 +123,68 @@ Deno.serve(async (req) => {
         try {
           const data = await forza(`/v2/teams/${team.forza_team_id}/unavailable_players`);
 
-          // Suspensions
           for (const s of [...(data.suspensions || [])]) {
             const forzaPlayerId = String(s.player?.id);
             if (!forzaPlayerId) continue;
             unavailablePlayerForzaIds.add(forzaPlayerId);
-
-            // Look up internal player ID
-            const { data: player } = await supabase
-              .from('players')
-              .select('id')
-              .eq('forza_player_id', forzaPlayerId)
-              .single();
-
-            if (!player) continue;
-
-            const sWithType = { ...s, _type: 'suspension' };
             const matchesLeft = s.total_matches_left ?? null;
-            const reason = matchesLeft
-              ? `Suspended — ${matchesLeft} match${matchesLeft > 1 ? 'es' : ''} remaining`
-              : mapReason(s.reason, 'suspension') ?? 'Suspended';
-
-            statusRows.push({
-              player_id:   player.id,
-              status:      mapStatus(sWithType),
-              confidence:  mapConfidence(sWithType),
-              reason,
-              return_date: s.suspended_until ?? null,
-              updated_at:  new Date().toISOString(),
+            rawStatusEntries.push({
+              forza_player_id: forzaPlayerId,
+              type:            'suspension',
+              absence:         { ...s, _type: 'suspension' },
+              reason:          matchesLeft
+                ? `Suspended — ${matchesLeft} match${matchesLeft > 1 ? 'es' : ''} remaining`
+                : mapReason(s.reason, 'suspension') ?? 'Suspended',
+              return_date:     s.suspended_until ?? null,
             });
           }
 
-          // Absences (injuries, sickness, other)
           for (const a of [...(data.absences || [])]) {
             const forzaPlayerId = String(a.player?.id);
             if (!forzaPlayerId) continue;
             unavailablePlayerForzaIds.add(forzaPlayerId);
-
-            const { data: player } = await supabase
-              .from('players')
-              .select('id')
-              .eq('forza_player_id', forzaPlayerId)
-              .single();
-
-            if (!player) continue;
-
-            const absenceWithType = { ...a, _type: 'absence' };
-            const returnOn = a.expected_return?.returns_on ?? null;
-            const reason = a.display_reason
-              ?? mapReason(a.reason, a.type)
-              ?? (a.type === 'injury' ? 'Injury' : 'Unavailable');
-
-            statusRows.push({
-              player_id:   player.id,
-              status:      mapStatus(absenceWithType),
-              confidence:  mapConfidence(absenceWithType),
-              reason,
-              return_date: returnOn,
-              updated_at:  new Date().toISOString(),
+            rawStatusEntries.push({
+              forza_player_id: forzaPlayerId,
+              type:            'absence',
+              absence:         { ...a, _type: 'absence' },
+              reason:          a.display_reason
+                ?? mapReason(a.reason, a.type)
+                ?? (a.type === 'injury' ? 'Injury' : 'Unavailable'),
+              return_date:     a.expected_return?.returns_on ?? null,
             });
           }
-
         } catch (e) {
           console.error(`sync-player-status: team ${team.name} failed:`, e.message);
         }
       }));
+    }
+
+    // DATA-15: one batch lookup for all forza_player_ids
+    const allForzaIds = [...unavailablePlayerForzaIds];
+    const playerIdMap = {};
+    if (allForzaIds.length) {
+      const { data: playerRows } = await supabase
+        .from('players')
+        .select('id, forza_player_id')
+        .in('forza_player_id', allForzaIds);
+      for (const p of playerRows ?? []) {
+        if (p.forza_player_id) playerIdMap[p.forza_player_id] = p.id;
+      }
+    }
+
+    // Resolve raw entries to internal player IDs
+    const statusRows = [];
+    for (const entry of rawStatusEntries) {
+      const internalId = playerIdMap[entry.forza_player_id];
+      if (!internalId) continue;
+      statusRows.push({
+        player_id:   internalId,
+        status:      mapStatus(entry.absence),
+        confidence:  mapConfidence(entry.absence),
+        reason:      entry.reason,
+        return_date: entry.return_date,
+        updated_at:  new Date().toISOString(),
+      });
     }
 
     // ── 4. Pass 1: upsert all currently unavailable players ───────────────────

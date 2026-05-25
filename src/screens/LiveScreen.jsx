@@ -307,39 +307,40 @@ export default function LiveScreen() {
   const [activeLeague, setActiveLeague] = useState(null);
   const [mobileTab,    setMobileTab]    = useState('events');
   const [currentGW,    setCurrentGW]    = useState('—');
+  const [benchPlayers, setBenchPlayers] = useState([]);
 
   const initialSet = useRef(false);
 
   const fetchAll = useCallback(async () => {
     try {
-      // 1. Live fixtures
+      // 0. Current matchday label from matchday_deadlines — U54
+      const { data: mdRow } = await supabase
+        .from('matchday_deadlines')
+        .select('matchday_id')
+        .order('deadline_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (mdRow?.matchday_id) {
+        // Format e.g. "426-r35" → "35"
+        const label = String(mdRow.matchday_id).replace(/^.*-r/, '');
+        setCurrentGW(label || mdRow.matchday_id);
+      }
+
+      // 1. Live fixtures — U55: use home_score/away_score columns directly
       const { data: fixData = [] } = await supabase
         .from('fixtures')
-        .select('id, home_team, away_team, status, kickoff_at, minute')
+        .select('id, home_team, away_team, status, kickoff_at, minute, home_score, away_score')
         .eq('status', 'live')
         .order('kickoff_at', { ascending: true });
 
       const activeFixIds = (fixData || []).map(f => f.id);
 
-      // Score map from goal events
-      const scoreMap = {};
-      (fixData || []).forEach(f => { scoreMap[f.id] = { homeGoals: 0, awayGoals: 0 }; });
-      if (activeFixIds.length) {
-        const { data: goalEvs = [] } = await supabase
-          .from('match_events')
-          .select('fixture_id, team, type')
-          .in('fixture_id', activeFixIds)
-          .in('type', ['goal', 'own_goal']);
-        for (const ev of goalEvs || []) {
-          const fix = (fixData || []).find(f => f.id === ev.fixture_id);
-          if (!fix) continue;
-          const isHome = ev.team === fix.home_team;
-          const isOwn  = ev.type === 'own_goal';
-          if (isHome !== isOwn) scoreMap[ev.fixture_id].homeGoals++;
-          else scoreMap[ev.fixture_id].awayGoals++;
-        }
-      }
-      const enrichedFix = (fixData || []).map(f => ({ ...f, ...scoreMap[f.id] }));
+      // U55: use stored score columns instead of counting events
+      const enrichedFix = (fixData || []).map(f => ({
+        ...f,
+        homeGoals: f.home_score ?? 0,
+        awayGoals: f.away_score ?? 0,
+      }));
       setLiveFixtures(enrichedFix);
 
       // Fetch next upcoming fixture if no live matches
@@ -355,9 +356,6 @@ export default function LiveScreen() {
       } else {
         setNextFixture(null);
       }
-
-      // Set GW label from fixture data (use earliest kickoff year/month as proxy)
-      if (fixData?.length) setCurrentGW('LIVE');
 
       if (!user?.id) { setLoading(false); return; }
 
@@ -402,36 +400,49 @@ export default function LiveScreen() {
       const captainId      = squadRow?.captain_id;
       const isTripleCap    = squadRow?.is_triple_captain ?? false;
 
-      // 5. Player details + live stats in parallel
+      // 5. Player details + live stats in parallel — U50/U52: fetch minutes_played
       const [{ data: playerRows = [] }, { data: statsData = [] }] = await Promise.all([
         squadPlayerIds.length
           ? supabase.from('players').select('id, name, position, club').in('id', squadPlayerIds)
           : Promise.resolve({ data: [] }),
         activeFixIds.length && squadPlayerIds.length
           ? supabase.from('player_match_stats')
-              .select('player_id, fantasy_points, fixture_id')
+              .select('player_id, fantasy_points, fixture_id, minutes_played')
               .in('player_id', squadPlayerIds)
               .in('fixture_id', activeFixIds)
           : Promise.resolve({ data: [] }),
       ]);
 
-      // Live player set (has stats in a live fixture)
-      const livePlayerSet = new Set((statsData || []).map(s => s.player_id));
+      // Live player set (has stats in a live fixture with > 0 minutes — U50)
+      const minutesMap = {};
+      (statsData || []).forEach(s => {
+        minutesMap[s.player_id] = (minutesMap[s.player_id] || 0) + (s.minutes_played ?? 0);
+      });
+      const livePlayerSet = new Set(
+        (statsData || [])
+          .filter(s => (minutesMap[s.player_id] ?? 0) > 0)
+          .map(s => s.player_id)
+      );
       const pointsMap = {};
       (statsData || []).forEach(s => {
         pointsMap[s.player_id] = (pointsMap[s.player_id] || 0) + Number(s.fantasy_points);
       });
 
-      // Apply captain multiplier
+      // Apply captain multiplier; tag bench players (index >= 11 in squadPlayerIds)
+      const benchSet = new Set(squadPlayerIds.slice(11));
       const enrichedPlayers = (playerRows || []).map(p => {
         let pts = pointsMap[p.id] || 0;
-        if (p.id === captainId) pts *= isTripleCap ? 3 : 2;
-        return { ...p, points: pts, live: livePlayerSet.has(p.id) };
+        const isBench = benchSet.has(p.id);
+        if (!isBench && p.id === captainId) pts *= isTripleCap ? 3 : 2;
+        return { ...p, points: pts, live: livePlayerSet.has(p.id), isBench, minutes: minutesMap[p.id] ?? null };
       });
 
-      // Position players on pitch
-      const positioned = positionPlayers(enrichedPlayers);
+      // Starters only on pitch; bench tracked separately
+      const starters = enrichedPlayers.filter(p => !p.isBench);
+      const bench    = squadPlayerIds.slice(11).map(id => enrichedPlayers.find(p => p.id === id)).filter(Boolean);
+      const positioned = positionPlayers(starters);
       setSquadPlayers(positioned);
+      setBenchPlayers(bench);
 
       // 6. Enrich leagues with tones + totals
       // U48: use per-league squad row so chip state is scoped to each league
@@ -659,17 +670,31 @@ export default function LiveScreen() {
                 <span className="mono" style={{ color: 'var(--mute)' }}>No upcoming matches</span>
               )}
             </div>
-          ) : liveFixtures.map((f, i) => (
-            <div key={f.id} style={{ flex: 1, padding: '10px 16px', borderLeft: i ? '1px solid var(--rule)' : 'none', display: 'flex', alignItems: 'center', gap: 14 }}>
-              <LivePill />
-              <span className="mono" style={{ fontSize: 11, color: 'var(--mute)', letterSpacing: '.18em' }}>{f.minute ? `${f.minute}'` : '—'}</span>
-              <span style={{ fontFamily: 'Archivo Black', fontSize: 14, letterSpacing: '-0.01em', marginLeft: 'auto' }}>
-                {teamCode(f.home_team)}
-                <span style={{ color: 'var(--cyan)', margin: '0 8px' }}>{f.homeGoals ?? 0}–{f.awayGoals ?? 0}</span>
-                {teamCode(f.away_team)}
-              </span>
-            </div>
-          ))}
+          ) : liveFixtures.map((f, i) => {
+            // U47: status transition labels
+            const isHT         = f.minute === 45 || f.status === 'halftime';
+            const isFT         = f.status === 'finished';
+            const isPostponed  = f.status === 'postponed' || f.status === 'cancelled' || f.status === 'abandoned';
+            const statusLabel  = isPostponed ? 'PST' : isFT ? 'FT' : isHT ? 'HT' : f.minute ? `${f.minute}'` : '—';
+            const statusColor  = isPostponed ? 'var(--gold)' : isFT ? 'var(--mute)' : 'var(--mute)';
+            return (
+              <div key={f.id} style={{ flex: 1, padding: '10px 16px', borderLeft: i ? '1px solid var(--rule)' : 'none', display: 'flex', alignItems: 'center', gap: 14 }}>
+                {isPostponed ? (
+                  <span className="mono" style={{ fontSize: 9, color: 'var(--gold)', letterSpacing: '.18em', background: 'rgba(240,180,0,.1)', padding: '2px 5px' }}>PST</span>
+                ) : isFT ? (
+                  <span className="mono" style={{ fontSize: 9, color: 'var(--mute)', letterSpacing: '.18em' }}>FT</span>
+                ) : (
+                  <LivePill />
+                )}
+                <span className="mono" style={{ fontSize: 11, color: statusColor, letterSpacing: '.18em' }}>{isHT ? 'HT' : statusLabel}</span>
+                <span style={{ fontFamily: 'Archivo Black', fontSize: 14, letterSpacing: '-0.01em', marginLeft: 'auto' }}>
+                  {teamCode(f.home_team)}
+                  <span style={{ color: 'var(--cyan)', margin: '0 8px' }}>{f.homeGoals ?? 0}–{f.awayGoals ?? 0}</span>
+                  {teamCode(f.away_team)}
+                </span>
+              </div>
+            );
+          })}
         </div>
 
         {/* League selector */}
@@ -678,8 +703,8 @@ export default function LiveScreen() {
         {/* Body — two columns */}
         <div style={{ flex: 1, display: 'grid', gridTemplateColumns: 'minmax(0, 520px) 1fr', minHeight: 0 }}>
 
-          {/* Left: mini pitch */}
-          <div style={{ padding: '20px 24px', borderRight: '1px solid var(--rule)', display: 'flex', flexDirection: 'column', gap: 14, minHeight: 0 }}>
+          {/* Left: mini pitch + bench */}
+          <div style={{ padding: '20px 24px', borderRight: '1px solid var(--rule)', display: 'flex', flexDirection: 'column', gap: 14, minHeight: 0, overflowY: 'auto' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <span style={{ width: 3, height: 14, background: activeLeague?.tone || 'var(--cyan)' }} />
@@ -692,7 +717,24 @@ export default function LiveScreen() {
                 {squadPlayers.filter(p => p.live).length} ACTIVE NOW
               </div>
             </div>
-            <div style={{ flex: 1, minHeight: 'clamp(340px, calc(100dvh - 340px), 700px)' }}>
+
+            {/* U52: Captain DNP banner */}
+            {(() => {
+              const cap = squadPlayers.find(p => activeLeague && p.id === activeLeague.captainId);
+              if (cap && liveFixtures.length > 0 && cap.live === false && cap.minutes === 0) {
+                return (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '7px 10px', background: 'rgba(240,180,0,.08)', border: '1px solid rgba(240,180,0,.25)', borderRadius: 3 }}>
+                    <span style={{ fontFamily: 'Archivo Black', fontSize: 9, background: 'var(--gold)', color: 'var(--ink)', padding: '1px 5px' }}>C</span>
+                    <span className="mono" style={{ fontSize: 9, color: 'var(--gold)', letterSpacing: '.14em' }}>
+                      {(cap.name || '').split(' ').pop().toUpperCase()} — DID NOT PLAY YET
+                    </span>
+                  </div>
+                );
+              }
+              return null;
+            })()}
+
+            <div style={{ minHeight: 'clamp(280px, calc(100dvh - 380px), 620px)' }}>
               {loading ? (
                 <div className="mono" style={{ fontSize: 10, color: 'var(--mute)', padding: 20 }}>Loading squad…</div>
               ) : squadPlayers.length === 0 ? (
@@ -701,6 +743,33 @@ export default function LiveScreen() {
                 <MiniPitch players={squadPlayers} activeLeague={activeLeague} gwLabel={`GW ${currentGW}`} />
               )}
             </div>
+
+            {/* U51: Bench section */}
+            {benchPlayers.length > 0 && (
+              <div style={{ borderTop: '1px solid var(--rule)', paddingTop: 12 }}>
+                <div className="mono" style={{ fontSize: 9, color: 'var(--mute)', letterSpacing: '.18em', marginBottom: 8 }}>BENCH</div>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  {benchPlayers.map((p, idx) => (
+                    <div key={p.id} style={{
+                      flex: 1, padding: '6px 8px',
+                      background: 'var(--ink-2)',
+                      border: `1px solid ${p.live ? 'var(--danger)' : 'var(--rule)'}`,
+                      borderLeft: `2px solid ${POS_TONE[p.position] || 'var(--mute)'}`,
+                      borderRadius: 2, minWidth: 0,
+                    }}>
+                      <div className="mono" style={{ fontSize: 8, color: 'var(--mute)', letterSpacing: '.12em', marginBottom: 2 }}>{idx + 1} · {p.position}</div>
+                      <div style={{ fontFamily: 'Archivo Black', fontSize: 10, letterSpacing: '-0.01em', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        {(p.name || '').split(' ').pop().toUpperCase()}
+                      </div>
+                      <div style={{ fontFamily: 'Archivo Black', fontSize: 11, color: (p.points ?? 0) >= 0 ? 'var(--mute)' : 'var(--danger)', marginTop: 2 }}>
+                        {(p.points ?? 0) >= 0 ? (p.points ?? 0) : `−${Math.abs(p.points)}`}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             <div className="mono" style={{ fontSize: 9, color: 'var(--mute)', lineHeight: 1.6 }}>
               ● PULSE = PLAYER IN A LIVE FIXTURE · <span style={{ color: 'var(--gold)' }}>C</span> = CAPTAIN · NUMBERS ARE GW POINTS
             </div>
@@ -808,17 +877,29 @@ export default function LiveScreen() {
                 <span className="mono" style={{ fontSize: 10, color: 'var(--mute)' }}>No upcoming matches</span>
               )}
             </div>
-          ) : liveFixtures.map((f, i) => (
-            <div key={f.id} style={{ padding: '10px 18px', display: 'flex', alignItems: 'center', gap: 12, borderTop: i ? '1px solid var(--rule)' : 'none' }}>
-              <span className="animate-live-pulse" style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--danger)' }} />
-              <span className="mono" style={{ fontSize: 10, color: 'var(--mute)', letterSpacing: '.18em' }}>{f.minute ? `${f.minute}'` : '—'}</span>
-              <span style={{ fontFamily: 'Archivo Black', fontSize: 14, marginLeft: 'auto' }}>
-                {teamCode(f.home_team)}
-                <span style={{ color: 'var(--cyan)', margin: '0 6px' }}>{f.homeGoals ?? 0}–{f.awayGoals ?? 0}</span>
-                {teamCode(f.away_team)}
-              </span>
-            </div>
-          ))}
+          ) : liveFixtures.map((f, i) => {
+            const isHT        = f.minute === 45 || f.status === 'halftime';
+            const isFT        = f.status === 'finished';
+            const isPostponed = f.status === 'postponed' || f.status === 'cancelled' || f.status === 'abandoned';
+            const statusLabel = isPostponed ? 'PST' : isFT ? 'FT' : isHT ? 'HT' : f.minute ? `${f.minute}'` : '—';
+            return (
+              <div key={f.id} style={{ padding: '10px 18px', display: 'flex', alignItems: 'center', gap: 12, borderTop: i ? '1px solid var(--rule)' : 'none' }}>
+                {isPostponed ? (
+                  <span className="mono" style={{ fontSize: 8, color: 'var(--gold)', letterSpacing: '.18em', background: 'rgba(240,180,0,.1)', padding: '1px 4px' }}>PST</span>
+                ) : isFT ? (
+                  <span className="mono" style={{ fontSize: 9, color: 'var(--mute)', letterSpacing: '.1em' }}>FT</span>
+                ) : (
+                  <span className="animate-live-pulse" style={{ width: 6, height: 6, borderRadius: '50%', flexShrink: 0, background: 'var(--danger)' }} />
+                )}
+                <span className="mono" style={{ fontSize: 10, color: isPostponed ? 'var(--gold)' : 'var(--mute)', letterSpacing: '.18em' }}>{isHT ? 'HT' : statusLabel}</span>
+                <span style={{ fontFamily: 'Archivo Black', fontSize: 14, marginLeft: 'auto' }}>
+                  {teamCode(f.home_team)}
+                  <span style={{ color: 'var(--cyan)', margin: '0 6px' }}>{f.homeGoals ?? 0}–{f.awayGoals ?? 0}</span>
+                  {teamCode(f.away_team)}
+                </span>
+              </div>
+            );
+          })}
         </div>
 
         {/* Segmented tabs */}
@@ -869,6 +950,23 @@ export default function LiveScreen() {
                     </span>
                     {activeLeague?.chip ? ` · ${activeLeague.chip.toUpperCase()}` : ''}
                   </div>
+
+                  {/* U52: Captain DNP banner — mobile */}
+                  {(() => {
+                    const cap = squadPlayers.find(p => activeLeague && p.id === activeLeague.captainId);
+                    if (cap && liveFixtures.length > 0 && cap.live === false && cap.minutes === 0) {
+                      return (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '7px 10px', marginBottom: 8, background: 'rgba(240,180,0,.08)', border: '1px solid rgba(240,180,0,.25)', borderRadius: 3 }}>
+                          <span style={{ fontFamily: 'Archivo Black', fontSize: 9, background: 'var(--gold)', color: 'var(--ink)', padding: '1px 4px' }}>C</span>
+                          <span className="mono" style={{ fontSize: 9, color: 'var(--gold)', letterSpacing: '.12em' }}>
+                            {(cap.name || '').split(' ').pop().toUpperCase()} — DNP
+                          </span>
+                        </div>
+                      );
+                    }
+                    return null;
+                  })()}
+
                   {POS_ORDER.slice().reverse().map(pos => {
                     const line = squadPlayers.filter(p => p.position === pos);
                     if (!line.length) return null;
@@ -879,6 +977,24 @@ export default function LiveScreen() {
                       </div>
                     );
                   })}
+
+                  {/* U51: Bench — mobile */}
+                  {benchPlayers.length > 0 && (
+                    <div style={{ borderTop: '1px solid var(--rule)', paddingTop: 8, marginTop: 4 }}>
+                      <div className="mono" style={{ fontSize: 9, color: 'var(--mute)', letterSpacing: '.16em', margin: '4px 0 8px' }}>BENCH · {benchPlayers.length}</div>
+                      {benchPlayers.map((p, idx) => (
+                        <div key={p.id} style={{ display: 'grid', gridTemplateColumns: '18px 1fr auto', gap: 10, alignItems: 'center', padding: '7px 0', borderTop: idx ? '1px solid rgba(242,238,229,.04)' : 'none' }}>
+                          <div className="mono" style={{ fontSize: 8, color: 'var(--mute)', opacity: .6 }}>{idx + 1}</div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                            <span style={{ width: 5, height: 5, borderRadius: '50%', background: p.live ? 'var(--danger)' : 'rgba(242,238,229,.2)', flexShrink: 0 }} className={p.live ? 'animate-live-pulse' : ''} />
+                            <span style={{ fontFamily: 'Archivo Black', fontSize: 12, letterSpacing: '-0.01em' }}>{(p.name || '').split(' ').pop().toUpperCase()}</span>
+                            <span className="mono" style={{ fontSize: 8, color: 'var(--mute)' }}>{p.position}</span>
+                          </div>
+                          <div style={{ fontFamily: 'Archivo Black', fontSize: 13, color: 'var(--mute)' }}>{p.points ?? 0}</div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </>
               )}
             </div>

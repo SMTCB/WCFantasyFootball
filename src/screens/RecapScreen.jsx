@@ -7,15 +7,47 @@ import { useAuth } from '../hooks/useAuth';
 
 export default function RecapScreen() {
   const { user } = useAuth();
-  const [recap,   setRecap]   = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [sharing, setSharing] = useState(false);
-  const [copied, setCopied]   = useState(false);
+  const [recap,              setRecap]              = useState(null);
+  const [loading,            setLoading]            = useState(true);
+  const [sharing,            setSharing]            = useState(false);
+  const [copied,             setCopied]             = useState(false);
+  const [availableMatchdays, setAvailableMatchdays] = useState([]);
+  const [selectedMatchdayId, setSelectedMatchdayId] = useState(null);
   const cardRef = useRef(null);
 
-  useEffect(() => { fetchRecap(); }, [user]);
+  // Load available past matchdays for the historic selector — U53
+  useEffect(() => {
+    if (!user?.id) return;
+    (async () => {
+      const { data: memberRow } = await supabase
+        .from('league_members')
+        .select('leagues(tournament_id)')
+        .eq('user_id', user.id)
+        .order('rank', { ascending: true })
+        .limit(1).maybeSingle();
+      const tournamentId = memberRow?.leagues?.tournament_id ?? null;
+      const q = supabase
+        .from('matchday_deadlines')
+        .select('matchday_id, deadline_at')
+        .lt('deadline_at', new Date().toISOString())
+        .order('deadline_at', { ascending: false })
+        .limit(20);
+      if (tournamentId) q.eq('tournament_id', tournamentId);
+      const { data: mds } = await q;
+      if (mds?.length) {
+        setAvailableMatchdays(mds);
+        setSelectedMatchdayId(prev => prev ?? mds[0].matchday_id);
+      }
+    })();
+  }, [user?.id]);
 
-  const fetchRecap = async () => {
+  useEffect(() => {
+    if (selectedMatchdayId) fetchRecap(selectedMatchdayId);
+    else if (!availableMatchdays.length) fetchRecap(null); // initial load before matchdays arrive
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, selectedMatchdayId]);
+
+  const fetchRecap = async (forcedMatchdayId) => {
     try {
       setLoading(true);
       const userId = user?.id;
@@ -35,12 +67,11 @@ export default function RecapScreen() {
 
       if (!squadRow) return; // no squad yet
 
-      // U12: derive matchday_id from matchday_deadlines instead of relying on
-      //      squad.matchday_id (which may be null, 'current', or 'md2' legacy values).
+      // U12/U53: use forced matchday if provided (from historic selector), else derive from DB
       const tournamentId = memberRow?.leagues?.tournament_id ?? null;
-      let matchdayId = squadRow.matchday_id;
+      let matchdayId = forcedMatchdayId ?? squadRow.matchday_id;
 
-      if (tournamentId) {
+      if (!forcedMatchdayId && tournamentId) {
         const { data: md } = await supabase
           .from('matchday_deadlines')
           .select('matchday_id')
@@ -242,8 +273,8 @@ export default function RecapScreen() {
       <div className="min-h-screen flex flex-col">
 
         {/* Header */}
-        <div className="bg-[#161616] py-3 px-4 border-b border-white/5 sticky top-0 z-40 flex items-center justify-between">
-          <div>
+        <div className="bg-[#161616] py-3 px-4 border-b border-white/5 sticky top-0 z-40 flex items-center justify-between gap-3">
+          <div className="min-w-0">
             <div className="text-[9px] font-black uppercase tracking-[0.2em] text-text-tertiary">
               {recap.leagueName}
             </div>
@@ -251,7 +282,31 @@ export default function RecapScreen() {
               Matchday {recap.matchday} Recap
             </h1>
           </div>
-          <div className="text-[10px] text-text-tertiary font-semibold">{recap.date}</div>
+          {/* U53: Historic matchday selector */}
+          {availableMatchdays.length > 1 && (
+            <select
+              value={selectedMatchdayId ?? ''}
+              onChange={e => setSelectedMatchdayId(e.target.value)}
+              style={{
+                fontFamily: 'JetBrains Mono, monospace',
+                fontSize: 10,
+                letterSpacing: '.12em',
+                background: 'var(--ink-2)',
+                color: 'var(--paper)',
+                border: '1px solid var(--rule)',
+                padding: '4px 8px',
+                borderRadius: 3,
+                cursor: 'pointer',
+                flexShrink: 0,
+              }}
+            >
+              {availableMatchdays.map(md => {
+                const label = String(md.matchday_id).replace(/^.*-r/, 'GW ');
+                return <option key={md.matchday_id} value={md.matchday_id}>{label}</option>;
+              })}
+            </select>
+          )}
+          <div className="text-[10px] text-text-tertiary font-semibold shrink-0">{recap.date}</div>
         </div>
 
         {/* ── Hero Rank Block ──────────────────────────────────── */}
