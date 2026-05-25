@@ -116,9 +116,9 @@ A small number of items must land in a specific order:
 ## Aggregation
 
 - ✅ **L3.3** · `recompute_league_ranks` function + trigger on `total_points` change — migration 69 applied to production
-- **L3.4** · `rollupSquads` hard-fail on missing `round_number` / `tournament_id`
+- ✅ **L3.4** · `rollupSquads` hard-fail on missing `round_number` / `tournament_id` — same fix as DATA-6 (session 35)
 - **L3.5** · Captain-on-bench policy — DB constraint or vice-captain logic
-- **L3.7** · `aggregate_league_member_points` filter to `reward_type='points'` only
+- ✅ **L3.7** · `aggregate_league_member_points` filter to `reward_type='points'` only — migration 70 (pending deploy)
 
 ## Bet resolution
 
