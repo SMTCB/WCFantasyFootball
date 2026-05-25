@@ -449,13 +449,27 @@ async function rollupSquads(fixture_id, pointsLookup, tournament_id) {
     const pitchPlayers = (squad.players || []).slice(0, 11);
     let total = 0;
 
+    // L3.5: if captain is on the bench, award the bonus to the highest-scoring starter.
+    let effectiveCaptainId = squad.captain_id;
+    if (squad.captain_id && !pitchPlayers.includes(squad.captain_id)) {
+      let bestPid = null, bestRaw = -Infinity;
+      for (const pid of pitchPlayers) {
+        const raw = fullRoundLookup[pid] ?? 0;
+        if (raw > bestRaw) { bestRaw = raw; bestPid = pid; }
+      }
+      effectiveCaptainId = bestPid;
+      logError('warning', 'Captain on bench; captain bonus moved to highest-scoring starter', {
+        fixture_id, squad_id: squad.id, captain_id: squad.captain_id, effective_captain_id: bestPid,
+      }); // fire-and-forget
+    }
+
     for (const pid of pitchPlayers) {
       let pts = fullRoundLookup[pid] ?? 0;   // ?? preserves legitimate negative scores (L1.3)
       if (Number.isNaN(pts)) {
         pts = 0;
         logError('error', 'NaN in points lookup', { fixture_id, player_id: pid }); // fire-and-forget
       }
-      if (pid === squad.captain_id)      pts *= squad.is_triple_captain ? 3 : 2;
+      if (pid === effectiveCaptainId)    pts *= squad.is_triple_captain ? 3 : 2;
       if (pid === squad.joker_player_id) pts *= 2;  // Joker doubles one player's points (L1.5)
       total += pts;
     }

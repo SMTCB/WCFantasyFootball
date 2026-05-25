@@ -80,18 +80,42 @@ Deno.serve(async (req) => {
         // ── 3. Create new transfer window for next round ────────────────────
         const now = new Date();
         const opens_at = now.toISOString();
-        const closes_at = new Date(now.getTime() + 48 * 60 * 60 * 1000).toISOString(); // +48h
 
+        // Close 1h before the next round's first kickoff (fallback: now + 48h).
+        // Capped so the window never stays open into a live matchday.
+        const { data: nextKickoff } = await supabase
+          .from('fixtures')
+          .select('kickoff_at')
+          .eq('tournament_id', league.tournament_id)
+          .eq('round_number', nextRound)
+          .order('kickoff_at', { ascending: true })
+          .limit(1)
+          .maybeSingle();
+
+        const fortyEightH = new Date(now.getTime() + 48 * 60 * 60 * 1000);
+        let closes_at;
+        if (nextKickoff?.kickoff_at) {
+          const oneHourBefore = new Date(new Date(nextKickoff.kickoff_at).getTime() - 60 * 60 * 1000);
+          closes_at = (oneHourBefore < fortyEightH ? oneHourBefore : fortyEightH).toISOString();
+        } else {
+          closes_at = fortyEightH.toISOString();
+        }
+
+        // Idempotent: the UNIQUE (league_id, round_number) constraint (migration 26)
+        // means a second run creates nothing if the window already exists.
         const { error: insertErr } = await supabase
           .from('transfer_windows')
-          .insert({
-            league_id: league.id,
-            round_number: nextRound,
-            opens_at,
-            closes_at,
-            window_type: 'standard',
-            transfers_remaining: 5,
-          });
+          .upsert(
+            {
+              league_id: league.id,
+              round_number: nextRound,
+              opens_at,
+              closes_at,
+              window_type: 'standard',
+              transfers_remaining: 5,
+            },
+            { onConflict: 'league_id,round_number', ignoreDuplicates: true }
+          );
 
         if (insertErr) {
           console.error(`Failed to create window for league ${league.id}:`, insertErr.message);
