@@ -135,6 +135,7 @@ Deno.serve(async (req) => {
 
             if (!player) continue;
 
+            const sWithType = { ...s, _type: 'suspension' };
             const matchesLeft = s.total_matches_left ?? null;
             const reason = matchesLeft
               ? `Suspended — ${matchesLeft} match${matchesLeft > 1 ? 'es' : ''} remaining`
@@ -142,8 +143,8 @@ Deno.serve(async (req) => {
 
             statusRows.push({
               player_id:   player.id,
-              status:      'out',
-              confidence:  0,
+              status:      mapStatus(sWithType),
+              confidence:  mapConfidence(sWithType),
               reason,
               return_date: s.suspended_until ?? null,
               updated_at:  new Date().toISOString(),

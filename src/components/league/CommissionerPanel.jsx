@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
+import BetCreatorPanel from './BetCreatorPanel';
 // HubShared is NOT imported here — LeagueScreen imports it directly, and
 // CommissionerPanel→HubShared at depth 2 causes a Rolldown TDZ crash in
 // the production bundle. All four exports are inlined below instead.
+// BetCreatorPanel is safe: LeagueScreen does NOT import it directly.
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Design tokens (mirrors docs/brand/ADMIN TAB/tokens.css)
@@ -1670,22 +1672,18 @@ export default function CommissionerPanel({ commissioner, leagueId, tournamentId
   }, []);
 
   const {
-    commLoading, commMsg, setCommMsg, commAction,
+    commLoading, commMsg, setCommMsg,
     openBets, resolutionBetsLoading,
     selectedBetForResolution, setSelectedBetForResolution,
     betResolutionAnswer, setBetResolutionAnswer,
     betSubmissions, answerGrouped,
-    fetchBetSubmissions, resolveBet,
-    createBetFromData,
+    fetchBetSubmissions, fetchOpenBets, resolveBet,
   } = commissioner;
-
-  const handlePublish = (wizardData) => {
-    createBetFromData(wizardData);
-  };
 
   if (isMobile) {
     // ── Mobile layout ────────────────────────────────────────────────────────
     const {
+      commAction,
       windowOpensAt, setWindowOpensAt,
       windowClosesAt, setWindowClosesAt,
       windowTransfers, setWindowTransfers,
@@ -1702,14 +1700,17 @@ export default function CommissionerPanel({ commissioner, leagueId, tournamentId
         <CommMsg msg={commMsg} onDismiss={() => setCommMsg(null)} />
         <MobSeasonStepper />
 
-        {/* Create bet (mobile) — accordion wizard */}
-        <MobSectionHeader label="CREATE BET" sub="GUIDED · 4 STEPS" tone="var(--cyan)" />
-        <MobCreateBet
-          tournamentId={tournamentId}
-          onPublish={handlePublish}
-          commLoading={commLoading}
-          memberCount={memberCount}
-        />
+        {/* Create bet (mobile) */}
+        <MobSectionHeader label="CREATE BET" sub="NEW BET INSTANCE" tone="var(--cyan)" />
+        <div style={{ padding: '0 14px' }}>
+          <BetCreatorPanel
+            leagueId={leagueId}
+            tournamentId={tournamentId}
+            onCreated={fetchOpenBets}
+            commLoading={commLoading}
+            setCommMsg={setCommMsg}
+          />
+        </div>
 
         {/* Resolve bets (mobile) */}
         <MobSectionHeader label="RESOLVE PENDING" sub="WAITING ON YOU" tone="var(--gold)" />
@@ -1788,8 +1789,14 @@ export default function CommissionerPanel({ commissioner, leagueId, tournamentId
 
       {/* Zone B — Bet management (two columns) */}
       <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', borderBottom: '1px solid var(--rule)', minHeight: 600 }}>
-        <div style={{ borderRight: '1px solid var(--rule)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-          <CreateBetWizard onPublish={handlePublish} commLoading={commLoading} memberCount={memberCount} tournamentId={tournamentId} />
+        <div style={{ borderRight: '1px solid var(--rule)', display: 'flex', flexDirection: 'column', overflow: 'hidden', padding: 20 }}>
+          <BetCreatorPanel
+            leagueId={leagueId}
+            tournamentId={tournamentId}
+            onCreated={fetchOpenBets}
+            commLoading={commLoading}
+            setCommMsg={setCommMsg}
+          />
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
           <ResolvePendingBets

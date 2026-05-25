@@ -1,8 +1,43 @@
-# Supabase Handoff — Sprint 1 Deployments (Session 37)
+# Supabase Handoff — Sprint 1 Deployments (Session 38)
 
 **Date**: 2026-05-25  
-**Latest branch merged**: `claude/s1-live-bets` → `main`  
-**Migrations applied**: 66, 67, 68, 69, 70, 71, 72 ✅ ALL APPLIED
+**Latest branch**: `claude/s1-pipe` (pending merge)  
+**Migrations applied**: 66, 67, 68, 69, 70, 71, 72 ✅ ALL APPLIED  
+**Next to apply**: 73
+
+---
+
+## Session 38 — PENDING DEPLOY
+
+### Migration 73 — pending ⏳
+```sql
+-- File: supabase/migrations/73_pipeline_cleanup.sql
+-- Paste and run in the Supabase SQL editor
+```
+**What it does:**
+- Unschedules duplicate EPL sync crons from migration 63 (`sync-player-status`, `sync-players-daily`, `sync-fixtures`) — the `sync-all-active-tournaments` orchestrator (migration 51) already handles these
+- Deletes `fantasy_points` rows where `matchday_id = 'current'` (seed artifact)
+- Adds `CHECK (matchday_id ~ '^[0-9]+-r[0-9]+$')` constraint to `fantasy_points`
+
+### Edge Functions to deploy (session 38)
+
+```bash
+# Updated in session 38:
+supabase functions deploy calculate-scores        # L3.5: captain-on-bench fallback
+supabase functions deploy sync-player-status      # 2.4.b: _type='suspension' fix
+supabase functions deploy auto-open-transfer-window  # DATA-9: idempotent + correct closes_at
+
+# Still pending from sessions 36-37:
+supabase functions deploy ingest-match-events
+supabase functions deploy process-transfer
+supabase functions deploy run-draft-lottery
+supabase functions deploy run-reverse-standings-draft
+supabase functions deploy sync-fixtures
+supabase functions deploy sync-players
+supabase functions deploy calculate-relaxation
+supabase functions deploy eliminate-cup-club
+supabase functions deploy resolve-bets
+```
 
 ---
 
@@ -14,26 +49,6 @@
 ### Migration 72 — applied ✅
 - `resolve_bet` hardened (options validation + `{winners, total}` return)
 - `resolve-finished-bets` cron every 15 min
-
-### Edge Functions still pending deploy
-
-```bash
-# Session 36 — all 11 functions updated (shared log.ts):
-supabase functions deploy calculate-scores
-supabase functions deploy ingest-match-events
-supabase functions deploy process-transfer
-supabase functions deploy run-draft-lottery
-supabase functions deploy run-reverse-standings-draft
-supabase functions deploy sync-fixtures
-supabase functions deploy sync-players
-supabase functions deploy sync-player-status
-supabase functions deploy calculate-relaxation
-supabase functions deploy eliminate-cup-club
-supabase functions deploy auto-open-transfer-window
-
-# Session 37 — new function:
-supabase functions deploy resolve-bets
-```
 
 ---
 

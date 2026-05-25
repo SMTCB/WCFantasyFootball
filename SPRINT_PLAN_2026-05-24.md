@@ -91,13 +91,13 @@ A small number of items must land in a specific order:
 ## Pipeline correctness
 
 - **I2** · WC sync crons send wrong key (`tournament_id` instead of `forza_id`)
-- **I4** · Unschedule duplicate orchestrator + hardcoded sync crons
-- **DATA-2** · Reconcile `scoring_rules` vs `scoring_templates` (rename or drop the dead one)
-- **DATA-7** · Unschedule duplicate cron jobs causing double Forza calls
-- **DATA-8** · Document canonical schedules for `run-draft-lottery` / `auto-open-transfer-window`
-- **DATA-9** · `auto-open-transfer-window` idempotency + correct `closes_at`
-- **DATA-10** · Normalize `matchday_id` format; remove `'current'` rows; add format check
-- **2.4.b** · `sync-player-status` — set `_type='suspension'` so mapping isn't dead code
+- ✅ **I4** · Unschedule duplicate orchestrator + hardcoded sync crons — migration 73 (session 38)
+- ✅ **DATA-2** · Reconcile `scoring_rules` vs `scoring_templates` — handled in migration 66 (applied)
+- ✅ **DATA-7** · Unschedule duplicate cron jobs causing double Forza calls — migration 73 (session 38)
+- ✅ **DATA-8** · Canonical schedule documented in migration 73 header comment (session 38)
+- ✅ **DATA-9** · `auto-open-transfer-window` idempotency + `closes_at` capped at next kickoff (session 38)
+- ✅ **DATA-10** · Delete `matchday_id='current'` rows; CHECK constraint added — migration 73 (session 38)
+- ✅ **2.4.b** · `sync-player-status` — `_type='suspension'` + `mapStatus`/`mapConfidence` unified (session 38)
 - ✅ **3.2** · Bet `TEMPLATE_UUID` — slug→id runtime lookup (session 37)
 
 ## Scoring math
@@ -117,7 +117,7 @@ A small number of items must land in a specific order:
 
 - ✅ **L3.3** · `recompute_league_ranks` function + trigger on `total_points` change — migration 69 applied to production
 - ✅ **L3.4** · `rollupSquads` hard-fail on missing `round_number` / `tournament_id` — same fix as DATA-6 (session 35)
-- **L3.5** · Captain-on-bench policy — DB constraint or vice-captain logic
+- ✅ **L3.5** · Captain-on-bench → highest-scoring starter gets bonus (session 38)
 - ✅ **L3.7** · `aggregate_league_member_points` filter to `reward_type='points'` only — migration 70 (pending deploy)
 
 ## Bet resolution
@@ -147,7 +147,7 @@ A small number of items must land in a specific order:
 - ✅ **U3** · `/join?code=` route handler — `LeagueScreen` reads `?joinCode=` from URL (session 36)
 - ✅ **U7** · Joker UI wired — RecapScreen `effectivePoints()` applies ×2; `recap.joker` set from `squads.joker_player_id` (session 37)
 - ✅ **U8** · Trade proposals → "coming soon" toast (session 36)
-- **U33** · Replace `CreateBetWizard` mock data with `BetCreatorPanel`
+- ✅ **U33** · `CommissionerPanel` now renders `BetCreatorPanel` (desktop + mobile); dead wizard removed (session 38)
 - ✅ **U34** · `TEMPLATE_UUID` slug→id lookup — runtime lookup in `BetCreatorPanel` + `useCommissioner` (session 37)
 - ✅ **U30** · Realtime standings handles INSERT — new members appear immediately (session 36)
 
