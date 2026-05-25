@@ -1,5 +1,5 @@
 # Consolidated Correction Plan — Sprint Allocation
-**Date:** 2026-05-24 (updated 2026-05-24 with Draft + Relaxation + Observability findings)
+**Date:** 2026-05-24 (updated 2026-05-25 — Sprint 0, 1, 2 complete; migrations 66-76 in production)
 **Total findings:** ~310 across five audits.
 
 ## How to read this document
@@ -84,8 +84,10 @@ A small number of items must land in a specific order:
 
 ---
 
-# Sprint 1 — Will break within the first week (≈10-12 hours)
+# Sprint 1 — Will break within the first week ✅ COMPLETE (2026-05-25)
 
+**PRs:** #171, #173, #174, #175 (sessions 34–38) · #176 `claude/s1-draft` (session 39) — all merged to main  
+**Migrations applied:** 69 (rank trigger), 70 (scoring fixes), 71 (observability), 72 (resolve-bets), 73 (cron dedup), 74 (draft/cup fixes)  
 **Goal: close paths that turn into bug reports or data drift as soon as real usage starts.**
 
 ## Pipeline correctness
@@ -178,102 +180,104 @@ A small number of items must land in a specific order:
 
 ---
 
-# Sprint 2 — Core flows users will notice (≈10-12 hours)
+# Sprint 2 — Core flows users will notice ✅ COMPLETE (2026-05-25)
 
+**PRs:** `claude/s2-auth-squad-ui` (#178) · `claude/s2-league-hub` (#179) · `claude/s2-live-pipeline` (#180) — all merged to main  
+**Migrations applied:** 75 (relaxation fixes), 76 (bet logic fixes)  
 **Goal: every promised feature actually does what it looks like it does.**
 
 ## Auth / onboarding polish
 
-- **U14** · Recovery mode flag persistence across token refresh
-- **U15** · Sign-up success message + existing-email detection
-- **U16** · Replay tour wrong localStorage key
-- **U17** · `ProtectedRoute` preserve query + hash in redirect
+- ✅ **U14** · Recovery mode flag persistence across token refresh
+- ✅ **U15** · Sign-up success message + existing-email detection
+- ✅ **U16** · Replay tour wrong localStorage key
+- ✅ **U17** · `ProtectedRoute` preserve query + hash in redirect
 
 ## Squad + Market + Draft
 
-- **U18** · Squad swap-mode toast on no-op
-- **U19** · Captain button label distinguishes states (`'CURRENT'` vs `'MAKE CAPTAIN'`)
-- **U20** · Joker activation debounce
-- **U21** · Delete `_handleChipToggle` dead code
-- **U22** · Currency symbol standardization (`£` global)
-- **U23** · Draft auto-save fires on idle + 2-min heartbeat
-- **U24** · Draft `autoComplete` respects position caps
-- **U25** · Disable edit for `processed` submissions
-- **U26** · Club cap (3/club) UI guard
-- **U27** · `PowerToolCard` confirm modal `body` prop fix
-- **DATA-13** · `run-reverse-standings-draft` per-league config (mirror lottery)
-- **DATA-15** · `sync-player-status` N+1 query batching
+- ✅ **U18** · Squad swap-mode toast on no-op
+- ✅ **U19** · Captain button label distinguishes states (`'CURRENT'` vs `'MAKE CAPTAIN'`)
+- ✅ **U20** · Joker activation debounce
+- ✅ **U21** · Delete `_handleChipToggle` dead code
+- ✅ **U22** · Currency symbol standardization (`£` global)
+- ✅ **U23** · Draft auto-save fires on idle + 2-min heartbeat
+- ✅ **U24** · Draft `autoComplete` respects position caps
+- ✅ **U25** · Disable edit for `processed` submissions
+- ✅ **U26** · Club cap (3/club) UI guard
+- ✅ **U27** · `PowerToolCard` confirm modal `body` prop fix
+- ✅ **DATA-13** · `run-reverse-standings-draft` per-league config (mirror lottery)
+- ✅ **DATA-15** · `sync-player-status` N+1 query batching
 
 ## League hub
 
-- **U28** · `isCommissioner` include `created_by` in initial query
-- **U29** · Reset league-scoped state on `leagueId` change
-- **U31** · Chat unread badge bumps on INSERT from other tabs
-- **U32** · Tab state in URL (`?tab=chat` or nested route)
-- **U35** · `resolve_bet` returns winners + total separately (links to L2.2)
-- **U36** · AuctionCard preflight budget check
-- **U37** · Verify `auction.seller_id` semantics
-- **U38** · Bet leaderboard `!inner` modifier (links to L2.6) + filter Realtime (links to L2.7)
-- **U40** · Mention dropdown default index 0
-- **U41** · Hashtags vs mentions visual distinction
-- **U42** · `clearAllNotifications` scoped to bet type
-- **U43** · Notifications deep-link on click
+- ✅ **U28** · `isCommissioner` include `created_by` in initial query
+- ✅ **U29** · Reset league-scoped state on `leagueId` change
+- ✅ **U31** · Chat unread badge bumps on INSERT from other tabs
+- ✅ **U32** · Tab state in URL (`?tab=chat` or nested route)
+- ✅ **U35** · `resolve_bet` returns winners + total separately (links to L2.2)
+- ✅ **U36** · AuctionCard preflight budget check
+- ✅ **U37** · Verify `auction.seller_id` semantics
+- ✅ **U38** · Bet leaderboard `!inner` modifier (links to L2.6) + filter Realtime (links to L2.7)
+- ✅ **U40** · Mention dropdown default index 0
+- ✅ **U41** · Hashtags vs mentions visual distinction
+- ✅ **U42** · `clearAllNotifications` scoped to bet type
+- ✅ **U43** · Notifications deep-link on click
 
 ## Live / Recap / Bracket
 
-- **U44** · Rename `/bracket` to `/predictions` or build the actual cup bracket
-- **U45** · Add navigation entries to `/recap` and `/bracket`
-- **U46** · Live deltas computed from real `scoring_rules` or `player_match_stats`
-- **U47** · Match status transitions (halftime banner, FT card, postponed banner)
-- **U48** · Per-league chip state — pick a data model and stop showing fake per-league chips
-- **U49** · `RecapScreen` topScorers math consistency
-- **U50** · "ACTIVE NOW" excludes 0-minute benched players
-- **U51** · Bench section on Live screen
-- **U52** · Captain DNP banner
-- **U53** · Historic matchday selector in Recap
-- **U54** · Derive `currentGW` from `matchday_deadlines`
-- **U55** · Live scoreboard from `fixtures.home_score/away_score` first
+- ✅ **U44** · Rename `/bracket` to `/predictions` + backward-compat redirect
+- ✅ **U45** · Add navigation entries to `/recap` and `/predictions` (desktop sidebar, `desktopOnly` flag keeps mobile bottom bar at 5 items)
+- **U46** · Live deltas computed from real `scoring_rules` or `player_match_stats` — deferred to Sprint 3
+- ✅ **U47** · Match status transitions (halftime banner, FT card, postponed banner)
+- **U48** · Per-league chip state — pick a data model and stop showing fake per-league chips — deferred to Sprint 3
+- ✅ **U49** · `RecapScreen` topScorers math consistency — verified already correct, no change needed
+- ✅ **U50** · "ACTIVE NOW" excludes 0-minute benched players
+- ✅ **U51** · Bench section on Live screen
+- ✅ **U52** · Captain DNP banner
+- ✅ **U53** · Historic matchday selector in Recap
+- ✅ **U54** · Derive `currentGW` from `matchday_deadlines`
+- ✅ **U55** · Live scoreboard from `fixtures.home_score/away_score` first
 
 ## Cross-cutting safety nets
 
-- **U57** · `<NotFoundScreen>` instead of silent root redirect
-- **U58** · `ConfirmModal` awaitable `onConfirm` + loading state
-- **U59** · `ConfirmModal` focus trap + ARIA dialog role
-- **U60** · Global `unhandledrejection` toast (covered by **O3**)
-- **U61** · Move `id="main-content"` to AppLayout (fix SkipToContent)
+- ✅ **U57** · `<NotFoundScreen>` instead of silent root redirect
+- ✅ **U58** · `ConfirmModal` awaitable `onConfirm` + loading state
+- ✅ **U59** · `ConfirmModal` focus trap + ARIA dialog role
+- ✅ **U60** · Global `unhandledrejection` toast (covered by **O3**)
+- ✅ **U61** · Move `id="main-content"` to AppLayout (fix SkipToContent)
 
 ## Draft polish + relaxation polish
 
-- **L5.5** · Deterministic submission ordering in draft
-- **L5.10** · Free-agency auto-window for `unresolved_slots > 0`
-- **L5.12** · Tournament-scoped player validation in submission
-- **L5.13** · Cap player_ids length at `draft_list_size`
-- **L5.16** · Cup phase transition UI banner
-- **L6.10** · `await` or `waitUntil` on `calculate-relaxation` invoke (links to DATA-14)
-- **L6.11** · Recalibrate tier multipliers post squad_size fix
-- **L6.12** · Filter `n_managers` by active members
-- **L6.13** · Tie gazette wording to actual enforcement
+- **L5.5** · Deterministic submission ordering in draft — deferred to Sprint 3
+- **L5.10** · Free-agency auto-window for `unresolved_slots > 0` — deferred to Sprint 3
+- **L5.12** · Tournament-scoped player validation in submission — deferred to Sprint 3
+- **L5.13** · Cap player_ids length at `draft_list_size` — deferred to Sprint 3
+- **L5.16** · Cup phase transition UI banner — deferred to Sprint 3
+- **L6.10** · `await` or `waitUntil` on `calculate-relaxation` invoke (links to DATA-14) — deferred to Sprint 3
+- **L6.11** · Recalibrate tier multipliers post squad_size fix — deferred to Sprint 3
+- **L6.12** · Filter `n_managers` by active members — deferred to Sprint 3
+- **L6.13** · Tie gazette wording to actual enforcement — deferred to Sprint 3
 
 ## Bet polish
 
-- **L2.2** · `resolve_bet` winners vs total
-- **L2.5** · `submit_bet` resets `is_correct/reward_awarded` on answer change
-- **L2.6** · `useBettingLeaderboard` `!inner`
-- **L2.7** · `useBettingLeaderboard` Realtime filter
-- **L3.6** · `points_breakdown` cumulative across fixtures
-- **L3.9** · Bet `reward_awarded` NULL for losers
+- ✅ **L2.2** · `resolve_bet` winners vs total — migration 76
+- ✅ **L2.5** · `submit_bet` resets `is_correct/reward_awarded` on answer change — migration 76
+- ✅ **L2.6** · `useBettingLeaderboard` `!inner`
+- ✅ **L2.7** · `useBettingLeaderboard` Realtime filter
+- ✅ **L3.6** · `points_breakdown` cumulative across fixtures
+- ✅ **L3.9** · Bet `reward_awarded` NULL for losers — migration 76
 
 ## Pipeline polish
 
-- **DATA-14** · `eliminate-cup-club` `EdgeRuntime.waitUntil`
-- **DATA-16** · `discover-tournament` batched concurrency
-- **DATA-17** · Redact access_token in `discover-tournament` / `test-forza-api` logs
-- **DATA-19** · `sync-fixtures` Date comparison (drop string compare)
-- **DATA-20** · `clean_sheet` consistency across paths (links to L1.8)
-- **2.2.b** · `sync-fixtures` timestamp parsing
-- **2.2.c** · Fixture status mapping for `postponed` / `cancelled` / `abandoned`
-- **2.5.c** · `parseInt('45+2')` added-time parser
-- **2.5.d** · Player lookup widened beyond two-team filter
+- **DATA-14** · `eliminate-cup-club` `EdgeRuntime.waitUntil` — deferred to Sprint 3
+- ✅ **DATA-16** · `discover-tournament` batched concurrency
+- ✅ **DATA-17** · Redact access_token in `discover-tournament` / `test-forza-api` logs
+- ✅ **DATA-19** · `sync-fixtures` Date comparison (drop string compare)
+- **DATA-20** · `clean_sheet` consistency across paths (links to L1.8) — deferred to Sprint 3
+- ✅ **2.2.b** · `sync-fixtures` timestamp parsing
+- ✅ **2.2.c** · Fixture status mapping for `postponed` / `cancelled` / `abandoned`
+- ✅ **2.5.c** · `parseInt('45+2')` added-time parser
+- ✅ **2.5.d** · Player lookup widened beyond two-team filter
 
 ---
 
