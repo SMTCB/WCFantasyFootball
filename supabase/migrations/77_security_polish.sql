@@ -77,7 +77,8 @@ CREATE TRIGGER chat_rate_limit
 -- SEC-12: handle_new_user trigger — creates public.users row on auth signup
 -- ─────────────────────────────────────────────────────────────────────────────
 
-CREATE OR REPLACE FUNCTION public.handle_new_user()
+DROP FUNCTION IF EXISTS public.handle_new_user() CASCADE;
+CREATE FUNCTION public.handle_new_user()
 RETURNS TRIGGER LANGUAGE plpgsql SECURITY DEFINER AS $$
 BEGIN
   INSERT INTO public.users (id, username)
