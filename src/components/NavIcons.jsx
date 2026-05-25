@@ -45,6 +45,32 @@ export const NavIconLeagues = ({ size = 24 }) => (
   </svg>
 );
 
+export const NavIconRecap = ({ size = 24 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect x="4" y="16" width="4" height="4" rx="1" fill={MUTE} />
+    <rect x="10" y="12" width="4" height="8" rx="1" fill={PAPER} />
+    <rect x="16" y="8" width="4" height="12" rx="1" fill={CYAN} />
+    <rect x="4" y="5" width="16" height="1" rx="0.5" fill={MUTE} opacity="0.3" />
+  </svg>
+);
+
+export const NavIconPredictions = ({ size = 24 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect x="10" y="4" width="4" height="2" rx="1" fill={CYAN} />
+    <rect x="5" y="9" width="4" height="2" rx="1" fill={PAPER} />
+    <rect x="15" y="9" width="4" height="2" rx="1" fill={PAPER} />
+    <line x1="12" y1="6" x2="7" y2="9" stroke={MUTE} strokeWidth="1" opacity="0.4" />
+    <line x1="12" y1="6" x2="17" y2="9" stroke={MUTE} strokeWidth="1" opacity="0.4" />
+    <rect x="3" y="14" width="4" height="2" rx="1" fill={MUTE} />
+    <rect x="10" y="14" width="4" height="2" rx="1" fill={MUTE} />
+    <rect x="17" y="14" width="4" height="2" rx="1" fill={MUTE} />
+    <line x1="7" y1="11" x2="5" y2="14" stroke={MUTE} strokeWidth="1" opacity="0.3" />
+    <line x1="7" y1="11" x2="12" y2="14" stroke={MUTE} strokeWidth="1" opacity="0.3" />
+    <line x1="17" y1="11" x2="12" y2="14" stroke={MUTE} strokeWidth="1" opacity="0.3" />
+    <line x1="17" y1="11" x2="19" y2="14" stroke={MUTE} strokeWidth="1" opacity="0.3" />
+  </svg>
+);
+
 export const NavIconLive = ({ size = 24 }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
     <rect x="2" y="7" width="8" height="2" rx="1" fill={MUTE} opacity="0.2" />

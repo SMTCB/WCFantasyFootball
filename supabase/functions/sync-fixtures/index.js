@@ -50,10 +50,13 @@ function respond(status, body) {
   });
 }
 
-// Map Forza match status to our enum
+// Map Forza match status to our enum — 2.2.c: include postponed/cancelled/abandoned
 function mapStatus(forzaStatus) {
-  if (forzaStatus === 'live')  return 'live';
-  if (forzaStatus === 'after') return 'finished';
+  if (forzaStatus === 'live')        return 'live';
+  if (forzaStatus === 'after')       return 'finished';
+  if (forzaStatus === 'postponed')   return 'postponed';
+  if (forzaStatus === 'cancelled')   return 'cancelled';
+  if (forzaStatus === 'abandoned')   return 'abandoned';
   return 'scheduled';
 }
 
@@ -118,11 +121,12 @@ Deno.serve(async (req) => {
 
     // ── 4. Derive matchday deadlines: MIN(kickoff_at) per round ───────────────
     // Group all matches by round number, take the earliest kickoff.
+    // DATA-19/2.2.b: use new Date() for date comparison, not raw string compare
     const deadlineMap = {};
     for (const m of matches) {
       const round = m.round;
-      if (!round) continue;
-      if (!deadlineMap[round] || m.kickoff_at < deadlineMap[round]) {
+      if (!round || !m.kickoff_at) continue;
+      if (!deadlineMap[round] || new Date(m.kickoff_at) < new Date(deadlineMap[round])) {
         deadlineMap[round] = m.kickoff_at;
       }
     }

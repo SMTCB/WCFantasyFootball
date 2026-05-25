@@ -7,14 +7,18 @@ import {
   NavIconLeagues,
   NavIconLive,
   NavIconMarket,
+  NavIconRecap,
+  NavIconPredictions,
 } from './NavIcons';
 
 const NAV_ITEMS = [
-  { key: 'scores',  label: 'SCORES',  path: '/',       Icon: NavIconScores,  desc: 'Match Scores & Fixtures' },
-  { key: 'squad',   label: 'SQUAD',   path: '/squad',  Icon: NavIconSquad,   desc: 'Your Tactical Sheet' },
-  { key: 'league',  label: 'LEAGUE',  path: '/league', Icon: NavIconLeagues, desc: 'League Standings & Chat' },
-  { key: 'live',    label: 'LIVE',    path: '/live',   Icon: NavIconLive,    desc: 'Live Points & Projections', isLive: true },
-  { key: 'market',  label: 'MARKET',  path: '/market', Icon: NavIconMarket,  desc: 'Player Transfer Market' },
+  { key: 'scores',      label: 'SCORES',      path: '/',            Icon: NavIconScores,      desc: 'Match Scores & Fixtures' },
+  { key: 'squad',       label: 'SQUAD',       path: '/squad',       Icon: NavIconSquad,       desc: 'Your Tactical Sheet' },
+  { key: 'league',      label: 'LEAGUE',      path: '/league',      Icon: NavIconLeagues,     desc: 'League Standings & Chat' },
+  { key: 'live',        label: 'LIVE',        path: '/live',        Icon: NavIconLive,        desc: 'Live Points & Projections', isLive: true },
+  { key: 'market',      label: 'MARKET',      path: '/market',      Icon: NavIconMarket,      desc: 'Player Transfer Market' },
+  { key: 'recap',       label: 'RECAP',       path: '/recap',       Icon: NavIconRecap,       desc: 'Matchday Recap & Stats', desktopOnly: true },
+  { key: 'predictions', label: 'PREDICTIONS', path: '/predictions', Icon: NavIconPredictions, desc: 'Cup & Tournament Bracket', desktopOnly: true },
 ];
 
 export default function AppLayout({ children }) {
@@ -169,7 +173,7 @@ export default function AppLayout({ children }) {
         }}
       >
         <div className="flex items-stretch h-16">
-          {NAV_ITEMS.map(({ key, label, path, Icon, isLive }) => { // eslint-disable-line no-unused-vars
+          {NAV_ITEMS.filter(item => !item.desktopOnly).map(({ key, label, path, Icon, isLive }) => { // eslint-disable-line no-unused-vars
             const isActive = location.pathname === path ||
               (path !== '/' && location.pathname.startsWith(path));
             const activeColor = isLive ? 'var(--danger)' : 'var(--cyan)';

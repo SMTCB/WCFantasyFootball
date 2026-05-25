@@ -6,6 +6,11 @@
 const FORZA_API_BASE = 'https://api.forzafootball.com';
 const FORZA_TOKEN = Deno.env.get('FORZA_ACCESS_TOKEN');
 
+// DATA-17: redact access_token from any log output
+function redactToken(str) {
+  return String(str).replace(/access_token=[^&\s"']*/gi, 'access_token=REDACTED');
+}
+
 // Helper: test if a tournament ID exists and get its info
 async function fetchTournament(tournamentId, retries = 3, timeout = 10000) {
   const url = `${FORZA_API_BASE}/v1/tournaments/${tournamentId}?access_token=${FORZA_TOKEN}`;
@@ -34,11 +39,12 @@ async function fetchTournament(tournamentId, retries = 3, timeout = 10000) {
       }
     } catch (error) {
       if (attempt < retries - 1) {
-        console.log(`[Attempt ${attempt + 1}] Error fetching tournament ${tournamentId}: ${error.message}, retrying...`);
+        // DATA-17: never log raw URLs containing access_token
+        console.log(`[Attempt ${attempt + 1}] Error fetching tournament ${tournamentId}: ${redactToken(error.message)}, retrying...`);
         await new Promise(r => setTimeout(r, 2000)); // 2s backoff
         continue;
       }
-      return { exists: false, error: error.message };
+      return { exists: false, error: redactToken(error.message) };
     }
   }
 
@@ -61,12 +67,22 @@ Deno.serve(async (req) => {
     console.log(`[discover-tournament] Searching for "${searchTerm}" in tournament ID range ${idRange.start}-${idRange.end}`);
 
     const found = [];
+    const BATCH = 5; // DATA-16: probe 5 IDs concurrently to speed up range scans
 
-    // Probe tournament IDs
-    for (let id = idRange.start; id <= idRange.end; id++) {
-      const result = await fetchTournament(id);
+    // Build list of IDs to probe
+    const ids = [];
+    for (let id = idRange.start; id <= idRange.end; id++) ids.push(id);
 
-      if (result.exists && result.data) {
+    // Process in concurrent batches
+    for (let i = 0; i < ids.length; i += BATCH) {
+      const batch = ids.slice(i, i + BATCH);
+      const results = await Promise.all(batch.map(id => fetchTournament(id)));
+
+      for (let j = 0; j < batch.length; j++) {
+        const id     = batch[j];
+        const result = results[j];
+        if (!result.exists || !result.data) continue;
+
         // API wraps tournament in { tournament: {...} }
         const tournament = result.data.tournament;
         const name = tournament.name || '';

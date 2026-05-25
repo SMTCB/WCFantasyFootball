@@ -443,6 +443,18 @@ async function rollupSquads(fixture_id, pointsLookup, tournament_id) {
 
   if (!squads?.length) return 0;
 
+  // L3.6: load existing breakdown data so we can accumulate across fixtures in the round
+  const squadIds = squads.map(s => s.id);
+  const { data: existingFP } = await supabase
+    .from('fantasy_points')
+    .select('squad_id, points_breakdown')
+    .in('squad_id', squadIds)
+    .eq('matchday_id', roundMatchdayId);
+
+  const existingBDMap = Object.fromEntries(
+    (existingFP ?? []).map(fp => [fp.squad_id, fp.points_breakdown ?? {}])
+  );
+
   // Build fantasy_points upserts — one row per squad per matchday (L1.3 / L1.4 / L1.5)
   const fantasyPointsUpserts = [];
   for (const squad of squads) {
@@ -477,11 +489,22 @@ async function rollupSquads(fixture_id, pointsLookup, tournament_id) {
     if (squad.is_wildcard) total *= 1.1;
     total = Math.round(total * 100) / 100;
 
+    // L3.6: accumulate per-fixture contributions in points_breakdown
+    const existingBD = existingBDMap[squad.id] ?? {};
+    const thisFixturePts = Math.round(
+      pitchPlayers.reduce((sum, pid) => sum + (pointsLookup[pid] ?? 0), 0) * 100
+    ) / 100;
     fantasyPointsUpserts.push({
       squad_id:         squad.id,
       matchday_id:      roundMatchdayId,
       total,
-      points_breakdown: { fixture_id, player_count: pitchPlayers.length },
+      points_breakdown: {
+        fixtures: {
+          ...(existingBD.fixtures ?? {}),
+          [fixture_id]: thisFixturePts,
+        },
+        player_count: pitchPlayers.length,
+      },
     });
   }
 
