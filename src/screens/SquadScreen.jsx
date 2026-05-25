@@ -89,20 +89,13 @@ export default function SquadScreen() {
   const [fetchError,         setFetchError]        = useState(null);
   const [tournamentId,       setTournamentId]      = useState(null);
 
-  // On mount: resolve league context
+  // On mount: resolve which league to show
   useEffect(() => {
     const init = async () => {
       if (leagueIdParam) {
         setActiveLeague(leagueIdParam);
-        const { data } = await supabase
-          .from('leagues')
-          .select('tournament_id')
-          .eq('id', leagueIdParam)
-          .maybeSingle();
-        if (data?.tournament_id) setTournamentId(data.tournament_id);
         return;
       }
-      // No leagueId in URL â€” fetch user's leagues
       const { data } = await supabase
         .from('league_members')
         .select('league_id, leagues(id, name, tournament_id)')
@@ -110,7 +103,6 @@ export default function SquadScreen() {
       const list = (data ?? []).map(r => ({ id: r.league_id, name: r.leagues?.name ?? r.league_id, tournament_id: r.leagues?.tournament_id }));
       if (list.length === 1) {
         setActiveLeague(list[0].id);
-        if (list[0].tournament_id) setTournamentId(list[0].tournament_id);
         setLeagues([]);
       } else {
         setLeagues(list);
@@ -119,21 +111,16 @@ export default function SquadScreen() {
     if (user?.id) init();
   }, [user?.id, leagueIdParam]);
 
-  // Fetch tournament_id when activeLeague changes (after selection)
+  // Resolve tournament_id whenever the active league is known or changes
   useEffect(() => {
-    if (!activeLeague || leagueIdParam) return; // Skip if came from URL (already handled above)
-    const fetchTournament = async () => {
-      const { data } = await supabase
-        .from('leagues')
-        .select('tournament_id')
-        .eq('id', activeLeague)
-        .maybeSingle();
-      if (data?.tournament_id) {
-        setTournamentId(data.tournament_id);
-      }
-    };
-    fetchTournament();
-  }, [activeLeague, leagueIdParam]);
+    if (!activeLeague) return;
+    supabase
+      .from('leagues')
+      .select('tournament_id')
+      .eq('id', activeLeague)
+      .maybeSingle()
+      .then(({ data }) => { if (data?.tournament_id) setTournamentId(data.tournament_id); });
+  }, [activeLeague]);
 
   // Competition-agnostic config from the selected league row
   const cfg = useLeagueConfig(activeLeague);
@@ -289,7 +276,7 @@ export default function SquadScreen() {
   }, [user?.id, activeLeague, tournamentId]);
 
   // Auto-fill hook â€” reusable across Squad, Market, League screens
-  const { handleAutoFill, autoFilling, autoFillMsg } = useAutoFill(activeLeague, squadData, fetchSquad, takenMap, buy);
+  const { handleAutoFill, autoFilling, autoFillMsg } = useAutoFill(activeLeague, squadData, fetchSquad, takenMap, buy, cfg);
 
   // Live countdown hook — pass tournamentId so it finds the correct deadline row.
   const deadline = useDeadlineCountdown({ tournamentId });

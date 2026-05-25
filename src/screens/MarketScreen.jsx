@@ -93,7 +93,7 @@ export default function MarketScreen() {
   };
 
   // Auto-fill hook â€” reusable across screens
-  const { handleAutoFill, autoFilling, autoFillMsg } = useAutoFill(activeLeague, mySquad, fetchSquad, takenMap, buy);
+  const { handleAutoFill, autoFilling, autoFillMsg } = useAutoFill(activeLeague, mySquad, fetchSquad, takenMap, buy, cfg);
 
   const resolveLeagueTournament = async (lid) => {
     const { data } = await supabase

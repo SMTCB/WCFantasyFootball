@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from './useAuth';
 
@@ -9,6 +9,8 @@ import { useAuth } from './useAuth';
 export function useAvailabilityFlag(leagueId) {
   const { user } = useAuth();
   const [flagMap, setFlagMap] = useState({});
+  const flagMapRef = useRef(flagMap);
+  useEffect(() => { flagMapRef.current = flagMap; }, [flagMap]);
   const [flagMapLoading, setFlagMapLoading] = useState(false);
 
   // Load all active flags for this league
@@ -49,7 +51,7 @@ export function useAvailabilityFlag(leagueId) {
   // Toggle flag for a player on user's squad
   const toggleFlag = useCallback(async (squadId, playerId) => {
     try {
-      const existing = flagMap[playerId];
+      const existing = flagMapRef.current[playerId];
 
       if (existing?.isOwnFlag) {
         // Remove existing flag
@@ -106,7 +108,7 @@ export function useAvailabilityFlag(leagueId) {
       console.error('useAvailabilityFlag: toggleFlag failed', err);
       return { ok: false, error: err.message };
     }
-  }, [leagueId, user?.id, flagMap]);
+  }, [leagueId, user?.id]);
 
   return { flagMap, flagMapLoading, toggleFlag, refresh: loadFlags };
 }
