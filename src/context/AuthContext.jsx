@@ -70,19 +70,13 @@ export function AuthProvider({ children }) {
 
   const signUp = async ({ email, password, username }) => {
     if (!AUTH_ENABLED) return { error: null };
-    const { data, error } = await supabase.auth.signUp({
+    // public.users row is created by the handle_new_user() DB trigger on auth.users INSERT.
+    // Attempting a client-side upsert here races the session propagation and fails RLS.
+    return supabase.auth.signUp({
       email,
       password,
       options: { data: { username } },
     });
-    // Create a row in public.users on successful sign-up
-    if (data?.user && !error) {
-      await supabase.from('users').upsert({
-        id:       data.user.id,
-        username: username || email.split('@')[0],
-      });
-    }
-    return { data, error };
   };
 
   const signOut = async () => {
