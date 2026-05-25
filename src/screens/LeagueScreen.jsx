@@ -121,6 +121,7 @@ export default function LeagueScreen() {
   const [_leagueListings, setLeagueListings] = useState([]);        // all listings in league
   const [h2hTarget, setH2hTarget] = useState(null);
   const [mySquadId, setMySquadId] = useState(null);
+  const [mySquadBudget, setMySquadBudget] = useState(null);
 
   // Real squad data for trade builder
   const [mySquadPlayers,   setMySquadPlayers]   = useState([]);
@@ -172,7 +173,7 @@ export default function LeagueScreen() {
 
   // Chat input state lives in ChatView â€” not needed here
   const { messages, loading: chatLoading, unreadCount, typingUsers, sendMessage, editMessage, deleteMessage, broadcastTyping, markChatAsRead, scrollEndRef } = useChatMessages(activeLeague?.league_id);
-  const { notifications, unreadCount: notificationCount, markAsRead: markNotificationAsRead, clearAll: clearAllNotifications } = useNotifications(activeLeague?.league_id);
+  const { notifications, unreadCount: notificationCount, markAsRead: markNotificationAsRead, clearAll: clearAllNotifications, clearByType: clearNotificationsByType } = useNotifications(activeLeague?.league_id);
   const { mentionSearch, mentionMatches, selectedMention, mentionedUserIds, loadLeagueMembers, parseMentionPattern, insertMention, handleMentionNavigate, resetMentions } = useMentions(activeLeague?.league_id);
   const { searchTerm, setSearchTerm, filteredMessages, clearSearch, resultCount } = useMessageSearch(messages);
 
@@ -248,6 +249,17 @@ export default function LeagueScreen() {
     if (t === 'admin') return 'commissioner';
     return t;
   };
+  // U32: set tab + sync to URL query param so ?tab=chat deep-links work
+  const setTab = useCallback((t) => {
+    setView(tabToView(t));
+    setSearchParams(prev => {
+      const next = new URLSearchParams(prev);
+      next.set('tab', t);
+      return next;
+    }, { replace: true });
+  // tabToView/setSearchParams are stable — no dep needed
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const fetchTournaments = useCallback(async () => {
     const { data } = await supabase
@@ -270,7 +282,7 @@ export default function LeagueScreen() {
         .from('league_members')
         .select(`
           league_id, rank, total_points,
-          leagues ( id, name, format, tournament_id )
+          leagues ( id, name, format, tournament_id, created_by )
         `)
         .eq('user_id', userId);
 
@@ -350,14 +362,15 @@ export default function LeagueScreen() {
         setDraftOpen(false);
       }
 
-      // Fetch current user's squadId in this league
+      // Fetch current user's squadId + budget in this league
       const { data: squadRow } = await supabase
         .from('squads')
-        .select('id')
+        .select('id, budget')
         .eq('league_id', id)
         .eq('user_id', user?.id)
         .maybeSingle();
       setMySquadId(squadRow?.id ?? null);
+      setMySquadBudget(squadRow?.budget ?? null);
 
       // Load trade listings for the league
       const { data: listings } = await supabase
@@ -375,6 +388,12 @@ export default function LeagueScreen() {
 
   useEffect(() => {
     if (leagueId && user?.id) {
+      // Reset league-scoped state before loading new league to avoid stale display (U29)
+      setMembers([]);
+      setMySquadId(null);
+      setMySquadBudget(null);
+      setDraftGaps(0);
+      setDraftOpen(false);
       loadLeagueById(leagueId);
     } else if (!leagueId) {
       setActiveLeague(null);
@@ -395,12 +414,21 @@ export default function LeagueScreen() {
     }
   }, [view, activeLeague?.league_id, markChatAsRead, loadLeagueMembers]);
 
-  // Auto-clear notification badge when viewing bets tab
+  // U32: Apply ?tab= URL param when a league loads
+  useEffect(() => {
+    if (!activeLeague?.league_id) return;
+    const tabParam = searchParams.get('tab');
+    if (tabParam) setView(tabToView(tabParam));
+  // Only apply on initial league load (activeLeague change), not on every searchParam change
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeLeague?.league_id]);
+
+  // U42: Auto-clear only bet-type notification badge when viewing bets tab
   useEffect(() => {
     if (view === 'bets' && activeLeague?.league_id && notificationCount > 0) {
-      clearAllNotifications();
+      clearNotificationsByType('bet');
     }
-  }, [view, activeLeague?.league_id, notificationCount, clearAllNotifications]);
+  }, [view, activeLeague?.league_id, notificationCount, clearNotificationsByType]);
 
   // Realtime subscription: league standings — handles UPDATE (points change) and INSERT (new member joins)
   useEffect(() => {
@@ -664,6 +692,7 @@ export default function LeagueScreen() {
                   unreadCount={notificationCount}
                   onMarkAsRead={markNotificationAsRead}
                   onClearAll={clearAllNotifications}
+                  onNavigate={(link) => link && navigate(link)}
                 />
                 <button
                   onClick={() => setNewLeague(activeLeague?.leagues || activeLeague)}
@@ -697,6 +726,7 @@ export default function LeagueScreen() {
                   unreadCount={notificationCount}
                   onMarkAsRead={markNotificationAsRead}
                   onClearAll={clearAllNotifications}
+                  onNavigate={(link) => link && navigate(link)}
                 />
                 <button
                   onClick={() => setNewLeague(activeLeague?.leagues || activeLeague)}
@@ -744,7 +774,7 @@ export default function LeagueScreen() {
         <div className="hidden lg:block" data-tour="league-tabs">
           <HubTabs
             active={viewToTab(view)}
-            onTab={t => setView(tabToView(t))}
+            onTab={setTab}
             isCommissioner={isCommissioner}
             unreadChat={unreadCount}
             notifyBets={notificationCount > 0}
@@ -755,7 +785,7 @@ export default function LeagueScreen() {
         <div className="lg:hidden" data-tour="league-tabs">
           <HubTabPills
             active={viewToTab(view)}
-            onTab={t => setView(tabToView(t))}
+            onTab={setTab}
             isCommissioner={isCommissioner}
             unreadChat={unreadCount}
             notifyBets={notificationCount > 0}
@@ -1131,6 +1161,7 @@ export default function LeagueScreen() {
              auctionsLoading={auctionsLoading}
              name={name}
              mySquadId={mySquadId}
+             myBudget={mySquadBudget}
              placeBid={placeBid}
              cancelListing={cancelListing}
              sellNow={sellNow}

@@ -62,6 +62,11 @@ function BetSection({ label, sub, tone, bets, squadId, onSubmitted }) {
                       +{bet.reward_value} {bet.reward_type === 'budget' ? 'M' : 'PTS'}
                     </span>
                   )}
+                  {bet.status === 'resolved' && bet.winners_count != null && bet.total_submissions != null && (
+                    <span style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.14em', flexShrink: 0 }}>
+                      {bet.winners_count}/{bet.total_submissions} correct
+                    </span>
+                  )}
                 </div>
                 {/* Prompt */}
                 <div style={{ fontFamily: "'Archivo', sans-serif", fontSize: 13, color: 'var(--paper)', lineHeight: 1.5 }}>{bet.prompt}</div>

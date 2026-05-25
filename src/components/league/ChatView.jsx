@@ -39,7 +39,7 @@ function MessageBody({ text, onHashtagClick }) {
         <span
           key={`h${i++}`}
           onClick={() => onHashtagClick(token)}
-          style={{ color: 'var(--cyan)', fontFamily: MONO, fontSize: 12, padding: '0 2px', background: 'rgba(0,180,216,.08)', cursor: 'pointer' }}
+          style={{ color: 'var(--gold)', fontFamily: MONO, fontSize: 12, padding: '0 2px', background: 'rgba(240,180,0,.1)', cursor: 'pointer', textDecoration: 'underline', textDecorationColor: 'rgba(240,180,0,.5)' }}
         >{token}</span>
       );
     } else {

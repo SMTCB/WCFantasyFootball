@@ -196,6 +196,7 @@ export function useChatMessages(leagueId) {
           const userName = meta.displayName;
 
           console.log('[useChatMessages] Adding new message to state:', { id: newMsg.id, userName, message: newMsg.message });
+          const isOwn = newMsg.user_id === user?.id;
           setMessages(prev => {
             const updated = [...prev, {
               id: newMsg.id,
@@ -205,11 +206,12 @@ export function useChatMessages(leagueId) {
               createdAt: newMsg.created_at,
               isDeleted: newMsg.is_deleted,
               editedAt: newMsg.edited_at,
-              isOwnMessage: newMsg.user_id === user?.id,
+              isOwnMessage: isOwn,
             }];
             console.log('[useChatMessages] Messages state updated, total count:', updated.length);
             return updated;
           });
+          if (!isOwn) setUnreadCount(prev => prev + 1);
         }
       )
       .on('broadcast', { event: 'typing' }, (payload) => {

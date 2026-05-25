@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 
 /**
@@ -10,6 +10,7 @@ export function useBettingLeaderboard(leagueId) {
   const [leaderboard, setLeaderboard] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const instanceIdsRef = useRef([]);
 
   const fetchLeaderboard = useCallback(async () => {
     if (!leagueId) return;
@@ -17,21 +18,24 @@ export function useBettingLeaderboard(leagueId) {
     setError(null);
 
     try {
-      // Fetch betting performance aggregates
+      // !inner ensures only rows with a matching bet_instance are returned
       const { data: entries, error: err } = await supabase
         .from('bet_submissions')
         .select(`
           user_id,
           squad_id,
           squads!squad_id(users!user_id(username)),
-          bet_instances!bet_instance_id(league_id),
+          bet_instances!inner!bet_instance_id(league_id),
           is_correct,
           reward_awarded
         `)
-        .filter('bet_instances.league_id', 'eq', leagueId)
+        .eq('bet_instances.league_id', leagueId)
         .not('is_correct', 'is', null);
 
       if (err) throw err;
+
+      // Cache instance IDs so Realtime subscription can be scoped (L2.7)
+      instanceIdsRef.current = [...new Set((entries ?? []).map(e => e.bet_instance_id).filter(Boolean))];
 
       // Aggregate by user
       const userStats = {};
@@ -75,21 +79,32 @@ export function useBettingLeaderboard(leagueId) {
     fetchLeaderboard();
   }, [fetchLeaderboard]);
 
-  // Subscribe to realtime changes on bet_submissions
+  // Subscribe to realtime changes — scoped to known instance IDs for this league (L2.7)
   useEffect(() => {
     if (!leagueId) return;
 
-    const subscription = supabase
-      .channel(`betting_leaderboard:league_id=${leagueId}`)
-      .on(
-        'postgres_changes',
-        { event: 'UPDATE', schema: 'public', table: 'bet_submissions' },
-        () => { fetchLeaderboard(); }
-      )
-      .subscribe();
+    const ids = instanceIdsRef.current;
+    // If no instances yet, fall back to unfiltered channel (will refetch anyway)
+    const filter = ids.length
+      ? `bet_instance_id=in.(${ids.join(',')})`
+      : undefined;
+
+    const channelName = `betting_leaderboard:${leagueId}`;
+    const channel = supabase.channel(channelName);
+
+    channel.on(
+      'postgres_changes',
+      {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'bet_submissions',
+        ...(filter ? { filter } : {}),
+      },
+      () => { fetchLeaderboard(); }
+    ).subscribe();
 
     return () => {
-      subscription.unsubscribe();
+      supabase.removeChannel(channel);
     };
   }, [leagueId, fetchLeaderboard]);
 

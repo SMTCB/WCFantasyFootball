@@ -53,7 +53,7 @@ export function useMentions(leagueId) {
       );
 
       setMentionMatches(matches);
-      setSelectedMentionIndex(-1);
+      setSelectedMentionIndex(0);
     } else {
       setMentionSearch('');
       setMentionMatches([]);
