@@ -443,7 +443,7 @@ e2e-report/                     # Test artifacts
 npm run dev              # Dev server (http://localhost:5173)
 npm run build            # Production build → dist/
 npm run lint             # ESLint (CI-enforced)
-npx playwright test      # E2E tests — 82/84 passing
+npx playwright test      # E2E tests — 84/84 passing
 npm run build && npx cap sync   # Build + sync to native projects
 npx cap open ios         # Open Xcode
 npx cap open android     # Open Android Studio
@@ -476,8 +476,10 @@ Always create a new file — never modify existing migrations.
 | 68 | `68_wc_cron_key_fix.sql` | Sprint 0: WC crons corrected to send forza_id key |
 | 69 | `69_rank_trigger.sql` | Sprint 1: recompute_league_ranks() + AFTER UPDATE OF total_points trigger |
 | 70 | `70_scoring_fixes.sql` | Sprint 1: aggregate_league_member_points (UUID,UUID) signature + L3.7 reward_type filter |
+| 71–77 | `71_*.sql` → `77_security_polish.sql` | Sprints 1-3: observability, draft fixes, bet logic, relaxation, security hardening |
+| 78 | `78_dead_code_cleanup.sql` | Sprint 4: drop `calculate_player_points` SQL function (superseded by Edge Function since migration 53) |
 
-**Next migration**: `71_`
+**Next migration**: `79_`
 
 **Key pipeline facts (2026-05-24):**
 - `calculate-scores` uses `scoring_rules` table (not `scoring_templates`) keyed by `tournament_id`
@@ -537,7 +539,7 @@ iOS deployment target: 15.0 · Android minSdk: 26 (Android 8.0) · targetSdk: 36
 ### DevOps & CI/CD
 - **Hosting**: Vercel (auto-deploys from `main` branch, ~30s deployment)
 - **CI Pipeline**: GitHub Actions (lint → build → E2E test)
-- **Testing**: Playwright (E2E browser automation, 116 tests)
+- **Testing**: Playwright (E2E browser automation, 84 tests)
 - **Git Workflow**: Feature branches (`claude/*`) → PR → merge → delete → main stays stable
 
 ---
@@ -557,7 +559,7 @@ iOS deployment target: 15.0 · Android minSdk: 26 (Android 8.0) · targetSdk: 36
 - **Player Status**: Injury alerts, suspension tracking, injury history
 - **Design**: Editorial Brandmark, tactical navigation icons, dark theme with gold accents
 - **Mobile**: Capacitor wrapper for iOS/Android, responsive layout at 375px+
-- **E2E Tests**: 116 tests covering major user flows
+- **E2E Tests**: 84 tests covering major user flows
 
 ### 🚧 In Progress / Planned
 - **Trade System**: Submit/approve player swap requests between managers
@@ -572,7 +574,7 @@ iOS deployment target: 15.0 · Android minSdk: 26 (Android 8.0) · targetSdk: 36
 ### 🔴 Known Issues & Debt
 - **React Compiler**: 3 pre-existing memoization warnings in `useAvailabilityFlag.js` (downgraded to warnings)
 - **Android Build**: Gradle/signing issues in CI (mobile builds pending local debug)
-- **E2E Coverage**: 116/116 tests passing, but Joker/chip flows need edge-case coverage
+- **E2E Coverage**: 84/84 tests passing, but Joker/chip flows need edge-case coverage
 - **Capacitor Sync**: Native projects not yet built for store submission
 
 ---
@@ -689,7 +691,7 @@ grep -n "^import" src/screens/LeagueScreen.jsx
 
 ---
 
-- **E2E**: 232 tests must stay green — run `npx playwright test` before merging (CI enforces this)
+- **E2E**: 84 tests must stay green — run `npx playwright test` before merging (CI enforces this)
 - **Mobile-first**: All UI tested at 375px viewport minimum (use DevTools device emulation)
 - **RLS**: Never bypass Supabase Row Level Security — always filter by `auth.uid()`
 - **Secrets**: Never commit `.env.local` or credentials — use `.env.example` as template

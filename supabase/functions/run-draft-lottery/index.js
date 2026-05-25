@@ -223,7 +223,7 @@ async function runLottery(leagueId) {
   for (const [uid, u] of Object.entries(userState)) {
     allocations[uid] = {
       allocated_players: u.allocated,
-      unresolved_slots:  SQUAD_SIZE - u.allocated.length,
+      unresolved_slots:  Math.max(0, SQUAD_SIZE - u.allocated.length),
       budget_used:       u.budgetUsed,
     };
   }
@@ -374,8 +374,8 @@ function buildGazetteEntry(leagueId, contested, allocations, submissions) {
     league_id:    leagueId,
     entry_type:   'draft_report',
     headline,
-    bullets:      JSON.stringify(bullets),
-    full_data:    JSON.stringify(fullData),
+    bullets,
+    full_data:    fullData,
     published_at: new Date().toISOString(),
   };
 }

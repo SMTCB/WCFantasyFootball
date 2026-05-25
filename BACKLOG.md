@@ -1,8 +1,42 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-05-25 (session 42 — Sprint 3 complete + migration 77 applied to production)  
+**Last Updated**: 2026-05-25 (session 43 — Sprint 4 complete; migration 78 pending deploy)  
 **E2E Test Suite**: 84/84 platform tests passing ✅ + `scoring-pipeline.spec.js` added  
 **Live App**: https://wc-fantasy-football.vercel.app
+
+---
+
+## 📊 SESSION 43 PROGRESS (2026-05-25 — Sprint 4: codebase hygiene)
+
+**Goal**: Sprint 4 — leave codebase clean for next contributor. Dead code purge, dependency hygiene, logging gates, security headers, SQL dead function drop.
+
+**🚀 COMPLETED THIS SESSION:**
+
+**Group A — Dead file / dead code purge:**
+- Deleted `src/App.css` — Vite scaffold, never imported
+- Deleted `src/data/squad.js` — demo stub, no callers
+- Deleted `src/data/fixtures.js` — demo stub, no callers (distinct from `src/lib/fixtures.js` which IS used)
+- Deleted `src/components/VARReviewBanner.jsx` — never imported
+- Deleted `src/components/EventTimeline.jsx` — never imported
+- Deleted `src/components/PageHeader.jsx` — never imported
+- `src/screens/LeagueScreen.jsx` — surgically removed 4 `_REMOVED` dead JSX blocks (~1,260 lines / 45k chars) and their now-orphaned imports/destructured vars
+
+**Group B — Docs & git hygiene:**
+- `docs/archive/` created; received CHAT_DEBUG_FINDINGS.md, CLEANUP_REPORT.md, GIT_AND_CODE_WALKTHROUGH.md, code_quality_analysis_V2.md
+- `docs/brand/ADMIN TAB/` → `docs/brand/admin-tab/` (space in dir name removed)
+
+**Group C — Config & dependency cleanup:**
+- `package.json`: `@capacitor/cli` moved from `dependencies` → `devDependencies`; added `test` + `typecheck` scripts
+- `vercel.json`: added CSP, X-Frame-Options, X-Content-Type-Options, Referrer-Policy, Permissions-Policy headers
+- `.gitignore`: removed duplicate `node_modules/` and `dist/` entries
+
+**Group D — Logging + API hygiene:**
+- `useChatMessages.js`: all `console.log` → `devLog` (gated behind `import.meta.env.DEV`); `.single().catch()` → `.maybeSingle()`
+- `useTransfer.js`: removed dead `user_id` field from `process-transfer` request body (SEC-3: JWT identity, not body claim)
+- `run-draft-lottery/index.js`: `Math.max(0,…)` guard on `unresolved_slots`; removed `JSON.stringify` double-serialization of JSONB `bullets`/`full_data`
+- `supabase/migrations/78_dead_code_cleanup.sql`: DROP `calculate_player_points` SQL function (dead since migration 53)
+
+**Sprint 4 status: ✅ COMPLETE.** All items merged to main; migration 78 pending Supabase deploy.
 
 ---
 

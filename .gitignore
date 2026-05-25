@@ -73,5 +73,3 @@ build/
 .env.*
 !.env.example
 backend/.env
-node_modules/
-dist/
