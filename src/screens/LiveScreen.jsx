@@ -380,14 +380,23 @@ export default function LiveScreen() {
       const countMap = {};
       (memberCounts || []).forEach(r => { countMap[r.league_id] = (countMap[r.league_id] || 0) + 1; });
 
-      // 4. Squad (single squad shared across leagues)
-      const { data: squadRow } = await supabase
-        .from('squads')
-        .select('players, captain_id, is_triple_captain')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .maybeSingle();
+      // 4. Squad — U48: fetch per league so chip state is league-scoped
+      const { data: squadRows = [] } = leagueIds.length
+        ? await supabase
+            .from('squads')
+            .select('league_id, players, captain_id, is_triple_captain')
+            .eq('user_id', user.id)
+            .in('league_id', leagueIds)
+        : { data: [] };
+
+      // Build a map of league_id → squad row for chip lookup
+      const squadByLeague = Object.fromEntries((squadRows || []).map(s => [s.league_id, s]));
+
+      // Use the active league's squad for pitch display; fall back to first available
+      const activeLeagueId = initialSet.current && activeLeague?.id
+        ? activeLeague.id
+        : (memberships?.[0]?.league_id ?? null);
+      const squadRow       = squadByLeague[activeLeagueId] ?? (squadRows?.[0] ?? null);
 
       const squadPlayerIds = squadRow?.players || [];
       const captainId      = squadRow?.captain_id;
@@ -425,21 +434,24 @@ export default function LiveScreen() {
       setSquadPlayers(positioned);
 
       // 6. Enrich leagues with tones + totals
+      // U48: use per-league squad row so chip state is scoped to each league
       const enrichedLeagues = (memberships || []).map((m, idx) => {
-        const tone       = LEAGUE_TONES[idx % LEAGUE_TONES.length];
-        const nameParts  = (m.leagues?.name || 'League').split(' ');
-        const short      = nameParts.map(w => w[0]).join('').toUpperCase().slice(0, 5);
-        const members    = countMap[m.league_id] || '—';
-        const total      = m.total_points || 0;
-        const rankLabel  = m.rank ? `${m.rank} / ${members}` : '—';
+        const tone          = LEAGUE_TONES[idx % LEAGUE_TONES.length];
+        const nameParts     = (m.leagues?.name || 'League').split(' ');
+        const short         = nameParts.map(w => w[0]).join('').toUpperCase().slice(0, 5);
+        const members       = countMap[m.league_id] || '—';
+        const total         = m.total_points || 0;
+        const rankLabel     = m.rank ? `${m.rank} / ${members}` : '—';
+        const leagueSquad   = squadByLeague[m.league_id];
+        const lgTripleCap   = leagueSquad?.is_triple_captain ?? false;
         return {
           id:        m.league_id,
           name:      m.leagues?.name || 'League',
           short,
           tone,
           members,
-          captainId,
-          chip:      isTripleCap ? 'Triple Captain' : null,
+          captainId: leagueSquad?.captain_id ?? captainId,
+          chip:      lgTripleCap ? 'Triple Captain' : null,
           rank:      rankLabel,
           total,
           delta:     0,

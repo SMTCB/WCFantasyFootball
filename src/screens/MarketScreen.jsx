@@ -250,8 +250,10 @@ export default function MarketScreen() {
     if (saving) return;
     if (isLocked) { showToast('Transfers are locked until after the match.', 'warning'); return; }
     if (!activeLeague) { showToast('Select a league first.', 'warning'); return; }
-    if ((mySquad?.players?.length ?? 0) >= squadSize) { showToast('Squad is full â€” sell a player first.', 'warning'); return; }
+    if ((mySquad?.players?.length ?? 0) >= squadSize) { showToast('Squad is full — sell a player first.', 'warning'); return; }
     if (stats.posCounts[player.position] >= POS_LIMITS[player.position]) { showToast(`Max ${player.position}s reached.`, 'warning'); return; }
+    // U26: club cap preflight check
+    if ((stats.countryCounts[player.club] ?? 0) >= COUNTRY_LIMIT) { showToast(`Max ${COUNTRY_LIMIT} players per club — ${player.club} is full.`, 'warning'); return; }
     if (budget < player.price) { showToast('Not enough budget.', 'error'); return; }
     try {
       setSaving(true);
@@ -619,9 +621,11 @@ export default function MarketScreen() {
             const takenByOther = !isOwned && isTaken(p.id);
             const ownerName    = takenBy(p.id);
             const limitReached = stats.posCounts[p.position] >= POS_LIMITS[p.position];
+            // U26: club cap guard
+            const clubFull     = !isOwned && (stats.countryCounts[p.club] ?? 0) >= COUNTRY_LIMIT;
             const canAfford    = budget >= p.price;
             const hasLeague    = !!activeLeague;
-            const canBuy       = hasLeague && !isOwned && !takenByOther && !limitReached && canAfford && (mySquad?.players?.length ?? 0) < squadSize;
+            const canBuy       = hasLeague && !isOwned && !takenByOther && !limitReached && !clubFull && canAfford && (mySquad?.players?.length ?? 0) < squadSize;
             const isJoker      = p.id === todayJokerId;
             const intel        = p.intel;
 
@@ -712,6 +716,18 @@ export default function MarketScreen() {
                     >
                       SELL
                     </button>
+                  ) : clubFull ? (
+                    // U26: club cap UI guard — show badge instead of BUY
+                    <div
+                      className="fk-mono"
+                      style={{
+                        minWidth: 52, padding: '6px 10px', textAlign: 'center',
+                        border: '1px solid rgba(240,58,58,0.4)', color: 'var(--danger)',
+                        fontSize: 9, letterSpacing: '0.14em', opacity: 0.8,
+                      }}
+                    >
+                      CLUB FULL
+                    </div>
                   ) : (
                     <button
                       onClick={() => handleBuy(p)}

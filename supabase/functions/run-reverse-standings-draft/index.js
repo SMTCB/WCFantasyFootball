@@ -52,16 +52,17 @@ Deno.serve(async (req) => {
 });
 
 async function runReverseDraft(leagueId) {
-  // 0. Load per-league config (squad_size, position_limits, budget).
+  // 0. DATA-13: Load per-league config (squad_size, position_limits, budget, tournament_id, league_config).
   const { data: leagueRow } = await supabase
     .from('leagues')
-    .select('squad_size, position_limits, budget, tournament_id')
+    .select('squad_size, position_limits, budget, tournament_id, league_config')
     .eq('id', leagueId)
     .maybeSingle();
 
-  const SQUAD_SIZE     = Number(leagueRow?.squad_size ?? DEFAULT_SQUAD_SIZE);
-  const SQUAD_POS_CAPS = leagueRow?.position_limits   ?? DEFAULT_SQUAD_POS_CAPS;
-  const budget         = Number(leagueRow?.budget     ?? 100);
+  const SQUAD_SIZE     = Number(leagueRow?.squad_size     ?? DEFAULT_SQUAD_SIZE);
+  const SQUAD_POS_CAPS = leagueRow?.position_limits       ?? DEFAULT_SQUAD_POS_CAPS;
+  const budget         = Number(leagueRow?.budget         ?? 100);
+  const squadSize      = SQUAD_SIZE; // alias for clarity below
 
   // 1. Load standings — ordered worst → best (lowest points first)
   const { data: standings } = await supabase
@@ -85,12 +86,20 @@ async function runReverseDraft(leagueId) {
 
   if (!submissions?.length) return { message: 'No pending submissions', leagueId };
 
-  // 3. Load player data for allocation logic
+  // DATA-13: cap each submission's player_ids to draft_list_size from league config
+  const maxLen = leagueRow?.league_config?.draft_list_size ?? 30;
+  submissions.forEach(s => { s.player_ids = (s.player_ids || []).slice(0, maxLen); });
+
+  // 3. Load player data for allocation logic — DATA-13: filter by tournament_id
   const allPlayerIds = [...new Set(submissions.flatMap(s => s.player_ids))];
-  const { data: playerRows } = await supabase
+  let playerQuery = supabase
     .from('players')
     .select('id, position, price')
     .in('id', allPlayerIds);
+  if (leagueRow?.tournament_id) {
+    playerQuery = playerQuery.eq('tournament_id', leagueRow.tournament_id);
+  }
+  const { data: playerRows } = await playerQuery;
 
   const playerMap = Object.fromEntries((playerRows ?? []).map(p => [p.id, p]));
 

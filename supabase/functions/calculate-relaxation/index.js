@@ -12,6 +12,8 @@ const supabase = createClient(
   Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
 );
 
+// L6.11: tier2_mult=1.4 and tier3_mult=1.8 were calibrated for squad_size=15.
+// With dynamic squad_size (L6.6), recalibrate once typical squad_size distribution is known.
 const TIER_LABELS = [
   null,                        // tier 0 — no message needed
   '1 repeated player allowed', // tier 1
@@ -46,8 +48,8 @@ Deno.serve(async (req) => {
         { text: `Available pool: ${pool} players · ${managers} managers · ${managers * 15} total slots` },
         { text: `Pressure ratio: ${pressure} (threshold: ${state.threshold})` },
         new_tier === 3
-          ? { text: 'The no-repeat rule has been fully lifted for this league.' }
-          : { text: `Each manager may now hold up to ${TIER_LABELS[new_tier].match(/\d+/)?.[0] ?? 'unlimited'} repeated player(s).` },
+          ? { text: 'The no-repeat rule is now fully lifted for this league — managers may hold any player.' }
+          : { text: `Each manager may hold up to ${TIER_LABELS[new_tier].match(/\d+/)?.[0] ?? 'unlimited'} repeated player(s).` },
       ];
 
       await supabase.from('gazette_entries').insert({
