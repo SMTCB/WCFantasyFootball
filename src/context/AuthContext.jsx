@@ -54,7 +54,8 @@ export function AuthProvider({ children }) {
       (event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
-        setRecoveryMode(event === 'PASSWORD_RECOVERY');
+        if (event === 'PASSWORD_RECOVERY') setRecoveryMode(true);
+        else if (event === 'SIGNED_OUT')   setRecoveryMode(false);
       }
     );
 

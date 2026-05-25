@@ -26,6 +26,7 @@ import BracketScreen from './screens/BracketScreen';
 import DraftScreen from './screens/DraftScreen';
 import DraftRecoveryScreen from './screens/DraftRecoveryScreen';
 import SettingsScreen from './screens/SettingsScreen';
+import NotFoundScreen from './screens/NotFoundScreen';
 import { useOnboarding } from './hooks/useOnboarding';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 import { ToastProvider } from './components/Toast';
@@ -99,7 +100,7 @@ function AppRoutes() {
                   <Route path="/admin"            element={<ErrorBoundary screen="Admin"><AdminSeedScreen /></ErrorBoundary>} />
                   <Route path="/settings"         element={<ErrorBoundary screen="Settings"><SettingsScreen /></ErrorBoundary>} />
                   <Route path="/join"             element={<JoinRoute />} />
-                  <Route path="*"                 element={<Navigate to="/" replace />} />
+                  <Route path="*"                 element={<ErrorBoundary screen="NotFound"><NotFoundScreen /></ErrorBoundary>} />
                 </Routes>
               </AppLayout>
             </ProtectedRoute>

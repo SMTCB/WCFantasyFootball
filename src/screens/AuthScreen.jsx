@@ -44,8 +44,8 @@ export default function AuthScreen() {
 
   const redirectTo = searchParams.get('redirect') || '/';
 
-  // Clear messages whenever the active tab changes
-  const switchTab = (t) => { setTab(t); setError(''); setSuccess(''); };
+  // Clear errors (not success) on tab switch so sign-up confirmation persists on sign-in tab
+  const switchTab = (t) => { setTab(t); setError(''); };
 
   // ── Handlers ────────────────────────────────────────────────────────────────
   const handleSignIn = async (e) => {
@@ -63,9 +63,15 @@ export default function AuthScreen() {
     if (password !== confirm) { setError('Passwords do not match.'); return; }
     if (password.length < 8)  { setError('Password must be at least 8 characters.'); return; }
     setLoading(true);
-    const { error } = await signUp({ email, password, username });
+    const { data, error } = await signUp({ email, password, username });
     setLoading(false);
     if (error) { setError(error.message); return; }
+    // Supabase returns a user with no identities when the email is already registered
+    if (data?.user?.identities?.length === 0) {
+      setError('This email is already registered — please sign in.');
+      switchTab(TAB_SIGNIN);
+      return;
+    }
     setSuccess('Account created! Check your email to verify, then sign in.');
     switchTab(TAB_SIGNIN);
   };

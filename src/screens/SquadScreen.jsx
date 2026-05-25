@@ -374,8 +374,11 @@ export default function SquadScreen() {
   const handleSwap = async (p1, p2) => {
     const isP1Bench = squadData.bench.some(b => b.id === p1.id);
     const isP2Bench = squadData.bench.some(b => b.id === p2.id);
-    // Same zone tap â€” stay in swap mode, let user pick a valid target
-    if (isP1Bench === isP2Bench) return;
+    // Same zone — stay in swap mode, show hint toast
+    if (isP1Bench === isP2Bench) {
+      showToast(isP1Bench ? 'Tap a starter to bring them on' : 'Tap a bench player to substitute in', 'info');
+      return;
+    }
 
     try {
       setSaving(true);
@@ -437,7 +440,7 @@ export default function SquadScreen() {
   };
 
   const handleActivateJoker = async () => {
-    if (!selectedPlayer) return;
+    if (!selectedPlayer || saving) return;
     try {
       setSaving(true);
       const userId = user?.id;
@@ -529,18 +532,6 @@ export default function SquadScreen() {
         return;
       }
       setSquadData({ ...squadData, [chip.stateKey]: data.active });
-    } finally { setSaving(false); }
-  };
-
-  const _handleChipToggle = async (type) => {
-    if (!squadData) return;
-    const chip = CHIPS.find(c => c.key === type);
-    if (!chip) return;
-    const newVal = !squadData[chip.stateKey];
-    setSquadData(prev => ({ ...prev, [chip.stateKey]: newVal }));
-    try {
-      setSaving(true);
-      await supabase.from('squads').update({ [chip.dbField]: newVal }).eq('id', squadData.squadId);
     } finally { setSaving(false); }
   };
 
@@ -1384,7 +1375,7 @@ export default function SquadScreen() {
                     if (!isLocked) {
                       setConfirm({
                         title: squadData.isWildcard ? 'Deactivate Wildcard?' : 'Activate Wildcard?',
-                        message: squadData.isWildcard
+                        body: squadData.isWildcard
                           ? 'You will no longer have unlimited free transfers.'
                           : 'You\'ll have unlimited free transfers this matchday. 1 use per season.',
                         onConfirm: () => doToggleChip('wildcard'),
@@ -1409,7 +1400,7 @@ export default function SquadScreen() {
                     if (!isLocked) {
                       setConfirm({
                         title: squadData.isTripleCaptain ? 'Deactivate Triple Captain?' : 'Activate Triple Captain?',
-                        message: squadData.isTripleCaptain
+                        body: squadData.isTripleCaptain
                           ? 'Your captain will earn normal points.'
                           : 'Your captain will earn 3Ã— points this matchday. 1 use per season.',
                         onConfirm: () => doToggleChip('triple'),
@@ -1743,7 +1734,7 @@ export default function SquadScreen() {
                     fontFamily: 'Archivo Black, sans-serif', fontSize: '11px', letterSpacing: '0.12em', textTransform: 'uppercase',
                   }}
                 >
-                  {captainId === selectedPlayer.id ? 'CAPTAIN' : 'CAPTAIN'}
+                  {captainId === selectedPlayer.id ? 'CURRENT CAPTAIN' : 'MAKE CAPTAIN'}
                 </button>
               )}
               {selectedIsBench && squadData.players.length < 11 ? (

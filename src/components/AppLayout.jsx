@@ -122,6 +122,8 @@ export default function AppLayout({ children }) {
 
       {/* ── Main Content ─────────────────────────────────────────────── */}
       <div
+        id="main-content"
+        tabIndex={-1}
         data-testid="main-content"
         className="flex-1 min-w-0 lg:ml-[220px] overflow-y-auto"
         style={{

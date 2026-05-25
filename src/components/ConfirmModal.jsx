@@ -6,18 +6,20 @@
  *
  *   setConfirm({
  *     title:      'Sell Bellingham?',
- *     body:       'You will receive $11.5M back into your budget.',
+ *     body:       'You will receive £11.5M back into your budget.',
  *     warning:    'He is your current captain — selling removes the armband.',  // optional
  *     confirmLabel: 'Sell',
  *     danger:     true,   // red confirm button
- *     onConfirm:  () => doTheSell(),
+ *     onConfirm:  async () => await doTheSell(),
  *   });
  *
  *   {confirm && <ConfirmModal {...confirm} onCancel={() => setConfirm(null)} />}
  */
 
-import { useEffect } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Button from './Button';
+
+const TITLE_ID = 'confirm-modal-title';
 
 export default function ConfirmModal({
   title,
@@ -29,19 +31,35 @@ export default function ConfirmModal({
   onConfirm,
   onCancel,
 }) {
+  const cancelRef = useRef(null);
+  const [loading, setLoading] = useState(false);
+
+  // Focus cancel button on mount so keyboard users can dismiss immediately
+  useEffect(() => { cancelRef.current?.focus(); }, []);
+
   // Escape key cancels
   useEffect(() => {
-    const onKey = (e) => { if (e.key === 'Escape') onCancel(); };
+    const onKey = (e) => { if (e.key === 'Escape' && !loading) onCancel(); };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [onCancel]);
+  }, [onCancel, loading]);
+
+  const handleConfirm = async () => {
+    setLoading(true);
+    try {
+      await onConfirm();
+    } finally {
+      setLoading(false);
+      onCancel();
+    }
+  };
 
   const confirmVariant = danger ? 'danger' : 'gold';
 
   return (
     /* Backdrop */
     <div
-      onClick={onCancel}
+      onClick={() => { if (!loading) onCancel(); }}
       style={{
         position:   'fixed',
         inset:      0,
@@ -56,6 +74,9 @@ export default function ConfirmModal({
     >
       {/* Card — stopPropagation so clicking inside doesn't dismiss */}
       <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={TITLE_ID}
         onClick={e => e.stopPropagation()}
         style={{
           width:        '100%',
@@ -68,16 +89,19 @@ export default function ConfirmModal({
         }}
       >
         {/* Title */}
-        <div style={{
-          fontSize:      '20px',
-          fontFamily:    'Archivo Black, sans-serif',
-          fontWeight:    900,
-          textTransform: 'uppercase',
-          color:         'var(--paper)',
-          letterSpacing: '-0.01em',
-          lineHeight:    1.1,
-          marginBottom:  '10px',
-        }}>
+        <div
+          id={TITLE_ID}
+          style={{
+            fontSize:      '20px',
+            fontFamily:    'Archivo Black, sans-serif',
+            fontWeight:    900,
+            textTransform: 'uppercase',
+            color:         'var(--paper)',
+            letterSpacing: '-0.01em',
+            lineHeight:    1.1,
+            marginBottom:  '10px',
+          }}
+        >
           {title}
         </div>
 
@@ -118,10 +142,12 @@ export default function ConfirmModal({
         {/* Actions */}
         <div style={{ display: 'flex', gap: '10px' }}>
           <Button
+            ref={cancelRef}
             variant="secondary"
             size="md"
             fullWidth
             onClick={onCancel}
+            disabled={loading}
           >
             {cancelLabel}
           </Button>
@@ -130,9 +156,10 @@ export default function ConfirmModal({
             variant={confirmVariant}
             size="md"
             fullWidth
-            onClick={() => { onConfirm(); onCancel(); }}
+            onClick={handleConfirm}
+            disabled={loading}
           >
-            {confirmLabel}
+            {loading ? '…' : confirmLabel}
           </Button>
         </div>
       </div>

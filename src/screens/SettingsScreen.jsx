@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { useToast } from '../hooks/useToast';
+import { useOnboarding } from '../hooks/useOnboarding';
 import TextInput from '../components/TextInput';
 import { supabase } from '../lib/supabase';
 
@@ -9,6 +10,7 @@ export default function SettingsScreen() {
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
   const { show: showToast } = useToast();
+  const { replayWizard } = useOnboarding();
 
   const [passwordForm, setPasswordForm] = useState({ current: '', new: '', confirm: '' });
   const [isChangingPassword, setIsChangingPassword] = useState(false);
@@ -57,8 +59,8 @@ export default function SettingsScreen() {
   };
 
   const handleReplayTour = () => {
-    localStorage.removeItem('onboardingCompleted');
-    showToast('Onboarding reset — refresh to see tour', 'info');
+    replayWizard();
+    showToast('Onboarding reset — the tour will appear on your next visit', 'info');
   };
 
   return (
