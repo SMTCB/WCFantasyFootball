@@ -722,7 +722,16 @@ export default function HomeScreen() {
       {filtered.length === 0 && (
         <div style={{ padding: '48px 32px', textAlign: 'center' }}>
           <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 10, color: 'var(--mute)', letterSpacing: '.22em', marginBottom: 10 }}>NO FIXTURES</div>
-          <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 22, letterSpacing: '-0.02em' }}>Nothing scheduled</div>
+          <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 22, letterSpacing: '-0.02em', marginBottom: 32 }}>Nothing scheduled</div>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
+            <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 10, color: 'var(--mute)', letterSpacing: '.18em', marginBottom: 4 }}>GET STARTED</div>
+            <a href="#/squad" style={{ display: 'block', padding: '12px 28px', background: 'var(--gold)', color: 'var(--ink)', fontFamily: 'Archivo Black, sans-serif', fontSize: 12, fontWeight: 800, letterSpacing: '.08em', textTransform: 'uppercase', textDecoration: 'none', borderRadius: 4 }}>
+              Build Your Squad →
+            </a>
+            <a href="#/league" style={{ display: 'block', padding: '12px 28px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)', color: 'var(--paper)', fontFamily: 'Archivo Black, sans-serif', fontSize: 12, fontWeight: 800, letterSpacing: '.08em', textTransform: 'uppercase', textDecoration: 'none', borderRadius: 4 }}>
+              Join a League →
+            </a>
+          </div>
         </div>
       )}
       {view === 'date' && dateGroups.map(g => (

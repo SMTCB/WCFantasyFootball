@@ -77,7 +77,7 @@ function ToastItem({ toast, onDismiss }) {
 function ToastStack({ toasts, onDismiss }) {
   if (!toasts.length) return null;
   return (
-    <div style={{ position: 'fixed', bottom: 80, left: 0, right: 0, zIndex: 9999, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, pointerEvents: 'none' }}>
+    <div style={{ position: 'fixed', bottom: 'calc(80px + env(safe-area-inset-bottom))', left: 0, right: 0, zIndex: 9999, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, pointerEvents: 'none' }}>
       {toasts.map(t => (
         <div key={t.id} style={{ pointerEvents: 'auto' }}>
           <ToastItem toast={t} onDismiss={onDismiss} />

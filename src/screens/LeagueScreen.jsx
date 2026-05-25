@@ -1790,7 +1790,11 @@ export default function LeagueScreen() {
           <input
             type="text"
             value={joinCode}
-            onChange={e => { setJoinCode(e.target.value.toUpperCase()); setJoinError(''); }}
+            onChange={e => {
+              const val = e.target.value.toUpperCase();
+              setJoinCode(val);
+              setJoinError(val.trim().length > 0 && val.trim().length < 4 ? 'Codes are 6+ characters' : '');
+            }}
             placeholder="XXXXXX"
             maxLength={8}
             style={{
