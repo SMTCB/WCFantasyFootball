@@ -40,7 +40,9 @@ DROP POLICY IF EXISTS "scoring_templates_admin_update" ON public.scoring_templat
 -- ─────────────────────────────────────────────────────────────────────────────
 
 ALTER TABLE public.chat_messages
-  ADD CONSTRAINT IF NOT EXISTS chat_msg_len
+  DROP CONSTRAINT IF EXISTS chat_msg_len;
+ALTER TABLE public.chat_messages
+  ADD CONSTRAINT chat_msg_len
   CHECK (char_length(message) <= 2000);
 
 CREATE OR REPLACE FUNCTION public.check_chat_rate_limit()
