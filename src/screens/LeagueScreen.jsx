@@ -733,7 +733,14 @@ export default function LeagueScreen() {
           </div>
         )}
 
-        {/* â”€â”€ Desktop tabs (hidden on mobile) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+                {/* L5.16: Cup phase banner -- shown when cup is active */}
+        {activeLeague?.leagues?.cup_phase && activeLeague.leagues.cup_phase !== 'pre_cup' && (
+          <div style={{ background: 'var(--gold, #FFD700)', color: '#000', padding: '8px', textAlign: 'center', fontSize: '12px', fontWeight: 'bold', flexShrink: 0 }}>
+            CUP PHASE: {activeLeague.leagues.cup_phase.replace(/_/g, ' ').toUpperCase()}
+          </div>
+        )}
+
+{/* â”€â”€ Desktop tabs (hidden on mobile) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
         <div className="hidden lg:block" data-tour="league-tabs">
           <HubTabs
             active={viewToTab(view)}

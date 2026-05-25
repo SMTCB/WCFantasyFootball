@@ -81,8 +81,8 @@ Deno.serve(async (req) => {
       published_at: new Date().toISOString(),
     });
 
-    // Trigger relaxation recalculation (fire-and-forget — gazette written only if tier changes)
-    supabase.functions.invoke('calculate-relaxation', { body: { league_id } }).catch(console.error);
+    // L6.10: await relaxation recalculation so gazette is written before this response returns
+    await supabase.functions.invoke('calculate-relaxation', { body: { league_id } });
 
     return respond(200, { eliminated: club_id, stats });
   } catch (err) {

@@ -91,13 +91,14 @@ async function runLottery(leagueId) {
   // 1. Load league config (squad_size, position_limits, tournament_id, budget) + pending submissions
   const [{ data: leagueRow }, { data: submissions }] = await Promise.all([
     supabase.from('leagues')
-      .select('squad_size, position_limits, tournament_id, budget')
+      .select('squad_size, position_limits, tournament_id, budget, league_config')
       .eq('id', leagueId)
       .maybeSingle(),
     supabase.from('draft_submissions')
       .select('user_id, player_ids')
       .eq('league_id', leagueId)
-      .eq('status', 'pending'),
+      .eq('status', 'pending')
+      .order('user_id'),  // L5.5: deterministic submission order
   ]);
 
   if (!submissions?.length) return { message: 'No pending submissions', leagueId };
@@ -107,12 +108,18 @@ async function runLottery(leagueId) {
   const SQUAD_POS_CAPS = leagueRow?.position_limits   ?? DEFAULT_SQUAD_POS_CAPS;
   const budget         = Number(leagueRow?.budget     ?? 100);
 
+  // L5.13: cap each submission's player_ids to draft_list_size from league config
+  const maxLen = leagueRow?.league_config?.draft_list_size ?? 30;
+  submissions.forEach(s => { s.player_ids = (s.player_ids || []).slice(0, maxLen); });
+
   // 2. Load player prices for budget enforcement
   const allPlayerIds = [...new Set(submissions.flatMap(s => s.player_ids))];
   const { data: playerRows } = await supabase
     .from('players')
     .select('id, position, price')
-    .in('id', allPlayerIds);
+    .in('id', allPlayerIds)
+    // L5.12: filter by tournament so cross-tournament player IDs are excluded
+    .eq('tournament_id', leagueRow?.tournament_id);
 
   const playerMap = Object.fromEntries((playerRows ?? []).map(p => [p.id, p]));
 
@@ -275,6 +282,21 @@ async function runLottery(leagueId) {
   // 8. Write gazette entry
   const gazettEntry = buildGazetteEntry(leagueId, contestedPlayers, allocations, submissions);
   await supabase.from('gazette_entries').insert(gazettEntry);
+
+  // L5.10: Notify users with unresolved slots to complete squad on recovery screen
+  const notificationRows = Object.entries(allocations)
+    .filter(([, d]) => d.unresolved_slots > 0)
+    .map(([userId, d]) => ({
+      league_id:         leagueId,
+      user_id:           userId,
+      notification_type: 'draft',
+      title:             'Draft complete — squad has empty slots',
+      description:       `Your squad has ${d.unresolved_slots} unfilled slot(s) — complete it on the recovery screen.`,
+      related_entity_type: 'draft_allocation',
+    }));
+  if (notificationRows.length > 0) {
+    await supabase.from('league_notifications').insert(notificationRows);
+  }
 
   // 9. Summary for caller
   const incomplete = Object.entries(allocations)

@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { normalisePlayers } from '../lib/players';
@@ -51,6 +51,7 @@ export default function DraftScreen() {
   const [expandedId,  setExpandedId]  = useState(null);
   const [lastSaved,   setLastSaved]   = useState(null);  // timestamp of last auto-save
   const [saveError,   setSaveError]   = useState(null);
+  const dirtyRef = useRef(false); // U23: heartbeat dirty flag
 
   const countdown   = useCountdown(deadline);
   const isClosed    = countdown === 'CLOSED';
@@ -133,11 +134,13 @@ export default function DraftScreen() {
   const addPlayer = (player) => {
     if (!canAdd(player)) return;
     setList(prev => [...prev, player]);
+    dirtyRef.current = true; // U23: mark dirty on list change
     setExpandedId(null);
   };
 
   const removePlayer = (id) => {
     setList(prev => prev.filter(p => p.id !== id));
+    dirtyRef.current = true; // U23: mark dirty on list change
   };
 
   const moveUp = (idx) => {
@@ -147,6 +150,7 @@ export default function DraftScreen() {
       [next[idx - 1], next[idx]] = [next[idx], next[idx - 1]];
       return next;
     });
+    dirtyRef.current = true; // U23: mark dirty on reorder
   };
 
   const moveDown = (idx) => {
@@ -156,6 +160,7 @@ export default function DraftScreen() {
       [next[idx], next[idx + 1]] = [next[idx + 1], next[idx]];
       return next;
     });
+    dirtyRef.current = true; // U23: mark dirty on reorder
   };
 
   const autoComplete = () => {
@@ -163,11 +168,24 @@ export default function DraftScreen() {
     const remaining  = DRAFT_LIST_SIZE - list.length;
     if (remaining <= 0) return;
 
-    // No position or budget constraints — pick any available players (shuffled for variety)
+    // U24: respect position caps when auto-filling
+    const currentPosCounts = { ...posCounts }; // copy current counts
     const available = players.filter(p => !currentIds.has(p.id));
     const shuffled  = [...available].sort(() => Math.random() - 0.5);
-    const picks     = shuffled.slice(0, remaining);
 
+    const picks = [];
+    for (const p of shuffled) {
+      if (picks.length >= remaining) break;
+      const pos = p.position;
+      const cap = DRAFT_POS_CAPS[pos];
+      // Only add if position cap exists and not yet full
+      if (cap !== undefined && (currentPosCounts[pos] ?? 0) < cap) {
+        picks.push(p);
+        currentPosCounts[pos] = (currentPosCounts[pos] ?? 0) + 1;
+      }
+    }
+
+    dirtyRef.current = true; // U23: mark dirty
     setList(prev => [...prev, ...picks]);
   };
 
@@ -184,6 +202,7 @@ export default function DraftScreen() {
         }, { onConflict: 'league_id,user_id' });
         setLastSaved(new Date());
         setSaveError(null);
+        dirtyRef.current = false;
       } catch (autoSaveErr) {
         console.warn('Auto-save failed:', autoSaveErr);
         setSaveError('Auto-save failed — check your connection.');
@@ -191,6 +210,31 @@ export default function DraftScreen() {
     }, 30000);
     return () => clearTimeout(timer);
   }, [list, submitted, isClosed, leagueId, user?.id]);
+
+  // U23: 2-minute heartbeat — saves if dirty regardless of whether list changed recently.
+  // Prevents the 30s debounce from never firing during continuous editing.
+  useEffect(() => {
+    if (submitted || isClosed || !user?.id) return;
+    const saveIfDirty = async () => {
+      if (!dirtyRef.current || list.length === 0) return;
+      try {
+        await supabase.from('draft_submissions').upsert({
+          league_id:  leagueId,
+          user_id:    user?.id,
+          player_ids: list.map(p => p.id),
+          status:     'pending',
+        }, { onConflict: 'league_id,user_id' });
+        setLastSaved(new Date());
+        setSaveError(null);
+        dirtyRef.current = false;
+      } catch (hbErr) {
+        console.warn('Heartbeat save failed:', hbErr);
+      }
+    };
+    const hb = setInterval(saveIfDirty, 120_000);
+    return () => clearInterval(hb);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [submitted, isClosed, leagueId, user?.id]);
 
   const handleSubmit = async () => {
     if (list.length === 0 || saving || isClosed) return;
