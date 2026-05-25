@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 
-export default function NotificationPanel({ notifications, unreadCount, onMarkAsRead, onClearAll }) {
+export default function NotificationPanel({ notifications, unreadCount, onMarkAsRead, onClearAll, onNavigate }) {
   const [isOpen, setIsOpen] = useState(false);
   const panelRef = useRef(null);
 
@@ -90,7 +90,11 @@ export default function NotificationPanel({ notifications, unreadCount, onMarkAs
                     borderBottom: '1px solid rgba(255,255,255,0.04)',
                     background: !n.is_read ? 'rgba(0,180,216,0.04)' : undefined,
                   }}
-                  onClick={() => { if (!n.is_read) onMarkAsRead?.(n.id); }}
+                  onClick={() => {
+                    if (!n.is_read) onMarkAsRead?.(n.id);
+                    const link = n.link ?? n.action_url ?? n.metadata?.link;
+                    if (link) { setIsOpen(false); onNavigate?.(link); }
+                  }}
                 >
                   {/* Unread dot — stays inside row with relative parent */}
                   <div className="shrink-0 mt-1.5">

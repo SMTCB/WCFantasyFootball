@@ -138,6 +138,12 @@ export function useNotifications(leagueId) {
     }
   }, [leagueId]);
 
+  // Mark all unread notifications of a given type as read (without touching other types)
+  const clearByType = useCallback(async (type) => {
+    const targets = notifications.filter(n => n.notification_type === type && !n.is_read);
+    for (const n of targets) await markAsRead(n.id);
+  }, [notifications, markAsRead]);
+
   return {
     notifications,
     unreadCount,
@@ -145,6 +151,7 @@ export function useNotifications(leagueId) {
     error,
     markAsRead,
     clearAll,
+    clearByType,
     refetch: fetchNotifications,
   };
 }

@@ -1,7 +1,7 @@
 import AuctionCard from '../AuctionCard';
 import { MONO, DISPLAY } from './HubConstants';
 
-export default function AuctionsView({ auctions, auctionsLoading, name, mySquadId, placeBid, cancelListing, sellNow, onToast }) {
+export default function AuctionsView({ auctions, auctionsLoading, name, mySquadId, myBudget, placeBid, cancelListing, sellNow, onToast }) {
   return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: 'var(--ink)' }}>
       {/* Hero strip — title + stats, responsive */}
@@ -44,6 +44,7 @@ export default function AuctionsView({ auctions, auctionsLoading, name, mySquadI
             key={auction.id}
             auction={auction}
             mySquadId={mySquadId}
+            myBudget={myBudget}
             onBid={async (id, amount) => { const res = await placeBid(id, amount); if (res.ok) onToast('Bid placed!', 'success'); return res; }}
             onCancel={async (id) => { const res = await cancelListing(id); if (res.ok) onToast('Listing cancelled.', 'info'); return res; }}
             onSellNow={async (id) => { const res = await sellNow(id); if (res.ok) onToast('Player sold!', 'success'); return res; }}

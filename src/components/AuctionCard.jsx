@@ -12,7 +12,7 @@ function timeLeft(endsAt) {
   return `${m}m`;
 }
 
-export default function AuctionCard({ auction, mySquadId, onBid, onCancel, onSellNow }) {
+export default function AuctionCard({ auction, mySquadId, myBudget, onBid, onCancel, onSellNow }) {
   const [amount, setAmount] = useState('');
   const [busy,   setBusy]   = useState(false);
   const [err,    setErr]    = useState(null);
@@ -29,6 +29,10 @@ export default function AuctionCard({ auction, mySquadId, onBid, onCancel, onSel
     const val = parseFloat(amount);
     if (isNaN(val) || val < minNext) {
       setErr(`Minimum bid: £${minNext.toFixed(1)}M`);
+      return;
+    }
+    if (myBudget != null && val > myBudget) {
+      setErr(`Bid exceeds your budget (£${myBudget.toFixed(1)}M)`);
       return;
     }
     setBusy(true);
