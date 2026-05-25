@@ -61,7 +61,6 @@ export function useTransfer(leagueId) {
         player_id:    player.id,
         player_price: player.price,
         league_id:    leagueId,
-        user_id:      user?.id,   // demo-mode fallback when no JWT session
       },
     });
 
@@ -104,7 +103,6 @@ export function useTransfer(leagueId) {
         player_id:    player.id,
         player_price: player.price,
         league_id:    leagueId,
-        user_id:      user?.id,   // demo-mode fallback when no JWT session
       },
     });
 

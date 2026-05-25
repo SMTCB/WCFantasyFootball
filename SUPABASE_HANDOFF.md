@@ -1,8 +1,8 @@
 # Supabase Handoff — Consolidated Deploy Guide
 
-**Last updated**: 2026-05-25 (session 41 — migrations 73-76 applied)  
+**Last updated**: 2026-05-25 (session 43 — Sprint 4 hygiene; migration 78 pending deploy)  
 **Main branch**: all code is on `main` — do a `git pull origin main` before deploying  
-**Migrations applied in production**: 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76
+**Migrations applied in production**: 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77
 
 ---
 
@@ -12,7 +12,18 @@ Run the steps below in order. Each section is self-contained; you can stop and r
 
 ---
 
-### ~~Step 1 — SQL Migrations 73, 74, 75, 76~~ ✅ DONE (session 41)
+### Step 1a — SQL Migration 78 (NEW — session 43)
+
+Open the **Supabase dashboard SQL editor** and run:
+
+**`supabase/migrations/78_dead_code_cleanup.sql`**
+- Drops `public.calculate_player_points` in all its overload signatures (TEXT,TEXT,JSONB,JSONB), (TEXT,TEXT,JSONB), and the catch-all CASCADE
+- This SQL function was superseded by the `calculate-scores` Edge Function (migration 53) and has had zero callers since then
+- Safe to run: verified no edge function file references it
+
+---
+
+### ~~Step 1b — SQL Migrations 73, 74, 75, 76, 77~~ ✅ DONE (sessions 38-42)
 
 Open the **Supabase dashboard SQL editor** and run each file in order:
 
@@ -34,7 +45,7 @@ Open the **Supabase dashboard SQL editor** and run each file in order:
 - **L2.5**: `submit_bet` resets `is_correct = NULL` and `reward_awarded = NULL` on re-submit after resolution
 - **L3.9**: `resolve_bet` sets `reward_awarded = NULL` (not 0) for losing submissions
 
-**Next migration to create**: `77_`
+**Next migration to create**: `79_`
 
 ---
 
@@ -79,7 +90,7 @@ supabase functions deploy resolve-bets
 | `discover-tournament` | Session 40 | DATA-16: concurrent batch probing; DATA-17: access_token redacted from logs |
 | `test-forza-api` | Session 40 | DATA-17: access_token redacted from log output and HTTP response |
 | `process-transfer` | Session 36 | Shared `logError`; buy/sell/create failures now written to `edge_function_errors` |
-| `run-draft-lottery` | Session 39 | L5.1: two-pass allocation — dropped players offered to runner-up wanters |
+| `run-draft-lottery` | Session 43 | Sprint 4: `Math.max(0,…)` guard on `unresolved_slots`; removed `JSON.stringify` double-serialization for JSONB `bullets`/`full_data` columns |
 | `run-reverse-standings-draft` | Session 36 | Shared `logError` |
 | `auto-open-transfer-window` | Session 38 | DATA-9: idempotent upsert; `closes_at` capped at 1h before next kickoff |
 | `sync-players` | Session 36 | Shared `logError` |
@@ -136,3 +147,5 @@ All L5.x and L6.x items are now complete. Sprint 1 is fully coded and merged to 
 | Session 38 | 73 ✅ | Cron dedup, `matchday_id` constraint, `fantasy_points` cleanup |
 | Session 39 | 74 ✅ | Cup pool tournament scoping, auto-seed trigger, relaxation squad_size fix |
 | Session 40–41 | 75, 76 ✅ | Relaxation fixes; bet logic fixes (L2.2, L2.5, L3.9) |
+| Session 42 | 77 ✅ | Security polish: stale auction policy, fake @admin, chat rate-limit, handle_new_user trigger |
+| Session 43 | 78 ⏳ | Dead code: drop `calculate_player_points` SQL function (all overloads) |

@@ -1,11 +1,9 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+﻿import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from './useAuth';
 
-/**
- * Manages league chat messages with realtime updates.
- * Provides messages array, loading state, send function, unread count, typing indicators, and auto-scroll ref.
- */
+const devLog = import.meta.env.DEV ? console.log.bind(console) : () => {};
+
 export function useChatMessages(leagueId) {
   const { user } = useAuth();
   const [messages, setMessages] = useState([]);
@@ -47,7 +45,7 @@ export function useChatMessages(leagueId) {
   // Load initial chat history
   const loadMessages = useCallback(async () => {
     if (!leagueId) return;
-    console.log('[useChatMessages] loadMessages called for league:', leagueId);
+    devLog('[useChatMessages] loadMessages called for league:', leagueId);
     setLoading(true);
     try {
       const { data: msgs, error } = await supabase
@@ -62,7 +60,7 @@ export function useChatMessages(leagueId) {
         return;
       }
 
-      console.log('[useChatMessages] Loaded', (msgs || []).length, 'messages from database');
+      devLog('[useChatMessages] Loaded', (msgs || []).length, 'messages from database');
 
       // Fetch usernames for any uncached users
       const uncachedUserIds = (msgs || [])
@@ -94,8 +92,8 @@ export function useChatMessages(leagueId) {
         };
       });
 
-      console.log('[useChatMessages] Setting messages state with', formattedMsgs.length, 'formatted messages');
-      console.log('[useChatMessages] Message IDs:', formattedMsgs.map(m => m.id).join(', '));
+      devLog('[useChatMessages] Setting messages state with', formattedMsgs.length, 'formatted messages');
+      devLog('[useChatMessages] Message IDs:', formattedMsgs.map(m => m.id).join(', '));
       setMessages(formattedMsgs);
     } catch (err) {
       console.error('useChatMessages: loadMessages exception', err);
@@ -155,14 +153,14 @@ export function useChatMessages(leagueId) {
 
   // Setup realtime subscription on mount
   useEffect(() => {
-    console.log('[useChatMessages] useEffect: Setting up chat for league:', leagueId);
+    devLog('[useChatMessages] useEffect: Setting up chat for league:', leagueId);
     loadMessages();
     fetchUnreadCount();
 
     if (!leagueId) return;
 
     // Subscribe to new messages and typing status
-    console.log('[useChatMessages] Creating Realtime channel for league:', leagueId);
+    devLog('[useChatMessages] Creating Realtime channel for league:', leagueId);
     const channel = supabase
       .channel(`chat:${leagueId}`)
       .on(
@@ -174,19 +172,18 @@ export function useChatMessages(leagueId) {
           filter: `league_id=eq.${leagueId}`,
         },
         async (payload) => {
-          console.log('[useChatMessages] Realtime INSERT event received:', payload.new);
+          devLog('[useChatMessages] Realtime INSERT event received:', payload.new);
           const newMsg = payload.new;
 
           // Check cache first — eliminates N+1 for known authors
           let meta = userMetaCache.current[newMsg.user_id];
           if (!meta) {
-            console.log('[useChatMessages] Fetching user metadata for user:', newMsg.user_id);
+            devLog('[useChatMessages] Fetching user metadata for user:', newMsg.user_id);
             const { data: userData } = await supabase
               .from('users')
               .select('username')
               .eq('id', newMsg.user_id)
-              .single()
-              .catch(() => ({ data: null }));
+              .maybeSingle();
             meta = {
               displayName: userData?.username || 'Unknown',
             };
@@ -195,7 +192,7 @@ export function useChatMessages(leagueId) {
 
           const userName = meta.displayName;
 
-          console.log('[useChatMessages] Adding new message to state:', { id: newMsg.id, userName, message: newMsg.message });
+          devLog('[useChatMessages] Adding new message to state:', { id: newMsg.id, userName, message: newMsg.message });
           const isOwn = newMsg.user_id === user?.id;
           setMessages(prev => {
             const updated = [...prev, {
@@ -208,7 +205,7 @@ export function useChatMessages(leagueId) {
               editedAt: newMsg.edited_at,
               isOwnMessage: isOwn,
             }];
-            console.log('[useChatMessages] Messages state updated, total count:', updated.length);
+            devLog('[useChatMessages] Messages state updated, total count:', updated.length);
             return updated;
           });
           if (!isOwn) setUnreadCount(prev => prev + 1);
@@ -231,9 +228,9 @@ export function useChatMessages(leagueId) {
         });
       })
       .subscribe((status, err) => {
-        console.log('[useChatMessages] Realtime subscription status:', status, 'error:', err);
+        devLog('[useChatMessages] Realtime subscription status:', status, 'error:', err);
         if (status === 'SUBSCRIBED') {
-          console.log('[useChatMessages] ✓ Successfully subscribed to chat channel for league:', leagueId);
+          devLog('[useChatMessages] ✓ Successfully subscribed to chat channel for league:', leagueId);
         } else {
           console.warn('[useChatMessages] ✗ Subscription failed or closed for league:', leagueId);
         }
@@ -272,7 +269,7 @@ export function useChatMessages(leagueId) {
     }
 
     try {
-      console.log('[useChatMessages] Sending message:', { leagueId, userId: user.id, message: messageText.trim() });
+      devLog('[useChatMessages] Sending message:', { leagueId, userId: user.id, message: messageText.trim() });
       const { error } = await supabase
         .from('chat_messages')
         .insert([{
