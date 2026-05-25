@@ -141,46 +141,84 @@ async function runLottery(leagueId) {
     }
   }
 
-  // 5. Allocate squads per manager using sequential priority
-  //    Skip: player taken by another manager, position cap reached, budget exceeded
-  const allocations = {};
-  const budgetTracker = {};
+  // 5. Two-pass squad allocation.
+  //    Pass 1 — allocate lottery winners; record players the winner couldn't
+  //             take due to position cap or budget.
+  //    Pass 2 — offer each dropped player to runner-up contestants (shuffled
+  //             with crypto-random so no submission ordering advantage).
+
+  const userState = {};
+  for (const sub of submissions) {
+    userState[sub.user_id] = {
+      allocated: [],
+      posCounts: { GK: 0, DEF: 0, MID: 0, FWD: 0 },
+      budgetUsed: 0,
+    };
+  }
+
+  const droppedByWinner = []; // pids the lottery winner couldn't take
 
   for (const sub of submissions) {
-    const userId = sub.user_id;
-    const allocated = [];
-    const posCounts = { GK: 0, DEF: 0, MID: 0, FWD: 0 };
-    let budgetUsed = 0;
+    const uid = sub.user_id;
+    const u   = userState[uid];
 
     for (const pid of sub.player_ids) {
-      if (allocated.length >= SQUAD_SIZE) break;
+      if (u.allocated.length >= SQUAD_SIZE) break;
+
+      if (awardedTo[pid] !== uid) continue;
 
       const player = playerMap[pid];
       if (!player) continue;
 
-      // Skip if another manager won this player in the lottery
-      if (awardedTo[pid] !== userId) continue;
-
       const pos = normalisePosition(player.position);
       if (!SQUAD_POS_CAPS[pos]) continue;
 
-      // Skip if position cap reached
-      if (posCounts[pos] >= SQUAD_POS_CAPS[pos]) continue;
+      if (u.posCounts[pos] >= SQUAD_POS_CAPS[pos] || u.budgetUsed + player.price > budget) {
+        droppedByWinner.push(pid);
+        continue;
+      }
 
-      // Skip if budget exceeded (league budget cap applies post-allocation)
-      if (budgetUsed + player.price > budget) continue;
+      u.allocated.push(pid);
+      u.posCounts[pos]++;
+      u.budgetUsed += player.price;
+    }
+  }
 
-      allocated.push(pid);
-      posCounts[pos]++;
-      budgetUsed += player.price;
+  // Pass 2: runner-up allocation for dropped players
+  for (const pid of droppedByWinner) {
+    const player = playerMap[pid];
+    if (!player) continue;
+
+    const runnerUps = (wantedBy[pid] ?? []).filter(uid => uid !== awardedTo[pid]);
+    // Crypto-random shuffle so no submission order advantage
+    for (let i = runnerUps.length - 1; i > 0; i--) {
+      const roll = crypto.getRandomValues(new Uint32Array(1))[0] / 0xFFFFFFFF;
+      const j    = Math.floor(roll * (i + 1));
+      [runnerUps[i], runnerUps[j]] = [runnerUps[j], runnerUps[i]];
     }
 
-    allocations[userId] = {
-      allocated_players: allocated,
-      unresolved_slots: SQUAD_SIZE - allocated.length,
-      budget_used: budgetUsed,
+    const pos = normalisePosition(player.position);
+    for (const uid of runnerUps) {
+      const u = userState[uid];
+      if (!u) continue;
+      if (u.allocated.length >= SQUAD_SIZE) continue;
+      if (u.posCounts[pos] >= SQUAD_POS_CAPS[pos]) continue;
+      if (u.budgetUsed + player.price > budget) continue;
+
+      u.allocated.push(pid);
+      u.posCounts[pos]++;
+      u.budgetUsed += player.price;
+      break;
+    }
+  }
+
+  const allocations = {};
+  for (const [uid, u] of Object.entries(userState)) {
+    allocations[uid] = {
+      allocated_players: u.allocated,
+      unresolved_slots:  SQUAD_SIZE - u.allocated.length,
+      budget_used:       u.budgetUsed,
     };
-    budgetTracker[userId] = budgetUsed;
   }
 
   // 6. Write draft_allocations rows
@@ -214,7 +252,6 @@ async function runLottery(leagueId) {
   }
 
   // Write allocated squads to the squads table so the Squad screen shows them.
-  const budget = Number(leagueRow?.budget ?? 100);
   const squadRows = Object.entries(allocations).map(([userId, data]) => ({
     user_id:          userId,
     league_id:        leagueId,
