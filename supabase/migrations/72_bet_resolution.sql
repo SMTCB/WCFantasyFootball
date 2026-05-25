@@ -3,6 +3,9 @@
 -- 3.4:  resolve-bets cron fires every 15 min to auto-resolve finished match_result bets
 
 -- ── Harden resolve_bet ─────────────────────────────────────────────────────────
+-- DROP required: production was deployed with param name p_bet_id (not p_instance_id).
+-- PostgreSQL won't let CREATE OR REPLACE change parameter names.
+DROP FUNCTION IF EXISTS resolve_bet(uuid, text);
 
 CREATE OR REPLACE FUNCTION resolve_bet(
   p_instance_id    UUID,
