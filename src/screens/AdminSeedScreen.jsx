@@ -855,16 +855,14 @@ function ScoringRulesEditor({ tournamentId }) {
 function ObservabilityPanel() {
   const [edgeLogs, setEdgeLogs]   = useState([]);
   const [clientLogs, setClientLogs] = useState([]);
-  const [cronLogs, setCronLogs]   = useState([]);
   const [loading, setLoading]     = useState(false);
   const [since, setSince]         = useState('24h');
 
   const load = useCallback(async () => {
     setLoading(true);
-    const interval = since === '1h' ? '1 hour' : since === '24h' ? '24 hours' : '7 days';
     const cutoff = new Date(Date.now() - (since === '1h' ? 3600_000 : since === '24h' ? 86400_000 : 7 * 86400_000)).toISOString();
 
-    const [{ data: edge }, { data: client }, { data: cron }] = await Promise.all([
+    const [{ data: edge }, { data: client }] = await Promise.all([
       supabase.from('edge_function_errors')
         .select('function, severity, message, context, created_at')
         .gte('created_at', cutoff)
@@ -875,18 +873,10 @@ function ObservabilityPanel() {
         .gte('created_at', cutoff)
         .order('created_at', { ascending: false })
         .limit(100),
-      supabase.from('cron_job_run_details')
-        .select('jobid, jobname, status, return_message, start_time, end_time')
-        .gte('start_time', cutoff)
-        .order('start_time', { ascending: false })
-        .limit(100)
-        .maybeSingle().then(() => ({ data: null }))  // fallback if view doesn't exist
-        .catch(() => ({ data: null })),
     ]);
 
     setEdgeLogs(edge ?? []);
     setClientLogs(client ?? []);
-    setCronLogs(cron ?? []);
     setLoading(false);
   }, [since]);
 

@@ -4,7 +4,7 @@ import { useAuth } from '../hooks/useAuth';
 
 // ── Constants ────────────────────────────────────────────────────────────────
 
-const REFRESH_MS = 5 * 60 * 1000;
+const REFRESH_MS = 60 * 1000; // 60s safety-net poll — Realtime handles sub-second updates
 
 const LEAGUE_TONES = ['#00B4D8', '#E0A800', '#A855F7', '#22C55E', '#F59E0B'];
 
@@ -502,6 +502,39 @@ export default function LiveScreen() {
     const interval = setInterval(fetchAll, REFRESH_MS);
     return () => clearInterval(interval);
   }, [fetchAll]);
+
+  // U6: Realtime subscriptions — match_events INSERT and player_match_stats UPDATE
+  // filtered to currently-live fixtures. Re-subscribes whenever liveFixtures changes.
+  useEffect(() => {
+    const ids = liveFixtures.map(f => f.id);
+    if (!ids.length) return;
+
+    const idList = ids.join(',');
+    const evCh = supabase
+      .channel(`live-match-events-${idList}`)
+      .on('postgres_changes', {
+        event:  'INSERT',
+        schema: 'public',
+        table:  'match_events',
+        filter: `fixture_id=in.(${idList})`,
+      }, () => fetchAll())
+      .subscribe();
+
+    const statsCh = supabase
+      .channel(`live-player-stats-${idList}`)
+      .on('postgres_changes', {
+        event:  'UPDATE',
+        schema: 'public',
+        table:  'player_match_stats',
+        filter: `fixture_id=in.(${idList})`,
+      }, () => fetchAll())
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(evCh);
+      supabase.removeChannel(statsCh);
+    };
+  }, [liveFixtures, fetchAll]);
 
   // ── Desktop layout ─────────────────────────────────────────────────────────
 

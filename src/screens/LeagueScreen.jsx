@@ -728,7 +728,7 @@ export default function LeagueScreen() {
 
         {draftGaps > 0 && (
           <div onClick={() => navigate(`/league/${activeLeague?.league_id}/draft/recover`)} style={{ background: '#B71C1C', color: 'white', padding: '10px 28px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer', flexShrink: 0 }}>
-            <span style={{ fontFamily: MONO, fontSize: 11, letterSpacing: '.18em' }}>âš  YOUR SQUAD HAS {draftGaps} EMPTY SLOT{draftGaps !== 1 ? 'S' : ''} â€” TAP TO PICK NOW</span>
+            <span style={{ fontFamily: MONO, fontSize: 11, letterSpacing: '.18em' }}>âš  YOUR SQUAD HAS {draftGaps} EMPTY SLOT{draftGaps !== 1 ? 'S' : ''} â€” TAP TO PICK NOW</span>
             <span style={{ fontFamily: MONO, fontSize: 11 }}>â†’</span>
           </div>
         )}
@@ -1543,7 +1543,7 @@ export default function LeagueScreen() {
                          />
                          {betResolutionAnswer && !answerGrouped[betResolutionAnswer] && !selectedBetForResolution.options?.some(o => (o.key ?? o) === betResolutionAnswer) && (
                            <div className="bg-yellow-900/30 border border-yellow-700/50 p-2 rounded-sm text-[10px] text-yellow-200">
-                             âš  Override: "{betResolutionAnswer}" â€” not in submissions or options. This will award reward only to exact matches.
+                             âš  Override: "{betResolutionAnswer}" â€” not in submissions or options. This will award reward only to exact matches.
                            </div>
                          )}
                        </div>

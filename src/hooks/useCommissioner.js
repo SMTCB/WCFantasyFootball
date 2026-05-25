@@ -1,11 +1,11 @@
 import { useState, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
 
-const TEMPLATE_UUID = {
-  top_scorer:   '912e7b5f-1c15-4747-bc0b-2da9678627ea',
-  match_result: '63a7de4f-5153-4e12-b6c5-4d5f3fc199fc',
-  player_block: 'b1828846-4ed6-47d6-9430-944768d87ae8',
-};
+// 3.2: slug→id at call-time; avoids hardcoded UUIDs that differ per environment
+async function templateIdForSlug(slug) {
+  const { data } = await supabase.from('bet_templates').select('id').eq('slug', slug).maybeSingle();
+  return data?.id ?? null;
+}
 
 export function useCommissioner(leagueId, tournamentId) {
   // ── Shared state ─────────────────────────────────────────────────────────
@@ -139,9 +139,10 @@ export function useCommissioner(leagueId, tournamentId) {
     if (!prompt)            throw new Error('Enter a bet question/prompt.');
     if (!deadline)          throw new Error('Set a submission deadline.');
     if (options.length < 2) throw new Error('Add at least 2 answer options.');
+    const tplId = template ? await templateIdForSlug(template) : null;
     const { error } = await supabase.from('bet_instances').insert({
       league_id:    leagueId,
-      template_id:  TEMPLATE_UUID[template] || null,
+      template_id:  tplId,
       title,
       prompt,
       options,
@@ -217,9 +218,10 @@ export function useCommissioner(leagueId, tournamentId) {
     if (!betPrompt)            throw new Error('Enter a bet prompt/question.');
     if (!betDeadline)          throw new Error('Set a deadline.');
     if (betOptions.length < 2) throw new Error('Add at least 2 answer options.');
+    const tplId = betTemplateId ? await templateIdForSlug(betTemplateId) : null;
     const { error } = await supabase.from('bet_instances').insert({
       league_id:    leagueId,
-      template_id:  TEMPLATE_UUID[betTemplateId] || null,
+      template_id:  tplId,
       title:        betTitle,
       prompt:       betPrompt,
       options:      betOptions,
