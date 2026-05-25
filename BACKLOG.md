@@ -12,6 +12,10 @@
 
 **🚀 COMPLETED THIS SESSION:**
 
+- ✅ **PR #189 `claude/s4-hygiene-deadcode-docs`** — full Sprint 4 changeset — merged to main
+- ✅ **PR #190 `claude/s4-migration-78-deployed`** — docs: migration 78 marked deployed — merged to main
+- ✅ **Migration `78_dead_code_cleanup.sql`** — applied to Supabase production
+
 **Group A — Dead file / dead code purge:**
 - Deleted `src/App.css` — Vite scaffold, never imported
 - Deleted `src/data/squad.js` — demo stub, no callers

@@ -1,5 +1,5 @@
 # Consolidated Correction Plan — Sprint Allocation
-**Date:** 2026-05-24 (updated 2026-05-25 — Sprint 0, 1, 2, 3 complete; migrations 66-77 in production)
+**Date:** 2026-05-24 (updated 2026-05-25 — Sprints 0–4 complete; migrations 66-78 in production)
 **Total findings:** ~310 across five audits.
 
 ## How to read this document
@@ -337,69 +337,71 @@ A small number of items must land in a specific order:
 
 ---
 
-# Sprint 4 — Hygiene, dead code, docs (≈4-6 hours)
+# Sprint 4 — Hygiene, dead code, docs ✅ COMPLETE (2026-05-25)
 
+**PRs:** #189 (main sprint), #190 (docs: migration 78 deployed) — merged to main  
+**Migration applied:** `78_dead_code_cleanup.sql` — applied to production  
 **Goal: leave the codebase in a state where the next contributor isn't tripped by zombies.**
 
 ## Dead code purge
 
-- **LOW-1** · Move `CHAT_DEBUG_FINDINGS.md`, `CLEANUP_REPORT.md`, `GIT_AND_CODE_WALKTHROUGH.md`, `code_quality_analysis_V2.md` to `docs/archive/`
-- **LOW-2** · Rename `docs/brand/ADMIN TAB/` (space) → `admin-tab`
-- **L1.9** · Drop broken `calculate_player_points` SQL function and helpers
-- **L1.10** · Position default logging in scorePlayer
-- **U106** · Adopt `PageHeader` (or delete)
-- **U117** · Delete `src/App.css` (dead Vite scaffold)
-- **U56** · Delete `VARReviewBanner` or wire it
-- **U103** · Delete `EventTimeline` or wire it
-- **U85** · Delete `view === '*_REMOVED'` blocks (~270 lines in LeagueScreen)
-- **`src/data/squad.js`** and `src/data/fixtures.js` deletion
-- **2.6.b** · Cleanup `tournament_id` UUID vs Forza-id confusion (already addressed by 2.6.a + I1)
+- ✅ **LOW-1** · Moved `CHAT_DEBUG_FINDINGS.md`, `CLEANUP_REPORT.md`, `GIT_AND_CODE_WALKTHROUGH.md`, `code_quality_analysis_V2.md` to `docs/archive/`
+- ✅ **LOW-2** · Renamed `docs/brand/ADMIN TAB/` → `docs/brand/admin-tab/` (space removed)
+- ✅ **L1.9** · Dropped `calculate_player_points` SQL function (all overloads) — migration 78
+- **L1.10** · Position default logging in scorePlayer — deferred
+- ✅ **U106** · Deleted `src/components/PageHeader.jsx` (never imported)
+- ✅ **U117** · Deleted `src/App.css` (dead Vite scaffold)
+- ✅ **U56** · Deleted `src/components/VARReviewBanner.jsx` (never imported)
+- ✅ **U103** · Deleted `src/components/EventTimeline.jsx` (never imported)
+- ✅ **U85** · Removed 4 `_REMOVED` dead JSX blocks (~1,260 lines) from `LeagueScreen.jsx` + orphaned imports
+- ✅ **`src/data/squad.js`** and **`src/data/fixtures.js`** — deleted (demo stubs, no callers)
+- **2.6.b** · Already resolved by 2.6.a + I1
 
 ## Dependency / config hygiene
 
-- **LOW-3** · Move `@capacitor/cli` to devDependencies
-- **LOW-4** · Replace `html2canvas` 1.4.1 (unmaintained)
-- **LOW-5** · `index.html` viewport accessibility (handled in U65)
-- **LOW-6** · Add Vercel security headers (`CSP`, `X-Frame-Options`, `Referrer-Policy`)
-- **LOW-7** · Document migration gaps (52, 58) in BACKLOG.md
-- **LOW-8** · `players.id` BIGINT vs TEXT cleanup (tied to L1.9)
-- **LOW-9** · `tournament_id` body key in cron migrations — standardize (already addressed in I2)
-- **LOW-10** · Remove unused `user_id` field from `useTransfer` body
-- **LOW-11** · `useChatMessages` `.catch` on PostgrestBuilder → `maybeSingle()`
-- **LOW-12** · Deduplicate `.gitignore` entries
-- **LOW-13** · Add `format`, `typecheck`, `test` npm scripts
-- **LOW-14** · Extract `_shared/forza.ts` helper
-- **LOW-15** · Added-time minute parser helper
+- ✅ **LOW-3** · `@capacitor/cli` moved to devDependencies
+- **LOW-4** · Replace `html2canvas` 1.4.1 (unmaintained) — deferred
+- ✅ **LOW-5** · `index.html` viewport accessibility — handled in Sprint 3 (U65)
+- ✅ **LOW-6** · Vercel security headers: `CSP`, `X-Frame-Options`, `X-Content-Type-Options`, `Referrer-Policy`, `Permissions-Policy`
+- **LOW-7** · Document migration gaps (52, 58) in BACKLOG.md — deferred
+- **LOW-8** · `players.id` BIGINT vs TEXT cleanup — deferred
+- **LOW-9** · Already addressed by I2 / 2.6.a
+- ✅ **LOW-10** · Removed dead `user_id` field from `useTransfer` request body (SEC-3: JWT identity)
+- ✅ **LOW-11** · `useChatMessages` `.single().catch()` → `.maybeSingle()`
+- ✅ **LOW-12** · Deduplicated `.gitignore` entries
+- ✅ **LOW-13** · Added `test` and `typecheck` npm scripts to `package.json`
+- **LOW-14** · Extract `_shared/forza.ts` helper — deferred
+- **LOW-15** · Added-time minute parser helper — deferred
 
 ## Logging / observability
 
-- Strip `console.log` in `useChatMessages` (gate behind `import.meta.env.DEV`)
-- Apply `edge_function_errors` logging to all critical paths (drafts, transfers)
-- Document `app.supabase_url` + `app.service_role_key` settings in CLAUDE.md
-- Update CLAUDE.md tests-pass claim with real Playwright count (from DEPLOY-3 outcome)
+- ✅ `useChatMessages` — all `console.log` gated behind `devLog` (`import.meta.env.DEV`)
+- ✅ CLAUDE.md E2E test count corrected (was stale at 232/116 — updated to 84)
+- Apply `edge_function_errors` logging to remaining critical paths — deferred
+- Document `app.supabase_url` + `app.service_role_key` settings in CLAUDE.md — deferred
 
-## Misc low-priority UI
+## Misc low-priority UI (deferred)
 
 - Brand color token deduplication
 - `Intl.NumberFormat` / `Intl.DateTimeFormat` wrapper module
 - Consolidate `LiveDot` / `StatusDot`
 - `BrandMark` accessibility wrapper
 - ProtectedRoute use `100dvh` instead of `100vh`
-- Mobile nav label font-size bump from 8px → 10px
+- Mobile nav label font-size bump from 8px → 10px (done in Sprint 3, U112)
 
 ## Draft / relaxation hygiene
 
-- **L5.14** · Optional global-fairness weighting in lottery
-- **L5.15** · Drop `JSON.stringify` for JSONB columns (gazette entries)
-- **L5.17** · Embed names in gazette bullets
-- **L5.18** · `Math.max(0, ...)` guard in lottery `unresolved_slots`
-- **L6.14** · Stop parsing tier labels by regex
-- **L6.15** · Decide tier-0 transition gazette policy
-- **L6.16** · Standardize NULL vs 0 in `repeats_allowed`
+- **L5.14** · Optional global-fairness weighting in lottery — deferred
+- ✅ **L5.15** · Removed `JSON.stringify` double-serialization for JSONB `bullets`/`full_data` in `run-draft-lottery`
+- **L5.17** · Embed names in gazette bullets — deferred
+- ✅ **L5.18** · `Math.max(0, ...)` guard on `unresolved_slots` in `run-draft-lottery`
+- **L6.14** · Stop parsing tier labels by regex — deferred
+- **L6.15** · Decide tier-0 transition gazette policy — deferred
+- **L6.16** · Standardize NULL vs 0 in `repeats_allowed` — deferred
 
 ## Observability optional
 
-- **O6** · Daily digest gazette entry (deferred; admin view from O5 is sufficient for test phase)
+- **O6** · Daily digest gazette entry — deferred (admin view from O5 sufficient for test phase)
 
 ---
 
