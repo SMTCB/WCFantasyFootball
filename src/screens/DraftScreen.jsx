@@ -46,6 +46,7 @@ export default function DraftScreen() {
   const [loading,     setLoading]     = useState(true);
   const [saving,      setSaving]      = useState(false);
   const [submitted,   setSubmitted]   = useState(false);
+  const [isProcessed, setIsProcessed] = useState(false);
   const [deadline,    setDeadline]    = useState(null);
   const [expandedId,  setExpandedId]  = useState(null);
   const [lastSaved,   setLastSaved]   = useState(null);  // timestamp of last auto-save
@@ -93,7 +94,10 @@ export default function DraftScreen() {
             .map(id => normalisePlayers(pData ?? []).find(p => p.id === id))
             .filter(Boolean);
           setList(ordered);
-          if (sub.status === 'processed') setSubmitted(true);
+          if (sub.status === 'processed') {
+            setSubmitted(true);
+            setIsProcessed(true);
+          }
         }
       } catch (err) {
         console.error(err);
@@ -256,12 +260,18 @@ export default function DraftScreen() {
             </div>
           ))}
         </div>
-        <button
-          onClick={() => setSubmitted(false)}
-          className="text-[#9E9E9E] text-[11px] uppercase tracking-widest underline"
-        >
-          Edit list
-        </button>
+        {isProcessed ? (
+          <div className="text-[#555] text-[11px] uppercase tracking-widest">
+            Lottery complete — list locked
+          </div>
+        ) : (
+          <button
+            onClick={() => setSubmitted(false)}
+            className="text-[#9E9E9E] text-[11px] uppercase tracking-widest underline"
+          >
+            Edit list
+          </button>
+        )}
         <button
           onClick={() => navigate(`/league/${leagueId}`)}
           className="text-cyan text-[11px] uppercase tracking-widest underline"
