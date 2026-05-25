@@ -1,6 +1,6 @@
 # Supabase Handoff — Consolidated Deploy Guide
 
-**Last updated**: 2026-05-25 (session 39)  
+**Last updated**: 2026-05-25 (session 40 — Sprint 2 complete)  
 **Main branch**: all code is on `main` — do a `git pull origin main` before deploying  
 **Migrations applied in production**: 66, 67, 68, 69, 70, 71, 72
 
@@ -12,7 +12,7 @@ Run the steps below in order. Each section is self-contained; you can stop and r
 
 ---
 
-### Step 1 — SQL Migrations 73 and 74
+### Step 1 — SQL Migrations 73, 74, 75, 76
 
 Open the **Supabase dashboard SQL editor** and run each file in order:
 
@@ -26,7 +26,15 @@ Open the **Supabase dashboard SQL editor** and run each file in order:
 - **L6.3**: trigger `_trigger_seed_cup_clubs` auto-seeds `cup_active_clubs` when a league's `cup_phase` transitions out of `'pre_cup'`
 - **L6.6**: `calculate_relaxation_state` uses `leagues.squad_size` instead of hardcoded `15.0` in the pool pressure formula
 
-**Next migration to create**: `75_`
+**`supabase/migrations/75_active_members_relaxation.sql`**
+- Sprint 2: various relaxation + active member fixes (see migration file for details)
+
+**`supabase/migrations/76_bet_logic_fixes.sql`**
+- **L2.2**: `bet_instances` gets `winners_count INT` and `total_submissions INT` columns; `resolve_bet` populates them
+- **L2.5**: `submit_bet` resets `is_correct = NULL` and `reward_awarded = NULL` on re-submit after resolution
+- **L3.9**: `resolve_bet` sets `reward_awarded = NULL` (not 0) for losing submissions
+
+**Next migration to create**: `77_`
 
 ---
 
@@ -49,6 +57,8 @@ supabase functions deploy auto-open-transfer-window
 supabase functions deploy sync-fixtures
 supabase functions deploy sync-players
 supabase functions deploy sync-player-status
+supabase functions deploy discover-tournament
+supabase functions deploy test-forza-api
 
 # Cup + relaxation
 supabase functions deploy calculate-relaxation
@@ -62,15 +72,17 @@ supabase functions deploy resolve-bets
 
 | Function | Last changed | What changed |
 |---|---|---|
-| `calculate-scores` | Session 38 | L3.5: captain on bench → highest-scoring starter gets bonus |
-| `ingest-match-events` | Session 36 | Shared `logError` from `_shared/log.ts` (was local copy) |
+| `calculate-scores` | Session 40 | L3.6: `points_breakdown` now cumulative across fixtures per round |
+| `ingest-match-events` | Session 40 | 2.5.c: `parseMinute` for added-time; 2.5.d: tournament-wide player lookup fallback |
+| `sync-fixtures` | Session 40 | 2.2.b: date comparison via `new Date()`; 2.2.c: postponed/cancelled/abandoned status mapping |
+| `sync-player-status` | Session 40 | DATA-15: N+1 per-player lookups replaced with single batch query |
+| `discover-tournament` | Session 40 | DATA-16: concurrent batch probing; DATA-17: access_token redacted from logs |
+| `test-forza-api` | Session 40 | DATA-17: access_token redacted from log output and HTTP response |
 | `process-transfer` | Session 36 | Shared `logError`; buy/sell/create failures now written to `edge_function_errors` |
 | `run-draft-lottery` | Session 39 | L5.1: two-pass allocation — dropped players offered to runner-up wanters |
 | `run-reverse-standings-draft` | Session 36 | Shared `logError` |
 | `auto-open-transfer-window` | Session 38 | DATA-9: idempotent upsert; `closes_at` capped at 1h before next kickoff |
-| `sync-fixtures` | Session 36 | Shared `logError` |
 | `sync-players` | Session 36 | Shared `logError` |
-| `sync-player-status` | Session 38 | 2.4.b: suspension rows now call `mapStatus`/`mapConfidence` (dead code eliminated) |
 | `calculate-relaxation` | Session 36 | Shared `logError` |
 | `eliminate-cup-club` | Session 36 | Shared `logError` |
 | `resolve-bets` | Session 37 | **New function**: auto-resolves `match_result` bets from fixture scores on 15-min cron |
@@ -122,4 +134,5 @@ All L5.x and L6.x items are now complete. Sprint 1 is fully coded and merged to 
 | Session 36 | 71 | Observability: `client_errors` table, `report_client_error` RPC, prune cron |
 | Session 37 | 72 | `resolve_bet` hardened + `resolve-finished-bets` cron |
 | Session 38 | 73 (PENDING) | Cron dedup, `matchday_id` constraint, `fantasy_points` cleanup |
-| **Session 39** | **74 (PENDING)** | Cup pool tournament scoping, auto-seed trigger, relaxation squad_size fix |
+| Session 39 | 74 (PENDING) | Cup pool tournament scoping, auto-seed trigger, relaxation squad_size fix |
+| Sprint 2 session 40 | 75, 76 (PENDING) | Relaxation fixes; bet logic fixes (L2.2, L2.5, L3.9) |

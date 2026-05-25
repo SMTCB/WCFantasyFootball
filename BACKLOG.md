@@ -1,8 +1,55 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-05-25 (Sprint 1 session 39 — draft fairness, cup pool fixes — Sprint 1 COMPLETE)  
+**Last Updated**: 2026-05-25 (Sprint 2 session 40 — live/pipeline batch — Sprint 2 COMPLETE)  
 **E2E Test Suite**: 84/84 platform tests passing ✅ + `scoring-pipeline.spec.js` added  
 **Live App**: https://wc-fantasy-football.vercel.app
+
+---
+
+## 📊 SESSION 40 PROGRESS (2026-05-25 — Sprint 2 batch 3: Live screen + pipeline)
+
+**Goal**: Sprint 2 live/pipeline batch — U44-U55, L3.6, DATA-14-20, 2.x edge function fixes.
+
+**🚀 COMPLETED THIS SESSION:**
+
+- ✅ **PR #178 `claude/s2-auth-squad-ui`** — auth/squad/accessibility (U14-U27, U57-U61) — merged
+- ✅ **PR #179 `claude/s2-league-hub`** — league hub (U28-U43, L2.x, migration 76) — merged
+- ✅ **PR #180 `claude/s2-live-pipeline`** — live/pipeline (U44-U55, L3.6, DATA-14-20, 2.x) — merged
+
+**Sprint 2 Route + Nav:**
+- U44: `/bracket` renamed to `/predictions` + backward-compat redirect kept
+- U45: Recap + Predictions added to desktop sidebar nav (`desktopOnly` flag prevents them cluttering mobile bottom bar)
+
+**Sprint 2 Live Screen upgrades:**
+- U47: HT/FT/postponed status banners in fixture strip (desktop + mobile)
+- U50: ACTIVE NOW count excludes 0-min benched players (uses `minutes_played` from stats)
+- U51: Bench section (players 12-15) rendered below pitch on desktop + mobile squad tab
+- U52: Captain DNP banner when captain has `minutes === 0` during a live fixture
+- U54: `currentGW` label from `matchday_deadlines` table instead of hardcoded `'LIVE'`
+- U55: Live scoreboard uses `fixtures.home_score`/`away_score` columns directly (removed goal-counting from match_events)
+
+**Sprint 2 RecapScreen:**
+- U49: Already done — `effectivePoints` with captain/joker multiplier verified present (skip)
+- U53: Historic matchday selector dropdown in header — fetches all past `matchday_deadlines`, allows switching GW to reload recap data
+
+**Sprint 2 Edge Functions:**
+- L3.6: `calculate-scores` — `points_breakdown` now cumulative across fixtures per round (JSONB `{ fixtures: { [fix_id]: pts }, player_count }`)
+- DATA-15: `sync-player-status` — replaced N+1 per-player queries with single batch lookup
+- DATA-16: `discover-tournament` — concurrent probing in batches of 5 (was sequential loop)
+- DATA-17: `discover-tournament` + `test-forza-api` — `access_token` redacted from all log output and HTTP responses
+- DATA-19/2.2.b: `sync-fixtures` — date comparison uses `new Date()` not raw ISO string compare
+- 2.2.c: `sync-fixtures` — `mapStatus` now handles `postponed`/`cancelled`/`abandoned` (was all falling through to `scheduled`)
+- 2.5.c: `ingest-match-events` — `parseMinute()` helper handles added-time format `'45+2'` → 47
+- 2.5.d: `ingest-match-events` — tournament-wide fallback player lookup for transferred players
+
+**Sprint 2 status: ✅ COMPLETE.** All items from the sprint plan are merged to main.
+
+**📋 MIGRATIONS APPLIED (previous sprint):**
+- ✅ `supabase/migrations/75_active_members_relaxation.sql` — PENDING deploy
+- ✅ `supabase/migrations/76_bet_logic_fixes.sql` — PENDING deploy
+
+**📋 EDGE FUNCTIONS TO DEPLOY:**
+See updated `SUPABASE_HANDOFF.md`.
 
 ---
 
