@@ -1,8 +1,114 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-05-24 (Sprint 1 — scoring math + transfer fixes + matchday_id correctness)  
+**Last Updated**: 2026-05-25 (Sprint 1 session 37 — live Realtime U6, Joker UI U7, bet resolution L2.1/L2.4/3.2/3.3/3.4)  
 **E2E Test Suite**: 84/84 platform tests passing ✅ + `scoring-pipeline.spec.js` added  
 **Live App**: https://wc-fantasy-football.vercel.app
+
+---
+
+## 📊 SESSION 37 PROGRESS (2026-05-25 — Sprint 1: Live Realtime, Joker UI, Bet resolution)
+
+**Goal**: U6 (LiveScreen Realtime), U7 (Joker chip UI), L2.1 (resolve_bet validation), L2.4+3.4 (auto-resolver), 3.2+U34 (TEMPLATE_UUID runtime lookup), 3.3 (scope_ref).
+
+**🚀 COMPLETED THIS SESSION:**
+
+- ✅ **PR `claude/s1-live-bets`** — merged to main
+
+**Live Centre (U6):**
+- Reduced poll from 5 min → 60s safety net
+- Added Realtime subscriptions: `match_events INSERT` + `player_match_stats UPDATE` filtered to live fixture IDs; re-subscribes when `liveFixtures` changes; calls `fetchAll()` on any change for sub-second updates
+
+**Joker chip UI (U7):**
+- `RecapScreen` fetches `squads.joker_player_id`
+- `effectivePoints()` now mirrors `calculate-scores`: captain ×2, joker player ×2 (stacks ×4 if both)
+- `recap.joker` set from player map; `RecapCard` already renders Joker section from this field
+
+**Bet resolution hardening (L2.1 + migration 72):**
+- `resolve_bet` validates `p_correct_answer` against `bet_instances.options[*].key` before updating; free-text bets (empty options) skip validation
+- Improved return: `{ winners: N, total: N }` (was misleadingly `submissions_updated = total`)
+
+**Bet auto-resolver (L2.4 + 3.4 + migration 72):**
+- `resolve-bets` edge function: queries `closed` bets with `resolves_at < NOW()`, derives `match_result` correct answer from `fixtures.home_score/away_score`, calls `resolve_bet` RPC
+- `resolve-finished-bets` cron: fires every 15 min
+- `top_scorer` and `player_block` types deferred to commissioner resolution
+
+**Bet template IDs (3.2 + U34):**
+- Removed hardcoded `TEMPLATE_UUID` from `BetCreatorPanel.jsx` and `useCommissioner.js`
+- `BetCreatorPanel`: fetches all slugs on mount into `templateIds` ref; used in `handleCreate`
+- `useCommissioner`: `templateIdForSlug(slug)` helper queries DB at call-time
+
+**Bet scope_ref (3.3):**
+- `BetCreatorPanel.handleCreate` derives `scope_ref` from first option key for `match_result` bets (format: `{fixtureId}_home` → strips suffix → `fixtureId`)
+
+**Pre-existing lint fixes:**
+- Removed 3 non-breaking spaces (U+00A0) from `LeagueScreen.jsx` and `MarketScreen.jsx` that were causing `no-irregular-whitespace` ESLint errors
+- Fixed unused `cronLogs` + `interval` vars in `AdminSeedScreen.ObservabilityPanel`
+
+**📋 SQL MIGRATIONS TO RUN ON SUPABASE:**
+1. `supabase/migrations/72_bet_resolution.sql` — `resolve_bet` hardening + `resolve-finished-bets` cron
+
+**📋 EDGE FUNCTIONS TO DEPLOY:**
+```
+supabase functions deploy resolve-bets
+```
+
+**📋 REMAINING Sprint 1 items (still open):**
+- L3.5: Captain-on-bench policy
+- I2/I4/DATA-2/7/8/9/10: Pipeline cleanup items
+- U33: Replace CreateBetWizard mock data with BetCreatorPanel
+- U7 (SquadScreen): Show Joker activation state in squad view (minor — scoring wired)
+- Draft fairness items (L5.x, L6.x)
+
+---
+
+## 📊 SESSION 36 PROGRESS (2026-05-25 — Sprint 1: Observability + UX fixes)
+
+**Goal**: Sprint 1 observability foundation (O1-O5) + remaining UX hot-spots (U3/U8/U13/U30).
+
+**🚀 COMPLETED THIS SESSION:**
+
+- ✅ **PR #172 `claude/s1-obs-ux`** — 18 files merged to main
+
+**Observability (O1-O5):**
+- O1: `supabase/functions/_shared/log.ts` — shared `logError` helper extracted
+- O2: All 11 edge functions import from `_shared/log.ts`; critical catch-blocks instrumented (process-transfer buy/sell/create failures; run-draft-lottery allocation upsert; sync-fixtures/players/status/relaxation/eliminate-cup/auto-transfer-window)
+- O3: `client_errors` table + `report_client_error` SECURITY DEFINER RPC (migration 71); `main.jsx` `window.error` + `unhandledrejection` listeners; `ErrorBoundary` routes through `window.__reportClientError`
+- O4: `prune-error-logs` cron — 30d edge errors / 14d client errors (migration 71)
+- O5: `AdminSeedScreen` `ObservabilityPanel` — Panel A (edge function errors) + Panel B (client errors) with 1h/24h/7d time-window toggle + Refresh button
+
+**UX fixes:**
+- U3: `LeagueScreen` reads `?joinCode=` query param seeded by `JoinRoute` in `App.jsx`; param cleared from URL after mount, code stays in join-form state
+- U8: `validateAndSendProposal` → "coming soon" toast (removes phantom `'Proposal sent!'` success for a DB no-op)
+- U13: `RecapScreen` `effectivePoints()` helper — captain doubled for `bestPlayer`/`topScorers` so comparisons match `calculate-scores` output; `totalPoints` from `fantasy_points` table already includes captain bonus
+- U30: Standings Realtime subscription handles `INSERT` — new members appear immediately without page reload; username fetched on arrival via `users` table
+
+**📋 SQL MIGRATIONS TO RUN ON SUPABASE:**
+1. `supabase/migrations/71_observability.sql` — `client_errors` table + `report_client_error` RPC + pruning cron
+
+**📋 EDGE FUNCTIONS TO REDEPLOY:**
+```
+supabase functions deploy calculate-scores
+supabase functions deploy ingest-match-events
+supabase functions deploy process-transfer
+supabase functions deploy run-draft-lottery
+supabase functions deploy run-reverse-standings-draft
+supabase functions deploy sync-fixtures
+supabase functions deploy sync-players
+supabase functions deploy sync-player-status
+supabase functions deploy calculate-relaxation
+supabase functions deploy eliminate-cup-club
+supabase functions deploy auto-open-transfer-window
+```
+
+**📋 REMAINING Sprint 1 items (still open):**
+- L2.1: `resolve_bet` validates `p_correct_answer` against options
+- L2.4: Auto-resolver edge function + cron
+- L3.5: Captain-on-bench policy — DB constraint or vice-captain logic
+- U6: LiveScreen Realtime subscription (replaces 5-min poll)
+- U7: Joker chip UI wiring (scoring done; UI display needed)
+- I2/I4/DATA-2/7/8/9/10: Pipeline cleanup items
+- 3.3, 3.4: BetCreatorPanel scope_ref + resolve-bets cron
+- U33, U34: CreateBetWizard/BetCreatorPanel wiring
 
 ---
 

@@ -22,7 +22,7 @@ export default function RecapScreen() {
 
       // 1. Latest squad + league membership in parallel
       const [{ data: squadRow }, { data: memberRow }] = await Promise.all([
-        supabase.from('squads').select('id, matchday_id, players, captain_id')
+        supabase.from('squads').select('id, matchday_id, players, captain_id, joker_player_id')
           .eq('user_id', userId)
           .order('created_at', { ascending: false })
           .limit(1).maybeSingle(),
@@ -55,6 +55,7 @@ export default function RecapScreen() {
       if (!matchdayId) matchdayId = squadRow.matchday_id;
       const playerIds   = squadRow.players || [];
       const captainId   = squadRow.captain_id;
+      const jokerId     = squadRow.joker_player_id ?? null;
 
       // 2. Per-player stats across this matchday's finished fixtures
       const { data: fixtures } = await supabase.from('fixtures')
@@ -80,11 +81,14 @@ export default function RecapScreen() {
 
       const playerMap = Object.fromEntries((playerRows || []).map(p => [p.id, p]));
 
-      // U13: effective points — captain's base is doubled, consistent with calculate-scores.
-      // Use effective points for bestPlayer / topScorers so the caption comparison is fair.
+      // U13: effective points — mirrors calculate-scores multipliers.
+      // Captain × 2 (or × 3 for triple-cap, not tracked here); Joker player × 2.
       const effectivePoints = (pid) => {
         const base = pointsMap[pid] || 0;
-        return pid === captainId ? base * 2 : base;
+        let mult = 1;
+        if (pid === captainId) mult = 2;
+        if (pid === jokerId)   mult = mult === 2 ? 4 : 2; // joker stacks on captain if both
+        return base * mult;
       };
 
       // 4. Derive best player (highest effective points in starting XI)
@@ -118,7 +122,9 @@ export default function RecapScreen() {
         captain: captainId && playerMap[captainId]
           ? { ...playerMap[captainId], points: pointsMap[captainId] ?? 0 }  // base; ×2 shown in UI
           : null,
-        joker:         null, // daily joker tracking — future work
+        joker: jokerId && playerMap[jokerId]
+          ? { ...playerMap[jokerId], points: effectivePoints(jokerId) }
+          : null,
         transfersMade: 0,    // transfer log not yet tracked
         topScorers: startingIds
           .map(id => ({ ...playerMap[id], points: effectivePoints(id) }))

@@ -6,11 +6,6 @@ import { supabase } from '../../lib/supabase';
 const MONO    = "'JetBrains Mono', monospace";
 const DISPLAY = "'Archivo Black', sans-serif";
 
-const TEMPLATE_UUID = {
-  top_scorer:   '912e7b5f-1c15-4747-bc0b-2da9678627ea',
-  match_result: '63a7de4f-5153-4e12-b6c5-4d5f3fc199fc',
-  player_block: 'b1828846-4ed6-47d6-9430-944768d87ae8',
-};
 
 const TEMPLATES = [
   {
@@ -146,6 +141,8 @@ export default function BetCreatorPanel({ leagueId, tournamentId, onCreated, com
   // Track if the user has manually edited title/prompt so we don't overwrite them
   const titleEdited  = useRef(false);
   const promptEdited = useRef(false);
+  // 3.2: slug→id cache fetched once on mount; avoids hardcoded UUIDs per environment
+  const templateIds  = useRef({});
 
   const resetForm = (picked) => {
     setTemplate(picked);
@@ -240,6 +237,13 @@ export default function BetCreatorPanel({ leagueId, tournamentId, onCreated, com
     if (template.answerType === 'fixture') fetchFixtures();
   }, [template, fetchPlayers, fetchFixtures]);
 
+  // 3.2: Fetch template slug→id once on mount for environment-portable IDs
+  useEffect(() => {
+    supabase.from('bet_templates').select('id, slug').then(({ data }) => {
+      if (data) templateIds.current = Object.fromEntries(data.map(t => [t.slug, t.id]));
+    });
+  }, []);
+
   // ── Option toggles ────────────────────────────────────────────────────────
   const togglePlayer = (player) => {
     setSelectedOpts(prev => {
@@ -280,9 +284,17 @@ export default function BetCreatorPanel({ leagueId, tournamentId, onCreated, com
       if (!deadline)               throw new Error('Set a submission deadline.');
       if (selectedOpts.length < 2) throw new Error('Select at least 2 options.');
 
+      // 3.3: derive scope_ref for match_result bets from the first option key ({fixtureId}_home)
+      let scopeRef = null;
+      if (template.slug === 'match_result' && selectedOpts.length) {
+        const firstKey = selectedOpts[0].key ?? '';
+        const fixtureId = firstKey.replace(/_home$|_draw$|_away$/, '');
+        if (fixtureId) scopeRef = fixtureId;
+      }
+
       const { error } = await supabase.from('bet_instances').insert({
         league_id:    leagueId,
-        template_id:  TEMPLATE_UUID[template.slug] || null,
+        template_id:  templateIds.current[template.slug] ?? null,
         title:        title.trim(),
         prompt:       prompt.trim(),
         options:      selectedOpts,
@@ -290,7 +302,7 @@ export default function BetCreatorPanel({ leagueId, tournamentId, onCreated, com
         reward_value: Number(rewardValue) || 5,
         reward_type:  rewardType,
         scope_type:   template.scopeType,
-        scope_ref:    null,
+        scope_ref:    scopeRef,
       });
       if (error) throw new Error(error.message);
 

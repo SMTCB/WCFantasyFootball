@@ -19,7 +19,7 @@ import { POS_CONFIG, POS_FILTER_ORDER } from '../lib/formations';
 const COUNTRY_LIMIT = 3;
 
 const FLAG_MAP = {
-  FRA: 'ðŸ‡«ðŸ‡·', BRA: 'ðŸ‡§ðŸ‡·', ENG: 'ðŸ´ó §ó ¢ó ¥ó ®ó §ó ¿', ESP: 'ðŸ‡ªðŸ‡¸', BEL: 'ðŸ‡§ðŸ‡ª', POR: 'ðŸ‡µðŸ‡¹',
+  FRA: 'ðŸ‡«ðŸ‡·', BRA: 'ðŸ‡§ðŸ‡·', ENG: 'ðŸ´ó §ó ¢ó ¥ó ®ó §ó ¿', ESP: 'ðŸ‡ªðŸ‡¸', BEL: 'ðŸ‡§ðŸ‡ª', POR: 'ðŸ‡µðŸ‡¹',
   MAR: 'ðŸ‡²ðŸ‡¦', URU: 'ðŸ‡ºðŸ‡¾', ITA: 'ðŸ‡®ðŸ‡¹', NOR: 'ðŸ‡³ðŸ‡´', GER: 'ðŸ‡©ðŸ‡ª', ARG: 'ðŸ‡¦ðŸ‡·',
   EGY: 'ðŸ‡ªðŸ‡¬', NED: 'ðŸ‡³ðŸ‡±', CRO: 'ðŸ‡­ðŸ‡·',
 };
@@ -350,7 +350,7 @@ export default function MarketScreen() {
           className="flex items-center gap-3 px-5 py-3"
           style={{ background: 'rgba(240,58,58,0.10)', borderBottom: '1px solid rgba(240,58,58,0.25)' }}
         >
-          <span style={{ color: 'var(--danger)', fontSize: 13 }}>âš  {takenMapError}</span>
+          <span style={{ color: 'var(--danger)', fontSize: 13 }}>âš  {takenMapError}</span>
         </div>
       )}
 

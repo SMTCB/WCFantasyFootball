@@ -1,41 +1,88 @@
-# Supabase Handoff — Sprint 1 Deployments (Session 35)
+# Supabase Handoff — Sprint 1 Deployments (Session 37)
 
-**Date**: 2026-05-24  
-**Branch merged**: `claude/sprint-1-scoring-math-transfer-fixes` → `main` (PR #171)  
-**Previous migrations applied**: 66, 67, 68, 69
+**Date**: 2026-05-25  
+**Latest branch merged**: `claude/s1-live-bets` → `main`  
+**Previous migrations applied**: 66, 67, 68, 69, 70
 
 ---
 
-## Sprint 1 — What to Deploy Now
+## Session 37 — What to Deploy Now (NEW)
 
 ### 1. SQL Migration (run in Supabase dashboard SQL editor)
 
 ```sql
--- File: supabase/migrations/70_scoring_fixes.sql
+-- File: supabase/migrations/72_bet_resolution.sql
 -- Paste and run this file's contents in the Supabase SQL editor
 ```
 
-**What migration 70 does:**
-- Drops the old `aggregate_league_member_points(UUID, TEXT)` overload (wrong signature — broke season standings)
-- Creates `aggregate_league_member_points(UUID, UUID)` with correct join path through `squads` (since `bet_submissions` has no `user_id` column)
-- Filters reward rows by `reward_type = 'points'` only
+**What migration 72 does:**
+- Replaces `resolve_bet` function with hardened version: validates `p_correct_answer` against declared options before marking submissions; returns `{ winners, total }` instead of misleading `submissions_updated`
+- Schedules `resolve-finished-bets` cron (every 15 min): invokes `resolve-bets` edge function to auto-resolve closed `match_result` bets from `fixtures.home_score/away_score`
 
-### 2. Edge Functions to Redeploy
+### 2. New Edge Function to Deploy
+
+```bash
+supabase functions deploy resolve-bets
+```
+
+**What `resolve-bets` does:** Queries all `status='closed'` bet_instances where `resolves_at < NOW()`, looks up fixture result for `match_result` type bets, calls `resolve_bet` RPC. Runs hands-free every 15 min via cron.
+
+---
+
+## Session 36 — What to Deploy Now (NEW)
+
+### 1. SQL Migration (run in Supabase dashboard SQL editor)
+
+```sql
+-- File: supabase/migrations/71_observability.sql
+-- Paste and run this file's contents in the Supabase SQL editor
+```
+
+**What migration 71 does:**
+- Creates `client_errors` table (RLS enabled, no client SELECT, indexed by time/url)
+- Creates `report_client_error` SECURITY DEFINER function — anon/authenticated can call it without bypassing RLS
+- Schedules `prune-error-logs` cron: deletes edge_function_errors older than 30d and client_errors older than 14d
+
+### 2. Edge Functions to Redeploy (ALL 11)
 
 ```bash
 # From the project root, after git pull origin main:
 supabase functions deploy calculate-scores
 supabase functions deploy ingest-match-events
 supabase functions deploy process-transfer
+supabase functions deploy run-draft-lottery
+supabase functions deploy run-reverse-standings-draft
+supabase functions deploy sync-fixtures
+supabase functions deploy sync-players
+supabase functions deploy sync-player-status
+supabase functions deploy calculate-relaxation
+supabase functions deploy eliminate-cup-club
+supabase functions deploy auto-open-transfer-window
 ```
 
-**What changed in each:**
+**What changed:** All 11 functions now import `logError` from `_shared/log.ts` (O1/O2). Previously `calculate-scores` and `ingest-match-events` had local copies; now all functions share the same helper. Critical catch-blocks in `process-transfer`, `run-draft-lottery`, and the sync functions now write to `edge_function_errors`.
 
-| Function | Change |
-|----------|--------|
-| `calculate-scores` | L1.2: GK conceded FPL-style (floor(n/2)); L1.3: `??` + NaN guard; L1.4: wildcard 1.1× once after loop; L1.5: joker doubling; L1.6: both 'sub'/'sub_off'; L1.8: mins≥60 for clean sheet; L3.4/DATA-6: hard-fail if round_number missing |
-| `ingest-match-events` | L1.7: penalty_missed typeMap fix (was stored as 'goal') |
-| `process-transfer` | DATA-4/5: deadline + squad scoped to league's tournament_id; new squads use real matchday_id not 'current' |
+---
+
+## Session 35 — Still Pending (if not done yet)
+
+### SQL Migration 70
+
+```sql
+-- File: supabase/migrations/70_scoring_fixes.sql
+```
+
+**What migration 70 does:**
+- Fixes `aggregate_league_member_points` signature (UUID, UUID) + correct join path
+- Filters reward rows by `reward_type = 'points'`
+
+### Edge Functions from Session 35
+
+```bash
+supabase functions deploy calculate-scores
+supabase functions deploy ingest-match-events
+supabase functions deploy process-transfer
+```
 
 ---
 
@@ -92,4 +139,4 @@ See `SPRINT_PLAN_2026-05-24.md` for full detail. Key open items:
 - **U30**: Realtime standings handles INSERT (new members invisible)
 - **O1-O5**: Observability (logError helper, client_errors table, admin view)
 
-**Next migration**: `71_`
+**Next migration**: `73_`
