@@ -151,7 +151,7 @@ export function useChatMessages(leagueId) {
     } catch (err) {
       console.error('useChatMessages: broadcastTyping error', err);
     }
-  }, [leagueId, user?.id, user?.username, user?.user_metadata]);
+  }, [leagueId, user?.id]);
 
   // Setup realtime subscription on mount
   useEffect(() => {
@@ -287,14 +287,12 @@ export function useChatMessages(leagueId) {
         return { ok: false, error: error.message };
       }
 
-      console.log('[useChatMessages] Message sent successfully, data:', data);
-      console.log('[useChatMessages] Current messages count:', messages.length);
       return { ok: true };
     } catch (err) {
       console.error('[useChatMessages] sendMessage exception:', err);
       return { ok: false, error: err.message };
     }
-  }, [leagueId, user?.id, messages.length]);
+  }, [leagueId, user?.id]);
 
   // Edit a message
   const editMessage = useCallback(async (messageId, newText) => {

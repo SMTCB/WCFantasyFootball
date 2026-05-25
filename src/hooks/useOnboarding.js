@@ -127,10 +127,12 @@ export function useOnboarding() {
 
   // Dev helper — call window.__resetOnboarding() in console to replay wizard
   useEffect(() => {
-    window.__resetOnboarding = () => {
-      Object.values(K).forEach(k => localStorage.removeItem(k));
-      window.location.reload();
-    };
+    if (!window.__resetOnboarding) {
+      window.__resetOnboarding = () => {
+        Object.values(K).forEach(k => localStorage.removeItem(k));
+        window.location.reload();
+      };
+    }
     return () => { delete window.__resetOnboarding; };
   }, []);
 

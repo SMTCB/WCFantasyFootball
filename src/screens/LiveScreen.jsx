@@ -538,6 +538,7 @@ export default function LiveScreen() {
         setEvents([]);
       }
 
+      setLiveError(null);
     } catch (err) {
       console.error('LiveScreen fetch error', err);
       setLiveError('Live data could not be loaded. Scores may be stale.');

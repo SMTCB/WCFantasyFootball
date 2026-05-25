@@ -136,9 +136,12 @@ export default function AppLayout({ children }) {
           WebkitOverflowScrolling: 'touch',
         }}
       >
-        {/* Back affordance — mobile only, nested routes only */}
-        {showBackButton && (
-          <div className="lg:hidden sticky top-0 z-40 px-4 py-3" style={{ background: 'var(--ink)', borderBottom: '1px solid var(--rule)' }}>
+        {/* Mobile top bar — back affordance on nested routes, settings gear always */}
+        <div
+          className="lg:hidden sticky top-0 z-40 flex items-center justify-between px-4"
+          style={{ background: 'var(--ink)', borderBottom: '1px solid var(--rule)', minHeight: 44 }}
+        >
+          {showBackButton ? (
             <button
               onClick={() => navigate(-1)}
               aria-label="Go back"
@@ -152,8 +155,19 @@ export default function AppLayout({ children }) {
                 Back
               </span>
             </button>
-          </div>
-        )}
+          ) : (
+            <div />
+          )}
+          <Link
+            to="/settings"
+            aria-label="Settings"
+            style={{ color: 'var(--mute)', fontSize: '18px', padding: '8px', lineHeight: 1 }}
+            onMouseEnter={(e) => e.currentTarget.style.color = 'var(--cyan)'}
+            onMouseLeave={(e) => e.currentTarget.style.color = 'var(--mute)'}
+          >
+            ⚙
+          </Link>
+        </div>
 
         <div className="animate-page-enter">
           {children}
@@ -197,7 +211,7 @@ export default function AppLayout({ children }) {
 
                 <span style={{
                   fontFamily:    'JetBrains Mono, monospace',
-                  fontSize:      '8px',
+                  fontSize:      '10px',
                   letterSpacing: '0.15em',
                   fontWeight:    600,
                   lineHeight:    1,

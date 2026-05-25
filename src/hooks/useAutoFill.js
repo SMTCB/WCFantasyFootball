@@ -1,33 +1,21 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
-import { useLeagueConfig } from './useLeagueConfig';
 
 /**
- * Auto-fill hook.
- *
- * Fills empty squad slots with the cheapest available players in the correct
- * positions. Correctly handles:
- *   - Draft/noduplicate leagues: pre-filters players already taken by ANY
- *     manager (via takenMap) before calling the transfer API, avoiding wasted
- *     attempts and false "all taken" errors.
- *   - Competition scoping: fetches the league's tournament_id and restricts
- *     the player pool to that competition only.
- *   - Pool size: fetches 500 players per position (ordered cheapest-first,
- *     within budget) so there are enough candidates after filtering.
- *   - Bail-on-fatal-error: stops immediately on auth/window/squad-full errors
- *     instead of hammering the API with 500+ doomed requests.
- *
  * @param {string}   leagueId   - Active league UUID
  * @param {object}   squadData  - Squad object (from SquadScreen or MarketScreen)
  * @param {function} fetchSquad - Callback to refresh squad after successful fill
  * @param {object}   takenMap   - { [playerId]: { userId, managerName } } from useTransfer
  * @param {function} buy        - buy(player) from useTransfer — passed in to avoid duplicate hook instance
+ * @param {object}   cfg        - League config from useLeagueConfig — passed in to avoid TDZ (same module imported at depth-1 by callers)
  */
-export function useAutoFill(leagueId, squadData, fetchSquad, takenMap = {}, buy) {
+export function useAutoFill(leagueId, squadData, fetchSquad, takenMap = {}, buy, cfg = {}) {
   const [autoFilling, setAutoFilling] = useState(false);
   const [autoFillMsg, setAutoFillMsg] = useState(null);
+  const clearMsgTimerRef = useRef(null);
 
-  const cfg        = useLeagueConfig(leagueId);
+  useEffect(() => () => { if (clearMsgTimerRef.current) clearTimeout(clearMsgTimerRef.current); }, []);
+
   const POS_LIMITS = cfg.positionLimits;
 
   const handleAutoFill = useCallback(async () => {
@@ -278,7 +266,8 @@ export function useAutoFill(leagueId, squadData, fetchSquad, takenMap = {}, buy)
       setAutoFillMsg('Auto-fill failed — try again');
     } finally {
       setAutoFilling(false);
-      setTimeout(() => setAutoFillMsg(null), 7000);
+      if (clearMsgTimerRef.current) clearTimeout(clearMsgTimerRef.current);
+      clearMsgTimerRef.current = setTimeout(() => setAutoFillMsg(null), 7000);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [leagueId, squadData, buy, fetchSquad, takenMap, cfg]);

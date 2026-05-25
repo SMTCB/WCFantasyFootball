@@ -27,7 +27,8 @@ dist-ssr
 e2e-report/
 test-results/
 playwright-results.txt
-*.png
+/e2e-report/*.png
+/test-results/*.png
 .playwright-mcp/
 
 # Claude Code — local settings and ephemeral worktrees
@@ -70,7 +71,7 @@ build/
 # Security
 .env
 .env.*
-! .env.example
+!.env.example
 backend/.env
 node_modules/
 dist/

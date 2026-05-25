@@ -7,7 +7,7 @@ const SQUAD_MAX  = 15;
 
 Deno.serve(async (req) => {
   const corsHeaders = {
-    'Access-Control-Allow-Origin':  '*',
+    'Access-Control-Allow-Origin':  'https://wc-fantasy-football.vercel.app',
     'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
   };
 
@@ -270,7 +270,8 @@ Deno.serve(async (req) => {
   } catch (err) {
     await logError(FN, 'critical', err.message, { stack: err.stack });
     return json({ ok: false, error: 'Internal server error' }, 500, {
-      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Origin': 'https://wc-fantasy-football.vercel.app',
+      'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
     });
   }
 });

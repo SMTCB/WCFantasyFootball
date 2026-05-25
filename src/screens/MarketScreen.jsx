@@ -93,7 +93,7 @@ export default function MarketScreen() {
   };
 
   // Auto-fill hook â€” reusable across screens
-  const { handleAutoFill, autoFilling, autoFillMsg } = useAutoFill(activeLeague, mySquad, fetchSquad, takenMap, buy);
+  const { handleAutoFill, autoFilling, autoFillMsg } = useAutoFill(activeLeague, mySquad, fetchSquad, takenMap, buy, cfg);
 
   const resolveLeagueTournament = async (lid) => {
     const { data } = await supabase
@@ -264,6 +264,7 @@ export default function MarketScreen() {
       }
       setMySquad(prev => ({ ...prev, players: result.players, budget_remaining: result.budget_remaining }));
       setBudget(result.budget_remaining);
+      fetchSquad();
     } finally { setSaving(false); }
   };
 
@@ -298,11 +299,11 @@ export default function MarketScreen() {
     });
   };
 
-  const filteredPlayers = players.filter(p => {
+  const filteredPlayers = useMemo(() => players.filter(p => {
     const matchesPos = filterPos === 'ALL' || p.position === filterPos;
     const matchesSearch = !searchQuery || p.name?.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesPos && matchesSearch;
-  });
+  }), [players, filterPos, searchQuery]);
   const squadCount  = mySquad?.players?.length || 0;
   const emptySlots  = Math.max(0, squadSize - squadCount);
 

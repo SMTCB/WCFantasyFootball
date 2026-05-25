@@ -8,4 +8,16 @@ export default defineConfig({
     react(),
     tailwindcss(),
   ],
+  build: {
+    sourcemap: true,
+    target: 'es2020',
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes('@supabase/supabase-js')) return 'supabase';
+          if (id.includes('react-dom') || id.includes('react-router-dom') || id.includes('/react/')) return 'react';
+        },
+      },
+    },
+  },
 })

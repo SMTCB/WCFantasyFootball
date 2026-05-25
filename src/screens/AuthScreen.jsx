@@ -50,6 +50,7 @@ export default function AuthScreen() {
   // ── Handlers ────────────────────────────────────────────────────────────────
   const handleSignIn = async (e) => {
     e.preventDefault();
+    if (loading) return;
     setError(''); setLoading(true);
     const { error } = await signIn({ email, password });
     setLoading(false);
@@ -59,6 +60,7 @@ export default function AuthScreen() {
 
   const handleSignUp = async (e) => {
     e.preventDefault();
+    if (loading) return;
     setError('');
     if (password !== confirm) { setError('Passwords do not match.'); return; }
     if (password.length < 8)  { setError('Password must be at least 8 characters.'); return; }
