@@ -5,11 +5,6 @@
  * down the whole app. The user sees a branded fallback with a Reload CTA
  * instead of a blank white screen.
  *
- * Crash reporting:
- *   In development: logs to console.error.
- *   In production: calls reportError() which logs to Supabase error_logs
- *   and is ready for a Sentry DSN to be dropped in (see reportError below).
- *
  * Usage:
  *   <ErrorBoundary screen="SquadScreen">
  *     <SquadScreen />
@@ -17,29 +12,18 @@
  */
 
 import { Component } from 'react';
-import { supabase } from '../lib/supabase';
 
 // ── Lightweight crash reporter ────────────────────────────────────────────────
-// Replace the body of this function with Sentry.captureException(error) once
-// a Sentry DSN is configured. The signature stays the same.
-async function reportError(error, errorInfo, screen) {
-  // Always log locally
+// Delegates to window.__reportClientError (wired in main.jsx) which calls the
+// report_client_error RPC (migration 71). Falls back to console.error only.
+function reportError(error, errorInfo, screen) {
   console.error(`[ErrorBoundary] Crash on screen: ${screen}`, error, errorInfo);
-
-  // In production, write a row to error_logs for visibility
-  if (import.meta.env.PROD) {
-    try {
-      await supabase.from('error_logs').insert({
-        screen,
-        message:    error?.message ?? String(error),
-        stack:      error?.stack   ?? null,
-        component:  errorInfo?.componentStack ?? null,
-        user_agent: navigator.userAgent,
-        occurred_at: new Date().toISOString(),
-      });
-    } catch {
-      // Swallow — if the reporter itself fails we don't want an infinite loop
-    }
+  if (typeof window.__reportClientError === 'function') {
+    window.__reportClientError(
+      error?.message ?? String(error),
+      error?.stack   ?? null,
+      { type: 'react', screen, componentStack: errorInfo?.componentStack ?? null }
+    );
   }
 }
 

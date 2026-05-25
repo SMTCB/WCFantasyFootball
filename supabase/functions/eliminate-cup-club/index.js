@@ -5,7 +5,9 @@
 // 3. Writes a gazette entry with the new pool size
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { logError } from '../_shared/log.ts';
 
+const FN           = 'eliminate-cup-club';
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
 const SERVICE_KEY  = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 const ANON_KEY     = Deno.env.get('SUPABASE_ANON_KEY');
@@ -84,7 +86,7 @@ Deno.serve(async (req) => {
 
     return respond(200, { eliminated: club_id, stats });
   } catch (err) {
-    console.error(err);
+    await logError(FN, 'error', err.message, { stack: err.stack });
     return respond(500, { error: err.message });
   }
 });

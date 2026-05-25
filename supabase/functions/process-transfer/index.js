@@ -1,5 +1,7 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { logError } from '../_shared/log.ts';
 
+const FN = 'process-transfer';
 const POS_LIMITS = { GK: 2, DEF: 5, MID: 5, FWD: 3 };
 const SQUAD_MAX  = 15;
 
@@ -148,7 +150,10 @@ Deno.serve(async (req) => {
         .insert({ user_id: user.id, league_id, players: [], budget_remaining: 100, matchday_id: activeMatchdayId })
         .select('id, players, budget_remaining')
         .single();
-      if (createErr) return json({ ok: false, error: 'Failed to create squad' }, 500, corsHeaders);
+      if (createErr) {
+        await logError(FN, 'critical', 'Squad create failed', { user_id: user.id, league_id, matchday_id: activeMatchdayId, error: createErr.message });
+        return json({ ok: false, error: 'Failed to create squad' }, 500, corsHeaders);
+      }
       squad = newSquad;
     }
 
@@ -169,7 +174,10 @@ Deno.serve(async (req) => {
         .update({ players: newPlayers, budget_remaining: newBudget })
         .eq('id', squad.id);
 
-      if (updateErr) return json({ ok: false, error: 'Transfer failed' }, 500, corsHeaders);
+      if (updateErr) {
+        await logError(FN, 'error', 'Sell update failed', { user_id: user.id, league_id, player_id, error: updateErr.message });
+        return json({ ok: false, error: 'Transfer failed' }, 500, corsHeaders);
+      }
 
       return json({ ok: true, players: newPlayers, budget_remaining: newBudget }, 200, corsHeaders);
     }
@@ -249,7 +257,10 @@ Deno.serve(async (req) => {
         .update({ players: newPlayers, budget_remaining: newBudget })
         .eq('id', squad.id);
 
-      if (updateErr) return json({ ok: false, error: 'Transfer failed' }, 500, corsHeaders);
+      if (updateErr) {
+        await logError(FN, 'error', 'Buy update failed', { user_id: user.id, league_id, player_id, error: updateErr.message });
+        return json({ ok: false, error: 'Transfer failed' }, 500, corsHeaders);
+      }
 
       return json({ ok: true, players: newPlayers, budget_remaining: newBudget }, 200, corsHeaders);
     }
@@ -257,7 +268,7 @@ Deno.serve(async (req) => {
     return json({ ok: false, error: 'Unknown action' }, 400, corsHeaders);
 
   } catch (err) {
-    console.error('process-transfer error:', err);
+    await logError(FN, 'critical', err.message, { stack: err.stack });
     return json({ ok: false, error: 'Internal server error' }, 500, {
       'Access-Control-Allow-Origin': '*',
     });

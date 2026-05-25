@@ -72,21 +72,27 @@ export default function RecapScreen() {
         supabase.from('users').select('username').eq('id', userId).maybeSingle(),
       ]);
 
-      // 3. Sum points per player across all finished fixtures
+      // 3. Sum base points per player across all finished fixtures
       const pointsMap = {};
       for (const s of statsRows || []) {
         pointsMap[s.player_id] = (pointsMap[s.player_id] || 0) + Number(s.fantasy_points);
       }
 
-      // Captain gets 2× applied to their base points for display
       const playerMap = Object.fromEntries((playerRows || []).map(p => [p.id, p]));
 
-      // 4. Derive best player (highest points in starting XI)
+      // U13: effective points — captain's base is doubled, consistent with calculate-scores.
+      // Use effective points for bestPlayer / topScorers so the caption comparison is fair.
+      const effectivePoints = (pid) => {
+        const base = pointsMap[pid] || 0;
+        return pid === captainId ? base * 2 : base;
+      };
+
+      // 4. Derive best player (highest effective points in starting XI)
       const startingIds = playerIds.slice(0, 11);
       let bestPlayerId  = null;
       let bestPts       = -Infinity;
       for (const pid of startingIds) {
-        const pts = pointsMap[pid] || 0;
+        const pts = effectivePoints(pid);
         if (pts > bestPts) { bestPts = pts; bestPlayerId = pid; }
       }
 
@@ -107,15 +113,15 @@ export default function RecapScreen() {
         points:     Math.round(totalPoints * 10) / 10,
         rankChange: null, // would need prior-matchday data
         bestPlayer: bestPlayerId && playerMap[bestPlayerId]
-          ? { ...playerMap[bestPlayerId], points: pointsMap[bestPlayerId] ?? 0 }
+          ? { ...playerMap[bestPlayerId], points: effectivePoints(bestPlayerId) }
           : null,
         captain: captainId && playerMap[captainId]
-          ? { ...playerMap[captainId], points: pointsMap[captainId] ?? 0 }
+          ? { ...playerMap[captainId], points: pointsMap[captainId] ?? 0 }  // base; ×2 shown in UI
           : null,
         joker:         null, // daily joker tracking — future work
         transfersMade: 0,    // transfer log not yet tracked
         topScorers: startingIds
-          .map(id => ({ ...playerMap[id], points: pointsMap[id] || 0 }))
+          .map(id => ({ ...playerMap[id], points: effectivePoints(id) }))
           .filter(p => p.name && p.points > 0)
           .sort((a, b) => b.points - a.points)
           .slice(0, 5),

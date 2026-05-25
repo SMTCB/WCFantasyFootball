@@ -23,21 +23,14 @@
 //   ensuring scoring is always competition-agnostic without code changes.
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { logError as _logError } from '../_shared/log.ts';
 
 const supabase = createClient(
   Deno.env.get('SUPABASE_URL'),
   Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
 );
 
-// Write critical failures to edge_function_errors table (queryable via dashboard).
-// Never throws — logging errors must not crash the function.
-async function logError(severity, message, context = {}) {
-  try {
-    await supabase.from('edge_function_errors').insert({
-      function: 'calculate-scores', severity, message, context,
-    });
-  } catch { /* silent */ }
-}
+const logError = (severity, message, context = {}) => _logError('calculate-scores', severity, message, context);
 
 // ─── Hard-coded fallback scoring (used only if scoring_rules table is empty) ───
 // These match the EPL 2025/26 season rules exactly.

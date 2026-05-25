@@ -12,7 +12,9 @@
 // DOES NOT run unless tournaments.sync_enabled = true for this forza_id.
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { logError } from '../_shared/log.ts';
 
+const FN      = 'sync-players';
 const supabase = createClient(
   Deno.env.get('SUPABASE_URL'),
   Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
@@ -193,7 +195,7 @@ Deno.serve(async (req) => {
     });
 
   } catch (err) {
-    console.error('sync-players error:', err.message);
+    await logError(FN, 'error', err.message, { stack: err.stack });
     return respond(500, { error: err.message });
   }
 });
