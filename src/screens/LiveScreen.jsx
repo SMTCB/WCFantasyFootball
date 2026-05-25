@@ -13,21 +13,32 @@ import { teamCode } from '../lib/fixtures';
 const POS_TONE = { FWD: 'var(--danger)', MID: 'var(--gold)', DEF: 'var(--cyan)', GK: '#A855F7' };
 
 // ── Point estimation ─────────────────────────────────────────────────────────
+// U46: fallback constants match EPL scoring_rules seed; overridden at runtime
+// by scoring_rules rows fetched during fetchAll so values are tournament-accurate.
 
-function approxDelta(type, pos, isCap, isTripleCap) {
+const FALLBACK_POS = {
+  GK:  { goal: 5, assist: 0, clean_sheet: 4, conceded_per_goal: -1, penalty_saved: 5 },
+  DEF: { goal: 4, assist: 1, clean_sheet: 4, conceded_per_goal:  0, penalty_saved: 0 },
+  MID: { goal: 5, assist: 1, clean_sheet: 1, conceded_per_goal:  0, penalty_saved: 0 },
+  FWD: { goal: 3, assist: 1, clean_sheet: 0, conceded_per_goal:  0, penalty_saved: 0 },
+};
+const FALLBACK_UNIV = { own_goal: -2, yellow_card: -1, red_card: -3, penalty_missed: -1 };
+
+function realDelta(type, pos, isCap, isTripleCap, PR, UR) {
+  const r = PR[pos] ?? {};
   const base = {
-    goal:         (pos === 'GK' || pos === 'DEF') ? 6 : pos === 'MID' ? 5 : 4,
-    assist:       3,
-    clean_sheet:  (pos === 'GK' || pos === 'DEF') ? 4 : pos === 'MID' ? 1 : 0,
-    yellow_card:  -1,
-    red_card:     -3,
-    penalty_save: 5,
-    penalty_miss: -2,
+    goal:         r.goal              ?? 0,
+    assist:       r.assist            ?? 0,
+    clean_sheet:  r.clean_sheet       ?? 0,
+    yellow_card:  UR.yellow_card      ?? -1,
+    red_card:     UR.red_card         ?? -3,
+    penalty_save: r.penalty_saved     ?? 0,
+    penalty_miss: UR.penalty_missed   ?? -1,
+    own_goal:     UR.own_goal         ?? -2,
+    conceded:     r.conceded_per_goal ?? 0,
     bonus:        1,
     sub_off:      0,
     sub_on:       0,
-    conceded:     (pos === 'GK' || pos === 'DEF') ? -1 : 0,
-    own_goal:     -2,
   }[type] ?? 0;
   if (isCap && base > 0) return isTripleCap ? base * 3 : base * 2;
   return base;
@@ -329,7 +340,7 @@ export default function LiveScreen() {
       // 1. Live fixtures — U55: use home_score/away_score columns directly
       const { data: fixData = [] } = await supabase
         .from('fixtures')
-        .select('id, home_team, away_team, status, kickoff_at, minute, home_score, away_score')
+        .select('id, home_team, away_team, status, kickoff_at, minute, home_score, away_score, tournament_id')
         .eq('status', 'live')
         .order('kickoff_at', { ascending: true });
 
@@ -477,13 +488,28 @@ export default function LiveScreen() {
 
       // 7. Match events → fan out per league (delta differs per captain/chip)
       if (activeFixIds.length && squadPlayerIds.length) {
-        const { data: evData = [] } = await supabase
-          .from('match_events')
-          .select('id, fixture_id, player_id, type, minute, team')
-          .in('fixture_id', activeFixIds)
-          .in('player_id', squadPlayerIds)
-          .order('minute', { ascending: false })
-          .limit(100);
+        // U46: fetch events and scoring_rules in parallel
+        const activeTournamentIds = [...new Set((fixData || []).map(f => f.tournament_id).filter(Boolean))];
+        const [{ data: evData = [] }, { data: ruleRows = [] }] = await Promise.all([
+          supabase
+            .from('match_events')
+            .select('id, fixture_id, player_id, type, minute, team')
+            .in('fixture_id', activeFixIds)
+            .in('player_id', squadPlayerIds)
+            .order('minute', { ascending: false })
+            .limit(100),
+          activeTournamentIds.length
+            ? supabase.from('scoring_rules').select('position, rules').in('tournament_id', activeTournamentIds)
+            : Promise.resolve({ data: [] }),
+        ]);
+
+        // Build per-position scoring lookup from DB rows, falling back to EPL defaults
+        const posRules = { ...FALLBACK_POS };
+        let   univRules = { ...FALLBACK_UNIV };
+        for (const r of ruleRows || []) {
+          if (r.position === 'UNIVERSAL') univRules = { ...FALLBACK_UNIV, ...r.rules };
+          else if (FALLBACK_POS[r.position]) posRules[r.position] = { ...FALLBACK_POS[r.position], ...r.rules };
+        }
 
         const playerMap = Object.fromEntries((playerRows || []).map(p => [p.id, p]));
         const fanned = [];
@@ -493,7 +519,7 @@ export default function LiveScreen() {
           const isCap = p.id === captainId;
           for (const lg of enrichedLeagues) {
             const isTripleForLeague = isCap && lg.chip === 'Triple Captain';
-            const delta = approxDelta(ev.type, p.position, isCap, isTripleForLeague);
+            const delta = realDelta(ev.type, p.position, isCap, isTripleForLeague, posRules, univRules);
             fanned.push({
               key:        `${ev.id}-${lg.id}`,
               type:       ev.type,

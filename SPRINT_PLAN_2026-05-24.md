@@ -227,9 +227,9 @@ A small number of items must land in a specific order:
 
 - ✅ **U44** · Rename `/bracket` to `/predictions` + backward-compat redirect
 - ✅ **U45** · Add navigation entries to `/recap` and `/predictions` (desktop sidebar, `desktopOnly` flag keeps mobile bottom bar at 5 items)
-- **U46** · Live deltas computed from real `scoring_rules` or `player_match_stats` — deferred to Sprint 3
+- ✅ **U46** · Live deltas computed from real `scoring_rules` — loads tournament rules from DB; falls back to EPL defaults
 - ✅ **U47** · Match status transitions (halftime banner, FT card, postponed banner)
-- **U48** · Per-league chip state — pick a data model and stop showing fake per-league chips — deferred to Sprint 3
+- ✅ **U48** · Per-league chip state — squad fetched per league (`squadByLeague` map); `lgTripleCap` scoped per league
 - ✅ **U49** · `RecapScreen` topScorers math consistency — verified already correct, no change needed
 - ✅ **U50** · "ACTIVE NOW" excludes 0-minute benched players
 - ✅ **U51** · Bench section on Live screen
@@ -248,15 +248,15 @@ A small number of items must land in a specific order:
 
 ## Draft polish + relaxation polish
 
-- **L5.5** · Deterministic submission ordering in draft — deferred to Sprint 3
-- **L5.10** · Free-agency auto-window for `unresolved_slots > 0` — deferred to Sprint 3
-- **L5.12** · Tournament-scoped player validation in submission — deferred to Sprint 3
-- **L5.13** · Cap player_ids length at `draft_list_size` — deferred to Sprint 3
-- **L5.16** · Cup phase transition UI banner — deferred to Sprint 3
-- **L6.10** · `await` or `waitUntil` on `calculate-relaxation` invoke (links to DATA-14) — deferred to Sprint 3
-- **L6.11** · Recalibrate tier multipliers post squad_size fix — deferred to Sprint 3
-- **L6.12** · Filter `n_managers` by active members — deferred to Sprint 3
-- **L6.13** · Tie gazette wording to actual enforcement — deferred to Sprint 3
+- ✅ **L5.5** · Deterministic submission ordering — `.order('user_id')` on submissions query
+- ✅ **L5.10** · Free-agency auto-window for `unresolved_slots > 0` — notifications + 48h transfer window opened after lottery
+- ✅ **L5.12** · Tournament-scoped player validation — `.eq('tournament_id', leagueRow.tournament_id)` on player fetch
+- ✅ **L5.13** · Cap player_ids at `draft_list_size` — submission array capped before allocation
+- ✅ **L5.16** · Cup phase transition UI banner — LeagueScreen header shows phase when `cup_phase !== 'pre_cup'`
+- ✅ **L6.10** · `await` on `calculate-relaxation` invoke in `eliminate-cup-club` — properly awaited
+- ✅ **L6.11** · Tier multipliers post squad_size fix — migration 74 recalculates using `leagues.squad_size`
+- ✅ **L6.12** · `n_managers` filtered to active members — migration 75
+- ✅ **L6.13** · Gazette wording truthful — L6.1 (Sprint 0) enforces `repeats_allowed` in `process-transfer`; message is accurate
 
 ## Bet polish
 
@@ -269,11 +269,11 @@ A small number of items must land in a specific order:
 
 ## Pipeline polish
 
-- **DATA-14** · `eliminate-cup-club` `EdgeRuntime.waitUntil` — deferred to Sprint 3
+- ✅ **DATA-14** · `eliminate-cup-club` properly `await`s `calculate-relaxation` invoke
 - ✅ **DATA-16** · `discover-tournament` batched concurrency
 - ✅ **DATA-17** · Redact access_token in `discover-tournament` / `test-forza-api` logs
 - ✅ **DATA-19** · `sync-fixtures` Date comparison (drop string compare)
-- **DATA-20** · `clean_sheet` consistency across paths (links to L1.8) — deferred to Sprint 3
+- ✅ **DATA-20** · `clean_sheet` mins≥60 gate consistent across both paths (L1.8 fix covers it)
 - ✅ **2.2.b** · `sync-fixtures` timestamp parsing
 - ✅ **2.2.c** · Fixture status mapping for `postponed` / `cancelled` / `abandoned`
 - ✅ **2.5.c** · `parseInt('45+2')` added-time parser

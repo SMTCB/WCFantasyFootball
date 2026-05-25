@@ -298,6 +298,26 @@ async function runLottery(leagueId) {
     await supabase.from('league_notifications').insert(notificationRows);
   }
 
+  // L5.10: Open a 48h free-agency window so managers with gaps can fill via DraftRecoveryScreen
+  if (notificationRows.length > 0) {
+    const now      = new Date();
+    const closes   = new Date(now.getTime() + 48 * 60 * 60 * 1000).toISOString();
+    const roundNum = parseInt(String(canonicalMatchdayId).replace(/^.*-r/, ''), 10) || 1;
+    await supabase
+      .from('transfer_windows')
+      .upsert(
+        {
+          league_id:           leagueId,
+          round_number:        roundNum,
+          opens_at:            now.toISOString(),
+          closes_at:           closes,
+          window_type:         'standard',
+          transfers_remaining: 15,
+        },
+        { onConflict: 'league_id,round_number', ignoreDuplicates: true }
+      );
+  }
+
   // 9. Summary for caller
   const incomplete = Object.entries(allocations)
     .filter(([, d]) => d.unresolved_slots > 0)
