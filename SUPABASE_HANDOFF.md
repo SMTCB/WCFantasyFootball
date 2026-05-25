@@ -1,8 +1,8 @@
 # Supabase Handoff — Consolidated Deploy Guide
 
-**Last updated**: 2026-05-25 (session 40 — Sprint 2 complete)  
+**Last updated**: 2026-05-25 (session 41 — migrations 73-76 applied)  
 **Main branch**: all code is on `main` — do a `git pull origin main` before deploying  
-**Migrations applied in production**: 66, 67, 68, 69, 70, 71, 72
+**Migrations applied in production**: 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76
 
 ---
 
@@ -12,7 +12,7 @@ Run the steps below in order. Each section is self-contained; you can stop and r
 
 ---
 
-### Step 1 — SQL Migrations 73, 74, 75, 76
+### ~~Step 1 — SQL Migrations 73, 74, 75, 76~~ ✅ DONE (session 41)
 
 Open the **Supabase dashboard SQL editor** and run each file in order:
 
@@ -133,6 +133,6 @@ All L5.x and L6.x items are now complete. Sprint 1 is fully coded and merged to 
 | Session 35 | 70 | `aggregate_league_member_points` UUID signature + reward_type filter |
 | Session 36 | 71 | Observability: `client_errors` table, `report_client_error` RPC, prune cron |
 | Session 37 | 72 | `resolve_bet` hardened + `resolve-finished-bets` cron |
-| Session 38 | 73 (PENDING) | Cron dedup, `matchday_id` constraint, `fantasy_points` cleanup |
-| Session 39 | 74 (PENDING) | Cup pool tournament scoping, auto-seed trigger, relaxation squad_size fix |
-| Sprint 2 session 40 | 75, 76 (PENDING) | Relaxation fixes; bet logic fixes (L2.2, L2.5, L3.9) |
+| Session 38 | 73 ✅ | Cron dedup, `matchday_id` constraint, `fantasy_points` cleanup |
+| Session 39 | 74 ✅ | Cup pool tournament scoping, auto-seed trigger, relaxation squad_size fix |
+| Session 40–41 | 75, 76 ✅ | Relaxation fixes; bet logic fixes (L2.2, L2.5, L3.9) |

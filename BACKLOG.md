@@ -1,6 +1,6 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-05-25 (Sprint 2 session 40 — live/pipeline batch — Sprint 2 COMPLETE)  
+**Last Updated**: 2026-05-25 (session 41 — migrations 73-76 deployed to production)  
 **E2E Test Suite**: 84/84 platform tests passing ✅ + `scoring-pipeline.spec.js` added  
 **Live App**: https://wc-fantasy-football.vercel.app
 
@@ -44,12 +44,12 @@
 
 **Sprint 2 status: ✅ COMPLETE.** All items from the sprint plan are merged to main.
 
-**📋 MIGRATIONS APPLIED (previous sprint):**
-- ✅ `supabase/migrations/75_active_members_relaxation.sql` — PENDING deploy
-- ✅ `supabase/migrations/76_bet_logic_fixes.sql` — PENDING deploy
+**📋 MIGRATIONS DEPLOYED TO PRODUCTION (session 41):**
+- ✅ `supabase/migrations/75_active_members_relaxation.sql` — applied
+- ✅ `supabase/migrations/76_bet_logic_fixes.sql` — applied (required DROP FUNCTION fixes for resolve_bet + submit_bet)
 
 **📋 EDGE FUNCTIONS TO DEPLOY:**
-See updated `SUPABASE_HANDOFF.md`.
+See `SUPABASE_HANDOFF.md` — Step 2 lists all 14 functions. Still pending deploy.
 
 ---
 
