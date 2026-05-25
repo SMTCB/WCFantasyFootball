@@ -1,8 +1,57 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-05-25 (session 41 — migrations 73-76 deployed to production)  
+**Last Updated**: 2026-05-25 (session 42 — Sprint 3 complete + migration 77 applied to production)  
 **E2E Test Suite**: 84/84 platform tests passing ✅ + `scoring-pipeline.spec.js` added  
 **Live App**: https://wc-fantasy-football.vercel.app
+
+---
+
+## 📊 SESSION 42 PROGRESS (2026-05-25 — Sprint 3: production-quality polish)
+
+**Goal**: Sprint 3 — production-quality polish: accessibility, error UX, performance hot spots, security hardening.
+
+**🚀 COMPLETED THIS SESSION:**
+
+- ✅ **PR #182 `claude/s3-quality-a11y-perf`** — Sprint 3 all 3 changesets — merged to main
+
+**PR A — Config hardening + DB security:**
+- DEPLOY-4: `ci.yml` `npm install` → `npm ci` for reproducible CI installs
+- DEPLOY-6: `vite.config.js` sourcemap + `manualChunks` code-splitting (Supabase + React chunks)
+- DEPLOY-7: `.gitignore` fix `*.png` scope + `! .env.example` space bug
+- SEC-11: `process-transfer/index.js` CORS `*` → production origin
+- SEC-12: `AuthContext.jsx` remove racing client-side `users` upsert — DB trigger handles it
+- Migration `77_security_polish.sql`: SEC-8 (stale auction policy), SEC-9 (fake @admin policy), SEC-10 (chat 2000-char limit + 5-msg/10s rate-limit trigger), SEC-12 (handle_new_user trigger), L4.3 (drop duplicate bet_submissions constraint)
+
+**PR B — Accessibility + UX quick wins:**
+- U65: Remove `user-scalable=no` from `index.html` — WCAG 1.4.4 pinch-to-zoom compliance
+- U64/U68: `OnboardingWizard.jsx` formation copy fix + Step 1 CTA "Next →"
+- U63/U112: `AppLayout.jsx` mobile top bar always visible + ⚙ Settings link; nav labels 8px → 10px
+- U66: `AuthScreen.jsx` double-submit guard `if (loading) return`
+- U67: `LeagueScreen.jsx` inline join-code length validation
+- U62: `HomeScreen.jsx` enhanced empty state with squad/league CTAs
+- U70/U77: `MarketScreen.jsx` `useMemo` for player filter + squad refresh after buy
+- U100: `LiveScreen.jsx` auto-clear error banner on successful fetch
+- U109: `Toast.jsx` safe-area-inset-bottom for iPhone home indicator
+
+**PR C — Hook cleanup + TDZ prevention:**
+- FRONT-16: `useAutoFill.js` — removed `useLeagueConfig` import (Rolldown TDZ crash prevention); pass `cfg` as 6th param from callers
+- FRONT-15: `useAutoFill.js` — clearMsg timer tracked in ref, cleared on unmount
+- FRONT-17: `useAvailabilityFlag.js` — `flagMap` read via ref in `toggleFlag`, removed from deps
+- FRONT-8/13: `useChatMessages.js` — `messages.length` removed from sendMessage deps; `user?.username/user_metadata` removed from broadcastTyping deps
+- FRONT-6: `useOnboarding.js` — guard `window.__resetOnboarding` assignment
+- FRONT-12: `SquadScreen.jsx` — merged two duplicate tournament_id effects into one
+
+**📋 Migration hotfixes (applied same session):**
+- ✅ **PR #183** — `ADD CONSTRAINT IF NOT EXISTS` is invalid PostgreSQL; replaced with `DROP CONSTRAINT IF EXISTS` + `ADD CONSTRAINT`
+- ✅ **PR #184** — `DROP POLICY IF EXISTS` on non-existent `scoring_templates` table throws 42P01; wrapped in `DO $$` pg_tables guard
+- ✅ **PR #185** — `CREATE OR REPLACE FUNCTION handle_new_user()` fails with 42P13 (can't change return type); replaced with `DROP FUNCTION IF EXISTS ... CASCADE` + `CREATE FUNCTION`
+- ✅ **PR #186** — `package-lock.json` regenerated to include `sharp` (Vite v8 optional dep); `npm ci` in CI was failing with EUSAGE
+
+**📋 DEPLOYED TO PRODUCTION:**
+- ✅ Migration `77_security_polish.sql` — applied to Supabase production
+- ⏳ 14 edge functions — still pending deploy (see `SUPABASE_HANDOFF.md` Step 2)
+
+**Sprint 3 status: ✅ COMPLETE.** All items merged to main, migration 77 applied.
 
 ---
 
