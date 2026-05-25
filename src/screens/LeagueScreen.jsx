@@ -312,7 +312,7 @@ export default function LeagueScreen() {
     if (!id || !user?.id) return;
     try {
       setMembersLoading(true);
-      if (view === 'list') setView('detail');
+      setView(v => v === 'list' ? 'detail' : v);
       const { data: lData } = await supabase.from('leagues').select('*').eq('id', id).single();
       if (!lData) {
         // League doesn't exist or RLS denied — redirect to list view.
@@ -371,7 +371,7 @@ export default function LeagueScreen() {
     } finally {
       setMembersLoading(false);
     }
-  }, [user?.id, view]);
+  }, [user?.id]);
 
   useEffect(() => {
     if (leagueId && user?.id) {

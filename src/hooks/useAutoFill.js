@@ -31,8 +31,9 @@ export function useAutoFill(leagueId, squadData, fetchSquad, takenMap = {}, buy,
       }
 
       const rawPlayers  = squadData?.players || [];
+      const benchPlayers = squadData?.bench || [];
       const squadSize   = cfg.squadSize ?? 15;
-      const slotsNeeded = squadSize - rawPlayers.length;
+      const slotsNeeded = squadSize - rawPlayers.length - benchPlayers.length;
 
       if (slotsNeeded <= 0) {
         setAutoFillMsg('Squad is already full');
@@ -48,8 +49,6 @@ export function useAutoFill(leagueId, squadData, fetchSquad, takenMap = {}, buy,
           .in('id', rawPlayers);
         playerObjects = fetched || [];
       }
-
-      const benchPlayers = squadData?.bench || [];
 
       // ── Build my own player IDs (never re-buy) ───────────────────────────
       const myIds = new Set([
