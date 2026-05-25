@@ -32,8 +32,13 @@ DROP POLICY IF EXISTS "members can bid on auctions" ON public.auction_listings;
 -- SEC-9: Drop fake scoring_templates admin policies
 -- ─────────────────────────────────────────────────────────────────────────────
 
-DROP POLICY IF EXISTS "scoring_templates_admin_write"  ON public.scoring_templates;
-DROP POLICY IF EXISTS "scoring_templates_admin_update" ON public.scoring_templates;
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM pg_tables WHERE schemaname = 'public' AND tablename = 'scoring_templates') THEN
+    DROP POLICY IF EXISTS "scoring_templates_admin_write"  ON public.scoring_templates;
+    DROP POLICY IF EXISTS "scoring_templates_admin_update" ON public.scoring_templates;
+  END IF;
+END $$;
 
 -- ─────────────────────────────────────────────────────────────────────────────
 -- SEC-10: chat_messages length cap + rate-limit trigger
