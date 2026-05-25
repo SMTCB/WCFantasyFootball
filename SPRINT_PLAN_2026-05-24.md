@@ -153,20 +153,20 @@ A small number of items must land in a specific order:
 
 ## Draft fairness & relaxation
 
-- **L5.1** · Two-pass allocation so capacity/budget skips don't drop awarded players
-- **L5.3** · Crypto-random + audit log for lottery rolls
-- **L5.6** · Deterministic tiebreaker in reverse-standings
-- **L5.7** · Null guard on `playerRows` in reverse-standings
-- **L5.8** · Per-league budget (drop hardcoded 100)
-- **L5.9** · Draft writes canonical `matchday_id` (links to U10/DATA-1)
-- **L5.11** · Disable `Edit` after `processed` (links to U25)
-- **L6.3** · Auto-seed `cup_active_clubs` on cup-league creation
-- **L6.4** · Tournament scoping in `seed_cup_clubs`
-- **L6.5** · Tournament scoping in `get_cup_pool_stats`
-- **L6.6** · Honor `squad_size` in pressure formula
-- **L6.7** · Standardize `calculate_relaxation_state` vs `apply_relaxation_state` between UI and enforcement
-- **L6.8** · `useRelaxationState` Realtime subscription
-- **L6.9** · Drop `.single()` on scalar RPC
+- ✅ **L5.1** · Two-pass allocation — dropped players offered to runner-up contestants in crypto-random order (session 39)
+- ✅ **L5.3** · Crypto-random lottery rolls + audit log — already in code; verified session 38
+- ✅ **L5.6** · Deterministic tiebreaker in reverse-standings — verified in code session 38
+- ✅ **L5.7** · Null guard on `playerRows` in reverse-standings — verified in code session 38
+- ✅ **L5.8** · Per-league budget used in allocation — verified in code session 38
+- ✅ **L5.9** · Draft writes canonical `matchday_id` from `matchday_deadlines` — verified in code session 38
+- ✅ **L5.11** · Disable `Edit` after `processed` — "Lottery complete — list locked" shown (session 39)
+- ✅ **L6.3** · Auto-seed `cup_active_clubs` trigger on `cup_phase` transition — migration 74 (session 39)
+- ✅ **L6.4** · Tournament scoping in `seed_cup_clubs` (p_tournament_id param) — migration 74 (session 39)
+- ✅ **L6.5** · Tournament scoping in `get_cup_pool_stats` — auto-resolves with L6.4 (session 39)
+- ✅ **L6.6** · `squad_size` used in pressure formula instead of hardcoded 15 — migration 74 (session 39)
+- ✅ **L6.7** · `useRelaxationState` reads persisted `current_repeats_allowed` from `league_config` (session 39)
+- ✅ **L6.8** · `useRelaxationState` Realtime subscription on `gazette_entries INSERT` (session 39)
+- ✅ **L6.9** · Dropped `.single()` from `calculate_relaxation_state` RPC call (session 39)
 
 ## Observability (foundation — informs all later debugging)
 

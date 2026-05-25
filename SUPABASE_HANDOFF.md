@@ -1,6 +1,6 @@
 # Supabase Handoff — Consolidated Deploy Guide
 
-**Last updated**: 2026-05-25 (session 38)  
+**Last updated**: 2026-05-25 (session 39)  
 **Main branch**: all code is on `main` — do a `git pull origin main` before deploying  
 **Migrations applied in production**: 66, 67, 68, 69, 70, 71, 72
 
@@ -12,20 +12,21 @@ Run the steps below in order. Each section is self-contained; you can stop and r
 
 ---
 
-### Step 1 — SQL Migration 73
+### Step 1 — SQL Migrations 73 and 74
 
-Open the **Supabase dashboard SQL editor** and run the contents of:
+Open the **Supabase dashboard SQL editor** and run each file in order:
 
-```
-supabase/migrations/73_pipeline_cleanup.sql
-```
-
-**What it does:**
+**`supabase/migrations/73_pipeline_cleanup.sql`**
 - Unschedules 3 duplicate EPL sync crons left by migration 63 (`sync-player-status`, `sync-players-daily`, `sync-fixtures`) — the `sync-all-active-tournaments` orchestrator from migration 51 already covers these; running both caused every Forza API call to fire twice per schedule
 - Deletes any `fantasy_points` rows where `matchday_id = 'current'` (leftover seed artifact that would corrupt rollup queries)
 - Adds `CHECK (matchday_id ~ '^[0-9]+-r[0-9]+$')` to enforce the canonical format (e.g. `'426-r35'`) going forward
 
-**Next migration to create**: `74_`
+**`supabase/migrations/74_draft_cup_fixes.sql`**
+- **L6.4**: `seed_cup_clubs` now accepts `p_tournament_id TEXT DEFAULT NULL` — scopes club seeding to the league's tournament (EPL ≠ WC)
+- **L6.3**: trigger `_trigger_seed_cup_clubs` auto-seeds `cup_active_clubs` when a league's `cup_phase` transitions out of `'pre_cup'`
+- **L6.6**: `calculate_relaxation_state` uses `leagues.squad_size` instead of hardcoded `15.0` in the pool pressure formula
+
+**Next migration to create**: `75_`
 
 ---
 
@@ -64,7 +65,7 @@ supabase functions deploy resolve-bets
 | `calculate-scores` | Session 38 | L3.5: captain on bench → highest-scoring starter gets bonus |
 | `ingest-match-events` | Session 36 | Shared `logError` from `_shared/log.ts` (was local copy) |
 | `process-transfer` | Session 36 | Shared `logError`; buy/sell/create failures now written to `edge_function_errors` |
-| `run-draft-lottery` | Session 36 | Shared `logError`; allocation upsert failures logged |
+| `run-draft-lottery` | Session 39 | L5.1: two-pass allocation — dropped players offered to runner-up wanters |
 | `run-reverse-standings-draft` | Session 36 | Shared `logError` |
 | `auto-open-transfer-window` | Session 38 | DATA-9: idempotent upsert; `closes_at` capped at 1h before next kickoff |
 | `sync-fixtures` | Session 36 | Shared `logError` |
@@ -108,10 +109,7 @@ After migration 73, you should see `sync-player-status`, `sync-players-daily`, a
 
 ## Sprint 1 Remaining (code not yet written)
 
-Open items still in backlog — see `SPRINT_PLAN_2026-05-24.md` for full spec:
-
-- **L5.x Draft fairness** (~6h): two-pass allocation, crypto-random lottery, tiebreaker, per-league budget, disable-edit after draft
-- **L6.x Relaxation / cup** (~5h): auto-seed `cup_active_clubs`, tournament scoping, Realtime subscription, `.single()` safety
+All L5.x and L6.x items are now complete. Sprint 1 is fully coded and merged to `main`.
 
 ---
 
@@ -123,4 +121,5 @@ Open items still in backlog — see `SPRINT_PLAN_2026-05-24.md` for full spec:
 | Session 35 | 70 | `aggregate_league_member_points` UUID signature + reward_type filter |
 | Session 36 | 71 | Observability: `client_errors` table, `report_client_error` RPC, prune cron |
 | Session 37 | 72 | `resolve_bet` hardened + `resolve-finished-bets` cron |
-| **Session 38** | **73 (PENDING)** | Cron dedup, `matchday_id` constraint, `fantasy_points` cleanup |
+| Session 38 | 73 (PENDING) | Cron dedup, `matchday_id` constraint, `fantasy_points` cleanup |
+| **Session 39** | **74 (PENDING)** | Cup pool tournament scoping, auto-seed trigger, relaxation squad_size fix |

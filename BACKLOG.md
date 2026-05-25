@@ -1,8 +1,48 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-05-25 (Sprint 1 session 38 — pipeline cleanup, captain-on-bench, bet creator UI)  
+**Last Updated**: 2026-05-25 (Sprint 1 session 39 — draft fairness, cup pool fixes — Sprint 1 COMPLETE)  
 **E2E Test Suite**: 84/84 platform tests passing ✅ + `scoring-pipeline.spec.js` added  
 **Live App**: https://wc-fantasy-football.vercel.app
+
+---
+
+## 📊 SESSION 39 PROGRESS (2026-05-25 — Sprint 1 complete: L5.x + L6.x)
+
+**Goal**: Close out all remaining Sprint 1 items — draft fairness (L5.1, L5.11) and relaxation/cup pool correctness (L6.3–L6.9).
+
+**🚀 COMPLETED THIS SESSION:**
+
+- ✅ **PR #176 `claude/s1-draft`** — 4 files merged to main
+
+**Draft lottery — two-pass allocation (L5.1 — `run-draft-lottery`):**
+- Pass 1 allocates players to lottery winners as before
+- Players the winner couldn't take (position cap reached or budget exceeded) are now collected as `droppedByWinner`
+- Pass 2 offers each dropped player to runner-up contestants in crypto-random shuffled order — first runner-up who can fit it gets it
+- Also removed a duplicate `const budget` declaration (silent bug in the existing code)
+
+**DraftScreen — lock after lottery (L5.11):**
+- Added `isProcessed` state; set `true` when the existing submission has `status = 'processed'`
+- Submitted view now shows "Lottery complete — list locked" instead of "Edit list" button when processed
+
+**Migration 74 — `74_draft_cup_fixes.sql` (L6.3, L6.4, L6.5, L6.6):**
+- `seed_cup_clubs` now accepts optional `p_tournament_id TEXT` — filters players by tournament so EPL cup leagues don't pick up WC clubs (backward-compat: `DEFAULT NULL` = old behaviour)
+- `_trigger_seed_cup_clubs` trigger fires on `AFTER INSERT OR UPDATE OF cup_phase` — auto-seeds `cup_active_clubs` when a league transitions out of `pre_cup`
+- `calculate_relaxation_state` uses `leagues.squad_size` instead of hardcoded `15.0` in the pool pressure numerator
+- `get_cup_pool_stats` / `get_cup_available_players` auto-resolve from L6.4 fix
+
+**`useRelaxationState` hook (L6.7, L6.8, L6.9 — `src/hooks/useRelaxationState.js`):**
+- Dropped `.single()` from the `calculate_relaxation_state` RPC call (was fragile for JSON-returning RPCs)
+- Added parallel read of `current_repeats_allowed` and `current_relaxation_tier` from `league_config` — these are the values written by `apply_relaxation_state` after each club elimination; hook uses them as the authoritative enforcement values, falling back to the RPC result if not yet persisted
+- Added Realtime subscription on `gazette_entries INSERT` for this league — gazette entries are published after `apply_relaxation_state`, so an INSERT is the signal that tier may have changed; subscription calls `load()` to re-fetch
+
+**Sprint 1 status: ✅ COMPLETE.** All items from SPRINT_PLAN_2026-05-24.md Sprint 1 section are merged to main.
+
+**📋 MIGRATIONS APPLIED IN PRODUCTION (session 39):**
+- ✅ `supabase/migrations/73_pipeline_cleanup.sql` — applied
+- ✅ `supabase/migrations/74_draft_cup_fixes.sql` — applied
+
+**📋 EDGE FUNCTIONS TO DEPLOY (still pending from previous sessions):**
+See `SUPABASE_HANDOFF.md` — Step 2 lists all 12 functions.
 
 ---
 
