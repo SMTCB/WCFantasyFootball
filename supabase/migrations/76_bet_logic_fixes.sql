@@ -59,6 +59,7 @@ END;
 $$;
 
 -- L2.5 — reset is_correct to NULL when squad re-submits a previously resolved bet
+DROP FUNCTION IF EXISTS submit_bet(UUID, UUID, TEXT);
 CREATE OR REPLACE FUNCTION submit_bet(
   p_squad_id    UUID,
   p_instance_id UUID,
