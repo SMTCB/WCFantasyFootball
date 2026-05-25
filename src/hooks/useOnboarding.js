@@ -119,6 +119,12 @@ export function useOnboarding() {
     track('onboarding_tour_replay', { screen: 'bets' });
   }, []);
 
+  const replayWizard = useCallback(() => {
+    set(K.wizard, false);
+    setWizardDone(false);
+    track('onboarding_wizard_replay', {});
+  }, []);
+
   // Dev helper — call window.__resetOnboarding() in console to replay wizard
   useEffect(() => {
     window.__resetOnboarding = () => {
@@ -147,5 +153,6 @@ export function useOnboarding() {
     replayLeagueTour,
     replayCommissionerTour,
     replayBetsTour,
+    replayWizard,
   };
 }

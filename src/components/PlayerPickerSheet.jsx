@@ -95,7 +95,7 @@ export default function PlayerPickerSheet({ position, budget, takenMap, isOwnedB
               Sign a {POS_LABEL[position] ?? position}
             </span>
             <div className="text-[12px] mt-0.5" style={{ color: 'var(--mute)' }}>
-              Budget: <span style={{ color: 'var(--paper)' }}>${budget?.toFixed(1)}M</span>
+              Budget: <span style={{ color: 'var(--paper)' }}>£{budget?.toFixed(1)}M</span>
             </div>
           </div>
           <button

@@ -39,7 +39,7 @@ export default function ProtectedRoute({ children }) {
   if (!user) {
     return (
       <Navigate
-        to={`/auth?redirect=${encodeURIComponent(location.pathname)}`}
+        to={`/auth?redirect=${encodeURIComponent(location.pathname + location.search + location.hash)}`}
         replace
       />
     );
