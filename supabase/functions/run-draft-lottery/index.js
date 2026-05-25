@@ -7,7 +7,9 @@
 // Cron calls originate from service role (no Authorization header required).
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { logError } from '../_shared/log.ts';
 
+const FN           = 'run-draft-lottery';
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
 const SERVICE_KEY  = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 const ANON_KEY     = Deno.env.get('SUPABASE_ANON_KEY');
@@ -80,7 +82,7 @@ Deno.serve(async (req) => {
     const results = await Promise.all(leagueIds.map(id => runLottery(id)));
     return respond(200, { processed: results });
   } catch (err) {
-    console.error(err);
+    await logError(FN, 'critical', err.message, { stack: err.stack });
     return respond(500, { error: err.message });
   }
 });
@@ -190,9 +192,10 @@ async function runLottery(leagueId) {
     allocated_at:      new Date().toISOString(),
   }));
 
-  await supabase
+  const { error: allocErr } = await supabase
     .from('draft_allocations')
     .upsert(allocationRows, { onConflict: 'league_id,user_id' });
+  if (allocErr) await logError(FN, 'critical', 'draft_allocations upsert failed', { leagueId, error: allocErr.message });
 
   // 6b. Fetch the canonical matchday_id for this league's tournament.
   //     Use the nearest upcoming deadline; fall back to 'active'.

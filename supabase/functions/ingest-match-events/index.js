@@ -21,6 +21,7 @@
 //                                                 minutes, cards, tackles, saves, xG/xA…)
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { logError as _logError } from '../_shared/log.ts';
 
 const supabase = createClient(
   Deno.env.get('SUPABASE_URL'),
@@ -32,13 +33,7 @@ const FORZA_TOKEN     = Deno.env.get('FORZA_ACCESS_TOKEN');
 const SELF_BASE_URL   = Deno.env.get('SUPABASE_URL');
 const SELF_ANON_KEY   = Deno.env.get('SUPABASE_ANON_KEY');
 
-async function logError(severity, message, context = {}) {
-  try {
-    await supabase.from('edge_function_errors').insert({
-      function: 'ingest-match-events', severity, message, context,
-    });
-  } catch { /* silent */ }
-}
+const logError = (severity, message, context = {}) => _logError('ingest-match-events', severity, message, context);
 
 async function forza(path, retries = 3) {
   const url = `${FORZA_BASE}${path}?access_token=${FORZA_TOKEN}`;

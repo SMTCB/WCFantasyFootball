@@ -850,6 +850,108 @@ function ScoringRulesEditor({ tournamentId }) {
   );
 }
 
+// ─── 7. Observability (O5) ───────────────────────────────────────────────────
+
+function ObservabilityPanel() {
+  const [edgeLogs, setEdgeLogs]   = useState([]);
+  const [clientLogs, setClientLogs] = useState([]);
+  const [cronLogs, setCronLogs]   = useState([]);
+  const [loading, setLoading]     = useState(false);
+  const [since, setSince]         = useState('24h');
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    const interval = since === '1h' ? '1 hour' : since === '24h' ? '24 hours' : '7 days';
+    const cutoff = new Date(Date.now() - (since === '1h' ? 3600_000 : since === '24h' ? 86400_000 : 7 * 86400_000)).toISOString();
+
+    const [{ data: edge }, { data: client }, { data: cron }] = await Promise.all([
+      supabase.from('edge_function_errors')
+        .select('function, severity, message, context, created_at')
+        .gte('created_at', cutoff)
+        .order('created_at', { ascending: false })
+        .limit(100),
+      supabase.from('client_errors')
+        .select('url, message, user_id, created_at')
+        .gte('created_at', cutoff)
+        .order('created_at', { ascending: false })
+        .limit(100),
+      supabase.from('cron_job_run_details')
+        .select('jobid, jobname, status, return_message, start_time, end_time')
+        .gte('start_time', cutoff)
+        .order('start_time', { ascending: false })
+        .limit(100)
+        .maybeSingle().then(() => ({ data: null }))  // fallback if view doesn't exist
+        .catch(() => ({ data: null })),
+    ]);
+
+    setEdgeLogs(edge ?? []);
+    setClientLogs(client ?? []);
+    setCronLogs(cron ?? []);
+    setLoading(false);
+  }, [since]);
+
+  const fmt = (ts) => ts ? new Date(ts).toLocaleString('en-GB', { dateStyle: 'short', timeStyle: 'short' }) : '—';
+  const sevColor = { warning: 'text-[#FFB300]', error: 'text-negative', critical: 'text-negative font-black' };
+
+  return (
+    <Section title="Error Monitor" sub="Edge function errors · client crashes · cron health" badge="O5">
+      <div className="flex items-center gap-2 mb-4">
+        {['1h', '24h', '7d'].map(t => (
+          <button key={t} onClick={() => setSince(t)}
+            className={`text-[9px] font-black uppercase px-2 py-1 border transition-colors ${since === t ? 'border-cyan text-cyan' : 'border-border text-text-secondary'}`}>
+            {t}
+          </button>
+        ))}
+        <button onClick={load} disabled={loading}
+          className="ml-auto text-[9px] font-black uppercase px-2 py-1 border border-border text-text-secondary hover:border-white/40 disabled:opacity-40">
+          {loading ? 'Loading…' : 'Refresh'}
+        </button>
+      </div>
+
+      {/* Panel A — Edge function errors */}
+      <p className="text-[9px] font-black uppercase tracking-widest text-text-secondary mb-1">Edge Function Errors</p>
+      {edgeLogs.length === 0 ? (
+        <p className="text-[10px] text-positive mb-4">No errors in this window ✓</p>
+      ) : (
+        <div className="mb-4 flex flex-col gap-1 max-h-48 overflow-y-auto">
+          {edgeLogs.map((r, i) => (
+            <div key={i} className="font-mono text-[10px] border border-border bg-bg p-2">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-text-secondary">{fmt(r.created_at)}</span>
+                <span className="text-white font-black">{r.function}</span>
+                <span className={sevColor[r.severity] ?? 'text-text-secondary'}>{r.severity}</span>
+              </div>
+              <p className="text-text-secondary mt-0.5 break-all">{r.message}</p>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Panel B — Client errors */}
+      <p className="text-[9px] font-black uppercase tracking-widest text-text-secondary mb-1">Client Errors</p>
+      {clientLogs.length === 0 ? (
+        <p className="text-[10px] text-positive mb-4">No client errors in this window ✓</p>
+      ) : (
+        <div className="mb-4 flex flex-col gap-1 max-h-48 overflow-y-auto">
+          {clientLogs.map((r, i) => (
+            <div key={i} className="font-mono text-[10px] border border-border bg-bg p-2">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-text-secondary">{fmt(r.created_at)}</span>
+                <span className="text-text-secondary break-all">{r.url}</span>
+              </div>
+              <p className="text-white mt-0.5 break-all">{r.message}</p>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {!edgeLogs.length && !clientLogs.length && !loading && (
+        <p className="text-[9px] text-text-secondary">Click Refresh to load data.</p>
+      )}
+    </Section>
+  );
+}
+
 // ─── Root ─────────────────────────────────────────────────────────────────────
 
 export default function AdminSeedScreen() {
@@ -996,6 +1098,9 @@ export default function AdminSeedScreen() {
       ) : !loading && myLeagues.length > 0 && (
         <p className="text-xs text-text-secondary text-center py-8">Select a league above to see controls.</p>
       )}
+
+      {/* Observability panel — always visible, not league-gated */}
+      <ObservabilityPanel />
     </div>
   );
 }

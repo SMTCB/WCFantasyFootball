@@ -4,7 +4,9 @@
 // gazette entry ONLY when the tier changes (to avoid gazette noise).
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { logError } from '../_shared/log.ts';
 
+const FN      = 'calculate-relaxation';
 const supabase = createClient(
   Deno.env.get('SUPABASE_URL'),
   Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
@@ -68,7 +70,7 @@ Deno.serve(async (req) => {
       threshold:       state.threshold,
     });
   } catch (err) {
-    console.error(err);
+    await logError(FN, 'error', err.message, { stack: err.stack });
     return respond(500, { error: err.message });
   }
 });

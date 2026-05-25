@@ -12,7 +12,9 @@
 // Run via cron: every 1-2 hours
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { logError } from '../_shared/log.ts';
 
+const FN      = 'auto-open-transfer-window';
 const supabase = createClient(
   Deno.env.get('SUPABASE_URL'),
   Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
@@ -109,7 +111,7 @@ Deno.serve(async (req) => {
     return respond(200, { ok: true, created });
 
   } catch (err) {
-    console.error('auto-open-transfer-window error:', err.message);
+    await logError(FN, 'error', err.message, { stack: err.stack });
     return respond(500, { error: err.message });
   }
 });

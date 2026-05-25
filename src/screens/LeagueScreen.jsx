@@ -1,5 +1,5 @@
 ﻿import { useState, useEffect, useCallback } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../hooks/useAuth';
 import { useChatMessages } from '../hooks/useChatMessages';
@@ -95,6 +95,7 @@ export default function LeagueScreen() {
   const { show: showToast } = useToast();
   const navigate = useNavigate();
   const { leagueId } = useParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const {
     showLeagueTour, completeLeagueTour, replayLeagueTour,
     showCommissionerTour, completeCommissionerTour, replayCommissionerTour,
@@ -164,8 +165,8 @@ export default function LeagueScreen() {
   const [formLoading,      setFormLoading]      = useState(false);
   const [newLeague,        setNewLeague]        = useState(null);   // set after creation â†’ shows invite card
 
-  // Join-by-code state
-  const [joinCode,     setJoinCode]     = useState('');
+  // Join-by-code state — U3: seed from ?joinCode= URL param (written by JoinRoute in App.jsx)
+  const [joinCode,     setJoinCode]     = useState(() => searchParams.get('joinCode') ?? '');
   const [joinLoading,  setJoinLoading]  = useState(false);
   const [joinError,    setJoinError]    = useState('');
 
@@ -223,23 +224,9 @@ export default function LeagueScreen() {
     setManagerRoster(rows ?? []);
   };
 
-  const validateAndSendProposal = async () => {
-    setTradeError(null);
-    if (!tradeMyPlayer || !tradeTheirPlayer) {
-      setTradeError('Select both players before sending.');
-      return;
-    }
-    const myPos    = tradeMyPlayer.position?.toUpperCase().replace('FW','FWD');
-    const theirPos = tradeTheirPlayer.position?.toUpperCase().replace('FW','FWD');
-    const positionChange = myPos !== theirPos;
-
-    // Position-change swaps require an open transfer window
-    if (positionChange && !transferWindow.isOpen) {
-      setTradeError('Position-change swaps require an open transfer window.');
-      return;
-    }
-    // TODO: deeper position-cap check will use live squad data once real squads are wired
-    showToast('Proposal sent!', 'success');
+  const validateAndSendProposal = () => {
+    // U8: Trade proposals backend not yet wired — show "coming soon" instead of a phantom toast.
+    showToast('Trade proposals coming soon — this feature is in development.', 'info');
     setShowTradeBuilder(false);
     setTradeError(null);
   };
@@ -310,6 +297,17 @@ export default function LeagueScreen() {
   // user.id is the stable identity; user object reference changes on token refresh
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id, fetchLeagues, fetchTournaments]);
+
+  // U3: If a joinCode was passed via URL (?joinCode=XXX from /join?code=XXX),
+  // clear the query param from the address bar (keep the code in state for the form).
+  useEffect(() => {
+    const code = searchParams.get('joinCode');
+    if (code) {
+      setSearchParams({}, { replace: true });
+    }
+  // Only run once on mount
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const loadLeagueById = useCallback(async (id) => {
     if (!id || !user?.id) return;
@@ -404,17 +402,17 @@ export default function LeagueScreen() {
     }
   }, [view, activeLeague?.league_id, notificationCount, clearAllNotifications]);
 
-  // Realtime subscription: league standings (total_points updates from bet rewards)
+  // Realtime subscription: league standings — handles UPDATE (points change) and INSERT (new member joins)
   useEffect(() => {
     if (!activeLeague?.league_id) return;
 
+    const leagueId = activeLeague.league_id;
     const membersSub = supabase
-      .channel(`league_members:league_id=eq.${activeLeague.league_id}`)
+      .channel(`league_members:league_id=eq.${leagueId}`)
       .on(
         'postgres_changes',
-        { event: 'UPDATE', schema: 'public', table: 'league_members', filter: `league_id=eq.${activeLeague.league_id}` },
+        { event: 'UPDATE', schema: 'public', table: 'league_members', filter: `league_id=eq.${leagueId}` },
         (payload) => {
-          // Update the specific member in the members list with new total_points
           setMembers(prev => {
             const idx = prev.findIndex(m => m.user_id === payload.new.user_id);
             if (idx >= 0) {
@@ -423,6 +421,28 @@ export default function LeagueScreen() {
               return updated.sort((a, b) => (b.total_points || 0) - (a.total_points || 0));
             }
             return prev;
+          });
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'league_members', filter: `league_id=eq.${leagueId}` },
+        async (payload) => {
+          // Fetch the new member's username then append to the list (U30)
+          const { data: userRow } = await supabase
+            .from('users')
+            .select('username')
+            .eq('id', payload.new.user_id)
+            .maybeSingle();
+          const newMember = {
+            user_id:      payload.new.user_id,
+            rank:         payload.new.rank ?? null,
+            total_points: payload.new.total_points ?? 0,
+            users:        { username: userRow?.username ?? 'New Manager' },
+          };
+          setMembers(prev => {
+            if (prev.some(m => m.user_id === newMember.user_id)) return prev;
+            return [...prev, newMember].sort((a, b) => (b.total_points || 0) - (a.total_points || 0));
           });
         }
       )

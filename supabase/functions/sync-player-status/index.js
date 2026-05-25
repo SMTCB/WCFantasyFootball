@@ -11,7 +11,9 @@
 //            Forza's unavailable list are reset to 'fit'
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { logError } from '../_shared/log.ts';
 
+const FN      = 'sync-player-status';
 const supabase = createClient(
   Deno.env.get('SUPABASE_URL'),
   Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
@@ -225,7 +227,7 @@ Deno.serve(async (req) => {
     return respond(200, { ok: true, updated, cleared });
 
   } catch (err) {
-    console.error('sync-player-status error:', err.message);
+    await logError(FN, 'error', err.message, { stack: err.stack });
     return respond(500, { error: err.message });
   }
 });
