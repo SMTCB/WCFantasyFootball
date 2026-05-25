@@ -1,6 +1,6 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-05-25 (session 43 — Sprint 4 complete; migration 78 pending deploy)  
+**Last Updated**: 2026-05-25 (session 43 — Sprint 4 complete; migration 78 applied to production)  
 **E2E Test Suite**: 84/84 platform tests passing ✅ + `scoring-pipeline.spec.js` added  
 **Live App**: https://wc-fantasy-football.vercel.app
 
@@ -36,7 +36,7 @@
 - `run-draft-lottery/index.js`: `Math.max(0,…)` guard on `unresolved_slots`; removed `JSON.stringify` double-serialization of JSONB `bullets`/`full_data`
 - `supabase/migrations/78_dead_code_cleanup.sql`: DROP `calculate_player_points` SQL function (dead since migration 53)
 
-**Sprint 4 status: ✅ COMPLETE.** All items merged to main; migration 78 pending Supabase deploy.
+**Sprint 4 status: ✅ COMPLETE.** All items merged to main; migration 78 applied to production.
 
 ---
 
