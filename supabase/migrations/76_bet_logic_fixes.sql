@@ -9,6 +9,8 @@ ALTER TABLE bet_instances
   ADD COLUMN IF NOT EXISTS total_submissions INT;
 
 -- L2.2 — update resolve_bet to populate winners_count + total_submissions
+-- Drop first to allow changing return type if it differs from the existing function
+DROP FUNCTION IF EXISTS resolve_bet(UUID, TEXT);
 CREATE OR REPLACE FUNCTION resolve_bet(
   p_instance_id UUID,
   p_answer      TEXT
