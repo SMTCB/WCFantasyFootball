@@ -1,8 +1,8 @@
 # Supabase Handoff — Consolidated Deploy Guide
 
-**Last updated**: 2026-05-25 (session 43 — Sprint 4 hygiene; migration 78 pending deploy)  
+**Last updated**: 2026-05-25 (session 43 — Sprint 4 complete; all migrations applied)  
 **Main branch**: all code is on `main` — do a `git pull origin main` before deploying  
-**Migrations applied in production**: 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77
+**Migrations applied in production**: 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78
 
 ---
 
@@ -12,14 +12,10 @@ Run the steps below in order. Each section is self-contained; you can stop and r
 
 ---
 
-### Step 1a — SQL Migration 78 (NEW — session 43)
+### ~~Step 1a — SQL Migration 78~~ ✅ DONE (2026-05-25)
 
-Open the **Supabase dashboard SQL editor** and run:
-
-**`supabase/migrations/78_dead_code_cleanup.sql`**
-- Drops `public.calculate_player_points` in all its overload signatures (TEXT,TEXT,JSONB,JSONB), (TEXT,TEXT,JSONB), and the catch-all CASCADE
-- This SQL function was superseded by the `calculate-scores` Edge Function (migration 53) and has had zero callers since then
-- Safe to run: verified no edge function file references it
+**`supabase/migrations/78_dead_code_cleanup.sql`** — applied to production.
+- Dropped `public.calculate_player_points` in all overload signatures (superseded by `calculate-scores` Edge Function since migration 53)
 
 ---
 
@@ -148,4 +144,4 @@ All L5.x and L6.x items are now complete. Sprint 1 is fully coded and merged to 
 | Session 39 | 74 ✅ | Cup pool tournament scoping, auto-seed trigger, relaxation squad_size fix |
 | Session 40–41 | 75, 76 ✅ | Relaxation fixes; bet logic fixes (L2.2, L2.5, L3.9) |
 | Session 42 | 77 ✅ | Security polish: stale auction policy, fake @admin, chat rate-limit, handle_new_user trigger |
-| Session 43 | 78 ⏳ | Dead code: drop `calculate_player_points` SQL function (all overloads) |
+| Session 43 | 78 ✅ | Dead code: drop `calculate_player_points` SQL function (all overloads) |
