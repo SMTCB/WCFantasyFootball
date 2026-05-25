@@ -1,8 +1,45 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-05-25 (Sprint 1 session 37 — live Realtime U6, Joker UI U7, bet resolution L2.1/L2.4/3.2/3.3/3.4)  
+**Last Updated**: 2026-05-25 (Sprint 1 session 38 — pipeline cleanup, captain-on-bench, bet creator UI)  
 **E2E Test Suite**: 84/84 platform tests passing ✅ + `scoring-pipeline.spec.js` added  
 **Live App**: https://wc-fantasy-football.vercel.app
+
+---
+
+## 📊 SESSION 38 PROGRESS (2026-05-25 — Sprint 1: Pipeline cleanup, L3.5, U33)
+
+**Goal**: I4/DATA-7/DATA-10 (cron dedup + matchday_id cleanup), L3.5 (captain-on-bench), DATA-9 (transfer window idempotency), 2.4.b (sync-player-status), U33 (CommissionerPanel bet creator).
+
+**🚀 COMPLETED THIS SESSION:**
+
+- ✅ **PR #175 `claude/s1-pipe`** — 7 files merged to main
+
+**Migration 73 (pending deploy):**
+- Unschedules duplicate EPL sync crons from migration 63 (`sync-player-status`, `sync-players-daily`, `sync-fixtures`) — `sync-all-active-tournaments` orchestrator (migration 51) already covers them
+- Deletes `fantasy_points` rows with `matchday_id='current'` (seed artifact)
+- Adds `CHECK (matchday_id ~ '^[0-9]+-r[0-9]+$')` to enforce canonical matchday_id format
+
+**Scoring (L3.5 — calculate-scores edge function):**
+- If `captain_id` is not in starters [0..10], the captain bonus is awarded to the highest-scoring starter instead (FPL-style vice-captain fallback); logs a warning via `logError`
+
+**Transfer window (DATA-9 — auto-open-transfer-window edge function):**
+- Insert is now idempotent: uses `upsert` with `ignoreDuplicates: true` (no more race-condition errors on the unique constraint)
+- `closes_at` capped at 1h before the next round's first kickoff (was always `now + 48h`, which could overlap a live matchday)
+
+**Sync (2.4.b — sync-player-status edge function):**
+- Suspension rows now pass `{ ...s, _type: 'suspension' }` to `mapStatus()` / `mapConfidence()` — previously the suspension branch in `mapStatus` was dead code; result is identical but now consistent
+
+**Commissioner panel (U33):**
+- Replaced inline `CreateBetWizard` (desktop) and `MobCreateBet` (mobile) in `CommissionerPanel.jsx` with the real `BetCreatorPanel` component
+- `BetCreatorPanel` writes directly to `bet_instances` with slug→id lookup and `scope_ref` support (from session 37)
+- `fetchOpenBets` wired as `onCreated` callback so resolve-bets list refreshes after creation
+
+**📋 SQL MIGRATIONS TO RUN ON SUPABASE:**
+See `SUPABASE_HANDOFF.md` — consolidated deploy guide covering all pending sessions.
+
+**📋 REMAINING Sprint 1 items (still open):**
+- Draft fairness (L5.x): two-pass allocation, crypto-random, tiebreaker, per-league budget ~6h
+- Relaxation/cup (L6.x): auto-seed cup_active_clubs, tournament scoping, Realtime sub ~5h
 
 ---
 
@@ -52,12 +89,11 @@
 supabase functions deploy resolve-bets
 ```
 
-**📋 REMAINING Sprint 1 items (still open):**
-- L3.5: Captain-on-bench policy
-- I2/I4/DATA-2/7/8/9/10: Pipeline cleanup items
-- U33: Replace CreateBetWizard mock data with BetCreatorPanel
-- U7 (SquadScreen): Show Joker activation state in squad view (minor — scoring wired)
-- Draft fairness items (L5.x, L6.x)
+**📋 REMAINING Sprint 1 items (still open after session 37):**
+- ✅ L3.5: Captain-on-bench policy — done in session 38
+- ✅ I4/DATA-7/8/9/10: Pipeline cleanup — done in session 38
+- ✅ U33: CommissionerPanel wired to BetCreatorPanel — done in session 38
+- Draft fairness items (L5.x, L6.x) — still open
 
 ---
 
@@ -100,15 +136,13 @@ supabase functions deploy eliminate-cup-club
 supabase functions deploy auto-open-transfer-window
 ```
 
-**📋 REMAINING Sprint 1 items (still open):**
-- L2.1: `resolve_bet` validates `p_correct_answer` against options
-- L2.4: Auto-resolver edge function + cron
-- L3.5: Captain-on-bench policy — DB constraint or vice-captain logic
-- U6: LiveScreen Realtime subscription (replaces 5-min poll)
-- U7: Joker chip UI wiring (scoring done; UI display needed)
-- I2/I4/DATA-2/7/8/9/10: Pipeline cleanup items
-- 3.3, 3.4: BetCreatorPanel scope_ref + resolve-bets cron
-- U33, U34: CreateBetWizard/BetCreatorPanel wiring
+**📋 REMAINING Sprint 1 items (still open after session 36):**
+- ✅ L2.1/L2.4/3.3/3.4: bet resolution + auto-resolver + scope_ref — done in session 37
+- ✅ L3.5: Captain-on-bench — done in session 38
+- ✅ U6/U7: LiveScreen Realtime + Joker UI — done in session 37
+- ✅ I4/DATA-7/8/9/10: Pipeline cleanup — done in session 38
+- ✅ U33/U34: BetCreatorPanel wiring + template slug→id — done in sessions 37-38
+- Draft fairness (L5.x, L6.x) — still open
 
 ---
 

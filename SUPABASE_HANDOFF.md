@@ -1,165 +1,126 @@
-# Supabase Handoff — Sprint 1 Deployments (Session 38)
+# Supabase Handoff — Consolidated Deploy Guide
 
-**Date**: 2026-05-25  
-**Latest branch**: `claude/s1-pipe` (pending merge)  
-**Migrations applied**: 66, 67, 68, 69, 70, 71, 72 ✅ ALL APPLIED  
-**Next to apply**: 73
+**Last updated**: 2026-05-25 (session 38)  
+**Main branch**: all code is on `main` — do a `git pull origin main` before deploying  
+**Migrations applied in production**: 66, 67, 68, 69, 70, 71, 72
 
 ---
 
-## Session 38 — PENDING DEPLOY
+## ✅ DO THIS ONCE — Deploy Everything Pending
 
-### Migration 73 — pending ⏳
-```sql
--- File: supabase/migrations/73_pipeline_cleanup.sql
--- Paste and run in the Supabase SQL editor
+Run the steps below in order. Each section is self-contained; you can stop and resume safely.
+
+---
+
+### Step 1 — SQL Migration 73
+
+Open the **Supabase dashboard SQL editor** and run the contents of:
+
 ```
+supabase/migrations/73_pipeline_cleanup.sql
+```
+
 **What it does:**
-- Unschedules duplicate EPL sync crons from migration 63 (`sync-player-status`, `sync-players-daily`, `sync-fixtures`) — the `sync-all-active-tournaments` orchestrator (migration 51) already handles these
-- Deletes `fantasy_points` rows where `matchday_id = 'current'` (seed artifact)
-- Adds `CHECK (matchday_id ~ '^[0-9]+-r[0-9]+$')` constraint to `fantasy_points`
+- Unschedules 3 duplicate EPL sync crons left by migration 63 (`sync-player-status`, `sync-players-daily`, `sync-fixtures`) — the `sync-all-active-tournaments` orchestrator from migration 51 already covers these; running both caused every Forza API call to fire twice per schedule
+- Deletes any `fantasy_points` rows where `matchday_id = 'current'` (leftover seed artifact that would corrupt rollup queries)
+- Adds `CHECK (matchday_id ~ '^[0-9]+-r[0-9]+$')` to enforce the canonical format (e.g. `'426-r35'`) going forward
 
-### Edge Functions to deploy (session 38)
-
-```bash
-# Updated in session 38:
-supabase functions deploy calculate-scores        # L3.5: captain-on-bench fallback
-supabase functions deploy sync-player-status      # 2.4.b: _type='suspension' fix
-supabase functions deploy auto-open-transfer-window  # DATA-9: idempotent + correct closes_at
-
-# Still pending from sessions 36-37:
-supabase functions deploy ingest-match-events
-supabase functions deploy process-transfer
-supabase functions deploy run-draft-lottery
-supabase functions deploy run-reverse-standings-draft
-supabase functions deploy sync-fixtures
-supabase functions deploy sync-players
-supabase functions deploy calculate-relaxation
-supabase functions deploy eliminate-cup-club
-supabase functions deploy resolve-bets
-```
+**Next migration to create**: `74_`
 
 ---
 
-## Session 37 — ✅ DEPLOYED
+### Step 2 — Deploy All Edge Functions
 
-### Migration 71 — applied ✅
-- `client_errors` table + `report_client_error` RPC + `prune-error-logs` cron
-
-### Migration 72 — applied ✅
-- `resolve_bet` hardened (options validation + `{winners, total}` return)
-- `resolve-finished-bets` cron every 15 min
-
----
-
-## Session 36 — What to Deploy Now (NEW)
-
-### 1. SQL Migration (run in Supabase dashboard SQL editor)
-
-```sql
--- File: supabase/migrations/71_observability.sql
--- Paste and run this file's contents in the Supabase SQL editor
-```
-
-**What migration 71 does:**
-- Creates `client_errors` table (RLS enabled, no client SELECT, indexed by time/url)
-- Creates `report_client_error` SECURITY DEFINER function — anon/authenticated can call it without bypassing RLS
-- Schedules `prune-error-logs` cron: deletes edge_function_errors older than 30d and client_errors older than 14d
-
-### 2. Edge Functions to Redeploy (ALL 11)
+From the project root (`git pull origin main` first):
 
 ```bash
-# From the project root, after git pull origin main:
+# Core scoring + ingestion
 supabase functions deploy calculate-scores
 supabase functions deploy ingest-match-events
+
+# Transfers + draft
 supabase functions deploy process-transfer
 supabase functions deploy run-draft-lottery
 supabase functions deploy run-reverse-standings-draft
+supabase functions deploy auto-open-transfer-window
+
+# Data sync
 supabase functions deploy sync-fixtures
 supabase functions deploy sync-players
 supabase functions deploy sync-player-status
+
+# Cup + relaxation
 supabase functions deploy calculate-relaxation
 supabase functions deploy eliminate-cup-club
-supabase functions deploy auto-open-transfer-window
+
+# Bet resolution (new — session 37)
+supabase functions deploy resolve-bets
 ```
 
-**What changed:** All 11 functions now import `logError` from `_shared/log.ts` (O1/O2). Previously `calculate-scores` and `ingest-match-events` had local copies; now all functions share the same helper. Critical catch-blocks in `process-transfer`, `run-draft-lottery`, and the sync functions now write to `edge_function_errors`.
+**Why each function needs to be deployed:**
+
+| Function | Last changed | What changed |
+|---|---|---|
+| `calculate-scores` | Session 38 | L3.5: captain on bench → highest-scoring starter gets bonus |
+| `ingest-match-events` | Session 36 | Shared `logError` from `_shared/log.ts` (was local copy) |
+| `process-transfer` | Session 36 | Shared `logError`; buy/sell/create failures now written to `edge_function_errors` |
+| `run-draft-lottery` | Session 36 | Shared `logError`; allocation upsert failures logged |
+| `run-reverse-standings-draft` | Session 36 | Shared `logError` |
+| `auto-open-transfer-window` | Session 38 | DATA-9: idempotent upsert; `closes_at` capped at 1h before next kickoff |
+| `sync-fixtures` | Session 36 | Shared `logError` |
+| `sync-players` | Session 36 | Shared `logError` |
+| `sync-player-status` | Session 38 | 2.4.b: suspension rows now call `mapStatus`/`mapConfidence` (dead code eliminated) |
+| `calculate-relaxation` | Session 36 | Shared `logError` |
+| `eliminate-cup-club` | Session 36 | Shared `logError` |
+| `resolve-bets` | Session 37 | **New function**: auto-resolves `match_result` bets from fixture scores on 15-min cron |
 
 ---
 
-## Session 35 — Still Pending (if not done yet)
-
-### SQL Migration 70
-
-```sql
--- File: supabase/migrations/70_scoring_fixes.sql
-```
-
-**What migration 70 does:**
-- Fixes `aggregate_league_member_points` signature (UUID, UUID) + correct join path
-- Filters reward rows by `reward_type = 'points'`
-
-### Edge Functions from Session 35
-
-```bash
-supabase functions deploy calculate-scores
-supabase functions deploy ingest-match-events
-supabase functions deploy process-transfer
-```
-
----
-
-## Previous Sprint 0 Deployments (already done)
-
-**Branch merged**: `claude/sprint-0-release-blockers` → `main`  
-**SQL migrations applied**: `66_security_hardening.sql`, `67_ingest_events_cron.sql`, `68_wc_cron_key_fix.sql`, `69_rank_trigger.sql`
-
-### Functions deployed in Sprint 0
-
-```bash
-supabase functions deploy run-draft-lottery
-supabase functions deploy run-reverse-standings-draft
-supabase functions deploy eliminate-cup-club
-supabase functions deploy process-transfer
-supabase functions deploy sync-players
-```
-
-### What Changed in Sprint 0 Functions
-
-| Function | Change | Why |
-|----------|--------|-----|
-| `run-draft-lottery` | Added `relaxation_state` upsert after each draft round | Keeps pool pressure current so transfer enforcement works |
-| `run-reverse-standings-draft` | Same — upserts `relaxation_state` on round completion | Same reason |
-| `eliminate-cup-club` | Added safe squad query (only real columns) | Previous version referenced non-existent `formation` column |
-| `process-transfer` | Fixed no-repeat check: reads `relaxation_state.current_repeats_allowed` | Previously blocked all transfers if any squad held the player |
-| `sync-players` | Fixed cron — ingest now fires per-fixture after match completion | Was incorrectly scheduled |
-
----
-
-## Verify Deployment
-
-After deploying, confirm functions are live:
+### Step 3 — Verify
 
 ```bash
 supabase functions list
 ```
 
-Expected: all deployed functions show a recent `deployed_at` timestamp (today's date).
+All 12 functions should show a `deployed_at` timestamp from today.
+
+To verify cron health, run this in the SQL editor:
+
+```sql
+SELECT jobname, schedule, active FROM cron.job ORDER BY jobname;
+```
+
+After migration 73, you should see `sync-player-status`, `sync-players-daily`, and `sync-fixtures` are **absent** from this list (removed). The canonical active crons are:
+
+| Cron job | Schedule | Purpose |
+|---|---|---|
+| `auto-open-transfer-window` | every 2h | Opens new transfer windows after matchday completes |
+| `calculate-scores-post-match` | 22:30 UTC | Scores all fixtures finished in last 24h |
+| `ingest-match-events-live` | every 5 min | Ingests live events for fixtures with `status='live'` |
+| `resolve-finished-bets` | every 15 min | Auto-resolves `match_result` bets from finished fixtures |
+| `run-draft-lottery` | every 15 min | Runs allocation for leagues past draft deadline |
+| `sync-all-active-tournaments` | every 6h | Syncs player status + players + fixtures for all `sync_enabled` tournaments |
+| `sync-wc-players-6h` | 2 */6 | WC-specific player sync (until WC set to `sync_enabled=true`) |
+| `sync-wc-fixtures-6h` | 4 */6 | WC-specific fixture sync |
+| `prune-error-logs` | daily | Deletes edge errors >30d + client errors >14d |
 
 ---
 
-## Remaining Sprint 1 Items (not yet deployed)
+## Sprint 1 Remaining (code not yet written)
 
-See `SPRINT_PLAN_2026-05-24.md` for full detail. Key open items:
+Open items still in backlog — see `SPRINT_PLAN_2026-05-24.md` for full spec:
 
-- **L2.1**: `resolve_bet` validates `p_correct_answer` against options
-- **L2.4**: Auto-resolver edge function + cron
-- **U3**: `/join?code=` route handler
-- **U6**: LiveScreen Realtime subscription (replaces 5-min poll)
-- **U7**: Joker chip UI (scoring done; UI wiring needed)
-- **U8**: Trade proposals — hide or wire to DB
-- **U13**: RecapScreen captain math (×2 display)
-- **U30**: Realtime standings handles INSERT (new members invisible)
-- **O1-O5**: Observability (logError helper, client_errors table, admin view)
+- **L5.x Draft fairness** (~6h): two-pass allocation, crypto-random lottery, tiebreaker, per-league budget, disable-edit after draft
+- **L6.x Relaxation / cup** (~5h): auto-seed `cup_active_clubs`, tournament scoping, Realtime subscription, `.single()` safety
 
-**Next migration**: `73_`
+---
+
+## Deployment History
+
+| Session | Migrations applied | Notes |
+|---|---|---|
+| Sprint 0 | 66, 67, 68, 69 | Security hardening, ingest cron, WC key fix, rank trigger |
+| Session 35 | 70 | `aggregate_league_member_points` UUID signature + reward_type filter |
+| Session 36 | 71 | Observability: `client_errors` table, `report_client_error` RPC, prune cron |
+| Session 37 | 72 | `resolve_bet` hardened + `resolve-finished-bets` cron |
+| **Session 38** | **73 (PENDING)** | Cron dedup, `matchday_id` constraint, `fantasy_points` cleanup |
