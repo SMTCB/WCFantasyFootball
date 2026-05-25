@@ -273,7 +273,7 @@ export function useChatMessages(leagueId) {
 
     try {
       console.log('[useChatMessages] Sending message:', { leagueId, userId: user.id, message: messageText.trim() });
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('chat_messages')
         .insert([{
           league_id: leagueId,
@@ -292,6 +292,7 @@ export function useChatMessages(leagueId) {
       console.error('[useChatMessages] sendMessage exception:', err);
       return { ok: false, error: err.message };
     }
+  // eslint-disable-next-line react-hooks/preserve-manual-memoization
   }, [leagueId, user?.id]);
 
   // Edit a message
