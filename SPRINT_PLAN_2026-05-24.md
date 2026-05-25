@@ -98,7 +98,7 @@ A small number of items must land in a specific order:
 - **DATA-9** · `auto-open-transfer-window` idempotency + correct `closes_at`
 - **DATA-10** · Normalize `matchday_id` format; remove `'current'` rows; add format check
 - **2.4.b** · `sync-player-status` — set `_type='suspension'` so mapping isn't dead code
-- **3.2** · Bet `TEMPLATE_UUID` — slug→id runtime lookup
+- ✅ **3.2** · Bet `TEMPLATE_UUID` — slug→id runtime lookup (session 37)
 
 ## Scoring math
 
@@ -122,10 +122,10 @@ A small number of items must land in a specific order:
 
 ## Bet resolution
 
-- **L2.1** · `resolve_bet` validates `p_correct_answer` is in options
-- **L2.4** · Add bet auto-resolver edge function + cron (or remove `resolves_at`)
-- **3.3** · BetCreatorPanel writes `scope_ref = fixture.id` for match_result
-- **3.4** · Schedule `resolve-bets` cron
+- ✅ **L2.1** · `resolve_bet` validates `p_correct_answer` against options — migration 72 (session 37)
+- ✅ **L2.4** · `resolve-bets` edge function + `resolve-finished-bets` cron every 15 min — migration 72 (session 37)
+- ✅ **3.3** · BetCreatorPanel writes `scope_ref = fixture.id` for match_result (session 37)
+- ✅ **3.4** · `resolve-finished-bets` cron scheduled — migration 72 (session 37)
 
 ## Frontend stability hot spots
 
@@ -139,17 +139,17 @@ A small number of items must land in a specific order:
 - ✅ **U10** · `DraftRecoveryScreen` derives active matchday_id from matchday_deadlines
 - ✅ **U11** · `SquadScreen.fetchSquad` scoped to active matchday_id
 - ✅ **U12** · `RecapScreen` resolves matchday from `matchday_deadlines` via tournament_id
-- **U13** · `RecapScreen` captain math convention (pick base or effective)
-- **U6** · `LiveScreen` Realtime subscription (replaces 5-min poll)
+- ✅ **U13** · `RecapScreen` captain math — `effectivePoints()` mirrors `calculate-scores` (session 36/37)
+- ✅ **U6** · `LiveScreen` Realtime subscription — `match_events INSERT` + `player_match_stats UPDATE` on live fixture IDs; 60s safety-net poll (session 37)
 
 ## Catastrophic UX gaps
 
-- **U3** · `/join?code=` route handler
-- **U7** · Joker — ship or remove (paired with L1.5)
-- **U8** · Trade proposals — hide ("coming soon") or wire to DB
+- ✅ **U3** · `/join?code=` route handler — `LeagueScreen` reads `?joinCode=` from URL (session 36)
+- ✅ **U7** · Joker UI wired — RecapScreen `effectivePoints()` applies ×2; `recap.joker` set from `squads.joker_player_id` (session 37)
+- ✅ **U8** · Trade proposals → "coming soon" toast (session 36)
 - **U33** · Replace `CreateBetWizard` mock data with `BetCreatorPanel`
-- **U34** · `TEMPLATE_UUID` slug→id lookup (paired with 3.2)
-- **U30** · Realtime standings handles INSERT (new members invisible otherwise)
+- ✅ **U34** · `TEMPLATE_UUID` slug→id lookup — runtime lookup in `BetCreatorPanel` + `useCommissioner` (session 37)
+- ✅ **U30** · Realtime standings handles INSERT — new members appear immediately (session 36)
 
 ## Draft fairness & relaxation
 
@@ -170,11 +170,11 @@ A small number of items must land in a specific order:
 
 ## Observability (foundation — informs all later debugging)
 
-- **O1** · Extract `_shared/log.ts` helper
-- **O2** · Apply `logError` across remaining 11 edge functions
-- **O3** · `client_errors` table + RPC + frontend `unhandledrejection` / `window.error` listeners
-- **O4** · Auto-prune cron for error logs (30d / 14d)
-- **O5** · Read-only admin error view (3 panels)
+- ✅ **O1** · Extract `_shared/log.ts` helper (session 36)
+- ✅ **O2** · Apply `logError` across all 11 edge functions (session 36)
+- ✅ **O3** · `client_errors` table + RPC + frontend listeners — migration 71 (session 36)
+- ✅ **O4** · Auto-prune cron — migration 71 (session 36)
+- ✅ **O5** · `AdminSeedScreen` ObservabilityPanel — edge + client error panels (session 36)
 
 ---
 

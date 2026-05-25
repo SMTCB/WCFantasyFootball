@@ -2,30 +2,38 @@
 
 **Date**: 2026-05-25  
 **Latest branch merged**: `claude/s1-live-bets` → `main`  
-**Previous migrations applied**: 66, 67, 68, 69, 70
+**Migrations applied**: 66, 67, 68, 69, 70, 71, 72 ✅ ALL APPLIED
 
 ---
 
-## Session 37 — What to Deploy Now (NEW)
+## Session 37 — ✅ DEPLOYED
 
-### 1. SQL Migration (run in Supabase dashboard SQL editor)
+### Migration 71 — applied ✅
+- `client_errors` table + `report_client_error` RPC + `prune-error-logs` cron
 
-```sql
--- File: supabase/migrations/72_bet_resolution.sql
--- Paste and run this file's contents in the Supabase SQL editor
-```
+### Migration 72 — applied ✅
+- `resolve_bet` hardened (options validation + `{winners, total}` return)
+- `resolve-finished-bets` cron every 15 min
 
-**What migration 72 does:**
-- Replaces `resolve_bet` function with hardened version: validates `p_correct_answer` against declared options before marking submissions; returns `{ winners, total }` instead of misleading `submissions_updated`
-- Schedules `resolve-finished-bets` cron (every 15 min): invokes `resolve-bets` edge function to auto-resolve closed `match_result` bets from `fixtures.home_score/away_score`
-
-### 2. New Edge Function to Deploy
+### Edge Functions still pending deploy
 
 ```bash
+# Session 36 — all 11 functions updated (shared log.ts):
+supabase functions deploy calculate-scores
+supabase functions deploy ingest-match-events
+supabase functions deploy process-transfer
+supabase functions deploy run-draft-lottery
+supabase functions deploy run-reverse-standings-draft
+supabase functions deploy sync-fixtures
+supabase functions deploy sync-players
+supabase functions deploy sync-player-status
+supabase functions deploy calculate-relaxation
+supabase functions deploy eliminate-cup-club
+supabase functions deploy auto-open-transfer-window
+
+# Session 37 — new function:
 supabase functions deploy resolve-bets
 ```
-
-**What `resolve-bets` does:** Queries all `status='closed'` bet_instances where `resolves_at < NOW()`, looks up fixture result for `match_result` type bets, calls `resolve_bet` RPC. Runs hands-free every 15 min via cron.
 
 ---
 
