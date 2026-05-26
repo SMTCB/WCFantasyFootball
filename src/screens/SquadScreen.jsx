@@ -101,12 +101,9 @@ export default function SquadScreen() {
         .select('league_id, leagues(id, name, tournament_id)')
         .eq('user_id', user?.id);
       const list = (data ?? []).map(r => ({ id: r.league_id, name: r.leagues?.name ?? r.league_id, tournament_id: r.leagues?.tournament_id }));
-      if (list.length === 1) {
-        setActiveLeague(list[0].id);
-        setLeagues([]);
-      } else {
-        setLeagues(list);
-      }
+      // Always set leagues list so the selector can be shown.
+      // Auto-select only when coming from a leagueId URL param (handled above).
+      setLeagues(list);
     };
     if (user?.id) init();
   }, [user?.id, leagueIdParam]);
@@ -536,8 +533,22 @@ export default function SquadScreen() {
     finally { setSaving(false); }
   };
 
-  // League picker — shown when user has multiple leagues and none is selected
-  if (leagues && leagues.length > 1 && !activeLeague) {
+  // No leagues — prompt to join or create
+  if (leagues !== null && leagues.length === 0 && !activeLeague) {
+    return (
+      <div className="min-h-screen bg-bg flex flex-col items-center justify-center px-6 gap-4">
+        <div className="text-[13px] font-black uppercase tracking-widest mb-2" style={{ color: 'var(--mute)', fontFamily: 'Archivo Black, sans-serif' }}>
+          No League Yet
+        </div>
+        <p style={{ color: 'var(--mute)', fontFamily: 'JetBrains Mono, monospace', fontSize: 11, textAlign: 'center', maxWidth: 260, lineHeight: 1.6 }}>
+          You need to join or create a league before building your squad.
+        </p>
+      </div>
+    );
+  }
+
+  // League picker — shown when user has one or more leagues and none is selected
+  if (leagues && leagues.length >= 1 && !activeLeague) {
     return (
       <div className="min-h-screen bg-bg flex flex-col items-center justify-center px-6 gap-4">
         <div className="text-[13px] font-black uppercase tracking-widest mb-2" style={{ color: 'var(--mute)', fontFamily: 'Archivo Black, sans-serif' }}>
@@ -570,6 +581,34 @@ export default function SquadScreen() {
   }
 
   const { budget, players, bench, captainId, locked_at } = squadData;
+
+  // Empty squad — no players signed yet; prompt user to go to Market
+  if (!players.length && !bench.length) {
+    return (
+      <div className="min-h-screen bg-bg flex flex-col items-center justify-center px-6 gap-4">
+        <div className="text-[13px] font-black uppercase tracking-widest mb-2" style={{ color: 'var(--mute)', fontFamily: 'Archivo Black, sans-serif' }}>
+          No Squad Built Yet
+        </div>
+        <p style={{ color: 'var(--mute)', fontFamily: 'JetBrains Mono, monospace', fontSize: 11, textAlign: 'center', maxWidth: 280, lineHeight: 1.6 }}>
+          Head to the Transfer Market to sign your first 11 players.
+        </p>
+        <div style={{ display: 'flex', gap: 10, marginTop: 8 }}>
+          <a href="#/market" style={{ padding: '10px 22px', background: 'var(--gold)', color: 'var(--ink)', fontFamily: 'Archivo Black, sans-serif', fontSize: 11, letterSpacing: '.08em', textTransform: 'uppercase', textDecoration: 'none' }}>
+            Transfer Market →
+          </a>
+          {leagues && leagues.length > 1 && (
+            <button
+              onClick={() => setActiveLeague(null)}
+              style={{ padding: '10px 22px', background: 'transparent', border: '1px solid var(--rule)', color: 'var(--mute)', fontFamily: 'JetBrains Mono, monospace', fontSize: 10, letterSpacing: '.14em', cursor: 'pointer' }}
+            >
+              Switch League
+            </button>
+          )}
+        </div>
+      </div>
+    );
+  }
+
   const isLocked        = deadline.isLocked;
   const allSquadPlayers = [...players, ...bench];
   const dangerPlayers   = getDangerZonePlayers(allSquadPlayers);

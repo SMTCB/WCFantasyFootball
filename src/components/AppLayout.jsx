@@ -57,11 +57,17 @@ export default function AppLayout({ children }) {
               (path !== '/' && location.pathname.startsWith(path));
             const liveColor = 'var(--danger)';
             const activeColor = isLive ? liveColor : 'var(--cyan)';
+            // If already on a league detail page, stay on that page instead of
+            // resetting to /league (which would drop the user back to the list).
+            const alreadyOnLeague = key === 'league' && location.pathname.startsWith('/league/');
+            const navTo = alreadyOnLeague
+              ? location.pathname + location.search
+              : path;
 
             return (
               <Link
                 key={key}
-                to={path}
+                to={navTo}
                 title={desc}
                 className="relative flex items-center gap-3 mx-3 px-3 py-2.5 transition-all duration-150"
                 style={{
@@ -191,11 +197,16 @@ export default function AppLayout({ children }) {
             const isActive = location.pathname === path ||
               (path !== '/' && location.pathname.startsWith(path));
             const activeColor = isLive ? 'var(--danger)' : 'var(--cyan)';
+            // Stay on current league detail page when tapping LEAGUE nav while already in a league
+            const alreadyOnLeague = key === 'league' && location.pathname.startsWith('/league/');
+            const navTo = alreadyOnLeague
+              ? location.pathname + location.search
+              : path;
 
             return (
               <Link
                 key={key}
-                to={path}
+                to={navTo}
                 className="relative flex-1 flex flex-col items-center justify-center gap-1 transition-all"
                 style={{ color: isActive ? activeColor : 'var(--mute)' }}
               >
