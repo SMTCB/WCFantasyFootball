@@ -723,16 +723,7 @@ export default function HomeScreen() {
       {filtered.length === 0 && (
         <div style={{ padding: '48px 32px', textAlign: 'center' }}>
           <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 10, color: 'var(--mute)', letterSpacing: '.22em', marginBottom: 10 }}>NO FIXTURES</div>
-          <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 22, letterSpacing: '-0.02em', marginBottom: 32 }}>Nothing scheduled</div>
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
-            <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 10, color: 'var(--mute)', letterSpacing: '.18em', marginBottom: 4 }}>GET STARTED</div>
-            <a href="#/squad" style={{ display: 'block', padding: '12px 28px', background: 'var(--gold)', color: 'var(--ink)', fontFamily: 'Archivo Black, sans-serif', fontSize: 12, fontWeight: 800, letterSpacing: '.08em', textTransform: 'uppercase', textDecoration: 'none', borderRadius: 4 }}>
-              Build Your Squad →
-            </a>
-            <a href="#/league" style={{ display: 'block', padding: '12px 28px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)', color: 'var(--paper)', fontFamily: 'Archivo Black, sans-serif', fontSize: 12, fontWeight: 800, letterSpacing: '.08em', textTransform: 'uppercase', textDecoration: 'none', borderRadius: 4 }}>
-              Join a League →
-            </a>
-          </div>
+          <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 22, letterSpacing: '-0.02em' }}>Nothing scheduled</div>
         </div>
       )}
       {view === 'date' && dateGroups.map(g => (
@@ -783,25 +774,14 @@ export default function HomeScreen() {
               {liveCount}
             </div>
           </div>
-          {/* Calendar date-jump button — transparent input overlaid so native picker opens on click */}
-          <div style={{ position: 'relative', display: 'inline-flex', alignSelf: 'flex-end' }} title="Jump to date">
-            <div style={{
-              width: 34, height: 34, border: '1px solid var(--rule)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              color: 'var(--mute)', cursor: 'pointer',
-              fontFamily: 'JetBrains Mono, monospace', fontSize: 13, userSelect: 'none',
-            }}>⊟</div>
-            <input
-              ref={calInputRef}
-              type="date"
-              value={selectedDate}
-              onChange={e => { if (e.target.value) setSelectedDate(e.target.value); }}
-              style={{
-                position: 'absolute', inset: 0, opacity: 0, cursor: 'pointer',
-                width: '100%', height: '100%', padding: 0, margin: 0, border: 0,
-              }}
-            />
-          </div>
+          {/* Hidden date input — triggered by clicking the DATE display box above */}
+          <input
+            ref={calInputRef}
+            type="date"
+            value={selectedDate}
+            onChange={e => { if (e.target.value) setSelectedDate(e.target.value); }}
+            style={{ position: 'absolute', opacity: 0, width: 1, height: 1, pointerEvents: 'none', overflow: 'hidden' }}
+          />
         </div>
       </div>
 
@@ -928,25 +908,14 @@ export default function HomeScreen() {
               }}>›</button>
             </div>
           )}
-          {/* Mobile calendar picker icon */}
-          <div style={{ position: 'relative', display: 'inline-flex', flexShrink: 0 }} title="Jump to date">
-            <div style={{
-              width: 28, height: 28, border: '1px solid var(--rule)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              color: 'var(--mute)', cursor: 'pointer',
-              fontFamily: 'JetBrains Mono, monospace', fontSize: 12,
-            }}>⊟</div>
-            <input
-              ref={mobCalInputRef}
-              type="date"
-              value={selectedDate}
-              onChange={e => { if (e.target.value) setSelectedDate(e.target.value); }}
-              style={{
-                position: 'absolute', inset: 0, opacity: 0, cursor: 'pointer',
-                width: '100%', height: '100%', padding: 0, margin: 0, border: 0,
-              }}
-            />
-          </div>
+          {/* Hidden mobile date input — triggered by clicking the DATE display box */}
+          <input
+            ref={mobCalInputRef}
+            type="date"
+            value={selectedDate}
+            onChange={e => { if (e.target.value) setSelectedDate(e.target.value); }}
+            style={{ position: 'absolute', opacity: 0, width: 1, height: 1, pointerEvents: 'none', overflow: 'hidden' }}
+          />
         </div>
         {/* Row B: comp chips */}
         <div style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 2 }}>

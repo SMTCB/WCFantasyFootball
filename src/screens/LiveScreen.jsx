@@ -545,7 +545,8 @@ export default function LiveScreen() {
     } finally {
       setLoading(false);
     }
-  }, [user?.id]);
+  // activeLeague?.id in deps so the squad re-fetches whenever the user switches leagues
+  }, [user?.id, activeLeague?.id]);
 
   useEffect(() => {
     fetchAll();
