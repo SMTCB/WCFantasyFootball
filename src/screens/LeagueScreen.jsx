@@ -787,6 +787,7 @@ export default function LeagueScreen() {
 
          {view === 'detail' && (
            <LeagueDetailView
+             leagueId={activeLeague?.league_id}
              members={members}
              currentUser={currentUser}
              membersLoading={membersLoading}
