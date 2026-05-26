@@ -451,6 +451,43 @@ npx cap open android     # Open Android Studio
 
 ---
 
+## Supabase Direct DB Access
+
+**Always use `npx supabase db query --linked` for any DB inspection or one-off data fix.**
+
+This runs as the DB owner (bypasses RLS) and works without Docker or a DB password.
+
+```bash
+# Read query
+npx supabase db query --linked "SELECT * FROM players WHERE tournament_id = '426' LIMIT 5;"
+
+# Write query (UPDATE, INSERT, DELETE — bypasses RLS)
+npx supabase db query --linked "UPDATE players SET price = 5.0 WHERE tournament_id = '426' AND price IS NULL;"
+
+# Check cron jobs
+npx supabase db query --linked "SELECT jobname, schedule, active FROM cron.job ORDER BY jobname;"
+
+# Multi-statement (use semicolons; last SELECT is returned)
+npx supabase db query --linked "UPDATE players SET price = ROUND((RANDOM()*2+4)::NUMERIC,1) WHERE price IS NULL; SELECT COUNT(*) FROM players WHERE price IS NOT NULL;"
+```
+
+**When to use this vs other approaches:**
+- `npx supabase db query --linked` — ✅ always works for reads AND writes; use this first
+- Supabase JS client with anon key — ❌ blocked by RLS for most writes; only use for read-only checks
+- Supabase dashboard SQL editor — fallback if CLI is not linked (run `npx supabase link --project-ref sssmvihxtqtohisghjet` first)
+- `supabase functions deploy` — only for deploying Edge Functions, not DB queries
+
+**If the CLI isn't linked yet** (new machine / fresh clone):
+```bash
+npx supabase login                                          # opens browser auth
+npx supabase link --project-ref sssmvihxtqtohisghjet       # links to this project
+```
+
+**Project ref**: `sssmvihxtqtohisghjet`  
+**Supabase dashboard**: https://supabase.com/dashboard/project/sssmvihxtqtohisghjet
+
+---
+
 ## Supabase Migrations
 
 Always create a new file — never modify existing migrations.
