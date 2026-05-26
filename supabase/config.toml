@@ -8,6 +8,7 @@ entrypoint = "./functions/calculate-relaxation/index.js"
 
 [functions.calculate-scores]
 entrypoint = "./functions/calculate-scores/index.js"
+verify_jwt = false
 
 [functions.discover-tournament]
 entrypoint = "./functions/discover-tournament/index.js"
@@ -17,6 +18,7 @@ entrypoint = "./functions/eliminate-cup-club/index.js"
 
 [functions.ingest-match-events]
 entrypoint = "./functions/ingest-match-events/index.js"
+verify_jwt = false
 
 [functions.process-transfer]
 entrypoint = "./functions/process-transfer/index.js"

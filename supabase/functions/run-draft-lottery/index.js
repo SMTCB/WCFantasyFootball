@@ -88,10 +88,10 @@ Deno.serve(async (req) => {
 });
 
 async function runLottery(leagueId) {
-  // 1. Load league config (squad_size, position_limits, tournament_id, budget) + pending submissions
+  // 1. Load league config (squad_size, position_limits, tournament_id, budget_total, draft_list_size) + pending submissions
   const [{ data: leagueRow }, { data: submissions }] = await Promise.all([
     supabase.from('leagues')
-      .select('squad_size, position_limits, tournament_id, budget, league_config')
+      .select('squad_size, position_limits, tournament_id, budget_total, draft_list_size')
       .eq('id', leagueId)
       .maybeSingle(),
     supabase.from('draft_submissions')
@@ -106,10 +106,10 @@ async function runLottery(leagueId) {
   // Per-league squad size, position caps, and budget (fall back to defaults)
   const SQUAD_SIZE     = Number(leagueRow?.squad_size ?? DEFAULT_SQUAD_SIZE);
   const SQUAD_POS_CAPS = leagueRow?.position_limits   ?? DEFAULT_SQUAD_POS_CAPS;
-  const budget         = Number(leagueRow?.budget     ?? 100);
+  const budget         = Number(leagueRow?.budget_total ?? 100);
 
   // L5.13: cap each submission's player_ids to draft_list_size from league config
-  const maxLen = leagueRow?.league_config?.draft_list_size ?? 30;
+  const maxLen = leagueRow?.draft_list_size ?? 30;
   submissions.forEach(s => { s.player_ids = (s.player_ids || []).slice(0, maxLen); });
 
   // 2. Load player prices for budget enforcement
@@ -262,7 +262,6 @@ async function runLottery(leagueId) {
   const squadRows = Object.entries(allocations).map(([userId, data]) => ({
     user_id:          userId,
     league_id:        leagueId,
-    tournament_id:    leagueWithTournament ?? null,
     players:          data.allocated_players,
     budget_remaining: Math.round((budget - data.budget_used) * 100) / 100,
     matchday_id:      canonicalMatchdayId,
