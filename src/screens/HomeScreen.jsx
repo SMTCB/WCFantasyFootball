@@ -605,7 +605,8 @@ export default function HomeScreen() {
 
   // ── Calendar-based navigation (not fixture-locked) ───────────────
   // List mode: ±1 day.  Week mode: ±7 days (prev/next whole week).
-  const calInputRef = useRef(null);
+  const calInputRef    = useRef(null);
+  const mobCalInputRef = useRef(null);
 
   const datePrev = useCallback(() => {
     setSelectedDate(prev => addDays(prev, viewMode === 'week' ? -7 : -1));
@@ -873,7 +874,10 @@ export default function HomeScreen() {
               ) : (
                 <>
                   <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 9, color: 'var(--mute)', letterSpacing: '.22em' }}>DATE</div>
-                  <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 12, letterSpacing: '-0.01em', marginTop: 2 }}>{selectedDate.split('-').reverse().join('/')}</div>
+                  <div
+                    onClick={() => calInputRef.current?.showPicker?.() || calInputRef.current?.click()}
+                    style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 12, letterSpacing: '-0.01em', marginTop: 2, cursor: 'pointer' }}
+                  >{selectedDate.split('-').reverse().join('/')}</div>
                 </>
               )}
             </div>
@@ -911,7 +915,10 @@ export default function HomeScreen() {
                 borderRight: '1px solid var(--rule)',
                 color: 'var(--paper)', fontFamily: 'JetBrains Mono, monospace', fontSize: 12, cursor: 'pointer',
               }}>‹</button>
-              <div style={{ padding: '0 6px', height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, minWidth: 72 }}>
+              <div
+                onClick={() => mobCalInputRef.current?.showPicker?.() || mobCalInputRef.current?.click()}
+                style={{ padding: '0 6px', height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, minWidth: 72, cursor: 'pointer' }}
+              >
                 <div style={{ fontFamily: 'Archivo Black, sans-serif' }}>{selectedDate.split('-').reverse().join('/')}</div>
               </div>
               <button onClick={dateNext} style={{
@@ -930,6 +937,7 @@ export default function HomeScreen() {
               fontFamily: 'JetBrains Mono, monospace', fontSize: 12,
             }}>⊟</div>
             <input
+              ref={mobCalInputRef}
               type="date"
               value={selectedDate}
               onChange={e => { if (e.target.value) setSelectedDate(e.target.value); }}

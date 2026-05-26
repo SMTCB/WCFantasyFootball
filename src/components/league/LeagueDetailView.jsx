@@ -1,7 +1,9 @@
+import { useState } from 'react';
 import { MgrTag, TrendPill, HubSectionLabel, MobFormDots, MobSection } from './HubShared';
 import { MONO, DISPLAY, miniBtnStyle, mgrHue, mgrMono } from './HubConstants';
 
 export default function LeagueDetailView({ members, currentUser, membersLoading, onH2h, onViewManager }) {
+  const [activityFilter, setActivityFilter] = useState('ALL');
   const myEntry   = members.find(m => currentUser && m.user_id === currentUser.id);
   const myRank    = myEntry?.rank ?? '—';
   const myPts     = myEntry?.total_points ?? '—';
@@ -142,9 +144,23 @@ export default function LeagueDetailView({ members, currentUser, membersLoading,
           <div style={{ padding: '12px 18px', borderTop: '1px solid var(--rule)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <span style={{ fontFamily: MONO, fontSize: 10, color: 'var(--mute)', letterSpacing: '.18em' }}>FILTER</span>
             <div style={{ display: 'flex', gap: 6 }}>
-              {['ALL', 'GAME', 'BETS', 'TRADES'].map((f, i) => (
-                <span key={f} style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.18em', padding: '3px 6px', border: `1px solid ${i === 0 ? 'var(--cyan)' : 'var(--rule)'}`, color: i === 0 ? 'var(--cyan)' : 'var(--mute)' }}>{f}</span>
-              ))}
+              {['ALL', 'GAME', 'BETS', 'TRADES'].map((f) => {
+                const active = activityFilter === f;
+                return (
+                  <button
+                    key={f}
+                    onClick={() => setActivityFilter(f)}
+                    style={{
+                      fontFamily: MONO, fontSize: 9, letterSpacing: '.18em',
+                      padding: '3px 6px',
+                      border: `1px solid ${active ? 'var(--cyan)' : 'var(--rule)'}`,
+                      color: active ? 'var(--cyan)' : 'var(--mute)',
+                      background: active ? 'rgba(0,180,216,.08)' : 'transparent',
+                      cursor: 'pointer',
+                    }}
+                  >{f}</button>
+                );
+              })}
             </div>
           </div>
         </aside>

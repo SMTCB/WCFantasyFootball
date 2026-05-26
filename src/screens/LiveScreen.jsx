@@ -296,7 +296,7 @@ function positionPlayers(players) {
     const grp = byPos[pos] || [];
     grp.forEach((p, i) => {
       const n = grp.length;
-      const x = n === 1 ? 50 : Math.round(10 + (i / (n - 1)) * 80);
+      const x = n === 1 ? 50 : Math.round(20 + (i / (n - 1)) * 60);
       positioned.push({ ...p, x, y: POS_Y[pos] || 50 });
     });
   }
