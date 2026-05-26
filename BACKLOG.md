@@ -1,8 +1,41 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-05-25 (session 43 — Sprint 4 complete; migration 78 applied to production)  
+**Last Updated**: 2026-05-26 (session 44 — Full E2E live data test; 3 critical bugs fixed; migration 79 applied)  
 **E2E Test Suite**: 84/84 platform tests passing ✅ + `scoring-pipeline.spec.js` added  
 **Live App**: https://wc-fantasy-football.vercel.app
+
+---
+
+## 📊 SESSION 44 PROGRESS (2026-05-26 — Full E2E Live Data Test)
+
+**Goal**: End-to-end test of the complete fantasy football flow using real Forza API data: league creation → draft → GW30/31 scoring → bets → transfers → auctions.
+
+**🚀 COMPLETED THIS SESSION:**
+
+- ✅ **PR #201 `claude/e2e-test-fixes`** — 3 critical bug fixes + migration 79 — merged to main
+
+**League EPL_OVERALL_E2E created and tested:**
+- 8 managers (3 with manual+autofill lists, 5 with full autofill), 15-player squads, no overlaps ✓
+- GW30 real data ingested: 10 fixtures, 661 player_match_stats
+- GW30 scores: range 5.66–28.43 pts; GW31: 3.49–24.13 pts
+- 3 bets created + 24 submissions + resolved (Liverpool 1–1 Tottenham = draw)
+- 3 transfers completed; 2 auction listings with 3 bids
+
+**Critical Bugs Fixed:**
+- ✅ **BUG-01/02**: `run-draft-lottery` used wrong column names (`budget` → `budget_total`, removed non-existent `tournament_id` from squads upsert) — was causing ALL managers to get 0 players
+- ✅ **BUG-06**: `fantasy_points.total INTEGER` rejects decimal scores → **migration 79** changes to NUMERIC
+- ✅ `verify_jwt = false` added to `calculate-scores` and `ingest-match-events` in config.toml
+
+**Open Bugs Found (not fixed, logged in E2E_TEST_REPORT.md):**
+- 🐛 **BUG-05**: Auctions UI queries `auction_listings` but data lives in `trade_listings` — auctions always show empty
+- 🐛 **BUG-09**: Draft screen shows WC players for EPL leagues (`get_cup_available_players` doesn't filter by tournament for non-cup leagues)
+- 🐛 **BUG-07/08/10/11**: RLS blocks anon-key reads on squads/draft_submissions/tournaments — Squad/Recap/Draft screens broken in demo mode
+- 🐛 **BUG-12**: Live screen shows wrong tournament's next fixture (WC instead of EPL)
+- 🐛 **BUG-13**: Admin panel edge function calls need `verify_jwt = false` on all admin functions
+
+**Migration applied to production**: `79_fantasy_points_total_numeric.sql`
+
+**Session 44 status: ✅ COMPLETE.** Fixes merged; test data preserved in DB for UI review.
 
 ---
 
