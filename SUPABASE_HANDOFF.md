@@ -45,7 +45,10 @@ Open the **Supabase dashboard SQL editor** and run each file in order:
 
 ---
 
-### Step 2 — Deploy All Edge Functions
+### ~~Step 2 — Deploy All Edge Functions~~ ✅ DONE (2026-05-26)
+
+All 14 functions deployed via `npx supabase functions deploy <name> --use-api`.  
+`supabase/config.toml` created with explicit `.js` entrypoints for all functions (CLI defaults to `.ts`).
 
 From the project root (`git pull origin main` first):
 

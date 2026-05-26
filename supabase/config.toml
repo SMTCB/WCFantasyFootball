@@ -1,0 +1,45 @@
+project_id = "sssmvihxtqtohisghjet"
+
+[functions.auto-open-transfer-window]
+entrypoint = "./functions/auto-open-transfer-window/index.js"
+
+[functions.calculate-relaxation]
+entrypoint = "./functions/calculate-relaxation/index.js"
+
+[functions.calculate-scores]
+entrypoint = "./functions/calculate-scores/index.js"
+
+[functions.discover-tournament]
+entrypoint = "./functions/discover-tournament/index.js"
+
+[functions.eliminate-cup-club]
+entrypoint = "./functions/eliminate-cup-club/index.js"
+
+[functions.ingest-match-events]
+entrypoint = "./functions/ingest-match-events/index.js"
+
+[functions.process-transfer]
+entrypoint = "./functions/process-transfer/index.js"
+verify_jwt = false
+
+[functions.resolve-bets]
+entrypoint = "./functions/resolve-bets/index.js"
+
+[functions.run-draft-lottery]
+entrypoint = "./functions/run-draft-lottery/index.js"
+verify_jwt = false
+
+[functions.run-reverse-standings-draft]
+entrypoint = "./functions/run-reverse-standings-draft/index.js"
+
+[functions.sync-fixtures]
+entrypoint = "./functions/sync-fixtures/index.js"
+
+[functions.sync-player-status]
+entrypoint = "./functions/sync-player-status/index.js"
+
+[functions.sync-players]
+entrypoint = "./functions/sync-players/index.js"
+
+[functions.test-forza-api]
+entrypoint = "./functions/test-forza-api/index.js"
