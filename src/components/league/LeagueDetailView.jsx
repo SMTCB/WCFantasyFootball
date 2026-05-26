@@ -1,9 +1,60 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { MgrTag, TrendPill, HubSectionLabel, MobFormDots, MobSection } from './HubShared';
 import { MONO, DISPLAY, miniBtnStyle, mgrHue, mgrMono } from './HubConstants';
+import { supabase } from '../../lib/supabase';
 
-export default function LeagueDetailView({ members, currentUser, membersLoading, onH2h, onViewManager }) {
+// Maps gazette entry_type to a filter category and display label
+const ENTRY_META = {
+  draft_report:     { filter: 'GAME',   badge: 'DRAFT',    color: 'var(--gold)' },
+  rank_change:      { filter: 'GAME',   badge: 'RANKS',    color: 'var(--cyan)' },
+  relaxation:       { filter: 'GAME',   badge: 'POOL',     color: 'var(--cyan)' },
+  cup_elimination:  { filter: 'GAME',   badge: 'CUP',      color: 'var(--danger)' },
+  bet_result:       { filter: 'BETS',   badge: 'BETS',     color: '#A855F7' },
+  transfer:         { filter: 'TRADES', badge: 'TRANSFER', color: 'var(--positive)' },
+};
+
+function timeAgo(iso) {
+  const diff = Math.floor((Date.now() - new Date(iso)) / 1000);
+  if (diff < 60)   return `${diff}s ago`;
+  if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+  if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+  return `${Math.floor(diff / 86400)}d ago`;
+}
+
+export default function LeagueDetailView({ leagueId, members, currentUser, membersLoading, onH2h, onViewManager }) {
   const [activityFilter, setActivityFilter] = useState('ALL');
+  const [entries, setEntries] = useState([]);
+  const channelRef = useRef(null);
+
+  useEffect(() => {
+    if (!leagueId) return;
+
+    supabase
+      .from('gazette_entries')
+      .select('id, entry_type, headline, published_at')
+      .eq('league_id', leagueId)
+      .order('published_at', { ascending: false })
+      .limit(30)
+      .then(({ data }) => setEntries(data ?? []));
+
+    // Realtime: prepend new entries as they arrive (draft lottery, cup events, etc.)
+    channelRef.current = supabase
+      .channel(`gazette:${leagueId}`)
+      .on('postgres_changes', {
+        event: 'INSERT', schema: 'public', table: 'gazette_entries',
+        filter: `league_id=eq.${leagueId}`,
+      }, (payload) => {
+        setEntries(prev => [payload.new, ...prev]);
+      })
+      .subscribe();
+
+    return () => {
+      if (channelRef.current) {
+        supabase.removeChannel(channelRef.current);
+        channelRef.current = null;
+      }
+    };
+  }, [leagueId]);
   const myEntry   = members.find(m => currentUser && m.user_id === currentUser.id);
   const myRank    = myEntry?.rank ?? '—';
   const myPts     = myEntry?.total_points ?? '—';
@@ -135,13 +186,48 @@ export default function LeagueDetailView({ members, currentUser, membersLoading,
 
         {/* Activity rail */}
         <aside style={{ display: 'flex', flexDirection: 'column', background: 'var(--ink-2)' }}>
-          <HubSectionLabel label="LEAGUE ACTIVITY" sub="LIVE" tone="var(--gold)" right={<span style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)' }}>LAST 24H</span>} />
-          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '32px 18px', gap: 8 }}>
-            <div style={{ fontSize: 24 }}>⚽</div>
-            <div style={{ fontFamily: MONO, fontSize: 10, color: 'var(--mute)', letterSpacing: '.2em', textAlign: 'center' }}>NO ACTIVITY YET</div>
-            <div style={{ fontFamily: "'Archivo', sans-serif", fontSize: 11, color: 'var(--mute)', opacity: 0.6, textAlign: 'center', lineHeight: 1.5 }}>Match events, rank changes, and league news will appear here once the season starts.</div>
-          </div>
-          <div style={{ padding: '12px 18px', borderTop: '1px solid var(--rule)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <HubSectionLabel label="LEAGUE ACTIVITY" sub="LIVE" tone="var(--gold)" right={<span style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)' }}>RECENT</span>} />
+          {/* Feed */}
+          {(() => {
+            const filtered = activityFilter === 'ALL'
+              ? entries
+              : entries.filter(e => (ENTRY_META[e.entry_type]?.filter ?? 'GAME') === activityFilter);
+            if (filtered.length === 0) return (
+              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '32px 18px', gap: 8 }}>
+                <div style={{ fontSize: 24 }}>⚽</div>
+                <div style={{ fontFamily: MONO, fontSize: 10, color: 'var(--mute)', letterSpacing: '.2em', textAlign: 'center' }}>NO ACTIVITY YET</div>
+                <div style={{ fontFamily: "'Archivo', sans-serif", fontSize: 11, color: 'var(--mute)', opacity: 0.6, textAlign: 'center', lineHeight: 1.5 }}>
+                  Draft results, rank changes, and league news will appear here as the season unfolds.
+                </div>
+              </div>
+            );
+            return (
+              <div style={{ flex: 1, overflow: 'auto' }}>
+                {filtered.map((e) => {
+                  const meta = ENTRY_META[e.entry_type] ?? { badge: e.entry_type.toUpperCase(), color: 'var(--mute)' };
+                  return (
+                    <div key={e.id} style={{ padding: '12px 18px', borderBottom: '1px solid var(--rule)' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+                        <span style={{
+                          fontFamily: MONO, fontSize: 8, letterSpacing: '.18em',
+                          padding: '2px 5px', border: `1px solid ${meta.color}`,
+                          color: meta.color, flexShrink: 0,
+                        }}>{meta.badge}</span>
+                        <span style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)' }}>
+                          {timeAgo(e.published_at)}
+                        </span>
+                      </div>
+                      <div style={{ fontFamily: "'Archivo', sans-serif", fontSize: 12, fontWeight: 600, color: 'var(--paper)', lineHeight: 1.35 }}>
+                        {e.headline}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            );
+          })()}
+          {/* Filter bar */}
+          <div style={{ padding: '12px 18px', borderTop: '1px solid var(--rule)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
             <span style={{ fontFamily: MONO, fontSize: 10, color: 'var(--mute)', letterSpacing: '.18em' }}>FILTER</span>
             <div style={{ display: 'flex', gap: 6 }}>
               {['ALL', 'GAME', 'BETS', 'TRADES'].map((f) => {
