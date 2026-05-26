@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useMemo, useRef } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { normalizeIntelligence } from '../lib/intelligence';
@@ -19,9 +19,9 @@ import { POS_CONFIG, POS_FILTER_ORDER } from '../lib/formations';
 const COUNTRY_LIMIT = 3;
 
 const FLAG_MAP = {
-  FRA: 'ðŸ‡«ðŸ‡·', BRA: 'ðŸ‡§ðŸ‡·', ENG: 'ðŸ´ó §ó ¢ó ¥ó ®ó §ó ¿', ESP: 'ðŸ‡ªðŸ‡¸', BEL: 'ðŸ‡§ðŸ‡ª', POR: 'ðŸ‡µðŸ‡¹',
-  MAR: 'ðŸ‡²ðŸ‡¦', URU: 'ðŸ‡ºðŸ‡¾', ITA: 'ðŸ‡®ðŸ‡¹', NOR: 'ðŸ‡³ðŸ‡´', GER: 'ðŸ‡©ðŸ‡ª', ARG: 'ðŸ‡¦ðŸ‡·',
-  EGY: 'ðŸ‡ªðŸ‡¬', NED: 'ðŸ‡³ðŸ‡±', CRO: 'ðŸ‡­ðŸ‡·',
+  FRA: '🇫🇷', BRA: '🇧🇷', ENG: 'ðŸ´ó §ó ¢ó ¥ó ®ó §ó ¿', ESP: '🇪🇸', BEL: '🇧🇪', POR: '🇵🇹',
+  MAR: '🇲🇦', URU: '🇺🇾', ITA: '🇮🇹', NOR: '🇳🇴', GER: '🇩🇪', ARG: '🇦🇷',
+  EGY: '🇪🇬', NED: '🇳🇱', CRO: '🇭🇷',
 };
 
 const MARKET_TOUR_STEPS = [
@@ -33,7 +33,7 @@ const MARKET_TOUR_STEPS = [
   {
     target: 'market-budget',
     title:  'Your Budget',
-    body:   'Every player you buy deducts from your Â£100M budget. Sell players back to free up funds â€” but the window closes before each matchday.',
+    body:   'Every player you buy deducts from your £100M budget. Sell players back to free up funds — but the window closes before each matchday.',
   },
   {
     target: 'market-player-list',
@@ -92,7 +92,7 @@ export default function MarketScreen() {
     }
   };
 
-  // Auto-fill hook â€” reusable across screens
+  // Auto-fill hook — reusable across screens
   const { handleAutoFill, autoFilling, autoFillMsg } = useAutoFill(activeLeague, mySquad, fetchSquad, takenMap, buy, cfg);
 
   const resolveLeagueTournament = async (lid) => {
@@ -112,7 +112,7 @@ export default function MarketScreen() {
         resolveLeagueTournament(leagueId);
         return;
       }
-      // No leagueId in URL â€” fetch user's leagues
+      // No leagueId in URL — fetch user's leagues
       const { data } = await supabase
         .from('league_members')
         .select('league_id, leagues(id, name, tournament_id)')
@@ -132,7 +132,7 @@ export default function MarketScreen() {
   const fetchMarketParams = async () => {
     setLoading(true);
 
-    // â”€â”€ 1. Players â€” filtered by competition when known â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // â”€â”€ 1. Players — filtered by competition when known â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     try {
       let playersQuery = supabase.from('players').select('*').order('price', { ascending: false });
       if (tournamentId) playersQuery = playersQuery.eq('tournament_id', tournamentId);
@@ -275,12 +275,12 @@ export default function MarketScreen() {
     const isCaptain = mySquad?.captain_id === player.id;
     const isJoker   = todayJokerId === player.id;
     const warnings  = [];
-    if (isCaptain) warnings.push('This player is your captain â€” selling them removes the armband.');
-    if (isJoker)   warnings.push('This player is your Daily Joker â€” selling voids today\'s boost.');
+    if (isCaptain) warnings.push('This player is your captain — selling them removes the armband.');
+    if (isJoker)   warnings.push('This player is your Daily Joker — selling voids today\'s boost.');
 
     setConfirm({
       title:        `Sell ${player.name}?`,
-      body:         `You will receive Â£${player.price}M back into your budget.`,
+      body:         `You will receive £${player.price}M back into your budget.`,
       warning:      warnings.length ? warnings.join(' ') : null,
       confirmLabel: 'Sell',
       danger:       true,
@@ -307,7 +307,7 @@ export default function MarketScreen() {
   const squadCount  = mySquad?.players?.length || 0;
   const emptySlots  = Math.max(0, squadSize - squadCount);
 
-  // League picker â€” shown when user has multiple leagues and none is selected
+  // League picker — shown when user has multiple leagues and none is selected
   if (leagues && leagues.length > 1 && !activeLeague) {
     return (
       <div className="min-h-screen bg-bg flex flex-col items-center justify-center px-6 gap-4">
@@ -353,7 +353,7 @@ export default function MarketScreen() {
           className="flex items-center gap-3 px-5 py-3"
           style={{ background: 'rgba(240,58,58,0.10)', borderBottom: '1px solid rgba(240,58,58,0.25)' }}
         >
-          <span style={{ color: 'var(--danger)', fontSize: 13 }}>âš  {takenMapError}</span>
+          <span style={{ color: 'var(--danger)', fontSize: 13 }}>⚠  {takenMapError}</span>
         </div>
       )}
 
@@ -441,7 +441,7 @@ export default function MarketScreen() {
                 className="text-[16px] lg:text-[20px] font-black tabular-nums leading-tight"
                 style={{ fontFamily: 'Archivo Black, sans-serif', color: (budget ?? 0) < 5 ? 'var(--danger)' : 'var(--cyan)' }}
               >
-                Â£{(budget ?? 0).toFixed(1)}
+                £{(budget ?? 0).toFixed(1)}
                 <span className="text-[10px] lg:text-[12px] font-normal" style={{ color: 'var(--mute)' }}>M</span>
               </div>
               {emptySlots > 0 && (
@@ -470,7 +470,7 @@ export default function MarketScreen() {
                 whiteSpace: 'nowrap',
               }}
             >
-              {autoFilling ? 'FILLING' : 'âš¡ FILL'}
+              {autoFilling ? 'FILLING' : '⚡ FILL'}
             </button>
           </div>
         </div>
@@ -531,7 +531,7 @@ export default function MarketScreen() {
               className="px-2 py-1 rounded-sm flex items-center gap-1 shrink-0"
               style={{ background: 'rgba(24,201,107,0.12)', border: '1px solid rgba(24,201,107,0.25)' }}
             >
-              <span className="text-[8px]">âˆž</span>
+              <span className="text-[8px]">∞</span>
               <span
                 className="text-[8px] font-black uppercase"
                 style={{ color: 'var(--positive)', fontFamily: 'Archivo Black, sans-serif', letterSpacing: '0.08em' }}
@@ -546,7 +546,7 @@ export default function MarketScreen() {
         <div className="px-5 py-2.5 border-t" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
           <input
             type="text"
-            placeholder="Search player nameâ€¦"
+            placeholder="Search player name…"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full outline-none text-[13px]"
@@ -641,7 +641,7 @@ export default function MarketScreen() {
                   opacity:      takenByOther ? 0.65 : 1,
                 }}
               >
-                {/* Position chip â€” replaces circle avatar */}
+                {/* Position chip — replaces circle avatar */}
                 <PositionChip pos={p.position} />
 
                 {/* Status dot + name block */}
@@ -663,7 +663,7 @@ export default function MarketScreen() {
                       )}
                       {takenByOther && (
                         <span className="fk-mono shrink-0" style={{ fontSize: 8, color: 'var(--danger)', border: '1px solid var(--danger)', padding: '1px 5px' }}>
-                          {ownerName ? `TAKEN Â· ${ownerName}` : 'TAKEN'}
+                          {ownerName ? `TAKEN · ${ownerName}` : 'TAKEN'}
                         </span>
                       )}
                       {isJoker && (
@@ -674,7 +674,7 @@ export default function MarketScreen() {
                     </div>
                     {/* Metadata */}
                     <div className="fk-mono mt-0.5" style={{ fontSize: 9, color: 'var(--mute)', letterSpacing: '0.14em' }}>
-                      {p.club}{p.country ? ` Â· ${p.country}` : ''}
+                      {p.club}{p.country ? ` · ${p.country}` : ''}
                     </div>
                   </div>
                 </div>
@@ -686,7 +686,7 @@ export default function MarketScreen() {
                       className="fk-display tabular-nums"
                       style={{ fontSize: 16, color: canAfford || isOwned ? 'var(--paper)' : 'var(--danger)', letterSpacing: '-0.02em' }}
                     >
-                      Â£{p.price}
+                      £{p.price}
                       <span className="fk-mono" style={{ fontSize: 9, color: 'var(--mute)', fontWeight: 400 }}>M</span>
                     </div>
                   </div>
@@ -778,7 +778,7 @@ export default function MarketScreen() {
           className="text-[9px] font-semibold uppercase tracking-wider"
           style={{ color: 'var(--mute)', fontFamily: 'Archivo, sans-serif' }}
         >
-          Max {COUNTRY_LIMIT} per club (Joker exempt) Â· Max {squadSize} players Â· Â£{cfg.budgetTotal}M budget
+          Max {COUNTRY_LIMIT} per club (Joker exempt) · Max {squadSize} players · £{cfg.budgetTotal}M budget
         </span>
       </div>
     </div>
