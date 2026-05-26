@@ -237,6 +237,12 @@ export default function LeagueScreen() {
     return t;
   };
   // U32: set tab + sync to URL query param so ?tab=chat deep-links work
+  // setSearchParams MUST be in deps: React Router v7 recreates it whenever
+  // the location changes (it closes over navigate which closes over locationPathname).
+  // Both /league and /league/:leagueId render the same component instance (no
+  // remount), so without this dep setTab would hold a stale setSearchParams from
+  // the /league render, causing tab clicks to navigate to /league?tab=X instead
+  // of /league/:leagueId?tab=X.
   const setTab = useCallback((t) => {
     setView(tabToView(t));
     setSearchParams(prev => {
@@ -244,9 +250,7 @@ export default function LeagueScreen() {
       next.set('tab', t);
       return next;
     }, { replace: true });
-  // tabToView/setSearchParams are stable — no dep needed
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [setSearchParams]);
 
   const fetchTournaments = useCallback(async () => {
     const { data } = await supabase
