@@ -13,9 +13,10 @@ function timeLeft(endsAt) {
 }
 
 export default function AuctionCard({ auction, mySquadId, myBudget, onBid, onCancel, onSellNow }) {
-  const [amount, setAmount] = useState('');
-  const [busy,   setBusy]   = useState(false);
-  const [err,    setErr]    = useState(null);
+  const [amount,        setAmount]        = useState('');
+  const [busy,          setBusy]          = useState(false);
+  const [err,           setErr]           = useState(null);
+  const [confirmCancel, setConfirmCancel] = useState(false);
 
   const player      = auction.players;
   const posColor    = POS_COLOR[player?.position] ?? 'var(--mute)';
@@ -102,12 +103,27 @@ export default function AuctionCard({ auction, mySquadId, myBudget, onBid, onCan
                 </button>
               )}
               <button
-                onClick={async () => { setBusy(true); const r = await onCancel(auction.id); setBusy(false); if (!r.ok) setErr(r.error); }}
+                onClick={async () => {
+                  if (!confirmCancel) {
+                    setConfirmCancel(true);
+                    setTimeout(() => setConfirmCancel(false), 4000);
+                    return;
+                  }
+                  setBusy(true);
+                  setConfirmCancel(false);
+                  const r = await onCancel(auction.id);
+                  setBusy(false);
+                  if (!r.ok) setErr(r.error);
+                }}
                 disabled={busy}
                 className="text-[10px] font-black uppercase tracking-wider px-3 py-1.5 disabled:opacity-40"
-                style={{ border: '1px solid rgba(239,68,68,0.3)', color: 'var(--danger)', background: 'rgba(239,68,68,0.06)' }}
+                style={{
+                  border: `1px solid ${confirmCancel ? 'rgba(239,68,68,0.8)' : 'rgba(239,68,68,0.3)'}`,
+                  color: 'var(--danger)',
+                  background: confirmCancel ? 'rgba(239,68,68,0.18)' : 'rgba(239,68,68,0.06)',
+                }}
               >
-                {busy ? '…' : 'Cancel'}
+                {busy ? '…' : confirmCancel ? 'Confirm Cancel?' : 'Cancel'}
               </button>
             </div>
           ) : (
