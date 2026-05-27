@@ -672,7 +672,8 @@ export default function LeagueScreen() {
   }
 
   if (leagueId) {
-    const name = activeLeague?.leagues?.name || activeLeague?.name || 'SYNCING...';
+    const name     = activeLeague?.leagues?.name || activeLeague?.name || 'SYNCING...';
+    const joinCode = activeLeague?.leagues?.join_code ?? activeLeague?.join_code ?? null;
     return (
       <div style={{ display: 'flex', flexDirection: 'column', background: 'var(--ink)', color: 'var(--paper)', minHeight: '100vh', fontFamily: "'Archivo', sans-serif" }}>
 
@@ -718,7 +719,8 @@ export default function LeagueScreen() {
                 <button
                   onClick={() => setNewLeague(activeLeague?.leagues || activeLeague)}
                   data-tour="league-invite"
-                  style={{ background: 'transparent', border: '1px solid rgba(0,180,216,.4)', color: 'var(--cyan)', padding: '6px 12px', fontFamily: MONO, fontSize: 10, letterSpacing: '.2em', cursor: 'pointer' }}
+                  disabled={!joinCode}
+                  style={{ background: 'transparent', border: '1px solid rgba(0,180,216,.4)', color: 'var(--cyan)', padding: '6px 12px', fontFamily: MONO, fontSize: 10, letterSpacing: '.2em', cursor: joinCode ? 'pointer' : 'default', opacity: joinCode ? 1 : 0.4 }}
                 >+ INVITE</button>
                 <button
                   onClick={replayLeagueTour}
@@ -752,7 +754,8 @@ export default function LeagueScreen() {
                 <button
                   onClick={() => setNewLeague(activeLeague?.leagues || activeLeague)}
                   data-tour="league-invite"
-                  style={{ background: 'transparent', border: '1px solid rgba(0,180,216,.4)', color: 'var(--cyan)', padding: '4px 8px', fontFamily: MONO, fontSize: 9, letterSpacing: '.2em', cursor: 'pointer' }}
+                  disabled={!joinCode}
+                  style={{ background: 'transparent', border: '1px solid rgba(0,180,216,.4)', color: 'var(--cyan)', padding: '4px 8px', fontFamily: MONO, fontSize: 9, letterSpacing: '.2em', cursor: joinCode ? 'pointer' : 'default', opacity: joinCode ? 1 : 0.4 }}
                 >+ INVITE</button>
               </div>
             }
