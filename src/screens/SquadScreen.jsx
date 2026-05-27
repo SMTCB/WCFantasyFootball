@@ -590,31 +590,132 @@ export default function SquadScreen() {
   }
 
   const { budget, players, bench, captainId, locked_at } = squadData;
+  // budgetLeft/budgetLow hoisted here so the empty-state shell can display them
+  const budgetLeft = Number(budget.current.toFixed(1));
+  const budgetLow  = budgetLeft < 5;
 
-  // Empty squad — no players signed yet; prompt user to go to Market
+  // Empty squad — no players signed yet.
+  // Render the header + tab strip so the UI chrome is always visible (fixes E2E
+  // tests that assert on "My Squad" heading / Budget / CHIPS tab in demo mode).
   if (!players.length && !bench.length) {
+    const EMPTY_TABS_MOBILE  = [
+      { id: 'pitch',  label: '⚽ PITCH'  },
+      { id: 'squad',  label: '📋 LIST'   },
+      { id: 'chips',  label: '⚡ CHIPS'  },
+      { id: 'status', label: '⚠️ STATUS' },
+    ];
+    const EMPTY_TABS_DESKTOP = [
+      { id: 'pitch', label: 'Pitch'  },
+      { id: 'list',  label: 'List'   },
+      { id: 'chips', label: 'Chips'  },
+      { id: 'status',label: 'Status' },
+    ];
+    const showChips = mobileTab === 'chips' || desktopTab === 'chips';
     return (
-      <div className="min-h-screen bg-bg flex flex-col items-center justify-center px-6 gap-4">
-        <div className="text-[13px] font-black uppercase tracking-widest mb-2" style={{ color: 'var(--mute)', fontFamily: 'Archivo Black, sans-serif' }}>
-          No Squad Built Yet
+      <>
+        {/* ── Sticky header ─────────────────────────────────────────── */}
+        <div
+          className="sticky top-0 z-40 flex items-center justify-between px-5 py-3"
+          style={{ background: 'rgba(13,17,23,0.97)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', borderBottom: '1px solid rgba(255,255,255,0.07)' }}
+        >
+          <div>
+            <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 10, color: 'var(--mute)', letterSpacing: '.14em', textTransform: 'uppercase' }}>
+              Tactical Sheet
+            </div>
+            <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 34, color: 'var(--paper)', lineHeight: 1.05, letterSpacing: '-0.01em' }}>
+              My Squad
+            </div>
+          </div>
+          <div className="text-right">
+            <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 9, color: 'var(--mute)', letterSpacing: '.14em', textTransform: 'uppercase' }}>Budget</div>
+            <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 20, color: budgetLow ? 'var(--danger)' : 'var(--cyan)', lineHeight: 1 }}>
+              £{budgetLeft}M
+            </div>
+          </div>
         </div>
-        <p style={{ color: 'var(--mute)', fontFamily: 'JetBrains Mono, monospace', fontSize: 11, textAlign: 'center', maxWidth: 280, lineHeight: 1.6 }}>
-          Head to the Transfer Market to sign your first 11 players.
-        </p>
-        <div style={{ display: 'flex', gap: 10, marginTop: 8 }}>
-          <a href="#/market" style={{ padding: '10px 22px', background: 'var(--gold)', color: 'var(--ink)', fontFamily: 'Archivo Black, sans-serif', fontSize: 11, letterSpacing: '.08em', textTransform: 'uppercase', textDecoration: 'none' }}>
-            Transfer Market →
-          </a>
-          {leagues && leagues.length > 1 && (
+
+        {/* ── Mobile tab strip ──────────────────────────────────────── */}
+        <div className="lg:hidden flex" style={{ borderBottom: '1px solid var(--rule)', background: 'var(--ink-2)' }}>
+          {EMPTY_TABS_MOBILE.map(tab => (
             <button
-              onClick={() => setActiveLeague(null)}
-              style={{ padding: '10px 22px', background: 'transparent', border: '1px solid var(--rule)', color: 'var(--mute)', fontFamily: 'JetBrains Mono, monospace', fontSize: 10, letterSpacing: '.14em', cursor: 'pointer' }}
+              key={tab.id}
+              onClick={() => setMobileTab(tab.id)}
+              className="flex-1 py-2.5 text-center transition-all relative"
+              style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 9, letterSpacing: '0.14em', textTransform: 'uppercase', color: mobileTab === tab.id ? 'var(--cyan)' : 'var(--mute)', background: 'transparent' }}
             >
-              Switch League
+              {tab.label}
+              {mobileTab === tab.id && <div className="absolute bottom-0 left-0 right-0 h-[2px]" style={{ background: 'var(--cyan)' }} />}
             </button>
-          )}
+          ))}
         </div>
-      </div>
+
+        {/* ── Desktop tab strip ─────────────────────────────────────── */}
+        <div className="hidden lg:flex shrink-0" style={{ borderBottom: '1px solid var(--rule)', background: 'var(--ink-2)' }}>
+          {EMPTY_TABS_DESKTOP.map(tab => (
+            <button
+              key={tab.id}
+              onClick={() => setDesktopTab(tab.id)}
+              className="relative px-6 py-3 text-[10px] font-black uppercase tracking-widest transition-all"
+              style={{ fontFamily: 'Archivo Black, sans-serif', color: desktopTab === tab.id ? 'var(--cyan)' : 'var(--mute)', background: 'transparent' }}
+            >
+              {tab.label}
+              {desktopTab === tab.id && <div className="absolute bottom-0 left-0 right-0 h-[2px]" style={{ background: 'var(--cyan)' }} />}
+            </button>
+          ))}
+        </div>
+
+        {/* ── Chips tab ─────────────────────────────────────────────── */}
+        {showChips ? (
+          <div className="px-4 py-4 max-w-lg mx-auto">
+            {CHIPS.map(chip => (
+              <div
+                key={chip.key}
+                className="mb-3 rounded p-4 border transition-all"
+                style={chip.inactiveStyle}
+              >
+                <div className="flex items-center justify-between gap-2 mb-1">
+                  <span className="fk-display text-[12px]" style={{ color: 'var(--paper)' }}>
+                    {chip.label.toUpperCase()}
+                  </span>
+                </div>
+                <p className="text-[11px] leading-relaxed mb-3" style={{ color: 'var(--mute)' }}>
+                  {chip.description}
+                </p>
+                <button
+                  disabled
+                  className="w-full py-2 rounded text-[10px] font-black uppercase tracking-widest opacity-40"
+                  style={{ background: 'rgba(255,255,255,0.06)', color: 'var(--paper)', border: '1px solid rgba(255,255,255,0.12)' }}
+                >
+                  No Squad Yet
+                </button>
+              </div>
+            ))}
+          </div>
+        ) : (
+          /* ── No-squad message ─────────────────────────────────────── */
+          <div className="min-h-[60vh] flex flex-col items-center justify-center px-6 gap-4">
+            <div className="text-[13px] font-black uppercase tracking-widest mb-2" style={{ color: 'var(--mute)', fontFamily: 'Archivo Black, sans-serif' }}>
+              No Squad Built Yet
+            </div>
+            <p style={{ color: 'var(--mute)', fontFamily: 'JetBrains Mono, monospace', fontSize: 11, textAlign: 'center', maxWidth: 280, lineHeight: 1.6 }}>
+              Head to the Transfer Market to sign your first 11 players.
+            </p>
+            <div style={{ display: 'flex', gap: 10, marginTop: 8 }}>
+              <a href="#/market" style={{ padding: '10px 22px', background: 'var(--gold)', color: 'var(--ink)', fontFamily: 'Archivo Black, sans-serif', fontSize: 11, letterSpacing: '.08em', textTransform: 'uppercase', textDecoration: 'none' }}>
+                Transfer Market →
+              </a>
+              {leagues && leagues.length > 1 && (
+                <button
+                  onClick={() => setActiveLeague(null)}
+                  style={{ padding: '10px 22px', background: 'transparent', border: '1px solid var(--rule)', color: 'var(--mute)', fontFamily: 'JetBrains Mono, monospace', fontSize: 10, letterSpacing: '.14em', cursor: 'pointer' }}
+                >
+                  Switch League
+                </button>
+              )}
+            </div>
+          </div>
+        )}
+      </>
     );
   }
 
@@ -622,8 +723,7 @@ export default function SquadScreen() {
   const allSquadPlayers = [...players, ...bench];
   const dangerPlayers   = getDangerZonePlayers(allSquadPlayers);
   const selectedIsBench = selectedPlayer && bench.some(b => b.id === selectedPlayer.id);
-  const budgetLeft      = Number(budget.current.toFixed(1));
-  const budgetLow       = budgetLeft < 5;
+  // budgetLeft / budgetLow declared earlier (before empty-state guard)
 
   // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   // â”€â”€ Sub-components defined inside render for squad closure access â”€â”€â”€â”€â”€â”€â”€â”€â”€
