@@ -1,6 +1,6 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-05-26 (session 44 — Full E2E live data test; 3 critical bugs fixed; migration 79 applied)  
+**Last Updated**: 2026-05-27 (sessions 44+45 — Full E2E test complete; all 12 identified bugs fixed; migrations 79–82 applied)  
 **E2E Test Suite**: 84/84 platform tests passing ✅ + `scoring-pipeline.spec.js` added  
 **Live App**: https://wc-fantasy-football.vercel.app
 
