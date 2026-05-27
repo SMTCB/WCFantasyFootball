@@ -302,8 +302,8 @@ export function useCommissioner(leagueId, tournamentId) {
     if (!selectedBetForResolution) throw new Error('Select a bet to resolve.');
     if (!betResolutionAnswer)      throw new Error('Select the correct answer.');
     const { data, error } = await supabase.rpc('resolve_bet', {
-      p_instance_id:    selectedBetForResolution.id,
-      p_correct_answer: betResolutionAnswer,
+      p_instance_id: selectedBetForResolution.id,
+      p_answer:      betResolutionAnswer,
     });
     if (error) throw new Error(error.message);
     setCommMsg({ type: 'ok', text: `Bet resolved — ${data?.submissions_updated ?? 0} submissions graded.` });
