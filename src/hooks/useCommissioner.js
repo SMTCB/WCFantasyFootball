@@ -1,5 +1,31 @@
 import { useState, useCallback } from 'react';
-import { supabase } from '../lib/supabase';
+import { supabase, FUNCTIONS_BASE } from '../lib/supabase';
+
+async function invokeEdgeFunction(fnName, body) {
+  if (!FUNCTIONS_BASE) return { data: null, error: { message: 'Supabase not configured' } };
+  let session = null;
+  try {
+    const { data } = await supabase.auth.getSession();
+    session = data?.session ?? null;
+  } catch { /* network/token-store failure — fall through to anon key */ }
+  const token = session?.access_token ?? import.meta.env.VITE_SUPABASE_ANON_KEY;
+  const res = await fetch(`${FUNCTIONS_BASE}/${fnName}`, {
+    method:  'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+    body:    JSON.stringify(body),
+  });
+  if (!res.ok) {
+    let msg = `${fnName} failed`;
+    try { const b = await res.json(); msg = b?.error ?? msg; } catch { /* ignore */ }
+    return { data: null, error: { message: msg } };
+  }
+  try {
+    const data = await res.json();
+    return { data: data ?? {}, error: null };
+  } catch {
+    return { data: null, error: { message: 'Invalid response from server' } };
+  }
+}
 
 // 3.2: slug→id at call-time; avoids hardcoded UUIDs that differ per environment
 async function templateIdForSlug(slug) {
@@ -80,9 +106,7 @@ export function useCommissioner(leagueId, tournamentId) {
 
   // ── Score recalculation ───────────────────────────────────────────────────
   const triggerScores = useCallback(() => commAction(async () => {
-    const { data, error } = await supabase.functions.invoke('calculate-scores', {
-      body: { fixture_id: scoreFixtureId },
-    });
+    const { data, error } = await invokeEdgeFunction('calculate-scores', { fixture_id: scoreFixtureId });
     if (error) throw new Error(error.message);
     setCommMsg({ type: 'ok', text: `Scores updated — ${data?.updated_squads ?? 0} squads, ${data?.player_stats ?? 0} player stats.` });
   }), [commAction, scoreFixtureId]);
@@ -99,9 +123,7 @@ export function useCommissioner(leagueId, tournamentId) {
 
   // ── Run draft allocation ──────────────────────────────────────────────────
   const triggerDraftAllocation = useCallback(() => commAction(async () => {
-    const { data, error } = await supabase.functions.invoke('run-draft-lottery', {
-      body: { league_id: leagueId },
-    });
+    const { data, error } = await invokeEdgeFunction('run-draft-lottery', { league_id: leagueId });
     if (error) throw new Error(error.message);
     const managed = data?.managersProcessed ?? 0;
     const contested = data?.contestedPlayers ?? 0;
