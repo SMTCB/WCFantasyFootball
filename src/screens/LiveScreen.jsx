@@ -324,15 +324,14 @@ export default function LiveScreen() {
 
   const fetchAll = useCallback(async () => {
     try {
-      // 0. Current matchday label from matchday_deadlines — U54
-      const { data: mdRow } = await supabase
-        .from('matchday_deadlines')
-        .select('matchday_id')
-        .order('deadline_at', { ascending: false })
-        .limit(1)
-        .maybeSingle();
+      // 0. Current matchday label — filtered by active league's tournament (BUG-12 fix).
+      // Falls back to most recent past deadline when no upcoming ones exist (IMP-01 fix).
+      const activeTournamentId = activeLeague?.tournamentId ?? null;
+      let mdQuery = supabase.from('matchday_deadlines').select('matchday_id')
+        .order('deadline_at', { ascending: false }).limit(1);
+      if (activeTournamentId) mdQuery = mdQuery.eq('tournament_id', activeTournamentId);
+      const { data: mdRow } = await mdQuery.maybeSingle();
       if (mdRow?.matchday_id) {
-        // Format e.g. "426-r35" → "35"
         const label = String(mdRow.matchday_id).replace(/^.*-r/, '');
         setCurrentGW(label || mdRow.matchday_id);
       }
@@ -354,15 +353,16 @@ export default function LiveScreen() {
       }));
       setLiveFixtures(enrichedFix);
 
-      // Fetch next upcoming fixture if no live matches
+      // Fetch next upcoming fixture — filtered by active league's tournament (BUG-12 fix)
       if (!activeFixIds.length) {
-        const { data: upcomingData = [] } = await supabase
-          .from('fixtures')
-          .select('id, home_team, away_team, status, kickoff_at')
+        let upcomingQ = supabase.from('fixtures')
+          .select('id, home_team, away_team, status, kickoff_at, tournament_id')
           .eq('status', 'scheduled')
           .gt('kickoff_at', new Date().toISOString())
           .order('kickoff_at', { ascending: true })
           .limit(1);
+        if (activeTournamentId) upcomingQ = upcomingQ.eq('tournament_id', activeTournamentId);
+        const { data: upcomingData = [] } = await upcomingQ;
         if (upcomingData?.length) setNextFixture(upcomingData[0]);
       } else {
         setNextFixture(null);
@@ -373,7 +373,7 @@ export default function LiveScreen() {
       // 2. User leagues
       const { data: memberships = [] } = await supabase
         .from('league_members')
-        .select('league_id, total_points, rank, leagues(id, name)')
+        .select('league_id, total_points, rank, leagues(id, name, tournament_id)')
         .eq('user_id', user.id);
 
       if (!memberships?.length) { setLoading(false); return; }
@@ -467,8 +467,9 @@ export default function LiveScreen() {
         const leagueSquad   = squadByLeague[m.league_id];
         const lgTripleCap   = leagueSquad?.is_triple_captain ?? false;
         return {
-          id:        m.league_id,
-          name:      m.leagues?.name || 'League',
+          id:           m.league_id,
+          name:         m.leagues?.name || 'League',
+          tournamentId: m.leagues?.tournament_id ?? null,
           short,
           tone,
           members,
