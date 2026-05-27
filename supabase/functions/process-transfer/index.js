@@ -6,8 +6,13 @@ const POS_LIMITS = { GK: 2, DEF: 5, MID: 5, FWD: 3 };
 const SQUAD_MAX  = 15;
 
 Deno.serve(async (req) => {
+  const origin = req.headers.get('Origin') ?? '';
+  const allowedOrigin = (
+    origin === 'https://wc-fantasy-football.vercel.app' ||
+    origin.startsWith('http://localhost')
+  ) ? origin : 'https://wc-fantasy-football.vercel.app';
   const corsHeaders = {
-    'Access-Control-Allow-Origin':  'https://wc-fantasy-football.vercel.app',
+    'Access-Control-Allow-Origin':  allowedOrigin,
     'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
   };
 
@@ -269,10 +274,7 @@ Deno.serve(async (req) => {
 
   } catch (err) {
     await logError(FN, 'critical', err.message, { stack: err.stack });
-    return json({ ok: false, error: 'Internal server error' }, 500, {
-      'Access-Control-Allow-Origin': 'https://wc-fantasy-football.vercel.app',
-      'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-    });
+    return json({ ok: false, error: 'Internal server error' }, 500, corsHeaders);
   }
 });
 

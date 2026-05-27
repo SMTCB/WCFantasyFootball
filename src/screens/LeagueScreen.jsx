@@ -220,7 +220,8 @@ export default function LeagueScreen() {
     setTradeError(null);
   };
 
-  const isCommissioner = activeLeague?.leagues?.created_by === currentUser?.id;
+  const isCommissioner = activeLeague?.leagues?.created_by === currentUser?.id
+    || activeLeague?.role === 'commissioner';
 
   // commAction, openTransferWindow, closeTransferWindow, triggerScores,
   // setLeagueDraftDeadline, createBetInstance, autoGenerateBetOptions,
@@ -273,7 +274,7 @@ export default function LeagueScreen() {
       const { data, error } = await supabase
         .from('league_members')
         .select(`
-          league_id, rank, total_points,
+          league_id, rank, total_points, role,
           leagues ( id, name, format, tournament_id, created_by )
         `)
         .eq('user_id', userId);
@@ -383,12 +384,14 @@ export default function LeagueScreen() {
       // Fetch current user's squadId + budget in this league
       const { data: squadRow } = await supabase
         .from('squads')
-        .select('id, budget')
+        .select('id, budget_remaining')
         .eq('league_id', id)
         .eq('user_id', user?.id)
+        .order('created_at', { ascending: false })
+        .limit(1)
         .maybeSingle();
       setMySquadId(squadRow?.id ?? null);
-      setMySquadBudget(squadRow?.budget ?? null);
+      setMySquadBudget(squadRow?.budget_remaining ?? null);
 
       // Load trade listings for the league
       const { data: listings } = await supabase
