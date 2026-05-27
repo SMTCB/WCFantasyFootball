@@ -1,8 +1,10 @@
 # Supabase Handoff — Consolidated Deploy Guide
 
-**Last updated**: 2026-05-25 (session 43 — Sprint 4 complete; all migrations applied)  
+**Last updated**: 2026-05-27 (sessions 44–45 — Full E2E test; all bugs fixed; migrations 79–84 applied)  
 **Main branch**: all code is on `main` — do a `git pull origin main` before deploying  
-**Migrations applied in production**: 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78
+**Migrations applied in production**: 66–84 (next: `85_`)  
+**Edge Functions**: ✅ ALL 14 DEPLOYED (2026-05-26 via `npx supabase functions deploy --use-api`)  
+**⚠️ NO PENDING SUPABASE TASKS** — everything is deployed and up to date
 
 ---
 
@@ -41,7 +43,8 @@ Open the **Supabase dashboard SQL editor** and run each file in order:
 - **L2.5**: `submit_bet` resets `is_correct = NULL` and `reward_awarded = NULL` on re-submit after resolution
 - **L3.9**: `resolve_bet` sets `reward_awarded = NULL` (not 0) for losing submissions
 
-**Next migration to create**: `79_`
+**Next migration to create**: `85_`  
+*(79–84 applied — see Deployment History below)*
 
 ---
 
@@ -129,9 +132,9 @@ After migration 73, you should see `sync-player-status`, `sync-players-daily`, a
 
 ---
 
-## Sprint 1 Remaining (code not yet written)
+## All Sprints + E2E Fixes Complete
 
-All L5.x and L6.x items are now complete. Sprint 1 is fully coded and merged to `main`.
+Sprints 0–4 and the full E2E bug-fix pass (sessions 44–45) are merged to `main`. There are no pending code or Supabase tasks. The next work is fixing the open bugs listed in `docs/BUG_TRACKER.md`.
 
 ---
 
@@ -148,3 +151,9 @@ All L5.x and L6.x items are now complete. Sprint 1 is fully coded and merged to 
 | Session 40–41 | 75, 76 ✅ | Relaxation fixes; bet logic fixes (L2.2, L2.5, L3.9) |
 | Session 42 | 77 ✅ | Security polish: stale auction policy, fake @admin, chat rate-limit, handle_new_user trigger |
 | Session 43 | 78 ✅ | Dead code: drop `calculate_player_points` SQL function (all overloads) |
+| Session 44 | 79 ✅ | `fantasy_points.total` → NUMERIC; `verify_jwt=false` on cron functions |
+| Session 44–45 | 80 ✅ | `auction_bids` FK fix |
+| Session 44–45 | 81 ✅ | Draft pool tournament filter |
+| Session 44–45 | 82 ✅ | Public read RLS policies |
+| Session 44–45 | 83 ✅ | `submit_bet` RPC fix |
+| Session 44–45 | 84 ✅ | `resolve_bet` RPC fix |
