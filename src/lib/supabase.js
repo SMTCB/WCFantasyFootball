@@ -51,3 +51,11 @@ if (!supabaseUrl || !supabaseAnonKey) {
 export const supabase = (supabaseUrl && supabaseAnonKey)
   ? createClient(supabaseUrl, supabaseAnonKey)
   : makeNoopClient();
+
+/**
+ * Base URL for direct edge-function fetch calls.
+ * Use with: `fetch(`${FUNCTIONS_BASE}/function-name`, { ... })`
+ */
+export const FUNCTIONS_BASE = supabaseUrl
+  ? `${supabaseUrl}/functions/v1`
+  : null;
