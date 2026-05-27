@@ -1,6 +1,6 @@
 # Bug Tracker — Forza Fantasy League
-**Last updated**: 2026-05-27 (post true E2E session)  
-**Total bugs**: 20 (20 fixed, 0 open)
+**Last updated**: 2026-05-27 (session 47 — UI/CI polish)  
+**Total bugs/items**: 26 (26 fixed, 0 open)
 
 ---
 
@@ -174,6 +174,16 @@ None remaining.
 | BUG-07/08/10 | Squad/Recap/Draft blank in demo mode | 🟡 MEDIUM | ✅ Fixed | #206 |
 | BUG-12 | Live screen shows WC fixture for EPL users | 🟡 MEDIUM | ✅ Fixed | #206 |
 | IMP-05 | Auction listing UI unreachable (dead code) | 🟢 LOW | ✅ Fixed | #206 |
+| DEPLOY-2 | CI E2E runs against production bundle (not dev) | 🟡 MEDIUM | ✅ Fixed | #209 |
+| LOW-4/U92 | html2canvas replaced with modern-screenshot; invite PNG bg fixed | 🟡 MEDIUM | ✅ Fixed | #209 |
+| U82/U83 | Standings dead MD column + hardcoded TrendPill removed | 🟢 LOW | ✅ Fixed | #209 |
+| U84 | Activity filter chips — already implemented (buttons w/ onClick) | — | ✅ N/A | — |
+| U88 | AuctionCard cancel requires confirmation tap | 🟢 LOW | ✅ Fixed | #209 |
+| U93 | Invite button disabled until join_code is loaded | 🟢 LOW | ✅ Fixed | #209 |
+| U98 | RecapCard misleading transfersMade=0 removed | 🟢 LOW | ✅ Fixed | #209 |
+| U101 | LiveScreen refreshes on tab focus (visibilitychange) | 🟢 LOW | ✅ Fixed | #209 |
+| U105 | Triple Captain badge shows ×3 when chip was used | 🟢 LOW | ✅ Fixed | #209 |
+| LOW-8 | players.id BIGINT issue — resolved by migration 78 | — | ✅ N/A | — |
 
 **Migrations applied to production**: 79, 80, 81, 82, 83, 84  
-*(no new migrations for session 46 — all fixes were frontend-only)*
+*(no new migrations for sessions 46–47 — all fixes were frontend-only)*
