@@ -845,7 +845,7 @@ export default function SquadScreen() {
                       isOwn={true}
                       onToggle={() => toggleFlag(squadData.squadId, player.id)}
                     />
-                    {activeLeague && !isListed && (cfg.format === 'auction' || cfg.format === 'hybrid') && (
+                    {activeLeague && !isListed && (
                       <button
                         disabled={auctionBusy === player.id}
                         onClick={async () => {
@@ -873,7 +873,7 @@ export default function SquadScreen() {
                         {auctionBusy === player.id ? '…' : 'Auction'}
                       </button>
                     )}
-                    {activeLeague && isListed && (cfg.format === 'auction' || cfg.format === 'hybrid') && (
+                    {activeLeague && isListed && (
                       <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 7, letterSpacing: '0.1em', textTransform: 'uppercase', padding: '2px 5px', border: '1px solid rgba(240,180,0,0.4)', color: 'var(--gold)', background: 'rgba(240,180,0,0.1)', flexShrink: 0 }}>
                         On auction
                       </span>
