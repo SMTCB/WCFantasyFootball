@@ -192,7 +192,6 @@ export default function RecapScreen() {
         joker: jokerId && playerMap[jokerId]
           ? { ...playerMap[jokerId], points: effectivePoints(jokerId) }
           : null,
-        transfersMade: 0,    // transfer log not yet tracked
         topScorers: startingIds
           .map(id => ({ ...playerMap[id], points: effectivePoints(id) }))
           .filter(p => p.name && p.points > 0)
