@@ -4,7 +4,11 @@ import { useAuth } from './useAuth';
 
 async function invokeTransfer(body) {
   if (!FUNCTIONS_BASE) return { ok: false, error: 'Supabase not configured' };
-  const { data: { session } } = await supabase.auth.getSession();
+  let session = null;
+  try {
+    const { data } = await supabase.auth.getSession();
+    session = data?.session ?? null;
+  } catch { /* network/token-store failure — fall through to anon key */ }
   const token = session?.access_token ?? import.meta.env.VITE_SUPABASE_ANON_KEY;
   const res = await fetch(`${FUNCTIONS_BASE}/process-transfer`, {
     method:  'POST',
@@ -16,7 +20,12 @@ async function invokeTransfer(body) {
     try { const b = await res.json(); msg = b?.error ?? msg; } catch { /* ignore */ }
     return { ok: false, error: msg };
   }
-  return res.json();
+  try {
+    const payload = await res.json();
+    return payload ?? { ok: false, error: 'Empty response from server' };
+  } catch {
+    return { ok: false, error: 'Invalid response from server' };
+  }
 }
 
 /**
