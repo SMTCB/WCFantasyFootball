@@ -134,6 +134,7 @@ export default function LeagueScreen() {
   const [draftGaps, setDraftGaps] = useState(0); // unresolved_slots for current user
   const [draftOpen, setDraftOpen] = useState(false); // deadline in future + no submission yet
   const [draftDeadlineDate, setDraftDeadlineDate] = useState(null); // for countdown banner
+  const [currentGW, setCurrentGW] = useState('—'); // current GW label for league header
   const transferWindow = useTransferWindow(activeLeague?.league_id);
   const { auctions, loading: auctionsLoading, placeBid, cancelListing, sellNow } = useAuctions(activeLeague?.league_id, mySquadId);
   const { topScorers, teamMetrics, loading: statsLoading } = useLeagueStats(activeLeague?.league_id);
@@ -300,6 +301,32 @@ export default function LeagueScreen() {
   // user.id is the stable identity; user object reference changes on token refresh
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id, fetchLeagues, fetchTournaments]);
+
+  // IMP-01: Fetch current GW for the active league's tournament.
+  // Tries the next upcoming deadline first; falls back to the most recent completed round.
+  useEffect(() => {
+    const tournamentId = activeLeague?.leagues?.tournament_id;
+    if (!tournamentId) { setCurrentGW('—'); return; }
+    let cancelled = false;
+    (async () => {
+      const { data: upcoming } = await supabase
+        .from('matchday_deadlines').select('matchday_id')
+        .eq('tournament_id', tournamentId)
+        .gt('deadline_at', new Date().toISOString())
+        .order('deadline_at', { ascending: true }).limit(1).maybeSingle();
+      if (upcoming?.matchday_id) {
+        if (!cancelled) setCurrentGW(String(upcoming.matchday_id).replace(/^.*-r/, ''));
+        return;
+      }
+      const { data: past } = await supabase
+        .from('matchday_deadlines').select('matchday_id')
+        .eq('tournament_id', tournamentId)
+        .lte('deadline_at', new Date().toISOString())
+        .order('deadline_at', { ascending: false }).limit(1).maybeSingle();
+      if (!cancelled) setCurrentGW(past?.matchday_id ? String(past.matchday_id).replace(/^.*-r/, '') : '—');
+    })();
+    return () => { cancelled = true; };
+  }, [activeLeague?.leagues?.tournament_id]);
 
   // U3: If a joinCode was passed via URL (?joinCode=XXX from /join?code=XXX),
   // clear the query param from the address bar (keep the code in state for the form).
@@ -673,7 +700,7 @@ export default function LeagueScreen() {
           <HubTopbar
             leagueName={name}
             memberCount={members.length}
-            gw="—"
+            gw={currentGW}
             isLive={false}
             onBack={() => navigate('/league')}
             rightSlot={
@@ -708,7 +735,7 @@ export default function LeagueScreen() {
           <HubLeagueHeader
             leagueName={name}
             memberCount={members.length}
-            gw="—"
+            gw={currentGW}
             onBack={() => navigate('/league')}
             rightSlot={
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -791,6 +818,7 @@ export default function LeagueScreen() {
              members={members}
              currentUser={currentUser}
              membersLoading={membersLoading}
+             currentGW={currentGW}
              onH2h={setH2hTarget}
              onViewManager={(mgr) => { setManagerTeamView(mgr); loadManagerRoster(mgr.user_id); }}
            />

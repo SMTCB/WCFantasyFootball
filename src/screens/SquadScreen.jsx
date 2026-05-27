@@ -166,7 +166,16 @@ export default function SquadScreen() {
       let squadQuery = supabase.from('squads').select('*').eq('user_id', userId);
       if (activeLeague)      squadQuery = squadQuery.eq('league_id', activeLeague);
       if (activeMatchdayId)  squadQuery = squadQuery.eq('matchday_id', activeMatchdayId);
-      const { data: squad, error } = await squadQuery.order('created_at', { ascending: false }).limit(1).maybeSingle();
+      let { data: squad, error } = await squadQuery.order('created_at', { ascending: false }).limit(1).maybeSingle();
+      // Fallback: if exact matchday yields no squad (e.g. squad was created for an older round),
+      // retry without the matchday filter to load the most recently created squad.
+      if (!error && !squad && activeMatchdayId && activeLeague) {
+        const { data: fallback, error: fbErr } = await supabase
+          .from('squads').select('*').eq('user_id', userId).eq('league_id', activeLeague)
+          .order('created_at', { ascending: false }).limit(1).maybeSingle();
+        squad = fallback ?? null;
+        error = fbErr ?? null;
+      }
       if (error) {
         setFetchError('Could not load your squad. Tap Retry to try again.');
         setSquadData(EMPTY_SQUAD); setLoading(false); return;

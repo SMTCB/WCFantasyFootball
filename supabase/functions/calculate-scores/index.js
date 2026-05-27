@@ -515,6 +515,7 @@ async function rollupSquads(fixture_id, pointsLookup, tournament_id) {
   if (fpErr) {
     console.error('fantasy_points upsert error:', JSON.stringify(fpErr));
     await logError('critical', 'fantasy_points upsert failed — scores not saved', { fixture_id, error: fpErr });
+    return 0; // IMP-04: don't report success if points weren't saved
   }
 
   // Update league_members totals via aggregate_league_member_points RPC

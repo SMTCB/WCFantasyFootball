@@ -243,19 +243,32 @@ async function runLottery(leagueId) {
   if (allocErr) await logError(FN, 'critical', 'draft_allocations upsert failed', { leagueId, error: allocErr.message });
 
   // 6b. Fetch the canonical matchday_id for this league's tournament.
-  //     Use the nearest upcoming deadline; fall back to 'active'.
+  //     Try the nearest upcoming deadline first; fall back to the most recent past
+  //     deadline (IMP-02 fix — avoids 'active' when season is over).
   const leagueWithTournament = leagueRow?.tournament_id;
   let canonicalMatchdayId = 'active';
   if (leagueWithTournament) {
-    const { data: deadline } = await supabase
+    const { data: upcoming } = await supabase
       .from('matchday_deadlines')
       .select('matchday_id')
       .eq('tournament_id', leagueWithTournament)
-      .order('deadline_at', { ascending: true })
       .gt('deadline_at', new Date().toISOString())
+      .order('deadline_at', { ascending: true })
       .limit(1)
       .maybeSingle();
-    if (deadline?.matchday_id) canonicalMatchdayId = deadline.matchday_id;
+    if (upcoming?.matchday_id) {
+      canonicalMatchdayId = upcoming.matchday_id;
+    } else {
+      const { data: past } = await supabase
+        .from('matchday_deadlines')
+        .select('matchday_id')
+        .eq('tournament_id', leagueWithTournament)
+        .lte('deadline_at', new Date().toISOString())
+        .order('deadline_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (past?.matchday_id) canonicalMatchdayId = past.matchday_id;
+    }
   }
 
   // Write allocated squads to the squads table so the Squad screen shows them.

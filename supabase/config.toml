@@ -12,6 +12,7 @@ verify_jwt = false
 
 [functions.discover-tournament]
 entrypoint = "./functions/discover-tournament/index.js"
+verify_jwt = false
 
 [functions.eliminate-cup-club]
 entrypoint = "./functions/eliminate-cup-club/index.js"
@@ -26,6 +27,7 @@ verify_jwt = false
 
 [functions.resolve-bets]
 entrypoint = "./functions/resolve-bets/index.js"
+verify_jwt = false
 
 [functions.run-draft-lottery]
 entrypoint = "./functions/run-draft-lottery/index.js"
@@ -36,12 +38,15 @@ entrypoint = "./functions/run-reverse-standings-draft/index.js"
 
 [functions.sync-fixtures]
 entrypoint = "./functions/sync-fixtures/index.js"
+verify_jwt = false
 
 [functions.sync-player-status]
 entrypoint = "./functions/sync-player-status/index.js"
+verify_jwt = false
 
 [functions.sync-players]
 entrypoint = "./functions/sync-players/index.js"
+verify_jwt = false
 
 [functions.test-forza-api]
 entrypoint = "./functions/test-forza-api/index.js"

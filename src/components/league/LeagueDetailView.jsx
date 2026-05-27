@@ -28,7 +28,7 @@ function timeAgo(iso) {
   return `${Math.floor(diff / 86400)}d ago`;
 }
 
-export default function LeagueDetailView({ leagueId, members, currentUser, membersLoading, onH2h, onViewManager }) {
+export default function LeagueDetailView({ leagueId, members, currentUser, membersLoading, currentGW = '—', onH2h, onViewManager }) {
   const [activityFilter, setActivityFilter] = useState('ALL');
   const [entries, setEntries] = useState([]);
   const channelRef = useRef(null);
@@ -79,7 +79,7 @@ export default function LeagueDetailView({ leagueId, members, currentUser, membe
         <div style={{ padding: '18px 22px', borderRight: '1px solid var(--rule)', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
           <div>
             <div style={{ fontFamily: MONO, fontSize: 10, color: 'var(--cyan)', letterSpacing: '.22em' }}>LEAGUE · SEASON</div>
-            <div style={{ fontFamily: DISPLAY, fontSize: 28, marginTop: 4, letterSpacing: '-0.02em' }}>GW —</div>
+            <div style={{ fontFamily: DISPLAY, fontSize: 28, marginTop: 4, letterSpacing: '-0.02em' }}>GW {currentGW}</div>
             <div style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', marginTop: 6, letterSpacing: '.16em' }}>{members.length} MANAGERS · STANDINGS</div>
           </div>
           {members[0] && (
