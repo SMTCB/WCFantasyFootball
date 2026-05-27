@@ -55,7 +55,8 @@ export const supabase = (supabaseUrl && supabaseAnonKey)
 /**
  * Base URL for direct edge-function fetch calls.
  * Use with: `fetch(`${FUNCTIONS_BASE}/function-name`, { ... })`
+ * NOTE: Returns null when VITE_SUPABASE_URL is not set — callers must guard before use.
  */
 export const FUNCTIONS_BASE = supabaseUrl
-  ? `${supabaseUrl}/functions/v1`
+  ? `${supabaseUrl.replace(/\/$/, '')}/functions/v1`
   : null;
