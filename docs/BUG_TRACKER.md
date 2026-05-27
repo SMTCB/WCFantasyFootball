@@ -144,13 +144,16 @@ None remaining.
 - **Fix**: Replaced both `buy` and `sell` with raw `fetch()` via `invokeTransfer` helper using session JWT. ✅ **Fixed — session 46, PR #206**
 
 ### E2E-01 · E2E CI tests fail after production-build switch (DEPLOY-2 regression)
-- **Files**: `src/screens/SquadScreen.jsx`, `e2e/autofill-draft-classic.spec.js`
-- **Symptom (a)**: 3 `platform.spec.js` SquadScreen tests fail in CI — "My Squad" heading, Budget KPI, and CHIPS tab button not found inside `[data-testid="main-content"]`.
-- **Symptom (b)**: `autofill-draft-classic.spec.js` throws on `provisionTestUsers()` when test users already exist from a prior run.
-- **Root cause (a)**: DEPLOY-2 (PR #209) switched CI from `npm run dev` to `npm run build && npm run preview`. Production builds complete Supabase queries faster → demo empty-state early return executes → the early return rendered only a plain "No squad built yet" message with no header, budget KPI, or tab strip. Tests that previously passed against the loading spinner now hit the bare empty state.
-- **Root cause (b)**: `provisionTestUsers()` treated any `r.error` as fatal, including "User already registered" responses from Supabase Auth when re-running the suite against a pre-seeded project.
-- **Fix (a)**: Restructured SquadScreen empty state to render the full sticky header ("My Squad" + budget), mobile/desktop tab strips (including ⚡ CHIPS), and tab content — even when no players are allocated.
-- **Fix (b)**: Filter responses where `r.error` contains "already" from the fatal-failure list. ✅ **Fixed — session 48, PR #210**
+- **Files**: `src/screens/SquadScreen.jsx`, `e2e/autofill-draft-classic.spec.js`, `.github/workflows/ci.yml`, `playwright.config.js`
+- **Symptom (a)**: Every E2E CI run shows `conclusion: cancelled` — no tests ever ran. GitHub marks job timeouts as `cancelled`.
+- **Symptom (b)**: 3 `platform.spec.js` SquadScreen tests would fail — "My Squad" heading, Budget KPI, and CHIPS tab button not found in demo mode.
+- **Symptom (c)**: `autofill-draft-classic.spec.js` throws on `provisionTestUsers()` when test users already exist from a prior run.
+- **Root cause (a)**: `ci.yml` E2E job `timeout-minutes: 20` was too short. DEPLOY-2 added `npm run build` inside the Playwright `webServer` command, creating a double build in CI: the build job builds and uploads an artifact, then the E2E job also rebuilds from scratch. Browser install + double build + 84 tests = ~22–25 min, exceeding the 20-min limit.
+- **Root cause (b)**: DEPLOY-2 switched CI from `npm run dev` to `npm run build && npm run preview`. Production builds complete Supabase queries faster → demo empty-state early return fires → the early return showed only a plain "No squad built yet" message with no header, budget KPI, or tab strip. Tests that previously passed against the loading spinner now hit the bare empty state.
+- **Root cause (c)**: `provisionTestUsers()` treated any `r.error` as fatal, including "User already registered" responses from Supabase Auth when re-running the suite.
+- **Fix (a)**: `ci.yml` timeout 20→40 min; E2E job downloads the dist/ artifact built by the build job; `playwright.config.js` uses `SKIP_BUILD=true` env var (set in ci.yml) to run `npm run preview` only — eliminating the double build.
+- **Fix (b)**: Restructured SquadScreen empty state to render the full sticky header ("My Squad" + budget), mobile/desktop tab strips (including ⚡ CHIPS), and tab content — even when no players are allocated.
+- **Fix (c)**: Filter responses where `r.error` contains "already" from the fatal-failure list. ✅ **Fixed — session 48, PR #210**
 
 ---
 
