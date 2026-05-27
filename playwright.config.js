@@ -5,6 +5,10 @@ const isCI = !!process.env.CI;
 
 export default defineConfig({
   testDir: './e2e',
+  // scoring-pipeline.spec.js queries live production Supabase data and is not
+  // suitable for automated CI (production DB state is not guaranteed in CI).
+  // Run it manually with: npx playwright test e2e/scoring-pipeline.spec.js
+  testIgnore: isCI ? ['**/scoring-pipeline.spec.js'] : [],
   fullyParallel: false,
   retries: isCI ? 2 : 1,           // More retries on CI to absorb flakiness
   timeout: isCI ? 30000 : 20000,   // Longer timeout on CI (slower VMs)
