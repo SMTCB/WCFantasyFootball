@@ -1,6 +1,6 @@
 /**
  * RecapCard — the "hidden canvas" that gets rendered to a PNG for sharing.
- * This component is rendered off-screen and captured by html2canvas.
+ * This component is rendered off-screen and captured by modern-screenshot.
  * Design: 1080×1920px portrait, Forza-dark aesthetic with a colour accent stripe.
  */
 export default function RecapCard({ recap, forwardRef }) {
@@ -16,7 +16,6 @@ export default function RecapCard({ recap, forwardRef }) {
     bestPlayer,
     captain,
     joker,
-    transfersMade,
     date,
   } = recap;
 
@@ -125,11 +124,6 @@ export default function RecapCard({ recap, forwardRef }) {
           </div>
         )}
 
-        {/* Transfers */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '8px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
-          <div style={{ fontSize: '11px', color: '#555', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.15em' }}>Transfers made</div>
-          <div style={{ fontSize: '13px', fontWeight: 700 }}>{transfersMade}</div>
-        </div>
       </div>
 
       {/* Footer / Branding */}

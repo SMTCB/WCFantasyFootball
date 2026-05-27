@@ -571,6 +571,15 @@ export default function LiveScreen() {
     return () => clearInterval(interval);
   }, [fetchAll]);
 
+  // U101: refresh immediately when user returns to this tab after backgrounding
+  useEffect(() => {
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') fetchAll();
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+    return () => document.removeEventListener('visibilitychange', handleVisibility);
+  }, [fetchAll]);
+
   // U6: Realtime subscriptions — match_events INSERT and player_match_stats UPDATE
   // filtered to currently-live fixtures. Re-subscribes whenever liveFixtures changes.
   useEffect(() => {

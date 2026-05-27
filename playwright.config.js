@@ -40,10 +40,10 @@ export default defineConfig({
   // Uses port 5174 (separate from the dev server on 5173) with auth disabled so
   // E2E tests run against demo mode — no Supabase auth session required.
   webServer: process.env.PLAYWRIGHT_BASE_URL ? undefined : {
-    command: 'npm run dev -- --port 5174',
+    command: 'npm run build && npm run preview -- --port 5174',
     url: 'http://localhost:5174',
     reuseExistingServer: !isCI,   // Always start fresh on CI
-    timeout: isCI ? 60000 : 30000,
+    timeout: isCI ? 120000 : 60000,
     stdout: 'ignore',
     stderr: 'pipe',
     env: {

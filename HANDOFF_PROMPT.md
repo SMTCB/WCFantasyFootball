@@ -18,16 +18,28 @@ git status  # Should be clean and on main
 
 ---
 
-**Current state (as of 2026-05-27 — session 46):**
+**Current state (as of 2026-05-27 — session 47):**
 - Sprints 0–4: ✅ ALL COMPLETE and merged to `main`
-- Sessions 44+45+46: ✅ Full E2E live-data test complete + all open bugs fixed
+- Sessions 44–47: ✅ Full E2E live-data test complete + all open bugs fixed + UI/CI polish done
 - Migrations applied to production: 66–84 (next migration: **`85_`**)
 - Edge Functions: ✅ ALL 14 deployed (including `config.toml` with `.js` entrypoints)
 - E2E test suite: 84/84 passing
 
 ---
 
-**What was recently done (sessions 44–45 + post-sprint UI polish):**
+**What was recently done (session 47 — PR #209):**
+- **DEPLOY-2**: CI E2E now runs against production Vite bundle (`npm run build && npm run preview`) instead of dev server — Rolldown TDZ bugs are now catchable in CI
+- **LOW-4 / U92**: Replaced `html2canvas` with `modern-screenshot` (`domToPng`) — invite card PNG no longer has transparent background; CSS vars resolved correctly
+- **U82 / U83**: Removed dead MD (matchday points) column from standings table + hardcoded `TrendPill(0)` — both always showed placeholder data
+- **U88**: AuctionCard cancel now requires confirmation tap (two-step: first tap turns red, second tap within 4s fires cancel)
+- **U93**: `+ INVITE` button disabled (opacity 0.4) until `join_code` is loaded — prevents rendering invite card with `undefined` code
+- **U98**: Removed misleading `transfersMade: 0` hardcoded stat from RecapCard (transfer history not tracked yet)
+- **U101**: LiveScreen now refreshes immediately when tab regains focus via `visibilitychange` listener
+- **U105**: Triple Captain badge shows `×3` (was always `×2`) — `is_triple_captain` now fetched in squad query and passed into recap object
+
+---
+
+**What was recently done (sessions 44–46 + post-sprint UI polish):**
 - Full end-to-end test with real Forza API data (8 managers, GW30/31 scoring, bets, transfers, auctions)
 - **Migrations 79–84 applied to production:**
   - `79`: `fantasy_points.total` → NUMERIC (was INTEGER, rejected decimal scores)
@@ -36,7 +48,7 @@ git status  # Should be clean and on main
   - `82`: public read RLS policies
   - `83`: `submit_bet` fix
   - `84`: `resolve_bet` fix
-- Bug fixes: `run-draft-lottery` wrong column names (`budget` → `budget_total`), draft pool filter, bet submission/resolution RPCs
+- Bug fixes: `run-draft-lottery` wrong column names, draft pool filter, bet submission/resolution RPCs, admin panel auth tokens, LiveScreen tournament filter, RecapScreen demo mode
 - New docs: `docs/BUG_TRACKER.md`, `docs/E2E_TEST_PLAYBOOK.md`
 - New config: `supabase/config.toml` (explicit `.js` entrypoints + `verify_jwt = false` on cron-triggered functions)
 - UI polish PRs #192–195: league tab nav, RecapScreen multi-league selector, encoding fixes, pitch/calendar UX
@@ -44,7 +56,7 @@ git status  # Should be clean and on main
 ---
 
 **Known open bugs:**
-- ✅ All bugs from `docs/BUG_TRACKER.md` are now fixed (as of session 46, PR #206)
+- ✅ All bugs from `docs/BUG_TRACKER.md` are now fixed (as of session 47, PR #209)
 - No open bugs remaining in `docs/BUG_TRACKER.md`
 
 ---
