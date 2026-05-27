@@ -83,7 +83,7 @@ export default function RecapScreen() {
 
       // 1. Squad scoped to this league's tournament + membership row for this league
       let squadQuery = supabase.from('squads')
-        .select('id, matchday_id, players, captain_id, joker_player_id')
+        .select('id, matchday_id, players, captain_id, joker_player_id, is_triple_captain')
         .eq('user_id', userId)
         .order('created_at', { ascending: false })
         .limit(1);
@@ -149,7 +149,7 @@ export default function RecapScreen() {
       const playerMap = Object.fromEntries((playerRows || []).map(p => [p.id, p]));
 
       // U13: effective points — mirrors calculate-scores multipliers.
-      // Captain × 2 (or × 3 for triple-cap, not tracked here); Joker player × 2.
+      // Captain × 2 (or × 3 for triple-cap chip); Joker player × 2.
       const effectivePoints = (pid) => {
         const base = pointsMap[pid] || 0;
         let mult = 1;
@@ -192,6 +192,7 @@ export default function RecapScreen() {
         joker: jokerId && playerMap[jokerId]
           ? { ...playerMap[jokerId], points: effectivePoints(jokerId) }
           : null,
+        isTripleCap: squadRow?.is_triple_captain ?? false,
         topScorers: startingIds
           .map(id => ({ ...playerMap[id], points: effectivePoints(id) }))
           .filter(p => p.name && p.points > 0)
@@ -420,8 +421,8 @@ export default function RecapScreen() {
               </div>
               <div className="bg-yellow-500 text-black text-[11px] font-black px-2.5 py-1 rounded-[3px]">
                 {recap.captain.points != null
-                  ? `×2 = ${recap.captain.points * 2} pts`
-                  : '×2'}
+                  ? `×${recap.isTripleCap ? 3 : 2} = ${recap.captain.points * (recap.isTripleCap ? 3 : 2)} pts`
+                  : recap.isTripleCap ? '×3' : '×2'}
               </div>
             </div>
           )}
