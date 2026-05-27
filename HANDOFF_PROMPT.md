@@ -18,9 +18,9 @@ git status  # Should be clean and on main
 
 ---
 
-**Current state (as of 2026-05-27):**
+**Current state (as of 2026-05-27 — session 46):**
 - Sprints 0–4: ✅ ALL COMPLETE and merged to `main`
-- Sessions 44+45: ✅ Full E2E live-data test complete; 12 bugs found and fixed
+- Sessions 44+45+46: ✅ Full E2E live-data test complete + all open bugs fixed
 - Migrations applied to production: 66–84 (next migration: **`85_`**)
 - Edge Functions: ✅ ALL 14 deployed (including `config.toml` with `.js` entrypoints)
 - E2E test suite: 84/84 passing
@@ -43,12 +43,9 @@ git status  # Should be clean and on main
 
 ---
 
-**Known open bugs (logged in `docs/BUG_TRACKER.md` — prioritise these first):**
-- 🐛 **BUG-05**: Auctions UI queries `auction_listings` but data lives in `trade_listings` — always empty
-- 🐛 **BUG-09**: Draft screen shows WC players for EPL leagues — `get_cup_available_players` doesn't filter by tournament for non-cup leagues
-- 🐛 **BUG-07/08/10/11**: RLS blocks anon-key reads on squads/draft_submissions/tournaments — Squad/Recap/Draft screens broken in demo mode
-- 🐛 **BUG-12**: Live screen shows wrong tournament's next fixture (WC instead of EPL)
-- 🐛 **BUG-13**: Admin panel edge function calls need `verify_jwt = false` in `config.toml`
+**Known open bugs:**
+- ✅ All bugs from `docs/BUG_TRACKER.md` are now fixed (as of session 46, PR #206)
+- No open bugs remaining in `docs/BUG_TRACKER.md`
 
 ---
 

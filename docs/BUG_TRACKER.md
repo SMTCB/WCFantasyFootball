@@ -1,6 +1,6 @@
 # Bug Tracker — Forza Fantasy League
 **Last updated**: 2026-05-27 (post true E2E session)  
-**Total bugs**: 20 (7 fixed, 13 open)
+**Total bugs**: 20 (20 fixed, 0 open)
 
 ---
 
@@ -87,37 +87,40 @@ None remaining.
 
 ---
 
-## 🟠 HIGH — Open
+## 🟠 HIGH — Fixed (continued)
 
 ### BUG-13 · Admin panel edge function calls fail with publishable key
-- **Files**: `src/screens/AdminSeedScreen.jsx`, `supabase/config.toml`
-- **Symptom**: From the admin panel, clicking Sync Fixtures / Sync Players / Sync Player Status / Discover Tournament / Resolve Bets returns auth errors. Only Ingest and Score work (they have `verify_jwt=false`).
-- **Root cause**: Admin panel sends `Authorization: Bearer sb_publishable_IQF1...` but the `sb_publishable_*` key is not a valid JWT. Functions with `verify_jwt=true` reject it.
-- **Status**: Partial — `ingest-match-events`, `calculate-scores`, `sync-fixtures`, `sync-players`, `sync-player-status`, `discover-tournament`, `resolve-bets` all now have `verify_jwt=false` in config. BUT these need to be redeployed whenever config changes.
-- **Proper fix**: Admin panel should use `supabase.functions.invoke()` with the user's session JWT (not the raw anon key). ⏳ **2h effort**
+- **Files**: `src/screens/AdminSeedScreen.jsx`, `src/lib/supabase.js`
+- **Symptom**: From the admin panel, clicking Sync Fixtures / Sync Players / Sync Player Status / Discover Tournament / Resolve Bets returns auth errors.
+- **Root cause**: Admin panel was always sending `Authorization: Bearer sb_publishable_IQF1...` — not a valid JWT. Functions with `verify_jwt=true` reject it.
+- **Fix**: `callFunction` now calls `supabase.auth.getSession()` and uses `session.access_token` as the bearer token. Fails fast (throws) if not authenticated. ✅ **Fixed — session 46, PR #206**
 
 ---
 
 ## 🟡 MEDIUM — Open
 
+None remaining.
+
+---
+
+## 🟡 MEDIUM — Fixed
+
 ### BUG-07 / BUG-08 / BUG-10 · Squad/Recap/Draft blank in demo mode (VITE_AUTH_ENABLED not set)
 - **Symptom**: In demo mode (no login required), Squad screen shows "NO SQUAD BUILT YET", Recap shows "NO RECAPS YET", Draft screen shows 0/30 list.
-- **Root cause**: RLS policies require `auth.uid() = user_id`. Demo mode (anon key, no session) has `auth.uid() = null` → queries return empty. Note: PUBLIC SELECT policies were added for `squads`, `draft_submissions`, `tournaments` (migration 82). However, SquadScreen has an additional matchday filter issue — it queries `matchday_id = current_matchday` which doesn't match test squads on '426-r30'.
-- **Fix needed**: SquadScreen fallback (added in PR #203) + public read policies should handle this. Retest in demo mode.
-- **Status**: Partially fixed. ⏳ **1h retest**
+- **Root cause**: Multiple — RLS policies (fixed by migration 82 public SELECT), SquadScreen matchday filter (fixed by PR #203 fallback), RecapScreen missing `setLoading(false)` before early return when no leagues found (fixed in this session).
+- **Fix**: Migration 82 public read policies + PR #203 matchday fallback + session 46 RecapScreen `setLoading(false)` fix. ✅ **Fixed — session 46, PR #206**
 
 ### BUG-12 · Live screen shows wrong tournament's next fixture
 - **File**: `src/screens/LiveScreen.jsx`
 - **Symptom**: "NEXT MEX vs SOU" shown for EPL league managers (WC fixture appears instead of EPL).
-- **Root cause**: Partially fixed — `tournamentId` is now carried in `enrichedLeagues` and filters the next-fixture query. Regression possible if `tournamentId` isn't populated before `fetchAll` runs.
-- **Status**: Code fix in PR #203. ⏳ **needs retest**
+- **Root cause**: On first render `activeLeague` is null → `activeTournamentId` is null → next-fixture query has no tournament filter → returns nearest fixture in DB (often WC).
+- **Fix**: After loading memberships inside `fetchAll`, if `activeTournamentId` was null on entry, re-run the next-fixture query with the resolved tournament ID from `enrichedLeagues[0]`. ✅ **Fixed — session 46, PR #206**
 
 ### BUG-14 · `supabase.functions.invoke()` silently fails with publishable key
-- **Files**: `src/hooks/useTransfer.js`, any hook using `supabase.functions.invoke()`
-- **Symptom**: BUY transfers appear to succeed (no error toast shown) but squad doesn't update. Sell works because it returns data the React component uses. Buy silently does nothing from the UI.
-- **Root cause**: `supabase.functions.invoke()` with `sb_publishable_*` key — the function IS called (no network error), response body is received but possibly not parsed correctly by the Supabase JS client. The process-transfer function itself works when called via raw fetch with the user JWT.
-- **Impact**: Transfers can be done via the sell flow (works) + buy via dev console workaround. Production users on Vercel may not be affected if their JWT handling is different.
-- **Status**: ❌ Open — investigate Supabase JS client v2 + `sb_publishable_*` key interaction. ⏳ **3h**
+- **Files**: `src/hooks/useTransfer.js`
+- **Symptom**: BUY transfers appeared to succeed but squad didn't update. Silent failure.
+- **Root cause**: `supabase.functions.invoke()` with `sb_publishable_*` key doesn't correctly surface the response body. `sell` appeared to work due to optimistic UI.
+- **Fix**: Replaced both `buy` and `sell` with raw `fetch()` via `invokeTransfer` helper using session JWT. ✅ **Fixed — session 46, PR #206**
 
 ---
 
@@ -145,9 +148,9 @@ None remaining.
 
 ### IMP-05 · Auction listing UI unreachable (dead code)
 - **File**: `src/screens/SquadScreen.jsx`
-- **Symptom**: The "List for Auction" button in the squad screen never appears for any user. The button is conditionally rendered only for `format === 'auction' || format === 'hybrid'` but these formats don't exist in the `leagues` table (enum only has `classic` and `noduplicate`).
-- **Impact**: Managers can never list players for auction through the UI. Auction listings must be created directly in the DB.
-- **Fix needed**: Either add 'auction'/'hybrid' to the format enum, OR show the listing button for all formats (since the `auction_listings` table works regardless of format). ⏳ **1h effort**
+- **Symptom**: The "List for Auction" button never appeared for any user.
+- **Root cause**: Button rendered only for `format === 'auction' || format === 'hybrid'`. The `leagues` table only has `classic` and `noduplicate` — neither ever matched.
+- **Fix**: Removed the dead format condition. Auction listing button now shows for all league formats. ✅ **Fixed — session 46, PR #206**
 
 ---
 
@@ -166,10 +169,11 @@ None remaining.
 | BUG-NEW-04 | submit_bet missing user_id + no UNIQUE index | 🔴 CRITICAL | ✅ Fixed | #204 |
 | BUG-NEW-05 | resolve_bet uses non-existent columns | 🔴 CRITICAL | ✅ Fixed | #204 |
 | BUG-NEW-06 | process-transfer CORS blocks localhost | 🟠 HIGH | ✅ Fixed | #204 |
-| BUG-13 | Admin panel functions fail with publishable key | 🟠 HIGH | ⏳ Open | — |
-| BUG-14 | functions.invoke() silent fail on BUY | 🟡 MEDIUM | ⏳ Open | — |
-| BUG-07/08/10 | Squad/Recap/Draft blank in demo mode | 🟡 MEDIUM | ⏳ Open | — |
-| BUG-12 | Live screen shows WC fixture for EPL users | 🟡 MEDIUM | ⏳ Partial | #203 |
-| IMP-05 | Auction listing UI unreachable (dead code) | 🟢 LOW | ⏳ Open | — |
+| BUG-13 | Admin panel functions fail with publishable key | 🟠 HIGH | ✅ Fixed | #206 |
+| BUG-14 | functions.invoke() silent fail on BUY | 🟡 MEDIUM | ✅ Fixed | #206 |
+| BUG-07/08/10 | Squad/Recap/Draft blank in demo mode | 🟡 MEDIUM | ✅ Fixed | #206 |
+| BUG-12 | Live screen shows WC fixture for EPL users | 🟡 MEDIUM | ✅ Fixed | #206 |
+| IMP-05 | Auction listing UI unreachable (dead code) | 🟢 LOW | ✅ Fixed | #206 |
 
-**Migrations applied to production**: 79, 80, 81, 82, 83, 84
+**Migrations applied to production**: 79, 80, 81, 82, 83, 84  
+*(no new migrations for session 46 — all fixes were frontend-only)*
