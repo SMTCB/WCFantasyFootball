@@ -487,6 +487,22 @@ export default function LiveScreen() {
         initialSet.current = true;
       }
 
+      // BUG-12: on first load activeTournamentId was null because activeLeague
+      // hadn't been set yet. Now that we know the user's leagues, correct the
+      // next-fixture display if it was fetched without a tournament filter.
+      const resolvedTId = activeTournamentId ?? enrichedLeagues[0]?.tournamentId ?? null;
+      if (!activeFixIds.length && !activeTournamentId && resolvedTId) {
+        const { data: corrected = [] } = await supabase
+          .from('fixtures')
+          .select('id, home_team, away_team, status, kickoff_at, tournament_id')
+          .eq('status', 'scheduled')
+          .gt('kickoff_at', new Date().toISOString())
+          .eq('tournament_id', resolvedTId)
+          .order('kickoff_at', { ascending: true })
+          .limit(1);
+        if (corrected?.length) setNextFixture(corrected[0]);
+      }
+
       // 7. Match events → fan out per league (delta differs per captain/chip)
       if (activeFixIds.length && squadPlayerIds.length) {
         // U46: fetch events and scoring_rules in parallel

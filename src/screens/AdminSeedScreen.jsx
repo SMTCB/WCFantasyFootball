@@ -16,22 +16,22 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
-import { supabase } from '../lib/supabase';
+import { supabase, FUNCTIONS_BASE } from '../lib/supabase';
 import { useAuth } from '../hooks/useAuth';
 
 // ─── Edge Function caller ─────────────────────────────────────────────────────
-const FUNCTIONS_URL = import.meta.env.VITE_SUPABASE_URL
-  ? `${import.meta.env.VITE_SUPABASE_URL}/functions/v1`
-  : 'https://sssmvihxtqtohisghjet.supabase.co/functions/v1';
-
-const ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || 'sb_publishable_IQF1vJEiydutRmDa6XgDUA_FHTlWX0b';
+const FUNCTIONS_URL = FUNCTIONS_BASE
+  ?? 'https://sssmvihxtqtohisghjet.supabase.co/functions/v1';
 
 async function callFunction(name, body) {
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session?.access_token) throw new Error('Not authenticated — sign in to use admin functions');
   const res = await fetch(`${FUNCTIONS_URL}/${name}`, {
     method:  'POST',
-    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${ANON_KEY}` },
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` },
     body:    JSON.stringify(body),
   });
+  if (!res.ok) throw new Error(`Function ${name} returned ${res.status}`);
   return res.json();
 }
 

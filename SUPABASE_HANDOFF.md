@@ -1,6 +1,6 @@
 # Supabase Handoff — Consolidated Deploy Guide
 
-**Last updated**: 2026-05-27 (sessions 44–45 — Full E2E test; all bugs fixed; migrations 79–84 applied)  
+**Last updated**: 2026-05-27 (session 46 — all BUG_TRACKER bugs fixed; no new migrations)  
 **Main branch**: all code is on `main` — do a `git pull origin main` before deploying  
 **Migrations applied in production**: 66–84 (next: `85_`)  
 **Edge Functions**: ✅ ALL 14 DEPLOYED (2026-05-26 via `npx supabase functions deploy --use-api`)  

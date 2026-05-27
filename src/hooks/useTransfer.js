@@ -1,6 +1,32 @@
 import { useState, useEffect, useCallback } from 'react';
-import { supabase } from '../lib/supabase';
+import { supabase, FUNCTIONS_BASE } from '../lib/supabase';
 import { useAuth } from './useAuth';
+
+async function invokeTransfer(body) {
+  if (!FUNCTIONS_BASE) return { ok: false, error: 'Supabase not configured' };
+  let session = null;
+  try {
+    const { data } = await supabase.auth.getSession();
+    session = data?.session ?? null;
+  } catch { /* network/token-store failure — fall through to anon key */ }
+  const token = session?.access_token ?? import.meta.env.VITE_SUPABASE_ANON_KEY;
+  const res = await fetch(`${FUNCTIONS_BASE}/process-transfer`, {
+    method:  'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+    body:    JSON.stringify(body),
+  });
+  if (!res.ok) {
+    let msg = 'Transfer failed';
+    try { const b = await res.json(); msg = b?.error ?? msg; } catch { /* ignore */ }
+    return { ok: false, error: msg };
+  }
+  try {
+    const payload = await res.json();
+    return payload ?? { ok: false, error: 'Empty response from server' };
+  } catch {
+    return { ok: false, error: 'Invalid response from server' };
+  }
+}
 
 /**
  * Manages transfer state for a specific league.
@@ -55,36 +81,15 @@ export function useTransfer(leagueId) {
   useEffect(() => { loadTakenMap(); }, [loadTakenMap]);
 
   const buy = useCallback(async (player) => {
-    const { data, error } = await supabase.functions.invoke('process-transfer', {
-      body: {
-        action:       'buy',
-        player_id:    player.id,
-        player_price: player.price,
-        league_id:    leagueId,
-      },
+    const data = await invokeTransfer({
+      action:       'buy',
+      player_id:    player.id,
+      player_price: player.price,
+      league_id:    leagueId,
     });
 
-    if (error || !data?.ok) {
-      // Supabase SDK puts non-2xx response body in error.context (a Response object)
-      let msg  = data?.error;
-      let code = data?.code ?? '';
-      if (!msg && error?.context) {
-        try {
-          let body;
-          if (typeof error.context?.json === 'function') {
-            // error.context is a Response object — read it async
-            body = await error.context.json();
-          } else if (typeof error.context === 'string') {
-            body = JSON.parse(error.context);
-          } else {
-            body = error.context;
-          }
-          msg  = body?.error;
-          code = body?.code ?? code;
-        } catch { /* ignore parse errors */ }
-      }
-      msg = msg ?? error?.message ?? 'Transfer failed';
-      return { ok: false, error: msg, code };
+    if (!data?.ok) {
+      return { ok: false, error: data?.error ?? 'Transfer failed', code: data?.code ?? '' };
     }
 
     // Optimistic update: mark this player as owned by current manager
@@ -97,25 +102,15 @@ export function useTransfer(leagueId) {
   }, [leagueId, user]);
 
   const sell = useCallback(async (player) => {
-    const { data, error } = await supabase.functions.invoke('process-transfer', {
-      body: {
-        action:       'sell',
-        player_id:    player.id,
-        player_price: player.price,
-        league_id:    leagueId,
-      },
+    const data = await invokeTransfer({
+      action:       'sell',
+      player_id:    player.id,
+      player_price: player.price,
+      league_id:    leagueId,
     });
 
-    if (error || !data?.ok) {
-      let msg = data?.error;
-      if (!msg && error?.context) {
-        try {
-          const body = typeof error.context === 'string' ? JSON.parse(error.context) : error.context;
-          msg = body?.error;
-        } catch { /* ignore */ }
-      }
-      msg = msg ?? error?.message ?? 'Transfer failed';
-      return { ok: false, error: msg };
+    if (!data?.ok) {
+      return { ok: false, error: data?.error ?? 'Transfer failed' };
     }
 
     // Optimistic update: remove player from takenMap
