@@ -14,7 +14,7 @@
  */
 
 import { useState, useRef, useEffect } from 'react';
-import html2canvas from 'html2canvas';
+import { domToPng } from 'modern-screenshot';
 import { supabase } from '../lib/supabase';
 
 const BASE_URL = window.location.origin;
@@ -67,14 +67,13 @@ export default function LeagueInviteCard({ league, onDone }) {
     if (!cardRef.current) return;
     setExporting(true);
     try {
-      const canvas = await html2canvas(cardRef.current, {
-        backgroundColor: 'var(--ink-2)',
+      const dataUrl = await domToPng(cardRef.current, {
         scale: 2,
-        logging: false,
+        backgroundColor: '#0F1218',   // --ink-2 resolved value
       });
       const link = document.createElement('a');
       link.download = `${league.name.replace(/\s+/g, '-')}-invite.png`;
-      link.href = canvas.toDataURL('image/png');
+      link.href = dataUrl;
       link.click();
     } catch (err) {
       console.error('Export failed', err);

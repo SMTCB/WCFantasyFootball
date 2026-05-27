@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import html2canvas from 'html2canvas';
+import { domToPng } from 'modern-screenshot';
 import RecapCard from '../components/RecapCard';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../hooks/useAuth';
@@ -229,13 +229,10 @@ export default function RecapScreen() {
     if (!cardRef.current) return null;
     setSharing(true);
     try {
-      const canvas = await html2canvas(cardRef.current, {
+      return await domToPng(cardRef.current, {
         scale: 3,
         backgroundColor: '#0D0D0D',
-        useCORS: true,
-        logging: false,
       });
-      return canvas.toDataURL('image/png');
     } finally {
       setSharing(false);
     }
@@ -509,7 +506,7 @@ export default function RecapScreen() {
           </div>
         </div>
 
-        {/* ── Off-screen Shareable Card (used by html2canvas) ──── */}
+        {/* ── Off-screen Shareable Card (used by modern-screenshot) ──── */}
         <div className="absolute -left-[9999px] top-0 opacity-0 pointer-events-none" aria-hidden="true">
           <RecapCard recap={recap} forwardRef={cardRef} />
         </div>
