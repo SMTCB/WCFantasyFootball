@@ -16,20 +16,22 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
-import { supabase } from '../lib/supabase';
+import { supabase, FUNCTIONS_BASE } from '../lib/supabase';
 import { useAuth } from '../hooks/useAuth';
 
 // ─── Edge Function caller ─────────────────────────────────────────────────────
-const FUNCTIONS_URL = import.meta.env.VITE_SUPABASE_URL
-  ? `${import.meta.env.VITE_SUPABASE_URL}/functions/v1`
-  : 'https://sssmvihxtqtohisghjet.supabase.co/functions/v1';
+const FUNCTIONS_URL = FUNCTIONS_BASE
+  ?? 'https://sssmvihxtqtohisghjet.supabase.co/functions/v1';
 
-const ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || 'sb_publishable_IQF1vJEiydutRmDa6XgDUA_FHTlWX0b';
+const ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY
+  ?? 'sb_publishable_IQF1vJEiydutRmDa6XgDUA_FHTlWX0b';
 
 async function callFunction(name, body) {
+  const { data: { session } } = await supabase.auth.getSession();
+  const token = session?.access_token ?? ANON_KEY;
   const res = await fetch(`${FUNCTIONS_URL}/${name}`, {
     method:  'POST',
-    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${ANON_KEY}` },
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
     body:    JSON.stringify(body),
   });
   return res.json();
