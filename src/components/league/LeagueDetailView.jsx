@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { MgrTag, TrendPill, HubSectionLabel, MobFormDots, MobSection } from './HubShared';
+import { MgrTag, HubSectionLabel, MobFormDots, MobSection } from './HubShared';
 import { MONO, DISPLAY, miniBtnStyle, mgrHue, mgrMono } from './HubConstants';
 import { supabase } from '../../lib/supabase';
 
@@ -140,9 +140,9 @@ export default function LeagueDetailView({ leagueId, members, currentUser, membe
       <div className="hidden lg:grid" style={{ flex: 1, gridTemplateColumns: '1fr 400px', minHeight: 0 }}>
         {/* Standings table */}
         <div data-tour="league-standings" style={{ display: 'flex', flexDirection: 'column', borderRight: '1px solid var(--rule)' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '48px 1fr 80px 80px 100px', gap: 14, padding: '12px 24px', borderBottom: '1px solid var(--rule)', color: 'var(--mute)' }}>
-            {['#', 'MANAGER', 'MD', 'TOT', ''].map((h, i) => (
-              <div key={i} style={{ fontFamily: MONO, fontSize: 9, textAlign: i >= 2 && i < 4 ? 'right' : 'left' }}>{h}</div>
+          <div style={{ display: 'grid', gridTemplateColumns: '48px 1fr 80px 100px', gap: 14, padding: '12px 24px', borderBottom: '1px solid var(--rule)', color: 'var(--mute)' }}>
+            {['#', 'MANAGER', 'TOT', ''].map((h, i) => (
+              <div key={i} style={{ fontFamily: MONO, fontSize: 9, textAlign: i >= 2 && i < 3 ? 'right' : 'left' }}>{h}</div>
             ))}
           </div>
           <div style={{ flex: 1, overflow: 'auto' }}>
@@ -156,14 +156,13 @@ export default function LeagueDetailView({ leagueId, members, currentUser, membe
               const hue = mgrHue(m.users?.username || '');
               return (
                 <div key={m.user_id} style={{
-                  display: 'grid', gridTemplateColumns: '48px 1fr 80px 80px 100px', gap: 14, alignItems: 'center',
+                  display: 'grid', gridTemplateColumns: '48px 1fr 80px 100px', gap: 14, alignItems: 'center',
                   padding: '12px 24px', borderBottom: '1px solid var(--rule)',
                   borderLeft: isMe ? '2px solid var(--cyan)' : '2px solid transparent',
                   background: isMe ? 'rgba(0,180,216,.04)' : 'transparent',
                 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                     <span style={{ fontFamily: DISPLAY, fontSize: 14, minWidth: 18 }}>{m.rank || '—'}</span>
-                    <TrendPill trend={0} />
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
                     <MgrTag mono={mgrMono(mName)} hue={hue} />
@@ -174,7 +173,6 @@ export default function LeagueDetailView({ leagueId, members, currentUser, membe
                       </div>
                     </div>
                   </div>
-                  <div style={{ textAlign: 'right', fontFamily: DISPLAY, fontSize: 13, color: 'var(--mute)' }}>—</div>
                   <div style={{ textAlign: 'right', fontFamily: DISPLAY, fontSize: 13 }}>{m.total_points}</div>
                   <div style={{ display: 'flex', gap: 4, justifyContent: 'flex-end' }}>
                     {!isMe && (
