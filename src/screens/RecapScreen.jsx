@@ -26,7 +26,11 @@ export default function RecapScreen() {
         .select('league_id, rank, leagues(name, tournament_id)')
         .eq('user_id', user.id)
         .order('rank', { ascending: true });
-      if (!rows?.length) return;
+      if (!rows?.length) {
+        // No leagues yet — stop loading so the "No Recaps Yet" empty state shows
+        setLoading(false);
+        return;
+      }
       const leagueList = rows.map(r => ({
         league_id:     r.league_id,
         name:          r.leagues?.name        ?? 'Unknown League',
