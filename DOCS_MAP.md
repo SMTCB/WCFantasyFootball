@@ -23,7 +23,7 @@ Complete index and overview of all project documentation organized by purpose an
 **Product & Strategy**
 | File | Purpose | Audience | Last Updated |
 |------|---------|----------|--------------|
-| [PIPELINE.md](PIPELINE.md) | Product roadmap, sprint plan, timeline, feature phases | PM/Team | Current |
+| [BACKLOG.md](BACKLOG.md) | Session progress, completed features, POST-MVP roadmap (contains product strategy) | Team/PM | Session 51 (2026-05-28) |
 
 **Deployment & Launch**
 | File | Purpose | Audience | Last Updated |
@@ -46,6 +46,36 @@ Detailed documentation of core systems and how they work.
 | [FANTASY_POINTS_SCORING_LAYER.md](docs/architecture/FANTASY_POINTS_SCORING_LAYER.md) | Scoring formula, DB schema, point calculations | EPL point values, position multipliers, bonus rules |
 | [APP_DYNAMICS.md](docs/architecture/APP_DYNAMICS.md) | Live match updates, real-time subscriptions, Joker chip | Realtime architecture, match state machine |
 | [FORMATION_RULES.md](docs/architecture/FORMATION_RULES.md) | 11-player pitch validation rules | Position constraints, squad balance, constraints |
+
+### 🧪 **docs/testing/** — Test Strategy & Coverage
+
+Testing frameworks, test automation, and quality assurance.
+
+| File | Purpose | Key Content |
+|------|---------|------------|
+| [README.md](docs/testing/README.md) | Testing framework index | Test tiers, CI/CD overview, getting started |
+| [TESTING_STRATEGY.md](docs/testing/TESTING_STRATEGY.md) | Comprehensive testing approach | Playwright config, test organization, best practices, debugging |
+| [E2E_TEST_PLAYBOOK.md](docs/testing/E2E_TEST_PLAYBOOK.md) | E2E test execution guide | Running tests locally, CI integration |
+
+### 📦 **docs/product/** — Product Strategy & Roadmap
+
+Product roadmap, sprint planning, and business strategy.
+
+| File | Purpose | Key Content |
+|------|---------|------------|
+| [README.md](docs/product/README.md) | Product documentation index | Current status, phases, timeline |
+| [PIPELINE.md](docs/product/PIPELINE.md) | Sprint roadmap and delivery timeline | Phase 1–3, release dates, feature priority |
+| [12_MONTH_ROADMAP_2026_2027.md](docs/product/12_MONTH_ROADMAP_2026_2027.md) | Year-long strategic vision | Q2 2026–Q2 2027 planning (archived, reference) |
+
+### 📚 **docs/reference/** — Quick Lookup & Developer Guides
+
+Developer setup, conventions, and best practices.
+
+| File | Purpose | Key Content |
+|------|---------|------------|
+| [README.md](docs/reference/README.md) | Reference guides index | Quick navigation, common workflows |
+| [LOCAL_DEVELOPMENT.md](docs/reference/LOCAL_DEVELOPMENT.md) | Local environment setup | Prerequisites, one-time setup, daily commands, debugging |
+| [CONVENTIONS.md](docs/reference/CONVENTIONS.md) | Code style & naming conventions | JS/React, SQL, CSS, Git, ESLint rules |
 
 ### 🔌 **docs/api/** — External Integrations & API Reference
 
@@ -71,10 +101,11 @@ Design tokens, branding guidelines, and component specs.
 
 ### 📦 **docs/deployment/** — Launch & DevOps
 
-Infrastructure, deployment procedures, and pre-launch checklist.
+Infrastructure, deployment procedures, and operational strategy.
 
 | File | Purpose | Key Content |
 |------|---------|-------------|
+| [OBSERVABILITY_STRATEGY.md](docs/deployment/OBSERVABILITY_STRATEGY.md) | Lightweight observability design (no external SaaS) | 5-minute setup per function, self-pruning logs, production readiness |
 | [DATA_PIPELINE_RUNBOOK.md](docs/deployment/DATA_PIPELINE_RUNBOOK.md) | Supabase cron setup & data activation steps | Fixtures, scores, player status syncs |
 | [DRY_RUN_PREP_CHECKLIST.md](docs/deployment/DRY_RUN_PREP_CHECKLIST.md) | Pre-launch verification checklist | Go/no-go criteria, sign-off process |
 
@@ -82,15 +113,25 @@ Infrastructure, deployment procedures, and pre-launch checklist.
 
 ## Archived & Consolidated Documentation
 
-Files that were analysis/intermediate work but may be referenced for context:
+Files that were analysis/intermediate work — moved to `docs/archive/` on 2026-05-28:
 
 | File | Purpose | Status | Note |
 |------|---------|--------|------|
-| [docs/STRATEGIC_PRODUCT_ROADMAP_ASSESSMENT.md](docs/STRATEGIC_PRODUCT_ROADMAP_ASSESSMENT.md) | Strategic analysis from earlier planning | Archive | Consolidated into PIPELINE.md |
-| [docs/STRATEGIC_PRODUCT_ROADMAP_PROMPT.md](docs/STRATEGIC_PRODUCT_ROADMAP_PROMPT.md) | Research & analysis notes | Archive | Consolidated into PIPELINE.md |
-| [docs/12_MONTH_ROADMAP_2026_2027.md](docs/12_MONTH_ROADMAP_2026_2027.md) | Year-long planning document | Archive | Consolidated into PIPELINE.md |
-| [docs/WORKSPACE_REORGANIZATION_SUMMARY.md](docs/WORKSPACE_REORGANIZATION_SUMMARY.md) | One-off workspace analysis | Archive | Historical only |
-| [GIT_AND_CODE_WALKTHROUGH.md](GIT_AND_CODE_WALKTHROUGH.md) | Historical code navigation guide | Archive | Superseded by CLAUDE.md |
+| `docs/archive/CODE_AUDIT_2026-05-24.md` | Full-stack code quality review | Reference | Findings extracted to BACKLOG.md |
+| `docs/archive/CODE_REVIEW_REPORT.md` | Production risks & improvements | Reference | 10 improvements + bugs moved to POST-MVP |
+| `docs/archive/LOGIC_AUDIT_2026-05-24.md` | Scoring, betting, standings logic audit | Reference | Deferred items moved to BACKLOG |
+| `docs/archive/UI_AUDIT_2026-05-24.md` | User flow & UX audit | Reference | Deferred items moved to BACKLOG |
+| `docs/archive/INGESTION_AUDIT_2026-05-24.md` | API pipeline & cron job audit | Reference | Deferred items moved to BACKLOG |
+| `docs/archive/SPRINT_PLAN_2026-05-24.md` | Consolidated correction plan | Reference | Sprints 0-4 complete as of 2026-05-25 |
+| `docs/archive/OBSERVABILITY_STRATEGY_2026-05-24.md` | (→ moved to docs/deployment/OBSERVABILITY_STRATEGY.md) | Applied | Lightweight observability design |
+| `docs/archive/SUPABASE_HANDOFF.md` | Deployment guide | Reference | All migrations 66-87 applied; no pending tasks |
+| `docs/archive/HANDOFF_PROMPT.md` | Session handoff template | Reference | Use CLAUDE.md Session Start Checklist instead |
+| `docs/archive/AUDIT_EXTRACTION_2026-05-28.md` | Extraction analysis from above audits | Reference | Links to items moved to BACKLOG |
+| `docs/STRATEGIC_PRODUCT_ROADMAP_ASSESSMENT.md` | Strategic analysis from earlier planning | Archive | Consolidated into BACKLOG POST-MVP |
+| `docs/STRATEGIC_PRODUCT_ROADMAP_PROMPT.md` | Research & analysis notes | Archive | Consolidated into BACKLOG POST-MVP |
+| `docs/12_MONTH_ROADMAP_2026_2027.md` | Year-long planning document | Archive | Consolidated into BACKLOG POST-MVP |
+| `docs/WORKSPACE_REORGANIZATION_SUMMARY.md` | One-off workspace analysis | Archive | Historical only |
+| `docs/archive/GIT_AND_CODE_WALKTHROUGH.md` | Historical code navigation guide | Archive | Superseded by CLAUDE.md |
 
 ---
 
@@ -125,16 +166,13 @@ Files that were analysis/intermediate work but may be referenced for context:
 ```
 Root-level (critical, always referenced):
 ├── README.md                      # Start here
-├── CLAUDE.md                      # Authoritative project instructions
-├── BACKLOG.md                     # Session progress
-├── PIPELINE.md                    # Roadmap
-├── APP_STORE_ASSESSMENT.md        # Mobile launch
-├── MOBILE_IMPLEMENTATION_GUIDE.md # Capacitor setup
-├── E2E_TEST_REPORT.md             # Test status
-├── CLEANUP_REPORT.md              # Maintenance audit
-├── CODE_REVIEW_REPORT.md          # Quality assessment
-├── GEMINI.md                      # Mobile AI instructions
-└── DOCS_MAP.md                    # ← You are here
+├── CLAUDE.md                      # Authoritative project instructions (SESSION START CHECKLIST)
+├── BACKLOG.md                     # Session progress + POST-MVP roadmap
+├── APP_STORE_ASSESSMENT.md        # Mobile launch readiness
+├── MOBILE_IMPLEMENTATION_GUIDE.md # Capacitor setup & native plugins
+├── E2E_TEST_REPORT.md             # E2E test results & coverage (session 50, historical)
+├── GEMINI.md                      # Mobile AI (Google Antigravity) instructions
+└── DOCS_MAP.md                    # ← You are here (documentation index)
 
 docs/architecture/                 # System design
 ├── DRAFT_SYSTEM_DESIGN.md
@@ -152,27 +190,100 @@ docs/brand/                        # Design system
 ├── BRANDING.md
 ├── FORZAKIT-UI-Overhaul.md
 ├── FORZAKIT-Pitch-Fixes.md
+├── UX_UI_REVIEW.md
 ├── tokens.css
 └── brand_guidelines/
 
 docs/deployment/                   # Launch & ops
 ├── DATA_PIPELINE_RUNBOOK.md
-└── DRY_RUN_PREP_CHECKLIST.md
+├── DRY_RUN_PREP_CHECKLIST.md
+└── OBSERVABILITY_STRATEGY.md
 
-docs/ (archive/consolidated):
+docs/testing/                      # Test strategy & coverage
+├── README.md
+├── TESTING_STRATEGY.md
+└── E2E_TEST_PLAYBOOK.md
+
+docs/product/                      # Product roadmap & strategy
+├── README.md
+├── PIPELINE.md
+└── 12_MONTH_ROADMAP_2026_2027.md
+
+docs/reference/                    # Developer guides & lookup
+├── README.md
+├── LOCAL_DEVELOPMENT.md
+└── CONVENTIONS.md
+
+docs/archive/                      # Archived & consolidated docs
 ├── STRATEGIC_PRODUCT_ROADMAP_ASSESSMENT.md
 ├── STRATEGIC_PRODUCT_ROADMAP_PROMPT.md
-├── 12_MONTH_ROADMAP_2026_2027.md
-└── WORKSPACE_REORGANIZATION_SUMMARY.md
+├── WORKSPACE_REORGANIZATION_SUMMARY.md
+├── AUDIT_EXTRACTION_2026-05-28.md
+├── CODE_AUDIT_2026-05-24.md
+├── CODE_REVIEW_REPORT.md
+├── HANDOFF_PROMPT.md
+├── INGESTION_AUDIT_2026-05-24.md
+├── LOGIC_AUDIT_2026-05-24.md
+├── OBSERVABILITY_STRATEGY_2026-05-24.md
+├── PIPELINE_DATA_PIPELINE.md
+├── SPRINT_PLAN_2026-05-24.md
+├── SUPABASE_HANDOFF.md
+├── UI_AUDIT_2026-05-24.md
+├── .old/                         # Pre-MVP early work
+│   ├── PRELIMINARY_SCORING_MECHANISM.md
+│   ├── README.md
+│   └── brand_preview.html
+└── .working-docs/                # Working session notes
+    ├── BEHAVIORAL_RULES.md
+    ├── GIT_WORKFLOW_GUIDE.md
+    ├── ROOT_FILES_EXPLAINED.md
+    ├── SESSION_WORKFLOW.md
+    └── WORKSPACE_GUIDE.md
 ```
 
 ---
 
 ## Maintenance Notes
 
-- **Update Frequency**: Root-level docs updated after each session; architecture docs updated as features ship
-- **Review Process**: Before any major release, verify all architecture docs match current code
-- **Consolidation**: If strategic roadmap changes, update PIPELINE.md and archive old docs
-- **Link Validation**: All links in this map should resolve correctly — if broken, file an issue
+- **Update Frequency**: 
+  - Root-level docs (BACKLOG.md, CLAUDE.md, README.md): After each session
+  - Architecture docs: When features ship or systems change
+  - Testing/product docs: When roadmap or strategy changes
+  - Reference docs: When conventions or setup changes
+  
+- **Review Process**: Before any major release, verify:
+  - All architecture docs match current code
+  - Testing strategy reflects actual test coverage
+  - PIPELINE.md aligns with current roadmap
+  
+- **Consolidation**: Intermediate work (audits, session notes) goes directly to `docs/archive/`; never leave temp files in root or docs/
 
-Last Updated: **2026-05-17** (after lint fixes and documentation cleanup)
+- **Link Validation**: All links in this map should resolve correctly — if broken, update this file immediately
+
+- **Single Source of Truth**: 
+  - [BACKLOG.md](BACKLOG.md) — all open issues and completed work
+  - [CLAUDE.md](CLAUDE.md) — authoritative project instructions
+  - [docs/testing/TESTING_STRATEGY.md](docs/testing/TESTING_STRATEGY.md) — test framework details
+  - [docs/product/PIPELINE.md](docs/product/PIPELINE.md) — delivery timeline
+  - [docs/reference/CONVENTIONS.md](docs/reference/CONVENTIONS.md) — code style rules
+
+## Documentation Reorganization Summary
+
+**Date**: 2026-05-28  
+**Scope**: Complete reorganization of 30+ documentation files across root and docs/ folder  
+**Actions Taken**:
+1. Created 4 new top-level doc folders (testing, product, reference + archive reorganization)
+2. Moved 9 core files to appropriate categories (PIPELINE, APP_DYNAMICS, E2E_TEST_PLAYBOOK, etc)
+3. Removed 3 duplicate files (APP_STORE_ASSESSMENT, MOBILE_IMPLEMENTATION_GUIDE from docs/)
+4. Created 6 new documentation files (README/index files for each category + FORMATION_RULES, LOCAL_DEVELOPMENT, CONVENTIONS, TESTING_STRATEGY)
+5. Archived 13 intermediate/stale files (audits, strategic docs, working notes) to docs/archive/
+6. Updated DOCS_MAP.md as master index of all documentation
+
+**Result**: 
+- Root folder reduced from 18 to 8 essential files
+- Documentation organized by topic (architecture, api, brand, deployment, testing, product, reference)
+- Clear ownership and maintenance path for each document category
+- BACKLOG.md established as single source of truth for task management
+- All documentation now discoverable from DOCS_MAP.md
+
+Last Updated: **2026-05-28** (comprehensive documentation reorganization complete)
