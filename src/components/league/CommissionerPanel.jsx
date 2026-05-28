@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
 import BetCreatorPanel from './BetCreatorPanel';
+import TourReplayButton from '../TourReplayButton';
 // HubShared is NOT imported here — LeagueScreen imports it directly, and
 // CommissionerPanel→HubShared at depth 2 causes a Rolldown TDZ crash in
 // the production bundle. All four exports are inlined below instead.
@@ -1670,7 +1671,7 @@ function CommMsg({ msg, onDismiss }) {
 // ─────────────────────────────────────────────────────────────────────────────
 // Root export
 // ─────────────────────────────────────────────────────────────────────────────
-export default function CommissionerPanel({ commissioner, leagueId, tournamentId, memberCount = 0, leagueName = 'LEAGUE' }) {
+export default function CommissionerPanel({ commissioner, leagueId, tournamentId, memberCount = 0, leagueName = 'LEAGUE', replayCommissionerTour }) {
   const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' && window.innerWidth < 1024);
 
   useEffect(() => {
@@ -1791,6 +1792,8 @@ export default function CommissionerPanel({ commissioner, leagueId, tournamentId
           </MobLifecycleCard>
           </div>
         </div>
+        {/* Tour replay */}
+        <TourReplayButton onReplay={replayCommissionerTour} label="REPLAY ADMIN GUIDE" title="Replay the commissioner guide" />
       </div>
     );
   }
@@ -1833,6 +1836,9 @@ export default function CommissionerPanel({ commissioner, leagueId, tournamentId
 
       {/* Zone C — Lifecycle ops */}
       <LifecycleOps commissioner={commissioner} leagueId={leagueId} />
+
+      {/* Tour replay */}
+      <TourReplayButton onReplay={replayCommissionerTour} label="REPLAY ADMIN GUIDE" title="Replay the commissioner guide" />
     </div>
   );
 }
