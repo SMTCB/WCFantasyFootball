@@ -171,6 +171,9 @@ test.describe('SquadScreen', () => {
     await skipOnboarding(page);
     await page.goto('/squad');
     await waitForContent(page);
+    // Demo user has real league memberships → league picker appears before squad UI.
+    // Select the first league so squad content loads.
+    await selectFirstLeagueIfPicker(page);
   });
 
   test('shows My Squad heading', async ({ page }) => {
@@ -198,6 +201,8 @@ test.describe('SquadScreen', () => {
     await page.setViewportSize({ width: 375, height: 812 });
     await page.goto('/squad');
     await waitForContent(page);
+    // This test re-navigates, so re-dismiss the picker if it appears again
+    await selectFirstLeagueIfPicker(page);
     // Chips are in the CHIPS tab
     await page.getByRole('button', { name: /chips/i }).click();
     await page.waitForTimeout(300);
@@ -424,6 +429,8 @@ test.describe('Layout consistency', () => {
     await skipOnboarding(page);
     await page.goto('/this-route-does-not-exist');
     await waitForContent(page);
+    // NotFoundScreen shows a "← Back to Home" button — no auto-redirect
+    await page.getByRole('button', { name: /back to home/i }).click();
     await expect(page).toHaveURL('/');
   });
 });

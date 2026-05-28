@@ -66,7 +66,8 @@ async function provisionTestUsers() {
   });
   const body = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error(`e2e-setup HTTP ${res.status}: ${JSON.stringify(body)}`);
-  const failures = (body.results ?? []).filter(r => r.error);
+  // "already_registered" is not a failure — user exists from a previous run, which is fine.
+  const failures = (body.results ?? []).filter(r => r.error && !r.error.toLowerCase().includes('already'));
   if (failures.length) throw new Error(`user provisioning failed: ${JSON.stringify(failures)}`);
   console.log('✅ Test users provisioned:', body.results.map(r => r.email).join(', '));
 }
