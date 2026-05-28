@@ -18,6 +18,28 @@
 
 ---
 
+## 📋 BACKLOG IS SINGLE SOURCE OF TRUTH
+
+**Critical governance rule:** [BACKLOG.md](BACKLOG.md) is the **authoritative** document for:
+- ✅ Completed features and session progress
+- 🚀 ALL open issues, bugs, and improvements (prioritized by tier: P0/P1/P2/P3)
+- ⏱️ Effort estimates and phase allocation for each item
+- 📊 Session notes and decision history
+
+**If it's not in BACKLOG.md, it doesn't exist.** All task assignment, prioritization, and planning flows from this single document.
+
+**Tier reference** (from BACKLOG.md):
+| Tier | When | Examples |
+|------|------|----------|
+| **P0 — BLOCKER** | Fix before launch | RLS spoofing, concurrent races, data corruption |
+| **P1 — HIGH** | Phase 2a (weeks 1-4 post-launch) | API timeouts, RLS enablement, observability |
+| **P2 — MEDIUM** | Phase 2b (weeks 5-12 post-launch) | Performance improvements, deferred logic, betting features |
+| **P3 — LOW** | Phase 3+ (3+ months) | Polish, refactoring, documentation |
+
+See BACKLOG.md for the complete prioritized list with effort estimates and implementation guidance.
+
+---
+
 ## Ways of Working
 
 ### Your Role (Non-Technical User)
@@ -886,3 +908,223 @@ During dev/testing, you discover a bug or gap.
 - Card stays "Not started" in Notion
 - Add note: "Deferred to Phase 2" or "Post-MVP"
 - Reference in BACKLOG.md under appropriate section
+
+---
+
+## Documentation Structure Standards
+
+**Every new documentation file must follow these standards for consistency and discoverability.**
+
+### Documentation Categories & Locations
+
+| Category | Location | Purpose | File Examples |
+|----------|----------|---------|----------------|
+| **Architecture** | `docs/architecture/` | System design, data flow, algorithms | DRAFT_SYSTEM_DESIGN.md, FANTASY_POINTS_SCORING_LAYER.md |
+| **API** | `docs/api/` | External integrations, endpoints, auth | FORZA_API_ASSESSMENT.md, API_INTEGRATION_REFERENCE.md |
+| **Brand** | `docs/brand/` | Design system, visual identity, tokens | BRANDING.md, FORZAKIT-UI-Overhaul.md, tokens.css |
+| **Deployment** | `docs/deployment/` | DevOps, infrastructure, launch checklists | DATA_PIPELINE_RUNBOOK.md, DRY_RUN_PREP_CHECKLIST.md |
+| **Testing** | `docs/testing/` | Test strategy, frameworks, coverage | TESTING_STRATEGY.md, E2E_TEST_PLAYBOOK.md |
+| **Product** | `docs/product/` | Roadmap, strategy, timeline | PIPELINE.md, 12_MONTH_ROADMAP_2026_2027.md |
+| **Reference** | `docs/reference/` | Developer setup, conventions, lookup | LOCAL_DEVELOPMENT.md, CONVENTIONS.md |
+| **Archive** | `docs/archive/` | Stale, intermediate, or reference work | Audit files, old strategic docs |
+
+### Standard File Structure
+
+**Every documentation file should follow this structure:**
+
+```markdown
+# Document Title
+
+**One-line summary of purpose and audience.**
+
+---
+
+## Quick Navigation (Optional)
+
+Use this if the document has multiple sections or audiences:
+- **For X**: Links to sections 1, 2, 3
+- **For Y**: Links to sections A, B, C
+
+---
+
+## Context / Overview
+
+Brief explanation of what this document covers, why it matters, and key assumptions.
+
+---
+
+## Main Content
+
+Organized in clear sections with:
+- Headings that are self-documenting
+- Tables for reference data (not paragraph form)
+- Code blocks for examples
+- Links to related documents
+
+---
+
+## Related Documents
+
+- [Related Doc 1](path/to/doc.md) — Brief description
+- [Related Doc 2](path/to/doc.md) — Brief description
+
+---
+
+Last Updated: **YYYY-MM-DD**
+```
+
+### Specific Category Templates
+
+#### 🏗️ Architecture Docs
+- **Format**: System overview → Design decisions → Data schemas → Diagrams (if applicable)
+- **Length**: 1000–3000 words
+- **Update Frequency**: When architecture changes
+- **Example**: `FANTASY_POINTS_SCORING_LAYER.md`
+
+```markdown
+# Feature Name — System Design
+
+**Complete specification and design for [feature].**
+
+---
+
+## Overview
+[What is this system? Why does it exist?]
+
+---
+
+## Core Components
+[Key parts, data structures, algorithms]
+
+---
+
+## Design Decisions
+[Why this approach? What were the alternatives?]
+
+---
+
+## Database Schema
+[Tables, constraints, indexes if applicable]
+
+---
+
+## Integration Points
+[How it connects to other systems]
+
+---
+
+## Related Documents
+[Links to related architecture docs]
+
+Last Updated: YYYY-MM-DD
+```
+
+#### 🎯 Product Docs
+- **Format**: Index/overview → Roadmap/timeline → Details
+- **Length**: 500–2000 words
+- **Update Frequency**: After each release or roadmap change
+- **Example**: `PIPELINE.md`
+
+#### 🧪 Testing Docs
+- **Format**: Overview → Framework/tools → Test organization → How to run → Examples
+- **Length**: 1000–3000 words
+- **Update Frequency**: When testing strategy changes
+- **Example**: `TESTING_STRATEGY.md`
+
+#### 📚 Reference Docs
+- **Format**: Quick start → Detailed sections → Troubleshooting → Tips
+- **Length**: 1000–4000 words (comprehensive reference)
+- **Update Frequency**: When setup or conventions change
+- **Example**: `LOCAL_DEVELOPMENT.md`, `CONVENTIONS.md`
+
+### File Naming Conventions
+
+| Pattern | Usage | Examples |
+|---------|-------|----------|
+| `{FEATURE}_{TYPE}.md` | Architecture/design | `DRAFT_SYSTEM_DESIGN.md`, `FANTASY_POINTS_SCORING_LAYER.md` |
+| `{NAME}_OVERVIEW.md` or `README.md` | Category index/intro | `docs/testing/README.md` |
+| `{ACTION}_{SUBJECT}.md` | How-to / guide | `LOCAL_DEVELOPMENT.md`, `DATA_PIPELINE_RUNBOOK.md` |
+| `{TOPIC}_STRATEGY.md` | Strategy/approach | `TESTING_STRATEGY.md`, `OBSERVABILITY_STRATEGY.md` |
+| `{CHECKLIST_TITLE}.md` | Pre-launch/verification | `DRY_RUN_PREP_CHECKLIST.md` |
+
+### Maintenance Rules
+
+**Every documentation file MUST:**
+1. ✅ Have a "Last Updated" date at the bottom
+2. ✅ Link to related documents (avoid orphaned docs)
+3. ✅ Be indexed in [DOCS_MAP.md](DOCS_MAP.md) (if top-level or category-defining)
+4. ✅ Use clear headings and short sections (max 500 words per section)
+5. ✅ Avoid duplication (reference instead of copy)
+6. ✅ Be kept current (update within 1 week of code changes affecting it)
+
+**Never:**
+- ❌ Create new files in root without adding to DOCS_MAP.md
+- ❌ Duplicate content across multiple files (use links instead)
+- ❌ Keep stale files in active folders (move to `docs/archive/`)
+- ❌ Leave "Last Updated" dates older than the current sprint
+- ❌ Add docs without considering where they belong in the category system
+
+### How to Add a New Document
+
+1. **Identify the category** — Which folder does this belong in?
+   - If unsure, check [DOCS_MAP.md](DOCS_MAP.md) and BACKLOG.md for guidance
+
+2. **Choose a filename** — Follow naming conventions above
+   - Example: `docs/testing/LOAD_TESTING_GUIDE.md`
+
+3. **Use the standard structure** — Follow the template above
+   - Title + summary
+   - Quick navigation (if needed)
+   - Clear sections
+   - Related documents
+   - Last Updated date
+
+4. **Update DOCS_MAP.md** — Add entry to the appropriate section
+   - Table entry in the category section
+   - One-line description in the file tree
+
+5. **Commit with a clear message**:
+   ```
+   docs(category): add new document title
+   ```
+   Example:
+   ```
+   docs(testing): add load testing guide and stress test procedures
+   ```
+
+### When to Archive vs Update
+
+**Archive a document** (move to `docs/archive/`) if:
+- It documents a system that was replaced
+- It's an audit or intermediate analysis file (snapshot in time)
+- It's a template from a previous session
+- It has not been updated in 3+ months and is not actively referenced
+
+**Update a document** if:
+- The feature/system it describes changed
+- Code snippets are no longer accurate
+- New sections needed based on recent work
+- The timestamp is older than current sprint
+
+### Cross-Referencing Best Practices
+
+**Always use relative links** for docs in the same repo:
+```markdown
+[BACKLOG.md](../BACKLOG.md)           # From docs/testing/
+[CONVENTIONS.md](CONVENTIONS.md)       # From docs/reference/
+[BRANDING.md](../brand/BRANDING.md)   # From docs/testing/
+```
+
+**Link by category**, not just file names:
+```markdown
+❌ Bad: See TESTING_STRATEGY.md
+✅ Good: See [Testing Strategy](../testing/TESTING_STRATEGY.md) for framework details
+```
+
+### Examples in the Codebase
+
+These files follow the standards above and can serve as templates:
+- [docs/testing/TESTING_STRATEGY.md](docs/testing/TESTING_STRATEGY.md) — Comprehensive strategy doc
+- [docs/reference/LOCAL_DEVELOPMENT.md](docs/reference/LOCAL_DEVELOPMENT.md) — Detailed how-to guide
+- [docs/reference/CONVENTIONS.md](docs/reference/CONVENTIONS.md) — Reference doc with tables and examples
+- [docs/product/README.md](docs/product/README.md) — Category index with quick navigation
