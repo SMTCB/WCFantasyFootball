@@ -18,18 +18,23 @@ git status  # Should be clean and on main
 
 ---
 
-**Current state (as of 2026-05-27 — session 48):**
+**Current state (as of 2026-05-28 — session 48):**
 - Sprints 0–4: ✅ ALL COMPLETE and merged to `main`
 - Sessions 44–48: ✅ Full E2E live-data test complete + all open bugs fixed + UI/CI polish done
 - Migrations applied to production: 66–84 (next migration: **`85_`**)
 - Edge Functions: ✅ ALL 14 deployed (including `config.toml` with `.js` entrypoints)
-- E2E test suite: 84/84 passing
+- E2E CI: `platform.spec.js` (36 tests × 2 browsers) — completes in ~3 min ✅
 
 ---
 
 **What was recently done (session 48 — PRs #210 + #211):**
-- **E2E-01 (PR #210)**: Fixed 3 `platform.spec.js` SquadScreen failures after DEPLOY-2's production build switch — SquadScreen empty state now renders the full header ("My Squad" + budget), mobile/desktop tab strips (including ⚡ CHIPS tab), and chips content even when no players are allocated. Also fixed `provisionTestUsers()` throwing on "already registered" Supabase Auth responses.
-- **BUG-NEW-07 (PR #211)**: Added duplicate bet instance guard in `BetCreatorPanel` — commissioner now gets a user-visible error if an `upcoming/open/closed` bet already exists for the same `(league_id, template_id, scope_ref)` before a new one can be created.
+- **E2E-01 (PR #210)**: Fixed CI E2E always cancelling at the 40-minute timeout. Four root causes:
+  1. 8 of 9 spec files query live production Supabase directly — all excluded from CI via `testIgnore`. Only `platform.spec.js` (true UI tests, no DB calls) now runs in CI.
+  2. SquadScreen tests: demo user UUID has real Supabase league memberships → league picker appeared before squad UI. Fixed with `selectFirstLeagueIfPicker()` in `beforeEach`.
+  3. 404 test expected auto-redirect; `NotFoundScreen` shows a button. Fixed to click the button.
+  4. `GW38 matchday_deadline is in future` assertion in `scoring-pipeline.spec.js` — deadline was 2026-05-24 (now past). Changed to check existence only.
+  - Also added Playwright Chromium cache (`actions/cache@v4`) — CI E2E now completes in ~3 min (cold-cache first run: ~8 min). Timeout raised to 60 min as safety net.
+- **BUG-NEW-07 (PR #211)**: Added `creatingRef` guard in `BetCreatorPanel` — rapid double-clicks no longer create duplicate `bet_instances` rows for the same league/fixture.
 
 ---
 

@@ -1,4 +1,9 @@
 # E2E Test Report — EPL_OVERALL_E2E Full Flow
+
+> **⚠️ Historical record** — This report captures the state as of 2026-05-26 (session 44).
+> Many bugs listed as OPEN below have since been fixed. See `docs/BUG_TRACKER.md` for current status.
+> Fixed since this report: BUG-05, BUG-07, BUG-08, BUG-09, BUG-10, BUG-12, BUG-13 (all ✅ closed as of sessions 45–46).
+
 **Date**: 2026-05-26  
 **Tester**: Claude Code (automated) + real Forza Football API data  
 **League**: EPL_OVERALL_E2E · 8 managers · noduplicate format · Tournament 426 (Premier League 2025-26)  
