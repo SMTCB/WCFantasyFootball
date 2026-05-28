@@ -1,8 +1,37 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-05-28 (session 50 — WC E2E + cron fixes migrations 86+87)  
+**Last Updated**: 2026-05-28 (session 51 — WC bug sweep, all issues resolved pre-launch)  
 **E2E Test Suite**: `platform.spec.js` (36 tests × 2 browsers) passing in CI ✅ — completes in ~3 min  
 **Live App**: https://wc-fantasy-football.vercel.app
+
+---
+
+## 📊 SESSION 51 PROGRESS (2026-05-28 — WC Pre-Launch Bug Sweep)
+
+**Goal**: Clear the entire `docs/BUG_TRACKER.md` before WC kick-off (June 11, 2026).
+
+### ✅ ALL BUGS RESOLVED — BUG_TRACKER IS CLEAR
+
+**PR #215** — P1/P2/P3 bugs + improvements:
+- ✅ **WC-05** (P1): Roster modal stuck — `loadManagerRoster` + `loadTradeSquads` now fall back to `squads.players` when no `draft_allocations` exist
+- ✅ **WC-02** (P1): Bets tab showed "GW—" — `BetsTabHub` now receives `currentGW` prop from `LeagueScreen`
+- ✅ **WC-03** (P1): Auction bid placeholder used `+0.1` — now uses `min_increment` from DB (default 0.5)
+- ✅ **WC-07** (P1): Same player proposable twice — `submit_trade_proposal` RPC now guards with `PLAYER_ALREADY_PROPOSED`
+- ✅ **IMP-A**: Trade cash sweetener default changed from £5M → £0
+- ✅ **WC-01** (P2): `get_league_stats` RPC created (was 404 on STATS tab)
+- ✅ **WC-06** (P2): Chat Realtime subscription warning now only fires on `CHANNEL_ERROR`/`TIMED_OUT`
+- ✅ **IMP-B**: WC matchday deadlines seeded (rounds 4–7 for knockout stage)
+- ✅ **WC-04** (P3): Auctions LIVE counter now counts `highest_bidder_id === mySquadId`
+- ✅ **WC-09** (P3): LiveScreen GW shows next upcoming deadline (not latest overall)
+- ✅ **Migration 88**: trade proposal guard + `get_league_stats` RPC + WC deadlines r4–r7
+
+**PR #216** — Remaining items:
+- ✅ **WC-08** (P3): `useTransferWindow` — module-level TTL cache (1min) + poll interval 60s → 5min
+- ✅ **IMP-C**: WC scoring rules confirmed identical to EPL — acceptable for launch, no change needed
+- ✅ **IMP-D** (new bug found during live test): `notify_league_on_bet_creation` trigger was missing `SECURITY DEFINER` — blocked ALL bet creation with 403. Fixed in Migration 89.
+- ✅ **IMP-D E2E confirmed**: Player Block full flow tested in browser — Create → Submit → Resolve → +5 pts awarded ✅
+
+**Session 51 status**: ✅ COMPLETE. BUG_TRACKER empty. App ready for WC June 11 launch.
 
 ---
 

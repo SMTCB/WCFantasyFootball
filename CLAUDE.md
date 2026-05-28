@@ -516,10 +516,13 @@ Always create a new file — never modify existing migrations.
 | 70 | `70_scoring_fixes.sql` | Sprint 1: aggregate_league_member_points (UUID,UUID) signature + L3.7 reward_type filter |
 | 71–77 | `71_*.sql` → `77_security_polish.sql` | Sprints 1-3: observability, draft fixes, bet logic, relaxation, security hardening |
 | 78 | `78_dead_code_cleanup.sql` | Sprint 4: drop `calculate_player_points` SQL function (superseded by Edge Function since migration 53) |
+| 79–87 | `79_*.sql` → `87_*.sql` | Sprint 4–5: fantasy_points NUMERIC, auction FK fix, draft pool filter, RLS hardening, bet submit/resolve fixes, WC cron URL fix, score cron status fix |
+| 88 | `88_wc_bug_fixes.sql` | Session 51: trade proposal duplicate guard, get_league_stats RPC, WC matchday deadlines r4–r7 |
+| 89 | `89_bet_notification_trigger_fix.sql` | Session 51: notify_league_on_bet_creation → SECURITY DEFINER (was blocking all bet creation with 403) |
 
-**Next migration**: `79_`
+**Next migration**: `90_`
 
-**Key pipeline facts (2026-05-24):**
+**Key pipeline facts (2026-05-28):**
 - `calculate-scores` uses `scoring_rules` table (not `scoring_templates`) keyed by `tournament_id`
 - `fantasy_points.matchday_id` format: `'{tournament_id}-r{round}'` e.g. `'426-r35'`
 - `matchday_deadlines.matchday_id` format: `'426-rN'` (canonical, written by `sync-fixtures`)
