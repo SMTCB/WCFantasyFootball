@@ -405,3 +405,61 @@ ON CONFLICT DO NOTHING;
 3. **Season-end state**: After the EPL season ends (all matchday deadlines in the past), transfer windows and GW labels behave differently. The matchday_deadlines dates must be set to the future for testing.
 
 4. **Draft lottery**: After running the lottery, squad `matchday_id` must match the current matchday deadline for transfers/scoring to work. Run the matchday update in Appendix B when re-testing.
+
+---
+
+## WC E2E Addendum (session 50 — 2026-05-28)
+
+### BETS tab vs BETTING tab — they are different
+
+The league navigation has two separate tabs:
+- **BETS** — where managers place picks on open bet instances. Shows OPEN/PENDING/BANKED counters and the live pick UI.
+- **BETTING** — the **prediction performance leaderboard**. Shows season-long stats: total pts earned from bets, win rate, record, rewards. Sorted by rewards earned. Only updates after bets are resolved.
+
+### WC Tournament Setup Prerequisites
+
+When creating a WC test league (tournament_id = '429') the following must be done manually — they are NOT auto-configured:
+
+```sql
+-- 1. Copy scoring rules from EPL to WC (no scoring rules exist for WC by default)
+INSERT INTO scoring_rules (tournament_id, position, rules)
+SELECT '429', position, rules FROM scoring_rules WHERE tournament_id = '426'
+ON CONFLICT (tournament_id, position) DO NOTHING;
+
+-- 2. Create matchday deadlines (WC has no deadlines pre-loaded)
+INSERT INTO matchday_deadlines (tournament_id, matchday_id, deadline_at) VALUES
+  ('429','429-r1', NOW() - INTERVAL '3 days'),   -- past round (scores already in)
+  ('429','429-r2', NOW() + INTERVAL '14 days'),   -- current open window
+  ('429','429-r3', NOW() + INTERVAL '21 days');   -- future
+
+-- 3. Mark some fixtures 'finished' for scoring (WC fixtures default to 'scheduled')
+--    Note: use 'finished' NOT 'after' — 'after' is not a valid match_status enum value
+UPDATE fixtures SET status = 'finished', home_score = 2, away_score = 1, matchday_id = '429-r1'
+WHERE id = 'f-1219435455';  -- Brazil vs Morocco
+```
+
+### Roster modal requires `draft_allocations`
+
+The "XYZ's Roster" modal (opened by clicking a manager in BOARD standings) fetches `draft_allocations.allocated_players` to render the player list. If the league was created via direct SQL (not via the draft lottery), `draft_allocations` rows don't exist and the modal shows "Loading roster..." indefinitely.
+
+**Workaround**: copy squads → draft_allocations before testing the roster/trade flow:
+```sql
+INSERT INTO draft_allocations (league_id, user_id, allocated_players, unresolved_slots, allocated_at)
+SELECT s.league_id, s.user_id, s.players, 0, NOW()
+FROM squads s WHERE s.league_id = '<your_league_id>'
+ON CONFLICT (league_id, user_id) DO UPDATE SET allocated_players = EXCLUDED.allocated_players;
+```
+
+### Trade proposal UX notes
+
+- Cash sweetener **defaults to £5.0M** (slider halfway), not £0. Reset to 0 for straight swap.
+- The same player can be offered in **multiple simultaneous pending proposals** — the system allows this. The `accept_trade_proposal` RPC cascade-cancels competing proposals, but no UI warning is shown.
+- The trade submit button is labelled **"Broadcast Proposal"** (not "Send" or "Submit").
+
+### Auction bid input placeholder is misleading
+
+The placeholder shows `£X.XM+` using a 0.1 increment from the current bid, but actual validation enforces the listing's `min_increment` (typically 0.5). A bid of `current_bid + 0.1` will be rejected with "Bid too low. Minimum: X.X". Always bid at least `current_bid + min_increment`. (Bug WC-03.)
+
+### Admin tab — "Player Block" bet type
+
+The ADMIN tab CREATE BET section shows three bet types: **Top Scorer**, **Match Result**, and **Player Block**. Player Block lets managers pick a player to "block" — if that player underperforms, the picker earns points. This is documented in `bet_templates` but not yet fully tested in E2E flows.

@@ -1,6 +1,6 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-05-28 (session 50 — WC E2E live browser test)  
+**Last Updated**: 2026-05-28 (session 50 — WC E2E + cron fixes migrations 86+87)  
 **E2E Test Suite**: `platform.spec.js` (36 tests × 2 browsers) passing in CI ✅ — completes in ~3 min  
 **Live App**: https://wc-fantasy-football.vercel.app
 
@@ -93,6 +93,7 @@
 ### 🐛 BUGS FOUND (9 total — see `docs/BUG_TRACKER.md` WC-01 through WC-09):
 | ID | Summary | Severity |
 |----|---------|---------|
+| **WC-10** | `calculate-scores-post-match` cron `status='after'` — was NEVER firing (fixed mig 87) | 🔴 **CRITICAL** |
 | WC-01 | `get_league_stats` RPC 404 (function missing) | 🟡 MEDIUM |
 | WC-02 | Bets tab shows "GW—" for WC tournament | 🟡 MEDIUM |
 | WC-03 | Auction placeholder min uses 0.1 increment instead of min_increment (0.5) | 🟡 MEDIUM |
