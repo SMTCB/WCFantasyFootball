@@ -1,7 +1,7 @@
 # Bug Tracker — Forza Fantasy League
-**Last updated**: 2026-05-28 (session 51 — WC P1/P2/P3 bug fixes)  
+**Last updated**: 2026-05-28 (session 51 — all WC bugs resolved)  
 **Live app**: https://wc-fantasy-football.vercel.app  
-**Next migration**: `89_`
+**Next migration**: `90_`
 
 ---
 
@@ -23,56 +23,15 @@
 
 ---
 
-### P3-C · WC-08 · `get_transfer_window_status` called 20+ times per session — LOW
-**Performance overhead — no user-visible breakage.**
-
-- **Network**: 20+ POST calls to `/rest/v1/rpc/get_transfer_window_status` observed in a single session  
-- **Root cause**: `useTransferWindow` is mounted in both `LeagueScreen` and `SquadScreen`. In `LeagueScreen`, switching between the BOARD/BETS/AUCTIONS/CHAT tabs triggers remounts of child components — each remount recreates the interval and fires an immediate fetch. The fix is to lift the hook to a context provider shared across tab views.
-- **Where to look**: Create a `TransferWindowContext` provider in `LeagueScreen` and pass the result down via context instead of calling `useTransferWindow` per-tab.
-
-**Re-test steps**:
-1. Log in → WC_OVERALL_E2E → navigate through all tabs (BOARD, BETS, AUCTIONS, CHAT, STATS)
-2. Open DevTools → Network → filter by `transfer_window`
-3. ✅ Pass: fewer than 5 calls total across all tab navigations
-
----
-
-## 🔧 IMPROVEMENTS (not bugs — polish items)
-
-These are not blocking anything but worth doing before WC launch or shortly after.
-
----
-
-### IMP-C · WC scoring rules are a copy of EPL — validate before launch
-**Priority: P2**
-
-- **Issue**: The WC scoring rules (tournament_id='429') were created by copying the EPL rules verbatim. EPL rules may not match WC tournament-specific events. For example: penalty shootouts aren't in EPL, WC has different clean-sheet patterns (knockout stage vs group stage), and assists may have different significance.
-- **Action**: Review the `scoring_rules` for tournament 429 before the WC starts. Decide whether the EPL copy is acceptable or needs tuning.
-- **Current rules** (both EPL and WC have identical):
-  ```sql
-  SELECT * FROM scoring_rules WHERE tournament_id = '429';
-  -- GK: goal=5, assist=0, clean_sheet=4, conceded_per_2_goals=-1, penalty_saved=5, minute_per_90=1
-  -- DEF: goal=4, assist=1, clean_sheet=4, tackle=0.5, interception=0.25, minute_per_90=1
-  -- MID: goal=5, assist=1, clean_sheet=1, tackle=0.5, interception=0.25, minute_per_90=1
-  -- FWD: goal=5, assist=1, minute_per_90=1
-  ```
-
----
-
-### IMP-D · Player Block bet type untested end-to-end
-**Priority: P3**
-
-- **Issue**: The ADMIN → CREATE BET section shows "Player Block" as a third bet type alongside Top Scorer and Match Result. It exists in `bet_templates` and renders in the UI, but was never exercised in any E2E session. Unknown whether the submission, resolution, and rewards flow works.
-- **Action**: Create a Player Block bet instance via admin, have a manager submit a pick, then resolve it — verify points are awarded correctly.
-
----
-
 ## ✅ CLOSED BUGS — Summary Log
 
 All bugs below are fixed and merged to `main`. Detail is preserved in git history. Do not re-open unless you observe a regression.
 
 | ID | Title | Severity | Fixed in | PR/Migration |
 |----|-------|----------|----------|-------------|
+| IMP-D | `notify_league_on_bet_creation` trigger missing SECURITY DEFINER — all bet creation 403d | 🔴 HIGH | Session 51 | PR #216, Mig 89 |
+| WC-08 | `get_transfer_window_status` called 20+ times/session — module-level TTL cache + 5min poll | 🟢 LOW | Session 51 | PR #216 |
+| IMP-C | WC scoring rules review — EPL copy confirmed acceptable, identical rules for all positions | 🟢 LOW | Session 51 | Verified, no change |
 | WC-05 | Roster modal stuck "Loading roster..." for non-draft leagues — no fallback to `squads.players` | 🔴 HIGH | Session 51 | PR #215 |
 | WC-07 | Same player proposable in multiple simultaneous trade proposals | 🟠 HIGH | Session 51 | PR #215, Mig 88 |
 | WC-02 | Bets tab showed "GW—" for WC (hardcoded label, not passed `currentGW` prop) | 🟡 MEDIUM | Session 51 | PR #215 |
