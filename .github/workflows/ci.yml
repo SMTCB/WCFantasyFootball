@@ -68,7 +68,7 @@ jobs:
     name: E2E Tests
     runs-on: ubuntu-latest
     needs: [lint, build]   # Only run if lint + build pass
-    timeout-minutes: 40    # Increased from 20: browser install + 84 tests takes ~25 min
+    timeout-minutes: 60    # Browser install (~10 min) + platform.spec.js x2 projects (~25 min)
     env:
       VITE_SUPABASE_URL:      ${{ secrets.VITE_SUPABASE_URL }}
       VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
@@ -92,8 +92,21 @@ jobs:
           name: dist
           path: dist/
 
-      - name: Install Playwright browsers
-        run: npx playwright install --with-deps chromium
+      # Cache Playwright Chromium binary by Playwright version (keyed by package-lock.json).
+      # System-level deps (libgtk etc.) are installed separately and always fresh.
+      - name: Cache Playwright Chromium binary
+        uses: actions/cache@v4
+        id: playwright-cache
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-chromium-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+          restore-keys: playwright-chromium-${{ runner.os }}-
+
+      - name: Install Playwright system dependencies
+        run: npx playwright install-deps chromium
+
+      - name: Install Playwright Chromium browser
+        run: npx playwright install chromium
 
       - name: Run Playwright tests
         run: npx playwright test --project=desktop-chrome --project=mobile-chrome
