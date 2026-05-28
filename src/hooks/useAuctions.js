@@ -13,7 +13,7 @@ export function useAuctions(leagueId, squadId) {
     const { data } = await supabase
       .from('auction_listings')
       .select(`
-        id, player_id, seller_id, starting_bid, current_bid, highest_bidder_id, deadline_at, status, created_at,
+        id, player_id, seller_id, starting_bid, current_bid, highest_bidder_id, deadline_at, status, created_at, min_increment,
         players(id, name, position, club, price)
       `)
       .eq('league_id', leagueId)

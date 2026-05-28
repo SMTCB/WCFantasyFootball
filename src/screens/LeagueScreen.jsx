@@ -133,7 +133,7 @@ export default function LeagueScreen() {
   const [managerTeamView, setManagerTeamView] = useState(null); // { id, name }
   const [tradeMyPlayer, setTradeMyPlayer] = useState(null);
   const [tradeTheirPlayer, setTradeTheirPlayer] = useState(null);
-  const [tradeCash, setTradeCash] = useState(5.0);
+  const [tradeCash, setTradeCash] = useState(0);
   const [tradePoints, setTradePoints] = useState(0);
   
   const [tradeTarget,    setTradeTarget]    = useState(null);
@@ -224,8 +224,17 @@ export default function LeagueScreen() {
       supabase.from('draft_allocations').select('allocated_players').eq('league_id', lid).eq('user_id', user.id).maybeSingle(),
       supabase.from('draft_allocations').select('allocated_players').eq('league_id', lid).eq('user_id', targetUserId).maybeSingle(),
     ]);
-    const myIds    = myAlloc?.allocated_players    ?? [];
-    const theirIds = theirAlloc?.allocated_players ?? [];
+    let myIds    = myAlloc?.allocated_players    ?? [];
+    let theirIds = theirAlloc?.allocated_players ?? [];
+    // Fallback: leagues without draft lottery have no draft_allocations rows — read from squads.players
+    if (!myIds.length || !theirIds.length) {
+      const [mySquadRes, theirSquadRes] = await Promise.all([
+        myIds.length ? Promise.resolve({ data: null }) : supabase.from('squads').select('players').eq('league_id', lid).eq('user_id', user.id).maybeSingle(),
+        theirIds.length ? Promise.resolve({ data: null }) : supabase.from('squads').select('players').eq('league_id', lid).eq('user_id', targetUserId).maybeSingle(),
+      ]);
+      if (!myIds.length) myIds = mySquadRes?.data?.players ?? [];
+      if (!theirIds.length) theirIds = theirSquadRes?.data?.players ?? [];
+    }
     const allIds   = [...new Set([...myIds, ...theirIds])];
     if (!allIds.length) return;
     const { data: playerRows } = await supabase.from('players').select('id,name,position,club,price').in('id', allIds);
@@ -239,7 +248,12 @@ export default function LeagueScreen() {
     if (!lid || !targetUserId) return;
     setManagerRoster([]);
     const { data: alloc } = await supabase.from('draft_allocations').select('allocated_players').eq('league_id', lid).eq('user_id', targetUserId).maybeSingle();
-    const ids = alloc?.allocated_players ?? [];
+    let ids = alloc?.allocated_players ?? [];
+    // Fallback: leagues without draft lottery have no draft_allocations rows — read from squads.players
+    if (!ids.length) {
+      const { data: squad } = await supabase.from('squads').select('players').eq('league_id', lid).eq('user_id', targetUserId).maybeSingle();
+      ids = squad?.players ?? [];
+    }
     if (!ids.length) return;
     const { data: rows } = await supabase.from('players').select('id,name,position,club,price').in('id', ids);
     setManagerRoster(rows ?? []);
@@ -270,7 +284,7 @@ export default function LeagueScreen() {
       setTradeTarget(null);
       setTradeMyPlayer(null);
       setTradeTheirPlayer(null);
-      setTradeCash(5.0);
+      setTradeCash(0);
       setTradePoints(0);
     } catch (err) {
       const msg = {
@@ -278,6 +292,7 @@ export default function LeagueScreen() {
         INSUFFICIENT_POINTS: 'Not enough points to offer as sweetener.',
         PROPOSER_PLAYER_NOT_IN_SQUAD: 'That player is no longer in your squad.',
         TARGET_PLAYER_NOT_IN_SQUAD: 'That player is no longer in the target squad.',
+        PLAYER_ALREADY_PROPOSED: 'This player already has a pending proposal. Cancel it first.',
       }[err.message] || err.message;
       setTradeError(msg);
     } finally {
@@ -1021,6 +1036,7 @@ export default function LeagueScreen() {
              leagueId={activeLeague?.league_id}
              squadId={mySquadId}
              onReplayTour={replayBetsTour}
+             currentGW={currentGW}
            />
          )}
 

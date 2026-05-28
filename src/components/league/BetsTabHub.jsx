@@ -82,7 +82,7 @@ function BetSection({ label, sub, tone, bets, squadId, onSubmitted }) {
   );
 }
 
-export default function BetsTabHub({ leagueId, squadId, onReplayTour }) {
+export default function BetsTabHub({ leagueId, squadId, onReplayTour, currentGW }) {
   const { bets, loading, error, refetch } = useBets(leagueId, squadId);
 
   const open     = bets.filter(b => b.status === 'open');
@@ -96,7 +96,7 @@ export default function BetsTabHub({ leagueId, squadId, onReplayTour }) {
       <div data-tour="bets-header" style={{ borderBottom: '1px solid var(--rule)', background: 'var(--ink-2)', flexShrink: 0 }}>
         {/* Top section: title + mini stats */}
         <div style={{ padding: 'clamp(12px, 2vw, 20px) clamp(14px, 3vw, 24px)', borderBottom: '1px solid var(--rule)' }}>
-          <div style={{ fontFamily: MONO, fontSize: 'clamp(9px, 1.8vw, 10px)', color: 'var(--cyan)', letterSpacing: '.22em' }}>BETS &amp; PREDICTIONS · GW—</div>
+          <div style={{ fontFamily: MONO, fontSize: 'clamp(9px, 1.8vw, 10px)', color: 'var(--cyan)', letterSpacing: '.22em' }}>BETS &amp; PREDICTIONS · GW{currentGW ?? '—'}</div>
           <div style={{ fontFamily: DISPLAY, fontSize: 'clamp(18px, 4vw, 26px)', marginTop: 6, lineHeight: 1.1 }}>Make your picks before the deadline.</div>
         </div>
         {/* Stats row */}
