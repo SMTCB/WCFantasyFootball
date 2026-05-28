@@ -324,13 +324,20 @@ export default function LiveScreen() {
 
   const fetchAll = useCallback(async () => {
     try {
-      // 0. Current matchday label — filtered by active league's tournament (BUG-12 fix).
-      // Falls back to most recent past deadline when no upcoming ones exist (IMP-01 fix).
+      // 0. Current matchday label — prefer next upcoming deadline, fall back to most recent past.
+      // Filtered by active league's tournament (BUG-12 fix).
       const activeTournamentId = activeLeague?.tournamentId ?? null;
-      let mdQuery = supabase.from('matchday_deadlines').select('matchday_id')
-        .order('deadline_at', { ascending: false }).limit(1);
-      if (activeTournamentId) mdQuery = mdQuery.eq('tournament_id', activeTournamentId);
-      const { data: mdRow } = await mdQuery.maybeSingle();
+      const now = new Date().toISOString();
+      let upcomingQuery = supabase.from('matchday_deadlines').select('matchday_id')
+        .gt('deadline_at', now).order('deadline_at', { ascending: true }).limit(1);
+      if (activeTournamentId) upcomingQuery = upcomingQuery.eq('tournament_id', activeTournamentId);
+      let { data: mdRow } = await upcomingQuery.maybeSingle();
+      if (!mdRow?.matchday_id) {
+        let pastQuery = supabase.from('matchday_deadlines').select('matchday_id')
+          .lte('deadline_at', now).order('deadline_at', { ascending: false }).limit(1);
+        if (activeTournamentId) pastQuery = pastQuery.eq('tournament_id', activeTournamentId);
+        ({ data: mdRow } = await pastQuery.maybeSingle());
+      }
       if (mdRow?.matchday_id) {
         const label = String(mdRow.matchday_id).replace(/^.*-r/, '');
         setCurrentGW(label || mdRow.matchday_id);

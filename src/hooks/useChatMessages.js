@@ -231,9 +231,10 @@ export function useChatMessages(leagueId) {
         devLog('[useChatMessages] Realtime subscription status:', status, 'error:', err);
         if (status === 'SUBSCRIBED') {
           devLog('[useChatMessages] ✓ Successfully subscribed to chat channel for league:', leagueId);
-        } else {
-          console.warn('[useChatMessages] ✗ Subscription failed or closed for league:', leagueId);
+        } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+          console.warn('[useChatMessages] ✗ Subscription failed for league:', leagueId, 'status:', status, err);
         }
+        // SUBSCRIBING / CLOSED are normal lifecycle states — not errors
       });
 
     subscriptionRef.current = channel;

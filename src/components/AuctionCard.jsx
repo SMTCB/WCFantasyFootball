@@ -22,7 +22,8 @@ export default function AuctionCard({ auction, mySquadId, myBudget, onBid, onCan
   const posColor    = POS_COLOR[player?.position] ?? 'var(--mute)';
   const isMine      = auction.seller_id === mySquadId;
   const currentBid  = auction.current_bid ?? null;
-  const minNext     = currentBid != null ? currentBid + 0.1 : auction.starting_bid;
+  const increment   = auction.min_increment ?? 0.5;
+  const minNext     = currentBid != null ? currentBid + increment : auction.starting_bid;
   const timeStr     = timeLeft(auction.deadline_at);
   const isEnded     = timeStr === 'Ended';
 
@@ -130,7 +131,7 @@ export default function AuctionCard({ auction, mySquadId, myBudget, onBid, onCan
             <>
               <input
                 type="number"
-                step="0.1"
+                step={String(increment)}
                 min={minNext}
                 value={amount}
                 onChange={e => { setAmount(e.target.value); setErr(null); }}
