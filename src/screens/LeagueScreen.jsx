@@ -70,24 +70,44 @@ const BETS_TOUR_STEPS = [
 
 const COMMISSIONER_TOUR_STEPS = [
   {
+    target: 'comm-season-stepper',
+    title:  'Season Lifecycle',
+    body:   "This bar tracks your league's progress. Transfers open first, then draft, then allocation, cup seeding, and finally the live season. Each stage has its own controls below.",
+  },
+  {
     target: 'comm-transfer-window',
     title:  'Transfer Window',
-    body:   'Set when the window opens and closes, and cap the number of transfers allowed per manager this matchday.',
+    body:   'Open the window between gameweeks so managers can buy and sell players on the market. Set an opening and closing time — the system enforces the deadline automatically. Close it at least 1 hour before the first match kicks off.',
   },
   {
     target: 'comm-draft-deadline',
-    title:  'Draft Deadline',
-    body:   'Managers must submit their draft before this date. After it passes, the lottery runs automatically.',
+    title:  'Draft & Allocation',
+    body:   'Managers submit their ranked player wishlist before this deadline. Once it passes, the lottery runs automatically and resolves conflicts. Click "Run Allocation" to trigger it manually if needed.',
+  },
+  {
+    target: 'comm-cup-phase',
+    title:  'Cup Phase',
+    body:   'After allocation, seed the cup pool to assign one club per manager per round. The system prevents repeat picks across rounds. Run this once at the start of the cup phase — it cannot be undone for the season.',
   },
   {
     target: 'comm-score-recalc',
     title:  'Score Recalculation',
-    body:   'Re-run the scoring engine for any fixture by ID. Use this if a match result was corrected after the fact.',
+    body:   'If a match result was corrected after the final whistle, re-run the scoring engine here. Enter the fixture ID and hit Recalculate — squad scores update immediately.',
   },
   {
     target: 'comm-bets',
     title:  'Create Bets',
-    body:   'Post prediction challenges for your league. Choose a template or write a custom question, then set options and a deadline.',
+    body:   'Post prediction challenges for your managers before each gameweek. Pick a template (Top Scorer, Match Result, or Player Block), configure the options and reward points, then publish. Bets lock when the relevant match kicks off.',
+  },
+  {
+    target: 'comm-resolve',
+    title:  'Resolve Bets',
+    body:   "After a match finishes, bet results that can't be auto-resolved will appear here. Select the correct answer to distribute reward points to winning managers. Match Result bets resolve automatically — only custom bets need manual resolution.",
+  },
+  {
+    target: 'comm-bets',
+    title:  'Weekly Gameweek Flow',
+    body:   'Each gameweek: (1) Open transfer window → managers trade. (2) Close window 1h before kickoff. (3) Matches play — scores calculate automatically. (4) Create bets for next GW. (5) Resolve any pending bets. Repeat each round.',
   },
 ];
 
