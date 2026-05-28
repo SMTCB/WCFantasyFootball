@@ -191,6 +191,15 @@ None remaining.
 
 | ID | Title | Severity | Status | PR |
 |----|-------|----------|--------|----|
+| WC-01 | `get_league_stats` RPC missing — 404 | 🟡 MEDIUM | 🔴 Open | — |
+| WC-02 | Bets tab "GW—" instead of round number (WC) | 🟡 MEDIUM | 🔴 Open | — |
+| WC-03 | Auction placeholder uses 0.1 increment, actual min is 0.5 | 🟡 MEDIUM | 🔴 Open | — |
+| WC-04 | Auctions LIVE counter stays 0 after placing winning bids | 🟢 LOW | 🔴 Open | — |
+| WC-05 | Roster modal stuck loading without draft_allocations | 🟠 HIGH | 🔴 Open | — |
+| WC-06 | useChatMessages Realtime subscription fails for new leagues | 🟡 MEDIUM | 🔴 Open | — |
+| WC-07 | Same player can be in multiple simultaneous pending trade proposals | 🟡 MEDIUM | 🔴 Open | — |
+| WC-08 | get_transfer_window_status called 20+ times per session (polling) | 🟢 LOW | 🔴 Open | — |
+| WC-09 | LiveScreen shows GW 3 instead of GW 2 for WC league | 🟢 LOW | 🔴 Open | — |
 | BUG-01 | Lottery: wrong column names → 0 players | 🔴 CRITICAL | ✅ Fixed | #201 |
 | BUG-02 | Lottery: inserts non-existent tournament_id column | 🔴 CRITICAL | ✅ Fixed | #201 |
 | BUG-06 | fantasy_points INTEGER rejects decimal scores | 🔴 CRITICAL | ✅ Fixed | #201 |
@@ -222,5 +231,84 @@ None remaining.
 | E2E-01 | E2E CI tests fail after production-build switch (DEPLOY-2 regression) | 🟡 MEDIUM | ✅ Fixed | #210 |
 | BUG-NEW-07 | Duplicate bet instances: no guard in BetCreatorPanel | 🟠 HIGH | ✅ Fixed | #211 |
 
-**Migrations applied to production**: 79, 80, 81, 82, 83, 84  
+**Migrations applied to production**: 79, 80, 81, 82, 83, 84, 85, 86  
 *(no new migrations for sessions 46–48 — all fixes were frontend-only)*
+
+---
+
+## 🟡 MEDIUM / 🟢 LOW — Open (found WC E2E session 50, 2026-05-28)
+
+### WC-01 · `get_league_stats` RPC missing — 404 on STATS tab
+- **Severity**: 🟡 MEDIUM
+- **Console**: `Failed to load resource: 404 @ /rest/v1/rpc/get_league_stats`
+- **Symptom**: STATS tab makes an RPC call to `get_league_stats` which does not exist. The tab still renders correctly from `league_members.total_points` data, but one supplementary data source fails silently.
+- **Root cause**: The `get_league_stats` PostgreSQL function was never created. The frontend calls it for enriched stats (e.g. per-round breakdown), but falls back to basic data.
+- **To fix**: Create `get_league_stats(p_league_id UUID)` RPC returning aggregated fantasy_points per matchday per squad.
+- **Status**: 🔴 Open
+
+### WC-02 · Bets tab shows "GW—" instead of round number for WC tournament
+- **Severity**: 🟡 MEDIUM
+- **Screen**: Bets tab header "BETS & PREDICTIONS · GW—"
+- **Symptom**: The GW label in the Bets tab shows "GW—" (dash) instead of the actual round number when the active tournament is WC (429). For EPL it showed correctly.
+- **Root cause**: The GW label extraction likely parses `matchday_id` as `426-rN` → round N. For WC, matchday_ids are `429-r1` etc. — the parser may be hardcoded to tournament 426 or filtering on tournament ID before extracting round.
+- **Reproduce**: Log in → WC_OVERALL_E2E → BETS tab → observe header.
+- **Status**: 🔴 Open
+
+### WC-03 · Auction bid placeholder shows wrong minimum (0.1 increment vs actual 0.5)
+- **Severity**: 🟡 MEDIUM
+- **Screen**: AUCTIONS tab — bid input placeholder
+- **Symptom**: Placeholder shows `£5.1M+` when current bid is £5.0M and `min_increment = 0.5`. Actual validation correctly rejects anything below £5.5M ("Bid too low. Minimum: 5.5"). The placeholder is misleading — triggers "bid too low" error for unsuspecting users.
+- **Root cause**: Placeholder calculation uses a hardcoded 0.1 increment (`current_bid + 0.1`) instead of `current_bid + listing.min_increment`.
+- **File**: `src/components/AuctionCard.jsx` — look for placeholder prop on the bid input.
+- **Reproduce**: Open any auction listing → observe placeholder vs actual minimum.
+- **Status**: 🔴 Open
+
+### WC-04 · Auctions "LIVE" counter stays 0 after placing winning bids
+- **Severity**: 🟢 LOW
+- **Screen**: AUCTIONS tab header — "LIVE" KPI chip
+- **Symptom**: After placing 3 winning bids (Hakimi £5.6M, Gerson £6.1M, Kevin Schade £5.6M — all confirmed in DB), the "LIVE" counter still shows 0. Expected: 3 (bids I'm currently winning).
+- **Root cause**: The "LIVE" count query likely compares `highest_bidder_id = my_squad_id`, but after a bid the field may not update in the UI subscription, or the definition of "LIVE" is different from "bids I'm winning".
+- **Status**: 🔴 Open
+
+### WC-05 · Roster modal stuck on "Loading roster..." without draft_allocations
+- **Severity**: 🟠 HIGH
+- **Screen**: BOARD → click any manager → "Loading roster..." spinner never resolves
+- **Symptom**: Clicking a manager in the standings opens a "XYZ's Roster" modal that shows "Loading roster..." indefinitely. Only resolves after `draft_allocations` rows are manually created in the DB.
+- **Root cause**: The modal fetches `draft_allocations.allocated_players` to build the player list. For leagues created via direct SQL (not draft lottery), `draft_allocations` rows don't exist. No fallback to `squads.players`.
+- **Fix**: If `draft_allocations` returns empty, fall back to `squads.players` for the roster display. The trade proposal flow should still work (it already reads `squads` for ownership checks).
+- **Workaround applied**: Created `draft_allocations` from `squads.players` via SQL for the WC E2E test league.
+- **Status**: 🔴 Open
+
+### WC-06 · `useChatMessages` Realtime subscription fails for new leagues
+- **Severity**: 🟡 MEDIUM
+- **Console**: `[useChatMessages] ✗ Subscription failed or closed for league: fca00001-...`
+- **Symptom**: The Realtime subscription for chat messages fails silently after page load. Messages load correctly via REST but new messages from other managers won't appear without a page refresh.
+- **Root cause**: Likely a Supabase Realtime channel limit, or the `chat_messages` table doesn't have row-level publication enabled for this league's data range. Also possible: Realtime row filter `league_id=eq.fca00001...` not matching due to type mismatch.
+- **Status**: 🔴 Open
+
+### WC-07 · Same player can be offered in multiple simultaneous pending trade proposals
+- **Severity**: 🟡 MEDIUM
+- **Screen**: BOARD → Trade proposal flow
+- **Symptom**: TestComm offered Richarlison to TestMgr (Trade 1 — pending) and then successfully also offered Richarlison to DragonMgr (Trade 5). Both proposals are `status='pending'` simultaneously. If both were accepted in quick succession, the `accept_trade_proposal` RPC's cascade-cancel would handle it — but only the first accept atomically cancels others.
+- **Root cause**: No pre-submission guard prevents proposing the same `proposer_player_id` while another pending proposal already uses it. The DB relies purely on the `accept_trade_proposal` cascade, which only fires on acceptance, not submission.
+- **Fix**: In `submit_trade_proposal`, add a check: if any pending proposal already uses `p_proposer_player_id` for this proposer, raise an error `PLAYER_ALREADY_PROPOSED`.
+- **Status**: 🔴 Open
+
+### WC-08 · `get_transfer_window_status` RPC called excessively (polling)
+- **Severity**: 🟢 LOW
+- **Network**: 20+ POST calls to `/rest/v1/rpc/get_transfer_window_status` in a single session
+- **Symptom**: The transfer window status RPC fires every time any component re-renders (observed 20+ calls during the E2E session). This is unnecessary polling overhead.
+- **Root cause**: `get_transfer_window_status` is likely called in a `useEffect` with a broad dependency array or in a component that re-renders frequently (e.g. on every auction bid update).
+- **Fix**: Cache the result in React context or use `useMemo`/`useCallback` to prevent redundant calls. The window status changes rarely (admin action only).
+- **Status**: 🔴 Open
+
+### WC-09 · LiveScreen shows "GW 3" instead of "GW 2" for WC league with 3 rounds
+- **Severity**: 🟢 LOW
+- **Screen**: LIVE → switch to WC_OVERALL_E2E tile → header shows "MATCH DAY · GW 3"
+- **Symptom**: With matchday_deadlines `429-r1` (past), `429-r2` (future+14d), `429-r3` (future+21d), the LiveScreen shows "GW 3" when WC league is selected. Expected "GW 2" (the next upcoming round).
+- **Root cause**: Unknown — likely the query returns the second-next upcoming deadline or counts all deadlines +1. The matching logic for WC matchday format may differ from EPL.
+- **Status**: 🔴 Open
+
+---
+
+## Summary Table

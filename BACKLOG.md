@@ -1,8 +1,109 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-05-28 (session 49 — trade proposals + commissioner guide)  
+**Last Updated**: 2026-05-28 (session 50 — WC E2E live browser test)  
 **E2E Test Suite**: `platform.spec.js` (36 tests × 2 browsers) passing in CI ✅ — completes in ~3 min  
 **Live App**: https://wc-fantasy-football.vercel.app
+
+---
+
+## 📊 SESSION 50 PROGRESS (2026-05-28 — WC End-to-End Live Browser Test)
+
+**Goal**: Comprehensive WC browser E2E test — simulate real user interaction across all league features using World Cup data (FIFA World Cup 2026, tournament 429).
+
+### 🚀 DATA SETUP (SQL via Supabase CLI):
+- ✅ 8 WC managers created (`aaaae001` → `aaaae008`, reusing EPL e2e accounts + 6 new)
+- ✅ WC league `WC_OVERALL_E2E` (id: `fca00001-...`) with all 8 managers
+- ✅ 8 squads — 15 WC players each, no overlaps (1589 total WC players, row_number partitioned)
+- ✅ Scoring rules copied from EPL 426 → WC 429
+- ✅ Matchday deadlines: `429-r1` (past), `429-r2` (+14d), `429-r3` (+21d)
+- ✅ 3 WC Round 1 fixtures marked `finished` (Brazil 2-1 Morocco, Germany 3-0 Curaçao, Qatar 1-1 Switzerland)
+- ✅ Fantasy points inserted directly: TestComm 28.5, TestMgr 22, DragonMgr 18.5, SambaFC 15, IronAtlas 14, EagleSquad 11.5, TartanArmy 9, DesertRose 6.5
+- ✅ 2 open bet instances (Brazil vs Morocco result + GW1 Top Scorer)
+- ✅ 5 auction listings (Richarlison £6M, Ounahi £5M — seller=TestComm; Gerson £5.5M — SambaFC; Hakimi £5M — EagleSquad; Kevin Schade £5M — TartanArmy)
+- ✅ 10 pre-seeded chat messages from various managers
+- ✅ `draft_allocations` created from squads (needed for roster modal)
+- ✅ Migration 86: fix 5 cron jobs using unconfigured `current_setting('app.supabase_url')` → hardcoded URLs
+
+### 🚀 BROWSER FLOWS TESTED (live interaction via Playwright):
+
+**FLOW 1 — Login & Board ✅**
+- Login as TestComm (e2e_test1@fantasykit.test), skip onboarding
+- WC_OVERALL_E2E visible in MY LEAGUES with 28.5 pts, RANK #1 ✅
+- BOARD: GW 2 header, all 8 managers listed with correct points ✅
+- Commissioner tour auto-triggered ✅
+
+**FLOW 2 — Frontpage ✅**
+- Forza Times renders: "TESTCOMM leads the table" headline ✅
+- "28.5 points" in article body ✅, EDITION #1 ✅
+
+**FLOW 3 — Bets ✅**
+- 2 open bets visible: Brazil vs Morocco + Top Scorer ✅
+- Placed "Brazil Win" pick → highlighted with "Your pick" ✅
+- Placed "Neymar" Top Scorer pick → checkmark ✅
+- REPLAY BETS GUIDE FAB visible ✅
+
+**FLOW 4 — Chat ✅**
+- All 10 pre-seeded messages load ✅
+- 8 members in sidebar ✅
+- Sent live message with @mention (highlighted cyan) + #hashtag (highlighted) ✅
+- EDIT/DEL on own messages ✅
+
+**FLOW 5 — Auctions ✅**
+- 5 listings: LISTED:5, STATUS:LIVE ✅
+- Richarlison + Ounahi show CANCEL (seller = TestComm) ✅
+- Placed bids: Hakimi £5.6M, Gerson £6.1M, Kevin Schade £5.6M — all 200 OK ✅
+
+**FLOW 6 — Stats ✅**
+- TOTAL:125, AVG:16, LEAD:28.5 ✅
+- All 8 managers in ranked bar chart ✅
+- LEAGUE OVERVIEW: MEMBERS:8, AVG POINTS:16, LEADER:TESTCOMM, TOTAL PTS:125 ✅
+- BIGGEST GAMEWEEKS leaderboard: TestComm #1 ✅
+
+**FLOW 7 — Trade Proposals (5 trades) ✅**
+- Fixed roster modal (required creating draft_allocations from squads)
+- Roster shows all 15 players per manager with 🔄 buttons ✅
+- Trade 1: Richarlison ↔ Bento (TestMgr) — sent ✅
+- Trade 2: João Pedro ↔ Hugo Souza (TestMgr) — sent, shows "SENT OFFERS (1)" panel ✅
+- Trade 3: Kaio Jorge ↔ Carlos Augusto (DragonMgr) — sent ✅
+- Trade 4: Nobel Mendy ↔ Pedro (SambaFC) — sent ✅
+- Trade 5: Richarlison ↔ Natan (DragonMgr) — sent (REPEAT PLAYER — allowed, notes bug WC-07) ✅
+- All 5 confirmed in DB: 5 `pending` rows ✅
+
+**FLOW 8 — Admin Tab (Bet Resolution) ✅**
+- Season Lifecycle bar shows: TRANSFERS ✅, DRAFT ✅, ALLOCATION ✅
+- CREATE BET section: Top Scorer, Match Result, Player Block cards ✅
+- RESOLVE BETS: 2 PENDING listed ✅
+- Expanded Brazil vs Morocco → "WHO PICKED WHAT 1/4": TestComm → Brazil Win ✅
+- Clicked Brazil Win → RESOLVE → green banner "Bet resolved — 1 submissions graded" ✅
+- Down to 1 PENDING ✅
+
+**FLOW 9 — Squad Screen ✅**
+- Formation 5-1-3, GW 429-r2, CAPTAIN RICHARLISON displayed ✅
+- WC players visible with national flags (BRA, SEN, IRA, MOR, GER, CZE) ✅
+
+**FLOW 10 — Betting Leaderboard Tab ✅**
+- YOUR BETTING: +3 PTS, RANK 1/1, PLAYED:1, WON:1, WIN%:100%, REWARDS:+3 ✅
+- Betting Leaderboard shows TestComm #1, RECORD 1-0 ✅
+
+**FLOW 11 — Live Screen ✅**
+- 3 league tiles visible: EPL_DRAFT_TEST, EPL_OVERALL_E2E, WC_OVERALL_E2E ✅
+- WC tile shows 28.5 pts, 1/8 ✅
+- Switching to WC tile updates context: MY XI · W, NEXT: MEX vs SOU ✅
+
+### 🐛 BUGS FOUND (9 total — see `docs/BUG_TRACKER.md` WC-01 through WC-09):
+| ID | Summary | Severity |
+|----|---------|---------|
+| WC-01 | `get_league_stats` RPC 404 (function missing) | 🟡 MEDIUM |
+| WC-02 | Bets tab shows "GW—" for WC tournament | 🟡 MEDIUM |
+| WC-03 | Auction placeholder min uses 0.1 increment instead of min_increment (0.5) | 🟡 MEDIUM |
+| WC-04 | Auctions LIVE counter stays 0 after placing winning bids | 🟢 LOW |
+| WC-05 | Roster modal stuck without draft_allocations (no fallback to squads) | 🟠 HIGH |
+| WC-06 | useChatMessages Realtime subscription fails for new leagues | 🟡 MEDIUM |
+| WC-07 | Same player proposable in multiple simultaneous trades | 🟡 MEDIUM |
+| WC-08 | get_transfer_window_status called 20+ times per session | 🟢 LOW |
+| WC-09 | LiveScreen shows GW 3 instead of GW 2 for WC league | 🟢 LOW |
+
+**Session 50 status**: ✅ COMPLETE. WC E2E test fully executed. All flows work except noted bugs. Data preserved in DB.
 
 ---
 
