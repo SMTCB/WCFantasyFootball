@@ -18,12 +18,13 @@ git status  # Should be clean and on main
 
 ---
 
-**Current state (as of 2026-05-28 — session 48):**
+**Current state (as of 2026-05-28 — session 50):**
 - Sprints 0–4: ✅ ALL COMPLETE and merged to `main`
-- Sessions 44–48: ✅ Full E2E live-data test complete + all open bugs fixed + UI/CI polish done
-- Migrations applied to production: 66–84 (next migration: **`85_`**)
+- Sessions 44–50: ✅ Full E2E tests (EPL + WC), trade proposals, commissioner guide, cron fixes
+- Migrations applied to production: 66–86 (next migration: **`87_`**)
 - Edge Functions: ✅ ALL 14 deployed (including `config.toml` with `.js` entrypoints)
 - E2E CI: `platform.spec.js` (36 tests × 2 browsers) — completes in ~3 min ✅
+- 9 NEW BUGS found in WC E2E session (WC-01 through WC-09) — see `docs/BUG_TRACKER.md`
 
 ---
 
