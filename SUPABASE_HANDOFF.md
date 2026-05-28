@@ -1,8 +1,8 @@
 # Supabase Handoff — Consolidated Deploy Guide
 
-**Last updated**: 2026-05-28 (session 49 — trade proposals feature + migration 85)  
+**Last updated**: 2026-05-28 (session 50 — WC E2E + cron fixes migrations 86 + 87)  
 **Main branch**: all code is on `main` — do a `git pull origin main` before deploying  
-**Migrations applied in production**: 66–85 (next: `86_`)  
+**Migrations applied in production**: 66–87 (next: `88_`)  
 **Edge Functions**: ✅ ALL 14 DEPLOYED (2026-05-26 via `npx supabase functions deploy --use-api`)  
 **⚠️ NO PENDING SUPABASE TASKS** — everything is deployed and up to date
 
@@ -43,8 +43,8 @@ Open the **Supabase dashboard SQL editor** and run each file in order:
 - **L2.5**: `submit_bet` resets `is_correct = NULL` and `reward_awarded = NULL` on re-submit after resolution
 - **L3.9**: `resolve_bet` sets `reward_awarded = NULL` (not 0) for losing submissions
 
-**Next migration to create**: `86_`  
-*(79–85 applied — see Deployment History below)*
+**Next migration to create**: `88_`  
+*(79–87 applied — see Deployment History below)*
 
 ---
 
@@ -158,3 +158,5 @@ Sprints 0–4 and the full E2E bug-fix pass (sessions 44–45) are merged to `ma
 | Session 44–45 | 83 ✅ | `submit_bet` RPC fix |
 | Session 44–45 | 84 ✅ | `resolve_bet` RPC fix |
 | Session 49 | 85 ✅ | `trade_proposals` table + `submit/accept/reject/cancel_trade_proposal` RPCs |
+| Session 50 | 86 ✅ | Fix 5 cron jobs using unconfigured `current_setting('app.supabase_url')` → hardcoded URLs |
+| Session 50 | 87 ✅ | Fix `calculate-scores-post-match` cron: `status='after'` → `'finished'` (cron was never firing) |

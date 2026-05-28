@@ -191,6 +191,7 @@ None remaining.
 
 | ID | Title | Severity | Status | PR |
 |----|-------|----------|--------|----|
+| WC-10 | `calculate-scores-post-match` cron uses `status='after'` — never fires | 🔴 CRITICAL | ✅ Fixed | mig 87 |
 | WC-01 | `get_league_stats` RPC missing — 404 | 🟡 MEDIUM | 🔴 Open | — |
 | WC-02 | Bets tab "GW—" instead of round number (WC) | 🟡 MEDIUM | 🔴 Open | — |
 | WC-03 | Auction placeholder uses 0.1 increment, actual min is 0.5 | 🟡 MEDIUM | 🔴 Open | — |
@@ -301,6 +302,15 @@ None remaining.
 - **Root cause**: `get_transfer_window_status` is likely called in a `useEffect` with a broad dependency array or in a component that re-renders frequently (e.g. on every auction bid update).
 - **Fix**: Cache the result in React context or use `useMemo`/`useCallback` to prevent redundant calls. The window status changes rarely (admin action only).
 - **Status**: 🔴 Open
+
+### WC-10 · `calculate-scores-post-match` cron uses invalid `status='after'` — NEVER fires
+- **Severity**: 🔴 CRITICAL
+- **Cron**: `calculate-scores-post-match` (22:30 UTC daily)
+- **Symptom**: Post-match scoring has NEVER run automatically since the cron was created (migration 67). The cron queries `f.status = 'after'` but the `match_status` enum has no `'after'` value — only `scheduled`, `live`, `finished`. So the WHERE clause matches 0 rows every night.
+- **Root cause**: Whoever wrote migration 67 used `'after'` by analogy with "after the match", but the DB enum uses `'finished'`. The bug was silently preserved in migration 86 (the cron URL fix) because the query body was copied verbatim.
+- **Impact**: End-of-day score calculation never runs automatically. All scoring requires manual triggering via the Admin panel (which calls the edge function with an explicit `fixture_id`, bypassing the status filter). This has been the case since sprint 0.
+- **Fix**: Migration 87 — updated cron to `WHERE f.status = 'finished'`. ✅ **Applied to production 2026-05-28**
+- **Status**: ✅ Fixed (migration 87)
 
 ### WC-09 · LiveScreen shows "GW 3" instead of "GW 2" for WC league with 3 rounds
 - **Severity**: 🟢 LOW
