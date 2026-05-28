@@ -292,6 +292,29 @@ export default function BetCreatorPanel({ leagueId, tournamentId, onCreated, com
         if (fixtureId) scopeRef = fixtureId;
       }
 
+      // Duplicate-instance guard: prevent commissioner creating the same active bet twice.
+      // Checks for any non-resolved, non-cancelled instance with the same template.
+      // For match_result bets we also match on scope_ref (fixture) to allow separate
+      // bets for different fixtures using the same template.
+      const tplId = templateIds.current[template.slug];
+      if (tplId) {
+        let dupQ = supabase
+          .from('bet_instances')
+          .select('id, title')
+          .eq('league_id', leagueId)
+          .eq('template_id', tplId)
+          .in('status', ['upcoming', 'open', 'closed'])
+          .limit(1);
+        if (scopeRef) dupQ = dupQ.eq('scope_ref', scopeRef);
+        const { data: dup } = await dupQ.maybeSingle();
+        if (dup) {
+          throw new Error(
+            `An active "${template.label}" bet already exists ("${dup.title}"). ` +
+            `Resolve or cancel it before creating a new one.`
+          );
+        }
+      }
+
       const { error } = await supabase.from('bet_instances').insert({
         league_id:    leagueId,
         template_id:  templateIds.current[template.slug] ?? null,

@@ -18,12 +18,18 @@ git status  # Should be clean and on main
 
 ---
 
-**Current state (as of 2026-05-27 — session 47):**
+**Current state (as of 2026-05-27 — session 48):**
 - Sprints 0–4: ✅ ALL COMPLETE and merged to `main`
-- Sessions 44–47: ✅ Full E2E live-data test complete + all open bugs fixed + UI/CI polish done
+- Sessions 44–48: ✅ Full E2E live-data test complete + all open bugs fixed + UI/CI polish done
 - Migrations applied to production: 66–84 (next migration: **`85_`**)
 - Edge Functions: ✅ ALL 14 deployed (including `config.toml` with `.js` entrypoints)
 - E2E test suite: 84/84 passing
+
+---
+
+**What was recently done (session 48 — PRs #210 + #211):**
+- **E2E-01 (PR #210)**: Fixed 3 `platform.spec.js` SquadScreen failures after DEPLOY-2's production build switch — SquadScreen empty state now renders the full header ("My Squad" + budget), mobile/desktop tab strips (including ⚡ CHIPS tab), and chips content even when no players are allocated. Also fixed `provisionTestUsers()` throwing on "already registered" Supabase Auth responses.
+- **BUG-NEW-07 (PR #211)**: Added duplicate bet instance guard in `BetCreatorPanel` — commissioner now gets a user-visible error if an `upcoming/open/closed` bet already exists for the same `(league_id, template_id, scope_ref)` before a new one can be created.
 
 ---
 
@@ -56,7 +62,7 @@ git status  # Should be clean and on main
 ---
 
 **Known open bugs:**
-- ✅ All bugs from `docs/BUG_TRACKER.md` are now fixed (as of session 47, PR #209)
+- ✅ All bugs from `docs/BUG_TRACKER.md` are now fixed (as of session 48, PRs #210 + #211)
 - No open bugs remaining in `docs/BUG_TRACKER.md`
 
 ---

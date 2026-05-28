@@ -1,5 +1,5 @@
 # Bug Tracker — Forza Fantasy League
-**Last updated**: 2026-05-27 (session 48 — E2E CI fixes + bet duplicate guard)  
+**Last updated**: 2026-05-28 (session 48 — E2E CI fixes + bet duplicate guard)
 **Total bugs/items**: 28 (28 fixed, 0 open)
 
 ---
@@ -95,6 +95,12 @@ None remaining.
 - **Root cause**: Admin panel was always sending `Authorization: Bearer sb_publishable_IQF1...` — not a valid JWT. Functions with `verify_jwt=true` reject it.
 - **Fix**: `callFunction` now calls `supabase.auth.getSession()` and uses `session.access_token` as the bearer token. Fails fast (throws) if not authenticated. ✅ **Fixed — session 46, PR #206**
 
+### BUG-NEW-07 · Duplicate bet instances: no guard in BetCreatorPanel
+- **File**: `src/components/league/BetCreatorPanel.jsx`
+- **Symptom**: Commissioner can create a second active "Top Scorer" or "Match Result" bet for the same league/fixture while the first is still open. Two identical bets appear for managers to vote on; one is effectively orphaned.
+- **Root cause**: No pre-flight query before `bet_instances` insert. The submission layer prevents duplicate manager answers (migration 83 UNIQUE + upsert), but nothing blocked multiple `bet_instances` rows with the same `(league_id, template_id, scope_ref)`.
+- **Fix**: Added duplicate guard before insert — queries `bet_instances` for any `upcoming/open/closed` row matching same `league_id + template_id + scope_ref`. If found, throws a user-visible error: "An active 'X' bet already exists. Resolve or cancel it before creating a new one." ✅ **Fixed — session 48, PR #211**
+
 ---
 
 ## 🟡 MEDIUM — Open
@@ -136,6 +142,18 @@ None remaining.
 - **Symptom**: BUY transfers appeared to succeed but squad didn't update. Silent failure.
 - **Root cause**: `supabase.functions.invoke()` with `sb_publishable_*` key doesn't correctly surface the response body. `sell` appeared to work due to optimistic UI.
 - **Fix**: Replaced both `buy` and `sell` with raw `fetch()` via `invokeTransfer` helper using session JWT. ✅ **Fixed — session 46, PR #206**
+
+### E2E-01 · E2E CI tests fail after production-build switch (DEPLOY-2 regression)
+- **Files**: `src/screens/SquadScreen.jsx`, `e2e/autofill-draft-classic.spec.js`, `.github/workflows/ci.yml`, `playwright.config.js`
+- **Symptom (a)**: Every E2E CI run shows `conclusion: cancelled` — no tests ever ran. GitHub marks job timeouts as `cancelled`.
+- **Symptom (b)**: 3 `platform.spec.js` SquadScreen tests would fail — "My Squad" heading, Budget KPI, and CHIPS tab button not found in demo mode.
+- **Symptom (c)**: `autofill-draft-classic.spec.js` throws on `provisionTestUsers()` when test users already exist from a prior run.
+- **Root cause (a)**: `ci.yml` E2E job `timeout-minutes: 20` was too short. DEPLOY-2 added `npm run build` inside the Playwright `webServer` command, creating a double build in CI: the build job builds and uploads an artifact, then the E2E job also rebuilds from scratch. Browser install + double build + 84 tests = ~22–25 min, exceeding the 20-min limit.
+- **Root cause (b)**: DEPLOY-2 switched CI from `npm run dev` to `npm run build && npm run preview`. Production builds complete Supabase queries faster → demo empty-state early return fires → the early return showed only a plain "No squad built yet" message with no header, budget KPI, or tab strip. Tests that previously passed against the loading spinner now hit the bare empty state.
+- **Root cause (c)**: `provisionTestUsers()` treated any `r.error` as fatal, including "User already registered" responses from Supabase Auth when re-running the suite.
+- **Fix (a)**: `ci.yml` timeout 20→40 min; E2E job downloads the dist/ artifact built by the build job; `playwright.config.js` uses `SKIP_BUILD=true` env var (set in ci.yml) to run `npm run preview` only — eliminating the double build.
+- **Fix (b)**: Restructured SquadScreen empty state to render the full sticky header ("My Squad" + budget), mobile/desktop tab strips (including ⚡ CHIPS), and tab content — even when no players are allocated.
+- **Fix (c)**: Filter responses where `r.error` contains "already" from the fatal-failure list. ✅ **Fixed — session 48, PR #210**
 
 ---
 
@@ -201,6 +219,8 @@ None remaining.
 | U101 | LiveScreen refreshes on tab focus (visibilitychange) | 🟢 LOW | ✅ Fixed | #209 |
 | U105 | Triple Captain badge shows ×3 when chip was used | 🟢 LOW | ✅ Fixed | #209 |
 | LOW-8 | players.id BIGINT issue — resolved by migration 78 | — | ✅ N/A | — |
+| E2E-01 | E2E CI tests fail after production-build switch (DEPLOY-2 regression) | 🟡 MEDIUM | ✅ Fixed | #210 |
+| BUG-NEW-07 | Duplicate bet instances: no guard in BetCreatorPanel | 🟠 HIGH | ✅ Fixed | #211 |
 
 **Migrations applied to production**: 79, 80, 81, 82, 83, 84  
-*(no new migrations for sessions 46–47 — all fixes were frontend-only)*
+*(no new migrations for sessions 46–48 — all fixes were frontend-only)*
