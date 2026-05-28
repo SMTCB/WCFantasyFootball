@@ -76,7 +76,7 @@ function SeasonStepper({ leagueName = 'LEAGUE', memberCount = 0 }) {
   ];
   const tone = (s) => s === 'done' ? 'var(--positive)' : s === 'active' ? 'var(--cyan)' : 'var(--mute)';
   return (
-    <div style={{ padding: '18px 28px 22px', borderBottom: '1px solid var(--rule)', background: 'var(--ink-2)', flexShrink: 0 }}>
+    <div data-tour="comm-season-stepper" style={{ padding: '18px 28px 22px', borderBottom: '1px solid var(--rule)', background: 'var(--ink-2)', flexShrink: 0 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14, flexWrap: 'wrap' }}>
         <span style={{ width: 3, height: 14, background: 'var(--purple)', flexShrink: 0 }} />
         <span style={{ fontFamily: MONO, fontSize: 11, letterSpacing: '.22em', color: 'var(--paper)' }}>COMMISSIONER CONTROLS</span>
@@ -1055,6 +1055,7 @@ function LifecycleOps({ commissioner, leagueId }) {
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4" style={{ gap: 14 }}>
 
           {/* Transfer Window */}
+          <div data-tour="comm-transfer-window">
           <LifecycleOp
             title="TRANSFER WINDOW"
             status="CLOSED"
@@ -1084,8 +1085,10 @@ function LifecycleOps({ commissioner, leagueId }) {
               </div>
             }
           />
+          </div>
 
           {/* Draft */}
+          <div data-tour="comm-draft-deadline">
           <LifecycleOp
             title="DRAFT"
             status="DEADLINE SET"
@@ -1107,8 +1110,10 @@ function LifecycleOps({ commissioner, leagueId }) {
               </div>
             }
           />
+          </div>
 
           {/* Cup Phase */}
+          <div data-tour="comm-cup-phase">
           <LifecycleOp
             title="CUP PHASE"
             status="UNSEEDED"
@@ -1125,8 +1130,10 @@ function LifecycleOps({ commissioner, leagueId }) {
               </div>
             }
           />
+          </div>
 
           {/* Score Recalculation */}
+          <div data-tour="comm-score-recalc">
           <LifecycleOp
             title="SCORE RECALCULATION"
             status="UTILITY · ON-DEMAND"
@@ -1143,6 +1150,7 @@ function LifecycleOps({ commissioner, leagueId }) {
               </div>
             }
           />
+          </div>
 
         </div>
       </div>
@@ -1702,7 +1710,7 @@ export default function CommissionerPanel({ commissioner, leagueId, tournamentId
 
         {/* Create bet (mobile) */}
         <MobSectionHeader label="CREATE BET" sub="NEW BET INSTANCE" tone="var(--cyan)" />
-        <div style={{ padding: '0 14px' }}>
+        <div data-tour="comm-bets" style={{ padding: '0 14px' }}>
           <BetCreatorPanel
             leagueId={leagueId}
             tournamentId={tournamentId}
@@ -1714,7 +1722,7 @@ export default function CommissionerPanel({ commissioner, leagueId, tournamentId
 
         {/* Resolve bets (mobile) */}
         <MobSectionHeader label="RESOLVE PENDING" sub="WAITING ON YOU" tone="var(--gold)" />
-        <div style={{ padding: '0 14px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+        <div data-tour="comm-resolve" style={{ padding: '0 14px', display: 'flex', flexDirection: 'column', gap: 8 }}>
           <ResolvePendingBets
             openBets={openBets}
             resolutionBetsLoading={resolutionBetsLoading}
@@ -1733,6 +1741,7 @@ export default function CommissionerPanel({ commissioner, leagueId, tournamentId
         {/* Lifecycle ops (mobile) — cards have margin: 0 14px built in */}
         <MobSectionHeader label="LIFECYCLE OPERATIONS" sub="SEASON CONTROLS" tone="var(--purple)" />
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8, paddingBottom: 80 }}>
+          <div data-tour="comm-transfer-window">
           <MobLifecycleCard title="TRANSFER WINDOW" status="CLOSED" tone="var(--danger)" when="Open between gameweeks. Close 1h before MD kickoff.">
             <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
               <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.2em', color: 'var(--mute)' }}>OPENS</span>
@@ -1751,7 +1760,9 @@ export default function CommissionerPanel({ commissioner, leagueId, tournamentId
               <button onClick={() => { if (window.confirm('Close the transfer window immediately?')) closeTransferWindow(); }} disabled={commLoading} style={{ ...mobBtn, background: 'transparent', color: 'var(--danger)', border: '1px solid rgba(239,68,68,.33)' }}>CLOSE NOW</button>
             </div>
           </MobLifecycleCard>
+          </div>
 
+          <div data-tour="comm-draft-deadline">
           <MobLifecycleCard title="DRAFT" status="DEADLINE SET" tone="var(--positive)" when="After all picks. Before GW1.">
             <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
               <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.2em', color: 'var(--mute)' }}>DEADLINE</span>
@@ -1761,12 +1772,16 @@ export default function CommissionerPanel({ commissioner, leagueId, tournamentId
             <div style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.18em', color: 'var(--mute)', lineHeight: 1.6 }}>15 PLAYERS / MGR · £100M · GK≤2 DEF≤5 MID≤5 FWD≤3</div>
             <button onClick={() => { if (window.confirm('Run allocation for all managers? This cannot be undone without a manual reset.')) { commAction(async () => { const { error } = await supabase.rpc('run_draft_allocation', { p_league_id: leagueId }); if (error) throw new Error(error.message); setCommMsg({ type: 'ok', text: 'Allocation complete.' }); }); } }} disabled={commLoading} style={{ ...mobBtn, background: 'var(--gold)', color: 'var(--ink)' }}>RUN ALLOCATION ↯</button>
           </MobLifecycleCard>
+          </div>
 
+          <div data-tour="comm-cup-phase">
           <MobLifecycleCard title="CUP PHASE" status="UNSEEDED" tone="var(--warn)" when="After allocation.">
             <div style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.18em', color: 'var(--mute)' }}>20 CLUBS · 14 MGRS · 1 CLUB / MGR / ROUND</div>
             <button onClick={() => { if (window.confirm('Seed cup clubs? This cannot be undone for this season.')) { commAction(async () => { const { error } = await supabase.rpc('seed_cup_clubs', { p_league_id: leagueId }); if (error) throw new Error(error.message); setCommMsg({ type: 'ok', text: 'Cup clubs seeded.' }); }); } }} disabled={commLoading} style={{ ...mobBtn, background: 'var(--purple)', color: 'var(--paper)' }}>SEED CUP CLUBS ↯</button>
           </MobLifecycleCard>
+          </div>
 
+          <div data-tour="comm-score-recalc">
           <MobLifecycleCard title="SCORE RECALCULATION" status="UTILITY" tone="var(--mute)" when="Anytime. Safe.">
             <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
               <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.2em', color: 'var(--mute)' }}>FIXTURE ID</span>
@@ -1774,6 +1789,7 @@ export default function CommissionerPanel({ commissioner, leagueId, tournamentId
             </div>
             <button onClick={triggerScores} disabled={commLoading || !scoreFixtureId} style={{ ...mobBtn, background: 'var(--warn)', color: 'var(--ink)' }}>RECALCULATE ↯</button>
           </MobLifecycleCard>
+          </div>
         </div>
       </div>
     );
@@ -1789,7 +1805,7 @@ export default function CommissionerPanel({ commissioner, leagueId, tournamentId
 
       {/* Zone B — Bet management (two columns) */}
       <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', borderBottom: '1px solid var(--rule)', minHeight: 600 }}>
-        <div style={{ borderRight: '1px solid var(--rule)', display: 'flex', flexDirection: 'column', overflow: 'hidden', padding: 20 }}>
+        <div data-tour="comm-bets" style={{ borderRight: '1px solid var(--rule)', display: 'flex', flexDirection: 'column', overflow: 'hidden', padding: 20 }}>
           <BetCreatorPanel
             leagueId={leagueId}
             tournamentId={tournamentId}
@@ -1798,7 +1814,7 @@ export default function CommissionerPanel({ commissioner, leagueId, tournamentId
             setCommMsg={setCommMsg}
           />
         </div>
-        <div style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        <div data-tour="comm-resolve" style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
           <ResolvePendingBets
             openBets={openBets}
             resolutionBetsLoading={resolutionBetsLoading}
