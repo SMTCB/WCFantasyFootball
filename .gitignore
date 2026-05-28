@@ -31,6 +31,11 @@ playwright-results.txt
 /test-results/*.png
 .playwright-mcp/
 
+# Root-level test screenshots and temporary files (NOT part of codebase)
+/*.png                      # All PNG files in root (e2e-*.png, flow*.png, etc)
+audit-contrast.js           # Temporary audit script
+e2e-setup.mjs              # Temporary E2E setup script
+
 # Claude Code — local settings and ephemeral worktrees
 .claude/settings.local.json
 .claude/worktrees/
