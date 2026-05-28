@@ -9,13 +9,13 @@
 
 const MONO = "'JetBrains Mono', monospace";
 
-export default function TourReplayButton({ onReplay, label = 'REPLAY GUIDE' }) {
+export default function TourReplayButton({ onReplay, label = 'REPLAY GUIDE', title = 'Replay the guide' }) {
   if (!onReplay) return null;
 
   return (
     <button
       onClick={onReplay}
-      title="Replay the commissioner guide"
+      title={title}
       style={{
         position:      'fixed',
         bottom:        88,          // above bottom nav bar (~72px)
