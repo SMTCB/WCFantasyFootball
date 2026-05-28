@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../hooks/useAuth';
@@ -20,6 +20,7 @@ import BetsSection from '../components/BetsSection';
 import NotificationPanel from '../components/NotificationPanel';
 import { useTransferWindow } from '../hooks/useTransferWindow';
 import { useCommissioner }   from '../hooks/useCommissioner';
+import { useTradeProposals } from '../hooks/useTradeProposals';
 import { useOnboarding } from '../hooks/useOnboarding';
 import OnboardingTour from '../components/OnboardingTour';
 import {
@@ -117,6 +118,7 @@ export default function LeagueScreen() {
   
   const [tradeTarget,    setTradeTarget]    = useState(null);
   const [tradeError,     setTradeError]     = useState(null);
+  const [isSendingProposal, setIsSendingProposal] = useState(false);
   const [myListings,     setMyListings]     = useState(new Set()); // player_ids I've listed
   const [_leagueListings, setLeagueListings] = useState([]);        // all listings in league
   const [h2hTarget, setH2hTarget] = useState(null);
@@ -127,6 +129,8 @@ export default function LeagueScreen() {
   const [mySquadPlayers,   setMySquadPlayers]   = useState([]);
   const [theirSquadPlayers,setTheirSquadPlayers] = useState([]);
   const [managerRoster,    setManagerRoster]    = useState([]);
+
+  const squadByUserRef = useRef({});
   
   const [members, setMembers] = useState([]);
   const [membersLoading, setMembersLoading] = useState(false);
@@ -162,6 +166,14 @@ export default function LeagueScreen() {
   // Chat input state lives in ChatView — not needed here
   const { messages, loading: chatLoading, unreadCount, typingUsers, sendMessage, editMessage, deleteMessage, broadcastTyping, markChatAsRead, scrollEndRef } = useChatMessages(activeLeague?.league_id);
   const { notifications, unreadCount: notificationCount, markAsRead: markNotificationAsRead, clearAll: clearAllNotifications, clearByType: clearNotificationsByType } = useNotifications(activeLeague?.league_id);
+  const {
+    incoming: incomingTrades,
+    outgoing: outgoingTrades,
+    submitProposal,
+    acceptProposal,
+    rejectProposal,
+    cancelProposal,
+  } = useTradeProposals(activeLeague?.league_id, mySquadId);
   const { mentionSearch, mentionMatches, selectedMention, mentionedUserIds, loadLeagueMembers, parseMentionPattern, insertMention, handleMentionNavigate, resetMentions } = useMentions(activeLeague?.league_id);
   const { searchTerm, setSearchTerm, filteredMessages, clearSearch, resultCount } = useMessageSearch(messages);
 
@@ -213,11 +225,44 @@ export default function LeagueScreen() {
     setManagerRoster(rows ?? []);
   };
 
-  const validateAndSendProposal = () => {
-    // U8: Trade proposals backend not yet wired — show "coming soon" instead of a phantom toast.
-    showToast('Trade proposals coming soon — this feature is in development.', 'info');
-    setShowTradeBuilder(false);
+  const validateAndSendProposal = async () => {
+    if (isSendingProposal) return;
+    if (!tradeMyPlayer || !tradeTheirPlayer || !tradeTarget) {
+      setTradeError('Select a player from each squad to propose a trade.');
+      return;
+    }
+    if (!tradeTarget.squadId) {
+      setTradeError('Could not find target squad. Please close and reopen the trade builder.');
+      return;
+    }
+    setIsSendingProposal(true);
     setTradeError(null);
+    try {
+      await submitProposal({
+        targetSquadId:   tradeTarget.squadId,
+        myPlayerId:      tradeMyPlayer.id,
+        theirPlayerId:   tradeTheirPlayer.id,
+        cashSweetener:   tradeCash,
+        pointsSweetener: tradePoints,
+      });
+      showToast('Trade proposal sent!', 'success');
+      setShowTradeBuilder(false);
+      setTradeTarget(null);
+      setTradeMyPlayer(null);
+      setTradeTheirPlayer(null);
+      setTradeCash(5.0);
+      setTradePoints(0);
+    } catch (err) {
+      const msg = {
+        INSUFFICIENT_BUDGET: 'Not enough budget to offer that cash sweetener.',
+        INSUFFICIENT_POINTS: 'Not enough points to offer as sweetener.',
+        PROPOSER_PLAYER_NOT_IN_SQUAD: 'That player is no longer in your squad.',
+        TARGET_PLAYER_NOT_IN_SQUAD: 'That player is no longer in the target squad.',
+      }[err.message] || err.message;
+      setTradeError(msg);
+    } finally {
+      setIsSendingProposal(false);
+    }
   };
 
   const isCommissioner = activeLeague?.leagues?.created_by === currentUser?.id
@@ -392,6 +437,16 @@ export default function LeagueScreen() {
         .maybeSingle();
       setMySquadId(squadRow?.id ?? null);
       setMySquadBudget(squadRow?.budget_remaining ?? null);
+
+      // Build user→squadId map for trade target lookup
+      const { data: allSquads } = await supabase
+        .from('squads')
+        .select('id, user_id')
+        .eq('league_id', id)
+        .order('created_at', { ascending: false });
+      const byUser = {};
+      (allSquads || []).forEach(s => { if (!byUser[s.user_id]) byUser[s.user_id] = s.id; });
+      squadByUserRef.current = byUser;
 
       // Load trade listings for the league
       const { data: listings } = await supabase
@@ -712,6 +767,7 @@ export default function LeagueScreen() {
                 <NotificationPanel
                   notifications={notifications}
                   unreadCount={notificationCount}
+                  extraCount={incomingTrades.length}
                   onMarkAsRead={markNotificationAsRead}
                   onClearAll={clearAllNotifications}
                   onNavigate={(link) => link && navigate(link)}
@@ -747,6 +803,7 @@ export default function LeagueScreen() {
                 <NotificationPanel
                   notifications={notifications}
                   unreadCount={notificationCount}
+                  extraCount={incomingTrades.length}
                   onMarkAsRead={markNotificationAsRead}
                   onClearAll={clearAllNotifications}
                   onNavigate={(link) => link && navigate(link)}
@@ -1024,6 +1081,117 @@ export default function LeagueScreen() {
                     <button onClick={() => setShowTradeBuilder(false)} className="text-[var(--mute)] hover:text-white transition-colors">✕</button>
                   </div>
                   <div className="flex-1 overflow-y-auto px-6 py-8 flex flex-col gap-8 no-scrollbar">
+                    {/* Incoming trade proposals */}
+                    {incomingTrades.length > 0 && (
+                      <div>
+                        <h3 style={{ color: 'var(--gold)', fontSize: 12, fontWeight: 900, letterSpacing: 2, marginBottom: 12 }}>
+                          INCOMING OFFERS ({incomingTrades.length})
+                        </h3>
+                        {incomingTrades.map(p => (
+                          <div key={p.id} style={{
+                            background: 'var(--ink-2)', border: '1px solid var(--rule)',
+                            borderRadius: 4, padding: '12px 16px', marginBottom: 8,
+                          }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                              <span style={{ color: 'var(--paper)', fontSize: 12, fontWeight: 700 }}>
+                                {p.proposer_player?.name} <span style={{ color: 'var(--mute)' }}>for</span> {p.target_player?.name}
+                              </span>
+                              <span style={{ color: 'var(--mute)', fontSize: 10 }}>
+                                {new Date(p.created_at).toLocaleDateString()}
+                              </span>
+                            </div>
+                            {(p.cash_sweetener !== 0 || p.points_sweetener > 0) && (
+                              <div style={{ display: 'flex', gap: 12, marginBottom: 8 }}>
+                                {p.cash_sweetener !== 0 && (
+                                  <span style={{ color: p.cash_sweetener > 0 ? 'var(--positive)' : 'var(--danger)', fontSize: 11, fontWeight: 700 }}>
+                                    {p.cash_sweetener > 0 ? `+€${p.cash_sweetener}M (you receive)` : `-€${Math.abs(p.cash_sweetener)}M (you pay)`}
+                                  </span>
+                                )}
+                                {p.points_sweetener > 0 && (
+                                  <span style={{ color: 'var(--gold)', fontSize: 11, fontWeight: 700 }}>
+                                    +{p.points_sweetener} pts sweetener
+                                  </span>
+                                )}
+                              </div>
+                            )}
+                            <div style={{ display: 'flex', gap: 8 }}>
+                              <button
+                                onClick={async () => {
+                                  try {
+                                    await acceptProposal(p.id);
+                                    showToast('Trade accepted! Squads updated.', 'success');
+                                  } catch (err) {
+                                    showToast(err.message, 'error');
+                                  }
+                                }}
+                                style={{
+                                  background: 'var(--positive)', color: '#000', fontSize: 11,
+                                  fontWeight: 900, padding: '6px 14px', borderRadius: 2, border: 'none', cursor: 'pointer',
+                                }}
+                              >
+                                ACCEPT
+                              </button>
+                              <button
+                                onClick={async () => {
+                                  try {
+                                    await rejectProposal(p.id);
+                                    showToast('Trade rejected.', 'info');
+                                  } catch (err) {
+                                    showToast(err.message, 'error');
+                                  }
+                                }}
+                                style={{
+                                  background: 'var(--ink-3)', color: 'var(--mute)', fontSize: 11,
+                                  fontWeight: 900, padding: '6px 14px', borderRadius: 2, border: 'none', cursor: 'pointer',
+                                }}
+                              >
+                                DECLINE
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Outgoing proposals I've sent */}
+                    {outgoingTrades.length > 0 && (
+                      <div>
+                        <h3 style={{ color: 'var(--mute)', fontSize: 12, fontWeight: 900, letterSpacing: 2, marginBottom: 12 }}>
+                          SENT OFFERS ({outgoingTrades.length})
+                        </h3>
+                        {outgoingTrades.map(p => (
+                          <div key={p.id} style={{
+                            background: 'var(--ink-2)', border: '1px solid var(--rule)',
+                            borderRadius: 4, padding: '12px 16px', marginBottom: 8,
+                          }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                              <span style={{ color: 'var(--paper)', fontSize: 12, fontWeight: 700 }}>
+                                {p.proposer_player?.name} <span style={{ color: 'var(--mute)' }}>for</span> {p.target_player?.name}
+                              </span>
+                              <span style={{ color: 'var(--mute)', fontSize: 10 }}>awaiting response</span>
+                            </div>
+                            <button
+                              onClick={async () => {
+                                try {
+                                  await cancelProposal(p.id);
+                                  showToast('Offer cancelled.', 'info');
+                                } catch (err) {
+                                  showToast(err.message, 'error');
+                                }
+                              }}
+                              style={{
+                                background: 'transparent', color: 'var(--danger)', fontSize: 10,
+                                fontWeight: 700, padding: '4px 10px', borderRadius: 2,
+                                border: '1px solid var(--danger)', cursor: 'pointer',
+                              }}
+                            >
+                              CANCEL OFFER
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
                     <div className="grid grid-cols-[1fr_40px_1fr] items-center gap-2">
                       <div className="flex flex-col gap-2">
                         <label className="text-[9px] font-black text-[var(--mute)] uppercase tracking-widest text-center">MY PLAYER</label>
@@ -1097,6 +1265,7 @@ export default function LeagueScreen() {
                       <div className="text-[#E53935] text-[10px] font-bold text-center">{tradeError}</div>
                     )}
                     <button
+                      disabled={isSendingProposal}
                       onClick={validateAndSendProposal}
                       className="w-full py-4 bg-cyan text-black text-[13px] font-black uppercase tracking-widest rounded active:scale-95 shadow-[0_0_15px_rgba(0,180,216,0.3)]"
                       style={{ backgroundColor: '#00B4D8' }}
@@ -1134,7 +1303,7 @@ export default function LeagueScreen() {
                         <div className="text-[12px] font-black text-white">€{p.price}M</div>
                         <div className="text-[9px] text-positive font-bold">READY</div>
                      </div>
-                     <button onClick={() => { const t = { ...managerTeamView, name: managerTeamView.name }; setTradeTarget(t); setTradeTheirPlayer(p); loadTradeSquads(managerTeamView.user_id); setManagerTeamView(null); setShowTradeBuilder(true); }} className="w-9 h-9 rounded-full bg-cyan text-black flex items-center justify-center font-bold active:scale-90 transition-transform shadow-[0_4px_10px_rgba(0,180,216,0.3)]">🔄</button>
+                     <button onClick={() => { const t = { ...managerTeamView, name: managerTeamView.name, squadId: squadByUserRef.current[managerTeamView.user_id] }; setTradeTarget(t); setTradeTheirPlayer(p); loadTradeSquads(managerTeamView.user_id); setManagerTeamView(null); setShowTradeBuilder(true); }} className="w-9 h-9 rounded-full bg-cyan text-black flex items-center justify-center font-bold active:scale-90 transition-transform shadow-[0_4px_10px_rgba(0,180,216,0.3)]">🔄</button>
                    </div>
                  ))}
                </div>
