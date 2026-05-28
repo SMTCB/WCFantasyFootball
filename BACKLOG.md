@@ -1,12 +1,42 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-05-28 (session 49 — trade proposals feature complete + migration 85 applied)  
+**Last Updated**: 2026-05-28 (session 49 — trade proposals + commissioner guide)  
 **E2E Test Suite**: `platform.spec.js` (36 tests × 2 browsers) passing in CI ✅ — completes in ~3 min  
 **Live App**: https://wc-fantasy-football.vercel.app
 
 ---
 
-## 📊 SESSION 49 PROGRESS (2026-05-28 — Trade Proposals)
+## 📊 SESSION 49 PROGRESS (2026-05-28 — Trade Proposals + Commissioner Guide)
+
+### Part B — Commissioner In-App Guide
+
+**Goal**: Surface a re-triggerable commissioner guide inside the Admin tab with a branded replay button and full lifecycle tour.
+
+**🚀 COMPLETED:**
+
+- ✅ **`src/components/TourReplayButton.jsx`** (NEW) — branded gold pill FAB replacing the plain `?` circle
+  - Fixed-position, bottom-right, above nav bar; gold border + hover state; accepts `label`, `title`, `onReplay` props
+- ✅ **`src/components/league/BetsTabHub.jsx`** — replaced inline `?` button with `TourReplayButton`
+- ✅ **`src/components/league/CommissionerPanel.jsx`** — 3 changes:
+  - `replayCommissionerTour` prop wired into function signature
+  - `TourReplayButton` rendered in both mobile and desktop layouts (label: "REPLAY ADMIN GUIDE")
+  - 13 `data-tour` anchors added across all 8 zones (both mobile + desktop): `comm-season-stepper`, `comm-transfer-window`, `comm-draft-deadline`, `comm-cup-phase`, `comm-score-recalc`, `comm-bets`, `comm-resolve`
+- ✅ **`src/screens/LeagueScreen.jsx`** — `COMMISSIONER_TOUR_STEPS` expanded from 4 → 8 steps:
+  1. Season Lifecycle (overview of progression bar)
+  2. Transfer Window (open/close controls)
+  3. Draft & Allocation (deadline + run allocation)
+  4. Cup Phase (seed clubs)
+  5. Score Recalculation (per-fixture re-run)
+  6. Create Bets (prediction challenges)
+  7. Resolve Bets (manual resolution)
+  8. Weekly Gameweek Flow (repeating cycle summary)
+- ✅ **Build clean**, E2E 36/36 passing, pushed to `origin/main` (commits `ae4d0fb`–`3e35b9e`)
+
+**No new migrations** — entirely frontend.
+
+---
+
+### Part A — Trade Proposals
 
 **Goal**: Implement the trade proposals feature end-to-end (DB, RPCs, hook, UI).
 
