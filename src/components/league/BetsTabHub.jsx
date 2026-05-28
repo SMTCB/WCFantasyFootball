@@ -2,6 +2,7 @@ import { useBets } from '../../hooks/useBets';
 import BetWidget from '../BetWidget';
 import { HubSectionLabel, MobSection } from './HubShared';
 import { MONO, DISPLAY } from './HubConstants';
+import TourReplayButton from '../TourReplayButton';
 
 const KIND = {
   top_scorer:   { g: '◉', tone: 'var(--cyan)'   },
@@ -138,11 +139,7 @@ export default function BetsTabHub({ leagueId, squadId, onReplayTour }) {
       </div>
 
       {/* Tour replay */}
-      {onReplayTour && (
-        <div style={{ position: 'fixed', bottom: 80, right: 20, zIndex: 10 }}>
-          <button onClick={onReplayTour} style={{ width: 28, height: 28, borderRadius: '50%', border: '1px solid rgba(255,255,255,0.2)', background: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.5)', fontSize: 12, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>?</button>
-        </div>
-      )}
+      <TourReplayButton onReplay={onReplayTour} label="REPLAY BETS GUIDE" title="Replay the bets tour" />
     </div>
   );
 }
