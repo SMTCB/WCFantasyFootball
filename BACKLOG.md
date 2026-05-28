@@ -1,8 +1,39 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-05-28 (session 48 — E2E CI fixed; PRs #210 + #211 merged)  
+**Last Updated**: 2026-05-28 (session 49 — trade proposals feature complete + migration 85 applied)  
 **E2E Test Suite**: `platform.spec.js` (36 tests × 2 browsers) passing in CI ✅ — completes in ~3 min  
 **Live App**: https://wc-fantasy-football.vercel.app
+
+---
+
+## 📊 SESSION 49 PROGRESS (2026-05-28 — Trade Proposals)
+
+**Goal**: Implement the trade proposals feature end-to-end (DB, RPCs, hook, UI).
+
+**🚀 COMPLETED THIS SESSION:**
+
+- ✅ **Migration 85 applied to production** — `trade_proposals` table + 4 SECURITY DEFINER RPCs
+  - `submit_trade_proposal` — validates ownership, budget/points checks, INSERT + notification
+  - `accept_trade_proposal` — atomic player swap via `array_remove || ARRAY[]`, cash/points transfer, cascading cancel of other pending proposals
+  - `reject_trade_proposal` — sets status to rejected, updates resolved_at
+  - `cancel_trade_proposal` — proposer cancels their own pending proposal
+  - `cash_sweetener` guarded by `CHECK (cash_sweetener >= 0)` + `INVALID_SWEETENER` error
+  - `RETURNING id INTO v_new_proposal_id` pattern prevents racy subquery for notification insert
+
+- ✅ **`src/hooks/useTradeProposals.js`** (NEW) — fetch, subscribe, submit/accept/reject/cancel
+  - Realtime subscription on `trade_proposals` filtered by `league_id`
+  - Splits proposals into `incoming` / `outgoing` by `mySquadId`
+
+- ✅ **`src/screens/LeagueScreen.jsx`** (MODIFIED) — wired trade proposals UI
+  - Incoming and outgoing panels inside the trade builder modal
+  - ACCEPT / DECLINE / CANCEL OFFER buttons per proposal
+  - Badge count on notification icon (`extraCount={incomingTrades.length}`)
+  - Double-submit guard (`isSendingProposal` state + `disabled` button)
+  - `squadId` guard before proposal submission (populated from `squadByUserRef`)
+
+- ✅ **Merged to main** — commit `ba426d6` (squash merge, branch deleted)
+
+**No pending Supabase tasks** — migration 85 applied, no new edge functions needed.
 
 ---
 

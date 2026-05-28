@@ -1,8 +1,8 @@
 # Supabase Handoff — Consolidated Deploy Guide
 
-**Last updated**: 2026-05-28 (session 48 — E2E CI fixed; no new migrations)  
+**Last updated**: 2026-05-28 (session 49 — trade proposals feature + migration 85)  
 **Main branch**: all code is on `main` — do a `git pull origin main` before deploying  
-**Migrations applied in production**: 66–84 (next: `85_`)  
+**Migrations applied in production**: 66–85 (next: `86_`)  
 **Edge Functions**: ✅ ALL 14 DEPLOYED (2026-05-26 via `npx supabase functions deploy --use-api`)  
 **⚠️ NO PENDING SUPABASE TASKS** — everything is deployed and up to date
 
@@ -43,8 +43,8 @@ Open the **Supabase dashboard SQL editor** and run each file in order:
 - **L2.5**: `submit_bet` resets `is_correct = NULL` and `reward_awarded = NULL` on re-submit after resolution
 - **L3.9**: `resolve_bet` sets `reward_awarded = NULL` (not 0) for losing submissions
 
-**Next migration to create**: `85_`  
-*(79–84 applied — see Deployment History below)*
+**Next migration to create**: `86_`  
+*(79–85 applied — see Deployment History below)*
 
 ---
 
@@ -157,3 +157,4 @@ Sprints 0–4 and the full E2E bug-fix pass (sessions 44–45) are merged to `ma
 | Session 44–45 | 82 ✅ | Public read RLS policies |
 | Session 44–45 | 83 ✅ | `submit_bet` RPC fix |
 | Session 44–45 | 84 ✅ | `resolve_bet` RPC fix |
+| Session 49 | 85 ✅ | `trade_proposals` table + `submit/accept/reject/cancel_trade_proposal` RPCs |
