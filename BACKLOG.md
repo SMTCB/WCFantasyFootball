@@ -1,6 +1,6 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-05-29 (session 53 — P0 fixes + PILOT-03 browser test PASS + tournament name bug fixed; next: PILOT-04 player prices)  
+**Last Updated**: 2026-05-29 (session 53 complete — all P0/P1 items resolved except PILOT-04 deferred; full cron audit done; 10/12 crons healthy)  
 **E2E Test Suite**: `platform.spec.js` (36 tests × 2 browsers) passing in CI ✅ — completes in ~3 min  
 **Live App**: https://wc-fantasy-football.vercel.app  
 **WC Kick-off**: 2026-06-11 19:00 UTC (Mexico vs South Africa) — **13 days away**
@@ -40,17 +40,18 @@
   B. Leave random for pilot, gather feedback, price properly for launch
 - **Recommended**: Option A — takes ~30 min of SQL. A price tier list can be based on FIFA world ranking of the 32 WC nations.
 
-#### PILOT-05 — Ingest cron also requires Forza API to be active
-- **Impact**: `ingest-match-events-live` fires every 5 minutes. Without active Forza API credentials, it will produce empty responses. Scoring still works (falls back to `player_match_stats` when data exists), but live match events (goals, cards as they happen) won't populate. The live centre won't show real-time events.
-- **Action**: Confirm Forza API key is configured in Supabase Edge Function secrets before kick-off. If not available, ensure the cron is disabled rather than failing silently:
-  ```sql
-  SELECT cron.unschedule('ingest-match-events-live'); -- only if no Forza key
-  ```
+#### PILOT-05 — Cron audit + Forza API key — RESOLVED ✅ (session 53)
+- **Forza API key**: `FORZA_ACCESS_TOKEN` confirmed set in Edge Function secrets — `test-forza-api` returned live Premier League data, `token_set: true`.
+- **Full cron audit (12 jobs)**: found 2 more `current_setting()` bugs beyond migration 90.
+  - `resolve-finished-bets`: was **FAILING every 15 min** — bets never auto-resolved after matches. Fixed in migration 91.
+  - `ingest-match-events-live`: showed "0 rows / succeeded" (no live fixtures), but would have silently broken on June 11 when WC goes live. Fixed in migration 91 (PR [#220](https://github.com/SMTCB/WCFantasyFootball/pull/220)).
+- **Verified post-fix**: both crons show `status: succeeded` in `cron.job_run_details` — confirmed live.
+- **10/12 crons healthy**; `auto-close-bets`, `prune-error-logs`, `resolve-expired-auctions` are pure SQL and never broken.
 
-### 🟢 P3 — Nice to Have Before Pilot
+### ✅ P3 — CONFIRMED RESOLVED
 
-#### PILOT-06 — League creation wizard WC default
-- When creating a new league, ensure "FIFA World Cup 2026" is the prominent/default tournament option (not EPL). A confused user could accidentally create an EPL league with no live EPL data.
+#### PILOT-06 — League creation wizard WC default — RESOLVED ✅ (session 53)
+- Confirmed during PILOT-03 browser test: FIFA WORLD CUP 2026 is already the first option with `SELECTED` badge pre-applied. No code change needed.
 
 #### PILOT-07 — Mobile builds not available
 - iOS/Android native builds haven't been compiled. Web-only pilot is fine for now; mobile users will use the browser version. Not a blocker.
@@ -95,9 +96,32 @@
 - `LeagueInviteCard.jsx` queried `tournaments.id` (UUID) with Forza integer string `'429'` → 400 on invite card display
 - Fixed `.eq('id', ...)` → `.eq('forza_id', ...)` — verified via `preview_eval`: returns `"FIFA World Cup 2026"` ✅
 
+### ✅ CRON AUDIT + PILOT-05 (later same session)
+
+**Full 12-job cron audit against production `cron.job`:**
+
+| Job | Result |
+|---|---|
+| `auto-close-bets` | ✅ Pure SQL, healthy |
+| `calculate-scores-live` | ✅ Hardcoded URL, firing every 2 min |
+| `calculate-scores-post-match` | ✅ Hardcoded URL, 22:30 UTC daily |
+| `ingest-match-events-live` | ✅ FIXED (migration 91) — was `current_setting()` ticking bomb |
+| `prune-error-logs` | ✅ Pure SQL, healthy |
+| `resolve-expired-auctions` | ✅ Pure SQL, healthy |
+| `resolve-finished-bets` | ✅ FIXED (migration 91) — was FAILING every 15 min |
+| `run-draft-lottery` | ✅ `verify_jwt=false`, firing correctly |
+| `run-reverse-standings-draft` | ✅ Healthy |
+| `sync-wc-fixtures-6h` | ✅ Fixed in migration 90 |
+| `sync-wc-player-status` | ✅ Healthy |
+| `sync-wc-players-6h` | ✅ Fixed in migration 90 |
+
+**PR [#220](https://github.com/SMTCB/WCFantasyFootball/pull/220)** — migration 91 — merged to main  
+**Verified**: Both fixed crons show `status: succeeded` in live `cron.job_run_details`
+
+**PILOT-06**: Confirmed resolved during PILOT-03 — WC already the default in wizard.
+
 ### 📋 NEXT (session 54)
-- PILOT-04: Seed tiered player prices for WC (P1)
-- PILOT-05: Confirm Forza API key in Edge Function secrets (P1)
+- PILOT-04: Seed tiered player prices for WC (P1, deferred by user)
 
 ---
 
