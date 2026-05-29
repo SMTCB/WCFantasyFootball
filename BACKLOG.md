@@ -1,8 +1,110 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-05-28 (session 51 — WC bug sweep, all issues resolved pre-launch)  
+**Last Updated**: 2026-05-29 (session 52 — WC E2E full test run, 2 bugs found & fixed, 6 new backlog items)  
 **E2E Test Suite**: `platform.spec.js` (36 tests × 2 browsers) passing in CI ✅ — completes in ~3 min  
 **Live App**: https://wc-fantasy-football.vercel.app
+
+---
+
+## 📊 SESSION 52 PROGRESS (2026-05-29 — WC E2E Full Playbook Run)
+
+**Goal**: Run the full E2E test playbook against WC tournament (429) — all 8 flows — with player prices seeded and match events adapted from EPL.
+
+### 🔧 PRE-TEST SETUP (Done automatically)
+- ✅ Seeded prices (£4–£7 random) for all 1,589 WC players that had `price IS NULL`
+- ✅ Inserted `player_match_stats` for 3 finished WC fixtures (Brazil 2-1 Morocco · Germany 3-0 Curaçao · Qatar 1-1 Switzerland) — 25 stat rows covering all squad players from those matches
+- ✅ Installed missing `modern-screenshot` npm package (was crashing app on startup — see BUG-E2E-01)
+- ✅ Linked test accounts to `WC_OVERALL_E2E` league, synced `draft_allocations`, set deadline to +14d
+- ✅ Created open WC bet instance for admin-tab resolution flow
+
+### ✅ FLOW RESULTS
+
+| Flow | Name | Result | Notes |
+|------|------|--------|-------|
+| 1 | Draft — WC Player List | ✅ PASS | 1589 WC players, countdown, auto-complete→30, submit confirmed in DB (30, pending) |
+| 2a | Bets — Place Pick | ✅ PASS | Brazil Win highlighted, `answer='home'` in DB |
+| 2b | Bets — Admin Resolve | ✅ PASS | Bet resolved to `status='resolved'`, `correct_answer='home'`, `winners_count=1` |
+| 3a | Transfer Market — Sell | ✅ PASS (after fix) | Initially failed — BUG-E2E-02 found & fixed. Richarlison sold, squad 14/15, budget +£6M |
+| 3b | Transfer Market — Buy | ✅ PASS (after fix) | Kerem Akturkoglu bought, squad 15/15, budget -£7M |
+| 4 | Auctions — Bid | ✅ PASS | current_bid updated £5.6→£6.5M. Audit trail bug found — see BUG-E2E-03 |
+| 5 | League Board + Frontpage | ✅ PASS | 8 managers, correct GW2 label, 31.5 pts leader, Forza Times rendered |
+| 6 | Squad Screen | ✅ PASS | 15/15, £25M budget, WC players, formation 5-1-3, GW 429-r2 |
+| 7 | Live Centre | ⚠️ PARTIAL | WC tile + GW2 label correct. NEXT fixture shows EPL match — BUG-E2E-04 |
+
+### 🐛 BUGS FOUND & FIXED THIS SESSION
+
+#### BUG-E2E-01 — Missing `modern-screenshot` dependency — FIXED ✅
+- **Symptom**: App shows blank white page on startup. Console: `500 Internal Server Error` on `RecapScreen.jsx` and `LeagueInviteCard.jsx`
+- **Root cause**: Both files import `domToPng` from `modern-screenshot` but the package was never added to `package.json`
+- **Fix**: `npm install modern-screenshot --save`
+- **Priority**: **P0** — crashes app on startup, blocks ALL testing
+- **How to retest**: `npm run dev` → navigate to app → should render login screen without errors
+
+#### BUG-E2E-02 — `process-transfer` uses wrong matchday for multi-round tournaments — FIXED ✅
+- **Symptom**: Sell returns `"Player not in your squad"`. A new empty squad is created (`matchday_id='429-r7'`, `budget=£100`) instead of finding the existing one (`matchday_id='429-r2'`).
+- **Root cause**: `supabase/functions/process-transfer/index.js` line 77 used `ORDER BY deadline_at DESC LIMIT 1` — resolves to the *furthest* future deadline (r7). Existing squad was pinned to r2. Squad lookup by `matchday_id` fails → creates phantom squad → player not found.
+- **Fix**: Changed to `gte('deadline_at', now.toISOString()).ORDER BY deadline_at ASC LIMIT 1` — nearest upcoming deadline. Deployed to Supabase.
+- **Files changed**: `supabase/functions/process-transfer/index.js`
+- **Priority**: **P0** — breaks all WC transfers (buy and sell) for any league with multiple future deadlines
+- **How to retest**: Search for Richarlison in WC market → SELL → confirm modal → budget increases, squad drops to 14/15 with no error toast
+
+#### BUG-E2E-03 — Auction bids don't insert rows in `auction_bids` table — OPEN 🔴
+- **Symptom**: After placing a bid, `auction_listings.current_bid` updates correctly, but no row is inserted in `auction_bids`. Verified: DB query returns only bids from 2026-05-28, not today's £6.5M bid.
+- **Root cause**: Unknown — likely the `place_bid` RPC or Edge Function updates `current_bid` but skips the `INSERT INTO auction_bids`. Needs investigation of the auction bid path.
+- **Impact**: No auction history/audit trail. When auction closes, winner can't be identified from bid history.
+- **Priority**: **P1** — auction resolution may silently award to wrong manager
+- **How to retest**: Place a bid in auctions tab → `SELECT * FROM auction_bids WHERE league_id='fca00001-...' ORDER BY placed_at DESC LIMIT 3` — new row should appear with current timestamp
+
+#### BUG-E2E-04 — Live Centre NEXT fixture strip doesn't switch to WC fixtures — OPEN 🔴
+- **Symptom**: When WC_OVERALL_E2E league is selected in Live Centre, the NEXT fixture strip still shows an EPL fixture ("MEX vs SOU, Thu 20:00"), not the next WC fixture.
+- **Root cause**: The fixture strip likely queries the next scheduled fixture globally or for the last-selected EPL tournament, not filtered to the currently active league's tournament.
+- **Impact**: WC users see EPL fixtures in Live Centre — confusing, especially post-EPL-season.
+- **Priority**: **P2** — wrong fixtures shown but doesn't break functionality
+- **How to retest**: Log in → Live Centre → select WC_OVERALL_E2E tile → NEXT fixture strip should show a WC match (e.g., Brazil's next group game), not an EPL club match
+
+#### BUG-E2E-05 — Admin panel Transfer Window shows CLOSED for WC despite future deadline — OPEN 🟡
+- **Symptom**: Admin panel lifecycle shows `TRANSFER WINDOW ● CLOSED` even though `matchday_deadlines` has a future deadline at `NOW() + 14 days`. Transfers DO work (Flow 3 passed), so this is a false display.
+- **Root cause**: The admin lifecycle panel reads a boolean flag (likely `leagues.transfer_window_open` or similar), not derived from `matchday_deadlines.deadline_at`. Opening the deadline doesn't flip this flag.
+- **Impact**: Confusing for commissioners managing WC leagues — UI says closed but market is open.
+- **Priority**: **P2** — display-only, doesn't break transfers
+- **How to retest**: Admin tab → LIFECYCLE OPERATIONS → TRANSFER WINDOW should show `● OPEN` when a future deadline exists for the league's tournament
+
+#### BUG-E2E-06 — Stale auction listings remain active after player sold via Transfer Market — OPEN 🟡
+- **Symptom**: Richarlison was sold via Transfer Market. His auction listing in AUCTIONS tab still shows with a CANCEL button — as if the user still owns him and the listing is live.
+- **Root cause**: `process-transfer` SELL path doesn't check/cancel active `auction_listings` for the sold player.
+- **Impact**: Ghost listings on the auction board. If the auction closes, the winning bidder may receive a player the seller no longer owns.
+- **Priority**: **P2** — data integrity issue, potential for bad auction resolution
+- **How to retest**: List a player for auction → sell the same player via Transfer Market → Auctions tab should either remove the listing automatically or show an error
+
+### 📈 IMPROVEMENTS IDENTIFIED
+
+#### IMP-E2E-01 — Feature tours re-trigger every navigation (P3)
+- Tours in Squad, League Board, Market, and Admin tabs appeared on every page visit during testing (4 separate tour pop-ups interrupted test flows)
+- Tour dismissed state should persist in `localStorage` keyed by screen name, not just for the session
+- **Effort**: ~1h
+
+#### IMP-E2E-02 — Market `?league=` URL param not auto-selecting league (P3)
+- Navigating to `/market?league=fca00001-...` shows the league selector instead of pre-selecting the league
+- The param is preserved in the URL but `MarketScreen` ignores it on mount
+- **Effort**: ~30min
+
+#### IMP-E2E-03 — Squad screen shows 0 pts for all players even when r1 stats exist (P3)
+- After seeding `player_match_stats` for r1, the squad screen still shows 0 pts per player
+- The `calculate-scores` Edge Function must be manually triggered to populate `fantasy_points`
+- An admin "Recalculate Scores" button exists in the admin panel but the flow isn't clear for WC
+- **Effort**: ~1h (add per-round score trigger button to admin lifecycle panel)
+
+#### IMP-E2E-04 — WC E2E playbook Appendix B needs WC-specific version (P3)
+- The current Appendix B data reset script is EPL-only (tournament 426 hardcoded)
+- A parallel WC appendix covering tournament 429 setup would prevent manual SQL work each run
+- **Effort**: ~1h (documentation only)
+
+#### IMP-E2E-05 — Points sources inconsistent across views (P2 — investigate)
+- Three sources showed different totals for TestComm: `fantasy_points` table = 28.5, Board = 31.5, Live Centre = 36.5
+- `league_members.total_points` = 36.5 (source of truth for Board + Live Centre)
+- The 8pt gap vs `fantasy_points` sum is unexplained — may include bet reward points added directly to `league_members.total_points` bypassing `fantasy_points` rows
+- Needs investigation to confirm the aggregation path is correct and auditable
+- **Effort**: 1–2h investigation
 
 ---
 

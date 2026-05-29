@@ -71,21 +71,25 @@ Deno.serve(async (req) => {
     // ── Transfer window enforcement ───────────────────────────────────────────
     // 1. Reject if past the active matchday deadline.
     //    DATA-4: scope to this league's tournament so cross-tournament deadlines don't bleed through.
+    // Use nearest upcoming deadline (ascending + gte now) so multi-round tournaments
+    // (e.g. WC with r1–r7) don't resolve to the furthest future round and mismatch
+    // existing squad rows that are pinned to the current open round.
     let deadlineQuery = supabase
       .from('matchday_deadlines')
       .select('deadline_at, matchday_id')
-      .order('deadline_at', { ascending: false })
+      .gte('deadline_at', new Date().toISOString())
+      .order('deadline_at', { ascending: true })
       .limit(1);
     if (tournamentId) deadlineQuery = deadlineQuery.eq('tournament_id', tournamentId);
     const { data: deadline } = await deadlineQuery.maybeSingle();
 
     const activeMatchdayId = deadline?.matchday_id ?? null;
 
-    if (deadline && new Date() > new Date(deadline.deadline_at)) {
+    if (!deadline) {
       return json({
         ok:    false,
         code:  'WINDOW_CLOSED',
-        error: `Transfer window closed — matchday ${activeMatchdayId ?? ''} deadline has passed`,
+        error: `Transfer window closed — no upcoming matchday deadline found`,
       }, 403, corsHeaders);
     }
 
