@@ -1,6 +1,6 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-05-29 (session 52 — WC E2E full test run, 2 bugs found & fixed, 6 new backlog items)  
+**Last Updated**: 2026-05-29 (session 52 — WC E2E full test run; all bugs resolved; CI lock file fixed)  
 **E2E Test Suite**: `platform.spec.js` (36 tests × 2 browsers) passing in CI ✅ — completes in ~3 min  
 **Live App**: https://wc-fantasy-football.vercel.app
 
@@ -48,33 +48,23 @@
 - **Priority**: **P0** — breaks all WC transfers (buy and sell) for any league with multiple future deadlines
 - **How to retest**: Search for Richarlison in WC market → SELL → confirm modal → budget increases, squad drops to 14/15 with no error toast
 
-#### BUG-E2E-03 — Auction bids don't insert rows in `auction_bids` table — OPEN 🔴
-- **Symptom**: After placing a bid, `auction_listings.current_bid` updates correctly, but no row is inserted in `auction_bids`. Verified: DB query returns only bids from 2026-05-28, not today's £6.5M bid.
-- **Root cause**: Unknown — likely the `place_bid` RPC or Edge Function updates `current_bid` but skips the `INSERT INTO auction_bids`. Needs investigation of the auction bid path.
-- **Impact**: No auction history/audit trail. When auction closes, winner can't be identified from bid history.
-- **Priority**: **P1** — auction resolution may silently award to wrong manager
-- **How to retest**: Place a bid in auctions tab → `SELECT * FROM auction_bids WHERE league_id='fca00001-...' ORDER BY placed_at DESC LIMIT 3` — new row should appear with current timestamp
+#### BUG-E2E-03 — Auction bids not persisting — FIXED ✅ (migration 90)
+- **Root cause**: `place_bid` RPC used `ON CONFLICT DO NOTHING` on `UNIQUE(listing_id, bidder_id)` — any re-bid by the same user was silently dropped because the (listing, bidder) pair already existed from the first bid.
+- **Fix**: Changed to `ON CONFLICT (listing_id, bidder_id) DO UPDATE SET amount=EXCLUDED.amount, placed_at=EXCLUDED.placed_at` — each user now has one row per listing, always reflecting their latest bid.
+- **How to retest**: Place a bid → place a higher bid on same listing → `SELECT amount FROM auction_bids WHERE listing_id=... AND bidder_id=...` — should show the updated higher amount.
 
-#### BUG-E2E-04 — Live Centre NEXT fixture strip doesn't switch to WC fixtures — OPEN 🔴
-- **Symptom**: When WC_OVERALL_E2E league is selected in Live Centre, the NEXT fixture strip still shows an EPL fixture ("MEX vs SOU, Thu 20:00"), not the next WC fixture.
-- **Root cause**: The fixture strip likely queries the next scheduled fixture globally or for the last-selected EPL tournament, not filtered to the currently active league's tournament.
-- **Impact**: WC users see EPL fixtures in Live Centre — confusing, especially post-EPL-season.
-- **Priority**: **P2** — wrong fixtures shown but doesn't break functionality
-- **How to retest**: Log in → Live Centre → select WC_OVERALL_E2E tile → NEXT fixture strip should show a WC match (e.g., Brazil's next group game), not an EPL club match
+#### BUG-E2E-04 — Live Centre NEXT fixture "MEX vs SOU" — NOT A BUG ✅ (closed)
+- **Investigation**: "MEX vs SOU" = Mexico vs South Africa — a genuine WC fixture on June 11, 2026. The `teamCode()` function renders "South Africa" → "SOU". The Live Centre IS correctly filtering by tournament when the WC tile is selected. No fix needed.
 
-#### BUG-E2E-05 — Admin panel Transfer Window shows CLOSED for WC despite future deadline — OPEN 🟡
-- **Symptom**: Admin panel lifecycle shows `TRANSFER WINDOW ● CLOSED` even though `matchday_deadlines` has a future deadline at `NOW() + 14 days`. Transfers DO work (Flow 3 passed), so this is a false display.
-- **Root cause**: The admin lifecycle panel reads a boolean flag (likely `leagues.transfer_window_open` or similar), not derived from `matchday_deadlines.deadline_at`. Opening the deadline doesn't flip this flag.
-- **Impact**: Confusing for commissioners managing WC leagues — UI says closed but market is open.
-- **Priority**: **P2** — display-only, doesn't break transfers
-- **How to retest**: Admin tab → LIFECYCLE OPERATIONS → TRANSFER WINDOW should show `● OPEN` when a future deadline exists for the league's tournament
+#### BUG-E2E-05 — Admin panel Transfer Window shows CLOSED for WC — FIXED ✅ (migration 90)
+- **Root cause**: `get_transfer_window_status` only checked the `transfer_windows` table. WC leagues have no `transfer_windows` row — they use `matchday_deadlines` for enforcement. The function returned `no_window` even when a future deadline existed.
+- **Fix**: Added a third path to `get_transfer_window_status`: if no `transfer_windows` row exists, check `matchday_deadlines` for the league's tournament. If a future deadline is found, return `status='open', window_type='matchday'`.
+- **How to retest**: Admin tab → LIFECYCLE OPERATIONS → TRANSFER WINDOW should show `● OPEN` for WC_OVERALL_E2E (which has 429-r2 deadline ~June 12).
 
-#### BUG-E2E-06 — Stale auction listings remain active after player sold via Transfer Market — OPEN 🟡
-- **Symptom**: Richarlison was sold via Transfer Market. His auction listing in AUCTIONS tab still shows with a CANCEL button — as if the user still owns him and the listing is live.
-- **Root cause**: `process-transfer` SELL path doesn't check/cancel active `auction_listings` for the sold player.
-- **Impact**: Ghost listings on the auction board. If the auction closes, the winning bidder may receive a player the seller no longer owns.
-- **Priority**: **P2** — data integrity issue, potential for bad auction resolution
-- **How to retest**: List a player for auction → sell the same player via Transfer Market → Auctions tab should either remove the listing automatically or show an error
+#### BUG-E2E-06 — Stale auction listings after player sold — FIXED ✅ (Edge Function)
+- **Root cause**: `process-transfer` SELL path didn't cancel active `auction_listings` for the sold player. The ghost listing remained with a CANCEL button.
+- **Fix**: After the squad update succeeds, the SELL path now cancels any open `auction_listings` where `league_id=league_id AND player_id=player_id AND seller_id=squad.id AND status='open'`.
+- **How to retest**: List a player for auction → sell the same player via Transfer Market → Auctions tab: the listing should disappear (status cancelled).
 
 ### 📈 IMPROVEMENTS IDENTIFIED
 

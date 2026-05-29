@@ -26,6 +26,8 @@
     "@capacitor/preferences": "^8.0.1",
     "@capacitor/splash-screen": "^8.0.1",
     "@capacitor/status-bar": "^8.0.2",
+    "@emnapi/core": "^1.10.0",
+    "@emnapi/runtime": "^1.10.0",
     "@supabase/supabase-js": "^2.103.3",
     "@tailwindcss/vite": "^4.2.2",
     "modern-screenshot": "^4.7.0",

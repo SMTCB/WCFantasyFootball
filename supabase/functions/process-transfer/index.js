@@ -188,6 +188,17 @@ Deno.serve(async (req) => {
         return json({ ok: false, error: 'Transfer failed' }, 500, corsHeaders);
       }
 
+      // Cancel any active auction listings the seller had for this player.
+      // Without this, the listing stays open and the winner could receive a
+      // player the seller no longer owns (BUG-E2E-06).
+      await supabase
+        .from('auction_listings')
+        .update({ status: 'cancelled', updated_at: new Date().toISOString() })
+        .eq('league_id', league_id)
+        .eq('player_id', player_id)
+        .eq('seller_id', squad.id)
+        .eq('status', 'open');
+
       return json({ ok: true, players: newPlayers, budget_remaining: newBudget }, 200, corsHeaders);
     }
 
