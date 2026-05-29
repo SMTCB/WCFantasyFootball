@@ -46,7 +46,7 @@ export default function MarketScreen() {
   const { user } = useAuth();
   const { show: showToast } = useToast();
   const [searchParams] = useSearchParams();
-  const leagueId = searchParams.get('leagueId');
+  const leagueId = searchParams.get('leagueId') || searchParams.get('league');
   const { showMarketTour, completeMarketTour, replayMarketTour } = useOnboarding();
   const [players,       setPlayers]       = useState([]);
   const [mySquad,       setMySquad]       = useState(null);

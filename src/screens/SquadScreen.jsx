@@ -184,12 +184,15 @@ export default function SquadScreen() {
 
       const playerIds = squad.players || [];
 
-      // Build fixture query — handle missing matchday_id for some tournaments
-      let fixturesQuery = supabase.from('fixtures').select('id').eq('status', 'finished');
+      // Build fixture query — filter by matchday_id column (not fixture id prefix).
+      // If the current round has no finished fixtures yet, fall back to the most
+      // recently completed round so the pitch always shows meaningful points.
+      let fixturesQuery = supabase.from('fixtures').select('id, matchday_id').eq('status', 'finished');
       if (squad.matchday_id) {
-        fixturesQuery = fixturesQuery.like('id', `${squad.matchday_id}%`);
+        fixturesQuery = fixturesQuery.eq('matchday_id', squad.matchday_id);
+      } else if (tournamentId) {
+        fixturesQuery = fixturesQuery.eq('tournament_id', tournamentId);
       } else {
-        // No matchday — return empty set so points calculation doesn't crash
         fixturesQuery = fixturesQuery.eq('id', 'null_no_matchday');
       }
 
@@ -197,16 +200,32 @@ export default function SquadScreen() {
         { data: players,   error: pErr },
         { data: intelData },
         { data: statsData },
-        { data: fixtures  },
+        { data: currentRoundFixtures },
       ] = await Promise.all([
         supabase.from('players').select('*').in('id', playerIds),
         supabase.from('player_status').select('*').in('player_id', playerIds),
-        // Points from all finished/live fixtures for this matchday
         supabase.from('player_match_stats')
           .select('player_id, fantasy_points, fixture_id')
           .in('player_id', playerIds),
         fixturesQuery,
       ]);
+
+      // If the current round has no finished fixtures, fall back to the last
+      // completed round so the pitch shows last-round stats rather than all zeros.
+      let fixtures = currentRoundFixtures;
+      if ((!fixtures || fixtures.length === 0) && squad.matchday_id && tournamentId) {
+        const { data: prevFixtures } = await supabase
+          .from('fixtures')
+          .select('id, matchday_id')
+          .eq('tournament_id', tournamentId)
+          .eq('status', 'finished')
+          .order('kickoff_at', { ascending: false })
+          .limit(30);
+        if (prevFixtures?.length) {
+          const latestMD = prevFixtures[0].matchday_id;
+          fixtures = prevFixtures.filter(f => f.matchday_id === latestMD);
+        }
+      }
       if (pErr) throw pErr;
 
       // Sum fantasy_points across all finished fixtures for this matchday

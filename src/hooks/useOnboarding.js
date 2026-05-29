@@ -53,8 +53,15 @@ export function useOnboarding() {
   }, []);
 
   const skipWizard = useCallback((step) => {
-    set(K.wizard, true);
+    // Skipping the wizard means the user doesn't want any tutorials — dismiss all
+    // per-screen tours at once so they don't reappear on every tab they visit.
+    Object.values(K).forEach(k => set(k, true));
     setWizardDone(true);
+    setSquadDone(true);
+    setMarketDone(true);
+    setLeagueDone(true);
+    setCommissionerDone(true);
+    setBetsDone(true);
     track('onboarding_wizard_skip', { step });
   }, []);
 

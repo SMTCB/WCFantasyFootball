@@ -111,6 +111,28 @@ export function useCommissioner(leagueId, tournamentId) {
     setCommMsg({ type: 'ok', text: `Scores updated — ${data?.updated_squads ?? 0} squads, ${data?.player_stats ?? 0} player stats.` });
   }), [commAction, scoreFixtureId]);
 
+  // Score every finished fixture in the most recently completed round — no
+  // need for the commissioner to look up individual fixture IDs manually.
+  const triggerScoresLatestRound = useCallback(() => commAction(async () => {
+    if (!tournamentId) throw new Error('No tournament configured for this league.');
+    const { data: fixtures } = await supabase
+      .from('fixtures')
+      .select('id, matchday_id')
+      .eq('tournament_id', tournamentId)
+      .eq('status', 'finished')
+      .order('kickoff_at', { ascending: false })
+      .limit(30);
+    if (!fixtures?.length) throw new Error('No finished fixtures found for this tournament.');
+    const latestMD    = fixtures[0].matchday_id;
+    const roundFix    = fixtures.filter(f => f.matchday_id === latestMD);
+    let totalSquads = 0, totalStats = 0;
+    for (const f of roundFix) {
+      const { data } = await invokeEdgeFunction('calculate-scores', { fixture_id: f.id });
+      if (data) { totalSquads += data.updated_squads ?? 0; totalStats += data.player_stats ?? 0; }
+    }
+    setCommMsg({ type: 'ok', text: `${latestMD} scored — ${roundFix.length} fixtures, ${totalSquads} squads, ${totalStats} stats.` });
+  }), [commAction, tournamentId]);
+
   // ── Draft deadline ────────────────────────────────────────────────────────
   const setLeagueDraftDeadline = useCallback(() => commAction(async () => {
     if (!draftDeadline) throw new Error('Enter a deadline date/time.');
@@ -343,7 +365,7 @@ export function useCommissioner(leagueId, tournamentId) {
     windowTransfers, setWindowTransfers,
     openTransferWindow, closeTransferWindow,
     draftDeadline, setDraftDeadline, setLeagueDraftDeadline, triggerDraftAllocation,
-    scoreFixtureId, setScoreFixtureId, triggerScores,
+    scoreFixtureId, setScoreFixtureId, triggerScores, triggerScoresLatestRound,
     betTemplateId, setBetTemplateId,
     betTitle, setBetTitle,
     betPrompt, setBetPrompt,

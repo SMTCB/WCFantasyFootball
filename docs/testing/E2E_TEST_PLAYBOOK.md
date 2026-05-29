@@ -495,3 +495,103 @@ The placeholder shows `£X.XM+` using a 0.1 increment from the current bid, but 
 ### Admin tab — "Player Block" bet type
 
 The ADMIN tab CREATE BET section shows three bet types: **Top Scorer**, **Match Result**, and **Player Block**. Player Block lets managers pick a player to "block" — if that player underperforms, the picker earns points. This is documented in `bet_templates` but not yet fully tested in E2E flows.
+
+---
+
+## Appendix C: WC Data Reset (session 52 — 2026-05-29)
+
+Run before each WC test cycle to reset `WC_OVERALL_E2E` (id: `fca00001-0000-4000-a000-000000000001`, tournament 429) to a known state.
+
+### Step 1 — Seed player prices (if not already done)
+```sql
+-- Assign £4.0–£7.0 to all unpriced WC players
+UPDATE players
+SET price = ROUND((RANDOM() * 3 + 4)::NUMERIC, 1)
+WHERE tournament_id = '429' AND price IS NULL;
+
+-- Verify
+SELECT COUNT(*) FILTER (WHERE price IS NULL) AS no_price FROM players WHERE tournament_id = '429';
+-- Must be 0
+```
+
+### Step 2 — Seed match events for finished WC fixtures
+The Forza API does not backfill historical match events for WC. Seed `player_match_stats` manually for the 3 finished r1 fixtures:
+
+**Fixture IDs (tournament 429, round r1):**
+| Fixture | Result | ID |
+|---------|--------|----|
+| Brazil vs Morocco | 2-1 | `f-1219435455` |
+| Germany vs Curaçao | 3-0 | `f-1219435591` |
+| Qatar vs Switzerland | 1-1 | `f-1219435449` |
+
+Sample insert (adapt player_ids as needed from the test league's squads):
+```sql
+-- Example: Richarlison (Brazil FWD) scored in Brazil 2-1 Morocco
+INSERT INTO player_match_stats
+  (fixture_id, player_id, minutes_played, goals, assists, own_goals, yellow_cards,
+   red_cards, penalty_saved, penalty_missed, clean_sheet, tackles_won, interceptions,
+   bps_score, bonus_points, fantasy_points, breakdown, shots_on_target, saves,
+   xg, xa, goals_conceded, accurate_passes, total_passes, forza_match_id)
+VALUES
+  ('f-1219435455','fp-1411531-429',90,1,0,0,0,0,0,0,false,0,0,
+   27.00,2,6.00,
+   '{"minutes":1,"goals":4,"assists":0,"clean_sheet":0,"yellow_cards":0,"red_cards":0,"own_goals":0,"penalty_scored":0,"penalty_saved":0,"penalty_missed":0,"tackles":0,"interceptions":0,"bonus":2}'::jsonb,
+   2,0,'0.70','0.20',0,0,0,'1219435455')
+ON CONFLICT (fixture_id, player_id) DO UPDATE SET
+  fantasy_points=EXCLUDED.fantasy_points, updated_at=NOW();
+```
+
+### Step 3 — Reset league, members, deadlines
+```sql
+-- Add test accounts to WC E2E league
+INSERT INTO league_members (league_id, user_id, role, joined_at) VALUES
+  ('fca00001-0000-4000-a000-000000000001','aaaae001-0000-4000-a000-000000000001'::uuid,'commissioner',NOW()),
+  ('fca00001-0000-4000-a000-000000000001','aaaae002-0000-4000-a000-000000000002'::uuid,'member',NOW())
+ON CONFLICT (league_id, user_id) DO UPDATE SET role = EXCLUDED.role;
+
+-- Set created_by so ADMIN tab is accessible
+UPDATE leagues SET created_by = 'aaaae001-0000-4000-a000-000000000001'::uuid
+WHERE id = 'fca00001-0000-4000-a000-000000000001';
+
+-- Open transfer window (move r2 deadline to future)
+UPDATE matchday_deadlines SET deadline_at = NOW() + INTERVAL '14 days'
+WHERE tournament_id = '429' AND matchday_id = '429-r2';
+
+-- Sync squad matchday to open window
+UPDATE squads SET matchday_id = '429-r2'
+WHERE league_id = 'fca00001-0000-4000-a000-000000000001'
+  AND user_id = 'aaaae001-0000-4000-a000-000000000001'::uuid;
+
+-- Sync draft_allocations (required for roster modal)
+INSERT INTO draft_allocations (league_id, user_id, allocated_players, unresolved_slots, allocated_at)
+SELECT s.league_id, s.user_id, s.players, 0, NOW()
+FROM squads s WHERE s.league_id = 'fca00001-0000-4000-a000-000000000001'
+ON CONFLICT (league_id, user_id) DO UPDATE SET allocated_players = EXCLUDED.allocated_players;
+
+-- Create a fresh open bet for admin-tab resolution test
+DELETE FROM bet_instances
+WHERE league_id = 'fca00001-0000-4000-a000-000000000001'
+  AND title LIKE 'WC Admin Tab Test Bet%'
+  AND status = 'open';
+
+INSERT INTO bet_instances (league_id, template_id, title, prompt, options, reward_type, reward_value,
+  deadline_at, resolves_at, scope_type, scope_ref, status)
+VALUES ('fca00001-0000-4000-a000-000000000001',
+  '63a7de4f-5153-4e12-b6c5-4d5f3fc199fc',
+  'WC Admin Tab Test Bet - Brazil vs Morocco',
+  'Who wins the WC Round 1 Brazil vs Morocco match?',
+  '[{"key":"home","label":"Brazil Win"},{"key":"draw","label":"Draw"},{"key":"away","label":"Morocco Win"}]'::jsonb,
+  'points', 3, NOW() + INTERVAL '1 hour', NOW() + INTERVAL '2 hours',
+  'match', 'f-1219435455', 'open');
+```
+
+### Step 4 — Score round 1 via admin panel
+After setup, log in as TestComm → League → ADMIN tab → LIFECYCLE OPERATIONS → SCORE RECALCULATION → click **SCORE LATEST ROUND ↯**. This runs `calculate-scores` for all 3 r1 fixtures and populates `fantasy_points` + `league_members.total_points`.
+
+### Notes
+- **`?league=` URL param**: The market URL `?league=fca00001-...` now correctly pre-selects the league (fixed in session 52).
+- **Tour pop-ups**: Clicking "Skip intro" on the onboarding wizard now dismisses ALL per-screen tours. First-time test accounts will show the wizard once, then no tours.
+- **process-transfer matchday**: The Edge Function now picks the nearest future `matchday_deadline` (not the furthest), so sells/buys work correctly for multi-round WC leagues.
+- **Auction bids**: Re-bidding on the same listing now upserts the `auction_bids` row — each user always has their latest bid recorded.
+
+Last Updated: **2026-05-29**
