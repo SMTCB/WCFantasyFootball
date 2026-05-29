@@ -1,38 +1,28 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-05-29 (session 52 — pilot readiness audit complete; 2 critical fixes identified; league creation flow still unverified)  
+**Last Updated**: 2026-05-29 (session 53 — P0 pilot fixes applied; PILOT-03 league creation flow is next)  
 **E2E Test Suite**: `platform.spec.js` (36 tests × 2 browsers) passing in CI ✅ — completes in ~3 min  
 **Live App**: https://wc-fantasy-football.vercel.app  
 **WC Kick-off**: 2026-06-11 19:00 UTC (Mexico vs South Africa) — **13 days away**
 
 ---
 
-## 🚀 PILOT READINESS — SESSION 53 START HERE
+## 🚀 PILOT READINESS — SESSION 54 START HERE
 
-**Context**: Full E2E test suite passed (14 flows, all real browser interactions). Two critical production issues found during pilot readiness audit that must be fixed before any real user touches the app.
+**Context**: Both P0 blockers fixed (session 53). Next priority: PILOT-03 league creation browser test, then PILOT-04 player prices.
 
-### 🔴 P0 — Fix Before Any Pilot User Logs In (< 1h total)
+### ✅ P0 — FIXED (session 53)
 
-#### PILOT-01 — Sync crons fail silently — app.service_role_key not set
-- **Impact**: `sync-wc-fixtures-6h` and `sync-wc-players-6h` both use `current_setting('app.service_role_key')` which returns NULL in the live DB. Both crons fire every 6 hours and produce no output, no error. WC fixture updates and player injury/availability data will never flow in during the pilot.
-- **Fix** (one SQL call in Supabase dashboard → SQL editor):
-  ```sql
-  ALTER DATABASE postgres SET app.supabase_url = 'https://sssmvihxtqtohisghjet.supabase.co';
-  ALTER DATABASE postgres SET app.service_role_key = '<your_service_role_key>';
-  SELECT pg_reload_conf();
-  ```
-  Then verify: `SELECT current_setting('app.service_role_key', true);` should return non-null.
-- **Note**: `calculate-scores-live` and `calculate-scores-post-match` use hardcoded tokens and will work regardless.
+#### PILOT-01 — Sync crons fail silently — FIXED ✅ (migration 90)
+- **Root cause**: `sync-wc-fixtures-6h` and `sync-wc-players-6h` used `current_setting('app.service_role_key')` which returns NULL on hosted Supabase (`ALTER DATABASE SET` not permitted). Same pattern as migration 86.
+- **Fix**: Migration 90 unschedules both crons and re-schedules with hardcoded `https://sssmvihxtqtohisghjet.supabase.co` URL and service role bearer token. Applied to production 2026-05-29.
+- **Verified**: `cron.job` rows for both jobs now contain literal URL + token (no `current_setting` calls).
 
-#### PILOT-02 — r2 transfer deadline is AFTER WC kick-off
-- **Impact**: `429-r2` deadline = June 12 08:11 UTC, but WC opens June 11 19:00 UTC. A manager can watch the first match result, then buy that game's top performers before the window closes. Competitive integrity failure.
-- **Fix**:
-  ```sql
-  UPDATE matchday_deadlines
-  SET deadline_at = '2026-06-11 17:00:00+00'
-  WHERE tournament_id = '429' AND matchday_id = '429-r2';
-  ```
-  Verify: `SELECT matchday_id, deadline_at FROM matchday_deadlines WHERE tournament_id='429' ORDER BY deadline_at;`
+#### PILOT-02 — r2 transfer deadline is AFTER WC kick-off — FIXED ✅
+- **Fix**: `429-r2` deadline updated from `2026-06-12 08:11 UTC` → `2026-06-11 17:00 UTC` (2h before kick-off).
+- **Verified**: `SELECT deadline_at FROM matchday_deadlines WHERE matchday_id='429-r2'` returns `2026-06-11 17:00:00+00`.
+
+### 🟡 P1 — Test Before Pilot (session 54)
 
 ### 🟡 P1 — Test Before Pilot (session 53)
 
@@ -70,6 +60,30 @@
   ```sql
   DELETE FROM edge_function_errors WHERE created_at < NOW() - INTERVAL '1 day';
   ```
+
+---
+
+## 📊 SESSION 53 PROGRESS (2026-05-29 — P0 Pilot Fixes)
+
+**Goal**: Apply both P0 blockers identified in session 52 before any pilot user logs in.
+
+### ✅ COMPLETED
+
+**PILOT-01 — WC sync crons fixed (Migration 90)**
+- `sync-wc-fixtures-6h` and `sync-wc-players-6h` used `current_setting('app.service_role_key')` → NULL on hosted Supabase
+- Created `supabase/migrations/90_fix_wc_sync_crons.sql`: unschedule + re-schedule both crons with hardcoded URL + bearer token
+- Applied to production; verified via `cron.job` query — no more `current_setting` calls
+
+**PILOT-02 — Transfer deadline fixed**
+- `429-r2` deadline moved from `2026-06-12 08:11 UTC` → `2026-06-11 17:00 UTC` (2h before kick-off)
+- Applied directly via `npx supabase db query --linked`; verified in DB
+
+**PR**: `claude/pilot-p0-fixes` — commit `dd0c24e` — merged to main
+
+### 📋 NEXT (session 54)
+- PILOT-03: Browser-test league creation wizard + invite flow (P1)
+- PILOT-04: Seed tiered player prices for WC (P1)
+- PILOT-05: Confirm Forza API key in Edge Function secrets (P1)
 
 ---
 
