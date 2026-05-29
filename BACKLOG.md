@@ -1,6 +1,6 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-05-29 (session 53 — P0 pilot fixes applied; PILOT-03 league creation flow is next)  
+**Last Updated**: 2026-05-29 (session 53 — P0 fixes + PILOT-03 browser test PASS + tournament name bug fixed; next: PILOT-04 player prices)  
 **E2E Test Suite**: `platform.spec.js` (36 tests × 2 browsers) passing in CI ✅ — completes in ~3 min  
 **Live App**: https://wc-fantasy-football.vercel.app  
 **WC Kick-off**: 2026-06-11 19:00 UTC (Mexico vs South Africa) — **13 days away**
@@ -9,7 +9,7 @@
 
 ## 🚀 PILOT READINESS — SESSION 54 START HERE
 
-**Context**: Both P0 blockers fixed (session 53). Next priority: PILOT-03 league creation browser test, then PILOT-04 player prices.
+**Context**: P0 blockers fixed + PILOT-03 league creation flow fully browser-tested (session 53). Next priority: PILOT-04 player prices.
 
 ### ✅ P0 — FIXED (session 53)
 
@@ -22,16 +22,16 @@
 - **Fix**: `429-r2` deadline updated from `2026-06-12 08:11 UTC` → `2026-06-11 17:00 UTC` (2h before kick-off).
 - **Verified**: `SELECT deadline_at FROM matchday_deadlines WHERE matchday_id='429-r2'` returns `2026-06-11 17:00:00+00`.
 
-### 🟡 P1 — Test Before Pilot (session 54)
+### ✅ P1 — TESTED (session 53)
 
-### 🟡 P1 — Test Before Pilot (session 53)
+#### PILOT-03 — League creation + invite flow — PASS ✅ (session 53)
+- **Tested**: Full browser flow against live app via Playwright.
+- **Create flow**: e2e_test1 (TestComm) → `+` → wizard → `PILOT_TEST_LEAGUE`, WC auto-selected, CLASSIC → START SEASON → invite card with code `BC8D3D`. DB: `tournament_id='429'`, `format='classic'`. ✅
+- **Join flow**: Logged out → e2e_test2 (TestMgr) → LEAGUE → entered `BC8D3D` → JOIN → league appeared in MY LEAGUES, board shows 2/2 members. DB: 2 `league_members` rows. ✅
+- **WC default**: FIFA WORLD CUP 2026 already the default selection with `SELECTED` badge — PILOT-06 also resolved. ✅
+- **Bug found & fixed during test**: Tournament name showed "Fantasy League" instead of "FIFA World Cup 2026" on invite card. `LeagueInviteCard.jsx` queried `tournaments.id` (UUID) with Forza integer string `'429'` → 400. Fixed to `.eq('forza_id', ...)`. PR [#218](https://github.com/SMTCB/WCFantasyFootball/pull/218) merged. ✅
 
-#### PILOT-03 — League creation + invite flow never browser-tested
-- **Impact**: The `LeagueCreationWizard` (multi-step flow every new user runs) and join-via-invite-code (`?code=` URL) have never been walked through in a browser in any E2E session. This is the first thing every pilot user does.
-- **What to test**:
-  1. Log in as test user → click "Create League" → walk all wizard steps → confirm league created with WC tournament selected
-  2. Copy the invite code → open incognito tab → log in as `e2e_test2` → join via the invite URL → confirm they appear in the league member list
-- **Pass criteria**: New league appears in DB with correct `tournament_id='429'`, invitee joins successfully
+### 🟡 P1 — Still Open
 
 #### PILOT-04 — Player prices are all random £4–7 (no differentiation)
 - **Impact**: Every player is worth ~£5.50. Mbappé costs the same as a Curaçao backup goalkeeper. The transfer market has no strategic layer — managers can afford anyone. This significantly weakens the product experience for a pilot.
@@ -80,8 +80,22 @@
 
 **PR**: `claude/pilot-p0-fixes` — commit `dd0c24e` — merged to main
 
+### ✅ PILOT-03 — League creation + invite flow browser test
+
+**Full Playwright flow against https://wc-fantasy-football.vercel.app:**
+- ✅ `LeagueCreationWizard` opens from `+` button on LEAGUE home
+- ✅ FIFA WORLD CUP 2026 auto-selected (PILOT-06 closed)
+- ✅ League name entry, CLASSIC format, START SEASON all work
+- ✅ Invite card shows join code `BC8D3D`, LEAGUE CREATED ✓ message
+- ✅ DB: `tournament_id='429'`, `format='classic'`, `join_code='BC8D3D'`
+- ✅ TestMgr joined via code `BC8D3D` → appeared in MY LEAGUES instantly
+- ✅ Board shows 2/2 members (TestComm + TestMgr), both in `league_members` DB
+
+**Bug found & fixed (PR [#218](https://github.com/SMTCB/WCFantasyFootball/pull/218)):**
+- `LeagueInviteCard.jsx` queried `tournaments.id` (UUID) with Forza integer string `'429'` → 400 on invite card display
+- Fixed `.eq('id', ...)` → `.eq('forza_id', ...)` — verified via `preview_eval`: returns `"FIFA World Cup 2026"` ✅
+
 ### 📋 NEXT (session 54)
-- PILOT-03: Browser-test league creation wizard + invite flow (P1)
 - PILOT-04: Seed tiered player prices for WC (P1)
 - PILOT-05: Confirm Forza API key in Edge Function secrets (P1)
 
