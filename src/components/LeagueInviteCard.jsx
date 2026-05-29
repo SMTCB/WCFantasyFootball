@@ -34,7 +34,7 @@ export default function LeagueInviteCard({ league, onDone }) {
           const { data } = await supabase
             .from('tournaments')
             .select('name')
-            .eq('id', league.tournament_id)
+            .eq('forza_id', league.tournament_id)
             .single();
           if (data) setTournamentName(data.name);
         } catch (err) {
