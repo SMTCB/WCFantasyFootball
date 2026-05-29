@@ -1,6 +1,6 @@
 # E2E Test Playbook — Forza Fantasy League
-**Version**: 1.1 (2026-05-29)  
-**Coverage**: Full user journey — league creation → draft → scoring → bets → transfers → auctions  
+**Version**: 1.2 (2026-05-29)  
+**Coverage**: Full user journey — draft (manual + auto) → scoring → bets (place + create + resolve) → transfers → auctions → squad interactions → chat → stats → roster modal  
 **Auth**: Real Supabase auth required (`VITE_AUTH_ENABLED=true` in `.env`)  
 **Test league**: `EPL_OVERALL_E2E` · Tournament 426 (Premier League) · 8 managers · noduplicate
 
@@ -305,6 +305,123 @@ ORDER BY placed_at DESC LIMIT 1;
 8. Navigate to League BOARD → verify scores updated
 
 **Pass criteria**: Admin panel accessible, functions execute without error ✓
+
+---
+
+### FLOW 9: Squad Screen — Player Interactions
+**Purpose**: Verify a manager can click a player, access actions, and set a captain. Confirms the squad pitch list renders with real points.
+
+**URL**: `http://localhost:5173/squad` → select WC_OVERALL_E2E
+
+**Steps:**
+1. Select WC_OVERALL_E2E — squad loads 15/15
+2. Confirm: `WINDOW OPEN · Unlimited · Closes in Xh` banner visible
+3. Confirm: Players from finished WC r1 fixtures show non-zero points (e.g. VAGNOMAN 6.25, OUNAHI 8.75)
+4. Confirm: Players from non-r1-fixture clubs show 0
+5. Click on a player row (e.g. OUNAHI) — action panel expands showing MAKE CAPTAIN, SUB OUT, SELL, ACTIVATE JOKER
+6. Click **MAKE CAPTAIN** — gold `C` badge appears next to player name
+7. Scroll to bottom — SUBSTITUTES section shows bench players with position badges
+
+**Pass criteria**: Action panel opens, captain badge set, bench section visible ✓
+
+---
+
+### FLOW 10: Roster Modal — Click Manager in Standings
+**Purpose**: Verify clicking a manager in BOARD standings opens their allocated squad roster.
+
+**URL**: `http://localhost:5173/league/<wc_league_id>`
+
+**Steps:**
+1. Navigate to WC_OVERALL_E2E BOARD tab
+2. Click on any manager row (e.g. DragonMgr, rank 2)
+3. Modal opens: "DragonMgr's Roster · FULL 11-MAN TACTICAL SQUAD"
+4. Confirm: Player cards visible with photo, position badge, club, price, READY status
+5. Press Escape to close
+
+**Pass criteria**: Modal opens with full player list pulled from `draft_allocations` ✓
+
+---
+
+### FLOW 11: Chat — Send and Receive Message
+**Purpose**: Verify a manager can send a chat message and it appears in real-time.
+
+**URL**: `http://localhost:5173/league/<wc_league_id>?tab=chat`
+
+**Steps:**
+1. Navigate to CHAT tab
+2. Confirm: existing messages from other managers visible, right sidebar shows all 8 members with @handles
+3. Type a message in the input (e.g. "WC E2E test — #worldcup @TestMgr")
+4. Click **SEND +**
+5. Confirm: message appears immediately at the bottom of the chat list with correct username, timestamp, and `#worldcup` in cyan, `@TestMgr` highlighted
+6. Confirm: input field clears automatically
+7. EDIT / DEL buttons visible on your own messages
+
+**Pass criteria**: Message sent, rendered with @mention and #hashtag formatting ✓
+
+---
+
+### FLOW 12: Stats and Betting Tabs
+**Purpose**: Verify STATS and BETTING tabs render real season data.
+
+**URL**: `http://localhost:5173/league/<wc_league_id>?tab=stats` then `?tab=betting`
+
+**STATS Steps:**
+1. Click STATS tab
+2. Confirm: "LEAGUE STATS · X GAMEWEEKS" header
+3. Confirm: TOTAL, AVG, LEAD numbers are populated (not zero)
+4. Confirm: SEASON TOTALS · TOP SCORERS bar chart shows all 8 managers with coloured bars
+
+**BETTING Steps:**
+1. Click BETTING tab
+2. Confirm: YOUR BETTING section shows: pts earned, rank, played, won, win %, rewards
+3. Confirm: BETTING LEADERBOARD shows at least 1 manager with record and rewards
+
+**Pass criteria**: Both tabs load without errors, data is populated ✓
+
+---
+
+### FLOW 13: Admin — Create Bet via UI
+**Purpose**: Commissioner creates a Match Result bet using the admin form (not SQL).
+
+**URL**: `http://localhost:5173/league/<wc_league_id>?tab=admin`
+
+**Steps:**
+1. Navigate to ADMIN tab → CREATE BET section
+2. Click **Match Result** bet type — it highlights as selected
+3. Confirm: Step 3 "SELECT MATCH" shows upcoming WC fixtures **immediately** (no deadline needed)
+4. Click on a fixture (e.g. Mexico vs South Africa, Thu 11 Jun, 20:00) — checkmark appears, "1 match · 3 options" counter updates
+5. OPTIONS CREATED box shows: `· Mexico Win · Draw · South Africa Win`
+6. Set a DEADLINE (optional — fixture list already populated)
+7. Click **CREATE BET · 3 OPTIONS** button
+8. Confirm: success — CREATE BET form resets, new bet appears in RESOLVE BETS as PENDING
+
+**Pass criteria**: Bet created with correct fixture-linked options, appears in resolve list ✓
+
+> **Note**: This flow requires the `BUG-E2E-07` fix (merged in session 52). Prior to that fix, `tournamentId` was always `undefined` and the fixture list was never populated.
+
+---
+
+### FLOW 14: Admin — Score Latest Round Button
+**Purpose**: Commissioner triggers scoring for the most recently completed round via the new one-click button.
+
+**URL**: `http://localhost:5173/league/<wc_league_id>?tab=admin`
+
+**Steps:**
+1. Navigate to ADMIN tab → LIFECYCLE OPERATIONS → SCORE RECALCULATION section (click `+` to expand)
+2. Confirm: **SCORE LATEST ROUND ↯** green button visible
+3. Click it
+4. Confirm: success message appears: `"429-r1 scored — 3 fixtures, 12 squads, 25 stats."`
+5. Navigate to BOARD — verify standings updated
+
+> **Note (Playwright limitation)**: The button correctly calls `calculate-scores` per fixture but the Playwright MCP browser cannot reach Supabase Edge Functions via raw fetch (BUG-F8-01). Test this in a real browser, or verify via `curl`:
+> ```bash
+> curl -s -X POST "https://sssmvihxtqtohisghjet.supabase.co/functions/v1/calculate-scores" \
+>   -H "Content-Type: application/json" -H "Authorization: Bearer nokey" \
+>   -d '{"fixture_id":"f-1219435455"}'
+> # Expected: {"ok":true,"source":"forza","player_stats":15,"updated_squads":12}
+> ```
+
+**Pass criteria**: Button triggers scoring for all r1 fixtures, board standings update ✓
 
 ---
 

@@ -1,6 +1,6 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-05-29 (session 52 — WC E2E full test run; all bugs resolved; CI lock file fixed)  
+**Last Updated**: 2026-05-29 (session 52 — full real-interaction E2E complete; all 11 missing scenarios tested; 1 new bug fixed)  
 **E2E Test Suite**: `platform.spec.js` (36 tests × 2 browsers) passing in CI ✅ — completes in ~3 min  
 **Live App**: https://wc-fantasy-football.vercel.app
 
@@ -66,6 +66,13 @@
 - **Root cause**: `process-transfer` SELL path didn't cancel active `auction_listings` for the sold player. The ghost listing remained with a CANCEL button.
 - **Fix**: After the squad update succeeds, the SELL path now cancels any open `auction_listings` where `league_id=league_id AND player_id=player_id AND seller_id=squad.id AND status='open'`.
 - **How to retest**: List a player for auction → sell the same player via Transfer Market → Auctions tab: the listing should disappear (status cancelled).
+
+#### BUG-E2E-07 — Create Bet fixture list always empty — FIXED ✅ (LeagueScreen.jsx)
+- **Symptom**: When commissioner opens ADMIN tab → CREATE BET → Match Result, step 3 "SELECT MATCH" showed "NO SCHEDULED MATCHES BEFORE THIS DEADLINE" regardless of deadline, even though WC scheduled fixtures exist in the DB.
+- **Root cause**: `LeagueScreen.jsx` passed `activeLeague?.tournament_id` to `useCommissioner` and `CommissionerPanel`, but `activeLeague` has shape `{ league_id, leagues: { tournament_id } }` — `activeLeague.tournament_id` is always `undefined`. The `BetCreatorPanel.fetchFixtures()` calls `if (!tournamentId) return` immediately, so the fixture list was never populated for any league.
+- **Fix**: Changed both usages to `activeLeague?.leagues?.tournament_id` in `LeagueScreen.jsx` lines 170 and 1102.
+- **Impact**: Create Bet Match Result and Top Scorer forms were broken for ALL leagues since the fixture/player population depended on `tournamentId`. Now works correctly.
+- **How to retest**: ADMIN tab → CREATE BET → select Match Result → fixtures list should populate immediately without setting a deadline.
 
 #### BUG-F8-01 — Admin `/admin` screen Edge Function buttons fail in Playwright test environment — OPEN 🟡 (test infra limitation)
 - **Symptom**: Sync Fixtures, Ingest, and Score buttons in AdminSeedScreen all return "Failed to fetch". The Playwright MCP browser cannot make raw `fetch()` calls to external HTTPS endpoints (Supabase functions URL).

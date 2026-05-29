@@ -167,7 +167,7 @@ export default function LeagueScreen() {
   // Commissioner state + handlers consolidated into a single hook.
   // The whole object is passed as a prop to CommissionerPanel.
   // fetchOpenBets is also called inline when the admin tab becomes active.
-  const commissioner = useCommissioner(activeLeague?.league_id, activeLeague?.tournament_id);
+  const commissioner = useCommissioner(activeLeague?.league_id, activeLeague?.leagues?.tournament_id);
   const { fetchOpenBets } = commissioner;
 
   // Create form state
@@ -1099,7 +1099,7 @@ export default function LeagueScreen() {
            <CommissionerPanel
              commissioner={commissioner}
              leagueId={activeLeague?.league_id}
-             tournamentId={activeLeague?.tournament_id ?? commissioner?.tournamentId}
+             tournamentId={activeLeague?.leagues?.tournament_id ?? commissioner?.tournamentId}
              replayCommissionerTour={replayCommissionerTour}
              memberCount={members.length}
              leagueName={activeLeague?.leagues?.name || activeLeague?.name || 'LEAGUE'}
