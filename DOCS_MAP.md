@@ -29,8 +29,6 @@ Complete index and overview of all project documentation organized by purpose an
 | File | Purpose | Audience | Last Updated |
 |------|---------|----------|--------------|
 | [APP_STORE_ASSESSMENT.md](APP_STORE_ASSESSMENT.md) | iOS/Android app store readiness, submission checklist | Mobile team | Current |
-| [MOBILE_IMPLEMENTATION_GUIDE.md](MOBILE_IMPLEMENTATION_GUIDE.md) | Capacitor setup, native plugin docs, build instructions | Developers | Current |
-| [E2E_TEST_REPORT.md](E2E_TEST_REPORT.md) | Latest E2E test results, coverage metrics, known gaps | Developers/QA | 2026-05-17 |
 
 ---
 
@@ -56,6 +54,7 @@ Testing frameworks, test automation, and quality assurance.
 | [README.md](docs/testing/README.md) | Testing framework index | Test tiers, CI/CD overview, getting started |
 | [TESTING_STRATEGY.md](docs/testing/TESTING_STRATEGY.md) | Comprehensive testing approach | Playwright config, test organization, best practices, debugging |
 | [E2E_TEST_PLAYBOOK.md](docs/testing/E2E_TEST_PLAYBOOK.md) | E2E test execution guide | Running tests locally, CI integration |
+| [TEST_RESULTS.md](docs/testing/TEST_RESULTS.md) | Historical E2E test results & coverage | Test data, bug findings, session records |
 
 ### 📦 **docs/product/** — Product Strategy & Roadmap
 
@@ -76,6 +75,7 @@ Developer setup, conventions, and best practices.
 | [README.md](docs/reference/README.md) | Reference guides index | Quick navigation, common workflows |
 | [LOCAL_DEVELOPMENT.md](docs/reference/LOCAL_DEVELOPMENT.md) | Local environment setup | Prerequisites, one-time setup, daily commands, debugging |
 | [CONVENTIONS.md](docs/reference/CONVENTIONS.md) | Code style & naming conventions | JS/React, SQL, CSS, Git, ESLint rules |
+| [MOBILE_DEVELOPMENT.md](docs/reference/MOBILE_DEVELOPMENT.md) | iOS/Android Capacitor implementation | Setup, native plugins, build & store submission |
 
 ### 🔌 **docs/api/** — External Integrations & API Reference
 
@@ -157,7 +157,7 @@ Files that were analysis/intermediate work — moved to `docs/archive/` on 2026-
 ### For Deployment & Ops
 - **Pre-launch checklist?** → [DRY_RUN_PREP_CHECKLIST.md](docs/deployment/DRY_RUN_PREP_CHECKLIST.md)
 - **Data pipeline setup?** → [DATA_PIPELINE_RUNBOOK.md](docs/deployment/DATA_PIPELINE_RUNBOOK.md)
-- **Mobile builds?** → [MOBILE_IMPLEMENTATION_GUIDE.md](MOBILE_IMPLEMENTATION_GUIDE.md)
+- **Mobile builds?** → [MOBILE_DEVELOPMENT.md](docs/reference/MOBILE_DEVELOPMENT.md)
 
 ---
 
@@ -169,8 +169,6 @@ Root-level (critical, always referenced):
 ├── CLAUDE.md                      # Authoritative project instructions (SESSION START CHECKLIST)
 ├── BACKLOG.md                     # Session progress + POST-MVP roadmap
 ├── APP_STORE_ASSESSMENT.md        # Mobile launch readiness
-├── MOBILE_IMPLEMENTATION_GUIDE.md # Capacitor setup & native plugins
-├── E2E_TEST_REPORT.md             # E2E test results & coverage (session 50, historical)
 ├── GEMINI.md                      # Mobile AI (Google Antigravity) instructions
 └── DOCS_MAP.md                    # ← You are here (documentation index)
 
@@ -202,7 +200,8 @@ docs/deployment/                   # Launch & ops
 docs/testing/                      # Test strategy & coverage
 ├── README.md
 ├── TESTING_STRATEGY.md
-└── E2E_TEST_PLAYBOOK.md
+├── E2E_TEST_PLAYBOOK.md
+└── TEST_RESULTS.md
 
 docs/product/                      # Product roadmap & strategy
 ├── README.md
@@ -212,7 +211,8 @@ docs/product/                      # Product roadmap & strategy
 docs/reference/                    # Developer guides & lookup
 ├── README.md
 ├── LOCAL_DEVELOPMENT.md
-└── CONVENTIONS.md
+├── CONVENTIONS.md
+└── MOBILE_DEVELOPMENT.md
 
 docs/archive/                      # Archived & consolidated docs
 ├── STRATEGIC_PRODUCT_ROADMAP_ASSESSMENT.md

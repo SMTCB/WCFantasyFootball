@@ -240,7 +240,7 @@
 - ✅ **BUG-06**: `fantasy_points.total INTEGER` rejects decimal scores → **migration 79** changes to NUMERIC
 - ✅ `verify_jwt = false` added to `calculate-scores` and `ingest-match-events` in config.toml
 
-**Open Bugs Found (not fixed, logged in E2E_TEST_REPORT.md):**
+**Open Bugs Found (not fixed, logged in [`docs/testing/TEST_RESULTS.md`](docs/testing/TEST_RESULTS.md)):**
 - 🐛 **BUG-05**: Auctions UI queries `auction_listings` but data lives in `trade_listings` — auctions always show empty
 - 🐛 **BUG-09**: Draft screen shows WC players for EPL leagues (`get_cup_available_players` doesn't filter by tournament for non-cup leagues)
 - 🐛 **BUG-07/08/10/11**: RLS blocks anon-key reads on squads/draft_submissions/tournaments — Squad/Recap/Draft screens broken in demo mode
@@ -1076,12 +1076,12 @@ Foundation work phase complete. Delivered 3 major features: keyboard navigation,
   - **Result**: Linter now passes with **0 errors, 56 warnings** (pre-existing issues only)
   - **Impact**: CI/CD pipeline unblocked; main branch stable for future work
 
-- ✅ **Documentation Reorganization & Mapping** (Merged):
-  - Moved `APP_STORE_ASSESSMENT.md` and `MOBILE_IMPLEMENTATION_GUIDE.md` to root level per CLAUDE.md spec
-  - Created **DOCS_MAP.md**: Comprehensive 250-line documentation index
-    - Organized docs by purpose: core, architecture, API, brand, deployment
-    - Added usage guide for different audiences (devs, PM, ops)
-    - Resolved navigation friction with clear file organization
+- ✅ **Documentation Reorganization & Mapping** (Complete):
+  - Created **DOCS_MAP.md**: Comprehensive 250-line documentation index with 7 doc categories
+  - Consolidated duplicate docs: moved `E2E_TEST_REPORT.md` → `docs/testing/TEST_RESULTS.md` and `MOBILE_IMPLEMENTATION_GUIDE.md` → `docs/reference/MOBILE_DEVELOPMENT.md`
+  - Root folder optimized: reduced from 20+ to 6 essential files (README, CLAUDE, BACKLOG, APP_STORE_ASSESSMENT, GEMINI, DOCS_MAP)
+  - Organized docs by purpose: architecture, API, brand, deployment, testing, product, reference + archive
+  - Added usage guide for different audiences (devs, PM, ops)
   - **Result**: Root-level documentation structure now complete and well-indexed
 
 - ✅ **Git Repository Analysis & Cleanup Documented** (Ref: CLEANUP_REPORT.md):
@@ -1457,48 +1457,381 @@ The Forza Football API integration is fully documented and analyzed (see `docs/a
 
 ---
 
-## 📋 POST-MVP ROADMAP (Post-Launch Enhancements)
+## 📋 POST-MVP ROADMAP (Prioritized Backlog)
 
-### Betting System Gaps — 5 Items Identified (Session 16)
+**This section is the single source of truth for all tasks, bugs, improvements, and priorities.**
 
-**1. Bet Notifications** (2-3h)
-- User story: Commissioner creates bet → league members get notified immediately
-- Current state: No notifications when new bet_instance created or when bet_submission deadline approaches
-- Implementation: 
-  - Create `handle-bet-notifications` Edge Function triggered on bet_instances INSERT
-  - Add notification record to `league_notifications` table or push service
-  - Display unread notifications badge in LeagueScreen
-- Priority: HIGH (engagement + usability)
+### TIER SUMMARY (Effort Estimates)
 
-**2. Auto-Generate Bet Options** (1-2h)
-- User story: Bet template suggests automatic option generation from player stats
-- Current state: Commissioner manually types all bet options (e.g., "Top 3 scorers", "5+ goals")
-- Implementation:
-  - Enhance BetWidget to auto-populate common options based on template
-  - Example for `top_scorer`: fetch top 5 last-week scorers from players table, pre-populate
-  - Allow commissioner to override/customize before publishing
-- Priority: MEDIUM (reduces commissioner friction)
+| Tier | Count | Effort | Timeline | Status |
+|------|-------|--------|----------|--------|
+| **P0 — BLOCKERS** | 5 | 14h (2 days) | **Before web launch** | 🔴 MUST FIX |
+| **P1 — HIGH** | 5 | 53h (6.6 days) | Phase 2a (weeks 1-4 post-launch) | 🟠 Important |
+| **P2 — MEDIUM** | 25 | 59.5h (7.5 days) | Phase 2b (weeks 5-12 post-launch) | 🟡 Nice-to-have |
+| **P3 — LOW** | 5 | 4.5h (0.6 days) | Phase 3+ (3+ months) | 🟢 Deferred |
+| **TOTAL** | **40** | **131 hours** | — | — |
 
-**3. Duplicate Bet Prevention** (30 min)
-- User story: Prevent duplicate bets on same player/match in same week
-- Current state: No uniqueness constraint on (league_id, template, player_id, week)
-- Implementation: Add database constraint + UI validation in BetWidget
-- Priority: MEDIUM (data quality)
+**Key rule**: P0 items are launch gates. All 5 must be fixed before web goes live.  
+P1+ items are deferred to post-launch phases and not blocking.
 
-**4. Bet Scoring Edge Cases** (2-3h)
-- Cases identified but deferred:
-  - Late submissions (user submits after deadline) → should be rejected gracefully
-  - Partial results (player injured mid-match) → should handle missing player data
-  - Admin override (commissioner manually adjusts reward if scoring failed)
-- Implementation: Add error handling in `resolve_bet` RPC + commissioner override UI
-- Priority: MEDIUM (handles real-world scenarios)
+---
 
-**5. Realtime Bet Leaderboard Updates** (1h)
-- User story: Betting leaderboard updates instantly when bets resolve
-- Current state: Works but may have 2-3 sec Realtime latency
-- Implementation: Already partially done (Realtime subscriptions in useBettingLeaderboard)
-- Validation: Stress-test on multi-league resolution to confirm no lag
-- Priority: LOW (already functional)
+### 🔴 P0 — BLOCKERS (All Must Ship Before Launch — 14 hours, 2 days)
+
+**1. Auction RLS Allows Seller Spoofing** (CRITICAL SECURITY) (2h)
+- **Severity**: 🔴 CRITICAL — Players can be sold without owner consent
+- **Location**: `supabase/migrations/27_auction_listings.sql:39-47`
+- **Issue**: INSERT policy checks `EXISTS league_members` but doesn't verify `seller_squad_id` belongs to `auth.uid()`. A malicious league member can list ANY squad's player for auction.
+- **Impact**: Players sold without consent, budget transferred without authorization
+- **Fix**: Add `EXISTS (SELECT 1 FROM squads WHERE id = NEW.seller_squad_id AND user_id = auth.uid())` to INSERT policy; add audit trigger logging unauthorized attempts
+- **Test**: Manual penetration test — attempt to list another manager's player, expect rejection
+- **Priority**: CRITICAL (fix before web launch if accepting public users)
+
+**2. Concurrent Transfer Race** (HIGH) (3h)
+- **Severity**: 🟠 HIGH — Budget debited twice, transfers_remaining can go negative
+- **Location**: `supabase/migrations/04_transfer_window_enforcement.sql:39-41`, `src/hooks/useTransfer.js:60-110`
+- **Scenario**: User rapidly clicks "Buy Player A" and "Buy Player B"; or two managers attempt to buy same player simultaneously
+- **Issue**: `enforce_transfer_window()` reads `transfers_remaining`, then UPDATEs — no row lock between. Optimistic UI may show success while server rolls back.
+- **Fix**: Add `SELECT * FROM transfer_windows WHERE ... FOR UPDATE` in trigger; add `isTransferring` guard in `useTransfer` to prevent double-fire
+- **Test**: Two parallel `process-transfer` invocations for same `user_id`; expect one success, one `TRANSFERS_EXHAUSTED` error
+- **Priority**: HIGH (production issue)
+
+**3. Match Event Ingestion Race on Retry** (HIGH) (4h)
+- **Severity**: 🟠 HIGH — Goals/assists can be lost between DELETE and INSERT; user's fantasy points wrong
+- **Location**: `supabase/functions/ingest-match-events/index.ts:351-355`
+- **Scenario**: Polling fires `ingest-match-events` while previous run still writing; each run DELETEs all events then re-INSERTs
+- **Issue**: Non-idempotent. Concurrent runs can lose events written between DELETE of one and INSERT of another.
+- **Fix**: Use `INSERT ... ON CONFLICT (fixture_id, type, minute, player_id) DO NOTHING` instead of DELETE; idempotent
+- **Test**: Invoke function twice in parallel for same `forza_match_id`; assert final event count is consistent
+- **Priority**: HIGH (data integrity)
+
+**4. Auction Bid Race at Expiry** (MEDIUM) (2h)
+- **Severity**: 🟡 MEDIUM — Two bids within ms of deadline; one wins silently, other loses without explanation
+- **Location**: `supabase/migrations/27_auction_listings.sql:87`
+- **Scenario**: Two bidders click "Place Bid" within milliseconds of `ends_at`; cron also auto-closing
+- **Issue**: Both bids pass `IF v_auction.ends_at < NOW()` check; one wins, other's bid silently lost when status flips to `sold`
+- **Fix**: Use `SELECT ... FOR UPDATE` in `place_bid()` RPC; cron must use same lock when auto-closing
+- **Test**: Parallel bids at deadline; expect exactly one to succeed, other to see "auction closed" error
+- **Priority**: MEDIUM (graceful degradation exists, but UX poor)
+
+**5. Cron Job Collision on Matchday Rollover** (MEDIUM) (3h)
+- **Severity**: 🟡 MEDIUM — UNIQUE constraint prevents duplicate; second job silently fails with no retry
+- **Location**: `supabase/migrations/26_transfer_window_constraint_and_cron.sql:99-112`
+- **Scenario**: `run-draft-lottery` (15m cadence) and `auto-open-transfer-window` (2h cadence) fire within seconds of matchday
+- **Issue**: UNIQUE constraint violation on second job; silently swallowed, no alert
+- **Fix**: Make handlers idempotent (UPSERT not INSERT); log + alert on uniqueness violation rather than swallowing
+- **Priority**: MEDIUM (affects tournament fairness)
+
+---
+
+### 🟠 P1 — HIGH (Phase 2a: Weeks 1-4 Post-Launch — 53 hours, 6.6 days)
+
+**Production Readiness & Resilience (Phase 2a must-haves):**
+
+**6. No Forza API Timeouts/Retries** (HIGH) (2d)
+- **Severity**: 🟠 HIGH — Hanging upstream API stalls every Edge Function indefinitely; cascades to user blocking
+- **Location**: All Edge Functions calling Forza API (no timeout handling)
+- **Issue**: A 30-second Forza delay → 30-second user wait; a hung API → hung Edge Function forever
+- **Fix**: Add 5-second timeout + 3 exponential-backoff retries to all Forza calls; graceful fallback on timeout
+- **Priority**: HIGH (operational resilience)
+
+**7. RLS Disabled on Core Tables** (HIGH) (3d)
+- **Severity**: 🟠 HIGH — Acceptable for alpha; unacceptable at production scale with real users
+- **Location**: `players`, `fixtures`, `leagues`, `squads`, `users` tables
+- **Issue**: Anon key can read/write all data; multi-tenant data isolation broken
+- **Fix**: Enable RLS on all tables; implement `auth.uid()` checks for personal data, league-membership checks for shared data
+- **Test**: Verify anon key cannot read another user's squads or private league data
+- **Priority**: HIGH (must fix before opening to public)
+
+**8. Observability Logging/Alerting** (HIGH) (1d)
+- **Severity**: 🟠 HIGH — Can't debug production issues without logs
+- **Location**: All Edge Functions in `supabase/functions/`
+- **Issue**: No production logging; critical errors on `process-transfer`, `calculate-scores`, `ingest-match-events` are silent
+- **Fix**: Implement lightweight strategy (see OBSERVABILITY_STRATEGY.md): 5-min setup per function, Sentry or equivalent
+- **Impact**: Enables post-launch debugging, reduces MTTR
+- **Priority**: HIGH (operational readiness)
+
+**9. Bet Validation (L2.1)** (MEDIUM) (2h)
+- **Issue**: `resolve_bet` RPC doesn't validate `correct_answer` is in `options` array
+- **Location**: `supabase/migrations/84_bet_resolve.sql`
+- **Fix**: Add constraint; raise `INVALID_ANSWER` error on invalid submission
+- **Impact**: Prevents data corruption (wrong answer marked correct)
+- **Priority**: MEDIUM (correctness)
+
+**10. Bet Submission Boundary (Corner Case)** (MEDIUM) (3h)
+- **Issue**: Submissions near deadline fail without clear error (UX poor, no grace window)
+- **Location**: `src/hooks/useBets.js` + `supabase/functions/submit-bet/`
+- **Fix**: Add 100ms grace window on deadline; explicit "deadline passed" message on rejection
+- **Impact**: Reduces user confusion on edge-case submissions
+- **Priority**: MEDIUM (UX)
+
+---
+
+### 🟡 P2 — MEDIUM (Phase 2b: Weeks 5-12 Post-Launch — 59.5 hours, 7.5 days)
+
+**Experience, Scale, & Deferred Features (25 items across 4 subcategories)**
+
+#### Performance Improvements (10 items, ~1.5 weeks)
+
+**1. N+1 User-Metadata Fetches on Chat Messages** (4h)
+- **Issue**: `useChatMessages` queries poster metadata for EACH new message via Realtime; 50 messages = 50 queries
+- **Location**: `src/hooks/useChatMessages.js:159-165`
+- **Fix**: Cache user metadata in `useRef` keyed by `user_id`; deduplicate concurrent fetches via `Set`; batch-fetch on initial load
+- **Impact**: 90% load reduction on chat; mobile battery/network improvement
+- **Priority**: MEDIUM (performance, mobile)
+
+**2. Over-Fetching in League Stats Fallback** (1h)
+- **Issue**: If RPC fails, falls back to fetching ALL `league_members` rows (1000 rows = 1000x over-fetch) just for averages
+- **Location**: `src/hooks/useLeagueStats.js:42-56`
+- **Fix**: Use `SELECT COUNT(*), SUM(total_points), AVG(total_points)` aggregate; fall back only on aggregate failure
+- **Impact**: 95% data reduction on error path
+- **Priority**: LOW (only triggered on RPC failure)
+
+**3. Realtime Subscription Refetch Storm** (3h)
+- **Issue**: Any `bet_submission` INSERT triggers full `fetchBets()` refetch for entire league; 100 concurrent submissions = 100 refetches
+- **Location**: `src/hooks/useBets.js:68-90`
+- **Fix**: Filter Realtime channel by `bet_instance_id` server-side; locally merge new submissions without refetch
+- **Impact**: 50× API load reduction on bet submission storms
+- **Priority**: MEDIUM (multi-league leagues)
+
+**4. Missing Index on Transfer Lookup** (15m)
+- **Issue**: `transfers` table has no index on `(league_id, user_id)`; history queries scan full table O(n)
+- **Location**: `supabase/migrations/90_*.sql` (new migration)
+- **Fix**: `CREATE INDEX idx_transfers_user_league ON transfers(league_id, user_id);`
+- **Impact**: O(n) → O(log n) query time
+- **Priority**: LOW (easy win, low impact)
+
+**5. LeagueScreen Refactoring** (1d)
+- **Issue**: 2273 lines; 40+ `useState` hooks; concurrent edits race; no clear state machine
+- **Location**: `src/screens/LeagueScreen.jsx`
+- **Fix**: Extract `useTradeHub()`, `useCommissionerActions()`, `useBettingHub()` custom hooks; convert tab views to lazy-loaded routes
+- **Impact**: Enables parallel dev, fixes races, improves team velocity
+- **Priority**: MEDIUM (code quality, team velocity)
+
+**6. Duplicated Position/Formation Constants** (3h)
+- **Issue**: `POS_ORDER`, `POS_LABEL`, `POS_TONE`, `POS_CONFIG` defined independently in 4+ files
+- **Location**: Multiple screen files
+- **Fix**: Create `src/lib/formations.js` with single source of truth; source from `useLeagueConfig` when league is active
+- **Impact**: Unblocks multi-config tournaments
+- **Priority**: MEDIUM (scalability)
+
+**7. Position Limits Hardcoded in SQL Trigger** (2h)
+- **Issue**: `enforce_position_limit()` hardcodes `{"GK":2,"DEF":5,"MID":5,"FWD":3}` inside trigger
+- **Location**: `supabase/migrations/04_transfer_window_enforcement.sql:88-91`
+- **Fix**: Parameterize from `league_config.position_caps` JSONB; fall back to constants only if not set
+- **Impact**: Tournament-agnostic schema
+- **Priority**: MEDIUM (scalability)
+
+**8. PlayerCard Component Over-Prop** (3h)
+- **Issue**: `PlayerCard` has 10+ props; prop drilling reduces reusability
+- **Location**: `src/components/PlayerCard.jsx`
+- **Fix**: Introduce `PlayerCardContext` for captain/chip/joker state; pass only `player` + `onClick`
+- **Impact**: Reduces prop drilling, improves reusability
+- **Priority**: LOW (refactoring)
+
+**9. Production Logging Implementation** (4h)
+- **Issue**: Remaining 11 Edge Functions not wired to observability (9 already done via PR #164)
+- **Location**: All Edge Functions in `supabase/functions/`
+- **Fix**: Complete observability strategy rollout (see OBSERVABILITY_STRATEGY.md): 5-min setup per function
+- **Impact**: Enables post-launch debugging, reduces MTTR
+- **Priority**: MEDIUM (operational readiness)
+
+**10. RLS Policy Documentation** (2h)
+- **Issue**: Many `DISABLE ROW LEVEL SECURITY` statements have no inline comments
+- **Location**: `supabase/migrations/` (multiple files)
+- **Fix**: Add comments explaining rationale; create `docs/architecture/SECURITY.md` documenting all RLS decisions
+- **Impact**: Onboards new team members; audit trail
+- **Priority**: LOW (documentation)
+
+#### Deferred Logic & Betting (5 items, ~1 week)
+
+**11. Bet Answer Validation (L2.1)** (2h)
+- **Issue**: `resolve_bet` RPC doesn't validate `correct_answer` is in `options` array
+- **Location**: `supabase/functions/resolve-bets/index.ts`
+- **Fix**: Add constraint check before accepting answer; raise `INVALID_ANSWER` error
+- **Impact**: Prevents data corruption (wrong answer marked correct)
+- **Priority**: MEDIUM (data integrity)
+
+**12. Auto-Resolver Cron (L2.4)** (4h)
+- **Issue**: Commissioners manually resolve bets; simple bets (top_scorer, etc) could auto-resolve post-match
+- **Location**: New Edge Function `auto-resolve-bets`
+- **Fix**: Schedule cron to auto-resolve bets with obvious answers (top scorer from fixture stats)
+- **Impact**: Engagement + automation
+- **Priority**: MEDIUM (engagement)
+
+**13. Squad Rollup Hard-Fail (L3.4)** (2h)
+- **Issue**: `rollupSquads` silently returns NaN on missing `round_number` / `tournament_id`
+- **Location**: `supabase/functions/calculate-scores/index.ts:rollupSquads`
+- **Fix**: Add hard-fail: log critical error, return 0, never write NaN
+- **Impact**: Prevents silent scoring corruption
+- **Priority**: MEDIUM (data integrity)
+
+**14. Captain-on-Bench Policy (L3.5)** (2h)
+- **Issue**: Captain can be benched during transfers (defensive check missing)
+- **Location**: `supabase/functions/process-transfer/index.ts`
+- **Fix**: Validate captain not in bench formation before transfer approval
+- **Impact**: Prevents invalid captain state
+- **Priority**: MEDIUM (data integrity)
+
+**15. Bet Points Filter (L3.7)** (1h)
+- **Issue**: `aggregate_league_member_points` includes all reward types (points + auction + bets); can double-count
+- **Location**: `supabase/migrations/70_scoring_fixes.sql`
+- **Fix**: Filter to `reward_type='points'` only; exclude auction/bet rewards from aggregation
+- **Impact**: Prevents points double-count
+- **Priority**: MEDIUM (data integrity)
+
+#### Data Pipeline & Deferred Features (4 items, ~0.5 weeks)
+
+**16. Unschedule Duplicate Crons (I4)** (2h)
+- **Issue**: Duplicate sync crons left over from migration 51 create noise/collision risk
+- **Location**: `supabase/migrations/51_*` remnants
+- **Fix**: Unschedule orphaned duplicate crons; keep only canonical versions
+- **Impact**: Data pipeline reliability
+- **Priority**: MEDIUM (operational)
+
+**17. Suspension Type Population (2.4.b)** (1h)
+- **Issue**: `sync-player-status` sets `_type='injury'` for all; suspension should be `'suspension'`
+- **Location**: `supabase/functions/sync-player-status/index.ts`
+- **Fix**: Check Forza API suspension field; set `_type='suspension'` for suspensions
+- **Impact**: Data quality (accurate status types)
+- **Priority**: LOW (cosmetic)
+
+**18. Bet Template Runtime Lookup (3.2)** (2h)
+- **Issue**: BetCreatorPanel hardcodes template UUID; should lookup by slug at runtime
+- **Location**: `src/components/league/BetCreatorPanel.jsx`
+- **Fix**: Replace hardcoded UUID with `slug → id` lookup from `bet_templates` table
+- **Impact**: Enables dynamic bet template management without code changes
+- **Priority**: MEDIUM (scalability)
+
+**19. Bet Scope_Ref Population (3.3)** (1h)
+- **Issue**: `scope_ref` column not populated for match_result bets (needed for matching submissions to fixtures)
+- **Location**: `src/components/league/BetCreatorPanel.jsx`
+- **Fix**: BetCreatorPanel writes `scope_ref = fixture.id` when creating match_result bets
+- **Impact**: Enables bet matching logic
+- **Priority**: MEDIUM (feature completeness)
+
+**20. Resolve-Bets Cron Schedule (3.4)** (3h)
+- **Issue**: No automated cron for resolving simple bets; commissioners must do manually
+- **Location**: New migration + Edge Function
+- **Fix**: Schedule `resolve-bets` cron for post-match auto-resolution
+- **Impact**: Automation + engagement
+- **Priority**: MEDIUM (automation)
+
+#### Betting System Gaps (5 items, ~1 week)
+
+**21. Bet Notifications** (3h)
+- **User story**: Commissioner creates bet → league members get notified
+- **Current state**: No notifications on bet creation or deadline approach
+- **Implementation**: Create `handle-bet-notifications` Edge Function; notify on `bet_instances` INSERT
+- **Impact**: Engagement driver
+- **Priority**: HIGH (engagement)
+
+**22. Auto-Generate Bet Options** (2h)
+- **User story**: Suggest options from player stats (top 5 scorers, etc)
+- **Current state**: Commissioner manually types all options
+- **Implementation**: Enhance BetWidget to auto-populate common options; allow override
+- **Impact**: Commissioner friction reduction
+- **Priority**: MEDIUM (UX)
+
+**23. Duplicate Bet Prevention** (30m)
+- **User story**: Prevent duplicate bets on same player/match in same week
+- **Current state**: No uniqueness constraint on (league_id, template, player_id, week)
+- **Implementation**: Add database constraint + UI validation
+- **Impact**: Data quality
+- **Priority**: MEDIUM (data quality)
+
+**24. Bet Edge Case Handling** (3h)
+- **Cases**: Late submissions (past deadline), partial results (injured players), admin override
+- **Current state**: No graceful error handling
+- **Implementation**: Enhanced `resolve_bet` RPC + commissioner override UI
+- **Impact**: Real-world robustness
+- **Priority**: MEDIUM (UX)
+
+**25. Realtime Bet Leaderboard** (1h)
+- **User story**: Betting leaderboard updates instantly when bets resolve
+- **Current state**: Works but may have 2-3 sec Realtime latency
+- **Implementation**: Already mostly done; stress-test + polish
+- **Impact**: UX polish
+- **Priority**: LOW (already functional)
+
+---
+
+### 🟢 P3 — LOW (Phase 3+: 3+ Months Post-Launch — 4.5 hours, 0.6 days)
+
+**Deferred UX Fixes, Documentation, and Technical Debt (5 items)**
+
+**26. Squad Fetch Error States** (2h)
+- **Issue**: Squad screen doesn't distinguish between loading/empty/failed states
+- **Location**: `src/screens/SquadScreen.jsx`
+- **Fix**: Show loading spinner, "No squad yet" message, and retry banner on fetch failure
+- **Impact**: UX clarity
+- **Priority**: LOW (cosmetic)
+
+**27. League Deletion Realtime** (1h)
+- **Issue**: Deleting a league doesn't alert members in real-time
+- **Location**: `src/screens/LeagueScreen.jsx`
+- **Fix**: Subscribe to league DELETE event via Realtime; redirect with toast on deletion
+- **Impact**: Real-time consistency
+- **Priority**: LOW (edge case)
+
+**28. Notification Deduplication** (1h)
+- **Issue**: UPDATE events on league_notifications can fire duplicates
+- **Location**: `src/hooks/useNotifications.js`
+- **Fix**: Track last-seen notification state; deduplicate identical UPDATE events
+- **Impact**: Reduces notification spam
+- **Priority**: LOW (polish)
+
+**29. Node.js 24 LTS Update** (15m)
+- **Issue**: CI uses Node.js 20 (deprecated); causes false E2E test timeouts
+- **Location**: `.github/workflows/ci.yml`
+- **Fix**: Update to Node.js 24 LTS image
+- **Impact**: Unblocks deployment confidence
+- **Priority**: LOW (CI/CD)
+
+**30. Migration 34 Activation** (5m)
+- **Issue**: `34_auto_close_bets_cron.sql` created but not activated in Supabase
+- **Location**: Supabase dashboard → SQL Editor
+- **Fix**: Manual one-time task to run migration via dashboard
+- **Impact**: Betting system cron stability
+- **Priority**: LOW (one-time setup)
+
+---
+
+## 📊 EFFORT ALLOCATION SCENARIOS
+
+### Scenario A: 1 Developer, 8 Weeks
+- **Phase 1 (week 0, before launch)**: P0 blockers only (1-1.5 days)
+- **Phase 2a (weeks 1-4)**: P1 items (6 days, ~1.5 weeks)
+- **Phase 2b (weeks 5-8)**: P2 items (7.5 days, ~2 weeks), leaving room for incidents/support
+- **Phase 3**: Backlog for later sprints
+
+### Scenario B: 2 Developers, 4 Weeks
+- **Phase 1 (parallel)**: 1 dev on P0 blockers, 1 dev on pre-Phase-2a prep (1 day total)
+- **Phase 2a (parallel)**: Split P1 items (~3 days each, ~1 week)
+- **Phase 2b (parallel)**: Frontend perf/UX + Backend logic/pipeline in parallel (~3.75 days each, ~1 week)
+
+### Scenario C: MVP-Only (Risk Mitigation)
+- **Phase 1**: Only fix 3 critical P0 items (concurrent races + RLS spoofing = 9h)
+- Ship web launch with known P0 items 4-5 deferred to week 2
+- **Phase 2a**: Hit P1 ASAP (security + resilience)
+- Defer all P2 to later sprints
+
+---
+
+## 📊 RISK SUMMARY & MITIGATION
+
+| Risk | Severity | If Not Fixed By | Recommendation |
+|------|----------|-----------------|-----------------|
+| Auction RLS spoofing | 🔴 CRITICAL | Launch | Fix before shipping (2h) |
+| Concurrent transfer race | 🔴 CRITICAL | Launch | Fix before shipping (3h) |
+| Event ingestion race | 🔴 CRITICAL | Launch | Fix before shipping (4h) |
+| Auction bid race at deadline | 🟠 HIGH | Phase 2a (week 4) | Fix immediately post-launch (2h) |
+| Cron job collision | 🟠 HIGH | Phase 2a (week 4) | Fix immediately post-launch (3h) |
+| RLS disabled on core tables | 🟠 HIGH | Phase 2a (week 4) | Fix immediately post-launch (3d) |
+| No API timeouts | 🟠 HIGH | Phase 2a (week 4) | Fix immediately post-launch (2d) |
+| No observability | 🟠 HIGH | Phase 2a (week 4) | Implement week 1 post-launch (1d) |
+| Missing deferred logic items | 🟡 MEDIUM | Phase 2b (week 12) | Ship by end of Phase 2 |
+| Performance issues | 🟡 MEDIUM | Phase 2b (week 12) | Not critical; ship as you go |
 
 ---
 

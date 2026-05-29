@@ -1,8 +1,40 @@
 # E2E Test Playbook — Forza Fantasy League
-**Version**: 1.0 (2026-05-27)  
+**Version**: 1.1 (2026-05-29)  
 **Coverage**: Full user journey — league creation → draft → scoring → bets → transfers → auctions  
 **Auth**: Real Supabase auth required (`VITE_AUTH_ENABLED=true` in `.env`)  
 **Test league**: `EPL_OVERALL_E2E` · Tournament 426 (Premier League) · 8 managers · noduplicate
+
+---
+
+## ⛔ HARD STOP — Price Check (run before any transfer/auction/budget test)
+
+Before executing any flow that involves player transfers, auctions, or budget mechanics, verify that prices are seeded for the tournament under test. If they are not, **stop immediately and flag the session** — do not proceed until the user explicitly approves continuing without prices.
+
+```sql
+-- Run this for the tournament you are testing (replace '426' with your tournament_id)
+SELECT
+  COUNT(*)                                          AS total_players,
+  COUNT(*) FILTER (WHERE price IS NOT NULL)         AS with_price,
+  COUNT(*) FILTER (WHERE price IS NULL)             AS no_price,
+  ROUND(100.0 * COUNT(*) FILTER (WHERE price IS NOT NULL) / COUNT(*), 1) AS pct_priced
+FROM players
+WHERE tournament_id = '426';
+```
+
+**Pass condition**: `no_price = 0` (or `pct_priced = 100`).
+
+**If prices are missing**: Do NOT continue with FLOW 5 (Transfers), FLOW 6 (Auctions), or any test that asserts budget changes. The `process-transfer` function defaults null prices to £0, meaning all budget enforcement is silently bypassed — buy/sell transactions will succeed regardless of squad budget, making those test results meaningless.
+
+**Why this matters**: In session 50 (2026-05-27), a full WC E2E test was run with 1,480 of 1,589 WC players having null prices. All transfer and auction flows appeared to pass, but budget enforcement was never exercised. This is the canonical example of a test that produced false confidence.
+
+**To fix missing prices**: Prices are not provided by the Forza API. They must be seeded manually via a migration. Example:
+```sql
+-- Assign prices to all unpriced players in a tournament (adjust ranges as needed)
+UPDATE players
+SET price = ROUND((RANDOM() * 3 + 4)::NUMERIC, 1)  -- £4.0–£7.0
+WHERE tournament_id = '429' AND price IS NULL;
+```
+Run this, confirm `no_price = 0`, then proceed.
 
 ---
 

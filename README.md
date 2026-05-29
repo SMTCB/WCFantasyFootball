@@ -79,7 +79,7 @@ This creates optimized icons in:
 | `DRAFT_SYSTEM_DESIGN.md` | Draft lottery and transfer window mechanics |
 | `FANTASY_POINTS_SCORING_LAYER.md` | Scoring rules and calculation engine |
 | `BACKLOG.md` | Open issues and technical debt |
-| `MOBILE_IMPLEMENTATION_GUIDE.md` | Capacitor setup for iOS/Android |
+| `docs/reference/MOBILE_DEVELOPMENT.md` | Capacitor setup for iOS/Android |
 | `CLAUDE.md` | Instructions for Claude development |
 | `GEMINI.md` | Instructions for Google Antigravity |
 | `API/` | Forza Football API reference |

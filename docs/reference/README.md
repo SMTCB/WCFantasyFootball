@@ -14,6 +14,9 @@ Quick lookup and reference documentation for developers and operators.
 2. [../architecture/](../architecture/) — System design (formation rules, scoring, drafts)
 3. [../api/](../api/) — API integration (Forza Football endpoints, auth)
 
+**For Mobile Development**:
+1. [MOBILE_DEVELOPMENT.md](MOBILE_DEVELOPMENT.md) — iOS/Android Capacitor setup, native plugins, store submission
+
 **For Operations**:
 1. [../deployment/DATA_PIPELINE_RUNBOOK.md](../deployment/DATA_PIPELINE_RUNBOOK.md) — Cron setup, data activation
 2. [../deployment/DRY_RUN_PREP_CHECKLIST.md](../deployment/DRY_RUN_PREP_CHECKLIST.md) — Pre-launch checklist
@@ -26,6 +29,7 @@ Quick lookup and reference documentation for developers and operators.
 |------|---------|----------|
 | [LOCAL_DEVELOPMENT.md](LOCAL_DEVELOPMENT.md) | Local environment setup, dev commands, debugging | Developers |
 | [CONVENTIONS.md](CONVENTIONS.md) | Code style, naming conventions, project structure | Developers |
+| [MOBILE_DEVELOPMENT.md](MOBILE_DEVELOPMENT.md) | iOS/Android Capacitor setup, native plugins, testing, store submission | Mobile developers |
 
 ---
 

@@ -11,7 +11,7 @@
 
 ## 🚀 Quick Start for Developers
 
-> **Implementation is underway.** See `MOBILE_IMPLEMENTATION_GUIDE.md` for current status and next steps. Phases 1 & 2 are complete (Capacitor scaffold, native config, OAuth deep links, auth flow). Phase 3 (push notifications, app icons) is next.
+> **Implementation is underway.** See [`docs/reference/MOBILE_DEVELOPMENT.md`](docs/reference/MOBILE_DEVELOPMENT.md) for current status and next steps. Phases 1 & 2 are complete (Capacitor scaffold, native config, OAuth deep links, auth flow). Phase 3 (push notifications, app icons) is next.
 
 **What's done**:
 - ✅ Capacitor installed — `ios/` and `android/` native projects committed

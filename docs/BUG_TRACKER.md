@@ -1,5 +1,5 @@
 # Bug Tracker — Forza Fantasy League
-**Last updated**: 2026-05-28 (session 51 — all WC bugs resolved)  
+**Last updated**: 2026-05-29 (session 52 — BUG-15 added)  
 **Live app**: https://wc-fantasy-football.vercel.app  
 **Next migration**: `90_`
 
@@ -20,6 +20,60 @@
 - **P1 — Fix before WC kicks off (June 11, 2026)**: user-visible breakage on the WC flow
 - **P2 — Fix soon**: noticeable but workaround exists
 - **P3 — Defer**: cosmetic / low impact
+
+---
+
+### BUG-15 — WC players have no prices; budget enforcement completely bypassed
+**Priority**: P1 (must fix before June 11 WC launch)  
+**Severity**: 🔴 HIGH — core gameplay mechanic silently broken  
+
+**What happens**: 1,480 of 1,589 WC players (tournament `429`) have `price = NULL`. `process-transfer` uses `Number(playerData.price ?? 0)`, so all null-priced players cost £0M to buy and return £0M on sale. A manager can fill an entire squad without spending any budget. Budget standings are meaningless.
+
+**Root cause**: Prices are not provided by the Forza API and are never written by `sync-players` (intentionally omitted on upsert to preserve manual valuations). Nobody seeded prices for the WC tournament.
+
+**Where to look**:  
+- `supabase/functions/sync-players/index.js` line 169 — confirms price is deliberately excluded from sync  
+- `supabase/functions/process-transfer/index.js` — `Number(playerData.price ?? 0)` is the bypass  
+- DB: `SELECT COUNT(*) FILTER (WHERE price IS NULL) FROM players WHERE tournament_id = '429'`
+
+**Fix**: Seed prices for all WC players before launch. Create migration `90_seed_wc_player_prices.sql`:
+```sql
+UPDATE players
+SET price = ROUND((RANDOM() * 3 + 4)::NUMERIC, 1)  -- £4.0–£7.0 range
+WHERE tournament_id = '429' AND price IS NULL;
+```
+Then validate: confirm `no_price = 0`. Optionally apply position-based pricing (GK/DEF lower, FWD higher).
+
+**Re-test**: Buy a player worth £6.5M with a squad that has only £3.0M remaining — transfer should be rejected with INSUFFICIENT_FUNDS. Currently it silently succeeds.
+
+**Effort**: ~1h (migration + validation query + one transfer rejection test)
+
+---
+
+### BUG-16 — `process-transfer` accepts null-priced players as free (security gap)
+**Priority**: P1 (fix alongside BUG-15 before June 11 WC launch)  
+**Severity**: 🟠 HIGH — exploitable window between player sync and price seeding  
+
+**What happens**: If a player's `price` is NULL at the time of transfer, `process-transfer` evaluates `Number(playerData.price ?? 0)` → £0M. The budget check always passes. A manager who knows prices haven't been seeded yet (e.g. immediately after a tournament sync) can acquire unlimited players for free.
+
+**Root cause**: Defensive default in `process-transfer` treats missing price as £0 rather than rejecting the transaction.
+
+**Where to look**:  
+- `supabase/functions/process-transfer/index.js` — find `playerData.price ?? 0`
+
+**Fix**: Reject the transfer if price is null. Replace the default with an explicit guard:
+```js
+const price = playerData.price;
+if (price === null || price === undefined) {
+  return respond(400, { error: 'PLAYER_PRICE_UNAVAILABLE' });
+}
+```
+Surface a user-facing message: "This player's price hasn't been set yet — contact your commissioner."
+
+**Re-test**: Manually null a player's price in DB, attempt to buy them — should receive an error, not a successful transfer.
+
+**Effort**: ~30 min (one-line guard + error message + re-test)  
+**Depends on**: BUG-15 must also be fixed so legitimate players aren't blocked
 
 ---
 

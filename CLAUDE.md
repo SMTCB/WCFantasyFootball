@@ -357,9 +357,7 @@ forza-fantasy-league/
 │   │                                      # **UPDATE WEEKLY with progress**
 │   ├── PIPELINE.md                        # Product roadmap, sprint plan, timeline
 │   ├── APP_STORE_ASSESSMENT.md            # Mobile store strategy & launch readiness
-│   ├── MOBILE_IMPLEMENTATION_GUIDE.md     # Capacitor setup & native plugin docs
 │   ├── GEMINI.md                          # Instructions for Google Antigravity (mobile AI)
-│   ├── E2E_TEST_REPORT.md                 # Latest test results & coverage
 │   └── CLAUDE.md                          # THIS FILE — session onboarding & reference
 │
 ├── 📦 Build & Dist (GITIGNORED)
@@ -423,7 +421,7 @@ e2e-report/                     # Test artifacts
 | **Notion BACKLOG** | **https://www.notion.so/361fe9c7e4c2803c9fc7c898a0c4bbac** — Kanban board for task prioritization & tracking |
 | `PIPELINE.md` | Product roadmap, sprint plan, timeline |
 | `APP_STORE_ASSESSMENT.md` | Mobile store strategy & launch readiness |
-| `MOBILE_IMPLEMENTATION_GUIDE.md` | Capacitor setup & native plugin docs |
+| `docs/reference/MOBILE_DEVELOPMENT.md` | Capacitor setup & native plugin docs |
 
 **Architecture Docs** (`docs/architecture/`):
 | File | Purpose |
@@ -455,7 +453,7 @@ e2e-report/                     # Test artifacts
 | File | Purpose |
 |------|---------|
 | `GEMINI.md` | Instructions for Google Antigravity (mobile AI) |
-| `E2E_TEST_REPORT.md` | Latest test results & coverage |
+| `docs/testing/TEST_RESULTS.md` | Latest test results & coverage |
 
 ---
 
@@ -696,10 +694,10 @@ iOS deployment target: 15.0 · Android minSdk: 26 (Android 8.0) · targetSdk: 36
 - `PIPELINE.md` ← Roadmap & strategy
 
 **Reference docs**:
-- `E2E_TEST_REPORT.md` — Test results & coverage
+- `docs/testing/TEST_RESULTS.md` — Test results & coverage (historical)
 - `CODE_REVIEW_REPORT.md` — Recent code quality assessment
 - `APP_STORE_ASSESSMENT.md` — Mobile launch readiness
-- `MOBILE_IMPLEMENTATION_GUIDE.md` — Capacitor setup & native plugins
+- `docs/reference/MOBILE_DEVELOPMENT.md` — Capacitor setup & native plugins
 - `CLEANUP_REPORT.md` — Git/docs organization audit
 - `GEMINI.md` — Google Antigravity mobile AI instructions
 

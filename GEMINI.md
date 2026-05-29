@@ -7,7 +7,7 @@
 - **Web app**: React 19 + Vite + Tailwind CSS 4 + Supabase (production-ready, 82/84 E2E passing)
 - **Your scope**: iOS and Android native apps via **Capacitor** (scaffold already exists)
 - **Other AI platform**: Claude Code handles web app and backend — coordinate before touching `src/`, `supabase/`, or `backend/`
-- **Implementation guide**: `MOBILE_IMPLEMENTATION_GUIDE.md` — start here, Phase 1 & 2 already done
+- **Implementation guide**: [`docs/reference/MOBILE_DEVELOPMENT.md`](docs/reference/MOBILE_DEVELOPMENT.md) — start here, Phase 1 & 2 already done
 
 ---
 
