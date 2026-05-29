@@ -1,8 +1,75 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-05-29 (session 52 — full real-interaction E2E complete; all 11 missing scenarios tested; 1 new bug fixed)  
+**Last Updated**: 2026-05-29 (session 52 — pilot readiness audit complete; 2 critical fixes identified; league creation flow still unverified)  
 **E2E Test Suite**: `platform.spec.js` (36 tests × 2 browsers) passing in CI ✅ — completes in ~3 min  
-**Live App**: https://wc-fantasy-football.vercel.app
+**Live App**: https://wc-fantasy-football.vercel.app  
+**WC Kick-off**: 2026-06-11 19:00 UTC (Mexico vs South Africa) — **13 days away**
+
+---
+
+## 🚀 PILOT READINESS — SESSION 53 START HERE
+
+**Context**: Full E2E test suite passed (14 flows, all real browser interactions). Two critical production issues found during pilot readiness audit that must be fixed before any real user touches the app.
+
+### 🔴 P0 — Fix Before Any Pilot User Logs In (< 1h total)
+
+#### PILOT-01 — Sync crons fail silently — app.service_role_key not set
+- **Impact**: `sync-wc-fixtures-6h` and `sync-wc-players-6h` both use `current_setting('app.service_role_key')` which returns NULL in the live DB. Both crons fire every 6 hours and produce no output, no error. WC fixture updates and player injury/availability data will never flow in during the pilot.
+- **Fix** (one SQL call in Supabase dashboard → SQL editor):
+  ```sql
+  ALTER DATABASE postgres SET app.supabase_url = 'https://sssmvihxtqtohisghjet.supabase.co';
+  ALTER DATABASE postgres SET app.service_role_key = '<your_service_role_key>';
+  SELECT pg_reload_conf();
+  ```
+  Then verify: `SELECT current_setting('app.service_role_key', true);` should return non-null.
+- **Note**: `calculate-scores-live` and `calculate-scores-post-match` use hardcoded tokens and will work regardless.
+
+#### PILOT-02 — r2 transfer deadline is AFTER WC kick-off
+- **Impact**: `429-r2` deadline = June 12 08:11 UTC, but WC opens June 11 19:00 UTC. A manager can watch the first match result, then buy that game's top performers before the window closes. Competitive integrity failure.
+- **Fix**:
+  ```sql
+  UPDATE matchday_deadlines
+  SET deadline_at = '2026-06-11 17:00:00+00'
+  WHERE tournament_id = '429' AND matchday_id = '429-r2';
+  ```
+  Verify: `SELECT matchday_id, deadline_at FROM matchday_deadlines WHERE tournament_id='429' ORDER BY deadline_at;`
+
+### 🟡 P1 — Test Before Pilot (session 53)
+
+#### PILOT-03 — League creation + invite flow never browser-tested
+- **Impact**: The `LeagueCreationWizard` (multi-step flow every new user runs) and join-via-invite-code (`?code=` URL) have never been walked through in a browser in any E2E session. This is the first thing every pilot user does.
+- **What to test**:
+  1. Log in as test user → click "Create League" → walk all wizard steps → confirm league created with WC tournament selected
+  2. Copy the invite code → open incognito tab → log in as `e2e_test2` → join via the invite URL → confirm they appear in the league member list
+- **Pass criteria**: New league appears in DB with correct `tournament_id='429'`, invitee joins successfully
+
+#### PILOT-04 — Player prices are all random £4–7 (no differentiation)
+- **Impact**: Every player is worth ~£5.50. Mbappé costs the same as a Curaçao backup goalkeeper. The transfer market has no strategic layer — managers can afford anyone. This significantly weakens the product experience for a pilot.
+- **Options**:
+  A. Seed tiered prices based on club (e.g. big nations = £6.5–7M, mid-tier = £5–6.5M, smaller nations = £4–5M)
+  B. Leave random for pilot, gather feedback, price properly for launch
+- **Recommended**: Option A — takes ~30 min of SQL. A price tier list can be based on FIFA world ranking of the 32 WC nations.
+
+#### PILOT-05 — Ingest cron also requires Forza API to be active
+- **Impact**: `ingest-match-events-live` fires every 5 minutes. Without active Forza API credentials, it will produce empty responses. Scoring still works (falls back to `player_match_stats` when data exists), but live match events (goals, cards as they happen) won't populate. The live centre won't show real-time events.
+- **Action**: Confirm Forza API key is configured in Supabase Edge Function secrets before kick-off. If not available, ensure the cron is disabled rather than failing silently:
+  ```sql
+  SELECT cron.unschedule('ingest-match-events-live'); -- only if no Forza key
+  ```
+
+### 🟢 P3 — Nice to Have Before Pilot
+
+#### PILOT-06 — League creation wizard WC default
+- When creating a new league, ensure "FIFA World Cup 2026" is the prominent/default tournament option (not EPL). A confused user could accidentally create an EPL league with no live EPL data.
+
+#### PILOT-07 — Mobile builds not available
+- iOS/Android native builds haven't been compiled. Web-only pilot is fine for now; mobile users will use the browser version. Not a blocker.
+
+#### PILOT-08 — Error monitor shows 5 warnings
+- All 5 are harmless: "Captain on bench; bonus moved to highest-scoring starter" from our own E2E test sessions. Safe to clear:
+  ```sql
+  DELETE FROM edge_function_errors WHERE created_at < NOW() - INTERVAL '1 day';
+  ```
 
 ---
 
