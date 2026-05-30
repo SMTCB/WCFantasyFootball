@@ -1342,21 +1342,21 @@ export default function LeagueScreen() {
                  {!managerRoster.length && (
                    <div className="text-center text-[12px] text-text-tertiary py-8">Loading roster…</div>
                  )}
-                 {managerRoster.map((p, i) => (
-                   <div key={i} className="flex items-center gap-4 bg-[var(--ink)] p-3 border border-[var(--rule)] rounded-sm relative overflow-hidden group">
-                     <div className="absolute left-0 top-0 bottom-0 w-1 bg-cyan/20 group-hover:bg-cyan transition-colors" />
-                     <div className="w-10 h-10 rounded bg-[var(--ink-2)] flex items-center justify-center text-[10px] font-black overflow-hidden shrink-0" style={{ border: `1px solid ${p.position === 'GK' ? '#A855F7' : p.position === 'DEF' ? 'var(--cyan)' : p.position === 'MID' ? 'var(--gold)' : 'var(--danger)'}44`, color: p.position === 'GK' ? '#A855F7' : p.position === 'DEF' ? 'var(--cyan)' : p.position === 'MID' ? 'var(--gold)' : 'var(--danger)', fontFamily: 'JetBrains Mono, monospace', letterSpacing: '.06em' }}>{p.position}</div>
-                     <div className="flex-1">
-                       <div className="text-[10px] font-black text-white/40 uppercase tracking-tighter">{p.club} · {p.position}</div>
-                       <div className="text-[15px] font-bold text-white tracking-tight">{p.name}</div>
+                 {managerRoster.map((p, i) => {
+                   const posColor = p.position === 'GK' ? '#A855F7' : p.position === 'DEF' ? 'var(--cyan)' : p.position === 'MID' ? 'var(--gold)' : 'var(--danger)';
+                   return (
+                   <div key={i} className="flex items-center gap-3 bg-[var(--ink)] p-3 border border-[var(--rule)] rounded-sm relative overflow-hidden" style={{ borderLeft: `2px solid ${posColor}44` }}>
+                     <div className="flex-1 min-w-0">
+                       <div className="text-[10px] font-black uppercase tracking-tighter" style={{ color: posColor }}>{p.position} · {p.club}</div>
+                       <div className="text-[14px] font-bold text-white tracking-tight truncate">{p.name}</div>
                      </div>
-                     <div className="text-right mr-2">
-                        <div className="text-[12px] font-black text-white">€{p.price}M</div>
-                        <div className="text-[9px] text-positive font-bold">READY</div>
+                     <div className="text-right shrink-0">
+                       <div className="text-[13px] font-black text-white">£{p.price}M</div>
+                       <div className="text-[9px] font-bold" style={{ color: 'var(--positive)' }}>READY</div>
                      </div>
-                     <button onClick={() => { const t = { ...managerTeamView, name: managerTeamView.name, squadId: squadByUserRef.current[managerTeamView.user_id] }; setTradeTarget(t); setTradeTheirPlayer(p); loadTradeSquads(managerTeamView.user_id); setManagerTeamView(null); setShowTradeBuilder(true); }} className="w-9 h-9 rounded-full bg-cyan text-black flex items-center justify-center font-bold active:scale-90 transition-transform shadow-[0_4px_10px_rgba(0,180,216,0.3)]">🔄</button>
                    </div>
-                 ))}
+                   );
+                 })}
                </div>
              </div>
            </div>

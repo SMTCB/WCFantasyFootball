@@ -157,7 +157,7 @@ function MiniTok({ p, activeLeague }) {
           <span className="mono" style={{ fontSize: 8, color: 'var(--mute)' }}>{p.club || '—'}</span>
           <span style={{ width: 2, height: 2, borderRadius: '50%', background: 'var(--mute)' }} />
           <span style={{ fontFamily: 'Archivo Black', fontSize: 10, color: (p.points ?? 0) >= 0 ? 'var(--paper)' : 'var(--danger)' }}>
-            {(p.points ?? 0) >= 0 ? (p.points ?? 0) : `−${Math.abs(p.points ?? 0)}`}
+            {(() => { const pts = Math.round(p.points ?? 0); return pts >= 0 ? pts : `−${Math.abs(pts)}`; })()}
           </span>
         </div>
       </div>
@@ -274,7 +274,7 @@ function MobSquadRow({ p, activeLeague }) {
         <span className="mono" style={{ fontSize: 9, color: 'var(--mute)', marginLeft: 'auto' }}>{p.club || '—'}</span>
       </div>
       <div style={{ fontFamily: 'Archivo Black', fontSize: 14, letterSpacing: '-0.02em', color: (p.points ?? 0) >= 0 ? 'var(--cyan)' : 'var(--danger)' }}>
-        {(p.points ?? 0) >= 0 ? (p.points ?? 0) : `−${Math.abs(p.points ?? 0)}`}
+        {(() => { const pts = Math.round(p.points ?? 0); return pts >= 0 ? pts : `−${Math.abs(pts)}`; })()}
       </div>
     </div>
   );
@@ -654,7 +654,7 @@ export default function LiveScreen() {
             </div>
             <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, width: '100%' }}>
               <span style={{ fontFamily: 'Archivo Black', fontSize: 26, letterSpacing: '-0.02em', color: isActive ? lg.tone : 'var(--paper)' }}>
-                {lg.total}
+                {Math.round(lg.total)}
               </span>
               <DeltaPill delta={lg.delta} />
               {lg.chip && (
@@ -823,7 +823,7 @@ export default function LiveScreen() {
                         {(p.name || '').split(' ').pop().toUpperCase()}
                       </div>
                       <div style={{ fontFamily: 'Archivo Black', fontSize: 11, color: (p.points ?? 0) >= 0 ? 'var(--mute)' : 'var(--danger)', marginTop: 2 }}>
-                        {(p.points ?? 0) >= 0 ? (p.points ?? 0) : `−${Math.abs(p.points)}`}
+                        {(() => { const pts = Math.round(p.points ?? 0); return pts >= 0 ? pts : `−${Math.abs(pts)}`; })()}
                       </div>
                     </div>
                   ))}
@@ -903,7 +903,7 @@ export default function LiveScreen() {
                   <span style={{ fontFamily: 'Archivo Black', fontSize: 12, letterSpacing: '-0.01em', whiteSpace: 'nowrap' }}>{lg.name}</span>
                   <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
                     <span style={{ fontFamily: 'Archivo Black', fontSize: 22, letterSpacing: '-0.02em', color: isActive ? lg.tone : 'var(--paper)' }}>
-                      {lg.total}
+                      {Math.round(lg.total)}
                     </span>
                     <DeltaPill delta={lg.delta} />
                   </div>
@@ -1051,7 +1051,7 @@ export default function LiveScreen() {
                             <span style={{ fontFamily: 'Archivo Black', fontSize: 12, letterSpacing: '-0.01em' }}>{(p.name || '').split(' ').pop().toUpperCase()}</span>
                             <span className="mono" style={{ fontSize: 8, color: 'var(--mute)' }}>{p.position}</span>
                           </div>
-                          <div style={{ fontFamily: 'Archivo Black', fontSize: 13, color: 'var(--mute)' }}>{p.points ?? 0}</div>
+                          <div style={{ fontFamily: 'Archivo Black', fontSize: 13, color: 'var(--mute)' }}>{Math.round(p.points ?? 0)}</div>
                         </div>
                       ))}
                     </div>
