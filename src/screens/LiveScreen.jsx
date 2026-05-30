@@ -261,6 +261,67 @@ function MobEventRow({ ev }) {
   );
 }
 
+// ── StatsLogRow — live points breakdown from player_match_stats ──────────────
+// Shown on the Events tab during a live match before match_events are available.
+// Each row = one squad player, with their scoring contributions summarised.
+function StatsLogRow({ s }) {
+  const pts    = Math.round(s.points ?? 0);
+  const ptsPos = pts >= 0;
+  const name   = (s.playerName || '').split(' ').pop().toUpperCase();
+
+  // Build a compact contribution label (e.g. "2G · 1A · CS")
+  const tags = [];
+  if (s.goals         > 0) tags.push(`${s.goals}G`);
+  if (s.assists       > 0) tags.push(`${s.assists}A`);
+  if (s.cleanSheet)        tags.push('CS');
+  if (s.yellowCards   > 0) tags.push('YC');
+  if (s.redCards      > 0) tags.push('RC');
+  if (s.penaltyScored > 0) tags.push(`${s.penaltyScored}P`);
+  if (s.penaltyMissed > 0) tags.push('PM');
+  if (s.goalsConceded > 0) tags.push(`−${s.goalsConceded}GA`);
+  if (!tags.length && s.minutesPlayed > 0) tags.push(`${s.minutesPlayed}'`);
+
+  return (
+    <div style={{
+      display: 'grid', gridTemplateColumns: '1fr auto', gap: 10, alignItems: 'center',
+      padding: '10px 18px', borderTop: '1px solid var(--rule)',
+    }}>
+      <div style={{ minWidth: 0, display: 'flex', flexDirection: 'column', gap: 3 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <span style={{ fontFamily: 'Archivo Black', fontSize: 13, letterSpacing: '-0.01em' }}>{name}</span>
+          <span className="mono" style={{ fontSize: 8, color: 'var(--mute)' }}>{s.position}</span>
+          <span className="mono" style={{ fontSize: 8, color: 'var(--mute)', opacity: .6 }}>{(s.club || '').split(' ')[0]}</span>
+          {s.isCap && (
+            <span style={{ fontFamily: 'Archivo Black', fontSize: 8, background: 'var(--gold)', color: 'var(--ink)', padding: '1px 4px', lineHeight: 1 }}>
+              {s.isTripleCap ? '3×C' : 'C'}
+            </span>
+          )}
+        </div>
+        {tags.length > 0 && (
+          <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+            {tags.map(t => (
+              <span key={t} className="mono" style={{
+                fontSize: 8, padding: '1px 5px', borderRadius: 2,
+                background: t.startsWith('−') || t === 'YC' || t === 'RC' || t === 'PM'
+                  ? 'rgba(239,68,68,.15)' : 'rgba(34,197,94,.12)',
+                color: t.startsWith('−') || t === 'YC' || t === 'RC' || t === 'PM'
+                  ? 'var(--danger)' : 'var(--positive)',
+                letterSpacing: '.1em',
+              }}>{t}</span>
+            ))}
+          </div>
+        )}
+      </div>
+      <span style={{
+        fontFamily: 'Archivo Black', fontSize: 18, letterSpacing: '-0.02em',
+        color: ptsPos ? 'var(--paper)' : 'var(--danger)',
+      }}>
+        {ptsPos ? pts : `−${Math.abs(pts)}`}
+      </span>
+    </div>
+  );
+}
+
 function MobSquadRow({ p, activeLeague }) {
   const isCap   = activeLeague && activeLeague.captainId === p.id;
   const isTriple = isCap && activeLeague.chip === 'Triple Captain';
@@ -355,15 +416,16 @@ export default function LiveScreen() {
 
   const [loading,      setLoading]      = useState(true);
   const [liveError,    setLiveError]    = useState(null);
-  const [liveFixtures, setLiveFixtures] = useState([]);
-  const [nextFixture,  setNextFixture]  = useState(null);
-  const [userLeagues,  setUserLeagues]  = useState([]);
-  const [squadPlayers, setSquadPlayers] = useState([]);
-  const [events,       setEvents]       = useState([]);
-  const [activeLeague, setActiveLeague] = useState(null);
-  const [mobileTab,    setMobileTab]    = useState('squad');
-  const [currentGW,    setCurrentGW]    = useState('—');
-  const [benchPlayers, setBenchPlayers] = useState([]);
+  const [liveFixtures,  setLiveFixtures]  = useState([]);
+  const [nextFixture,   setNextFixture]   = useState(null);
+  const [userLeagues,   setUserLeagues]   = useState([]);
+  const [squadPlayers,  setSquadPlayers]  = useState([]);
+  const [events,        setEvents]        = useState([]);
+  const [liveStatsLog,  setLiveStatsLog]  = useState([]); // live pts breakdown from player_match_stats
+  const [activeLeague,  setActiveLeague]  = useState(null);
+  const [mobileTab,     setMobileTab]     = useState('squad');
+  const [currentGW,     setCurrentGW]     = useState('—');
+  const [benchPlayers,  setBenchPlayers]  = useState([]);
 
   const initialSet = useRef(false);
 
@@ -470,7 +532,7 @@ export default function LiveScreen() {
           : Promise.resolve({ data: [] }),
         activeFixIds.length && squadPlayerIds.length
           ? supabase.from('player_match_stats')
-              .select('player_id, fantasy_points, fixture_id, minutes_played')
+              .select('player_id, fantasy_points, fixture_id, minutes_played, goals, assists, clean_sheet, goals_conceded, yellow_cards, red_cards, penalty_scored, penalty_missed')
               .in('player_id', squadPlayerIds)
               .in('fixture_id', activeFixIds)
           : Promise.resolve({ data: [] }),
@@ -559,9 +621,15 @@ export default function LiveScreen() {
         if (corrected?.length) setNextFixture(corrected[0]);
       }
 
-      // 7. Match events → fan out per league (delta differs per captain/chip)
+      // 7. Events tab — dual-mode:
+      //   7a. Post-match timeline from match_events (goals/cards at exact minute)
+      //   7b. Live stats breakdown from player_match_stats (available every 5 min during match)
+      //   The UI shows 7a if events exist, else 7b if a match is live, else empty state.
+
+      const playerMap = Object.fromEntries((playerRows || []).map(p => [p.id, p]));
+
       if (activeFixIds.length && squadPlayerIds.length) {
-        // U46: fetch events and scoring_rules in parallel
+        // 7a: Timeline events (post-match, from periods endpoint)
         const activeTournamentIds = [...new Set((fixData || []).map(f => f.tournament_id).filter(Boolean))];
         const [{ data: evData = [] }, { data: ruleRows = [] }] = await Promise.all([
           supabase
@@ -576,7 +644,7 @@ export default function LiveScreen() {
             : Promise.resolve({ data: [] }),
         ]);
 
-        // Build per-position scoring lookup from DB rows, falling back to EPL defaults
+        // Per-position scoring lookup
         const posRules = { ...FALLBACK_POS };
         let   univRules = { ...FALLBACK_UNIV };
         for (const r of ruleRows || []) {
@@ -584,31 +652,57 @@ export default function LiveScreen() {
           else if (FALLBACK_POS[r.position]) posRules[r.position] = { ...FALLBACK_POS[r.position], ...r.rules };
         }
 
-        const playerMap = Object.fromEntries((playerRows || []).map(p => [p.id, p]));
         const fanned = [];
         for (const ev of evData || []) {
-          const p     = playerMap[ev.player_id];
+          const p = playerMap[ev.player_id];
           if (!p) continue;
           const isCap = p.id === captainId;
           for (const lg of enrichedLeagues) {
             const isTripleForLeague = isCap && lg.chip === 'Triple Captain';
             const delta = realDelta(ev.type, p.position, isCap, isTripleForLeague, posRules, univRules);
             fanned.push({
-              key:        `${ev.id}-${lg.id}`,
-              type:       ev.type,
-              minute:     ev.minute,
-              playerName: p.name,
-              club:       p.club,
-              position:   p.position,
-              isCap,
-              league:     lg,
-              delta,
+              key: `${ev.id}-${lg.id}`, type: ev.type, minute: ev.minute,
+              playerName: p.name, club: p.club, position: p.position,
+              isCap, league: lg, delta,
             });
           }
         }
         setEvents(fanned);
+
+        // 7b: Live stats breakdown — built from player_match_stats (already fetched in step 5)
+        // Aggregates per player across all active fixtures and shows what's scoring / why.
+        const statsByPlayer = {};
+        for (const s of statsData || []) {
+          if (!statsByPlayer[s.player_id]) {
+            statsByPlayer[s.player_id] = { goals: 0, assists: 0, cleanSheet: false, goalsConceded: 0, yellowCards: 0, redCards: 0, minutesPlayed: 0, penaltyScored: 0, penaltyMissed: 0 };
+          }
+          const acc = statsByPlayer[s.player_id];
+          acc.goals          += s.goals           ?? 0;
+          acc.assists        += s.assists          ?? 0;
+          acc.cleanSheet      = acc.cleanSheet || (s.clean_sheet ?? false);
+          acc.goalsConceded  += s.goals_conceded   ?? 0;
+          acc.yellowCards    += s.yellow_cards      ?? 0;
+          acc.redCards       += s.red_cards         ?? 0;
+          acc.minutesPlayed   = Math.max(acc.minutesPlayed, s.minutes_played ?? 0);
+          acc.penaltyScored  += s.penalty_scored   ?? 0;
+          acc.penaltyMissed  += s.penalty_missed   ?? 0;
+        }
+
+        const log = [];
+        for (const [pid, stats] of Object.entries(statsByPlayer)) {
+          const p = playerMap[pid];
+          if (!p) continue;
+          const isCap = pid === captainId;
+          const pts   = pointsMap[pid] ?? 0;
+          log.push({ key: `stat-${pid}`, playerName: p.name, club: p.club,
+                     position: p.position, isCap, isTripleCap, points: pts, ...stats });
+        }
+        log.sort((a, b) => b.points - a.points);
+        setLiveStatsLog(log);
+
       } else {
         setEvents([]);
+        setLiveStatsLog([]);
       }
 
       setLiveError(null);
@@ -1016,7 +1110,7 @@ export default function LiveScreen() {
         <div style={{ display: 'flex', padding: '0 18px', borderBottom: '1px solid var(--rule)' }}>
           {[
             { id: 'squad',  label: `MY XI · ${activeLeague?.short || '—'}` },
-            { id: 'events', label: `EVENTS · ${events.length}` },
+            { id: 'events', label: events.length > 0 ? `EVENTS · ${events.length}` : liveStatsLog.length > 0 ? `POINTS · ${liveStatsLog.length}` : 'POINTS' },
           ].map(t => {
             const isActive = mobileTab === t.id;
             return (
@@ -1112,18 +1206,38 @@ export default function LiveScreen() {
             <>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '12px 18px 8px' }}>
                 <span style={{ width: 3, height: 14, background: 'var(--gold)' }} />
-                <span className="mono" style={{ fontSize: 10, color: 'var(--paper)', letterSpacing: '.22em' }}>ALL EVENTS</span>
-                <span className="mono" style={{ fontSize: 9, color: 'var(--mute)', marginLeft: 'auto' }}>EVERY PLAYER · EVERY LEAGUE</span>
+                <span className="mono" style={{ fontSize: 10, color: 'var(--paper)', letterSpacing: '.22em' }}>
+                  {events.length > 0 ? 'MATCH EVENTS' : 'POINTS LOG'}
+                </span>
+                <span className="mono" style={{ fontSize: 9, color: 'var(--mute)', marginLeft: 'auto' }}>
+                  {events.length > 0 ? 'TIMELINE · YOUR SQUAD' : liveFixtures.length > 0 ? 'LIVE · UPDATES EVERY 60S' : ''}
+                </span>
               </div>
+
               {loading ? (
-                <div className="mono" style={{ fontSize: 10, color: 'var(--mute)', padding: '12px 18px' }}>Connecting to live feed…</div>
-              ) : events.length === 0 ? (
-                <div style={{ padding: '32px 18px', textAlign: 'center' }}>
-                  <div className="mono" style={{ fontSize: 10, color: 'var(--mute)', letterSpacing: '.22em' }}>AWAITING KICKOFF…</div>
-                  <div className="mono" style={{ fontSize: 9, color: 'var(--rule)', marginTop: 8 }}>Events appear here as your players act</div>
-                </div>
-              ) : (
+                <div className="mono" style={{ fontSize: 10, color: 'var(--mute)', padding: '12px 18px' }}>Connecting…</div>
+
+              ) : events.length > 0 ? (
+                /* Post-match timeline from match_events */
                 events.map(ev => <MobEventRow key={ev.key} ev={ev} />)
+
+              ) : liveFixtures.length > 0 && liveStatsLog.length > 0 ? (
+                /* Live stats breakdown from player_match_stats */
+                liveStatsLog.map(s => <StatsLogRow key={s.key} s={s} />)
+
+              ) : liveFixtures.length > 0 ? (
+                /* Live match but no stats yet (match just kicked off) */
+                <div style={{ padding: '32px 18px', textAlign: 'center' }}>
+                  <div className="mono" style={{ fontSize: 10, color: 'var(--mute)', letterSpacing: '.22em' }}>MATCH IN PROGRESS</div>
+                  <div className="mono" style={{ fontSize: 9, color: 'var(--rule)', marginTop: 8 }}>Points will appear once stats are available</div>
+                </div>
+
+              ) : (
+                /* No active match */
+                <div style={{ padding: '32px 18px', textAlign: 'center' }}>
+                  <div className="mono" style={{ fontSize: 10, color: 'var(--mute)', letterSpacing: '.22em' }}>NO ACTIVE MATCH</div>
+                  <div className="mono" style={{ fontSize: 9, color: 'var(--rule)', marginTop: 8 }}>Check back after the match for the full points breakdown</div>
+                </div>
               )}
               <div style={{ height: 30 }} />
             </>

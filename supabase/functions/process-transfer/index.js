@@ -4,6 +4,7 @@ import { logError } from '../_shared/log.ts';
 const FN = 'process-transfer';
 const POS_LIMITS = { GK: 2, DEF: 5, MID: 5, FWD: 3 };
 const SQUAD_MAX  = 15;
+const CLUB_MAX   = 3;   // max players from the same club/team per squad
 
 Deno.serve(async (req) => {
   const origin = req.headers.get('Origin') ?? '';
@@ -272,8 +273,8 @@ Deno.serve(async (req) => {
         }
       }
 
-      // TDD-01/TDD-11: atomic RPC acquires SELECT FOR UPDATE lock on squad row,
-      // re-validates budget, ownership, position cap, and squad size inside the lock.
+      // TDD-01/TDD-11/96: atomic RPC acquires SELECT FOR UPDATE lock on squad row,
+      // re-validates budget, ownership, position cap, squad size, and club cap inside the lock.
       const { data: xferResult, error: updateErr } = await supabase
         .rpc('execute_transfer_atomic', {
           p_squad_id:  squad.id,
@@ -282,12 +283,14 @@ Deno.serve(async (req) => {
           p_price:     price,
           p_pos_limit: posLimit,   // TDD-11: position cap enforced inside the lock
           p_squad_max: SQUAD_MAX,  // TDD-11: squad size enforced inside the lock
+          p_club_max:  CLUB_MAX,   // 96: max 3 players per club enforced inside the lock
         });
 
       if (updateErr || !xferResult?.ok) {
         const msg   = xferResult?.error ?? updateErr?.message ?? 'Transfer failed';
         const code  = xferResult?.code  ?? 'TRANSFER_FAILED';
-        const status = code === 'INSUFFICIENT_BUDGET' ? 400 : code === 'ALREADY_OWNED' ? 409 : 500;
+        const clientError = ['INSUFFICIENT_BUDGET','ALREADY_OWNED','SQUAD_FULL','POSITION_LIMIT','CLUB_LIMIT'].includes(code);
+        const status = clientError ? 400 : code === 'ALREADY_OWNED' ? 409 : 500;
         if (status === 500) {
           await logError(FN, 'error', 'Buy atomic failed', { user_id: user.id, league_id, player_id, error: msg });
         }
