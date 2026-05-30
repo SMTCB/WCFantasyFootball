@@ -855,6 +855,7 @@ function ScoringRulesEditor({ tournamentId }) {
 function ObservabilityPanel() {
   const [edgeLogs, setEdgeLogs]   = useState([]);
   const [clientLogs, setClientLogs] = useState([]);
+  const [cronJobs, setCronJobs]   = useState([]);
   const [loading, setLoading]     = useState(false);
   const [since, setSince]         = useState('24h');
 
@@ -862,7 +863,7 @@ function ObservabilityPanel() {
     setLoading(true);
     const cutoff = new Date(Date.now() - (since === '1h' ? 3600_000 : since === '24h' ? 86400_000 : 7 * 86400_000)).toISOString();
 
-    const [{ data: edge }, { data: client }] = await Promise.all([
+    const [{ data: edge }, { data: client }, { data: cron }] = await Promise.all([
       supabase.from('edge_function_errors')
         .select('function, severity, message, context, created_at')
         .gte('created_at', cutoff)
@@ -873,15 +874,37 @@ function ObservabilityPanel() {
         .gte('created_at', cutoff)
         .order('created_at', { ascending: false })
         .limit(100),
+      supabase.rpc('get_cron_status'),
     ]);
 
     setEdgeLogs(edge ?? []);
     setClientLogs(client ?? []);
+    setCronJobs(cron ?? []);
     setLoading(false);
   }, [since]);
 
+  // Auto-load on mount
+  useEffect(() => { load(); }, [load]);
+
   const fmt = (ts) => ts ? new Date(ts).toLocaleString('en-GB', { dateStyle: 'short', timeStyle: 'short' }) : '—';
+  const fmtRelative = (ts) => {
+    if (!ts) return 'never';
+    const diffMs = Date.now() - new Date(ts).getTime();
+    const mins = Math.floor(diffMs / 60_000);
+    if (mins < 2)  return 'just now';
+    if (mins < 60) return `${mins}m ago`;
+    const hrs = Math.floor(mins / 60);
+    if (hrs < 24)  return `${hrs}h ago`;
+    return `${Math.floor(hrs / 24)}d ago`;
+  };
   const sevColor = { warning: 'text-[#FFB300]', error: 'text-negative', critical: 'text-negative font-black' };
+
+  const failedCount = cronJobs.filter(j => j.status === 'failed').length;
+  const cronSummary = cronJobs.length === 0
+    ? null
+    : failedCount === 0
+      ? `All ${cronJobs.length} jobs healthy ✓`
+      : `${failedCount} job${failedCount > 1 ? 's' : ''} FAILING`;
 
   return (
     <Section title="Error Monitor" sub="Edge function errors · client crashes · cron health" badge="O5">
@@ -897,6 +920,45 @@ function ObservabilityPanel() {
           {loading ? 'Loading…' : 'Refresh'}
         </button>
       </div>
+
+      {/* Panel C — Cron jobs (shown first — most actionable at pilot time) */}
+      <div className="flex items-center justify-between mb-1">
+        <p className="text-[9px] font-black uppercase tracking-widest text-text-secondary">Cron Jobs</p>
+        {cronSummary && (
+          <span className={`text-[9px] font-black uppercase ${failedCount > 0 ? 'text-negative' : 'text-positive'}`}>
+            {cronSummary}
+          </span>
+        )}
+      </div>
+      {cronJobs.length === 0 && !loading ? (
+        <p className="text-[10px] text-text-secondary mb-4">Loading…</p>
+      ) : (
+        <div className="mb-6 flex flex-col gap-1 max-h-72 overflow-y-auto">
+          {cronJobs.map((j) => {
+            const ok = j.status === 'succeeded';
+            const hasRun = !!j.last_run;
+            return (
+              <div key={j.jobname} className={`font-mono text-[10px] border p-2 flex items-start gap-2 ${ok ? 'border-border bg-bg' : 'border-negative/40 bg-negative/5'}`}>
+                <span className={`mt-0.5 shrink-0 w-2 h-2 rounded-full ${!hasRun ? 'bg-text-secondary' : ok ? 'bg-positive' : 'bg-negative'}`} />
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-white font-black">{j.jobname}</span>
+                    <span className="text-text-secondary">{j.schedule}</span>
+                    {!hasRun && <span className="text-text-secondary italic">never run</span>}
+                  </div>
+                  {hasRun && (
+                    <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                      <span className={ok ? 'text-positive' : 'text-negative'}>{j.status}</span>
+                      <span className="text-text-secondary">{fmtRelative(j.last_run)}</span>
+                      <span className="text-text-secondary truncate max-w-[180px]" title={j.message}>{j.message}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
 
       {/* Panel A — Edge function errors */}
       <p className="text-[9px] font-black uppercase tracking-widest text-text-secondary mb-1">Edge Function Errors</p>
@@ -933,10 +995,6 @@ function ObservabilityPanel() {
             </div>
           ))}
         </div>
-      )}
-
-      {!edgeLogs.length && !clientLogs.length && !loading && (
-        <p className="text-[9px] text-text-secondary">Click Refresh to load data.</p>
       )}
     </Section>
   );
