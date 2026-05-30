@@ -463,13 +463,14 @@ export default function MarketScreen() {
 
             {/* Auto-fill button */}
             <button
-              onClick={handleAutoFill}
+              onClick={isLocked ? () => showToast('Transfer window is closed — the commissioner must open it first.', 'warning') : handleAutoFill}
               disabled={autoFilling}
+              title={isLocked ? 'Transfer window closed' : emptySlots === 0 ? 'Squad is full' : `Fill ${emptySlots} empty slot${emptySlots > 1 ? 's' : ''}`}
               style={{
                 padding: '6px 10px',
-                background: 'rgba(0,196,232,0.08)',
-                border: '1px solid rgba(0,196,232,0.25)',
-                color: autoFilling ? 'var(--mute)' : 'var(--cyan)',
+                background: isLocked ? 'rgba(239,68,68,0.06)' : 'rgba(0,196,232,0.08)',
+                border: isLocked ? '1px solid rgba(239,68,68,0.25)' : '1px solid rgba(0,196,232,0.25)',
+                color: autoFilling ? 'var(--mute)' : isLocked ? 'var(--danger)' : 'var(--cyan)',
                 fontFamily: 'Archivo Black, sans-serif',
                 fontSize: 8,
                 letterSpacing: '0.1em',
@@ -480,7 +481,7 @@ export default function MarketScreen() {
                 whiteSpace: 'nowrap',
               }}
             >
-              {autoFilling ? 'FILLING' : '⚡ FILL'}
+              {autoFilling ? 'FILLING…' : isLocked ? '🔒 WINDOW CLOSED' : '⚡ FILL'}
             </button>
           </div>
         </div>
