@@ -261,6 +261,66 @@ function MobEventRow({ ev }) {
   );
 }
 
+// ── DesktopStatsRow — wider layout for desktop events panel ──────────────────
+function DesktopStatsRow({ s }) {
+  const pts    = Math.round(s.points ?? 0);
+  const ptsPos = pts >= 0;
+  const name   = (s.playerName || '').split(' ').pop().toUpperCase();
+
+  const tags = [];
+  if (s.goals         > 0) tags.push({ label: `${s.goals}G`,  neg: false });
+  if (s.assists       > 0) tags.push({ label: `${s.assists}A`, neg: false });
+  if (s.cleanSheet)        tags.push({ label: 'CS',            neg: false });
+  if (s.yellowCards   > 0) tags.push({ label: 'YC',            neg: true  });
+  if (s.redCards      > 0) tags.push({ label: 'RC',            neg: true  });
+  if (s.penaltyScored > 0) tags.push({ label: `${s.penaltyScored}P`, neg: false });
+  if (s.penaltyMissed > 0) tags.push({ label: 'PM',            neg: true  });
+  if (s.goalsConceded > 0) tags.push({ label: `−${s.goalsConceded}GA`, neg: true });
+  if (!tags.length && s.minutesPlayed > 0) tags.push({ label: `${s.minutesPlayed}'`, neg: false });
+
+  return (
+    <div style={{
+      display: 'grid', gridTemplateColumns: '44px 22px 1fr auto auto',
+      alignItems: 'center', gap: 12, padding: '10px 16px',
+      borderBottom: '1px solid var(--rule)',
+    }}>
+      {/* Position badge */}
+      <span className="mono" style={{ fontSize: 9, color: 'var(--mute)' }}>{s.position}</span>
+      {/* Captain marker */}
+      <span style={{
+        width: 18, height: 18, borderRadius: '50%', flexShrink: 0,
+        background: s.isCap ? 'var(--gold)' : 'transparent',
+        color: 'var(--ink)', fontFamily: 'Archivo Black', fontSize: 9,
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+      }}>{s.isCap ? (s.isTripleCap ? '3' : 'C') : ''}</span>
+      {/* Name + club + tags */}
+      <div style={{ minWidth: 0, display: 'flex', flexDirection: 'column', gap: 3 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span style={{ fontFamily: 'Archivo Black', fontSize: 13, letterSpacing: '-0.01em' }}>{name}</span>
+          <span className="mono" style={{ fontSize: 9, color: 'var(--mute)' }}>{(s.club || '').split(' ').slice(0, 2).join(' ')}</span>
+        </div>
+        {tags.length > 0 && (
+          <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+            {tags.map(t => (
+              <span key={t.label} className="mono" style={{
+                fontSize: 8, padding: '1px 5px', borderRadius: 2,
+                background: t.neg ? 'rgba(239,68,68,.15)' : 'rgba(34,197,94,.12)',
+                color: t.neg ? 'var(--danger)' : 'var(--positive)',
+                letterSpacing: '.1em',
+              }}>{t.label}</span>
+            ))}
+          </div>
+        )}
+      </div>
+      {/* Points */}
+      <span style={{ fontFamily: 'Archivo Black', fontSize: 18, color: ptsPos ? 'var(--paper)' : 'var(--danger)' }}>
+        {ptsPos ? pts : `−${Math.abs(pts)}`}
+      </span>
+      <span />
+    </div>
+  );
+}
+
 // ── StatsLogRow — live points breakdown from player_match_stats ──────────────
 // Shown on the Events tab during a live match before match_events are available.
 // Each row = one squad player, with their scoring contributions summarised.
@@ -1002,26 +1062,58 @@ export default function LiveScreen() {
             </div>
           </div>
 
-          {/* Right: events feed (all leagues) */}
+          {/* Right: Points Log (live) → Match Events (post-match) */}
           <div style={{ display: 'flex', flexDirection: 'column', minHeight: 0 }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 20px', borderBottom: '1px solid var(--rule)' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <span style={{ width: 3, height: 14, background: 'var(--gold)' }} />
-                <span className="mono" style={{ fontSize: 11, color: 'var(--paper)', letterSpacing: '.22em' }}>MATCH EVENTS</span>
-                <span className="mono" style={{ fontSize: 9, color: 'var(--mute)', letterSpacing: '.14em' }}>· EVERY PLAYER · EVERY LEAGUE</span>
+
+            {/* Header — adapts based on what's available */}
+            <div style={{ padding: '14px 20px 10px', borderBottom: '1px solid var(--rule)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <span style={{ width: 3, height: 14, background: 'var(--gold)', flexShrink: 0 }} />
+                  <span className="mono" style={{ fontSize: 11, color: 'var(--paper)', letterSpacing: '.22em' }}>
+                    {events.length > 0 ? 'MATCH EVENTS' : 'POINTS LOG'}
+                  </span>
+                  <span className="mono" style={{ fontSize: 9, color: 'var(--mute)', letterSpacing: '.14em' }}>
+                    {events.length > 0 ? '· EVERY PLAYER · EVERY LEAGUE' : liveFixtures.length > 0 ? '· LIVE · EVERY 60S' : '· FINAL'}
+                  </span>
+                </div>
+                <span className="mono" style={{ fontSize: 9, color: 'var(--mute)' }}>
+                  {events.length > 0 ? `${events.length} TOTAL` : liveStatsLog.length > 0 ? `${liveStatsLog.length} PLAYERS` : ''}
+                </span>
               </div>
-              <span className="mono" style={{ fontSize: 9, color: 'var(--mute)' }}>{events.length} TOTAL</span>
+              {/* Preliminary disclaimer — during live match before events are written */}
+              {liveFixtures.length > 0 && events.length === 0 && liveStatsLog.length > 0 && (
+                <div className="mono" style={{ fontSize: 8, color: 'var(--mute)', letterSpacing: '.12em', marginTop: 5, paddingLeft: 13, opacity: .7 }}>
+                  PRELIMINARY — FINAL POINTS CALCULATED AFTER THE MATCH
+                </div>
+              )}
             </div>
+
             <div style={{ flex: 1, overflowY: 'auto' }}>
               {loading ? (
                 <div className="mono" style={{ fontSize: 10, color: 'var(--mute)', padding: 20 }}>Connecting to live feed…</div>
-              ) : events.length === 0 ? (
+
+              ) : events.length > 0 ? (
+                /* Post-match timeline from match_events */
+                events.map(ev => <EventRow key={ev.key} ev={ev} />)
+
+              ) : liveFixtures.length > 0 && liveStatsLog.length > 0 ? (
+                /* Live stats breakdown from player_match_stats */
+                liveStatsLog.map(s => <DesktopStatsRow key={s.key} s={s} />)
+
+              ) : liveFixtures.length > 0 ? (
+                /* Live match but no stats yet */
+                <div style={{ padding: '32px 20px', textAlign: 'center' }}>
+                  <div className="mono" style={{ fontSize: 10, color: 'var(--mute)', letterSpacing: '.22em' }}>MATCH IN PROGRESS</div>
+                  <div className="mono" style={{ fontSize: 9, color: 'var(--rule)', marginTop: 8 }}>Points will appear once stats are available</div>
+                </div>
+
+              ) : (
+                /* No active or recent match */
                 <div style={{ padding: '32px 20px', textAlign: 'center' }}>
                   <div className="mono" style={{ fontSize: 10, color: 'var(--mute)', letterSpacing: '.22em' }}>AWAITING KICKOFF…</div>
-                  <div className="mono" style={{ fontSize: 9, color: 'var(--rule)', marginTop: 8 }}>Events will appear here as your players act</div>
+                  <div className="mono" style={{ fontSize: 9, color: 'var(--rule)', marginTop: 8 }}>Points Log will appear here once a match starts</div>
                 </div>
-              ) : (
-                events.map(ev => <EventRow key={ev.key} ev={ev} />)
               )}
             </div>
           </div>
@@ -1264,10 +1356,10 @@ export default function LiveScreen() {
                 </div>
 
               ) : (
-                /* No active match */
+                /* No active or recent match — use "Awaiting kickoff" (makes sense here) */
                 <div style={{ padding: '32px 18px', textAlign: 'center' }}>
-                  <div className="mono" style={{ fontSize: 10, color: 'var(--mute)', letterSpacing: '.22em' }}>NO ACTIVE MATCH</div>
-                  <div className="mono" style={{ fontSize: 9, color: 'var(--rule)', marginTop: 8 }}>Check back after the match for the full points breakdown</div>
+                  <div className="mono" style={{ fontSize: 10, color: 'var(--mute)', letterSpacing: '.22em' }}>AWAITING KICKOFF…</div>
+                  <div className="mono" style={{ fontSize: 9, color: 'var(--rule)', marginTop: 8 }}>Points Log will appear here once a match starts</div>
                 </div>
               )}
               <div style={{ height: 30 }} />
