@@ -125,17 +125,20 @@ function MiniTok({ p, activeLeague }) {
   const tone      = POS_TONE[p.position] || 'var(--mute)';
   const isCaptain = activeLeague && activeLeague.captainId === p.id;
   const isTriple  = isCaptain && activeLeague.chip === 'Triple Captain';
+  // Shrink cards when a row is crowded to prevent overlap
+  const cardMinW  = (p.rowSize ?? 1) >= 5 ? 58 : (p.rowSize ?? 1) >= 4 ? 66 : 74;
   return (
     <div style={{ position: 'absolute', left: `${p.x}%`, top: `${p.y}%`, transform: 'translate(-50%,-50%)' }}>
       <div style={{
         position: 'relative',
-        padding: '4px 8px',
+        padding: '4px 6px',
         background: 'rgba(15,18,24,.94)',
         border: `1px solid ${p.live ? 'var(--danger)' : 'var(--rule)'}`,
         borderLeft: `2px solid ${tone}`,
         borderRadius: 2,
-        minWidth: 78, textAlign: 'center',
+        minWidth: cardMinW, maxWidth: cardMinW + 10, textAlign: 'center',
         boxShadow: p.live ? '0 0 0 2px rgba(239,68,68,.18)' : 'none',
+        overflow: 'hidden',
       }}>
         {p.live && (
           <span className="animate-live-pulse" style={{ position: 'absolute', top: -3, right: -3, width: 6, height: 6, borderRadius: '50%', background: 'var(--danger)' }} />
@@ -150,13 +153,19 @@ function MiniTok({ p, activeLeague }) {
             border: '2px solid var(--ink)',
           }}>{isTriple ? '3' : 'C'}</span>
         )}
-        <div style={{ fontFamily: 'Archivo Black', fontSize: 10, letterSpacing: '-0.01em' }}>
+        <div style={{ fontFamily: 'Archivo Black', fontSize: (p.rowSize ?? 1) >= 5 ? 9 : 10, letterSpacing: '-0.01em', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
           {(p.name || '').split(' ').pop().toUpperCase()}
         </div>
-        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 4, marginTop: 1 }}>
-          <span className="mono" style={{ fontSize: 8, color: 'var(--mute)' }}>{p.club || '—'}</span>
-          <span style={{ width: 2, height: 2, borderRadius: '50%', background: 'var(--mute)' }} />
-          <span style={{ fontFamily: 'Archivo Black', fontSize: 10, color: (p.points ?? 0) >= 0 ? 'var(--paper)' : 'var(--danger)' }}>
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 3, marginTop: 1 }}>
+          {(p.rowSize ?? 1) < 5 && (
+            <>
+              <span className="mono" style={{ fontSize: 7, color: 'var(--mute)', maxWidth: 36, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {(p.club || '').split(' ')[0]}
+              </span>
+              <span style={{ width: 2, height: 2, borderRadius: '50%', background: 'var(--mute)', flexShrink: 0 }} />
+            </>
+          )}
+          <span style={{ fontFamily: 'Archivo Black', fontSize: 10, color: (p.points ?? 0) >= 0 ? 'var(--paper)' : 'var(--danger)', flexShrink: 0 }}>
             {(() => { const pts = Math.round(p.points ?? 0); return pts >= 0 ? pts : `−${Math.abs(pts)}`; })()}
           </span>
         </div>
@@ -285,7 +294,42 @@ function MobSquadRow({ p, activeLeague }) {
 function buildFormation(players) {
   const counts = { GK: 0, DEF: 0, MID: 0, FWD: 0 };
   players.forEach(p => { if (counts[p.position] !== undefined) counts[p.position]++; });
-  return `${counts.DEF}-${counts.MID}-${counts.FWD}`;
+  // Only show non-zero outfield lines; GK is always assumed (1)
+  const parts = [counts.DEF, counts.MID, counts.FWD].filter(n => n > 0);
+  return parts.join('-') || '—';
+}
+
+// Enforce valid starting XI: exactly 1 GK, at least 1 DEF/MID/FWD, total 11.
+// Takes the full squad id array and a {id→player} lookup.
+// Returns a Set of the 11 valid starter ids.
+function pickValidStarters(squadIds, playerLookup) {
+  const byPos = { GK: [], DEF: [], MID: [], FWD: [] };
+  for (const id of squadIds) {
+    const p = playerLookup[id];
+    if (p && byPos[p.position]) byPos[p.position].push(id);
+  }
+
+  const starters = new Set();
+
+  // Step 1 — mandatory minimums (1 GK + 1 each outfield)
+  if (byPos.GK.length)  starters.add(byPos.GK[0]);
+  if (byPos.DEF.length) starters.add(byPos.DEF[0]);
+  if (byPos.MID.length) starters.add(byPos.MID[0]);
+  if (byPos.FWD.length) starters.add(byPos.FWD[0]);
+
+  // Step 2 — fill remaining slots in squad-array order, skip extra GKs
+  for (const id of squadIds) {
+    if (starters.size >= 11) break;
+    if (starters.has(id)) continue;
+    const p = playerLookup[id];
+    if (!p) continue;
+    // Only allow 1 GK in the starting XI
+    const gkAlreadyIn = [...starters].some(sid => playerLookup[sid]?.position === 'GK');
+    if (p.position === 'GK' && gkAlreadyIn) continue;
+    starters.add(id);
+  }
+
+  return starters;
 }
 
 function positionPlayers(players) {
@@ -297,7 +341,8 @@ function positionPlayers(players) {
     grp.forEach((p, i) => {
       const n = grp.length;
       const x = n === 1 ? 50 : Math.round(20 + (i / (n - 1)) * 60);
-      positioned.push({ ...p, x, y: POS_Y[pos] || 50 });
+      // rowSize drives dynamic card width in MiniTok to prevent overlap
+      positioned.push({ ...p, x, y: POS_Y[pos] || 50, rowSize: n });
     });
   }
   return positioned;
@@ -446,8 +491,12 @@ export default function LiveScreen() {
         pointsMap[s.player_id] = (pointsMap[s.player_id] || 0) + Number(s.fantasy_points);
       });
 
-      // Apply captain multiplier; tag bench players (index >= 11 in squadPlayerIds)
-      const benchSet = new Set(squadPlayerIds.slice(11));
+      // Apply captain multiplier; tag bench players using formation-validated starter set.
+      // pickValidStarters enforces 1 GK + ≥1 DEF/MID/FWD so squads stored in any order
+      // still display with a legal formation.
+      const playerLookup = Object.fromEntries((playerRows || []).map(p => [p.id, p]));
+      const validStarterSet = pickValidStarters(squadPlayerIds, playerLookup);
+      const benchSet = new Set(squadPlayerIds.filter(id => !validStarterSet.has(id)));
       const enrichedPlayers = (playerRows || []).map(p => {
         let pts = pointsMap[p.id] || 0;
         const isBench = benchSet.has(p.id);
