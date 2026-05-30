@@ -158,6 +158,7 @@ export default function ConfirmModal({
             fullWidth
             onClick={handleConfirm}
             disabled={loading}
+            style={{ whiteSpace: 'normal', lineHeight: 1.25, textAlign: 'center' }}
           >
             {loading ? '…' : confirmLabel}
           </Button>
