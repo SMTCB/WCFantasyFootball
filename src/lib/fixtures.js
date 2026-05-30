@@ -41,11 +41,19 @@ export function teamCode(name = '') {
 }
 
 // ── Competition detection ─────────────────────────────────────────────────────
-export function detectComp(competition) {
+// Prefer tournament_id (authoritative) over parsing competition text.
+const TOURNAMENT_COMP = {
+  '426':  'EPL',
+  '429':  'WC',
+  '1593': 'UCL',
+};
+
+export function detectComp(competition, tournament_id) {
+  if (tournament_id && TOURNAMENT_COMP[tournament_id]) return TOURNAMENT_COMP[tournament_id];
   if (!competition) return 'EPL';
   const lc = competition.toLowerCase();
   if (lc.includes('world cup') || lc.includes('fifa')) return 'WC';
-  if (lc.includes('champions')) return 'UCL';
+  if (lc.includes('champions') || lc.includes('ucl'))  return 'UCL';
   if (lc.includes('europa'))    return 'UEL';
   if (lc.includes('fa cup'))    return 'FAC';
   return 'EPL';
@@ -63,7 +71,7 @@ export function normalizeFixture(f) {
     dnum:    String(d.getDate()),
     dlong:   `${d.getDate()} ${MONTHS_SHORT[d.getMonth()]}`,
     kickoff: d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }),
-    comp:    detectComp(f.competition),
+    comp:    detectComp(f.competition, f.tournament_id),
     gw:      f.round_number ?? 1,
     status:  f.status === 'finished' ? 'FT' : f.status === 'live' ? 'LIVE' : 'KO',
     live:    f.status === 'live' ? (f.minute ? `${f.minute}'` : 'LIVE') : undefined,

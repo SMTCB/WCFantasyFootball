@@ -813,7 +813,8 @@ export default function LeagueScreen() {
                   style={{ background: 'transparent', border: '1px solid rgba(0,180,216,.4)', color: 'var(--cyan)', padding: '6px 12px', fontFamily: MONO, fontSize: 10, letterSpacing: '.2em', cursor: joinCode ? 'pointer' : 'default', opacity: joinCode ? 1 : 0.4 }}
                 >+ INVITE</button>
                 <button
-                  onClick={replayLeagueTour}
+                  onClick={() => view === 'commissioner' ? replayCommissionerTour() : replayLeagueTour()}
+                  title={view === 'commissioner' ? 'Replay admin tour' : 'Replay league tour'}
                   style={{ width: 20, height: 20, borderRadius: '50%', border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.4)', fontSize: 10, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                 >?</button>
               </div>
