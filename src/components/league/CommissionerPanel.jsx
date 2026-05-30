@@ -921,8 +921,8 @@ function ResolvePendingBets({ openBets, resolutionBetsLoading, setSelectedBetFor
                     </div>
                   )}
 
-                  {/* Answer chips */}
-                  <WizField label="ANSWER" sub="Select the winning option.">
+                  {/* Answer chips + free-text fallback for non-match-result bets (TDD-13) */}
+                  <WizField label="ANSWER" sub={opts.length > 0 ? "Select the winning option, or type a custom answer below." : "No predefined options — type the correct answer key."}>
                     <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                       {opts.map(opt => {
                         const optKey   = opt.key ?? opt;
@@ -944,6 +944,13 @@ function ResolvePendingBets({ openBets, resolutionBetsLoading, setSelectedBetFor
                         );
                       })}
                     </div>
+                    {/* Free-text override for closed bets whose options don't match the actual result */}
+                    <input
+                      placeholder="Or type answer key manually…"
+                      value={currentAnswer}
+                      onChange={e => setBetResolutionAnswer(e.target.value)}
+                      style={{ ...inputStyle, marginTop: 6, fontSize: 11 }}
+                    />
                   </WizField>
 
                   <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>

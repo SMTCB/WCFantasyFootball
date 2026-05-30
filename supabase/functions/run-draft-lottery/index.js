@@ -295,6 +295,29 @@ async function runLottery(leagueId) {
   const gazettEntry = buildGazetteEntry(leagueId, contestedPlayers, allocations, submissions);
   await supabase.from('gazette_entries').insert(gazettEntry);
 
+  // TDD-14: Notify managers who never submitted a draft list — they have no squad.
+  const { data: allMembers } = await supabase
+    .from('league_members')
+    .select('user_id')
+    .eq('league_id', leagueId);
+
+  const submittedUserIds = new Set(submissions.map(s => s.user_id));
+  const missedRows = (allMembers ?? [])
+    .filter(m => !submittedUserIds.has(m.user_id))
+    .map(m => ({
+      league_id:           leagueId,
+      user_id:             m.user_id,
+      notification_type:   'draft',
+      title:               'Draft complete — no wishlist submitted',
+      description:         'The draft lottery ran but you had no wishlist. You have no squad yet — contact your league commissioner to arrange a recovery pick.',
+      related_entity_type: 'draft_allocation',
+    }));
+  if (missedRows.length > 0) {
+    await supabase.from('league_notifications').insert(missedRows);
+    await logError(FN, 'warning', `${missedRows.length} manager(s) missed draft deadline in league ${leagueId}`,
+      { league_id: leagueId, user_ids: missedRows.map(r => r.user_id) });
+  }
+
   // L5.10: Notify users with unresolved slots to complete squad on recovery screen
   const notificationRows = Object.entries(allocations)
     .filter(([, d]) => d.unresolved_slots > 0)

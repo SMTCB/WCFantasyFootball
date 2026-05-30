@@ -272,14 +272,16 @@ Deno.serve(async (req) => {
         }
       }
 
-      // TDD-01: atomic RPC acquires SELECT FOR UPDATE lock on squad row,
-      // re-validates budget and ownership inside the lock, then applies the mutation.
+      // TDD-01/TDD-11: atomic RPC acquires SELECT FOR UPDATE lock on squad row,
+      // re-validates budget, ownership, position cap, and squad size inside the lock.
       const { data: xferResult, error: updateErr } = await supabase
         .rpc('execute_transfer_atomic', {
           p_squad_id:  squad.id,
           p_action:    'buy',
           p_player_id: player_id,
           p_price:     price,
+          p_pos_limit: posLimit,   // TDD-11: position cap enforced inside the lock
+          p_squad_max: SQUAD_MAX,  // TDD-11: squad size enforced inside the lock
         });
 
       if (updateErr || !xferResult?.ok) {
