@@ -531,7 +531,9 @@ export default function LiveScreen() {
       // This keeps the Points Log (and post-match EVENTS timeline) showing after full-time.
       let statsFixIds = (liveFixData || []).map(f => f.id);
       if (!statsFixIds.length) {
-        const cutoff = new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString();
+        // 6h window: covers kickoff + 90 min regulation + 30 min ET + 30 min PT + buffer.
+        // Using kickoff_at as anchor (not match end time) so extra-time finals are still visible.
+        const cutoff = new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString();
         let recentQ = supabase
           .from('fixtures')
           .select('id')

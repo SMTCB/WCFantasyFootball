@@ -2,9 +2,11 @@ import { MgrTag, HubSectionLabel } from './HubShared';
 import { MONO, DISPLAY, mgrHue, mgrMono } from './HubConstants';
 
 export default function StatsView({ topScorers, teamMetrics, members, currentUser, statsLoading }) {
-  const totalPts  = (topScorers || []).reduce((s, m) => s + (m.total_points || 0), 0);
-  const avgPts    = teamMetrics?.avg_points?.toFixed(0) || (members.length ? Math.round(totalPts / members.length) : '—');
-  const biggestGW = topScorers?.[0]?.total_points || '—';
+  const totalPts  = (topScorers || []).reduce((s, m) => s + Math.round(Number(m.total_points) || 0), 0);
+  const avgPts    = teamMetrics?.avg_points != null
+    ? Math.round(Number(teamMetrics.avg_points))
+    : (members.length ? Math.round(totalPts / members.length) : '—');
+  const biggestGW = topScorers?.[0]?.total_points != null ? Math.round(Number(topScorers[0].total_points)) : '—';
 
   return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: 'var(--ink)' }}>
@@ -54,7 +56,7 @@ export default function StatsView({ topScorers, teamMetrics, members, currentUse
                   <span style={{ flex: 1 }} />
                   <span style={{ fontFamily: MONO, fontSize: 10, color: 'var(--mute)' }}>#{i + 1}</span>
                   <span style={{ fontFamily: DISPLAY, fontSize: 14, color: i === 0 ? 'var(--gold)' : 'var(--paper)' }}>
-                    {scorer.total_points}<span style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', marginLeft: 4 }}>PTS</span>
+                    {Math.round(Number(scorer.total_points) || 0)}<span style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', marginLeft: 4 }}>PTS</span>
                   </span>
                 </div>
               );
@@ -98,25 +100,25 @@ export default function StatsView({ topScorers, teamMetrics, members, currentUse
                     <div style={{ fontFamily: DISPLAY, fontSize: 12 }}>{scorer.username}</div>
                     <div style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.16em', marginTop: 2 }}>SEASON TOTAL</div>
                   </div>
-                  <span style={{ fontFamily: MONO, fontSize: 10, color: 'var(--mute)' }}>+{scorer.total_points}</span>
+                  <span style={{ fontFamily: MONO, fontSize: 10, color: 'var(--mute)' }}>+{Math.round(Number(scorer.total_points) || 0)}</span>
                   <span style={{ fontFamily: DISPLAY, fontSize: 16, color: i === 0 ? 'var(--gold)' : 'var(--paper)' }}>
-                    {scorer.total_points}<span style={{ color: 'var(--mute)', fontSize: 10, marginLeft: 4 }}>PTS</span>
+                    {Math.round(Number(scorer.total_points) || 0)}<span style={{ color: 'var(--mute)', fontSize: 10, marginLeft: 4 }}>PTS</span>
                   </span>
                 </div>
               );
             })}
           </section>
 
-          {/* Captaincy placeholder */}
+          {/* Captaincy — coming soon */}
           <section style={{ padding: '16px 22px', display: 'flex', flexDirection: 'column', gap: 8, overflow: 'auto' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
               <span style={{ width: 3, height: 14, background: 'var(--positive)' }} />
               <span style={{ fontFamily: MONO, fontSize: 11, color: 'var(--paper)', letterSpacing: '.22em' }}>CAPTAINCY · HIT RATE</span>
+              <span style={{ fontFamily: MONO, fontSize: 8, letterSpacing: '.18em', color: 'var(--mute)', border: '1px solid var(--rule)', padding: '2px 5px' }}>COMING SOON</span>
             </div>
             <div style={{ fontFamily: "'Archivo', sans-serif", fontSize: 12, color: 'var(--mute)', lineHeight: 1.5 }}>
-              Captain data available once matchday scoring is active.
+              Tracks how often each manager's captain outscored the rest of their squad. Requires multiple scored matchdays to calculate.
             </div>
-            <div style={{ fontFamily: MONO, fontSize: 10, color: 'var(--mute)', letterSpacing: '.18em', marginTop: 4 }}>SEASON HASN'T STARTED YET</div>
           </section>
         </div>
       )}
