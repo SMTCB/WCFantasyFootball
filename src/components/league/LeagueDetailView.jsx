@@ -84,7 +84,7 @@ export default function LeagueDetailView({ leagueId, members, currentUser, membe
           </div>
           {members[0] && (
             <div style={{ textAlign: 'right' }}>
-              <div style={{ fontFamily: DISPLAY, fontSize: 16, color: 'var(--positive)' }}>{members[0].total_points}</div>
+              <div style={{ fontFamily: DISPLAY, fontSize: 16, color: 'var(--positive)' }}>{Math.round(members[0].total_points ?? 0)}</div>
               <div style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.18em', marginTop: 4 }}>LEAD SCORE</div>
             </div>
           )}
@@ -124,13 +124,13 @@ export default function LeagueDetailView({ leagueId, members, currentUser, membe
             <span style={{ fontFamily: DISPLAY, fontSize: 24 }}>{myRank}</span>
             <span style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)' }}>/ {members.length}</span>
           </div>
-          <div style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', marginTop: 4, letterSpacing: '.14em' }}>{myPts} TOT</div>
+          <div style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', marginTop: 4, letterSpacing: '.14em' }}>{myPts !== '—' ? Math.round(myPts) : '—'} TOT</div>
         </div>
         {/* Leader */}
         <div style={{ padding: '10px 12px', background: 'var(--ink-2)', border: '1px solid var(--rule)', borderLeft: '2px solid var(--gold)' }}>
           <div style={{ fontFamily: MONO, fontSize: 9, color: 'var(--gold)', letterSpacing: '.2em' }}>LEADER · {mgrMono(leaderName)}</div>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, marginTop: 4 }}>
-            <span style={{ fontFamily: DISPLAY, fontSize: 24 }}>{leader?.total_points ?? '—'}</span>
+            <span style={{ fontFamily: DISPLAY, fontSize: 24 }}>{leader?.total_points != null ? Math.round(leader.total_points) : '—'}</span>
           </div>
           <div style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', marginTop: 4, letterSpacing: '.14em' }}>{leaderName}</div>
         </div>
@@ -173,7 +173,7 @@ export default function LeagueDetailView({ leagueId, members, currentUser, membe
                       </div>
                     </div>
                   </div>
-                  <div style={{ textAlign: 'right', fontFamily: DISPLAY, fontSize: 13 }}>{m.total_points}</div>
+                  <div style={{ textAlign: 'right', fontFamily: DISPLAY, fontSize: 13 }}>{Math.round(m.total_points ?? 0)}</div>
                   <div style={{ display: 'flex', gap: 4, justifyContent: 'flex-end' }}>
                     {!isMe && (
                       <>
@@ -304,7 +304,7 @@ export default function LeagueDetailView({ leagueId, members, currentUser, membe
               <MobFormDots form={[]} />
               {/* Points */}
               <div style={{ textAlign: 'right' }}>
-                <div style={{ fontFamily: DISPLAY, fontSize: 14 }}>{m.total_points}</div>
+                <div style={{ fontFamily: DISPLAY, fontSize: 14 }}>{Math.round(m.total_points ?? 0)}</div>
                 <div style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.14em', marginTop: 2 }}>TOT</div>
               </div>
             </div>
