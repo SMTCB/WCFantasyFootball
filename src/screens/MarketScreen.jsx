@@ -95,6 +95,16 @@ export default function MarketScreen() {
   // Auto-fill hook — reusable across screens
   const { handleAutoFill, autoFilling, autoFillMsg } = useAutoFill(activeLeague, mySquad, fetchSquad, takenMap, buy, cfg);
 
+  // Mirror auto-fill messages to the toast system so they're always visible
+  const prevAutoFillMsg = useRef(null);
+  useEffect(() => {
+    if (autoFillMsg && autoFillMsg !== prevAutoFillMsg.current) {
+      const isSuccess = autoFillMsg.startsWith('Added');
+      showToast(autoFillMsg, isSuccess ? 'success' : 'warning', 6000);
+    }
+    prevAutoFillMsg.current = autoFillMsg;
+  }, [autoFillMsg, showToast]);
+
   const resolveLeagueTournament = async (lid) => {
     const { data } = await supabase
       .from('leagues')

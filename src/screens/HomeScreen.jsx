@@ -645,7 +645,8 @@ export default function HomeScreen() {
   }, [selectedDate, getWeekDates]);
 
   // WEEK mode: all fixtures in the 7-day window containing selectedDate.
-  // List mode (date or comp grouping): only fixtures on the selected date.
+  // List mode in COMP grouping: all fixtures across all dates (so you can browse by competition).
+  // List mode in DATE grouping: only fixtures on the selected date.
   // viewMode === 'week' MUST be checked first — 'view' defaults to 'date' and would
   // otherwise always match the single-day branch, preventing the week view from ever
   // receiving more than one day of fixtures.
@@ -654,8 +655,9 @@ export default function HomeScreen() {
       const { start, end } = getWeekDates(selectedDate);
       return allFixtures.filter(f => f.date >= start && f.date <= end);
     }
+    if (view === 'comp') return allFixtures;
     return allFixtures.filter(f => f.date === selectedDate);
-  }, [allFixtures, viewMode, selectedDate, getWeekDates]);
+  }, [allFixtures, viewMode, view, selectedDate, getWeekDates]);
 
   // Comp-filtered fixtures for list/week views
   const filtered = useMemo(

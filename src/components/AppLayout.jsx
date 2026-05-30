@@ -18,7 +18,6 @@ const NAV_ITEMS = [
   { key: 'live',        label: 'LIVE',        path: '/live',        Icon: NavIconLive,        desc: 'Live Points & Projections', isLive: true },
   { key: 'market',      label: 'MARKET',      path: '/market',      Icon: NavIconMarket,      desc: 'Player Transfer Market' },
   { key: 'recap',       label: 'RECAP',       path: '/recap',       Icon: NavIconRecap,       desc: 'Matchday Recap & Stats', desktopOnly: true },
-  { key: 'predictions', label: 'PREDICTIONS', path: '/predictions', Icon: NavIconPredictions, desc: 'Cup & Tournament Bracket', desktopOnly: true },
 ];
 
 export default function AppLayout({ children }) {

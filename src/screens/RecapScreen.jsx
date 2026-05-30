@@ -181,7 +181,7 @@ export default function RecapScreen() {
         leagueName,
         username,
         rank,
-        points:     Math.round(totalPoints * 10) / 10,
+        points:     Math.round(totalPoints),
         rankChange: null, // would need prior-matchday data
         bestPlayer: bestPlayerId && playerMap[bestPlayerId]
           ? { ...playerMap[bestPlayerId], points: effectivePoints(bestPlayerId) }
@@ -285,21 +285,50 @@ export default function RecapScreen() {
     </div>
   );
 
-  if (!recap) return (
-    <div className="min-h-screen bg-black flex flex-col items-center justify-center p-8 text-center">
-      <div className="fk-display mb-4" style={{ fontSize: 24, color: 'var(--gold)' }}>FFL</div>
-      <div className="text-lg font-black uppercase">No Recaps Yet</div>
-      <div className="text-xs text-text-tertiary mt-2">
-        Finish a matchday to see your performance summary!
+  if (!recap) {
+    const DEMO_RECAP = {
+      matchday: 'PREVIEW',
+      leagueName: 'My League',
+      username: 'Manager',
+      rank: 2,
+      points: 74,
+      rankChange: 1,
+      bestPlayer: { name: 'Mbappé', position: 'FWD', club: 'FRA', points: 18 },
+      captain:    { name: 'Bellingham', position: 'MID', club: 'ENG', points: 12 },
+      joker: null,
+      isTripleCap: false,
+      topScorers: [
+        { id: '1', name: 'Mbappé',    position: 'FWD', club: 'FRA', points: 18 },
+        { id: '2', name: 'Bellingham',position: 'MID', club: 'ENG', points: 24 },
+        { id: '3', name: 'Salah',     position: 'MID', club: 'EGY', points: 11 },
+        { id: '4', name: 'Trippier',  position: 'DEF', club: 'ENG', points:  9 },
+        { id: '5', name: 'Alisson',   position: 'GK',  club: 'BRA', points:  6 },
+      ],
+      date: new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }),
+    };
+    return (
+      <div className="min-h-screen bg-black flex flex-col items-center justify-center p-8 text-center">
+        <div className="fk-display mb-4" style={{ fontSize: 24, color: 'var(--gold)' }}>FFL</div>
+        <div className="text-lg font-black uppercase">No Recaps Yet</div>
+        <div className="text-xs text-text-tertiary mt-2 mb-6">
+          Recaps appear after each matchday finishes. The WC 2026 kicks off 11 Jun.
+        </div>
+        <button
+          onClick={() => setRecap(DEMO_RECAP)}
+          className="px-6 py-3 text-xs font-black uppercase tracking-widest border rounded-sm"
+          style={{ border: '1px solid var(--cyan)', color: 'var(--cyan)', background: 'rgba(0,180,216,.06)', cursor: 'pointer' }}
+        >
+          Preview Demo Recap
+        </button>
+        <Link
+          to="/"
+          className="mt-4 text-positive text-xs font-black uppercase tracking-widest border border-positive/30 px-6 py-3 rounded-sm"
+        >
+          Back to Home
+        </Link>
       </div>
-      <Link
-        to="/"
-        className="mt-8 text-positive text-xs font-black uppercase tracking-widest border border-positive/30 px-6 py-3 rounded-sm"
-      >
-        Back to Home
-      </Link>
-    </div>
-  );
+    );
+  }
 
   return (
     <div className="min-h-screen bg-bg">

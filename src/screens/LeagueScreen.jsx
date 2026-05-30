@@ -852,6 +852,21 @@ export default function LeagueScreen() {
               </div>
             }
           />
+          {/* Mobile Squad + Market quick-access bar */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', borderBottom: '1px solid var(--rule)', flexShrink: 0 }}>
+            <button
+              onClick={() => navigate(`/squad?leagueId=${activeLeague?.league_id}`)}
+              style={{ padding: '10px 14px', background: 'transparent', border: 'none', borderRight: '1px solid var(--rule)', color: 'var(--purple, #A855F7)', fontFamily: MONO, fontSize: 10, letterSpacing: '.18em', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}
+            >
+              ⬜ SQUAD
+            </button>
+            <button
+              onClick={() => navigate(`/market?leagueId=${activeLeague?.league_id}`)}
+              style={{ padding: '10px 14px', background: 'transparent', border: 'none', color: 'var(--positive)', fontFamily: MONO, fontSize: 10, letterSpacing: '.18em', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}
+            >
+              ⬜ MARKET
+            </button>
+          </div>
         </div>
 
         <TransferWindowBanner {...transferWindow} />
@@ -1003,7 +1018,7 @@ export default function LeagueScreen() {
                                  <tr key={m.user_id} style={{ borderTop: i === 0 ? 'none' : `1px solid ${FT_RULE}` }}>
                                    <td style={{ padding: '5px 4px', width: 18 }}>{i + 1}</td>
                                    <td style={{ padding: '5px 4px', fontFamily: ftSerif, fontSize: 12 }}>{mName}</td>
-                                   <td style={{ padding: '5px 4px', textAlign: 'right', fontWeight: 600 }}>{m.total_points}</td>
+                                   <td style={{ padding: '5px 4px', textAlign: 'right', fontWeight: 600 }}>{Math.round(m.total_points ?? 0)}</td>
                                  </tr>
                                );
                              })}
@@ -1330,7 +1345,7 @@ export default function LeagueScreen() {
                  {managerRoster.map((p, i) => (
                    <div key={i} className="flex items-center gap-4 bg-[var(--ink)] p-3 border border-[var(--rule)] rounded-sm relative overflow-hidden group">
                      <div className="absolute left-0 top-0 bottom-0 w-1 bg-cyan/20 group-hover:bg-cyan transition-colors" />
-                     <div className="w-10 h-10 rounded bg-[var(--ink-2)] flex items-center justify-center text-[10px] font-bold text-[#555] overflow-hidden grayscale"><img src={`https://media.api-sports.io/football/players/${(i % 10) + 600}.png`} className="w-full h-full object-cover" /></div>
+                     <div className="w-10 h-10 rounded bg-[var(--ink-2)] flex items-center justify-center text-[10px] font-black overflow-hidden shrink-0" style={{ border: `1px solid ${p.position === 'GK' ? '#A855F7' : p.position === 'DEF' ? 'var(--cyan)' : p.position === 'MID' ? 'var(--gold)' : 'var(--danger)'}44`, color: p.position === 'GK' ? '#A855F7' : p.position === 'DEF' ? 'var(--cyan)' : p.position === 'MID' ? 'var(--gold)' : 'var(--danger)', fontFamily: 'JetBrains Mono, monospace', letterSpacing: '.06em' }}>{p.position}</div>
                      <div className="flex-1">
                        <div className="text-[10px] font-black text-white/40 uppercase tracking-tighter">{p.club} · {p.position}</div>
                        <div className="text-[15px] font-bold text-white tracking-tight">{p.name}</div>
@@ -1388,7 +1403,7 @@ export default function LeagueScreen() {
               <div className="font-bold uppercase tracking-tight text-[15px]">{l.leagues?.name || l.name}</div>
               <div className="text-[10px] text-text-secondary uppercase mt-1">Rank #{l.rank || '-'}</div>
             </div>
-            <div className="font-black text-positive">{l.total_points || 0} pts</div>
+            <div className="font-black text-positive">{Math.round(l.total_points || 0)} pts</div>
           </div>
         ))
       )}

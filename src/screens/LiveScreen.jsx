@@ -316,7 +316,7 @@ export default function LiveScreen() {
   const [squadPlayers, setSquadPlayers] = useState([]);
   const [events,       setEvents]       = useState([]);
   const [activeLeague, setActiveLeague] = useState(null);
-  const [mobileTab,    setMobileTab]    = useState('events');
+  const [mobileTab,    setMobileTab]    = useState('squad');
   const [currentGW,    setCurrentGW]    = useState('—');
   const [benchPlayers, setBenchPlayers] = useState([]);
 
