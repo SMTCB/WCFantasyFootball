@@ -1,6 +1,6 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-05-30 (session 57 — AUDIT-57 game logic review: 11 findings across auctions, bets, squad windows)  
+**Last Updated**: 2026-05-30 (session 57 — AUDIT-58 admin/lifecycle operations audit: 10 findings; AUDIT-57 game logic review: 11 findings)  
 **E2E Test Suite**: `platform.spec.js` (36 tests × 2 browsers) passing in CI ✅ — completes in ~3 min  
 **Live App**: https://wc-fantasy-football.vercel.app  
 **WC Kick-off**: 2026-06-11 19:00 UTC (Mexico vs South Africa) — **12 days away**
@@ -122,6 +122,106 @@
 - **Note**: Enforcement is correct (process-transfer/deadline check gates mutations), so this is a UX confusion issue, not a logic bug.
 - **Fix**: Return `status:'upcoming'` for the period after a deadline passes and before the next deadline opens (could use a configurable "window closed" gap). Or simply document this as intended behaviour for now.
 - **Effort**: ~1h
+
+---
+
+## 🔍 AUDIT-58 — Admin / Lifecycle Operations Audit (2026-05-30)
+
+**Scope**: Commissioner panel (LEAGUES → ADMIN tab) — period open/close operations, lifecycle controls (Transfer Window, Draft, Cup Phase, Score Recalc), and bet resolution. 10 findings. Ordered by pilot impact.
+
+**Source**: Full read of `CommissionerPanel.jsx` (1890 lines), `useCommissioner.js`, `docs/brand/admin-tab/LOGIC.md` (spec), cross-checked against `process-transfer/index.js`, migrations `06`, `74`, `84`, `90`.
+
+---
+
+### 🔴 P0 — Critical lifecycle breakage
+
+#### AUDIT-58-A1 — RUN ALLOCATION button calls a non-existent RPC (BROKEN)
+- **File**: `src/components/league/CommissionerPanel.jsx:1067`
+- **Issue**: `handleRunAllocation()` calls `supabase.rpc('run_draft_allocation', { p_league_id })`. **This function does not exist in any migration.** The real allocation logic lives in the `run-draft-lottery` edge function. `useCommissioner.triggerDraftAllocation()` ([:147](src/hooks/useCommissioner.js:147)) correctly calls that edge function — but the RUN ALLOCATION ↯ button wires to the inline `handleRunAllocation` instead and never calls `triggerDraftAllocation`. **Pressing the button throws "function run_draft_allocation does not exist" and the core one-way lifecycle step fails.**
+- **Fix**: Replace the inline `commAction(async () => supabase.rpc('run_draft_allocation', …))` in `LifecycleOps` with a call to `commissioner.triggerDraftAllocation()`, which already exists in the hook and calls the correct edge function.
+- **File change**: `src/components/league/CommissionerPanel.jsx:1064-1070` (LifecycleOps handleRunAllocation)
+- **Effort**: ~15 min
+
+#### AUDIT-58-A2 — Transfer window OPEN/CLOSE have no effect on actual transfer enforcement (CRITICAL DISCONNECT)
+- **Files**: `src/hooks/useCommissioner.js:85-105`, `supabase/functions/process-transfer/index.js:72-92`
+- **Issue**: The three period-control signals are fully disconnected:
+
+  | Signal | Written by | Read by |
+  |---|---|---|
+  | `transfer_windows` table | Admin **OPEN** / **CLOSE NOW** buttons | `get_transfer_window_status` path 1 → SquadScreen banner only |
+  | `leagues.transfers_open` (bool) | AdminSeedScreen toggle | Season stepper sub-text only |
+  | `matchday_deadlines` | `sync-fixtures` cron | **process-transfer write enforcement** (the real gate) |
+
+  `process-transfer` (the server that executes transfers) reads **only `matchday_deadlines`** and never touches `transfer_windows` or `transfers_open`. So the admin clicking OPEN does not enable transfers and CLOSE NOW does not stop them for WC/tournament leagues — enforcement runs on the matchday-deadline schedule regardless.
+- **Impact**: Commissioner has the illusion of control but no actual effect on the enforcement path. A transfer can be blocked even when the admin "opens" the window, or allowed when the admin "closes" it.
+- **Fix options**:
+  A. Teach `process-transfer` to also check `transfer_windows` (add a secondary OR condition before the matchday fallback).
+  B. Make OPEN/CLOSE write/update `matchday_deadlines` instead of `transfer_windows`.
+  C. Document that WC leagues are deadline-controlled only, and remove the OPEN/CLOSE buttons from the WC commissioner view.
+  Option C is the fastest safe fix for the pilot (prevents misleading the commissioner); Option A is the proper long-term fix.
+- **Effort**: ~30 min (Option C UI guard), ~1.5h (Option A migration + process-transfer change)
+
+---
+
+### 🟠 P1 — Fix in first week of pilot
+
+#### AUDIT-58-A3 — Status pills on all 4 Lifecycle cards are hardcoded (not live state)
+- **File**: `src/components/league/CommissionerPanel.jsx:1098, 1131, 1156, 1177`
+- **Issue**: Every `LifecycleOp` card passes a literal status string — `status="CLOSED"`, `status="DEADLINE SET"`, `status="UNSEEDED"`, `status="UTILITY · ON-DEMAND"`. The spec (`docs/brand/admin-tab/LOGIC.md §3.1`) requires live state copy such as `"OPEN · CLOSES IN {duration}"`, `"SCHEDULED · OPENS {datetime}"`, etc. The Transfer Window card reads "CLOSED" even when the commissioner just opened it. The Draft card reads "DEADLINE SET" even before a deadline exists.
+- **Impact**: Commissioner cannot trust the panel as a diagnostic. After running each operation, the status label does not change.
+- **Fix**: Pass real derived state to `LifecycleOp`. For Transfer Window: call `get_transfer_window_status` on mount and after open/close to derive current status string. For Draft: derive from `league.draft_deadline` + `now()`. For Cup: derive from `league.cup_phase`.
+- **Effort**: ~1.5h (requires fetching league state inside `LifecycleOps` or passing it down as a prop)
+
+#### AUDIT-58-A4 — No precondition enforcement on one-way lifecycle operations (ORDERING GAP)
+- **Files**: `src/components/league/CommissionerPanel.jsx:1095-1197`
+- **Issue**: The spec (§3.2, §3.3) says:
+  - Allocation should be **disabled** until the draft deadline has passed, and hidden/changed after it runs.
+  - Cup seed should be **disabled** until allocation has run.
+  The code disables only on `commLoading`. A commissioner can seed the cup before running allocation, run allocation multiple times after seeding, or run either before a deadline. No ordering is enforced.
+- **Secondary note**: `seed_cup_clubs` is also fired automatically via the `leagues_cup_seed` DB trigger ([74_draft_cup_fixes.sql:51](supabase/migrations/74_draft_cup_fixes.sql:51)) whenever `cup_phase` transitions from `pre_cup`. The manual SEED button can therefore double-fire (benign due to `ON CONFLICT DO NOTHING`, but the "can't be undone" warning is misleading — it's actually idempotent).
+- **Fix**: Pass `league` state into `LifecycleOps`. Derive guards: `allocationDisabled = !league.draft_deadline || new Date(league.draft_deadline) > new Date()`, `cupDisabled = league.cup_phase === 'pre_cup'`. Disable buttons accordingly. Update SEED button copy to reflect idempotency.
+- **Effort**: ~45 min
+
+#### AUDIT-58-A5 — VOID bet is a non-functional no-op
+- **File**: `src/components/league/CommissionerPanel.jsx:990-994`
+- **Issue**: VOID button: `if (!window.confirm(…)) return; // TODO: wire to voidBet when that function is added`. The confirm dialog fires, then nothing happens. No `voidBet` function exists in `useCommissioner.js`. The spec (§2.2) expects `voidBet(betId)` to mark the bet `state='voided'`, clear picks, and notify managers.
+- **Fix**: Add `voidBet` to `useCommissioner.js` — update `bet_instances.status = 'voided'` and `bet_submissions.is_correct = false` for all picks. Wire the button.
+- **Migration needed**: `resolve_bet` may need a sibling `void_bet` RPC with commissioner auth check, or it can be a direct update via the client with an RLS policy that permits commissioner role. Either way add AUDIT-58-A7's auth guard at the same time.
+- **Effort**: ~1h (hook + migration/RLS)
+
+#### AUDIT-58-A6 — Timezone inconsistency: draft deadline and transfer windows stored without normalization
+- **Files**: `src/hooks/useCommissioner.js:139-140` (draft deadline), `src/hooks/useCommissioner.js:86-88` (transfer window open)
+- **Issue**: Bet deadlines go through `new Date(deadline).toISOString()` before storage (line 312). But `setLeagueDraftDeadline` stores `draftDeadline` raw (the naive `datetime-local` string `YYYY-MM-DDTHH:mm`), and `openTransferWindow` stores `windowOpensAt` raw the same way. Postgres `timestamptz` interprets a timezone-less string as UTC — but a commissioner in GMT+1 entering "19:00" actually means 18:00 UTC. The draft deadline and window times will be off by the commissioner's UTC offset.
+- **Fix**: Normalize both values before storage: `new Date(draftDeadline).toISOString()` and `new Date(windowOpensAt/windowClosesAt).toISOString()`.
+- **Effort**: ~15 min
+
+---
+
+### 🟡 P2 — Monitor / post-pilot
+
+#### AUDIT-58-A7 — `resolve_bet` server authorization gap (duplicates AUDIT-57-01, reinforced here)
+- **Files**: `supabase/migrations/84_resolve_bet_fix.sql`, `src/hooks/useCommissioner.js:345-359`
+- **Issue**: Carried from AUDIT-57-01. `resolve_bet` is SECURITY DEFINER + granted to `authenticated` with no commissioner-role check. The admin panel is the only UI surface, but any user can call the RPC directly. Since VOID (A5) will require the same pattern, both should be fixed in the same migration.
+- **Fix**: Add `IF NOT EXISTS (SELECT 1 FROM league_members WHERE league_id = v_league_id AND user_id = auth.uid() AND role = 'commissioner') THEN RAISE EXCEPTION 'unauthorized'; END IF;` inside `resolve_bet`.
+- **Effort**: ~30 min (shared migration with A5)
+
+#### AUDIT-58-A8 — Score Recalc defaults to placeholder fixture ID `'test-live'`
+- **File**: `src/hooks/useCommissioner.js:50`
+- **Issue**: `scoreFixtureId` is initialized to `'test-live'` — the input field is pre-filled with this non-real value. If a commissioner clicks RECALCULATE without changing the field, the `calculate-scores` edge function runs against `fixture_id='test-live'`. Depending on edge function behaviour (it may return 0 updates silently or error). The spec (§3.4) says the field should eventually be a typeahead; at minimum the default should be empty so RECALCULATE ↯ stays disabled until a value is provided.
+- **Fix**: Change initial state to `''` and ensure the button is disabled when `!scoreFixtureId` (already done in UI — just remove the default init value).
+- **Effort**: 5 min
+
+#### AUDIT-58-A9 — Dead / duplicate bet-creation code paths (MAINTENANCE RISK)
+- **File**: `src/hooks/useCommissioner.js:180-322`
+- **Issue**: Four overlapping bet-create functions exist: `createBetDirect` (line 180), `createBetFromData` (line 288), `createBetInstance` (line 260), `autoGenerateBetOptions` (line 204). Only the wizard path (`createBetFromData`, called via `onPublish` in `CreateBetWizard`) is live. The others are exported in the hook's return value but unused by any component. `reward_type` is hard-coded `'points'` in `createBetFromData` but is a parameter in `createBetDirect`. If a future change adds budget-reward bets, the wrong function may be reached.
+- **Fix**: Remove or clearly mark the legacy functions. Consolidate into a single `createBet(data)` function.
+- **Effort**: ~45 min refactor (low priority; no runtime impact today)
+
+#### AUDIT-58-A10 — "WHO PICKED WHAT" denominator is nonsensical
+- **File**: `src/components/league/CommissionerPanel.jsx:933`
+- **Issue**: The sub-label reads `{betSubmissions.length}/{pending.length + 2}`. `pending.length + 2` is the count of unresolved bets plus 2 — not the number of managers or any meaningful denominator. Should be the league member count (e.g. `memberCount`), passed as a prop. The hardcoded "20 CLUBS · 14 MGRS" copy on the Cup card (:1163) is similarly static.
+- **Fix**: Pass `memberCount` into `ResolvePendingBets` (already passed to the parent `CommissionerPanel`). Replace `pending.length + 2` with `memberCount`. Update cup card copy to derive from league data.
+- **Effort**: ~15 min
 
 ---
 
