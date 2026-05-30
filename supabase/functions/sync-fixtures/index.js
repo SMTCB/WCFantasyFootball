@@ -141,7 +141,12 @@ Deno.serve(async (req) => {
       .from('matchday_deadlines')
       .upsert(deadlineRows, { onConflict: 'matchday_id' });
 
-    if (dlErr) console.error('matchday_deadlines upsert error:', JSON.stringify(dlErr));
+    if (dlErr) {
+      await logError(FN, 'error', 'matchday_deadlines upsert failed — transfer deadlines not saved', {
+        tournament_id: forza_id, error: dlErr.message ?? dlErr,
+      });
+      return respond(500, { ok: false, error: 'matchday_deadlines upsert failed', detail: dlErr.message });
+    }
 
     return respond(200, {
       ok: true,

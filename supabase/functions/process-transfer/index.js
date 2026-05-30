@@ -175,17 +175,20 @@ Deno.serve(async (req) => {
         return json({ ok: false, error: 'Player not in your squad' }, 400, corsHeaders);
       }
 
-      const newPlayers = currentPlayers.filter(id => id !== player_id);
-      const newBudget  = Math.round((budget + price) * 10) / 10;
+      // TDD-01: atomic RPC acquires SELECT FOR UPDATE lock on squad row,
+      // re-validates ownership inside the lock, then applies the mutation.
+      const { data: xferResult, error: updateErr } = await supabase
+        .rpc('execute_transfer_atomic', {
+          p_squad_id:  squad.id,
+          p_action:    'sell',
+          p_player_id: player_id,
+          p_price:     price,
+        });
 
-      const { error: updateErr } = await supabase
-        .from('squads')
-        .update({ players: newPlayers, budget_remaining: newBudget })
-        .eq('id', squad.id);
-
-      if (updateErr) {
-        await logError(FN, 'error', 'Sell update failed', { user_id: user.id, league_id, player_id, error: updateErr.message });
-        return json({ ok: false, error: 'Transfer failed' }, 500, corsHeaders);
+      if (updateErr || !xferResult?.ok) {
+        const msg = xferResult?.error ?? updateErr?.message ?? 'Transfer failed';
+        await logError(FN, 'error', 'Sell atomic failed', { user_id: user.id, league_id, player_id, error: msg });
+        return json({ ok: false, error: msg }, 500, corsHeaders);
       }
 
       // Cancel any active auction listings the seller had for this player.
@@ -199,7 +202,7 @@ Deno.serve(async (req) => {
         .eq('seller_id', squad.id)
         .eq('status', 'open');
 
-      return json({ ok: true, players: newPlayers, budget_remaining: newBudget }, 200, corsHeaders);
+      return json({ ok: true, players: xferResult.players, budget_remaining: xferResult.budget_remaining }, 200, corsHeaders);
     }
 
     // ── BUY ──────────────────────────────────────────────────────────────────
@@ -269,20 +272,27 @@ Deno.serve(async (req) => {
         }
       }
 
-      const newPlayers = [...currentPlayers, player_id];
-      const newBudget  = Math.round((budget - price) * 10) / 10;
+      // TDD-01: atomic RPC acquires SELECT FOR UPDATE lock on squad row,
+      // re-validates budget and ownership inside the lock, then applies the mutation.
+      const { data: xferResult, error: updateErr } = await supabase
+        .rpc('execute_transfer_atomic', {
+          p_squad_id:  squad.id,
+          p_action:    'buy',
+          p_player_id: player_id,
+          p_price:     price,
+        });
 
-      const { error: updateErr } = await supabase
-        .from('squads')
-        .update({ players: newPlayers, budget_remaining: newBudget })
-        .eq('id', squad.id);
-
-      if (updateErr) {
-        await logError(FN, 'error', 'Buy update failed', { user_id: user.id, league_id, player_id, error: updateErr.message });
-        return json({ ok: false, error: 'Transfer failed' }, 500, corsHeaders);
+      if (updateErr || !xferResult?.ok) {
+        const msg   = xferResult?.error ?? updateErr?.message ?? 'Transfer failed';
+        const code  = xferResult?.code  ?? 'TRANSFER_FAILED';
+        const status = code === 'INSUFFICIENT_BUDGET' ? 400 : code === 'ALREADY_OWNED' ? 409 : 500;
+        if (status === 500) {
+          await logError(FN, 'error', 'Buy atomic failed', { user_id: user.id, league_id, player_id, error: msg });
+        }
+        return json({ ok: false, code, error: msg }, status, corsHeaders);
       }
 
-      return json({ ok: true, players: newPlayers, budget_remaining: newBudget }, 200, corsHeaders);
+      return json({ ok: true, players: xferResult.players, budget_remaining: xferResult.budget_remaining }, 200, corsHeaders);
     }
 
     return json({ ok: false, error: 'Unknown action' }, 400, corsHeaders);
