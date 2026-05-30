@@ -473,6 +473,16 @@ async function rollupSquads(fixture_id, pointsLookup, tournament_id) {
       logError('warning', 'Captain on bench; captain bonus moved to highest-scoring starter', {
         fixture_id, squad_id: squad.id, captain_id: squad.captain_id, effective_captain_id: bestPid,
       }); // fire-and-forget
+      // TDD-07: notify manager so they know the reallocation happened
+      supabase.from('league_notifications').insert({
+        league_id:           squad.league_id,
+        user_id:             squad.user_id,
+        notification_type:   'captain_moved',
+        title:               'Captain bonus reallocated',
+        description:         'Your captain was not in the starting XI — the bonus was moved to your highest-scoring player this round.',
+        related_entity_type: 'fixture',
+        related_entity_id:   fixture_id,
+      }).then(); // fire-and-forget
     }
 
     for (const pid of pitchPlayers) {

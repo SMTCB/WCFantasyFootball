@@ -99,59 +99,32 @@ SELECT pg_get_functiondef(oid) FROM pg_proc WHERE proname='resolve_auction_listi
 
 ### 🟠 P1 — Fix in week 1 of pilot
 
-#### TDD-06 — `sync-fixtures` silent failure on matchday_deadlines upsert (HIGH)
+#### TDD-06 — `sync-fixtures` silent failure ✅ FIXED (session 55, PR #223)
 - **File**: `supabase/functions/sync-fixtures/index.js:140–144`
 - **Issue**: Deadline upsert errors are `console.log`-ed only; function returns HTTP 200 / `ok:true`. Transfer deadlines silently go missing → managers transfer after kickoff.
 - **Fix**: Add `logError()` + return HTTP 500 on deadline upsert failure.
 - **Effort**: ~15 min
 
-#### TDD-07 — Captain reallocation after deadline is silent (HIGH)
-- **File**: `supabase/functions/calculate-scores/index.js:464–476`
-- **Issue**: If captain is benched/DNP, system silently moves captain bonus to highest-scoring starter. No notification. Can accidentally reward a manager whose captain gets injured after their squad locks.
-- **Fix**: Keep the reallocation (it's good UX for casual users) but add a league notification so the manager sees it happened. Log to `edge_function_errors` with WARNING level.
-- **Effort**: ~1h
+#### TDD-07 — Captain reallocation notification ✅ FIXED (session 55, PR #225)
+- Captain reallocation now inserts a `league_notifications` row (`captain_moved`) so the manager sees it in the league feed.
 
-#### TDD-08 — `penalty_scored` stat never written to `player_match_stats` (HIGH)
-- **File**: `supabase/functions/ingest-match-events/index.js:415`
-- **Issue**: Ingest derives `penaltyScoredMap` from Forza data but discards it before DB write (the column was removed from the upsert as a prior fix in session 31). `calculate-scores` has scoring rules for penalties but the stat is always absent. FWD bonus for penalty goals missing for all matches.
-- **Fix**: Check if `penalty_scored` column exists in `player_match_stats`. If yes, restore to upsert payload. If no, add via migration + restore.
-- **Effort**: ~30 min
+#### TDD-08 — `penalty_scored` stat ✅ FIXED (session 55, PR #223)
+#### TDD-09 — GK `penalty_saved` starter-only ✅ FIXED (session 55, PR #223)
+#### TDD-10 — Transfer deadline scoping ✅ VERIFIED OK (session 55)
+- All 7 WC deadlines confirmed correct. r1 deadline = 19:00 UTC (kickoff time). Logic is sound — no code change needed.
 
-#### TDD-09 — GK `penalty_saved` credited to ALL GKs in squad, not just starter (HIGH)
-- **File**: `supabase/functions/ingest-match-events/index.js:386–392`
-- **Issue**: Penalty save credit applied to all GKs on the opposing side in the squad (starter + backup). If squad has 2 GKs, both get +5 for one save event.
-- **Fix**: Filter to GK with `minutes_played > 0` (starters only) before awarding credit.
-- **Effort**: ~30 min
+#### TDD-11 — Position quota enforced atomically ✅ FIXED (session 55, PR #225)
+- `execute_transfer_atomic()` updated to accept `p_pos_limit` + `p_squad_max`; position cap and squad size now validated inside the `FOR UPDATE` lock.
 
-#### TDD-10 — Process-transfer deadline may not be scoped to current matchday (HIGH)
-- **File**: `supabase/functions/process-transfer/index.js:77–94`
-- **Issue**: BUG-E2E-02 fixed `ORDER BY DESC → ASC` but multi-round scoping (current vs future round) may still allow transfers after the current round's kickoff if the query returns the current active round's deadline and not the next one. Needs a targeted test on WC data.
-- **Action**: Manual test — attempt a transfer after `429-r2` deadline passes (Jun 11 17:00 UTC) and confirm it is rejected.
-- **Effort**: ~1h to test + fix if needed
+#### TDD-12 — Trade double-accept race ✅ FIXED (session 55, PR #225)
+- `accept_trade_proposal()` now locks proposal + both squad rows (`FOR UPDATE` in UUID order) before checking ownership.
 
-#### TDD-11 — Position quota (max 2 GK, 5 DEF etc.) not enforced server-side (MEDIUM)
-- **File**: `supabase/migrations/04_transfer_window_enforcement.sql:62–107`
-- **Issue**: Trigger `enforce_position_limit()` is on the `transfers` table, but `process-transfer` updates `squads` directly — trigger never fires. Rapid consecutive buys can exceed position caps.
-- **Fix**: Move enforcement into `process-transfer` edge function (count existing players by position before completing buy).
-- **Effort**: ~1h
+#### TDD-13 — Non-match-result bets manual resolve ✅ FIXED (session 55, PR #225)
+- CommissionerPanel `ResolvePendingBets` now shows a free-text answer input alongside option chips — commissioner can type any answer key for `top_scorer`/`player_block` bets.
+- `resolve-bets` edge function: fixed wrong RPC param (`p_correct_answer` → `p_answer`) — match-result auto-resolution was silently failing on every cron tick.
 
-#### TDD-12 — Trade proposal `accept` has no row lock (double-accept race) (HIGH)
-- **File**: `supabase/migrations/85_trade_proposals.sql:156–170`
-- **Issue**: `accept_trade_proposal()` reads `status='pending'` but doesn't lock the row before checking player ownership. Two near-simultaneous accepts can both pass and execute the swap twice.
-- **Fix**: Add `SELECT … FOR UPDATE` on trade_proposals row at start of the function.
-- **Effort**: ~30 min
-
-#### TDD-13 — Non-match-result bets (`top_scorer`, `player_block`) never auto-resolve (MEDIUM)
-- **File**: `supabase/functions/resolve-bets/index.js:50–85`
-- **Issue**: Auto-resolver skips non-match-result bet types (line 84). These become permanently stuck in `closed` status with rewards never awarded. No commissioner UI to force-resolve.
-- **Fix**: Add "Resolve manually" path in CommissionerPanel for any closed bet — expose `resolve_bet` RPC with free-text answer input for non-match-result types.
-- **Effort**: ~2h
-
-#### TDD-14 — Manager who misses draft deadline gets no squad and no notification (MEDIUM)
-- **File**: `supabase/functions/run-draft-lottery/index.js:104`
-- **Issue**: Lottery silently excludes managers with no submission. They log in post-deadline to find no squad, no message, no recovery path.
-- **Fix**: After lottery, check all `league_members` have a submission. Send notification to those who missed it. Optionally auto-fill a squad from remaining available players.
-- **Effort**: ~1h
+#### TDD-14 — Draft miss notification ✅ FIXED (session 55, PR #225)
+- `run-draft-lottery` now fetches all `league_members`, diffs against submission list, and sends `league_notifications` to managers who never submitted a wishlist.
 
 ---
 
@@ -161,10 +134,8 @@ SELECT pg_get_functiondef(oid) FROM pg_proc WHERE proname='resolve_auction_listi
 - **Details**: 3 matches × 5-min poll × ~4 endpoints ≈ 144 API calls/hr during group stage. No backoff or rate-limit response handling visible in ingest functions.
 - **Action**: Monitor `edge_function_errors` daily. Add exponential backoff if errors appear.
 
-#### TDD-16 — Public read policy exposes all squads to unauthenticated users if demo mode is on (HIGH if on)
-- **File**: `supabase/migrations/82_public_read_policies.sql:19–27`
-- **Issue**: `squads_public_read` policy: `USING (true)` — no league membership check, no auth. All pilot squads (budget, player arrays) visible to anyone on the internet if demo mode is enabled.
-- **Action**: Verify demo mode is OFF in production. Query `league_config` or check env flags before pilot launch.
+#### TDD-16 — Public squad read policy ✅ FIXED (session 55, PR #225)
+- `squads_public_read` policy (`USING (true)`) dropped via migration 95. Squad data (budget, player arrays) no longer readable by unauthenticated users.
 
 #### TDD-17 — H2H + Cup formats non-functional (no generator logic) (HIGH for those formats)
 - **Details**: `h2h_records` table exists but no function populates H2H matchups. Cup bracket generator is also absent. Both features are dead code paths.
