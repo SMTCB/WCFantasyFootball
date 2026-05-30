@@ -711,4 +711,107 @@ After setup, log in as TestComm → League → ADMIN tab → LIFECYCLE OPERATION
 - **process-transfer matchday**: The Edge Function now picks the nearest future `matchday_deadline` (not the furthest), so sells/buys work correctly for multi-round WC leagues.
 - **Auction bids**: Re-bidding on the same listing now upserts the `auction_bids` row — each user always has their latest bid recorded.
 
-Last Updated: **2026-05-29**
+---
+
+## FLOW 12 — Chips (Wildcard, Triple Captain, 16th Man)
+
+**Scope**: Verify the three squad chips activate correctly, enforce their rules, and respect matchday scope for the Daily Joker.
+
+**Pre-conditions**:
+- Logged in as `e2e_test1@fantasykit.test`
+- Squad has at least 11 players signed (chips are disabled without a squad)
+- No chips currently active (reset via SQL if needed: `UPDATE squads SET is_wildcard=false, is_triple_captain=false WHERE user_id=<uid>`)
+- No Daily Joker row for the current matchday (reset: `DELETE FROM daily_jokers WHERE user_id=<uid>`)
+
+### Step 1 — Navigate to Chips tab
+
+1. Open `/squad` → select your league.
+2. On mobile: tap the **⚡ CHIPS** tab strip. On desktop: click **Chips** sub-tab.
+3. **Assert**: Three sections visible — Wildcard, Triple Captain, Daily Joker.
+4. **Assert**: "CHIP GUIDE" button is visible at the top-right of the chips tab.
+
+### Step 2 — Open the Chip Guide wizard
+
+1. Tap / click **CHIP GUIDE**.
+2. **Assert**: Modal slides up (mobile) or appears centered (desktop).
+3. **Assert**: Three chip entries visible — Wildcard, Triple Captain, 16th Man — each with What/When/Restrictions/Tip sections.
+4. **Assert**: "REPLAY TUTORIAL" and "GOT IT" buttons visible at the bottom.
+5. Click **GOT IT** → modal closes.
+
+### Step 3 — Activate Wildcard chip
+
+1. In the Chips tab, tap **Activate Chip** under Wildcard.
+2. **Assert**: Confirmation modal appears: "Use Wildcard?" + "This cannot be undone for this matchday."
+3. Click **Activate**.
+4. **Assert**: Wildcard card turns green and shows **ACTIVE** badge.
+5. **Assert**: Button now reads "Deactivate".
+6. Click **Deactivate** → Wildcard deactivates without a confirmation dialog.
+
+```sql
+-- Verify the DB flag toggled correctly
+SELECT is_wildcard FROM squads WHERE user_id = '<test1_uid>' AND league_id = '<league_id>' ORDER BY created_at DESC LIMIT 1;
+-- Expected: false after deactivation
+```
+
+### Step 4 — Activate Triple Captain chip
+
+1. In the Chips tab, tap **Activate Chip** under Triple Captain.
+2. **Assert**: Confirmation modal appears with "All-or-Nothing" warning.
+3. Click **Activate**.
+4. **Assert**: Triple Captain card turns gold and shows **ACTIVE** badge.
+5. Navigate to Pitch tab → **Assert**: Captain badge shows a "C×3" or triple visual indicator.
+
+```sql
+SELECT is_triple_captain FROM squads WHERE user_id = '<test1_uid>' AND league_id = '<league_id>' ORDER BY created_at DESC LIMIT 1;
+-- Expected: true
+```
+
+### Step 5 — Daily Joker (16th Man) — once per matchday enforcement
+
+**Pre-condition**: No joker set yet. Squad has at least one player whose club is playing today.
+
+1. In Chips tab, click **Choose 16th Man**.
+2. **Assert**: Player picker appears, filtered to players from clubs playing today.
+3. Select any player.
+4. **Assert**: JokerCard now shows "JOKER LOCKED FOR TODAY" / "JOKER LOCKED FOR THIS MATCHDAY".
+5. Attempt to set joker again by refreshing and opening the Chips tab.
+6. **Assert**: Button is disabled / locked — cannot set a second joker.
+
+```sql
+-- Confirm joker row exists with matchday_id populated
+SELECT player_id, joker_date, matchday_id FROM daily_jokers WHERE user_id = '<test1_uid>' ORDER BY created_at DESC LIMIT 1;
+-- Expected: matchday_id matches the active matchday (e.g. '426-r35'), joker_date = today's date
+```
+
+**Matchday scope test** (manual): If today has multiple match fixtures on different calendar days, confirm the joker remains locked across both days without resetting at midnight (since constraint is now per matchday_id, not per joker_date).
+
+### Step 6 — Validate chip chip already-used protection
+
+1. Set Wildcard to active.
+2. Via SQL: manually update `is_wildcard = false` to simulate "already used this season" without deactivating (or simulate `CHIP_ALREADY_USED` from `activate_chip` RPC by inserting a record).
+3. **Assert**: Attempting to re-activate shows error: "Wildcard has already been used this season."
+
+### Expected Results
+
+| Step | Assert | Pass/Fail |
+|------|--------|-----------|
+| 1 | Chips tab visible with all three sections | |
+| 2 | Chip Guide modal opens with all chip details | |
+| 3 | Wildcard activates → turns green → deactivates cleanly | |
+| 4 | Triple Captain activates → turns gold → captain pitch indicator updates | |
+| 5 | 16th Man locked after selection, matchday_id populated in DB | |
+| 6 | Already-used protection fires correctly | |
+
+### Reset after test
+
+```sql
+UPDATE squads
+  SET is_wildcard = false, is_triple_captain = false
+  WHERE user_id = '<test1_uid>' AND league_id = '<league_id>';
+
+DELETE FROM daily_jokers WHERE user_id = '<test1_uid>';
+```
+
+---
+
+Last Updated: **2026-05-30**

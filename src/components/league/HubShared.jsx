@@ -105,6 +105,7 @@ export function HubActionBar({ onManageSquad, onMarket }) {
 export function HubTabs({ active = 'leaderboard', onTab, isCommissioner = false, unreadChat = 0, notifyBets = false, notifyAuctions = false }) {
   const tabs = [
     { id: 'leaderboard', label: 'LEADERBOARD' },
+    { id: 'recap',       label: 'RECAP' },
     { id: 'frontpage',   label: 'FRONTPAGE' },
     { id: 'bets',        label: 'BETS',     notify: notifyBets },
     { id: 'betting',     label: 'BETTING' },
@@ -272,6 +273,7 @@ export function HubLeagueHeader({ leagueName = 'LOADING…', memberCount = 0, gw
 export function HubTabPills({ active = 'leaderboard', onTab, isCommissioner = false, unreadChat = 0, notifyBets = false, notifyAuctions = false }) {
   const tabs = [
     { id: 'leaderboard', label: 'BOARD' },
+    { id: 'recap',       label: 'RECAP' },
     { id: 'frontpage',   label: 'FRONTPAGE' },
     { id: 'bets',        label: 'BETS',     notify: notifyBets },
     { id: 'betting',     label: 'BETTING' },
