@@ -209,6 +209,57 @@ SELECT pg_get_functiondef(oid) FROM pg_proc WHERE proname='resolve_auction_listi
 
 ---
 
+## 📊 SESSION 55 PROGRESS (2026-05-30 — TDD Audit Fixes + Pilot Readiness)
+
+**Goal**: Work through technical due diligence audit findings from session 54. Fix all P0 + P1 items before WC kick-off (Jun 11).
+
+### ✅ VERIFICATION PASS (session 55 start)
+
+- **TDD-V01**: Auction status enum = `open/cancelled/sold` ✅ — TDD-02 NOT confirmed
+- **TDD-V02**: All 4 draft/transfer tables have `rowsecurity=true` ✅ — TDD-05 NOT confirmed
+- **TDD-V03**: `resolve_auction_listing` uses correct column names + status ✅ — TDD-02 NOT confirmed
+- **Net result**: 2 P0 items eliminated without code changes; 3 real P0s and all P1s tackled
+
+### ✅ PR [#223](https://github.com/SMTCB/WCFantasyFootball/pull/223) — P0 Fixes (migration 93)
+
+| TDD | Fix |
+|-----|-----|
+| TDD-01 | `execute_transfer_atomic()` Postgres function with `SELECT FOR UPDATE` — eliminates budget double-spend race from double-click / concurrent tabs |
+| TDD-03 | `CHECK (captain_id IS DISTINCT FROM joker_player_id)` constraint on squads — prevents 4× (6× with Triple Captain) multiplier exploit |
+| TDD-04 | `BEFORE INSERT` trigger `draft_deadline_check` on `draft_submissions` — deadline enforced server-side, not just client |
+| TDD-06 | `sync-fixtures`: `logError()` + HTTP 500 on `matchday_deadlines` upsert failure (was silently returning ok:true) |
+| TDD-08 | `penalty_scored` column added to `player_match_stats`; restored to ingest upsert — FWD penalty goal bonus was always 0 |
+| TDD-09 | GK `penalty_saved` now restricted to `mins > 0` — backup GKs were getting +5 from the bench |
+
+### ✅ PR [#224](https://github.com/SMTCB/WCFantasyFootball/pull/224) — PILOT-04 Player Prices (migration 94)
+
+- 4-tier nation pricing across all 48 WC nations (Tier S=£7.0 base, A=£6.0, B=£5.0, C=£4.0)
+- Position adjustment: FWD +1.0, MID +0.5, DEF ±0, GK -0.5; random noise ×1.5; cap £4.0–9.5
+- **Result**: Elite FWDs avg £8.5–8.7, Tier-C GKs avg £4.0–4.3. Full elite squad ≈£95M — real budget trade-offs
+- **Verified via DB query**: Distribution correct across all tiers
+
+### ✅ PR [#225](https://github.com/SMTCB/WCFantasyFootball/pull/225) — P1 Fixes (migration 95)
+
+| TDD | Fix |
+|-----|-----|
+| TDD-07 | `calculate-scores` inserts `league_notifications` (`captain_moved`) when captain bonus reallocated |
+| TDD-10 | Verified OK — all 7 WC deadlines correct, r1=19:00 UTC (kickoff). No code change |
+| TDD-11 | `execute_transfer_atomic()` extended: `p_pos_limit` + `p_squad_max` params; position cap + squad size validated inside the lock |
+| TDD-12 | `accept_trade_proposal()`: `FOR UPDATE` on proposal + both squad rows in UUID order (deadlock-safe) |
+| TDD-13 | CommissionerPanel: free-text answer input added to `ResolvePendingBets`. Fixed `resolve-bets` edge function calling RPC with wrong param (`p_correct_answer` → `p_answer`) — match-result auto-resolution was silently failing on every cron tick since migration 72 |
+| TDD-14 | `run-draft-lottery` diffs `league_members` vs submissions; sends notification to managers who missed the draft entirely |
+| TDD-16 | `squads_public_read` policy (`USING(true)`) dropped — squad data no longer readable by unauthenticated users |
+
+### 📋 REMAINING (low priority — post-pilot or monitor)
+
+| TDD | Status |
+|-----|--------|
+| TDD-15 | Monitor `edge_function_errors` for Forza API rate limit issues during 3 concurrent WC matches |
+| TDD-18 | Rotate Supabase service role key after pilot launch (JWT hardcoded in migration 91 git history) |
+| TDD-19 | Chat rate limit race — monitor only; low risk at pilot scale |
+
+---
+
 ## 📊 SESSION 53 PROGRESS (2026-05-29 — P0 Pilot Fixes)
 
 **Goal**: Apply both P0 blockers identified in session 52 before any pilot user logs in.

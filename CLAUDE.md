@@ -539,10 +539,16 @@ Always create a new file — never modify existing migrations.
 | 79–87 | `79_*.sql` → `87_*.sql` | Sprint 4–5: fantasy_points NUMERIC, auction FK fix, draft pool filter, RLS hardening, bet submit/resolve fixes, WC cron URL fix, score cron status fix |
 | 88 | `88_wc_bug_fixes.sql` | Session 51: trade proposal duplicate guard, get_league_stats RPC, WC matchday deadlines r4–r7 |
 | 89 | `89_bet_notification_trigger_fix.sql` | Session 51: notify_league_on_bet_creation → SECURITY DEFINER (was blocking all bet creation with 403) |
+| 90 | `90_fix_wc_sync_crons.sql` | Session 53: fix sync-wc-fixtures-6h + sync-wc-players-6h crons (current_setting → hardcoded URL) |
+| 91 | `91_fix_remaining_current_setting_crons.sql` | Session 53: fix resolve-finished-bets (failing) + ingest-match-events-live (ticking bomb) |
+| 92 | `92_cron_status_rpc.sql` | Session 53: cron_job_status() RPC for admin error monitor panel |
+| 93 | `93_tdd_p0_fixes.sql` | Session 55: execute_transfer_atomic() FOR UPDATE lock; squads_captain_not_joker CHECK; draft_deadline_check trigger; penalty_scored column |
+| 94 | `94_pilot04_player_price_tiers.sql` | Session 55: 4-tier nation pricing for WC 2026 (Tier S £7.0 → Tier C £4.0 base + position adj) |
+| 95 | `95_p1_fixes.sql` | Session 55: execute_transfer_atomic() position cap + squad size in lock; accept_trade_proposal() FOR UPDATE; drop squads_public_read policy |
 
-**Next migration**: `90_`
+**Next migration**: `96_`
 
-**Key pipeline facts (2026-05-28):**
+**Key pipeline facts (2026-05-30):**
 - `calculate-scores` uses `scoring_rules` table (not `scoring_templates`) keyed by `tournament_id`
 - `fantasy_points.matchday_id` format: `'{tournament_id}-r{round}'` e.g. `'426-r35'`
 - `matchday_deadlines.matchday_id` format: `'426-rN'` (canonical, written by `sync-fixtures`)
