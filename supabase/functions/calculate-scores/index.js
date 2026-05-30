@@ -436,6 +436,10 @@ async function rollupSquads(fixture_id, pointsLookup, tournament_id) {
     }
   }
 
+  // minutes_played lookup removed — auto-substitution is disabled.
+  // Bench players (indices 11-14) never contribute to the squad total.
+  // DNP starters simply score 0 for the matchday.
+
   const { data: squads } = await supabase
     .from('squads')
     .select('id, user_id, league_id, matchday_id, players, captain_id, joker_player_id, is_triple_captain, is_wildcard, leagues!inner(tournament_id)')
@@ -485,6 +489,9 @@ async function rollupSquads(fixture_id, pointsLookup, tournament_id) {
       }).then(); // fire-and-forget
     }
 
+    // Starters only — bench players (indices 11-14) never score.
+    // Auto-substitution is intentionally disabled; DNP starters score 0.
+    // (Auto-sub is a Backlog item to implement in a future sprint.)
     for (const pid of pitchPlayers) {
       let pts = fullRoundLookup[pid] ?? 0;   // ?? preserves legitimate negative scores (L1.3)
       if (Number.isNaN(pts)) {
