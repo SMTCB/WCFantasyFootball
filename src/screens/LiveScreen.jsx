@@ -451,24 +451,43 @@ export default function LiveScreen() {
       }
 
       // 1. Live fixtures — U55: use home_score/away_score columns directly
-      const { data: fixData = [] } = await supabase
+      // Score strip shows only truly-live matches; stats/events window also covers
+      // recently-finished fixtures (up to 3 h after kickoff) so the Points Log stays
+      // visible after a match ends and shows FINAL points.
+      const { data: liveFixData = [] } = await supabase
         .from('fixtures')
         .select('id, home_team, away_team, status, kickoff_at, minute, home_score, away_score, tournament_id')
         .eq('status', 'live')
         .order('kickoff_at', { ascending: true });
 
-      const activeFixIds = (fixData || []).map(f => f.id);
-
-      // U55: use stored score columns instead of counting events
-      const enrichedFix = (fixData || []).map(f => ({
+      const enrichedFix = (liveFixData || []).map(f => ({
         ...f,
         homeGoals: f.home_score ?? 0,
         awayGoals: f.away_score ?? 0,
       }));
       setLiveFixtures(enrichedFix);
 
+      // Stats window: live + recently-finished (last 3 h), filtered to active tournament.
+      // This keeps the Points Log (and post-match EVENTS timeline) showing after full-time.
+      let statsFixIds = (liveFixData || []).map(f => f.id);
+      if (!statsFixIds.length) {
+        const cutoff = new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString();
+        let recentQ = supabase
+          .from('fixtures')
+          .select('id')
+          .eq('status', 'finished')
+          .gte('kickoff_at', cutoff);
+        // Only look at the active league's tournament to avoid surfacing unrelated matches
+        if (activeTournamentId) recentQ = recentQ.eq('tournament_id', activeTournamentId);
+        const { data: recentFix = [] } = await recentQ;
+        statsFixIds = (recentFix || []).map(f => f.id);
+      }
+      // Keep a backward-compatible alias so the rest of the function uses statsFixIds
+      const activeFixIds = statsFixIds;
+      const fixData      = liveFixData; // used only for tournament-id extraction below
+
       // Fetch next upcoming fixture — filtered by active league's tournament (BUG-12 fix)
-      if (!activeFixIds.length) {
+      if (!liveFixData.length) {
         let upcomingQ = supabase.from('fixtures')
           .select('id, home_team, away_team, status, kickoff_at, tournament_id')
           .eq('status', 'scheduled')
@@ -630,7 +649,11 @@ export default function LiveScreen() {
 
       if (activeFixIds.length && squadPlayerIds.length) {
         // 7a: Timeline events (post-match, from periods endpoint)
-        const activeTournamentIds = [...new Set((fixData || []).map(f => f.tournament_id).filter(Boolean))];
+        // Use activeTournamentId (active league's tournament) as primary; fall back to
+        // scanning liveFixData tournament_ids. This keeps scoring rules correct post-match.
+        const activeTournamentIds = activeTournamentId
+          ? [activeTournamentId]
+          : [...new Set((fixData || []).map(f => f.tournament_id).filter(Boolean))];
         const [{ data: evData = [] }, { data: ruleRows = [] }] = await Promise.all([
           supabase
             .from('match_events')
@@ -1204,14 +1227,22 @@ export default function LiveScreen() {
             </div>
           ) : (
             <>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '12px 18px 8px' }}>
-                <span style={{ width: 3, height: 14, background: 'var(--gold)' }} />
-                <span className="mono" style={{ fontSize: 10, color: 'var(--paper)', letterSpacing: '.22em' }}>
-                  {events.length > 0 ? 'MATCH EVENTS' : 'POINTS LOG'}
-                </span>
-                <span className="mono" style={{ fontSize: 9, color: 'var(--mute)', marginLeft: 'auto' }}>
-                  {events.length > 0 ? 'TIMELINE · YOUR SQUAD' : liveFixtures.length > 0 ? 'LIVE · UPDATES EVERY 60S' : ''}
-                </span>
+              <div style={{ padding: '12px 18px 0' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <span style={{ width: 3, height: 14, background: 'var(--gold)', flexShrink: 0 }} />
+                  <span className="mono" style={{ fontSize: 10, color: 'var(--paper)', letterSpacing: '.22em' }}>
+                    {events.length > 0 ? 'MATCH EVENTS' : 'POINTS LOG'}
+                  </span>
+                  <span className="mono" style={{ fontSize: 9, color: 'var(--mute)', marginLeft: 'auto' }}>
+                    {events.length > 0 ? 'TIMELINE · YOUR SQUAD' : liveFixtures.length > 0 ? 'LIVE · UPDATES EVERY 60S' : 'FINAL'}
+                  </span>
+                </div>
+                {/* Preliminary disclaimer — shown during live match, hidden once match_events are written */}
+                {liveFixtures.length > 0 && events.length === 0 && liveStatsLog.length > 0 && (
+                  <div className="mono" style={{ fontSize: 8, color: 'var(--mute)', letterSpacing: '.12em', marginTop: 5, paddingLeft: 11, opacity: .7 }}>
+                    PRELIMINARY — FINAL POINTS CALCULATED AFTER THE MATCH
+                  </div>
+                )}
               </div>
 
               {loading ? (
