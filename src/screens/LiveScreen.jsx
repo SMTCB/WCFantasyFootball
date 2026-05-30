@@ -1109,10 +1109,10 @@ export default function LiveScreen() {
                 </div>
 
               ) : (
-                /* No active or recent match */
+                /* No live or recent match for this league */
                 <div style={{ padding: '32px 20px', textAlign: 'center' }}>
-                  <div className="mono" style={{ fontSize: 10, color: 'var(--mute)', letterSpacing: '.22em' }}>AWAITING KICKOFF…</div>
-                  <div className="mono" style={{ fontSize: 9, color: 'var(--rule)', marginTop: 8 }}>Points Log will appear here once a match starts</div>
+                  <div className="mono" style={{ fontSize: 10, color: 'var(--mute)', letterSpacing: '.22em' }}>NO MATCH ONGOING</div>
+                  <div className="mono" style={{ fontSize: 9, color: 'var(--rule)', marginTop: 8 }}>Points Log will appear here when a match is live</div>
                 </div>
               )}
             </div>
@@ -1356,10 +1356,10 @@ export default function LiveScreen() {
                 </div>
 
               ) : (
-                /* No active or recent match — use "Awaiting kickoff" (makes sense here) */
+                /* No live or recent match for this league */
                 <div style={{ padding: '32px 18px', textAlign: 'center' }}>
-                  <div className="mono" style={{ fontSize: 10, color: 'var(--mute)', letterSpacing: '.22em' }}>AWAITING KICKOFF…</div>
-                  <div className="mono" style={{ fontSize: 9, color: 'var(--rule)', marginTop: 8 }}>Points Log will appear here once a match starts</div>
+                  <div className="mono" style={{ fontSize: 10, color: 'var(--mute)', letterSpacing: '.22em' }}>NO MATCH ONGOING</div>
+                  <div className="mono" style={{ fontSize: 9, color: 'var(--rule)', marginTop: 8 }}>Points Log will appear here when a match is live</div>
                 </div>
               )}
               <div style={{ height: 30 }} />
