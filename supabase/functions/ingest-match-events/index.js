@@ -387,7 +387,9 @@ Deno.serve(async (req) => {
       // (Approximation: can't distinguish save from post/bar, but saves are the vast majority.)
       const teamSide    = teamId === homeId ? 'home' : teamId === awayId ? 'away' : null;
       const oppTeamSide = teamSide === 'home' ? 'away' : teamSide === 'away' ? 'home' : null;
-      const penaltySaved = (internal.position === 'GK' && oppTeamSide)
+      // TDD-09: only award penalty_saved to the starting GK (mins > 0),
+      // not to all GKs in the squad (backup would get +5 from the bench).
+      const penaltySaved = (internal.position === 'GK' && oppTeamSide && mins > 0)
         ? (periodsResult.penaltyMissedByTeamSide[oppTeamSide] ?? 0)
         : 0;
 
@@ -412,7 +414,7 @@ Deno.serve(async (req) => {
         red_cards:       periodsResult.redCards.has(fpid)      ? 1 : 0,
         penalty_missed:  periodsResult.penaltyMissed.has(fpid) ? 1 : 0,
         penalty_saved:   penaltySaved,
-        // penalty_scored omitted — column does not exist in player_match_stats
+        penalty_scored:  periodsResult.penaltyScoredMap[fpid] ?? 0,  // TDD-08: restored now that column exists
 
         // From E5 EventDigest — only source for own goals
         own_goals:       ownGoalMap[fpid] ?? 0,
