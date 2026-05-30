@@ -12,38 +12,6 @@ import { POS_ORDER, POS_PITCH_Y as POS_Y } from '../lib/formations';
 import { teamCode } from '../lib/fixtures';
 const POS_TONE = { FWD: 'var(--danger)', MID: 'var(--gold)', DEF: 'var(--cyan)', GK: '#A855F7' };
 
-// ── Point estimation ─────────────────────────────────────────────────────────
-// U46: fallback constants match EPL scoring_rules seed; overridden at runtime
-// by scoring_rules rows fetched during fetchAll so values are tournament-accurate.
-
-const FALLBACK_POS = {
-  GK:  { goal: 5, assist: 0, clean_sheet: 4, conceded_per_goal: -1, penalty_saved: 5 },
-  DEF: { goal: 4, assist: 1, clean_sheet: 4, conceded_per_goal:  0, penalty_saved: 0 },
-  MID: { goal: 5, assist: 1, clean_sheet: 1, conceded_per_goal:  0, penalty_saved: 0 },
-  FWD: { goal: 3, assist: 1, clean_sheet: 0, conceded_per_goal:  0, penalty_saved: 0 },
-};
-const FALLBACK_UNIV = { own_goal: -2, yellow_card: -1, red_card: -3, penalty_missed: -1 };
-
-function realDelta(type, pos, isCap, isTripleCap, PR, UR) {
-  const r = PR[pos] ?? {};
-  const base = {
-    goal:         r.goal              ?? 0,
-    assist:       r.assist            ?? 0,
-    clean_sheet:  r.clean_sheet       ?? 0,
-    yellow_card:  UR.yellow_card      ?? -1,
-    red_card:     UR.red_card         ?? -3,
-    penalty_save: r.penalty_saved     ?? 0,
-    penalty_miss: UR.penalty_missed   ?? -1,
-    own_goal:     UR.own_goal         ?? -2,
-    conceded:     r.conceded_per_goal ?? 0,
-    bonus:        1,
-    sub_off:      0,
-    sub_on:       0,
-  }[type] ?? 0;
-  if (isCap && base > 0) return isTripleCap ? base * 3 : base * 2;
-  return base;
-}
-
 // ── Shared primitives ────────────────────────────────────────────────────────
 
 function LivePill({ size = 10 }) {
@@ -170,93 +138,6 @@ function MiniTok({ p, activeLeague }) {
           </span>
         </div>
       </div>
-    </div>
-  );
-}
-
-// ── Event rows ────────────────────────────────────────────────────────────────
-
-const EVENT_GLYPH = {
-  goal: { glyph: '●', tone: 'var(--positive)', label: 'Goal' },
-  assist: { glyph: '◆', tone: 'var(--cyan)', label: 'Assist' },
-  clean_sheet: { glyph: '▲', tone: 'var(--positive)', label: 'Clean sheet' },
-  yellow_card: { glyph: '■', tone: 'var(--gold)', label: 'Yellow card' },
-  red_card: { glyph: '■', tone: 'var(--danger)', label: 'Red card' },
-  penalty_save: { glyph: '★', tone: 'var(--cyan)', label: 'Penalty save' },
-  penalty_miss: { glyph: '✕', tone: 'var(--danger)', label: 'Penalty miss' },
-  bonus: { glyph: '+', tone: 'var(--gold)', label: 'Bonus pts' },
-  sub_off: { glyph: '↓', tone: 'var(--mute)', label: 'Subbed off' },
-  sub_on: { glyph: '↑', tone: 'var(--mute)', label: 'Subbed on' },
-  conceded: { glyph: '−', tone: 'var(--danger)', label: 'Conceded' },
-  own_goal: { glyph: '●', tone: 'var(--danger)', label: 'Own goal' },
-};
-
-function EventRow({ ev }) {
-  const kind = EVENT_GLYPH[ev.type] || { glyph: '?', tone: 'var(--mute)', label: ev.type };
-  return (
-    <div style={{
-      display: 'grid',
-      gridTemplateColumns: '44px 22px 1fr auto auto',
-      alignItems: 'center', gap: 12,
-      padding: '11px 16px',
-      borderBottom: '1px solid var(--rule)',
-      background: ev.delta < 0 ? 'rgba(239,68,68,.04)' : 'transparent',
-    }}>
-      <span className="mono" style={{ fontSize: 10, color: 'var(--mute)', letterSpacing: '.14em' }}>
-        {ev.minute != null ? `${ev.minute}'` : '—'}
-      </span>
-      <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 18, height: 18, color: kind.tone, fontFamily: 'Archivo Black', fontSize: 12, lineHeight: 1 }}>
-        {kind.glyph}
-      </span>
-      <div style={{ minWidth: 0, display: 'flex', flexDirection: 'column', gap: 2 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
-          <span style={{ fontFamily: 'Archivo Black', fontSize: 13, letterSpacing: '-0.01em', whiteSpace: 'nowrap' }}>
-            {(ev.playerName || '').split(' ').pop().toUpperCase()}
-          </span>
-          <span className="mono" style={{ fontSize: 9, color: 'var(--mute)', letterSpacing: '.14em' }}>{ev.club || ''}</span>
-          <span style={{ fontFamily: 'Archivo', fontSize: 12, color: 'var(--mute)', marginLeft: 2 }}>· {kind.label}</span>
-          {ev.isCap && (
-            <span style={{ fontFamily: 'Archivo Black', fontSize: 8, background: 'var(--gold)', color: 'var(--ink)', padding: '1px 4px', lineHeight: 1 }}>C</span>
-          )}
-        </div>
-      </div>
-      <LeagueChip league={ev.league} />
-      <DeltaPill delta={ev.delta ?? 0} />
-    </div>
-  );
-}
-
-function MobEventRow({ ev }) {
-  const kind = EVENT_GLYPH[ev.type] || { glyph: '?', tone: 'var(--mute)', label: ev.type };
-  return (
-    <div style={{
-      display: 'grid', gridTemplateColumns: '36px 1fr auto', gap: 10, alignItems: 'center',
-      padding: '10px 18px',
-      borderTop: '1px solid var(--rule)',
-      background: ev.delta < 0 ? 'rgba(239,68,68,.04)' : 'transparent',
-    }}>
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
-        <span className="mono" style={{ fontSize: 10, color: 'var(--mute)', letterSpacing: '.14em' }}>
-          {ev.minute != null ? `${ev.minute}'` : '—'}
-        </span>
-        <span style={{ color: kind.tone, fontFamily: 'Archivo Black', fontSize: 14, lineHeight: 1 }}>{kind.glyph}</span>
-      </div>
-      <div style={{ minWidth: 0, display: 'flex', flexDirection: 'column', gap: 4 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-          <span style={{ fontFamily: 'Archivo Black', fontSize: 13, letterSpacing: '-0.01em' }}>
-            {(ev.playerName || '').split(' ').pop().toUpperCase()}
-          </span>
-          <span className="mono" style={{ fontSize: 9, color: 'var(--mute)' }}>{ev.club || ''}</span>
-          {ev.isCap && (
-            <span style={{ fontFamily: 'Archivo Black', fontSize: 8, background: 'var(--gold)', color: 'var(--ink)', padding: '1px 4px', lineHeight: 1 }}>C</span>
-          )}
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <span style={{ fontSize: 11, color: 'var(--mute)' }}>{kind.label}</span>
-          <LeagueChip league={ev.league} compact />
-        </div>
-      </div>
-      <DeltaPill delta={ev.delta ?? 0} />
     </div>
   );
 }
@@ -480,7 +361,6 @@ export default function LiveScreen() {
   const [nextFixture,   setNextFixture]   = useState(null);
   const [userLeagues,   setUserLeagues]   = useState([]);
   const [squadPlayers,  setSquadPlayers]  = useState([]);
-  const [events,        setEvents]        = useState([]);
   const [liveStatsLog,  setLiveStatsLog]  = useState([]); // live pts breakdown from player_match_stats
   const [activeLeague,  setActiveLeague]  = useState(null);
   const [mobileTab,     setMobileTab]     = useState('squad');
@@ -546,7 +426,6 @@ export default function LiveScreen() {
       }
       // Keep a backward-compatible alias so the rest of the function uses statsFixIds
       const activeFixIds = statsFixIds;
-      const fixData      = liveFixData; // used only for tournament-id extraction below
 
 
       // Fetch next upcoming fixture — filtered by active league's tournament (BUG-12 fix)
@@ -703,59 +582,13 @@ export default function LiveScreen() {
         if (corrected?.length) setNextFixture(corrected[0]);
       }
 
-      // 7. Events tab — dual-mode:
-      //   7a. Post-match timeline from match_events (goals/cards at exact minute)
-      //   7b. Live stats breakdown from player_match_stats (available every 5 min during match)
-      //   The UI shows 7a if events exist, else 7b if a match is live, else empty state.
+      // 7. Points Log — built from player_match_stats (fetched in step 5).
+      // match_events timeline was removed; Points Log is the only display on this tab.
 
       const playerMap = Object.fromEntries((playerRows || []).map(p => [p.id, p]));
 
       if (activeFixIds.length && squadPlayerIds.length) {
-        // 7a: Timeline events (post-match, from periods endpoint)
-        // Use activeTournamentId (active league's tournament) as primary; fall back to
-        // scanning liveFixData tournament_ids. This keeps scoring rules correct post-match.
-        const activeTournamentIds = activeTournamentId
-          ? [activeTournamentId]
-          : [...new Set((fixData || []).map(f => f.tournament_id).filter(Boolean))];
-        const [{ data: evData = [] }, { data: ruleRows = [] }] = await Promise.all([
-          supabase
-            .from('match_events')
-            .select('id, fixture_id, player_id, type, minute, team')
-            .in('fixture_id', activeFixIds)
-            .in('player_id', squadPlayerIds)
-            .order('minute', { ascending: false })
-            .limit(100),
-          activeTournamentIds.length
-            ? supabase.from('scoring_rules').select('position, rules').in('tournament_id', activeTournamentIds)
-            : Promise.resolve({ data: [] }),
-        ]);
-
-        // Per-position scoring lookup
-        const posRules = { ...FALLBACK_POS };
-        let   univRules = { ...FALLBACK_UNIV };
-        for (const r of ruleRows || []) {
-          if (r.position === 'UNIVERSAL') univRules = { ...FALLBACK_UNIV, ...r.rules };
-          else if (FALLBACK_POS[r.position]) posRules[r.position] = { ...FALLBACK_POS[r.position], ...r.rules };
-        }
-
-        const fanned = [];
-        for (const ev of evData || []) {
-          const p = playerMap[ev.player_id];
-          if (!p) continue;
-          const isCap = p.id === captainId;
-          for (const lg of enrichedLeagues) {
-            const isTripleForLeague = isCap && lg.chip === 'Triple Captain';
-            const delta = realDelta(ev.type, p.position, isCap, isTripleForLeague, posRules, univRules);
-            fanned.push({
-              key: `${ev.id}-${lg.id}`, type: ev.type, minute: ev.minute,
-              playerName: p.name, club: p.club, position: p.position,
-              isCap, league: lg, delta,
-            });
-          }
-        }
-        setEvents(fanned);
-
-        // 7b: Live stats breakdown — built from player_match_stats (already fetched in step 5)
+        // Build stats breakdown per player for the Points Log
         // Aggregates per player across all active fixtures and shows what's scoring / why.
         const statsByPlayer = {};
         for (const s of statsData || []) {
@@ -787,7 +620,6 @@ export default function LiveScreen() {
         setLiveStatsLog(log);
 
       } else {
-        setEvents([]);
         setLiveStatsLog([]);
       }
 
@@ -816,23 +648,13 @@ export default function LiveScreen() {
     return () => document.removeEventListener('visibilitychange', handleVisibility);
   }, [fetchAll]);
 
-  // U6: Realtime subscriptions — match_events INSERT and player_match_stats UPDATE
-  // filtered to currently-live fixtures. Re-subscribes whenever liveFixtures changes.
+  // U6: Realtime subscription — player_match_stats UPDATE triggers Points Log refresh.
+  // Re-subscribes whenever liveFixtures changes (new live matches).
   useEffect(() => {
     const ids = liveFixtures.map(f => f.id);
     if (!ids.length) return;
 
     const idList = ids.join(',');
-    const evCh = supabase
-      .channel(`live-match-events-${idList}`)
-      .on('postgres_changes', {
-        event:  'INSERT',
-        schema: 'public',
-        table:  'match_events',
-        filter: `fixture_id=in.(${idList})`,
-      }, () => fetchAll())
-      .subscribe();
-
     const statsCh = supabase
       .channel(`live-player-stats-${idList}`)
       .on('postgres_changes', {
@@ -843,10 +665,7 @@ export default function LiveScreen() {
       }, () => fetchAll())
       .subscribe();
 
-    return () => {
-      supabase.removeChannel(evCh);
-      supabase.removeChannel(statsCh);
-    };
+    return () => { supabase.removeChannel(statsCh); };
   }, [liveFixtures, fetchAll]);
 
   // Whether the active league's tournament has a live match right now.
