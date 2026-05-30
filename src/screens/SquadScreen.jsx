@@ -48,7 +48,7 @@ const CHIPS = [
   {
     key:         'triple',
     label:       'Triple Captain',
-    description: 'All-or-Nothing: your captain scores 3Ã— points — but 0 if they don\'t play.',
+    description: 'All-or-Nothing: your captain scores 3× points — but 0 if they don\'t play.',
     stateKey:    'isTripleCaptain',
     dbField:     'is_triple_captain',
     activeColor: 'var(--gold)',
@@ -330,7 +330,7 @@ export default function SquadScreen() {
     {
       target: 'squad-chips',
       title:  'Chips & Boosts',
-      body:   'Wildcard lets you make unlimited free transfers. Triple Captain scores 3Ã— points — or 0 if they don\'t play. Use them wisely, they\'re one-per-season.',
+      body:   'Wildcard lets you make unlimited free transfers. Triple Captain scores 3× points — or 0 if they don\'t play. Use them wisely, they\'re one-per-season.',
     },
   ];
 
@@ -515,7 +515,7 @@ export default function SquadScreen() {
         title:        `Use ${chip.label}?`,
         body:         chip.description,
         warning:      'This cannot be undone for this matchday.',
-        confirmLabel: `Activate ${chip.label}`,
+        confirmLabel: 'Activate',
         danger:       false,
         onConfirm:    () => doToggleChip(chipKey),
       });
@@ -885,7 +885,7 @@ export default function SquadScreen() {
         <button onClick={() => { setDangerDismissed(true); setMobileTab('tools'); }} className="text-[9px] font-black uppercase tracking-widest shrink-0 px-2 py-1 rounded" style={{ color: 'var(--danger)', background: 'rgba(240,58,58,0.12)' }}>
           View
         </button>
-        <button onClick={() => setDangerDismissed(true)} className="text-[16px] leading-none shrink-0" style={{ color: 'rgba(255,255,255,0.3)' }}>Ã—</button>
+        <button onClick={() => setDangerDismissed(true)} className="text-[16px] leading-none shrink-0" style={{ color: 'rgba(255,255,255,0.3)' }}>×</button>
       </div>
     );
   };
@@ -1086,7 +1086,7 @@ export default function SquadScreen() {
             aria-label="Dismiss error"
             className="text-lg leading-none"
           >
-            <span aria-hidden="true">Ã—</span>
+            <span aria-hidden="true">×</span>
           </Button>
         </div>
       )}
@@ -1544,7 +1544,7 @@ export default function SquadScreen() {
                 <PowerToolCard
                   
                   label="Triple Cap."
-                  description="3Ã— captain points — or 0 if they don't play"
+                  description="3× captain points — or 0 if they don't play"
                   isActive={squadData.isTripleCaptain}
                   accentColor="var(--gold)"
                   bgColor="rgba(240,180,0,0.08)"
@@ -1556,7 +1556,7 @@ export default function SquadScreen() {
                         title: squadData.isTripleCaptain ? 'Deactivate Triple Captain?' : 'Activate Triple Captain?',
                         body: squadData.isTripleCaptain
                           ? 'Your captain will earn normal points.'
-                          : 'Your captain will earn 3Ã— points this matchday. 1 use per season.',
+                          : 'Your captain will earn 3× points this matchday. 1 use per season.',
                         onConfirm: () => doToggleChip('triple'),
                         confirmLabel: 'Confirm',
                         warning: squadData.isTripleCaptain ? null : 'This action cannot be undone this gameweek.',
@@ -1872,7 +1872,7 @@ export default function SquadScreen() {
               <button
                 onClick={() => setSelectedPlayer(null)}
                 style={{ width: 28, height: 28, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.08)', color: 'var(--mute)', fontSize: 16, cursor: 'pointer' }}
-              >Ã—</button>
+              >×</button>
             </div>
             {/* Actions */}
             <div className="flex gap-2 mb-3">
@@ -2026,7 +2026,7 @@ export default function SquadScreen() {
                 <div className="fz-label text-purple">Daily Joker Selection</div>
                 <div className="fz-display text-lg text-white">CHOOSE YOUR 16TH MAN</div>
               </div>
-              <button onClick={() => setIsJokerPickerOpen(false)} className="text-text-tertiary hover:text-white text-2xl">Ã—</button>
+              <button onClick={() => setIsJokerPickerOpen(false)} className="text-text-tertiary hover:text-white text-2xl">×</button>
             </div>
             {/* Only show team strip when there are fixtures */}
             {playingTodayTeams.length > 0 && (
