@@ -1,6 +1,6 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-05-30 (session 56 — branch cleanup: 20 stale claude/* branches deleted)  
+**Last Updated**: 2026-05-30 (session 57 — AUDIT-57 game logic review: 11 findings across auctions, bets, squad windows)  
 **E2E Test Suite**: `platform.spec.js` (36 tests × 2 browsers) passing in CI ✅ — completes in ~3 min  
 **Live App**: https://wc-fantasy-football.vercel.app  
 **WC Kick-off**: 2026-06-11 19:00 UTC (Mexico vs South Africa) — **12 days away**
@@ -22,6 +22,106 @@
 | Mobile layout (1) | admin-mobile-layout | Deleted — older than main (pre-TDZ fix; merging would have reverted the TDZ-safe CommissionerPanel) |
 
 **Only remote branch remaining**: `claude/silly-villani-0bdb10` (kept per task instructions)
+
+---
+
+## 🔍 AUDIT-57 — Game Logic & Data Flow Review (2026-05-30)
+
+**Scope**: Auctions, bets, squad-management windows, and per-matchday squad model. 11 findings across 3 systems. Ordered by pilot impact.
+
+**Source**: Deep code review — `useAuctions.js`, `AuctionCard.jsx`, `AuctionsView.jsx`, `place_bid`/`resolve_auction_listing`/`submit_bet`/`resolve_bet` RPCs, `process-transfer` Edge Function, `SquadScreen.jsx`, `useTransferWindow.js`, `useTransfer.js`, `useBets.js`, `useBetSubmit.js`.
+
+---
+
+### 🔴 P0 — Fix before any bet is resolved by a commissioner
+
+#### AUDIT-57-01 — `resolve_bet` has no authorization check (CRITICAL)
+- **Files**: `supabase/migrations/84_resolve_bet_fix.sql:8`, `src/hooks/useCommissioner.js:348`
+- **Issue**: `resolve_bet(p_instance_id, p_answer)` is `SECURITY DEFINER` and `GRANT EXECUTE … TO authenticated` with no commissioner-role check inside the function. Any authenticated user — not just the commissioner — can call this RPC directly (e.g. via browser console or Postman) and resolve any bet with any answer, awarding rewards to whoever picked that answer.
+- **Client gating is not sufficient**: `useCommissioner.js` checks for the commissioner UI, but that's client-side only and trivially bypassed.
+- **Fix**: Add a check inside `resolve_bet` that the caller's `auth.uid()` maps to a `league_members` row with `role='commissioner'` for the instance's league. Alternatively, move `resolve_bet` to be callable only from the service role (Edge Function) and revoke the `authenticated` grant.
+- **Migration**: `96_resolve_bet_auth.sql` (next in sequence after 96_club_cap_enforcement.sql, or use 97_)
+- **Effort**: ~30 min
+
+---
+
+### 🟠 P1 — Fix in first week of pilot
+
+#### AUDIT-57-02 — `submit_bet` allows picking for another manager's squad (INTEGRITY)
+- **File**: `supabase/migrations/83_submit_bet_fix.sql:8`
+- **Issue**: `submit_bet(p_squad_id, p_instance_id, p_answer)` is `SECURITY DEFINER` and does not verify the caller owns `p_squad_id`. A user can pass a different manager's `squad_id` and overwrite their bet pick (the `ON CONFLICT … DO UPDATE` will clobber it). `user_id = auth.uid()` is recorded, but the submission still lands on the other squad's record.
+- **Fix**: Add `IF NOT EXISTS (SELECT 1 FROM squads WHERE id = p_squad_id AND user_id = auth.uid()) THEN RETURN error 'Not authorised' END IF;` at the top of the function.
+- **Effort**: ~15 min
+
+#### AUDIT-57-03 — `budget`-type bet rewards are shown in UI but never applied (GAME LOGIC)
+- **Files**: `supabase/migrations/28_bets_system.sql:16`, `supabase/migrations/70_scoring_fixes.sql:45`, `src/components/BetWidget.jsx:226`, `src/components/league/BetsTabHub.jsx:63`
+- **Issue**: `bet_instances.reward_type` supports `'budget'` and `'points'`. When `resolve_bet` runs for a `budget`-type bet it writes `reward_awarded` on each winning submission, and the UI displays "+X M". But nothing ever adds `reward_awarded` to `squads.budget_remaining`. `aggregate_league_member_points` explicitly filters `reward_type='points'` — budget rewards are excluded. Winners are told they got budget and never receive it.
+- **Fix**: After `UPDATE bet_submissions`, add a second `UPDATE squads SET budget_remaining = budget_remaining + v_reward_value WHERE id IN (SELECT squad_id FROM bet_submissions WHERE bet_instance_id = p_instance_id AND is_correct = true)` inside `resolve_bet`, conditional on `reward_type = 'budget'`. Fetch `reward_type` from `bet_instances` first.
+- **Effort**: ~45 min (migration + verify)
+
+#### AUDIT-57-04 — No server-side budget check when placing an auction bid (GAME LOGIC)
+- **File**: `supabase/migrations/90_e2e_bug_fixes.sql:22` (canonical `place_bid`)
+- **Issue**: `place_bid` validates status, deadline, and min-increment but **never checks the bidder has enough budget**. The old 3-arg version (`supabase/migrations/27_auction_listings.sql:104`) did check `squads.budget_remaining < p_amount`. The 2-arg canonical version dropped it. `AuctionCard.jsx:36` has a client-side guard (`val > myBudget`) that is bypassed by direct RPC calls.
+- **Impact**: A manager can bid beyond their budget. If they win, `resolve_auction_listing` will catch it at resolution time and return `ok:false` — but then the auction gets stuck (see AUDIT-57-05).
+- **Fix**: In `place_bid`, after the deadline check, add: `SELECT budget_remaining INTO v_budget FROM squads WHERE id = (SELECT id FROM squads WHERE league_id = v_listing.league_id AND user_id = auth.uid() LIMIT 1); IF v_budget < p_bid_amount THEN RETURN error 'Insufficient budget'; END IF;`
+- **Effort**: ~30 min
+
+#### AUDIT-57-05 — Expired auction listings get permanently stuck (GAME LOGIC)
+- **File**: `supabase/migrations/36_auction_resolution.sql:64`
+- **Issue**: `resolve_auction_listing` returns `ok:false, error:'Buyer has insufficient budget'` but **never changes the listing `status`**. The 5-min cron retries and keeps failing. `place_bid` then rejects new bids ("deadline passed"). The listing is frozen `open` indefinitely — the player is notionally locked in the seller's squad forever, and neither party can do anything.
+- **Root cause**: AUDIT-57-04 is the trigger (bidder wins but can't pay), but the real bug is the missing status fallback in the resolver.
+- **Fix**: When resolution fails due to buyer budget, either: (a) demote to second-highest bidder if one exists (check `auction_bids` history), or (b) cancel the listing gracefully: `UPDATE auction_listings SET status='cancelled' WHERE id=p_listing_id`. Option (b) is the safe minimum.
+- **Effort**: ~30 min (migration)
+
+#### AUDIT-57-06 — SquadScreen shows wrong lock deadline (WINDOW INCONSISTENCY)
+- **File**: `src/screens/SquadScreen.jsx:146-147`
+- **Issue**: SquadScreen fetches the active matchday deadline with `ORDER BY deadline_at DESC LIMIT 1` — the *furthest* future deadline — and uses it for both the displayed lock countdown and the squad-row lookup. `process-transfer` and `get_transfer_window_status` use the *nearest upcoming* deadline (`>= now`, `ASC`). BUG-E2E-02 already fixed `process-transfer` to use ASC but **SquadScreen was never updated**.
+- **Impact**: On a 7-round WC, the squad screen counts down to the Round 7 deadline (~mid-July) even when the Round 2 deadline is hours away. A manager sees "squad locks in 32 days" but transfer enforcement locks them out at the next deadline. The squad-row loaded may also be incorrect (furthest matchday_id), mitigated only by the line-179 fallback.
+- **Fix**: Change `ORDER BY deadline_at DESC` → `ORDER BY deadline_at ASC` AND add `.gte('deadline_at', new Date().toISOString())` to match process-transfer's logic exactly.
+- **File change**: `src/screens/SquadScreen.jsx:147`
+- **Effort**: ~15 min (one-line change + verify)
+
+#### AUDIT-57-07 — Auction resolution targets the wrong squad row in per-matchday leagues (DATA FLOW)
+- **File**: `supabase/migrations/36_auction_resolution.sql:48-54`
+- **Issue**: `resolve_auction_listing` finds the buyer's squad with `ORDER BY created_at DESC LIMIT 1` (most recently created squad row, ignoring `matchday_id`). `process-transfer` creates a fresh squad row for each new round. After a round rollover, the buyer's "latest" squad row is the new empty one (no players), while their active round-N squad row holds the actual squad. Auction transfers the player to the empty row — player disappears from the active squad.
+- **Related**: `useTransfer.loadTakenMap` (`src/hooks/useTransfer.js:47`) also queries squads by `league_id` only (no matchday filter), so the "taken" map spans all rounds. This is cosmetic (may show stale taken status) but the auction issue is a real data loss.
+- **Fix**: In `resolve_auction_listing`, after fetching the listing, resolve the active `matchday_id` the same way `process-transfer` does (nearest upcoming deadline for the listing's league_id → tournament_id → matchday_id), then add `.eq('matchday_id', active_matchday_id)` to the buyer AND seller squad queries.
+- **Effort**: ~1h (migration; needs new helper query inside the function)
+
+---
+
+### 🟡 P2 — Fix before auction feature is actively promoted
+
+#### AUDIT-57-08 — "LIVE" auctions stat in Auction House always shows 0 (UI BUG)
+- **File**: `src/components/league/AuctionsView.jsx:15`
+- **Issue**: `auctions.filter(a => a.highest_bidder_id === mySquadId)` computes "auctions I'm winning". But `place_bid` sets `highest_bidder_id = auth.uid()` — a **user_id** — while `mySquadId` is a squad UUID. They can never match. The LIVE stat is always 0.
+- **Fix**: Either (a) compare `highest_bidder_id` to the current user's `auth.uid()` (pass `myUserId` prop alongside `mySquadId`), or (b) change `place_bid` to store the squad_id instead — but then `resolve_auction_listing` (which currently treats it as user_id) must also be updated. Option (a) is the minimal fix.
+- **Effort**: ~20 min
+
+#### AUDIT-57-09 — Seller can cancel a listing after bids have been placed (GAME LOGIC)
+- **Files**: `src/hooks/useAuctions.js:54`, `src/components/AuctionCard.jsx:106`
+- **Issue**: `cancelListing` does a direct `UPDATE status='cancelled'` with no check for existing bids (`highest_bidder_id IS NOT NULL`). `AuctionCard` always renders the Cancel button for the seller. A seller can retract a player after a manager has outbid others, making auctions unreliable.
+- **Fix**: In `cancelListing`, either: (a) reject if `highest_bidder_id IS NOT NULL` (add DB-side check — currently there's no RPC for cancel, it's a direct update), or (b) hide the Cancel button in `AuctionCard` when `auction.highest_bidder_id` is truthy (`isMine && !auction.highest_bidder_id`).
+- **Effort**: ~20 min (UI fix is quickest; DB enforcement recommended alongside)
+
+#### AUDIT-57-10 — Migration history is not cleanly replayable (TECH DEBT)
+- **Files**: Multiple migration files
+- **Issue 1**: Duplicate migration file numbers in repo: `16_` appears twice, `63_` appears 4 times (different names), `90_` appears twice. A clean `supabase db reset` (or fresh environment setup) would error on duplicate numbers.
+- **Issue 2**: `27_auction_listings.sql` creates `seller_squad_id / min_bid / ends_at / bidder_squad_id / status CHECK('active','sold','unsold','cancelled')`. Later migrations (`36_`, `80_`, `90_`) use `seller_id / starting_bid / deadline_at / highest_bidder_id / min_increment / status='open'`. Migration `44_` references `seller_squad_id` again. These are irreconcilable in a replay.
+- **Impact**: Production is fine (migrations already applied); this only affects fresh environment setup (new dev, staging branch, or disaster recovery). Not a pilot blocker.
+- **Fix**: Audit and renumber/merge all duplicate-numbered migration files. Document the canonical column names in a migration-schema readme. Consolidate the auction table definition into one authoritative migration.
+- **Effort**: ~2h (documentation + renumber; no prod schema changes needed)
+
+---
+
+### 🔵 P3 — Monitor / post-pilot
+
+#### AUDIT-57-11 — WC/tournament leagues never show "Window Closed" in the banner
+- **Files**: `src/components/TransferWindowBanner.jsx:55`, `supabase/migrations/90_e2e_bug_fixes.sql:101-122`
+- **Issue**: `get_transfer_window_status` fallback (matchday path) returns `status:'open'` pointing at the next upcoming deadline — always. For tournament leagues the banner perpetually shows "Window Open · Closes in X". The `upcoming`/closed state only fires for `transfer_windows`-table leagues (EPL). Between a round's deadline and the next round opening, WC managers see "open" even though the previous round's squad is now locked.
+- **Note**: Enforcement is correct (process-transfer/deadline check gates mutations), so this is a UX confusion issue, not a logic bug.
+- **Fix**: Return `status:'upcoming'` for the period after a deadline passes and before the next deadline opens (could use a configurable "window closed" gap). Or simply document this as intended behaviour for now.
+- **Effort**: ~1h
 
 ---
 
