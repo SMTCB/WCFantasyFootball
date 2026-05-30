@@ -226,7 +226,6 @@ export default function LeagueScreen() {
     ]);
     let myIds    = myAlloc?.allocated_players    ?? [];
     let theirIds = theirAlloc?.allocated_players ?? [];
-    // Fallback: leagues without draft lottery have no draft_allocations rows — read from squads.players
     if (!myIds.length || !theirIds.length) {
       const [mySquadRes, theirSquadRes] = await Promise.all([
         myIds.length ? Promise.resolve({ data: null }) : supabase.from('squads').select('players').eq('league_id', lid).eq('user_id', user.id).maybeSingle(),
@@ -235,7 +234,7 @@ export default function LeagueScreen() {
       if (!myIds.length) myIds = mySquadRes?.data?.players ?? [];
       if (!theirIds.length) theirIds = theirSquadRes?.data?.players ?? [];
     }
-    const allIds   = [...new Set([...myIds, ...theirIds])];
+    const allIds = [...new Set([...myIds, ...theirIds])];
     if (!allIds.length) return;
     const { data: playerRows } = await supabase.from('players').select('id,name,position,club,price').in('id', allIds);
     const byId = Object.fromEntries((playerRows ?? []).map(p => [p.id, p]));
@@ -1350,10 +1349,14 @@ export default function LeagueScreen() {
                        <div className="text-[10px] font-black uppercase tracking-tighter" style={{ color: posColor }}>{p.position} · {p.club}</div>
                        <div className="text-[14px] font-bold text-white tracking-tight truncate">{p.name}</div>
                      </div>
-                     <div className="text-right shrink-0">
+                     <div className="text-right shrink-0 mr-2">
                        <div className="text-[13px] font-black text-white">£{p.price}M</div>
                        <div className="text-[9px] font-bold" style={{ color: 'var(--positive)' }}>READY</div>
                      </div>
+                     <button
+                       onClick={() => { const t = { ...managerTeamView, squadId: squadByUserRef.current[managerTeamView.user_id] }; setTradeTarget(t); setTradeTheirPlayer(p); loadTradeSquads(managerTeamView.user_id); setManagerTeamView(null); setShowTradeBuilder(true); }}
+                       style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 9, letterSpacing: '.14em', color: 'var(--cyan)', background: 'transparent', border: '1px solid rgba(0,180,216,.3)', padding: '4px 8px', cursor: 'pointer', flexShrink: 0 }}
+                     >TRADE</button>
                    </div>
                    );
                  })}
