@@ -1,13 +1,189 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-05-29 (session 53 complete — all P0/P1 items resolved except PILOT-04 deferred; full cron audit done; 10/12 crons healthy)  
+**Last Updated**: 2026-05-30 (session 55 — TDD-01/03/04/06/08/09 fixed; PR #223 merged; PILOT-04 player prices tackled)  
 **E2E Test Suite**: `platform.spec.js` (36 tests × 2 browsers) passing in CI ✅ — completes in ~3 min  
 **Live App**: https://wc-fantasy-football.vercel.app  
-**WC Kick-off**: 2026-06-11 19:00 UTC (Mexico vs South Africa) — **13 days away**
+**WC Kick-off**: 2026-06-11 19:00 UTC (Mexico vs South Africa) — **12 days away**
 
 ---
 
-## 🚀 PILOT READINESS — SESSION 54 START HERE
+## 🔍 TECHNICAL DUE DILIGENCE — SESSION 55 START HERE
+
+**Context**: Multi-agent deep audit of game logic, scoring, transfers, auctions, draft, bets, security, and data ingestion. 19 findings across 5 areas. Ordered by pilot impact.
+
+**Session 55 results:**
+- TDD-V01/V02/V03: TDD-02 (auctions) and TDD-05 (RLS) NOT confirmed — both already correct ✅
+- TDD-01 ✅ FIXED — `execute_transfer_atomic()` RPC with FOR UPDATE row lock
+- TDD-02 ✅ NOT AN ISSUE — verified correct status enum + column names in prod
+- TDD-03 ✅ FIXED — `squads_captain_not_joker` CHECK constraint added
+- TDD-04 ✅ FIXED — `draft_deadline_check` BEFORE INSERT trigger on draft_submissions
+- TDD-05 ✅ NOT AN ISSUE — all 4 tables already have rowsecurity=true
+- TDD-06 ✅ FIXED — sync-fixtures now logError() + returns HTTP 500 on deadline upsert failure
+- TDD-08 ✅ FIXED — `penalty_scored` column added; restored to ingest upsert
+- TDD-09 ✅ FIXED — penalty_saved now only awarded to GKs with mins > 0
+- TDD-17 ✅ NOT AN ISSUE — wizard only shows Classic + Draft formats (no H2H/Cup option)
+- All fixed via PR #223 (migration 93 + 3 edge functions redeployed)
+
+---
+
+### 🔬 VERIFICATION QUERIES — Run before acting on ⚠️ items
+
+#### TDD-V01 — Auction status enum
+```sql
+SELECT DISTINCT status FROM auction_listings LIMIT 10;
+-- Expected 'open'; if returns 'active' → TDD-02 confirmed (auctions fully broken)
+```
+
+#### TDD-V02 — RLS on draft tables
+```sql
+SELECT tablename, rowsecurity
+FROM pg_tables
+WHERE tablename IN ('draft_submissions','draft_allocations','transfers','trade_proposals')
+ORDER BY tablename;
+-- rowsecurity=false on any row → TDD-05 confirmed (any user can read/write)
+```
+
+#### TDD-V03 — Auction resolver function signature
+```sql
+SELECT pg_get_functiondef(oid) FROM pg_proc WHERE proname='resolve_auction_listing';
+-- Look for 'highest_bidder_id' vs 'bidder_squad_id' — mismatch confirms TDD-02
+```
+
+---
+
+### 🔴 P0 — Fix before first pilot user logs in
+
+#### TDD-01 — Concurrent transfers can double-spend budget (CRITICAL)
+- **File**: `supabase/functions/process-transfer/index.js:147–278`
+- **Issue**: Two simultaneous BUY clicks both read `budget_remaining=X`, both pass the budget check, both write. No `SELECT … FOR UPDATE` row lock. Two failure modes:
+  1. Budget not decremented correctly (second UPDATE overwrites first with stale budget)
+  2. Squad player array loses one player (both reads see same array, both append, last-write-wins)
+- **Real-world trigger**: Double-click on BUY, slow network retry, or two browser tabs
+- **Fix**: Wrap the read-check-write in a Postgres function with `SELECT … FOR UPDATE` on the squad row, called via RPC. Or add a DB CHECK trigger validating budget after UPDATE.
+- **Effort**: ~2h
+
+#### TDD-02 — Auctions may be fully broken ⚠️ (CRITICAL — verify with TDD-V01/V03 first)
+- **Files**: `supabase/migrations/27_auction_listings.sql` + `supabase/migrations/36_auction_resolution.sql`
+- **Issue**: Two potential mismatches found between migration 27 (table) and migration 36 (resolver):
+  1. Resolver queries `status='open'`; table may use `status='active'` → cron finds 0 rows
+  2. Resolver references `highest_bidder_id`; column may be `bidder_squad_id` → function crashes
+- **Impact if confirmed**: No expired auction has ever resolved. Players stay locked in seller's squad. Budget never refunded. Auction feature non-functional end-to-end.
+- **Fix options**:
+  A. Patch `resolve_auction_listing()` to use correct column/status names (~30 min migration)
+  B. **Disable Auctions tab in UI for the pilot** (10 min) — safest if fix is risky to push under time pressure
+- **Effort**: 30 min fix or 10 min disable
+
+#### TDD-03 — Captain + Joker multipliers stack; Wildcard inflates captain bonus (HIGH)
+- **File**: `supabase/functions/calculate-scores/index.js:484–489`
+- **Issue 1 — Stacking**: Same player as Captain (×2) + Joker (×2) → 4× multiplier (6× with Triple Captain). No constraint prevents `captain_id == joker_player_id`. One pilot user can exploit this.
+- **Issue 2 — Wildcard order**: Wildcard 1.1× applied to squad total AFTER captain bonus is computed, so it inflates the captain bonus by 10% beyond design intent.
+- **Fix**:
+  1. Add `CHECK (captain_id IS DISTINCT FROM joker_player_id)` to squads (migration)
+  2. In `calculate-scores`, apply Wildcard to base player scores before captain/joker loop — or document post-multiplier as intended
+- **Effort**: ~30 min
+
+#### TDD-04 — Draft submissions have no server-side deadline check (CRITICAL)
+- **File**: `supabase/migrations/02_draft_system.sql`
+- **Issue**: No trigger validates that a draft submission arrives before `leagues.draft_deadline`. Client enforces it, but direct Supabase API calls bypass this. Combined with TDD-05, this is a simple exploit.
+- **Fix**: Add `BEFORE INSERT` trigger on `draft_submissions` comparing `NOW()` with `leagues.draft_deadline`. Return error if past.
+- **Effort**: ~30 min
+
+#### TDD-05 — RLS disabled on draft tables ⚠️ (CRITICAL — verify with TDD-V02 first)
+- **File**: `supabase/migrations/02_draft_system.sql:103–110`
+- **Issue**: `draft_submissions`, `draft_allocations`, `transfers`, possibly others may have RLS DISABLED (early migration, pre-dating security hardening in migration 66). Any authenticated user can read/write any league's draft data.
+- **Impact**: Exploitable in ~10 lines of JS by any pilot user who watches network requests.
+- **Fix**: Enable RLS + policies: "league members can read/write only their own league's draft data".
+- **Effort**: ~1h (migration)
+
+---
+
+### 🟠 P1 — Fix in week 1 of pilot
+
+#### TDD-06 — `sync-fixtures` silent failure on matchday_deadlines upsert (HIGH)
+- **File**: `supabase/functions/sync-fixtures/index.js:140–144`
+- **Issue**: Deadline upsert errors are `console.log`-ed only; function returns HTTP 200 / `ok:true`. Transfer deadlines silently go missing → managers transfer after kickoff.
+- **Fix**: Add `logError()` + return HTTP 500 on deadline upsert failure.
+- **Effort**: ~15 min
+
+#### TDD-07 — Captain reallocation after deadline is silent (HIGH)
+- **File**: `supabase/functions/calculate-scores/index.js:464–476`
+- **Issue**: If captain is benched/DNP, system silently moves captain bonus to highest-scoring starter. No notification. Can accidentally reward a manager whose captain gets injured after their squad locks.
+- **Fix**: Keep the reallocation (it's good UX for casual users) but add a league notification so the manager sees it happened. Log to `edge_function_errors` with WARNING level.
+- **Effort**: ~1h
+
+#### TDD-08 — `penalty_scored` stat never written to `player_match_stats` (HIGH)
+- **File**: `supabase/functions/ingest-match-events/index.js:415`
+- **Issue**: Ingest derives `penaltyScoredMap` from Forza data but discards it before DB write (the column was removed from the upsert as a prior fix in session 31). `calculate-scores` has scoring rules for penalties but the stat is always absent. FWD bonus for penalty goals missing for all matches.
+- **Fix**: Check if `penalty_scored` column exists in `player_match_stats`. If yes, restore to upsert payload. If no, add via migration + restore.
+- **Effort**: ~30 min
+
+#### TDD-09 — GK `penalty_saved` credited to ALL GKs in squad, not just starter (HIGH)
+- **File**: `supabase/functions/ingest-match-events/index.js:386–392`
+- **Issue**: Penalty save credit applied to all GKs on the opposing side in the squad (starter + backup). If squad has 2 GKs, both get +5 for one save event.
+- **Fix**: Filter to GK with `minutes_played > 0` (starters only) before awarding credit.
+- **Effort**: ~30 min
+
+#### TDD-10 — Process-transfer deadline may not be scoped to current matchday (HIGH)
+- **File**: `supabase/functions/process-transfer/index.js:77–94`
+- **Issue**: BUG-E2E-02 fixed `ORDER BY DESC → ASC` but multi-round scoping (current vs future round) may still allow transfers after the current round's kickoff if the query returns the current active round's deadline and not the next one. Needs a targeted test on WC data.
+- **Action**: Manual test — attempt a transfer after `429-r2` deadline passes (Jun 11 17:00 UTC) and confirm it is rejected.
+- **Effort**: ~1h to test + fix if needed
+
+#### TDD-11 — Position quota (max 2 GK, 5 DEF etc.) not enforced server-side (MEDIUM)
+- **File**: `supabase/migrations/04_transfer_window_enforcement.sql:62–107`
+- **Issue**: Trigger `enforce_position_limit()` is on the `transfers` table, but `process-transfer` updates `squads` directly — trigger never fires. Rapid consecutive buys can exceed position caps.
+- **Fix**: Move enforcement into `process-transfer` edge function (count existing players by position before completing buy).
+- **Effort**: ~1h
+
+#### TDD-12 — Trade proposal `accept` has no row lock (double-accept race) (HIGH)
+- **File**: `supabase/migrations/85_trade_proposals.sql:156–170`
+- **Issue**: `accept_trade_proposal()` reads `status='pending'` but doesn't lock the row before checking player ownership. Two near-simultaneous accepts can both pass and execute the swap twice.
+- **Fix**: Add `SELECT … FOR UPDATE` on trade_proposals row at start of the function.
+- **Effort**: ~30 min
+
+#### TDD-13 — Non-match-result bets (`top_scorer`, `player_block`) never auto-resolve (MEDIUM)
+- **File**: `supabase/functions/resolve-bets/index.js:50–85`
+- **Issue**: Auto-resolver skips non-match-result bet types (line 84). These become permanently stuck in `closed` status with rewards never awarded. No commissioner UI to force-resolve.
+- **Fix**: Add "Resolve manually" path in CommissionerPanel for any closed bet — expose `resolve_bet` RPC with free-text answer input for non-match-result types.
+- **Effort**: ~2h
+
+#### TDD-14 — Manager who misses draft deadline gets no squad and no notification (MEDIUM)
+- **File**: `supabase/functions/run-draft-lottery/index.js:104`
+- **Issue**: Lottery silently excludes managers with no submission. They log in post-deadline to find no squad, no message, no recovery path.
+- **Fix**: After lottery, check all `league_members` have a submission. Send notification to those who missed it. Optionally auto-fill a squad from remaining available players.
+- **Effort**: ~1h
+
+---
+
+### 🟡 P2 — Monitor during pilot / post-launch
+
+#### TDD-15 — Forza API load during 3 concurrent WC matches (LOW-MEDIUM)
+- **Details**: 3 matches × 5-min poll × ~4 endpoints ≈ 144 API calls/hr during group stage. No backoff or rate-limit response handling visible in ingest functions.
+- **Action**: Monitor `edge_function_errors` daily. Add exponential backoff if errors appear.
+
+#### TDD-16 — Public read policy exposes all squads to unauthenticated users if demo mode is on (HIGH if on)
+- **File**: `supabase/migrations/82_public_read_policies.sql:19–27`
+- **Issue**: `squads_public_read` policy: `USING (true)` — no league membership check, no auth. All pilot squads (budget, player arrays) visible to anyone on the internet if demo mode is enabled.
+- **Action**: Verify demo mode is OFF in production. Query `league_config` or check env flags before pilot launch.
+
+#### TDD-17 — H2H + Cup formats non-functional (no generator logic) (HIGH for those formats)
+- **Details**: `h2h_records` table exists but no function populates H2H matchups. Cup bracket generator is also absent. Both features are dead code paths.
+- **Action**: Add UI guard in `LeagueCreationWizard` — restrict to CLASSIC format only for the pilot, or add "coming soon" label on H2H/Cup. Prevents pilot users creating a broken league type.
+- **Effort**: ~30 min
+
+#### TDD-18 — Service role JWT hardcoded in migration SQL (visible in git history) (MEDIUM)
+- **File**: `supabase/migrations/91_fix_remaining_current_setting_crons.sql:20, 38`
+- **Issue**: Service role JWT in plaintext in committed migration. Visible in git history permanently.
+- **Action**: Rotate Supabase service role key after pilot launch (dashboard → Settings → API → Reset). Update cron job URLs with new key via new migration.
+
+#### TDD-19 — Chat rate limit racy under parallel connections (LOW)
+- **File**: `supabase/migrations/77_security_polish.sql:53–74`
+- **Issue**: Rate-limit trigger counts existing rows before INSERT — two parallel connections can both pass before either inserts, giving 2× the intended rate.
+- **Action**: Monitor. Only relevant at scale; low risk for a small friends/family pilot.
+
+---
+
+## 🚀 PILOT READINESS — SESSION 54 CONTEXT
 
 **Context**: P0 blockers fixed + PILOT-03 league creation flow fully browser-tested (session 53). Next priority: PILOT-04 player prices.
 
@@ -33,12 +209,10 @@
 
 ### 🟡 P1 — Still Open
 
-#### PILOT-04 — Player prices are all random £4–7 (no differentiation)
-- **Impact**: Every player is worth ~£5.50. Mbappé costs the same as a Curaçao backup goalkeeper. The transfer market has no strategic layer — managers can afford anyone. This significantly weakens the product experience for a pilot.
-- **Options**:
-  A. Seed tiered prices based on club (e.g. big nations = £6.5–7M, mid-tier = £5–6.5M, smaller nations = £4–5M)
-  B. Leave random for pilot, gather feedback, price properly for launch
-- **Recommended**: Option A — takes ~30 min of SQL. A price tier list can be based on FIFA world ranking of the 32 WC nations.
+#### PILOT-04 — Player prices tiered ✅ FIXED (session 55, migration 94)
+- **Fix**: 4-tier nation pricing applied (S=£7.0 base, A=£6.0, B=£5.0, C=£4.0) + position adjustment (FWD+1.0, MID+0.5, GK-0.5) + random noise (×1.5). Cap £4.0–9.5.
+- **Result**: France/England/Brazil FWDs avg £8.5–8.7; Curaçao/Qatar GKs avg £4.3–4.5. Elite squad costs ~£95M, mixed squad ~£80M — creates real trade-off decisions.
+- **Verified**: Distribution query confirmed all tiers correct in prod.
 
 #### PILOT-05 — Cron audit + Forza API key — RESOLVED ✅ (session 53)
 - **Forza API key**: `FORZA_ACCESS_TOKEN` confirmed set in Edge Function secrets — `test-forza-api` returned live Premier League data, `token_set: true`.
