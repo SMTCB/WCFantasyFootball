@@ -1,9 +1,27 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-05-30 (session 55 — TDD-01/03/04/06/08/09 fixed; PR #223 merged; PILOT-04 player prices tackled)  
+**Last Updated**: 2026-05-30 (session 56 — branch cleanup: 20 stale claude/* branches deleted)  
 **E2E Test Suite**: `platform.spec.js` (36 tests × 2 browsers) passing in CI ✅ — completes in ~3 min  
 **Live App**: https://wc-fantasy-football.vercel.app  
 **WC Kick-off**: 2026-06-11 19:00 UTC (Mexico vs South Africa) — **12 days away**
+
+---
+
+## 🧹 SESSION 56 — Branch Cleanup (2026-05-30)
+
+**20 stale `claude/*` remote branches reviewed and deleted.** All were either squash-merged into main or older/superseded:
+
+| Group | Branches | Verdict |
+|---|---|---|
+| TDZ fixes (4) | fix-tdz-login, fix-tdz-v2, fix-tdz-v3, fix-tzdz-homecreen | Deleted — all TDZ fixes already in main via PRs #162–168 |
+| UI bundles (4) | fix-bundle-round2, fix-bundle-ui-encoding-ux, fix-league-tab-encoding-autofill, fix-recap-multi-league | Deleted — merged as PRs #192–195 |
+| Sprint 1 (3) | s1-live-bets, s1-obs-ux, sprint-1-scoring-math-transfer-fixes | Deleted — merged as PRs #171–175 |
+| Sprint 2 (3) | s2-deferred-cleanup, s2-draft-logic, s2-live-pipeline | Deleted — merged as PRs #177–181 |
+| Sprint 4 (3) | s4-hygiene-deadcode-docs, s4-migration-78-deployed, s4-sprint-plan-update | Deleted — merged as PRs #189–191 |
+| Docs (2) | s1-docs, update-handoff-docs | Deleted — stale docs, content superseded or already on main |
+| Mobile layout (1) | admin-mobile-layout | Deleted — older than main (pre-TDZ fix; merging would have reverted the TDZ-safe CommissionerPanel) |
+
+**Only remote branch remaining**: `claude/silly-villani-0bdb10` (kept per task instructions)
 
 ---
 
@@ -249,6 +267,20 @@ SELECT pg_get_functiondef(oid) FROM pg_proc WHERE proname='resolve_auction_listi
 | TDD-13 | CommissionerPanel: free-text answer input added to `ResolvePendingBets`. Fixed `resolve-bets` edge function calling RPC with wrong param (`p_correct_answer` → `p_answer`) — match-result auto-resolution was silently failing on every cron tick since migration 72 |
 | TDD-14 | `run-draft-lottery` diffs `league_members` vs submissions; sends notification to managers who missed the draft entirely |
 | TDD-16 | `squads_public_read` policy (`USING(true)`) dropped — squad data no longer readable by unauthenticated users |
+
+### ✅ SeasonStepper — data-driven (same session, uncommitted)
+
+**`CommissionerPanel.jsx` + `LeagueScreen.jsx`** — `SeasonStepper` (desktop) and `MobSeasonStepper` (mobile) were previously hardcoded with demo phase states. Now data-driven:
+
+| Phase | DB column / condition |
+|---|---|
+| TRANSFER WINDOW | `leagues.transfers_open` (bool) |
+| DRAFT DEADLINE | `leagues.draft_deadline` set → active; past → done |
+| ALLOCATION | `draft_deadline` passed → active; `cup_phase ≠ 'pre_cup'` → done |
+| CUP SEEDED | `leagues.cup_phase ≠ 'pre_cup'` → active; in-season phase → done |
+| IN SEASON | `cup_phase` in `group_stage / pre_elimination / elimination / final` → active |
+
+`computePhases(league, memberCount)` helper drives both steppers; falls back to demo data when `league` is null (no active league selected). `league={activeLeague?.leagues}` passed from `LeagueScreen` — already loaded via `select('*')`, no extra fetch.
 
 ### 📋 REMAINING (low priority — post-pilot or monitor)
 
