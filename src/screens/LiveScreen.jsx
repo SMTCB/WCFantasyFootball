@@ -1062,27 +1062,24 @@ export default function LiveScreen() {
             </div>
           </div>
 
-          {/* Right: Points Log (live) → Match Events (post-match) */}
+          {/* Right: Points Log — always player_match_stats, never match_events timeline */}
           <div style={{ display: 'flex', flexDirection: 'column', minHeight: 0 }}>
 
-            {/* Header — adapts based on what's available */}
             <div style={{ padding: '14px 20px 10px', borderBottom: '1px solid var(--rule)' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                   <span style={{ width: 3, height: 14, background: 'var(--gold)', flexShrink: 0 }} />
-                  <span className="mono" style={{ fontSize: 11, color: 'var(--paper)', letterSpacing: '.22em' }}>
-                    {events.length > 0 ? 'MATCH EVENTS' : 'POINTS LOG'}
-                  </span>
+                  <span className="mono" style={{ fontSize: 11, color: 'var(--paper)', letterSpacing: '.22em' }}>POINTS LOG</span>
                   <span className="mono" style={{ fontSize: 9, color: 'var(--mute)', letterSpacing: '.14em' }}>
-                    {events.length > 0 ? '· EVERY PLAYER · EVERY LEAGUE' : liveFixtures.length > 0 ? '· LIVE · EVERY 60S' : '· FINAL'}
+                    {liveFixtures.length > 0 ? '· LIVE · EVERY 60S' : liveStatsLog.length > 0 ? '· FINAL' : ''}
                   </span>
                 </div>
-                <span className="mono" style={{ fontSize: 9, color: 'var(--mute)' }}>
-                  {events.length > 0 ? `${events.length} TOTAL` : liveStatsLog.length > 0 ? `${liveStatsLog.length} PLAYERS` : ''}
-                </span>
+                {liveStatsLog.length > 0 && (
+                  <span className="mono" style={{ fontSize: 9, color: 'var(--mute)' }}>{liveStatsLog.length} PLAYERS</span>
+                )}
               </div>
-              {/* Preliminary disclaimer — during live match before events are written */}
-              {liveFixtures.length > 0 && events.length === 0 && liveStatsLog.length > 0 && (
+              {/* Preliminary disclaimer — shown only during a live match */}
+              {liveFixtures.length > 0 && liveStatsLog.length > 0 && (
                 <div className="mono" style={{ fontSize: 8, color: 'var(--mute)', letterSpacing: '.12em', marginTop: 5, paddingLeft: 13, opacity: .7 }}>
                   PRELIMINARY — FINAL POINTS CALCULATED AFTER THE MATCH
                 </div>
@@ -1093,23 +1090,16 @@ export default function LiveScreen() {
               {loading ? (
                 <div className="mono" style={{ fontSize: 10, color: 'var(--mute)', padding: 20 }}>Connecting to live feed…</div>
 
-              ) : events.length > 0 ? (
-                /* Post-match timeline from match_events */
-                events.map(ev => <EventRow key={ev.key} ev={ev} />)
-
-              ) : liveFixtures.length > 0 && liveStatsLog.length > 0 ? (
-                /* Live stats breakdown from player_match_stats */
+              ) : liveStatsLog.length > 0 ? (
                 liveStatsLog.map(s => <DesktopStatsRow key={s.key} s={s} />)
 
               ) : liveFixtures.length > 0 ? (
-                /* Live match but no stats yet */
                 <div style={{ padding: '32px 20px', textAlign: 'center' }}>
                   <div className="mono" style={{ fontSize: 10, color: 'var(--mute)', letterSpacing: '.22em' }}>MATCH IN PROGRESS</div>
                   <div className="mono" style={{ fontSize: 9, color: 'var(--rule)', marginTop: 8 }}>Points will appear once stats are available</div>
                 </div>
 
               ) : (
-                /* No live or recent match for this league */
                 <div style={{ padding: '32px 20px', textAlign: 'center' }}>
                   <div className="mono" style={{ fontSize: 10, color: 'var(--mute)', letterSpacing: '.22em' }}>NO MATCH ONGOING</div>
                   <div className="mono" style={{ fontSize: 9, color: 'var(--rule)', marginTop: 8 }}>Points Log will appear here when a match is live</div>
@@ -1225,7 +1215,7 @@ export default function LiveScreen() {
         <div style={{ display: 'flex', padding: '0 18px', borderBottom: '1px solid var(--rule)' }}>
           {[
             { id: 'squad',  label: `MY XI · ${activeLeague?.short || '—'}` },
-            { id: 'events', label: events.length > 0 ? `EVENTS · ${events.length}` : liveStatsLog.length > 0 ? `POINTS · ${liveStatsLog.length}` : 'POINTS' },
+            { id: 'events', label: liveStatsLog.length > 0 ? `POINTS · ${liveStatsLog.length}` : 'POINTS' },
           ].map(t => {
             const isActive = mobileTab === t.id;
             return (
@@ -1322,15 +1312,13 @@ export default function LiveScreen() {
               <div style={{ padding: '12px 18px 0' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                   <span style={{ width: 3, height: 14, background: 'var(--gold)', flexShrink: 0 }} />
-                  <span className="mono" style={{ fontSize: 10, color: 'var(--paper)', letterSpacing: '.22em' }}>
-                    {events.length > 0 ? 'MATCH EVENTS' : 'POINTS LOG'}
-                  </span>
+                  <span className="mono" style={{ fontSize: 10, color: 'var(--paper)', letterSpacing: '.22em' }}>POINTS LOG</span>
                   <span className="mono" style={{ fontSize: 9, color: 'var(--mute)', marginLeft: 'auto' }}>
-                    {events.length > 0 ? 'TIMELINE · YOUR SQUAD' : liveFixtures.length > 0 ? 'LIVE · UPDATES EVERY 60S' : 'FINAL'}
+                    {liveFixtures.length > 0 ? 'LIVE · UPDATES EVERY 60S' : liveStatsLog.length > 0 ? 'FINAL' : ''}
                   </span>
                 </div>
-                {/* Preliminary disclaimer — shown during live match, hidden once match_events are written */}
-                {liveFixtures.length > 0 && events.length === 0 && liveStatsLog.length > 0 && (
+                {/* Preliminary disclaimer — shown only during a live match */}
+                {liveFixtures.length > 0 && liveStatsLog.length > 0 && (
                   <div className="mono" style={{ fontSize: 8, color: 'var(--mute)', letterSpacing: '.12em', marginTop: 5, paddingLeft: 11, opacity: .7 }}>
                     PRELIMINARY — FINAL POINTS CALCULATED AFTER THE MATCH
                   </div>
@@ -1340,23 +1328,16 @@ export default function LiveScreen() {
               {loading ? (
                 <div className="mono" style={{ fontSize: 10, color: 'var(--mute)', padding: '12px 18px' }}>Connecting…</div>
 
-              ) : events.length > 0 ? (
-                /* Post-match timeline from match_events */
-                events.map(ev => <MobEventRow key={ev.key} ev={ev} />)
-
-              ) : liveFixtures.length > 0 && liveStatsLog.length > 0 ? (
-                /* Live stats breakdown from player_match_stats */
+              ) : liveStatsLog.length > 0 ? (
                 liveStatsLog.map(s => <StatsLogRow key={s.key} s={s} />)
 
               ) : liveFixtures.length > 0 ? (
-                /* Live match but no stats yet (match just kicked off) */
                 <div style={{ padding: '32px 18px', textAlign: 'center' }}>
                   <div className="mono" style={{ fontSize: 10, color: 'var(--mute)', letterSpacing: '.22em' }}>MATCH IN PROGRESS</div>
                   <div className="mono" style={{ fontSize: 9, color: 'var(--rule)', marginTop: 8 }}>Points will appear once stats are available</div>
                 </div>
 
               ) : (
-                /* No live or recent match for this league */
                 <div style={{ padding: '32px 18px', textAlign: 'center' }}>
                   <div className="mono" style={{ fontSize: 10, color: 'var(--mute)', letterSpacing: '.22em' }}>NO MATCH ONGOING</div>
                   <div className="mono" style={{ fontSize: 9, color: 'var(--rule)', marginTop: 8 }}>Points Log will appear here when a match is live</div>
