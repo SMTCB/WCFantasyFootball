@@ -36,6 +36,7 @@ import AuctionsView           from '../components/league/AuctionsView';
 import StatsView              from '../components/league/StatsView';
 import ChatView               from '../components/league/ChatView';
 import CommissionerPanel      from '../components/league/CommissionerPanel';
+import RecapView             from '../components/league/RecapView';
 
 const LEAGUE_TOUR_STEPS = [
   {
@@ -317,6 +318,7 @@ export default function LeagueScreen() {
     if (t === 'admin') return 'commissioner';
     return t;
   };
+  // recap tab maps 1:1 (tabToView('recap') === 'recap', viewToTab('recap') === 'recap')
   // U32: set tab + sync to URL query param so ?tab=chat deep-links work
   // setSearchParams MUST be in deps: React Router v7 recreates it whenever
   // the location changes (it closes over navigate which closes over locationPathname).
@@ -936,6 +938,14 @@ export default function LeagueScreen() {
              onViewManager={(mgr) => { setManagerTeamView(mgr); loadManagerRoster(mgr.user_id); }}
            />
          )}
+         {view === 'recap' && (
+           <RecapView
+             leagueId={activeLeague?.league_id}
+             tournamentId={activeLeague?.leagues?.tournament_id}
+             members={members}
+             currentUser={currentUser}
+           />
+         )}
          {view === 'frontpage' && (() => {
            const FT_PAPER = '#F2EEE5', FT_INK = '#0A0E14', FT_RULE = '#D8D2C6', FT_MUTE = '#5A6470', FT_RED = '#B0271E';
            const ftSerif = "'Playfair Display', 'Times New Roman', serif";
@@ -1118,6 +1128,7 @@ export default function LeagueScreen() {
              replayCommissionerTour={replayCommissionerTour}
              memberCount={members.length}
              leagueName={activeLeague?.leagues?.name || activeLeague?.name || 'LEAGUE'}
+             league={activeLeague?.leagues ?? null}
            />
          )}
          {showTradeBuilder && tradeTarget && (

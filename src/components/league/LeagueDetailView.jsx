@@ -107,7 +107,7 @@ export default function LeagueDetailView({ leagueId, members, currentUser, membe
                 <div style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', marginTop: 4, letterSpacing: '.14em' }}>RANK #{idx + 1}</div>
               </div>
               <div style={{ textAlign: 'right' }}>
-                <div style={{ fontFamily: DISPLAY, fontSize: 16, color: 'var(--positive)' }}>{m.total_points}</div>
+                <div style={{ fontFamily: DISPLAY, fontSize: 16, color: 'var(--positive)' }}>{Math.round(m.total_points ?? 0)}</div>
                 <div style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', marginTop: 4, letterSpacing: '.18em' }}>TOT</div>
               </div>
             </div>
@@ -202,7 +202,7 @@ export default function LeagueDetailView({ leagueId, members, currentUser, membe
                 <div style={{ fontSize: 24 }}>⚽</div>
                 <div style={{ fontFamily: MONO, fontSize: 10, color: 'var(--mute)', letterSpacing: '.2em', textAlign: 'center' }}>NO ACTIVITY YET</div>
                 <div style={{ fontFamily: "'Archivo', sans-serif", fontSize: 11, color: 'var(--mute)', opacity: 0.6, textAlign: 'center', lineHeight: 1.5 }}>
-                  Draft results, rank changes, and league news will appear here as the season unfolds.
+                  Draft results, rank changes, match scores, and league news will appear here as the season unfolds.
                 </div>
               </div>
             );
@@ -310,7 +310,42 @@ export default function LeagueDetailView({ leagueId, members, currentUser, membe
             </div>
           );
         })}
-        <div style={{ height: 20 }} />
+
+        {/* ── Mobile activity feed ───────────────────────────────────── */}
+        <MobSection
+          label="LEAGUE ACTIVITY"
+          tone="var(--gold)"
+          right={<span style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.14em' }}>RECENT</span>}
+        />
+        {(() => {
+          if (entries.length === 0) return (
+            <div style={{ padding: '24px 18px', textAlign: 'center' }}>
+              <div style={{ fontSize: 20, marginBottom: 8 }}>⚽</div>
+              <div style={{ fontFamily: MONO, fontSize: 10, color: 'var(--mute)', letterSpacing: '.18em', marginBottom: 6 }}>NO ACTIVITY YET</div>
+              <div style={{ fontFamily: "'Archivo', sans-serif", fontSize: 11, color: 'var(--mute)', opacity: 0.6, lineHeight: 1.5, maxWidth: 280, margin: '0 auto' }}>
+                Draft results, rank changes, and league news will appear here as the season unfolds.
+              </div>
+            </div>
+          );
+          return entries.slice(0, 8).map((e) => {
+            const meta = ENTRY_META[e.entry_type] ?? { badge: e.entry_type.toUpperCase(), color: 'var(--mute)' };
+            return (
+              <div key={e.id} style={{ padding: '11px 18px', borderBottom: '1px solid var(--rule)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 3 }}>
+                  <span style={{ fontFamily: MONO, fontSize: 8, letterSpacing: '.16em', padding: '1px 4px', border: `1px solid ${meta.color}`, color: meta.color, flexShrink: 0 }}>
+                    {meta.badge}
+                  </span>
+                  <span style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)' }}>{timeAgo(e.published_at)}</span>
+                </div>
+                <div style={{ fontFamily: "'Archivo', sans-serif", fontSize: 12, fontWeight: 600, color: 'var(--paper)', lineHeight: 1.35 }}>
+                  {e.headline}
+                </div>
+              </div>
+            );
+          });
+        })()}
+
+        <div style={{ height: 32 }} />
       </div>
     </div>
   );

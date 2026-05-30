@@ -33,7 +33,7 @@ import PowerToolCard from '../components/PowerToolCard';
 import { AvailabilityBadge } from '../components/AvailabilityBadge';
 import { POS_ORDER, POS_LABEL, POS_BADGE_COLOR } from '../lib/formations';
 
-// â”€â”€ Chip config â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// â"€â"€ Chip config â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
 const CHIPS = [
   {
     key:         'wildcard',
@@ -57,7 +57,7 @@ const CHIPS = [
   },
 ];
 
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
 
 export default function SquadScreen() {
   const { user } = useAuth();
@@ -88,6 +88,7 @@ export default function SquadScreen() {
   const [pickerPos,          setPickerPos]         = useState(null);
   const [fetchError,         setFetchError]        = useState(null);
   const [tournamentId,       setTournamentId]      = useState(null);
+  const [showChipWizard,     setShowChipWizard]    = useState(false);
 
   // On mount: resolve which league to show
   useEffect(() => {
@@ -133,14 +134,14 @@ export default function SquadScreen() {
   const { listPlayer: listForAuction, auctions: activeAuctions } = useAuctions(activeLeague, squadData?.squadId);
   const [auctionBusy, setAuctionBusy] = useState(null); // playerId being listed
 
-  // â”€â”€ Data Fetching â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // â"€â"€ Data Fetching â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
   const fetchSquad = useCallback(async () => {
     try {
       setLoading(true);
       const userId = user?.id;
       const today  = new Date().toISOString().split('T')[0];
 
-      // â”€â”€ Transfer window lock check — use latest matchday deadline â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+      // â"€â"€ Transfer window lock check — use latest matchday deadline â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
       // U11: scope deadline check to this league's tournament; capture matchday_id for squad filter
       let dlQuery = supabase
         .from('matchday_deadlines').select('deadline_at, matchday_id').order('deadline_at', { ascending: false }).limit(1);
@@ -151,8 +152,14 @@ export default function SquadScreen() {
       }
       const activeMatchdayId = deadlineRow?.matchday_id ?? null;
 
-      const { data: jokerRec } = await supabase.from('daily_jokers').select('player_id')
-        .eq('user_id', userId).eq('joker_date', today).maybeSingle();
+      // Query joker by matchday_id if known, else fall back to today's date
+      let jokerQuery = supabase.from('daily_jokers').select('player_id').eq('user_id', userId);
+      if (activeMatchdayId) {
+        jokerQuery = jokerQuery.eq('matchday_id', activeMatchdayId);
+      } else {
+        jokerQuery = jokerQuery.eq('joker_date', today);
+      }
+      const { data: jokerRec } = await jokerQuery.maybeSingle();
       let jokerP = null;
       if (jokerRec?.player_id) {
         const { data: jp } = await supabase.from('players').select('*').eq('id', jokerRec.player_id).single();
@@ -363,14 +370,14 @@ export default function SquadScreen() {
     } catch (err) { console.error('Daily status error', err); }
   };
 
-  // â”€â”€ Actions â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // â"€â"€ Actions â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
   const handlePlayerClick = (player) => {
     if (player.isJokerSlot) { setIsJokerPickerOpen(true); return; }
     if (swapMode && selectedPlayer) { handleSwap(selectedPlayer, player); return; }
     setSelectedPlayer(prev => prev?.id === player.id ? null : player);
   };
 
-  // â”€â”€ FB-022: formation validation â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // â"€â"€ FB-022: formation validation â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
   const validateFormation = (pitchPlayers) => {
     const MIN_FORMATION = cfg.minFormation;
     const counts = { GK: 0, DEF: 0, MID: 0, FWD: 0 };
@@ -455,11 +462,14 @@ export default function SquadScreen() {
     if (!selectedPlayer || saving) return;
     try {
       setSaving(true);
-      const userId = user?.id;
-      const today  = new Date().toISOString().split('T')[0];
-      const { error } = await supabase.from('daily_jokers').insert({ user_id: userId, player_id: selectedPlayer.id, joker_date: today });
+      const userId     = user?.id;
+      const today      = new Date().toISOString().split('T')[0];
+      const matchdayId = squadData?.matchdayId ?? null;
+      const row = { user_id: userId, player_id: selectedPlayer.id, joker_date: today };
+      if (matchdayId) row.matchday_id = matchdayId;
+      const { error } = await supabase.from('daily_jokers').insert(row);
       if (error) {
-        if (error.code === '23505') showToast('You already used your daily Joker today!', 'warning');
+        if (error.code === '23505') showToast('You already used your 16th Man this matchday!', 'warning');
         else throw error;
       } else { setTodayJokerId(selectedPlayer.id); setSelectedPlayer(null); }
     } catch (err) { console.error(err); showToast('Failed to set Joker: ' + err.message, 'error'); }
@@ -550,11 +560,14 @@ export default function SquadScreen() {
   const handleJokerSelection = async (player) => {
     try {
       setSaving(true);
-      const userId = user?.id;
-      const today  = new Date().toISOString().split('T')[0];
-      const { error } = await supabase.from('daily_jokers').insert({ user_id: userId, player_id: player.id, joker_date: today });
+      const userId      = user?.id;
+      const today       = new Date().toISOString().split('T')[0];
+      const matchdayId  = squadData?.matchdayId ?? null;
+      const row = { user_id: userId, player_id: player.id, joker_date: today };
+      if (matchdayId) row.matchday_id = matchdayId;
+      const { error } = await supabase.from('daily_jokers').insert(row);
       if (error) {
-        if (error.code === '23505') showToast('You already have a Joker for today!', 'warning');
+        if (error.code === '23505') showToast('You already have a Joker for this matchday!', 'warning');
         else throw error;
       } else { setJokerPlayer(player); setTodayJokerId(player.id); setIsJokerPickerOpen(false); }
     } catch (err) { console.error(err); showToast('Failed to set Joker', 'error'); }
@@ -596,7 +609,7 @@ export default function SquadScreen() {
     );
   }
 
-  // â”€â”€ Loading â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // â"€â"€ Loading â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
   if (loading || !squadData) {
     return (
       <div className="min-h-screen bg-bg flex items-center justify-center">
@@ -744,9 +757,9 @@ export default function SquadScreen() {
   const selectedIsBench = selectedPlayer && bench.some(b => b.id === selectedPlayer.id);
   // budgetLeft / budgetLow declared earlier (before empty-state guard)
 
-  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-  // â”€â”€ Sub-components defined inside render for squad closure access â”€â”€â”€â”€â”€â”€â”€â”€â”€
-  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
+  // â"€â"€ Sub-components defined inside render for squad closure access â"€â"€â"€â"€â"€â"€â"€â"€â"€
+  // â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
 
   // Chip card (full description, toggle button)
   const ChipCard = ({ chip }) => {
@@ -800,7 +813,7 @@ export default function SquadScreen() {
             DAILY JOKER
           </div>
           <p className="text-[11px] leading-relaxed mb-3" style={{ color: 'var(--mute)', fontFamily: 'Archivo, sans-serif' }}>
-            Pick a 16th man today — exempt from country limit rules. Choose any player currently playing. Locked once set.
+            Pick a 16th man for this matchday — exempt from country limit rules. One per matchday, locked once set.
           </p>
           {todayJokerId ? (
             <div className="fk-mono flex items-center gap-2 py-2 px-3" style={{ background: 'rgba(168,85,247,0.08)', border: '1px solid var(--pos-gk)', color: 'var(--pos-gk)', fontSize: 9 }}>
@@ -817,6 +830,105 @@ export default function SquadScreen() {
           )}
         </div>
       </div>
+  );
+
+  // Chip Guide modal — detailed explanation + replay tutorial button
+  const CHIP_GUIDE = [
+    {
+      key: 'wildcard',
+      icon: '🃏',
+      label: 'Wildcard',
+      color: 'var(--positive)',
+      what: 'Make unlimited free transfers for the current matchday. Normal transfer limits are waived entirely.',
+      when: 'Use mid-season when a large portion of your squad has injury doubts, or when you want to rebuild after falling behind.',
+      restriction: '1 use per season. Once activated for a matchday it cannot be reversed.',
+      tip: 'Plan your wildcard carefully — time it for a matchday where you can bring in multiple in-form players.',
+    },
+    {
+      key: 'triple',
+      icon: '👑',
+      label: 'Triple Captain',
+      color: 'var(--gold)',
+      what: 'Your captain scores 3× their fantasy points instead of the usual 2×. But if they don\'t start, they score 0.',
+      when: 'Save it for a matchday when your captain is a nailed-on starter against weak opposition.',
+      restriction: '1 use per season. High risk — do not activate if your captain is a doubt.',
+      tip: 'Check injury news on match day. Never activate this if there\'s any chance they\'re rested.',
+    },
+    {
+      key: 'joker',
+      icon: '⚡',
+      label: '16th Man (Daily Joker)',
+      color: 'var(--pos-gk)',
+      what: 'Pick any player outside your 15-man squad as an extra scorer for this matchday. They are exempt from country limit rules.',
+      when: 'Any matchday — choose someone whose club is playing today that you couldn\'t otherwise fit due to country limits.',
+      restriction: '1 use per matchday. Must be selected before their match kicks off. Cannot be changed once locked.',
+      tip: 'Great for covering a top player from a country you\'ve already maxed out in your main squad.',
+    },
+  ];
+
+  const ChipWizardModal = () => (
+    <div className="fixed inset-0 z-[80] flex items-end lg:items-center justify-center" style={{ background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(4px)' }} onClick={() => setShowChipWizard(false)}>
+      <div
+        className="w-full lg:max-w-lg lg:mx-4 rounded-t-2xl lg:rounded-2xl flex flex-col animate-in slide-in-from-bottom"
+        style={{ background: 'var(--ink)', border: '1px solid var(--rule)', maxHeight: '90vh', overflow: 'hidden' }}
+        onClick={e => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div style={{ padding: '20px 20px 14px', borderBottom: '1px solid var(--rule)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
+          <div>
+            <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 9, color: 'var(--cyan)', letterSpacing: '.18em', marginBottom: 4 }}>CHIP GUIDE</div>
+            <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 20, color: 'var(--paper)', letterSpacing: '-0.01em' }}>How Chips Work</div>
+          </div>
+          <button onClick={() => setShowChipWizard(false)} style={{ width: 30, height: 30, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(255,255,255,0.06)', border: '1px solid var(--rule)', color: 'var(--mute)', fontSize: 16, cursor: 'pointer', borderRadius: 4 }}>×</button>
+        </div>
+        {/* Chips */}
+        <div style={{ overflowY: 'auto', padding: '16px 20px 8px' }}>
+          {CHIP_GUIDE.map((c, i) => (
+            <div key={c.key} style={{ marginBottom: i < CHIP_GUIDE.length - 1 ? 20 : 8, paddingBottom: i < CHIP_GUIDE.length - 1 ? 20 : 0, borderBottom: i < CHIP_GUIDE.length - 1 ? '1px solid var(--rule)' : 'none' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
+                <span style={{ fontSize: 22 }}>{c.icon}</span>
+                <div>
+                  <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 14, color: c.color, letterSpacing: '0.04em', textTransform: 'uppercase' }}>{c.label}</div>
+                </div>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                <div>
+                  <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 8, color: 'var(--mute)', letterSpacing: '.14em', textTransform: 'uppercase' }}>What it does · </span>
+                  <span style={{ fontFamily: 'Archivo, sans-serif', fontSize: 12, color: 'var(--paper)', lineHeight: 1.5 }}>{c.what}</span>
+                </div>
+                <div>
+                  <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 8, color: 'var(--cyan)', letterSpacing: '.14em', textTransform: 'uppercase' }}>When to use · </span>
+                  <span style={{ fontFamily: 'Archivo, sans-serif', fontSize: 12, color: 'var(--paper)', lineHeight: 1.5 }}>{c.when}</span>
+                </div>
+                <div>
+                  <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 8, color: 'var(--danger)', letterSpacing: '.14em', textTransform: 'uppercase' }}>Restrictions · </span>
+                  <span style={{ fontFamily: 'Archivo, sans-serif', fontSize: 12, color: 'var(--paper)', lineHeight: 1.5 }}>{c.restriction}</span>
+                </div>
+                <div style={{ padding: '8px 10px', background: `${c.color}0A`, border: `1px solid ${c.color}22`, borderRadius: 4, marginTop: 2 }}>
+                  <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 8, color: c.color, letterSpacing: '.14em', textTransform: 'uppercase' }}>💡 Tip · </span>
+                  <span style={{ fontFamily: 'Archivo, sans-serif', fontSize: 11, color: 'var(--paper)', lineHeight: 1.5, opacity: 0.85 }}>{c.tip}</span>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+        {/* Footer */}
+        <div style={{ padding: '14px 20px 20px', borderTop: '1px solid var(--rule)', display: 'flex', gap: 10, flexShrink: 0 }}>
+          <button
+            onClick={() => { setShowChipWizard(false); replaySquadTour(); }}
+            style={{ flex: 1, padding: '10px', background: 'transparent', border: '1px solid var(--rule)', color: 'var(--mute)', fontFamily: 'JetBrains Mono, monospace', fontSize: 9, letterSpacing: '.16em', textTransform: 'uppercase', cursor: 'pointer', borderRadius: 4 }}
+          >
+            ↺ REPLAY TUTORIAL
+          </button>
+          <button
+            onClick={() => setShowChipWizard(false)}
+            style={{ flex: 2, padding: '10px', background: 'var(--cyan)', border: 'none', color: 'var(--ink)', fontFamily: 'Archivo Black, sans-serif', fontSize: 11, letterSpacing: '.1em', textTransform: 'uppercase', cursor: 'pointer', borderRadius: 4 }}
+          >
+            GOT IT
+          </button>
+        </div>
+      </div>
+    </div>
   );
 
   // Danger Zone vertical list (for sidebar / tools tab)
@@ -924,6 +1036,7 @@ export default function SquadScreen() {
   // Player list grouped by position — starters + bench unified, with START/BENCH badge
   const PlayerList = () => {
     const benchIds = new Set(bench.map(b => b.id));
+    const squadFull = allSquadPlayers.length >= cfg.squadSize;
     return (
       <div>
         {POS_ORDER.map(pos => {
@@ -931,7 +1044,7 @@ export default function SquadScreen() {
           const posBench    = bench.filter(p => p.position === pos);
           const allPos      = [...posStarters, ...posBench];
           const limit       = POS_LIMITS[pos] ?? 0;
-          const emptySlots  = Math.max(0, limit - allPos.length);
+          const emptySlots  = squadFull ? 0 : Math.max(0, limit - allPos.length);
           const posColor    = POS_CONFIG_COLORS[pos] ?? 'var(--mute)';
           if (!allPos.length && !emptySlots) return null;
           return (
@@ -1050,9 +1163,9 @@ export default function SquadScreen() {
     );
   };
 
-  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-  // â”€â”€ RENDER â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
+  // â"€â"€ RENDER â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
+  // â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
   return (
     <div className="min-h-screen bg-bg overflow-x-hidden">
 
@@ -1204,7 +1317,7 @@ export default function SquadScreen() {
           ))}
         </div>
 
-        {/* â”€â”€ PITCH TAB — starting XI + bench strip for sub management â”€â”€ */}
+        {/* â"€â"€ PITCH TAB — starting XI + bench strip for sub management â"€â"€ */}
         {mobileTab === 'pitch' && (() => {
           const captain = allSquadPlayers.find(p => p.id === captainId);
           const def = players.filter(p => p.position === 'DEF').length;
@@ -1342,7 +1455,7 @@ export default function SquadScreen() {
           );
         })()}
 
-        {/* â”€â”€ LIST TAB — full squad with empty slots + SIGN buttons â”€â”€â”€ */}
+        {/* â"€â"€ LIST TAB — full squad with empty slots + SIGN buttons â"€â"€â"€ */}
         {mobileTab === 'squad' && (() => {
           const totalSigned = allSquadPlayers.length;
           const squadSize   = Object.values(POS_LIMITS).reduce((a, b) => a + b, 0);
@@ -1382,7 +1495,7 @@ export default function SquadScreen() {
                 const posStarters = players.filter(p => p.position === pos);
                 const posBench    = bench.filter(p => p.position === pos);
                 const allPos      = [...posStarters, ...posBench];
-                const emptyCount  = Math.max(0, limit - allPos.length);
+                const emptyCount  = totalSigned >= squadSize ? 0 : Math.max(0, limit - allPos.length);
                 const posColor    = pos === 'GK' ? 'var(--pos-gk)' : pos === 'DEF' ? 'var(--pos-def)' : pos === 'MID' ? 'var(--pos-mid)' : 'var(--pos-fwd)';
                 return (
                   <div key={pos}>
@@ -1460,15 +1573,24 @@ export default function SquadScreen() {
           );
         })()}
 
-        {/* â”€â”€ CHIPS TAB â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+        {/* â"€â"€ CHIPS TAB â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€ */}
         {mobileTab === 'chips' && (
           <div className="pb-24 pt-2">
+            {/* Guide button */}
+            <div style={{ padding: '6px 16px 10px', display: 'flex', justifyContent: 'flex-end' }}>
+              <button
+                onClick={() => setShowChipWizard(true)}
+                style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 9, letterSpacing: '.16em', color: 'var(--cyan)', background: 'rgba(0,180,216,0.08)', border: '1px solid rgba(0,180,216,0.25)', padding: '5px 10px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5 }}
+              >
+                <span style={{ fontSize: 11 }}>?</span> CHIP GUIDE
+              </button>
+            </div>
             {CHIPS.map(chip => <ChipCard key={chip.key} chip={chip} />)}
             <JokerCard />
           </div>
         )}
 
-        {/* â”€â”€ STATUS TAB â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+        {/* â"€â"€ STATUS TAB â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€ */}
         {mobileTab === 'status' && (
           <div className="pb-24">
             <SectionHeader title="Player Status" accent="gold" />
@@ -1476,7 +1598,7 @@ export default function SquadScreen() {
           </div>
         )}
 
-        {/* â”€â”€ TOOLS TAB (legacy fallback — now unused) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+        {/* â"€â"€ TOOLS TAB (legacy fallback — now unused) â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€ */}
         {mobileTab === 'tools' && (
           <div className="pb-6">
 
@@ -1613,7 +1735,7 @@ export default function SquadScreen() {
                     opacity: isLocked ? 0.5 : 1,
                   }}
                 >
-                  {jokerPlayer ? `âœ“ Set: ${jokerPlayer.name}` : 'Pick Joker'}
+                  {jokerPlayer ? `âœ" Set: ${jokerPlayer.name}` : 'Pick Joker'}
                 </button>
               </div>
             </div>
@@ -1633,7 +1755,7 @@ export default function SquadScreen() {
       {/* Shrink container by swap-banner height (â‰ˆ64px) so bench strip stays above the fixed banner */}
       <div className="hidden lg:flex flex-col" style={{ height: swapMode ? 'calc(100vh - 88px - 64px)' : 'calc(100vh - 88px)' }}>
 
-        {/* â”€â”€ Sub-tab row: Pitch / List / Chips / Status â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+        {/* â"€â"€ Sub-tab row: Pitch / List / Chips / Status â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€ */}
         <div className="flex shrink-0" style={{ borderBottom: '1px solid var(--rule)', background: 'var(--ink-2)' }}>
           {[
             { id: 'pitch',  label: 'Pitch'  },
@@ -1662,10 +1784,10 @@ export default function SquadScreen() {
           ))}
         </div>
 
-        {/* â”€â”€ Tab content â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+        {/* â"€â"€ Tab content â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€ */}
         <div className="flex-1 overflow-hidden flex">
 
-          {/* â”€â”€ PITCH TAB — XI on pitch + bench strip below â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+          {/* â"€â"€ PITCH TAB — XI on pitch + bench strip below â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€ */}
           {desktopTab === 'pitch' && (
             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
               {/* Pitch — flex:1 to fill most of the height */}
@@ -1724,7 +1846,7 @@ export default function SquadScreen() {
             </div>
           )}
 
-          {/* â”€â”€ LIST TAB — player list + bench panel â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+          {/* â"€â"€ LIST TAB — player list + bench panel â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€ */}
           {desktopTab === 'list' && (
             <>
               <div className="flex-1 min-w-0 overflow-y-auto">
@@ -1768,15 +1890,24 @@ export default function SquadScreen() {
             </>
           )}
 
-          {/* â”€â”€ CHIPS TAB â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+          {/* â"€â"€ CHIPS TAB â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€ */}
           {desktopTab === 'chips' && (
             <div className="flex-1 overflow-y-auto pt-2 max-w-xl" data-tour="squad-chips">
+              {/* Guide button */}
+              <div style={{ padding: '4px 16px 8px', display: 'flex', justifyContent: 'flex-end' }}>
+                <button
+                  onClick={() => setShowChipWizard(true)}
+                  style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 9, letterSpacing: '.16em', color: 'var(--cyan)', background: 'rgba(0,180,216,0.08)', border: '1px solid rgba(0,180,216,0.25)', padding: '5px 10px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5 }}
+                >
+                  <span style={{ fontSize: 11 }}>?</span> CHIP GUIDE
+                </button>
+              </div>
               {CHIPS.map(chip => <ChipCard key={chip.key} chip={chip} />)}
               <JokerCard />
             </div>
           )}
 
-          {/* â”€â”€ STATUS TAB â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+          {/* â"€â"€ STATUS TAB â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€ */}
           {desktopTab === 'status' && (
             <div className="flex-1 overflow-y-auto max-w-xl">
               <SectionHeader title="Player Status" accent="gold" />
@@ -1962,7 +2093,7 @@ export default function SquadScreen() {
                     {playingTodayTeams.includes(selectedPlayer.club) ? 'ACTIVATE JOKER' : 'âœ— Not Playing Today'}
                   </button>
                   <p className="mt-1.5 text-[9px] text-center uppercase tracking-wide" style={{ color: 'var(--mute)', fontFamily: 'Archivo, sans-serif' }}>
-                    1 Joker per day · Country limit exempt · Locked once set
+                    1 Joker per matchday · Country limit exempt · Locked once set
                   </p>
                 </>
               )}
@@ -1973,6 +2104,8 @@ export default function SquadScreen() {
       )}
 
       {/* â•â• PLAYER PICKER SHEET â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
+      {showChipWizard && <ChipWizardModal />}
+
       {pickerPos && (
         <PlayerPickerSheet
           position={pickerPos}
@@ -2057,7 +2190,7 @@ export default function SquadScreen() {
   );
 }
 
-// â”€â”€ Supporting UI: Joker picker list (FB-024: proper empty/error states) â”€â”€â”€â”€â”€
+// â"€â"€ Supporting UI: Joker picker list (FB-024: proper empty/error states) â"€â"€â"€â"€â"€
 function JokerList({ teams, squadPlayerIds, onSelect, saving }) {
   const [players,    setPlayers]    = useState([]);
   const [loading,    setLoading]    = useState(true);
