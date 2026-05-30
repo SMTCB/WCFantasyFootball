@@ -546,6 +546,7 @@ export default function LiveScreen() {
       const activeFixIds = statsFixIds;
       const fixData      = liveFixData; // used only for tournament-id extraction below
 
+
       // Fetch next upcoming fixture — filtered by active league's tournament (BUG-12 fix)
       if (!liveFixData.length) {
         let upcomingQ = supabase.from('fixtures')
@@ -846,6 +847,14 @@ export default function LiveScreen() {
     };
   }, [liveFixtures, fetchAll]);
 
+  // Whether the active league's tournament has a live match right now.
+  // Derived from liveFixtures (global) filtered to activeLeague's tournamentId.
+  // Used instead of hasLiveForActiveTournament for the Points Log / MATCH IN PROGRESS
+  // states so EPL leagues don't show "Match in progress" when UCL is live.
+  const hasLiveForActiveTournament = liveFixtures.some(
+    f => !activeLeague?.tournamentId || f.tournament_id === activeLeague?.tournamentId
+  );
+
   // ── Desktop layout ─────────────────────────────────────────────────────────
 
   const desktopLeagueSelector = (
@@ -1008,7 +1017,7 @@ export default function LiveScreen() {
             {/* U52: Captain DNP banner */}
             {(() => {
               const cap = squadPlayers.find(p => activeLeague && p.id === activeLeague.captainId);
-              if (cap && liveFixtures.length > 0 && cap.live === false && cap.minutes === 0) {
+              if (cap && hasLiveForActiveTournament && cap.live === false && cap.minutes === 0) {
                 return (
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '7px 10px', background: 'rgba(240,180,0,.08)', border: '1px solid rgba(240,180,0,.25)', borderRadius: 3 }}>
                     <span style={{ fontFamily: 'Archivo Black', fontSize: 9, background: 'var(--gold)', color: 'var(--ink)', padding: '1px 5px' }}>C</span>
@@ -1071,7 +1080,7 @@ export default function LiveScreen() {
                   <span style={{ width: 3, height: 14, background: 'var(--gold)', flexShrink: 0 }} />
                   <span className="mono" style={{ fontSize: 11, color: 'var(--paper)', letterSpacing: '.22em' }}>POINTS LOG</span>
                   <span className="mono" style={{ fontSize: 9, color: 'var(--mute)', letterSpacing: '.14em' }}>
-                    {liveFixtures.length > 0 ? '· LIVE · EVERY 60S' : liveStatsLog.length > 0 ? '· FINAL' : ''}
+                    {hasLiveForActiveTournament ? '· LIVE · EVERY 60S' : liveStatsLog.length > 0 ? '· FINAL' : ''}
                   </span>
                 </div>
                 {liveStatsLog.length > 0 && (
@@ -1079,7 +1088,7 @@ export default function LiveScreen() {
                 )}
               </div>
               {/* Preliminary disclaimer — shown only during a live match */}
-              {liveFixtures.length > 0 && liveStatsLog.length > 0 && (
+              {hasLiveForActiveTournament && liveStatsLog.length > 0 && (
                 <div className="mono" style={{ fontSize: 8, color: 'var(--mute)', letterSpacing: '.12em', marginTop: 5, paddingLeft: 13, opacity: .7 }}>
                   PRELIMINARY — FINAL POINTS CALCULATED AFTER THE MATCH
                 </div>
@@ -1093,7 +1102,7 @@ export default function LiveScreen() {
               ) : liveStatsLog.length > 0 ? (
                 liveStatsLog.map(s => <DesktopStatsRow key={s.key} s={s} />)
 
-              ) : liveFixtures.length > 0 ? (
+              ) : hasLiveForActiveTournament ? (
                 <div style={{ padding: '32px 20px', textAlign: 'center' }}>
                   <div className="mono" style={{ fontSize: 10, color: 'var(--mute)', letterSpacing: '.22em' }}>MATCH IN PROGRESS</div>
                   <div className="mono" style={{ fontSize: 9, color: 'var(--rule)', marginTop: 8 }}>Points will appear once stats are available</div>
@@ -1263,7 +1272,7 @@ export default function LiveScreen() {
                   {/* U52: Captain DNP banner — mobile */}
                   {(() => {
                     const cap = squadPlayers.find(p => activeLeague && p.id === activeLeague.captainId);
-                    if (cap && liveFixtures.length > 0 && cap.live === false && cap.minutes === 0) {
+                    if (cap && hasLiveForActiveTournament && cap.live === false && cap.minutes === 0) {
                       return (
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '7px 10px', marginBottom: 8, background: 'rgba(240,180,0,.08)', border: '1px solid rgba(240,180,0,.25)', borderRadius: 3 }}>
                           <span style={{ fontFamily: 'Archivo Black', fontSize: 9, background: 'var(--gold)', color: 'var(--ink)', padding: '1px 4px' }}>C</span>
@@ -1314,11 +1323,11 @@ export default function LiveScreen() {
                   <span style={{ width: 3, height: 14, background: 'var(--gold)', flexShrink: 0 }} />
                   <span className="mono" style={{ fontSize: 10, color: 'var(--paper)', letterSpacing: '.22em' }}>POINTS LOG</span>
                   <span className="mono" style={{ fontSize: 9, color: 'var(--mute)', marginLeft: 'auto' }}>
-                    {liveFixtures.length > 0 ? 'LIVE · UPDATES EVERY 60S' : liveStatsLog.length > 0 ? 'FINAL' : ''}
+                    {hasLiveForActiveTournament ? 'LIVE · UPDATES EVERY 60S' : liveStatsLog.length > 0 ? 'FINAL' : ''}
                   </span>
                 </div>
                 {/* Preliminary disclaimer — shown only during a live match */}
-                {liveFixtures.length > 0 && liveStatsLog.length > 0 && (
+                {hasLiveForActiveTournament && liveStatsLog.length > 0 && (
                   <div className="mono" style={{ fontSize: 8, color: 'var(--mute)', letterSpacing: '.12em', marginTop: 5, paddingLeft: 11, opacity: .7 }}>
                     PRELIMINARY — FINAL POINTS CALCULATED AFTER THE MATCH
                   </div>
@@ -1331,7 +1340,7 @@ export default function LiveScreen() {
               ) : liveStatsLog.length > 0 ? (
                 liveStatsLog.map(s => <StatsLogRow key={s.key} s={s} />)
 
-              ) : liveFixtures.length > 0 ? (
+              ) : hasLiveForActiveTournament ? (
                 <div style={{ padding: '32px 18px', textAlign: 'center' }}>
                   <div className="mono" style={{ fontSize: 10, color: 'var(--mute)', letterSpacing: '.22em' }}>MATCH IN PROGRESS</div>
                   <div className="mono" style={{ fontSize: 9, color: 'var(--rule)', marginTop: 8 }}>Points will appear once stats are available</div>

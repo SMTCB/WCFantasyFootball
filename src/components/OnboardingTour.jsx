@@ -22,8 +22,9 @@
 import { useState, useEffect, useLayoutEffect } from 'react';
 import Button from './Button';
 
-const PADDING = 10;   // px around highlighted element
-const TOOLTIP_W = 280;
+const PADDING   = 10;    // px around highlighted element
+const TOOLTIP_W = 300;
+const TOOLTIP_H = 230;   // realistic estimate (avoids "goes to top" overcorrection)
 
 function getRect(target) {
   const el = document.querySelector(`[data-tour="${target}"]`);
@@ -136,34 +137,35 @@ export default function OnboardingTour({ steps, onComplete, onSkip }) {
     position:   'fixed',
     width:      `${TOOLTIP_W}px`,
     zIndex:     10001,
-    transition: 'top 0.25s ease, left 0.25s ease, right 0.25s ease',
+    transition: 'top 0.25s ease, left 0.25s ease',
   };
 
   if (rect) {
-    // Use clientWidth (excludes scrollbar) and subtract sidebar on desktop (lg breakpoint = 1024px)
     const vw = document.documentElement.clientWidth;
-    const sidebarW = vw >= 1024 ? 220 : 0;
-    const usableW  = vw - sidebarW;
     const vh = window.innerHeight;
+    const MARGIN = 12;
+
+    // Vertical: prefer below target, fallback to above, last resort center viewport.
     const spaceBelow = vh - (rect.top + rect.height);
-
-    // Prefer below; fallback to above
-    if (spaceBelow > 180) {
-      tooltipStyle.top  = `${rect.top + rect.height + 12}px`;
+    const spaceAbove = rect.top;
+    let top;
+    if (spaceBelow >= TOOLTIP_H + MARGIN) {
+      // Fits below
+      top = rect.top + rect.height + 12;
+    } else if (spaceAbove >= TOOLTIP_H + MARGIN) {
+      // Fits above
+      top = rect.top - TOOLTIP_H - 12;
     } else {
-      tooltipStyle.top = `${Math.max(12, rect.top - 12)}px`;
+      // Neither — float in the lower-center of the viewport
+      top = vh - TOOLTIP_H - MARGIN * 4;
     }
+    top = Math.max(MARGIN, Math.min(top, vh - TOOLTIP_H - MARGIN));
+    tooltipStyle.top = `${top}px`;
 
-    // Horizontal: right-anchor when target is in the right half, left-anchor otherwise
-    const targetCenterX = rect.left + rect.width / 2;
-    if (targetCenterX > sidebarW + usableW / 2) {
-      // Right-side element — pin tooltip to the right edge so it never overflows
-      tooltipStyle.right = '8px';
-    } else {
-      const idealLeft = targetCenterX - TOOLTIP_W / 2;
-      const maxLeft   = vw - TOOLTIP_W - 8;
-      tooltipStyle.left = `${Math.max(sidebarW + 8, Math.min(idealLeft, maxLeft))}px`;
-    }
+    // Horizontal: center on target, clamped within viewport
+    const idealLeft = rect.left + rect.width / 2 - TOOLTIP_W / 2;
+    const clampedLeft = Math.max(MARGIN, Math.min(idealLeft, vw - TOOLTIP_W - MARGIN));
+    tooltipStyle.left = `${clampedLeft}px`;
   } else {
     // Fallback: center screen
     tooltipStyle.top  = '50%';
@@ -171,29 +173,8 @@ export default function OnboardingTour({ steps, onComplete, onSkip }) {
     tooltipStyle.transform = 'translate(-50%, -50%)';
   }
 
-  // ── Overlay cutout via box-shadow ───────────────────────────────────────────
-  // When rect is null (element not found / zero-height), show NO overlay rather
-  // than a full-screen dark block — the tooltip still renders centered.
-  const overlayStyle = rect
-    ? {
-        position:  'fixed',
-        top:       `${rect.top}px`,
-        left:      `${rect.left}px`,
-        width:     `${rect.width}px`,
-        height:    `${rect.height}px`,
-        borderRadius: '6px',
-        boxShadow: '0 0 0 9999px rgba(7, 10, 15, 0.82)',
-        zIndex:    10000,
-        pointerEvents: 'none',
-        transition: 'top 0.25s ease, left 0.25s ease, width 0.25s ease, height 0.25s ease',
-      }
-    : null;
-
   return (
     <div style={{ opacity: visible ? 1 : 0, transition: 'opacity 0.3s ease', pointerEvents: visible ? 'auto' : 'none' }}>
-      {/* Overlay / cutout — only rendered when element found */}
-      {overlayStyle && <div style={overlayStyle} />}
-
       {/* Tooltip card */}
       <div style={{
         ...tooltipStyle,
@@ -201,7 +182,7 @@ export default function OnboardingTour({ steps, onComplete, onSkip }) {
         border:       '1px solid rgba(255,255,255,0.1)',
         borderRadius: '12px',
         padding:      '20px',
-        boxShadow:    '0 16px 48px rgba(0,0,0,0.6)',
+        boxShadow:    'none',
       }}>
         {/* Step counter */}
         <div style={{
