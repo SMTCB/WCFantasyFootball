@@ -25,7 +25,9 @@
 | AUDIT-58-A8 | Score Recalc default fixture ID `''` (was `'test-live'`) | useCommissioner.js |
 | AUDIT-58-A10 | WHO PICKED WHAT denominator = `memberCount` (was `pending.length+2`) | CommissionerPanel.jsx |
 
-**Remaining open P1s from AUDIT-57/58**: AUDIT-57-03 (budget bets), AUDIT-57-04+05 (auction stuck), AUDIT-58-A5 (void bet), AUDIT-58-A3 partial (LifecycleOp card status labels), AUDIT-58-A4 (lifecycle preconditions), AUDIT-57-07 (auction wrong squad row).
+**Session 58b (PR #246)**: AUDIT-57-03 ✅, AUDIT-57-04 ✅, AUDIT-57-05 ✅, AUDIT-57-07 ✅, AUDIT-58-A4 ✅, AUDIT-58-A5 ✅ — all remaining P1s resolved.
+
+**Still open (P2/P3)**: AUDIT-57-08 (LIVE auctions stat), AUDIT-57-09 (cancel after bid), AUDIT-57-10 (migration renumber), AUDIT-57-11 (window closed banner), AUDIT-58-A3 partial (LifecycleOp card status labels), AUDIT-58-A9 (dead bet code paths).
 
 ---
 
@@ -75,20 +77,20 @@
 - **Fix**: Add `IF NOT EXISTS (SELECT 1 FROM squads WHERE id = p_squad_id AND user_id = auth.uid()) THEN RETURN error 'Not authorised' END IF;` at the top of the function.
 - **Effort**: ~15 min
 
-#### AUDIT-57-03 — `budget`-type bet rewards are shown in UI but never applied (GAME LOGIC)
+#### AUDIT-57-03 — `budget`-type bet rewards are shown in UI but never applied ✅ FIXED (session 58b, migration 99)
 - **Files**: `supabase/migrations/28_bets_system.sql:16`, `supabase/migrations/70_scoring_fixes.sql:45`, `src/components/BetWidget.jsx:226`, `src/components/league/BetsTabHub.jsx:63`
 - **Issue**: `bet_instances.reward_type` supports `'budget'` and `'points'`. When `resolve_bet` runs for a `budget`-type bet it writes `reward_awarded` on each winning submission, and the UI displays "+X M". But nothing ever adds `reward_awarded` to `squads.budget_remaining`. `aggregate_league_member_points` explicitly filters `reward_type='points'` — budget rewards are excluded. Winners are told they got budget and never receive it.
 - **Fix**: After `UPDATE bet_submissions`, add a second `UPDATE squads SET budget_remaining = budget_remaining + v_reward_value WHERE id IN (SELECT squad_id FROM bet_submissions WHERE bet_instance_id = p_instance_id AND is_correct = true)` inside `resolve_bet`, conditional on `reward_type = 'budget'`. Fetch `reward_type` from `bet_instances` first.
 - **Effort**: ~45 min (migration + verify)
 
-#### AUDIT-57-04 — No server-side budget check when placing an auction bid (GAME LOGIC)
+#### AUDIT-57-04 — No server-side budget check when placing an auction bid ✅ FIXED (session 58b, migration 100)
 - **File**: `supabase/migrations/90_e2e_bug_fixes.sql:22` (canonical `place_bid`)
 - **Issue**: `place_bid` validates status, deadline, and min-increment but **never checks the bidder has enough budget**. The old 3-arg version (`supabase/migrations/27_auction_listings.sql:104`) did check `squads.budget_remaining < p_amount`. The 2-arg canonical version dropped it. `AuctionCard.jsx:36` has a client-side guard (`val > myBudget`) that is bypassed by direct RPC calls.
 - **Impact**: A manager can bid beyond their budget. If they win, `resolve_auction_listing` will catch it at resolution time and return `ok:false` — but then the auction gets stuck (see AUDIT-57-05).
 - **Fix**: In `place_bid`, after the deadline check, add: `SELECT budget_remaining INTO v_budget FROM squads WHERE id = (SELECT id FROM squads WHERE league_id = v_listing.league_id AND user_id = auth.uid() LIMIT 1); IF v_budget < p_bid_amount THEN RETURN error 'Insufficient budget'; END IF;`
 - **Effort**: ~30 min
 
-#### AUDIT-57-05 — Expired auction listings get permanently stuck (GAME LOGIC)
+#### AUDIT-57-05 — Expired auction listings get permanently stuck ✅ FIXED (session 58b, migration 100)
 - **File**: `supabase/migrations/36_auction_resolution.sql:64`
 - **Issue**: `resolve_auction_listing` returns `ok:false, error:'Buyer has insufficient budget'` but **never changes the listing `status`**. The 5-min cron retries and keeps failing. `place_bid` then rejects new bids ("deadline passed"). The listing is frozen `open` indefinitely — the player is notionally locked in the seller's squad forever, and neither party can do anything.
 - **Root cause**: AUDIT-57-04 is the trigger (bidder wins but can't pay), but the real bug is the missing status fallback in the resolver.
@@ -103,7 +105,7 @@
 - **File change**: `src/screens/SquadScreen.jsx:147`
 - **Effort**: ~15 min (one-line change + verify)
 
-#### AUDIT-57-07 — Auction resolution targets the wrong squad row in per-matchday leagues (DATA FLOW)
+#### AUDIT-57-07 — Auction resolution targets the wrong squad row in per-matchday leagues ✅ FIXED (session 58b, migration 100)
 - **File**: `supabase/migrations/36_auction_resolution.sql:48-54`
 - **Issue**: `resolve_auction_listing` finds the buyer's squad with `ORDER BY created_at DESC LIMIT 1` (most recently created squad row, ignoring `matchday_id`). `process-transfer` creates a fresh squad row for each new round. After a round rollover, the buyer's "latest" squad row is the new empty one (no players), while their active round-N squad row holds the actual squad. Auction transfers the player to the empty row — player disappears from the active squad.
 - **Related**: `useTransfer.loadTakenMap` (`src/hooks/useTransfer.js:47`) also queries squads by `league_id` only (no matchday filter), so the "taken" map spans all rounds. This is cosmetic (may show stale taken status) but the auction issue is a real data loss.
@@ -194,7 +196,7 @@
 - **Fix**: Pass real derived state to `LifecycleOp`. For Transfer Window: call `get_transfer_window_status` on mount and after open/close to derive current status string. For Draft: derive from `league.draft_deadline` + `now()`. For Cup: derive from `league.cup_phase`.
 - **Effort**: ~1.5h (requires fetching league state inside `LifecycleOps` or passing it down as a prop)
 
-#### AUDIT-58-A4 — No precondition enforcement on one-way lifecycle operations (ORDERING GAP)
+#### AUDIT-58-A4 — No precondition enforcement on one-way lifecycle operations ✅ FIXED (session 58b, PR #246)
 - **Files**: `src/components/league/CommissionerPanel.jsx:1095-1197`
 - **Issue**: The spec (§3.2, §3.3) says:
   - Allocation should be **disabled** until the draft deadline has passed, and hidden/changed after it runs.
@@ -204,7 +206,7 @@
 - **Fix**: Pass `league` state into `LifecycleOps`. Derive guards: `allocationDisabled = !league.draft_deadline || new Date(league.draft_deadline) > new Date()`, `cupDisabled = league.cup_phase === 'pre_cup'`. Disable buttons accordingly. Update SEED button copy to reflect idempotency.
 - **Effort**: ~45 min
 
-#### AUDIT-58-A5 — VOID bet is a non-functional no-op
+#### AUDIT-58-A5 — VOID bet is a non-functional no-op ✅ FIXED (session 58b, migration 101, PR #246)
 - **File**: `src/components/league/CommissionerPanel.jsx:990-994`
 - **Issue**: VOID button: `if (!window.confirm(…)) return; // TODO: wire to voidBet when that function is added`. The confirm dialog fires, then nothing happens. No `voidBet` function exists in `useCommissioner.js`. The spec (§2.2) expects `voidBet(betId)` to mark the bet `state='voided'`, clear picks, and notify managers.
 - **Fix**: Add `voidBet` to `useCommissioner.js` — update `bet_instances.status = 'voided'` and `bet_submissions.is_correct = false` for all picks. Wire the button.
