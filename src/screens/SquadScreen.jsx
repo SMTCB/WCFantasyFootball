@@ -46,7 +46,7 @@ const CHIPS = [
     inactiveStyle: { borderColor: 'rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.03)' },
   },
   {
-    key:         'triple',
+    key:         'triple_captain',
     label:       'Triple Captain',
     description: 'All-or-Nothing: your captain scores 3× points — but 0 if they don\'t play.',
     stateKey:    'isTripleCaptain',
@@ -544,7 +544,13 @@ export default function SquadScreen() {
       if (error) {
         if (error.code === '23505') showToast('You already used your 16th Man this matchday!', 'warning');
         else throw error;
-      } else { setTodayJokerId(selectedPlayer.id); setSelectedPlayer(null); }
+      } else {
+        // DD-C13: sync joker_player_id on squad so calculate-scores picks it up
+        if (squadData?.squadId) {
+          await supabase.from('squads').update({ joker_player_id: selectedPlayer.id }).eq('id', squadData.squadId);
+        }
+        setTodayJokerId(selectedPlayer.id); setSelectedPlayer(null);
+      }
     } catch (err) { console.error(err); showToast('Failed to set Joker: ' + err.message, 'error'); }
     finally { setSaving(false); }
   };
@@ -642,7 +648,13 @@ export default function SquadScreen() {
       if (error) {
         if (error.code === '23505') showToast('You already have a Joker for this matchday!', 'warning');
         else throw error;
-      } else { setJokerPlayer(player); setTodayJokerId(player.id); setIsJokerPickerOpen(false); }
+      } else {
+        // DD-C13: sync joker_player_id on squad so calculate-scores picks it up
+        if (squadData?.squadId) {
+          await supabase.from('squads').update({ joker_player_id: player.id }).eq('id', squadData.squadId);
+        }
+        setJokerPlayer(player); setTodayJokerId(player.id); setIsJokerPickerOpen(false);
+      }
     } catch (err) { console.error(err); showToast('Failed to set Joker', 'error'); }
     finally { setSaving(false); }
   };
@@ -918,7 +930,7 @@ export default function SquadScreen() {
       tip: 'Plan your wildcard carefully — time it for a matchday where you can bring in multiple in-form players.',
     },
     {
-      key: 'triple',
+      key: 'triple_captain',
       icon: '👑',
       label: 'Triple Captain',
       color: 'var(--gold)',
