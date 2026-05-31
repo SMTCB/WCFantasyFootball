@@ -49,6 +49,170 @@ const ghostBtn = {
   fontFamily: MONO, fontWeight: 600,
 };
 
+const helpBtnStyle = {
+  background: 'transparent',
+  border: '1px solid var(--rule)',
+  color: 'var(--mute)',
+  cursor: 'pointer',
+  width: 20,
+  height: 20,
+  borderRadius: '50%',
+  display: 'inline-flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  fontFamily: MONO,
+  fontSize: 10,
+  letterSpacing: 0,
+  flexShrink: 0,
+  padding: 0,
+  lineHeight: 1,
+};
+
+// ── Help overlay — renders on top of the admin panel with section-specific help ──
+function HelpOverlay({ topic, onClose }) {
+  if (!topic) return null;
+
+  const CONTENT = {
+    commissioner: {
+      title: 'COMMISSIONER CONTROLS — HOW IT WORKS',
+      sections: [
+        {
+          heading: 'What is this?',
+          body: 'The season progress bar shows which stage your league is currently in. It reflects real database state — you do not click it to advance stages. Stages advance automatically as you complete the corresponding lifecycle operations below.',
+        },
+        {
+          heading: 'The 5 stages',
+          rows: [
+            ['TRANSFER WINDOW', 'Active from league creation. Open/close via Lifecycle Operations.'],
+            ['DRAFT DEADLINE', 'Advances when you set a draft deadline. Shows the deadline timestamp once set.'],
+            ['ALLOCATION', 'Advances once the deadline passes and you run the allocation engine.'],
+            ['CUP SEEDED', 'Advances when you seed cup clubs via Lifecycle Operations.'],
+            ['IN SEASON', 'Active when a cup phase is running (group stage, elimination, etc.).'],
+          ],
+        },
+        {
+          heading: 'Stage colours',
+          body: '✓ Green = done.  ● Cyan = current stage (YOU ARE HERE).  Grey = not yet reached.',
+        },
+      ],
+    },
+    lifecycle: {
+      title: 'LIFECYCLE OPERATIONS — HOW IT WORKS',
+      sections: [
+        {
+          heading: 'Transfer Window',
+          body: 'Open between gameweeks so managers can buy and sell on the market. Close at least 1 hour before the first kickoff. For World Cup / tournament leagues the window is controlled by matchday deadlines — the OPEN/CLOSE buttons have no effect (shown as DEADLINE-CONTROLLED).',
+        },
+        {
+          heading: 'Draft',
+          body: 'Set a pick deadline, then run the allocation engine after it passes. Allocation assigns 15 players per manager within a £100M budget (GK≤2, DEF≤5, MID≤5, FWD≤3). One-way — cannot be undone without a manual admin reset. The RUN ALLOCATION button stays disabled until the deadline has passed.',
+        },
+        {
+          heading: 'Cup Phase',
+          body: 'Seeds the 20-club no-repeat pool for all managers. Each manager can pick a club only once across cup rounds. Cannot be undone for the season. Disabled until Run Allocation has completed.',
+        },
+        {
+          heading: 'Score Recalculation',
+          body: 'Re-fetches stats from Forza Football and reapplies the scoring engine. Safe to run multiple times — it is idempotent. Use "Score Latest Round" after any completed matchday, or enter a specific fixture ID to fix a single match.',
+        },
+      ],
+    },
+    bets: {
+      title: 'BET MANAGEMENT — HOW IT WORKS',
+      sections: [
+        {
+          heading: 'Create Bet — 4-step wizard',
+          rows: [
+            ['Step 1 · TYPE', 'Choose Top Scorer (who scores most?), Match Result (Home/Draw/Away), or Player Block (pick a player to flop — earns points if they do).'],
+            ['Step 2 · CONFIGURE', 'Select the fixture(s). For Top Scorer, define the player pool (2–8 players). For Player Block, select the block target.'],
+            ['Step 3 · REWARD', 'Set the point value (stepper +/−) and the picks lock deadline. Must be before the first kickoff.'],
+            ['Step 4 · PUBLISH', 'Review the live preview. Publishing notifies all managers and opens picks immediately.'],
+          ],
+        },
+        {
+          heading: 'After publishing',
+          body: 'A bet can be edited freely until the first manager submits a pick. After any pick is submitted, only VOID is available — edits are blocked server-side.',
+        },
+        {
+          heading: 'Resolve Bets',
+          body: 'After a match finishes, expand a pending bet card, select the winning option, and click RESOLVE. Points are awarded instantly. Use VOID if the fixture is cancelled or postponed — all picks are refunded with no points awarded.',
+        },
+        {
+          heading: 'Auto-resolve',
+          body: 'Auto-resolve is OFF. All resolutions require manual commissioner action. Match Result bets can be resolved manually even though the options are auto-generated.',
+        },
+      ],
+    },
+  };
+
+  const content = CONTENT[topic];
+  if (!content) return null;
+
+  return (
+    <div
+      onClick={e => { if (e.target === e.currentTarget) onClose(); }}
+      style={{
+        position: 'fixed', inset: 0, zIndex: 500,
+        background: 'rgba(0,0,0,0.72)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        padding: '16px',
+      }}
+    >
+      <div style={{
+        background: 'var(--ink-2)',
+        border: '1px solid var(--rule)',
+        width: '100%', maxWidth: 580,
+        maxHeight: '80vh',
+        display: 'flex', flexDirection: 'column',
+        boxShadow: '0 24px 60px rgba(0,0,0,0.6)',
+      }}>
+        {/* Header */}
+        <div style={{
+          padding: '14px 18px',
+          borderBottom: '1px solid var(--rule)',
+          display: 'flex', alignItems: 'center', gap: 10,
+          background: 'var(--ink)',
+        }}>
+          <span style={{ width: 3, height: 12, background: 'var(--cyan)', flexShrink: 0 }} />
+          <span style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '.22em', color: 'var(--paper)', flex: 1 }}>
+            {content.title}
+          </span>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--mute)', cursor: 'pointer', fontSize: 18, lineHeight: 1, padding: '0 2px' }}>✕</button>
+        </div>
+        {/* Body */}
+        <div style={{ padding: '18px 20px', overflowY: 'auto', flex: 1, display: 'flex', flexDirection: 'column', gap: 18 }}>
+          {content.sections.map((s, i) => (
+            <div key={i} style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.22em', color: 'var(--cyan)' }}>
+                {s.heading.toUpperCase()}
+              </span>
+              {s.body && (
+                <p style={{ fontFamily: BODY, fontSize: 12, color: 'var(--paper)', lineHeight: 1.6, margin: 0 }}>
+                  {s.body}
+                </p>
+              )}
+              {s.rows && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  {s.rows.map(([k, v]) => (
+                    <div key={k} style={{ display: 'grid', gridTemplateColumns: '140px 1fr', gap: 10 }}>
+                      <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.16em', color: 'var(--mute)', paddingTop: 2 }}>{k}</span>
+                      <span style={{ fontFamily: BODY, fontSize: 12, color: 'var(--paper)', lineHeight: 1.5 }}>{v}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+        {/* Footer */}
+        <div style={{ padding: '10px 18px', borderTop: '1px solid var(--rule)', display: 'flex', justifyContent: 'flex-end' }}>
+          <button onClick={onClose} style={{ ...ghostBtn, fontSize: 9, padding: '6px 14px' }}>CLOSE</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // Format a kickoff ISO timestamp to a short readable string
 function fmtKickoff(iso) {
   if (!iso) return '';
@@ -96,7 +260,7 @@ const BET_TYPES = [
 // ─────────────────────────────────────────────────────────────────────────────
 // Season stepper (Zone A)
 // ─────────────────────────────────────────────────────────────────────────────
-function SeasonStepper({ leagueName = 'LEAGUE', memberCount = 0, league = null }) {
+function SeasonStepper({ leagueName = 'LEAGUE', memberCount = 0, league = null, onHelp }) {
   const phases = computePhases(league, memberCount) ?? [
     { id: 'transfers',  label: 'TRANSFER WINDOW', state: 'done',   sub: 'Closed · GW27' },
     { id: 'draft',      label: 'DRAFT DEADLINE',  state: 'done',   sub: '15 Mar 19:00' },
@@ -111,6 +275,9 @@ function SeasonStepper({ leagueName = 'LEAGUE', memberCount = 0, league = null }
         <span style={{ width: 3, height: 14, background: 'var(--purple)', flexShrink: 0 }} />
         <span style={{ fontFamily: MONO, fontSize: 11, letterSpacing: '.22em', color: 'var(--paper)' }}>COMMISSIONER CONTROLS</span>
         <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.22em', color: 'var(--mute)' }}>· ADMIN ONLY · CHANGES TAKE EFFECT IMMEDIATELY</span>
+        {onHelp && (
+          <button onClick={onHelp} style={helpBtnStyle} title="How does this work?">?</button>
+        )}
         <span style={{ flex: 1 }} />
         <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.22em', color: 'var(--mute)' }}>
           {leagueName.toUpperCase()} · {memberCount} MGRS
@@ -1046,7 +1213,7 @@ function LifecycleOp({ title, status, statusTone = 'var(--mute)', sub, when, chi
 // ─────────────────────────────────────────────────────────────────────────────
 // Lifecycle operations (Zone C)
 // ─────────────────────────────────────────────────────────────────────────────
-function LifecycleOps({ commissioner, leagueId, tournamentId, league = null }) {
+function LifecycleOps({ commissioner, leagueId, tournamentId, league = null, onHelp }) {
   const {
     commLoading, commAction, setCommMsg,
     windowOpensAt, setWindowOpensAt,
@@ -1120,7 +1287,14 @@ function LifecycleOps({ commissioner, leagueId, tournamentId, league = null }) {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column' }}>
-      <HubSectionLabel label="LIFECYCLE OPERATIONS" sub="SEASON-STAGE CONTROLS" tone="var(--purple)" />
+      <HubSectionLabel
+        label="LIFECYCLE OPERATIONS"
+        sub="SEASON-STAGE CONTROLS"
+        tone="var(--purple)"
+        right={onHelp && (
+          <button onClick={onHelp} style={helpBtnStyle} title="How do these controls work?">?</button>
+        )}
+      />
       <div style={{ padding: '18px 24px' }}>
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4" style={{ gap: 14 }}>
 
@@ -1253,7 +1427,7 @@ function LifecycleOps({ commissioner, leagueId, tournamentId, league = null }) {
 // ─────────────────────────────────────────────────────────────────────────────
 // Mobile accordion variants
 // ─────────────────────────────────────────────────────────────────────────────
-function MobSeasonStepper({ league = null, memberCount = 0 }) {
+function MobSeasonStepper({ league = null, memberCount = 0, onHelp }) {
   const computed = computePhases(league, memberCount);
   const phases = computed
     ? computed.map(p => ({ label: p.id.toUpperCase(), state: p.state }))
@@ -1270,6 +1444,9 @@ function MobSeasonStepper({ league = null, memberCount = 0 }) {
         <span style={{ width: 3, height: 12, background: 'var(--purple)', flexShrink: 0 }} />
         <span style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '.22em', color: 'var(--paper)' }}>COMMISSIONER</span>
         <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.18em', color: 'var(--mute)' }}>· ADMIN ONLY</span>
+        {onHelp && (
+          <button onClick={onHelp} style={helpBtnStyle} title="How does this work?">?</button>
+        )}
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 4, position: 'relative' }}>
         <div style={{ position: 'absolute', top: 11, left: '10%', right: '10%', height: 1, background: 'var(--rule)' }} />
@@ -1321,12 +1498,15 @@ function MobLifecycleCard({ title, status, tone, children, when, defaultOpen = f
 }
 
 // ── Slim section header (matches brand MobSection) ─────────────────────────────
-function MobSectionHeader({ label, sub, tone }) {
+function MobSectionHeader({ label, sub, tone, onHelp }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '14px 18px 6px' }}>
       <span style={{ width: 3, height: 12, background: tone, flexShrink: 0 }} />
       <span style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '.22em', color: 'var(--paper)' }}>{label}</span>
       {sub && <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.16em', color: 'var(--mute)' }}>· {sub}</span>}
+      {onHelp && (
+        <button onClick={onHelp} style={helpBtnStyle} title="How does this work?">?</button>
+      )}
     </div>
   );
 }
@@ -1767,6 +1947,7 @@ function CommMsg({ msg, onDismiss }) {
 // ─────────────────────────────────────────────────────────────────────────────
 export default function CommissionerPanel({ commissioner, leagueId, tournamentId, memberCount = 0, leagueName = 'LEAGUE', league = null, replayCommissionerTour }) {
   const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' && window.innerWidth < 1024);
+  const [helpModal, setHelpModal] = useState(null); // null | 'commissioner' | 'lifecycle' | 'bets'
 
   useEffect(() => {
     const onResize = () => setIsMobile(window.innerWidth < 1024);
@@ -1808,43 +1989,12 @@ export default function CommissionerPanel({ commissioner, leagueId, tournamentId
 
     return (
       <div style={{ flex: 1, overflow: 'auto', background: 'var(--ink)', display: 'flex', flexDirection: 'column' }}>
+        <HelpOverlay topic={helpModal} onClose={() => setHelpModal(null)} />
         <CommMsg msg={commMsg} onDismiss={() => setCommMsg(null)} />
-        <MobSeasonStepper league={league} memberCount={memberCount} />
+        <MobSeasonStepper league={league} memberCount={memberCount} onHelp={() => setHelpModal('commissioner')} />
 
-        {/* Create bet (mobile) */}
-        <MobSectionHeader label="CREATE BET" sub="NEW BET INSTANCE" tone="var(--cyan)" />
-        <div data-tour="comm-bets" style={{ padding: '0 14px' }}>
-          <BetCreatorPanel
-            leagueId={leagueId}
-            tournamentId={tournamentId}
-            onCreated={fetchOpenBets}
-            commLoading={commLoading}
-            setCommMsg={setCommMsg}
-          />
-        </div>
-
-        {/* Resolve bets (mobile) */}
-        <MobSectionHeader label="RESOLVE PENDING" sub="WAITING ON YOU" tone="var(--gold)" />
-        <div data-tour="comm-resolve" style={{ padding: '0 14px', display: 'flex', flexDirection: 'column', gap: 8 }}>
-          <ResolvePendingBets
-            openBets={openBets}
-            resolutionBetsLoading={resolutionBetsLoading}
-            selectedBetForResolution={selectedBetForResolution}
-            setSelectedBetForResolution={setSelectedBetForResolution}
-            betResolutionAnswer={betResolutionAnswer}
-            setBetResolutionAnswer={setBetResolutionAnswer}
-            betSubmissions={betSubmissions}
-            answerGrouped={answerGrouped}
-            fetchBetSubmissions={fetchBetSubmissions}
-            resolveBet={resolveBet}
-            voidBet={voidBet}
-            commLoading={commLoading}
-            memberCount={memberCount}
-          />
-        </div>
-
-        {/* Lifecycle ops (mobile) — cards have margin: 0 14px built in */}
-        <MobSectionHeader label="LIFECYCLE OPERATIONS" sub="SEASON CONTROLS" tone="var(--purple)" />
+        {/* Lifecycle ops (mobile) — moved above bets; cards have margin: 0 14px built in */}
+        <MobSectionHeader label="LIFECYCLE OPERATIONS" sub="SEASON CONTROLS" tone="var(--purple)" onHelp={() => setHelpModal('lifecycle')} />
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8, paddingBottom: 80 }}>
           <div data-tour="comm-transfer-window">
           <MobLifecycleCard title="TRANSFER WINDOW" status="CLOSED" tone="var(--danger)" when="Open between gameweeks. Close 1h before MD kickoff.">
@@ -1914,6 +2064,39 @@ export default function CommissionerPanel({ commissioner, leagueId, tournamentId
           </MobLifecycleCard>
           </div>
         </div>
+
+        {/* Bet management (mobile) — moved below lifecycle ops */}
+        <MobSectionHeader label="BET MANAGEMENT" sub="CREATE & RESOLVE" tone="var(--cyan)" onHelp={() => setHelpModal('bets')} />
+        <div data-tour="comm-bets" style={{ padding: '0 14px' }}>
+          <BetCreatorPanel
+            leagueId={leagueId}
+            tournamentId={tournamentId}
+            onCreated={fetchOpenBets}
+            commLoading={commLoading}
+            setCommMsg={setCommMsg}
+          />
+        </div>
+
+        {/* Resolve bets (mobile) */}
+        <MobSectionHeader label="RESOLVE PENDING" sub="WAITING ON YOU" tone="var(--gold)" />
+        <div data-tour="comm-resolve" style={{ padding: '0 14px 80px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <ResolvePendingBets
+            openBets={openBets}
+            resolutionBetsLoading={resolutionBetsLoading}
+            selectedBetForResolution={selectedBetForResolution}
+            setSelectedBetForResolution={setSelectedBetForResolution}
+            betResolutionAnswer={betResolutionAnswer}
+            setBetResolutionAnswer={setBetResolutionAnswer}
+            betSubmissions={betSubmissions}
+            answerGrouped={answerGrouped}
+            fetchBetSubmissions={fetchBetSubmissions}
+            resolveBet={resolveBet}
+            voidBet={voidBet}
+            commLoading={commLoading}
+            memberCount={memberCount}
+          />
+        </div>
+
         {/* Tour replay */}
         <TourReplayButton onReplay={replayCommissionerTour} label="REPLAY ADMIN GUIDE" title="Replay the commissioner guide" />
       </div>
@@ -1923,12 +2106,35 @@ export default function CommissionerPanel({ commissioner, leagueId, tournamentId
   // ── Desktop layout ──────────────────────────────────────────────────────────
   return (
     <div style={{ flex: 1, overflow: 'auto', background: 'var(--ink)', display: 'flex', flexDirection: 'column' }}>
+      <HelpOverlay topic={helpModal} onClose={() => setHelpModal(null)} />
       <CommMsg msg={commMsg} onDismiss={() => setCommMsg(null)} />
 
       {/* Zone A — Season stepper */}
-      <SeasonStepper leagueName={leagueName} memberCount={memberCount} league={league} />
+      <SeasonStepper
+        leagueName={leagueName}
+        memberCount={memberCount}
+        league={league}
+        onHelp={() => setHelpModal('commissioner')}
+      />
 
-      {/* Zone B — Bet management (two columns) */}
+      {/* Zone B — Lifecycle ops (moved above bets) */}
+      <LifecycleOps
+        commissioner={commissioner}
+        leagueId={leagueId}
+        tournamentId={tournamentId}
+        league={league}
+        onHelp={() => setHelpModal('lifecycle')}
+      />
+
+      {/* Zone C — Bet management (two columns) */}
+      <HubSectionLabel
+        label="BET MANAGEMENT"
+        sub="CREATE & RESOLVE PREDICTIONS"
+        tone="var(--cyan)"
+        right={
+          <button onClick={() => setHelpModal('bets')} style={helpBtnStyle} title="How does bet management work?">?</button>
+        }
+      />
       <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', borderBottom: '1px solid var(--rule)', minHeight: 600 }}>
         <div data-tour="comm-bets" style={{ borderRight: '1px solid var(--rule)', display: 'flex', flexDirection: 'column', overflow: 'hidden', padding: 20 }}>
           <BetCreatorPanel
@@ -1957,9 +2163,6 @@ export default function CommissionerPanel({ commissioner, leagueId, tournamentId
           />
         </div>
       </div>
-
-      {/* Zone C — Lifecycle ops */}
-      <LifecycleOps commissioner={commissioner} leagueId={leagueId} tournamentId={tournamentId} league={league} />
 
       {/* Tour replay */}
       <TourReplayButton onReplay={replayCommissionerTour} label="REPLAY ADMIN GUIDE" title="Replay the commissioner guide" />
