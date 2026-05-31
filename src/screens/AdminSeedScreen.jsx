@@ -1017,7 +1017,7 @@ export default function AdminSeedScreen() {
       setLoading(true);
       // Leagues created by user
       const { data: created } = await supabase.from('leagues')
-        .select('id, name, format, tournament_id, is_dry_run, transfers_open, draft_deadline, join_code, max_members, cup_phase')
+        .select('id, name, format, tournament_id, is_dry_run, transfers_open, draft_deadline, join_code, max_members, cup_phase, league_mode')
         .eq('created_by', user.id);
 
       // Leagues where user is commissioner member
@@ -1030,7 +1030,7 @@ export default function AdminSeedScreen() {
       let commissionerLeagues = [];
       if (commissionerIds.length > 0) {
         const { data } = await supabase.from('leagues')
-          .select('id, name, format, tournament_id, is_dry_run, transfers_open, draft_deadline, join_code, max_members, cup_phase')
+          .select('id, name, format, tournament_id, is_dry_run, transfers_open, draft_deadline, join_code, max_members, cup_phase, league_mode')
           .in('id', commissionerIds);
         commissionerLeagues = data ?? [];
       }
@@ -1049,7 +1049,7 @@ export default function AdminSeedScreen() {
   const loadLeague = useCallback(async (id) => {
     if (!id) { setLeague(null); setTournament(null); return; }
     const { data: l } = await supabase.from('leagues')
-      .select('id, name, format, tournament_id, is_dry_run, transfers_open, draft_deadline, join_code, max_members, cup_phase')
+      .select('id, name, format, tournament_id, is_dry_run, transfers_open, draft_deadline, join_code, max_members, cup_phase, league_mode')
       .eq('id', id).single();
     setLeague(l ?? null);
 

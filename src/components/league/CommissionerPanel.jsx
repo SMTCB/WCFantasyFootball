@@ -82,13 +82,12 @@ function HelpOverlay({ topic, onClose }) {
           body: 'The season progress bar shows which stage your league is currently in. It reflects real database state — you do not click it to advance stages. Stages advance automatically as you complete the corresponding lifecycle operations below.',
         },
         {
-          heading: 'The 5 stages',
+          heading: 'Season stages',
           rows: [
             ['TRANSFER WINDOW', 'Active from league creation. Open/close via Lifecycle Operations.'],
-            ['DRAFT DEADLINE', 'Advances when you set a draft deadline. Shows the deadline timestamp once set.'],
-            ['ALLOCATION', 'Advances once the deadline passes and you run the allocation engine.'],
-            ['CUP SEEDED', 'Advances when you seed cup clubs via Lifecycle Operations.'],
-            ['IN SEASON', 'Active when a cup phase is running (group stage, elimination, etc.).'],
+            ['DRAFT DEADLINE',  'Advances when you set a draft deadline. Draft mode only — hidden for Classic leagues.'],
+            ['ALLOCATION',      'Advances once the deadline passes and you run the allocation engine.'],
+            ['IN SEASON',       'Active once allocation is complete and the season is underway.'],
           ],
         },
         {
@@ -109,8 +108,8 @@ function HelpOverlay({ topic, onClose }) {
           body: 'Set a pick deadline, then run the allocation engine after it passes. Allocation assigns 15 players per manager within a £100M budget (GK≤2, DEF≤5, MID≤5, FWD≤3). One-way — cannot be undone without a manual admin reset. The RUN ALLOCATION button stays disabled until the deadline has passed.',
         },
         {
-          heading: 'Cup Phase',
-          body: 'Seeds the 20-club no-repeat pool for all managers. Each manager can pick a club only once across cup rounds. Cannot be undone for the season. Disabled until Run Allocation has completed.',
+          heading: 'Classic vs Draft Mode',
+          body: 'Classic: all managers can hold the same players. No draft, no uniqueness rules — whoever buys first, keeps it.\n\nDraft: each player belongs to one manager. Season starts with a blind draft — submit up to 30 preferred players (no constraints during submission). The allocation engine resolves conflicts and builds squads. After that, transfers are first-come-first-served from the remaining pool.',
         },
         {
           heading: 'Score Recalculation',
@@ -231,14 +230,22 @@ function computePhases(league, memberCount = 0) {
   const now = new Date();
   const hasDraftDeadline = !!league.draft_deadline;
   const deadlinePassed = hasDraftDeadline && new Date(league.draft_deadline) <= now;
-  const cupSeeded = league.cup_phase && league.cup_phase !== 'pre_cup';
-  const inSeason = ['group_stage', 'pre_elimination', 'elimination', 'final'].includes(league.cup_phase);
+  const isDraft = !league.league_mode || league.league_mode === 'draft';
+  const allocationDone = league.cup_phase && league.cup_phase !== 'pre_cup';
+  const inSeason = allocationDone; // allocation done = in season
 
-  // Linear current-stage index
+  if (!isDraft) {
+    // Classic mode: 2 stages
+    return [
+      { id: 'transfers', label: 'TRANSFER WINDOW', state: 'active', sub: league.transfers_open ? 'Open · transfers enabled' : 'Closed' },
+      { id: 'season',    label: `IN SEASON · ${memberCount} MGRS`, state: allocationDone ? 'active' : 'todo', sub: 'Live' },
+    ];
+  }
+
+  // Draft mode: 4 stages
   let currentIdx = 0;
-  if (inSeason)            currentIdx = 4;
-  else if (cupSeeded)      currentIdx = 3;
-  else if (deadlinePassed) currentIdx = 2;
+  if (inSeason)              currentIdx = 3;
+  else if (deadlinePassed)   currentIdx = 2;
   else if (hasDraftDeadline) currentIdx = 1;
 
   const stateFor = (idx) => idx < currentIdx ? 'done' : idx === currentIdx ? 'active' : 'todo';
@@ -246,9 +253,8 @@ function computePhases(league, memberCount = 0) {
   return [
     { id: 'transfers',  label: 'TRANSFER WINDOW', state: stateFor(0), sub: league.transfers_open ? 'Open · transfers enabled' : 'Closed' },
     { id: 'draft',      label: 'DRAFT DEADLINE',  state: stateFor(1), sub: hasDraftDeadline ? fmtKickoff(league.draft_deadline) : 'Not set' },
-    { id: 'allocation', label: 'ALLOCATION',       state: stateFor(2), sub: cupSeeded ? 'Squads allocated' : deadlinePassed ? 'Processing…' : 'Awaiting draft' },
-    { id: 'cup',        label: 'CUP SEEDED',       state: stateFor(3), sub: cupSeeded ? league.cup_phase.replace(/_/g, ' ').toUpperCase() : 'Pool ready · run when set' },
-    { id: 'season',     label: `IN SEASON · ${memberCount} MGRS`, state: stateFor(4), sub: inSeason ? 'Live' : 'Awaiting cup seed' },
+    { id: 'allocation', label: 'ALLOCATION',       state: stateFor(2), sub: allocationDone ? 'Squads allocated' : deadlinePassed ? 'Processing…' : 'Awaiting draft' },
+    { id: 'season',     label: `IN SEASON · ${memberCount} MGRS`, state: stateFor(3), sub: inSeason ? 'Live' : 'Awaiting allocation' },
   ];
 }
 
@@ -263,11 +269,10 @@ const BET_TYPES = [
 // ─────────────────────────────────────────────────────────────────────────────
 function SeasonStepper({ leagueName = 'LEAGUE', memberCount = 0, league = null, onHelp }) {
   const phases = computePhases(league, memberCount) ?? [
-    { id: 'transfers',  label: 'TRANSFER WINDOW', state: 'done',   sub: 'Closed · GW27' },
+    { id: 'transfers',  label: 'TRANSFER WINDOW', state: 'done',   sub: 'Closed' },
     { id: 'draft',      label: 'DRAFT DEADLINE',  state: 'done',   sub: '15 Mar 19:00' },
-    { id: 'allocation', label: 'ALLOCATION',       state: 'done',   sub: '12 conflicts resolved' },
-    { id: 'cup',        label: 'CUP SEEDED',       state: 'active', sub: 'Pool ready · run when set' },
-    { id: 'season',     label: 'IN SEASON · GW28', state: 'todo',   sub: 'Live · 2h 36m to lock' },
+    { id: 'allocation', label: 'ALLOCATION',       state: 'active', sub: 'Squads allocated' },
+    { id: 'season',     label: 'IN SEASON · 14 MGRS', state: 'todo', sub: 'Awaiting allocation' },
   ];
   const tone = (s) => s === 'done' ? 'var(--positive)' : s === 'active' ? 'var(--cyan)' : 'var(--mute)';
   return (
@@ -284,7 +289,7 @@ function SeasonStepper({ leagueName = 'LEAGUE', memberCount = 0, league = null, 
           {leagueName.toUpperCase()} · {memberCount} MGRS
         </span>
       </div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', position: 'relative', gap: 0 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: `repeat(${phases.length}, 1fr)`, position: 'relative', gap: 0 }}>
         <div style={{ position: 'absolute', top: 14, left: '10%', right: '10%', height: 1, background: 'var(--rule)' }} />
         {phases.map((p, i) => {
           const t = tone(p.state);
@@ -1214,9 +1219,9 @@ function LifecycleOp({ title, status, statusTone = 'var(--mute)', sub, when, chi
 // ─────────────────────────────────────────────────────────────────────────────
 // Lifecycle operations (Zone C)
 // ─────────────────────────────────────────────────────────────────────────────
-function LifecycleOps({ commissioner, leagueId, tournamentId, league = null, onHelp }) {
+function LifecycleOps({ commissioner, tournamentId, league = null, onHelp }) {
   const {
-    commLoading, commAction, setCommMsg,
+    commLoading,
     windowOpensAt, setWindowOpensAt,
     windowClosesAt, setWindowClosesAt,
     windowTransfers, setWindowTransfers,
@@ -1236,7 +1241,6 @@ function LifecycleOps({ commissioner, leagueId, tournamentId, league = null, onH
   const deadlinePassed = league?.draft_deadline && new Date(league.draft_deadline) <= now;
   const allocationDone = league?.cup_phase && league.cup_phase !== 'pre_cup';
   const allocationDisabled = commLoading || !deadlinePassed;
-  const cupDisabled        = commLoading || !allocationDone;
 
   // AUDIT-58-A3: derive live status labels for the four LifecycleOp cards
   const twStatus  = isDeadlineControlled ? 'DEADLINE-CONTROLLED'
@@ -1253,14 +1257,6 @@ function LifecycleOps({ commissioner, leagueId, tournamentId, league = null, onH
                     : deadlinePassed          ? 'var(--warn)'
                     :                           'var(--positive)';
 
-  const cupPhase  = league?.cup_phase;
-  const cupStatus = !cupPhase || cupPhase === 'pre_cup' ? 'UNSEEDED'
-                  : cupPhase === 'seeded'               ? 'SEEDED'
-                  :                                       cupPhase.replace(/_/g, ' ').toUpperCase();
-  const cupTone   = !cupPhase || cupPhase === 'pre_cup' ? 'var(--warn)'
-                  : cupPhase === 'seeded'               ? 'var(--positive)'
-                  :                                       'var(--cyan)';
-
   const handleCloseNow = () => {
     if (!window.confirm('This stops all in-progress transfers immediately. Continue?')) return;
     closeTransferWindow();
@@ -1269,15 +1265,6 @@ function LifecycleOps({ commissioner, leagueId, tournamentId, league = null, onH
   const handleRunAllocation = () => {
     if (!window.confirm('This allocates squads for all managers. It cannot be undone without a manual reset. Continue?')) return;
     triggerDraftAllocation();
-  };
-
-  const handleSeedCup = () => {
-    if (!window.confirm('Seeding the cup pool prevents repeat picks across cup rounds. It cannot be undone for this season. Continue?')) return;
-    commAction(async () => {
-      const { error } = await supabase.rpc('seed_cup_clubs', { p_league_id: leagueId });
-      if (error) throw new Error(error.message);
-      setCommMsg({ type: 'ok', text: 'Cup clubs seeded.' });
-    });
   };
 
   const opBtnStyle = (bg, color = 'var(--ink)') => ({
@@ -1297,7 +1284,7 @@ function LifecycleOps({ commissioner, leagueId, tournamentId, league = null, onH
         )}
       />
       <div style={{ padding: '18px 24px' }}>
-        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4" style={{ gap: 14 }}>
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3" style={{ gap: 14 }}>
 
           {/* Transfer Window */}
           <div data-tour="comm-transfer-window">
@@ -1339,7 +1326,8 @@ function LifecycleOps({ commissioner, leagueId, tournamentId, league = null, onH
           />
           </div>
 
-          {/* Draft */}
+          {/* Draft — draft mode only */}
+          {(!league || league.league_mode === 'draft' || !league.league_mode) && (
           <div data-tour="comm-draft-deadline">
           <LifecycleOp
             title="DRAFT"
@@ -1368,31 +1356,7 @@ function LifecycleOps({ commissioner, leagueId, tournamentId, league = null, onH
             }
           />
           </div>
-
-          {/* Cup Phase */}
-          <div data-tour="comm-cup-phase">
-          <LifecycleOp
-            title="CUP PHASE"
-            status={cupStatus}
-            statusTone={cupTone}
-            sub="Seed cup clubs into the no-repeat pool. Each manager picks one cup club per week without repeats."
-            when="After Run Allocation is complete. Before the cup-phase rounds begin."
-            primary={
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                <div style={{ padding: '8px 10px', background: 'var(--ink)', border: '1px solid var(--rule)', fontFamily: BODY, fontSize: 10, color: 'var(--mute)', lineHeight: 1.5 }}>
-                  <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.2em', color: 'var(--purple)' }}>20 CLUBS · 14 MGRS</span><br />
-                  Each mgr will use a club at most once during cup rounds.
-                </div>
-                <button
-                  onClick={handleSeedCup}
-                  disabled={cupDisabled}
-                  title={cupDisabled && !commLoading ? 'Run allocation before seeding the cup' : undefined}
-                  style={{ ...opBtnStyle('var(--purple)', 'var(--paper)'), marginTop: 'auto' }}
-                >SEED CUP CLUBS ↯</button>
-              </div>
-            }
-          />
-          </div>
+          )}
 
           {/* Score Recalculation */}
           <div data-tour="comm-score-recalc">
@@ -1433,8 +1397,7 @@ function MobSeasonStepper({ league = null, memberCount = 0, onHelp }) {
     : [
         { label: 'TRANSFERS',  state: 'done' },
         { label: 'DRAFT',      state: 'done' },
-        { label: 'ALLOCATION', state: 'done' },
-        { label: 'CUP',        state: 'active' },
+        { label: 'ALLOCATION', state: 'active' },
         { label: 'SEASON',     state: 'todo' },
       ];
   return (
@@ -1447,7 +1410,7 @@ function MobSeasonStepper({ league = null, memberCount = 0, onHelp }) {
           <button onClick={onHelp} style={helpBtnStyle} title="How does this work?">?</button>
         )}
       </div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 4, position: 'relative' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: `repeat(${phases.length}, 1fr)`, gap: 4, position: 'relative' }}>
         <div style={{ position: 'absolute', top: 11, left: '10%', right: '10%', height: 1, background: 'var(--rule)' }} />
         {phases.map((p, i) => {
           const tone = p.state === 'done' ? 'var(--positive)' : p.state === 'active' ? 'var(--cyan)' : 'var(--mute)';
@@ -2038,7 +2001,6 @@ export default function CommissionerPanel({ commissioner, leagueId, tournamentId
   if (isMobile) {
     // ── Mobile layout ────────────────────────────────────────────────────────
     const {
-      commAction,
       windowOpensAt, setWindowOpensAt,
       windowClosesAt, setWindowClosesAt,
       windowTransfers, setWindowTransfers,
@@ -2054,9 +2016,7 @@ export default function CommissionerPanel({ commissioner, leagueId, tournamentId
     // AUDIT-58-A4: precondition guards (same logic as desktop LifecycleOps)
     const mobNow = new Date();
     const mobDeadlinePassed = league?.draft_deadline && new Date(league.draft_deadline) <= mobNow;
-    const mobAllocationDone = league?.cup_phase && league.cup_phase !== 'pre_cup';
     const mobAllocationDisabled = commLoading || !mobDeadlinePassed;
-    const mobCupDisabled        = commLoading || !mobAllocationDone;
 
     return (
       <div style={{ flex: 1, overflow: 'auto', background: 'var(--ink)', display: 'flex', flexDirection: 'column' }}>
@@ -2095,6 +2055,7 @@ export default function CommissionerPanel({ commissioner, leagueId, tournamentId
           </MobLifecycleCard>
           </div>
 
+          {(!league || league.league_mode === 'draft' || !league.league_mode) && (
           <div data-tour="comm-draft-deadline">
           <MobLifecycleCard title="DRAFT" status="DEADLINE SET" tone="var(--positive)" when="After all picks. Before GW1.">
             <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
@@ -2111,18 +2072,7 @@ export default function CommissionerPanel({ commissioner, leagueId, tournamentId
             >RUN ALLOCATION ↯</button>
           </MobLifecycleCard>
           </div>
-
-          <div data-tour="comm-cup-phase">
-          <MobLifecycleCard title="CUP PHASE" status="UNSEEDED" tone="var(--warn)" when="After allocation.">
-            <div style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.18em', color: 'var(--mute)' }}>20 CLUBS · 14 MGRS · 1 CLUB / MGR / ROUND</div>
-            <button
-              onClick={() => { if (window.confirm('Seed cup clubs? This cannot be undone for this season.')) { commAction(async () => { const { error } = await supabase.rpc('seed_cup_clubs', { p_league_id: leagueId }); if (error) throw new Error(error.message); setCommMsg({ type: 'ok', text: 'Cup clubs seeded.' }); }); } }}
-              disabled={mobCupDisabled}
-              title={mobCupDisabled && !commLoading ? 'Run allocation before seeding the cup' : undefined}
-              style={{ ...mobBtn, background: 'var(--purple)', color: 'var(--paper)' }}
-            >SEED CUP CLUBS ↯</button>
-          </MobLifecycleCard>
-          </div>
+          )}
 
           <div data-tour="comm-score-recalc">
           <MobLifecycleCard title="SCORE RECALCULATION" status="UTILITY" tone="var(--mute)" when="Anytime. Safe.">

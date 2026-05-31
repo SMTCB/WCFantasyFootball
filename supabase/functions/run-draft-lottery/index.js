@@ -24,6 +24,7 @@ Deno.serve(async (req) => {
   try {
     const body = await req.json().catch(() => ({}));
     const { league_id } = body;
+    const phase = body.phase ?? 'group';
 
     // Direct league call: verify caller is a commissioner of that league.
     // Cron mode (no league_id): originates from service role — no JWT needed.
@@ -50,19 +51,20 @@ Deno.serve(async (req) => {
       }
       // If no auth header this is a cron/service-role call — allow through.
 
-      // Idempotency gate: if allocations already exist for this league, skip.
+      // Idempotency gate: if allocations already exist for this league+phase, skip.
       const { data: existing } = await supabase
         .from('draft_allocations')
         .select('league_id')
         .eq('league_id', league_id)
+        .eq('phase', phase)
         .limit(1)
         .maybeSingle();
 
       if (existing) {
-        return respond(200, { message: 'Draft already processed', leagueId: league_id, skipped: true });
+        return respond(200, { message: 'Draft already processed', leagueId: league_id, phase, skipped: true });
       }
 
-      const result = await runLottery(league_id);
+      const result = await runLottery(league_id, phase);
       return respond(200, result);
     }
 
@@ -79,7 +81,7 @@ Deno.serve(async (req) => {
       return respond(200, { message: 'No leagues past deadline with pending submissions' });
     }
 
-    const results = await Promise.all(leagueIds.map(id => runLottery(id)));
+    const results = await Promise.all(leagueIds.map(id => runLottery(id, 'group')));
     return respond(200, { processed: results });
   } catch (err) {
     await logError(FN, 'critical', err.message, { stack: err.stack });
@@ -87,16 +89,17 @@ Deno.serve(async (req) => {
   }
 });
 
-async function runLottery(leagueId) {
-  // 1. Load league config (squad_size, position_limits, tournament_id, budget_total, draft_list_size) + pending submissions
+async function runLottery(leagueId, phase = 'group') {
+  // 1. Load league config (squad_size, position_limits, tournament_id, budget_total, draft_list_size, format, league_mode) + pending submissions
   const [{ data: leagueRow }, { data: submissions }] = await Promise.all([
     supabase.from('leagues')
-      .select('squad_size, position_limits, tournament_id, budget_total, draft_list_size')
+      .select('squad_size, position_limits, tournament_id, budget_total, draft_list_size, format, league_mode')
       .eq('id', leagueId)
       .maybeSingle(),
     supabase.from('draft_submissions')
       .select('user_id, player_ids')
       .eq('league_id', leagueId)
+      .eq('phase', phase)
       .eq('status', 'pending')
       .order('user_id'),  // L5.5: deterministic submission order
   ]);
@@ -232,6 +235,7 @@ async function runLottery(leagueId) {
   const allocationRows = Object.entries(allocations).map(([userId, data]) => ({
     league_id:         leagueId,
     user_id:           userId,
+    phase,
     allocated_players: data.allocated_players,
     unresolved_slots:  data.unresolved_slots,
     allocated_at:      new Date().toISOString(),
@@ -239,8 +243,18 @@ async function runLottery(leagueId) {
 
   const { error: allocErr } = await supabase
     .from('draft_allocations')
-    .upsert(allocationRows, { onConflict: 'league_id,user_id' });
-  if (allocErr) await logError(FN, 'critical', 'draft_allocations upsert failed', { leagueId, error: allocErr.message });
+    .upsert(allocationRows, { onConflict: 'league_id,user_id,phase' });
+  if (allocErr) await logError(FN, 'critical', 'draft_allocations upsert failed', { leagueId, phase, error: allocErr.message });
+
+  // 6c. Update cup_phase on the league to signal allocation is done.
+  //     If phase='knockout', mark elimination stage; otherwise group_stage.
+  const newCupPhase = phase === 'knockout' ? 'elimination' : 'group_stage';
+  await supabase.from('leagues').update({ cup_phase: newCupPhase }).eq('id', leagueId);
+
+  // 6d. For group-phase cup leagues, auto-seed cup clubs from the allocated squads.
+  if (phase === 'group' && leagueRow?.format === 'cup') {
+    await supabase.rpc('seed_cup_clubs', { p_league_id: leagueId });
+  }
 
   // 6b. Fetch the canonical matchday_id for this league's tournament.
   //     Try the nearest upcoming deadline first; fall back to the most recent past
@@ -289,6 +303,7 @@ async function runLottery(leagueId) {
     .from('draft_submissions')
     .update({ status: 'processed' })
     .eq('league_id', leagueId)
+    .eq('phase', phase)
     .eq('status', 'pending');
 
   // 8. Write gazette entry

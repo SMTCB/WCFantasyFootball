@@ -134,27 +134,33 @@ Status copy:
 
 ### 3.2 Draft
 
+**Draft section visibility is mode-driven:**
+- **Classic mode** — the entire Draft section is **hidden**. No draft controls are rendered. Classic leagues have no draft mechanic.
+- **Draft mode, League format** — one draft section: Group Stage Draft only.
+- **Draft mode, Cup format** — two draft sections shown sequentially: Group Stage Draft, then Knockout Draft (locked until Group allocation is confirmed complete).
+
+#### Group Stage Draft
+
 | Field | Behaviour |
 |---|---|
 | DEADLINE | Datetime input. The moment after which managers can no longer change draft picks. |
 | SET DEADLINE | Persists the value; idempotent. |
-| RUN ALLOCATION | **One-way.** Runs the lottery + allocation engine: resolves pick conflicts, allocates 15 players per manager, enforces £100M budget and position limits (GK ≤ 2, DEF ≤ 5, MID ≤ 5, FWD ≤ 3). **Show a confirm dialog**: "This allocates squads for all 14 managers. It can't be undone without a manual reset. Continue?" |
+| RUN ALLOCATION | **One-way.** Runs the lottery + allocation engine: resolves pick conflicts, allocates 15 players per manager, enforces £100M budget and position limits (GK ≤ 2, DEF ≤ 5, MID ≤ 5, FWD ≤ 3). **Show a confirm dialog**: "This allocates squads for all managers. It can't be undone without a manual reset. Continue?" |
 
 Preconditions:
 - Allocation is **disabled** until the draft deadline has passed.
-- Allocation is **hidden** once it has run successfully (status flips to `ALLOCATED · {count} CONFLICTS RESOLVED` and the button is replaced by a `↻ RE-RUN (admin reset)` ghost link).
+- Once allocation has run, the button is **replaced** by a status label: `"ALLOCATED · [timestamp]"`. No re-run pathway is exposed to the admin.
+- A cron job auto-fires allocation **4 hours before the first match** if the admin has not already triggered it. The cron is a no-op if allocation already ran.
 
-### 3.3 Cup Phase
+#### Knockout Draft (Cup format only)
 
-| Field | Behaviour |
-|---|---|
-| SEED CUP CLUBS | **One-way.** Initialises the no-repeat club pool: every manager gets the full 20-club list, and a per-manager used-clubs counter is created at zero. **Show a confirm dialog**: "Seeding the cup pool prevents repeat picks across cup rounds. It can't be undone for this season. Continue?" |
+Same fields and behaviour as Group Stage Draft, with additional preconditions:
+- Section is **locked** (rendered but non-interactive) until Group Stage allocation is confirmed complete. A status label explains why: `"Locked — awaiting group stage allocation."`
+- Once unlocked: admin sets a new deadline, managers submit 30 new picks, allocation runs.
+- Same auto-run cron applies: fires 4 hours before the first knockout match if not already triggered.
+- Same idempotency guard: once run, button replaced by status label.
 
-Preconditions:
-- **Disabled** until allocation has run.
-- Status reflects seeded/unseeded.
-
-### 3.4 Score Recalculation
+### 3.3 Score Recalculation
 
 | Field | Behaviour |
 |---|---|
@@ -169,54 +175,99 @@ Side effects:
 
 ## 4. Season-state stepper
 
-Pure presentation, but it's the **source of truth** for "what stage are we in".
+Pure presentation, but it's the **source of truth** for "what stage are we in". The stepper is mode-aware: Draft and Classic leagues show different stages.
 
-### Implementation
-
-`computePhases(league, memberCount)` in `CommissionerPanel.jsx` derives a linear current-stage index from the `leagues` row. Only one phase is `active` at a time; all prior phases are `done`; all later phases are `todo`.
+### Classic mode stepper (3 stages)
 
 ```
-currentIdx = 0  (TRANSFERS)
-  → 1  when  league.draft_deadline  IS NOT NULL  (deadline set, even if future)
-  → 2  when  draft_deadline ≤ NOW()              (deadline has passed)
-  → 3  when  cup_phase ≠ 'pre_cup'               (cup pool seeded)
-  → 4  when  cup_phase IN ('group_stage', 'pre_elimination', 'elimination', 'final')
+TRANSFER WINDOW → IN SEASON
 ```
 
-### DB column mapping
+No draft or allocation stages exist for Classic leagues.
+
+### Draft mode — League format stepper (4 stages)
+
+```
+TRANSFER WINDOW → DRAFT DEADLINE → ALLOCATION → IN SEASON
+```
+
+### Draft mode — Cup format stepper (5 stages)
+
+```
+TRANSFER WINDOW → GROUP DRAFT → GROUP ALLOCATION → KNOCKOUT DRAFT → IN SEASON
+```
+
+The Knockout Draft step is shown as `todo` until Group Allocation is confirmed complete.
+
+### DB column mapping (Draft mode — Cup format)
 
 | Phase | `done` condition | `active` condition | Source column |
 |---|---|---|---|
-| TRANSFER WINDOW | `currentIdx > 0` | `currentIdx === 0` | `leagues.transfers_open` (sub text only) |
-| DRAFT DEADLINE | `draft_deadline` past | `draft_deadline` set & future | `leagues.draft_deadline` |
-| ALLOCATION | `cup_phase ≠ 'pre_cup'` | `draft_deadline` past, cup not yet seeded | derived |
-| CUP SEEDED | in-season phase | `cup_phase ≠ 'pre_cup'` and not yet in-season | `leagues.cup_phase` |
-| IN SEASON | (terminal) | `cup_phase` in in-season set | `leagues.cup_phase` |
+| TRANSFER WINDOW | group draft deadline set | no deadline yet | `leagues.transfers_open` |
+| GROUP DRAFT | group allocation ran | deadline set & future | `leagues.draft_deadline` |
+| GROUP ALLOCATION | knockout deadline set | group deadline past, no group allocation yet | `draft_allocations` (phase='group') |
+| KNOCKOUT DRAFT | knockout allocation ran | knockout deadline set | `leagues.knockout_draft_deadline` |
+| IN SEASON | (terminal) | knockout allocation ran | `draft_allocations` (phase='knockout') |
 
-### Sub-text per phase (when active or prior)
+### Sub-text per phase
 
 | Phase | Sub text |
 |---|---|
-| TRANSFER WINDOW | `"Open · transfers enabled"` or `"Closed"` from `transfers_open` |
-| DRAFT DEADLINE | Formatted `draft_deadline` timestamp, or `"Not set"` |
-| ALLOCATION | `"Squads allocated"` / `"Processing…"` / `"Awaiting draft"` |
-| CUP SEEDED | `cup_phase` value formatted (`GROUP STAGE` etc), or `"Pool ready · run when set"` |
-| IN SEASON | `"Live"` or `"Awaiting cup seed"` |
+| TRANSFER WINDOW | `"Open · transfers enabled"` or `"Closed"` |
+| GROUP / KNOCKOUT DRAFT | Formatted deadline timestamp, or `"Not set"` |
+| GROUP / KNOCKOUT ALLOCATION | `"Squads allocated · [timestamp]"` / `"Processing…"` / `"Awaiting draft"` |
+| IN SEASON | `"Live"` |
 
 ### Fallback
 
-If `league` is `null` (no active league loaded), both steppers render with demo/hardcoded phase data so the component never crashes.
+If `league` is `null` (no active league loaded), the stepper renders with demo/hardcoded phase data so the component never crashes.
 
 ---
 
-## 5. Permissions & access
+## 5. League Mode Help — ? Button Copy
+
+A `?` button appears at the top of the Lifecycle Operations section. Tapping it opens a modal with the following copy:
+
+---
+
+**LEAGUE MODES — HOW THEY WORK**
+
+**Classic**
+All managers can hold the same players simultaneously. There are no uniqueness rules — if Salah is available, every manager can buy him. Points are scored independently. This mode rewards the manager who makes the best decisions, not just who gets to the market first.
+
+Best for: casual leagues, friends groups, tournament formats where simplicity matters.
+
+**Draft**
+Each player belongs to exactly one manager at a time. The season starts with a blind draft: every manager submits a ranked list of up to 30 preferred players (no constraints during submission — pick freely). When the deadline passes, the allocation engine resolves conflicts and builds each squad. After that, the market is first-come-first-served from the remaining unallocated pool.
+
+Best for: competitive leagues where fairness and player uniqueness are important.
+
+---
+
+**CUP FORMAT RULES (both modes)**
+
+In cup tournaments, as clubs are knocked out:
+- You **cannot buy** players from eliminated clubs (you can keep ones you already hold — they just score 0)
+- The maximum players from the same club in your squad rises automatically as fewer clubs remain:
+  - More than 8 clubs active → max 3 per club
+  - 8 or fewer → max 4
+  - 4 or fewer → max 5
+  - Final (2 clubs) → no limit
+
+In Draft mode, the no-repeat rule also relaxes automatically as the player pool shrinks.
+
+**Position rules always apply** regardless of mode, format, or stage.
+
+---
+
+## 6. Permissions & access
 
 - The `⚙ ADMIN` tab is **only rendered for users with the commissioner role**. Non-admins should not see the pill at all.
-- All write actions (`PUBLISH`, `RESOLVE`, `VOID`, `OPEN`, `CLOSE NOW`, `SET DEADLINE`, `RUN ALLOCATION`, `SEED CUP CLUBS`, `RECALCULATE SCORES`) must be guarded server-side as well as in the UI.
+- All write actions (`PUBLISH`, `RESOLVE`, `VOID`, `OPEN`, `CLOSE NOW`, `SET DEADLINE`, `RUN ALLOCATION`, `RECALCULATE SCORES`) must be guarded server-side as well as in the UI.
 
 ---
 
-## 6. Mobile-specific behaviour
+## 7. Mobile-specific behaviour
 
 - The accordion wizard (`<MobCreateBet/>`) collapses each completed step to its **one-line summary** (the value picked). Tapping the header re-expands.
 - Lifecycle cards (`<MobLifecycleCard/>`) default to **collapsed** to keep scroll length manageable.
@@ -225,7 +276,7 @@ If `league` is `null` (no active league loaded), both steppers render with demo/
 
 ---
 
-## 7. Telemetry hooks (recommended)
+## 8. Telemetry hooks (recommended)
 
 Track these events so we know whether the new wizard helps:
 
@@ -236,12 +287,12 @@ admin.bet.wizard.reset                 { stepReachedBeforeReset }
 admin.bet.publish                      { type, fixtureId, reward, msTotal }
 admin.bet.resolve                      { betId, winningOption, mgrsAwarded }
 admin.bet.void                         { betId }
-admin.lifecycle.transfer.open          { scheduled: bool }
+admin.lifecycle.transfer.open                    { scheduled: bool }
 admin.lifecycle.transfer.close_now
-admin.lifecycle.draft.set_deadline
-admin.lifecycle.draft.run_allocation   { confirmed: bool }
-admin.lifecycle.cup.seed               { confirmed: bool }
-admin.lifecycle.score.recalculate      { fixtureId, scoresChanged }
+admin.lifecycle.draft.set_deadline               { phase: 'group' | 'knockout' }
+admin.lifecycle.draft.run_allocation             { phase: 'group' | 'knockout', confirmed: bool }
+admin.lifecycle.draft.auto_run_cron              { phase: 'group' | 'knockout', skipped: bool }
+admin.lifecycle.score.recalculate                { fixtureId, scoresChanged }
 ```
 
 These are recommendations — wire them to whatever analytics the codebase already uses.
