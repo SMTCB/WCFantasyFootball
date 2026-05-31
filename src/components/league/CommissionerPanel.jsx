@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
 import BetCreatorPanel from './BetCreatorPanel';
-import TourReplayButton from '../TourReplayButton';
 // HubShared is NOT imported here — LeagueScreen imports it directly, and
 // CommissionerPanel→HubShared at depth 2 causes a Rolldown TDZ crash in
 // the production bundle. All four exports are inlined below instead.
@@ -1945,7 +1944,7 @@ function CommMsg({ msg, onDismiss }) {
 // ─────────────────────────────────────────────────────────────────────────────
 // Root export
 // ─────────────────────────────────────────────────────────────────────────────
-export default function CommissionerPanel({ commissioner, leagueId, tournamentId, memberCount = 0, leagueName = 'LEAGUE', league = null, replayCommissionerTour }) {
+export default function CommissionerPanel({ commissioner, leagueId, tournamentId, memberCount = 0, leagueName = 'LEAGUE', league = null }) {
   const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' && window.innerWidth < 1024);
   const [helpModal, setHelpModal] = useState(null); // null | 'commissioner' | 'lifecycle' | 'bets'
 
@@ -2097,8 +2096,6 @@ export default function CommissionerPanel({ commissioner, leagueId, tournamentId
           />
         </div>
 
-        {/* Tour replay */}
-        <TourReplayButton onReplay={replayCommissionerTour} label="REPLAY ADMIN GUIDE" title="Replay the commissioner guide" />
       </div>
     );
   }
@@ -2164,8 +2161,6 @@ export default function CommissionerPanel({ commissioner, leagueId, tournamentId
         </div>
       </div>
 
-      {/* Tour replay */}
-      <TourReplayButton onReplay={replayCommissionerTour} label="REPLAY ADMIN GUIDE" title="Replay the commissioner guide" />
     </div>
   );
 }
