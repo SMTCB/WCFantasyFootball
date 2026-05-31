@@ -1070,6 +1070,29 @@ function LifecycleOps({ commissioner, leagueId, tournamentId, league = null }) {
   const allocationDisabled = commLoading || !deadlinePassed;
   const cupDisabled        = commLoading || !allocationDone;
 
+  // AUDIT-58-A3: derive live status labels for the four LifecycleOp cards
+  const twStatus  = isDeadlineControlled ? 'DEADLINE-CONTROLLED'
+                  : league?.transfers_open ? 'OPEN' : 'CLOSED';
+  const twTone    = isDeadlineControlled ? 'var(--warn)'
+                  : league?.transfers_open ? 'var(--positive)' : 'var(--danger)';
+
+  const draftStatus = !league?.draft_deadline ? 'NOT SET'
+                    : allocationDone          ? 'ALLOCATED'
+                    : deadlinePassed          ? 'DEADLINE PASSED'
+                    :                           'DEADLINE SET';
+  const draftTone   = !league?.draft_deadline ? 'var(--mute)'
+                    : allocationDone          ? 'var(--positive)'
+                    : deadlinePassed          ? 'var(--warn)'
+                    :                           'var(--positive)';
+
+  const cupPhase  = league?.cup_phase;
+  const cupStatus = !cupPhase || cupPhase === 'pre_cup' ? 'UNSEEDED'
+                  : cupPhase === 'seeded'               ? 'SEEDED'
+                  :                                       cupPhase.replace(/_/g, ' ').toUpperCase();
+  const cupTone   = !cupPhase || cupPhase === 'pre_cup' ? 'var(--warn)'
+                  : cupPhase === 'seeded'               ? 'var(--positive)'
+                  :                                       'var(--cyan)';
+
   const handleCloseNow = () => {
     if (!window.confirm('This stops all in-progress transfers immediately. Continue?')) return;
     closeTransferWindow();
@@ -1105,8 +1128,8 @@ function LifecycleOps({ commissioner, leagueId, tournamentId, league = null }) {
           <div data-tour="comm-transfer-window">
           <LifecycleOp
             title="TRANSFER WINDOW"
-            status="CLOSED"
-            statusTone="var(--danger)"
+            status={twStatus}
+            statusTone={twTone}
             sub="Open and close the trading window. While open, managers swap players from the market."
             when="Open between gameweeks. Close 1h before the first MD kickoff."
             primary={
@@ -1145,8 +1168,8 @@ function LifecycleOps({ commissioner, leagueId, tournamentId, league = null }) {
           <div data-tour="comm-draft-deadline">
           <LifecycleOp
             title="DRAFT"
-            status="DEADLINE SET"
-            statusTone="var(--positive)"
+            status={draftStatus}
+            statusTone={draftTone}
             sub="Set the pick deadline, then run the allocation engine. Allocation runs once per season."
             when="After all managers submit picks. Before GW1 kickoff."
             primary={
@@ -1175,8 +1198,8 @@ function LifecycleOps({ commissioner, leagueId, tournamentId, league = null }) {
           <div data-tour="comm-cup-phase">
           <LifecycleOp
             title="CUP PHASE"
-            status="UNSEEDED"
-            statusTone="var(--warn)"
+            status={cupStatus}
+            statusTone={cupTone}
             sub="Seed cup clubs into the no-repeat pool. Each manager picks one cup club per week without repeats."
             when="After Run Allocation is complete. Before the cup-phase rounds begin."
             primary={
