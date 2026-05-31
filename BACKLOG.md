@@ -1,6 +1,6 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-05-31 (session 63 — Pre-Pilot Technical Due Diligence, 3 rounds / 8 audit passes)  
+**Last Updated**: 2026-06-01 (session 64 — DB verification + all CRITICAL fixes shipped, PR #270)  
 **E2E Test Suite**: `platform.spec.js` (36 tests × 2 browsers) passing in CI ✅ — completes in ~3 min  
 **Live App**: https://wc-fantasy-football.vercel.app  
 **WC Kick-off**: 2026-06-11 19:00 UTC (Mexico vs South Africa)
@@ -15,7 +15,44 @@
 
 **Verification note**: Supabase CLI was NOT logged in during the audit, so all DB/cron/env state items are flagged "VERIFY" with exact SQL in the checklist below. Items marked ✅verified were confirmed directly against source in-repo.
 
-> Every finding below should be turned into a Notion card. Suggested next migration: **`108_security_lockdown.sql`**.
+> Every finding below should be turned into a Notion card. Suggested next migration: **`109_`**.
+
+## ✅ Session 64 — DB Verification + All Critical Fixes (PR #270, 2026-06-01)
+
+**Verification run on main PC** (Supabase CLI logged in). Full checklist completed.
+
+### Confirmed OK after verification:
+- **DD-C6/L2** ✅ — `join_league_by_code`, `get_server_time`, `resolve_bet` all exist in prod
+- **DD-C8** ✅ CLOSED — `sync-all-active-tournaments` cron doesn't exist; WC synced via direct `sync-wc-fixtures-6h` / `sync-wc-player-status` (hardcoded forza_id 429)
+- **DD-M8** ✅ CLOSED — `min_increment` NOT NULL DEFAULT 0.5; `starting_bid` NOT NULL — no null floor
+- **DD-H3** ✅ CLOSED — live schema is `seller_id`/`starting_bid`/`deadline_at`/`min_increment` — matches frontend
+- **DD-M2** ✅ CLOSED — `match_status` enum is `scheduled/live/finished`; sync-fixtures writes only valid values for 429
+- Cron health — all 13 crons active, 0 failures in 48h window ✅
+- WC data — 104 fixtures (all scheduled), 1,680 players with forza_player_id ✅
+
+### New findings discovered during verification:
+- **NEW-C1**: 32 WC knockout fixtures had `round_number = NULL` → scoring rollup would silently fail in July
+- **NEW-C2**: `run-draft-lottery` stuck in 5-min loop for 2 test leagues (E2E WC Draft, EPL_DRAFT_TEST) — 288 wasted invocations/day
+- **NEW-H1** (HIGH): `auction_listings` UPDATE policy is `auth.uid() IS NOT NULL` only — any authenticated user can UPDATE any listing row directly
+- **DD-C4** (confirmed worse than expected): crons send `league_id` + anon key → edge function was returning 401 for ALL cron-triggered allocations; draft lottery was only working via manual commissioner trigger
+
+### Fixed in PR #270 (migration 108 + 2 edge function deployments):
+- ✅ **DD-C1** — `execute_transfer_atomic`: ownership check + server-side price from DB (client `p_price` ignored)
+- ✅ **DD-C1 hardening** — REVOKE execute from `anon`/`authenticated` on all 4 overloads
+- ✅ **DD-C2** — `set_lineup`: `auth.uid()` ownership check
+- ✅ **DD-C3** — `set_lineup`: blocks sub-in of `live`-fixture players; deduction fires for `live` too (not just `finished`)
+- ✅ **DD-C4** — `run-draft-lottery`: always require valid JWT for direct calls; crons fixed to service-role key + empty body
+- ✅ **DD-C10** — `resolve_bet`: `ALREADY_RESOLVED` guard prevents double-credit on budget bets
+- ✅ **DD-C11** — `resolve-bets` edge fn: skip NULL-score fixtures instead of resolving as draw
+- ✅ **DD-C12** — `SquadScreen`: chip key `'triple'` → `'triple_captain'` (was always returning "Unknown chip type")
+- ✅ **DD-C13** — `SquadScreen`: both joker paths now also write `squads.joker_player_id` → `calculate-scores` ×2 multiplier now fires
+- ✅ **DD-M11** — REVOKE direct UPDATE on chip columns from `anon`/`authenticated`
+- ✅ **NEW-C1** — Backfill `round_number` for 32 WC knockout fixtures (rounds 4–8 by kickoff_at order)
+- ✅ **NEW-C2** — Mark stuck draft submissions `processed` for test leagues → loop stopped
+
+### Still open (HIGH/MEDIUM/LOW from session 63):
+See full table below. DD-C5 (Vercel VITE_AUTH_ENABLED) still needs manual check in Vercel dashboard.
+Next migration: `109_`
 
 ### 🔴 CRITICAL — launch blockers
 
