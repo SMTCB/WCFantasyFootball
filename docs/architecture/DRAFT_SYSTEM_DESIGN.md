@@ -1,58 +1,233 @@
 # Draft System Design
-**Status**: Design Complete — Ready for Implementation  
-**Last Updated**: 2026-04-23  
+**Status**: Revised — Aligned with Session 61 product decisions  
+**Last Updated**: 2026-05-31  
 **Scope**: Per-league only. All mechanics described here are strictly isolated to a single fantasy league.
 
 ---
 
-## 1. Understanding Summary
+## 1. Two Axes: Mode × Format
 
-- **What**: Async team-building and transfer system for League and Cup formats, with a no-duplicate-players rule across squads in the same league
-- **Why**: Live drafts are not feasible for an async mobile-first product; managers need a fair, engaging mechanism to claim players without real-time coordination
-- **Who**: All league managers (variable size, typically 4–12)
-- **Key constraints**: MVP; React + Supabase stack; mobile-first; no synchronous sessions
-- **Non-goals**: Live draft room, cross-league transfers, forced squad changes on player elimination
+Every league is defined by the intersection of two independent choices made at creation time.
+
+### League Mode
+
+| | Classic | Draft |
+|---|---|---|
+| **Player repeats across managers** | Allowed — any manager can hold the same player | Forbidden — each player belongs to one manager at a time |
+| **Draft runs** | None | 1 per phase (see Format below) |
+| **Player-repeat relaxation** | N/A | Active in Cup format as pool shrinks |
+| **Market** | Open pool, any player, any time | FCFS from unallocated players only; eliminated-club restriction applies in Cup |
+
+### Tournament Format
+
+| | League | Cup |
+|---|---|---|
+| **Structure** | Season-long, round-robin | Group stage → knockout rounds |
+| **Draft phases** | One draft at season start (Draft mode only) | Two drafts: group start + group→knockout transition (Draft mode only) |
+| **Club cap relaxation** | Fixed at 3 (no shrinkage) | Active — cap rises as clubs are eliminated |
+| **Player-repeat relaxation** | N/A | Active in Draft mode |
+| **Eliminated club restriction** | N/A | Active in both modes — cannot buy from eliminated clubs |
 
 ---
 
-## 2. Format Overview
+## 2. Rules That Always Apply (mode- and format-agnostic)
+
+**Position constraints** — enforced at all times, no exceptions:
+- Exactly 1 GK in the starting 11
+- 3–5 DEF
+- 2–4 MID
+- 1–2 FWD
+- Allocation engine: GK ≤ 2, DEF ≤ 5, MID ≤ 5, FWD ≤ 3 in full squad of 15
+
+**Club cap** — maximum players from the same club in a squad, enforced on buys and at allocation:
+- Default: **3**
+- In Cup format, relaxes as clubs are eliminated (see Section 6.2)
+
+---
+
+## 3. Draft Submission — No Constraints by Design
+
+When a draft is open, managers submit a ranked list of up to 30 players. **There are no constraints during submission.** Managers can select:
+- Any number of players from the same position
+- Any number of players from the same club
+- Players of any price
+- Any combination of value, position, and club
+
+**Why this is correct:** Managers use the submission strategically. Over-selecting a popular position (e.g. 8 midfielders) increases the odds of securing multiple contested picks from that group. Picking 5 players from the same club hedges against the club-cap restriction — the engine will allocate up to the cap and ignore the rest. Constraints applied during submission would limit strategic depth.
+
+**What happens at allocation time** is where constraints are enforced (see Section 4).
+
+---
+
+## 4. Draft Allocation Engine
+
+### Trigger
+Runs at the draft deadline. If the admin has not manually triggered it, a cron job fires automatically **4 hours before the first match of the relevant phase** (group stage or knockout stage). The job is idempotent: if allocation has already run for this league and phase, the cron does nothing and the admin trigger is disabled.
+
+### Algorithm
+
+```
+1. Fetch all draft_submissions for the league
+2. Build conflict map: player_id → [managers who listed them]
+3. For each contested player: randomly select one winner
+4. Per manager, walk ranked list sequentially:
+   a. Skip: player already taken by another manager
+   b. Skip: position cap would be exceeded (GK ≤ 2, DEF ≤ 5, MID ≤ 5, FWD ≤ 3)
+   c. Skip: adding this player would exceed the club cap (default: 3)
+   d. Skip: cumulative value of already-allocated players exceeds £100M
+   e. Stop: when 15 players allocated or list exhausted
+5. Write results → draft_allocations
+6. Flag unresolved_slots for managers with < 15 players
+7. Write gazette_entry (headline + bullets + full table)
+8. Push notification to all managers
+```
+
+### Incomplete Squads
+If a manager's ranked list is exhausted before 15 players are allocated (e.g. they listed only attackers and ran out of valid FWD slots), they enter the **Squad Recovery** screen. Here, FCFS applies: available unallocated players are shown filtered by needed positions, and the normal £100M budget applies.
+
+### Idempotency Guard
+Once allocation has run for a given league + phase:
+- The admin "Run Allocation" button is replaced by a status label: `"Allocation complete — [timestamp]"`
+- No API pathway allows a second run
+- The cron skips the job silently
+
+---
+
+## 5. Post-Draft Market (First-Come-First-Served)
+
+After allocation, managers adjust squads through the open market. Rules differ by mode:
+
+### Classic Mode
+- Any player can be bought or sold at any time within transfer windows
+- No uniqueness constraint — two managers can hold the same player
+- In Cup format: cannot buy players from eliminated clubs (existing holdings kept)
+
+### Draft Mode
+- Only unallocated players (not held by any manager in this league) are available to buy
+- In Cup format: cannot buy players from eliminated clubs (existing holdings kept)
+- Player-repeat relaxation applies (see Section 6.1)
+
+### Transfer constraints (both modes)
+- Position limits enforced on every buy
+- Club cap enforced on every buy (with cup relaxation if applicable)
+- Budget enforced on every buy
+- Transfer window must be open
+
+---
+
+## 6. Cup Format Relaxation Formulas
+
+Two separate formulas exist for Cup format. They are independent of each other.
+
+### 6.1 Player-Repeat Relaxation (Draft mode only)
+
+As clubs are eliminated, the pool of available players shrinks. In Draft mode, the no-repeat rule can become impossible to satisfy near the final. This formula auto-relaxes the rule based on pool pressure.
+
+```
+pressure  = (n_managers × 15) / available_pool_size
+threshold = relaxation_base + (n_managers / relaxation_scale)
+```
+
+| Tier | Condition | Repeats allowed |
+|---|---|---|
+| 0 | pressure ≤ threshold | 0 (strict) |
+| 1 | pressure > threshold | 1 |
+| 2 | pressure > threshold × 1.4 | 3 |
+| 3 | pressure > threshold × 1.8 | Unlimited |
+
+When the tier changes, a gazette entry is published automatically.
+
+**Formula examples:**
+
+| Scenario | Managers | Pool | Pressure | Result |
+|---|---|---|---|---|
+| QF, 12 managers | 12 | 200 | 0.90 | 1 repeat |
+| SF, 12 managers | 12 | 100 | 1.80 | 3 repeats |
+| SF, 4 managers | 4 | 100 | 0.60 | No repeats |
+| Final, 12 managers | 12 | 50 | 3.60 | Rule dropped |
+
+All constants live in `league_config` and can be adjusted per-league without a code change.
+
+### 6.2 Club-Cap Relaxation (both modes)
+
+As clubs are knocked out, the maximum 3-players-per-club rule becomes overly restrictive — fewer clubs means managers naturally concentrate on survivors. This formula raises the cap in tiers.
+
+| Active clubs remaining | Club cap |
+|---|---|
+| > 8 | 3 (default) |
+| ≤ 8 | 4 |
+| ≤ 4 | 5 |
+| ≤ 2 (final) | No cap |
+
+Applies to: buys on the market, and to the knockout-stage allocation engine.
+
+---
+
+## 7. Club Elimination Detection
+
+### Source of truth: Forza Football API
+
+A club is considered eliminated when the API shows no remaining fixtures for that club in the tournament. Specifically:
+
+```
+eliminated_at = NOW()  when:
+  API returns 0 future fixtures for this club in this tournament
+  AND the tournament has advanced at least one completed round
+  AND at least 1 other club has future fixtures in the same tournament
+```
+
+**Safety guard — benefit of doubt:** If the API returns no future fixtures for **all** clubs (e.g. fixtures for the next round haven't been published yet), no club is treated as eliminated. The system only eliminates a club when there is positive evidence it is out — i.e. other clubs demonstrably have upcoming fixtures while this one does not.
+
+This check runs as part of the cron pipeline after each round's results are ingested.
+
+---
+
+## 8. Cup Format — Two-Phase Draft (Draft mode only)
+
+### Phase 1 — Group Stage
+Standard draft flow. Admin sets a deadline → managers submit 30 picks → allocation runs.
+
+### Phase 2 — Knockout Stage
+Same flow as Phase 1, but:
+- Admin sets a new deadline
+- **Precondition enforced:** Phase 2 allocation cannot run until Phase 1 allocation is confirmed complete
+- **Idempotency enforced:** Cannot run if Phase 2 allocation has already run for this league
+- Managers submit 30 new picks from the surviving club pool (club-cap relaxation already in effect)
+- Same allocation engine runs, rebuilding squads for the knockout phase
+- After allocation: FCFS market with player-repeat relaxation + club-cap relaxation
 
 ### League Format
-| Phase | Mechanic |
-|---|---|
-| Season start | Blind submission (ranked 25–30 players) → random lottery → gazette report |
-| Every round | 5 transfers, position-limited, budget-limited |
-| Halfway transition (once) | Unlimited transfer window |
-| After halfway | Back to 5 per round |
-| Always | Manager-to-manager swaps via existing Trade UI, time-boxed per round |
-
-### Cup Format
-| Phase | Mechanic |
-|---|---|
-| Pre-cup | Blind submission + random lottery (same as league) |
-| Group stage — after each round | 3 transfers |
-| Group → elimination transition | Unlimited window |
-| Post-group contested players | Reverse-standings draft (worst rank picks first) |
-| After each elimination round | Unlimited window |
-| Player pool | Only players from clubs still in the cup (new picks only) |
-| Eliminated players | Can be held indefinitely; score 0 points |
+Only Phase 1 exists. No second draft concept applies.
 
 ---
 
-## 3. Data Model
+## 9. Admin Panel — Mode-Driven Display
 
-### New Tables
+**Classic mode:** The Draft section is hidden from the admin panel entirely. No draft lifecycle steps are shown.
+
+**Draft mode, League format:** One draft section — set deadline, run allocation, status.
+
+**Draft mode, Cup format:** Two draft sections shown sequentially:
+- "Group Stage Draft" — always available
+- "Knockout Draft" — locked with a status indicator until Group Stage allocation is confirmed complete
+
+---
+
+## 10. Data Model
+
+### Tables
 
 ```sql
--- Manager's ranked preference submission
+-- Manager's ranked preference submission (up to 30 players, no constraints)
 draft_submissions (
   id UUID PRIMARY KEY,
   league_id UUID REFERENCES leagues(id),
   user_id UUID REFERENCES auth.users(id),
-  player_ids TEXT[],           -- ordered, index 0 = highest priority
+  phase TEXT DEFAULT 'group',         -- 'group' | 'knockout'
+  player_ids TEXT[],                  -- ordered, index 0 = highest priority
   submitted_at TIMESTAMPTZ,
   status ENUM('pending', 'processed'),
-  UNIQUE(league_id, user_id)
+  UNIQUE(league_id, user_id, phase)
 )
 
 -- Allocated squad post-lottery
@@ -60,7 +235,8 @@ draft_allocations (
   id UUID PRIMARY KEY,
   league_id UUID REFERENCES leagues(id),
   user_id UUID REFERENCES auth.users(id),
-  allocated_players TEXT[],    -- final 15 after lottery
+  phase TEXT DEFAULT 'group',
+  allocated_players TEXT[],
   unresolved_slots INT DEFAULT 0,
   allocated_at TIMESTAMPTZ
 )
@@ -76,23 +252,12 @@ transfer_windows (
   transfers_remaining INT      -- NULL = unlimited
 )
 
--- Individual transfer log
-transfers (
-  id UUID PRIMARY KEY,
-  league_id UUID REFERENCES leagues(id),
-  user_id UUID REFERENCES auth.users(id),
-  round_number INT,
-  player_out TEXT,
-  player_in TEXT,
-  transferred_at TIMESTAMPTZ
-)
-
--- Cup pool: clubs still active in the cup
+-- Cup pool: clubs still active in the cup (derived from Forza API)
 cup_active_clubs (
   id UUID PRIMARY KEY,
   league_id UUID REFERENCES leagues(id),
   club_id TEXT,
-  eliminated_at TIMESTAMPTZ    -- NULL = still active
+  eliminated_at TIMESTAMPTZ    -- NULL = still active; set by cron after each round
 )
 
 -- Config: all tunable parameters, readable at runtime
@@ -104,27 +269,19 @@ league_config (
   updated_at TIMESTAMPTZ DEFAULT NOW(),
   UNIQUE(league_id, config_key)
 )
-
--- Gazette entries (draft reports, breaking news, auction results)
-gazette_entries (
-  id UUID PRIMARY KEY,
-  league_id UUID REFERENCES leagues(id),
-  entry_type ENUM('draft_report', 'breaking_news', 'activity', 'auction_result'),
-  headline TEXT,
-  bullets JSONB,               -- array of 2-3 story strings
-  full_data JSONB,             -- collapsible full allocation table
-  published_at TIMESTAMPTZ DEFAULT NOW()
-)
 ```
 
 ### Default `league_config` rows (seeded on league creation)
 
 ```json
 { "draft_list_size": 30 }
-{ "draft_auto_complete_ratio": { "GK": 4, "DEF": 10, "MID": 10, "FWD": 6 } }
 { "transfer_limit_per_round": 5 }
 { "cup_transfer_limit": 3 }
 { "swap_window_hours": 48 }
+{ "club_cap_default": 3 }
+{ "club_cap_tier1_threshold": 8, "club_cap_tier1_value": 4 }
+{ "club_cap_tier2_threshold": 4, "club_cap_tier2_value": 5 }
+{ "club_cap_tier3_threshold": 2, "club_cap_tier3_value": null }
 { "relaxation_base": 0.6 }
 { "relaxation_scale": 40 }
 { "relaxation_tier2_mult": 1.4 }
@@ -132,119 +289,12 @@ gazette_entries (
 { "relaxation_repeats": [0, 1, 3, null] }
 ```
 
-To adjust any parameter: one SQL update, zero code changes.
-
 ---
 
-## 4. Edge Functions
+## 11. Gazette Integration
 
-### `run-draft-lottery` (cron — fires at draft deadline)
+**Draft report** fires automatically from the allocation engine and writes a `gazette_entries` row:
 
-```
-1. Fetch all draft_submissions for the league
-2. Build conflict map: player_id → [managers who listed them]
-3. For each contested player: randomly select one winner
-4. Per manager, walk ranked list sequentially:
-   - Skip: player already taken by another manager
-   - Skip: position cap would be exceeded (2 GK / 5 DEF / 5 MID / 3 FWD)
-   - Skip: cumulative value of already-allocated players exceeds 100M
-   - Stop: when 15 players allocated or list exhausted
-5. Write results → draft_allocations
-6. Flag unresolved_slots for managers with < 15 players
-7. Write gazette_entry (headline + bullets + full table)
-8. Push notification to all managers
-```
-
-### `enforce-transfer-window` (RLS policy)
-
-- RLS on `transfers` table rejects inserts when `NOW()` is outside the active `transfer_windows` row for that `league_id`
-- Pre-insert trigger validates position limits (cannot exceed 2 GK / 5 DEF / 5 MID / 3 FWD)
-- Decrements `transfers_remaining` on each successful insert (if not null)
-
-### `resolve-swap-proposal` (triggered on Trade acceptance)
-
-```
-1. Validate both players still belong to their respective managers
-2. Validate position limits hold for both managers post-swap
-3. If position change involved: verify active transfer_window exists
-4. Atomically update both squads
-5. Mark proposal accepted in existing trade proposals table
-6. Log both as transfers
-7. Expire all other pending proposals involving either player
-```
-
-### `auto-complete-draft` (client-triggered)
-
-```
-1. Count current submission slots by position
-2. Read draft_auto_complete_ratio from league_config
-3. Calculate remaining needed per position
-4. Fetch available players by position (not already in submission)
-5. Randomly fill each position gap
-6. Append to draft_submissions.player_ids
-```
-
-### `calculate-relaxation` (called before each cup transfer window opens)
-
-```js
-const cfg = await getLeagueConfig(league_id)
-
-const available_pool = await countCupActivePlayers(league_id)
-const pressure = (n_managers * 15) / available_pool
-
-const threshold = cfg.relaxation_base + (n_managers / cfg.relaxation_scale)
-
-const repeats_allowed =
-  pressure <= threshold                      ? cfg.relaxation_repeats[0]  // 0
-  : pressure <= threshold * cfg.relaxation_tier2_mult ? cfg.relaxation_repeats[1]  // 1
-  : pressure <= threshold * cfg.relaxation_tier3_mult ? cfg.relaxation_repeats[2]  // 3
-  :                                                      cfg.relaxation_repeats[3]  // null = unlimited
-
-// If threshold just changed vs. previous round: fire gazette entry
-```
-
-**Formula examples:**
-
-| Scenario | Managers | Pool | Pressure | Threshold | Result |
-|---|---|---|---|---|---|
-| QF, 12 managers | 12 | 200 | 0.90 | 0.90 | 1 repeat |
-| SF, 12 managers | 12 | 100 | 1.80 | 0.90 | 3 repeats |
-| SF, 4 managers | 4 | 100 | 0.60 | 0.70 | No repeats |
-| Final, 12 managers | 12 | 50 | 3.60 | 0.90 | Rule dropped |
-
----
-
-## 5. UI Flows
-
-### Draft Submission Screen (`/league/:id/draft`)
-- Search/filter players, add to ranked list
-- Drag-to-reorder for priority management
-- AUTO-COMPLETE button fills remaining slots using position ratio from config
-- Budget indicator hidden (unlimited during draft)
-- SUBMIT locked until ≥15 players in list
-- Deadline countdown prominent at top
-
-### Incomplete Squad Recovery (`/league/:id/draft/recover`)
-- Shown only to managers with `unresolved_slots > 0`
-- Filtered to available (unallocated) players only
-- Position gaps clearly labelled
-- Supabase realtime subscription: taken players disappear instantly
-- Normal 100M budget applies
-
-### Swap Marketplace
-- **Leverages existing Trade UI in LeagueScreen.jsx** — no new screen needed
-- Additions only:
-  1. "List for trade" flag on player cards (sets `listed_for_trade: true`)
-  2. Transfer window enforcement wrapper — disables Trade builder outside windows
-  3. Position limit pre-check before "Broadcast Proposal"
-
----
-
-## 6. Gazette Integration
-
-Draft report fires automatically from `run-draft-lottery` and writes a `gazette_entries` row.
-
-**Format (Hybrid):**
 ```
 HEADLINE:  "DRAFT SETTLED: Salah, Haaland & Mbappé decided by the lottery gods"
 
@@ -252,41 +302,30 @@ BULLETS:
 • Salah (wanted by 4 managers) → allocated to [Manager X]
 • Haaland (3 managers) → allocated to [Manager Y]
 • 2 managers enter with incomplete squads — first-come picks now open
-
-[Full Results ▼]  ← collapsible table: Manager | Players | Gaps
 ```
 
-Rendered in the existing gazette component using serif headline, pull-quote bullets, and a toggle for the full table. No wall of text on the surface.
-
-Relaxation threshold crossings also fire a gazette entry automatically:
+**Relaxation tier changes** (player-repeat) also fire a gazette entry:
 > *"RULE UPDATE: Pool pressure has reached 90% — managers may now hold up to 1 repeated player."*
 
+**Club-cap tier changes** fire a gazette entry:
+> *"RULE UPDATE: 6 clubs remain — the 3-player club limit has been raised to 4."*
+
 ---
 
-## 7. Decision Log
+## 12. Decision Log
 
-| # | Decision | Alternatives Considered | Why |
+| # | Decision | Alternatives | Why |
 |---|---|---|---|
-| 1 | Async blind submission + random lottery | Live draft, auction bidding, FCFS | MVP feasibility; fairest for async play across timezones |
-| 2 | Post-submission conflict resolution | Pre-lock enforcement, sequential turns | Most flexible; no coordination required |
-| 3 | Reverse-standings draft post-group (Cup) | Lottery again, auction | Balances competition; rewards poor performance |
-| 4 | FCFS for post-elimination windows | Fixed auction windows | Speed rewards engagement; simpler |
-| 5 | Pool = cup-active clubs only (new picks) | All EPL players | Most realistic cup mechanic; creates meaningful scarcity |
-| 6 | Managers never forced to sell eliminated players | Auto-remove on elimination | Budget constraints make forced removal punishing |
-| 7 | Math-driven relaxation formula, league-size-scaled | Fixed rule, admin toggle, per-manager opt-in | Self-adjusting, fair, transparent — zero admin burden |
-| 8 | All constants in `league_config` DB table | Hardcoded, env vars, constants file | Runtime-adjustable without redeploy; per-league tunable |
-| 9 | Leverage existing Trade UI | Build new swap screen | Trade builder already handles player selection, sweeteners, accept/decline |
-| 10 | Gazette hybrid report | Full text, visual card, separate screen | Preserves aesthetic; surfaces drama without wall of text |
-| 11 | Draft budget unlimited; 100M applies post-allocation | 100M during draft | Managers need freedom to rank preferences |
-| 12 | Auto-complete 4/10/10/6 ratio (30 slots) | Equal distribution | Mirrors standard fantasy formation; avoids invalid squads |
-| 13 | Transfer window enforced via RLS | Client-side only | RLS is tamper-proof; cannot be bypassed by client |
+| 1 | No constraints during draft submission | Enforce position/club/budget at submission | Strategic depth — managers hedge by over-selecting positions/clubs; allocation engine resolves constraints fairly |
+| 2 | Constraints enforced only at allocation | Client-side validation during submission | Allocation is the authoritative resolution point; pre-submission validation limits strategic choices |
+| 3 | Two relaxation formulas: player-repeat + club-cap | Single unified formula | They solve different problems — player-repeat applies only in Draft mode; club-cap applies in both |
+| 4 | Club elimination derived from Forza API | Admin-triggered manual elimination | Removes admin burden; self-maintaining; safety guard prevents false eliminations |
+| 5 | 4-hour cron fallback before first match | 2-hour, 6-hour | Enough buffer for managers to act on incomplete squads; not so early it's disruptive |
+| 6 | Second draft (knockout) same flow as first | Reverse-standings draft, auction | Consistency — managers know the mechanic; simpler to build and explain |
+| 7 | Phase 2 draft locked until Phase 1 complete | Admin override allowed | Prevents data corruption; one-way lifecycle integrity |
+| 8 | Classic mode: draft section hidden (not greyed) | Greyed out | Greyed controls imply "coming soon"; hidden is cleaner when the feature genuinely does not apply |
+| 9 | All constants in `league_config` DB table | Hardcoded, env vars | Runtime-adjustable without redeploy; per-league tunable |
 
 ---
 
-## 8. Open Items (tracked in BACKLOG.md)
-
-- **Issue #012**: Gazette component extension for draft report rendering
-- **Issue #013**: In-league player auction system (bids via budget + points)
-- Cup phase state machine: exact `cup_phase` enum values to confirm with product
-- Fixed cup change limit per round: **3** (configurable via `cup_transfer_limit` in `league_config`)
-- Swap window duration: **48 hours** (configurable via `swap_window_hours`)
+Last Updated: **2026-05-31**
