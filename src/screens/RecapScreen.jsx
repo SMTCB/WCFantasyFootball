@@ -1,14 +1,22 @@
-import { useState, useEffect, useRef } from 'react';
-import { domToPng } from 'modern-screenshot';
-import RecapCard from '../components/RecapCard';
+import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../hooks/useAuth';
 
-// ── helpers ──────────────────────────────────────────────────────────────────
-
+// ── Design tokens — mirror the league hub exactly ─────────────────────────────
 const MONO    = "'JetBrains Mono', monospace";
 const DISPLAY = "'Archivo Black', sans-serif";
 const BODY    = "'Archivo', sans-serif";
+
+// Badge metadata — exact mirror of ENTRY_META in LeagueDetailView.jsx
+const ENTRY_META = {
+  activity:       { badge: 'SCORES',   color: 'var(--positive)' },
+  draft_report:   { badge: 'DRAFT',    color: 'var(--gold)'     },
+  breaking_news:  { badge: 'NEWS',     color: 'var(--danger)'   },
+  auction_result: { badge: 'AUCTION',  color: 'var(--positive)' },
+};
+const TRANSFER_META = { badge: 'TRANSFER', color: 'var(--cyan)' };
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
 
 function timeAgo(iso) {
   const diff = Math.floor((Date.now() - new Date(iso)) / 1000);
@@ -18,473 +26,275 @@ function timeAgo(iso) {
   return `${Math.floor(diff / 86400)}d ago`;
 }
 
-// ── DigestCard ────────────────────────────────────────────────────────────────
+function dayLabel(iso) {
+  const d   = new Date(iso);
+  const now = new Date();
+  const yest = new Date(now);
+  yest.setDate(now.getDate() - 1);
+  if (d.toDateString() === now.toDateString())  return 'TODAY';
+  if (d.toDateString() === yest.toDateString()) return 'YESTERDAY';
+  return d.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'short' }).toUpperCase();
+}
 
-function DigestCard({ entry, onViewRecap }) {
+// ── Sub-components ────────────────────────────────────────────────────────────
+
+function DaySeparator({ label }) {
   return (
     <div style={{
-      borderBottom: '1px solid rgba(255,255,255,.07)',
-      padding: '16px 20px',
+      display: 'flex', alignItems: 'center', gap: 10,
+      padding: '8px 20px',
+      background: 'var(--ink-2)',
+      borderBottom: '1px solid var(--rule)',
     }}>
-      {/* top row: badge + time + league name */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8, gap: 8 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
-          <span style={{
-            fontFamily: MONO, fontSize: 8, letterSpacing: '.18em',
-            padding: '2px 5px', border: '1px solid var(--positive)',
-            color: 'var(--positive)',
-          }}>SCORES</span>
-          <span style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)' }}>
-            {timeAgo(entry.published_at)}
-          </span>
-        </div>
-        <span style={{
-          fontFamily: MONO, fontSize: 8, letterSpacing: '.14em',
-          color: 'var(--cyan)', padding: '2px 6px',
-          border: '1px solid rgba(0,180,216,.3)',
-          overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-          maxWidth: 200,
-        }}>
-          {(entry.leagues?.name || '').toUpperCase()}
-        </span>
-      </div>
-
-      {/* headline */}
-      <div style={{
-        fontFamily: BODY, fontSize: 13, fontWeight: 700,
-        color: 'var(--paper)', lineHeight: 1.35,
-        marginBottom: Array.isArray(entry.bullets) && entry.bullets.length ? 8 : 0,
-      }}>
-        {entry.headline}
-      </div>
-
-      {/* bullets */}
-      {Array.isArray(entry.bullets) && entry.bullets.length > 0 && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 3, marginBottom: 10 }}>
-          {entry.bullets.map((b, i) => (
-            <div key={i} style={{
-              fontFamily: MONO, fontSize: 9, color: 'var(--mute)',
-              letterSpacing: '.1em', lineHeight: 1.4,
-            }}>
-              {b}
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* my recap CTA */}
-      <button
-        onClick={() => onViewRecap(entry.league_id, entry.full_data?.matchday_id)}
-        style={{
-          fontFamily: MONO, fontSize: 9, letterSpacing: '.18em',
-          color: 'var(--gold)', background: 'transparent',
-          border: '1px solid rgba(240,180,0,.35)', padding: '4px 10px',
-          cursor: 'pointer', marginTop: 2,
-        }}
-      >
-        MY RECAP ↗
-      </button>
+      <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.2em', color: 'var(--mute)', flexShrink: 0 }}>
+        {label}
+      </span>
+      <div style={{ flex: 1, height: 1, background: 'var(--rule)' }} />
     </div>
   );
 }
 
-// ── Personal recap view (drill-in) ────────────────────────────────────────────
+function LeagueTag({ name }) {
+  return (
+    <span style={{
+      fontFamily: MONO, fontSize: 8, letterSpacing: '.14em',
+      color: 'var(--cyan)', padding: '2px 6px',
+      border: '1px solid rgba(0,180,216,.25)',
+      whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+      maxWidth: 190, flexShrink: 0,
+    }}>
+      {(name || '').toUpperCase()}
+    </span>
+  );
+}
 
-function PersonalRecapView({ leagueId, matchdayId, leagues, user, onBack }) {
-  const [recap,   setRecap]   = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [sharing, setSharing] = useState(false);
-  const [copied,  setCopied]  = useState(false);
-  const cardRef = useRef(null);
-
-  useEffect(() => {
-    if (!leagueId || !user?.id) return;
-    fetchRecap();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [leagueId, matchdayId]);
-
-  const fetchRecap = async () => {
-    try {
-      setLoading(true);
-      const userId     = user.id;
-      const leagueInfo = leagues.find(l => l.league_id === leagueId) ?? null;
-      const tournamentId = leagueInfo?.tournament_id ?? null;
-
-      let squadQuery = supabase.from('squads')
-        .select('id, matchday_id, players, captain_id, joker_player_id, is_triple_captain')
-        .eq('user_id', userId)
-        .order('created_at', { ascending: false })
-        .limit(1);
-      if (tournamentId) squadQuery = squadQuery.eq('tournament_id', tournamentId);
-
-      const [{ data: squadRow }, { data: memberRow }] = await Promise.all([
-        squadQuery.maybeSingle(),
-        supabase.from('league_members')
-          .select('league_id, rank, total_points, leagues(name, tournament_id)')
-          .eq('user_id', userId).eq('league_id', leagueId).maybeSingle(),
-      ]);
-
-      if (!squadRow) { setLoading(false); return; }
-
-      const resolvedMatchdayId = matchdayId ?? squadRow.matchday_id ?? (() => {
-        // fallback: most recent deadline
-        return null;
-      })();
-
-      const playerIds = squadRow.players || [];
-      const captainId = squadRow.captain_id;
-      const jokerId   = squadRow.joker_player_id ?? null;
-
-      const { data: fixtures } = await supabase.from('fixtures')
-        .select('id').eq('status', 'finished').like('id', `${resolvedMatchdayId}%`);
-      const finishedIds = (fixtures || []).map(f => f.id);
-
-      const [{ data: statsRows }, { data: playerRows }, { data: userRow }] = await Promise.all([
-        finishedIds.length
-          ? supabase.from('player_match_stats')
-              .select('player_id, fantasy_points, fixture_id')
-              .in('player_id', playerIds).in('fixture_id', finishedIds)
-          : { data: [] },
-        supabase.from('players').select('id, name, position, club').in('id', playerIds),
-        supabase.from('users').select('username').eq('id', userId).maybeSingle(),
-      ]);
-
-      const pointsMap = {};
-      for (const s of statsRows || []) {
-        pointsMap[s.player_id] = (pointsMap[s.player_id] || 0) + Number(s.fantasy_points);
-      }
-      const playerMap = Object.fromEntries((playerRows || []).map(p => [p.id, p]));
-
-      const effectivePoints = (pid) => {
-        const base = pointsMap[pid] || 0;
-        let mult = 1;
-        if (pid === captainId) mult = 2;
-        if (pid === jokerId)   mult = mult === 2 ? 4 : 2;
-        return base * mult;
-      };
-
-      const startingIds = playerIds.slice(0, 11);
-      let bestPlayerId = null, bestPts = -Infinity;
-      for (const pid of startingIds) {
-        const pts = effectivePoints(pid);
-        if (pts > bestPts) { bestPts = pts; bestPlayerId = pid; }
-      }
-
-      const { data: fpRow } = await supabase.from('fantasy_points')
-        .select('total').eq('squad_id', squadRow.id)
-        .eq('matchday_id', resolvedMatchdayId).maybeSingle();
-      const totalPoints = fpRow?.total ?? Object.values(pointsMap).reduce((s, v) => s + v, 0);
-
-      const username   = userRow?.username ?? user?.user_metadata?.username ?? 'Manager';
-      const rank       = memberRow?.rank ?? leagueInfo?.rank ?? null;
-      const leagueName = memberRow?.leagues?.name ?? leagueInfo?.name ?? 'My League';
-      const r = rank;
-      const rankLabel  = r === 1 ? '1st' : r === 2 ? '2nd' : r === 3 ? '3rd' : r ? `${r}th` : '—';
-
-      setRecap({
-        matchday: resolvedMatchdayId ? String(resolvedMatchdayId).toUpperCase() : '—',
-        leagueName, username, rank, rankLabel,
-        points: Math.round(totalPoints),
-        bestPlayer: bestPlayerId && playerMap[bestPlayerId]
-          ? { ...playerMap[bestPlayerId], points: effectivePoints(bestPlayerId) } : null,
-        captain: captainId && playerMap[captainId]
-          ? { ...playerMap[captainId], points: pointsMap[captainId] ?? 0 } : null,
-        joker: jokerId && playerMap[jokerId]
-          ? { ...playerMap[jokerId], points: effectivePoints(jokerId) } : null,
-        isTripleCap: squadRow?.is_triple_captain ?? false,
-        topScorers: startingIds
-          .map(id => ({ ...playerMap[id], points: effectivePoints(id) }))
-          .filter(p => p.name && p.points > 0)
-          .sort((a, b) => b.points - a.points)
-          .slice(0, 5),
-        date: new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }),
-      });
-    } catch (err) {
-      console.error('[PersonalRecap] fetch error', err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const generateImage = async () => {
-    if (!cardRef.current) return null;
-    setSharing(true);
-    try { return await domToPng(cardRef.current, { scale: 3, backgroundColor: '#0D0D0D' }); }
-    finally { setSharing(false); }
-  };
-
-  const handleSaveImage = async () => {
-    const dataUrl = await generateImage();
-    if (!dataUrl) return;
-    const link = document.createElement('a');
-    link.download = `forza-recap-${recap.matchday}.png`;
-    link.href = dataUrl; link.click();
-  };
-
-  const handleShareNative = async () => {
-    const dataUrl = await generateImage();
-    if (!dataUrl) return;
-    const blob = await (await fetch(dataUrl)).blob();
-    const file  = new File([blob], `forza-recap-${recap.matchday}.png`, { type: 'image/png' });
-    if (navigator.canShare?.({ files: [file] })) {
-      try { await navigator.share({ files: [file], title: `Forza Fantasy League — ${recap.matchday} Recap` }); }
-      catch (e) { if (e.name !== 'AbortError') console.error(e); }
-    } else {
-      try {
-        await navigator.clipboard.writeText(
-          `I scored ${recap.points} pts in ${recap.matchday} of Forza Fantasy League! Rank: ${recap.rankLabel} in ${recap.leagueName}.`
-        );
-        setCopied(true); setTimeout(() => setCopied(false), 2500);
-      } catch (err) { console.error(err); }
-    }
-  };
-
-  const pts = (val) => val != null ? `${val} pts` : '— pts';
+function FeedItem({ item }) {
+  const meta = item.kind === 'transfer'
+    ? TRANSFER_META
+    : (ENTRY_META[item.entry_type] ?? { badge: (item.entry_type ?? '—').toUpperCase(), color: 'var(--mute)' });
 
   return (
-    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
-      {/* back bar */}
+    <div style={{ padding: '12px 20px', borderBottom: '1px solid var(--rule)' }}>
+
+      {/* Row 1: type badge + time ←→ league tag */}
       <div style={{
-        display: 'flex', alignItems: 'center', gap: 12,
-        padding: '10px 20px', borderBottom: '1px solid rgba(255,255,255,.07)',
-        background: 'var(--ink)', flexShrink: 0,
+        display: 'flex', alignItems: 'center',
+        justifyContent: 'space-between', gap: 8, marginBottom: 7,
       }}>
-        <button onClick={onBack} style={{
-          fontFamily: MONO, fontSize: 9, letterSpacing: '.18em',
-          color: 'var(--mute)', background: 'none', border: 'none', cursor: 'pointer',
-        }}>← BACK TO DIGEST</button>
-        {recap && (
-          <span style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.14em' }}>
-            {recap.leagueName.toUpperCase()} · {recap.matchday}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span style={{
+            fontFamily: MONO, fontSize: 8, letterSpacing: '.18em',
+            padding: '2px 5px',
+            border: `1px solid ${meta.color}`,
+            color: meta.color, flexShrink: 0,
+          }}>{meta.badge}</span>
+          <span style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)' }}>
+            {timeAgo(item.ts)}
           </span>
-        )}
+        </div>
+        <LeagueTag name={item.league_name} />
       </div>
 
-      {loading ? (
-        <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <span style={{ fontFamily: MONO, fontSize: 10, color: 'var(--mute)', letterSpacing: '.2em' }}>LOADING…</span>
-        </div>
-      ) : !recap ? (
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '48px 24px', textAlign: 'center' }}>
-          <div style={{ fontFamily: MONO, fontSize: 11, color: 'var(--mute)', letterSpacing: '.18em' }}>NO SQUAD DATA</div>
+      {/* Row 2+: content */}
+      {item.kind === 'transfer' ? (
+        <div style={{ fontFamily: BODY, fontSize: 12, color: 'var(--paper)', lineHeight: 1.4 }}>
+          {item.text}
         </div>
       ) : (
-        <div style={{ flex: 1, overflow: 'auto' }}>
-          {/* Hero rank */}
-          <div style={{ padding: '32px 24px', borderBottom: '1px solid rgba(255,255,255,.07)', textAlign: 'center', background: '#0a0a0a' }}>
-            <div style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.2em', color: 'var(--mute)', marginBottom: 4 }}>{recap.username}</div>
-            <div style={{ fontFamily: DISPLAY, fontSize: 72, lineHeight: 1, color: 'var(--paper)' }}>{recap.rankLabel}</div>
-            <div style={{ fontFamily: DISPLAY, fontSize: 24, color: 'var(--positive)', marginTop: 12 }}>{recap.points} pts</div>
-          </div>
-
-          {/* stat rows */}
-          <div style={{ borderBottom: '1px solid rgba(255,255,255,.07)' }}>
-            {recap.bestPlayer && (
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 20px', borderBottom: '1px solid rgba(255,255,255,.04)' }}>
-                <div>
-                  <div style={{ fontFamily: MONO, fontSize: 8, color: 'var(--mute)', letterSpacing: '.15em', marginBottom: 3 }}>BEST PLAYER</div>
-                  <div style={{ fontFamily: DISPLAY, fontSize: 14 }}>{recap.bestPlayer.name}</div>
-                </div>
-                <div style={{ fontFamily: DISPLAY, fontSize: 13, color: 'var(--paper)', background: 'rgba(255,255,255,.1)', padding: '4px 10px' }}>
-                  {pts(recap.bestPlayer.points)}
-                </div>
-              </div>
-            )}
-            {recap.captain && (
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 20px', borderBottom: '1px solid rgba(255,255,255,.04)' }}>
-                <div>
-                  <div style={{ fontFamily: MONO, fontSize: 8, color: 'var(--mute)', letterSpacing: '.15em', marginBottom: 3 }}>CAPTAIN</div>
-                  <div style={{ fontFamily: DISPLAY, fontSize: 14 }}>{recap.captain.name}</div>
-                </div>
-                <div style={{ fontFamily: DISPLAY, fontSize: 13, color: 'var(--gold)', background: 'rgba(240,180,0,.1)', padding: '4px 10px' }}>
-                  ×{recap.isTripleCap ? 3 : 2} = {recap.captain.points * (recap.isTripleCap ? 3 : 2)} pts
-                </div>
-              </div>
-            )}
-            {recap.joker && (
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 20px', borderBottom: '1px solid rgba(255,255,255,.04)' }}>
-                <div>
-                  <div style={{ fontFamily: MONO, fontSize: 8, color: 'var(--mute)', letterSpacing: '.15em', marginBottom: 3 }}>JOKER PLAYED</div>
-                  <div style={{ fontFamily: DISPLAY, fontSize: 14 }}>{recap.joker.name}</div>
-                </div>
-                <div style={{ fontFamily: DISPLAY, fontSize: 13, color: 'var(--purple)', background: 'rgba(140,80,200,.12)', padding: '4px 10px' }}>
-                  {pts(recap.joker.points)}
-                </div>
-              </div>
-            )}
-            {recap.topScorers?.length > 0 && (
-              <div style={{ padding: '14px 20px' }}>
-                <div style={{ fontFamily: MONO, fontSize: 8, color: 'var(--mute)', letterSpacing: '.15em', marginBottom: 10 }}>TOP SCORERS</div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                  {recap.topScorers.map((p, i) => (
-                    <div key={p.id ?? i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
-                        <span style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', width: 14 }}>{i + 1}</span>
-                        <span style={{ fontFamily: DISPLAY, fontSize: 13, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name}</span>
-                        <span style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', flexShrink: 0 }}>{p.position}</span>
-                      </div>
-                      <span style={{ fontFamily: DISPLAY, fontSize: 13, color: 'var(--positive)', flexShrink: 0, marginLeft: 8 }}>+{p.points}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* share */}
-          <div style={{ padding: '20px' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-              <button
-                onClick={handleShareNative} disabled={sharing}
-                style={{ gridColumn: '1 / -1', padding: '14px', background: 'var(--positive)', color: '#000', fontFamily: MONO, fontSize: 11, letterSpacing: '.18em', fontWeight: 700, cursor: 'pointer', border: 'none' }}
-              >
-                {sharing ? 'GENERATING…' : copied ? 'COPIED ✓' : '📱 SHARE RECAP'}
-              </button>
-              <button
-                onClick={handleSaveImage} disabled={sharing}
-                style={{ padding: '12px', background: 'transparent', border: '1px solid rgba(255,255,255,.1)', color: 'var(--paper)', fontFamily: MONO, fontSize: 10, letterSpacing: '.15em', cursor: 'pointer' }}
-              >
-                💾 SAVE IMAGE
-              </button>
-              <button
-                onClick={async () => {
-                  await navigator.clipboard.writeText(
-                    `I scored ${recap.points} pts in ${recap.matchday} — ${recap.rankLabel} in ${recap.leagueName}. #ForzaFantasyLeague`
-                  );
-                  setCopied(true); setTimeout(() => setCopied(false), 2500);
-                }}
-                style={{ padding: '12px', background: 'transparent', border: '1px solid rgba(255,255,255,.1)', color: 'var(--paper)', fontFamily: MONO, fontSize: 10, letterSpacing: '.15em', cursor: 'pointer' }}
-              >
-                {copied ? 'COPIED ✓' : '📋 COPY TEXT'}
-              </button>
+        <>
+          {item.headline && (
+            <div style={{
+              fontFamily: BODY, fontSize: 12, fontWeight: 600,
+              color: 'var(--paper)', lineHeight: 1.35,
+              marginBottom: Array.isArray(item.bullets) && item.bullets.length ? 7 : 0,
+            }}>
+              {item.headline}
             </div>
-          </div>
-
-          {/* off-screen shareable card */}
-          <div style={{ position: 'absolute', left: -9999, top: 0, opacity: 0, pointerEvents: 'none' }} aria-hidden>
-            <RecapCard recap={recap} forwardRef={cardRef} />
-          </div>
-        </div>
+          )}
+          {Array.isArray(item.bullets) && item.bullets.length > 0 && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+              {item.bullets.map((b, i) => (
+                <div key={i} style={{
+                  fontFamily: MONO, fontSize: 9, color: 'var(--mute)',
+                  letterSpacing: '.1em', lineHeight: 1.4,
+                }}>{b}</div>
+              ))}
+            </div>
+          )}
+        </>
       )}
     </div>
   );
 }
 
-// ── Main: RecapScreen ─────────────────────────────────────────────────────────
+// ── Main screen ───────────────────────────────────────────────────────────────
 
 export default function RecapScreen() {
   const { user } = useAuth();
-  const [entries,  setEntries]  = useState([]);
-  const [leagues,  setLeagues]  = useState([]);
-  const [loading,  setLoading]  = useState(true);
-  const [drillIn,  setDrillIn]  = useState(null);   // { leagueId, matchdayId } | null
+  const [feed,    setFeed]    = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  // Load all user's leagues + gazette activity entries in parallel
   useEffect(() => {
     if (!user?.id) return;
     let cancelled = false;
     setLoading(true);
-
     const since = new Date(Date.now() - 7 * 86400000).toISOString();
 
-    Promise.all([
-      supabase
-        .from('league_members')
-        .select('league_id, rank, leagues(name, tournament_id)')
-        .eq('user_id', user.id),
-      supabase
-        .from('gazette_entries')
-        .select('id, league_id, headline, bullets, full_data, published_at, leagues(name)')
-        .eq('entry_type', 'activity')
-        .gte('published_at', since)
-        .order('published_at', { ascending: false }),
-    ]).then(([{ data: memberRows }, { data: gazetteRows }]) => {
-      if (cancelled) return;
-      const leagueList = (memberRows ?? []).map(r => ({
-        league_id:     r.league_id,
-        name:          r.leagues?.name ?? 'Unknown League',
-        tournament_id: r.leagues?.tournament_id ?? null,
-        rank:          r.rank,
-      }));
-      setLeagues(leagueList);
-      setEntries(gazetteRows ?? []);
-      setLoading(false);
-    });
+    (async () => {
+      try {
+        // 1. User's leagues (for transfer league-name lookup)
+        const { data: memberRows } = await supabase
+          .from('league_members')
+          .select('league_id, leagues(name)')
+          .eq('user_id', user.id);
+
+        if (cancelled) return;
+
+        const leagueNameById = Object.fromEntries(
+          (memberRows ?? []).map(r => [r.league_id, r.leagues?.name ?? 'League'])
+        );
+
+        // 2. Gazette (all types, scoped by RLS) + own transfers — parallel
+        const [{ data: gazetteRows }, { data: transferRows }] = await Promise.all([
+          supabase
+            .from('gazette_entries')
+            .select('id, entry_type, league_id, headline, bullets, published_at, leagues(name)')
+            .gte('published_at', since)
+            .order('published_at', { ascending: false }),
+          supabase
+            .from('transfers')
+            .select('id, league_id, player_in, player_out, round_number, transferred_at')
+            .eq('user_id', user.id)
+            .gte('transferred_at', since)
+            .order('transferred_at', { ascending: false }),
+        ]);
+
+        if (cancelled) return;
+
+        // 3. Batch-fetch player names for all transfer rows
+        const pidSet = new Set();
+        for (const t of transferRows ?? []) {
+          if (t.player_in)  pidSet.add(t.player_in);
+          if (t.player_out) pidSet.add(t.player_out);
+        }
+        let playerMap = {};
+        if (pidSet.size > 0) {
+          const { data: playerRows } = await supabase
+            .from('players')
+            .select('id, name, position')
+            .in('id', [...pidSet]);
+          playerMap = Object.fromEntries((playerRows ?? []).map(p => [p.id, p]));
+        }
+
+        if (cancelled) return;
+
+        // 4. Normalise gazette entries
+        const gazetteItems = (gazetteRows ?? []).map(e => ({
+          id:         `g-${e.id}`,
+          kind:       'gazette',
+          entry_type: e.entry_type,
+          ts:         e.published_at,
+          league_name: e.leagues?.name ?? leagueNameById[e.league_id] ?? 'League',
+          headline:   e.headline,
+          bullets:    e.bullets,
+        }));
+
+        // 5. Normalise transfers — show what player came in / went out
+        const transferItems = (transferRows ?? []).map(t => {
+          const pIn  = t.player_in  ? playerMap[t.player_in]  : null;
+          const pOut = t.player_out ? playerMap[t.player_out] : null;
+          const parts = [];
+          if (pIn)  parts.push(`▲ ${pIn.name}  ${pIn.position}`);
+          if (pOut) parts.push(`▼ ${pOut.name}  ${pOut.position}`);
+          return {
+            id:          `t-${t.id}`,
+            kind:        'transfer',
+            ts:          t.transferred_at,
+            league_name: leagueNameById[t.league_id] ?? 'League',
+            text:        parts.length ? parts.join('   ·   ') : `GW ${t.round_number} transfer`,
+          };
+        });
+
+        // 6. Merge + sort newest first
+        const allItems = [...gazetteItems, ...transferItems]
+          .sort((a, b) => new Date(b.ts) - new Date(a.ts));
+
+        if (!cancelled) { setFeed(allItems); setLoading(false); }
+      } catch (err) {
+        console.error('[RecapScreen]', err);
+        if (!cancelled) setLoading(false);
+      }
+    })();
 
     return () => { cancelled = true; };
   }, [user?.id]);
 
-  // ── Drill-in to personal recap ─────────────────────────────────────────────
-  if (drillIn) {
-    return (
-      <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-        <PersonalRecapView
-          leagueId={drillIn.leagueId}
-          matchdayId={drillIn.matchdayId}
-          leagues={leagues}
-          user={user}
-          onBack={() => setDrillIn(null)}
-        />
-      </div>
-    );
+  // ── Group feed by calendar day ────────────────────────────────────────────
+  const grouped = [];
+  let lastLabel = null;
+  for (const item of feed) {
+    const label = dayLabel(item.ts);
+    if (label !== lastLabel) {
+      grouped.push({ type: 'sep', label, id: `sep-${label}` });
+      lastLabel = label;
+    }
+    grouped.push({ type: 'item', item, id: item.id });
   }
 
-  // ── Digest view (default) ──────────────────────────────────────────────────
+  const todayStr = new Date().toLocaleDateString('en-GB', {
+    weekday: 'long', day: 'numeric', month: 'long',
+  }).toUpperCase();
+
+  // ── Render ────────────────────────────────────────────────────────────────
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: 'var(--ink)' }}>
-      {/* header */}
+
+      {/* ── Header ─────────────────────────────────────────────────────────── */}
       <div style={{
-        padding: '16px 20px 12px',
-        borderBottom: '1px solid rgba(255,255,255,.07)',
+        padding: '16px 20px 14px',
+        borderBottom: '1px solid var(--rule)',
         flexShrink: 0,
       }}>
         <div style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.2em', color: 'var(--mute)', marginBottom: 4 }}>
-          LAST 7 DAYS · ALL LEAGUES
+          {todayStr} · ALL LEAGUES
         </div>
         <div style={{ fontFamily: DISPLAY, fontSize: 22, letterSpacing: '-0.01em', color: 'var(--paper)' }}>
           MY DIGEST
         </div>
       </div>
 
+      {/* ── Feed ───────────────────────────────────────────────────────────── */}
       {loading ? (
         <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <span style={{ fontFamily: MONO, fontSize: 10, color: 'var(--mute)', letterSpacing: '.2em' }}>LOADING…</span>
+          <span style={{ fontFamily: MONO, fontSize: 10, color: 'var(--mute)', letterSpacing: '.2em' }}>
+            LOADING…
+          </span>
         </div>
-      ) : !entries.length ? (
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '48px 24px', textAlign: 'center' }}>
+      ) : feed.length === 0 ? (
+        <div style={{
+          flex: 1, display: 'flex', flexDirection: 'column',
+          alignItems: 'center', justifyContent: 'center',
+          padding: '48px 24px', textAlign: 'center',
+        }}>
           <div style={{ fontSize: 32, marginBottom: 14 }}>📋</div>
           <div style={{ fontFamily: DISPLAY, fontSize: 18, color: 'var(--paper)', marginBottom: 8 }}>
-            NOTHING TO REPORT
+            ALL QUIET
           </div>
-          <div style={{ fontFamily: BODY, fontSize: 13, color: 'var(--mute)', lineHeight: 1.55, maxWidth: 280 }}>
-            No matches have been scored in your leagues in the last 7 days.{' '}
-            {leagues.length === 0
-              ? 'Join a league first to see activity here.'
-              : 'Check back after the next round scores.'}
+          <div style={{
+            fontFamily: BODY, fontSize: 13, color: 'var(--mute)',
+            lineHeight: 1.55, maxWidth: 280,
+          }}>
+            No activity in your leagues in the last 7 days.
+            The WC 2026 kicks off 11 Jun — check back after the first round.
           </div>
-          {/* preview demo — only shown when leagues exist but no entries yet */}
-          {leagues.length > 0 && (
-            <button
-              onClick={() => setDrillIn({ leagueId: leagues[0].league_id, matchdayId: null })}
-              style={{
-                marginTop: 24, fontFamily: MONO, fontSize: 9, letterSpacing: '.18em',
-                color: 'var(--cyan)', background: 'transparent',
-                border: '1px solid rgba(0,180,216,.3)', padding: '8px 18px', cursor: 'pointer',
-              }}
-            >
-              VIEW MY LATEST RECAP ↗
-            </button>
-          )}
         </div>
       ) : (
         <div style={{ flex: 1, overflow: 'auto' }}>
-          {entries.map(e => (
-            <DigestCard
-              key={e.id}
-              entry={e}
-              onViewRecap={(leagueId, matchdayId) => setDrillIn({ leagueId, matchdayId })}
-            />
-          ))}
+          {grouped.map(g =>
+            g.type === 'sep'
+              ? <DaySeparator key={g.id} label={g.label} />
+              : <FeedItem     key={g.id} item={g.item} />
+          )}
           <div style={{ height: 32 }} />
         </div>
       )}
