@@ -4,7 +4,7 @@ import { logError } from '../_shared/log.ts';
 const FN = 'process-transfer';
 const POS_LIMITS = { GK: 2, DEF: 5, MID: 5, FWD: 3 };
 const SQUAD_MAX  = 15;
-const CLUB_MAX   = 3;   // max players from the same club/team per squad
+const CLUB_MAX_DEFAULT = 3;  // fallback club cap; overridden per-league by get_club_cap()
 
 Deno.serve(async (req) => {
   const origin = req.headers.get('Origin') ?? '';
@@ -213,6 +213,41 @@ Deno.serve(async (req) => {
         return json({ ok: false, error: 'You already own this player' }, 400, corsHeaders);
       }
 
+      // 1b. Eliminated club check: in cup leagues, cannot buy players from knocked-out clubs.
+      // Only fires when the club appears in cup_active_clubs with eliminated_at set.
+      // Classic / non-cup leagues have no cup_active_clubs rows so the query returns null
+      // harmlessly and this check is skipped.
+      {
+        const { data: playerClub } = await supabase
+          .from('players')
+          .select('club, forza_team_id')
+          .eq('id', player_id)
+          .maybeSingle();
+
+        if (playerClub?.club || playerClub?.forza_team_id) {
+          const orFilter = [
+            playerClub.club          ? `club_id.eq.${playerClub.club}`          : null,
+            playerClub.forza_team_id ? `club_id.eq.${playerClub.forza_team_id}` : null,
+          ].filter(Boolean).join(',');
+
+          const { data: eliminatedClub } = await supabase
+            .from('cup_active_clubs')
+            .select('eliminated_at')
+            .eq('league_id', league_id)
+            .or(orFilter)
+            .not('eliminated_at', 'is', null)
+            .maybeSingle();
+
+          if (eliminatedClub) {
+            return json({
+              ok:    false,
+              code:  'CLUB_ELIMINATED',
+              error: `${playerClub.club ?? 'This club'} has been knocked out — you cannot buy their players`,
+            }, 400, corsHeaders);
+          }
+        }
+      }
+
       // 2. No-repeat / relaxation check: count other squads holding this player,
       //    then compare against current repeats_allowed tier (L6.1).
       const { data: takenRows, count: takenCount } = await supabase
@@ -273,6 +308,16 @@ Deno.serve(async (req) => {
         }
       }
 
+      // Get dynamic club cap: relaxes as cup clubs are eliminated (get_club_cap returns
+      // NULL when only 2 clubs remain — the final — meaning no cap applies).
+      let clubMax = CLUB_MAX_DEFAULT;
+      const { data: clubCapData } = await supabase
+        .rpc('get_club_cap', { p_league_id: league_id });
+      if (clubCapData !== null && clubCapData !== undefined) {
+        clubMax = clubCapData;  // NULL from DB = final, no cap → use 999
+      }
+      if (clubMax === null) clubMax = 999;
+
       // TDD-01/TDD-11/96: atomic RPC acquires SELECT FOR UPDATE lock on squad row,
       // re-validates budget, ownership, position cap, squad size, and club cap inside the lock.
       const { data: xferResult, error: updateErr } = await supabase
@@ -283,7 +328,7 @@ Deno.serve(async (req) => {
           p_price:     price,
           p_pos_limit: posLimit,   // TDD-11: position cap enforced inside the lock
           p_squad_max: SQUAD_MAX,  // TDD-11: squad size enforced inside the lock
-          p_club_max:  CLUB_MAX,   // 96: max 3 players per club enforced inside the lock
+          p_club_max:  clubMax,    // 96/105: dynamic cap — relaxes as cup clubs are eliminated
         });
 
       if (updateErr || !xferResult?.ok) {

@@ -230,7 +230,7 @@ function computePhases(league, memberCount = 0) {
   const now = new Date();
   const hasDraftDeadline = !!league.draft_deadline;
   const deadlinePassed = hasDraftDeadline && new Date(league.draft_deadline) <= now;
-  const isDraft = !league.league_mode || league.league_mode === 'draft';
+  const isDraft = league.format === 'noduplicate';
   const allocationDone = league.cup_phase && league.cup_phase !== 'pre_cup';
   const inSeason = allocationDone; // allocation done = in season
 
@@ -1219,9 +1219,9 @@ function LifecycleOp({ title, status, statusTone = 'var(--mute)', sub, when, chi
 // ─────────────────────────────────────────────────────────────────────────────
 // Lifecycle operations (Zone C)
 // ─────────────────────────────────────────────────────────────────────────────
-function LifecycleOps({ commissioner, tournamentId, league = null, onHelp }) {
+function LifecycleOps({ commissioner, leagueId, tournamentId, league = null, onHelp }) {
   const {
-    commLoading,
+    commLoading, commAction, setCommMsg,
     windowOpensAt, setWindowOpensAt,
     windowClosesAt, setWindowClosesAt,
     windowTransfers, setWindowTransfers,
@@ -1241,6 +1241,22 @@ function LifecycleOps({ commissioner, tournamentId, league = null, onHelp }) {
   const deadlinePassed = league?.draft_deadline && new Date(league.draft_deadline) <= now;
   const allocationDone = league?.cup_phase && league.cup_phase !== 'pre_cup';
   const allocationDisabled = commLoading || !deadlinePassed;
+
+  // Knockout draft local state
+  const [knockoutDeadline, setKnockoutDeadline] = useState('');
+
+  // Knockout allocation is done once cup_phase moves into an elimination phase
+  const knockoutAllocationDone = ['elimination', 'round_of_16', 'quarter_final', 'semi_final', 'final'].includes(league?.cup_phase);
+
+  const knockoutStatus = !allocationDone ? 'LOCKED'
+    : knockoutAllocationDone ? 'ALLOCATED'
+    : league?.knockout_draft_deadline ? 'DEADLINE SET'
+    : 'NOT SET';
+
+  const knockoutTone = !allocationDone ? 'var(--mute)'
+    : knockoutAllocationDone ? 'var(--positive)'
+    : league?.knockout_draft_deadline ? 'var(--positive)'
+    : 'var(--warn)';
 
   // AUDIT-58-A3: derive live status labels for the four LifecycleOp cards
   const twStatus  = isDeadlineControlled ? 'DEADLINE-CONTROLLED'
@@ -1265,6 +1281,20 @@ function LifecycleOps({ commissioner, tournamentId, league = null, onHelp }) {
   const handleRunAllocation = () => {
     if (!window.confirm('This allocates squads for all managers. It cannot be undone without a manual reset. Continue?')) return;
     triggerDraftAllocation();
+  };
+
+  const handleRunKnockoutAllocation = () => {
+    if (!window.confirm('This runs the knockout-phase draft allocation. It cannot be undone. Continue?')) return;
+    commAction(async () => {
+      if (knockoutDeadline) {
+        await supabase.from('leagues').update({ knockout_draft_deadline: new Date(knockoutDeadline).toISOString() }).eq('id', leagueId);
+      }
+      const { error } = await supabase.functions.invoke('run-draft-lottery', {
+        body: { league_id: leagueId, phase: 'knockout' },
+      });
+      if (error) throw new Error(error.message);
+      setCommMsg({ type: 'ok', text: 'Knockout draft allocation complete.' });
+    });
   };
 
   const opBtnStyle = (bg, color = 'var(--ink)') => ({
@@ -1327,7 +1357,7 @@ function LifecycleOps({ commissioner, tournamentId, league = null, onHelp }) {
           </div>
 
           {/* Draft — draft mode only */}
-          {(!league || league.league_mode === 'draft' || !league.league_mode) && (
+          {(!league || league.format === 'noduplicate') && (
           <div data-tour="comm-draft-deadline">
           <LifecycleOp
             title="DRAFT"
@@ -1353,6 +1383,47 @@ function LifecycleOps({ commissioner, tournamentId, league = null, onHelp }) {
                   style={opBtnStyle('var(--gold)')}
                 >RUN ALLOCATION ↯</button>
               </div>
+            }
+          />
+          </div>
+          )}
+
+          {/* Knockout Draft — draft mode only */}
+          {(!league || league.format === 'noduplicate') && (
+          <div data-tour="comm-knockout-draft">
+          <LifecycleOp
+            title="KNOCKOUT DRAFT"
+            status={knockoutStatus}
+            statusTone={knockoutTone}
+            sub="Second draft for the knockout phase. Same allocation logic as the group draft — managers submit 30 picks, lottery resolves conflicts."
+            when="After group stage allocation completes. Set before the first knockout match."
+            primary={
+              knockoutAllocationDone ? (
+                <div style={{ padding: '8px 10px', background: 'var(--ink)', border: '1px solid var(--rule)', fontFamily: BODY, fontSize: 10, color: 'var(--positive)', lineHeight: 1.5 }}>
+                  ✓ Knockout squads allocated
+                </div>
+              ) : !allocationDone ? (
+                <div style={{ padding: '8px 10px', background: 'var(--ink)', border: '1px solid var(--rule)', fontFamily: BODY, fontSize: 10, color: 'var(--mute)', lineHeight: 1.5 }}>
+                  Locked — complete group allocation first
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                    <span style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '.2em', color: 'var(--paper)' }}>KNOCKOUT DEADLINE</span>
+                    <input
+                      type="datetime-local"
+                      value={knockoutDeadline}
+                      onChange={e => setKnockoutDeadline(e.target.value)}
+                      style={{ ...inputStyle, colorScheme: 'dark', fontSize: 11 }}
+                    />
+                  </div>
+                  <button
+                    onClick={handleRunKnockoutAllocation}
+                    disabled={commLoading}
+                    style={opBtnStyle('var(--gold)', 'var(--ink)')}
+                  >RUN KNOCKOUT ALLOCATION ↯</button>
+                </div>
+              )
             }
           />
           </div>
@@ -2055,7 +2126,7 @@ export default function CommissionerPanel({ commissioner, leagueId, tournamentId
           </MobLifecycleCard>
           </div>
 
-          {(!league || league.league_mode === 'draft' || !league.league_mode) && (
+          {(!league || league.format === 'noduplicate') && (
           <div data-tour="comm-draft-deadline">
           <MobLifecycleCard title="DRAFT" status="DEADLINE SET" tone="var(--positive)" when="After all picks. Before GW1.">
             <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
