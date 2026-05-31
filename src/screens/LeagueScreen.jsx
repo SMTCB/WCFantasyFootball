@@ -36,7 +36,7 @@ import AuctionsView           from '../components/league/AuctionsView';
 import StatsView              from '../components/league/StatsView';
 import ChatView               from '../components/league/ChatView';
 import CommissionerPanel      from '../components/league/CommissionerPanel';
-import RecapContainer        from '../components/league/RecapContainer';
+import RecapView             from '../components/league/RecapView';
 
 const LEAGUE_TOUR_STEPS = [
   {
@@ -939,12 +939,11 @@ export default function LeagueScreen() {
            />
          )}
          {view === 'recap' && (
-           <RecapContainer
+           <RecapView
              leagueId={activeLeague?.league_id}
              tournamentId={activeLeague?.leagues?.tournament_id}
              members={members}
              currentUser={currentUser}
-             onNavigateToLeague={loadLeagueById}
            />
          )}
          {view === 'frontpage' && (() => {
