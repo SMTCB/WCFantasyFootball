@@ -545,10 +545,17 @@ Always create a new file — never modify existing migrations.
 | 93 | `93_tdd_p0_fixes.sql` | Session 55: execute_transfer_atomic() FOR UPDATE lock; squads_captain_not_joker CHECK; draft_deadline_check trigger; penalty_scored column |
 | 94 | `94_pilot04_player_price_tiers.sql` | Session 55: 4-tier nation pricing for WC 2026 (Tier S £7.0 → Tier C £4.0 base + position adj) |
 | 95 | `95_p1_fixes.sql` | Session 55: execute_transfer_atomic() position cap + squad size in lock; accept_trade_proposal() FOR UPDATE; drop squads_public_read policy |
+| 96–96 | `96_club_cap_enforcement.sql`, `96_daily_joker_matchday.sql` | Sessions 55–57: club cap enforcement, daily joker matchday scoping |
+| 97 | `97_resolve_bet_auth.sql` | Session 58: resolve_bet commissioner auth guard (AUDIT-57-01/A7) |
+| 98 | `98_submit_bet_ownership.sql` | Session 58: submit_bet squad ownership check (AUDIT-57-02) |
+| 99 | `99_resolve_bet_budget_rewards.sql` | Session 58: resolve_bet credits budget_remaining for budget-type bets (AUDIT-57-03) |
+| 100 | `100_auction_fixes.sql` | Session 58: place_bid budget guard; resolve_auction_listing stuck-listing cancel + matchday squad fix (AUDIT-57-04/05/07) |
+| 101 | `101_void_bet.sql` | Session 58: void_bet() RPC with commissioner auth guard (AUDIT-58-A5) |
+| 102 | `102_transfer_window_closed_gap.sql` | Session 58: get_transfer_window_status 6h recovery window for WC leagues (AUDIT-57-11) |
 
-**Next migration**: `96_`
+**Next migration**: `103_`
 
-**Key pipeline facts (2026-05-30):**
+**Key pipeline facts (2026-05-31):**
 - `calculate-scores` uses `scoring_rules` table (not `scoring_templates`) keyed by `tournament_id`
 - `fantasy_points.matchday_id` format: `'{tournament_id}-r{round}'` e.g. `'426-r35'`
 - `matchday_deadlines.matchday_id` format: `'426-rN'` (canonical, written by `sync-fixtures`)
