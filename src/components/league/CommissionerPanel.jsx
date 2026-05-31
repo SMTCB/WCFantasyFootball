@@ -2094,8 +2094,24 @@ export default function CommissionerPanel({ commissioner, leagueId, tournamentId
 
     // AUDIT-58-A4: precondition guards (same logic as desktop LifecycleOps)
     const mobNow = new Date();
-    const mobDeadlinePassed = league?.draft_deadline && new Date(league.draft_deadline) <= mobNow;
+    const mobDeadlinePassed    = league?.draft_deadline && new Date(league.draft_deadline) <= mobNow;
+    const mobAllocationDone    = league?.cup_phase && league.cup_phase !== 'pre_cup';
     const mobAllocationDisabled = commLoading || !mobDeadlinePassed;
+
+    // AUDIT-58-A3: derive live status labels for mobile cards (mirrors desktop LifecycleOps)
+    const mobTwStatus = !!tournamentId           ? 'DEADLINE-CONTROLLED'
+                      : league?.transfers_open   ? 'OPEN' : 'CLOSED';
+    const mobTwTone   = !!tournamentId           ? 'var(--warn)'
+                      : league?.transfers_open   ? 'var(--positive)' : 'var(--danger)';
+
+    const mobDraftStatus = !league?.draft_deadline ? 'NOT SET'
+                         : mobAllocationDone       ? 'ALLOCATED'
+                         : mobDeadlinePassed        ? 'DEADLINE PASSED'
+                         :                           'DEADLINE SET';
+    const mobDraftTone   = !league?.draft_deadline ? 'var(--mute)'
+                         : mobAllocationDone       ? 'var(--positive)'
+                         : mobDeadlinePassed        ? 'var(--warn)'
+                         :                           'var(--positive)';
 
     return (
       <div style={{ flex: 1, overflow: 'auto', background: 'var(--ink)', display: 'flex', flexDirection: 'column' }}>
@@ -2107,7 +2123,7 @@ export default function CommissionerPanel({ commissioner, leagueId, tournamentId
         <MobSectionHeader label="LIFECYCLE OPERATIONS" sub="SEASON CONTROLS" tone="var(--purple)" onHelp={() => setHelpModal('lifecycle')} />
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8, paddingBottom: 80 }}>
           <div data-tour="comm-transfer-window">
-          <MobLifecycleCard title="TRANSFER WINDOW" status="CLOSED" tone="var(--danger)" when="Open between gameweeks. Close 1h before MD kickoff.">
+          <MobLifecycleCard title="TRANSFER WINDOW" status={mobTwStatus} tone={mobTwTone} when="Open between gameweeks. Close 1h before MD kickoff.">
             <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
               <span style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '.2em', color: 'var(--paper)' }}>OPENS</span>
               <input type="datetime-local" value={windowOpensAt} onChange={e => setWindowOpensAt(e.target.value)} style={{ ...mobInput, colorScheme: 'dark', fontSize: 11 }} />
@@ -2136,7 +2152,7 @@ export default function CommissionerPanel({ commissioner, leagueId, tournamentId
 
           {(!league || league.format === 'noduplicate') && (
           <div data-tour="comm-draft-deadline">
-          <MobLifecycleCard title="DRAFT" status="DEADLINE SET" tone="var(--positive)" when="After all picks. Before GW1.">
+          <MobLifecycleCard title="DRAFT" status={mobDraftStatus} tone={mobDraftTone} when="After all picks. Before GW1.">
             <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
               <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.2em', color: 'var(--mute)' }}>DEADLINE</span>
               <input type="datetime-local" value={draftDeadline} onChange={e => setDraftDeadline(e.target.value)} style={mobInput} />

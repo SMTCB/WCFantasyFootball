@@ -439,7 +439,7 @@ All required tables and RLS policies exist. The gazette INSERT policy (migration
 
 ### 🟠 P1 — Fix in first week of pilot
 
-#### AUDIT-58-A3 — Status pills on all 4 Lifecycle cards are hardcoded ✅ PARTIAL FIX (session 58, PR #245) — SeasonStepper now uses live league data; LifecycleOp card status labels still static (P1 remaining)
+#### AUDIT-58-A3 — Status pills on all 4 Lifecycle cards are hardcoded ✅ FIXED (session 62, PR #269) — desktop LifecycleOp cards fixed in session 58; mobile MobLifecycleCard Transfer Window + Draft pills now derive from live league state
 - **File**: `src/components/league/CommissionerPanel.jsx:1098, 1131, 1156, 1177`
 - **Issue**: Every `LifecycleOp` card passes a literal status string — `status="CLOSED"`, `status="DEADLINE SET"`, `status="UNSEEDED"`, `status="UTILITY · ON-DEMAND"`. The spec (`docs/brand/admin-tab/LOGIC.md §3.1`) requires live state copy such as `"OPEN · CLOSES IN {duration}"`, `"SCHEDULED · OPENS {datetime}"`, etc. The Transfer Window card reads "CLOSED" even when the commissioner just opened it. The Draft card reads "DEADLINE SET" even before a deadline exists.
 - **Impact**: Commissioner cannot trust the panel as a diagnostic. After running each operation, the status label does not change.
