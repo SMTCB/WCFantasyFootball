@@ -164,16 +164,23 @@ function buildBreakdown(stats, pos, POINTS, UNIVERSAL) {
   };
 }
 
+const CORS_HEADERS = {
+  'Access-Control-Allow-Origin':  '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+};
+
 function respond(status, body) {
   return new Response(JSON.stringify(body), {
     status,
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', ...CORS_HEADERS },
   });
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
 Deno.serve(async (req) => {
-  if (req.method !== 'POST') return respond(405, { error: 'POST required' });
+  if (req.method === 'OPTIONS') return new Response('ok', { headers: CORS_HEADERS });
+  if (req.method !== 'POST')    return respond(405, { error: 'POST required' });
 
   let fixture_id;
   try { ({ fixture_id } = await req.json()); }
