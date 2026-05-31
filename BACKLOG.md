@@ -1,6 +1,6 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-05-31 (session 59 — admin tab overhaul, RECAP fix, gazette scoring entries, calculate-scores CORS fix, migration 103)  
+**Last Updated**: 2026-06-01 (session 60 — RECAP Digest tab: MY DIGEST + THIS LEAGUE toggle, PR #257)  
 **E2E Test Suite**: `platform.spec.js` (36 tests × 2 browsers) passing in CI ✅ — completes in ~3 min  
 **Live App**: https://wc-fantasy-football.vercel.app  
 **WC Kick-off**: 2026-06-11 19:00 UTC (Mexico vs South Africa) — **11 days away**
@@ -11,11 +11,11 @@
 
 ## 🚀 OPEN FEATURES — NEXT SESSION PRIORITIES
 
-### [FEATURE] RECAP Tab — Cross-League Daily Digest + Per-League History toggle
+### ✅ [FEATURE] RECAP Tab — Cross-League Daily Digest + Per-League History toggle ✅ DONE (session 60, PR #257)
 
 **Priority**: P2 — High value UX, fully event-driven, infrastructure already built  
 **Effort**: ~3–4h  
-**Status**: Not started — detailed spec below, no additional clarification needed
+**Status**: COMPLETE — merged to main
 
 #### What the user wants
 Transform the RECAP tab from a single-league matchday history into a dual-mode dashboard:
@@ -114,6 +114,23 @@ All required tables and RLS policies exist. The gazette INSERT policy (migration
 - [ ] Toggle persists within the session (resets on tab change is fine)
 - [ ] Works on desktop and mobile
 - [ ] No new migrations required
+
+---
+
+## 📊 SESSION 60 PROGRESS (2026-06-01 — RECAP Digest Tab)
+
+### Delivered
+- **RECAP Digest tab** (PR [#257](https://github.com/SMTCB/WCFantasyFootball/pull/257)): MY DIGEST + THIS LEAGUE toggle on the RECAP tab
+  - `DigestView.jsx`: queries `gazette_entries` (`entry_type='activity'`) for past 7 days across all user's leagues; renders activity cards (SCORES badge, time-ago, league name tag, headline, bullets)
+  - `RecapContainer.jsx`: thin wrapper managing the `recapMode` toggle ('digest' | 'league'); conditionally renders DigestView or RecapView
+  - `LeagueScreen.jsx`: replaced `RecapView` import with `RecapContainer` (TDZ-safe — RecapView now only at depth 2); added `onNavigateToLeague={loadLeagueById}` prop so clicking a digest card can switch leagues
+  - Empty state shown when no activity in past 7 days
+  - No migrations needed — gazette_entries RLS (`is_league_member`) + existing `calculate-scores` v18 gazette writes cover everything
+
+### Key technical facts (for next session)
+- `RecapContainer` is the new entrypoint for `view === 'recap'` in LeagueScreen
+- `DigestView` only imports `HubConstants` (leaf module) + `supabase` — no TDZ risk
+- `gazette_entries.leagues(name)` join works via Supabase JS FK relationship
 
 ---
 
