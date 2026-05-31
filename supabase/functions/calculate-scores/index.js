@@ -508,8 +508,11 @@ async function rollupSquads(fixture_id, pointsLookup, tournament_id) {
         pts = 0;
         logError('error', 'NaN in points lookup', { fixture_id, player_id: pid }); // fire-and-forget
       }
-      if (pid === effectiveCaptainId)    pts *= squad.is_triple_captain ? 3 : 2;
-      if (pid === squad.joker_player_id) pts *= 2;  // Joker doubles one player's points (L1.5)
+      // DD-H5: chips take the highest multiplier, not the product.
+      // Captain+Joker on same player → max(2,2)=×2, not ×4. TC+Joker → max(3,2)=×3.
+      const captainMult = pid === effectiveCaptainId ? (squad.is_triple_captain ? 3 : 2) : 1;
+      const jokerMult   = pid === squad.joker_player_id ? 2 : 1;
+      pts *= Math.max(captainMult, jokerMult);
       total += pts;
     }
     // Wildcard applies to the whole squad total once — not per-player (L1.4)
