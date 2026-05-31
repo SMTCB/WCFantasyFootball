@@ -144,7 +144,9 @@ export default function SquadScreen() {
       // â"€â"€ Transfer window lock check — use latest matchday deadline â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
       // U11: scope deadline check to this league's tournament; capture matchday_id for squad filter
       let dlQuery = supabase
-        .from('matchday_deadlines').select('deadline_at, matchday_id').order('deadline_at', { ascending: false }).limit(1);
+        .from('matchday_deadlines').select('deadline_at, matchday_id')
+        .gte('deadline_at', new Date().toISOString())
+        .order('deadline_at', { ascending: true }).limit(1);
       if (tournamentId) dlQuery = dlQuery.eq('tournament_id', tournamentId);
       const { data: deadlineRow } = await dlQuery.maybeSingle();
       if (deadlineRow?.deadline_at) {
