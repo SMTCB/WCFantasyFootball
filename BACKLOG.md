@@ -1,6 +1,6 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-05-31 (session 58 — AUDIT-57/58 P0+P1 fixes: 3 P0s + 6 P1s resolved; migrations 97–98 deployed)  
+**Last Updated**: 2026-05-31 (session 58 — all AUDIT-57/58 findings resolved; migrations 97–102 deployed; TDD-17 hidden)  
 **E2E Test Suite**: `platform.spec.js` (36 tests × 2 browsers) passing in CI ✅ — completes in ~3 min  
 **Live App**: https://wc-fantasy-football.vercel.app  
 **WC Kick-off**: 2026-06-11 19:00 UTC (Mexico vs South Africa) — **11 days away**
@@ -29,7 +29,9 @@
 
 **Session 58c (PR #247)**: AUDIT-57-08 ✅, AUDIT-57-09 ✅, AUDIT-58-A3 ✅ (full), AUDIT-58-A9 ✅, TDD-17 ✅.
 
-**Still open (P3 only)**: AUDIT-57-10 (migration renumber — tech debt), AUDIT-57-11 (window closed banner).
+**Session 58d (PR #248)**: AUDIT-57-11 ✅ (6h recovery window in get_transfer_window_status, migration 102).
+
+**Still open (P3 only)**: AUDIT-57-10 (migration renumber — tech debt, no runtime impact).
 
 ---
 
@@ -142,7 +144,7 @@
 
 ### 🔵 P3 — Monitor / post-pilot
 
-#### AUDIT-57-11 — WC/tournament leagues never show "Window Closed" in the banner
+#### AUDIT-57-11 — WC/tournament leagues never show "Window Closed" in the banner ✅ FIXED (session 58d, migration 102)
 - **Files**: `src/components/TransferWindowBanner.jsx:55`, `supabase/migrations/90_e2e_bug_fixes.sql:101-122`
 - **Issue**: `get_transfer_window_status` fallback (matchday path) returns `status:'open'` pointing at the next upcoming deadline — always. For tournament leagues the banner perpetually shows "Window Open · Closes in X". The `upcoming`/closed state only fires for `transfer_windows`-table leagues (EPL). Between a round's deadline and the next round opening, WC managers see "open" even though the previous round's squad is now locked.
 - **Note**: Enforcement is correct (process-transfer/deadline check gates mutations), so this is a UX confusion issue, not a logic bug.
