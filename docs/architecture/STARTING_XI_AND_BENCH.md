@@ -151,13 +151,13 @@ These rules are identical for tournament-format (WC, UCL) and league-format (EPL
 
 | Component | Status |
 |---|---|
-| `squads.starting_xi` column | ⏳ Phase B |
-| `squads.lineup_locks` column | ⏳ Phase B |
-| `set_lineup` DB function | ⏳ Phase B |
-| `calculate-scores` uses `starting_xi` | ⏳ Phase B |
-| Lineup lock cron | ⏳ Phase B |
-| Squad screen UI split view | ⏳ Phase B |
-| Points deduction logic | ⏳ Phase B |
+| `squads.starting_xi` column | ✅ Migration 107 |
+| `squads.lineup_locks` column | ✅ Migration 107 |
+| `set_lineup` DB function | ✅ Migration 107 |
+| `calculate-scores` uses `starting_xi` | ✅ v19 (with `players[0..10]` fallback) |
+| Lineup lock cron | ✅ `lock_lineups_for_fixture()` called by `ingest-match-events` |
+| Squad screen UI split view | ✅ `SquadScreen.jsx` — lock icons, deduction warning |
+| Points deduction logic | ✅ Inside `set_lineup` DB function |
 
 ---
 
@@ -169,4 +169,4 @@ These rules are identical for tournament-format (WC, UCL) and league-format (EPL
 
 ---
 
-Last Updated: **2026-06-01**
+Last Updated: **2026-06-01** (session 62 — Phase B fully implemented)

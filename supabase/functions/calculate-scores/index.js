@@ -1,4 +1,4 @@
-// Edge Function: calculate-scores  (v6)
+// Edge Function: calculate-scores  (v19)
 // Calculates fantasy points for all squads for a given fixture.
 // Called by ingest-match-events (Forza live path) or directly (mock/manual path).
 //
@@ -449,7 +449,7 @@ async function rollupSquads(fixture_id, pointsLookup, tournament_id) {
 
   const { data: squads } = await supabase
     .from('squads')
-    .select('id, user_id, league_id, matchday_id, players, captain_id, joker_player_id, is_triple_captain, is_wildcard, leagues!inner(tournament_id)')
+    .select('id, user_id, league_id, matchday_id, players, starting_xi, captain_id, joker_player_id, is_triple_captain, is_wildcard, leagues!inner(tournament_id)')
     .eq('leagues.tournament_id', tournament_id);
 
   if (!squads?.length) return 0;
@@ -469,7 +469,10 @@ async function rollupSquads(fixture_id, pointsLookup, tournament_id) {
   // Build fantasy_points upserts — one row per squad per matchday (L1.3 / L1.4 / L1.5)
   const fantasyPointsUpserts = [];
   for (const squad of squads) {
-    const pitchPlayers = (squad.players || []).slice(0, 11);
+    // Phase B: use starting_xi when set; fallback to players[0..10] for legacy squads
+    const pitchPlayers = (squad.starting_xi?.length > 0)
+      ? squad.starting_xi
+      : (squad.players || []).slice(0, 11);
     let total = 0;
 
     // L3.5: if captain is on the bench, award the bonus to the highest-scoring starter.
