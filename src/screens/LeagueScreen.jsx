@@ -964,6 +964,21 @@ export default function LeagueScreen() {
 
         <TransferWindowBanner {...transferWindow} />
 
+        {/* DD-C7: guide commissioner to set draft deadline after creating a Draft league */}
+        {activeLeague?.leagues?.format === 'noduplicate'
+          && !activeLeague?.leagues?.draft_deadline
+          && isCommissioner && (
+          <div
+            onClick={() => setView('commissioner')}
+            style={{ background: 'rgba(240,180,0,0.12)', borderBottom: '1px solid rgba(240,180,0,0.25)', color: 'var(--gold)', padding: '10px 28px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer', flexShrink: 0 }}
+          >
+            <span style={{ fontFamily: MONO, fontSize: 11, letterSpacing: '.18em' }}>
+              ⚙ DRAFT LEAGUE — SET A DRAFT DEADLINE IN THE ADMIN TAB TO OPEN SUBMISSIONS
+            </span>
+            <span style={{ fontFamily: MONO, fontSize: 11 }}>→</span>
+          </div>
+        )}
+
         {draftOpen && (() => {
           const msLeft = draftDeadlineDate ? draftDeadlineDate.getTime() - Date.now() : Infinity;
           const hoursLeft = msLeft / 3_600_000;
