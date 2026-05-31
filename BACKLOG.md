@@ -1,13 +1,13 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-06-01 (session 61 — Draft/Cup system redesign + transfer window unified design + starting XI design; PRs #261–265)  
+**Last Updated**: 2026-06-01 (session 61 — Draft/Cup system redesign + transfer window unified design + starting XI design; PRs #261–266)  
 **E2E Test Suite**: `platform.spec.js` (36 tests × 2 browsers) passing in CI ✅ — completes in ~3 min  
 **Live App**: https://wc-fantasy-football.vercel.app  
 **WC Kick-off**: 2026-06-11 19:00 UTC (Mexico vs South Africa) — **10 days away**
 
 ---
 
-## 🚧 NEXT SESSION — Phase A: Transfer Window Unification + Config Table
+## 🚧 NEXT SESSION — **[GAMEPLAY ENGINE]** Phase A: Transfer Window Unification + Config Table
 
 **Priority**: P0 — must complete before WC kick-off (2026-06-11)
 **Effort**: ~4–5h
@@ -69,7 +69,7 @@ Add transfer limit enforcement inside the atomic RPC:
 
 ---
 
-## 🚧 NEXT SESSION — Phase B: Starting XI and Bench
+## 🚧 NEXT SESSION — **[GAMEPLAY ENGINE]** Phase B: Starting XI and Bench
 
 **Priority**: P1 — needed for correct scoring before WC group stage ends
 **Effort**: ~6–8h

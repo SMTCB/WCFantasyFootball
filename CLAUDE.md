@@ -554,10 +554,12 @@ Always create a new file — never modify existing migrations.
 | 101 | `101_void_bet.sql` | Session 58: void_bet() RPC with commissioner auth guard (AUDIT-58-A5) |
 | 102 | `102_transfer_window_closed_gap.sql` | Session 58: get_transfer_window_status 6h recovery window for WC leagues (AUDIT-57-11) |
 | 103 | `103_gazette_policies.sql` | Session 59: INSERT policy on gazette_entries for commissioners (breaking news form) |
+| 104 | `104_league_mode_and_phase.sql` | Session 61: add league_mode (classic/draft), knockout_draft_deadline, phase column on draft_submissions + draft_allocations; update UNIQUE constraints to include phase; get_club_cap() function; club-cap league_config defaults |
+| 105 | `105_league_mode_data_fix.sql` | Session 61: fix league_mode data (was 'draft' for all); add trg_sync_league_mode trigger; sync_cup_eliminations() function; sync-cup-eliminations cron every 6h |
 
-**Next migration**: `104_`
+**Next migration**: `106_`
 
-**Key pipeline facts (2026-05-31):**
+**Key pipeline facts (2026-06-01):**
 - `calculate-scores` uses `scoring_rules` table (not `scoring_templates`) keyed by `tournament_id`
 - `calculate-scores` is deployed as **v18** (edge function, `verify_jwt: false`, CORS headers added in v17/v18)
 - `calculate-scores` writes a `gazette_entries` row (`entry_type='activity'`) per league after scoring — idempotent (deletes+reinserts for same matchday_id)
