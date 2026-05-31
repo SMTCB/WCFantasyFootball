@@ -194,6 +194,7 @@ forza-fantasy-league/
 │   │   ├── ScoresScreen.jsx               # Home: match fixtures & live scores
 │   │   ├── SquadScreen.jsx                # User's squad builder & formation
 │   │   ├── LeagueScreen.jsx               # League standings & chat interface
+│   │   ├── RecapScreen.jsx                # MY DIGEST: cross-league activity feed (gazette_entries all types + own transfers, 7 days)
 │   │   ├── LiveScreen.jsx                 # Live match updates & Joker chip
 │   │   ├── MarketScreen.jsx               # Transfer market player search
 │   │   ├── LeagueCreationWizard.jsx       # Multi-step league creation flow
@@ -567,6 +568,12 @@ Always create a new file — never modify existing migrations.
 - `bet_submissions` uses `bet_instance_id` column (not `bet_id`) — references `bet_instances(id)`
 - `gazette_entries.entry_type` enum: `draft_report`, `breaking_news`, `activity`, `auction_result`
 - `gazette_entries` INSERT: commissioners only (RLS policy, migration 103); SELECT: league members (is_league_member)
+- `gazette_entries.bullets` field is NOT always `string[]` — shapes vary by type:
+  - `activity`: `string[]` (e.g. `"🥇 TestComm  8 pts this GW"`)
+  - `breaking_news`: `{text: string}[]`
+  - `draft_report`: `{player_id, wanted_by, winner_id}[]` (contested picks) + optional `{text}` trailing item
+  - older rows: `bullets` stored as a JSON-encoded string (not parsed JSONB)
+  - Always use `normalizeBullets()` from `RecapScreen.jsx` before rendering; never render bullets directly
 - `squads` updatable columns (via RLS): `captain_id`, `joker_player_id`, `is_wildcard`, `is_triple_captain`
 
 ---

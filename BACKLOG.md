@@ -1,6 +1,6 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-06-01 (session 60 — RECAP Digest tab: MY DIGEST + THIS LEAGUE toggle, PR #257)  
+**Last Updated**: 2026-06-01 (session 60 — RECAP MY DIGEST dashboard: all gazette types + transfers, PRs #258–260)  
 **E2E Test Suite**: `platform.spec.js` (36 tests × 2 browsers) passing in CI ✅ — completes in ~3 min  
 **Live App**: https://wc-fantasy-football.vercel.app  
 **WC Kick-off**: 2026-06-11 19:00 UTC (Mexico vs South Africa) — **11 days away**
@@ -117,20 +117,32 @@ All required tables and RLS policies exist. The gazette INSERT policy (migration
 
 ---
 
-## 📊 SESSION 60 PROGRESS (2026-06-01 — RECAP Digest Tab)
+## 📊 SESSION 60 PROGRESS (2026-06-01 — RECAP MY DIGEST Dashboard)
 
 ### Delivered
-- **RECAP Digest tab** (PR [#257](https://github.com/SMTCB/WCFantasyFootball/pull/257)): MY DIGEST + THIS LEAGUE toggle on the RECAP tab
-  - `DigestView.jsx`: queries `gazette_entries` (`entry_type='activity'`) for past 7 days across all user's leagues; renders activity cards (SCORES badge, time-ago, league name tag, headline, bullets)
-  - `RecapContainer.jsx`: thin wrapper managing the `recapMode` toggle ('digest' | 'league'); conditionally renders DigestView or RecapView
-  - `LeagueScreen.jsx`: replaced `RecapView` import with `RecapContainer` (TDZ-safe — RecapView now only at depth 2); added `onNavigateToLeague={loadLeagueById}` prop so clicking a digest card can switch leagues
-  - Empty state shown when no activity in past 7 days
-  - No migrations needed — gazette_entries RLS (`is_league_member`) + existing `calculate-scores` v18 gazette writes cover everything
+- **RecapScreen.jsx rebuilt as MY DIGEST cross-league activity dashboard** (PRs [#258](https://github.com/SMTCB/WCFantasyFootball/pull/258), [#259](https://github.com/SMTCB/WCFantasyFootball/pull/259), [#260](https://github.com/SMTCB/WCFantasyFootball/pull/260))
+  - Chronological feed of all activity across all the user's leagues, last 7 days
+  - Events grouped by **TODAY / YESTERDAY / day-name** separators
+  - Every card shows a **type badge + league name tag** (cyan pill, right-aligned) for instant context
+  - **Data sources merged into one feed:**
+    - `gazette_entries` ALL types (no `entry_type` filter): SCORES · DRAFT · NEWS · AUCTION — badge colours mirror `LeagueDetailView.ENTRY_META` exactly
+    - User's own `transfers` (RLS: `user_id = auth.uid()`): player ▲ in / ▼ out with position, batch player-name lookup
+  - Empty state: "ALL QUIET" with WC kick-off reminder
+  - No migrations needed
+
+- **Crash fix** (PR [#260](https://github.com/SMTCB/WCFantasyFootball/pull/260)): `gazette_entries.bullets` is not always `string[]`
+  - `draft_report` bullets: `{player_id, wanted_by, winner_id}` objects → drop (headline covers it)
+  - `breaking_news` bullets: `{text: "..."}` objects → unwrap to string
+  - Older rows: `bullets` stored as JSON string → parse first
+  - `normalizeBullets()` applied at load time; render always receives `string[]`
+
+- **Note — PR #257 reverted**: an initial incorrect implementation put a digest toggle inside the league hub (wrong location). That was fully reverted in PR #258 before the correct top-level RecapScreen approach shipped.
 
 ### Key technical facts (for next session)
-- `RecapContainer` is the new entrypoint for `view === 'recap'` in LeagueScreen
-- `DigestView` only imports `HubConstants` (leaf module) + `supabase` — no TDZ risk
-- `gazette_entries.leagues(name)` join works via Supabase JS FK relationship
+- `RecapScreen.jsx` is now the MY DIGEST dashboard — `gazette_entries` (all types, 7 days) + own transfers
+- `gazette_entries.bullets` field shapes: `string[]` (activity), `{text}[]` (breaking_news), `{player_id,wanted_by,winner_id}[]` (draft_report), JSON string (older rows) — all normalised by `normalizeBullets()`
+- `transfers` RLS: `user_id = auth.uid()` — only own transfers are readable; social feed of other managers' transfers requires a policy change
+- LeagueScreen `view === 'recap'` still mounts `RecapView` (per-league matchday history) — unchanged
 
 ---
 
