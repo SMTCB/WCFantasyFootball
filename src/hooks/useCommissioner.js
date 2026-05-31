@@ -342,6 +342,17 @@ export function useCommissioner(leagueId, tournamentId) {
     }
   }, []);
 
+  const voidBet = useCallback((betInstanceId) => commAction(async () => {
+    const { data, error } = await supabase.rpc('void_bet', { p_instance_id: betInstanceId });
+    if (error) throw new Error(error.message);
+    if (data?.ok === false) throw new Error(data.error || 'Void failed');
+    setCommMsg({ type: 'ok', text: `Bet voided — ${data?.submissions_cleared ?? 0} picks cleared.` });
+    setSelectedBetForResolution(null);
+    setBetSubmissions([]);
+    setAnswerGrouped({});
+    await fetchOpenBets();
+  }), [commAction, fetchOpenBets]);
+
   const resolveBet = useCallback(() => commAction(async () => {
     if (!selectedBetForResolution) throw new Error('Select a bet to resolve.');
     if (!betResolutionAnswer)      throw new Error('Select the correct answer.');
@@ -380,6 +391,6 @@ export function useCommissioner(leagueId, tournamentId) {
     selectedBetForResolution, setSelectedBetForResolution,
     betResolutionAnswer, setBetResolutionAnswer,
     betSubmissions, answerGrouped,
-    fetchOpenBets, fetchBetSubmissions, resolveBet,
+    fetchOpenBets, fetchBetSubmissions, resolveBet, voidBet,
   };
 }
