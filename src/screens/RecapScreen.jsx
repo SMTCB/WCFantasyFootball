@@ -18,6 +18,26 @@ const TRANSFER_META = { badge: 'TRANSFER', color: 'var(--cyan)' };
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
+// Normalise gazette bullets to an array of display strings.
+// bullets can be: string[] | object[] | JSON string | null
+function normalizeBullets(raw) {
+  let arr = raw;
+  if (typeof arr === 'string') {
+    try { arr = JSON.parse(arr); } catch { return []; }
+  }
+  if (!Array.isArray(arr)) return [];
+  return arr.map(b => {
+    if (typeof b === 'string') return b;
+    if (b && typeof b === 'object') {
+      if (b.text) return b.text;
+      // draft_report contest objects {player_id, wanted_by, winner_id}
+      // headline already covers the summary — drop these to avoid clutter
+      if (b.player_id) return null;
+    }
+    return null;
+  }).filter(Boolean);
+}
+
 function timeAgo(iso) {
   const diff = Math.floor((Date.now() - new Date(iso)) / 1000);
   if (diff < 60)    return `${diff}s ago`;
@@ -188,7 +208,7 @@ export default function RecapScreen() {
 
         if (cancelled) return;
 
-        // 4. Normalise gazette entries
+        // 4. Normalise gazette entries — bullets always become string[]
         const gazetteItems = (gazetteRows ?? []).map(e => ({
           id:         `g-${e.id}`,
           kind:       'gazette',
@@ -196,7 +216,7 @@ export default function RecapScreen() {
           ts:         e.published_at,
           league_name: e.leagues?.name ?? leagueNameById[e.league_id] ?? 'League',
           headline:   e.headline,
-          bullets:    e.bullets,
+          bullets:    normalizeBullets(e.bullets),
         }));
 
         // 5. Normalise transfers — show what player came in / went out
