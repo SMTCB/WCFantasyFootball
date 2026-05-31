@@ -538,6 +538,11 @@ Deno.serve(async (req) => {
       await logError('critical', 'calculate-scores invoke failed after 3 retries', { fixture_id: fixture.id, error: scoringErr });
     }
 
+    // Lock lineups for players in this fixture (fire-and-forget, non-critical).
+    // Adds fixture players to squad.lineup_locks[matchday_id] so the UI can show
+    // padlock icons and set_lineup can enforce per-fixture locking (migration 107).
+    supabase.rpc('lock_lineups_for_fixture', { p_fixture_id: fixture.id }).then();
+
     return respond(200, {
       ok:               true,
       players_ingested: statsUpserts.length,

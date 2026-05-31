@@ -246,17 +246,24 @@ export default function SquadScreen() {
         }
       }
 
-      const starterIds    = new Set(playerIds.slice(0, 11));
+      // Phase B: use starting_xi when set; fallback to players[0..10] for legacy squads
+      const startingXiArr = squad.starting_xi?.length > 0 ? squad.starting_xi : playerIds.slice(0, 11);
+      const starterIds    = new Set(startingXiArr);
+      // Locked-out players (subbed out this matchday — cannot return to XI until next round)
+      const lineupLocks   = squad.lineup_locks ?? {};
+      const lockedIds     = new Set(lineupLocks[squad.matchday_id] ?? []);
+
       const mappedPlayers = (players || []).map((p) => {
         const playerIntel = intelData?.find(i => i.player_id === p.id);
         const isStarter   = starterIds.has(p.id);
-        // normalisePlayer strips unknown keys — set isBench after the call
+        const isLocked    = lockedIds.has(p.id);
+        // normalisePlayer strips unknown keys — set isBench/isLineupLocked after the call
         const normalised  = normalisePlayer({
           ...p,
           points: pointsMap[p.id] ?? 0,
           intel:  normalizeIntelligence(playerIntel),
         });
-        return { ...normalised, isBench: !isStarter };
+        return { ...normalised, isBench: !isStarter, isLineupLocked: isLocked };
       });
 
       // Enforce formation rules: 1 GK, 3-5 DEF, 2-4 MID, 1-2 FWD, total 11
@@ -295,6 +302,9 @@ export default function SquadScreen() {
         captainId:       squad.captain_id || playerIds[0] || '',
         players:         pitchPlayers,
         bench:           benchPlayers,
+        startingXi:      squad.starting_xi || [],
+        lineupLocks:     lineupLocks,
+        lockedIds:       lockedIds,
         isWildcard:      squad.is_wildcard,
         isTripleCaptain: squad.is_triple_captain,
         locked_at:       squad.locked_at,
@@ -392,7 +402,7 @@ export default function SquadScreen() {
   };
 
 
-  const handleSwap = async (p1, p2) => {
+  const handleSwap = (p1, p2) => {
     const isP1Bench = squadData.bench.some(b => b.id === p1.id);
     const isP2Bench = squadData.bench.some(b => b.id === p2.id);
     // Same zone — stay in swap mode, show hint toast
@@ -401,34 +411,91 @@ export default function SquadScreen() {
       return;
     }
 
+    const pitchPlayer = isP1Bench ? p2 : p1;
+    const benchPlayer = isP1Bench ? p1 : p2;
+
+    // Bench player locked out this matchday — cannot sub in
+    if (benchPlayer.isLineupLocked) {
+      showToast(`${benchPlayer.name} was already subbed out this round and cannot return.`, 'warning');
+      setSwapMode(false);
+      setSelectedPlayer(null);
+      return;
+    }
+
+    // If pitcher already scored, warn about deduction before confirming
+    if (pitchPlayer.points > 0) {
+      setConfirm({
+        title:        `Move ${pitchPlayer.name} to bench?`,
+        body:         `${pitchPlayer.name} has scored ${pitchPlayer.points} pts this round. Moving them to the bench will deduct those points from your total.`,
+        warning:      'This action cannot be undone.',
+        confirmLabel: 'Confirm (-' + pitchPlayer.points + ' pts)',
+        danger:       true,
+        onConfirm:    () => doSwap(pitchPlayer, benchPlayer),
+      });
+      setSelectedPlayer(null);
+      setSwapMode(false);
+      return;
+    }
+
+    doSwap(pitchPlayer, benchPlayer);
+  };
+
+  const doSwap = async (pitchPlayer, benchPlayer) => {
     try {
       setSaving(true);
-      const pitchPlayer  = isP1Bench ? p2 : p1;
-      const benchPlayer  = isP1Bench ? p1 : p2;
-      const tempGrid     = pitchPlayer.gridClass;
-      const newPlayers   = squadData.players.map(p =>
+      setSelectedPlayer(null);
+      setSwapMode(false);
+
+      // Validate formation client-side first for fast feedback
+      const tempGrid   = pitchPlayer.gridClass;
+      const newPlayers = squadData.players.map(p =>
         p.id === pitchPlayer.id ? { ...benchPlayer, gridClass: tempGrid } : p
       );
-      // Validate formation — only block if it's actually a formation violation
       const formationError = validateFormation(newPlayers);
       if (formationError) {
         showToast(formationError, 'warning');
-        setSwapMode(false);
-        setSelectedPlayer(null);
         return;
       }
-      const newBench     = squadData.bench.map(b =>
-        b.id === benchPlayer.id ? { ...pitchPlayer, gridClass: '' } : b
+
+      // Call set_lineup RPC — enforces server-side rules atomically
+      const { data: result, error: rpcErr } = await supabase.rpc('set_lineup', {
+        p_squad_id:   squadData.squadId,
+        p_player_out: pitchPlayer.id,
+        p_player_in:  benchPlayer.id,
+      });
+
+      if (rpcErr || !result?.ok) {
+        const code = result?.code ?? '';
+        const msg  = result?.error ?? rpcErr?.message ?? 'Lineup change failed';
+        if (code === 'FIXTURE_COMPLETED') {
+          showToast(`Cannot sub in ${benchPlayer.name} — their match has already finished this round.`, 'warning');
+        } else if (code === 'PLAYER_LOCKED') {
+          showToast(msg, 'warning');
+        } else {
+          showToast(msg, 'error');
+        }
+        return;
+      }
+
+      // Optimistic local update
+      const newBench           = squadData.bench.map(b =>
+        b.id === benchPlayer.id ? { ...pitchPlayer, gridClass: '', isLineupLocked: true } : b
       );
       const captainBeingBenched = squadData.captainId === pitchPlayer.id;
-      const newCaptainId = captainBeingBenched ? null : squadData.captainId;
-      setSquadData({ ...squadData, players: newPlayers, bench: newBench, captainId: newCaptainId });
-      setSelectedPlayer(null);
-      setSwapMode(false);
-      await supabase.from('squads').update({
-        players:    [...newPlayers, ...newBench].map(p => p.id),
-        captain_id: newCaptainId,
-      }).eq('id', squadData.squadId);
+      const newCaptainId        = captainBeingBenched ? null : squadData.captainId;
+
+      setSquadData(prev => ({
+        ...prev,
+        players:     newPlayers,
+        bench:       newBench,
+        captainId:   newCaptainId,
+        lockedIds:   new Set([...(prev.lockedIds ?? []), pitchPlayer.id]),
+      }));
+
+      if (result.deduction > 0) {
+        showToast(`−${result.deduction} pts deducted (${pitchPlayer.name} benched after scoring).`, 'warning', 5000);
+      }
+
       if (captainBeingBenched) {
         setConfirm({
           title:        'Captain benched',
@@ -442,8 +509,12 @@ export default function SquadScreen() {
           },
         });
       }
-    } catch (err) { console.error('Swap failed', err); }
-    finally { setSaving(false); }
+    } catch (err) {
+      console.error('Swap failed', err);
+      showToast('Lineup change failed — please try again.', 'error');
+    } finally {
+      setSaving(false);
+    }
   };
 
   const setCaptain = async () => {
@@ -1421,8 +1492,9 @@ export default function SquadScreen() {
                   {bench.map((player, bi) => {
                     const surname = player.name?.split(' ').slice(-1)[0]?.toUpperCase() ?? '?';
                     const posColor = player.position === 'GK' ? 'var(--pos-gk)' : player.position === 'DEF' ? 'var(--pos-def)' : player.position === 'MID' ? 'var(--pos-mid)' : 'var(--pos-fwd)';
-                    const isSelected = selectedPlayer?.id === player.id;
+                    const isSelected   = selectedPlayer?.id === player.id;
                     const isSwapTarget = swapMode && !isSelected;
+                    const isLocked     = player.isLineupLocked;
                     return (
                       <button
                         key={player.id}
@@ -1430,20 +1502,23 @@ export default function SquadScreen() {
                         style={{
                           width: '100%', display: 'flex', alignItems: 'center', gap: 12,
                           padding: '9px 16px',
-                          background: isSelected ? 'rgba(0,180,216,0.07)' : isSwapTarget ? 'rgba(0,180,216,0.03)' : 'rgba(255,255,255,0.015)',
+                          background: isSelected ? 'rgba(0,180,216,0.07)' : isSwapTarget && !isLocked ? 'rgba(0,180,216,0.03)' : 'rgba(255,255,255,0.015)',
                           borderBottom: '1px solid var(--rule)',
-                          borderLeft: isSelected ? '2px solid var(--cyan)' : isSwapTarget ? '2px solid rgba(0,180,216,0.3)' : '2px solid transparent',
-                          opacity: isSwapTarget ? 1 : 0.7,
-                          cursor: 'pointer', textAlign: 'left',
+                          borderLeft: isSelected ? '2px solid var(--cyan)' : isSwapTarget && !isLocked ? '2px solid rgba(0,180,216,0.3)' : '2px solid transparent',
+                          opacity: isLocked ? 0.4 : isSwapTarget ? 1 : 0.7,
+                          cursor: isLocked ? 'not-allowed' : 'pointer', textAlign: 'left',
                         }}
                       >
-                        <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 10, color: 'var(--mute)', width: 28, flexShrink: 0, textAlign: 'right' }}>S{bi + 1}</div>
+                        <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 10, color: 'var(--mute)', width: 28, flexShrink: 0, textAlign: 'right' }}>{isLocked ? '🔒' : `S${bi + 1}`}</div>
                         <div style={{ width: 7, height: 7, borderRadius: '50%', background: statusColor(player), flexShrink: 0 }} />
                         <div style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: 6 }}>
                           <span style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 14, color: 'var(--paper)', letterSpacing: '-0.01em', textTransform: 'uppercase', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{surname}</span>
                           <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 7, color: posColor, border: `1px solid ${posColor}50`, padding: '1px 4px', flexShrink: 0, letterSpacing: '0.1em' }}>{player.position}</span>
-                          {isSwapTarget && (
+                          {isSwapTarget && !isLocked && (
                             <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 7, color: 'var(--cyan)', border: '1px solid rgba(0,180,216,0.4)', padding: '1px 4px', flexShrink: 0, letterSpacing: '0.1em' }}>SWAP</span>
+                          )}
+                          {isLocked && (
+                            <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 7, color: 'var(--mute)', border: '1px solid rgba(255,255,255,0.12)', padding: '1px 4px', flexShrink: 0, letterSpacing: '0.1em' }}>LOCKED</span>
                           )}
                         </div>
                         <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 9, color: 'var(--mute)', flexShrink: 0, minWidth: 28, textAlign: 'right' }}>{(player.club ?? '').substring(0, 3).toUpperCase()}</div>

@@ -178,12 +178,15 @@ Deno.serve(async (req) => {
 
       // TDD-01: atomic RPC acquires SELECT FOR UPDATE lock on squad row,
       // re-validates ownership inside the lock, then applies the mutation.
+      // p_league_id + p_matchday_id enable transfer-limit enforcement (migration 106).
       const { data: xferResult, error: updateErr } = await supabase
         .rpc('execute_transfer_atomic', {
-          p_squad_id:  squad.id,
-          p_action:    'sell',
-          p_player_id: player_id,
-          p_price:     price,
+          p_squad_id:    squad.id,
+          p_action:      'sell',
+          p_player_id:   player_id,
+          p_price:       price,
+          p_league_id:   league_id,
+          p_matchday_id: activeMatchdayId,
         });
 
       if (updateErr || !xferResult?.ok) {
@@ -318,23 +321,26 @@ Deno.serve(async (req) => {
       }
       if (clubMax === null) clubMax = 999;
 
-      // TDD-01/TDD-11/96: atomic RPC acquires SELECT FOR UPDATE lock on squad row,
-      // re-validates budget, ownership, position cap, squad size, and club cap inside the lock.
+      // TDD-01/TDD-11/96/106: atomic RPC acquires SELECT FOR UPDATE lock on squad row,
+      // re-validates budget, ownership, position cap, squad size, club cap, and
+      // per-round transfer limit inside the lock.
       const { data: xferResult, error: updateErr } = await supabase
         .rpc('execute_transfer_atomic', {
-          p_squad_id:  squad.id,
-          p_action:    'buy',
-          p_player_id: player_id,
-          p_price:     price,
-          p_pos_limit: posLimit,   // TDD-11: position cap enforced inside the lock
-          p_squad_max: SQUAD_MAX,  // TDD-11: squad size enforced inside the lock
-          p_club_max:  clubMax,    // 96/105: dynamic cap — relaxes as cup clubs are eliminated
+          p_squad_id:    squad.id,
+          p_action:      'buy',
+          p_player_id:   player_id,
+          p_price:       price,
+          p_pos_limit:   posLimit,       // TDD-11: position cap enforced inside the lock
+          p_squad_max:   SQUAD_MAX,      // TDD-11: squad size enforced inside the lock
+          p_club_max:    clubMax,        // 96/105: dynamic cap — relaxes as cup clubs are eliminated
+          p_league_id:   league_id,      // 106: transfer-limit enforcement context
+          p_matchday_id: activeMatchdayId, // 106: transfer-limit enforcement context
         });
 
       if (updateErr || !xferResult?.ok) {
         const msg   = xferResult?.error ?? updateErr?.message ?? 'Transfer failed';
         const code  = xferResult?.code  ?? 'TRANSFER_FAILED';
-        const clientError = ['INSUFFICIENT_BUDGET','ALREADY_OWNED','SQUAD_FULL','POSITION_LIMIT','CLUB_LIMIT'].includes(code);
+        const clientError = ['INSUFFICIENT_BUDGET','ALREADY_OWNED','SQUAD_FULL','POSITION_LIMIT','CLUB_LIMIT','TRANSFER_LIMIT_REACHED'].includes(code);
         const status = clientError ? 400 : code === 'ALREADY_OWNED' ? 409 : 500;
         if (status === 500) {
           await logError(FN, 'error', 'Buy atomic failed', { user_id: user.id, league_id, player_id, error: msg });

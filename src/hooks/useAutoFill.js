@@ -198,9 +198,11 @@ export function useAutoFill(leagueId, squadData, fetchSquad, takenMap = {}, buy,
               errCode === 'WINDOW_CLOSED' ||
               errCode === 'WINDOW_LOCKED' ||
               errCode === 'TRANSFER_LOCKED' ||
+              errCode === 'TRANSFER_LIMIT_REACHED' ||
               errMsg.includes('Transfer window closed') ||
               errMsg.includes('Transfers locked') ||
               errMsg.includes('Transfer cost locked') ||
+              errMsg.includes('Transfer limit reached') ||
               errMsg.includes('Missing required fields')
             ) {
               criticalError = errMsg;

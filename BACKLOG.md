@@ -1,134 +1,57 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-06-01 (session 61 — Draft/Cup system redesign + transfer window unified design + starting XI design; PRs #261–266)  
+**Last Updated**: 2026-06-01 (session 62 — Gameplay Engine: transfer window unification + starting XI/bench; PRs #268–269)  
 **E2E Test Suite**: `platform.spec.js` (36 tests × 2 browsers) passing in CI ✅ — completes in ~3 min  
 **Live App**: https://wc-fantasy-football.vercel.app  
 **WC Kick-off**: 2026-06-11 19:00 UTC (Mexico vs South Africa) — **10 days away**
 
 ---
 
-## 🚧 NEXT SESSION — **[GAMEPLAY ENGINE]** Phase A: Transfer Window Unification + Config Table
+## ✅ Session 62 — Gameplay Engine (PRs #268–269)
 
-**Priority**: P0 — must complete before WC kick-off (2026-06-11)
-**Effort**: ~4–5h
-**Design docs**: [`TRANSFER_WINDOW_SYSTEM.md`](docs/architecture/TRANSFER_WINDOW_SYSTEM.md)
+### Phase A — Transfer Window Unification ✅ DONE
 
-### What to build
+**Migration 106** (`106_transfer_window_unification.sql`) — applied to production:
+- `squads.round_transfers JSONB DEFAULT '{}'` added — tracks `{matchday_id: count}` per manager
+- `enforce_transfer_window` trigger: early-exit for tournament leagues (no longer raises exception when no `transfer_windows` row exists)
+- `league_config` keys seeded for all 11 existing leagues: `transfers_per_round=3`, `transfer_reopen_hours=6`, `transfer_wildcard_round=null`
+- `get_transfer_window_status`: reads `transfer_reopen_hours` from `league_config` (was hardcoded `INTERVAL '6 hours'`)
+- `get_club_cap()`: reads tier thresholds from `league_config` (was hardcoded; now config-driven per league)
+- `execute_transfer_atomic()`: new optional params `p_league_id` + `p_matchday_id`; enforces `transfers_per_round` limit with wildcard-round bypass; increments `round_transfers` counter atomically
+- `create_league` RPC: seeds all 10 config keys at league creation time (no league ever starts missing config)
 
-#### Migration 106 — Config + transfer counting + trigger fix
+**`process-transfer` edge function** — deployed: passes `p_league_id` + `p_matchday_id` to `execute_transfer_atomic` for both BUY and SELL; `TRANSFER_LIMIT_REACHED` added to client-error list
 
-1. **Fix `get_club_cap()`** to read tier thresholds from `league_config` instead of hardcoded values (`club_cap_tier1_threshold`, `club_cap_tier1_value`, etc. already seeded in migration 104)
+**`useAutoFill.js`**: `TRANSFER_LIMIT_REACHED` added as fatal abort condition
 
-2. **Seed new `league_config` keys** for all existing leagues:
-   - `transfers_per_round = 3`
-   - `transfer_reopen_hours = 6`
-   - `transfer_wildcard_round = null`
+**`sync-fixtures` note**: already correct — MIN(kickoff_at) per round was already implemented; no change needed
 
-3. **Add `round_transfers JSONB DEFAULT '{}'`** to `squads` — tracks `{matchday_id: count}` of transfers used per round per manager
+### Phase B — Starting XI and Bench ✅ DONE
 
-4. **Fix `enforce_transfer_window` trigger** — add early-exit for tournament leagues:
-   ```sql
-   IF EXISTS (SELECT 1 FROM leagues WHERE id = NEW.league_id AND tournament_id IS NOT NULL) THEN
-     RETURN NEW;
-   END IF;
-   ```
+**Migration 107** (`107_starting_xi_and_bench.sql`) — applied to production:
+- `squads.starting_xi TEXT[] DEFAULT '{}'` — the 11 players that score this round
+- `squads.lineup_locks JSONB DEFAULT '{}'` — `{matchday_id: [player_ids]}` locked-out players
+- `league_config`: `lineup_lock_per_fixture=true` seeded for all leagues
+- `set_lineup(p_squad_id, p_player_out, p_player_in)` DB function — atomic swap with: ownership, lock-out, fixture-completion, formation-validity checks; points deduction if player subbed out after scoring
+- `lock_lineups_for_fixture(p_fixture_id)` DB function — marks players in live/finished fixtures as locked-in in `lineup_locks`
 
-5. **Update `get_transfer_window_status`** to read `transfer_reopen_hours` from `league_config` instead of hardcoded `INTERVAL '6 hours'`
+**`calculate-scores` edge function** — deployed as v19: scores `starting_xi` (not `players`); fallback to `players[0..10]` for legacy squads with empty `starting_xi`
 
-#### `execute_transfer_atomic` RPC update
+**`ingest-match-events` edge function** — deployed: calls `lock_lineups_for_fixture(fixture_id)` fire-and-forget after each ingest pass
 
-Add transfer limit enforcement inside the atomic RPC:
-- Read `transfers_per_round` from `league_config` for this league
-- Read `squads.round_transfers[current_matchday_id]`
-- Check `transfer_wildcard_round` — if current round matches, skip limit
-- If count >= limit → raise exception `TRANSFER_LIMIT_REACHED`
-- On success: increment `round_transfers[current_matchday_id]`
+**`SquadScreen.jsx`**:
+- `fetchSquad`: reads `starting_xi` + `lineup_locks` from DB; uses `starting_xi` for pitch/bench split; tracks `lockedIds` per matchday
+- `handleSwap`: replaced direct `squads.update` with `set_lineup` RPC; deduction warning modal if pitcher has scored; server-side error codes surfaced as toasts
+- Bench row: lock icon + "LOCKED" badge + greyed+disabled style for locked-out players
 
-#### `process-transfer` edge function update
-
-- Pass `current_matchday_id` to `execute_transfer_atomic` so it can update the counter
-
-#### `sync-fixtures` edge function update
-
-- For league-format rounds: set `deadline_at = kickoff_at of first fixture in the round`
-- This gives league-format the same automatic window behaviour as tournament (already automatic for tournament)
-
-#### League creation update (`create_league` RPC)
-
-- After inserting the league, query `matchday_deadlines` to count total rounds for the tournament
-- Set `transfer_wildcard_round = CEIL(total_rounds / 2)` for league-format leagues
-- Leave `null` for tournament/cup-format leagues
-
-### Acceptance criteria
-- [ ] Transfer limit enforced: a 4th transfer in a round is rejected with `TRANSFER_LIMIT_REACHED`
-- [ ] Wildcard round: unlimited transfers work on round N when `transfer_wildcard_round = N`
-- [ ] `transfer_reopen_hours = 3` (config update) → window reopens 3h after deadline, not 6h
-- [ ] Tournament league: trigger no longer raises exception on `transfers` table inserts
-- [ ] `get_club_cap()` returns 4 when active_count = 7 (reads config, not hardcoded)
-- [ ] League-format: `deadline_at` set correctly from first fixture kickoff per round
-
----
-
-## 🚧 NEXT SESSION — **[GAMEPLAY ENGINE]** Phase B: Starting XI and Bench
-
-**Priority**: P1 — needed for correct scoring before WC group stage ends
-**Effort**: ~6–8h
-**Design docs**: [`STARTING_XI_AND_BENCH.md`](docs/architecture/STARTING_XI_AND_BENCH.md)
-
-### What to build
-
-#### Migration 107 — Schema additions
-
-```sql
--- squads table
-ALTER TABLE squads ADD COLUMN starting_xi    TEXT[]  DEFAULT '{}';
-ALTER TABLE squads ADD COLUMN lineup_locks   JSONB   DEFAULT '{}';
--- (round_transfers added in Migration 106)
-
--- league_config seed
-INSERT INTO league_config (league_id, config_key, config_value) ...
-  ('lineup_lock_per_fixture', 'true'::jsonb)
-```
-
-#### `set_lineup` DB function
-
-Atomic swap of one player between XI and bench. Rules enforced:
-1. Player being subbed IN is owned by this manager
-2. Player being subbed IN is NOT in `lineup_locks[matchday_id]`
-3. Player being subbed IN's fixture has NOT completed this round
-4. Resulting `starting_xi` is formation-valid (position rules)
-5. If player being subbed OUT's fixture is `completed` → deduct their round points from `fantasy_points`
-6. Add player subbed OUT to `lineup_locks[matchday_id]`
-
-Uses `SELECT FOR UPDATE` on squad row.
-
-#### `calculate-scores` edge function update
-
-- Score only players in `squads.starting_xi` instead of `squads.players`
-- Fallback: if `starting_xi` is empty, use `players` (backwards compat for pre-Phase B squads)
-
-#### Lineup lock cron
-
-Runs every 5 minutes (piggyback on `ingest-match-events-live`):
-- Find fixtures that just went `live` or `completed`
-- For affected players in any `starting_xi`: mark them locked (add to `lineup_locks`)
-- No auto-sub logic
-
-#### Squad screen UI (`src/screens/SquadScreen.jsx`)
-
-- **Split view**: pitch view (11 starters) + bench row (4 players)
-- **Tap to swap**: tap bench player → pick XI player to replace → confirm
-- **Deduction warning modal**: "Moving [Name] to bench deducts [X] pts. Continue?"
-- **Lock icon**: on players whose fixture has started (cannot sub in; can sub out with deduction)
-- **Greyed bench players**: cannot be tapped if their fixture completed this round
-
-### Acceptance criteria
-- [ ] Only starting_xi players contribute to round total
-- [ ] Subbing out a scorer: correct pts deducted from `fantasy_points.total`
-- [ ] Cannot sub in a player whose fixture is completed this round
-- [ ] Cannot return a subbed-out player to XI same matchday
-- [ ] Formation constraint enforced on `set_lineup` (can't remove only GK)
-- [ ] Existing squads (no `starting_xi`) score correctly via fallback
+### Key technical facts for next session
+- `squads.round_transfers` shape: `{ "429-r2": 2, "429-r3": 0 }` — key is `matchday_id`; absent = 0
+- `squads.starting_xi` is TEXT[] (player UUIDs as strings); empty `{}` means "use fallback" for scoring
+- `squads.lineup_locks` shape: `{ "429-r2": ["player-uuid-1", "player-uuid-2"] }`
+- Transfer limit error code: `TRANSFER_LIMIT_REACHED` — raised in `execute_transfer_atomic`, surfaced as toast in MarketScreen
+- `set_lineup` auto-initialises `starting_xi` from `players[1..11]` if column is empty (safe for existing squads)
+- `lock_lineups_for_fixture` is fire-and-forget from ingest; harmless if it fails
+- Next migration: **108_**
 
 ---
 

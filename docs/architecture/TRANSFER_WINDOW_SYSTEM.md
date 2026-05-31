@@ -136,15 +136,15 @@ In practice all current leagues have a `tournament_id`, so the manual path is in
 
 | Component | Status |
 |---|---|
-| `get_transfer_window_status` reads config | ⏳ Phase A |
-| `execute_transfer_atomic` enforces `transfers_per_round` | ⏳ Phase A |
-| `round_transfers` counter on `squads` | ⏳ Phase A |
-| `transfer_wildcard_round` auto-set at creation | ⏳ Phase A |
-| `enforce_transfer_window` trigger guard | ⏳ Phase A |
-| `sync-fixtures` sets `deadline_at` for league-format | ⏳ Phase A |
+| `get_transfer_window_status` reads config | ✅ Migration 106 |
+| `execute_transfer_atomic` enforces `transfers_per_round` | ✅ Migration 106 |
+| `round_transfers` counter on `squads` | ✅ Migration 106 |
+| `transfer_wildcard_round` seeded null at creation | ✅ Migration 106 |
+| `enforce_transfer_window` trigger guard | ✅ Migration 106 |
+| `sync-fixtures` sets `deadline_at` for league-format | ✅ Already correct (MIN kickoff per round) |
 | Manual window path (`transfer_windows` table) | ✅ Exists (fallback only) |
-| Eliminated club restriction on buy | ✅ Shipped PR #262 |
-| Dynamic club cap on buy | ✅ Shipped PR #262 |
+| Eliminated club restriction on buy | ✅ PR #262 |
+| Dynamic club cap on buy | ✅ PR #262 |
 
 ---
 
@@ -156,4 +156,4 @@ In practice all current leagues have a `tournament_id`, so the manual path is in
 
 ---
 
-Last Updated: **2026-06-01**
+Last Updated: **2026-06-01** (session 62 — Phase A fully implemented)
