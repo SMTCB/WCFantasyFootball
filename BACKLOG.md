@@ -1,9 +1,31 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-05-30 (session 57 — AUDIT-58 admin/lifecycle operations audit: 10 findings; AUDIT-57 game logic review: 11 findings)  
+**Last Updated**: 2026-05-31 (session 58 — AUDIT-57/58 P0+P1 fixes: 3 P0s + 6 P1s resolved; migrations 97–98 deployed)  
 **E2E Test Suite**: `platform.spec.js` (36 tests × 2 browsers) passing in CI ✅ — completes in ~3 min  
 **Live App**: https://wc-fantasy-football.vercel.app  
-**WC Kick-off**: 2026-06-11 19:00 UTC (Mexico vs South Africa) — **12 days away**
+**WC Kick-off**: 2026-06-11 19:00 UTC (Mexico vs South Africa) — **11 days away**
+
+---
+
+## 📊 SESSION 58 PROGRESS (2026-05-31 — AUDIT-57/58 P0+P1 Fixes)
+
+**Goal**: Fix all P0 blockers and quick P1 wins from AUDIT-57 and AUDIT-58 before WC kick-off.
+
+### ✅ PR [#245](https://github.com/SMTCB/WCFantasyFootball/pull/245) — P0 + P1 Fixes (migrations 97–98)
+
+| Finding | Fix | Migration/File |
+|---------|-----|----------------|
+| AUDIT-58-A1 | RUN ALLOCATION now calls `triggerDraftAllocation()` (edge function) | CommissionerPanel.jsx |
+| AUDIT-57-01 / A7 | `resolve_bet` commissioner auth guard | migration 97 |
+| AUDIT-58-A2 | OPEN/CLOSE buttons hidden for WC leagues (deadline-controlled note shown) | CommissionerPanel.jsx |
+| AUDIT-57-02 | `submit_bet` squad ownership check | migration 98 |
+| AUDIT-57-06 | SquadScreen deadline query: ASC + `.gte(now)` | SquadScreen.jsx |
+| AUDIT-58-A3 | SeasonStepper derives live phase state from `league` prop | CommissionerPanel.jsx |
+| AUDIT-58-A6 | Draft deadline + window open/close times normalized via `toISOString()` | useCommissioner.js |
+| AUDIT-58-A8 | Score Recalc default fixture ID `''` (was `'test-live'`) | useCommissioner.js |
+| AUDIT-58-A10 | WHO PICKED WHAT denominator = `memberCount` (was `pending.length+2`) | CommissionerPanel.jsx |
+
+**Remaining open P1s from AUDIT-57/58**: AUDIT-57-03 (budget bets), AUDIT-57-04+05 (auction stuck), AUDIT-58-A5 (void bet), AUDIT-58-A3 partial (LifecycleOp card status labels), AUDIT-58-A4 (lifecycle preconditions), AUDIT-57-07 (auction wrong squad row).
 
 ---
 
@@ -35,7 +57,7 @@
 
 ### 🔴 P0 — Fix before any bet is resolved by a commissioner
 
-#### AUDIT-57-01 — `resolve_bet` has no authorization check (CRITICAL)
+#### AUDIT-57-01 — `resolve_bet` has no authorization check ✅ FIXED (session 58, migration 97)
 - **Files**: `supabase/migrations/84_resolve_bet_fix.sql:8`, `src/hooks/useCommissioner.js:348`
 - **Issue**: `resolve_bet(p_instance_id, p_answer)` is `SECURITY DEFINER` and `GRANT EXECUTE … TO authenticated` with no commissioner-role check inside the function. Any authenticated user — not just the commissioner — can call this RPC directly (e.g. via browser console or Postman) and resolve any bet with any answer, awarding rewards to whoever picked that answer.
 - **Client gating is not sufficient**: `useCommissioner.js` checks for the commissioner UI, but that's client-side only and trivially bypassed.
@@ -47,7 +69,7 @@
 
 ### 🟠 P1 — Fix in first week of pilot
 
-#### AUDIT-57-02 — `submit_bet` allows picking for another manager's squad (INTEGRITY)
+#### AUDIT-57-02 — `submit_bet` allows picking for another manager's squad ✅ FIXED (session 58, migration 98)
 - **File**: `supabase/migrations/83_submit_bet_fix.sql:8`
 - **Issue**: `submit_bet(p_squad_id, p_instance_id, p_answer)` is `SECURITY DEFINER` and does not verify the caller owns `p_squad_id`. A user can pass a different manager's `squad_id` and overwrite their bet pick (the `ON CONFLICT … DO UPDATE` will clobber it). `user_id = auth.uid()` is recorded, but the submission still lands on the other squad's record.
 - **Fix**: Add `IF NOT EXISTS (SELECT 1 FROM squads WHERE id = p_squad_id AND user_id = auth.uid()) THEN RETURN error 'Not authorised' END IF;` at the top of the function.
@@ -73,7 +95,7 @@
 - **Fix**: When resolution fails due to buyer budget, either: (a) demote to second-highest bidder if one exists (check `auction_bids` history), or (b) cancel the listing gracefully: `UPDATE auction_listings SET status='cancelled' WHERE id=p_listing_id`. Option (b) is the safe minimum.
 - **Effort**: ~30 min (migration)
 
-#### AUDIT-57-06 — SquadScreen shows wrong lock deadline (WINDOW INCONSISTENCY)
+#### AUDIT-57-06 — SquadScreen shows wrong lock deadline ✅ FIXED (session 58, PR #245)
 - **File**: `src/screens/SquadScreen.jsx:146-147`
 - **Issue**: SquadScreen fetches the active matchday deadline with `ORDER BY deadline_at DESC LIMIT 1` — the *furthest* future deadline — and uses it for both the displayed lock countdown and the squad-row lookup. `process-transfer` and `get_transfer_window_status` use the *nearest upcoming* deadline (`>= now`, `ASC`). BUG-E2E-02 already fixed `process-transfer` to use ASC but **SquadScreen was never updated**.
 - **Impact**: On a 7-round WC, the squad screen counts down to the Round 7 deadline (~mid-July) even when the Round 2 deadline is hours away. A manager sees "squad locks in 32 days" but transfer enforcement locks them out at the next deadline. The squad-row loaded may also be incorrect (furthest matchday_id), mitigated only by the line-179 fallback.
@@ -135,14 +157,14 @@
 
 ### 🔴 P0 — Critical lifecycle breakage
 
-#### AUDIT-58-A1 — RUN ALLOCATION button calls a non-existent RPC (BROKEN)
+#### AUDIT-58-A1 — RUN ALLOCATION button calls a non-existent RPC ✅ FIXED (session 58, PR #245)
 - **File**: `src/components/league/CommissionerPanel.jsx:1067`
 - **Issue**: `handleRunAllocation()` calls `supabase.rpc('run_draft_allocation', { p_league_id })`. **This function does not exist in any migration.** The real allocation logic lives in the `run-draft-lottery` edge function. `useCommissioner.triggerDraftAllocation()` ([:147](src/hooks/useCommissioner.js:147)) correctly calls that edge function — but the RUN ALLOCATION ↯ button wires to the inline `handleRunAllocation` instead and never calls `triggerDraftAllocation`. **Pressing the button throws "function run_draft_allocation does not exist" and the core one-way lifecycle step fails.**
 - **Fix**: Replace the inline `commAction(async () => supabase.rpc('run_draft_allocation', …))` in `LifecycleOps` with a call to `commissioner.triggerDraftAllocation()`, which already exists in the hook and calls the correct edge function.
 - **File change**: `src/components/league/CommissionerPanel.jsx:1064-1070` (LifecycleOps handleRunAllocation)
 - **Effort**: ~15 min
 
-#### AUDIT-58-A2 — Transfer window OPEN/CLOSE have no effect on actual transfer enforcement (CRITICAL DISCONNECT)
+#### AUDIT-58-A2 — Transfer window OPEN/CLOSE have no effect on actual transfer enforcement ✅ FIXED Option C (session 58, PR #245)
 - **Files**: `src/hooks/useCommissioner.js:85-105`, `supabase/functions/process-transfer/index.js:72-92`
 - **Issue**: The three period-control signals are fully disconnected:
 
@@ -165,7 +187,7 @@
 
 ### 🟠 P1 — Fix in first week of pilot
 
-#### AUDIT-58-A3 — Status pills on all 4 Lifecycle cards are hardcoded (not live state)
+#### AUDIT-58-A3 — Status pills on all 4 Lifecycle cards are hardcoded ✅ PARTIAL FIX (session 58, PR #245) — SeasonStepper now uses live league data; LifecycleOp card status labels still static (P1 remaining)
 - **File**: `src/components/league/CommissionerPanel.jsx:1098, 1131, 1156, 1177`
 - **Issue**: Every `LifecycleOp` card passes a literal status string — `status="CLOSED"`, `status="DEADLINE SET"`, `status="UNSEEDED"`, `status="UTILITY · ON-DEMAND"`. The spec (`docs/brand/admin-tab/LOGIC.md §3.1`) requires live state copy such as `"OPEN · CLOSES IN {duration}"`, `"SCHEDULED · OPENS {datetime}"`, etc. The Transfer Window card reads "CLOSED" even when the commissioner just opened it. The Draft card reads "DEADLINE SET" even before a deadline exists.
 - **Impact**: Commissioner cannot trust the panel as a diagnostic. After running each operation, the status label does not change.
@@ -189,7 +211,7 @@
 - **Migration needed**: `resolve_bet` may need a sibling `void_bet` RPC with commissioner auth check, or it can be a direct update via the client with an RLS policy that permits commissioner role. Either way add AUDIT-58-A7's auth guard at the same time.
 - **Effort**: ~1h (hook + migration/RLS)
 
-#### AUDIT-58-A6 — Timezone inconsistency: draft deadline and transfer windows stored without normalization
+#### AUDIT-58-A6 — Timezone inconsistency: draft deadline and transfer windows stored without normalization ✅ FIXED (session 58, PR #245)
 - **Files**: `src/hooks/useCommissioner.js:139-140` (draft deadline), `src/hooks/useCommissioner.js:86-88` (transfer window open)
 - **Issue**: Bet deadlines go through `new Date(deadline).toISOString()` before storage (line 312). But `setLeagueDraftDeadline` stores `draftDeadline` raw (the naive `datetime-local` string `YYYY-MM-DDTHH:mm`), and `openTransferWindow` stores `windowOpensAt` raw the same way. Postgres `timestamptz` interprets a timezone-less string as UTC — but a commissioner in GMT+1 entering "19:00" actually means 18:00 UTC. The draft deadline and window times will be off by the commissioner's UTC offset.
 - **Fix**: Normalize both values before storage: `new Date(draftDeadline).toISOString()` and `new Date(windowOpensAt/windowClosesAt).toISOString()`.
@@ -199,13 +221,13 @@
 
 ### 🟡 P2 — Monitor / post-pilot
 
-#### AUDIT-58-A7 — `resolve_bet` server authorization gap (duplicates AUDIT-57-01, reinforced here)
+#### AUDIT-58-A7 — `resolve_bet` server authorization gap ✅ FIXED (session 58, shared with AUDIT-57-01, migration 97)
 - **Files**: `supabase/migrations/84_resolve_bet_fix.sql`, `src/hooks/useCommissioner.js:345-359`
 - **Issue**: Carried from AUDIT-57-01. `resolve_bet` is SECURITY DEFINER + granted to `authenticated` with no commissioner-role check. The admin panel is the only UI surface, but any user can call the RPC directly. Since VOID (A5) will require the same pattern, both should be fixed in the same migration.
 - **Fix**: Add `IF NOT EXISTS (SELECT 1 FROM league_members WHERE league_id = v_league_id AND user_id = auth.uid() AND role = 'commissioner') THEN RAISE EXCEPTION 'unauthorized'; END IF;` inside `resolve_bet`.
 - **Effort**: ~30 min (shared migration with A5)
 
-#### AUDIT-58-A8 — Score Recalc defaults to placeholder fixture ID `'test-live'`
+#### AUDIT-58-A8 — Score Recalc defaults to placeholder fixture ID `'test-live'` ✅ FIXED (session 58, PR #245)
 - **File**: `src/hooks/useCommissioner.js:50`
 - **Issue**: `scoreFixtureId` is initialized to `'test-live'` — the input field is pre-filled with this non-real value. If a commissioner clicks RECALCULATE without changing the field, the `calculate-scores` edge function runs against `fixture_id='test-live'`. Depending on edge function behaviour (it may return 0 updates silently or error). The spec (§3.4) says the field should eventually be a typeahead; at minimum the default should be empty so RECALCULATE ↯ stays disabled until a value is provided.
 - **Fix**: Change initial state to `''` and ensure the button is disabled when `!scoreFixtureId` (already done in UI — just remove the default init value).
@@ -217,7 +239,7 @@
 - **Fix**: Remove or clearly mark the legacy functions. Consolidate into a single `createBet(data)` function.
 - **Effort**: ~45 min refactor (low priority; no runtime impact today)
 
-#### AUDIT-58-A10 — "WHO PICKED WHAT" denominator is nonsensical
+#### AUDIT-58-A10 — "WHO PICKED WHAT" denominator is nonsensical ✅ FIXED (session 58, PR #245)
 - **File**: `src/components/league/CommissionerPanel.jsx:933`
 - **Issue**: The sub-label reads `{betSubmissions.length}/{pending.length + 2}`. `pending.length + 2` is the count of unresolved bets plus 2 — not the number of managers or any meaningful denominator. Should be the league member count (e.g. `memberCount`), passed as a prop. The hardcoded "20 CLUBS · 14 MGRS" copy on the Cup card (:1163) is similarly static.
 - **Fix**: Pass `memberCount` into `ResolvePendingBets` (already passed to the parent `CommissionerPanel`). Replace `pending.length + 2` with `memberCount`. Update cup card copy to derive from league data.
