@@ -98,6 +98,10 @@ Design tokens, branding guidelines, and component specs.
 | [FORZAKIT-UI-Overhaul.md](docs/brand/FORZAKIT-UI-Overhaul.md) | UI redesign specs and component patterns | Layout changes, component updates, accessibility |
 | [FORZAKIT-Pitch-Fixes.md](docs/brand/FORZAKIT-Pitch-Fixes.md) | Formation display improvements and fixes | Visual rendering, responsiveness |
 | [tokens.css](docs/brand/tokens.css) | **CSS design tokens** — Use these for consistent styling | CSS custom properties (--gold, --ink, --cyan, etc) |
+| [admin-tab/LOGIC.md](docs/brand/admin-tab/LOGIC.md) | Admin tab behaviour spec — full wizard, lifecycle, resolve flows | Create-bet wizard, season stepper, resolve bets |
+| [admin-tab/COMMISSIONER_CONTROLS.md](docs/brand/admin-tab/COMMISSIONER_CONTROLS.md) | Season lifecycle tracker — stage logic and DB column mapping | Stage reference, sub-text copy, fallback behaviour |
+| [admin-tab/LIFECYCLE_OPERATIONS.md](docs/brand/admin-tab/LIFECYCLE_OPERATIONS.md) | Transfer window, Draft, Cup Phase, Score Recalculation | Status pills, preconditions, confirm dialogs |
+| [admin-tab/BETS_LOGIC.md](docs/brand/admin-tab/BETS_LOGIC.md) | Create Bet wizard and Resolve Bets full spec | Step validation, bet types, publishing side-effects, VOID |
 
 ### 📦 **docs/deployment/** — Launch & DevOps
 

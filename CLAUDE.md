@@ -552,14 +552,21 @@ Always create a new file — never modify existing migrations.
 | 100 | `100_auction_fixes.sql` | Session 58: place_bid budget guard; resolve_auction_listing stuck-listing cancel + matchday squad fix (AUDIT-57-04/05/07) |
 | 101 | `101_void_bet.sql` | Session 58: void_bet() RPC with commissioner auth guard (AUDIT-58-A5) |
 | 102 | `102_transfer_window_closed_gap.sql` | Session 58: get_transfer_window_status 6h recovery window for WC leagues (AUDIT-57-11) |
+| 103 | `103_gazette_policies.sql` | Session 59: INSERT policy on gazette_entries for commissioners (breaking news form) |
 
-**Next migration**: `103_`
+**Next migration**: `104_`
 
 **Key pipeline facts (2026-05-31):**
 - `calculate-scores` uses `scoring_rules` table (not `scoring_templates`) keyed by `tournament_id`
+- `calculate-scores` is deployed as **v18** (edge function, `verify_jwt: false`, CORS headers added in v17/v18)
+- `calculate-scores` writes a `gazette_entries` row (`entry_type='activity'`) per league after scoring — idempotent (deletes+reinserts for same matchday_id)
+- `calculate-scores` stores integer points: `Math.round(total)` — no decimals in `fantasy_points.total`
+- `fantasy_points` column for squad total is `total` (not `total_points`) — integer
 - `fantasy_points.matchday_id` format: `'{tournament_id}-r{round}'` e.g. `'426-r35'`
 - `matchday_deadlines.matchday_id` format: `'426-rN'` (canonical, written by `sync-fixtures`)
 - `bet_submissions` uses `bet_instance_id` column (not `bet_id`) — references `bet_instances(id)`
+- `gazette_entries.entry_type` enum: `draft_report`, `breaking_news`, `activity`, `auction_result`
+- `gazette_entries` INSERT: commissioners only (RLS policy, migration 103); SELECT: league members (is_league_member)
 - `squads` updatable columns (via RLS): `captain_id`, `joker_player_id`, `is_wildcard`, `is_triple_captain`
 
 ---
