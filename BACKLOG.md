@@ -1,9 +1,140 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-05-31 (session 58 — all AUDIT-57/58 findings resolved; migrations 97–102 deployed; TDD-17 hidden)  
+**Last Updated**: 2026-05-31 (session 59 — admin tab overhaul, RECAP fix, gazette scoring entries, calculate-scores CORS fix, migration 103)  
 **E2E Test Suite**: `platform.spec.js` (36 tests × 2 browsers) passing in CI ✅ — completes in ~3 min  
 **Live App**: https://wc-fantasy-football.vercel.app  
 **WC Kick-off**: 2026-06-11 19:00 UTC (Mexico vs South Africa) — **11 days away**
+
+---
+
+---
+
+## 🚀 OPEN FEATURES — NEXT SESSION PRIORITIES
+
+### [FEATURE] RECAP Tab — Cross-League Daily Digest + Per-League History toggle
+
+**Priority**: P2 — High value UX, fully event-driven, infrastructure already built  
+**Effort**: ~3–4h  
+**Status**: Not started — detailed spec below, no additional clarification needed
+
+#### What the user wants
+Transform the RECAP tab from a single-league matchday history into a dual-mode dashboard:
+
+- **Mode A — "MY DIGEST"** (default): Cross-league daily snapshot. Shows what happened across ALL the user's leagues since last login / in the past 7 days. Event-driven — only appears when something actually happened (scoring ran). This is the "not to miss this" view.
+- **Mode B — "THIS LEAGUE"**: The current per-league matchday history with round navigation. Already built and working — keep as-is.
+
+A toggle pill at the top of the RECAP tab switches between the two modes.
+
+#### Why the infrastructure is already there
+- `gazette_entries` table has an `activity` row written automatically by `calculate-scores` after every scored fixture. Each row has: `league_id`, `headline` (match result + GW leader), `bullets` (all managers ranked by GW pts), `full_data` (matchday_id, fixture_id, scores array), `published_at`.
+- `league_members` already tells us every league the user belongs to.
+- The gazette rendering code in `LeagueDetailView` already shows headline + bullets with a coloured badge.
+- All UI primitives (`HubSectionLabel`, `MgrTag`, `HubSectionLabel`, card patterns) exist.
+
+#### Mode A — My Digest: implementation spec
+
+**Query** (single call, no joins in JS):
+```sql
+SELECT ge.id, ge.league_id, ge.headline, ge.bullets, ge.full_data, ge.published_at,
+       l.name AS league_name
+FROM gazette_entries ge
+JOIN leagues l ON l.id = ge.league_id
+JOIN league_members lm ON lm.league_id = ge.league_id AND lm.user_id = auth.uid()
+WHERE ge.entry_type = 'activity'
+  AND ge.published_at > NOW() - INTERVAL '7 days'
+ORDER BY ge.published_at DESC
+```
+In Supabase JS:
+```js
+const { data } = await supabase
+  .from('gazette_entries')
+  .select('id, league_id, headline, bullets, full_data, published_at, leagues(name)')
+  .eq('entry_type', 'activity')
+  .gte('published_at', new Date(Date.now() - 7*86400000).toISOString())
+  .order('published_at', { ascending: false });
+// Filter to user's leagues via RLS — is_league_member(league_id) already does this
+```
+
+**UI card per entry:**
+```
+┌─────────────────────────────────────────────────────┐
+│  [SCORES] 2h ago            UCL FINAL 2026 — LIVE TEST │
+│  GW 15 — PSG 1–1 Arsenal — TestComm leads with 8 pts  │
+│  🥇 TestComm  8 pts this GW                            │
+│  🥈 s.t.c.braganca  8 pts this GW                     │
+└─────────────────────────────────────────────────────┘
+```
+- League name shown as a sub-tag (since entries span multiple leagues)
+- Headline bold, bullets below in MONO 9px
+- Clicking a card → navigates into that league (setActiveLeague + setView('recap') or similar)
+- Empty state: "Nothing to report — no matches in your leagues in the last 7 days"
+
+**Layout**: Simple vertical card list, same pattern as `LeagueDetailView` activity rail but full-width. No pagination needed (7-day window, small volume).
+
+#### Mode B — This League: already built
+The current `RecapView` (matchday pills + score table + fixture panel + player breakdown on click) stays exactly as-is. This is Mode B.
+
+#### Toggle component
+Add a pill toggle at the top of the RECAP tab, above the section header:
+```jsx
+// Two pills: "MY DIGEST" | "THIS LEAGUE"
+// default: "MY DIGEST"
+// state: const [recapMode, setRecapMode] = useState('digest')
+```
+
+Both pills in same horizontal bar style as the existing round pills in the score table. Active pill uses `var(--cyan)` border + bg.
+
+#### File structure
+New file: `src/components/league/DigestView.jsx` — contains the cross-league digest query + card rendering. Mount it conditionally inside the existing `view === 'recap'` block in `LeagueScreen.jsx`:
+
+```jsx
+{view === 'recap' && (
+  <RecapContainer
+    leagueId={activeLeague?.league_id}
+    tournamentId={activeLeague?.leagues?.tournament_id}
+    members={members}
+    currentUser={currentUser}
+  />
+)}
+```
+
+`RecapContainer` manages the `recapMode` toggle and renders either `<DigestView />` or `<RecapView />`.
+
+Or simpler: add the toggle + DigestView directly inside the existing `RecapView` — only adds one new state + one new data load.
+
+#### DB: no migration needed
+All required tables and RLS policies exist. The gazette INSERT policy (migration 103) is already deployed. The `gazette_entries` RLS policy `is_league_member(league_id)` already scopes reads to the user's leagues.
+
+#### Acceptance criteria
+- [ ] RECAP tab defaults to "MY DIGEST" view showing all recent scoring events across all user leagues
+- [ ] Each card shows: league name, match result, GW scores ranked by pts
+- [ ] Empty state shown when no activity in last 7 days
+- [ ] Clicking a card navigates into that league's RECAP (Mode B)
+- [ ] "THIS LEAGUE" toggle shows the existing per-league matchday history
+- [ ] Toggle persists within the session (resets on tab change is fine)
+- [ ] Works on desktop and mobile
+- [ ] No new migrations required
+
+---
+
+## 📊 SESSION 59 PROGRESS (2026-05-31 — Admin Tab, RECAP, Scoring pipeline)
+
+### Delivered
+- **Admin tab overhaul**: ? help overlays (COMMISSIONER CONTROLS, LIFECYCLE OPS, BET MANAGEMENT), section reorder (Lifecycle above Bets), BET MANAGEMENT outer separator, LEAGUE NEWS breaking-news form for commissioners, disabled onboarding popup
+- **RECAP tab fixes**: column name bug fixed (`total_points` → `total`), round ordering fixed (numeric not deadline-based), double-layout eliminated (JS `isMobile` state), player breakdown on click, `members` removed from effect deps (was causing race conditions)
+- **calculate-scores CORS fix**: OPTIONS preflight was returning 405; deployed v17/v18 with CORS headers → "Failed to fetch" resolved
+- **Integer scoring**: calculate-scores now stores `Math.round(total)` — no more decimal points in fantasy scores
+- **Gazette scoring entries**: calculate-scores v18 writes an `activity` gazette entry per league after each scored fixture — populates League Activity automatically
+- **League Activity**: now renders `bullets` array below headline; `activity` badge renamed `SCORES`
+- **Migrations**: 103 (gazette INSERT policy for commissioners)
+- **Docs**: `COMMISSIONER_CONTROLS.md`, `LIFECYCLE_OPERATIONS.md`, `BETS_LOGIC.md` in `docs/brand/admin-tab/`
+
+### Key technical facts (for next session)
+- `calculate-scores` deployed as **v18** (edge function, `verify_jwt: false`)
+- Scoring is **fully automatic** — `calculate-scores-live` cron (every 2 min for live fixtures) and `calculate-scores-post-match` (22:30 UTC daily for finished fixtures in past 24h). Manual button is for edge-case re-runs only.
+- `gazette_entries.entry_type = 'activity'` written by calculate-scores after scoring; one row per league per round (idempotent — replaces on re-run)
+- `fantasy_points.total` is integer; column name is `total` not `total_points`
+- Next migration: **104_**
 
 ---
 
