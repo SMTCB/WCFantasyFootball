@@ -29,27 +29,27 @@ Deno.serve(async (req) => {
     // Direct league call: verify caller is a commissioner of that league.
     // Cron mode (no league_id): originates from service role — no JWT needed.
     if (league_id) {
+      // DD-C4: always require a valid user JWT for direct league calls.
+      // Cron uses service-role key + empty body (no league_id) — it never reaches this branch.
       const authHeader = req.headers.get('Authorization');
-      if (authHeader) {
-        // Validate JWT and check commissioner role.
-        const userClient = createClient(SUPABASE_URL, ANON_KEY, {
-          global: { headers: { Authorization: authHeader } },
-        });
-        const { data: { user }, error: authErr } = await userClient.auth.getUser();
-        if (authErr || !user) return respond(401, { error: 'Unauthorized' });
+      if (!authHeader) return respond(401, { error: 'Unauthorized' });
 
-        const { data: membership } = await supabase
-          .from('league_members')
-          .select('role')
-          .eq('league_id', league_id)
-          .eq('user_id', user.id)
-          .maybeSingle();
+      const userClient = createClient(SUPABASE_URL, ANON_KEY, {
+        global: { headers: { Authorization: authHeader } },
+      });
+      const { data: { user }, error: authErr } = await userClient.auth.getUser();
+      if (authErr || !user) return respond(401, { error: 'Unauthorized' });
 
-        if (!membership || membership.role !== 'commissioner') {
-          return respond(403, { error: 'Forbidden — commissioner only' });
-        }
+      const { data: membership } = await supabase
+        .from('league_members')
+        .select('role')
+        .eq('league_id', league_id)
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (!membership || membership.role !== 'commissioner') {
+        return respond(403, { error: 'Forbidden — commissioner only' });
       }
-      // If no auth header this is a cron/service-role call — allow through.
 
       // Idempotency gate: if allocations already exist for this league+phase, skip.
       const { data: existing } = await supabase

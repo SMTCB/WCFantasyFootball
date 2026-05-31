@@ -58,6 +58,9 @@ Deno.serve(async (req) => {
 
         if (!fx || fx.status !== 'finished') { skipped++; continue; }
 
+        // DD-C11: skip fixtures with NULL scores (postponed/abandoned/API-gap)
+        if (fx.home_score === null || fx.away_score === null) { skipped++; continue; }
+
         // Derive correct answer key — format must match what BetCreatorPanel wrote to options
         const homeKey = `${inst.scope_ref}_home`;
         const drawKey = `${inst.scope_ref}_draw`;
