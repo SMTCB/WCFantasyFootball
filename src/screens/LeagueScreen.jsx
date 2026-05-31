@@ -178,6 +178,7 @@ export default function LeagueScreen() {
   const [tournaments,      setTournaments]      = useState([]);
   const [formLoading,      setFormLoading]      = useState(false);
   const [newLeague,        setNewLeague]        = useState(null);   // set after creation → shows invite card
+  const [showModeHelp,     setShowModeHelp]     = useState(false);  // ? modal for Classic vs Draft
 
   // Join-by-code state — U3: seed from ?joinCode= URL param (written by JoinRoute in App.jsx)
   const [joinCode,     setJoinCode]     = useState(() => searchParams.get('joinCode') ?? '');
@@ -709,8 +710,95 @@ export default function LeagueScreen() {
               <p className="text-[11px] text-text-secondary">Loading competitions…</p>
             )}
           </div>
+          {/* League Mode Help Modal */}
+          {showModeHelp && (
+            <div
+              onClick={() => setShowModeHelp(false)}
+              style={{
+                position: 'fixed', inset: 0, zIndex: 500,
+                background: 'rgba(0,0,0,0.75)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                padding: 16,
+              }}
+            >
+              <div
+                onClick={e => e.stopPropagation()}
+                style={{
+                  background: 'var(--ink-2, #111)',
+                  border: '1px solid rgba(255,255,255,0.1)',
+                  width: '100%', maxWidth: 520,
+                  maxHeight: '82vh', overflowY: 'auto',
+                  display: 'flex', flexDirection: 'column',
+                  boxShadow: '0 24px 60px rgba(0,0,0,0.6)',
+                }}
+              >
+                <div style={{ padding: '14px 18px', borderBottom: '1px solid rgba(255,255,255,0.08)', display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <span style={{ width: 3, height: 12, background: 'var(--cyan, #00b4d8)', flexShrink: 0 }} />
+                  <span style={{ fontFamily: 'monospace', fontSize: 10, letterSpacing: '.22em', color: 'var(--paper, #e8e8e8)', flex: 1, textTransform: 'uppercase' }}>League Mode — Classic vs Draft</span>
+                  <button onClick={() => setShowModeHelp(false)} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', cursor: 'pointer', fontSize: 18, lineHeight: 1 }}>✕</button>
+                </div>
+                <div style={{ padding: '18px 20px', display: 'flex', flexDirection: 'column', gap: 20 }}>
+                  {[
+                    {
+                      label: 'CLASSIC', color: 'rgba(255,255,255,0.6)',
+                      summary: 'All managers build freely. The same player can appear in multiple squads simultaneously.',
+                      rows: [
+                        ['Market', 'Fully open — buy any player at any time, no uniqueness rules.'],
+                        ['Setup', 'No draft required. Managers can start picking immediately after joining.'],
+                        ['Transfers', '5 per round, unlimited budget transfers at the season halfway point.'],
+                        ['Cup format', 'Club cap relaxes automatically as teams are eliminated. Cannot buy from knocked-out clubs.'],
+                        ['Best for', 'Casual groups, first-time leagues, tournaments where simplicity matters.'],
+                      ],
+                    },
+                    {
+                      label: 'DRAFT', color: 'var(--cyan, #00b4d8)',
+                      summary: 'Each player belongs to exactly one manager at a time. The season starts with a blind draft.',
+                      rows: [
+                        ['Draft', 'Managers submit a ranked wishlist of up to 30 players before the deadline — no position, club, or budget constraints during submission. The allocation engine resolves conflicts by lottery and assigns squads.'],
+                        ['After draft', 'Transfers are first-come-first-served from the remaining unallocated pool. No other manager can own the same player.'],
+                        ['Cup format', 'A second draft runs at the group → knockout transition. Club cap and player-repeat rules relax automatically as clubs are eliminated.'],
+                        ['Incomplete squad', 'If your wishlist runs out before 15 players are filled, you complete the squad from what\'s left — first come, first served.'],
+                        ['Best for', 'Competitive leagues where fairness and player uniqueness define the game.'],
+                      ],
+                    },
+                  ].map(({ label, color, summary, rows }) => (
+                    <div key={label} style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <span style={{ fontFamily: 'monospace', fontSize: 10, letterSpacing: '.2em', color, fontWeight: 700 }}>{label}</span>
+                        <span style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.08)' }} />
+                      </div>
+                      <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.75)', lineHeight: 1.5, margin: 0 }}>{summary}</p>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                        {rows.map(([k, v]) => (
+                          <div key={k} style={{ display: 'grid', gridTemplateColumns: '90px 1fr', gap: 10 }}>
+                            <span style={{ fontFamily: 'monospace', fontSize: 9, letterSpacing: '.14em', color: 'rgba(255,255,255,0.35)', paddingTop: 2, textTransform: 'uppercase' }}>{k}</span>
+                            <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.65)', lineHeight: 1.55 }}>{v}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                  <p style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', lineHeight: 1.5, margin: 0, borderTop: '1px solid rgba(255,255,255,0.07)', paddingTop: 14 }}>
+                    Regardless of mode: position rules always apply (1 GK, 3–5 DEF, 2–4 MID, 1–2 FWD) and the max 3 players per club rule applies to final squads in all formats.
+                  </p>
+                </div>
+                <div style={{ padding: '10px 18px', borderTop: '1px solid rgba(255,255,255,0.07)', display: 'flex', justifyContent: 'flex-end' }}>
+                  <button onClick={() => setShowModeHelp(false)} style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.15)', color: 'rgba(255,255,255,0.5)', padding: '6px 14px', fontSize: 9, letterSpacing: '.2em', cursor: 'pointer', fontFamily: 'monospace', textTransform: 'uppercase' }}>CLOSE</button>
+                </div>
+              </div>
+            </div>
+          )}
+
           <div className="flex flex-col gap-2">
-            <label className="text-[11px] font-semibold text-text-secondary uppercase tracking-wider">Format</label>
+            <div className="flex items-center gap-2">
+              <label className="text-[11px] font-semibold text-text-secondary uppercase tracking-wider">Format</label>
+              <button
+                type="button"
+                onClick={() => setShowModeHelp(true)}
+                title="What's the difference?"
+                style={{ width: 16, height: 16, borderRadius: '50%', border: '1px solid rgba(255,255,255,0.2)', background: 'transparent', color: 'rgba(255,255,255,0.4)', fontSize: 9, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontFamily: 'monospace' }}
+              >?</button>
+            </div>
             <div className="grid grid-cols-2 gap-3">
               {/* Classic */}
               <button
@@ -723,11 +811,11 @@ export default function LeagueScreen() {
                 }`}
               >
                 <span className="text-[11px] font-bold uppercase tracking-wider text-white">Classic</span>
-                <span className="text-[11px] leading-snug" style={{ color: 'var(--paper)' }}>Everyone builds freely — no player restrictions across squads.</span>
+                <span className="text-[11px] leading-snug" style={{ color: 'var(--paper)' }}>All managers build freely — the same player can appear in any squad.</span>
                 <ul className="flex flex-col gap-[3px]">
-                  <li className="text-[10px]" style={{ color: 'var(--mute)' }}>• Any player, any manager</li>
+                  <li className="text-[10px]" style={{ color: 'var(--mute)' }}>• No draft required · join and pick</li>
                   <li className="text-[10px]" style={{ color: 'var(--mute)' }}>• 5 transfers per round</li>
-                  <li className="text-[10px]" style={{ color: 'var(--mute)' }}>• Quick to set up</li>
+                  <li className="text-[10px]" style={{ color: 'var(--mute)' }}>• Unlimited window at halfway</li>
                 </ul>
               </button>
 
@@ -745,14 +833,17 @@ export default function LeagueScreen() {
                   <span className="text-[11px] font-bold uppercase tracking-wider text-white">Draft</span>
                   <span className="text-[9px] font-bold uppercase tracking-wider text-cyan border border-cyan/40 rounded px-1 py-[1px] leading-none">Recommended</span>
                 </div>
-                <span className="text-[11px] leading-snug" style={{ color: 'var(--paper)' }}>No two managers can own the same player.</span>
+                <span className="text-[11px] leading-snug" style={{ color: 'var(--paper)' }}>Each player owned by one manager — allocated by blind draft lottery.</span>
                 <ul className="flex flex-col gap-[3px]">
                   <li className="text-[10px]" style={{ color: 'var(--mute)' }}>• Submit ranked wishlist pre-season</li>
                   <li className="text-[10px]" style={{ color: 'var(--mute)' }}>• Lottery resolves contested picks</li>
-                  <li className="text-[10px]" style={{ color: 'var(--mute)' }}>• 5 transfers/round · unlimited at halfway</li>
+                  <li className="text-[10px]" style={{ color: 'var(--mute)' }}>• First-come-first-served after draft</li>
                 </ul>
               </button>
             </div>
+            <p className="text-[10px]" style={{ color: 'var(--mute)', marginTop: 2 }}>
+              Both modes: max 3 players per club · position rules always apply · club cap relaxes in cup tournaments
+            </p>
           </div>
           <button type="submit" disabled={formLoading || !leagueName.trim()} className="w-full mt-4 bg-cyan text-black font-bold py-4 uppercase tracking-wider disabled:opacity-50">
             {formLoading ? 'Creating…' : 'Start Season'}
