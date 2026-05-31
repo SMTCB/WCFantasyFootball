@@ -27,7 +27,9 @@
 
 **Session 58b (PR #246)**: AUDIT-57-03 ✅, AUDIT-57-04 ✅, AUDIT-57-05 ✅, AUDIT-57-07 ✅, AUDIT-58-A4 ✅, AUDIT-58-A5 ✅ — all remaining P1s resolved.
 
-**Still open (P2/P3)**: AUDIT-57-08 (LIVE auctions stat), AUDIT-57-09 (cancel after bid), AUDIT-57-10 (migration renumber), AUDIT-57-11 (window closed banner), AUDIT-58-A3 partial (LifecycleOp card status labels), AUDIT-58-A9 (dead bet code paths).
+**Session 58c (PR #247)**: AUDIT-57-08 ✅, AUDIT-57-09 ✅, AUDIT-58-A3 ✅ (full), AUDIT-58-A9 ✅, TDD-17 ✅.
+
+**Still open (P3 only)**: AUDIT-57-10 (migration renumber — tech debt), AUDIT-57-11 (window closed banner).
 
 ---
 
@@ -116,13 +118,13 @@
 
 ### 🟡 P2 — Fix before auction feature is actively promoted
 
-#### AUDIT-57-08 — "LIVE" auctions stat in Auction House always shows 0 (UI BUG)
+#### AUDIT-57-08 — "LIVE" auctions stat in Auction House always shows 0 ✅ FIXED (session 58c, PR #247)
 - **File**: `src/components/league/AuctionsView.jsx:15`
 - **Issue**: `auctions.filter(a => a.highest_bidder_id === mySquadId)` computes "auctions I'm winning". But `place_bid` sets `highest_bidder_id = auth.uid()` — a **user_id** — while `mySquadId` is a squad UUID. They can never match. The LIVE stat is always 0.
 - **Fix**: Either (a) compare `highest_bidder_id` to the current user's `auth.uid()` (pass `myUserId` prop alongside `mySquadId`), or (b) change `place_bid` to store the squad_id instead — but then `resolve_auction_listing` (which currently treats it as user_id) must also be updated. Option (a) is the minimal fix.
 - **Effort**: ~20 min
 
-#### AUDIT-57-09 — Seller can cancel a listing after bids have been placed (GAME LOGIC)
+#### AUDIT-57-09 — Seller can cancel a listing after bids have been placed ✅ FIXED (session 58c, PR #247)
 - **Files**: `src/hooks/useAuctions.js:54`, `src/components/AuctionCard.jsx:106`
 - **Issue**: `cancelListing` does a direct `UPDATE status='cancelled'` with no check for existing bids (`highest_bidder_id IS NOT NULL`). `AuctionCard` always renders the Cancel button for the seller. A seller can retract a player after a manager has outbid others, making auctions unreliable.
 - **Fix**: In `cancelListing`, either: (a) reject if `highest_bidder_id IS NOT NULL` (add DB-side check — currently there's no RPC for cancel, it's a direct update), or (b) hide the Cancel button in `AuctionCard` when `auction.highest_bidder_id` is truthy (`isMine && !auction.highest_bidder_id`).
@@ -235,7 +237,7 @@
 - **Fix**: Change initial state to `''` and ensure the button is disabled when `!scoreFixtureId` (already done in UI — just remove the default init value).
 - **Effort**: 5 min
 
-#### AUDIT-58-A9 — Dead / duplicate bet-creation code paths (MAINTENANCE RISK)
+#### AUDIT-58-A9 — Dead / duplicate bet-creation code paths ✅ FIXED (session 58c, PR #247)
 - **File**: `src/hooks/useCommissioner.js:180-322`
 - **Issue**: Four overlapping bet-create functions exist: `createBetDirect` (line 180), `createBetFromData` (line 288), `createBetInstance` (line 260), `autoGenerateBetOptions` (line 204). Only the wizard path (`createBetFromData`, called via `onPublish` in `CreateBetWizard`) is live. The others are exported in the hook's return value but unused by any component. `reward_type` is hard-coded `'points'` in `createBetFromData` but is a parameter in `createBetDirect`. If a future change adds budget-reward bets, the wrong function may be reached.
 - **Fix**: Remove or clearly mark the legacy functions. Consolidate into a single `createBet(data)` function.
@@ -379,7 +381,7 @@ SELECT pg_get_functiondef(oid) FROM pg_proc WHERE proname='resolve_auction_listi
 #### TDD-16 — Public squad read policy ✅ FIXED (session 55, PR #225)
 - `squads_public_read` policy (`USING (true)`) dropped via migration 95. Squad data (budget, player arrays) no longer readable by unauthenticated users.
 
-#### TDD-17 — H2H + Cup formats non-functional (no generator logic) (HIGH for those formats)
+#### TDD-17 — H2H + Cup formats non-functional ✅ HIDDEN FOR PILOT (session 58c, PR #247)
 - **Details**: `h2h_records` table exists but no function populates H2H matchups. Cup bracket generator is also absent. Both features are dead code paths.
 - **Action**: Add UI guard in `LeagueCreationWizard` — restrict to CLASSIC format only for the pilot, or add "coming soon" label on H2H/Cup. Prevents pilot users creating a broken league type.
 - **Effort**: ~30 min
