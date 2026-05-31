@@ -10,9 +10,8 @@ import { supabase } from '../../lib/supabase';
 const ENTRY_META = {
   draft_report:     { filter: 'GAME',   badge: 'DRAFT',    color: 'var(--gold)' },
   breaking_news:    { filter: 'GAME',   badge: 'NEWS',     color: 'var(--danger)' },
-  activity:         { filter: 'GAME',   badge: 'ACTIVITY', color: 'var(--cyan)' },
+  activity:         { filter: 'GAME',   badge: 'SCORES',   color: 'var(--positive)' },
   auction_result:   { filter: 'TRADES', badge: 'AUCTION',  color: 'var(--positive)' },
-  // future types (not yet in enum — added here so UI handles them when they land)
   rank_change:      { filter: 'GAME',   badge: 'RANKS',    color: 'var(--cyan)' },
   relaxation:       { filter: 'GAME',   badge: 'POOL',     color: 'var(--cyan)' },
   cup_elimination:  { filter: 'GAME',   badge: 'CUP',      color: 'var(--danger)' },
@@ -38,7 +37,7 @@ export default function LeagueDetailView({ leagueId, members, currentUser, membe
 
     supabase
       .from('gazette_entries')
-      .select('id, entry_type, headline, published_at')
+      .select('id, entry_type, headline, bullets, published_at')
       .eq('league_id', leagueId)
       .order('published_at', { ascending: false })
       .limit(30)
@@ -212,7 +211,7 @@ export default function LeagueDetailView({ leagueId, members, currentUser, membe
                   const meta = ENTRY_META[e.entry_type] ?? { badge: e.entry_type.toUpperCase(), color: 'var(--mute)' };
                   return (
                     <div key={e.id} style={{ padding: '12px 18px', borderBottom: '1px solid var(--rule)' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
                         <span style={{
                           fontFamily: MONO, fontSize: 8, letterSpacing: '.18em',
                           padding: '2px 5px', border: `1px solid ${meta.color}`,
@@ -222,9 +221,18 @@ export default function LeagueDetailView({ leagueId, members, currentUser, membe
                           {timeAgo(e.published_at)}
                         </span>
                       </div>
-                      <div style={{ fontFamily: "'Archivo', sans-serif", fontSize: 12, fontWeight: 600, color: 'var(--paper)', lineHeight: 1.35 }}>
+                      <div style={{ fontFamily: "'Archivo', sans-serif", fontSize: 12, fontWeight: 600, color: 'var(--paper)', lineHeight: 1.35, marginBottom: e.bullets?.length ? 6 : 0 }}>
                         {e.headline}
                       </div>
+                      {Array.isArray(e.bullets) && e.bullets.length > 0 && (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                          {e.bullets.map((b, i) => (
+                            <div key={i} style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.1em', lineHeight: 1.4 }}>
+                              {b}
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   );
                 })}

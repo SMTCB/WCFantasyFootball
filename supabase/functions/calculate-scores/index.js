@@ -511,13 +511,13 @@ async function rollupSquads(fixture_id, pointsLookup, tournament_id) {
     }
     // Wildcard applies to the whole squad total once — not per-player (L1.4)
     if (squad.is_wildcard) total *= 1.1;
-    total = Math.round(total * 100) / 100;
+    total = Math.round(total); // integer points — no decimals in fantasy
 
     // L3.6: accumulate per-fixture contributions in points_breakdown
     const existingBD = existingBDMap[squad.id] ?? {};
     const thisFixturePts = Math.round(
-      pitchPlayers.reduce((sum, pid) => sum + (pointsLookup[pid] ?? 0), 0) * 100
-    ) / 100;
+      pitchPlayers.reduce((sum, pid) => sum + (pointsLookup[pid] ?? 0), 0)
+    );
     fantasyPointsUpserts.push({
       squad_id:         squad.id,
       matchday_id:      roundMatchdayId,
@@ -561,7 +561,77 @@ async function rollupSquads(fixture_id, pointsLookup, tournament_id) {
     }
   }
 
+  // Write one gazette entry per league showing GW scores (fire-and-forget)
+  writeGazetteEntries(fixture_id, roundMatchdayId, fantasyPointsUpserts, squads).catch(e =>
+    console.warn('[calculate-scores] gazette write failed (non-critical):', e.message)
+  );
+
   return squads.length;
+}
+
+async function writeGazetteEntries(fixture_id, roundMatchdayId, fantasyPointsUpserts, squads) {
+  // Fetch fixture details for the headline
+  const { data: fix } = await supabase
+    .from('fixtures')
+    .select('home_team, away_team, home_score, away_score')
+    .eq('id', fixture_id)
+    .single();
+
+  // Fetch usernames for all users involved
+  const userIds = [...new Set(squads.map(s => s.user_id))];
+  const { data: users } = await supabase
+    .from('users')
+    .select('id, username')
+    .in('id', userIds);
+  const usernameMap = Object.fromEntries((users || []).map(u => [u.id, u.username || 'Unknown']));
+
+  // Build squad_id → GW total map
+  const gwMap = Object.fromEntries(fantasyPointsUpserts.map(fp => [fp.squad_id, fp.total ?? 0]));
+
+  const roundNum = String(roundMatchdayId).replace(/^.*-r/, '');
+  const medals = ['🥇', '🥈', '🥉'];
+
+  // Group squads by league and write one entry per league
+  const leagueMap = {};
+  for (const s of squads) {
+    if (!leagueMap[s.league_id]) leagueMap[s.league_id] = [];
+    leagueMap[s.league_id].push(s);
+  }
+
+  for (const [leagueId, leagueSquads] of Object.entries(leagueMap)) {
+    const ranked = leagueSquads
+      .map(s => ({ username: usernameMap[s.user_id], pts: gwMap[s.id] ?? 0 }))
+      .sort((a, b) => b.pts - a.pts);
+
+    const fixtureLabel = fix
+      ? `${fix.home_team} ${fix.home_score ?? '?'}–${fix.away_score ?? '?'} ${fix.away_team}`
+      : `Round ${roundNum}`;
+
+    const topName = ranked[0]?.username ?? '—';
+    const topPts  = ranked[0]?.pts ?? 0;
+
+    const headline = `GW ${roundNum} — ${fixtureLabel} — ${topName} leads with ${topPts} pts`;
+    const bullets  = ranked.map((r, i) =>
+      `${medals[i] ?? `${i + 1}.`} ${r.username}  ${r.pts} pts this GW`
+    );
+
+    // Delete any existing score entry for this matchday+league, then reinsert
+    // (safe to re-run: latest fixture in round always wins)
+    await supabase.from('gazette_entries')
+      .delete()
+      .eq('league_id', leagueId)
+      .eq('entry_type', 'activity')
+      .filter('full_data->>matchday_id', 'eq', roundMatchdayId);
+
+    await supabase.from('gazette_entries').insert({
+      league_id:    leagueId,
+      entry_type:   'activity',
+      headline,
+      bullets,
+      full_data:    { matchday_id: roundMatchdayId, fixture_id, scores: ranked },
+      published_at: new Date().toISOString(),
+    });
+  }
 }
 
 async function broadcastUpdate(fixture_id) {

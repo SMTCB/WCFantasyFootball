@@ -259,7 +259,7 @@ export default function RecapView({ leagueId, tournamentId, members, currentUser
                 {p.hasStats ? p.minutes : '—'}
               </span>
               <span style={{ fontFamily: DISPLAY, fontSize: 11, textAlign: 'right', color: p.pts !== null ? (p.pts > 0 ? 'var(--positive)' : p.pts < 0 ? 'var(--danger)' : 'var(--mute)') : 'var(--mute)' }}>
-                {p.pts !== null ? (p.pts > 0 ? `+${Math.round(p.pts * 10) / 10}` : Math.round(p.pts * 10) / 10) : (p.hasStats ? '0' : '—')}
+                {p.pts !== null ? Math.round(p.pts) : (p.hasStats ? '0' : '—')}
               </span>
             </div>
           );
