@@ -40,7 +40,9 @@ Detailed documentation of core systems and how they work.
 
 | File | Purpose | Key Sections |
 |------|---------|--------------|
-| [DRAFT_SYSTEM_DESIGN.md](docs/architecture/DRAFT_SYSTEM_DESIGN.md) | Draft lottery & transfer window rules engine | Lottery algorithm, transfer window phases, claim deadlines |
+| [DRAFT_SYSTEM_DESIGN.md](docs/architecture/DRAFT_SYSTEM_DESIGN.md) | Draft lottery, league modes (Classic/Draft), cup format, relaxation formulas | Allocation engine, no-repeat rules, club cap, two-phase draft |
+| [TRANSFER_WINDOW_SYSTEM.md](docs/architecture/TRANSFER_WINDOW_SYSTEM.md) | Unified transfer window model for all league and competition types | Auto open/close, config table, transfer limits, wildcard round |
+| [STARTING_XI_AND_BENCH.md](docs/architecture/STARTING_XI_AND_BENCH.md) | Starting XI selection, bench, points deduction, lineup change rules | set_lineup rules, lock mechanic, scoring model |
 | [FANTASY_POINTS_SCORING_LAYER.md](docs/architecture/FANTASY_POINTS_SCORING_LAYER.md) | Scoring formula, DB schema, point calculations | EPL point values, position multipliers, bonus rules |
 | [APP_DYNAMICS.md](docs/architecture/APP_DYNAMICS.md) | Live match updates, real-time subscriptions, Joker chip | Realtime architecture, match state machine |
 | [FORMATION_RULES.md](docs/architecture/FORMATION_RULES.md) | 11-player pitch validation rules | Position constraints, squad balance, constraints |
@@ -178,6 +180,8 @@ Root-level (critical, always referenced):
 
 docs/architecture/                 # System design
 ├── DRAFT_SYSTEM_DESIGN.md
+├── TRANSFER_WINDOW_SYSTEM.md
+├── STARTING_XI_AND_BENCH.md
 ├── FANTASY_POINTS_SCORING_LAYER.md
 ├── APP_DYNAMICS.md
 └── FORMATION_RULES.md
@@ -290,4 +294,4 @@ docs/archive/                      # Archived & consolidated docs
 - BACKLOG.md established as single source of truth for task management
 - All documentation now discoverable from DOCS_MAP.md
 
-Last Updated: **2026-05-28** (comprehensive documentation reorganization complete)
+Last Updated: **2026-06-01** (session 61 — added TRANSFER_WINDOW_SYSTEM.md, STARTING_XI_AND_BENCH.md; updated architecture table and file tree)
