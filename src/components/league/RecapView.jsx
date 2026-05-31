@@ -63,7 +63,6 @@ function PlayerBreakdown({ breakdown }) {
       </div>
     );
   }
-  const medals = ['🥇', '🥈', '🥉'];
   return (
     <div style={{ borderTop: '1px solid var(--rule)', background: 'var(--ink-2)' }}>
       <div style={{ display: 'grid', gridTemplateColumns: '32px 1fr 50px 50px', gap: 8, padding: '6px 24px', borderBottom: '1px solid rgba(255,255,255,.05)' }}>
