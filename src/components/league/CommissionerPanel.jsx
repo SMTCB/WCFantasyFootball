@@ -100,20 +100,28 @@ function HelpOverlay({ topic, onClose }) {
       title: 'LIFECYCLE OPERATIONS — HOW IT WORKS',
       sections: [
         {
+          heading: 'Classic vs Draft Mode',
+          body: 'Classic: all managers can hold the same players. No draft — whoever buys first, keeps it. Draft section is hidden for Classic leagues.\n\nDraft: each player belongs to one manager. Season starts with a blind draft — managers submit up to 30 preferred players (no constraints during submission). The allocation engine resolves conflicts and builds squads. After that, transfers are first-come-first-served from the remaining unallocated pool.',
+        },
+        {
           heading: 'Transfer Window',
           body: 'Open between gameweeks so managers can buy and sell on the market. Close at least 1 hour before the first kickoff. For World Cup / tournament leagues the window is controlled by matchday deadlines — the OPEN/CLOSE buttons have no effect (shown as DEADLINE-CONTROLLED).',
         },
         {
-          heading: 'Draft',
-          body: 'Set a pick deadline, then run the allocation engine after it passes. Allocation assigns 15 players per manager within a £100M budget (GK≤2, DEF≤5, MID≤5, FWD≤3). One-way — cannot be undone without a manual admin reset. The RUN ALLOCATION button stays disabled until the deadline has passed.',
+          heading: 'Group Stage Draft',
+          body: 'Set a pick deadline, then run allocation after it passes. Assigns 15 players per manager within £100M budget (GK≤2, DEF≤5, MID≤5, FWD≤3). One-way — cannot be undone. If you forget to run it, a cron fires automatically 4 hours before the first match.',
         },
         {
-          heading: 'Classic vs Draft Mode',
-          body: 'Classic: all managers can hold the same players. No draft, no uniqueness rules — whoever buys first, keeps it.\n\nDraft: each player belongs to one manager. Season starts with a blind draft — submit up to 30 preferred players (no constraints during submission). The allocation engine resolves conflicts and builds squads. After that, transfers are first-come-first-served from the remaining pool.',
+          heading: 'Knockout Draft (cup leagues)',
+          body: 'A second draft run at the group → knockout transition. Same mechanics as the group draft. Locked until group allocation is confirmed. Set a new deadline, managers submit 30 new picks from the surviving club pool, then run allocation.',
+        },
+        {
+          heading: 'Cup format rules (automatic)',
+          body: 'Eliminated clubs: managers cannot buy players from knocked-out clubs (existing holdings kept — they score 0). Club cap relaxes automatically as clubs exit: max 3 → 4 → 5 → no cap. In Draft mode, the no-repeat rule also relaxes as the player pool shrinks. All of this is automatic — no admin action needed.',
         },
         {
           heading: 'Score Recalculation',
-          body: 'Re-fetches stats from Forza Football and reapplies the scoring engine. Safe to run multiple times — it is idempotent. Use "Score Latest Round" after any completed matchday, or enter a specific fixture ID to fix a single match.',
+          body: 'Re-fetches stats from Forza Football and reapplies the scoring engine. Safe to run multiple times — idempotent. Use "Score Latest Round" after any completed matchday, or enter a specific fixture ID to fix a single match.',
         },
       ],
     },
