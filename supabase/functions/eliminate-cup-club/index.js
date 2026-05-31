@@ -1,8 +1,10 @@
 // Edge Function: eliminate-cup-club
-// Called by league admin when a club is knocked out of the cup.
-// 1. Marks the club eliminated in cup_active_clubs
-// 2. Recalculates pool stats
-// 3. Writes a gazette entry with the new pool size
+// Two call modes:
+//   1. Auto (cron): body = { mode: 'auto' }
+//      Loops over all leagues with active cup_active_clubs rows, calls
+//      sync_cup_eliminations() for each. No JWT required (service-role cron).
+//   2. Manual (commissioner): body = { league_id, club_id, club_name? }
+//      Eliminates a single named club, writes gazette + recalculates relaxation.
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { logError } from '../_shared/log.ts';
@@ -16,7 +18,47 @@ const supabase = createClient(SUPABASE_URL, SERVICE_KEY);
 
 Deno.serve(async (req) => {
   try {
-    const { league_id, club_id, club_name } = await req.json();
+    const body = await req.json().catch(() => ({}));
+    const { league_id, club_id, club_name, mode } = body;
+
+    // ── AUTO mode (cron) ──────────────────────────────────────────────────────
+    if (mode === 'auto') {
+      // Find all leagues that have at least one active cup_active_clubs row.
+      const { data: cupLeagues } = await supabase
+        .from('cup_active_clubs')
+        .select('league_id')
+        .is('eliminated_at', null);
+
+      const leagueIds = [...new Set((cupLeagues ?? []).map(r => r.league_id))];
+
+      if (!leagueIds.length) {
+        return respond(200, { message: 'No active cup leagues found', eliminated: 0 });
+      }
+
+      let totalEliminated = 0;
+      const results = [];
+
+      for (const lid of leagueIds) {
+        const { data: count, error } = await supabase
+          .rpc('sync_cup_eliminations', { p_league_id: lid });
+
+        if (error) {
+          await logError(FN, 'warning', `sync_cup_eliminations failed for league ${lid}`, { error: error.message });
+          results.push({ league_id: lid, error: error.message });
+        } else {
+          totalEliminated += (count ?? 0);
+          results.push({ league_id: lid, eliminated: count ?? 0 });
+          // Recalculate relaxation for any league where clubs were eliminated
+          if ((count ?? 0) > 0) {
+            await supabase.functions.invoke('calculate-relaxation', { body: { league_id: lid } });
+          }
+        }
+      }
+
+      return respond(200, { mode: 'auto', leaguesChecked: leagueIds.length, totalEliminated, results });
+    }
+
+    // ── MANUAL mode (commissioner) ────────────────────────────────────────────
     if (!league_id || !club_id) return respond(400, { error: 'league_id and club_id required' });
 
     // Verify caller is a commissioner of this league.
