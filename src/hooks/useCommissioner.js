@@ -27,11 +27,6 @@ async function invokeEdgeFunction(fnName, body) {
   }
 }
 
-// 3.2: slug→id at call-time; avoids hardcoded UUIDs that differ per environment
-async function templateIdForSlug(slug) {
-  const { data } = await supabase.from('bet_templates').select('id').eq('slug', slug).maybeSingle();
-  return data?.id ?? null;
-}
 
 export function useCommissioner(leagueId, tournamentId) {
   // ── Shared state ─────────────────────────────────────────────────────────
@@ -49,16 +44,6 @@ export function useCommissioner(leagueId, tournamentId) {
   // ── Score recalc ──────────────────────────────────────────────────────────
   const [scoreFixtureId, setScoreFixtureId] = useState('');
 
-  // ── Bet creation state (legacy — used by resolution panel) ───────────────
-  const [betTemplateId,  setBetTemplateId]  = useState('');
-  const [betTitle,       setBetTitle]       = useState('');
-  const [betPrompt,      setBetPrompt]      = useState('');
-  const [betDeadline,    setBetDeadline]    = useState('');
-  const [betRewardValue, setBetRewardValue] = useState('5');
-  const [betScopeType,   setBetScopeType]   = useState('matchday');
-  const [betScopeRef,    setBetScopeRef]    = useState('');
-  const [betOptionDraft, setBetOptionDraft] = useState('');
-  const [betOptions,     setBetOptions]     = useState([]);
 
   // ── Bet resolution ────────────────────────────────────────────────────────
   const [openBets,                 setOpenBets]                 = useState([]);
@@ -176,113 +161,6 @@ export function useCommissioner(leagueId, tournamentId) {
     }
   }, [leagueId]);
 
-  // ── Bet creation — new direct API used by BetCreatorPanel ────────────────
-  const createBetDirect = useCallback(async (betData) => {
-    const { template, title, prompt, options, deadline, rewardValue, rewardType, scopeType, scopeRef } = betData;
-    if (!title)             throw new Error('Enter a bet title.');
-    if (!prompt)            throw new Error('Enter a bet question/prompt.');
-    if (!deadline)          throw new Error('Set a submission deadline.');
-    if (options.length < 2) throw new Error('Add at least 2 answer options.');
-    const tplId = template ? await templateIdForSlug(template) : null;
-    const { error } = await supabase.from('bet_instances').insert({
-      league_id:    leagueId,
-      template_id:  tplId,
-      title,
-      prompt,
-      options,
-      deadline_at:  new Date(deadline).toISOString(),
-      reward_value: Number(rewardValue) || 5,
-      reward_type:  rewardType || 'points',
-      scope_type:   scopeType || 'matchday',
-      scope_ref:    scopeRef || null,
-    });
-    if (error) throw new Error(error.message);
-    await fetchOpenBets();
-  }, [leagueId, fetchOpenBets]);
-
-  // ── Bet creation — legacy auto-generate (fixed filters) ──────────────────
-  const autoGenerateBetOptions = useCallback(async () => {
-    if (!betTemplateId) {
-      setCommMsg({ type: 'err', text: 'Select a template to auto-generate options.' });
-      return;
-    }
-    try {
-      setCommLoading(true);
-      let generated = [];
-      if (betTemplateId === 'top_scorer' || betTemplateId === 'player_block') {
-        const { data: players } = await supabase
-          .from('players')
-          .select('id, name, position, club')
-          .eq('tournament_id', tournamentId || '426')
-          .in('position', ['FWD', 'MID'])
-          .order('price', { ascending: false })
-          .limit(8);
-        generated = (players || []).map(p => ({
-          key: p.id, label: p.name, meta: { club: p.club, pos: p.position },
-        }));
-      } else if (betTemplateId === 'match_result') {
-        let query = supabase
-          .from('fixtures')
-          .select('id, home_team, away_team, kickoff_at')
-          .eq('tournament_id', tournamentId || '426')
-          .eq('status', 'scheduled')
-          .order('kickoff_at', { ascending: true })
-          .limit(3);
-        if (betDeadline) query = query.lte('kickoff_at', new Date(betDeadline).toISOString());
-        const { data: fixtures } = await query;
-        generated = (fixtures || []).flatMap(f => [
-          { key: `${f.id}_home`, label: `${f.home_team} Win`, meta: {} },
-          { key: `${f.id}_draw`, label: 'Draw', meta: {} },
-          { key: `${f.id}_away`, label: `${f.away_team} Win`, meta: {} },
-        ]);
-        if (!generated.length) {
-          generated = [
-            { key: 'home_win', label: 'Home Win', meta: {} },
-            { key: 'draw',     label: 'Draw', meta: {} },
-            { key: 'away_win', label: 'Away Win', meta: {} },
-          ];
-        }
-      }
-      if (!generated.length) {
-        setCommMsg({ type: 'err', text: 'No options could be generated for this template.' });
-        return;
-      }
-      setBetOptions(generated);
-      setCommMsg({ type: 'ok', text: `Auto-generated ${generated.length} options.` });
-    } catch (err) {
-      setCommMsg({ type: 'err', text: err.message || 'Auto-generate failed.' });
-    } finally {
-      setCommLoading(false);
-    }
-  }, [betTemplateId, betDeadline, tournamentId]);
-
-  // ── Legacy create (still used by old form if any) ─────────────────────────
-  const createBetInstance = useCallback(() => commAction(async () => {
-    if (!betTitle)             throw new Error('Enter a bet title.');
-    if (!betPrompt)            throw new Error('Enter a bet prompt/question.');
-    if (!betDeadline)          throw new Error('Set a deadline.');
-    if (betOptions.length < 2) throw new Error('Add at least 2 answer options.');
-    const tplId = betTemplateId ? await templateIdForSlug(betTemplateId) : null;
-    const { error } = await supabase.from('bet_instances').insert({
-      league_id:    leagueId,
-      template_id:  tplId,
-      title:        betTitle,
-      prompt:       betPrompt,
-      options:      betOptions,
-      deadline_at:  new Date(betDeadline).toISOString(),
-      reward_value: Number(betRewardValue) || 5,
-      scope_type:   betScopeType,
-      scope_ref:    betScopeRef || null,
-    });
-    if (error) throw new Error(error.message);
-    setCommMsg({ type: 'ok', text: 'Bet instance created.' });
-    setBetTitle(''); setBetPrompt(''); setBetDeadline('');
-    setBetRewardValue('5'); setBetScopeType('matchday');
-    setBetScopeRef(''); setBetTemplateId(''); setBetOptions([]); setBetOptionDraft('');
-    await fetchOpenBets();
-  }), [commAction, leagueId, betTemplateId, betTitle, betPrompt, betDeadline,
-       betRewardValue, betScopeType, betScopeRef, betOptions, fetchOpenBets]);
-
   // Wizard-driven create: accepts pre-assembled data so wizard state doesn't
   // need to be synced into hook state before calling.
   const createBetFromData = useCallback((data) => commAction(async () => {
@@ -377,16 +255,7 @@ export function useCommissioner(leagueId, tournamentId) {
     openTransferWindow, closeTransferWindow,
     draftDeadline, setDraftDeadline, setLeagueDraftDeadline, triggerDraftAllocation,
     scoreFixtureId, setScoreFixtureId, triggerScores, triggerScoresLatestRound,
-    betTemplateId, setBetTemplateId,
-    betTitle, setBetTitle,
-    betPrompt, setBetPrompt,
-    betDeadline, setBetDeadline,
-    betRewardValue, setBetRewardValue,
-    betScopeType, setBetScopeType,
-    betScopeRef, setBetScopeRef,
-    betOptionDraft, setBetOptionDraft,
-    betOptions, setBetOptions,
-    autoGenerateBetOptions, createBetInstance, createBetDirect, createBetFromData,
+    createBetFromData,
     openBets, resolutionBetsLoading,
     selectedBetForResolution, setSelectedBetForResolution,
     betResolutionAnswer, setBetResolutionAnswer,

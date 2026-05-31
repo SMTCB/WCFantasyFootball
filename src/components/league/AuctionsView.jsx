@@ -1,7 +1,7 @@
 import AuctionCard from '../AuctionCard';
 import { MONO, DISPLAY } from './HubConstants';
 
-export default function AuctionsView({ auctions, auctionsLoading, name, mySquadId, myBudget, placeBid, cancelListing, sellNow, onToast }) {
+export default function AuctionsView({ auctions, auctionsLoading, name, mySquadId, myUserId, myBudget, placeBid, cancelListing, sellNow, onToast }) {
   return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: 'var(--ink)' }}>
       {/* Hero strip — title + stats, responsive */}
@@ -12,7 +12,7 @@ export default function AuctionsView({ auctions, auctionsLoading, name, mySquadI
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr' }}>
           {[
-            { k: 'LIVE',   v: auctions.filter(a => a.highest_bidder_id === mySquadId).length, tone: 'var(--danger)' },
+            { k: 'LIVE',   v: auctions.filter(a => a.highest_bidder_id === myUserId).length, tone: 'var(--danger)' },
             { k: 'LISTED', v: auctions.length,                                    tone: 'var(--gold)'   },
             { k: 'STATUS', v: auctionsLoading ? '…' : 'LIVE',                    tone: 'var(--cyan)'   },
           ].map((c, i) => (

@@ -52,11 +52,13 @@ export function useAuctions(leagueId, squadId) {
   }, [squadId, load]);
 
   const cancelListing = useCallback(async (auctionId) => {
+    // Only allow cancel when no bids have been placed — prevents rug-pulling bidders
     const { error } = await supabase
       .from('auction_listings')
       .update({ status: 'cancelled' })
       .eq('id', auctionId)
-      .eq('seller_id', squadId);
+      .eq('seller_id', squadId)
+      .is('highest_bidder_id', null);
     if (error) return { ok: false, error: error.message };
     await load();
     return { ok: true };

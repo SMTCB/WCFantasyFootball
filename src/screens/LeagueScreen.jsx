@@ -934,7 +934,7 @@ export default function LeagueScreen() {
              currentUser={currentUser}
              membersLoading={membersLoading}
              currentGW={currentGW}
-             onH2h={setH2hTarget}
+             onH2h={null}
              onViewManager={(mgr) => { setManagerTeamView(mgr); loadManagerRoster(mgr.user_id); }}
            />
          )}
@@ -1074,6 +1074,7 @@ export default function LeagueScreen() {
              auctionsLoading={auctionsLoading}
              name={name}
              mySquadId={mySquadId}
+             myUserId={user?.id}
              myBudget={mySquadBudget}
              placeBid={placeBid}
              cancelListing={cancelListing}

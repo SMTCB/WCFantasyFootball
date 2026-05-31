@@ -177,7 +177,7 @@ export default function LeagueDetailView({ leagueId, members, currentUser, membe
                   <div style={{ display: 'flex', gap: 4, justifyContent: 'flex-end' }}>
                     {!isMe && (
                       <>
-                        <button onClick={() => onH2h({ ...m, name: mName })} style={miniBtnStyle('var(--cyan)')}>H2H</button>
+                        {onH2h && <button onClick={() => onH2h({ ...m, name: mName })} style={miniBtnStyle('var(--cyan)')}>H2H</button>}
                         <button onClick={() => onViewManager({ user_id: m.user_id, name: mName })} style={miniBtnStyle('var(--mute)')}>VIEW</button>
                       </>
                     )}
