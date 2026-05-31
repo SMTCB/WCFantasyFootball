@@ -854,7 +854,7 @@ function CreateBetWizard({ onPublish, commLoading, memberCount, tournamentId, is
 // ─────────────────────────────────────────────────────────────────────────────
 // Resolve pending bets (Zone B right)
 // ─────────────────────────────────────────────────────────────────────────────
-function ResolvePendingBets({ openBets, resolutionBetsLoading, setSelectedBetForResolution, betResolutionAnswer, setBetResolutionAnswer, betSubmissions, answerGrouped, fetchBetSubmissions, resolveBet, commLoading, memberCount = 0 }) {
+function ResolvePendingBets({ openBets, resolutionBetsLoading, setSelectedBetForResolution, betResolutionAnswer, setBetResolutionAnswer, betSubmissions, answerGrouped, fetchBetSubmissions, resolveBet, voidBet, commLoading, memberCount = 0 }) {
   const [expandedId, setExpandedId] = useState(null);
 
   const pending = (openBets || []).filter(b => b.status !== 'resolved');
@@ -989,9 +989,10 @@ function ResolvePendingBets({ openBets, resolutionBetsLoading, setSelectedBetFor
                     <span style={{ flex: 1 }} />
                     <button
                       onClick={() => {
-                        if (!window.confirm(`Void "${b.title}"? No points will be awarded and all picks will be marked VOIDED.`)) return;
-                        // TODO: wire to voidBet when that function is added
+                        if (!window.confirm(`Void "${b.title}"? No points will be awarded and all picks will be cleared.`)) return;
+                        voidBet(b.id);
                       }}
+                      disabled={commLoading}
                       style={{ ...ghostBtn, fontSize: 9 }}
                     >VOID</button>
                     <button
@@ -1045,7 +1046,7 @@ function LifecycleOp({ title, status, statusTone = 'var(--mute)', sub, when, chi
 // ─────────────────────────────────────────────────────────────────────────────
 // Lifecycle operations (Zone C)
 // ─────────────────────────────────────────────────────────────────────────────
-function LifecycleOps({ commissioner, leagueId, tournamentId }) {
+function LifecycleOps({ commissioner, leagueId, tournamentId, league = null }) {
   const {
     commLoading, commAction, setCommMsg,
     windowOpensAt, setWindowOpensAt,
@@ -1061,6 +1062,13 @@ function LifecycleOps({ commissioner, leagueId, tournamentId }) {
   // The transfer_windows table is ignored by process-transfer for these leagues,
   // so OPEN/CLOSE buttons have no enforcement effect and would mislead the commissioner.
   const isDeadlineControlled = !!tournamentId;
+
+  // AUDIT-58-A4: precondition guards for one-way lifecycle operations.
+  const now = new Date();
+  const deadlinePassed = league?.draft_deadline && new Date(league.draft_deadline) <= now;
+  const allocationDone = league?.cup_phase && league.cup_phase !== 'pre_cup';
+  const allocationDisabled = commLoading || !deadlinePassed;
+  const cupDisabled        = commLoading || !allocationDone;
 
   const handleCloseNow = () => {
     if (!window.confirm('This stops all in-progress transfers immediately. Continue?')) return;
@@ -1152,7 +1160,12 @@ function LifecycleOps({ commissioner, leagueId, tournamentId }) {
                 <div style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.18em', color: 'var(--mute)', lineHeight: 1.6 }}>
                   ONCE DONE · 15 PLAYERS / MGR · £100M BUDGET · GK≤2 DEF≤5 MID≤5 FWD≤3
                 </div>
-                <button onClick={handleRunAllocation} disabled={commLoading} style={opBtnStyle('var(--gold)')}>RUN ALLOCATION ↯</button>
+                <button
+                  onClick={handleRunAllocation}
+                  disabled={allocationDisabled}
+                  title={allocationDisabled && !commLoading ? 'Draft deadline must pass before running allocation' : undefined}
+                  style={opBtnStyle('var(--gold)')}
+                >RUN ALLOCATION ↯</button>
               </div>
             }
           />
@@ -1172,7 +1185,12 @@ function LifecycleOps({ commissioner, leagueId, tournamentId }) {
                   <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.2em', color: 'var(--purple)' }}>20 CLUBS · 14 MGRS</span><br />
                   Each mgr will use a club at most once during cup rounds.
                 </div>
-                <button onClick={handleSeedCup} disabled={commLoading} style={{ ...opBtnStyle('var(--purple)', 'var(--paper)'), marginTop: 'auto' }}>SEED CUP CLUBS ↯</button>
+                <button
+                  onClick={handleSeedCup}
+                  disabled={cupDisabled}
+                  title={cupDisabled && !commLoading ? 'Run allocation before seeding the cup' : undefined}
+                  style={{ ...opBtnStyle('var(--purple)', 'var(--paper)'), marginTop: 'auto' }}
+                >SEED CUP CLUBS ↯</button>
               </div>
             }
           />
@@ -1739,7 +1757,7 @@ export default function CommissionerPanel({ commissioner, leagueId, tournamentId
     selectedBetForResolution, setSelectedBetForResolution,
     betResolutionAnswer, setBetResolutionAnswer,
     betSubmissions, answerGrouped,
-    fetchBetSubmissions, fetchOpenBets, resolveBet,
+    fetchBetSubmissions, fetchOpenBets, resolveBet, voidBet,
   } = commissioner;
 
   if (isMobile) {
@@ -1751,11 +1769,19 @@ export default function CommissionerPanel({ commissioner, leagueId, tournamentId
       windowTransfers, setWindowTransfers,
       openTransferWindow, closeTransferWindow,
       draftDeadline, setDraftDeadline, setLeagueDraftDeadline,
+      triggerDraftAllocation,
       scoreFixtureId, setScoreFixtureId, triggerScores, triggerScoresLatestRound,
     } = commissioner;
 
     const mobInput = { ...inputStyle };
     const mobBtn = { ...btnBase, width: '100%', fontSize: 12 };
+
+    // AUDIT-58-A4: precondition guards (same logic as desktop LifecycleOps)
+    const mobNow = new Date();
+    const mobDeadlinePassed = league?.draft_deadline && new Date(league.draft_deadline) <= mobNow;
+    const mobAllocationDone = league?.cup_phase && league.cup_phase !== 'pre_cup';
+    const mobAllocationDisabled = commLoading || !mobDeadlinePassed;
+    const mobCupDisabled        = commLoading || !mobAllocationDone;
 
     return (
       <div style={{ flex: 1, overflow: 'auto', background: 'var(--ink)', display: 'flex', flexDirection: 'column' }}>
@@ -1788,6 +1814,7 @@ export default function CommissionerPanel({ commissioner, leagueId, tournamentId
             answerGrouped={answerGrouped}
             fetchBetSubmissions={fetchBetSubmissions}
             resolveBet={resolveBet}
+            voidBet={voidBet}
             commLoading={commLoading}
             memberCount={memberCount}
           />
@@ -1832,14 +1859,24 @@ export default function CommissionerPanel({ commissioner, leagueId, tournamentId
             </div>
             <button onClick={setLeagueDraftDeadline} disabled={commLoading} style={{ ...mobBtn, background: 'transparent', color: 'var(--paper)', border: '1px solid var(--rule)' }}>SET DEADLINE</button>
             <div style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.18em', color: 'var(--mute)', lineHeight: 1.6 }}>15 PLAYERS / MGR · £100M · GK≤2 DEF≤5 MID≤5 FWD≤3</div>
-            <button onClick={() => { if (window.confirm('Run allocation for all managers? This cannot be undone without a manual reset.')) { commAction(async () => { const { error } = await supabase.rpc('run_draft_allocation', { p_league_id: leagueId }); if (error) throw new Error(error.message); setCommMsg({ type: 'ok', text: 'Allocation complete.' }); }); } }} disabled={commLoading} style={{ ...mobBtn, background: 'var(--gold)', color: 'var(--ink)' }}>RUN ALLOCATION ↯</button>
+            <button
+              onClick={() => { if (window.confirm('Run allocation for all managers? This cannot be undone without a manual reset.')) triggerDraftAllocation(); }}
+              disabled={mobAllocationDisabled}
+              title={mobAllocationDisabled && !commLoading ? 'Draft deadline must pass before running allocation' : undefined}
+              style={{ ...mobBtn, background: 'var(--gold)', color: 'var(--ink)' }}
+            >RUN ALLOCATION ↯</button>
           </MobLifecycleCard>
           </div>
 
           <div data-tour="comm-cup-phase">
           <MobLifecycleCard title="CUP PHASE" status="UNSEEDED" tone="var(--warn)" when="After allocation.">
             <div style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.18em', color: 'var(--mute)' }}>20 CLUBS · 14 MGRS · 1 CLUB / MGR / ROUND</div>
-            <button onClick={() => { if (window.confirm('Seed cup clubs? This cannot be undone for this season.')) { commAction(async () => { const { error } = await supabase.rpc('seed_cup_clubs', { p_league_id: leagueId }); if (error) throw new Error(error.message); setCommMsg({ type: 'ok', text: 'Cup clubs seeded.' }); }); } }} disabled={commLoading} style={{ ...mobBtn, background: 'var(--purple)', color: 'var(--paper)' }}>SEED CUP CLUBS ↯</button>
+            <button
+              onClick={() => { if (window.confirm('Seed cup clubs? This cannot be undone for this season.')) { commAction(async () => { const { error } = await supabase.rpc('seed_cup_clubs', { p_league_id: leagueId }); if (error) throw new Error(error.message); setCommMsg({ type: 'ok', text: 'Cup clubs seeded.' }); }); } }}
+              disabled={mobCupDisabled}
+              title={mobCupDisabled && !commLoading ? 'Run allocation before seeding the cup' : undefined}
+              style={{ ...mobBtn, background: 'var(--purple)', color: 'var(--paper)' }}
+            >SEED CUP CLUBS ↯</button>
           </MobLifecycleCard>
           </div>
 
@@ -1891,6 +1928,7 @@ export default function CommissionerPanel({ commissioner, leagueId, tournamentId
             answerGrouped={answerGrouped}
             fetchBetSubmissions={fetchBetSubmissions}
             resolveBet={resolveBet}
+            voidBet={voidBet}
             commLoading={commLoading}
             memberCount={memberCount}
           />
@@ -1898,7 +1936,7 @@ export default function CommissionerPanel({ commissioner, leagueId, tournamentId
       </div>
 
       {/* Zone C — Lifecycle ops */}
-      <LifecycleOps commissioner={commissioner} leagueId={leagueId} tournamentId={tournamentId} />
+      <LifecycleOps commissioner={commissioner} leagueId={leagueId} tournamentId={tournamentId} league={league} />
 
       {/* Tour replay */}
       <TourReplayButton onReplay={replayCommissionerTour} label="REPLAY ADMIN GUIDE" title="Replay the commissioner guide" />
