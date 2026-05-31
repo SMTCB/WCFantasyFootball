@@ -144,7 +144,7 @@ export function useOnboarding() {
   }, []);
 
   return {
-    showWizard:          !wizardDone,
+    showWizard:          false, // disabled — restore to: !wizardDone
     showSquadTour:       wizardDone && !squadDone,
     showMarketTour:      wizardDone && !marketDone,
     showLeagueTour:      wizardDone && !leagueDone,
