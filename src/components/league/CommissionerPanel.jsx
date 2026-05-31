@@ -15,11 +15,12 @@ const DISPLAY = "'Archivo Black', sans-serif";
 const BODY    = "'Archivo', sans-serif";
 
 // ── Inlined from HubShared (TDZ-safe copies) ─────────────────────────────────
-function HubSectionLabel({ label, sub, tone = 'var(--cyan)', right }) {
+function HubSectionLabel({ label, sub, tone = 'var(--cyan)', right, helpBtn }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 20px', borderBottom: '1px solid var(--rule)', background: 'var(--ink-2)', flexShrink: 0 }}>
       <span style={{ width: 3, height: 14, background: tone, flexShrink: 0 }} />
       <span style={{ fontFamily: MONO, fontSize: 11, color: 'var(--paper)', letterSpacing: '.22em' }}>{label}</span>
+      {helpBtn}
       {sub && <span style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.18em' }}>· {sub}</span>}
       <span style={{ flex: 1 }} />
       {right}
@@ -50,18 +51,19 @@ const ghostBtn = {
 };
 
 const helpBtnStyle = {
-  background: 'transparent',
-  border: '1px solid var(--rule)',
-  color: 'var(--mute)',
+  background: 'rgba(255,255,255,0.10)',
+  border: '1px solid rgba(255,255,255,0.30)',
+  color: 'var(--paper)',
   cursor: 'pointer',
-  width: 20,
-  height: 20,
+  width: 18,
+  height: 18,
   borderRadius: '50%',
   display: 'inline-flex',
   alignItems: 'center',
   justifyContent: 'center',
   fontFamily: MONO,
   fontSize: 10,
+  fontWeight: 700,
   letterSpacing: 0,
   flexShrink: 0,
   padding: 0,
@@ -1291,7 +1293,7 @@ function LifecycleOps({ commissioner, leagueId, tournamentId, league = null, onH
         label="LIFECYCLE OPERATIONS"
         sub="SEASON-STAGE CONTROLS"
         tone="var(--purple)"
-        right={onHelp && (
+        helpBtn={onHelp && (
           <button onClick={onHelp} style={helpBtnStyle} title="How do these controls work?">?</button>
         )}
       />
@@ -1308,14 +1310,14 @@ function LifecycleOps({ commissioner, leagueId, tournamentId, league = null, onH
             when="Open between gameweeks. Close 1h before the first MD kickoff."
             primary={
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                    <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.2em', color: 'var(--mute)' }}>OPENS</span>
-                    <input type="datetime-local" value={windowOpensAt} onChange={e => setWindowOpensAt(e.target.value)} style={inputStyle} />
+                    <span style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '.2em', color: 'var(--paper)' }}>OPENS</span>
+                    <input type="datetime-local" value={windowOpensAt} onChange={e => setWindowOpensAt(e.target.value)} style={{ ...inputStyle, colorScheme: 'dark', fontSize: 11 }} />
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                    <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.2em', color: 'var(--mute)' }}>CLOSES</span>
-                    <input type="datetime-local" value={windowClosesAt} onChange={e => setWindowClosesAt(e.target.value)} style={inputStyle} />
+                    <span style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '.2em', color: 'var(--paper)' }}>CLOSES</span>
+                    <input type="datetime-local" value={windowClosesAt} onChange={e => setWindowClosesAt(e.target.value)} style={{ ...inputStyle, colorScheme: 'dark', fontSize: 11 }} />
                   </div>
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
@@ -1409,10 +1411,8 @@ function LifecycleOps({ commissioner, leagueId, tournamentId, league = null, onH
                   <span style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.15em' }}>OR SPECIFIC FIXTURE</span>
                   <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.08)' }} />
                 </div>
-                <div style={{ display: 'flex', gap: 6 }}>
-                  <input type="text" value={scoreFixtureId} onChange={e => setScoreFixtureId(e.target.value)} placeholder="e.g. f-1219435455" style={{ ...inputStyle, flex: 1 }} />
-                  <button onClick={triggerScores} disabled={commLoading || !scoreFixtureId} style={{ ...opBtnStyle('var(--warn)'), cursor: (commLoading || !scoreFixtureId) ? 'not-allowed' : 'pointer', whiteSpace: 'nowrap' }}>RECALCULATE ↯</button>
-                </div>
+                <input type="text" value={scoreFixtureId} onChange={e => setScoreFixtureId(e.target.value)} placeholder="e.g. f-1219435455" style={inputStyle} />
+                <button onClick={triggerScores} disabled={commLoading || !scoreFixtureId} style={{ ...opBtnStyle('var(--warn)'), cursor: (commLoading || !scoreFixtureId) ? 'not-allowed' : 'pointer' }}>RECALCULATE ↯</button>
               </div>
             }
           />
@@ -1503,10 +1503,10 @@ function MobSectionHeader({ label, sub, tone, onHelp }) {
     <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '14px 18px 6px' }}>
       <span style={{ width: 3, height: 12, background: tone, flexShrink: 0 }} />
       <span style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '.22em', color: 'var(--paper)' }}>{label}</span>
-      {sub && <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.16em', color: 'var(--mute)' }}>· {sub}</span>}
       {onHelp && (
         <button onClick={onHelp} style={helpBtnStyle} title="How does this work?">?</button>
       )}
+      {sub && <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.16em', color: 'var(--mute)' }}>· {sub}</span>}
     </div>
   );
 }
@@ -1999,12 +1999,12 @@ export default function CommissionerPanel({ commissioner, leagueId, tournamentId
           <div data-tour="comm-transfer-window">
           <MobLifecycleCard title="TRANSFER WINDOW" status="CLOSED" tone="var(--danger)" when="Open between gameweeks. Close 1h before MD kickoff.">
             <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-              <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.2em', color: 'var(--mute)' }}>OPENS</span>
-              <input type="datetime-local" value={windowOpensAt} onChange={e => setWindowOpensAt(e.target.value)} style={mobInput} />
+              <span style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '.2em', color: 'var(--paper)' }}>OPENS</span>
+              <input type="datetime-local" value={windowOpensAt} onChange={e => setWindowOpensAt(e.target.value)} style={{ ...mobInput, colorScheme: 'dark', fontSize: 11 }} />
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-              <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.2em', color: 'var(--mute)' }}>CLOSES</span>
-              <input type="datetime-local" value={windowClosesAt} onChange={e => setWindowClosesAt(e.target.value)} style={mobInput} />
+              <span style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '.2em', color: 'var(--paper)' }}>CLOSES</span>
+              <input type="datetime-local" value={windowClosesAt} onChange={e => setWindowClosesAt(e.target.value)} style={{ ...mobInput, colorScheme: 'dark', fontSize: 11 }} />
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
               <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.2em', color: 'var(--mute)' }}>LIMIT · BLANK = UNLIMITED</span>
@@ -2057,10 +2057,10 @@ export default function CommissionerPanel({ commissioner, leagueId, tournamentId
           <MobLifecycleCard title="SCORE RECALCULATION" status="UTILITY" tone="var(--mute)" when="Anytime. Safe.">
             <button onClick={triggerScoresLatestRound} disabled={commLoading} style={{ ...mobBtn, background: 'var(--positive)', color: 'var(--ink)' }}>SCORE LATEST ROUND ↯</button>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginTop: 4 }}>
-              <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.2em', color: 'var(--mute)' }}>SPECIFIC FIXTURE ID</span>
+              <span style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '.2em', color: 'var(--paper)' }}>SPECIFIC FIXTURE ID</span>
               <input type="text" value={scoreFixtureId} onChange={e => setScoreFixtureId(e.target.value)} placeholder="e.g. f-1219435455" style={mobInput} />
             </div>
-            <button onClick={triggerScores} disabled={commLoading || !scoreFixtureId} style={{ ...mobBtn, background: 'var(--warn)', color: 'var(--ink)' }}>RECALCULATE ↯</button>
+            <button onClick={triggerScores} disabled={commLoading || !scoreFixtureId} style={{ ...mobBtn, background: commLoading || !scoreFixtureId ? 'var(--ink-3)' : 'var(--warn)', color: commLoading || !scoreFixtureId ? 'var(--mute)' : 'var(--ink)', cursor: commLoading || !scoreFixtureId ? 'not-allowed' : 'pointer' }}>RECALCULATE ↯</button>
           </MobLifecycleCard>
           </div>
         </div>
@@ -2131,7 +2131,7 @@ export default function CommissionerPanel({ commissioner, leagueId, tournamentId
         label="BET MANAGEMENT"
         sub="CREATE & RESOLVE PREDICTIONS"
         tone="var(--cyan)"
-        right={
+        helpBtn={
           <button onClick={() => setHelpModal('bets')} style={helpBtnStyle} title="How does bet management work?">?</button>
         }
       />
