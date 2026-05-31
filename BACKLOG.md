@@ -1,9 +1,47 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-06-01 (session 60 — RECAP MY DIGEST dashboard: all gazette types + transfers, PRs #258–260)  
+**Last Updated**: 2026-06-01 (session 61 — Draft/Cup system redesign: cup phase removal, league_mode, knockout draft, club cap relaxation, auto club elimination, PRs #261–263)  
 **E2E Test Suite**: `platform.spec.js` (36 tests × 2 browsers) passing in CI ✅ — completes in ~3 min  
 **Live App**: https://wc-fantasy-football.vercel.app  
-**WC Kick-off**: 2026-06-11 19:00 UTC (Mexico vs South Africa) — **11 days away**
+**WC Kick-off**: 2026-06-11 19:00 UTC (Mexico vs South Africa) — **10 days away**
+
+---
+
+## ✅ Session 61 — Draft/Cup System Redesign (PRs #261–263)
+
+### What shipped
+
+**Design decisions (documented in `docs/architecture/DRAFT_SYSTEM_DESIGN.md`):**
+- Two independent axes: **league mode** (Classic vs Draft) × **tournament format** (League vs Cup)
+- Draft submission: no constraints during pick submission — position/club/budget enforced only at allocation time
+- Two relaxation formulas: player-repeat (Draft mode only) and club-cap (both modes, cup format)
+- Club elimination: API-derived, safety guard prevents false eliminations on fixture data lag
+- Second draft (Knockout) for cup format, same mechanics as group draft
+
+**PR #261 — Phase 1:**
+- Migration 104: `league_mode` column (classic/draft), `knockout_draft_deadline`, `phase` column on draft tables, `get_club_cap()` DB function, club-cap config defaults
+- `run-draft-lottery` edge function: phase-aware allocation, idempotency per phase, auto-sets `cup_phase` after allocation, auto-seeds cup clubs on group allocation
+- Admin UI: removed "Seed Cup Clubs" card, Season Stepper is now mode-aware (Classic=2 stages, Draft=4), Draft section hidden for Classic leagues, help modal updated
+
+**PR #262 — Phase 2:**
+- Migration 105: `league_mode` data fixed (all leagues now correct), `trg_sync_league_mode` trigger keeps it in sync with `format` going forward, `sync_cup_eliminations()` function, `sync-cup-eliminations` cron (every 6h)
+- `process-transfer`: eliminated-club buy restriction (CLUB_ELIMINATED error code), dynamic club cap via `get_club_cap()` replacing hardcoded 3
+- Admin UI: `isDraft` check fixed to use `league.format === 'noduplicate'`, Knockout Draft admin card added (locked until group allocation done)
+
+**PR #263 — Phase 2 completion:**
+- `eliminate-cup-club` edge function: added `mode: 'auto'` handler for cron calls — loops over all cup leagues, calls `sync_cup_eliminations()` per league, triggers relaxation recalculation for affected leagues
+
+**Docs updated this session:**
+- `docs/architecture/DRAFT_SYSTEM_DESIGN.md` — fully rewritten
+- `docs/brand/admin-tab/LOGIC.md` — cup phase section removed, knockout draft added, mode-aware stepper documented
+- `docs/brand/admin-tab/LIFECYCLE_OPERATIONS.md` — rewritten: cup phase section removed, knockout draft section added, cup format rules section added
+- `docs/brand/admin-tab/COMMISSIONER_CONTROLS.md` — rewritten: mode-aware stage sets documented
+
+### What remains (next session)
+- Auto-run cron: 4h before first match, fire allocation if deadline not set (currently only fires if deadline passed with pending submissions)
+- League creation: `league_mode` is derived from `format` via DB trigger — no UI change needed for Classic/Draft selection (already present in the create form as "Classic" / "Draft" format options)
+- Mobile Knockout Draft card (currently desktop only)
+- E2E test coverage for draft phase mechanics
 
 ---
 
