@@ -169,17 +169,43 @@ Side effects:
 
 ## 4. Season-state stepper
 
-Pure presentation, but it's the **source of truth** for "what stage are we in":
+Pure presentation, but it's the **source of truth** for "what stage are we in".
 
-| Phase | Condition for `done` | Condition for `active` |
-|---|---|---|
-| TRANSFER WINDOW | At least one window has opened and closed this season. | A window is currently open. |
-| DRAFT DEADLINE | Deadline is set AND has passed. | Deadline is set AND in the future. |
-| ALLOCATION | Allocation engine has run successfully. | Deadline has passed but allocation has not run. |
-| CUP SEEDED | Cup pool is seeded. | Allocation done, cup not yet seeded. |
-| IN SEASON | First fixture of the season has kicked off. | Cup seeded AND first kickoff hasn't happened. |
+### Implementation
 
-Only **one** phase should be `active` at a time. Multiple `done` phases stack until the active one. Past `active` phases become `done` once the next becomes `active`.
+`computePhases(league, memberCount)` in `CommissionerPanel.jsx` derives a linear current-stage index from the `leagues` row. Only one phase is `active` at a time; all prior phases are `done`; all later phases are `todo`.
+
+```
+currentIdx = 0  (TRANSFERS)
+  → 1  when  league.draft_deadline  IS NOT NULL  (deadline set, even if future)
+  → 2  when  draft_deadline ≤ NOW()              (deadline has passed)
+  → 3  when  cup_phase ≠ 'pre_cup'               (cup pool seeded)
+  → 4  when  cup_phase IN ('group_stage', 'pre_elimination', 'elimination', 'final')
+```
+
+### DB column mapping
+
+| Phase | `done` condition | `active` condition | Source column |
+|---|---|---|---|
+| TRANSFER WINDOW | `currentIdx > 0` | `currentIdx === 0` | `leagues.transfers_open` (sub text only) |
+| DRAFT DEADLINE | `draft_deadline` past | `draft_deadline` set & future | `leagues.draft_deadline` |
+| ALLOCATION | `cup_phase ≠ 'pre_cup'` | `draft_deadline` past, cup not yet seeded | derived |
+| CUP SEEDED | in-season phase | `cup_phase ≠ 'pre_cup'` and not yet in-season | `leagues.cup_phase` |
+| IN SEASON | (terminal) | `cup_phase` in in-season set | `leagues.cup_phase` |
+
+### Sub-text per phase (when active or prior)
+
+| Phase | Sub text |
+|---|---|
+| TRANSFER WINDOW | `"Open · transfers enabled"` or `"Closed"` from `transfers_open` |
+| DRAFT DEADLINE | Formatted `draft_deadline` timestamp, or `"Not set"` |
+| ALLOCATION | `"Squads allocated"` / `"Processing…"` / `"Awaiting draft"` |
+| CUP SEEDED | `cup_phase` value formatted (`GROUP STAGE` etc), or `"Pool ready · run when set"` |
+| IN SEASON | `"Live"` or `"Awaiting cup seed"` |
+
+### Fallback
+
+If `league` is `null` (no active league loaded), both steppers render with demo/hardcoded phase data so the component never crashes.
 
 ---
 

@@ -47,7 +47,7 @@ export function useCommissioner(leagueId, tournamentId) {
   const [draftDeadline, setDraftDeadline] = useState('');
 
   // ── Score recalc ──────────────────────────────────────────────────────────
-  const [scoreFixtureId, setScoreFixtureId] = useState('test-live');
+  const [scoreFixtureId, setScoreFixtureId] = useState('');
 
   // ── Bet creation state (legacy — used by resolution panel) ───────────────
   const [betTemplateId,  setBetTemplateId]  = useState('');
@@ -83,8 +83,8 @@ export function useCommissioner(leagueId, tournamentId) {
 
   // ── Transfer window ───────────────────────────────────────────────────────
   const openTransferWindow = useCallback(() => commAction(async () => {
-    const opens  = windowOpensAt  || new Date().toISOString();
-    const closes = windowClosesAt || new Date(Date.now() + 48 * 3600 * 1000).toISOString();
+    const opens  = windowOpensAt  ? new Date(windowOpensAt).toISOString()  : new Date().toISOString();
+    const closes = windowClosesAt ? new Date(windowClosesAt).toISOString() : new Date(Date.now() + 48 * 3600 * 1000).toISOString();
     const { error } = await supabase.from('transfer_windows').insert({
       league_id:           leagueId,
       opens_at:            opens,
@@ -137,7 +137,7 @@ export function useCommissioner(leagueId, tournamentId) {
   const setLeagueDraftDeadline = useCallback(() => commAction(async () => {
     if (!draftDeadline) throw new Error('Enter a deadline date/time.');
     const { error } = await supabase.from('leagues')
-      .update({ draft_deadline: draftDeadline })
+      .update({ draft_deadline: new Date(draftDeadline).toISOString() })
       .eq('id', leagueId);
     if (error) throw new Error(error.message);
     setCommMsg({ type: 'ok', text: 'Draft deadline set.' });

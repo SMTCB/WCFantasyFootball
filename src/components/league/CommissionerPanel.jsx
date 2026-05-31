@@ -58,6 +58,35 @@ function fmtKickoff(iso) {
   });
 }
 
+// Derive season stepper phases from real league data.
+// Returns null if no league data is available (callers fall back to demo phases).
+function computePhases(league, memberCount = 0) {
+  if (!league) return null;
+
+  const now = new Date();
+  const hasDraftDeadline = !!league.draft_deadline;
+  const deadlinePassed = hasDraftDeadline && new Date(league.draft_deadline) <= now;
+  const cupSeeded = league.cup_phase && league.cup_phase !== 'pre_cup';
+  const inSeason = ['group_stage', 'pre_elimination', 'elimination', 'final'].includes(league.cup_phase);
+
+  // Linear current-stage index
+  let currentIdx = 0;
+  if (inSeason)            currentIdx = 4;
+  else if (cupSeeded)      currentIdx = 3;
+  else if (deadlinePassed) currentIdx = 2;
+  else if (hasDraftDeadline) currentIdx = 1;
+
+  const stateFor = (idx) => idx < currentIdx ? 'done' : idx === currentIdx ? 'active' : 'todo';
+
+  return [
+    { id: 'transfers',  label: 'TRANSFER WINDOW', state: stateFor(0), sub: league.transfers_open ? 'Open · transfers enabled' : 'Closed' },
+    { id: 'draft',      label: 'DRAFT DEADLINE',  state: stateFor(1), sub: hasDraftDeadline ? fmtKickoff(league.draft_deadline) : 'Not set' },
+    { id: 'allocation', label: 'ALLOCATION',       state: stateFor(2), sub: cupSeeded ? 'Squads allocated' : deadlinePassed ? 'Processing…' : 'Awaiting draft' },
+    { id: 'cup',        label: 'CUP SEEDED',       state: stateFor(3), sub: cupSeeded ? league.cup_phase.replace(/_/g, ' ').toUpperCase() : 'Pool ready · run when set' },
+    { id: 'season',     label: `IN SEASON · ${memberCount} MGRS`, state: stateFor(4), sub: inSeason ? 'Live' : 'Awaiting cup seed' },
+  ];
+}
+
 const BET_TYPES = [
   { id: 'top-scorer',   label: 'TOP SCORER',   glyph: '◉', tone: 'var(--cyan)',     templateId: 'top_scorer',   hint: 'Who scores the most goals across the fixture / gameweek?', body: 'Auto-resolves at final whistle. Tie-break: assists → minutes.' },
   { id: 'match-result', label: 'MATCH RESULT', glyph: '◈', tone: 'var(--positive)', templateId: 'match_result', hint: 'Predict the outcome of a single fixture.', body: 'Options are auto-generated: HOME · DRAW · AWAY. Resolves at FT.' },
@@ -67,8 +96,8 @@ const BET_TYPES = [
 // ─────────────────────────────────────────────────────────────────────────────
 // Season stepper (Zone A)
 // ─────────────────────────────────────────────────────────────────────────────
-function SeasonStepper({ leagueName = 'LEAGUE', memberCount = 0 }) {
-  const phases = [
+function SeasonStepper({ leagueName = 'LEAGUE', memberCount = 0, league = null }) {
+  const phases = computePhases(league, memberCount) ?? [
     { id: 'transfers',  label: 'TRANSFER WINDOW', state: 'done',   sub: 'Closed · GW27' },
     { id: 'draft',      label: 'DRAFT DEADLINE',  state: 'done',   sub: '15 Mar 19:00' },
     { id: 'allocation', label: 'ALLOCATION',       state: 'done',   sub: '12 conflicts resolved' },
@@ -84,7 +113,7 @@ function SeasonStepper({ leagueName = 'LEAGUE', memberCount = 0 }) {
         <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.22em', color: 'var(--mute)' }}>· ADMIN ONLY · CHANGES TAKE EFFECT IMMEDIATELY</span>
         <span style={{ flex: 1 }} />
         <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.22em', color: 'var(--mute)' }}>
-          {leagueName.toUpperCase()} · {memberCount} MGRS · GW28
+          {leagueName.toUpperCase()} · {memberCount} MGRS
         </span>
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', position: 'relative', gap: 0 }}>
@@ -825,7 +854,7 @@ function CreateBetWizard({ onPublish, commLoading, memberCount, tournamentId, is
 // ─────────────────────────────────────────────────────────────────────────────
 // Resolve pending bets (Zone B right)
 // ─────────────────────────────────────────────────────────────────────────────
-function ResolvePendingBets({ openBets, resolutionBetsLoading, setSelectedBetForResolution, betResolutionAnswer, setBetResolutionAnswer, betSubmissions, answerGrouped, fetchBetSubmissions, resolveBet, commLoading }) {
+function ResolvePendingBets({ openBets, resolutionBetsLoading, setSelectedBetForResolution, betResolutionAnswer, setBetResolutionAnswer, betSubmissions, answerGrouped, fetchBetSubmissions, resolveBet, commLoading, memberCount = 0 }) {
   const [expandedId, setExpandedId] = useState(null);
 
   const pending = (openBets || []).filter(b => b.status !== 'resolved');
@@ -901,7 +930,7 @@ function ResolvePendingBets({ openBets, resolutionBetsLoading, setSelectedBetFor
                   {/* Who picked what */}
                   {Object.keys(answerGrouped).length > 0 && (
                     <div>
-                      <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.22em', color: 'var(--mute)' }}>WHO PICKED WHAT · {betSubmissions.length}/{pending.length + 2}</span>
+                      <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.22em', color: 'var(--mute)' }}>WHO PICKED WHAT · {betSubmissions.length}/{memberCount}</span>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 8 }}>
                         {Object.entries(answerGrouped).map(([optKey, usernames]) => (
                           <div key={optKey} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -1016,7 +1045,7 @@ function LifecycleOp({ title, status, statusTone = 'var(--mute)', sub, when, chi
 // ─────────────────────────────────────────────────────────────────────────────
 // Lifecycle operations (Zone C)
 // ─────────────────────────────────────────────────────────────────────────────
-function LifecycleOps({ commissioner, leagueId }) {
+function LifecycleOps({ commissioner, leagueId, tournamentId }) {
   const {
     commLoading, commAction, setCommMsg,
     windowOpensAt, setWindowOpensAt,
@@ -1024,8 +1053,14 @@ function LifecycleOps({ commissioner, leagueId }) {
     windowTransfers, setWindowTransfers,
     openTransferWindow, closeTransferWindow,
     draftDeadline, setDraftDeadline, setLeagueDraftDeadline,
+    triggerDraftAllocation,
     scoreFixtureId, setScoreFixtureId, triggerScores, triggerScoresLatestRound,
   } = commissioner;
+
+  // WC/tournament leagues enforce transfers via matchday_deadlines only.
+  // The transfer_windows table is ignored by process-transfer for these leagues,
+  // so OPEN/CLOSE buttons have no enforcement effect and would mislead the commissioner.
+  const isDeadlineControlled = !!tournamentId;
 
   const handleCloseNow = () => {
     if (!window.confirm('This stops all in-progress transfers immediately. Continue?')) return;
@@ -1034,11 +1069,7 @@ function LifecycleOps({ commissioner, leagueId }) {
 
   const handleRunAllocation = () => {
     if (!window.confirm('This allocates squads for all managers. It cannot be undone without a manual reset. Continue?')) return;
-    commAction(async () => {
-      const { error } = await supabase.rpc('run_draft_allocation', { p_league_id: leagueId });
-      if (error) throw new Error(error.message);
-      setCommMsg({ type: 'ok', text: 'Draft allocation complete.' });
-    });
+    triggerDraftAllocation();
   };
 
   const handleSeedCup = () => {
@@ -1086,10 +1117,17 @@ function LifecycleOps({ commissioner, leagueId }) {
                   <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.2em', color: 'var(--mute)' }}>LIMIT · BLANK = UNLIMITED</span>
                   <input type="number" min="1" value={windowTransfers} onChange={e => setWindowTransfers(e.target.value)} placeholder="e.g. 5" style={inputStyle} />
                 </div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6, marginTop: 4 }}>
-                  <button onClick={openTransferWindow} disabled={commLoading} style={opBtnStyle('var(--positive)')}>OPEN</button>
-                  <button onClick={handleCloseNow}     disabled={commLoading} style={{ ...btnBase, width: '100%', background: 'transparent', border: '1px solid rgba(239,68,68,.33)', color: 'var(--danger)', cursor: commLoading ? 'not-allowed' : 'pointer', fontSize: 11 }}>CLOSE NOW</button>
-                </div>
+                {isDeadlineControlled ? (
+                  <div style={{ padding: '8px 10px', background: 'var(--ink)', border: '1px solid var(--rule)', fontFamily: BODY, fontSize: 10, color: 'var(--mute)', lineHeight: 1.5 }}>
+                    <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.2em', color: 'var(--warn)' }}>DEADLINE-CONTROLLED · </span>
+                    Transfer windows for this league are governed by matchday deadlines, not manual open/close. Use the schedule to control transfer periods.
+                  </div>
+                ) : (
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6, marginTop: 4 }}>
+                    <button onClick={openTransferWindow} disabled={commLoading} style={opBtnStyle('var(--positive)')}>OPEN</button>
+                    <button onClick={handleCloseNow}     disabled={commLoading} style={{ ...btnBase, width: '100%', background: 'transparent', border: '1px solid rgba(239,68,68,.33)', color: 'var(--danger)', cursor: commLoading ? 'not-allowed' : 'pointer', fontSize: 11 }}>CLOSE NOW</button>
+                  </div>
+                )}
               </div>
             }
           />
@@ -1174,14 +1212,17 @@ function LifecycleOps({ commissioner, leagueId }) {
 // ─────────────────────────────────────────────────────────────────────────────
 // Mobile accordion variants
 // ─────────────────────────────────────────────────────────────────────────────
-function MobSeasonStepper() {
-  const phases = [
-    { label: 'TRANSFERS',  state: 'done' },
-    { label: 'DRAFT',      state: 'done' },
-    { label: 'ALLOCATION', state: 'done' },
-    { label: 'CUP',        state: 'active' },
-    { label: 'SEASON',     state: 'todo' },
-  ];
+function MobSeasonStepper({ league = null, memberCount = 0 }) {
+  const computed = computePhases(league, memberCount);
+  const phases = computed
+    ? computed.map(p => ({ label: p.id.toUpperCase(), state: p.state }))
+    : [
+        { label: 'TRANSFERS',  state: 'done' },
+        { label: 'DRAFT',      state: 'done' },
+        { label: 'ALLOCATION', state: 'done' },
+        { label: 'CUP',        state: 'active' },
+        { label: 'SEASON',     state: 'todo' },
+      ];
   return (
     <div style={{ padding: '14px 18px', background: 'var(--ink-2)', borderBottom: '1px solid var(--rule)' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
@@ -1683,7 +1724,7 @@ function CommMsg({ msg, onDismiss }) {
 // ─────────────────────────────────────────────────────────────────────────────
 // Root export
 // ─────────────────────────────────────────────────────────────────────────────
-export default function CommissionerPanel({ commissioner, leagueId, tournamentId, memberCount = 0, leagueName = 'LEAGUE', replayCommissionerTour }) {
+export default function CommissionerPanel({ commissioner, leagueId, tournamentId, memberCount = 0, leagueName = 'LEAGUE', league = null, replayCommissionerTour }) {
   const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' && window.innerWidth < 1024);
 
   useEffect(() => {
@@ -1719,7 +1760,7 @@ export default function CommissionerPanel({ commissioner, leagueId, tournamentId
     return (
       <div style={{ flex: 1, overflow: 'auto', background: 'var(--ink)', display: 'flex', flexDirection: 'column' }}>
         <CommMsg msg={commMsg} onDismiss={() => setCommMsg(null)} />
-        <MobSeasonStepper />
+        <MobSeasonStepper league={league} memberCount={memberCount} />
 
         {/* Create bet (mobile) */}
         <MobSectionHeader label="CREATE BET" sub="NEW BET INSTANCE" tone="var(--cyan)" />
@@ -1748,6 +1789,7 @@ export default function CommissionerPanel({ commissioner, leagueId, tournamentId
             fetchBetSubmissions={fetchBetSubmissions}
             resolveBet={resolveBet}
             commLoading={commLoading}
+            memberCount={memberCount}
           />
         </div>
 
@@ -1768,10 +1810,17 @@ export default function CommissionerPanel({ commissioner, leagueId, tournamentId
               <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.2em', color: 'var(--mute)' }}>LIMIT · BLANK = UNLIMITED</span>
               <input type="number" min="1" value={windowTransfers} onChange={e => setWindowTransfers(e.target.value)} placeholder="e.g. 5" style={mobInput} />
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-              <button onClick={openTransferWindow} disabled={commLoading} style={{ ...mobBtn, background: 'var(--positive)', color: 'var(--ink)' }}>OPEN</button>
-              <button onClick={() => { if (window.confirm('Close the transfer window immediately?')) closeTransferWindow(); }} disabled={commLoading} style={{ ...mobBtn, background: 'transparent', color: 'var(--danger)', border: '1px solid rgba(239,68,68,.33)' }}>CLOSE NOW</button>
-            </div>
+            {tournamentId ? (
+              <div style={{ padding: '8px 10px', background: 'var(--ink)', border: '1px solid var(--rule)', fontFamily: BODY, fontSize: 10, color: 'var(--mute)', lineHeight: 1.5 }}>
+                <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.2em', color: 'var(--warn)' }}>DEADLINE-CONTROLLED · </span>
+                Transfer windows for this league are governed by matchday deadlines, not manual open/close.
+              </div>
+            ) : (
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                <button onClick={openTransferWindow} disabled={commLoading} style={{ ...mobBtn, background: 'var(--positive)', color: 'var(--ink)' }}>OPEN</button>
+                <button onClick={() => { if (window.confirm('Close the transfer window immediately?')) closeTransferWindow(); }} disabled={commLoading} style={{ ...mobBtn, background: 'transparent', color: 'var(--danger)', border: '1px solid rgba(239,68,68,.33)' }}>CLOSE NOW</button>
+              </div>
+            )}
           </MobLifecycleCard>
           </div>
 
@@ -1817,7 +1866,7 @@ export default function CommissionerPanel({ commissioner, leagueId, tournamentId
       <CommMsg msg={commMsg} onDismiss={() => setCommMsg(null)} />
 
       {/* Zone A — Season stepper */}
-      <SeasonStepper leagueName={leagueName} memberCount={memberCount} />
+      <SeasonStepper leagueName={leagueName} memberCount={memberCount} league={league} />
 
       {/* Zone B — Bet management (two columns) */}
       <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', borderBottom: '1px solid var(--rule)', minHeight: 600 }}>
@@ -1843,12 +1892,13 @@ export default function CommissionerPanel({ commissioner, leagueId, tournamentId
             fetchBetSubmissions={fetchBetSubmissions}
             resolveBet={resolveBet}
             commLoading={commLoading}
+            memberCount={memberCount}
           />
         </div>
       </div>
 
       {/* Zone C — Lifecycle ops */}
-      <LifecycleOps commissioner={commissioner} leagueId={leagueId} />
+      <LifecycleOps commissioner={commissioner} leagueId={leagueId} tournamentId={tournamentId} />
 
       {/* Tour replay */}
       <TourReplayButton onReplay={replayCommissionerTour} label="REPLAY ADMIN GUIDE" title="Replay the commissioner guide" />
