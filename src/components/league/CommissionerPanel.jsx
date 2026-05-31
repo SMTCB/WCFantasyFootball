@@ -1510,6 +1510,78 @@ function MobSectionHeader({ label, sub, tone, onHelp }) {
   );
 }
 
+// ── Breaking news form — posts to gazette_entries ─────────────────────────────
+function NewsPostForm({ leagueId, setCommMsg, isMobile = false }) {
+  const [headline, setHeadline] = useState('');
+  const [bulletsText, setBulletsText] = useState('');
+  const [posting, setPosting] = useState(false);
+
+  const handlePost = async () => {
+    if (!headline.trim()) return;
+    setPosting(true);
+    const bullets = bulletsText
+      .split('\n')
+      .map(l => l.trim())
+      .filter(Boolean);
+    const { error } = await supabase.from('gazette_entries').insert({
+      league_id:    leagueId,
+      entry_type:   'breaking_news',
+      headline:     headline.trim(),
+      bullets:      bullets.length ? bullets : null,
+      published_at: new Date().toISOString(),
+    });
+    setPosting(false);
+    if (error) {
+      setCommMsg({ type: 'err', text: `Failed to post: ${error.message}` });
+    } else {
+      setCommMsg({ type: 'ok', text: 'News posted to league activity.' });
+      setHeadline('');
+      setBulletsText('');
+    }
+  };
+
+  const pad = isMobile ? '0 14px' : '16px 24px';
+
+  return (
+    <div style={{ padding: pad, display: 'flex', flexDirection: 'column', gap: 10 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+        <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.2em', color: 'var(--paper)' }}>HEADLINE</span>
+        <input
+          type="text"
+          placeholder="e.g. Transfer window opens Monday — plan your moves"
+          value={headline}
+          onChange={e => setHeadline(e.target.value)}
+          style={{ ...inputStyle, colorScheme: 'dark' }}
+          maxLength={200}
+        />
+      </div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+        <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.2em', color: 'var(--mute)' }}>DETAILS · ONE LINE EACH (OPTIONAL)</span>
+        <textarea
+          placeholder={"Deadline: Sunday 22:00\nUse the market to find value\nTop tip: check injuries"}
+          value={bulletsText}
+          onChange={e => setBulletsText(e.target.value)}
+          rows={3}
+          style={{ ...inputStyle, resize: 'vertical', lineHeight: 1.5, colorScheme: 'dark' }}
+        />
+      </div>
+      <button
+        onClick={handlePost}
+        disabled={posting || !headline.trim()}
+        style={{
+          ...btnBase, fontSize: 11,
+          background: posting || !headline.trim() ? 'var(--ink-3)' : 'var(--danger)',
+          color: posting || !headline.trim() ? 'var(--mute)' : 'var(--paper)',
+          cursor: posting || !headline.trim() ? 'not-allowed' : 'pointer',
+          alignSelf: 'flex-start',
+        }}
+      >
+        {posting ? 'POSTING…' : 'POST TO LEAGUE →'}
+      </button>
+    </div>
+  );
+}
+
 // ── Mobile accordion wizard step header ───────────────────────────────────────
 function MobStepHeader({ n, label, state, onClick, summary }) {
   const tone = state === 'done' ? 'var(--positive)' : state === 'active' ? 'var(--cyan)' : 'var(--mute)';
@@ -2064,6 +2136,10 @@ export default function CommissionerPanel({ commissioner, leagueId, tournamentId
           </div>
         </div>
 
+        {/* League news (mobile) */}
+        <MobSectionHeader label="LEAGUE NEWS" sub="POST TO ACTIVITY FEED" tone="var(--danger)" />
+        <NewsPostForm leagueId={leagueId} setCommMsg={setCommMsg} isMobile />
+
         {/* Bet management (mobile) — moved below lifecycle ops */}
         <MobSectionHeader label="BET MANAGEMENT" sub="CREATE & RESOLVE" tone="var(--cyan)" onHelp={() => setHelpModal('bets')} />
         <div data-tour="comm-bets" style={{ padding: '0 14px' }}>
@@ -2122,6 +2198,10 @@ export default function CommissionerPanel({ commissioner, leagueId, tournamentId
         league={league}
         onHelp={() => setHelpModal('lifecycle')}
       />
+
+      {/* League News — breaking news form */}
+      <HubSectionLabel label="LEAGUE NEWS" sub="POST TO ACTIVITY FEED" tone="var(--danger)" />
+      <NewsPostForm leagueId={leagueId} setCommMsg={setCommMsg} />
 
       {/* Zone C — Bet management (two columns) */}
       <HubSectionLabel
