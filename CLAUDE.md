@@ -558,12 +558,14 @@ Always create a new file — never modify existing migrations.
 | 105 | `105_league_mode_data_fix.sql` | Session 61: fix league_mode data (was 'draft' for all); add trg_sync_league_mode trigger; sync_cup_eliminations() function; sync-cup-eliminations cron every 6h |
 | 106 | `106_transfer_window_unification.sql` | Session 62: squads.round_transfers; enforce_transfer_window tournament early-exit; transfer config keys seeded; get_transfer_window_status config-driven; get_club_cap() config-driven; execute_transfer_atomic transfer-limit enforcement; create_league seeds config |
 | 107 | `107_starting_xi_and_bench.sql` | Session 62: squads.starting_xi + lineup_locks; lineup_lock_per_fixture config; set_lineup() atomic swap function; lock_lineups_for_fixture() cron helper |
+| 108 | `108_security_lockdown.sql` | Session 64: execute_transfer_atomic ownership+server-price; set_lineup ownership+live-lock; resolve_bet double-resolve guard; REVOKE chip column grants; REVOKE execute_transfer_atomic from anon/authenticated; fix run-draft-lottery+run-reverse-standings-draft crons to service-role; cancel stuck draft submissions; WC knockout round_number backfill |
+| 109 | `109_auth_uid_league_functions.sql` | Session 65: create_league (both overloads) + join_league_by_code use auth.uid() instead of trusting client p_user_id |
 
-**Next migration**: `108_`
+**Next migration**: `110_`
 
 **Key pipeline facts (2026-06-01):**
 - `calculate-scores` uses `scoring_rules` table (not `scoring_templates`) keyed by `tournament_id`
-- `calculate-scores` is deployed as **v19** (edge function, `verify_jwt: false`; v19 uses `starting_xi` for scoring with fallback to `players[0..10]`)
+- `calculate-scores` is deployed as **v20** (edge function, `verify_jwt: false`; uses `starting_xi` for scoring with fallback to `players[0..10]`; multiplier rule: `Math.max(captainMult, jokerMult)` — chips do not stack)
 - `calculate-scores` writes a `gazette_entries` row (`entry_type='activity'`) per league after scoring — idempotent (deletes+reinserts for same matchday_id)
 - `calculate-scores` stores integer points: `Math.round(total)` — no decimals in `fantasy_points.total`
 - `fantasy_points` column for squad total is `total` (not `total_points`) — integer

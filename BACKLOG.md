@@ -1,6 +1,6 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-06-01 (session 64 — DB verification + all CRITICAL fixes shipped, PR #270)  
+**Last Updated**: 2026-06-01 (session 64/65 — DD-H5, DD-C7, DD-H11 fixed, PR #271)  
 **E2E Test Suite**: `platform.spec.js` (36 tests × 2 browsers) passing in CI ✅ — completes in ~3 min  
 **Live App**: https://wc-fantasy-football.vercel.app  
 **WC Kick-off**: 2026-06-11 19:00 UTC (Mexico vs South Africa)
@@ -52,7 +52,13 @@
 
 ### Still open (HIGH/MEDIUM/LOW from session 63):
 See full table below. DD-C5 (Vercel VITE_AUTH_ENABLED) still needs manual check in Vercel dashboard.
-Next migration: `109_`
+Next migration: `110_`
+
+## ✅ Session 65 — DD-H5, DD-C7, DD-H11 (PR #271, 2026-06-01)
+
+- ✅ **DD-H5** — `calculate-scores`: captain + joker multipliers now use `Math.max` (not product). Captain+Joker on same player → ×2 (was ×4); TC+Joker → ×3 (was ×6). Live exploit since #270 wired the Joker.
+- ✅ **DD-C7** — `LeagueScreen`: gold commissioner-only banner on Draft leagues with no deadline set: "SET A DRAFT DEADLINE IN THE ADMIN TAB". Clicking navigates to the commissioner view. Commissioner tour now has a clear entry point post-creation.
+- ✅ **DD-H11** — migration 109: `create_league` (both overloads) + `join_league_by_code` use `auth.uid()` internally; `p_user_id` param accepted for compat but ignored. Unauthenticated calls raise UNAUTHORIZED.
 
 ### 🔴 CRITICAL — launch blockers
 
@@ -64,7 +70,7 @@ Next migration: `109_`
 | **DD-C4** | Admin | `run-draft-lottery` enforces commissioner check only `if (authHeader)` present (✅verified line 33) — a request with `league_id` and **no auth header** runs the irreversible allocation. Trust inferred from header absence, not a verified service-role key. | `run-draft-lottery/index.js:33` |
 | **DD-C5** | Funnel | **If Vercel prod doesn't set `VITE_AUTH_ENABLED=true`, every pilot user shares ONE demo identity** (✅verified default `false`, `AuthContext.jsx:27,34`; all auth no-ops in demo mode). Master switch — without it the whole pilot is one shared account. | `.env.example:14`, `AuthContext.jsx` |
 | **DD-C6** | Funnel | `join_league_by_code` is **called by the UI** (✅verified `LeagueScreen.jsx:627`) but **defined in NO migration** (✅verified grep). Exists in prod only if hand-created. If missing/dropped, **no second user can ever join a league** — fatal for a multi-user pilot. | `LeagueScreen.jsx:627` |
-| **DD-C7** | Funnel | New **Draft** league has no path to the draft: `create_league` never sets `draft_deadline` (`106:392`); the only entry point is a banner gated on `draftOpen` (`LeagueScreen.jsx:450`). Commissioner must manually set deadline → members submit → manually trigger allocation, with no guidance. | `106:392`, `LeagueScreen.jsx:450` |
+| ~~**DD-C7**~~ | ~~Funnel~~ | ~~New **Draft** league has no path to the draft.~~ **✅ Fixed #271** — Gold commissioner banner on Draft leagues with no deadline; navigates to Admin tab. | |
 | **DD-C8** | Pipeline | Canonical sync orchestrator `sync-all-active-tournaments` uses `current_setting('app.*')` which **returns NULL on hosted Supabase** (never rewritten like the others). Migration 73 made it the sole path for `sync-player-status`. Net: **WC player injury/availability never auto-refreshes.** | `51_dynamic_cron_tournaments.sql:24-27` |
 | **DD-C9** | Pipeline | **No alerting of any kind.** Observability is pull-only (`get_cron_status`, `edge_function_errors` in AdminSeedScreen). Over a 2-day live tournament a silent pipeline stop is the most likely failure and has zero automated detection. The 500 path in ingest doesn't even `logError`. | `ingest-match-events/index.js:555` |
 | **DD-C10** | Bets | `resolve_bet` **lost its double-resolution guard** (✅verified migration 99 has BET_NOT_FOUND + UNAUTHORIZED but no `already-resolved` early-return; dropped in mig 76). Budget bets **double-credit** on re-resolve (additive). Commissioner double-click or cron race hands winners free budget. | `99_resolve_bet_budget_rewards.sql` |
@@ -80,13 +86,13 @@ Next migration: `109_`
 | **DD-H2** | Auction | `place_bid` **lost its `FOR UPDATE` row lock** (present in mig 27, gone in 80/90/100). Concurrent bids read stale `current_bid`, both pass, last-writer-wins → a lower bid can overwrite a higher one; highest bid not guaranteed to win. | `100_auction_fixes.sql:19,57` |
 | **DD-H3** | Auction | Migration history is **internally contradictory** on `auction_listings` columns (`seller_squad_id`/`min_bid`/`ends_at` vs `seller_id`/`starting_bid`/`deadline_at`) and on the `place_bid` overload. Frontend uses the second set. Unclear bidding even works as expected until live schema confirmed. | mig 27/66 vs 36/80/100 |
 | **DD-H4** | Game logic | **Transfer recovery-window can orphan a squad.** `process-transfer` filters squad by *nearest upcoming* deadline; in the 6h post-deadline window that's the next round, lookup misses the real squad and **creates a fresh empty squad (budget 100, players [])**. Manager loses roster. | `process-transfer/index.js:153,156-167` |
-| **DD-H5** | Scoring | **Captain + Joker stack to ×4 (×6 with Triple Captain).** `calculate-scores:511-512` applies both multipliers independently, no max-not-product guard. Latent today (DB CHECK + dead Joker mask it) but arms the moment DD-C13 is fixed. | `calculate-scores/index.js:511-512` |
+| ~~**DD-H5**~~ | ~~Scoring~~ | ~~Captain + Joker stack to ×4.~~ **✅ Fixed #271** — `Math.max(captainMult, jokerMult)` in `calculate-scores`. | |
 | **DD-H6** | Security | `calculate-scores` has **no authorization at all** — any authenticated user / anon-key holder can trigger a full recalc for any fixture across every league. Idempotent (not destructive) but open global-write/DoS surface. | `calculate-scores/index.js` |
 | **DD-H7** | Admin | RUN ALLOCATION button stays enabled after allocation (`allocationDisabled` omits `allocationDone`, `CommissionerPanel.jsx:1251`), contradicting LIFECYCLE_OPERATIONS.md ("no re-run exposed"). Only the edge idempotency gate prevents destructive re-run. | `CommissionerPanel.jsx:1251` |
 | **DD-H8** | Draft | `run-draft-lottery` is **non-transactional** (allocations → squads → submissions as separate calls, no rollback). Mid-way crash leaves managers with allocations but no squad; idempotency gate then skips recovery. | `run-draft-lottery/index.js` |
 | **DD-H9** | Bets | Commissioner can **resolve an OPEN bet before the match** — resolve list shows open bets and `resolve_bet` has no status/deadline guard (combines with DD-C10 to re-resolve after real result). | `CommissionerPanel.jsx:1041`, `useCommissioner.js:153` |
 | **DD-H10** | Chips | **"Wildcard" is mislabeled.** UI says "unlimited free transfers" (`SquadScreen.jsx:41`) but the only effect of `is_wildcard` is a hidden **+10% total-points boost** (`calculate-scores:516`) — zero interaction with transfer limits. Undisclosed competitive imbalance + guaranteed support tickets. | `SquadScreen.jsx:41`, `calculate-scores/index.js:516` |
-| **DD-H11** | Funnel/Sec | `create_league` / `join_league_by_code` are `SECURITY DEFINER` and **trust client-supplied `p_user_id`** (insert `created_by = p_user_id`, not `auth.uid()`). A user can create/join as another user. | `106:399`, `LeagueScreen.jsx:604,627` |
+| ~~**DD-H11**~~ | ~~Funnel/Sec~~ | ~~`create_league`/`join_league_by_code` trust client `p_user_id`.~~ **✅ Fixed #271** — migration 109 uses `auth.uid()` internally; `p_user_id` param retained for compat but ignored. | |
 | **DD-H12** | Pipeline | **Live ingest is chicken-and-egg with ~6h worst-case latency.** `ingest-match-events-live` only fires for fixtures already `status='live'`, but status is flipped live only by the 6-hourly `sync-wc-fixtures-6h`. A match can run its full 90 min before ingest starts. | `91_fix_remaining_current_setting_crons.sql:42` |
 | **DD-H13** | Pipeline | Cron bodies rewritten 5× (mig 60/63/67/68/86/87/90/91); `calculate-scores-post-match` carries an **expired anon JWT (exp 2024-08-17)** — works only because `verify_jwt=false`; one toggle from silent scoring outage. Live cron state cannot be assumed from highest-numbered file. | `87:20`, `90_fix_wc_sync_crons.sql:6` |
 | **DD-H14** | Pipeline | `ingest-match-events` uses `Promise.all` on 4 Forza endpoints — if any one stays down after retries, the **whole match's ingest aborts** with no partial write and no `logError`. Should be `allSettled`. | `ingest-match-events/index.js:216,555` |
