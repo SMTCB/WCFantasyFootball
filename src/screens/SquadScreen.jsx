@@ -238,7 +238,10 @@ export default function SquadScreen() {
 
       // Phase B: use starting_xi when set; fallback to players[0..10] for legacy squads
       const startingXiArr = squad.starting_xi?.length > 0 ? squad.starting_xi : playerIds.slice(0, 11);
-      const starterIds    = new Set(startingXiArr);
+      // Defensive filter: only mark players as starters if they were actually fetched.
+      // Ghost IDs in starting_xi (not in squad.players) would otherwise create invisible XI slots.
+      const fetchedIds    = new Set((players || []).map(p => p.id));
+      const starterIds    = new Set(startingXiArr.filter(id => fetchedIds.has(id)));
       // Locked-out players (subbed out this matchday — cannot return to XI until next round)
       const lineupLocks   = squad.lineup_locks ?? {};
       const lockedIds     = new Set(lineupLocks[squad.matchday_id] ?? []);
@@ -423,9 +426,9 @@ export default function SquadScreen() {
     if (pitchPlayer.points > 0) {
       setConfirm({
         title:        `Move ${pitchPlayer.name} to bench?`,
-        body:         `${pitchPlayer.name} has scored ${pitchPlayer.points} pts this round. Moving them to the bench will deduct those points from your total.`,
+        body:         `${pitchPlayer.name} has scored ${Math.round(pitchPlayer.points)} pts this round. Moving them to the bench will deduct those points from your total.`,
         warning:      'This action cannot be undone.',
-        confirmLabel: 'Confirm (-' + pitchPlayer.points + ' pts)',
+        confirmLabel: 'Confirm (-' + Math.round(pitchPlayer.points) + ' pts)',
         danger:       true,
         onConfirm:    () => doSwap(pitchPlayer, benchPlayer),
       });
@@ -1197,6 +1200,7 @@ export default function SquadScreen() {
                     isSelected={selectedPlayer?.id === player.id}
                     isSwapTarget={swapMode && selectedPlayer?.id !== player.id}
                     showIntelligence
+                    showPrice
                     action={rowAction}
                   />
                 );
@@ -1390,6 +1394,24 @@ export default function SquadScreen() {
           ))}
         </div>
 
+        {/* Incomplete squad banner — shown on all mobile tabs */}
+        {allSquadPlayers.length < 11 && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px', background: 'rgba(240,58,58,0.10)', borderBottom: '1px solid rgba(240,58,58,0.25)' }}>
+            <div style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--danger)', flexShrink: 0 }} />
+            <div style={{ flex: 1 }}>
+              <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 11, color: 'var(--danger)', letterSpacing: '0.04em', textTransform: 'uppercase' }}>
+                Squad incomplete — {allSquadPlayers.length}/11 players
+              </div>
+              <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 9, color: 'var(--mute)', marginTop: 2 }}>
+                You need {11 - allSquadPlayers.length} more player{11 - allSquadPlayers.length !== 1 ? 's' : ''} to field a starting XI
+              </div>
+            </div>
+            <a href="#/market" style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 9, color: 'var(--danger)', border: '1px solid rgba(240,58,58,0.4)', padding: '4px 10px', textDecoration: 'none', letterSpacing: '0.1em', textTransform: 'uppercase', flexShrink: 0 }}>
+              MARKET →
+            </a>
+          </div>
+        )}
+
         {/* â"€â"€ PITCH TAB — starting XI + bench strip for sub management â"€â"€ */}
         {mobileTab === 'pitch' && (() => {
           const captain = allSquadPlayers.find(p => p.id === captainId);
@@ -1472,7 +1494,7 @@ export default function SquadScreen() {
                             )}
                           </div>
                           <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 9, color: 'var(--mute)', flexShrink: 0, minWidth: 28, textAlign: 'right' }}>{(player.club ?? '').substring(0, 3).toUpperCase()}</div>
-                          <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 16, color: 'var(--paper)', letterSpacing: '-0.02em', flexShrink: 0, minWidth: 24, textAlign: 'right' }}>{player.points ?? 0}</div>
+                          <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 16, color: 'var(--paper)', letterSpacing: '-0.02em', flexShrink: 0, minWidth: 24, textAlign: 'right' }}>{Math.round(player.points ?? 0)}</div>
                         </button>
                       );
                     })}
@@ -1522,7 +1544,7 @@ export default function SquadScreen() {
                           )}
                         </div>
                         <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 9, color: 'var(--mute)', flexShrink: 0, minWidth: 28, textAlign: 'right' }}>{(player.club ?? '').substring(0, 3).toUpperCase()}</div>
-                        <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 16, color: 'var(--paper)', letterSpacing: '-0.02em', flexShrink: 0, minWidth: 24, textAlign: 'right' }}>{player.points ?? 0}</div>
+                        <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 16, color: 'var(--paper)', letterSpacing: '-0.02em', flexShrink: 0, minWidth: 24, textAlign: 'right' }}>{Math.round(player.points ?? 0)}</div>
                       </button>
                     );
                   })}
@@ -1615,7 +1637,7 @@ export default function SquadScreen() {
                             <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 8, color: 'var(--mute)', letterSpacing: '0.12em', marginTop: 1 }}>{(player.club ?? '').substring(0, 3).toUpperCase()} · £{player.price}M</div>
                           </div>
                           {/* Points */}
-                          <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 16, color: 'var(--paper)', letterSpacing: '-0.02em', flexShrink: 0 }}>{player.points ?? 0}</div>
+                          <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 16, color: 'var(--paper)', letterSpacing: '-0.02em', flexShrink: 0 }}>{Math.round(player.points ?? 0)}</div>
                         </button>
                       );
                     })}
@@ -1830,6 +1852,22 @@ export default function SquadScreen() {
           ))}
         </div>
 
+        {/* Incomplete squad banner — desktop */}
+        {allSquadPlayers.length < 11 && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 20px', background: 'rgba(240,58,58,0.08)', borderBottom: '1px solid rgba(240,58,58,0.2)', flexShrink: 0 }}>
+            <div style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--danger)', flexShrink: 0 }} />
+            <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 11, color: 'var(--danger)', letterSpacing: '0.04em', textTransform: 'uppercase' }}>
+              Squad incomplete — {allSquadPlayers.length}/11 players
+            </div>
+            <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 9, color: 'var(--mute)' }}>
+              You need {11 - allSquadPlayers.length} more player{11 - allSquadPlayers.length !== 1 ? 's' : ''} to field a starting XI
+            </div>
+            <a href="#/market" style={{ marginLeft: 'auto', fontFamily: 'Archivo Black, sans-serif', fontSize: 9, color: 'var(--danger)', border: '1px solid rgba(240,58,58,0.4)', padding: '4px 10px', textDecoration: 'none', letterSpacing: '0.1em', textTransform: 'uppercase', flexShrink: 0 }}>
+              GO TO MARKET →
+            </a>
+          </div>
+        )}
+
         {/* â"€â"€ Tab content â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€ */}
         <div className="flex-1 overflow-hidden flex">
 
@@ -1881,7 +1919,7 @@ export default function SquadScreen() {
                           }}>{pos}</div>
                           <div>
                             <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 11, color: 'var(--paper)', letterSpacing: '-0.01em' }}>{surname}</div>
-                            <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 8, color: 'var(--mute)', letterSpacing: '0.1em' }}>{player.club} · {player.points ?? 0} PTS</div>
+                            <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 8, color: 'var(--mute)', letterSpacing: '0.1em' }}>{player.club}{player.price != null ? ` · £${player.price}M` : ''} · {Math.round(player.points ?? 0)} PTS</div>
                           </div>
                         </button>
                       );

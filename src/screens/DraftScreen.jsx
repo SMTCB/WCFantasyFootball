@@ -532,7 +532,7 @@ export default function DraftScreen() {
                   {isExpanded && !disabled && (
                     <div className="bg-[#0D0D0D] border border-[#1E1E1E] border-t-0 rounded-b-lg px-3 py-2 flex items-center justify-between">
                       <div className="text-[10px] text-[#9E9E9E]">
-                        {p.points > 0 && <span>{p.points} pts · </span>}
+                        {p.points > 0 && <span>{Math.round(p.points)} pts · </span>}
                         {p.intel?.status !== 'fit' && (
                           <span className="text-[#FFC107]">{p.intel?.status} · </span>
                         )}

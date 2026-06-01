@@ -26,6 +26,7 @@ export default function PlayerCard({
   isSelected      = false,
   isSwapTarget    = false,
   showIntelligence = false,
+  showPrice       = false,
   action          = null,
   variant         = 'pitch',
 }) {
@@ -46,6 +47,7 @@ export default function PlayerCard({
         isSelected={isSelected}
         isSwapTarget={isSwapTarget}
         showPoints
+        showPrice={showPrice}
         showStatus={false}
         action={action}
         onClick={onClick}
@@ -161,7 +163,7 @@ export default function PlayerCard({
           letterSpacing:  '-0.02em',
         }}
       >
-        {player.points ?? 0}
+        {Math.round(player.points ?? 0)}
       </div>
 
       {/* Two-line block: name + metadata */}
@@ -192,7 +194,7 @@ export default function PlayerCard({
             letterSpacing: '0.1em',
           }}
         >
-          {player.club} · {player.points ?? 0} PTS
+          {player.club} · {Math.round(player.points ?? 0)} PTS
         </div>
       </div>
 
