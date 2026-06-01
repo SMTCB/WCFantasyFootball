@@ -145,6 +145,7 @@ export default function LeagueScreen() {
   const [h2hTarget, setH2hTarget] = useState(null);
   const [mySquadId, setMySquadId] = useState(null);
   const [mySquadBudget, setMySquadBudget] = useState(null);
+  const [mySquadPlayerCount, setMySquadPlayerCount] = useState(null);
 
   // Real squad data for trade builder
   const [mySquadPlayers,   setMySquadPlayers]   = useState([]);
@@ -463,10 +464,10 @@ export default function LeagueScreen() {
         setDraftOpen(false);
       }
 
-      // Fetch current user's squadId + budget in this league
+      // Fetch current user's squadId + budget + player count in this league
       const { data: squadRow } = await supabase
         .from('squads')
-        .select('id, budget_remaining')
+        .select('id, budget_remaining, players')
         .eq('league_id', id)
         .eq('user_id', user?.id)
         .order('created_at', { ascending: false })
@@ -474,6 +475,7 @@ export default function LeagueScreen() {
         .maybeSingle();
       setMySquadId(squadRow?.id ?? null);
       setMySquadBudget(squadRow?.budget_remaining ?? null);
+      setMySquadPlayerCount(squadRow ? (squadRow.players?.length ?? 0) : null);
 
       // Build user→squadId map for trade target lookup
       const { data: allSquads } = await supabase
@@ -999,6 +1001,24 @@ export default function LeagueScreen() {
           <div onClick={() => navigate(`/league/${activeLeague?.league_id}/draft/recover`)} style={{ background: '#B71C1C', color: 'white', padding: '10px 28px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer', flexShrink: 0 }}>
             <span style={{ fontFamily: MONO, fontSize: 11, letterSpacing: '.18em' }}>⚠  YOUR SQUAD HAS {draftGaps} EMPTY SLOT{draftGaps !== 1 ? 'S' : ''} — TAP TO PICK NOW</span>
             <span style={{ fontFamily: MONO, fontSize: 11 }}>→</span>
+          </div>
+        )}
+
+        {/* Incomplete squad warning — shown when squad has fewer than 11 players (can't field an XI) */}
+        {mySquadPlayerCount !== null && mySquadPlayerCount < 11 && draftGaps === 0 && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 20px', background: 'rgba(240,58,58,0.10)', borderBottom: '1px solid rgba(240,58,58,0.25)', flexShrink: 0 }}>
+            <div style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--danger)', flexShrink: 0 }} />
+            <div style={{ flex: 1 }}>
+              <div style={{ fontFamily: DISPLAY, fontSize: 11, color: 'var(--danger)', letterSpacing: '0.06em', textTransform: 'uppercase' }}>
+                Squad incomplete — {mySquadPlayerCount}/11 players
+              </div>
+              <div style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', marginTop: 2 }}>
+                Sign {11 - mySquadPlayerCount} more player{11 - mySquadPlayerCount !== 1 ? 's' : ''} in the transfer market to field a starting XI
+              </div>
+            </div>
+            <a href="#/squad" style={{ fontFamily: DISPLAY, fontSize: 9, color: 'var(--danger)', border: '1px solid rgba(240,58,58,0.4)', padding: '5px 10px', textDecoration: 'none', letterSpacing: '0.1em', textTransform: 'uppercase', flexShrink: 0 }}>
+              MY SQUAD →
+            </a>
           </div>
         )}
 

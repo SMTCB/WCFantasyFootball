@@ -86,7 +86,7 @@ export default function RecapCard({ recap, forwardRef }) {
             </div>
           </div>
           <div style={{ background: 'white', color: 'var(--ink)', fontSize: '12px', fontWeight: 900, padding: '3px 8px', borderRadius: '3px' }}>
-            {bestPlayer?.points != null ? `${bestPlayer.points} pts` : '— pts'}
+            {bestPlayer?.points != null ? `${Math.round(bestPlayer.points)} pts` : '— pts'}
           </div>
         </div>
 
@@ -102,7 +102,7 @@ export default function RecapCard({ recap, forwardRef }) {
             </div>
           </div>
           <div style={{ background: 'var(--gold)', color: 'var(--ink)', fontSize: '12px', fontWeight: 900, padding: '3px 8px', borderRadius: '3px' }}>
-            {captain?.points != null ? `×2 = ${captain.points * 2} pts` : '×2'}
+            {captain?.points != null ? `×2 = ${Math.round(captain.points * 2)} pts` : '×2'}
           </div>
         </div>
 
@@ -119,7 +119,7 @@ export default function RecapCard({ recap, forwardRef }) {
               </div>
             </div>
             <div style={{ background: '#a855f7', color: '#fff', fontSize: '12px', fontWeight: 900, padding: '3px 8px', borderRadius: '3px' }}>
-              {joker?.points != null ? `${joker.points} pts` : '— pts'}
+              {joker?.points != null ? `${Math.round(joker.points)} pts` : '— pts'}
             </div>
           </div>
         )}

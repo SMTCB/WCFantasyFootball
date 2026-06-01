@@ -45,7 +45,7 @@ function xPositions(n) {
 function HybridToken({ player, no, x, y, isCaptain, onClick, isSelected, compact }) {
   const surname = player.name?.split(' ').slice(-1)[0]?.toUpperCase() ?? player.name?.toUpperCase() ?? '?';
   const club    = (player.club ?? '').substring(0, 3).toUpperCase();
-  const pts     = player.points ?? 0;
+  const pts     = Math.round(player.points ?? 0);
   const sc      = STATUS_COLOR[player.intel?.status] ?? 'var(--positive)';
 
   if (compact) {

@@ -145,7 +145,7 @@ export default function PlayerRow({
             {isDummy
               ? 'OPEN MARKET TO SIGN'
               : [player.club, player.country].filter(Boolean).join(' · ') +
-                (showPrice ? ` · $${player.price}M` : '')}
+                (showPrice && player.price != null ? ` · £${player.price}M` : '')}
           </div>
         </div>
       </div>
@@ -156,7 +156,7 @@ export default function PlayerRow({
           className="fk-display shrink-0 tabular-nums"
           style={{ fontSize: 18, color: 'var(--cyan)', letterSpacing: '-0.02em', minWidth: 28, textAlign: 'right' }}
         >
-          {player.points ?? 0}
+          {Math.round(player.points ?? 0)}
         </div>
       )}
 
