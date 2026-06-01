@@ -1395,22 +1395,34 @@ export default function SquadScreen() {
         </div>
 
         {/* Incomplete squad banner — shown on all mobile tabs */}
-        {allSquadPlayers.length < 11 && (
+        {allSquadPlayers.length < 11 ? (
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px', background: 'rgba(240,58,58,0.10)', borderBottom: '1px solid rgba(240,58,58,0.25)' }}>
             <div style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--danger)', flexShrink: 0 }} />
             <div style={{ flex: 1 }}>
               <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 11, color: 'var(--danger)', letterSpacing: '0.04em', textTransform: 'uppercase' }}>
-                Squad incomplete — {allSquadPlayers.length}/11 players
+                Squad too small — {allSquadPlayers.length}/11 starters
               </div>
               <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 9, color: 'var(--mute)', marginTop: 2 }}>
-                You need {11 - allSquadPlayers.length} more player{11 - allSquadPlayers.length !== 1 ? 's' : ''} to field a starting XI
+                Need {11 - allSquadPlayers.length} more to field a starting XI
               </div>
             </div>
             <a href="#/market" style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 9, color: 'var(--danger)', border: '1px solid rgba(240,58,58,0.4)', padding: '4px 10px', textDecoration: 'none', letterSpacing: '0.1em', textTransform: 'uppercase', flexShrink: 0 }}>
               MARKET →
             </a>
           </div>
-        )}
+        ) : allSquadPlayers.length < 15 ? (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 16px', background: 'rgba(240,180,0,0.08)', borderBottom: '1px solid rgba(240,180,0,0.2)' }}>
+            <div style={{ width: 7, height: 7, borderRadius: '50%', background: 'var(--gold)', flexShrink: 0 }} />
+            <div style={{ flex: 1 }}>
+              <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 10, color: 'var(--gold)', letterSpacing: '0.04em', textTransform: 'uppercase' }}>
+                {allSquadPlayers.length}/15 players signed — {15 - allSquadPlayers.length} empty slot{15 - allSquadPlayers.length !== 1 ? 's' : ''}
+              </div>
+            </div>
+            <a href="#/market" style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 9, color: 'var(--gold)', border: '1px solid rgba(240,180,0,0.35)', padding: '4px 10px', textDecoration: 'none', letterSpacing: '0.1em', textTransform: 'uppercase', flexShrink: 0 }}>
+              SIGN →
+            </a>
+          </div>
+        ) : null}
 
         {/* â"€â"€ PITCH TAB — starting XI + bench strip for sub management â"€â"€ */}
         {mobileTab === 'pitch' && (() => {
@@ -1634,7 +1646,7 @@ export default function SquadScreen() {
                               {player.id === captainId && <div style={{ width: 14, height: 14, borderRadius: '50%', background: 'var(--gold)', color: '#0A0A0A', fontFamily: 'Archivo Black, sans-serif', fontSize: 7, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>C</div>}
                               {!isStarter && <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 7, color: 'var(--mute)', border: '1px solid var(--rule)', padding: '0 3px', flexShrink: 0 }}>SUB</span>}
                             </div>
-                            <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 8, color: 'var(--mute)', letterSpacing: '0.12em', marginTop: 1 }}>{(player.club ?? '').substring(0, 3).toUpperCase()} · £{player.price}M</div>
+                            <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 8, color: 'var(--mute)', letterSpacing: '0.12em', marginTop: 1 }}>{(player.club ?? '').substring(0, 3).toUpperCase()}{player.price > 0 ? ` · £${Number(player.price).toFixed(1)}M` : ''}</div>
                           </div>
                           {/* Points */}
                           <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 16, color: 'var(--paper)', letterSpacing: '-0.02em', flexShrink: 0 }}>{Math.round(player.points ?? 0)}</div>
@@ -1853,20 +1865,33 @@ export default function SquadScreen() {
         </div>
 
         {/* Incomplete squad banner — desktop */}
-        {allSquadPlayers.length < 11 && (
+        {allSquadPlayers.length < 11 ? (
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 20px', background: 'rgba(240,58,58,0.08)', borderBottom: '1px solid rgba(240,58,58,0.2)', flexShrink: 0 }}>
             <div style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--danger)', flexShrink: 0 }} />
             <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 11, color: 'var(--danger)', letterSpacing: '0.04em', textTransform: 'uppercase' }}>
-              Squad incomplete — {allSquadPlayers.length}/11 players
+              Squad too small — {allSquadPlayers.length}/11 starters
             </div>
             <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 9, color: 'var(--mute)' }}>
-              You need {11 - allSquadPlayers.length} more player{11 - allSquadPlayers.length !== 1 ? 's' : ''} to field a starting XI
+              Need {11 - allSquadPlayers.length} more to field a starting XI
             </div>
             <a href="#/market" style={{ marginLeft: 'auto', fontFamily: 'Archivo Black, sans-serif', fontSize: 9, color: 'var(--danger)', border: '1px solid rgba(240,58,58,0.4)', padding: '4px 10px', textDecoration: 'none', letterSpacing: '0.1em', textTransform: 'uppercase', flexShrink: 0 }}>
               GO TO MARKET →
             </a>
           </div>
-        )}
+        ) : allSquadPlayers.length < 15 ? (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '8px 20px', background: 'rgba(240,180,0,0.07)', borderBottom: '1px solid rgba(240,180,0,0.18)', flexShrink: 0 }}>
+            <div style={{ width: 7, height: 7, borderRadius: '50%', background: 'var(--gold)', flexShrink: 0 }} />
+            <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 10, color: 'var(--gold)', letterSpacing: '0.04em', textTransform: 'uppercase' }}>
+              {allSquadPlayers.length}/15 players — {15 - allSquadPlayers.length} empty slot{15 - allSquadPlayers.length !== 1 ? 's' : ''}
+            </div>
+            <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 9, color: 'var(--mute)' }}>
+              Sign more players to complete your squad
+            </div>
+            <a href="#/market" style={{ marginLeft: 'auto', fontFamily: 'Archivo Black, sans-serif', fontSize: 9, color: 'var(--gold)', border: '1px solid rgba(240,180,0,0.35)', padding: '4px 10px', textDecoration: 'none', letterSpacing: '0.1em', textTransform: 'uppercase', flexShrink: 0 }}>
+              SIGN PLAYERS →
+            </a>
+          </div>
+        ) : null}
 
         {/* â"€â"€ Tab content â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€ */}
         <div className="flex-1 overflow-hidden flex">
@@ -1919,7 +1944,7 @@ export default function SquadScreen() {
                           }}>{pos}</div>
                           <div>
                             <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 11, color: 'var(--paper)', letterSpacing: '-0.01em' }}>{surname}</div>
-                            <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 8, color: 'var(--mute)', letterSpacing: '0.1em' }}>{player.club}{player.price != null ? ` · £${player.price}M` : ''} · {Math.round(player.points ?? 0)} PTS</div>
+                            <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 8, color: 'var(--mute)', letterSpacing: '0.1em' }}>{player.club}{player.price > 0 ? ` · £${Number(player.price).toFixed(1)}M` : ''} · {Math.round(player.points ?? 0)} PTS</div>
                           </div>
                         </button>
                       );

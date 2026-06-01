@@ -145,7 +145,7 @@ export default function PlayerRow({
             {isDummy
               ? 'OPEN MARKET TO SIGN'
               : [player.club, player.country].filter(Boolean).join(' · ') +
-                (showPrice && player.price != null ? ` · £${player.price}M` : '')}
+                (showPrice && player.price > 0 ? ` · £${Number(player.price).toFixed(1)}M` : '')}
           </div>
         </div>
       </div>
