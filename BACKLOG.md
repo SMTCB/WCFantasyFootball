@@ -1,6 +1,6 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-06-01 (session 66 closeout — all 9 open HIGH items resolved; migration 110 applied; next migration 111_)  
+**Last Updated**: 2026-06-01 (session 66 full closeout — all 12 HIGH items resolved; migrations 110–111 applied; next migration 112_)  
 **E2E Test Suite**: `platform.spec.js` (36 tests × 2 browsers) passing in CI ✅ — completes in ~3 min  
 **Live App**: https://wc-fantasy-football.vercel.app  
 **WC Kick-off**: 2026-06-11 19:00 UTC (Mexico vs South Africa)
@@ -51,8 +51,8 @@
 - ✅ **NEW-C2** — Mark stuck draft submissions `processed` for test leagues → loop stopped
 
 ### Still open (HIGH/MEDIUM/LOW from session 63):
-See full table below. All CRITICAL + HIGH items now resolved (except H1/H4/H6/H8 — deferred, see session 66 notes).
-Next migration: `111_`
+See full table below. All CRITICAL + HIGH items resolved (except H8 — deferred, see session 66 notes).
+Next migration: `112_`
 
 ## ✅ Session 66 — All Open HIGH Items (PR #272, 2026-06-01)
 
@@ -70,16 +70,21 @@ Next migration: `111_`
 | ~~**DD-H14**~~ | `ingest-match-events` — `Promise.all` → `Promise.allSettled`; partial endpoint failures logged and ingest continues | edge function redeployed |
 | ~~**DD-H15**~~ | `leagues` UPDATE RLS — new `leagues: commissioner update` policy; co-commissioners can now save admin changes | migration 110 |
 
-### Deferred HIGH items (complex, scheduled for next session)
+### Session 66b — H1/H4/H6 (PR #273, 2026-06-01)
+
+| ID | Fix | Where |
+|----|-----|-------|
+| ~~**DD-H1**~~ | `place_bid` budget reservation — sums all open winning bids before accepting; rejects over-commitment | migration 111 |
+| ~~**DD-H4**~~ | `process-transfer` recovery-window orphan — falls back to most recent squad before creating empty; uses squad's own matchday for transfer limits | edge function redeployed |
+| ~~**DD-H6**~~ | `calculate-scores` auth guard — service-role key (cron) or valid JWT required; anon-key-only callers get 401 | edge function redeployed |
+
+### Still deferred (H8 only)
 
 | ID | Reason |
 |----|--------|
-| **DD-H1** | Budget reservation on auction bids — needs `reserved_budget` column schema change |
-| **DD-H4** | Transfer recovery-window orphan — complex `process-transfer` surgery |
-| **DD-H6** | `calculate-scores` auth guard — `verify_jwt=false` makes JWT verification non-trivial without breaking cron |
-| **DD-H8** | Non-transactional draft lottery — risky multi-step edge function refactor |
+| **DD-H8** | Non-transactional draft lottery — making it atomic requires moving logic into a DB stored procedure or full rollback support in the edge function; too risky without a dedicated session |
 
-**Next migration**: `111_`
+**Next migration**: `112_`
 **Build/lint**: `npm run build` ✅ clean · `npm run lint` ✅ warnings only (all pre-existing)
 
 ---
@@ -121,12 +126,12 @@ Next migration: `111_`
 
 | ID | Area | Issue | Evidence |
 |----|------|-------|----------|
-| **DD-H1** | Auction | **No budget reservation** — budget checked at bid time against full balance, only debited at settlement. One manager can be top bidder on N auctions each ≤ balance; at settlement first wins, rest silently cancelled nondeterministically — sellers unpaid, "spend only what you have" broken. | `100_auction_fixes.sql:39-54,160` |
+| ~~**DD-H1**~~ | ~~Auction~~ | ~~No budget reservation — over-commitment across concurrent auctions.~~ **✅ Fixed #273** — migration 111: `place_bid` sums all current winning bids before accepting; rejects if new bid would exceed available (unreserved) budget. | |
 | ~~**DD-H2**~~ | ~~Auction~~ | ~~`place_bid` lost its `FOR UPDATE` row lock.~~ **✅ Fixed #272** — migration 110 adds `FOR UPDATE` on listing + squad rows; concurrent bids now serialise correctly. | |
 | ~~**DD-H3**~~ | ~~Auction~~ | ~~Migration history contradictory on column names.~~ **✅ VERIFIED CLOSED #272** — live schema confirmed `seller_id/starting_bid/deadline_at/min_increment/highest_bidder_id`; matches frontend. | |
-| **DD-H4** | Game logic | **Transfer recovery-window can orphan a squad.** `process-transfer` filters squad by *nearest upcoming* deadline; in the 6h post-deadline window that's the next round, lookup misses the real squad and **creates a fresh empty squad (budget 100, players [])**. Manager loses roster. | `process-transfer/index.js:153,156-167` |
+| ~~**DD-H4**~~ | ~~Game logic~~ | ~~Transfer recovery-window orphans squad.~~ **✅ Fixed #273** — `process-transfer`: falls back to most-recent squad before creating empty; transfer limits tracked against squad's actual matchday, not next round. | |
 | ~~**DD-H5**~~ | ~~Scoring~~ | ~~Captain + Joker stack to ×4.~~ **✅ Fixed #271** | |
-| **DD-H6** | Security | `calculate-scores` has **no authorization at all** — any authenticated user / anon-key holder can trigger a full recalc for any fixture across every league. Idempotent (not destructive) but open global-write/DoS surface. | `calculate-scores/index.js` |
+| ~~**DD-H6**~~ | ~~Security~~ | ~~`calculate-scores` no authorization — anon-key holder can trigger global recalc.~~ **✅ Fixed #273** — service-role key or valid user JWT required; anon-only callers → 401. | |
 | ~~**DD-H7**~~ | ~~Admin~~ | ~~RUN ALLOCATION stays enabled after allocation.~~ **✅ Fixed #272** — `allocationDisabled` now includes `allocationDone` (desktop + mobile). | |
 | **DD-H8** | Draft | `run-draft-lottery` is **non-transactional** (allocations → squads → submissions as separate calls, no rollback). Mid-way crash leaves managers with allocations but no squad; idempotency gate then skips recovery. | `run-draft-lottery/index.js` |
 | ~~**DD-H9**~~ | ~~Bets~~ | ~~Commissioner can resolve OPEN bet before the match.~~ **✅ Fixed #272** — `resolve_bet` migration 110: returns `BET_STILL_OPEN` if `status='open'` and `deadline_at > NOW()`. | |
