@@ -51,16 +51,17 @@ Deno.serve(async (req) => {
         return respond(403, { error: 'Forbidden — commissioner only' });
       }
 
-      // Idempotency gate: if allocations already exist for this league+phase, skip.
-      const { data: existing } = await supabase
-        .from('draft_allocations')
-        .select('league_id')
+      // Idempotency gate: if no pending submissions remain, the draft is already committed.
+      const { data: pendingSub } = await supabase
+        .from('draft_submissions')
+        .select('id')
         .eq('league_id', league_id)
         .eq('phase', phase)
+        .eq('status', 'pending')
         .limit(1)
         .maybeSingle();
 
-      if (existing) {
+      if (!pendingSub) {
         return respond(200, { message: 'Draft already processed', leagueId: league_id, phase, skipped: true });
       }
 
@@ -91,7 +92,7 @@ Deno.serve(async (req) => {
 
 async function runLottery(leagueId, phase = 'group') {
   // 1. Load league config (squad_size, position_limits, tournament_id, budget_total, draft_list_size, format, league_mode) + pending submissions
-  const [{ data: leagueRow }, { data: submissions }] = await Promise.all([
+  const [{ data: leagueRow }, { data: submissions }, { data: existingAllocations }] = await Promise.all([
     supabase.from('leagues')
       .select('squad_size, position_limits, tournament_id, budget_total, draft_list_size, format, league_mode')
       .eq('id', leagueId)
@@ -102,6 +103,11 @@ async function runLottery(leagueId, phase = 'group') {
       .eq('phase', phase)
       .eq('status', 'pending')
       .order('user_id'),  // L5.5: deterministic submission order
+    // Re-entry check: Phase 1 may have committed before a prior crash.
+    supabase.from('draft_allocations')
+      .select('user_id, allocated_players, unresolved_slots')
+      .eq('league_id', leagueId)
+      .eq('phase', phase),
   ]);
 
   if (!submissions?.length) return { message: 'No pending submissions', leagueId };
@@ -115,136 +121,168 @@ async function runLottery(leagueId, phase = 'group') {
   const maxLen = leagueRow?.draft_list_size ?? 30;
   submissions.forEach(s => { s.player_ids = (s.player_ids || []).slice(0, maxLen); });
 
-  // 2. Load player prices for budget enforcement
-  const allPlayerIds = [...new Set(submissions.flatMap(s => s.player_ids))];
-  const { data: playerRows } = await supabase
-    .from('players')
-    .select('id, position, price')
-    .in('id', allPlayerIds)
-    // L5.12: filter by tournament so cross-tournament player IDs are excluded
-    .eq('tournament_id', leagueRow?.tournament_id);
+  // Re-entry guard: if a prior invocation crashed after writing allocations but before
+  // writing squads, skip the lottery (preserving the original random result) and jump
+  // straight to Phase 2. isReEntry also suppresses gazette/notifications so they are
+  // not duplicated on the recovery run.
+  const isReEntry = (existingAllocations?.length ?? 0) > 0;
+  let allocations;
+  let contestedPlayers = [];
 
-  const playerMap = Object.fromEntries((playerRows ?? []).map(p => [p.id, p]));
-
-  // 3. Build conflict map: player_id → [user_ids who want them]
-  const wantedBy = {};
-  for (const sub of submissions) {
-    for (const pid of sub.player_ids) {
-      if (!wantedBy[pid]) wantedBy[pid] = [];
-      wantedBy[pid].push(sub.user_id);
+  if (isReEntry) {
+    // Phase 1 already committed — rebuild from DB rows, no re-randomization.
+    allocations = {};
+    for (const row of existingAllocations) {
+      allocations[row.user_id] = {
+        allocated_players: row.allocated_players,
+        unresolved_slots:  row.unresolved_slots,
+        budget_used:       0,
+      };
     }
-  }
-
-  // 4. Resolve conflicts: random lottery winner per contested player
-  const awardedTo = {}; // player_id → winning user_id
-  const contestedPlayers = []; // for gazette report
-
-  for (const [pid, wanters] of Object.entries(wantedBy)) {
-    if (wanters.length === 1) {
-      awardedTo[pid] = wanters[0];
-    } else {
-      // Use crypto-random for fairness; log roll for audit trail.
-      const roll   = crypto.getRandomValues(new Uint32Array(1))[0] / 0xFFFFFFFF;
-      const winner = wanters[Math.floor(roll * wanters.length)];
-      awardedTo[pid] = winner;
-      contestedPlayers.push({ pid, wanters, winner, roll: roll.toFixed(6) });
+    // Recompute budget_used from player prices so squads get accurate budget_remaining.
+    const reentryPlayerIds = [...new Set(existingAllocations.flatMap(r => r.allocated_players ?? []))];
+    if (reentryPlayerIds.length > 0) {
+      const { data: reentryPrices } = await supabase
+        .from('players')
+        .select('id, price')
+        .in('id', reentryPlayerIds)
+        .eq('tournament_id', leagueRow?.tournament_id);
+      const priceMap = Object.fromEntries((reentryPrices ?? []).map(p => [p.id, p.price ?? 0]));
+      for (const a of Object.values(allocations)) {
+        a.budget_used = (a.allocated_players ?? []).reduce((sum, pid) => sum + (priceMap[pid] ?? 0), 0);
+      }
     }
-  }
+  } else {
+    // 2. Load player prices for budget enforcement
+    const allPlayerIds = [...new Set(submissions.flatMap(s => s.player_ids))];
+    const { data: playerRows } = await supabase
+      .from('players')
+      .select('id, position, price')
+      .in('id', allPlayerIds)
+      // L5.12: filter by tournament so cross-tournament player IDs are excluded
+      .eq('tournament_id', leagueRow?.tournament_id);
 
-  // 5. Two-pass squad allocation.
-  //    Pass 1 — allocate lottery winners; record players the winner couldn't
-  //             take due to position cap or budget.
-  //    Pass 2 — offer each dropped player to runner-up contestants (shuffled
-  //             with crypto-random so no submission ordering advantage).
+    const playerMap = Object.fromEntries((playerRows ?? []).map(p => [p.id, p]));
 
-  const userState = {};
-  for (const sub of submissions) {
-    userState[sub.user_id] = {
-      allocated: [],
-      posCounts: { GK: 0, DEF: 0, MID: 0, FWD: 0 },
-      budgetUsed: 0,
-    };
-  }
+    // 3. Build conflict map: player_id → [user_ids who want them]
+    const wantedBy = {};
+    for (const sub of submissions) {
+      for (const pid of sub.player_ids) {
+        if (!wantedBy[pid]) wantedBy[pid] = [];
+        wantedBy[pid].push(sub.user_id);
+      }
+    }
 
-  const droppedByWinner = []; // pids the lottery winner couldn't take
+    // 4. Resolve conflicts: random lottery winner per contested player
+    const awardedTo = {}; // player_id → winning user_id
 
-  for (const sub of submissions) {
-    const uid = sub.user_id;
-    const u   = userState[uid];
+    for (const [pid, wanters] of Object.entries(wantedBy)) {
+      if (wanters.length === 1) {
+        awardedTo[pid] = wanters[0];
+      } else {
+        // Use crypto-random for fairness; log roll for audit trail.
+        const roll   = crypto.getRandomValues(new Uint32Array(1))[0] / 0xFFFFFFFF;
+        const winner = wanters[Math.floor(roll * wanters.length)];
+        awardedTo[pid] = winner;
+        contestedPlayers.push({ pid, wanters, winner, roll: roll.toFixed(6) });
+      }
+    }
 
-    for (const pid of sub.player_ids) {
-      if (u.allocated.length >= SQUAD_SIZE) break;
+    // 5. Two-pass squad allocation.
+    //    Pass 1 — allocate lottery winners; record players the winner couldn't
+    //             take due to position cap or budget.
+    //    Pass 2 — offer each dropped player to runner-up contestants (shuffled
+    //             with crypto-random so no submission ordering advantage).
 
-      if (awardedTo[pid] !== uid) continue;
+    const userState = {};
+    for (const sub of submissions) {
+      userState[sub.user_id] = {
+        allocated: [],
+        posCounts: { GK: 0, DEF: 0, MID: 0, FWD: 0 },
+        budgetUsed: 0,
+      };
+    }
 
+    const droppedByWinner = []; // pids the lottery winner couldn't take
+
+    for (const sub of submissions) {
+      const uid = sub.user_id;
+      const u   = userState[uid];
+
+      for (const pid of sub.player_ids) {
+        if (u.allocated.length >= SQUAD_SIZE) break;
+
+        if (awardedTo[pid] !== uid) continue;
+
+        const player = playerMap[pid];
+        if (!player) continue;
+
+        const pos = normalisePosition(player.position);
+        if (!SQUAD_POS_CAPS[pos]) continue;
+
+        if (u.posCounts[pos] >= SQUAD_POS_CAPS[pos] || u.budgetUsed + player.price > budget) {
+          droppedByWinner.push(pid);
+          continue;
+        }
+
+        u.allocated.push(pid);
+        u.posCounts[pos]++;
+        u.budgetUsed += player.price;
+      }
+    }
+
+    // Pass 2: runner-up allocation for dropped players
+    for (const pid of droppedByWinner) {
       const player = playerMap[pid];
       if (!player) continue;
 
-      const pos = normalisePosition(player.position);
-      if (!SQUAD_POS_CAPS[pos]) continue;
-
-      if (u.posCounts[pos] >= SQUAD_POS_CAPS[pos] || u.budgetUsed + player.price > budget) {
-        droppedByWinner.push(pid);
-        continue;
+      const runnerUps = (wantedBy[pid] ?? []).filter(uid => uid !== awardedTo[pid]);
+      // Crypto-random shuffle so no submission order advantage
+      for (let i = runnerUps.length - 1; i > 0; i--) {
+        const roll = crypto.getRandomValues(new Uint32Array(1))[0] / 0xFFFFFFFF;
+        const j    = Math.floor(roll * (i + 1));
+        [runnerUps[i], runnerUps[j]] = [runnerUps[j], runnerUps[i]];
       }
 
-      u.allocated.push(pid);
-      u.posCounts[pos]++;
-      u.budgetUsed += player.price;
-    }
-  }
+      const pos = normalisePosition(player.position);
+      for (const uid of runnerUps) {
+        const u = userState[uid];
+        if (!u) continue;
+        if (u.allocated.length >= SQUAD_SIZE) continue;
+        if (u.posCounts[pos] >= SQUAD_POS_CAPS[pos]) continue;
+        if (u.budgetUsed + player.price > budget) continue;
 
-  // Pass 2: runner-up allocation for dropped players
-  for (const pid of droppedByWinner) {
-    const player = playerMap[pid];
-    if (!player) continue;
-
-    const runnerUps = (wantedBy[pid] ?? []).filter(uid => uid !== awardedTo[pid]);
-    // Crypto-random shuffle so no submission order advantage
-    for (let i = runnerUps.length - 1; i > 0; i--) {
-      const roll = crypto.getRandomValues(new Uint32Array(1))[0] / 0xFFFFFFFF;
-      const j    = Math.floor(roll * (i + 1));
-      [runnerUps[i], runnerUps[j]] = [runnerUps[j], runnerUps[i]];
+        u.allocated.push(pid);
+        u.posCounts[pos]++;
+        u.budgetUsed += player.price;
+        break;
+      }
     }
 
-    const pos = normalisePosition(player.position);
-    for (const uid of runnerUps) {
-      const u = userState[uid];
-      if (!u) continue;
-      if (u.allocated.length >= SQUAD_SIZE) continue;
-      if (u.posCounts[pos] >= SQUAD_POS_CAPS[pos]) continue;
-      if (u.budgetUsed + player.price > budget) continue;
-
-      u.allocated.push(pid);
-      u.posCounts[pos]++;
-      u.budgetUsed += player.price;
-      break;
+    allocations = {};
+    for (const [uid, u] of Object.entries(userState)) {
+      allocations[uid] = {
+        allocated_players: u.allocated,
+        unresolved_slots:  Math.max(0, SQUAD_SIZE - u.allocated.length),
+        budget_used:       u.budgetUsed,
+      };
     }
+
+    // 6. Write draft_allocations rows (Phase 1 commit point)
+    const allocationRows = Object.entries(allocations).map(([userId, data]) => ({
+      league_id:         leagueId,
+      user_id:           userId,
+      phase,
+      allocated_players: data.allocated_players,
+      unresolved_slots:  data.unresolved_slots,
+      allocated_at:      new Date().toISOString(),
+    }));
+
+    const { error: allocErr } = await supabase
+      .from('draft_allocations')
+      .upsert(allocationRows, { onConflict: 'league_id,user_id,phase' });
+    if (allocErr) await logError(FN, 'critical', 'draft_allocations upsert failed', { leagueId, phase, error: allocErr.message });
   }
-
-  const allocations = {};
-  for (const [uid, u] of Object.entries(userState)) {
-    allocations[uid] = {
-      allocated_players: u.allocated,
-      unresolved_slots:  Math.max(0, SQUAD_SIZE - u.allocated.length),
-      budget_used:       u.budgetUsed,
-    };
-  }
-
-  // 6. Write draft_allocations rows
-  const allocationRows = Object.entries(allocations).map(([userId, data]) => ({
-    league_id:         leagueId,
-    user_id:           userId,
-    phase,
-    allocated_players: data.allocated_players,
-    unresolved_slots:  data.unresolved_slots,
-    allocated_at:      new Date().toISOString(),
-  }));
-
-  const { error: allocErr } = await supabase
-    .from('draft_allocations')
-    .upsert(allocationRows, { onConflict: 'league_id,user_id,phase' });
-  if (allocErr) await logError(FN, 'critical', 'draft_allocations upsert failed', { leagueId, phase, error: allocErr.message });
 
   // 6c. Update cup_phase on the league to signal allocation is done.
   //     If phase='knockout', mark elimination stage; otherwise group_stage.
@@ -298,7 +336,8 @@ async function runLottery(leagueId, phase = 'group') {
     .from('squads')
     .upsert(squadRows, { onConflict: 'league_id,user_id,matchday_id' });
 
-  // 7. Mark submissions as processed
+  // Commit marker: once submissions are flipped to 'processed', the idempotency gate
+  // (no pending submissions) will catch any future invocation and skip cleanly.
   await supabase
     .from('draft_submissions')
     .update({ status: 'processed' })
@@ -306,6 +345,9 @@ async function runLottery(leagueId, phase = 'group') {
     .eq('phase', phase)
     .eq('status', 'pending');
 
+  // Gazette, notifications, and transfer window are side effects written after the
+  // commit marker. On a re-entry run these are skipped to avoid duplicates.
+  if (!isReEntry) {
   // 8. Write gazette entry
   const gazettEntry = buildGazetteEntry(leagueId, contestedPlayers, allocations, submissions);
   await supabase.from('gazette_entries').insert(gazettEntry);
@@ -367,6 +409,7 @@ async function runLottery(leagueId, phase = 'group') {
         { onConflict: 'league_id,round_number', ignoreDuplicates: true }
       );
   }
+  } // end if (!isReEntry)
 
   // 9. Summary for caller
   const incomplete = Object.entries(allocations)
