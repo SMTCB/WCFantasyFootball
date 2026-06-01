@@ -69,11 +69,12 @@ const BETS_TOUR_STEPS = [
   },
 ];
 
+// Draft-only steps are tagged so they can be filtered out for Classic leagues.
 const COMMISSIONER_TOUR_STEPS = [
   {
     target: 'comm-season-stepper',
     title:  'Season Lifecycle',
-    body:   "This bar tracks your league's progress. Transfers open first, then draft, then allocation, cup seeding, and finally the live season. Each stage has its own controls below.",
+    body:   "This bar tracks your league's progress. Transfers open first, then (in Draft leagues) the draft and allocation, and finally the live season. Each stage has its own controls below.",
   },
   {
     target: 'comm-transfer-window',
@@ -81,14 +82,10 @@ const COMMISSIONER_TOUR_STEPS = [
     body:   'Open the window between gameweeks so managers can buy and sell players on the market. Set an opening and closing time — the system enforces the deadline automatically. Close it at least 1 hour before the first match kicks off.',
   },
   {
-    target: 'comm-draft-deadline',
-    title:  'Draft & Allocation',
-    body:   'Managers submit their ranked player wishlist before this deadline. Once it passes, the lottery runs automatically and resolves conflicts. Click "Run Allocation" to trigger it manually if needed.',
-  },
-  {
-    target: 'comm-cup-phase',
-    title:  'Cup Phase',
-    body:   'After allocation, seed the cup pool to assign one club per manager per round. The system prevents repeat picks across rounds. Run this once at the start of the cup phase — it cannot be undone for the season.',
+    target:    'comm-draft-deadline',
+    title:     'Draft & Allocation',
+    body:      'Managers submit their ranked player wishlist before this deadline. Once it passes, the lottery runs automatically and resolves conflicts. Click "Run Allocation" to trigger it manually if needed.',
+    draftOnly: true,
   },
   {
     target: 'comm-score-recalc',
@@ -876,13 +873,17 @@ export default function LeagueScreen() {
             onSkip={completeBetsTour}
           />
         )}
-        {showCommissionerTour && view === 'commissioner' && isCommissioner && (
-          <OnboardingTour
-            steps={COMMISSIONER_TOUR_STEPS}
-            onComplete={completeCommissionerTour}
-            onSkip={completeCommissionerTour}
-          />
-        )}
+        {showCommissionerTour && view === 'commissioner' && isCommissioner && (() => {
+          const isDraftLeague = activeLeague?.leagues?.format === 'noduplicate';
+          const filteredSteps = COMMISSIONER_TOUR_STEPS.filter(s => isDraftLeague || !s.draftOnly);
+          return (
+            <OnboardingTour
+              steps={filteredSteps}
+              onComplete={completeCommissionerTour}
+              onSkip={completeCommissionerTour}
+            />
+          );
+        })()}
         {/* â”€â”€ Desktop chrome (hidden on mobile) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
         <div className="hidden lg:block">
           <HubTopbar
@@ -1147,13 +1148,25 @@ export default function LeagueScreen() {
                        <div style={{ fontFamily: ftMono, fontSize: 10, letterSpacing: '.18em', color: FT_MUTE, marginTop: 12, textTransform: 'uppercase' }}>By the Forza Times Desk · {today}</div>
                      </article>
 
-                     {/* Secondary column */}
+                     {/* Secondary column — Draft Report for Draft leagues; Transfer Activity for Classic */}
                      <div style={{ borderLeft: `1px solid ${FT_RULE}`, borderRight: `1px solid ${FT_RULE}`, padding: '0 22px' }}>
-                       <div style={{ fontFamily: ftMono, fontSize: 9, letterSpacing: '.22em', color: FT_RED }}>DRAFT REPORT</div>
-                       <h2 style={{ fontFamily: ftSerif, fontWeight: 800, fontSize: 22, lineHeight: 1.02, letterSpacing: '-0.02em', color: FT_INK, marginTop: 6 }}>Squad allocations & latest picks</h2>
-                       <div style={{ marginTop: 12 }}>
-                         <GazetteDraftReport leagueId={activeLeague?.league_id} />
-                       </div>
+                       {activeLeague?.leagues?.format === 'noduplicate' ? (
+                         <>
+                           <div style={{ fontFamily: ftMono, fontSize: 9, letterSpacing: '.22em', color: FT_RED }}>DRAFT REPORT</div>
+                           <h2 style={{ fontFamily: ftSerif, fontWeight: 800, fontSize: 22, lineHeight: 1.02, letterSpacing: '-0.02em', color: FT_INK, marginTop: 6 }}>Squad allocations & latest picks</h2>
+                           <div style={{ marginTop: 12 }}>
+                             <GazetteDraftReport leagueId={activeLeague?.league_id} />
+                           </div>
+                         </>
+                       ) : (
+                         <>
+                           <div style={{ fontFamily: ftMono, fontSize: 9, letterSpacing: '.22em', color: FT_RED }}>LEAGUE ACTIVITY</div>
+                           <h2 style={{ fontFamily: ftSerif, fontWeight: 800, fontSize: 22, lineHeight: 1.02, letterSpacing: '-0.02em', color: FT_INK, marginTop: 6 }}>Open market — build freely</h2>
+                           <p style={{ fontFamily: ftSerif, fontSize: 14, color: FT_MUTE, lineHeight: 1.6, marginTop: 10 }}>
+                             Classic mode is in effect. Any player can appear in multiple squads simultaneously — there is no draft or lottery. Head to the Market to sign players and start scoring points.
+                           </p>
+                         </>
+                       )}
                      </div>
 
                      {/* Sidebar */}
