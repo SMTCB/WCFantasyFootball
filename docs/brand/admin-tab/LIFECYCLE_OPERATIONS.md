@@ -1,6 +1,6 @@
 # LIFECYCLE OPERATIONS — Admin Logic Reference
 
-**Full specification for the season-control cards in the Admin tab. Covers Transfer Window, Draft (Group + Knockout), and Score Recalculation.**
+**Full specification for the season-control cards in the Admin tab. Covers Transfer Window, Draft (Group + Knockout), League News, and Score Recalculation.**
 
 ---
 
@@ -11,7 +11,15 @@ Lifecycle Operations are the active controls that drive a league through its sea
 - A **WHEN TO RUN** hint so the commissioner knows the right timing.
 - A **confirmation gate** on one-way (irreversible) operations.
 
-**Draft cards are only shown for Draft-mode leagues** (`format = 'noduplicate'`). Classic-mode leagues hide the Draft section entirely.
+**Cards shown by mode and format:**
+
+| Card | Classic | Draft · League format | Draft · Cup format |
+|---|---|---|---|
+| Transfer Window | ✓ | ✓ | ✓ |
+| Group Stage Draft | — | ✓ | ✓ |
+| Knockout Draft | — | — | ✓ (once cup evidence exists) |
+| League News | ✓ | ✓ | ✓ |
+| Score Recalculation | ✓ | ✓ | ✓ |
 
 ---
 
@@ -24,17 +32,16 @@ Controls when managers can buy and sell players from the market.
 | OPENS | Datetime input. Required to schedule an opening. |
 | CLOSES | Datetime input. Optional — if blank, the window stays open until CLOSE NOW is pressed. |
 | LIMIT | Integer or blank. Blank = unlimited transfers per manager during this window. |
-| OPEN button | Sets `transfer_windows.state = 'open'`; emits a league notification. |
+| OPEN button | Sets the transfer window to open; emits a league notification. |
 | CLOSE NOW | Closes immediately regardless of the scheduled CLOSES value. Shows a confirm dialog. |
 
 **Status copy:**
-- `OPEN · CLOSES IN {duration}` — green tone
-- `OPEN · NO SCHEDULED CLOSE` — warn tone
-- `SCHEDULED · OPENS {datetime}` — cyan tone
+- `OPEN` — green tone
 - `CLOSED` — danger tone
+- `DEADLINE-CONTROLLED` — warn tone (WC/tournament leagues only)
 
 **DEADLINE-CONTROLLED leagues (WC/tournament):**
-Transfer windows for these leagues are governed by `matchday_deadlines`, not the `transfer_windows` table. The OPEN/CLOSE buttons have no enforcement effect and are labelled DEADLINE-CONTROLLED.
+Transfer windows for these leagues are governed by `matchday_deadlines`, not the `transfer_windows` table. The OPEN/CLOSE buttons have no enforcement effect and are replaced by a `DEADLINE-CONTROLLED` label. The commissioner does not need to manage windows manually for these leagues.
 
 **When to run:** Open between gameweeks. Close at least 1 hour before the first match kickoff.
 
@@ -58,8 +65,8 @@ Controls the initial player selection deadline and runs the squad allocation eng
 - Conflicts resolved by random lottery
 
 **Preconditions:**
-- RUN ALLOCATION disabled until the draft deadline has passed.
-- RUN ALLOCATION disabled once allocation is done (`cup_phase ≠ 'pre_cup'`) — button stays visible but greyed out. Status pill updates to `ALLOCATED`. No re-run is exposed to the commissioner.
+- RUN ALLOCATION is disabled until the draft deadline has passed.
+- RUN ALLOCATION is disabled once allocation has run (`cup_phase ≠ 'pre_cup'`). Status pill updates to `ALLOCATED`. No re-run is exposed to the commissioner.
 - If the admin does not run allocation manually, a cron job fires automatically **4 hours before the first match**.
 
 **Confirm dialog:**
@@ -68,8 +75,7 @@ Controls the initial player selection deadline and runs the squad allocation eng
 **After allocation runs:**
 - Squad rows are written for all managers.
 - Gazette entry published with contested picks and any incomplete squads.
-- For cup-format leagues: cup clubs are auto-seeded (no manual step required).
-- `cup_phase` is set to `group_stage` on the league row, signalling to the Season Stepper that allocation is done.
+- For cup-format leagues: `cup_phase` is set to `group_stage` on the league row, signalling to the Season Stepper that allocation is done.
 
 **When to run:** After all managers have submitted their picks. Before GW1 kickoff.
 
@@ -79,21 +85,24 @@ Controls the initial player selection deadline and runs the squad allocation eng
 
 A second draft run at the group-stage → knockout transition. Same mechanics as the Group Stage Draft.
 
+**Visibility rule (important):**
+- This card is **completely hidden** for Classic leagues and for Draft leagues on a League-format tournament (e.g. EPL). The cup_phase for League-format leagues never advances beyond `pre_cup`, so the card never appears.
+- This card **appears** for Draft + Cup-format leagues once either:
+  - `cup_phase` has transitioned beyond `pre_cup` (group allocation ran and the league is now in group stage), OR
+  - The admin has already set a `knockout_draft_deadline`.
+
 | Field | Behaviour |
 |---|---|
 | KNOCKOUT DEADLINE | Datetime input. The cutoff for knockout-phase draft picks. |
 | RUN KNOCKOUT ALLOCATION | One-way. Runs the lottery + allocation engine for the knockout phase (`phase = 'knockout'`). |
 
 **Preconditions:**
-- **Locked** (non-interactive) until Group Stage allocation is confirmed complete (`cup_phase ≠ 'pre_cup'`). A status label explains why.
-- Once unlocked: admin sets a new deadline, managers submit 30 new picks from the surviving club pool.
+- Once visible, the card proceeds through the same lifecycle as Group Stage Draft: NOT SET → DEADLINE SET → ALLOCATED.
 - Same auto-run cron applies: fires 4 hours before the first knockout match if not already triggered.
-- After running, button stays visible but is disabled. Status pill updates to `ALLOCATED`. No re-run exposed.
-- `cup_phase` is set to `elimination` after a successful knockout allocation run.
+- After running, button is disabled. Status pill updates to `ALLOCATED`. No re-run exposed.
 
 **Status values:**
-- `LOCKED` — group allocation not yet complete (muted tone)
-- `NOT SET` — group done, no knockout deadline yet (warn tone)
+- `NOT SET` — cup mode active, no knockout deadline yet (warn tone)
 - `DEADLINE SET` — deadline exists, allocation not yet run (positive tone)
 - `ALLOCATED` — knockout squads built (positive tone)
 
@@ -101,7 +110,23 @@ A second draft run at the group-stage → knockout transition. Same mechanics as
 
 ---
 
-## 4. Cup Format Rules (automatic — no admin action needed)
+## 4. League News _(all modes)_
+
+Commissioners can post breaking news headlines directly to the league's activity feed (Gazette). Visible to all managers in their RECAP tab immediately.
+
+| Field | Behaviour |
+|---|---|
+| HEADLINE | Text input (max 200 chars). Required. |
+| DETAILS | Textarea. Optional — one bullet per line. |
+| POST TO LEAGUE | Inserts a `gazette_entries` row (`entry_type = 'breaking_news'`). |
+
+No confirmation gate required. Posts are immediate and visible to all managers.
+
+**When to use:** Announce transfer window openings, rule reminders, match previews, or any commissioner message to the league.
+
+---
+
+## 5. Cup Format Rules (automatic — no admin action needed)
 
 These rules apply automatically in cup tournaments and require no manual lifecycle operations.
 
@@ -127,7 +152,7 @@ When pool pressure becomes high (many managers chasing a small player pool), the
 
 ---
 
-## 5. Score Recalculation
+## 6. Score Recalculation _(all modes)_
 
 Re-fetches match statistics from Forza Football and reapplies the scoring engine.
 
@@ -137,32 +162,25 @@ Re-fetches match statistics from Forza Football and reapplies the scoring engine
 | FIXTURE ID input | Free-text field for a specific fixture ID (e.g. `f-1219435455`). |
 | RECALCULATE button | Re-scores only the specified fixture. |
 
-**Side effects:**
-- Player scores and manager totals update immediately.
-- An audit event is logged with before/after score diffs.
-- A toast confirms: `"Recalculated · {n} scores changed · {pts diff total}"`.
-
-**Safe to run multiple times:** Re-running is idempotent — it only overwrites with the latest data.
+**Safe to run multiple times:** Re-running is idempotent — it only overwrites with the latest data. No confirmation dialog needed.
 
 **When to run:** Any time a match result was corrected, or if scores look wrong for a specific fixture.
 
 ---
 
-## 6. Status Pill Reference
+## 7. Status Pill Reference
 
 | Status | Meaning | Tone |
 |---|---|---|
 | `OPEN` | Transfer window is active | Green (positive) |
 | `CLOSED` | Window not currently open | Red (danger) |
-| `SCHEDULED` | Set to open at a future time | Cyan |
 | `DEADLINE SET` | Deadline exists, not yet passed | Green (positive) |
 | `DEADLINE PASSED` | Deadline has passed, awaiting allocation | Warn |
 | `ALLOCATED` | Allocation has run for this phase | Green (positive) |
 | `NOT SET` | No deadline configured yet | Muted |
-| `LOCKED` | Precondition not met (earlier step incomplete) | Muted |
 | `UTILITY · ON-DEMAND` | Score recalc (no lifecycle dependency) | Muted |
 | `DEADLINE-CONTROLLED` | WC/tournament league — matchday deadlines govern | Warn |
 
 ---
 
-Last Updated: **2026-05-31**
+Last Updated: **2026-06-01**
