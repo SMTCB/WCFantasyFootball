@@ -263,6 +263,7 @@ export default function SquadScreen() {
 
       // Group by position
       const gks = pitchPlayers.filter(p => p.position === 'GK');
+      let needsXiFix = false;
 
       // Enforce rules: must have exactly 1 GK
       if (gks.length > 1) {
@@ -270,11 +271,12 @@ export default function SquadScreen() {
         benchPlayers = [...benchPlayers, ...extraGks];
         pitchPlayers = pitchPlayers.filter(p => p.position !== 'GK' || gks.indexOf(p) === 0);
       } else if (gks.length === 0 && benchPlayers.length > 0) {
-        // If somehow no GK on pitch, try to move one from bench
+        // No GK on pitch — move one from bench and persist the fix
         const benchGk = benchPlayers.find(p => p.position === 'GK');
         if (benchGk) {
           benchPlayers = benchPlayers.filter(p => p.id !== benchGk.id);
           pitchPlayers = [...pitchPlayers, benchGk];
+          needsXiFix = true;
         }
       }
 
@@ -282,6 +284,11 @@ export default function SquadScreen() {
       if (pitchPlayers.length > 11) {
         benchPlayers = [...benchPlayers, ...pitchPlayers.slice(11)];
         pitchPlayers = pitchPlayers.slice(0, 11);
+      }
+
+      // Persist corrected starting_xi to DB so it doesn't re-break on every load
+      if (needsXiFix && squad.id) {
+        supabase.from('squads').update({ starting_xi: pitchPlayers.map(p => p.id) }).eq('id', squad.id);
       }
 
       setSquadData({
