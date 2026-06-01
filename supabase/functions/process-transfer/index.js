@@ -42,10 +42,10 @@ Deno.serve(async (req) => {
       return json({ ok: false, error: 'Missing required fields' }, 400, corsHeaders);
     }
 
-    // Verify caller is a member of the league (SEC-3); fetch tournament_id in same query (DATA-4).
+    // Verify caller is a member of the league (SEC-3); fetch tournament_id + league_mode in same query (DATA-4).
     const { data: membership } = await supabase
       .from('league_members')
-      .select('user_id, leagues(tournament_id)')
+      .select('user_id, leagues(tournament_id, league_mode)')
       .eq('league_id', league_id)
       .eq('user_id', user.id)
       .maybeSingle();
@@ -55,6 +55,7 @@ Deno.serve(async (req) => {
     }
 
     const tournamentId = membership?.leagues?.tournament_id ?? null;
+    const leagueMode  = membership?.leagues?.league_mode ?? null;
 
     // Read price from DB — never trust the client-supplied value (SEC-3).
     // Also fetches tournament_id for isolation check below.
@@ -284,6 +285,10 @@ Deno.serve(async (req) => {
 
       // 2. No-repeat / relaxation check: count other squads holding this player,
       //    then compare against current repeats_allowed tier (L6.1).
+      //    Classic leagues allow unlimited shared ownership — skip entirely.
+      if (leagueMode === 'classic') {
+        // no-op: multiple managers can own the same player
+      } else {
       const { data: takenRows, count: takenCount } = await supabase
         .from('squads')
         .select('user_id', { count: 'exact' })
@@ -314,6 +319,7 @@ Deno.serve(async (req) => {
           takenBy: ownerProfile?.username ?? 'another manager',
         }, 409, corsHeaders);
       }
+      } // end else (draft/noduplicate only)
 
       // 3. Squad size
       if (currentPlayers.length >= SQUAD_MAX) {
