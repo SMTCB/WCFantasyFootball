@@ -641,6 +641,32 @@ iOS deployment target: 15.0 · Android minSdk: 26 (Android 8.0) · targetSdk: 36
 - **Testing**: Playwright (E2E browser automation — `platform.spec.js` runs in CI; 8 other integration specs run manually against live DB)
 - **Git Workflow**: Feature branches (`claude/*`) → PR → merge → delete → main stays stable
 
+### Vercel CLI Access (set up 2026-06-01)
+
+Claude has full Vercel CLI access — authenticated as `smtcb`, project linked to `wc-fantasy-football`.
+
+```bash
+vercel env ls                        # list env vars
+vercel env add NAME environment      # add env var (pipe value via stdin)
+vercel env rm NAME environment --yes # remove env var
+vercel deploy --prod                 # trigger production redeploy
+vercel logs wc-fantasy-football.vercel.app  # runtime logs
+vercel list                          # recent deployments + status
+vercel inspect wc-fantasy-football.vercel.app  # deployment details
+```
+
+**Current production env vars** (as of 2026-06-01):
+| Variable | Environments | Purpose |
+|----------|-------------|---------|
+| `VITE_AUTH_ENABLED` | Production only | Must be `"true"` — enables real Supabase Auth (default is demo mode) |
+| `VITE_SUPABASE_ANON_KEY` | All | Supabase client anon key |
+| `VITE_SUPABASE_URL` | All | Supabase project URL |
+
+**Rules:**
+- Only `VITE_`-prefixed vars are bundled into the client JS — never add secrets with `VITE_` prefix
+- Vercel does NOT auto-redeploy on env var changes — always run `vercel deploy --prod` after changing a var
+- `SUPABASE_SERVICE_ROLE_KEY` belongs in Supabase Edge Functions only, not in Vercel (removed 2026-06-01)
+
 ---
 
 ## Current Implementation Status

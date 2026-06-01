@@ -1,6 +1,6 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-06-01 (session 64/65 — DD-H5, DD-C7, DD-H11 fixed, PR #271)  
+**Last Updated**: 2026-06-01 (session 65 closeout — DD-C5 closed, Vercel CLI access set up, env vars cleaned)  
 **E2E Test Suite**: `platform.spec.js` (36 tests × 2 browsers) passing in CI ✅ — completes in ~3 min  
 **Live App**: https://wc-fantasy-football.vercel.app  
 **WC Kick-off**: 2026-06-11 19:00 UTC (Mexico vs South Africa)
@@ -51,10 +51,19 @@
 - ✅ **NEW-C2** — Mark stuck draft submissions `processed` for test leagues → loop stopped
 
 ### Still open (HIGH/MEDIUM/LOW from session 63):
-See full table below. DD-C5 (Vercel VITE_AUTH_ENABLED) still needs manual check in Vercel dashboard.
+See full table below. All CRITICAL items now resolved. Next batch: HIGH items (pipeline + auction + admin), planned for next session.
 Next migration: `110_`
 
-## ✅ Session 65 — DD-H5, DD-C7, DD-H11 (PR #271, 2026-06-01)
+## ✅ Session 65 — DD-H5/C7/H11 + DD-C5 + Vercel access (PRs #270–271, 2026-06-01)
+
+### Vercel access & env var cleanup
+- Vercel CLI installed and authenticated (`vercel whoami` → smtcb); project linked to `wc-fantasy-football`
+- **DD-C5 CLOSED**: `VITE_AUTH_ENABLED` was set to `https://api.example.com` (placeholder) — removed and re-added as `true`; production redeploy triggered. Auth is now live.
+- Removed stale env vars with no VITE_ prefix (never bundled into client, no Vercel functions use them): `SUPABASE_SERVICE_ROLE_KEY` and `API_FOOTBALL_KEY`
+- Final Vercel env vars: `VITE_AUTH_ENABLED` (Production), `VITE_SUPABASE_ANON_KEY` (all), `VITE_SUPABASE_URL` (all)
+- Going forward Claude can manage Vercel via CLI: `vercel env`, `vercel deploy --prod`, `vercel logs`
+
+## ✅ Session 65a — DD-H5, DD-C7, DD-H11 (PR #271, 2026-06-01)
 
 - ✅ **DD-H5** — `calculate-scores`: captain + joker multipliers now use `Math.max` (not product). Captain+Joker on same player → ×2 (was ×4); TC+Joker → ×3 (was ×6). Live exploit since #270 wired the Joker.
 - ✅ **DD-C7** — `LeagueScreen`: gold commissioner-only banner on Draft leagues with no deadline set: "SET A DRAFT DEADLINE IN THE ADMIN TAB". Clicking navigates to the commissioner view. Commissioner tour now has a clear entry point post-creation.
@@ -68,7 +77,7 @@ Next migration: `110_`
 | **DD-C2** | Security | `set_lineup` granted `TO authenticated` (✅verified `107:218`), **no `auth.uid()` check** (grep: `auth.uid` absent from file). Exploit: sabotage a rival's XI, lock out their players, or trigger the deduction branch to **subtract a rival's already-scored points**. | `107_starting_xi_and_bench.sql:218,170-186` |
 | **DD-C3** | Game logic | **Live-match lineup lock is bypassable.** Deduction only fires when benched player's fixture is `finished`; during `live` it's allowed with no deduction. Locks written fire-and-forget by 5-min ingest cron — gap between kickoff and next ingest lets a manager bench a player mid-match to dodge a 0. | `107:...`, `ingest-match-events/index.js:544` |
 | **DD-C4** | Admin | `run-draft-lottery` enforces commissioner check only `if (authHeader)` present (✅verified line 33) — a request with `league_id` and **no auth header** runs the irreversible allocation. Trust inferred from header absence, not a verified service-role key. | `run-draft-lottery/index.js:33` |
-| **DD-C5** | Funnel | **If Vercel prod doesn't set `VITE_AUTH_ENABLED=true`, every pilot user shares ONE demo identity** (✅verified default `false`, `AuthContext.jsx:27,34`; all auth no-ops in demo mode). Master switch — without it the whole pilot is one shared account. | `.env.example:14`, `AuthContext.jsx` |
+| ~~**DD-C5**~~ | ~~Funnel~~ | ~~Every pilot user shares ONE demo identity if VITE_AUTH_ENABLED not set.~~ **✅ Fixed session 65** — was set to placeholder URL; removed and re-added as `true`; redeployed. Auth is live. | |
 | **DD-C6** | Funnel | `join_league_by_code` is **called by the UI** (✅verified `LeagueScreen.jsx:627`) but **defined in NO migration** (✅verified grep). Exists in prod only if hand-created. If missing/dropped, **no second user can ever join a league** — fatal for a multi-user pilot. | `LeagueScreen.jsx:627` |
 | ~~**DD-C7**~~ | ~~Funnel~~ | ~~New **Draft** league has no path to the draft.~~ **✅ Fixed #271** — Gold commissioner banner on Draft leagues with no deadline; navigates to Admin tab. | |
 | **DD-C8** | Pipeline | Canonical sync orchestrator `sync-all-active-tournaments` uses `current_setting('app.*')` which **returns NULL on hosted Supabase** (never rewritten like the others). Migration 73 made it the sole path for `sync-player-status`. Net: **WC player injury/availability never auto-refreshes.** | `51_dynamic_cron_tournaments.sql:24-27` |
