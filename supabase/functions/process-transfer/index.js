@@ -57,14 +57,29 @@ Deno.serve(async (req) => {
     const tournamentId = membership?.leagues?.tournament_id ?? null;
 
     // Read price from DB — never trust the client-supplied value (SEC-3).
+    // Also fetches tournament_id for isolation check below.
     const { data: playerData, error: playerErr } = await supabase
       .from('players')
-      .select('price, position')
+      .select('price, position, tournament_id')
       .eq('id', player_id)
       .maybeSingle();
 
     if (playerErr || !playerData) {
       return json({ ok: false, error: 'Player not found' }, 400, corsHeaders);
+    }
+
+    // Tournament isolation: every league is tied to exactly one competition.
+    // A player from a different tournament can never enter this league's squads.
+    if (
+      tournamentId &&
+      playerData.tournament_id &&
+      playerData.tournament_id !== tournamentId
+    ) {
+      return json({
+        ok:    false,
+        code:  'WRONG_TOURNAMENT',
+        error: 'This player is not part of this competition',
+      }, 400, corsHeaders);
     }
 
     const price = Number(playerData.price ?? 0);
