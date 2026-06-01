@@ -1071,6 +1071,12 @@ export default function AdminSeedScreen() {
     </div>
   );
 
+  if (!loading && myLeagues.length === 0) return (
+    <div className="min-h-screen bg-bg flex items-center justify-center">
+      <p className="text-text-secondary text-sm">Commissioner access only.</p>
+    </div>
+  );
+
   return (
     <div className="min-h-screen bg-bg p-4 max-w-2xl mx-auto pb-24">
       {/* Header */}

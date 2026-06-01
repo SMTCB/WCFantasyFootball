@@ -431,6 +431,7 @@ export default function SquadScreen() {
   };
 
   const doSwap = async (pitchPlayer, benchPlayer) => {
+    if (saving) return;
     try {
       setSaving(true);
       setSelectedPlayer(null);
@@ -528,7 +529,7 @@ export default function SquadScreen() {
       const userId     = user?.id;
       const today      = new Date().toISOString().split('T')[0];
       const matchdayId = squadData?.matchdayId ?? null;
-      const row = { user_id: userId, player_id: selectedPlayer.id, joker_date: today };
+      const row = { user_id: userId, player_id: selectedPlayer.id, joker_date: today, league_id: squadData?.leagueId ?? null };
       if (matchdayId) row.matchday_id = matchdayId;
       const { error } = await supabase.from('daily_jokers').insert(row);
       if (error) {
@@ -632,7 +633,7 @@ export default function SquadScreen() {
       const userId      = user?.id;
       const today       = new Date().toISOString().split('T')[0];
       const matchdayId  = squadData?.matchdayId ?? null;
-      const row = { user_id: userId, player_id: player.id, joker_date: today };
+      const row = { user_id: userId, player_id: player.id, joker_date: today, league_id: squadData?.leagueId ?? null };
       if (matchdayId) row.matchday_id = matchdayId;
       const { error } = await supabase.from('daily_jokers').insert(row);
       if (error) {
