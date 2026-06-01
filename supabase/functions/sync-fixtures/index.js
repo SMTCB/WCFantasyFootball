@@ -50,13 +50,14 @@ function respond(status, body) {
   });
 }
 
-// Map Forza match status to our enum — 2.2.c: include postponed/cancelled/abandoned
+// Map Forza match status to the match_status enum (scheduled | live | finished).
+// Non-enum values must be remapped: postponed → scheduled; cancelled/abandoned → finished.
+// status_detail carries the Forza-specific value for display/audit purposes.
 function mapStatus(forzaStatus) {
-  if (forzaStatus === 'live')        return 'live';
-  if (forzaStatus === 'after')       return 'finished';
-  if (forzaStatus === 'postponed')   return 'postponed';
-  if (forzaStatus === 'cancelled')   return 'cancelled';
-  if (forzaStatus === 'abandoned')   return 'abandoned';
+  if (forzaStatus === 'live')                                      return 'live';
+  if (forzaStatus === 'after')                                     return 'finished';
+  if (forzaStatus === 'cancelled' || forzaStatus === 'abandoned')  return 'finished';
+  if (forzaStatus === 'postponed')                                 return 'scheduled';
   return 'scheduled';
 }
 

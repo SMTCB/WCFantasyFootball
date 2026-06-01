@@ -77,6 +77,7 @@ export function useCommissioner(leagueId, tournamentId) {
       transfers_remaining: windowTransfers ? Number(windowTransfers) : null,
     });
     if (error) throw new Error(error.message);
+    await supabase.from('leagues').update({ transfers_open: true }).eq('id', leagueId);
     setCommMsg({ type: 'ok', text: 'Transfer window opened.' });
   }), [commAction, leagueId, windowOpensAt, windowClosesAt, windowTransfers]);
 
@@ -86,6 +87,7 @@ export function useCommissioner(leagueId, tournamentId) {
       .eq('league_id', leagueId)
       .gt('closes_at', new Date().toISOString());
     if (error) throw new Error(error.message);
+    await supabase.from('leagues').update({ transfers_open: false }).eq('id', leagueId);
     setCommMsg({ type: 'ok', text: 'Transfer window closed.' });
   }), [commAction, leagueId]);
 
