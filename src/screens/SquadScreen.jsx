@@ -2095,11 +2095,16 @@ export default function SquadScreen() {
                   {selectedPlayer.position}
                 </div>
                 <div>
-                  <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 18, color: 'var(--paper)', lineHeight: 1.1 }}>
+                  <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 18, color: 'var(--paper)', lineHeight: 1.1, display: 'flex', alignItems: 'baseline', gap: 8, flexWrap: 'wrap' }}>
                     {selectedPlayer.name}
+                    {selectedPlayer.price > 0 && (
+                      <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 13, color: 'var(--paper)', letterSpacing: '0.04em' }}>
+                        £{Number(selectedPlayer.price).toFixed(1)}M
+                      </span>
+                    )}
                   </div>
                   <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 10, color: 'var(--mute)', letterSpacing: '0.14em', marginTop: 4, display: 'flex', alignItems: 'center', gap: 8 }}>
-                    {selectedPlayer.club} · £{selectedPlayer.price}M
+                    {selectedPlayer.club}
                     {selectedPlayer.id === captainId && (
                       <span style={{ color: 'var(--gold)', background: 'rgba(224,168,0,0.12)', border: '1px solid rgba(224,168,0,0.3)', padding: '1px 6px', borderRadius: 2 }}>CAPTAIN</span>
                     )}
