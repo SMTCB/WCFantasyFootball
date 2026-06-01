@@ -183,10 +183,10 @@ export default function MarketScreen() {
     try {
       const userId = user?.id;
       if (userId) {
-        const squadQuery = supabase.from('squads').select('*').eq('user_id', userId);
-        if (activeLeague) squadQuery.eq('league_id', activeLeague);
+        let squadQuery = supabase.from('squads').select('*').eq('user_id', userId);
+        if (activeLeague) squadQuery = squadQuery.eq('league_id', activeLeague);
         const [{ data: sData }, { data: jData }] = await Promise.all([
-          squadQuery.maybeSingle(),
+          squadQuery.order('created_at', { ascending: false }).limit(1).maybeSingle(),
           supabase.from('daily_jokers').select('player_id')
             .eq('user_id', userId)
             .eq('joker_date', new Date().toISOString().split('T')[0])
