@@ -1,6 +1,6 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-06-01 (session 65 closeout — DD-C5 closed, Vercel CLI access set up, env vars cleaned)  
+**Last Updated**: 2026-06-01 (session 66 closeout — all 9 open HIGH items resolved; migration 110 applied; next migration 111_)  
 **E2E Test Suite**: `platform.spec.js` (36 tests × 2 browsers) passing in CI ✅ — completes in ~3 min  
 **Live App**: https://wc-fantasy-football.vercel.app  
 **WC Kick-off**: 2026-06-11 19:00 UTC (Mexico vs South Africa)
@@ -51,8 +51,38 @@
 - ✅ **NEW-C2** — Mark stuck draft submissions `processed` for test leagues → loop stopped
 
 ### Still open (HIGH/MEDIUM/LOW from session 63):
-See full table below. All CRITICAL items now resolved. Next batch: HIGH items (pipeline + auction + admin), planned for next session.
-Next migration: `110_`
+See full table below. All CRITICAL + HIGH items now resolved (except H1/H4/H6/H8 — deferred, see session 66 notes).
+Next migration: `111_`
+
+## ✅ Session 66 — All Open HIGH Items (PR #272, 2026-06-01)
+
+**Goal**: Close every remaining HIGH-priority DD audit item before WC kick-off.
+
+| ID | Fix | Where |
+|----|-----|-------|
+| ~~**DD-H2**~~ | `place_bid` — `FOR UPDATE` locks on listing + squad rows; prevents lower bid overwriting higher concurrent bid | migration 110 |
+| ~~**DD-H3**~~ | VERIFIED CLOSED — live schema confirmed as `seller_id/starting_bid/deadline_at/min_increment/highest_bidder_id` | DB query |
+| ~~**DD-H7**~~ | RUN ALLOCATION button disabled once `allocationDone` (desktop + mobile) | `CommissionerPanel.jsx` |
+| ~~**DD-H9**~~ | `resolve_bet` now returns `BET_STILL_OPEN` if `status='open'` and `deadline_at > NOW()` | migration 110 |
+| ~~**DD-H10**~~ | Wildcard chip removed from UI — description was factually wrong ("unlimited transfers" vs actual "+10% boost"); hidden to prevent pilot confusion | `SquadScreen.jsx`, `MarketScreen.jsx` |
+| ~~**DD-H12**~~ | `sync-wc-fixtures` bumped from 6h → 30min; cron renamed `sync-wc-fixtures-30m` | migration 110 |
+| ~~**DD-H13**~~ | `calculate-scores-post-match` cron replaces expired anon JWT (exp 2024-08-17) with service-role key | migration 110 |
+| ~~**DD-H14**~~ | `ingest-match-events` — `Promise.all` → `Promise.allSettled`; partial endpoint failures logged and ingest continues | edge function redeployed |
+| ~~**DD-H15**~~ | `leagues` UPDATE RLS — new `leagues: commissioner update` policy; co-commissioners can now save admin changes | migration 110 |
+
+### Deferred HIGH items (complex, scheduled for next session)
+
+| ID | Reason |
+|----|--------|
+| **DD-H1** | Budget reservation on auction bids — needs `reserved_budget` column schema change |
+| **DD-H4** | Transfer recovery-window orphan — complex `process-transfer` surgery |
+| **DD-H6** | `calculate-scores` auth guard — `verify_jwt=false` makes JWT verification non-trivial without breaking cron |
+| **DD-H8** | Non-transactional draft lottery — risky multi-step edge function refactor |
+
+**Next migration**: `111_`
+**Build/lint**: `npm run build` ✅ clean · `npm run lint` ✅ warnings only (all pre-existing)
+
+---
 
 ## ✅ Session 65 — DD-H5/C7/H11 + DD-C5 + Vercel access (PRs #270–271, 2026-06-01)
 
@@ -92,20 +122,20 @@ Next migration: `110_`
 | ID | Area | Issue | Evidence |
 |----|------|-------|----------|
 | **DD-H1** | Auction | **No budget reservation** — budget checked at bid time against full balance, only debited at settlement. One manager can be top bidder on N auctions each ≤ balance; at settlement first wins, rest silently cancelled nondeterministically — sellers unpaid, "spend only what you have" broken. | `100_auction_fixes.sql:39-54,160` |
-| **DD-H2** | Auction | `place_bid` **lost its `FOR UPDATE` row lock** (present in mig 27, gone in 80/90/100). Concurrent bids read stale `current_bid`, both pass, last-writer-wins → a lower bid can overwrite a higher one; highest bid not guaranteed to win. | `100_auction_fixes.sql:19,57` |
-| **DD-H3** | Auction | Migration history is **internally contradictory** on `auction_listings` columns (`seller_squad_id`/`min_bid`/`ends_at` vs `seller_id`/`starting_bid`/`deadline_at`) and on the `place_bid` overload. Frontend uses the second set. Unclear bidding even works as expected until live schema confirmed. | mig 27/66 vs 36/80/100 |
+| ~~**DD-H2**~~ | ~~Auction~~ | ~~`place_bid` lost its `FOR UPDATE` row lock.~~ **✅ Fixed #272** — migration 110 adds `FOR UPDATE` on listing + squad rows; concurrent bids now serialise correctly. | |
+| ~~**DD-H3**~~ | ~~Auction~~ | ~~Migration history contradictory on column names.~~ **✅ VERIFIED CLOSED #272** — live schema confirmed `seller_id/starting_bid/deadline_at/min_increment/highest_bidder_id`; matches frontend. | |
 | **DD-H4** | Game logic | **Transfer recovery-window can orphan a squad.** `process-transfer` filters squad by *nearest upcoming* deadline; in the 6h post-deadline window that's the next round, lookup misses the real squad and **creates a fresh empty squad (budget 100, players [])**. Manager loses roster. | `process-transfer/index.js:153,156-167` |
-| ~~**DD-H5**~~ | ~~Scoring~~ | ~~Captain + Joker stack to ×4.~~ **✅ Fixed #271** — `Math.max(captainMult, jokerMult)` in `calculate-scores`. | |
+| ~~**DD-H5**~~ | ~~Scoring~~ | ~~Captain + Joker stack to ×4.~~ **✅ Fixed #271** | |
 | **DD-H6** | Security | `calculate-scores` has **no authorization at all** — any authenticated user / anon-key holder can trigger a full recalc for any fixture across every league. Idempotent (not destructive) but open global-write/DoS surface. | `calculate-scores/index.js` |
-| **DD-H7** | Admin | RUN ALLOCATION button stays enabled after allocation (`allocationDisabled` omits `allocationDone`, `CommissionerPanel.jsx:1251`), contradicting LIFECYCLE_OPERATIONS.md ("no re-run exposed"). Only the edge idempotency gate prevents destructive re-run. | `CommissionerPanel.jsx:1251` |
+| ~~**DD-H7**~~ | ~~Admin~~ | ~~RUN ALLOCATION stays enabled after allocation.~~ **✅ Fixed #272** — `allocationDisabled` now includes `allocationDone` (desktop + mobile). | |
 | **DD-H8** | Draft | `run-draft-lottery` is **non-transactional** (allocations → squads → submissions as separate calls, no rollback). Mid-way crash leaves managers with allocations but no squad; idempotency gate then skips recovery. | `run-draft-lottery/index.js` |
-| **DD-H9** | Bets | Commissioner can **resolve an OPEN bet before the match** — resolve list shows open bets and `resolve_bet` has no status/deadline guard (combines with DD-C10 to re-resolve after real result). | `CommissionerPanel.jsx:1041`, `useCommissioner.js:153` |
-| **DD-H10** | Chips | **"Wildcard" is mislabeled.** UI says "unlimited free transfers" (`SquadScreen.jsx:41`) but the only effect of `is_wildcard` is a hidden **+10% total-points boost** (`calculate-scores:516`) — zero interaction with transfer limits. Undisclosed competitive imbalance + guaranteed support tickets. | `SquadScreen.jsx:41`, `calculate-scores/index.js:516` |
-| ~~**DD-H11**~~ | ~~Funnel/Sec~~ | ~~`create_league`/`join_league_by_code` trust client `p_user_id`.~~ **✅ Fixed #271** — migration 109 uses `auth.uid()` internally; `p_user_id` param retained for compat but ignored. | |
-| **DD-H12** | Pipeline | **Live ingest is chicken-and-egg with ~6h worst-case latency.** `ingest-match-events-live` only fires for fixtures already `status='live'`, but status is flipped live only by the 6-hourly `sync-wc-fixtures-6h`. A match can run its full 90 min before ingest starts. | `91_fix_remaining_current_setting_crons.sql:42` |
-| **DD-H13** | Pipeline | Cron bodies rewritten 5× (mig 60/63/67/68/86/87/90/91); `calculate-scores-post-match` carries an **expired anon JWT (exp 2024-08-17)** — works only because `verify_jwt=false`; one toggle from silent scoring outage. Live cron state cannot be assumed from highest-numbered file. | `87:20`, `90_fix_wc_sync_crons.sql:6` |
-| **DD-H14** | Pipeline | `ingest-match-events` uses `Promise.all` on 4 Forza endpoints — if any one stays down after retries, the **whole match's ingest aborts** with no partial write and no `logError`. Should be `allSettled`. | `ingest-match-events/index.js:216,555` |
-| **DD-H15** | Admin | **Authority split-brain:** `leagues` UPDATE RLS gated on `created_by = auth.uid()` (creator only), but UI + bet/gazette RPCs use `role='commissioner'`. A co-commissioner sees the full panel but `setLeagueDraftDeadline` silently fails RLS. | `47_rls_core_tables.sql:64`, `LeagueScreen.jsx:304` |
+| ~~**DD-H9**~~ | ~~Bets~~ | ~~Commissioner can resolve OPEN bet before the match.~~ **✅ Fixed #272** — `resolve_bet` migration 110: returns `BET_STILL_OPEN` if `status='open'` and `deadline_at > NOW()`. | |
+| ~~**DD-H10**~~ | ~~Chips~~ | ~~"Wildcard" mislabeled — UI said "unlimited transfers", actual = +10% pts boost.~~ **✅ Fixed #272** — Wildcard chip removed from UI entirely to prevent pilot confusion. | |
+| ~~**DD-H11**~~ | ~~Funnel/Sec~~ | ~~`create_league`/`join_league_by_code` trust client `p_user_id`.~~ **✅ Fixed #271** | |
+| ~~**DD-H12**~~ | ~~Pipeline~~ | ~~Live ingest chicken-and-egg, ~6h worst-case latency.~~ **✅ Fixed #272** — `sync-wc-fixtures` now runs every 30 min (`sync-wc-fixtures-30m`); worst-case gap is 30 min. | |
+| ~~**DD-H13**~~ | ~~Pipeline~~ | ~~`calculate-scores-post-match` carries expired anon JWT (exp 2024-08-17).~~ **✅ Fixed #272** — migration 110 replaces with service-role key. | |
+| ~~**DD-H14**~~ | ~~Pipeline~~ | ~~`ingest-match-events` uses `Promise.all` — one Forza endpoint down aborts all ingest.~~ **✅ Fixed #272** — switched to `Promise.allSettled`; partial failures logged, ingest continues. | |
+| ~~**DD-H15**~~ | ~~Admin~~ | ~~`leagues` UPDATE RLS gated on `created_by` only.~~ **✅ Fixed #272** — migration 110 adds `leagues: commissioner update` policy; co-commissioners can now save. | |
 
 ### 🟡 MEDIUM
 
