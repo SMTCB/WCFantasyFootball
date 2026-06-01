@@ -72,11 +72,15 @@ export function useAutoFill(leagueId, squadData, fetchSquad, takenMap = {}, buy,
         .maybeSingle();
       tournamentId = leagueRow?.tournament_id ?? null;
 
-      // ── Count current positions ──────────────────────────────────────────
+      // ── Count current positions (starters + bench) ──────────────────────
+      // benchPlayers are player objects in SquadScreen; in MarketScreen bench=[].
+      // Must include both to avoid miscomputing capacity for positions already full
+      // on the bench (e.g. FWD at 3/3 but only 1 in the starting XI → need.FWD > 0 wrongly).
       const have = { GK: 0, DEF: 0, MID: 0, FWD: 0 };
-      for (const p of playerObjects) {
+      for (const p of [...playerObjects, ...benchPlayers]) {
+        if (typeof p !== 'object' || !p) continue;
         const pos = p.position?.toUpperCase().replace('FW', 'FWD');
-        if (have[pos] !== undefined) have[pos]++;
+        if (pos && have[pos] !== undefined) have[pos]++;
       }
 
       const minPer = cfg.minFormation ?? { GK: 1, DEF: 3, MID: 2, FWD: 1 };
