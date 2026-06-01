@@ -59,7 +59,7 @@ Controls the initial player selection deadline and runs the squad allocation eng
 
 **Preconditions:**
 - RUN ALLOCATION disabled until the draft deadline has passed.
-- Once allocation runs, the button is replaced by `ALLOCATED · [timestamp]`. No re-run is exposed.
+- RUN ALLOCATION disabled once allocation is done (`cup_phase ≠ 'pre_cup'`) — button stays visible but greyed out. Status pill updates to `ALLOCATED`. No re-run is exposed to the commissioner.
 - If the admin does not run allocation manually, a cron job fires automatically **4 hours before the first match**.
 
 **Confirm dialog:**
@@ -88,7 +88,7 @@ A second draft run at the group-stage → knockout transition. Same mechanics as
 - **Locked** (non-interactive) until Group Stage allocation is confirmed complete (`cup_phase ≠ 'pre_cup'`). A status label explains why.
 - Once unlocked: admin sets a new deadline, managers submit 30 new picks from the surviving club pool.
 - Same auto-run cron applies: fires 4 hours before the first knockout match if not already triggered.
-- After running, button replaced by `ALLOCATED · [timestamp]`. No re-run exposed.
+- After running, button stays visible but is disabled. Status pill updates to `ALLOCATED`. No re-run exposed.
 - `cup_phase` is set to `elimination` after a successful knockout allocation run.
 
 **Status values:**

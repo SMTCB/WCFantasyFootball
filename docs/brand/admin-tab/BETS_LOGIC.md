@@ -128,6 +128,9 @@ Click VOID to cancel a bet when the underlying fixture is cancelled, postponed, 
 | Fixture cancelled / postponed | Use VOID — do not resolve with a dummy answer |
 | Late picks (after kickoff) | Server rejects; UI does not need to handle this |
 | Duplicate bet same fixture + type | Server rejects; client shows a toast and rewinds to Step 2 |
+| Bet still open (deadline in future) | `resolve_bet` returns `BET_STILL_OPEN` error — resolution is blocked until `deadline_at` has passed |
+
+**Pre-deadline guard** (migration 110): `resolve_bet` checks `status = 'open' AND deadline_at > NOW()` and returns `{ ok: false, error: 'BET_STILL_OPEN' }`. This prevents a commissioner from awarding points before submissions have closed. The guard only applies when `deadline_at` is not null — bets with no deadline can still be resolved at any time.
 
 ---
 
