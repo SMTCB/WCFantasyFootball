@@ -54,7 +54,9 @@ The tab inherits the shared chrome (`HubTopbar` + `HubActionBar` + `HubTabs` wit
 #### Zone A — Season-state stepper (`<SeasonStepper/>`)
 - Full-width bar at the top of the tab body. Background `--ink-2`, bottom rule `--rule`.
 - Heading row (height ~30px): purple 3×14 accent + mono label `"COMMISSIONER CONTROLS"` (paper, 11px, .22em tracking) + dim subtitle `"· ADMIN ONLY · CHANGES TAKE EFFECT IMMEDIATELY"` + right-aligned league summary `"OFFICE HEROES · 14 MGRS · GW28"`.
-- 5 phases laid out as equal columns: `TRANSFER WINDOW`, `DRAFT DEADLINE`, `ALLOCATION`, `CUP SEEDED`, `IN SEASON · GW28`.
+- **Phase count is mode-aware:**
+  - Classic: 2 phases — `TRANSFER WINDOW`, `IN SEASON`
+  - Draft (any format): 4 phases — `TRANSFER WINDOW`, `DRAFT DEADLINE`, `ALLOCATION`, `IN SEASON`
 - Each phase: 28×28 circle (filled-positive for done, outline-cyan for active, outline-mute for todo) → 1px connecting line at circle-centre → mono label coloured to match → sub-status in mute.
 - Active phase shows a `● YOU ARE HERE` chip below.
 
@@ -80,13 +82,19 @@ The tab inherits the shared chrome (`HubTopbar` + `HubActionBar` + `HubTabs` wit
    - **Answer** field — chip buttons (one per option). Picked = positive border + check.
    - Footer row: `AWARDS +N PTS TO M MANAGERS` lead-in (mute, mono) + ghost `VOID` + filled gold `RESOLVE →`.
 
+#### Zone B.5 — League News
+- Section header: danger accent, label `"LEAGUE NEWS"`, sub `"POST TO ACTIVITY FEED"`.
+- Headline text input (full-width) + optional Details textarea + `POST TO LEAGUE →` button (danger fill).
+- Posts a `breaking_news` gazette entry visible to all managers in their RECAP tab immediately.
+- Visible for all modes and formats.
+
 #### Zone C — Lifecycle operations (`<LifecycleOps/>`)
 - Section header: purple accent, label `"LIFECYCLE OPERATIONS"`, sub `"SEASON-STAGE CONTROLS"`.
-- 4-column grid of cards, each ~240px min height:
-  1. **TRANSFER WINDOW** (status `CLOSED`, danger tone) — Opens/Closes inputs side-by-side, Limit input, paired buttons `OPEN` (positive) and `CLOSE NOW` (danger outline).
-  2. **DRAFT** (status `DEADLINE SET · 15 MAR`, positive) — Deadline input, ghost `SET DEADLINE` button, divider, mono spec line, gold `RUN ALLOCATION ↯` button.
-  3. **CUP PHASE** (status `UNSEEDED`, warn) — Mono info block (`20 CLUBS · 14 MGRS`), purple `SEED CUP CLUBS ↯` button.
-  4. **SCORE RECALCULATION** (status `UTILITY · ON-DEMAND`, mute) — Fixture ID input, last-run info block, warn `RECALCULATE SCORES ↯` button.
+- Card grid, each ~240px min height. **Card set is mode- and format-driven:**
+  1. **TRANSFER WINDOW** (always) — Opens/Closes datetime inputs, Limit input, paired `OPEN` (positive) + `CLOSE NOW` (danger outline) buttons. For WC/tournament leagues: shows `DEADLINE-CONTROLLED` label; buttons hidden.
+  2. **DRAFT** (Draft mode only) — Deadline input, ghost `SET DEADLINE` button, divider, mono spec line (`15 PLAYERS / MGR · £100M · GK≤2 DEF≤5 MID≤5 FWD≤3`), gold `RUN ALLOCATION ↯` button.
+  3. **KNOCKOUT DRAFT** (Draft + Cup format only, shown when cup evidence exists) — Deadline input, gold `RUN KNOCKOUT ALLOCATION ↯` button. Locked label shown until group allocation completes.
+  4. **SCORE RECALCULATION** (always) — Green `SCORE LATEST ROUND ↯` button + Fixture ID input + warn `RECALCULATE ↯` button.
 - Every card carries a `WHEN TO RUN · …` hint block above the primary button.
 
 ### 2. Mobile — `<MobAdmin/>`
@@ -94,10 +102,11 @@ The tab inherits the shared chrome (`HubTopbar` + `HubActionBar` + `HubTabs` wit
 **390 × 2400. One scrollable column.** Inherits `<PhoneShell/>` → `<AppTopbar/>` → `<HubLeagueHeader/>` → `<HubTabPills active="admin"/>` (admin pill added to the existing 7-tab pill row).
 
 Vertical sequence:
-1. **`<MobSeasonStepper/>`** — same 5-phase stepper, compressed: 22×22 dots, 8px labels, no "you are here" chip.
-2. **`<MobCreateBet/>`** — accordion wizard. Each step is a button-header (step number + label + summary of completed value) that toggles to reveal the form. Only the active step is expanded. Same rules and defaults as desktop. The preview lives inside Step 4.
-3. **`<MobResolveBets/>`** — vertical list of pending bets. Each card expands inline to show monograms + answer chips + RESOLVE button.
-4. **`<MobLifecycle/>`** — 4 stacked collapsible cards (`<MobLifecycleCard/>`). Each card shows title + status pill in the header; expanded body shows inputs, a `WHEN · …` hint, and the action button.
+1. **`<MobSeasonStepper/>`** — mode-aware dot-progress bar, compressed: 22×22 dots, 8px labels, no "you are here" chip. 2 dots for Classic, 4 dots for Draft (any format).
+2. **`<MobLifecycle/>`** — stacked collapsible cards (`<MobLifecycleCard/>`). Card count depends on mode: Classic = 2 (Transfer Window + Score Recalc); Draft League format = 3 (adds Draft); Draft Cup format = 4 (adds Knockout Draft once cup evidence exists). Each card shows title + status pill in the header; expanded body shows inputs, a `WHEN · …` hint, and the action button.
+3. **`<MobLeagueNews/>`** — Headline + Details inputs + POST button (all modes).
+4. **`<MobCreateBet/>`** — accordion wizard. Each step is a button-header (step number + label + summary of completed value) that toggles to reveal the form. Only the active step is expanded. Same rules and defaults as desktop. The preview lives inside Step 4.
+5. **`<MobResolveBets/>`** — vertical list of pending bets. Each card expands inline to show monograms + answer chips + RESOLVE button.
 
 Hit targets are ≥44px tall throughout. Inputs span full width.
 

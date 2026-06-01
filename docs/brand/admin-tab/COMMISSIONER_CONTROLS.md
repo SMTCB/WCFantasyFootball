@@ -23,7 +23,7 @@ Two stages only — no draft mechanics exist.
 | 1 | TRANSFER WINDOW | Always (from league creation) |
 | 2 | IN SEASON | The league is live |
 
-### Draft Mode — League Format (`format = 'noduplicate'`, season-long)
+### Draft Mode — League Format (`format = 'noduplicate'`, season-long e.g. EPL)
 
 Four stages.
 
@@ -34,9 +34,16 @@ Four stages.
 | 3 | ALLOCATION | Allocation has run | `cup_phase ≠ 'pre_cup'` |
 | 4 | IN SEASON | Allocation complete | `cup_phase ≠ 'pre_cup'` |
 
-### Draft Mode — Cup Format (`format = 'noduplicate'`, cup/knockout tournament)
+### Draft Mode — Cup Format (`format = 'noduplicate'`, cup/knockout tournament e.g. WC, UCL)
 
-Same four stages — the Knockout Draft is tracked separately in Lifecycle Operations and does not add a stepper stage.
+Same four stages as League format. The Knockout Draft lifecycle is tracked separately in **Lifecycle Operations** as a dedicated card — it does not add a stepper stage. This keeps the stepper simple and consistent across formats.
+
+| Stage | Label | Same advancement logic as League format |
+|---|---|---|
+| 1 | TRANSFER WINDOW | ✓ |
+| 2 | DRAFT DEADLINE | ✓ |
+| 3 | ALLOCATION | ✓ |
+| 4 | IN SEASON | ✓ |
 
 ---
 
@@ -67,9 +74,15 @@ Each stage shows a descriptive sub-text when active or done:
 
 | Stage | Action required |
 |---|---|
-| 1 → 2 | Set a draft deadline via **Lifecycle Operations → Group Stage Draft → Set Deadline** |
-| 2 → 3 | Wait for the deadline to pass (automatic), then **Run Allocation** (or cron auto-runs 4h before first match) |
+| 1 → 2 | Set a draft deadline via **Lifecycle Operations → Group Stage Draft → SET DEADLINE** |
+| 2 → 3 | Wait for the deadline to pass (automatic), then **RUN ALLOCATION** (or cron auto-runs 4h before first match) |
 | 3 → 4 | Automatic — allocation running sets `cup_phase = 'group_stage'` |
+
+---
+
+## Mobile (`MobSeasonStepper`)
+
+Shows a condensed dot-progress bar using the same `computePhases` logic. Dots are 22×22 (vs 28×28 on desktop), labels are 8px, and the "● YOU ARE HERE" chip is omitted to save space. Same stage sets as desktop.
 
 ---
 
@@ -82,12 +95,13 @@ If no league data is loaded (`league === null`), the stepper renders with hardco
 ## Technical Notes
 
 - `computePhases(league, memberCount)` derives the stage set and current index from the `leagues` row.
+- Classic mode detected via `league.format !== 'noduplicate'` (i.e. `format = 'classic'`).
 - Draft mode detected via `league.format === 'noduplicate'`.
 - `allocationDone` = `league.cup_phase && league.cup_phase !== 'pre_cup'`.
 - `knockoutAllocationDone` = `cup_phase` ∈ `['elimination', 'round_of_16', 'quarter_final', 'semi_final', 'final']`.
 - Stage advancement is non-reversible in normal operation.
-- Mobile (`MobSeasonStepper`) shows a condensed dot-progress bar using the same `computePhases` logic.
+- The Knockout Draft card in Lifecycle Operations is shown when `(cup_phase ≠ 'pre_cup') OR (knockout_draft_deadline IS NOT NULL)` — this is separate from the stepper.
 
 ---
 
-Last Updated: **2026-05-31**
+Last Updated: **2026-06-01**

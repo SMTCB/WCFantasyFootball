@@ -153,4 +153,4 @@ Click VOID to cancel a bet when the underlying fixture is cancelled, postponed, 
 
 ---
 
-Last Updated: **2026-05-31**
+Last Updated: **2026-06-01**
