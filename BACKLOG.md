@@ -148,16 +148,16 @@ Next migration: `112_`
 
 | ID | Area | Issue |
 |----|------|-------|
-| **DD-M1** | Funnel/Frontend | **Onboarding tours globally disabled** — `useOnboarding.js:147` hardcodes `showWizard:false`; per-screen tours gated on `wizardDone` which can never become true. New users get zero guidance + the commissioner tour is dead code. One-line flip to fix. |
+| ~~**DD-M1**~~ | ~~Funnel/Frontend~~ | ~~Onboarding tours globally disabled.~~ **✅ Fixed #277** — `showWizard` restored to `!wizardDone`; new users see the welcome wizard on first login. |
 | **DD-M2** | Game logic | **`match_status` enum vs sync-fixtures mismatch** — enum is `scheduled/live/finished` but `sync-fixtures` writes `postponed/cancelled/abandoned`. If `fixtures.status` is that enum, one postponed match fails the entire fixtures+deadlines sync batch. *VERIFY column type.* |
 | **DD-M3** | Game logic | **`execute_transfer_atomic` `text[]` vs `uuid[]` mismatch** — `squads.players` is `TEXT[]` but function declares `v_new_players uuid[]` and does `@>`/`array_append` across types (set_lineup casts `::text`, this doesn't). If it errors, all buys/sells fail. *VERIFY with one live transfer.* |
-| **DD-M4** | Frontend | **Lineup swap has no double-submit guard** — `SquadScreen.jsx handleSwap` (line 405) lacks `if (saving) return` (unlike handleBuy/handleSell). Rapid double-tap fires two `set_lineup` RPCs. |
+| ~~**DD-M4**~~ | ~~Frontend~~ | ~~Lineup swap has no double-submit guard.~~ **✅ Fixed #277** — `if (saving) return` added to `doSwap`; rapid double-tap now a no-op while first call is in flight. |
 | **DD-M5** | Admin | **`transfers_open` status never reflects open/close buttons** — commissioner writes `transfer_windows`, but stepper/pills read `leagues.transfers_open` (only AdminSeedScreen writes it). UI misleads on both layouts. |
-| **DD-M6** | Admin/Funnel | **`AdminSeedScreen` not commissioner-gated** (`:1068` only checks `!user`, reachable by any auth user via URL) and its controls mutate **tournament-global** data (`match_events`, `player_match_stats`, `scoring_rules`) shared across all leagues on a tournament. |
+| ~~**DD-M6**~~ | ~~Admin/Funnel~~ | ~~`AdminSeedScreen` not commissioner-gated.~~ **✅ Fixed #277** — early return added when `!loading && myLeagues.length === 0`; non-commissioners see "Commissioner access only." |
 | **DD-M7** | Auction | **Winning an auction enforces zero squad constraints** — `array_append(players,...)` with no size/position/club-cap/duplicate check. Can win a 16th player or a duplicate, corrupting formation. |
 | **DD-M8** | Auction | **NULL-propagation bid floor** — if `min_increment`/`starting_bid` NULL, `GREATEST(NULL,...)` → NULL → comparison NULL → bid passes with no floor (arbitrary/£0.01 bid). *VERIFY column defaults.* |
 | **DD-M9** | Bets | **No stake is ever debited** — bets are risk-free upside only; losers pay nothing. If a wager economy was intended, it doesn't exist (design/expectation gap). |
-| **DD-M10** | Chips | **Joker insert omits `league_id`** (`SquadScreen.jsx:639`) but unique index is `(user_id, league_id, matchday_id)` (`96:22`). If column NOT NULL → joker can't save; if nullable → bleeds across leagues. |
+| ~~**DD-M10**~~ | ~~Chips~~ | ~~Joker insert omits `league_id`.~~ **✅ Fixed #277** — both `handleActivateJoker` and `handleJokerSelection` now include `league_id: squadData?.leagueId`; unique constraint works correctly, no cross-league bleed. |
 | **DD-M11** | Chips | **No deadline/lock check on chip activation** — `activate_chip` validates only season usage; RPC callable post-deadline. Worse, mig 66 grants users direct UPDATE on `is_wildcard/is_triple_captain/joker_player_id`, bypassing the season guard entirely. |
 | **DD-M12** | Funnel | **Sign-up / email-confirmation messaging ambiguous**, no resend path; behavior depends on a Supabase setting nobody has pinned for the pilot (`AuthScreen.jsx:77`). |
 | **DD-M13** | Pipeline | **Post-match scoring race** — daily 22:30 UTC cron scores any `finished` fixture; if Forza hasn't finalized (delay/ET/abandon) it locks in incomplete data with no NULL/plausibility guard. WC matches span time zones; one daily pass is coarse. |
