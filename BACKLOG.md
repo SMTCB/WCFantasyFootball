@@ -78,11 +78,13 @@ Next migration: `112_`
 | ~~**DD-H4**~~ | `process-transfer` recovery-window orphan — falls back to most recent squad before creating empty; uses squad's own matchday for transfer limits | edge function redeployed |
 | ~~**DD-H6**~~ | `calculate-scores` auth guard — service-role key (cron) or valid JWT required; anon-key-only callers get 401 | edge function redeployed |
 
-### Still deferred (H8 only)
+### Session 67 — DD-H8 (PR #275, 2026-06-01)
 
-| ID | Reason |
-|----|--------|
-| **DD-H8** | Non-transactional draft lottery — making it atomic requires moving logic into a DB stored procedure or full rollback support in the edge function; too risky without a dedicated session |
+| ID | Fix | Where |
+|----|-----|-------|
+| ~~**DD-H8**~~ | `run-draft-lottery` crash-safe two-phase re-entry — idempotency gate now checks `draft_submissions.status=pending`; re-entry rebuilds allocations from DB rows (no re-randomization); commit marker moved to immediately after squads upsert; gazette/notifications suppressed on re-entry | edge function redeployed |
+
+**No migration required** — pure edge function change.
 
 **Next migration**: `112_`
 **Build/lint**: `npm run build` ✅ clean · `npm run lint` ✅ warnings only (all pre-existing)
@@ -133,7 +135,7 @@ Next migration: `112_`
 | ~~**DD-H5**~~ | ~~Scoring~~ | ~~Captain + Joker stack to ×4.~~ **✅ Fixed #271** | |
 | ~~**DD-H6**~~ | ~~Security~~ | ~~`calculate-scores` no authorization — anon-key holder can trigger global recalc.~~ **✅ Fixed #273** — service-role key or valid user JWT required; anon-only callers → 401. | |
 | ~~**DD-H7**~~ | ~~Admin~~ | ~~RUN ALLOCATION stays enabled after allocation.~~ **✅ Fixed #272** — `allocationDisabled` now includes `allocationDone` (desktop + mobile). | |
-| **DD-H8** | Draft | `run-draft-lottery` is **non-transactional** (allocations → squads → submissions as separate calls, no rollback). Mid-way crash leaves managers with allocations but no squad; idempotency gate then skips recovery. | `run-draft-lottery/index.js` |
+| ~~**DD-H8**~~ | ~~Draft~~ | ~~`run-draft-lottery` is **non-transactional**.~~ **✅ Fixed #275** — two-phase re-entry: idempotency gate checks submissions status; crash between Phase 1 and Phase 2 is recovered on retry without re-randomization. | |
 | ~~**DD-H9**~~ | ~~Bets~~ | ~~Commissioner can resolve OPEN bet before the match.~~ **✅ Fixed #272** — `resolve_bet` migration 110: returns `BET_STILL_OPEN` if `status='open'` and `deadline_at > NOW()`. | |
 | ~~**DD-H10**~~ | ~~Chips~~ | ~~"Wildcard" mislabeled — UI said "unlimited transfers", actual = +10% pts boost.~~ **✅ Fixed #272** — Wildcard chip removed from UI entirely to prevent pilot confusion. | |
 | ~~**DD-H11**~~ | ~~Funnel/Sec~~ | ~~`create_league`/`join_league_by_code` trust client `p_user_id`.~~ **✅ Fixed #271** | |
