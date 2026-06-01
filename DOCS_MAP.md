@@ -112,8 +112,7 @@ Infrastructure, deployment procedures, and operational strategy.
 | File | Purpose | Key Content |
 |------|---------|-------------|
 | [OBSERVABILITY_STRATEGY.md](docs/deployment/OBSERVABILITY_STRATEGY.md) | Lightweight observability design (no external SaaS) | 5-minute setup per function, self-pruning logs, production readiness |
-| [DATA_PIPELINE_RUNBOOK.md](docs/deployment/DATA_PIPELINE_RUNBOOK.md) | Supabase cron setup & data activation steps | Fixtures, scores, player status syncs |
-| [DRY_RUN_PREP_CHECKLIST.md](docs/deployment/DRY_RUN_PREP_CHECKLIST.md) | Pre-launch verification checklist | Go/no-go criteria, sign-off process |
+| [DATA_PIPELINE_RUNBOOK.md](docs/deployment/DATA_PIPELINE_RUNBOOK.md) | Active cron table + data activation steps for any tournament | All 13 active cron jobs, fixtures, scores, player status syncs |
 
 ---
 
@@ -158,10 +157,10 @@ Files that were analysis/intermediate work — moved to `docs/archive/` on 2026-
 ### For Product & PM
 - **What's done/pending?** → [BACKLOG.md](BACKLOG.md) + [Notion BACKLOG](https://www.notion.so/361fe9c7e4c2803c9fc7c898a0c4bbac)
 - **Roadmap & timeline?** → [PIPELINE.md](PIPELINE.md)
-- **Launch readiness?** → [APP_STORE_ASSESSMENT.md](APP_STORE_ASSESSMENT.md) + [DRY_RUN_PREP_CHECKLIST.md](docs/deployment/DRY_RUN_PREP_CHECKLIST.md)
+- **Launch readiness?** → [APP_STORE_ASSESSMENT.md](APP_STORE_ASSESSMENT.md)
 
 ### For Deployment & Ops
-- **Pre-launch checklist?** → [DRY_RUN_PREP_CHECKLIST.md](docs/deployment/DRY_RUN_PREP_CHECKLIST.md)
+- **Active cron jobs?** → [DATA_PIPELINE_RUNBOOK.md](docs/deployment/DATA_PIPELINE_RUNBOOK.md) (Active Crons table at the top)
 - **Data pipeline setup?** → [DATA_PIPELINE_RUNBOOK.md](docs/deployment/DATA_PIPELINE_RUNBOOK.md)
 - **Mobile builds?** → [MOBILE_DEVELOPMENT.md](docs/reference/MOBILE_DEVELOPMENT.md)
 
@@ -202,7 +201,7 @@ docs/brand/                        # Design system
 
 docs/deployment/                   # Launch & ops
 ├── DATA_PIPELINE_RUNBOOK.md
-├── DRY_RUN_PREP_CHECKLIST.md
+├── OBSERVABILITY_STRATEGY.md
 └── OBSERVABILITY_STRATEGY.md
 
 docs/testing/                      # Test strategy & coverage
@@ -294,4 +293,4 @@ docs/archive/                      # Archived & consolidated docs
 - BACKLOG.md established as single source of truth for task management
 - All documentation now discoverable from DOCS_MAP.md
 
-Last Updated: **2026-06-01** (session 61 — added TRANSFER_WINDOW_SYSTEM.md, STARTING_XI_AND_BENCH.md; updated architecture table and file tree)
+Last Updated: **2026-06-01** (session 66 — DATA_PIPELINE_RUNBOOK.md updated with active cron table; DRY_RUN_PREP_CHECKLIST.md archived; TRANSFER_WINDOW_SYSTEM.md + BETS_LOGIC.md + LIFECYCLE_OPERATIONS.md updated for session 66 fixes)

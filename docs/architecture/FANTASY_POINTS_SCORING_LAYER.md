@@ -236,7 +236,8 @@ for rank, (player, score) in enumerate(players_bps[:3]):
         ┌────────────────────────────────────────┐
         │ Apply Captain / Chip Multipliers       │
         │ • Captain: ×2 pts                      │
-        │ • Wildcard: +10% to all               │
+        │ • Wildcard: +10% to all (DB only —    │
+        │   chip hidden from UI, session 66)    │
         │ • Bench boost: All bench count        │
         │ • Triple captain: ×3 pts              │
         └────────────┬─────────────────────────┘

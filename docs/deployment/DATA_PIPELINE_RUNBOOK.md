@@ -1,6 +1,28 @@
 # Data Pipeline Runbook
 **Everything needed to go from zero to live scoring for any tournament.**
 
+> **Current status (2026-06-01):** FIFA World Cup 2026 (forza_id `429`) is fully active. All 13 cron jobs are running in production. See the active cron table below before adding or modifying any scheduled jobs.
+
+---
+
+## Active Crons (production, 2026-06-01)
+
+| Job name | Schedule | Purpose |
+|---|---|---|
+| `sync-wc-fixtures-30m` | `*/30 * * * *` | Sync WC fixtures + flip status live/finished; was 6h (DD-H12 fix) |
+| `sync-wc-players-6h` | every 6h | Sync WC player roster + prices |
+| `sync-wc-player-status` | daily | Sync injury/suspension status |
+| `ingest-match-events-live` | every 5 min | Live match event ingestion (fires for `status='live'` fixtures) |
+| `calculate-scores-live` | every 2 min | Score live fixtures |
+| `calculate-scores-post-match` | `30 22 * * *` | Score finished fixtures in past 24h (service-role JWT; was expired anon JWT) |
+| `resolve-finished-bets` | every 15 min | Auto-resolve match-result bets |
+| `auto-close-bets` | hourly | Close bets past their deadline |
+| `sync-cup-eliminations` | every 6h | Sync cup club eliminations |
+| `run-draft-lottery` | every 5 min | Run allocation for leagues past deadline |
+| `run-reverse-standings-draft` | nightly | Reverse-standings draft order update |
+| `prune-error-logs` | weekly | Clear old edge_function_errors rows |
+| `resolve-expired-auctions` | every 5 min | Settle auctions past deadline |
+
 ---
 
 ## Architecture Overview

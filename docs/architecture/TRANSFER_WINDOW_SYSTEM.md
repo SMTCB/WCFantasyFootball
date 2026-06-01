@@ -87,6 +87,24 @@ SELL is never blocked by live fixture state — you can always offload a player.
 
 ---
 
+## Recovery Window — Squad Lookup (process-transfer)
+
+During the 6h recovery window (after a deadline passes, before the next round opens), `activeMatchdayId` resolves to the **next** round because `matchday_deadlines` filters `deadline_at >= now`. The user's existing squad was created for the **current** round.
+
+**Without the fix (DD-H4):** Squad lookup with `matchday_id = nextRound` found nothing → a new empty squad (£100M, no players) was created for the next round → the manager effectively lost their roster for that transfer.
+
+**Fix (session 66, `process-transfer/index.js`):** After the primary squad lookup fails, a fallback query fetches `ORDER BY created_at DESC LIMIT 1` (no matchday filter). If a previous-round squad is found, it is used — no empty squad is created. `execute_transfer_atomic` is called with `squad.matchday_id` (not `activeMatchdayId`) so transfer limit counts track against the correct round.
+
+```
+Transfer in recovery window:
+  activeMatchdayId = '429-r3'  (next round)
+  Squad lookup with matchday_id = '429-r3' → not found
+  Fallback: ORDER BY created_at DESC → finds squad matchday_id = '429-r2'  ← use this
+  execute_transfer_atomic(p_matchday_id: '429-r2')  ← limits checked against r2
+```
+
+---
+
 ## DB Trigger — Silent Failure Guard
 
 The `enforce_transfer_window` trigger on the `transfers` table is the old manual-window enforcement path. It is skipped for tournament leagues (those with `tournament_id`) via an early-exit condition:

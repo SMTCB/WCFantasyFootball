@@ -560,12 +560,14 @@ Always create a new file — never modify existing migrations.
 | 107 | `107_starting_xi_and_bench.sql` | Session 62: squads.starting_xi + lineup_locks; lineup_lock_per_fixture config; set_lineup() atomic swap function; lock_lineups_for_fixture() cron helper |
 | 108 | `108_security_lockdown.sql` | Session 64: execute_transfer_atomic ownership+server-price; set_lineup ownership+live-lock; resolve_bet double-resolve guard; REVOKE chip column grants; REVOKE execute_transfer_atomic from anon/authenticated; fix run-draft-lottery+run-reverse-standings-draft crons to service-role; cancel stuck draft submissions; WC knockout round_number backfill |
 | 109 | `109_auth_uid_league_functions.sql` | Session 65: create_league (both overloads) + join_league_by_code use auth.uid() instead of trusting client p_user_id |
+| 110 | `110_session66_high_items.sql` | Session 66: resolve_bet BET_STILL_OPEN guard; place_bid FOR UPDATE locks; leagues commissioner UPDATE RLS; sync-wc-fixtures-6h → sync-wc-fixtures-30m; calculate-scores-post-match expired JWT replaced with service-role key |
+| 111 | `111_session66b_h1_budget_reservation.sql` | Session 66: place_bid budget reservation — sums all open winning bids before accepting; rejects if new bid exceeds available (unreserved) budget |
 
-**Next migration**: `110_`
+**Next migration**: `112_`
 
 **Key pipeline facts (2026-06-01):**
 - `calculate-scores` uses `scoring_rules` table (not `scoring_templates`) keyed by `tournament_id`
-- `calculate-scores` is deployed as **v20** (edge function, `verify_jwt: false`; uses `starting_xi` for scoring with fallback to `players[0..10]`; multiplier rule: `Math.max(captainMult, jokerMult)` — chips do not stack)
+- `calculate-scores` is deployed as **v21** (edge function, `verify_jwt: false`; requires service-role key OR valid user JWT — anon-only callers get 401; uses `starting_xi` for scoring with fallback to `players[0..10]`; multiplier rule: `Math.max(captainMult, jokerMult)` — chips do not stack)
 - `calculate-scores` writes a `gazette_entries` row (`entry_type='activity'`) per league after scoring — idempotent (deletes+reinserts for same matchday_id)
 - `calculate-scores` stores integer points: `Math.round(total)` — no decimals in `fantasy_points.total`
 - `fantasy_points` column for squad total is `total` (not `total_points`) — integer
@@ -580,6 +582,10 @@ Always create a new file — never modify existing migrations.
   - `draft_report`: `{player_id, wanted_by, winner_id}[]` (contested picks) + optional `{text}` trailing item
   - older rows: `bullets` stored as a JSON-encoded string (not parsed JSONB)
   - Always use `normalizeBullets()` from `RecapScreen.jsx` before rendering; never render bullets directly
+- **Cron names** (active in prod): `sync-wc-fixtures-30m` (every 30 min — was `sync-wc-fixtures-6h`), `calculate-scores-post-match` (22:30 UTC, service-role JWT — was expired anon JWT), `ingest-match-events-live`, `calculate-scores-live`, `sync-wc-players-6h`, `resolve-finished-bets`, `sync-cup-eliminations`, `run-draft-lottery`, `run-reverse-standings-draft`, `auto-close-bets`, `prune-error-logs`, `resolve-expired-auctions`, `cron_job_status` helper
+- **Wildcard chip removed from UI** (session 66 — `SquadScreen.jsx` + `MarketScreen.jsx`): the DB column `squads.is_wildcard` and the +10% scoring multiplier still exist, but the chip is hidden to prevent confusion (UI said "unlimited transfers"; actual effect was +10% pts boost — undisclosed competitive imbalance). Do NOT re-add without fixing the description or the scoring effect.
+- **place_bid** (migration 111): budget reservation — sums all open winning bids before accepting new bid; `v_reserved` = SUM of current_bid on other open auctions where caller is `highest_bidder_id`; new bid rejected if `budget_remaining - v_reserved < p_bid_amount`
+- **process-transfer** recovery window fix: if squad not found for `activeMatchdayId`, falls back to most recently created squad for the league (`ORDER BY created_at DESC`) before creating a new empty one; `execute_transfer_atomic` called with `squad.matchday_id` not `activeMatchdayId` — ensures transfer limits tracked for correct round
 - `squads` updatable columns (via RLS): `captain_id`, `joker_player_id`, `is_wildcard`, `is_triple_captain`
 - `squads.starting_xi` TEXT[] — the 11 player IDs that score this round; empty `{}` → scoring falls back to `players[0..10]`
 - `squads.lineup_locks` JSONB — `{ matchday_id: [player_id, ...] }` — players subbed out, cannot re-enter XI until next matchday
