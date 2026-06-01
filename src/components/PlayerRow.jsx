@@ -106,6 +106,15 @@ export default function PlayerRow({
               {isDummy ? 'EMPTY SLOT' : player.name.toUpperCase()}
             </span>
 
+            {showPrice && !isDummy && player.price > 0 && (
+              <span
+                className="fk-mono shrink-0"
+                style={{ fontSize: 10, color: 'var(--paper)', letterSpacing: '0.04em' }}
+              >
+                £{Number(player.price).toFixed(1)}M
+              </span>
+            )}
+
             {isCaptain && <CaptainPill triple={isTripleCaptain} />}
 
             {player.isJoker && (
@@ -137,15 +146,14 @@ export default function PlayerRow({
             )}
           </div>
 
-          {/* Metadata line */}
+          {/* Metadata line — club only; price moved to name line */}
           <div
             className="fk-mono mt-0.5"
             style={{ fontSize: 9, color: 'var(--mute)', letterSpacing: '0.14em' }}
           >
             {isDummy
               ? 'OPEN MARKET TO SIGN'
-              : [player.club, player.country].filter(Boolean).join(' · ') +
-                (showPrice && player.price > 0 ? ` · £${Number(player.price).toFixed(1)}M` : '')}
+              : [player.club, player.country].filter(Boolean).join(' · ')}
           </div>
         </div>
       </div>
