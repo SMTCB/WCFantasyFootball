@@ -147,18 +147,34 @@ Deno.serve(async (req) => {
     //         (one per gameweek) always lands on the correct active row.
     let squadQuery = supabase
       .from('squads')
-      .select('id, players, budget_remaining')
+      .select('id, players, budget_remaining, matchday_id')
       .eq('user_id', user.id)
       .eq('league_id', league_id);
     if (activeMatchdayId) squadQuery = squadQuery.eq('matchday_id', activeMatchdayId);
     let { data: squad } = await squadQuery.maybeSingle();
+
+    // DD-H4: Recovery-window fallback. If no squad found for activeMatchdayId, look for the
+    // most recently created squad for this league. Handles the 6h post-deadline window where
+    // activeMatchdayId = next round but the user's real squad was created for the current round.
+    // Without this, a new empty squad is created for the next round and the manager loses their roster.
+    if (!squad && activeMatchdayId) {
+      const { data: prevSquad } = await supabase
+        .from('squads')
+        .select('id, players, budget_remaining, matchday_id')
+        .eq('user_id', user.id)
+        .eq('league_id', league_id)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (prevSquad) squad = prevSquad;
+    }
 
     if (!squad) {
       // First transfer in this league — create the squad row for the active matchday.
       const { data: newSquad, error: createErr } = await supabase
         .from('squads')
         .insert({ user_id: user.id, league_id, players: [], budget_remaining: 100, matchday_id: activeMatchdayId })
-        .select('id, players, budget_remaining')
+        .select('id, players, budget_remaining, matchday_id')
         .single();
       if (createErr) {
         await logError(FN, 'critical', 'Squad create failed', { user_id: user.id, league_id, matchday_id: activeMatchdayId, error: createErr.message });
@@ -186,7 +202,7 @@ Deno.serve(async (req) => {
           p_player_id:   player_id,
           p_price:       price,
           p_league_id:   league_id,
-          p_matchday_id: activeMatchdayId,
+          p_matchday_id: squad.matchday_id ?? activeMatchdayId,
         });
 
       if (updateErr || !xferResult?.ok) {
@@ -332,9 +348,9 @@ Deno.serve(async (req) => {
           p_price:       price,
           p_pos_limit:   posLimit,       // TDD-11: position cap enforced inside the lock
           p_squad_max:   SQUAD_MAX,      // TDD-11: squad size enforced inside the lock
-          p_club_max:    clubMax,        // 96/105: dynamic cap — relaxes as cup clubs are eliminated
-          p_league_id:   league_id,      // 106: transfer-limit enforcement context
-          p_matchday_id: activeMatchdayId, // 106: transfer-limit enforcement context
+          p_club_max:    clubMax,                            // 96/105: dynamic cap — relaxes as cup clubs are eliminated
+          p_league_id:   league_id,                          // 106: transfer-limit enforcement context
+          p_matchday_id: squad.matchday_id ?? activeMatchdayId, // 106: use squad's actual round, not next round
         });
 
       if (updateErr || !xferResult?.ok) {
