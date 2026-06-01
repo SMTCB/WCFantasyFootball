@@ -2099,9 +2099,9 @@ export default function CommissionerPanel({ commissioner, leagueId, tournamentId
     const mobAllocationDisabled = commLoading || !mobDeadlinePassed || mobAllocationDone;
 
     // AUDIT-58-A3: derive live status labels for mobile cards (mirrors desktop LifecycleOps)
-    const mobTwStatus = !!tournamentId           ? 'DEADLINE-CONTROLLED'
+    const mobTwStatus = tournamentId             ? 'DEADLINE-CONTROLLED'
                       : league?.transfers_open   ? 'OPEN' : 'CLOSED';
-    const mobTwTone   = !!tournamentId           ? 'var(--warn)'
+    const mobTwTone   = tournamentId             ? 'var(--warn)'
                       : league?.transfers_open   ? 'var(--positive)' : 'var(--danger)';
 
     const mobDraftStatus = !league?.draft_deadline ? 'NOT SET'
