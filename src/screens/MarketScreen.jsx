@@ -309,11 +309,21 @@ export default function MarketScreen() {
     });
   };
 
-  const filteredPlayers = useMemo(() => players.filter(p => {
-    const matchesPos = filterPos === 'ALL' || p.position === filterPos;
-    const matchesSearch = !searchQuery || p.name?.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesPos && matchesSearch;
-  }), [players, filterPos, searchQuery]);
+  const filteredPlayers = useMemo(() => {
+    const filtered = players.filter(p => {
+      const matchesPos = filterPos === 'ALL' || p.position === filterPos;
+      const matchesSearch = !searchQuery || p.name?.toLowerCase().includes(searchQuery.toLowerCase());
+      return matchesPos && matchesSearch;
+    });
+    // Own players always float to the top; within each group sort by price descending
+    const owned = mySquad?.players ?? [];
+    return filtered.sort((a, b) => {
+      const aOwned = owned.includes(a.id) ? 1 : 0;
+      const bOwned = owned.includes(b.id) ? 1 : 0;
+      if (aOwned !== bOwned) return bOwned - aOwned;
+      return b.price - a.price;
+    });
+  }, [players, filterPos, searchQuery, mySquad]);
   const squadCount  = mySquad?.players?.length || 0;
   const emptySlots  = Math.max(0, squadSize - squadCount);
 
@@ -493,49 +503,38 @@ export default function MarketScreen() {
           </div>
         )}
 
-        {/* Position quota row */}
+        {/* Position quota row — red=empty, yellow=partial, green=full */}
         <div className="flex gap-1.5 px-5 pb-2.5">
           {(['GK', 'DEF', 'MID', 'FWD']).map(pos => {
-            const cfg   = POS_CONFIG[pos];
-            const count = stats.posCounts[pos];
-            const max   = POS_LIMITS[pos];
-            const full  = count >= max;
-            const pct   = (count / max) * 100;
+            const count  = stats.posCounts[pos];
+            const max    = POS_LIMITS[pos];
+            const pct    = (count / max) * 100;
+            const status = count === 0 ? 'empty' : count >= max ? 'full' : 'partial';
+            const statusColor = status === 'empty' ? 'var(--danger)' : status === 'full' ? 'var(--positive)' : 'var(--gold)';
+            const statusBg    = status === 'empty' ? 'rgba(240,58,58,0.10)' : status === 'full' ? 'rgba(24,201,107,0.10)' : 'rgba(240,180,0,0.08)';
             return (
               <div
                 key={pos}
                 className="flex-1 rounded-sm overflow-hidden"
-                style={{ background: 'rgba(255,255,255,0.04)' }}
+                style={{ background: statusBg, border: `1px solid ${statusColor}30` }}
                 title={`${pos}: ${count}/${max}`}
               >
                 {/* Fill bar */}
                 <div
                   className="h-[3px] transition-all duration-300"
-                  style={{
-                    width: `${pct}%`,
-                    background: full ? cfg.color : `${cfg.color}60`,
-                  }}
+                  style={{ width: `${pct}%`, background: statusColor }}
                 />
-                <div
-                  className="px-1.5 py-1 flex items-center justify-between"
-                >
-                  <span
-                    className="text-[8px] font-black uppercase"
-                    style={{ color: full ? cfg.color : 'var(--mute)', fontFamily: 'Archivo Black, sans-serif', letterSpacing: '0.08em' }}
-                  >
+                <div className="px-1.5 py-1 flex items-center justify-between">
+                  <span className="text-[9px] font-black uppercase" style={{ color: statusColor, fontFamily: 'Archivo Black, sans-serif', letterSpacing: '0.08em' }}>
                     {pos}
                   </span>
-                  <span
-                    className="text-[8px] font-bold tabular-nums"
-                    style={{ color: full ? cfg.color : 'var(--mute)', fontFamily: 'Archivo Black, sans-serif' }}
-                  >
+                  <span className="text-[9px] font-black tabular-nums" style={{ color: statusColor, fontFamily: 'Archivo Black, sans-serif' }}>
                     {count}/{max}
                   </span>
                 </div>
               </div>
             );
           })}
-
         </div>
 
         {/* Search input */}
@@ -558,7 +557,7 @@ export default function MarketScreen() {
           />
         </div>
 
-        {/* Position filter tabs */}
+        {/* Position filter tabs — dot shows red/yellow/green fill status */}
         <div
           className="flex"
           data-tour="market-filters"
@@ -566,29 +565,36 @@ export default function MarketScreen() {
         >
           {POS_FILTER_ORDER.map(pos => {
             const isActive = filterPos === pos;
-            const cfg = pos !== 'ALL' ? POS_CONFIG[pos] : null;
-            const activeColor = cfg?.color ?? 'var(--paper)';
+            const posColor = pos !== 'ALL' ? (POS_CONFIG[pos]?.color ?? 'var(--paper)') : 'var(--paper)';
+            const activeColor = isActive ? posColor : 'var(--mute)';
+            // Status dot for position tabs (not for ALL)
+            const count  = pos !== 'ALL' ? stats.posCounts[pos] : null;
+            const max    = pos !== 'ALL' ? POS_LIMITS[pos] : null;
+            const dotColor = pos === 'ALL' ? null
+              : count === 0 ? 'var(--danger)'
+              : count >= max ? 'var(--positive)'
+              : 'var(--gold)';
             return (
               <button
                 key={pos}
                 onClick={() => setFilterPos(pos)}
-                className="flex-1 min-w-0 py-2.5 transition-all duration-150 relative"
+                className="flex-1 min-w-0 py-2.5 transition-all duration-150 relative flex flex-col items-center gap-1"
                 style={{
                   fontFamily: 'Archivo Black, sans-serif',
                   fontSize: '11px',
                   fontWeight: 800,
                   letterSpacing: '0.1em',
                   textTransform: 'uppercase',
-                  color: isActive ? activeColor : 'var(--mute)',
-                  background: isActive ? `${activeColor}0F` : 'transparent',
+                  color: activeColor,
+                  background: isActive ? `${posColor}0F` : 'transparent',
                 }}
               >
                 {pos}
+                {dotColor && (
+                  <div style={{ width: 5, height: 5, borderRadius: '50%', background: dotColor, flexShrink: 0 }} />
+                )}
                 {isActive && (
-                  <div
-                    className="absolute bottom-0 left-0 right-0 h-[2px]"
-                    style={{ background: activeColor }}
-                  />
+                  <div className="absolute bottom-0 left-0 right-0 h-[2px]" style={{ background: posColor }} />
                 )}
               </button>
             );
@@ -653,17 +659,17 @@ export default function MarketScreen() {
                         {p.name.toUpperCase()}
                       </span>
                       {isOwned && (
-                        <span className="fk-mono shrink-0" style={{ fontSize: 8, color: 'var(--cyan)', border: '1px solid var(--cyan)', padding: '1px 5px' }}>
+                        <span className="fk-mono shrink-0" style={{ fontSize: 9, fontWeight: 800, color: 'var(--cyan)', border: '1px solid var(--cyan)', padding: '2px 6px' }}>
                           OWNED
                         </span>
                       )}
                       {takenByOther && (
-                        <span className="fk-mono shrink-0" style={{ fontSize: 8, color: 'var(--danger)', border: '1px solid var(--danger)', padding: '1px 5px' }}>
+                        <span className="fk-mono shrink-0" style={{ fontSize: 9, fontWeight: 800, color: 'var(--danger)', border: '1px solid var(--danger)', padding: '2px 6px' }}>
                           {ownerName ? `TAKEN · ${ownerName}` : 'TAKEN'}
                         </span>
                       )}
                       {isJoker && (
-                        <span className="fk-mono shrink-0" style={{ fontSize: 8, color: 'var(--pos-gk)', border: '1px solid var(--pos-gk)', padding: '1px 5px' }}>
+                        <span className="fk-mono shrink-0" style={{ fontSize: 9, fontWeight: 800, color: 'var(--pos-gk)', border: '1px solid var(--pos-gk)', padding: '2px 6px' }}>
                           JOKER
                         </span>
                       )}
@@ -691,9 +697,9 @@ export default function MarketScreen() {
                     <div
                       className="fk-mono"
                       style={{
-                        minWidth: 52, padding: '6px 10px', textAlign: 'center',
+                        minWidth: 56, padding: '6px 10px', textAlign: 'center',
                         border: '1px solid var(--rule)', color: 'var(--mute)',
-                        fontSize: 9, opacity: 0.6,
+                        fontSize: 10, fontWeight: 800, opacity: 0.6,
                       }}
                     >
                       LOCKED
@@ -704,23 +710,22 @@ export default function MarketScreen() {
                       disabled={saving}
                       className="fk-mono transition-all active:scale-95 disabled:opacity-40"
                       style={{
-                        minWidth: 52, padding: '6px 10px',
+                        minWidth: 56, padding: '6px 10px',
                         border: '1px solid var(--danger)',
                         color: 'var(--danger)',
                         background: 'transparent',
-                        fontSize: 9, letterSpacing: '0.18em',
+                        fontSize: 10, fontWeight: 800, letterSpacing: '0.14em',
                       }}
                     >
                       SELL
                     </button>
                   ) : clubFull ? (
-                    // U26: club cap UI guard — show badge instead of BUY
                     <div
                       className="fk-mono"
                       style={{
-                        minWidth: 52, padding: '6px 10px', textAlign: 'center',
+                        minWidth: 56, padding: '6px 10px', textAlign: 'center',
                         border: '1px solid rgba(240,58,58,0.4)', color: 'var(--danger)',
-                        fontSize: 9, letterSpacing: '0.14em', opacity: 0.8,
+                        fontSize: 10, fontWeight: 800, letterSpacing: '0.1em', opacity: 0.85,
                       }}
                     >
                       CLUB FULL
@@ -737,11 +742,11 @@ export default function MarketScreen() {
                       }
                       className="fk-mono transition-all active:scale-95"
                       style={{
-                        minWidth: 52, padding: '6px 10px',
+                        minWidth: 56, padding: '6px 10px',
                         border: `1px solid ${canBuy ? 'var(--cyan)' : 'var(--rule)'}`,
                         color: canBuy ? 'var(--cyan)' : 'var(--mute)',
                         background: 'transparent',
-                        fontSize: 9, letterSpacing: '0.18em',
+                        fontSize: 10, fontWeight: 800, letterSpacing: '0.14em',
                         cursor: canBuy ? 'pointer' : 'not-allowed',
                         opacity: saving ? 0.5 : 1,
                       }}

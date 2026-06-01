@@ -77,11 +77,11 @@ function DaySeparator({ label }) {
 function LeagueTag({ name }) {
   return (
     <span style={{
-      fontFamily: MONO, fontSize: 8, letterSpacing: '.14em',
-      color: 'var(--cyan)', padding: '2px 6px',
-      border: '1px solid rgba(0,180,216,.25)',
+      fontFamily: MONO, fontSize: 10, fontWeight: 800, letterSpacing: '.12em',
+      color: 'var(--cyan)', padding: '3px 8px',
+      border: '1px solid rgba(0,180,216,.35)',
       whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
-      maxWidth: 190, flexShrink: 0,
+      maxWidth: 200, flexShrink: 0,
     }}>
       {(name || '').toUpperCase()}
     </span>
@@ -103,8 +103,8 @@ function FeedItem({ item }) {
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <span style={{
-            fontFamily: MONO, fontSize: 8, letterSpacing: '.18em',
-            padding: '2px 5px',
+            fontFamily: MONO, fontSize: 10, fontWeight: 800, letterSpacing: '.14em',
+            padding: '3px 7px',
             border: `1px solid ${meta.color}`,
             color: meta.color, flexShrink: 0,
           }}>{meta.badge}</span>
