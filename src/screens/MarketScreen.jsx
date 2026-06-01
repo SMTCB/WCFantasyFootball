@@ -53,6 +53,7 @@ export default function MarketScreen() {
   const [leagues,       setLeagues]       = useState(null);   // null = not yet loaded
   const [activeLeague,  setActiveLeague]  = useState(leagueId);
   const [tournamentId,  setTournamentId]  = useState(null);
+  const [leagueFormat,  setLeagueFormat]  = useState('classic'); // 'classic' | 'noduplicate'
   const [todayJokerId,  setTodayJokerId]  = useState(null);
   const [loading,       setLoading]       = useState(true);
   const [filterPos,     setFilterPos]     = useState(() => localStorage.getItem('market_filterPos') || 'ALL');
@@ -108,10 +109,11 @@ export default function MarketScreen() {
   const resolveLeagueTournament = async (lid) => {
     const { data } = await supabase
       .from('leagues')
-      .select('tournament_id')
+      .select('tournament_id, format')
       .eq('id', lid)
       .maybeSingle();
     if (data?.tournament_id) setTournamentId(data.tournament_id);
+    if (data?.format) setLeagueFormat(data.format);
   };
 
   // On mount: resolve league context
@@ -125,12 +127,13 @@ export default function MarketScreen() {
       // No leagueId in URL — fetch user's leagues
       const { data } = await supabase
         .from('league_members')
-        .select('league_id, leagues(id, name, tournament_id)')
+        .select('league_id, leagues(id, name, tournament_id, format)')
         .eq('user_id', user?.id);
-      const list = (data ?? []).map(r => ({ id: r.league_id, name: r.leagues?.name ?? r.league_id, tournament_id: r.leagues?.tournament_id }));
+      const list = (data ?? []).map(r => ({ id: r.league_id, name: r.leagues?.name ?? r.league_id, tournament_id: r.leagues?.tournament_id, format: r.leagues?.format }));
       if (list.length === 1) {
         setActiveLeague(list[0].id);
         if (list[0].tournament_id) setTournamentId(list[0].tournament_id);
+        if (list[0].format) setLeagueFormat(list[0].format);
         setLeagues([]);
       } else {
         setLeagues(list);
@@ -626,7 +629,10 @@ export default function MarketScreen() {
           {filteredPlayers.map((p) => {
             const inMySquad    = mySquad?.players?.includes(p.id);
             const isOwned      = inMySquad || isOwnedBy(p.id);
-            const takenByOther = !isOwned && isTaken(p.id);
+            // In Draft mode each player belongs to one manager — block if taken.
+            // In Classic mode any player can be in multiple squads simultaneously.
+            const isDraftLeague = leagueFormat === 'noduplicate';
+            const takenByOther = isDraftLeague && !isOwned && isTaken(p.id);
             const ownerName    = takenBy(p.id);
             const limitReached = stats.posCounts[p.position] >= POS_LIMITS[p.position];
             // U26: club cap guard

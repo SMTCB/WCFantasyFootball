@@ -1396,8 +1396,12 @@ function LifecycleOps({ commissioner, leagueId, tournamentId, league = null, onH
           </div>
           )}
 
-          {/* Knockout Draft — draft mode only */}
-          {(!league || league.format === 'noduplicate') && (
+          {/* Knockout Draft — draft + cup format only (cup_phase transitions beyond pre_cup,
+              or admin has already set a knockout deadline) */}
+          {(!league || (league.format === 'noduplicate' && (
+            (league.cup_phase && league.cup_phase !== 'pre_cup') ||
+            !!league.knockout_draft_deadline
+          ))) && (
           <div data-tour="comm-knockout-draft">
           <LifecycleOp
             title="KNOCKOUT DRAFT"
@@ -2061,6 +2065,7 @@ function CommMsg({ msg, onDismiss }) {
 export default function CommissionerPanel({ commissioner, leagueId, tournamentId, memberCount = 0, leagueName = 'LEAGUE', league = null }) {
   const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' && window.innerWidth < 1024);
   const [helpModal, setHelpModal] = useState(null); // null | 'commissioner' | 'lifecycle' | 'bets'
+  const [mobKnockoutDeadline, setMobKnockoutDeadline] = useState('');
 
   useEffect(() => {
     const onResize = () => setIsMobile(window.innerWidth < 1024);
@@ -2168,6 +2173,55 @@ export default function CommissionerPanel({ commissioner, leagueId, tournamentId
           </MobLifecycleCard>
           </div>
           )}
+
+          {/* Knockout Draft — cup-format Draft leagues only */}
+          {(!league || (league.format === 'noduplicate' && (
+            (league.cup_phase && league.cup_phase !== 'pre_cup') ||
+            !!league.knockout_draft_deadline
+          ))) && (() => {
+            const mobKnockoutAllocationDone = ['elimination', 'round_of_16', 'quarter_final', 'semi_final', 'final'].includes(league?.cup_phase);
+            const mobKnockoutStatus = mobKnockoutAllocationDone ? 'ALLOCATED'
+              : league?.knockout_draft_deadline ? 'DEADLINE SET'
+              : 'NOT SET';
+            const mobKnockoutTone = mobKnockoutAllocationDone ? 'var(--positive)'
+              : league?.knockout_draft_deadline ? 'var(--positive)'
+              : 'var(--warn)';
+            return (
+              <div data-tour="comm-knockout-draft">
+              <MobLifecycleCard title="KNOCKOUT DRAFT" status={mobKnockoutStatus} tone={mobKnockoutTone} when="After group stage allocation. Before first knockout match.">
+                {mobKnockoutAllocationDone ? (
+                  <div style={{ padding: '8px 10px', background: 'var(--ink)', border: '1px solid var(--rule)', fontFamily: BODY, fontSize: 10, color: 'var(--positive)', lineHeight: 1.5 }}>
+                    ✓ Knockout squads allocated
+                  </div>
+                ) : (
+                  <>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                      <span style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '.2em', color: 'var(--paper)' }}>KNOCKOUT DEADLINE</span>
+                      <input type="datetime-local" value={mobKnockoutDeadline} onChange={e => setMobKnockoutDeadline(e.target.value)} style={{ ...mobInput, colorScheme: 'dark', fontSize: 11 }} />
+                    </div>
+                    <button
+                      onClick={() => {
+                        if (!window.confirm('Run knockout-phase draft allocation? This cannot be undone.')) return;
+                        commissioner.commAction(async () => {
+                          if (mobKnockoutDeadline) {
+                            await supabase.from('leagues').update({ knockout_draft_deadline: new Date(mobKnockoutDeadline).toISOString() }).eq('id', leagueId);
+                          }
+                          const { error } = await supabase.functions.invoke('run-draft-lottery', {
+                            body: { league_id: leagueId, phase: 'knockout' },
+                          });
+                          if (error) throw new Error(error.message);
+                          setCommMsg({ type: 'ok', text: 'Knockout draft allocation complete.' });
+                        });
+                      }}
+                      disabled={commLoading}
+                      style={{ ...mobBtn, background: 'var(--gold)', color: 'var(--ink)' }}
+                    >RUN KNOCKOUT ALLOCATION ↯</button>
+                  </>
+                )}
+              </MobLifecycleCard>
+              </div>
+            );
+          })()}
 
           <div data-tour="comm-score-recalc">
           <MobLifecycleCard title="SCORE RECALCULATION" status="UTILITY" tone="var(--mute)" when="Anytime. Safe.">
