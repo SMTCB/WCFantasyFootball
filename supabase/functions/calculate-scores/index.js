@@ -182,6 +182,19 @@ Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: CORS_HEADERS });
   if (req.method !== 'POST')    return respond(405, { error: 'POST required' });
 
+  // ── H6: Authorization guard ────────────────────────────────────────────────
+  // verify_jwt=false means Supabase doesn't enforce JWT automatically.
+  // Guard: service-role key (cron path) OR a valid user JWT (admin manual button).
+  // Blocks anon-key-only callers who could otherwise trigger global score recalcs.
+  const authHeader = req.headers.get('Authorization') ?? '';
+  const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
+  const isServiceRole = authHeader === `Bearer ${serviceRoleKey}`;
+
+  if (!isServiceRole) {
+    const { data: { user } } = await supabase.auth.getUser(authHeader.replace('Bearer ', ''));
+    if (!user) return respond(401, { error: 'Unauthorized' });
+  }
+
   let fixture_id;
   try { ({ fixture_id } = await req.json()); }
   catch { return respond(400, { error: 'Invalid JSON body' }); }
