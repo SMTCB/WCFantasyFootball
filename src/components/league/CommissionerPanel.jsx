@@ -1248,7 +1248,7 @@ function LifecycleOps({ commissioner, leagueId, tournamentId, league = null, onH
   const now = new Date();
   const deadlinePassed = league?.draft_deadline && new Date(league.draft_deadline) <= now;
   const allocationDone = league?.cup_phase && league.cup_phase !== 'pre_cup';
-  const allocationDisabled = commLoading || !deadlinePassed;
+  const allocationDisabled = commLoading || !deadlinePassed || allocationDone;
 
   // Knockout draft local state
   const [knockoutDeadline, setKnockoutDeadline] = useState('');
@@ -2096,7 +2096,7 @@ export default function CommissionerPanel({ commissioner, leagueId, tournamentId
     const mobNow = new Date();
     const mobDeadlinePassed    = league?.draft_deadline && new Date(league.draft_deadline) <= mobNow;
     const mobAllocationDone    = league?.cup_phase && league.cup_phase !== 'pre_cup';
-    const mobAllocationDisabled = commLoading || !mobDeadlinePassed;
+    const mobAllocationDisabled = commLoading || !mobDeadlinePassed || mobAllocationDone;
 
     // AUDIT-58-A3: derive live status labels for mobile cards (mirrors desktop LifecycleOps)
     const mobTwStatus = !!tournamentId           ? 'DEADLINE-CONTROLLED'

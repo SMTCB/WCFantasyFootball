@@ -36,16 +36,6 @@ import { POS_ORDER, POS_LABEL, POS_BADGE_COLOR } from '../lib/formations';
 // â"€â"€ Chip config â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
 const CHIPS = [
   {
-    key:         'wildcard',
-    label:       'Wildcard',
-    description: 'Make unlimited free transfers this matchday. No point penalties.',
-    stateKey:    'isWildcard',
-    dbField:     'is_wildcard',
-    activeColor: 'var(--positive)',
-    activeStyle: { borderColor: 'rgba(24,201,107,0.35)', background: 'rgba(24,201,107,0.07)' },
-    inactiveStyle: { borderColor: 'rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.03)' },
-  },
-  {
     key:         'triple_captain',
     label:       'Triple Captain',
     description: 'All-or-Nothing: your captain scores 3× points — but 0 if they don\'t play.',
@@ -344,12 +334,12 @@ export default function SquadScreen() {
     {
       target: 'squad-power-tools',
       title:  'Power Tools',
-      body:   'Wildcard, Triple Captain, and Daily Joker live here. Each is one-use — activate carefully.',
+      body:   'Triple Captain and Daily Joker live here. Each is one-use — activate carefully.',
     },
     {
       target: 'squad-chips',
       title:  'Chips & Boosts',
-      body:   'Wildcard lets you make unlimited free transfers. Triple Captain scores 3× points — or 0 if they don\'t play. Use them wisely, they\'re one-per-season.',
+      body:   'Triple Captain scores 3× points — or 0 if they don\'t play. Daily Joker adds a 16th man for this matchday. Use them wisely, they\'re one-per-season.',
     },
   ];
 
@@ -919,16 +909,6 @@ export default function SquadScreen() {
 
   // Chip Guide modal — detailed explanation + replay tutorial button
   const CHIP_GUIDE = [
-    {
-      key: 'wildcard',
-      icon: '🃏',
-      label: 'Wildcard',
-      color: 'var(--positive)',
-      what: 'Make unlimited free transfers for the current matchday. Normal transfer limits are waived entirely.',
-      when: 'Use mid-season when a large portion of your squad has injury doubts, or when you want to rebuild after falling behind.',
-      restriction: '1 use per season. Once activated for a matchday it cannot be reversed.',
-      tip: 'Plan your wildcard carefully — time it for a matchday where you can bring in multiple in-form players.',
-    },
     {
       key: 'triple_captain',
       icon: '👑',
@@ -1692,18 +1672,12 @@ export default function SquadScreen() {
           <div className="pb-6">
 
             {/* Section 1: Active Features Summary */}
-            {(squadData.isWildcard || squadData.isTripleCaptain || jokerPlayer) && (
+            {(squadData.isTripleCaptain || jokerPlayer) && (
               <div className="mx-4 mt-4 mb-4 pb-3 border-b border-white/5">
                 <div className="text-[9px] font-black uppercase tracking-[0.1em]" style={{ color: 'var(--mute)', marginBottom: '8px' }}>
                   Active Features
                 </div>
                 <div className="flex flex-wrap gap-2">
-                  {squadData.isWildcard && (
-                    <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded" style={{ background: 'rgba(24,201,107,0.1)', border: '1px solid rgba(24,201,107,0.25)' }}>
-                      
-                      <span className="text-[8px] font-black uppercase tracking-widest" style={{ color: 'var(--positive)' }}>Wildcard</span>
-                    </div>
-                  )}
                   {squadData.isTripleCaptain && (
                     <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded" style={{ background: 'rgba(240,180,0,0.1)', border: '1px solid rgba(240,180,0,0.25)' }}>
                       
@@ -1726,31 +1700,6 @@ export default function SquadScreen() {
                 POWER TOOLS
               </div>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-4">
-                {/* Wildcard */}
-                <PowerToolCard
-                  
-                  label="Wildcard"
-                  description="Unlimited free transfers this matchday"
-                  isActive={squadData.isWildcard}
-                  accentColor="var(--positive)"
-                  bgColor="rgba(24,201,107,0.08)"
-                  borderColor="rgba(24,201,107,0.15)"
-                  actionLabel={squadData.isWildcard ? 'Active' : 'Activate'}
-                  onAction={() => {
-                    if (!isLocked) {
-                      setConfirm({
-                        title: squadData.isWildcard ? 'Deactivate Wildcard?' : 'Activate Wildcard?',
-                        body: squadData.isWildcard
-                          ? 'You will no longer have unlimited free transfers.'
-                          : 'You\'ll have unlimited free transfers this matchday. 1 use per season.',
-                        onConfirm: () => doToggleChip('wildcard'),
-                        confirmLabel: 'Confirm',
-                        warning: squadData.isWildcard ? null : 'This action cannot be undone this gameweek.',
-                      });
-                    }
-                  }}
-                />
-
                 {/* Triple Captain */}
                 <PowerToolCard
                   

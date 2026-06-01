@@ -213,12 +213,26 @@ Deno.serve(async (req) => {
     }
 
     // ── 2. Fetch 4 Forza endpoints in parallel ────────────────────────────────
-    const [matchData, lineupsData, periodsData, statsData] = await Promise.all([
+    // Use allSettled so a single endpoint failure doesn't abort the whole ingest.
+    // matchData is required; lineupsData/periodsData/statsData degrade gracefully.
+    const [matchResult, lineupsResult, periodsResult, statsResult] = await Promise.allSettled([
       forza(`/v1/matches/${fmid}`),
       forza(`/v1/matches/${fmid}/lineups`),
       forza(`/v2/matches/${fmid}/periods`),
       forza(`/v2/matches/${fmid}/player_statistics`),
     ]);
+
+    const matchData    = matchResult.status   === 'fulfilled' ? matchResult.value   : null;
+    const lineupsData  = lineupsResult.status === 'fulfilled' ? lineupsResult.value : null;
+    const periodsData  = periodsResult.status === 'fulfilled' ? periodsResult.value : null;
+    const statsData    = statsResult.status   === 'fulfilled' ? statsResult.value   : null;
+
+    // Log partial failures so they appear in edge_function_errors
+    for (const [name, result] of [['match', matchResult], ['lineups', lineupsResult], ['periods', periodsResult], ['stats', statsResult]]) {
+      if (result.status === 'rejected') {
+        logError('warn', `Forza endpoint '${name}' failed for match ${fmid}: ${result.reason?.message ?? result.reason}`, { fmid });
+      }
+    }
 
     if (!matchData) return respond(200, { ok: true, message: 'Match data not available yet', players_ingested: 0, events_written: 0 });
 
