@@ -1,6 +1,6 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-06-01 (session 66 full closeout — all 12 HIGH items resolved; migrations 110–111 applied; next migration 112_)  
+**Last Updated**: 2026-06-01 (session 68 — UUID type mismatch + GK-in-XI fixed; migration 112 applied; next migration 113_)  
 **E2E Test Suite**: `platform.spec.js` (36 tests × 2 browsers) passing in CI ✅ — completes in ~3 min  
 **Live App**: https://wc-fantasy-football.vercel.app  
 **WC Kick-off**: 2026-06-11 19:00 UTC (Mexico vs South Africa)
@@ -52,7 +52,7 @@
 
 ### Still open (HIGH/MEDIUM/LOW from session 63):
 See full table below. All CRITICAL + HIGH items resolved (except H8 — deferred, see session 66 notes).
-Next migration: `112_`
+Next migration: `113_`
 
 ## ✅ Session 66 — All Open HIGH Items (PR #272, 2026-06-01)
 
@@ -78,6 +78,19 @@ Next migration: `112_`
 | ~~**DD-H4**~~ | `process-transfer` recovery-window orphan — falls back to most recent squad before creating empty; uses squad's own matchday for transfer limits | edge function redeployed |
 | ~~**DD-H6**~~ | `calculate-scores` auth guard — service-role key (cron) or valid JWT required; anon-key-only callers get 401 | edge function redeployed |
 
+### Session 68 — UUID type mismatch + GK-in-XI (PR #279, 2026-06-01)
+
+| ID | Fix | Where |
+|----|-----|-------|
+| ~~**DD-M3**~~ | `execute_transfer_atomic` + `set_lineup`: `p_player_id/p_player_out/p_player_in` changed from `uuid` to `text` (players.id is TEXT PRIMARY KEY). The "VERIFIED CLOSED" note was incorrect — PostgreSQL casts TEXT→UUID (not the reverse), so Forza IDs like `fp-740833-428` raised "invalid input syntax for type uuid" on every WC bench-swap, sell, and buy. Also fixed `v_new_players uuid[]`→`text[]` inside `execute_transfer_atomic`. | migration 112 |
+| **GK-in-XI** | `set_lineup` auto-init now sorts GKs first (`ORDER BY (position='GK') DESC`) so the first 11 always include the goalkeeper. Auto-init also persists to DB immediately. Backfill in migration 112 corrects existing squads whose `starting_xi` had no GK. Client-side `fetchSquad` now persists GK correction to DB (fire-and-forget) so it doesn't re-break on every reload. | migration 112 + SquadScreen.jsx |
+
+**Migration 112** (`112_fix_player_id_types.sql`) applied.  
+**Next migration**: `113_`  
+**Build/lint**: `npm run build` ✅ clean · `npm run lint` ✅ warnings only (all pre-existing)
+
+---
+
 ### Session 67 — DD-H8 (PR #275, 2026-06-01)
 
 | ID | Fix | Where |
@@ -86,7 +99,7 @@ Next migration: `112_`
 
 **No migration required** — pure edge function change.
 
-**Next migration**: `112_`
+**Next migration**: `113_`
 **Build/lint**: `npm run build` ✅ clean · `npm run lint` ✅ warnings only (all pre-existing)
 
 ---
@@ -150,7 +163,7 @@ Next migration: `112_`
 |----|------|-------|
 | ~~**DD-M1**~~ | ~~Funnel/Frontend~~ | ~~Onboarding tours globally disabled.~~ **✅ Fixed #277** — `showWizard` restored to `!wizardDone`; new users see the welcome wizard on first login. |
 | ~~**DD-M2**~~ | ~~Game logic~~ | ~~`sync-fixtures` writes `postponed/cancelled/abandoned` to `match_status` enum.~~ **✅ Fixed #278** — `mapStatus` now remaps: `postponed→scheduled`, `cancelled/abandoned→finished`; `status_detail` retains Forza value. Edge function redeployed. |
-| ~~**DD-M3**~~ | ~~Game logic~~ | ~~`execute_transfer_atomic` `uuid[]` vs `text[]` mismatch.~~ **✅ VERIFIED CLOSED** — PostgreSQL implicitly casts uuid→text; transfers work in practice (E2E tests pass). Live function confirmed via `pg_proc` query. |
+| ~~**DD-M3**~~ | ~~Game logic~~ | ~~`execute_transfer_atomic` + `set_lineup` UUID vs TEXT type mismatch.~~ **✅ Fixed #279** — migration 112: `p_player_id/p_player_out/p_player_in` changed `uuid→text`; `v_new_players uuid[]→text[]`. Prior "VERIFIED CLOSED" was wrong — PostgreSQL casts TEXT→UUID (not reverse), raising "invalid input syntax" for Forza IDs. |
 | ~~**DD-M4**~~ | ~~Frontend~~ | ~~Lineup swap has no double-submit guard.~~ **✅ Fixed #277** — `if (saving) return` added to `doSwap`; rapid double-tap now a no-op while first call is in flight. |
 | ~~**DD-M5**~~ | ~~Admin~~ | ~~`transfers_open` status never reflects open/close buttons.~~ **✅ Fixed #278** — `openTransferWindow`/`closeTransferWindow` now also write `leagues.transfers_open=true/false`; status pills update immediately. |
 | ~~**DD-M6**~~ | ~~Admin/Funnel~~ | ~~`AdminSeedScreen` not commissioner-gated.~~ **✅ Fixed #277** — early return added when `!loading && myLeagues.length === 0`; non-commissioners see "Commissioner access only." |
