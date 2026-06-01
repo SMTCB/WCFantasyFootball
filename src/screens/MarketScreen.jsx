@@ -536,21 +536,6 @@ export default function MarketScreen() {
             );
           })}
 
-          {/* Wildcard indicator */}
-          {mySquad?.is_wildcard && (
-            <div
-              className="px-2 py-1 rounded-sm flex items-center gap-1 shrink-0"
-              style={{ background: 'rgba(24,201,107,0.12)', border: '1px solid rgba(24,201,107,0.25)' }}
-            >
-              <span className="text-[8px]">∞</span>
-              <span
-                className="text-[8px] font-black uppercase"
-                style={{ color: 'var(--positive)', fontFamily: 'Archivo Black, sans-serif', letterSpacing: '0.08em' }}
-              >
-                WC
-              </span>
-            </div>
-          )}
         </div>
 
         {/* Search input */}
