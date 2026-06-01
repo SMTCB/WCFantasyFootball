@@ -144,7 +144,12 @@ export default function MarketScreen() {
 
     // â”€â”€ 1. Players — filtered by competition when known â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     try {
-      let playersQuery = supabase.from('players').select('*').order('price', { ascending: false });
+      // Supabase JS default row cap is 1,000. WC has 1,680+ players — without an
+      // explicit limit the cheapest ~680 are silently cut off, so cheap owned
+      // players don't appear and the position tiles show wrong counts.
+      let playersQuery = supabase.from('players').select('*')
+        .order('price', { ascending: false })
+        .limit(5000);
       if (tournamentId) playersQuery = playersQuery.eq('tournament_id', tournamentId);
       const [{ data: pData }, { data: intelData }] = await Promise.all([
         playersQuery,
