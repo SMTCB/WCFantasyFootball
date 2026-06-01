@@ -9,20 +9,64 @@
 This project uses **Playwright for end-to-end testing** with a two-tier execution model:
 
 1. **CI-Enforced** — `platform.spec.js` (36 tests × 2 browsers, ~3 min) runs on every PR
-2. **Integration** — 8 additional specs (auth, squad, transfer, league, live, auction, draft, scoring) run manually against live Supabase
+2. **Integration** — Mode-scoped specs run manually against live Supabase
 
-**Unit tests are planned** (Vitest) but not yet implemented.
+Unit tests are planned (Vitest) but not yet implemented.
+
+---
+
+## Non-Negotiable Testing Principles
+
+These rules apply to every test session and every spec file.
+
+### 1. Always Use Real API Data
+
+Tests must use real players and real fixtures as served by the Forza Football API and already stored in the `players` and `fixtures` tables. Never hard-code made-up player names, club names, or fixture pairings in test flows.
+
+**Exception**: Player prices. The Forza API does not provide price data. When `price IS NULL` for players in the test tournament, seed random prices **before running any transfer or auction test** (see Price Check below). This is the only case where synthetic data is permitted.
+
+### 2. Player Price Hard Stop
+
+Before any test flow involving buy/sell/auction/budget: run the price coverage query in Appendix D. If any player prices are missing, seed them before proceeding. Tests that run against null-price players produce false confidence — budget enforcement is silently bypassed.
+
+### 3. Minimum 4 Participants Per Test League
+
+Every test league must have at least 4 active managers. This is required to test:
+- Standings with a meaningful table (not just 1 or 2 rows)
+- Chat @mentions of other managers
+- Auction competition (bidding between managers)
+- Trade proposals (must have a counterparty)
+- Draft allocation conflicts (multiple managers wanting the same player)
+
+### 4. All Mode × Format Combinations Must Be Covered
+
+The platform has two independent axes that produce four distinct game paths. Every test session must cover all four:
+
+| | League format (EPL-style, season-long) | Cup format (WC/UCL-style, knockout) |
+|---|---|---|
+| **Classic mode** | Classic × League | Classic × Cup |
+| **Draft mode** | Draft × League | Draft × Cup |
+
+Features that behave differently across paths:
+- **Market**: Classic allows shared player ownership; Draft enforces uniqueness (takenByOther blocks)
+- **Admin — Draft section**: hidden for Classic, shown for Draft
+- **Admin — Knockout Draft**: hidden for Classic and for Draft × League; visible for Draft × Cup
+- **Season stepper**: 2 stages (Classic) vs 4 stages (Draft)
+- **FrontPage secondary column**: "LEAGUE ACTIVITY" (Classic) vs "DRAFT REPORT" (Draft)
+- **Market — takenByOther indicator**: Classic shows no blocking; Draft blocks owned players
+- **Transfer window status**: DEADLINE-CONTROLLED for WC/tournament leagues
 
 ---
 
 ## Test Tiers & Execution Model
 
 ### Tier 1: Platform Tests (CI-Enforced)
-**File**: `e2e/tests/platform.spec.js`  
-**Scope**: Critical user flows required for MVP  
-**Browsers**: Chromium × Firefox (2 parallel runs)  
-**Execution**: Automatic on every PR (`.github/workflows/ci.yml`)  
-**Duration**: ~3 minutes  
+
+**File**: `e2e/tests/platform.spec.js`
+**Scope**: Critical user flows required for MVP
+**Browsers**: Chromium × Firefox (2 parallel runs)
+**Execution**: Automatic on every PR (`.github/workflows/ci.yml`)
+**Duration**: ~3 minutes
 **Must-Pass Requirement**: Blocks PR merge to main
 
 **Flows Tested** (36 tests):
@@ -30,28 +74,34 @@ This project uses **Playwright for end-to-end testing** with a two-tier executio
 - Onboarding wizard
 - Squad building & formation validation
 - Transfer market interaction
-- League creation & H2H setup
-- League standings & chat
+- League creation & standing display
+- League chat
 - Live match updates & Joker chip selection
 
 ### Tier 2: Integration Tests (Manual)
-**Files**: `e2e/tests/{auth,squad,transfer,league,live,auction,draft,scoring}.spec.js`  
-**Scope**: Feature-specific user journeys with live Supabase queries  
-**Trigger**: Developer runs locally or in dedicated test session  
-**Duration**: 5–15 minutes each  
-**Live Data Requirement**: These tests query production Supabase data; not suitable for automated CI
 
-**Why Manual?**
-- Tests depend on specific Supabase state (players, fixtures, leagues)
-- Data changes during test execution affect other specs
-- Requires human decision on test data setup/teardown
-- No CI environment for isolated test database
+**Spec files**: one per game path + shared flows
+**Scope**: Full feature coverage for each mode × format combination
+**Trigger**: Developer runs locally against live Supabase before releases
+**Duration**: 30–60 minutes for a full run across all four paths
+**Live Data Requirement**: Requires real players, fixtures, and Supabase state
+
+**Spec organisation** (aligned to game paths):
+
+| File | Scope |
+|---|---|
+| `platform.spec.js` | CI-enforced: auth, squad, market, league, live (36 tests) |
+| `classic-league.spec.js` | Classic × League format — full journey |
+| `classic-cup.spec.js` | Classic × Cup format — full journey |
+| `draft-league.spec.js` | Draft × League format — full journey |
+| `draft-cup.spec.js` | Draft × Cup format — full journey |
+| `scoring.spec.js` | Score calculation, points log, recalculation (all modes) |
 
 ### Tier 3: Unit Tests (Planned, Not Yet Implemented)
-**Framework**: Vitest (lightweight, Vite-native)  
-**Scope**: Hooks, utilities, pure functions  
-**Trigger**: Developer runs locally + CI check  
+
+**Framework**: Vitest (lightweight, Vite-native)
 **Target**: React hooks (useAuth, useSquad, useTransfer), formatters, validators
+**Trigger**: Developer runs locally + CI check
 
 ---
 
@@ -60,22 +110,17 @@ This project uses **Playwright for end-to-end testing** with a two-tier executio
 **File**: `playwright.config.js`
 
 ```javascript
-// Key settings
 use: {
   baseURL: 'http://localhost:5173',
-  trace: 'on-first-retry',              // Capture trace on failure
-  screenshot: 'only-on-failure',        // Save screenshot on failure
-  video: 'retain-on-failure',           // Save video on failure
+  trace: 'on-first-retry',
+  screenshot: 'only-on-failure',
+  video: 'retain-on-failure',
 },
-
-// Browsers for CI
 projects: [
   { name: 'chromium' },
   { name: 'firefox' },
   // Safari omitted (flaky on CI, tested locally)
 ],
-
-// CI-specific
 webServer: {
   command: 'npm run dev',
   port: 5173,
@@ -87,245 +132,183 @@ webServer: {
 - Trace files: `.playwright/trace.zip` (on failure)
 - Screenshots: `e2e-report/` (on failure)
 - Videos: `e2e-report/` (on failure)
-- HTML Report: View with `npx playwright show-report`
+- HTML Report: `npx playwright show-report`
 
 ---
 
 ## Running Tests Locally
 
-### Single Spec (Recommended for Development)
 ```bash
-# Run CI-enforced test
+# CI-enforced test
 npx playwright test e2e/tests/platform.spec.js
 
-# Run specific integration test
-npx playwright test e2e/tests/squad.spec.js
+# Full integration suite (manual, all four paths)
+npx playwright test e2e/
 
-# Run specific test by name
-npx playwright test -g "user can build a valid 11-player squad"
-```
+# Single path
+npx playwright test e2e/tests/draft-cup.spec.js
 
-### All Tests
-```bash
-# Run all Playwright tests (includes CI + integration specs)
-npx playwright test
+# Debug specific test
+npx playwright test -g "Draft × Cup — Knockout allocation" --debug
 
-# Run with debug UI (step through each action)
-npx playwright test --debug
-
-# Run with headed browser (watch execution)
-npx playwright test --headed
-```
-
-### View Test Report
-```bash
-# After tests complete
+# View report
 npx playwright show-report e2e-report/
 ```
 
 ---
 
-## Test Data & Setup
+## Test Data & Isolation
 
-### Isolation Strategy
-- **No shared fixtures** — Each test must be independent
-- **Demo league** — Use a fixed demo league (ID `demo-001`) for stable test data
-- **Fallback data** — If Supabase unavailable, use `src/data/` JSON files
+### API Data First
 
-### Database Reset for Integration Tests
-For manual integration spec runs, you may need to reset state:
+Every test that needs players or fixtures resolves them from the live `players` and `fixtures` tables. Do not use `src/data/*.json` fallbacks in integration tests — those are for offline demo mode only.
 
-```bash
-# Reset a league (deletes all squads, bets, trades)
-npx supabase db query --linked "DELETE FROM squads WHERE league_id = 'demo-001';"
+### Player Price Fallback
 
-# Reset a user's squad
-npx supabase db query --linked "DELETE FROM squads WHERE user_id = 'test-user-123' AND league_id = 'demo-001';"
+If players in the tournament under test have `price IS NULL`, seed prices before running transfer/auction flows:
 
-# Reseed demo data
-npx supabase db query --linked < supabase/fixtures/demo-data.sql
+```sql
+UPDATE players
+SET price = ROUND((RANDOM() * 3 + 4)::NUMERIC, 1)  -- £4.0–£7.0
+WHERE tournament_id = '<id>' AND price IS NULL;
 ```
+
+This is the only permitted use of synthetic data.
+
+### League Isolation
+
+Each test path operates on its own dedicated league (see Appendix A of the E2E playbook for IDs). Test accounts are added to all four leagues, but each spec only exercises its own league to avoid cross-contamination.
+
+### Reset Between Runs
+
+Before each test cycle, run the data reset scripts in the playbook Appendix B. This restores league members, open transfer windows, auction listings, and fresh bet instances.
 
 ---
 
 ## CI/CD Integration
 
-### GitHub Actions Workflow
 **File**: `.github/workflows/ci.yml`
 
 Pipeline stages:
 1. **Lint** — ESLint (must pass)
 2. **Build** — Vite production build (must succeed)
-3. **E2E Test** — `platform.spec.js` (36 tests × 2 browsers, must pass)
-
-**Failure Behavior**:
-- If lint fails → PR cannot be merged
-- If build fails → PR cannot be merged
-- If E2E fails → PR cannot be merged
-- Artifacts preserved → PR author can download for debugging
+3. **E2E Test** — `platform.spec.js` only (36 tests × 2 browsers)
 
 **Local CI Simulation**:
 ```bash
-npm run lint
-npm run build
-npx playwright test e2e/tests/platform.spec.js
+npm run lint && npm run build && npx playwright test e2e/tests/platform.spec.js
 ```
 
 ---
 
-## Known Test Issues & Limitations
+## Coverage Goals & Status
 
-| Issue | Scope | Workaround | Status |
-|-------|-------|-----------|--------|
-| Safari flaky in CI | platform.spec.js | Run locally only | Known limitation |
-| E2E specs need Supabase | integration specs | Run manual, not CI | By design |
-| No unit tests | utilities, hooks | Write when needed | Planned (Vitest) |
-| Demo data drift | platform.spec.js | Reset yearly or after major schema changes | Managed |
+### Mode × Format Coverage Matrix
+
+| Feature | Classic × League | Classic × Cup | Draft × League | Draft × Cup |
+|---|---|---|---|---|
+| Auth & onboarding | ✅ | (same) | (same) | (same) |
+| Market — open buy/sell | ✅ target | ✅ target | ✅ target | ✅ target |
+| Market — Classic no-block | ✅ target | ✅ target | — | — |
+| Market — Draft taken-block | — | — | ✅ target | ✅ target |
+| Draft submission | — | — | ✅ target | ✅ target |
+| Draft allocation (admin) | — | — | ✅ target | ✅ target |
+| Knockout draft | — | — | — | ✅ target |
+| Auctions | ✅ target | ✅ target | ✅ target | ✅ target |
+| Trades | ✅ target | ✅ target | ✅ target | ✅ target |
+| Captain & chips | ✅ target | ✅ target | ✅ target | ✅ target |
+| Starting XI / bench swap | ✅ target | ✅ target | ✅ target | ✅ target |
+| Bets (place/create/resolve) | ✅ target | ✅ target | ✅ target | ✅ target |
+| League News post | ✅ target | ✅ target | ✅ target | ✅ target |
+| Chat & mentions | ✅ target | (same) | (same) | (same) |
+| Admin — season stepper | 2-stage | 2-stage | 4-stage | 4-stage |
+| Admin — transfer window | ✅ target | DEADLINE-CONTROLLED | ✅ target | DEADLINE-CONTROLLED |
+| Admin — knockout draft | hidden | hidden | hidden | ✅ target |
+| Score recalculation | ✅ target | ✅ target | ✅ target | ✅ target |
+| Standings & FrontPage | ACTIVITY col | ACTIVITY col | DRAFT REPORT col | DRAFT REPORT col |
+| Club cap relaxation | — | ✅ target | — | ✅ target |
+| Eliminated club restriction | — | ✅ target | — | ✅ target |
+| Player-repeat relaxation | — | — | — | ✅ target |
+
+### Implementation Status
+
+| Spec | Status |
+|---|---|
+| `platform.spec.js` | ✅ Green (CI) |
+| `classic-league.spec.js` | 📋 New — see Playbook PART B |
+| `classic-cup.spec.js` | 📋 New — see Playbook PART C |
+| `draft-league.spec.js` | 🟡 Partially covered (old playbook FLOW 1–14) — needs rewrite |
+| `draft-cup.spec.js` | 🟡 Partially covered (old playbook WC addendum) — needs rewrite |
+| `scoring.spec.js` | 🟡 In progress |
+
+---
+
+## Known Limitations
+
+| Issue | Scope | Workaround |
+|---|---|---|
+| Safari flaky in CI | `platform.spec.js` | Run locally only |
+| Integration specs need live Supabase | All integration specs | Manual only; not CI |
+| Lineup lock cron (5-min interval) | Starting XI tests | Mark fixture as `live` in SQL directly to trigger lock |
+| process-transfer JWT requirement | Buy transfer | Use user's JWT from `localStorage` (not anon key) if direct fetch needed |
+| Player prices not from Forza API | Any budget test | Seed with random £4–£7 before running |
+| No unit tests | Hooks, utilities | Planned (Vitest) |
 
 ---
 
 ## Best Practices for Writing Tests
 
-### 1. **Test User Behavior, Not Implementation**
+### Test User Behaviour, Not Implementation
+
 ```javascript
 // ❌ Bad: Testing internal state
 expect(component.state.squadLoaded).toBe(true);
 
-// ✅ Good: Testing observable behavior
+// ✅ Good: Testing observable behaviour
 await expect(page.locator('[data-testid="squad-formation"]')).toBeVisible();
 ```
 
-### 2. **Use Data-Testid for Stable Selectors**
-```javascript
-// ❌ Bad: Brittle to CSS changes
-page.click('.formation-display > div:nth-child(2)');
+### Self-Contained Setup
 
-// ✅ Good: Intent-based selector
-page.click('[data-testid="formation-defender-slot-1"]');
-```
-
-### 3. **Isolate Tests**
 ```javascript
 // ❌ Bad: Depends on previous test state
 test('user can transfer player', async ({ page }) => {
-  // assumes squad already built from previous test
+  // assumes squad already built
 });
 
-// ✅ Good: Self-contained setup
+// ✅ Good: Self-contained
 test('user can transfer player', async ({ page }) => {
-  await loginAs(page, 'test-user@example.com');
-  await buildDefaultSquad(page);
-  // now transfer player
+  await loginAs(page, 'e2e_test1@fantasykit.test', 'Test2026!!');
+  // now do the transfer
 });
 ```
 
-### 4. **Use Page Objects for Complex Flows**
+### Use Page Objects for Complex Flows
+
 ```javascript
-// ✅ Good: Encapsulate UI interactions
-class SquadScreen {
-  constructor(page) { this.page = page; }
-  async navigateTo() { await this.page.goto('/squad'); }
-  async addPlayer(name) { /* ... */ }
-  async selectFormation(type) { /* ... */ }
+class LeagueHub {
+  constructor(page, leagueId) {
+    this.page = page;
+    this.leagueId = leagueId;
+  }
+  async navigateTo(tab = 'leaderboard') {
+    await this.page.goto(`/league/${this.leagueId}?tab=${tab}`);
+  }
+  async openAdminTab() { await this.navigateTo('admin'); }
 }
-
-test('user can build squad', async ({ page }) => {
-  const squad = new SquadScreen(page);
-  await squad.navigateTo();
-  await squad.addPlayer('Salah');
-});
 ```
-
----
-
-## Coverage Goals & Roadmap
-
-### Phase 1: CI-Enforced (✅ Complete)
-- [x] platform.spec.js (36 tests, 2 browsers)
-- [x] GitHub Actions pipeline
-- [x] PR blocking on failure
-
-### Phase 2: Integration Tests (🟡 In Progress)
-- [x] auth.spec.js
-- [x] squad.spec.js
-- [x] transfer.spec.js
-- [x] league.spec.js
-- [x] live.spec.js
-- [ ] auction.spec.js (draft in progress)
-- [ ] draft.spec.js (draft in progress)
-- [ ] scoring.spec.js (draft in progress)
-
-### Phase 3: Unit Tests (📋 Planned)
-- [ ] Vitest setup
-- [ ] Hook tests (useAuth, useSquad, useTransfer)
-- [ ] Utility function tests
-- [ ] CI integration
-
-### Phase 4: Performance Testing (📋 Future)
-- [ ] Lighthouse CI integration
-- [ ] Load testing (chat, live scores)
-- [ ] Mobile performance (Capacitor)
-
----
-
-## Debugging Test Failures
-
-### Step 1: Reproduce Locally
-```bash
-npx playwright test --debug
-# Playwright Inspector opens; step through failing test
-```
-
-### Step 2: Check Artifacts
-```bash
-# View failure trace, screenshot, video
-npx playwright show-report e2e-report/
-```
-
-### Step 3: Log Page State
-```javascript
-// Temporary debug log
-await page.evaluate(() => {
-  console.log('Current URL:', window.location.href);
-  console.log('Auth state:', window.__auth_state);
-  console.log('DOM:', document.body.innerHTML.substring(0, 500));
-});
-```
-
-### Step 4: Verify Test Data
-```bash
-# Check league state in CI failure
-npx supabase db query --linked "SELECT * FROM squads WHERE league_id = 'demo-001' LIMIT 5;"
-```
-
----
-
-## Mobile Testing (Capacitor)
-
-**Status**: Manual testing only (Playwright for web app)
-
-### Test on Device
-```bash
-npm run build && npx cap sync
-npx cap open ios    # Run in Xcode simulator or device
-npx cap open android # Run in Android Studio emulator or device
-```
-
-### Visual Testing Checklist
-- [ ] Formation displays correctly at 375px (mobile)
-- [ ] Touch interactions responsive (no 300ms delay)
-- [ ] Safe area respected (notch, home indicator)
-- [ ] App resume/background handling (Capacitor lifecycle)
 
 ---
 
 ## Related Documents
 
-- [../BACKLOG.md](../BACKLOG.md) — Known test gaps and E2E issues (see E2E-01, P2/P3)
-- [README.md](README.md) — Test file index
-- [../deployment/DRY_RUN_PREP_CHECKLIST.md](../deployment/DRY_RUN_PREP_CHECKLIST.md) — Pre-launch verification
+- [E2E_TEST_PLAYBOOK.md](E2E_TEST_PLAYBOOK.md) — Step-by-step test flows for all four game paths
+- [../brand/admin-tab/LOGIC.md](../brand/admin-tab/LOGIC.md) — Admin panel behaviour spec
+- [../architecture/DRAFT_SYSTEM_DESIGN.md](../architecture/DRAFT_SYSTEM_DESIGN.md) — Draft mechanics
+- [../architecture/TRANSFER_WINDOW_SYSTEM.md](../architecture/TRANSFER_WINDOW_SYSTEM.md) — Transfer rules
+- [../architecture/STARTING_XI_AND_BENCH.md](../architecture/STARTING_XI_AND_BENCH.md) — Lineup rules
 - [../../CLAUDE.md](../../CLAUDE.md) — Development guidelines (includes E2E section)
 
 ---
 
-Last Updated: 2026-05-28
+Last Updated: **2026-06-01**
