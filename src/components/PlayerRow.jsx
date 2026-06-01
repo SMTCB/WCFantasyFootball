@@ -120,12 +120,7 @@ export default function PlayerRow({
             {player.isJoker && (
               <span
                 className="fk-mono shrink-0"
-                style={{
-                  fontSize: 8,
-                  color: 'var(--pos-gk)',
-                  border: '1px solid var(--pos-gk)',
-                  padding: '1px 5px',
-                }}
+                style={{ fontSize: 9, fontWeight: 800, color: 'var(--pos-gk)', border: '1px solid var(--pos-gk)', padding: '2px 6px' }}
               >
                 JOKER
               </span>
@@ -134,12 +129,7 @@ export default function PlayerRow({
             {isSwapTarget && (
               <span
                 className="fk-mono shrink-0"
-                style={{
-                  fontSize: 8,
-                  color: 'var(--positive)',
-                  border: '1px solid var(--positive)',
-                  padding: '1px 5px',
-                }}
+                style={{ fontSize: 9, fontWeight: 800, color: 'var(--positive)', border: '1px solid var(--positive)', padding: '2px 6px' }}
               >
                 SWAP
               </span>

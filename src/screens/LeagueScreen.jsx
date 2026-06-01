@@ -1006,35 +1006,35 @@ export default function LeagueScreen() {
 
         {/* Incomplete squad warning — two levels, suppressed when draftGaps banner is active */}
         {mySquadPlayerCount !== null && draftGaps === 0 && mySquadPlayerCount < 11 && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 20px', background: 'rgba(240,58,58,0.10)', borderBottom: '1px solid rgba(240,58,58,0.25)', flexShrink: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 20px', background: 'rgba(240,58,58,0.10)', borderBottom: '1px solid rgba(240,58,58,0.28)', flexShrink: 0 }}>
             <div style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--danger)', flexShrink: 0 }} />
             <div style={{ flex: 1 }}>
-              <div style={{ fontFamily: DISPLAY, fontSize: 11, color: 'var(--danger)', letterSpacing: '0.06em', textTransform: 'uppercase' }}>
-                Squad too small — {mySquadPlayerCount}/11 starters
+              <div style={{ fontFamily: DISPLAY, fontSize: 13, fontWeight: 900, color: 'var(--danger)', letterSpacing: '0.04em', textTransform: 'uppercase' }}>
+                Squad too small — {mySquadPlayerCount}/11 players
               </div>
-              <div style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', marginTop: 2 }}>
+              <div style={{ fontFamily: MONO, fontSize: 10, color: 'rgba(240,58,58,0.8)', marginTop: 3 }}>
                 Need {11 - mySquadPlayerCount} more player{11 - mySquadPlayerCount !== 1 ? 's' : ''} to field a starting XI
               </div>
             </div>
-            <a href="#/squad" style={{ fontFamily: DISPLAY, fontSize: 9, color: 'var(--danger)', border: '1px solid rgba(240,58,58,0.4)', padding: '5px 10px', textDecoration: 'none', letterSpacing: '0.1em', textTransform: 'uppercase', flexShrink: 0 }}>
+            <button onClick={() => navigate('/squad')} style={{ fontFamily: DISPLAY, fontWeight: 900, fontSize: 10, color: 'var(--danger)', border: '1px solid rgba(240,58,58,0.5)', padding: '6px 14px', background: 'transparent', cursor: 'pointer', letterSpacing: '0.1em', textTransform: 'uppercase', flexShrink: 0 }}>
               MY SQUAD →
-            </a>
+            </button>
           </div>
         )}
         {mySquadPlayerCount !== null && draftGaps === 0 && mySquadPlayerCount >= 11 && mySquadPlayerCount < 15 && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '8px 20px', background: 'rgba(240,180,0,0.07)', borderBottom: '1px solid rgba(240,180,0,0.18)', flexShrink: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 20px', background: 'rgba(240,180,0,0.09)', borderBottom: '1px solid rgba(240,180,0,0.22)', flexShrink: 0 }}>
             <div style={{ width: 7, height: 7, borderRadius: '50%', background: 'var(--gold)', flexShrink: 0 }} />
             <div style={{ flex: 1 }}>
-              <div style={{ fontFamily: DISPLAY, fontSize: 10, color: 'var(--gold)', letterSpacing: '0.06em', textTransform: 'uppercase' }}>
+              <div style={{ fontFamily: DISPLAY, fontSize: 13, fontWeight: 900, color: 'var(--gold)', letterSpacing: '0.04em', textTransform: 'uppercase' }}>
                 Squad incomplete — {mySquadPlayerCount}/15 players
               </div>
-              <div style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', marginTop: 2 }}>
+              <div style={{ fontFamily: MONO, fontSize: 10, color: 'rgba(240,180,0,0.75)', marginTop: 3 }}>
                 {15 - mySquadPlayerCount} empty slot{15 - mySquadPlayerCount !== 1 ? 's' : ''} — sign more players to complete your squad
               </div>
             </div>
-            <a href="#/squad" style={{ fontFamily: DISPLAY, fontSize: 9, color: 'var(--gold)', border: '1px solid rgba(240,180,0,0.35)', padding: '5px 10px', textDecoration: 'none', letterSpacing: '0.1em', textTransform: 'uppercase', flexShrink: 0 }}>
+            <button onClick={() => navigate('/squad')} style={{ fontFamily: DISPLAY, fontWeight: 900, fontSize: 10, color: 'var(--gold)', border: '1px solid rgba(240,180,0,0.45)', padding: '6px 14px', background: 'transparent', cursor: 'pointer', letterSpacing: '0.1em', textTransform: 'uppercase', flexShrink: 0 }}>
               MY SQUAD →
-            </a>
+            </button>
           </div>
         )}
 

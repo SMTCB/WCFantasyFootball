@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 // Empty squad shown when user has no squad yet (instead of demo data)
 const EMPTY_SQUAD = {
@@ -52,6 +52,7 @@ const CHIPS = [
 export default function SquadScreen() {
   const { user } = useAuth();
   const { show: showToast } = useToast();
+  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const leagueIdParam = searchParams.get('leagueId');
   const [activeLeague,       setActiveLeague]      = useState(leagueIdParam);
@@ -1134,11 +1135,11 @@ export default function SquadScreen() {
                     <span
                       style={{
                         fontFamily: 'JetBrains Mono, monospace',
-                        fontSize: 7,
-                        letterSpacing: '0.14em',
+                        fontSize: 9, fontWeight: 800,
+                        letterSpacing: '0.1em',
                         textTransform: 'uppercase',
-                        padding: '2px 5px',
-                        border: isBench ? '1px solid var(--rule)' : '1px solid rgba(0,180,216,0.3)',
+                        padding: '2px 6px',
+                        border: isBench ? '1px solid var(--rule)' : '1px solid rgba(0,180,216,0.4)',
                         color: isBench ? 'var(--mute)' : 'var(--cyan)',
                         background: isBench ? 'transparent' : 'rgba(0,180,216,0.06)',
                         flexShrink: 0,
@@ -1166,11 +1167,11 @@ export default function SquadScreen() {
                         }}
                         style={{
                           fontFamily: 'JetBrains Mono, monospace',
-                          fontSize: 7,
+                          fontSize: 9, fontWeight: 800,
                           letterSpacing: '0.1em',
                           textTransform: 'uppercase',
-                          padding: '2px 5px',
-                          border: '1px solid rgba(240,180,0,0.3)',
+                          padding: '2px 6px',
+                          border: '1px solid rgba(240,180,0,0.4)',
                           color: 'var(--gold)',
                           background: 'rgba(240,180,0,0.06)',
                           flexShrink: 0,
@@ -1178,12 +1179,12 @@ export default function SquadScreen() {
                           opacity: auctionBusy === player.id ? 0.5 : 1,
                         }}
                       >
-                        {auctionBusy === player.id ? '…' : 'Auction'}
+                        {auctionBusy === player.id ? '…' : 'AUCTION'}
                       </button>
                     )}
                     {activeLeague && isListed && (
-                      <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 7, letterSpacing: '0.1em', textTransform: 'uppercase', padding: '2px 5px', border: '1px solid rgba(240,180,0,0.4)', color: 'var(--gold)', background: 'rgba(240,180,0,0.1)', flexShrink: 0 }}>
-                        On auction
+                      <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 9, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', padding: '2px 6px', border: '1px solid rgba(240,180,0,0.4)', color: 'var(--gold)', background: 'rgba(240,180,0,0.1)', flexShrink: 0 }}>
+                        ON AUCTION
                       </span>
                     )}
                   </div>
@@ -1396,31 +1397,34 @@ export default function SquadScreen() {
 
         {/* Incomplete squad banner — shown on all mobile tabs */}
         {allSquadPlayers.length < 11 ? (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px', background: 'rgba(240,58,58,0.10)', borderBottom: '1px solid rgba(240,58,58,0.25)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 16px', background: 'rgba(240,58,58,0.12)', borderBottom: '1px solid rgba(240,58,58,0.3)' }}>
             <div style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--danger)', flexShrink: 0 }} />
             <div style={{ flex: 1 }}>
-              <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 11, color: 'var(--danger)', letterSpacing: '0.04em', textTransform: 'uppercase' }}>
-                Squad too small — {allSquadPlayers.length}/11 starters
+              <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 13, fontWeight: 900, color: 'var(--danger)', letterSpacing: '0.04em', textTransform: 'uppercase' }}>
+                Squad too small — {allSquadPlayers.length}/11 players
               </div>
-              <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 9, color: 'var(--mute)', marginTop: 2 }}>
+              <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 10, color: 'rgba(240,58,58,0.8)', marginTop: 3 }}>
                 Need {11 - allSquadPlayers.length} more to field a starting XI
               </div>
             </div>
-            <a href="#/market" style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 9, color: 'var(--danger)', border: '1px solid rgba(240,58,58,0.4)', padding: '4px 10px', textDecoration: 'none', letterSpacing: '0.1em', textTransform: 'uppercase', flexShrink: 0 }}>
+            <button onClick={() => navigate('/market')} style={{ fontFamily: 'Archivo Black, sans-serif', fontWeight: 900, fontSize: 10, color: 'var(--danger)', border: '1px solid rgba(240,58,58,0.5)', padding: '6px 12px', background: 'transparent', cursor: 'pointer', letterSpacing: '0.1em', textTransform: 'uppercase', flexShrink: 0 }}>
               MARKET →
-            </a>
+            </button>
           </div>
         ) : allSquadPlayers.length < 15 ? (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 16px', background: 'rgba(240,180,0,0.08)', borderBottom: '1px solid rgba(240,180,0,0.2)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px', background: 'rgba(240,180,0,0.10)', borderBottom: '1px solid rgba(240,180,0,0.25)' }}>
             <div style={{ width: 7, height: 7, borderRadius: '50%', background: 'var(--gold)', flexShrink: 0 }} />
             <div style={{ flex: 1 }}>
-              <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 10, color: 'var(--gold)', letterSpacing: '0.04em', textTransform: 'uppercase' }}>
-                {allSquadPlayers.length}/15 players signed — {15 - allSquadPlayers.length} empty slot{15 - allSquadPlayers.length !== 1 ? 's' : ''}
+              <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 13, fontWeight: 900, color: 'var(--gold)', letterSpacing: '0.04em', textTransform: 'uppercase' }}>
+                Squad incomplete — {allSquadPlayers.length}/15 players
+              </div>
+              <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 10, color: 'rgba(240,180,0,0.7)', marginTop: 3 }}>
+                {15 - allSquadPlayers.length} empty slot{15 - allSquadPlayers.length !== 1 ? 's' : ''} — sign more players
               </div>
             </div>
-            <a href="#/market" style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 9, color: 'var(--gold)', border: '1px solid rgba(240,180,0,0.35)', padding: '4px 10px', textDecoration: 'none', letterSpacing: '0.1em', textTransform: 'uppercase', flexShrink: 0 }}>
+            <button onClick={() => navigate('/market')} style={{ fontFamily: 'Archivo Black, sans-serif', fontWeight: 900, fontSize: 10, color: 'var(--gold)', border: '1px solid rgba(240,180,0,0.45)', padding: '6px 12px', background: 'transparent', cursor: 'pointer', letterSpacing: '0.1em', textTransform: 'uppercase', flexShrink: 0 }}>
               SIGN →
-            </a>
+            </button>
           </div>
         ) : null}
 
@@ -1866,30 +1870,30 @@ export default function SquadScreen() {
 
         {/* Incomplete squad banner — desktop */}
         {allSquadPlayers.length < 11 ? (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 20px', background: 'rgba(240,58,58,0.08)', borderBottom: '1px solid rgba(240,58,58,0.2)', flexShrink: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 20px', background: 'rgba(240,58,58,0.10)', borderBottom: '1px solid rgba(240,58,58,0.28)', flexShrink: 0 }}>
             <div style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--danger)', flexShrink: 0 }} />
-            <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 11, color: 'var(--danger)', letterSpacing: '0.04em', textTransform: 'uppercase' }}>
-              Squad too small — {allSquadPlayers.length}/11 starters
+            <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 13, fontWeight: 900, color: 'var(--danger)', letterSpacing: '0.04em', textTransform: 'uppercase' }}>
+              Squad too small — {allSquadPlayers.length}/11 players
             </div>
-            <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 9, color: 'var(--mute)' }}>
+            <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 10, color: 'rgba(240,58,58,0.8)' }}>
               Need {11 - allSquadPlayers.length} more to field a starting XI
             </div>
-            <a href="#/market" style={{ marginLeft: 'auto', fontFamily: 'Archivo Black, sans-serif', fontSize: 9, color: 'var(--danger)', border: '1px solid rgba(240,58,58,0.4)', padding: '4px 10px', textDecoration: 'none', letterSpacing: '0.1em', textTransform: 'uppercase', flexShrink: 0 }}>
+            <button onClick={() => navigate('/market')} style={{ marginLeft: 'auto', fontFamily: 'Archivo Black, sans-serif', fontWeight: 900, fontSize: 10, color: 'var(--danger)', border: '1px solid rgba(240,58,58,0.5)', padding: '6px 14px', background: 'transparent', cursor: 'pointer', letterSpacing: '0.1em', textTransform: 'uppercase', flexShrink: 0 }}>
               GO TO MARKET →
-            </a>
+            </button>
           </div>
         ) : allSquadPlayers.length < 15 ? (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '8px 20px', background: 'rgba(240,180,0,0.07)', borderBottom: '1px solid rgba(240,180,0,0.18)', flexShrink: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 20px', background: 'rgba(240,180,0,0.09)', borderBottom: '1px solid rgba(240,180,0,0.22)', flexShrink: 0 }}>
             <div style={{ width: 7, height: 7, borderRadius: '50%', background: 'var(--gold)', flexShrink: 0 }} />
-            <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 10, color: 'var(--gold)', letterSpacing: '0.04em', textTransform: 'uppercase' }}>
-              {allSquadPlayers.length}/15 players — {15 - allSquadPlayers.length} empty slot{15 - allSquadPlayers.length !== 1 ? 's' : ''}
+            <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 13, fontWeight: 900, color: 'var(--gold)', letterSpacing: '0.04em', textTransform: 'uppercase' }}>
+              Squad incomplete — {allSquadPlayers.length}/15 players
             </div>
-            <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 9, color: 'var(--mute)' }}>
-              Sign more players to complete your squad
+            <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 10, color: 'rgba(240,180,0,0.75)' }}>
+              {15 - allSquadPlayers.length} empty slot{15 - allSquadPlayers.length !== 1 ? 's' : ''} — sign more players to complete your squad
             </div>
-            <a href="#/market" style={{ marginLeft: 'auto', fontFamily: 'Archivo Black, sans-serif', fontSize: 9, color: 'var(--gold)', border: '1px solid rgba(240,180,0,0.35)', padding: '4px 10px', textDecoration: 'none', letterSpacing: '0.1em', textTransform: 'uppercase', flexShrink: 0 }}>
+            <button onClick={() => navigate('/market')} style={{ marginLeft: 'auto', fontFamily: 'Archivo Black, sans-serif', fontWeight: 900, fontSize: 10, color: 'var(--gold)', border: '1px solid rgba(240,180,0,0.45)', padding: '6px 14px', background: 'transparent', cursor: 'pointer', letterSpacing: '0.1em', textTransform: 'uppercase', flexShrink: 0 }}>
               SIGN PLAYERS →
-            </a>
+            </button>
           </div>
         ) : null}
 
