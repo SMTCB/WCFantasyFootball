@@ -1044,7 +1044,9 @@ ORDER BY s.user_id, fp.matchday_id;
 2. **Assert**: players who played in the finished fixture show non-zero points next to their name.
 3. Click a player row → **Assert**: scoring breakdown visible (goals, assists, clean sheet, etc.).
 
-**Pass**: Breakdown shows per-event contribution from real match stats. ✓
+> **Status (session 72)**: Step 2 ✅ PASS (Pécsi=5, Leno=4, Lindelöf=4, Burn=2 visible after SquadScreen `tournamentId` bug fix). Step 3 ⚠️ NOT BUILT — `ScoringBreakdown.jsx` listed in CLAUDE.md repo structure does not exist. The per-stat breakdown panel is a planned feature (see BACKLOG.md `[FEATURE] Player form strip + per-matchday stats panel`). Once built, this assertion will be satisfied by the inline stat subtitle on the player row.
+
+**Pass**: Breakdown shows per-event contribution from real match stats. ✓ (Step 2 only until feature is built)
 
 ---
 
@@ -1617,7 +1619,12 @@ ORDER BY s.user_id, fp.matchday_id;
 | Playwright MCP browser lock | UI flows requiring browser | If Playwright MCP reports "Browser already in use", kill Chrome processes for the `mcp-chrome-*` profile and retry. Alternative: use `curl` + user JWT to call RPCs directly (B-3, B-4 verified this way in session 70). |
 | EPL season end (2026-05-24) | B-5a fixture selection, A-4 | All EPL fixtures have `status='finished'`. No scheduled EPL fixtures for bet creation — use WC fixtures or manually reset one fixture to `status='scheduled'`. |
 | E-2 gaps when wishlists identical | E-2 allocation | If all 4 managers submit the same 30-player WC wishlist, each gets only 4–5 unique players (10–12 unresolved slots). This is correct lottery behavior. For E-4 knockout test, managers must submit different wishlists. |
+| F-2 step 3 (scoring breakdown on click) | F-2 | Feature not yet built. `ScoringBreakdown.jsx` listed in CLAUDE.md does not exist. Will be resolved when the Player Form Strip + Stats Panel feature is implemented (see BACKLOG.md). |
+| E-3 (eliminated club + takenByOther combined) | E-3 | Never run. Requires `cup_active_clubs` row with `is_active=false` for one WC club in DRAFT_WC_E2E. Algeria was seeded in session 69 — verify row still exists before running. |
+| D-3 squad completion path | D-3 | One FCFS pick confirmed (screen renders, DB updates). The "squad complete → write to squads table" trigger at 15 picks was never reached. Quick to verify: keep picking until counter hits 0. |
+| B-7d betting leaderboard stats | B-7d | Shows structure but all "—". Requires a fully resolved bet. The RESOLVE button needs React fiber click (`page.evaluate` with React internals), not standard `dispatchEvent`. |
+| A-2 real-time chat (cross-client) | A-2 | Single-browser confirmed. Cross-client real-time delivery never verified. Use Playwright `browser.newPage()` to open a second tab as TestMgr2. |
 
 ---
 
-Last Updated: **2026-06-02** (session 72: F-2/E-4/D-3 confirmed; 9 bugs fixed; `pre_elimination` enum, CORS on run-draft-lottery, phase-aware draft screens)
+Last Updated: **2026-06-02** (session 72: F-2/E-4/D-3 confirmed; 9 bugs fixed; known limitations table updated with remaining open items)
