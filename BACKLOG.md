@@ -1,6 +1,6 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-06-02 (session 74 — Form strip shipped PR #301; DD-L1 + DD-L9 fixed; next migration 119_)  
+**Last Updated**: 2026-06-02 (session 74 — Form strip PR #301; DD-L1/L9 fixed; low bug sweep commit f9a668e; migration 119 applied; next migration 120_)  
 **E2E Test Suite**: `platform.spec.js` (36 tests × 2 browsers) passing in CI ✅ — completes in ~3 min  
 **Full Playbook Run**: `E2E_TEST_PLAYBOOK.md` v2.0 — all flows confirmed (D-4a/b, E-4, D-3 ✅; F-2 PASS — form strip satisfies per-stat breakdown criterion)  
 **Live App**: https://wc-fantasy-football.vercel.app  
@@ -312,24 +312,29 @@ Next migration: `113_`
 | ~~**DD-M11**~~ | ~~Chips~~ | ~~No deadline check on chip activation.~~ **✅ Fixed #278** — migration 112: `activate_chip` checks `matchday_deadlines` and returns `DEADLINE_PASSED` if `deadline_at < NOW()`. (Direct column UPDATE grant remains — separate LOW item.) |
 | **DD-M12** | Funnel | **Sign-up / email-confirmation messaging ambiguous**, no resend path; behavior depends on a Supabase setting nobody has pinned for the pilot (`AuthScreen.jsx:77`). |
 | **DD-M13** | Pipeline | **Post-match scoring race** — daily 22:30 UTC cron scores any `finished` fixture; if Forza hasn't finalized (delay/ET/abandon) it locks in incomplete data with no NULL/plausibility guard. WC matches span time zones; one daily pass is coarse. |
-| **DD-M14** | Pipeline | **`sync_cup_eliminations` filters `status != 'completed'`** — no such enum value; dead filter, logic carried only by `kickoff_at`. |
+| ~~**DD-M14**~~ | ~~Pipeline~~ | ~~`sync_cup_eliminations` dead status filter `'completed'`.~~ **✅ Fixed f9a668e** — changed to `'finished'`. |
 | **DD-M15** | Security | **Hardcoded service-role JWT in migration 105 cron body** (`:145`) — full-bypass token in source control; vault-reference it. |
 
 ### 🔵 LOW
 
 | ID | Area | Issue |
 |----|------|-------|
-| ~~**DD-L1**~~ | ~~Funnel~~ | ~~Join succeeds but auto-navigate reads `data?.id`; RPC returns `{league_id,name}` → user left on list view.~~ **✅ Fixed #301** — use `data?.league_id ?? data?.id`. |
+| ~~**DD-L1**~~ | ~~Funnel~~ | ~~Join auto-navigate reads wrong field.~~ **✅ Fixed #301** |
+| ~~**DD-L2**~~ | ~~Funnel~~ | ~~`get_server_time` + `LEAGUE_FULL` cap not in migrations.~~ **✅ Verified closed** — both exist in prod. |
+| ~~**DD-L3**~~ | ~~Auction~~ | ~~`cancelListing` UPDATE policy too permissive (any auth user).~~ **✅ Fixed f9a668e** — narrowed to `seller_id = auth.uid() AND highest_bidder_id IS NULL`. |
+| ~~**DD-L4**~~ | ~~Auction~~ | ~~No seller ≠ bidder check in `place_bid`.~~ **✅ Fixed f9a668e** — self-bid returns error. |
+| ~~**DD-L5**~~ | ~~Bets~~ | ~~`void_bet` doesn't reverse credited budget.~~ **✅ Fixed f9a668e** — reverses budget for resolved budget-type bets. |
+| ~~**DD-L6**~~ | ~~Bets~~ | ~~Auto-close cron 6h lag.~~ **✅ Fixed f9a668e** — tightened to hourly. |
 | **DD-L2** | Funnel | `get_server_time` (draft anti-clock-skew) & `LEAGUE_FULL` cap not in any migration — draft deadline trusts client clock if RPC absent. |
 | **DD-L3** | Auction | `cancelListing` does direct UPDATE relying on RLS; after SEC-8 dropped the member UPDATE policy, cancel may silently fail. *VERIFY policy.* |
 | **DD-L4** | Auction | No seller≠bidder check in current `place_bid` — seller can self-bid to ramp price (input hidden in UI, RPC callable). |
 | **DD-L5** | Bets | `void_bet` doesn't reverse an already-credited budget (`101:28`); help text promises refunds. |
 | **DD-L6** | Bets | Auto-close cron lag (6h) — bets show "open" past deadline; submissions still blocked by `submit_bet` deadline check. |
 | **DD-L7** | Chips | Free Hit & Bench Boost not implemented at all (no code/UI). Only Wildcard + Triple Captain exist (both broken). |
-| **DD-L8** | Scoring | calculate-scores Path B (event aggregation) defaults `minutes_played:90` for anyone with an event — inflates fallback scores if Forza data absent. |
-| ~~**DD-L9**~~ | ~~Frontend~~ | ~~MarketScreen shows tap-to-retry on `TRANSFER_LIMIT_REACHED` which always re-fails.~~ **✅ Fixed #301** — no retry on limit/full errors. |
-| **DD-L10** | Pipeline | `eliminate-cup-club` manual path double-JSON-encodes gazette `bullets`/`full_data` (`:121-123`) — stores a string, UI may not render. |
-| **DD-L11** | Build | App is one 641 KB chunk (no code-splitting); a module-eval TDZ would white-screen before ErrorBoundary can catch (`App.jsx`). Slow cold-load on mobile data. |
+| ~~**DD-L8**~~ | ~~Scoring~~ | ~~Path B defaults `minutes_played:90` for event-only players.~~ **✅ Fixed f9a668e** — default changed to 0. |
+| ~~**DD-L9**~~ | ~~Frontend~~ | ~~MarketScreen tap-to-retry on `TRANSFER_LIMIT_REACHED`.~~ **✅ Fixed #301** |
+| ~~**DD-L10**~~ | ~~Pipeline~~ | ~~`eliminate-cup-club` double-JSON-encodes gazette bullets/full_data.~~ **✅ Fixed f9a668e** — removed JSON.stringify wrappers. |
+| **DD-L11** | Build | App is one 641 KB chunk (no code-splitting); slow cold-load on mobile data. |
 
 ### ✅ VERIFY-ON-LIVE-DB CHECKLIST (run before kickoff — needs `npx supabase login`)
 
