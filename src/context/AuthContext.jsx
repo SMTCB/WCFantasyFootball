@@ -100,6 +100,11 @@ export function AuthProvider({ children }) {
     return result;
   };
 
+  const resendConfirmation = async (email) => {
+    if (!AUTH_ENABLED) return { error: null };
+    return supabase.auth.resend({ type: 'signup', email });
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -113,6 +118,7 @@ export function AuthProvider({ children }) {
         signOut,
         resetPassword,
         updatePassword,
+        resendConfirmation,
       }}
     >
       {children}
