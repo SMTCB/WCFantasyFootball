@@ -562,12 +562,22 @@ Always create a new file — never modify existing migrations.
 | 109 | `109_auth_uid_league_functions.sql` | Session 65: create_league (both overloads) + join_league_by_code use auth.uid() instead of trusting client p_user_id |
 | 110 | `110_session66_high_items.sql` | Session 66: resolve_bet BET_STILL_OPEN guard; place_bid FOR UPDATE locks; leagues commissioner UPDATE RLS; sync-wc-fixtures-6h → sync-wc-fixtures-30m; calculate-scores-post-match expired JWT replaced with service-role key |
 | 111 | `111_session66b_h1_budget_reservation.sql` | Session 66: place_bid budget reservation — sums all open winning bids before accepting; rejects if new bid exceeds available (unreserved) budget |
+| 112a | `112_auction_chip_fixes.sql` | Session 67/68: resolve_auction_listing squad size + duplicate guards (DD-M7); activate_chip matchday deadline check (DD-M11) |
+| 112b | `112_fix_player_id_types.sql` | Session 68: execute_transfer_atomic + set_lineup p_player_id/p_player_out/p_player_in changed uuid→text (DD-M3); GK auto-init sorts GKs first; backfill existing squads with missing GK in starting_xi |
+| 112c | `112_void_bet_use_cancelled.sql` | Session 69: void_bet() status fixed from 'voided' → 'cancelled' (constraint only allows cancelled) |
+| 113 | `113_fix_ghost_starting_xi.sql` | Session 69: remove ghost IDs from squads.starting_xi (IDs present in starting_xi but absent from squad.players) |
+| 114 | `114_fix_transfer_limit_pre_competition.sql` | Session 69: bypass per-round transfer limit for non-standard matchday IDs (squads created before WC competition starts) |
+| 115 | `115_purge_cross_tournament_players.sql` | Session 70: purge cross-tournament players from squads; DB-level trigger to prevent future cross-tournament adds |
+| 116 | `116_drop_draft_submissions_legacy_unique.sql` | Session 71: drop legacy (league_id, user_id) unique constraint on draft_submissions — blocked multi-phase inserts (group + knockout) |
+| 117 | `117_draft_allocations_user_update_rls.sql` | Session 71: UPDATE RLS policy on draft_allocations for users' own rows (needed by DraftRecoveryScreen client picks) |
+| 118 | `118_scoring_v2.sql` | Session 73: V2 additive scoring — key_passes + big_chances_created columns on player_match_stats; scoring_rules updated for tournaments 426, 429, 1593; calculate-scores v22 deployed |
+| 119 | `119_low_bug_sweep.sql` | Session 74: auction_listings UPDATE policy narrowed (DD-L3); place_bid seller self-bid blocked (DD-L4); void_bet budget reversal (DD-L5); auto-close-bets cron hourly (DD-L6); sync_cup_eliminations status filter fixed 'completed'→'finished' (DD-M14) |
 
-**Next migration**: `112_`
+**Next migration**: `120_`
 
-**Key pipeline facts (2026-06-01):**
+**Key pipeline facts (2026-06-02):**
 - `calculate-scores` uses `scoring_rules` table (not `scoring_templates`) keyed by `tournament_id`
-- `calculate-scores` is deployed as **v21** (edge function, `verify_jwt: false`; requires service-role key OR valid user JWT — anon-only callers get 401; uses `starting_xi` for scoring with fallback to `players[0..10]`; multiplier rule: `Math.max(captainMult, jokerMult)` — chips do not stack)
+- `calculate-scores` is deployed as **v22** (edge function, `verify_jwt: false`; requires service-role key OR valid user JWT — anon-only callers get 401; uses `starting_xi` for scoring with fallback to `players[0..10]`; multiplier rule: `Math.max(captainMult, jokerMult)` — chips do not stack)
 - `calculate-scores` writes a `gazette_entries` row (`entry_type='activity'`) per league after scoring — idempotent (deletes+reinserts for same matchday_id)
 - `calculate-scores` stores integer points: `Math.round(total)` — no decimals in `fantasy_points.total`
 - `fantasy_points` column for squad total is `total` (not `total_points`) — integer

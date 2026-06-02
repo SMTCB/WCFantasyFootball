@@ -1,75 +1,42 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-06-02 (session 74 — Form strip PR #301; Layer 2 stats panel 6d8f5e8; low bug sweep f9a668e; migration 119; next migration 120_)  
+**Last Updated**: 2026-06-02 (session 74 — all P0/P1/P2 blockers closed; form strip + stats panel; 12 DD bugs swept; DD-M12 sign-up UX; next migration 120_)  
 **E2E Test Suite**: `platform.spec.js` (36 tests × 2 browsers) passing in CI ✅ — completes in ~3 min  
 **Full Playbook Run**: `E2E_TEST_PLAYBOOK.md` v2.0 — all flows confirmed (D-4a/b, E-4, D-3 ✅; F-2 PASS — form strip satisfies per-stat breakdown criterion)  
+**🟢 LAUNCH READY**: No critical (P0/P1) bugs open. All game mechanics functional. WC kick-off 2026-06-11.  
 **Live App**: https://wc-fantasy-football.vercel.app  
 **WC Kick-off**: 2026-06-11 19:00 UTC (Mexico vs South Africa)
 
 ---
 
-## ✅ Session 74 — Form strip + DD fixes (PR #301, 2026-06-02)
+## ✅ Session 74 — Player stats, DD bug sweep, sign-up UX (2026-06-02)
 
-- **Form strip (Layer 1)** — `usePlayerStats` hook + `FormStrip` component. 5-cell coloured history per player on Market rows and Squad LIST tab rows. Colors: red=0, amber=1–4, green=5–9, gold=10+. Data: last 5 finished matchdays from `player_match_stats`, one query per tournament. Closes F-2 playbook assertion.
-- **DD-L1 fixed** — `join_league_by_code` RPC returns `{league_id, name}`; `data?.id` was always undefined; user stayed on list view after joining. Fixed to use `data?.league_id ?? data?.id`.
-- **DD-L9 fixed** — MarketScreen buy error toast no longer shows retry button on `TRANSFER_LIMIT_REACHED` / limit / full errors (retrying always re-failed). Other transient errors still retryable.
-- **CommissionerPanel lint** — Fixed pre-existing `no-unused-vars` errors on `commAction` + `setCommMsg`.
-- **Market race condition** — Already fixed (guard at `MarketScreen.jsx:233`). No new work needed.
+### PRs & commits
+| Ref | What |
+|-----|------|
+| PR #301 | Form strip (Layer 1) + DD-L1 join nav + DD-L9 retry UX fix |
+| commit f9a668e | Low bug sweep — DD-L2–L6/L8/L10 + DD-M14 (migration 119) |
+| commit 6d8f5e8 | Layer 2 expandable per-player stats panel on Market screen |
+| PR #304 | DD-M12 sign-up email confirmation UX |
 
-**Layer 2 (expandable stats panel)** remains open below as P2.
+### Delivered
+- **Form strip** (`usePlayerStats` + `FormStrip`) — 5-cell coloured GW history on Market rows and Squad LIST tab rows. Closes F-2 playbook.
+- **Expandable stats panel** (`PlayerStatsPanel`) — tap player name on Market → last 5 GW table (GW · Fixture · Min · G · A · CS · Pts) + season totals + BUY/SELL button. Lazy-loaded per player.
+- **Low bug sweep** (migration 119 + 2 edge function deploys): DD-L3/L4/L5/L6/L8/L10/M14 — auction RLS, seller self-bid, void_bet budget reversal, hourly cron, Path B minutes fix, gazette double-encode fix, dead cup filter fixed. DD-L2 verified closed in prod.
+- **Sign-up UX** (PR #304) — dedicated "Check Your Inbox" view with 60s-cooldown resend button; auto-navigates if email confirm is disabled.
+- **CommissionerPanel lint** — fixed pre-existing `no-unused-vars` errors.
+
+### Critical bugs status: 🟢 NONE
+All P0/P1/P2 blockers from the pre-pilot audit (sessions 63–68) are resolved. No new critical bugs found in session 74.
 
 ---
 
-## 🚧 Open Features — Player Performance Stats (P2, post-launch)
+## ✅ Player Performance Stats — DONE (session 74, 2026-06-02)
 
-### ✅ [FEATURE] Player stats expandable panel (Layer 2) — DONE (6d8f5e8, 2026-06-02)
-
-**Why**: Stats are the primary decision driver for buy/sell transfers. Currently the Market and Squad screens show only the player's price and position — there is no form history, no per-GW breakdown, and no way to compare players by recent performance. Managers are flying blind on transfer decisions.
-
-**Proposed design — two layers:**
-
-**Layer 1 — Form strip (inline, always visible)**  
-Add a 5-cell coloured strip to every player row in the Market screen AND the Squad LIST tab:
-
-```
-FWD  Salah  LIV · £9.5M    8 · 2 · 12 · 0 · 6    [BUY]
-```
-
-- Each cell = points scored that GW
-- Colour: 0 = red, 1–4 = amber, 5–9 = green, 10+ = gold
-- No interaction needed — instant comparison across the whole visible pool
-
-**Layer 2 — Expandable per-player stats panel**  
-Tap the player name (not the BUY button) to expand a detail panel:
-- Last 5 GWs as a table: `GW · Fixture · Mins · G · A · CS · Pts`
-- Season totals line: `38 apps · 24G · 12A · 320 pts · avg 8.4/gw`
-- Next fixture if available
-- BUY / SELL button at the bottom of the expanded panel
-
-**Layer 1 also resolves F-2 partial**: same stat subtitle rendered under the player name in Squad LIST tab satisfies the "scoring breakdown visible" assertion in the E2E playbook.
-
-**Data source**: `player_match_stats` (goals, assists, clean_sheet, minutes_played, fantasy_points per fixture), joined with `fixtures` (matchday_id, kickoff_at). Stats are global (not per-league) — same player history regardless of which league you're in.
-
-**Surfaces**:
-- Market screen (`MarketScreen.jsx`) — primary buy decision surface
-- Squad LIST tab (`SquadScreen.jsx`) — sell decision + F-2 completion
-- Roster modal (`LeagueScreen.jsx`) — viewing other managers' squads (Phase 2 addition)
-
-**Implementation plan**:
-1. New `usePlayerStats(playerIds)` hook — batched query for all visible players: `player_match_stats` joined with `fixtures`, last 5 rounds, grouped by `player_id` — ~1h
-2. `FormStrip` component — 5 coloured cells, memoised — ~1h
-3. `PlayerStatsPanel` expandable component (table + season totals) — ~3h
-4. Wire into Market player row + Squad LIST player row — ~1-2h
-5. Roster modal reuse — ~1h (Phase 2)
-
-**Effort**: ~6h (form strip alone ~2-3h as a quick win)  
-**Priority**: P2 — valuable before WC group stage ends; impacts every transfer decision  
-**Acceptance criteria**:
-- [ ] Form strip visible on all player rows in Market and Squad LIST without any click
-- [ ] Tapping player name expands stat panel with last 5 GWs
-- [ ] Stats panel shows season totals
-- [ ] BUY / SELL accessible from within expanded panel
-- [ ] F-2 playbook assertion ("non-zero points visible + breakdown") passes fully
+- **Layer 1 — Form strip**: `FormStrip` + `usePlayerStats` — 5-cell GW history on Market rows and Squad LIST tab. PR #301.
+- **Layer 2 — Stats panel**: `PlayerStatsPanel` — tap player name on Market to expand last-5-GW table + season totals + BUY/SELL. Lazy-loaded per player. commit 6d8f5e8.
+- **Phase 2 remaining**: Roster modal (other managers' squads) — deferred post-pilot.
+- **F-2 playbook**: PASS ✅ — form strip satisfies per-stat breakdown criterion.
 
 ---
 
