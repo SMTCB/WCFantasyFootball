@@ -10,7 +10,7 @@
  *   ?redirect=/squad     → destination after successful auth
  */
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import BrandMark from '../components/BrandMark';
@@ -21,11 +21,12 @@ const TAB_SIGNIN  = 'signin';
 const TAB_SIGNUP  = 'signup';
 const TAB_RESET   = 'reset';
 const TAB_RECOVER = 'recover';   // set new password after clicking email link
+const TAB_PENDING = 'pending';   // awaiting email confirmation after sign-up
 
 export default function AuthScreen() {
   const [searchParams] = useSearchParams();
   const navigate       = useNavigate();
-  const { signIn, signUp, resetPassword, updatePassword } = useAuth();
+  const { signIn, signUp, resetPassword, updatePassword, resendConfirmation } = useAuth();
 
   const initialTab = searchParams.get('type') === 'recovery'
     ? TAB_RECOVER
@@ -33,14 +34,23 @@ export default function AuthScreen() {
       ? TAB_SIGNUP
       : TAB_SIGNIN;
 
-  const [tab,      setTab]      = useState(initialTab);
-  const [email,    setEmail]    = useState('');
-  const [password, setPassword] = useState('');
-  const [username, setUsername] = useState('');
-  const [confirm,  setConfirm]  = useState('');
-  const [loading,  setLoading]  = useState(false);
-  const [error,    setError]    = useState('');
-  const [success,  setSuccess]  = useState('');
+  const [tab,          setTab]          = useState(initialTab);
+  const [email,        setEmail]        = useState('');
+  const [password,     setPassword]     = useState('');
+  const [username,     setUsername]     = useState('');
+  const [confirm,      setConfirm]      = useState('');
+  const [loading,      setLoading]      = useState(false);
+  const [error,        setError]        = useState('');
+  const [success,      setSuccess]      = useState('');
+  const [pendingEmail, setPendingEmail] = useState('');
+  const [resendCooldown, setResendCooldown] = useState(0); // seconds remaining
+
+  // Count down the resend cooldown timer
+  useEffect(() => {
+    if (resendCooldown <= 0) return;
+    const t = setTimeout(() => setResendCooldown(c => c - 1), 1000);
+    return () => clearTimeout(t);
+  }, [resendCooldown]);
 
   const redirectTo = searchParams.get('redirect') || '/';
 
@@ -74,8 +84,24 @@ export default function AuthScreen() {
       switchTab(TAB_SIGNIN);
       return;
     }
-    setSuccess('Account created! Check your email to verify, then sign in.');
-    switchTab(TAB_SIGNIN);
+    // If session is returned, email confirmation is disabled — user is already signed in
+    if (data?.session) {
+      navigate(redirectTo, { replace: true });
+      return;
+    }
+    // Email confirmation required — show pending view with resend option
+    setPendingEmail(email);
+    setResendCooldown(60);
+    setTab(TAB_PENDING);
+  };
+
+  const handleResend = async () => {
+    if (resendCooldown > 0 || !pendingEmail) return;
+    setError('');
+    const { error } = await resendConfirmation(pendingEmail);
+    if (error) { setError(error.message); return; }
+    setResendCooldown(60);
+    setSuccess('Confirmation email resent — check your inbox.');
   };
 
   const handleReset = async (e) => {
@@ -144,6 +170,52 @@ export default function AuthScreen() {
             {loading ? 'Saving…' : 'Update Password'}
           </Button>
         </form>
+      </AuthShell>
+    );
+  }
+
+  // ── Pending email confirmation ────────────────────────────────────────────────
+  if (tab === TAB_PENDING) {
+    return (
+      <AuthShell>
+        <div style={{ textAlign: 'center', marginBottom: '28px' }}>
+          <div style={{ fontSize: '40px', marginBottom: '16px' }}>✉️</div>
+          <h2 style={{ fontSize: '18px', fontWeight: 900, color: 'var(--paper)', marginBottom: '10px', fontFamily: 'Archivo Black, sans-serif', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+            Check Your Inbox
+          </h2>
+          <p style={{ fontSize: '13px', color: 'var(--mute)', lineHeight: 1.6 }}>
+            We sent a confirmation link to{' '}
+            <span style={{ color: 'var(--paper)', fontWeight: 600 }}>{pendingEmail}</span>.
+            Click it to activate your account, then sign in.
+          </p>
+        </div>
+
+        {error   && <Msg type="error">{error}</Msg>}
+        {success && <Msg type="success">{success}</Msg>}
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: error || success ? '16px' : '0' }}>
+          <Button
+            type="button"
+            size="lg"
+            fullWidth
+            onClick={handleResend}
+            disabled={resendCooldown > 0}
+          >
+            {resendCooldown > 0 ? `Resend in ${resendCooldown}s` : 'Resend Confirmation Email'}
+          </Button>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={() => { switchTab(TAB_SIGNIN); setSuccess(''); }}
+          >
+            Already confirmed? Sign in
+          </Button>
+        </div>
+
+        <p style={{ fontSize: '11px', color: 'var(--mute)', textAlign: 'center', marginTop: '20px', lineHeight: 1.5 }}>
+          Can't find it? Check your spam folder, or resend after the cooldown.
+        </p>
       </AuthShell>
     );
   }
