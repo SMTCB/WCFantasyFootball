@@ -73,14 +73,17 @@ function PlayerBreakdown({ breakdown }) {
       {breakdown.map((p, i) => {
         const posColor = p.position === 'GK' ? 'var(--gold)' : p.position === 'DEF' ? 'var(--cyan)' : p.position === 'MID' ? 'var(--positive)' : 'var(--danger)';
         const badges = [];
-        if (p.triple)    badges.push({ s: '3×C', c: 'var(--gold)' });
-        else if (p.captain) badges.push({ s: '©', c: 'var(--gold)' });
-        if (p.joker)     badges.push({ s: '2×', c: 'var(--purple)' });
-        if (p.goals)     badges.push({ s: `⚽×${p.goals}`, c: 'var(--positive)' });
-        if (p.assists)   badges.push({ s: `🅰×${p.assists}`, c: 'var(--cyan)' });
-        if (p.yellow)    badges.push({ s: '🟨', c: 'var(--warn)' });
-        if (p.red)       badges.push({ s: '🟥', c: 'var(--danger)' });
-        if (p.bonus > 0) badges.push({ s: `+${p.bonus}B`, c: 'var(--mute)' });
+        if (p.triple)        badges.push({ s: '3×C',               c: 'var(--gold)' });
+        else if (p.captain)  badges.push({ s: '©',                 c: 'var(--gold)' });
+        if (p.joker)         badges.push({ s: '2×',                c: 'var(--purple)' });
+        if (p.goals)         badges.push({ s: `⚽×${p.goals}`,     c: 'var(--positive)' });
+        if (p.assists)       badges.push({ s: `🅰×${p.assists}`,   c: 'var(--cyan)' });
+        if (p.saves > 0)     badges.push({ s: `${p.saves}SV`,      c: 'var(--cyan)' });
+        if (p.keyPasses > 0) badges.push({ s: `${p.keyPasses}KP`,  c: 'var(--positive)' });
+        if (p.sot > 0)       badges.push({ s: `${p.sot}SoT`,       c: 'var(--positive)' });
+        if (p.bigChances > 0) badges.push({ s: `${p.bigChances}BC`, c: 'var(--gold)' });
+        if (p.yellow)        badges.push({ s: '🟨',                c: 'var(--warn)' });
+        if (p.red)           badges.push({ s: '🟥',                c: 'var(--danger)' });
         return (
           <div key={p.id} style={{
             display: 'grid', gridTemplateColumns: '32px 1fr 50px 50px', gap: 8,
@@ -233,22 +236,25 @@ export default function RecapView({ leagueId, tournamentId, members, currentUser
       const [{ data: playerRows }, { data: statRows }] = await Promise.all([
         supabase.from('players').select('id, name, position').in('id', starters),
         supabase.from('player_match_stats')
-          .select('player_id, fantasy_points, goals, assists, minutes_played, yellow_cards, red_cards, bonus_points')
+          .select('player_id, fantasy_points, goals, assists, minutes_played, yellow_cards, red_cards, saves, key_passes, shots_on_target, big_chances_created')
           .in('player_id', starters).in('fixture_id', fixtureIds),
       ]);
 
       const playerMeta = Object.fromEntries((playerRows || []).map(p => [p.id, p]));
       const statsByPlayer = {};
       for (const r of statRows || []) {
-        if (!statsByPlayer[r.player_id]) statsByPlayer[r.player_id] = { pts: 0, goals: 0, assists: 0, minutes: 0, yellow: 0, red: 0, bonus: 0 };
+        if (!statsByPlayer[r.player_id]) statsByPlayer[r.player_id] = { pts: 0, goals: 0, assists: 0, minutes: 0, yellow: 0, red: 0, saves: 0, keyPasses: 0, sot: 0, bigChances: 0 };
         const s = statsByPlayer[r.player_id];
-        s.pts     += r.fantasy_points ?? 0;
-        s.goals   += r.goals ?? 0;
-        s.assists += r.assists ?? 0;
-        s.minutes += r.minutes_played ?? 0;
-        s.yellow  += r.yellow_cards ?? 0;
-        s.red     += r.red_cards ?? 0;
-        s.bonus   += r.bonus_points ?? 0;
+        s.pts       += r.fantasy_points      ?? 0;
+        s.goals     += r.goals               ?? 0;
+        s.assists   += r.assists             ?? 0;
+        s.minutes   += r.minutes_played      ?? 0;
+        s.yellow    += r.yellow_cards        ?? 0;
+        s.red       += r.red_cards           ?? 0;
+        s.saves     += r.saves               ?? 0;
+        s.keyPasses += r.key_passes          ?? 0;
+        s.sot       += r.shots_on_target     ?? 0;
+        s.bigChances += r.big_chances_created ?? 0;
       }
 
       const rows = starters.map(pid => {
@@ -256,10 +262,12 @@ export default function RecapView({ leagueId, tournamentId, members, currentUser
         const stats = statsByPlayer[pid];
         return {
           id: pid, name: meta.name, position: meta.position,
-          pts:     stats?.pts ?? null,
-          goals:   stats?.goals ?? 0, assists: stats?.assists ?? 0,
-          minutes: stats?.minutes ?? 0, yellow: stats?.yellow ?? 0,
-          red: stats?.red ?? 0, bonus: stats?.bonus ?? 0,
+          pts:       stats?.pts ?? null,
+          goals:     stats?.goals     ?? 0, assists:    stats?.assists    ?? 0,
+          minutes:   stats?.minutes   ?? 0, yellow:     stats?.yellow     ?? 0,
+          red:       stats?.red       ?? 0, saves:      stats?.saves      ?? 0,
+          keyPasses: stats?.keyPasses ?? 0, sot:        stats?.sot        ?? 0,
+          bigChances: stats?.bigChances ?? 0,
           captain: pid === squadRow.captain_id,
           triple:  pid === squadRow.captain_id && squadRow.is_triple_captain,
           joker:   pid === squadRow.joker_player_id,
