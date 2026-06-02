@@ -572,8 +572,9 @@ Always create a new file — never modify existing migrations.
 | 117 | `117_draft_allocations_user_update_rls.sql` | Session 71: UPDATE RLS policy on draft_allocations for users' own rows (needed by DraftRecoveryScreen client picks) |
 | 118 | `118_scoring_v2.sql` | Session 73: V2 additive scoring — key_passes + big_chances_created columns on player_match_stats; scoring_rules updated for tournaments 426, 429, 1593; calculate-scores v22 deployed |
 | 119 | `119_low_bug_sweep.sql` | Session 74: auction_listings UPDATE policy narrowed (DD-L3); place_bid seller self-bid blocked (DD-L4); void_bet budget reversal (DD-L5); auto-close-bets cron hourly (DD-L6); sync_cup_eliminations status filter fixed 'completed'→'finished' (DD-M14) |
+| 120 | `120_dd_m13_late_scoring.sql` | Session 75: calculate-scores-live expired anon JWT fixed → service-role; new calculate-scores-late-finishers cron 23:30+00:30 UTC with 3h window for late WC finishers (DD-M13) |
 
-**Next migration**: `120_`
+**Next migration**: `121_`
 
 **Key pipeline facts (2026-06-02):**
 - `calculate-scores` uses `scoring_rules` table (not `scoring_templates`) keyed by `tournament_id`
@@ -592,7 +593,7 @@ Always create a new file — never modify existing migrations.
   - `draft_report`: `{player_id, wanted_by, winner_id}[]` (contested picks) + optional `{text}` trailing item
   - older rows: `bullets` stored as a JSON-encoded string (not parsed JSONB)
   - Always use `normalizeBullets()` from `RecapScreen.jsx` before rendering; never render bullets directly
-- **Cron names** (active in prod): `sync-wc-fixtures-30m` (every 30 min — was `sync-wc-fixtures-6h`), `calculate-scores-post-match` (22:30 UTC, service-role JWT — was expired anon JWT), `ingest-match-events-live`, `calculate-scores-live`, `sync-wc-players-6h`, `resolve-finished-bets`, `sync-cup-eliminations`, `run-draft-lottery`, `run-reverse-standings-draft`, `auto-close-bets`, `prune-error-logs`, `resolve-expired-auctions`, `cron_job_status` helper
+- **Cron names** (active in prod): `sync-wc-fixtures-30m` (every 30 min), `calculate-scores-post-match` (22:30 UTC daily, 24h window), `calculate-scores-late-finishers` (23:30 + 00:30 UTC, 3h window — catches late WC finishers), `ingest-match-events-live` (every 5 min, selects `status='live'` fixtures), `calculate-scores-live` (every 2 min, `status='live'` — all now use service-role JWT), `sync-wc-players-6h`, `resolve-finished-bets`, `sync-cup-eliminations`, `run-draft-lottery`, `run-reverse-standings-draft`, `auto-close-bets` (hourly), `prune-error-logs`, `resolve-expired-auctions`, `cron_job_status` helper
 - **Wildcard chip removed from UI** (session 66 — `SquadScreen.jsx` + `MarketScreen.jsx`): the DB column `squads.is_wildcard` and the +10% scoring multiplier still exist, but the chip is hidden to prevent confusion (UI said "unlimited transfers"; actual effect was +10% pts boost — undisclosed competitive imbalance). Do NOT re-add without fixing the description or the scoring effect.
 - **place_bid** (migration 111): budget reservation — sums all open winning bids before accepting new bid; `v_reserved` = SUM of current_bid on other open auctions where caller is `highest_bidder_id`; new bid rejected if `budget_remaining - v_reserved < p_bid_amount`
 - **process-transfer** recovery window fix: if squad not found for `activeMatchdayId`, falls back to most recently created squad for the league (`ORDER BY created_at DESC`) before creating a new empty one; `execute_transfer_atomic` called with `squad.matchday_id` not `activeMatchdayId` — ensures transfer limits tracked for correct round

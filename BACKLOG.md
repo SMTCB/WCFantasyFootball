@@ -366,7 +366,7 @@ Next migration: `113_`
 | ~~**DD-M10**~~ | ~~Chips~~ | ~~Joker insert omits `league_id`.~~ **✅ Fixed #277** — both `handleActivateJoker` and `handleJokerSelection` now include `league_id: squadData?.leagueId`; unique constraint works correctly, no cross-league bleed. |
 | ~~**DD-M11**~~ | ~~Chips~~ | ~~No deadline check on chip activation.~~ **✅ Fixed #278** — migration 112: `activate_chip` checks `matchday_deadlines` and returns `DEADLINE_PASSED` if `deadline_at < NOW()`. (Direct column UPDATE grant remains — separate LOW item.) |
 | ~~**DD-M12**~~ | ~~Funnel~~ | ~~Sign-up email confirmation messaging ambiguous, no resend path.~~ **✅ Fixed #304** — dedicated "Check Your Inbox" view with 60s-cooldown resend button; auto-navigates if email confirm is disabled. |
-| **DD-M13** | Pipeline | **Post-match scoring race** — daily 22:30 UTC cron scores any `finished` fixture; if Forza hasn't finalized (delay/ET/abandon) it locks in incomplete data with no NULL/plausibility guard. WC matches span time zones; one daily pass is coarse. |
+| ~~**DD-M13**~~ | ~~Pipeline~~ | ~~Post-match scoring single daily cron too coarse for WC time zones.~~ **✅ Fixed #307** — `calculate-scores-live` expired JWT fixed (was silently 401 since Aug 2024); new `calculate-scores-late-finishers` cron at 23:30 + 00:30 UTC covers late-finishing matches within 1h. |
 | ~~**DD-M14**~~ | ~~Pipeline~~ | ~~`sync_cup_eliminations` dead status filter `'completed'`.~~ **✅ Fixed f9a668e** — changed to `'finished'`. |
 | **DD-M15** | Security | **Hardcoded service-role JWT in migration 105 cron body** (`:145`) — full-bypass token in source control; vault-reference it. |
 
