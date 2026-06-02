@@ -1613,11 +1613,11 @@ ORDER BY s.user_id, fp.matchday_id;
 | Real-time chat test | A-2 (two browsers) | Use two separate browser profiles or incognito + normal window |
 | Auction min-increment validation | B-3b | Bid must be ≥ `current_bid + min_increment`; `0.1` increments will be rejected; use `0.5` |
 | `calculate-scores` Path A vs Path B | F-1/F-2 stats seeding | Stats seeded without `forza_match_id` trigger Path B (reads `match_events`). Always set `forza_match_id` when inserting into `player_match_stats` manually. See Appendix F. |
-| Appendix C seeds shared squads | D-4b takenByOther | All 4 DRAFT_EPL_E2E managers get the same top-priced players — takenByOther won't trigger unless D-2c allocation has been re-run with different wishlists. Re-run D-1 with unique player lists before testing D-4b. |
+| Appendix C seeds shared squads | D-4b takenByOther | All 4 DRAFT_EPL_E2E managers get the same top-priced players. Workaround (session 71): remove one player from TestComm's squad via DB (`array_remove`) to create a TestMgr-exclusive player, then test. Badge shows last manager iterated in takenMap (artifact of shared seeding); blocking logic is correct. In real post-allocation state each player belongs to exactly one manager. |
 | Playwright MCP browser lock | UI flows requiring browser | If Playwright MCP reports "Browser already in use", kill Chrome processes for the `mcp-chrome-*` profile and retry. Alternative: use `curl` + user JWT to call RPCs directly (B-3, B-4 verified this way in session 70). |
 | EPL season end (2026-05-24) | B-5a fixture selection, A-4 | All EPL fixtures have `status='finished'`. No scheduled EPL fixtures for bet creation — use WC fixtures or manually reset one fixture to `status='scheduled'`. |
 | E-2 gaps when wishlists identical | E-2 allocation | If all 4 managers submit the same 30-player WC wishlist, each gets only 4–5 unique players (10–12 unresolved slots). This is correct lottery behavior. For E-4 knockout test, managers must submit different wishlists. |
 
 ---
 
-Last Updated: **2026-06-02** (session 70: D-4b guidance, Appendix F `forza_match_id` fix, new Known Limitations)
+Last Updated: **2026-06-02** (session 71: D-4b confirmed ✅; Known Limitations updated with workaround)
