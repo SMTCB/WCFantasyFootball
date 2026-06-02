@@ -811,19 +811,32 @@ WHERE league_id = 'daf7e001-0000-4000-a000-000000000001'
 
 #### D-4b: Draft takeLock (takenByOther)
 
-1. Note a player in TestMgr2's squad.
+> **Pre-condition (Bug #4 fixed in PR #295)**: The market race condition that previously loaded all-tournament players on initial render is resolved. Wait for the league selector to show before testing — the player list now loads correctly on first render.
+
+1. Note a player in TestMgr2's squad (query below).
 2. Search for that player in the market as TestComm.
 3. **Assert**: that player's card shows **"Taken by TestMgr2"** indicator and the BUY button is disabled (greyed out, cannot be clicked).
+4. **Assert**: a player NOT in any squad shows a BUY button (unblocked).
 
-> **Key Draft assertion**: Unlike Classic mode (PART B-2b), Draft mode enforces player uniqueness. A player in another squad must be blocked.
+> **Key Draft assertion**: Unlike Classic mode (PART B-2b), Draft mode enforces player uniqueness. A player in another squad must be blocked. The code path is `MarketScreen.jsx` — `isDraftLeague && !isOwned && isTaken(p.id)`.
 
 ```sql
--- Confirm the player is in TestMgr2's squad
-SELECT user_id FROM squads
-WHERE league_id = 'daf7e001-0000-4000-a000-000000000001'
-  AND '<player_id>' = ANY(players);
--- Should return TestMgr2's user_id only
+-- Get a player that is in TestMgr2's squad but NOT TestComm's
+-- (needed to find a real takenByOther candidate)
+SELECT p.id, p.name, p.position FROM squads s
+JOIN LATERAL unnest(s.players) AS pid ON TRUE
+JOIN players p ON p.id = pid
+WHERE s.league_id = 'daf7e001-0000-4000-a000-000000000001'
+  AND s.user_id = 'aaaae002-0000-4000-a000-000000000002'
+  AND pid NOT IN (
+    SELECT unnest(players) FROM squads
+    WHERE league_id = 'daf7e001-0000-4000-a000-000000000001'
+      AND user_id = 'aaaae001-0000-4000-a000-000000000001'
+  )
+LIMIT 3;
 ```
+
+> **Note (session 69/70)**: DRAFT_EPL_E2E squads were seeded with identical players (Appendix C gives everyone the same top-priced players). Re-run Appendix D-2 (set deadline to past) and Appendix D-2c (run allocation) to give managers distinct squads before this test.
 
 **Pass**: FCFS buy works for unowned players; takenByOther correctly blocks Draft-mode buys. ✓
 
@@ -1442,47 +1455,53 @@ WHERE league_id = 'daf7e002-0000-4000-a000-000000000002'
 
 ## Appendix F — Seed Finished Fixture + Stats for Scoring Tests
 
+> ⚠️ **Critical: set `forza_match_id` when seeding manually.**
+>
+> `calculate-scores` has two paths: Path A (reads from `player_match_stats` where `forza_match_id IS NOT NULL`) and Path B (reads from `match_events`). When stats are seeded manually (no real Forza match data), Path B fires by default — but `match_events` will be empty, returning "No events yet / 0 squads / 0 stats".
+>
+> **Solution**: either seed `match_events` OR set `forza_match_id` on the inserted rows. The SQL below sets a fake `forza_match_id` to force Path A.
+
 ```sql
 -- Only needed if no real finished EPL fixture exists yet.
 
--- 1. Get a scheduled fixture to use
+-- 1. Get a finished fixture to use (EPL season ended 2026-05-24 — all fixtures are 'finished')
 SELECT id, home_team, away_team FROM fixtures
-WHERE tournament_id = '426' AND status = 'scheduled'
-ORDER BY kickoff_at ASC LIMIT 1;
--- Note the fixture ID (e.g. 'f-1234567890') and team names
+WHERE tournament_id = '426' AND status = 'finished'
+ORDER BY kickoff_at DESC LIMIT 5;
+-- Note the fixture ID (e.g. 'f-1218672863') and team names
 
--- 2. Mark it finished
-UPDATE fixtures
-SET status = 'finished', home_score = 2, away_score = 1
-WHERE id = '<fixture_id_from_above>';
+-- 2. (Skip if already finished) Mark a scheduled fixture as finished
+-- UPDATE fixtures
+-- SET status = 'finished', home_score = 2, away_score = 1
+-- WHERE id = '<fixture_id>';
 
--- 3. Seed match stats for players in test squads
--- Run this for each player in the squads you want to score
--- Replace player_id and fixture_id with real values from your DB
+-- 3. Seed match stats — MUST include forza_match_id to trigger Path A scoring
 INSERT INTO player_match_stats (
   fixture_id, player_id,
   minutes_played, goals, assists, clean_sheet,
   own_goals, yellow_cards, red_cards,
   penalty_saved, penalty_missed,
-  fantasy_points, breakdown
+  fantasy_points, breakdown,
+  forza_match_id          -- ← required: triggers Path A in calculate-scores
 )
 SELECT
   '<fixture_id>',
   p.id,
   90,
-  CASE p.position WHEN 'FWD' THEN 1 ELSE 0 END,  -- FWDs score 1 goal
-  CASE p.position WHEN 'MID' THEN 1 ELSE 0 END,  -- MIDs get 1 assist
+  CASE p.position WHEN 'FWD' THEN 1 ELSE 0 END,
+  CASE p.position WHEN 'MID' THEN 1 ELSE 0 END,
   CASE p.position WHEN 'GK'  THEN true
-                  WHEN 'DEF' THEN true ELSE false END,  -- back line clean sheet
+                  WHEN 'DEF' THEN true ELSE false END,
   0, 0, 0, 0, 0,
   CASE p.position
-    WHEN 'GK'  THEN 6   -- clean sheet + 1pt/min approx
+    WHEN 'GK'  THEN 6
     WHEN 'DEF' THEN 6
-    WHEN 'MID' THEN 5   -- assist
-    WHEN 'FWD' THEN 5   -- goal
+    WHEN 'MID' THEN 5
+    WHEN 'FWD' THEN 5
     ELSE 1
   END,
-  '{}'::jsonb
+  '{}'::jsonb,
+  'e2e-test-' || '<fixture_id>'   -- fake forza_match_id to trigger Path A
 FROM players p
 WHERE p.id = ANY(
   ARRAY(SELECT unnest(players) FROM squads
@@ -1492,7 +1511,16 @@ WHERE p.id = ANY(
 )
 AND p.tournament_id = '426'
 ON CONFLICT (fixture_id, player_id) DO UPDATE
-  SET fantasy_points = EXCLUDED.fantasy_points, updated_at = NOW();
+  SET fantasy_points = EXCLUDED.fantasy_points,
+      forza_match_id = EXCLUDED.forza_match_id,
+      updated_at = NOW();
+
+-- 4. Verify stats are seeded with forza_match_id set
+SELECT COUNT(*) AS with_forza_id, fixture_id
+FROM player_match_stats
+WHERE fixture_id = '<fixture_id>' AND forza_match_id IS NOT NULL
+GROUP BY fixture_id;
+-- Must return > 0 rows or scoring will return "No events yet"
 ```
 
 ---
@@ -1584,7 +1612,12 @@ ORDER BY s.user_id, fp.matchday_id;
 | Draft relaxation config | Pool pressure test (E-5) | Requires tweaking `league_config.relaxation_base` — revert after test |
 | Real-time chat test | A-2 (two browsers) | Use two separate browser profiles or incognito + normal window |
 | Auction min-increment validation | B-3b | Bid must be ≥ `current_bid + min_increment`; `0.1` increments will be rejected; use `0.5` |
+| `calculate-scores` Path A vs Path B | F-1/F-2 stats seeding | Stats seeded without `forza_match_id` trigger Path B (reads `match_events`). Always set `forza_match_id` when inserting into `player_match_stats` manually. See Appendix F. |
+| Appendix C seeds shared squads | D-4b takenByOther | All 4 DRAFT_EPL_E2E managers get the same top-priced players — takenByOther won't trigger unless D-2c allocation has been re-run with different wishlists. Re-run D-1 with unique player lists before testing D-4b. |
+| Playwright MCP browser lock | UI flows requiring browser | If Playwright MCP reports "Browser already in use", kill Chrome processes for the `mcp-chrome-*` profile and retry. Alternative: use `curl` + user JWT to call RPCs directly (B-3, B-4 verified this way in session 70). |
+| EPL season end (2026-05-24) | B-5a fixture selection, A-4 | All EPL fixtures have `status='finished'`. No scheduled EPL fixtures for bet creation — use WC fixtures or manually reset one fixture to `status='scheduled'`. |
+| E-2 gaps when wishlists identical | E-2 allocation | If all 4 managers submit the same 30-player WC wishlist, each gets only 4–5 unique players (10–12 unresolved slots). This is correct lottery behavior. For E-4 knockout test, managers must submit different wishlists. |
 
 ---
 
-Last Updated: **2026-06-01**
+Last Updated: **2026-06-02** (session 70: D-4b guidance, Appendix F `forza_match_id` fix, new Known Limitations)
