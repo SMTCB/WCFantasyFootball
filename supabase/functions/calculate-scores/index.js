@@ -1,4 +1,4 @@
-// Edge Function: calculate-scores  (v19)
+// Edge Function: calculate-scores  (v22 — Scoring V2)
 // Calculates fantasy points for all squads for a given fixture.
 // Called by ingest-match-events (Forza live path) or directly (mock/manual path).
 //
@@ -36,10 +36,10 @@ const logError = (severity, message, context = {}) => _logError('calculate-score
 // These match the EPL 2025/26 season rules exactly.
 
 const FALLBACK_POINTS = {
-  GK:  { goal: 5, assist: 0, clean_sheet: 4, conceded_per_goal: -1, penalty_saved: 5, tackle: 0, interception: 0, penalty_scored: 0 },
-  DEF: { goal: 4, assist: 1, clean_sheet: 4, conceded_per_goal:  0, penalty_saved: 0, tackle: 0.5, interception: 0.25, penalty_scored: 0 },
-  MID: { goal: 5, assist: 1, clean_sheet: 1, conceded_per_goal:  0, penalty_saved: 0, tackle: 0.5, interception: 0.25, penalty_scored: 0 },
-  FWD: { goal: 3, assist: 1, clean_sheet: 0, conceded_per_goal:  0, penalty_saved: 0, tackle: 0, interception: 0, penalty_scored: 1 },
+  GK:  { goal: 5, assist: 3, clean_sheet: 4, conceded_per_goal: 0, penalty_saved: 5, save: 0.5,  tackle: 0,   interception: 0,    penalty_scored: 0, key_pass: 0,    shot_on_target: 0,    big_chance_created: 0 },
+  DEF: { goal: 5, assist: 2, clean_sheet: 4, conceded_per_goal: 0, penalty_saved: 0, save: 0,    tackle: 0.5, interception: 0.25, penalty_scored: 0, key_pass: 0,    shot_on_target: 0,    big_chance_created: 0 },
+  MID: { goal: 4, assist: 2, clean_sheet: 0, conceded_per_goal: 0, penalty_saved: 0, save: 0,    tackle: 0,   interception: 0,    penalty_scored: 0, key_pass: 0.25, shot_on_target: 0.5,  big_chance_created: 0 },
+  FWD: { goal: 4, assist: 2, clean_sheet: 0, conceded_per_goal: 0, penalty_saved: 0, save: 0,    tackle: 0,   interception: 0,    penalty_scored: 0, key_pass: 0,    shot_on_target: 0.25, big_chance_created: 1.0 },
 };
 
 const FALLBACK_UNIVERSAL = {
@@ -120,25 +120,19 @@ function scorePlayer(stats, position, POINTS, UNIVERSAL) {
     pts += rules.clean_sheet;
   }
 
-  // GK: -1 per 2 goals conceded, FPL-style (only if played ≥60 min) (L1.2)
-  if (pos === 'GK' && mins >= 60) {
-    pts += Math.floor((stats.goals_conceded ?? 0) / 2) * rules.conceded_per_goal;
-  }
-
   pts += (stats.penalty_saved  ?? 0) * (rules.penalty_saved  ?? 0);
   pts += (stats.own_goals      ?? 0) * UNIVERSAL.own_goal;
   pts += (stats.yellow_cards   ?? 0) * UNIVERSAL.yellow_card;
   pts += (stats.red_cards      ?? 0) * UNIVERSAL.red_card;
   pts += (stats.penalty_missed ?? 0) * UNIVERSAL.penalty_missed;
 
-  // Tackle + interception bonus (DEF/MID by default; rules.tackle/interception are 0 for others)
-  pts += (stats.tackles_won   ?? 0) * (rules.tackle        ?? 0);
-  pts += (stats.interceptions ?? 0) * (rules.interception  ?? 0);
-
-  // Penalty scored bonus (FWD by default; 0 for others)
-  pts += (stats.penalty_scored ?? 0) * (rules.penalty_scored ?? 0);
-
-  pts += stats.bonus ?? 0;
+  pts += (stats.tackles_won        ?? 0) * (rules.tackle            ?? 0);
+  pts += (stats.interceptions      ?? 0) * (rules.interception       ?? 0);
+  pts += (stats.penalty_scored     ?? 0) * (rules.penalty_scored     ?? 0);
+  pts += (stats.saves              ?? 0) * (rules.save               ?? 0);
+  pts += (stats.key_passes         ?? 0) * (rules.key_pass           ?? 0);
+  pts += (stats.shots_on_target    ?? 0) * (rules.shot_on_target     ?? 0);
+  pts += (stats.big_chances_created ?? 0) * (rules.big_chance_created ?? 0);
 
   return Math.round(pts * 100) / 100;
 }
@@ -148,19 +142,22 @@ function buildBreakdown(stats, pos, POINTS, UNIVERSAL) {
   const rules = POINTS[p] || POINTS.MID;
   const mins  = stats.minutes_played ?? stats.minutes ?? 0;
   return {
-    minutes:        Math.round((mins / 90) * UNIVERSAL.minute_per_90 * 100) / 100,
-    goals:          (stats.goals   ?? 0) * rules.goal,
-    assists:        (stats.assists ?? 0) * rules.assist,
-    clean_sheet:    (stats.clean_sheet && mins >= 60) ? rules.clean_sheet : 0,
-    own_goals:      (stats.own_goals    ?? 0) * UNIVERSAL.own_goal,
-    yellow_cards:   (stats.yellow_cards ?? 0) * UNIVERSAL.yellow_card,
-    red_cards:      (stats.red_cards    ?? 0) * UNIVERSAL.red_card,
-    penalty_saved:  (stats.penalty_saved  ?? 0) * (rules.penalty_saved  ?? 0),
-    penalty_scored: (stats.penalty_scored ?? 0) * (rules.penalty_scored ?? 0),
-    penalty_missed: (stats.penalty_missed ?? 0) * UNIVERSAL.penalty_missed,
-    tackles:        (stats.tackles_won   ?? 0) * (rules.tackle        ?? 0),
-    interceptions:  (stats.interceptions ?? 0) * (rules.interception  ?? 0),
-    bonus:          stats.bonus ?? 0,
+    minutes:           Math.round((mins / 90) * UNIVERSAL.minute_per_90 * 100) / 100,
+    goals:             (stats.goals              ?? 0) * rules.goal,
+    assists:           (stats.assists            ?? 0) * rules.assist,
+    clean_sheet:       (stats.clean_sheet && mins >= 60) ? rules.clean_sheet : 0,
+    own_goals:         (stats.own_goals          ?? 0) * UNIVERSAL.own_goal,
+    yellow_cards:      (stats.yellow_cards       ?? 0) * UNIVERSAL.yellow_card,
+    red_cards:         (stats.red_cards          ?? 0) * UNIVERSAL.red_card,
+    penalty_saved:     (stats.penalty_saved      ?? 0) * (rules.penalty_saved      ?? 0),
+    penalty_scored:    (stats.penalty_scored     ?? 0) * (rules.penalty_scored     ?? 0),
+    penalty_missed:    (stats.penalty_missed     ?? 0) * UNIVERSAL.penalty_missed,
+    tackles:           (stats.tackles_won        ?? 0) * (rules.tackle             ?? 0),
+    interceptions:     (stats.interceptions      ?? 0) * (rules.interception       ?? 0),
+    saves:             (stats.saves              ?? 0) * (rules.save               ?? 0),
+    key_passes:        (stats.key_passes         ?? 0) * (rules.key_pass           ?? 0),
+    shots_on_target:   (stats.shots_on_target    ?? 0) * (rules.shot_on_target     ?? 0),
+    big_chances:       (stats.big_chances_created ?? 0) * (rules.big_chance_created ?? 0),
   };
 }
 
@@ -247,14 +244,13 @@ Deno.serve(async (req) => {
       const positionMap = {};
       for (const p of playerRows ?? []) positionMap[p.id] = p.position;
 
-      // BPS + bonus
+      // V2: BPS bonus removed — every point comes directly from a stat
       const withBps = rows.map(r => ({
         ...r,
         position: positionMap[r.player_id] ?? 'MID',
-        bps:      calcBPS(r),
+        bps:      0,
         bonus:    0,
       }));
-      assignBonus(withBps);
 
       // Score each player and write back bps_score, bonus_points, fantasy_points
       const statUpserts = withBps.map(r => {
@@ -367,8 +363,7 @@ Deno.serve(async (req) => {
     }
 
     const statsList = Object.values(statsMap);
-    statsList.forEach(s => { s.bps = calcBPS(s); });
-    assignBonus(statsList);
+    statsList.forEach(s => { s.bps = 0; s.bonus = 0; });
 
     const playerStatUpserts = statsList.map(s => {
       const pos = positionMap[s.player_id] || 'MID';

@@ -32,6 +32,7 @@ import SectionHeader from '../components/SectionHeader';
 import PowerToolCard from '../components/PowerToolCard';
 import { AvailabilityBadge } from '../components/AvailabilityBadge';
 import { POS_ORDER, POS_LABEL, POS_BADGE_COLOR } from '../lib/formations';
+import ScoringInfoModal from '../components/ScoringInfoModal';
 
 // â"€â"€ Chip config â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
 const CHIPS = [
@@ -80,6 +81,7 @@ export default function SquadScreen() {
   const [fetchError,         setFetchError]        = useState(null);
   const [tournamentId,       setTournamentId]      = useState(null);
   const [showChipWizard,     setShowChipWizard]    = useState(false);
+  const [showScoringModal,   setShowScoringModal]  = useState(false);
 
   // On mount: resolve which league to show
   useEffect(() => {
@@ -1292,6 +1294,8 @@ export default function SquadScreen() {
         />
       )}
 
+      {showScoringModal && <ScoringInfoModal onClose={() => setShowScoringModal(false)} />}
+
       {/* First-visit spotlight tour */}
       {showSquadTour && !loading && (
         <OnboardingTour
@@ -1966,7 +1970,10 @@ export default function SquadScreen() {
             <>
               <div className="flex-1 min-w-0 overflow-y-auto">
                 <div style={{ padding: '12px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid var(--rule)' }}>
-                  <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 14, color: 'var(--paper)', letterSpacing: '0.02em' }}>Squad List</div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 14, color: 'var(--paper)', letterSpacing: '0.02em' }}>Squad List</div>
+                    <button onClick={() => setShowScoringModal(true)} style={{ background: 'none', border: '1px solid var(--rule)', color: 'var(--mute)', fontFamily: 'Archivo Black, sans-serif', fontSize: 9, width: 18, height: 18, borderRadius: '50%', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>?</button>
+                  </div>
                   <button
                     onClick={handleAutoFill}
                     disabled={autoFilling}

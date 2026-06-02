@@ -9,6 +9,7 @@ const REFRESH_MS = 60 * 1000; // 60s safety-net poll — Realtime handles sub-se
 const LEAGUE_TONES = ['#00B4D8', '#E0A800', '#A855F7', '#22C55E', '#F59E0B'];
 
 import { POS_ORDER, POS_PITCH_Y as POS_Y } from '../lib/formations';
+import ScoringInfoModal from '../components/ScoringInfoModal';
 import { teamCode } from '../lib/fixtures';
 const POS_TONE = { FWD: 'var(--danger)', MID: 'var(--gold)', DEF: 'var(--cyan)', GK: '#A855F7' };
 
@@ -212,14 +213,16 @@ function StatsLogRow({ s }) {
 
   // Build a compact contribution label (e.g. "2G · 1A · CS")
   const tags = [];
-  if (s.goals         > 0) tags.push(`${s.goals}G`);
-  if (s.assists       > 0) tags.push(`${s.assists}A`);
-  if (s.cleanSheet)        tags.push('CS');
-  if (s.yellowCards   > 0) tags.push('YC');
-  if (s.redCards      > 0) tags.push('RC');
-  if (s.penaltyScored > 0) tags.push(`${s.penaltyScored}P`);
-  if (s.penaltyMissed > 0) tags.push('PM');
-  if (s.goalsConceded > 0) tags.push(`−${s.goalsConceded}GA`);
+  if (s.goals          > 0) tags.push(`${s.goals}G`);
+  if (s.assists        > 0) tags.push(`${s.assists}A`);
+  if (s.cleanSheet)          tags.push('CS');
+  if (s.saves          > 0) tags.push(`${s.saves}SV`);
+  if (s.keyPasses      > 0) tags.push(`${s.keyPasses}KP`);
+  if (s.shotsOnTarget  > 0) tags.push(`${s.shotsOnTarget}SoT`);
+  if (s.bigChances     > 0) tags.push(`${s.bigChances}BC`);
+  if (s.yellowCards    > 0) tags.push('YC');
+  if (s.redCards       > 0) tags.push('RC');
+  if (s.penaltyMissed  > 0) tags.push('PM');
   if (!tags.length && s.minutesPlayed > 0) tags.push(`${s.minutesPlayed}'`);
 
   return (
@@ -362,6 +365,7 @@ export default function LiveScreen() {
   const [userLeagues,   setUserLeagues]   = useState([]);
   const [squadPlayers,  setSquadPlayers]  = useState([]);
   const [liveStatsLog,  setLiveStatsLog]  = useState([]); // live pts breakdown from player_match_stats
+  const [showScoringModal, setShowScoringModal] = useState(false);
   const [activeLeague,  setActiveLeague]  = useState(null);
   const [mobileTab,     setMobileTab]     = useState('squad');
   const [currentGW,     setCurrentGW]     = useState('—');
@@ -493,7 +497,7 @@ export default function LiveScreen() {
           : Promise.resolve({ data: [] }),
         activeFixIds.length && squadPlayerIds.length
           ? supabase.from('player_match_stats')
-              .select('player_id, fantasy_points, fixture_id, minutes_played, goals, assists, clean_sheet, goals_conceded, yellow_cards, red_cards, penalty_scored, penalty_missed')
+              .select('player_id, fantasy_points, fixture_id, minutes_played, goals, assists, clean_sheet, yellow_cards, red_cards, penalty_missed, saves, key_passes, shots_on_target, big_chances_created')
               .in('player_id', squadPlayerIds)
               .in('fixture_id', activeFixIds)
           : Promise.resolve({ data: [] }),
@@ -593,18 +597,20 @@ export default function LiveScreen() {
         const statsByPlayer = {};
         for (const s of statsData || []) {
           if (!statsByPlayer[s.player_id]) {
-            statsByPlayer[s.player_id] = { goals: 0, assists: 0, cleanSheet: false, goalsConceded: 0, yellowCards: 0, redCards: 0, minutesPlayed: 0, penaltyScored: 0, penaltyMissed: 0 };
+            statsByPlayer[s.player_id] = { goals: 0, assists: 0, cleanSheet: false, yellowCards: 0, redCards: 0, minutesPlayed: 0, penaltyMissed: 0, saves: 0, keyPasses: 0, shotsOnTarget: 0, bigChances: 0 };
           }
           const acc = statsByPlayer[s.player_id];
-          acc.goals          += s.goals           ?? 0;
-          acc.assists        += s.assists          ?? 0;
-          acc.cleanSheet      = acc.cleanSheet || (s.clean_sheet ?? false);
-          acc.goalsConceded  += s.goals_conceded   ?? 0;
-          acc.yellowCards    += s.yellow_cards      ?? 0;
-          acc.redCards       += s.red_cards         ?? 0;
-          acc.minutesPlayed   = Math.max(acc.minutesPlayed, s.minutes_played ?? 0);
-          acc.penaltyScored  += s.penalty_scored   ?? 0;
-          acc.penaltyMissed  += s.penalty_missed   ?? 0;
+          acc.goals         += s.goals              ?? 0;
+          acc.assists       += s.assists             ?? 0;
+          acc.cleanSheet     = acc.cleanSheet || (s.clean_sheet ?? false);
+          acc.yellowCards   += s.yellow_cards        ?? 0;
+          acc.redCards      += s.red_cards           ?? 0;
+          acc.minutesPlayed  = Math.max(acc.minutesPlayed, s.minutes_played ?? 0);
+          acc.penaltyMissed += s.penalty_missed      ?? 0;
+          acc.saves         += s.saves               ?? 0;
+          acc.keyPasses     += s.key_passes          ?? 0;
+          acc.shotsOnTarget += s.shots_on_target     ?? 0;
+          acc.bigChances    += s.big_chances_created ?? 0;
         }
 
         const log = [];
@@ -900,6 +906,7 @@ export default function LiveScreen() {
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                   <span style={{ width: 3, height: 14, background: 'var(--gold)', flexShrink: 0 }} />
                   <span className="mono" style={{ fontSize: 11, color: 'var(--paper)', letterSpacing: '.22em' }}>POINTS LOG</span>
+                  <button onClick={() => setShowScoringModal(true)} style={{ background: 'none', border: '1px solid var(--rule)', color: 'var(--mute)', fontFamily: 'Archivo Black, sans-serif', fontSize: 9, width: 18, height: 18, borderRadius: '50%', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>?</button>
                   <span className="mono" style={{ fontSize: 9, color: 'var(--mute)', letterSpacing: '.14em' }}>
                     {hasLiveForActiveTournament ? '· LIVE · EVERY 60S' : liveStatsLog.length > 0 ? '· FINAL' : ''}
                   </span>
@@ -1178,6 +1185,7 @@ export default function LiveScreen() {
           )}
         </div>
       </div>
+      {showScoringModal && <ScoringInfoModal onClose={() => setShowScoringModal(false)} />}
     </div>
   );
 }

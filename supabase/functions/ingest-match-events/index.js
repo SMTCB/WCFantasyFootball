@@ -419,10 +419,12 @@ Deno.serve(async (req) => {
         yellow_cards:    s.yellow_cards      ?? 0,
         saves:           s.saves             ?? 0,
         shots_on_target: s.shots_on_target   ?? 0,
-        tackles_won:     s.won_tackles       ?? 0,
-        interceptions:   s.interceptions     ?? 0,
-        xg:              s.expected_goals    ?? 0,
-        xa:              s.expected_assists  ?? 0,
+        tackles_won:         s.won_tackles         ?? 0,
+        interceptions:       s.interceptions       ?? 0,
+        key_passes:          s.key_passes          ?? 0,
+        big_chances_created: s.big_chances_created ?? 0,
+        xg:                  s.expected_goals      ?? 0,
+        xa:                  s.expected_assists    ?? 0,
 
         // From E9 — derived
         red_cards:       periodsResult.redCards.has(fpid)      ? 1 : 0,
