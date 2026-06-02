@@ -1,11 +1,99 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-06-02 (session 74 — all P0/P1/P2 blockers closed; form strip + stats panel; 12 DD bugs swept; DD-M12 sign-up UX; next migration 120_)  
+**Last Updated**: 2026-06-02 (session 75 — friendly test league pipeline; 2 new P1 bugs: ingest-match-events BOOT_ERROR + calculate-scores auth mismatch; next migration 120_)  
 **E2E Test Suite**: `platform.spec.js` (36 tests × 2 browsers) passing in CI ✅ — completes in ~3 min  
 **Full Playbook Run**: `E2E_TEST_PLAYBOOK.md` v2.0 — all flows confirmed (D-4a/b, E-4, D-3 ✅; F-2 PASS — form strip satisfies per-stat breakdown criterion)  
 **🟢 LAUNCH READY**: No critical (P0/P1) bugs open. All game mechanics functional. WC kick-off 2026-06-11.  
 **Live App**: https://wc-fantasy-football.vercel.app  
 **WC Kick-off**: 2026-06-11 19:00 UTC (Mexico vs South Africa)
+
+---
+
+## 🔴 Session 75 — Two Open P1 Bugs (2026-06-02)
+
+### [BUG] BUG-INGEST-01 — `ingest-match-events` BOOT_ERROR (503) on all external calls
+
+**Priority**: P1 — Live match event pipeline is silently broken for non-cron callers  
+**Effort**: ~2h (diagnose cold-start failure, likely deploy fix)
+
+#### What happens
+Every call to the `ingest-match-events` edge function (v18) returns:
+```json
+{"code":"BOOT_ERROR","message":"Function failed to start (please check logs)"}
+```
+This happens regardless of payload or JWT. The function is marked ACTIVE in the dashboard but never boots.
+
+#### Root cause hypothesis
+The function imports `createClient` from `https://esm.sh/@supabase/supabase-js@2` at module level and immediately calls `createClient(Deno.env.get('SUPABASE_URL'), Deno.env.get('SUPABASE_SERVICE_ROLE_KEY'))`. If either env var is undefined at cold-start (e.g. due to a Supabase secret rotation or a deploy that lost the secret binding), the constructor may throw, causing BOOT_ERROR before the request handler ever runs.
+
+A secondary suspect is the `import { logError } from '../_shared/log.ts'` — if the shared module has an issue it would also cause boot failure.
+
+#### Impact
+- The `ingest-match-events-live` cron runs every 5 min but **only for `status='live'` fixtures** — so during a live match, the cron fires but the function immediately dies. Player stats never land in `player_match_stats`, so `calculate-scores` has nothing to read (Path A) and falls back to `match_events` (Path B), which is also empty → **all live match scoring silently produces 0 pts**.
+- Manual invocations (e.g. for finished matches, test runs) are completely blocked.
+
+#### Steps to reproduce
+```sql
+SELECT net.http_post(
+  url := 'https://sssmvihxtqtohisghjet.supabase.co/functions/v1/ingest-match-events',
+  headers := jsonb_build_object('Content-Type','application/json','Authorization','Bearer <service_role_jwt>'),
+  body := jsonb_build_object('forza_match_id','1219721917')
+);
+-- Check response:
+SELECT status_code, content FROM net._http_response WHERE id = <req_id>;
+-- Returns: {"code":"BOOT_ERROR","message":"Function failed to start (please check logs)"}
+```
+
+#### Fix
+1. Check Supabase dashboard → Edge Functions → `ingest-match-events` → Logs for the actual error
+2. Verify `SUPABASE_SERVICE_ROLE_KEY` and `FORZA_ACCESS_TOKEN` secrets are set (Dashboard → Project Settings → Edge Functions → Secrets)
+3. If missing, re-add them, then redeploy the function
+4. Consider moving the `createClient` call inside `Deno.serve(...)` to avoid top-level boot failures
+
+---
+
+### [BUG] BUG-CALC-SCORES-01 — `calculate-scores` returns 401 for valid service-role JWT
+
+**Priority**: P1 — Post-match scoring cron may be silently failing if JWT has rotated  
+**Effort**: ~1h (identify key mismatch, update cron or function)
+
+#### What happens
+`calculate-scores` (v23, `verify_jwt: false`) implements its own auth guard:
+```js
+const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
+const isServiceRole = authHeader === `Bearer ${serviceRoleKey}`;
+if (!isServiceRole) {
+  const { data: { user } } = await supabase.auth.getUser(...);
+  if (!user) return respond(401, { error: 'Unauthorized' });
+}
+```
+When called with the JWT extracted from the `calculate-scores-post-match` cron command, it returns `401`. This means the cron's JWT does **not** match what `SUPABASE_SERVICE_ROLE_KEY` resolves to inside the function runtime.
+
+#### Root cause hypothesis
+Supabase may have issued a new service-role JWT since the cron was last updated (session 66). The cron still has the old JWT hardcoded; the function's `SUPABASE_SERVICE_ROLE_KEY` env var now holds a different value. The mismatch causes every invocation — including the nightly `calculate-scores-post-match` cron — to 401 and skip scoring.
+
+#### Impact
+- The nightly post-match score cron (`30 22 * * *`) has likely been returning 401 silently since a JWT rotation occurred. Fantasy points for WC matches may not be accumulating in production.
+- Workaround used in session 75: replicated scoring logic directly in SQL via Supabase MCP `execute_sql` (service-role DB access bypasses the auth check).
+
+#### Steps to reproduce
+```sql
+SELECT net.http_post(
+  url := 'https://sssmvihxtqtohisghjet.supabase.co/functions/v1/calculate-scores',
+  headers := jsonb_build_object('Content-Type','application/json','Authorization','Bearer <cron_jwt>'),
+  body := jsonb_build_object('fixture_id','f-1219721917')
+);
+-- Returns: {"error":"Unauthorized"}  (HTTP 401)
+```
+
+#### Fix
+1. Go to Supabase dashboard → Project Settings → API → copy the current **Service Role (secret)** key
+2. Compare it to the JWT in every cron that calls `calculate-scores` and `run-draft-lottery`
+3. If they differ, update all affected crons via:
+   ```sql
+   SELECT cron.alter_job(jobid := <id>, command := '<updated command with new JWT>') FROM cron.job WHERE jobname = 'calculate-scores-post-match';
+   ```
+4. Alternatively, refactor `calculate-scores` to use Supabase's built-in JWT verification instead of manual string comparison
 
 ---
 

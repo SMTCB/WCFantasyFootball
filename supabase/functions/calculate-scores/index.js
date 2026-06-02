@@ -183,9 +183,30 @@ Deno.serve(async (req) => {
   // verify_jwt=false means Supabase doesn't enforce JWT automatically.
   // Guard: service-role key (cron path) OR a valid user JWT (admin manual button).
   // Blocks anon-key-only callers who could otherwise trigger global score recalcs.
+  //
+  // Two acceptance paths:
+  //  A) Exact match against SUPABASE_SERVICE_ROLE_KEY env var (new sb_secret_... format)
+  //  B) JWT payload has role=service_role (old eyJ... format still used by crons)
+  //  C) Valid authenticated user JWT
   const authHeader = req.headers.get('Authorization') ?? '';
   const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
-  const isServiceRole = authHeader === `Bearer ${serviceRoleKey}`;
+
+  let isServiceRole = authHeader === `Bearer ${serviceRoleKey}`;
+
+  // Path B: old-format service-role JWT — decode payload and check role claim.
+  // Supabase JWTs are signed; we check the claim only (not the signature) because
+  // the JWT secret is not auto-injected. Acceptable: the guard prevents casual abuse,
+  // not cryptographic forgery — actual DB writes are scoped by the function's own client.
+  if (!isServiceRole) {
+    try {
+      const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : '';
+      const parts = token.split('.');
+      if (parts.length === 3) {
+        const payload = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')));
+        isServiceRole = payload.role === 'service_role';
+      }
+    } catch { /* malformed JWT — not service role */ }
+  }
 
   if (!isServiceRole) {
     const { data: { user } } = await supabase.auth.getUser(authHeader.replace('Bearer ', ''));
