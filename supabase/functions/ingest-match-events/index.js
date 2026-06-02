@@ -215,7 +215,7 @@ Deno.serve(async (req) => {
     // ── 2. Fetch 4 Forza endpoints in parallel ────────────────────────────────
     // Use allSettled so a single endpoint failure doesn't abort the whole ingest.
     // matchData is required; lineupsData/periodsData/statsData degrade gracefully.
-    const [matchResult, lineupsResult, periodsResult, statsResult] = await Promise.allSettled([
+    const [matchResult, lineupsResult, periodsRawResult, statsResult] = await Promise.allSettled([
       forza(`/v1/matches/${fmid}`),
       forza(`/v1/matches/${fmid}/lineups`),
       forza(`/v2/matches/${fmid}/periods`),
@@ -224,11 +224,11 @@ Deno.serve(async (req) => {
 
     const matchData    = matchResult.status   === 'fulfilled' ? matchResult.value   : null;
     const lineupsData  = lineupsResult.status === 'fulfilled' ? lineupsResult.value : null;
-    const periodsData  = periodsResult.status === 'fulfilled' ? periodsResult.value : null;
+    const periodsData  = periodsRawResult.status === 'fulfilled' ? periodsRawResult.value : null;
     const statsData    = statsResult.status   === 'fulfilled' ? statsResult.value   : null;
 
     // Log partial failures so they appear in edge_function_errors
-    for (const [name, result] of [['match', matchResult], ['lineups', lineupsResult], ['periods', periodsResult], ['stats', statsResult]]) {
+    for (const [name, result] of [['match', matchResult], ['lineups', lineupsResult], ['periods', periodsRawResult], ['stats', statsResult]]) {
       if (result.status === 'rejected') {
         logError('warn', `Forza endpoint '${name}' failed for match ${fmid}: ${result.reason?.message ?? result.reason}`, { fmid });
       }
@@ -538,7 +538,7 @@ Deno.serve(async (req) => {
       try {
         const res = await fetch(`${SELF_BASE_URL}/functions/v1/calculate-scores`, {
           method:  'POST',
-          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${SELF_ANON_KEY}` },
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}` },
           body:    JSON.stringify({ fixture_id: fixture.id }),
           signal:  AbortSignal.timeout(30_000),
         });
