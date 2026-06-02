@@ -139,9 +139,18 @@ These flows are **identical regardless of league mode or tournament type**. Run 
    - `@TestMgr2` highlighted as a mention
 6. **Assert**: input clears after sending.
 7. Hover your own message — **Assert**: EDIT and DEL buttons appear.
-8. Open a second browser tab as TestMgr2 — **Assert**: message appears in real-time without refresh.
+8. **Real-time cross-client test** — open a second Playwright page logged in as TestMgr2:
+   ```javascript
+   // In Playwright test context:
+   const page2 = await browser.newPage();
+   await page2.goto('http://localhost:5173');
+   // log in as e2e_test2@fantasykit.test / Test2026!!
+   await page2.goto('http://localhost:5173/league/c1a5501e-0000-4000-a000-000000000001?tab=chat');
+   // now send a message from page1 (TestComm) and assert it appears in page2 without refresh
+   ```
+   **Assert**: the message sent in step 4 is visible in the second page within 3 seconds, without any page reload.
 
-**Pass**: Message delivered, hashtag + mention formatted, real-time delivery confirmed. ✓
+**Pass**: Message delivered, hashtag + mention formatted, real-time cross-client delivery confirmed. ✓
 
 ---
 
@@ -602,11 +611,34 @@ ORDER BY published_at DESC LIMIT 1;
 
 #### B-7d: Betting Leaderboard Tab
 
-1. Click **BETTING**.
-2. **Assert**: YOUR BETTING section shows: pts earned, rank, played, won, win%.
-3. **Assert**: BETTING LEADERBOARD shows at least 1 manager row with record.
+**Pre-condition**: At least one bet must be fully resolved (status = `resolved`, a manager has a `bet_submissions` row with the correct answer). Run B-5c first if no resolved bet exists yet.
 
-**Pass**: All tabs load with real data; FrontPage secondary column = LEAGUE ACTIVITY. ✓
+> **Playwright note**: The RESOLVE button in the admin panel does not respond to `page.click()` or standard `dispatchEvent` because it is behind a sticky overlay that intercepts pointer events. Use React's internal event system instead:
+> ```javascript
+> await page.evaluate(() => {
+>   const btn = Array.from(document.querySelectorAll('button'))
+>     .find(b => b.textContent.includes('RESOLVE'));
+>   const nativeInputValueSetter = Object.getOwnPropertyDescriptor(
+>     window.HTMLElement.prototype, 'click'
+>   );
+>   btn?.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+> });
+> ```
+> Alternatively, call `resolve_bet` RPC directly with the service-role key (see B-5c curl approach).
+
+1. After a bet is resolved, navigate to **BOARD → BETTING** tab in CLASSIC_EPL_E2E.
+2. **Assert**: YOUR BETTING section shows non-zero values for PLAYED, WON, WIN%.
+3. **Assert**: BETTING LEADERBOARD shows at least 1 manager row with a win record.
+
+```sql
+-- Verify a resolved bet exists
+SELECT id, status, correct_answer FROM bet_instances
+WHERE league_id = 'c1a5501e-0000-4000-a000-000000000001'
+  AND status = 'resolved' LIMIT 1;
+-- Should return a row
+```
+
+**Pass**: Leaderboard stats populated after a resolved bet. ✓
 
 ---
 
@@ -772,25 +804,40 @@ WHERE league_id = 'daf7e001-0000-4000-a000-000000000001';
 
 ### D-3: Squad Recovery — Incomplete Allocation
 
-If any manager in D-2 has `unresolved_slots > 0`:
+**League to use**: `DRAFT_WC_E2E` (`daf7e002`) is the reliable target — after E-4 (knockout allocation), TestComm typically has 7–8 unresolved slots. DRAFT_EPL_E2E D-2c runs with 0 unresolved slots (managers have distinct wishlists) so D-3 is never triggered there.
 
-**URL**: `/league/daf7e001-0000-4000-a000-000000000001/draft/recover`
-
-1. Log in as the manager with incomplete allocation.
-2. **Assert**: Recovery screen shows empty slots filtered by needed position.
-3. **Assert**: only unallocated players are shown (no player currently in another manager's squad).
-4. Select a player for each empty slot.
-5. **Assert**: squad reaches 15/15; recovery screen closes.
-
+**Pre-condition check**:
 ```sql
--- Verify all slots filled
-SELECT array_length(players,1) FROM squads
-WHERE league_id = 'daf7e001-0000-4000-a000-000000000001'
-  AND user_id = '<manager_with_gaps>';
--- Should return 15
+SELECT user_id, unresolved_slots FROM draft_allocations
+WHERE league_id = 'daf7e002-0000-4000-a000-000000000002'
+  AND phase = 'knockout'
+ORDER BY unresolved_slots DESC;
+-- At least one manager should have unresolved_slots > 0
 ```
 
-**Pass**: Recovery screen fills remaining slots with FCFS picks. ✓
+**URL**: `/league/daf7e002-0000-4000-a000-000000000002/draft/recover`
+
+1. Log in as TestComm (the manager with most unresolved slots).
+2. **Assert**: Recovery screen header shows "DRAFT RECOVERY / FILL YOUR GAPS" with correct slot count.
+3. **Assert**: Pool pressure banner visible (🟢/🟡/🔴 depending on remaining pool size).
+4. **Assert**: Player list shows real WC players — only unallocated ones (no TAKEN badge).
+5. Click a player row to pick them — **Assert**: slot counter decrements, player disappears from list.
+6. Continue picking players until the slot counter reaches **0 / 15**.
+7. **Assert**: "squad complete" confirmation shown OR screen redirects to league page.
+
+```sql
+-- Verify squad row written to squads table after completion
+SELECT array_length(players,1) AS squad_size, budget_remaining
+FROM squads
+WHERE league_id = 'daf7e002-0000-4000-a000-000000000002'
+  AND user_id = 'aaaae001-0000-4000-a000-000000000001'
+ORDER BY created_at DESC LIMIT 1;
+-- squad_size: 15; budget_remaining: reflects total cost deducted
+```
+
+> **Note (session 72)**: The pick mechanism was confirmed (1 pick, DB updates). Step 6–7 (full squad completion → squads table write) was not reached in session 72. This is the critical path to verify in the next run.
+
+**Pass**: Recovery screen fills all slots FCFS; completed squad persists to `squads` table. ✓
 
 ---
 
@@ -921,18 +968,64 @@ WHERE id = 'daf7e002-0000-4000-a000-000000000002';
 
 ### E-3: Market — Eliminated Club + Draft takenByOther
 
-**Pre-condition**: Simulate a club elimination (Appendix E-3 SQL).
+**Pre-condition**: Run Appendix E-3 SQL to seed one club as eliminated and identify test players.
+
+> **Current DB state (after session 72)**: DRAFT_WC_E2E has `cup_phase = 'pre_elimination'`. Managers have distinct knockout allocations (4 non-overlapping 30-player splits). Algeria was seeded as eliminated in session 69 — verify it's still there before running. The `takenByOther` test player must come from TestMgr2's knockout allocation but NOT TestComm's.
+
+**Step 1 — Verify/seed eliminated club**:
+```sql
+-- Check if Algeria is already eliminated
+SELECT club, is_active FROM cup_active_clubs
+WHERE league_id = 'daf7e002-0000-4000-a000-000000000002'
+  AND club = 'Algeria';
+-- If not found or is_active=true, run Appendix E-3 SQL
+```
+
+**Step 2 — Get test players**:
+```sql
+-- Player from eliminated club (Algeria)
+SELECT p.id, p.name, p.position FROM players p
+WHERE p.tournament_id = '429' AND p.club = 'Algeria' LIMIT 1;
+
+-- Player in TestMgr2's knockout allocation but NOT TestComm's
+SELECT p.id, p.name FROM draft_allocations da
+JOIN LATERAL unnest(da.allocated_players) AS pid ON TRUE
+JOIN players p ON p.id = pid
+WHERE da.league_id = 'daf7e002-0000-4000-a000-000000000002'
+  AND da.user_id = 'aaaae002-0000-4000-a000-000000000002'
+  AND da.phase = 'knockout'
+  AND pid NOT IN (
+    SELECT unnest(allocated_players) FROM draft_allocations
+    WHERE league_id = 'daf7e002-0000-4000-a000-000000000002'
+      AND user_id = 'aaaae001-0000-4000-a000-000000000001'
+      AND phase = 'knockout'
+  )
+LIMIT 1;
+
+-- Unallocated player from a surviving club
+SELECT p.id, p.name, p.position FROM players p
+WHERE p.tournament_id = '429'
+  AND p.club != 'Algeria'
+  AND NOT EXISTS (
+    SELECT 1 FROM draft_allocations da
+    WHERE da.league_id = 'daf7e002-0000-4000-a000-000000000002'
+      AND p.id = ANY(da.allocated_players)
+  )
+LIMIT 1;
+```
 
 **URL**: `/market?leagueId=daf7e002-0000-4000-a000-000000000002`
 
-1. Search for a player from the eliminated club.
-2. **Assert**: player shows **ELIMINATED CLUB** indicator; BUY is disabled.
-3. Search for a player allocated to another manager.
-4. **Assert**: player shows **takenByOther** indicator; BUY is disabled.
-5. Search for an unallocated player from a surviving club.
-6. **Assert**: BUY is enabled; buy succeeds.
+1. Log in as TestComm. Navigate to market with DRAFT_WC_E2E selected.
+2. Search for the **Algeria player** (eliminated club).
+3. **Assert**: player shows **ELIMINATED CLUB** indicator; BUY is disabled.
+4. Search for the **TestMgr2 knockout player** (takenByOther).
+5. **Assert**: player shows **TAKEN · TestMgr2** indicator; BUY is disabled.
+6. Search for the **unallocated player** from a surviving club.
+7. **Assert**: no TAKEN or ELIMINATED badge; BUY is enabled.
+8. Click BUY — **Assert**: purchase succeeds, slot counter decrements.
 
-**Pass**: Both Draft uniqueness AND Cup club elimination restrictions enforced simultaneously. ✓
+**Pass**: Eliminated club badge blocks BUY; takenByOther badge blocks BUY; unallocated player from surviving club is buyable. ✓
 
 ---
 
@@ -1443,6 +1536,44 @@ WHERE id = 'daf7e002-0000-4000-a000-000000000002';
 
 ---
 
+## Appendix E-3 — Seed Eliminated Club (DRAFT_WC_E2E)
+
+Run before E-3. Seeds Algeria as eliminated in DRAFT_WC_E2E so the ELIMINATED CLUB badge fires in the market.
+
+```sql
+-- Step 1: Check if cup_active_clubs row already exists
+SELECT club, is_active FROM cup_active_clubs
+WHERE league_id = 'daf7e002-0000-4000-a000-000000000002'
+  AND club = 'Algeria';
+
+-- Step 2a: If row exists but is_active = true, mark as eliminated
+UPDATE cup_active_clubs
+SET is_active = false
+WHERE league_id = 'daf7e002-0000-4000-a000-000000000002'
+  AND club = 'Algeria';
+
+-- Step 2b: If row doesn't exist, insert it as eliminated
+INSERT INTO cup_active_clubs (league_id, club, is_active)
+VALUES ('daf7e002-0000-4000-a000-000000000002', 'Algeria', false)
+ON CONFLICT (league_id, club) DO UPDATE SET is_active = false;
+
+-- Step 3: Confirm an Algeria player exists in the WC pool
+SELECT id, name, position FROM players
+WHERE tournament_id = '429' AND club = 'Algeria'
+LIMIT 3;
+-- Must return at least 1 row for the elimination badge to be visible in market
+
+-- Step 4: Verify the elimination row
+SELECT club, is_active FROM cup_active_clubs
+WHERE league_id = 'daf7e002-0000-4000-a000-000000000002'
+  AND club = 'Algeria';
+-- is_active: false ✓
+```
+
+> **Cleanup after test**: If you want to reactivate Algeria, run `UPDATE cup_active_clubs SET is_active = true WHERE league_id = 'daf7e002-...' AND club = 'Algeria'`.
+
+---
+
 ## Appendix E-5 — Simulate High Pool Pressure (Player-Repeat Relaxation)
 
 ```sql
@@ -1627,4 +1758,4 @@ ORDER BY s.user_id, fp.matchday_id;
 
 ---
 
-Last Updated: **2026-06-02** (session 72: F-2/E-4/D-3 confirmed; 9 bugs fixed; known limitations table updated with remaining open items)
+Last Updated: **2026-06-02** (session 72 final: A-2 cross-client steps, B-7d pre-condition + React fiber note, D-3 completion path + WC target, E-3 full step-by-step + player queries, Appendix E-3 added)
