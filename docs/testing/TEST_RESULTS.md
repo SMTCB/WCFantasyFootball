@@ -2,6 +2,96 @@
 
 ---
 
+## Session 71 — D-4a/D-4b: Draft FCFS + takenByOther (2026-06-02)
+
+**Date**: 2026-06-02  
+**Tester**: Claude Code (Playwright MCP — browser unlocked)  
+**Playbook**: `E2E_TEST_PLAYBOOK.md` v2.0  
+**Scope**: D-4a (FCFS buy of unallocated player) and D-4b (takenByOther blocking in Draft market)  
+**Method**: Playwright MCP browser at `http://localhost:5173`
+
+### Setup
+
+DRAFT_EPL_E2E squads were identical across all 4 managers (Appendix C seeding flaw). To create a `takenByOther` test case:
+
+1. Removed `fp-1708306-426` (Randal Kolo Muani, FWD, £6.0) from TestComm's squad only via direct DB UPDATE.
+2. TestMgr2/3/4 retain Kolo Muani → he is "taken" in the draft league from TestComm's perspective.
+3. Identified Wilson Odobert (FWD, `fp-1185108285-426`, £5.9, unallocated) as the FCFS buy target.
+
+| Pre-condition | Result |
+|---|---|
+| TestComm squad: 14/15, FWD 2/3, budget £16.0M | ✅ Confirmed in market UI header |
+| Kolo Muani in TestMgr2/3/4 squads but NOT TestComm | ✅ Confirmed via DB query |
+| Odobert not in any squad | ✅ Confirmed via DB query |
+
+---
+
+### D-4a: FCFS Buy of Unallocated Player
+
+**League**: DRAFT_EPL_E2E · TestComm · market `/market?leagueId=daf7e001...`
+
+| Sub-flow | Result | Evidence |
+|---|---|---|
+| Search "Odobert" — player appears | ✅ PASS | WILSON ODOBERT visible, no TAKEN/OWNED badge |
+| BUY button enabled (no block indicators) | ✅ PASS | Snapshot: `button "BUY"` (not disabled) |
+| Click BUY — purchase succeeds | ✅ PASS | FWD counter: 2/3 → 3/3; Odobert switches to SELL button; budget £16.0M → £10.1M (−£5.9) |
+| Squad count updates | ✅ PASS | Squad header: 14/15 → 15/15 |
+
+**Pass**: Unallocated player is buyable via FCFS; squad and budget update immediately in UI. ✓
+
+---
+
+### D-4b: takenByOther Blocking
+
+**League**: DRAFT_EPL_E2E · TestComm · market still open
+
+| Sub-flow | Result | Evidence |
+|---|---|---|
+| Search "Kolo Muani" — player appears | ✅ PASS | RANDAL KOLO MUANI visible |
+| TAKEN badge visible | ✅ PASS | Snapshot: `generic "TAKEN · TestMgr4"` — red border, 0.65 opacity row |
+| BUY button disabled | ✅ PASS | Snapshot: `button "BUY" [disabled]` |
+| canBuy logic: `isDraftLeague && !isOwned && isTaken` → false | ✅ PASS | All three conditions confirmed in source + UI |
+
+**Note on owner label**: Badge shows "TestMgr4" rather than "TestMgr2". This is expected — with multiple managers owning the same player (seeding artifact), `takenMap` overwrites to the last squad iterated (TestMgr4). In a real post-allocation state each player belongs to exactly one manager, so the label would be unambiguous. The blocking logic itself is correct.
+
+**Screenshot**: `d4b-taken-badge.png` (saved in project root)
+
+**Code path verified**: `MarketScreen.jsx:641–649`
+```javascript
+const isDraftLeague = leagueFormat === 'noduplicate';
+const takenByOther = isDraftLeague && !isOwned && isTaken(p.id);
+// ...
+const canBuy = hasLeague && !isOwned && !takenByOther && ...;
+```
+
+**Pass**: Draft mode correctly blocks purchase of a player owned by another manager. TAKEN badge and manager name visible. BUY disabled. ✓
+
+---
+
+### Overall Result (Session 71)
+
+**Flows tested**: D-4a, D-4b  
+**PASS**: 2  
+**PARTIAL**: 0  
+**FAIL/BUG**: 0  
+**New bugs found**: 0
+
+All core Draft invariants now confirmed end-to-end:
+
+| Flow | Status | Session |
+|---|---|---|
+| D-1 Draft submission | ✅ PASS | 69 |
+| D-2a 4-stage stepper | ✅ PASS | 69 |
+| D-2b Deadline passed state | ✅ PASS | 69 |
+| D-2c Run allocation | ✅ PASS | 69 |
+| D-3 Squad recovery | N/A (0 unresolved slots) | 69 |
+| D-4a FCFS buy | ✅ PASS | **71** |
+| D-4b takenByOther blocking | ✅ PASS | **71** |
+| D-5 No knockout draft card | ✅ PASS | 69 |
+| D-6 Draft report column | ✅ PASS | 69 |
+
+---
+
 ## Session 70 — Gap Flows: B-3, B-4, F-1/F-2, E-2 (2026-06-02)
 
 **Date**: 2026-06-02  
