@@ -15,6 +15,8 @@ import ConfirmModal    from '../components/ConfirmModal';
 import PositionChip    from '../components/PositionChip';
 import StatusDot       from '../components/StatusDot';
 import { POS_CONFIG, POS_FILTER_ORDER } from '../lib/formations';
+import { usePlayerStats } from '../hooks/usePlayerStats';
+import FormStrip from '../components/FormStrip';
 
 const COUNTRY_LIMIT = 3;
 
@@ -71,6 +73,9 @@ export default function MarketScreen() {
 
   // League-scoped transfer state
   const { buy, sell, isTaken, takenBy, isOwnedBy, takenMapError, takenMap } = useTransfer(activeLeague);
+
+  // Form history — last 5 GW points per player for this tournament
+  const { statsMap } = usePlayerStats(tournamentId);
 
   // Fetch squad for auto-fill
   const fetchSquad = async () => {
@@ -284,7 +289,11 @@ export default function MarketScreen() {
       setSaving(true);
       const result = await buy(player);
       if (!result.ok) {
-        showToast(result.error, 'error', 5000, () => handleBuy(player));
+        // No retry for limit/constraint errors — retrying always re-fails
+        const isRetryable = result.error !== 'TRANSFER_LIMIT_REACHED'
+          && !result.error?.includes('limit')
+          && !result.error?.includes('full');
+        showToast(result.error, 'error', 5000, isRetryable ? () => handleBuy(player) : undefined);
         return;
       }
       setMySquad(prev => ({ ...prev, players: result.players, budget_remaining: result.budget_remaining }));
@@ -696,6 +705,8 @@ export default function MarketScreen() {
                     <div className="fk-mono mt-0.5" style={{ fontSize: 9, color: 'var(--mute)', letterSpacing: '0.14em' }}>
                       {p.club}{p.country ? ` · ${p.country}` : ''}
                     </div>
+                    {/* Form strip — last 5 GW pts */}
+                    <FormStrip rounds={statsMap[p.id]} />
                   </div>
                 </div>
 

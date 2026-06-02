@@ -1229,7 +1229,7 @@ function LifecycleOp({ title, status, statusTone = 'var(--mute)', sub, when, chi
 // ─────────────────────────────────────────────────────────────────────────────
 function LifecycleOps({ commissioner, leagueId, tournamentId, windowType = null, league = null, onHelp }) {
   const {
-    commLoading, commAction, setCommMsg,
+    commLoading,
     windowOpensAt, setWindowOpensAt,
     windowClosesAt, setWindowClosesAt,
     windowTransfers, setWindowTransfers,

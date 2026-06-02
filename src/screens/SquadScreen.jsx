@@ -33,6 +33,8 @@ import PowerToolCard from '../components/PowerToolCard';
 import { AvailabilityBadge } from '../components/AvailabilityBadge';
 import { POS_ORDER, POS_LABEL, POS_BADGE_COLOR } from '../lib/formations';
 import ScoringInfoModal from '../components/ScoringInfoModal';
+import { usePlayerStats } from '../hooks/usePlayerStats';
+import FormStrip from '../components/FormStrip';
 
 // â"€â"€ Chip config â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
 const CHIPS = [
@@ -116,6 +118,9 @@ export default function SquadScreen() {
   // Competition-agnostic config from the selected league row
   const cfg = useLeagueConfig(activeLeague);
   const POS_LIMITS = cfg.positionLimits;
+
+  // Form history — last 5 GW pts per player for the squad list strip
+  const { statsMap: squadStatsMap } = usePlayerStats(tournamentId);
 
   // Transfer hook — league-scoped buy/sell + no-repeat enforcement
   const { buy, sell, takenMap, isOwnedBy } = useTransfer(activeLeague);
@@ -1657,6 +1662,7 @@ export default function SquadScreen() {
                               {!isStarter && <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 7, color: 'var(--mute)', border: '1px solid var(--rule)', padding: '0 3px', flexShrink: 0 }}>SUB</span>}
                             </div>
                             <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 8, color: 'var(--mute)', letterSpacing: '0.12em', marginTop: 1 }}>{(player.club ?? '').substring(0, 3).toUpperCase()}{player.price > 0 ? ` · £${Number(player.price).toFixed(1)}M` : ''}</div>
+                            <FormStrip rounds={squadStatsMap[player.id]} />
                           </div>
                           {/* Points */}
                           <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 16, color: 'var(--paper)', letterSpacing: '-0.02em', flexShrink: 0 }}>{Math.round(player.points ?? 0)}</div>
