@@ -1,6 +1,6 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-06-02 (session 74 — Form strip PR #301; DD-L1/L9 fixed; low bug sweep commit f9a668e; migration 119 applied; next migration 120_)  
+**Last Updated**: 2026-06-02 (session 74 — Form strip PR #301; Layer 2 stats panel 6d8f5e8; low bug sweep f9a668e; migration 119; next migration 120_)  
 **E2E Test Suite**: `platform.spec.js` (36 tests × 2 browsers) passing in CI ✅ — completes in ~3 min  
 **Full Playbook Run**: `E2E_TEST_PLAYBOOK.md` v2.0 — all flows confirmed (D-4a/b, E-4, D-3 ✅; F-2 PASS — form strip satisfies per-stat breakdown criterion)  
 **Live App**: https://wc-fantasy-football.vercel.app  
@@ -22,7 +22,7 @@
 
 ## 🚧 Open Features — Player Performance Stats (P2, post-launch)
 
-### [FEATURE] Player stats expandable panel (Layer 2)
+### ✅ [FEATURE] Player stats expandable panel (Layer 2) — DONE (6d8f5e8, 2026-06-02)
 
 **Why**: Stats are the primary decision driver for buy/sell transfers. Currently the Market and Squad screens show only the player's price and position — there is no form history, no per-GW breakdown, and no way to compare players by recent performance. Managers are flying blind on transfer decisions.
 
