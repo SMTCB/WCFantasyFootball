@@ -312,7 +312,7 @@ Deno.serve(async (req) => {
       if (!statsMap[ev.player_id]) {
         statsMap[ev.player_id] = {
           player_id: ev.player_id,
-          minutes_played: 90,
+          minutes_played: 0,   // DD-L8: don't assume 90 min from event presence alone
           goals: 0, assists: 0, own_goals: 0,
           yellow_cards: 0, red_cards: 0,
           penalty_saved: 0, penalty_missed: 0,

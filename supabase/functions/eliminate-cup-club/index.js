@@ -118,8 +118,8 @@ Deno.serve(async (req) => {
       league_id,
       entry_type:   'breaking_news',
       headline,
-      bullets:      JSON.stringify(bullets),
-      full_data:    JSON.stringify(stats),
+      bullets,       // DD-L10: pass array directly; JSON.stringify was double-encoding
+      full_data:    stats,
       published_at: new Date().toISOString(),
     });
 
