@@ -1,16 +1,28 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-06-02 (session 73 — Scoring V2 shipped PR #300; next migration 119_)  
+**Last Updated**: 2026-06-02 (session 74 — Form strip shipped PR #301; DD-L1 + DD-L9 fixed; next migration 119_)  
 **E2E Test Suite**: `platform.spec.js` (36 tests × 2 browsers) passing in CI ✅ — completes in ~3 min  
-**Full Playbook Run**: `E2E_TEST_PLAYBOOK.md` v2.0 — all flows confirmed (D-4a/b, E-4, D-3 ✅; F-2 PARTIAL — points display ✓, per-stat breakdown not yet built)  
+**Full Playbook Run**: `E2E_TEST_PLAYBOOK.md` v2.0 — all flows confirmed (D-4a/b, E-4, D-3 ✅; F-2 PASS — form strip satisfies per-stat breakdown criterion)  
 **Live App**: https://wc-fantasy-football.vercel.app  
 **WC Kick-off**: 2026-06-11 19:00 UTC (Mexico vs South Africa)
 
 ---
 
+## ✅ Session 74 — Form strip + DD fixes (PR #301, 2026-06-02)
+
+- **Form strip (Layer 1)** — `usePlayerStats` hook + `FormStrip` component. 5-cell coloured history per player on Market rows and Squad LIST tab rows. Colors: red=0, amber=1–4, green=5–9, gold=10+. Data: last 5 finished matchdays from `player_match_stats`, one query per tournament. Closes F-2 playbook assertion.
+- **DD-L1 fixed** — `join_league_by_code` RPC returns `{league_id, name}`; `data?.id` was always undefined; user stayed on list view after joining. Fixed to use `data?.league_id ?? data?.id`.
+- **DD-L9 fixed** — MarketScreen buy error toast no longer shows retry button on `TRANSFER_LIMIT_REACHED` / limit / full errors (retrying always re-failed). Other transient errors still retryable.
+- **CommissionerPanel lint** — Fixed pre-existing `no-unused-vars` errors on `commAction` + `setCommMsg`.
+- **Market race condition** — Already fixed (guard at `MarketScreen.jsx:233`). No new work needed.
+
+**Layer 2 (expandable stats panel)** remains open below as P2.
+
+---
+
 ## 🚧 Open Features — Player Performance Stats (P2, post-launch)
 
-### [FEATURE] Player form strip + per-matchday stats panel
+### [FEATURE] Player stats expandable panel (Layer 2)
 
 **Why**: Stats are the primary decision driver for buy/sell transfers. Currently the Market and Squad screens show only the player's price and position — there is no form history, no per-GW breakdown, and no way to compare players by recent performance. Managers are flying blind on transfer decisions.
 
@@ -307,7 +319,7 @@ Next migration: `113_`
 
 | ID | Area | Issue |
 |----|------|-------|
-| **DD-L1** | Funnel | Join succeeds but auto-navigate reads `data?.id`; RPC returns `{league_id,name}` → user left on list view (`LeagueScreen.jsx:642`). |
+| ~~**DD-L1**~~ | ~~Funnel~~ | ~~Join succeeds but auto-navigate reads `data?.id`; RPC returns `{league_id,name}` → user left on list view.~~ **✅ Fixed #301** — use `data?.league_id ?? data?.id`. |
 | **DD-L2** | Funnel | `get_server_time` (draft anti-clock-skew) & `LEAGUE_FULL` cap not in any migration — draft deadline trusts client clock if RPC absent. |
 | **DD-L3** | Auction | `cancelListing` does direct UPDATE relying on RLS; after SEC-8 dropped the member UPDATE policy, cancel may silently fail. *VERIFY policy.* |
 | **DD-L4** | Auction | No seller≠bidder check in current `place_bid` — seller can self-bid to ramp price (input hidden in UI, RPC callable). |
@@ -315,7 +327,7 @@ Next migration: `113_`
 | **DD-L6** | Bets | Auto-close cron lag (6h) — bets show "open" past deadline; submissions still blocked by `submit_bet` deadline check. |
 | **DD-L7** | Chips | Free Hit & Bench Boost not implemented at all (no code/UI). Only Wildcard + Triple Captain exist (both broken). |
 | **DD-L8** | Scoring | calculate-scores Path B (event aggregation) defaults `minutes_played:90` for anyone with an event — inflates fallback scores if Forza data absent. |
-| **DD-L9** | Frontend | MarketScreen shows tap-to-retry on `TRANSFER_LIMIT_REACHED` (`:272`) which always re-fails; no preflight on `transfersRemaining`. |
+| ~~**DD-L9**~~ | ~~Frontend~~ | ~~MarketScreen shows tap-to-retry on `TRANSFER_LIMIT_REACHED` which always re-fails.~~ **✅ Fixed #301** — no retry on limit/full errors. |
 | **DD-L10** | Pipeline | `eliminate-cup-club` manual path double-JSON-encodes gazette `bullets`/`full_data` (`:121-123`) — stores a string, UI may not render. |
 | **DD-L11** | Build | App is one 641 KB chunk (no code-splitting); a module-eval TDZ would white-screen before ErrorBoundary can catch (`App.jsx`). Slow cold-load on mobile data. |
 
