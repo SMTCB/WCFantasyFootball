@@ -220,7 +220,14 @@ export default function MarketScreen() {
     setLoading(false);
   };
 
-  useEffect(() => { fetchMarketParams(); }, [activeLeague, tournamentId]);
+  useEffect(() => {
+    // Guard: if we know the league but tournamentId hasn't resolved yet, skip this
+    // render — the effect will fire again once resolveLeagueTournament completes.
+    // Without this guard the first render fetches all tournaments' players, producing
+    // a ~3 s flash of the wrong player list (Bug #4).
+    if (activeLeague && !tournamentId) return;
+    fetchMarketParams();
+  }, [activeLeague, tournamentId]);
 
   // Persist filter position to localStorage
   useEffect(() => {
