@@ -10,13 +10,16 @@ import { supabase } from "./lib/supabase.js";
 // Fire-and-forget: never block the UI on logging. Uses report_client_error RPC
 // (migration 71) so anon calls bypass RLS and write to client_errors table.
 function reportClientError(message, stack, context = {}) {
-  supabase.rpc('report_client_error', {
-    p_message:    String(message ?? 'unknown'),
-    p_stack:      stack ?? null,
-    p_url:        window.location.href,
-    p_user_agent: navigator.userAgent,
-    p_context:    context,
-  }).catch(() => {});
+  try {
+    const q = supabase.rpc('report_client_error', {
+      p_message:    String(message ?? 'unknown'),
+      p_stack:      stack ?? null,
+      p_url:        window.location.href,
+      p_user_agent: navigator.userAgent,
+      p_context:    context,
+    });
+    if (q && typeof q.catch === 'function') q.catch(() => {});
+  } catch { /* reporter must never throw */ }
 }
 
 window.addEventListener('error', (e) => {

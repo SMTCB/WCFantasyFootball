@@ -19,6 +19,28 @@ const ENTRY_META = {
   transfer:         { filter: 'TRADES', badge: 'TRANSFER', color: 'var(--positive)' },
 };
 
+// Normalise a single gazette bullet to a display string.
+// bullets can be: string | {text} | {player_id, wanted_by, winner_id} | other object
+function bulletText(b) {
+  if (typeof b === 'string') return b;
+  if (b && typeof b === 'object') {
+    if (b.text) return b.text;
+    // draft_report contest objects — not meaningful without player name lookups; skip
+    return null;
+  }
+  return null;
+}
+
+// Handle bullets stored as raw JSON string (older rows) or already-parsed array
+function parseBullets(raw) {
+  if (!raw) return [];
+  let arr = raw;
+  if (typeof arr === 'string') {
+    try { arr = JSON.parse(arr); } catch { return []; }
+  }
+  return Array.isArray(arr) ? arr : [];
+}
+
 function timeAgo(iso) {
   const diff = Math.floor((Date.now() - new Date(iso)) / 1000);
   if (diff < 60)   return `${diff}s ago`;
@@ -224,13 +246,17 @@ export default function LeagueDetailView({ leagueId, members, currentUser, membe
                       <div style={{ fontFamily: "'Archivo', sans-serif", fontSize: 12, fontWeight: 600, color: 'var(--paper)', lineHeight: 1.35, marginBottom: e.bullets?.length ? 6 : 0 }}>
                         {e.headline}
                       </div>
-                      {Array.isArray(e.bullets) && e.bullets.length > 0 && (
+                      {parseBullets(e.bullets).length > 0 && (
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-                          {e.bullets.map((b, i) => (
-                            <div key={i} style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.1em', lineHeight: 1.4 }}>
-                              {b}
-                            </div>
-                          ))}
+                          {parseBullets(e.bullets).map((b, i) => {
+                            const text = bulletText(b);
+                            if (!text) return null;
+                            return (
+                              <div key={i} style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.1em', lineHeight: 1.4 }}>
+                                {text}
+                              </div>
+                            );
+                          })}
                         </div>
                       )}
                     </div>
