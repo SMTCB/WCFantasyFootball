@@ -1,6 +1,6 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-06-02 (sessions 71–72 — remaining E2E flows confirmed; 9 bugs fixed in PRs #297–298; next migration 118_)  
+**Last Updated**: 2026-06-02 (session 73 — Scoring V2 shipped PR #300; next migration 119_)  
 **E2E Test Suite**: `platform.spec.js` (36 tests × 2 browsers) passing in CI ✅ — completes in ~3 min  
 **Full Playbook Run**: `E2E_TEST_PLAYBOOK.md` v2.0 — all flows confirmed (D-4a/b, E-4, D-3 ✅; F-2 PARTIAL — points display ✓, per-stat breakdown not yet built)  
 **Live App**: https://wc-fantasy-football.vercel.app  
@@ -479,6 +479,112 @@ npx supabase link --project-ref sssmvihxtqtohisghjet     # link this project
 ---
 
 ## 🚀 OPEN FEATURES — NEXT SESSION PRIORITIES
+
+---
+
+### ✅ [FEATURE] Scoring System V2 — Additive Position-Aware Scoring ✅ DONE (session 73, PR #300, 2026-06-02)
+
+**Priority**: P1 — Affects live scoring, league fairness, and pilot launch impression  
+**Effort**: ~6–8h across backend + frontend  
+**Status**: COMPLETE — merged to main  
+**Design doc**: `docs/architecture/SCORING_APPROACH_V2.md`
+
+#### Why
+FPL-style scoring (V1) overweights goals/assists and causes squad homogeneity. V2 rewards each position for its actual football contribution: saves for GKs, tackles for DEFs, key passes for MIDs, big chances for FWDs. No tier multipliers — every point is directly auditable by the user.
+
+#### V2 Scoring Rules (full spec in SCORING_APPROACH_V2.md)
+
+| Pos | Metric | Pts |
+|---|---|---|
+| **GK** | Save | +0.5 |
+| GK | Clean Sheet (≥60 min) | +4.0 |
+| GK | Goal | +5.0 |
+| GK | Assist | +3.0 |
+| GK | Penalty Saved | +5.0 |
+| **DEF** | Clean Sheet (≥60 min) | +4.0 |
+| DEF | Goal | +5.0 |
+| DEF | Assist | +2.0 |
+| DEF | Tackle Won | +0.5 |
+| DEF | Interception | +0.25 |
+| **MID** | Goal | +4.0 |
+| MID | Assist | +2.0 |
+| MID | Key Pass | +0.25 |
+| MID | Shot on Target | +0.5 |
+| **FWD** | Goal | +4.0 |
+| FWD | Assist | +2.0 |
+| FWD | Shot on Target | +0.25 |
+| FWD | Big Chance Created | +1.0 |
+| **ALL** | Minutes (per 90) | +1.0 |
+| ALL | Yellow Card | −1.0 |
+| ALL | Red Card | −3.0 |
+| ALL | Own Goal | −2.0 |
+| ALL | Penalty Missed | −1.0 |
+
+No BPS bonus points. No tier multipliers. No goals-conceded penalty. No MID/FWD clean sheet.
+
+#### Files to Touch
+
+| File | Change |
+|---|---|
+| `supabase/migrations/112_scoring_v2.sql` | **New** — add `key_passes` + `big_chances_created` columns to `player_match_stats`; update `scoring_rules` rows for tournament_id 426, 429, 1593 |
+| `supabase/functions/ingest-match-events/index.js` | Add `key_passes: s.key_passes ?? 0` and `big_chances_created: s.big_chances_created ?? 0` to the `statsUpserts.push()` block (~line 410) |
+| `supabase/functions/calculate-scores/index.js` | Update `FALLBACK_POINTS`; add 4 new lines to `scorePlayer()`; update `buildBreakdown()`; remove `assignBonus()` call (BPS gone) |
+| `src/screens/LiveScreen.jsx` | Add `key_passes, big_chances_created, saves` to SELECT; update StatsLogRow to show new fields; remove `−GA` display |
+| `src/components/league/RecapView.jsx` | Add saves/key_pass/SoT/big_chance badges; remove BPS bonus badge |
+| `src/components/ScoringInfoModal.jsx` | **New** — bottom sheet listing V2 scoring rules by position |
+| `src/screens/SquadScreen.jsx` | Add `?` button near "Weekly Points" heading → opens ScoringInfoModal |
+| `src/screens/LiveScreen.jsx` | Add `?` button near "Points Log" heading → opens ScoringInfoModal |
+
+#### Key Implementation Details
+
+**Migration `112_scoring_v2.sql`:**
+- Two new columns needed: `key_passes INTEGER DEFAULT 0` and `big_chances_created INTEGER DEFAULT 0`. All other required columns (`saves`, `shots_on_target`, `tackles_won`, `interceptions`) already exist on `player_match_stats`.
+- Run `UPDATE scoring_rules SET rules = ...` for each position × tournament. New rule values:
+  - GK: `{ goal:5, assist:3, clean_sheet:4, conceded_per_goal:0, penalty_saved:5, save:0.5, key_pass:0, shot_on_target:0, big_chance_created:0 }`
+  - DEF: `{ goal:5, assist:2, clean_sheet:4, conceded_per_goal:0, tackle:0.5, interception:0.25, save:0, key_pass:0, shot_on_target:0, big_chance_created:0 }`
+  - MID: `{ goal:4, assist:2, clean_sheet:0, conceded_per_goal:0, tackle:0, interception:0, save:0, key_pass:0.25, shot_on_target:0.5, big_chance_created:0 }`
+  - FWD: `{ goal:4, assist:2, clean_sheet:0, conceded_per_goal:0, tackle:0, interception:0, save:0, key_pass:0, shot_on_target:0.25, big_chance_created:1.0 }`
+  - UNIVERSAL: unchanged
+
+**`calculate-scores` changes (scorePlayer function):**
+```js
+// Add after existing tackle/interception lines:
+pts += (stats.saves               ?? 0) * (rules.save               ?? 0);
+pts += (stats.key_passes          ?? 0) * (rules.key_pass           ?? 0);
+pts += (stats.shots_on_target     ?? 0) * (rules.shot_on_target     ?? 0);
+pts += (stats.big_chances_created ?? 0) * (rules.big_chance_created ?? 0);
+// Remove: assignBonus(withBps) call — set bonus_points: 0 in upserts
+// Remove: GK goals-conceded penalty — already 0 when conceded_per_goal:0 in rules
+```
+
+**ingest-match-events — both fields already in Forza `/v2/matches/:id/player_statistics` (confirmed):**
+```js
+key_passes:          s.key_passes            ?? 0,
+big_chances_created: s.big_chances_created   ?? 0,
+```
+
+#### Failsafe / Backup Plan
+
+| Level | Trigger | What scores |
+|---|---|---|
+| **Level 1** (normal) | All Forza stats present | Full V2: saves + key passes + SoT + big chances + goals + assists + cards + minutes |
+| **Level 2** (partial Forza failure) | Some fields null | `?? 0` guards already in place — missing fields score 0, player still earns goals/assists/minutes/cards |
+| **Level 3** (no Forza data at all) | `forza_match_id IS NULL` → Path B | Manual event aggregation: goals, assists, own goals, cards, minutes only. No code change needed — existing Path B. |
+
+Levels 1–2 require no additional code. Level 3 is the existing Path B fallback in `calculate-scores`.
+
+#### Acceptance Criteria
+- [ ] `calculate-scores` uses V2 rules (confirmed via test fixture score)
+- [ ] GK with 7 saves + CS scores ~8.5 pts (was ~5 pts under V1)
+- [ ] DEF with CS + 5 tackles scores ~8 pts (was ~5.5 pts under V1)
+- [ ] MID with 1G + 1A + 4 key passes scores ~9 pts
+- [ ] No BPS bonus in any player breakdown
+- [ ] `key_passes` and `big_chances_created` appear in `player_match_stats` after ingest
+- [ ] LiveScreen shows saves/key passes/SoT/big chances; no `−GA` display
+- [ ] `?` button opens scoring modal on SquadScreen and LiveScreen
+- [ ] Scoring modal shows correct V2 rules by position
+
+---
 
 ### ✅ [FEATURE] RECAP Tab — Cross-League Daily Digest + Per-League History toggle ✅ DONE (session 60, PR #257)
 
