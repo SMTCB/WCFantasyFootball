@@ -1,9 +1,135 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-06-01 (session 68 — UUID type mismatch + GK-in-XI fixed; migration 112 applied; next migration 113_)  
+**Last Updated**: 2026-06-02 (sessions 71–72 — remaining E2E flows confirmed; 9 bugs fixed in PRs #297–298; next migration 118_)  
 **E2E Test Suite**: `platform.spec.js` (36 tests × 2 browsers) passing in CI ✅ — completes in ~3 min  
+**Full Playbook Run**: `E2E_TEST_PLAYBOOK.md` v2.0 — all flows confirmed (D-4a/b, E-4, D-3 ✅; F-2 PARTIAL — points display ✓, per-stat breakdown not yet built)  
 **Live App**: https://wc-fantasy-football.vercel.app  
 **WC Kick-off**: 2026-06-11 19:00 UTC (Mexico vs South Africa)
+
+---
+
+## 🚧 Open Features — Player Performance Stats (P2, post-launch)
+
+### [FEATURE] Player form strip + per-matchday stats panel
+
+**Why**: Stats are the primary decision driver for buy/sell transfers. Currently the Market and Squad screens show only the player's price and position — there is no form history, no per-GW breakdown, and no way to compare players by recent performance. Managers are flying blind on transfer decisions.
+
+**Proposed design — two layers:**
+
+**Layer 1 — Form strip (inline, always visible)**  
+Add a 5-cell coloured strip to every player row in the Market screen AND the Squad LIST tab:
+
+```
+FWD  Salah  LIV · £9.5M    8 · 2 · 12 · 0 · 6    [BUY]
+```
+
+- Each cell = points scored that GW
+- Colour: 0 = red, 1–4 = amber, 5–9 = green, 10+ = gold
+- No interaction needed — instant comparison across the whole visible pool
+
+**Layer 2 — Expandable per-player stats panel**  
+Tap the player name (not the BUY button) to expand a detail panel:
+- Last 5 GWs as a table: `GW · Fixture · Mins · G · A · CS · Pts`
+- Season totals line: `38 apps · 24G · 12A · 320 pts · avg 8.4/gw`
+- Next fixture if available
+- BUY / SELL button at the bottom of the expanded panel
+
+**Layer 1 also resolves F-2 partial**: same stat subtitle rendered under the player name in Squad LIST tab satisfies the "scoring breakdown visible" assertion in the E2E playbook.
+
+**Data source**: `player_match_stats` (goals, assists, clean_sheet, minutes_played, fantasy_points per fixture), joined with `fixtures` (matchday_id, kickoff_at). Stats are global (not per-league) — same player history regardless of which league you're in.
+
+**Surfaces**:
+- Market screen (`MarketScreen.jsx`) — primary buy decision surface
+- Squad LIST tab (`SquadScreen.jsx`) — sell decision + F-2 completion
+- Roster modal (`LeagueScreen.jsx`) — viewing other managers' squads (Phase 2 addition)
+
+**Implementation plan**:
+1. New `usePlayerStats(playerIds)` hook — batched query for all visible players: `player_match_stats` joined with `fixtures`, last 5 rounds, grouped by `player_id` — ~1h
+2. `FormStrip` component — 5 coloured cells, memoised — ~1h
+3. `PlayerStatsPanel` expandable component (table + season totals) — ~3h
+4. Wire into Market player row + Squad LIST player row — ~1-2h
+5. Roster modal reuse — ~1h (Phase 2)
+
+**Effort**: ~6h (form strip alone ~2-3h as a quick win)  
+**Priority**: P2 — valuable before WC group stage ends; impacts every transfer decision  
+**Acceptance criteria**:
+- [ ] Form strip visible on all player rows in Market and Squad LIST without any click
+- [ ] Tapping player name expands stat panel with last 5 GWs
+- [ ] Stats panel shows season totals
+- [ ] BUY / SELL accessible from within expanded panel
+- [ ] F-2 playbook assertion ("non-zero points visible + breakdown") passes fully
+
+---
+
+## ✅ Sessions 71–72 — Remaining E2E Flows + 9 Bug Fixes (PRs #297–298, 2026-06-02)
+
+**Goal**: Complete the outstanding E2E playbook flows (D-4a/b, F-2, E-4, D-3). All flows confirmed. 9 bugs discovered and fixed.
+
+### Flows confirmed:
+| Flow | Result | PR |
+|---|---|---|
+| D-4a FCFS buy (Draft market) | ✅ PASS | #297 |
+| D-4b takenByOther blocking (Draft market) | ✅ PASS | #297 |
+| F-2 Points display in Squad screen | ✅ PASS (points); ⚠️ PARTIAL (per-stat breakdown not built) | #298 |
+| E-4 Knockout Draft allocation | ✅ PASS | #298 |
+| D-3 Squad Recovery screen | ✅ PASS | #298 |
+
+### Bugs found and fixed (9):
+| # | Component | Bug | Fix |
+|---|---|---|---|
+| 1 | `SquadScreen.jsx` | `tournamentId` missing from useEffect deps → points always 0 after season end | Add to deps array |
+| 2 | `run-draft-lottery` | No CORS handler → browser calls blocked by OPTIONS preflight | Add OPTIONS route + CORS headers |
+| 3 | `run-draft-lottery` + `CommissionerPanel.jsx` | `'elimination'` invalid enum → `cup_phase` update silently fails | Change to `'pre_elimination'` |
+| 4 | `CommissionerPanel.jsx` mobile | Mobile `mobKnockoutAllocationDone` also used invalid enum | Fix at line 2178 |
+| 5 | `useCommissioner.js` | Knockout allocation used `supabase.functions.invoke` → CORS blocked | New `triggerKnockoutAllocation` via `invokeEdgeFunction` |
+| 6 | Migration 116 | Stale `(league_id, user_id)` constraint on `draft_submissions` blocked multi-phase inserts | `DROP CONSTRAINT draft_submissions_league_user_key` |
+| 7 | `DraftRecoveryScreen.jsx` | Upsert targeted dropped constraint; no phase filter | `update()` with `phase` filter; phase derived from `cup_phase` |
+| 8 | Migration 117 | No UPDATE RLS on `draft_allocations` → 403 on client picks | `CREATE POLICY "Users can update their own draft allocation"` |
+| 9 | `DraftScreen.jsx` | 3 upserts on `draft_submissions` used old constraint; no phase state | Added `phase` state derived from `cup_phase`; all upserts phase-aware |
+
+**Next migration**: `118_`  
+**Build/lint**: `npm run build` ✅ clean
+
+---
+
+## ✅ Session 70 — Gap Flows B-3, B-4, F-1/F-2, E-2 (PR #296, 2026-06-02)
+
+**Goal**: Cover flows skipped in session 69 (auctions API, trade API, scoring round-trip, group allocation). All confirmed at API+DB layer (Playwright MCP locked; curl+JWT used as fallback).
+
+| Flow | Result | Notes |
+|---|---|---|
+| B-3 Auctions full round-trip | ✅ PASS | `place_bid` RPC, `current_bid` update, cancel guard confirmed |
+| B-4 Trade proposal → accept | ✅ PASS | Both squads updated; `status='accepted'` |
+| F-1 Scoring round-trip (Path A) | ✅ PASS | `calculate-scores` v21; 15 player stats scored; `fantasy_points` written |
+| E-2 Group allocation + cup_phase | ✅ PASS | `cup_phase='group_stage'`; 4 `draft_allocations`; Knockout Draft card conditions met |
+
+Root cause documented: F-1 "0 squads" in session 69 was seeding issue — stats without `forza_match_id` trigger Path B (reads `match_events`). Appendix F in playbook updated.
+
+---
+
+## ✅ Session 69 — Full E2E Playbook Run + 3 Bug Fixes (PRs #292–294, 2026-06-02)
+
+**Goal**: Run the complete `E2E_TEST_PLAYBOOK.md` v2.0 for the first time across all 4 game paths (Classic×League, Classic×Cup, Draft×League, Draft×Cup). Full results in `docs/testing/TEST_RESULTS.md`.
+
+### Bugs found and fixed in same session:
+
+| # | Bug | PR | Fix |
+|---|---|---|---|
+| ~~**BUG-VOID**~~ | `void_bet()` sets `status='voided'` but `bet_instances_status_check` only allows `cancelled` — RPC always silently fails | #292 | Changed to `'cancelled'` |
+| ~~**BUG-CLASSIC-TRANSFER**~~ | `process-transfer` applies Draft player-uniqueness check to Classic leagues — any player in another manager's squad blocked | #293 | Skip uniqueness check when `league.format = 'classic'` |
+| ~~**BUG-ADMIN-WINDOW**~~ | Admin Transfer Window always shows DEADLINE-CONTROLLED because `isDeadlineControlled = !!tournamentId` (always true for all leagues) | #294 | Use `windowType` from `get_transfer_window_status` hook — 'matchday' → deadline-controlled, anything else → manual |
+
+### New open bug (P2):
+
+**[BUG] Market shows wrong tournament players on first load (race condition)**  
+`MarketScreen.jsx` calls `fetchMarketParams()` twice on mount: once with `tournamentId=null` (fetches all ~5000 players from all tournaments, UCL players appear first due to DESC null-sort) and once after `resolveLeagueTournament` async completes (correct tournament filter). The initial fetch overwrites the correct data briefly. Within ~3s the correct EPL/WC players load, but the flash of wrong players can confuse users and blocks automated testing observation.  
+- **Root cause**: `useEffect([activeLeague, tournamentId])` fires with null tournamentId before the async league lookup completes  
+- **Fix**: Only fire `fetchMarketParams` once `tournamentId` is non-null, or set initial state from URL params before first render  
+- **Priority**: P2 — cosmetic, resolves in ~3s, no data integrity issue  
+- **Effort**: ~1h
+
+**Next migration**: `113_`  
+**Build/lint**: `npm run build` ✅ clean · `npm run lint` ✅ warnings only (pre-existing)
 
 ---
 
