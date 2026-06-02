@@ -51,17 +51,25 @@ export default function DraftRecoveryScreen() {
 
         // Load available players — RPC respects cup pool restriction.
         // Falls back to full pool for non-cup leagues (no cup_active_clubs rows).
-        const { data: pData } = await supabase
-          .rpc('get_cup_available_players', { p_league_id: leagueId });
+        const [{ data: pData }, { data: leagueRow }] = await Promise.all([
+          supabase.rpc('get_cup_available_players', { p_league_id: leagueId }),
+          supabase.from('leagues').select('cup_phase').eq('id', leagueId).maybeSingle(),
+        ]);
         const players = normalisePlayers(pData ?? []);
         setAllPlayers(players);
 
-        // Load this manager's allocation
+        // Derive the draft phase from cup_phase:
+        // pre_elimination or beyond → knockout recovery; otherwise → group recovery
+        const KO_PHASES = ['pre_elimination', 'round_of_16', 'quarter_final', 'semi_final', 'final'];
+        const derivedPhase = KO_PHASES.includes(leagueRow?.cup_phase) ? 'knockout' : 'group';
+
+        // Load this manager's allocation for the current phase
         const { data: alloc } = await supabase
           .from('draft_allocations')
           .select('*')
           .eq('league_id', leagueId)
           .eq('user_id', user?.id)
+          .eq('phase', derivedPhase)
           .maybeSingle();
 
         setAllocation(alloc ?? null);
@@ -186,13 +194,14 @@ export default function DraftRecoveryScreen() {
 
       const { error: err } = await supabase
         .from('draft_allocations')
-        .upsert({
-          league_id:         leagueId,
-          user_id:           user?.id,
+        .update({
           allocated_players: newPlayerIds,
           unresolved_slots:  Math.max(0, SQUAD_SIZE - newPlayerIds.length),
           allocated_at:      new Date().toISOString(),
-        }, { onConflict: 'league_id,user_id' });
+        })
+        .eq('league_id', leagueId)
+        .eq('user_id', user?.id)
+        .eq('phase', allocation?.phase ?? 'group');
 
       if (err) {
         // Rollback optimistic update

@@ -20,7 +20,14 @@ const supabase = createClient(SUPABASE_URL, SERVICE_KEY);
 const DEFAULT_SQUAD_POS_CAPS = { GK: 2, DEF: 5, MID: 5, FWD: 3 };
 const DEFAULT_SQUAD_SIZE = 15;
 
+const CORS = {
+  'Access-Control-Allow-Origin':  '*',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization, apikey, x-client-info',
+};
+
 Deno.serve(async (req) => {
+  if (req.method === 'OPTIONS') return new Response(null, { status: 204, headers: CORS });
   try {
     const body = await req.json().catch(() => ({}));
     const { league_id } = body;
@@ -286,7 +293,7 @@ async function runLottery(leagueId, phase = 'group') {
 
   // 6c. Update cup_phase on the league to signal allocation is done.
   //     If phase='knockout', mark elimination stage; otherwise group_stage.
-  const newCupPhase = phase === 'knockout' ? 'elimination' : 'group_stage';
+  const newCupPhase = phase === 'knockout' ? 'pre_elimination' : 'group_stage';
   await supabase.from('leagues').update({ cup_phase: newCupPhase }).eq('id', leagueId);
 
   // 6d. For group-phase cup leagues, auto-seed cup clubs from the allocated squads.
@@ -489,6 +496,6 @@ function normalisePosition(pos) {
 function respond(status, body) {
   return new Response(JSON.stringify(body), {
     status,
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', ...CORS },
   });
 }

@@ -143,6 +143,19 @@ export function useCommissioner(leagueId, tournamentId) {
     });
   }), [commAction, leagueId]);
 
+  // ── Run knockout draft allocation ─────────────────────────────────────────────
+  const triggerKnockoutAllocation = useCallback(() => commAction(async () => {
+    const { data, error } = await invokeEdgeFunction('run-draft-lottery', { league_id: leagueId, phase: 'knockout' });
+    if (error) throw new Error(error.message);
+    const managed = data?.managersProcessed ?? 0;
+    const contested = data?.contestedPlayers ?? 0;
+    const incomplete = data?.incomplete?.length ?? 0;
+    setCommMsg({
+      type: 'ok',
+      text: `Knockout allocation complete — ${managed} squad${managed !== 1 ? 's' : ''} allocated, ${contested} conflict${contested !== 1 ? 's' : ''} resolved${incomplete > 0 ? `, ${incomplete} incomplete` : ''}.`,
+    });
+  }), [commAction, leagueId]);
+
   // ── Fetch open/unresolved bets — declared first so createBetDirect can use it ──
   const fetchOpenBets = useCallback(async () => {
     if (!leagueId) return;
@@ -255,7 +268,7 @@ export function useCommissioner(leagueId, tournamentId) {
     windowClosesAt, setWindowClosesAt,
     windowTransfers, setWindowTransfers,
     openTransferWindow, closeTransferWindow,
-    draftDeadline, setDraftDeadline, setLeagueDraftDeadline, triggerDraftAllocation,
+    draftDeadline, setDraftDeadline, setLeagueDraftDeadline, triggerDraftAllocation, triggerKnockoutAllocation,
     scoreFixtureId, setScoreFixtureId, triggerScores, triggerScoresLatestRound,
     createBetFromData,
     openBets, resolutionBetsLoading,

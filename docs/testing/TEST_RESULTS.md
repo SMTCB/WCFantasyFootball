@@ -2,6 +2,121 @@
 
 ---
 
+## Session 72 — F-2 UI, E-4 Knockout Draft, D-3 Squad Recovery (2026-06-02)
+
+**Date**: 2026-06-02  
+**Tester**: Claude Code (Playwright MCP)  
+**Playbook**: `E2E_TEST_PLAYBOOK.md` v2.0  
+**Scope**: F-2 (points breakdown in squad screen), E-4 (knockout draft allocation), D-3 (squad recovery screen)
+
+---
+
+### F-2: Points Breakdown View
+
+**League**: DRAFT_EPL_E2E · TestComm · `/squad?leagueId=daf7e001...`
+
+**Bug found and fixed during test**: `SquadScreen.jsx:370` — `tournamentId` was not in the calling `useEffect`'s dependency array. When `tournamentId` resolved async (after `fetchSquad` completed), the fixture fallback query never fired. All players showed 0 pts even when `player_match_stats` rows existed.
+
+**Fix**: Added `tournamentId` to the useEffect deps at `SquadScreen.jsx:370`. Squad fetches with fallback now when season is over and squad's `matchday_id` format (`426-r38`) doesn't match fixtures table format (`epl-2526-r38`).
+
+| Sub-flow | Result | Evidence |
+|---|---|---|
+| Non-zero points in player list (after bug fix) | ✅ PASS | Pécsi=5, Leno=4, Lindelöf=4, Burn=2 — match F-1 scoring from session 70 |
+| Click player → scoring breakdown panel | ⚠️ PARTIAL | Action panel shows CAPTAIN/SUB/SELL only. Per-stat breakdown (goals/assists/clean sheet) not implemented. `ScoringBreakdown.jsx` listed in CLAUDE.md doesn't exist in codebase. |
+
+**Pass status**: PARTIAL — per-player points visible ✓; click-to-detail breakdown not implemented.
+
+---
+
+### E-4: Knockout Draft Allocation
+
+**League**: DRAFT_WC_E2E (`daf7e002`) · 4 managers · Phase='knockout'
+
+**Bugs found and fixed during test**:
+
+| Bug | Fix |
+|---|---|
+| `run-draft-lottery` had no CORS handler — OPTIONS preflight blocked from localhost | Added `CORS` headers + OPTIONS route to function (deployed v17→v18→v19) |
+| `run-draft-lottery` used `'elimination'` (invalid enum) instead of `'pre_elimination'` | Fixed in function + `CommissionerPanel.jsx:1258` + `CommissionerPanel.jsx:2178` |
+| Knockout allocation in UI used `supabase.functions.invoke` (CORS-blocked) | Replaced with `triggerKnockoutAllocation` via `invokeEdgeFunction` in `useCommissioner.js` |
+| `draft_submissions_league_user_key` constraint not dropped by migration 104 | Migration 116: `DROP CONSTRAINT draft_submissions_league_user_key` |
+
+**Pre-conditions:**
+- 4 distinct 30-player knockout wishlists seeded (non-overlapping splits) — 0 contested players
+- `knockout_draft_deadline` set to 1 min past
+- `cup_phase = 'group_stage'` pre-allocation
+
+| Sub-flow | Result | Evidence |
+|---|---|---|
+| E-4a: 4 knockout submissions seeded (phase='knockout', status='pending') | ✅ SEEDED | DB: 4 rows × 30 players |
+| E-4b: KNOCKOUT DRAFT card visible in admin (cup_phase='group_stage') | ✅ PASS | Button shows "KNOCKOUT DRAFT● DEADLINE SET+" |
+| E-4b: RUN KNOCKOUT ALLOCATION button enabled (deadline past) | ✅ PASS | `[ENABLED]` in evaluation |
+| E-4b: Click → confirm dialog → allocation runs | ✅ PASS | "Knockout draft allocation complete." message visible |
+| E-4b: `draft_allocations` written with phase='knockout' | ✅ PASS | 4 rows; 7/8/11/11 players each; 8/7/4/4 unresolved slots |
+| E-4b: `cup_phase` → `pre_elimination` | ✅ PASS | DB confirmed; page displays "CUP PHASE: PRE ELIMINATION" |
+| E-4b: KNOCKOUT DRAFT card → **ALLOCATED** | ✅ PASS | Button shows "KNOCKOUT DRAFT● ALLOCATED+"; expanded: "✓ Knockout squads allocated" |
+
+**Screenshot**: `e4-knockout-allocated.png`
+
+**Pass**: Knockout allocation runs end-to-end; `cup_phase` transitions; admin card flips to ALLOCATED. ✓
+
+---
+
+### D-3: Squad Recovery Screen
+
+**League**: DRAFT_WC_E2E (`daf7e002`) · TestComm (8 unresolved knockout slots) · `/league/:id/draft/recover`
+
+**Bugs found and fixed during test**:
+
+| Bug | Fix |
+|---|---|
+| `DraftRecoveryScreen` upsert used `onConflict: 'league_id,user_id'` (dropped constraint) | Changed to `update()` filtered by `(league_id, user_id, phase)` |
+| `DraftRecoveryScreen` `.maybeSingle()` fetch had no phase filter — when multiple phase rows exist, returned null | Added `derivedPhase` derived from `cup_phase`, filtered allocation fetch by phase |
+| `DraftScreen` 3 upserts on `draft_submissions` targeted dropped `(league_id, user_id)` constraint | Added `phase` state derived from `cup_phase`; all 3 upserts now include `phase` with `onConflict: 'league_id,user_id,phase'` |
+| `draft_allocations` had no UPDATE RLS policy — client-side writes returned 403 | Migration 117: `CREATE POLICY "Users can update their own draft allocation"` |
+
+| Sub-flow | Result | Evidence |
+|---|---|---|
+| Recovery screen loads: "DRAFT RECOVERY / FILL YOUR GAPS" | ✅ PASS | URL `/draft/recover` renders without error |
+| Slot counter correct for knockout recovery | ✅ PASS | 8 slots remaining (15 − 7 allocated) after phase fix |
+| Pool pressure banner visible | ✅ PASS | "🟢 Pool pressure 4% — strict no-repeat · 1692 available" |
+| Player pool shows real WC players with position filter | ✅ PASS | FWD Matheus Cunha £9.5M, Nico González £9.4M, etc. |
+| FCFS pick: click player → removed from pool, slot count decrements | ✅ PASS | Cunha picked: pool removed, slots 15→14 (before phase fix); 8 slots confirmed after fix |
+| DB update: `allocated_players` updated in correct phase row | ✅ PASS | `draft_allocations` WHERE phase='knockout' has Cunha |
+
+**Screenshot**: `d3-recovery-screen.png`
+
+**Pass**: Recovery screen loads, pool displayed, FCFS pick works, DB updates. ✓
+
+---
+
+### Bugs Fixed (Total Session 72)
+
+8 bugs fixed across this session:
+
+| # | Severity | Component | Description | Fix |
+|---|---|---|---|---|
+| 1 | BUG | `SquadScreen.jsx:370` | `tournamentId` missing from useEffect deps → points always 0 in off-season | Add `tournamentId` to deps array |
+| 2 | BUG | `run-draft-lottery` | No CORS handler → direct browser calls blocked | Add OPTIONS route + CORS headers in v19 |
+| 3 | BUG | `run-draft-lottery` + `CommissionerPanel.jsx` | Invalid enum `'elimination'` → `cup_phase` update silently fails | Change to `'pre_elimination'` (valid enum value) |
+| 4 | BUG | `CommissionerPanel.jsx:2178` | Mobile card used `'elimination'` same bug | Fixed `mobKnockoutAllocationDone` check |
+| 5 | BUG | `useCommissioner.js` | Knockout allocation invoked via `supabase.functions.invoke` → CORS blocked | New `triggerKnockoutAllocation` using `invokeEdgeFunction` |
+| 6 | DB | Migration 116 | Stale `(league_id, user_id)` unique constraint on `draft_submissions` blocked multi-phase inserts | `DROP CONSTRAINT draft_submissions_league_user_key` |
+| 7 | BUG | `DraftRecoveryScreen.jsx` | Upsert targeted dropped constraint + no phase filter → picks went to wrong phase | `update()` with `phase` filter; phase derived from `cup_phase` |
+| 8 | DB | Migration 117 | No UPDATE RLS on `draft_allocations` → 403 on client picks | `CREATE POLICY "Users can update their own draft allocation"` |
+| 9 | BUG | `DraftScreen.jsx` | 3 upserts on `draft_submissions` used old constraint; no phase state | Added `phase` state + all upserts phase-aware |
+
+---
+
+### Overall Result (Session 72)
+
+**Flows tested**: F-2, E-4, D-3  
+**PASS**: 2 (E-4, D-3)  
+**PARTIAL**: 1 (F-2: points display ✓, detail breakdown not implemented)  
+**NEW BUGS FIXED**: 9
+
+---
+
 ## Session 71 — D-4a/D-4b: Draft FCFS + takenByOther (2026-06-02)
 
 **Date**: 2026-06-02  
