@@ -1,6 +1,6 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-06-02 (session 75 — friendly test league pipeline; 2 new P1 bugs: ingest-match-events BOOT_ERROR + calculate-scores auth mismatch; next migration 120_)  
+**Last Updated**: 2026-06-03 (session 75 — BUG-INGEST-01 + BUG-CALC-SCORES-01 fixed, PR #306; live scoring pipeline restored; next migration 120_)  
 **E2E Test Suite**: `platform.spec.js` (36 tests × 2 browsers) passing in CI ✅ — completes in ~3 min  
 **Full Playbook Run**: `E2E_TEST_PLAYBOOK.md` v2.0 — all flows confirmed (D-4a/b, E-4, D-3 ✅; F-2 PASS — form strip satisfies per-stat breakdown criterion)  
 **🟢 LAUNCH READY**: No critical (P0/P1) bugs open. All game mechanics functional. WC kick-off 2026-06-11.  
@@ -9,9 +9,9 @@
 
 ---
 
-## 🔴 Session 75 — Two Open P1 Bugs (2026-06-02)
+## ✅ Session 75 — BUG-INGEST-01 + BUG-CALC-SCORES-01 Fixed (2026-06-03, PR #306)
 
-### [BUG] BUG-INGEST-01 — `ingest-match-events` BOOT_ERROR (503) on all external calls
+### ✅ [BUG] BUG-INGEST-01 — `ingest-match-events` BOOT_ERROR — FIXED PR #306
 
 **Priority**: P1 — Live match event pipeline is silently broken for non-cron callers  
 **Effort**: ~2h (diagnose cold-start failure, likely deploy fix)
@@ -52,7 +52,7 @@ SELECT status_code, content FROM net._http_response WHERE id = <req_id>;
 
 ---
 
-### [BUG] BUG-CALC-SCORES-01 — `calculate-scores` returns 401 for valid service-role JWT
+### ✅ [BUG] BUG-CALC-SCORES-01 — `calculate-scores` 401 — FIXED PR #306
 
 **Priority**: P1 — Post-match scoring cron may be silently failing if JWT has rotated  
 **Effort**: ~1h (identify key mismatch, update cron or function)
