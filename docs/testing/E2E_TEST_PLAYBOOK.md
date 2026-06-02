@@ -12,11 +12,16 @@
 ### RULE 1 — Use Real API Data
 All player names, club names, fixture details, and scores must come from the live `players` and `fixtures` tables (populated by the Forza Football API). Do not invent or hard-code player names in test steps. If a flow asks you to "pick a FWD", query the DB or browse the market for an actual FWD from the tournament.
 
+**If a competition hasn't started yet** (e.g. WC 2026 before June 11): use real data from a completed competition for flows that require match stats. EPL 2025-26 ended May 24 with all 38 rounds fully scored — use those fixtures and stats. The scoring pipeline is competition-agnostic.
+
 ### RULE 2 — Price Check Before Any Transfer or Auction
-Player prices are **not** provided by the Forza API. If any player in the test tournament has `price IS NULL`, budget enforcement is silently bypassed — all buys succeed regardless of cost, producing false confidence. **Run the price check query (Appendix D) before any flow in PART B, C, D, or E that involves buying, selling, or bidding.** If prices are missing, seed them with Appendix D's random query before proceeding.
+Player prices are **not** provided by the Forza API. If any player in the test tournament has `price IS NULL`, budget enforcement is silently bypassed — all buys succeed regardless of cost, producing false confidence. **Run the price check query (Appendix D) before any flow in PART B, C, D, or E that involves buying, selling, or bidding.** If prices are missing, seed them using the **deterministic tier values** in Appendix D (never random — random prices cannot be reproduced and make budget test results meaningless).
 
 ### RULE 3 — Minimum 4 Participants Per League
 Each test league must have all 4 test accounts as members before testing begins. Standings, trades, auctions, chat mentions, and draft conflicts all require multiple managers. The setup SQL in Appendix B creates all 4 leagues with all 4 members.
+
+### RULE 4 — Test Through the UI
+Every assertion must be observable in the browser. SQL queries are used only to **verify** what the UI has already done — never as a substitute for a UI action. If a flow shows "X is correct in DB", that only matters if you first triggered it by clicking in the app. Flows that pass purely in SQL and fail in the UI are not passing.
 
 ---
 
@@ -91,15 +96,34 @@ GROUP BY tournament_id;
 
 **Pass condition**: `no_price = 0` for every tournament row.
 
-**If prices are missing** — run this, then re-check:
+**If prices are missing** — use the deterministic tier values below (same logic as migration 94), then re-check:
 ```sql
--- Seed £4.0–£7.0 randomly for any unpriced player
+-- Seed deterministic tier prices — never use RANDOM() (random prices give false confidence
+-- in budget tests and cannot be reproduced across sessions).
+-- WC 2026 (tournament 429): position-based tiers aligned with migration 94 valuations
 UPDATE players
-SET price = ROUND((RANDOM() * 3 + 4)::NUMERIC, 1)
-WHERE price IS NULL AND tournament_id IN ('426', '429');
+SET price = CASE position
+  WHEN 'GK'  THEN 6.5
+  WHEN 'DEF' THEN 7.0
+  WHEN 'MID' THEN 7.5
+  WHEN 'FWD' THEN 8.0
+  ELSE 6.0
+END
+WHERE price IS NULL AND tournament_id = '429';
+
+-- EPL (tournament 426): slightly lower tier (established market valuations)
+UPDATE players
+SET price = CASE position
+  WHEN 'GK'  THEN 5.5
+  WHEN 'DEF' THEN 6.0
+  WHEN 'MID' THEN 6.5
+  WHEN 'FWD' THEN 7.0
+  ELSE 5.5
+END
+WHERE price IS NULL AND tournament_id = '426';
 ```
 
-**Why this exists**: In session 50 (2026-05-27), all WC transfer tests appeared to pass with 1,480 null-priced players. Budget enforcement was never triggered. Null prices cause `process-transfer` to default to £0, bypassing all budget checks. See TESTING_STRATEGY.md §Principle 2.
+**Why deterministic values matter**: In session 50 (2026-05-27), all WC transfer tests appeared to pass with 1,480 null-priced players — budget enforcement was never triggered. Random prices (the original fallback) were equally dangerous: they change on every seed, making budget-exhaustion tests unreliable across sessions. Fixed tier values give consistent, reproducible budget scenarios. See TESTING_STRATEGY.md §Principle 2.
 
 ---
 
@@ -1102,7 +1126,23 @@ WHERE league_id = 'daf7e002-0000-4000-a000-000000000002'
 
 Run against `DRAFT_EPL_E2E` (`daf7e001-0000-4000-a000-000000000001`). Scoring logic is identical across modes — only the league matters for squad scoping.
 
-**Pre-condition**: At least one EPL fixture must have `status = 'finished'` and have `player_match_stats` rows. Run Appendix F SQL to seed a finished fixture and stats if no real finished fixture exists yet.
+**Pre-condition**: At least one EPL fixture must have `status = 'finished'` with real `player_match_stats` rows (i.e. `forza_match_id IS NOT NULL`). **Use real API data first** — the EPL season ended 2026-05-24, so all 38 rounds have real stats from the Forza Football API. Run the check below; only fall back to Appendix F if the DB genuinely has no stats.
+
+```sql
+-- Check for real stats (forza_match_id confirms data came from the Forza API, not manual seed)
+SELECT pms.fixture_id, f.matchday_id, COUNT(*) AS stat_rows
+FROM player_match_stats pms
+JOIN fixtures f ON f.id = pms.fixture_id
+WHERE f.tournament_id = '426'
+  AND pms.forza_match_id IS NOT NULL
+GROUP BY pms.fixture_id, f.matchday_id
+ORDER BY f.kickoff_at DESC
+LIMIT 5;
+-- Expect rows — use the top fixture_id for F-1/F-3 tests.
+-- Known good fixture (confirmed session 70): f-1218672863 (Crystal Palace 1-2 Arsenal, GW38)
+```
+
+**Only run Appendix F** if the query above returns 0 rows.
 
 ---
 
@@ -1147,11 +1187,13 @@ ORDER BY s.user_id, fp.matchday_id;
 
 **URL**: `/league/daf7e001-0000-4000-a000-000000000001?tab=admin`
 
+**Fixture to use**: `f-1218672863` (Crystal Palace 1-2 Arsenal, GW38) — confirmed to have real Forza API stats. Use this directly rather than querying the DB for an ID.
+
 1. Admin tab → SCORE RECALCULATION card.
-2. Enter the ID of the finished fixture in the FIXTURE ID input (get from DB via Appendix F).
+2. Enter `f-1218672863` in the FIXTURE ID input (or the top fixture from the PART F pre-condition check if you used a different one).
 3. Click **RECALCULATE ↯**.
-4. **Assert**: success message for that specific fixture.
-5. Navigate to BOARD → points unchanged (idempotent re-run produces same result).
+4. **Assert**: success message showing that fixture ID and confirming squads were scored.
+5. Navigate to BOARD → **Assert**: points unchanged from F-1 (idempotent re-run produces same result).
 
 **Pass**: Fixture-specific recalculation is idempotent and scoped correctly. ✓
 
@@ -1586,75 +1628,47 @@ WHERE league_id = 'daf7e002-0000-4000-a000-000000000002'
 
 ---
 
-## Appendix F — Seed Finished Fixture + Stats for Scoring Tests
+## Appendix F — Stats Pre-condition for Scoring Tests
 
-> ⚠️ **Critical: set `forza_match_id` when seeding manually.**
+> **Use real data first.** The EPL season ended 2026-05-24. All fixtures are `finished` and the Forza Football API populated real `player_match_stats` rows with real `forza_match_id` values. Always verify real data exists before considering any seeding.
 >
-> `calculate-scores` has two paths: Path A (reads from `player_match_stats` where `forza_match_id IS NOT NULL`) and Path B (reads from `match_events`). When stats are seeded manually (no real Forza match data), Path B fires by default — but `match_events` will be empty, returning "No events yet / 0 squads / 0 stats".
->
-> **Solution**: either seed `match_events` OR set `forza_match_id` on the inserted rows. The SQL below sets a fake `forza_match_id` to force Path A.
+> `calculate-scores` has two paths: **Path A** reads from `player_match_stats WHERE forza_match_id IS NOT NULL` (real API data). **Path B** reads from `match_events` (live ingest). Only Path A is used for scoring tests. A row with `forza_match_id IS NULL` silently triggers Path B → empty `match_events` → "No events yet / 0 squads scored."
+
+### Step 1 — Verify real stats exist (always run first)
 
 ```sql
--- Only needed if no real finished EPL fixture exists yet.
-
--- 1. Get a finished fixture to use (EPL season ended 2026-05-24 — all fixtures are 'finished')
-SELECT id, home_team, away_team FROM fixtures
-WHERE tournament_id = '426' AND status = 'finished'
-ORDER BY kickoff_at DESC LIMIT 5;
--- Note the fixture ID (e.g. 'f-1218672863') and team names
-
--- 2. (Skip if already finished) Mark a scheduled fixture as finished
--- UPDATE fixtures
--- SET status = 'finished', home_score = 2, away_score = 1
--- WHERE id = '<fixture_id>';
-
--- 3. Seed match stats — MUST include forza_match_id to trigger Path A scoring
-INSERT INTO player_match_stats (
-  fixture_id, player_id,
-  minutes_played, goals, assists, clean_sheet,
-  own_goals, yellow_cards, red_cards,
-  penalty_saved, penalty_missed,
-  fantasy_points, breakdown,
-  forza_match_id          -- ← required: triggers Path A in calculate-scores
-)
-SELECT
-  '<fixture_id>',
-  p.id,
-  90,
-  CASE p.position WHEN 'FWD' THEN 1 ELSE 0 END,
-  CASE p.position WHEN 'MID' THEN 1 ELSE 0 END,
-  CASE p.position WHEN 'GK'  THEN true
-                  WHEN 'DEF' THEN true ELSE false END,
-  0, 0, 0, 0, 0,
-  CASE p.position
-    WHEN 'GK'  THEN 6
-    WHEN 'DEF' THEN 6
-    WHEN 'MID' THEN 5
-    WHEN 'FWD' THEN 5
-    ELSE 1
-  END,
-  '{}'::jsonb,
-  'e2e-test-' || '<fixture_id>'   -- fake forza_match_id to trigger Path A
-FROM players p
-WHERE p.id = ANY(
-  ARRAY(SELECT unnest(players) FROM squads
-        WHERE league_id = 'daf7e001-0000-4000-a000-000000000001'
-          AND user_id = 'aaaae001-0000-4000-a000-000000000001'
-        ORDER BY created_at DESC LIMIT 1)
-)
-AND p.tournament_id = '426'
-ON CONFLICT (fixture_id, player_id) DO UPDATE
-  SET fantasy_points = EXCLUDED.fantasy_points,
-      forza_match_id = EXCLUDED.forza_match_id,
-      updated_at = NOW();
-
--- 4. Verify stats are seeded with forza_match_id set
-SELECT COUNT(*) AS with_forza_id, fixture_id
-FROM player_match_stats
-WHERE fixture_id = '<fixture_id>' AND forza_match_id IS NOT NULL
-GROUP BY fixture_id;
--- Must return > 0 rows or scoring will return "No events yet"
+-- Check for real Forza API stats in the scoring test fixture
+SELECT pms.fixture_id, f.home_team, f.away_team, f.matchday_id,
+       COUNT(*) AS player_rows,
+       COUNT(*) FILTER (WHERE pms.forza_match_id IS NOT NULL) AS with_forza_id
+FROM player_match_stats pms
+JOIN fixtures f ON f.id = pms.fixture_id
+WHERE pms.fixture_id = 'f-1218672863'   -- Crystal Palace 1-2 Arsenal, GW38
+GROUP BY pms.fixture_id, f.home_team, f.away_team, f.matchday_id;
+-- Expect: player_rows > 0 AND with_forza_id = player_rows (all rows have real forza_match_id)
 ```
+
+**If the query returns the expected result**: no seeding needed — proceed directly to F-1.
+
+**If the query returns 0 rows** (stats were deleted or DB was reset): see Step 2 below.
+
+### Step 2 — Last-resort fix: set forza_match_id on existing rows
+
+Before inserting fake data, first check if rows exist but with `forza_match_id = NULL` (manual seed without the flag — happens when tests seed stats without following the instructions):
+
+```sql
+-- Fix existing rows that are missing forza_match_id
+UPDATE player_match_stats
+SET forza_match_id = 'forza-' || fixture_id
+WHERE fixture_id = 'f-1218672863'
+  AND forza_match_id IS NULL;
+```
+
+### Step 3 — Only if Steps 1–2 both fail: re-trigger scoring from a REAL finished fixture via the admin UI
+
+If `player_match_stats` is genuinely empty for all EPL fixtures, the correct fix is to re-sync from the Forza API — NOT to insert fake stats. From the admin panel of any EPL league, click **SCORE LATEST ROUND ↯**. This calls `calculate-scores` which will pull real data from Forza.
+
+> **Do not insert synthetic stats.** Fake stats (hardcoded goals/assists per position) give false confidence in tests — scoring logic, BPS rankings, and captain multipliers all behave differently with real data. If the Forza API is unavailable and you must seed, use data from a real past EPL match (copy actual stats from another fixture that has `forza_match_id` set) rather than inventing values.
 
 ---
 
@@ -1758,4 +1772,4 @@ ORDER BY s.user_id, fp.matchday_id;
 
 ---
 
-Last Updated: **2026-06-02** (session 72 final: A-2 cross-client steps, B-7d pre-condition + React fiber note, D-3 completion path + WC target, E-3 full step-by-step + player queries, Appendix E-3 added)
+Last Updated: **2026-06-02** (guiding principles added as RULE 1-4; price seeding changed from RANDOM to deterministic tiers; Appendix F rewritten to use real EPL stats first, synthetic seeding demoted to last resort; F-3 hardcodes known-good fixture ID)
