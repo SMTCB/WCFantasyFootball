@@ -1281,6 +1281,7 @@ export default function LeagueScreen() {
              commissioner={commissioner}
              leagueId={activeLeague?.league_id}
              tournamentId={activeLeague?.leagues?.tournament_id ?? commissioner?.tournamentId}
+             windowType={transferWindow.windowType}
              replayCommissionerTour={replayCommissionerTour}
              memberCount={members.length}
              leagueName={activeLeague?.leagues?.name || activeLeague?.name || 'LEAGUE'}

@@ -1227,7 +1227,7 @@ function LifecycleOp({ title, status, statusTone = 'var(--mute)', sub, when, chi
 // ─────────────────────────────────────────────────────────────────────────────
 // Lifecycle operations (Zone C)
 // ─────────────────────────────────────────────────────────────────────────────
-function LifecycleOps({ commissioner, leagueId, tournamentId, league = null, onHelp }) {
+function LifecycleOps({ commissioner, leagueId, tournamentId, windowType = null, league = null, onHelp }) {
   const {
     commLoading, commAction, setCommMsg,
     windowOpensAt, setWindowOpensAt,
@@ -1239,10 +1239,11 @@ function LifecycleOps({ commissioner, leagueId, tournamentId, league = null, onH
     scoreFixtureId, setScoreFixtureId, triggerScores, triggerScoresLatestRound,
   } = commissioner;
 
-  // WC/tournament leagues enforce transfers via matchday_deadlines only.
-  // The transfer_windows table is ignored by process-transfer for these leagues,
-  // so OPEN/CLOSE buttons have no enforcement effect and would mislead the commissioner.
-  const isDeadlineControlled = !!tournamentId;
+  // Deadline-controlled = window_type is 'matchday' (WC/cup leagues using matchday_deadlines).
+  // Manual-controlled = window from transfer_windows table (EPL/season leagues).
+  // windowType comes from get_transfer_window_status via useTransferWindow in LeagueScreen;
+  // fall back to tournamentId heuristic only while the status is still loading (windowType null).
+  const isDeadlineControlled = windowType !== null ? windowType === 'matchday' : !!tournamentId;
 
   // AUDIT-58-A4: precondition guards for one-way lifecycle operations.
   const now = new Date();
@@ -2062,7 +2063,7 @@ function CommMsg({ msg, onDismiss }) {
 // ─────────────────────────────────────────────────────────────────────────────
 // Root export
 // ─────────────────────────────────────────────────────────────────────────────
-export default function CommissionerPanel({ commissioner, leagueId, tournamentId, memberCount = 0, leagueName = 'LEAGUE', league = null }) {
+export default function CommissionerPanel({ commissioner, leagueId, tournamentId, windowType = null, memberCount = 0, leagueName = 'LEAGUE', league = null }) {
   const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' && window.innerWidth < 1024);
   const [helpModal, setHelpModal] = useState(null); // null | 'commissioner' | 'lifecycle' | 'bets'
   const [mobKnockoutDeadline, setMobKnockoutDeadline] = useState('');
@@ -2104,10 +2105,11 @@ export default function CommissionerPanel({ commissioner, leagueId, tournamentId
     const mobAllocationDisabled = commLoading || !mobDeadlinePassed || mobAllocationDone;
 
     // AUDIT-58-A3: derive live status labels for mobile cards (mirrors desktop LifecycleOps)
-    const mobTwStatus = tournamentId             ? 'DEADLINE-CONTROLLED'
-                      : league?.transfers_open   ? 'OPEN' : 'CLOSED';
-    const mobTwTone   = tournamentId             ? 'var(--warn)'
-                      : league?.transfers_open   ? 'var(--positive)' : 'var(--danger)';
+    const mobIsDeadlineControlled = windowType !== null ? windowType === 'matchday' : !!tournamentId;
+    const mobTwStatus = mobIsDeadlineControlled    ? 'DEADLINE-CONTROLLED'
+                      : league?.transfers_open     ? 'OPEN' : 'CLOSED';
+    const mobTwTone   = mobIsDeadlineControlled    ? 'var(--warn)'
+                      : league?.transfers_open     ? 'var(--positive)' : 'var(--danger)';
 
     const mobDraftStatus = !league?.draft_deadline ? 'NOT SET'
                          : mobAllocationDone       ? 'ALLOCATED'
@@ -2294,6 +2296,7 @@ export default function CommissionerPanel({ commissioner, leagueId, tournamentId
         commissioner={commissioner}
         leagueId={leagueId}
         tournamentId={tournamentId}
+        windowType={windowType}
         league={league}
         onHelp={() => setHelpModal('lifecycle')}
       />
