@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef } from 'react';
+import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { normalizeIntelligence } from '../lib/intelligence';
@@ -17,6 +17,7 @@ import StatusDot       from '../components/StatusDot';
 import { POS_CONFIG, POS_FILTER_ORDER } from '../lib/formations';
 import { usePlayerStats } from '../hooks/usePlayerStats';
 import FormStrip from '../components/FormStrip';
+import PlayerStatsPanel from '../components/PlayerStatsPanel';
 
 const COUNTRY_LIMIT = 3;
 
@@ -76,6 +77,89 @@ export default function MarketScreen() {
 
   // Form history — last 5 GW points per player for this tournament
   const { statsMap } = usePlayerStats(tournamentId);
+
+  // Expandable stats panel state
+  const [expandedPlayerId, setExpandedPlayerId] = useState(null);
+  const [playerDetails,    setPlayerDetails]    = useState({});
+  const loadedRef = useRef(new Set());
+
+  const togglePanel = useCallback(async (playerId) => {
+    setExpandedPlayerId(prev => prev === playerId ? null : playerId);
+    if (loadedRef.current.has(playerId)) return;
+    loadedRef.current.add(playerId);
+
+    try {
+      const { data: stats } = await supabase
+        .from('player_match_stats')
+        .select('fantasy_points, fixture_id, goals, assists, clean_sheet, minutes_played')
+        .eq('player_id', playerId)
+        .limit(200);
+
+      if (!stats?.length) {
+        setPlayerDetails(prev => ({ ...prev, [playerId]: { rounds: [], season: { apps: 0, goals: 0, assists: 0, pts: 0, avgPts: '0.0' } } }));
+        return;
+      }
+
+      const fixtureIds = [...new Set(stats.map(s => s.fixture_id))];
+      const { data: fixtures } = await supabase
+        .from('fixtures')
+        .select('id, matchday_id, home_team, away_team, kickoff_at')
+        .in('id', fixtureIds)
+        .eq('status', 'finished')
+        .order('kickoff_at', { ascending: false });
+
+      const fixtureMap = {};
+      (fixtures ?? []).forEach(f => { fixtureMap[f.id] = f; });
+
+      // Aggregate per matchday (single fixture per player per round in practice)
+      const byMD = {};
+      for (const s of stats) {
+        const f = fixtureMap[s.fixture_id];
+        if (!f) continue;
+        const md = f.matchday_id;
+        if (!byMD[md]) {
+          const home = (f.home_team ?? '?').substring(0, 3).toUpperCase();
+          const away = (f.away_team ?? '?').substring(0, 3).toUpperCase();
+          byMD[md] = { kickoff: f.kickoff_at, fixture: `${home} vs ${away}`, goals: 0, assists: 0, cs: false, mins: 0, pts: 0 };
+        }
+        byMD[md].goals   += s.goals          ?? 0;
+        byMD[md].assists += s.assists         ?? 0;
+        byMD[md].cs       = byMD[md].cs || !!(s.clean_sheet);
+        byMD[md].mins    += s.minutes_played  ?? 0;
+        byMD[md].pts     += Number(s.fantasy_points ?? 0);
+      }
+
+      const sorted = Object.entries(byMD)
+        .sort((a, b) => b[1].kickoff.localeCompare(a[1].kickoff));
+
+      const rounds = sorted.slice(0, 5).map(([md, r]) => ({
+        gw:      md.includes('-r') ? `R${md.split('-r')[1]}` : md,
+        fixture: r.fixture,
+        goals:   r.goals,
+        assists: r.assists,
+        cs:      r.cs,
+        mins:    r.mins,
+        pts:     r.pts,
+      }));
+
+      const allRounds  = sorted.map(([, r]) => r);
+      const totalPts   = allRounds.reduce((s, r) => s + r.pts, 0);
+      const totalGoals = allRounds.reduce((s, r) => s + r.goals, 0);
+      const totalAst   = allRounds.reduce((s, r) => s + r.assists, 0);
+      const apps       = allRounds.filter(r => r.mins > 0).length;
+
+      setPlayerDetails(prev => ({
+        ...prev,
+        [playerId]: {
+          rounds,
+          season: { apps, goals: totalGoals, assists: totalAst, pts: Math.round(totalPts), avgPts: apps > 0 ? (totalPts / apps).toFixed(1) : '0.0' },
+        },
+      }));
+    } catch (err) {
+      console.error('PlayerStatsPanel load failed', err);
+      setPlayerDetails(prev => ({ ...prev, [playerId]: { rounds: [], season: null } }));
+    }
+  }, []);
 
   // Fetch squad for auto-fill
   const fetchSquad = async () => {
@@ -659,12 +743,14 @@ export default function MarketScreen() {
             const isJoker      = p.id === todayJokerId;
             const intel        = p.intel;
 
+            const isExpanded = expandedPlayerId === p.id;
+
             return (
+              <div key={p.id}>
               <div
-                key={p.id}
                 className="flex items-center px-4 py-2.5 gap-3 transition-all duration-150"
                 style={{
-                  borderBottom: '1px solid var(--rule)',
+                  borderBottom: isExpanded ? 'none' : '1px solid var(--rule)',
                   background:   isOwned ? 'rgba(0,180,216,0.05)' : takenByOther ? 'rgba(239,68,68,0.02)' : 'transparent',
                   borderLeft:   isOwned ? '2px solid var(--cyan)' : takenByOther ? '2px solid rgba(239,68,68,0.3)' : '2px solid transparent',
                   opacity:      takenByOther ? 0.65 : 1,
@@ -677,13 +763,19 @@ export default function MarketScreen() {
                 <div className="flex-1 min-w-0 flex items-center gap-2">
                   {intel && <StatusDot status={intel.status ?? 'fit'} />}
                   <div className="min-w-0">
-                    {/* Name */}
-                    <div className="flex items-center flex-wrap gap-1.5">
+                    {/* Name — tap to expand stats panel */}
+                    <div
+                      className="flex items-center flex-wrap gap-1.5 cursor-pointer"
+                      onClick={() => togglePanel(p.id)}
+                    >
                       <span
                         className="fk-display truncate"
-                        style={{ fontSize: 13, color: 'var(--paper)', letterSpacing: '-0.01em' }}
+                        style={{ fontSize: 13, color: isExpanded ? 'var(--cyan)' : 'var(--paper)', letterSpacing: '-0.01em' }}
                       >
                         {p.name.toUpperCase()}
+                      </span>
+                      <span style={{ fontSize: 8, color: 'var(--mute)', lineHeight: 1, flexShrink: 0 }}>
+                        {isExpanded ? '▲' : '▼'}
                       </span>
                       {isOwned && (
                         <span className="fk-mono shrink-0" style={{ fontSize: 9, fontWeight: 800, color: 'var(--cyan)', border: '1px solid var(--cyan)', padding: '2px 6px' }}>
@@ -784,6 +876,18 @@ export default function MarketScreen() {
                     </button>
                   )}
                 </div>
+              </div>
+              {isExpanded && (
+                <PlayerStatsPanel
+                  detail={playerDetails[p.id]}
+                  position={p.position}
+                  isOwned={isOwned}
+                  canBuy={canBuy}
+                  saving={saving}
+                  isLocked={isLocked}
+                  onAction={(action) => action === 'buy' ? handleBuy(p) : handleSell(p)}
+                />
+              )}
               </div>
             );
           })}
