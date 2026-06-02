@@ -637,8 +637,9 @@ export default function LeagueScreen() {
       }
       setJoinCode('');
       fetchLeagues();
-      // Navigate to the newly joined league
-      if (data?.id) navigate(`/league/${data.id}`);
+      // Navigate to the newly joined league (RPC returns {league_id, name})
+      const joinedId = data?.league_id ?? data?.id;
+      if (joinedId) navigate(`/league/${joinedId}`);
     } catch (err) {
       console.error('[joinLeague]', err);
       setJoinError('Something went wrong — please try again.');
