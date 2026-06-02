@@ -51,6 +51,7 @@ export default function DraftScreen() {
   const [expandedId,  setExpandedId]  = useState(null);
   const [lastSaved,   setLastSaved]   = useState(null);  // timestamp of last auto-save
   const [saveError,   setSaveError]   = useState(null);
+  const [phase,       setPhase]       = useState('group'); // 'group' | 'knockout'
   const dirtyRef = useRef(false); // U23: heartbeat dirty flag
 
   const countdown   = useCountdown(deadline);
@@ -68,13 +69,16 @@ export default function DraftScreen() {
       try {
         setLoading(true);
 
-        // Load league for deadline
+        // Load league for deadline + cup_phase (needed to determine submission phase)
         const { data: league } = await supabase
           .from('leagues')
-          .select('draft_deadline')
+          .select('draft_deadline, cup_phase')
           .eq('id', leagueId)
           .maybeSingle();
         setDeadline(league?.draft_deadline ?? null);
+        // group_stage means group allocation ran → next submission is for knockout
+        const derivedPhase = league?.cup_phase === 'group_stage' ? 'knockout' : 'group';
+        setPhase(derivedPhase);
 
         // Load players — RPC respects cup pool restriction.
         // For non-cup leagues returns the full pool.
@@ -82,12 +86,13 @@ export default function DraftScreen() {
           .rpc('get_cup_available_players', { p_league_id: leagueId });
         setPlayers(normalisePlayers(pData ?? []));
 
-        // Load existing submission if any
+        // Load existing submission for the current phase
         const { data: sub } = await supabase
           .from('draft_submissions')
           .select('*')
           .eq('league_id', leagueId)
           .eq('user_id', user?.id)
+          .eq('phase', derivedPhase)
           .maybeSingle();
 
         if (sub?.player_ids?.length) {
@@ -197,9 +202,10 @@ export default function DraftScreen() {
         await supabase.from('draft_submissions').upsert({
           league_id:  leagueId,
           user_id:    user?.id,
+          phase,
           player_ids: list.map(p => p.id),
           status:     'pending',
-        }, { onConflict: 'league_id,user_id' });
+        }, { onConflict: 'league_id,user_id,phase' });
         setLastSaved(new Date());
         setSaveError(null);
         dirtyRef.current = false;
@@ -221,9 +227,10 @@ export default function DraftScreen() {
         await supabase.from('draft_submissions').upsert({
           league_id:  leagueId,
           user_id:    user?.id,
+          phase,
           player_ids: list.map(p => p.id),
           status:     'pending',
-        }, { onConflict: 'league_id,user_id' });
+        }, { onConflict: 'league_id,user_id,phase' });
         setLastSaved(new Date());
         setSaveError(null);
         dirtyRef.current = false;
@@ -251,10 +258,11 @@ export default function DraftScreen() {
       const { error } = await supabase.from('draft_submissions').upsert({
         league_id:    leagueId,
         user_id:      user?.id,
+        phase,
         player_ids:   list.map(p => p.id),
         submitted_at: new Date().toISOString(),
         status:       'pending',
-      }, { onConflict: 'league_id,user_id' });
+      }, { onConflict: 'league_id,user_id,phase' });
 
       if (error) throw error;
       setLastSaved(new Date());

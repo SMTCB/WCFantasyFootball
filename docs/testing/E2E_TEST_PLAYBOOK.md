@@ -1620,4 +1620,4 @@ ORDER BY s.user_id, fp.matchday_id;
 
 ---
 
-Last Updated: **2026-06-02** (session 71: D-4b confirmed ✅; Known Limitations updated with workaround)
+Last Updated: **2026-06-02** (session 72: F-2/E-4/D-3 confirmed; 9 bugs fixed; `pre_elimination` enum, CORS on run-draft-lottery, phase-aware draft screens)

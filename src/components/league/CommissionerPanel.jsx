@@ -1235,7 +1235,7 @@ function LifecycleOps({ commissioner, leagueId, tournamentId, windowType = null,
     windowTransfers, setWindowTransfers,
     openTransferWindow, closeTransferWindow,
     draftDeadline, setDraftDeadline, setLeagueDraftDeadline,
-    triggerDraftAllocation,
+    triggerDraftAllocation, triggerKnockoutAllocation,
     scoreFixtureId, setScoreFixtureId, triggerScores, triggerScoresLatestRound,
   } = commissioner;
 
@@ -1255,7 +1255,7 @@ function LifecycleOps({ commissioner, leagueId, tournamentId, windowType = null,
   const [knockoutDeadline, setKnockoutDeadline] = useState('');
 
   // Knockout allocation is done once cup_phase moves into an elimination phase
-  const knockoutAllocationDone = ['elimination', 'round_of_16', 'quarter_final', 'semi_final', 'final'].includes(league?.cup_phase);
+  const knockoutAllocationDone = ['pre_elimination', 'round_of_16', 'quarter_final', 'semi_final', 'final'].includes(league?.cup_phase);
 
   const knockoutStatus = !allocationDone ? 'LOCKED'
     : knockoutAllocationDone ? 'ALLOCATED'
@@ -1292,18 +1292,12 @@ function LifecycleOps({ commissioner, leagueId, tournamentId, windowType = null,
     triggerDraftAllocation();
   };
 
-  const handleRunKnockoutAllocation = () => {
+  const handleRunKnockoutAllocation = async () => {
     if (!window.confirm('This runs the knockout-phase draft allocation. It cannot be undone. Continue?')) return;
-    commAction(async () => {
-      if (knockoutDeadline) {
-        await supabase.from('leagues').update({ knockout_draft_deadline: new Date(knockoutDeadline).toISOString() }).eq('id', leagueId);
-      }
-      const { error } = await supabase.functions.invoke('run-draft-lottery', {
-        body: { league_id: leagueId, phase: 'knockout' },
-      });
-      if (error) throw new Error(error.message);
-      setCommMsg({ type: 'ok', text: 'Knockout draft allocation complete.' });
-    });
+    if (knockoutDeadline) {
+      await supabase.from('leagues').update({ knockout_draft_deadline: new Date(knockoutDeadline).toISOString() }).eq('id', leagueId);
+    }
+    triggerKnockoutAllocation();
   };
 
   const opBtnStyle = (bg, color = 'var(--ink)') => ({
@@ -2181,7 +2175,7 @@ export default function CommissionerPanel({ commissioner, leagueId, tournamentId
             (league.cup_phase && league.cup_phase !== 'pre_cup') ||
             !!league.knockout_draft_deadline
           ))) && (() => {
-            const mobKnockoutAllocationDone = ['elimination', 'round_of_16', 'quarter_final', 'semi_final', 'final'].includes(league?.cup_phase);
+            const mobKnockoutAllocationDone = ['pre_elimination', 'round_of_16', 'quarter_final', 'semi_final', 'final'].includes(league?.cup_phase);
             const mobKnockoutStatus = mobKnockoutAllocationDone ? 'ALLOCATED'
               : league?.knockout_draft_deadline ? 'DEADLINE SET'
               : 'NOT SET';

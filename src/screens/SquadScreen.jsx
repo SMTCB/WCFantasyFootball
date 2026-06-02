@@ -367,7 +367,9 @@ export default function SquadScreen() {
       setLoading(false);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user?.id, activeLeague, leagues]);
+  // tournamentId included so the fixture fallback (which needs it) re-runs after async resolution.
+  // squadData deliberately excluded: setting it inside fetchSquad would cause an infinite loop.
+  }, [user?.id, activeLeague, leagues, tournamentId]);
 
   const fetchDailyStatus = async () => {
     try {
