@@ -394,15 +394,25 @@ export default function LiveScreen() {
         setCurrentGW(label || mdRow.matchday_id);
       }
 
-      // 1. Live fixtures — U55: use home_score/away_score columns directly
+      // 1a. User leagues — fetched early so we can filter the score strip to relevant tournaments.
+      // Non-logged-in users (user?.id is null) get an empty array → no filter applied → show all live.
+      const { data: memberships = [] } = user?.id ? await supabase
+        .from('league_members')
+        .select('league_id, total_points, rank, leagues(id, name, tournament_id)')
+        .eq('user_id', user.id) : { data: [] };
+      const userTournamentIds = [...new Set((memberships || []).map(m => m.leagues?.tournament_id).filter(Boolean))];
+
+      // 1b. Live fixtures — filtered to the manager's league tournaments only.
       // Score strip shows only truly-live matches; stats/events window also covers
       // recently-finished fixtures (up to 3 h after kickoff) so the Points Log stays
       // visible after a match ends and shows FINAL points.
-      const { data: liveFixData = [] } = await supabase
+      let liveQ = supabase
         .from('fixtures')
         .select('id, home_team, away_team, status, kickoff_at, minute, home_score, away_score, tournament_id')
         .eq('status', 'live')
         .order('kickoff_at', { ascending: true });
+      if (userTournamentIds.length) liveQ = liveQ.in('tournament_id', userTournamentIds);
+      const { data: liveFixData = [] } = await liveQ;
 
       const enrichedFix = (liveFixData || []).map(f => ({
         ...f,
@@ -449,12 +459,7 @@ export default function LiveScreen() {
 
       if (!user?.id) { setLoading(false); return; }
 
-      // 2. User leagues
-      const { data: memberships = [] } = await supabase
-        .from('league_members')
-        .select('league_id, total_points, rank, leagues(id, name, tournament_id)')
-        .eq('user_id', user.id);
-
+      // 2. User leagues — already fetched above (1a) to filter the score strip.
       if (!memberships?.length) { setLoading(false); return; }
 
       // 3. Member counts per league
