@@ -1104,6 +1104,10 @@ All required tables and RLS policies exist. The gazette INSERT policy (migration
 
 ### 🔵 P3 — Monitor / post-pilot
 
+#### ✅ FIXED — sync-fixtures now writes matchday_id to fixtures (session 80, PR #326)
+- `sync-fixtures` only wrote `matchday_deadlines`, never `fixtures.matchday_id` — required manual migration for every new tournament. One-line fix: derive `matchday_id = '{forza_id}-r{round}'` in the fixtureRows map. Self-healing from now on.
+- `supabase/functions/sync-fixtures/index.js`
+
 #### ⚠️ OPEN — Confirm Forza /v2/player_statistics covers WC matches (session 80, before June 11)
 - **What**: During NED vs ALG dry run, Forza returned HTTP 404 on `/v2/matches/{id}/player_statistics` for a friendly — goal scorer not attributed. Minutes + clean sheet worked fine via other endpoints.
 - **Action**: Ask Forza when replying about the API key: *"Does /v2/player_statistics cover all WC matches?"*

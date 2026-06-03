@@ -113,6 +113,7 @@ Deno.serve(async (req) => {
       forza_match_id:       String(m.id),
       tournament_id:        forza_id,
       round_number:         m.round ?? null,
+      matchday_id:          m.round ? `${forza_id}-r${m.round}` : null,
       home_team:            m.home_team?.name ?? 'TBD',
       away_team:            m.away_team?.name ?? 'TBD',
       home_team_forza_id:   m.home_team?.id ? String(m.home_team.id) : null,
