@@ -467,7 +467,7 @@ async function rollupSquads(fixture_id, pointsLookup, tournament_id) {
     .from('fixtures').select('round_number').eq('id', fixture_id).single();
 
   if (!fix?.round_number || !tournament_id) {
-    await logError('critical', 'Cannot derive matchday_id — missing round_number or tournament_id; rollup skipped', { fixture_id, tournament_id });
+    await logError('warning', 'rollup skipped — fixture has no round_number (friendly/unassigned match, not a scoring error)', { fixture_id, tournament_id });
     return 0;
   }
 
