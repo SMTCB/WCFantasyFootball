@@ -78,6 +78,34 @@ Run **Appendix D** before any test flow that involves budget. Seed prices if mis
 
 ---
 
+## 🌱 SQL Seeding Rules — read before writing or running any seed
+
+SQL seeding of **gameplay/scenario state** (leagues, members, squads, drafts, chips, bets) is the intended way to set up E2E scenarios. But the seed must respect the live schema, or it will silently produce wrong state (or fail). These rules reflect the schema as of migration 122 (session 78).
+
+1. **Reference data comes from the API, never from SQL.** `players`, `fixtures`, and `player_match_stats` / `match_events` must be loaded via the edge functions (`sync-players`, `sync-fixtures`, `ingest-match-events`). The Forza API is the source of truth for rosters, prices, kickoff times, statuses, and results — hand-writing them in SQL drifts from real IDs and breaks scoring. SQL seeding is **only** for gameplay/scenario tables.
+
+2. **`leagues.format` is the enum `league_format` = `{classic, auction, noduplicate, hybrid}`.** Use `'noduplicate'` for a draft league and `'classic'` for a classic league. **`'draft'` is NOT a valid value** — that INSERT fails.
+
+3. **Never set `leagues.league_mode` by hand.** It is derived from `format` by the `trg_sync_league_mode` trigger on every insert/update (`noduplicate → 'draft'`, else `'classic'`). The column DEFAULT is `'draft'`, so a seed that omits `league_mode` *and* runs without the trigger silently makes every league — including classic ones — `league_mode='draft'`. (This was the real cause of historical mode drift; migration 121 recreated the missing trigger so it's now self-correcting. Just set `format` and let the trigger do the rest.)
+
+4. **`draft_submissions` / `draft_allocations` are keyed `(league_id, user_id, phase)`.** Set `phase` (`'group'` or `'knockout'`; column default `'group'`) and use `ON CONFLICT (league_id, user_id, phase)`. The legacy `(league_id, user_id)` constraint was **dropped in migration 116** — `ON CONFLICT (league_id, user_id)` now errors.
+
+5. **Chips are scored per-round from `chips_used` + `daily_jokers`, NOT the squad columns** (migration 121). To test **Triple Captain** in round N, insert `chips_used(user_id, league_id, chip_type='triple_captain', matchday_id='{tournament}-rN')`. To test a **Joker**, insert `daily_jokers(user_id, league_id, player_id, matchday_id='{tournament}-rN')`. Setting `squads.is_triple_captain` / `squads.joker_player_id` alone will **not** apply the chip during scoring. (The wildcard chip is retired — `is_wildcard` is inert and `activate_chip` rejects it.)
+
+6. **`squads.starting_xi` must be a subset of `squads.players`.** The `trg_sanitize_starting_xi` trigger auto-strips any id not in `players`, so seed exactly 11 ids that are all present in `players`, or the XI silently shrinks.
+
+7. **Use canonical `matchday_id` = `'{tournament}-rN'`** (e.g. `'429-r1'`) on squads and in chip/scoring rows — matching the round under test. Avoid placeholders like `'current'`: per-round chip binding and transfer-limit enforcement key off the canonical round id.
+
+8. **Tournament IDs: EPL = `426`, WC 2026 = `429`.** A league's `tournament_id`, its players/fixtures/`scoring_rules`/`matchday_deadlines`, and every `matchday_id` round key must all use the same tournament. Cross-tournament rows are stripped from squads by a DB trigger (migration 115) and score 0.
+
+9. **Relaxation state lives in `league_config`** (keys `current_relaxation_tier`, `current_repeats_allowed`), written by `apply_relaxation_state()`. There is **no `relaxation_state` table**. On `current_repeats_allowed`: a JSON integer = repeats allowed; JSON `null` = cap fully lifted (unlimited); no row = strict (0 repeats).
+
+10. **`cup_active_clubs` uses `eliminated_at`** (NULL = active) — there is **no `is_active` column**. `club_id` holds the club/nation **name** (matches `fixtures.home_team` / `away_team`), and `seed_cup_clubs(league_id)` scopes to the league's tournament (migration 122).
+
+> For the live pilot (not E2E), prefer creating leagues through the app's `create_league` flow rather than raw SQL — it sets every field correctly and goes through the same trigger.
+
+---
+
 ## ⛔ PRICE CHECK — Run Before Any Budget Flow
 
 ```sql
@@ -998,11 +1026,11 @@ WHERE id = 'daf7e002-0000-4000-a000-000000000002';
 
 **Step 1 — Verify/seed eliminated club**:
 ```sql
--- Check if Algeria is already eliminated
-SELECT club, is_active FROM cup_active_clubs
+-- Check if Algeria is already eliminated (active = eliminated_at IS NULL)
+SELECT club_id, eliminated_at FROM cup_active_clubs
 WHERE league_id = 'daf7e002-0000-4000-a000-000000000002'
-  AND club = 'Algeria';
--- If not found or is_active=true, run Appendix E-3 SQL
+  AND club_id = 'Algeria';
+-- If not found or eliminated_at IS NULL (still active), run Appendix E-3 SQL
 ```
 
 **Step 2 — Get test players**:
@@ -1098,7 +1126,7 @@ WHERE league_id = 'daf7e002-0000-4000-a000-000000000002'
 
 ### E-5: Player-Repeat Relaxation Banner
 
-**Pre-condition**: Pool pressure must be > threshold. Run Appendix E-5 SQL to simulate high pressure (reduce `available_pool_size` in `relaxation_state` or reduce the `relaxation_base` config).
+**Pre-condition**: Pool pressure must be > threshold. Run Appendix E-5 SQL to simulate high pressure (eliminate more clubs in `cup_active_clubs` so the available pool shrinks, then call `apply_relaxation_state(league_id)` to recompute — relaxation tier and repeats live in `league_config`, there is no `relaxation_state` table).
 
 **URL**: `/league/daf7e002-0000-4000-a000-000000000002/draft`
 
@@ -1271,6 +1299,9 @@ Run before each test cycle. Creates all 4 leagues with all 4 members.
 
 ```sql
 -- ── 1. Leagues ────────────────────────────────────────────────────────────────
+-- NOTE: do NOT set league_mode here — the trg_sync_league_mode trigger derives it
+-- from format on insert (noduplicate → 'draft', classic → 'classic'). See SQL Seeding
+-- Rule #3. (format is the league_format enum: classic | auction | noduplicate | hybrid.)
 INSERT INTO leagues (id, name, format, tournament_id, created_by,
   cup_phase, transfers_open, join_code)
 VALUES
@@ -1583,36 +1614,36 @@ WHERE id = 'daf7e002-0000-4000-a000-000000000002';
 Run before E-3. Seeds Algeria as eliminated in DRAFT_WC_E2E so the ELIMINATED CLUB badge fires in the market.
 
 ```sql
--- Step 1: Check if cup_active_clubs row already exists
-SELECT club, is_active FROM cup_active_clubs
+-- Schema note: cup_active_clubs is (league_id, club_id, eliminated_at).
+-- club_id holds the club/nation NAME; active = eliminated_at IS NULL; eliminated = eliminated_at set.
+
+-- Step 1: Check if the cup_active_clubs row already exists
+SELECT club_id, eliminated_at FROM cup_active_clubs
 WHERE league_id = 'daf7e002-0000-4000-a000-000000000002'
-  AND club = 'Algeria';
+  AND club_id = 'Algeria';
 
--- Step 2a: If row exists but is_active = true, mark as eliminated
-UPDATE cup_active_clubs
-SET is_active = false
-WHERE league_id = 'daf7e002-0000-4000-a000-000000000002'
-  AND club = 'Algeria';
+-- Step 2: Insert (or mark) Algeria as eliminated. Prefer the RPC, which enforces
+-- the "must be active" guard and is what the cron uses:
+--   SELECT eliminate_cup_club('daf7e002-0000-4000-a000-000000000002', 'Algeria');
+-- Or seed the row directly:
+INSERT INTO cup_active_clubs (league_id, club_id, eliminated_at)
+VALUES ('daf7e002-0000-4000-a000-000000000002', 'Algeria', NOW())
+ON CONFLICT (league_id, club_id) DO UPDATE SET eliminated_at = NOW();
 
--- Step 2b: If row doesn't exist, insert it as eliminated
-INSERT INTO cup_active_clubs (league_id, club, is_active)
-VALUES ('daf7e002-0000-4000-a000-000000000002', 'Algeria', false)
-ON CONFLICT (league_id, club) DO UPDATE SET is_active = false;
-
--- Step 3: Confirm an Algeria player exists in the WC pool
+-- Step 3: Confirm an Algeria player exists in the WC pool (players.club = nation name)
 SELECT id, name, position FROM players
 WHERE tournament_id = '429' AND club = 'Algeria'
 LIMIT 3;
 -- Must return at least 1 row for the elimination badge to be visible in market
 
 -- Step 4: Verify the elimination row
-SELECT club, is_active FROM cup_active_clubs
+SELECT club_id, eliminated_at FROM cup_active_clubs
 WHERE league_id = 'daf7e002-0000-4000-a000-000000000002'
-  AND club = 'Algeria';
--- is_active: false ✓
+  AND club_id = 'Algeria';
+-- eliminated_at: <a timestamp> ✓
 ```
 
-> **Cleanup after test**: If you want to reactivate Algeria, run `UPDATE cup_active_clubs SET is_active = true WHERE league_id = 'daf7e002-...' AND club = 'Algeria'`.
+> **Cleanup after test**: to reactivate Algeria, run `UPDATE cup_active_clubs SET eliminated_at = NULL WHERE league_id = 'daf7e002-...' AND club_id = 'Algeria'`.
 
 ---
 
@@ -1765,11 +1796,11 @@ ORDER BY s.user_id, fp.matchday_id;
 | EPL season end (2026-05-24) | B-5a fixture selection, A-4 | All EPL fixtures have `status='finished'`. No scheduled EPL fixtures for bet creation — use WC fixtures or manually reset one fixture to `status='scheduled'`. |
 | E-2 gaps when wishlists identical | E-2 allocation | If all 4 managers submit the same 30-player WC wishlist, each gets only 4–5 unique players (10–12 unresolved slots). This is correct lottery behavior. For E-4 knockout test, managers must submit different wishlists. |
 | F-2 step 3 (scoring breakdown on click) | F-2 | Feature not yet built. `ScoringBreakdown.jsx` listed in CLAUDE.md does not exist. Will be resolved when the Player Form Strip + Stats Panel feature is implemented (see BACKLOG.md). |
-| E-3 (eliminated club + takenByOther combined) | E-3 | Never run. Requires `cup_active_clubs` row with `is_active=false` for one WC club in DRAFT_WC_E2E. Algeria was seeded in session 69 — verify row still exists before running. |
+| E-3 (eliminated club + takenByOther combined) | E-3 | Never run. Requires `cup_active_clubs` row with `eliminated_at` set (not NULL) for one WC club in DRAFT_WC_E2E. Algeria was seeded in session 69 — verify row still exists before running. |
 | D-3 squad completion path | D-3 | One FCFS pick confirmed (screen renders, DB updates). The "squad complete → write to squads table" trigger at 15 picks was never reached. Quick to verify: keep picking until counter hits 0. |
 | B-7d betting leaderboard stats | B-7d | Shows structure but all "—". Requires a fully resolved bet. The RESOLVE button needs React fiber click (`page.evaluate` with React internals), not standard `dispatchEvent`. |
 | A-2 real-time chat (cross-client) | A-2 | Single-browser confirmed. Cross-client real-time delivery never verified. Use Playwright `browser.newPage()` to open a second tab as TestMgr2. |
 
 ---
 
-Last Updated: **2026-06-02** (guiding principles added as RULE 1-4; price seeding changed from RANDOM to deterministic tiers; Appendix F rewritten to use real EPL stats first, synthetic seeding demoted to last resort; F-3 hardcodes known-good fixture ID)
+Last Updated: **2026-06-03** (session 78: added "SQL Seeding Rules" section — reference data via API only, format enum, league_mode auto-derived, draft phase conflict target, per-round chips from chips_used/daily_jokers, starting_xi subset, tournament-id alignment, relaxation in league_config, cup_active_clubs eliminated_at; fixed stale cup SQL in E-3/E-5/matrix from club/is_active → club_id/eliminated_at)
