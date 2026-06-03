@@ -1,6 +1,6 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-06-03 (session 75 — BUG-INGEST-01 + BUG-CALC-SCORES-01 fixed, PR #306; live scoring pipeline restored; next migration 120_)  
+**Last Updated**: 2026-06-03 (session 75 close — 4 PRs: #305 gazette crash, #306 scoring pipeline, #308 squad context bug, DD-M13; friendly test league E2E; next migration 120_)  
 **E2E Test Suite**: `platform.spec.js` (36 tests × 2 browsers) passing in CI ✅ — completes in ~3 min  
 **Full Playbook Run**: `E2E_TEST_PLAYBOOK.md` v2.0 — all flows confirmed (D-4a/b, E-4, D-3 ✅; F-2 PASS — form strip satisfies per-stat breakdown criterion)  
 **🟢 LAUNCH READY**: No critical (P0/P1) bugs open. All game mechanics functional. WC kick-off 2026-06-11.  
@@ -9,7 +9,27 @@
 
 ---
 
-## ✅ Session 75 — BUG-INGEST-01 + BUG-CALC-SCORES-01 Fixed (2026-06-03, PR #306)
+## ✅ Session 75 — Bug sweep + Friendly test league E2E (2026-06-03)
+
+### PRs & commits
+| Ref | What |
+|-----|------|
+| PR #305 | Fix League screen crash on draft_report gazette entries (React #31) |
+| PR #306 | BUG-INGEST-01 + BUG-CALC-SCORES-01 — live scoring pipeline restored |
+| PR #307 | DD-M13 — late-finishing WC match scoring coverage |
+| PR #308 | Squad shows incomplete when entering from League tab |
+
+### Delivered
+- **Gazette crash fix** — `LeagueDetailView` was rendering `draft_report` bullets (objects `{player_id, wanted_by, winner_id}`) directly as JSX children → React error #31. Added `parseBullets()` + `bulletText()` normalisation. Also hardened `reportClientError` in `main.jsx`.
+- **Live scoring pipeline** — Two P1 bugs fixed: (1) `ingest-match-events` BOOT_ERROR caused by duplicate `const periodsResult` declaration in the same async function scope (Deno SyntaxError at module load). (2) `calculate-scores` auth guard used exact string match against `SUPABASE_SERVICE_ROLE_KEY` (now `sb_secret_...` format); added JWT payload `role` check as fallback. Also fixed ingest calling calculate-scores with anon key instead of service role.
+- **Squad league context bug** — Two causes: (1) incomplete-squad banner "MY SQUAD →" buttons in LeagueScreen navigated to `/squad` without `?leagueId=`, losing league context. (2) SquadScreen race condition: when leagueId comes from URL param, `tournamentId` resolves asynchronously — deadline query ran before it was known, fetching a cross-tournament matchday that filtered out the correct squad. Fixed by skipping deadline query when `activeLeague` is set but `tournamentId` is null.
+- **Friendly test league E2E** — Full pipeline test with tournament 623 (international friendlies): 209 players copied from WC, 3 fixtures synced (Mexico 1-0 Australia, USA 3-2 Senegal, Croatia 0-2 Belgium), draft league with 3 managers, draft allocation (36 contested picks), player stats ingested, scoring verified hand-calc correct (braganca 50pts, e2e_a 48pts, e2e_b 44pts).
+
+### Critical bugs status: 🟢 NONE (all P0/P1 resolved)
+
+---
+
+## ✅ BUG-INGEST-01 + BUG-CALC-SCORES-01 Fixed (2026-06-03, PR #306)
 
 ### ✅ [BUG] BUG-INGEST-01 — `ingest-match-events` BOOT_ERROR — FIXED PR #306
 
