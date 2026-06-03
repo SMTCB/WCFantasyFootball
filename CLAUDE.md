@@ -307,7 +307,9 @@ forza-fantasy-league/
 │   │
 │   └── deployment/                        # Launch & DevOps
 │       ├── DATA_PIPELINE_RUNBOOK.md       # Supabase cron & data activation steps
-│       └── DRY_RUN_PREP_CHECKLIST.md      # Pre-launch verification checklist
+│       ├── DRY_RUN_PREP_CHECKLIST.md      # Pre-launch verification checklist
+│       ├── ADDING_A_NEW_TOURNAMENT.md     # New tournament cookbook (registration → live squads)
+│       └── SERVICE_KEY_ROTATION_RUNBOOK.md # API key rotation procedure
 │
 ├── 📱 ios/                                 # Capacitor iOS native project
 │   ├── App/                               # Xcode project files
@@ -449,6 +451,7 @@ e2e-report/                     # Test artifacts
 |------|---------|
 | `DATA_PIPELINE_RUNBOOK.md` | Supabase cron setup & data activation |
 | `DRY_RUN_PREP_CHECKLIST.md` | Pre-launch verification checklist |
+| `ADDING_A_NEW_TOURNAMENT.md` | **New tournament cookbook** — step-by-step from Forza registration to live squads; includes friendly/test tournament pattern, squad setup, and 6-point dry run checklist |
 
 **Special Docs:**
 | File | Purpose |
