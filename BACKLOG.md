@@ -1,11 +1,28 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-06-03 (session 75 close — 4 PRs: #305 gazette crash, #306 scoring pipeline, #308 squad context bug, DD-M13; friendly test league E2E; next migration 120_)  
+**Last Updated**: 2026-06-03 (session 76 — PR #309: INT comp label, squad stale state fix, market team filter, recap font; DB: West Ham R38 corrupt fixture fixed)  
 **E2E Test Suite**: `platform.spec.js` (36 tests × 2 browsers) passing in CI ✅ — completes in ~3 min  
 **Full Playbook Run**: `E2E_TEST_PLAYBOOK.md` v2.0 — all flows confirmed (D-4a/b, E-4, D-3 ✅; F-2 PASS — form strip satisfies per-stat breakdown criterion)  
 **🟢 LAUNCH READY**: No critical (P0/P1) bugs open. All game mechanics functional. WC kick-off 2026-06-11.  
 **Live App**: https://wc-fantasy-football.vercel.app  
 **WC Kick-off**: 2026-06-11 19:00 UTC (Mexico vs South Africa)
+
+---
+
+## ✅ Session 76 — Bug fixes + Market team filter (2026-06-03)
+
+### PRs & commits
+| Ref | What |
+|-----|------|
+| PR #309 | Bug fixes: INT comp label, squad stale state; feat: market team filter, recap font |
+| DB fix | West Ham vs Leeds EPL R38 — corrupt kickoff_at fixed to 2026-05-24 15:00 UTC |
+
+### Delivered
+- **Scores screen INT label** — International friendly fixtures (tournament 623) were showing `EPL` badge. Added `INT` competition to registry, mapped `623 → INT` in `TOURNAMENT_COMP`, added `'friendly'`/`'international'` keyword fallback in `detectComp`.
+- **West Ham vs Leeds fixture** — EPL R38 match had a garbage `2026-06-02 00:13:41` kickoff (timestamp set at migration run-time instead of the real kick-off). Fixed directly in DB: `2026-05-24 15:00 UTC`, status `finished`. The match is no longer shown as an upcoming fixture.
+- **Squad stale state (PR #308 regression)** — Navigating from League tab to Squad with `?leagueId=X` showed the previous league's player count briefly, triggering "Squad incomplete" banner. Root cause: component was reused without unmounting, so old `squadData` was visible until async fetch completed. Fix: reset `squadData = null` + `loading = true` synchronously when `leagueIdParam` changes.
+- **Market team filter** — New "Club ▾" dropdown in the Market header. Multi-select with club search, checkboxes, Clear/Apply buttons. Active selection count shown on the button.
+- **Recap font legibility** — Bullets upgraded from 9px JetBrains Mono muted to 12px Archivo body near-white.
 
 ---
 
