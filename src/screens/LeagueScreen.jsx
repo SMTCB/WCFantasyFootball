@@ -1018,7 +1018,7 @@ export default function LeagueScreen() {
                 Need {11 - mySquadPlayerCount} more player{11 - mySquadPlayerCount !== 1 ? 's' : ''} to field a starting XI
               </div>
             </div>
-            <button onClick={() => navigate('/squad')} style={{ fontFamily: DISPLAY, fontWeight: 900, fontSize: 10, color: 'var(--danger)', border: '1px solid rgba(240,58,58,0.5)', padding: '6px 14px', background: 'transparent', cursor: 'pointer', letterSpacing: '0.1em', textTransform: 'uppercase', flexShrink: 0 }}>
+            <button onClick={() => navigate(`/squad${activeLeague?.league_id ? `?leagueId=${activeLeague.league_id}` : ''}`)} style={{ fontFamily: DISPLAY, fontWeight: 900, fontSize: 10, color: 'var(--danger)', border: '1px solid rgba(240,58,58,0.5)', padding: '6px 14px', background: 'transparent', cursor: 'pointer', letterSpacing: '0.1em', textTransform: 'uppercase', flexShrink: 0 }}>
               MY SQUAD →
             </button>
           </div>
@@ -1034,7 +1034,7 @@ export default function LeagueScreen() {
                 {15 - mySquadPlayerCount} empty slot{15 - mySquadPlayerCount !== 1 ? 's' : ''} — sign more players to complete your squad
               </div>
             </div>
-            <button onClick={() => navigate('/squad')} style={{ fontFamily: DISPLAY, fontWeight: 900, fontSize: 10, color: 'var(--gold)', border: '1px solid rgba(240,180,0,0.45)', padding: '6px 14px', background: 'transparent', cursor: 'pointer', letterSpacing: '0.1em', textTransform: 'uppercase', flexShrink: 0 }}>
+            <button onClick={() => navigate(`/squad${activeLeague?.league_id ? `?leagueId=${activeLeague.league_id}` : ''}`)} style={{ fontFamily: DISPLAY, fontWeight: 900, fontSize: 10, color: 'var(--gold)', border: '1px solid rgba(240,180,0,0.45)', padding: '6px 14px', background: 'transparent', cursor: 'pointer', letterSpacing: '0.1em', textTransform: 'uppercase', flexShrink: 0 }}>
               MY SQUAD →
             </button>
           </div>

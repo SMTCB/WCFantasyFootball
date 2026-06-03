@@ -141,16 +141,30 @@ export default function SquadScreen() {
 
       // â"€â"€ Transfer window lock check — use latest matchday deadline â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
       // U11: scope deadline check to this league's tournament; capture matchday_id for squad filter
-      let dlQuery = supabase
-        .from('matchday_deadlines').select('deadline_at, matchday_id')
-        .gte('deadline_at', new Date().toISOString())
-        .order('deadline_at', { ascending: true }).limit(1);
-      if (tournamentId) dlQuery = dlQuery.eq('tournament_id', tournamentId);
-      const { data: deadlineRow } = await dlQuery.maybeSingle();
-      if (deadlineRow?.deadline_at) {
-        setWindowDeadline(new Date(deadlineRow.deadline_at));
+      // Guard: if activeLeague is known but tournamentId hasn't resolved yet (race condition
+      // on URL-param navigation), skip the deadline query. Using a cross-tournament deadline
+      // would inject a foreign matchday filter into the squad query, loading the wrong squad.
+      // fetchSquad re-runs once tournamentId resolves via the tournament useEffect.
+      let activeMatchdayId = null;
+      if (tournamentId) {
+        const { data: deadlineRow } = await supabase
+          .from('matchday_deadlines').select('deadline_at, matchday_id')
+          .gte('deadline_at', new Date().toISOString())
+          .eq('tournament_id', tournamentId)
+          .order('deadline_at', { ascending: true }).limit(1)
+          .maybeSingle();
+        if (deadlineRow?.deadline_at) setWindowDeadline(new Date(deadlineRow.deadline_at));
+        activeMatchdayId = deadlineRow?.matchday_id ?? null;
+      } else if (!activeLeague) {
+        // No league context — global next deadline (shown on league-picker screen)
+        const { data: deadlineRow } = await supabase
+          .from('matchday_deadlines').select('deadline_at, matchday_id')
+          .gte('deadline_at', new Date().toISOString())
+          .order('deadline_at', { ascending: true }).limit(1)
+          .maybeSingle();
+        if (deadlineRow?.deadline_at) setWindowDeadline(new Date(deadlineRow.deadline_at));
+        activeMatchdayId = deadlineRow?.matchday_id ?? null;
       }
-      const activeMatchdayId = deadlineRow?.matchday_id ?? null;
 
       // Query joker by matchday_id if known, else fall back to today's date
       let jokerQuery = supabase.from('daily_jokers').select('player_id').eq('user_id', userId);
