@@ -4,11 +4,12 @@
 
 // ── Competition registry ──────────────────────────────────────────────────────
 export const COMPS = {
-  EPL: { code: 'EPL', name: 'PREMIER LEAGUE',   tone: '#00B4D8' },
-  UCL: { code: 'UCL', name: 'CHAMPIONS LEAGUE', tone: '#E0A800' },
-  UEL: { code: 'UEL', name: 'EUROPA LEAGUE',    tone: '#A855F7' },
-  FAC: { code: 'FAC', name: 'FA CUP',           tone: '#EF4444' },
-  WC:  { code: 'WC',  name: 'FIFA WORLD CUP',   tone: '#C9A227' },
+  EPL: { code: 'EPL', name: 'PREMIER LEAGUE',          tone: '#00B4D8' },
+  UCL: { code: 'UCL', name: 'CHAMPIONS LEAGUE',        tone: '#E0A800' },
+  UEL: { code: 'UEL', name: 'EUROPA LEAGUE',           tone: '#A855F7' },
+  FAC: { code: 'FAC', name: 'FA CUP',                  tone: '#EF4444' },
+  WC:  { code: 'WC',  name: 'FIFA WORLD CUP',          tone: '#C9A227' },
+  INT: { code: 'INT', name: 'INTERNATIONAL FRIENDLY',  tone: '#6B7280' },
 };
 
 // ── Date formatting ───────────────────────────────────────────────────────────
@@ -46,16 +47,18 @@ const TOURNAMENT_COMP = {
   '426':  'EPL',
   '429':  'WC',
   '1593': 'UCL',
+  '623':  'INT',
 };
 
 export function detectComp(competition, tournament_id) {
-  if (tournament_id && TOURNAMENT_COMP[tournament_id]) return TOURNAMENT_COMP[tournament_id];
+  if (tournament_id && TOURNAMENT_COMP[String(tournament_id)]) return TOURNAMENT_COMP[String(tournament_id)];
   if (!competition) return 'EPL';
   const lc = competition.toLowerCase();
   if (lc.includes('world cup') || lc.includes('fifa')) return 'WC';
   if (lc.includes('champions') || lc.includes('ucl'))  return 'UCL';
   if (lc.includes('europa'))    return 'UEL';
   if (lc.includes('fa cup'))    return 'FAC';
+  if (lc.includes('friendly') || lc.includes('international')) return 'INT';
   return 'EPL';
 }
 
