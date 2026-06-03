@@ -115,6 +115,8 @@ function processPeriodsData(periodsData, homeTeamForzaId) {
     penaltyMissed:           new Set(),
     penaltyMissedByTeamSide: {},   // 'home'|'away' → number of missed penalties by that team
     penaltyScoredMap:        {},   // forza_player_id → penalties scored count
+    goalsMap:                {},   // forza_player_id → regular goal count (E9 fallback for when E10 is absent)
+    assistsMap:              {},   // forza_player_id → assist count (E9 fallback)
     activityEvents:          [],
   };
 
@@ -148,10 +150,21 @@ function processPeriodsData(periodsData, homeTeamForzaId) {
 
       if (ev.type === 'goal') {
         const isPenalty = ev.detail === 'penalty';
+        const isOwnGoal = ev.detail === 'own_goal';
 
         // Track penalty scored per player (for FWD +1 bonus in scoring)
         if (isPenalty && playerForzaId) {
           result.penaltyScoredMap[playerForzaId] = (result.penaltyScoredMap[playerForzaId] ?? 0) + 1;
+        }
+
+        // E9 fallback goal/assist maps — used in step 9 when E10 player_statistics is absent (e.g. 404 on friendlies).
+        // Own goals excluded here — they are tracked separately via E5 EventDigest own_goal_count.
+        if (!isOwnGoal && playerForzaId) {
+          result.goalsMap[playerForzaId] = (result.goalsMap[playerForzaId] ?? 0) + 1;
+        }
+        const assistForzaId = ev.assisting_player?.id ? String(ev.assisting_player.id) : null;
+        if (!isOwnGoal && assistForzaId) {
+          result.assistsMap[assistForzaId] = (result.assistsMap[assistForzaId] ?? 0) + 1;
         }
 
         // Own goals are detected via E5 EventDigest own_goal_count — skip here
@@ -434,10 +447,10 @@ Deno.serve(async (req) => {
         player_id:      internal.id,
         forza_match_id: fmid,
 
-        // From E10 — direct fields
+        // From E10 — direct fields (fall back to E9 period events when E10 is absent, e.g. 404 on friendlies)
         minutes_played:  mins,
-        goals:           s.goals             ?? 0,
-        assists:         s.assists           ?? 0,
+        goals:           s.goals   ?? periodsResult.goalsMap[fpid]   ?? 0,
+        assists:         s.assists ?? periodsResult.assistsMap[fpid] ?? 0,
         yellow_cards:    s.yellow_cards      ?? 0,
         saves:           s.saves             ?? 0,
         shots_on_target: s.shots_on_target   ?? 0,
