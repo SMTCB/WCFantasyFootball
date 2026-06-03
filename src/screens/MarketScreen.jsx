@@ -313,11 +313,11 @@ export default function MarketScreen() {
   };
 
   useEffect(() => {
-    // Guard: if we know the league but tournamentId hasn't resolved yet, skip this
-    // render — the effect will fire again once resolveLeagueTournament completes.
-    // Without this guard the first render fetches all tournaments' players, producing
-    // a ~3 s flash of the wrong player list (Bug #4).
-    if (activeLeague && !tournamentId) return;
+    // Only fetch once both activeLeague and tournamentId are known.
+    // - !activeLeague: initial mount before the init effect has resolved the league.
+    // - activeLeague && !tournamentId: league resolved but tournament lookup still in flight.
+    // Both states would produce an unfiltered 5000-player fetch; skip and wait.
+    if (!activeLeague || !tournamentId) return;
     fetchMarketParams();
   }, [activeLeague, tournamentId]);
 
