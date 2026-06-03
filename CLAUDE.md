@@ -578,8 +578,9 @@ Always create a new file — never modify existing migrations.
 | 123 | `123_session78_security_lockdown.sql` | Session 78 authz DD: guard_squad_protected_columns() trigger (blocks direct client writes to squads budget/identity/round_transfers; players reorder-only) — closes a proven P0 self-tamper; drop draft_allocations direct UPDATE policy + claim_draft_player() RPC (advisory-locked, fixes draft double-claim); activate_chip auth.uid() guard; accept_trade_proposal proposer-budget recheck |
 | 124 | `124_session78_resolve_bet_cron.sql` | Session 78: resolve_bet allows cron/service-role context (auth.uid() IS NULL) — auto-resolve cron was getting UNAUTHORIZED on every call so bets never auto-resolved; authenticated non-commissioners still rejected |
 | 125 | `125_session78_quickwins.sql` | Session 78: daily_jokers deadline gate (client can't set a joker after the matchday deadline; owner/service-role exempt for seeds) (#16); void_bet budget claw-back floored at 0 (#11) |
+| 126 | `126_wc429_knockout_round_number.sql` | Session 80: WC 429 knockout `round_number` backfill (Forza returns `round=null` for knockouts → scoring hard-failed). Stage→round map: r4=R32 / r5=R16 / r6=QF / r7=SF / r8=Final+3rd (16/8/4/2/2). `derive_fixture_round_number()` BEFORE INSERT/UPDATE trigger re-fills `round_number` from `matchday_id` on every write so the 30-min sync cron can't re-null it; knockout deadlines corrected to each stage's first kickoff (B4) |
 
-**Next migration**: `126_`
+**Next migration**: `127_`
 
 **Key pipeline facts (2026-06-02):**
 - `calculate-scores` uses `scoring_rules` table (not `scoring_templates`) keyed by `tournament_id`
@@ -589,6 +590,7 @@ Always create a new file — never modify existing migrations.
 - `fantasy_points` column for squad total is `total` (not `total_points`) — integer
 - `fantasy_points.matchday_id` format: `'{tournament_id}-r{round}'` e.g. `'426-r35'`
 - `matchday_deadlines.matchday_id` format: `'426-rN'` (canonical, written by `sync-fixtures`)
+- **Knockout `round_number`** (migration 126): Forza does NOT number knockout matches — `sync-fixtures` writes `round_number = m.round ?? null` = NULL for them, which makes `calculate-scores` hard-fail ('critical', rollup skipped). The `derive_fixture_round_number()` BEFORE INSERT/UPDATE trigger re-fills `round_number` from `fixtures.matchday_id` (`'{tournament}-rN'`) on every write — `sync-fixtures` never writes `matchday_id`, so it survives the 30-min sync and the trigger keeps `round_number` populated. **Do NOT clear `fixtures.matchday_id` on knockout rows, and do NOT rely on a one-off `round_number` UPDATE** (the cron re-nulls it). For WC 429: r4=R32, r5=R16, r6=QF, r7=SF, r8=Final+3rd. A new tournament's knockout needs `matchday_id` seeded the same way before its first knockout match scores.
 - `bet_submissions` uses `bet_instance_id` column (not `bet_id`) — references `bet_instances(id)`
 - `gazette_entries.entry_type` enum: `draft_report`, `breaking_news`, `activity`, `auction_result`
 - `gazette_entries` INSERT: commissioners only (RLS policy, migration 103); SELECT: league members (is_league_member)
