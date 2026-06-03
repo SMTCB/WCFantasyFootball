@@ -104,6 +104,18 @@ SQL seeding of **gameplay/scenario state** (leagues, members, squads, drafts, ch
 
 > For the live pilot (not E2E), prefer creating leagues through the app's `create_league` flow rather than raw SQL — it sets every field correctly and goes through the same trigger.
 
+### Session-78 changes that affect seeding (migrations 121–125)
+
+These lockdowns changed what a seed may write directly. **Run all seeds as the DB owner** — the Supabase Dashboard SQL Editor and `npx supabase db query --linked` both connect as owner, so the existing Appendix A–F seeds work unchanged. The points below matter if you ever run a seed through an authenticated client, or wonder why a hand-written insert is rejected:
+
+1. **`squads` protected columns (mig 123)** — `budget_remaining`, `players`, `user_id`, `league_id`, `matchday_id`, `round_transfers` can only be written by the owner / SECURITY DEFINER RPCs. A seed run **as owner** writes them fine; the same insert from an `authenticated`/`anon` session is **rejected**. `players` from a client may only be reordered, not added to/removed from. Seed squads (Appendix C) as owner.
+2. **`starting_xi` ⊆ `players` (mig 121)** — the sanitizer trigger strips any `starting_xi` id not in `players`. Seed exactly the 11 ids you want, all present in `players`.
+3. **Draft recovery → `claim_draft_player` (mig 123)** — the client can no longer write `draft_allocations`/`squads` directly. To E2E the recovery flow, call `SELECT claim_draft_player('<league>','<player_id>','group');` as the **authenticated** test user (it advisory-locks, validates uniqueness/budget/position, and materializes the squad when complete). Seeding `draft_allocations` directly for setup still works **as owner**.
+4. **Chips are per-round (mig 121)** — to test Triple Captain in round N, insert a `chips_used` row (`chip_type='triple_captain', matchday_id='{tourn}-rN'`); to test a Joker, insert a `daily_jokers` row for that matchday. Setting `squads.is_triple_captain`/`joker_player_id` alone does nothing in scoring.
+5. **Joker deadline gate (mig 125)** — an `authenticated` client cannot insert a `daily_jokers` row for a matchday whose deadline has passed; seed historical jokers **as owner** (the guard exempts owner/service-role).
+6. **Bet auto-resolve works via cron (mig 124)** — `resolve-finished-bets` now settles bets automatically once their deadline passes; you no longer need a commissioner to resolve each one to test resolution (you still can, via the app or `resolve_bet`).
+7. **Auto-subs (mig/redeploy)** — to E2E auto-substitution, seed a finished round where a *starter* has `minutes_played = 0` and a *bench* player (in `players` but not `starting_xi`) has `minutes_played > 0`; after `calculate-scores`, the bench player's points should count.
+
 ---
 
 ## ⛔ PRICE CHECK — Run Before Any Budget Flow
@@ -1803,4 +1815,4 @@ ORDER BY s.user_id, fp.matchday_id;
 
 ---
 
-Last Updated: **2026-06-03** (session 78: added "SQL Seeding Rules" section — reference data via API only, format enum, league_mode auto-derived, draft phase conflict target, per-round chips from chips_used/daily_jokers, starting_xi subset, tournament-id alignment, relaxation in league_config, cup_active_clubs eliminated_at; fixed stale cup SQL in E-3/E-5/matrix from club/is_active → club_id/eliminated_at)
+Last Updated: **2026-06-03** (session 78: added "SQL Seeding Rules" + "Session-78 changes that affect seeding" (migrations 121–125: run seeds as owner; squads/draft_allocations lockdown → use claim_draft_player for recovery; starting_xi subset; per-round chips; joker deadline gate; bet auto-resolve; auto-sub setup); fixed stale cup SQL in E-3/E-5/matrix from club/is_active → club_id/eliminated_at)

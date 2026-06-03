@@ -577,8 +577,9 @@ Always create a new file — never modify existing migrations.
 | 122 | `122_session78_live_timing_and_cup_seed.sql` | Session 78: D1 flip-fixtures-live cron (kickoff-driven scheduled→live) + ingest-match-events-live re-ingests finished-within-3h; seed_cup_clubs(uuid) scoped to league tournament |
 | 123 | `123_session78_security_lockdown.sql` | Session 78 authz DD: guard_squad_protected_columns() trigger (blocks direct client writes to squads budget/identity/round_transfers; players reorder-only) — closes a proven P0 self-tamper; drop draft_allocations direct UPDATE policy + claim_draft_player() RPC (advisory-locked, fixes draft double-claim); activate_chip auth.uid() guard; accept_trade_proposal proposer-budget recheck |
 | 124 | `124_session78_resolve_bet_cron.sql` | Session 78: resolve_bet allows cron/service-role context (auth.uid() IS NULL) — auto-resolve cron was getting UNAUTHORIZED on every call so bets never auto-resolved; authenticated non-commissioners still rejected |
+| 125 | `125_session78_quickwins.sql` | Session 78: daily_jokers deadline gate (client can't set a joker after the matchday deadline; owner/service-role exempt for seeds) (#16); void_bet budget claw-back floored at 0 (#11) |
 
-**Next migration**: `125_`
+**Next migration**: `126_`
 
 **Key pipeline facts (2026-06-02):**
 - `calculate-scores` uses `scoring_rules` table (not `scoring_templates`) keyed by `tournament_id`

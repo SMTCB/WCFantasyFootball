@@ -87,7 +87,19 @@ Deno.serve(async (req) => {
   try {
     // ── 2. Fetch all matches from Forza ───────────────────────────────────────
     const { matches } = await forza(`/v1/tournaments/${forza_id}/matches`);
-    if (!matches?.length) return respond(200, { ok: true, fixtures_upserted: 0, deadlines_upserted: 0 });
+    if (!matches?.length) {
+      // #13: a previously-populated tournament returning 0 matches is almost certainly a
+      // Forza outage/partial response, not a legitimate empty — surface it instead of
+      // reporting healthy (otherwise live data silently stops with no trail).
+      const { count: existing } = await supabase
+        .from('fixtures').select('id', { count: 'exact', head: true }).eq('tournament_id', forza_id);
+      if ((existing ?? 0) > 0) {
+        await logError(FN, 'warning',
+          `Forza returned 0 matches for tournament ${forza_id} but ${existing} fixtures exist — possible API outage`,
+          { forza_id, existing });
+      }
+      return respond(200, { ok: true, fixtures_upserted: 0, deadlines_upserted: 0 });
+    }
 
     // ── 3. Build fixture upsert rows ──────────────────────────────────────────
     // Our fixtures.id must be a stable TEXT key — use forza_match_id as the
