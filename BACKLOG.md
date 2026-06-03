@@ -1104,6 +1104,12 @@ All required tables and RLS policies exist. The gazette INSERT policy (migration
 
 ### 🔵 P3 — Monitor / post-pilot
 
+#### Live screen score strip — filter to manager's leagues only (session 80, dry run finding)
+- **What**: Score strip fetches all `status='live'` fixtures globally. A manager sees live games from unrelated tournaments.
+- **Should**: Filter by `tournament_id IN (manager's league tournament IDs)` — all leagues, not just the active one.
+- **File**: `src/screens/LiveScreen.jsx` lines 401–404 (the `liveFixData` query). `hasLiveForActiveTournament` and Points Log are already correctly scoped — only the strip query needs updating.
+- **Effort**: 1h · **Priority**: P3
+
 #### AUDIT-57-11 — WC/tournament leagues never show "Window Closed" in the banner ✅ FIXED (session 58d, migration 102)
 - **Files**: `src/components/TransferWindowBanner.jsx:55`, `supabase/migrations/90_e2e_bug_fixes.sql:101-122`
 - **Issue**: `get_transfer_window_status` fallback (matchday path) returns `status:'open'` pointing at the next upcoming deadline — always. For tournament leagues the banner perpetually shows "Window Open · Closes in X". The `upcoming`/closed state only fires for `transfer_windows`-table leagues (EPL). Between a round's deadline and the next round opening, WC managers see "open" even though the previous round's squad is now locked.
