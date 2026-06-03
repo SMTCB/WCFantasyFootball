@@ -54,9 +54,12 @@ ORDER BY round_number NULLS FIRST;
 | | Group/league formats (EPL, La Liga…) | Knockout formats (WC, UCL, cups…) |
 |---|---|---|
 | `round_number` | ✅ Auto-populated — Forza returns a numbered round for every match | ❌ Always `NULL` — Forza returns `round: null` for every knockout fixture |
+| `matchday_id` | ✅ Auto-derived: `'{forza_id}-r{round}'` (PR #326) | ❌ Not set — skipped because `m.round` is null |
 | `matchday_deadlines` | ✅ Auto-derived: `MIN(kickoff_at)` per round | ❌ Never created — skipped because `m.round` is null |
 
 **If your tournament has a knockout stage, continue to Step 2b before proceeding.**
+
+> **Note on international friendlies**: Forza does not always provide a `round` field for non-competitive matches. When `round` is absent, `round_number` and `matchday_id` both remain `NULL`. You must assign them manually — see [Step 2c](#step-2c----friendly--test-tournaments-only).
 
 ---
 
@@ -195,7 +198,56 @@ SELECT matchday_id, deadline_at FROM matchday_deadlines
 WHERE tournament_id = '999' ORDER BY matchday_id;
 ```
 
-> ⚠️ **Never clear `fixtures.matchday_id` on knockout rows.** That column is the trigger's source of truth. If `sync-fixtures` ever wrote a `matchday_id` column (it currently does not), this mechanism would need revisiting.
+> ⚠️ **Never clear `fixtures.matchday_id` on knockout rows.** That column is the trigger's source of truth. Note: `sync-fixtures` now writes `matchday_id` for fixtures where `m.round` is non-null (PR #326) — but knockout fixtures have `m.round = null`, so `sync-fixtures` writes `matchday_id = null` for them. The trigger corrects this on every upsert by re-deriving `round_number` from the existing `matchday_id`. The net result: the seeded `matchday_id` survives every sync run.
+
+---
+
+## Step 2c — Friendly / test tournaments only
+
+Skip this step for competitive tournaments — `sync-players` handles them in Step 3.
+
+For **international friendlies or test tournaments** where `sync-players` returns no players (Forza's team endpoint is blocked or the tournament has no player data), copy players from an existing competitive tournament instead:
+
+```sql
+-- Example: copy France + CIV from WC (429) into the friendly tournament (623)
+-- id format: 'fp-{forza_player_id}-{target_tournament_id}'
+INSERT INTO players (
+  id, name, position, nationality, club,
+  price, photo_url, forza_player_id, forza_team_id,
+  tournament_id, birthdate, height, season_avg
+)
+SELECT
+  'fp-' || forza_player_id || '-623',
+  name, position, nationality, club,
+  price, photo_url, forza_player_id, forza_team_id,
+  '623',
+  birthdate, height, season_avg
+FROM players
+WHERE tournament_id = '429'
+  AND club IN ('France', 'Côte d''Ivoire')
+ON CONFLICT (id) DO NOTHING;
+```
+
+Also assign `round_number` and `matchday_id` manually for each friendly fixture you want to test:
+
+```sql
+-- Assign the next available round number and set the matchday deadline
+UPDATE fixtures SET round_number = 6, matchday_id = '623-r6' WHERE id = 'f-1220119072';
+
+INSERT INTO matchday_deadlines (matchday_id, tournament_id, deadline_at)
+VALUES ('623-r6', '623', '2026-06-04 19:00:00+00')   -- 10 min before kickoff
+ON CONFLICT (matchday_id) DO NOTHING;
+```
+
+Verify:
+```sql
+SELECT id, home_team, away_team, round_number, matchday_id, kickoff_at
+FROM fixtures WHERE tournament_id = '623' AND round_number IS NOT NULL ORDER BY kickoff_at;
+
+SELECT matchday_id, deadline_at FROM matchday_deadlines WHERE tournament_id = '623' ORDER BY deadline_at;
+
+SELECT club, COUNT(*) FROM players WHERE tournament_id = '623' GROUP BY club ORDER BY club;
+```
 
 ---
 
@@ -328,19 +380,91 @@ SELECT create_league('My UCL League', 'classic', '<user_id>', '999');
 
 ---
 
+## Step 9 — Set up squads for live scoring (dry run / test only)
+
+For a live test, squads need `starting_xi` and `captain_id` set — otherwise scoring falls back to `players[0..10]` which may produce an invalid formation (e.g. two GKs).
+
+**Check current state:**
+```sql
+SELECT s.id, s.user_id, s.matchday_id, s.captain_id,
+       array_length(s.players, 1)    AS squad_size,
+       array_length(s.starting_xi, 1) AS xi_size
+FROM squads s
+WHERE s.league_id = '<league_id>'
+ORDER BY s.created_at;
+```
+
+**If `starting_xi` is null, set it manually** — pick 11 players in a valid formation (1 GK, 3–5 DEF, 2–5 MID, 1–3 FWD):
+
+```sql
+-- Example: 1-4-3-3 formation
+UPDATE squads
+SET
+  starting_xi = ARRAY[
+    'fp-<gk_id>-623',
+    'fp-<def1>-623', 'fp-<def2>-623', 'fp-<def3>-623', 'fp-<def4>-623',
+    'fp-<mid1>-623', 'fp-<mid2>-623', 'fp-<mid3>-623',
+    'fp-<fwd1>-623', 'fp-<fwd2>-623', 'fp-<fwd3>-623'
+  ],
+  captain_id = 'fp-<captain_id>-623'
+WHERE id = '<squad_id>';
+```
+
+> All player IDs must exist in the `players` table for the target `tournament_id`. Use the player list from Step 2c or Step 3 to pick valid IDs.
+
+---
+
+## Step 10 — Live test dry run checklist
+
+Run this before each live test match to confirm everything is wired up:
+
+```sql
+-- 1. Fixture is scheduled and has round_number + matchday_id
+SELECT id, home_team, away_team, status, round_number, matchday_id, kickoff_at
+FROM fixtures WHERE id = 'f-<forza_match_id>';
+
+-- 2. matchday_deadline exists for this round
+SELECT matchday_id, deadline_at FROM matchday_deadlines
+WHERE tournament_id = '<forza_id>' AND matchday_id = '<tournament_id>-r<N>';
+
+-- 3. Players exist for both teams in the target tournament
+SELECT club, COUNT(*) FROM players WHERE tournament_id = '<forza_id>'
+AND club IN ('<home_team>', '<away_team>') GROUP BY club;
+
+-- 4. All squads in the test league have starting_xi and captain set
+SELECT s.user_id, array_length(s.starting_xi,1) AS xi, s.captain_id
+FROM squads s WHERE s.league_id = '<league_id>';
+
+-- 5. sync cron is active for the tournament
+SELECT jobname, schedule, active FROM cron.job
+WHERE jobname LIKE 'sync-%<slug>%';
+
+-- 6. scoring_rules exist for the tournament
+SELECT position, COUNT(*) FROM scoring_rules WHERE tournament_id = '<forza_id>' GROUP BY position;
+```
+
+All six checks should return data. Any NULL or empty result = fix it before kickoff.
+
+---
+
 ## Summary checklist
 
 ```
 [ ] INSERT into tournaments (sync_enabled = false)
-[ ] sync-fixtures run → verify fixtures populated; check for NULL round_number rows
+[ ] sync-fixtures run → verify fixtures populated; matchday_id auto-derived for competitive rounds
 [ ] (knockout tournament) seed fixtures.matchday_id by stage → trigger auto-derives round_number
 [ ] (knockout tournament) seed matchday_deadlines for KO rounds
+[ ] (friendly/test) manually set round_number + matchday_id on each fixture to test
+[ ] (friendly/test) manually seed matchday_deadlines for each round
 [ ] sync-players → verify player counts by position
+[ ] (friendly/test) copy players from existing tournament if sync-players returns nothing
 [ ] scoring_rules seeded for tournament_id
 [ ] 3 cron jobs added (sync-fixtures, sync-players, sync-player-status)
 [ ] UPDATE tournaments SET sync_enabled = true
-[ ] End-to-end pipeline test with a finished fixture
 [ ] Leagues created in the app
+[ ] Squads have valid starting_xi (11 players, valid formation) + captain_id set
+[ ] Run Step 10 dry run checklist — all 6 queries return data
+[ ] End-to-end pipeline test: manually trigger ingest + calculate-scores on a finished fixture
 ```
 
 ---
@@ -365,4 +489,10 @@ SELECT create_league('My UCL League', 'classic', '<user_id>', '999');
 
 ---
 
-Last Updated: **2026-06-03** (rewritten for clarity; Step 2b added — knockout `round_number` durable mechanism via `derive_fixture_round_number()` trigger, migration 126)
+Last Updated: **2026-06-04**
+- Step 2 table updated: `sync-fixtures` now writes `matchday_id` for competitive rounds (PR #326)
+- Step 2b note updated: trigger + sync-fixtures interaction clarified
+- Step 2c added: friendly/test tournament player copy + manual fixture setup pattern
+- Step 9 added: squad `starting_xi` + `captain_id` setup for live tests
+- Step 10 added: live test dry run checklist (6 SQL checks)
+- Summary checklist updated with all new steps
