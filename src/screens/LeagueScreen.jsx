@@ -246,12 +246,21 @@ export default function LeagueScreen() {
     const lid = activeLeague?.league_id;
     if (!lid || !targetUserId) return;
     setManagerRoster([]);
-    const { data: alloc } = await supabase.from('draft_allocations').select('allocated_players').eq('league_id', lid).eq('user_id', targetUserId).maybeSingle();
-    let ids = alloc?.allocated_players ?? [];
-    // Fallback: leagues without draft lottery have no draft_allocations rows — read from squads.players
+    // Always use the most recent squad row as the source of truth — it reflects
+    // the live squad including free-market transfers after any draft phase.
+    // draft_allocations only holds the subset of players allocated in the draft
+    // lottery and misses transfers made after allocation.
+    const { data: squad } = await supabase
+      .from('squads').select('players')
+      .eq('league_id', lid).eq('user_id', targetUserId)
+      .order('created_at', { ascending: false }).limit(1).maybeSingle();
+    let ids = squad?.players ?? [];
+    // Fallback: draft-only leagues may have allocations without a squad row yet
     if (!ids.length) {
-      const { data: squad } = await supabase.from('squads').select('players').eq('league_id', lid).eq('user_id', targetUserId).maybeSingle();
-      ids = squad?.players ?? [];
+      const { data: allocs } = await supabase
+        .from('draft_allocations').select('allocated_players')
+        .eq('league_id', lid).eq('user_id', targetUserId);
+      ids = (allocs ?? []).flatMap(a => a.allocated_players ?? []);
     }
     if (!ids.length) return;
     const { data: rows } = await supabase.from('players').select('id,name,position,club,price').in('id', ids);
@@ -1138,10 +1147,6 @@ export default function LeagueScreen() {
                        <h1 style={{ fontFamily: ftSerif, fontWeight: 900, fontSize: 'clamp(24px, 6vw, 44px)', lineHeight: 0.98, letterSpacing: '-0.025em', color: FT_INK, marginBottom: 14 }}>
                          {members[0] ? `${(members[0].users?.username || 'Unknown').toUpperCase()} leads the table.` : 'The season is yet to begin.'}
                        </h1>
-                       {/* Placeholder image */}
-                       <div style={{ height: 180, background: `repeating-linear-gradient(135deg, ${FT_INK} 0 1px, transparent 1px 12px), #D6CFBF`, border: `1px solid ${FT_INK}`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                         <span style={{ fontFamily: ftMono, fontSize: 10, letterSpacing: '.22em', color: FT_INK, background: FT_PAPER, padding: '4px 8px', border: `1px solid ${FT_INK}` }}>LEAGUE PHOTO · MATCHDAY</span>
-                       </div>
                        <p style={{ fontFamily: ftSerif, fontSize: 16, lineHeight: 1.5, color: FT_INK, marginTop: 14 }}>
                          <span style={{ float: 'left', fontFamily: ftSerif, fontWeight: 900, fontSize: 52, lineHeight: 0.85, paddingRight: 8, paddingTop: 4, color: FT_INK }}>{members[0] ? (members[0].users?.username?.[0] || 'T').toUpperCase() : 'T'}</span>
                          {members[0] ? `he ${name} is underway with ${members.length} managers fighting for glory. ${members[0].users?.username || 'The leader'} currently tops the table with ${Math.round(members[0].total_points)} points, setting the pace for the rest of the field.` : 'he season hasn\'t started yet. Invite your rivals and prepare for battle.'}
