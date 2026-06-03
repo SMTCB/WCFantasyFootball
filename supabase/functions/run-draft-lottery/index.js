@@ -119,6 +119,12 @@ async function runLottery(leagueId, phase = 'group') {
 
   if (!submissions?.length) return { message: 'No pending submissions', leagueId };
 
+  // P1-2: only draft (no-duplicate) leagues run a lottery. A classic league that somehow
+  // has a draft_deadline + pending submissions must never be allocated by the lottery.
+  if (leagueRow && leagueRow.format !== 'noduplicate' && leagueRow.league_mode !== 'draft') {
+    return { message: 'Not a draft league — lottery skipped', leagueId, skipped: true };
+  }
+
   // Per-league squad size, position caps, and budget (fall back to defaults)
   const SQUAD_SIZE     = Number(leagueRow?.squad_size ?? DEFAULT_SQUAD_SIZE);
   const SQUAD_POS_CAPS = leagueRow?.position_limits   ?? DEFAULT_SQUAD_POS_CAPS;

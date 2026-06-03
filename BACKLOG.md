@@ -1,11 +1,36 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-06-03 (session 78 — security & RLS DD: closed proven squad-tamper P0 + authz holes, migration 123; next migration 124_)  
+**Last Updated**: 2026-06-03 (session 78 — round 3: bet auto-resolve, auto-subs, captain & lottery guards, migration 124; next migration 125_)  
 **E2E Test Suite**: `platform.spec.js` (36 tests × 2 browsers) passing in CI ✅ — completes in ~3 min  
 **Full Playbook Run**: `E2E_TEST_PLAYBOOK.md` v2.0 — all flows confirmed (D-4a/b, E-4, D-3 ✅; F-2 PASS — form strip satisfies per-stat breakdown criterion)  
 **🟢 LAUNCH READY**: No critical (P0/P1) bugs open. All game mechanics functional. WC kick-off 2026-06-11.  
 **Live App**: https://wc-fantasy-football.vercel.app  
 **WC Kick-off**: 2026-06-11 19:00 UTC (Mexico vs South Africa)
+
+---
+
+## ✅ Session 78 — Round 3: gameplay-correctness fixes (2026-06-03)
+
+Follow-up fixes for issues detected during the DD that were still uncorrected. User-selected scope: Cluster A + scoring accuracy + auto-subs.
+
+### Fixed (migration 124 + calculate-scores/run-draft-lottery redeploy)
+| ID | Issue | Fix |
+|----|-------|-----|
+| A1 | **Bet auto-resolve broken** — `resolve_bet` required commissioner `auth.uid()`; the cron runs as service-role (no uid) → `UNAUTHORIZED` every time, bets never auto-resolved | allow `auth.uid() IS NULL` (cron) context; non-commissioner users still rejected. Verified: cron-context resolve → ok:true |
+| #17 | **No auto-subs** — DNP starters scored 0 with no bench cover | at round completion, replace 0-minute starters with the highest-priority bench player who played, formation kept valid; no premature subs during live scoring |
+| #6 | **Captain-on-bench bonus could land on a negative scorer** (×2/×3 amplified a loss) | reassign only to a starter scoring > 0; else no captain bonus |
+| A3 | **`run-draft-lottery` didn't check `league_mode`** — a classic league with a draft deadline could be lottery-allocated | skip lottery unless `format='noduplicate'`/`league_mode='draft'` |
+
+### Detected but DOCUMENTED (not fixed — data/scope limits)
+- **#2 `set_lineup` deduction**: on analysis it's eventually-consistent — the next `calculate-scores` recompute rebuilds the total from `starting_xi` correctly; the deduction is just an interim display value. No change needed.
+- **#5 `penalty_saved` over-credit**: ingest infers saves from opposing *missed* penalties — there is no save-specific Forza signal, so a correct fix isn't possible without better event data. Low group-stage impact (no shootouts). Documented.
+- **#7 extra-time minutes / abandoned matches**: starter minutes default to 90 (extra-time unrepresented) and abandoned/cancelled map to `finished`. Correct fixes need Forza match-duration data / a new `status` enum value (schema-invasive for a rare event). Documented.
+
+### Other still-open (lower priority, from the DD lists)
+- Budget: cross-subsystem auction reservation (#9, phantom-void), auction+trade player-dup (#10), void_bet negative floor (#11), confirm price freeze (#12).
+- Observability: Forza empty-response masks outages (#13); `calculate-scores` accepts unsigned service_role claim (#14); stale deadline pruning (#15); `daily_jokers` deadline gating (#16).
+- Product calls: opponents' squads visible pre-deadline (#18), points-only tie-break (#19).
+- DD areas not yet run: auth/onboarding+Realtime, ops-readiness, performance.
 
 ---
 

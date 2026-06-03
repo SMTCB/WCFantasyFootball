@@ -434,6 +434,31 @@ Deno.serve(async (req) => {
 
 // ─── Shared helpers ────────────────────────────────────────────────────────────
 
+// Auto-sub helpers (#17). Formation: 1 GK, 3–5 DEF, 2–5 MID, 1–3 FWD (11 total).
+function isValidFormation(ids, posLookup) {
+  const c = { GK: 0, DEF: 0, MID: 0, FWD: 0 };
+  for (const id of ids) { const p = posLookup[id]; if (c[p] !== undefined) c[p]++; }
+  return c.GK >= 1 && c.DEF >= 3 && c.DEF <= 5 && c.MID >= 2 && c.MID <= 5
+      && c.FWD >= 1 && c.FWD <= 3 && (c.GK + c.DEF + c.MID + c.FWD) === ids.length;
+}
+
+// Replace DNP starters (0 minutes) with the highest-priority bench player who played,
+// keeping the formation valid. Bench priority = order in the squad's players array.
+function applyAutoSubs(pitch, bench, minutesLookup, posLookup) {
+  const played = (id) => (minutesLookup[id] ?? 0) > 0;
+  const xi = [...pitch];
+  const usedBench = new Set();
+  for (let i = 0; i < xi.length; i++) {
+    if (played(xi[i])) continue;                 // starter played — keep
+    for (const b of bench) {                     // find a played bench replacement
+      if (usedBench.has(b) || !played(b)) continue;
+      const candidate = [...xi]; candidate[i] = b;
+      if (isValidFormation(candidate, posLookup)) { xi[i] = b; usedBench.add(b); break; }
+    }
+  }
+  return xi;
+}
+
 async function rollupSquads(fixture_id, pointsLookup, tournament_id) {
   const fullRoundLookup = { ...pointsLookup };
 
@@ -538,6 +563,41 @@ async function rollupSquads(fixture_id, pointsLookup, tournament_id) {
     (existingFP ?? []).map(fp => [fp.squad_id, fp.points_breakdown ?? {}])
   );
 
+  // ── Auto-subs (#17) data ─────────────────────────────────────────────────────
+  // Auto-substitution replaces a starter who did NOT play with the highest-priority
+  // bench player who did, provided the formation stays valid. To avoid subbing out a
+  // starter who simply hasn't kicked off yet, subs are applied ONLY once EVERY fixture
+  // in the round is finished (FPL-style end-of-gameweek auto-subs). During live scoring
+  // the XI is scored as-is (DNP starters transiently score 0; corrected at round end).
+  const allRoundFixtureIds = [fixture_id, ...roundFixtureIds];
+  const { data: roundFixStatus } = await supabase
+    .from('fixtures').select('id, status').in('id', allRoundFixtureIds);
+  const roundComplete = (roundFixStatus?.length ?? 0) > 0
+    && roundFixStatus.every(f => f.status === 'finished');
+
+  // minutes played per player this round (max across the round's fixtures)
+  const minutesLookup = {};
+  if (roundComplete) {
+    const { data: minRows } = await supabase
+      .from('player_match_stats')
+      .select('player_id, minutes_played')
+      .in('fixture_id', allRoundFixtureIds);
+    for (const r of minRows ?? []) {
+      minutesLookup[r.player_id] = Math.max(minutesLookup[r.player_id] ?? 0, r.minutes_played ?? 0);
+    }
+  }
+
+  // positions for every squad player (formation validation for auto-subs)
+  const posLookup = {};
+  if (roundComplete) {
+    const allSquadPlayerIds = [...new Set(squads.flatMap(s => s.players || []))];
+    if (allSquadPlayerIds.length) {
+      const { data: posRows } = await supabase
+        .from('players').select('id, position').in('id', allSquadPlayerIds);
+      for (const p of posRows ?? []) posLookup[p.id] = (p.position || 'MID').toUpperCase();
+    }
+  }
+
   // Build fantasy_points upserts — one row per squad per matchday (L1.3 / L1.4 / L1.5)
   const fantasyPointsUpserts = [];
   for (const squad of squads) {
@@ -545,21 +605,32 @@ async function rollupSquads(fixture_id, pointsLookup, tournament_id) {
     const isTripleCaptain = tcThisRound.has(mgrKey);   // C1: per-round, from chips_used
     const jokerPid = jokerThisRound[mgrKey] ?? null;    // C1: per-round, from daily_jokers
     // Phase B: use starting_xi when set; fallback to players[0..10] for legacy squads
-    const pitchPlayers = (squad.starting_xi?.length > 0)
+    const baseXI = (squad.starting_xi?.length > 0)
       ? squad.starting_xi
       : (squad.players || []).slice(0, 11);
+
+    // #17: at round completion, auto-sub DNP starters (0 min) for the highest-priority
+    // bench player who played, keeping the formation valid. Bench priority = players-array
+    // order. Before the round completes, score the XI as-is.
+    let pitchPlayers = baseXI;
+    if (roundComplete) {
+      const bench = (squad.players || []).filter(pid => !baseXI.includes(pid));
+      pitchPlayers = applyAutoSubs(baseXI, bench, minutesLookup, posLookup);
+    }
     let total = 0;
 
-    // L3.5: if captain is on the bench, award the bonus to the highest-scoring starter.
+    // L3.5: if the captain isn't in the (effective) XI, move the bonus to the highest
+    // POSITIVE-scoring starter. #6: never reassign onto a negative score (that would
+    // amplify a loss); if no starter scored positive, no captain bonus applies this round.
     let effectiveCaptainId = squad.captain_id;
     if (squad.captain_id && !pitchPlayers.includes(squad.captain_id)) {
-      let bestPid = null, bestRaw = -Infinity;
+      let bestPid = null, bestRaw = 0;   // strictly > 0 required to reassign
       for (const pid of pitchPlayers) {
         const raw = fullRoundLookup[pid] ?? 0;
         if (raw > bestRaw) { bestRaw = raw; bestPid = pid; }
       }
-      effectiveCaptainId = bestPid;
-      logError('warning', 'Captain on bench; captain bonus moved to highest-scoring starter', {
+      effectiveCaptainId = bestPid;      // null when no positive scorer → no captain bonus
+      logError('warning', 'Captain not in XI; bonus moved to highest positive starter (if any)', {
         fixture_id, squad_id: squad.id, captain_id: squad.captain_id, effective_captain_id: bestPid,
       }); // fire-and-forget
       // TDD-07: notify manager so they know the reallocation happened
@@ -574,9 +645,7 @@ async function rollupSquads(fixture_id, pointsLookup, tournament_id) {
       }).then(); // fire-and-forget
     }
 
-    // Starters only — bench players (indices 11-14) never score.
-    // Auto-substitution is intentionally disabled; DNP starters score 0.
-    // (Auto-sub is a Backlog item to implement in a future sprint.)
+    // Score the (auto-subbed) starting XI. Bench players not subbed in never score.
     for (const pid of pitchPlayers) {
       let pts = fullRoundLookup[pid] ?? 0;   // ?? preserves legitimate negative scores (L1.3)
       if (Number.isNaN(pts)) {

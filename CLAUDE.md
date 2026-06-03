@@ -576,8 +576,9 @@ Always create a new file — never modify existing migrations.
 | 121 | `121_session78_dd_corrections.sql` | Session 78 final DD: C5 sanitize_starting_xi trigger (starting_xi ⊆ players); DR4 recreate sync_league_mode() (absent in prod) + fire on all insert/update; C2 activate_chip rejects 'wildcard' + clear is_wildcard |
 | 122 | `122_session78_live_timing_and_cup_seed.sql` | Session 78: D1 flip-fixtures-live cron (kickoff-driven scheduled→live) + ingest-match-events-live re-ingests finished-within-3h; seed_cup_clubs(uuid) scoped to league tournament |
 | 123 | `123_session78_security_lockdown.sql` | Session 78 authz DD: guard_squad_protected_columns() trigger (blocks direct client writes to squads budget/identity/round_transfers; players reorder-only) — closes a proven P0 self-tamper; drop draft_allocations direct UPDATE policy + claim_draft_player() RPC (advisory-locked, fixes draft double-claim); activate_chip auth.uid() guard; accept_trade_proposal proposer-budget recheck |
+| 124 | `124_session78_resolve_bet_cron.sql` | Session 78: resolve_bet allows cron/service-role context (auth.uid() IS NULL) — auto-resolve cron was getting UNAUTHORIZED on every call so bets never auto-resolved; authenticated non-commissioners still rejected |
 
-**Next migration**: `124_`
+**Next migration**: `125_`
 
 **Key pipeline facts (2026-06-02):**
 - `calculate-scores` uses `scoring_rules` table (not `scoring_templates`) keyed by `tournament_id`
@@ -608,6 +609,10 @@ Always create a new file — never modify existing migrations.
 - `squads.round_transfers` JSONB — `{ matchday_id: count }` — buy+sell transfers used per round; enforced by `execute_transfer_atomic`
 - `set_lineup(p_squad_id, p_player_out, p_player_in)` — atomic RPC to swap starters/bench; enforces lock, fixture-complete, formation rules; deducts points if scorer subbed out
 - `lock_lineups_for_fixture(p_fixture_id)` — called fire-and-forget by `ingest-match-events`; adds XI players with started fixtures to `lineup_locks`
+- **Auto-subs (session 78)**: `calculate-scores` replaces DNP starters (0 minutes) with the highest-priority bench player who played, keeping formation valid (1 GK / 3–5 DEF / 2–5 MID / 1–3 FWD) — but ONLY once every fixture in the round is finished (`roundComplete`). During live scoring the XI is scored as-is. Bench priority = `squads.players` array order.
+- **Captain reassignment (session 78)**: if the captain isn't in the (auto-subbed) XI, the bonus moves only to a starter who scored **> 0** — never onto a negative score. An actual captain who played and scored negative still gets the ×2/×3 (standard).
+- `resolve_bet` (migration 124) allows the cron/service-role context (`auth.uid() IS NULL`) so the `resolve-finished-bets` cron can auto-resolve; authenticated non-commissioners are still rejected.
+- **Known scoring approximations (documented, not bugs to fix pre-pilot)**: `penalty_saved` is inferred from opposing *missed* penalties (no save-specific Forza signal — can over-credit on posts/shootouts; low group-stage impact); starter minutes default to 90 (extra-time not represented); abandoned/cancelled matches map to `finished`. `set_lineup`'s point deduction is an interim value that the next `calculate-scores` recompute overwrites correctly.
 
 ---
 
