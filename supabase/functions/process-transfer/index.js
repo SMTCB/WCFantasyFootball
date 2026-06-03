@@ -202,6 +202,15 @@ Deno.serve(async (req) => {
     const currentPlayers = squad.players ?? [];
     const budget         = Number(squad.budget_remaining ?? 100);
 
+    // C6: enforce the per-round transfer limit against the real upcoming round.
+    // A squad still carrying a placeholder matchday_id (e.g. 'current') must not
+    // bypass the limit. Migration 114 intentionally skips enforcement only when no
+    // canonical '-rN' round can be resolved at all (genuinely pre-competition, where
+    // activeMatchdayId is itself null because no deadline exists yet).
+    const enforceMatchdayId = /-r\d+$/.test(squad.matchday_id ?? '')
+      ? squad.matchday_id
+      : activeMatchdayId;
+
     // ── SELL ─────────────────────────────────────────────────────────────────
     if (action === 'sell') {
       if (!currentPlayers.includes(player_id)) {
@@ -218,7 +227,7 @@ Deno.serve(async (req) => {
           p_player_id:   player_id,
           p_price:       price,
           p_league_id:   league_id,
-          p_matchday_id: squad.matchday_id ?? activeMatchdayId,
+          p_matchday_id: enforceMatchdayId,
         });
 
       if (updateErr || !xferResult?.ok) {
@@ -381,7 +390,7 @@ Deno.serve(async (req) => {
           p_squad_max:   SQUAD_MAX,      // TDD-11: squad size enforced inside the lock
           p_club_max:    clubMax,                            // 96/105: dynamic cap — relaxes as cup clubs are eliminated
           p_league_id:   league_id,                          // 106: transfer-limit enforcement context
-          p_matchday_id: squad.matchday_id ?? activeMatchdayId, // 106: use squad's actual round, not next round
+          p_matchday_id: enforceMatchdayId,                   // 106/C6: real round, never a placeholder
         });
 
       if (updateErr || !xferResult?.ok) {

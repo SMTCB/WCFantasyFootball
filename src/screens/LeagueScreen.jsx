@@ -453,18 +453,23 @@ export default function LeagueScreen() {
         .maybeSingle();
       setDraftGaps(alloc?.unresolved_slots ?? 0);
 
-      // Check if draft is open and manager hasn't submitted yet
+      // Check if draft is open and manager hasn't submitted yet.
+      // P1-2: only draft (no-duplicate) leagues run a draft — never show draft UI
+      // for a classic league even if a draft_deadline somehow got set.
+      const isDraftLeague = lData?.format === 'noduplicate' || lData?.league_mode === 'draft';
       const deadline = lData?.draft_deadline;
       const deadlineDate = deadline ? new Date(deadline) : null;
-      if (deadlineDate && deadlineDate > new Date()) {
+      if (isDraftLeague && deadlineDate && deadlineDate > new Date()) {
         setDraftDeadlineDate(deadlineDate);
-        const { data: sub } = await supabase
+        // A draft league can have rows for multiple phases (group + knockout), so
+        // fetch as a list rather than maybeSingle (which errors on >1 row).
+        const { data: subs } = await supabase
           .from('draft_submissions')
           .select('id')
           .eq('league_id', id)
           .eq('user_id', user?.id)
-          .maybeSingle();
-        setDraftOpen(!sub);
+          .limit(1);
+        setDraftOpen(!(subs && subs.length));
       } else {
         setDraftDeadlineDate(null);
         setDraftOpen(false);
