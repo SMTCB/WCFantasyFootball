@@ -191,6 +191,28 @@ function processPeriodsData(periodsData, homeTeamForzaId) {
 Deno.serve(async (req) => {
   if (req.method !== 'POST') return respond(405, { error: 'POST required' });
 
+  // P1 auth guard: this function does privileged service-role writes and chain-invokes
+  // calculate-scores. verify_jwt is false, so guard here (mirrors calculate-scores):
+  // accept the service-role key (cron), a service_role JWT claim, or a valid user JWT
+  // (admin re-ingest button). Reject anon callers — closes the unauthenticated endpoint.
+  const authHeader = req.headers.get('Authorization') ?? '';
+  const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
+  let isAuthorized = serviceRoleKey !== '' && authHeader === `Bearer ${serviceRoleKey}`;
+  if (!isAuthorized) {
+    try {
+      const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : '';
+      const parts = token.split('.');
+      if (parts.length === 3) {
+        const payload = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')));
+        isAuthorized = payload.role === 'service_role';
+      }
+    } catch { /* not a service-role JWT */ }
+  }
+  if (!isAuthorized) {
+    const { data: { user } } = await supabase.auth.getUser(authHeader.replace('Bearer ', ''));
+    if (!user) return respond(401, { error: 'Unauthorized' });
+  }
+
   let forza_match_id;
   try { ({ forza_match_id } = await req.json()); }
   catch { return respond(400, { error: 'Invalid JSON body' }); }

@@ -186,60 +186,30 @@ export default function DraftRecoveryScreen() {
     setPicking(player.id);
     setError(null);
     try {
-      const newPlayerIds = [...squad.map(p => p.id), player.id];
-
       // Optimistic update
       setSquad(prev => [...prev, player]);
       setTakenIds(prev => new Set([...prev, player.id]));
 
-      const { error: err } = await supabase
-        .from('draft_allocations')
-        .update({
-          allocated_players: newPlayerIds,
-          unresolved_slots:  Math.max(0, SQUAD_SIZE - newPlayerIds.length),
-          allocated_at:      new Date().toISOString(),
-        })
-        .eq('league_id', leagueId)
-        .eq('user_id', user?.id)
-        .eq('phase', allocation?.phase ?? 'group');
+      // All allocation + squad materialization happens server-side in claim_draft_player:
+      // it takes a per-league advisory lock (so two managers can't claim the same player),
+      // re-validates ownership / budget / position caps / global uniqueness, appends the
+      // pick, and writes the squads row once complete. Direct writes to draft_allocations
+      // and squads are no longer permitted to the client (migration 123).
+      const { data: res, error: err } = await supabase.rpc('claim_draft_player', {
+        p_league_id: leagueId,
+        p_player_id: player.id,
+        p_phase:     allocation?.phase ?? 'group',
+      });
 
-      if (err) {
+      if (err || !res?.ok) {
         // Rollback optimistic update
         setSquad(prev => prev.filter(p => p.id !== player.id));
         setTakenIds(prev => { const s = new Set(prev); s.delete(player.id); return s; });
-        setError('Someone else just picked that player. Choose another.');
+        setError(res?.error || 'Could not draft that player. Choose another.');
         return;
       }
 
-      // When the squad is complete, persist it to the squads table so it is
-      // available in the Squad screen and for scoring.
-      // U10: resolve the canonical matchday_id from matchday_deadlines — never write 'current'.
-      if (newPlayerIds.length >= SQUAD_SIZE) {
-        const newBudgetRemaining = BUDGET_TOTAL - [...squad, player]
-          .reduce((sum, p) => sum + (p.price ?? 0), 0);
-
-        let activeMatchdayId = null;
-        const tournamentId = cfg.tournamentId;
-        if (tournamentId) {
-          const { data: md } = await supabase
-            .from('matchday_deadlines')
-            .select('matchday_id')
-            .eq('tournament_id', tournamentId)
-            .order('deadline_at', { ascending: false })
-            .limit(1)
-            .maybeSingle();
-          activeMatchdayId = md?.matchday_id ?? null;
-        }
-
-        await supabase.from('squads').upsert({
-          league_id:        leagueId,
-          user_id:          user?.id,
-          matchday_id:      activeMatchdayId,
-          players:          newPlayerIds,
-          budget_remaining: Math.max(0, newBudgetRemaining),
-        }, { onConflict: 'league_id,user_id,matchday_id' });
-        setDone(true);
-      }
+      if (res.done) setDone(true);
     } finally {
       setPicking(null);
     }
