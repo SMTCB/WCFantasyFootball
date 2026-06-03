@@ -13,6 +13,7 @@
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { logError } from '../_shared/log.ts';
+import { requireServiceRole } from '../_shared/auth.ts';
 
 const FN      = 'sync-players';
 const supabase = createClient(
@@ -71,6 +72,8 @@ function isRealTeam(name) {
 
 Deno.serve(async (req) => {
   if (req.method !== 'POST') return respond(405, { error: 'POST required' });
+  const authErr = requireServiceRole(req);
+  if (authErr) return authErr;
 
   let forza_id;
   try { ({ forza_id } = await req.json()); }
