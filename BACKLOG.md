@@ -1104,7 +1104,17 @@ All required tables and RLS policies exist. The gazette INSERT policy (migration
 
 ### 🔵 P3 — Monitor / post-pilot
 
-#### Live screen score strip — filter to manager's leagues only (session 80, dry run finding)
+#### ⚠️ OPEN — Confirm Forza /v2/player_statistics covers WC matches (session 80, before June 11)
+- **What**: During NED vs ALG dry run, Forza returned HTTP 404 on `/v2/matches/{id}/player_statistics` for a friendly — goal scorer not attributed. Minutes + clean sheet worked fine via other endpoints.
+- **Action**: Ask Forza when replying about the API key: *"Does /v2/player_statistics cover all WC matches?"*
+- **If yes**: no code change needed. **If no**: investigate fallback for goal attribution.
+- **Priority**: HIGH — confirm before June 11 kickoff
+
+#### ✅ FIXED — calculate-scores logged critical errors for null round_number fixtures (session 80, PR #324)
+- Friendlies/unassigned fixtures (round_number NULL) triggered a CRITICAL every 2 min while live — noisy false alarm in error monitor.
+- Fixed: downgraded to `warning` with clearer message. `supabase/functions/calculate-scores/index.js`
+
+#### ✅ FIXED — Live screen score strip — filter to manager's leagues only (session 80, PR #322)
 - **What**: Score strip fetches all `status='live'` fixtures globally. A manager sees live games from unrelated tournaments.
 - **Should**: Filter by `tournament_id IN (manager's league tournament IDs)` — all leagues, not just the active one.
 - **File**: `src/screens/LiveScreen.jsx` lines 401–404 (the `liveFixData` query). `hasLiveForActiveTournament` and Points Log are already correctly scoped — only the strip query needs updating.
