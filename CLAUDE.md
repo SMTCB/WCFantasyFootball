@@ -575,8 +575,9 @@ Always create a new file — never modify existing migrations.
 | 120 | `120_dd_m13_late_scoring.sql` | Session 75: calculate-scores-live expired anon JWT fixed → service-role; new calculate-scores-late-finishers cron 23:30+00:30 UTC with 3h window for late WC finishers (DD-M13) |
 | 121 | `121_session78_dd_corrections.sql` | Session 78 final DD: C5 sanitize_starting_xi trigger (starting_xi ⊆ players); DR4 recreate sync_league_mode() (absent in prod) + fire on all insert/update; C2 activate_chip rejects 'wildcard' + clear is_wildcard |
 | 122 | `122_session78_live_timing_and_cup_seed.sql` | Session 78: D1 flip-fixtures-live cron (kickoff-driven scheduled→live) + ingest-match-events-live re-ingests finished-within-3h; seed_cup_clubs(uuid) scoped to league tournament |
+| 123 | `123_session78_security_lockdown.sql` | Session 78 authz DD: guard_squad_protected_columns() trigger (blocks direct client writes to squads budget/identity/round_transfers; players reorder-only) — closes a proven P0 self-tamper; drop draft_allocations direct UPDATE policy + claim_draft_player() RPC (advisory-locked, fixes draft double-claim); activate_chip auth.uid() guard; accept_trade_proposal proposer-budget recheck |
 
-**Next migration**: `123_`
+**Next migration**: `124_`
 
 **Key pipeline facts (2026-06-02):**
 - `calculate-scores` uses `scoring_rules` table (not `scoring_templates`) keyed by `tournament_id`
@@ -600,7 +601,8 @@ Always create a new file — never modify existing migrations.
 - **Chips never auto-reset on the squad row** — `activate_chip` sets `is_triple_captain` permanently and the joker is mirrored onto `squads.joker_player_id` but never cleared. Session 78 made scoring ignore those persistent columns and derive chips per-round from `chips_used`/`daily_jokers` instead. If you add new scoring code, read chips per-round — do NOT trust the persistent squad columns.
 - **place_bid** (migration 111): budget reservation — sums all open winning bids before accepting new bid; `v_reserved` = SUM of current_bid on other open auctions where caller is `highest_bidder_id`; new bid rejected if `budget_remaining - v_reserved < p_bid_amount`
 - **process-transfer** recovery window fix: if squad not found for `activeMatchdayId`, falls back to most recently created squad for the league (`ORDER BY created_at DESC`) before creating a new empty one; `execute_transfer_atomic` called with `squad.matchday_id` not `activeMatchdayId` — ensures transfer limits tracked for correct round
-- `squads` updatable columns (via RLS): `captain_id`, `joker_player_id`, `is_wildcard`, `is_triple_captain`
+- `squads` **direct client writes** (migration 123 `guard_squad_protected_columns` trigger): a client (authenticated/anon) may only set `captain_id`, `starting_xi`, `lineup_locks`, `joker_player_id`, `is_triple_captain` and **reorder** `players` (same set). `budget_remaining`, `user_id`, `league_id`, `matchday_id`, `round_transfers`, and roster add/remove are BLOCKED for direct writes — they change only through SECURITY DEFINER RPCs (`execute_transfer_atomic`, `set_lineup`, `claim_draft_player`, `accept_trade_proposal`), which run as owner and bypass the guard. Do NOT add client code that writes those columns directly; route through an RPC. (Closes a proven P0: clients previously had table-wide UPDATE and could set their own budget/roster.)
+- **Draft picks** go through `claim_draft_player(p_league_id, p_player_id, p_phase)` (advisory-locked per league+phase → no concurrent double-claim; validates uniqueness/budget/position; materializes the squad when complete). The client no longer writes `draft_allocations`/`squads` directly during recovery.
 - `squads.starting_xi` TEXT[] — the 11 player IDs that score this round; empty `{}` → scoring falls back to `players[0..10]`
 - `squads.lineup_locks` JSONB — `{ matchday_id: [player_id, ...] }` — players subbed out, cannot re-enter XI until next matchday
 - `squads.round_transfers` JSONB — `{ matchday_id: count }` — buy+sell transfers used per round; enforced by `execute_transfer_atomic`

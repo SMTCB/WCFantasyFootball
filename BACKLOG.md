@@ -1,11 +1,34 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-06-03 (session 78 — final pre-pilot DD: scoring/draft/cup/pipeline corrections, migrations 121–122; next migration 123_)  
+**Last Updated**: 2026-06-03 (session 78 — security & RLS DD: closed proven squad-tamper P0 + authz holes, migration 123; next migration 124_)  
 **E2E Test Suite**: `platform.spec.js` (36 tests × 2 browsers) passing in CI ✅ — completes in ~3 min  
 **Full Playbook Run**: `E2E_TEST_PLAYBOOK.md` v2.0 — all flows confirmed (D-4a/b, E-4, D-3 ✅; F-2 PASS — form strip satisfies per-stat breakdown criterion)  
 **🟢 LAUNCH READY**: No critical (P0/P1) bugs open. All game mechanics functional. WC kick-off 2026-06-11.  
 **Live App**: https://wc-fantasy-football.vercel.app  
 **WC Kick-off**: 2026-06-11 19:00 UTC (Mexico vs South Africa)
+
+---
+
+## ✅ Session 78 — Security & RLS lockdown (2026-06-03)
+
+Adversarial authorization + budget-integrity DD (round 2). The headline finding was **proven exploitable on the live DB and is now closed**.
+
+### Fixed (migration 123 + ingest-match-events redeploy + DraftRecoveryScreen)
+| ID | Sev | Issue | Fix |
+|----|-----|-------|-----|
+| SEC-P0 | 🔴 P0 | `anon`/`authenticated` had table-wide UPDATE on `squads` (every column) → a logged-in user could `PATCH` their own `budget_remaining`/`players` directly, bypassing all transfer/budget/cap logic. **Proven** via live RLS-simulated UPDATE. | `guard_squad_protected_columns()` BEFORE trigger: budget/identity/round_transfers immutable from client; `players` reorder-only; RPCs (run as owner) bypass it. Verified: tamper→blocked, reorder/captain/starting_xi→allowed |
+| SEC-P1 | 🟠 P1 | `activate_chip` trusted client `p_user_id` → burn a rival's Triple Captain | reject when `p_user_id <> auth.uid()` |
+| SEC-P1 | 🟠 P1 | `ingest-match-events` fully unauthenticated (privileged writes + chains to calculate-scores) | auth guard (service-role key / claim / valid user). Verified: junk→401, cron→200 |
+| BUD-P0 | 🔴 P0 | Draft recovery wrote picks client-side with no server lock → two managers could claim the same player (no-duplicate invariant broken) | `claim_draft_player()` RPC: per-league advisory lock + global uniqueness + budget/position validation + squad materialization; client direct writes to `draft_allocations`/`squads` removed |
+| BUD-P1 | 🟠 P1 | `accept_trade_proposal` checked the target's budget, but the cash sweetener debits the **proposer** → negative budget | re-check proposer budget at accept time inside the lock |
+
+**Tables confirmed already safe** (RLS-locked, read-only/RPC-only): `fantasy_points`, `league_members` (total_points/rank), `players` (price), `league_config`, `chips_used`, `cup_active_clubs`.
+
+### Remaining (tracked, non-blocking — de-amplified now that budget is RPC-only)
+- **BUD-P1 cross-subsystem reservation**: `execute_transfer_atomic` doesn't subtract open auction-bid reservations from available budget (and vice-versa) → a concurrent transfer + bid can phantom-void a won auction at settle. Conservation holds (no theft); auction outcome non-deterministic. Add the reservation query to the buy guard.
+- **SEC-P2 daily_jokers**: clients can insert their own `daily_jokers` row for an arbitrary `matchday_id` (own rows). Gate on the matchday deadline.
+- **DD-M15 service-role key rotation**: committed in cron bodies. Runbook: [docs/deployment/SERVICE_KEY_ROTATION_RUNBOOK.md](docs/deployment/SERVICE_KEY_ROTATION_RUNBOOK.md). **Scheduled before kickoff.**
+- Auth & onboarding + Realtime, ops-readiness, performance — DD areas not yet run (deferred).
 
 ---
 
