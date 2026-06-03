@@ -315,9 +315,12 @@ export default function SquadScreen() {
         pitchPlayers = pitchPlayers.slice(0, 11);
       }
 
-      // Persist corrected starting_xi to DB so it doesn't re-break on every load
+      // Persist corrected starting_xi to DB so it doesn't re-break on every load.
+      // Fire-and-forget (self-heals on next load if it fails) but log so a persistent
+      // rejection (RLS/guard) doesn't stay invisible.
       if (needsXiFix && squad.id) {
-        supabase.from('squads').update({ starting_xi: pitchPlayers.map(p => p.id) }).eq('id', squad.id);
+        supabase.from('squads').update({ starting_xi: pitchPlayers.map(p => p.id) }).eq('id', squad.id)
+          .then(({ error }) => { if (error) console.warn('[SquadScreen] starting_xi self-heal failed:', error.message); });
       }
 
       setSquadData({
@@ -555,8 +558,15 @@ export default function SquadScreen() {
         return;
       }
       setSaving(true);
+      const prevCaptainId = squadData.captainId;
       setSquadData({ ...squadData, captainId: selectedPlayer.id });
-      await supabase.from('squads').update({ captain_id: selectedPlayer.id }).eq('id', squadData.squadId);
+      const { error } = await supabase.from('squads').update({ captain_id: selectedPlayer.id }).eq('id', squadData.squadId);
+      if (error) {
+        // Persisting the armband failed — revert the optimistic update so the UI
+        // doesn't show a captain that won't actually score.
+        setSquadData(prev => ({ ...prev, captainId: prevCaptainId }));
+        showToast('Failed to set captain — please try again.', 'error');
+      }
     } finally { setSaving(false); setSelectedPlayer(null); }
   };
 
@@ -574,9 +584,11 @@ export default function SquadScreen() {
         if (error.code === '23505') showToast('You already used your 16th Man this matchday!', 'warning');
         else throw error;
       } else {
-        // DD-C13: sync joker_player_id on squad so calculate-scores picks it up
+        // DD-C13: mirror joker_player_id on squad for UI; scoring reads daily_jokers
+        // (above) so this sync failing is non-critical — log rather than block.
         if (squadData?.squadId) {
-          await supabase.from('squads').update({ joker_player_id: selectedPlayer.id }).eq('id', squadData.squadId);
+          const { error: syncErr } = await supabase.from('squads').update({ joker_player_id: selectedPlayer.id }).eq('id', squadData.squadId);
+          if (syncErr) console.warn('[SquadScreen] joker squad-sync failed:', syncErr.message);
         }
         setTodayJokerId(selectedPlayer.id); setSelectedPlayer(null);
       }
@@ -678,9 +690,11 @@ export default function SquadScreen() {
         if (error.code === '23505') showToast('You already have a Joker for this matchday!', 'warning');
         else throw error;
       } else {
-        // DD-C13: sync joker_player_id on squad so calculate-scores picks it up
+        // DD-C13: mirror joker_player_id on squad for UI; scoring reads daily_jokers
+        // (above) so this sync failing is non-critical — log rather than block.
         if (squadData?.squadId) {
-          await supabase.from('squads').update({ joker_player_id: player.id }).eq('id', squadData.squadId);
+          const { error: syncErr } = await supabase.from('squads').update({ joker_player_id: player.id }).eq('id', squadData.squadId);
+          if (syncErr) console.warn('[SquadScreen] joker squad-sync failed:', syncErr.message);
         }
         setJokerPlayer(player); setTodayJokerId(player.id); setIsJokerPickerOpen(false);
       }
