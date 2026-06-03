@@ -1,11 +1,23 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-06-03 (session 78 — round 3: bet auto-resolve, auto-subs, captain & lottery guards, migration 124; next migration 125_)  
+**Last Updated**: 2026-06-03 (session 78 — round 4 quick wins: Forza-outage logging, joker deadline gate, void_bet floor, playbook seeding update, migration 125; next migration 126_)  
 **E2E Test Suite**: `platform.spec.js` (36 tests × 2 browsers) passing in CI ✅ — completes in ~3 min  
 **Full Playbook Run**: `E2E_TEST_PLAYBOOK.md` v2.0 — all flows confirmed (D-4a/b, E-4, D-3 ✅; F-2 PASS — form strip satisfies per-stat breakdown criterion)  
 **🟢 LAUNCH READY**: No critical (P0/P1) bugs open. All game mechanics functional. WC kick-off 2026-06-11.  
 **Live App**: https://wc-fantasy-football.vercel.app  
 **WC Kick-off**: 2026-06-11 19:00 UTC (Mexico vs South Africa)
+
+---
+
+## ✅ Session 78 — Round 4: quick wins + seeding doc (2026-06-03)
+
+- **#13 Forza-outage observability** (sync-fixtures + sync-players): log a `warning` when a previously-populated tournament returns 0 fixtures/players — a Forza outage mid-match is now visible instead of silently reporting healthy.
+- **#16 daily_jokers deadline gate** (migration 125): a client can't set a joker after the matchday deadline (owner/service-role exempt for seeds). Verified: authenticated past-deadline insert → blocked, owner → allowed.
+- **#11 void_bet floor** (migration 125): budget claw-back floored at 0.
+- **#12 price freeze** — verified no fix needed: `sync-players` preserves price on conflict and no price-update cron exists, so the sell-arbitrage can't occur.
+- **E2E playbook**: added "Session-78 changes that affect seeding" (run seeds as owner; squads/draft lockdown → `claim_draft_player` for recovery; starting_xi subset; per-round chips; joker deadline gate; bet auto-resolve; auto-sub setup).
+
+Still open (lower priority): budget cross-subsystem reservation (#9) + auction/trade player-dup (#10); calculate-scores unsigned-claim guard (#14); stale-deadline pruning (#15); product calls (#18/#19). DD not yet run: **auth/onboarding+Realtime** and **ops-readiness** (in progress this session); performance (deferred).
 
 ---
 

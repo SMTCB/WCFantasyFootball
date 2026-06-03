@@ -187,6 +187,18 @@ Deno.serve(async (req) => {
       }));
     }
 
+    // #13: a previously-populated tournament yielding 0 players is almost certainly a
+    // Forza outage/partial response — surface it rather than reporting healthy.
+    if (totalPlayers === 0) {
+      const { count: existing } = await supabase
+        .from('players').select('id', { count: 'exact', head: true }).eq('tournament_id', forza_id);
+      if ((existing ?? 0) > 0) {
+        await logError(FN, 'warning',
+          `Forza returned 0 players for tournament ${forza_id} but ${existing} players exist — possible API outage`,
+          { forza_id, existing, team_errors: errors });
+      }
+    }
+
     return respond(200, {
       ok:              true,
       teams_upserted:  teamEntries.length,
