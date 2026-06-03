@@ -476,12 +476,55 @@ async function rollupSquads(fixture_id, pointsLookup, tournament_id) {
   // Bench players (indices 11-14) never contribute to the squad total.
   // DNP starters simply score 0 for the matchday.
 
-  const { data: squads } = await supabase
+  const { data: allSquadRows } = await supabase
     .from('squads')
-    .select('id, user_id, league_id, matchday_id, players, starting_xi, captain_id, joker_player_id, is_triple_captain, is_wildcard, leagues!inner(tournament_id)')
-    .eq('leagues.tournament_id', tournament_id);
+    .select('id, user_id, league_id, matchday_id, players, starting_xi, captain_id, created_at, leagues!inner(tournament_id)')
+    .eq('leagues.tournament_id', tournament_id)
+    .order('created_at', { ascending: false });
 
-  if (!squads?.length) return 0;
+  if (!allSquadRows?.length) return 0;
+
+  // C3: score exactly one squad row per (league_id, user_id). The schema permits
+  // multiple rows (one per gameweek); scoring every row would multi-count a manager
+  // because aggregate_league_member_points sums fantasy_points across all their rows.
+  // Prefer the row whose matchday_id matches the round being scored; otherwise the
+  // most-recently-created row (the carried-forward single-row model).
+  const squadByManager = new Map();
+  for (const s of allSquadRows) {
+    const key = `${s.league_id}:${s.user_id}`;
+    const existing = squadByManager.get(key);
+    if (!existing) { squadByManager.set(key, s); continue; }
+    if (s.matchday_id === roundMatchdayId && existing.matchday_id !== roundMatchdayId) {
+      squadByManager.set(key, s); // exact-round row beats a stale carried-forward row
+    }
+  }
+  const squads = [...squadByManager.values()];
+
+  // C1: chips are scoped to the round they were activated for — never re-applied.
+  //   Triple Captain: applies only in the matchday recorded in chips_used.
+  //   Joker: the per-round joker lives in daily_jokers, keyed by matchday_id.
+  // The persistent squads.is_triple_captain / joker_player_id / is_wildcard columns are
+  // NOT trusted for scoring: they are never reset and would otherwise re-fire every round.
+  // (C2: the retired wildcard chip's +10% multiplier is intentionally not applied at all.)
+  const leagueIds = [...new Set(squads.map(s => s.league_id))];
+  const tcThisRound = new Set();
+  const jokerThisRound = {};
+  if (leagueIds.length) {
+    const { data: tcRows } = await supabase
+      .from('chips_used')
+      .select('user_id, league_id')
+      .in('league_id', leagueIds)
+      .eq('chip_type', 'triple_captain')
+      .eq('matchday_id', roundMatchdayId);
+    for (const r of tcRows ?? []) tcThisRound.add(`${r.league_id}:${r.user_id}`);
+
+    const { data: jokerRows } = await supabase
+      .from('daily_jokers')
+      .select('user_id, league_id, player_id')
+      .in('league_id', leagueIds)
+      .eq('matchday_id', roundMatchdayId);
+    for (const r of jokerRows ?? []) jokerThisRound[`${r.league_id}:${r.user_id}`] = r.player_id;
+  }
 
   // L3.6: load existing breakdown data so we can accumulate across fixtures in the round
   const squadIds = squads.map(s => s.id);
@@ -498,6 +541,9 @@ async function rollupSquads(fixture_id, pointsLookup, tournament_id) {
   // Build fantasy_points upserts — one row per squad per matchday (L1.3 / L1.4 / L1.5)
   const fantasyPointsUpserts = [];
   for (const squad of squads) {
+    const mgrKey = `${squad.league_id}:${squad.user_id}`;
+    const isTripleCaptain = tcThisRound.has(mgrKey);   // C1: per-round, from chips_used
+    const jokerPid = jokerThisRound[mgrKey] ?? null;    // C1: per-round, from daily_jokers
     // Phase B: use starting_xi when set; fallback to players[0..10] for legacy squads
     const pitchPlayers = (squad.starting_xi?.length > 0)
       ? squad.starting_xi
@@ -539,13 +585,12 @@ async function rollupSquads(fixture_id, pointsLookup, tournament_id) {
       }
       // DD-H5: chips take the highest multiplier, not the product.
       // Captain+Joker on same player → max(2,2)=×2, not ×4. TC+Joker → max(3,2)=×3.
-      const captainMult = pid === effectiveCaptainId ? (squad.is_triple_captain ? 3 : 2) : 1;
-      const jokerMult   = pid === squad.joker_player_id ? 2 : 1;
+      const captainMult = pid === effectiveCaptainId ? (isTripleCaptain ? 3 : 2) : 1;
+      const jokerMult   = pid === jokerPid ? 2 : 1;
       pts *= Math.max(captainMult, jokerMult);
       total += pts;
     }
-    // Wildcard applies to the whole squad total once — not per-player (L1.4)
-    if (squad.is_wildcard) total *= 1.1;
+    // C2: the retired wildcard +10% multiplier is no longer applied.
     total = Math.round(total); // integer points — no decimals in fantasy
 
     // L3.6: accumulate per-fixture contributions in points_breakdown

@@ -296,15 +296,25 @@ Deno.serve(async (req) => {
         .contains('players', [player_id])
         .neq('user_id', user.id);
 
-      const { data: relaxState } = await supabase
-        .from('relaxation_state')
-        .select('current_repeats_allowed')
+      // DR1: relaxation is persisted in league_config by apply_relaxation_state()
+      // (key 'current_repeats_allowed'). config_value is a JSON int (repeats allowed)
+      // or JSON null (cap fully lifted → unlimited). The old code read a non-existent
+      // `relaxation_state` table, so repeatsAllowed was always 0 and the no-repeat rule
+      // never relaxed even after clubs were eliminated.
+      // Semantics: no row → strict (0 repeats); int N → N; explicit null → unlimited.
+      const { data: relaxCfg } = await supabase
+        .from('league_config')
+        .select('config_value')
         .eq('league_id', league_id)
+        .eq('config_key', 'current_repeats_allowed')
         .maybeSingle();
 
-      const repeatsAllowed = relaxState?.current_repeats_allowed ?? 0;
+      const repeatsUnlimited = relaxCfg != null && relaxCfg.config_value === null;
+      const repeatsAllowed = (relaxCfg != null && relaxCfg.config_value !== null)
+        ? Number(relaxCfg.config_value)
+        : 0;
 
-      if ((takenCount ?? 0) > repeatsAllowed) {
+      if (!repeatsUnlimited && (takenCount ?? 0) > repeatsAllowed) {
         const firstOwner = takenRows?.[0];
         const { data: ownerProfile } = firstOwner
           ? await supabase.from('users').select('username').eq('id', firstOwner.user_id).maybeSingle()

@@ -19,12 +19,14 @@ const DEFAULT_SQUAD_SIZE     = 15;
 
 Deno.serve(async (req) => {
   try {
-    const { league_id } = await req.json();
-    if (!league_id) return respond(400, { error: 'league_id required' });
+    const body = await req.json().catch(() => ({}));
+    const { league_id } = body;
 
-    // Verify caller is a commissioner of this league (if JWT provided).
-    const authHeader = req.headers.get('Authorization');
-    if (authHeader) {
+    // Direct league call (commissioner button): require a valid commissioner JWT.
+    if (league_id) {
+      const authHeader = req.headers.get('Authorization');
+      if (!authHeader) return respond(401, { error: 'Unauthorized' });
+
       const userClient = createClient(SUPABASE_URL, ANON_KEY, {
         global: { headers: { Authorization: authHeader } },
       });
@@ -41,10 +43,30 @@ Deno.serve(async (req) => {
       if (!membership || membership.role !== 'commissioner') {
         return respond(403, { error: 'Forbidden — commissioner only' });
       }
+
+      const result = await runReverseDraft(league_id);
+      return respond(200, result);
     }
 
-    const result = await runReverseDraft(league_id);
-    return respond(200, result);
+    // DR2: cron mode (no league_id, service-role). Find group-stage leagues with
+    // pending KNOCKOUT submissions past their knockout draft deadline. Previously the
+    // cron posted an empty body to a handler that 400'd on the missing league_id, so
+    // the elimination draft never ran automatically.
+    const { data: pendingLeagues } = await supabase
+      .from('draft_submissions')
+      .select('league_id, leagues!inner(cup_phase, knockout_draft_deadline)')
+      .eq('phase', 'knockout')
+      .eq('status', 'pending')
+      .eq('leagues.cup_phase', 'group_stage')
+      .lte('leagues.knockout_draft_deadline', new Date().toISOString());
+
+    const leagueIds = [...new Set((pendingLeagues ?? []).map(r => r.league_id))];
+    if (!leagueIds.length) {
+      return respond(200, { message: 'No leagues past knockout deadline with pending submissions' });
+    }
+
+    const results = await Promise.all(leagueIds.map(id => runReverseDraft(id)));
+    return respond(200, { processed: results });
   } catch (err) {
     await logError(FN, 'critical', err.message, { stack: err.stack });
     return respond(500, { error: err.message });
@@ -53,15 +75,17 @@ Deno.serve(async (req) => {
 
 async function runReverseDraft(leagueId) {
   // 0. DATA-13: Load per-league config (squad_size, position_limits, budget, tournament_id, league_config).
+  // P0-4: leagues has budget_total + top-level draft_list_size; there is no `budget`
+  // or `league_config` column. Selecting those threw on every call. Mirror run-draft-lottery.
   const { data: leagueRow } = await supabase
     .from('leagues')
-    .select('squad_size, position_limits, budget, tournament_id, league_config')
+    .select('squad_size, position_limits, tournament_id, budget_total, draft_list_size')
     .eq('id', leagueId)
     .maybeSingle();
 
-  const SQUAD_SIZE     = Number(leagueRow?.squad_size     ?? DEFAULT_SQUAD_SIZE);
-  const SQUAD_POS_CAPS = leagueRow?.position_limits       ?? DEFAULT_SQUAD_POS_CAPS;
-  const budget         = Number(leagueRow?.budget         ?? 100);
+  const SQUAD_SIZE     = Number(leagueRow?.squad_size   ?? DEFAULT_SQUAD_SIZE);
+  const SQUAD_POS_CAPS = leagueRow?.position_limits     ?? DEFAULT_SQUAD_POS_CAPS;
+  const budget         = Number(leagueRow?.budget_total ?? 100);
   const squadSize      = SQUAD_SIZE; // alias for clarity below
 
   // 1. Load standings — ordered worst → best (lowest points first)
@@ -78,16 +102,18 @@ async function runReverseDraft(leagueId) {
   const rankMap       = Object.fromEntries(standings.map(s => [s.user_id, s.total_points]));
 
   // 2. Load pending submissions
+  // DR3: this is the KNOCKOUT-phase elimination draft — scope to phase='knockout'.
   const { data: submissions } = await supabase
     .from('draft_submissions')
     .select('user_id, player_ids')
     .eq('league_id', leagueId)
+    .eq('phase', 'knockout')
     .eq('status', 'pending');
 
   if (!submissions?.length) return { message: 'No pending submissions', leagueId };
 
   // DATA-13: cap each submission's player_ids to draft_list_size from league config
-  const maxLen = leagueRow?.league_config?.draft_list_size ?? 30;
+  const maxLen = leagueRow?.draft_list_size ?? 30;
   submissions.forEach(s => { s.player_ids = (s.player_ids || []).slice(0, maxLen); });
 
   // 3. Load player data for allocation logic — DATA-13: filter by tournament_id
@@ -175,6 +201,7 @@ async function runReverseDraft(leagueId) {
       .select('allocated_players')
       .eq('league_id', leagueId)
       .eq('user_id', userId)
+      .eq('phase', 'knockout')
       .maybeSingle();
 
     // New players = allocation result minus anything already held
@@ -187,10 +214,11 @@ async function runReverseDraft(leagueId) {
     await supabase.from('draft_allocations').upsert({
       league_id:         leagueId,
       user_id:           userId,
+      phase:             'knockout',
       allocated_players: merged,
       unresolved_slots:  Math.max(0, SQUAD_SIZE - merged.length),
       allocated_at:      new Date().toISOString(),
-    }, { onConflict: 'league_id,user_id' });
+    }, { onConflict: 'league_id,user_id,phase' });
   }
 
   // 8. Mark submissions processed
@@ -198,6 +226,7 @@ async function runReverseDraft(leagueId) {
     .from('draft_submissions')
     .update({ status: 'processed' })
     .eq('league_id', leagueId)
+    .eq('phase', 'knockout')
     .eq('status', 'pending');
 
   // 9. Advance cup phase to PRE_ELIMINATION

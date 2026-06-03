@@ -230,7 +230,7 @@ Deno.serve(async (req) => {
     // Log partial failures so they appear in edge_function_errors
     for (const [name, result] of [['match', matchResult], ['lineups', lineupsResult], ['periods', periodsRawResult], ['stats', statsResult]]) {
       if (result.status === 'rejected') {
-        logError('warn', `Forza endpoint '${name}' failed for match ${fmid}: ${result.reason?.message ?? result.reason}`, { fmid });
+        logError('warning', `Forza endpoint '${name}' failed for match ${fmid}: ${result.reason?.message ?? result.reason}`, { fmid });
       }
     }
 
@@ -569,6 +569,9 @@ Deno.serve(async (req) => {
 
   } catch (err) {
     console.error('ingest-match-events error:', err.message);
+    // D2: the most critical live function must leave a DB trail when it fails outright
+    // (e.g. Forza token expiry mid-match), otherwise live-scoring failures are invisible.
+    await logError('critical', `ingest-match-events failed: ${err.message}`, { stack: err.stack });
     return respond(500, { error: err.message });
   }
 });
