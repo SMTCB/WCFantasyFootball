@@ -202,6 +202,15 @@ Deno.serve(async (req) => {
     const currentPlayers = squad.players ?? [];
     const budget         = Number(squad.budget_remaining ?? 100);
 
+    // C6: enforce the per-round transfer limit against the real upcoming round.
+    // A squad still carrying a placeholder matchday_id (e.g. 'current') must not
+    // bypass the limit. Migration 114 intentionally skips enforcement only when no
+    // canonical '-rN' round can be resolved at all (genuinely pre-competition, where
+    // activeMatchdayId is itself null because no deadline exists yet).
+    const enforceMatchdayId = /-r\d+$/.test(squad.matchday_id ?? '')
+      ? squad.matchday_id
+      : activeMatchdayId;
+
     // ── SELL ─────────────────────────────────────────────────────────────────
     if (action === 'sell') {
       if (!currentPlayers.includes(player_id)) {
@@ -218,7 +227,7 @@ Deno.serve(async (req) => {
           p_player_id:   player_id,
           p_price:       price,
           p_league_id:   league_id,
-          p_matchday_id: squad.matchday_id ?? activeMatchdayId,
+          p_matchday_id: enforceMatchdayId,
         });
 
       if (updateErr || !xferResult?.ok) {
@@ -296,15 +305,25 @@ Deno.serve(async (req) => {
         .contains('players', [player_id])
         .neq('user_id', user.id);
 
-      const { data: relaxState } = await supabase
-        .from('relaxation_state')
-        .select('current_repeats_allowed')
+      // DR1: relaxation is persisted in league_config by apply_relaxation_state()
+      // (key 'current_repeats_allowed'). config_value is a JSON int (repeats allowed)
+      // or JSON null (cap fully lifted → unlimited). The old code read a non-existent
+      // `relaxation_state` table, so repeatsAllowed was always 0 and the no-repeat rule
+      // never relaxed even after clubs were eliminated.
+      // Semantics: no row → strict (0 repeats); int N → N; explicit null → unlimited.
+      const { data: relaxCfg } = await supabase
+        .from('league_config')
+        .select('config_value')
         .eq('league_id', league_id)
+        .eq('config_key', 'current_repeats_allowed')
         .maybeSingle();
 
-      const repeatsAllowed = relaxState?.current_repeats_allowed ?? 0;
+      const repeatsUnlimited = relaxCfg != null && relaxCfg.config_value === null;
+      const repeatsAllowed = (relaxCfg != null && relaxCfg.config_value !== null)
+        ? Number(relaxCfg.config_value)
+        : 0;
 
-      if ((takenCount ?? 0) > repeatsAllowed) {
+      if (!repeatsUnlimited && (takenCount ?? 0) > repeatsAllowed) {
         const firstOwner = takenRows?.[0];
         const { data: ownerProfile } = firstOwner
           ? await supabase.from('users').select('username').eq('id', firstOwner.user_id).maybeSingle()
@@ -371,7 +390,7 @@ Deno.serve(async (req) => {
           p_squad_max:   SQUAD_MAX,      // TDD-11: squad size enforced inside the lock
           p_club_max:    clubMax,                            // 96/105: dynamic cap — relaxes as cup clubs are eliminated
           p_league_id:   league_id,                          // 106: transfer-limit enforcement context
-          p_matchday_id: squad.matchday_id ?? activeMatchdayId, // 106: use squad's actual round, not next round
+          p_matchday_id: enforceMatchdayId,                   // 106/C6: real round, never a placeholder
         });
 
       if (updateErr || !xferResult?.ok) {

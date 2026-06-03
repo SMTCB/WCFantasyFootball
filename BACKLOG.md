@@ -1,11 +1,40 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-06-03 (session 77 — PRs #309–311: bug sweep, roster fix, market race fix; all P0/P1 clear; next migration 121_)  
+**Last Updated**: 2026-06-03 (session 78 — final pre-pilot DD: scoring/draft/cup/pipeline corrections, migrations 121–122; next migration 123_)  
 **E2E Test Suite**: `platform.spec.js` (36 tests × 2 browsers) passing in CI ✅ — completes in ~3 min  
 **Full Playbook Run**: `E2E_TEST_PLAYBOOK.md` v2.0 — all flows confirmed (D-4a/b, E-4, D-3 ✅; F-2 PASS — form strip satisfies per-stat breakdown criterion)  
 **🟢 LAUNCH READY**: No critical (P0/P1) bugs open. All game mechanics functional. WC kick-off 2026-06-11.  
 **Live App**: https://wc-fantasy-football.vercel.app  
 **WC Kick-off**: 2026-06-11 19:00 UTC (Mexico vs South Africa)
+
+---
+
+## ✅ Session 78 — Final pre-pilot due diligence + corrections (2026-06-03)
+
+Independent re-audit of (i) API data flow, (ii) scoring, (iii) game dynamics (draft/classic, league/cup) ahead of the WC pilot. Findings verified against the production DB and a live `calculate-scores` invocation, then corrected. Migrations 121–122; edge functions calculate-scores, process-transfer, run-reverse-standings-draft, ingest-match-events redeployed.
+
+### Blockers found & fixed
+| ID | Severity | Issue | Fix |
+|----|----------|-------|-----|
+| C1 | P0 | Chips (Triple Captain/Joker) read from never-reset squad columns → re-fired every gameweek | Scoring derives chips per-round from `chips_used`/`daily_jokers` |
+| C2 | P0 | Retired wildcard still applied a hidden +10% | Removed from scoring; `activate_chip` rejects it; flags cleared |
+| C3 | P1 | Scoring counted every per-gameweek squad row → multi-count | One squad row per (league,user) per round |
+| C5 | P1 | Selling a starter left a ghost id in `starting_xi` → silent 0-score slot | `sanitize_starting_xi` BEFORE trigger (starting_xi ⊆ players) |
+| C6 | P1 | Squads with placeholder `matchday_id` bypassed the per-round transfer limit | `process-transfer` resolves placeholder → active round |
+| DR1 | P0 | No-repeat relaxation read a non-existent `relaxation_state` table → rule never relaxed | Read `league_config` (null = unlimited) |
+| DR2/DR3/P0-4 | P0 | Knockout reverse-standings draft: dead cron, no `phase` scoping, selected non-existent columns | Cron-batch mode + `phase='knockout'` + `budget_total` |
+| DR4 | P1 | `sync_league_mode()` absent in prod → `league_mode` drifted from `format` | Recreated function + fire on all insert/update + data fix |
+| D1 | P0/P1 | Live scoring timing gaps (slow live-flip; lost final-whistle stats) | `flip-fixtures-live` cron + re-ingest finished-within-3h |
+| D2 | P1 | `logError('warn')` (invalid severity) silently dropped; ingest outer catch didn't log | Severity fixed + outer-catch logging |
+| P1-2 | P1 | Classic leagues could surface draft UI (gated on deadline, not mode) | LeagueScreen gates on draft league |
+
+**Cup** confirmed as the **knockout phase of a draft league** (not a separate format); `sync_cup_eliminations` verified correct (nation-name/forza-id match); `seed_cup_clubs(uuid)` scoped to the league tournament.
+
+### Remaining / follow-up
+- **Captain-multiplier E2E**: re-verify ×2/×3 on the fresh seeded system (current test data has captains scoring 0).
+- **Knockout draft E2E**: exercise the reverse-standings flow end-to-end before the WC knockout stage (~3 weeks into pilot).
+- **DD-M15**: committed service-role JWT in cron bodies — vault post-pilot.
+- Next: **test-data cleanup → fresh system**.
 
 ---
 
