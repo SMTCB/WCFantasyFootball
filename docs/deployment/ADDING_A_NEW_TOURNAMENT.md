@@ -57,6 +57,60 @@ The `matchday_deadlines` entries are auto-derived as `MIN(kickoff_at)` per round
 
 ---
 
+## Step 2b — Knockout-stage tournaments (⚠️ required for UCL / World Cup / cups)
+
+**Forza does not number knockout matches.** Its API returns `round: null` for every knockout fixture (Round of 16, quarter-finals, etc.), so `sync-fixtures` writes `fixtures.round_number = NULL` for all of them. `calculate-scores` derives the scoring matchday from `round_number` (`{tournament}-r{round_number}`) and **hard-fails** (`'critical'`, rollup skipped) when it's null — so **knockout matches will silently never score** unless you complete this step. (This bit WC 429 and UCL 1593; see migration 126.)
+
+A one-off `UPDATE fixtures SET round_number = …` is **not durable** — the `sync-*-fixtures` cron re-upserts `round_number: null` on its next run (every few minutes/hours) and reverts it. The durable mechanism is already in place via the `derive_fixture_round_number()` BEFORE INSERT/UPDATE trigger (migration 126): it re-fills `round_number` from `fixtures.matchday_id` on every write, and `sync-fixtures` never writes `matchday_id`, so it survives a sync.
+
+**So all you must do is seed `fixtures.matchday_id` for the knockout fixtures** (one tournament stage per fantasy round; continue the numbering after the group rounds):
+
+```sql
+-- Example: group stage is rounds 1–3, so knockout starts at r4.
+-- Identify each knockout fixture's stage from its placeholder team labels while the
+-- bracket is unresolved: 'W##' = winner of match ##, 'RU##' = loser/runner-up,
+-- group codes (1A, 2B, 3A/3B/…) have no W|RU|L prefix → those are the first KO round.
+-- Adjust the match-number ranges to the tournament's own bracket numbering.
+WITH ko AS (
+  SELECT id,
+         GREATEST(
+           COALESCE((substring(home_team FROM '^(?:W|RU|L)(\d+)$'))::int, 0),
+           COALESCE((substring(away_team FROM '^(?:W|RU|L)(\d+)$'))::int, 0)
+         ) AS ref
+  FROM fixtures
+  WHERE tournament_id = '999' AND round_number IS NULL
+)
+UPDATE fixtures f
+SET matchday_id = '999-r' || CASE
+      WHEN ref = 0                  THEN 4   -- first knockout round
+      WHEN ref BETWEEN 73 AND 88    THEN 5
+      WHEN ref BETWEEN 89 AND 96    THEN 6
+      WHEN ref BETWEEN 97 AND 100   THEN 7
+      WHEN ref BETWEEN 101 AND 102  THEN 8
+    END
+FROM ko WHERE f.id = ko.id;
+-- The trigger derives round_number from matchday_id automatically on this UPDATE.
+```
+
+Then seed `matchday_deadlines` for those knockout rounds (sync-fixtures skips them because `m.round` is null, so they are NOT auto-derived):
+
+```sql
+INSERT INTO matchday_deadlines (matchday_id, tournament_id, deadline_at)
+SELECT '999-r' || round_number, '999', MIN(kickoff_at)
+FROM fixtures WHERE tournament_id = '999' AND round_number >= 4
+GROUP BY round_number
+ON CONFLICT (matchday_id) DO UPDATE SET deadline_at = EXCLUDED.deadline_at;
+```
+
+**Verify** every knockout fixture has a non-null `round_number` and the counts match the bracket (e.g. 16/8/4/2/2):
+```sql
+SELECT round_number, matchday_id, COUNT(*) FROM fixtures
+WHERE tournament_id = '999' GROUP BY round_number, matchday_id ORDER BY round_number NULLS FIRST;
+```
+> ⚠️ Do NOT clear `fixtures.matchday_id` on knockout rows afterwards — that's the key the trigger depends on.
+
+---
+
 ## Step 3 — Sync players
 
 ```bash
@@ -218,6 +272,7 @@ SELECT create_league('My UCL League', 'classic', '<user_id>', '999');
 [ ] Confirmed forza_id with provider
 [ ] INSERT into tournaments (sync_enabled = false)
 [ ] sync-fixtures → fixtures + matchday_deadlines populated
+[ ] (knockout tournaments) seed fixtures.matchday_id for KO stages → round_number auto-derived; seed KO matchday_deadlines
 [ ] sync-players → players populated
 [ ] scoring_rules seeded for tournament_id
 [ ] 3 cron jobs added (sync-fixtures, sync-players, sync-player-status)
@@ -233,4 +288,8 @@ SELECT create_league('My UCL League', 'classic', '<user_id>', '999');
 | Tournament | forza_id | slug | Crons |
 |---|---|---|---|
 | Premier League 2025-26 | `426` | `epl-2526` | `sync-fixtures` (daily), `sync-players-daily`, `sync-player-status` |
-| FIFA World Cup 2026 | `429` | `wc-2026` | `sync-wc-fixtures-6h`, `sync-wc-players-6h`, `sync-wc-player-status` |
+| FIFA World Cup 2026 | `429` | `wc-2026` | `sync-wc-fixtures-30m`, `sync-wc-players-6h`, `sync-wc-player-status` |
+
+---
+
+Last Updated: **2026-06-03** (added Step 2b — knockout-stage `round_number` handling; migration 126)

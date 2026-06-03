@@ -1,11 +1,21 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-06-03 (session 78 — round 4 quick wins: Forza-outage logging, joker deadline gate, void_bet floor, playbook seeding update, migration 125; next migration 126_)  
+**Last Updated**: 2026-06-03 (session 80 — WC 429 knockout `round_number` durable fix, migration 126, PR #318; next migration 127_)  
 **E2E Test Suite**: `platform.spec.js` (36 tests × 2 browsers) passing in CI ✅ — completes in ~3 min  
 **Full Playbook Run**: `E2E_TEST_PLAYBOOK.md` v2.0 — all flows confirmed (D-4a/b, E-4, D-3 ✅; F-2 PASS — form strip satisfies per-stat breakdown criterion)  
 **🟢 LAUNCH READY**: No critical (P0/P1) bugs open. All game mechanics functional. WC kick-off 2026-06-11.  
 **Live App**: https://wc-fantasy-football.vercel.app  
 **WC Kick-off**: 2026-06-11 19:00 UTC (Mexico vs South Africa)
+
+---
+
+## ✅ Session 80 — WC 429 knockout round_number durable fix (PR #318, 2026-06-03)
+
+- **NEW-C1 REGRESSION found & durably fixed** (migration 126). All 32 WC knockout fixtures were *still* `round_number = NULL` despite session 64 marking NEW-C1 ✅ — the migration-108 one-off backfill was **silently reverted by the `sync-wc-fixtures-30m` cron**, which re-upserts `round_number: m.round ?? null` (Forza returns `round:null` for knockouts) every 30 min. `calculate-scores` hard-fails (`'critical'`, rollup skipped) on null `round_number`, so no knockout match would have scored from June 28.
+- **Durable mechanism**: `derive_fixture_round_number()` BEFORE INSERT/UPDATE trigger re-fills `round_number` from `fixtures.matchday_id` on every write. `sync-fixtures` never writes `matchday_id`, so it survives the sync and the trigger keeps `round_number` populated — the one-off UPDATE that regressed before can no longer be undone.
+- **Mapping changed from the session-64 plan**: now **one tournament stage per fantasy round** (r4=R32 16 / r5=R16 8 / r6=QF 4 / r7=SF 2 / r8=Final+3rd 2), not "by kickoff_at order" (which date-chunked and mixed stages — e.g. R32+R16 in one round). Knockout squad-lock deadlines corrected to each stage's first kickoff.
+- **Verified in prod**: 16/8/4/2/2 split; simulated a sync (`UPDATE … SET round_number = NULL`) → trigger re-derived it from `matchday_id`; deadlines aligned. Resolves session-79 deferred item **B4**. Group stage (rounds 1–3) was never affected.
+- ⚠️ **Guardrail**: do NOT clear `fixtures.matchday_id` on knockout rows, and do NOT rely on a one-off `round_number` UPDATE (the cron reverts it). A new tournament's knockout needs `matchday_id` seeded as `{tournament}-rN` before its first knockout match scores.
 
 ---
 
@@ -383,7 +393,7 @@ Fixed in PR #311: changed guard from `activeLeague && !tournamentId` → `!activ
 - ✅ **DD-C12** — `SquadScreen`: chip key `'triple'` → `'triple_captain'` (was always returning "Unknown chip type")
 - ✅ **DD-C13** — `SquadScreen`: both joker paths now also write `squads.joker_player_id` → `calculate-scores` ×2 multiplier now fires
 - ✅ **DD-M11** — REVOKE direct UPDATE on chip columns from `anon`/`authenticated`
-- ✅ **NEW-C1** — Backfill `round_number` for 32 WC knockout fixtures (rounds 4–8 by kickoff_at order)
+- ⚠️ **NEW-C1** — Backfill `round_number` for 32 WC knockout fixtures (rounds 4–8 by kickoff_at order) — **REGRESSED: this one-off backfill was reverted by the sync cron within 30 min; durably re-fixed in session 80 / migration 126 (stage-based + trigger). See top of file.**
 - ✅ **NEW-C2** — Mark stuck draft submissions `processed` for test leagues → loop stopped
 
 ### Still open (HIGH/MEDIUM/LOW from session 63):
