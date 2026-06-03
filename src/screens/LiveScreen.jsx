@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../hooks/useAuth';
 
@@ -655,24 +655,32 @@ export default function LiveScreen() {
   }, [fetchAll]);
 
   // U6: Realtime subscription — player_match_stats UPDATE triggers Points Log refresh.
-  // Re-subscribes whenever liveFixtures changes (new live matches).
-  useEffect(() => {
-    const ids = liveFixtures.map(f => f.id);
-    if (!ids.length) return;
+  // `fetchAll` rebuilds `liveFixtures` (new array ref) on every poll, so depending the
+  // effect on the array re-created/tore-down the channel every cycle — churning the
+  // WebSocket and dropping the very stat events it watches. Depend on a *stable* id
+  // string instead, and call the latest fetchAll via a ref so it isn't a dep.
+  const liveFixtureIdList = useMemo(
+    () => liveFixtures.map(f => f.id).sort().join(','),
+    [liveFixtures],
+  );
+  const fetchAllRef = useRef(fetchAll);
+  useEffect(() => { fetchAllRef.current = fetchAll; }, [fetchAll]);
 
-    const idList = ids.join(',');
+  useEffect(() => {
+    if (!liveFixtureIdList) return;
+
     const statsCh = supabase
-      .channel(`live-player-stats-${idList}`)
+      .channel(`live-player-stats-${liveFixtureIdList}`)
       .on('postgres_changes', {
         event:  'UPDATE',
         schema: 'public',
         table:  'player_match_stats',
-        filter: `fixture_id=in.(${idList})`,
-      }, () => fetchAll())
+        filter: `fixture_id=in.(${liveFixtureIdList})`,
+      }, () => fetchAllRef.current())
       .subscribe();
 
     return () => { supabase.removeChannel(statsCh); };
-  }, [liveFixtures, fetchAll]);
+  }, [liveFixtureIdList]);
 
   // Whether the active league's tournament has a live match right now.
   // Derived from liveFixtures (global) filtered to activeLeague's tournamentId.

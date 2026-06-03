@@ -5,6 +5,10 @@
  *   'false' (default) → demo mode; always returns DEMO_USER, no Supabase Auth calls.
  *   'true'            → real Supabase Auth; full sign-in/sign-up/reset flow active.
  *
+ * Fail-closed: a PRODUCTION build always requires real auth regardless of the flag.
+ * The flag only enables demo mode in dev. A missing/misspelled prod env var can no
+ * longer silently collapse every user onto the shared DEMO_USER identity.
+ *
  * To activate auth: set VITE_AUTH_ENABLED=true in .env.local (local) or
  * Vercel environment variables (production). No code changes required.
  */
@@ -24,7 +28,15 @@ const DEMO_USER = {
   user_metadata: { username: 'Demo Manager' },
 };
 
-const AUTH_ENABLED = import.meta.env.VITE_AUTH_ENABLED === 'true';
+const AUTH_ENABLED = import.meta.env.VITE_AUTH_ENABLED === 'true' || import.meta.env.PROD;
+
+// Surface a misconfigured production build loudly rather than failing silently.
+if (import.meta.env.PROD && import.meta.env.VITE_AUTH_ENABLED !== 'true') {
+  console.error(
+    '[AuthContext] VITE_AUTH_ENABLED is not "true" in a production build — ' +
+    'forcing real auth (fail-closed). Set VITE_AUTH_ENABLED=true to silence this.',
+  );
+}
 
 // ── Context ───────────────────────────────────────────────────────────────────
 const AuthContext = createContext(null);
@@ -40,11 +52,13 @@ export function AuthProvider({ children }) {
     if (!AUTH_ENABLED) return;   // demo mode — nothing to subscribe to
 
     // Restore existing session on mount
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
-    });
+    supabase.auth.getSession()
+      .then(({ data: { session } }) => {
+        setSession(session);
+        setUser(session?.user ?? null);
+      })
+      .catch(() => { /* corrupt/unreachable session — fall through to signed-out */ })
+      .finally(() => setLoading(false));   // never leave the splash stuck
 
     // React to sign-in / sign-out / token refresh
     // PASSWORD_RECOVERY must be handled explicitly — without this, Supabase v2 PKCE
