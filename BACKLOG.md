@@ -1,11 +1,32 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-06-03 (session 76 — PR #309: INT comp label, squad stale state fix, market team filter, recap font; DB: West Ham R38 corrupt fixture fixed)  
+**Last Updated**: 2026-06-03 (session 77 — PRs #309–311: bug sweep, roster fix, market race fix; all P0/P1 clear; next migration 121_)  
 **E2E Test Suite**: `platform.spec.js` (36 tests × 2 browsers) passing in CI ✅ — completes in ~3 min  
 **Full Playbook Run**: `E2E_TEST_PLAYBOOK.md` v2.0 — all flows confirmed (D-4a/b, E-4, D-3 ✅; F-2 PASS — form strip satisfies per-stat breakdown criterion)  
 **🟢 LAUNCH READY**: No critical (P0/P1) bugs open. All game mechanics functional. WC kick-off 2026-06-11.  
 **Live App**: https://wc-fantasy-football.vercel.app  
 **WC Kick-off**: 2026-06-11 19:00 UTC (Mexico vs South Africa)
+
+---
+
+## ✅ Session 77 — Market race fix + close (2026-06-03)
+
+### PRs & commits
+| Ref | What |
+|-----|------|
+| PR #310 | fix: roster shows full squad (not draft allocation); remove league photo placeholder |
+| PR #311 | fix: market race — no premature fetch before league+tournament resolve |
+
+### Delivered
+- **Roster shows full squad** — `loadManagerRoster` was reading `draft_allocations.allocated_players` (5–6 from the group-phase draft only) instead of `squads.players` (the live 15-player squad). Fixed to always use `squads.players ORDER BY created_at DESC`; `draft_allocations` retained as fallback only.
+- **League photo removed** — Removed the 180px hatched "LEAGUE PHOTO · MATCHDAY" placeholder from the Frontpage tab. Was a design mock-up never wired to real data.
+- **Market race fix** — `fetchMarketParams` was firing on initial mount with both `activeLeague` and `tournamentId` null, loading all ~5000 players from every tournament. Changed guard from `activeLeague && !tournamentId` to `!activeLeague || !tournamentId` — market now waits until both are known before fetching, eliminating the wrong-player flash. Closes session-69 open bug.
+
+### Remaining open items (post-pilot, non-blocking)
+- **DD-M9**: Bets are risk-free (no stake) — design gap, intentional for now
+- **DD-M15**: Hardcoded JWT in migration 105 cron body — vault it post-pilot
+- **DD-L7**: Free Hit & Bench Boost chips not implemented
+- **DD-L11**: Single 671 KB bundle, no code-splitting
 
 ---
 
@@ -223,14 +244,10 @@ Root cause documented: F-1 "0 squads" in session 69 was seeding issue — stats 
 | ~~**BUG-CLASSIC-TRANSFER**~~ | `process-transfer` applies Draft player-uniqueness check to Classic leagues — any player in another manager's squad blocked | #293 | Skip uniqueness check when `league.format = 'classic'` |
 | ~~**BUG-ADMIN-WINDOW**~~ | Admin Transfer Window always shows DEADLINE-CONTROLLED because `isDeadlineControlled = !!tournamentId` (always true for all leagues) | #294 | Use `windowType` from `get_transfer_window_status` hook — 'matchday' → deadline-controlled, anything else → manual |
 
-### New open bug (P2):
+### ~~New open bug (P2)~~ — FIXED PR #311
 
-**[BUG] Market shows wrong tournament players on first load (race condition)**  
-`MarketScreen.jsx` calls `fetchMarketParams()` twice on mount: once with `tournamentId=null` (fetches all ~5000 players from all tournaments, UCL players appear first due to DESC null-sort) and once after `resolveLeagueTournament` async completes (correct tournament filter). The initial fetch overwrites the correct data briefly. Within ~3s the correct EPL/WC players load, but the flash of wrong players can confuse users and blocks automated testing observation.  
-- **Root cause**: `useEffect([activeLeague, tournamentId])` fires with null tournamentId before the async league lookup completes  
-- **Fix**: Only fire `fetchMarketParams` once `tournamentId` is non-null, or set initial state from URL params before first render  
-- **Priority**: P2 — cosmetic, resolves in ~3s, no data integrity issue  
-- **Effort**: ~1h
+~~**[BUG] Market shows wrong tournament players on first load (race condition)**~~  
+Fixed in PR #311: changed guard from `activeLeague && !tournamentId` → `!activeLeague || !tournamentId`. Market now waits until both are known before fetching.
 
 **Next migration**: `113_`  
 **Build/lint**: `npm run build` ✅ clean · `npm run lint` ✅ warnings only (pre-existing)
