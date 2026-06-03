@@ -61,6 +61,9 @@ export default function MarketScreen() {
   const [loading,       setLoading]       = useState(true);
   const [filterPos,     setFilterPos]     = useState(() => localStorage.getItem('market_filterPos') || 'ALL');
   const [searchQuery,   setSearchQuery]   = useState(() => localStorage.getItem('market_searchQuery') || '');
+  const [selectedTeams, setSelectedTeams] = useState(new Set());
+  const [showTeamPicker, setShowTeamPicker] = useState(false);
+  const [teamSearch,    setTeamSearch]    = useState('');
   const [budget,        setBudget]        = useState(0);      // loaded from league config
   const [saving,        setSaving]        = useState(false);
   const [isLocked,      setIsLocked]      = useState(false);
@@ -234,7 +237,7 @@ export default function MarketScreen() {
   const fetchMarketParams = async () => {
     setLoading(true);
 
-    // â”€â”€ 1. Players — filtered by competition when known â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // â"€â"€ 1. Players — filtered by competition when known â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
     try {
       // Supabase JS default row cap is 1,000. WC has 1,680+ players — without an
       // explicit limit the cheapest ~680 are silently cut off, so cheap owned
@@ -276,7 +279,7 @@ export default function MarketScreen() {
       console.error('MarketScreen: deadline fetch failed', err);
     }
 
-    // â”€â”€ 3. Squad & joker â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // â"€â"€ 3. Squad & joker â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
     try {
       const userId = user?.id;
       if (userId) {
@@ -417,11 +420,17 @@ export default function MarketScreen() {
     });
   };
 
+  const availableTeams = useMemo(() => {
+    const teams = new Set(players.map(p => p.club).filter(Boolean));
+    return [...teams].sort((a, b) => a.localeCompare(b));
+  }, [players]);
+
   const filteredPlayers = useMemo(() => {
     const filtered = players.filter(p => {
-      const matchesPos = filterPos === 'ALL' || p.position === filterPos;
+      const matchesPos    = filterPos === 'ALL' || p.position === filterPos;
       const matchesSearch = !searchQuery || p.name?.toLowerCase().includes(searchQuery.toLowerCase());
-      return matchesPos && matchesSearch;
+      const matchesTeam   = selectedTeams.size === 0 || selectedTeams.has(p.club);
+      return matchesPos && matchesSearch && matchesTeam;
     });
     // Own players always float to the top; within each group sort by price descending
     const owned = mySquad?.players ?? [];
@@ -431,7 +440,7 @@ export default function MarketScreen() {
       if (aOwned !== bOwned) return bOwned - aOwned;
       return b.price - a.price;
     });
-  }, [players, filterPos, searchQuery, mySquad]);
+  }, [players, filterPos, searchQuery, selectedTeams, mySquad]);
   const squadCount  = mySquad?.players?.length || 0;
   const emptySlots  = Math.max(0, squadSize - squadCount);
 
@@ -458,6 +467,13 @@ export default function MarketScreen() {
 
   return (
     <div className="min-h-screen bg-bg">
+      {/* Team picker backdrop — closes dropdown on outside tap */}
+      {showTeamPicker && (
+        <div
+          style={{ position: 'fixed', inset: 0, zIndex: 55 }}
+          onClick={() => { setShowTeamPicker(false); setTeamSearch(''); }}
+        />
+      )}
       {/* Confirmation dialog (FB-021 + FB-023) */}
       {confirm && (
         <ConfirmModal
@@ -475,7 +491,7 @@ export default function MarketScreen() {
         />
       )}
 
-      {/* â”€â”€ Squad data load error â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+      {/* â"€â"€ Squad data load error â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€ */}
       {takenMapError && (
         <div
           className="flex items-center gap-3 px-5 py-3"
@@ -485,7 +501,7 @@ export default function MarketScreen() {
         </div>
       )}
 
-      {/* â”€â”€ Transfer Window Lock Banner â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+      {/* â"€â"€ Transfer Window Lock Banner â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€ */}
       {isLocked && (
         <div
           className="flex items-center gap-3 px-5 py-3"
@@ -506,14 +522,16 @@ export default function MarketScreen() {
         </div>
       )}
 
-      {/* â”€â”€ Sticky Header â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+      {/* â"€â"€ Sticky Header â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€ */}
       <div
-        className="sticky top-0 z-40"
+        className="sticky top-0"
         style={{
           background: 'rgba(13,17,23,0.97)',
           backdropFilter: 'blur(20px)',
           WebkitBackdropFilter: 'blur(20px)',
           borderBottom: '1px solid rgba(255,255,255,0.07)',
+          position: 'relative',
+          zIndex: 60,
         }}
       >
         {/* Title + stats row */}
@@ -645,14 +663,14 @@ export default function MarketScreen() {
           })}
         </div>
 
-        {/* Search input */}
-        <div className="px-5 py-2.5 border-t" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
+        {/* Search + Team filter row */}
+        <div className="px-5 py-2.5 border-t flex gap-2 items-center" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
           <input
             type="text"
             placeholder="Search player name…"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full outline-none text-[13px]"
+            className="flex-1 outline-none text-[13px]"
             style={{
               padding: '8px 12px',
               background: 'rgba(255,255,255,0.04)',
@@ -663,7 +681,110 @@ export default function MarketScreen() {
               caretColor: 'var(--cyan)',
             }}
           />
+          {/* Team filter toggle button */}
+          <button
+            onClick={() => setShowTeamPicker(v => !v)}
+            style={{
+              padding: '8px 12px', flexShrink: 0,
+              background: selectedTeams.size > 0 ? 'rgba(0,180,216,0.12)' : 'rgba(255,255,255,0.04)',
+              border: selectedTeams.size > 0 ? '1px solid rgba(0,180,216,0.4)' : '1px solid rgba(255,255,255,0.1)',
+              borderRadius: '4px',
+              color: selectedTeams.size > 0 ? 'var(--cyan)' : 'var(--mute)',
+              fontFamily: 'Archivo Black, sans-serif',
+              fontSize: 10, letterSpacing: '.08em', textTransform: 'uppercase',
+              cursor: 'pointer', whiteSpace: 'nowrap',
+            }}
+          >
+            {selectedTeams.size > 0 ? `${selectedTeams.size} Club${selectedTeams.size > 1 ? 's' : ''}` : 'Club ▾'}
+          </button>
         </div>
+
+        {/* Team picker dropdown */}
+        {showTeamPicker && (
+          <div style={{
+            position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 60,
+            background: 'var(--ink)', border: '1px solid rgba(255,255,255,0.12)',
+            borderTop: 'none', maxHeight: 320, display: 'flex', flexDirection: 'column',
+            boxShadow: '0 8px 32px rgba(0,0,0,0.6)',
+          }}>
+            {/* Team search */}
+            <div style={{ padding: '10px 14px', borderBottom: '1px solid var(--rule)', flexShrink: 0 }}>
+              <input
+                type="text"
+                placeholder="Search club…"
+                value={teamSearch}
+                onChange={e => setTeamSearch(e.target.value)}
+                autoFocus
+                style={{
+                  width: '100%', padding: '6px 10px', outline: 'none',
+                  background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
+                  borderRadius: 3, color: 'var(--paper)', fontFamily: 'Archivo, sans-serif', fontSize: 12,
+                  caretColor: 'var(--cyan)',
+                }}
+              />
+            </div>
+            {/* Team list */}
+            <div style={{ overflowY: 'auto', flex: 1 }}>
+              {availableTeams
+                .filter(t => !teamSearch || t.toLowerCase().includes(teamSearch.toLowerCase()))
+                .map(team => {
+                  const checked = selectedTeams.has(team);
+                  return (
+                    <button
+                      key={team}
+                      onClick={() => setSelectedTeams(prev => {
+                        const next = new Set(prev);
+                        if (next.has(team)) next.delete(team); else next.add(team);
+                        return next;
+                      })}
+                      style={{
+                        width: '100%', textAlign: 'left', padding: '9px 14px',
+                        display: 'flex', alignItems: 'center', gap: 10,
+                        background: checked ? 'rgba(0,180,216,0.08)' : 'transparent',
+                        border: 'none', borderBottom: '1px solid rgba(255,255,255,0.04)',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      <div style={{
+                        width: 14, height: 14, border: checked ? 'none' : '1px solid rgba(255,255,255,0.25)',
+                        background: checked ? 'var(--cyan)' : 'transparent',
+                        borderRadius: 2, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      }}>
+                        {checked && <span style={{ color: 'var(--ink)', fontSize: 10, fontWeight: 900 }}>✓</span>}
+                      </div>
+                      <span style={{ fontFamily: 'Archivo, sans-serif', fontSize: 12, color: checked ? 'var(--cyan)' : 'var(--paper)' }}>
+                        {team}
+                      </span>
+                    </button>
+                  );
+                })}
+            </div>
+            {/* Footer: Clear + Apply */}
+            <div style={{ padding: '10px 14px', borderTop: '1px solid var(--rule)', display: 'flex', gap: 8, flexShrink: 0 }}>
+              <button
+                onClick={() => { setSelectedTeams(new Set()); setShowTeamPicker(false); setTeamSearch(''); }}
+                style={{
+                  flex: 1, padding: '7px', background: 'transparent',
+                  border: '1px solid var(--rule)', color: 'var(--mute)',
+                  fontFamily: 'Archivo Black, sans-serif', fontSize: 9, letterSpacing: '.1em',
+                  textTransform: 'uppercase', cursor: 'pointer', borderRadius: 3,
+                }}
+              >
+                Clear
+              </button>
+              <button
+                onClick={() => { setShowTeamPicker(false); setTeamSearch(''); }}
+                style={{
+                  flex: 2, padding: '7px', background: 'var(--cyan)', border: 'none',
+                  color: 'var(--ink)', fontFamily: 'Archivo Black, sans-serif', fontSize: 9,
+                  letterSpacing: '.1em', textTransform: 'uppercase', cursor: 'pointer', borderRadius: 3,
+                }}
+              >
+                {selectedTeams.size > 0 ? `Show ${selectedTeams.size} Club${selectedTeams.size > 1 ? 's' : ''}` : 'Apply'}
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Position filter tabs — dot shows red/yellow/green fill status */}
         <div
@@ -710,7 +831,7 @@ export default function MarketScreen() {
         </div>
       </div>
 
-      {/* â”€â”€ Player List â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+      {/* â"€â"€ Player List â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€ */}
       {loading ? (
         <div className="divide-y divide-border">
           {[1, 2, 3, 4, 5].map(i => (

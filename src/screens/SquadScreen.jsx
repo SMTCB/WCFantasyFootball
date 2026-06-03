@@ -89,6 +89,10 @@ export default function SquadScreen() {
   useEffect(() => {
     const init = async () => {
       if (leagueIdParam) {
+        // Clear any stale squad from a previous league so the loading screen
+        // shows immediately instead of flashing the wrong player count.
+        setSquadData(null);
+        setLoading(true);
         setActiveLeague(leagueIdParam);
         return;
       }

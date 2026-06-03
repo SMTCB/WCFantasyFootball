@@ -132,11 +132,11 @@ function FeedItem({ item }) {
             </div>
           )}
           {Array.isArray(item.bullets) && item.bullets.length > 0 && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
               {item.bullets.map((b, i) => (
                 <div key={i} style={{
-                  fontFamily: MONO, fontSize: 9, color: 'var(--mute)',
-                  letterSpacing: '.1em', lineHeight: 1.4,
+                  fontFamily: BODY, fontSize: 12, color: 'var(--paper)',
+                  lineHeight: 1.5, opacity: 0.85,
                 }}>{b}</div>
               ))}
             </div>
