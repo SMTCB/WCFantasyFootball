@@ -3,6 +3,8 @@
 // Input: { search_term: "World Cup", id_range: { start: 450, end: 550 } }
 // Output: { found: true, tournaments: [{ id, name, region, season_status }] }
 
+import { requireServiceRole } from '../_shared/auth.ts';
+
 const FORZA_API_BASE = 'https://api.forzafootball.com';
 const FORZA_TOKEN = Deno.env.get('FORZA_ACCESS_TOKEN');
 
@@ -59,6 +61,8 @@ Deno.serve(async (req) => {
         { status: 405, headers: { 'Content-Type': 'application/json' } }
       );
     }
+    const authErr = requireServiceRole(req);
+    if (authErr) return authErr;
 
     const body = await req.json();
     const searchTerm = body.search_term || 'World Cup';
