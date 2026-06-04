@@ -155,6 +155,7 @@ export default function LeagueScreen() {
   const [membersLoading, setMembersLoading] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
   const [draftGaps, setDraftGaps] = useState(0); // unresolved_slots for current user
+  const [draftAllocated, setDraftAllocated] = useState(false); // lottery ran and produced allocation
   const [draftOpen, setDraftOpen] = useState(false); // deadline in future + no submission yet
   const [draftDeadlineDate, setDraftDeadlineDate] = useState(null); // for countdown banner
   const [currentGW, setCurrentGW] = useState('—'); // current GW label for league header
@@ -447,11 +448,12 @@ export default function LeagueScreen() {
       // Check if current user has an incomplete draft allocation
       const { data: alloc } = await supabase
         .from('draft_allocations')
-        .select('unresolved_slots')
+        .select('unresolved_slots, allocated_players')
         .eq('league_id', id)
         .eq('user_id', user?.id)
         .maybeSingle();
       setDraftGaps(alloc?.unresolved_slots ?? 0);
+      setDraftAllocated(!!(alloc?.allocated_players));
 
       // Check if draft is open and manager hasn't submitted yet.
       // P1-2: only draft (no-duplicate) leagues run a draft — never show draft UI
@@ -1020,8 +1022,10 @@ export default function LeagueScreen() {
           </div>
         )}
 
-        {/* Incomplete squad warning — two levels, suppressed when draftGaps banner or draft-open banner is active */}
-        {mySquadPlayerCount !== null && draftGaps === 0 && !draftOpen && mySquadPlayerCount < 11 && (
+        {/* Incomplete squad warning — suppressed when draft-open or lottery hasn't run yet */}
+        {mySquadPlayerCount !== null && draftGaps === 0 && !draftOpen
+          && (activeLeague?.leagues?.format !== 'noduplicate' || draftAllocated)
+          && mySquadPlayerCount < 11 && (
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 20px', background: 'rgba(240,58,58,0.10)', borderBottom: '1px solid rgba(240,58,58,0.28)', flexShrink: 0 }}>
             <div style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--danger)', flexShrink: 0 }} />
             <div style={{ flex: 1 }}>
@@ -1037,7 +1041,9 @@ export default function LeagueScreen() {
             </button>
           </div>
         )}
-        {mySquadPlayerCount !== null && draftGaps === 0 && !draftOpen && mySquadPlayerCount >= 11 && mySquadPlayerCount < 15 && (
+        {mySquadPlayerCount !== null && draftGaps === 0 && !draftOpen
+          && (activeLeague?.leagues?.format !== 'noduplicate' || draftAllocated)
+          && mySquadPlayerCount >= 11 && mySquadPlayerCount < 15 && (
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 20px', background: 'rgba(240,180,0,0.09)', borderBottom: '1px solid rgba(240,180,0,0.22)', flexShrink: 0 }}>
             <div style={{ width: 7, height: 7, borderRadius: '50%', background: 'var(--gold)', flexShrink: 0 }} />
             <div style={{ flex: 1 }}>
