@@ -402,16 +402,38 @@ export default function LiveScreen() {
         .eq('user_id', user.id) : { data: [] };
       const userTournamentIds = [...new Set((memberships || []).map(m => m.leagues?.tournament_id).filter(Boolean))];
 
-      // 1b. Live fixtures — filtered to the manager's league tournaments only.
-      // Score strip shows only truly-live matches; stats/events window also covers
-      // recently-finished fixtures (up to 3 h after kickoff) so the Points Log stays
-      // visible after a match ends and shows FINAL points.
+      // 1b. Active matchday_ids — find the most recent matchday deadline per tournament.
+      // This scopes the live strip to only the current round's fixtures, preventing
+      // unrelated matches (e.g. other nations in a large tournament) from appearing.
+      let activeMatchdayIds = [];
+      if (userTournamentIds.length) {
+        const { data: mdRows = [] } = await supabase
+          .from('matchday_deadlines')
+          .select('matchday_id, tournament_id, deadline_at')
+          .in('tournament_id', userTournamentIds)
+          .lte('deadline_at', new Date().toISOString())  // deadline has passed = round is live/recent
+          .order('deadline_at', { ascending: false });
+        // One matchday_id per tournament (the most recent past deadline)
+        const seen = new Set();
+        for (const row of (mdRows || [])) {
+          if (!seen.has(row.tournament_id)) {
+            seen.add(row.tournament_id);
+            activeMatchdayIds.push(row.matchday_id);
+          }
+        }
+      }
+
+      // 1c. Live fixtures — scoped to the active matchday(s) when possible, otherwise all user tournaments.
       let liveQ = supabase
         .from('fixtures')
-        .select('id, home_team, away_team, status, kickoff_at, minute, home_score, away_score, tournament_id')
+        .select('id, home_team, away_team, status, kickoff_at, minute, home_score, away_score, tournament_id, matchday_id')
         .eq('status', 'live')
         .order('kickoff_at', { ascending: true });
-      if (userTournamentIds.length) liveQ = liveQ.in('tournament_id', userTournamentIds);
+      if (activeMatchdayIds.length) {
+        liveQ = liveQ.in('matchday_id', activeMatchdayIds);
+      } else if (userTournamentIds.length) {
+        liveQ = liveQ.in('tournament_id', userTournamentIds);
+      }
       const { data: liveFixData = [] } = await liveQ;
 
       const enrichedFix = (liveFixData || []).map(f => ({
@@ -485,11 +507,12 @@ export default function LiveScreen() {
       // Build a map of league_id → squad row for chip lookup
       const squadByLeague = Object.fromEntries((squadRows || []).map(s => [s.league_id, s]));
 
-      // Use the active league's squad for pitch display; fall back to first available
+      // Use the active league's squad only — no cross-league fallback.
+      // If the active league has no squad, show no players (empty XI).
       const activeLeagueId = initialSet.current && activeLeague?.id
         ? activeLeague.id
         : (memberships?.[0]?.league_id ?? null);
-      const squadRow       = squadByLeague[activeLeagueId] ?? (squadRows?.[0] ?? null);
+      const squadRow = squadByLeague[activeLeagueId] ?? null;
 
       const squadPlayerIds = squadRow?.players || [];
       const captainId      = squadRow?.captain_id;
