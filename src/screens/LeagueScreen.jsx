@@ -1142,6 +1142,11 @@ export default function LeagueScreen() {
                    <button onClick={() => setNewLeague(activeLeague?.leagues || activeLeague)} style={{ background: FT_INK, color: FT_PAPER, border: 'none', padding: '10px 24px', fontFamily: ftMono, fontSize: 11, letterSpacing: '.2em', cursor: 'pointer' }}>
                      SHOW INVITE CODE →
                    </button>
+                   <GazetteNews
+                     leagueId={activeLeague?.league_id}
+                     ftSerif={ftSerif} ftMono={ftMono}
+                     ftInk={FT_INK} ftMute={FT_MUTE} ftRed={FT_RED} ftRule={FT_RULE}
+                   />
                  </div>
                ) : (
                  /* Newspaper layout */
