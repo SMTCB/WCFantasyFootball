@@ -126,49 +126,24 @@ export default function SquadScreen() {
   const cfg = useLeagueConfig(activeLeague);
   const POS_LIMITS = cfg.positionLimits;
 
-  // Draft gate: for noduplicate leagues, redirect to draft/recovery if the
-  // lottery hasn't run yet for this user. Runs once cfg and user are ready.
+  // Draft gate: single question — has the lottery run for this league?
+  // YES → squad management (normal flow). NO → draft submission screen.
   useEffect(() => {
     if (cfg.loading || !user?.id) return;
     if (cfg.format !== 'noduplicate') { setDraftGateChecked(true); return; }
     if (!activeLeague) { setDraftGateChecked(true); return; }
     let cancelled = false;
     (async () => {
-      // Check this user's allocation
-      const { data: myAlloc } = await supabase
-        .from('draft_allocations')
-        .select('id, unresolved_slots')
-        .eq('league_id', activeLeague)
-        .eq('user_id', user.id)
-        .not('allocated_players', 'is', null)
-        .limit(1)
-        .maybeSingle();
-      if (cancelled) return;
-      if (myAlloc) {
-        // Allocation exists but still has unresolved slots → send to recovery to pick players
-        if ((myAlloc.unresolved_slots ?? 0) > 0) {
-          navigate(`/league/${activeLeague}/draft/recover`);
-        } else {
-          setDraftGateChecked(true);
-        }
-        return;
-      }
-
-      // No allocation for me — check if the lottery ran for anyone else
       const { count } = await supabase
         .from('draft_allocations')
         .select('id', { count: 'exact', head: true })
         .eq('league_id', activeLeague)
         .not('allocated_players', 'is', null);
       if (cancelled) return;
-
       if (count > 0) {
-        // Lottery ran but I missed it — create a late-joiner slot then go to recovery
-        await supabase.rpc('create_late_joiner_allocation', { p_league_id: activeLeague });
-        navigate(`/league/${activeLeague}/draft/recover`);
+        setDraftGateChecked(true); // Draft ran → squad management
       } else {
-        // Lottery hasn't run yet — go to pre-lottery draft submission screen
-        navigate(`/league/${activeLeague}/draft`);
+        navigate(`/league/${activeLeague}/draft`); // Draft not run → submission
       }
     })();
     return () => { cancelled = true; };
@@ -922,14 +897,12 @@ export default function SquadScreen() {
               No Squad Built Yet
             </div>
             <p style={{ color: 'var(--mute)', fontFamily: 'JetBrains Mono, monospace', fontSize: 11, textAlign: 'center', maxWidth: 280, lineHeight: 1.6 }}>
-              {cfg.format === 'noduplicate'
-                ? 'The draft has run. Pick your players from the remaining pool to build your squad.'
-                : 'Head to the Transfer Market to sign your first 11 players.'}
+              Head to the Transfer Market to sign players and build your squad.
             </p>
             <div style={{ display: 'flex', gap: 10, marginTop: 8 }}>
               {cfg.format === 'noduplicate' ? (
-                <button onClick={() => navigate(`/league/${activeLeague}/draft/recover`)} style={{ padding: '10px 22px', background: 'var(--gold)', color: 'var(--ink)', fontFamily: 'Archivo Black, sans-serif', fontSize: 11, letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer', border: 'none' }}>
-                  Pick Your Players →
+                <button onClick={() => navigate(`/market?leagueId=${activeLeague}`)} style={{ padding: '10px 22px', background: 'var(--gold)', color: 'var(--ink)', fontFamily: 'Archivo Black, sans-serif', fontSize: 11, letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer', border: 'none' }}>
+                  Transfer Market →
                 </button>
               ) : (
                 <button onClick={() => navigate(`/market?leagueId=${activeLeague}`)} style={{ padding: '10px 22px', background: 'var(--gold)', color: 'var(--ink)', fontFamily: 'Archivo Black, sans-serif', fontSize: 11, letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer', border: 'none' }}>
