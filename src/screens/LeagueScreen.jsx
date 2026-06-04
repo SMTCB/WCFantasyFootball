@@ -1020,8 +1020,8 @@ export default function LeagueScreen() {
           </div>
         )}
 
-        {/* Incomplete squad warning — two levels, suppressed when draftGaps banner is active */}
-        {mySquadPlayerCount !== null && draftGaps === 0 && mySquadPlayerCount < 11 && (
+        {/* Incomplete squad warning — two levels, suppressed when draftGaps banner or draft-open banner is active */}
+        {mySquadPlayerCount !== null && draftGaps === 0 && !draftOpen && mySquadPlayerCount < 11 && (
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 20px', background: 'rgba(240,58,58,0.10)', borderBottom: '1px solid rgba(240,58,58,0.28)', flexShrink: 0 }}>
             <div style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--danger)', flexShrink: 0 }} />
             <div style={{ flex: 1 }}>
@@ -1037,7 +1037,7 @@ export default function LeagueScreen() {
             </button>
           </div>
         )}
-        {mySquadPlayerCount !== null && draftGaps === 0 && mySquadPlayerCount >= 11 && mySquadPlayerCount < 15 && (
+        {mySquadPlayerCount !== null && draftGaps === 0 && !draftOpen && mySquadPlayerCount >= 11 && mySquadPlayerCount < 15 && (
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 20px', background: 'rgba(240,180,0,0.09)', borderBottom: '1px solid rgba(240,180,0,0.22)', flexShrink: 0 }}>
             <div style={{ width: 7, height: 7, borderRadius: '50%', background: 'var(--gold)', flexShrink: 0 }} />
             <div style={{ flex: 1 }}>
