@@ -907,6 +907,7 @@ export default function LeagueScreen() {
             gw={currentGW}
             isLive={false}
             onBack={() => navigate('/league')}
+            cupPhase={activeLeague?.leagues?.cup_phase}
             rightSlot={
               <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                 <NotificationPanel
