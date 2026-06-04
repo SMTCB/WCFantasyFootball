@@ -444,13 +444,27 @@ export default function DraftScreen() {
             <span className="text-[10px] font-black uppercase tracking-widest text-[#9E9E9E]">
               Your List — {list.length}/{DRAFT_LIST_SIZE}
             </span>
-            <button
-              onClick={autoComplete}
-              disabled={list.length >= DRAFT_LIST_SIZE || isClosed}
-              className="text-[9px] font-black uppercase tracking-widest px-2.5 py-1 border border-[#2A2A2A] text-[#9E9E9E] bg-[#1A1A1A] disabled:opacity-30 disabled:cursor-not-allowed active:scale-95 transition-transform"
-            >
-              ⚡ Auto-Fill
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={autoComplete}
+                disabled={list.length >= DRAFT_LIST_SIZE || isClosed}
+                className="text-[9px] font-black uppercase tracking-widest px-2.5 py-1 border border-[#2A2A2A] text-[#9E9E9E] bg-[#1A1A1A] disabled:opacity-30 disabled:cursor-not-allowed active:scale-95 transition-transform"
+              >
+                ⚡ Auto-Fill
+              </button>
+              <button
+                onClick={handleSubmit}
+                disabled={list.length === 0 || saving || isClosed}
+                className="text-[9px] font-black uppercase tracking-widest px-2.5 py-1 disabled:opacity-30 disabled:cursor-not-allowed active:scale-95 transition-transform"
+                style={{
+                  background: list.length > 0 && !isClosed ? '#00C853' : '#1A1A1A',
+                  color:      list.length > 0 && !isClosed ? '#000'    : '#555',
+                  border:     list.length > 0 && !isClosed ? 'none'    : '1px solid #2A2A2A',
+                }}
+              >
+                {saving ? '...' : `Submit (${list.length})`}
+              </button>
+            </div>
           </div>
 
           {list.length === 0 ? (
