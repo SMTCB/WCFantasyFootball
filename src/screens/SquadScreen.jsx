@@ -84,6 +84,9 @@ export default function SquadScreen() {
   const [tournamentId,       setTournamentId]      = useState(null);
   const [showChipWizard,     setShowChipWizard]    = useState(false);
   const [showScoringModal,   setShowScoringModal]  = useState(false);
+  // Draft gate: false until we've confirmed whether a draft allocation exists.
+  // Keeps the loading spinner up while the async check runs for noduplicate leagues.
+  const [draftGateChecked,   setDraftGateChecked]  = useState(false);
 
   // On mount: resolve which league to show
   useEffect(() => {
@@ -122,6 +125,32 @@ export default function SquadScreen() {
   // Competition-agnostic config from the selected league row
   const cfg = useLeagueConfig(activeLeague);
   const POS_LIMITS = cfg.positionLimits;
+
+  // Draft gate: for noduplicate leagues, redirect to the draft screen if the
+  // lottery hasn't run yet for this user. Runs once cfg and user are ready.
+  useEffect(() => {
+    if (cfg.loading || !user?.id) return;
+    if (cfg.format !== 'noduplicate') { setDraftGateChecked(true); return; }
+    if (!activeLeague) { setDraftGateChecked(true); return; }
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase
+        .from('draft_allocations')
+        .select('id')
+        .eq('league_id', activeLeague)
+        .eq('user_id', user.id)
+        .not('allocated_players', 'is', null)
+        .limit(1)
+        .maybeSingle();
+      if (cancelled) return;
+      if (!data) {
+        navigate(`/league/${activeLeague}/draft`);
+      } else {
+        setDraftGateChecked(true);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [cfg.loading, cfg.format, user?.id, activeLeague]);
 
   // Form history — last 5 GW pts per player for the squad list strip
   const { statsMap: squadStatsMap } = usePlayerStats(tournamentId);
@@ -2399,7 +2428,7 @@ function JokerList({ teams, squadPlayerIds, onSelect, saving }) {
     </div>
   );
 
-  if (loading) return (
+  if (loading || (cfg.format === 'noduplicate' && !draftGateChecked)) return (
     <EmptyState title="Scouting Active Teams…" sub={null} action={
       <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: '10px', letterSpacing: '0.15em', color: 'var(--mute)', textTransform: 'uppercase' }} className="animate-scan">Loading</div>
     } />
