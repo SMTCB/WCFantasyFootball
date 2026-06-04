@@ -1,4 +1,4 @@
-import { MgrTag, HubSectionLabel, Spark } from './HubShared';
+import { MgrTag, HubSectionLabel } from './HubShared';
 import { MONO, DISPLAY, mgrHue, mgrMono } from './HubConstants';
 
 export default function BettingLeaderboardView({ leaderboard, currentUser, betLoading }) {
