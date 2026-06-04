@@ -388,6 +388,36 @@ export default function SquadScreen() {
   // Transfer window status for the sticky banner (open / upcoming / no_window).
   const transferWindow = useTransferWindow(activeLeague);
 
+  // KPI header: when window is in recovery (upcoming), count down to opensAt.
+  // When open, use the deadline countdown (closes at next matchday).
+  const [windowKpi, setWindowKpi] = useState({ label: 'Transfers', text: '', color: 'var(--mute)' });
+  useEffect(() => {
+    const target = transferWindow.status === 'upcoming'
+      ? transferWindow.opensAt
+      : transferWindow.status === 'open'
+      ? transferWindow.closesAt
+      : null;
+    if (!target) {
+      setWindowKpi({ label: 'Transfers', text: transferWindow.status === 'no_window' ? '—' : 'CLOSED', color: 'var(--mute)' });
+      return;
+    }
+    const tick = () => {
+      const ms = new Date(target) - Date.now();
+      if (ms <= 0) { setWindowKpi({ label: transferWindow.status === 'upcoming' ? 'Opens In' : 'Transfers', text: '—', color: 'var(--mute)' }); return; }
+      const h = Math.floor(ms / 3600000);
+      const m = Math.floor((ms % 3600000) / 60000);
+      const s = Math.floor((ms % 60000) / 1000);
+      const text = `${h}h ${m}m ${s}s`;
+      setWindowKpi(transferWindow.status === 'upcoming'
+        ? { label: 'Opens In', text, color: 'var(--warn)' }
+        : { label: 'Transfers', text, color: h < 2 ? 'var(--danger)' : 'var(--positive)' }
+      );
+    };
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, [transferWindow.status, transferWindow.opensAt, transferWindow.closesAt]);
+
   // First-visit tour
   const { showSquadTour, completeSquadTour, replaySquadTour } = useOnboarding();
 
@@ -1417,11 +1447,11 @@ export default function SquadScreen() {
 
         {/* Right: KPI cluster — Transfers · Squad · Budget */}
         <div className="flex items-center gap-5">
-          {!deadline.loading && (
+          {windowKpi.text && (
             <div className="text-right">
-              <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 9, color: 'var(--mute)', letterSpacing: '.14em', textTransform: 'uppercase' }}>Transfers</div>
-              <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 14, color: deadline.color, letterSpacing: '-0.01em' }}>
-                {deadline.isLocked ? 'CLOSED' : deadline.timeLeft}
+              <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 9, color: 'var(--mute)', letterSpacing: '.14em', textTransform: 'uppercase' }}>{windowKpi.label}</div>
+              <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 14, color: windowKpi.color, letterSpacing: '-0.01em' }}>
+                {windowKpi.text}
               </div>
             </div>
           )}
