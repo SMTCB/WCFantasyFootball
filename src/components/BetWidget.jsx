@@ -266,8 +266,15 @@ export default function BetWidget({ bet, squadId, onSubmitted }) {
           </div>
         )}
 
+        {/* No-squad guard — user hasn't completed their team setup */}
+        {!isPastDeadline && !squadId && options.length > 0 && (
+          <div className="text-[10px] font-semibold mt-1 px-3 py-2 rounded" style={{ color: 'var(--mute)', background: 'rgba(255,255,255,0.04)', border: '1px solid var(--rule)' }}>
+            Complete your squad setup to place bets.
+          </div>
+        )}
+
         {/* Inline options — shown when open and not yet resolved */}
-        {!isPastDeadline && options.length > 0 && (
+        {!isPastDeadline && !!squadId && options.length > 0 && (
           <>
             <div className="flex items-center justify-between mt-1">
               <span style={{ color: deadline.color, fontSize: 10, fontWeight: 600 }}>{deadline.label}</span>

@@ -14,6 +14,7 @@ import SectionHeader from '../components/SectionHeader';
 import LeagueInviteCard from '../components/LeagueInviteCard';
 import H2HSheet from '../components/H2HSheet';
 import GazetteDraftReport from '../components/GazetteDraftReport';
+import GazetteNews        from '../components/GazetteNews';
 import TransferWindowBanner from '../components/TransferWindowBanner';
 import BetsSection from '../components/BetsSection';
 
@@ -1216,6 +1217,13 @@ export default function LeagueScreen() {
                        </div>
                      </aside>
                    </div>
+
+                   {/* Commissioner posts — last 3 breaking_news entries */}
+                   <GazetteNews
+                     leagueId={activeLeague?.league_id}
+                     ftSerif={ftSerif} ftMono={ftMono}
+                     ftInk={FT_INK} ftMute={FT_MUTE} ftRed={FT_RED} ftRule={FT_RULE}
+                   />
 
                    <div style={{ height: 1, background: FT_INK, margin: '24px 0 12px' }} />
                    <div style={{ display: 'flex', justifyContent: 'space-between', fontFamily: ftMono, fontSize: 9, letterSpacing: '.22em', color: FT_MUTE }}>
