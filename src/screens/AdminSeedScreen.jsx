@@ -152,9 +152,14 @@ function LeagueControls({ league, tournament, onRefresh }) {
     setLotteryMsg(null);
     try {
       const result = await callFunction('run-draft-lottery', { league_id: league.id });
-      const processed = result?.processed ?? result?.managers_processed ?? '?';
+      if (result?.skipped) {
+        setLotteryMsg({ ok: true, text: 'Draft was already processed — no changes made' });
+        setLotteryStatus(1); // show as ran
+        return;
+      }
+      const processed = result?.managersProcessed ?? '?';
       setLotteryMsg({ ok: true, text: `Lottery complete — ${processed} manager(s) allocated` });
-      setLotteryStatus(processed);
+      setLotteryStatus(typeof processed === 'number' ? processed : 1);
     } catch (err) {
       setLotteryMsg({ ok: false, text: err.message || 'Lottery failed — check logs' });
     } finally {
