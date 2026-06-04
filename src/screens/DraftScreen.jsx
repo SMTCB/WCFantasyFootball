@@ -55,9 +55,8 @@ export default function DraftScreen() {
   const [phase,       setPhase]       = useState('group'); // 'group' | 'knockout'
   const dirtyRef = useRef(false); // U23: heartbeat dirty flag
 
-  const countdown   = useCountdown(deadline);
-  const isClosed    = countdown === 'CLOSED';
-  const relaxation  = useRelaxationState(leagueId);
+  const countdown  = useCountdown(deadline);
+  const relaxation = useRelaxationState(leagueId);
 
   // Competition-agnostic config from the leagues row
   const cfg             = useLeagueConfig(leagueId);
@@ -214,7 +213,7 @@ export default function DraftScreen() {
 
   // Auto-save draft every 30s whenever list changes (status stays 'pending')
   useEffect(() => {
-    if (submitted || isClosed || !user?.id || list.length === 0) return;
+    if (submitted || !user?.id || list.length === 0) return;
     const timer = setTimeout(async () => {
       try {
         await supabase.from('draft_submissions').upsert({
@@ -233,12 +232,12 @@ export default function DraftScreen() {
       }
     }, 30000);
     return () => clearTimeout(timer);
-  }, [list, submitted, isClosed, leagueId, user?.id]);
+  }, [list, submitted, leagueId, user?.id]);
 
   // U23: 2-minute heartbeat — saves if dirty regardless of whether list changed recently.
   // Prevents the 30s debounce from never firing during continuous editing.
   useEffect(() => {
-    if (submitted || isClosed || !user?.id) return;
+    if (submitted || !user?.id) return;
     const saveIfDirty = async () => {
       if (!dirtyRef.current || list.length === 0) return;
       try {
@@ -259,20 +258,13 @@ export default function DraftScreen() {
     const hb = setInterval(saveIfDirty, 120_000);
     return () => clearInterval(hb);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [submitted, isClosed, leagueId, user?.id]);
+  }, [submitted, leagueId, user?.id]);
 
   const handleSubmit = async () => {
-    if (list.length === 0 || saving || isClosed) return;
+    if (list.length === 0 || saving) return;
     setSaving(true);
     setSaveError(null);
     try {
-      // Validate against server time — client clock may be wrong
-      const { data: serverNow } = await supabase.rpc('get_server_time').single().then(r => r, () => ({ data: null }));
-      if (serverNow && deadline && new Date(serverNow) >= new Date(deadline)) {
-        setSaveError('Draft deadline has passed — submission rejected.');
-        return;
-      }
-
       const { error } = await supabase.from('draft_submissions').upsert({
         league_id:    leagueId,
         user_id:      user?.id,
@@ -312,7 +304,7 @@ export default function DraftScreen() {
             Draft Submitted
           </div>
           <div className="text-[#9E9E9E] text-[12px]">
-            {list.length} players ranked. Lottery runs at deadline.
+            {list.length} players ranked. Lottery runs when the admin triggers it.
           </div>
         </div>
         <div className="w-full max-w-sm space-y-2">
@@ -373,14 +365,14 @@ export default function DraftScreen() {
         {/* Deadline + list size */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-1.5">
-            {isClosed
-              ? <span className="text-[#E53935] text-[10px] font-black uppercase tracking-widest">Draft Closed</span>
-              : deadline
-                ? <>
-                    <span className="text-[#9E9E9E] text-[10px] uppercase tracking-widest">Closes in</span>
+            {deadline
+              ? countdown === 'CLOSED'
+                ? <span className="text-[#555] text-[10px] uppercase tracking-widest">Submission window closed</span>
+                : <>
+                    <span className="text-[#9E9E9E] text-[10px] uppercase tracking-widest">Suggested deadline in</span>
                     <span className="text-[#FFC107] text-[10px] font-black">{countdown}</span>
                   </>
-                : <span className="text-[#555] text-[10px] uppercase tracking-widest">No deadline set</span>
+              : <span className="text-[#555] text-[10px] uppercase tracking-widest">Open until lottery runs</span>
             }
           </div>
           <div className="flex gap-3">
@@ -452,19 +444,19 @@ export default function DraftScreen() {
             <div className="flex items-center gap-2">
               <button
                 onClick={autoComplete}
-                disabled={list.length >= DRAFT_LIST_SIZE || isClosed}
+                disabled={list.length >= DRAFT_LIST_SIZE}
                 className="text-[9px] font-black uppercase tracking-widest px-2.5 py-1 border border-[#2A2A2A] text-[#9E9E9E] bg-[#1A1A1A] disabled:opacity-30 disabled:cursor-not-allowed active:scale-95 transition-transform"
               >
                 ⚡ Auto-Fill
               </button>
               <button
                 onClick={handleSubmit}
-                disabled={list.length === 0 || saving || isClosed}
+                disabled={list.length === 0 || saving}
                 className="text-[9px] font-black uppercase tracking-widest px-2.5 py-1 disabled:opacity-30 disabled:cursor-not-allowed active:scale-95 transition-transform"
                 style={{
-                  background: list.length > 0 && !isClosed ? '#00C853' : '#1A1A1A',
-                  color:      list.length > 0 && !isClosed ? '#000'    : '#555',
-                  border:     list.length > 0 && !isClosed ? 'none'    : '1px solid #2A2A2A',
+                  background: list.length > 0 ? '#00C853' : '#1A1A1A',
+                  color:      list.length > 0 ? '#000'    : '#555',
+                  border:     list.length > 0 ? 'none'    : '1px solid #2A2A2A',
                 }}
               >
                 {saving ? '...' : `Submit (${list.length})`}
@@ -573,7 +565,7 @@ export default function DraftScreen() {
             )}
             {filtered.map(p => {
               const listFull = list.length >= DRAFT_LIST_SIZE;
-              const disabled = listFull || isClosed;
+              const disabled = listFull;
               const isExpanded = expandedId === p.id;
 
               return (
@@ -631,15 +623,15 @@ export default function DraftScreen() {
       <div className="bg-[#111111] border-t border-[#1E1E1E] px-4 py-4">
         <button
           onClick={handleSubmit}
-          disabled={list.length === 0 || saving || isClosed}
+          disabled={list.length === 0 || saving}
           className="w-full py-3.5 text-[11px] font-black uppercase tracking-widest rounded transition-all disabled:opacity-30 disabled:cursor-not-allowed active:scale-95"
           style={{
-            background:      list.length > 0 && !isClosed ? '#00C853' : undefined,
-            color:           list.length > 0 && !isClosed ? '#000'    : '#555',
-            backgroundColor: list.length === 0 || isClosed ? '#1A1A1A' : undefined,
+            background:      list.length > 0 ? '#00C853' : undefined,
+            color:           list.length > 0 ? '#000'    : '#555',
+            backgroundColor: list.length === 0 ? '#1A1A1A' : undefined,
           }}
         >
-          {saving ? 'Saving...' : isClosed ? 'Draft Closed' : list.length === 0 ? 'Submit' : `Submit List (${list.length})`}
+          {saving ? 'Saving...' : list.length === 0 ? 'Add players to your list' : `Submit List (${list.length})`}
         </button>
       </div>
     </div>
