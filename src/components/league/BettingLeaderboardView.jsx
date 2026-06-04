@@ -49,8 +49,8 @@ export default function BettingLeaderboardView({ leaderboard, currentUser, betLo
               right={<span style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)' }}>SORT · REWARDS ↓</span>}
             />
             {/* Column headers — desktop only */}
-            <div className="hidden lg:grid" style={{ gridTemplateColumns: '40px 1fr 100px 70px 70px 80px', gap: 14, padding: '10px 22px', borderBottom: '1px solid var(--rule)', color: 'var(--mute)' }}>
-              {['#', 'MANAGER', 'L8 GW', 'W-L', 'WIN %', 'REWARDS'].map(h => <span key={h} style={{ fontFamily: MONO, fontSize: 9 }}>{h}</span>)}
+            <div className="hidden lg:grid" style={{ gridTemplateColumns: '40px 1fr 70px 70px 80px', gap: 14, padding: '10px 22px', borderBottom: '1px solid var(--rule)', color: 'var(--mute)' }}>
+              {['#', 'MANAGER', 'W-L', 'WIN %', 'REWARDS'].map(h => <span key={h} style={{ fontFamily: MONO, fontSize: 9 }}>{h}</span>)}
             </div>
 
             <div style={{ flex: 1, overflow: 'auto' }}>
@@ -58,7 +58,6 @@ export default function BettingLeaderboardView({ leaderboard, currentUser, betLo
                 const isMe = currentUser && entry.user_id === currentUser.id;
                 const hue  = mgrHue(entry.username || '');
                 const lost = entry.total_bets - entry.correct_bets;
-                const sparkData = Array.from({ length: 8 }, (_, j) => (j % 3 === 0 ? -2 : j % 2 === 0 ? 4 : 2));
                 return (
                   <div key={entry.user_id} style={{
                     borderBottom: '1px solid var(--rule)',
@@ -93,13 +92,12 @@ export default function BettingLeaderboardView({ leaderboard, currentUser, betLo
                       </div>
                     </div>
                     {/* Desktop row */}
-                    <div className="hidden lg:grid" style={{ gridTemplateColumns: '40px 1fr 100px 70px 70px 80px', gap: 14, padding: '12px 22px', alignItems: 'center' }}>
+                    <div className="hidden lg:grid" style={{ gridTemplateColumns: '40px 1fr 70px 70px 80px', gap: 14, padding: '12px 22px', alignItems: 'center' }}>
                       <span style={{ fontFamily: DISPLAY, fontSize: 14 }}>{i + 1}</span>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                         <MgrTag mono={mgrMono(entry.username || '')} hue={hue} />
                         <span style={{ fontFamily: DISPLAY, fontSize: 13 }}>{isMe ? 'You' : entry.username}</span>
                       </div>
-                      <Spark data={sparkData} tone={i === 0 ? 'var(--gold)' : 'var(--cyan)'} w={88} h={22} />
                       <span style={{ fontFamily: "'Archivo', sans-serif", fontSize: 12 }}>
                         <span style={{ color: 'var(--positive)' }}>{entry.correct_bets}</span>
                         <span style={{ color: 'var(--mute)' }}> · </span>

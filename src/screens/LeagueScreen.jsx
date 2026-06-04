@@ -1071,10 +1071,12 @@ export default function LeagueScreen() {
           </div>
         )}
 
-                {/* L5.16: Cup phase banner -- shown when cup is active */}
+                {/* Cup phase chip — compact, sits just above the tab bar */}
         {activeLeague?.leagues?.cup_phase && activeLeague.leagues.cup_phase !== 'pre_cup' && (
-          <div style={{ background: 'var(--gold, #FFD700)', color: '#000', padding: '8px', textAlign: 'center', fontSize: '12px', fontWeight: 'bold', flexShrink: 0 }}>
-            CUP PHASE: {activeLeague.leagues.cup_phase.replace(/_/g, ' ').toUpperCase()}
+          <div style={{ display: 'flex', justifyContent: 'center', padding: '4px 0', borderBottom: '1px solid var(--rule)', flexShrink: 0 }}>
+            <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 9, letterSpacing: '.22em', color: 'var(--gold)', background: 'rgba(240,180,0,0.1)', border: '1px solid rgba(240,180,0,0.3)', padding: '2px 10px' }}>
+              ⚽ CUP · {activeLeague.leagues.cup_phase.replace(/_/g, ' ').toUpperCase()}
+            </span>
           </div>
         )}
 
