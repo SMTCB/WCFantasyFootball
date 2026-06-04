@@ -41,6 +41,17 @@ function parseBullets(raw) {
   return Array.isArray(arr) ? arr : [];
 }
 
+// Limit breaking_news to the 3 most recent for display (entries already sorted DESC).
+// Older posts are kept in the DB but not shown.
+function capBreakingNews(entries, max = 3) {
+  let count = 0;
+  return entries.filter(e => {
+    if (e.entry_type !== 'breaking_news') return true;
+    count++;
+    return count <= max;
+  });
+}
+
 function timeAgo(iso) {
   const diff = Math.floor((Date.now() - new Date(iso)) / 1000);
   if (diff < 60)   return `${diff}s ago`;
@@ -215,9 +226,10 @@ export default function LeagueDetailView({ leagueId, members, currentUser, membe
           <HubSectionLabel label="LEAGUE ACTIVITY" sub="LIVE" tone="var(--gold)" right={<span style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)' }}>RECENT</span>} />
           {/* Feed */}
           {(() => {
+            const capped   = capBreakingNews(entries);
             const filtered = activityFilter === 'ALL'
-              ? entries
-              : entries.filter(e => (ENTRY_META[e.entry_type]?.filter ?? 'GAME') === activityFilter);
+              ? capped
+              : capped.filter(e => (ENTRY_META[e.entry_type]?.filter ?? 'GAME') === activityFilter);
             if (filtered.length === 0) return (
               <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '32px 18px', gap: 8 }}>
                 <div style={{ fontSize: 24 }}>⚽</div>
@@ -361,7 +373,7 @@ export default function LeagueDetailView({ leagueId, members, currentUser, membe
               </div>
             </div>
           );
-          return entries.slice(0, 8).map((e) => {
+          return capBreakingNews(entries).slice(0, 8).map((e) => {
             const meta = ENTRY_META[e.entry_type] ?? { badge: e.entry_type.toUpperCase(), color: 'var(--mute)' };
             return (
               <div key={e.id} style={{ padding: '11px 18px', borderBottom: '1px solid var(--rule)' }}>
