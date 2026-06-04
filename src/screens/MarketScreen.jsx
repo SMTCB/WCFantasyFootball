@@ -75,6 +75,25 @@ export default function MarketScreen() {
   const POS_LIMITS = cfg.positionLimits;
   const squadSize  = cfg.squadSize;
 
+  // Draft gate: noduplicate leagues with no processed allocation go to draft screen
+  useEffect(() => {
+    if (cfg.loading || !user?.id || !activeLeague) return;
+    if (cfg.format !== 'noduplicate') return;
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase
+        .from('draft_allocations')
+        .select('id')
+        .eq('league_id', activeLeague)
+        .eq('user_id', user.id)
+        .not('allocated_players', 'is', null)
+        .limit(1)
+        .maybeSingle();
+      if (!cancelled && !data) navigate(`/league/${activeLeague}/draft`);
+    })();
+    return () => { cancelled = true; };
+  }, [cfg.loading, cfg.format, user?.id, activeLeague]);
+
   // League-scoped transfer state
   const { buy, sell, isTaken, takenBy, isOwnedBy, takenMapError, takenMap } = useTransfer(activeLeague);
 
