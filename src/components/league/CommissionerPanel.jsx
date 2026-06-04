@@ -1461,17 +1461,18 @@ function LifecycleOps({ commissioner, leagueId, tournamentId, windowType = null,
             title="SCORE RECALCULATION"
             status="UTILITY · ON-DEMAND"
             statusTone="var(--mute)"
-            sub="Re-run scoring for a specific fixture, or score the entire latest completed round automatically."
-            when="Anytime. Safe — only re-applies the latest data."
+            sub="Scores run automatically — no action needed under normal conditions."
+            when="Use only if a match score looks wrong or a fixture failed to score."
             primary={
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                <button onClick={triggerScoresLatestRound} disabled={commLoading} style={{ ...opBtnStyle('var(--positive)'), cursor: commLoading ? 'not-allowed' : 'pointer' }}>SCORE LATEST ROUND ↯</button>
-                <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-                  <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.08)' }} />
-                  <span style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.15em' }}>OR SPECIFIC FIXTURE</span>
-                  <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.08)' }} />
+                <div style={{ padding: '8px 10px', background: 'var(--ink)', border: '1px solid var(--rule)', fontFamily: BODY, fontSize: 10, color: 'var(--mute)', lineHeight: 1.6 }}>
+                  <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.2em', color: 'var(--positive)' }}>AUTO · </span>
+                  Scores recalculate automatically after every match via scheduled jobs (post-match ~22:30 UTC, late finishers ~23:30 UTC, live every 2 min). You do not need to trigger anything.
+                  <br /><br />
+                  <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.2em', color: 'var(--warn)' }}>WHEN TO USE · </span>
+                  Only if a specific match shows incorrect points (e.g. a data correction from the provider arrived after scoring ran). Enter the fixture ID and recalculate — safe to re-run, overwrites with latest data.
                 </div>
-                <input type="text" value={scoreFixtureId} onChange={e => setScoreFixtureId(e.target.value)} placeholder="e.g. f-1219435455" style={inputStyle} />
+                <input type="text" value={scoreFixtureId} onChange={e => setScoreFixtureId(e.target.value)} placeholder="Fixture ID — e.g. f-1219435455" style={inputStyle} />
                 <button onClick={triggerScores} disabled={commLoading || !scoreFixtureId} style={{ ...opBtnStyle('var(--warn)'), cursor: (commLoading || !scoreFixtureId) ? 'not-allowed' : 'pointer' }}>RECALCULATE ↯</button>
               </div>
             }
@@ -2239,10 +2240,13 @@ export default function CommissionerPanel({ commissioner, leagueId, tournamentId
           })()}
 
           <div data-tour="comm-score-recalc">
-          <MobLifecycleCard title="SCORE RECALCULATION" status="UTILITY" tone="var(--mute)" when="Anytime. Safe.">
-            <button onClick={triggerScoresLatestRound} disabled={commLoading} style={{ ...mobBtn, background: 'var(--positive)', color: 'var(--ink)' }}>SCORE LATEST ROUND ↯</button>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginTop: 4 }}>
-              <span style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '.2em', color: 'var(--paper)' }}>SPECIFIC FIXTURE ID</span>
+          <MobLifecycleCard title="SCORE RECALCULATION" status="UTILITY" tone="var(--mute)" when="Only if a match shows incorrect points.">
+            <div style={{ padding: '8px 10px', background: 'var(--ink)', border: '1px solid var(--rule)', fontFamily: BODY, fontSize: 10, color: 'var(--mute)', lineHeight: 1.6, marginBottom: 8 }}>
+              <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.18em', color: 'var(--positive)' }}>AUTO · </span>
+              Scores run automatically after every match. No action needed under normal conditions.
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+              <span style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '.2em', color: 'var(--paper)' }}>FIXTURE ID</span>
               <input type="text" value={scoreFixtureId} onChange={e => setScoreFixtureId(e.target.value)} placeholder="e.g. f-1219435455" style={mobInput} />
             </div>
             <button onClick={triggerScores} disabled={commLoading || !scoreFixtureId} style={{ ...mobBtn, background: commLoading || !scoreFixtureId ? 'var(--ink-3)' : 'var(--warn)', color: commLoading || !scoreFixtureId ? 'var(--mute)' : 'var(--ink)', cursor: commLoading || !scoreFixtureId ? 'not-allowed' : 'pointer' }}>RECALCULATE ↯</button>
