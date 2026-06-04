@@ -155,7 +155,6 @@ export default function LeagueScreen() {
   const [members, setMembers] = useState([]);
   const [membersLoading, setMembersLoading] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
-  const [draftGaps, setDraftGaps] = useState(0); // unresolved_slots for current user
   const [draftAllocated, setDraftAllocated] = useState(false); // lottery ran and produced allocation
   const [draftOpen, setDraftOpen] = useState(false); // deadline in future + no submission yet
   const [draftDeadlineDate, setDraftDeadlineDate] = useState(null); // for countdown banner
@@ -453,7 +452,6 @@ export default function LeagueScreen() {
         .eq('league_id', id)
         .eq('user_id', user?.id)
         .maybeSingle();
-      setDraftGaps(alloc?.unresolved_slots ?? 0);
       setDraftAllocated(!!(alloc?.allocated_players));
 
       // Check if draft is open and manager hasn't submitted yet.
@@ -521,7 +519,6 @@ export default function LeagueScreen() {
       setMembers([]);
       setMySquadId(null);
       setMySquadBudget(null);
-      setDraftGaps(0);
       setDraftOpen(false);
       loadLeagueById(leagueId);
     } else if (!leagueId) {

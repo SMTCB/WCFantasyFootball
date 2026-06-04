@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { normalizeIntelligence } from '../lib/intelligence';
 import { normalisePlayers } from '../lib/players';
@@ -46,6 +46,7 @@ const MARKET_TOUR_STEPS = [
 ];
 
 export default function MarketScreen() {
+  const navigate = useNavigate();
   const { user } = useAuth();
   const { show: showToast } = useToast();
   const [searchParams] = useSearchParams();

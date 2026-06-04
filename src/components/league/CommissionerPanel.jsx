@@ -1242,7 +1242,7 @@ function LifecycleOps({ commissioner, leagueId, tournamentId, windowType = null,
     openTransferWindow, closeTransferWindow,
     draftDeadline, setDraftDeadline, setLeagueDraftDeadline,
     triggerDraftAllocation, triggerKnockoutAllocation,
-    scoreFixtureId, setScoreFixtureId, triggerScores, triggerScoresLatestRound,
+    scoreFixtureId, setScoreFixtureId, triggerScores,
   } = commissioner;
 
   // Override mode: allows editing transfer window fields even when deadline-controlled
@@ -1254,11 +1254,10 @@ function LifecycleOps({ commissioner, leagueId, tournamentId, windowType = null,
   // fall back to tournamentId heuristic only while the status is still loading (windowType null).
   const isDeadlineControlled = windowType !== null ? windowType === 'matchday' : !!tournamentId;
 
-  // AUDIT-58-A4: precondition guards for one-way lifecycle operations.
+  // Allocation state
   const now = new Date();
   const deadlinePassed = league?.draft_deadline && new Date(league.draft_deadline) <= now;
   const allocationDone = league?.cup_phase && league.cup_phase !== 'pre_cup';
-  const allocationDisabled = commLoading || !deadlinePassed || allocationDone;
 
   // Knockout draft local state
   const [knockoutDeadline, setKnockoutDeadline] = useState('');
@@ -2112,17 +2111,16 @@ export default function CommissionerPanel({ commissioner, leagueId, tournamentId
       openTransferWindow, closeTransferWindow,
       draftDeadline, setDraftDeadline, setLeagueDraftDeadline,
       triggerDraftAllocation,
-      scoreFixtureId, setScoreFixtureId, triggerScores, triggerScoresLatestRound,
+      scoreFixtureId, setScoreFixtureId, triggerScores,
     } = commissioner;
 
     const mobInput = { ...inputStyle };
     const mobBtn = { ...btnBase, width: '100%', fontSize: 12 };
 
-    // AUDIT-58-A4: precondition guards (same logic as desktop LifecycleOps)
+    // Allocation state (mobile)
     const mobNow = new Date();
-    const mobDeadlinePassed    = league?.draft_deadline && new Date(league.draft_deadline) <= mobNow;
-    const mobAllocationDone    = league?.cup_phase && league.cup_phase !== 'pre_cup';
-    const mobAllocationDisabled = commLoading || !mobDeadlinePassed || mobAllocationDone;
+    const mobDeadlinePassed = league?.draft_deadline && new Date(league.draft_deadline) <= mobNow;
+    const mobAllocationDone = league?.cup_phase && league.cup_phase !== 'pre_cup';
 
     // AUDIT-58-A3: derive live status labels for mobile cards (mirrors desktop LifecycleOps)
     const mobIsDeadlineControlled = windowType !== null ? windowType === 'matchday' : !!tournamentId;
@@ -2180,18 +2178,25 @@ export default function CommissionerPanel({ commissioner, leagueId, tournamentId
           {(!league || league.format === 'noduplicate') && (
           <div data-tour="comm-draft-deadline">
           <MobLifecycleCard title="DRAFT" status={mobDraftStatus} tone={mobDraftTone} when="After all picks. Before GW1.">
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-              <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.2em', color: 'var(--mute)' }}>DEADLINE</span>
-              <input type="datetime-local" value={draftDeadline} onChange={e => setDraftDeadline(e.target.value)} style={mobInput} />
-            </div>
-            <button onClick={setLeagueDraftDeadline} disabled={commLoading} style={{ ...mobBtn, background: 'transparent', color: 'var(--paper)', border: '1px solid var(--rule)' }}>SET DEADLINE</button>
-            <div style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.18em', color: 'var(--mute)', lineHeight: 1.6 }}>15 PLAYERS / MGR · £100M · GK≤2 DEF≤5 MID≤5 FWD≤3</div>
-            <button
-              onClick={() => { if (window.confirm('Run allocation for all managers? This cannot be undone without a manual reset.')) triggerDraftAllocation(); }}
-              disabled={mobAllocationDisabled}
-              title={mobAllocationDisabled && !commLoading ? 'Draft deadline must pass before running allocation' : undefined}
-              style={{ ...mobBtn, background: 'var(--gold)', color: 'var(--ink)' }}
-            >RUN ALLOCATION ↯</button>
+            {mobAllocationDone ? (
+              <div style={{ padding: '8px 10px', background: 'var(--ink)', border: '1px solid var(--rule)', fontFamily: BODY, fontSize: 10, color: 'var(--positive)', lineHeight: 1.5 }}>
+                ✓ Allocation complete — squads are live
+              </div>
+            ) : (
+              <>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                  <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.2em', color: 'var(--mute)' }}>DEADLINE (INFORMATIONAL)</span>
+                  <input type="datetime-local" value={draftDeadline} onChange={e => setDraftDeadline(e.target.value)} style={mobInput} />
+                </div>
+                <button onClick={setLeagueDraftDeadline} disabled={commLoading} style={{ ...mobBtn, background: 'transparent', color: 'var(--paper)', border: '1px solid var(--rule)' }}>SET DEADLINE</button>
+                <div style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.18em', color: 'var(--mute)', lineHeight: 1.6 }}>15 PLAYERS / MGR · £100M · GK≤2 DEF≤5 MID≤5 FWD≤3</div>
+                <button
+                  onClick={() => { if (window.confirm('Run allocation for all managers? This cannot be undone without a manual reset.')) triggerDraftAllocation(); }}
+                  disabled={commLoading}
+                  style={{ ...mobBtn, background: 'var(--gold)', color: 'var(--ink)' }}
+                >RUN ALLOCATION ↯</button>
+              </>
+            )}
           </MobLifecycleCard>
           </div>
           )}
