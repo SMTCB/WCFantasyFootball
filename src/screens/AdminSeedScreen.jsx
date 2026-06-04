@@ -229,6 +229,7 @@ function MatchdayDeadlines({ tournamentId }) {
 
   return (
     <Section title="Matchday Deadlines" sub="Squad lock / unlock windows per round">
+      <p className="text-xs text-text-secondary mb-2">Auto-populated by fixture sync — edit only to override a specific round.</p>
       {deadlines.length === 0 && <p className="text-xs text-text-secondary">No deadlines configured.</p>}
       <div className="flex flex-col gap-1">
         {deadlines.map(d => {

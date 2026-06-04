@@ -858,12 +858,20 @@ export default function SquadScreen() {
               No Squad Built Yet
             </div>
             <p style={{ color: 'var(--mute)', fontFamily: 'JetBrains Mono, monospace', fontSize: 11, textAlign: 'center', maxWidth: 280, lineHeight: 1.6 }}>
-              Head to the Transfer Market to sign your first 11 players.
+              {cfg.format === 'noduplicate'
+                ? 'This is a draft league. Submit your ranked player list to enter the draft.'
+                : 'Head to the Transfer Market to sign your first 11 players.'}
             </p>
             <div style={{ display: 'flex', gap: 10, marginTop: 8 }}>
-              <a href="#/market" style={{ padding: '10px 22px', background: 'var(--gold)', color: 'var(--ink)', fontFamily: 'Archivo Black, sans-serif', fontSize: 11, letterSpacing: '.08em', textTransform: 'uppercase', textDecoration: 'none' }}>
-                Transfer Market →
-              </a>
+              {cfg.format === 'noduplicate' ? (
+                <button onClick={() => navigate(`/league/${activeLeague}/draft`)} style={{ padding: '10px 22px', background: 'var(--gold)', color: 'var(--ink)', fontFamily: 'Archivo Black, sans-serif', fontSize: 11, letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer', border: 'none' }}>
+                  Submit Draft List →
+                </button>
+              ) : (
+                <button onClick={() => navigate(`/market?leagueId=${activeLeague}`)} style={{ padding: '10px 22px', background: 'var(--gold)', color: 'var(--ink)', fontFamily: 'Archivo Black, sans-serif', fontSize: 11, letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer', border: 'none' }}>
+                  Transfer Market →
+                </button>
+              )}
               {leagues && leagues.length > 1 && (
                 <button
                   onClick={() => setActiveLeague(null)}
@@ -1450,7 +1458,7 @@ export default function SquadScreen() {
                 Need {11 - allSquadPlayers.length} more to field a starting XI
               </div>
             </div>
-            <button onClick={() => navigate('/market')} style={{ fontFamily: 'Archivo Black, sans-serif', fontWeight: 900, fontSize: 10, color: 'var(--danger)', border: '1px solid rgba(240,58,58,0.5)', padding: '6px 12px', background: 'transparent', cursor: 'pointer', letterSpacing: '0.1em', textTransform: 'uppercase', flexShrink: 0 }}>
+            <button onClick={() => navigate(`/market?leagueId=${activeLeague}`)} style={{ fontFamily: 'Archivo Black, sans-serif', fontWeight: 900, fontSize: 10, color: 'var(--danger)', border: '1px solid rgba(240,58,58,0.5)', padding: '6px 12px', background: 'transparent', cursor: 'pointer', letterSpacing: '0.1em', textTransform: 'uppercase', flexShrink: 0 }}>
               MARKET →
             </button>
           </div>
@@ -1465,7 +1473,7 @@ export default function SquadScreen() {
                 {15 - allSquadPlayers.length} empty slot{15 - allSquadPlayers.length !== 1 ? 's' : ''} — sign more players
               </div>
             </div>
-            <button onClick={() => navigate('/market')} style={{ fontFamily: 'Archivo Black, sans-serif', fontWeight: 900, fontSize: 10, color: 'var(--gold)', border: '1px solid rgba(240,180,0,0.45)', padding: '6px 12px', background: 'transparent', cursor: 'pointer', letterSpacing: '0.1em', textTransform: 'uppercase', flexShrink: 0 }}>
+            <button onClick={() => navigate(`/market?leagueId=${activeLeague}`)} style={{ fontFamily: 'Archivo Black, sans-serif', fontWeight: 900, fontSize: 10, color: 'var(--gold)', border: '1px solid rgba(240,180,0,0.45)', padding: '6px 12px', background: 'transparent', cursor: 'pointer', letterSpacing: '0.1em', textTransform: 'uppercase', flexShrink: 0 }}>
               SIGN →
             </button>
           </div>
@@ -1922,7 +1930,7 @@ export default function SquadScreen() {
             <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 10, color: 'rgba(240,58,58,0.8)' }}>
               Need {11 - allSquadPlayers.length} more to field a starting XI
             </div>
-            <button onClick={() => navigate('/market')} style={{ marginLeft: 'auto', fontFamily: 'Archivo Black, sans-serif', fontWeight: 900, fontSize: 10, color: 'var(--danger)', border: '1px solid rgba(240,58,58,0.5)', padding: '6px 14px', background: 'transparent', cursor: 'pointer', letterSpacing: '0.1em', textTransform: 'uppercase', flexShrink: 0 }}>
+            <button onClick={() => navigate(`/market?leagueId=${activeLeague}`)} style={{ marginLeft: 'auto', fontFamily: 'Archivo Black, sans-serif', fontWeight: 900, fontSize: 10, color: 'var(--danger)', border: '1px solid rgba(240,58,58,0.5)', padding: '6px 14px', background: 'transparent', cursor: 'pointer', letterSpacing: '0.1em', textTransform: 'uppercase', flexShrink: 0 }}>
               GO TO MARKET →
             </button>
           </div>
@@ -1935,7 +1943,7 @@ export default function SquadScreen() {
             <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 10, color: 'rgba(240,180,0,0.75)' }}>
               {15 - allSquadPlayers.length} empty slot{15 - allSquadPlayers.length !== 1 ? 's' : ''} — sign more players to complete your squad
             </div>
-            <button onClick={() => navigate('/market')} style={{ marginLeft: 'auto', fontFamily: 'Archivo Black, sans-serif', fontWeight: 900, fontSize: 10, color: 'var(--gold)', border: '1px solid rgba(240,180,0,0.45)', padding: '6px 14px', background: 'transparent', cursor: 'pointer', letterSpacing: '0.1em', textTransform: 'uppercase', flexShrink: 0 }}>
+            <button onClick={() => navigate(`/market?leagueId=${activeLeague}`)} style={{ marginLeft: 'auto', fontFamily: 'Archivo Black, sans-serif', fontWeight: 900, fontSize: 10, color: 'var(--gold)', border: '1px solid rgba(240,180,0,0.45)', padding: '6px 14px', background: 'transparent', cursor: 'pointer', letterSpacing: '0.1em', textTransform: 'uppercase', flexShrink: 0 }}>
               SIGN PLAYERS →
             </button>
           </div>
