@@ -84,9 +84,6 @@ export default function SquadScreen() {
   const [tournamentId,       setTournamentId]      = useState(null);
   const [showChipWizard,     setShowChipWizard]    = useState(false);
   const [showScoringModal,   setShowScoringModal]  = useState(false);
-  // Draft gate: false until we've confirmed whether a draft allocation exists.
-  // Keeps the loading spinner up while the async check runs for noduplicate leagues.
-  const [draftGateChecked,   setDraftGateChecked]  = useState(false);
 
   // On mount: resolve which league to show
   useEffect(() => {
@@ -127,11 +124,11 @@ export default function SquadScreen() {
   const POS_LIMITS = cfg.positionLimits;
 
   // Draft gate: single question — has the lottery run for this league?
-  // YES → squad management (normal flow). NO → draft submission screen.
+  // YES → stay on squad screen. NO → draft submission screen.
   useEffect(() => {
     if (cfg.loading || !user?.id) return;
-    if (cfg.format !== 'noduplicate') { setDraftGateChecked(true); return; }
-    if (!activeLeague) { setDraftGateChecked(true); return; }
+    if (cfg.format !== 'noduplicate') return;
+    if (!activeLeague) return;
     let cancelled = false;
     (async () => {
       const { count } = await supabase
@@ -140,11 +137,7 @@ export default function SquadScreen() {
         .eq('league_id', activeLeague)
         .not('allocated_players', 'is', null);
       if (cancelled) return;
-      if (count > 0) {
-        setDraftGateChecked(true); // Draft ran → squad management
-      } else {
-        navigate(`/league/${activeLeague}/draft`); // Draft not run → submission
-      }
+      if (!count || count === 0) navigate(`/league/${activeLeague}/draft`);
     })();
     return () => { cancelled = true; };
   }, [cfg.loading, cfg.format, user?.id, activeLeague]);
@@ -2436,7 +2429,7 @@ function JokerList({ teams, squadPlayerIds, onSelect, saving }) {
     </div>
   );
 
-  if (loading || (cfg.format === 'noduplicate' && !draftGateChecked)) return (
+  if (loading) return (
     <EmptyState title="Scouting Active Teams…" sub={null} action={
       <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: '10px', letterSpacing: '0.15em', color: 'var(--mute)', textTransform: 'uppercase' }} className="animate-scan">Loading</div>
     } />
