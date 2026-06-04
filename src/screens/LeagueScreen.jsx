@@ -1016,15 +1016,25 @@ export default function LeagueScreen() {
           );
         })()}
 
-        {draftGaps > 0 && (
-          <div onClick={() => navigate(`/league/${activeLeague?.league_id}/draft/recover`)} style={{ background: '#B71C1C', color: 'white', padding: '10px 28px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer', flexShrink: 0 }}>
-            <span style={{ fontFamily: MONO, fontSize: 11, letterSpacing: '.18em' }}>⚠  YOUR SQUAD HAS {draftGaps} EMPTY SLOT{draftGaps !== 1 ? 'S' : ''} — TAP TO PICK NOW</span>
-            <span style={{ fontFamily: MONO, fontSize: 11 }}>→</span>
+        {/* No-squad banner: draft ran but user has no squad yet → go to market */}
+        {draftAllocated && mySquadPlayerCount === null && !draftOpen && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 20px', background: 'rgba(240,180,0,0.09)', borderBottom: '1px solid rgba(240,180,0,0.22)', flexShrink: 0 }}>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontFamily: DISPLAY, fontSize: 13, fontWeight: 900, color: 'var(--gold)', letterSpacing: '0.04em', textTransform: 'uppercase' }}>
+                No squad yet
+              </div>
+              <div style={{ fontFamily: MONO, fontSize: 10, color: 'rgba(240,180,0,0.75)', marginTop: 3 }}>
+                Head to the market to sign players and build your squad
+              </div>
+            </div>
+            <button onClick={() => navigate(`/market?leagueId=${activeLeague?.league_id}`)} style={{ fontFamily: DISPLAY, fontWeight: 900, fontSize: 10, color: 'var(--gold)', border: '1px solid rgba(240,180,0,0.45)', padding: '6px 14px', background: 'transparent', cursor: 'pointer', letterSpacing: '0.1em', textTransform: 'uppercase', flexShrink: 0 }}>
+              MARKET →
+            </button>
           </div>
         )}
 
-        {/* Incomplete squad warning — suppressed when draft-open or lottery hasn't run yet */}
-        {mySquadPlayerCount !== null && draftGaps === 0 && !draftOpen
+        {/* Incomplete squad warnings — suppressed while draft is open or lottery hasn't run */}
+        {mySquadPlayerCount !== null && !draftOpen
           && (activeLeague?.leagues?.format !== 'noduplicate' || draftAllocated)
           && mySquadPlayerCount < 11 && (
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 20px', background: 'rgba(240,58,58,0.10)', borderBottom: '1px solid rgba(240,58,58,0.28)', flexShrink: 0 }}>
@@ -1042,7 +1052,7 @@ export default function LeagueScreen() {
             </button>
           </div>
         )}
-        {mySquadPlayerCount !== null && draftGaps === 0 && !draftOpen
+        {mySquadPlayerCount !== null && !draftOpen
           && (activeLeague?.leagues?.format !== 'noduplicate' || draftAllocated)
           && mySquadPlayerCount >= 11 && mySquadPlayerCount < 15 && (
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 20px', background: 'rgba(240,180,0,0.09)', borderBottom: '1px solid rgba(240,180,0,0.22)', flexShrink: 0 }}>
