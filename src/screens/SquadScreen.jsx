@@ -137,14 +137,22 @@ export default function SquadScreen() {
       // Check this user's allocation
       const { data: myAlloc } = await supabase
         .from('draft_allocations')
-        .select('id')
+        .select('id, unresolved_slots')
         .eq('league_id', activeLeague)
         .eq('user_id', user.id)
         .not('allocated_players', 'is', null)
         .limit(1)
         .maybeSingle();
       if (cancelled) return;
-      if (myAlloc) { setDraftGateChecked(true); return; }
+      if (myAlloc) {
+        // Allocation exists but still has unresolved slots → send to recovery to pick players
+        if ((myAlloc.unresolved_slots ?? 0) > 0) {
+          navigate(`/league/${activeLeague}/draft/recover`);
+        } else {
+          setDraftGateChecked(true);
+        }
+        return;
+      }
 
       // No allocation for me — check if the lottery ran for anyone else
       const { count } = await supabase
@@ -915,13 +923,13 @@ export default function SquadScreen() {
             </div>
             <p style={{ color: 'var(--mute)', fontFamily: 'JetBrains Mono, monospace', fontSize: 11, textAlign: 'center', maxWidth: 280, lineHeight: 1.6 }}>
               {cfg.format === 'noduplicate'
-                ? 'This is a draft league. Submit your ranked player list to enter the draft.'
+                ? 'The draft has run. Pick your players from the remaining pool to build your squad.'
                 : 'Head to the Transfer Market to sign your first 11 players.'}
             </p>
             <div style={{ display: 'flex', gap: 10, marginTop: 8 }}>
               {cfg.format === 'noduplicate' ? (
-                <button onClick={() => navigate(`/league/${activeLeague}/draft`)} style={{ padding: '10px 22px', background: 'var(--gold)', color: 'var(--ink)', fontFamily: 'Archivo Black, sans-serif', fontSize: 11, letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer', border: 'none' }}>
-                  Submit Draft List →
+                <button onClick={() => navigate(`/league/${activeLeague}/draft/recover`)} style={{ padding: '10px 22px', background: 'var(--gold)', color: 'var(--ink)', fontFamily: 'Archivo Black, sans-serif', fontSize: 11, letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer', border: 'none' }}>
+                  Pick Your Players →
                 </button>
               ) : (
                 <button onClick={() => navigate(`/market?leagueId=${activeLeague}`)} style={{ padding: '10px 22px', background: 'var(--gold)', color: 'var(--ink)', fontFamily: 'Archivo Black, sans-serif', fontSize: 11, letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer', border: 'none' }}>
