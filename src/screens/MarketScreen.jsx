@@ -83,13 +83,17 @@ export default function MarketScreen() {
     (async () => {
       const { data: myAlloc } = await supabase
         .from('draft_allocations')
-        .select('id')
+        .select('id, unresolved_slots')
         .eq('league_id', activeLeague)
         .eq('user_id', user.id)
         .not('allocated_players', 'is', null)
         .limit(1)
         .maybeSingle();
-      if (cancelled || myAlloc) return;
+      if (cancelled) return;
+      if (myAlloc) {
+        if ((myAlloc.unresolved_slots ?? 0) > 0) navigate(`/league/${activeLeague}/draft/recover`);
+        return;
+      }
 
       const { count } = await supabase
         .from('draft_allocations')
