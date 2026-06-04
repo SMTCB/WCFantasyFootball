@@ -209,15 +209,24 @@ export default function RecapScreen() {
         if (cancelled) return;
 
         // 4. Normalise gazette entries — bullets always become string[]
-        const gazetteItems = (gazetteRows ?? []).map(e => ({
-          id:         `g-${e.id}`,
-          kind:       'gazette',
-          entry_type: e.entry_type,
-          ts:         e.published_at,
-          league_name: e.leagues?.name ?? leagueNameById[e.league_id] ?? 'League',
-          headline:   e.headline,
-          bullets:    normalizeBullets(e.bullets),
-        }));
+        // Cap breaking_news to 3 most recent per league (entries already sorted DESC)
+        const newsCountByLeague = {};
+        const gazetteItems = (gazetteRows ?? [])
+          .filter(e => {
+            if (e.entry_type !== 'breaking_news') return true;
+            const c = (newsCountByLeague[e.league_id] ?? 0) + 1;
+            newsCountByLeague[e.league_id] = c;
+            return c <= 3;
+          })
+          .map(e => ({
+            id:         `g-${e.id}`,
+            kind:       'gazette',
+            entry_type: e.entry_type,
+            ts:         e.published_at,
+            league_name: e.leagues?.name ?? leagueNameById[e.league_id] ?? 'League',
+            headline:   e.headline,
+            bullets:    normalizeBullets(e.bullets),
+          }));
 
         // 5. Normalise transfers — show what player came in / went out
         const transferItems = (transferRows ?? []).map(t => {
