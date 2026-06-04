@@ -328,6 +328,7 @@ export default function SquadScreen() {
         const extraGks = gks.slice(1);
         benchPlayers = [...benchPlayers, ...extraGks];
         pitchPlayers = pitchPlayers.filter(p => p.position !== 'GK' || gks.indexOf(p) === 0);
+        needsXiFix = true;
       } else if (gks.length === 0 && benchPlayers.length > 0) {
         // No GK on pitch — move one from bench and persist the fix
         const benchGk = benchPlayers.find(p => p.position === 'GK');
@@ -342,6 +343,18 @@ export default function SquadScreen() {
       if (pitchPlayers.length > 11) {
         benchPlayers = [...benchPlayers, ...pitchPlayers.slice(11)];
         pitchPlayers = pitchPlayers.slice(0, 11);
+        needsXiFix = true;
+      } else if (pitchPlayers.length < 11) {
+        // Pull bench players up to fill to 11 — non-GKs first
+        const nonGkBench = benchPlayers.filter(p => p.position !== 'GK');
+        const gkBench    = benchPlayers.filter(p => p.position === 'GK');
+        const candidates = [...nonGkBench, ...gkBench];
+        while (pitchPlayers.length < 11 && candidates.length > 0) {
+          const next = candidates.shift();
+          pitchPlayers = [...pitchPlayers, next];
+          benchPlayers = benchPlayers.filter(p => p.id !== next.id);
+        }
+        if (pitchPlayers.length === 11) needsXiFix = true;
       }
 
       // Persist corrected starting_xi to DB so it doesn't re-break on every load.
