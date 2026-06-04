@@ -32,7 +32,7 @@ export function MgrTag({ mono = '???', hue = '#8B95A1', size = 18, dim = false }
 }
 
 // Hub topbar — "← BACK · COMPETITIVE CENTER / LEAGUE NAME · N MEMBERS · GWX"
-export function HubTopbar({ leagueName = 'LOADING…', memberCount = 0, gw = '—', rightSlot, onBack, isLive = false }) {
+export function HubTopbar({ leagueName = 'LOADING…', memberCount = 0, gw = '—', rightSlot, onBack, isLive = false, cupPhase }) {
   return (
     <div style={{
       display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap',
@@ -52,6 +52,11 @@ export function HubTopbar({ leagueName = 'LOADING…', memberCount = 0, gw = '�
           <div style={{ fontFamily: DISPLAY, fontSize: 'clamp(18px, 5vw, 28px)', letterSpacing: '-0.02em', color: 'var(--paper)', minWidth: 0 }}>
             {leagueName.toUpperCase()}
           </div>
+          {cupPhase && cupPhase !== 'pre_cup' && (
+            <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.18em', color: 'var(--gold)', background: 'rgba(240,180,0,0.1)', border: '1px solid rgba(240,180,0,0.3)', padding: '2px 7px', flexShrink: 0 }}>
+              {cupPhase.replace(/_/g, ' ').toUpperCase()}
+            </span>
+          )}
           <span style={{ fontFamily: MONO, fontSize: 'clamp(8px, 2vw, 10px)', color: 'var(--mute)', letterSpacing: '.2em', whiteSpace: 'nowrap' }}>
             {memberCount}M · GW{gw}
           </span>
