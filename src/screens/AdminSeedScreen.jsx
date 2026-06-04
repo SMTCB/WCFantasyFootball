@@ -114,6 +114,19 @@ function LeagueControls({ league, tournament, onRefresh }) {
   const [deadline, setDeadline] = useState(
     league.draft_deadline ? league.draft_deadline.slice(0, 16) : ''
   );
+  const [lotteryStatus, setLotteryStatus] = useState(null); // null=loading, 0=not run, N=ran for N managers
+  const [lotteryRunning, setLotteryRunning] = useState(false);
+  const [lotteryMsg, setLotteryMsg] = useState(null);
+
+  useEffect(() => {
+    if (league.format !== 'noduplicate') return;
+    supabase
+      .from('draft_allocations')
+      .select('user_id', { count: 'exact', head: true })
+      .eq('league_id', league.id)
+      .not('allocated_players', 'is', null)
+      .then(({ count }) => setLotteryStatus(count ?? 0));
+  }, [league.id, league.format]);
 
   const updateLeague = async (patch) => {
     setSaving(Object.keys(patch)[0]);
@@ -132,6 +145,21 @@ function LeagueControls({ league, tournament, onRefresh }) {
   const saveDeadline = async () => {
     if (!deadline) return;
     await updateLeague({ draft_deadline: new Date(deadline).toISOString() });
+  };
+
+  const runLottery = async () => {
+    setLotteryRunning(true);
+    setLotteryMsg(null);
+    try {
+      const result = await callFunction('run-draft-lottery', { league_id: league.id });
+      const processed = result?.processed ?? result?.managers_processed ?? '?';
+      setLotteryMsg({ ok: true, text: `Lottery complete — ${processed} manager(s) allocated` });
+      setLotteryStatus(processed);
+    } catch (err) {
+      setLotteryMsg({ ok: false, text: err.message || 'Lottery failed — check logs' });
+    } finally {
+      setLotteryRunning(false);
+    }
   };
 
   return (
@@ -179,6 +207,38 @@ function LeagueControls({ league, tournament, onRefresh }) {
             </p>
           )}
         </div>
+
+        {/* Run Draft Lottery — noduplicate leagues only */}
+        {league.format === 'noduplicate' && (
+          <div className="border border-border p-3 mt-1">
+            <p className="text-[9px] font-black uppercase tracking-widest text-text-secondary mb-1">Draft Lottery</p>
+            {lotteryStatus === null ? (
+              <p className="text-[10px] text-text-secondary">Checking lottery status…</p>
+            ) : lotteryStatus > 0 ? (
+              <p className="text-[10px] text-positive font-bold">
+                ✓ Lottery already ran — {lotteryStatus} manager(s) allocated
+              </p>
+            ) : (
+              <>
+                <p className="text-[10px] text-text-secondary mb-2">
+                  Manually trigger the draft lottery for this league. Managers who submitted a list will be allocated their players.
+                </p>
+                <button
+                  onClick={runLottery}
+                  disabled={lotteryRunning}
+                  className="w-full py-2.5 text-[11px] font-black uppercase tracking-widest bg-[#FFC107] text-black disabled:opacity-40"
+                >
+                  {lotteryRunning ? 'Running…' : '⚡ Run Draft Lottery'}
+                </button>
+              </>
+            )}
+            {lotteryMsg && (
+              <p className={`text-[10px] font-bold mt-2 ${lotteryMsg.ok ? 'text-positive' : 'text-negative'}`}>
+                {lotteryMsg.text}
+              </p>
+            )}
+          </div>
+        )}
 
         {/* Info pills */}
         <div className="flex flex-wrap gap-1 mt-1">

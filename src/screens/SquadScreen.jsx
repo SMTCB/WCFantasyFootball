@@ -126,7 +126,7 @@ export default function SquadScreen() {
   const cfg = useLeagueConfig(activeLeague);
   const POS_LIMITS = cfg.positionLimits;
 
-  // Draft gate: for noduplicate leagues, redirect to the draft screen if the
+  // Draft gate: for noduplicate leagues, redirect to draft/recovery if the
   // lottery hasn't run yet for this user. Runs once cfg and user are ready.
   useEffect(() => {
     if (cfg.loading || !user?.id) return;
@@ -134,7 +134,8 @@ export default function SquadScreen() {
     if (!activeLeague) { setDraftGateChecked(true); return; }
     let cancelled = false;
     (async () => {
-      const { data } = await supabase
+      // Check this user's allocation
+      const { data: myAlloc } = await supabase
         .from('draft_allocations')
         .select('id')
         .eq('league_id', activeLeague)
@@ -143,10 +144,23 @@ export default function SquadScreen() {
         .limit(1)
         .maybeSingle();
       if (cancelled) return;
-      if (!data) {
-        navigate(`/league/${activeLeague}/draft`);
+      if (myAlloc) { setDraftGateChecked(true); return; }
+
+      // No allocation for me — check if the lottery ran for anyone else
+      const { count } = await supabase
+        .from('draft_allocations')
+        .select('id', { count: 'exact', head: true })
+        .eq('league_id', activeLeague)
+        .not('allocated_players', 'is', null);
+      if (cancelled) return;
+
+      if (count > 0) {
+        // Lottery ran but I missed it — create a late-joiner slot then go to recovery
+        await supabase.rpc('create_late_joiner_allocation', { p_league_id: activeLeague });
+        navigate(`/league/${activeLeague}/draft/recover`);
       } else {
-        setDraftGateChecked(true);
+        // Lottery hasn't run yet — go to pre-lottery draft submission screen
+        navigate(`/league/${activeLeague}/draft`);
       }
     })();
     return () => { cancelled = true; };

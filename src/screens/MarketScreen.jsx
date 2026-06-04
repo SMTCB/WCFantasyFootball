@@ -75,13 +75,13 @@ export default function MarketScreen() {
   const POS_LIMITS = cfg.positionLimits;
   const squadSize  = cfg.squadSize;
 
-  // Draft gate: noduplicate leagues with no processed allocation go to draft screen
+  // Draft gate: noduplicate leagues with no processed allocation go to draft screen or recovery
   useEffect(() => {
     if (cfg.loading || !user?.id || !activeLeague) return;
     if (cfg.format !== 'noduplicate') return;
     let cancelled = false;
     (async () => {
-      const { data } = await supabase
+      const { data: myAlloc } = await supabase
         .from('draft_allocations')
         .select('id')
         .eq('league_id', activeLeague)
@@ -89,7 +89,21 @@ export default function MarketScreen() {
         .not('allocated_players', 'is', null)
         .limit(1)
         .maybeSingle();
-      if (!cancelled && !data) navigate(`/league/${activeLeague}/draft`);
+      if (cancelled || myAlloc) return;
+
+      const { count } = await supabase
+        .from('draft_allocations')
+        .select('id', { count: 'exact', head: true })
+        .eq('league_id', activeLeague)
+        .not('allocated_players', 'is', null);
+      if (cancelled) return;
+
+      if (count > 0) {
+        await supabase.rpc('create_late_joiner_allocation', { p_league_id: activeLeague });
+        navigate(`/league/${activeLeague}/draft/recover`);
+      } else {
+        navigate(`/league/${activeLeague}/draft`);
+      }
     })();
     return () => { cancelled = true; };
   }, [cfg.loading, cfg.format, user?.id, activeLeague]);
