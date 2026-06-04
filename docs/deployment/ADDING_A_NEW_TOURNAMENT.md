@@ -378,6 +378,12 @@ ORDER BY pms.fantasy_points DESC LIMIT 10;
 SELECT create_league('My UCL League', 'classic', '<user_id>', '999');
 ```
 
+> ⚠️ **Cup leagues and the cross-tournament player pool bug (fixed in migration 131)**
+>
+> If a league has rows in `cup_active_clubs`, `get_cup_available_players` joins by club name (e.g. "France") with **no tournament filter**. Before migration 131 this caused players from other tournaments with matching club names (WC 429, UCL, etc.) to appear in the draft pool as duplicates. Migration 131 adds `AND p.tournament_id = v_tournament_id` to the cup path.
+>
+> **This is already fixed in production.** But if you ever debug a draft pool showing duplicates or an inflated player count, check whether `cup_active_clubs` is seeded for the league and whether the `get_cup_available_players` function has the `tournament_id` guard.
+
 ---
 
 ## Step 9 — Set up squads for live scoring (dry run / test only)
