@@ -1239,6 +1239,9 @@ function LifecycleOps({ commissioner, leagueId, tournamentId, windowType = null,
     scoreFixtureId, setScoreFixtureId, triggerScores, triggerScoresLatestRound,
   } = commissioner;
 
+  // Override mode: allows editing transfer window fields even when deadline-controlled
+  const [twOverride, setTwOverride] = useState(false);
+
   // Deadline-controlled = window_type is 'matchday' (WC/cup leagues using matchday_deadlines).
   // Manual-controlled = window from transfer_windows table (EPL/season leagues).
   // windowType comes from get_transfer_window_status via useTransferWindow in LeagueScreen;
@@ -1328,33 +1331,44 @@ function LifecycleOps({ commissioner, leagueId, tournamentId, windowType = null,
             sub="Open and close the trading window. While open, managers swap players from the market."
             when="Open between gameweeks. Close 1h before the first MD kickoff."
             primary={
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                    <span style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '.2em', color: 'var(--paper)' }}>OPENS</span>
-                    <input type="datetime-local" value={windowOpensAt} onChange={e => setWindowOpensAt(e.target.value)} style={{ ...inputStyle, colorScheme: 'dark', fontSize: 11 }} />
-                  </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                    <span style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '.2em', color: 'var(--paper)' }}>CLOSES</span>
-                    <input type="datetime-local" value={windowClosesAt} onChange={e => setWindowClosesAt(e.target.value)} style={{ ...inputStyle, colorScheme: 'dark', fontSize: 11 }} />
-                  </div>
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                  <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.2em', color: 'var(--mute)' }}>LIMIT · BLANK = UNLIMITED</span>
-                  <input type="number" min="1" value={windowTransfers} onChange={e => setWindowTransfers(e.target.value)} placeholder="e.g. 5" style={inputStyle} />
-                </div>
-                {isDeadlineControlled ? (
+              isDeadlineControlled && !twOverride ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                   <div style={{ padding: '8px 10px', background: 'var(--ink)', border: '1px solid var(--rule)', fontFamily: BODY, fontSize: 10, color: 'var(--mute)', lineHeight: 1.5 }}>
-                    <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.2em', color: 'var(--warn)' }}>DEADLINE-CONTROLLED · </span>
-                    Transfer windows for this league are governed by matchday deadlines, not manual open/close. Use the schedule to control transfer periods.
+                    <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.2em', color: 'var(--warn)' }}>AUTO-MANAGED · </span>
+                    Transfer windows are governed by matchday deadlines. Override only if you need to manually intervene.
                   </div>
-                ) : (
+                  <button onClick={() => setTwOverride(true)} style={{ ...btnBase, width: '100%', background: 'transparent', border: '1px solid var(--rule)', color: 'var(--mute)', fontSize: 10 }}>
+                    OVERRIDE ↗
+                  </button>
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  {isDeadlineControlled && (
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '4px 8px', background: 'rgba(240,180,0,0.08)', border: '1px solid rgba(240,180,0,0.25)' }}>
+                      <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.18em', color: 'var(--warn)' }}>✏ OVERRIDE MODE</span>
+                      <button onClick={() => setTwOverride(false)} style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.14em', color: 'var(--mute)', background: 'transparent', border: '1px solid var(--rule)', padding: '2px 8px', cursor: 'pointer' }}>LOCK</button>
+                    </div>
+                  )}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                      <span style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '.2em', color: 'var(--paper)' }}>OPENS</span>
+                      <input type="datetime-local" value={windowOpensAt} onChange={e => setWindowOpensAt(e.target.value)} style={{ ...inputStyle, colorScheme: 'dark', fontSize: 11 }} />
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                      <span style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '.2em', color: 'var(--paper)' }}>CLOSES</span>
+                      <input type="datetime-local" value={windowClosesAt} onChange={e => setWindowClosesAt(e.target.value)} style={{ ...inputStyle, colorScheme: 'dark', fontSize: 11 }} />
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                    <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.2em', color: 'var(--mute)' }}>LIMIT · BLANK = UNLIMITED</span>
+                    <input type="number" min="1" value={windowTransfers} onChange={e => setWindowTransfers(e.target.value)} placeholder="e.g. 5" style={inputStyle} />
+                  </div>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6, marginTop: 4 }}>
                     <button onClick={openTransferWindow} disabled={commLoading} style={opBtnStyle('var(--positive)')}>OPEN</button>
                     <button onClick={handleCloseNow}     disabled={commLoading} style={{ ...btnBase, width: '100%', background: 'transparent', border: '1px solid rgba(239,68,68,.33)', color: 'var(--danger)', cursor: commLoading ? 'not-allowed' : 'pointer', fontSize: 11 }}>CLOSE NOW</button>
                   </div>
-                )}
-              </div>
+                </div>
+              )
             }
           />
           </div>
@@ -1369,23 +1383,28 @@ function LifecycleOps({ commissioner, leagueId, tournamentId, windowType = null,
             sub="Set the pick deadline, then run the allocation engine. Allocation runs once per season."
             when="After all managers submit picks. Before GW1 kickoff."
             primary={
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                  <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.2em', color: 'var(--mute)' }}>DEADLINE</span>
-                  <input type="datetime-local" value={draftDeadline} onChange={e => setDraftDeadline(e.target.value)} style={inputStyle} />
+              allocationDone ? (
+                <div style={{ padding: '8px 10px', background: 'var(--ink)', border: '1px solid var(--rule)', fontFamily: BODY, fontSize: 10, color: 'var(--positive)', lineHeight: 1.5 }}>
+                  ✓ Allocation complete — squads are live. The lottery cannot be re-run.
                 </div>
-                <button onClick={setLeagueDraftDeadline} disabled={commLoading} style={{ ...btnBase, width: '100%', background: 'transparent', border: '1px solid var(--rule)', color: 'var(--paper)', fontSize: 11 }}>SET DEADLINE</button>
-                <div style={{ height: 1, background: 'var(--rule)', margin: '4px 0' }} />
-                <div style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.18em', color: 'var(--mute)', lineHeight: 1.6 }}>
-                  ONCE DONE · 15 PLAYERS / MGR · £100M BUDGET · GK≤2 DEF≤5 MID≤5 FWD≤3
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                    <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.2em', color: 'var(--mute)' }}>DEADLINE (INFORMATIONAL)</span>
+                    <input type="datetime-local" value={draftDeadline} onChange={e => setDraftDeadline(e.target.value)} style={inputStyle} />
+                  </div>
+                  <button onClick={setLeagueDraftDeadline} disabled={commLoading} style={{ ...btnBase, width: '100%', background: 'transparent', border: '1px solid var(--rule)', color: 'var(--paper)', fontSize: 11 }}>SET DEADLINE</button>
+                  <div style={{ height: 1, background: 'var(--rule)', margin: '4px 0' }} />
+                  <div style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.18em', color: 'var(--mute)', lineHeight: 1.6 }}>
+                    ONCE DONE · 15 PLAYERS / MGR · £100M BUDGET · GK≤2 DEF≤5 MID≤5 FWD≤3
+                  </div>
+                  <button
+                    onClick={handleRunAllocation}
+                    disabled={commLoading}
+                    style={opBtnStyle('var(--gold)')}
+                  >RUN ALLOCATION ↯</button>
                 </div>
-                <button
-                  onClick={handleRunAllocation}
-                  disabled={allocationDisabled}
-                  title={allocationDisabled && !commLoading ? 'Draft deadline must pass before running allocation' : undefined}
-                  style={opBtnStyle('var(--gold)')}
-                >RUN ALLOCATION ↯</button>
-              </div>
+              )
             }
           />
           </div>
