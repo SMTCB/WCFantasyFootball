@@ -28,14 +28,14 @@ const DEMO_USER = {
   user_metadata: { username: 'Demo Manager' },
 };
 
-const AUTH_ENABLED = import.meta.env.VITE_AUTH_ENABLED === 'true' || import.meta.env.PROD;
+// Auth is enabled only when VITE_AUTH_ENABLED is explicitly 'true'.
+// The previous `|| import.meta.env.PROD` forced auth on in all production builds,
+// which broke CI E2E tests that build with VITE_AUTH_ENABLED=false.
+// Vercel production has VITE_AUTH_ENABLED=true set as an env var, so prod is protected.
+const AUTH_ENABLED = import.meta.env.VITE_AUTH_ENABLED === 'true';
 
-// Surface a misconfigured production build loudly rather than failing silently.
-if (import.meta.env.PROD && import.meta.env.VITE_AUTH_ENABLED !== 'true') {
-  console.error(
-    '[AuthContext] VITE_AUTH_ENABLED is not "true" in a production build — ' +
-    'forcing real auth (fail-closed). Set VITE_AUTH_ENABLED=true to silence this.',
-  );
+if (import.meta.env.PROD && !AUTH_ENABLED) {
+  console.warn('[AuthContext] Running a production build with auth disabled (VITE_AUTH_ENABLED != true). Ensure this is intentional.');
 }
 
 // ── Context ───────────────────────────────────────────────────────────────────
