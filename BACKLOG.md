@@ -1,11 +1,56 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-06-03 (session 80 — WC 429 knockout `round_number` durable fix, migration 126, PR #318; next migration 127_)  
-**E2E Test Suite**: `platform.spec.js` (36 tests × 2 browsers) passing in CI ✅ — completes in ~3 min  
+**Last Updated**: 2026-06-05 (pilot smoke test session — migrations 129–135, PRs #325–#360; next migration 136_)  
+**E2E Test Suite**: `platform.spec.js` (36 tests × 2 browsers) passing in CI ✅ — AUTH_ENABLED || PROD bug fixed (PR #360)  
 **Full Playbook Run**: `E2E_TEST_PLAYBOOK.md` v2.0 — all flows confirmed (D-4a/b, E-4, D-3 ✅; F-2 PASS — form strip satisfies per-stat breakdown criterion)  
 **🟢 LAUNCH READY**: No critical (P0/P1) bugs open. All game mechanics functional. WC kick-off 2026-06-11.  
 **Live App**: https://wc-fantasy-football.vercel.app  
 **WC Kick-off**: 2026-06-11 19:00 UTC (Mexico vs South Africa)
+
+---
+
+## ✅ Pilot Smoke Test Session (2026-06-04/05) — Int Friendlies 623 + Draft + Bug Fixes
+
+### Infrastructure fixes
+- **Migration 129**: `preserve_manual_matchday_id()` trigger — prevents sync from wiping manually-set matchday_id with null on knockout/friendly fixtures
+- **Migration 130**: Backfilled 32 WC 429 knockout matchday_ids that were wiped by sync-wc-fixtures-30m
+- **Migration 131**: `get_cup_available_players` cup path now filters by `tournament_id` — was pulling players from ALL tournaments with matching club names (bug: Gonçalo Ramos appeared twice)
+- **Migration 133**: Dropped `draft_deadline_check` trigger — deadline is now informational only
+- **Migration 134**: `resolve_bet` commissioner override — BET_STILL_OPEN no longer blocks commissioners
+- **Migration 135**: Transfer window closes for full matchday duration (reopen = last kickoff + 2h + 6h)
+
+### Draft system overhaul
+- Draft gate simplified to one question: **did the lottery run?** (count > 0 in `draft_allocations` with non-null `allocated_players`). If yes → squad management. If no → draft submission screen.
+- Draft deadline is informational — `draft_deadline_check` trigger dropped (migration 133)
+- `run-draft-lottery` cron **disabled** — lottery always manually triggered via Admin → Run Allocation button
+- Admin panel: "Run Allocation" button added to League Controls for draft leagues; shows lottery status; disables itself after run
+- Late joiners (joined after lottery): draft gate detects and routes to squad screen (empty) with Market button
+
+### Admin / commissioner UX
+- Transfer Window: deadline-controlled leagues default to locked with "AUTO-MANAGED" banner + OVERRIDE toggle
+- Draft section: replaced "RUN ALLOCATION" button with green info box once allocation is done
+- Score Recalculation: removed "SCORE LATEST ROUND" button; section now explains auto process and when to use manual recalculate
+- Bet resolve: inline error banner now appears next to RESOLVE button (was only at top of scrolled-away panel)
+
+### Gazette / Frontpage
+- Commissioner `breaking_news` posts now appear in Forza Times Frontpage (new `GazetteNews` component)
+- Posts also appear in Frontpage empty state (single-member leagues)
+- Gazette capped to 3 most recent `breaking_news` per league in activity feed and Recap
+
+### UI fixes
+- Cup phase chip moved inline next to league name (was a prominent full-width gold banner)
+- Dummy sparkline removed from Betting Leaderboard (was hardcoded random data)
+- Squad header "Transfers" KPI: shows "Opens In X" during recovery window instead of next deadline countdown
+- Live screen: MY XI now scoped to active league only (no cross-league fallback); fixtures filtered to current matchday_id
+- League screen: removed misleading "N empty slots — tap to pick now" banner; replaced with clean "No squad yet → MARKET" banner when draft ran but user has no squad
+- SquadScreen: starting XI auto-fills to 11 when extra GK is demoted to bench
+
+### Auth / CI
+- `AuthContext`: removed `|| import.meta.env.PROD` from AUTH_ENABLED — was breaking CI E2E tests by forcing auth on in production builds even when VITE_AUTH_ENABLED=false
+
+### Known deferred items
+- Demo data cleanup (e2e_test1-4, wce_mgr05-08, admin@fantasykit.com accounts + test leagues): deferred until after WC pilot smoke tests complete
+- Tommy's draft (Int Friendly Test): 4 unresolved slots from the lottery — needs to complete squad via Market
 
 ---
 
