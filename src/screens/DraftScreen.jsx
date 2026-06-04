@@ -85,7 +85,9 @@ export default function DraftScreen() {
         // For non-cup leagues returns the full pool.
         const { data: pData } = await supabase
           .rpc('get_cup_available_players', { p_league_id: leagueId });
-        setPlayers(normalisePlayers(pData ?? []));
+        const normalised = normalisePlayers(pData ?? []);
+        const seen = new Set();
+        setPlayers(normalised.filter(p => { if (seen.has(p.id)) return false; seen.add(p.id); return true; }));
 
         // Load existing submission for the current phase
         const { data: sub } = await supabase
@@ -151,7 +153,10 @@ export default function DraftScreen() {
 
   const addPlayer = (player) => {
     if (!canAdd(player)) return;
-    setList(prev => [...prev, player]);
+    setList(prev => {
+      if (prev.some(p => p.id === player.id)) return prev; // guard against double-tap
+      return [...prev, player];
+    });
     dirtyRef.current = true; // U23: mark dirty on list change
     setExpandedId(null);
   };
