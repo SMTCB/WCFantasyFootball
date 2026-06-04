@@ -42,6 +42,7 @@ export default function DraftScreen() {
   const [players,     setPlayers]     = useState([]);
   const [list,        setList]        = useState([]);   // ordered player objects
   const [filterPos,   setFilterPos]   = useState('ALL');
+  const [filterClub,  setFilterClub]  = useState('ALL');
   const [search,      setSearch]      = useState('');
   const [loading,     setLoading]     = useState(true);
   const [saving,      setSaving]      = useState(false);
@@ -114,22 +115,34 @@ export default function DraftScreen() {
     fetchData();
   }, [leagueId, user?.id]);
 
+  // If the lottery has already been processed, redirect straight to squad management
+  useEffect(() => {
+    if (isProcessed) navigate(`/league/${leagueId}`);
+  }, [isProcessed, leagueId]);
+
   // Position counts in current list
   const posCounts = useMemo(() =>
     list.reduce((acc, p) => ({ ...acc, [p.position]: (acc[p.position] ?? 0) + 1 }), {}),
     [list]
   );
 
+  // Sorted unique club list for the club filter
+  const clubs = useMemo(() => {
+    const names = [...new Set(players.map(p => p.club).filter(Boolean))].sort();
+    return names;
+  }, [players]);
+
   // Filtered + searched player pool (excludes already-listed players)
   const listedIds = useMemo(() => new Set(list.map(p => p.id)), [list]);
   const filtered = useMemo(() => {
     return players.filter(p => {
       if (listedIds.has(p.id)) return false;
-      if (filterPos !== 'ALL' && p.position !== filterPos) return false;
+      if (filterPos  !== 'ALL' && p.position !== filterPos) return false;
+      if (filterClub !== 'ALL' && p.club     !== filterClub) return false;
       if (search && !p.name.toLowerCase().includes(search.toLowerCase())) return false;
       return true;
     });
-  }, [players, listedIds, filterPos, search]);
+  }, [players, listedIds, filterPos, filterClub, search]);
 
   const canAdd = () => {
     if (list.length >= DRAFT_LIST_SIZE) return false;
@@ -431,11 +444,13 @@ export default function DraftScreen() {
             <span className="text-[10px] font-black uppercase tracking-widest text-[#9E9E9E]">
               Your List — {list.length}/{DRAFT_LIST_SIZE}
             </span>
-            {list.length === 0 && (
-              <span className="text-[9px] text-[#E53935] font-bold">
-                Add at least 1 player to submit
-              </span>
-            )}
+            <button
+              onClick={autoComplete}
+              disabled={list.length >= DRAFT_LIST_SIZE || isClosed}
+              className="text-[9px] font-black uppercase tracking-widest px-2.5 py-1 border border-[#2A2A2A] text-[#9E9E9E] bg-[#1A1A1A] disabled:opacity-30 disabled:cursor-not-allowed active:scale-95 transition-transform"
+            >
+              ⚡ Auto-Fill
+            </button>
           </div>
 
           {list.length === 0 ? (
@@ -504,6 +519,30 @@ export default function DraftScreen() {
                 </button>
               ))}
             </div>
+            {/* Club filter — scrollable chip row */}
+            {clubs.length > 1 && (
+              <div className="flex gap-1.5 overflow-x-auto pb-0.5 no-scrollbar">
+                <button
+                  onClick={() => setFilterClub('ALL')}
+                  className={`flex-shrink-0 px-2.5 py-1 rounded-sm text-[9px] font-black uppercase tracking-wider transition-all ${
+                    filterClub === 'ALL' ? 'bg-white text-black' : 'bg-[#111] text-[#555] border border-[#1E1E1E]'
+                  }`}
+                >
+                  All
+                </button>
+                {clubs.map(club => (
+                  <button
+                    key={club}
+                    onClick={() => setFilterClub(club === filterClub ? 'ALL' : club)}
+                    className={`flex-shrink-0 px-2.5 py-1 rounded-sm text-[9px] font-black uppercase tracking-wider transition-all ${
+                      filterClub === club ? 'bg-white text-black' : 'bg-[#111] text-[#555] border border-[#1E1E1E]'
+                    }`}
+                  >
+                    {club}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Player rows */}
@@ -570,18 +609,11 @@ export default function DraftScreen() {
       )}
 
       {/* Bottom action bar */}
-      <div className="bg-[#111111] border-t border-[#1E1E1E] px-4 py-4 flex gap-3">
-        <button
-          onClick={autoComplete}
-          disabled={list.length >= DRAFT_LIST_SIZE || isClosed}
-          className="flex-1 py-3.5 bg-[#1A1A1A] text-[#9E9E9E] text-[11px] font-black uppercase tracking-widest rounded border border-[#2A2A2A] transition-all active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed"
-        >
-          Auto-Complete
-        </button>
+      <div className="bg-[#111111] border-t border-[#1E1E1E] px-4 py-4">
         <button
           onClick={handleSubmit}
           disabled={list.length === 0 || saving || isClosed}
-          className="flex-1 py-3.5 text-[11px] font-black uppercase tracking-widest rounded transition-all disabled:opacity-30 disabled:cursor-not-allowed active:scale-95"
+          className="w-full py-3.5 text-[11px] font-black uppercase tracking-widest rounded transition-all disabled:opacity-30 disabled:cursor-not-allowed active:scale-95"
           style={{
             background:      list.length > 0 && !isClosed ? '#00C853' : undefined,
             color:           list.length > 0 && !isClosed ? '#000'    : '#555',
