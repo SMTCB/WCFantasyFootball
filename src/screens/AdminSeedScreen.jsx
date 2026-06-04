@@ -201,9 +201,10 @@ function LeagueControls({ league, tournament, onRefresh }) {
 // ─── 2. Matchday Deadlines ────────────────────────────────────────────────────
 
 function MatchdayDeadlines({ tournamentId }) {
-  const [deadlines, setDeadlines] = useState([]);
-  const [editing, setEditing]   = useState(null);
-  const [busy, setBusy]         = useState(false);
+  const [deadlines,     setDeadlines]     = useState([]);
+  const [editing,       setEditing]       = useState(null);
+  const [busy,          setBusy]          = useState(false);
+  const [overrideMode,  setOverrideMode]  = useState(false);
 
   const load = useCallback(async () => {
     if (!tournamentId) return;
@@ -225,13 +226,45 @@ function MatchdayDeadlines({ tournamentId }) {
     setBusy(false);
   };
 
+  const handleToggleOverride = () => {
+    setOverrideMode(v => {
+      if (v) setEditing(null); // close any open edit when turning off
+      return !v;
+    });
+  };
+
   if (!tournamentId) return <p className="text-xs text-text-secondary">No tournament linked to this league.</p>;
 
   return (
     <Section title="Matchday Deadlines" sub="Squad lock / unlock windows per round">
-      <p className="text-xs text-text-secondary mb-2">Auto-populated by fixture sync — edit only to override a specific round.</p>
+      {/* Override toggle */}
+      <div className="flex items-center justify-between mb-3 p-2 border border-border rounded"
+        style={{ background: overrideMode ? 'rgba(240,180,0,0.07)' : 'rgba(255,255,255,0.03)' }}>
+        <div>
+          <p className="text-[10px] font-black uppercase tracking-widest" style={{ color: overrideMode ? 'var(--gold)' : 'var(--mute)' }}>
+            {overrideMode ? '✏ Override mode — editing enabled' : '⚙ Auto-managed by fixture sync'}
+          </p>
+          <p className="text-[9px] mt-0.5" style={{ color: 'var(--mute)' }}>
+            {overrideMode ? 'Changes you save here will persist until the next sync overwrites them.' : 'Deadlines are set automatically. Toggle to override a specific round.'}
+          </p>
+        </div>
+        <button
+          onClick={handleToggleOverride}
+          className="ml-4 text-[9px] font-black uppercase px-3 py-1.5 border transition-colors flex-shrink-0"
+          style={{
+            border:     overrideMode ? '1px solid rgba(240,180,0,0.6)' : '1px solid rgba(255,255,255,0.2)',
+            color:      overrideMode ? 'var(--gold)' : 'var(--mute)',
+            background: 'transparent',
+            cursor:     'pointer',
+            letterSpacing: '.12em',
+          }}
+        >
+          {overrideMode ? 'LOCK' : 'OVERRIDE'}
+        </button>
+      </div>
+
       {deadlines.length === 0 && <p className="text-xs text-text-secondary">No deadlines configured.</p>}
-      <div className="flex flex-col gap-1">
+      <div className="flex flex-col gap-1" style={{ opacity: overrideMode ? 1 : 0.45, pointerEvents: overrideMode ? 'auto' : 'none' }}>
         {deadlines.map(d => {
           const isEdit = editing?.id === d.id;
           const now    = new Date();
