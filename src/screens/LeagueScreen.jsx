@@ -944,6 +944,7 @@ export default function LeagueScreen() {
             memberCount={members.length}
             gw={currentGW}
             onBack={() => navigate('/league')}
+            cupPhase={activeLeague?.leagues?.cup_phase}
             rightSlot={
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <NotificationPanel
@@ -1068,14 +1069,6 @@ export default function LeagueScreen() {
           </div>
         )}
 
-                {/* Cup phase chip — compact, sits just above the tab bar */}
-        {activeLeague?.leagues?.cup_phase && activeLeague.leagues.cup_phase !== 'pre_cup' && (
-          <div style={{ display: 'flex', justifyContent: 'center', padding: '4px 0', borderBottom: '1px solid var(--rule)', flexShrink: 0 }}>
-            <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 9, letterSpacing: '.22em', color: 'var(--gold)', background: 'rgba(240,180,0,0.1)', border: '1px solid rgba(240,180,0,0.3)', padding: '2px 10px' }}>
-              ⚽ CUP · {activeLeague.leagues.cup_phase.replace(/_/g, ' ').toUpperCase()}
-            </span>
-          </div>
-        )}
 
 {/* â”€â”€ Desktop tabs (hidden on mobile) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
         <div className="hidden lg:block" data-tour="league-tabs">

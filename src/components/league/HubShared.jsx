@@ -243,7 +243,7 @@ export const mgrMono = (username = '') => username.substring(0, 3).toUpperCase()
 // ─── Mobile components ────────────────────────────────────────────────────────
 
 // Mobile hub league header — replaces HubTopbar on mobile viewports.
-export function HubLeagueHeader({ leagueName = 'LOADING…', memberCount = 0, gw = '—', backable = false, backTitle = '', onBack, rightSlot }) {
+export function HubLeagueHeader({ leagueName = 'LOADING…', memberCount = 0, gw = '—', backable = false, backTitle = '', onBack, rightSlot, cupPhase }) {
   return (
     <div style={{ padding: '10px max(18px, 4vw) 8px', borderBottom: '1px solid var(--rule)', background: 'var(--ink)', flexShrink: 0 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -264,6 +264,11 @@ export function HubLeagueHeader({ leagueName = 'LOADING…', memberCount = 0, gw
         <span style={{ fontFamily: DISPLAY, fontSize: backable ? 18 : 22, letterSpacing: '-0.02em', color: 'var(--paper)' }}>
           {backable ? backTitle : leagueName.toUpperCase()}
         </span>
+        {cupPhase && cupPhase !== 'pre_cup' && (
+          <span style={{ fontFamily: MONO, fontSize: 8, letterSpacing: '.18em', color: 'var(--gold)', background: 'rgba(240,180,0,0.1)', border: '1px solid rgba(240,180,0,0.3)', padding: '2px 7px', flexShrink: 0 }}>
+            {cupPhase.replace(/_/g, ' ').toUpperCase()}
+          </span>
+        )}
       </div>
     </div>
   );
