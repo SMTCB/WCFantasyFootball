@@ -1035,7 +1035,7 @@ function CreateBetWizard({ onPublish, commLoading, memberCount, tournamentId, is
 // ─────────────────────────────────────────────────────────────────────────────
 // Resolve pending bets (Zone B right)
 // ─────────────────────────────────────────────────────────────────────────────
-function ResolvePendingBets({ openBets, resolutionBetsLoading, setSelectedBetForResolution, betResolutionAnswer, setBetResolutionAnswer, betSubmissions, answerGrouped, fetchBetSubmissions, resolveBet, voidBet, commLoading, memberCount = 0 }) {
+function ResolvePendingBets({ openBets, resolutionBetsLoading, setSelectedBetForResolution, betResolutionAnswer, setBetResolutionAnswer, betSubmissions, answerGrouped, fetchBetSubmissions, resolveBet, voidBet, commLoading, commMsg, memberCount = 0 }) {
   const [expandedId, setExpandedId] = useState(null);
 
   const pending = (openBets || []).filter(b => b.status !== 'resolved');
@@ -1187,6 +1187,12 @@ function ResolvePendingBets({ openBets, resolutionBetsLoading, setSelectedBetFor
                       }}
                     >{commLoading ? 'RESOLVING…' : 'RESOLVE →'}</button>
                   </div>
+                  {/* Inline error — visible without scrolling to top */}
+                  {commMsg?.type === 'err' && isOpen && (
+                    <div style={{ padding: '8px 10px', background: 'rgba(239,68,68,.08)', border: '1px solid rgba(239,68,68,.3)', color: 'var(--danger)', fontFamily: BODY, fontSize: 12 }}>
+                      {commMsg.text}
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -2286,6 +2292,7 @@ export default function CommissionerPanel({ commissioner, leagueId, tournamentId
             resolveBet={resolveBet}
             voidBet={voidBet}
             commLoading={commLoading}
+            commMsg={commMsg}
             memberCount={memberCount}
           />
         </div>
@@ -2355,6 +2362,7 @@ export default function CommissionerPanel({ commissioner, leagueId, tournamentId
             resolveBet={resolveBet}
             voidBet={voidBet}
             commLoading={commLoading}
+            commMsg={commMsg}
             memberCount={memberCount}
           />
         </div>
