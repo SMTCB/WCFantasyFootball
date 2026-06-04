@@ -81,33 +81,14 @@ export default function MarketScreen() {
     if (cfg.format !== 'noduplicate') return;
     let cancelled = false;
     (async () => {
-      const { data: myAlloc } = await supabase
-        .from('draft_allocations')
-        .select('id, unresolved_slots')
-        .eq('league_id', activeLeague)
-        .eq('user_id', user.id)
-        .not('allocated_players', 'is', null)
-        .limit(1)
-        .maybeSingle();
-      if (cancelled) return;
-      if (myAlloc) {
-        if ((myAlloc.unresolved_slots ?? 0) > 0) navigate(`/league/${activeLeague}/draft/recover`);
-        return;
-      }
-
       const { count } = await supabase
         .from('draft_allocations')
         .select('id', { count: 'exact', head: true })
         .eq('league_id', activeLeague)
         .not('allocated_players', 'is', null);
       if (cancelled) return;
-
-      if (count > 0) {
-        await supabase.rpc('create_late_joiner_allocation', { p_league_id: activeLeague });
-        navigate(`/league/${activeLeague}/draft/recover`);
-      } else {
-        navigate(`/league/${activeLeague}/draft`);
-      }
+      // Draft ran → allow market access. Draft not run → go submit picks.
+      if (!count || count === 0) navigate(`/league/${activeLeague}/draft`);
     })();
     return () => { cancelled = true; };
   }, [cfg.loading, cfg.format, user?.id, activeLeague]);
