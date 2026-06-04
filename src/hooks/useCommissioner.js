@@ -254,6 +254,13 @@ export function useCommissioner(leagueId, tournamentId) {
       p_answer:      betResolutionAnswer,
     });
     if (error) throw new Error(error.message);
+    if (data?.ok === false) {
+      const msg = data.error === 'BET_STILL_OPEN'   ? 'Bet deadline has not passed yet — close the bet first.'
+                : data.error === 'UNAUTHORIZED'     ? 'Only the commissioner can resolve bets.'
+                : data.error === 'ALREADY_RESOLVED' ? 'This bet is already resolved.'
+                : (data.error || 'Failed to resolve bet');
+      throw new Error(msg);
+    }
     setCommMsg({ type: 'ok', text: `Bet resolved — ${data?.submissions_updated ?? 0} submissions graded.` });
     setBetResolutionAnswer('');
     setSelectedBetForResolution(null);
