@@ -425,7 +425,7 @@ export default function SquadScreen() {
     {
       target: 'squad-pitch',
       title:  'Your Pitch',
-      body:   'This is your starting XI laid out on a pitch. Tap any player to see options — swap positions, set captain, or activate your Daily Joker.',
+      body:   'This is your starting XI laid out on a pitch. Tap any player to see options — swap positions, set captain, or activate your Matchday Joker.',
     },
     {
       target: 'squad-budget',
@@ -435,12 +435,12 @@ export default function SquadScreen() {
     {
       target: 'squad-power-tools',
       title:  'Power Tools',
-      body:   'Triple Captain and Daily Joker live here. Each is one-use — activate carefully.',
+      body:   'Triple Captain and Matchday Joker live here. Each is one-use — activate carefully.',
     },
     {
       target: 'squad-chips',
       title:  'Chips & Boosts',
-      body:   'Triple Captain scores 3× points — or 0 if they don\'t play. Daily Joker adds a 16th man for this matchday. Use them wisely, they\'re one-per-season.',
+      body:   'Triple Captain scores 3× points — or 0 if they don\'t play. Matchday Joker adds a 16th man for this matchday. Use them wisely, they\'re one-per-season.',
     },
   ];
 
@@ -665,7 +665,7 @@ export default function SquadScreen() {
     const isJoker   = selectedPlayer.id === todayJokerId;
     const warnings  = [];
     if (isCaptain) warnings.push('This player is your captain — selling them removes the armband.');
-    if (isJoker)   warnings.push('This player is your Daily Joker — selling them voids today\'s boost.');
+    if (isJoker)   warnings.push('This player is your Matchday Joker — selling them voids today\'s boost.');
 
     setConfirm({
       title:        `Remove ${selectedPlayer.name}?`,
@@ -1001,12 +1001,12 @@ export default function SquadScreen() {
     );
   };
 
-  // Daily Joker card
+  // Matchday Joker card
   const JokerCard = () => (
     <div className="mx-4 mb-3 rounded p-4 border" style={{ borderColor: 'rgba(157,95,245,0.2)', background: 'rgba(157,95,245,0.04)' }}>
       <div className="flex-1 min-w-0">
           <div className="fk-display text-[12px] mb-1" style={{ color: 'var(--pos-gk)' }}>
-            DAILY JOKER
+            MATCHDAY JOKER
           </div>
           <p className="text-[11px] leading-relaxed mb-3" style={{ color: 'var(--mute)', fontFamily: 'Archivo, sans-serif' }}>
             Pick a 16th man for this matchday — exempt from country limit rules. One per matchday, locked once set.
@@ -1043,7 +1043,7 @@ export default function SquadScreen() {
     {
       key: 'joker',
       icon: '⚡',
-      label: '16th Man (Daily Joker)',
+      label: '16th Man (Matchday Joker)',
       color: 'var(--pos-gk)',
       what: 'Pick any player outside your 15-man squad as an extra scorer for this matchday. They are exempt from country limit rules.',
       when: 'Any matchday — choose someone whose club is playing today that you couldn\'t otherwise fit due to country limits.',
@@ -1886,7 +1886,7 @@ export default function SquadScreen() {
               </div>
             </div>
 
-            {/* Section 3: Daily Joker */}
+            {/* Section 3: Matchday Joker */}
             <div className="mx-4 mb-4">
               <div className="p-3 rounded-sm" style={{ background: 'var(--ink-2)', border: '1.5px solid rgba(157,95,245,0.15)' }}>
                 <div className="fk-display" style={{ fontSize: 16, textAlign: 'center', color: 'var(--pos-gk)', marginBottom: '4px' }}>JOKER</div>
@@ -1900,7 +1900,7 @@ export default function SquadScreen() {
                   textAlign: 'center',
                   marginBottom: '4px',
                 }}>
-                  Daily Joker – Your 16th Man
+                  Matchday Joker – Your 16th Man
                 </div>
                 <div style={{
                   fontSize: '10px',
@@ -2091,7 +2091,7 @@ export default function SquadScreen() {
                 {autoFillMsg && (
                   <div style={{ padding: '6px 16px', fontFamily: 'JetBrains Mono, monospace', fontSize: 9, color: 'var(--positive)', borderBottom: '1px solid var(--rule)' }}>{autoFillMsg}</div>
                 )}
-                <SectionHeader title="Daily Joker" accent="purple" />
+                <SectionHeader title="Matchday Joker" accent="purple" />
                 {jokerPlayer ? (
                   <PlayerCard
                     player={jokerPlayer}
@@ -2299,7 +2299,7 @@ export default function SquadScreen() {
                 SELL
               </button>
             </div>
-            {/* Daily Joker section */}
+            {/* Matchday Joker section */}
             <div className="pt-3" style={{ borderTop: '1px solid rgba(255,255,255,0.07)' }}>
               {todayJokerId ? (
                 <div className="flex items-center gap-2 p-2.5 rounded-sm" style={{ background: 'rgba(157,95,245,0.08)', border: '1px solid rgba(157,95,245,0.2)' }}>
@@ -2389,7 +2389,7 @@ export default function SquadScreen() {
           <div className="w-full max-w-lg bg-surface border border-purple/30 rounded-sm shadow-[0_0_50px_rgba(168,85,247,0.2)] overflow-hidden flex flex-col max-h-[80vh] relative z-10">
             <div className="px-5 py-4 border-b border-border flex justify-between items-center bg-purple/5">
               <div>
-                <div className="fz-label text-purple">Daily Joker Selection</div>
+                <div className="fz-label text-purple">Matchday Joker Selection</div>
                 <div className="fz-display text-lg text-white">CHOOSE YOUR 16TH MAN</div>
               </div>
               <button onClick={() => setIsJokerPickerOpen(false)} className="text-text-tertiary hover:text-white text-2xl">×</button>
@@ -2476,7 +2476,7 @@ function JokerList({ teams, squadPlayerIds, onSelect, saving }) {
 
   // FB-024: no matches today
   if (!teams.length) return (
-    <EmptyState title="No Matches Today" sub="The Daily Joker is only available on matchdays. Check back when fixtures are scheduled." action={null} />
+    <EmptyState title="No Matches Today" sub="The Matchday Joker is only available on matchdays. Check back when fixtures are scheduled." action={null} />
   );
 
   // FB-024: none of your squad plays today
