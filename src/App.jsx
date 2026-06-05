@@ -71,6 +71,7 @@ function AppRoutes() {
         <OnboardingWizard
           onComplete={completeWizard}
           onSkip={skipWizard}
+          user={user}
         />
       )}
 

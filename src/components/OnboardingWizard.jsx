@@ -17,6 +17,7 @@
 
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { supabase } from '../lib/supabase';
 
 function buildSteps({ competitionName, budgetTotal, squadSize }) {
   const comp   = competitionName || 'Fantasy League';
@@ -24,6 +25,16 @@ function buildSteps({ competitionName, budgetTotal, squadSize }) {
   const size   = squadSize       || 15;
 
   return [
+    {
+      id:       'username',
+      emoji:    '👤',
+      kicker:   'First things first',
+      heading:  'Choose your\nManager Name',
+      body:     'This is how other managers will see you in leaderboards, chat, and bets. Pick something you like — you can change it any time in Settings.',
+      cta:      'Continue →',
+      skip:     'Skip for now',
+      isUsernameStep: true,
+    },
     {
       id:       'welcome',
       emoji:    '🏆',
@@ -120,12 +131,28 @@ function ProgressDots({ current, total }) {
 }
 
 // ── Main component ────────────────────────────────────────────────────────────
-export default function OnboardingWizard({ onComplete, onSkip, config = {} }) {
+export default function OnboardingWizard({ onComplete, onSkip, config = {}, user = null }) {
   const STEPS = buildSteps(config);
   const [step,    setStep]    = useState(0);
   const [exiting, setExiting] = useState(false);
   const [visible, setVisible] = useState(false);
   const navigate = useNavigate();
+
+  // Username step state
+  const [usernameInput,    setUsernameInput]    = useState('');
+  const [usernameError,    setUsernameError]    = useState('');
+  const [usernameSaving,   setUsernameSaving]   = useState(false);
+
+  // Pre-fill with current username when the wizard mounts (if user is known)
+  useEffect(() => {
+    if (!user?.id) return;
+    supabase
+      .from('users')
+      .select('username')
+      .eq('id', user.id)
+      .single()
+      .then(({ data }) => { if (data?.username) setUsernameInput(data.username); });
+  }, [user?.id]);
 
   // Fade in on mount
   useEffect(() => {
@@ -147,12 +174,32 @@ export default function OnboardingWizard({ onComplete, onSkip, config = {} }) {
   const current = STEPS[step];
   const isLast  = step === STEPS.length - 1;
 
-  function advance(route) {
+  async function advance(route) {
+    // Save username when leaving the username step
+    if (current.isUsernameStep && user?.id) {
+      const trimmed = usernameInput.trim();
+      if (trimmed && trimmed.length >= 3) {
+        setUsernameSaving(true);
+        setUsernameError('');
+        const { error } = await supabase
+          .from('users')
+          .update({ username: trimmed })
+          .eq('id', user.id);
+        setUsernameSaving(false);
+        if (error) {
+          if (error.code === '23505') {
+            setUsernameError('That username is already taken — try a different one');
+          } else {
+            setUsernameError(error.message || 'Could not save username');
+          }
+          return; // stay on this step until fixed
+        }
+      }
+    }
     if (isLast) {
       handleFinish(route);
     } else {
       setStep(s => s + 1);
-      // Don't navigate mid-wizard — let user navigate after completing
     }
   }
 
@@ -296,9 +343,47 @@ export default function OnboardingWizard({ onComplete, onSkip, config = {} }) {
           {current.body}
         </p>
 
+        {/* Username input — only on the username step */}
+        {current.isUsernameStep && (
+          <div style={{ width: '100%', maxWidth: 400, marginBottom: 20, display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <input
+              type="text"
+              value={usernameInput}
+              onChange={e => { setUsernameInput(e.target.value); setUsernameError(''); }}
+              onKeyDown={e => { if (e.key === 'Enter') advance(current.ctaRoute); }}
+              placeholder="e.g. FantasyKing, PilotMgr…"
+              maxLength={30}
+              autoFocus
+              style={{
+                width: '100%',
+                fontFamily: 'JetBrains Mono, monospace',
+                fontSize: 16,
+                color: 'var(--paper)',
+                textAlign: 'center',
+                padding: '12px 16px',
+                background: 'rgba(255,255,255,0.06)',
+                border: `1px solid ${usernameError ? 'var(--danger)' : usernameInput.trim().length >= 3 ? 'var(--gold)' : 'rgba(255,255,255,0.15)'}`,
+                borderRadius: 8,
+                outline: 'none',
+                boxSizing: 'border-box',
+                letterSpacing: '0.04em',
+              }}
+            />
+            {usernameError && (
+              <p style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 11, color: 'var(--danger)', textAlign: 'center', letterSpacing: '.08em' }}>
+                {usernameError}
+              </p>
+            )}
+            <p style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 10, color: 'rgba(255,255,255,0.3)', textAlign: 'center', letterSpacing: '.08em' }}>
+              3–30 characters · can be changed later in Settings
+            </p>
+          </div>
+        )}
+
         {/* CTA */}
         <button
           onClick={() => advance(current.ctaRoute)}
+          disabled={usernameSaving}
           style={{
             width:         '100%',
             padding:       '14px 24px',
@@ -317,7 +402,7 @@ export default function OnboardingWizard({ onComplete, onSkip, config = {} }) {
           onMouseEnter={e => { e.target.style.opacity = '0.88'; e.target.style.transform = 'translateY(-1px)'; }}
           onMouseLeave={e => { e.target.style.opacity = '1';    e.target.style.transform = 'translateY(0)'; }}
         >
-          {current.cta}
+          {usernameSaving ? 'Saving…' : current.cta}
         </button>
 
         {/* Step counter */}

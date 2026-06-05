@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { useToast } from '../hooks/useToast';
@@ -14,6 +14,28 @@ export default function SettingsScreen() {
 
   const [passwordForm, setPasswordForm] = useState({ current: '', new: '', confirm: '' });
   const [isChangingPassword, setIsChangingPassword] = useState(false);
+
+  // Username editing
+  const [currentUsername, setCurrentUsername] = useState('');
+  const [usernameInput,   setUsernameInput]   = useState('');
+  const [isSavingUsername, setIsSavingUsername] = useState(false);
+  const [usernameLoaded,   setUsernameLoaded]  = useState(false);
+
+  // Load current username from the public users table on mount
+  useEffect(() => {
+    if (!user?.id) return;
+    supabase
+      .from('users')
+      .select('username')
+      .eq('id', user.id)
+      .single()
+      .then(({ data }) => {
+        const name = data?.username ?? '';
+        setCurrentUsername(name);
+        setUsernameInput(name);
+        setUsernameLoaded(true);
+      });
+  }, [user?.id]);
 
   const handlePasswordChange = async (e) => {
     e.preventDefault();
@@ -45,6 +67,36 @@ export default function SettingsScreen() {
       showToast('Error updating password', 'error');
     } finally {
       setIsChangingPassword(false);
+    }
+  };
+
+  const handleSaveUsername = async () => {
+    const trimmed = usernameInput.trim();
+    if (!trimmed) { showToast('Username cannot be empty', 'warning'); return; }
+    if (trimmed.length < 3)  { showToast('Username must be at least 3 characters', 'warning'); return; }
+    if (trimmed.length > 30) { showToast('Username must be 30 characters or fewer', 'warning'); return; }
+    if (trimmed === currentUsername) { showToast('No changes to save', 'info'); return; }
+
+    setIsSavingUsername(true);
+    try {
+      const { error } = await supabase
+        .from('users')
+        .update({ username: trimmed })
+        .eq('id', user.id);
+      if (error) {
+        if (error.code === '23505') {
+          showToast('That username is already taken — try a different one', 'error');
+        } else {
+          showToast(error.message || 'Failed to update username', 'error');
+        }
+        return;
+      }
+      setCurrentUsername(trimmed);
+      showToast('Username updated!', 'success');
+    } catch {
+      showToast('Error updating username', 'error');
+    } finally {
+      setIsSavingUsername(false);
     }
   };
 
@@ -100,7 +152,76 @@ export default function SettingsScreen() {
           }}>
             Profile
           </h2>
-          <div style={{ display: 'grid', gap: 12 }}>
+          <div style={{ display: 'grid', gap: 16 }}>
+
+            {/* Username — editable */}
+            <div>
+              <label style={{
+                fontFamily: 'JetBrains Mono, monospace',
+                fontSize: 10,
+                color: 'var(--mute)',
+                textTransform: 'uppercase',
+                letterSpacing: '0.08em',
+                display: 'block',
+                marginBottom: 4,
+              }}>
+                Username
+              </label>
+              <p style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 10, color: 'var(--mute)', marginBottom: 8, lineHeight: 1.5 }}>
+                Shown to other managers in leaderboards, chat, and bets. 3–30 characters.
+              </p>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <input
+                  type="text"
+                  value={usernameInput}
+                  onChange={e => setUsernameInput(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && handleSaveUsername()}
+                  maxLength={30}
+                  placeholder={usernameLoaded ? 'Enter a username…' : 'Loading…'}
+                  disabled={!usernameLoaded || isSavingUsername}
+                  style={{
+                    flex: 1,
+                    fontFamily: 'JetBrains Mono, monospace',
+                    fontSize: 13,
+                    color: 'var(--paper)',
+                    padding: '8px 12px',
+                    background: 'rgba(242, 238, 229, 0.04)',
+                    border: `1px solid ${usernameInput.trim() !== currentUsername && usernameInput.trim() ? 'var(--cyan)' : 'var(--rule)'}`,
+                    borderRadius: 4,
+                    outline: 'none',
+                  }}
+                />
+                <button
+                  onClick={handleSaveUsername}
+                  disabled={!usernameLoaded || isSavingUsername || usernameInput.trim() === currentUsername || !usernameInput.trim()}
+                  style={{
+                    fontFamily: 'Archivo Black, sans-serif',
+                    fontSize: 11,
+                    fontWeight: 800,
+                    letterSpacing: '0.08em',
+                    textTransform: 'uppercase',
+                    padding: '8px 16px',
+                    background: (!usernameLoaded || isSavingUsername || usernameInput.trim() === currentUsername || !usernameInput.trim())
+                      ? 'var(--ink-3)'
+                      : 'var(--cyan)',
+                    color: (!usernameLoaded || isSavingUsername || usernameInput.trim() === currentUsername || !usernameInput.trim())
+                      ? 'var(--mute)'
+                      : '#000',
+                    border: '1px solid var(--rule)',
+                    borderRadius: 4,
+                    cursor: (!usernameLoaded || isSavingUsername || usernameInput.trim() === currentUsername || !usernameInput.trim())
+                      ? 'not-allowed'
+                      : 'pointer',
+                    flexShrink: 0,
+                    transition: 'all 150ms',
+                  }}
+                >
+                  {isSavingUsername ? 'Saving…' : 'Save'}
+                </button>
+              </div>
+            </div>
+
+            {/* Email — read-only */}
             <div>
               <label style={{
                 fontFamily: 'JetBrains Mono, monospace',
@@ -116,15 +237,16 @@ export default function SettingsScreen() {
               <div style={{
                 fontFamily: 'JetBrains Mono, monospace',
                 fontSize: 13,
-                color: 'var(--paper)',
+                color: 'var(--mute)',
                 padding: '8px 12px',
-                background: 'rgba(242, 238, 229, 0.04)',
+                background: 'rgba(242, 238, 229, 0.02)',
                 borderRadius: 4,
                 border: '1px solid var(--rule)',
               }}>
                 {user?.email || 'Not loaded'}
               </div>
             </div>
+
           </div>
         </div>
 
