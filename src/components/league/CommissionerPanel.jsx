@@ -232,7 +232,8 @@ function fmtKickoff(iso) {
 
 // Derive season stepper phases from real league data.
 // Returns null if no league data is available (callers fall back to demo phases).
-function computePhases(league, memberCount = 0) {
+// windowType: 'matchday' (deadline-controlled tournament leagues) | 'manual' | null
+function computePhases(league, memberCount = 0, windowType = null) {
   if (!league) return null;
 
   const now = new Date();
@@ -242,10 +243,17 @@ function computePhases(league, memberCount = 0) {
   const allocationDone = league.cup_phase && league.cup_phase !== 'pre_cup';
   const inSeason = allocationDone; // allocation done = in season
 
+  // Bug #2: tournament leagues have a deadline-controlled window, so
+  // `transfers_open` (always false by default) is meaningless for them.
+  // Show "Auto-managed" so the stage sub-label isn't misleadingly "Closed".
+  const twSub = windowType === 'matchday'
+    ? 'Auto-managed · Deadline-controlled'
+    : (league.transfers_open ? 'Open · transfers enabled' : 'Closed');
+
   if (!isDraft) {
     // Classic mode: 2 stages
     return [
-      { id: 'transfers', label: 'TRANSFER WINDOW', state: 'active', sub: league.transfers_open ? 'Open · transfers enabled' : 'Closed' },
+      { id: 'transfers', label: 'TRANSFER WINDOW', state: 'active', sub: twSub },
       { id: 'season',    label: `IN SEASON · ${memberCount} MGRS`, state: allocationDone ? 'active' : 'todo', sub: 'Live' },
     ];
   }
@@ -259,7 +267,7 @@ function computePhases(league, memberCount = 0) {
   const stateFor = (idx) => idx < currentIdx ? 'done' : idx === currentIdx ? 'active' : 'todo';
 
   return [
-    { id: 'transfers',  label: 'TRANSFER WINDOW', state: stateFor(0), sub: league.transfers_open ? 'Open · transfers enabled' : 'Closed' },
+    { id: 'transfers',  label: 'TRANSFER WINDOW', state: stateFor(0), sub: twSub },
     { id: 'draft',      label: 'DRAFT DEADLINE',  state: stateFor(1), sub: hasDraftDeadline ? fmtKickoff(league.draft_deadline) : 'Not set' },
     { id: 'allocation', label: 'ALLOCATION',       state: stateFor(2), sub: allocationDone ? 'Squads allocated' : deadlinePassed ? 'Processing…' : 'Awaiting draft' },
     { id: 'season',     label: `IN SEASON · ${memberCount} MGRS`, state: stateFor(3), sub: inSeason ? 'Live' : 'Awaiting allocation' },
@@ -275,8 +283,8 @@ const BET_TYPES = [
 // ─────────────────────────────────────────────────────────────────────────────
 // Season stepper (Zone A)
 // ─────────────────────────────────────────────────────────────────────────────
-function SeasonStepper({ leagueName = 'LEAGUE', memberCount = 0, league = null, onHelp }) {
-  const phases = computePhases(league, memberCount) ?? [
+function SeasonStepper({ leagueName = 'LEAGUE', memberCount = 0, league = null, windowType = null, onHelp }) {
+  const phases = computePhases(league, memberCount, windowType) ?? [
     { id: 'transfers',  label: 'TRANSFER WINDOW', state: 'done',   sub: 'Closed' },
     { id: 'draft',      label: 'DRAFT DEADLINE',  state: 'done',   sub: '15 Mar 19:00' },
     { id: 'allocation', label: 'ALLOCATION',       state: 'active', sub: 'Squads allocated' },
@@ -1628,8 +1636,8 @@ function H2HCalendarSection({ leagueId, tournamentId, isMobile = false }) {
 // ─────────────────────────────────────────────────────────────────────────────
 // Mobile accordion variants
 // ─────────────────────────────────────────────────────────────────────────────
-function MobSeasonStepper({ league = null, memberCount = 0, onHelp }) {
-  const computed = computePhases(league, memberCount);
+function MobSeasonStepper({ league = null, memberCount = 0, windowType = null, onHelp }) {
+  const computed = computePhases(league, memberCount, windowType);
   const phases = computed
     ? computed.map(p => ({ label: p.id.toUpperCase(), state: p.state }))
     : [
@@ -2277,7 +2285,7 @@ export default function CommissionerPanel({ commissioner, leagueId, tournamentId
       <div style={{ flex: 1, overflow: 'auto', background: 'var(--ink)', display: 'flex', flexDirection: 'column' }}>
         <HelpOverlay topic={helpModal} onClose={() => setHelpModal(null)} />
         <CommMsg msg={commMsg} onDismiss={() => setCommMsg(null)} />
-        <MobSeasonStepper league={league} memberCount={memberCount} onHelp={() => setHelpModal('commissioner')} />
+        <MobSeasonStepper league={league} memberCount={memberCount} windowType={windowType} onHelp={() => setHelpModal('commissioner')} />
 
         {/* Lifecycle ops (mobile) — moved above bets; cards have margin: 0 14px built in */}
         <MobSectionHeader label="LIFECYCLE OPERATIONS" sub="SEASON CONTROLS" tone="var(--purple)" onHelp={() => setHelpModal('lifecycle')} />
@@ -2462,6 +2470,7 @@ export default function CommissionerPanel({ commissioner, leagueId, tournamentId
         leagueName={leagueName}
         memberCount={memberCount}
         league={league}
+        windowType={windowType}
         onHelp={() => setHelpModal('commissioner')}
       />
 
