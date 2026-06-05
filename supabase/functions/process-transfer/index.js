@@ -360,8 +360,11 @@ Deno.serve(async (req) => {
       }
 
       // 5. Position limit (use playerData already fetched above).
-      const position  = playerData.position;
-      const posLimit  = POS_LIMITS[position] ?? 99;
+      // Normalise 'FW' → 'FWD' so squads containing either raw Forza value ('FW')
+      // or the normalised value ('FWD') are counted correctly against the same cap.
+      const normPos  = (p) => p === 'FW' ? 'FWD' : p;
+      const position = normPos(playerData.position);
+      const posLimit = POS_LIMITS[position] ?? 99;
 
       if (position && posLimit < 99) {
         // Count how many of this position the manager already has
@@ -370,7 +373,7 @@ Deno.serve(async (req) => {
           .select('position')
           .in('id', currentPlayers);
 
-        const posCount = (squadPlayers ?? []).filter(p => p.position === position).length;
+        const posCount = (squadPlayers ?? []).filter(p => normPos(p.position) === position).length;
         if (posCount >= posLimit) {
           return json({ ok: false, error: `Maximum ${position} players reached (${posLimit})` }, 400, corsHeaders);
         }

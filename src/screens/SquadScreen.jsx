@@ -1590,7 +1590,7 @@ export default function SquadScreen() {
                   </button>
                 </div>
                 {autoFillMsg && (
-                  <div style={{ marginTop: 6, fontFamily: 'JetBrains Mono, monospace', fontSize: 9, color: 'var(--positive)' }}>{autoFillMsg}</div>
+                  <div style={{ marginTop: 6, fontFamily: 'JetBrains Mono, monospace', fontSize: 9, color: autoFillMsg?.startsWith('Added') ? 'var(--positive)' : 'var(--gold)' }}>{autoFillMsg}</div>
                 )}
                 <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 9, color: 'var(--mute)', letterSpacing: '0.14em', marginTop: 6 }}>
                   {captain ? `CAPTAIN ${captain.name.split(' ').slice(-1)[0].toUpperCase()}` : 'NO CAPTAIN'}
@@ -1731,7 +1731,7 @@ export default function SquadScreen() {
                 </div>
               </div>
               {autoFillMsg && (
-                <div style={{ padding: '6px 16px', fontFamily: 'JetBrains Mono, monospace', fontSize: 9, color: 'var(--positive)', borderBottom: '1px solid var(--rule)' }}>{autoFillMsg}</div>
+                <div style={{ padding: '6px 16px', fontFamily: 'JetBrains Mono, monospace', fontSize: 9, color: autoFillMsg?.startsWith('Added') ? 'var(--positive)' : 'var(--gold)', borderBottom: '1px solid var(--rule)' }}>{autoFillMsg}</div>
               )}
               {/* Starters + bench grouped by position */}
               {['GK', 'DEF', 'MID', 'FWD'].map(pos => {
@@ -2107,7 +2107,7 @@ export default function SquadScreen() {
                   </button>
                 </div>
                 {autoFillMsg && (
-                  <div style={{ padding: '6px 16px', fontFamily: 'JetBrains Mono, monospace', fontSize: 9, color: 'var(--positive)', borderBottom: '1px solid var(--rule)' }}>{autoFillMsg}</div>
+                  <div style={{ padding: '6px 16px', fontFamily: 'JetBrains Mono, monospace', fontSize: 9, color: autoFillMsg?.startsWith('Added') ? 'var(--positive)' : 'var(--gold)', borderBottom: '1px solid var(--rule)' }}>{autoFillMsg}</div>
                 )}
                 <SectionHeader title="Matchday Joker" accent="purple" />
                 {jokerPlayer ? (
