@@ -652,23 +652,23 @@ async function rollupSquads(fixture_id, pointsLookup, tournament_id) {
         pts = 0;
         logError('error', 'NaN in points lookup', { fixture_id, player_id: pid }); // fire-and-forget
       }
-      // DD-H5: chips take the highest multiplier, not the product.
-      // Captain+Joker on same player → max(2,2)=×2, not ×4. TC+Joker → max(3,2)=×3.
+      // Only captain / Triple Captain multipliers apply inside the XI.
+      // The Matchday Joker no longer applies a multiplier — it is always an external
+      // player (DB trigger enforces this) scored separately below.
       const captainMult = pid === effectiveCaptainId ? (isTripleCaptain ? 3 : 2) : 1;
-      const jokerMult   = pid === jokerPid ? 2 : 1;
-      pts *= Math.max(captainMult, jokerMult);
+      pts *= captainMult;
       total += pts;
     }
 
-    // Matchday Joker — external player bonus:
-    // If the joker player is NOT in the (auto-subbed) starting XI, add their points ×2
-    // as a bonus on top of the XI total. This is the "16th man" mechanic — a player
-    // outside your squad contributes their stats independently.
-    // If the joker IS in pitchPlayers, they were already scored ×2 in the loop above
-    // (jokerMult=2), so we must not double-count.
+    // Matchday Joker — external player bonus (real points, no multiplier):
+    // The joker is a player outside the manager's squad who scores their real
+    // fantasy points as a bonus added on top of the XI total. A DB trigger
+    // (migration 143) ensures the joker is always external, so there is no
+    // double-counting risk with pitchPlayers. Guard with the includes check
+    // anyway for safety (legacy rows pre-migration 143).
     if (jokerPid && !pitchPlayers.includes(jokerPid)) {
       const jokerRawPts = fullRoundLookup[jokerPid] ?? 0;
-      total += jokerRawPts * 2;
+      total += jokerRawPts;   // ×1 — real points, no multiplier
     }
 
     // C2: the retired wildcard +10% multiplier is no longer applied.

@@ -643,7 +643,13 @@ export default function SquadScreen() {
       if (matchdayId) row.matchday_id = matchdayId;
       const { error } = await supabase.from('daily_jokers').insert(row);
       if (error) {
-        if (error.code === '23505') showToast('You already used your 16th Man this matchday!', 'warning');
+        if (error.code === '23505') {
+          if ((error.message || '').includes('player_uq') || (error.details || '').includes('player_uq')) {
+            showToast('You\'ve already used this player as your Joker this season!', 'warning');
+          } else {
+            showToast('You already have a Joker for this matchday!', 'warning');
+          }
+        }
         else throw error;
       } else {
         // DD-C13: mirror joker_player_id on squad for UI; scoring reads daily_jokers
@@ -749,8 +755,20 @@ export default function SquadScreen() {
       if (matchdayId) row.matchday_id = matchdayId;
       const { error } = await supabase.from('daily_jokers').insert(row);
       if (error) {
-        if (error.code === '23505') showToast('You already have a Joker for this matchday!', 'warning');
-        else throw error;
+        if (error.code === '23505') {
+          // Two unique constraints can fire:
+          // daily_jokers_user_league_player_uq  → same player used again this season
+          // daily_jokers_user_league_matchday_uq → already have a joker this matchday
+          const isRepeatPlayer = (error.message || '').includes('player_uq') || (error.details || '').includes('player_uq');
+          showToast(isRepeatPlayer
+            ? `${player.name} was already your Joker this season — pick a different player.`
+            : 'You already have a Joker for this matchday!',
+            'warning');
+        } else if ((error.message || '').includes('JOKER_OWN_SQUAD')) {
+          showToast('Pick a player outside your squad — your own players don\'t count as Joker.', 'warning');
+        } else {
+          throw error;
+        }
       } else {
         // DD-C13: mirror joker_player_id on squad for UI; scoring reads daily_jokers
         // (above) so this sync failing is non-critical — log rather than block.
@@ -1009,11 +1027,11 @@ export default function SquadScreen() {
             MATCHDAY JOKER
           </div>
           <p className="text-[11px] leading-relaxed mb-3" style={{ color: 'var(--mute)', fontFamily: 'Archivo, sans-serif' }}>
-            Pick a 16th man for this matchday — exempt from country limit rules. One per matchday, locked once set.
+            Pick one player outside your squad for this matchday. They score their real points as a bonus — no multiplier needed. One pick per matchday; each player can only be used once per season.
           </p>
           {todayJokerId ? (
             <div className="fk-mono flex items-center gap-2 py-2 px-3" style={{ background: 'rgba(168,85,247,0.08)', border: '1px solid var(--pos-gk)', color: 'var(--pos-gk)', fontSize: 9 }}>
-              JOKER LOCKED FOR TODAY
+              JOKER LOCKED FOR THIS MATCHDAY
             </div>
           ) : (
             <button
@@ -1021,7 +1039,7 @@ export default function SquadScreen() {
               className="w-full py-2 rounded text-[10px] font-black uppercase tracking-widest transition-all active:scale-95"
               style={{ background: 'rgba(157,95,245,0.12)', color: 'var(--pos-gk)', border: '1px solid rgba(157,95,245,0.3)' }}
             >
-              Choose 16th Man
+              Choose Matchday Joker
             </button>
           )}
         </div>
@@ -1043,12 +1061,12 @@ export default function SquadScreen() {
     {
       key: 'joker',
       icon: '⚡',
-      label: '16th Man (Matchday Joker)',
+      label: 'Matchday Joker',
       color: 'var(--pos-gk)',
-      what: 'Pick any player outside your 15-man squad as an extra scorer for this matchday. They are exempt from country limit rules.',
-      when: 'Any matchday — choose someone whose club is playing today that you couldn\'t otherwise fit due to country limits.',
-      restriction: '1 use per matchday. Must be selected before their match kicks off. Cannot be changed once locked.',
-      tip: 'Great for covering a top player from a country you\'ve already maxed out in your main squad.',
+      what: 'Pick one player from outside your 15-man squad. They score their real fantasy points as a bonus on top of your XI total — no multiplier, no squad slot required.',
+      when: 'Any matchday — use it to add a top performer you couldn\'t fit in your squad, or a player from a country you\'ve already maxed out.',
+      restriction: '1 pick per matchday. Each player can only be your Joker once per season — you can\'t pick the same player every matchday. Must be chosen before the matchday deadline.',
+      tip: 'Don\'t waste it on a player you already own. Pick someone great who didn\'t make your 15 this round.',
     },
   ];
 
@@ -1900,7 +1918,7 @@ export default function SquadScreen() {
                   textAlign: 'center',
                   marginBottom: '4px',
                 }}>
-                  Matchday Joker – Your 16th Man
+                  Matchday Joker
                 </div>
                 <div style={{
                   fontSize: '10px',
@@ -1910,7 +1928,7 @@ export default function SquadScreen() {
                   lineHeight: 1.4,
                   fontFamily: 'Archivo, sans-serif',
                 }}>
-                  Pick one extra player outside your 15. Exempt from country limits.
+                  Pick one player outside your squad. They score their real points as a bonus — one pick per matchday, each player once per season.
                 </div>
                 <button
                   onClick={() => setIsJokerPickerOpen(true)}
@@ -2108,7 +2126,7 @@ export default function SquadScreen() {
                   >
                     <div className="w-8 h-8 border-2 border-dashed flex items-center justify-center font-black" style={{ borderColor: 'var(--pos-gk)', color: 'var(--pos-gk)' }}>+</div>
                     <div className="flex-1 text-left">
-                      <div className="text-[12px] font-black uppercase tracking-widest" style={{ color: 'var(--pos-gk)', fontFamily: 'Archivo Black, sans-serif' }}>Select 16th Man</div>
+                      <div className="text-[12px] font-black uppercase tracking-widest" style={{ color: 'var(--pos-gk)', fontFamily: 'Archivo Black, sans-serif' }}>Select Matchday Joker</div>
                       <div className="text-[10px] mt-0.5" style={{ color: 'var(--mute)' }}>Exempt from country limit rules today</div>
                     </div>
                   </button>
@@ -2414,7 +2432,7 @@ export default function SquadScreen() {
               />
             </div>
             <div className="p-4 border-t border-border bg-surface text-[9px] text-text-tertiary uppercase text-center tracking-widest">
-              Independent of your 15-man squad · Ignores country limits
+              Must be outside your squad · Real points, no multiplier · Once per matchday, each player once per season
             </div>
           </div>
         </div>
@@ -2479,22 +2497,21 @@ function JokerList({ teams, squadPlayerIds, onSelect, saving }) {
     <EmptyState title="No Matches Today" sub="The Matchday Joker is only available on matchdays. Check back when fixtures are scheduled." action={null} />
   );
 
-  // FB-024: none of your squad plays today
-  const playingSquadPlayers = players.filter(p => squadPlayerIds?.includes(p.id));
-  const otherPlayers        = players.filter(p => !squadPlayerIds?.includes(p.id));
-  const noSquadOverlap      = squadPlayerIds?.length && !playingSquadPlayers.length;
+  // Joker must be from outside the manager's own squad.
+  // Filter out own-squad players — the DB trigger also enforces this, but the
+  // picker should not show them at all to avoid confusing the user.
+  const availablePlayers = players.filter(p => !squadPlayerIds?.includes(p.id));
 
-  if (!players.length) return (
-    <EmptyState emoji="🏟️" title="None of your players are in today's matches" sub="You can still pick any player from the active squads below as your Joker." action={null} />
+  if (!availablePlayers.length) return (
+    <EmptyState emoji="🏟️" title="No available players" sub="All players from today's fixtures are already in your squad." action={null} />
   );
 
-  const PlayerRow = ({ p, highlight }) => (
+  const PlayerRow = ({ p }) => (
     <button
       key={p.id}
       onClick={() => onSelect(p)}
       disabled={saving}
       className="w-full flex items-center gap-3 p-3 bg-bg border border-border hover:border-purple/50 rounded-sm transition-all group"
-      style={highlight ? { borderColor: 'rgba(157,95,245,0.35)', background: 'rgba(157,95,245,0.05)' } : {}}
     >
       <div className="w-10 h-10 rounded-full border border-border flex items-center justify-center font-bold text-[10px] text-white bg-surface shrink-0 group-hover:border-purple/30">
         {p.club.substring(0, 3)}
@@ -2503,36 +2520,18 @@ function JokerList({ teams, squadPlayerIds, onSelect, saving }) {
         <div className="text-[13px] font-bold text-white group-hover:text-purple transition-colors truncate">{p.name}</div>
         <div className="text-[9px] text-text-tertiary uppercase tracking-tighter">
           {p.position} · {p.club}
-          {highlight && <span style={{ color: 'var(--pos-gk)', marginLeft: '6px' }}>· Your squad</span>}
         </div>
       </div>
       <div className="text-right shrink-0">
-        <div className="text-[13px] font-black text-cyan tabular-nums">${p.price}M</div>
+        <div className="text-[13px] font-black text-cyan tabular-nums">£{p.price}M</div>
         <div className="text-[8px] text-positive font-bold uppercase tracking-widest">Pick</div>
       </div>
     </button>
   );
 
-  const SectionLabel = ({ label }) => (
-    <div className="flex items-center gap-2 px-1 py-2">
-      <div className="h-px flex-1" style={{ background: 'rgba(255,255,255,0.07)' }} />
-      <span style={{ fontSize: '9px', fontFamily: 'Archivo Black, sans-serif', fontWeight: 800, letterSpacing: '0.15em', textTransform: 'uppercase', color: 'var(--mute)' }}>{label}</span>
-      <div className="h-px flex-1" style={{ background: 'rgba(255,255,255,0.07)' }} />
-    </div>
-  );
-
   return (
     <div className="space-y-1">
-      {/* Squad players playing today shown first */}
-      {playingSquadPlayers.length > 0 && (
-        <>
-          <SectionLabel label="Your squad — playing today" />
-          {playingSquadPlayers.map(p => <PlayerRow key={p.id} p={p} highlight />)}
-          {otherPlayers.length > 0 && <SectionLabel label="All active players" />}
-        </>
-      )}
-      {noSquadOverlap && <SectionLabel label="None of your squad plays today — pick any Joker" />}
-      {otherPlayers.map(p => <PlayerRow key={p.id} p={p} highlight={false} />)}
+      {availablePlayers.map(p => <PlayerRow key={p.id} p={p} />)}
     </div>
   );
 }

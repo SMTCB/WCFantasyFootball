@@ -52,54 +52,40 @@ If you set the Triple Captain AND make your captain your Matchday Joker:
 
 ---
 
-## Matchday Joker (16th Man)
+## Matchday Joker
 
 ### What it does
 
-The Matchday Joker lets you designate **one player** from today's active fixtures to score **×2 fantasy points**, added on top of your regular squad score. The player can be:
+Pick **one player outside your 15-man squad** for this matchday. They score their real fantasy points as a bonus added on top of your XI total. No multiplier — just their actual stats.
 
-- **Someone already in your starting XI** — their points are doubled (they score once at ×2 instead of ×1)
-- **Someone outside your squad entirely** — their points are scored independently at ×2 as a bonus on top of your XI
-
-Both cases give you a ×2 contribution from the designated player. The choice is strategic: do you boost a reliable starter already in your XI, or gamble on a high-upside external player you don't own?
-
-> **Why are own-squad players highlighted?** Because they are a known, controllable option — you already know they're in your starting XI and likely to play. External players are wildcards: more upside, more risk.
+The player does not need to be in your starting XI, does not take a squad slot, and does not count toward any formation rule. They simply contribute their matchday points as a straight addition.
 
 ### How to use it
 
-1. Go to **Squad → Chips** and tap **Choose 16th Man** (or tap the chip card button).
-2. A picker shows all players from today's active fixtures — sorted by price.
-3. Select any player. They're locked in immediately.
-4. The joker is shown in the Chips section and in the Live/Points views.
+1. Go to **Squad → Chips** and tap **Choose Matchday Joker**.
+2. A picker shows all players from today's active fixtures who are **not in your squad** — sorted by price.
+3. Select a player. They're locked in immediately.
+4. Their points are added to your round total when scoring runs.
 
 ### Rules
 
 | Rule | Detail |
 |---|---|
-| **Once per matchday** | One joker per matchday, per league. The unique constraint on `daily_jokers` prevents a second pick. |
-| **Must be set before deadline** | A trigger (`trg_guard_daily_joker_deadline`) blocks all inserts after `matchday_deadlines.deadline_at` for the active matchday. There is no way around this from the client. |
-| **Any player from active fixtures** | Can be from your squad or completely external — anyone playing today. |
-| **Ignores country/club limits** | Completely independent of squad composition rules. |
-| **Does not need to be in starting XI** | If you pick an external player, their points are added as a bonus regardless of your lineup. If you pick one of your own starters, their points are doubled in place. |
-| **Scoring effect: ×2** | The joker player's full-matchday fantasy points × 2, added to your round total. |
-| **Selling the joker player** | If you sell the joker player from your squad during the matchday, a warning is shown and the joker boost is cleared. |
-| **Multi-day matchdays** | Matchday-scoped, not day-scoped. If your matchday runs across 4-5 days, the joker scores across ALL fixtures in that matchday. Set it once before the deadline; it applies to the whole block. |
+| **Must be outside your squad** | You cannot pick one of your own 15 players. The picker only shows external players. A DB trigger (`trg_guard_daily_joker_external_player`) also enforces this at the server level. |
+| **Once per matchday** | One joker per matchday per league. Unique index on `(user_id, league_id, matchday_id)` prevents a second pick. |
+| **Once per player per season** | Each player can only be your joker once per season per league. After using Mbappé in round 1, you cannot pick him again in round 3. Unique index on `(user_id, league_id, player_id)`. |
+| **Must be set before deadline** | Trigger `trg_guard_daily_joker_deadline` blocks inserts after `matchday_deadlines.deadline_at`. No way around this from the client. |
+| **Matchday-scoped, not day-scoped** | If a matchday runs across 4–5 days (e.g. WC group stage), the joker picks up points from ALL fixtures in that matchday. You set it once before the deadline and it applies to the whole block. |
+| **Scoring: real points, no multiplier** | The joker's full-matchday fantasy points are added directly. If they score 15 pts, you get +15 pts. |
+| **Ignores draft no-repeat rule** | In draft leagues, other managers may own your joker player. This is allowed — the joker does not transfer ownership. |
 
-### Who can you pick as joker?
+### Who can you pick?
 
-The picker shows all players whose team is playing today:
-- **Your squad — playing today** (highlighted at top): your own starting XI candidates — a guaranteed ×2 boost if you know they'll play well
-- **All other active players**: anyone from today's fixtures — potentially higher ceiling, less certainty
+Any player from today's active fixtures who is **not in your 15-man squad**. The picker filters out your own players automatically.
 
-There is no restriction. Pick your own star who you expect to dominate, or take a punt on a high-priced external striker you couldn't afford to buy.
+### Draft mode
 
-### Draft mode (noduplicate/H2H) — important point
-
-**In draft mode, the Matchday Joker does NOT check the no-repeat rule.**
-
-You can pick a player already owned by another manager in your league as your joker. The no-repeat rule applies only to buying players into your 15-man squad. The joker is personal and does not transfer ownership or affect anyone else's squad.
-
-**Practical implication**: In a 5-manager draft league, all 5 managers could pick the same player as their joker on the same matchday. There is no server-side guard against this.
+The no-repeat rule (each player belongs to one manager) applies to squad ownership only. For the joker, you can pick any player playing today, even if they are exclusively owned by another manager in your league. All 5 managers in a draft league can pick the same player as their joker simultaneously — there is no server guard against this.
 
 ---
 
@@ -130,11 +116,8 @@ Chips do not multiply each other. The highest applicable multiplier wins.
 |---|---|
 | Normal captain | ×2 |
 | Triple Captain on captain | ×3 |
-| Joker on non-captain player | ×2 |
-| Joker AND captain on same player (no TC) | max(2, 2) = ×2 |
-| Triple Captain + Joker on same player | max(3, 2) = ×3 |
-| Joker on bench player (own squad) | ×2 as external bonus — bench players don't score from XI, but joker bonus still applies |
-| Joker on external player (not in squad) | ×2 bonus added on top of XI total |
+| Joker (external player) | +their real pts (×1 bonus) |
+| Triple Captain on captain, no joker | ×3 on captain |
 
 ---
 
