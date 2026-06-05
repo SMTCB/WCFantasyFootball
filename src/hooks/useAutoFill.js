@@ -184,6 +184,7 @@ export function useAutoFill(leagueId, squadData, fetchSquad, takenMap = {}, buy,
         let query = supabase
           .from('players')
           .select('id, name, position, club, price')
+          .eq('is_active', true)
           .in('position', dbPos)
           .lte('price', budgetLeft)
           .order('price', { ascending: true })

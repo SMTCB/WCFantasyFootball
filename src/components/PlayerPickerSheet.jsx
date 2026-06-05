@@ -28,6 +28,7 @@ export default function PlayerPickerSheet({ position, budget, takenMap, isOwnedB
       let query = supabase
         .from('players')
         .select('*')
+        .eq('is_active', true)
         .eq('position', position);
 
       // Filter by tournament if provided

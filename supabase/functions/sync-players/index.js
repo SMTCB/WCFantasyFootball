@@ -144,6 +144,7 @@ Deno.serve(async (req) => {
     const BATCH = 5;
     let totalPlayers = 0;
     const errors = [];
+    const activeForzaPlayerIds = new Set();
 
     for (let i = 0; i < teamEntries.length; i += BATCH) {
       const batch = teamEntries.slice(i, i + BATCH);
@@ -158,6 +159,7 @@ Deno.serve(async (req) => {
             const name = p.nickname
               ? p.nickname
               : [p.first_name, p.last_name].filter(Boolean).join(' ');
+            activeForzaPlayerIds.add(String(p.id));
             return {
               id:              `fp-${p.id}-${forza_id}`,
               name,
@@ -169,6 +171,7 @@ Deno.serve(async (req) => {
               tournament_id:   forza_id,
               birthdate:       p.birthdate ?? null,
               height:          p.height ?? null,
+              is_active:       true,
               // price intentionally omitted — preserve existing valuations on conflict.
             };
           });
@@ -190,9 +193,37 @@ Deno.serve(async (req) => {
       }));
     }
 
-    // #13: a previously-populated tournament yielding 0 players is almost certainly a
-    // Forza outage/partial response — surface it rather than reporting healthy.
-    if (totalPlayers === 0) {
+    // ── 5. Soft-delete players no longer in Forza's squad lists ──────────────
+    // Only runs if we got a meaningful response (guards against API outages
+    // wiping everyone as inactive when Forza returns empty).
+    let deactivated = 0;
+    if (totalPlayers > 0 && activeForzaPlayerIds.size > 0) {
+      const { data: dbPlayers } = await supabase
+        .from('players')
+        .select('forza_player_id')
+        .eq('tournament_id', forza_id)
+        .eq('is_active', true);
+
+      const toDeactivate = (dbPlayers ?? [])
+        .map(p => p.forza_player_id)
+        .filter(id => !activeForzaPlayerIds.has(id));
+
+      if (toDeactivate.length > 0) {
+        const { error: deactErr } = await supabase
+          .from('players')
+          .update({ is_active: false })
+          .eq('tournament_id', forza_id)
+          .in('forza_player_id', toDeactivate);
+
+        if (deactErr) {
+          console.error('soft-delete error:', JSON.stringify(deactErr));
+        } else {
+          deactivated = toDeactivate.length;
+        }
+      }
+    } else if (totalPlayers === 0) {
+      // #13: a previously-populated tournament yielding 0 players is almost certainly a
+      // Forza outage/partial response — surface it rather than reporting healthy.
       const { count: existing } = await supabase
         .from('players').select('id', { count: 'exact', head: true }).eq('tournament_id', forza_id);
       if ((existing ?? 0) > 0) {
@@ -203,10 +234,11 @@ Deno.serve(async (req) => {
     }
 
     return respond(200, {
-      ok:              true,
-      teams_upserted:  teamEntries.length,
+      ok:               true,
+      teams_upserted:   teamEntries.length,
       players_upserted: totalPlayers,
-      errors:          errors.length ? errors : undefined,
+      players_deactivated: deactivated,
+      errors:           errors.length ? errors : undefined,
     });
 
   } catch (err) {
