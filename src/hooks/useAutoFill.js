@@ -13,13 +13,15 @@ export function useAutoFill(leagueId, squadData, fetchSquad, takenMap = {}, buy,
   const [autoFilling, setAutoFilling] = useState(false);
   const [autoFillMsg, setAutoFillMsg] = useState(null);
   const clearMsgTimerRef = useRef(null);
+  const fillingRef       = useRef(false); // C3: sync reentrancy guard — state updates are async
 
   useEffect(() => () => { if (clearMsgTimerRef.current) clearTimeout(clearMsgTimerRef.current); }, []);
 
   const POS_LIMITS = cfg.positionLimits;
 
   const handleAutoFill = useCallback(async () => {
-    if (autoFilling) return;
+    if (fillingRef.current) return; // C3: synchronous check before any await
+    fillingRef.current = true;
     setAutoFilling(true);
     setAutoFillMsg(null);
 
@@ -31,12 +33,13 @@ export function useAutoFill(leagueId, squadData, fetchSquad, takenMap = {}, buy,
 
       // ── Always fetch the freshest squad state from DB ────────────────────
       // Avoids the stale-closure bug where a second auto-fill click uses
-      // squadData captured before the previous fetchSquad() propagated through
-      // React state (causing wrong have counts and position misallocation).
+      // squadData captured before the previous fetchSquad() propagated.
       let freshPlayerIds = null;
       let freshBudget    = null;
+      let freshUser      = null;
       try {
         const { data: { user } } = await supabase.auth.getUser();
+        freshUser = user;
         if (user?.id) {
           const { data: freshSquad } = await supabase
             .from('squads')
@@ -53,8 +56,13 @@ export function useAutoFill(leagueId, squadData, fetchSquad, takenMap = {}, buy,
         }
       } catch { /* network hiccup — fall through to squadData */ }
 
+      // B1: When freshPlayerIds is available it already contains ALL players
+      // (starters + bench combined). squadData.bench is a subset of those same IDs —
+      // subtracting it again would make slotsNeeded incorrectly negative, causing
+      // a false "Squad is already full" on the SquadScreen path.
+      const useFreshData = freshPlayerIds !== null;
       const rawPlayers   = freshPlayerIds ?? squadData?.players ?? [];
-      const benchPlayers = squadData?.bench ?? [];
+      const benchPlayers = useFreshData ? [] : (squadData?.bench ?? []);
       const squadSize    = cfg.squadSize ?? 15;
       const slotsNeeded  = squadSize - rawPlayers.length - benchPlayers.length;
 
@@ -68,7 +76,7 @@ export function useAutoFill(leagueId, squadData, fetchSquad, takenMap = {}, buy,
       if (rawPlayers.length > 0 && typeof rawPlayers[0] === 'string') {
         const { data: fetched } = await supabase
           .from('players')
-          .select('id, position')
+          .select('id, position, club') // club needed for C1 preflight
           .in('id', rawPlayers);
         playerObjects = fetched || [];
       }
@@ -79,12 +87,18 @@ export function useAutoFill(leagueId, squadData, fetchSquad, takenMap = {}, buy,
         ...benchPlayers.map(p => p.id ?? p),
       ]);
 
-      // ── Build taken-by-others set from takenMap ──────────────────────────
-      const othersIds = new Set(
-        Object.entries(takenMap || {})
-          .filter(([, v]) => v?.userId !== undefined)
-          .map(([id]) => id)
-      );
+      // B2: Only exclude taken-by-others in noduplicate (draft) leagues.
+      // Classic leagues allow multiple managers to own the same player, so
+      // filtering by takenMap would silently shrink a valid candidate pool.
+      const currentUserId = freshUser?.id;
+      const isDraftLeague = (cfg.format ?? '') === 'noduplicate';
+      const othersIds = isDraftLeague
+        ? new Set(
+            Object.entries(takenMap || {})
+              .filter(([, v]) => v?.userId !== undefined && v?.userId !== currentUserId)
+              .map(([id]) => id)
+          )
+        : new Set();
 
       // ── Fetch this league's tournament_id ────────────────────────────────
       let tournamentId = null;
@@ -95,15 +109,23 @@ export function useAutoFill(leagueId, squadData, fetchSquad, takenMap = {}, buy,
         .maybeSingle();
       tournamentId = leagueRow?.tournament_id ?? null;
 
-      // ── Count current positions (starters + bench, ALL tournaments) ─────
-      // Include bench so FWD at 3/3 across starters+bench counts correctly.
-      // Fetch without tournament filter so EPL players in a WC squad still count.
+      // ── Count current positions ──────────────────────────────────────────
+      // benchPlayers is [] when useFreshData=true (all players already in playerObjects).
       const have = { GK: 0, DEF: 0, MID: 0, FWD: 0 };
       for (const p of [...playerObjects, ...benchPlayers]) {
         if (typeof p !== 'object' || !p) continue;
         const rawPos = p.position?.toUpperCase() ?? '';
         const pos = rawPos === 'FW' ? 'FWD' : rawPos;
         if (pos && have[pos] !== undefined) have[pos]++;
+      }
+
+      // C1: Per-club counts for preflight filtering. Uses the backend default (3).
+      // Cup leagues relax dynamically; being conservative here just means a cup-relaxed
+      // candidate gets skipped client-side and will succeed if re-tried manually.
+      const FILL_CLUB_LIMIT = 3;
+      const clubCounts = {};
+      for (const p of playerObjects) {
+        if (typeof p === 'object' && p?.club) clubCounts[p.club] = (clubCounts[p.club] ?? 0) + 1;
       }
 
       const minPer = cfg.minFormation ?? { GK: 1, DEF: 3, MID: 2, FWD: 1 };
@@ -169,29 +191,25 @@ export function useAutoFill(leagueId, squadData, fetchSquad, takenMap = {}, buy,
 
         if (tournamentId) query = query.eq('tournament_id', tournamentId);
 
-        let { data: pool } = await query;
+        const { data: pool } = await query;
 
-        // Fallback: retry without tournament filter if no results
-        if (!pool?.length && tournamentId) {
-          const { data: fallback } = await supabase
-            .from('players')
-            .select('id, name, position, club, price')
-            .in('position', dbPos)
-            .lte('price', budgetLeft)
-            .order('price', { ascending: true })
-            .limit(500);
-          pool = fallback;
-        }
-
+        // B5: No fallback to all-tournaments. Out-of-tournament players would be
+        // rejected with WRONG_TOURNAMENT, burning the consecutive-failure budget
+        // and producing a confusing abort before any valid candidate is reached.
         if (!pool?.length) continue;
 
-        const candidates = pool.filter(p => !myIds.has(p.id) && !othersIds.has(p.id));
+        // C1: Pre-filter by club cap so club-capped candidates never hit the backend.
+        const candidates = pool.filter(p =>
+          !myIds.has(p.id) &&
+          !othersIds.has(p.id) &&
+          (clubCounts[p.club] ?? 0) < FILL_CLUB_LIMIT
+        );
         skippedTaken += pool.length - candidates.length;
         if (candidates.length > 0) anyPoolFound = true;
 
-        let bought             = 0;
+        let bought              = 0;
         let consecutiveFailures = 0;
-        const MAX_CONSECUTIVE  = 5;
+        const MAX_CONSECUTIVE   = 5;
 
         for (let i = 0; i < candidates.length && bought < need[pos]; i++) {
           const result = await buy(candidates[i]);
@@ -200,32 +218,38 @@ export function useAutoFill(leagueId, squadData, fetchSquad, takenMap = {}, buy,
             bought++;
             consecutiveFailures = 0;
             added++;
-            have[pos]++;  // keep position count accurate for redistribution
+            have[pos]++;
             budgetLeft = result.budget_remaining ?? (budgetLeft - (candidates[i].price || 0));
             myIds.add(candidates[i].id);
+            // C1: keep club counts live so subsequent candidates respect the cap
+            if (candidates[i].club) clubCounts[candidates[i].club] = (clubCounts[candidates[i].club] ?? 0) + 1;
           } else {
-            const errMsg  = result.error ?? '';
+            // B3: check structured error codes before falling back to substring matching
             const errCode = result.code  ?? '';
+            const errMsg  = result.error ?? '';
 
-            if (errMsg.includes('already own')) {
+            // Silent skips — not a consecutive failure
+            if (errMsg.includes('already own') || errCode === 'ALREADY_OWNED') {
               myIds.add(candidates[i].id);
               continue;
             }
+            if (errCode === 'WRONG_TOURNAMENT') continue;
+            if (errCode === 'CLUB_LIMIT')       continue; // shouldn't reach here after preflight
 
             consecutiveFailures++;
             lastBuyError = errMsg;
 
             // Fatal — abort everything
             if (
-              errMsg.includes('Unauthorised') ||
-              errMsg.includes('unauthorized') ||
-              errCode === 'WINDOW_CLOSED'     ||
-              errCode === 'WINDOW_LOCKED'     ||
-              errCode === 'TRANSFER_LOCKED'   ||
+              errCode === 'WINDOW_CLOSED'         ||
+              errCode === 'WINDOW_LOCKED'          ||
+              errCode === 'TRANSFER_LOCKED'        ||
               errCode === 'TRANSFER_LIMIT_REACHED' ||
+              errMsg.includes('Unauthorised')      ||
+              errMsg.includes('unauthorized')      ||
               errMsg.includes('Transfer window closed') ||
-              errMsg.includes('Transfers locked')     ||
-              errMsg.includes('Transfer cost locked') ||
+              errMsg.includes('Transfers locked')       ||
+              errMsg.includes('Transfer cost locked')   ||
               errMsg.includes('Transfer limit reached') ||
               errMsg.includes('Missing required fields')
             ) {
@@ -233,29 +257,37 @@ export function useAutoFill(leagueId, squadData, fetchSquad, takenMap = {}, buy,
               break;
             }
 
-            if (errMsg.includes('Squad is full')) break;
+            if (errCode === 'SQUAD_FULL' || errMsg.includes('Squad is full')) break;
 
-            // Position limit hit — backend confirmed this pos is full.
-            // Update have so the cap is respected, then redistribute the
-            // unmet slots to later positions that still have capacity.
-            if (errMsg.includes('Maximum') && errMsg.includes('players reached')) {
+            // B3+B4: position cap hit — update have, redistribute unmet slots both forward
+            // and backward so a capped earlier position can still absorb overflow.
+            if (errCode === 'POSITION_LIMIT' || (errMsg.includes('Maximum') && errMsg.includes('players reached'))) {
               have[pos] = maxPer[pos] ?? 99;
               const unmet = need[pos] - bought;
               if (unmet > 0) {
-                const posIdx = POS_ORDER.indexOf(pos);
+                const posIdx  = POS_ORDER.indexOf(pos);
                 let remaining = unmet;
+                // Forward pass
                 for (let j = posIdx + 1; j < POS_ORDER.length && remaining > 0; j++) {
-                  const altPos     = POS_ORDER[j];
-                  const altCap     = Math.max(0, (maxPer[altPos] ?? 5) - have[altPos] - need[altPos]);
-                  const altGive    = Math.min(remaining, altCap);
-                  need[altPos]    += altGive;
-                  remaining       -= altGive;
+                  const altPos  = POS_ORDER[j];
+                  const altCap  = Math.max(0, (maxPer[altPos] ?? 5) - have[altPos] - need[altPos]);
+                  const altGive = Math.min(remaining, altCap);
+                  need[altPos] += altGive;
+                  remaining    -= altGive;
+                }
+                // B4: backward pass (e.g. GK still has capacity when DEF overflows)
+                for (let j = posIdx - 1; j >= 0 && remaining > 0; j--) {
+                  const altPos  = POS_ORDER[j];
+                  const altCap  = Math.max(0, (maxPer[altPos] ?? 5) - have[altPos] - need[altPos]);
+                  const altGive = Math.min(remaining, altCap);
+                  need[altPos] += altGive;
+                  remaining    -= altGive;
                 }
               }
               break;
             }
 
-            if (errMsg.includes('Insufficient budget') || errMsg.includes('budget')) {
+            if (errCode === 'INSUFFICIENT_BUDGET' || errMsg.includes('Insufficient budget') || errMsg.includes('budget')) {
               budgetLeft = 0;
               break;
             }
@@ -296,6 +328,7 @@ export function useAutoFill(leagueId, squadData, fetchSquad, takenMap = {}, buy,
       console.error('[useAutoFill]', err);
       setAutoFillMsg('Auto-fill failed — try again');
     } finally {
+      fillingRef.current = false; // C3: release sync lock before state update
       setAutoFilling(false);
       if (clearMsgTimerRef.current) clearTimeout(clearMsgTimerRef.current);
       clearMsgTimerRef.current = setTimeout(() => setAutoFillMsg(null), 7000);
