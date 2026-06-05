@@ -56,7 +56,14 @@ If you set the Triple Captain AND make your captain your Matchday Joker:
 
 ### What it does
 
-The Matchday Joker lets you pick a **16th player** outside your 15-man squad for this matchday only. That player scores ×2 fantasy points, added on top of your regular squad score.
+The Matchday Joker lets you designate **one player** from today's active fixtures to score **×2 fantasy points**, added on top of your regular squad score. The player can be:
+
+- **Someone already in your starting XI** — their points are doubled (they score once at ×2 instead of ×1)
+- **Someone outside your squad entirely** — their points are scored independently at ×2 as a bonus on top of your XI
+
+Both cases give you a ×2 contribution from the designated player. The choice is strategic: do you boost a reliable starter already in your XI, or gamble on a high-upside external player you don't own?
+
+> **Why are own-squad players highlighted?** Because they are a known, controllable option — you already know they're in your starting XI and likely to play. External players are wildcards: more upside, more risk.
 
 ### How to use it
 
@@ -71,28 +78,28 @@ The Matchday Joker lets you pick a **16th player** outside your 15-man squad for
 |---|---|
 | **Once per matchday** | One joker per matchday, per league. The unique constraint on `daily_jokers` prevents a second pick. |
 | **Must be set before deadline** | A trigger (`trg_guard_daily_joker_deadline`) blocks all inserts after `matchday_deadlines.deadline_at` for the active matchday. There is no way around this from the client. |
-| **Not limited to your squad** | You can pick any player from the active matchday's fixtures — they do not need to be in your 15-man squad. |
-| **Ignores country/club limits** | The joker selection is completely independent of squad composition rules. |
-| **Does not need to be in starting XI** | The joker player scores regardless of your lineup selection. They are always counted. |
-| **Scoring effect: ×2** | The joker player's fantasy points are doubled and added to your round total. |
-| **Selling the joker player** | If you sell the joker player from your squad (they are in both your squad and selected as joker), a warning is shown. After selling, the joker boost is cleared for that matchday. |
-| **Multi-day matchdays** | The joker is matchday-scoped, not day-scoped. If your matchday runs across 4-5 days, your joker scores across ALL fixtures in that matchday — including ones played on later days. The deadline gate is tied to the matchday deadline (before the first fixture), so you set the joker once for the whole block. |
+| **Any player from active fixtures** | Can be from your squad or completely external — anyone playing today. |
+| **Ignores country/club limits** | Completely independent of squad composition rules. |
+| **Does not need to be in starting XI** | If you pick an external player, their points are added as a bonus regardless of your lineup. If you pick one of your own starters, their points are doubled in place. |
+| **Scoring effect: ×2** | The joker player's full-matchday fantasy points × 2, added to your round total. |
+| **Selling the joker player** | If you sell the joker player from your squad during the matchday, a warning is shown and the joker boost is cleared. |
+| **Multi-day matchdays** | Matchday-scoped, not day-scoped. If your matchday runs across 4-5 days, the joker scores across ALL fixtures in that matchday. Set it once before the deadline; it applies to the whole block. |
 
 ### Who can you pick as joker?
 
-The joker picker shows all players whose `club` (national team or club team) is playing today. The picker is divided into two sections:
-- **Your squad — playing today**: players from your 15-man squad who are in today's fixtures (highlighted)
-- **All other active players**: everyone else from today's fixtures sorted by price
+The picker shows all players whose team is playing today:
+- **Your squad — playing today** (highlighted at top): your own starting XI candidates — a guaranteed ×2 boost if you know they'll play well
+- **All other active players**: anyone from today's fixtures — potentially higher ceiling, less certainty
 
-There is no restriction on who you can pick.
+There is no restriction. Pick your own star who you expect to dominate, or take a punt on a high-priced external striker you couldn't afford to buy.
 
-### Draft mode (noduplicate/H2H) — important limitation
+### Draft mode (noduplicate/H2H) — important point
 
 **In draft mode, the Matchday Joker does NOT check the no-repeat rule.**
 
-You can pick a player already owned by another manager in your league as your joker. This is intentional — the joker is a bonus scorer that sits outside the squad ownership model. The no-repeat rule applies only to buying players into your 15-man squad, not to the joker pick.
+You can pick a player already owned by another manager in your league as your joker. The no-repeat rule applies only to buying players into your 15-man squad. The joker is personal and does not transfer ownership or affect anyone else's squad.
 
-**Practical implication**: In a 5-manager draft league, all 5 managers could technically pick the same top forward as their joker on the same matchday. There is no server-side guard against this. The joker pick is purely personal — it does not transfer ownership or affect other managers' squads.
+**Practical implication**: In a 5-manager draft league, all 5 managers could pick the same player as their joker on the same matchday. There is no server-side guard against this.
 
 ---
 
@@ -126,7 +133,8 @@ Chips do not multiply each other. The highest applicable multiplier wins.
 | Joker on non-captain player | ×2 |
 | Joker AND captain on same player (no TC) | max(2, 2) = ×2 |
 | Triple Captain + Joker on same player | max(3, 2) = ×3 |
-| Joker on bench player | ×2 regardless (joker always scores) |
+| Joker on bench player (own squad) | ×2 as external bonus — bench players don't score from XI, but joker bonus still applies |
+| Joker on external player (not in squad) | ×2 bonus added on top of XI total |
 
 ---
 

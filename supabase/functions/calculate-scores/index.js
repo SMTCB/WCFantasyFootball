@@ -659,6 +659,18 @@ async function rollupSquads(fixture_id, pointsLookup, tournament_id) {
       pts *= Math.max(captainMult, jokerMult);
       total += pts;
     }
+
+    // Matchday Joker — external player bonus:
+    // If the joker player is NOT in the (auto-subbed) starting XI, add their points ×2
+    // as a bonus on top of the XI total. This is the "16th man" mechanic — a player
+    // outside your squad contributes their stats independently.
+    // If the joker IS in pitchPlayers, they were already scored ×2 in the loop above
+    // (jokerMult=2), so we must not double-count.
+    if (jokerPid && !pitchPlayers.includes(jokerPid)) {
+      const jokerRawPts = fullRoundLookup[jokerPid] ?? 0;
+      total += jokerRawPts * 2;
+    }
+
     // C2: the retired wildcard +10% multiplier is no longer applied.
     total = Math.round(total); // integer points — no decimals in fantasy
 
