@@ -60,10 +60,21 @@ function timeAgo(iso) {
   return `${Math.floor(diff / 86400)}d ago`;
 }
 
-export default function LeagueDetailView({ leagueId, members, currentUser, membersLoading, currentGW = '—', onH2h, onViewManager }) {
+export default function LeagueDetailView({ leagueId, members, currentUser, membersLoading, currentGW = '—', onH2h, onViewManager, h2hEnabled = false }) {
   const [activityFilter, setActivityFilter] = useState('ALL');
   const [entries, setEntries] = useState([]);
+  const [h2hStandings, setH2hStandings] = useState([]); // { user_id, total_h2h_pts, h2h_rank }
   const channelRef = useRef(null);
+
+  // Fetch H2H standings when league is H2H-enabled
+  useEffect(() => {
+    if (!leagueId || !h2hEnabled) return;
+    supabase.rpc('get_h2h_standings', { p_league_id: leagueId })
+      .then(({ data }) => setH2hStandings(data ?? []));
+  }, [leagueId, h2hEnabled]);
+
+  // Build user_id → h2h_pts lookup
+  const h2hMap = Object.fromEntries(h2hStandings.map(r => [r.user_id, r.total_h2h_pts ?? 0]));
 
   useEffect(() => {
     if (!leagueId) return;
@@ -172,9 +183,9 @@ export default function LeagueDetailView({ leagueId, members, currentUser, membe
       <div className="hidden lg:grid" style={{ flex: 1, gridTemplateColumns: '1fr 400px', minHeight: 0 }}>
         {/* Standings table */}
         <div data-tour="league-standings" style={{ display: 'flex', flexDirection: 'column', borderRight: '1px solid var(--rule)' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '48px 1fr 80px 100px', gap: 14, padding: '12px 24px', borderBottom: '1px solid var(--rule)', color: 'var(--mute)' }}>
-            {['#', 'MANAGER', 'TOT', ''].map((h, i) => (
-              <div key={i} style={{ fontFamily: MONO, fontSize: 9, textAlign: i >= 2 && i < 3 ? 'right' : 'left' }}>{h}</div>
+          <div style={{ display: 'grid', gridTemplateColumns: h2hEnabled ? '48px 1fr 80px 60px 100px' : '48px 1fr 80px 100px', gap: 14, padding: '12px 24px', borderBottom: '1px solid var(--rule)', color: 'var(--mute)' }}>
+            {(h2hEnabled ? ['#', 'MANAGER', 'TOT', 'H2H', ''] : ['#', 'MANAGER', 'TOT', '']).map((h, i) => (
+              <div key={i} style={{ fontFamily: MONO, fontSize: 9, textAlign: (h2hEnabled ? i >= 2 && i < 4 : i >= 2 && i < 3) ? 'right' : 'left' }}>{h}</div>
             ))}
           </div>
           <div style={{ flex: 1, overflow: 'auto' }}>
@@ -188,7 +199,7 @@ export default function LeagueDetailView({ leagueId, members, currentUser, membe
               const hue = mgrHue(m.users?.username || '');
               return (
                 <div key={m.user_id} style={{
-                  display: 'grid', gridTemplateColumns: '48px 1fr 80px 100px', gap: 14, alignItems: 'center',
+                  display: 'grid', gridTemplateColumns: h2hEnabled ? '48px 1fr 80px 60px 100px' : '48px 1fr 80px 100px', gap: 14, alignItems: 'center',
                   padding: '12px 24px', borderBottom: '1px solid var(--rule)',
                   borderLeft: isMe ? '2px solid var(--cyan)' : '2px solid transparent',
                   background: isMe ? 'rgba(0,180,216,.04)' : 'transparent',
@@ -206,6 +217,11 @@ export default function LeagueDetailView({ leagueId, members, currentUser, membe
                     </div>
                   </div>
                   <div style={{ textAlign: 'right', fontFamily: DISPLAY, fontSize: 13 }}>{Math.round(m.total_points ?? 0)}</div>
+                  {h2hEnabled && (
+                    <div style={{ textAlign: 'right', fontFamily: DISPLAY, fontSize: 13, color: 'var(--gold)' }}>
+                      {h2hMap[m.user_id] ?? '—'}
+                    </div>
+                  )}
                   <div style={{ display: 'flex', gap: 4, justifyContent: 'flex-end' }}>
                     {!isMe && (
                       <>
@@ -352,6 +368,11 @@ export default function LeagueDetailView({ leagueId, members, currentUser, membe
               <div style={{ textAlign: 'right' }}>
                 <div style={{ fontFamily: DISPLAY, fontSize: 14 }}>{Math.round(m.total_points ?? 0)}</div>
                 <div style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.14em', marginTop: 2 }}>TOT</div>
+                {h2hEnabled && (
+                  <div style={{ fontFamily: MONO, fontSize: 9, color: 'var(--gold)', letterSpacing: '.12em', marginTop: 1 }}>
+                    {h2hMap[m.user_id] ?? '—'} H2H
+                  </div>
+                )}
               </div>
             </div>
           );

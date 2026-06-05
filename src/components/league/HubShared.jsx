@@ -113,6 +113,7 @@ export function HubActionBar({ onManageSquad, onMarket }) {
 export function HubTabs({ active = 'leaderboard', onTab, isCommissioner = false, unreadChat = 0, notifyBets = false, notifyAuctions = false, h2hEnabled = false }) {
   const tabs = [
     { id: 'leaderboard', label: 'LEADERBOARD' },
+    ...(h2hEnabled ? [{ id: 'h2h', label: 'H2H ⚔️' }] : []),
     { id: 'recap',       label: 'RECAP' },
     { id: 'frontpage',   label: 'FRONTPAGE' },
     { id: 'bets',        label: 'BETS',     notify: notifyBets },
@@ -120,7 +121,6 @@ export function HubTabs({ active = 'leaderboard', onTab, isCommissioner = false,
     { id: 'auctions',    label: 'AUCTIONS', notify: notifyAuctions },
     { id: 'chat',        label: 'CHAT',     count: unreadChat },
     { id: 'stats',       label: 'STATS' },
-    ...(h2hEnabled ? [{ id: 'h2h', label: 'H2H ⚔️' }] : []),
     ...(isCommissioner ? [{ id: 'admin', label: '⚙ ADMIN', dim: true }] : []),
   ];
 
@@ -290,6 +290,7 @@ export function HubLeagueHeader({ leagueName = 'LOADING…', memberCount = 0, gw
 export function HubTabPills({ active = 'leaderboard', onTab, isCommissioner = false, unreadChat = 0, notifyBets = false, notifyAuctions = false, h2hEnabled = false }) {
   const tabs = [
     { id: 'leaderboard', label: 'BOARD' },
+    ...(h2hEnabled ? [{ id: 'h2h', label: 'H2H ⚔️' }] : []),
     { id: 'recap',       label: 'RECAP' },
     { id: 'frontpage',   label: 'FRONTPAGE' },
     { id: 'bets',        label: 'BETS',     notify: notifyBets },
@@ -297,7 +298,6 @@ export function HubTabPills({ active = 'leaderboard', onTab, isCommissioner = fa
     { id: 'auctions',    label: 'AUCTIONS', notify: notifyAuctions },
     { id: 'chat',        label: 'CHAT',     count: unreadChat },
     { id: 'stats',       label: 'STATS' },
-    ...(h2hEnabled ? [{ id: 'h2h', label: 'H2H ⚔️' }] : []),
     ...(isCommissioner ? [{ id: 'admin', label: 'ADMIN' }] : []),
   ];
   return (
