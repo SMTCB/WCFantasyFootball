@@ -110,7 +110,7 @@ export function HubActionBar({ onManageSquad, onMarket }) {
 }
 
 // 8-tab hub navigation
-export function HubTabs({ active = 'leaderboard', onTab, isCommissioner = false, unreadChat = 0, notifyBets = false, notifyAuctions = false, h2hEnabled = false }) {
+export function HubTabs({ active = 'leaderboard', onTab, isCommissioner = false, unreadChat = 0, notifyBets = false, notifyAuctions = false, h2hEnabled = false, isDraftLeague = false }) {
   const tabs = [
     { id: 'leaderboard', label: 'LEADERBOARD' },
     ...(h2hEnabled ? [{ id: 'h2h', label: 'H2H ⚔️' }] : []),
@@ -118,7 +118,9 @@ export function HubTabs({ active = 'leaderboard', onTab, isCommissioner = false,
     { id: 'frontpage',   label: 'FRONTPAGE' },
     { id: 'bets',        label: 'BETS',     notify: notifyBets },
     { id: 'betting',     label: 'BETTING' },
-    { id: 'auctions',    label: 'AUCTIONS', notify: notifyAuctions },
+    // Auctions and trades are draft-only mechanics — Classic leagues allow shared
+    // player ownership so there is nothing to bid on or swap exclusively.
+    ...(isDraftLeague ? [{ id: 'auctions', label: 'AUCTIONS', notify: notifyAuctions }] : []),
     { id: 'chat',        label: 'CHAT',     count: unreadChat },
     { id: 'stats',       label: 'STATS' },
     ...(isCommissioner ? [{ id: 'admin', label: '⚙ ADMIN', dim: true }] : []),
@@ -287,7 +289,7 @@ export function HubLeagueHeader({ leagueName = 'LOADING…', memberCount = 0, gw
 }
 
 // Mobile horizontal-scroll hub tab pills — replaces HubTabs on mobile viewports.
-export function HubTabPills({ active = 'leaderboard', onTab, isCommissioner = false, unreadChat = 0, notifyBets = false, notifyAuctions = false, h2hEnabled = false }) {
+export function HubTabPills({ active = 'leaderboard', onTab, isCommissioner = false, unreadChat = 0, notifyBets = false, notifyAuctions = false, h2hEnabled = false, isDraftLeague = false }) {
   const tabs = [
     { id: 'leaderboard', label: 'BOARD' },
     ...(h2hEnabled ? [{ id: 'h2h', label: 'H2H ⚔️' }] : []),
@@ -295,7 +297,7 @@ export function HubTabPills({ active = 'leaderboard', onTab, isCommissioner = fa
     { id: 'frontpage',   label: 'FRONTPAGE' },
     { id: 'bets',        label: 'BETS',     notify: notifyBets },
     { id: 'betting',     label: 'BETTING' },
-    { id: 'auctions',    label: 'AUCTIONS', notify: notifyAuctions },
+    ...(isDraftLeague ? [{ id: 'auctions', label: 'AUCTIONS', notify: notifyAuctions }] : []),
     { id: 'chat',        label: 'CHAT',     count: unreadChat },
     { id: 'stats',       label: 'STATS' },
     ...(isCommissioner ? [{ id: 'admin', label: 'ADMIN' }] : []),
