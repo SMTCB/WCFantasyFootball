@@ -416,7 +416,7 @@ export default function MarketScreen() {
     const isJoker   = todayJokerId === player.id;
     const warnings  = [];
     if (isCaptain) warnings.push('This player is your captain — selling them removes the armband.');
-    if (isJoker)   warnings.push('This player is your Daily Joker — selling voids today\'s boost.');
+    if (isJoker)   warnings.push('This player is your Matchday Joker — selling voids today\'s boost.');
 
     setConfirm({
       title:        `Sell ${player.name}?`,
