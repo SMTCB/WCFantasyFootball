@@ -168,7 +168,13 @@ export default function LeagueScreen() {
   // Commissioner state + handlers consolidated into a single hook.
   // The whole object is passed as a prop to CommissionerPanel.
   // fetchOpenBets is also called inline when the admin tab becomes active.
-  const commissioner = useCommissioner(activeLeague?.league_id, activeLeague?.leagues?.tournament_id);
+  const commissioner = useCommissioner(
+    activeLeague?.league_id,
+    activeLeague?.leagues?.tournament_id,
+    // Bug #1: after setting a draft deadline the panel must refresh so the
+    // season stepper advances from stage 1 → stage 2.
+    () => activeLeague?.league_id && loadLeagueById(activeLeague.league_id),
+  );
   const { fetchOpenBets } = commissioner;
 
   // Create form state
@@ -491,7 +497,18 @@ export default function LeagueScreen() {
         .maybeSingle();
       setMySquadId(squadRow?.id ?? null);
       setMySquadBudget(squadRow?.budget_remaining ?? null);
-      setMySquadPlayerCount(squadRow ? (squadRow.players?.length ?? 0) : null);
+      // Bug #3: verify player count against the DB rather than trusting the raw
+      // array length — deleted players leave ghost IDs that inflate the count.
+      const rawPlayerIds = squadRow?.players ?? [];
+      let validPlayerCount = rawPlayerIds.length;
+      if (rawPlayerIds.length > 0) {
+        const { count } = await supabase
+          .from('players')
+          .select('id', { count: 'exact', head: true })
+          .in('id', rawPlayerIds);
+        if (count !== null) validPlayerCount = count;
+      }
+      setMySquadPlayerCount(squadRow ? validPlayerCount : null);
 
       // Build user→squadId map for trade target lookup
       const { data: allSquads } = await supabase
@@ -1154,16 +1171,47 @@ export default function LeagueScreen() {
          {/* â”€â”€ VIEWS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
 
          {view === 'detail' && (
-           <LeagueDetailView
-             leagueId={activeLeague?.league_id}
-             members={members}
-             currentUser={currentUser}
-             membersLoading={membersLoading}
-             currentGW={currentGW}
-             onH2h={null}
-             onViewManager={(mgr) => { setManagerTeamView(mgr); loadManagerRoster(mgr.user_id); }}
-             h2hEnabled={h2hEnabled}
-           />
+           <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
+             {/* Bug #4: Persistent pending-trades notice so managers know where
+                 to find the proposals they sent or received. Only rendered when
+                 at least one proposal is active. */}
+             {(incomingTrades.length > 0 || outgoingTrades.length > 0) && (
+               <div style={{
+                 display: 'flex', alignItems: 'center', gap: 10,
+                 padding: '9px 16px',
+                 background: 'rgba(224,168,0,0.07)',
+                 borderBottom: '1px solid rgba(224,168,0,0.25)',
+                 flexShrink: 0,
+               }}>
+                 <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 9, letterSpacing: '.22em', color: 'var(--gold)' }}>
+                   ⇄ TRADE PROPOSALS
+                 </span>
+                 {incomingTrades.length > 0 && (
+                   <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 9, letterSpacing: '.16em', color: 'var(--positive)' }}>
+                     {incomingTrades.length} INCOMING
+                   </span>
+                 )}
+                 {outgoingTrades.length > 0 && (
+                   <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 9, letterSpacing: '.16em', color: 'var(--mute)' }}>
+                     {outgoingTrades.length} SENT
+                   </span>
+                 )}
+                 <span style={{ fontFamily: "'Archivo', sans-serif", fontSize: 10, color: 'var(--mute)', flex: 1 }}>
+                   · Tap a manager&apos;s card to accept, decline or cancel
+                 </span>
+               </div>
+             )}
+             <LeagueDetailView
+               leagueId={activeLeague?.league_id}
+               members={members}
+               currentUser={currentUser}
+               membersLoading={membersLoading}
+               currentGW={currentGW}
+               onH2h={null}
+               onViewManager={(mgr) => { setManagerTeamView(mgr); loadManagerRoster(mgr.user_id); }}
+               h2hEnabled={h2hEnabled}
+             />
+           </div>
          )}
          {view === 'recap' && (
            <RecapView

@@ -28,7 +28,7 @@ async function invokeEdgeFunction(fnName, body) {
 }
 
 
-export function useCommissioner(leagueId, tournamentId) {
+export function useCommissioner(leagueId, tournamentId, onLeagueUpdated) {
   // ── Shared state ─────────────────────────────────────────────────────────
   const [commLoading, setCommLoading] = useState(false);
   const [commMsg,     setCommMsg]     = useState(null);
@@ -128,7 +128,9 @@ export function useCommissioner(leagueId, tournamentId) {
       .eq('id', leagueId);
     if (error) throw new Error(error.message);
     setCommMsg({ type: 'ok', text: 'Draft deadline set.' });
-  }), [commAction, leagueId, draftDeadline]);
+    // Refresh parent league data so the season stepper advances to stage 2.
+    onLeagueUpdated?.();
+  }), [commAction, leagueId, draftDeadline, onLeagueUpdated]);
 
   // ── Run draft allocation ──────────────────────────────────────────────────
   const triggerDraftAllocation = useCallback(() => commAction(async () => {
