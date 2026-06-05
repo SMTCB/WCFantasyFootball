@@ -589,8 +589,11 @@ Always create a new file — never modify existing migrations.
 | 133 | `133_drop_draft_deadline_trigger.sql` | Pilot session: drop draft_deadline_check trigger on draft_submissions — deadline is now informational only; lottery is always manually triggered by commissioner; run-draft-lottery cron disabled |
 | 134 | `134_resolve_bet_commissioner_override.sql` | Pilot session: resolve_bet reordered — commissioner check now runs BEFORE BET_STILL_OPEN guard; commissioners can resolve any bet at any time regardless of deadline; BET_STILL_OPEN only blocks the auto-resolve cron (auth.uid() IS NULL) |
 | 135 | `135_transfer_window_matchday_aware.sql` | Pilot session: get_transfer_window_status now closes the window for the full matchday duration. Reopen time = MAX(kickoff_at for matchday) + 2h match buffer + 6h scoring window (8h total from last kickoff). Falls back to deadline + 6h if no fixtures found for matchday_id |
+| 136 | `136_h2h_competition.sql` | Session H2H: Draft+H2H mode — `h2h_enabled` on leagues; `h2h_schedule` table (RLS); `generate_h2h_schedule` RPC (Berger circle round-robin); `get_h2h_standings` RPC; updated `create_league` with `p_h2h_enabled` param + H2H config seeding (5/2/0) |
+| 137 | `137_fix_generate_h2h_schedule.sql` | Session H2H bugfix: `generate_h2h_schedule` used `ORDER BY created_at` on `league_members` (no such column) — fixed to `ORDER BY user_id` |
+| 138 | `138_fix_h2h_standings_ambiguity.sql` | Session H2H bugfix: `get_h2h_standings` had ambiguous `user_id` column reference in auth check — fixed with explicit table alias `lm.user_id` |
 
-**Next migration**: `136_`
+**Next migration**: `139_`
 
 **Key pipeline facts (2026-06-05):**
 - `calculate-scores` uses `scoring_rules` table (not `scoring_templates`) keyed by `tournament_id`
@@ -631,6 +634,7 @@ Always create a new file — never modify existing migrations.
 - **Transfer window** (migration 135): `get_transfer_window_status` closes for the full matchday duration. Reopen = `MAX(kickoff_at for current matchday) + 2h + 6h`. Both WC/cup leagues (matchday-deadline path) and classic leagues without manual `transfer_windows` rows use this automatic logic. The 8h total from last kickoff is the natural fallback for stuck fixtures.
 - **AUTH_ENABLED** (pilot session): `AuthContext` now uses `VITE_AUTH_ENABLED === 'true'` only — the previous `|| import.meta.env.PROD` fallback was removed. Vercel production has `VITE_AUTH_ENABLED=true` set explicitly. CI E2E builds with `VITE_AUTH_ENABLED=false` now correctly use demo mode.
 - **Known scoring approximations (documented, not bugs to fix pre-pilot)**: `penalty_saved` is inferred from opposing *missed* penalties (no save-specific Forza signal — can over-credit on posts/shootouts; low group-stage impact); starter minutes default to 90 (extra-time not represented); abandoned/cancelled matches map to `finished`. `set_lineup`'s point deduction is an interim value that the next `calculate-scores` recompute overwrites correctly.
+- **Draft + H2H mode** (migrations 136–138, PRs #362–#364): `leagues.h2h_enabled boolean DEFAULT false`. `h2h_schedule` table stores both schedule (scores null) and results (scores + h2h_pts + resolved_at). H2H scoring config in `league_config`: `h2h_win_pts` (default 5), `h2h_draw_pts` (default 2), `h2h_loss_pts` (default 0). `generate_h2h_schedule(p_league_id, p_start_matchday_id)` — commissioner-only, Berger circle round-robin, handles odd manager count (bye = auto-win), sorts members by `user_id`. `get_h2h_standings(p_league_id)` — returns W/D/L/pts/rank. H2H resolution runs inside `calculate-scores` after `rollupSquads` gated on `roundComplete = true` (all round fixtures finished) — safe for multi-day WC matchdays. `create_league` updated with `p_h2h_enabled boolean DEFAULT false`. UI: `leagueFormat === 'noduplicate_h2h'` maps to `p_format='noduplicate' + p_h2h_enabled=true`. H2H tab is slot 2 (after BOARD). Leaderboard and Recap show H2H pts column (gold) next to TOTAL when h2h_enabled. Frontpage shows scoring + H2H activity entries in a "LATEST SCORES & H2H RESULTS" section. Architecture doc: `docs/architecture/H2H_COMPETITION_DESIGN.md`.
 
 ---
 

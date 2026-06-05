@@ -1,11 +1,35 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-06-05 (pilot smoke test session — migrations 129–135, PRs #325–#360; next migration 136_)  
-**E2E Test Suite**: `platform.spec.js` (36 tests × 2 browsers) passing in CI ✅ — AUTH_ENABLED || PROD bug fixed (PR #360)  
-**Full Playbook Run**: `E2E_TEST_PLAYBOOK.md` v2.0 — all flows confirmed (D-4a/b, E-4, D-3 ✅; F-2 PASS — form strip satisfies per-stat breakdown criterion)  
+**Last Updated**: 2026-06-05 (H2H session — migrations 136–138, PRs #362–#364; next migration 139_)  
+**E2E Test Suite**: `platform.spec.js` (36 tests × 2 browsers) passing in CI ✅  
+**Full Playbook Run**: `E2E_TEST_PLAYBOOK.md` v2.0 — all flows confirmed  
 **🟢 LAUNCH READY**: No critical (P0/P1) bugs open. All game mechanics functional. WC kick-off 2026-06-11.  
 **Live App**: https://wc-fantasy-football.vercel.app  
 **WC Kick-off**: 2026-06-11 19:00 UTC (Mexico vs South Africa)
+
+---
+
+## ✅ H2H Session (2026-06-05) — Draft + H2H Competition Mode (PRs #362–#364)
+
+### Feature: Draft + H2H parallel competition
+- **Migration 136**: `h2h_enabled` on leagues; `h2h_schedule` table + RLS; `generate_h2h_schedule` RPC (Berger circle round-robin, handles odd managers with bye); `get_h2h_standings` RPC; updated `create_league` with `p_h2h_enabled` param; H2H config keys seeded (5/2/0 default)
+- **Migration 137**: Bug fix — `generate_h2h_schedule` used `ORDER BY created_at` on `league_members` (no such column); fixed to `ORDER BY user_id`
+- **Migration 138**: Bug fix — `get_h2h_standings` had ambiguous `user_id` reference in auth check; fixed with explicit table alias
+- **calculate-scores**: H2H resolution hook added — fires after `rollupSquads` gated on `roundComplete = true`; writes gazette `activity` entry per league per matchday
+- **Frontend (PR #362)**: Third league creation card (Draft + H2H); `DRAFT · H2H` mode badge; H2H tab (slot 2, after BOARD); H2HView (standings + schedule + empty state); Admin H2H Calendar section
+- **Frontend (PR #364)**: H2H pts column (gold) in Leaderboard and Recap; H2H tab moved to position 2; Frontpage now shows scoring + H2H gazette entries in "LATEST SCORES & H2H RESULTS" section
+
+### E2E Test (tournament 623, 5 managers, 2 matchdays — real Forza API)
+- Fixture data: 623-r7 (France/CIV/Mexico/Serbia/Sweden/Greece) + 623-r5 (Germany/Switzerland/USA, May 31 fixtures)
+- Squad compositions: TestComm (Mexico+Germany), TestMgr2 (France+USA), TestMgr3 (CIV+Swiss), TestMgr4 (Serbia), User (Sweden+Greece)
+- Auto-subs and captain reassignment verified (captain moved to Deniz Undav when Vásquez auto-subbed out)
+- H2H schedule: round-robin, 2 fixtures + 1 bye per matchday ✓
+- Fantasy scores: TestComm 82 total (57 r5 + 25 r7), TestMgr3 48 (9+28), TestMgr2 35 (17+18), User 26, TestMgr4 25
+- H2H standings: TestMgr2 10 pts (2W), TestMgr3 10 pts (2W), TestComm 5 (1W-1L), User 5 (1W-1L), TestMgr4 0 (2L)
+- Gazette entries written for each matchday ✓; Frontpage display confirmed ✓
+
+### Architecture docs
+- `docs/architecture/H2H_COMPETITION_DESIGN.md` — full system design, DB schema, admin RPC, scoring hook, frontend spec
 
 ---
 
