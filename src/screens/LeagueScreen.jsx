@@ -185,6 +185,7 @@ export default function LeagueScreen() {
   const [joinCode,     setJoinCode]     = useState(() => searchParams.get('joinCode') ?? '');
   const [joinLoading,  setJoinLoading]  = useState(false);
   const [joinError,    setJoinError]    = useState('');
+  const [frontpageActivityEntries, setFrontpageActivityEntries] = useState([]);
 
   // Chat input state lives in ChatView — not needed here
   const { messages, loading: chatLoading, unreadCount, typingUsers, sendMessage, editMessage, deleteMessage, broadcastTyping, markChatAsRead, scrollEndRef } = useChatMessages(activeLeague?.league_id);
@@ -550,6 +551,19 @@ export default function LeagueScreen() {
     if (tabParam) setView(tabToView(tabParam));
   // Only apply on initial league load (activeLeague change), not on every searchParam change
   // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeLeague?.league_id]);
+
+  // Fetch recent activity entries for Frontpage (scores + H2H results)
+  useEffect(() => {
+    const lid = activeLeague?.league_id;
+    if (!lid) return;
+    supabase.from('gazette_entries')
+      .select('id, entry_type, headline, bullets, published_at')
+      .eq('league_id', lid)
+      .eq('entry_type', 'activity')
+      .order('published_at', { ascending: false })
+      .limit(6)
+      .then(({ data }) => setFrontpageActivityEntries(data ?? []));
   }, [activeLeague?.league_id]);
 
   // U42: Auto-clear only bet-type notification badge when viewing bets tab
@@ -1148,6 +1162,7 @@ export default function LeagueScreen() {
              currentGW={currentGW}
              onH2h={null}
              onViewManager={(mgr) => { setManagerTeamView(mgr); loadManagerRoster(mgr.user_id); }}
+             h2hEnabled={h2hEnabled}
            />
          )}
          {view === 'recap' && (
@@ -1156,6 +1171,7 @@ export default function LeagueScreen() {
              tournamentId={activeLeague?.leagues?.tournament_id}
              members={members}
              currentUser={currentUser}
+             h2hEnabled={h2hEnabled}
            />
          )}
          {view === 'frontpage' && (() => {
@@ -1276,6 +1292,38 @@ export default function LeagueScreen() {
                      ftSerif={ftSerif} ftMono={ftMono}
                      ftInk={FT_INK} ftMute={FT_MUTE} ftRed={FT_RED} ftRule={FT_RULE}
                    />
+
+                   {/* Recent scores + H2H results — activity entries */}
+                   {frontpageActivityEntries.length > 0 && (() => {
+                     const h2hEntries = frontpageActivityEntries.filter(e => e.headline?.startsWith('⚔️'));
+                     const scoreEntries = frontpageActivityEntries.filter(e => !e.headline?.startsWith('⚔️'));
+                     const toShow = h2hEnabled
+                       ? [...h2hEntries.slice(0, 2), ...scoreEntries.slice(0, 2)]
+                       : scoreEntries.slice(0, 3);
+                     if (toShow.length === 0) return null;
+                     return (
+                       <div style={{ marginTop: 24, borderTop: `2px solid ${FT_INK}`, paddingTop: 20 }}>
+                         <div style={{ fontFamily: ftMono, fontSize: 10, letterSpacing: '.22em', color: FT_RED, marginBottom: 14 }}>
+                           {h2hEnabled ? 'LATEST SCORES & H2H RESULTS' : 'LATEST SCORES'}
+                         </div>
+                         <div style={{ display: 'grid', gridTemplateColumns: `repeat(${Math.min(toShow.length, 2)}, 1fr)`, gap: 20 }}>
+                           {toShow.map(e => (
+                             <div key={e.id} style={{ borderLeft: `3px solid ${FT_INK}`, paddingLeft: 14 }}>
+                               <div style={{ fontFamily: ftMono, fontSize: 9, letterSpacing: '.18em', color: e.headline?.startsWith('⚔️') ? '#C07000' : FT_MUTE, marginBottom: 6 }}>
+                                 {e.headline?.startsWith('⚔️') ? 'H2H RESULT' : 'SCORES'}
+                               </div>
+                               <div style={{ fontFamily: ftSerif, fontWeight: 700, fontSize: 13, color: FT_INK, marginBottom: 8, lineHeight: 1.3 }}>
+                                 {e.headline}
+                               </div>
+                               {Array.isArray(e.bullets) && e.bullets.slice(0, 4).map((b, i) => (
+                                 <div key={i} style={{ fontFamily: ftMono, fontSize: 10, color: FT_MUTE, marginBottom: 3, letterSpacing: '.06em' }}>{b}</div>
+                               ))}
+                             </div>
+                           ))}
+                         </div>
+                       </div>
+                     );
+                   })()}
 
                    <div style={{ height: 1, background: FT_INK, margin: '24px 0 12px' }} />
                    <div style={{ display: 'flex', justifyContent: 'space-between', fontFamily: ftMono, fontSize: 9, letterSpacing: '.22em', color: FT_MUTE }}>

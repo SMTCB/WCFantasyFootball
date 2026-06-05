@@ -107,7 +107,7 @@ function PlayerBreakdown({ breakdown }) {
 }
 
 // ── Main component ─────────────────────────────────────────────────────────────
-export default function RecapView({ leagueId, tournamentId, members, currentUser }) {
+export default function RecapView({ leagueId, tournamentId, members, currentUser, h2hEnabled = false }) {
   const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' && window.innerWidth < 1024);
   useEffect(() => {
     const h = () => setIsMobile(window.innerWidth < 1024);
@@ -123,6 +123,16 @@ export default function RecapView({ leagueId, tournamentId, members, currentUser
   const [loadingScores,    setLoadingScores]    = useState(false);
   const [breakdown,        setBreakdown]        = useState({});
   const [expandedUser,     setExpandedUser]     = useState(null);
+  const [h2hStandings,     setH2hStandings]     = useState([]);
+
+  // Fetch H2H standings when league is H2H-enabled
+  useEffect(() => {
+    if (!leagueId || !h2hEnabled) return;
+    supabase.rpc('get_h2h_standings', { p_league_id: leagueId })
+      .then(({ data }) => setH2hStandings(data ?? []));
+  }, [leagueId, h2hEnabled]);
+
+  const h2hMap = Object.fromEntries(h2hStandings.map(r => [r.user_id, r.total_h2h_pts ?? 0]));
 
   // ── Effect 1: load matchday list (runs once on mount per league/tournament) ─
   useEffect(() => {
@@ -306,7 +316,7 @@ export default function RecapView({ leagueId, tournamentId, members, currentUser
 
     const rowStyle = {
       display: 'grid',
-      gridTemplateColumns: desktop ? '40px 1fr 80px 80px 24px' : '28px auto 1fr auto',
+      gridTemplateColumns: desktop ? (h2hEnabled ? '40px 1fr 80px 80px 60px 24px' : '40px 1fr 80px 80px 24px') : '28px auto 1fr auto',
       gap: desktop ? 12 : 10,
       alignItems: 'center',
       padding: desktop ? '11px 24px' : '10px 18px',
@@ -332,6 +342,11 @@ export default function RecapView({ leagueId, tournamentId, members, currentUser
             <div style={{ textAlign: 'right', fontFamily: MONO, fontSize: 11, color: 'var(--mute)' }}>
               {totalPts != null ? Math.round(totalPts) : '—'}
             </div>
+            {h2hEnabled && (
+              <div style={{ textAlign: 'right', fontFamily: MONO, fontSize: 11, color: 'var(--gold)' }}>
+                {h2hMap[s.user_id] ?? '—'}
+              </div>
+            )}
             <div style={{ textAlign: 'right', fontFamily: MONO, fontSize: 12, color: 'var(--mute)' }}>{isOpen ? '−' : '+'}</div>
           </div>
         ) : (
@@ -341,7 +356,7 @@ export default function RecapView({ leagueId, tournamentId, members, currentUser
             <div style={{ minWidth: 0 }}>
               <span style={{ fontFamily: DISPLAY, fontSize: 13, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', display: 'block' }}>{name}</span>
               <span style={{ fontFamily: MONO, fontSize: 8, color: 'var(--mute)', letterSpacing: '.12em' }}>
-                TOTAL {totalPts !== null ? Math.round(totalPts) : '—'} · TAP FOR BREAKDOWN
+                TOTAL {totalPts !== null ? Math.round(totalPts) : '—'}{h2hEnabled ? ` · H2H ${h2hMap[s.user_id] ?? '—'}` : ''} · TAP FOR BREAKDOWN
               </span>
             </div>
             <div style={{ textAlign: 'right' }}>
@@ -386,8 +401,8 @@ export default function RecapView({ leagueId, tournamentId, members, currentUser
           right={<span style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)' }}>CLICK ROW FOR BREAKDOWN</span>}
         />
         <MatchdayNav allMatchdays={allMatchdays} selected={selectedMatchday} onSelect={setSelectedMatchday} />
-        <div style={{ display: 'grid', gridTemplateColumns: '40px 1fr 80px 80px 24px', gap: 12, padding: '10px 24px', borderBottom: '1px solid var(--rule)', flexShrink: 0 }}>
-          {['GW#', 'MANAGER', 'GW PTS', 'TOTAL', ''].map((h, i) => (
+        <div style={{ display: 'grid', gridTemplateColumns: h2hEnabled ? '40px 1fr 80px 80px 60px 24px' : '40px 1fr 80px 80px 24px', gap: 12, padding: '10px 24px', borderBottom: '1px solid var(--rule)', flexShrink: 0 }}>
+          {(h2hEnabled ? ['GW#', 'MANAGER', 'GW PTS', 'TOTAL', 'H2H', ''] : ['GW#', 'MANAGER', 'GW PTS', 'TOTAL', '']).map((h, i) => (
             <div key={i} style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', textAlign: i >= 2 ? 'right' : 'left' }}>{h}</div>
           ))}
         </div>
