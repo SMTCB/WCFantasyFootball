@@ -109,42 +109,56 @@ export function useAutoFill(leagueId, squadData, fetchSquad, takenMap = {}, buy,
       tournamentId = leagueRow?.tournament_id ?? null;
 
       // ── Count current positions ────────────────────────────────────────
-      // Parse and normalize position strings from fetched player data
-      console.log('[useAutoFill] Starting position count for', playerObjects.length, 'players');
-      const have = { GK: 0, DEF: 0, MID: 0, FWD: 0 };
+      // Normalize ANY position value to standard format (GK/DEF/MID/FWD)
+      const normalizePosition = (rawPos) => {
+        if (!rawPos) return null;
+        const upper = String(rawPos).toUpperCase().trim();
 
-      // Log all player positions for diagnosis
-      const positionDump = playerObjects.map(p => ({
-        id: p.id?.substring(0, 8),
-        pos: p.position,
-        posUpper: String(p.position ?? 'NULL').toUpperCase()
-      }));
-      console.log('[useAutoFill] Player positions:', positionDump);
+        // Direct matches
+        if (['GK', 'DEF', 'MID', 'FWD'].includes(upper)) return upper;
+
+        // Common variants
+        if (upper === 'FW') return 'FWD';
+        if (upper === 'DF') return 'DEF';
+        if (upper === 'MF') return 'MID';
+
+        // Full names
+        if (upper.includes('GOAL')) return 'GK';
+        if (upper.includes('DEFEND') || upper.includes('BACK')) return 'DEF';
+        if (upper.includes('MID')) return 'MID';
+        if (upper.includes('FORWARD') || upper.includes('STRIKER') || upper.includes('ATTACK')) return 'FWD';
+
+        // Abbreviations
+        if (upper === 'G') return 'GK';
+        if (upper === 'D') return 'DEF';
+        if (upper === 'M') return 'MID';
+        if (upper === 'F') return 'FWD';
+
+        return null; // Unrecognized
+      };
+
+      const have = { GK: 0, DEF: 0, MID: 0, FWD: 0 };
+      const unrecognized = [];
 
       for (const p of playerObjects) {
         if (typeof p !== 'object' || !p) continue;
-        if (!p.position) {
-          console.error(`[useAutoFill] MISSING POSITION: Player ${p.id}`, p);
-          continue;
-        }
 
-        // Normalize position: handle 'FW' → 'FWD', lowercase → uppercase
-        let pos = String(p.position).toUpperCase();
-        if (pos === 'FW') pos = 'FWD';
-
-        // Validate position is recognized
-        if (have[pos] !== undefined) {
-          have[pos]++;
+        const normalized = normalizePosition(p.position);
+        if (normalized) {
+          have[normalized]++;
         } else {
-          console.error(`[useAutoFill] UNRECOGNIZED POSITION "${p.position}" for player ${p.id}`);
+          unrecognized.push({ id: p.id, pos: p.position });
         }
       }
 
-      // Debug: log position counts for diagnostics
+      // If any positions couldn't be recognized, log them (this is critical info)
+      if (unrecognized.length > 0) {
+        console.error('[useAutoFill] ⚠️ UNRECOGNIZED POSITIONS:', unrecognized);
+      }
+
       const totalCounted = Object.values(have).reduce((a, b) => a + b, 0);
-      console.error('[useAutoFill] Position counts:', have, '| Total counted:', totalCounted, '| Expected:', playerObjects.length);
       if (totalCounted !== playerObjects.length) {
-        console.error(`[useAutoFill] ⚠️ MISMATCH: counted ${totalCounted}, have ${playerObjects.length} objects`);
+        console.error(`[useAutoFill] ⚠️ COUNT MISMATCH: counted ${totalCounted}, expected ${playerObjects.length}`);
       }
 
       const minPer = cfg.minFormation ?? { GK: 1, DEF: 3, MID: 2, FWD: 1 };
