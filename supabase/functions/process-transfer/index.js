@@ -110,21 +110,23 @@ Deno.serve(async (req) => {
       }, 403, corsHeaders);
     }
 
-    // 2. Reject if any fixture for THIS LEAGUE'S TOURNAMENT is currently live.
-    //    Scoping to tournamentId prevents unrelated matches (e.g. other nations in a
-    //    large tournament, or other competitions entirely) from blocking transfers in
-    //    this league. Without the filter, TAJ vs IND being live in tournament 623 would
-    //    block transfers in every league backed by that tournament, even a mini-league
-    //    that only uses 8 of the 200 fixtures.
+    // 2. Reject if any fixture for THIS LEAGUE'S ACTIVE MATCHDAY is currently live.
+    //    Two scope guards apply:
+    //      a. tournament_id: only fixtures belonging to this league's competition
+    //      b. matchday_id IS NOT NULL: fixtures the sync cron pulled in but never
+    //         assigned to a matchday (null matchday_id) are not part of any league
+    //         calendar and must never block transfers. Without this guard, stale
+    //         "ghost" fixtures (e.g. TAJ vs IND, ANG vs BOT stuck as 'live' after
+    //         a UAT sync) would permanently block the window.
     const threeHoursAgo = new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString();
     let liveQuery = supabase
       .from('fixtures')
       .select('id, home_team, away_team, kickoff_at')
       .eq('status', 'live')
       .gte('kickoff_at', threeHoursAgo)
-      .limit(1);
+      .not('matchday_id', 'is', null);   // only calendar fixtures can lock the window
     if (tournamentId) liveQuery = liveQuery.eq('tournament_id', tournamentId);
-    const { data: liveFixture } = await liveQuery.maybeSingle();
+    const { data: liveFixture } = await liveQuery.limit(1).maybeSingle();
 
     if (liveFixture) {
       return json({
@@ -135,9 +137,8 @@ Deno.serve(async (req) => {
     }
 
     // 3. (#105) Reject if the specific player's team fixture is currently live (cost-lock at kickoff).
-    // Scoped to the league's tournament so a player in a different competition's live match
-    // doesn't accidentally freeze their price here.
-    // Only check for BUY actions (selling is always allowed).
+    //    Same two scope guards: tournament + matchday_id IS NOT NULL.
+    //    Only check for BUY actions (selling is always allowed).
     if (action === 'buy') {
       const { data: playerRow } = await supabase
         .from('players')
@@ -152,9 +153,9 @@ Deno.serve(async (req) => {
           .or(`home_team_forza_id.eq.${playerRow.forza_team_id},away_team_forza_id.eq.${playerRow.forza_team_id}`)
           .eq('status', 'live')
           .gte('kickoff_at', threeHoursAgo)
-          .limit(1);
+          .not('matchday_id', 'is', null);
         if (tournamentId) playerFixQ = playerFixQ.eq('tournament_id', tournamentId);
-        const { data: playerFixture } = await playerFixQ.maybeSingle();
+        const { data: playerFixture } = await playerFixQ.limit(1).maybeSingle();
 
         if (playerFixture) {
           return json({
