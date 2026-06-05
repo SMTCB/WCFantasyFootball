@@ -1484,7 +1484,142 @@ function LifecycleOps({ commissioner, leagueId, tournamentId, windowType = null,
           />
           </div>
 
+          {/* H2H Calendar — only for Draft + H2H leagues */}
+          {league?.h2h_enabled && (
+            <H2HCalendarSection leagueId={leagueId} tournamentId={tournamentId} />
+          )}
+
         </div>
+      </div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// H2H Calendar management panel — used in both desktop and mobile commissioner views
+// ─────────────────────────────────────────────────────────────────────────────
+function H2HCalendarSection({ leagueId, tournamentId, isMobile = false }) {
+  const [matchdays,       setMatchdays]       = useState([]);
+  const [startMatchday,   setStartMatchday]   = useState('');
+  const [scheduleCount,   setScheduleCount]   = useState(null); // null = not yet loaded
+  const [generating,      setGenerating]      = useState(false);
+  const [msg,             setMsg]             = useState(null);
+
+  // Load available matchday IDs + check if a schedule already exists
+  useEffect(() => {
+    if (!leagueId || !tournamentId) return;
+    let cancelled = false;
+
+    (async () => {
+      // Available matchdays from matchday_deadlines for this tournament, ordered by round
+      const { data: rows } = await supabase
+        .from('matchday_deadlines')
+        .select('matchday_id')
+        .eq('tournament_id', tournamentId)
+        .order('deadline_at', { ascending: true });
+
+      // Deduplicate (multiple leagues share the same tournament deadlines)
+      const seen = new Set();
+      const mds = (rows ?? [])
+        .map(r => r.matchday_id)
+        .filter(id => { if (seen.has(id)) return false; seen.add(id); return true; });
+
+      // Count existing h2h_schedule rows for this league
+      const { count } = await supabase
+        .from('h2h_schedule')
+        .select('id', { count: 'exact', head: true })
+        .eq('league_id', leagueId);
+
+      if (cancelled) return;
+      setMatchdays(mds);
+      if (mds.length > 0 && !startMatchday) setStartMatchday(mds[0]);
+      setScheduleCount(count ?? 0);
+    })();
+
+    return () => { cancelled = true; };
+  }, [leagueId, tournamentId]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const generate = async () => {
+    if (!startMatchday) return;
+    setGenerating(true);
+    setMsg(null);
+    try {
+      const { data, error } = await supabase.rpc('generate_h2h_schedule', {
+        p_league_id:         leagueId,
+        p_start_matchday_id: startMatchday,
+      });
+      if (error) throw error;
+      setMsg({ type: 'ok', text: `Calendar generated — ${data.matchdays_scheduled} matchdays scheduled for ${data.managers} managers.` });
+      setScheduleCount(data.matchdays_scheduled * Math.ceil(data.managers / 2));
+    } catch (err) {
+      setMsg({ type: 'err', text: `Failed: ${err.message}` });
+    } finally {
+      setGenerating(false);
+    }
+  };
+
+  const isGenerated = scheduleCount !== null && scheduleCount > 0;
+
+  const sectionStyle = isMobile ? {} : {};
+
+  return (
+    <div style={sectionStyle}>
+      <HubSectionLabel
+        label="H2H CALENDAR"
+        sub={isGenerated ? 'GENERATED' : 'NOT YET GENERATED'}
+        tone={isGenerated ? 'var(--positive)' : 'var(--gold)'}
+      />
+      <div style={{ padding: '14px 20px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+        {isGenerated ? (
+          <div style={{ padding: '8px 10px', background: 'var(--ink)', border: '1px solid rgba(34,197,94,0.25)', fontFamily: BODY, fontSize: 10, color: 'var(--mute)', lineHeight: 1.6 }}>
+            <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.2em', color: 'var(--positive)' }}>ACTIVE · </span>
+            H2H schedule is in place. Managers can view it on the H2H tab. Results are calculated automatically once every match in a round finishes.
+            <br /><br />
+            <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.2em', color: 'var(--warn)' }}>RE-GENERATE · </span>
+            To regenerate (e.g. after a new manager joins), pick a new start matchday below. Only unresolved future matchdays are overwritten — completed rounds are preserved.
+          </div>
+        ) : (
+          <div style={{ padding: '8px 10px', background: 'var(--ink)', border: '1px solid rgba(240,180,0,0.2)', fontFamily: BODY, fontSize: 10, color: 'var(--mute)', lineHeight: 1.6 }}>
+            <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.2em', color: 'var(--gold)' }}>SETUP REQUIRED · </span>
+            Pick the first matchday for H2H play and click Generate. All managers currently in the league will be included. If a new manager joins later, regenerate from the next unplayed matchday.
+          </div>
+        )}
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+          <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.2em', color: 'var(--mute)' }}>START FROM MATCHDAY</span>
+          {matchdays.length > 0 ? (
+            <select
+              value={startMatchday}
+              onChange={e => setStartMatchday(e.target.value)}
+              style={{ ...inputStyle, cursor: 'pointer' }}
+            >
+              {matchdays.map(md => (
+                <option key={md} value={md}>{md}</option>
+              ))}
+            </select>
+          ) : (
+            <span style={{ fontFamily: MONO, fontSize: 10, color: 'var(--mute)' }}>Loading matchdays…</span>
+          )}
+        </div>
+
+        <button
+          onClick={generate}
+          disabled={generating || !startMatchday}
+          style={{
+            padding: '11px 16px', border: 0, cursor: generating || !startMatchday ? 'not-allowed' : 'pointer',
+            fontFamily: DISPLAY, fontSize: 11, letterSpacing: '.18em', fontWeight: 400,
+            background: generating || !startMatchday ? 'var(--ink-3)' : 'var(--gold)',
+            color: generating || !startMatchday ? 'var(--mute)' : 'var(--ink)',
+          }}
+        >
+          {generating ? 'GENERATING…' : isGenerated ? 'REGENERATE CALENDAR ↻' : 'GENERATE CALENDAR ⚔️'}
+        </button>
+
+        {msg && (
+          <div style={{ padding: '8px 10px', background: msg.type === 'ok' ? 'rgba(34,197,94,0.08)' : 'rgba(239,68,68,0.08)', border: `1px solid ${msg.type === 'ok' ? 'rgba(34,197,94,0.3)' : 'rgba(239,68,68,0.3)'}`, fontFamily: MONO, fontSize: 10, color: msg.type === 'ok' ? 'var(--positive)' : 'var(--danger)', letterSpacing: '.1em' }}>
+            {msg.text}
+          </div>
+        )}
       </div>
     </div>
   );
@@ -2264,6 +2399,16 @@ export default function CommissionerPanel({ commissioner, leagueId, tournamentId
           </MobLifecycleCard>
           </div>
         </div>
+
+        {/* H2H Calendar (mobile) — only for Draft + H2H leagues */}
+        {league?.h2h_enabled && (
+          <>
+            <MobSectionHeader label="H2H CALENDAR" sub="SCHEDULE MANAGEMENT" tone="var(--gold)" />
+            <div style={{ padding: '0 14px' }}>
+              <H2HCalendarSection leagueId={leagueId} tournamentId={tournamentId} isMobile />
+            </div>
+          </>
+        )}
 
         {/* League news (mobile) */}
         <MobSectionHeader label="LEAGUE NEWS" sub="POST TO ACTIVITY FEED" tone="var(--danger)" />

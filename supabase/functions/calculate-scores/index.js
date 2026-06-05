@@ -715,6 +715,13 @@ async function rollupSquads(fixture_id, pointsLookup, tournament_id) {
     console.warn('[calculate-scores] gazette write failed (non-critical):', e.message)
   );
 
+  // H2H resolution — only runs when every fixture in the round is finished
+  if (roundComplete) {
+    resolveH2HMatchday(roundMatchdayId, squads, fantasyPointsUpserts).catch(e =>
+      console.warn('[calculate-scores] H2H resolution failed (non-critical):', e.message)
+    );
+  }
+
   return squads.length;
 }
 
@@ -781,6 +788,142 @@ async function writeGazetteEntries(fixture_id, roundMatchdayId, fantasyPointsUps
       published_at: new Date().toISOString(),
     });
   }
+}
+
+// ─── H2H resolution ────────────────────────────────────────────────────────────
+// Called after rollupSquads when roundComplete=true.
+// For each H2H-enabled league: looks up unresolved pairings for the matchday,
+// fetches each manager's fantasy_points.total, computes 5/2/0 (or configured values),
+// writes back to h2h_schedule, and appends a gazette entry.
+
+async function resolveH2HMatchday(roundMatchdayId, squads, fantasyPointsUpserts) {
+  // Group squads by league
+  const leagueMap = {};
+  for (const s of squads) {
+    if (!leagueMap[s.league_id]) leagueMap[s.league_id] = [];
+    leagueMap[s.league_id].push(s);
+  }
+
+  for (const [leagueId, leagueSquads] of Object.entries(leagueMap)) {
+    // Check h2h_enabled for this league
+    const { data: league } = await supabase
+      .from('leagues')
+      .select('h2h_enabled')
+      .eq('id', leagueId)
+      .single();
+
+    if (!league?.h2h_enabled) continue;
+
+    // Load H2H scoring config (defaults: 5/2/0)
+    const { data: cfgRows } = await supabase
+      .from('league_config')
+      .select('config_key, config_value')
+      .eq('league_id', leagueId)
+      .in('config_key', ['h2h_win_pts', 'h2h_draw_pts', 'h2h_loss_pts']);
+
+    const cfg = Object.fromEntries((cfgRows || []).map(r => [r.config_key, Number(r.config_value)]));
+    const winPts  = cfg.h2h_win_pts  ?? 5;
+    const drawPts = cfg.h2h_draw_pts ?? 2;
+    const lossPts = cfg.h2h_loss_pts ?? 0;
+
+    // Find unresolved pairings for this matchday
+    const { data: pairings } = await supabase
+      .from('h2h_schedule')
+      .select('id, home_user_id, away_user_id, is_bye, bye_user_id')
+      .eq('league_id', leagueId)
+      .eq('matchday_id', roundMatchdayId)
+      .is('resolved_at', null);
+
+    if (!pairings?.length) continue;
+
+    // Build user_id → fantasy points map from the upserts array (already computed this run)
+    const squadUserMap = Object.fromEntries(leagueSquads.map(s => [s.id, s.user_id]));
+    const scoreMap = {};
+    for (const fp of fantasyPointsUpserts) {
+      const uid = squadUserMap[fp.squad_id];
+      if (uid) scoreMap[uid] = fp.total ?? 0;
+    }
+
+    const now = new Date().toISOString();
+    const gazetteLines = [];
+
+    for (const p of pairings) {
+      if (p.is_bye) {
+        await supabase.from('h2h_schedule').update({
+          home_h2h_pts: winPts,
+          away_h2h_pts: null,
+          home_score:   null,
+          away_score:   null,
+          resolved_at:  now,
+        }).eq('id', p.id);
+        gazetteLines.push({ type: 'bye', userId: p.bye_user_id, pts: winPts });
+      } else {
+        const homeScore = scoreMap[p.home_user_id] ?? 0;
+        const awayScore = scoreMap[p.away_user_id] ?? 0;
+        let homeH2h, awayH2h;
+        if (homeScore > awayScore)      { homeH2h = winPts;  awayH2h = lossPts; }
+        else if (homeScore < awayScore) { homeH2h = lossPts; awayH2h = winPts;  }
+        else                            { homeH2h = drawPts; awayH2h = drawPts; }
+
+        await supabase.from('h2h_schedule').update({
+          home_score:   homeScore,
+          away_score:   awayScore,
+          home_h2h_pts: homeH2h,
+          away_h2h_pts: awayH2h,
+          resolved_at:  now,
+        }).eq('id', p.id);
+        gazetteLines.push({ type: 'match', homeUid: p.home_user_id, awayUid: p.away_user_id, homeScore, awayScore, homeH2h, awayH2h });
+      }
+    }
+
+    if (gazetteLines.length) {
+      await writeH2HGazette(leagueId, roundMatchdayId, gazetteLines, leagueSquads, winPts);
+    }
+  }
+}
+
+async function writeH2HGazette(leagueId, roundMatchdayId, gazetteLines, leagueSquads, winPts) {
+  const userIds = [...new Set(leagueSquads.map(s => s.user_id))];
+  const { data: users } = await supabase
+    .from('users').select('id, username').in('id', userIds);
+  const nameOf = (uid) => users?.find(u => u.id === uid)?.username ?? '?';
+
+  const roundNum = String(roundMatchdayId).replace(/^.*-r/, '');
+  const headline = `⚔️ Matchday ${roundNum} H2H Results`;
+
+  const bullets = gazetteLines.map(line => {
+    if (line.type === 'bye') {
+      return `${nameOf(line.userId)} — BYE  +${line.pts}`;
+    }
+    const homeWon = line.homeH2h === winPts;
+    const awayWon = line.awayH2h === winPts;
+    const isDraw  = line.homeH2h === line.awayH2h;
+    const verb = isDraw ? 'drew with' : (homeWon ? 'beat' : 'lost to');
+    const winner = homeWon ? nameOf(line.homeUid) : nameOf(line.awayUid);
+    const loser  = homeWon ? nameOf(line.awayUid) : nameOf(line.homeUid);
+    const wScore = homeWon ? line.homeScore : line.awayScore;
+    const lScore = homeWon ? line.awayScore : line.homeScore;
+    if (isDraw) {
+      return `${nameOf(line.homeUid)} ${wScore} pts drew ${nameOf(line.awayUid)} ${lScore} pts  +${line.homeH2h}`;
+    }
+    return `${winner} ${wScore} pts beat ${loser} ${lScore} pts  +${winPts}`;
+  });
+
+  // Idempotent: delete existing H2H gazette entry for this matchday, then reinsert
+  await supabase.from('gazette_entries')
+    .delete()
+    .eq('league_id', leagueId)
+    .eq('entry_type', 'activity')
+    .filter('full_data->>h2h_matchday_id', 'eq', roundMatchdayId);
+
+  await supabase.from('gazette_entries').insert({
+    league_id:    leagueId,
+    entry_type:   'activity',
+    headline,
+    bullets,
+    full_data:    { h2h_matchday_id: roundMatchdayId, results: gazetteLines },
+    published_at: new Date().toISOString(),
+  });
 }
 
 async function broadcastUpdate(fixture_id) {
