@@ -200,6 +200,12 @@ export function useAutoFill(leagueId, squadData, fetchSquad, takenMap = {}, buy,
       // ── Fill each position ───────────────────────────────────────────────
       const POS_ORDER = ['GK', 'DEF', 'MID', 'FWD'];
 
+      console.error('[useAutoFill] 🎯 FINAL CALCULATION BEFORE BUYING:');
+      console.error('  have:', have, '(current positions in squad)');
+      console.error('  need:', need, '(trying to add these positions)');
+      console.error('  maxPer:', maxPer, '(position limits)');
+      console.error('  Will try to buy in order:', POS_ORDER);
+
       for (const pos of POS_ORDER) {
         if (!need[pos] || criticalError) continue;
 
