@@ -11,7 +11,7 @@ Chips are special one-time (or once-per-matchday) boosts that give a scoring adv
 | Chip | When | Effect | Limit |
 |---|---|---|---|
 | **Triple Captain** | Any matchday | Your captain scores ×3 instead of ×2 | Once per season |
-| **Matchday Joker** | Any matchday | A 16th player outside your squad scores ×2 for this matchday | Once per matchday |
+| **Matchday Joker** | Any matchday | One player outside your squad scores their real points as a bonus | Once per matchday; each player once per season |
 
 A retired chip (Wildcard, ×10% budget boost) was removed in session 78 and is not available.
 
@@ -43,12 +43,6 @@ Normally your captain scores ×2. With Triple Captain active, they score ×3.
 ### Captain reassignment (edge case)
 
 If your captain isn't in the auto-resolved starting XI at the end of the round (e.g. they scored 0 minutes and were auto-subbed out), the scoring engine can reassign the captain bonus to the highest-scoring starter — but **only if that starter has > 0 points**. The Triple Captain multiplier moves with the reassigned captain.
-
-### Stacking with Matchday Joker
-
-If you set the Triple Captain AND make your captain your Matchday Joker:
-- The multiplier is `Math.max(3, 2) = ×3` — it does **not** stack to ×6.
-- Triple Captain always wins over Joker when both apply to the same player.
 
 ---
 
@@ -102,22 +96,23 @@ The persistent columns `squads.is_triple_captain` and `squads.joker_player_id` a
 - Historical chips do not carry forward and re-fire in later rounds.
 - If a chip was accidentally left on the squad row, it has no effect on scoring.
 
-### Multiplier rule
+### Multiplier rule (Triple Captain only)
+
+The Matchday Joker no longer uses a multiplier — it scores real points as a flat bonus added after the XI is scored. Only the captain / Triple Captain multiplier applies inside the XI loop.
 
 ```
-captain_mult = captain? (triple_captain? 3 : 2) : 1
-joker_mult   = joker?   2 : 1
-final_mult   = Math.max(captain_mult, joker_mult)
+captain_mult = is_captain? (triple_captain? 3 : 2) : 1
+XI total     = SUM(player_pts × captain_mult) for each starter
+Joker bonus  = joker_player_pts  (added after, no multiplier)
+Round total  = XI total + Joker bonus
 ```
-
-Chips do not multiply each other. The highest applicable multiplier wins.
 
 | Scenario | Result |
 |---|---|
-| Normal captain | ×2 |
-| Triple Captain on captain | ×3 |
-| Joker (external player) | +their real pts (×1 bonus) |
-| Triple Captain on captain, no joker | ×3 on captain |
+| Normal captain | ×2 on captain's points |
+| Triple Captain on captain | ×3 on captain's points |
+| Matchday Joker | +joker's real points added as bonus |
+| Both chips active | Independent — TC multiplies captain in XI, Joker adds external pts separately |
 
 ---
 
@@ -126,7 +121,7 @@ Chips do not multiply each other. The highest applicable multiplier wins.
 | Chip | Status |
 |---|---|
 | **Wildcard** | ❌ Retired. All wildcard flags on squads were cleared in session 78. The +10% budget multiplier is no longer applied anywhere. `activate_chip('wildcard')` returns an error. |
-| **Bench Boost** | ❌ Never implemented. Bench players always score 0 (unless joker). |
+| **Bench Boost** | ❌ Never implemented. Bench players always score 0. |
 | **Free Hit** | ❌ Never implemented. |
 
 ---
@@ -135,7 +130,9 @@ Chips do not multiply each other. The highest applicable multiplier wins.
 
 ```
 chips_used          → Triple Captain records. Unique per (user_id, league_id, chip_type).
-daily_jokers        → Matchday Joker records. Unique per (user_id, league_id, matchday_id).
+daily_jokers        → Matchday Joker records.
+                       UNIQUE (user_id, league_id, matchday_id) — one joker per matchday.
+                       UNIQUE (user_id, league_id, player_id)   — each player once per season.
 squads.is_triple_captain  → UI mirror only. Not read by scoring.
 squads.joker_player_id    → UI mirror only. Not read by scoring.
 ```
@@ -150,4 +147,4 @@ squads.joker_player_id    → UI mirror only. Not read by scoring.
 
 ---
 
-Last Updated: **2026-06-06**
+Last Updated: **2026-06-06** (session — joker redesign: external only, real points, once per player per season)
