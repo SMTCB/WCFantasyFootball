@@ -101,7 +101,8 @@ export function useAutoFill(leagueId, squadData, fetchSquad, takenMap = {}, buy,
       const have = { GK: 0, DEF: 0, MID: 0, FWD: 0 };
       for (const p of [...playerObjects, ...benchPlayers]) {
         if (typeof p !== 'object' || !p) continue;
-        const pos = p.position?.toUpperCase().replace('FW', 'FWD');
+        const rawPos = p.position?.toUpperCase() ?? '';
+        const pos = rawPos === 'FW' ? 'FWD' : rawPos;
         if (pos && have[pos] !== undefined) have[pos]++;
       }
 
