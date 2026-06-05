@@ -592,8 +592,9 @@ Always create a new file — never modify existing migrations.
 | 136 | `136_h2h_competition.sql` | Session H2H: Draft+H2H mode — `h2h_enabled` on leagues; `h2h_schedule` table (RLS); `generate_h2h_schedule` RPC (Berger circle round-robin); `get_h2h_standings` RPC; updated `create_league` with `p_h2h_enabled` param + H2H config seeding (5/2/0) |
 | 137 | `137_fix_generate_h2h_schedule.sql` | Session H2H bugfix: `generate_h2h_schedule` used `ORDER BY created_at` on `league_members` (no such column) — fixed to `ORDER BY user_id` |
 | 138 | `138_fix_h2h_standings_ambiguity.sql` | Session H2H bugfix: `get_h2h_standings` had ambiguous `user_id` column reference in auth check — fixed with explicit table alias `lm.user_id` |
+| 139 | `139_intfriendly_reset.sql` | Mini-league reset: re-assign tournament 623 fixtures to MD1 (Jun 6: Portugal-Chile, USA-Germany, Switzerland-Australia, England-New Zealand) and MD2 (Jun 7: Morocco-Norway, Croatia-Slovenia, Greece-Italy); update matchday_deadlines (r1=Jun 6 17:00, r2=Jul 7 18:00), delete stale r3-r8 deadlines; copy Morocco/Norway/Croatia players from WC (429) preserving price; copy Slovenia (30) + Italy (26) from tournament 1593 with random £4–7 price; delete polluting nationalities (France, Ivory Coast, Mexico, Montenegro, Serbia, Sweden, null) |
 
-**Next migration**: `139_`
+**Next migration**: `140_`
 
 **Key pipeline facts (2026-06-05):**
 - `calculate-scores` uses `scoring_rules` table (not `scoring_templates`) keyed by `tournament_id`
