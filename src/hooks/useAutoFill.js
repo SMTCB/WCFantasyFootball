@@ -106,11 +106,21 @@ export function useAutoFill(leagueId, squadData, fetchSquad, takenMap = {}, buy,
 
       // ── Count current positions ────────────────────────────────────────
       // Parse and normalize position strings from fetched player data
+      console.log('[useAutoFill] Starting position count for', playerObjects.length, 'players');
       const have = { GK: 0, DEF: 0, MID: 0, FWD: 0 };
+
+      // Log all player positions for diagnosis
+      const positionDump = playerObjects.map(p => ({
+        id: p.id?.substring(0, 8),
+        pos: p.position,
+        posUpper: String(p.position ?? 'NULL').toUpperCase()
+      }));
+      console.log('[useAutoFill] Player positions:', positionDump);
+
       for (const p of playerObjects) {
         if (typeof p !== 'object' || !p) continue;
         if (!p.position) {
-          console.warn(`[useAutoFill] Player ${p.id} missing position field`, p);
+          console.error(`[useAutoFill] MISSING POSITION: Player ${p.id}`, p);
           continue;
         }
 
@@ -122,14 +132,15 @@ export function useAutoFill(leagueId, squadData, fetchSquad, takenMap = {}, buy,
         if (have[pos] !== undefined) {
           have[pos]++;
         } else {
-          console.warn(`[useAutoFill] Unrecognized position "${p.position}" for player ${p.id}`);
+          console.error(`[useAutoFill] UNRECOGNIZED POSITION "${p.position}" for player ${p.id}`);
         }
       }
 
       // Debug: log position counts for diagnostics
       const totalCounted = Object.values(have).reduce((a, b) => a + b, 0);
+      console.error('[useAutoFill] Position counts:', have, '| Total counted:', totalCounted, '| Expected:', playerObjects.length);
       if (totalCounted !== playerObjects.length) {
-        console.warn(`[useAutoFill] Position count mismatch: counted ${totalCounted}, have ${playerObjects.length} objects`, have, playerObjects);
+        console.error(`[useAutoFill] ⚠️ MISMATCH: counted ${totalCounted}, have ${playerObjects.length} objects`);
       }
 
       const minPer = cfg.minFormation ?? { GK: 1, DEF: 3, MID: 2, FWD: 1 };
@@ -155,13 +166,18 @@ export function useAutoFill(leagueId, squadData, fetchSquad, takenMap = {}, buy,
 
       // Distribute remaining slots to positions that still have capacity
       let extra = slotsNeeded - Object.values(need).reduce((s, n) => s + n, 0);
+      console.error('[useAutoFill] Before distribution - need:', need, '| extra slots:', extra, '| have:', have);
       for (const pos of ['DEF', 'MID', 'FWD', 'GK']) {
         if (extra <= 0) break;
         const capacity = Math.max(0, (maxPer[pos] ?? 5) - have[pos] - need[pos]);
         const give     = Math.min(extra, capacity);
+        if (give > 0) {
+          console.error(`[useAutoFill] ${pos}: have=${have[pos]}, max=${maxPer[pos]}, capacity=${capacity}, giving=${give}`);
+        }
         need[pos] += give;
         extra     -= give;
       }
+      console.error('[useAutoFill] After distribution - need:', need, '| remaining extra:', extra);
 
       // ── Budget ───────────────────────────────────────────────────────────
       let budgetLeft =
