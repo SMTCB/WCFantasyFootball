@@ -187,11 +187,7 @@ export default function OnboardingWizard({ onComplete, onSkip, config = {}, user
           .eq('id', user.id);
         setUsernameSaving(false);
         if (error) {
-          if (error.code === '23505') {
-            setUsernameError('That username is already taken — try a different one');
-          } else {
-            setUsernameError(error.message || 'Could not save username');
-          }
+          setUsernameError(error.message || 'Could not save username');
           return; // stay on this step until fixed
         }
       }
