@@ -49,9 +49,17 @@ export function useCommissioner(leagueId, tournamentId, onLeagueUpdated) {
   const [openBets,                 setOpenBets]                 = useState([]);
   const [resolutionBetsLoading,    setResolutionBetsLoading]    = useState(false);
   const [selectedBetForResolution, setSelectedBetForResolution] = useState(null);
-  const [betResolutionAnswer,      setBetResolutionAnswer]      = useState('');
+  // Multi-select: array of selected answer keys (empty = nothing selected)
+  const [betResolutionAnswers,     setBetResolutionAnswers]     = useState([]);
   const [betSubmissions,           setBetSubmissions]           = useState([]);
   const [answerGrouped,            setAnswerGrouped]            = useState({});
+
+  // Toggle a single answer key in/out of the selection
+  const toggleBetResolutionAnswer = useCallback((key) => {
+    setBetResolutionAnswers(prev =>
+      prev.includes(key) ? prev.filter(a => a !== key) : [...prev, key]
+    );
+  }, []);
 
   // ── Action wrapper ────────────────────────────────────────────────────────
   const commAction = useCallback(async (fn) => {
@@ -248,12 +256,13 @@ export function useCommissioner(leagueId, tournamentId, onLeagueUpdated) {
     await fetchOpenBets();
   }), [commAction, fetchOpenBets]);
 
-  const resolveBet = useCallback(() => commAction(async () => {
+  // Shared resolution helper — accepts an array of winning answer keys.
+  // Pass [] for a "no winner" resolution (valid bet, 0 pts awarded).
+  const _doResolve = useCallback((answers) => commAction(async () => {
     if (!selectedBetForResolution) throw new Error('Select a bet to resolve.');
-    if (!betResolutionAnswer)      throw new Error('Select the correct answer.');
     const { data, error } = await supabase.rpc('resolve_bet', {
       p_instance_id: selectedBetForResolution.id,
-      p_answer:      betResolutionAnswer,
+      p_answers:     answers,
     });
     if (error) throw new Error(error.message);
     if (data?.ok === false) {
@@ -263,13 +272,29 @@ export function useCommissioner(leagueId, tournamentId, onLeagueUpdated) {
                 : (data.error || 'Failed to resolve bet');
       throw new Error(msg);
     }
-    setCommMsg({ type: 'ok', text: `Bet resolved — ${data?.submissions_updated ?? 0} submissions graded.` });
-    setBetResolutionAnswer('');
+    const winners = data?.winners ?? 0;
+    const noWinner = answers.length === 0;
+    setCommMsg({
+      type: 'ok',
+      text: noWinner
+        ? `Resolved with no winner — ${data?.total ?? 0} picks graded, 0 pts awarded.`
+        : `Resolved — ${winners} manager${winners !== 1 ? 's' : ''} correct out of ${data?.total ?? 0}.`,
+    });
+    setBetResolutionAnswers([]);
     setSelectedBetForResolution(null);
     setBetSubmissions([]);
     setAnswerGrouped({});
     await fetchOpenBets();
-  }), [commAction, selectedBetForResolution, betResolutionAnswer, fetchOpenBets]);
+  }), [commAction, selectedBetForResolution, fetchOpenBets]);
+
+  // Resolve with one or more correct answers (at least one must be selected)
+  const resolveBet = useCallback(() => {
+    if (!betResolutionAnswers.length) throw new Error('Select at least one correct answer.');
+    return _doResolve(betResolutionAnswers);
+  }, [_doResolve, betResolutionAnswers]);
+
+  // Resolve with no winner — valid outcome, 0 pts awarded, not a cancellation
+  const resolveNoWinner = useCallback(() => _doResolve([]), [_doResolve]);
 
   return {
     commLoading, commMsg, setCommMsg, commAction,
@@ -282,8 +307,8 @@ export function useCommissioner(leagueId, tournamentId, onLeagueUpdated) {
     createBetFromData,
     openBets, resolutionBetsLoading,
     selectedBetForResolution, setSelectedBetForResolution,
-    betResolutionAnswer, setBetResolutionAnswer,
+    betResolutionAnswers, setBetResolutionAnswers, toggleBetResolutionAnswer,
     betSubmissions, answerGrouped,
-    fetchOpenBets, fetchBetSubmissions, resolveBet, voidBet,
+    fetchOpenBets, fetchBetSubmissions, resolveBet, resolveNoWinner, voidBet,
   };
 }

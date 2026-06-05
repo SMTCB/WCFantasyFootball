@@ -95,17 +95,29 @@ A bet **can be edited** until the first manager picks. After the first pick, edi
 ### 2.2 Behaviour
 
 - Only **one** card is expanded at a time. Clicking another collapses the current.
-- `answer[betId]` is local state — the admin can switch the picked answer freely before clicking RESOLVE.
-- The footer lead-in updates live: `"AWARDS +{reward} PTS TO {N} MANAGERS"` where N is the count of managers who picked that option.
-- **RESOLVE** fires the server action: `resolveBet(betId, winningOption)`. Server marks bet `state = 'resolved'`, sets `answer`, computes `won/lost` per pick, awards points, notifies the league.
-- **VOID** fires `voidBet(betId)`. Bet becomes `state = 'voided'`, no points awarded, picks shown as VOIDED in managers' BETS tabs.
-- **Auto-resolve** is OFF by default. The redesign assumes manual resolution today.
+- Answer selection is **multi-select**: the admin clicks option chips to toggle them in/out of the correct-answer set. Multiple options can be selected simultaneously for tie scenarios.
+- The footer lead-in updates live: `"AWARDS +{reward} PTS TO {N} MANAGERS"` where N is the combined count of managers who picked any of the selected options.
+- **RESOLVE** fires `resolveBet(betId, winningOptions[])`. Server marks bet `status = 'resolved'`, sets `correct_answers = winningOptions[]`, marks all matching submissions as correct, awards points.
+- **NO WINNER** fires `resolveNoWinner(betId)` — equivalent to `resolve_bet(id, [])`. Resolves the bet with `winners_count = 0`. Valid bet, valid outcome, 0 pts awarded. The bet shows "No winner" to managers. Use this when the prediction was genuinely wrong for everyone (e.g. nobody scored in the match). This is **not the same as VOID**.
+- **VOID** fires `voidBet(betId)`. Bet becomes `status = 'cancelled'`, no points awarded, all picks cleared. Use this when the bet itself was wrong (cancelled fixture, bad setup). Reverses any budget awards already paid for resolved bets.
+- **Auto-resolve** is OFF. All resolutions require manual commissioner action.
 
-### 2.3 Edge cases
+### 2.3 VOID vs NO WINNER — when to use which
 
-- **Custom answer.** If the actual result doesn't match any option (e.g. tied top scorer), the UI includes a free-text override input below the option chips. The admin types the correct answer key manually.
-- **Late picks.** If a pick is recorded after kickoff (clock skew, etc.), server should reject — UI does not need to handle this here.
-- **Bet still open.** `resolve_bet` returns `BET_STILL_OPEN` if called before the deadline passes. Resolution is blocked server-side until `deadline_at` has passed.
+| Scenario | Action |
+|---|---|
+| Fixture cancelled / postponed | **VOID** — the bet was never valid |
+| Bet set up with wrong options | **VOID** — the bet was wrong |
+| Valid bet, valid result, but nobody predicted correctly | **NO WINNER** — the bet was correct, the managers were wrong |
+| Valid bet, tie between two options (e.g. top-scorer tie) | **RESOLVE** with both options selected |
+
+### 2.4 Edge cases
+
+- **Tied top scorer.** Select both players' option chips simultaneously. Both groups of pickers are marked correct and receive points.
+- **No winner outcome.** Click NO WINNER. Bet resolves with 0 pts awarded. Managers see "No winner" in their BETS tab.
+- **Late picks.** If a pick is recorded after kickoff (clock skew, etc.), server should reject — UI does not need to handle this.
+- **Bet still open.** `resolve_bet` returns `BET_STILL_OPEN` if called by cron before the deadline. Commissioners can always resolve regardless of deadline.
+- **Free-text fallback.** Only shown when a bet has no predefined options (unusual). Removed for normal bets; multi-select chips cover all standard cases.
 
 ---
 

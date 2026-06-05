@@ -1043,7 +1043,7 @@ function CreateBetWizard({ onPublish, commLoading, memberCount, tournamentId, is
 // ─────────────────────────────────────────────────────────────────────────────
 // Resolve pending bets (Zone B right)
 // ─────────────────────────────────────────────────────────────────────────────
-function ResolvePendingBets({ openBets, resolutionBetsLoading, setSelectedBetForResolution, betResolutionAnswer, setBetResolutionAnswer, betSubmissions, answerGrouped, fetchBetSubmissions, resolveBet, voidBet, commLoading, commMsg, memberCount = 0 }) {
+function ResolvePendingBets({ openBets, resolutionBetsLoading, setSelectedBetForResolution, betResolutionAnswers, toggleBetResolutionAnswer, setBetResolutionAnswers, betSubmissions, answerGrouped, fetchBetSubmissions, resolveBet, resolveNoWinner, voidBet, commLoading, commMsg, memberCount = 0 }) {
   const [expandedId, setExpandedId] = useState(null);
 
   const pending = (openBets || []).filter(b => b.status !== 'resolved');
@@ -1054,7 +1054,7 @@ function ResolvePendingBets({ openBets, resolutionBetsLoading, setSelectedBetFor
     } else {
       setExpandedId(betId);
       setSelectedBetForResolution(openBets.find(b => b.id === betId) || null);
-      setBetResolutionAnswer('');
+      setBetResolutionAnswers([]);
       fetchBetSubmissions(betId);
     }
   };
@@ -1097,7 +1097,7 @@ function ResolvePendingBets({ openBets, resolutionBetsLoading, setSelectedBetFor
           const tone   = typeTone(b.template_id);
           const glyph  = typeGlyph(b.template_id);
           const opts   = Array.isArray(b.options) ? b.options : [];
-          const currentAnswer = isOpen ? betResolutionAnswer : '';
+          const currentAnswers = isOpen ? betResolutionAnswers : [];
 
           return (
             <div key={b.id} style={{ background: 'var(--ink-2)', border: '1px solid var(--rule)', borderLeft: `3px solid ${tone}` }}>
@@ -1139,16 +1139,21 @@ function ResolvePendingBets({ openBets, resolutionBetsLoading, setSelectedBetFor
                     </div>
                   )}
 
-                  {/* Answer chips + free-text fallback for non-match-result bets (TDD-13) */}
-                  <WizField label="ANSWER" sub={opts.length > 0 ? "Select the winning option, or type a custom answer below." : "No predefined options — type the correct answer key."}>
+                  {/* Multi-select answer chips — click to toggle, multiple allowed for ties */}
+                  <WizField
+                    label="CORRECT ANSWER(S)"
+                    sub={opts.length > 0
+                      ? 'Select all correct options — click to toggle. Multiple selections allowed for ties.'
+                      : 'No predefined options — type the answer key manually below.'}
+                  >
                     <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                       {opts.map(opt => {
                         const optKey   = opt.key ?? opt;
                         const optLabel = opt.label ?? opt;
-                        const picked   = currentAnswer === optKey;
+                        const picked   = currentAnswers.includes(optKey);
                         const subCount = answerGrouped[optKey]?.length ?? 0;
                         return (
-                          <button key={optKey} onClick={() => setBetResolutionAnswer(optKey)} style={{
+                          <button key={optKey} onClick={() => toggleBetResolutionAnswer(optKey)} style={{
                             padding: '7px 11px', cursor: 'pointer',
                             background: picked ? 'rgba(34,197,94,.08)' : 'var(--ink)',
                             border: picked ? '1px solid var(--positive)' : '1px solid var(--rule)',
@@ -1162,39 +1167,61 @@ function ResolvePendingBets({ openBets, resolutionBetsLoading, setSelectedBetFor
                         );
                       })}
                     </div>
-                    {/* Free-text override for closed bets whose options don't match the actual result */}
-                    <input
-                      placeholder="Or type answer key manually…"
-                      value={currentAnswer}
-                      onChange={e => setBetResolutionAnswer(e.target.value)}
-                      style={{ ...inputStyle, marginTop: 6, fontSize: 11 }}
-                    />
+                    {/* Free-text fallback only when there are no predefined options */}
+                    {opts.length === 0 && (
+                      <input
+                        placeholder="Type answer key manually…"
+                        value={currentAnswers[0] ?? ''}
+                        onChange={e => setBetResolutionAnswers(e.target.value ? [e.target.value] : [])}
+                        style={{ ...inputStyle, marginTop: 6, fontSize: 11 }}
+                      />
+                    )}
                   </WizField>
 
-                  <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                    <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.16em', color: 'var(--mute)' }}>
-                      AWARDS <b style={{ color: 'var(--positive)' }}>+{b.reward_value} PTS</b> TO {currentAnswer ? (answerGrouped[currentAnswer]?.length ?? 0) : '—'} MANAGERS
-                    </span>
-                    <span style={{ flex: 1 }} />
-                    <button
-                      onClick={() => {
-                        if (!window.confirm(`Void "${b.title}"? No points will be awarded and all picks will be cleared.`)) return;
-                        voidBet(b.id);
-                      }}
-                      disabled={commLoading}
-                      style={{ ...ghostBtn, fontSize: 9 }}
-                    >VOID</button>
-                    <button
-                      disabled={commLoading || !currentAnswer}
-                      onClick={resolveBet}
-                      style={{
-                        ...btnBase, fontSize: 11,
-                        background: currentAnswer ? 'var(--gold)' : 'var(--ink-3)',
-                        color: currentAnswer ? 'var(--ink)' : 'var(--mute)',
-                        cursor: currentAnswer ? 'pointer' : 'not-allowed',
-                      }}
-                    >{commLoading ? 'RESOLVING…' : 'RESOLVE →'}</button>
-                  </div>
+                  {/* Footer: AWARDS count + action buttons */}
+                  {(() => {
+                    const totalWinners = currentAnswers.reduce((sum, ak) => sum + (answerGrouped[ak]?.length ?? 0), 0);
+                    const canResolve = currentAnswers.length > 0;
+                    return (
+                      <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+                        <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.16em', color: 'var(--mute)' }}>
+                          {canResolve
+                            ? <>AWARDS <b style={{ color: 'var(--positive)' }}>+{b.reward_value} PTS</b> TO {totalWinners} MGR{totalWinners !== 1 ? 'S' : ''}</>
+                            : <span style={{ color: 'var(--mute)' }}>SELECT A WINNER OR USE NO WINNER →</span>}
+                        </span>
+                        <span style={{ flex: 1 }} />
+                        {/* VOID — cancels the bet entirely (wrong setup / abandoned fixture) */}
+                        <button
+                          onClick={() => {
+                            if (!window.confirm(`Void "${b.title}"? All picks cleared, no points awarded. Use "No Winner" instead if the bet was valid.`)) return;
+                            voidBet(b.id);
+                          }}
+                          disabled={commLoading}
+                          style={{ ...ghostBtn, fontSize: 9 }}
+                        >VOID</button>
+                        {/* NO WINNER — bet was valid but no option was correct (0 pts, stays resolved) */}
+                        <button
+                          onClick={() => {
+                            if (!window.confirm(`Resolve "${b.title}" with no winner? 0 pts will be awarded. This cannot be undone.`)) return;
+                            resolveNoWinner();
+                          }}
+                          disabled={commLoading}
+                          style={{ ...ghostBtn, fontSize: 9, borderColor: 'rgba(245,158,11,.4)', color: 'var(--warn)' }}
+                        >NO WINNER</button>
+                        {/* RESOLVE — awards pts to managers who picked a selected option */}
+                        <button
+                          disabled={commLoading || !canResolve}
+                          onClick={resolveBet}
+                          style={{
+                            ...btnBase, fontSize: 11,
+                            background: canResolve ? 'var(--gold)' : 'var(--ink-3)',
+                            color: canResolve ? 'var(--ink)' : 'var(--mute)',
+                            cursor: canResolve ? 'pointer' : 'not-allowed',
+                          }}
+                        >{commLoading ? 'RESOLVING…' : 'RESOLVE →'}</button>
+                      </div>
+                    );
+                  })()}
                   {/* Inline error — visible without scrolling to top */}
                   {commMsg?.type === 'err' && isOpen && (
                     <div style={{ padding: '8px 10px', background: 'rgba(239,68,68,.08)', border: '1px solid rgba(239,68,68,.3)', color: 'var(--danger)', fontFamily: BODY, fontSize: 12 }}>
@@ -2240,9 +2267,9 @@ export default function CommissionerPanel({ commissioner, leagueId, tournamentId
     commLoading, commMsg, setCommMsg,
     openBets, resolutionBetsLoading,
     selectedBetForResolution, setSelectedBetForResolution,
-    betResolutionAnswer, setBetResolutionAnswer,
+    betResolutionAnswers, setBetResolutionAnswers, toggleBetResolutionAnswer,
     betSubmissions, answerGrouped,
-    fetchBetSubmissions, fetchOpenBets, resolveBet, voidBet,
+    fetchBetSubmissions, fetchOpenBets, resolveBet, resolveNoWinner, voidBet,
   } = commissioner;
 
   if (isMobile) {
@@ -2442,12 +2469,14 @@ export default function CommissionerPanel({ commissioner, leagueId, tournamentId
             resolutionBetsLoading={resolutionBetsLoading}
             selectedBetForResolution={selectedBetForResolution}
             setSelectedBetForResolution={setSelectedBetForResolution}
-            betResolutionAnswer={betResolutionAnswer}
-            setBetResolutionAnswer={setBetResolutionAnswer}
+            betResolutionAnswers={betResolutionAnswers}
+            setBetResolutionAnswers={setBetResolutionAnswers}
+            toggleBetResolutionAnswer={toggleBetResolutionAnswer}
             betSubmissions={betSubmissions}
             answerGrouped={answerGrouped}
             fetchBetSubmissions={fetchBetSubmissions}
             resolveBet={resolveBet}
+            resolveNoWinner={resolveNoWinner}
             voidBet={voidBet}
             commLoading={commLoading}
             commMsg={commMsg}
@@ -2513,12 +2542,14 @@ export default function CommissionerPanel({ commissioner, leagueId, tournamentId
             resolutionBetsLoading={resolutionBetsLoading}
             selectedBetForResolution={selectedBetForResolution}
             setSelectedBetForResolution={setSelectedBetForResolution}
-            betResolutionAnswer={betResolutionAnswer}
-            setBetResolutionAnswer={setBetResolutionAnswer}
+            betResolutionAnswers={betResolutionAnswers}
+            setBetResolutionAnswers={setBetResolutionAnswers}
+            toggleBetResolutionAnswer={toggleBetResolutionAnswer}
             betSubmissions={betSubmissions}
             answerGrouped={answerGrouped}
             fetchBetSubmissions={fetchBetSubmissions}
             resolveBet={resolveBet}
+            resolveNoWinner={resolveNoWinner}
             voidBet={voidBet}
             commLoading={commLoading}
             commMsg={commMsg}
