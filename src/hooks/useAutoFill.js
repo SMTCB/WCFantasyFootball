@@ -54,9 +54,8 @@ export function useAutoFill(leagueId, squadData, fetchSquad, takenMap = {}, buy,
       } catch { /* network hiccup — fall through to squadData */ }
 
       const rawPlayers   = freshPlayerIds ?? squadData?.players ?? [];
-      const benchPlayers = squadData?.bench ?? [];
       const squadSize    = cfg.squadSize ?? 15;
-      const slotsNeeded  = squadSize - rawPlayers.length - benchPlayers.length;
+      const slotsNeeded  = squadSize - rawPlayers.length;
 
       if (slotsNeeded <= 0) {
         setAutoFillMsg('Squad is already full');
@@ -64,20 +63,30 @@ export function useAutoFill(leagueId, squadData, fetchSquad, takenMap = {}, buy,
       }
 
       // ── Resolve player objects from IDs if needed ────────────────────────
-      let playerObjects = rawPlayers;
+      // Always fetch fresh player data to ensure position info is present
+      let playerObjects = [];
       if (rawPlayers.length > 0 && typeof rawPlayers[0] === 'string') {
-        const { data: fetched } = await supabase
+        const { data: fetched, error: fetchErr } = await supabase
           .from('players')
           .select('id, position')
           .in('id', rawPlayers);
+        if (fetchErr) {
+          setAutoFillMsg('Auto-fill failed — could not load player data');
+          return;
+        }
         playerObjects = fetched || [];
+
+        // Validation: ensure all players were fetched
+        if (playerObjects.length < rawPlayers.length) {
+          console.warn(`[useAutoFill] Only ${playerObjects.length}/${rawPlayers.length} players fetched`);
+        }
+      } else {
+        // If rawPlayers is already objects, use directly
+        playerObjects = rawPlayers;
       }
 
       // ── Build my own player IDs (never re-buy) ───────────────────────────
-      const myIds = new Set([
-        ...playerObjects.map(p => p.id ?? p),
-        ...benchPlayers.map(p => p.id ?? p),
-      ]);
+      const myIds = new Set(playerObjects.map(p => p.id ?? p));
 
       // ── Build taken-by-others set from takenMap ──────────────────────────
       const othersIds = new Set(
@@ -95,14 +104,32 @@ export function useAutoFill(leagueId, squadData, fetchSquad, takenMap = {}, buy,
         .maybeSingle();
       tournamentId = leagueRow?.tournament_id ?? null;
 
-      // ── Count current positions (starters + bench, ALL tournaments) ─────
-      // Include bench so FWD at 3/3 across starters+bench counts correctly.
-      // Fetch without tournament filter so EPL players in a WC squad still count.
+      // ── Count current positions ────────────────────────────────────────
+      // Parse and normalize position strings from fetched player data
       const have = { GK: 0, DEF: 0, MID: 0, FWD: 0 };
-      for (const p of [...playerObjects, ...benchPlayers]) {
+      for (const p of playerObjects) {
         if (typeof p !== 'object' || !p) continue;
-        const pos = p.position?.toUpperCase().replace('FW', 'FWD');
-        if (pos && have[pos] !== undefined) have[pos]++;
+        if (!p.position) {
+          console.warn(`[useAutoFill] Player ${p.id} missing position field`, p);
+          continue;
+        }
+
+        // Normalize position: handle 'FW' → 'FWD', lowercase → uppercase
+        let pos = String(p.position).toUpperCase();
+        if (pos === 'FW') pos = 'FWD';
+
+        // Validate position is recognized
+        if (have[pos] !== undefined) {
+          have[pos]++;
+        } else {
+          console.warn(`[useAutoFill] Unrecognized position "${p.position}" for player ${p.id}`);
+        }
+      }
+
+      // Debug: log position counts for diagnostics
+      const totalCounted = Object.values(have).reduce((a, b) => a + b, 0);
+      if (totalCounted !== playerObjects.length) {
+        console.warn(`[useAutoFill] Position count mismatch: counted ${totalCounted}, have ${playerObjects.length} objects`, have, playerObjects);
       }
 
       const minPer = cfg.minFormation ?? { GK: 1, DEF: 3, MID: 2, FWD: 1 };
