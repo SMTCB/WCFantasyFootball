@@ -19,20 +19,24 @@ export function useAutoFill(leagueId, squadData, fetchSquad, takenMap = {}, buy,
   const POS_LIMITS = cfg.positionLimits;
 
   const handleAutoFill = useCallback(async () => {
+    console.error('[useAutoFill] ⭐ FILL BUTTON CLICKED - Starting auto-fill');
     if (autoFilling) return;
     setAutoFilling(true);
     setAutoFillMsg(null);
 
     try {
       if (!leagueId) {
+        console.error('[useAutoFill] ❌ No league selected');
         setAutoFillMsg('No league selected — open your squad from the League screen');
         return;
       }
+      console.error('[useAutoFill] ✅ League ID:', leagueId);
 
       // ── Always fetch the freshest squad state from DB ────────────────────
       // Avoids the stale-closure bug where a second auto-fill click uses
       // squadData captured before the previous fetchSquad() propagated through
       // React state (causing wrong have counts and position misallocation).
+      console.error('[useAutoFill] 🔄 Fetching fresh squad data from DB');
       let freshPlayerIds = null;
       let freshBudget    = null;
       try {
