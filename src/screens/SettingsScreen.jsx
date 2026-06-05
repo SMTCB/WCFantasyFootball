@@ -84,11 +84,7 @@ export default function SettingsScreen() {
         .update({ username: trimmed })
         .eq('id', user.id);
       if (error) {
-        if (error.code === '23505') {
-          showToast('That username is already taken — try a different one', 'error');
-        } else {
-          showToast(error.message || 'Failed to update username', 'error');
-        }
+        showToast(error.message || 'Failed to update username', 'error');
         return;
       }
       setCurrentUsername(trimmed);
@@ -168,7 +164,7 @@ export default function SettingsScreen() {
                 Username
               </label>
               <p style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 10, color: 'var(--mute)', marginBottom: 8, lineHeight: 1.5 }}>
-                Shown to other managers in leaderboards, chat, and bets. 3–30 characters.
+                Shown to other managers in leaderboards, chat, and bets. 3–30 characters. No uniqueness required.
               </p>
               <div style={{ display: 'flex', gap: 8 }}>
                 <input
