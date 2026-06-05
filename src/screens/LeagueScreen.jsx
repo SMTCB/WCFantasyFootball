@@ -985,7 +985,7 @@ export default function LeagueScreen() {
                 <NotificationPanel
                   notifications={notifications}
                   unreadCount={notificationCount}
-                  extraCount={incomingTrades.length}
+                  extraCount={activeLeague?.leagues?.format === 'noduplicate' ? incomingTrades.length : 0}
                   onMarkAsRead={markNotificationAsRead}
                   onClearAll={clearAllNotifications}
                   onNavigate={(link) => link && navigate(link)}
@@ -1024,7 +1024,7 @@ export default function LeagueScreen() {
                 <NotificationPanel
                   notifications={notifications}
                   unreadCount={notificationCount}
-                  extraCount={incomingTrades.length}
+                  extraCount={activeLeague?.leagues?.format === 'noduplicate' ? incomingTrades.length : 0}
                   onMarkAsRead={markNotificationAsRead}
                   onClearAll={clearAllNotifications}
                   onNavigate={(link) => link && navigate(link)}
@@ -1153,6 +1153,7 @@ export default function LeagueScreen() {
             unreadChat={unreadCount}
             notifyBets={notificationCount > 0}
             h2hEnabled={h2hEnabled}
+            isDraftLeague={activeLeague?.leagues?.format === 'noduplicate'}
           />
         </div>
 
@@ -1165,6 +1166,7 @@ export default function LeagueScreen() {
             unreadChat={unreadCount}
             notifyBets={notificationCount > 0}
             h2hEnabled={h2hEnabled}
+            isDraftLeague={activeLeague?.leagues?.format === 'noduplicate'}
           />
         </div>
 
@@ -1175,7 +1177,7 @@ export default function LeagueScreen() {
              {/* Bug #4: Persistent pending-trades notice so managers know where
                  to find the proposals they sent or received. Only rendered when
                  at least one proposal is active. */}
-             {(incomingTrades.length > 0 || outgoingTrades.length > 0) && (
+             {activeLeague?.leagues?.format === 'noduplicate' && (incomingTrades.length > 0 || outgoingTrades.length > 0) && (
                <div style={{
                  display: 'flex', alignItems: 'center', gap: 10,
                  padding: '9px 16px',
@@ -1702,10 +1704,12 @@ export default function LeagueScreen() {
                        <div className="text-[13px] font-black text-white">£{p.price}M</div>
                        <div className="text-[9px] font-bold" style={{ color: 'var(--positive)' }}>READY</div>
                      </div>
-                     <button
-                       onClick={() => { const t = { ...managerTeamView, squadId: squadByUserRef.current[managerTeamView.user_id] }; setTradeTarget(t); setTradeTheirPlayer(p); loadTradeSquads(managerTeamView.user_id); setManagerTeamView(null); setShowTradeBuilder(true); }}
-                       style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 9, letterSpacing: '.14em', color: 'var(--cyan)', background: 'transparent', border: '1px solid rgba(0,180,216,.3)', padding: '4px 8px', cursor: 'pointer', flexShrink: 0 }}
-                     >TRADE</button>
+                     {activeLeague?.leagues?.format === 'noduplicate' && (
+                       <button
+                         onClick={() => { const t = { ...managerTeamView, squadId: squadByUserRef.current[managerTeamView.user_id] }; setTradeTarget(t); setTradeTheirPlayer(p); loadTradeSquads(managerTeamView.user_id); setManagerTeamView(null); setShowTradeBuilder(true); }}
+                         style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 9, letterSpacing: '.14em', color: 'var(--cyan)', background: 'transparent', border: '1px solid rgba(0,180,216,.3)', padding: '4px 8px', cursor: 'pointer', flexShrink: 0 }}
+                       >TRADE</button>
+                     )}
                    </div>
                    );
                  })}

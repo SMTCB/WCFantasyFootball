@@ -8,7 +8,7 @@ export default function AuctionsView({ auctions, auctionsLoading, name, mySquadI
       <div style={{ borderBottom: '1px solid var(--rule)', background: 'var(--ink-2)', flexShrink: 0 }}>
         <div style={{ padding: 'clamp(12px, 2vw, 20px) clamp(14px, 3vw, 28px)', borderBottom: '1px solid var(--rule)' }}>
           <div style={{ fontFamily: MONO, fontSize: 'clamp(9px, 1.8vw, 10px)', color: 'var(--gold)', letterSpacing: '.22em' }}>AUCTION HOUSE · {name.toUpperCase()}</div>
-          <div style={{ fontFamily: DISPLAY, fontSize: 'clamp(18px, 4vw, 24px)', marginTop: 6 }}>Open bids. No two managers own the same player.</div>
+          <div style={{ fontFamily: DISPLAY, fontSize: 'clamp(18px, 4vw, 24px)', marginTop: 6 }}>Open bids. First manager to win the auction gets exclusive rights.</div>
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr' }}>
           {[
