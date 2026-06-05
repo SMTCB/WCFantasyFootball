@@ -336,6 +336,63 @@ function SeasonStepper({ leagueName = 'LEAGUE', memberCount = 0, league = null, 
 // ─────────────────────────────────────────────────────────────────────────────
 // Wizard sub-components
 // ─────────────────────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// Draft submission tracker — commissioner-only, shown in the DRAFT lifecycle card
+// ─────────────────────────────────────────────────────────────────────────────
+function DraftSubmissionTracker({ members, submitted }) {
+  const total     = members.length;
+  const doneCount = members.filter(m => submitted.has(m.user_id)).length;
+  const allDone   = doneCount === total;
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+      {/* Summary bar */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.2em', color: 'var(--mute)' }}>
+          SUBMISSIONS
+        </span>
+        <span style={{
+          fontFamily: MONO, fontSize: 9, letterSpacing: '.14em', padding: '2px 7px',
+          border: `1px solid ${allDone ? 'rgba(34,197,94,.4)' : 'rgba(245,158,11,.4)'}`,
+          background: allDone ? 'rgba(34,197,94,.06)' : 'rgba(245,158,11,.06)',
+          color: allDone ? 'var(--positive)' : 'var(--warn)',
+        }}>
+          {doneCount}/{total} {allDone ? '· ALL IN ✓' : '· WAITING'}
+        </span>
+      </div>
+      {/* Per-manager rows */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+        {members.map(m => {
+          const done     = submitted.has(m.user_id);
+          const username = m.users?.username ?? m.user_id.slice(0, 8);
+          return (
+            <div key={m.user_id} style={{
+              display: 'flex', alignItems: 'center', gap: 8,
+              padding: '4px 8px',
+              background: done ? 'rgba(34,197,94,.04)' : 'var(--ink)',
+              border: `1px solid ${done ? 'rgba(34,197,94,.2)' : 'var(--rule)'}`,
+            }}>
+              <span style={{
+                fontFamily: MONO, fontSize: 8, letterSpacing: '.14em',
+                color: done ? 'var(--positive)' : 'var(--danger)',
+                width: 12, textAlign: 'center', flexShrink: 0,
+              }}>
+                {done ? '✓' : '✗'}
+              </span>
+              <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.14em', color: done ? 'var(--paper)' : 'var(--mute)', flex: 1 }}>
+                {username}
+              </span>
+              <span style={{ fontFamily: MONO, fontSize: 8, letterSpacing: '.12em', color: done ? 'var(--positive)' : 'var(--mute)' }}>
+                {done ? 'SUBMITTED' : 'PENDING'}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 function WizField({ label, sub, children }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -1283,6 +1340,37 @@ function LifecycleOps({ commissioner, leagueId, tournamentId, windowType = null,
   // Override mode: allows editing transfer window fields even when deadline-controlled
   const [twOverride, setTwOverride] = useState(false);
 
+  // Draft submission tracker — shows which managers have submitted their pick list.
+  // Reads only user_id + submitted_at (NOT player_ids) so the blind draft stays blind.
+  const [draftSubmissions, setDraftSubmissions]   = useState(null); // null = not yet loaded
+  const [draftMembers,     setDraftMembers]       = useState([]);   // all league members
+
+  useEffect(() => {
+    if (!leagueId || !league || league.format !== 'noduplicate') return;
+    let cancelled = false;
+    (async () => {
+      const [{ data: members }, { data: subs }] = await Promise.all([
+        supabase
+          .from('league_members')
+          .select('user_id, users(username)')
+          .eq('league_id', leagueId)
+          .order('total_points', { ascending: false }),
+        supabase
+          .from('draft_submissions')
+          .select('user_id, submitted_at, phase')
+          .eq('league_id', leagueId),
+      ]);
+      if (cancelled) return;
+      setDraftMembers(members || []);
+      // Build a Set of user_ids who have a submitted row (any phase)
+      const submittedSet = new Set((subs || []).map(s => s.user_id));
+      setDraftSubmissions(submittedSet);
+    })();
+    return () => { cancelled = true; };
+  // Re-run when the league or allocation status changes (e.g. after allocation runs)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [leagueId, league?.format, league?.cup_phase]);
+
   // Deadline-controlled = window_type is 'matchday' (WC/cup leagues using matchday_deadlines).
   // Manual-controlled = window from transfer_windows table (EPL/season leagues).
   // windowType comes from get_transfer_window_status via useTransferWindow in LeagueScreen;
@@ -1424,11 +1512,22 @@ function LifecycleOps({ commissioner, leagueId, tournamentId, windowType = null,
             when="After all managers submit picks. Before GW1 kickoff."
             primary={
               allocationDone ? (
-                <div style={{ padding: '8px 10px', background: 'var(--ink)', border: '1px solid var(--rule)', fontFamily: BODY, fontSize: 10, color: 'var(--positive)', lineHeight: 1.5 }}>
-                  ✓ Allocation complete — squads are live. The lottery cannot be re-run.
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  <div style={{ padding: '8px 10px', background: 'var(--ink)', border: '1px solid var(--rule)', fontFamily: BODY, fontSize: 10, color: 'var(--positive)', lineHeight: 1.5 }}>
+                    ✓ Allocation complete — squads are live. The lottery cannot be re-run.
+                  </div>
+                  {/* Submission tracker still visible after allocation for reference */}
+                  {draftMembers.length > 0 && draftSubmissions !== null && (
+                    <DraftSubmissionTracker members={draftMembers} submitted={draftSubmissions} />
+                  )}
                 </div>
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  {/* Submission tracker — shows who has/hasn't submitted their pick list */}
+                  {draftMembers.length > 0 && draftSubmissions !== null && (
+                    <DraftSubmissionTracker members={draftMembers} submitted={draftSubmissions} />
+                  )}
+                  <div style={{ height: 1, background: 'var(--rule)', margin: '2px 0' }} />
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                     <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.2em', color: 'var(--mute)' }}>DEADLINE (INFORMATIONAL)</span>
                     <input type="datetime-local" value={draftDeadline} onChange={e => setDraftDeadline(e.target.value)} style={inputStyle} />
