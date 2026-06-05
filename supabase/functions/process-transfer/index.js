@@ -110,15 +110,21 @@ Deno.serve(async (req) => {
       }, 403, corsHeaders);
     }
 
-    // 2. Reject if any fixture is currently live (kickoff within last 3 hours — guards against stale 'live' status)
+    // 2. Reject if any fixture for THIS LEAGUE'S TOURNAMENT is currently live.
+    //    Scoping to tournamentId prevents unrelated matches (e.g. other nations in a
+    //    large tournament, or other competitions entirely) from blocking transfers in
+    //    this league. Without the filter, TAJ vs IND being live in tournament 623 would
+    //    block transfers in every league backed by that tournament, even a mini-league
+    //    that only uses 8 of the 200 fixtures.
     const threeHoursAgo = new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString();
-    const { data: liveFixture } = await supabase
+    let liveQuery = supabase
       .from('fixtures')
       .select('id, home_team, away_team, kickoff_at')
       .eq('status', 'live')
       .gte('kickoff_at', threeHoursAgo)
-      .limit(1)
-      .maybeSingle();
+      .limit(1);
+    if (tournamentId) liveQuery = liveQuery.eq('tournament_id', tournamentId);
+    const { data: liveFixture } = await liveQuery.maybeSingle();
 
     if (liveFixture) {
       return json({
@@ -128,9 +134,10 @@ Deno.serve(async (req) => {
       }, 403, corsHeaders);
     }
 
-    // 3. (#105) Reject if the player's team fixture is currently in progress (cost-lock at kickoff)
-    // Only check for BUY actions (selling is always allowed)
-    // Only consider fixtures within the last 3 hours to guard against stale 'live' status
+    // 3. (#105) Reject if the specific player's team fixture is currently live (cost-lock at kickoff).
+    // Scoped to the league's tournament so a player in a different competition's live match
+    // doesn't accidentally freeze their price here.
+    // Only check for BUY actions (selling is always allowed).
     if (action === 'buy') {
       const { data: playerRow } = await supabase
         .from('players')
@@ -139,14 +146,15 @@ Deno.serve(async (req) => {
         .maybeSingle();
 
       if (playerRow?.forza_team_id) {
-        const { data: playerFixture } = await supabase
+        let playerFixQ = supabase
           .from('fixtures')
           .select('id, home_team, away_team, kickoff_at, status')
           .or(`home_team_forza_id.eq.${playerRow.forza_team_id},away_team_forza_id.eq.${playerRow.forza_team_id}`)
           .eq('status', 'live')
           .gte('kickoff_at', threeHoursAgo)
-          .limit(1)
-          .maybeSingle();
+          .limit(1);
+        if (tournamentId) playerFixQ = playerFixQ.eq('tournament_id', tournamentId);
+        const { data: playerFixture } = await playerFixQ.maybeSingle();
 
         if (playerFixture) {
           return json({
