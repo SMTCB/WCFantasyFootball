@@ -38,6 +38,7 @@ import StatsView              from '../components/league/StatsView';
 import ChatView               from '../components/league/ChatView';
 import CommissionerPanel      from '../components/league/CommissionerPanel';
 import RecapView             from '../components/league/RecapView';
+import H2HView               from '../components/league/H2HView';
 
 const LEAGUE_TOUR_STEPS = [
   {
@@ -173,6 +174,7 @@ export default function LeagueScreen() {
   // Create form state
   const [leagueName,       setLeagueName]       = useState('');
   const [leagueFormat,     setLeagueFormat]     = useState('classic');
+  // 'noduplicate_h2h' is a UI-only value — sent to the RPC as format='noduplicate' + p_h2h_enabled=true
   const [leagueTournament, setLeagueTournament] = useState('426');
   const [tournaments,      setTournaments]      = useState([]);
   const [formLoading,      setFormLoading]      = useState(false);
@@ -327,6 +329,7 @@ export default function LeagueScreen() {
     if (t === 'admin') return 'commissioner';
     return t;
   };
+  // h2h maps 1:1 (viewToTab('h2h') === 'h2h', tabToView('h2h') === 'h2h')
   // recap tab maps 1:1 (tabToView('recap') === 'recap', viewToTab('recap') === 'recap')
   // U32: set tab + sync to URL query param so ?tab=chat deep-links work
   // setSearchParams MUST be in deps: React Router v7 recreates it whenever
@@ -365,7 +368,7 @@ export default function LeagueScreen() {
         .from('league_members')
         .select(`
           league_id, rank, total_points, role,
-          leagues ( id, name, format, tournament_id, created_by )
+          leagues ( id, name, format, tournament_id, created_by, h2h_enabled )
         `)
         .eq('user_id', userId);
 
@@ -611,11 +614,13 @@ export default function LeagueScreen() {
     if (!leagueName.trim()) return;
     try {
       setFormLoading(true);
+      const isH2H = leagueFormat === 'noduplicate_h2h';
       const { data, error } = await supabase.rpc('create_league', {
         p_name:          leagueName.trim(),
-        p_format:        leagueFormat,
+        p_format:        isH2H ? 'noduplicate' : leagueFormat,
         p_user_id:       user?.id,
         p_tournament_id: leagueTournament,
+        p_h2h_enabled:   isH2H,
       });
       if (error) throw error;
       setLeagueName('');
@@ -754,6 +759,17 @@ export default function LeagueScreen() {
                 <div style={{ padding: '18px 20px', display: 'flex', flexDirection: 'column', gap: 20 }}>
                   {[
                     {
+                      label: 'DRAFT + H2H', color: 'var(--gold)',
+                      summary: 'Draft league with a parallel head-to-head competition. Every matchday you face one opponent — winner takes 5 H2H pts, draw 2, loss 0.',
+                      rows: [
+                        ['Draft', 'All draft rules apply — blind lottery, unique player ownership, first-come-first-served after allocation.'],
+                        ['H2H', 'Each matchday your fantasy points total is compared against one opponent. Two parallel standings: classic pts + H2H pts.'],
+                        ['Scoring', 'Win 5 pts · Draw 2 pts · Loss 0 pts (configurable). Bye = automatic win.'],
+                        ['Schedule', 'Round-robin — everyone plays everyone before repeating. Commissioner sets it up via the Admin tab.'],
+                        ['Best for', 'Competitive groups wanting both individual excellence (classic) and weekly head-to-head drama (H2H).'],
+                      ],
+                    },
+                    {
                       label: 'CLASSIC', color: 'rgba(255,255,255,0.6)',
                       summary: 'All managers build freely. The same player can appear in multiple squads simultaneously.',
                       rows: [
@@ -813,7 +829,7 @@ export default function LeagueScreen() {
                 style={{ width: 16, height: 16, borderRadius: '50%', border: '1px solid rgba(255,255,255,0.2)', background: 'transparent', color: 'rgba(255,255,255,0.4)', fontSize: 9, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontFamily: 'monospace' }}
               >?</button>
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="flex flex-col gap-3">
               {/* Classic */}
               <button
                 type="button"
@@ -854,6 +870,28 @@ export default function LeagueScreen() {
                   <li className="text-[10px]" style={{ color: 'var(--mute)' }}>• First-come-first-served after draft</li>
                 </ul>
               </button>
+
+              {/* Draft + H2H */}
+              <button
+                type="button"
+                onClick={() => setLeagueFormat('noduplicate_h2h')}
+                className={`flex flex-col items-start gap-2 p-3 border rounded text-left transition-colors ${
+                  leagueFormat === 'noduplicate_h2h'
+                    ? 'border-yellow-400 bg-yellow-400/5'
+                    : 'border-border bg-surface hover:border-yellow-400/40'
+                }`}
+              >
+                <div className="flex items-center gap-2 w-full">
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-white">Draft + H2H</span>
+                  <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 8, color: 'var(--gold)', border: '1px solid rgba(240,180,0,0.4)', padding: '1px 5px', letterSpacing: '.14em' }}>⚔️ H2H</span>
+                </div>
+                <span className="text-[11px] leading-snug" style={{ color: 'var(--paper)' }}>Draft league with a parallel head-to-head competition each matchday.</span>
+                <ul className="flex flex-col gap-[3px]">
+                  <li className="text-[10px]" style={{ color: 'var(--mute)' }}>• All draft rules apply</li>
+                  <li className="text-[10px]" style={{ color: 'var(--mute)' }}>• Win 5 pts · Draw 2 pts · Loss 0 pts</li>
+                  <li className="text-[10px]" style={{ color: 'var(--gold)' }}>• Two parallel tables: pts + H2H</li>
+                </ul>
+              </button>
             </div>
             <p className="text-[10px]" style={{ color: 'var(--mute)', marginTop: 2 }}>
               Both modes: max 3 players per club · position rules always apply · club cap relaxes in cup tournaments
@@ -868,8 +906,10 @@ export default function LeagueScreen() {
   }
 
   if (leagueId) {
-    const name     = activeLeague?.leagues?.name || activeLeague?.name || 'SYNCING...';
-    const joinCode = activeLeague?.leagues?.join_code ?? activeLeague?.join_code ?? null;
+    const name       = activeLeague?.leagues?.name || activeLeague?.name || 'SYNCING...';
+    const joinCode   = activeLeague?.leagues?.join_code ?? activeLeague?.join_code ?? null;
+    const h2hEnabled = activeLeague?.leagues?.h2h_enabled ?? false;
+    const leagueMode = h2hEnabled ? 'draft_h2h' : (activeLeague?.leagues?.format === 'noduplicate' ? 'draft' : 'classic');
     return (
       <div style={{ display: 'flex', flexDirection: 'column', background: 'var(--ink)', color: 'var(--paper)', minHeight: '100vh', fontFamily: "'Archivo', sans-serif" }}>
 
@@ -908,6 +948,7 @@ export default function LeagueScreen() {
             isLive={false}
             onBack={() => navigate('/league')}
             cupPhase={activeLeague?.leagues?.cup_phase}
+            leagueMode={leagueMode}
             rightSlot={
               <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                 <NotificationPanel
@@ -946,6 +987,7 @@ export default function LeagueScreen() {
             gw={currentGW}
             onBack={() => navigate('/league')}
             cupPhase={activeLeague?.leagues?.cup_phase}
+            leagueMode={leagueMode}
             rightSlot={
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <NotificationPanel
@@ -1079,6 +1121,7 @@ export default function LeagueScreen() {
             isCommissioner={isCommissioner}
             unreadChat={unreadCount}
             notifyBets={notificationCount > 0}
+            h2hEnabled={h2hEnabled}
           />
         </div>
 
@@ -1090,6 +1133,7 @@ export default function LeagueScreen() {
             isCommissioner={isCommissioner}
             unreadChat={unreadCount}
             notifyBets={notificationCount > 0}
+            h2hEnabled={h2hEnabled}
           />
         </div>
 
@@ -1307,6 +1351,13 @@ export default function LeagueScreen() {
              members={members}
              currentUser={currentUser}
              statsLoading={statsLoading}
+           />
+         )}
+         {view === 'h2h' && h2hEnabled && (
+           <H2HView
+             leagueId={activeLeague?.league_id}
+             currentUser={currentUser}
+             members={members}
            />
          )}
          {view === 'commissioner' && isCommissioner && (

@@ -32,7 +32,7 @@ export function MgrTag({ mono = '???', hue = '#8B95A1', size = 18, dim = false }
 }
 
 // Hub topbar — "← BACK · COMPETITIVE CENTER / LEAGUE NAME · N MEMBERS · GWX"
-export function HubTopbar({ leagueName = 'LOADING…', memberCount = 0, gw = '—', rightSlot, onBack, isLive = false, cupPhase }) {
+export function HubTopbar({ leagueName = 'LOADING…', memberCount = 0, gw = '—', rightSlot, onBack, isLive = false, cupPhase, leagueMode }) {
   return (
     <div style={{
       display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap',
@@ -56,6 +56,9 @@ export function HubTopbar({ leagueName = 'LOADING…', memberCount = 0, gw = '�
             <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.18em', color: 'var(--gold)', background: 'rgba(240,180,0,0.1)', border: '1px solid rgba(240,180,0,0.3)', padding: '2px 7px', flexShrink: 0 }}>
               {cupPhase.replace(/_/g, ' ').toUpperCase()}
             </span>
+          )}
+          {leagueMode === 'draft_h2h' && (
+            <span style={{ fontFamily: MONO, fontSize: 8, letterSpacing: '.16em', color: 'var(--gold)', background: 'rgba(240,180,0,0.08)', border: '1px solid rgba(240,180,0,0.35)', padding: '2px 6px', flexShrink: 0 }}>DRAFT · H2H</span>
           )}
           <span style={{ fontFamily: MONO, fontSize: 'clamp(8px, 2vw, 10px)', color: 'var(--mute)', letterSpacing: '.2em', whiteSpace: 'nowrap' }}>
             {memberCount}M · GW{gw}
@@ -107,7 +110,7 @@ export function HubActionBar({ onManageSquad, onMarket }) {
 }
 
 // 8-tab hub navigation
-export function HubTabs({ active = 'leaderboard', onTab, isCommissioner = false, unreadChat = 0, notifyBets = false, notifyAuctions = false }) {
+export function HubTabs({ active = 'leaderboard', onTab, isCommissioner = false, unreadChat = 0, notifyBets = false, notifyAuctions = false, h2hEnabled = false }) {
   const tabs = [
     { id: 'leaderboard', label: 'LEADERBOARD' },
     { id: 'recap',       label: 'RECAP' },
@@ -117,6 +120,7 @@ export function HubTabs({ active = 'leaderboard', onTab, isCommissioner = false,
     { id: 'auctions',    label: 'AUCTIONS', notify: notifyAuctions },
     { id: 'chat',        label: 'CHAT',     count: unreadChat },
     { id: 'stats',       label: 'STATS' },
+    ...(h2hEnabled ? [{ id: 'h2h', label: 'H2H ⚔️' }] : []),
     ...(isCommissioner ? [{ id: 'admin', label: '⚙ ADMIN', dim: true }] : []),
   ];
 
@@ -248,7 +252,7 @@ export const mgrMono = (username = '') => username.substring(0, 3).toUpperCase()
 // ─── Mobile components ────────────────────────────────────────────────────────
 
 // Mobile hub league header — replaces HubTopbar on mobile viewports.
-export function HubLeagueHeader({ leagueName = 'LOADING…', memberCount = 0, gw = '—', backable = false, backTitle = '', onBack, rightSlot, cupPhase }) {
+export function HubLeagueHeader({ leagueName = 'LOADING…', memberCount = 0, gw = '—', backable = false, backTitle = '', onBack, rightSlot, cupPhase, leagueMode }) {
   return (
     <div style={{ padding: '10px max(18px, 4vw) 8px', borderBottom: '1px solid var(--rule)', background: 'var(--ink)', flexShrink: 0 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -274,13 +278,16 @@ export function HubLeagueHeader({ leagueName = 'LOADING…', memberCount = 0, gw
             {cupPhase.replace(/_/g, ' ').toUpperCase()}
           </span>
         )}
+        {leagueMode === 'draft_h2h' && (
+          <span style={{ fontFamily: MONO, fontSize: 8, letterSpacing: '.16em', color: 'var(--gold)', background: 'rgba(240,180,0,0.08)', border: '1px solid rgba(240,180,0,0.35)', padding: '2px 6px', flexShrink: 0 }}>DRAFT · H2H</span>
+        )}
       </div>
     </div>
   );
 }
 
 // Mobile horizontal-scroll hub tab pills — replaces HubTabs on mobile viewports.
-export function HubTabPills({ active = 'leaderboard', onTab, isCommissioner = false, unreadChat = 0, notifyBets = false, notifyAuctions = false }) {
+export function HubTabPills({ active = 'leaderboard', onTab, isCommissioner = false, unreadChat = 0, notifyBets = false, notifyAuctions = false, h2hEnabled = false }) {
   const tabs = [
     { id: 'leaderboard', label: 'BOARD' },
     { id: 'recap',       label: 'RECAP' },
@@ -290,6 +297,7 @@ export function HubTabPills({ active = 'leaderboard', onTab, isCommissioner = fa
     { id: 'auctions',    label: 'AUCTIONS', notify: notifyAuctions },
     { id: 'chat',        label: 'CHAT',     count: unreadChat },
     { id: 'stats',       label: 'STATS' },
+    ...(h2hEnabled ? [{ id: 'h2h', label: 'H2H ⚔️' }] : []),
     ...(isCommissioner ? [{ id: 'admin', label: 'ADMIN' }] : []),
   ];
   return (

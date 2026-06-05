@@ -40,6 +40,7 @@ Detailed documentation of core systems and how they work.
 
 | File | Purpose | Key Sections |
 |------|---------|--------------|
+| [H2H_COMPETITION_DESIGN.md](docs/architecture/H2H_COMPETITION_DESIGN.md) | Draft + H2H mode — parallel H2H competition layered on draft leagues | Round-robin schedule, scoring config, multi-day gate, admin calendar, DB schema |
 | [DRAFT_SYSTEM_DESIGN.md](docs/architecture/DRAFT_SYSTEM_DESIGN.md) | Draft lottery, league modes (Classic/Draft), cup format, relaxation formulas | Allocation engine, no-repeat rules, club cap, two-phase draft |
 | [TRANSFER_WINDOW_SYSTEM.md](docs/architecture/TRANSFER_WINDOW_SYSTEM.md) | Unified transfer window model for all league and competition types | Auto open/close, config table, transfer limits, wildcard round |
 | [STARTING_XI_AND_BENCH.md](docs/architecture/STARTING_XI_AND_BENCH.md) | Starting XI selection, bench, points deduction, lineup change rules | set_lineup rules, lock mechanic, scoring model |
