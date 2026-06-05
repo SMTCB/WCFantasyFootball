@@ -262,6 +262,7 @@ export default function MarketScreen() {
       // explicit limit the cheapest ~680 are silently cut off, so cheap owned
       // players don't appear and the position tiles show wrong counts.
       let playersQuery = supabase.from('players').select('*')
+        .eq('is_active', true)
         .order('price', { ascending: false })
         .limit(5000);
       if (tournamentId) playersQuery = playersQuery.eq('tournament_id', tournamentId);

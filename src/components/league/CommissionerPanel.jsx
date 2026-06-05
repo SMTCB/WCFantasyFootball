@@ -579,6 +579,7 @@ function CreateBetWizard({ onPublish, commLoading, memberCount, tournamentId, is
       supabase.from('players')
         .select('id, name, position, club')
         .eq('tournament_id', tournamentId)
+        .eq('is_active', true)
         .in('position', ['FWD', 'MID', 'DEF', 'GK'])
         .order('price', { ascending: false })
         .limit(300),
@@ -2009,7 +2010,7 @@ function MobCreateBet({ tournamentId, onPublish, commLoading, memberCount }) {
         .eq('tournament_id', tournamentId).eq('status', 'scheduled').gte('kickoff_at', now)
         .order('kickoff_at', { ascending: true }).limit(40),
       supabase.from('players').select('id, name, position, club')
-        .eq('tournament_id', tournamentId).in('position', ['FWD', 'MID', 'DEF', 'GK'])
+        .eq('tournament_id', tournamentId).eq('is_active', true).in('position', ['FWD', 'MID', 'DEF', 'GK'])
         .order('price', { ascending: false }).limit(300),
     ]).then(([{ data: fx }, { data: pl }]) => {
       const allFx = fx || [];
