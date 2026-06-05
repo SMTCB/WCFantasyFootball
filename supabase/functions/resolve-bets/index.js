@@ -72,7 +72,7 @@ Deno.serve(async (req) => {
         else                                     correctAnswer = drawKey;
 
         const { data: result, error: rpcErr } = await supabase
-          .rpc('resolve_bet', { p_instance_id: inst.id, p_answer: correctAnswer });
+          .rpc('resolve_bet', { p_instance_id: inst.id, p_answers: [correctAnswer] });
 
         if (rpcErr || result?.ok === false) {
           const msg = rpcErr?.message ?? result?.error ?? 'unknown';

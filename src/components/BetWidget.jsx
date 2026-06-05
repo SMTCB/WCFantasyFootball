@@ -202,8 +202,13 @@ export default function BetWidget({ bet, squadId, onSubmitted }) {
     ? (options.find(o => o.key === submission.answer)?.label ?? submission.answer)
     : null;
 
-  const correctLabel = bet.correct_answer
-    ? (options.find(o => o.key === bet.correct_answer)?.label ?? bet.correct_answer)
+  // Support both new correct_answers[] and legacy correct_answer string
+  const correctAnswerKeys = (bet.correct_answers?.length ? bet.correct_answers : null)
+    ?? (bet.correct_answer ? [bet.correct_answer] : null);
+  const correctLabel = correctAnswerKeys
+    ? correctAnswerKeys
+        .map(k => options.find(o => o.key === k)?.label ?? k)
+        .join(' · ')
     : null;
 
   const handleSelect = async (opt) => {
@@ -241,7 +246,9 @@ export default function BetWidget({ bet, squadId, onSubmitted }) {
         {isResolved && (
           <div className="flex items-center gap-3">
             <div className="text-[10px] uppercase tracking-wider font-semibold" style={{ color: 'var(--mute)' }}>Answer:</div>
-            <div className="text-[13px] font-black" style={{ color: 'var(--paper)' }}>{correctLabel ?? bet.correct_answer}</div>
+            <div className="text-[13px] font-black" style={{ color: correctAnswerKeys?.length ? 'var(--paper)' : 'var(--mute)' }}>
+              {correctAnswerKeys?.length ? correctLabel : 'No winner'}
+            </div>
             {resultBadge()}
           </div>
         )}
