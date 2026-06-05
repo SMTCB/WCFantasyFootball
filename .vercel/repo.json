@@ -1,0 +1,11 @@
+{
+  "remoteName": "origin",
+  "projects": [
+    {
+      "id": "prj_zMw2RhRye7taz4KCDOXGwlxNSgPN",
+      "name": "wc-fantasy-football",
+      "directory": ".",
+      "orgId": "team_pT5AzY0rUqE7mvRSdVw8fr9L"
+    }
+  ]
+}

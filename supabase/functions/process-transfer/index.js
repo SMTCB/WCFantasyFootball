@@ -136,21 +136,6 @@ Deno.serve(async (req) => {
       }, 403, corsHeaders);
     }
 
-    // 2b. Check if the active matchday has started at all. If all fixtures are
-    //     still 'scheduled', the league hasn't kicked off — transfers should be free.
-    //     This implements the rule: "before the start of the league, all transfers are free".
-    //     Count fixtures for this matchday that have either started (live) or finished.
-    let hasStartedQuery = supabase
-      .from('fixtures')
-      .select('id', { count: 'exact' })
-      .eq('matchday_id', activeMatchdayId)
-      .in('status', ['live', 'finished']);
-    if (tournamentId) hasStartedQuery = hasStartedQuery.eq('tournament_id', tournamentId);
-    const { count: startedFixtureCount } = await hasStartedQuery;
-
-    // If no fixtures have started yet, skip transfer limit enforcement by not passing matchday_id.
-    const leagueHasStarted = (startedFixtureCount ?? 0) > 0;
-
     // 3. (#105) Reject if the specific player's team fixture is currently live (cost-lock at kickoff).
     //    Same two scope guards: tournament + matchday_id IS NOT NULL.
     //    Only check for BUY actions (selling is always allowed).
@@ -231,14 +216,9 @@ Deno.serve(async (req) => {
     // bypass the limit. Migration 114 intentionally skips enforcement only when no
     // canonical '-rN' round can be resolved at all (genuinely pre-competition, where
     // activeMatchdayId is itself null because no deadline exists yet).
-    // 2b: Additionally, if the league hasn't started (all fixtures still scheduled),
-    //     skip transfer limit enforcement by passing null for matchday_id.
-    let enforceMatchdayId = null;
-    if (leagueHasStarted) {
-      enforceMatchdayId = /-r\d+$/.test(squad.matchday_id ?? '')
-        ? squad.matchday_id
-        : activeMatchdayId;
-    }
+    const enforceMatchdayId = /-r\d+$/.test(squad.matchday_id ?? '')
+      ? squad.matchday_id
+      : activeMatchdayId;
 
     // ── SELL ─────────────────────────────────────────────────────────────────
     if (action === 'sell') {
