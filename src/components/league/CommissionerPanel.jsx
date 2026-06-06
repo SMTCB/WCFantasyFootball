@@ -1328,7 +1328,7 @@ function LifecycleOp({ title, status, statusTone = 'var(--mute)', sub, when, chi
 // ─────────────────────────────────────────────────────────────────────────────
 function LifecycleOps({ commissioner, leagueId, tournamentId, windowType = null, league = null, onHelp }) {
   const {
-    commLoading,
+    commLoading, setCommMsg,
     windowOpensAt, setWindowOpensAt,
     windowClosesAt, setWindowClosesAt,
     windowTransfers, setWindowTransfers,
@@ -1382,6 +1382,11 @@ function LifecycleOps({ commissioner, leagueId, tournamentId, windowType = null,
   const now = new Date();
   const deadlinePassed = league?.draft_deadline && new Date(league.draft_deadline) <= now;
   const allocationDone = league?.cup_phase && league.cup_phase !== 'pre_cup';
+
+  // Knockout allocation is done once cup_phase moves into an elimination phase.
+  // Declared here (before groupStageStarted useEffect) so it's initialised when
+  // the dependency array at that useEffect is evaluated — avoids a TDZ crash.
+  const knockoutAllocationDone = ['pre_elimination', 'round_of_16', 'quarter_final', 'semi_final', 'final'].includes(league?.cup_phase);
 
   // Knockout draft local state
   const [knockoutDeadline,    setKnockoutDeadline]    = useState('');
@@ -1475,9 +1480,6 @@ function LifecycleOps({ commissioner, leagueId, tournamentId, windowType = null,
       .eq('league_id', leagueId)
       .then(({ count }) => setKeepSubmissionCount(count ?? 0));
   }, [league?.cup_phase, leagueId]);
-
-  // Knockout allocation is done once cup_phase moves into an elimination phase
-  const knockoutAllocationDone = ['pre_elimination', 'round_of_16', 'quarter_final', 'semi_final', 'final'].includes(league?.cup_phase);
 
   const knockoutStatus = !allocationDone ? 'LOCKED'
     : knockoutAllocationDone ? 'ALLOCATED'
