@@ -3,42 +3,38 @@ import { supabase } from '../lib/supabase';
 
 export function useAuctions(leagueId, squadId) {
   const [auctions,       setAuctions]       = useState([]);
+  const [pendingAuctions,setPendingAuctions]= useState([]);
   const [closedAuctions, setClosedAuctions] = useState([]);
   const [loading, setLoading]               = useState(false);
   const cancelRef = useRef(false);
+
+  const FIELDS        = `id, player_id, seller_id, starting_bid, current_bid, highest_bidder_id, deadline_at, status, created_at, min_increment, won_at, players(id, name, position, club, price)`;
+  const FIELDS_CLOSED = `id, player_id, seller_id, starting_bid, current_bid, highest_bidder_id, deadline_at, status, created_at, won_at, players(id, name, position, club)`;
 
   const load = useCallback(async () => {
     if (!leagueId) return;
     cancelRef.current = false;
     setLoading(true);
     const cutoff = new Date(Date.now() - 30 * 24 * 3600_000).toISOString();
-    const [{ data: open }, { data: closed }] = await Promise.all([
-      supabase
-        .from('auction_listings')
-        .select(`
-          id, player_id, seller_id, starting_bid, current_bid, highest_bidder_id, deadline_at, status, created_at, min_increment,
-          players(id, name, position, club, price)
-        `)
-        .eq('league_id', leagueId)
-        .eq('status', 'open')
+    const [{ data: open }, { data: pending }, { data: closed }] = await Promise.all([
+      supabase.from('auction_listings').select(FIELDS)
+        .eq('league_id', leagueId).eq('status', 'open')
         .order('deadline_at', { ascending: true }),
-      supabase
-        .from('auction_listings')
-        .select(`
-          id, player_id, seller_id, starting_bid, current_bid, highest_bidder_id, deadline_at, status, created_at,
-          players(id, name, position, club)
-        `)
-        .eq('league_id', leagueId)
-        .in('status', ['closed', 'cancelled'])
-        .gte('deadline_at', cutoff)
-        .order('deadline_at', { ascending: false })
-        .limit(20),
+      supabase.from('auction_listings').select(FIELDS)
+        .eq('league_id', leagueId).eq('status', 'pending_confirmation')
+        .order('won_at', { ascending: false }),
+      supabase.from('auction_listings').select(FIELDS_CLOSED)
+        .eq('league_id', leagueId).in('status', ['sold', 'cancelled'])
+        .gte('created_at', cutoff)
+        .order('updated_at', { ascending: false }).limit(20),
     ]);
     if (!cancelRef.current) {
       setAuctions(open ?? []);
+      setPendingAuctions(pending ?? []);
       setClosedAuctions(closed ?? []);
       setLoading(false);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [leagueId]);
 
   useEffect(() => {
@@ -91,5 +87,13 @@ export function useAuctions(leagueId, squadId) {
     return { ok: true };
   }, [load]);
 
-  return { auctions, closedAuctions, loading, listPlayer, placeBid, cancelListing, sellNow, reload: load };
+  const confirmWin = useCallback(async (listingId) => {
+    const { data, error } = await supabase.rpc('confirm_auction_win', { p_listing_id: listingId });
+    if (error) return { ok: false, code: 'RPC_ERROR', error: error.message };
+    if (!data?.ok) return { ok: false, code: data?.code ?? 'UNKNOWN', error: data?.error ?? 'Confirmation failed.' };
+    await load();
+    return { ok: true };
+  }, [load]);
+
+  return { auctions, pendingAuctions, closedAuctions, loading, listPlayer, placeBid, cancelListing, sellNow, confirmWin, reload: load };
 }

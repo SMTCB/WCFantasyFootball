@@ -2,7 +2,7 @@
 
 **Complete specification for the draft-league auction mechanic: bidding, win confirmation, and transfer window integration.**
 
-Last Updated: **2026-06-06**
+Last Updated: **2026-06-06** (rev 2 — squad-full alert, budget at confirmation, gazette entry)
 
 ---
 
@@ -26,8 +26,9 @@ The auction system allows managers in draft leagues to trade players via an open
 ### Phase 2 — Confirmation (buyer must act within the transfer window)
 
 5. The winning manager sees a **CONFIRM PURCHASE** prompt in the TRADING tab
-6. If their squad is full (15 players), they must sell/offload a player first to free a slot
-7. Once a slot is free, the buyer clicks **CONFIRM** — the transfer executes immediately if the window is open
+6. If their squad is full (15 players), the system **alerts them to sell a player first** — they cannot confirm until a slot is free. There is no automatic offload; the manager decides which player to sell via the transfer market, then returns to confirm.
+7. The system checks budget **at confirmation time** (not at bid time). If the budget is no longer sufficient, the listing is cancelled.
+8. Once a slot is free and budget is confirmed, the buyer clicks **CONFIRM** — the transfer executes immediately if the window is open
 
 ---
 
@@ -168,6 +169,7 @@ On success:
   - Remove player from seller squad, add bid amount to seller budget
   - Add player to buyer squad, deduct bid amount from buyer budget
   - UPDATE auction_listings SET status = 'sold', updated_at = NOW()
+  - Write gazette_entries row (entry_type='auction_result') — headline + bullet visible in FRONTPAGE/RECAP
   - RETURN { ok: true, result: 'sold', amount, player_id }
 ```
 
