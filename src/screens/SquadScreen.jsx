@@ -863,8 +863,11 @@ export default function SquadScreen() {
             <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 10, color: 'var(--mute)', letterSpacing: '.14em', textTransform: 'uppercase' }}>
               Tactical Sheet
             </div>
-            <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 34, color: 'var(--paper)', lineHeight: 1.05, letterSpacing: '-0.01em' }}>
-              My Squad
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+              <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 34, color: 'var(--paper)', lineHeight: 1.05, letterSpacing: '-0.01em' }}>
+                My Squad
+              </div>
+              <LeagueSelector value={activeLeague} onChange={setActiveLeague} />
             </div>
           </div>
           <div className="text-right">
@@ -1447,10 +1450,11 @@ export default function SquadScreen() {
           <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 10, color: 'var(--mute)', letterSpacing: '.14em', textTransform: 'uppercase' }}>
             Tactical Sheet
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 34, color: 'var(--paper)', lineHeight: 1.05, letterSpacing: '-0.01em' }}>
               My Squad
             </div>
+            <LeagueSelector value={activeLeague} onChange={setActiveLeague} />
             <button
               onClick={replaySquadTour}
               title="Replay squad tour"

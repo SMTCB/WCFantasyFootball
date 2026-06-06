@@ -12,6 +12,55 @@ This document details the scoring rules, implementation architecture, and data f
 
 ---
 
+## Scoring Job Timing
+
+Three cron jobs handle scoring at different phases of the matchday lifecycle. All call the same `calculate-scores` Edge Function with `{ fixture_id }` in the body; the function is idempotent.
+
+| Cron | Schedule (UTC) | Trigger condition | Purpose |
+|------|---------------|-------------------|---------|
+| `calculate-scores-live` | Every 2 min (`:01–:59`) | `fixtures.status = 'live'` | Live in-play point updates |
+| `calculate-scores-post-match` | **22:30 daily** | `fixtures.status = 'finished' AND kickoff_at > NOW() - 24h` | Final scores for all fixtures finished in the last 24 hours |
+| `calculate-scores-late-finishers` | **23:30 + 00:30 daily** | `fixtures.status = 'finished' AND kickoff_at > NOW() - 3h` | Safety net for fixtures that finish after 22:30 (e.g. extra time, late kickoffs) |
+
+### What triggers scoring?
+
+Scoring is **not event-driven** (it does not fire the moment a match whistle blows). It is **cron-driven**: the crons query the `fixtures` table by status and time window, then fan out one `calculate-scores` call per qualifying fixture.
+
+### Typical matchday timeline
+
+```
+Match kickoff (e.g. 20:00 UTC)
+  → calculate-scores-live fires every 2 min while status='live'
+  → Fixture flips to status='finished' (approx. 22:00 UTC for 90-min game)
+  → calculate-scores-live stops calling (no longer status='live')
+
+22:30 UTC — calculate-scores-post-match
+  → Picks up all finished fixtures from past 24h
+  → Writes final fantasy_points rows and gazette_entries activity row
+  → League standings updated via recompute_league_ranks() trigger
+
+If a fixture finishes after 22:30 (extra time, late kick):
+  23:30 UTC — calculate-scores-late-finishers (3h window)
+  00:30 UTC — calculate-scores-late-finishers (second pass, same 3h window)
+```
+
+### Example: tournament 623 Matchday 1 (2026-06-06)
+
+| Fixture | Kickoff (UTC) | Expected finish | Final score cron |
+|---------|--------------|-----------------|-----------------|
+| Portugal vs Chile | 17:45 | ~19:45 | 22:30 |
+| USA vs Germany | 18:30 | ~20:30 | 22:30 |
+| Switzerland vs Australia | 19:00 | ~21:00 | 22:30 |
+| England vs New Zealand | 20:00 | ~22:00 | 22:30 |
+
+All four games finish before 22:30, so **final MD1 scores land at 22:30 UTC**. If England-NZ goes to extra time the 23:30 pass catches it.
+
+### Auto-sub and H2H resolution
+
+Both auto-sub logic and H2H result resolution are gated on `roundComplete = true` (all fixtures in the round are `finished`). They run inside `calculate-scores` at 22:30 or later, never during live scoring.
+
+---
+
 ## Scoring Rules
 
 ### Base Scoring System
