@@ -157,9 +157,25 @@ async function runLottery(leagueId, phase = 'group') {
       }
     }
   } else {
+    // Pass 0: load keep submissions for the knockout phase.
+    // For all other phases (group, etc.) this query returns nothing and the
+    // keepsByManager / keptPlayerIds structures are empty — true no-op.
+    const { data: keepRows } = phase === 'knockout'
+      ? await supabase.from('knockout_keep_submissions').select('user_id, player_ids').eq('league_id', leagueId)
+      : { data: [] };
+
+    const keepsByManager = {};   // user_id → player_ids[]
+    const keptPlayerIds  = new Set();  // all kept pids — excluded from lottery pool
+    for (const row of keepRows ?? []) {
+      keepsByManager[row.user_id] = row.player_ids ?? [];
+      for (const pid of row.player_ids ?? []) keptPlayerIds.add(pid);
+    }
+
     // 2. Load player data (price, position, club) for allocation enforcement.
+    // Include keep player IDs so playerMap contains data needed for Pass 0 cap checks.
     // forza_team_id is the club identifier used for club-cap enforcement.
-    const allPlayerIds = [...new Set(submissions.flatMap(s => s.player_ids))];
+    const wishListIds  = [...new Set(submissions.flatMap(s => s.player_ids))];
+    const allPlayerIds = [...new Set([...wishListIds, ...keptPlayerIds])];
     const { data: playerRows } = await supabase
       .from('players')
       .select('id, position, price, forza_team_id')
@@ -208,9 +224,40 @@ async function runLottery(leagueId, phase = 'group') {
       userState[sub.user_id] = {
         allocated:  [],
         posCounts:  { GK: 0, DEF: 0, MID: 0, FWD: 0 },
-        clubCounts: {},   // forza_team_id → count, enforces per-club cap
+        clubCounts: {},
         budgetUsed: 0,
       };
+    }
+
+    // Pass 0: pre-allocate kept players before the lottery runs.
+    // Kept players are awarded directly to their keeper and excluded from
+    // the lottery pool — other managers cannot win them in Pass 1 or Pass 2.
+    // Same position/budget/club cap rules apply. If a keep fails validation
+    // (e.g. cap exceeded) it is silently skipped; the manager fills that slot
+    // via the lottery wish list instead.
+    for (const [uid, keepPids] of Object.entries(keepsByManager)) {
+      // Create a state entry for managers who submitted keeps but no wish list.
+      if (!userState[uid]) {
+        userState[uid] = { allocated: [], posCounts: { GK: 0, DEF: 0, MID: 0, FWD: 0 }, clubCounts: {}, budgetUsed: 0 };
+      }
+      const u = userState[uid];
+      for (const pid of keepPids) {
+        if (u.allocated.length >= SQUAD_SIZE) break;
+        const player = playerMap[pid];
+        if (!player) continue;
+        const pos     = normalisePosition(player.position);
+        const teamId  = player.forza_team_id;
+        const clubCnt = teamId ? (u.clubCounts[teamId] ?? 0) : 0;
+        if (u.posCounts[pos] >= SQUAD_POS_CAPS[pos]) continue;
+        if (u.budgetUsed + player.price > budget)    continue;
+        if (teamId && CLUB_CAP < 99 && clubCnt >= CLUB_CAP) continue;
+
+        u.allocated.push(pid);
+        u.posCounts[pos]++;
+        if (teamId) u.clubCounts[teamId] = clubCnt + 1;
+        u.budgetUsed += player.price;
+        awardedTo[pid] = uid; // lock out other managers — cannot be won via lottery
+      }
     }
 
     const droppedByWinner = []; // pids the lottery winner couldn't take
@@ -222,6 +269,7 @@ async function runLottery(leagueId, phase = 'group') {
       for (const pid of sub.player_ids) {
         if (u.allocated.length >= SQUAD_SIZE) break;
 
+        if (keptPlayerIds.has(pid)) continue;  // handled in Pass 0 — skip lottery processing
         if (awardedTo[pid] !== uid) continue;
 
         const player = playerMap[pid];
@@ -250,6 +298,7 @@ async function runLottery(leagueId, phase = 'group') {
 
     // Pass 2: runner-up allocation for dropped players
     for (const pid of droppedByWinner) {
+      if (keptPlayerIds.has(pid)) continue;  // kept in Pass 0 — cannot be runner-up allocated
       const player = playerMap[pid];
       if (!player) continue;
 

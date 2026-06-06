@@ -1384,7 +1384,18 @@ function LifecycleOps({ commissioner, leagueId, tournamentId, windowType = null,
   const allocationDone = league?.cup_phase && league.cup_phase !== 'pre_cup';
 
   // Knockout draft local state
-  const [knockoutDeadline, setKnockoutDeadline] = useState('');
+  const [knockoutDeadline,    setKnockoutDeadline]    = useState('');
+  const [keepSubmissionCount, setKeepSubmissionCount] = useState(null);
+
+  // Fetch keep submission count when the keep window is open (group_stage phase)
+  useEffect(() => {
+    if (league?.cup_phase !== 'group_stage' || !leagueId) { setKeepSubmissionCount(null); return; }
+    supabase
+      .from('knockout_keep_submissions')
+      .select('user_id', { count: 'exact', head: true })
+      .eq('league_id', leagueId)
+      .then(({ count }) => setKeepSubmissionCount(count ?? 0));
+  }, [league?.cup_phase, leagueId]);
 
   // Knockout allocation is done once cup_phase moves into an elimination phase
   const knockoutAllocationDone = ['pre_elimination', 'round_of_16', 'quarter_final', 'semi_final', 'final'].includes(league?.cup_phase);
@@ -1574,6 +1585,12 @@ function LifecycleOps({ commissioner, leagueId, tournamentId, windowType = null,
                 </div>
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  {/* Keep submission count — visible during the keep window */}
+                  {keepSubmissionCount !== null && (
+                    <div style={{ padding: '7px 10px', background: 'rgba(160,108,255,0.07)', border: '1px solid rgba(160,108,255,0.25)', fontFamily: MONO, fontSize: 9, letterSpacing: '.16em', color: '#a855f7', lineHeight: 1.5 }}>
+                      🛡️ KEEP SUBMISSIONS · {keepSubmissionCount} manager{keepSubmissionCount !== 1 ? 's' : ''} have protected players
+                    </div>
+                  )}
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                     <span style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '.2em', color: 'var(--paper)' }}>KNOCKOUT DEADLINE</span>
                     <input
@@ -2496,6 +2513,11 @@ export default function CommissionerPanel({ commissioner, leagueId, tournamentId
                       <span style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '.2em', color: 'var(--paper)' }}>KNOCKOUT DEADLINE</span>
                       <input type="datetime-local" value={mobKnockoutDeadline} onChange={e => setMobKnockoutDeadline(e.target.value)} style={{ ...mobInput, colorScheme: 'dark', fontSize: 11 }} />
                     </div>
+                    {keepSubmissionCount !== null && (
+                      <div style={{ padding: '6px 8px', background: 'rgba(160,108,255,0.07)', border: '1px solid rgba(160,108,255,0.25)', fontFamily: "'JetBrains Mono',monospace", fontSize: 9, letterSpacing: '.14em', color: '#a855f7' }}>
+                        🛡️ {keepSubmissionCount} manager{keepSubmissionCount !== 1 ? 's' : ''} have protected players
+                      </div>
+                    )}
                     <button
                       onClick={() => {
                         if (!window.confirm('Run knockout-phase draft allocation? This cannot be undone.')) return;
