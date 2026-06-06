@@ -1386,6 +1386,63 @@ function LifecycleOps({ commissioner, leagueId, tournamentId, windowType = null,
   // Knockout draft local state
   const [knockoutDeadline,    setKnockoutDeadline]    = useState('');
   const [keepSubmissionCount, setKeepSubmissionCount] = useState(null);
+
+  // Free transfer window state
+  const [activeFreeWindow,   setActiveFreeWindow]   = useState(null); // row or null
+  const [freeWindowClosesAt, setFreeWindowClosesAt] = useState('');
+
+  useEffect(() => {
+    if (!leagueId) return;
+    const now = new Date().toISOString();
+    supabase
+      .from('transfer_windows')
+      .select('id, closes_at')
+      .eq('league_id', leagueId)
+      .eq('window_type', 'unlimited')
+      .lte('opens_at', now)
+      .gte('closes_at', now)
+      .limit(1)
+      .maybeSingle()
+      .then(({ data }) => setActiveFreeWindow(data ?? null));
+  }, [leagueId]);
+
+  const openFreeWindow = () => {
+    if (!freeWindowClosesAt) return;
+    if (!window.confirm('Open an unlimited transfer window? All deadline and live-fixture locks are bypassed until the close time you set.')) return;
+    commissioner.commAction(async () => {
+      const { error } = await supabase.from('transfer_windows').insert({
+        league_id:           leagueId,
+        window_type:         'unlimited',
+        transfers_remaining: null,
+        opens_at:            new Date().toISOString(),
+        closes_at:           new Date(freeWindowClosesAt).toISOString(),
+      });
+      if (error) throw new Error(error.message);
+      const { data } = await supabase
+        .from('transfer_windows')
+        .select('id, closes_at')
+        .eq('league_id', leagueId)
+        .eq('window_type', 'unlimited')
+        .gte('closes_at', new Date().toISOString())
+        .limit(1)
+        .maybeSingle();
+      setActiveFreeWindow(data ?? null);
+      setCommMsg({ type: 'ok', text: 'Free transfer window opened.' });
+    });
+  };
+
+  const closeFreeWindow = () => {
+    if (!activeFreeWindow) return;
+    if (!window.confirm('Close the free transfer window immediately?')) return;
+    commissioner.commAction(async () => {
+      await supabase
+        .from('transfer_windows')
+        .update({ closes_at: new Date().toISOString() })
+        .eq('id', activeFreeWindow.id);
+      setActiveFreeWindow(null);
+      setCommMsg({ type: 'ok', text: 'Free transfer window closed.' });
+    });
+  };
   // groupStageStarted: true once at least one configured matchday fixture has kicked off.
   // Gating on kickoff_at (not deadline_at or fixture status) ensures the knockout draft
   // section is locked until actual group-stage play begins — not just when the deadline
@@ -1534,6 +1591,45 @@ function LifecycleOps({ commissioner, leagueId, tournamentId, windowType = null,
             }
           />
           </div>
+
+          {/* Free Transfer Window — tournament leagues only */}
+          {isDeadlineControlled && (
+          <LifecycleOp
+            title="FREE TRANSFER WINDOW"
+            status={activeFreeWindow ? 'ACTIVE' : 'CLOSED'}
+            statusTone={activeFreeWindow ? 'var(--positive)' : 'var(--mute)'}
+            sub="Open an unlimited transfer window. Bypasses deadline locks, live-fixture locks, and the 3/round limit. Budget, position, club cap, and ownership rules still apply."
+            when="Between group and knockout stage, or any time you want to give managers a free adjustment period."
+            primary={
+              activeFreeWindow ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  <div style={{ padding: '8px 10px', background: 'rgba(24,201,107,0.06)', border: '1px solid rgba(24,201,107,0.25)', fontFamily: BODY, fontSize: 10, color: 'var(--positive)', lineHeight: 1.5 }}>
+                    <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.2em' }}>UNLIMITED WINDOW ACTIVE · </span>
+                    Closes {new Date(activeFreeWindow.closes_at).toLocaleString()}
+                  </div>
+                  <button onClick={closeFreeWindow} disabled={commLoading} style={{ ...btnBase, width: '100%', background: 'transparent', border: '1px solid rgba(239,68,68,.33)', color: 'var(--danger)', cursor: commLoading ? 'not-allowed' : 'pointer', fontSize: 11 }}>CLOSE NOW</button>
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                    <span style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '.2em', color: 'var(--paper)' }}>CLOSES AT</span>
+                    <input
+                      type="datetime-local"
+                      value={freeWindowClosesAt}
+                      onChange={e => setFreeWindowClosesAt(e.target.value)}
+                      style={{ ...inputStyle, colorScheme: 'dark', fontSize: 11 }}
+                    />
+                  </div>
+                  <button
+                    onClick={openFreeWindow}
+                    disabled={commLoading || !freeWindowClosesAt}
+                    style={opBtnStyle(!freeWindowClosesAt ? 'var(--ink-3)' : 'var(--cyan)', !freeWindowClosesAt ? 'var(--mute)' : 'var(--ink)')}
+                  >OPEN FREE WINDOW ↯</button>
+                </div>
+              )
+            }
+          />
+          )}
 
           {/* Draft — draft mode only */}
           {(!league || league.format === 'noduplicate') && (

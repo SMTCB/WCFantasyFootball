@@ -85,7 +85,29 @@ Deno.serve(async (req) => {
 
     const price = Number(playerData.price ?? 0);
 
+    // ── Free window check (commissioner override) ────────────────────────────
+    // A commissioner can open an unlimited, time-bounded transfer window at any
+    // point. When active it bypasses the deadline lock, live-fixture lock, and
+    // the 3/round transfer limit. Normal constraints (budget, position, club cap,
+    // draft ownership) still apply. The window is created via the admin panel.
+    const { data: freeWindow } = await supabase
+      .from('transfer_windows')
+      .select('closes_at')
+      .eq('league_id', league_id)
+      .eq('window_type', 'unlimited')
+      .lte('opens_at', new Date().toISOString())
+      .gte('closes_at', new Date().toISOString())
+      .limit(1)
+      .maybeSingle();
+
+    const inFreeWindow = !!freeWindow;
+
     // ── Transfer window enforcement ───────────────────────────────────────────
+    // Skipped entirely when a free window is active.
+    let activeMatchdayId = null;
+    const threeHoursAgo  = new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString();
+
+    if (!inFreeWindow) {
     // 1. Reject if past the active matchday deadline.
     //    DATA-4: scope to this league's tournament so cross-tournament deadlines don't bleed through.
     // Use nearest upcoming deadline (ascending + gte now) so multi-round tournaments
@@ -100,7 +122,7 @@ Deno.serve(async (req) => {
     if (tournamentId) deadlineQuery = deadlineQuery.eq('tournament_id', tournamentId);
     const { data: deadline } = await deadlineQuery.maybeSingle();
 
-    const activeMatchdayId = deadline?.matchday_id ?? null;
+    activeMatchdayId = deadline?.matchday_id ?? null;
 
     if (!deadline) {
       return json({
@@ -118,7 +140,6 @@ Deno.serve(async (req) => {
     //         calendar and must never block transfers. Without this guard, stale
     //         "ghost" fixtures (e.g. TAJ vs IND, ANG vs BOT stuck as 'live' after
     //         a UAT sync) would permanently block the window.
-    const threeHoursAgo = new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString();
     let liveQuery = supabase
       .from('fixtures')
       .select('id, home_team, away_team, kickoff_at')
@@ -164,6 +185,22 @@ Deno.serve(async (req) => {
             error: `Transfer cost locked — ${playerFixture.home_team} vs ${playerFixture.away_team} has started (cost locked at kickoff)`,
           }, 403, corsHeaders);
         }
+      }
+    }
+    } else {
+      // Free window: deadline/live-fixture checks bypassed.
+      // Use the most recent past deadline as activeMatchdayId for squad lookup
+      // so the correct squad row is found (same fallback logic applies below).
+      if (tournamentId) {
+        const { data: pastDeadline } = await supabase
+          .from('matchday_deadlines')
+          .select('matchday_id')
+          .eq('tournament_id', tournamentId)
+          .lte('deadline_at', new Date().toISOString())
+          .order('deadline_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        activeMatchdayId = pastDeadline?.matchday_id ?? null;
       }
     }
 
@@ -226,8 +263,9 @@ Deno.serve(async (req) => {
     // Once any configured matchday fixture goes live or finishes, normal limits apply.
     // Scoped to configured matchdays (matchday_deadlines) so stale historical fixtures
     // in the same tournament don't falsely signal "competition started".
-    let limitMatchdayId = enforceMatchdayId;
-    if (enforceMatchdayId && tournamentId) {
+    // Free window: skip all limit enforcement.
+    let limitMatchdayId = inFreeWindow ? null : enforceMatchdayId;
+    if (!inFreeWindow && enforceMatchdayId && tournamentId) {
       const { data: configuredDeadlines } = await supabase
         .from('matchday_deadlines')
         .select('matchday_id')

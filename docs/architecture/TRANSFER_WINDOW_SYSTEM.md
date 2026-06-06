@@ -92,9 +92,37 @@ Backfill (migration 141): any squad already at 15+ players at migration time was
 
 ---
 
+## Commissioner Free Window (Unlimited Override)
+
+The commissioner can open a time-bounded unlimited transfer window at any point during the season. When active it bypasses:
+- The matchday deadline lock (`WINDOW_CLOSED`)
+- The live-fixture lock (`WINDOW_LOCKED`)
+- The 3/round transfer limit
+
+Normal constraints still apply: budget, position cap, club cap, draft ownership.
+
+### Typical use cases
+- Between group stage and knockout stage (the most common need)
+- After a draft runs late and managers need time to adjust
+- Any period where the league dynamics call for a "free pass"
+
+### How it works
+
+**Creating**: Commissioner opens Admin → Lifecycle Ops → **FREE TRANSFER WINDOW** card → sets a close time → clicks OPEN FREE WINDOW. This inserts a `transfer_windows` row with `window_type = 'unlimited'` and `transfers_remaining = NULL`.
+
+**Enforcement in `process-transfer`**: At the start of the window check, the function queries for an active `transfer_windows` row with `window_type = 'unlimited'`, `opens_at <= NOW()`, `closes_at >= NOW()`. If found, all deadline/live-fixture checks are skipped and `limitMatchdayId` is set to `null` (no limit enforcement).
+
+**UI via `get_transfer_window_status`**: The DB function reads manual `transfer_windows` rows first (priority over matchday deadlines). An active unlimited window returns `status: 'open'`, `transfers_remaining: null`. `TransferWindowBanner` shows **WINDOW OPEN · UNLIMITED** automatically.
+
+**Closing**: Commissioner clicks CLOSE NOW in the admin panel, or the window expires at `closes_at` automatically.
+
+**Data**: `transfer_windows(window_type='unlimited', transfers_remaining=NULL, round_number=NULL)`. `round_number` is nullable (migration 144) since free windows are not tied to a specific round. PostgreSQL treats multiple NULLs as distinct in unique constraints, so multiple windows can be created over the season.
+
+---
+
 ## Additional Buy Locks
 
-`process-transfer` enforces two extra locks on the BUY path only:
+`process-transfer` enforces extra locks on the BUY path. **All are bypassed when a free window is active.**
 
 | Lock | Trigger | Error code |
 |---|---|---|
@@ -102,7 +130,7 @@ Backfill (migration 141): any squad already at 15+ players at migration time was
 | Player's team in live fixture | Player's `forza_team_id` in a live fixture | `TRANSFER_LOCKED` |
 | Eliminated club | Player's club is in `cup_active_clubs` with `eliminated_at IS NOT NULL` | `CLUB_ELIMINATED` |
 
-SELL is never blocked by live fixture state — you can always offload a player.
+SELL is never blocked by live fixture state or deadline lock — you can always offload a player.
 
 ---
 
@@ -184,6 +212,7 @@ In practice all current leagues have a `tournament_id`, so the manual path is in
 | Dynamic club cap on buy | ✅ PR #262 |
 | Pre-competition bypass (no configured matchday has started) | ✅ Migration 140 / PR #386 |
 | Initial build exemption (`initial_build_complete` latch) | ✅ Migration 141 / PR #387 |
+| Commissioner free window (unlimited override, any period) | ✅ Migration 144 / PR #393 |
 
 ---
 
@@ -195,4 +224,4 @@ In practice all current leagues have a `tournament_id`, so the manual path is in
 
 ---
 
-Last Updated: **2026-06-06** (transfer audit — pre-competition bypass + initial build exemption documented; lock scoping corrected)
+Last Updated: **2026-06-06** (migration 144 — commissioner free window; lock scoping corrected; unlimited override documented)
