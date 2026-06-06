@@ -1,11 +1,52 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-06-05 (H2H session — migrations 136–138, PRs #362–#364; next migration 139_)  
+**Last Updated**: 2026-06-06 (Transfer + Draft audit session — migrations 140–143, PRs #386–#390; next migration 144_)  
 **E2E Test Suite**: `platform.spec.js` (36 tests × 2 browsers) passing in CI ✅  
 **Full Playbook Run**: `E2E_TEST_PLAYBOOK.md` v2.0 — all flows confirmed  
 **🟢 LAUNCH READY**: No critical (P0/P1) bugs open. All game mechanics functional. WC kick-off 2026-06-11.  
 **Live App**: https://wc-fantasy-football.vercel.app  
 **WC Kick-off**: 2026-06-11 19:00 UTC (Mexico vs South Africa)
+
+---
+
+## ✅ Transfer + Draft Audit Session (2026-06-06) — Migrations 140–143, PRs #386–#390
+
+### Transfer system audit & fixes
+
+**PR #386 — Pre-competition transfer bypass (migration 140)**
+- Root cause: `process-transfer` was passing a real matchday_id (`'623-r1'`) to `execute_transfer_atomic` even before any configured matchday fixture had kicked off. Post-draft managers hit the 3/round limit before the first game. Fix: fetch all `matchday_deadlines` for the tournament; if no configured matchday has a live/finished fixture, pass `p_matchday_id=null` to bypass the limit. Migration 140 clears stale counters that had already accumulated.
+
+**PR #387 — Initial squad build exemption + doc fixes (migration 141)**
+- `squads.initial_build_complete boolean DEFAULT false`: one-way latch. While false, the per-round limit is bypassed. Flips to true atomically in `execute_transfer_atomic` when squad first reaches 15. Selling back below 15 never resets it (prevents abuse). Backfill: existing full squads set to true.
+- Doc fix: corrected stale claim in TRANSFERS_AND_LINEUP_GUIDE that WINDOW_LOCKED / TRANSFER_LOCKED are unscoped — both are tournament-scoped in code.
+- BACKLOG: logged TDD-20 (transfer API enforcement gap, 44-min window between deadline and first kickoff, P3 deferred).
+
+### Draft system audit & fixes
+
+**PR #388 — Draft audit: club cap, knockout clearing, claim_draft_player (migration 142)**
+- **Bug A fixed**: club cap was never enforced at allocation time. Managers could receive 6+ players from the same club. `run-draft-lottery` now fetches `forza_team_id`, tracks `clubCounts` per manager, reads `get_club_cap()` (respects cup relaxation), enforces in Pass 1 + Pass 2.
+- **Bug C fixed**: `claim_draft_player` was stamping squads with the wrong matchday_id (furthest future deadline, not the active round), creating dangling rows. Now finds the manager's existing squad and UPDATEs it on every pick. Late joiners get a correctly scoped INSERT.
+- **Bug E fixed**: after the knockout draft, stale group-stage squad rows polluted the no-repeat market check. `run-draft-lottery` now clears `players/starting_xi/lineup_locks` from all non-current-matchday squads before writing knockout allocations.
+- **Admin-only guard**: `run-draft-lottery` cron path hard-disabled with a 405 response. Draft is always manually triggered by the commissioner.
+
+### Knockout keep mechanic
+
+**PR #389 — Knockout keep mechanic (migration 143)**
+- Managers in cup+draft leagues can protect up to 5 players from their group-stage squad before the knockout lottery. Protected players bypass the lottery (Pass 0 pre-allocation) and are excluded from the pool for all other managers.
+- **Isolation guarantee**: if no keep submissions exist, Pass 0 is a complete no-op — allocation runs identically to before.
+- **Group-stage guard** (three layers): `submit_knockout_keeps` RPC rejects when `cup_phase ≠ 'group_stage'`; UI hook checks same condition; banner only shows when `knockout_draft_deadline` is set. Cannot appear during group-stage draft selection.
+- UI: `KnockoutKeepSelector` banner on Squad screen (new self-contained component, no changes to DraftScreen or DraftRecoveryScreen). CommissionerPanel shows keep count chip.
+
+### Documentation
+
+**PR #390 — DRAFT_SYSTEM_DESIGN.md full rewrite**
+- Documents all changes from this session and previous sessions (141–143)
+- Clarifies the `format = 'noduplicate'` vs `format = 'cup'` distinction (all draft leagues use `noduplicate`; `cup_phase` tracks the competition stage)
+- Admin panel controls, lock conditions, keep window mechanics, isolation guarantee
+- Decision log updated with entries 8–10
+
+### Stale PR closed
+- **PR #382** (Fix: Allow free transfers before league starts) — closed as superseded by PRs #386 and #387 which implement a more complete solution to the same problem. Also contained accidentally staged screenshot/PDF test artifacts.
 
 ---
 
