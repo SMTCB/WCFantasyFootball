@@ -1,11 +1,31 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-06-06 (Transfer + Draft audit session — migrations 140–143, PRs #386–#390; next migration 144_)  
+**Last Updated**: 2026-06-06 (Pilot close session — migration 144, PRs #391–#394; next migration 145_)  
 **E2E Test Suite**: `platform.spec.js` (36 tests × 2 browsers) passing in CI ✅  
 **Full Playbook Run**: `E2E_TEST_PLAYBOOK.md` v2.0 — all flows confirmed  
 **🟢 LAUNCH READY**: No critical (P0/P1) bugs open. All game mechanics functional. WC kick-off 2026-06-11.  
 **Live App**: https://wc-fantasy-football.vercel.app  
 **WC Kick-off**: 2026-06-11 19:00 UTC (Mexico vs South Africa)
+
+---
+
+## ✅ Pilot Close Session (2026-06-06) — Migration 144, PRs #391–#394
+
+### Transfer window admin controls
+
+**PR #391 — Knockout draft gate: locked until group stage fixtures kick off**
+- The knockout draft controls (deadline input + RUN KNOCKOUT ALLOCATION) were showing active immediately after the group lottery ran, even before any group-stage fixture had kicked off. Fix: added `groupStageStarted` check — fetches configured matchday IDs from `matchday_deadlines`, counts fixtures with `kickoff_at <= NOW()` scoped to those matchdays. If zero have kicked off, shows "Locked — group stage fixtures have not kicked off yet." Both desktop and mobile sections updated.
+
+**PR #392 — Remove stale 48h recovery transfer_windows row from draft lottery**
+- `run-draft-lottery` was creating a manual `transfer_windows` row (`transfers_remaining=15, closes_at=now+48h`) when managers had incomplete squads. This row overrides `get_transfer_window_status` (manual windows checked first), causing the UI to show "15 transfers left, closes in 30h" instead of the real matchday deadline. Removed — the `initial_build_complete` latch (migration 141) already handles the incomplete squad exemption without needing a manual window. Stale rows deleted from prod for TEST_2_H2H_DRAFT, WC_DRAFT_TEST, NED_ALG_LIVE_DRAFT.
+
+**PR #393 — Commissioner free transfer window (migration 144)**
+- Admin can open a time-bounded unlimited transfer window at any point. Bypasses deadline locks, live-fixture locks, and the 3/round limit. Normal constraints (budget, position, club cap, ownership) still apply. Migration 144 makes `transfer_windows.round_number` nullable so free windows are not tied to a specific round. `process-transfer` checks for active `window_type='unlimited'` row first. CommissionerPanel: FREE TRANSFER WINDOW lifecycle card with datetime picker and OPEN/CLOSE controls. Primary use case: between group and knockout stage.
+
+**PR #394 — Fix LifecycleOps TDZ crash on admin tab**
+- The admin tab was crashing with "Something went wrong" due to two bugs introduced by PRs #391 and #393:
+  1. `knockoutAllocationDone` was declared after the `groupStageStarted` useEffect whose dependency array referenced it — TDZ ReferenceError during render. Fixed by hoisting the declaration above all new state/effect blocks.
+  2. `setCommMsg` missing from `commissioner` destructuring in `LifecycleOps` — would throw on free window button click. Fixed by adding to destructuring.
 
 ---
 

@@ -67,6 +67,20 @@ Counts are tracked in `squads.round_transfers` (JSON: `{ "423-r2": 3 }`). A new 
 
 **Both buys AND sells count.** 3 transfers = at most 1 full swap (sell + buy = 2 credits) plus 1 extra buy.
 
+### Commissioner Free Window
+
+The commissioner can open a time-bounded **unlimited** transfer window at any point. When active:
+- The transfer window banner shows **WINDOW OPEN · UNLIMITED**
+- The matchday deadline lock is bypassed
+- Live-fixture locks are bypassed (you can buy even during live matches)
+- The 3/round transfer limit is bypassed
+
+Budget, position caps, club caps, and draft ownership rules still apply.
+
+This is used between the group stage and knockout stage, after a draft runs late, or whenever the league dynamics call for a free adjustment period. The window closes automatically at the time the commissioner set.
+
+---
+
 ### Initial Squad Build Exemption
 
 If your squad has **never reached 15 players**, transfer limits are not enforced. This covers:
@@ -236,4 +250,4 @@ The POINTS LOG sub-screen is your **personal scoring tracker**, not a full match
 
 ---
 
-Last Updated: **2026-06-06** (session — lock scoping corrected; initial build exemption latch documented; migration 141)
+Last Updated: **2026-06-06** (migration 144 — commissioner free window section added; lock scoping corrected; initial build exemption latch documented)
