@@ -1386,6 +1386,28 @@ function LifecycleOps({ commissioner, leagueId, tournamentId, windowType = null,
   // Knockout draft local state
   const [knockoutDeadline,    setKnockoutDeadline]    = useState('');
   const [keepSubmissionCount, setKeepSubmissionCount] = useState(null);
+  // groupStageStarted: true once at least one configured matchday fixture has kicked off.
+  // Gating on kickoff_at (not deadline_at or fixture status) ensures the knockout draft
+  // section is locked until actual group-stage play begins — not just when the deadline
+  // passes or the group draft lottery ran. Scoped to matchday_deadlines so old historical
+  // fixtures in the same tournament don't produce false positives.
+  const [groupStageStarted,   setGroupStageStarted]   = useState(false);
+
+  useEffect(() => {
+    if (!allocationDone || knockoutAllocationDone || !tournamentId) { setGroupStageStarted(false); return; }
+    (async () => {
+      const { data: mds } = await supabase
+        .from('matchday_deadlines').select('matchday_id').eq('tournament_id', tournamentId);
+      const mdIds = (mds ?? []).map(r => r.matchday_id);
+      if (!mdIds.length) { setGroupStageStarted(false); return; }
+      const { count } = await supabase
+        .from('fixtures').select('id', { count: 'exact', head: true })
+        .eq('tournament_id', tournamentId)
+        .in('matchday_id', mdIds)
+        .lte('kickoff_at', new Date().toISOString());
+      setGroupStageStarted((count ?? 0) > 0);
+    })();
+  }, [allocationDone, knockoutAllocationDone, tournamentId]);
 
   // Fetch keep submission count when the keep window is open (group_stage phase)
   useEffect(() => {
@@ -1582,6 +1604,10 @@ function LifecycleOps({ commissioner, leagueId, tournamentId, windowType = null,
               ) : !allocationDone ? (
                 <div style={{ padding: '8px 10px', background: 'var(--ink)', border: '1px solid var(--rule)', fontFamily: BODY, fontSize: 10, color: 'var(--mute)', lineHeight: 1.5 }}>
                   Locked — complete group allocation first
+                </div>
+              ) : !groupStageStarted ? (
+                <div style={{ padding: '8px 10px', background: 'var(--ink)', border: '1px solid var(--rule)', fontFamily: BODY, fontSize: 10, color: 'var(--mute)', lineHeight: 1.5 }}>
+                  Locked — group stage fixtures have not kicked off yet
                 </div>
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -2506,6 +2532,10 @@ export default function CommissionerPanel({ commissioner, leagueId, tournamentId
                 {mobKnockoutAllocationDone ? (
                   <div style={{ padding: '8px 10px', background: 'var(--ink)', border: '1px solid var(--rule)', fontFamily: BODY, fontSize: 10, color: 'var(--positive)', lineHeight: 1.5 }}>
                     ✓ Knockout squads allocated
+                  </div>
+                ) : !groupStageStarted ? (
+                  <div style={{ padding: '8px 10px', background: 'var(--ink)', border: '1px solid var(--rule)', fontFamily: BODY, fontSize: 10, color: 'var(--mute)', lineHeight: 1.5 }}>
+                    Locked — group stage fixtures have not kicked off yet
                   </div>
                 ) : (
                   <>
