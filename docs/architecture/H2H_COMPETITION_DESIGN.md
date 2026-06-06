@@ -136,6 +136,22 @@ After the standard fantasy points calculation for a matchday, `calculate-scores`
 
 If all three: fetch each pairing's fantasy points totals, compute win/draw/loss using `league_config` values, update `h2h_schedule` rows with scores + H2H points + `resolved_at`, then write a gazette entry.
 
+### Timing
+
+H2H is **not a separate job**. It runs at the end of the same `calculate-scores` invocation that processes the last fixture of the round. The `roundComplete` flag (`every fixture in the matchday_id = 'finished'`) gates it — every prior invocation skips H2H silently.
+
+| Scenario | When H2H resolves |
+|---|---|
+| Single-day matchday (all games finish before 22:00 UTC) | **22:30 UTC** — `calculate-scores-post-match` cron |
+| Multi-day matchday (e.g. WC R32 over 5 days) | **22:30 UTC after the last fixture finishes** — all earlier 22:30 calls see `roundComplete = false` |
+| Last fixture finishes after 22:30 UTC | **23:30 UTC** or **00:30 UTC** — `calculate-scores-late-finishers` cron (3h window) |
+
+**Practical consequence**: for a 5-day WC R32 matchday where Day 5 has the last 4 games (finishing ~22:00 UTC), H2H for the entire matchday resolves that same night at 22:30. Managers who played on Day 1 see their H2H result 4 days after their own game — this is by design and matches how FPL handles multi-day gameweeks.
+
+The auto-sub logic shares the same `roundComplete` gate and resolves in the same call, so H2H scores are always based on the auto-subbed final XI.
+
+See [FANTASY_POINTS_SCORING_LAYER.md — Scoring Job Timing](FANTASY_POINTS_SCORING_LAYER.md) for the full cron schedule.
+
 ### Gazette Entry
 
 One `activity` gazette entry per league after resolution:
@@ -213,4 +229,4 @@ New section alongside the Draft section:
 
 ---
 
-Last Updated: **2026-06-05**
+Last Updated: **2026-06-06**
