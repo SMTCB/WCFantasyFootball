@@ -309,7 +309,7 @@ export function useAutoFill(leagueId, squadData, fetchSquad, takenMap = {}, buy,
         }
       } else if (added > 0) {
         const skippedNote = skippedTaken > 0 ? ` · skipped ${skippedTaken} taken` : '';
-        setAutoFillMsg(`Added ${added} player${added !== 1 ? 's' : ''} · £${Number(budgetLeft).toFixed(1)}M left${skippedNote}`);
+        setAutoFillMsg(`Added ${added} player${added !== 1 ? 's' : ''} · €${Number(budgetLeft).toFixed(1)}M left${skippedNote}`);
         if (fetchSquad) await fetchSquad();
       } else if (!anyPoolFound) {
         if (Number(budgetLeft) < 4.5) {

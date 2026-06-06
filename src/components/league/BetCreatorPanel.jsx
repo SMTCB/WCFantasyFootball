@@ -446,7 +446,7 @@ export default function BetCreatorPanel({ leagueId, tournamentId, onCreated, com
                     }}
                   >
                     <option value="points">pts</option>
-                    <option value="budget">£M</option>
+                    <option value="budget">€M</option>
                   </select>
                 </div>
               </div>

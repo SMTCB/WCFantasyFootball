@@ -7,7 +7,7 @@
  *   position:      string   — 'GK' | 'DEF' | 'MID' | 'FWD'
  *   club:          string   — three-letter nation code e.g. 'BRA'
  *   color:         string   — nation primary colour hex (used for accents)
- *   price:         number   — value in £M
+ *   price:         number   — value in €M
  *   points:        number   — total fantasy points accumulated
  *   gridClass:     string   — Tailwind grid placement for PitchView
  *   intel:         object   — fitness/risk info (see default below)

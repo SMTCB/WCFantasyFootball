@@ -6,7 +6,7 @@
  *
  *   setConfirm({
  *     title:      'Sell Bellingham?',
- *     body:       'You will receive £11.5M back into your budget.',
+ *     body:       'You will receive €11.5M back into your budget.',
  *     warning:    'He is your current captain — selling removes the armband.',  // optional
  *     confirmLabel: 'Sell',
  *     danger:     true,   // red confirm button

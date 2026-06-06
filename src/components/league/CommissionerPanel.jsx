@@ -109,7 +109,7 @@ function HelpOverlay({ topic, onClose }) {
         },
         {
           heading: 'Group Stage Draft',
-          body: 'Set a pick deadline, then run allocation after it passes. Assigns 15 players per manager within £100M budget (GK≤2, DEF≤5, MID≤5, FWD≤3). One-way — cannot be undone. If you forget to run it, a cron fires automatically 4 hours before the first match.',
+          body: 'Set a pick deadline, then run allocation after it passes. Assigns 15 players per manager within €100M budget (GK≤2, DEF≤5, MID≤5, FWD≤3). One-way — cannot be undone. If you forget to run it, a cron fires automatically 4 hours before the first match.',
         },
         {
           heading: 'Knockout Draft (cup leagues)',
@@ -1667,7 +1667,7 @@ function LifecycleOps({ commissioner, leagueId, tournamentId, windowType = null,
                   <button onClick={setLeagueDraftDeadline} disabled={commLoading} style={{ ...btnBase, width: '100%', background: 'transparent', border: '1px solid var(--rule)', color: 'var(--paper)', fontSize: 11 }}>SET DEADLINE</button>
                   <div style={{ height: 1, background: 'var(--rule)', margin: '4px 0' }} />
                   <div style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.18em', color: 'var(--mute)', lineHeight: 1.6 }}>
-                    ONCE DONE · 15 PLAYERS / MGR · £100M BUDGET · GK≤2 DEF≤5 MID≤5 FWD≤3
+                    ONCE DONE · 15 PLAYERS / MGR · €100M BUDGET · GK≤2 DEF≤5 MID≤5 FWD≤3
                   </div>
                   <button
                     onClick={handleRunAllocation}
@@ -2600,7 +2600,7 @@ export default function CommissionerPanel({ commissioner, leagueId, tournamentId
                   <input type="datetime-local" value={draftDeadline} onChange={e => setDraftDeadline(e.target.value)} style={mobInput} />
                 </div>
                 <button onClick={setLeagueDraftDeadline} disabled={commLoading} style={{ ...mobBtn, background: 'transparent', color: 'var(--paper)', border: '1px solid var(--rule)' }}>SET DEADLINE</button>
-                <div style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.18em', color: 'var(--mute)', lineHeight: 1.6 }}>15 PLAYERS / MGR · £100M · GK≤2 DEF≤5 MID≤5 FWD≤3</div>
+                <div style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.18em', color: 'var(--mute)', lineHeight: 1.6 }}>15 PLAYERS / MGR · €100M · GK≤2 DEF≤5 MID≤5 FWD≤3</div>
                 <button
                   onClick={() => { if (window.confirm('Run allocation for all managers? This cannot be undone without a manual reset.')) triggerDraftAllocation(); }}
                   disabled={commLoading}

@@ -318,7 +318,7 @@ export default function DraftScreen() {
                 {p.position}
               </span>
               <span className="text-white text-[12px] font-bold flex-1">{p.name}</span>
-              <span className="text-[#555] text-[11px]">£{p.price}M</span>
+              <span className="text-[#555] text-[11px]">€{p.price}M</span>
             </div>
           ))}
         </div>
@@ -480,7 +480,7 @@ export default function DraftScreen() {
                     {p.position}
                   </span>
                   <span className="text-white text-[11px] font-bold flex-1 truncate">{p.name}</span>
-                  <span className="text-[#444] text-[10px] shrink-0">£{p.price}M</span>
+                  <span className="text-[#444] text-[10px] shrink-0">€{p.price}M</span>
                   {/* Reorder controls */}
                   <div className="flex flex-col gap-0.5 shrink-0">
                     <button
@@ -582,7 +582,7 @@ export default function DraftScreen() {
                     </span>
                     <span className="text-white text-[12px] font-bold flex-1 truncate">{p.name}</span>
                     <span className="text-[#555] text-[11px] shrink-0">{p.club}</span>
-                    <span className="text-[#9E9E9E] text-[11px] font-bold shrink-0">£{p.price}M</span>
+                    <span className="text-[#9E9E9E] text-[11px] font-bold shrink-0">€{p.price}M</span>
                     {!disabled && (
                       <span className="text-[#9E9E9E] text-[11px] shrink-0">{isExpanded ? '▲' : '+'}</span>
                     )}

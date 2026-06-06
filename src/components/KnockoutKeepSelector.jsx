@@ -183,7 +183,7 @@ export default function KnockoutKeepSelector({ leagueId }) {
 
                     {/* Price */}
                     <span style={{ fontFamily: MONO, fontSize: 9, color: 'var(--gold)', flexShrink: 0 }}>
-                      £{Number(p.price ?? 0).toFixed(1)}m
+                      €{Number(p.price ?? 0).toFixed(1)}m
                     </span>
                   </button>
                 );
