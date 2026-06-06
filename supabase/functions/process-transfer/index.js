@@ -220,6 +220,30 @@ Deno.serve(async (req) => {
       ? squad.matchday_id
       : activeMatchdayId;
 
+    // Pre-competition bypass: before the first match of any configured matchday
+    // has kicked off, transfers are unlimited. This lets managers freely adjust
+    // their draft-allocated squads without burning per-round transfer budget.
+    // Once any configured matchday fixture goes live or finishes, normal limits apply.
+    // Scoped to configured matchdays (matchday_deadlines) so stale historical fixtures
+    // in the same tournament don't falsely signal "competition started".
+    let limitMatchdayId = enforceMatchdayId;
+    if (enforceMatchdayId && tournamentId) {
+      const { data: configuredDeadlines } = await supabase
+        .from('matchday_deadlines')
+        .select('matchday_id')
+        .eq('tournament_id', tournamentId);
+      const configuredMatchdays = (configuredDeadlines ?? []).map(d => d.matchday_id);
+      if (configuredMatchdays.length > 0) {
+        const { count: startedCount } = await supabase
+          .from('fixtures')
+          .select('id', { count: 'exact', head: true })
+          .eq('tournament_id', tournamentId)
+          .in('matchday_id', configuredMatchdays)
+          .in('status', ['live', 'finished']);
+        if ((startedCount ?? 0) === 0) limitMatchdayId = null;
+      }
+    }
+
     // ── SELL ─────────────────────────────────────────────────────────────────
     if (action === 'sell') {
       if (!currentPlayers.includes(player_id)) {
@@ -236,7 +260,7 @@ Deno.serve(async (req) => {
           p_player_id:   player_id,
           p_price:       price,
           p_league_id:   league_id,
-          p_matchday_id: enforceMatchdayId,
+          p_matchday_id: limitMatchdayId,
         });
 
       if (updateErr || !xferResult?.ok) {
@@ -402,7 +426,7 @@ Deno.serve(async (req) => {
           p_squad_max:   SQUAD_MAX,      // TDD-11: squad size enforced inside the lock
           p_club_max:    clubMax,                            // 96/105: dynamic cap — relaxes as cup clubs are eliminated
           p_league_id:   league_id,                          // 106: transfer-limit enforcement context
-          p_matchday_id: enforceMatchdayId,                   // 106/C6: real round, never a placeholder
+          p_matchday_id: limitMatchdayId,                    // 106/C6: null pre-competition, real round once started
         });
 
       if (updateErr || !xferResult?.ok) {
