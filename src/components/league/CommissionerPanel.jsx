@@ -2498,6 +2498,32 @@ export default function CommissionerPanel({ commissioner, leagueId, tournamentId
   const [helpModal, setHelpModal] = useState(null); // null | 'commissioner' | 'lifecycle' | 'bets'
   const [mobKnockoutDeadline, setMobKnockoutDeadline] = useState('');
 
+  // Mirror of LifecycleOps state — needed by the mobile knockout draft IIFE below.
+  const [keepSubmissionCount, setKeepSubmissionCount] = useState(null);
+  const [groupStageStarted,   setGroupStageStarted]   = useState(false);
+
+  const _mobAllocDone         = !!(league?.cup_phase && league.cup_phase !== 'pre_cup');
+  const _mobKnockoutAllocDone = ['pre_elimination', 'round_of_16', 'quarter_final', 'semi_final', 'final'].includes(league?.cup_phase);
+
+  useEffect(() => {
+    if (!_mobAllocDone || _mobKnockoutAllocDone || !tournamentId) { setGroupStageStarted(false); return; }
+    (async () => {
+      const { data: mds } = await supabase.from('matchday_deadlines').select('matchday_id').eq('tournament_id', tournamentId);
+      const mdIds = (mds ?? []).map(r => r.matchday_id);
+      if (!mdIds.length) { setGroupStageStarted(false); return; }
+      const { count } = await supabase.from('fixtures').select('id', { count: 'exact', head: true })
+        .eq('tournament_id', tournamentId).in('matchday_id', mdIds).lte('kickoff_at', new Date().toISOString());
+      setGroupStageStarted((count ?? 0) > 0);
+    })();
+  }, [_mobAllocDone, _mobKnockoutAllocDone, tournamentId]);
+
+  useEffect(() => {
+    if (league?.cup_phase !== 'group_stage' || !leagueId) { setKeepSubmissionCount(null); return; }
+    supabase.from('knockout_keep_submissions').select('user_id', { count: 'exact', head: true })
+      .eq('league_id', leagueId)
+      .then(({ count }) => setKeepSubmissionCount(count ?? 0));
+  }, [league?.cup_phase, leagueId]);
+
   useEffect(() => {
     const onResize = () => setIsMobile(window.innerWidth < 1024);
     window.addEventListener('resize', onResize);
