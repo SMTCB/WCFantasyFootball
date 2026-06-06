@@ -35,6 +35,7 @@ import { POS_ORDER, POS_LABEL, POS_BADGE_COLOR } from '../lib/formations';
 import ScoringInfoModal from '../components/ScoringInfoModal';
 import { usePlayerStats } from '../hooks/usePlayerStats';
 import FormStrip from '../components/FormStrip';
+import KnockoutKeepSelector from '../components/KnockoutKeepSelector';
 
 // â"€â"€ Chip config â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
 const CHIPS = [
@@ -1373,6 +1374,9 @@ export default function SquadScreen() {
   // â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
   return (
     <div className="min-h-screen bg-bg overflow-x-hidden">
+
+      {/* ── Knockout keep window (cup+draft leagues, group_stage phase only) ── */}
+      {activeLeague && <KnockoutKeepSelector leagueId={activeLeague} />}
 
       {/* ── Transfer window status banner (U5) ──────────────────────────────── */}
       <TransferWindowBanner
