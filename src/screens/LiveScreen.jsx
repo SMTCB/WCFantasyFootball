@@ -499,7 +499,7 @@ export default function LiveScreen() {
       const { data: squadRows = [] } = leagueIds.length
         ? await supabase
             .from('squads')
-            .select('league_id, players, captain_id, is_triple_captain')
+            .select('league_id, players, starting_xi, captain_id, is_triple_captain')
             .eq('user_id', user.id)
             .in('league_id', leagueIds)
         : { data: [] };
@@ -514,9 +514,10 @@ export default function LiveScreen() {
         : (memberships?.[0]?.league_id ?? null);
       const squadRow = squadByLeague[activeLeagueId] ?? null;
 
-      const squadPlayerIds = squadRow?.players || [];
-      const captainId      = squadRow?.captain_id;
-      const isTripleCap    = squadRow?.is_triple_captain ?? false;
+      const squadPlayerIds  = squadRow?.players || [];
+      const startingXi      = squadRow?.starting_xi?.length > 0 ? squadRow.starting_xi : null;
+      const captainId       = squadRow?.captain_id;
+      const isTripleCap     = squadRow?.is_triple_captain ?? false;
 
       // 5. Player details + live stats in parallel — U50/U52: fetch minutes_played
       const [{ data: playerRows = [] }, { data: statsData = [] }] = await Promise.all([
@@ -546,12 +547,14 @@ export default function LiveScreen() {
         pointsMap[s.player_id] = (pointsMap[s.player_id] || 0) + Number(s.fantasy_points);
       });
 
-      // Apply captain multiplier; tag bench players using formation-validated starter set.
-      // pickValidStarters enforces 1 GK + ≥1 DEF/MID/FWD so squads stored in any order
-      // still display with a legal formation.
+      // Apply captain multiplier; tag bench players.
+      // Use starting_xi when set (respects user's lineup); fall back to pickValidStarters
+      // for legacy squads that have never had set_lineup called.
       const playerLookup = Object.fromEntries((playerRows || []).map(p => [p.id, p]));
-      const validStarterSet = pickValidStarters(squadPlayerIds, playerLookup);
-      const benchSet = new Set(squadPlayerIds.filter(id => !validStarterSet.has(id)));
+      const starterIdSet = startingXi
+        ? new Set(startingXi.filter(id => playerLookup[id]))
+        : pickValidStarters(squadPlayerIds, playerLookup);
+      const benchSet = new Set(squadPlayerIds.filter(id => !starterIdSet.has(id)));
       const enrichedPlayers = (playerRows || []).map(p => {
         let pts = pointsMap[p.id] || 0;
         const isBench = benchSet.has(p.id);
@@ -559,9 +562,11 @@ export default function LiveScreen() {
         return { ...p, points: pts, live: livePlayerSet.has(p.id), isBench, minutes: minutesMap[p.id] ?? null };
       });
 
-      // Starters only on pitch; bench tracked separately
-      const starters = enrichedPlayers.filter(p => !p.isBench);
-      const bench    = squadPlayerIds.slice(11).map(id => enrichedPlayers.find(p => p.id === id)).filter(Boolean);
+      // Starters only on pitch; bench ordered by squad array position after the first 11
+      const starters = startingXi
+        ? startingXi.map(id => enrichedPlayers.find(p => p.id === id)).filter(Boolean)
+        : enrichedPlayers.filter(p => !p.isBench);
+      const bench = squadPlayerIds.filter(id => benchSet.has(id)).map(id => enrichedPlayers.find(p => p.id === id)).filter(Boolean);
       const positioned = positionPlayers(starters);
       setSquadPlayers(positioned);
       setBenchPlayers(bench);
