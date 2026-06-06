@@ -84,9 +84,10 @@ A locked-out player (fixture started, currently on bench) cannot be subbed in.
 ### `squads` table additions
 
 ```sql
-starting_xi  TEXT[] DEFAULT '{}'   -- 11 player IDs, subset of players[]
-lineup_locks JSONB  DEFAULT '{}'   -- { "matchday_id": ["player_id", ...] }
-round_transfers JSONB DEFAULT '{}'  -- { "matchday_id": count } (transfer counting)
+starting_xi             TEXT[]   DEFAULT '{}'   -- 11 player IDs, subset of players[]
+lineup_locks            JSONB    DEFAULT '{}'   -- { "matchday_id": ["player_id", ...] }
+round_transfers         JSONB    DEFAULT '{}'   -- { "matchday_id": count } (transfer counting)
+initial_build_complete  boolean  DEFAULT false  -- one-way latch; see Transfer Window doc
 ```
 
 ### `starting_xi` validity constraints (enforced at `set_lineup`)
@@ -169,4 +170,4 @@ These rules are identical for tournament-format (WC, UCL) and league-format (EPL
 
 ---
 
-Last Updated: **2026-06-01** (session 62 — Phase B fully implemented)
+Last Updated: **2026-06-06** (transfer audit — initial_build_complete column added to squads schema reference)

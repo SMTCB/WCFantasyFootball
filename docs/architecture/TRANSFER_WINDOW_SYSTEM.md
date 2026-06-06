@@ -60,16 +60,35 @@ Commissioner can override at any time by updating `league_config`.
 
 ### Counting transfers used
 
-Each buy or sell increments `squads.round_transfers[current_matchday_id]` atomically inside `execute_transfer_atomic`. The counter is naturally reset when a new matchday opens a new squad row.
+Each buy or sell increments `squads.round_transfers[current_matchday_id]` (a JSONB key per round) atomically inside `execute_transfer_atomic`. A new round key starts at 0 — no manual reset needed.
 
 Enforcement flow (inside `execute_transfer_atomic`):
 ```
-1. Read transfers_per_round from league_config
-2. If current round = transfer_wildcard_round → skip limit, allow
-3. Read squads.round_transfers[current_matchday_id]
-4. If count >= transfers_per_round → reject with TRANSFER_LIMIT_REACHED
-5. Otherwise → proceed, increment counter
+1. If p_matchday_id is null or not a real '-rN' round → skip limit (pre-competition bypass)
+2. If squads.initial_build_complete is false → skip limit (initial build exemption, see below)
+3. Read transfers_per_round from league_config
+4. If current round = transfer_wildcard_round → skip limit, allow
+5. Read squads.round_transfers[current_matchday_id]
+6. If count >= transfers_per_round → reject with TRANSFER_LIMIT_REACHED
+7. Otherwise → proceed, increment counter
 ```
+
+### Initial build exemption
+
+**Table**: `squads` · **Column**: `initial_build_complete boolean NOT NULL DEFAULT false`
+
+Managers whose draft allocation produced fewer than 15 players (due to wish-list overlaps with other managers) are not penalised by the per-round limit while they complete their squad.
+
+**When the latch flips**: inside `execute_transfer_atomic`, in the same atomic `UPDATE` that adds the 15th player. The check is `array_length(v_new_players, 1) >= 15` after a buy — the moment it is true, `initial_build_complete` is set to `true` in the same DB write.
+
+**It never resets**. Selling players back below 15 does not flip the latch back to `false`. This prevents the abuse case where a manager deliberately sells a full squad down to claim unlimited transfers.
+
+```
+initial_build_complete = false  →  no transfer limit (squad never been full)
+initial_build_complete = true   →  normal 3/round limit applies permanently
+```
+
+Backfill (migration 141): any squad already at 15+ players at migration time was set to `true` immediately.
 
 ---
 
@@ -163,6 +182,8 @@ In practice all current leagues have a `tournament_id`, so the manual path is in
 | Manual window path (`transfer_windows` table) | ✅ Exists (fallback only) |
 | Eliminated club restriction on buy | ✅ PR #262 |
 | Dynamic club cap on buy | ✅ PR #262 |
+| Pre-competition bypass (no configured matchday has started) | ✅ Migration 140 / PR #386 |
+| Initial build exemption (`initial_build_complete` latch) | ✅ Migration 141 / PR #387 |
 
 ---
 
@@ -174,4 +195,4 @@ In practice all current leagues have a `tournament_id`, so the manual path is in
 
 ---
 
-Last Updated: **2026-06-01** (session 62 — Phase A fully implemented)
+Last Updated: **2026-06-06** (transfer audit — pre-competition bypass + initial build exemption documented; lock scoping corrected)
