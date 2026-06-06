@@ -33,7 +33,7 @@ import { MONO, DISPLAY } from '../components/league/HubConstants';
 import BetsTabHub             from '../components/league/BetsTabHub';
 import LeagueDetailView       from '../components/league/LeagueDetailView';
 import BettingLeaderboardView from '../components/league/BettingLeaderboardView';
-import AuctionsView           from '../components/league/AuctionsView';
+import TradingView            from '../components/league/TradingView';
 import StatsView              from '../components/league/StatsView';
 import ChatView               from '../components/league/ChatView';
 import CommissionerPanel      from '../components/league/CommissionerPanel';
@@ -161,7 +161,7 @@ export default function LeagueScreen() {
   const [draftDeadlineDate, setDraftDeadlineDate] = useState(null); // for countdown banner
   const [currentGW, setCurrentGW] = useState('—'); // current GW label for league header
   const transferWindow = useTransferWindow(activeLeague?.league_id);
-  const { auctions, loading: auctionsLoading, placeBid, cancelListing, sellNow } = useAuctions(activeLeague?.league_id, mySquadId);
+  const { auctions, closedAuctions, loading: auctionsLoading, placeBid, cancelListing, sellNow } = useAuctions(activeLeague?.league_id, mySquadId);
   const { topScorers, teamMetrics, loading: statsLoading } = useLeagueStats(activeLeague?.league_id);
   const { leaderboard, loading: betLoading } = useBettingLeaderboard(activeLeague?.league_id);
 
@@ -199,6 +199,8 @@ export default function LeagueScreen() {
   const {
     incoming: incomingTrades,
     outgoing: outgoingTrades,
+    history: tradeHistory,
+    loading: tradesLoading,
     submitProposal,
     acceptProposal,
     rejectProposal,
@@ -328,12 +330,14 @@ export default function LeagueScreen() {
     if (v === 'detail') return 'leaderboard';
     if (v === 'betting_leaderboard') return 'betting';
     if (v === 'commissioner') return 'admin';
+    if (v === 'auctions') return 'trading'; // legacy deep-link compat
     return v;
   };
   const tabToView = (t) => {
     if (t === 'leaderboard') return 'detail';
     if (t === 'betting') return 'betting_leaderboard';
     if (t === 'admin') return 'commissioner';
+    if (t === 'auctions') return 'trading'; // legacy deep-link compat
     return t;
   };
   // h2h maps 1:1 (viewToTab('h2h') === 'h2h', tabToView('h2h') === 'h2h')
@@ -1152,6 +1156,7 @@ export default function LeagueScreen() {
             isCommissioner={isCommissioner}
             unreadChat={unreadCount}
             notifyBets={notificationCount > 0}
+            notifyTrading={auctions.some(a => a.highest_bidder_id === user?.id) || incomingTrades.length > 0}
             h2hEnabled={h2hEnabled}
             isDraftLeague={activeLeague?.leagues?.format === 'noduplicate'}
           />
@@ -1165,6 +1170,7 @@ export default function LeagueScreen() {
             isCommissioner={isCommissioner}
             unreadChat={unreadCount}
             notifyBets={notificationCount > 0}
+            notifyTrading={auctions.some(a => a.highest_bidder_id === user?.id) || incomingTrades.length > 0}
             h2hEnabled={h2hEnabled}
             isDraftLeague={activeLeague?.leagues?.format === 'noduplicate'}
           />
@@ -1398,9 +1404,10 @@ export default function LeagueScreen() {
          {view === 'betting_leaderboard' && (
            <BettingLeaderboardView leaderboard={leaderboard} currentUser={currentUser} betLoading={betLoading} />
          )}
-         {view === 'auctions' && (
-           <AuctionsView
+         {(view === 'trading' || view === 'auctions') && (
+           <TradingView
              auctions={auctions}
+             closedAuctions={closedAuctions}
              auctionsLoading={auctionsLoading}
              name={name}
              mySquadId={mySquadId}
@@ -1409,6 +1416,13 @@ export default function LeagueScreen() {
              placeBid={placeBid}
              cancelListing={cancelListing}
              sellNow={sellNow}
+             incoming={incomingTrades}
+             outgoing={outgoingTrades}
+             history={tradeHistory}
+             tradesLoading={tradesLoading}
+             acceptProposal={acceptProposal}
+             rejectProposal={rejectProposal}
+             cancelProposal={cancelProposal}
              onToast={showToast}
            />
          )}

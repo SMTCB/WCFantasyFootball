@@ -2,24 +2,43 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 
 export function useAuctions(leagueId, squadId) {
-  const [auctions, setAuctions]   = useState([]);
-  const [loading, setLoading]     = useState(false);
+  const [auctions,       setAuctions]       = useState([]);
+  const [closedAuctions, setClosedAuctions] = useState([]);
+  const [loading, setLoading]               = useState(false);
   const cancelRef = useRef(false);
 
   const load = useCallback(async () => {
     if (!leagueId) return;
     cancelRef.current = false;
     setLoading(true);
-    const { data } = await supabase
-      .from('auction_listings')
-      .select(`
-        id, player_id, seller_id, starting_bid, current_bid, highest_bidder_id, deadline_at, status, created_at, min_increment,
-        players(id, name, position, club, price)
-      `)
-      .eq('league_id', leagueId)
-      .eq('status', 'open')
-      .order('deadline_at', { ascending: true });
-    if (!cancelRef.current) { setAuctions(data ?? []); setLoading(false); }
+    const cutoff = new Date(Date.now() - 30 * 24 * 3600_000).toISOString();
+    const [{ data: open }, { data: closed }] = await Promise.all([
+      supabase
+        .from('auction_listings')
+        .select(`
+          id, player_id, seller_id, starting_bid, current_bid, highest_bidder_id, deadline_at, status, created_at, min_increment,
+          players(id, name, position, club, price)
+        `)
+        .eq('league_id', leagueId)
+        .eq('status', 'open')
+        .order('deadline_at', { ascending: true }),
+      supabase
+        .from('auction_listings')
+        .select(`
+          id, player_id, seller_id, starting_bid, current_bid, highest_bidder_id, deadline_at, status, created_at,
+          players(id, name, position, club)
+        `)
+        .eq('league_id', leagueId)
+        .in('status', ['closed', 'cancelled'])
+        .gte('deadline_at', cutoff)
+        .order('deadline_at', { ascending: false })
+        .limit(20),
+    ]);
+    if (!cancelRef.current) {
+      setAuctions(open ?? []);
+      setClosedAuctions(closed ?? []);
+      setLoading(false);
+    }
   }, [leagueId]);
 
   useEffect(() => {
@@ -72,5 +91,5 @@ export function useAuctions(leagueId, squadId) {
     return { ok: true };
   }, [load]);
 
-  return { auctions, loading, listPlayer, placeBid, cancelListing, sellNow, reload: load };
+  return { auctions, closedAuctions, loading, listPlayer, placeBid, cancelListing, sellNow, reload: load };
 }

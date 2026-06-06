@@ -1,9 +1,19 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 
+const TRADE_FIELDS = `
+  id, league_id, status, cash_sweetener, points_sweetener,
+  created_at, expires_at, resolved_at,
+  proposer_squad_id, target_squad_id,
+  proposer_player_id, target_player_id,
+  proposer_player:players!trade_proposals_proposer_player_id_fkey(id, name, position),
+  target_player:players!trade_proposals_target_player_id_fkey(id, name, position)
+`;
+
 export function useTradeProposals(leagueId, mySquadId) {
   const [incoming, setIncoming] = useState([]);
   const [outgoing, setOutgoing] = useState([]);
+  const [history,  setHistory]  = useState([]);
   const [loading, setLoading]   = useState(false);
   const [error, setError]       = useState(null);
   const channelRef = useRef(null);
@@ -13,24 +23,30 @@ export function useTradeProposals(leagueId, mySquadId) {
     setLoading(true);
     setError(null);
 
-    const { data, error: err } = await supabase
-      .from('trade_proposals')
-      .select(`
-        id, league_id, status, cash_sweetener, points_sweetener,
-        created_at, expires_at, resolved_at,
-        proposer_squad_id, target_squad_id,
-        proposer_player_id, target_player_id,
-        proposer_player:players!trade_proposals_proposer_player_id_fkey(id, name, position),
-        target_player:players!trade_proposals_target_player_id_fkey(id, name, position)
-      `)
-      .eq('league_id', leagueId)
-      .in('status', ['pending'])
-      .order('created_at', { ascending: false });
+    const cutoff = new Date(Date.now() - 30 * 24 * 3600_000).toISOString();
+    const [{ data: active, error: err }, { data: past }] = await Promise.all([
+      supabase
+        .from('trade_proposals')
+        .select(TRADE_FIELDS)
+        .eq('league_id', leagueId)
+        .in('status', ['pending'])
+        .order('created_at', { ascending: false }),
+      supabase
+        .from('trade_proposals')
+        .select(TRADE_FIELDS)
+        .eq('league_id', leagueId)
+        .in('status', ['accepted', 'rejected', 'cancelled'])
+        .or(`proposer_squad_id.eq.${mySquadId},target_squad_id.eq.${mySquadId}`)
+        .gte('created_at', cutoff)
+        .order('resolved_at', { ascending: false })
+        .limit(20),
+    ]);
 
     if (err) { setError(err.message); setLoading(false); return; }
 
-    setIncoming((data || []).filter(p => p.target_squad_id  === mySquadId));
-    setOutgoing((data || []).filter(p => p.proposer_squad_id === mySquadId));
+    setIncoming((active || []).filter(p => p.target_squad_id  === mySquadId));
+    setOutgoing((active || []).filter(p => p.proposer_squad_id === mySquadId));
+    setHistory(past || []);
     setLoading(false);
   }, [leagueId, mySquadId]);
 
@@ -100,7 +116,7 @@ export function useTradeProposals(leagueId, mySquadId) {
   }, [load]);
 
   return {
-    incoming, outgoing, loading, error,
+    incoming, outgoing, history, loading, error,
     submitProposal, acceptProposal, rejectProposal, cancelProposal,
     reload: load,
   };
