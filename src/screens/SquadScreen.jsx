@@ -873,7 +873,7 @@ export default function SquadScreen() {
           <div className="text-right">
             <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 9, color: 'var(--mute)', letterSpacing: '.14em', textTransform: 'uppercase' }}>Budget</div>
             <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 20, color: budgetLow ? 'var(--danger)' : 'var(--cyan)', lineHeight: 1 }}>
-              £{budgetLeft}M
+              €{budgetLeft}M
             </div>
           </div>
         </div>
@@ -1491,7 +1491,7 @@ export default function SquadScreen() {
           <div className="text-right" data-tour="squad-budget">
             <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 9, color: 'var(--mute)', letterSpacing: '.14em', textTransform: 'uppercase' }}>Budget</div>
             <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 20, color: budgetLow ? 'var(--danger)' : 'var(--cyan)', lineHeight: 1 }}>
-              £{budgetLeft}M
+              €{budgetLeft}M
             </div>
           </div>
         </div>
@@ -1787,7 +1787,7 @@ export default function SquadScreen() {
                               {player.id === captainId && <div style={{ width: 14, height: 14, borderRadius: '50%', background: 'var(--gold)', color: '#0A0A0A', fontFamily: 'Archivo Black, sans-serif', fontSize: 7, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>C</div>}
                               {!isStarter && <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 7, color: 'var(--mute)', border: '1px solid var(--rule)', padding: '0 3px', flexShrink: 0 }}>SUB</span>}
                             </div>
-                            <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 8, color: 'var(--mute)', letterSpacing: '0.12em', marginTop: 1 }}>{(player.club ?? '').substring(0, 3).toUpperCase()}{player.price > 0 ? ` · £${Number(player.price).toFixed(1)}M` : ''}</div>
+                            <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 8, color: 'var(--mute)', letterSpacing: '0.12em', marginTop: 1 }}>{(player.club ?? '').substring(0, 3).toUpperCase()}{player.price > 0 ? ` · €${Number(player.price).toFixed(1)}M` : ''}</div>
                             <FormStrip rounds={squadStatsMap[player.id]} />
                           </div>
                           {/* Points */}
@@ -2086,7 +2086,7 @@ export default function SquadScreen() {
                           }}>{pos}</div>
                           <div>
                             <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 11, color: 'var(--paper)', letterSpacing: '-0.01em' }}>{surname}</div>
-                            <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 8, color: 'var(--mute)', letterSpacing: '0.1em' }}>{player.club}{player.price > 0 ? ` · £${Number(player.price).toFixed(1)}M` : ''} · {Math.round(player.points ?? 0)} PTS</div>
+                            <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 8, color: 'var(--mute)', letterSpacing: '0.1em' }}>{player.club}{player.price > 0 ? ` · €${Number(player.price).toFixed(1)}M` : ''} · {Math.round(player.points ?? 0)} PTS</div>
                           </div>
                         </button>
                       );
@@ -2176,7 +2176,7 @@ export default function SquadScreen() {
                       <div className="w-8 h-8 flex items-center justify-center text-[10px] font-black shrink-0" style={{ background: 'rgba(224,168,0,0.15)', border: '1px solid rgba(224,168,0,0.4)', color: 'var(--gold)' }}>C</div>
                       <div className="flex-1 min-w-0">
                         <div className="text-[13px] font-semibold text-white truncate">{cap.name}</div>
-                        <div className="text-[10px] mt-0.5" style={{ color: 'var(--mute)' }}>{cap.position} · {cap.club} · £{cap.price}M</div>
+                        <div className="text-[10px] mt-0.5" style={{ color: 'var(--mute)' }}>{cap.position} · {cap.club} · €{cap.price}M</div>
                       </div>
                     </div>
                   );
@@ -2244,7 +2244,7 @@ export default function SquadScreen() {
                     {selectedPlayer.name}
                     {selectedPlayer.price > 0 && (
                       <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 13, color: 'var(--paper)', letterSpacing: '0.04em' }}>
-                        £{Number(selectedPlayer.price).toFixed(1)}M
+                        €{Number(selectedPlayer.price).toFixed(1)}M
                       </span>
                     )}
                   </div>
@@ -2531,7 +2531,7 @@ function JokerList({ teams, squadPlayerIds, onSelect, saving }) {
         </div>
       </div>
       <div className="text-right shrink-0">
-        <div className="text-[13px] font-black text-cyan tabular-nums">£{p.price}M</div>
+        <div className="text-[13px] font-black text-cyan tabular-nums">€{p.price}M</div>
         <div className="text-[8px] text-positive font-bold uppercase tracking-widest">Pick</div>
       </div>
     </button>

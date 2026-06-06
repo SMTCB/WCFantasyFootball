@@ -30,11 +30,11 @@ export default function AuctionCard({ auction, mySquadId, myBudget, onBid, onCan
   const handleBid = async () => {
     const val = parseFloat(amount);
     if (isNaN(val) || val < minNext) {
-      setErr(`Minimum bid: £${minNext.toFixed(1)}M`);
+      setErr(`Minimum bid: €${minNext.toFixed(1)}M`);
       return;
     }
     if (myBudget != null && val > myBudget) {
-      setErr(`Bid exceeds your budget (£${myBudget.toFixed(1)}M)`);
+      setErr(`Bid exceeds your budget (€${myBudget.toFixed(1)}M)`);
       return;
     }
     setBusy(true);
@@ -66,7 +66,7 @@ export default function AuctionCard({ auction, mySquadId, myBudget, onBid, onCan
         <div className="flex-1 min-w-0">
           <div className="text-[14px] font-bold text-white truncate">{player?.name ?? '—'}</div>
           <div className="text-[10px] mt-0.5" style={{ color: 'var(--mute)' }}>
-            {player?.club} · £{player?.price}M
+            {player?.club} · €{player?.price}M
           </div>
         </div>
 
@@ -79,7 +79,7 @@ export default function AuctionCard({ auction, mySquadId, myBudget, onBid, onCan
             {timeStr}
           </div>
           <div className="text-[12px] font-black text-white mt-0.5">
-            {currentBid != null ? `£${currentBid.toFixed(1)}M` : `from £${auction.starting_bid.toFixed(1)}M`}
+            {currentBid != null ? `€${currentBid.toFixed(1)}M` : `from €${auction.starting_bid.toFixed(1)}M`}
           </div>
           {currentBid != null && (
             <div className="text-[9px]" style={{ color: 'var(--mute)' }}>current bid</div>
@@ -100,7 +100,7 @@ export default function AuctionCard({ auction, mySquadId, myBudget, onBid, onCan
                   className="text-[10px] font-black uppercase tracking-wider px-3 py-1.5 disabled:opacity-40"
                   style={{ border: '1px solid rgba(34,197,86,0.35)', color: 'var(--positive)', background: 'rgba(34,197,86,0.08)' }}
                 >
-                  {busy ? '…' : `Sell Now · £${(auction.current_bid ?? 0).toFixed(1)}M`}
+                  {busy ? '…' : `Sell Now · €${(auction.current_bid ?? 0).toFixed(1)}M`}
                 </button>
               )}
               {/* Cancel only allowed before any bid is placed — prevent rug-pulling bidders */}
@@ -138,7 +138,7 @@ export default function AuctionCard({ auction, mySquadId, myBudget, onBid, onCan
                 min={minNext}
                 value={amount}
                 onChange={e => { setAmount(e.target.value); setErr(null); }}
-                placeholder={`£${minNext.toFixed(1)}M+`}
+                placeholder={`€${minNext.toFixed(1)}M+`}
                 className="flex-1 bg-transparent outline-none text-white text-[12px] font-bold px-2 py-1.5"
                 style={{ border: '1px solid var(--rule)', minWidth: 0 }}
               />

@@ -1263,7 +1263,7 @@ export default function LeagueScreen() {
                    <div style={{ textAlign: 'center', marginTop: 6 }}>
                      <div style={{ fontFamily: ftSerif, fontWeight: 900, fontStyle: 'italic', fontSize: 'clamp(38px, 10vw, 72px)', letterSpacing: '-0.03em', lineHeight: 0.9, color: FT_INK }}>FORZA TIMES</div>
                      <div style={{ fontFamily: ftSerif, fontStyle: 'italic', fontSize: 'clamp(10px, 2vw, 13px)', color: FT_MUTE, marginTop: 6 }}>
-                       "All the points that's fit to print" · {today} · £0.00 to subscribers
+                       "All the points that's fit to print" · {today} · €0.00 to subscribers
                      </div>
                    </div>
                    <div style={{ border: 0, height: 1, background: FT_INK, margin: '18px 0 4px' }} />
@@ -1701,7 +1701,7 @@ export default function LeagueScreen() {
                        <div className="text-[14px] font-bold text-white tracking-tight truncate">{p.name}</div>
                      </div>
                      <div className="text-right shrink-0 mr-2">
-                       <div className="text-[13px] font-black text-white">£{p.price}M</div>
+                       <div className="text-[13px] font-black text-white">€{p.price}M</div>
                        <div className="text-[9px] font-bold" style={{ color: 'var(--positive)' }}>READY</div>
                      </div>
                      {activeLeague?.leagues?.format === 'noduplicate' && (

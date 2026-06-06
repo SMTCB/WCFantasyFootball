@@ -234,7 +234,7 @@ export default function DraftRecoveryScreen() {
             Squad Complete
           </div>
           <div className="text-[#9E9E9E] text-[12px]">
-            All {SQUAD_SIZE} players locked in. Budget used: £{budgetUsed.toFixed(1)}M
+            All {SQUAD_SIZE} players locked in. Budget used: €{budgetUsed.toFixed(1)}M
           </div>
         </div>
         <button
@@ -275,7 +275,7 @@ export default function DraftRecoveryScreen() {
           <div className="flex items-center gap-1.5">
             <span className="text-[#9E9E9E] text-[10px] uppercase tracking-widest">Budget</span>
             <span className={`text-[10px] font-black ${budgetLeft < 10 ? 'text-[#E53935]' : 'text-[#00C853]'}`}>
-              £{budgetLeft.toFixed(1)}M
+              €{budgetLeft.toFixed(1)}M
             </span>
           </div>
         </div>
@@ -417,7 +417,7 @@ export default function DraftRecoveryScreen() {
                 <span className="text-white text-[12px] font-bold flex-1 truncate">{p.name}</span>
                 <span className="text-[#555] text-[11px] shrink-0">{p.club}</span>
                 <span className={`text-[11px] font-bold shrink-0 ${overBudget ? 'text-[#E53935]' : 'text-[#9E9E9E]'}`}>
-                  £{p.price}M
+                  €{p.price}M
                 </span>
                 {!disabled && (
                   <span className="text-[#00C853] text-[18px] leading-none shrink-0 font-black">+</span>

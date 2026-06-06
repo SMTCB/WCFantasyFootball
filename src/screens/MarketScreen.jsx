@@ -36,7 +36,7 @@ const MARKET_TOUR_STEPS = [
   {
     target: 'market-budget',
     title:  'Your Budget',
-    body:   'Every player you buy deducts from your £100M budget. Sell players back to free up funds — but the window closes before each matchday.',
+    body:   'Every player you buy deducts from your €100M budget. Sell players back to free up funds — but the window closes before each matchday.',
   },
   {
     target: 'market-player-list',
@@ -421,7 +421,7 @@ export default function MarketScreen() {
 
     setConfirm({
       title:        `Sell ${player.name}?`,
-      body:         `You will receive £${player.price}M back into your budget.`,
+      body:         `You will receive €${player.price}M back into your budget.`,
       warning:      warnings.length ? warnings.join(' ') : null,
       confirmLabel: 'Sell',
       danger:       true,
@@ -607,7 +607,7 @@ export default function MarketScreen() {
                 className="text-[16px] lg:text-[20px] font-black tabular-nums leading-tight"
                 style={{ fontFamily: 'Archivo Black, sans-serif', color: (budget ?? 0) < 5 ? 'var(--danger)' : 'var(--cyan)' }}
               >
-                £{(budget ?? 0).toFixed(1)}
+                €{(budget ?? 0).toFixed(1)}
                 <span className="text-[10px] lg:text-[12px] font-normal" style={{ color: 'var(--mute)' }}>M</span>
               </div>
               {emptySlots > 0 && (
@@ -950,7 +950,7 @@ export default function MarketScreen() {
                       className="fk-display tabular-nums"
                       style={{ fontSize: 16, color: canAfford || isOwned ? 'var(--paper)' : 'var(--danger)', letterSpacing: '-0.02em' }}
                     >
-                      £{p.price}
+                      €{p.price}
                       <span className="fk-mono" style={{ fontSize: 9, color: 'var(--mute)', fontWeight: 400 }}>M</span>
                     </div>
                   </div>
@@ -1053,7 +1053,7 @@ export default function MarketScreen() {
           className="text-[9px] font-semibold uppercase tracking-wider"
           style={{ color: 'var(--mute)', fontFamily: 'Archivo, sans-serif' }}
         >
-          Max {COUNTRY_LIMIT} per club (Joker exempt) · Max {squadSize} players · £{cfg.budgetTotal}M budget
+          Max {COUNTRY_LIMIT} per club (Joker exempt) · Max {squadSize} players · €{cfg.budgetTotal}M budget
         </span>
       </div>
     </div>

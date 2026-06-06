@@ -16,7 +16,7 @@ import CaptainPill  from './CaptainPill';
  *   isSwapTarget    — green tinted bg
  *   showPoints      — render the points column (default true)
  *   showStatus      — render the status word column (default true)
- *   showPrice       — render £/$ price in metadata (default false)
+ *   showPrice       — render €/$ price in metadata (default false)
  *   action          — React node for the rightmost column (e.g. a button)
  *   onClick         — click handler
  */
@@ -111,7 +111,7 @@ export default function PlayerRow({
                 className="fk-mono shrink-0"
                 style={{ fontSize: 10, color: 'var(--paper)', letterSpacing: '0.04em' }}
               >
-                £{Number(player.price).toFixed(1)}M
+                €{Number(player.price).toFixed(1)}M
               </span>
             )}
 
