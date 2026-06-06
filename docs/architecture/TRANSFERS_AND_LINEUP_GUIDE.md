@@ -69,11 +69,11 @@ Counts are tracked in `squads.round_transfers` (JSON: `{ "423-r2": 3 }`). A new 
 
 ### Initial Squad Build Exemption
 
-If your squad is **below 15 players**, transfer limits are not enforced at all. This covers:
+If your squad has **never reached 15 players**, transfer limits are not enforced. This covers:
+- A manager whose draft allocation was fewer than 15 players (wish-list overlaps reduced their haul)
 - A manager who joins after the round has started and needs to build their initial squad
-- A manager locked out during live fixtures who then completes their squad once the window reopens
 
-Once your squad reaches 15 players, all subsequent buys and sells count normally.
+The exemption uses a **one-way latch** (`squads.initial_build_complete`). The moment your squad first reaches 15 players, the latch flips permanently to true and the per-round limit applies from that point on. Selling players back down below 15 afterwards does **not** re-open the exemption — the latch never resets.
 
 ---
 
@@ -159,14 +159,12 @@ The `process-transfer` edge function applies two locks during buy actions.
 ### Lock 1 — Any live fixture blocks all buys (WINDOW_LOCKED)
 
 ```
-While ANY fixture in the database has status='live' (kickoff within last 3h):
-  → ALL buy actions are blocked for ALL leagues
+While any fixture in your league's tournament has status='live' (kickoff within last 3h):
+  → ALL buy actions are blocked for that league
   → Error: "Transfers locked while [Team A] vs [Team B] is in progress"
 ```
 
-**⚠️ Important:** this check is **NOT scoped to your league's tournament**. If Tajikistan vs India is live in tournament 623, and your mini-league uses tournament 623 for only 8 of the 200 fixtures in that tournament, you are still blocked. The check is global across all tournaments in the database.
-
-This is a current known simplification. The rationale: live prices fluctuate so any live football is considered a lock risk. A tournament-scoped fix is planned but not yet implemented.
+The check is scoped to `tournament_id` — only fixtures belonging to your league's competition can lock your window. Matches from unrelated tournaments in the database have no effect.
 
 **Sells are never blocked** by live fixture state — you can always offload a player during a live game.
 
@@ -178,7 +176,7 @@ While the specific player you are buying has forza_team_id in a live fixture (la
   → Error: "Transfer cost locked — [Team A] vs [Team B] has started"
 ```
 
-This one is player-specific (you can still buy players from teams not currently playing). Like Lock 1, it is also not scoped to tournament ID.
+This is player-specific (you can still buy players from teams not currently playing) and is scoped to your league's `tournament_id`.
 
 ### Lock 3 — Eliminated club (CLUB_ELIMINATED)
 
@@ -238,4 +236,4 @@ The POINTS LOG sub-screen is your **personal scoring tracker**, not a full match
 
 ---
 
-Last Updated: **2026-06-06** (session — covers all modes as of migration 141)
+Last Updated: **2026-06-06** (session — lock scoping corrected; initial build exemption latch documented; migration 141)

@@ -172,7 +172,7 @@ Deno.serve(async (req) => {
     //         (one per gameweek) always lands on the correct active row.
     let squadQuery = supabase
       .from('squads')
-      .select('id, players, budget_remaining, matchday_id')
+      .select('id, players, budget_remaining, matchday_id, initial_build_complete')
       .eq('user_id', user.id)
       .eq('league_id', league_id);
     if (activeMatchdayId) squadQuery = squadQuery.eq('matchday_id', activeMatchdayId);
@@ -185,7 +185,7 @@ Deno.serve(async (req) => {
     if (!squad && activeMatchdayId) {
       const { data: prevSquad } = await supabase
         .from('squads')
-        .select('id, players, budget_remaining, matchday_id')
+        .select('id, players, budget_remaining, matchday_id, initial_build_complete')
         .eq('user_id', user.id)
         .eq('league_id', league_id)
         .order('created_at', { ascending: false })
@@ -242,6 +242,16 @@ Deno.serve(async (req) => {
           .in('status', ['live', 'finished']);
         if ((startedCount ?? 0) === 0) limitMatchdayId = null;
       }
+    }
+
+    // Initial build exemption: a squad that has never reached 15 players (e.g.
+    // draft allocation gave fewer due to wish-list overlaps) is not subject to
+    // the per-round transfer limit until it first becomes complete.
+    // The latch (initial_build_complete) is a one-way flag set inside
+    // execute_transfer_atomic the moment a buy pushes the squad to 15.
+    // Selling back below 15 never resets it, closing the abuse vector.
+    if (limitMatchdayId && !squad.initial_build_complete && currentPlayers.length < 15) {
+      limitMatchdayId = null;
     }
 
     // ── SELL ─────────────────────────────────────────────────────────────────
