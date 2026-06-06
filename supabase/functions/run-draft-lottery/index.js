@@ -76,21 +76,12 @@ Deno.serve(async (req) => {
       return respond(200, result);
     }
 
-    // Cron mode: find leagues with pending submissions past their draft_deadline
-    const { data: pendingLeagues } = await supabase
-      .from('draft_submissions')
-      .select('league_id, leagues!inner(draft_deadline)')
-      .eq('status', 'pending')
-      .lte('leagues.draft_deadline', new Date().toISOString());
-
-    const leagueIds = [...new Set((pendingLeagues ?? []).map(r => r.league_id))];
-
-    if (!leagueIds.length) {
-      return respond(200, { message: 'No leagues past deadline with pending submissions' });
-    }
-
-    const results = await Promise.all(leagueIds.map(id => runLottery(id, 'group')));
-    return respond(200, { processed: results });
+    // Cron-mode allocation is permanently disabled. Draft allocation is ALWAYS
+    // manually triggered by the league commissioner via Admin → Run Allocation.
+    // Each league has different timing, manager readiness, and competitive dynamics
+    // that make automated triggering inappropriate. The pg_cron job is set
+    // active=false; this guard enforces the same rule at the code level.
+    return respond(405, { error: 'Automated draft allocation is disabled — use the commissioner panel to run the draft for each league.' });
   } catch (err) {
     await logError(FN, 'critical', err.message, { stack: err.stack });
     return respond(500, { error: err.message });
@@ -166,14 +157,19 @@ async function runLottery(leagueId, phase = 'group') {
       }
     }
   } else {
-    // 2. Load player prices for budget enforcement
+    // 2. Load player data (price, position, club) for allocation enforcement.
+    // forza_team_id is the club identifier used for club-cap enforcement.
     const allPlayerIds = [...new Set(submissions.flatMap(s => s.player_ids))];
     const { data: playerRows } = await supabase
       .from('players')
-      .select('id, position, price')
+      .select('id, position, price, forza_team_id')
       .in('id', allPlayerIds)
       // L5.12: filter by tournament so cross-tournament player IDs are excluded
       .eq('tournament_id', leagueRow?.tournament_id);
+
+    // Fetch the active club cap for this league (relaxes in cup as clubs are eliminated).
+    const { data: clubCapData } = await supabase.rpc('get_club_cap', { p_league_id: leagueId });
+    const CLUB_CAP = (clubCapData !== null && clubCapData !== undefined) ? clubCapData : 3;
 
     const playerMap = Object.fromEntries((playerRows ?? []).map(p => [p.id, p]));
 
@@ -210,8 +206,9 @@ async function runLottery(leagueId, phase = 'group') {
     const userState = {};
     for (const sub of submissions) {
       userState[sub.user_id] = {
-        allocated: [],
-        posCounts: { GK: 0, DEF: 0, MID: 0, FWD: 0 },
+        allocated:  [],
+        posCounts:  { GK: 0, DEF: 0, MID: 0, FWD: 0 },
+        clubCounts: {},   // forza_team_id → count, enforces per-club cap
         budgetUsed: 0,
       };
     }
@@ -233,13 +230,20 @@ async function runLottery(leagueId, phase = 'group') {
         const pos = normalisePosition(player.position);
         if (!SQUAD_POS_CAPS[pos]) continue;
 
-        if (u.posCounts[pos] >= SQUAD_POS_CAPS[pos] || u.budgetUsed + player.price > budget) {
+        const teamId    = player.forza_team_id;
+        const clubCount = teamId ? (u.clubCounts[teamId] ?? 0) : 0;
+        if (
+          u.posCounts[pos] >= SQUAD_POS_CAPS[pos] ||
+          u.budgetUsed + player.price > budget      ||
+          (teamId && CLUB_CAP < 99 && clubCount >= CLUB_CAP)
+        ) {
           droppedByWinner.push(pid);
           continue;
         }
 
         u.allocated.push(pid);
         u.posCounts[pos]++;
+        if (teamId) u.clubCounts[teamId] = clubCount + 1;
         u.budgetUsed += player.price;
       }
     }
@@ -257,16 +261,20 @@ async function runLottery(leagueId, phase = 'group') {
         [runnerUps[i], runnerUps[j]] = [runnerUps[j], runnerUps[i]];
       }
 
-      const pos = normalisePosition(player.position);
+      const pos    = normalisePosition(player.position);
+      const teamId = player.forza_team_id;
       for (const uid of runnerUps) {
-        const u = userState[uid];
+        const u         = userState[uid];
         if (!u) continue;
         if (u.allocated.length >= SQUAD_SIZE) continue;
         if (u.posCounts[pos] >= SQUAD_POS_CAPS[pos]) continue;
         if (u.budgetUsed + player.price > budget) continue;
+        const clubCount = teamId ? (u.clubCounts[teamId] ?? 0) : 0;
+        if (teamId && CLUB_CAP < 99 && clubCount >= CLUB_CAP) continue;
 
         u.allocated.push(pid);
         u.posCounts[pos]++;
+        if (teamId) u.clubCounts[teamId] = clubCount + 1;
         u.budgetUsed += player.price;
         break;
       }
@@ -336,13 +344,32 @@ async function runLottery(leagueId, phase = 'group') {
     }
   }
 
+  // Bug E fix: for the knockout phase, clear player lists from all group-stage squad rows
+  // before writing the new knockout squads. Without this, stale group-stage squads remain
+  // in the squads table and pollute the no-repeat check in process-transfer — blocking
+  // managers from buying players that are no longer owned by anyone in the new phase.
+  // Only clears squads with a different matchday_id (i.e. from previous phases).
+  // Historical fantasy_points rows reference squad_id and are unaffected by this clearing.
+  if (phase === 'knockout') {
+    await supabase
+      .from('squads')
+      .update({ players: [], starting_xi: [], lineup_locks: {} })
+      .eq('league_id', leagueId)
+      .neq('matchday_id', canonicalMatchdayId);
+  }
+
   // Write allocated squads to the squads table so the Squad screen shows them.
+  // initial_build_complete is set true for managers who received a full squad from the
+  // lottery — they should not receive the initial-build exemption on the transfer limit.
+  // Managers with incomplete allocations (< SQUAD_SIZE) keep it false so they can fill
+  // their squad without hitting the 3/round cap.
   const squadRows = Object.entries(allocations).map(([userId, data]) => ({
-    user_id:          userId,
-    league_id:        leagueId,
-    players:          data.allocated_players,
-    budget_remaining: Math.round((budget - data.budget_used) * 100) / 100,
-    matchday_id:      canonicalMatchdayId,
+    user_id:                userId,
+    league_id:              leagueId,
+    players:                data.allocated_players,
+    budget_remaining:       Math.round((budget - data.budget_used) * 100) / 100,
+    matchday_id:            canonicalMatchdayId,
+    initial_build_complete: data.unresolved_slots === 0,
   }));
 
   await supabase
