@@ -479,25 +479,14 @@ async function runLottery(leagueId, phase = 'group') {
     await supabase.from('league_notifications').insert(notificationRows);
   }
 
-  // L5.10: Open a 48h free-agency window so managers with gaps can fill via DraftRecoveryScreen
-  if (notificationRows.length > 0) {
-    const now      = new Date();
-    const closes   = new Date(now.getTime() + 48 * 60 * 60 * 1000).toISOString();
-    const roundNum = parseInt(String(canonicalMatchdayId).replace(/^.*-r/, ''), 10) || 1;
-    await supabase
-      .from('transfer_windows')
-      .upsert(
-        {
-          league_id:           leagueId,
-          round_number:        roundNum,
-          opens_at:            now.toISOString(),
-          closes_at:           closes,
-          window_type:         'standard',
-          transfers_remaining: 15,
-        },
-        { onConflict: 'league_id,round_number', ignoreDuplicates: true }
-      );
-  }
+  // NOTE: The 48h free-agency transfer_windows row (L5.10) is intentionally NOT created
+  // for tournament leagues. Tournament leagues use matchday_deadlines for window timing.
+  // Incomplete managers are already exempt from the per-round transfer limit via the
+  // initial_build_complete latch (migration 141, squads.initial_build_complete=false),
+  // which provides unlimited transfers until the squad reaches 15 without requiring a
+  // manual transfer_windows row. Creating that row overrides the matchday deadline system
+  // (get_transfer_window_status checks manual windows first), producing incorrect "15
+  // transfers left" and wrong close times for managers.
   } // end if (!isReEntry)
 
   // 9. Summary for caller
