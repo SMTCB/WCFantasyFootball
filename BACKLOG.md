@@ -1447,6 +1447,14 @@ SELECT pg_get_functiondef(oid) FROM pg_proc WHERE proname='resolve_auction_listi
 - **Issue**: Rate-limit trigger counts existing rows before INSERT — two parallel connections can both pass before either inserts, giving 2× the intended rate.
 - **Action**: Monitor. Only relevant at scale; low risk for a small friends/family pilot.
 
+#### TDD-20 — Transfer window API enforcement gap (~44 min between deadline and first kickoff) (LOW) 🟡 P3
+- **Discovery**: Transfer system audit (2026-06-06, session post-PR #386)
+- **Issue**: `get_transfer_window_status` (the DB function the UI calls) shows CLOSED from the moment the matchday deadline passes until `MAX(kickoff_at) + 8h`. But `process-transfer` (the actual API enforcement) only blocks on live fixtures — there's a gap between the deadline and when the first fixture goes live (typically ~2h) where direct API calls to buy succeed despite the UI showing CLOSED.
+- **Scope**: Buy actions only. Sells are always allowed (by design). Prices are stable in this window (no live data yet), so the risk is a manager skipping the 8h wait, not price manipulation.
+- **Fix option**: Replace the deadline-only check in `process-transfer` with a call to `get_transfer_window_status` (Option A) so both layers enforce identically. Adds one RPC call per transfer.
+- **Why deferred**: Low-risk for a friends/family pilot. Exploiting it requires deliberate API circumvention. Fix during off-season or between tournaments to avoid touching live transfer logic.
+- **Priority**: P3 — post-season
+
 ---
 
 ## 🚀 PILOT READINESS — SESSION 54 CONTEXT
