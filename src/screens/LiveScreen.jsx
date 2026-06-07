@@ -24,15 +24,17 @@ function LivePill({ size = 10 }) {
   );
 }
 
+// delta = current GW fantasy points for this league. null = not yet fetched / no data.
 function DeltaPill({ delta, big = false }) {
-  if (delta === 0) {
-    return <span className="mono" style={{ fontSize: big ? 13 : 11, color: 'var(--mute)', fontFamily: 'Archivo Black' }}>±0</span>;
-  }
-  const pos  = delta > 0;
-  const tone = pos ? 'var(--positive)' : 'var(--danger)';
+  const hasData = delta !== null && delta !== undefined;
+  const pos     = hasData && delta > 0;
+  const tone    = pos ? 'var(--positive)' : 'var(--mute)';
   return (
-    <span style={{ fontFamily: 'Archivo Black', fontSize: big ? 18 : 14, letterSpacing: '-0.02em', color: tone, display: 'inline-flex', alignItems: 'baseline', gap: 2 }}>
-      {pos ? '+' : '−'}{Math.abs(delta)}
+    <span style={{ display: 'inline-flex', alignItems: 'baseline', gap: 3 }}>
+      <span style={{ fontFamily: 'Archivo Black', fontSize: big ? 16 : 13, letterSpacing: '-0.02em', color: tone }}>
+        {!hasData ? '—' : delta === 0 ? '0' : `+${delta}`}
+      </span>
+      <span className="mono" style={{ fontSize: 8, color: 'var(--mute)', letterSpacing: '.14em' }}>GW</span>
     </span>
   );
 }
@@ -408,6 +410,7 @@ export default function LiveScreen() {
       // This scopes the live strip to only the current round's fixtures, preventing
       // unrelated matches (e.g. other nations in a large tournament) from appearing.
       let activeMatchdayIds = [];
+      const matchdayIdByTournament = {}; // tournament_id → active matchday_id
       if (userTournamentIds.length) {
         const { data: mdRows = [] } = await supabase
           .from('matchday_deadlines')
@@ -421,6 +424,7 @@ export default function LiveScreen() {
           if (!seen.has(row.tournament_id)) {
             seen.add(row.tournament_id);
             activeMatchdayIds.push(row.matchday_id);
+            matchdayIdByTournament[row.tournament_id] = row.matchday_id;
           }
         }
       }
@@ -514,13 +518,31 @@ export default function LiveScreen() {
       const { data: squadRows = [] } = leagueIds.length
         ? await supabase
             .from('squads')
-            .select('league_id, players, starting_xi, captain_id, is_triple_captain')
+            .select('id, league_id, players, starting_xi, captain_id, is_triple_captain')
             .eq('user_id', user.id)
             .in('league_id', leagueIds)
         : { data: [] };
 
       // Build a map of league_id → squad row for chip lookup
       const squadByLeague = Object.fromEntries((squadRows || []).map(s => [s.league_id, s]));
+
+      // 4b. Current GW points per league — fetched from fantasy_points for the active matchday.
+      // This powers the GW pill on each league card (shows running total as fixtures score).
+      const gwPtsByLeague = {};
+      const allSquadIds = (squadRows || []).map(s => s.id).filter(Boolean);
+      const gwMatchdayIds = [...new Set(Object.values(matchdayIdByTournament))];
+      if (allSquadIds.length && gwMatchdayIds.length) {
+        const squadIdToLeague = Object.fromEntries((squadRows || []).map(s => [s.id, s.league_id]));
+        const { data: fpRows = [] } = await supabase
+          .from('fantasy_points')
+          .select('squad_id, total, matchday_id')
+          .in('squad_id', allSquadIds)
+          .in('matchday_id', gwMatchdayIds);
+        for (const fp of fpRows || []) {
+          const lid = squadIdToLeague[fp.squad_id];
+          if (lid) gwPtsByLeague[lid] = Number(fp.total) ?? 0;
+        }
+      }
 
       // Use the active league's squad only — no cross-league fallback.
       // If the active league has no squad, show no players (empty XI).
@@ -610,7 +632,7 @@ export default function LiveScreen() {
           chip:            lgTripleCap ? 'Triple Captain' : null,
           rank:            rankLabel,
           total,
-          delta:           0,
+          delta:           gwPtsByLeague[m.league_id] ?? null,
           windowStatus:    win?.status   ?? null,
           windowClosesAt:  win?.closes_at ?? null,
         };
