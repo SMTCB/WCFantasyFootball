@@ -18,6 +18,44 @@
 
 ---
 
+## 🛡️ Pilot Safeguards — READ BEFORE EVERY DB OPERATION
+
+**Context**: This is a single-environment setup (no dev/staging/prod split). The live database IS the pilot database. There is no Point-in-Time Recovery. A bad migration or destructive query cannot be auto-rolled back. Protect user data above all else.
+
+### Rules Claude MUST follow — no exceptions
+
+**1. Backup before every migration**
+
+Before applying any `.sql` migration file to the live DB, always dump a backup first:
+```bash
+npx supabase db dump --linked > backups/pre_migration_$(date +%Y%m%d_%H%M%S).sql
+```
+The `backups/` folder is gitignored. If the dump fails, stop and tell the user before proceeding.
+
+**2. SELECT before any UPDATE or DELETE**
+
+Never run a bulk `UPDATE` or `DELETE` without first running the equivalent `SELECT` and showing the user which rows will be affected. Wait for explicit confirmation before executing the write.
+
+```sql
+-- Always do this first:
+SELECT id, <relevant columns> FROM table WHERE <condition>;
+-- Then, only after user confirms: run the UPDATE/DELETE
+```
+
+**3. Never DROP without explicit user confirmation**
+
+`DROP TABLE`, `DROP COLUMN`, `DROP FUNCTION` — always pause, describe exactly what will be lost, and wait for the user to say "yes, do it" before executing.
+
+**4. No test data mixed with pilot data**
+
+All test leagues and test users must be clearly labelled (name prefix `TEST_`) or removed before the pilot launches. Never seed fake data into tables that real pilot users share (e.g. `players`, `fixtures`, `leagues`) without confirming first.
+
+**5. Migrations are append-only**
+
+Never modify an already-applied migration file. Always create a new numbered file. This is non-negotiable — editing applied migrations breaks the audit trail and can corrupt the schema state.
+
+---
+
 ## 📋 BACKLOG IS SINGLE SOURCE OF TRUTH
 
 **Critical governance rule:** [BACKLOG.md](BACKLOG.md) is the **authoritative** document for:
@@ -859,9 +897,14 @@ vercel inspect wc-fantasy-football.vercel.app  # deployment details
    npm run dev  # http://localhost:5173
    ```
    
-7. **Develop, commit, push, PR, merge** (Claude does all git operations) per [Git Workflow](#git-workflow--version-control) rules
+7. **Before any DB migration** — dump a backup first (see [Pilot Safeguards](#️-pilot-safeguards--read-before-every-db-operation)):
+   ```bash
+   npx supabase db dump --linked > backups/pre_migration_$(date +%Y%m%d_%H%M%S).sql
+   ```
 
-8. **Test before pushing** (Claude does this automatically):
+8. **Develop, commit, push, PR, merge** (Claude does all git operations) per [Git Workflow](#git-workflow--version-control) rules
+
+9. **Test before pushing** (Claude does this automatically):
    ```bash
    npm run lint        # Must pass
    npx playwright test # Should stay green
@@ -947,7 +990,8 @@ grep -n "^import" src/screens/LeagueScreen.jsx
 - **No `--no-verify`**: Never skip git hooks — they catch errors early
 - **Atomic Commits**: One logical change per commit, with clear message describing why (not just what)
 - **Responsive Design**: Use Tailwind breakpoints, test on mobile/tablet/desktop
-- **Database Migrations**: Always create new numbered files, never modify existing ones
+- **Database Migrations**: Always create new numbered files, never modify existing ones — and always dump a backup before applying (see Pilot Safeguards)
+- **Destructive queries**: SELECT first, show affected rows, wait for confirmation before running UPDATE/DELETE/DROP (see Pilot Safeguards)
 - **Comments**: Only explain WHY, not WHAT — code names should be self-documenting
 - **Notion Backlog**: When bugs/gaps found during dev, immediately create a Notion card with [CATEGORY] header (see BACKLOG Management section)
 
