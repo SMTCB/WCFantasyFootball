@@ -91,6 +91,11 @@ function PendingConfirmCard({ listing, myUserId, windowStatus, onConfirm, onToas
             €{Number(listing.current_bid).toFixed(1)}M
           </div>
           <div style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', marginTop: 2 }}>winning bid</div>
+          {listing.bidder_name && (
+            <div style={{ fontFamily: MONO, fontSize: 9, color: 'var(--gold)', marginTop: 4, letterSpacing: '.1em' }}>
+              {listing.bidder_name}
+            </div>
+          )}
         </div>
       </div>
 

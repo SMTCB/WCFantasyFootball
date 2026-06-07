@@ -722,10 +722,13 @@ async function rollupSquads(fixture_id, pointsLookup, tournament_id) {
     }
   }
 
-  // Write one gazette entry per league showing GW scores (fire-and-forget)
-  writeGazetteEntries(fixture_id, roundMatchdayId, fantasyPointsUpserts, squads).catch(e =>
-    console.warn('[calculate-scores] gazette write failed (non-critical):', e.message)
-  );
+  // Write one gazette entry per league showing GW scores — only when all fixtures
+  // in the round are finished, so live/partial scores never appear in the feed.
+  if (roundComplete) {
+    writeGazetteEntries(fixture_id, roundMatchdayId, fantasyPointsUpserts, squads).catch(e =>
+      console.warn('[calculate-scores] gazette write failed (non-critical):', e.message)
+    );
+  }
 
   // H2H resolution — only runs when every fixture in the round is finished
   if (roundComplete) {
