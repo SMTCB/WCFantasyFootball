@@ -231,19 +231,23 @@ export default function LeagueScreen() {
     if (!lid || !user?.id) return;
     setMySquadPlayers([]);
     setTheirSquadPlayers([]);
-    const [{ data: myAlloc }, { data: theirAlloc }] = await Promise.all([
-      supabase.from('draft_allocations').select('allocated_players').eq('league_id', lid).eq('user_id', user.id).maybeSingle(),
-      supabase.from('draft_allocations').select('allocated_players').eq('league_id', lid).eq('user_id', targetUserId).maybeSingle(),
+    // Always prefer squads.players (live roster) over draft_allocations (draft-only snapshot).
+    // Free-market transfers after the draft are in squads.players but NOT in allocated_players,
+    // so using allocations as primary caused pre-filled "their player" to go missing.
+    const [mySquadRes, theirSquadRes] = await Promise.all([
+      supabase.from('squads').select('players').eq('league_id', lid).eq('user_id', user.id).order('created_at', { ascending: false }).limit(1).maybeSingle(),
+      supabase.from('squads').select('players').eq('league_id', lid).eq('user_id', targetUserId).order('created_at', { ascending: false }).limit(1).maybeSingle(),
     ]);
-    let myIds    = myAlloc?.allocated_players    ?? [];
-    let theirIds = theirAlloc?.allocated_players ?? [];
+    let myIds    = mySquadRes?.data?.players    ?? [];
+    let theirIds = theirSquadRes?.data?.players ?? [];
+    // Fallback to draft_allocations for leagues that never had a squad row
     if (!myIds.length || !theirIds.length) {
-      const [mySquadRes, theirSquadRes] = await Promise.all([
-        myIds.length ? Promise.resolve({ data: null }) : supabase.from('squads').select('players').eq('league_id', lid).eq('user_id', user.id).maybeSingle(),
-        theirIds.length ? Promise.resolve({ data: null }) : supabase.from('squads').select('players').eq('league_id', lid).eq('user_id', targetUserId).maybeSingle(),
+      const [myAlloc, theirAlloc] = await Promise.all([
+        myIds.length    ? Promise.resolve({ data: null }) : supabase.from('draft_allocations').select('allocated_players').eq('league_id', lid).eq('user_id', user.id).maybeSingle(),
+        theirIds.length ? Promise.resolve({ data: null }) : supabase.from('draft_allocations').select('allocated_players').eq('league_id', lid).eq('user_id', targetUserId).maybeSingle(),
       ]);
-      if (!myIds.length) myIds = mySquadRes?.data?.players ?? [];
-      if (!theirIds.length) theirIds = theirSquadRes?.data?.players ?? [];
+      if (!myIds.length)    myIds    = myAlloc?.data?.allocated_players    ?? [];
+      if (!theirIds.length) theirIds = theirAlloc?.data?.allocated_players ?? [];
     }
     const allIds = [...new Set([...myIds, ...theirIds])];
     if (!allIds.length) return;
@@ -580,9 +584,9 @@ export default function LeagueScreen() {
     supabase.from('gazette_entries')
       .select('id, entry_type, headline, bullets, published_at')
       .eq('league_id', lid)
-      .eq('entry_type', 'activity')
+      .in('entry_type', ['activity', 'auction_result'])
       .order('published_at', { ascending: false })
-      .limit(6)
+      .limit(8)
       .then(({ data }) => setFrontpageActivityEntries(data ?? []));
   }, [activeLeague?.league_id]);
 
@@ -1349,9 +1353,30 @@ export default function LeagueScreen() {
                    />
 
                    {/* Recent scores + H2H results — activity entries */}
+                   {/* Recent Deals — auction_result gazette entries */}
+                   {frontpageActivityEntries.some(e => e.entry_type === 'auction_result') && (() => {
+                     const dealEntries = frontpageActivityEntries.filter(e => e.entry_type === 'auction_result').slice(0, 3);
+                     return (
+                       <div style={{ marginTop: 24, borderTop: `2px solid ${FT_INK}`, paddingTop: 20 }}>
+                         <div style={{ fontFamily: ftMono, fontSize: 10, letterSpacing: '.22em', color: FT_RED, marginBottom: 14 }}>TRANSFER DESK · RECENT DEALS</div>
+                         <div style={{ display: 'grid', gridTemplateColumns: `repeat(${Math.min(dealEntries.length, 3)}, 1fr)`, gap: 16 }}>
+                           {dealEntries.map(e => (
+                             <div key={e.id} style={{ borderLeft: `3px solid ${FT_INK}`, paddingLeft: 14 }}>
+                               <div style={{ fontFamily: ftMono, fontSize: 9, letterSpacing: '.18em', color: FT_MUTE, marginBottom: 4 }}>AUCTION</div>
+                               <div style={{ fontFamily: ftSerif, fontWeight: 700, fontSize: 13, color: FT_INK, marginBottom: 6, lineHeight: 1.3 }}>{e.headline}</div>
+                               {Array.isArray(e.bullets) && e.bullets.slice(0, 2).map((b, i) => (
+                                 <div key={i} style={{ fontFamily: ftMono, fontSize: 10, color: FT_MUTE, marginBottom: 2, letterSpacing: '.06em' }}>{typeof b === 'string' ? b : b?.text ?? ''}</div>
+                               ))}
+                             </div>
+                           ))}
+                         </div>
+                       </div>
+                     );
+                   })()}
+
                    {frontpageActivityEntries.length > 0 && (() => {
                      const h2hEntries = frontpageActivityEntries.filter(e => e.headline?.startsWith('⚔️'));
-                     const scoreEntries = frontpageActivityEntries.filter(e => !e.headline?.startsWith('⚔️'));
+                     const scoreEntries = frontpageActivityEntries.filter(e => e.entry_type === 'activity' && !e.headline?.startsWith('⚔️'));
                      const toShow = h2hEnabled
                        ? [...h2hEntries.slice(0, 2), ...scoreEntries.slice(0, 2)]
                        : scoreEntries.slice(0, 3);
@@ -1658,7 +1683,7 @@ export default function LeagueScreen() {
                       </div>
                       <div className="flex items-center gap-4">
                         <span className="text-[10px] text-[var(--mute)]">0</span>
-                        <input type="range" min="0" max="50" step="5" value={tradePoints} onChange={e => setTradePoints(parseInt(e.target.value))} className="flex-1 accent-[#E53935]" />
+                        <input type="range" min="0" max="50" step="1" value={tradePoints} onChange={e => setTradePoints(parseInt(e.target.value))} className="flex-1 accent-[#E53935]" />
                         <span className="text-[10px] text-[var(--mute)]">50</span>
                       </div>
                       <p className="text-[10px] text-[var(--mute)] italic text-center">Give up raw ranking points to secure a star player.</p>
@@ -1719,7 +1744,7 @@ export default function LeagueScreen() {
                        <div className="text-[13px] font-black text-white">€{p.price}M</div>
                        <div className="text-[9px] font-bold" style={{ color: 'var(--positive)' }}>READY</div>
                      </div>
-                     {activeLeague?.leagues?.format === 'noduplicate' && (
+                     {activeLeague?.leagues?.format === 'noduplicate' && managerTeamView.user_id !== currentUser?.id && (
                        <button
                          onClick={() => { const t = { ...managerTeamView, squadId: squadByUserRef.current[managerTeamView.user_id] }; setTradeTarget(t); setTradeTheirPlayer(p); loadTradeSquads(managerTeamView.user_id); setManagerTeamView(null); setShowTradeBuilder(true); }}
                          style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 9, letterSpacing: '.14em', color: 'var(--cyan)', background: 'transparent', border: '1px solid rgba(0,180,216,.3)', padding: '4px 8px', cursor: 'pointer', flexShrink: 0 }}

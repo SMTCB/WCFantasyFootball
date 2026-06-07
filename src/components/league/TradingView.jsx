@@ -233,6 +233,7 @@ export default function TradingView({
 }) {
   const [showAuctionHistory, setShowAuctionHistory] = useState(false);
   const [showTradeHistory,   setShowTradeHistory]   = useState(false);
+  const [showHelp,           setShowHelp]           = useState(false);
 
   // Won auctions waiting for my confirmation
   const myPendingWins = (pendingAuctions ?? []).filter(a => a.highest_bidder_id === myUserId);
@@ -242,14 +243,60 @@ export default function TradingView({
   return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: 'var(--ink)', overflow: 'hidden' }}>
 
+      {/* ── Help modal ─────────────────────────────────────────────── */}
+      {showHelp && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 80, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}
+             onClick={() => setShowHelp(false)}>
+          <div style={{ background: 'var(--ink-2)', border: '1px solid var(--rule)', maxWidth: 480, width: '100%', padding: 28, position: 'relative' }}
+               onClick={e => e.stopPropagation()}>
+            <button onClick={() => setShowHelp(false)} style={{ position: 'absolute', top: 14, right: 16, background: 'none', border: 'none', color: 'var(--mute)', fontSize: 18, cursor: 'pointer' }}>✕</button>
+            <div style={{ fontFamily: MONO, fontSize: 10, color: 'var(--gold)', letterSpacing: '.22em', marginBottom: 16 }}>TRADING FLOOR · HOW IT WORKS</div>
+
+            <div style={{ fontFamily: MONO, fontSize: 11, color: 'var(--cyan)', letterSpacing: '.14em', marginBottom: 8 }}>🔨 AUCTIONS</div>
+            <div style={{ fontFamily: "'Archivo', sans-serif", fontSize: 12, color: 'var(--mute)', lineHeight: 1.6, marginBottom: 16 }}>
+              List any player from your squad for auction. A 48-hour bidding window opens — managers bid above the starting price in increments. When the deadline passes the highest bidder is notified. They must <strong style={{ color: 'var(--paper)' }}>CONFIRM PURCHASE</strong> during the next open transfer window to complete the deal. Sellers can hit <strong style={{ color: 'var(--paper)' }}>SELL NOW</strong> at any point to close the auction immediately at the current bid.
+            </div>
+            <div style={{ height: 1, background: 'var(--rule)', margin: '0 0 16px' }} />
+
+            <div style={{ fontFamily: MONO, fontSize: 11, color: 'var(--cyan)', letterSpacing: '.14em', marginBottom: 8 }}>⇄ TRADE PROPOSALS</div>
+            <div style={{ fontFamily: "'Archivo', sans-serif", fontSize: 12, color: 'var(--mute)', lineHeight: 1.6, marginBottom: 16 }}>
+              Click <strong style={{ color: 'var(--paper)' }}>TRADE</strong> on any player in another manager's roster to propose a direct swap. Add a cash sweetener (±€10M budget shift) or a points penalty (you give up ranking points) to balance unequal values. The target manager receives your proposal and can accept or decline. Accepted trades execute immediately.
+            </div>
+            <div style={{ height: 1, background: 'var(--rule)', margin: '0 0 16px' }} />
+
+            <div style={{ fontFamily: MONO, fontSize: 11, color: 'var(--cyan)', letterSpacing: '.14em', marginBottom: 8 }}>📊 THE COUNTERS</div>
+            <div style={{ fontFamily: "'Archivo', sans-serif", fontSize: 12, color: 'var(--mute)', lineHeight: 1.6 }}>
+              <strong style={{ color: 'var(--paper)' }}>AUCTIONS</strong> — all live auctions in the league.<br/>
+              <strong style={{ color: 'var(--paper)' }}>MY BIDS</strong> — auctions where you currently hold the highest bid.<br/>
+              <strong style={{ color: 'var(--paper)' }}>PROPOSALS</strong> — pending trade proposals sent or received by you.<br/>
+              History (last 30 days) is shown below each section.
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* ── Hero strip ─────────────────────────────────────────────── */}
       <div style={{ borderBottom: '1px solid var(--rule)', background: 'var(--ink-2)', flexShrink: 0 }}>
         <div style={{ padding: 'clamp(12px,2vw,20px) clamp(14px,3vw,28px)', borderBottom: '1px solid var(--rule)' }}>
           <div style={{ fontFamily: MONO, fontSize: 'clamp(9px,1.8vw,10px)', color: 'var(--gold)', letterSpacing: '.22em' }}>
             TRADING FLOOR · {name.toUpperCase()}
           </div>
-          <div style={{ fontFamily: DISPLAY, fontSize: 'clamp(18px,4vw,24px)', marginTop: 6 }}>
-            Auctions, bids and trade proposals in one place.
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 6 }}>
+            <div style={{ fontFamily: DISPLAY, fontSize: 'clamp(18px,4vw,24px)', flex: 1 }}>
+              Auctions, bids and trade proposals in one place.
+            </div>
+            <button
+              onClick={() => setShowHelp(true)}
+              title="How auctions & trades work"
+              style={{
+                flexShrink: 0, width: 24, height: 24, borderRadius: '50%',
+                border: '1px solid rgba(255,255,255,0.15)',
+                background: 'rgba(255,255,255,0.05)',
+                color: 'rgba(255,255,255,0.4)',
+                fontFamily: MONO, fontSize: 12, fontWeight: 700,
+                cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+              }}
+            >?</button>
           </div>
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr' }}>
