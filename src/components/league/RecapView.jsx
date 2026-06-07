@@ -20,14 +20,18 @@ function MatchdayNav({ allMatchdays, selected, onSelect, mobile }) {
       {allMatchdays.map(md => {
         const n = String(md.matchday_id).replace(/^.*-r/, '');
         const active = md.matchday_id === selected;
+        const isLive = md.isLive;
         return (
           <button key={md.matchday_id} onClick={() => onSelect(md.matchday_id)} style={{
-            padding: '4px 9px', flexShrink: 0,
-            border: active ? '1px solid var(--cyan)' : '1px solid var(--rule)',
-            background: active ? 'rgba(0,180,216,.14)' : 'transparent',
-            color: active ? 'var(--cyan)' : 'var(--mute)',
+            padding: '4px 9px', flexShrink: 0, display: 'flex', alignItems: 'center', gap: 4,
+            border: active ? `1px solid ${isLive ? 'var(--danger)' : 'var(--cyan)'}` : '1px solid var(--rule)',
+            background: active ? (isLive ? 'rgba(239,68,68,.12)' : 'rgba(0,180,216,.14)') : 'transparent',
+            color: active ? (isLive ? 'var(--danger)' : 'var(--cyan)') : 'var(--mute)',
             fontFamily: MONO, fontSize: 10, letterSpacing: '.12em', cursor: 'pointer',
-          }}>{n}</button>
+          }}>
+            {isLive && <span style={{ width: 5, height: 5, borderRadius: '50%', background: 'var(--danger)', flexShrink: 0 }} />}
+            {n}
+          </button>
         );
       })}
     </div>
@@ -142,23 +146,42 @@ export default function RecapView({ leagueId, tournamentId, members, currentUser
     setAllMatchdays([]);
     setSelectedMatchday(null);
 
-    supabase
-      .from('matchday_deadlines')
-      .select('matchday_id, deadline_at')
-      .eq('tournament_id', tournamentId)
-      .lte('deadline_at', new Date().toISOString())
-      .then(({ data, error }) => {
-        if (cancelled) return;
-        if (error) { console.error('[RecapView] matchday load:', error); setLoadingMds(false); return; }
-        const sorted = (data ?? []).sort((a, b) => {
-          const na = parseInt(String(a.matchday_id).replace(/^.*-r/, ''), 10);
-          const nb = parseInt(String(b.matchday_id).replace(/^.*-r/, ''), 10);
-          return na - nb;
-        });
-        setAllMatchdays(sorted);
-        if (sorted.length > 0) setSelectedMatchday(sorted[sorted.length - 1].matchday_id);
-        setLoadingMds(false);
+    const now = new Date().toISOString();
+    Promise.all([
+      // Past matchdays (deadline already passed = round locked)
+      supabase.from('matchday_deadlines').select('matchday_id, deadline_at')
+        .eq('tournament_id', tournamentId).lte('deadline_at', now),
+      // Current/active matchday (next upcoming deadline — may have fixtures in progress)
+      supabase.from('matchday_deadlines').select('matchday_id, deadline_at')
+        .eq('tournament_id', tournamentId).gt('deadline_at', now)
+        .order('deadline_at', { ascending: true }).limit(1),
+    ]).then(async ([{ data: pastData, error }, { data: upcomingData }]) => {
+      if (cancelled) return;
+      if (error) { console.error('[RecapView] matchday load:', error); setLoadingMds(false); return; }
+
+      const sorted = (pastData ?? []).sort((a, b) => {
+        const na = parseInt(String(a.matchday_id).replace(/^.*-r/, ''), 10);
+        const nb = parseInt(String(b.matchday_id).replace(/^.*-r/, ''), 10);
+        return na - nb;
       });
+
+      // Include the current active matchday if any of its fixtures have started.
+      // This shows partial/live GW scores mid-matchday without waiting for the round to close.
+      const activeMd = upcomingData?.[0] ?? null;
+      if (activeMd) {
+        const { data: startedFix } = await supabase
+          .from('fixtures').select('id').eq('matchday_id', activeMd.matchday_id)
+          .in('status', ['live', 'finished']).limit(1);
+        if (!cancelled && startedFix?.length) {
+          sorted.push({ ...activeMd, isLive: true });
+        }
+      }
+
+      if (cancelled) return;
+      setAllMatchdays(sorted);
+      if (sorted.length > 0) setSelectedMatchday(sorted[sorted.length - 1].matchday_id);
+      setLoadingMds(false);
+    });
 
     return () => { cancelled = true; };
   }, [leagueId, tournamentId]);
@@ -292,10 +315,11 @@ export default function RecapView({ leagueId, tournamentId, members, currentUser
   }, [expandedUser, breakdown, fixtures, leagueId]);
 
   // ── Derived ─────────────────────────────────────────────────────────────────
-  const roundNum   = selectedMatchday ? String(selectedMatchday).replace(/^.*-r/, '') : '—';
-  const roundLabel = selectedMatchday ? `GW ${roundNum}` : '—';
-  const hasScores  = scores.some(s => s.pts !== null);
-  const loading    = loadingMds || loadingScores;
+  const roundNum      = selectedMatchday ? String(selectedMatchday).replace(/^.*-r/, '') : '—';
+  const isLiveRound   = allMatchdays.find(md => md.matchday_id === selectedMatchday)?.isLive ?? false;
+  const roundLabel    = selectedMatchday ? `GW ${roundNum}${isLiveRound ? ' · IN PROGRESS' : ''}` : '—';
+  const hasScores     = scores.some(s => s.pts !== null);
+  const loading       = loadingMds || loadingScores;
 
   // Resolve username from members (display-only, doesn't affect data loading)
   const memberMap = {};
@@ -336,8 +360,13 @@ export default function RecapView({ leagueId, tournamentId, members, currentUser
               <span style={{ fontFamily: DISPLAY, fontSize: 13, letterSpacing: '-0.01em', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{name}</span>
               {isTop && <span style={{ fontFamily: MONO, fontSize: 8, background: 'var(--gold)', color: 'var(--ink)', padding: '1px 4px', letterSpacing: '.1em', flexShrink: 0 }}>TOP</span>}
             </div>
-            <div style={{ textAlign: 'right', fontFamily: DISPLAY, fontSize: 14, color: isTop ? 'var(--gold)' : 'var(--paper)' }}>
-              {s.pts !== null ? Math.round(s.pts) : '—'}
+            <div style={{ textAlign: 'right' }}>
+              <span style={{ fontFamily: DISPLAY, fontSize: 14, color: isTop ? 'var(--gold)' : 'var(--paper)' }}>
+                {s.pts !== null ? (isLiveRound ? '~' : '') + Math.round(s.pts) : '—'}
+              </span>
+              {isLiveRound && s.pts !== null && (
+                <div style={{ fontFamily: MONO, fontSize: 7, color: 'var(--danger)', letterSpacing: '.14em', marginTop: 1 }}>LIVE</div>
+              )}
             </div>
             <div style={{ textAlign: 'right', fontFamily: MONO, fontSize: 11, color: 'var(--mute)' }}>
               {totalPts != null ? Math.round(totalPts) : '—'}
@@ -361,9 +390,11 @@ export default function RecapView({ leagueId, tournamentId, members, currentUser
             </div>
             <div style={{ textAlign: 'right' }}>
               <div style={{ fontFamily: DISPLAY, fontSize: 16, color: isTop ? 'var(--gold)' : 'var(--paper)' }}>
-                {s.pts !== null ? Math.round(s.pts) : '—'}
+                {s.pts !== null ? (isLiveRound ? '~' : '') + Math.round(s.pts) : '—'}
               </div>
-              <div style={{ fontFamily: MONO, fontSize: 8, color: 'var(--mute)', letterSpacing: '.12em' }}>GW</div>
+              <div style={{ fontFamily: MONO, fontSize: 8, color: isLiveRound && s.pts !== null ? 'var(--danger)' : 'var(--mute)', letterSpacing: '.12em' }}>
+                {isLiveRound && s.pts !== null ? 'LIVE' : 'GW'}
+              </div>
             </div>
           </div>
         )}
