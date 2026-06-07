@@ -294,13 +294,12 @@ export default function BetCreatorPanel({ leagueId, tournamentId, onCreated, com
     const awayKey = `${fixture.id}_away`;
     const isSelected = selectedOpts.some(o => o.key === homeKey);
     if (isSelected) {
-      // deselect — also clear title if it was auto-set from this fixture
+      // deselect
       setSelectedOpts(prev => prev.filter(o => o.key !== homeKey && o.key !== drawKey && o.key !== awayKey));
     } else {
-      // select — auto-fill title from this fixture
+      // Match Result = single fixture only — replace any previously selected fixture
       updateTitleFromFixture(fixture);
-      setSelectedOpts(prev => [
-        ...prev,
+      setSelectedOpts([
         { key: homeKey, label: `${fixture.home_team} Win`, meta: {} },
         { key: drawKey, label: 'Draw', meta: {} },
         { key: awayKey, label: `${fixture.away_team} Win`, meta: {} },
