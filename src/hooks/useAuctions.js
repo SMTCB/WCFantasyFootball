@@ -28,10 +28,28 @@ export function useAuctions(leagueId, squadId) {
         .gte('created_at', cutoff)
         .order('updated_at', { ascending: false }).limit(20),
     ]);
+    if (cancelRef.current) return;
+
+    // Enrich with bidder username — batch fetch once for all unique bidder IDs
+    const allListings = [...(open ?? []), ...(pending ?? []), ...(closed ?? [])];
+    const bidderIds = [...new Set(allListings.map(l => l.highest_bidder_id).filter(Boolean))];
+    let usernameMap = {};
+    if (bidderIds.length > 0) {
+      const { data: profiles } = await supabase
+        .from('users')
+        .select('id, username')
+        .in('id', bidderIds);
+      usernameMap = Object.fromEntries((profiles ?? []).map(p => [p.id, p.username]));
+    }
+    const enrich = rows => (rows ?? []).map(r => ({
+      ...r,
+      bidder_name: r.highest_bidder_id ? (usernameMap[r.highest_bidder_id] ?? null) : null,
+    }));
+
     if (!cancelRef.current) {
-      setAuctions(open ?? []);
-      setPendingAuctions(pending ?? []);
-      setClosedAuctions(closed ?? []);
+      setAuctions(enrich(open));
+      setPendingAuctions(enrich(pending));
+      setClosedAuctions(enrich(closed));
       setLoading(false);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps

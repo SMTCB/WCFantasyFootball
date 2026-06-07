@@ -82,7 +82,9 @@ export default function AuctionCard({ auction, mySquadId, myBudget, onBid, onCan
             {currentBid != null ? `€${currentBid.toFixed(1)}M` : `from €${auction.starting_bid.toFixed(1)}M`}
           </div>
           {currentBid != null && (
-            <div className="text-[9px]" style={{ color: 'var(--mute)' }}>current bid</div>
+            <div className="text-[9px]" style={{ color: 'var(--mute)' }}>
+              {auction.bidder_name ? `${auction.bidder_name} · current bid` : 'current bid'}
+            </div>
           )}
         </div>
       </div>

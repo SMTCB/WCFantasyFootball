@@ -235,6 +235,7 @@ export function useAutoFill(leagueId, squadData, fetchSquad, takenMap = {}, buy,
               continue;
             }
             if (errCode === 'WRONG_TOURNAMENT') continue;
+            if (errCode === 'CLUB_ELIMINATED')  continue; // skip knocked-out clubs silently
             if (errCode === 'CLUB_LIMIT')       continue; // shouldn't reach here after preflight
 
             consecutiveFailures++;

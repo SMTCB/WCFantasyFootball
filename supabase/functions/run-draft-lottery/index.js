@@ -122,7 +122,7 @@ async function runLottery(leagueId, phase = 'group') {
   const budget         = Number(leagueRow?.budget_total ?? 100);
 
   // L5.13: cap each submission's player_ids to draft_list_size from league config
-  const maxLen = leagueRow?.draft_list_size ?? 30;
+  const maxLen = leagueRow?.draft_list_size ?? 40;
   submissions.forEach(s => { s.player_ids = (s.player_ids || []).slice(0, maxLen); });
 
   // Re-entry guard: if a prior invocation crashed after writing allocations but before
