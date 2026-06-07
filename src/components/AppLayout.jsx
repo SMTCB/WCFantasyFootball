@@ -171,6 +171,10 @@ export default function AppLayout({ children }) {
                 Back
               </span>
             </button>
+          ) : username ? (
+            <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 10, letterSpacing: '0.12em', color: 'var(--mute)', textTransform: 'uppercase' }}>
+              {username}
+            </div>
           ) : (
             <div />
           )}
