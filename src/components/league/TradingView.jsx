@@ -177,7 +177,9 @@ function TradeRow({ proposal, mySquadId, onAccept, onReject, onCancel }) {
             {proposal.target_player?.name ?? '—'}
           </div>
           <div style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', marginTop: 3, letterSpacing: '.1em' }}>
-            {isIncoming ? 'OFFER RECEIVED' : 'OFFER SENT'}
+            <span style={{ color: 'var(--paper)' }}>{proposal.proposer_name ?? '?'}</span>
+            <span style={{ color: 'var(--mute)' }}> → </span>
+            <span style={{ color: 'var(--paper)' }}>{proposal.target_name ?? '?'}</span>
             {(proposal.cash_sweetener !== 0 || proposal.points_sweetener > 0) && ' · '}
             {proposal.cash_sweetener > 0 && <span style={{ color: 'var(--positive)' }}>+€{proposal.cash_sweetener}M </span>}
             {proposal.cash_sweetener < 0 && <span style={{ color: 'var(--danger)' }}>-€{Math.abs(proposal.cash_sweetener)}M </span>}
@@ -281,20 +283,21 @@ export default function TradingView({
           <div style={{ fontFamily: MONO, fontSize: 'clamp(9px,1.8vw,10px)', color: 'var(--gold)', letterSpacing: '.22em' }}>
             TRADING FLOOR · {name.toUpperCase()}
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 6 }}>
-            <div style={{ fontFamily: DISPLAY, fontSize: 'clamp(18px,4vw,24px)', flex: 1 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 6, flexWrap: 'wrap' }}>
+            <div style={{ fontFamily: DISPLAY, fontSize: 'clamp(18px,4vw,24px)' }}>
               Auctions, bids and trade proposals in one place.
             </div>
             <button
               onClick={() => setShowHelp(true)}
               title="How auctions & trades work"
               style={{
-                flexShrink: 0, width: 24, height: 24, borderRadius: '50%',
+                flexShrink: 0, width: 20, height: 20, borderRadius: '50%',
                 border: '1px solid rgba(255,255,255,0.15)',
                 background: 'rgba(255,255,255,0.05)',
                 color: 'rgba(255,255,255,0.4)',
-                fontFamily: MONO, fontSize: 12, fontWeight: 700,
+                fontFamily: MONO, fontSize: 11, fontWeight: 700,
                 cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                alignSelf: 'center',
               }}
             >?</button>
           </div>
