@@ -531,7 +531,8 @@ export default function LiveScreen() {
 
       const squadPlayerIds  = squadRow?.players || [];
       const startingXi      = squadRow?.starting_xi?.length > 0 ? squadRow.starting_xi : null;
-      const captainId       = squadRow?.captain_id;
+      // Fall back to first starter when captain_id is null — mirrors SquadScreen behaviour.
+      const captainId       = squadRow?.captain_id ?? (startingXi?.[0] ?? squadPlayerIds[0] ?? null);
       const isTripleCap     = squadRow?.is_triple_captain ?? false;
 
       // 5. Player details + live stats in parallel — U50/U52: fetch minutes_played
