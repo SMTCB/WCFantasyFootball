@@ -1,6 +1,6 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-06-07 (Trading + smoke test bug sweep — PRs #403–#410, migrations 146–150; next migration 151_)  
+**Last Updated**: 2026-06-07 (Trading polish + Live tab + Bets — PRs #412–#422, migrations 151–155; next migration 156_)  
 **E2E Test Suite**: `platform.spec.js` (36 tests × 2 browsers) passing in CI ✅  
 **Full Playbook Run**: `E2E_TEST_PLAYBOOK.md` v2.0 — all flows confirmed  
 **🟢 LAUNCH READY**: No critical (P0/P1) bugs open. All game mechanics functional. WC kick-off 2026-06-11.  
@@ -11,26 +11,71 @@
 
 ## 🚀 Open Backlog — Prioritised
 
-### P2 — MEDIUM (weeks 5–12 post-launch)
+_No open P0–P2 items. All game mechanics functional. See completed sessions below._
 
-**[FEATURE] Public Trade Proposals on TRADING tab**  
-_Added 2026-06-07 · Effort: ~2h_
+---
 
-Currently the TRADING tab's PROPOSALS section shows only the two managers involved in a trade (proposer sees their sent offer, target sees the incoming offer). All other league members see nothing.
+## ✅ Trading Polish + Live Tab + Bets (2026-06-07) — Migrations 151–155, PRs #412–#422
 
-**Goal**: make all pending and recently-resolved proposals visible to the entire league — like a public bulletin board.
+### Trading — public proposals & position enforcement
 
-**Implementation approach:**
-- `useTradeProposals`: load is already fetching ALL `pending` proposals for the league (no squad filter on active). The `incoming`/`outgoing` split is done client-side. Add a third bucket: `leagueProposals = all active proposals`.
-- `TradingView`: add a "LEAGUE PROPOSALS" section (between AUCTIONS and INCOMING OFFERS) showing all pending proposals as read-only cards — player names, manager names, sweeteners, date. Non-party members see no action buttons.
-- History: `useTradeProposals` history currently filters by `mySquadId`. For public history, either remove the filter or add a separate query for league-wide accepted/rejected proposals (last 14 days).
-- No DB changes needed — data is already fetched and RLS allows all league members to read `trade_proposals`.
+**PR #412 — Public Trade Proposals bulletin board**
+- `useTradeProposals`: added `leagueProposals` bucket (all pending proposals, no squad filter). History widened to league-wide 14 days (was personal 30 days).
+- `TradingView`: new LEAGUE PROPOSALS section between auctions and INCOMING OFFERS. Third-party observers see read-only cards; action buttons only shown to the involved managers. PROPOSALS hero counter reflects full league pending count.
 
-**Acceptance criteria:**
-- [ ] All league members see all pending proposals in the TRADING tab
-- [ ] Non-party members see player names, manager names, sweeteners — no action buttons
-- [ ] Accepted/cancelled proposals appear in a shared league history (last 14 days)
-- [ ] Proposer/target still see their own action buttons (ACCEPT / DECLINE / CANCEL OFFER) unchanged
+**PR #413 — Same-position trade validation (migration 151)**
+- UI: MY PLAYER and THEIR PLAYER dropdowns both filter to matching positions; non-matching options disabled/greyed out and sorted to bottom.
+- Client: position check in `validateAndSendProposal` with clear error.
+- DB (migration 151): `POSITION_MISMATCH` guard in `submit_trade_proposal` and `accept_trade_proposal`.
+
+**PR #414 — Trade acceptance gated on transfer window (migration 152)**
+- `accept_trade_proposal` calls `get_transfer_window_status()` — returns `WINDOW_CLOSED` if window not open.
+- UI: ACCEPT button replaced by ⏳ WINDOW CLOSED info line when window is closed; DECLINE and CANCEL OFFER always available.
+- RPC errors in `TradeRow` now surface as toasts instead of silent console logs.
+
+**PR #417 — Trade builder UX: symmetric filter + no auto-clear**
+- MY PLAYER dropdown now filters/sorts by THEIR PLAYER's position when pre-filled via TRADE button on roster.
+- Removed auto-clear of `tradeTheirPlayer` when MY PLAYER changes — mismatch warning + submit block are sufficient.
+
+### Live tab
+
+**PR #415 — Captain badge fix + per-league market status**
+- MiniTok: captain badge moved outside `overflow:hidden` card so it renders correctly. Captain card gets gold border + glow.
+- LiveScreen `fetchAll`: calls `get_transfer_window_status(league_id)` for every user league in parallel; result stored on each league object.
+- Mobile cards show `⬤ MARKET OPEN · closes HH:MM` / `○ MARKET CLOSED`. Desktop tabs show a bordered OPEN/CLOSED badge.
+
+**PR #416 — Null captain_id backfill**
+- Root cause: `captain_id = NULL` in all squads — SquadScreen showed first player as captain in UI but never persisted it.
+- DB: one-time `UPDATE squads SET captain_id = players[1] WHERE captain_id IS NULL` (12 squads fixed).
+- SquadScreen: auto-persists first player as captain on load if null.
+- LiveScreen: falls back to `startingXi[0]` when `captain_id` is null.
+
+### Bugs fixed
+
+**PR #418 — gazette_entry_type enum missing trade_result (migration 153)**
+- `accept_trade_proposal` wrote `entry_type='trade_result'` but the Postgres ENUM value was never registered — caused runtime error on every trade acceptance.
+- `ALTER TYPE gazette_entry_type ADD VALUE IF NOT EXISTS 'trade_result'` applied.
+
+**PR #419 — Trade gazette encoding fix (migration 154)**
+- `accept_trade_proposal` was stored with garbled Unicode (emoji, arrows, dash encoded as Latin-1 bytes due to Windows file encoding during migration apply).
+- Rewrote function using `chr()` for all non-ASCII: `chr(129309)`=🤝, `chr(8644)`=⇄, `chr(8212)`=—, `chr(8364)`=€. Fixed one existing garbled entry by ID.
+- Frontpage TRANSFER DESK section was only showing `auction_result`; `trade_result` now included.
+
+**PR #421 — Match Result bet: single fixture enforcement**
+- Previously selecting multiple fixtures accumulated 12 options in one bet; root cause of the "invisible bet" report (it was created incorrectly then manually voided).
+- `toggleFixture` now replaces (not appends) — exactly one fixture's HOME/DRAW/AWAY options active at a time.
+
+### Bets
+
+**PR #420 — Clean Sheet bet type; retire Player Block (migration 155)**
+- Player Block removed from bet creator UI and `bet_templates` marked `is_active=false`.
+- Clean Sheet added: `answerType='team'`, slug `clean_sheet`. Team list derived from next matchday fixtures. Commissioner selects teams → managers pick one → commissioner resolves.
+- Resolved stale fixtures appearing in bet creator (fixtures from Feb/March still `status='scheduled'`).
+
+**PR #422 — Bet creator scopes to next matchday automatically**
+- `fetchFixtures` and `fetchTeams` now call `matchday_deadlines` to find the next upcoming matchday, then filter fixtures/teams by that `matchday_id`.
+- Eliminated hundreds of global tournament fixtures (`matchday_id=null`) from appearing in the list.
+- Deadline auto-fills from the matchday deadline on template selection; commissioner can override.
 
 ---
 
