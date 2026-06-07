@@ -283,10 +283,16 @@ export default function LeagueScreen() {
     setManagerRoster(rows ?? []);
   };
 
+  const normalizePos = (pos) => (pos ?? '').toUpperCase().replace('FW', 'FWD');
+
   const validateAndSendProposal = async () => {
     if (isSendingProposal) return;
     if (!tradeMyPlayer || !tradeTheirPlayer || !tradeTarget) {
       setTradeError('Select a player from each squad to propose a trade.');
+      return;
+    }
+    if (normalizePos(tradeMyPlayer.position) !== normalizePos(tradeTheirPlayer.position)) {
+      setTradeError('Both players must be the same position (e.g. MID ↔ MID).');
       return;
     }
     if (!tradeTarget.squadId) {
@@ -317,6 +323,7 @@ export default function LeagueScreen() {
         PROPOSER_PLAYER_NOT_IN_SQUAD: 'That player is no longer in your squad.',
         TARGET_PLAYER_NOT_IN_SQUAD: 'That player is no longer in the target squad.',
         PLAYER_ALREADY_PROPOSED: 'This player already has a pending proposal. Cancel it first.',
+        POSITION_MISMATCH: 'Both players must be the same position (e.g. MID ↔ MID).',
       }[err.message] || err.message;
       setTradeError(msg);
     } finally {
@@ -1638,7 +1645,13 @@ export default function LeagueScreen() {
                     <div className="grid grid-cols-[1fr_40px_1fr] items-center gap-2">
                       <div className="flex flex-col gap-2">
                         <label className="text-[9px] font-black text-[var(--mute)] uppercase tracking-widest text-center">MY PLAYER</label>
-                        <select value={tradeMyPlayer?.id || ''} onChange={(e) => setTradeMyPlayer(mySquadPlayers.find(p => p.id === e.target.value))} className="bg-[var(--ink)] border border-[var(--rule)] p-3 rounded-sm text-white text-[12px] font-bold outline-none text-center">
+                        <select value={tradeMyPlayer?.id || ''} onChange={(e) => {
+                           const picked = mySquadPlayers.find(p => p.id === e.target.value);
+                           setTradeMyPlayer(picked);
+                           if (picked && tradeTheirPlayer && normalizePos(picked.position) !== normalizePos(tradeTheirPlayer.position)) {
+                             setTradeTheirPlayer(null);
+                           }
+                         }} className="bg-[var(--ink)] border border-[var(--rule)] p-3 rounded-sm text-white text-[12px] font-bold outline-none text-center">
                            <option value="">{mySquadPlayers.length ? '(None)' : 'Loading…'}</option>
                            {mySquadPlayers.map(p => <option key={p.id} value={p.id}>{p.position ? `[${p.position}] ` : ''}{p.name}{p.price ? ` · €${p.price}M` : ''}</option>)}
                         </select>
@@ -1660,7 +1673,15 @@ export default function LeagueScreen() {
                         <label className="text-[9px] font-black text-[var(--mute)] uppercase tracking-widest text-center">THEIR PLAYER</label>
                         <select value={tradeTheirPlayer?.id || ''} onChange={(e) => setTradeTheirPlayer(theirSquadPlayers.find(p => p.id === e.target.value))} className="bg-[var(--ink)] border border-[var(--rule)] p-3 rounded-sm text-white text-[12px] font-bold outline-none text-center text-ellipsis overflow-hidden">
                            <option value="">{theirSquadPlayers.length ? '(None)' : 'Loading…'}</option>
-                           {theirSquadPlayers.map(p => <option key={p.id} value={p.id}>{p.position ? `[${p.position}] ` : ''}{p.name}{p.price ? ` · €${p.price}M` : ''}</option>)}
+                           {[...theirSquadPlayers].sort((a, b) => {
+                             if (!tradeMyPlayer) return 0;
+                             const aMatch = normalizePos(a.position) === normalizePos(tradeMyPlayer.position);
+                             const bMatch = normalizePos(b.position) === normalizePos(tradeMyPlayer.position);
+                             return aMatch === bMatch ? 0 : aMatch ? -1 : 1;
+                           }).map(p => {
+                             const posMatch = !tradeMyPlayer || normalizePos(p.position) === normalizePos(tradeMyPlayer.position);
+                             return <option key={p.id} value={p.id} disabled={!posMatch}>{p.position ? `[${p.position}] ` : ''}{p.name}{p.price ? ` · €${p.price}M` : ''}</option>;
+                           })}
                         </select>
                       </div>
                     </div>
@@ -1692,16 +1713,11 @@ export default function LeagueScreen() {
                     </div>
                   </div>
                   <div className="p-6 border-t border-[var(--rule)] bg-[var(--ink)] space-y-3">
-                    {/* Window status inside the builder */}
-                    {transferWindow.status === 'upcoming' && tradeMyPlayer && tradeTheirPlayer &&
-                      tradeMyPlayer.position?.toUpperCase().replace('FW','FWD') !==
-                      tradeTheirPlayer.position?.toUpperCase().replace('FW','FWD') && (
-                      <div className="text-[#FFC107] text-[10px] font-bold text-center">
-                        🔓 Transfer window opens in{' '}
-                        {transferWindow.opensAt
-                          ? new Date(transferWindow.opensAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-                          : 'soon'}
-                        {' '}— position-change swaps blocked until then
+                    {/* Position mismatch hint */}
+                    {tradeMyPlayer && tradeTheirPlayer &&
+                      normalizePos(tradeMyPlayer.position) !== normalizePos(tradeTheirPlayer.position) && (
+                      <div className="text-[#E53935] text-[10px] font-bold text-center">
+                        ⚠ Position mismatch — trades must swap same-position players ({normalizePos(tradeMyPlayer.position)} ↔ {normalizePos(tradeTheirPlayer.position)})
                       </div>
                     )}
                     {tradeError && (
