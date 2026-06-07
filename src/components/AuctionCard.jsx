@@ -33,10 +33,6 @@ export default function AuctionCard({ auction, mySquadId, myBudget, onBid, onCan
       setErr(`Minimum bid: €${minNext.toFixed(1)}M`);
       return;
     }
-    if (myBudget != null && val > myBudget) {
-      setErr(`Bid exceeds your budget (€${myBudget.toFixed(1)}M)`);
-      return;
-    }
     setBusy(true);
     setErr(null);
     const res = await onBid(auction.id, val);
