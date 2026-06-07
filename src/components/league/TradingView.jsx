@@ -129,8 +129,9 @@ function PendingConfirmCard({ listing, myUserId, windowStatus, onConfirm, onToas
 // ── Trade proposal row ────────────────────────────────────────────────────────
 function TradeRow({ proposal, mySquadId, onAccept, onReject, onCancel }) {
   const [busy, setBusy] = useState(false);
-  const isIncoming = proposal.target_squad_id === mySquadId;
-  const isPending  = proposal.status === 'pending';
+  const isIncoming  = proposal.target_squad_id   === mySquadId;
+  const isProposer  = proposal.proposer_squad_id === mySquadId;
+  const isPending   = proposal.status === 'pending';
 
   const statusLabel = {
     pending:   null,
@@ -210,7 +211,7 @@ function TradeRow({ proposal, mySquadId, onAccept, onReject, onCancel }) {
           </button>
         </div>
       )}
-      {isPending && !isIncoming && (
+      {isPending && isProposer && !isIncoming && (
         <button disabled={busy} onClick={() => handleAction(onCancel, 'cancel')}
           style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '.14em', fontWeight: 900, padding: '5px 12px', border: '1px solid rgba(239,68,68,0.35)', cursor: busy ? 'wait' : 'pointer', background: 'transparent', color: 'var(--danger)', opacity: busy ? 0.5 : 1 }}>
           CANCEL OFFER
@@ -228,7 +229,7 @@ export default function TradingView({
   placeBid, cancelListing, sellNow, confirmWin,
   windowStatus,
   // trades
-  incoming, outgoing, history,
+  incoming, outgoing, leagueProposals, history,
   acceptProposal, rejectProposal, cancelProposal,
   // misc
   name, onToast,
@@ -237,10 +238,16 @@ export default function TradingView({
   const [showTradeHistory,   setShowTradeHistory]   = useState(false);
   const [showHelp,           setShowHelp]           = useState(false);
 
+  const allLeagueProposals = leagueProposals ?? [];
+  // Proposals from other managers — the current user is neither proposer nor target
+  const thirdPartyProposals = allLeagueProposals.filter(
+    p => p.proposer_squad_id !== mySquadId && p.target_squad_id !== mySquadId,
+  );
+
   // Won auctions waiting for my confirmation
   const myPendingWins = (pendingAuctions ?? []).filter(a => a.highest_bidder_id === myUserId);
   const myLiveBids    = (auctions ?? []).filter(a => a.highest_bidder_id === myUserId).length;
-  const totalActive   = (auctions?.length ?? 0) + (pendingAuctions?.length ?? 0) + incoming.length + outgoing.length;
+  const totalActive   = (auctions?.length ?? 0) + (pendingAuctions?.length ?? 0) + allLeagueProposals.length;
 
   return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: 'var(--ink)', overflow: 'hidden' }}>
@@ -306,7 +313,7 @@ export default function TradingView({
           {[
             { k: 'AUCTIONS',   v: (auctions?.length ?? 0) + (pendingAuctions?.length ?? 0), tone: 'var(--gold)'   },
             { k: 'MY BIDS',    v: myLiveBids,                                               tone: 'var(--danger)' },
-            { k: 'PROPOSALS',  v: incoming.length + outgoing.length,                        tone: 'var(--cyan)'   },
+            { k: 'PROPOSALS',  v: allLeagueProposals.length,                                tone: 'var(--cyan)'   },
           ].map((c, i) => (
             <div key={c.k} style={{ padding: 'clamp(8px,2vw,14px) clamp(10px,2.5vw,20px)', borderRight: i < 2 ? '1px solid var(--rule)' : 'none' }}>
               <div style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.22em' }}>{c.k}</div>
@@ -413,6 +420,22 @@ export default function TradingView({
           </div>
         )}
 
+        {/* ══ LEAGUE PROPOSALS — all pending trades across the league ══ */}
+        <SectionHeader label="LEAGUE PROPOSALS" count={allLeagueProposals.length} tone="var(--cyan)" />
+        {allLeagueProposals.length === 0 && (
+          <div style={{ padding: '16px', fontFamily: MONO, fontSize: 10, color: 'var(--mute)', letterSpacing: '.14em' }}>NO PENDING PROPOSALS</div>
+        )}
+        {thirdPartyProposals.map(p => (
+          <TradeRow key={p.id} proposal={p} mySquadId={mySquadId}
+            onAccept={acceptProposal} onReject={rejectProposal} onCancel={cancelProposal} />
+        ))}
+        {/* Own proposals already visible in INCOMING / SENT below — show a summary line when there are any */}
+        {(incoming.length > 0 || outgoing.length > 0) && thirdPartyProposals.length < allLeagueProposals.length && (
+          <div style={{ padding: '8px 16px', fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.14em', borderBottom: '1px solid var(--rule)' }}>
+            + YOUR PROPOSALS ARE SHOWN BELOW
+          </div>
+        )}
+
         {/* ══ INCOMING TRADE OFFERS ══ */}
         <SectionHeader label="INCOMING OFFERS" count={incoming.length} tone="var(--cyan)" />
         {incoming.length === 0 && (
@@ -443,7 +466,7 @@ export default function TradingView({
           <div>
             <button onClick={() => setShowTradeHistory(v => !v)} style={{ width: '100%', padding: '10px 16px', background: 'transparent', border: 'none', borderTop: '1px solid var(--rule)', fontFamily: MONO, fontSize: 9, letterSpacing: '.18em', color: 'var(--mute)', cursor: 'pointer', textAlign: 'left', display: 'flex', alignItems: 'center', gap: 8 }}>
               <span>{showTradeHistory ? '▾' : '▸'}</span>
-              RECENT TRADES ({history.length})
+              LEAGUE TRADE HISTORY ({history.length})
             </button>
             {showTradeHistory && history.map(p => (
               <TradeRow key={p.id} proposal={p} mySquadId={mySquadId}
