@@ -1,6 +1,7 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import BrandMark from './BrandMark';
 import SkipToContent from './SkipToContent';
+import { useAuth } from '../hooks/useAuth';
 import {
   NavIconScores,
   NavIconSquad,
@@ -23,6 +24,8 @@ const NAV_ITEMS = [
 export default function AppLayout({ children }) {
   const location = useLocation();
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const username = user?.user_metadata?.username ?? user?.email?.split('@')[0] ?? null;
 
   // Show back button on deeply nested routes (not main nav routes, not single-param routes like /league/:id)
   const isMainRoute =
@@ -44,9 +47,17 @@ export default function AppLayout({ children }) {
         className="hidden lg:flex fixed left-0 top-0 bottom-0 w-[220px] flex-col z-50"
         style={{ background: 'var(--ink-2)', borderRight: '1px solid var(--rule)' }}
       >
-        {/* Editorial Brandmark */}
+        {/* Editorial Brandmark + username */}
         <div className="px-5 pt-6 pb-5" style={{ borderBottom: '1px solid var(--rule)' }}>
           <BrandMark theme="dark" scale={0.72} />
+          {username && (
+            <div
+              className="mt-2"
+              style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 9, letterSpacing: '0.12em', color: 'var(--mute)', textTransform: 'uppercase', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+            >
+              {username}
+            </div>
+          )}
         </div>
 
         {/* Nav Links */}
