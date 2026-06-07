@@ -356,12 +356,20 @@ export default function SquadScreen() {
           .then(({ error }) => { if (error) console.warn('[SquadScreen] starting_xi self-heal failed:', error.message); });
       }
 
+      // If no captain was ever set, default to first player and persist immediately
+      // so scoring applies the ×2 bonus without requiring a manual squad-screen visit.
+      const resolvedCaptainId = squad.captain_id || playerIds[0] || '';
+      if (!squad.captain_id && resolvedCaptainId && squad.id) {
+        supabase.from('squads').update({ captain_id: resolvedCaptainId }).eq('id', squad.id)
+          .then(({ error }) => { if (error) console.warn('[SquadScreen] captain_id auto-set failed:', error.message); });
+      }
+
       setSquadData({
         squadId:         squad.id,
         leagueId:        squad.league_id,
         matchdayId:      squad.matchday_id,
         budget:          { current: Number(squad.budget_remaining ?? cfg.budgetTotal ?? 100), total: cfg.budgetTotal ?? 100 },
-        captainId:       squad.captain_id || playerIds[0] || '',
+        captainId:       resolvedCaptainId,
         players:         pitchPlayers,
         bench:           benchPlayers,
         startingXi:      squad.starting_xi || [],
