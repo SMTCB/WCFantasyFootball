@@ -127,11 +127,12 @@ function PendingConfirmCard({ listing, myUserId, windowStatus, onConfirm, onToas
 }
 
 // ── Trade proposal row ────────────────────────────────────────────────────────
-function TradeRow({ proposal, mySquadId, onAccept, onReject, onCancel }) {
+function TradeRow({ proposal, mySquadId, windowStatus, onAccept, onReject, onCancel, onToast }) {
   const [busy, setBusy] = useState(false);
   const isIncoming  = proposal.target_squad_id   === mySquadId;
   const isProposer  = proposal.proposer_squad_id === mySquadId;
   const isPending   = proposal.status === 'pending';
+  const windowOpen  = windowStatus === 'open';
 
   const statusLabel = {
     pending:   null,
@@ -148,11 +149,21 @@ function TradeRow({ proposal, mySquadId, onAccept, onReject, onCancel }) {
 
   const posColor = POS_COLOR[proposal.proposer_player?.position] ?? 'var(--mute)';
 
-  const handleAction = async (fn, label) => {
+  const handleAction = async (fn, label, successMsg) => {
     setBusy(true);
-    try { await fn(proposal.id); }
-    catch (e) { console.error(`[TradingView] ${label}:`, e.message); }
-    finally { setBusy(false); }
+    try {
+      await fn(proposal.id);
+      if (successMsg && onToast) onToast(successMsg, 'success');
+    } catch (e) {
+      const friendlyMsg = {
+        WINDOW_CLOSED: 'Transfer window is closed — wait for it to reopen.',
+        POSITION_MISMATCH: 'Position mismatch — both players must be the same position.',
+        PROPOSER_PLAYER_NO_LONGER_IN_SQUAD: 'The offered player is no longer in the proposer\'s squad.',
+        TARGET_PLAYER_NO_LONGER_IN_SQUAD: 'The requested player is no longer in your squad.',
+      }[e.message] ?? e.message;
+      if (onToast) onToast(friendlyMsg, 'error');
+      else console.error(`[TradingView] ${label}:`, e.message);
+    } finally { setBusy(false); }
   };
 
   return (
@@ -200,19 +211,34 @@ function TradeRow({ proposal, mySquadId, onAccept, onReject, onCancel }) {
       </div>
 
       {isPending && isIncoming && (
-        <div style={{ display: 'flex', gap: 8 }}>
-          <button disabled={busy} onClick={() => handleAction(onAccept, 'accept')}
-            style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '.14em', fontWeight: 900, padding: '6px 14px', border: 'none', cursor: busy ? 'wait' : 'pointer', background: 'var(--positive)', color: '#000', opacity: busy ? 0.5 : 1 }}>
-            ACCEPT
-          </button>
-          <button disabled={busy} onClick={() => handleAction(onReject, 'reject')}
-            style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '.14em', fontWeight: 900, padding: '6px 14px', border: '1px solid var(--rule)', cursor: busy ? 'wait' : 'pointer', background: 'transparent', color: 'var(--mute)', opacity: busy ? 0.5 : 1 }}>
-            DECLINE
-          </button>
-        </div>
+        windowOpen ? (
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button disabled={busy} onClick={() => handleAction(onAccept, 'accept', 'Trade accepted! Squads updated.')}
+              style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '.14em', fontWeight: 900, padding: '6px 14px', border: 'none', cursor: busy ? 'wait' : 'pointer', background: 'var(--positive)', color: '#000', opacity: busy ? 0.5 : 1 }}>
+              ACCEPT
+            </button>
+            <button disabled={busy} onClick={() => handleAction(onReject, 'reject', 'Trade declined.')}
+              style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '.14em', fontWeight: 900, padding: '6px 14px', border: '1px solid var(--rule)', cursor: busy ? 'wait' : 'pointer', background: 'transparent', color: 'var(--mute)', opacity: busy ? 0.5 : 1 }}>
+              DECLINE
+            </button>
+          </div>
+        ) : (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <div style={{
+              fontFamily: MONO, fontSize: 9, letterSpacing: '.14em', color: 'var(--mute)',
+              padding: '5px 10px', border: '1px solid var(--rule)', background: 'rgba(255,255,255,0.02)',
+            }}>
+              ⏳ WINDOW CLOSED — accept when transfer window reopens
+            </div>
+            <button disabled={busy} onClick={() => handleAction(onReject, 'reject', 'Trade declined.')}
+              style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '.14em', fontWeight: 900, padding: '5px 10px', border: '1px solid var(--rule)', cursor: busy ? 'wait' : 'pointer', background: 'transparent', color: 'var(--mute)', opacity: busy ? 0.5 : 1, flexShrink: 0 }}>
+              DECLINE
+            </button>
+          </div>
+        )
       )}
       {isPending && isProposer && !isIncoming && (
-        <button disabled={busy} onClick={() => handleAction(onCancel, 'cancel')}
+        <button disabled={busy} onClick={() => handleAction(onCancel, 'cancel', 'Offer cancelled.')}
           style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '.14em', fontWeight: 900, padding: '5px 12px', border: '1px solid rgba(239,68,68,0.35)', cursor: busy ? 'wait' : 'pointer', background: 'transparent', color: 'var(--danger)', opacity: busy ? 0.5 : 1 }}>
           CANCEL OFFER
         </button>
@@ -427,6 +453,7 @@ export default function TradingView({
         )}
         {thirdPartyProposals.map(p => (
           <TradeRow key={p.id} proposal={p} mySquadId={mySquadId}
+            windowStatus={windowStatus} onToast={onToast}
             onAccept={acceptProposal} onReject={rejectProposal} onCancel={cancelProposal} />
         ))}
         {/* Own proposals already visible in INCOMING / SENT below — show a summary line when there are any */}
@@ -443,9 +470,8 @@ export default function TradingView({
         )}
         {incoming.map(p => (
           <TradeRow key={p.id} proposal={p} mySquadId={mySquadId}
-            onAccept={async (id) => { await acceptProposal(id); onToast('Trade accepted! Squads updated.', 'success'); }}
-            onReject={async (id) => { await rejectProposal(id); onToast('Trade declined.', 'info'); }}
-            onCancel={cancelProposal}
+            windowStatus={windowStatus} onToast={onToast}
+            onAccept={acceptProposal} onReject={rejectProposal} onCancel={cancelProposal}
           />
         ))}
 
@@ -456,8 +482,8 @@ export default function TradingView({
         )}
         {outgoing.map(p => (
           <TradeRow key={p.id} proposal={p} mySquadId={mySquadId}
-            onAccept={acceptProposal} onReject={rejectProposal}
-            onCancel={async (id) => { await cancelProposal(id); onToast('Offer cancelled.', 'info'); }}
+            windowStatus={windowStatus} onToast={onToast}
+            onAccept={acceptProposal} onReject={rejectProposal} onCancel={cancelProposal}
           />
         ))}
 
@@ -470,6 +496,7 @@ export default function TradingView({
             </button>
             {showTradeHistory && history.map(p => (
               <TradeRow key={p.id} proposal={p} mySquadId={mySquadId}
+                windowStatus={windowStatus} onToast={onToast}
                 onAccept={acceptProposal} onReject={rejectProposal} onCancel={cancelProposal} />
             ))}
           </div>
