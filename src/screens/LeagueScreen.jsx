@@ -1648,12 +1648,18 @@ export default function LeagueScreen() {
                         <select value={tradeMyPlayer?.id || ''} onChange={(e) => {
                            const picked = mySquadPlayers.find(p => p.id === e.target.value);
                            setTradeMyPlayer(picked);
-                           if (picked && tradeTheirPlayer && normalizePos(picked.position) !== normalizePos(tradeTheirPlayer.position)) {
-                             setTradeTheirPlayer(null);
-                           }
+                           // tradeTheirPlayer is NOT cleared — mismatch warning + submit block handle it
                          }} className="bg-[var(--ink)] border border-[var(--rule)] p-3 rounded-sm text-white text-[12px] font-bold outline-none text-center">
                            <option value="">{mySquadPlayers.length ? '(None)' : 'Loading…'}</option>
-                           {mySquadPlayers.map(p => <option key={p.id} value={p.id}>{p.position ? `[${p.position}] ` : ''}{p.name}{p.price ? ` · €${p.price}M` : ''}</option>)}
+                           {[...mySquadPlayers].sort((a, b) => {
+                             if (!tradeTheirPlayer) return 0;
+                             const aMatch = normalizePos(a.position) === normalizePos(tradeTheirPlayer.position);
+                             const bMatch = normalizePos(b.position) === normalizePos(tradeTheirPlayer.position);
+                             return aMatch === bMatch ? 0 : aMatch ? -1 : 1;
+                           }).map(p => {
+                             const posMatch = !tradeTheirPlayer || normalizePos(p.position) === normalizePos(tradeTheirPlayer.position);
+                             return <option key={p.id} value={p.id} disabled={!posMatch}>{p.position ? `[${p.position}] ` : ''}{p.name}{p.price ? ` · €${p.price}M` : ''}</option>;
+                           })}
                         </select>
                         {tradeMyPlayer && (
                           <button
