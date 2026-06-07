@@ -584,7 +584,7 @@ export default function LeagueScreen() {
     supabase.from('gazette_entries')
       .select('id, entry_type, headline, bullets, published_at')
       .eq('league_id', lid)
-      .in('entry_type', ['activity', 'auction_result'])
+      .in('entry_type', ['activity', 'auction_result', 'trade_result'])
       .order('published_at', { ascending: false })
       .limit(8)
       .then(({ data }) => setFrontpageActivityEntries(data ?? []));
@@ -1638,7 +1638,7 @@ export default function LeagueScreen() {
                         <label className="text-[9px] font-black text-[var(--mute)] uppercase tracking-widest text-center">MY PLAYER</label>
                         <select value={tradeMyPlayer?.id || ''} onChange={(e) => setTradeMyPlayer(mySquadPlayers.find(p => p.id === e.target.value))} className="bg-[var(--ink)] border border-[var(--rule)] p-3 rounded-sm text-white text-[12px] font-bold outline-none text-center">
                            <option value="">{mySquadPlayers.length ? '(None)' : 'Loading…'}</option>
-                           {mySquadPlayers.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                           {mySquadPlayers.map(p => <option key={p.id} value={p.id}>{p.position ? `[${p.position}] ` : ''}{p.name}{p.price ? ` · €${p.price}M` : ''}</option>)}
                         </select>
                         {tradeMyPlayer && (
                           <button
@@ -1658,7 +1658,7 @@ export default function LeagueScreen() {
                         <label className="text-[9px] font-black text-[var(--mute)] uppercase tracking-widest text-center">THEIR PLAYER</label>
                         <select value={tradeTheirPlayer?.id || ''} onChange={(e) => setTradeTheirPlayer(theirSquadPlayers.find(p => p.id === e.target.value))} className="bg-[var(--ink)] border border-[var(--rule)] p-3 rounded-sm text-white text-[12px] font-bold outline-none text-center text-ellipsis overflow-hidden">
                            <option value="">{theirSquadPlayers.length ? '(None)' : 'Loading…'}</option>
-                           {theirSquadPlayers.map(p => <option key={p.id} value={p.id}>{p.name} ({p.club})</option>)}
+                           {theirSquadPlayers.map(p => <option key={p.id} value={p.id}>{p.position ? `[${p.position}] ` : ''}{p.name}{p.price ? ` · €${p.price}M` : ''}</option>)}
                         </select>
                       </div>
                     </div>

@@ -44,9 +44,24 @@ export function useTradeProposals(leagueId, mySquadId) {
 
     if (err) { setError(err.message); setLoading(false); return; }
 
-    setIncoming((active || []).filter(p => p.target_squad_id  === mySquadId));
-    setOutgoing((active || []).filter(p => p.proposer_squad_id === mySquadId));
-    setHistory(past || []);
+    // Enrich with manager names — batch fetch squads → usernames
+    const allProposals = [...(active || []), ...(past || [])];
+    const squadIds = [...new Set(allProposals.flatMap(p => [p.proposer_squad_id, p.target_squad_id]).filter(Boolean))];
+    let squadNameMap = {};
+    if (squadIds.length > 0) {
+      const { data: squadRows } = await supabase
+        .from('squads').select('id, users(username)').in('id', squadIds);
+      squadNameMap = Object.fromEntries((squadRows ?? []).map(s => [s.id, s.users?.username ?? 'Unknown']));
+    }
+    const enrich = rows => (rows ?? []).map(p => ({
+      ...p,
+      proposer_name: squadNameMap[p.proposer_squad_id] ?? 'Unknown',
+      target_name:   squadNameMap[p.target_squad_id]   ?? 'Unknown',
+    }));
+
+    setIncoming(enrich(active).filter(p => p.target_squad_id  === mySquadId));
+    setOutgoing(enrich(active).filter(p => p.proposer_squad_id === mySquadId));
+    setHistory(enrich(past));
     setLoading(false);
   }, [leagueId, mySquadId]);
 

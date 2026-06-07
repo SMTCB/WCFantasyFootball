@@ -4,14 +4,13 @@ import { MONO, DISPLAY, miniBtnStyle, mgrHue, mgrMono } from './HubConstants';
 import { supabase } from '../../lib/supabase';
 
 // Maps gazette entry_type (DB enum) to a filter category and display label.
-// Current enum values: draft_report, breaking_news, activity, auction_result
-// Future values (add to enum via migration as features land):
-//   rank_change, relaxation, cup_elimination, bet_result, transfer
+// Current enum values: draft_report, breaking_news, activity, auction_result, trade_result
 const ENTRY_META = {
   draft_report:     { filter: 'GAME',   badge: 'DRAFT',    color: 'var(--gold)' },
   breaking_news:    { filter: 'GAME',   badge: 'NEWS',     color: 'var(--danger)' },
   activity:         { filter: 'GAME',   badge: 'SCORES',   color: 'var(--positive)' },
   auction_result:   { filter: 'TRADES', badge: 'AUCTION',  color: 'var(--positive)' },
+  trade_result:     { filter: 'TRADES', badge: 'TRADE',    color: 'var(--cyan)' },
   rank_change:      { filter: 'GAME',   badge: 'RANKS',    color: 'var(--cyan)' },
   relaxation:       { filter: 'GAME',   badge: 'POOL',     color: 'var(--cyan)' },
   cup_elimination:  { filter: 'GAME',   badge: 'CUP',      color: 'var(--danger)' },
