@@ -9,7 +9,7 @@ Complete index and overview of all project documentation organized by purpose an
 **Current Session & Progress**
 | File | Purpose | Audience | Last Updated |
 |------|---------|----------|--------------|
-| [BACKLOG.md](BACKLOG.md) | Session progress, completed features, post-MVP gaps | Team/PM | Session 58 (2026-05-31) |
+| [BACKLOG.md](BACKLOG.md) | Session progress, completed features, post-MVP gaps | Team/PM | 2026-06-07 |
 | [CLEANUP_REPORT.md](CLEANUP_REPORT.md) | Git cleanup analysis, Notion verification, documentation audit | Dev team | 2026-05-17 |
 | [CODE_REVIEW_REPORT.md](CODE_REVIEW_REPORT.md) | Recent code quality assessment and findings | Developers | 2026-05-16 |
 
@@ -23,7 +23,7 @@ Complete index and overview of all project documentation organized by purpose an
 **Product & Strategy**
 | File | Purpose | Audience | Last Updated |
 |------|---------|----------|--------------|
-| [BACKLOG.md](BACKLOG.md) | Session progress, completed features, POST-MVP roadmap (contains product strategy) | Team/PM | Session 58 (2026-05-31) |
+| [BACKLOG.md](BACKLOG.md) | Session progress, completed features, POST-MVP roadmap (contains product strategy) | Team/PM | 2026-06-07 |
 
 **Deployment & Launch**
 | File | Purpose | Audience | Last Updated |
@@ -40,11 +40,13 @@ Detailed documentation of core systems and how they work.
 
 | File | Purpose | Key Sections |
 |------|---------|--------------|
-| [H2H_COMPETITION_DESIGN.md](docs/architecture/H2H_COMPETITION_DESIGN.md) | Draft + H2H mode — parallel H2H competition layered on draft leagues | Round-robin schedule, scoring config, multi-day gate, admin calendar, DB schema |
+| [H2H_COMPETITION_DESIGN.md](docs/architecture/H2H_COMPETITION_DESIGN.md) | Draft + H2H mode — parallel H2H competition layered on draft leagues | Round-robin schedule, scoring config, multi-day gate, **timing** (resolves with last fixture, roundComplete gate), admin calendar, DB schema |
 | [DRAFT_SYSTEM_DESIGN.md](docs/architecture/DRAFT_SYSTEM_DESIGN.md) | Draft lottery, league modes (Classic/Draft), cup format, relaxation formulas | Allocation engine, no-repeat rules, club cap, two-phase draft |
 | [TRANSFER_WINDOW_SYSTEM.md](docs/architecture/TRANSFER_WINDOW_SYSTEM.md) | Unified transfer window model for all league and competition types | Auto open/close, config table, transfer limits, wildcard round |
 | [STARTING_XI_AND_BENCH.md](docs/architecture/STARTING_XI_AND_BENCH.md) | Starting XI selection, bench, points deduction, lineup change rules | set_lineup rules, lock mechanic, scoring model |
-| [FANTASY_POINTS_SCORING_LAYER.md](docs/architecture/FANTASY_POINTS_SCORING_LAYER.md) | Scoring formula, DB schema, point calculations | EPL point values, position multipliers, bonus rules |
+| [FANTASY_POINTS_SCORING_LAYER.md](docs/architecture/FANTASY_POINTS_SCORING_LAYER.md) | Scoring formula, DB schema, **scoring job timing** (cron schedule, matchday timeline) | EPL point values, position multipliers, cron table, auto-sub/H2H gates |
+| [LIVE_CENTRE_DESIGN.md](docs/architecture/LIVE_CENTRE_DESIGN.md) | Live Centre fixture filter logic and squad display | Three-layer cascade (user tournaments → active matchday → fallback), starting_xi authority, bench ordering |
+| [AUCTION_SYSTEM_DESIGN.md](docs/architecture/AUCTION_SYSTEM_DESIGN.md) | Auction two-phase flow — bid → pending_confirmation → confirm | State machine, transfer window rules, squad-full handling, void sweep, DB changes, UI spec |
 | [APP_DYNAMICS.md](docs/architecture/APP_DYNAMICS.md) | Live match updates, real-time subscriptions, Joker chip | Realtime architecture, match state machine |
 | [FORMATION_RULES.md](docs/architecture/FORMATION_RULES.md) | 11-player pitch validation rules | Position constraints, squad balance, constraints |
 

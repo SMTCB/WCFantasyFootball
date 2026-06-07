@@ -1,11 +1,64 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-06-06 (Pilot close session — migration 144, PRs #391–#394; next migration 145_)  
+**Last Updated**: 2026-06-07 (Smoke test session — PRs #395–#401, migration 145; next migration 146_)  
 **E2E Test Suite**: `platform.spec.js` (36 tests × 2 browsers) passing in CI ✅  
 **Full Playbook Run**: `E2E_TEST_PLAYBOOK.md` v2.0 — all flows confirmed  
 **🟢 LAUNCH READY**: No critical (P0/P1) bugs open. All game mechanics functional. WC kick-off 2026-06-11.  
 **Live App**: https://wc-fantasy-football.vercel.app  
 **WC Kick-off**: 2026-06-11 19:00 UTC (Mexico vs South Africa)
+
+---
+
+## ✅ Smoke Test Session (2026-06-07) — Migration 145, PRs #395–#401
+
+### Smoke test fixes & data setup
+
+**Player pricing (tournament 623 + 429)**
+- Loaded WC 2026 Fantasy Prices spreadsheet (`docs/api/WC2026_Fantasy_Prices.xlsx`) — 1,246 players priced for tournament 429. Six late call-ups missing from spreadsheet (Abdulquddus Atiah, Abdulrahman Al Sanbi, Assan Ouédraogo, Jayden Nelson, Ralph Priso, Zorhan Bassong) set to €3.5M fallback. All other tournaments (623, 426, 1593) unaffected — 623 was already priced from migration 139 seed.
+- Cancelled 2 stale open auction listings in TEST_2_H2H_DRAFT league for clean testing.
+
+**Currency symbol: £ → €**
+- **PR #396** — Simple find-and-replace across all 14 `src/` files (37 occurrences). No logic changes, no DB changes, no conversions — symbol only.
+
+### Bug fixes
+
+**PR #395 — LiveScreen starting_xi mismatch + league selector on Squad header**
+- Root cause: `LiveScreen` fetched `players, captain_id, is_triple_captain` from squads but NOT `starting_xi`. Used `pickValidStarters()` fallback (positional order) instead of the user's actual lineup. `SquadScreen` was correctly using `starting_xi`. Fix: added `starting_xi` to the squad fetch; starters = `starting_xi` array when set, fallback to `pickValidStarters()` for legacy squads.
+- `LeagueSelector` added to the My Squad sticky header (Pitch view). Previously only showed in the List tab.
+
+**PR #397 — CI lint: keepSubmissionCount + groupStageStarted not defined**
+- Both state variables were declared inside `LifecycleOps` (line 1329) but used inside `CommissionerPanel`'s mobile IIFE (line 2496) — a separate function scope. Added matching `useState` + `useEffect` declarations at the top of `CommissionerPanel`. Fixes 5 CI lint errors (no-undef).
+
+### Features
+
+**PR #399 — TRADING tab (replaces AUCTIONS, draft leagues only)**
+- AUCTIONS tab renamed TRADING. New `TradingView.jsx` combines: active auctions (bid/sell/cancel) + collapsible 30-day auction history + incoming trade proposals (accept/decline) + sent trade proposals (cancel) + collapsible 30-day trade history.
+- `useAuctions`: also fetches `closed`/`cancelled` listings (last 30 days).
+- `useTradeProposals`: also fetches `accepted`/`rejected`/`cancelled` history (last 30 days, user's own).
+- Notification dot on TRADING tab fires for: incoming trade proposals OR active winning bid.
+- Classic leagues: tab not rendered. Tab was already gated on `isDraftLeague = format === 'noduplicate'`.
+
+**PR #401 — Auction two-phase flow (migration 145, applied to prod)**
+- Auction deadline no longer auto-transfers. At deadline: listing moves to `pending_confirmation`, nothing moves in squads.
+- New `confirm_auction_win()` RPC: winner explicitly confirms in the TRADING tab. Guards (in order): transfer window open, squad has a free slot, budget sufficient at confirmation time, no duplicate. `SQUAD_FULL` returns actionable error ("sell a player first") — does NOT cancel the listing. Budget failure / duplicate DO cancel.
+- On success: player transferred, budgets adjusted, `gazette_entries(auction_result)` written.
+- `sweep_void_auction_confirmations()`: cancels `pending_confirmation` listings where a full transfer-window cycle (open → close) elapsed since `won_at` without confirmation. Runs every 5 min via `process_auction_deadlines()` wrapper.
+- `resolve-expired-auctions` cron updated to call `process_auction_deadlines()`.
+- `TradingView`: **ACTION REQUIRED** section at top for won auctions; window-closed holding message; gold CONFIRM button; SQUAD_FULL / WINDOW_CLOSED toasts guide next action.
+- Notification dot also fires when pending win exists during an open window.
+- `sell_now` unchanged — seller-triggered instant resolution stays immediate.
+
+### Documentation
+
+**PR #395 — New architecture docs**
+- `docs/architecture/LIVE_CENTRE_DESIGN.md` (new): three-layer fixture filter cascade, squad display logic, and the pre-fix inconsistency between LiveScreen and SquadScreen.
+- `docs/architecture/FANTASY_POINTS_SCORING_LAYER.md`: new "Scoring Job Timing" section — cron schedule table, matchday timeline, tournament 623 MD1 example.
+
+**PR #398 — H2H timing**
+- `docs/architecture/H2H_COMPETITION_DESIGN.md`: new "Timing" section — H2H runs inside the same `calculate-scores` call that finishes the last fixture, gated on `roundComplete=true`. Table covers single-day, multi-day, and late-finisher scenarios.
+
+**PR #400 — Auction system spec**
+- `docs/architecture/AUCTION_SYSTEM_DESIGN.md` (new): full two-phase state machine, all edge cases, DB changes, RPC specs, cron void sweep, UI changes. Revised post-discussion (squad-full alert, budget at confirmation, gazette entry).
 
 ---
 
