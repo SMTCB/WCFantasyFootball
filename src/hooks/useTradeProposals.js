@@ -11,9 +11,10 @@ const TRADE_FIELDS = `
 `;
 
 export function useTradeProposals(leagueId, mySquadId) {
-  const [incoming, setIncoming] = useState([]);
-  const [outgoing, setOutgoing] = useState([]);
-  const [history,  setHistory]  = useState([]);
+  const [incoming,       setIncoming]       = useState([]);
+  const [outgoing,       setOutgoing]       = useState([]);
+  const [leagueProposals, setLeagueProposals] = useState([]);
+  const [history,        setHistory]        = useState([]);
   const [loading, setLoading]   = useState(false);
   const [error, setError]       = useState(null);
   const channelRef = useRef(null);
@@ -23,7 +24,7 @@ export function useTradeProposals(leagueId, mySquadId) {
     setLoading(true);
     setError(null);
 
-    const cutoff = new Date(Date.now() - 30 * 24 * 3600_000).toISOString();
+    const cutoff14 = new Date(Date.now() - 14 * 24 * 3600_000).toISOString();
     const [{ data: active, error: err }, { data: past }] = await Promise.all([
       supabase
         .from('trade_proposals')
@@ -36,10 +37,9 @@ export function useTradeProposals(leagueId, mySquadId) {
         .select(TRADE_FIELDS)
         .eq('league_id', leagueId)
         .in('status', ['accepted', 'rejected', 'cancelled'])
-        .or(`proposer_squad_id.eq.${mySquadId},target_squad_id.eq.${mySquadId}`)
-        .gte('created_at', cutoff)
+        .gte('created_at', cutoff14)
         .order('resolved_at', { ascending: false })
-        .limit(20),
+        .limit(30),
     ]);
 
     if (err) { setError(err.message); setLoading(false); return; }
@@ -59,8 +59,10 @@ export function useTradeProposals(leagueId, mySquadId) {
       target_name:   squadNameMap[p.target_squad_id]   ?? 'Unknown',
     }));
 
-    setIncoming(enrich(active).filter(p => p.target_squad_id  === mySquadId));
-    setOutgoing(enrich(active).filter(p => p.proposer_squad_id === mySquadId));
+    const enrichedActive = enrich(active);
+    setIncoming(enrichedActive.filter(p => p.target_squad_id  === mySquadId));
+    setOutgoing(enrichedActive.filter(p => p.proposer_squad_id === mySquadId));
+    setLeagueProposals(enrichedActive);
     setHistory(enrich(past));
     setLoading(false);
   }, [leagueId, mySquadId]);
@@ -131,7 +133,7 @@ export function useTradeProposals(leagueId, mySquadId) {
   }, [load]);
 
   return {
-    incoming, outgoing, history, loading, error,
+    incoming, outgoing, leagueProposals, history, loading, error,
     submitProposal, acceptProposal, rejectProposal, cancelProposal,
     reload: load,
   };

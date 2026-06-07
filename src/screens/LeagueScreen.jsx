@@ -199,6 +199,7 @@ export default function LeagueScreen() {
   const {
     incoming: incomingTrades,
     outgoing: outgoingTrades,
+    leagueProposals: leagueTradeProposals,
     history: tradeHistory,
     submitProposal,
     acceptProposal,
@@ -1445,6 +1446,7 @@ export default function LeagueScreen() {
              windowStatus={transferWindow.status}
              incoming={incomingTrades}
              outgoing={outgoingTrades}
+             leagueProposals={leagueTradeProposals}
              history={tradeHistory}
              acceptProposal={acceptProposal}
              rejectProposal={rejectProposal}
