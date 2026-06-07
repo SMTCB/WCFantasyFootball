@@ -98,29 +98,31 @@ function MiniTok({ p, activeLeague }) {
   const cardMinW  = (p.rowSize ?? 1) >= 5 ? 58 : (p.rowSize ?? 1) >= 4 ? 66 : 74;
   return (
     <div style={{ position: 'absolute', left: `${p.x}%`, top: `${p.y}%`, transform: 'translate(-50%,-50%)' }}>
+      {/* Captain badge lives outside the overflow:hidden card so it isn't clipped */}
+      {isCaptain && (
+        <span style={{
+          position: 'absolute', top: -7, left: -7, zIndex: 2,
+          width: 16, height: 16, borderRadius: '50%',
+          background: 'var(--gold)', color: 'var(--ink)',
+          fontFamily: 'Archivo Black', fontSize: 9,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          border: '2px solid var(--ink)',
+          pointerEvents: 'none',
+        }}>{isTriple ? '3' : 'C'}</span>
+      )}
       <div style={{
         position: 'relative',
         padding: '4px 6px',
         background: 'rgba(15,18,24,.94)',
-        border: `1px solid ${p.live ? 'var(--danger)' : 'var(--rule)'}`,
-        borderLeft: `2px solid ${tone}`,
+        border: `1px solid ${isCaptain ? 'rgba(255,196,0,.5)' : p.live ? 'var(--danger)' : 'var(--rule)'}`,
+        borderLeft: `2px solid ${isCaptain ? 'var(--gold)' : tone}`,
         borderRadius: 2,
         minWidth: cardMinW, maxWidth: cardMinW + 10, textAlign: 'center',
-        boxShadow: p.live ? '0 0 0 2px rgba(239,68,68,.18)' : 'none',
+        boxShadow: isCaptain ? '0 0 0 1px rgba(255,196,0,.15)' : p.live ? '0 0 0 2px rgba(239,68,68,.18)' : 'none',
         overflow: 'hidden',
       }}>
         {p.live && (
           <span className="animate-live-pulse" style={{ position: 'absolute', top: -3, right: -3, width: 6, height: 6, borderRadius: '50%', background: 'var(--danger)' }} />
-        )}
-        {isCaptain && (
-          <span style={{
-            position: 'absolute', top: -7, left: -7,
-            width: 16, height: 16, borderRadius: '50%',
-            background: 'var(--gold)', color: 'var(--ink)',
-            fontFamily: 'Archivo Black', fontSize: 9,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            border: '2px solid var(--ink)',
-          }}>{isTriple ? '3' : 'C'}</span>
         )}
         <div style={{ fontFamily: 'Archivo Black', fontSize: (p.rowSize ?? 1) >= 5 ? 9 : 10, letterSpacing: '-0.01em', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
           {(p.name || '').split(' ').pop().toUpperCase()}
@@ -495,6 +497,19 @@ export default function LiveScreen() {
       const countMap = {};
       (memberCounts || []).forEach(r => { countMap[r.league_id] = (countMap[r.league_id] || 0) + 1; });
 
+      // 3b. Transfer window status per league — fetched in parallel so each
+      // league selector card can show open/closed + closing time independently.
+      const windowResults = leagueIds.length
+        ? await Promise.all(
+            leagueIds.map(lid =>
+              supabase.rpc('get_transfer_window_status', { p_league_id: lid })
+                .then(({ data }) => [lid, data])
+                .catch(() => [lid, null])
+            )
+          )
+        : [];
+      const windowByLeague = Object.fromEntries(windowResults);
+
       // 4. Squad — U48: fetch per league so chip state is league-scoped
       const { data: squadRows = [] } = leagueIds.length
         ? await supabase
@@ -582,18 +597,21 @@ export default function LiveScreen() {
         const rankLabel     = m.rank ? `${m.rank} / ${members}` : '—';
         const leagueSquad   = squadByLeague[m.league_id];
         const lgTripleCap   = leagueSquad?.is_triple_captain ?? false;
+        const win           = windowByLeague[m.league_id];
         return {
-          id:           m.league_id,
-          name:         m.leagues?.name || 'League',
-          tournamentId: m.leagues?.tournament_id ?? null,
+          id:              m.league_id,
+          name:            m.leagues?.name || 'League',
+          tournamentId:    m.leagues?.tournament_id ?? null,
           short,
           tone,
           members,
-          captainId: leagueSquad?.captain_id ?? captainId,
-          chip:      lgTripleCap ? 'Triple Captain' : null,
-          rank:      rankLabel,
+          captainId:       leagueSquad?.captain_id ?? captainId,
+          chip:            lgTripleCap ? 'Triple Captain' : null,
+          rank:            rankLabel,
           total,
-          delta:     0,
+          delta:           0,
+          windowStatus:    win?.status   ?? null,
+          windowClosesAt:  win?.closes_at ?? null,
         };
       });
       setUserLeagues(enrichedLeagues);
@@ -760,9 +778,23 @@ export default function LiveScreen() {
                 {Math.round(lg.total)}
               </span>
               <DeltaPill delta={lg.delta} />
-              {lg.chip && (
-                <span className="mono" style={{ fontSize: 9, color: 'var(--gold)', letterSpacing: '.14em', marginLeft: 'auto' }}>· {lg.chip.toUpperCase()}</span>
-              )}
+              <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 8 }}>
+                {lg.chip && (
+                  <span className="mono" style={{ fontSize: 9, color: 'var(--gold)', letterSpacing: '.14em' }}>· {lg.chip.toUpperCase()}</span>
+                )}
+                {lg.windowStatus && (
+                  <span className="mono" style={{
+                    fontSize: 8, letterSpacing: '.12em', padding: '1px 5px',
+                    border: `1px solid ${lg.windowStatus === 'open' ? 'rgba(34,197,94,.35)' : 'var(--rule)'}`,
+                    color: lg.windowStatus === 'open' ? 'var(--positive)' : 'var(--mute)',
+                    background: lg.windowStatus === 'open' ? 'rgba(34,197,94,.07)' : 'transparent',
+                  }}>
+                    {lg.windowStatus === 'open'
+                      ? `OPEN${lg.windowClosesAt ? ' · ' + new Date(lg.windowClosesAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}`
+                      : 'CLOSED'}
+                  </span>
+                )}
+              </div>
             </div>
           </button>
         );
@@ -1036,6 +1068,16 @@ export default function LiveScreen() {
                   <span className="mono" style={{ fontSize: 8, color: 'var(--mute)', letterSpacing: '.14em' }}>
                     {lg.rank}{lg.chip ? ` · ${lg.chip.toUpperCase()}` : ''}
                   </span>
+                  {lg.windowStatus && (
+                    <span className="mono" style={{
+                      fontSize: 8, letterSpacing: '.12em',
+                      color: lg.windowStatus === 'open' ? 'var(--positive)' : 'var(--mute)',
+                    }}>
+                      {lg.windowStatus === 'open'
+                        ? `⬤ MARKET OPEN${lg.windowClosesAt ? ' · closes ' + new Date(lg.windowClosesAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}`
+                        : '○ MARKET CLOSED'}
+                    </span>
+                  )}
                 </button>
               );
             })}
