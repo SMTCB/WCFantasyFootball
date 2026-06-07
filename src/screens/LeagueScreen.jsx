@@ -1361,16 +1361,20 @@ export default function LeagueScreen() {
                    />
 
                    {/* Recent scores + H2H results — activity entries */}
-                   {/* Recent Deals — auction_result gazette entries */}
-                   {frontpageActivityEntries.some(e => e.entry_type === 'auction_result') && (() => {
-                     const dealEntries = frontpageActivityEntries.filter(e => e.entry_type === 'auction_result').slice(0, 3);
+                   {/* Recent Deals — auction_result + trade_result gazette entries */}
+                   {frontpageActivityEntries.some(e => e.entry_type === 'auction_result' || e.entry_type === 'trade_result') && (() => {
+                     const dealEntries = frontpageActivityEntries
+                       .filter(e => e.entry_type === 'auction_result' || e.entry_type === 'trade_result')
+                       .slice(0, 3);
                      return (
                        <div style={{ marginTop: 24, borderTop: `2px solid ${FT_INK}`, paddingTop: 20 }}>
                          <div style={{ fontFamily: ftMono, fontSize: 10, letterSpacing: '.22em', color: FT_RED, marginBottom: 14 }}>TRANSFER DESK · RECENT DEALS</div>
                          <div style={{ display: 'grid', gridTemplateColumns: `repeat(${Math.min(dealEntries.length, 3)}, 1fr)`, gap: 16 }}>
                            {dealEntries.map(e => (
                              <div key={e.id} style={{ borderLeft: `3px solid ${FT_INK}`, paddingLeft: 14 }}>
-                               <div style={{ fontFamily: ftMono, fontSize: 9, letterSpacing: '.18em', color: FT_MUTE, marginBottom: 4 }}>AUCTION</div>
+                               <div style={{ fontFamily: ftMono, fontSize: 9, letterSpacing: '.18em', color: FT_MUTE, marginBottom: 4 }}>
+                                 {e.entry_type === 'trade_result' ? 'TRADE' : 'AUCTION'}
+                               </div>
                                <div style={{ fontFamily: ftSerif, fontWeight: 700, fontSize: 13, color: FT_INK, marginBottom: 6, lineHeight: 1.3 }}>{e.headline}</div>
                                {Array.isArray(e.bullets) && e.bullets.slice(0, 2).map((b, i) => (
                                  <div key={i} style={{ fontFamily: ftMono, fontSize: 10, color: FT_MUTE, marginBottom: 2, letterSpacing: '.06em' }}>{typeof b === 'string' ? b : b?.text ?? ''}</div>
