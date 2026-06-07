@@ -29,13 +29,13 @@ const TEMPLATES = [
     defaultPos:  'ALL',
   },
   {
-    slug:        'player_block',
-    label:       'Player Block',
-    icon:        '🛡️',
-    description: 'Pick a player to block — if they flop, you earn points.',
-    answerType:  'player',
-    scopeType:   'matchday',
-    promptHint:  'Pick a player to block this matchday.',
+    slug:        'clean_sheet',
+    label:       'Clean Sheet',
+    icon:        '🧤',
+    description: 'Pick a team — clean sheet earns points.',
+    answerType:  'team',
+    scopeType:   'match',
+    promptHint:  'Pick a team to keep a clean sheet.',
     defaultPos:  'ALL',
   },
 ];
@@ -133,6 +133,7 @@ export default function BetCreatorPanel({ leagueId, tournamentId, onCreated, com
 
   const [players,    setPlayers]    = useState([]);
   const [fixtures,   setFixtures]   = useState([]);
+  const [teams,      setTeams]      = useState([]);
   const [loading,    setLoading]    = useState(false);
   const [search,     setSearch]     = useState('');
   const [posFilter,  setPosFilter]  = useState('ALL');
@@ -208,7 +209,7 @@ export default function BetCreatorPanel({ leagueId, tournamentId, onCreated, com
     }
   }, [tournamentId, windowFrom, deadline]);
 
-  // ── Fetch: fixtures in the window ─────────────────────────────────────────
+  // ── Fetch: fixtures in the window (future only) ──────────────────────────
   const fetchFixtures = useCallback(async () => {
     if (!tournamentId) return;
     setLoading(true);
@@ -218,6 +219,7 @@ export default function BetCreatorPanel({ leagueId, tournamentId, onCreated, com
         .select('id, home_team, away_team, kickoff_at')
         .eq('tournament_id', tournamentId)
         .eq('status', 'scheduled')
+        .gte('kickoff_at', new Date().toISOString())   // only genuinely future matches
         .order('kickoff_at', { ascending: true })
         .limit(20);
       if (windowFrom) q = q.gte('kickoff_at', new Date(windowFrom).toISOString());
@@ -231,11 +233,36 @@ export default function BetCreatorPanel({ leagueId, tournamentId, onCreated, com
     }
   }, [tournamentId, windowFrom, deadline]);
 
+  // ── Fetch: unique teams from upcoming fixtures (for clean_sheet bets) ─────
+  const fetchTeams = useCallback(async () => {
+    if (!tournamentId) return;
+    setLoading(true);
+    try {
+      let q = supabase
+        .from('fixtures')
+        .select('home_team, away_team')
+        .eq('tournament_id', tournamentId)
+        .eq('status', 'scheduled')
+        .gte('kickoff_at', new Date().toISOString())
+        .order('kickoff_at', { ascending: true })
+        .limit(20);
+      if (deadline) q = q.lte('kickoff_at', new Date(deadline).toISOString());
+      const { data } = await q;
+      const sorted = [...new Set((data || []).flatMap(f => [f.home_team, f.away_team]))].sort();
+      setTeams(sorted);
+    } catch (e) {
+      console.error('BetCreatorPanel team fetch error:', e);
+    } finally {
+      setLoading(false);
+    }
+  }, [tournamentId, deadline]);
+
   useEffect(() => {
     if (!template) return;
     if (template.answerType === 'player')  fetchPlayers();
     if (template.answerType === 'fixture') fetchFixtures();
-  }, [template, fetchPlayers, fetchFixtures]);
+    if (template.answerType === 'team')    fetchTeams();
+  }, [template, fetchPlayers, fetchFixtures, fetchTeams]);
 
   // 3.2: Fetch template slug→id once on mount for environment-portable IDs
   useEffect(() => {
@@ -250,6 +277,14 @@ export default function BetCreatorPanel({ leagueId, tournamentId, onCreated, com
       const exists = prev.find(o => o.key === player.id);
       if (exists) return prev.filter(o => o.key !== player.id);
       return [...prev, { key: player.id, label: player.name, meta: { club: player.club, pos: player.position } }];
+    });
+  };
+
+  const toggleTeam = (teamName) => {
+    setSelectedOpts(prev => {
+      const exists = prev.find(o => o.key === teamName);
+      if (exists) return prev.filter(o => o.key !== teamName);
+      return [...prev, { key: teamName, label: teamName, meta: {} }];
     });
   };
 
@@ -353,11 +388,13 @@ export default function BetCreatorPanel({ leagueId, tournamentId, onCreated, com
     return matchesSearch && matchesPos;
   });
 
-  const isPlayerSelected  = (id)  => selectedOpts.some(o => o.key === id);
-  const isFixtureSelected = (fid) => selectedOpts.some(o => o.key === `${fid}_home`);
+  const isPlayerSelected  = (id)      => selectedOpts.some(o => o.key === id);
+  const isFixtureSelected = (fid)     => selectedOpts.some(o => o.key === `${fid}_home`);
+  const isTeamSelected    = (name)    => selectedOpts.some(o => o.key === name);
 
   const isPlayerBet  = template?.answerType === 'player';
   const isFixtureBet = template?.answerType === 'fixture';
+  const isTeamBet    = template?.answerType === 'team';
 
   const windowHint = (windowFrom && deadline)
     ? `Showing players from clubs with matches ${new Date(windowFrom).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })} – ${new Date(deadline).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}`
@@ -389,6 +426,7 @@ export default function BetCreatorPanel({ leagueId, tournamentId, onCreated, com
               2 · {isPlayerBet ? 'MATCH WINDOW & DEADLINE' : 'DEADLINE & REWARD'}
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: isPlayerBet ? '1fr 1fr 1fr' : '1fr 1fr', gap: 8 }}>
+
 
               {/* From date — only relevant for player bets to filter clubs */}
               {isPlayerBet && (
@@ -458,9 +496,9 @@ export default function BetCreatorPanel({ leagueId, tournamentId, onCreated, com
                 {windowHint}
               </div>
             )}
-            {isFixtureBet && !deadline && (
+            {(isFixtureBet || isTeamBet) && !deadline && (
               <div style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', marginTop: 6, letterSpacing: '.1em' }}>
-                Set a deadline to see scheduled matches before that date.
+                Set a deadline to see {isTeamBet ? 'eligible teams' : 'scheduled matches'} before that date.
               </div>
             )}
           </div>
@@ -469,12 +507,14 @@ export default function BetCreatorPanel({ leagueId, tournamentId, onCreated, com
           <div>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
               <div style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.2em' }}>
-                3 · {isPlayerBet ? 'SELECT PLAYERS' : 'SELECT MATCH'}
+                3 · {isPlayerBet ? 'SELECT PLAYERS' : isTeamBet ? 'SELECT TEAMS' : 'SELECT MATCH'}
                 {selectedOpts.length > 0 && (
                   <span style={{ color: 'var(--cyan)', marginLeft: 8 }}>
                     {isPlayerBet
                       ? `${selectedOpts.length} selected`
-                      : `${Math.floor(selectedOpts.length / 3)} match · ${selectedOpts.length} options`}
+                      : isTeamBet
+                        ? `${selectedOpts.length} team${selectedOpts.length !== 1 ? 's' : ''} selected`
+                        : `${Math.floor(selectedOpts.length / 3)} match · ${selectedOpts.length} options`}
                   </span>
                 )}
               </div>
@@ -493,6 +533,50 @@ export default function BetCreatorPanel({ leagueId, tournamentId, onCreated, com
 
             {loading ? (
               <div style={{ fontFamily: MONO, fontSize: 10, color: 'var(--mute)', padding: '20px 0', textAlign: 'center', letterSpacing: '.2em' }}>LOADING…</div>
+            ) : isTeamBet ? (
+              /* ── Team picker for Clean Sheet ─────────────────────────── */
+              <>
+                {!deadline ? (
+                  <div style={{ fontFamily: MONO, fontSize: 10, color: 'var(--mute)', padding: '20px 0', textAlign: 'center', letterSpacing: '.18em' }}>
+                    SET A DEADLINE ABOVE TO SEE ELIGIBLE TEAMS
+                  </div>
+                ) : teams.length === 0 ? (
+                  <div style={{ fontFamily: MONO, fontSize: 10, color: 'var(--mute)', padding: '20px 0', textAlign: 'center', letterSpacing: '.18em' }}>
+                    NO SCHEDULED MATCHES BEFORE THIS DEADLINE
+                  </div>
+                ) : null}
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 4, maxHeight: 260, overflowY: 'auto' }}>
+                  {teams.map(name => {
+                    const sel = isTeamSelected(name);
+                    return (
+                      <button
+                        key={name}
+                        onClick={() => toggleTeam(name)}
+                        style={{
+                          width: '100%', padding: '10px 12px', textAlign: 'left', cursor: 'pointer',
+                          background: sel ? 'rgba(0,196,232,0.1)' : 'rgba(255,255,255,0.03)',
+                          border: `1px solid ${sel ? 'rgba(0,196,232,0.4)' : 'rgba(255,255,255,0.06)'}`,
+                          borderRadius: 3, transition: 'all 0.12s',
+                          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                        }}
+                      >
+                        <span style={{ fontFamily: DISPLAY, fontSize: 13, color: sel ? 'var(--cyan)' : 'var(--paper)' }}>{name}</span>
+                        {sel && <span style={{ color: 'var(--cyan)', fontSize: 14 }}>✓</span>}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {selectedOpts.length > 0 && (
+                  <div style={{ marginTop: 8, padding: '8px 10px', background: 'rgba(0,196,232,0.06)', border: '1px solid rgba(0,196,232,0.2)', borderRadius: 3 }}>
+                    <div style={{ fontFamily: MONO, fontSize: 9, color: 'var(--cyan)', letterSpacing: '.18em', marginBottom: 4 }}>OPTIONS CREATED:</div>
+                    {selectedOpts.map(o => (
+                      <div key={o.key} style={{ fontFamily: "'Archivo', sans-serif", fontSize: 11, color: 'var(--paper)', padding: '2px 0' }}>· {o.label}</div>
+                    ))}
+                  </div>
+                )}
+              </>
             ) : isPlayerBet ? (
               <>
                 {/* Position filter + search */}
