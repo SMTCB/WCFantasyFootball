@@ -296,4 +296,4 @@ docs/archive/                      # Archived & consolidated docs
 - BACKLOG.md established as single source of truth for task management
 - All documentation now discoverable from DOCS_MAP.md
 
-Last Updated: **2026-06-01** (session 66 — DATA_PIPELINE_RUNBOOK.md updated with active cron table; DRY_RUN_PREP_CHECKLIST.md archived; TRANSFER_WINDOW_SYSTEM.md + BETS_LOGIC.md + LIFECYCLE_OPERATIONS.md updated for session 66 fixes)
+Last Updated: **2026-06-07** (AUCTION_SYSTEM_DESIGN.md updated — deferred budget check, seller cancel anytime, actionable INSUFFICIENT_BUDGET; CLAUDE.md updated — pilot safeguards section added)

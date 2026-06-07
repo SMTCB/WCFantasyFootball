@@ -2,7 +2,7 @@
 
 **Complete specification for the draft-league auction mechanic: bidding, win confirmation, and transfer window integration.**
 
-Last Updated: **2026-06-06** (rev 2 — squad-full alert, budget at confirmation, gazette entry)
+Last Updated: **2026-06-07** (rev 3 — deferred budget check, seller cancel anytime, winner name UI)
 
 ---
 
@@ -19,15 +19,16 @@ The auction system allows managers in draft leagues to trade players via an open
 ### Phase 1 — Bidding (always available while `status='open'`)
 
 1. A manager lists a player from their squad for auction (`listPlayer` from SquadScreen)
-2. Other managers place bids before `deadline_at`
+2. Other managers place bids before `deadline_at` — **no budget check at bid time**; any amount can be proposed
 3. At deadline, the highest bidder "wins" — status moves to `pending_confirmation`
 4. **Nothing is transferred yet.** The player stays with the seller.
+5. The seller can **cancel the auction at any time** (including after bids are placed) via the CANCEL button in the TRADING tab. Two-tap confirm required.
 
 ### Phase 2 — Confirmation (buyer must act within the transfer window)
 
 5. The winning manager sees a **CONFIRM PURCHASE** prompt in the TRADING tab
 6. If their squad is full (15 players), the system **alerts them to sell a player first** — they cannot confirm until a slot is free. There is no automatic offload; the manager decides which player to sell via the transfer market, then returns to confirm.
-7. The system checks budget **at confirmation time** (not at bid time). If the budget is no longer sufficient, the listing is cancelled.
+7. The system checks budget **at confirmation time** (not at bid time). If budget is insufficient, the listing stays `pending_confirmation` — the buyer is prompted to sell a player to free up funds and retry. The listing is **not cancelled**.
 8. Once a slot is free and budget is confirmed, the buyer clicks **CONFIRM** — the transfer executes immediately if the window is open
 
 ---
@@ -103,8 +104,10 @@ Void:                                        ↑ window closes → cancelled
 
 ### Budget insufficient at confirmation time
 
-- Budget was reserved at bid time via the existing reservation logic
-- If somehow insufficient at confirmation (e.g. another auction also resolved) → `confirm_auction_win` cancels the listing gracefully
+- No budget check at bid time — managers can propose any amount
+- If insufficient at confirmation → `confirm_auction_win` returns `INSUFFICIENT_BUDGET` (actionable, same as `SQUAD_FULL`)
+- Listing stays `pending_confirmation`; buyer sells a player to free funds, then retries
+- Only `DUPLICATE` and `SELLER_GONE` / `BUYER_GONE` cause an outright cancel
 
 ### Seller's squad state
 
@@ -159,11 +162,11 @@ Called by the buyer from the TRADING tab.
 Guards (in order):
 1. Listing exists + status = 'pending_confirmation'               → else NOT_FOUND
 2. auth.uid() = listing.highest_bidder_id                         → else UNAUTHORIZED
-3. get_transfer_window_status(listing.league_id).status = 'open'  → else WINDOW_CLOSED
-4. buyer squad exists                                              → else SQUAD_NOT_FOUND
-5. buyer squad not full (< squad_size)                            → else SQUAD_FULL
-6. player not already in buyer squad                              → else DUPLICATE
-7. buyer has enough budget                                         → else INSUFFICIENT_BUDGET (+ cancel)
+3. get_transfer_window_status(listing.league_id).status = 'open'  → else WINDOW_CLOSED (actionable)
+4. buyer squad exists                                              → else BUYER_GONE (+ cancel)
+5. buyer squad not full (< squad_size)                            → else SQUAD_FULL (actionable — sell first, retry)
+6. buyer has enough budget                                         → else INSUFFICIENT_BUDGET (actionable — sell first, retry)
+7. player not already in buyer squad                              → else DUPLICATE (+ cancel)
 
 On success:
   - Remove player from seller squad, add bid amount to seller budget
