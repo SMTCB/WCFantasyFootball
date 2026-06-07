@@ -1,7 +1,9 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
 import BrandMark from './BrandMark';
 import SkipToContent from './SkipToContent';
 import { useAuth } from '../hooks/useAuth';
+import { supabase } from '../lib/supabase';
 import {
   NavIconScores,
   NavIconSquad,
@@ -25,7 +27,18 @@ export default function AppLayout({ children }) {
   const location = useLocation();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const username = user?.user_metadata?.username ?? user?.email?.split('@')[0] ?? null;
+  // user_metadata.username is set at signup but may be absent for older accounts.
+  // Fall back to the users table (authoritative) then to email prefix.
+  const [username, setUsername] = useState(
+    user?.user_metadata?.username ?? user?.email?.split('@')[0] ?? null
+  );
+  useEffect(() => {
+    if (!user?.id) return;
+    // If metadata already has it, use it immediately and skip the DB round-trip.
+    if (user.user_metadata?.username) { setUsername(user.user_metadata.username); return; }
+    supabase.from('users').select('username').eq('id', user.id).maybeSingle()
+      .then(({ data }) => { if (data?.username) setUsername(data.username); });
+  }, [user?.id, user?.user_metadata?.username]);
 
   // Show back button on deeply nested routes (not main nav routes, not single-param routes like /league/:id)
   const isMainRoute =
