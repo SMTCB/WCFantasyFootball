@@ -1,11 +1,89 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-06-07 (Smoke test session — PRs #395–#401, migration 145; next migration 146_)  
+**Last Updated**: 2026-06-07 (Trading + smoke test bug sweep — PRs #403–#410, migrations 146–150; next migration 151_)  
 **E2E Test Suite**: `platform.spec.js` (36 tests × 2 browsers) passing in CI ✅  
 **Full Playbook Run**: `E2E_TEST_PLAYBOOK.md` v2.0 — all flows confirmed  
 **🟢 LAUNCH READY**: No critical (P0/P1) bugs open. All game mechanics functional. WC kick-off 2026-06-11.  
 **Live App**: https://wc-fantasy-football.vercel.app  
 **WC Kick-off**: 2026-06-11 19:00 UTC (Mexico vs South Africa)
+
+---
+
+## 🚀 Open Backlog — Prioritised
+
+### P2 — MEDIUM (weeks 5–12 post-launch)
+
+**[FEATURE] Public Trade Proposals on TRADING tab**  
+_Added 2026-06-07 · Effort: ~2h_
+
+Currently the TRADING tab's PROPOSALS section shows only the two managers involved in a trade (proposer sees their sent offer, target sees the incoming offer). All other league members see nothing.
+
+**Goal**: make all pending and recently-resolved proposals visible to the entire league — like a public bulletin board.
+
+**Implementation approach:**
+- `useTradeProposals`: load is already fetching ALL `pending` proposals for the league (no squad filter on active). The `incoming`/`outgoing` split is done client-side. Add a third bucket: `leagueProposals = all active proposals`.
+- `TradingView`: add a "LEAGUE PROPOSALS" section (between AUCTIONS and INCOMING OFFERS) showing all pending proposals as read-only cards — player names, manager names, sweeteners, date. Non-party members see no action buttons.
+- History: `useTradeProposals` history currently filters by `mySquadId`. For public history, either remove the filter or add a separate query for league-wide accepted/rejected proposals (last 14 days).
+- No DB changes needed — data is already fetched and RLS allows all league members to read `trade_proposals`.
+
+**Acceptance criteria:**
+- [ ] All league members see all pending proposals in the TRADING tab
+- [ ] Non-party members see player names, manager names, sweeteners — no action buttons
+- [ ] Accepted/cancelled proposals appear in a shared league history (last 14 days)
+- [ ] Proposer/target still see their own action buttons (ACCEPT / DECLINE / CANCEL OFFER) unchanged
+
+---
+
+## ✅ Trading & Smoke Test Bug Sweep (2026-06-07) — Migrations 146–150, PRs #403–#410
+
+### Data setup
+- **Migration 146** — MD3 int'l friendly fixtures (Netherlands-Uzbekistan, France-NI, Spain-Peru) assigned matchday_id='623-r3', deadline Jun 8 18:00 UTC. Netherlands/France/Spain/Uzbekistan players copied from WC 429 (real pricing). Peru + Northern Ireland synthetic squads (23 players each, prices 3.5–4.5, realistic player names).
+- **DB** — TEST_2_H2H_DRAFT `cup_active_clubs` deleted (sync cron was re-eliminating all clubs every 6h because all int'l friendly fixtures are finished); `draft_list_size` set to 40; `draft_position_caps` updated to sum to 40.
+
+### Bug fixes
+
+**PR #403 — Auto-fill CLUB_ELIMINATED silent skip + username in sidebar**
+- `useAutoFill`: `CLUB_ELIMINATED` added to silent-skip codes (was triggering `consecutiveFailures` and surfacing error toast). Auto-fill now continues past knocked-out clubs.
+- `AppLayout`: username displayed below brandmark in desktop sidebar; in mobile top bar on main routes (replaces empty div, hidden by back button on nested routes). Fetches from `users` table as fallback when `user_metadata.username` absent (accounts created before metadata field existed).
+
+**PR #404 — auction_listings status constraint** (migration 147)
+- Migration 145 introduced `pending_confirmation` but never updated CHECK constraint (`open|sold|cancelled`). `sell_now` → `resolve_auction_listing` failed every time.
+
+**PR #406 — sweep_void_auction_confirmations window guard** (migration 148)
+- Sweep was cancelling `pending_confirmation` listings in leagues with an unlimited/free window because matchday_deadlines rows existed and had passed. Added `AND window != 'open'` guard.
+
+**PR #407 — confirm_auction_win buyer squad lookup** (migration 149)
+- Function resolved next upcoming matchday deadline (e.g. '623-r3') then filtered squads by `matchday_id='623-r3'`. All squads still on '623-r1' → NOT FOUND → BUYER_GONE → listing cancelled on first click. Fix: drop matchday_id filter, use `ORDER BY created_at DESC` only.
+
+**PR #410 — accept_trade_proposal points fix + gazette** (migration 150)
+- Points sweetener was debited from proposer but NEVER credited to target. Fixed.
+- `accept_trade_proposal` now writes `gazette_entries(entry_type='trade_result')` on accept → appears in League Activity (TRADES filter) and Frontpage (TRANSFER DESK section).
+
+### Features & UX improvements
+
+**PR #403 — Draft wish list extended to 40** (+ Edge Function deployed)
+- `useLeagueConfig` default `draftListSize` 30→40; `draftPositionCaps` updated to sum to 40 (GK:5 DEF:13 MID:14 FWD:8).
+- `run-draft-lottery` fallback `maxLen` 30→40.
+- Partial submissions already supported (MIN_SUBMIT=1) — managers can submit any non-empty list.
+
+**PR #405 — Username in mobile top bar**
+- On main routes: username shown top-left (replaces empty div). Nested routes: back button takes priority.
+
+**PR #408 — Username fetched from users table**
+- AppLayout fetches username from `users` table when `user_metadata.username` absent — fixes email-prefix showing for older accounts.
+
+**PR #409 — Trading UX improvements**
+- Points sweetener slider: `step="5"` → `step="1"`.
+- `loadTradeSquads`: uses `squads.players` as primary source (draft_allocations was missing free-market-acquired players → "Their player" pre-fill went blank).
+- TRADE button hidden when viewing own squad in leaderboard manager modal.
+- Frontpage: fetch includes `auction_result` + `trade_result`; "TRANSFER DESK · RECENT DEALS" section added.
+- `TradingView`: `?` help button inline next to title; explains auction flow, trade proposals, counter meanings.
+
+**PR #410 — Additional trading UX**
+- `useTradeProposals`: batch-fetches squad→username; enriches proposals with `proposer_name` + `target_name`.
+- `TradeRow`: shows `ProposerName → TargetName` (was just OFFER SENT/RECEIVED).
+- `TradingView`: `trade_result` added to `ENTRY_META` (TRADES filter, TRADE badge, cyan).
+- Trade player selects show `[POS] Name · €XM`.
 
 ---
 
