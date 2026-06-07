@@ -12,7 +12,7 @@ function timeLeft(endsAt) {
   return `${m}m`;
 }
 
-export default function AuctionCard({ auction, mySquadId, myBudget, onBid, onCancel, onSellNow }) {
+export default function AuctionCard({ auction, mySquadId, onBid, onCancel, onSellNow }) {
   const [amount,        setAmount]        = useState('');
   const [busy,          setBusy]          = useState(false);
   const [err,           setErr]           = useState(null);
@@ -101,32 +101,30 @@ export default function AuctionCard({ auction, mySquadId, myBudget, onBid, onCan
                   {busy ? '…' : `Sell Now · €${(auction.current_bid ?? 0).toFixed(1)}M`}
                 </button>
               )}
-              {/* Cancel only allowed before any bid is placed — prevent rug-pulling bidders */}
-              {!auction.highest_bidder_id && (
-                <button
-                  onClick={async () => {
-                    if (!confirmCancel) {
-                      setConfirmCancel(true);
-                      setTimeout(() => setConfirmCancel(false), 4000);
-                      return;
-                    }
-                    setBusy(true);
-                    setConfirmCancel(false);
-                    const r = await onCancel(auction.id);
-                    setBusy(false);
-                    if (!r.ok) setErr(r.error);
-                  }}
-                  disabled={busy}
-                  className="text-[10px] font-black uppercase tracking-wider px-3 py-1.5 disabled:opacity-40"
-                  style={{
-                    border: `1px solid ${confirmCancel ? 'rgba(239,68,68,0.8)' : 'rgba(239,68,68,0.3)'}`,
-                    color: 'var(--danger)',
-                    background: confirmCancel ? 'rgba(239,68,68,0.18)' : 'rgba(239,68,68,0.06)',
-                  }}
-                >
-                  {busy ? '…' : confirmCancel ? 'Confirm Cancel?' : 'Cancel'}
-                </button>
-              )}
+              {/* Cancel — always available to seller; two-tap confirm to prevent accidents */}
+              <button
+                onClick={async () => {
+                  if (!confirmCancel) {
+                    setConfirmCancel(true);
+                    setTimeout(() => setConfirmCancel(false), 4000);
+                    return;
+                  }
+                  setBusy(true);
+                  setConfirmCancel(false);
+                  const r = await onCancel(auction.id);
+                  setBusy(false);
+                  if (!r.ok) setErr(r.error);
+                }}
+                disabled={busy}
+                className="text-[10px] font-black uppercase tracking-wider px-3 py-1.5 disabled:opacity-40"
+                style={{
+                  border: `1px solid ${confirmCancel ? 'rgba(239,68,68,0.8)' : 'rgba(239,68,68,0.3)'}`,
+                  color: 'var(--danger)',
+                  background: confirmCancel ? 'rgba(239,68,68,0.18)' : 'rgba(239,68,68,0.06)',
+                }}
+              >
+                {busy ? '…' : confirmCancel ? 'Confirm Cancel?' : 'Cancel'}
+              </button>
             </div>
           ) : (
             <>
