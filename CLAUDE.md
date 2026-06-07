@@ -143,6 +143,44 @@ git branch -D claude/description-of-work
 
 Steps 5 and 6 must happen **every time**. Unmerged PRs = app doesn't update on Vercel. Undeleted branches = repo accumulates junk.
 
+### GitHub API Fallback (when `gh` CLI is not installed)
+
+`gh` CLI is **not installed** on this machine. Always use the Python urllib pattern below instead of `gh pr create` / `gh pr merge`. The token is embedded in the git remote URL — retrieve it with `git remote get-url origin`.
+
+```python
+python3 -c "
+import urllib.request, json
+token = '<PAT>'  # retrieve with: git remote get-url origin | grep -oP '(?<=https://).*(?=@)'
+repo  = 'SMTCB/WCFantasyFootball'
+branch = 'claude/your-branch-name'
+
+# 1. Create PR
+data = json.dumps({'title': 'your title', 'head': branch, 'base': 'main', 'body': 'description'}).encode()
+req = urllib.request.Request(f'https://api.github.com/repos/{repo}/pulls', data=data,
+  headers={'Authorization': f'Bearer {token}', 'Accept': 'application/vnd.github+json', 'Content-Type': 'application/json'})
+with urllib.request.urlopen(req) as r:
+    n = json.loads(r.read())['number']; print('PR #', n)
+
+# 2. Merge (squash)
+data = json.dumps({'merge_method': 'squash', 'commit_title': f'your title (#{n})'}).encode()
+req = urllib.request.Request(f'https://api.github.com/repos/{repo}/pulls/{n}/merge', data=data, method='PUT',
+  headers={'Authorization': f'Bearer {token}', 'Accept': 'application/vnd.github+json', 'Content-Type': 'application/json'})
+with urllib.request.urlopen(req) as r: print('Merged:', json.loads(r.read()).get('merged'))
+
+# 3. Delete remote branch
+req = urllib.request.Request(f'https://api.github.com/repos/{repo}/git/refs/heads/{branch}',
+  method='DELETE', headers={'Authorization': f'Bearer {token}', 'Accept': 'application/vnd.github+json'})
+urllib.request.urlopen(req); print('Branch deleted')
+"
+```
+
+Then clean up locally:
+```bash
+git checkout main
+git pull origin main
+git branch -D claude/your-branch-name
+```
+
 ### Commit Message Format
 
 - `feat: description` — new feature
@@ -599,12 +637,20 @@ Always create a new file — never modify existing migrations.
 | 143 | `143_knockout_keep_submissions.sql` | Session 2026-06-06: `knockout_keep_submissions` table (league_id, user_id, player_ids[], UNIQUE per manager per league) + RLS (members read, own-row write). `submit_knockout_keeps` RPC: validates cup+draft format, `cup_phase='group_stage'` guard (prevents submission during group draft), slot limit (default 5, `knockout_keep_slots` config key), player ownership, club elimination. `run-draft-lottery` Pass 0: loads keeps, pre-allocates kept players before lottery (same position/budget/club cap checks), marks `awardedTo[pid]=uid`, skips kept pids in Pass 1/2 — no-op if no keeps exist (PR #389) |
 | 144 | `144_free_transfer_window.sql` | Session 2026-06-06: `ALTER TABLE transfer_windows ALTER COLUMN round_number DROP NOT NULL` — free windows (window_type='unlimited', transfers_remaining=NULL) are not tied to a specific round; PostgreSQL treats multiple NULLs as distinct in the UNIQUE (league_id, round_number) constraint so multiple free windows can be created over a season. `process-transfer` checks for active unlimited window first and bypasses deadline/live-fixture locks and 3/round limit when found. CommissionerPanel FREE TRANSFER WINDOW lifecycle card added (PR #393) |
 | 145 | `145_auction_two_phase.sql` | Session 2026-06-07: Two-phase auction flow — `auction_listings.won_at` column; `resolve_auction_listing` sets `pending_confirmation` on deadline (no auto-transfer); `confirm_auction_win()` RPC (window open + squad slot + budget at confirmation + duplicate guard → transfer + gazette_entries auction_result; SQUAD_FULL is actionable not a cancel); `sweep_void_auction_confirmations()` cancels pending listings where a full window cycle elapsed without confirmation; `process_auction_deadlines()` wrapper; `resolve-expired-auctions` cron updated (PR #401) |
+| 146 | `146_md3_int_friendly_seed.sql` | Session 2026-06-07: MD3 fixtures for tournament 623 (Netherlands-Uzbekistan, France-NI, Spain-Peru) assigned matchday_id='623-r3', deadline Jun 8 18:00 UTC; Netherlands/France/Spain/Uzbekistan players copied from WC 429; synthetic Peru + Northern Ireland squads (23 players each, prices 3.5–4.5, forza_player_id='syn-{nation}-NNN') (PR #403) |
+| 147 | `147_auction_status_constraint_fix.sql` | Session 2026-06-07: add 'pending_confirmation' to auction_listings CHECK constraint — migration 145 introduced the status but never updated the constraint, causing sell_now to fail (PR #404) |
+| 148 | `148_sweep_window_guard.sql` | Session 2026-06-07: `sweep_void_auction_confirmations` — add `AND (get_transfer_window_status(league_id)->>'status') <> 'open'` guard; was cancelling pending_confirmation listings in leagues with an unlimited/free window because matchday_deadlines still exist (PR #406) |
+| 149 | `149_confirm_auction_win_squad_lookup.sql` | Session 2026-06-07: `confirm_auction_win` buyer squad lookup — drop `matchday_id` filter (was finding next upcoming deadline e.g. '623-r3', then failing to find squads still on '623-r1' → BUYER_GONE → cancel on first click). Use `ORDER BY created_at DESC` only (PR #407) |
+| 150 | `150_accept_trade_points_and_gazette.sql` | Session 2026-06-07: `accept_trade_proposal` — (A) ADD points_sweetener to target manager (was only subtracting from proposer — target never received points); (B) write gazette_entries(entry_type='trade_result') on accept so trades appear in League Activity + Frontpage (PR #410) |
 
-**Next migration**: `146_`
+**Next migration**: `151_`
 
 **Key pipeline facts (2026-06-07):**
-- **Auction two-phase flow** (migration 145): `resolve_auction_listing` no longer auto-transfers. Deadline → `pending_confirmation` + `won_at`. Buyer must call `confirm_auction_win()` during an open transfer window. `SQUAD_FULL` is actionable (listing stays `pending_confirmation`); budget/duplicate failures cancel. On `sold`: `gazette_entries(entry_type='auction_result')` written. `sweep_void_auction_confirmations()` cancels listings where a full window cycle elapsed. `process_auction_deadlines()` wrapper runs both steps every 5 min. `sell_now` still immediate (seller-triggered, unchanged).
-- **TRADING tab** (PR #399): replaces AUCTIONS tab, draft leagues only. `TradingView.jsx` — active auctions + `pending_confirmation` won listings with CONFIRM button + trade proposals (incoming/outgoing) + 30-day history for both. `useAuctions` fetches `pending_confirmation` + `closed`/`cancelled` history. Currency is € throughout (PR #396 — 37 occurrences replaced).
+- **Auction two-phase flow** (migration 145): `resolve_auction_listing` no longer auto-transfers. Deadline → `pending_confirmation` + `won_at`. Buyer must call `confirm_auction_win()` during an open transfer window. `SQUAD_FULL` is actionable (listing stays `pending_confirmation`); budget/duplicate failures cancel. On `sold`: `gazette_entries(entry_type='auction_result')` written. `sweep_void_auction_confirmations()` cancels listings where a full window cycle elapsed AND window is currently closed (migration 148 guard: do NOT cancel when window is open). `process_auction_deadlines()` wrapper runs both steps every 5 min. `sell_now` still immediate (seller-triggered, unchanged).
+- **confirm_auction_win buyer squad lookup** (migration 149): does NOT filter by matchday_id — uses `ORDER BY created_at DESC`. Squads only advance their matchday_id on transfer, so the lookup must not require the next upcoming matchday_id.
+- **accept_trade_proposal points fix** (migration 150): points_sweetener is now debited from proposer AND credited to target. Previously only debited. Also writes `gazette_entries(entry_type='trade_result')` — appears in League Activity (TRADES filter) and Frontpage (TRANSFER DESK section).
+- **TRADING tab** (PR #399 + subsequent sessions): replaces AUCTIONS tab, draft leagues only. `TradingView.jsx` — active auctions + `pending_confirmation` won listings with CONFIRM button + trade proposals (incoming/outgoing) + 30-day history for both. `useAuctions` enriches listings with `bidder_name`. `useTradeProposals` enriches proposals with `proposer_name` + `target_name` (batch squad→username lookup). Currency is € throughout. `?` help button inline next to title. Player selects show `[POS] Name · €XM`. Points slider step=1.
+- **Gazette ENTRY_META** (`LeagueDetailView.jsx`): maps entry_type to display filter + badge + color. `auction_result` → TRADES/AUCTION/green; `trade_result` → TRADES/TRADE/cyan. Frontpage fetch includes `['activity', 'auction_result', 'trade_result']`.
 - **LiveScreen squad display** (PR #395): fetches `starting_xi` alongside `players`; uses it as authoritative XI. Fallback to `pickValidStarters()` for legacy squads. Fixes mismatch between LiveScreen and SquadScreen when user has set a custom lineup.
 - **Scoring job timing** (documented 2026-06-07): three crons — `calculate-scores-live` (every 2 min, live fixtures), `calculate-scores-post-match` (22:30 UTC daily, 24h window), `calculate-scores-late-finishers` (23:30+00:30 UTC, 3h window). H2H resolves in the same call as the last fixture, gated on `roundComplete=true`. Auto-sub same gate.
 
@@ -618,7 +664,7 @@ Always create a new file — never modify existing migrations.
 - `matchday_deadlines.matchday_id` format: `'426-rN'` (canonical, written by `sync-fixtures`)
 - **Knockout `round_number`** (migration 126): Forza does NOT number knockout matches — `sync-fixtures` writes `round_number = m.round ?? null` = NULL for them, which makes `calculate-scores` hard-fail ('critical', rollup skipped). The `derive_fixture_round_number()` BEFORE INSERT/UPDATE trigger re-fills `round_number` from `fixtures.matchday_id` (`'{tournament}-rN'`) on every write — `sync-fixtures` never writes `matchday_id`, so it survives the 30-min sync and the trigger keeps `round_number` populated. **Do NOT clear `fixtures.matchday_id` on knockout rows, and do NOT rely on a one-off `round_number` UPDATE** (the cron re-nulls it). For WC 429: r4=R32, r5=R16, r6=QF, r7=SF, r8=Final+3rd. A new tournament's knockout needs `matchday_id` seeded the same way before its first knockout match scores.
 - `bet_submissions` uses `bet_instance_id` column (not `bet_id`) — references `bet_instances(id)`
-- `gazette_entries.entry_type` enum: `draft_report`, `breaking_news`, `activity`, `auction_result`
+- `gazette_entries.entry_type` enum: `draft_report`, `breaking_news`, `activity`, `auction_result`, `trade_result` — no DB CHECK constraint; add new values freely but register in `ENTRY_META` in `LeagueDetailView.jsx`
 - `gazette_entries` INSERT: commissioners only (RLS policy, migration 103); SELECT: league members (is_league_member)
 - `gazette_entries.bullets` field is NOT always `string[]` — shapes vary by type:
   - `activity`: `string[]` (e.g. `"🥇 TestComm  8 pts this GW"`)
