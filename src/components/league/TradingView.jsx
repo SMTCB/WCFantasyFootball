@@ -41,6 +41,8 @@ function PendingConfirmCard({ listing, myUserId, windowStatus, onConfirm, onToas
       onToast(`${player?.name ?? 'Player'} signed for €${Number(listing.current_bid).toFixed(1)}M!`, 'success');
     } else if (res.code === 'SQUAD_FULL') {
       onToast('Your squad is full — sell a player first, then come back to confirm.', 'warning');
+    } else if (res.code === 'INSUFFICIENT_BUDGET') {
+      onToast('Not enough budget — sell a player to free up funds, then confirm again.', 'warning');
     } else if (res.code === 'WINDOW_CLOSED') {
       onToast('Transfer window is closed. Come back when it opens.', 'info');
     } else {
