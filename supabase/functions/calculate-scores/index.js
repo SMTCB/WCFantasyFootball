@@ -781,7 +781,7 @@ async function writeGazetteEntries(fixture_id, roundMatchdayId, fantasyPointsUps
     const topName = ranked[0]?.username ?? '—';
     const topPts  = ranked[0]?.pts ?? 0;
 
-    const headline = `GW ${roundNum} — ${fixtureLabel} — ${topName} leads with ${topPts} pts`;
+    const headline = `GW ${roundNum} — Matchday complete — ${topName} leads with ${topPts} pts`;
     const bullets  = ranked.map((r, i) =>
       `${medals[i] ?? `${i + 1}.`} ${r.username}  ${r.pts} pts this GW`
     );
