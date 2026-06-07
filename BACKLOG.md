@@ -1,6 +1,6 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-06-07 (Trading polish + Live tab + Bets — PRs #412–#422, migrations 151–155; next migration 156_)  
+**Last Updated**: 2026-06-07 (Auction fixes + pilot safeguards — PRs #424–#428, migration 156; next migration 157_)  
 **E2E Test Suite**: `platform.spec.js` (36 tests × 2 browsers) passing in CI ✅  
 **Full Playbook Run**: `E2E_TEST_PLAYBOOK.md` v2.0 — all flows confirmed  
 **🟢 LAUNCH READY**: No critical (P0/P1) bugs open. All game mechanics functional. WC kick-off 2026-06-11.  
@@ -12,6 +12,19 @@
 ## 🚀 Open Backlog — Prioritised
 
 _No open P0–P2 items. All game mechanics functional. See completed sessions below._
+
+---
+
+## ✅ Auction Fixes + Pilot Safeguards (2026-06-07) — Migration 156, PRs #424–#428
+
+### Auction flow fixes
+- **Migration 156** (`156_auction_deferred_budget_check.sql`): `place_bid` no longer validates budget — any bid amount can be proposed. `confirm_auction_win` `INSUFFICIENT_BUDGET` changed from cancel → actionable (listing stays `pending_confirmation` so buyer can sell players and retry), matching existing `SQUAD_FULL` behaviour.
+- **PR #425**: Removed client-side budget check from `AuctionCard.jsx` — was blocking bids in the browser before they reached the DB; also removed stale `myBudget` prop.
+- **PR #426**: Seller can now cancel an auction at any time, including after bids are placed. Cancel button previously hidden once a bid existed. Two-tap confirm still required to prevent accidents.
+- **PR #427**: Pending auction card now shows winning bidder name (gold, below the bid amount). League Activity SCORES gazette entry now only written when `roundComplete = true` (all round fixtures finished) — eliminates live/partial 0-pt entries during an ongoing GW. `calculate-scores` edge function redeployed.
+
+### Pilot safeguards
+- **PR #428**: `🛡️ Pilot Safeguards` section added to CLAUDE.md (5 non-negotiable rules: backup before migration, SELECT before UPDATE/DELETE, no DROP without confirmation, no test data mixed with pilot data, migrations append-only). Rules also wired into Session Start Checklist and Development Guidelines. `backups/` folder created and gitignored.
 
 ---
 
