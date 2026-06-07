@@ -139,22 +139,28 @@ export default function BetCreatorPanel({ leagueId, tournamentId, onCreated, com
   const [posFilter,  setPosFilter]  = useState('ALL');
   const [saving,     setSaving]     = useState(false);
 
-  // Track if the user has manually edited title/prompt so we don't overwrite them
-  const titleEdited  = useRef(false);
-  const promptEdited = useRef(false);
+  // Track if the user has manually edited title/prompt/deadline so we don't overwrite them
+  const titleEdited    = useRef(false);
+  const promptEdited   = useRef(false);
+  const deadlineEdited = useRef(false);
   // 3.2: slug→id cache fetched once on mount; avoids hardcoded UUIDs per environment
-  const templateIds  = useRef({});
+  const templateIds    = useRef({});
 
   const resetForm = (picked) => {
     setTemplate(picked);
     setSelectedOpts([]);
     setSearch('');
     setPosFilter(picked?.defaultPos || 'ALL');
-    titleEdited.current  = false;
-    promptEdited.current = false;
+    titleEdited.current    = false;
+    promptEdited.current   = false;
+    deadlineEdited.current = false;
     if (picked) {
       setTitle(picked.label);
       setPrompt(picked.promptHint);
+      // Clear deadline when switching templates so it auto-fills for fixture/team bets
+      if (picked.answerType === 'fixture' || picked.answerType === 'team') {
+        setDeadline('');
+      }
     }
   };
 
@@ -209,45 +215,76 @@ export default function BetCreatorPanel({ leagueId, tournamentId, onCreated, com
     }
   }, [tournamentId, windowFrom, deadline]);
 
-  // ── Fetch: fixtures in the window (future only) ──────────────────────────
+  // ── Helpers: next matchday for this tournament ────────────────────────────
+  // Returns { matchday_id, deadline_at } or null. Used by both fetchFixtures
+  // and fetchTeams so the list auto-scopes without requiring a manual deadline.
+  const fetchNextMatchday = useCallback(async () => {
+    if (!tournamentId) return null;
+    const { data } = await supabase
+      .from('matchday_deadlines')
+      .select('matchday_id, deadline_at')
+      .eq('tournament_id', tournamentId)
+      .gt('deadline_at', new Date().toISOString())
+      .order('deadline_at', { ascending: true })
+      .limit(1)
+      .maybeSingle();
+    return data ?? null;
+  }, [tournamentId]);
+
+  // ── Fetch: fixtures scoped to the next matchday ───────────────────────────
   const fetchFixtures = useCallback(async () => {
     if (!tournamentId) return;
     setLoading(true);
     try {
-      let q = supabase
+      const md = await fetchNextMatchday();
+      if (!md) { setFixtures([]); setLoading(false); return; }
+
+      // Auto-fill deadline from matchday deadline if the commissioner hasn't set one
+      if (!deadlineEdited.current) {
+        const dt = new Date(md.deadline_at);
+        // Convert to local datetime-local input format (YYYY-MM-DDTHH:MM)
+        const localIso = new Date(dt.getTime() - dt.getTimezoneOffset() * 60000)
+          .toISOString().slice(0, 16);
+        setDeadline(localIso);
+      }
+
+      const { data } = await supabase
         .from('fixtures')
-        .select('id, home_team, away_team, kickoff_at')
+        .select('id, home_team, away_team, kickoff_at, matchday_id')
         .eq('tournament_id', tournamentId)
-        .eq('status', 'scheduled')
-        .gte('kickoff_at', new Date().toISOString())   // only genuinely future matches
-        .order('kickoff_at', { ascending: true })
-        .limit(20);
-      if (windowFrom) q = q.gte('kickoff_at', new Date(windowFrom).toISOString());
-      if (deadline)   q = q.lte('kickoff_at', new Date(deadline).toISOString());
-      const { data } = await q;
+        .eq('matchday_id', md.matchday_id)
+        .order('kickoff_at', { ascending: true });
+
       setFixtures(data || []);
     } catch (e) {
       console.error('BetCreatorPanel fixture fetch error:', e);
     } finally {
       setLoading(false);
     }
-  }, [tournamentId, windowFrom, deadline]);
+  }, [tournamentId, fetchNextMatchday]);
 
-  // ── Fetch: unique teams from upcoming fixtures (for clean_sheet bets) ─────
+  // ── Fetch: unique teams from the next matchday (for clean_sheet bets) ────
   const fetchTeams = useCallback(async () => {
     if (!tournamentId) return;
     setLoading(true);
     try {
-      let q = supabase
+      const md = await fetchNextMatchday();
+      if (!md) { setTeams([]); setLoading(false); return; }
+
+      if (!deadlineEdited.current) {
+        const dt = new Date(md.deadline_at);
+        const localIso = new Date(dt.getTime() - dt.getTimezoneOffset() * 60000)
+          .toISOString().slice(0, 16);
+        setDeadline(localIso);
+      }
+
+      const { data } = await supabase
         .from('fixtures')
         .select('home_team, away_team')
         .eq('tournament_id', tournamentId)
-        .eq('status', 'scheduled')
-        .gte('kickoff_at', new Date().toISOString())
-        .order('kickoff_at', { ascending: true })
-        .limit(20);
-      if (deadline) q = q.lte('kickoff_at', new Date(deadline).toISOString());
-      const { data } = await q;
+        .eq('matchday_id', md.matchday_id)
+        .order('kickoff_at', { ascending: true });
+
       const sorted = [...new Set((data || []).flatMap(f => [f.home_team, f.away_team]))].sort();
       setTeams(sorted);
     } catch (e) {
@@ -255,7 +292,7 @@ export default function BetCreatorPanel({ leagueId, tournamentId, onCreated, com
     } finally {
       setLoading(false);
     }
-  }, [tournamentId, deadline]);
+  }, [tournamentId, fetchNextMatchday]);
 
   useEffect(() => {
     if (!template) return;
@@ -451,7 +488,7 @@ export default function BetCreatorPanel({ leagueId, tournamentId, onCreated, com
                 <input
                   type="datetime-local"
                   value={deadline}
-                  onChange={e => setDeadline(e.target.value)}
+                  onChange={e => { setDeadline(e.target.value); deadlineEdited.current = true; }}
                   style={{
                     width: '100%', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)',
                     color: deadline ? 'var(--paper)' : 'var(--danger)',
@@ -495,9 +532,9 @@ export default function BetCreatorPanel({ leagueId, tournamentId, onCreated, com
                 {windowHint}
               </div>
             )}
-            {(isFixtureBet || isTeamBet) && !deadline && (
+            {(isFixtureBet || isTeamBet) && deadline && (
               <div style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', marginTop: 6, letterSpacing: '.1em' }}>
-                Set a deadline to see {isTeamBet ? 'eligible teams' : 'scheduled matches'} before that date.
+                Deadline auto-set from next matchday · adjust if needed
               </div>
             )}
           </div>
@@ -535,11 +572,7 @@ export default function BetCreatorPanel({ leagueId, tournamentId, onCreated, com
             ) : isTeamBet ? (
               /* ── Team picker for Clean Sheet ─────────────────────────── */
               <>
-                {!deadline ? (
-                  <div style={{ fontFamily: MONO, fontSize: 10, color: 'var(--mute)', padding: '20px 0', textAlign: 'center', letterSpacing: '.18em' }}>
-                    SET A DEADLINE ABOVE TO SEE ELIGIBLE TEAMS
-                  </div>
-                ) : teams.length === 0 ? (
+                {teams.length === 0 && !loading ? (
                   <div style={{ fontFamily: MONO, fontSize: 10, color: 'var(--mute)', padding: '20px 0', textAlign: 'center', letterSpacing: '.18em' }}>
                     NO SCHEDULED MATCHES BEFORE THIS DEADLINE
                   </div>
@@ -624,11 +657,7 @@ export default function BetCreatorPanel({ leagueId, tournamentId, onCreated, com
             ) : (
               /* Fixture picker */
               <>
-                {!deadline ? (
-                  <div style={{ fontFamily: MONO, fontSize: 10, color: 'var(--mute)', padding: '20px 0', textAlign: 'center', letterSpacing: '.18em' }}>
-                    SET A DEADLINE ABOVE TO SEE UPCOMING MATCHES
-                  </div>
-                ) : fixtures.length === 0 ? (
+                {fixtures.length === 0 && !loading ? (
                   <div style={{ fontFamily: MONO, fontSize: 10, color: 'var(--mute)', padding: '20px 0', textAlign: 'center', letterSpacing: '.18em' }}>
                     NO SCHEDULED MATCHES BEFORE THIS DEADLINE
                   </div>
