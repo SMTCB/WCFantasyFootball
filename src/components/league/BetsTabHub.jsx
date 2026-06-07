@@ -5,16 +5,16 @@ import { MONO, DISPLAY } from './HubConstants';
 import TourReplayButton from '../TourReplayButton';
 
 const KIND = {
-  top_scorer:   { g: '◉', tone: 'var(--cyan)'   },
-  player_block: { g: '⛌', tone: 'var(--danger)' },
-  match_result: { g: '◈', tone: 'var(--paper)'  },
-  over_under:   { g: '≷', tone: 'var(--gold)'   },
-  h2h:          { g: '⚔', tone: 'var(--purple)' },
+  top_scorer:   { g: '◉', tone: 'var(--cyan)'     },
+  match_result: { g: '◈', tone: 'var(--paper)'    },
+  clean_sheet:  { g: '🧤', tone: 'var(--positive)' },
+  over_under:   { g: '≷', tone: 'var(--gold)'     },
+  h2h:          { g: '⚔', tone: 'var(--purple)'   },
 };
 
 function kindOf(bet) {
   const slug = bet.template?.slug || '';
-  if (slug.includes('block')) return KIND.player_block;
+  if (slug.includes('clean_sheet') || slug.includes('clean')) return KIND.clean_sheet;
   if (slug.includes('top_scorer') || slug.includes('scorer')) return KIND.top_scorer;
   if (slug.includes('match') || slug.includes('result')) return KIND.match_result;
   if (slug.includes('over') || slug.includes('under')) return KIND.over_under;

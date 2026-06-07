@@ -97,7 +97,7 @@ const COMMISSIONER_TOUR_STEPS = [
   {
     target: 'comm-bets',
     title:  'Create Bets',
-    body:   'Post prediction challenges for your managers before each gameweek. Pick a template (Top Scorer, Match Result, or Player Block), configure the options and reward points, then publish. Bets lock when the relevant match kicks off.',
+    body:   'Post prediction challenges for your managers before each gameweek. Pick a template (Top Scorer, Match Result, or Clean Sheet), configure the options and reward points, then publish. Bets lock when the relevant match kicks off.',
   },
   {
     target: 'comm-resolve',

@@ -131,8 +131,8 @@ function HelpOverlay({ topic, onClose }) {
         {
           heading: 'Create Bet — 4-step wizard',
           rows: [
-            ['Step 1 · TYPE', 'Choose Top Scorer (who scores most?), Match Result (Home/Draw/Away), or Player Block (pick a player to flop — earns points if they do).'],
-            ['Step 2 · CONFIGURE', 'Select the fixture(s). For Top Scorer, define the player pool (2–8 players). For Player Block, select the block target.'],
+            ['Step 1 · TYPE', 'Choose Top Scorer (who scores most?), Match Result (Home/Draw/Away), or Clean Sheet (pick a team — earns points if they keep a clean sheet).'],
+            ['Step 2 · CONFIGURE', 'Select the fixture(s) or teams. For Top Scorer, define the player pool (2–8 players). For Clean Sheet, select all teams playing in the window.'],
             ['Step 3 · REWARD', 'Set the point value (stepper +/−) and the picks lock deadline. Must be before the first kickoff.'],
             ['Step 4 · PUBLISH', 'Review the live preview. Publishing notifies all managers and opens picks immediately.'],
           ],
@@ -277,7 +277,7 @@ function computePhases(league, memberCount = 0, windowType = null) {
 const BET_TYPES = [
   { id: 'top-scorer',   label: 'TOP SCORER',   glyph: '◉', tone: 'var(--cyan)',     templateId: 'top_scorer',   hint: 'Who scores the most goals across the fixture / gameweek?', body: 'Auto-resolves at final whistle. Tie-break: assists → minutes.' },
   { id: 'match-result', label: 'MATCH RESULT', glyph: '◈', tone: 'var(--positive)', templateId: 'match_result', hint: 'Predict the outcome of a single fixture.', body: 'Options are auto-generated: HOME · DRAW · AWAY. Resolves at FT.' },
-  { id: 'player-block', label: 'PLAYER BLOCK', glyph: '⛌', tone: 'var(--danger)',   templateId: 'player_block', hint: 'Pick a player to BLOCK — if they flop, you earn points.', body: 'A flop = 0 goals + ≤30 min played, OR a red card. Resolves at FT.' },
+  { id: 'clean-sheet',  label: 'CLEAN SHEET',  glyph: '🧤', tone: 'var(--cyan)',    templateId: 'clean_sheet',  hint: 'Pick a team to keep a clean sheet.', body: 'Select the teams in play. Managers pick one — commissioner resolves after the match.' },
 ];
 
 // ─────────────────────────────────────────────────────────────────────────────
