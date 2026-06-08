@@ -131,7 +131,6 @@ async function runLottery(leagueId, phase = 'group') {
   // not duplicated on the recovery run.
   const isReEntry = (existingAllocations?.length ?? 0) > 0;
   let allocations;
-  let contestedPlayers = [];
 
   if (isReEntry) {
     // Phase 1 already committed — rebuild from DB rows, no re-randomization.
@@ -158,24 +157,21 @@ async function runLottery(leagueId, phase = 'group') {
     }
   } else {
     // Pass 0: load keep submissions for the knockout phase.
-    // For all other phases (group, etc.) this query returns nothing and the
-    // keepsByManager / keptPlayerIds structures are empty — true no-op.
+    // For all other phases (group, etc.) this query returns nothing — true no-op.
     const { data: keepRows } = phase === 'knockout'
       ? await supabase.from('knockout_keep_submissions').select('user_id, player_ids').eq('league_id', leagueId)
       : { data: [] };
 
-    const keepsByManager = {};   // user_id → player_ids[]
-    const keptPlayerIds  = new Set();  // all kept pids — excluded from lottery pool
+    const keepsByManager = {};
     for (const row of keepRows ?? []) {
       keepsByManager[row.user_id] = row.player_ids ?? [];
-      for (const pid of row.player_ids ?? []) keptPlayerIds.add(pid);
     }
 
-    // 2. Load player data (price, position, club) for allocation enforcement.
-    // Include keep player IDs so playerMap contains data needed for Pass 0 cap checks.
-    // forza_team_id is the club identifier used for club-cap enforcement.
+    // Load player data for all wish-list and keep player IDs.
     const wishListIds  = [...new Set(submissions.flatMap(s => s.player_ids))];
-    const allPlayerIds = [...new Set([...wishListIds, ...keptPlayerIds])];
+    const keepIds      = [...new Set(Object.values(keepsByManager).flat())];
+    const allPlayerIds = [...new Set([...wishListIds, ...keepIds])];
+
     const { data: playerRows } = await supabase
       .from('players')
       .select('id, position, price, forza_team_id')
@@ -189,36 +185,7 @@ async function runLottery(leagueId, phase = 'group') {
 
     const playerMap = Object.fromEntries((playerRows ?? []).map(p => [p.id, p]));
 
-    // 3. Build conflict map: player_id → [user_ids who want them]
-    const wantedBy = {};
-    for (const sub of submissions) {
-      for (const pid of sub.player_ids) {
-        if (!wantedBy[pid]) wantedBy[pid] = [];
-        wantedBy[pid].push(sub.user_id);
-      }
-    }
-
-    // 4. Resolve conflicts: random lottery winner per contested player
-    const awardedTo = {}; // player_id → winning user_id
-
-    for (const [pid, wanters] of Object.entries(wantedBy)) {
-      if (wanters.length === 1) {
-        awardedTo[pid] = wanters[0];
-      } else {
-        // Use crypto-random for fairness; log roll for audit trail.
-        const roll   = crypto.getRandomValues(new Uint32Array(1))[0] / 0xFFFFFFFF;
-        const winner = wanters[Math.floor(roll * wanters.length)];
-        awardedTo[pid] = winner;
-        contestedPlayers.push({ pid, wanters, winner, roll: roll.toFixed(6) });
-      }
-    }
-
-    // 5. Two-pass squad allocation.
-    //    Pass 1 — allocate lottery winners; record players the winner couldn't
-    //             take due to position cap or budget.
-    //    Pass 2 — offer each dropped player to runner-up contestants (shuffled
-    //             with crypto-random so no submission ordering advantage).
-
+    // Initialise per-manager state for every submitter.
     const userState = {};
     for (const sub of submissions) {
       userState[sub.user_id] = {
@@ -229,14 +196,11 @@ async function runLottery(leagueId, phase = 'group') {
       };
     }
 
-    // Pass 0: pre-allocate kept players before the lottery runs.
-    // Kept players are awarded directly to their keeper and excluded from
-    // the lottery pool — other managers cannot win them in Pass 1 or Pass 2.
-    // Same position/budget/club cap rules apply. If a keep fails validation
-    // (e.g. cap exceeded) it is silently skipped; the manager fills that slot
-    // via the lottery wish list instead.
+    // Pass 0: pre-allocate kept players (knockout only).
+    // Kept players go into `taken` — the snake loop skips them naturally.
+    // Same position/budget/club cap rules apply; silently skipped if validation fails.
+    const taken = new Set();
     for (const [uid, keepPids] of Object.entries(keepsByManager)) {
-      // Create a state entry for managers who submitted keeps but no wish list.
       if (!userState[uid]) {
         userState[uid] = { allocated: [], posCounts: { GK: 0, DEF: 0, MID: 0, FWD: 0 }, clubCounts: {}, budgetUsed: 0 };
       }
@@ -245,8 +209,8 @@ async function runLottery(leagueId, phase = 'group') {
         if (u.allocated.length >= SQUAD_SIZE) break;
         const player = playerMap[pid];
         if (!player) continue;
-        const pos     = normalisePosition(player.position);
-        const teamId  = player.forza_team_id;
+        const pos    = normalisePosition(player.position);
+        const teamId = player.forza_team_id;
         const clubCnt = teamId ? (u.clubCounts[teamId] ?? 0) : 0;
         if (u.posCounts[pos] >= SQUAD_POS_CAPS[pos]) continue;
         if (u.budgetUsed + player.price > budget)    continue;
@@ -256,77 +220,77 @@ async function runLottery(leagueId, phase = 'group') {
         u.posCounts[pos]++;
         if (teamId) u.clubCounts[teamId] = clubCnt + 1;
         u.budgetUsed += player.price;
-        awardedTo[pid] = uid; // lock out other managers — cannot be won via lottery
+        taken.add(pid);
       }
     }
 
-    const droppedByWinner = []; // pids the lottery winner couldn't take
+    // Snake draft allocation.
+    //
+    // One random roll assigns the initial pick order (Fisher-Yates shuffle).
+    // Rounds alternate direction: even = original order, odd = reversed.
+    // On each turn a manager walks their wish list forward from their pointer,
+    // skipping players already taken or that violate caps/budget, and takes the
+    // first valid pick. The pointer never resets — it carries across rounds.
+    // A player ranked #1 is tried in round 1; ranked #6 not until the 6th turn,
+    // giving higher-ranked picks genuine priority over lower-ranked ones.
 
-    for (const sub of submissions) {
-      const uid = sub.user_id;
-      const u   = userState[uid];
-
-      for (const pid of sub.player_ids) {
-        if (u.allocated.length >= SQUAD_SIZE) break;
-
-        if (keptPlayerIds.has(pid)) continue;  // handled in Pass 0 — skip lottery processing
-        if (awardedTo[pid] !== uid) continue;
-
-        const player = playerMap[pid];
-        if (!player) continue;
-
-        const pos = normalisePosition(player.position);
-        if (!SQUAD_POS_CAPS[pos]) continue;
-
-        const teamId    = player.forza_team_id;
-        const clubCount = teamId ? (u.clubCounts[teamId] ?? 0) : 0;
-        if (
-          u.posCounts[pos] >= SQUAD_POS_CAPS[pos] ||
-          u.budgetUsed + player.price > budget      ||
-          (teamId && CLUB_CAP < 99 && clubCount >= CLUB_CAP)
-        ) {
-          droppedByWinner.push(pid);
-          continue;
-        }
-
-        u.allocated.push(pid);
-        u.posCounts[pos]++;
-        if (teamId) u.clubCounts[teamId] = clubCount + 1;
-        u.budgetUsed += player.price;
-      }
+    // Assign random initial snake order (Fisher-Yates)
+    const snakeOrder = submissions.map(s => s.user_id);
+    for (let i = snakeOrder.length - 1; i > 0; i--) {
+      const roll = crypto.getRandomValues(new Uint32Array(1))[0] / 0xFFFFFFFF;
+      const j    = Math.floor(roll * (i + 1));
+      [snakeOrder[i], snakeOrder[j]] = [snakeOrder[j], snakeOrder[i]];
     }
 
-    // Pass 2: runner-up allocation for dropped players
-    for (const pid of droppedByWinner) {
-      if (keptPlayerIds.has(pid)) continue;  // kept in Pass 0 — cannot be runner-up allocated
-      const player = playerMap[pid];
-      if (!player) continue;
+    // One pointer per manager — position in their wish list, never resets
+    const pointers = {};
+    for (const sub of submissions) pointers[sub.user_id] = 0;
 
-      const runnerUps = (wantedBy[pid] ?? []).filter(uid => uid !== awardedTo[pid]);
-      // Crypto-random shuffle so no submission order advantage
-      for (let i = runnerUps.length - 1; i > 0; i--) {
-        const roll = crypto.getRandomValues(new Uint32Array(1))[0] / 0xFFFFFFFF;
-        const j    = Math.floor(roll * (i + 1));
-        [runnerUps[i], runnerUps[j]] = [runnerUps[j], runnerUps[i]];
-      }
+    const submissionMap = {};
+    for (const sub of submissions) submissionMap[sub.user_id] = sub.player_ids;
 
-      const pos    = normalisePosition(player.position);
-      const teamId = player.forza_team_id;
-      for (const uid of runnerUps) {
-        const u         = userState[uid];
-        if (!u) continue;
+    const maxRounds = Math.max(...submissions.map(s => s.player_ids.length), 0);
+
+    for (let round = 0; round < maxRounds; round++) {
+      const roundOrder = round % 2 === 0 ? [...snakeOrder] : [...snakeOrder].reverse();
+
+      for (const uid of roundOrder) {
+        const u = userState[uid];
         if (u.allocated.length >= SQUAD_SIZE) continue;
-        if (u.posCounts[pos] >= SQUAD_POS_CAPS[pos]) continue;
-        if (u.budgetUsed + player.price > budget) continue;
-        const clubCount = teamId ? (u.clubCounts[teamId] ?? 0) : 0;
-        if (teamId && CLUB_CAP < 99 && clubCount >= CLUB_CAP) continue;
 
-        u.allocated.push(pid);
-        u.posCounts[pos]++;
-        if (teamId) u.clubCounts[teamId] = clubCount + 1;
-        u.budgetUsed += player.price;
-        break;
+        const list = submissionMap[uid] || [];
+
+        // Walk forward from pointer: skip taken/invalid, take first valid pick
+        while (pointers[uid] < list.length) {
+          const pid = list[pointers[uid]];
+          pointers[uid]++;
+
+          if (taken.has(pid)) continue;
+
+          const player = playerMap[pid];
+          if (!player) continue;
+
+          const pos    = normalisePosition(player.position);
+          const teamId = player.forza_team_id;
+          const clubCnt = teamId ? (u.clubCounts[teamId] ?? 0) : 0;
+
+          if (u.posCounts[pos] >= SQUAD_POS_CAPS[pos]) continue;
+          if (u.budgetUsed + player.price > budget)    continue;
+          if (teamId && CLUB_CAP < 99 && clubCnt >= CLUB_CAP) continue;
+
+          u.allocated.push(pid);
+          u.posCounts[pos]++;
+          if (teamId) u.clubCounts[teamId] = clubCnt + 1;
+          u.budgetUsed += player.price;
+          taken.add(pid);
+          break;
+        }
       }
+
+      // Early exit: all squads full
+      if (Object.values(userState).every(u => u.allocated.length >= SQUAD_SIZE)) break;
+      // Early exit: all wish lists exhausted
+      if (Object.keys(pointers).every(uid => pointers[uid] >= (submissionMap[uid]?.length ?? 0))) break;
     }
 
     allocations = {};
@@ -338,7 +302,7 @@ async function runLottery(leagueId, phase = 'group') {
       };
     }
 
-    // 6. Write draft_allocations rows (Phase 1 commit point)
+    // Phase 1 commit point: write draft_allocations
     const allocationRows = Object.entries(allocations).map(([userId, data]) => ({
       league_id:         leagueId,
       user_id:           userId,
@@ -352,6 +316,9 @@ async function runLottery(leagueId, phase = 'group') {
       .from('draft_allocations')
       .upsert(allocationRows, { onConflict: 'league_id,user_id,phase' });
     if (allocErr) await logError(FN, 'critical', 'draft_allocations upsert failed', { leagueId, phase, error: allocErr.message });
+
+    // Capture snake order for gazette (written after the re-entry guard below)
+    runLottery._lastSnakeOrder = snakeOrder;
   }
 
   // 6c. Update cup_phase on the league to signal allocation is done.
@@ -438,7 +405,8 @@ async function runLottery(leagueId, phase = 'group') {
   // commit marker. On a re-entry run these are skipped to avoid duplicates.
   if (!isReEntry) {
   // 8. Write gazette entry
-  const gazettEntry = buildGazetteEntry(leagueId, contestedPlayers, allocations, submissions);
+  const snakeOrder = runLottery._lastSnakeOrder ?? [];
+  const gazettEntry = buildGazetteEntry(leagueId, snakeOrder, allocations, submissions);
   await supabase.from('gazette_entries').insert(gazettEntry);
 
   // TDD-14: Notify managers who never submitted a draft list — they have no squad.
@@ -497,48 +465,37 @@ async function runLottery(leagueId, phase = 'group') {
   return {
     leagueId,
     managersProcessed: submissions.length,
-    contestedPlayers: contestedPlayers.length,
+    snakeOrder: (runLottery._lastSnakeOrder ?? []),
     incomplete,
   };
 }
 
 // ── Gazette entry builder ────────────────────────────────────────────────────
 
-function buildGazetteEntry(leagueId, contested, allocations, submissions) {
-  const topContested = contested
-    .sort((a, b) => b.wanters.length - a.wanters.length)
-    .slice(0, 3);
+function buildGazetteEntry(leagueId, snakeOrder, allocations, submissions) {
+  const totalManagers   = submissions.length;
+  const incompleteCount = Object.values(allocations).filter(d => d.unresolved_slots > 0).length;
 
-  const headline = topContested.length > 0
-    ? `DRAFT SETTLED: ${topContested.length} battle${topContested.length > 1 ? 's' : ''} decided by the lottery`
-    : 'DRAFT COMPLETE: All squads allocated without conflicts';
+  const headline = incompleteCount > 0
+    ? `DRAFT SETTLED: ${totalManagers} squads allocated — ${incompleteCount} with open slots`
+    : `DRAFT SETTLED: All ${totalManagers} squads fully allocated`;
 
   const bullets = [];
-
-  for (const { pid, wanters, winner } of topContested) {
-    bullets.push({
-      player_id: pid,
-      wanted_by: wanters.length,
-      winner_id: winner,
-    });
-  }
-
-  const incompleteCount = Object.values(allocations).filter(d => d.unresolved_slots > 0).length;
   if (incompleteCount > 0) {
     bullets.push({
-      text: `${incompleteCount} manager${incompleteCount > 1 ? 's' : ''} enter the draft with incomplete squads — first available picks now open`,
+      text: `${incompleteCount} manager${incompleteCount > 1 ? 's' : ''} enter with incomplete squads — first available picks now open`,
     });
   }
 
   const fullData = {
-    allocations: Object.entries(allocations).map(([userId, data]) => ({
-      user_id:   userId,
-      players:   data.allocated_players,
-      gaps:      data.unresolved_slots,
+    snake_order:    snakeOrder,   // round-1 pick order; reverses every round
+    allocations:    Object.entries(allocations).map(([userId, data]) => ({
+      user_id:     userId,
+      players:     data.allocated_players,
+      gaps:        data.unresolved_slots,
       budget_used: data.budget_used,
     })),
-    contested_count: contested.length,
-    total_managers:  submissions.length,
+    total_managers: totalManagers,
   };
 
   return {
