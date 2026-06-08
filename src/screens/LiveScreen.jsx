@@ -540,7 +540,7 @@ export default function LiveScreen() {
           .in('matchday_id', gwMatchdayIds);
         for (const fp of fpRows || []) {
           const lid = squadIdToLeague[fp.squad_id];
-          if (lid) gwPtsByLeague[lid] = Number(fp.total) ?? 0;
+          if (lid) gwPtsByLeague[lid] = Number(fp.total ?? 0);
         }
       }
 

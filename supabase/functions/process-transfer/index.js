@@ -248,14 +248,16 @@ Deno.serve(async (req) => {
     const currentPlayers = squad.players ?? [];
     const budget         = Number(squad.budget_remaining ?? 100);
 
-    // C6: enforce the per-round transfer limit against the real upcoming round.
-    // A squad still carrying a placeholder matchday_id (e.g. 'current') must not
-    // bypass the limit. Migration 114 intentionally skips enforcement only when no
-    // canonical '-rN' round can be resolved at all (genuinely pre-competition, where
-    // activeMatchdayId is itself null because no deadline exists yet).
-    const enforceMatchdayId = /-r\d+$/.test(squad.matchday_id ?? '')
-      ? squad.matchday_id
-      : activeMatchdayId;
+    // C6: enforce the per-round transfer limit against the ACTIVE round (the next
+    // upcoming deadline), not the squad's stored matchday_id. A squad's matchday_id
+    // only advances when a transfer is processed for a newer round — so a manager who
+    // made 3 transfers in r1 and none in r2/r3 still has matchday_id='r1'. Using the
+    // squad's own matchday_id would incorrectly check the r1 counter (3/3 = blocked)
+    // rather than the r3 counter (0/3 = allowed).
+    // Fallback to squad.matchday_id only when activeMatchdayId is null (genuinely
+    // pre-competition, where no upcoming deadline exists yet).
+    const enforceMatchdayId = activeMatchdayId
+      ?? (/-r\d+$/.test(squad.matchday_id ?? '') ? squad.matchday_id : null);
 
     // Pre-competition bypass: before the first match of any configured matchday
     // has kicked off, transfers are unlimited. This lets managers freely adjust
