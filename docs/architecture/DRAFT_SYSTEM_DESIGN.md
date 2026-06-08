@@ -1,6 +1,6 @@
 # Draft System Design
-**Status**: Current — aligned with migrations 141–143 and sessions 55–present  
-**Last Updated**: 2026-06-06  
+**Status**: Current — aligned with migrations 141–143, 156 and sessions 55–present  
+**Last Updated**: 2026-06-09  
 **Scope**: Per-league only. All mechanics described here are strictly isolated to a single fantasy league.
 
 ---
@@ -56,13 +56,15 @@ A "season format" draft league is one where the commissioner never sets `knockou
 
 ## 3. Draft Submission — No Constraints by Design
 
-When a draft is open, managers submit a ranked list of up to 30 players. **There are no constraints during submission.** Managers can select:
+When a draft is open, managers submit a ranked list of up to 45 players (default; configurable via `draft_list_size` in `league_config`). **There are no constraints during submission.** Managers can select:
 - Any number of players from the same position
 - Any number of players from the same club
 - Players of any price
 - Any combination of value, position, and club
 
 **Why this is correct:** Managers use the submission strategically. Over-selecting a popular position increases the odds of securing multiple picks from that group. The allocation engine resolves constraints fairly.
+
+**How ranking works in the snake draft:** The position of a player in your list determines which round they are "tried". Rank 1 is tried in round 1, rank 6 in round 6. A longer list with well-considered ordering gives significantly better outcomes than a short or randomly ordered one.
 
 **What happens at allocation time** is where constraints are enforced (see Section 4).
 
@@ -77,31 +79,37 @@ When a draft is open, managers submit a ranked list of up to 30 players. **There
 
 ```
 Pass 0 (knockout phase only — see Section 8):
-  Pre-allocate kept players before the lottery
+  Pre-allocate kept players before the snake draft.
+  Kept players go into the `taken` set — snake skips them naturally.
 
-Pass 1 — Lottery allocation:
-  1. Fetch all draft_submissions for the league
-  2. Build conflict map: player_id → [managers who listed them]
-  3. For each contested player: randomly select one winner (crypto-random)
-  4. Per manager, walk ranked list sequentially:
-     a. Skip: already handled in Pass 0 (kept player)
-     b. Skip: player already taken by another manager
-     c. Skip: position cap would be exceeded (GK ≤ 2, DEF ≤ 5, MID ≤ 5, FWD ≤ 3)
-     d. Skip: adding this player would exceed the club cap (default: 3; relaxed in cup)
-     e. Skip: cumulative value of already-allocated players exceeds £100M budget
-     f. Stop: when 15 players allocated or list exhausted → record as dropped
-  5. Write results → draft_allocations (commit point)
+Snake draft allocation:
 
-Pass 2 — Runner-up offers for dropped players:
-  Dropped players are offered (in shuffled order) to other managers who listed them,
-  subject to the same position/budget/club cap checks. Kept players are never in
-  the dropped pool (they were resolved in Pass 0).
+  1. One random roll assigns the initial pick order
+     (Fisher-Yates shuffle of all submitting managers).
 
-6. Write squads (upsert by league_id, user_id, matchday_id)
-7. Flag unresolved_slots for managers with < 15 players
-8. Write gazette_entry (headline + bullets + full table)
-9. Push notification to all managers
+  2. For each round (up to max wish-list length):
+     a. Even round → process managers in original order  (1 → N)
+        Odd round  → process managers in reversed order  (N → 1)
+     b. Each manager's turn:
+        Walk forward through their wish list from their current pointer.
+        Skip each player that is: already taken, unknown, over position
+        cap, over budget, or over club cap.
+        Take the first valid player found; advance pointer past it.
+        If the list is exhausted without a valid pick, skip this turn.
+
+  3. Early exit when all squads have 15 players OR all wish lists
+     are exhausted.
+
+  4. Write results → draft_allocations (commit point)
+  5. Write squads (upsert by league_id, user_id, matchday_id)
+  6. Flag unresolved_slots for managers with < 15 players
+  7. Write gazette_entry (headline + snake order + full allocation table)
+  8. Push notification to all managers
 ```
+
+**Why rank matters:** A player at rank 1 is tried in round 1. A player at rank 6 is not tried until the manager's 6th turn. If two managers listed the same player, the one who ranked it higher gets priority in an earlier round. The only remaining luck is the initial random pick order assignment — which the snake reversal partially compensates for across rounds.
+
+**Tie-breaking:** If two managers have the same player at the same effective rank (both reach it on their 3rd turn, say), whichever appears first in that round's snake order wins it. This is the only remaining element of randomness.
 
 ### Club Cap Enforcement at Allocation
 
@@ -187,7 +195,7 @@ A club is eliminated when the API shows no remaining fixtures for that club in t
 ## 8. Cup Format — Two-Phase Draft (Draft mode only)
 
 ### Phase 1 — Group Stage Draft
-Standard flow. Commissioner sets a deadline → managers submit 30 picks → commissioner runs the allocation manually.
+Standard flow. Commissioner sets a deadline → managers submit up to 45 picks → commissioner runs the allocation manually.
 
 ### The Keep Window (Between Phases)
 
@@ -225,7 +233,7 @@ After the group-stage lottery runs and before the knockout lottery, managers can
 Same flow as Phase 1, but:
 - **Precondition**: `cup_phase = 'group_stage'` (group allocation must have run)
 - Commissioner sets a new `knockout_draft_deadline`
-- **Before the lottery runs**: managers submit up to N keep picks (the keep window, above) AND a 30-pick wish list for remaining slots
+- **Before the lottery runs**: managers submit up to N keep picks (the keep window, above) AND a 45-pick wish list for remaining slots
 - Same allocation engine runs with Pass 0 + Passes 1 and 2
 - After allocation: group-stage squad player arrays are cleared so stale rows don't pollute the no-repeat check for the knockout market (migration 142)
 - `cup_phase` is set to `'pre_elimination'` by `run-draft-lottery`
@@ -308,7 +316,7 @@ league_config (
 
 | Key | Default | Description |
 |---|---|---|
-| `draft_list_size` | `30` | Max players in a wish list submission |
+| `draft_list_size` | `45` | Max players in a wish list submission (updated migration 156) |
 | `knockout_keep_slots` | `5` | Max players a manager can protect per keep submission |
 
 ### `squads` table — draft-related columns
@@ -354,6 +362,7 @@ BULLETS:
 | 8 | Keep mechanic: additive Pass 0 | Separate code path | If no keeps exist, allocation is byte-for-byte identical to before |
 | 9 | Keep window opens when knockout_draft_deadline is set | Separate "open window" admin action | Single control point; admin setting the deadline implies the window is open |
 | 10 | All draft league formats stored as `noduplicate` | Separate `cup` format value | Simpler data model; `cup_phase` tracks the competition stage instead |
+| 11 | Snake draft replaces flat lottery | Flat lottery (rank ignored) | Rank in wish list now gives genuine priority — higher-ranked picks are tried in earlier rounds; only remaining luck is the initial random order assignment |
 
 ---
 
@@ -366,4 +375,4 @@ BULLETS:
 
 ---
 
-Last Updated: **2026-06-06** (migration 143 — knockout keep mechanic; club cap at allocation; claim_draft_player fix; format/mode axis clarification)
+Last Updated: **2026-06-09** (snake draft replaces flat lottery — rank now gives genuine pick priority; decision log row 11 added)
