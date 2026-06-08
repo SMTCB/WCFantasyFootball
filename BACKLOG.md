@@ -1,17 +1,42 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-06-08 (Live UX polish — PRs #431–#432; no migrations)  
+**Last Updated**: 2026-06-08 (Pilot smoke-test bug sweep — PRs #434–#438; no migrations)  
 **E2E Test Suite**: `platform.spec.js` (36 tests × 2 browsers) passing in CI ✅  
 **Full Playbook Run**: `E2E_TEST_PLAYBOOK.md` v2.0 — all flows confirmed  
 **🟢 LAUNCH READY**: No critical (P0/P1) bugs open. All game mechanics functional. WC kick-off 2026-06-11.  
 **Live App**: https://wc-fantasy-football.vercel.app  
-**WC Kick-off**: 2026-06-11 19:00 UTC (Mexico vs South Africa)
+**WC Kick-off**: 2026-06-11 19:00 UTC (Mexico vs South Africa)  
+**Supabase PostgREST max_rows**: 10,000 (raised from default 1,000 — 2026-06-08)
 
 ---
 
 ## 🚀 Open Backlog — Prioritised
 
 _No open P0–P2 items. All game mechanics functional. See completed sessions below._
+
+---
+
+## ✅ Pilot Smoke-Test Bug Sweep (2026-06-08) — PRs #434–#438
+
+### Bug fixes — no migrations
+
+- **PR #434 — Transfer limit blocked between rounds** (`process-transfer` + `LiveScreen` lint)
+  - `enforceMatchdayId` in `process-transfer/index.js` was using `squad.matchday_id` (e.g. `623-r1`) instead of `activeMatchdayId` (`623-r3`) for the per-round limit check. A squad whose last transfer was in r1 carries `matchday_id=623-r1` permanently (it only advances on transfer) — the RPC was checking `round_transfers->>'623-r1'=3` and blocking, even though the manager had 0/3 transfers in the current round. Fix: always prefer `activeMatchdayId` (nearest upcoming deadline); fall back to `squad.matchday_id` only pre-competition when no upcoming deadline exists. Universal bug — would have hit WC 429 too. **`process-transfer` Edge Function redeployed.**
+  - `LiveScreen.jsx:543` lint: `Number(fp.total) ?? 0` → `Number(fp.total ?? 0)` (ESLint: constant nullishness on left side of `??`).
+
+- **PR #435 — E2E SquadScreen CI tests** (no-league state)
+  - Demo user (`00000000-...`) has no league memberships in DB. SquadScreen returned early at "No League Yet" before the My Squad header, Budget label, or CHIPS tab rendered — causing 3 CI failures. Fix: "No League Yet" state now renders the full UI chrome (header + tabs) with the join-league message in the body, matching the existing intent at the empty-squad branch.
+
+- **PR #436 — Market position bars wrong after auto-fill** (stale players cache)
+  - Auto-fill queries the DB fresh and can buy players synced into the tournament after the market page loaded. Those players were absent from the cached `players` state, so `stats.posCounts` skipped them. `fetchSquad()` now backfills any squad player IDs missing from the cache.
+
+- **PR #437 — Market LeagueSelector must update tournamentId on league switch**
+  - `<LeagueSelector onChange={setActiveLeague}>` in the market header only updated `activeLeague`, not `tournamentId`. Switching from TEST_2_H2H_DRAFT (tournament 623) to MUNDIAL DO EDER (tournament 429) left `tournamentId='623'`, causing `fetchMarketParams` to load tournament 623 players. Squad IDs (`fp-xxx-429`) had no match in the 623 players list → GK/DEF position bars showed 0. Fix: `onChange` handler now resolves and sets `tournamentId` alongside `activeLeague`.
+
+- **PR #438 — Market position bars wrong: PostgREST 1000-row server cap**
+  - Root cause of the persistent 0 GK / 0 DEF bars: Supabase PostgREST default `max_rows=1000` silently truncates responses regardless of the client's `.limit(5000)`. WC 2026 has 1,251 active players for tournament 429 — the 251 cheapest (all GKs at €3.0M, some DEFs/MIDs) were cut off. Fix: `fetchMarketParams` now backfills any squad player IDs missing from the (possibly truncated) players list on every page load. **Supabase Dashboard `max_rows` raised to 10,000** (Settings → API) — permanent fix; backfill code kept as safety net.
+
+- **CLAUDE.md** — Added Edge Function deploy step (step 7) to Session Pattern and a prominent warning after "main auto-deploys to Vercel". Failure to redeploy `process-transfer` after PR #434 caused the transfer-limit fix to appear in git but not in production.
 
 ---
 

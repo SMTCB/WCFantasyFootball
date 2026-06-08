@@ -286,9 +286,9 @@ export default function MarketScreen() {
 
     // â"€â"€ 1. Players — filtered by competition when known â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
     try {
-      // Supabase JS default row cap is 1,000. WC has 1,680+ players — without an
-      // explicit limit the cheapest ~680 are silently cut off, so cheap owned
-      // players don't appear and the position tiles show wrong counts.
+      // Supabase PostgREST max_rows is set to 10,000 on this project (Dashboard →
+      // Settings → API). WC 2026 has ~1,251 active players; .limit(5000) is a
+      // conservative ceiling well within that cap.
       let playersQuery = supabase.from('players').select('*')
         .eq('is_active', true)
         .order('price', { ascending: false })
@@ -344,11 +344,9 @@ export default function MarketScreen() {
         if (sData) {
           setMySquad(sData);
           setBudget(Number(sData.budget_remaining ?? cfg.budgetTotal));
-          // Supabase PostgREST server-side max_rows cap (default 1000) silently
-          // truncates the players list even when .limit(5000) is requested. For
-          // WC 2026 there are 1,251 active players; the 251 cheapest (€3.0M GKs,
-          // some DEFs/MIDs) are cut off. Backfill any squad player IDs missing
-          // from the loaded list so position bars and owned badges are always correct.
+          // Safety net: even with max_rows=10,000 (Dashboard → Settings → API),
+          // backfill any squad player IDs not in the loaded list so position bars
+          // and owned badges stay correct if the cap is ever hit or changed.
           const squadIds = sData.players ?? [];
           if (squadIds.length > 0) {
             setPlayers(prev => {
