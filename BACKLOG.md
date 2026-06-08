@@ -1,6 +1,6 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-06-08 (Pilot smoke-test bug sweep — PRs #434–#438; no migrations)  
+**Last Updated**: 2026-06-08 (Draft DnD reorder — PRs #442–#444; drag-to-add from pool added to P3 backlog)  
 **E2E Test Suite**: `platform.spec.js` (36 tests × 2 browsers) passing in CI ✅  
 **Full Playbook Run**: `E2E_TEST_PLAYBOOK.md` v2.0 — all flows confirmed  
 **🟢 LAUNCH READY**: No critical (P0/P1) bugs open. All game mechanics functional. WC kick-off 2026-06-11.  
@@ -12,7 +12,11 @@
 
 ## 🚀 Open Backlog — Prioritised
 
-_No open P0–P2 items. All game mechanics functional. See completed sessions below._
+### P3 — LOW
+
+| # | Item | Effort | Notes |
+|---|------|--------|-------|
+| B-01 | **[FEATURE] Drag-to-add from player pool in Draft screen** | 3–4h | Allow dragging a player directly from the bottom pool list into a position in the ranked wishlist, bypassing the "Add to List" button. Requires lifting `DndContext` to wrap both lists, `useDraggable` on pool rows, cross-container drop with insertion-index logic, and position-cap enforcement. Current flow (Add to List → drag to reorder) works fine — this is a UX polish only. |
 
 ---
 
