@@ -461,11 +461,11 @@ Deno.serve(async (req) => {
         }
       }
 
-      // Get dynamic club cap: relaxes as cup clubs are eliminated (get_club_cap returns
-      // NULL when only 2 clubs remain — the final — meaning no cap applies).
+      // Get dynamic club cap: round-based lookup via club_cap_rules table.
+      // Falls back to cup-based logic for leagues without a club_cap_rules entry.
       let clubMax = CLUB_MAX_DEFAULT;
       const { data: clubCapData } = await supabase
-        .rpc('get_club_cap', { p_league_id: league_id });
+        .rpc('get_club_cap', { p_league_id: league_id, p_matchday_id: activeMatchdayId });
       if (clubCapData !== null && clubCapData !== undefined) {
         clubMax = clubCapData;  // NULL from DB = final, no cap → use 999
       }

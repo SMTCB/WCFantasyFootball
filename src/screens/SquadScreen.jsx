@@ -798,16 +798,14 @@ export default function SquadScreen() {
     const NO_LEAGUE_TABS_MOBILE  = [
       { id: 'pitch',  label: '⚽ PITCH'  },
       { id: 'squad',  label: '📋 LIST'   },
-      { id: 'chips',  label: '⚡ CHIPS'  },
       { id: 'status', label: '⚠️ STATUS' },
     ];
     const NO_LEAGUE_TABS_DESKTOP = [
       { id: 'pitch', label: 'Pitch'  },
       { id: 'list',  label: 'List'   },
-      { id: 'chips', label: 'Chips'  },
       { id: 'status',label: 'Status' },
     ];
-    const showChips = mobileTab === 'chips' || desktopTab === 'chips';
+    const showChips = false; // chips hidden for pilot
     return (
       <>
         <div
@@ -923,16 +921,14 @@ export default function SquadScreen() {
     const EMPTY_TABS_MOBILE  = [
       { id: 'pitch',  label: '⚽ PITCH'  },
       { id: 'squad',  label: '📋 LIST'   },
-      { id: 'chips',  label: '⚡ CHIPS'  },
       { id: 'status', label: '⚠️ STATUS' },
     ];
     const EMPTY_TABS_DESKTOP = [
       { id: 'pitch', label: 'Pitch'  },
       { id: 'list',  label: 'List'   },
-      { id: 'chips', label: 'Chips'  },
       { id: 'status',label: 'Status' },
     ];
-    const showChips = mobileTab === 'chips' || desktopTab === 'chips';
+    const showChips = false; // chips hidden for pilot
     return (
       <>
         {/* ── Sticky header ─────────────────────────────────────────── */}
@@ -1586,7 +1582,6 @@ export default function SquadScreen() {
           {[
             { id: 'pitch',  label: '⚽ PITCH'  },
             { id: 'squad',  label: '📋 LIST'   },
-            { id: 'chips',  label: '⚡ CHIPS'  },
             { id: 'status', label: '⚠️ STATUS' },
           ].map(tab => (
             <button
@@ -1908,21 +1903,8 @@ export default function SquadScreen() {
         })()}
 
         {/* â"€â"€ CHIPS TAB â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€ */}
-        {mobileTab === 'chips' && (
-          <div className="pb-24 pt-2">
-            {/* Guide button */}
-            <div style={{ padding: '6px 16px 10px', display: 'flex', justifyContent: 'flex-end' }}>
-              <button
-                onClick={() => setShowChipWizard(true)}
-                style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 9, letterSpacing: '.16em', color: 'var(--cyan)', background: 'rgba(0,180,216,0.08)', border: '1px solid rgba(0,180,216,0.25)', padding: '5px 10px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5 }}
-              >
-                <span style={{ fontSize: 11 }}>?</span> CHIP GUIDE
-              </button>
-            </div>
-            {CHIPS.map(chip => <ChipCard key={chip.key} chip={chip} />)}
-            <JokerCard />
-          </div>
-        )}
+        {/* CHIPS TAB hidden for pilot */}
+        {false && mobileTab === 'chips' && null}
 
         {/* â"€â"€ STATUS TAB â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€ */}
         {mobileTab === 'status' && (
@@ -1933,7 +1915,7 @@ export default function SquadScreen() {
         )}
 
         {/* â"€â"€ TOOLS TAB (legacy fallback — now unused) â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€ */}
-        {mobileTab === 'tools' && (
+        {false && mobileTab === 'tools' && (
           <div className="pb-6">
 
             {/* Section 1: Active Features Summary */}
@@ -2063,7 +2045,6 @@ export default function SquadScreen() {
           {[
             { id: 'pitch',  label: 'Pitch'  },
             { id: 'list',   label: 'List'   },
-            { id: 'chips',  label: 'Chips'  },
             { id: 'status', label: 'Status' },
           ].map(tab => (
             <button
@@ -2226,21 +2207,8 @@ export default function SquadScreen() {
           )}
 
           {/* â"€â"€ CHIPS TAB â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€ */}
-          {desktopTab === 'chips' && (
-            <div className="flex-1 overflow-y-auto pt-2 max-w-xl" data-tour="squad-chips">
-              {/* Guide button */}
-              <div style={{ padding: '4px 16px 8px', display: 'flex', justifyContent: 'flex-end' }}>
-                <button
-                  onClick={() => setShowChipWizard(true)}
-                  style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 9, letterSpacing: '.16em', color: 'var(--cyan)', background: 'rgba(0,180,216,0.08)', border: '1px solid rgba(0,180,216,0.25)', padding: '5px 10px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5 }}
-                >
-                  <span style={{ fontSize: 11 }}>?</span> CHIP GUIDE
-                </button>
-              </div>
-              {CHIPS.map(chip => <ChipCard key={chip.key} chip={chip} />)}
-              <JokerCard />
-            </div>
-          )}
+          {/* CHIPS TAB hidden for pilot */}
+          {false && desktopTab === 'chips' && null}
 
           {/* â"€â"€ STATUS TAB â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€ */}
           {desktopTab === 'status' && (
@@ -2444,7 +2412,7 @@ export default function SquadScreen() {
       )}
 
       {/* â•â• PLAYER PICKER SHEET â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
-      {showChipWizard && <ChipWizardModal />}
+      {false && showChipWizard && <ChipWizardModal />}
 
       {pickerPos && (
         <PlayerPickerSheet
@@ -2490,7 +2458,7 @@ export default function SquadScreen() {
       )}
 
       {/* â•â• JOKER PICKER MODAL â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
-      {isJokerPickerOpen && (
+      {false && isJokerPickerOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/90 backdrop-blur-sm" onClick={() => setIsJokerPickerOpen(false)} />
           <div className="w-full max-w-lg bg-surface border border-purple/30 rounded-sm shadow-[0_0_50px_rgba(168,85,247,0.2)] overflow-hidden flex flex-col max-h-[80vh] relative z-10">

@@ -20,7 +20,8 @@ import { usePlayerStats } from '../hooks/usePlayerStats';
 import FormStrip from '../components/FormStrip';
 import PlayerStatsPanel from '../components/PlayerStatsPanel';
 
-const COUNTRY_LIMIT = 3;
+// club cap is fetched dynamically per-round; default 3 until loaded
+
 
 const FLAG_MAP = {
   FRA: '🇫🇷', BRA: '🇧🇷', ENG: 'ðŸ´ó §ó ¢ó ¥ó ®ó §ó ¿', ESP: '🇪🇸', BEL: '🇧🇪', POR: '🇵🇹',
@@ -75,6 +76,7 @@ export default function MarketScreen() {
   const [transfersPerRound, setTransfersPerRound] = useState(3);  // free transfers allowed per round
   const [transferPenalty,   setTransferPenalty]   = useState(4);  // pts cost per extra buy (or array)
   const [activeMatchdayId,  setActiveMatchdayId]  = useState(null); // e.g. '623-r3'
+  const [clubCap,           setClubCap]           = useState(3);    // dynamic per-round, from club_cap_rules
   const [confirm,       setConfirm]       = useState(null);
   const marketListRef   = useRef(null);
 
@@ -415,6 +417,14 @@ export default function MarketScreen() {
     fetchMarketParams();
   }, [activeLeague, tournamentId]);
 
+  // Fetch per-round club cap whenever league + matchday are resolved
+  useEffect(() => {
+    if (!activeLeague || !activeMatchdayId) return;
+    supabase
+      .rpc('get_club_cap', { p_league_id: activeLeague, p_matchday_id: activeMatchdayId })
+      .then(({ data }) => { if (data !== null && data !== undefined) setClubCap(data); });
+  }, [activeLeague, activeMatchdayId]);
+
   // Persist filter position to localStorage
   useEffect(() => {
     localStorage.setItem('market_filterPos', filterPos);
@@ -476,7 +486,7 @@ export default function MarketScreen() {
     if ((mySquad?.players?.length ?? 0) >= squadSize) { showToast('Squad is full — sell a player first.', 'warning'); return; }
     if (stats.posCounts[player.position] >= POS_LIMITS[player.position]) { showToast(`Max ${player.position}s reached.`, 'warning'); return; }
     // U26: club cap preflight check
-    if ((stats.countryCounts[player.club] ?? 0) >= COUNTRY_LIMIT) { showToast(`Max ${COUNTRY_LIMIT} players per club — ${player.club} is full.`, 'warning'); return; }
+    if ((stats.countryCounts[player.club] ?? 0) >= clubCap) { showToast(`Max ${clubCap} players per club — ${player.club} is full.`, 'warning'); return; }
     if (budget < player.price) { showToast('Not enough budget.', 'error'); return; }
 
     // Warn about penalty cost but don't block — manager can still proceed
@@ -1063,7 +1073,7 @@ export default function MarketScreen() {
             const ownerName    = takenBy(p.id);
             const limitReached = stats.posCounts[p.position] >= POS_LIMITS[p.position];
             // U26: club cap guard
-            const clubFull     = !isOwned && (stats.countryCounts[p.club] ?? 0) >= COUNTRY_LIMIT;
+            const clubFull     = !isOwned && (stats.countryCounts[p.club] ?? 0) >= clubCap;
             const canAfford    = budget >= p.price;
             const hasLeague    = !!activeLeague;
             const canBuy       = hasLeague && !isOwned && !takenByOther && !limitReached && !clubFull && canAfford && (mySquad?.players?.length ?? 0) < squadSize;
@@ -1239,7 +1249,7 @@ export default function MarketScreen() {
           className="text-[9px] font-semibold uppercase tracking-wider"
           style={{ color: 'var(--mute)', fontFamily: 'Archivo, sans-serif' }}
         >
-          Max {COUNTRY_LIMIT} per club (Joker exempt) · Max {squadSize} players · €{cfg.budgetTotal}M budget
+          Max {clubCap} per club (Joker exempt) · Max {squadSize} players · €{cfg.budgetTotal}M budget
         </span>
       </div>
       {showScoringModal && <ScoringInfoModal onClose={() => setShowScoringModal(false)} />}

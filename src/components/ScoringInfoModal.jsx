@@ -229,9 +229,13 @@ export default function ScoringInfoModal({ onClose }) {
                 background: 'rgba(255,255,255,0.04)', borderRadius: 6, padding: '10px 14px',
                 fontFamily: MONO, fontSize: 10, color: 'var(--paper)', lineHeight: 1.8, letterSpacing: '.04em',
               }}>
-                <div>Max <span style={{ color: 'var(--cyan)', fontFamily: DISPLAY }}>3 players</span> per club during group stage.</div>
-                <div style={{ marginTop: 6, color: 'var(--mute)', fontSize: 9 }}>
-                  The club cap does not increase during this pilot competition. All matchdays use the 3-player limit.
+                <div>Club cap per round:</div>
+                <div style={{ marginTop: 6, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2px 16px', fontSize: 9 }}>
+                  <div style={{ color: 'var(--mute)' }}>Group (MD1–MD3)</div><div style={{ color: 'var(--cyan)', fontFamily: DISPLAY }}>3 players</div>
+                  <div style={{ color: 'var(--mute)' }}>Round of 32 (MD4)</div><div style={{ color: 'var(--cyan)', fontFamily: DISPLAY }}>3 players</div>
+                  <div style={{ color: 'var(--mute)' }}>Round of 16 (MD5)</div><div style={{ color: 'var(--cyan)', fontFamily: DISPLAY }}>4 players</div>
+                  <div style={{ color: 'var(--mute)' }}>QF + SF (MD6–7)</div><div style={{ color: 'var(--cyan)', fontFamily: DISPLAY }}>5 players</div>
+                  <div style={{ color: 'var(--mute)' }}>Final (MD8)</div><div style={{ color: 'var(--cyan)', fontFamily: DISPLAY }}>6 players</div>
                 </div>
               </div>
             </div>
