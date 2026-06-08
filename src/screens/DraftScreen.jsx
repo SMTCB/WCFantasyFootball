@@ -578,6 +578,7 @@ export default function DraftScreen() {
               collisionDetection={closestCenter}
               onDragStart={handleDragStart}
               onDragEnd={handleDragEnd}
+              modifiers={[({ transform }) => ({ ...transform, x: 0 })]}
             >
               <SortableContext
                 items={list.map(p => p.id)}
