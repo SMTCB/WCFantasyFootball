@@ -1,6 +1,6 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-06-08 (MD4 extension + scoring fixes + UX improvements — PR #451)  
+**Last Updated**: 2026-06-08 (Chips hidden + dynamic club cap per round — PR #452)  
 **E2E Test Suite**: `platform.spec.js` (36 tests × 2 browsers) passing in CI ✅  
 **Full Playbook Run**: `E2E_TEST_PLAYBOOK.md` v2.0 — all flows confirmed  
 **🟢 LAUNCH READY**: No critical (P0/P1) bugs open. All game mechanics functional. WC kick-off 2026-06-11.  
@@ -17,6 +17,32 @@
 | # | Item | Effort | Notes |
 |---|------|--------|-------|
 | B-01 | **[FEATURE] Drag-to-add from player pool in Draft screen** | 3–4h | Allow dragging a player directly from the bottom pool list into a position in the ranked wishlist, bypassing the "Add to List" button. Requires lifting `DndContext` to wrap both lists, `useDraggable` on pool rows, cross-container drop with insertion-index logic, and position-cap enforcement. Current flow (Add to List → drag to reorder) works fine — this is a UX polish only. |
+
+---
+
+## ✅ Chips Hidden + Dynamic Club Cap (2026-06-08) — PR #452
+
+### Chips UI — hidden for pilot (Triple Captain + Matchday Joker)
+- All chip activation UI removed from **SquadScreen**: chips tab, tools tab, wizard modal, joker picker — all wrapped with `{false && ...}`
+- Scoring logic untouched; re-enabling post-pilot is a one-liner change
+- No other screen had chip activation buttons (LiveScreen shows informational-only)
+
+### Dynamic club cap per round (migration 158)
+- New `club_cap_rules` table: `(tournament_id, round_suffix, cap, label)` — edit a single row to change any round's cap
+- Seeded for tournaments 623 and 429:
+
+| Round | Matchday suffix | Cap |
+|-------|-----------------|-----|
+| Group Stage | r1–r3 | 3 |
+| Round of 32 | r4 | 3 |
+| Round of 16 | r5 | 4 |
+| QF + SF | r6–r7 | 5 |
+| Final | r8 | 6 |
+
+- `get_club_cap(p_league_id, p_matchday_id DEFAULT NULL)` — updated to look up the table by round suffix first; falls back to cup-based logic when no rule found
+- **MarketScreen**: replaced hardcoded `COUNTRY_LIMIT = 3` with dynamic `clubCap` state, fetched via RPC on each league+matchday load
+- **process-transfer**: now passes `activeMatchdayId` to `get_club_cap` for server-side enforcement
+- **ScoringInfoModal Squad Rules tab**: shows the full cap schedule table
 
 ---
 
