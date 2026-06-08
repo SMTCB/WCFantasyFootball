@@ -330,7 +330,15 @@ Deno.serve(async (req) => {
         .eq('seller_id', squad.id)
         .eq('status', 'open');
 
-      return json({ ok: true, players: xferResult.players, budget_remaining: xferResult.budget_remaining }, 200, corsHeaders);
+      return json({
+        ok:                  true,
+        players:             xferResult.players,
+        budget_remaining:    xferResult.budget_remaining,
+        // Penalty transfer info — frontend uses these to update squad state and warn
+        penalty_buy:         xferResult.penalty_buy         ?? false,
+        free_transfers_used: xferResult.free_transfers_used ?? null,
+        penalty_count:       xferResult.penalty_count       ?? 0,
+      }, 200, corsHeaders);
     }
 
     // ── BUY ──────────────────────────────────────────────────────────────────
@@ -490,7 +498,15 @@ Deno.serve(async (req) => {
         return json({ ok: false, code, error: msg }, status, corsHeaders);
       }
 
-      return json({ ok: true, players: xferResult.players, budget_remaining: xferResult.budget_remaining }, 200, corsHeaders);
+      return json({
+        ok:                  true,
+        players:             xferResult.players,
+        budget_remaining:    xferResult.budget_remaining,
+        // Penalty transfer info — frontend uses these to update squad state and warn
+        penalty_buy:         xferResult.penalty_buy         ?? false,
+        free_transfers_used: xferResult.free_transfers_used ?? null,
+        penalty_count:       xferResult.penalty_count       ?? 0,
+      }, 200, corsHeaders);
     }
 
     return json({ ok: false, error: 'Unknown action' }, 400, corsHeaders);

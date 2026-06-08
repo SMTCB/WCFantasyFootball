@@ -98,7 +98,14 @@ export function useTransfer(leagueId) {
       [player.id]: { userId: user?.id, managerName: 'You' },
     }));
 
-    return { ok: true, players: data.players, budget_remaining: data.budget_remaining };
+    return {
+      ok:                  true,
+      players:             data.players,
+      budget_remaining:    data.budget_remaining,
+      penalty_buy:         data.penalty_buy         ?? false,
+      free_transfers_used: data.free_transfers_used ?? null,
+      penalty_count:       data.penalty_count       ?? 0,
+    };
   }, [leagueId, user]);
 
   const sell = useCallback(async (player) => {

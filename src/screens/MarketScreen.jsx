@@ -66,9 +66,13 @@ export default function MarketScreen() {
   const [selectedTeams, setSelectedTeams] = useState(new Set());
   const [showTeamPicker, setShowTeamPicker] = useState(false);
   const [teamSearch,    setTeamSearch]    = useState('');
-  const [budget,        setBudget]        = useState(0);      // loaded from league config
-  const [saving,        setSaving]        = useState(false);
-  const [isLocked,      setIsLocked]      = useState(false);
+  const [budget,          setBudget]          = useState(0);      // loaded from league config
+  const [saving,          setSaving]          = useState(false);
+  const [isLocked,        setIsLocked]        = useState(false);
+  // Transfer quota
+  const [transfersPerRound, setTransfersPerRound] = useState(3);  // free transfers allowed per round
+  const [transferPenalty,   setTransferPenalty]   = useState(4);  // pts cost per extra buy (or array)
+  const [activeMatchdayId,  setActiveMatchdayId]  = useState(null); // e.g. '623-r3'
   const [confirm,       setConfirm]       = useState(null);
   const marketListRef   = useRef(null);
 
@@ -309,11 +313,11 @@ export default function MarketScreen() {
       console.error('MarketScreen: players fetch failed', err);
     }
 
-    // ── 2. Transfer window lock — use canonical matchday_id from tournament ──
+    // ── 2. Transfer window lock + active matchday_id ─────────────────────────
     try {
       let deadlineQuery = supabase
         .from('matchday_deadlines')
-        .select('deadline_at')
+        .select('deadline_at, matchday_id')
         .gt('deadline_at', new Date().toISOString())
         .order('deadline_at', { ascending: true });
 
@@ -324,8 +328,26 @@ export default function MarketScreen() {
       const { data: deadlineRow } = await deadlineQuery.limit(1).maybeSingle();
       const deadline = deadlineRow?.deadline_at ? new Date(deadlineRow.deadline_at) : null;
       setIsLocked(deadline ? new Date() >= deadline : false);
+      if (deadlineRow?.matchday_id) setActiveMatchdayId(deadlineRow.matchday_id);
     } catch (err) {
       console.error('MarketScreen: deadline fetch failed', err);
+    }
+
+    // ── 2b. Transfer config (transfers_per_round, transfer_penalty) ───────────
+    if (activeLeague) {
+      try {
+        const { data: cfgRows } = await supabase
+          .from('league_config')
+          .select('config_key, config_value')
+          .eq('league_id', activeLeague)
+          .in('config_key', ['transfers_per_round', 'transfer_penalty']);
+        for (const row of cfgRows ?? []) {
+          if (row.config_key === 'transfers_per_round') setTransfersPerRound(Number(row.config_value) || 3);
+          if (row.config_key === 'transfer_penalty')    setTransferPenalty(row.config_value ?? 4);
+        }
+      } catch (err) {
+        console.error('MarketScreen: transfer config fetch failed', err);
+      }
     }
 
     // â"€â"€ 3. Squad & joker â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
@@ -433,6 +455,18 @@ export default function MarketScreen() {
     return { posCounts, countryCounts };
   }, [mySquad, players, todayJokerId]);
 
+  // Compute the point cost of the NEXT buy transfer for display/warning purposes.
+  // Returns 0 if within the free allowance, otherwise the cost from transfer_penalty config.
+  const nextBuyPenaltyCost = useMemo(() => {
+    if (!activeMatchdayId) return 0;
+    const freeUsed = (mySquad?.round_transfers ?? {})[activeMatchdayId] ?? 0;
+    if (freeUsed < transfersPerRound) return 0;
+    // Over the free limit — compute next penalty cost
+    const penaltyUsed = (mySquad?.penalty_transfers ?? {})[activeMatchdayId] ?? 0;
+    const costs = Array.isArray(transferPenalty) ? transferPenalty : [transferPenalty ?? 4];
+    return costs[Math.min(penaltyUsed, costs.length - 1)];
+  }, [mySquad, activeMatchdayId, transfersPerRound, transferPenalty]);
+
   const handleBuy = async (player) => {
     if (saving) return;
     if (isLocked) { showToast('Transfers are locked until after the match.', 'warning'); return; }
@@ -442,20 +476,22 @@ export default function MarketScreen() {
     // U26: club cap preflight check
     if ((stats.countryCounts[player.club] ?? 0) >= COUNTRY_LIMIT) { showToast(`Max ${COUNTRY_LIMIT} players per club — ${player.club} is full.`, 'warning'); return; }
     if (budget < player.price) { showToast('Not enough budget.', 'error'); return; }
+
+    // Warn about penalty cost but don't block — manager can still proceed
+    if (nextBuyPenaltyCost > 0) {
+      showToast(`⚠️ Penalty transfer — costs ${nextBuyPenaltyCost} pt${nextBuyPenaltyCost !== 1 ? 's' : ''} at end of round`, 'warning', 4000);
+    }
+
     try {
       setSaving(true);
       const result = await buy(player);
       if (!result.ok) {
-        // No retry for limit/constraint errors — retrying always re-fails
-        const isRetryable = result.error !== 'TRANSFER_LIMIT_REACHED'
-          && !result.error?.includes('limit')
-          && !result.error?.includes('full');
-        showToast(result.error, 'error', 5000, isRetryable ? () => handleBuy(player) : undefined);
+        showToast(result.error, 'error', 5000);
         return;
       }
       setMySquad(prev => ({ ...prev, players: result.players, budget_remaining: result.budget_remaining }));
       setBudget(result.budget_remaining);
-      fetchSquad();
+      fetchSquad(); // re-fetch to sync round_transfers + penalty_transfers counters
     } finally { setSaving(false); }
   };
 
@@ -662,6 +698,37 @@ export default function MarketScreen() {
                 <span className="text-[10px] lg:text-[12px] font-normal" style={{ color: 'var(--mute)' }}>/{squadSize}</span>
               </div>
             </div>
+
+            {/* Transfer quota */}
+            {activeMatchdayId && (() => {
+              const freeUsed     = (mySquad?.round_transfers  ?? {})[activeMatchdayId] ?? 0;
+              const penaltyUsed  = (mySquad?.penalty_transfers ?? {})[activeMatchdayId] ?? 0;
+              const freeLeft     = Math.max(0, transfersPerRound - freeUsed);
+              const isPenalty    = freeLeft === 0;
+              const displayColor = isPenalty ? 'var(--gold)' : freeLeft <= 1 ? 'var(--danger)' : 'var(--paper)';
+              return (
+                <div className="text-right">
+                  <div className="fz-label" style={{ color: 'var(--mute)', fontSize: 10 }}>Transfers</div>
+                  <div
+                    className="text-[16px] lg:text-[20px] font-black tabular-nums leading-tight"
+                    style={{ fontFamily: 'Archivo Black, sans-serif', color: displayColor }}
+                    title={isPenalty
+                      ? `${penaltyUsed} penalty transfer${penaltyUsed !== 1 ? 's' : ''} used this round`
+                      : `${freeLeft} free transfer${freeLeft !== 1 ? 's' : ''} left`}
+                  >
+                    {isPenalty ? `+${penaltyUsed}` : freeLeft}
+                    <span className="text-[10px] lg:text-[12px] font-normal" style={{ color: 'var(--mute)' }}>
+                      {isPenalty ? ' pts' : ` free`}
+                    </span>
+                  </div>
+                  {isPenalty && (
+                    <div className="text-[9px] font-black mt-0.5" style={{ color: 'var(--gold)', fontFamily: 'Archivo Black, sans-serif' }}>
+                      -{nextBuyPenaltyCost}pt next
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
 
             {/* Budget + empty slots */}
             <div className="text-right" data-tour="market-budget">
