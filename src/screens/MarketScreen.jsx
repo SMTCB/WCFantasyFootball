@@ -184,6 +184,11 @@ export default function MarketScreen() {
   }, []);
 
   // Fetch squad for auto-fill
+  // Keep a ref to the current players array so fetchSquad can access it
+  // without a stale closure (fetchSquad is captured by useAutoFill's useCallback).
+  const playersRef = useRef(players);
+  useEffect(() => { playersRef.current = players; }, [players]);
+
   const fetchSquad = async () => {
     try {
       const userId = user?.id;
@@ -193,10 +198,33 @@ export default function MarketScreen() {
           .select('*')
           .eq('user_id', userId)
           .eq('league_id', activeLeague)
+          .order('created_at', { ascending: false })
+          .limit(1)
           .maybeSingle();
         if (sData) {
           setMySquad(sData);
           setBudget(Number(sData.budget_remaining ?? cfg.budgetTotal));
+
+          // Backfill any squad players missing from the cached market list.
+          // Auto-fill queries the DB fresh, so it can buy players that were
+          // synced into the DB after this page loaded. Without this, those
+          // players are not found in `players` and position bars show 0.
+          const squadIds = sData.players ?? [];
+          if (squadIds.length > 0) {
+            const knownIds = new Set(playersRef.current.map(p => p.id));
+            const missingIds = squadIds.filter(id => !knownIds.has(id));
+            if (missingIds.length > 0) {
+              const { data: missing } = await supabase
+                .from('players').select('*').in('id', missingIds);
+              if (missing?.length) {
+                setPlayers(prev => {
+                  const existingIds = new Set(prev.map(p => p.id));
+                  const toAdd = normalisePlayers(missing).filter(p => !existingIds.has(p.id));
+                  return toAdd.length > 0 ? [...prev, ...toAdd] : prev;
+                });
+              }
+            }
+          }
         }
       }
     } catch (err) {
