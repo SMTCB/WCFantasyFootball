@@ -1,6 +1,6 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-06-08 (Draft UX session — PRs #441–#449; DnD reorder, scoring modal, portal fix, draft list size 45)  
+**Last Updated**: 2026-06-08 (Transfer system fix + penalty transfers — PR #450)  
 **E2E Test Suite**: `platform.spec.js` (36 tests × 2 browsers) passing in CI ✅  
 **Full Playbook Run**: `E2E_TEST_PLAYBOOK.md` v2.0 — all flows confirmed  
 **🟢 LAUNCH READY**: No critical (P0/P1) bugs open. All game mechanics functional. WC kick-off 2026-06-11.  
@@ -17,6 +17,31 @@
 | # | Item | Effort | Notes |
 |---|------|--------|-------|
 | B-01 | **[FEATURE] Drag-to-add from player pool in Draft screen** | 3–4h | Allow dragging a player directly from the bottom pool list into a position in the ranked wishlist, bypassing the "Add to List" button. Requires lifting `DndContext` to wrap both lists, `useDraggable` on pool rows, cross-container drop with insertion-index logic, and position-cap enforcement. Current flow (Add to List → drag to reorder) works fine — this is a UX polish only. |
+
+---
+
+## ✅ Transfer System Fix + Penalty Transfers (2026-06-08) — PR #450
+
+### Bug fixed
+- **Root cause**: `execute_transfer_atomic` counted BOTH buy AND sell against the per-round transfer limit. Only BUYs now count — selling is free (FPL-standard). User was hitting the cap because 2 sells + 1 buy = 3 operations.
+- **Data fix**: reset 623-r3 `round_transfers` counters (which included incorrectly charged sells) so all managers start the current round clean.
+
+### New feature — Penalty Transfers
+- BUYs beyond the free limit (default 3) are now **allowed** instead of blocked.
+- Each over-limit buy increments `squads.penalty_transfers` JSONB column.
+- Point deduction applied at round scoring by `calculate-scores` v23.
+- Config: `league_config.transfer_penalty` — default `4` (FPL standard).
+  - Number: flat cost per extra buy (e.g. `4` → 4 pts each)
+  - Array: escalating cost (e.g. `[1,2,4]` → 1st extra=1pt, 2nd=2pt, 3rd+=4pt)
+- **MarketScreen header**: new "Transfers" chip shows free transfers left (green→amber→red) or penalty count (gold when over limit with next-cost indicator).
+- **Warning toast**: ⚠️ shown before each penalty buy goes through — non-blocking.
+
+### Files changed
+- `supabase/migrations/157_sell_free_penalty_transfers.sql` — DB changes
+- `supabase/functions/calculate-scores/index.js` → v23
+- `supabase/functions/process-transfer/index.js` — passes penalty fields in response
+- `src/screens/MarketScreen.jsx` — transfer quota display + penalty warning
+- `src/hooks/useTransfer.js` — passes through penalty fields
 
 ---
 
