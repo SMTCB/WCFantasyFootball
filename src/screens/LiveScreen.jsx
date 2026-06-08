@@ -813,7 +813,7 @@ export default function LiveScreen() {
                     background: lg.windowStatus === 'open' ? 'rgba(34,197,94,.07)' : 'transparent',
                   }}>
                     {lg.windowStatus === 'open'
-                      ? `OPEN${lg.windowClosesAt ? ' · ' + new Date(lg.windowClosesAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}`
+                      ? `OPEN${lg.windowClosesAt ? ' · ' + new Date(lg.windowClosesAt).toLocaleString([], { weekday: 'short', hour: '2-digit', minute: '2-digit' }) : ''}`
                       : 'CLOSED'}
                   </span>
                 )}
@@ -1097,7 +1097,7 @@ export default function LiveScreen() {
                       color: lg.windowStatus === 'open' ? 'var(--positive)' : 'var(--mute)',
                     }}>
                       {lg.windowStatus === 'open'
-                        ? `⬤ MARKET OPEN${lg.windowClosesAt ? ' · closes ' + new Date(lg.windowClosesAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}`
+                        ? `⬤ MARKET OPEN${lg.windowClosesAt ? ' · closes ' + new Date(lg.windowClosesAt).toLocaleString([], { weekday: 'short', hour: '2-digit', minute: '2-digit' }) : ''}`
                         : '○ MARKET CLOSED'}
                     </span>
                   )}
