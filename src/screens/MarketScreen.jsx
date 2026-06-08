@@ -344,6 +344,29 @@ export default function MarketScreen() {
         if (sData) {
           setMySquad(sData);
           setBudget(Number(sData.budget_remaining ?? cfg.budgetTotal));
+          // Supabase PostgREST server-side max_rows cap (default 1000) silently
+          // truncates the players list even when .limit(5000) is requested. For
+          // WC 2026 there are 1,251 active players; the 251 cheapest (€3.0M GKs,
+          // some DEFs/MIDs) are cut off. Backfill any squad player IDs missing
+          // from the loaded list so position bars and owned badges are always correct.
+          const squadIds = sData.players ?? [];
+          if (squadIds.length > 0) {
+            setPlayers(prev => {
+              const knownIds = new Set(prev.map(p => p.id));
+              const missingIds = squadIds.filter(id => !knownIds.has(id));
+              if (!missingIds.length) return prev;
+              supabase.from('players').select('*').in('id', missingIds).then(({ data: missing }) => {
+                if (missing?.length) {
+                  setPlayers(current => {
+                    const existingIds = new Set(current.map(p => p.id));
+                    const toAdd = normalisePlayers(missing).filter(p => !existingIds.has(p.id));
+                    return toAdd.length ? [...current, ...toAdd] : current;
+                  });
+                }
+              });
+              return prev;
+            });
+          }
         } else {
           setMySquad({ id: null, players: [] });
           setBudget(cfg.budgetTotal);
