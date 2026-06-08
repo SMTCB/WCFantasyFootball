@@ -53,6 +53,9 @@ const CHIPS = [
 
 // â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
 
+// Set to true to re-enable chip UI (Triple Captain + Matchday Joker) post-pilot
+const CHIPS_ENABLED = false;
+
 export default function SquadScreen() {
   const { user } = useAuth();
   const { show: showToast } = useToast();
@@ -1904,7 +1907,7 @@ export default function SquadScreen() {
 
         {/* â"€â"€ CHIPS TAB â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€ */}
         {/* CHIPS TAB hidden for pilot */}
-        {false && mobileTab === 'chips' && null}
+        {CHIPS_ENABLED && mobileTab === 'chips' && null}
 
         {/* â"€â"€ STATUS TAB â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€ */}
         {mobileTab === 'status' && (
@@ -1915,7 +1918,7 @@ export default function SquadScreen() {
         )}
 
         {/* â"€â"€ TOOLS TAB (legacy fallback — now unused) â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€ */}
-        {false && mobileTab === 'tools' && (
+        {CHIPS_ENABLED && mobileTab === 'tools' && (
           <div className="pb-6">
 
             {/* Section 1: Active Features Summary */}
@@ -2208,7 +2211,7 @@ export default function SquadScreen() {
 
           {/* â"€â"€ CHIPS TAB â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€ */}
           {/* CHIPS TAB hidden for pilot */}
-          {false && desktopTab === 'chips' && null}
+          {CHIPS_ENABLED && desktopTab === 'chips' && null}
 
           {/* â"€â"€ STATUS TAB â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€ */}
           {desktopTab === 'status' && (
@@ -2412,7 +2415,7 @@ export default function SquadScreen() {
       )}
 
       {/* â•â• PLAYER PICKER SHEET â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
-      {false && showChipWizard && <ChipWizardModal />}
+      {CHIPS_ENABLED && showChipWizard && <ChipWizardModal />}
 
       {pickerPos && (
         <PlayerPickerSheet
@@ -2458,7 +2461,7 @@ export default function SquadScreen() {
       )}
 
       {/* â•â• JOKER PICKER MODAL â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
-      {false && isJokerPickerOpen && (
+      {CHIPS_ENABLED && isJokerPickerOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/90 backdrop-blur-sm" onClick={() => setIsJokerPickerOpen(false)} />
           <div className="w-full max-w-lg bg-surface border border-purple/30 rounded-sm shadow-[0_0_50px_rgba(168,85,247,0.2)] overflow-hidden flex flex-col max-h-[80vh] relative z-10">
