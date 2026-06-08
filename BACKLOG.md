@@ -1,6 +1,6 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-06-07 (Auction fixes + pilot safeguards — PRs #424–#428, migration 156; next migration 157_)  
+**Last Updated**: 2026-06-08 (Live UX polish — PRs #431–#432; no migrations)  
 **E2E Test Suite**: `platform.spec.js` (36 tests × 2 browsers) passing in CI ✅  
 **Full Playbook Run**: `E2E_TEST_PLAYBOOK.md` v2.0 — all flows confirmed  
 **🟢 LAUNCH READY**: No critical (P0/P1) bugs open. All game mechanics functional. WC kick-off 2026-06-11.  
@@ -12,6 +12,18 @@
 ## 🚀 Open Backlog — Prioritised
 
 _No open P0–P2 items. All game mechanics functional. See completed sessions below._
+
+---
+
+## ✅ Live UX Polish (2026-06-08) — PRs #431–#432
+
+### Scoring display improvements
+
+- **PR #431** — Gazette activity headline no longer names the triggering fixture. Changed from `GW N — TeamA X–Y TeamB — X leads with N pts` (confusing: named whichever fixture happened to run last) to `GW N — Matchday complete — X leads with N pts`. Points are always the full matchday total across all fixtures. `calculate-scores` Edge Function redeployed.
+
+- **PR #432** — Two connected UX improvements for visibility into in-progress matchdays:
+  - **Live tab `DeltaPill`**: The `±0` pill (previously hardcoded, always meaningless) now shows current GW fantasy points fetched from `fantasy_points` for the active matchday. Displays as `+6 GW` while the round is running; `— GW` when no fixtures have scored yet; finalises after the round closes. Requires `squads.id` in the squads fetch + one extra `fantasy_points` query per poll cycle.
+  - **Recap tab active matchday**: `RecapView` now includes the current active matchday in the GW nav if any of its fixtures have started (`status IN (live, finished)`). Shown with a red dot (●). GW PTS column displays partial scores with `~N` prefix and red `LIVE` label mid-matchday. Both indicators clear automatically once the matchday deadline passes and the round closes.
 
 ---
 
