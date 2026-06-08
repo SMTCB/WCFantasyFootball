@@ -1,6 +1,6 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-06-08 (Draft DnD reorder — PRs #442–#444; drag-to-add from pool added to P3 backlog)  
+**Last Updated**: 2026-06-08 (Draft UX session — PRs #441–#449; DnD reorder, scoring modal, portal fix, draft list size 45)  
 **E2E Test Suite**: `platform.spec.js` (36 tests × 2 browsers) passing in CI ✅  
 **Full Playbook Run**: `E2E_TEST_PLAYBOOK.md` v2.0 — all flows confirmed  
 **🟢 LAUNCH READY**: No critical (P0/P1) bugs open. All game mechanics functional. WC kick-off 2026-06-11.  
@@ -17,6 +17,36 @@
 | # | Item | Effort | Notes |
 |---|------|--------|-------|
 | B-01 | **[FEATURE] Drag-to-add from player pool in Draft screen** | 3–4h | Allow dragging a player directly from the bottom pool list into a position in the ranked wishlist, bypassing the "Add to List" button. Requires lifting `DndContext` to wrap both lists, `useDraggable` on pool rows, cross-container drop with insertion-index logic, and position-cap enforcement. Current flow (Add to List → drag to reorder) works fine — this is a UX polish only. |
+
+---
+
+## ✅ Draft UX Session (2026-06-08) — PRs #441–#449
+
+### Changes shipped
+
+- **PR #441 — Migration 156: draft_list_size raised to 45**
+  - `ALTER TABLE leagues ALTER COLUMN draft_list_size SET DEFAULT 45`
+  - All existing draft leagues (with and without H2H) patched to 45
+  - `useLeagueConfig.js` fallback default updated from 40 → 45
+
+- **PRs #442–#445 — Drag-and-drop reorder for Draft wishlist**
+  - Installed `@dnd-kit/core@6.3.1`, `@dnd-kit/sortable@10.0.0`, `@dnd-kit/utilities@3.2.2`
+  - `SortableRow` component + `DndContext`/`SortableContext` wraps the ranked list
+  - Listeners on the entire row div (not a small handle) for reliable mobile grab
+  - `touchAction: none` + `userSelect: none` inline on row div — prevents browser intercepting touch
+  - `modifiers={[({ transform }) => ({ ...transform, x: 0 })]}` locks ghost to vertical axis only
+  - `DragOverlay` ghost card constrained to `width: 320px, maxWidth: 85vw`
+  - ▲▼ buttons kept as fallback — both interaction methods work simultaneously
+  - Revert tag `pre-dnd-reorder` pushed to GitHub origin
+
+- **PRs #446–#448 — Scoring `?` button on Draft screen**
+  - Circular `?` button added inline next to "Your List — X/45"
+  - Opens `ScoringInfoModal` (same component as Live screen)
+  - **Root-cause fix (PR #448):** `ScoringInfoModal` now uses `createPortal(modal, document.body)` — `WebkitOverflowScrolling: touch` on `AppLayout#main-content` creates a stacking context on iOS Safari that traps `position: fixed` children, making the bottom sheet invisible. Portal bypasses all parent stacking contexts. **Rule: all future modals using `position: fixed` should use `createPortal`.**
+
+- **PR #449 — Scoring `?` button on Market screen**
+  - Same circular `?` button added to the left of the X/15 SQUAD indicator in the Market header
+  - Works correctly thanks to the portal fix above
 
 ---
 
