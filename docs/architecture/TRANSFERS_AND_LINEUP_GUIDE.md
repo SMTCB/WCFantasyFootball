@@ -56,16 +56,46 @@ The exact reopen delay is configurable per league (`transfer_reopen_hours` in `l
 
 ## Per-Round Limits
 
-Every manager gets **3 transfers per round** by default.
+Every manager gets **3 free buy transfers per round** by default.
 
 | Config key | Default | Effect |
 |---|---|---|
-| `transfers_per_round` | `3` | Max buys + sells between two consecutive deadlines |
+| `transfers_per_round` | `3` | Free BUY transfers allowed between two consecutive deadlines |
 | `transfer_wildcard_round` | `null` | If set: the specified round has unlimited transfers |
+| `transfer_penalty` | `4` | Point cost per extra buy beyond the free limit (see below) |
 
-Counts are tracked in `squads.round_transfers` (JSON: `{ "423-r2": 3 }`). A new round key starts at 0 — there's no manual reset needed.
+### What counts
 
-**Both buys AND sells count.** 3 transfers = at most 1 full swap (sell + buy = 2 credits) plus 1 extra buy.
+**Only BUYs count against the free transfer limit. Sells are always free.**
+
+This matches standard FPL behaviour — a "transfer" is conceptually a player-in, not player-out. Selling a player to free up a slot does not consume a transfer credit.
+
+Free buy counts are tracked in `squads.round_transfers` (JSON: `{ "423-r2": 3 }`). A new round key starts at 0 — there's no manual reset needed.
+
+### Penalty transfers (buys beyond the free limit)
+
+Once the free allowance is exhausted, additional **buys** are still permitted but incur a **point deduction** at the end of the round (applied by `calculate-scores`). The cost is configured per league via `league_config.transfer_penalty`:
+
+| Config value | Behaviour |
+|---|---|
+| `4` (default) | Flat 4 pts per extra buy — FPL standard |
+| `1` | Flat 1 pt per extra buy |
+| `[1, 2, 4]` | Escalating: 1st extra buy = 1 pt, 2nd = 2 pts, 3rd+ = 4 pts |
+
+Penalty buys are tracked separately in `squads.penalty_transfers` (same JSON format as `round_transfers`). The deduction is applied once on the final scoring pass (`roundComplete = true`), not mid-round.
+
+### Operations that are **exempt** from the transfer limit
+
+The following player movements bypass `execute_transfer_atomic` entirely and **never** count against the free transfer limit or trigger penalty charges:
+
+| Operation | Why exempt |
+|---|---|
+| Selling a player (market sell) | Only BUYS count |
+| Auction win (`confirm_auction_win`) | Uses raw SQL UPDATE, bypasses counter |
+| Auction sell (`sell_now` / cron expiry) | Uses raw SQL UPDATE, bypasses counter |
+| Trade acceptance (`accept_trade_proposal`) | Uses raw SQL UPDATE, bypasses counter |
+| Initial squad build (before 15-player latch) | `initial_build_complete = false` exempts all actions |
+| Commissioner free window | `transfer_windows` row with `window_type = 'unlimited'` bypasses all limits |
 
 ### Commissioner Free Window
 
@@ -211,7 +241,7 @@ Existing holdings of eliminated-club players are kept — they score 0 going for
 | `TRANSFER_LOCKED` | Player-specific | No | Player's team is in a live fixture |
 | `CLUB_ELIMINATED` | Cup leagues only | No | Player's club is eliminated |
 | `WINDOW_CLOSED` | League-specific | Yes | After deadline, before reopen |
-| `TRANSFER_LIMIT_REACHED` | League-specific | Yes (sells count too) | Used >= `transfers_per_round` this round |
+| ~~`TRANSFER_LIMIT_REACHED`~~ (retired) | — | — | **Buys beyond the free limit are no longer blocked.** They succeed as penalty transfers (see [Per-Round Limits](#per-round-limits)). |
 
 ---
 
@@ -250,4 +280,4 @@ The POINTS LOG sub-screen is your **personal scoring tracker**, not a full match
 
 ---
 
-Last Updated: **2026-06-06** (migration 144 — commissioner free window section added; lock scoping corrected; initial build exemption latch documented)
+Last Updated: **2026-06-08** (migration 157 — sells are now free (only BUYs count); penalty transfers beyond free limit; exempt operations table added; `TRANSFER_LIMIT_REACHED` retired)
