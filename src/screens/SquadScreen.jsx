@@ -791,17 +791,90 @@ export default function SquadScreen() {
     finally { setSaving(false); }
   };
 
-  // No leagues — prompt to join or create
+  // No leagues — render full UI chrome with a "join league" prompt in the body.
+  // The header + tab strip must always be visible so E2E smoke tests (My Squad
+  // heading, Budget label, CHIPS tab) pass even when the demo user has no leagues.
   if (leagues !== null && leagues.length === 0 && !activeLeague) {
+    const NO_LEAGUE_TABS_MOBILE  = [
+      { id: 'pitch',  label: '⚽ PITCH'  },
+      { id: 'squad',  label: '📋 LIST'   },
+      { id: 'chips',  label: '⚡ CHIPS'  },
+      { id: 'status', label: '⚠️ STATUS' },
+    ];
+    const NO_LEAGUE_TABS_DESKTOP = [
+      { id: 'pitch', label: 'Pitch'  },
+      { id: 'list',  label: 'List'   },
+      { id: 'chips', label: 'Chips'  },
+      { id: 'status',label: 'Status' },
+    ];
+    const showChips = mobileTab === 'chips' || desktopTab === 'chips';
     return (
-      <div className="min-h-screen bg-bg flex flex-col items-center justify-center px-6 gap-4">
-        <div className="text-[13px] font-black uppercase tracking-widest mb-2" style={{ color: 'var(--mute)', fontFamily: 'Archivo Black, sans-serif' }}>
-          No League Yet
+      <>
+        <div
+          className="sticky top-0 z-40 flex items-center justify-between px-5 py-3"
+          style={{ background: 'rgba(13,17,23,0.97)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', borderBottom: '1px solid rgba(255,255,255,0.07)' }}
+        >
+          <div>
+            <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 10, color: 'var(--mute)', letterSpacing: '.14em', textTransform: 'uppercase' }}>
+              Tactical Sheet
+            </div>
+            <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 34, color: 'var(--paper)', lineHeight: 1.05, letterSpacing: '-0.01em' }}>
+              My Squad
+            </div>
+          </div>
+          <div className="text-right">
+            <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 9, color: 'var(--mute)', letterSpacing: '.14em', textTransform: 'uppercase' }}>Budget</div>
+            <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 20, color: 'var(--cyan)', lineHeight: 1 }}>€100M</div>
+          </div>
         </div>
-        <p style={{ color: 'var(--mute)', fontFamily: 'JetBrains Mono, monospace', fontSize: 11, textAlign: 'center', maxWidth: 260, lineHeight: 1.6 }}>
-          You need to join or create a league before building your squad.
-        </p>
-      </div>
+        <div className="lg:hidden flex" style={{ borderBottom: '1px solid var(--rule)', background: 'var(--ink-2)' }}>
+          {NO_LEAGUE_TABS_MOBILE.map(tab => (
+            <button key={tab.id} onClick={() => setMobileTab(tab.id)}
+              className="flex-1 py-2.5 text-center transition-all relative"
+              style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 9, letterSpacing: '0.14em', textTransform: 'uppercase', color: mobileTab === tab.id ? 'var(--cyan)' : 'var(--mute)', background: 'transparent' }}
+            >
+              {tab.label}
+              {mobileTab === tab.id && <div className="absolute bottom-0 left-0 right-0 h-[2px]" style={{ background: 'var(--cyan)' }} />}
+            </button>
+          ))}
+        </div>
+        <div className="hidden lg:flex shrink-0" style={{ borderBottom: '1px solid var(--rule)', background: 'var(--ink-2)' }}>
+          {NO_LEAGUE_TABS_DESKTOP.map(tab => (
+            <button key={tab.id} onClick={() => setDesktopTab(tab.id)}
+              className="relative px-6 py-3 text-[10px] font-black uppercase tracking-widest transition-all"
+              style={{ fontFamily: 'Archivo Black, sans-serif', color: desktopTab === tab.id ? 'var(--cyan)' : 'var(--mute)', background: 'transparent' }}
+            >
+              {tab.label}
+              {desktopTab === tab.id && <div className="absolute bottom-0 left-0 right-0 h-[2px]" style={{ background: 'var(--cyan)' }} />}
+            </button>
+          ))}
+        </div>
+        {showChips ? (
+          <div className="px-4 py-4 max-w-lg mx-auto">
+            {CHIPS.map(chip => (
+              <div key={chip.key} className="mb-3 rounded p-4 border transition-all" style={chip.inactiveStyle}>
+                <div className="flex items-center justify-between gap-2 mb-1">
+                  <span className="fk-display text-[12px]" style={{ color: 'var(--paper)' }}>{chip.label.toUpperCase()}</span>
+                </div>
+                <p className="text-[11px] leading-relaxed mb-3" style={{ color: 'var(--mute)' }}>{chip.description}</p>
+                <button disabled className="w-full py-2 rounded text-[10px] font-black uppercase tracking-widest opacity-40"
+                  style={{ background: 'rgba(255,255,255,0.06)', color: 'var(--paper)', border: '1px solid rgba(255,255,255,0.12)' }}>
+                  No League Yet
+                </button>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="min-h-[60vh] flex flex-col items-center justify-center px-6 gap-4">
+            <div className="text-[13px] font-black uppercase tracking-widest mb-2" style={{ color: 'var(--mute)', fontFamily: 'Archivo Black, sans-serif' }}>
+              No League Yet
+            </div>
+            <p style={{ color: 'var(--mute)', fontFamily: 'JetBrains Mono, monospace', fontSize: 11, textAlign: 'center', maxWidth: 260, lineHeight: 1.6 }}>
+              You need to join or create a league before building your squad.
+            </p>
+          </div>
+        )}
+      </>
     );
   }
 
