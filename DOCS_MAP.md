@@ -42,6 +42,8 @@ Detailed documentation of core systems and how they work.
 |------|---------|--------------|
 | [H2H_COMPETITION_DESIGN.md](docs/architecture/H2H_COMPETITION_DESIGN.md) | Draft + H2H mode — parallel H2H competition layered on draft leagues | Round-robin schedule, scoring config, multi-day gate, **timing** (resolves with last fixture, roundComplete gate), admin calendar, DB schema |
 | [DRAFT_SYSTEM_DESIGN.md](docs/architecture/DRAFT_SYSTEM_DESIGN.md) | Draft lottery, league modes (Classic/Draft), cup format, relaxation formulas | Allocation engine, no-repeat rules, club cap, two-phase draft |
+| [DRAFT_MECHANICS_FOR_DUMMIES.md](docs/architecture/DRAFT_MECHANICS_FOR_DUMMIES.md) | Plain-English walkthrough of the sealed-bid lottery draft — no jargon | Step-by-step example, fairness explanation, glossary |
+| [POOL_RELAXATION_SYSTEM.md](docs/architecture/POOL_RELAXATION_SYSTEM.md) | Player-repeat and club-cap relaxation formulas in detail | Formula, tiers, config keys, SQL functions, Edge Function, React hook, enforcement |
 | [TRANSFER_WINDOW_SYSTEM.md](docs/architecture/TRANSFER_WINDOW_SYSTEM.md) | Unified transfer window model for all league and competition types | Auto open/close, config table, transfer limits, wildcard round |
 | [STARTING_XI_AND_BENCH.md](docs/architecture/STARTING_XI_AND_BENCH.md) | Starting XI selection, bench, points deduction, lineup change rules | set_lineup rules, lock mechanic, scoring model |
 | [FANTASY_POINTS_SCORING_LAYER.md](docs/architecture/FANTASY_POINTS_SCORING_LAYER.md) | Scoring formula, DB schema, **scoring job timing** (cron schedule, matchday timeline) | EPL point values, position multipliers, cron table, auto-sub/H2H gates |
@@ -182,6 +184,7 @@ Root-level (critical, always referenced):
 
 docs/architecture/                 # System design
 ├── DRAFT_SYSTEM_DESIGN.md
+├── POOL_RELAXATION_SYSTEM.md
 ├── TRANSFER_WINDOW_SYSTEM.md
 ├── STARTING_XI_AND_BENCH.md
 ├── FANTASY_POINTS_SCORING_LAYER.md
@@ -296,4 +299,4 @@ docs/archive/                      # Archived & consolidated docs
 - BACKLOG.md established as single source of truth for task management
 - All documentation now discoverable from DOCS_MAP.md
 
-Last Updated: **2026-06-07** (AUCTION_SYSTEM_DESIGN.md updated — deferred budget check, seller cancel anytime, actionable INSUFFICIENT_BUDGET; CLAUDE.md updated — pilot safeguards section added)
+Last Updated: **2026-06-08** (POOL_RELAXATION_SYSTEM.md added — player-repeat + club-cap formulas, full implementation map; DRAFT_SYSTEM_DESIGN.md updated — draft_list_size default 45)
