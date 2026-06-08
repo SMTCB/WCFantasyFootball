@@ -19,7 +19,7 @@ import { supabase } from '../lib/supabase';
 const DEFAULTS = {
   budgetTotal:       100.0,
   squadSize:         15,
-  draftListSize:     40,
+  draftListSize:     45,
   positionLimits:    { GK: 2, DEF: 5, MID: 5, FWD: 3 },
   draftPositionCaps: { GK: 5, DEF: 13, MID: 14, FWD: 8 },
   minFormation:      { GK: 1, DEF: 3, MID: 2, FWD: 1 },
