@@ -611,7 +611,12 @@ export default function MarketScreen() {
                   flexShrink: 0,
                 }}
               >?</button>
-              <LeagueSelector value={activeLeague} onChange={setActiveLeague} />
+              <LeagueSelector value={activeLeague} onChange={(lid) => {
+                setActiveLeague(lid);
+                const found = leagues?.find(l => l.id === lid);
+                if (found?.tournament_id) setTournamentId(found.tournament_id);
+                else resolveLeagueTournament(lid);
+              }} />
             </div>
           </div>
 
