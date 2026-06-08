@@ -60,18 +60,26 @@ Commissioner can override at any time by updating `league_config`.
 
 ### Counting transfers used
 
-Each buy or sell increments `squads.round_transfers[current_matchday_id]` (a JSONB key per round) atomically inside `execute_transfer_atomic`. A new round key starts at 0 — no manual reset needed.
+**Only BUYs count** against the per-round free transfer limit. Sells are always free.
+
+Free buy counts are tracked in `squads.round_transfers[current_matchday_id]` (a JSONB key per round), incremented atomically inside `execute_transfer_atomic`. A new round key starts at 0 — no manual reset needed.
 
 Enforcement flow (inside `execute_transfer_atomic`):
 ```
+SELL: skip limit check entirely — sells are free, counter never touched.
+
+BUY:
 1. If p_matchday_id is null or not a real '-rN' round → skip limit (pre-competition bypass)
 2. If squads.initial_build_complete is false → skip limit (initial build exemption, see below)
-3. Read transfers_per_round from league_config
+3. Read transfers_per_round from league_config (default 3)
 4. If current round = transfer_wildcard_round → skip limit, allow
 5. Read squads.round_transfers[current_matchday_id]
-6. If count >= transfers_per_round → reject with TRANSFER_LIMIT_REACHED
-7. Otherwise → proceed, increment counter
+6a. If count < transfers_per_round → proceed, increment round_transfers counter
+6b. If count >= transfers_per_round → PENALTY BUY: proceed, increment
+    squads.penalty_transfers[current_matchday_id] instead (no rejection)
 ```
+
+**Penalty transfers** — buys beyond the free limit are allowed but incur a point deduction at end-of-round scoring. Cost is in `league_config.transfer_penalty` (default `4`; supports flat number or escalating array like `[1,2,4]`). See [TRANSFERS_AND_LINEUP_GUIDE.md](TRANSFERS_AND_LINEUP_GUIDE.md) for full details.
 
 ### Initial build exemption
 
@@ -172,7 +180,8 @@ All keys live in `league_config` keyed by `(league_id, config_key)`.
 
 | Key | Type | Default | Description |
 |---|---|---|---|
-| `transfers_per_round` | INT | `3` | Max transfers per manager per round |
+| `transfers_per_round` | INT | `3` | Free BUY transfers per manager per round (sells are free) |
+| `transfer_penalty` | INT or ARRAY | `4` | Point cost per BUY beyond the free limit (flat or escalating) |
 | `transfer_reopen_hours` | INT | `6` | Hours after deadline before window reopens |
 | `transfer_wildcard_round` | INT or null | `null` (cup) / `ceil(n/2)` (league) | Round with unlimited transfers |
 | `lineup_lock_per_fixture` | BOOL | `true` | Players lock individually at their fixture's kickoff |
@@ -224,4 +233,4 @@ In practice all current leagues have a `tournament_id`, so the manual path is in
 
 ---
 
-Last Updated: **2026-06-06** (migration 144 — commissioner free window; lock scoping corrected; unlimited override documented)
+Last Updated: **2026-06-08** (migration 157 — sells are free; penalty transfers replace hard block; enforcement flow updated; transfer_penalty config key added)
