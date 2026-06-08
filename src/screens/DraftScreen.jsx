@@ -71,16 +71,16 @@ function SortableRow({ p, idx, listLength, onMoveUp, onMoveDown, onRemove }) {
   return (
     <div
       ref={setNodeRef}
-      style={style}
-      className="flex items-center gap-2 bg-[#111] rounded-sm px-2 py-2"
+      style={{ ...style, touchAction: 'none', userSelect: 'none' }}
+      {...attributes}
+      {...listeners}
+      className="flex items-center gap-2 bg-[#111] rounded-sm px-2 py-2 cursor-grab active:cursor-grabbing"
     >
-      {/* Drag handle — touch & mouse */}
+      {/* Visual drag affordance — the whole row is the grab target */}
       <span
-        {...attributes}
-        {...listeners}
-        className="text-[#333] hover:text-[#666] active:text-[#999] shrink-0 cursor-grab active:cursor-grabbing select-none touch-none"
-        style={{ fontSize: 14, lineHeight: 1, padding: '0 2px' }}
-        title="Drag to reorder"
+        className="text-[#555] shrink-0 select-none"
+        style={{ fontSize: 13, lineHeight: 1, padding: '0 2px', fontWeight: 900 }}
+        aria-hidden="true"
       >
         ⠿
       </span>
