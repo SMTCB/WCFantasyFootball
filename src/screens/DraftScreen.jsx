@@ -5,6 +5,7 @@ import { normalisePlayers } from '../lib/players';
 import { useAuth } from '../hooks/useAuth';
 import { useRelaxationState } from '../hooks/useRelaxationState';
 import { useLeagueConfig } from '../hooks/useLeagueConfig';
+import ScoringInfoModal from '../components/ScoringInfoModal';
 import {
   DndContext,
   closestCenter,
@@ -134,6 +135,7 @@ export default function DraftScreen() {
   const [saveError,   setSaveError]   = useState(null);
   const [phase,       setPhase]       = useState('group'); // 'group' | 'knockout'
   const dirtyRef = useRef(false); // U23: heartbeat dirty flag
+  const [showScoringModal, setShowScoringModal] = useState(false);
 
   const countdown  = useCountdown(deadline);
   const relaxation = useRelaxationState(leagueId);
@@ -449,6 +451,7 @@ export default function DraftScreen() {
   }
 
   return (
+    <>
     <div className="min-h-screen bg-[#0A0A0A] flex flex-col">
 
       {/* Header */}
@@ -542,9 +545,16 @@ export default function DraftScreen() {
         {/* Your ranked list */}
         <div className="px-4 py-3 border-b border-[#1E1E1E]">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-[10px] font-black uppercase tracking-widest text-[#9E9E9E]">
-              Your List — {list.length}/{DRAFT_LIST_SIZE}
-            </span>
+            <div className="flex items-center gap-1.5">
+              <span className="text-[10px] font-black uppercase tracking-widest text-[#9E9E9E]">
+                Your List — {list.length}/{DRAFT_LIST_SIZE}
+              </span>
+              <button
+                onClick={() => setShowScoringModal(true)}
+                style={{ background: 'none', border: '1px solid var(--rule)', color: 'var(--mute)', fontFamily: 'Archivo Black, sans-serif', fontSize: 9, width: 18, height: 18, borderRadius: '50%', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
+                title="Scoring overview"
+              >?</button>
+            </div>
             <div className="flex items-center gap-2">
               <button
                 onClick={autoComplete}
@@ -753,5 +763,8 @@ export default function DraftScreen() {
         </button>
       </div>
     </div>
+
+    {showScoringModal && <ScoringInfoModal onClose={() => setShowScoringModal(false)} />}
+    </>
   );
 }
