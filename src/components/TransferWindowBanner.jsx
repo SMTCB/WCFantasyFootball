@@ -10,10 +10,13 @@ function useCountdown(target) {
     const tick = () => {
       const diff = new Date(target) - Date.now();
       if (diff <= 0) { setLabel('now'); return; }
-      const h = Math.floor(diff / 3600000);
+      const d = Math.floor(diff / 86400000);
+      const h = Math.floor((diff % 86400000) / 3600000);
       const m = Math.floor((diff % 3600000) / 60000);
       const s = Math.floor((diff % 60000) / 1000);
-      setLabel(h > 0 ? `${h}h ${m}m` : `${m}m ${s}s`);
+      if (d > 0)      setLabel(`${d}d ${h}h ${m}m`);
+      else if (h > 0) setLabel(`${h}h ${m}m`);
+      else            setLabel(`${m}m ${s}s`);
     };
     tick();
     const id = setInterval(tick, 1000);
