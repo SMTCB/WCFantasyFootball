@@ -1,4 +1,4 @@
-// Edge Function: calculate-scores  (v22 — Scoring V2)
+// Edge Function: calculate-scores  (v23 — Penalty Transfers)
 // Calculates fantasy points for all squads for a given fixture.
 // Called by ingest-match-events (Forza live path) or directly (mock/manual path).
 //
@@ -503,7 +503,7 @@ async function rollupSquads(fixture_id, pointsLookup, tournament_id) {
 
   const { data: allSquadRows } = await supabase
     .from('squads')
-    .select('id, user_id, league_id, matchday_id, players, starting_xi, captain_id, created_at, leagues!inner(tournament_id)')
+    .select('id, user_id, league_id, matchday_id, players, starting_xi, captain_id, created_at, penalty_transfers, leagues!inner(tournament_id)')
     .eq('leagues.tournament_id', tournament_id)
     .order('created_at', { ascending: false });
 
@@ -549,6 +549,21 @@ async function rollupSquads(fixture_id, pointsLookup, tournament_id) {
       .in('league_id', leagueIds)
       .eq('matchday_id', roundMatchdayId);
     for (const r of jokerRows ?? []) jokerThisRound[`${r.league_id}:${r.user_id}`] = r.player_id;
+  }
+
+  // Penalty transfers: load transfer_penalty config per league.
+  // Config format: number (flat cost per extra buy) or array (escalating).
+  // e.g. 4 → 4 pts each; [1,2,4] → 1st extra=1pt, 2nd=2pt, 3rd+=4pt.
+  const penaltyConfigByLeague = {};
+  if (leagueIds.length) {
+    const { data: penaltyCfgRows } = await supabase
+      .from('league_config')
+      .select('league_id, config_value')
+      .in('league_id', leagueIds)
+      .eq('config_key', 'transfer_penalty');
+    for (const r of penaltyCfgRows ?? []) {
+      penaltyConfigByLeague[r.league_id] = r.config_value; // raw JSONB value (number or array)
+    }
   }
 
   // L3.6: load existing breakdown data so we can accumulate across fixtures in the round
@@ -673,6 +688,27 @@ async function rollupSquads(fixture_id, pointsLookup, tournament_id) {
 
     // C2: the retired wildcard +10% multiplier is no longer applied.
     total = Math.round(total); // integer points — no decimals in fantasy
+
+    // Penalty transfers: deduct points for buys over the free-transfer limit.
+    // Only applied on the FINAL scoring pass (when roundComplete=true) so the
+    // deduction appears once in the settled total, not re-applied every live update.
+    if (roundComplete) {
+      const penaltyCount = (squad.penalty_transfers ?? {})[roundMatchdayId] ?? 0;
+      if (penaltyCount > 0) {
+        const cfg = penaltyConfigByLeague[squad.league_id];
+        if (cfg != null) {
+          // Normalise: a plain number becomes a one-element array for uniform handling.
+          const costs = Array.isArray(cfg) ? cfg : [cfg];
+          let deduction = 0;
+          for (let i = 0; i < penaltyCount; i++) {
+            // Use last element of costs array for all extra transfers beyond the array length.
+            deduction += costs[Math.min(i, costs.length - 1)];
+          }
+          total -= deduction;
+          // total can go negative (e.g. many penalty transfers in a blank week) — that's intentional.
+        }
+      }
+    }
 
     // L3.6: accumulate per-fixture contributions in points_breakdown
     const existingBD = existingBDMap[squad.id] ?? {};
