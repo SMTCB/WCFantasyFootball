@@ -9,7 +9,8 @@ import { useTransfer } from '../hooks/useTransfer';
 import { useLeagueConfig } from '../hooks/useLeagueConfig';
 import { useAutoFill } from '../hooks/useAutoFill';
 import { useToast } from '../hooks/useToast';
-import LeagueSelector  from '../components/LeagueSelector';
+import LeagueSelector    from '../components/LeagueSelector';
+import ScoringInfoModal  from '../components/ScoringInfoModal';
 import OnboardingTour  from '../components/OnboardingTour';
 import ConfirmModal    from '../components/ConfirmModal';
 import PositionChip    from '../components/PositionChip';
@@ -512,6 +513,7 @@ export default function MarketScreen() {
   }, [players, filterPos, searchQuery, selectedTeams, mySquad]);
   const squadCount  = mySquad?.players?.length || 0;
   const emptySlots  = Math.max(0, squadSize - squadCount);
+  const [showScoringModal, setShowScoringModal] = useState(false);
 
   // League picker — shown when user has multiple leagues and none is selected
   if (leagues && leagues.length > 1 && !activeLeague) {
@@ -642,6 +644,13 @@ export default function MarketScreen() {
           </div>
 
           <div className="flex items-center gap-3 lg:gap-5 flex-wrap lg:flex-nowrap">
+            {/* Scoring info */}
+            <button
+              onClick={() => setShowScoringModal(true)}
+              style={{ background: 'none', border: '1px solid var(--rule)', color: 'var(--mute)', fontFamily: 'Archivo Black, sans-serif', fontSize: 9, width: 18, height: 18, borderRadius: '50%', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
+              title="Scoring overview"
+            >?</button>
+
             {/* Squad count */}
             <div className="text-right">
               <div className="fz-label" style={{ color: 'var(--mute)', fontSize: 10 }}>Squad</div>
@@ -1110,6 +1119,7 @@ export default function MarketScreen() {
           Max {COUNTRY_LIMIT} per club (Joker exempt) · Max {squadSize} players · €{cfg.budgetTotal}M budget
         </span>
       </div>
+      {showScoringModal && <ScoringInfoModal onClose={() => setShowScoringModal(false)} />}
     </div>
   );
 }
