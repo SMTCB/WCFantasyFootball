@@ -1,6 +1,6 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-06-08 (Transfer system fix + penalty transfers — PR #450)  
+**Last Updated**: 2026-06-08 (MD4 extension + scoring fixes + UX improvements — PR #451)  
 **E2E Test Suite**: `platform.spec.js` (36 tests × 2 browsers) passing in CI ✅  
 **Full Playbook Run**: `E2E_TEST_PLAYBOOK.md` v2.0 — all flows confirmed  
 **🟢 LAUNCH READY**: No critical (P0/P1) bugs open. All game mechanics functional. WC kick-off 2026-06-11.  
@@ -17,6 +17,33 @@
 | # | Item | Effort | Notes |
 |---|------|--------|-------|
 | B-01 | **[FEATURE] Drag-to-add from player pool in Draft screen** | 3–4h | Allow dragging a player directly from the bottom pool list into a position in the ranked wishlist, bypassing the "Add to List" button. Requires lifting `DndContext` to wrap both lists, `useDraggable` on pool rows, cross-container drop with insertion-index logic, and position-cap enforcement. Current flow (Add to List → drag to reorder) works fine — this is a UX polish only. |
+
+---
+
+## ✅ MD4 Extension + Scoring Fixes + UX (2026-06-08) — PR #451
+
+### Mini-league extension (tournament 623)
+- Argentina-Iceland + Portugal-Nigeria assigned to **623-r4** (Jun 10); deadline Jun 9 23:00 UTC
+- Argentina players copied from WC 429 (33 players, prices preserved)
+- Synthetic Iceland squad (23 players) + Nigeria squad (23 players), prices £4.0–5.0
+
+### Scoring adjustments (tournament 623 + Edge Function v24)
+- **GK goal**: +6 (was +5)
+- **DEF clean sheet**: now requires **45+ minutes** (was 60 — GK/others keep 60-min gate)
+- **MID shot on target**: +0.25 (was +0.5)
+- **FWD big chance created**: +0.5 (was +1)
+- **ALL positions — minutes**: now scored per-60 (was per-90); 60 min = 1 pt, 90 min = 1.5 pts
+- **ALL positions — penalty missed**: −2 (was −1)
+
+### ScoringInfoModal — double-tab layout
+- Tab 1: Scoring (updated values + minute-threshold notes on clean sheet rows)
+- Tab 2: Squad Rules (formation limits, 3-player club cap, transfer window rules, club cap note)
+
+### DraftScreen BUG fix
+- Club filter replaced from broken horizontal scrollable chip row → searchable **dropdown multi-select** (same pattern as MarketScreen; supports multiple nationalities at once)
+
+### MarketScreen price filter
+- Min/max price inputs above position tabs filter the player list; Reset button appears when active
 
 ---
 
