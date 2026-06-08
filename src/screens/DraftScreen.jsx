@@ -451,7 +451,6 @@ export default function DraftScreen() {
   }
 
   return (
-    <>
     <div className="min-h-screen bg-[#0A0A0A] flex flex-col">
 
       {/* Header */}
@@ -762,9 +761,7 @@ export default function DraftScreen() {
           {saving ? 'Saving...' : list.length === 0 ? 'Add players to your list' : `Submit List (${list.length})`}
         </button>
       </div>
+      {showScoringModal && <ScoringInfoModal onClose={() => setShowScoringModal(false)} />}
     </div>
-
-    {showScoringModal && <ScoringInfoModal onClose={() => setShowScoringModal(false)} />}
-    </>
   );
 }
