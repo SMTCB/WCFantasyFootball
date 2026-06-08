@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { createPortal } from 'react-dom';
 
 const MONO = 'var(--font-mono, monospace)';
 const DISPLAY = 'Archivo Black, sans-serif';
@@ -59,7 +60,7 @@ export default function ScoringInfoModal({ onClose }) {
     return () => document.removeEventListener('keydown', onKey);
   }, [onClose]);
 
-  return (
+  return createPortal(
     <div
       onClick={onClose}
       style={{
@@ -162,6 +163,7 @@ export default function ScoringInfoModal({ onClose }) {
           CHIP MULTIPLIERS: CAPTAIN ×2 · TRIPLE CAPTAIN ×3 · JOKER ×2 · CHIPS DO NOT STACK — MAX APPLIES
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
