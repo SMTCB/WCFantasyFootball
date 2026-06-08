@@ -597,19 +597,23 @@ export default function DraftScreen() {
                   ))}
                 </div>
               </SortableContext>
-              {/* Floating ghost row shown while dragging */}
+              {/* Floating ghost row shown while dragging — fixed width so it
+                  doesn't expand to full viewport inside the portal */}
               <DragOverlay>
                 {activePlayer && (
-                  <div className="flex items-center gap-2 bg-[#1A1A1A] border border-[#333] rounded-sm px-2 py-2 shadow-xl">
-                    <span className="text-[#666] shrink-0 select-none" style={{ fontSize: 14 }}>⠿</span>
+                  <div
+                    className="flex items-center gap-2 bg-[#1A1A1A] border border-[#444] rounded-sm px-2 py-2 shadow-xl"
+                    style={{ width: '320px', maxWidth: '85vw' }}
+                  >
+                    <span className="text-[#666] shrink-0 select-none" style={{ fontSize: 13, fontWeight: 900 }}>⠿</span>
                     <span
                       className="text-[9px] font-black px-1.5 py-0.5 rounded-sm shrink-0"
                       style={{ color: POS_CONFIG[activePlayer.position]?.color, background: POS_CONFIG[activePlayer.position]?.bg }}
                     >
                       {activePlayer.position}
                     </span>
-                    <span className="text-white text-[11px] font-bold flex-1 truncate">{activePlayer.name}</span>
-                    <span className="text-[#444] text-[10px] shrink-0">€{activePlayer.price}M</span>
+                    <span className="text-white text-[11px] font-bold truncate flex-1">{activePlayer.name}</span>
+                    <span className="text-[#666] text-[10px] shrink-0">€{activePlayer.price}M</span>
                   </div>
                 )}
               </DragOverlay>
