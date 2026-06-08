@@ -153,6 +153,12 @@ Claude creates worktrees under `.claude/worktrees/` — ephemeral and gitignored
 
 `main` auto-deploys to Vercel. Everything that lands on main ships live.
 
+> ⚠️ **Edge Functions are NOT auto-deployed.** Vercel only builds the React frontend. Any change to a file under `supabase/functions/` must be manually deployed:
+> ```bash
+> npx supabase functions deploy <function-name> --project-ref sssmvihxtqtohisghjet
+> ```
+> Always run this immediately after merging a PR that touches `supabase/functions/`. The code is in git but production still runs the old binary until you do.
+
 ### Session Pattern
 
 ```bash
@@ -177,6 +183,10 @@ gh pr merge <number> --squash --delete-branch
 git checkout main
 git pull origin main
 git branch -D claude/description-of-work
+
+# 7. Deploy Edge Functions if any supabase/functions/ file changed
+#    (Vercel auto-deploys only the React frontend — functions need a manual push)
+npx supabase functions deploy <function-name> --project-ref sssmvihxtqtohisghjet
 ```
 
 Steps 5 and 6 must happen **every time**. Unmerged PRs = app doesn't update on Vercel. Undeleted branches = repo accumulates junk.
