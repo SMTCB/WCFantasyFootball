@@ -5,6 +5,22 @@ import { normalisePlayers } from '../lib/players';
 import { useAuth } from '../hooks/useAuth';
 import { useRelaxationState } from '../hooks/useRelaxationState';
 import { useLeagueConfig } from '../hooks/useLeagueConfig';
+import {
+  DndContext,
+  closestCenter,
+  PointerSensor,
+  TouchSensor,
+  useSensor,
+  useSensors,
+  DragOverlay,
+} from '@dnd-kit/core';
+import {
+  SortableContext,
+  verticalListSortingStrategy,
+  useSortable,
+  arrayMove,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 
 const POS_CONFIG = {
   GK:  { label: 'GK',  color: 'var(--gold)', bg: 'rgba(240,180,0,0.14)'  },
@@ -32,6 +48,70 @@ function useCountdown(deadline) {
     return () => clearInterval(id);
   }, [deadline]);
   return remaining;
+}
+
+// ─── Sortable list row ────────────────────────────────────────────────────────
+function SortableRow({ p, idx, listLength, onMoveUp, onMoveDown, onRemove }) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: p.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity:   isDragging ? 0.4 : 1,
+    zIndex:    isDragging ? 1 : 'auto',
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className="flex items-center gap-2 bg-[#111] rounded-sm px-2 py-2"
+    >
+      {/* Drag handle — touch & mouse */}
+      <span
+        {...attributes}
+        {...listeners}
+        className="text-[#333] hover:text-[#666] active:text-[#999] shrink-0 cursor-grab active:cursor-grabbing select-none touch-none"
+        style={{ fontSize: 14, lineHeight: 1, padding: '0 2px' }}
+        title="Drag to reorder"
+      >
+        ⠿
+      </span>
+      <span className="text-[#444] text-[10px] font-black w-4 text-right shrink-0">{idx + 1}</span>
+      <span
+        className="text-[9px] font-black px-1.5 py-0.5 rounded-sm shrink-0"
+        style={{ color: POS_CONFIG[p.position]?.color, background: POS_CONFIG[p.position]?.bg }}
+      >
+        {p.position}
+      </span>
+      <span className="text-white text-[11px] font-bold flex-1 truncate">{p.name}</span>
+      <span className="text-[#444] text-[10px] shrink-0">€{p.price}M</span>
+      {/* ▲▼ kept as fallback — useful on desktop and for accessibility */}
+      <div className="flex flex-col gap-0.5 shrink-0">
+        <button
+          onClick={() => onMoveUp(idx)}
+          disabled={idx === 0}
+          className="text-[#444] hover:text-white disabled:opacity-20 text-[10px] leading-none"
+        >▲</button>
+        <button
+          onClick={() => onMoveDown(idx)}
+          disabled={idx === listLength - 1}
+          className="text-[#444] hover:text-white disabled:opacity-20 text-[10px] leading-none"
+        >▼</button>
+      </div>
+      <button
+        onClick={() => onRemove(p.id)}
+        className="text-[#333] hover:text-[#E53935] text-[14px] leading-none shrink-0 transition-colors"
+      >✕</button>
+    </div>
+  );
 }
 
 export default function DraftScreen() {
@@ -183,6 +263,30 @@ export default function DraftScreen() {
       return next;
     });
     dirtyRef.current = true; // U23: mark dirty on reorder
+  };
+
+  // ─── Drag-and-drop sensors ────────────────────────────────────────────────
+  // PointerSensor covers mouse + stylus; TouchSensor activates after a 250ms
+  // press so normal scroll still works on mobile.
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(TouchSensor,   { activationConstraint: { delay: 250, tolerance: 5 } }),
+  );
+  const [activePlayer, setActivePlayer] = useState(null);
+
+  const handleDragStart = ({ active }) => {
+    setActivePlayer(list.find(p => p.id === active.id) ?? null);
+  };
+
+  const handleDragEnd = ({ active, over }) => {
+    setActivePlayer(null);
+    if (!over || active.id === over.id) return;
+    setList(prev => {
+      const oldIdx = prev.findIndex(p => p.id === active.id);
+      const newIdx = prev.findIndex(p => p.id === over.id);
+      return arrayMove(prev, oldIdx, newIdx);
+    });
+    dirtyRef.current = true;
   };
 
   const autoComplete = () => {
@@ -469,38 +573,47 @@ export default function DraftScreen() {
               Add up to {DRAFT_LIST_SIZE} players — #1 is your highest priority
             </div>
           ) : (
-            <div className="space-y-1.5 max-h-[240px] overflow-y-auto pr-1">
-              {list.map((p, idx) => (
-                <div key={p.id} className="flex items-center gap-2 bg-[#111] rounded-sm px-2 py-2">
-                  <span className="text-[#444] text-[10px] font-black w-4 text-right shrink-0">{idx + 1}</span>
-                  <span
-                    className="text-[9px] font-black px-1.5 py-0.5 rounded-sm shrink-0"
-                    style={{ color: POS_CONFIG[p.position]?.color, background: POS_CONFIG[p.position]?.bg }}
-                  >
-                    {p.position}
-                  </span>
-                  <span className="text-white text-[11px] font-bold flex-1 truncate">{p.name}</span>
-                  <span className="text-[#444] text-[10px] shrink-0">€{p.price}M</span>
-                  {/* Reorder controls */}
-                  <div className="flex flex-col gap-0.5 shrink-0">
-                    <button
-                      onClick={() => moveUp(idx)}
-                      disabled={idx === 0}
-                      className="text-[#444] hover:text-white disabled:opacity-20 text-[10px] leading-none"
-                    >▲</button>
-                    <button
-                      onClick={() => moveDown(idx)}
-                      disabled={idx === list.length - 1}
-                      className="text-[#444] hover:text-white disabled:opacity-20 text-[10px] leading-none"
-                    >▼</button>
-                  </div>
-                  <button
-                    onClick={() => removePlayer(p.id)}
-                    className="text-[#333] hover:text-[#E53935] text-[14px] leading-none shrink-0 transition-colors"
-                  >✕</button>
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragStart={handleDragStart}
+              onDragEnd={handleDragEnd}
+            >
+              <SortableContext
+                items={list.map(p => p.id)}
+                strategy={verticalListSortingStrategy}
+              >
+                <div className="space-y-1.5 max-h-[240px] overflow-y-auto pr-1">
+                  {list.map((p, idx) => (
+                    <SortableRow
+                      key={p.id}
+                      p={p}
+                      idx={idx}
+                      listLength={list.length}
+                      onMoveUp={moveUp}
+                      onMoveDown={moveDown}
+                      onRemove={removePlayer}
+                    />
+                  ))}
                 </div>
-              ))}
-            </div>
+              </SortableContext>
+              {/* Floating ghost row shown while dragging */}
+              <DragOverlay>
+                {activePlayer && (
+                  <div className="flex items-center gap-2 bg-[#1A1A1A] border border-[#333] rounded-sm px-2 py-2 shadow-xl">
+                    <span className="text-[#666] shrink-0 select-none" style={{ fontSize: 14 }}>⠿</span>
+                    <span
+                      className="text-[9px] font-black px-1.5 py-0.5 rounded-sm shrink-0"
+                      style={{ color: POS_CONFIG[activePlayer.position]?.color, background: POS_CONFIG[activePlayer.position]?.bg }}
+                    >
+                      {activePlayer.position}
+                    </span>
+                    <span className="text-white text-[11px] font-bold flex-1 truncate">{activePlayer.name}</span>
+                    <span className="text-[#444] text-[10px] shrink-0">€{activePlayer.price}M</span>
+                  </div>
+                )}
+              </DragOverlay>
+            </DndContext>
           )}
         </div>
 
