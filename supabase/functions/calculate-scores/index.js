@@ -1,4 +1,4 @@
-// Edge Function: calculate-scores  (v23 — Penalty Transfers)
+// Edge Function: calculate-scores  (v24 — minutes/60, DEF clean-sheet 45min, scoring rule fixes)
 // Calculates fantasy points for all squads for a given fixture.
 // Called by ingest-match-events (Forza live path) or directly (mock/manual path).
 //
@@ -112,11 +112,13 @@ function scorePlayer(stats, position, POINTS, UNIVERSAL) {
   const mins  = stats.minutes_played ?? stats.minutes ?? 0;
   let pts = 0;
 
-  pts += (mins / 90) * UNIVERSAL.minute_per_90;
+  pts += (mins / 60) * UNIVERSAL.minute_per_90;
   pts += (stats.goals   ?? 0) * rules.goal;
   pts += (stats.assists ?? 0) * rules.assist;
 
-  if (stats.clean_sheet && mins >= 60) {
+  // DEF clean sheet requires 45+ min; GK and others keep the 60-min gate
+  const csMinThreshold = pos === 'DEF' ? 45 : 60;
+  if (stats.clean_sheet && mins >= csMinThreshold && rules.clean_sheet > 0) {
     pts += rules.clean_sheet;
   }
 
@@ -142,10 +144,10 @@ function buildBreakdown(stats, pos, POINTS, UNIVERSAL) {
   const rules = POINTS[p] || POINTS.MID;
   const mins  = stats.minutes_played ?? stats.minutes ?? 0;
   return {
-    minutes:           Math.round((mins / 90) * UNIVERSAL.minute_per_90 * 100) / 100,
+    minutes:           Math.round((mins / 60) * UNIVERSAL.minute_per_90 * 100) / 100,
     goals:             (stats.goals              ?? 0) * rules.goal,
     assists:           (stats.assists            ?? 0) * rules.assist,
-    clean_sheet:       (stats.clean_sheet && mins >= 60) ? rules.clean_sheet : 0,
+    clean_sheet:       (stats.clean_sheet && mins >= (p === 'DEF' ? 45 : 60) && rules.clean_sheet > 0) ? rules.clean_sheet : 0,
     own_goals:         (stats.own_goals          ?? 0) * UNIVERSAL.own_goal,
     yellow_cards:      (stats.yellow_cards       ?? 0) * UNIVERSAL.yellow_card,
     red_cards:         (stats.red_cards          ?? 0) * UNIVERSAL.red_card,
@@ -380,7 +382,7 @@ Deno.serve(async (req) => {
         .filter(c => c !== club)
         .reduce((sum, c) => sum + (goalsPerTeam[c] || 0), 0);
       stats.goals_conceded = goalsAgainst;
-      stats.clean_sheet    = (goalsAgainst === 0) && (stats.minutes_played >= 60); // L1.8: mirror Path A's mins≥60 gate
+      stats.clean_sheet    = (goalsAgainst === 0); // minutes gate applied per-position in scorePlayer (DEF≥45, others≥60)
     }
 
     const statsList = Object.values(statsMap);

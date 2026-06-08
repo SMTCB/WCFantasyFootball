@@ -122,9 +122,11 @@ export default function DraftScreen() {
 
   const [players,     setPlayers]     = useState([]);
   const [list,        setList]        = useState([]);   // ordered player objects
-  const [filterPos,   setFilterPos]   = useState('ALL');
-  const [filterClub,  setFilterClub]  = useState('ALL');
-  const [search,      setSearch]      = useState('');
+  const [filterPos,      setFilterPos]      = useState('ALL');
+  const [filterClubs,    setFilterClubs]    = useState(new Set());
+  const [clubSearch,     setClubSearch]     = useState('');
+  const [showClubPicker, setShowClubPicker] = useState(false);
+  const [search,         setSearch]         = useState('');
   const [loading,     setLoading]     = useState(true);
   const [saving,      setSaving]      = useState(false);
   const [submitted,   setSubmitted]   = useState(false);
@@ -220,12 +222,12 @@ export default function DraftScreen() {
   const filtered = useMemo(() => {
     return players.filter(p => {
       if (listedIds.has(p.id)) return false;
-      if (filterPos  !== 'ALL' && p.position !== filterPos) return false;
-      if (filterClub !== 'ALL' && p.club     !== filterClub) return false;
+      if (filterPos !== 'ALL' && p.position !== filterPos) return false;
+      if (filterClubs.size > 0 && !filterClubs.has(p.club)) return false;
       if (search && !p.name.toLowerCase().includes(search.toLowerCase())) return false;
       return true;
     });
-  }, [players, listedIds, filterPos, filterClub, search]);
+  }, [players, listedIds, filterPos, filterClubs, search]);
 
   const canAdd = () => {
     if (list.length >= DRAFT_LIST_SIZE) return false;
@@ -657,28 +659,79 @@ export default function DraftScreen() {
                 </button>
               ))}
             </div>
-            {/* Club filter — scrollable chip row */}
+            {/* Club filter — dropdown multi-select */}
             {clubs.length > 1 && (
-              <div className="flex gap-1.5 overflow-x-auto pb-0.5 no-scrollbar">
+              <div className="relative">
                 <button
-                  onClick={() => setFilterClub('ALL')}
-                  className={`flex-shrink-0 px-2.5 py-1 rounded-sm text-[9px] font-black uppercase tracking-wider transition-all ${
-                    filterClub === 'ALL' ? 'bg-white text-black' : 'bg-[#111] text-[#555] border border-[#1E1E1E]'
-                  }`}
+                  onClick={() => setShowClubPicker(v => !v)}
+                  className="w-full flex items-center justify-between px-3 py-2 rounded-sm text-[10px] font-black uppercase tracking-wider transition-all"
+                  style={{
+                    background: filterClubs.size > 0 ? 'rgba(0,180,216,0.12)' : 'rgba(255,255,255,0.04)',
+                    border: filterClubs.size > 0 ? '1px solid rgba(0,180,216,0.4)' : '1px solid rgba(255,255,255,0.1)',
+                    color: filterClubs.size > 0 ? 'var(--cyan)' : 'var(--mute)',
+                  }}
                 >
-                  All
+                  {filterClubs.size > 0 ? `${filterClubs.size} Club${filterClubs.size > 1 ? 's' : ''}` : 'Club ▾'}
+                  <span className="text-[8px] opacity-60">{showClubPicker ? '▲' : '▼'}</span>
                 </button>
-                {clubs.map(club => (
-                  <button
-                    key={club}
-                    onClick={() => setFilterClub(club === filterClub ? 'ALL' : club)}
-                    className={`flex-shrink-0 px-2.5 py-1 rounded-sm text-[9px] font-black uppercase tracking-wider transition-all ${
-                      filterClub === club ? 'bg-white text-black' : 'bg-[#111] text-[#555] border border-[#1E1E1E]'
-                    }`}
+
+                {showClubPicker && (
+                  <div
+                    className="absolute left-0 right-0 z-20 rounded-sm mt-1 overflow-hidden"
+                    style={{ background: '#1A1A1A', border: '1px solid rgba(255,255,255,0.1)' }}
                   >
-                    {club}
-                  </button>
-                ))}
+                    <div className="p-2">
+                      <input
+                        type="text"
+                        placeholder="Search clubs..."
+                        value={clubSearch}
+                        onChange={e => setClubSearch(e.target.value)}
+                        className="w-full bg-[#111] border border-[#2A2A2A] rounded-sm px-2 py-1.5 text-white text-[10px] outline-none placeholder:text-[#444]"
+                        onClick={e => e.stopPropagation()}
+                      />
+                    </div>
+                    <div className="max-h-48 overflow-y-auto">
+                      {clubs
+                        .filter(c => !clubSearch || c.toLowerCase().includes(clubSearch.toLowerCase()))
+                        .map(club => {
+                          const checked = filterClubs.has(club);
+                          return (
+                            <label
+                              key={club}
+                              className="flex items-center gap-2.5 px-3 py-2 cursor-pointer hover:bg-white/5"
+                            >
+                              <input
+                                type="checkbox"
+                                checked={checked}
+                                onChange={() => setFilterClubs(prev => {
+                                  const next = new Set(prev);
+                                  checked ? next.delete(club) : next.add(club);
+                                  return next;
+                                })}
+                                className="accent-cyan-400 w-3 h-3"
+                              />
+                              <span className="text-[10px] text-[#ccc] font-medium tracking-wide flex-1">{club}</span>
+                            </label>
+                          );
+                        })}
+                    </div>
+                    <div className="flex gap-2 p-2 border-t border-white/5">
+                      <button
+                        onClick={() => { setFilterClubs(new Set()); setClubSearch(''); }}
+                        className="flex-1 py-1.5 text-[9px] font-black uppercase tracking-wider text-[#555] hover:text-white transition-colors"
+                      >
+                        Clear
+                      </button>
+                      <button
+                        onClick={() => { setShowClubPicker(false); setClubSearch(''); }}
+                        className="flex-1 py-1.5 text-[9px] font-black uppercase tracking-wider rounded-sm"
+                        style={{ background: 'var(--cyan)', color: '#000' }}
+                      >
+                        {filterClubs.size > 0 ? `Show ${filterClubs.size} Club${filterClubs.size > 1 ? 's' : ''}` : 'Apply'}
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </div>

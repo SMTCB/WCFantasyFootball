@@ -66,6 +66,8 @@ export default function MarketScreen() {
   const [selectedTeams, setSelectedTeams] = useState(new Set());
   const [showTeamPicker, setShowTeamPicker] = useState(false);
   const [teamSearch,    setTeamSearch]    = useState('');
+  const [priceMin,      setPriceMin]      = useState(0);
+  const [priceMax,      setPriceMax]      = useState(15);
   const [budget,          setBudget]          = useState(0);      // loaded from league config
   const [saving,          setSaving]          = useState(false);
   const [isLocked,        setIsLocked]        = useState(false);
@@ -536,7 +538,9 @@ export default function MarketScreen() {
       const matchesPos    = filterPos === 'ALL' || p.position === filterPos;
       const matchesSearch = !searchQuery || p.name?.toLowerCase().includes(searchQuery.toLowerCase());
       const matchesTeam   = selectedTeams.size === 0 || selectedTeams.has(p.club);
-      return matchesPos && matchesSearch && matchesTeam;
+      const price         = p.price ?? 0;
+      const matchesPrice  = price >= priceMin && price <= priceMax;
+      return matchesPos && matchesSearch && matchesTeam && matchesPrice;
     });
     // Own players always float to the top; within each group sort by price descending
     const owned = mySquad?.players ?? [];
@@ -546,7 +550,7 @@ export default function MarketScreen() {
       if (aOwned !== bOwned) return bOwned - aOwned;
       return b.price - a.price;
     });
-  }, [players, filterPos, searchQuery, selectedTeams, mySquad]);
+  }, [players, filterPos, searchQuery, selectedTeams, priceMin, priceMax, mySquad]);
   const squadCount  = mySquad?.players?.length || 0;
   const emptySlots  = Math.max(0, squadSize - squadCount);
   const [showScoringModal, setShowScoringModal] = useState(false);
@@ -935,6 +939,58 @@ export default function MarketScreen() {
             </div>
           </div>
         )}
+
+        {/* Price range filter */}
+        <div className="px-5 pb-2 flex items-center gap-3" style={{ borderTop: 'none' }}>
+          <span style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 9, letterSpacing: '.1em', color: 'var(--mute)', textTransform: 'uppercase', flexShrink: 0 }}>
+            Price
+          </span>
+          <div className="flex items-center gap-2 flex-1">
+            <div className="flex items-center gap-1.5 flex-1">
+              <span style={{ fontSize: 10, color: 'var(--mute)', fontFamily: 'Archivo, sans-serif' }}>€</span>
+              <input
+                type="number"
+                min={0} max={priceMax} step={0.5}
+                value={priceMin}
+                onChange={e => setPriceMin(Math.min(Number(e.target.value), priceMax))}
+                style={{
+                  width: 44, padding: '4px 6px', textAlign: 'center',
+                  background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)',
+                  borderRadius: 3, color: 'var(--paper)', fontFamily: 'Archivo, sans-serif', fontSize: 11,
+                  outline: 'none',
+                }}
+              />
+            </div>
+            <span style={{ color: 'var(--mute)', fontSize: 10 }}>–</span>
+            <div className="flex items-center gap-1.5 flex-1">
+              <span style={{ fontSize: 10, color: 'var(--mute)', fontFamily: 'Archivo, sans-serif' }}>€</span>
+              <input
+                type="number"
+                min={priceMin} max={20} step={0.5}
+                value={priceMax}
+                onChange={e => setPriceMax(Math.max(Number(e.target.value), priceMin))}
+                style={{
+                  width: 44, padding: '4px 6px', textAlign: 'center',
+                  background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)',
+                  borderRadius: 3, color: 'var(--paper)', fontFamily: 'Archivo, sans-serif', fontSize: 11,
+                  outline: 'none',
+                }}
+              />
+            </div>
+          </div>
+          {(priceMin > 0 || priceMax < 15) && (
+            <button
+              onClick={() => { setPriceMin(0); setPriceMax(15); }}
+              style={{
+                background: 'none', border: 'none', color: 'var(--mute)', cursor: 'pointer',
+                fontFamily: 'Archivo Black, sans-serif', fontSize: 8, letterSpacing: '.1em',
+                textTransform: 'uppercase', flexShrink: 0,
+              }}
+            >
+              Reset
+            </button>
+          )}
+        </div>
 
         {/* Position filter tabs — dot shows red/yellow/green fill status */}
         <div
