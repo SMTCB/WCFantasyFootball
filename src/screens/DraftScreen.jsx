@@ -498,7 +498,7 @@ export default function DraftScreen() {
             }
           </div>
           <div className="flex gap-3">
-            {Object.keys(DRAFT_POS_CAPS).map(pos => (
+            {['GK', 'DEF', 'MID', 'FWD'].map(pos => (
               <div key={pos} className="text-center">
                 <div className="text-[9px] font-black" style={{ color: POS_CONFIG[pos].color }}>
                   {posCounts[pos] ?? 0}
