@@ -1,6 +1,6 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-06-08 (Chips hidden + dynamic club cap per round — PR #452)  
+**Last Updated**: 2026-06-09 (UI cleanup — ? buttons unified + League tour fix + DraftScreen crash — PRs #463–#466)  
 **E2E Test Suite**: `platform.spec.js` (36 tests × 2 browsers) passing in CI ✅  
 **Full Playbook Run**: `E2E_TEST_PLAYBOOK.md` v2.0 — all flows confirmed  
 **🟢 LAUNCH READY**: No critical (P0/P1) bugs open. All game mechanics functional. WC kick-off 2026-06-11.  
@@ -17,6 +17,39 @@
 | # | Item | Effort | Notes |
 |---|------|--------|-------|
 | B-01 | **[FEATURE] Drag-to-add from player pool in Draft screen** | 3–4h | Allow dragging a player directly from the bottom pool list into a position in the ranked wishlist, bypassing the "Add to List" button. Requires lifting `DndContext` to wrap both lists, `useDraggable` on pool rows, cross-container drop with insertion-index logic, and position-cap enforcement. Current flow (Add to List → drag to reorder) works fine — this is a UX polish only. |
+
+---
+
+## ✅ UI Cleanup — ? Buttons + League Tour + DraftScreen Crash (2026-06-09) — PRs #463–#466
+
+### Bug fixes
+
+- **PR #463 — DraftScreen crash on second player pick**
+  - Symptom: ErrorBoundary showed "Draft crashed unexpectedly" after picking the second player.
+  - Root cause: `supabase.from(...).upsert({...}).catch(() => {})` — Supabase's `PostgrestFilterBuilder` implements `PromiseLike` (has `.then()`) but **not** `.catch()`. Calling `.catch()` threw a `TypeError` synchronously inside a React effect cleanup, propagating as a render error caught by the ErrorBoundary.
+  - Fix: Changed `.catch(() => {})` → `.then(null, () => {})` in the auto-save effect's fire-and-forget upsert.
+  - **Rule**: Never call `.catch()` on a Supabase query builder. Use `.then(null, errorHandler)` instead.
+
+- **PR #464 — Remove ACTIVATE JOKER from player card bottom sheet**
+  - The "Activate Joker" action appeared in the bottom sheet on Squad screen for every player.
+  - Gated with `{CHIPS_ENABLED && ...}` (the named constant = `false`, defined at SquadScreen line 56).
+  - Also confirmed the squad LIST joker section was already removed by PR #458 — no duplicate fix needed.
+
+- **PR #465 — GAME RULES tab added to ScoringInfoModal + ? on Squad PITCH views**
+  - `ScoringInfoModal` now has 3 tabs: SCORING · SQUAD RULES · GAME RULES
+  - GAME RULES tab content: Transfer Window (open/closed/free-window rules), Lineups & Subs (sub out/in, lineup locks, auto-subs), Captain (×2, change window, auto-sub fallback)
+  - `initialTab` prop added to open the modal pre-focused on a specific tab
+  - `?` button added to Squad screen: desktop tab bar (right of PITCH/LIST/STATUS) and mobile PITCH header (next to "Starting XI")
+  - Market and Draft `?` buttons already wired to `ScoringInfoModal` from prior sessions
+
+- **PR #466 — Unify ? buttons to ScoringInfoModal + fix League tour step 2**
+  - **Squad**: old onboarding `?` (next to "My Squad" title) now opens ScoringInfoModal; redundant tab-bar `?` from PR #465 removed — one entry point per view
+  - **Market**: `?` next to "PLAYER MARKET" title changed from onboarding tour → ScoringInfoModal; duplicate `?` further right removed; `replayMarketTour` destructured reference removed (now unused, was causing an ESLint error)
+  - **Live Centre**: `?` moved from POINTS LOG section header → next to "Live Centre" title (desktop), consistent with all other screens
+  - **League onboarding step 2 disappearing — root cause and fix**: Two elements share `data-tour="league-tabs"` in LeagueScreen (one `hidden lg:block` for desktop, one `lg:hidden` for mobile). `querySelector` returned the first (hidden) element with zero-dimension `getBoundingClientRect`, causing the tooltip to fall back to a potentially off-screen `position: fixed; top: 50%; left: 50%` under iOS WebKit's stacking context. Fixed `getRect` and `waitForElement` in `OnboardingTour.jsx` to use `querySelectorAll` and return the first element with non-zero dimensions (i.e., the visible one).
+
+### DB fix
+- **TEST_2_H2H_DRAFT transfers reset**: segismundo's squad had `round_transfers["623-r4"] = 3` (3/3 buys used). Cleared that key — manager now has 3 free transfers for the current matchday (MD4, deadline 2026-06-09 23:00 UTC).
 
 ---
 
