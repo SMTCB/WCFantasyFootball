@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { normalizeIntelligence } from '../lib/intelligence';
@@ -493,17 +494,7 @@ export default function MarketScreen() {
     return { posCounts, countryCounts };
   }, [effectiveSquadIds, players, todayJokerId]);
 
-  // Compute the point cost of the NEXT buy transfer for display/warning purposes.
-  // Returns 0 if within the free allowance, otherwise the cost from transfer_penalty config.
-  const nextBuyPenaltyCost = useMemo(() => {
-    if (!activeMatchdayId) return 0;
-    const freeUsed = (mySquad?.round_transfers ?? {})[activeMatchdayId] ?? 0;
-    if (freeUsed < transfersPerRound) return 0;
-    // Over the free limit — compute next penalty cost
-    const penaltyUsed = (mySquad?.penalty_transfers ?? {})[activeMatchdayId] ?? 0;
-    const costs = Array.isArray(transferPenalty) ? transferPenalty : [transferPenalty ?? 4];
-    return costs[Math.min(penaltyUsed, costs.length - 1)];
-  }, [mySquad, activeMatchdayId, transfersPerRound, transferPenalty]);
+
 
   const handleBuy = (player) => {
     if (confirming) return;
@@ -751,31 +742,40 @@ export default function MarketScreen() {
               </div>
             </div>
 
-            {/* Transfer quota */}
+            {/* Transfer quota — projected values account for pending basket buys */}
             {activeMatchdayId && (() => {
-              const freeUsed     = (mySquad?.round_transfers  ?? {})[activeMatchdayId] ?? 0;
-              const penaltyUsed  = (mySquad?.penalty_transfers ?? {})[activeMatchdayId] ?? 0;
-              const freeLeft     = Math.max(0, transfersPerRound - freeUsed);
-              const isPenalty    = freeLeft === 0;
-              const displayColor = isPenalty ? 'var(--gold)' : freeLeft <= 1 ? 'var(--danger)' : 'var(--paper)';
+              const freeUsed        = (mySquad?.round_transfers  ?? {})[activeMatchdayId] ?? 0;
+              const penaltyUsed     = (mySquad?.penalty_transfers ?? {})[activeMatchdayId] ?? 0;
+              const basketBuys      = basket.filter(b => b.type === 'buy').length;
+              const isEst           = basketBuys > 0;
+              const projFreeUsed    = freeUsed + basketBuys;
+              const projFreeLeft    = Math.max(0, transfersPerRound - projFreeUsed);
+              const projPenaltyUsed = penaltyUsed + Math.max(0, projFreeUsed - transfersPerRound);
+              const isPenalty       = projFreeLeft === 0;
+              const displayColor    = isPenalty ? 'var(--gold)' : projFreeLeft <= 1 ? 'var(--danger)' : 'var(--paper)';
+              // Cost of the *next* buy beyond what's already in the basket
+              const costs           = Array.isArray(transferPenalty) ? transferPenalty : [transferPenalty ?? 4];
+              const nextCost        = costs[Math.min(projPenaltyUsed, costs.length - 1)];
               return (
                 <div className="text-right">
-                  <div className="fz-label" style={{ color: 'var(--mute)', fontSize: 10 }}>Transfers</div>
+                  <div className="fz-label" style={{ color: 'var(--mute)', fontSize: 10 }}>
+                    Transfers{isEst ? ' (est.)' : ''}
+                  </div>
                   <div
                     className="text-[16px] lg:text-[20px] font-black tabular-nums leading-tight"
                     style={{ fontFamily: 'Archivo Black, sans-serif', color: displayColor }}
                     title={isPenalty
-                      ? `${penaltyUsed} penalty transfer${penaltyUsed !== 1 ? 's' : ''} used this round`
-                      : `${freeLeft} free transfer${freeLeft !== 1 ? 's' : ''} left`}
+                      ? `${projPenaltyUsed} penalty buy${projPenaltyUsed !== 1 ? 's' : ''} in basket/used this round`
+                      : `${projFreeLeft} free transfer${projFreeLeft !== 1 ? 's' : ''} left`}
                   >
-                    {isPenalty ? `+${penaltyUsed}` : freeLeft}
+                    {isPenalty ? `+${projPenaltyUsed}` : projFreeLeft}
                     <span className="text-[10px] lg:text-[12px] font-normal" style={{ color: 'var(--mute)' }}>
-                      {isPenalty ? ' pts' : ` free`}
+                      {isPenalty ? ' pts' : ' free'}
                     </span>
                   </div>
                   {isPenalty && (
                     <div className="text-[9px] font-black mt-0.5" style={{ color: 'var(--gold)', fontFamily: 'Archivo Black, sans-serif' }}>
-                      -{nextBuyPenaltyCost}pt next
+                      -{nextCost}pt next
                     </div>
                   )}
                 </div>
@@ -1154,6 +1154,9 @@ export default function MarketScreen() {
                       >
                         {p.name.toUpperCase()}
                       </span>
+                      {isOwned && p.id === mySquad?.captain_id && (
+                        <div style={{ width: 14, height: 14, borderRadius: '50%', background: 'var(--gold)', color: '#0A0A0A', fontFamily: 'Archivo Black, sans-serif', fontSize: 7, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontWeight: 900 }}>C</div>
+                      )}
                       <span style={{ fontSize: 8, color: 'var(--mute)', lineHeight: 1, flexShrink: 0 }}>
                         {isExpanded ? '▲' : '▼'}
                       </span>
@@ -1330,16 +1333,16 @@ export default function MarketScreen() {
       {showScoringModal && <ScoringInfoModal onClose={() => setShowScoringModal(false)} />}
 
       {/* ── Transfer Basket ─────────────────────────────────────────────────── */}
-      {/* Sticky bottom drawer — appears when there are pending items.            */}
-      {/* Sells are processed before buys so freed budget is available.           */}
-      {basket.length > 0 && (() => {
+      {/* Uses createPortal so position:fixed renders relative to the viewport,  */}
+      {/* not the AppLayout scroll container (which creates a stacking context). */}
+      {basket.length > 0 && createPortal((() => {
         const netChange = basket.reduce((n, b) => b.type === 'sell' ? n + b.player.price : n - b.player.price, 0);
-        const netLabel  = netChange >= 0 ? `+€${netChange.toFixed(1)}M` : `-€${Math.abs(netChange).toFixed(1)}M`;
+        const netLabel  = netChange >= 0 ? `+${netChange.toFixed(1)}M` : `-${Math.abs(netChange).toFixed(1)}M`;
         const netColor  = netChange >= 0 ? 'var(--positive)' : 'var(--danger)';
         return (
           <div
             style={{
-              position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 80,
+              position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 9000,
               background: 'rgba(13,17,23,0.98)',
               backdropFilter: 'blur(24px)',
               WebkitBackdropFilter: 'blur(24px)',
@@ -1347,7 +1350,7 @@ export default function MarketScreen() {
               paddingBottom: 'max(16px, env(safe-area-inset-bottom))',
             }}
           >
-            <div style={{ maxWidth: 600, margin: '0 auto', padding: '10px 16px 0' }}>
+            <div style={{ maxWidth: 640, margin: '0 auto', padding: '10px 16px 0' }}>
               {/* Header row */}
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
                 <span style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 10, letterSpacing: '.12em', color: 'var(--gold)', textTransform: 'uppercase' }}>
@@ -1355,7 +1358,7 @@ export default function MarketScreen() {
                 </span>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                   <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 11, color: netColor, fontWeight: 700 }}>
-                    {netLabel}
+                    €{netLabel}
                   </span>
                   <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 11, color: 'var(--mute)' }}>
                     €{effectiveBudget.toFixed(1)}M left
@@ -1446,7 +1449,7 @@ export default function MarketScreen() {
             </div>
           </div>
         );
-      })()}
+      })(), document.body)}
     </div>
   );
 }
