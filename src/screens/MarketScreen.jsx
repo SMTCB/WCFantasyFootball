@@ -115,6 +115,18 @@ export default function MarketScreen() {
     ), budget);
   }, [basket, budget]);
 
+  const penaltyPointsCost = useMemo(() => {
+    if (!activeMatchdayId || basket.length === 0) return 0;
+    const freeUsed    = (mySquad?.round_transfers  ?? {})[activeMatchdayId] ?? 0;
+    const penaltyUsed = (mySquad?.penalty_transfers ?? {})[activeMatchdayId] ?? 0;
+    const basketBuys  = basket.filter(b => b.type === 'buy').length;
+    const projFreeUsed = freeUsed + basketBuys;
+    const basketPenBuys = Math.max(0, projFreeUsed - Math.max(freeUsed, transfersPerRound));
+    const costs = Array.isArray(transferPenalty) ? transferPenalty : [transferPenalty ?? 4];
+    return [...Array(basketPenBuys)].reduce((sum, _, i) =>
+      sum + (costs[Math.min(penaltyUsed + i, costs.length - 1)] ?? costs[costs.length - 1]), 0);
+  }, [basket, mySquad, activeMatchdayId, transfersPerRound, transferPenalty]);
+
   // Draft gate: noduplicate leagues with no processed allocation go to draft screen or recovery
   useEffect(() => {
     if (cfg.loading || !user?.id || !activeLeague) return;
@@ -1245,7 +1257,7 @@ export default function MarketScreen() {
                       }}
                       title="Remove from basket"
                     >
-                      QUEUED
+                      BUYING
                     </button>
                   ) : isOwned ? (
                     <button
@@ -1343,9 +1355,12 @@ export default function MarketScreen() {
       {/* Uses createPortal so position:fixed renders relative to the viewport,  */}
       {/* not the AppLayout scroll container (which creates a stacking context). */}
       {basket.length > 0 && createPortal((() => {
-        const netChange = basket.reduce((n, b) => b.type === 'sell' ? n + b.player.price : n - b.player.price, 0);
-        const netLabel  = netChange >= 0 ? `+${netChange.toFixed(1)}M` : `-${Math.abs(netChange).toFixed(1)}M`;
-        const netColor  = netChange >= 0 ? 'var(--positive)' : 'var(--danger)';
+        const sells        = basket.filter(b => b.type === 'sell');
+        const buys         = basket.filter(b => b.type === 'buy');
+        const numTransfers = Math.max(sells.length, buys.length);
+        const netChange    = basket.reduce((n, b) => b.type === 'sell' ? n + b.player.price : n - b.player.price, 0);
+        const netLabel     = netChange > 0 ? `+€${netChange.toFixed(1)}M` : netChange < 0 ? `-€${Math.abs(netChange).toFixed(1)}M` : null;
+        const netColor     = netChange >= 0 ? 'var(--positive)' : 'var(--danger)';
         return (
           <div
             style={{
@@ -1361,61 +1376,80 @@ export default function MarketScreen() {
               {/* Header row */}
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
                 <span style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 10, letterSpacing: '.12em', color: 'var(--gold)', textTransform: 'uppercase' }}>
-                  Transfer Basket · {basket.length} pending
+                  Transfer Basket · {numTransfers} transfer{numTransfers !== 1 ? 's' : ''}
                 </span>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                  <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 11, color: netColor, fontWeight: 700 }}>
-                    €{netLabel}
-                  </span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  {netLabel && (
+                    <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 11, color: netColor, fontWeight: 700 }}>
+                      {netLabel}
+                    </span>
+                  )}
                   <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 11, color: 'var(--mute)' }}>
                     €{effectiveBudget.toFixed(1)}M left
                   </span>
+                  {penaltyPointsCost > 0 && (
+                    <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 11, color: 'var(--danger)', fontWeight: 700 }}>
+                      −{penaltyPointsCost}pts
+                    </span>
+                  )}
                 </div>
               </div>
 
-              {/* Pending items list */}
-              <div style={{ marginBottom: 10, maxHeight: 120, overflowY: 'auto' }}>
-                {basket.map((item, i) => (
-                  <div
-                    key={i}
-                    style={{
-                      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                      padding: '5px 0',
-                      borderBottom: i < basket.length - 1 ? '1px solid rgba(255,255,255,0.05)' : 'none',
-                    }}
-                  >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <span
-                        style={{
-                          fontFamily: 'Archivo Black, sans-serif', fontSize: 8, letterSpacing: '.12em',
-                          color: item.type === 'sell' ? 'var(--danger)' : 'var(--cyan)',
-                          border: `1px solid ${item.type === 'sell' ? 'var(--danger)' : 'var(--cyan)'}`,
-                          padding: '2px 5px',
-                        }}
-                      >
-                        {item.type.toUpperCase()}
-                      </span>
-                      <span style={{ fontFamily: 'Archivo, sans-serif', fontSize: 13, color: 'var(--paper)' }}>
-                        {item.player.name}
-                      </span>
-                      <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 10, color: 'var(--mute)' }}>
-                        €{item.player.price}M
-                      </span>
-                    </div>
-                    <button
-                      onClick={() => setBasket(prev => prev.filter((_, j) => j !== i))}
-                      disabled={confirming}
+              {/* Paired transfer rows: sell ↔ buy on the same line */}
+              <div style={{ marginBottom: 10, maxHeight: 140, overflowY: 'auto' }}>
+                {[...Array(numTransfers)].map((_, i) => {
+                  const sell = sells[i] ?? null;
+                  const buy  = buys[i]  ?? null;
+                  return (
+                    <div
+                      key={i}
                       style={{
-                        background: 'none', border: 'none', cursor: 'pointer',
-                        color: 'var(--mute)', fontSize: 14, padding: '0 4px', lineHeight: 1,
-                        opacity: confirming ? 0.3 : 1,
+                        display: 'flex', alignItems: 'center', gap: 6,
+                        padding: '5px 0',
+                        borderBottom: i < numTransfers - 1 ? '1px solid rgba(255,255,255,0.05)' : 'none',
                       }}
-                      title="Remove from basket"
                     >
-                      ×
-                    </button>
-                  </div>
-                ))}
+                      {/* OUT side */}
+                      <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 4, minWidth: 0 }}>
+                        {sell ? (
+                          <>
+                            <span style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 8, letterSpacing: '.1em', color: 'var(--danger)', border: '1px solid var(--danger)', padding: '1px 4px', flexShrink: 0 }}>OUT</span>
+                            <span style={{ fontSize: 12, color: 'var(--paper)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{sell.player.name}</span>
+                            <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 9, color: 'var(--mute)', flexShrink: 0 }}>€{sell.player.price}M</span>
+                            <button
+                              onClick={() => setBasket(prev => prev.filter(b => b.player.id !== sell.player.id))}
+                              disabled={confirming}
+                              style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--mute)', fontSize: 13, padding: '0 2px', lineHeight: 1, flexShrink: 0, opacity: confirming ? 0.3 : 1 }}
+                              title="Remove from basket"
+                            >×</button>
+                          </>
+                        ) : (
+                          <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.15)' }}>—</span>
+                        )}
+                      </div>
+                      {/* Divider */}
+                      <span style={{ color: 'rgba(255,255,255,0.2)', fontSize: 12, flexShrink: 0 }}>⇄</span>
+                      {/* IN side */}
+                      <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 4, minWidth: 0 }}>
+                        {buy ? (
+                          <>
+                            <span style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 8, letterSpacing: '.1em', color: 'var(--cyan)', border: '1px solid var(--cyan)', padding: '1px 4px', flexShrink: 0 }}>IN</span>
+                            <span style={{ fontSize: 12, color: 'var(--paper)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{buy.player.name}</span>
+                            <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 9, color: 'var(--mute)', flexShrink: 0 }}>€{buy.player.price}M</span>
+                            <button
+                              onClick={() => setBasket(prev => prev.filter(b => b.player.id !== buy.player.id))}
+                              disabled={confirming}
+                              style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--mute)', fontSize: 13, padding: '0 2px', lineHeight: 1, flexShrink: 0, opacity: confirming ? 0.3 : 1 }}
+                              title="Remove from basket"
+                            >×</button>
+                          </>
+                        ) : (
+                          <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.15)' }}>—</span>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
 
               {/* Action buttons */}
@@ -1450,7 +1484,7 @@ export default function MarketScreen() {
                     fontWeight: 900,
                   }}
                 >
-                  {confirming ? 'Processing…' : `Confirm ${basket.length} Transfer${basket.length !== 1 ? 's' : ''}`}
+                  {confirming ? 'Processing…' : `Confirm ${numTransfers} Transfer${numTransfers !== 1 ? 's' : ''}`}
                 </button>
               </div>
             </div>
