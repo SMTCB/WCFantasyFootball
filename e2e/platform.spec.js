@@ -197,16 +197,13 @@ test.describe('SquadScreen', () => {
     await expect(page.getByText(/budget|\$\d+M/i).first()).toBeVisible();
   });
 
-  test('chips row is visible', async ({ page }) => {
+  test('chips tab is hidden (pilot mode)', async ({ page }) => {
     await page.setViewportSize({ width: 375, height: 812 });
     await page.goto('/squad');
     await waitForContent(page);
-    // This test re-navigates, so re-dismiss the picker if it appears again
     await selectFirstLeagueIfPicker(page);
-    // Chips are in the CHIPS tab
-    await page.getByRole('button', { name: /chips/i }).click();
-    await page.waitForTimeout(300);
-    await expect(page.getByText(/wildcard|triple/i).first()).toBeVisible();
+    // Chips are disabled for pilot — CHIPS tab must not exist
+    await expect(page.getByRole('button', { name: /^chips$/i })).toHaveCount(0);
   });
 
   test('mobile — no horizontal overflow', async ({ page }) => {
