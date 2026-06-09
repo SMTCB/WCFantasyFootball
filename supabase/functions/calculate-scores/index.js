@@ -694,6 +694,8 @@ async function rollupSquads(fixture_id, pointsLookup, tournament_id) {
     // Penalty transfers: deduct points for buys over the free-transfer limit.
     // Only applied on the FINAL scoring pass (when roundComplete=true) so the
     // deduction appears once in the settled total, not re-applied every live update.
+    // penaltyDeduction is kept outside the block so it can be stored in points_breakdown.
+    let penaltyDeduction = 0;
     if (roundComplete) {
       const penaltyCount = (squad.penalty_transfers ?? {})[roundMatchdayId] ?? 0;
       if (penaltyCount > 0) {
@@ -701,33 +703,36 @@ async function rollupSquads(fixture_id, pointsLookup, tournament_id) {
         if (cfg != null) {
           // Normalise: a plain number becomes a one-element array for uniform handling.
           const costs = Array.isArray(cfg) ? cfg : [cfg];
-          let deduction = 0;
           for (let i = 0; i < penaltyCount; i++) {
             // Use last element of costs array for all extra transfers beyond the array length.
-            deduction += costs[Math.min(i, costs.length - 1)];
+            penaltyDeduction += costs[Math.min(i, costs.length - 1)];
           }
-          total -= deduction;
+          total -= penaltyDeduction;
           // total can go negative (e.g. many penalty transfers in a blank week) — that's intentional.
         }
       }
     }
 
-    // L3.6: accumulate per-fixture contributions in points_breakdown
+    // L3.6: accumulate per-fixture contributions in points_breakdown.
+    // transfer_penalty_deduction is stored when > 0 so the UI can show
+    // "X pts from play − Y pts transfer penalty = Z pts total" without re-computing.
     const existingBD = existingBDMap[squad.id] ?? {};
     const thisFixturePts = Math.round(
       pitchPlayers.reduce((sum, pid) => sum + (pointsLookup[pid] ?? 0), 0)
     );
+    const breakdown = {
+      fixtures: {
+        ...(existingBD.fixtures ?? {}),
+        [fixture_id]: thisFixturePts,
+      },
+      player_count: pitchPlayers.length,
+    };
+    if (penaltyDeduction > 0) breakdown.transfer_penalty_deduction = penaltyDeduction;
     fantasyPointsUpserts.push({
       squad_id:         squad.id,
       matchday_id:      roundMatchdayId,
       total,
-      points_breakdown: {
-        fixtures: {
-          ...(existingBD.fixtures ?? {}),
-          [fixture_id]: thisFixturePts,
-        },
-        player_count: pitchPlayers.length,
-      },
+      points_breakdown: breakdown,
     });
   }
 

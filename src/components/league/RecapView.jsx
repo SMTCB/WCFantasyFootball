@@ -59,7 +59,7 @@ function FixtureRow({ f }) {
   );
 }
 
-function PlayerBreakdown({ breakdown }) {
+function PlayerBreakdown({ breakdown, penaltyDeduction = 0 }) {
   if (!breakdown || breakdown === 'loading') {
     return (
       <div style={{ padding: '10px 24px', fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.18em', borderTop: '1px solid var(--rule)' }}>
@@ -106,6 +106,21 @@ function PlayerBreakdown({ breakdown }) {
           </div>
         );
       })}
+      {penaltyDeduction > 0 && (
+        <div style={{
+          display: 'grid', gridTemplateColumns: '32px 1fr 50px 50px', gap: 8,
+          padding: '7px 24px', borderTop: '1px solid rgba(240,58,58,0.25)',
+          background: 'rgba(240,58,58,0.06)',
+        }}>
+          <span style={{ fontFamily: MONO, fontSize: 9, color: 'var(--danger)', letterSpacing: '.1em' }}>—</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+            <span style={{ fontFamily: DISPLAY, fontSize: 11, color: 'var(--danger)' }}>Transfer Penalty</span>
+            <span style={{ fontFamily: MONO, fontSize: 8, color: 'rgba(240,58,58,0.6)', letterSpacing: '.08em' }}>extra buys</span>
+          </div>
+          <span style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', textAlign: 'right' }}>—</span>
+          <span style={{ fontFamily: DISPLAY, fontSize: 11, textAlign: 'right', color: 'var(--danger)' }}>−{penaltyDeduction}</span>
+        </div>
+      )}
     </div>
   );
 }
@@ -214,7 +229,7 @@ export default function RecapView({ leagueId, tournamentId, members, currentUser
 
         // Load fantasy points + fixtures in parallel
         const [{ data: fpRows, error: fpErr }, { data: fixRows }] = await Promise.all([
-          supabase.from('fantasy_points').select('squad_id, total')
+          supabase.from('fantasy_points').select('squad_id, total, points_breakdown')
             .in('squad_id', squadIds).eq('matchday_id', selectedMatchday),
           supabase.from('fixtures')
             .select('id, home_team, away_team, home_score, away_score, status, kickoff_at')
@@ -223,7 +238,13 @@ export default function RecapView({ leagueId, tournamentId, members, currentUser
         if (cancelled) return;
         if (fpErr) console.error('[RecapView] fantasy_points:', fpErr);
 
-        const fpMap = Object.fromEntries((fpRows ?? []).map(r => [r.squad_id, Number(r.total)]));
+        const fpMap      = Object.fromEntries((fpRows ?? []).map(r => [r.squad_id, Number(r.total)]));
+        // transfer_penalty_deduction is stored in points_breakdown when > 0 (set at round completion)
+        const penaltyMap = Object.fromEntries(
+          (fpRows ?? [])
+            .filter(r => (r.points_breakdown?.transfer_penalty_deduction ?? 0) > 0)
+            .map(r => [r.squad_id, r.points_breakdown.transfer_penalty_deduction])
+        );
         const userIdBySquad = Object.fromEntries(Object.entries(latestByUser).map(([uid, sid]) => [sid, uid]));
 
         const list = squadIds.map(sid => {
@@ -233,6 +254,7 @@ export default function RecapView({ leagueId, tournamentId, members, currentUser
             user_id:  uid,
             squad_id: sid,
             pts:      (rawPts !== undefined && !Number.isNaN(rawPts)) ? rawPts : null,
+            penalty:  penaltyMap[sid] ?? 0,
           };
         }).sort((a, b) => (b.pts ?? -Infinity) - (a.pts ?? -Infinity));
 
@@ -364,9 +386,11 @@ export default function RecapView({ leagueId, tournamentId, members, currentUser
               <span style={{ fontFamily: DISPLAY, fontSize: 14, color: isTop ? 'var(--gold)' : 'var(--paper)' }}>
                 {s.pts !== null ? (isLiveRound ? '~' : '') + Math.round(s.pts) : '—'}
               </span>
-              {isLiveRound && s.pts !== null && (
+              {s.penalty > 0 ? (
+                <div style={{ fontFamily: MONO, fontSize: 7, color: 'var(--danger)', letterSpacing: '.12em', marginTop: 1 }}>−{s.penalty} PENALTY</div>
+              ) : isLiveRound && s.pts !== null ? (
                 <div style={{ fontFamily: MONO, fontSize: 7, color: 'var(--danger)', letterSpacing: '.14em', marginTop: 1 }}>LIVE</div>
-              )}
+              ) : null}
             </div>
             <div style={{ textAlign: 'right', fontFamily: MONO, fontSize: 11, color: 'var(--mute)' }}>
               {totalPts != null ? Math.round(totalPts) : '—'}
@@ -392,13 +416,13 @@ export default function RecapView({ leagueId, tournamentId, members, currentUser
               <div style={{ fontFamily: DISPLAY, fontSize: 16, color: isTop ? 'var(--gold)' : 'var(--paper)' }}>
                 {s.pts !== null ? (isLiveRound ? '~' : '') + Math.round(s.pts) : '—'}
               </div>
-              <div style={{ fontFamily: MONO, fontSize: 8, color: isLiveRound && s.pts !== null ? 'var(--danger)' : 'var(--mute)', letterSpacing: '.12em' }}>
-                {isLiveRound && s.pts !== null ? 'LIVE' : 'GW'}
+              <div style={{ fontFamily: MONO, fontSize: 8, letterSpacing: '.12em', color: s.penalty > 0 ? 'var(--danger)' : isLiveRound && s.pts !== null ? 'var(--danger)' : 'var(--mute)' }}>
+                {s.penalty > 0 ? `−${s.penalty} XFER` : isLiveRound && s.pts !== null ? 'LIVE' : 'GW'}
               </div>
             </div>
           </div>
         )}
-        {isOpen && <PlayerBreakdown breakdown={breakdown[s.user_id]} />}
+        {isOpen && <PlayerBreakdown breakdown={breakdown[s.user_id]} penaltyDeduction={s.penalty ?? 0} />}
         {isOpen && <div style={{ height: 1, background: 'var(--rule)' }} />}
       </div>
     );
