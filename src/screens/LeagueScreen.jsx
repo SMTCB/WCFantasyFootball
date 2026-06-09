@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useLayoutEffect, useCallback, useRef } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../hooks/useAuth';
@@ -151,7 +151,10 @@ export default function LeagueScreen() {
   const [theirSquadPlayers,setTheirSquadPlayers] = useState([]);
   const [managerRoster,    setManagerRoster]    = useState([]);
 
-  const squadByUserRef = useRef({});
+  const squadByUserRef    = useRef({});
+  const activeLeagueIdRef = useRef(null); // always holds the latest activeLeague.league_id
+  // Sync ref every render so onLeagueUpdated callbacks never use a stale id.
+  useLayoutEffect(() => { activeLeagueIdRef.current = activeLeague?.league_id ?? null; });
   
   const [members, setMembers] = useState([]);
   const [membersLoading, setMembersLoading] = useState(false);
@@ -173,7 +176,9 @@ export default function LeagueScreen() {
     activeLeague?.leagues?.tournament_id,
     // Bug #1: after setting a draft deadline the panel must refresh so the
     // season stepper advances from stage 1 → stage 2.
-    () => activeLeague?.league_id && loadLeagueById(activeLeague.league_id),
+    // Use the ref so this callback always has the freshest league id regardless
+    // of when the closure was created.
+    () => { const lid = activeLeagueIdRef.current; if (lid) loadLeagueById(lid); },
   );
   const { fetchOpenBets } = commissioner;
 
@@ -390,7 +395,7 @@ export default function LeagueScreen() {
         .from('league_members')
         .select(`
           league_id, rank, total_points, role,
-          leagues ( id, name, format, tournament_id, created_by, h2h_enabled )
+          leagues ( id, name, format, tournament_id, created_by, h2h_enabled, draft_deadline, cup_phase, league_mode )
         `)
         .eq('user_id', userId);
 
