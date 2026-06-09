@@ -1536,8 +1536,8 @@ export default function SquadScreen() {
             </div>
             <LeagueSelector value={activeLeague} onChange={setActiveLeague} />
             <button
-              onClick={replaySquadTour}
-              title="Replay squad tour"
+              onClick={() => setShowScoringModal(true)}
+              title="Scoring & game rules"
               style={{
                 width: 22, height: 22, borderRadius: '50%',
                 border: '1px solid rgba(255,255,255,0.15)',
@@ -2076,17 +2076,6 @@ export default function SquadScreen() {
               )}
             </button>
           ))}
-          <button
-            onClick={() => setShowScoringModal(true)}
-            title="Scoring & game rules"
-            style={{
-              marginLeft: 'auto', marginRight: 12,
-              background: 'none', border: '1px solid var(--rule)', color: 'var(--mute)',
-              fontFamily: 'Archivo Black, sans-serif', fontSize: 9,
-              width: 20, height: 20, borderRadius: '50%',
-              cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-            }}
-          >?</button>
         </div>
 
         {/* Incomplete squad banner — desktop */}

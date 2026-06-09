@@ -851,6 +851,7 @@ export default function LiveScreen() {
             <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginTop: 4 }}>
               <div className="display" style={{ fontSize: 34 }}>Live Centre</div>
               <LivePill size={11} />
+              <button onClick={() => setShowScoringModal(true)} title="Scoring & game rules" style={{ background: 'none', border: '1px solid var(--rule)', color: 'var(--mute)', fontFamily: 'Archivo Black, sans-serif', fontSize: 9, width: 20, height: 20, borderRadius: '50%', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>?</button>
             </div>
           </div>
           {activeLeague && (
@@ -1002,7 +1003,6 @@ export default function LiveScreen() {
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                   <span style={{ width: 3, height: 14, background: 'var(--gold)', flexShrink: 0 }} />
                   <span className="mono" style={{ fontSize: 11, color: 'var(--paper)', letterSpacing: '.22em' }}>POINTS LOG</span>
-                  <button onClick={() => setShowScoringModal(true)} style={{ background: 'none', border: '1px solid var(--rule)', color: 'var(--mute)', fontFamily: 'Archivo Black, sans-serif', fontSize: 9, width: 18, height: 18, borderRadius: '50%', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>?</button>
                   <span className="mono" style={{ fontSize: 9, color: 'var(--mute)', letterSpacing: '.14em' }}>
                     {hasLiveForActiveTournament ? '· LIVE · EVERY 60S' : liveStatsLog.length > 0 ? '· FINAL' : ''}
                   </span>

@@ -56,7 +56,7 @@ export default function MarketScreen() {
   const { show: showToast } = useToast();
   const [searchParams] = useSearchParams();
   const leagueId = searchParams.get('leagueId') || searchParams.get('league');
-  const { showMarketTour, completeMarketTour, replayMarketTour } = useOnboarding();
+  const { showMarketTour, completeMarketTour } = useOnboarding();
   const [players,       setPlayers]       = useState([]);
   const [mySquad,       setMySquad]       = useState(null);
   const [leagues,       setLeagues]       = useState(null);   // null = not yet loaded
@@ -709,8 +709,8 @@ export default function MarketScreen() {
                 Player Market
               </div>
               <button
-                onClick={replayMarketTour}
-                title="Replay market tour"
+                onClick={() => setShowScoringModal(true)}
+                title="Scoring & game rules"
                 style={{
                   width: 20, height: 20, borderRadius: '50%',
                   border: '1px solid rgba(255,255,255,0.15)',
@@ -732,13 +732,6 @@ export default function MarketScreen() {
           </div>
 
           <div className="flex items-center gap-3 lg:gap-5 flex-wrap lg:flex-nowrap">
-            {/* Scoring info */}
-            <button
-              onClick={() => setShowScoringModal(true)}
-              style={{ background: 'none', border: '1px solid var(--rule)', color: 'var(--mute)', fontFamily: 'Archivo Black, sans-serif', fontSize: 9, width: 18, height: 18, borderRadius: '50%', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
-              title="Scoring overview"
-            >?</button>
-
             {/* Squad count */}
             <div className="text-right">
               <div className="fz-label" style={{ color: 'var(--mute)', fontSize: 10 }}>Squad</div>
