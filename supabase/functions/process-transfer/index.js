@@ -105,62 +105,47 @@ Deno.serve(async (req) => {
     // ── Transfer window enforcement ───────────────────────────────────────────
     // Skipped entirely when a free window is active.
     let activeMatchdayId = null;
-    const threeHoursAgo  = new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString();
 
     if (!inFreeWindow) {
-    // 1. Reject if past the active matchday deadline.
-    //    DATA-4: scope to this league's tournament so cross-tournament deadlines don't bleed through.
-    // Use nearest upcoming deadline (ascending + gte now) so multi-round tournaments
-    // (e.g. WC with r1–r7) don't resolve to the furthest future round and mismatch
-    // existing squad rows that are pinned to the current open round.
+    // 1. Single source of truth for window status.
+    //    get_transfer_window_status() handles all cases: deadline lock, live-fixture
+    //    lock, AND the post-match scoring window (MAX kickoff + reopen_hours + 2h).
+    //    Previously this block re-implemented a subset of that logic using only a
+    //    status='live' fixture check — which let transfers through once fixtures
+    //    flipped to 'finished' even while scoring was still in progress.
+    const { data: winStatus, error: winErr } = await supabase
+      .rpc('get_transfer_window_status', { p_league_id: league_id });
+
+    if (winErr || !winStatus || winStatus.status !== 'open') {
+      const opensAt = winStatus?.opens_at
+        ? ` — opens ${new Date(winStatus.opens_at).toUTCString()}`
+        : '';
+      return json({
+        ok:    false,
+        code:  'WINDOW_CLOSED',
+        error: `Transfer window closed${opensAt}`,
+      }, 403, corsHeaders);
+    }
+
+    // 2. Resolve activeMatchdayId from the next upcoming deadline.
+    //    Used for squad lookup and per-round transfer limit enforcement.
+    //    DATA-4: scope to this league's tournament.
     let deadlineQuery = supabase
       .from('matchday_deadlines')
-      .select('deadline_at, matchday_id')
+      .select('matchday_id')
       .gte('deadline_at', new Date().toISOString())
       .order('deadline_at', { ascending: true })
       .limit(1);
     if (tournamentId) deadlineQuery = deadlineQuery.eq('tournament_id', tournamentId);
     const { data: deadline } = await deadlineQuery.maybeSingle();
-
     activeMatchdayId = deadline?.matchday_id ?? null;
 
-    if (!deadline) {
-      return json({
-        ok:    false,
-        code:  'WINDOW_CLOSED',
-        error: `Transfer window closed — no upcoming matchday deadline found`,
-      }, 403, corsHeaders);
-    }
-
-    // 2. Reject if any fixture for THIS LEAGUE'S ACTIVE MATCHDAY is currently live.
-    //    Two scope guards apply:
-    //      a. tournament_id: only fixtures belonging to this league's competition
-    //      b. matchday_id IS NOT NULL: fixtures the sync cron pulled in but never
-    //         assigned to a matchday (null matchday_id) are not part of any league
-    //         calendar and must never block transfers. Without this guard, stale
-    //         "ghost" fixtures (e.g. TAJ vs IND, ANG vs BOT stuck as 'live' after
-    //         a UAT sync) would permanently block the window.
-    let liveQuery = supabase
-      .from('fixtures')
-      .select('id, home_team, away_team, kickoff_at')
-      .eq('status', 'live')
-      .gte('kickoff_at', threeHoursAgo)
-      .not('matchday_id', 'is', null);   // only calendar fixtures can lock the window
-    if (tournamentId) liveQuery = liveQuery.eq('tournament_id', tournamentId);
-    const { data: liveFixture } = await liveQuery.limit(1).maybeSingle();
-
-    if (liveFixture) {
-      return json({
-        ok:    false,
-        code:  'WINDOW_LOCKED',
-        error: `Transfers locked while ${liveFixture.home_team} vs ${liveFixture.away_team} is in progress`,
-      }, 403, corsHeaders);
-    }
-
-    // 3. (#105) Reject if the specific player's team fixture is currently live (cost-lock at kickoff).
-    //    Same two scope guards: tournament + matchday_id IS NOT NULL.
-    //    Only check for BUY actions (selling is always allowed).
+    // 3. (#105) Reject if the specific player's team fixture is currently live.
+    //    Cost-lock at kickoff: price is frozen once a team's match starts.
+    //    Only applies to BUY actions — selling is always allowed.
+    //    Guards: tournament_id isolation + matchday_id IS NOT NULL (no ghost fixtures).
     if (action === 'buy') {
+      const threeHoursAgo = new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString();
       const { data: playerRow } = await supabase
         .from('players')
         .select('forza_team_id')
