@@ -2355,11 +2355,11 @@ export default function SquadScreen() {
                 SELL
               </button>
             </div>
-            {/* Matchday Joker section */}
-            <div className="pt-3" style={{ borderTop: '1px solid rgba(255,255,255,0.07)' }}>
+            {/* Matchday Joker section — hidden for pilot (CHIPS_ENABLED=false) */}
+            {false && <div className="pt-3" style={{ borderTop: '1px solid rgba(255,255,255,0.07)' }}>
               {todayJokerId ? (
                 <div className="flex items-center gap-2 p-2.5 rounded-sm" style={{ background: 'rgba(157,95,245,0.08)', border: '1px solid rgba(157,95,245,0.2)' }}>
-                  
+
                   <div className="text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--pos-gk)', fontFamily: 'Archivo Black, sans-serif' }}>
                     Joker already locked for today
                   </div>
@@ -2386,7 +2386,7 @@ export default function SquadScreen() {
                   </p>
                 </>
               )}
-            </div>
+            </div>}
           </div>
         </div>
         </>
