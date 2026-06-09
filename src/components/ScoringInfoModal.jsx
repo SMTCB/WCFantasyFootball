@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-const MONO = 'var(--font-mono, monospace)';
+const MONO    = 'var(--font-mono, monospace)';
 const DISPLAY = 'Archivo Black, sans-serif';
 
 const POSITIONS = [
@@ -54,24 +54,75 @@ const UNIVERSAL = [
 ];
 
 const SQUAD_RULES = [
-  { label: 'Squad Size',         val: '15 players' },
-  { label: 'Starting XI',        val: '11 players' },
-  { label: 'Goalkeepers',        val: '1 GK' },
-  { label: 'Defenders',          val: '3 – 5' },
-  { label: 'Midfielders',        val: '2 – 5' },
-  { label: 'Forwards',           val: '1 – 3' },
-  { label: 'Max per Club',       val: '3 players' },
-  { label: 'Budget',             val: '€50M' },
+  { label: 'Squad Size',   val: '15 players' },
+  { label: 'Starting XI',  val: '11 players' },
+  { label: 'Goalkeepers',  val: '1 GK' },
+  { label: 'Defenders',    val: '3 – 5' },
+  { label: 'Midfielders',  val: '2 – 5' },
+  { label: 'Forwards',     val: '1 – 3' },
+  { label: 'Max per Club', val: '3 players' },
+  { label: 'Budget',       val: '€50M' },
 ];
 
-export default function ScoringInfoModal({ onClose }) {
-  const [tab, setTab] = useState('scoring'); // 'scoring' | 'rules'
+const TABS = [
+  { id: 'scoring',    label: 'SCORING'     },
+  { id: 'rules',      label: 'SQUAD RULES' },
+  { id: 'game_rules', label: 'GAME RULES'  },
+];
+
+const TAB_META = {
+  scoring:    { title: 'SCORING SYSTEM',  sub: 'V2 — ADDITIVE · EVERY POINT TRACEABLE' },
+  rules:      { title: 'SQUAD RULES',     sub: 'FORMATION & LIMITS'                    },
+  game_rules: { title: 'GAME RULES',      sub: 'TRANSFERS · LINEUPS · CAPTAIN'         },
+};
+
+function Row({ label, val, valColor = 'var(--cyan)', note }) {
+  return (
+    <div style={{
+      display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+      padding: '6px 0', borderBottom: '1px solid rgba(255,255,255,.04)',
+    }}>
+      <span style={{ fontFamily: MONO, fontSize: 10, color: 'var(--paper)', letterSpacing: '.06em' }}>
+        {label}
+        {note && <span style={{ marginLeft: 6, fontSize: 8, color: 'var(--mute)', letterSpacing: '.1em' }}>({note})</span>}
+      </span>
+      <span style={{ fontFamily: DISPLAY, fontSize: 13, color: valColor }}>{val}</span>
+    </div>
+  );
+}
+
+function Section({ title, children, accent = 'var(--gold)' }) {
+  return (
+    <div style={{ padding: '14px 20px 0' }}>
+      <div style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.18em', color: accent, marginBottom: 8 }}>
+        {title}
+      </div>
+      {children}
+    </div>
+  );
+}
+
+function InfoBox({ children }) {
+  return (
+    <div style={{
+      background: 'rgba(255,255,255,0.04)', borderRadius: 6, padding: '10px 14px',
+      fontFamily: MONO, fontSize: 10, color: 'var(--paper)', lineHeight: 1.8, letterSpacing: '.04em',
+    }}>
+      {children}
+    </div>
+  );
+}
+
+export default function ScoringInfoModal({ onClose, initialTab }) {
+  const [tab, setTab] = useState(initialTab ?? 'scoring');
 
   useEffect(() => {
     const onKey = (e) => { if (e.key === 'Escape') onClose(); };
     document.addEventListener('keydown', onKey);
     return () => document.removeEventListener('keydown', onKey);
   }, [onClose]);
+
+  const meta = TAB_META[tab];
 
   return createPortal(
     <div
@@ -102,10 +153,10 @@ export default function ScoringInfoModal({ onClose }) {
           }}>
             <div>
               <div style={{ fontFamily: DISPLAY, fontSize: 14, letterSpacing: '-0.01em' }}>
-                {tab === 'scoring' ? 'SCORING SYSTEM' : 'SQUAD RULES'}
+                {meta.title}
               </div>
               <div style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.14em', marginTop: 2 }}>
-                {tab === 'scoring' ? 'V2 — ADDITIVE · EVERY POINT TRACEABLE' : 'FORMATION & LIMITS'}
+                {meta.sub}
               </div>
             </div>
             <button
@@ -121,7 +172,7 @@ export default function ScoringInfoModal({ onClose }) {
 
           {/* Tab switcher */}
           <div style={{ display: 'flex', padding: '0 20px 12px', gap: 8 }}>
-            {[{ id: 'scoring', label: 'SCORING' }, { id: 'rules', label: 'SQUAD RULES' }].map(t => (
+            {TABS.map(t => (
               <button
                 key={t.id}
                 onClick={() => setTab(t.id)}
@@ -145,53 +196,24 @@ export default function ScoringInfoModal({ onClose }) {
         {tab === 'scoring' && (
           <>
             {POSITIONS.map(({ pos, color, rules }) => (
-              <div key={pos} style={{ padding: '14px 20px 0' }}>
-                <div style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.18em', color, marginBottom: 8 }}>
-                  {pos}
-                </div>
+              <Section key={pos} title={pos} accent={color}>
                 {rules.map(({ label, val, note }) => (
-                  <div key={label} style={{
-                    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                    padding: '5px 0', borderBottom: '1px solid rgba(255,255,255,.04)',
-                  }}>
-                    <span style={{ fontFamily: MONO, fontSize: 10, color: 'var(--paper)', letterSpacing: '.06em' }}>
-                      {label}
-                      {note && (
-                        <span style={{ marginLeft: 6, fontSize: 8, color: 'var(--mute)', letterSpacing: '.1em' }}>
-                          ({note})
-                        </span>
-                      )}
-                    </span>
-                    <span style={{
-                      fontFamily: DISPLAY, fontSize: 13,
-                      color: val.startsWith('−') ? 'var(--danger)' : 'var(--positive)',
-                    }}>
-                      {val}
-                    </span>
-                  </div>
+                  <Row
+                    key={label}
+                    label={label}
+                    note={note}
+                    val={val}
+                    valColor={val.startsWith('−') ? 'var(--danger)' : 'var(--positive)'}
+                  />
                 ))}
-              </div>
+              </Section>
             ))}
 
-            {/* Universal */}
-            <div style={{ padding: '14px 20px 0' }}>
-              <div style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.18em', color: 'var(--mute)', marginBottom: 8 }}>
-                ALL POSITIONS
-              </div>
+            <Section title="ALL POSITIONS" accent="var(--mute)">
               {UNIVERSAL.map(({ label, val, neg }) => (
-                <div key={label} style={{
-                  display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                  padding: '5px 0', borderBottom: '1px solid rgba(255,255,255,.04)',
-                }}>
-                  <span style={{ fontFamily: MONO, fontSize: 10, color: 'var(--paper)', letterSpacing: '.06em' }}>
-                    {label}
-                  </span>
-                  <span style={{ fontFamily: DISPLAY, fontSize: 13, color: neg ? 'var(--danger)' : 'var(--positive)' }}>
-                    {val}
-                  </span>
-                </div>
+                <Row key={label} label={label} val={val} valColor={neg ? 'var(--danger)' : 'var(--positive)'} />
               ))}
-            </div>
+            </Section>
 
             <div style={{ margin: '16px 20px 0', fontFamily: MONO, fontSize: 8, color: 'var(--mute)', letterSpacing: '.1em', lineHeight: 1.6 }}>
               CAPTAIN ×2 · TRIPLE CAPTAIN ×3 · JOKER ×2 · CHIPS DO NOT STACK — MAX APPLIES
@@ -202,59 +224,88 @@ export default function ScoringInfoModal({ onClose }) {
         {/* ── Squad Rules tab ── */}
         {tab === 'rules' && (
           <>
-            <div style={{ padding: '14px 20px 0' }}>
-              <div style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.18em', color: 'var(--gold)', marginBottom: 8 }}>
-                SQUAD STRUCTURE
-              </div>
+            <Section title="SQUAD STRUCTURE">
               {SQUAD_RULES.map(({ label, val }) => (
-                <div key={label} style={{
-                  display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                  padding: '6px 0', borderBottom: '1px solid rgba(255,255,255,.04)',
-                }}>
-                  <span style={{ fontFamily: MONO, fontSize: 10, color: 'var(--paper)', letterSpacing: '.06em' }}>
-                    {label}
-                  </span>
-                  <span style={{ fontFamily: DISPLAY, fontSize: 13, color: 'var(--cyan)' }}>
-                    {val}
-                  </span>
-                </div>
+                <Row key={label} label={label} val={val} />
               ))}
-            </div>
+            </Section>
 
-            <div style={{ padding: '14px 20px 0' }}>
-              <div style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.18em', color: 'var(--gold)', marginBottom: 8 }}>
-                CLUB CAP RULES
-              </div>
-              <div style={{
-                background: 'rgba(255,255,255,0.04)', borderRadius: 6, padding: '10px 14px',
-                fontFamily: MONO, fontSize: 10, color: 'var(--paper)', lineHeight: 1.8, letterSpacing: '.04em',
-              }}>
+            <Section title="CLUB CAP RULES">
+              <InfoBox>
                 <div>Club cap per round:</div>
                 <div style={{ marginTop: 6, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2px 16px', fontSize: 9 }}>
-                  <div style={{ color: 'var(--mute)' }}>Group (MD1–MD3)</div><div style={{ color: 'var(--cyan)', fontFamily: DISPLAY }}>3 players</div>
-                  <div style={{ color: 'var(--mute)' }}>Round of 32 (MD4)</div><div style={{ color: 'var(--cyan)', fontFamily: DISPLAY }}>3 players</div>
-                  <div style={{ color: 'var(--mute)' }}>Round of 16 (MD5)</div><div style={{ color: 'var(--cyan)', fontFamily: DISPLAY }}>4 players</div>
-                  <div style={{ color: 'var(--mute)' }}>QF + SF (MD6–7)</div><div style={{ color: 'var(--cyan)', fontFamily: DISPLAY }}>5 players</div>
-                  <div style={{ color: 'var(--mute)' }}>Final (MD8)</div><div style={{ color: 'var(--cyan)', fontFamily: DISPLAY }}>6 players</div>
+                  <div style={{ color: 'var(--mute)' }}>Group (MD1–MD3)</div>      <div style={{ color: 'var(--cyan)', fontFamily: DISPLAY }}>3 players</div>
+                  <div style={{ color: 'var(--mute)' }}>Round of 32 (MD4)</div>    <div style={{ color: 'var(--cyan)', fontFamily: DISPLAY }}>3 players</div>
+                  <div style={{ color: 'var(--mute)' }}>Round of 16 (MD5)</div>    <div style={{ color: 'var(--cyan)', fontFamily: DISPLAY }}>4 players</div>
+                  <div style={{ color: 'var(--mute)' }}>QF + SF (MD6–7)</div>      <div style={{ color: 'var(--cyan)', fontFamily: DISPLAY }}>5 players</div>
+                  <div style={{ color: 'var(--mute)' }}>Final (MD8)</div>           <div style={{ color: 'var(--cyan)', fontFamily: DISPLAY }}>6 players</div>
                 </div>
-              </div>
-            </div>
+              </InfoBox>
+            </Section>
 
-            <div style={{ padding: '14px 20px 0' }}>
-              <div style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.18em', color: 'var(--gold)', marginBottom: 8 }}>
-                TRANSFERS
-              </div>
-              <div style={{
-                background: 'rgba(255,255,255,0.04)', borderRadius: 6, padding: '10px 14px',
-                fontFamily: MONO, fontSize: 10, color: 'var(--paper)', lineHeight: 1.8, letterSpacing: '.04em',
-              }}>
-                <div>Up to <span style={{ color: 'var(--cyan)', fontFamily: DISPLAY }}>3 transfers</span> per matchday window.</div>
+            <Section title="TRANSFERS">
+              <InfoBox>
+                <div>Up to <span style={{ color: 'var(--cyan)', fontFamily: DISPLAY }}>3 buys</span> per matchday window. Sells are always free.</div>
                 <div>Window closes at the <span style={{ color: 'var(--cyan)', fontFamily: DISPLAY }}>matchday deadline</span> and reopens ~8h after the last match.</div>
                 <div style={{ marginTop: 6, color: 'var(--mute)', fontSize: 9 }}>
-                  Sell-free transfers (commissioner) do not count toward your limit.
+                  Extra buys beyond 3 are allowed but cost <span style={{ color: 'var(--danger)' }}>−4 pts</span> each. Commissioner free-transfer windows bypass all limits.
                 </div>
-              </div>
-            </div>
+              </InfoBox>
+            </Section>
+          </>
+        )}
+
+        {/* ── Game Rules tab ── */}
+        {tab === 'game_rules' && (
+          <>
+            <Section title="TRANSFER WINDOW">
+              <InfoBox>
+                <div style={{ marginBottom: 8 }}>
+                  <span style={{ color: 'var(--positive)', fontFamily: DISPLAY }}>OPEN</span>
+                  {' — '}Between matchdays. Up to 3 buys; sells always free. Extra buys cost <span style={{ color: 'var(--danger)' }}>−4 pts</span> each.
+                </div>
+                <div style={{ marginBottom: 8 }}>
+                  <span style={{ color: 'var(--gold)', fontFamily: DISPLAY }}>CLOSED</span>
+                  {' — '}From the matchday deadline until ~8 hours after the last kick-off of the round. No buys or sells.
+                </div>
+                <div style={{ fontSize: 9, color: 'var(--mute)' }}>
+                  A commissioner free-transfer window bypasses the deadline lock and the 3-buy limit entirely.
+                </div>
+              </InfoBox>
+            </Section>
+
+            <Section title="LINEUPS & SUBS">
+              <InfoBox>
+                <div style={{ marginBottom: 6 }}>
+                  <span style={{ color: 'var(--cyan)', fontFamily: DISPLAY }}>SUB OUT</span>
+                  {' — '}Tap any starting XI player and choose SUB OUT to move them to the bench. Frees a XI slot for a bench player.
+                </div>
+                <div style={{ marginBottom: 6 }}>
+                  <span style={{ color: 'var(--cyan)', fontFamily: DISPLAY }}>SUB IN</span>
+                  {' — '}Tap any bench player and choose SUB IN to bring them into the starting XI.
+                </div>
+                <div style={{ marginBottom: 6, color: 'var(--gold)' }}>
+                  Once a fixture kicks off, any of your players who started that match are <span style={{ fontFamily: DISPLAY }}>LOCKED</span> — they cannot be swapped or benched until the next matchday.
+                </div>
+                <div style={{ fontSize: 9, color: 'var(--mute)' }}>
+                  Auto-subs: at the end of a round, any starter with 0 minutes is automatically replaced by the best-scoring bench player who played, provided formation rules are still valid.
+                </div>
+              </InfoBox>
+            </Section>
+
+            <Section title="CAPTAIN">
+              <InfoBox>
+                <div style={{ marginBottom: 6 }}>
+                  Your captain scores <span style={{ color: 'var(--gold)', fontFamily: DISPLAY }}>×2 points</span>. Set by tapping any player and choosing MAKE CAPTAIN.
+                </div>
+                <div style={{ marginBottom: 6 }}>
+                  You can change your captain anytime the transfer window is <span style={{ color: 'var(--positive)' }}>open</span>.
+                </div>
+                <div style={{ fontSize: 9, color: 'var(--mute)' }}>
+                  If your captain is auto-subbed out (0 minutes played), the ×2 bonus passes to the highest-scoring starter who registered more than 0 points.
+                </div>
+              </InfoBox>
+            </Section>
           </>
         )}
       </div>

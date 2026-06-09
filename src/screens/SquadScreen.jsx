@@ -1664,9 +1664,16 @@ export default function SquadScreen() {
               {/* Section header */}
               <div style={{ padding: '16px 16px 12px', borderBottom: '1px solid var(--rule)' }}>
                 <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
-                  <div>
-                    <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 9, color: 'var(--mute)', letterSpacing: '0.2em', textTransform: 'uppercase', marginBottom: 4 }}>Starting XI</div>
-                    <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 28, color: 'var(--paper)', lineHeight: 1, letterSpacing: '-0.01em' }}>{formation || 'NO SQUAD'}</div>
+                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: 6 }}>
+                    <div>
+                      <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 9, color: 'var(--mute)', letterSpacing: '0.2em', textTransform: 'uppercase', marginBottom: 4 }}>Starting XI</div>
+                      <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 28, color: 'var(--paper)', lineHeight: 1, letterSpacing: '-0.01em' }}>{formation || 'NO SQUAD'}</div>
+                    </div>
+                    <button
+                      onClick={() => setShowScoringModal(true)}
+                      title="Scoring & game rules"
+                      style={{ marginTop: 2, background: 'none', border: '1px solid var(--rule)', color: 'var(--mute)', fontFamily: 'Archivo Black, sans-serif', fontSize: 9, width: 18, height: 18, borderRadius: '50%', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
+                    >?</button>
                   </div>
                   <button
                     onClick={handleAutoFill}
@@ -2044,7 +2051,7 @@ export default function SquadScreen() {
       <div className="hidden lg:flex flex-col" style={{ height: swapMode ? 'calc(100vh - 88px - 64px)' : 'calc(100vh - 88px)' }}>
 
         {/* â"€â"€ Sub-tab row: Pitch / List / Chips / Status â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€ */}
-        <div className="flex shrink-0" style={{ borderBottom: '1px solid var(--rule)', background: 'var(--ink-2)' }}>
+        <div className="flex shrink-0 items-center" style={{ borderBottom: '1px solid var(--rule)', background: 'var(--ink-2)' }}>
           {[
             { id: 'pitch',  label: 'Pitch'  },
             { id: 'list',   label: 'List'   },
@@ -2069,6 +2076,17 @@ export default function SquadScreen() {
               )}
             </button>
           ))}
+          <button
+            onClick={() => setShowScoringModal(true)}
+            title="Scoring & game rules"
+            style={{
+              marginLeft: 'auto', marginRight: 12,
+              background: 'none', border: '1px solid var(--rule)', color: 'var(--mute)',
+              fontFamily: 'Archivo Black, sans-serif', fontSize: 9,
+              width: 20, height: 20, borderRadius: '50%',
+              cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+            }}
+          >?</button>
         </div>
 
         {/* Incomplete squad banner — desktop */}
@@ -2356,7 +2374,7 @@ export default function SquadScreen() {
               </button>
             </div>
             {/* Matchday Joker section — hidden for pilot (CHIPS_ENABLED=false) */}
-            {false && <div className="pt-3" style={{ borderTop: '1px solid rgba(255,255,255,0.07)' }}>
+            {CHIPS_ENABLED && <div className="pt-3" style={{ borderTop: '1px solid rgba(255,255,255,0.07)' }}>
               {todayJokerId ? (
                 <div className="flex items-center gap-2 p-2.5 rounded-sm" style={{ background: 'rgba(157,95,245,0.08)', border: '1px solid rgba(157,95,245,0.2)' }}>
 
