@@ -21,7 +21,7 @@ const DEFAULTS = {
   squadSize:         15,
   draftListSize:     45,
   positionLimits:    { GK: 2, DEF: 5, MID: 5, FWD: 3 },
-  draftPositionCaps: { GK: 5, DEF: 13, MID: 14, FWD: 8 },
+  draftPositionCaps: { GK: 6, DEF: 15, MID: 15, FWD: 9 },
   minFormation:      { GK: 1, DEF: 3, MID: 2, FWD: 1 },
   format:            'classic',
 };
