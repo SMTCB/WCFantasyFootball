@@ -319,16 +319,17 @@ export default function DraftScreen() {
     setList(prev => [...prev, ...picks]);
   };
 
-  // Auto-save draft every 30s whenever list changes (status stays 'pending')
+  // Auto-save draft 3s after list stops changing (was 30s — too slow for quick navigators)
   useEffect(() => {
     if (submitted || !user?.id || list.length === 0) return;
+    const playerIds = list.map(p => p.id);
     const timer = setTimeout(async () => {
       try {
         await supabase.from('draft_submissions').upsert({
           league_id:  leagueId,
           user_id:    user?.id,
           phase,
-          player_ids: list.map(p => p.id),
+          player_ids: playerIds,
           status:     'pending',
         }, { onConflict: 'league_id,user_id,phase' });
         setLastSaved(new Date());
@@ -338,8 +339,21 @@ export default function DraftScreen() {
         console.warn('Auto-save failed:', autoSaveErr);
         setSaveError('Auto-save failed — check your connection.');
       }
-    }, 30000);
-    return () => clearTimeout(timer);
+    }, 3000);
+    // Fire-and-forget save on navigate-away: if the timer hasn't fired yet,
+    // kick off the request anyway. The fetch outlives the component.
+    return () => {
+      clearTimeout(timer);
+      if (dirtyRef.current) {
+        supabase.from('draft_submissions').upsert({
+          league_id:  leagueId,
+          user_id:    user?.id,
+          phase,
+          player_ids: playerIds,
+          status:     'pending',
+        }, { onConflict: 'league_id,user_id,phase' }).catch(() => {});
+      }
+    };
   }, [list, submitted, leagueId, user?.id]);
 
   // U23: 2-minute heartbeat — saves if dirty regardless of whether list changed recently.
@@ -363,7 +377,7 @@ export default function DraftScreen() {
         console.warn('Heartbeat save failed:', hbErr);
       }
     };
-    const hb = setInterval(saveIfDirty, 120_000);
+    const hb = setInterval(saveIfDirty, 30_000);
     return () => clearInterval(hb);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [submitted, leagueId, user?.id]);
