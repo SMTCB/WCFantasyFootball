@@ -74,7 +74,6 @@ export default function MarketScreen() {
   const [priceMax,      setPriceMax]      = useState(15);
   const [budget,          setBudget]          = useState(0);      // loaded from league config
   const [saving,          setSaving]          = useState(false);
-  const [isLocked,        setIsLocked]        = useState(false);
   // Transfer quota
   const [transfersPerRound, setTransfersPerRound] = useState(3);  // free transfers allowed per round
   const [transferPenalty,   setTransferPenalty]   = useState(4);  // pts cost per extra buy (or array)
@@ -90,8 +89,13 @@ export default function MarketScreen() {
   const POS_LIMITS = cfg.positionLimits;
   const squadSize  = cfg.squadSize;
 
-  // Live transfer window status — drives the top banner
+  // Live transfer window status — drives the top banner and lock state.
+  // 'upcoming'  = closed (deadline passed, live-fixture lock, or scoring window)
+  // 'open'      = transfers allowed
+  // 'no_window' = no windows configured for this league → treat as open
+  // 'loading'   = first fetch in flight → optimistic unlock (backend validates anyway)
   const transferWindow = useTransferWindow(activeLeague);
+  const isLocked = transferWindow.status === 'upcoming';
 
   // Basket-simulated squad state — applies pending buys/sells on top of the actual squad.
   // Used for all validation (canBuy, position/club caps) and display (budget, squad count,
@@ -355,9 +359,8 @@ export default function MarketScreen() {
         deadlineQuery = deadlineQuery.eq('tournament_id', tournamentId);
       }
 
+      // Only need matchday_id here — lock state is derived from transferWindow.status
       const { data: deadlineRow } = await deadlineQuery.limit(1).maybeSingle();
-      const deadline = deadlineRow?.deadline_at ? new Date(deadlineRow.deadline_at) : null;
-      setIsLocked(deadline ? new Date() >= deadline : false);
       if (deadlineRow?.matchday_id) setActiveMatchdayId(deadlineRow.matchday_id);
     } catch (err) {
       console.error('MarketScreen: deadline fetch failed', err);
@@ -742,7 +745,10 @@ export default function MarketScreen() {
               </div>
             </div>
 
-            {/* Transfer quota — projected values account for pending basket buys */}
+            {/* Transfer quota
+                Primary number: free transfers remaining (always, even when 0).
+                Sub-label: total point deduction of pending penalty buys when > 0.
+                Both projected live from basket so the user sees the effect before confirming. */}
             {activeMatchdayId && (() => {
               const freeUsed        = (mySquad?.round_transfers  ?? {})[activeMatchdayId] ?? 0;
               const penaltyUsed     = (mySquad?.penalty_transfers ?? {})[activeMatchdayId] ?? 0;
@@ -750,12 +756,14 @@ export default function MarketScreen() {
               const isEst           = basketBuys > 0;
               const projFreeUsed    = freeUsed + basketBuys;
               const projFreeLeft    = Math.max(0, transfersPerRound - projFreeUsed);
-              const projPenaltyUsed = penaltyUsed + Math.max(0, projFreeUsed - transfersPerRound);
-              const isPenalty       = projFreeLeft === 0;
-              const displayColor    = isPenalty ? 'var(--gold)' : projFreeLeft <= 1 ? 'var(--danger)' : 'var(--paper)';
-              // Cost of the *next* buy beyond what's already in the basket
+              // How many of the basket buys are penalty buys (over the free limit)
+              const basketPenBuys   = Math.max(0, projFreeUsed - Math.max(freeUsed, transfersPerRound));
               const costs           = Array.isArray(transferPenalty) ? transferPenalty : [transferPenalty ?? 4];
-              const nextCost        = costs[Math.min(projPenaltyUsed, costs.length - 1)];
+              // Sum up the point cost of each penalty buy in the basket
+              const totalPenCost    = [...Array(basketPenBuys)].reduce((sum, _, i) => {
+                return sum + (costs[Math.min(penaltyUsed + i, costs.length - 1)] ?? costs[costs.length - 1]);
+              }, 0);
+              const freeColor       = projFreeLeft === 0 ? 'var(--danger)' : projFreeLeft <= 1 ? 'var(--gold)' : 'var(--paper)';
               return (
                 <div className="text-right">
                   <div className="fz-label" style={{ color: 'var(--mute)', fontSize: 10 }}>
@@ -763,19 +771,17 @@ export default function MarketScreen() {
                   </div>
                   <div
                     className="text-[16px] lg:text-[20px] font-black tabular-nums leading-tight"
-                    style={{ fontFamily: 'Archivo Black, sans-serif', color: displayColor }}
-                    title={isPenalty
-                      ? `${projPenaltyUsed} penalty buy${projPenaltyUsed !== 1 ? 's' : ''} in basket/used this round`
-                      : `${projFreeLeft} free transfer${projFreeLeft !== 1 ? 's' : ''} left`}
+                    style={{ fontFamily: 'Archivo Black, sans-serif', color: freeColor }}
+                    title={`${projFreeLeft} free transfer${projFreeLeft !== 1 ? 's' : ''} remaining this round`}
                   >
-                    {isPenalty ? `+${projPenaltyUsed}` : projFreeLeft}
+                    {projFreeLeft}
                     <span className="text-[10px] lg:text-[12px] font-normal" style={{ color: 'var(--mute)' }}>
-                      {isPenalty ? ' pts' : ' free'}
+                      {' free'}
                     </span>
                   </div>
-                  {isPenalty && (
+                  {totalPenCost > 0 && (
                     <div className="text-[9px] font-black mt-0.5" style={{ color: 'var(--gold)', fontFamily: 'Archivo Black, sans-serif' }}>
-                      -{nextCost}pt next
+                      -{totalPenCost}pt cost
                     </div>
                   )}
                 </div>
