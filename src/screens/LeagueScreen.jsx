@@ -395,7 +395,7 @@ export default function LeagueScreen() {
         .from('league_members')
         .select(`
           league_id, rank, total_points, role,
-          leagues ( id, name, format, tournament_id, created_by, h2h_enabled, draft_deadline, cup_phase, league_mode )
+          leagues ( id, name, format, tournament_id, created_by, h2h_enabled, draft_deadline, knockout_draft_deadline, cup_phase, league_mode )
         `)
         .eq('user_id', userId);
 
@@ -488,17 +488,23 @@ export default function LeagueScreen() {
       // P1-2: only draft (no-duplicate) leagues run a draft — never show draft UI
       // for a classic league even if a draft_deadline somehow got set.
       const isDraftLeague = lData?.format === 'noduplicate' || lData?.league_mode === 'draft';
-      const deadline = lData?.draft_deadline;
+      // For cup+draft leagues in group_stage phase, the active deadline is knockout_draft_deadline.
+      // For all other cases (group phase or no cup phase) use draft_deadline.
+      const isKnockoutWindow = lData?.cup_phase === 'group_stage' && !!lData?.knockout_draft_deadline;
+      const deadline = isKnockoutWindow ? lData.knockout_draft_deadline : lData?.draft_deadline;
       const deadlineDate = deadline ? new Date(deadline) : null;
       if (isDraftLeague && deadlineDate && deadlineDate > new Date()) {
         setDraftDeadlineDate(deadlineDate);
-        // A draft league can have rows for multiple phases (group + knockout), so
-        // fetch as a list rather than maybeSingle (which errors on >1 row).
+        // For knockout phase check if manager already submitted their knockout wish list.
+        // A draft league can have rows for multiple phases (group + knockout), so filter
+        // by phase to avoid false "already submitted" when group submission exists.
+        const currentPhase = isKnockoutWindow ? 'knockout' : 'group';
         const { data: subs } = await supabase
           .from('draft_submissions')
           .select('id')
           .eq('league_id', id)
           .eq('user_id', user?.id)
+          .eq('phase', currentPhase)
           .limit(1);
         setDraftOpen(!(subs && subs.length));
       } else {
