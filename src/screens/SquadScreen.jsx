@@ -2182,28 +2182,6 @@ export default function SquadScreen() {
                 {autoFillMsg && (
                   <div style={{ padding: '6px 16px', fontFamily: 'JetBrains Mono, monospace', fontSize: 9, color: autoFillMsg?.startsWith('Added') ? 'var(--positive)' : 'var(--gold)', borderBottom: '1px solid var(--rule)' }}>{autoFillMsg}</div>
                 )}
-                <SectionHeader title="Matchday Joker" accent="purple" />
-                {jokerPlayer ? (
-                  <PlayerCard
-                    player={jokerPlayer}
-                    variant="row"
-                    isJoker={true}
-                    onClick={handlePlayerClick}
-                    isSelected={selectedPlayer?.id === jokerPlayer.id}
-                    showIntelligence
-                  />
-                ) : (
-                  <button
-                    onClick={() => setIsJokerPickerOpen(true)}
-                    className="w-full flex items-center gap-3 px-4 py-3 border-b border-border hover:opacity-80 transition-all"
-                  >
-                    <div className="w-8 h-8 border-2 border-dashed flex items-center justify-center font-black" style={{ borderColor: 'var(--pos-gk)', color: 'var(--pos-gk)' }}>+</div>
-                    <div className="flex-1 text-left">
-                      <div className="text-[12px] font-black uppercase tracking-widest" style={{ color: 'var(--pos-gk)', fontFamily: 'Archivo Black, sans-serif' }}>Select Matchday Joker</div>
-                      <div className="text-[10px] mt-0.5" style={{ color: 'var(--mute)' }}>Exempt from country limit rules today</div>
-                    </div>
-                  </button>
-                )}
                 <PlayerList />
               </div>
             </>
