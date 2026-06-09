@@ -748,8 +748,10 @@ export default function MarketScreen() {
             {/* Transfer quota
                 Primary number: free transfers remaining (always, even when 0).
                 Sub-label: total point deduction of pending penalty buys when > 0.
-                Both projected live from basket so the user sees the effect before confirming. */}
-            {activeMatchdayId && (() => {
+                Both projected live from basket so the user sees the effect before confirming.
+                Hidden when window is locked — transfers impossible and stale round counts
+                (e.g. all 3 used last round) would show a misleading "0 free" in red. */}
+            {activeMatchdayId && !isLocked && (() => {
               const freeUsed        = (mySquad?.round_transfers  ?? {})[activeMatchdayId] ?? 0;
               const penaltyUsed     = (mySquad?.penalty_transfers ?? {})[activeMatchdayId] ?? 0;
               const basketBuys      = basket.filter(b => b.type === 'buy').length;
@@ -1168,7 +1170,7 @@ export default function MarketScreen() {
                       </span>
                       {isOwned && (
                         <span className="fk-mono shrink-0" style={{ fontSize: 9, fontWeight: 800, color: 'var(--cyan)', border: '1px solid var(--cyan)', padding: '2px 6px' }}>
-                          OWNED
+                          {isDraftLeague ? 'OWNED · YOU' : 'OWNED'}
                         </span>
                       )}
                       {takenByOther && (
