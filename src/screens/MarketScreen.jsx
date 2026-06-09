@@ -17,8 +17,10 @@ import PositionChip    from '../components/PositionChip';
 import StatusDot       from '../components/StatusDot';
 import { POS_CONFIG, POS_FILTER_ORDER } from '../lib/formations';
 import { usePlayerStats } from '../hooks/usePlayerStats';
+import { useTransferWindow } from '../hooks/useTransferWindow';
 import FormStrip from '../components/FormStrip';
 import PlayerStatsPanel from '../components/PlayerStatsPanel';
+import TransferWindowBanner from '../components/TransferWindowBanner';
 
 // club cap is fetched dynamically per-round; default 3 until loaded
 
@@ -86,6 +88,9 @@ export default function MarketScreen() {
   const cfg = useLeagueConfig(activeLeague);
   const POS_LIMITS = cfg.positionLimits;
   const squadSize  = cfg.squadSize;
+
+  // Live transfer window status — drives the top banner
+  const transferWindow = useTransferWindow(activeLeague);
 
   // Basket-simulated squad state — applies pending buys/sells on top of the actual squad.
   // Used for all validation (canBuy, position/club caps) and display (budget, squad count,
@@ -673,26 +678,8 @@ export default function MarketScreen() {
         </div>
       )}
 
-      {/* â"€â"€ Transfer Window Lock Banner â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€ */}
-      {isLocked && (
-        <div
-          className="flex items-center gap-3 px-5 py-3"
-          style={{ background: 'rgba(240,58,58,0.10)', borderBottom: '1px solid rgba(240,58,58,0.25)' }}
-        >
-          <span className="fk-mono" style={{ fontSize: 9, color: 'var(--danger)' }}>LCK</span>
-          <div>
-            <div
-              className="text-[11px] font-black uppercase tracking-widest"
-              style={{ color: 'var(--danger)', fontFamily: 'Archivo Black, sans-serif' }}
-            >
-              Transfer Window Closed
-            </div>
-            <div className="text-[10px]" style={{ color: 'var(--mute)' }}>
-              Transfers are locked until the matchday results are published.
-            </div>
-          </div>
-        </div>
-      )}
+      {/* â"€â"€ Transfer Window Status Banner â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€ */}
+      <TransferWindowBanner {...transferWindow} />
 
       {/* â"€â"€ Sticky Header â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€ */}
       <div
