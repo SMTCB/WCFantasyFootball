@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 // Empty squad shown when user has no squad yet (instead of demo data)
@@ -574,7 +575,7 @@ export default function SquadScreen() {
         const code = result?.code ?? '';
         const msg  = result?.error ?? rpcErr?.message ?? 'Lineup change failed';
         if (code === 'FIXTURE_COMPLETED') {
-          showToast(`Cannot sub in ${benchPlayer.name} — their match has already finished this round.`, 'warning');
+          showToast(`Cannot sub in ${benchPlayer.name} — their match already finished this gameweek. They'll be available next round.`, 'warning');
         } else if (code === 'PLAYER_LOCKED') {
           showToast(msg, 'warning');
         } else {
@@ -1688,7 +1689,7 @@ export default function SquadScreen() {
                 )}
                 <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 9, color: 'var(--mute)', letterSpacing: '0.14em', marginTop: 6 }}>
                   {captain ? `CAPTAIN ${captain.name.split(' ').slice(-1)[0].toUpperCase()}` : 'NO CAPTAIN'}
-                  {squadData.matchdayId ? ` · GW ${squadData.matchdayId}` : ''}
+                  {squadData.matchdayId ? ` · GW${squadData.matchdayId.split('-r')[1] ?? squadData.matchdayId} PTS` : ''}
                 </div>
               </div>
 
@@ -2225,9 +2226,9 @@ export default function SquadScreen() {
       </div>
 
       {/* â•â• PLAYER ACTION BOTTOM SHEET â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
-      {selectedPlayer && !swapMode && (
+      {selectedPlayer && !swapMode && createPortal(
         <>
-          {/* Tap-outside dismiss — no background dim */}
+          {/* Tap-outside dismiss — portaled to body so iOS WebKit stacking context doesn't trap z-index */}
           <div
             className="fixed inset-0 z-[59] lg:left-[220px]"
             onClick={() => setSelectedPlayer(null)}
@@ -2396,7 +2397,8 @@ export default function SquadScreen() {
             </div>}
           </div>
         </div>
-        </>
+        </>,
+        document.body
       )}
 
       {/* â•â• PLAYER PICKER SHEET â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
