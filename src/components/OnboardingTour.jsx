@@ -27,16 +27,20 @@ const TOOLTIP_W = 300;
 const TOOLTIP_H = 230;   // realistic estimate (avoids "goes to top" overcorrection)
 
 function getRect(target) {
-  const el = document.querySelector(`[data-tour="${target}"]`);
-  if (!el) return null;
-  const r = el.getBoundingClientRect();
-  return {
-    top:    r.top    - PADDING,
-    left:   r.left   - PADDING,
-    width:  r.width  + PADDING * 2,
-    height: r.height + PADDING * 2,
-    el,
-  };
+  const els = document.querySelectorAll(`[data-tour="${target}"]`);
+  for (const el of els) {
+    const r = el.getBoundingClientRect();
+    if (r.width > 0 && r.height > 0) {
+      return {
+        top:    r.top    - PADDING,
+        left:   r.left   - PADDING,
+        width:  r.width  + PADDING * 2,
+        height: r.height + PADDING * 2,
+        el,
+      };
+    }
+  }
+  return null;
 }
 
 /**
@@ -44,14 +48,22 @@ function getRect(target) {
  * Uses MutationObserver — no arbitrary delay, fires on the exact render tick.
  * Falls back after `timeout` ms if the element never appears.
  */
+function findVisible(target) {
+  const els = document.querySelectorAll(`[data-tour="${target}"]`);
+  for (const el of els) {
+    const r = el.getBoundingClientRect();
+    if (r.width > 0 && r.height > 0) return el;
+  }
+  return null;
+}
+
 function waitForElement(target, timeout = 2000) {
   return new Promise(resolve => {
-    const sel = `[data-tour="${target}"]`;
-    const existing = document.querySelector(sel);
+    const existing = findVisible(target);
     if (existing) { resolve(existing); return; }
 
     const observer = new MutationObserver(() => {
-      const el = document.querySelector(sel);
+      const el = findVisible(target);
       if (el) { observer.disconnect(); resolve(el); }
     });
     observer.observe(document.body, { childList: true, subtree: true });
