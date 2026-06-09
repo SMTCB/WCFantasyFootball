@@ -78,12 +78,32 @@ export default function MarketScreen() {
   const [activeMatchdayId,  setActiveMatchdayId]  = useState(null); // e.g. '623-r3'
   const [clubCap,           setClubCap]           = useState(3);    // dynamic per-round, from club_cap_rules
   const [confirm,       setConfirm]       = useState(null);
+  const [basket,        setBasket]        = useState([]);  // pending [{type:'buy'|'sell', player}]
+  const [confirming,    setConfirming]    = useState(false);
   const marketListRef   = useRef(null);
 
   // Competition-agnostic config from the selected league row
   const cfg = useLeagueConfig(activeLeague);
   const POS_LIMITS = cfg.positionLimits;
   const squadSize  = cfg.squadSize;
+
+  // Basket-simulated squad state — applies pending buys/sells on top of the actual squad.
+  // Used for all validation (canBuy, position/club caps) and display (budget, squad count,
+  // position bars) so the UI immediately reflects the full effect of pending changes.
+  const effectiveSquadIds = useMemo(() => {
+    const ids = new Set(mySquad?.players ?? []);
+    for (const item of basket) {
+      if (item.type === 'sell') ids.delete(item.player.id);
+      if (item.type === 'buy')  ids.add(item.player.id);
+    }
+    return [...ids];
+  }, [basket, mySquad]);
+
+  const effectiveBudget = useMemo(() => {
+    return basket.reduce((b, item) => (
+      item.type === 'sell' ? b + item.player.price : b - item.player.price
+    ), budget);
+  }, [basket, budget]);
 
   // Draft gate: noduplicate leagues with no processed allocation go to draft screen or recovery
   useEffect(() => {
@@ -458,14 +478,15 @@ export default function MarketScreen() {
     const posCounts = { GK: 0, DEF: 0, MID: 0, FWD: 0 };
     const countryCounts = {};
     if (!mySquad || !players.length) return { posCounts, countryCounts };
-    mySquad.players.forEach(pid => {
+    // Use basket-simulated squad so position bars and cap checks reflect pending changes
+    effectiveSquadIds.forEach(pid => {
       const p = players.find(pl => pl.id === pid);
       if (!p) return;
       if (posCounts[p.position] !== undefined) posCounts[p.position]++;
       if (pid !== todayJokerId) countryCounts[p.club] = (countryCounts[p.club] || 0) + 1;
     });
     return { posCounts, countryCounts };
-  }, [mySquad, players, todayJokerId]);
+  }, [effectiveSquadIds, players, todayJokerId]);
 
   // Compute the point cost of the NEXT buy transfer for display/warning purposes.
   // Returns 0 if within the free allowance, otherwise the cost from transfer_penalty config.
@@ -479,37 +500,35 @@ export default function MarketScreen() {
     return costs[Math.min(penaltyUsed, costs.length - 1)];
   }, [mySquad, activeMatchdayId, transfersPerRound, transferPenalty]);
 
-  const handleBuy = async (player) => {
-    if (saving) return;
+  const handleBuy = (player) => {
+    if (confirming) return;
     if (isLocked) { showToast('Transfers are locked until after the match.', 'warning'); return; }
     if (!activeLeague) { showToast('Select a league first.', 'warning'); return; }
-    if ((mySquad?.players?.length ?? 0) >= squadSize) { showToast('Squad is full — sell a player first.', 'warning'); return; }
-    if (stats.posCounts[player.position] >= POS_LIMITS[player.position]) { showToast(`Max ${player.position}s reached.`, 'warning'); return; }
-    // U26: club cap preflight check
-    if ((stats.countryCounts[player.club] ?? 0) >= clubCap) { showToast(`Max ${clubCap} players per club — ${player.club} is full.`, 'warning'); return; }
-    if (budget < player.price) { showToast('Not enough budget.', 'error'); return; }
 
-    // Warn about penalty cost but don't block — manager can still proceed
-    if (nextBuyPenaltyCost > 0) {
-      showToast(`⚠️ Penalty transfer — costs ${nextBuyPenaltyCost} pt${nextBuyPenaltyCost !== 1 ? 's' : ''} at end of round`, 'warning', 4000);
+    // Already in basket
+    if (basket.some(b => b.player.id === player.id)) {
+      showToast(`${player.name} is already in your transfer basket.`, 'warning'); return;
     }
 
-    try {
-      setSaving(true);
-      const result = await buy(player);
-      if (!result.ok) {
-        showToast(result.error, 'error', 5000);
-        return;
-      }
-      setMySquad(prev => ({ ...prev, players: result.players, budget_remaining: result.budget_remaining }));
-      setBudget(result.budget_remaining);
-      fetchSquad(); // re-fetch to sync round_transfers + penalty_transfers counters
-    } finally { setSaving(false); }
+    // Validate against basket-simulated squad state
+    if (effectiveSquadIds.length >= squadSize) { showToast('Squad is full — sell a player first.', 'warning'); return; }
+    if (stats.posCounts[player.position] >= POS_LIMITS[player.position]) { showToast(`Max ${player.position}s reached.`, 'warning'); return; }
+    if ((stats.countryCounts[player.club] ?? 0) >= clubCap) { showToast(`Max ${clubCap} players per club — ${player.club} is full.`, 'warning'); return; }
+    if (effectiveBudget < player.price) { showToast('Not enough budget.', 'error'); return; }
+
+    setBasket(prev => [...prev, { type: 'buy', player }]);
   };
 
   const handleSell = (player) => {
-    if (saving)   return;
+    if (confirming) return;
     if (isLocked) { showToast('Transfers are locked until after the match.', 'warning'); return; }
+
+    // Already in basket
+    if (basket.some(b => b.player.id === player.id)) {
+      showToast(`${player.name} is already in your transfer basket.`, 'warning'); return;
+    }
+
+    const addToBasket = () => setBasket(prev => [...prev, { type: 'sell', player }]);
 
     const isCaptain = mySquad?.captain_id === player.id;
     const isJoker   = todayJokerId === player.id;
@@ -517,25 +536,57 @@ export default function MarketScreen() {
     if (isCaptain) warnings.push('This player is your captain — selling them removes the armband.');
     if (isJoker)   warnings.push('This player is your Matchday Joker — selling voids today\'s boost.');
 
-    setConfirm({
-      title:        `Sell ${player.name}?`,
-      body:         `You will receive €${player.price}M back into your budget.`,
-      warning:      warnings.length ? warnings.join(' ') : null,
-      confirmLabel: 'Sell',
-      danger:       true,
-      onConfirm: async () => {
-        try {
-          setSaving(true);
-          const result = await sell(player);
-          if (!result.ok) {
-            showToast(result.error, 'error', 5000, () => handleSell(player));
-            return;
-          }
-          setMySquad(prev => ({ ...prev, players: result.players, budget_remaining: result.budget_remaining }));
-          setBudget(result.budget_remaining);
-        } finally { setSaving(false); }
-      },
-    });
+    if (warnings.length) {
+      setConfirm({
+        title:        `Add ${player.name} to basket?`,
+        body:         `€${player.price}M will be credited when transfers are confirmed.`,
+        warning:      warnings.join(' '),
+        confirmLabel: 'Add to basket',
+        danger:       true,
+        onConfirm:    addToBasket,
+      });
+    } else {
+      addToBasket();
+    }
+  };
+
+  // Processes all pending basket items: sells first (free up budget), then buys.
+  const handleConfirmBasket = async () => {
+    if (basket.length === 0 || confirming) return;
+    setConfirming(true);
+    setSaving(true);
+
+    const sells = basket.filter(b => b.type === 'sell');
+    const buys  = basket.filter(b => b.type === 'buy');
+    const errors = [];
+    const succeeded = new Set();
+
+    for (const item of [...sells, ...buys]) {
+      const fn = item.type === 'sell' ? sell : buy;
+      const result = await fn(item.player);
+      if (!result.ok) {
+        errors.push(`${item.type === 'sell' ? 'SELL' : 'BUY'} ${item.player.name}: ${result.error}`);
+      } else {
+        succeeded.add(item.player.id);
+        setMySquad(prev => ({ ...prev, players: result.players, budget_remaining: result.budget_remaining }));
+        setBudget(result.budget_remaining);
+      }
+    }
+
+    // Remove succeeded items from basket; keep failed ones so user can retry or discard
+    setBasket(prev => prev.filter(b => !succeeded.has(b.player.id)));
+
+    if (errors.length === 0) {
+      showToast(`${basket.length} transfer${basket.length !== 1 ? 's' : ''} confirmed ✓`, 'success', 3000);
+    } else if (succeeded.size > 0) {
+      showToast(`${succeeded.size} succeeded, ${errors.length} failed: ${errors[0]}`, 'warning', 6000);
+    } else {
+      showToast(`Transfer failed: ${errors[0]}`, 'error', 6000);
+    }
+
+    await fetchSquad(); // re-sync round_transfers + penalty_transfers counters
+    setConfirming(false);
+    setSaving(false);
   };
 
   const availableTeams = useMemo(() => {
@@ -561,7 +612,7 @@ export default function MarketScreen() {
       return b.price - a.price;
     });
   }, [players, filterPos, searchQuery, selectedTeams, priceMin, priceMax, mySquad]);
-  const squadCount  = mySquad?.players?.length || 0;
+  const squadCount  = effectiveSquadIds.length;
   const emptySlots  = Math.max(0, squadSize - squadCount);
   const [showScoringModal, setShowScoringModal] = useState(false);
 
@@ -746,12 +797,14 @@ export default function MarketScreen() {
 
             {/* Budget + empty slots */}
             <div className="text-right" data-tour="market-budget">
-              <div className="fz-label" style={{ color: 'var(--mute)', fontSize: 10 }}>Budget</div>
+              <div className="fz-label" style={{ color: 'var(--mute)', fontSize: 10 }}>
+                Budget{basket.length > 0 ? ' (est.)' : ''}
+              </div>
               <div
                 className="text-[16px] lg:text-[20px] font-black tabular-nums leading-tight"
-                style={{ fontFamily: 'Archivo Black, sans-serif', color: (budget ?? 0) < 5 ? 'var(--danger)' : 'var(--cyan)' }}
+                style={{ fontFamily: 'Archivo Black, sans-serif', color: effectiveBudget < 5 ? 'var(--danger)' : 'var(--cyan)' }}
               >
-                €{(budget ?? 0).toFixed(1)}
+                €{effectiveBudget.toFixed(1)}
                 <span className="text-[10px] lg:text-[12px] font-normal" style={{ color: 'var(--mute)' }}>M</span>
               </div>
               {emptySlots > 0 && (
@@ -1066,17 +1119,20 @@ export default function MarketScreen() {
           {filteredPlayers.map((p) => {
             const inMySquad    = mySquad?.players?.includes(p.id);
             const isOwned      = inMySquad || isOwnedBy(p.id);
+            // Basket pending state
+            const pendingSell  = basket.some(b => b.type === 'sell' && b.player.id === p.id);
+            const pendingBuy   = basket.some(b => b.type === 'buy'  && b.player.id === p.id);
             // In Draft mode each player belongs to one manager — block if taken.
             // In Classic mode any player can be in multiple squads simultaneously.
             const isDraftLeague = leagueFormat === 'noduplicate';
             const takenByOther = isDraftLeague && !isOwned && isTaken(p.id);
             const ownerName    = takenBy(p.id);
             const limitReached = stats.posCounts[p.position] >= POS_LIMITS[p.position];
-            // U26: club cap guard
+            // U26: club cap guard — uses basket-simulated counts via stats
             const clubFull     = !isOwned && (stats.countryCounts[p.club] ?? 0) >= clubCap;
-            const canAfford    = budget >= p.price;
+            const canAfford    = effectiveBudget >= p.price;
             const hasLeague    = !!activeLeague;
-            const canBuy       = hasLeague && !isOwned && !takenByOther && !limitReached && !clubFull && canAfford && (mySquad?.players?.length ?? 0) < squadSize;
+            const canBuy       = hasLeague && !isOwned && !pendingBuy && !takenByOther && !limitReached && !clubFull && canAfford && effectiveSquadIds.length < squadSize;
             const isJoker      = p.id === todayJokerId;
             const intel        = p.intel;
 
@@ -1162,10 +1218,42 @@ export default function MarketScreen() {
                     >
                       LOCKED
                     </div>
+                  ) : pendingSell ? (
+                    // Player queued for sale — tap to remove from basket
+                    <button
+                      onClick={() => setBasket(prev => prev.filter(b => b.player.id !== p.id))}
+                      className="fk-mono transition-all active:scale-95"
+                      style={{
+                        minWidth: 56, padding: '6px 10px',
+                        border: '1px solid var(--gold)',
+                        color: 'var(--gold)',
+                        background: 'rgba(240,180,0,0.08)',
+                        fontSize: 10, fontWeight: 800, letterSpacing: '0.1em',
+                      }}
+                      title="Remove from basket"
+                    >
+                      SELLING
+                    </button>
+                  ) : pendingBuy ? (
+                    // Player queued for purchase — tap to remove from basket
+                    <button
+                      onClick={() => setBasket(prev => prev.filter(b => b.player.id !== p.id))}
+                      className="fk-mono transition-all active:scale-95"
+                      style={{
+                        minWidth: 56, padding: '6px 10px',
+                        border: '1px solid var(--gold)',
+                        color: 'var(--gold)',
+                        background: 'rgba(240,180,0,0.08)',
+                        fontSize: 10, fontWeight: 800, letterSpacing: '0.1em',
+                      }}
+                      title="Remove from basket"
+                    >
+                      QUEUED
+                    </button>
                   ) : isOwned ? (
                     <button
                       onClick={() => handleSell(p)}
-                      disabled={saving}
+                      disabled={confirming}
                       className="fk-mono transition-all active:scale-95 disabled:opacity-40"
                       style={{
                         minWidth: 56, padding: '6px 10px',
@@ -1191,12 +1279,12 @@ export default function MarketScreen() {
                   ) : (
                     <button
                       onClick={() => handleBuy(p)}
-                      disabled={saving || !canBuy}
+                      disabled={confirming || !canBuy}
                       title={
                         !hasLeague     ? 'Select a league first'
                         : !canAfford   ? 'Insufficient budget'
                         : limitReached ? `${p.position} slots full`
-                        : 'Add to squad'
+                        : 'Add to basket'
                       }
                       className="fk-mono transition-all active:scale-95"
                       style={{
@@ -1206,7 +1294,7 @@ export default function MarketScreen() {
                         background: 'transparent',
                         fontSize: 10, fontWeight: 800, letterSpacing: '0.14em',
                         cursor: canBuy ? 'pointer' : 'not-allowed',
-                        opacity: saving ? 0.5 : 1,
+                        opacity: confirming ? 0.5 : 1,
                       }}
                     >
                       BUY
@@ -1253,6 +1341,125 @@ export default function MarketScreen() {
         </span>
       </div>
       {showScoringModal && <ScoringInfoModal onClose={() => setShowScoringModal(false)} />}
+
+      {/* ── Transfer Basket ─────────────────────────────────────────────────── */}
+      {/* Sticky bottom drawer — appears when there are pending items.            */}
+      {/* Sells are processed before buys so freed budget is available.           */}
+      {basket.length > 0 && (() => {
+        const netChange = basket.reduce((n, b) => b.type === 'sell' ? n + b.player.price : n - b.player.price, 0);
+        const netLabel  = netChange >= 0 ? `+€${netChange.toFixed(1)}M` : `-€${Math.abs(netChange).toFixed(1)}M`;
+        const netColor  = netChange >= 0 ? 'var(--positive)' : 'var(--danger)';
+        return (
+          <div
+            style={{
+              position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 80,
+              background: 'rgba(13,17,23,0.98)',
+              backdropFilter: 'blur(24px)',
+              WebkitBackdropFilter: 'blur(24px)',
+              borderTop: '2px solid var(--gold)',
+              paddingBottom: 'max(16px, env(safe-area-inset-bottom))',
+            }}
+          >
+            <div style={{ maxWidth: 600, margin: '0 auto', padding: '10px 16px 0' }}>
+              {/* Header row */}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+                <span style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 10, letterSpacing: '.12em', color: 'var(--gold)', textTransform: 'uppercase' }}>
+                  Transfer Basket · {basket.length} pending
+                </span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 11, color: netColor, fontWeight: 700 }}>
+                    {netLabel}
+                  </span>
+                  <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 11, color: 'var(--mute)' }}>
+                    €{effectiveBudget.toFixed(1)}M left
+                  </span>
+                </div>
+              </div>
+
+              {/* Pending items list */}
+              <div style={{ marginBottom: 10, maxHeight: 120, overflowY: 'auto' }}>
+                {basket.map((item, i) => (
+                  <div
+                    key={i}
+                    style={{
+                      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                      padding: '5px 0',
+                      borderBottom: i < basket.length - 1 ? '1px solid rgba(255,255,255,0.05)' : 'none',
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <span
+                        style={{
+                          fontFamily: 'Archivo Black, sans-serif', fontSize: 8, letterSpacing: '.12em',
+                          color: item.type === 'sell' ? 'var(--danger)' : 'var(--cyan)',
+                          border: `1px solid ${item.type === 'sell' ? 'var(--danger)' : 'var(--cyan)'}`,
+                          padding: '2px 5px',
+                        }}
+                      >
+                        {item.type.toUpperCase()}
+                      </span>
+                      <span style={{ fontFamily: 'Archivo, sans-serif', fontSize: 13, color: 'var(--paper)' }}>
+                        {item.player.name}
+                      </span>
+                      <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 10, color: 'var(--mute)' }}>
+                        €{item.player.price}M
+                      </span>
+                    </div>
+                    <button
+                      onClick={() => setBasket(prev => prev.filter((_, j) => j !== i))}
+                      disabled={confirming}
+                      style={{
+                        background: 'none', border: 'none', cursor: 'pointer',
+                        color: 'var(--mute)', fontSize: 14, padding: '0 4px', lineHeight: 1,
+                        opacity: confirming ? 0.3 : 1,
+                      }}
+                      title="Remove from basket"
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))}
+              </div>
+
+              {/* Action buttons */}
+              <div style={{ display: 'flex', gap: 8 }}>
+                <button
+                  onClick={() => setBasket([])}
+                  disabled={confirming}
+                  style={{
+                    flex: 1, padding: '10px 8px',
+                    background: 'transparent',
+                    border: '1px solid rgba(255,255,255,0.12)',
+                    color: 'var(--mute)',
+                    fontFamily: 'Archivo Black, sans-serif',
+                    fontSize: 9, letterSpacing: '.12em', textTransform: 'uppercase',
+                    cursor: confirming ? 'not-allowed' : 'pointer',
+                    opacity: confirming ? 0.4 : 1,
+                  }}
+                >
+                  Discard all
+                </button>
+                <button
+                  onClick={handleConfirmBasket}
+                  disabled={confirming}
+                  style={{
+                    flex: 3, padding: '10px 8px',
+                    background: confirming ? 'rgba(240,180,0,0.4)' : 'var(--gold)',
+                    border: 'none',
+                    color: 'var(--ink)',
+                    fontFamily: 'Archivo Black, sans-serif',
+                    fontSize: 10, letterSpacing: '.1em', textTransform: 'uppercase',
+                    cursor: confirming ? 'wait' : 'pointer',
+                    fontWeight: 900,
+                  }}
+                >
+                  {confirming ? 'Processing…' : `Confirm ${basket.length} Transfer${basket.length !== 1 ? 's' : ''}`}
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 }
