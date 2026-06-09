@@ -351,7 +351,7 @@ export default function DraftScreen() {
           phase,
           player_ids: playerIds,
           status:     'pending',
-        }, { onConflict: 'league_id,user_id,phase' }).catch(() => {});
+        }, { onConflict: 'league_id,user_id,phase' }).then(null, () => {});
       }
     };
   }, [list, submitted, leagueId, user?.id]);
