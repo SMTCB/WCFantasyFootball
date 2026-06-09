@@ -1,6 +1,6 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-06-09 (Transfer basket UX + penalty visibility — PRs #472–#473)  
+**Last Updated**: 2026-06-10 (Squad screen sub-in fix + bottom sheet portal — PR #474)  
 **E2E Test Suite**: `platform.spec.js` (36 tests × 2 browsers) passing in CI ✅  
 **Full Playbook Run**: `E2E_TEST_PLAYBOOK.md` v2.0 — all flows confirmed  
 **🟢 LAUNCH READY**: No critical (P0/P1) bugs open. All game mechanics functional. WC kick-off 2026-06-11.  
@@ -17,6 +17,16 @@
 | # | Item | Effort | Notes |
 |---|------|--------|-------|
 | B-01 | **[FEATURE] Drag-to-add from player pool in Draft screen** | 3–4h | Allow dragging a player directly from the bottom pool list into a position in the ranked wishlist, bypassing the "Add to List" button. Requires lifting `DndContext` to wrap both lists, `useDraggable` on pool rows, cross-container drop with insertion-index logic, and position-cap enforcement. Current flow (Add to List → drag to reorder) works fine — this is a UX polish only. |
+
+---
+
+## ✅ Squad Screen Sub-in + Bottom Sheet Portal (2026-06-10) — PR #474
+
+### Bug fixes
+- **Sub direction (Bug 1)**: Bench→starter swap (SUB IN) was silently doing nothing on mobile. Root cause: `AppLayout#main-content` has `WebkitOverflowScrolling: touch` which creates a new iOS Safari stacking context — `position: fixed` children have z-index evaluated locally, making the tap-outside overlay intercept the SUB IN button tap and clear `selectedPlayer` before the user could tap a starter. Fix: wrap bottom sheet and overlay in `createPortal(_, document.body)` so they live in the global stacking context.
+- **Bottom sheet alignment (Bug 2)**: Sheet appeared off-screen to the right on mobile. Same root cause (stacking context). Same createPortal fix.
+- **FIXTURE_COMPLETED message (Bug 3)**: Error toast for trying to sub in a player whose match is done this round now reads "They'll be available next round" — previously implied they were permanently blocked.
+- **GW points label (Bug 4)**: Starting XI header now shows `GW4 PTS` instead of raw `GW 623-r4`.
 
 ---
 
