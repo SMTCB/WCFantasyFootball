@@ -625,7 +625,12 @@ export default function MarketScreen() {
         {leagues.map(l => (
           <button
             key={l.id}
-            onClick={() => { setActiveLeague(l.id); if (l.tournament_id) setTournamentId(l.tournament_id); else resolveLeagueTournament(l.id); }}
+            onClick={() => {
+              setActiveLeague(l.id);
+              if (l.format) setLeagueFormat(l.format);
+              if (l.tournament_id) setTournamentId(l.tournament_id);
+              else resolveLeagueTournament(l.id);
+            }}
             className="w-full max-w-sm px-5 py-4 rounded-sm text-left transition-all active:opacity-70"
             style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'var(--paper)' }}
           >
@@ -719,6 +724,7 @@ export default function MarketScreen() {
               <LeagueSelector value={activeLeague} onChange={(lid) => {
                 setActiveLeague(lid);
                 const found = leagues?.find(l => l.id === lid);
+                if (found?.format) setLeagueFormat(found.format);
                 if (found?.tournament_id) setTournamentId(found.tournament_id);
                 else resolveLeagueTournament(lid);
               }} />
