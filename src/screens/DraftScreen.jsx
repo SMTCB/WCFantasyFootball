@@ -156,12 +156,16 @@ export default function DraftScreen() {
         // Load league for deadline + cup_phase (needed to determine submission phase)
         const { data: league } = await supabase
           .from('leagues')
-          .select('draft_deadline, cup_phase')
+          .select('draft_deadline, knockout_draft_deadline, cup_phase')
           .eq('id', leagueId)
           .maybeSingle();
-        setDeadline(league?.draft_deadline ?? null);
         // group_stage means group allocation ran → next submission is for knockout
         const derivedPhase = league?.cup_phase === 'group_stage' ? 'knockout' : 'group';
+        // Show the deadline relevant to the current phase
+        const activeDeadline = derivedPhase === 'knockout'
+          ? (league?.knockout_draft_deadline ?? league?.draft_deadline)
+          : (league?.draft_deadline ?? null);
+        setDeadline(activeDeadline);
         setPhase(derivedPhase);
 
         // Load players — RPC respects cup pool restriction.
