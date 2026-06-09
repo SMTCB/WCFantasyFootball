@@ -1,6 +1,6 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-06-09 (UI cleanup — ? buttons unified + League tour fix + DraftScreen crash — PRs #463–#466)  
+**Last Updated**: 2026-06-09 (Transfer basket UX + penalty visibility — PRs #472–#473)  
 **E2E Test Suite**: `platform.spec.js` (36 tests × 2 browsers) passing in CI ✅  
 **Full Playbook Run**: `E2E_TEST_PLAYBOOK.md` v2.0 — all flows confirmed  
 **🟢 LAUNCH READY**: No critical (P0/P1) bugs open. All game mechanics functional. WC kick-off 2026-06-11.  
@@ -17,6 +17,29 @@
 | # | Item | Effort | Notes |
 |---|------|--------|-------|
 | B-01 | **[FEATURE] Drag-to-add from player pool in Draft screen** | 3–4h | Allow dragging a player directly from the bottom pool list into a position in the ranked wishlist, bypassing the "Add to List" button. Requires lifting `DndContext` to wrap both lists, `useDraggable` on pool rows, cross-container drop with insertion-index logic, and position-cap enforcement. Current flow (Add to List → drag to reorder) works fine — this is a UX polish only. |
+
+---
+
+## ✅ Transfer Basket UX + Penalty Visibility (2026-06-09) — PRs #472–#473
+
+### PR #472 — Transfer basket UX overhaul
+- **Paired rows**: basket list now shows `OUT ⇄ IN` on the same line; first sell pairs with first buy; unpaired side shows `—`; each side has an independent `×` to remove
+- **Transfer count**: header changed from "12 pending" (total items) to "6 transfers" — count = `max(sells, buys)` pairs
+- **Penalty pts in header**: red `−8pts` appears next to the budget when queued buys exceed the free limit, so managers see the points cost before confirming
+- **QUEUED → BUYING**: label on a player queued for purchase renamed to match SELLING convention
+- **`penaltyPointsCost` useMemo** added in MarketScreen for clean reuse across header chip and basket footer
+
+### PR #473 — Transfer penalty deduction visibility in RecapView
+- **calculate-scores**: `penaltyDeduction` variable now lifted out of inner scope; stored as `transfer_penalty_deduction` in `points_breakdown` JSONB when > 0 (only on `roundComplete` pass)
+- **RecapView**: fetches `points_breakdown` alongside `total`; builds `penaltyMap` from the new field
+- **GW score sub-label**: shows red `−8 XFER` (mobile) / `−8 PENALTY` (desktop) instead of GW/LIVE when a penalty was applied that round
+- **Expanded player breakdown**: red "Transfer Penalty — extra buys" row at the bottom shows the exact deduction so managers can see "20 pts from play − 8 pts penalty = 12 pts total"
+- Edge Function `calculate-scores` re-deployed to production
+
+### Behaviour confirmed (not bugs)
+- Penalty deduction is applied only at `roundComplete = true` — not during live scoring and not immediately on transfer confirmation
+- `execute_transfer_atomic` always allows penalty buys (no points-balance block) — deduction happens at scoring; total can go negative
+- Budget check is doubly guarded: client-side `effectiveBudget` simulation + server-side `INSUFFICIENT_BUDGET` on the DB function
 
 ---
 
