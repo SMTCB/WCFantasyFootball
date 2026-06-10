@@ -587,9 +587,11 @@ export default function SquadScreen() {
         return;
       }
 
-      // Optimistic local update
+      // Optimistic local update — only mark the benched player as locked if the
+      // server actually wrote it to lineup_locks (round has kicked off). Otherwise
+      // a pre-competition swap-back would be blocked client-side until a refresh.
       const newBench           = squadData.bench.map(b =>
-        b.id === benchPlayer.id ? { ...pitchPlayer, gridClass: '', isLineupLocked: true } : b
+        b.id === benchPlayer.id ? { ...pitchPlayer, gridClass: '', isLineupLocked: result.locked === true } : b
       );
       const captainBeingBenched = squadData.captainId === pitchPlayer.id;
       const newCaptainId        = captainBeingBenched ? null : squadData.captainId;
@@ -599,7 +601,9 @@ export default function SquadScreen() {
         players:     newPlayers,
         bench:       newBench,
         captainId:   newCaptainId,
-        lockedIds:   new Set([...(prev.lockedIds ?? []), pitchPlayer.id]),
+        lockedIds:   result.locked === true
+          ? new Set([...(prev.lockedIds ?? []), pitchPlayer.id])
+          : (prev.lockedIds ?? new Set()),
       }));
 
       if (result.deduction > 0) {
@@ -2124,7 +2128,6 @@ export default function SquadScreen() {
                   squad={{ players, captainId, isTripleCaptain: squadData.isTripleCaptain, joker: jokerPlayer }}
                   onPlayerClick={handlePlayerClick}
                   selectedPlayerId={selectedPlayer?.id}
-                  swapMode={swapMode}
                   jokerPlayerId={todayJokerId}
                   matchdayLabel={squadData.matchdayId ? `GW · ${squadData.matchdayId}` : ''}
                 />
