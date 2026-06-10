@@ -78,6 +78,7 @@ export default function MarketScreen() {
   const [transfersPerRound, setTransfersPerRound] = useState(3);  // free transfers allowed per round
   const [transferPenalty,   setTransferPenalty]   = useState(4);  // pts cost per extra buy (or array)
   const [activeMatchdayId,  setActiveMatchdayId]  = useState(null); // e.g. '623-r3'
+  const [preCompetition,    setPreCompetition]    = useState(false); // true until first live/finished fixture
   const [clubCap,           setClubCap]           = useState(3);    // dynamic per-round, from club_cap_rules
   const [confirm,       setConfirm]       = useState(null);
   const [basket,        setBasket]        = useState([]);  // pending [{type:'buy'|'sell', player}]
@@ -117,9 +118,10 @@ export default function MarketScreen() {
 
   const penaltyPointsCost = useMemo(() => {
     if (!activeMatchdayId || basket.length === 0) return 0;
-    // No penalty when window is unlimited or squad is still in initial build
+    // No penalty when window is unlimited, squad is still building, or competition hasn't started
     if (transferWindow?.windowType === 'unlimited') return 0;
     if (mySquad?.initial_build_complete === false)  return 0;
+    if (preCompetition)                             return 0;
     const freeUsed    = (mySquad?.round_transfers  ?? {})[activeMatchdayId] ?? 0;
     const penaltyUsed = (mySquad?.penalty_transfers ?? {})[activeMatchdayId] ?? 0;
     const basketBuys  = basket.filter(b => b.type === 'buy').length;
@@ -128,7 +130,7 @@ export default function MarketScreen() {
     const costs = Array.isArray(transferPenalty) ? transferPenalty : [transferPenalty ?? 4];
     return [...Array(basketPenBuys)].reduce((sum, _, i) =>
       sum + (costs[Math.min(penaltyUsed + i, costs.length - 1)] ?? costs[costs.length - 1]), 0);
-  }, [basket, mySquad, activeMatchdayId, transfersPerRound, transferPenalty, transferWindow]);
+  }, [basket, mySquad, activeMatchdayId, transfersPerRound, transferPenalty, transferWindow, preCompetition]);
 
   // Draft gate: noduplicate leagues with no processed allocation go to draft screen or recovery
   useEffect(() => {
@@ -388,6 +390,20 @@ export default function MarketScreen() {
       if (deadlineRow?.matchday_id) setActiveMatchdayId(deadlineRow.matchday_id);
     } catch (err) {
       console.error('MarketScreen: deadline fetch failed', err);
+    }
+
+    // ── 2c. Pre-competition check: no live/finished fixtures yet → unlimited ───
+    if (tournamentId) {
+      try {
+        const { count } = await supabase
+          .from('fixtures')
+          .select('id', { count: 'exact', head: true })
+          .eq('tournament_id', tournamentId)
+          .in('status', ['live', 'finished']);
+        setPreCompetition((count ?? 0) === 0);
+      } catch {
+        setPreCompetition(false);
+      }
     }
 
     // ── 2b. Transfer config (transfers_per_round, transfer_penalty) ───────────
@@ -775,9 +791,10 @@ export default function MarketScreen() {
                 Hidden when window is locked — transfers impossible and stale round counts
                 (e.g. all 3 used last round) would show a misleading "0 free" in red. */}
             {activeMatchdayId && !isLocked && (() => {
-              // Unlimited when: initial build not yet complete (< 15 players), or free-window active.
+              // Unlimited when: initial build not yet complete, free-window active, or competition not started.
               const isUnlimited = mySquad?.initial_build_complete === false
-                || transferWindow?.windowType === 'unlimited';
+                || transferWindow?.windowType === 'unlimited'
+                || preCompetition;
               const freeUsed      = (mySquad?.round_transfers  ?? {})[activeMatchdayId] ?? 0;
               const penaltyUsed   = (mySquad?.penalty_transfers ?? {})[activeMatchdayId] ?? 0;
               const basketBuys    = basket.filter(b => b.type === 'buy').length;
