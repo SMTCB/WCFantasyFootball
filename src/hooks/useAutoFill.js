@@ -8,8 +8,9 @@ import { supabase } from '../lib/supabase';
  * @param {object}   takenMap   - { [playerId]: { userId, managerName } } from useTransfer
  * @param {function} buy        - buy(player) from useTransfer — passed in to avoid duplicate hook instance
  * @param {object}   cfg        - League config from useLeagueConfig — passed in to avoid TDZ (same module imported at depth-1 by callers)
+ * @param {Array}    basket     - Pending basket items [{type:'buy'|'sell', player}] — sells are applied before fill so slots/budget reflect post-sell state
  */
-export function useAutoFill(leagueId, squadData, fetchSquad, takenMap = {}, buy, cfg = {}) {
+export function useAutoFill(leagueId, squadData, fetchSquad, takenMap = {}, buy, cfg = {}, basket = []) {
   const [autoFilling, setAutoFilling] = useState(false);
   const [autoFillMsg, setAutoFillMsg] = useState(null);
   const clearMsgTimerRef = useRef(null);
@@ -64,7 +65,14 @@ export function useAutoFill(leagueId, squadData, fetchSquad, takenMap = {}, buy,
       const rawPlayers   = freshPlayerIds ?? squadData?.players ?? [];
       const benchPlayers = useFreshData ? [] : (squadData?.bench ?? []);
       const squadSize    = cfg.squadSize ?? 15;
-      const slotsNeeded  = squadSize - rawPlayers.length - benchPlayers.length;
+
+      // Pending sells free up slots and budget — apply them before computing slotsNeeded.
+      const pendingSells    = (basket ?? []).filter(b => b.type === 'sell');
+      const pendingSellIds  = new Set(pendingSells.map(b => b.player?.id ?? b.player));
+      const pendingSellBudget = pendingSells.reduce((sum, b) => sum + (Number(b.player?.price) || 0), 0);
+
+      const effectivePlayers = rawPlayers.filter(id => !pendingSellIds.has(typeof id === 'object' ? id?.id : id));
+      const slotsNeeded = squadSize - effectivePlayers.length - benchPlayers.length;
 
       if (slotsNeeded <= 0) {
         setAutoFillMsg('Squad is already full');
@@ -80,10 +88,13 @@ export function useAutoFill(leagueId, squadData, fetchSquad, takenMap = {}, buy,
           .in('id', rawPlayers);
         playerObjects = fetched || [];
       }
+      // Exclude players pending sell from the owned set so they can be re-bought
+      // as different players (and don't count against position/club caps).
+      const playerObjectsKept = playerObjects.filter(p => !pendingSellIds.has(p.id ?? p));
 
       // ── Build my own player IDs (never re-buy) ───────────────────────────
       const myIds = new Set([
-        ...playerObjects.map(p => p.id ?? p),
+        ...playerObjectsKept.map(p => p.id ?? p),
         ...benchPlayers.map(p => p.id ?? p),
       ]);
 
@@ -111,8 +122,9 @@ export function useAutoFill(leagueId, squadData, fetchSquad, takenMap = {}, buy,
 
       // ── Count current positions ──────────────────────────────────────────
       // benchPlayers is [] when useFreshData=true (all players already in playerObjects).
+      // Use playerObjectsKept (sells excluded) so position slots correctly reflect vacancies.
       const have = { GK: 0, DEF: 0, MID: 0, FWD: 0 };
-      for (const p of [...playerObjects, ...benchPlayers]) {
+      for (const p of [...playerObjectsKept, ...benchPlayers]) {
         if (typeof p !== 'object' || !p) continue;
         const rawPos = p.position?.toUpperCase() ?? '';
         const pos = rawPos === 'FW' ? 'FWD' : rawPos;
@@ -124,7 +136,7 @@ export function useAutoFill(leagueId, squadData, fetchSquad, takenMap = {}, buy,
       // candidate gets skipped client-side and will succeed if re-tried manually.
       const FILL_CLUB_LIMIT = 3;
       const clubCounts = {};
-      for (const p of playerObjects) {
+      for (const p of playerObjectsKept) {
         if (typeof p === 'object' && p?.club) clubCounts[p.club] = (clubCounts[p.club] ?? 0) + 1;
       }
 
@@ -160,12 +172,14 @@ export function useAutoFill(leagueId, squadData, fetchSquad, takenMap = {}, buy,
       }
 
       // ── Budget ───────────────────────────────────────────────────────────
-      let budgetLeft =
+      // Add pending sell proceeds so fill can use the freed-up funds immediately.
+      let budgetLeft = (
         freshBudget                 ??
         squadData?.budget?.current  ??
         squadData?.budget_remaining ??
         cfg.budgetTotal             ??
-        100;
+        100
+      ) + pendingSellBudget;
 
       let added            = 0;
       let skippedTaken     = 0;
@@ -336,7 +350,7 @@ export function useAutoFill(leagueId, squadData, fetchSquad, takenMap = {}, buy,
       clearMsgTimerRef.current = setTimeout(() => setAutoFillMsg(null), 7000);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [leagueId, squadData, buy, fetchSquad, takenMap, cfg]);
+  }, [leagueId, squadData, buy, fetchSquad, takenMap, cfg, basket]);
 
   return { handleAutoFill, autoFilling, autoFillMsg };
 }
