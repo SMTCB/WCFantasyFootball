@@ -1,6 +1,6 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-06-10 (RECAP tab GW breakdown fixes — PRs #483–#486)  
+**Last Updated**: 2026-06-10 (Squad sub-in/sub-out lock fixes — PRs #490–#491)  
 **E2E Test Suite**: `platform.spec.js` (36 tests × 2 browsers) passing in CI ✅  
 **Full Playbook Run**: `E2E_TEST_PLAYBOOK.md` v2.0 — all flows confirmed  
 **🟢 LAUNCH READY**: No critical (P0/P1) bugs open. All game mechanics functional. WC kick-off 2026-06-11.  
@@ -17,6 +17,23 @@
 | # | Item | Effort | Notes |
 |---|------|--------|-------|
 | B-01 | **[FEATURE] Drag-to-add from player pool in Draft screen** | 3–4h | Allow dragging a player directly from the bottom pool list into a position in the ranked wishlist, bypassing the "Add to List" button. Requires lifting `DndContext` to wrap both lists, `useDraggable` on pool rows, cross-container drop with insertion-index logic, and position-cap enforcement. Current flow (Add to List → drag to reorder) works fine — this is a UX polish only. |
+
+---
+
+## ✅ Squad sub-in/sub-out lock fixes (2026-06-10) — PRs #490–#491
+
+### Bug fixes (Mundial do Eder, tournament 429, pre-competition round)
+
+- **PR #490 — set_lineup returns `locked` flag + PitchView swap-mode tap fix**
+  - **Bug A**: subbing a player out then immediately back in failed with "already subbed out this round and cannot return" until a hard refresh. Root cause: `SquadScreen.doSwap()` unconditionally set `isLineupLocked: true` on the benched player client-side, regardless of whether the server (migration 162) actually wrote `lineup_locks` (only happens once the round has started). The very next swap-back was then blocked by the client's own `isLineupLocked` guard before the RPC was even called.
+  - Fix: migration 164 — `set_lineup` RETURN now includes `'locked': v_round_started`; `doSwap` sets `isLineupLocked: result.locked === true`, mirroring server truth exactly.
+  - **Bug B**: in swap mode, tapping a starting-XI player on the pitch (bench → SUB IN → tap XI player) did nothing.
+  - Root cause: `PitchView.jsx` token `onClick` was `swapMode ? () => {} : onPlayerClick` — a no-op while in swap mode.
+  - Fix: tokens always call `onPlayerClick`; removed the now-unused `swapMode` prop from `PitchView` and its usage in `SquadScreen`.
+
+- **PR #491 — clear stale 429-r1 lineup_locks for squad missed by migration 162's backfill**
+  - One squad in Mundial do Eder (xavierazcue@gmail.com) still carried a pre-existing `lineup_locks->'429-r1'` entry that migration 162's backfill missed — same symptom as Bug A but for stale data rather than newly-created locks.
+  - Migration 165 cleared it. Database-wide check across all tournaments/leagues confirmed no other squad has a `lineup_locks` entry for a round that hasn't started — issue fully closed.
 
 ---
 
