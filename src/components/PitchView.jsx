@@ -214,7 +214,6 @@ export default function PitchView({
   squad,
   onPlayerClick,
   selectedPlayerId,
-  swapMode,
   variant = 'desktop',   // 'desktop' | 'mobile' | 'compact'
   matchdayLabel = '',
 }) {
@@ -366,7 +365,7 @@ export default function PitchView({
             x={x}
             y={y}
             isCaptain={isCaptain}
-            onClick={swapMode ? () => {} : (onPlayerClick ?? (() => {}))}
+            onClick={() => (onPlayerClick ?? (() => {}))(player)}
             isSelected={selectedPlayerId === player.id}
             compact={isCompact}
           />
