@@ -283,8 +283,17 @@ export default function MarketScreen() {
     }
   };
 
-  // Auto-fill hook — reusable across screens
-  const { handleAutoFill, autoFilling, autoFillMsg } = useAutoFill(activeLeague, mySquad, fetchSquad, takenMap, buy, cfg, basket);
+  // addToBasket: used by auto-fill to stage picks without committing transfers.
+  // The user reviews the basket and hits Confirm when satisfied.
+  const addToBasket = useCallback((player) => {
+    setBasket(prev => {
+      if (prev.some(b => b.player.id === player.id)) return prev; // already queued
+      return [...prev, { type: 'buy', player }];
+    });
+  }, []);
+
+  // Auto-fill hook — adds suggestions to basket (no DB writes until basket confirmed)
+  const { handleAutoFill, autoFilling, autoFillMsg } = useAutoFill(activeLeague, mySquad, fetchSquad, takenMap, addToBasket, cfg, basket);
 
   // Mirror auto-fill messages to the toast system so they're always visible
   const prevAutoFillMsg = useRef(null);
@@ -600,43 +609,6 @@ export default function MarketScreen() {
     setSaving(false);
   };
 
-  // FILL wrapper: if there are pending sells in the basket, execute them first to
-  // credit the budget in the DB before auto-fill tries to buy. The backend validates
-  // budget against DB state, so sells must be committed before buys.
-  const handleAutoFillWithSells = async () => {
-    if (isLocked) { showToast('Transfer window is closed — the commissioner must open it first.', 'warning'); return; }
-    const pendingSells = basket.filter(b => b.type === 'sell');
-    if (pendingSells.length === 0) { handleAutoFill(); return; }
-
-    setConfirming(true);
-    setSaving(true);
-    const succeeded = new Set();
-    const errors = [];
-    for (const item of pendingSells) {
-      const result = await sell(item.player);
-      if (!result.ok) {
-        errors.push(`${item.player.name}: ${result.error}`);
-      } else {
-        succeeded.add(item.player.id);
-        setMySquad(prev => ({ ...prev, players: result.players, budget_remaining: result.budget_remaining }));
-        setBudget(result.budget_remaining);
-      }
-    }
-    setBasket(prev => prev.filter(b => !(b.type === 'sell' && succeeded.has(b.player.id))));
-    setConfirming(false);
-    setSaving(false);
-
-    if (errors.length > 0) {
-      showToast(`${errors.length} sell${errors.length > 1 ? 's' : ''} failed — ${errors[0]}`, 'warning', 5000);
-      if (succeeded.size === 0) return; // nothing sold, no point filling
-    } else {
-      showToast(`Sold ${succeeded.size} player${succeeded.size > 1 ? 's' : ''} — filling squad…`, 'success', 3000);
-    }
-
-    await fetchSquad(); // ensure DB budget is reflected before fill starts
-    handleAutoFill();
-  };
-
   const availableTeams = useMemo(() => {
     const teams = new Set(players.map(p => p.club).filter(Boolean));
     return [...teams].sort((a, b) => a.localeCompare(b));
@@ -859,7 +831,7 @@ export default function MarketScreen() {
 
             {/* Auto-fill button */}
             <button
-              onClick={handleAutoFillWithSells}
+              onClick={handleAutoFill}
               disabled={autoFilling}
               title={isLocked ? 'Transfer window closed' : emptySlots === 0 ? 'Squad is full' : `Fill ${emptySlots} empty slot${emptySlots > 1 ? 's' : ''}`}
               style={{
