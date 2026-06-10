@@ -6,7 +6,9 @@
 
 ## Core Principle
 
-League mode (Classic vs Draft) has no effect on transfer window logic. Competition format (tournament vs league) has no effect either. **One code path handles everything.** The only differences are config values stored per-league in `league_config`.
+Competition format (tournament vs league) has no effect on transfer window logic — **one code path handles window open/close timing for everything.** The only timing differences are config values stored per-league in `league_config`.
+
+League mode (Classic vs Draft) **does** affect one thing: the per-round transfer limit. Window open/close timing, live-fixture locks, budget, position caps, and club caps are identical for both modes. See [Transfer Limits](#transfer-limits) below and [DRAFT_UNLIMITED_TRANSFERS.md](DRAFT_UNLIMITED_TRANSFERS.md).
 
 ---
 
@@ -48,7 +50,7 @@ transfers_per_round  →  max transfers between any two deadlines (config, defau
 transfer_wildcard_round  →  one round with unlimited transfers (config; NULL = none)
 ```
 
-Limits apply equally to Classic and Draft mode. There is no separate limit by mode.
+**Classic leagues only.** `process-transfer` passes `p_matchday_id = null` to `execute_transfer_atomic` whenever `league_mode = 'draft'` (covers standard Draft and Draft+H2H — both have `format = 'noduplicate'`), which skips the limit check and the `round_transfers`/`penalty_transfers` counters entirely. Draft leagues have unlimited buys and sells, no penalty. See [DRAFT_UNLIMITED_TRANSFERS.md](DRAFT_UNLIMITED_TRANSFERS.md).
 
 ### Wildcard round
 
@@ -227,10 +229,11 @@ In practice all current leagues have a `tournament_id`, so the manual path is in
 
 ## Related Documents
 
+- [DRAFT_UNLIMITED_TRANSFERS.md](DRAFT_UNLIMITED_TRANSFERS.md) — Draft leagues unlimited-transfer change + revert guide
 - [DRAFT_SYSTEM_DESIGN.md](DRAFT_SYSTEM_DESIGN.md) — Draft mode mechanics and allocation engine
 - [STARTING_XI_AND_BENCH.md](STARTING_XI_AND_BENCH.md) — Lineup change rules (distinct from transfers)
 - [docs/brand/admin-tab/LIFECYCLE_OPERATIONS.md](../brand/admin-tab/LIFECYCLE_OPERATIONS.md) — Commissioner panel controls
 
 ---
 
-Last Updated: **2026-06-08** (migration 157 — sells are free; penalty transfers replace hard block; enforcement flow updated; transfer_penalty config key added)
+Last Updated: **2026-06-10** (Draft leagues — incl. Draft+H2H — now have unlimited transfers via `process-transfer` passing `p_matchday_id=null` when `league_mode='draft'`; Classic leagues unaffected; see [DRAFT_UNLIMITED_TRANSFERS.md](DRAFT_UNLIMITED_TRANSFERS.md). Previously: 2026-06-08, migration 157 — sells are free; penalty transfers replace hard block; enforcement flow updated; transfer_penalty config key added)
