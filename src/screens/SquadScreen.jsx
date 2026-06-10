@@ -642,12 +642,21 @@ export default function SquadScreen() {
       setSaving(true);
       const prevCaptainId = squadData.captainId;
       setSquadData({ ...squadData, captainId: selectedPlayer.id });
-      const { error } = await supabase.from('squads').update({ captain_id: selectedPlayer.id }).eq('id', squadData.squadId);
-      if (error) {
+      const { data: result, error } = await supabase.rpc('set_captain', {
+        p_squad_id: squadData.squadId,
+        p_player_id: selectedPlayer.id,
+      });
+      if (error || !result?.ok) {
         // Persisting the armband failed — revert the optimistic update so the UI
         // doesn't show a captain that won't actually score.
         setSquadData(prev => ({ ...prev, captainId: prevCaptainId }));
-        showToast('Failed to set captain — please try again.', 'error');
+        const code = result?.code ?? '';
+        const msg  = result?.error ?? error?.message ?? 'Failed to set captain — please try again.';
+        if (code === 'FIXTURE_STARTED') {
+          showToast(`Cannot make ${selectedPlayer.name} captain — their match has already started or finished this round.`, 'warning');
+        } else {
+          showToast(msg, 'error');
+        }
       }
     } finally { setSaving(false); setSelectedPlayer(null); }
   };
