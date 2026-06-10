@@ -284,7 +284,7 @@ export default function MarketScreen() {
   };
 
   // Auto-fill hook — reusable across screens
-  const { handleAutoFill, autoFilling, autoFillMsg } = useAutoFill(activeLeague, mySquad, fetchSquad, takenMap, buy, cfg);
+  const { handleAutoFill, autoFilling, autoFillMsg } = useAutoFill(activeLeague, mySquad, fetchSquad, takenMap, buy, cfg, basket);
 
   // Mirror auto-fill messages to the toast system so they're always visible
   const prevAutoFillMsg = useRef(null);
@@ -763,33 +763,33 @@ export default function MarketScreen() {
                 Hidden when window is locked — transfers impossible and stale round counts
                 (e.g. all 3 used last round) would show a misleading "0 free" in red. */}
             {activeMatchdayId && !isLocked && (() => {
-              const freeUsed        = (mySquad?.round_transfers  ?? {})[activeMatchdayId] ?? 0;
-              const penaltyUsed     = (mySquad?.penalty_transfers ?? {})[activeMatchdayId] ?? 0;
-              const basketBuys      = basket.filter(b => b.type === 'buy').length;
-              const isEst           = basketBuys > 0;
-              const projFreeUsed    = freeUsed + basketBuys;
-              const projFreeLeft    = Math.max(0, transfersPerRound - projFreeUsed);
-              // How many of the basket buys are penalty buys (over the free limit)
-              const basketPenBuys   = Math.max(0, projFreeUsed - Math.max(freeUsed, transfersPerRound));
-              const costs           = Array.isArray(transferPenalty) ? transferPenalty : [transferPenalty ?? 4];
-              // Sum up the point cost of each penalty buy in the basket
-              const totalPenCost    = [...Array(basketPenBuys)].reduce((sum, _, i) => {
-                return sum + (costs[Math.min(penaltyUsed + i, costs.length - 1)] ?? costs[costs.length - 1]);
-              }, 0);
-              const freeColor       = projFreeLeft === 0 ? 'var(--danger)' : projFreeLeft <= 1 ? 'var(--gold)' : 'var(--paper)';
+              // Unlimited when: initial build not yet complete (< 15 players), or free-window active.
+              const isUnlimited = mySquad?.initial_build_complete === false
+                || transferWindow?.windowType === 'unlimited';
+              const freeUsed      = (mySquad?.round_transfers  ?? {})[activeMatchdayId] ?? 0;
+              const penaltyUsed   = (mySquad?.penalty_transfers ?? {})[activeMatchdayId] ?? 0;
+              const basketBuys    = basket.filter(b => b.type === 'buy').length;
+              const isEst         = basketBuys > 0;
+              const projFreeUsed  = freeUsed + basketBuys;
+              const projFreeLeft  = Math.max(0, transfersPerRound - projFreeUsed);
+              const basketPenBuys = isUnlimited ? 0 : Math.max(0, projFreeUsed - Math.max(freeUsed, transfersPerRound));
+              const costs         = Array.isArray(transferPenalty) ? transferPenalty : [transferPenalty ?? 4];
+              const totalPenCost  = [...Array(basketPenBuys)].reduce((sum, _, i) =>
+                sum + (costs[Math.min(penaltyUsed + i, costs.length - 1)] ?? costs[costs.length - 1]), 0);
+              const freeColor     = isUnlimited ? 'var(--positive)' : projFreeLeft === 0 ? 'var(--danger)' : projFreeLeft <= 1 ? 'var(--gold)' : 'var(--paper)';
               return (
                 <div className="text-right">
                   <div className="fz-label" style={{ color: 'var(--mute)', fontSize: 10 }}>
-                    Transfers{isEst ? ' (est.)' : ''}
+                    Transfers{!isUnlimited && isEst ? ' (est.)' : ''}
                   </div>
                   <div
                     className="text-[16px] lg:text-[20px] font-black tabular-nums leading-tight"
                     style={{ fontFamily: 'Archivo Black, sans-serif', color: freeColor }}
-                    title={`${projFreeLeft} free transfer${projFreeLeft !== 1 ? 's' : ''} remaining this round`}
+                    title={isUnlimited ? 'Unlimited transfers — build your squad freely' : `${projFreeLeft} free transfer${projFreeLeft !== 1 ? 's' : ''} remaining this round`}
                   >
-                    {projFreeLeft}
+                    {isUnlimited ? '∞' : projFreeLeft}
                     <span className="text-[10px] lg:text-[12px] font-normal" style={{ color: 'var(--mute)' }}>
-                      {' free'}
+                      {isUnlimited ? ' free' : ' free'}
                     </span>
                   </div>
                   {totalPenCost > 0 && (
