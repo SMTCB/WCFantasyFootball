@@ -1,6 +1,6 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-06-10 (Squad screen sub-in fix + bottom sheet portal — PR #474)  
+**Last Updated**: 2026-06-10 (Auto-fill basket staging + transfer quota UX — PRs #476–#481)  
 **E2E Test Suite**: `platform.spec.js` (36 tests × 2 browsers) passing in CI ✅  
 **Full Playbook Run**: `E2E_TEST_PLAYBOOK.md` v2.0 — all flows confirmed  
 **🟢 LAUNCH READY**: No critical (P0/P1) bugs open. All game mechanics functional. WC kick-off 2026-06-11.  
@@ -19,6 +19,34 @@
 | B-01 | **[FEATURE] Drag-to-add from player pool in Draft screen** | 3–4h | Allow dragging a player directly from the bottom pool list into a position in the ranked wishlist, bypassing the "Add to List" button. Requires lifting `DndContext` to wrap both lists, `useDraggable` on pool rows, cross-container drop with insertion-index logic, and position-cap enforcement. Current flow (Add to List → drag to reorder) works fine — this is a UX polish only. |
 
 ---
+
+## ✅ Auto-fill basket staging + Transfer quota UX (2026-06-10) — PRs #476–#481
+
+### PR #476 — Commissioner draft deadline banner + auto-fill cap fix
+- **Commissioner deadline banner**: new always-visible banner in LeagueScreen for commissioners once a draft deadline is set — shows `DRAFT SUBMISSIONS — N/M MANAGERS · DEADLINE Jun XX HH:MM`, changes to `DEADLINE PASSED · RUN LOTTERY WHEN READY` after deadline. Tapping navigates to commissioner panel.
+- **Auto-fill cap at 30 fixed**: migration 160 — `draft_position_caps` column default updated to `{GK:6,DEF:15,MID:15,FWD:9}` (sum=45); all existing leagues patched. Classic-mode leagues were missed by migration 156 which only targeted `league_mode='draft'` leagues.
+
+### PR #477 — Transfer quota + initial build unlimited (partial, extended by #479–#481)
+- Transfer quota chip shows `∞ free` when `initial_build_complete === false`
+
+### PR #479 — FILL button basket-staging rewrite
+- `useAutoFill` hook completely rewritten: takes `addToBasket(player)` instead of `buy`; no DB writes during fill
+- Pending basket sells are applied client-side (free slots + budget) before fill computes candidates
+- Pending basket buys are already accounted for (skipped in pool, cost deducted from budget)
+- FILL adds players to basket → user reviews → Confirm executes everything at once
+- Basket UX contract fully honoured: nothing commits until the user clicks Confirm
+
+### PR #480 — Hide penalty pts during unlimited / initial build
+- `penaltyPointsCost` useMemo returns 0 when `transferWindow?.windowType === 'unlimited'` or `initial_build_complete === false`
+- Basket footer no longer shows `-Xpts` during free-window or squad-build phases
+
+### PR #481 — Unlimited transfers before competition starts
+- `preCompetition` state in MarketScreen: COUNT fixtures with `status IN ('live', 'finished')` for the tournament (lightweight HEAD query)
+- `preCompetition = true` until the first fixture goes live → quota chip shows `∞`, no penalty
+- Three unlimited-transfer rules now fully enforced in UI:
+  1. Squad incomplete: `initial_build_complete === false`
+  2. Pre-competition: no live/finished fixtures in tournament
+  3. Admin free window: `windowType === 'unlimited'`
 
 ## ✅ Squad Screen Sub-in + Bottom Sheet Portal (2026-06-10) — PR #474
 
