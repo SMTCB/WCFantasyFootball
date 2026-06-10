@@ -1,6 +1,6 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-06-10 (Auto-fill basket staging + transfer quota UX — PRs #476–#481)  
+**Last Updated**: 2026-06-10 (RECAP tab GW breakdown fixes — PRs #483–#486)  
 **E2E Test Suite**: `platform.spec.js` (36 tests × 2 browsers) passing in CI ✅  
 **Full Playbook Run**: `E2E_TEST_PLAYBOOK.md` v2.0 — all flows confirmed  
 **🟢 LAUNCH READY**: No critical (P0/P1) bugs open. All game mechanics functional. WC kick-off 2026-06-11.  
@@ -17,6 +17,32 @@
 | # | Item | Effort | Notes |
 |---|------|--------|-------|
 | B-01 | **[FEATURE] Drag-to-add from player pool in Draft screen** | 3–4h | Allow dragging a player directly from the bottom pool list into a position in the ranked wishlist, bypassing the "Add to List" button. Requires lifting `DndContext` to wrap both lists, `useDraggable` on pool rows, cross-container drop with insertion-index logic, and position-cap enforcement. Current flow (Add to List → drag to reorder) works fine — this is a UX polish only. |
+
+---
+
+## ✅ RECAP tab GW breakdown fixes (2026-06-10) — PRs #483–#486
+
+### Bug fixes (smoke test of TEST_2_H2H_DRAFT before WC kick-off)
+
+- **PR #483 — LiveScreen stats window: matchday-scoped, not 6h time window**
+  - Players from games with kickoff > 6h ago (e.g., Argentina at 00:30 UTC seen next morning) showed 0 pts on the Live tab
+  - Root cause: stats fixture lookup used a 6h `kickoff_at >= NOW()-6h` filter, which missed overnight games
+  - Fix: primary lookup now fetches all fixtures for `activeMatchdayIds` with `status='finished'`; 6h window is retained only as fallback when no matchday ID is known
+
+- **PR #484 — MY DIGEST screen: live matchday scorecard (mid-round view)**
+  - Added `LiveMatchdayCard` component pinned above the gazette feed in `RecapScreen.jsx` (the standalone MY DIGEST screen, accessible from the Recap nav icon)
+  - Shows: GW label + IN PROGRESS badge, per-fixture sections with player rows (position, name, captain badge, minutes, pts), NO FIXTURE footer for upcoming games
+  - Only renders when `roundComplete=false` (at least one fixture in the matchday is not yet finished)
+  - Uses `player.nationality` to match players to their fixture (correct for international tournaments)
+
+- **PR #485 — RECAP tab breakdown: use starting_xi not players.slice(0,11)**
+  - The League screen RECAP tab showed wrong players when tapping a manager's GW row for breakdown
+  - Root cause: `toggleBreakdown` fetched `players.slice(0, 11)` — the first 11 entries of the raw squad array in insertion order — instead of `squads.starting_xi` (the actual lineup set by the manager)
+  - Fix: fetch `starting_xi` alongside `players`; use it when non-empty, fall back to `players.slice(0,11)` for squads that never set a custom lineup via set_lineup
+
+- **PR #486 — RECAP tab breakdown: newest squad row (DESC not ASC)**
+  - `toggleBreakdown` was querying `ORDER BY created_at ASC` → oldest squad row. Managers who made transfers (which creates a new squad row for the current matchday) would see stale lineup data
+  - Fix: `ORDER BY created_at DESC` to always read the most recently active squad
 
 ---
 
