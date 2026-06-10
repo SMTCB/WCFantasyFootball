@@ -283,7 +283,7 @@ export default function RecapView({ leagueId, tournamentId, members, currentUser
       const { data: squadRow } = await supabase.from('squads')
         .select('id, players, starting_xi, captain_id, joker_player_id, is_triple_captain')
         .eq('league_id', leagueId).eq('user_id', userId)
-        .order('created_at', { ascending: true }).limit(1).maybeSingle();
+        .order('created_at', { ascending: false }).limit(1).maybeSingle();
 
       if (!squadRow?.players) { setBreakdown(prev => ({ ...prev, [userId]: [] })); return; }
       // Use starting_xi when set; fall back to first 11 of players array
