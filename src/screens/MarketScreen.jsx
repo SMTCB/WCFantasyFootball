@@ -116,12 +116,18 @@ export default function MarketScreen() {
     ), budget);
   }, [basket, budget]);
 
+  // Draft leagues (incl. draft+H2H, format='noduplicate') have unlimited transfers —
+  // mirrors the league_mode === 'draft' bypass in process-transfer's execute_transfer_atomic call.
+  const isDraftLeague = leagueFormat === 'noduplicate';
+
   const penaltyPointsCost = useMemo(() => {
     if (!activeMatchdayId || basket.length === 0) return 0;
-    // No penalty when window is unlimited, squad is still building, or competition hasn't started
+    // No penalty when window is unlimited, squad is still building, competition hasn't started,
+    // or this is a draft league (unlimited transfers, no penalty mechanism applies)
     if (transferWindow?.windowType === 'unlimited') return 0;
     if (mySquad?.initial_build_complete === false)  return 0;
     if (preCompetition)                             return 0;
+    if (isDraftLeague)                              return 0;
     const freeUsed    = (mySquad?.round_transfers  ?? {})[activeMatchdayId] ?? 0;
     const penaltyUsed = (mySquad?.penalty_transfers ?? {})[activeMatchdayId] ?? 0;
     const basketBuys  = basket.filter(b => b.type === 'buy').length;
@@ -130,7 +136,7 @@ export default function MarketScreen() {
     const costs = Array.isArray(transferPenalty) ? transferPenalty : [transferPenalty ?? 4];
     return [...Array(basketPenBuys)].reduce((sum, _, i) =>
       sum + (costs[Math.min(penaltyUsed + i, costs.length - 1)] ?? costs[costs.length - 1]), 0);
-  }, [basket, mySquad, activeMatchdayId, transfersPerRound, transferPenalty, transferWindow, preCompetition]);
+  }, [basket, mySquad, activeMatchdayId, transfersPerRound, transferPenalty, transferWindow, preCompetition, isDraftLeague]);
 
   // Draft gate: noduplicate leagues with no processed allocation go to draft screen or recovery
   useEffect(() => {
@@ -791,8 +797,10 @@ export default function MarketScreen() {
                 Hidden when window is locked — transfers impossible and stale round counts
                 (e.g. all 3 used last round) would show a misleading "0 free" in red. */}
             {activeMatchdayId && !isLocked && (() => {
-              // Unlimited when: initial build not yet complete, free-window active, or competition not started.
-              const isUnlimited = mySquad?.initial_build_complete === false
+              // Unlimited when: draft league (always), initial build not yet complete,
+              // free-window active, or competition not started.
+              const isUnlimited = isDraftLeague
+                || mySquad?.initial_build_complete === false
                 || transferWindow?.windowType === 'unlimited'
                 || preCompetition;
               const freeUsed      = (mySquad?.round_transfers  ?? {})[activeMatchdayId] ?? 0;
@@ -1159,7 +1167,6 @@ export default function MarketScreen() {
             const pendingBuy   = basket.some(b => b.type === 'buy'  && b.player.id === p.id);
             // In Draft mode each player belongs to one manager — block if taken.
             // In Classic mode any player can be in multiple squads simultaneously.
-            const isDraftLeague = leagueFormat === 'noduplicate';
             const takenByOther = isDraftLeague && !isOwned && isTaken(p.id);
             const ownerName    = takenBy(p.id);
             const limitReached = stats.posCounts[p.position] >= POS_LIMITS[p.position];

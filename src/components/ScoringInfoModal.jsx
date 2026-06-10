@@ -245,10 +245,17 @@ export default function ScoringInfoModal({ onClose, initialTab }) {
 
             <Section title="TRANSFERS">
               <InfoBox>
-                <div>Up to <span style={{ color: 'var(--cyan)', fontFamily: DISPLAY }}>3 buys</span> per matchday window. Sells are always free.</div>
+                <div style={{ marginBottom: 8 }}>
+                  <span style={{ color: 'var(--positive)', fontFamily: DISPLAY }}>DRAFT LEAGUES</span>
+                  {' — '}<span style={{ color: 'var(--positive)', fontFamily: DISPLAY }}>∞ unlimited</span> buys and sells, no point penalty.
+                </div>
+                <div>
+                  <span style={{ color: 'var(--cyan)', fontFamily: DISPLAY }}>CLASSIC LEAGUES</span>
+                  {' — '}Up to <span style={{ color: 'var(--cyan)', fontFamily: DISPLAY }}>3 buys</span> per matchday window. Sells are always free.
+                </div>
                 <div>Window closes at the <span style={{ color: 'var(--cyan)', fontFamily: DISPLAY }}>matchday deadline</span> and reopens ~8h after the last match.</div>
                 <div style={{ marginTop: 6, color: 'var(--mute)', fontSize: 9 }}>
-                  Extra buys beyond 3 are allowed but cost <span style={{ color: 'var(--danger)' }}>−4 pts</span> each. Commissioner free-transfer windows bypass all limits.
+                  Classic leagues only: extra buys beyond 3 are allowed but cost <span style={{ color: 'var(--danger)' }}>−4 pts</span> each. Commissioner free-transfer windows bypass all limits.
                 </div>
               </InfoBox>
             </Section>
@@ -262,14 +269,14 @@ export default function ScoringInfoModal({ onClose, initialTab }) {
               <InfoBox>
                 <div style={{ marginBottom: 8 }}>
                   <span style={{ color: 'var(--positive)', fontFamily: DISPLAY }}>OPEN</span>
-                  {' — '}Between matchdays. Up to 3 buys; sells always free. Extra buys cost <span style={{ color: 'var(--danger)' }}>−4 pts</span> each.
+                  {' — '}Between matchdays. <span style={{ color: 'var(--positive)', fontFamily: DISPLAY }}>Draft leagues: ∞ unlimited</span> buys/sells, no penalty. <span style={{ color: 'var(--cyan)', fontFamily: DISPLAY }}>Classic leagues:</span> up to 3 buys; sells always free; extra buys cost <span style={{ color: 'var(--danger)' }}>−4 pts</span> each.
                 </div>
                 <div style={{ marginBottom: 8 }}>
                   <span style={{ color: 'var(--gold)', fontFamily: DISPLAY }}>CLOSED</span>
                   {' — '}From the matchday deadline until ~8 hours after the last kick-off of the round. No buys or sells.
                 </div>
                 <div style={{ fontSize: 9, color: 'var(--mute)' }}>
-                  A commissioner free-transfer window bypasses the deadline lock and the 3-buy limit entirely.
+                  A commissioner free-transfer window bypasses the deadline lock and (for classic leagues) the 3-buy limit entirely.
                 </div>
               </InfoBox>
             </Section>

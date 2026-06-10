@@ -279,6 +279,16 @@ Deno.serve(async (req) => {
       limitMatchdayId = null;
     }
 
+    // Draft leagues: unlimited transfers (no free-transfer cap, no penalty buys).
+    // league_mode is 'draft' for both standard draft and draft+H2H leagues
+    // (format='noduplicate'); 'classic' leagues keep the per-round limit.
+    // Passing p_matchday_id=null to execute_transfer_atomic skips the limit
+    // check and the round_transfers/penalty_transfers counters entirely —
+    // the same mechanism used by the bypasses above.
+    if (leagueMode === 'draft') {
+      limitMatchdayId = null;
+    }
+
     // ── SELL ─────────────────────────────────────────────────────────────────
     if (action === 'sell') {
       if (!currentPlayers.includes(player_id)) {

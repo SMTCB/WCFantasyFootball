@@ -49,6 +49,7 @@ Detailed documentation of core systems and how they work.
 | [FANTASY_POINTS_SCORING_LAYER.md](docs/architecture/FANTASY_POINTS_SCORING_LAYER.md) | Scoring formula, DB schema, **scoring job timing** (cron schedule, matchday timeline) | EPL point values, position multipliers, cron table, auto-sub/H2H gates |
 | [LIVE_CENTRE_DESIGN.md](docs/architecture/LIVE_CENTRE_DESIGN.md) | Live Centre fixture filter logic and squad display | Three-layer cascade (user tournaments → active matchday → fallback), starting_xi authority, bench ordering |
 | [AUCTION_SYSTEM_DESIGN.md](docs/architecture/AUCTION_SYSTEM_DESIGN.md) | Auction two-phase flow — bid → pending_confirmation → confirm | State machine, transfer window rules, squad-full handling, void sweep, DB changes, UI spec |
+| [DRAFT_UNLIMITED_TRANSFERS.md](docs/architecture/DRAFT_UNLIMITED_TRANSFERS.md) | Draft leagues (incl. Draft+H2H) have unlimited buys/sells, no penalty | `process-transfer` league_mode bypass, MarketScreen `isDraftLeague` flag, revert steps |
 | [APP_DYNAMICS.md](docs/architecture/APP_DYNAMICS.md) | Live match updates, real-time subscriptions, Joker chip | Realtime architecture, match state machine |
 | [FORMATION_RULES.md](docs/architecture/FORMATION_RULES.md) | 11-player pitch validation rules | Position constraints, squad balance, constraints |
 
