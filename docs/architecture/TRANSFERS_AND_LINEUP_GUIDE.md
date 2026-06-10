@@ -2,6 +2,8 @@
 
 **Single reference covering transfer windows, per-round limits, lineup sub-in/sub-out, and live-match locks across all league modes (Classic / Draft) and competition formats (Tournament / Season).**
 
+> **Draft leagues (incl. Draft+H2H) have UNLIMITED transfers — no free-transfer cap, no penalty buys.** The per-round limit described below (3 free buys, penalty for extras) applies to **Classic leagues only**. See [Classic vs Draft Mode Differences](#classic-vs-draft-mode-differences) and [DRAFT_UNLIMITED_TRANSFERS.md](DRAFT_UNLIMITED_TRANSFERS.md) for the implementation + revert details.
+
 ---
 
 ## Quick Navigation
@@ -56,7 +58,9 @@ The exact reopen delay is configurable per league (`transfer_reopen_hours` in `l
 
 ## Per-Round Limits
 
-Every manager gets **3 free buy transfers per round** by default.
+> **This entire section applies to Classic leagues only.** Draft leagues (and Draft+H2H) have unlimited buys and sells — `process-transfer` passes `p_matchday_id = null` to `execute_transfer_atomic` whenever `league_mode = 'draft'`, which skips the limit check and the `round_transfers`/`penalty_transfers` counters entirely. See [DRAFT_UNLIMITED_TRANSFERS.md](DRAFT_UNLIMITED_TRANSFERS.md).
+
+Every manager in a **Classic** league gets **3 free buy transfers per round** by default.
 
 | Config key | Default | Effect |
 |---|---|---|
@@ -91,6 +95,7 @@ The following player movements bypass `execute_transfer_atomic` entirely and **n
 | Operation | Why exempt |
 |---|---|
 | Selling a player (market sell) | Only BUYS count |
+| **Any buy/sell in a Draft league** | `league_mode = 'draft'` forces `p_matchday_id = null` — unlimited, see [DRAFT_UNLIMITED_TRANSFERS.md](DRAFT_UNLIMITED_TRANSFERS.md) |
 | Auction win (`confirm_auction_win`) | Uses raw SQL UPDATE, bypasses counter |
 | Auction sell (`sell_now` / cron expiry) | Uses raw SQL UPDATE, bypasses counter |
 | Trade acceptance (`accept_trade_proposal`) | Uses raw SQL UPDATE, bypasses counter |
@@ -123,7 +128,7 @@ The exemption uses a **one-way latch** (`squads.initial_build_complete`). The mo
 
 ## Classic vs Draft Mode Differences
 
-The transfer window timing and limits work **identically** in both modes. The only differences are in who can hold a player.
+The transfer **window timing** (open/closed schedule, live-game locks) works **identically** in both modes. The **per-round transfer limit does not** — Draft leagues are unlimited. The other differences are in who can hold a player.
 
 | Rule | Classic | Draft/Noduplicate |
 |---|---|---|
@@ -131,7 +136,7 @@ The transfer window timing and limits work **identically** in both modes. The on
 | No-repeat rule | None | Enforced at buy time via `current_repeats_allowed` |
 | No-repeat relaxation | N/A | Automatic as cup clubs are eliminated (0 → 1 → 2 → unlimited) |
 | Transfer window timing | Same | Same |
-| Per-round transfer limit | Same | Same |
+| Per-round transfer limit | 3 free buys/round + penalty for extras | **Unlimited (∞)** — see [DRAFT_UNLIMITED_TRANSFERS.md](DRAFT_UNLIMITED_TRANSFERS.md) |
 | Initial squad: how players are allocated | Self-select from market | Draft lottery first; market-style after allocation |
 
 ### Draft mode: before and after allocation
@@ -280,4 +285,4 @@ The POINTS LOG sub-screen is your **personal scoring tracker**, not a full match
 
 ---
 
-Last Updated: **2026-06-08** (migration 157 — sells are now free (only BUYs count); penalty transfers beyond free limit; exempt operations table added; `TRANSFER_LIMIT_REACHED` retired)
+Last Updated: **2026-06-10** (Draft leagues — incl. Draft+H2H — now have unlimited transfers; per-round limit applies to Classic only; see [DRAFT_UNLIMITED_TRANSFERS.md](DRAFT_UNLIMITED_TRANSFERS.md). Previously: 2026-06-08, migration 157 — sells are now free (only BUYs count); penalty transfers beyond free limit; exempt operations table added; `TRANSFER_LIMIT_REACHED` retired)
