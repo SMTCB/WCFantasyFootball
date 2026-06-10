@@ -162,6 +162,7 @@ export default function LeagueScreen() {
   const [draftAllocated, setDraftAllocated] = useState(false); // lottery ran and produced allocation
   const [draftOpen, setDraftOpen] = useState(false); // deadline in future + no submission yet
   const [draftDeadlineDate, setDraftDeadlineDate] = useState(null); // for countdown banner
+  const [draftSubmissionCount, setDraftSubmissionCount] = useState(0); // how many managers submitted
   const [currentGW, setCurrentGW] = useState('—'); // current GW label for league header
   const transferWindow = useTransferWindow(activeLeague?.league_id);
   const { auctions, pendingAuctions, closedAuctions, loading: auctionsLoading, placeBid, cancelListing, sellNow, confirmWin } = useAuctions(activeLeague?.league_id, mySquadId);
@@ -493,12 +494,10 @@ export default function LeagueScreen() {
       const isKnockoutWindow = lData?.cup_phase === 'group_stage' && !!lData?.knockout_draft_deadline;
       const deadline = isKnockoutWindow ? lData.knockout_draft_deadline : lData?.draft_deadline;
       const deadlineDate = deadline ? new Date(deadline) : null;
-      if (isDraftLeague && deadlineDate && deadlineDate > new Date()) {
+      const currentPhase = isKnockoutWindow ? 'knockout' : 'group';
+      if (isDraftLeague && deadlineDate) {
         setDraftDeadlineDate(deadlineDate);
-        // For knockout phase check if manager already submitted their knockout wish list.
-        // A draft league can have rows for multiple phases (group + knockout), so filter
-        // by phase to avoid false "already submitted" when group submission exists.
-        const currentPhase = isKnockoutWindow ? 'knockout' : 'group';
+        // Check if current user submitted their wish list for this phase.
         const { data: subs } = await supabase
           .from('draft_submissions')
           .select('id')
@@ -506,10 +505,19 @@ export default function LeagueScreen() {
           .eq('user_id', user?.id)
           .eq('phase', currentPhase)
           .limit(1);
-        setDraftOpen(!(subs && subs.length));
+        // Only show the "submit now" banner when the deadline is still in the future.
+        setDraftOpen(!(subs && subs.length) && deadlineDate > new Date());
+        // Fetch total submission count for the commissioner overview banner.
+        const { count: subCount } = await supabase
+          .from('draft_submissions')
+          .select('id', { count: 'exact', head: true })
+          .eq('league_id', id)
+          .eq('phase', currentPhase);
+        setDraftSubmissionCount(subCount ?? 0);
       } else {
         setDraftDeadlineDate(null);
         setDraftOpen(false);
+        setDraftSubmissionCount(0);
       }
 
       // Fetch current user's squadId + budget + player count in this league
@@ -1097,6 +1105,29 @@ export default function LeagueScreen() {
             <span style={{ fontFamily: MONO, fontSize: 11 }}>→</span>
           </div>
         )}
+
+        {/* Commissioner overview: deadline set, lottery not yet run */}
+        {isCommissioner && draftDeadlineDate && !draftAllocated && (() => {
+          const msLeft = draftDeadlineDate.getTime() - Date.now();
+          const hoursLeft = msLeft / 3_600_000;
+          const deadlinePassed = hoursLeft <= 0;
+          const fmtDeadline = draftDeadlineDate.toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+          const memberCount = members?.length ?? 0;
+          return (
+            <div
+              onClick={() => setView('commissioner')}
+              style={{ background: 'rgba(240,180,0,0.10)', borderBottom: '1px solid rgba(240,180,0,0.22)', color: 'var(--gold)', padding: '10px 28px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer', flexShrink: 0 }}
+            >
+              <span style={{ fontFamily: MONO, fontSize: 11, letterSpacing: '.18em' }}>
+                {deadlinePassed ? '⏰' : '📋'} DRAFT SUBMISSIONS — {draftSubmissionCount}/{memberCount} MANAGERS
+                {deadlinePassed
+                  ? ' — DEADLINE PASSED · RUN LOTTERY WHEN READY'
+                  : ` · DEADLINE ${fmtDeadline}`}
+              </span>
+              <span style={{ fontFamily: MONO, fontSize: 11 }}>→</span>
+            </div>
+          );
+        })()}
 
         {draftOpen && (() => {
           const msLeft = draftDeadlineDate ? draftDeadlineDate.getTime() - Date.now() : Infinity;
