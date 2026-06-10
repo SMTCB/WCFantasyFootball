@@ -117,6 +117,9 @@ export default function MarketScreen() {
 
   const penaltyPointsCost = useMemo(() => {
     if (!activeMatchdayId || basket.length === 0) return 0;
+    // No penalty when window is unlimited or squad is still in initial build
+    if (transferWindow?.windowType === 'unlimited') return 0;
+    if (mySquad?.initial_build_complete === false)  return 0;
     const freeUsed    = (mySquad?.round_transfers  ?? {})[activeMatchdayId] ?? 0;
     const penaltyUsed = (mySquad?.penalty_transfers ?? {})[activeMatchdayId] ?? 0;
     const basketBuys  = basket.filter(b => b.type === 'buy').length;
@@ -125,7 +128,7 @@ export default function MarketScreen() {
     const costs = Array.isArray(transferPenalty) ? transferPenalty : [transferPenalty ?? 4];
     return [...Array(basketPenBuys)].reduce((sum, _, i) =>
       sum + (costs[Math.min(penaltyUsed + i, costs.length - 1)] ?? costs[costs.length - 1]), 0);
-  }, [basket, mySquad, activeMatchdayId, transfersPerRound, transferPenalty]);
+  }, [basket, mySquad, activeMatchdayId, transfersPerRound, transferPenalty, transferWindow]);
 
   // Draft gate: noduplicate leagues with no processed allocation go to draft screen or recovery
   useEffect(() => {
