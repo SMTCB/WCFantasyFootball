@@ -316,7 +316,10 @@ export default function SquadScreen() {
 
       // Group by position
       const gks = pitchPlayers.filter(p => p.position === 'GK');
-      let needsXiFix = false;
+      // If starting_xi was empty/unset in the DB, set_lineup's own lazy-init (GK-first
+      // ordering) can diverge from this client's slice(0,11)-based pitch — persist ours
+      // now so the server never has to guess, and set_lineup operates on what's shown.
+      let needsXiFix = !(squad.starting_xi?.length > 0);
 
       // Enforce rules: must have exactly 1 GK
       if (gks.length > 1) {
