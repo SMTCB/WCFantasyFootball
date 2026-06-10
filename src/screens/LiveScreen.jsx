@@ -449,19 +449,27 @@ export default function LiveScreen() {
       }));
       setLiveFixtures(enrichedFix);
 
-      // Stats window: live + recently-finished (last 3 h), filtered to active tournament.
-      // This keeps the Points Log (and post-match EVENTS timeline) showing after full-time.
+      // Stats window: live fixtures + all finished fixtures in the active matchday(s).
+      // Using matchday scope (not a time window) so multi-day WC matchdays stay visible
+      // throughout the round — e.g. an Argentina game at 00:30 UTC shows correct pts
+      // for the rest of the day while Portugal plays the same evening.
       let statsFixIds = (liveFixData || []).map(f => f.id);
+      if (activeMatchdayIds.length) {
+        const { data: mdFinished = [] } = await supabase
+          .from('fixtures')
+          .select('id')
+          .in('matchday_id', activeMatchdayIds)
+          .eq('status', 'finished');
+        statsFixIds = [...new Set([...statsFixIds, ...(mdFinished || []).map(f => f.id)])];
+      }
       if (!statsFixIds.length) {
-        // 6h window: covers kickoff + 90 min regulation + 30 min ET + 30 min PT + buffer.
-        // Using kickoff_at as anchor (not match end time) so extra-time finals are still visible.
+        // Fallback when no active matchday is known: 6h window based on kickoff_at.
         const cutoff = new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString();
         let recentQ = supabase
           .from('fixtures')
           .select('id')
           .eq('status', 'finished')
           .gte('kickoff_at', cutoff);
-        // Only look at the active league's tournament to avoid surfacing unrelated matches
         if (activeTournamentId) recentQ = recentQ.eq('tournament_id', activeTournamentId);
         const { data: recentFix = [] } = await recentQ;
         statsFixIds = (recentFix || []).map(f => f.id);
