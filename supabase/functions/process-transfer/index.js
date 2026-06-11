@@ -102,80 +102,12 @@ Deno.serve(async (req) => {
 
     const inFreeWindow = !!freeWindow;
 
-    // ── Transfer window enforcement ───────────────────────────────────────────
-    // Skipped entirely when a free window is active.
+    // ── Resolve activeMatchdayId (needed for squad lookup, independent of window status) ──
+    // Free window: use the most recent past deadline so the correct (current-round)
+    // squad row is found. Otherwise: the next upcoming deadline (DATA-4: scope to
+    // this league's tournament).
     let activeMatchdayId = null;
-
-    if (!inFreeWindow) {
-    // 1. Single source of truth for window status.
-    //    get_transfer_window_status() handles all cases: deadline lock, live-fixture
-    //    lock, AND the post-match scoring window (MAX kickoff + reopen_hours + 2h).
-    //    Previously this block re-implemented a subset of that logic using only a
-    //    status='live' fixture check — which let transfers through once fixtures
-    //    flipped to 'finished' even while scoring was still in progress.
-    const { data: winStatus, error: winErr } = await supabase
-      .rpc('get_transfer_window_status', { p_league_id: league_id });
-
-    if (winErr || !winStatus || winStatus.status !== 'open') {
-      const opensAt = winStatus?.opens_at
-        ? ` — opens ${new Date(winStatus.opens_at).toUTCString()}`
-        : '';
-      return json({
-        ok:    false,
-        code:  'WINDOW_CLOSED',
-        error: `Transfer window closed${opensAt}`,
-      }, 403, corsHeaders);
-    }
-
-    // 2. Resolve activeMatchdayId from the next upcoming deadline.
-    //    Used for squad lookup and per-round transfer limit enforcement.
-    //    DATA-4: scope to this league's tournament.
-    let deadlineQuery = supabase
-      .from('matchday_deadlines')
-      .select('matchday_id')
-      .gte('deadline_at', new Date().toISOString())
-      .order('deadline_at', { ascending: true })
-      .limit(1);
-    if (tournamentId) deadlineQuery = deadlineQuery.eq('tournament_id', tournamentId);
-    const { data: deadline } = await deadlineQuery.maybeSingle();
-    activeMatchdayId = deadline?.matchday_id ?? null;
-
-    // 3. (#105) Reject if the specific player's team fixture is currently live.
-    //    Cost-lock at kickoff: price is frozen once a team's match starts.
-    //    Only applies to BUY actions — selling is always allowed.
-    //    Guards: tournament_id isolation + matchday_id IS NOT NULL (no ghost fixtures).
-    if (action === 'buy') {
-      const threeHoursAgo = new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString();
-      const { data: playerRow } = await supabase
-        .from('players')
-        .select('forza_team_id')
-        .eq('id', player_id)
-        .maybeSingle();
-
-      if (playerRow?.forza_team_id) {
-        let playerFixQ = supabase
-          .from('fixtures')
-          .select('id, home_team, away_team, kickoff_at, status')
-          .or(`home_team_forza_id.eq.${playerRow.forza_team_id},away_team_forza_id.eq.${playerRow.forza_team_id}`)
-          .eq('status', 'live')
-          .gte('kickoff_at', threeHoursAgo)
-          .not('matchday_id', 'is', null);
-        if (tournamentId) playerFixQ = playerFixQ.eq('tournament_id', tournamentId);
-        const { data: playerFixture } = await playerFixQ.limit(1).maybeSingle();
-
-        if (playerFixture) {
-          return json({
-            ok:    false,
-            code:  'TRANSFER_LOCKED',
-            error: `Transfer cost locked — ${playerFixture.home_team} vs ${playerFixture.away_team} has started (cost locked at kickoff)`,
-          }, 403, corsHeaders);
-        }
-      }
-    }
-    } else {
-      // Free window: deadline/live-fixture checks bypassed.
-      // Use the most recent past deadline as activeMatchdayId for squad lookup
-      // so the correct squad row is found (same fallback logic applies below).
+    if (inFreeWindow) {
       if (tournamentId) {
         const { data: pastDeadline } = await supabase
           .from('matchday_deadlines')
@@ -187,6 +119,16 @@ Deno.serve(async (req) => {
           .maybeSingle();
         activeMatchdayId = pastDeadline?.matchday_id ?? null;
       }
+    } else {
+      let deadlineQuery = supabase
+        .from('matchday_deadlines')
+        .select('matchday_id')
+        .gte('deadline_at', new Date().toISOString())
+        .order('deadline_at', { ascending: true })
+        .limit(1);
+      if (tournamentId) deadlineQuery = deadlineQuery.eq('tournament_id', tournamentId);
+      const { data: deadline } = await deadlineQuery.maybeSingle();
+      activeMatchdayId = deadline?.matchday_id ?? null;
     }
 
     // ── Fetch or create the manager's squad for this league ──────────────────
@@ -221,7 +163,7 @@ Deno.serve(async (req) => {
       const { data: newSquad, error: createErr } = await supabase
         .from('squads')
         .insert({ user_id: user.id, league_id, players: [], budget_remaining: 100, matchday_id: activeMatchdayId })
-        .select('id, players, budget_remaining, matchday_id')
+        .select('id, players, budget_remaining, matchday_id, initial_build_complete')
         .single();
       if (createErr) {
         await logError(FN, 'critical', 'Squad create failed', { user_id: user.id, league_id, matchday_id: activeMatchdayId, error: createErr.message });
@@ -232,6 +174,71 @@ Deno.serve(async (req) => {
 
     const currentPlayers = squad.players ?? [];
     const budget         = Number(squad.budget_remaining ?? 100);
+
+    // ── Transfer window enforcement ───────────────────────────────────────────
+    // A squad that has never reached full size (initial_build_complete=false — e.g.
+    // the draft lottery left it short due to pool exhaustion/unresolved picks, or
+    // the lottery hasn't materialised a full squad yet) is exempt from the matchday
+    // window lock so the manager can keep using the Market to finish building it,
+    // even if the commissioner runs the draft after a matchday has started.
+    // The latch is one-way (set by execute_transfer_atomic the moment the squad
+    // first reaches full size), so a squad that completed once and later sold
+    // below full size does NOT regain this exemption.
+    const squadNeverCompleted = !squad.initial_build_complete;
+
+    if (!inFreeWindow && !squadNeverCompleted) {
+      // Single source of truth for window status. get_transfer_window_status()
+      // handles all cases: deadline lock, live-fixture lock, AND the post-match
+      // scoring window (MAX kickoff + reopen_hours + 2h).
+      const { data: winStatus, error: winErr } = await supabase
+        .rpc('get_transfer_window_status', { p_league_id: league_id });
+
+      if (winErr || !winStatus || winStatus.status !== 'open') {
+        const opensAt = winStatus?.opens_at
+          ? ` — opens ${new Date(winStatus.opens_at).toUTCString()}`
+          : '';
+        return json({
+          ok:    false,
+          code:  'WINDOW_CLOSED',
+          error: `Transfer window closed${opensAt}`,
+        }, 403, corsHeaders);
+      }
+    }
+
+    // (#105) Reject if the specific player's team fixture is currently live.
+    // Cost-lock at kickoff: price is frozen once a team's match starts.
+    // Only applies to BUY actions — selling is always allowed. Applies even to
+    // squads exempt from the window lock above (price integrity, not a
+    // "build your squad" restriction).
+    // Guards: tournament_id isolation + matchday_id IS NOT NULL (no ghost fixtures).
+    if (!inFreeWindow && action === 'buy') {
+      const threeHoursAgo = new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString();
+      const { data: playerRow } = await supabase
+        .from('players')
+        .select('forza_team_id')
+        .eq('id', player_id)
+        .maybeSingle();
+
+      if (playerRow?.forza_team_id) {
+        let playerFixQ = supabase
+          .from('fixtures')
+          .select('id, home_team, away_team, kickoff_at, status')
+          .or(`home_team_forza_id.eq.${playerRow.forza_team_id},away_team_forza_id.eq.${playerRow.forza_team_id}`)
+          .eq('status', 'live')
+          .gte('kickoff_at', threeHoursAgo)
+          .not('matchday_id', 'is', null);
+        if (tournamentId) playerFixQ = playerFixQ.eq('tournament_id', tournamentId);
+        const { data: playerFixture } = await playerFixQ.limit(1).maybeSingle();
+
+        if (playerFixture) {
+          return json({
+            ok:    false,
+            code:  'TRANSFER_LOCKED',
+            error: `Transfer cost locked — ${playerFixture.home_team} vs ${playerFixture.away_team} has started (cost locked at kickoff)`,
+          }, 403, corsHeaders);
+        }
+      }
+    }
 
     // C6: enforce the per-round transfer limit against the ACTIVE round (the next
     // upcoming deadline), not the squad's stored matchday_id. A squad's matchday_id
