@@ -124,6 +124,7 @@ export function formatFixtureStatus(fixtureInfo) {
   const d = new Date(fixtureInfo.kickoff_at);
   if (Number.isNaN(d.getTime())) return null;
   const day  = d.toLocaleDateString('en-GB', { weekday: 'short' });
-  const time = d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
-  return { label: `${day} ${time}`, color: 'var(--mute)' };
+  const date = `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}`;
+  const time = `${String(d.getHours()).padStart(2, '0')}h${String(d.getMinutes()).padStart(2, '0')}`;
+  return { label: `${day} ${date} ${time}`, color: 'var(--mute)' };
 }
