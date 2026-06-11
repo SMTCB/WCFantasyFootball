@@ -96,7 +96,11 @@ export default function MarketScreen() {
   // 'no_window' = no windows configured for this league → treat as open
   // 'loading'   = first fetch in flight → optimistic unlock (backend validates anyway)
   const transferWindow = useTransferWindow(activeLeague);
-  const isLocked = transferWindow.status === 'upcoming';
+  // A squad that has never reached full size (initial_build_complete=false) is exempt
+  // from the matchday window lock — mirrors the same exemption in process-transfer —
+  // so a manager left short by a draft lottery can keep using the Market to finish
+  // building their squad even while the window shows 'upcoming'.
+  const isLocked = transferWindow.status === 'upcoming' && mySquad?.initial_build_complete !== false;
 
   // Basket-simulated squad state — applies pending buys/sells on top of the actual squad.
   // Used for all validation (canBuy, position/club caps) and display (budget, squad count,
