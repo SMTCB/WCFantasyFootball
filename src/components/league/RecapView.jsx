@@ -59,7 +59,7 @@ function FixtureRow({ f }) {
   );
 }
 
-function PlayerBreakdown({ breakdown, penaltyDeduction = 0, betDetails = [] }) {
+function PlayerBreakdown({ breakdown, penaltyDeduction = 0, betDetails = [], tradeNet = 0 }) {
   if (!breakdown || breakdown === 'loading') {
     return (
       <div style={{ padding: '10px 24px', fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.18em', borderTop: '1px solid var(--rule)' }}>
@@ -136,6 +136,25 @@ function PlayerBreakdown({ breakdown, penaltyDeduction = 0, betDetails = [] }) {
           <span style={{ fontFamily: DISPLAY, fontSize: 11, textAlign: 'right', color: 'var(--gold)' }}>+{b.amount}</span>
         </div>
       ))}
+      {tradeNet !== 0 && (
+        <div style={{
+          display: 'grid', gridTemplateColumns: '32px 1fr 50px 50px', gap: 8,
+          padding: '7px 24px',
+          borderTop: tradeNet > 0 ? '1px solid rgba(240,180,0,0.25)' : '1px solid rgba(240,58,58,0.25)',
+          background: tradeNet > 0 ? 'rgba(240,180,0,0.06)' : 'rgba(240,58,58,0.06)',
+        }}>
+          <span style={{ fontFamily: MONO, fontSize: 9, color: tradeNet > 0 ? 'var(--gold)' : 'var(--danger)', letterSpacing: '.1em' }}>—</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 5, minWidth: 0 }}>
+            <span style={{ fontFamily: DISPLAY, fontSize: 11, color: tradeNet > 0 ? 'var(--gold)' : 'var(--danger)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              {tradeNet > 0 ? 'Trade received' : 'Trade given'}
+            </span>
+          </div>
+          <span style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', textAlign: 'right' }}>—</span>
+          <span style={{ fontFamily: DISPLAY, fontSize: 11, textAlign: 'right', color: tradeNet > 0 ? 'var(--gold)' : 'var(--danger)' }}>
+            {tradeNet > 0 ? `+${tradeNet}` : `−${Math.abs(tradeNet)}`}
+          </span>
+        </div>
+      )}
     </div>
   );
 }
@@ -159,6 +178,7 @@ export default function RecapView({ leagueId, tournamentId, members, currentUser
   const [expandedUser,     setExpandedUser]     = useState(null);
   const [h2hStandings,     setH2hStandings]     = useState([]);
   const [betMap,           setBetMap]           = useState({});
+  const [tradeMap,         setTradeMap]         = useState({});
 
   // Fetch H2H standings when league is H2H-enabled
   useEffect(() => {
@@ -277,6 +297,74 @@ export default function RecapView({ leagueId, tournamentId, members, currentUser
         setBetMap(map);
       } catch (e) {
         console.error('[RecapView] bet rewards load error:', e);
+      }
+    })();
+
+    return () => { cancelled = true; };
+  }, [leagueId, allMatchdays]);
+
+  // ── Effect 1c: load accepted trade points sweeteners, mapped onto a matchday ─
+  // points_sweetener moves from the proposer (gives points) to the target
+  // (receives points) on accept. Mapped to a matchday the same way as bet
+  // rewards (next deadline on/after resolved_at). Multiple trades within the
+  // same matchday net out into a single TRADING line.
+  useEffect(() => {
+    if (!leagueId || !allMatchdays.length) return;
+    let cancelled = false;
+
+    (async () => {
+      try {
+        const { data: squadRows, error: sqErr } = await supabase
+          .from('squads').select('id, user_id').eq('league_id', leagueId);
+        if (cancelled || sqErr || !squadRows?.length) return;
+
+        const latestByUser = {};
+        squadRows.forEach(s => { if (!latestByUser[s.user_id]) latestByUser[s.user_id] = s.id; });
+        const userBySquad = Object.fromEntries(squadRows.map(s => [s.id, s.user_id]));
+
+        const { data: tradeRows, error: tradeErr } = await supabase
+          .from('trade_proposals')
+          .select('proposer_squad_id, target_squad_id, points_sweetener, resolved_at, created_at')
+          .eq('league_id', leagueId)
+          .eq('status', 'accepted')
+          .gt('points_sweetener', 0);
+
+        if (cancelled) return;
+        if (tradeErr) { console.error('[RecapView] trade points:', tradeErr); return; }
+        if (!tradeRows?.length) { setTradeMap({}); return; }
+
+        const sortedMds = allMatchdays;
+        const mapToMatchday = (anchorIso) => {
+          const anchor = new Date(anchorIso).getTime();
+          for (const md of sortedMds) {
+            if (new Date(md.deadline_at).getTime() >= anchor) return md.matchday_id;
+          }
+          return sortedMds[sortedMds.length - 1].matchday_id;
+        };
+
+        const map = {};
+        for (const row of tradeRows) {
+          const amount = Number(row.points_sweetener) || 0;
+          if (!amount) continue;
+          const mdId = mapToMatchday(row.resolved_at ?? row.created_at);
+
+          const giverSquad    = latestByUser[userBySquad[row.proposer_squad_id]];
+          const receiverSquad = latestByUser[userBySquad[row.target_squad_id]];
+
+          if (giverSquad) {
+            if (!map[giverSquad]) map[giverSquad] = {};
+            if (!map[giverSquad][mdId]) map[giverSquad][mdId] = { net: 0 };
+            map[giverSquad][mdId].net -= amount;
+          }
+          if (receiverSquad) {
+            if (!map[receiverSquad]) map[receiverSquad] = {};
+            if (!map[receiverSquad][mdId]) map[receiverSquad][mdId] = { net: 0 };
+            map[receiverSquad][mdId].net += amount;
+          }
+        }
+        setTradeMap(map);
+      } catch (e) {
+        console.error('[RecapView] trade points load error:', e);
       }
     })();
 
@@ -444,6 +532,7 @@ export default function RecapView({ leagueId, tournamentId, members, currentUser
     const totalPts = memberMap[s.user_id]?.total_points ?? null;
     const betEntry = betMap[s.squad_id]?.[selectedMatchday];
     const betPts = betEntry?.total ?? 0;
+    const tradeNet = tradeMap[s.squad_id]?.[selectedMatchday]?.net ?? 0;
 
     const rowStyle = {
       display: 'grid',
@@ -473,6 +562,11 @@ export default function RecapView({ leagueId, tournamentId, members, currentUser
               </span>
               {betPts > 0 && (
                 <div style={{ fontFamily: MONO, fontSize: 7, color: 'var(--gold)', letterSpacing: '.12em', marginTop: 1 }}>+{betPts} BET</div>
+              )}
+              {tradeNet !== 0 && (
+                <div style={{ fontFamily: MONO, fontSize: 7, color: tradeNet > 0 ? 'var(--gold)' : 'var(--danger)', letterSpacing: '.12em', marginTop: 1 }}>
+                  {tradeNet > 0 ? `+${tradeNet}` : `−${Math.abs(tradeNet)}`} TRADING
+                </div>
               )}
               {s.penalty > 0 ? (
                 <div style={{ fontFamily: MONO, fontSize: 7, color: 'var(--danger)', letterSpacing: '.12em', marginTop: 1 }}>−{s.penalty} PENALTY</div>
@@ -507,13 +601,18 @@ export default function RecapView({ leagueId, tournamentId, members, currentUser
               {betPts > 0 && (
                 <div style={{ fontFamily: MONO, fontSize: 8, letterSpacing: '.12em', color: 'var(--gold)' }}>+{betPts} BET</div>
               )}
+              {tradeNet !== 0 && (
+                <div style={{ fontFamily: MONO, fontSize: 8, letterSpacing: '.12em', color: tradeNet > 0 ? 'var(--gold)' : 'var(--danger)' }}>
+                  {tradeNet > 0 ? `+${tradeNet}` : `−${Math.abs(tradeNet)}`} TRADING
+                </div>
+              )}
               <div style={{ fontFamily: MONO, fontSize: 8, letterSpacing: '.12em', color: s.penalty > 0 ? 'var(--danger)' : isLiveRound && s.pts !== null ? 'var(--danger)' : 'var(--mute)' }}>
                 {s.penalty > 0 ? `−${s.penalty} XFER` : isLiveRound && s.pts !== null ? 'LIVE' : 'GW'}
               </div>
             </div>
           </div>
         )}
-        {isOpen && <PlayerBreakdown breakdown={breakdown[s.user_id]} penaltyDeduction={s.penalty ?? 0} betDetails={betEntry?.bets ?? []} />}
+        {isOpen && <PlayerBreakdown breakdown={breakdown[s.user_id]} penaltyDeduction={s.penalty ?? 0} betDetails={betEntry?.bets ?? []} tradeNet={tradeNet} />}
         {isOpen && <div style={{ height: 1, background: 'var(--rule)' }} />}
       </div>
     );
