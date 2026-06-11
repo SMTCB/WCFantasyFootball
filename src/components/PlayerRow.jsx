@@ -1,3 +1,4 @@
+import { formatFixtureStatus } from '../lib/players';
 import PositionChip from './PositionChip';
 import StatusDot    from './StatusDot';
 import CaptainPill  from './CaptainPill';
@@ -37,6 +38,7 @@ export default function PlayerRow({
 
   const status   = player.intel?.status ?? player.status ?? 'fit';
   const isDummy  = player.isDummy;
+  const fixtureStatus = formatFixtureStatus(player.fixtureInfo);
 
   const rowBg = isSelected
     ? 'rgba(0,180,216,0.08)'
@@ -136,14 +138,21 @@ export default function PlayerRow({
             )}
           </div>
 
-          {/* Metadata line — club only; price moved to name line */}
+          {/* Metadata line — club + fixture timing for the active matchday */}
           <div
-            className="fk-mono mt-0.5"
-            style={{ fontSize: 9, color: 'var(--mute)', letterSpacing: '0.14em' }}
+            className="fk-mono mt-0.5 flex items-center"
+            style={{ fontSize: 9, color: 'var(--mute)', letterSpacing: '0.14em', gap: 6 }}
           >
-            {isDummy
-              ? 'OPEN MARKET TO SIGN'
-              : [player.club, player.country].filter(Boolean).join(' · ')}
+            <span className="truncate">
+              {isDummy
+                ? 'OPEN MARKET TO SIGN'
+                : [player.club, player.country].filter(Boolean).join(' · ')}
+            </span>
+            {!isDummy && fixtureStatus && (
+              <span className="shrink-0" style={{ color: fixtureStatus.color }}>
+                · {fixtureStatus.label}
+              </span>
+            )}
           </div>
         </div>
       </div>

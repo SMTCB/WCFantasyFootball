@@ -59,7 +59,7 @@ function FixtureRow({ f }) {
   );
 }
 
-function PlayerBreakdown({ breakdown, penaltyDeduction = 0 }) {
+function PlayerBreakdown({ breakdown, penaltyDeduction = 0, betDetails = [] }) {
   if (!breakdown || breakdown === 'loading') {
     return (
       <div style={{ padding: '10px 24px', fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.18em', borderTop: '1px solid var(--rule)' }}>
@@ -121,6 +121,21 @@ function PlayerBreakdown({ breakdown, penaltyDeduction = 0 }) {
           <span style={{ fontFamily: DISPLAY, fontSize: 11, textAlign: 'right', color: 'var(--danger)' }}>−{penaltyDeduction}</span>
         </div>
       )}
+      {betDetails.map((b, bi) => (
+        <div key={bi} style={{
+          display: 'grid', gridTemplateColumns: '32px 1fr 50px 50px', gap: 8,
+          padding: '7px 24px', borderTop: '1px solid rgba(240,180,0,0.25)',
+          background: 'rgba(240,180,0,0.06)',
+        }}>
+          <span style={{ fontFamily: MONO, fontSize: 9, color: 'var(--gold)', letterSpacing: '.1em' }}>—</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 5, minWidth: 0 }}>
+            <span style={{ fontFamily: DISPLAY, fontSize: 11, color: 'var(--gold)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>Bet won</span>
+            <span style={{ fontFamily: MONO, fontSize: 8, color: 'rgba(240,180,0,0.6)', letterSpacing: '.08em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{b.title}</span>
+          </div>
+          <span style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', textAlign: 'right' }}>—</span>
+          <span style={{ fontFamily: DISPLAY, fontSize: 11, textAlign: 'right', color: 'var(--gold)' }}>+{b.amount}</span>
+        </div>
+      ))}
     </div>
   );
 }
@@ -143,6 +158,7 @@ export default function RecapView({ leagueId, tournamentId, members, currentUser
   const [breakdown,        setBreakdown]        = useState({});
   const [expandedUser,     setExpandedUser]     = useState(null);
   const [h2hStandings,     setH2hStandings]     = useState([]);
+  const [betMap,           setBetMap]           = useState({});
 
   // Fetch H2H standings when league is H2H-enabled
   useEffect(() => {
@@ -200,6 +216,72 @@ export default function RecapView({ leagueId, tournamentId, members, currentUser
 
     return () => { cancelled = true; };
   }, [leagueId, tournamentId]);
+
+  // ── Effect 1b: load resolved points-bet rewards, mapped onto a matchday ──────
+  // bet_instances has no matchday_id column, so we approximate: each resolved
+  // points-type bet maps to the matchday whose deadline is the next one on/after
+  // the bet's own deadline (clamped to the last known matchday if the bet
+  // resolved after every matchday deadline). The points themselves are already
+  // safely included in league_members.total_points (migration 167) regardless —
+  // this only controls which GW row shows the "+N BET" indicator.
+  useEffect(() => {
+    if (!leagueId || !allMatchdays.length) return;
+    let cancelled = false;
+
+    (async () => {
+      try {
+        const { data: squadRows, error: sqErr } = await supabase
+          .from('squads').select('id, user_id').eq('league_id', leagueId);
+        if (cancelled || sqErr || !squadRows?.length) return;
+
+        const latestByUser = {};
+        squadRows.forEach(s => { if (!latestByUser[s.user_id]) latestByUser[s.user_id] = s.id; });
+        const squadIds = Object.values(latestByUser);
+
+        const { data: betRows, error: betErr } = await supabase
+          .from('bet_submissions')
+          .select('squad_id, reward_awarded, bet_instances!inner(id, league_id, deadline_at, resolves_at, created_at, title, reward_type, status)')
+          .in('squad_id', squadIds)
+          .eq('is_correct', true)
+          .not('reward_awarded', 'is', null)
+          .eq('bet_instances.league_id', leagueId)
+          .eq('bet_instances.reward_type', 'points')
+          .eq('bet_instances.status', 'resolved');
+
+        if (cancelled) return;
+        if (betErr) { console.error('[RecapView] bet rewards:', betErr); return; }
+        if (!betRows?.length) { setBetMap({}); return; }
+
+        // allMatchdays is already ascending by round number / deadline
+        const sortedMds = allMatchdays;
+        const mapToMatchday = (anchorIso) => {
+          const anchor = new Date(anchorIso).getTime();
+          for (const md of sortedMds) {
+            if (new Date(md.deadline_at).getTime() >= anchor) return md.matchday_id;
+          }
+          return sortedMds[sortedMds.length - 1].matchday_id;
+        };
+
+        const map = {};
+        for (const row of betRows) {
+          const inst = row.bet_instances;
+          const anchor = inst.deadline_at ?? inst.resolves_at ?? inst.created_at;
+          const mdId = mapToMatchday(anchor);
+          const amount = Number(row.reward_awarded) || 0;
+          if (!amount) continue;
+          if (!map[row.squad_id]) map[row.squad_id] = {};
+          if (!map[row.squad_id][mdId]) map[row.squad_id][mdId] = { total: 0, bets: [] };
+          map[row.squad_id][mdId].total += amount;
+          map[row.squad_id][mdId].bets.push({ title: inst.title || 'Bet', amount });
+        }
+        setBetMap(map);
+      } catch (e) {
+        console.error('[RecapView] bet rewards load error:', e);
+      }
+    })();
+
+    return () => { cancelled = true; };
+  }, [leagueId, allMatchdays]);
 
   // ── Effect 2: load scores + fixtures when selectedMatchday changes ───────────
   // NOTE: members intentionally NOT in deps — it's display-only, not required for loading
@@ -360,6 +442,8 @@ export default function RecapView({ leagueId, tournamentId, members, currentUser
     const isTop = idx === 0 && s.pts !== null;
     const isOpen = expandedUser === s.user_id;
     const totalPts = memberMap[s.user_id]?.total_points ?? null;
+    const betEntry = betMap[s.squad_id]?.[selectedMatchday];
+    const betPts = betEntry?.total ?? 0;
 
     const rowStyle = {
       display: 'grid',
@@ -387,6 +471,9 @@ export default function RecapView({ leagueId, tournamentId, members, currentUser
               <span style={{ fontFamily: DISPLAY, fontSize: 14, color: isTop ? 'var(--gold)' : 'var(--paper)' }}>
                 {s.pts !== null ? (isLiveRound ? '~' : '') + Math.round(s.pts) : '—'}
               </span>
+              {betPts > 0 && (
+                <div style={{ fontFamily: MONO, fontSize: 7, color: 'var(--gold)', letterSpacing: '.12em', marginTop: 1 }}>+{betPts} BET</div>
+              )}
               {s.penalty > 0 ? (
                 <div style={{ fontFamily: MONO, fontSize: 7, color: 'var(--danger)', letterSpacing: '.12em', marginTop: 1 }}>−{s.penalty} PENALTY</div>
               ) : isLiveRound && s.pts !== null ? (
@@ -417,13 +504,16 @@ export default function RecapView({ leagueId, tournamentId, members, currentUser
               <div style={{ fontFamily: DISPLAY, fontSize: 16, color: isTop ? 'var(--gold)' : 'var(--paper)' }}>
                 {s.pts !== null ? (isLiveRound ? '~' : '') + Math.round(s.pts) : '—'}
               </div>
+              {betPts > 0 && (
+                <div style={{ fontFamily: MONO, fontSize: 8, letterSpacing: '.12em', color: 'var(--gold)' }}>+{betPts} BET</div>
+              )}
               <div style={{ fontFamily: MONO, fontSize: 8, letterSpacing: '.12em', color: s.penalty > 0 ? 'var(--danger)' : isLiveRound && s.pts !== null ? 'var(--danger)' : 'var(--mute)' }}>
                 {s.penalty > 0 ? `−${s.penalty} XFER` : isLiveRound && s.pts !== null ? 'LIVE' : 'GW'}
               </div>
             </div>
           </div>
         )}
-        {isOpen && <PlayerBreakdown breakdown={breakdown[s.user_id]} penaltyDeduction={s.penalty ?? 0} />}
+        {isOpen && <PlayerBreakdown breakdown={breakdown[s.user_id]} penaltyDeduction={s.penalty ?? 0} betDetails={betEntry?.bets ?? []} />}
         {isOpen && <div style={{ height: 1, background: 'var(--rule)' }} />}
       </div>
     );

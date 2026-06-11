@@ -1,4 +1,5 @@
 import { LINEUP_STATUS } from '../lib/intelligence';
+import { formatFixtureStatus } from '../lib/players';
 import PlayerRow    from './PlayerRow';
 import PositionChip from './PositionChip';
 import StatusDot    from './StatusDot';
@@ -36,6 +37,7 @@ export default function PlayerCard({
   const status   = intel?.status ?? 'fit';
   const isDummy  = player.isDummy;
   const toneColor = POS_TONE[player.position] ?? 'var(--mute)';
+  const fixtureStatus = formatFixtureStatus(player.fixtureInfo);
 
   /* ── ROW variant — delegate to PlayerRow ──────────────────────── */
   if (variant === 'row') {
@@ -196,6 +198,21 @@ export default function PlayerCard({
         >
           {player.club} · {Math.round(player.points ?? 0)} PTS
         </div>
+
+        {/* Fixture timing for the active matchday — kickoff / LIVE / FT score */}
+        {fixtureStatus && (
+          <div
+            className="fk-mono"
+            style={{
+              fontSize:    window?.innerWidth < 640 ? 6 : 8,
+              color:       fixtureStatus.color,
+              marginTop:   1,
+              letterSpacing: '0.1em',
+            }}
+          >
+            {fixtureStatus.label}
+          </div>
+        )}
       </div>
 
       {/* Swap ring */}
