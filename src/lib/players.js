@@ -72,3 +72,58 @@ export function normalisePlayer(raw = {}) {
 export function normalisePlayers(rawArray = []) {
   return rawArray.filter(Boolean).map(normalisePlayer);
 }
+
+/**
+ * Match a raw player (club and/or nationality) against a list of fixtures
+ * for the squad's CURRENT active matchday only — never searches other rounds.
+ * Returns { state: 'none' | 'live' | 'finished' | 'scheduled', ... } describing
+ * the player's club/nation fixture for this round, or { state: 'none' } if
+ * they have no fixture this round.
+ */
+export function buildFixtureInfo(rawPlayer = {}, activeFixtures = []) {
+  if (!activeFixtures?.length) return { state: 'none' };
+  const candidates = [rawPlayer.club, rawPlayer.nationality].filter(Boolean);
+  if (!candidates.length) return { state: 'none' };
+
+  const fx = activeFixtures.find(
+    f => candidates.includes(f.home_team) || candidates.includes(f.away_team)
+  );
+  if (!fx) return { state: 'none' };
+
+  const isLive = fx.status === 'live' || fx.status === 'in_progress';
+  const state  = fx.status === 'finished' ? 'finished' : isLive ? 'live' : 'scheduled';
+  const isHome = candidates.includes(fx.home_team);
+
+  return {
+    state,
+    kickoff_at:  fx.kickoff_at,
+    home_score:  fx.home_score,
+    away_score:  fx.away_score,
+    opponent:    isHome ? fx.away_team : fx.home_team,
+    isHome,
+  };
+}
+
+/**
+ * Format a fixtureInfo object (from buildFixtureInfo) into a short display
+ * label + colour for use in PlayerCard / PlayerRow. Returns null when there's
+ * nothing to show (no fixture this round).
+ */
+export function formatFixtureStatus(fixtureInfo) {
+  if (!fixtureInfo || fixtureInfo.state === 'none') return null;
+
+  if (fixtureInfo.state === 'live') {
+    return { label: 'LIVE', color: 'var(--danger)' };
+  }
+  if (fixtureInfo.state === 'finished') {
+    const home = fixtureInfo.home_score ?? '-';
+    const away = fixtureInfo.away_score ?? '-';
+    return { label: `FT ${home}-${away}`, color: 'var(--mute)' };
+  }
+  // scheduled
+  const d = new Date(fixtureInfo.kickoff_at);
+  if (Number.isNaN(d.getTime())) return null;
+  const day  = d.toLocaleDateString([], { weekday: 'short' });
+  const time = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  return { label: `${day} ${time}`, color: 'var(--mute)' };
+}

@@ -10,7 +10,7 @@ const EMPTY_SQUAD = {
   bench: [],
 };
 import { getDangerZonePlayers, normalizeIntelligence, LINEUP_STATUS } from '../lib/intelligence';
-import { normalisePlayer } from '../lib/players';
+import { normalisePlayer, buildFixtureInfo } from '../lib/players';
 import { useAuth } from '../hooks/useAuth';
 import { useDeadlineCountdown } from '../hooks/useDeadlineCountdown';
 import { useTransferWindow } from '../hooks/useTransferWindow';
@@ -245,11 +245,20 @@ export default function SquadScreen() {
         fixturesQuery = fixturesQuery.eq('id', 'null_no_matchday');
       }
 
+      // Active-matchday fixtures (any status) for the fixture-timing indicator —
+      // strictly the squad's CURRENT matchday, never a future/past round.
+      const activeFixturesQuery = squad.matchday_id
+        ? supabase.from('fixtures')
+            .select('home_team, away_team, status, kickoff_at, home_score, away_score')
+            .eq('matchday_id', squad.matchday_id)
+        : Promise.resolve({ data: [] });
+
       const [
         { data: players,   error: pErr },
         { data: intelData },
         { data: statsData },
         { data: currentRoundFixtures },
+        { data: activeRoundFixtures },
       ] = await Promise.all([
         supabase.from('players').select('*').in('id', playerIds),
         supabase.from('player_status').select('*').in('player_id', playerIds),
@@ -257,6 +266,7 @@ export default function SquadScreen() {
           .select('player_id, fantasy_points, fixture_id')
           .in('player_id', playerIds),
         fixturesQuery,
+        activeFixturesQuery,
       ]);
 
       // If the current round has no finished fixtures, fall back to the last
@@ -306,7 +316,8 @@ export default function SquadScreen() {
           points: pointsMap[p.id] ?? 0,
           intel:  normalizeIntelligence(playerIntel),
         });
-        return { ...normalised, isBench: !isStarter, isLineupLocked: isLocked };
+        const fixtureInfo = buildFixtureInfo(p, activeRoundFixtures);
+        return { ...normalised, isBench: !isStarter, isLineupLocked: isLocked, fixtureInfo };
       });
 
       // Enforce formation rules: 1 GK, 3-5 DEF, 2-4 MID, 1-2 FWD, total 11
