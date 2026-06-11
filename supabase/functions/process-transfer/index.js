@@ -103,32 +103,16 @@ Deno.serve(async (req) => {
     const inFreeWindow = !!freeWindow;
 
     // ── Resolve activeMatchdayId (needed for squad lookup, independent of window status) ──
-    // Free window: use the most recent past deadline so the correct (current-round)
-    // squad row is found. Otherwise: the next upcoming deadline (DATA-4: scope to
-    // this league's tournament).
+    // Active round = lowest round with a scheduled/live fixture, else the highest
+    // finished round — same logic as sync_squad_matchdays()/set_lineup(). The
+    // previous "nearest upcoming deadline" lookup jumped to the NEXT round the
+    // moment the current round's deadline passed, even while that round's fixtures
+    // were still mostly 'scheduled' (caused #506 GW2 bug).
     let activeMatchdayId = null;
-    if (inFreeWindow) {
-      if (tournamentId) {
-        const { data: pastDeadline } = await supabase
-          .from('matchday_deadlines')
-          .select('matchday_id')
-          .eq('tournament_id', tournamentId)
-          .lte('deadline_at', new Date().toISOString())
-          .order('deadline_at', { ascending: false })
-          .limit(1)
-          .maybeSingle();
-        activeMatchdayId = pastDeadline?.matchday_id ?? null;
-      }
-    } else {
-      let deadlineQuery = supabase
-        .from('matchday_deadlines')
-        .select('matchday_id')
-        .gte('deadline_at', new Date().toISOString())
-        .order('deadline_at', { ascending: true })
-        .limit(1);
-      if (tournamentId) deadlineQuery = deadlineQuery.eq('tournament_id', tournamentId);
-      const { data: deadline } = await deadlineQuery.maybeSingle();
-      activeMatchdayId = deadline?.matchday_id ?? null;
+    if (tournamentId) {
+      const { data: activeMatchday } = await supabase
+        .rpc('get_active_matchday_id', { p_tournament_id: tournamentId });
+      activeMatchdayId = activeMatchday ?? null;
     }
 
     // ── Fetch or create the manager's squad for this league ──────────────────

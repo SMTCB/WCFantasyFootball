@@ -332,32 +332,17 @@ async function runLottery(leagueId, phase = 'group') {
   }
 
   // 6b. Fetch the canonical matchday_id for this league's tournament.
-  //     Try the nearest upcoming deadline first; fall back to the most recent past
-  //     deadline (IMP-02 fix — avoids 'active' when season is over).
+  //     Active round (lowest round with a scheduled/live fixture, else the highest
+  //     finished round) — same logic as sync_squad_matchdays()/set_lineup(). The
+  //     previous "nearest upcoming deadline" lookup jumped to the NEXT round the
+  //     moment the current round's deadline passed, even while that round's
+  //     fixtures were still mostly 'scheduled' (caused #506 GW2 bug).
   const leagueWithTournament = leagueRow?.tournament_id;
   let canonicalMatchdayId = 'active';
   if (leagueWithTournament) {
-    const { data: upcoming } = await supabase
-      .from('matchday_deadlines')
-      .select('matchday_id')
-      .eq('tournament_id', leagueWithTournament)
-      .gt('deadline_at', new Date().toISOString())
-      .order('deadline_at', { ascending: true })
-      .limit(1)
-      .maybeSingle();
-    if (upcoming?.matchday_id) {
-      canonicalMatchdayId = upcoming.matchday_id;
-    } else {
-      const { data: past } = await supabase
-        .from('matchday_deadlines')
-        .select('matchday_id')
-        .eq('tournament_id', leagueWithTournament)
-        .lte('deadline_at', new Date().toISOString())
-        .order('deadline_at', { ascending: false })
-        .limit(1)
-        .maybeSingle();
-      if (past?.matchday_id) canonicalMatchdayId = past.matchday_id;
-    }
+    const { data: activeMatchday } = await supabase
+      .rpc('get_active_matchday_id', { p_tournament_id: leagueWithTournament });
+    if (activeMatchday) canonicalMatchdayId = activeMatchday;
   }
 
   // Bug E fix: for the knockout phase, clear player lists from all group-stage squad rows
