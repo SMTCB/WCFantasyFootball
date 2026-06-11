@@ -10,7 +10,7 @@ const EMPTY_SQUAD = {
   bench: [],
 };
 import { getDangerZonePlayers, normalizeIntelligence, LINEUP_STATUS } from '../lib/intelligence';
-import { normalisePlayer, buildFixtureInfo } from '../lib/players';
+import { normalisePlayer, buildFixtureInfo, formatFixtureStatus } from '../lib/players';
 import { useAuth } from '../hooks/useAuth';
 import { useDeadlineCountdown } from '../hooks/useDeadlineCountdown';
 import { useTransferWindow } from '../hooks/useTransferWindow';
@@ -317,7 +317,8 @@ export default function SquadScreen() {
           intel:  normalizeIntelligence(playerIntel),
         });
         const fixtureInfo = buildFixtureInfo(p, activeRoundFixtures);
-        return { ...normalised, isBench: !isStarter, isLineupLocked: isLocked, fixtureInfo };
+        const fixtureStatus = formatFixtureStatus(fixtureInfo);
+        return { ...normalised, isBench: !isStarter, isLineupLocked: isLocked, fixtureInfo, fixtureStatus };
       });
 
       // Enforce formation rules: 1 GK, 3-5 DEF, 2-4 MID, 1-2 FWD, total 11
@@ -1751,13 +1752,18 @@ export default function SquadScreen() {
                         >
                           <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 10, color: 'var(--mute)', width: 28, flexShrink: 0, textAlign: 'right' }}>#{String(no).padStart(2, '0')}</div>
                           <div style={{ width: 7, height: 7, borderRadius: '50%', background: statusColor(player), flexShrink: 0 }} />
-                          <div style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: 6 }}>
-                            <span style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 14, color: 'var(--paper)', letterSpacing: '-0.01em', textTransform: 'uppercase', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{surname}</span>
-                            {player.id === captainId && (
-                              <div style={{ width: 16, height: 16, borderRadius: '50%', background: 'var(--gold)', color: '#0A0A0A', fontFamily: 'Archivo Black, sans-serif', fontSize: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>C</div>
-                            )}
-                            {isSwapTarget && (
-                              <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 7, color: 'var(--cyan)', border: '1px solid rgba(0,180,216,0.4)', padding: '1px 4px', flexShrink: 0, letterSpacing: '0.1em' }}>SWAP</span>
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                              <span style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 14, color: 'var(--paper)', letterSpacing: '-0.01em', textTransform: 'uppercase', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{surname}</span>
+                              {player.id === captainId && (
+                                <div style={{ width: 16, height: 16, borderRadius: '50%', background: 'var(--gold)', color: '#0A0A0A', fontFamily: 'Archivo Black, sans-serif', fontSize: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>C</div>
+                              )}
+                              {isSwapTarget && (
+                                <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 7, color: 'var(--cyan)', border: '1px solid rgba(0,180,216,0.4)', padding: '1px 4px', flexShrink: 0, letterSpacing: '0.1em' }}>SWAP</span>
+                              )}
+                            </div>
+                            {player.fixtureStatus && (
+                              <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 7, color: player.fixtureStatus.color, letterSpacing: '0.1em', marginTop: 1 }}>{player.fixtureStatus.label}</div>
                             )}
                           </div>
                           <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 9, color: 'var(--mute)', flexShrink: 0, minWidth: 28, textAlign: 'right' }}>{(player.club ?? '').substring(0, 3).toUpperCase()}</div>
@@ -1800,14 +1806,19 @@ export default function SquadScreen() {
                       >
                         <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 10, color: 'var(--mute)', width: 28, flexShrink: 0, textAlign: 'right' }}>{isLocked ? '🔒' : `S${bi + 1}`}</div>
                         <div style={{ width: 7, height: 7, borderRadius: '50%', background: statusColor(player), flexShrink: 0 }} />
-                        <div style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: 6 }}>
-                          <span style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 14, color: 'var(--paper)', letterSpacing: '-0.01em', textTransform: 'uppercase', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{surname}</span>
-                          <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 7, color: posColor, border: `1px solid ${posColor}50`, padding: '1px 4px', flexShrink: 0, letterSpacing: '0.1em' }}>{player.position}</span>
-                          {isSwapTarget && !isLocked && (
-                            <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 7, color: 'var(--cyan)', border: '1px solid rgba(0,180,216,0.4)', padding: '1px 4px', flexShrink: 0, letterSpacing: '0.1em' }}>SWAP</span>
-                          )}
-                          {isLocked && (
-                            <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 7, color: 'var(--mute)', border: '1px solid rgba(255,255,255,0.12)', padding: '1px 4px', flexShrink: 0, letterSpacing: '0.1em' }}>LOCKED</span>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                            <span style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 14, color: 'var(--paper)', letterSpacing: '-0.01em', textTransform: 'uppercase', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{surname}</span>
+                            <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 7, color: posColor, border: `1px solid ${posColor}50`, padding: '1px 4px', flexShrink: 0, letterSpacing: '0.1em' }}>{player.position}</span>
+                            {isSwapTarget && !isLocked && (
+                              <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 7, color: 'var(--cyan)', border: '1px solid rgba(0,180,216,0.4)', padding: '1px 4px', flexShrink: 0, letterSpacing: '0.1em' }}>SWAP</span>
+                            )}
+                            {isLocked && (
+                              <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 7, color: 'var(--mute)', border: '1px solid rgba(255,255,255,0.12)', padding: '1px 4px', flexShrink: 0, letterSpacing: '0.1em' }}>LOCKED</span>
+                            )}
+                          </div>
+                          {player.fixtureStatus && (
+                            <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 7, color: player.fixtureStatus.color, letterSpacing: '0.1em', marginTop: 1 }}>{player.fixtureStatus.label}</div>
                           )}
                         </div>
                         <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 9, color: 'var(--mute)', flexShrink: 0, minWidth: 28, textAlign: 'right' }}>{(player.club ?? '').substring(0, 3).toUpperCase()}</div>
@@ -1902,6 +1913,9 @@ export default function SquadScreen() {
                               {!isStarter && <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 7, color: 'var(--mute)', border: '1px solid var(--rule)', padding: '0 3px', flexShrink: 0 }}>SUB</span>}
                             </div>
                             <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 8, color: 'var(--mute)', letterSpacing: '0.12em', marginTop: 1 }}>{(player.club ?? '').substring(0, 3).toUpperCase()}{player.price > 0 ? ` · €${Number(player.price).toFixed(1)}M` : ''}</div>
+                            {player.fixtureStatus && (
+                              <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 8, color: player.fixtureStatus.color, letterSpacing: '0.12em', marginTop: 1 }}>{player.fixtureStatus.label}</div>
+                            )}
                             <FormStrip rounds={squadStatsMap[player.id]} />
                           </div>
                           {/* Points */}
@@ -2186,6 +2200,9 @@ export default function SquadScreen() {
                           <div>
                             <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 11, color: 'var(--paper)', letterSpacing: '-0.01em' }}>{surname}</div>
                             <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 8, color: 'var(--mute)', letterSpacing: '0.1em' }}>{(player.club ?? '').substring(0, 3).toUpperCase()}{player.price > 0 ? ` · €${Number(player.price).toFixed(1)}M` : ''} · {Math.round(player.points ?? 0)} PTS</div>
+                            {player.fixtureStatus && (
+                              <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 8, color: player.fixtureStatus.color, letterSpacing: '0.1em', marginTop: 1 }}>{player.fixtureStatus.label}</div>
+                            )}
                           </div>
                         </button>
                       );
