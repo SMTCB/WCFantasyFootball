@@ -1887,10 +1887,14 @@ export default function SquadScreen() {
                       const sc = player.intel?.status === 'out' || player.intel?.status === 'injured' || player.intel?.status === 'suspended'
                         ? 'var(--danger)' : player.intel?.status === 'doubt' || player.intel?.status === 'doubtful'
                         ? 'var(--gold)' : 'var(--positive)';
+                      const isListed = activeAuctions.some(a => a.player_id === player.id);
                       return (
-                        <button
+                        <div
                           key={player.id}
+                          role="button"
+                          tabIndex={0}
                           onClick={() => handlePlayerClick(player)}
+                          onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') handlePlayerClick(player); }}
                           style={{
                             width: '100%', display: 'flex', alignItems: 'center', gap: 10,
                             padding: '9px 16px',
@@ -1920,7 +1924,44 @@ export default function SquadScreen() {
                           </div>
                           {/* Points */}
                           <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 16, color: 'var(--paper)', letterSpacing: '-0.02em', flexShrink: 0 }}>{Math.round(player.points ?? 0)}</div>
-                        </button>
+                          {/* Auction action */}
+                          {activeLeague && (
+                            <div onClick={e => e.stopPropagation()} style={{ flexShrink: 0 }}>
+                              {isListed ? (
+                                <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 8, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', padding: '3px 6px', border: '1px solid rgba(240,180,0,0.4)', color: 'var(--gold)', background: 'rgba(240,180,0,0.1)', whiteSpace: 'nowrap' }}>
+                                  ON AUCTION
+                                </span>
+                              ) : (
+                                <button
+                                  disabled={auctionBusy === player.id}
+                                  onClick={async () => {
+                                    const bid = parseFloat(player.price ?? 0);
+                                    setAuctionBusy(player.id);
+                                    const res = await listForAuction(player.id, bid);
+                                    setAuctionBusy(null);
+                                    if (!res.ok) showToast(res.error, 'error');
+                                    else showToast(`${player.name} listed for auction`, 'success');
+                                  }}
+                                  style={{
+                                    fontFamily: 'JetBrains Mono, monospace',
+                                    fontSize: 8, fontWeight: 800,
+                                    letterSpacing: '0.1em',
+                                    textTransform: 'uppercase',
+                                    padding: '3px 6px',
+                                    border: '1px solid rgba(240,180,0,0.4)',
+                                    color: 'var(--gold)',
+                                    background: 'rgba(240,180,0,0.06)',
+                                    cursor: 'pointer',
+                                    whiteSpace: 'nowrap',
+                                    opacity: auctionBusy === player.id ? 0.5 : 1,
+                                  }}
+                                >
+                                  {auctionBusy === player.id ? '…' : 'AUCTION'}
+                                </button>
+                              )}
+                            </div>
+                          )}
+                        </div>
                       );
                     })}
                     {/* Empty slots */}
