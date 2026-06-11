@@ -41,9 +41,20 @@ export function useAuctions(leagueId, squadId) {
         .in('id', bidderIds);
       usernameMap = Object.fromEntries((profiles ?? []).map(p => [p.id, p.username]));
     }
+    // Enrich with seller (lister) username — squads.id -> users.username
+    const sellerIds = [...new Set(allListings.map(l => l.seller_id).filter(Boolean))];
+    let sellerNameMap = {};
+    if (sellerIds.length > 0) {
+      const { data: sellerSquads } = await supabase
+        .from('squads')
+        .select('id, users(username)')
+        .in('id', sellerIds);
+      sellerNameMap = Object.fromEntries((sellerSquads ?? []).map(s => [s.id, s.users?.username ?? null]));
+    }
     const enrich = rows => (rows ?? []).map(r => ({
       ...r,
       bidder_name: r.highest_bidder_id ? (usernameMap[r.highest_bidder_id] ?? null) : null,
+      seller_name: r.seller_id ? (sellerNameMap[r.seller_id] ?? null) : null,
     }));
 
     if (!cancelRef.current) {
