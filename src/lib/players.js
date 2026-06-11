@@ -123,7 +123,7 @@ export function formatFixtureStatus(fixtureInfo) {
   // scheduled
   const d = new Date(fixtureInfo.kickoff_at);
   if (Number.isNaN(d.getTime())) return null;
-  const day  = d.toLocaleDateString([], { weekday: 'short' });
-  const time = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  const day  = d.toLocaleDateString('en-GB', { weekday: 'short' });
+  const time = d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
   return { label: `${day} ${time}`, color: 'var(--mute)' };
 }
