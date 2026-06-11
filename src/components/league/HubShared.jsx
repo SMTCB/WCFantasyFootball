@@ -270,9 +270,9 @@ export function HubLeagueHeader({ leagueName = 'LOADING…', memberCount = 0, gw
         )}
         {rightSlot && <div style={{ marginLeft: 'auto' }}>{rightSlot}</div>}
       </div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 6 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, rowGap: 4, marginTop: 6, flexWrap: 'wrap' }}>
         <span style={{ width: 7, height: 7, borderRadius: '50%', background: 'var(--cyan)', flexShrink: 0 }} />
-        <span style={{ fontFamily: DISPLAY, fontSize: backable ? 18 : 22, letterSpacing: '-0.02em', color: 'var(--paper)' }}>
+        <span style={{ fontFamily: DISPLAY, fontSize: backable ? 18 : 22, letterSpacing: '-0.02em', color: 'var(--paper)', minWidth: 0, flex: '1 1 auto' }}>
           {backable ? backTitle : leagueName.toUpperCase()}
         </span>
         {cupPhase && cupPhase !== 'pre_cup' && (
