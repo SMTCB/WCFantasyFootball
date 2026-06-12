@@ -1334,6 +1334,73 @@ function ToggleSwitch({ checked, onChange, disabled, labelOn, labelOff }) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Free transfer window state — emergency "open the market mid-matchday" toggle.
+// Shared by the desktop LifecycleOps grid and the mobile lifecycle cards so
+// EMERGENCY TRANSFERS is available on both layouts.
+// ─────────────────────────────────────────────────────────────────────────────
+function useFreeTransferWindow(leagueId, commissioner) {
+  const FREE_WINDOW_HOURS = 24;
+  const [activeFreeWindow, setActiveFreeWindow] = useState(null); // row or null
+
+  const refreshFreeWindow = useCallback(() => {
+    if (!leagueId) return;
+    const now = new Date().toISOString();
+    supabase
+      .from('transfer_windows')
+      .select('id, closes_at')
+      .eq('league_id', leagueId)
+      .eq('window_type', 'unlimited')
+      .lte('opens_at', now)
+      .gte('closes_at', now)
+      .limit(1)
+      .maybeSingle()
+      .then(({ data }) => setActiveFreeWindow(data ?? null));
+  }, [leagueId]);
+
+  useEffect(() => { refreshFreeWindow(); }, [refreshFreeWindow]);
+
+  const openFreeWindow = () => {
+    if (!window.confirm(
+      'Turn ON emergency transfers?\n\n' +
+      'This allows transfers during a live matchday, bypassing the deadline and live-fixture locks (budget, position, club cap, and ownership rules still apply).\n\n' +
+      'This can distort the game:\n' +
+      '- Managers can sub IN players who have already played this round, banking points they already earned elsewhere.\n' +
+      '- Managers can sub OUT underperforming players, erasing points they have already conceded this round.\n\n' +
+      `The window stays open for ${FREE_WINDOW_HOURS}h or until you turn it off. Continue?`
+    )) return;
+    commissioner.commAction(async () => {
+      const closesAt = new Date(Date.now() + FREE_WINDOW_HOURS * 3600 * 1000).toISOString();
+      const { error } = await supabase.from('transfer_windows').insert({
+        league_id:           leagueId,
+        window_type:         'unlimited',
+        transfers_remaining: null,
+        opens_at:            new Date().toISOString(),
+        closes_at:           closesAt,
+      });
+      if (error) throw new Error(error.message);
+      refreshFreeWindow();
+      commissioner.setCommMsg({ type: 'ok', text: 'Emergency transfers ON — managers can now trade regardless of the matchday lock.' });
+    });
+  };
+
+  const closeFreeWindow = () => {
+    if (!activeFreeWindow) return;
+    if (!window.confirm('Turn off emergency transfers now?')) return;
+    commissioner.commAction(async () => {
+      const { error } = await supabase
+        .from('transfer_windows')
+        .update({ closes_at: new Date().toISOString() })
+        .eq('id', activeFreeWindow.id);
+      if (error) throw new Error(error.message);
+      setActiveFreeWindow(null);
+      commissioner.setCommMsg({ type: 'ok', text: 'Emergency transfers OFF.' });
+    });
+  };
+
+  return { activeFreeWindow, openFreeWindow, closeFreeWindow };
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Lifecycle operation card
 // ─────────────────────────────────────────────────────────────────────────────
 function LifecycleOp({ title, status, statusTone = 'var(--mute)', sub, when, children, primary }) {
@@ -1365,7 +1432,7 @@ function LifecycleOp({ title, status, statusTone = 'var(--mute)', sub, when, chi
 // ─────────────────────────────────────────────────────────────────────────────
 function LifecycleOps({ commissioner, leagueId, tournamentId, windowType = null, league = null, onHelp }) {
   const {
-    commLoading, setCommMsg,
+    commLoading,
     windowOpensAt, setWindowOpensAt,
     windowClosesAt, setWindowClosesAt,
     windowTransfers, setWindowTransfers,
@@ -1430,64 +1497,9 @@ function LifecycleOps({ commissioner, leagueId, tournamentId, windowType = null,
   const [keepSubmissionCount, setKeepSubmissionCount] = useState(null);
 
   // Free transfer window state — emergency "open the market mid-matchday" toggle.
-  // Defaults to a 24h window; the commissioner can flip it off again any time.
-  const FREE_WINDOW_HOURS = 24;
-  const [activeFreeWindow, setActiveFreeWindow] = useState(null); // row or null
+  // Shared with the mobile layout via useFreeTransferWindow.
+  const { activeFreeWindow, openFreeWindow, closeFreeWindow } = useFreeTransferWindow(leagueId, commissioner);
 
-  const refreshFreeWindow = useCallback(() => {
-    if (!leagueId) return;
-    const now = new Date().toISOString();
-    supabase
-      .from('transfer_windows')
-      .select('id, closes_at')
-      .eq('league_id', leagueId)
-      .eq('window_type', 'unlimited')
-      .lte('opens_at', now)
-      .gte('closes_at', now)
-      .limit(1)
-      .maybeSingle()
-      .then(({ data }) => setActiveFreeWindow(data ?? null));
-  }, [leagueId]);
-
-  useEffect(() => { refreshFreeWindow(); }, [refreshFreeWindow]);
-
-  const openFreeWindow = () => {
-    if (!window.confirm(
-      'Turn ON emergency transfers?\n\n' +
-      'This allows transfers during a live matchday, bypassing the deadline and live-fixture locks (budget, position, club cap, and ownership rules still apply).\n\n' +
-      'This can distort the game:\n' +
-      '- Managers can sub IN players who have already played this round, banking points they already earned elsewhere.\n' +
-      '- Managers can sub OUT underperforming players, erasing points they have already conceded this round.\n\n' +
-      `The window stays open for ${FREE_WINDOW_HOURS}h or until you turn it off. Continue?`
-    )) return;
-    commissioner.commAction(async () => {
-      const closesAt = new Date(Date.now() + FREE_WINDOW_HOURS * 3600 * 1000).toISOString();
-      const { error } = await supabase.from('transfer_windows').insert({
-        league_id:           leagueId,
-        window_type:         'unlimited',
-        transfers_remaining: null,
-        opens_at:            new Date().toISOString(),
-        closes_at:           closesAt,
-      });
-      if (error) throw new Error(error.message);
-      refreshFreeWindow();
-      setCommMsg({ type: 'ok', text: 'Emergency transfers ON — managers can now trade regardless of the matchday lock.' });
-    });
-  };
-
-  const closeFreeWindow = () => {
-    if (!activeFreeWindow) return;
-    if (!window.confirm('Turn off emergency transfers now?')) return;
-    commissioner.commAction(async () => {
-      const { error } = await supabase
-        .from('transfer_windows')
-        .update({ closes_at: new Date().toISOString() })
-        .eq('id', activeFreeWindow.id);
-      if (error) throw new Error(error.message);
-      setActiveFreeWindow(null);
-      setCommMsg({ type: 'ok', text: 'Emergency transfers OFF.' });
-    });
-  };
   // groupStageStarted: true once at least one configured matchday fixture has kicked off.
   // Gating on kickoff_at (not deadline_at or fixture status) ensures the knockout draft
   // section is locked until actual group-stage play begins — not just when the deadline
@@ -1581,7 +1593,7 @@ function LifecycleOps({ commissioner, leagueId, tournamentId, windowType = null,
         )}
       />
       <div style={{ padding: '18px 24px' }}>
-        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3" style={{ gap: 14 }}>
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3" style={{ gap: 14, alignItems: 'start' }}>
 
           {/* Transfer Window */}
           <div data-tour="comm-transfer-window">
@@ -2544,6 +2556,11 @@ export default function CommissionerPanel({ commissioner, leagueId, tournamentId
   const _mobAllocDone         = !!(league?.cup_phase && league.cup_phase !== 'pre_cup');
   const _mobKnockoutAllocDone = ['pre_elimination', 'round_of_16', 'quarter_final', 'semi_final', 'final'].includes(league?.cup_phase);
 
+  // Emergency transfers — shared state/handlers across desktop LifecycleOps grid
+  // and the mobile lifecycle cards below. Called unconditionally (Rules of Hooks)
+  // even though it's only rendered on one of the two layouts per render.
+  const { activeFreeWindow, openFreeWindow, closeFreeWindow } = useFreeTransferWindow(leagueId, commissioner);
+
   useEffect(() => {
     if (!_mobAllocDone || _mobKnockoutAllocDone || !tournamentId) { setGroupStageStarted(false); return; }
     (async () => {
@@ -2614,6 +2631,10 @@ export default function CommissionerPanel({ commissioner, leagueId, tournamentId
                          : mobDeadlinePassed        ? 'var(--warn)'
                          :                           'var(--positive)';
 
+    // Emergency transfers status labels (state/handlers from the top-level hook above).
+    const mobEtStatus = activeFreeWindow ? 'ON' : 'OFF';
+    const mobEtTone   = activeFreeWindow ? 'var(--positive)' : 'var(--mute)';
+
     return (
       <div style={{ flex: 1, overflow: 'auto', background: 'var(--ink)', display: 'flex', flexDirection: 'column' }}>
         <HelpOverlay topic={helpModal} onClose={() => setHelpModal(null)} />
@@ -2650,6 +2671,30 @@ export default function CommissionerPanel({ commissioner, leagueId, tournamentId
             )}
           </MobLifecycleCard>
           </div>
+
+          {mobIsDeadlineControlled && (
+          <div data-tour="comm-emergency-transfers">
+          <MobLifecycleCard title="EMERGENCY TRANSFERS" status={mobEtStatus} tone={mobEtTone} when="Genuine emergencies only — e.g. reversing a manager's mistaken transfer or unblocking someone hit by a bug. For routine schedule fixes, use TRANSFER WINDOW OVERRIDE instead.">
+            <div style={{ padding: '8px 10px', background: 'rgba(240,180,0,0.06)', border: '1px solid rgba(240,180,0,0.25)', fontFamily: BODY, fontSize: 10, color: 'var(--warn)', lineHeight: 1.5 }}>
+              <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.2em' }}>CAUTION · </span>
+              Managers can sub in players who already scored this round, or sub out players who already conceded points. Past points are NOT recalculated. Turn off as soon as the issue is resolved.
+            </div>
+            {activeFreeWindow && (
+              <div style={{ padding: '8px 10px', background: 'rgba(24,201,107,0.06)', border: '1px solid rgba(24,201,107,0.25)', fontFamily: BODY, fontSize: 10, color: 'var(--positive)', lineHeight: 1.5 }}>
+                <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.2em' }}>ON · </span>
+                Auto-closes {new Date(activeFreeWindow.closes_at).toLocaleString()}
+              </div>
+            )}
+            <ToggleSwitch
+              checked={!!activeFreeWindow}
+              onChange={activeFreeWindow ? closeFreeWindow : openFreeWindow}
+              disabled={commLoading}
+              labelOn="EMERGENCY TRANSFERS ON"
+              labelOff="EMERGENCY TRANSFERS OFF"
+            />
+          </MobLifecycleCard>
+          </div>
+          )}
 
           {(!league || league.format === 'noduplicate') && (
           <div data-tour="comm-draft-deadline">
