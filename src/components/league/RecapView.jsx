@@ -72,12 +72,20 @@ function PlayerBreakdown({ breakdown, gwTotal = null, penaltyDeduction = 0, betD
   // Apportion individual player points so they sum exactly to the GW total
   // shown on the row above (largest-remainder method) — prevents the
   // "3 + 2 = 4?" display inconsistency when raw per-player points (e.g.
-  // 1.5, 2.5) are each rounded independently. Falls back to plain rounding
-  // while scores are still pending (gwTotal === null) or hasStats is mixed.
-  const allHaveStats = breakdown.every(p => p.hasStats);
-  const displayPts = (allHaveStats && gwTotal !== null)
-    ? apportionToTotal(breakdown.map(p => p.pts ?? 0), gwTotal + penaltyDeduction)
-    : breakdown.map(p => p.pts !== null ? Math.round(p.pts) : null);
+  // 1.5, 2.5) are each rounded independently. Only players whose fixture has
+  // started contribute to the GW total, so apportion across those only —
+  // players with hasStats=false (no fixture yet this round) always show '—'
+  // and are excluded from both the input and the target sum.
+  const statsRaw = breakdown.filter(p => p.hasStats).map(p => p.pts ?? 0);
+  const apportioned = (gwTotal !== null && statsRaw.length > 0)
+    ? apportionToTotal(statsRaw, gwTotal + penaltyDeduction)
+    : null;
+  let statsIdx = 0;
+  const displayPts = breakdown.map(p => {
+    if (!p.hasStats) return null;
+    if (apportioned) return apportioned[statsIdx++];
+    return p.pts !== null ? Math.round(p.pts) : null;
+  });
 
   return (
     <div style={{ borderTop: '1px solid var(--rule)', background: 'var(--ink-2)' }}>
