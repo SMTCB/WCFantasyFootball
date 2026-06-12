@@ -1,4 +1,4 @@
-// Edge Function: calculate-scores  (v24 — minutes/60, DEF clean-sheet 45min, scoring rule fixes)
+// Edge Function: calculate-scores  (v25 — points_breakdown.fixtures stored unrounded to 2dp, fixes sum-vs-total drift)
 // Calculates fantasy points for all squads for a given fixture.
 // Called by ingest-match-events (Forza live path) or directly (mock/manual path).
 //
@@ -716,10 +716,14 @@ async function rollupSquads(fixture_id, pointsLookup, tournament_id) {
     // L3.6: accumulate per-fixture contributions in points_breakdown.
     // transfer_penalty_deduction is stored when > 0 so the UI can show
     // "X pts from play − Y pts transfer penalty = Z pts total" without re-computing.
+    // Stored to 2dp (NOT rounded to an integer) — rounding each fixture's contribution
+    // independently caused the sum of fixtures[] to drift from the rounded `total`
+    // (e.g. 1.5 + 2.5 each round to 2 + 3 = 5, while round(1.5+2.5) = 4). Any future
+    // consumer summing fixtures[] should round the SUM, not each entry.
     const existingBD = existingBDMap[squad.id] ?? {};
     const thisFixturePts = Math.round(
-      pitchPlayers.reduce((sum, pid) => sum + (pointsLookup[pid] ?? 0), 0)
-    );
+      pitchPlayers.reduce((sum, pid) => sum + (pointsLookup[pid] ?? 0), 0) * 100
+    ) / 100;
     const breakdown = {
       fixtures: {
         ...(existingBD.fixtures ?? {}),

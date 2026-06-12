@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../../lib/supabase';
 import { MONO, DISPLAY, mgrHue, mgrMono } from './HubConstants';
 import { MgrTag, HubSectionLabel, MobSection } from './HubShared';
+import { apportionToTotal } from '../../lib/scoring';
 
 // ── All helpers are module-level so React never sees new function references ──
 
@@ -59,7 +60,7 @@ function FixtureRow({ f }) {
   );
 }
 
-function PlayerBreakdown({ breakdown, penaltyDeduction = 0, betDetails = [], tradeNet = 0 }) {
+function PlayerBreakdown({ breakdown, gwTotal = null, penaltyDeduction = 0, betDetails = [], tradeNet = 0 }) {
   if (!breakdown || breakdown === 'loading') {
     return (
       <div style={{ padding: '10px 24px', fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.18em', borderTop: '1px solid var(--rule)' }}>
@@ -67,6 +68,17 @@ function PlayerBreakdown({ breakdown, penaltyDeduction = 0, betDetails = [], tra
       </div>
     );
   }
+
+  // Apportion individual player points so they sum exactly to the GW total
+  // shown on the row above (largest-remainder method) — prevents the
+  // "3 + 2 = 4?" display inconsistency when raw per-player points (e.g.
+  // 1.5, 2.5) are each rounded independently. Falls back to plain rounding
+  // while scores are still pending (gwTotal === null) or hasStats is mixed.
+  const allHaveStats = breakdown.every(p => p.hasStats);
+  const displayPts = (allHaveStats && gwTotal !== null)
+    ? apportionToTotal(breakdown.map(p => p.pts ?? 0), gwTotal + penaltyDeduction)
+    : breakdown.map(p => p.pts !== null ? Math.round(p.pts) : null);
+
   return (
     <div style={{ borderTop: '1px solid var(--rule)', background: 'var(--ink-2)' }}>
       <div style={{ display: 'grid', gridTemplateColumns: '32px 1fr 50px 50px', gap: 8, padding: '6px 24px', borderBottom: '1px solid rgba(255,255,255,.05)' }}>
@@ -101,7 +113,7 @@ function PlayerBreakdown({ breakdown, penaltyDeduction = 0, betDetails = [], tra
             </div>
             <span style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', textAlign: 'right' }}>{p.hasStats ? p.minutes : '—'}</span>
             <span style={{ fontFamily: DISPLAY, fontSize: 11, textAlign: 'right', color: p.pts > 0 ? 'var(--positive)' : p.pts < 0 ? 'var(--danger)' : 'var(--mute)' }}>
-              {p.pts !== null ? Math.round(p.pts) : (p.hasStats ? '0' : '—')}
+              {displayPts[i] !== null ? displayPts[i] : (p.hasStats ? '0' : '—')}
             </span>
           </div>
         );
@@ -617,7 +629,7 @@ export default function RecapView({ leagueId, tournamentId, members, currentUser
             </div>
           </div>
         )}
-        {isOpen && <PlayerBreakdown breakdown={breakdown[s.user_id]} penaltyDeduction={s.penalty ?? 0} betDetails={betEntry?.bets ?? []} tradeNet={tradeNet} />}
+        {isOpen && <PlayerBreakdown breakdown={breakdown[s.user_id]} gwTotal={s.pts} penaltyDeduction={s.penalty ?? 0} betDetails={betEntry?.bets ?? []} tradeNet={tradeNet} />}
         {isOpen && <div style={{ height: 1, background: 'var(--rule)' }} />}
       </div>
     );

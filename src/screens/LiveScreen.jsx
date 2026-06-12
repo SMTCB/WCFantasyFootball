@@ -11,6 +11,7 @@ const LEAGUE_TONES = ['#00B4D8', '#E0A800', '#A855F7', '#22C55E', '#F59E0B'];
 import { POS_ORDER, POS_PITCH_Y as POS_Y } from '../lib/formations';
 import ScoringInfoModal from '../components/ScoringInfoModal';
 import { teamCode } from '../lib/fixtures';
+import { apportionToTotal } from '../lib/scoring';
 const POS_TONE = { FWD: 'var(--danger)', MID: 'var(--gold)', DEF: 'var(--cyan)', GK: '#A855F7' };
 
 // ── Shared primitives ────────────────────────────────────────────────────────
@@ -139,7 +140,7 @@ function MiniTok({ p, activeLeague }) {
             </>
           )}
           <span style={{ fontFamily: 'Archivo Black', fontSize: 10, color: (p.points ?? 0) >= 0 ? 'var(--paper)' : 'var(--danger)', flexShrink: 0 }}>
-            {(() => { const pts = Math.round(p.points ?? 0); return pts >= 0 ? pts : `−${Math.abs(pts)}`; })()}
+            {(() => { const pts = p.displayPoints ?? Math.round(p.points ?? 0); return pts >= 0 ? pts : `−${Math.abs(pts)}`; })()}
           </span>
         </div>
       </div>
@@ -292,7 +293,7 @@ function MobSquadRow({ p, activeLeague }) {
         <span className="mono" style={{ fontSize: 9, color: 'var(--mute)', marginLeft: 'auto' }}>{p.club || '—'}</span>
       </div>
       <div style={{ fontFamily: 'Archivo Black', fontSize: 14, letterSpacing: '-0.02em', color: (p.points ?? 0) >= 0 ? 'var(--cyan)' : 'var(--danger)' }}>
-        {(() => { const pts = Math.round(p.points ?? 0); return pts >= 0 ? pts : `−${Math.abs(pts)}`; })()}
+        {(() => { const pts = p.displayPoints ?? Math.round(p.points ?? 0); return pts >= 0 ? pts : `−${Math.abs(pts)}`; })()}
       </div>
     </div>
   );
@@ -615,9 +616,20 @@ export default function LiveScreen() {
         ? startingXi.map(id => enrichedPlayers.find(p => p.id === id)).filter(Boolean)
         : enrichedPlayers.filter(p => !p.isBench);
       const bench = squadPlayerIds.filter(id => benchSet.has(id)).map(id => enrichedPlayers.find(p => p.id === id)).filter(Boolean);
-      const positioned = positionPlayers(starters);
+
+      // Apportion each group's individually-rounded points so they sum to
+      // Math.round(raw group total) — prevents "these don't add up" when
+      // fractional per-player points (e.g. 1.5, 2.5) are rounded independently.
+      const withDisplayPoints = (group) => {
+        const raw = group.map(p => p.points ?? 0);
+        const total = Math.round(raw.reduce((a, b) => a + b, 0));
+        const apportioned = apportionToTotal(raw, total);
+        return group.map((p, i) => ({ ...p, displayPoints: apportioned[i] }));
+      };
+
+      const positioned = positionPlayers(withDisplayPoints(starters));
       setSquadPlayers(positioned);
-      setBenchPlayers(bench);
+      setBenchPlayers(withDisplayPoints(bench));
 
       // 6. Enrich leagues with tones + totals
       // U48: use per-league squad row so chip state is scoped to each league
@@ -992,7 +1004,7 @@ export default function LiveScreen() {
                         {(p.name || '').split(' ').pop().toUpperCase()}
                       </div>
                       <div style={{ fontFamily: 'Archivo Black', fontSize: 11, color: (p.points ?? 0) >= 0 ? 'var(--mute)' : 'var(--danger)', marginTop: 2 }}>
-                        {(() => { const pts = Math.round(p.points ?? 0); return pts >= 0 ? pts : `−${Math.abs(pts)}`; })()}
+                        {(() => { const pts = p.displayPoints ?? Math.round(p.points ?? 0); return pts >= 0 ? pts : `−${Math.abs(pts)}`; })()}
                       </div>
                     </div>
                   ))}
@@ -1252,7 +1264,7 @@ export default function LiveScreen() {
                             <span style={{ fontFamily: 'Archivo Black', fontSize: 12, letterSpacing: '-0.01em' }}>{(p.name || '').split(' ').pop().toUpperCase()}</span>
                             <span className="mono" style={{ fontSize: 8, color: 'var(--mute)' }}>{p.position}</span>
                           </div>
-                          <div style={{ fontFamily: 'Archivo Black', fontSize: 13, color: 'var(--mute)' }}>{Math.round(p.points ?? 0)}</div>
+                          <div style={{ fontFamily: 'Archivo Black', fontSize: 13, color: 'var(--mute)' }}>{p.displayPoints ?? Math.round(p.points ?? 0)}</div>
                         </div>
                       ))}
                     </div>
