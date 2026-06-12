@@ -1,6 +1,6 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-06-13 (rounding-consistency fix across RECAP/LIVE/calculate-scores — PR #520, v25)  
+**Last Updated**: 2026-06-13 (RecapView apportionment fix for partial/live rounds — PR #522, follow-up to #520)  
 **E2E Test Suite**: `platform.spec.js` (36 tests × 2 browsers) passing in CI ✅  
 **Full Playbook Run**: `E2E_TEST_PLAYBOOK.md` v2.0 — all flows confirmed  
 **🟢 LAUNCH READY**: No critical (P0/P1) bugs open. All game mechanics functional. WC kick-off 2026-06-11.  
@@ -30,6 +30,13 @@
   - `LiveScreen` — starters and bench groups each apportioned to `Math.round(group raw sum)` (pitch tokens, mobile rows, desktop/mobile bench).
   - `calculate-scores` (v25) — `points_breakdown.fixtures[fixture_id]` now stored to 2dp instead of pre-rounded per fixture, so any future consumer summing `fixtures[]` stays consistent with `total`. Redeployed 2026-06-13.
 - **No backfill**: `points_breakdown.fixtures` is not rendered anywhere in the UI today; existing mismatches in stored data (e.g. 429-r1) are mostly from captain multiplier/joker bonuses (not just rounding) and aren't meaningful to reconstruct retroactively.
+
+### Follow-up: RecapView fix didn't apply to partial/live rounds — PR #522 (2026-06-13)
+
+- **Reported**: user re-checked tommyazcue's Draft Mundial 26 GW1 after PR #520 deployed — RecapView still showed Crépeau PTS=3 and Soucek PTS=2 (sum=5) against GW PTS=4.
+- **Root cause**: PR #520's `RecapView.PlayerBreakdown` gated apportionment on `allHaveStats = breakdown.every(p => p.hasStats)`. Any starter whose fixture hasn't started yet this round makes `hasStats=false` for that player, so `allHaveStats` is false for almost every partial/in-progress round — apportionment never ran, falling back to the old per-player `Math.round()`.
+- **Fix**: apportion only across players with `hasStats=true` (the ones actually contributing to `gwTotal`), targeting `gwTotal + penaltyDeduction`. Players with `hasStats=false` are excluded from both the input and the target and continue to render `—`.
+- **Verified** against production data for squad `aa1fde1e-428c-4595-84a9-cb82dc828835` (tommyazcue, 429-r1, `total=4`): Crépeau (raw 2.5) and Soucek (raw 1.5) are the only two starters with stats — `apportionToTotal([2.5, 1.5], 4) = [3, 1]`, summing to 4. New display: Crépeau=3, Soucek=1.
 
 ---
 
