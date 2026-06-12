@@ -1430,7 +1430,7 @@ function LifecycleOp({ title, status, statusTone = 'var(--mute)', sub, when, chi
 // ─────────────────────────────────────────────────────────────────────────────
 // Lifecycle operations (Zone C)
 // ─────────────────────────────────────────────────────────────────────────────
-function LifecycleOps({ commissioner, leagueId, tournamentId, windowType = null, league = null, onHelp }) {
+function LifecycleOps({ commissioner, leagueId, tournamentId, league = null, onHelp }) {
   const {
     commLoading,
     windowOpensAt, setWindowOpensAt,
@@ -1476,11 +1476,18 @@ function LifecycleOps({ commissioner, leagueId, tournamentId, windowType = null,
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [leagueId, league?.format, league?.cup_phase]);
 
-  // Deadline-controlled = window_type is 'matchday' (WC/cup leagues using matchday_deadlines).
-  // Manual-controlled = window from transfer_windows table (EPL/season leagues).
-  // windowType comes from get_transfer_window_status via useTransferWindow in LeagueScreen;
-  // fall back to tournamentId heuristic only while the status is still loading (windowType null).
-  const isDeadlineControlled = windowType !== null ? windowType === 'matchday' : !!tournamentId;
+  // Deadline-controlled = league belongs to a tournament with matchday_deadlines
+  // (WC/cup leagues). Manual-controlled = EPL/season leagues with no tournamentId,
+  // always governed by transfer_windows.
+  //
+  // NOTE: do NOT derive this from `windowType` (get_transfer_window_status's
+  // window_type) — that field reflects the *currently active window's* type
+  // ('unlimited' during an emergency window, 'standard'/'cup_group'/etc. for a
+  // manual transfer_windows row, 'matchday' only on the deadline fallback path
+  // when no manual/emergency row is active). A deadline-controlled league still
+  // IS deadline-controlled while an emergency window is open — in fact that's
+  // exactly when the commissioner needs to see the EMERGENCY TRANSFERS toggle.
+  const isDeadlineControlled = !!tournamentId;
 
   // Allocation state
   const now = new Date();
@@ -2615,8 +2622,11 @@ export default function CommissionerPanel({ commissioner, leagueId, tournamentId
     const mobDeadlinePassed = league?.draft_deadline && new Date(league.draft_deadline) <= mobNow;
     const mobAllocationDone = league?.cup_phase && league.cup_phase !== 'pre_cup';
 
-    // AUDIT-58-A3: derive live status labels for mobile cards (mirrors desktop LifecycleOps)
-    const mobIsDeadlineControlled = windowType !== null ? windowType === 'matchday' : !!tournamentId;
+    // AUDIT-58-A3: derive live status labels for mobile cards (mirrors desktop LifecycleOps).
+    // See the desktop `isDeadlineControlled` definition above for why this must NOT be
+    // derived from `windowType` — it reflects the currently-active window's type, not
+    // whether this league uses the matchday-deadline lock system at all.
+    const mobIsDeadlineControlled = !!tournamentId;
     const mobTwStatus = mobIsDeadlineControlled    ? 'DEADLINE-CONTROLLED'
                       : league?.transfers_open     ? 'OPEN' : 'CLOSED';
     const mobTwTone   = mobIsDeadlineControlled    ? 'var(--warn)'
@@ -2868,7 +2878,6 @@ export default function CommissionerPanel({ commissioner, leagueId, tournamentId
         commissioner={commissioner}
         leagueId={leagueId}
         tournamentId={tournamentId}
-        windowType={windowType}
         league={league}
         onHelp={() => setHelpModal('lifecycle')}
       />
