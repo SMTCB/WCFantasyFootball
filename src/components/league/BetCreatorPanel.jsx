@@ -215,84 +215,124 @@ export default function BetCreatorPanel({ leagueId, tournamentId, onCreated, com
     }
   }, [tournamentId, windowFrom, deadline]);
 
-  // ── Helpers: next matchday for this tournament ────────────────────────────
-  // Returns { matchday_id, deadline_at } or null. Used by both fetchFixtures
-  // and fetchTeams so the list auto-scopes without requiring a manual deadline.
-  const fetchNextMatchday = useCallback(async () => {
-    if (!tournamentId) return null;
-    const { data } = await supabase
-      .from('matchday_deadlines')
-      .select('matchday_id, deadline_at')
-      .eq('tournament_id', tournamentId)
-      .gt('deadline_at', new Date().toISOString())
-      .order('deadline_at', { ascending: true })
-      .limit(1)
-      .maybeSingle();
-    return data ?? null;
+  // ── Helpers: current + next matchday for this tournament ──────────────────
+  // "current" = matchday whose deadline has already passed (most recent past
+  // deadline) — its later-in-the-week fixtures may still be unstarted.
+  // "next"    = matchday whose deadline is still upcoming.
+  // Returns { current, next } where each is { matchday_id, deadline_at } or null.
+  const fetchMatchdayWindow = useCallback(async () => {
+    if (!tournamentId) return { current: null, next: null };
+    const now = new Date().toISOString();
+    const [{ data: nextRows }, { data: currentRows }] = await Promise.all([
+      supabase
+        .from('matchday_deadlines')
+        .select('matchday_id, deadline_at')
+        .eq('tournament_id', tournamentId)
+        .gt('deadline_at', now)
+        .order('deadline_at', { ascending: true })
+        .limit(1),
+      supabase
+        .from('matchday_deadlines')
+        .select('matchday_id, deadline_at')
+        .eq('tournament_id', tournamentId)
+        .lte('deadline_at', now)
+        .order('deadline_at', { ascending: false })
+        .limit(1),
+    ]);
+    return { current: currentRows?.[0] ?? null, next: nextRows?.[0] ?? null };
   }, [tournamentId]);
 
-  // ── Fetch: fixtures scoped to the next matchday ───────────────────────────
+  // ── Fetch: fixtures scoped to the next matchday, plus not-yet-started ─────
+  // fixtures from the current matchday that kick off tomorrow or later (so a
+  // bet can still be created on a later leg of an in-progress matchday without
+  // touching games that have already kicked off or start later today).
   const fetchFixtures = useCallback(async () => {
     if (!tournamentId) return;
     setLoading(true);
     try {
-      const md = await fetchNextMatchday();
-      if (!md) { setFixtures([]); setLoading(false); return; }
+      const { current, next } = await fetchMatchdayWindow();
+      const primary = next ?? current;
+      if (!primary) { setFixtures([]); setLoading(false); return; }
 
       // Auto-fill deadline from matchday deadline if the commissioner hasn't set one
       if (!deadlineEdited.current) {
-        const dt = new Date(md.deadline_at);
+        const dt = new Date(primary.deadline_at);
         // Convert to local datetime-local input format (YYYY-MM-DDTHH:MM)
         const localIso = new Date(dt.getTime() - dt.getTimezoneOffset() * 60000)
           .toISOString().slice(0, 16);
         setDeadline(localIso);
       }
 
+      const matchdayIds = [next, current].filter(Boolean).map(m => m.matchday_id);
       const { data } = await supabase
         .from('fixtures')
         .select('id, home_team, away_team, kickoff_at, matchday_id')
         .eq('tournament_id', tournamentId)
-        .eq('matchday_id', md.matchday_id)
+        .in('matchday_id', matchdayIds)
         .order('kickoff_at', { ascending: true });
 
-      setFixtures(data || []);
+      const tomorrowStart = new Date();
+      tomorrowStart.setUTCHours(0, 0, 0, 0);
+      tomorrowStart.setUTCDate(tomorrowStart.getUTCDate() + 1);
+
+      const filtered = (data || []).filter(f => {
+        if (next && f.matchday_id === next.matchday_id) return true;
+        if (current && f.matchday_id === current.matchday_id) return new Date(f.kickoff_at) >= tomorrowStart;
+        return false;
+      });
+
+      setFixtures(filtered);
     } catch (e) {
       console.error('BetCreatorPanel fixture fetch error:', e);
     } finally {
       setLoading(false);
     }
-  }, [tournamentId, fetchNextMatchday]);
+  }, [tournamentId, fetchMatchdayWindow]);
 
   // ── Fetch: unique teams from the next matchday (for clean_sheet bets) ────
+  // Same current+next window as fetchFixtures, restricted to teams whose
+  // current-matchday fixture hasn't kicked off before tomorrow.
   const fetchTeams = useCallback(async () => {
     if (!tournamentId) return;
     setLoading(true);
     try {
-      const md = await fetchNextMatchday();
-      if (!md) { setTeams([]); setLoading(false); return; }
+      const { current, next } = await fetchMatchdayWindow();
+      const primary = next ?? current;
+      if (!primary) { setTeams([]); setLoading(false); return; }
 
       if (!deadlineEdited.current) {
-        const dt = new Date(md.deadline_at);
+        const dt = new Date(primary.deadline_at);
         const localIso = new Date(dt.getTime() - dt.getTimezoneOffset() * 60000)
           .toISOString().slice(0, 16);
         setDeadline(localIso);
       }
 
+      const matchdayIds = [next, current].filter(Boolean).map(m => m.matchday_id);
       const { data } = await supabase
         .from('fixtures')
-        .select('home_team, away_team')
+        .select('home_team, away_team, kickoff_at, matchday_id')
         .eq('tournament_id', tournamentId)
-        .eq('matchday_id', md.matchday_id)
+        .in('matchday_id', matchdayIds)
         .order('kickoff_at', { ascending: true });
 
-      const sorted = [...new Set((data || []).flatMap(f => [f.home_team, f.away_team]))].sort();
+      const tomorrowStart = new Date();
+      tomorrowStart.setUTCHours(0, 0, 0, 0);
+      tomorrowStart.setUTCDate(tomorrowStart.getUTCDate() + 1);
+
+      const filtered = (data || []).filter(f => {
+        if (next && f.matchday_id === next.matchday_id) return true;
+        if (current && f.matchday_id === current.matchday_id) return new Date(f.kickoff_at) >= tomorrowStart;
+        return false;
+      });
+
+      const sorted = [...new Set(filtered.flatMap(f => [f.home_team, f.away_team]))].sort();
       setTeams(sorted);
     } catch (e) {
       console.error('BetCreatorPanel team fetch error:', e);
     } finally {
       setLoading(false);
     }
-  }, [tournamentId, fetchNextMatchday]);
+  }, [tournamentId, fetchMatchdayWindow]);
 
   useEffect(() => {
     if (!template) return;

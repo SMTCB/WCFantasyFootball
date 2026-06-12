@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../../lib/supabase';
 import BetCreatorPanel from './BetCreatorPanel';
 // HubShared is NOT imported here — LeagueScreen imports it directly, and
@@ -1392,11 +1392,12 @@ function LifecycleOps({ commissioner, leagueId, tournamentId, windowType = null,
   const [knockoutDeadline,    setKnockoutDeadline]    = useState('');
   const [keepSubmissionCount, setKeepSubmissionCount] = useState(null);
 
-  // Free transfer window state
-  const [activeFreeWindow,   setActiveFreeWindow]   = useState(null); // row or null
-  const [freeWindowClosesAt, setFreeWindowClosesAt] = useState('');
+  // Free transfer window state — emergency "open the market mid-matchday" toggle.
+  // Defaults to a 24h window; the commissioner can flip it off again any time.
+  const FREE_WINDOW_HOURS = 24;
+  const [activeFreeWindow, setActiveFreeWindow] = useState(null); // row or null
 
-  useEffect(() => {
+  const refreshFreeWindow = useCallback(() => {
     if (!leagueId) return;
     const now = new Date().toISOString();
     supabase
@@ -1411,41 +1412,43 @@ function LifecycleOps({ commissioner, leagueId, tournamentId, windowType = null,
       .then(({ data }) => setActiveFreeWindow(data ?? null));
   }, [leagueId]);
 
+  useEffect(() => { refreshFreeWindow(); }, [refreshFreeWindow]);
+
   const openFreeWindow = () => {
-    if (!freeWindowClosesAt) return;
-    if (!window.confirm('Open an unlimited transfer window? All deadline and live-fixture locks are bypassed until the close time you set.')) return;
+    if (!window.confirm(
+      'Turn ON emergency transfers?\n\n' +
+      'This allows transfers during a live matchday, bypassing the deadline and live-fixture locks (budget, position, club cap, and ownership rules still apply).\n\n' +
+      'This can distort the game:\n' +
+      '- Managers can sub IN players who have already played this round, banking points they already earned elsewhere.\n' +
+      '- Managers can sub OUT underperforming players, erasing points they have already conceded this round.\n\n' +
+      `The window stays open for ${FREE_WINDOW_HOURS}h or until you turn it off. Continue?`
+    )) return;
     commissioner.commAction(async () => {
+      const closesAt = new Date(Date.now() + FREE_WINDOW_HOURS * 3600 * 1000).toISOString();
       const { error } = await supabase.from('transfer_windows').insert({
         league_id:           leagueId,
         window_type:         'unlimited',
         transfers_remaining: null,
         opens_at:            new Date().toISOString(),
-        closes_at:           new Date(freeWindowClosesAt).toISOString(),
+        closes_at:           closesAt,
       });
       if (error) throw new Error(error.message);
-      const { data } = await supabase
-        .from('transfer_windows')
-        .select('id, closes_at')
-        .eq('league_id', leagueId)
-        .eq('window_type', 'unlimited')
-        .gte('closes_at', new Date().toISOString())
-        .limit(1)
-        .maybeSingle();
-      setActiveFreeWindow(data ?? null);
-      setCommMsg({ type: 'ok', text: 'Free transfer window opened.' });
+      refreshFreeWindow();
+      setCommMsg({ type: 'ok', text: 'Emergency transfers ON — managers can now trade regardless of the matchday lock.' });
     });
   };
 
   const closeFreeWindow = () => {
     if (!activeFreeWindow) return;
-    if (!window.confirm('Close the free transfer window immediately?')) return;
+    if (!window.confirm('Turn off emergency transfers now?')) return;
     commissioner.commAction(async () => {
-      await supabase
+      const { error } = await supabase
         .from('transfer_windows')
         .update({ closes_at: new Date().toISOString() })
         .eq('id', activeFreeWindow.id);
+      if (error) throw new Error(error.message);
       setActiveFreeWindow(null);
-      setCommMsg({ type: 'ok', text: 'Free transfer window closed.' });
+      setCommMsg({ type: 'ok', text: 'Emergency transfers OFF.' });
     });
   };
   // groupStageStarted: true once at least one configured matchday fixture has kicked off.
@@ -1594,40 +1597,30 @@ function LifecycleOps({ commissioner, leagueId, tournamentId, windowType = null,
           />
           </div>
 
-          {/* Free Transfer Window — tournament leagues only */}
+          {/* Emergency mid-matchday transfer toggle — relevant to any deadline-controlled
+              league (matchday-deadline lock applies regardless of league_mode). */}
           {isDeadlineControlled && (
           <LifecycleOp
-            title="FREE TRANSFER WINDOW"
-            status={activeFreeWindow ? 'ACTIVE' : 'CLOSED'}
+            title="EMERGENCY TRANSFERS"
+            status={activeFreeWindow ? 'ON' : 'OFF'}
             statusTone={activeFreeWindow ? 'var(--positive)' : 'var(--mute)'}
-            sub="Open an unlimited transfer window. Bypasses deadline locks, live-fixture locks, and the 3/round limit. Budget, position, club cap, and ownership rules still apply."
-            when="Between group and knockout stage, or any time you want to give managers a free adjustment period."
+            sub="Last resort: lets managers trade during a live matchday, bypassing the deadline and live-fixture locks. Budget, position, club cap, and ownership rules still apply."
+            when="Only use mid-matchday in exceptional circumstances — see warning when turning on."
             primary={
               activeFreeWindow ? (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                   <div style={{ padding: '8px 10px', background: 'rgba(24,201,107,0.06)', border: '1px solid rgba(24,201,107,0.25)', fontFamily: BODY, fontSize: 10, color: 'var(--positive)', lineHeight: 1.5 }}>
-                    <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.2em' }}>UNLIMITED WINDOW ACTIVE · </span>
-                    Closes {new Date(activeFreeWindow.closes_at).toLocaleString()}
+                    <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.2em' }}>ON · </span>
+                    Auto-closes {new Date(activeFreeWindow.closes_at).toLocaleString()}
                   </div>
-                  <button onClick={closeFreeWindow} disabled={commLoading} style={{ ...btnBase, width: '100%', background: 'transparent', border: '1px solid rgba(239,68,68,.33)', color: 'var(--danger)', cursor: commLoading ? 'not-allowed' : 'pointer', fontSize: 11 }}>CLOSE NOW</button>
+                  <button onClick={closeFreeWindow} disabled={commLoading} style={{ ...btnBase, width: '100%', background: 'transparent', border: '1px solid rgba(239,68,68,.33)', color: 'var(--danger)', cursor: commLoading ? 'not-allowed' : 'pointer', fontSize: 11 }}>TURN OFF</button>
                 </div>
               ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                    <span style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '.2em', color: 'var(--paper)' }}>CLOSES AT</span>
-                    <input
-                      type="datetime-local"
-                      value={freeWindowClosesAt}
-                      onChange={e => setFreeWindowClosesAt(e.target.value)}
-                      style={{ ...inputStyle, colorScheme: 'dark', fontSize: 11 }}
-                    />
-                  </div>
-                  <button
-                    onClick={openFreeWindow}
-                    disabled={commLoading || !freeWindowClosesAt}
-                    style={opBtnStyle(!freeWindowClosesAt ? 'var(--ink-3)' : 'var(--cyan)', !freeWindowClosesAt ? 'var(--mute)' : 'var(--ink)')}
-                  >OPEN FREE WINDOW ↯</button>
-                </div>
+                <button
+                  onClick={openFreeWindow}
+                  disabled={commLoading}
+                  style={opBtnStyle('var(--cyan)', 'var(--ink)')}
+                >TURN ON ↯</button>
               )
             }
           />
