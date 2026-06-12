@@ -1297,6 +1297,43 @@ function ResolvePendingBets({ openBets, resolutionBetsLoading, setSelectedBetFor
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Toggle switch (on/off control with a label)
+// ─────────────────────────────────────────────────────────────────────────────
+function ToggleSwitch({ checked, onChange, disabled, labelOn, labelOff }) {
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={checked}
+      onClick={onChange}
+      disabled={disabled}
+      style={{
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10,
+        width: '100%', background: 'transparent', border: 'none', padding: 0,
+        cursor: disabled ? 'not-allowed' : 'pointer', opacity: disabled ? 0.5 : 1,
+      }}
+    >
+      <span style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '.2em', color: checked ? 'var(--positive)' : 'var(--mute)' }}>
+        {checked ? labelOn : labelOff}
+      </span>
+      <span style={{
+        position: 'relative', width: 44, height: 24, borderRadius: 12, flexShrink: 0,
+        background: checked ? 'var(--positive)' : 'var(--ink)',
+        border: `1px solid ${checked ? 'var(--positive)' : 'var(--rule)'}`,
+        transition: 'background 0.15s ease',
+      }}>
+        <span style={{
+          position: 'absolute', top: 2, left: checked ? 22 : 2,
+          width: 18, height: 18, borderRadius: '50%',
+          background: checked ? 'var(--ink)' : 'var(--mute)',
+          transition: 'left 0.15s ease',
+        }} />
+      </span>
+    </button>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Lifecycle operation card
 // ─────────────────────────────────────────────────────────────────────────────
 function LifecycleOp({ title, status, statusTone = 'var(--mute)', sub, when, children, primary }) {
@@ -1607,21 +1644,21 @@ function LifecycleOps({ commissioner, leagueId, tournamentId, windowType = null,
             sub="Last resort: lets managers trade during a live matchday, bypassing the deadline and live-fixture locks. Budget, position, club cap, and ownership rules still apply."
             when="Only use mid-matchday in exceptional circumstances — see warning when turning on."
             primary={
-              activeFreeWindow ? (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {activeFreeWindow && (
                   <div style={{ padding: '8px 10px', background: 'rgba(24,201,107,0.06)', border: '1px solid rgba(24,201,107,0.25)', fontFamily: BODY, fontSize: 10, color: 'var(--positive)', lineHeight: 1.5 }}>
                     <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.2em' }}>ON · </span>
                     Auto-closes {new Date(activeFreeWindow.closes_at).toLocaleString()}
                   </div>
-                  <button onClick={closeFreeWindow} disabled={commLoading} style={{ ...btnBase, width: '100%', background: 'transparent', border: '1px solid rgba(239,68,68,.33)', color: 'var(--danger)', cursor: commLoading ? 'not-allowed' : 'pointer', fontSize: 11 }}>TURN OFF</button>
-                </div>
-              ) : (
-                <button
-                  onClick={openFreeWindow}
+                )}
+                <ToggleSwitch
+                  checked={!!activeFreeWindow}
+                  onChange={activeFreeWindow ? closeFreeWindow : openFreeWindow}
                   disabled={commLoading}
-                  style={opBtnStyle('var(--cyan)', 'var(--ink)')}
-                >TURN ON ↯</button>
-              )
+                  labelOn="EMERGENCY TRANSFERS ON"
+                  labelOff="EMERGENCY TRANSFERS OFF"
+                />
+              </div>
             }
           />
           )}
