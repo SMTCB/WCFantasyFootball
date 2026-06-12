@@ -1589,14 +1589,14 @@ function LifecycleOps({ commissioner, leagueId, tournamentId, windowType = null,
             title="TRANSFER WINDOW"
             status={twStatus}
             statusTone={twTone}
-            sub="Open and close the trading window. While open, managers swap players from the market."
-            when="Open between gameweeks. Close 1h before the first MD kickoff."
+            sub="Sets when the transfer market is open for trading. Normally automatic — governed by matchday deadlines (open between gameweeks, closed during a live round)."
+            when="Use OVERRIDE to fix a wrong auto-schedule (e.g. a postponed fixture) or to open/close on a custom date. It still enforces the live-fixture price lock and the per-round transfer limit — for those, use EMERGENCY TRANSFERS instead."
             primary={
               isDeadlineControlled && !twOverride ? (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                   <div style={{ padding: '8px 10px', background: 'var(--ink)', border: '1px solid var(--rule)', fontFamily: BODY, fontSize: 10, color: 'var(--mute)', lineHeight: 1.5 }}>
                     <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.2em', color: 'var(--warn)' }}>AUTO-MANAGED · </span>
-                    Transfer windows are governed by matchday deadlines. Override only if you need to manually intervene.
+                    Opens and closes automatically based on matchday deadlines — no action needed most weeks. Use OVERRIDE only if this schedule is wrong or you need a custom open/close time.
                   </div>
                   <button onClick={() => setTwOverride(true)} style={{ ...btnBase, width: '100%', background: 'transparent', border: '1px solid var(--rule)', color: 'var(--mute)', fontSize: 10 }}>
                     OVERRIDE ↗
@@ -1608,6 +1608,11 @@ function LifecycleOps({ commissioner, leagueId, tournamentId, windowType = null,
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '4px 8px', background: 'rgba(240,180,0,0.08)', border: '1px solid rgba(240,180,0,0.25)' }}>
                       <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.18em', color: 'var(--warn)' }}>✏ OVERRIDE MODE</span>
                       <button onClick={() => setTwOverride(false)} style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.14em', color: 'var(--mute)', background: 'transparent', border: '1px solid var(--rule)', padding: '2px 8px', cursor: 'pointer' }}>LOCK</button>
+                    </div>
+                  )}
+                  {isDeadlineControlled && (
+                    <div style={{ padding: '6px 8px', background: 'var(--ink)', border: '1px solid var(--rule)', fontFamily: BODY, fontSize: 10, color: 'var(--mute)', lineHeight: 1.4 }}>
+                      Note: OPEN here still respects the live-fixture price lock and the per-round transfer limit.
                     </div>
                   )}
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
@@ -1641,10 +1646,14 @@ function LifecycleOps({ commissioner, leagueId, tournamentId, windowType = null,
             title="EMERGENCY TRANSFERS"
             status={activeFreeWindow ? 'ON' : 'OFF'}
             statusTone={activeFreeWindow ? 'var(--positive)' : 'var(--mute)'}
-            sub="Last resort: lets managers trade during a live matchday, bypassing the deadline and live-fixture locks. Budget, position, club cap, and ownership rules still apply."
-            when="Only use mid-matchday in exceptional circumstances — see warning when turning on."
+            sub="Forces the market open during a live matchday AND lifts the live-fixture price lock and the per-round transfer limit. Budget, position, club cap, and ownership rules still apply."
+            when="Genuine emergencies only — e.g. reversing a manager's mistaken transfer or unblocking someone hit by a bug. For routine schedule fixes, use TRANSFER WINDOW OVERRIDE instead."
             primary={
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <div style={{ padding: '8px 10px', background: 'rgba(240,180,0,0.06)', border: '1px solid rgba(240,180,0,0.25)', fontFamily: BODY, fontSize: 10, color: 'var(--warn)', lineHeight: 1.5 }}>
+                  <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.2em' }}>CAUTION · </span>
+                  Managers can sub in players who already scored this round, or sub out players who already conceded points. Past points are NOT recalculated. Turn off as soon as the issue is resolved.
+                </div>
                 {activeFreeWindow && (
                   <div style={{ padding: '8px 10px', background: 'rgba(24,201,107,0.06)', border: '1px solid rgba(24,201,107,0.25)', fontFamily: BODY, fontSize: 10, color: 'var(--positive)', lineHeight: 1.5 }}>
                     <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.2em' }}>ON · </span>
