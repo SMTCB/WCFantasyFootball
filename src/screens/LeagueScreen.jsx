@@ -425,27 +425,29 @@ export default function LeagueScreen() {
   }, [user?.id, fetchLeagues, fetchTournaments]);
 
   // IMP-01: Fetch current GW for the active league's tournament.
-  // Tries the next upcoming deadline first; falls back to the most recent completed round.
+  // Prefers the most recent past deadline (the round currently being played,
+  // even after its deadline passes but before it completes); falls back to
+  // the next upcoming deadline pre-competition.
   useEffect(() => {
     const tournamentId = activeLeague?.leagues?.tournament_id;
     if (!tournamentId) { setCurrentGW('—'); return; }
     let cancelled = false;
     (async () => {
-      const { data: upcoming } = await supabase
-        .from('matchday_deadlines').select('matchday_id')
-        .eq('tournament_id', tournamentId)
-        .gt('deadline_at', new Date().toISOString())
-        .order('deadline_at', { ascending: true }).limit(1).maybeSingle();
-      if (upcoming?.matchday_id) {
-        if (!cancelled) setCurrentGW(String(upcoming.matchday_id).replace(/^.*-r/, ''));
-        return;
-      }
       const { data: past } = await supabase
         .from('matchday_deadlines').select('matchday_id')
         .eq('tournament_id', tournamentId)
         .lte('deadline_at', new Date().toISOString())
         .order('deadline_at', { ascending: false }).limit(1).maybeSingle();
-      if (!cancelled) setCurrentGW(past?.matchday_id ? String(past.matchday_id).replace(/^.*-r/, '') : '—');
+      if (past?.matchday_id) {
+        if (!cancelled) setCurrentGW(String(past.matchday_id).replace(/^.*-r/, ''));
+        return;
+      }
+      const { data: upcoming } = await supabase
+        .from('matchday_deadlines').select('matchday_id')
+        .eq('tournament_id', tournamentId)
+        .gt('deadline_at', new Date().toISOString())
+        .order('deadline_at', { ascending: true }).limit(1).maybeSingle();
+      if (!cancelled) setCurrentGW(upcoming?.matchday_id ? String(upcoming.matchday_id).replace(/^.*-r/, '') : '—');
     })();
     return () => { cancelled = true; };
   }, [activeLeague?.leagues?.tournament_id]);
