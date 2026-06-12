@@ -484,18 +484,23 @@ export default function RecapView({ leagueId, tournamentId, members, currentUser
       }
 
       const rows = starters.map(pid => {
-        const meta  = playerMeta[pid] || { name: pid, position: '?' };
-        const stats = statsByPlayer[pid];
+        const meta    = playerMeta[pid] || { name: pid, position: '?' };
+        const stats   = statsByPlayer[pid];
+        const isCaptain = pid === squadRow.captain_id;
+        const isTriple  = isCaptain && squadRow.is_triple_captain;
+        // Apply the captain multiplier here so displayed player points sum to
+        // the GW total shown on the row above (which is itself captain-multiplied).
+        const mult = isTriple ? 3 : isCaptain ? 2 : 1;
         return {
           id: pid, name: meta.name, position: meta.position,
-          pts:       stats?.pts ?? null,
+          pts:       stats?.pts != null ? stats.pts * mult : null,
           goals:     stats?.goals     ?? 0, assists:    stats?.assists    ?? 0,
           minutes:   stats?.minutes   ?? 0, yellow:     stats?.yellow     ?? 0,
           red:       stats?.red       ?? 0, saves:      stats?.saves      ?? 0,
           keyPasses: stats?.keyPasses ?? 0, sot:        stats?.sot        ?? 0,
           bigChances: stats?.bigChances ?? 0,
-          captain: pid === squadRow.captain_id,
-          triple:  pid === squadRow.captain_id && squadRow.is_triple_captain,
+          captain: isCaptain,
+          triple:  isTriple,
           joker:   pid === squadRow.joker_player_id,
           hasStats: !!stats,
         };

@@ -379,19 +379,21 @@ export default function LiveScreen() {
 
   const fetchAll = useCallback(async () => {
     try {
-      // 0. Current matchday label — prefer next upcoming deadline, fall back to most recent past.
-      // Filtered by active league's tournament (BUG-12 fix).
+      // 0. Current matchday label — prefer the most recent past deadline (the round
+      // currently being played, even after its deadline passes but before it completes),
+      // fall back to the next upcoming deadline (pre-competition). Filtered by active
+      // league's tournament (BUG-12 fix).
       const activeTournamentId = activeLeague?.tournamentId ?? null;
       const now = new Date().toISOString();
-      let upcomingQuery = supabase.from('matchday_deadlines').select('matchday_id')
-        .gt('deadline_at', now).order('deadline_at', { ascending: true }).limit(1);
-      if (activeTournamentId) upcomingQuery = upcomingQuery.eq('tournament_id', activeTournamentId);
-      let { data: mdRow } = await upcomingQuery.maybeSingle();
+      let pastQuery = supabase.from('matchday_deadlines').select('matchday_id')
+        .lte('deadline_at', now).order('deadline_at', { ascending: false }).limit(1);
+      if (activeTournamentId) pastQuery = pastQuery.eq('tournament_id', activeTournamentId);
+      let { data: mdRow } = await pastQuery.maybeSingle();
       if (!mdRow?.matchday_id) {
-        let pastQuery = supabase.from('matchday_deadlines').select('matchday_id')
-          .lte('deadline_at', now).order('deadline_at', { ascending: false }).limit(1);
-        if (activeTournamentId) pastQuery = pastQuery.eq('tournament_id', activeTournamentId);
-        ({ data: mdRow } = await pastQuery.maybeSingle());
+        let upcomingQuery = supabase.from('matchday_deadlines').select('matchday_id')
+          .gt('deadline_at', now).order('deadline_at', { ascending: true }).limit(1);
+        if (activeTournamentId) upcomingQuery = upcomingQuery.eq('tournament_id', activeTournamentId);
+        ({ data: mdRow } = await upcomingQuery.maybeSingle());
       }
       if (mdRow?.matchday_id) {
         const label = String(mdRow.matchday_id).replace(/^.*-r/, '');
