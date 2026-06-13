@@ -1,12 +1,26 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-06-13 (RecapView apportionment fix for partial/live rounds — PR #522, follow-up to #520)  
+**Last Updated**: 2026-06-13 (Scoring v2 Buckets A+B shipped — PR #524, migration 175, calculate-scores v26)  
 **E2E Test Suite**: `platform.spec.js` (36 tests × 2 browsers) passing in CI ✅  
 **Full Playbook Run**: `E2E_TEST_PLAYBOOK.md` v2.0 — all flows confirmed  
 **🟢 LAUNCH READY**: No critical (P0/P1) bugs open. All game mechanics functional. WC kick-off 2026-06-11.  
 **Live App**: https://wc-fantasy-football.vercel.app  
 **WC Kick-off**: 2026-06-11 19:00 UTC (Mexico vs South Africa)  
 **Supabase PostgREST max_rows**: 10,000 (raised from default 1,000 — 2026-06-08)
+
+---
+
+## ✅ Scoring v2 Buckets A+B (2026-06-13) — PR #524, migration 175, calculate-scores v26
+
+**Context**: User supplied a v2 scoring proposal spreadsheet (`Forza_Scoring_v2.xlsx`); analyzed against current `scoring_rules`/`calculate-scores` and the Forza API data we have, split into 3 buckets by feasibility.
+
+- **Bucket A** (config-only, migration 175 — tournament 429 `scoring_rules`): goal points raised (GK 5→8, DEF 5→6, MID 4→5, FWD unchanged 4); tackles/interceptions/key passes/shots on target/big chances created now scored for **all** positions (previously only some); MID clean sheet introduced (+1, 60+ min); `penalty_missed` -1 → -2 (UNIVERSAL).
+- **Bucket B** (calculate-scores v26, deployed): GK clean-sheet minute threshold fixed 60 → 45 (matches DEF); new `conceded_2plus_penalty` (-0.5 per goal conceded beyond the first, GK/DEF only) using existing `player_match_stats.goals_conceded`.
+- **Bucket C deferred** — see B-04 below. Direct free-kick/corner goal +1, MOTM +3, penalty won/committed ±1 — feasibility unconfirmed against Forza API, needs live-match verification.
+- `ScoringInfoModal` SCORING tab updated to display all new v2 values per position.
+- **Retroactive rescore**: re-invoked `calculate-scores` for the 4 already-finished WC `429-r1` fixtures (Mexico–South Africa, Korea–Czechia, Canada–Bosnia, USA–Paraguay) under the new rules — idempotent recompute from already-stored `player_match_stats`, no gazette/H2H side effects (round not yet complete). Verified: totals shifted up as expected, no new errors beyond the pre-existing benign "Captain not in XI" warning.
+- **Pipeline health check (2026-06-13 AM)**: all crons active (`flip-fixtures-live`, `ingest-match-events-live`, `calculate-scores-live`, `calculate-scores-post-match`, `calculate-scores-late-finishers`, `sync-wc-fixtures-30m`). Next fixture: Qatar vs Switzerland, `f-1219435449`, kickoff 2026-06-13 19:00 UTC — system is ready, no action needed before kickoff.
+- **Backups**: full `db dump --linked` unavailable (Docker not running on this machine, as in prior sessions) — old `scoring_rules` (429) snapshot saved to `backups/scoring_rules_429_pre_v2_20260613_083947.json`; old calculate-scores v25 preserved in git history (commit `faaba8a`). Recovery = restore old rules + redeploy v25 + re-invoke for affected fixtures (raw Forza stats untouched, so fully re-derivable).
 
 ---
 
