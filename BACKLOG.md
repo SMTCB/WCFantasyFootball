@@ -1,12 +1,27 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-06-13 (Scoring v2 Buckets A+B shipped — PR #524, migration 175, calculate-scores v26)  
+**Last Updated**: 2026-06-13 (Captain rounding fix + Squad UX polish + scoring-details panel — PRs #526/#527/#528)  
 **E2E Test Suite**: `platform.spec.js` (36 tests × 2 browsers) passing in CI ✅  
 **Full Playbook Run**: `E2E_TEST_PLAYBOOK.md` v2.0 — all flows confirmed  
 **🟢 LAUNCH READY**: No critical (P0/P1) bugs open. All game mechanics functional. WC kick-off 2026-06-11.  
 **Live App**: https://wc-fantasy-football.vercel.app  
 **WC Kick-off**: 2026-06-11 19:00 UTC (Mexico vs South Africa)  
 **Supabase PostgREST max_rows**: 10,000 (raised from default 1,000 — 2026-06-08)
+
+---
+
+## ✅ Captain rounding fix + Squad screen UX polish + scoring-details panel (2026-06-13) — PRs #526/#527/#528
+
+**Reported (Mundial 26 / Fixo Draft Mundial 2026)**: (1) Pulisic showed 9 pts in one league and 10 pts in another for the same GW; (2) Robinson's captain score showed as 3 pts, which felt wrong for a sub-1.5 raw score; (3) Squad screen countdown showed "154h" instead of days, and the budget figure was clipped mid-character; (4) Market tab's GW-average stat used unrounded per-round points; (5) request to add the Market tab's per-player scoring-history dropdown to the Squad tab; (6) request to show the opponent (abbreviated) alongside each player's next-fixture status on the Squad tab.
+
+- **PR #526 — captain-multiplier rounding order**: `RecapView.PlayerBreakdown` and `LiveScreen.enrichedPlayers` were computing `Math.round(rawPts * mult)` for the captain (e.g. `round(1.4*2)=3`), which could disagree with `fantasy_points.total` (computed server-side as `Math.round(sum of rawPts*mult)` across the whole XI — the correct order). Both now do `Math.round(rawPts) * mult` (e.g. `round(1.4)*2=2`), matching the server. Explains both the Pulisic 9-vs-10 discrepancy (different captains in each league rounding differently) and the Robinson "3 pts as captain" report. `apportionToTotal` (PR #522) needed no change — it already operates on the corrected `p.points`.
+- **PR #527 — Squad screen polish**:
+  - Countdown (`windowKpi`) now formats as `Xd Yh Zm` / `Yh Zm` / `Zm Zs` (day-rollover), mirroring `TransferWindowBanner`'s `useCountdown` — fixes "154h" overflow.
+  - Market tab GW-average (`usePlayerScoreDetail`'s `season.avgPts`) now sums **per-round rounded** points before averaging, consistent with the per-round displayed values (was averaging raw decimals).
+  - `formatFixtureStatus` (`src/lib/players.js`) now appends the opponent's abbreviated team code + home/away marker (e.g. `LIVE v BRA`, `FT 2-1 @ ARG`, `Mon 15/06 22h00 v MEX`) — flows through unchanged to PitchView, bench strip, and mobile squad list (all already render `.label`/`.color`).
+  - Audited other non-rounded-score usages in UI calculations (CHANGE 4) — no further fixes needed beyond #526/#527.
+- **PR #528 — Squad tab scoring-details dropdown**: extracted MarketScreen's per-player history fetch/aggregation into `src/hooks/usePlayerScoreDetail.js` (shared hook: last-5-GW table + season summary from `player_match_stats`). `SquadScreen` LIST tab (desktop `PlayerList` and mobile inline rows) now has a `▼ STATS` / `▼` toggle that expands the same `PlayerStatsPanel` used on Market, rendered with `isLocked` (no BUY/SELL — squad transfers go through the existing action sheet/AUCTION button). Answers CHANGE 5 (player-history visibility): the panel always shows the **last 5 GWs** for that player (rolling window, not just the latest), plus a season-to-date summary — same on both Market and Squad tabs.
+- All three: `npm run lint` (0 errors, 77 pre-existing warnings) and `npm run build` clean.
 
 ---
 
