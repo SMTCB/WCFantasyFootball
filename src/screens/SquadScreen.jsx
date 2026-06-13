@@ -35,6 +35,8 @@ import { AvailabilityBadge } from '../components/AvailabilityBadge';
 import { POS_ORDER, POS_LABEL, POS_BADGE_COLOR } from '../lib/formations';
 import ScoringInfoModal from '../components/ScoringInfoModal';
 import { usePlayerStats } from '../hooks/usePlayerStats';
+import { usePlayerScoreDetail } from '../hooks/usePlayerScoreDetail';
+import PlayerStatsPanel from '../components/PlayerStatsPanel';
 import FormStrip from '../components/FormStrip';
 import KnockoutKeepSelector from '../components/KnockoutKeepSelector';
 
@@ -149,6 +151,9 @@ export default function SquadScreen() {
 
   // Form history — last 5 GW pts per player for the squad list strip
   const { statsMap: squadStatsMap } = usePlayerStats(tournamentId);
+
+  // Expandable per-player scoring history (shared with MarketScreen)
+  const { expandedPlayerId, playerDetails, togglePanel } = usePlayerScoreDetail();
 
   // Transfer hook — league-scoped buy/sell + no-repeat enforcement
   const { buy, sell, takenMap, isOwnedBy } = useTransfer(activeLeague);
@@ -1371,8 +1376,25 @@ export default function SquadScreen() {
               {allPos.map(player => {
                 const isBench = benchIds.has(player.id);
                 const isListed = activeAuctions.some(a => a.player_id === player.id);
+                const isExpanded = expandedPlayerId === player.id;
                 const rowAction = (
                   <div className="flex flex-col items-end gap-1" onClick={e => e.stopPropagation()}>
+                    <button
+                      onClick={() => togglePanel(player.id)}
+                      style={{
+                        fontFamily: 'JetBrains Mono, monospace',
+                        fontSize: 9, fontWeight: 800,
+                        letterSpacing: '0.1em',
+                        padding: '2px 6px',
+                        border: '1px solid var(--rule)',
+                        color: 'var(--mute)',
+                        background: 'transparent',
+                        flexShrink: 0,
+                        cursor: 'pointer',
+                      }}
+                    >
+                      {isExpanded ? '▲ STATS' : '▼ STATS'}
+                    </button>
                     <span
                       style={{
                         fontFamily: 'JetBrains Mono, monospace',
@@ -1431,20 +1453,28 @@ export default function SquadScreen() {
                   </div>
                 );
                 return (
-                  <PlayerCard
-                    key={player.id}
-                    player={player}
-                    variant="row"
-                    isCaptain={player.id === captainId}
-                    isTripleCaptain={squadData.isTripleCaptain}
-                    isJoker={player.id === todayJokerId}
-                    onClick={handlePlayerClick}
-                    isSelected={selectedPlayer?.id === player.id}
-                    isSwapTarget={swapMode && selectedPlayer?.id !== player.id}
-                    showIntelligence
-                    showPrice
-                    action={rowAction}
-                  />
+                  <div key={player.id}>
+                    <PlayerCard
+                      player={player}
+                      variant="row"
+                      isCaptain={player.id === captainId}
+                      isTripleCaptain={squadData.isTripleCaptain}
+                      isJoker={player.id === todayJokerId}
+                      onClick={handlePlayerClick}
+                      isSelected={selectedPlayer?.id === player.id}
+                      isSwapTarget={swapMode && selectedPlayer?.id !== player.id}
+                      showIntelligence
+                      showPrice
+                      action={rowAction}
+                    />
+                    {isExpanded && (
+                      <PlayerStatsPanel
+                        detail={playerDetails[player.id]}
+                        position={player.position}
+                        isLocked
+                      />
+                    )}
+                  </div>
                 );
               })}
               {Array.from({ length: emptySlots }).map((_, i) => (
@@ -1889,9 +1919,10 @@ export default function SquadScreen() {
                         ? 'var(--danger)' : player.intel?.status === 'doubt' || player.intel?.status === 'doubtful'
                         ? 'var(--gold)' : 'var(--positive)';
                       const isListed = activeAuctions.some(a => a.player_id === player.id);
+                      const isExpanded = expandedPlayerId === player.id;
                       return (
+                        <div key={player.id}>
                         <div
-                          key={player.id}
                           role="button"
                           tabIndex={0}
                           onClick={() => handlePlayerClick(player)}
@@ -1925,6 +1956,24 @@ export default function SquadScreen() {
                           </div>
                           {/* Points */}
                           <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 16, color: 'var(--paper)', letterSpacing: '-0.02em', flexShrink: 0 }}>{Math.round(player.points ?? 0)}</div>
+                          {/* Stats toggle */}
+                          <button
+                            onClick={e => { e.stopPropagation(); togglePanel(player.id); }}
+                            style={{
+                              fontFamily: 'JetBrains Mono, monospace',
+                              fontSize: 8, fontWeight: 800,
+                              letterSpacing: '0.1em',
+                              padding: '3px 6px',
+                              border: '1px solid var(--rule)',
+                              color: 'var(--mute)',
+                              background: 'transparent',
+                              flexShrink: 0,
+                              cursor: 'pointer',
+                              whiteSpace: 'nowrap',
+                            }}
+                          >
+                            {isExpanded ? '▲' : '▼'}
+                          </button>
                           {/* Auction action */}
                           {activeLeague && (
                             <div onClick={e => e.stopPropagation()} style={{ flexShrink: 0 }}>
@@ -1962,6 +2011,14 @@ export default function SquadScreen() {
                               )}
                             </div>
                           )}
+                        </div>
+                        {isExpanded && (
+                          <PlayerStatsPanel
+                            detail={playerDetails[player.id]}
+                            position={player.position}
+                            isLocked
+                          />
+                        )}
                         </div>
                       );
                     })}
