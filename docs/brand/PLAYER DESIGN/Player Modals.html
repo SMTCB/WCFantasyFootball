@@ -1,0 +1,877 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>FORZAKIT — Player Modals Redesign</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Archivo:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="squad-shared.css">
+<style>* { box-sizing:border-box; margin:0; padding:0; } button:focus { outline:none; }</style>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel" src="design-canvas.jsx"></script>
+<script type="text/babel" src="squad-data.jsx"></script>
+
+<script type="text/babel" data-presets="react">
+// ════════════════════════════════════════════════════════════════════
+//  FORZAKIT · Player Modals v2
+//  [1] Stats Dashboard — STATS ↗ button in player history row
+//  [2] Player Action Popup — Option A (with context) + B (minimal)
+//  PLUGIN comments = integration points for Claude Code
+// ════════════════════════════════════════════════════════════════════
+
+const POS_COLOR = { GK:'var(--purple)', DEF:'var(--cyan)', MID:'var(--gold)', FWD:'var(--danger)' };
+const STATUS_C  = { fit:'var(--positive)', doubt:'var(--gold)', out:'var(--danger)' };
+const STATUS_L  = { fit:'AVAILABLE', doubt:'DOUBTFUL', out:'INJURED' };
+
+// Shared mono style — spread as {...MO} in component styles
+const MO = { fontFamily:'JetBrains Mono,monospace', textTransform:'uppercase', letterSpacing:'.14em' };
+
+// ── POSITION-SPECIFIC STATS CONFIG ───────────────────────────────
+// PLUGIN: Each entry maps to a stat field.
+//   derive(gwHistory) → computed locally from gwHistory array (always available)
+//   derive = null     → must come from your stats provider (mark as PLUGIN in UI)
+//   pluginKey         → the exact key to expect from provider API
+//
+// Adjust stat selection per position to match what your data layer supports.
+const POS_STATS_CFG = {
+  GK: [
+    { label:'CLEAN SHEETS', derive: h => h.filter(r => r.cleanSheet).length,             pluginKey: null },
+    { label:'SAVES',        derive: null, pluginKey:'player.stats.saves'                              },
+    { label:'PEN SAVES',    derive: null, pluginKey:'player.stats.penaltySaves'                       },
+    { label:'CONCEDED',     derive: null, pluginKey:'player.stats.goalsConceded'                      },
+  ],
+  DEF: [
+    { label:'CLEAN SHEETS', derive: h => h.filter(r => r.cleanSheet).length,             pluginKey: null },
+    { label:'GOALS',        derive: h => h.reduce((s,r) => s+r.goals, 0),                pluginKey: null },
+    { label:'ASSISTS',      derive: h => h.reduce((s,r) => s+r.assists, 0),              pluginKey: null },
+    { label:'TACKLES',      derive: null, pluginKey:'player.stats.tackles'                            },
+  ],
+  MID: [
+    { label:'GOALS',        derive: h => h.reduce((s,r) => s+r.goals, 0),                pluginKey: null },
+    { label:'ASSISTS',      derive: h => h.reduce((s,r) => s+r.assists, 0),              pluginKey: null },
+    { label:'KEY PASSES',   derive: null, pluginKey:'player.stats.keyPasses'                          },
+    { label:'CHANCES',      derive: null, pluginKey:'player.stats.chancesCreated'                     },
+  ],
+  FWD: [
+    { label:'GOALS',        derive: h => h.reduce((s,r) => s+r.goals, 0),                pluginKey: null },
+    { label:'ASSISTS',      derive: h => h.reduce((s,r) => s+r.assists, 0),              pluginKey: null },
+    { label:'SHOTS ON TGT', derive: null, pluginKey:'player.stats.shotsOnTarget'                      },
+    { label:'xG',           derive: null, pluginKey:'player.stats.xG'                                 },
+  ],
+};
+
+// ── MOCK DATA ─────────────────────────────────────────────────────
+// PLUGIN: replace with real player objects from your store
+
+const BALOGUN = {
+  name:'FOLARIN BALOGUN', lastName:'BALOGUN', position:'FWD',
+  country:'UNITED STATES', club:'MON', price:'€7M',
+  status:'fit', trend:'up', isLocked:true, ownership:14.2,
+};
+
+// PLUGIN: player.gwHistory — one object per played gameweek
+const BALOGUN_GW = [
+  { gw:'R1', fixture:'UNI vs PAR', isHome:true,  minutes:72, goals:2, assists:0, cleanSheet:false, yellowCards:0, redCards:0, ownGoals:0, penaltyMiss:0, bonusPts:0, totalPts:10 },
+  { gw:'R2', fixture:'PAR vs UNI', isHome:false, minutes:90, goals:0, assists:1, cleanSheet:false, yellowCards:1, redCards:0, ownGoals:0, penaltyMiss:0, bonusPts:0, totalPts:4  },
+  { gw:'R3', fixture:'MON vs LYN', isHome:true,  minutes:90, goals:1, assists:1, cleanSheet:false, yellowCards:0, redCards:0, ownGoals:0, penaltyMiss:0, bonusPts:3, totalPts:12 },
+  { gw:'R4', fixture:'BOR vs MON', isHome:false, minutes:60, goals:0, assists:0, cleanSheet:false, yellowCards:0, redCards:0, ownGoals:0, penaltyMiss:0, bonusPts:0, totalPts:2  },
+  { gw:'R5', fixture:'MON vs NIC', isHome:true,  minutes:45, goals:1, assists:0, cleanSheet:false, yellowCards:0, redCards:0, ownGoals:0, penaltyMiss:0, bonusPts:0, totalPts:5  },
+];
+
+const VDV = {
+  name:'MICKY VAN DE VEN', lastName:'VAN DE VEN', position:'DEF',
+  country:'NETHERLANDS', club:'TOT', price:'€5.5M',
+  status:'fit', trend:'neutral', isLocked:false, isCaptain:false,
+  ownership:22.8,
+  nextFixture:'TOT vs CHE', // PLUGIN: player.nextFixture
+  fixtureDiff:3,             // PLUGIN: player.fixtureDifficulty (1=easy, 5=hard)
+};
+const VDV_FORM = [7, 2, 9, 6, 4]; // PLUGIN: player.recentForm — last N GWs, oldest→newest
+
+// ── SCORING ENGINE ────────────────────────────────────────────────
+// PLUGIN: replace with function reading from league.scoringConfig
+function buildBreakdown(gw, pos) {
+  const rows = [];
+  if (gw.minutes > 0) {
+    const p = gw.minutes >= 60 ? 2 : 1; // PLUGIN: league.minuteThreshold
+    rows.push({ label:`APPEARANCE  (${gw.minutes}')`, pts:p, kind:'pos' });
+  }
+  const gPts = {GK:6,DEF:6,MID:5,FWD:4}[pos] || 4; // PLUGIN: league.goalPoints[pos]
+  if (gw.goals > 0)    rows.push({ label:`GOALS × ${gw.goals}  (${pos} = ${gPts} PTS EACH)`, pts:gw.goals*gPts, kind:'pos' });
+  if (gw.assists > 0)  rows.push({ label:`ASSISTS × ${gw.assists}`, pts:gw.assists*3, kind:'pos' }); // PLUGIN: league.assistPoints
+  if (gw.cleanSheet) {
+    const cp = {GK:4,DEF:4,MID:1,FWD:0}[pos]||0; // PLUGIN: league.cleanSheetPoints[pos]
+    if (cp > 0) rows.push({ label:'CLEAN SHEET', pts:cp, kind:'pos' });
+  }
+  if (gw.bonusPts > 0)    rows.push({ label:'BONUS POINTS', pts:gw.bonusPts, kind:'bonus' }); // PLUGIN: league.bonusEnabled
+  if (gw.yellowCards > 0) rows.push({ label:`YELLOW CARD × ${gw.yellowCards}`, pts:gw.yellowCards*-1, kind:'neg' });
+  if (gw.redCards > 0)    rows.push({ label:'RED CARD', pts:-3, kind:'neg' });
+  if (gw.ownGoals > 0)    rows.push({ label:`OWN GOAL × ${gw.ownGoals}`, pts:gw.ownGoals*-2, kind:'neg' });
+  if (gw.penaltyMiss > 0) rows.push({ label:'PENALTY MISS', pts:-2, kind:'neg' });
+  return rows;
+}
+
+// ── ATOMS ─────────────────────────────────────────────────────────
+function PosBadge({ pos, small }) {
+  const c = POS_COLOR[pos]||'var(--mute)';
+  return <div style={{ flexShrink:0, width:small?36:44, height:small?20:24, border:`1.5px solid ${c}`, color:c,
+    fontFamily:'Archivo Black,sans-serif', fontSize:small?9:11, letterSpacing:'.04em',
+    display:'flex', alignItems:'center', justifyContent:'center' }}>{pos}</div>;
+}
+function Dot({ status }) {
+  return <span style={{ display:'inline-block', width:7, height:7, borderRadius:'50%',
+    background:STATUS_C[status]||'var(--mute)', flexShrink:0 }} />;
+}
+function FormBars({ form, maxH=36 }) {
+  const max = Math.max(...form, 1);
+  return (
+    <div style={{ display:'flex', gap:3, alignItems:'flex-end' }}>
+      {form.map((p,i) => (
+        <div key={i} style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:3 }}>
+          <div style={{ width:20, height:Math.max(3,(p/max)*maxH),
+            background:p>=8?'var(--positive)':p>=4?'var(--cyan)':'var(--mute)' }} />
+          <div style={{ ...MO, fontSize:8, color:'var(--mute)', letterSpacing:'.06em' }}>{p}</div>
+        </div>
+      ))}
+    </div>
+  );
+}
+function MiniChart({ history }) {
+  if (!history?.length) return <div style={{ ...MO, fontSize:9, color:'var(--mute)' }}>— NO DATA YET —</div>;
+  const max = Math.max(...history.map(r=>r.totalPts), 1);
+  return (
+    <div style={{ display:'flex', gap:4, alignItems:'flex-end', height:44 }}>
+      {history.map((r,i) => (
+        <div key={i} style={{ flex:1, display:'flex', flexDirection:'column', alignItems:'center', gap:3, justifyContent:'flex-end' }}>
+          <div style={{ width:'100%', height:Math.max(3,(r.totalPts/max)*32),
+            background:r.totalPts>=10?'var(--positive)':r.totalPts>=5?'var(--cyan)':'var(--mute)' }} />
+          <div style={{ ...MO, fontSize:8, color:'var(--mute)', letterSpacing:'.06em' }}>{r.gw}</div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ── POSITION STATS STRIP ─────────────────────────────────────────
+// Shows up to 4 position-specific stats. Computable ones derive from gwHistory;
+// others show — with a PLUGIN key so Claude Code knows which API field to connect.
+function PosStatsStrip({ position, gwHistory, compact }) {
+  const cfg = POS_STATS_CFG[position] || [];
+  const posC = POS_COLOR[position];
+  return (
+    <div style={{ display:'flex', borderBottom:'1px solid var(--rule)', flexShrink:0 }}>
+      {/* position label cell */}
+      <div style={{ flex:'0 0 88px', padding:compact?'7px 12px':'10px 16px',
+        borderRight:'1px solid var(--rule)',
+        display:'flex', flexDirection:'column', justifyContent:'center', gap:2 }}>
+        <div style={{ ...MO, fontSize:7, color:posC, letterSpacing:'.22em' }}>POS STATS</div>
+        <div style={{ fontFamily:'Archivo Black', fontSize:compact?11:14, color:posC }}>{position}</div>
+      </div>
+      {/* stat cells */}
+      {cfg.map((s, i) => {
+        const val = s.derive ? s.derive(gwHistory) : null;
+        const hasVal = val !== null;
+        return (
+          <div key={i} style={{ flex:1, padding:compact?'7px 10px':'10px 14px',
+            borderRight:i<3?'1px solid var(--rule)':'none' }}>
+            <div style={{ ...MO, fontSize:7, color:'var(--mute)', marginBottom:compact?2:3, letterSpacing:'.18em' }}>{s.label}</div>
+            <div style={{ fontFamily:'Archivo Black', fontSize:compact?14:18, letterSpacing:'-0.02em',
+              color:hasVal?'var(--paper)':'rgba(139,149,161,.35)' }}>
+              {hasVal ? val : '—'}
+            </div>
+            {/* PLUGIN: marker for stats that require external provider data */}
+            {!hasVal && s.pluginKey && (
+              <div style={{ ...MO, fontSize:7, color:'rgba(0,180,216,.45)', letterSpacing:'.08em', marginTop:2, lineHeight:1.4 }}>
+                {s.pluginKey}
+              </div>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+// ── TRIGGER CONTEXT ───────────────────────────────────────────────
+function TriggerContext() {
+  return (
+    <div style={{ width:'100%', height:'100%', background:'var(--ink)', color:'var(--paper)',
+      fontFamily:'Archivo,sans-serif', display:'flex', flexDirection:'column', justifyContent:'center' }}>
+      {/* player header */}
+      <div style={{ display:'flex', alignItems:'center', gap:14, padding:'10px 20px', borderBottom:'1px solid var(--rule)' }}>
+        <PosBadge pos="FWD" />
+        <div style={{ flex:1 }}>
+          <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+            <span style={{ fontFamily:'Archivo Black', fontSize:15, letterSpacing:'-0.01em' }}>FOLARIN BALOGUN</span>
+            <span style={{ ...MO, fontSize:8, color:'var(--positive)' }}>▲</span>
+          </div>
+          <div style={{ display:'flex', alignItems:'center', gap:6, marginTop:2 }}>
+            <Dot status="fit" />
+            <span style={{ ...MO, fontSize:9, color:'var(--mute)' }}>UNITED STATES</span>
+            {[1,2,3,4,5].map(i=><div key={i} style={{ width:18,height:10,background:'var(--rule)',borderRadius:1 }}/>)}
+          </div>
+        </div>
+        <div style={{ display:'flex', alignItems:'center', gap:12 }}>
+          <span style={{ fontFamily:'Archivo Black', fontSize:16 }}>€7M</span>
+          <span style={{ ...MO, fontSize:9, color:'var(--mute)', border:'1px solid var(--rule)', padding:'3px 7px' }}>LOCKED</span>
+        </div>
+      </div>
+      {/* table header */}
+      <div style={{ display:'grid', gridTemplateColumns:'56px 1fr 70px 52px 52px 60px 96px',
+        padding:'6px 20px', borderBottom:'1px solid var(--rule)', ...MO, fontSize:9, color:'var(--mute)' }}>
+        <span>GW</span><span>FIXTURE</span><span>MIN</span>
+        <span style={{ color:'var(--positive)' }}>G</span><span style={{ color:'var(--cyan)' }}>A</span>
+        <span style={{ textAlign:'right' }}>PTS</span><span></span>
+      </div>
+      {/* data row */}
+      <div style={{ display:'grid', gridTemplateColumns:'56px 1fr 70px 52px 52px 60px 96px',
+        padding:'9px 20px', borderBottom:'1px solid var(--rule)', alignItems:'center' }}>
+        <span style={{ ...MO, fontSize:10, color:'var(--mute)' }}>R1</span>
+        <span style={{ fontFamily:'Archivo', fontSize:12 }}>UNI vs PAR</span>
+        <span style={{ ...MO, fontSize:10, color:'var(--mute)' }}>72'</span>
+        <span style={{ fontFamily:'Archivo Black', fontSize:15, color:'var(--positive)' }}>2</span>
+        <span style={{ fontFamily:'Archivo Black', fontSize:15, color:'var(--mute)' }}>0</span>
+        <span style={{ textAlign:'right', fontFamily:'Archivo Black', fontSize:17, color:'var(--positive)' }}>10</span>
+        <span></span>
+      </div>
+      {/* summary + NEW STATS BUTTON */}
+      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'8px 20px' }}>
+        <div style={{ display:'flex', gap:10, ...MO, fontSize:9, color:'var(--mute)' }}>
+          <span>1 APPS</span><span>·</span>
+          <span style={{ color:'var(--positive)' }}>2G</span><span>·</span>
+          <span style={{ color:'var(--cyan)' }}>0A</span><span>·</span>
+          <span>10 PTS</span><span>·</span><span>AVG 10.0/GW</span>
+        </div>
+        {/* ← NEW BUTTON — PLUGIN: onClick opens PlayerStatsDashboard modal */}
+        <button style={{ background:'transparent', border:'1px solid var(--rule)', color:'var(--cyan)',
+          ...MO, fontSize:9, padding:'5px 12px',
+          display:'flex', alignItems:'center', gap:6, cursor:'pointer' }}>
+          STATS <span style={{ fontSize:11 }}>↗</span>
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ════════════════════════════════════════════════════════════════════
+//  [1A] STATS DASHBOARD — DESKTOP
+// ════════════════════════════════════════════════════════════════════
+function StatsDashDesktop({ player=BALOGUN, gwHistory=BALOGUN_GW }) {
+  const [sel, setSel] = React.useState(gwHistory[0]||null);
+  const breakdown = sel ? buildBreakdown(sel, player.position) : [];
+
+  const apps  = gwHistory.length;
+  const goals = gwHistory.reduce((s,r)=>s+r.goals,0);
+  const asts  = gwHistory.reduce((s,r)=>s+r.assists,0);
+  const tot   = gwHistory.reduce((s,r)=>s+r.totalPts,0);
+  const avg   = apps>0?(tot/apps).toFixed(1):'—';
+
+  return (
+    <div style={{ width:'100%', height:'100%', display:'flex', alignItems:'center', justifyContent:'center',
+      background:'rgba(6,7,10,.86)', fontFamily:'Archivo,sans-serif' }}>
+      <div style={{ width:900, background:'var(--ink)', border:'1px solid var(--rule)',
+        display:'flex', flexDirection:'column', maxHeight:620, overflow:'hidden', color:'var(--paper)' }}>
+
+        {/* HEADER */}
+        <div style={{ display:'flex', alignItems:'center', gap:14, padding:'13px 20px',
+          borderBottom:'1px solid var(--rule)', flexShrink:0 }}>
+          <PosBadge pos={player.position} />
+          <div style={{ flex:1, minWidth:0 }}>
+            <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+              <span style={{ fontFamily:'Archivo Black', fontSize:18, letterSpacing:'-0.01em', textTransform:'uppercase' }}>{player.name}</span>
+              {player.trend==='up'   && <span style={{ ...MO, fontSize:9, color:'var(--positive)' }}>▲</span>}
+              {player.trend==='down' && <span style={{ ...MO, fontSize:9, color:'var(--danger)' }}>▼</span>}
+            </div>
+            <div style={{ display:'flex', alignItems:'center', gap:8, marginTop:3 }}>
+              <Dot status={player.status} />
+              <span style={{ ...MO, fontSize:9, color:'var(--mute)' }}>{player.country} · {player.club}</span>
+              <span style={{ ...MO, fontSize:9, color:STATUS_C[player.status] }}>· {STATUS_L[player.status]}</span>
+            </div>
+          </div>
+          <div style={{ display:'flex', alignItems:'center', gap:14, flexShrink:0 }}>
+            <div style={{ textAlign:'right' }}>
+              <div style={{ fontFamily:'Archivo Black', fontSize:18 }}>{player.price}</div>
+              <div style={{ ...MO, fontSize:8, color:'var(--mute)', marginTop:2 }}>PRICE</div>
+            </div>
+            {player.isLocked && <div style={{ ...MO, fontSize:9, color:'var(--mute)', border:'1px solid var(--rule)', padding:'4px 8px' }}>LOCKED</div>}
+            {/* PLUGIN: onClose */}
+            <div style={{ width:24, height:24, border:'1px solid var(--rule)', color:'var(--mute)',
+              display:'flex', alignItems:'center', justifyContent:'center', cursor:'pointer', fontSize:13 }}>✕</div>
+          </div>
+        </div>
+
+        {/* KEY STATS STRIP */}
+        <div style={{ display:'flex', borderBottom:'1px solid var(--rule)', flexShrink:0 }}>
+          {[
+            { label:'APPS',      val:apps,              c:'var(--paper)'    },
+            { label:'GOALS',     val:goals,             c:'var(--positive)' },
+            { label:'ASSISTS',   val:asts,              c:'var(--cyan)'     },
+            { label:'TOTAL PTS', val:tot,               c:'var(--paper)'    },
+            { label:'AVG / GW',  val:avg,               c:'var(--paper)'    },
+            { label:'OWNED BY',  val:`${player.ownership}%`, c:'var(--mute)' }, // PLUGIN: player.ownershipPct
+          ].map((s,i) => (
+            <div key={i} style={{ flex:1, padding:'10px 14px', borderRight:i<5?'1px solid var(--rule)':'none' }}>
+              <div style={{ ...MO, fontSize:8, color:'var(--mute)', marginBottom:3 }}>{s.label}</div>
+              <div style={{ fontFamily:'Archivo Black', fontSize:19, letterSpacing:'-0.02em', color:s.c }}>{s.val}</div>
+            </div>
+          ))}
+        </div>
+
+        {/* POSITION STATS STRIP */}
+        <PosStatsStrip position={player.position} gwHistory={gwHistory} />
+
+        {/* BODY */}
+        <div style={{ flex:1, display:'flex', overflow:'hidden', minHeight:0 }}>
+
+          {/* LEFT — GW table */}
+          <div style={{ flex:'0 0 55%', borderRight:'1px solid var(--rule)', display:'flex', flexDirection:'column', overflow:'hidden' }}>
+            <div style={{ ...MO, fontSize:9, color:'var(--mute)', padding:'8px 16px',
+              borderBottom:'1px solid var(--rule)', flexShrink:0, letterSpacing:'.2em' }}>GW HISTORY</div>
+            <div style={{ display:'grid', gridTemplateColumns:'44px 1fr 54px 36px 36px 50px',
+              padding:'6px 16px', borderBottom:'1px solid var(--rule)',
+              ...MO, fontSize:8, color:'var(--mute)', flexShrink:0 }}>
+              <span>GW</span><span>FIXTURE</span><span>MIN</span>
+              <span style={{ color:'var(--positive)' }}>G</span>
+              <span style={{ color:'var(--cyan)' }}>A</span>
+              <span style={{ textAlign:'right' }}>PTS</span>
+            </div>
+            <div style={{ flex:1, overflow:'auto' }}>
+              {/* PLUGIN: map over player.gwHistory */}
+              {gwHistory.map((r,i) => (
+                <div key={i} onClick={() => setSel(r)} style={{
+                  display:'grid', gridTemplateColumns:'44px 1fr 54px 36px 36px 50px',
+                  padding:'10px 16px', borderBottom:'1px solid var(--rule)',
+                  cursor:'pointer', alignItems:'center',
+                  background:sel===r?'rgba(0,180,216,.07)':'transparent',
+                  borderLeft:sel===r?'2px solid var(--cyan)':'2px solid transparent',
+                }}>
+                  <span style={{ ...MO, fontSize:9, color:'var(--mute)' }}>{r.gw}</span>
+                  <span style={{ fontFamily:'Archivo', fontSize:12 }}>{r.fixture}{r.isHome?' (H)':' (A)'}</span>
+                  <span style={{ ...MO, fontSize:9, color:'var(--mute)' }}>{r.minutes}'</span>
+                  <span style={{ fontFamily:'Archivo Black', fontSize:14, color:r.goals>0?'var(--positive)':'var(--mute)' }}>{r.goals}</span>
+                  <span style={{ fontFamily:'Archivo Black', fontSize:14, color:r.assists>0?'var(--cyan)':'var(--mute)' }}>{r.assists}</span>
+                  <span style={{ textAlign:'right', fontFamily:'Archivo Black', fontSize:16, color:'var(--positive)' }}>{r.totalPts}</span>
+                </div>
+              ))}
+              {!gwHistory.length && (
+                <div style={{ padding:'18px 16px', ...MO, fontSize:9, color:'var(--mute)' }}>— NO GAMEWEEKS PLAYED —</div>
+              )}
+            </div>
+            <div style={{ borderTop:'1px solid var(--rule)', padding:'10px 16px', flexShrink:0 }}>
+              <div style={{ ...MO, fontSize:8, color:'var(--mute)', marginBottom:8, letterSpacing:'.2em' }}>POINTS HISTORY</div>
+              <MiniChart history={gwHistory} />
+            </div>
+          </div>
+
+          {/* RIGHT — point breakdown (for selected row) */}
+          <div style={{ flex:1, display:'flex', flexDirection:'column', overflow:'hidden' }}>
+            {/* breakdown header — clearly shows which fixture */}
+            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center',
+              padding:'8px 16px', borderBottom:'1px solid var(--rule)', flexShrink:0 }}>
+              <span style={{ ...MO, fontSize:9, color:'var(--mute)', letterSpacing:'.2em' }}>POINT BREAKDOWN</span>
+              {sel ? (
+                <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+                  {/* pill showing selected GW — reinforces the "per row" connection */}
+                  <div style={{ ...MO, fontSize:8, color:'var(--cyan)', background:'rgba(0,180,216,.1)',
+                    border:'1px solid rgba(0,180,216,.25)', padding:'3px 8px', letterSpacing:'.12em' }}>
+                    {sel.gw}
+                  </div>
+                  <span style={{ fontFamily:'Archivo', fontSize:11, color:'var(--mute)' }}>{sel.fixture}</span>
+                </div>
+              ) : (
+                <span style={{ ...MO, fontSize:9, color:'var(--mute)', letterSpacing:'.12em' }}>SELECT A ROW ←</span>
+              )}
+            </div>
+
+            {sel ? (
+              <div style={{ flex:1, padding:'12px 16px', overflow:'auto' }}>
+                {breakdown.map((item,i) => (
+                  <div key={i} style={{ display:'flex', justifyContent:'space-between', alignItems:'center',
+                    padding:'9px 0', borderBottom:'1px solid var(--rule)' }}>
+                    <span style={{ ...MO, fontSize:10, color:'var(--mute)', letterSpacing:'.1em' }}>{item.label}</span>
+                    <span style={{
+                      fontFamily:'Archivo Black', fontSize:16, letterSpacing:'-0.01em',
+                      color:item.kind==='pos'?'var(--positive)':item.kind==='bonus'?'var(--gold)':'var(--danger)',
+                    }}>{item.pts>0?'+':''}{item.pts}</span>
+                  </div>
+                ))}
+                <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center',
+                  padding:'11px 0 4px', marginTop:4, borderTop:'2px solid var(--rule)' }}>
+                  <span style={{ ...MO, fontSize:10, color:'var(--paper)' }}>TOTAL</span>
+                  <span style={{ fontFamily:'Archivo Black', fontSize:28, color:'var(--positive)', letterSpacing:'-0.02em' }}>{sel.totalPts}</span>
+                </div>
+                {/* scoring config — PLUGIN: render from league.scoringConfig */}
+                <div style={{ marginTop:12, padding:'8px 12px',
+                  border:'1px solid rgba(0,180,216,.16)', background:'rgba(0,180,216,.04)',
+                  ...MO, fontSize:8, color:'rgba(0,180,216,.6)', letterSpacing:'.1em', lineHeight:1.7 }}>
+                  RULES SHOWN ABOVE → PLUGIN: league.scoringConfig<br/>
+                  FWD · GOAL=4 · ASSIST=3 · APP(60+)=2 · APP(&lt;60)=1 · BONUS · CS · CARDS
+                </div>
+              </div>
+            ) : (
+              <div style={{ flex:1, display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:8, opacity:.5 }}>
+                <div style={{ ...MO, fontSize:10, color:'var(--mute)' }}>TAP ANY GW ROW</div>
+                <div style={{ ...MO, fontSize:9, color:'var(--mute)', letterSpacing:'.1em' }}>TO SEE POINT BREAKDOWN</div>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ════════════════════════════════════════════════════════════════════
+//  [1B] STATS DASHBOARD — MOBILE
+// ════════════════════════════════════════════════════════════════════
+function StatsDashMobile({ player=BALOGUN, gwHistory=BALOGUN_GW }) {
+  const [tab, setTab] = React.useState('history');
+  const [sel, setSel] = React.useState(gwHistory[0]||null);
+  const breakdown = sel ? buildBreakdown(sel, player.position) : [];
+
+  const apps  = gwHistory.length;
+  const goals = gwHistory.reduce((s,r)=>s+r.goals,0);
+  const asts  = gwHistory.reduce((s,r)=>s+r.assists,0);
+  const tot   = gwHistory.reduce((s,r)=>s+r.totalPts,0);
+  const avg   = apps>0?(tot/apps).toFixed(1):'—';
+
+  return (
+    <div style={{ width:'100%', height:'100%', background:'var(--ink)', color:'var(--paper)',
+      display:'flex', flexDirection:'column', fontFamily:'Archivo,sans-serif', overflow:'hidden' }}>
+      {/* status bar */}
+      <div style={{ height:32, display:'flex', justifyContent:'space-between', alignItems:'center',
+        padding:'0 22px', ...MO, fontSize:11, fontWeight:600, flexShrink:0 }}>
+        <span>9:41</span><span>●●● ▮</span>
+      </div>
+      {/* back nav */}
+      <div style={{ display:'flex', alignItems:'center', gap:10, padding:'6px 16px 10px',
+        borderBottom:'1px solid var(--rule)', flexShrink:0 }}>
+        <div style={{ ...MO, fontSize:9, color:'var(--cyan)', cursor:'pointer' }}>← BACK</div>{/* PLUGIN: onClose */}
+        <div style={{ flex:1, display:'flex', alignItems:'center', gap:8 }}>
+          <PosBadge pos={player.position} small />
+          <span style={{ fontFamily:'Archivo Black', fontSize:15, letterSpacing:'-0.01em', textTransform:'uppercase' }}>{player.name}</span>
+          {player.trend==='up'&&<span style={{ ...MO, fontSize:8, color:'var(--positive)' }}>▲</span>}
+        </div>
+        <span style={{ fontFamily:'Archivo Black', fontSize:14 }}>{player.price}</span>
+      </div>
+      {/* meta */}
+      <div style={{ display:'flex', alignItems:'center', gap:7, padding:'7px 16px',
+        borderBottom:'1px solid var(--rule)', flexShrink:0 }}>
+        <Dot status={player.status} />
+        <span style={{ ...MO, fontSize:8, color:'var(--mute)' }}>{player.country} · {player.club}</span>
+        <span style={{ ...MO, fontSize:8, color:STATUS_C[player.status] }}>· {STATUS_L[player.status]}</span>
+        <span style={{ ...MO, fontSize:8, color:'var(--mute)', marginLeft:'auto' }}>OWNED {player.ownership}%</span>
+      </div>
+      {/* stats strip */}
+      <div style={{ display:'flex', borderBottom:'1px solid var(--rule)', flexShrink:0 }}>
+        {[
+          { label:'APPS', val:apps,  c:'var(--paper)'    },
+          { label:'G',    val:goals, c:'var(--positive)' },
+          { label:'A',    val:asts,  c:'var(--cyan)'     },
+          { label:'PTS',  val:tot,   c:'var(--paper)'    },
+          { label:'AVG',  val:avg,   c:'var(--paper)'    },
+        ].map((s,i) => (
+          <div key={i} style={{ flex:1, padding:'8px 6px', textAlign:'center',
+            borderRight:i<4?'1px solid var(--rule)':'none' }}>
+            <div style={{ ...MO, fontSize:7, color:'var(--mute)', marginBottom:2 }}>{s.label}</div>
+            <div style={{ fontFamily:'Archivo Black', fontSize:17, letterSpacing:'-0.02em', color:s.c }}>{s.val}</div>
+          </div>
+        ))}
+      </div>
+      {/* position stats (compact) */}
+      <PosStatsStrip position={player.position} gwHistory={gwHistory} compact />
+      {/* tabs */}
+      <div style={{ display:'flex', gap:20, padding:'9px 16px 0',
+        borderBottom:'1px solid var(--rule)', flexShrink:0 }}>
+        {['HISTORY','BREAKDOWN'].map(t => (
+          <div key={t} onClick={() => setTab(t.toLowerCase())} style={{
+            ...MO, fontSize:10, paddingBottom:7, cursor:'pointer', position:'relative',
+            color:tab===t.toLowerCase()?'var(--paper)':'var(--mute)',
+          }}>
+            {t}
+            {tab===t.toLowerCase()&&<span style={{ position:'absolute',left:0,right:0,bottom:-1,height:2,background:'var(--cyan)' }}/>}
+          </div>
+        ))}
+      </div>
+      {/* tab content */}
+      <div style={{ flex:1, overflow:'auto' }}>
+        {tab==='history' && <>
+          <div style={{ display:'grid', gridTemplateColumns:'34px 1fr 44px 28px 28px 38px',
+            padding:'6px 16px', borderBottom:'1px solid var(--rule)',
+            position:'sticky', top:0, background:'var(--ink)',
+            ...MO, fontSize:8, color:'var(--mute)' }}>
+            <span>GW</span><span>FIXTURE</span><span>MIN</span>
+            <span style={{ color:'var(--positive)' }}>G</span><span style={{ color:'var(--cyan)' }}>A</span>
+            <span style={{ textAlign:'right' }}>PTS</span>
+          </div>
+          {/* PLUGIN: map over player.gwHistory */}
+          {gwHistory.map((r,i) => (
+            <div key={i} onClick={() => { setSel(r); setTab('breakdown'); }} style={{
+              display:'grid', gridTemplateColumns:'34px 1fr 44px 28px 28px 38px',
+              padding:'11px 16px', borderBottom:'1px solid var(--rule)',
+              cursor:'pointer', alignItems:'center',
+              background:sel===r?'rgba(0,180,216,.07)':'transparent',
+              borderLeft:sel===r?'2px solid var(--cyan)':'2px solid transparent',
+            }}>
+              <span style={{ ...MO, fontSize:9, color:'var(--mute)' }}>{r.gw}</span>
+              <span style={{ fontFamily:'Archivo', fontSize:11 }}>{r.fixture}</span>
+              <span style={{ ...MO, fontSize:9, color:'var(--mute)' }}>{r.minutes}'</span>
+              <span style={{ fontFamily:'Archivo Black', fontSize:13, color:r.goals>0?'var(--positive)':'var(--mute)' }}>{r.goals}</span>
+              <span style={{ fontFamily:'Archivo Black', fontSize:13, color:r.assists>0?'var(--cyan)':'var(--mute)' }}>{r.assists}</span>
+              <span style={{ textAlign:'right', fontFamily:'Archivo Black', fontSize:15, color:'var(--positive)' }}>{r.totalPts}</span>
+            </div>
+          ))}
+          <div style={{ padding:'12px 16px' }}>
+            <div style={{ ...MO, fontSize:8, color:'var(--mute)', marginBottom:8, letterSpacing:'.2em' }}>POINTS HISTORY</div>
+            <MiniChart history={gwHistory} />
+          </div>
+        </>}
+        {tab==='breakdown' && (
+          <div style={{ padding:'12px 16px' }}>
+            {sel ? <>
+              {/* GW pill — reinforces "per fixture" logic */}
+              <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:12 }}>
+                <div style={{ ...MO, fontSize:8, color:'var(--cyan)', background:'rgba(0,180,216,.1)',
+                  border:'1px solid rgba(0,180,216,.25)', padding:'3px 8px' }}>{sel.gw}</div>
+                <span style={{ fontFamily:'Archivo', fontSize:11, color:'var(--mute)' }}>{sel.fixture} · {sel.minutes}'</span>
+              </div>
+              {breakdown.map((item,i) => (
+                <div key={i} style={{ display:'flex', justifyContent:'space-between', alignItems:'center',
+                  padding:'10px 0', borderBottom:'1px solid var(--rule)' }}>
+                  <span style={{ ...MO, fontSize:10, color:'var(--mute)', letterSpacing:'.08em' }}>{item.label}</span>
+                  <span style={{ fontFamily:'Archivo Black', fontSize:16,
+                    color:item.kind==='pos'?'var(--positive)':item.kind==='bonus'?'var(--gold)':'var(--danger)',
+                  }}>{item.pts>0?'+':''}{item.pts}</span>
+                </div>
+              ))}
+              <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center',
+                padding:'12px 0 4px', marginTop:4, borderTop:'2px solid var(--rule)' }}>
+                <span style={{ ...MO, fontSize:10, color:'var(--paper)' }}>TOTAL</span>
+                <span style={{ fontFamily:'Archivo Black', fontSize:28, color:'var(--positive)', letterSpacing:'-0.02em' }}>{sel.totalPts}</span>
+              </div>
+              <div style={{ marginTop:12, padding:'8px 10px',
+                border:'1px solid rgba(0,180,216,.16)', background:'rgba(0,180,216,.04)',
+                ...MO, fontSize:8, color:'rgba(0,180,216,.6)', letterSpacing:'.1em', lineHeight:1.6 }}>
+                PLUGIN: league.scoringConfig · FWD · GOAL=4 · ASSIST=3 · APP(60+)=2
+              </div>
+            </> : (
+              <div style={{ padding:'20px 0', ...MO, fontSize:10, color:'var(--mute)' }}>
+                GO TO HISTORY AND TAP A GAMEWEEK
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ════════════════════════════════════════════════════════════════════
+//  [2A] ACTION MODAL OPTION A — WITH CONTEXT STATS (desktop)
+// ════════════════════════════════════════════════════════════════════
+function ActionModalDesktopA({ player=VDV, form=VDV_FORM }) {
+  const diffC = player.fixtureDiff<=2?'var(--positive)':player.fixtureDiff>=4?'var(--danger)':'var(--gold)';
+  const diffL = player.fixtureDiff<=2?'EASY':player.fixtureDiff>=4?'HARD':'MEDIUM';
+  return (
+    <div style={{ width:'100%', height:'100%', display:'flex', alignItems:'center', justifyContent:'center',
+      background:'rgba(6,7,10,.88)', fontFamily:'Archivo,sans-serif' }}>
+      <div style={{ width:460, background:'var(--ink)', border:'1px solid var(--rule)', color:'var(--paper)' }}>
+        {/* header */}
+        <div style={{ display:'flex', alignItems:'center', gap:12, padding:'14px 18px', borderBottom:'1px solid var(--rule)' }}>
+          <PosBadge pos={player.position} />
+          <div style={{ flex:1, minWidth:0 }}>
+            <div style={{ fontFamily:'Archivo Black', fontSize:18, letterSpacing:'-0.01em', textTransform:'uppercase' }}>{player.name}</div>
+            <div style={{ display:'flex', alignItems:'center', gap:7, marginTop:3 }}>
+              <Dot status={player.status} />
+              <span style={{ ...MO, fontSize:9, color:'var(--mute)' }}>{player.country} · {player.club}</span>
+              <span style={{ ...MO, fontSize:9, color:STATUS_C[player.status] }}>· {STATUS_L[player.status]}</span>
+            </div>
+          </div>
+          <div style={{ textAlign:'right', flexShrink:0 }}>
+            <div style={{ fontFamily:'Archivo Black', fontSize:18 }}>{player.price}</div>
+            <div style={{ ...MO, fontSize:8, color:'var(--mute)', marginTop:2 }}>MARKET VALUE</div>
+          </div>
+          {/* PLUGIN: onClose */}
+          <div style={{ width:24, height:24, border:'1px solid var(--rule)', color:'var(--mute)',
+            display:'flex', alignItems:'center', justifyContent:'center', cursor:'pointer', fontSize:12, flexShrink:0 }}>✕</div>
+        </div>
+        {/* form + fixture */}
+        <div style={{ display:'flex', borderBottom:'1px solid var(--rule)' }}>
+          <div style={{ flex:1, padding:'13px 18px', borderRight:'1px solid var(--rule)' }}>
+            <div style={{ ...MO, fontSize:8, color:'var(--mute)', marginBottom:9, letterSpacing:'.2em' }}>LAST {form.length} GWS</div>{/* PLUGIN: player.recentForm */}
+            <FormBars form={form} />
+          </div>
+          <div style={{ flex:'0 0 156px', padding:'13px 18px' }}>
+            <div style={{ ...MO, fontSize:8, color:'var(--mute)', marginBottom:8, letterSpacing:'.2em' }}>NEXT FIXTURE</div>{/* PLUGIN: player.nextFixture */}
+            <div style={{ fontFamily:'Archivo Black', fontSize:14, letterSpacing:'-0.01em' }}>{player.nextFixture}</div>
+            <div style={{ marginTop:7 }}>
+              <div style={{ height:3, background:'var(--rule)', borderRadius:1, overflow:'hidden' }}>
+                <div style={{ height:'100%', width:`${(player.fixtureDiff/5)*100}%`, background:diffC }} />
+              </div>
+              <div style={{ display:'flex', justifyContent:'space-between', marginTop:3 }}>
+                <div style={{ ...MO, fontSize:8, color:diffC }}>{diffL}</div>
+                <div style={{ ...MO, fontSize:8, color:'var(--mute)' }}>{player.fixtureDiff}/5</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        {/* ownership */}
+        <div style={{ padding:'9px 18px', borderBottom:'1px solid var(--rule)' }}>
+          <div style={{ ...MO, fontSize:8, color:'var(--mute)', marginBottom:2 }}>OWNED BY</div>
+          <div style={{ fontFamily:'Archivo Black', fontSize:14 }}>{player.ownership}%</div>{/* PLUGIN: player.ownershipPct */}
+          {/* PLUGIN: add more quick stats here — current GW score, xG, xA, etc. */}
+        </div>
+        {/* actions */}
+        <div style={{ padding:'16px 18px', display:'flex', flexDirection:'column', gap:10 }}>
+          <button style={{ width:'100%', padding:'14px', background:'var(--gold)', color:'#0A0A0A',
+            border:'none', ...MO, fontSize:11, letterSpacing:'.22em', fontWeight:600, cursor:'pointer' }}>
+            {player.isCaptain?'REMOVE CAPTAIN':'MAKE CAPTAIN'}{/* PLUGIN: player.isCaptain */}
+          </button>
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10 }}>
+            <button style={{ padding:'13px', background:'transparent', color:'var(--paper)',
+              border:'1px solid var(--rule)', ...MO, fontSize:11, letterSpacing:'.22em', cursor:'pointer' }}>
+              SUB OUT{/* PLUGIN: trigger substitution flow */}
+            </button>
+            <button style={{ padding:'13px', background:'transparent', color:'var(--danger)',
+              border:'1px solid var(--danger)', ...MO, fontSize:11, letterSpacing:'.22em', cursor:'pointer' }}>
+              SELL{/* PLUGIN: trigger sell/market flow */}
+            </button>
+          </div>
+          <button style={{ padding:'10px', background:'transparent', color:'var(--mute)',
+            border:'1px solid var(--rule)', ...MO, fontSize:10, letterSpacing:'.18em',
+            display:'flex', alignItems:'center', justifyContent:'center', gap:7, cursor:'pointer' }}>
+            VIEW FULL STATS DASHBOARD <span style={{ color:'var(--cyan)', fontSize:12 }}>↗</span>
+            {/* PLUGIN: opens StatsDashboard modal for this player */}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ════════════════════════════════════════════════════════════════════
+//  [2B] ACTION MODAL OPTION B — MINIMAL (desktop)
+// ════════════════════════════════════════════════════════════════════
+function ActionModalDesktopB({ player=VDV }) {
+  return (
+    <div style={{ width:'100%', height:'100%', display:'flex', alignItems:'center', justifyContent:'center',
+      background:'rgba(6,7,10,.88)', fontFamily:'Archivo,sans-serif' }}>
+      <div style={{ width:420, background:'var(--ink)', border:'1px solid var(--rule)', color:'var(--paper)' }}>
+        {/* header */}
+        <div style={{ display:'flex', alignItems:'center', gap:12, padding:'16px 18px', borderBottom:'1px solid var(--rule)' }}>
+          <PosBadge pos={player.position} />
+          <div style={{ flex:1, minWidth:0 }}>
+            <div style={{ fontFamily:'Archivo Black', fontSize:18, letterSpacing:'-0.01em', textTransform:'uppercase' }}>{player.name}</div>
+            <div style={{ display:'flex', alignItems:'center', gap:7, marginTop:3 }}>
+              <Dot status={player.status} />
+              <span style={{ ...MO, fontSize:9, color:'var(--mute)' }}>{player.country} · {player.club}</span>
+              <span style={{ ...MO, fontSize:9, color:STATUS_C[player.status] }}>· {STATUS_L[player.status]}</span>
+            </div>
+          </div>
+          <div style={{ display:'flex', alignItems:'center', gap:12, flexShrink:0 }}>
+            <span style={{ fontFamily:'Archivo Black', fontSize:17 }}>{player.price}</span>
+            {/* PLUGIN: onClose */}
+            <div style={{ width:24, height:24, border:'1px solid var(--rule)', color:'var(--mute)',
+              display:'flex', alignItems:'center', justifyContent:'center', cursor:'pointer', fontSize:12 }}>✕</div>
+          </div>
+        </div>
+        {/* actions only */}
+        <div style={{ padding:'16px 18px', display:'flex', flexDirection:'column', gap:10 }}>
+          <button style={{ width:'100%', padding:'14px', background:'var(--gold)', color:'#0A0A0A',
+            border:'none', ...MO, fontSize:11, letterSpacing:'.22em', fontWeight:600, cursor:'pointer' }}>
+            {player.isCaptain?'REMOVE CAPTAIN':'MAKE CAPTAIN'}
+          </button>
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10 }}>
+            <button style={{ padding:'13px', background:'transparent', color:'var(--paper)',
+              border:'1px solid var(--rule)', ...MO, fontSize:11, letterSpacing:'.22em', cursor:'pointer' }}>SUB OUT</button>
+            <button style={{ padding:'13px', background:'transparent', color:'var(--danger)',
+              border:'1px solid var(--danger)', ...MO, fontSize:11, letterSpacing:'.22em', cursor:'pointer' }}>SELL</button>
+          </div>
+          <button style={{ padding:'10px', background:'transparent', color:'var(--mute)',
+            border:'1px solid var(--rule)', ...MO, fontSize:10, letterSpacing:'.18em',
+            display:'flex', alignItems:'center', justifyContent:'center', gap:7, cursor:'pointer' }}>
+            VIEW FULL STATS DASHBOARD <span style={{ color:'var(--cyan)', fontSize:12 }}>↗</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ════════════════════════════════════════════════════════════════════
+//  [2A] ACTION MODAL OPTION A — WITH CONTEXT STATS (mobile)
+// ════════════════════════════════════════════════════════════════════
+function ActionModalMobileA({ player=VDV, form=VDV_FORM }) {
+  const diffC = player.fixtureDiff<=2?'var(--positive)':player.fixtureDiff>=4?'var(--danger)':'var(--gold)';
+  const diffL = player.fixtureDiff<=2?'EASY':player.fixtureDiff>=4?'HARD':'MEDIUM';
+  return (
+    <div style={{ width:'100%', height:'100%', background:'var(--ink)', color:'var(--paper)',
+      fontFamily:'Archivo,sans-serif', display:'flex', flexDirection:'column', position:'relative' }}>
+      <div style={{ height:32, display:'flex', justifyContent:'space-between', alignItems:'center',
+        padding:'0 22px', ...MO, fontSize:11, fontWeight:600, flexShrink:0 }}><span>9:41</span><span>●●● ▮</span></div>
+      <div style={{ flex:1, background:'rgba(8,10,14,.5)', position:'relative' }}>
+        <div style={{ position:'absolute', bottom:0, left:0, right:0, background:'var(--ink-2)', borderTop:'1px solid var(--rule)' }}>
+          <div style={{ display:'flex', justifyContent:'center', padding:'10px 0 6px' }}>
+            <div style={{ width:36, height:4, background:'var(--rule)', borderRadius:2 }} />
+          </div>
+          <div style={{ display:'flex', alignItems:'center', gap:12, padding:'6px 18px 12px', borderBottom:'1px solid var(--rule)' }}>
+            <PosBadge pos={player.position} />
+            <div style={{ flex:1, minWidth:0 }}>
+              <div style={{ fontFamily:'Archivo Black', fontSize:17, letterSpacing:'-0.01em', textTransform:'uppercase' }}>{player.name}</div>
+              <div style={{ display:'flex', alignItems:'center', gap:6, marginTop:2 }}>
+                <Dot status={player.status} />
+                <span style={{ ...MO, fontSize:8, color:'var(--mute)' }}>{player.country} · {player.club}</span>
+                <span style={{ ...MO, fontSize:8, color:STATUS_C[player.status] }}>· {STATUS_L[player.status]}</span>
+              </div>
+            </div>
+            <div style={{ textAlign:'right', flexShrink:0 }}>
+              <div style={{ fontFamily:'Archivo Black', fontSize:16 }}>{player.price}</div>
+              <div style={{ ...MO, fontSize:8, color:'var(--mute)', marginTop:1 }}>PRICE</div>
+            </div>
+          </div>
+          <div style={{ display:'flex', borderBottom:'1px solid var(--rule)' }}>
+            <div style={{ flex:1, padding:'11px 18px', borderRight:'1px solid var(--rule)' }}>
+              <div style={{ ...MO, fontSize:8, color:'var(--mute)', marginBottom:8, letterSpacing:'.18em' }}>LAST {form.length} GWS</div>
+              <FormBars form={form} maxH={28} />
+            </div>
+            <div style={{ flex:'0 0 140px', padding:'11px 18px' }}>
+              <div style={{ ...MO, fontSize:8, color:'var(--mute)', marginBottom:6, letterSpacing:'.18em' }}>NEXT FIXTURE</div>
+              <div style={{ fontFamily:'Archivo Black', fontSize:13 }}>{player.nextFixture}</div>
+              <div style={{ marginTop:6 }}>
+                <div style={{ height:3, background:'var(--rule)', borderRadius:1, overflow:'hidden' }}>
+                  <div style={{ height:'100%', width:`${(player.fixtureDiff/5)*100}%`, background:diffC }} />
+                </div>
+                <div style={{ ...MO, fontSize:8, color:diffC, marginTop:3 }}>{diffL} · {player.fixtureDiff}/5</div>
+              </div>
+            </div>
+          </div>
+          <div style={{ padding:'14px 18px', display:'flex', flexDirection:'column', gap:10 }}>
+            <button style={{ width:'100%', padding:'15px', background:'var(--gold)', color:'#0A0A0A',
+              border:'none', ...MO, fontSize:11, letterSpacing:'.22em', fontWeight:600, cursor:'pointer' }}>
+              {player.isCaptain?'REMOVE CAPTAIN':'MAKE CAPTAIN'}
+            </button>
+            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10 }}>
+              <button style={{ padding:'14px', background:'transparent', color:'var(--paper)',
+                border:'1px solid var(--rule)', ...MO, fontSize:11, letterSpacing:'.2em', cursor:'pointer' }}>SUB OUT</button>
+              <button style={{ padding:'14px', background:'transparent', color:'var(--danger)',
+                border:'1px solid var(--danger)', ...MO, fontSize:11, letterSpacing:'.2em', cursor:'pointer' }}>SELL</button>
+            </div>
+            <button style={{ padding:'11px', background:'transparent', color:'var(--mute)',
+              border:'1px solid var(--rule)', ...MO, fontSize:10, letterSpacing:'.16em',
+              display:'flex', alignItems:'center', justifyContent:'center', gap:7, cursor:'pointer' }}>
+              VIEW FULL STATS <span style={{ color:'var(--cyan)', fontSize:12 }}>↗</span>
+            </button>
+          </div>
+          <div style={{ height:20 }} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ════════════════════════════════════════════════════════════════════
+//  [2B] ACTION MODAL OPTION B — MINIMAL (mobile)
+// ════════════════════════════════════════════════════════════════════
+function ActionModalMobileB({ player=VDV }) {
+  return (
+    <div style={{ width:'100%', height:'100%', background:'var(--ink)', color:'var(--paper)',
+      fontFamily:'Archivo,sans-serif', display:'flex', flexDirection:'column', position:'relative' }}>
+      <div style={{ height:32, display:'flex', justifyContent:'space-between', alignItems:'center',
+        padding:'0 22px', ...MO, fontSize:11, fontWeight:600, flexShrink:0 }}><span>9:41</span><span>●●● ▮</span></div>
+      <div style={{ flex:1, background:'rgba(8,10,14,.5)', position:'relative' }}>
+        <div style={{ position:'absolute', bottom:0, left:0, right:0, background:'var(--ink-2)', borderTop:'1px solid var(--rule)' }}>
+          <div style={{ display:'flex', justifyContent:'center', padding:'10px 0 6px' }}>
+            <div style={{ width:36, height:4, background:'var(--rule)', borderRadius:2 }} />
+          </div>
+          <div style={{ display:'flex', alignItems:'center', gap:12, padding:'10px 18px 14px', borderBottom:'1px solid var(--rule)' }}>
+            <PosBadge pos={player.position} />
+            <div style={{ flex:1, minWidth:0 }}>
+              <div style={{ fontFamily:'Archivo Black', fontSize:17, letterSpacing:'-0.01em', textTransform:'uppercase' }}>{player.name}</div>
+              <div style={{ display:'flex', alignItems:'center', gap:6, marginTop:3 }}>
+                <Dot status={player.status} />
+                <span style={{ ...MO, fontSize:8, color:'var(--mute)' }}>{player.country} · {player.club}</span>
+                <span style={{ ...MO, fontSize:8, color:STATUS_C[player.status] }}>· {STATUS_L[player.status]}</span>
+              </div>
+            </div>
+            <div style={{ display:'flex', alignItems:'center', gap:10, flexShrink:0 }}>
+              <span style={{ fontFamily:'Archivo Black', fontSize:16 }}>{player.price}</span>
+              <div style={{ width:22, height:22, border:'1px solid var(--rule)', color:'var(--mute)',
+                display:'flex', alignItems:'center', justifyContent:'center', cursor:'pointer', fontSize:11 }}>✕</div>
+            </div>
+          </div>
+          <div style={{ padding:'14px 18px', display:'flex', flexDirection:'column', gap:10 }}>
+            <button style={{ width:'100%', padding:'15px', background:'var(--gold)', color:'#0A0A0A',
+              border:'none', ...MO, fontSize:11, letterSpacing:'.22em', fontWeight:600, cursor:'pointer' }}>
+              {player.isCaptain?'REMOVE CAPTAIN':'MAKE CAPTAIN'}
+            </button>
+            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10 }}>
+              <button style={{ padding:'14px', background:'transparent', color:'var(--paper)',
+                border:'1px solid var(--rule)', ...MO, fontSize:11, letterSpacing:'.2em', cursor:'pointer' }}>SUB OUT</button>
+              <button style={{ padding:'14px', background:'transparent', color:'var(--danger)',
+                border:'1px solid var(--danger)', ...MO, fontSize:11, letterSpacing:'.2em', cursor:'pointer' }}>SELL</button>
+            </div>
+            <button style={{ padding:'11px', background:'transparent', color:'var(--mute)',
+              border:'1px solid var(--rule)', ...MO, fontSize:10, letterSpacing:'.16em',
+              display:'flex', alignItems:'center', justifyContent:'center', gap:7, cursor:'pointer' }}>
+              VIEW FULL STATS <span style={{ color:'var(--cyan)', fontSize:12 }}>↗</span>
+            </button>
+          </div>
+          <div style={{ height:20 }} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ════════════════════════════════════════════════════════════════════
+//  APP
+// ════════════════════════════════════════════════════════════════════
+function App(){
+  return (
+    <DesignCanvas
+      title="FORZAKIT · Player Modals v2"
+      subtitle="[1] Stats Dashboard (STATS ↗ button in history row) · [2] Player Action Popup — Option A with context stats, Option B minimal. Desktop + mobile. PLUGIN comments = Claude Code handoff points."
+    >
+      <DCSection id="stats-dashboard" title="[1] Player Stats Dashboard">
+        <DCArtboard id="trigger" label="Trigger — STATS ↗ button location in player history row" width={1200} height={122} background="#06070A">
+          <TriggerContext />
+        </DCArtboard>
+        <DCArtboard id="stats-desktop" label="Desktop · 900px modal · click any GW row → breakdown updates" width={1100} height={700} background="#06070A">
+          <StatsDashDesktop />
+        </DCArtboard>
+        <DCArtboard id="stats-mobile" label="Mobile · full-screen · HISTORY tab / BREAKDOWN tab" width={390} height={780} background="#06070A">
+          <StatsDashMobile />
+        </DCArtboard>
+      </DCSection>
+
+      <DCSection id="action-a" title="[2A] Player Action Popup — Option A · with context stats">
+        <DCArtboard id="action-a-desktop" label="Desktop · form + fixture + ownership" width={680} height={520} background="#06070A">
+          <ActionModalDesktopA />
+        </DCArtboard>
+        <DCArtboard id="action-a-mobile" label="Mobile · bottom sheet" width={390} height={660} background="#06070A">
+          <ActionModalMobileA />
+        </DCArtboard>
+      </DCSection>
+
+      <DCSection id="action-b" title="[2B] Player Action Popup — Option B · minimal (player + actions only)">
+        <DCArtboard id="action-b-desktop" label="Desktop · compact — identity + 3 actions + stats link" width={680} height={360} background="#06070A">
+          <ActionModalDesktopB />
+        </DCArtboard>
+        <DCArtboard id="action-b-mobile" label="Mobile · bottom sheet · minimal" width={390} height={560} background="#06070A">
+          <ActionModalMobileB />
+        </DCArtboard>
+      </DCSection>
+    </DesignCanvas>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>
