@@ -35,8 +35,8 @@ import { AvailabilityBadge } from '../components/AvailabilityBadge';
 import { POS_ORDER, POS_LABEL, POS_BADGE_COLOR } from '../lib/formations';
 import ScoringInfoModal from '../components/ScoringInfoModal';
 import { usePlayerStats } from '../hooks/usePlayerStats';
-import { usePlayerScoreDetail } from '../hooks/usePlayerScoreDetail';
-import PlayerStatsPanel from '../components/PlayerStatsPanel';
+import { useLeagueOwnership } from '../hooks/useLeagueOwnership';
+import PlayerStatsDashboard from '../components/player/PlayerStatsDashboard';
 import FormStrip from '../components/FormStrip';
 import KnockoutKeepSelector from '../components/KnockoutKeepSelector';
 
@@ -152,8 +152,11 @@ export default function SquadScreen() {
   // Form history — last 5 GW pts per player for the squad list strip
   const { statsMap: squadStatsMap } = usePlayerStats(tournamentId);
 
-  // Expandable per-player scoring history (shared with MarketScreen)
-  const { expandedPlayerId, playerDetails, togglePanel } = usePlayerScoreDetail();
+  // League ownership % per player — used in stats dashboard + action sheet
+  const { ownershipMap } = useLeagueOwnership(activeLeague);
+
+  // Full stats dashboard modal — set to a player object to open
+  const [statsDashboardPlayer, setStatsDashboardPlayer] = useState(null);
 
   // Transfer hook — league-scoped buy/sell + no-repeat enforcement
   const { buy, sell, takenMap, isOwnedBy } = useTransfer(activeLeague);
@@ -1389,24 +1392,23 @@ export default function SquadScreen() {
               {allPos.map(player => {
                 const isBench = benchIds.has(player.id);
                 const isListed = activeAuctions.some(a => a.player_id === player.id);
-                const isExpanded = expandedPlayerId === player.id;
                 const rowAction = (
                   <div className="flex flex-col items-end gap-1" onClick={e => e.stopPropagation()}>
                     <button
-                      onClick={() => togglePanel(player.id)}
+                      onClick={() => setStatsDashboardPlayer(player)}
                       style={{
                         fontFamily: 'JetBrains Mono, monospace',
                         fontSize: 9, fontWeight: 800,
                         letterSpacing: '0.1em',
                         padding: '2px 6px',
-                        border: '1px solid var(--rule)',
-                        color: 'var(--mute)',
-                        background: 'transparent',
+                        border: '1px solid rgba(0,180,216,0.4)',
+                        color: 'var(--cyan)',
+                        background: 'rgba(0,180,216,0.06)',
                         flexShrink: 0,
                         cursor: 'pointer',
                       }}
                     >
-                      {isExpanded ? '▲ STATS' : '▼ STATS'}
+                      STATS ↗
                     </button>
                     <span
                       style={{
@@ -1480,13 +1482,6 @@ export default function SquadScreen() {
                       showPrice
                       action={rowAction}
                     />
-                    {isExpanded && (
-                      <PlayerStatsPanel
-                        detail={playerDetails[player.id]}
-                        position={player.position}
-                        isLocked
-                      />
-                    )}
                   </div>
                 );
               })}
@@ -1932,7 +1927,6 @@ export default function SquadScreen() {
                         ? 'var(--danger)' : player.intel?.status === 'doubt' || player.intel?.status === 'doubtful'
                         ? 'var(--gold)' : 'var(--positive)';
                       const isListed = activeAuctions.some(a => a.player_id === player.id);
-                      const isExpanded = expandedPlayerId === player.id;
                       return (
                         <div key={player.id}>
                         <div
@@ -1969,23 +1963,23 @@ export default function SquadScreen() {
                           </div>
                           {/* Points */}
                           <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 16, color: 'var(--paper)', letterSpacing: '-0.02em', flexShrink: 0 }}>{Math.round(player.points ?? 0)}</div>
-                          {/* Stats toggle */}
+                          {/* Full stats dashboard trigger */}
                           <button
-                            onClick={e => { e.stopPropagation(); togglePanel(player.id); }}
+                            onClick={e => { e.stopPropagation(); setStatsDashboardPlayer(player); }}
                             style={{
                               fontFamily: 'JetBrains Mono, monospace',
                               fontSize: 8, fontWeight: 800,
                               letterSpacing: '0.1em',
                               padding: '3px 6px',
-                              border: '1px solid var(--rule)',
-                              color: 'var(--mute)',
-                              background: 'transparent',
+                              border: '1px solid rgba(0,180,216,0.4)',
+                              color: 'var(--cyan)',
+                              background: 'rgba(0,180,216,0.06)',
                               flexShrink: 0,
                               cursor: 'pointer',
                               whiteSpace: 'nowrap',
                             }}
                           >
-                            {isExpanded ? '▲' : '▼'}
+                            STATS ↗
                           </button>
                           {/* Auction action */}
                           {activeLeague && (
@@ -2025,13 +2019,6 @@ export default function SquadScreen() {
                             </div>
                           )}
                         </div>
-                        {isExpanded && (
-                          <PlayerStatsPanel
-                            detail={playerDetails[player.id]}
-                            position={player.position}
-                            isLocked
-                          />
-                        )}
                         </div>
                       );
                     })}
@@ -2457,6 +2444,33 @@ export default function SquadScreen() {
                 style={{ width: 28, height: 28, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.08)', color: 'var(--mute)', fontSize: 16, cursor: 'pointer' }}
               >×</button>
             </div>
+            {/* Form + next fixture + ownership context strip */}
+            <div className="flex items-stretch gap-3 mb-3" style={{ borderTop: '1px solid rgba(255,255,255,0.07)', borderBottom: '1px solid rgba(255,255,255,0.07)', padding: '10px 0' }}>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 8, color: 'var(--mute)', letterSpacing: '0.2em', marginBottom: 6 }}>FORM</div>
+                <FormStrip rounds={squadStatsMap[selectedPlayer.id]} />
+              </div>
+              <div style={{ flex: 1, minWidth: 0, borderLeft: '1px solid rgba(255,255,255,0.07)', paddingLeft: 12 }}>
+                <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 8, color: 'var(--mute)', letterSpacing: '0.2em', marginBottom: 6 }}>NEXT FIXTURE</div>
+                <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 12, color: selectedPlayer.fixtureStatus?.color || 'var(--paper)', letterSpacing: '-0.01em' }}>
+                  {selectedPlayer.fixtureStatus?.label || 'NO FIXTURE'}
+                </div>
+              </div>
+              <div style={{ flex: 1, minWidth: 0, borderLeft: '1px solid rgba(255,255,255,0.07)', paddingLeft: 12 }}>
+                <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 8, color: 'var(--mute)', letterSpacing: '0.2em', marginBottom: 6 }}>OWNED BY</div>
+                <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 12, color: 'var(--paper)', letterSpacing: '-0.01em' }}>
+                  {ownershipMap[selectedPlayer.id] != null ? `${ownershipMap[selectedPlayer.id]}%` : '—'}
+                </div>
+              </div>
+            </div>
+            {/* View full stats dashboard */}
+            <button
+              onClick={() => setStatsDashboardPlayer(selectedPlayer)}
+              className="w-full mb-3 py-2 rounded-sm transition-all active:scale-95"
+              style={{ background: 'rgba(0,180,216,0.06)', color: 'var(--cyan)', border: '1px solid rgba(0,180,216,0.35)', fontFamily: 'Archivo Black, sans-serif', fontSize: '10px', letterSpacing: '0.18em', textTransform: 'uppercase' }}
+            >
+              VIEW FULL STATS DASHBOARD ↗
+            </button>
             {/* Actions */}
             <div className="flex gap-2 mb-3">
               {!selectedIsBench && (
@@ -2558,6 +2572,15 @@ export default function SquadScreen() {
 
       {/* â•â• PLAYER PICKER SHEET â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
       {CHIPS_ENABLED && showChipWizard && <ChipWizardModal />}
+
+      {/* Full player stats dashboard */}
+      {statsDashboardPlayer && (
+        <PlayerStatsDashboard
+          player={statsDashboardPlayer}
+          ownershipPct={ownershipMap[statsDashboardPlayer.id]}
+          onClose={() => setStatsDashboardPlayer(null)}
+        />
+      )}
 
       {pickerPos && (
         <PlayerPickerSheet
