@@ -231,7 +231,9 @@ export default function MarketScreen() {
       }));
 
       const allRounds  = sorted.map(([, r]) => r);
-      const totalPts   = allRounds.reduce((s, r) => s + r.pts, 0);
+      // Sum each GW's rounded score (matching the per-round display) so the
+      // average is consistent with what the user sees round-by-round.
+      const totalPts   = allRounds.reduce((s, r) => s + Math.round(r.pts), 0);
       const totalGoals = allRounds.reduce((s, r) => s + r.goals, 0);
       const totalAst   = allRounds.reduce((s, r) => s + r.assists, 0);
       const apps       = allRounds.filter(r => r.mins > 0).length;
@@ -240,7 +242,7 @@ export default function MarketScreen() {
         ...prev,
         [playerId]: {
           rounds,
-          season: { apps, goals: totalGoals, assists: totalAst, pts: Math.round(totalPts), avgPts: apps > 0 ? (totalPts / apps).toFixed(1) : '0.0' },
+          season: { apps, goals: totalGoals, assists: totalAst, pts: totalPts, avgPts: apps > 0 ? (totalPts / apps).toFixed(1) : '0.0' },
         },
       }));
     } catch (err) {

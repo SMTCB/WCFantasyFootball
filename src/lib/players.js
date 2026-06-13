@@ -15,6 +15,8 @@
  * }
  */
 
+import { teamCode } from './fixtures';
+
 const DEFAULT_INTEL = { status: 'fit', confidence: 100, risk: 0, reason: null };
 
 // Nation colours — covers all likely WC 2026 nations (48 slots) plus common European leagues.
@@ -112,13 +114,16 @@ export function buildFixtureInfo(rawPlayer = {}, activeFixtures = []) {
 export function formatFixtureStatus(fixtureInfo) {
   if (!fixtureInfo || fixtureInfo.state === 'none') return null;
 
+  const opp = fixtureInfo.opponent ? teamCode(fixtureInfo.opponent) : null;
+  const vs  = opp ? ` ${fixtureInfo.isHome ? 'v' : '@'} ${opp}` : '';
+
   if (fixtureInfo.state === 'live') {
-    return { label: 'LIVE', color: 'var(--danger)' };
+    return { label: `LIVE${vs}`, color: 'var(--danger)' };
   }
   if (fixtureInfo.state === 'finished') {
     const home = fixtureInfo.home_score ?? '-';
     const away = fixtureInfo.away_score ?? '-';
-    return { label: `FT ${home}-${away}`, color: 'var(--mute)' };
+    return { label: `FT ${home}-${away}${vs}`, color: 'var(--mute)' };
   }
   // scheduled
   const d = new Date(fixtureInfo.kickoff_at);
@@ -126,5 +131,5 @@ export function formatFixtureStatus(fixtureInfo) {
   const day  = d.toLocaleDateString('en-GB', { weekday: 'short' });
   const date = `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}`;
   const time = `${String(d.getHours()).padStart(2, '0')}h${String(d.getMinutes()).padStart(2, '0')}`;
-  return { label: `${day} ${date} ${time}`, color: 'var(--mute)' };
+  return { label: `${day} ${date} ${time}${vs}`, color: 'var(--mute)' };
 }
