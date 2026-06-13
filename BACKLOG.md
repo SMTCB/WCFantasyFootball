@@ -1,12 +1,23 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-06-13 (Captain rounding fix + Squad UX polish + scoring-details panel — PRs #526/#527/#528)  
+**Last Updated**: 2026-06-13 (My Squad captain points display fix — PR #530)  
 **E2E Test Suite**: `platform.spec.js` (36 tests × 2 browsers) passing in CI ✅  
 **Full Playbook Run**: `E2E_TEST_PLAYBOOK.md` v2.0 — all flows confirmed  
 **🟢 LAUNCH READY**: No critical (P0/P1) bugs open. All game mechanics functional. WC kick-off 2026-06-11.  
 **Live App**: https://wc-fantasy-football.vercel.app  
 **WC Kick-off**: 2026-06-11 19:00 UTC (Mexico vs South Africa)  
 **Supabase PostgREST max_rows**: 10,000 (raised from default 1,000 — 2026-06-08)
+
+---
+
+## ✅ My Squad captain points display fix (2026-06-13) — PR #530
+
+**Reported**: Pulisic (captain in two leagues) showed `5` pts in the My Squad pitch/list view when the correct value — matching `fantasy_points.total` and the Recap/Live views — was `10` (raw 4.75 → `round(4.75)*2=10`, per PR #526's rounding convention).
+
+- `SquadScreen.fetchSquad`'s `mappedPlayers` was setting every player's display `points` to the raw, unmultiplied `pointsMap[p.id]` — the captain's ×2/×3 bonus was never applied in this view (other views already applied it).
+- Fix: resolve `captain_id`/`is_triple_captain` ahead of the map; captain (when a starter) gets `points: Math.round(rawPts) * captainMult`, matching RecapView/LiveScreen.
+- Added `rawPoints` (rounded, unmultiplied) to each mapped player so the bench-swap deduction confirmation modal keeps showing the correct raw per-fixture amount (matches `set_lineup`'s interim deduction, migration 173) instead of the now-doubled captain value.
+- `npm run lint` (0 errors, 77 pre-existing warnings) and `npm run build` clean.
 
 ---
 
