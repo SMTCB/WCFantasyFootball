@@ -1,4 +1,4 @@
-// Edge Function: calculate-scores  (v25 — points_breakdown.fixtures stored unrounded to 2dp, fixes sum-vs-total drift)
+// Edge Function: calculate-scores  (v26 — scoring v2 Bucket B: GK clean-sheet 45min threshold, goals_conceded 2nd+ penalty for GK/DEF)
 // Calculates fantasy points for all squads for a given fixture.
 // Called by ingest-match-events (Forza live path) or directly (mock/manual path).
 //
@@ -116,11 +116,15 @@ function scorePlayer(stats, position, POINTS, UNIVERSAL) {
   pts += (stats.goals   ?? 0) * rules.goal;
   pts += (stats.assists ?? 0) * rules.assist;
 
-  // DEF clean sheet requires 45+ min; GK and others keep the 60-min gate
-  const csMinThreshold = pos === 'DEF' ? 45 : 60;
+  // GK and DEF clean sheet require 45+ min; MID keeps the 60-min gate
+  const csMinThreshold = (pos === 'DEF' || pos === 'GK') ? 45 : 60;
   if (stats.clean_sheet && mins >= csMinThreshold && rules.clean_sheet > 0) {
     pts += rules.clean_sheet;
   }
+
+  // Goals conceded beyond the first incur a penalty for GK/DEF
+  const concededBeyondFirst = Math.max(0, (stats.goals_conceded ?? 0) - 1);
+  pts += concededBeyondFirst * (rules.conceded_2plus_penalty ?? 0);
 
   pts += (stats.penalty_saved  ?? 0) * (rules.penalty_saved  ?? 0);
   pts += (stats.own_goals      ?? 0) * UNIVERSAL.own_goal;
@@ -147,7 +151,8 @@ function buildBreakdown(stats, pos, POINTS, UNIVERSAL) {
     minutes:           Math.round((mins / 60) * UNIVERSAL.minute_per_90 * 100) / 100,
     goals:             (stats.goals              ?? 0) * rules.goal,
     assists:           (stats.assists            ?? 0) * rules.assist,
-    clean_sheet:       (stats.clean_sheet && mins >= (p === 'DEF' ? 45 : 60) && rules.clean_sheet > 0) ? rules.clean_sheet : 0,
+    clean_sheet:       (stats.clean_sheet && mins >= ((p === 'DEF' || p === 'GK') ? 45 : 60) && rules.clean_sheet > 0) ? rules.clean_sheet : 0,
+    goals_conceded:    Math.max(0, (stats.goals_conceded ?? 0) - 1) * (rules.conceded_2plus_penalty ?? 0),
     own_goals:         (stats.own_goals          ?? 0) * UNIVERSAL.own_goal,
     yellow_cards:      (stats.yellow_cards       ?? 0) * UNIVERSAL.yellow_card,
     red_cards:         (stats.red_cards          ?? 0) * UNIVERSAL.red_card,
@@ -382,7 +387,7 @@ Deno.serve(async (req) => {
         .filter(c => c !== club)
         .reduce((sum, c) => sum + (goalsPerTeam[c] || 0), 0);
       stats.goals_conceded = goalsAgainst;
-      stats.clean_sheet    = (goalsAgainst === 0); // minutes gate applied per-position in scorePlayer (DEF≥45, others≥60)
+      stats.clean_sheet    = (goalsAgainst === 0); // minutes gate applied per-position in scorePlayer (GK/DEF≥45, others≥60)
     }
 
     const statsList = Object.values(statsMap);
