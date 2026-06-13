@@ -432,10 +432,11 @@ export default function SquadScreen() {
     const tick = () => {
       const ms = new Date(target) - Date.now();
       if (ms <= 0) { setWindowKpi({ label: transferWindow.status === 'upcoming' ? 'Opens In' : 'Transfers', text: '—', color: 'var(--mute)' }); return; }
-      const h = Math.floor(ms / 3600000);
+      const d = Math.floor(ms / 86400000);
+      const h = Math.floor((ms % 86400000) / 3600000);
       const m = Math.floor((ms % 3600000) / 60000);
       const s = Math.floor((ms % 60000) / 1000);
-      const text = `${h}h ${m}m ${s}s`;
+      const text = d > 0 ? `${d}d ${h}h ${m}m` : h > 0 ? `${h}h ${m}m` : `${m}m ${s}s`;
       setWindowKpi(transferWindow.status === 'upcoming'
         ? { label: 'Opens In', text, color: 'var(--warn)' }
         : { label: 'Transfers', text, color: h < 2 ? 'var(--danger)' : 'var(--positive)' }
