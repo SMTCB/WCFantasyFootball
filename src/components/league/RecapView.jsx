@@ -510,10 +510,12 @@ export default function RecapView({ leagueId, tournamentId, members, currentUser
         const isTriple  = isCaptain && squadRow.is_triple_captain;
         // Apply the captain multiplier here so displayed player points sum to
         // the GW total shown on the row above (which is itself captain-multiplied).
+        // Round the raw score BEFORE multiplying so e.g. 1.4 pts doubled reads
+        // as 1*2=2, not round(1.4*2)=3.
         const mult = isTriple ? 3 : isCaptain ? 2 : 1;
         return {
           id: pid, name: meta.name, position: meta.position,
-          pts:       stats?.pts != null ? stats.pts * mult : null,
+          pts:       stats?.pts != null ? Math.round(stats.pts) * mult : null,
           goals:     stats?.goals     ?? 0, assists:    stats?.assists    ?? 0,
           minutes:   stats?.minutes   ?? 0, yellow:     stats?.yellow     ?? 0,
           red:       stats?.red       ?? 0, saves:      stats?.saves      ?? 0,

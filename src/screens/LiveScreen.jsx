@@ -607,7 +607,9 @@ export default function LiveScreen() {
       const enrichedPlayers = (playerRows || []).map(p => {
         let pts = pointsMap[p.id] || 0;
         const isBench = benchSet.has(p.id);
-        if (!isBench && p.id === captainId) pts *= isTripleCap ? 3 : 2;
+        // Round the raw score BEFORE applying the captain multiplier so e.g.
+        // 1.4 pts doubled reads as 1*2=2, not round(1.4*2)=3.
+        if (!isBench && p.id === captainId) pts = Math.round(pts) * (isTripleCap ? 3 : 2);
         return { ...p, points: pts, live: livePlayerSet.has(p.id), isBench, minutes: minutesMap[p.id] ?? null };
       });
 
