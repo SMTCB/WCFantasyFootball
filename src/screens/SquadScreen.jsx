@@ -311,19 +311,29 @@ export default function SquadScreen() {
       const lineupLocks   = squad.lineup_locks ?? {};
       const lockedIds     = new Set(lineupLocks[squad.matchday_id] ?? []);
 
+      // Resolve captain ahead of the player map so the captain's displayed points
+      // can carry the ×2/×3 multiplier (matches RecapView/LiveScreen — round the
+      // raw score BEFORE multiplying, e.g. round(4.75)*2=10, not round(4.75*2)).
+      const captainIdForPoints = squad.captain_id || playerIds[0] || '';
+      const captainMult = squad.is_triple_captain ? 3 : 2;
+
       const mappedPlayers = (players || []).map((p) => {
         const playerIntel = intelData?.find(i => i.player_id === p.id);
         const isStarter   = starterIds.has(p.id);
         const isLocked    = lockedIds.has(p.id);
+        const rawPts      = pointsMap[p.id] ?? 0;
+        const mult        = (p.id === captainIdForPoints && isStarter) ? captainMult : 1;
         // normalisePlayer strips unknown keys — set isBench/isLineupLocked after the call
         const normalised  = normalisePlayer({
           ...p,
-          points: pointsMap[p.id] ?? 0,
+          points: Math.round(rawPts) * mult,
           intel:  normalizeIntelligence(playerIntel),
         });
         const fixtureInfo = buildFixtureInfo(p, activeRoundFixtures);
         const fixtureStatus = formatFixtureStatus(fixtureInfo);
-        return { ...normalised, isBench: !isStarter, isLineupLocked: isLocked, fixtureInfo, fixtureStatus };
+        // rawPoints: unmultiplied per-fixture score, used for swap-out deduction
+        // warnings (set_lineup's interim deduction is the raw value, not captain-doubled).
+        return { ...normalised, rawPoints: Math.round(rawPts), isBench: !isStarter, isLineupLocked: isLocked, fixtureInfo, fixtureStatus };
       });
 
       // Enforce formation rules: 1 GK, 3-5 DEF, 2-4 MID, 1-2 FWD, total 11
@@ -382,7 +392,7 @@ export default function SquadScreen() {
 
       // If no captain was ever set, default to first player and persist immediately
       // so scoring applies the ×2 bonus without requiring a manual squad-screen visit.
-      const resolvedCaptainId = squad.captain_id || playerIds[0] || '';
+      const resolvedCaptainId = captainIdForPoints;
       if (!squad.captain_id && resolvedCaptainId && squad.id) {
         supabase.from('squads').update({ captain_id: resolvedCaptainId }).eq('id', squad.id)
           .then(({ error }) => { if (error) console.warn('[SquadScreen] captain_id auto-set failed:', error.message); });
@@ -549,13 +559,16 @@ export default function SquadScreen() {
       return;
     }
 
-    // If pitcher already scored, warn about deduction before confirming
-    if (pitchPlayer.points > 0) {
+    // If pitcher already scored, warn about deduction before confirming.
+    // Use rawPoints (unmultiplied) — set_lineup's interim deduction is the raw
+    // per-fixture score, not the captain-doubled display value.
+    const deductionPts = pitchPlayer.rawPoints ?? pitchPlayer.points;
+    if (deductionPts > 0) {
       setConfirm({
         title:        `Move ${pitchPlayer.name} to bench?`,
-        body:         `${pitchPlayer.name} has scored ${Math.round(pitchPlayer.points)} pts this round. Moving them to the bench will deduct those points from your total.`,
+        body:         `${pitchPlayer.name} has scored ${deductionPts} pts this round. Moving them to the bench will deduct those points from your total.`,
         warning:      'This action cannot be undone.',
-        confirmLabel: 'Confirm (-' + Math.round(pitchPlayer.points) + ' pts)',
+        confirmLabel: 'Confirm (-' + deductionPts + ' pts)',
         danger:       true,
         onConfirm:    () => doSwap(pitchPlayer, benchPlayer),
       });
