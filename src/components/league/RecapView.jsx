@@ -2,7 +2,6 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../../lib/supabase';
 import { MONO, DISPLAY, mgrHue, mgrMono } from './HubConstants';
 import { MgrTag, HubSectionLabel, MobSection } from './HubShared';
-import { apportionToTotal } from '../../lib/scoring';
 
 // ── All helpers are module-level so React never sees new function references ──
 
@@ -60,7 +59,7 @@ function FixtureRow({ f }) {
   );
 }
 
-function PlayerBreakdown({ breakdown, gwTotal = null, penaltyDeduction = 0, betDetails = [], tradeNet = 0 }) {
+function PlayerBreakdown({ breakdown, penaltyDeduction = 0, betDetails = [], tradeNet = 0 }) {
   if (!breakdown || breakdown === 'loading') {
     return (
       <div style={{ padding: '10px 24px', fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.18em', borderTop: '1px solid var(--rule)' }}>
@@ -69,23 +68,13 @@ function PlayerBreakdown({ breakdown, gwTotal = null, penaltyDeduction = 0, betD
     );
   }
 
-  // Apportion individual player points so they sum exactly to the GW total
-  // shown on the row above (largest-remainder method) — prevents the
-  // "3 + 2 = 4?" display inconsistency when raw per-player points (e.g.
-  // 1.5, 2.5) are each rounded independently. Only players whose fixture has
-  // started contribute to the GW total, so apportion across those only —
-  // players with hasStats=false (no fixture yet this round) always show '—'
-  // and are excluded from both the input and the target sum.
-  const statsRaw = breakdown.filter(p => p.hasStats).map(p => p.pts ?? 0);
-  const apportioned = (gwTotal !== null && statsRaw.length > 0)
-    ? apportionToTotal(statsRaw, gwTotal + penaltyDeduction)
-    : null;
-  let statsIdx = 0;
-  const displayPts = breakdown.map(p => {
-    if (!p.hasStats) return null;
-    if (apportioned) return apportioned[statsIdx++];
-    return p.pts !== null ? Math.round(p.pts) : null;
-  });
+  // Each player's displayed points is Math.round(raw) * captain multiplier
+  // (already computed in `pts`) so the same player always shows the same
+  // score regardless of which squad/league they're viewed in. The sum of
+  // these may occasionally differ from gwTotal by ±1 due to independent
+  // rounding — preferred over a per-squad "largest remainder" distribution
+  // that made the same player's score vary across leagues.
+  const displayPts = breakdown.map(p => (p.hasStats ? p.pts : null));
 
   return (
     <div style={{ borderTop: '1px solid var(--rule)', background: 'var(--ink-2)' }}>
@@ -639,7 +628,7 @@ export default function RecapView({ leagueId, tournamentId, members, currentUser
             </div>
           </div>
         )}
-        {isOpen && <PlayerBreakdown breakdown={breakdown[s.user_id]} gwTotal={s.pts} penaltyDeduction={s.penalty ?? 0} betDetails={betEntry?.bets ?? []} tradeNet={tradeNet} />}
+        {isOpen && <PlayerBreakdown breakdown={breakdown[s.user_id]} penaltyDeduction={s.penalty ?? 0} betDetails={betEntry?.bets ?? []} tradeNet={tradeNet} />}
         {isOpen && <div style={{ height: 1, background: 'var(--rule)' }} />}
       </div>
     );

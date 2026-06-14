@@ -11,7 +11,6 @@ const LEAGUE_TONES = ['#00B4D8', '#E0A800', '#A855F7', '#22C55E', '#F59E0B'];
 import { POS_ORDER, POS_PITCH_Y as POS_Y } from '../lib/formations';
 import ScoringInfoModal from '../components/ScoringInfoModal';
 import { teamCode } from '../lib/fixtures';
-import { apportionToTotal } from '../lib/scoring';
 const POS_TONE = { FWD: 'var(--danger)', MID: 'var(--gold)', DEF: 'var(--cyan)', GK: '#A855F7' };
 
 // ── Shared primitives ────────────────────────────────────────────────────────
@@ -581,14 +580,19 @@ export default function LiveScreen() {
           : Promise.resolve({ data: [] }),
       ]);
 
-      // Live player set (has stats in a live fixture with > 0 minutes — U50)
+      // Live player set (has stats in a fixture that is CURRENTLY live with > 0 minutes).
+      // statsData spans the whole active matchday (live + finished fixtures) so the
+      // points total stays correct across multi-day rounds — but the "live" pulse
+      // must only fire for fixtures still in progress, not ones that finished
+      // hours/days ago. Scope to liveFixData (status='live'), not the full matchday.
       const minutesMap = {};
       (statsData || []).forEach(s => {
         minutesMap[s.player_id] = (minutesMap[s.player_id] || 0) + (s.minutes_played ?? 0);
       });
+      const liveFixtureIdSet = new Set((liveFixData || []).map(f => f.id));
       const livePlayerSet = new Set(
         (statsData || [])
-          .filter(s => (minutesMap[s.player_id] ?? 0) > 0)
+          .filter(s => liveFixtureIdSet.has(s.fixture_id) && (s.minutes_played ?? 0) > 0)
           .map(s => s.player_id)
       );
       const pointsMap = {};
@@ -619,15 +623,14 @@ export default function LiveScreen() {
         : enrichedPlayers.filter(p => !p.isBench);
       const bench = squadPlayerIds.filter(id => benchSet.has(id)).map(id => enrichedPlayers.find(p => p.id === id)).filter(Boolean);
 
-      // Apportion each group's individually-rounded points so they sum to
-      // Math.round(raw group total) — prevents "these don't add up" when
-      // fractional per-player points (e.g. 1.5, 2.5) are rounded independently.
-      const withDisplayPoints = (group) => {
-        const raw = group.map(p => p.points ?? 0);
-        const total = Math.round(raw.reduce((a, b) => a + b, 0));
-        const apportioned = apportionToTotal(raw, total);
-        return group.map((p, i) => ({ ...p, displayPoints: apportioned[i] }));
-      };
+      // Each player's displayPoints is simply Math.round(raw points) (captain
+      // multiplier already applied above) — so the same player always shows
+      // the same score regardless of which squad/league they're viewed in.
+      // The sum may occasionally differ from the GW total by ±1 due to
+      // independent rounding, which is preferable to a per-squad "largest
+      // remainder" distribution that made the same player's score vary
+      // across leagues.
+      const withDisplayPoints = (group) => group.map(p => ({ ...p, displayPoints: Math.round(p.points ?? 0) }));
 
       const positioned = positionPlayers(withDisplayPoints(starters));
       setSquadPlayers(positioned);
