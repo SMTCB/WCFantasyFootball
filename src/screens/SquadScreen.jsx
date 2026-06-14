@@ -165,8 +165,29 @@ export default function SquadScreen() {
   const { flagMap, toggleFlag } = useAvailabilityFlag(activeLeague);
 
   // Auction hook — list players for auction in the current league
-  const { listPlayer: listForAuction, auctions: activeAuctions } = useAuctions(activeLeague, squadData?.squadId);
+  const { listPlayer: listForAuction, auctions: activeAuctions, cancelListing } = useAuctions(activeLeague, squadData?.squadId);
   const [auctionBusy, setAuctionBusy] = useState(null); // playerId being listed
+  const [cancelBusy, setCancelBusy] = useState(null); // playerId being cancelled
+  const [confirmCancelId, setConfirmCancelId] = useState(null); // playerId pending two-tap cancel confirm
+
+  const handleAuctionBadgeClick = useCallback(async (player, listing) => {
+    if (!listing) return;
+    if (listing.highest_bidder_id) {
+      showToast('A bid has already been placed — this listing can no longer be cancelled here. Go to the Trading tab to Sell Now.', 'info');
+      return;
+    }
+    if (confirmCancelId !== player.id) {
+      setConfirmCancelId(player.id);
+      setTimeout(() => setConfirmCancelId(curr => (curr === player.id ? null : curr)), 4000);
+      return;
+    }
+    setConfirmCancelId(null);
+    setCancelBusy(player.id);
+    const res = await cancelListing(listing.id);
+    setCancelBusy(null);
+    if (!res.ok) showToast(res.error, 'error');
+    else showToast('Listing cancelled.', 'info');
+  }, [cancelListing, confirmCancelId, showToast]);
 
   // â"€â"€ Data Fetching â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
   const fetchSquad = useCallback(async () => {
@@ -1391,7 +1412,8 @@ export default function SquadScreen() {
               <SectionHeader title={POS_LABEL[pos]} />
               {allPos.map(player => {
                 const isBench = benchIds.has(player.id);
-                const isListed = activeAuctions.some(a => a.player_id === player.id);
+                const auctionListing = activeAuctions.find(a => a.player_id === player.id);
+                const isListed = !!auctionListing;
                 const rowAction = (
                   <div className="flex flex-col items-end gap-1" onClick={e => e.stopPropagation()}>
                     <button
@@ -1460,11 +1482,31 @@ export default function SquadScreen() {
                         {auctionBusy === player.id ? '…' : 'AUCTION'}
                       </button>
                     )}
-                    {activeLeague && isListed && (
-                      <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 9, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', padding: '2px 6px', border: '1px solid rgba(240,180,0,0.4)', color: 'var(--gold)', background: 'rgba(240,180,0,0.1)', flexShrink: 0 }}>
-                        ON AUCTION
-                      </span>
-                    )}
+                    {activeLeague && isListed && (() => {
+                      const isConfirming = confirmCancelId === player.id;
+                      const isCancelBusy = cancelBusy === player.id;
+                      return (
+                        <button
+                          disabled={isCancelBusy}
+                          onClick={() => handleAuctionBadgeClick(player, auctionListing)}
+                          style={{
+                            fontFamily: 'JetBrains Mono, monospace',
+                            fontSize: 9, fontWeight: 800,
+                            letterSpacing: '0.1em',
+                            textTransform: 'uppercase',
+                            padding: '2px 6px',
+                            border: isConfirming ? '1px solid rgba(239,68,68,0.6)' : '1px solid rgba(240,180,0,0.4)',
+                            color: isConfirming ? 'var(--danger)' : 'var(--gold)',
+                            background: isConfirming ? 'rgba(239,68,68,0.12)' : 'rgba(240,180,0,0.1)',
+                            flexShrink: 0,
+                            cursor: 'pointer',
+                            opacity: isCancelBusy ? 0.5 : 1,
+                          }}
+                        >
+                          {isCancelBusy ? '…' : isConfirming ? 'CANCEL?' : 'ON AUCTION'}
+                        </button>
+                      );
+                    })()}
                   </div>
                 );
                 return (
@@ -1926,7 +1968,8 @@ export default function SquadScreen() {
                       const sc = player.intel?.status === 'out' || player.intel?.status === 'injured' || player.intel?.status === 'suspended'
                         ? 'var(--danger)' : player.intel?.status === 'doubt' || player.intel?.status === 'doubtful'
                         ? 'var(--gold)' : 'var(--positive)';
-                      const isListed = activeAuctions.some(a => a.player_id === player.id);
+                      const auctionListing = activeAuctions.find(a => a.player_id === player.id);
+                      const isListed = !!auctionListing;
                       return (
                         <div key={player.id}>
                         <div
@@ -1984,11 +2027,31 @@ export default function SquadScreen() {
                           {/* Auction action */}
                           {activeLeague && (
                             <div onClick={e => e.stopPropagation()} style={{ flexShrink: 0 }}>
-                              {isListed ? (
-                                <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 8, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', padding: '3px 6px', border: '1px solid rgba(240,180,0,0.4)', color: 'var(--gold)', background: 'rgba(240,180,0,0.1)', whiteSpace: 'nowrap' }}>
-                                  ON AUCTION
-                                </span>
-                              ) : (
+                              {isListed ? (() => {
+                                const isConfirming = confirmCancelId === player.id;
+                                const isCancelBusy = cancelBusy === player.id;
+                                return (
+                                  <button
+                                    disabled={isCancelBusy}
+                                    onClick={() => handleAuctionBadgeClick(player, auctionListing)}
+                                    style={{
+                                      fontFamily: 'JetBrains Mono, monospace',
+                                      fontSize: 8, fontWeight: 800,
+                                      letterSpacing: '0.1em',
+                                      textTransform: 'uppercase',
+                                      padding: '3px 6px',
+                                      border: isConfirming ? '1px solid rgba(239,68,68,0.6)' : '1px solid rgba(240,180,0,0.4)',
+                                      color: isConfirming ? 'var(--danger)' : 'var(--gold)',
+                                      background: isConfirming ? 'rgba(239,68,68,0.12)' : 'rgba(240,180,0,0.1)',
+                                      whiteSpace: 'nowrap',
+                                      cursor: 'pointer',
+                                      opacity: isCancelBusy ? 0.5 : 1,
+                                    }}
+                                  >
+                                    {isCancelBusy ? '…' : isConfirming ? 'CANCEL?' : 'ON AUCTION'}
+                                  </button>
+                                );
+                              })() : (
                                 <button
                                   disabled={auctionBusy === player.id}
                                   onClick={async () => {
