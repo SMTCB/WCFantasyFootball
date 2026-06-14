@@ -1,12 +1,29 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-06-13 (My Squad captain points display fix — PR #530)  
+**Last Updated**: 2026-06-14 (PlayerStatsDashboard double-render + Market STATS link + Owned By cleanup — PR #533)  
 **E2E Test Suite**: `platform.spec.js` (36 tests × 2 browsers) passing in CI ✅  
 **Full Playbook Run**: `E2E_TEST_PLAYBOOK.md` v2.0 — all flows confirmed  
 **🟢 LAUNCH READY**: No critical (P0/P1) bugs open. All game mechanics functional. WC kick-off 2026-06-11.  
 **Live App**: https://wc-fantasy-football.vercel.app  
 **WC Kick-off**: 2026-06-11 19:00 UTC (Mexico vs South Africa)  
 **Supabase PostgREST max_rows**: 10,000 (raised from default 1,000 — 2026-06-08)
+
+---
+
+## ✅ PlayerStatsDashboard double-render + Market STATS link + Owned By cleanup (2026-06-14) — PR #533
+
+**Reported**: 4 issues after PR #532 (PlayerStatsDashboard feature) went live:
+1. On desktop, the full-stats dashboard rendered BOTH the desktop and mobile layouts simultaneously (overlapping/duplicated panels).
+2. The "STATS" button was missing from the MarketScreen player list (mini-stats panel had no link to the full dashboard).
+3. The mini player-stats panel (▲/▼ in player list) still used the pre-redesign layout, not the `docs/brand/PLAYER DESIGN/` tokens.
+4. The "OWNED BY" field in the SquadScreen player action sheet (sub-in/out/sell) was hardcoded — flagged as unacceptable.
+
+**Fixes**:
+- `PlayerStatsDashboard.jsx` — mobile variant's wrapper was `className="lg:hidden"` with `display: 'flex'` set via inline `style`, which overrode `lg:hidden`'s `display:none` on desktop and caused both layouts to render. Moved `display:flex` into `className` (`flex lg:hidden`), mirroring the working desktop variant's `hidden lg:flex` pattern. Desktop layout untouched.
+- `PlayerStatsPanel.jsx` — `ptColor()` rewritten to use design tokens (`--mute`/`--danger`/`--gold`/`--positive`) per `docs/brand/PLAYER DESIGN/`; season-totals row redesigned as a flex row with a new `onViewStats` "STATS ↗" button (cyan outline, `var(--cyan)`).
+- `MarketScreen.jsx` — wired `PlayerStatsPanel`'s new `onViewStats` to open `PlayerStatsDashboard` for the selected player; added `useLeagueOwnership(activeLeague)` for the dashboard's `ownershipPct` prop.
+- `SquadScreen.jsx` — removed the hardcoded "OWNED BY" column from the player action sheet's FORM/NEXT FIXTURE/OWNED BY strip (now 2-column FORM | NEXT FIXTURE). `ownershipMap` retained for `PlayerStatsDashboard`'s ownership display elsewhere.
+- `npm run lint` (0 errors) and `npm run build` clean. Manual live-preview verification of issues #1–#3 was blocked by the test account having zero league memberships (pre-existing data-state issue, not a regression) — fixes were verified via code review against the working desktop pattern instead.
 
 ---
 
