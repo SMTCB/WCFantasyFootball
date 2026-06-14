@@ -1,13 +1,6 @@
 // FORZAKIT message icons — see docs/brand/MESSAGES
 // 14x14 viewBox, stroke-based, square line caps per spec.
 
-export const MESSAGE_LABELS = {
-  success: 'SUCCESS',
-  warning: 'WARNING',
-  error: 'ERROR',
-  info: 'INFO',
-};
-
 function IconSuccess(props) {
   return (
     <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="square" strokeLinejoin="miter" {...props}>

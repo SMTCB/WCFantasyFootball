@@ -1,6 +1,7 @@
 import { createPortal } from 'react-dom';
 import { useState } from 'react';
-import { MessageIcon, MESSAGE_LABELS } from './icons';
+import { MessageIcon } from './icons';
+import { MESSAGE_LABELS } from './labels';
 
 // FORZAKIT Mobile Action Sheet — see docs/brand/MESSAGES
 // Interrupting decision on mobile. Replaces System Banner on small screens

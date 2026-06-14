@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import { ToastContext } from '../lib/toastContext';
-import { MESSAGE_LABELS } from './messages/icons';
+import { MESSAGE_LABELS } from './messages/labels';
 
 function ToastItem({ toast, onDismiss }) {
   const [isRetrying, setIsRetrying] = useState(false);

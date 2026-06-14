@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { MessageIcon, MESSAGE_LABELS } from './icons';
+import { MessageIcon } from './icons';
+import { MESSAGE_LABELS } from './labels';
 
 // FORZAKIT Inline Banner — see docs/brand/MESSAGES
 // Direct response to a user action, or a decision the user must make.
