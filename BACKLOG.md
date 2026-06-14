@@ -1,12 +1,26 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-06-14 (PlayerStatsDashboard rounding indicator + chart values + mobile budget fix — PR #536)  
+**Last Updated**: 2026-06-14 (Squad screen: cancel auction listing inline — PR #539)  
 **E2E Test Suite**: `platform.spec.js` (36 tests × 2 browsers) passing in CI ✅  
 **Full Playbook Run**: `E2E_TEST_PLAYBOOK.md` v2.0 — all flows confirmed  
 **🟢 LAUNCH READY**: No critical (P0/P1) bugs open. All game mechanics functional. WC kick-off 2026-06-11.  
 **Live App**: https://wc-fantasy-football.vercel.app  
 **WC Kick-off**: 2026-06-11 19:00 UTC (Mexico vs South Africa)  
 **Supabase PostgREST max_rows**: 10,000 (raised from default 1,000 — 2026-06-08)
+
+---
+
+## ✅ Squad screen: cancel auction listing inline (2026-06-14) — PR #539
+
+**Requested**: When a player is listed for auction from the Squad screen, the "ON AUCTION" badge gave no way to undo it — the user had to go to the TRADING tab to cancel.
+
+- `SquadScreen.jsx` (desktop list view + mobile pitch/list view) — the gold "ON AUCTION" badge is now a button:
+  - **No bid yet** (`highest_bidder_id === null`): tap → badge turns red "CANCEL?" for 4s (two-tap confirm, same pattern as `AuctionCard.jsx`) → tap again → calls the existing `cancelListing` from `useAuctions`, toast "Listing cancelled."
+  - **Bid already placed**: tap shows an info toast — "A bid has already been placed — this listing can no longer be cancelled here. Go to the Trading tab to Sell Now." — badge state unchanged.
+- TRADING tab unchanged; this is an additional shortcut, not a replacement.
+- Pure UI change reading existing `auction_listings` rows — works for pre-existing open listings, no migration needed.
+- `npm run lint` (0 errors, pre-existing warnings only); dev server builds/runs cleanly. Full interactive verification of the cancel flow blocked by the demo account having no league/squad/active auction — recommend a quick manual check with a real no-bid listing.
+- **Note**: `docs/architecture/AUCTION_SYSTEM_DESIGN.md` (line 25) states the seller can cancel "at any time (including after bids are placed)" via the TRADING tab, but `useAuctions.cancelListing` only updates rows where `highest_bidder_id IS NULL` — a bid-placed cancel attempt silently no-ops (no error, listing stays open). This pre-existing doc/code mismatch is unrelated to this PR; flagged separately for investigation.
 
 ---
 
