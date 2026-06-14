@@ -19,12 +19,12 @@ export default function SelectLeaguePicker({ leagues, onSelect, eyebrow }) {
             Select a League
           </div>
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 140px 100px 90px 100px', gap: 0, padding: '10px 40px', borderBottom: '1px solid var(--rule)' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 140px 100px 90px 100px', gap: 0, padding: '10px 0 10px 40px', borderBottom: '1px solid var(--rule)' }}>
           <span style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.16em', textTransform: 'uppercase' }}>League</span>
           <span style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.16em', textTransform: 'uppercase', textAlign: 'center' }}>Type</span>
           <span style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.16em', textTransform: 'uppercase', textAlign: 'center' }}>Members</span>
-          <span style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.16em', textTransform: 'uppercase', textAlign: 'right' }}>Rank</span>
-          <span style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.16em', textTransform: 'uppercase', textAlign: 'right' }}>Pts</span>
+          <span style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.16em', textTransform: 'uppercase', textAlign: 'right', paddingRight: 16 }}>Rank</span>
+          <span style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.16em', textTransform: 'uppercase', textAlign: 'right', paddingRight: 40 }}>Pts</span>
         </div>
         {leagues.map(l => {
           const tc = TYPE_COLOR[l.type] || 'var(--mute)';
