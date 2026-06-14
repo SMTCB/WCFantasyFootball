@@ -1,17 +1,10 @@
 import { useState, useCallback } from 'react';
 import { ToastContext } from '../lib/toastContext';
-
-const ICONS = { success: '✓', error: '✕', warning: '⚠', info: 'i' };
-const STYLES = {
-  success: { border: 'rgba(24,201,107,0.35)', bg: 'rgba(24,201,107,0.12)', color: '#18c96b' },
-  error:   { border: 'rgba(240,58,58,0.35)',  bg: 'rgba(240,58,58,0.12)',  color: '#f03a3a' },
-  warning: { border: 'rgba(240,180,0,0.35)',  bg: 'rgba(240,180,0,0.12)',  color: '#f0b400' },
-  info:    { border: 'rgba(0,180,216,0.35)',   bg: 'rgba(0,180,216,0.12)',  color: '#00b4d8' },
-};
+import { MESSAGE_LABELS } from './messages/labels';
 
 function ToastItem({ toast, onDismiss }) {
-  const s = STYLES[toast.type] ?? STYLES.info;
   const [isRetrying, setIsRetrying] = useState(false);
+  const type = toast.type ?? 'info';
 
   const handleRetry = async (e) => {
     e.stopPropagation();
@@ -27,48 +20,25 @@ function ToastItem({ toast, onDismiss }) {
   };
 
   return (
-    <div
-      onClick={() => onDismiss(toast.id)}
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: 10,
-        padding: '10px 14px',
-        borderRadius: 4,
-        border: `1px solid ${s.border}`,
-        background: s.bg,
-        backdropFilter: 'blur(12px)',
-        WebkitBackdropFilter: 'blur(12px)',
-        animation: 'toast-in 0.18s ease-out',
-        minWidth: 220,
-        maxWidth: 360,
-        boxShadow: '0 4px 20px rgba(0,0,0,0.5)',
-      }}
-    >
-      <span style={{ fontSize: 12, fontWeight: 900, color: s.color, flexShrink: 0 }}>{ICONS[toast.type]}</span>
-      <span style={{ fontSize: 13, fontWeight: 600, color: '#fff', flex: 1, lineHeight: 1.3 }}>{toast.message}</span>
-      {toast.onRetry && (
-        <button
-          onClick={handleRetry}
-          disabled={isRetrying}
-          style={{
-            padding: '4px 10px',
-            background: s.color,
-            color: '#000',
-            border: 'none',
-            borderRadius: 2,
-            fontSize: 11,
-            fontWeight: 700,
-            cursor: isRetrying ? 'wait' : 'pointer',
-            opacity: isRetrying ? 0.6 : 1,
-            flexShrink: 0,
-            fontFamily: 'Archivo Black, sans-serif',
-            letterSpacing: '0.08em',
-            textTransform: 'uppercase',
-          }}
-        >
-          {isRetrying ? '...' : 'RETRY'}
-        </button>
+    <div className={`fk-toast ${type}`} style={{ width: '100%', maxWidth: 380, animation: 'toast-in 0.18s ease-out' }}>
+      <span className="fk-toast-dot" />
+      <div className="fk-toast-body">
+        <div className="fk-toast-label">{MESSAGE_LABELS[type] ?? MESSAGE_LABELS.info}</div>
+        <div className="fk-toast-title">{toast.message}</div>
+        {toast.sub && <div className="fk-toast-sub">{toast.sub}</div>}
+        {toast.onRetry && (
+          <div className="fk-toast-actions">
+            <button type="button" className="fk-msg-btn" onClick={handleRetry} disabled={isRetrying}>
+              {isRetrying ? '...' : 'RETRY'}
+            </button>
+          </div>
+        )}
+      </div>
+      <button type="button" className="fk-toast-dismiss" onClick={() => onDismiss(toast.id)} aria-label="Dismiss">
+        ✕
+      </button>
+      {!toast.onRetry && (
+        <span className="fk-toast-progress" style={{ animationDuration: `${toast.duration}ms` }} />
       )}
     </div>
   );
@@ -76,10 +46,11 @@ function ToastItem({ toast, onDismiss }) {
 
 function ToastStack({ toasts, onDismiss }) {
   if (!toasts.length) return null;
+  const visible = toasts.slice(-3);
   return (
-    <div style={{ position: 'fixed', bottom: 'calc(80px + env(safe-area-inset-bottom))', left: 0, right: 0, zIndex: 9999, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, pointerEvents: 'none' }}>
-      {toasts.map(t => (
-        <div key={t.id} style={{ pointerEvents: 'auto' }}>
+    <div style={{ position: 'fixed', bottom: 'calc(80px + env(safe-area-inset-bottom))', left: 0, right: 0, zIndex: 9999, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, pointerEvents: 'none', padding: '0 16px' }}>
+      {visible.map(t => (
+        <div key={t.id} style={{ pointerEvents: 'auto', width: '100%', maxWidth: 380 }}>
           <ToastItem toast={t} onDismiss={onDismiss} />
         </div>
       ))}
@@ -90,9 +61,9 @@ function ToastStack({ toasts, onDismiss }) {
 export function ToastProvider({ children }) {
   const [toasts, setToasts] = useState([]);
 
-  const show = useCallback((message, type = 'info', duration = 3500, onRetry = null) => {
+  const show = useCallback((message, type = 'info', duration = 3500, onRetry = null, sub = null) => {
     const id = Date.now() + Math.random();
-    setToasts(prev => [...prev, { id, message, type, onRetry }]);
+    setToasts(prev => [...prev, { id, message, type, onRetry, sub, duration }]);
     if (!onRetry) {
       setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), duration);
     }
