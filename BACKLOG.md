@@ -1,12 +1,26 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-06-14 (Squad screen: cancel auction listing inline — PR #539)  
+**Last Updated**: 2026-06-15 (League selection screens redesign — PR #541)  
 **E2E Test Suite**: `platform.spec.js` (36 tests × 2 browsers) passing in CI ✅  
 **Full Playbook Run**: `E2E_TEST_PLAYBOOK.md` v2.0 — all flows confirmed  
 **🟢 LAUNCH READY**: No critical (P0/P1) bugs open. All game mechanics functional. WC kick-off 2026-06-11.  
 **Live App**: https://wc-fantasy-football.vercel.app  
 **WC Kick-off**: 2026-06-11 19:00 UTC (Mexico vs South Africa)  
 **Supabase PostgREST max_rows**: 10,000 (raised from default 1,000 — 2026-06-08)
+
+---
+
+## ✅ League selection screens redesign (2026-06-15) — PR #541
+
+**Requested**: Redesign the "Select a League" pickers (Squad/Market) and the "My Leagues" list (League screen) using the FORZAKIT visual language from `docs/brand/LEAGUE SELECTION SCREEN/`, for both mobile and desktop, without touching the sidebar nav.
+
+- New `src/components/league/LeagueBadges.jsx` — shared `TypeChip` (H2H/CLASSIC/DRAFT pill) and `RankBadge` (medal-colored rank square) components.
+- New `src/components/league/LeagueBadgeHelpers.js` — `TYPE_COLOR` map and `deriveLeagueType(lg)` helper (split from `LeagueBadges.jsx` to satisfy `react-refresh/only-export-components`).
+- New `src/components/league/SelectLeaguePicker.jsx` — reusable "Select a League" picker (desktop table + mobile cards) showing rank, type, members, and total points. Used by both `SquadScreen.jsx` and `MarketScreen.jsx` when the user has leagues but none active.
+- `LeagueScreen.jsx` "My Leagues" view rewritten with a desktop/mobile split (previously one layout for all viewports) — desktop table with RANK/LEAGUE/TYPE/TOTAL PTS columns, mobile card list with `RankBadge` + `TypeChip`.
+- "GW PTS" and "Trend" columns from the design mockup were intentionally omitted — no per-GW historical data source available for these screens.
+- `npm run lint` (0 errors, 79 pre-existing warnings) and `npm run build` clean — verified no Rolldown TDZ issues from the new shared imports.
+- Verified desktop (≥1024px) and mobile (375px) layouts via a temporary mock-data preview route (removed before merge) — badges, rank medals, member counts, and points render correctly in both pickers and the My Leagues view. No local test account has 2+ leagues to exercise the live picker end-to-end — recommend a quick manual check once a multi-league pilot account is available.
 
 ---
 
