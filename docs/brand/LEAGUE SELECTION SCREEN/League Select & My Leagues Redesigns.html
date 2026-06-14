@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>FORZAKIT — League Select & My Leagues Redesigns</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Archivo:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --paper:#F2EEE5;
+  --ink:#080A0E;
+  --ink-2:#0F1218;
+  --ink-3:#161B25;
+  --rule:#1E2530;
+  --mute:#8B95A1;
+  --cyan:#00B4D8;
+  --gold:#E0A800;
+  --positive:#22C55E;
+  --warn:#F59E0B;
+  --danger:#EF4444;
+  --purple:#A855F7;
+}
+html,body{background:#06070A;color:var(--paper);font-family:'Archivo',sans-serif;min-height:100vh;}
+.display{font-family:'Archivo Black',sans-serif;font-weight:900;letter-spacing:-0.02em;line-height:0.9;text-transform:uppercase}
+.mono{font-family:'JetBrains Mono',monospace;text-transform:uppercase;letter-spacing:.14em}
+.eyebrow{font-family:'JetBrains Mono',monospace;letter-spacing:.22em;text-transform:uppercase;color:var(--mute);font-weight:500;font-size:11px}
+button{cursor:pointer;border:none;background:none;color:inherit;font:inherit}
+</style>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script type="text/babel" src="design-canvas.jsx"></script>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel" data-presets="react">
+
+// ─── DATA ───────────────────────────────────────────────────────────────────
+const LEAGUES = [
+  { id:1, name:'TEST_2_H2H_DRAFT',       type:'H2H',     format:'DRAFT',   rank:3,  members:8,  pts:9,   gwPts:4,  trend:+1 },
+  { id:2, name:'Draft Mundial 26',        type:'H2H',     format:'DRAFT',   rank:6,  members:10, pts:8,   gwPts:2,  trend:-2 },
+  { id:3, name:'TEXT_WC_CONTROL_CLASSIC', type:'CLASSIC', format:'CLASSIC', rank:1,  members:12, pts:30,  gwPts:8,  trend:0  },
+  { id:4, name:"Munaial '26",             type:'CLASSIC', format:'CLASSIC', rank:3,  members:9,  pts:14,  gwPts:5,  trend:+3 },
+  { id:5, name:'TEST_WC_CONTROL_LEAGUE',  type:'H2H',     format:'CLASSIC', rank:3,  members:11, pts:10,  gwPts:3,  trend:0  },
+  { id:6, name:'Mundial do Eder',         type:'CLASSIC', format:'DRAFT',   rank:5,  members:14, pts:17,  gwPts:6,  trend:+2 },
+];
+
+const TYPE_COLOR = { H2H:'#00B4D8', CLASSIC:'#E0A800', DRAFT:'#A855F7' };
+
+// ─── SIDE NAV (desktop shell) ────────────────────────────────────────────────
+function SideNav({active='squad'}){
+  const items=[
+    {id:'scores',label:'SCORES',dot:'cyan'},
+    {id:'squad',label:'SQUAD'},
+    {id:'league',label:'LEAGUE'},
+    {id:'live',label:'LIVE',live:true},
+    {id:'market',label:'MARKET'},
+    {id:'recap',label:'RECAP'},
+  ];
+  return (
+    <nav style={{width:176,flexShrink:0,background:'#0A0C10',borderRight:'1px solid var(--rule)',display:'flex',flexDirection:'column',height:'100%'}}>
+      <div style={{padding:'18px 20px 14px',borderBottom:'1px solid var(--rule)'}}>
+        <div style={{fontFamily:'Archivo Black',fontSize:16,letterSpacing:'-0.01em',lineHeight:1}}>
+          FORZA<span style={{color:'var(--cyan)'}}> / </span>
+          <span style={{fontSize:10,fontFamily:'JetBrains Mono',color:'var(--mute)',letterSpacing:'.12em',fontWeight:400,display:'block',marginTop:3}}>FANTASY<br/>LEAGUE</span>
+        </div>
+        <div className="mono" style={{fontSize:10,color:'var(--mute)',marginTop:10,letterSpacing:'.16em'}}>S87</div>
+      </div>
+      <div style={{flex:1,padding:'16px 0'}}>
+        {items.map(it=>(
+          <div key={it.id} style={{
+            display:'flex',alignItems:'center',gap:10,
+            padding:'10px 20px',cursor:'pointer',
+            background:it.id===active?'rgba(0,180,216,0.08)':'transparent',
+            borderLeft:it.id===active?'2px solid var(--cyan)':'2px solid transparent',
+          }}>
+            <span className="mono" style={{fontSize:11,color:it.id===active?'var(--cyan)':'var(--mute)',letterSpacing:'.18em'}}>{it.label}</span>
+            {it.live&&<span style={{width:6,height:6,borderRadius:'50%',background:'var(--danger)',marginLeft:'auto'}}/>}
+          </div>
+        ))}
+      </div>
+      <div style={{padding:'16px 20px',borderTop:'1px solid var(--rule)'}}>
+        <div className="mono" style={{fontSize:9,color:'var(--mute)'}}>© SETTINGS</div>
+        <div className="mono" style={{fontSize:9,color:'#3a4050',marginTop:4}}>ALPHA V0.1</div>
+      </div>
+    </nav>
+  );
+}
+
+// ─── SIDE NAV LOCKED (proposed artboards only — sidebar unchanged) ────────────
+function SideNavLocked({active='squad'}){
+  return (
+    <div style={{position:'relative',flexShrink:0}}>
+      <SideNav active={active}/>
+      <div style={{
+        position:'absolute',inset:0,
+        background:'rgba(6,7,10,0.58)',
+        pointerEvents:'none',
+        display:'flex',flexDirection:'column',
+        alignItems:'center',justifyContent:'center',
+        gap:8,
+      }}>
+        <div style={{
+          border:'1px solid rgba(139,149,161,0.4)',
+          padding:'6px 14px',
+          fontFamily:'JetBrains Mono',fontSize:9,letterSpacing:'.22em',
+          color:'#8B95A1',background:'rgba(6,7,10,0.75)',
+          textTransform:'uppercase',
+        }}>UNCHANGED</div>
+        <div style={{
+          fontFamily:'JetBrains Mono',fontSize:8,letterSpacing:'.14em',
+          color:'rgba(139,149,161,0.5)',textTransform:'uppercase',textAlign:'center',
+          lineHeight:1.7,padding:'0 14px',
+        }}>Sidebar remains<br/>as-is</div>
+      </div>
+    </div>
+  );
+}
+
+// ─── LEAGUE TYPE CHIP ────────────────────────────────────────────────────────
+function TypeChip({type, format}){
+  const c = TYPE_COLOR[type] || '#8B95A1';
+  return (
+    <span style={{
+      display:'inline-flex',alignItems:'center',gap:4,
+      padding:'2px 7px',
+      border:`1px solid ${c}44`,
+      background:`${c}12`,
+      color:c,
+      fontFamily:'JetBrains Mono',fontSize:9,letterSpacing:'.16em',fontWeight:600,
+    }}>{type}{format!==type&&` · ${format}`}</span>
+  );
+}
+
+// ─── RANK BADGE ──────────────────────────────────────────────────────────────
+function RankBadge({rank, size='sm'}){
+  const medal = rank===1?'var(--gold)':rank===2?'#C0C0C0':rank===3?'#CD7F32':'var(--mute)';
+  const big = size==='lg';
+  return (
+    <div style={{
+      display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',
+      width:big?40:32,height:big?40:32,
+      border:`1.5px solid ${medal}55`,
+      background:`${medal}0E`,
+      flexShrink:0,
+    }}>
+      <span style={{fontFamily:'Archivo Black',fontSize:big?16:13,color:medal,lineHeight:1}}>#{rank}</span>
+    </div>
+  );
+}
+
+// ─── TREND ────────────────────────────────────────────────────────────────────
+function Trend({v}){
+  if(v===0) return <span style={{fontFamily:'JetBrains Mono',fontSize:9,color:'var(--mute)'}}>—</span>;
+  const up=v>0;
+  return <span style={{fontFamily:'JetBrains Mono',fontSize:9,color:up?'var(--positive)':'var(--danger)'}}>{up?'↑':'↓'}{Math.abs(v)}</span>;
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// COMPONENT A — "SELECT A LEAGUE" DESKTOP (Current / Proposed)
+// ══════════════════════════════════════════════════════════════════════════════
+
+// CURRENT — reproduced faithfully
+function SelectLeagueCurrentDesktop(){
+  return (
+    <div style={{display:'flex',width:'100%',height:'100%',background:'var(--ink)',color:'var(--paper)',fontFamily:'Archivo,sans-serif'}}>
+      <SideNav active="squad"/>
+      <main style={{flex:1,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:8}}>
+        <div className="eyebrow" style={{marginBottom:16,letterSpacing:'.28em'}}>SELECT A LEAGUE</div>
+        {LEAGUES.map(l=>(
+          <div key={l.id} style={{
+            width:320,padding:'16px 20px',background:'#1C2028',border:'1px solid #2a3040',
+            cursor:'pointer',marginBottom:4,
+            fontFamily:'Archivo',fontWeight:700,fontSize:15,
+          }}>{l.name}</div>
+        ))}
+      </main>
+    </div>
+  );
+}
+
+// PROPOSED — richer rows, left-aligned, more data
+function SelectLeagueProposedDesktop(){
+  const [hov,setHov]=React.useState(null);
+  return (
+    <div style={{display:'flex',width:'100%',height:'100%',background:'var(--ink)',color:'var(--paper)',fontFamily:'Archivo,sans-serif'}}>
+      <SideNavLocked active="squad"/>
+      <main style={{flex:1,display:'flex',flexDirection:'column',minWidth:0}}>
+        {/* Header */}
+        <div style={{padding:'28px 40px 20px',borderBottom:'1px solid var(--rule)'}}>
+          <div className="eyebrow" style={{marginBottom:6}}>MY SQUAD · S87</div>
+          <div className="display" style={{fontSize:30}}>Select a League</div>
+        </div>
+        {/* Column headers */}
+        <div style={{display:'grid',gridTemplateColumns:'1fr 120px 80px 80px 80px',gap:0,padding:'10px 40px',borderBottom:'1px solid var(--rule)'}}>
+          <span className="mono" style={{fontSize:9,color:'var(--mute)'}}>LEAGUE</span>
+          <span className="mono" style={{fontSize:9,color:'var(--mute)',textAlign:'center'}}>TYPE</span>
+          <span className="mono" style={{fontSize:9,color:'var(--mute)',textAlign:'center'}}>MEMBERS</span>
+          <span className="mono" style={{fontSize:9,color:'var(--mute)',textAlign:'right'}}>RANK</span>
+          <span className="mono" style={{fontSize:9,color:'var(--mute)',textAlign:'right'}}>PTS</span>
+        </div>
+        {/* Rows */}
+        <div style={{flex:1,overflow:'auto'}}>
+          {LEAGUES.map(l=>{
+            const isHov=hov===l.id;
+            const tc = TYPE_COLOR[l.type]||'var(--mute)';
+            return (
+              <div key={l.id}
+                onMouseEnter={()=>setHov(l.id)}
+                onMouseLeave={()=>setHov(null)}
+                style={{
+                  display:'grid',gridTemplateColumns:'1fr 120px 80px 80px 80px',gap:0,
+                  padding:'0 0 0 40px',
+                  borderBottom:'1px solid var(--rule)',
+                  borderLeft:`3px solid ${isHov?tc:'transparent'}`,
+                  background:isHov?'rgba(255,255,255,0.025)':'transparent',
+                  cursor:'pointer',alignItems:'center',transition:'all .12s',
+                }}>
+                <div style={{padding:'18px 16px 18px 0',display:'flex',flexDirection:'column',gap:4,minWidth:0}}>
+                  <div style={{fontFamily:'Archivo Black',fontSize:15,letterSpacing:'-0.01em',
+                    color:isHov?'var(--paper)':'var(--paper)',
+                    whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{l.name}</div>
+                  <div style={{display:'flex',gap:8,alignItems:'center'}}>
+                    <span className="mono" style={{fontSize:9,color:'var(--mute)'}}>GW28</span>
+                    <Trend v={l.trend}/>
+                  </div>
+                </div>
+                <div style={{padding:'18px 0',display:'flex',justifyContent:'center'}}>
+                  <TypeChip type={l.type} format={l.format}/>
+                </div>
+                <div style={{padding:'18px 0',textAlign:'center'}}>
+                  <span className="mono" style={{fontSize:12,color:'var(--mute)'}}>{l.members}</span>
+                </div>
+                <div style={{padding:'18px 0',textAlign:'right',paddingRight:16}}>
+                  <RankBadge rank={l.rank}/>
+                </div>
+                <div style={{padding:'18px 40px 18px 0',textAlign:'right'}}>
+                  <div style={{fontFamily:'Archivo Black',fontSize:18,color:'var(--positive)'}}>{l.pts}</div>
+                  <div className="mono" style={{fontSize:9,color:'var(--mute)'}}>PTS</div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </main>
+    </div>
+  );
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// COMPONENT B — "SELECT A LEAGUE" MOBILE (Current / Proposed)
+// ══════════════════════════════════════════════════════════════════════════════
+
+function MobileShell({children, active='SQUAD'}){
+  const tabs=['SCORES','SQUAD','LEAGUE','LIVE','MARKET'];
+  return (
+    <div style={{width:'100%',height:'100%',background:'var(--ink)',display:'flex',flexDirection:'column',fontFamily:'Archivo,sans-serif',color:'var(--paper)'}}>
+      {/* status bar */}
+      <div style={{height:32,display:'flex',justifyContent:'space-between',alignItems:'center',padding:'0 20px',fontFamily:'JetBrains Mono',fontSize:11,fontWeight:600}}>
+        <span>9:41</span><span>●●● ▮</span>
+      </div>
+      {/* wordmark */}
+      <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'6px 18px 12px'}}>
+        <div style={{fontFamily:'Archivo Black',fontSize:18,letterSpacing:'-0.01em'}}>
+          FORZA<span style={{color:'var(--cyan)'}}> / </span>
+          <span style={{fontSize:8,fontFamily:'JetBrains Mono',color:'var(--mute)',letterSpacing:'.12em'}}>FANTASY LEAGUE</span>
+        </div>
+        <span className="mono" style={{fontSize:9,color:'var(--positive)'}}>● LIVE</span>
+      </div>
+      {/* tab strip */}
+      <div style={{display:'flex',gap:0,padding:'0 18px',borderBottom:'1px solid var(--rule)',overflowX:'auto'}}>
+        {tabs.map(t=>(
+          <div key={t} className="mono" style={{
+            fontSize:10,letterSpacing:'.16em',padding:'10px 12px 10px 0',
+            color:t===active?'var(--paper)':'var(--mute)',
+            position:'relative',flexShrink:0,
+          }}>
+            {t}
+            {t==='LIVE'&&<span style={{display:'inline-block',width:4,height:4,borderRadius:'50%',background:'var(--danger)',marginLeft:4,verticalAlign:'middle'}}/>}
+            {t===active&&<span style={{position:'absolute',left:0,right:12,bottom:-1,height:2,background:'var(--cyan)'}}/>}
+          </div>
+        ))}
+      </div>
+      {children}
+    </div>
+  );
+}
+
+function SelectLeagueCurrentMobile(){
+  return (
+    <MobileShell active="SQUAD">
+      <div style={{flex:1,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:6,padding:'0 20px'}}>
+        <div className="eyebrow" style={{marginBottom:12,letterSpacing:'.28em'}}>SELECT A LEAGUE</div>
+        {LEAGUES.map(l=>(
+          <div key={l.id} style={{
+            width:'100%',padding:'14px 16px',background:'#1C2028',
+            border:'1px solid #2a3040',cursor:'pointer',
+            fontFamily:'Archivo',fontWeight:700,fontSize:14,marginBottom:2,
+          }}>{l.name}</div>
+        ))}
+      </div>
+    </MobileShell>
+  );
+}
+
+function SelectLeagueProposedMobile(){
+  const [hov,setHov]=React.useState(null);
+  return (
+    <MobileShell active="SQUAD">
+      {/* mini header */}
+      <div style={{padding:'16px 18px 12px',borderBottom:'1px solid var(--rule)',display:'flex',justifyContent:'space-between',alignItems:'flex-end'}}>
+        <div>
+          <div className="eyebrow" style={{marginBottom:3}}>MY SQUAD</div>
+          <div className="display" style={{fontSize:22}}>Select a League</div>
+        </div>
+        <div className="mono" style={{fontSize:9,color:'var(--mute)'}}>6 LEAGUES</div>
+      </div>
+      {/* rows */}
+      <div style={{flex:1,overflow:'auto'}}>
+        {LEAGUES.map(l=>{
+          const tc=TYPE_COLOR[l.type]||'var(--mute)';
+          return (
+            <div key={l.id} style={{
+              display:'flex',alignItems:'center',gap:12,
+              padding:'14px 18px',
+              borderBottom:'1px solid var(--rule)',
+              borderLeft:`3px solid ${tc}`,
+              background:'transparent',cursor:'pointer',
+            }}>
+              {/* rank */}
+              <RankBadge rank={l.rank}/>
+              {/* info */}
+              <div style={{flex:1,minWidth:0}}>
+                <div style={{fontFamily:'Archivo Black',fontSize:14,letterSpacing:'-0.01em',
+                  whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{l.name}</div>
+                <div style={{display:'flex',gap:8,alignItems:'center',marginTop:4}}>
+                  <TypeChip type={l.type} format={l.format}/>
+                  <span className="mono" style={{fontSize:9,color:'var(--mute)'}}>{l.members} MEMBERS</span>
+                </div>
+              </div>
+              {/* pts */}
+              <div style={{textAlign:'right',flexShrink:0}}>
+                <div style={{fontFamily:'Archivo Black',fontSize:18,color:'var(--positive)'}}>{l.pts}</div>
+                <div className="mono" style={{fontSize:9,color:'var(--mute)'}}>PTS</div>
+              </div>
+              <span style={{color:'var(--mute)',fontSize:14,flexShrink:0}}>›</span>
+            </div>
+          );
+        })}
+      </div>
+    </MobileShell>
+  );
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// COMPONENT C — MY LEAGUES DESKTOP (Current / Proposed)
+// ══════════════════════════════════════════════════════════════════════════════
+
+function MyLeaguesCurrentDesktop(){
+  return (
+    <div style={{display:'flex',width:'100%',height:'100%',background:'var(--ink)',color:'var(--paper)',fontFamily:'Archivo,sans-serif'}}>
+      <SideNav active="league"/>
+      <main style={{flex:1,display:'flex',flexDirection:'column',minWidth:0}}>
+        {/* header */}
+        <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'20px 32px',borderBottom:'1px solid var(--rule)'}}>
+          <div style={{fontFamily:'Archivo Black',fontSize:18,letterSpacing:'-0.01em'}}>MY LEAGUES</div>
+          <button style={{fontSize:20,color:'var(--paper)',cursor:'pointer',padding:'0 4px'}}>+</button>
+        </div>
+        {/* rows */}
+        {LEAGUES.map(l=>(
+          <div key={l.id} style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'22px 32px',borderBottom:'1px solid var(--rule)'}}>
+            <div>
+              <div style={{fontFamily:'Archivo Black',fontSize:16}}>{l.name.toUpperCase()}</div>
+              <div className="mono" style={{fontSize:10,color:'var(--mute)',marginTop:4}}>RANK #{l.rank}</div>
+            </div>
+            <div style={{fontFamily:'Archivo Black',fontSize:17,color:'var(--positive)'}}>{l.pts} pts</div>
+          </div>
+        ))}
+        {/* invite */}
+        <div style={{margin:'24px 32px',padding:'20px 24px',background:'#0F1218',border:'1px solid var(--rule)'}}>
+          <div className="mono" style={{fontSize:10,color:'var(--cyan)',marginBottom:4}}>HAVE AN INVITE CODE?</div>
+          <div style={{fontSize:14,color:'var(--mute)',marginBottom:14}}>Enter it below to join a friend's league</div>
+          <div style={{display:'flex',gap:0}}>
+            <input placeholder="XXXXXX" style={{flex:1,background:'#1a1f2a',border:'1px solid var(--rule)',color:'var(--paper)',padding:'12px 16px',fontFamily:'JetBrains Mono',fontSize:13,letterSpacing:'.2em',outline:'none'}}/>
+            <button style={{padding:'12px 20px',background:'var(--gold)',color:'var(--ink)',fontFamily:'JetBrains Mono',fontSize:12,letterSpacing:'.14em',fontWeight:700,cursor:'pointer',border:'none'}}>JOIN →</button>
+          </div>
+        </div>
+      </main>
+    </div>
+  );
+}
+
+function MyLeaguesProposedDesktop(){
+  const [invCode,setInvCode]=React.useState('');
+  const [hov,setHov]=React.useState(null);
+  return (
+    <div style={{display:'flex',width:'100%',height:'100%',background:'var(--ink)',color:'var(--paper)',fontFamily:'Archivo,sans-serif'}}>
+      <SideNavLocked active="league"/>
+      <main style={{flex:1,display:'flex',flexDirection:'column',minWidth:0}}>
+        {/* header */}
+        <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-end',padding:'28px 40px 20px',borderBottom:'1px solid var(--rule)'}}>
+          <div>
+            <div className="eyebrow" style={{marginBottom:6}}>SEASON 87</div>
+            <div className="display" style={{fontSize:30}}>My Leagues</div>
+          </div>
+          <div style={{display:'flex',gap:12,alignItems:'center'}}>
+            <div className="mono" style={{fontSize:10,color:'var(--mute)'}}>{LEAGUES.length} LEAGUES</div>
+            <button style={{
+              display:'flex',alignItems:'center',gap:8,
+              padding:'9px 18px',border:'1px solid var(--cyan)',color:'var(--cyan)',
+              background:'transparent',fontFamily:'JetBrains Mono',fontSize:11,letterSpacing:'.16em',
+              cursor:'pointer',
+            }}>+ CREATE LEAGUE</button>
+          </div>
+        </div>
+        {/* column headers */}
+        <div style={{display:'grid',gridTemplateColumns:'48px 1fr 120px 80px 80px 120px',gap:0,padding:'10px 40px',borderBottom:'1px solid var(--rule)'}}>
+          <span className="mono" style={{fontSize:9,color:'var(--mute)'}}>RANK</span>
+          <span className="mono" style={{fontSize:9,color:'var(--mute)'}}>LEAGUE</span>
+          <span className="mono" style={{fontSize:9,color:'var(--mute)',textAlign:'center'}}>TYPE</span>
+          <span className="mono" style={{fontSize:9,color:'var(--mute)',textAlign:'center'}}>GW PTS</span>
+          <span className="mono" style={{fontSize:9,color:'var(--mute)',textAlign:'center'}}>TREND</span>
+          <span className="mono" style={{fontSize:9,color:'var(--mute)',textAlign:'right'}}>TOTAL PTS</span>
+        </div>
+        {/* league rows */}
+        {LEAGUES.map(l=>{
+          const isHov=hov===l.id;
+          const tc=TYPE_COLOR[l.type]||'var(--mute)';
+          const medal=l.rank===1?'var(--gold)':l.rank===2?'#C0C0C0':l.rank===3?'#CD7F32':'var(--mute)';
+          return (
+            <div key={l.id}
+              onMouseEnter={()=>setHov(l.id)}
+              onMouseLeave={()=>setHov(null)}
+              style={{
+                display:'grid',gridTemplateColumns:'48px 1fr 120px 80px 80px 120px',gap:0,
+                padding:'0 40px',
+                borderBottom:'1px solid var(--rule)',
+                borderLeft:`3px solid ${isHov?tc:'transparent'}`,
+                background:isHov?'rgba(255,255,255,0.025)':'transparent',
+                cursor:'pointer',alignItems:'center',transition:'all .1s',
+              }}>
+              {/* rank number */}
+              <div style={{padding:'20px 0',display:'flex',alignItems:'center'}}>
+                <span style={{fontFamily:'Archivo Black',fontSize:22,color:medal,lineHeight:1}}>#{l.rank}</span>
+              </div>
+              {/* name + meta */}
+              <div style={{padding:'20px 16px 20px 12px',minWidth:0}}>
+                <div style={{fontFamily:'Archivo Black',fontSize:15,letterSpacing:'-0.01em',
+                  whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{l.name}</div>
+                <div className="mono" style={{fontSize:9,color:'var(--mute)',marginTop:4}}>{l.members} MEMBERS · GW28</div>
+              </div>
+              {/* type */}
+              <div style={{display:'flex',justifyContent:'center'}}><TypeChip type={l.type} format={l.format}/></div>
+              {/* gw pts */}
+              <div style={{textAlign:'center'}}>
+                <span style={{fontFamily:'Archivo Black',fontSize:16,color:'var(--cyan)'}}>{l.gwPts}</span>
+              </div>
+              {/* trend */}
+              <div style={{textAlign:'center'}}><Trend v={l.trend}/></div>
+              {/* total pts */}
+              <div style={{textAlign:'right',padding:'20px 0'}}>
+                <span style={{fontFamily:'Archivo Black',fontSize:22,color:'var(--positive)'}}>{l.pts}</span>
+                <span className="mono" style={{fontSize:9,color:'var(--mute)',marginLeft:5}}>PTS</span>
+              </div>
+            </div>
+          );
+        })}
+        {/* invite code — inline at bottom */}
+        <div style={{display:'flex',alignItems:'center',gap:24,padding:'20px 40px',borderTop:'1px solid var(--rule)',marginTop:'auto'}}>
+          <div style={{flexShrink:0}}>
+            <div className="mono" style={{fontSize:9,color:'var(--cyan)',marginBottom:3}}>HAVE AN INVITE CODE?</div>
+            <div style={{fontSize:13,color:'var(--mute)'}}>Enter below to join a friend's league</div>
+          </div>
+          <div style={{flex:1,display:'flex',gap:0,maxWidth:440}}>
+            <input
+              value={invCode} onChange={e=>setInvCode(e.target.value)}
+              placeholder="XXXXXX"
+              style={{flex:1,background:'#0F1218',border:'1px solid var(--rule)',borderRight:'none',color:'var(--paper)',padding:'11px 16px',fontFamily:'JetBrains Mono',fontSize:13,letterSpacing:'.28em',outline:'none'}}
+            />
+            <button style={{padding:'11px 20px',background:'var(--gold)',color:'var(--ink)',fontFamily:'JetBrains Mono',fontSize:11,letterSpacing:'.14em',fontWeight:700,cursor:'pointer',border:'1px solid var(--gold)',flexShrink:0}}>JOIN →</button>
+          </div>
+        </div>
+      </main>
+    </div>
+  );
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// COMPONENT D — MY LEAGUES MOBILE (Current / Proposed)
+// ══════════════════════════════════════════════════════════════════════════════
+
+function MyLeaguesCurrentMobile(){
+  return (
+    <MobileShell active="LEAGUE">
+      <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'16px 18px',borderBottom:'1px solid var(--rule)'}}>
+        <div style={{fontFamily:'Archivo Black',fontSize:16}}>MY LEAGUES</div>
+        <button style={{fontSize:20}}>+</button>
+      </div>
+      <div style={{flex:1,overflow:'auto'}}>
+        {LEAGUES.map(l=>(
+          <div key={l.id} style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'18px 18px',borderBottom:'1px solid var(--rule)'}}>
+            <div>
+              <div style={{fontFamily:'Archivo Black',fontSize:13}}>{l.name.toUpperCase()}</div>
+              <div className="mono" style={{fontSize:9,color:'var(--mute)',marginTop:4}}>RANK #{l.rank}</div>
+            </div>
+            <div style={{fontFamily:'Archivo Black',fontSize:15,color:'var(--positive)'}}>{l.pts} pts</div>
+          </div>
+        ))}
+        <div style={{margin:'16px',padding:'16px',background:'#0F1218',border:'1px solid var(--rule)'}}>
+          <div className="mono" style={{fontSize:9,color:'var(--cyan)',marginBottom:3}}>HAVE AN INVITE CODE?</div>
+          <div style={{fontSize:13,color:'var(--mute)',marginBottom:12}}>Enter it below to join a friend's league</div>
+          <div style={{display:'flex',gap:0}}>
+            <input placeholder="XXXXXX" style={{flex:1,background:'#1a1f2a',border:'1px solid var(--rule)',color:'var(--paper)',padding:'10px 12px',fontFamily:'JetBrains Mono',fontSize:12,letterSpacing:'.2em',outline:'none'}}/>
+            <button style={{padding:'10px 14px',background:'var(--gold)',color:'var(--ink)',fontFamily:'JetBrains Mono',fontSize:11,letterSpacing:'.1em',fontWeight:700,border:'none'}}>JOIN →</button>
+          </div>
+        </div>
+      </div>
+    </MobileShell>
+  );
+}
+
+function MyLeaguesProposedMobile(){
+  const [invCode,setInvCode]=React.useState('');
+  return (
+    <MobileShell active="LEAGUE">
+      <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'14px 18px 12px',borderBottom:'1px solid var(--rule)'}}>
+        <div>
+          <div className="eyebrow" style={{marginBottom:3}}>SEASON 87</div>
+          <div className="display" style={{fontSize:22}}>My Leagues</div>
+        </div>
+        <button style={{
+          display:'flex',alignItems:'center',gap:6,
+          padding:'7px 12px',border:'1px solid var(--cyan)',color:'var(--cyan)',
+          background:'transparent',fontFamily:'JetBrains Mono',fontSize:10,letterSpacing:'.14em',
+        }}>+ NEW</button>
+      </div>
+      <div style={{flex:1,overflow:'auto'}}>
+        {LEAGUES.map(l=>{
+          const tc=TYPE_COLOR[l.type]||'var(--mute)';
+          const medal=l.rank===1?'var(--gold)':l.rank===2?'#C0C0C0':l.rank===3?'#CD7F32':'var(--mute)';
+          return (
+            <div key={l.id} style={{
+              display:'flex',alignItems:'center',gap:12,
+              padding:'14px 18px',
+              borderBottom:'1px solid var(--rule)',
+              borderLeft:`3px solid ${tc}`,
+              cursor:'pointer',
+            }}>
+              {/* rank number */}
+              <div style={{width:36,flexShrink:0,textAlign:'center'}}>
+                <div style={{fontFamily:'Archivo Black',fontSize:20,color:medal,lineHeight:1}}>#{l.rank}</div>
+                <div className="mono" style={{fontSize:8,color:'var(--mute)',marginTop:2}}>{l.members}P</div>
+              </div>
+              {/* info */}
+              <div style={{flex:1,minWidth:0}}>
+                <div style={{fontFamily:'Archivo Black',fontSize:13,letterSpacing:'-0.01em',
+                  whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{l.name}</div>
+                <div style={{display:'flex',gap:6,alignItems:'center',marginTop:4}}>
+                  <TypeChip type={l.type} format={l.format}/>
+                  <Trend v={l.trend}/>
+                </div>
+              </div>
+              {/* pts col */}
+              <div style={{textAlign:'right',flexShrink:0}}>
+                <div style={{fontFamily:'Archivo Black',fontSize:20,color:'var(--positive)',lineHeight:1}}>{l.pts}</div>
+                <div className="mono" style={{fontSize:8,color:'var(--mute)',marginTop:2}}>PTS TOTAL</div>
+                <div className="mono" style={{fontSize:8,color:'var(--cyan)',marginTop:1}}>GW {l.gwPts}</div>
+              </div>
+            </div>
+          );
+        })}
+        {/* invite row */}
+        <div style={{padding:'16px 18px',borderTop:'2px solid var(--rule)',marginTop:4}}>
+          <div className="mono" style={{fontSize:9,color:'var(--cyan)',marginBottom:3}}>HAVE AN INVITE CODE?</div>
+          <div style={{fontSize:13,color:'var(--mute)',marginBottom:12}}>Enter below to join a friend's league</div>
+          <div style={{display:'flex',gap:0}}>
+            <input
+              value={invCode} onChange={e=>setInvCode(e.target.value)}
+              placeholder="XXXXXX"
+              style={{flex:1,background:'#0F1218',border:'1px solid var(--rule)',borderRight:'none',color:'var(--paper)',padding:'11px 14px',fontFamily:'JetBrains Mono',fontSize:13,letterSpacing:'.28em',outline:'none'}}
+            />
+            <button style={{padding:'11px 16px',background:'var(--gold)',color:'var(--ink)',fontFamily:'JetBrains Mono',fontSize:11,letterSpacing:'.12em',fontWeight:700,border:'1px solid var(--gold)'}}>JOIN →</button>
+          </div>
+        </div>
+      </div>
+    </MobileShell>
+  );
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// CANVAS
+// ══════════════════════════════════════════════════════════════════════════════
+
+function App(){
+  return (
+    <DesignCanvas
+      title="FORZAKIT · League Select & My Leagues — Redesigns"
+      subtitle="Two components redesigned for desktop + mobile. Left: current · Right: proposed. Sidebar navigation is UNCHANGED — only the main content area is redesigned. Key changes: rank badges, type chips, GW pts column, trend indicator, left accent border, create league CTA."
+    >
+      {/* ── SECTION 1: SELECT A LEAGUE ── */}
+      <DCSection id="select-league" title="Select a League — Squad & Market tabs">
+
+        <DCArtboard id="sl-curr-d" label="CURRENT · Desktop · 1440×780" width={1440} height={780} background="#06070A">
+          <SelectLeagueCurrentDesktop/>
+        </DCArtboard>
+
+        <DCArtboard id="sl-prop-d" label="PROPOSED · Desktop · 1440×780" width={1440} height={780} background="#06070A">
+          <SelectLeagueProposedDesktop/>
+        </DCArtboard>
+
+        <DCArtboard id="sl-curr-m" label="CURRENT · Mobile · 390×780" width={390} height={780} background="#06070A">
+          <SelectLeagueCurrentMobile/>
+        </DCArtboard>
+
+        <DCArtboard id="sl-prop-m" label="PROPOSED · Mobile · 390×780" width={390} height={780} background="#06070A">
+          <SelectLeagueProposedMobile/>
+        </DCArtboard>
+
+      </DCSection>
+
+      {/* ── SECTION 2: MY LEAGUES ── */}
+      <DCSection id="my-leagues" title="My Leagues — League tab">
+
+        <DCArtboard id="ml-curr-d" label="CURRENT · Desktop · 1440×780" width={1440} height={780} background="#06070A">
+          <MyLeaguesCurrentDesktop/>
+        </DCArtboard>
+
+        <DCArtboard id="ml-prop-d" label="PROPOSED · Desktop · 1440×780" width={1440} height={780} background="#06070A">
+          <MyLeaguesProposedDesktop/>
+        </DCArtboard>
+
+        <DCArtboard id="ml-curr-m" label="CURRENT · Mobile · 390×900" width={390} height={900} background="#06070A">
+          <MyLeaguesCurrentMobile/>
+        </DCArtboard>
+
+        <DCArtboard id="ml-prop-m" label="PROPOSED · Mobile · 390×900" width={390} height={900} background="#06070A">
+          <MyLeaguesProposedMobile/>
+        </DCArtboard>
+
+      </DCSection>
+    </DesignCanvas>
+  );
+}
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(<App/>);
+</script>
+</body>
+</html>

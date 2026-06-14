@@ -39,6 +39,8 @@ import { useLeagueOwnership } from '../hooks/useLeagueOwnership';
 import PlayerStatsDashboard from '../components/player/PlayerStatsDashboard';
 import FormStrip from '../components/FormStrip';
 import KnockoutKeepSelector from '../components/KnockoutKeepSelector';
+import SelectLeaguePicker from '../components/league/SelectLeaguePicker';
+import { deriveLeagueType } from '../components/league/LeagueBadgeHelpers';
 
 // â"€â"€ Chip config â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
 const CHIPS = [
@@ -105,9 +107,32 @@ export default function SquadScreen() {
       }
       const { data } = await supabase
         .from('league_members')
-        .select('league_id, leagues(id, name, tournament_id)')
+        .select('league_id, rank, total_points, leagues(id, name, tournament_id, format, h2h_enabled, league_mode)')
         .eq('user_id', user?.id);
-      const list = (data ?? []).map(r => ({ id: r.league_id, name: r.leagues?.name ?? r.league_id, tournament_id: r.leagues?.tournament_id }));
+      const rows = data ?? [];
+      let memberCounts = {};
+      if (rows.length > 0) {
+        const { data: memberRows } = await supabase
+          .from('league_members')
+          .select('league_id')
+          .in('league_id', rows.map(r => r.league_id));
+        memberCounts = (memberRows ?? []).reduce((acc, m) => {
+          acc[m.league_id] = (acc[m.league_id] || 0) + 1;
+          return acc;
+        }, {});
+      }
+      const list = rows.map(r => {
+        const { type, format } = deriveLeagueType(r.leagues ?? {});
+        return {
+          id: r.league_id,
+          name: r.leagues?.name ?? r.league_id,
+          tournament_id: r.leagues?.tournament_id,
+          rank: r.rank,
+          totalPoints: r.total_points,
+          members: memberCounts[r.league_id],
+          type, format,
+        };
+      });
       // Always set leagues list so the selector can be shown.
       // Auto-select only when coming from a leagueId URL param (handled above).
       setLeagues(list);
@@ -954,21 +979,11 @@ export default function SquadScreen() {
   // League picker — shown when user has one or more leagues and none is selected
   if (leagues && leagues.length >= 1 && !activeLeague) {
     return (
-      <div className="min-h-screen bg-bg flex flex-col items-center justify-center px-6 gap-4">
-        <div className="text-[13px] font-black uppercase tracking-widest mb-2" style={{ color: 'var(--mute)', fontFamily: 'Archivo Black, sans-serif' }}>
-          Select a League
-        </div>
-        {leagues.map(l => (
-          <button
-            key={l.id}
-            onClick={() => { setActiveLeague(l.id); if (l.tournament_id) setTournamentId(l.tournament_id); }}
-            className="w-full max-w-sm px-5 py-4 rounded-sm text-left transition-all active:opacity-70"
-            style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'var(--paper)' }}
-          >
-            <div className="text-[14px] font-semibold">{l.name}</div>
-          </button>
-        ))}
-      </div>
+      <SelectLeaguePicker
+        leagues={leagues}
+        eyebrow="MY SQUAD"
+        onSelect={l => { setActiveLeague(l.id); if (l.tournament_id) setTournamentId(l.tournament_id); }}
+      />
     );
   }
 

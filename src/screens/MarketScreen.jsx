@@ -25,6 +25,8 @@ import PlayerStatsPanel from '../components/PlayerStatsPanel';
 import TransferWindowBanner from '../components/TransferWindowBanner';
 import PlayerStatsDashboard from '../components/player/PlayerStatsDashboard';
 import { useLeagueOwnership } from '../hooks/useLeagueOwnership';
+import SelectLeaguePicker from '../components/league/SelectLeaguePicker';
+import { deriveLeagueType } from '../components/league/LeagueBadgeHelpers';
 
 // club cap is fetched dynamically per-round; default 3 until loaded
 
@@ -270,15 +272,40 @@ export default function MarketScreen() {
       // No leagueId in URL — fetch user's leagues
       const { data } = await supabase
         .from('league_members')
-        .select('league_id, leagues(id, name, tournament_id, format)')
+        .select('league_id, rank, total_points, leagues(id, name, tournament_id, format, h2h_enabled, league_mode)')
         .eq('user_id', user?.id);
-      const list = (data ?? []).map(r => ({ id: r.league_id, name: r.leagues?.name ?? r.league_id, tournament_id: r.leagues?.tournament_id, format: r.leagues?.format }));
-      if (list.length === 1) {
-        setActiveLeague(list[0].id);
-        if (list[0].tournament_id) setTournamentId(list[0].tournament_id);
-        if (list[0].format) setLeagueFormat(list[0].format);
+      const rows = data ?? [];
+      if (rows.length === 1) {
+        const r = rows[0];
+        setActiveLeague(r.league_id);
+        if (r.leagues?.tournament_id) setTournamentId(r.leagues.tournament_id);
+        if (r.leagues?.format) setLeagueFormat(r.leagues.format);
         setLeagues([]);
       } else {
+        let memberCounts = {};
+        if (rows.length > 0) {
+          const { data: memberRows } = await supabase
+            .from('league_members')
+            .select('league_id')
+            .in('league_id', rows.map(r => r.league_id));
+          memberCounts = (memberRows ?? []).reduce((acc, m) => {
+            acc[m.league_id] = (acc[m.league_id] || 0) + 1;
+            return acc;
+          }, {});
+        }
+        const list = rows.map(r => {
+          const { type, format } = deriveLeagueType(r.leagues ?? {});
+          return {
+            id: r.league_id,
+            name: r.leagues?.name ?? r.league_id,
+            tournament_id: r.leagues?.tournament_id,
+            rawFormat: r.leagues?.format,
+            rank: r.rank,
+            totalPoints: r.total_points,
+            members: memberCounts[r.league_id],
+            type, format,
+          };
+        });
         setLeagues(list);
       }
     };
@@ -597,26 +624,16 @@ export default function MarketScreen() {
   // League picker — shown when user has multiple leagues and none is selected
   if (leagues && leagues.length > 1 && !activeLeague) {
     return (
-      <div className="min-h-screen bg-bg flex flex-col items-center justify-center px-6 gap-4">
-        <div className="text-[13px] font-black uppercase tracking-widest mb-2" style={{ color: 'var(--mute)', fontFamily: 'Archivo Black, sans-serif' }}>
-          Select a League
-        </div>
-        {leagues.map(l => (
-          <button
-            key={l.id}
-            onClick={() => {
-              setActiveLeague(l.id);
-              if (l.format) setLeagueFormat(l.format);
-              if (l.tournament_id) setTournamentId(l.tournament_id);
-              else resolveLeagueTournament(l.id);
-            }}
-            className="w-full max-w-sm px-5 py-4 rounded-sm text-left transition-all active:opacity-70"
-            style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'var(--paper)' }}
-          >
-            <div className="text-[14px] font-semibold">{l.name}</div>
-          </button>
-        ))}
-      </div>
+      <SelectLeaguePicker
+        leagues={leagues}
+        eyebrow="TRANSFER MARKET"
+        onSelect={l => {
+          setActiveLeague(l.id);
+          if (l.rawFormat) setLeagueFormat(l.rawFormat);
+          if (l.tournament_id) setTournamentId(l.tournament_id);
+          else resolveLeagueTournament(l.id);
+        }}
+      />
     );
   }
 

@@ -30,6 +30,8 @@ import {
   MgrTag, TrendPill, FormDots, Spark, HubSectionLabel,
 } from '../components/league/HubShared';
 import { MONO, DISPLAY } from '../components/league/HubConstants';
+import { TypeChip, RankBadge } from '../components/league/LeagueBadges';
+import { deriveLeagueType, TYPE_COLOR } from '../components/league/LeagueBadgeHelpers';
 import BetsTabHub             from '../components/league/BetsTabHub';
 import LeagueDetailView       from '../components/league/LeagueDetailView';
 import BettingLeaderboardView from '../components/league/BettingLeaderboardView';
@@ -406,7 +408,17 @@ export default function LeagueScreen() {
         setLeagues([]);
         return;
       }
-      setLeagues(data || []);
+
+      const { data: memberRows } = await supabase
+        .from('league_members')
+        .select('league_id')
+        .in('league_id', data.map(r => r.league_id));
+      const memberCounts = (memberRows ?? []).reduce((acc, m) => {
+        acc[m.league_id] = (acc[m.league_id] || 0) + 1;
+        return acc;
+      }, {});
+
+      setLeagues(data.map(r => ({ ...r, member_count: memberCounts[r.league_id] })) || []);
     } catch (err) {
       console.error(err);
     } finally {
@@ -1844,97 +1856,215 @@ export default function LeagueScreen() {
     );
   }
 
+  const inviteForm = (
+    <form onSubmit={handleJoinByCode} style={{ display: 'flex', gap: 0, flex: 1, minWidth: 0 }}>
+      <input
+        type="text"
+        value={joinCode}
+        onChange={e => {
+          const val = e.target.value.toUpperCase();
+          setJoinCode(val);
+          setJoinError(val.trim().length > 0 && val.trim().length < 4 ? 'Codes are 6+ characters' : '');
+        }}
+        placeholder="XXXXXX"
+        maxLength={8}
+        style={{
+          flex:          1,
+          minWidth:      0,
+          padding:       '11px 16px',
+          background:    'var(--ink-2)',
+          border:        `1px solid ${joinError ? 'rgba(240,58,58,0.5)' : 'var(--rule)'}`,
+          borderRight:   'none',
+          color:         'var(--paper)',
+          fontSize:      '13px',
+          fontFamily:    MONO,
+          fontWeight:    700,
+          letterSpacing: '0.2em',
+          textTransform: 'uppercase',
+          outline:       'none',
+        }}
+      />
+      <button
+        type="submit"
+        disabled={joinLoading || joinCode.trim().length < 4}
+        style={{
+          padding:       '11px 20px',
+          background:    'var(--gold)',
+          color:         'var(--ink-2)',
+          fontSize:      '11px',
+          fontFamily:    MONO,
+          fontWeight:    700,
+          letterSpacing: '0.14em',
+          textTransform: 'uppercase',
+          border:        '1px solid var(--gold)',
+          cursor:        joinLoading ? 'wait' : 'pointer',
+          opacity:       (joinLoading || joinCode.trim().length < 4) ? 0.5 : 1,
+          whiteSpace:    'nowrap',
+          flexShrink:    0,
+        }}
+      >
+        {joinLoading ? '…' : 'Join →'}
+      </button>
+    </form>
+  );
+
+  const emptyState = (
+    <div className="p-8 text-center">
+      <div className="fk-display" style={{ fontSize: 24, color: 'var(--gold)', marginBottom: '12px' }}>FFL</div>
+      <div className="text-[13px] font-bold uppercase tracking-wide text-white mb-2">No leagues yet</div>
+      <div className="text-[11px] text-text-secondary mb-6">Create a league or enter a friend's invite code below.</div>
+      <button onClick={() => setView('create')} className="px-6 py-3 bg-cyan text-black text-[11px] font-bold uppercase tracking-wider">
+        Create a League
+      </button>
+    </div>
+  );
+
   return (
-    <div className="pb-24 min-h-screen bg-bg">
-      {/* Header */}
-      <div className="p-4 border-b border-border bg-surface flex justify-between items-center sticky top-0 z-10">
-        <h1 className="text-[15px] font-bold uppercase tracking-wide">My Leagues</h1>
-        <button onClick={() => setView('create')} className="text-white text-2xl active:scale-95" title="Create league">+</button>
+    <div className="min-h-screen bg-bg" style={{ color: 'var(--paper)' }}>
+      {/* Desktop */}
+      <div className="hidden lg:flex flex-col">
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', padding: '28px 40px 20px', borderBottom: '1px solid var(--rule)' }}>
+          <div>
+            <div className="fk-eyebrow" style={{ marginBottom: 6 }}>Season</div>
+            <div style={{ fontFamily: DISPLAY, fontWeight: 900, fontSize: 30, textTransform: 'uppercase', letterSpacing: '-0.02em' }}>My Leagues</div>
+          </div>
+          <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+            <div style={{ fontFamily: MONO, fontSize: 10, color: 'var(--mute)', letterSpacing: '.16em', textTransform: 'uppercase' }}>
+              {leagues.length} {leagues.length === 1 ? 'LEAGUE' : 'LEAGUES'}
+            </div>
+            <button
+              onClick={() => setView('create')}
+              style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '9px 18px', border: '1px solid var(--cyan)', color: 'var(--cyan)', background: 'transparent', fontFamily: MONO, fontSize: 11, letterSpacing: '.16em', cursor: 'pointer', textTransform: 'uppercase' }}
+            >
+              + Create League
+            </button>
+          </div>
+        </div>
+
+        {loading ? (
+          <div className="p-8 text-center text-xs font-bold uppercase tracking-widest opacity-50">Syncing...</div>
+        ) : leagues.length === 0 ? emptyState : (
+          <>
+            <div style={{ display: 'grid', gridTemplateColumns: '64px 1fr 140px 140px', gap: 0, padding: '10px 40px', borderBottom: '1px solid var(--rule)' }}>
+              <span style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.16em', textTransform: 'uppercase' }}>Rank</span>
+              <span style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.16em', textTransform: 'uppercase' }}>League</span>
+              <span style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.16em', textTransform: 'uppercase', textAlign: 'center' }}>Type</span>
+              <span style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.16em', textTransform: 'uppercase', textAlign: 'right' }}>Total Pts</span>
+            </div>
+            {leagues.map(l => {
+              const { type, format } = deriveLeagueType(l.leagues ?? {});
+              const medal = l.rank === 1 ? 'var(--gold)' : l.rank === 2 ? '#C0C0C0' : l.rank === 3 ? '#CD7F32' : 'var(--mute)';
+              return (
+                <div
+                  key={l.league_id}
+                  onClick={() => navigate(`/league/${l.league_id}`)}
+                  style={{
+                    display: 'grid', gridTemplateColumns: '64px 1fr 140px 140px', gap: 0,
+                    padding: '0 40px',
+                    borderBottom: '1px solid var(--rule)',
+                    borderLeft: '3px solid transparent',
+                    cursor: 'pointer', alignItems: 'center', transition: 'all .1s',
+                  }}
+                  onMouseEnter={e => { e.currentTarget.style.borderLeftColor = TYPE_COLOR[type] || 'var(--mute)'; e.currentTarget.style.background = 'rgba(255,255,255,0.025)'; }}
+                  onMouseLeave={e => { e.currentTarget.style.borderLeftColor = 'transparent'; e.currentTarget.style.background = 'transparent'; }}
+                >
+                  <div style={{ padding: '20px 0' }}>
+                    <span style={{ fontFamily: DISPLAY, fontWeight: 900, fontSize: 22, color: medal, lineHeight: 1 }}>{l.rank ? `#${l.rank}` : '—'}</span>
+                  </div>
+                  <div style={{ padding: '20px 16px 20px 12px', minWidth: 0 }}>
+                    <div style={{ fontFamily: DISPLAY, fontWeight: 900, fontSize: 15, letterSpacing: '-0.01em', textTransform: 'uppercase', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      {l.leagues?.name || l.name}
+                    </div>
+                    <div style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.16em', textTransform: 'uppercase', marginTop: 4 }}>
+                      {l.member_count ?? '—'} members
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'center' }}>
+                    <TypeChip type={type} format={format} />
+                  </div>
+                  <div style={{ textAlign: 'right', padding: '20px 0' }}>
+                    <span style={{ fontFamily: DISPLAY, fontWeight: 900, fontSize: 22, color: 'var(--positive)' }}>{Math.round(l.total_points || 0)}</span>
+                    <span style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.16em', textTransform: 'uppercase', marginLeft: 5 }}>Pts</span>
+                  </div>
+                </div>
+              );
+            })}
+          </>
+        )}
+
+        {/* Invite code — inline at bottom */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 24, padding: '20px 40px', borderTop: '1px solid var(--rule)', marginTop: 'auto' }}>
+          <div style={{ flexShrink: 0 }}>
+            <div style={{ fontFamily: MONO, fontSize: 9, color: 'var(--cyan)', letterSpacing: '.16em', textTransform: 'uppercase', marginBottom: 3 }}>Have an invite code?</div>
+            <div style={{ fontSize: 13, color: 'var(--mute)' }}>Enter below to join a friend's league</div>
+          </div>
+          <div style={{ flex: 1, display: 'flex', maxWidth: 440 }}>
+            {inviteForm}
+          </div>
+          {joinError && (
+            <div style={{ fontSize: '12px', color: 'var(--danger)', fontFamily: MONO, flexShrink: 0 }}>{joinError}</div>
+          )}
+        </div>
       </div>
 
-      {/* League list */}
-      {loading ? (
-        <div className="p-8 text-center text-xs font-bold uppercase tracking-widest opacity-50">Syncing...</div>
-      ) : leagues.length === 0 ? (
-        <div className="p-8 text-center">
-          <div className="fk-display" style={{ fontSize: 24, color: 'var(--gold)', marginBottom: '12px' }}>FFL</div>
-          <div className="text-[13px] font-bold uppercase tracking-wide text-white mb-2">No leagues yet</div>
-          <div className="text-[11px] text-text-secondary mb-6">Create a league or enter a friend's invite code below.</div>
-          <button onClick={() => setView('create')} className="px-6 py-3 bg-cyan text-black text-[11px] font-bold uppercase tracking-wider">
-            Create a League
-          </button>
-        </div>
-      ) : (
-        leagues.map(l => (
-          <div key={l.league_id} onClick={() => navigate(`/league/${l.league_id}`)} className="p-4 bg-surface border-b border-border active:bg-surface-elevated flex justify-between items-center cursor-pointer">
-            <div>
-              <div className="font-bold uppercase tracking-tight text-[15px]">{l.leagues?.name || l.name}</div>
-              <div className="text-[10px] text-text-secondary uppercase mt-1">Rank #{l.rank || '-'}</div>
-            </div>
-            <div className="font-black text-positive">{Math.round(l.total_points || 0)} pts</div>
+      {/* Mobile */}
+      <div className="lg:hidden pb-24">
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 18px 12px', borderBottom: '1px solid var(--rule)' }}>
+          <div>
+            <div className="fk-eyebrow" style={{ marginBottom: 3 }}>Season</div>
+            <div style={{ fontFamily: DISPLAY, fontWeight: 900, fontSize: 22, textTransform: 'uppercase', letterSpacing: '-0.02em' }}>My Leagues</div>
           </div>
-        ))
-      )}
-
-      {/* FB-025: Join by code */}
-      <div className="mx-4 mt-6 p-5 rounded-sm" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
-        <div className="text-[11px] font-black uppercase tracking-widest mb-1" style={{ fontFamily: 'Archivo Black, sans-serif', color: 'var(--mute)' }}>
-          Have an invite code?
-        </div>
-        <div className="text-[13px] font-bold text-white mb-4">Enter it below to join a friend's league</div>
-        <form onSubmit={handleJoinByCode} className="flex gap-2">
-          <input
-            type="text"
-            value={joinCode}
-            onChange={e => {
-              const val = e.target.value.toUpperCase();
-              setJoinCode(val);
-              setJoinError(val.trim().length > 0 && val.trim().length < 4 ? 'Codes are 6+ characters' : '');
-            }}
-            placeholder="XXXXXX"
-            maxLength={8}
-            style={{
-              flex:          1,
-              padding:       '10px 14px',
-              background:    'rgba(255,255,255,0.05)',
-              border:        `1px solid ${joinError ? 'rgba(240,58,58,0.5)' : 'rgba(255,255,255,0.10)'}`,
-              borderRadius:  '8px',
-              color:         'var(--paper)',
-              fontSize:      '16px',
-              fontFamily:    'Archivo Black, sans-serif',
-              fontWeight:    800,
-              letterSpacing: '0.2em',
-              textTransform: 'uppercase',
-              outline:       'none',
-            }}
-          />
           <button
-            type="submit"
-            disabled={joinLoading || joinCode.trim().length < 4}
-            style={{
-              padding:       '10px 20px',
-              background:    'var(--gold)',
-              color:         'var(--ink-2)',
-              fontSize:      '12px',
-              fontFamily:    'Archivo Black, sans-serif',
-              fontWeight:    800,
-              letterSpacing: '0.08em',
-              textTransform: 'uppercase',
-              border:        'none',
-              borderRadius:  '8px',
-              cursor:        joinLoading ? 'wait' : 'pointer',
-              opacity:       (joinLoading || joinCode.trim().length < 4) ? 0.5 : 1,
-              whiteSpace:    'nowrap',
-            }}
+            onClick={() => setView('create')}
+            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 12px', border: '1px solid var(--cyan)', color: 'var(--cyan)', background: 'transparent', fontFamily: MONO, fontSize: 10, letterSpacing: '.14em', cursor: 'pointer', textTransform: 'uppercase' }}
           >
-            {joinLoading ? '…' : 'Join →'}
+            + New
           </button>
-        </form>
-        {joinError && (
-          <div style={{ marginTop: '8px', fontSize: '12px', color: 'var(--danger)', fontFamily: 'Archivo Black, sans-serif' }}>
-            {joinError}
-          </div>
+        </div>
+
+        {loading ? (
+          <div className="p-8 text-center text-xs font-bold uppercase tracking-widest opacity-50">Syncing...</div>
+        ) : leagues.length === 0 ? emptyState : (
+          leagues.map(l => {
+            const { type, format } = deriveLeagueType(l.leagues ?? {});
+            const tc = TYPE_COLOR[type] || 'var(--mute)';
+            return (
+              <div
+                key={l.league_id}
+                onClick={() => navigate(`/league/${l.league_id}`)}
+                className="active:opacity-70"
+                style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 18px', borderBottom: '1px solid var(--rule)', borderLeft: `3px solid ${tc}`, cursor: 'pointer' }}
+              >
+                <div style={{ width: 36, flexShrink: 0, textAlign: 'center' }}>
+                  <RankBadge rank={l.rank} />
+                  <div style={{ fontFamily: MONO, fontSize: 8, color: 'var(--mute)', marginTop: 2 }}>{l.member_count ?? '—'}P</div>
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontFamily: DISPLAY, fontWeight: 900, fontSize: 13, letterSpacing: '-0.01em', textTransform: 'uppercase', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    {l.leagues?.name || l.name}
+                  </div>
+                  <div style={{ display: 'flex', gap: 6, alignItems: 'center', marginTop: 4 }}>
+                    <TypeChip type={type} format={format} />
+                  </div>
+                </div>
+                <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                  <div style={{ fontFamily: DISPLAY, fontWeight: 900, fontSize: 20, color: 'var(--positive)', lineHeight: 1 }}>{Math.round(l.total_points || 0)}</div>
+                  <div style={{ fontFamily: MONO, fontSize: 8, color: 'var(--mute)', letterSpacing: '.14em', textTransform: 'uppercase', marginTop: 2 }}>Pts Total</div>
+                </div>
+              </div>
+            );
+          })
         )}
+
+        {/* Invite row */}
+        <div style={{ padding: '16px 18px', borderTop: '2px solid var(--rule)', marginTop: 4 }}>
+          <div style={{ fontFamily: MONO, fontSize: 9, color: 'var(--cyan)', letterSpacing: '.16em', textTransform: 'uppercase', marginBottom: 3 }}>Have an invite code?</div>
+          <div style={{ fontSize: 13, color: 'var(--mute)', marginBottom: 12 }}>Enter below to join a friend's league</div>
+          {inviteForm}
+          {joinError && (
+            <div style={{ marginTop: '8px', fontSize: '12px', color: 'var(--danger)', fontFamily: MONO }}>{joinError}</div>
+          )}
+        </div>
       </div>
     </div>
   );
