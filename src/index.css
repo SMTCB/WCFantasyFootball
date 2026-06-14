@@ -559,3 +559,227 @@ button, a {
 @media (prefers-reduced-motion: reduce) {
   .ffl-skeleton { animation: none; opacity: 0.6; }
 }
+
+/* ═══════════════════════════════════════════════════════════════════════ */
+/* FORZAKIT Message Components — see docs/brand/MESSAGES                   */
+/* Inline banners, toasts, system banners, mobile action sheets.           */
+/* All four semantic types: success / warning / error / info.              */
+/* ═══════════════════════════════════════════════════════════════════════ */
+
+/* ── Inline Banner ────────────────────────────────────────────────── */
+.fk-msg {
+  --msg-color: var(--cyan);
+  position: relative;
+  display: flex; gap: 14px; align-items: flex-start;
+  padding: 14px 16px 14px 0;
+  border-left: 3px solid var(--msg-color);
+  background: color-mix(in srgb, var(--msg-color) 9%, var(--ink-2));
+  border-top: 1px solid color-mix(in srgb, var(--msg-color) 22%, transparent);
+  border-right: 1px solid color-mix(in srgb, var(--msg-color) 10%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--msg-color) 10%, transparent);
+}
+.fk-msg.success { --msg-color: var(--positive); }
+.fk-msg.warning { --msg-color: var(--warn); }
+.fk-msg.error   { --msg-color: var(--danger); }
+.fk-msg.info    { --msg-color: var(--cyan); }
+
+.fk-msg-icon {
+  width: 32px; height: 32px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  margin-left: 14px;
+  background: color-mix(in srgb, var(--msg-color) 14%, transparent);
+  border: 1px solid color-mix(in srgb, var(--msg-color) 35%, transparent);
+  color: var(--msg-color);
+}
+.fk-msg-icon svg { width: 14px; height: 14px; }
+
+.fk-msg-body { flex: 1; min-width: 0; padding-top: 1px; }
+.fk-msg-type {
+  font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 600;
+  letter-spacing: .22em; text-transform: uppercase; color: var(--msg-color);
+  line-height: 1; margin-bottom: 5px;
+}
+.fk-msg-title {
+  font-family: 'Archivo Black', sans-serif; font-size: 13px;
+  color: var(--paper); line-height: 1.2; margin-bottom: 4px;
+  letter-spacing: -0.01em;
+}
+.fk-msg-text {
+  font-family: 'Archivo', sans-serif; font-size: 12px;
+  color: var(--mute); line-height: 1.5;
+}
+.fk-msg-actions {
+  display: flex; gap: 8px; margin-top: 12px; align-items: center; flex-wrap: wrap;
+}
+.fk-msg-btn {
+  font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 600;
+  letter-spacing: .18em; text-transform: uppercase; padding: 6px 12px;
+  background: color-mix(in srgb, var(--msg-color) 16%, transparent);
+  border: 1px solid color-mix(in srgb, var(--msg-color) 55%, transparent);
+  color: var(--msg-color); cursor: pointer;
+}
+.fk-msg-btn:disabled { opacity: 0.6; cursor: wait; }
+.fk-msg-btn.ghost {
+  background: transparent;
+  border-color: color-mix(in srgb, var(--mute) 30%, transparent);
+  color: var(--mute);
+}
+.fk-msg-dismiss {
+  position: absolute; top: 10px; right: 12px;
+  width: 20px; height: 20px; display: flex; align-items: center; justify-content: center;
+  cursor: pointer; color: var(--mute); font-size: 14px; line-height: 1;
+  font-family: 'JetBrains Mono', monospace;
+  border: 1px solid transparent; background: transparent; padding: 0;
+}
+.fk-msg-dismiss:hover { border-color: var(--rule); color: var(--paper); }
+
+/* Mobile inline banner — tighter padding + smaller icon/type */
+@media (max-width: 640px) {
+  .fk-msg { padding: 12px 40px 12px 0; gap: 10px; }
+  .fk-msg-icon { width: 28px; height: 28px; margin-left: 12px; }
+  .fk-msg-icon svg { width: 12px; height: 12px; }
+  .fk-msg-type { font-size: 8px; }
+  .fk-msg-title { font-size: 12px; }
+  .fk-msg-text { font-size: 11px; }
+}
+
+/* ── Toast ─────────────────────────────────────────────────────────── */
+.fk-toast {
+  --msg-color: var(--cyan);
+  display: flex; gap: 12px; align-items: flex-start;
+  padding: 12px 40px 12px 12px;
+  background: var(--ink-3);
+  border: 1px solid color-mix(in srgb, var(--msg-color) 28%, var(--rule));
+  border-top: 2px solid var(--msg-color);
+  box-shadow: 0 8px 32px rgba(0,0,0,.6), 0 2px 8px rgba(0,0,0,.4);
+  position: relative;
+  overflow: hidden;
+}
+.fk-toast.success { --msg-color: var(--positive); }
+.fk-toast.warning { --msg-color: var(--warn); }
+.fk-toast.error   { --msg-color: var(--danger); }
+.fk-toast.info    { --msg-color: var(--cyan); }
+.fk-toast-dot {
+  width: 8px; height: 8px; border-radius: 50%; background: var(--msg-color);
+  flex-shrink: 0; margin-top: 4px;
+}
+.fk-toast-body { flex: 1; min-width: 0; }
+.fk-toast-label {
+  font-family: 'JetBrains Mono', monospace; font-size: 9px; font-weight: 600;
+  letter-spacing: .22em; text-transform: uppercase; color: var(--msg-color); margin-bottom: 3px;
+}
+.fk-toast-title {
+  font-family: 'Archivo', sans-serif; font-size: 13px; font-weight: 600;
+  color: var(--paper); line-height: 1.25;
+}
+.fk-toast-sub {
+  font-family: 'Archivo', sans-serif; font-size: 11px; color: var(--mute);
+  margin-top: 3px; line-height: 1.4;
+}
+.fk-toast-actions { display: flex; gap: 8px; margin-top: 8px; }
+.fk-toast-dismiss {
+  position: absolute; top: 10px; right: 10px;
+  font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--mute);
+  cursor: pointer; line-height: 1; background: transparent; border: none; padding: 0;
+}
+.fk-toast-dismiss:hover { color: var(--paper); }
+.fk-toast-progress {
+  position: absolute; bottom: 0; left: 0; height: 2px;
+  background: color-mix(in srgb, var(--msg-color) 40%, transparent);
+  animation: fk-toast-shrink linear forwards;
+}
+@keyframes fk-toast-shrink {
+  from { width: 100%; }
+  to   { width: 0%; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .fk-toast-progress { animation: none; width: 0%; }
+}
+
+/* ── System Banner ────────────────────────────────────────────────── */
+.fk-sysbar {
+  --msg-color: var(--cyan);
+  display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+  padding: 10px 16px;
+  background: color-mix(in srgb, var(--msg-color) 12%, var(--ink));
+  border-bottom: 1px solid color-mix(in srgb, var(--msg-color) 30%, transparent);
+}
+.fk-sysbar.success { --msg-color: var(--positive); }
+.fk-sysbar.warning { --msg-color: var(--warn); }
+.fk-sysbar.error   { --msg-color: var(--danger); }
+.fk-sysbar.info    { --msg-color: var(--cyan); }
+.fk-sysbar-dot { width: 6px; height: 6px; background: var(--msg-color); flex-shrink: 0; border-radius: 50%; }
+.fk-sysbar-tag {
+  font-family: 'JetBrains Mono', monospace; font-size: 9px; font-weight: 600;
+  letter-spacing: .22em; text-transform: uppercase; color: var(--msg-color); flex-shrink: 0;
+}
+.fk-sysbar-msg {
+  font-family: 'Archivo', sans-serif; font-size: 12px; color: var(--paper); flex: 1;
+}
+.fk-sysbar-msg span { color: var(--mute); margin-left: 6px; }
+.fk-sysbar-action {
+  font-family: 'JetBrains Mono', monospace; font-size: 9px; font-weight: 600;
+  letter-spacing: .18em; text-transform: uppercase;
+  color: var(--msg-color); cursor: pointer; text-decoration: underline; flex-shrink: 0;
+  background: transparent; border: none; padding: 0;
+}
+.fk-sysbar-x {
+  font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--mute);
+  cursor: pointer; flex-shrink: 0; margin-left: 4px; background: transparent; border: none; padding: 0;
+}
+.fk-sysbar-x:hover { color: var(--paper); }
+
+/* ── Mobile Action Sheet ───────────────────────────────────────────── */
+.fk-mob-sheet {
+  --msg-color: var(--cyan);
+  background: var(--ink-2);
+  border-top: 2px solid var(--msg-color);
+  padding: 20px 16px max(24px, env(safe-area-inset-bottom));
+}
+.fk-mob-sheet.success { --msg-color: var(--positive); }
+.fk-mob-sheet.warning { --msg-color: var(--warn); }
+.fk-mob-sheet.error   { --msg-color: var(--danger); }
+.fk-mob-sheet.info    { --msg-color: var(--cyan); }
+.fk-mob-sheet-head { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.fk-mob-sheet-icon {
+  width: 36px; height: 36px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: color-mix(in srgb, var(--msg-color) 16%, transparent);
+  border: 1px solid color-mix(in srgb, var(--msg-color) 35%, transparent);
+  color: var(--msg-color);
+}
+.fk-mob-sheet-icon svg { width: 16px; height: 16px; }
+.fk-mob-sheet-kicker {
+  font-family: 'JetBrains Mono', monospace; font-size: 9px; font-weight: 600;
+  letter-spacing: .22em; text-transform: uppercase; color: var(--msg-color); margin-bottom: 2px;
+}
+.fk-mob-sheet-title {
+  font-family: 'Archivo Black', sans-serif; font-size: 15px; color: var(--paper);
+  letter-spacing: -0.01em;
+}
+.fk-mob-sheet-text {
+  font-family: 'Archivo', sans-serif; font-size: 12px; color: var(--mute);
+  line-height: 1.55; margin-bottom: 16px; margin-top: 4px;
+}
+.fk-mob-sheet-btns { display: flex; gap: 8px; }
+.fk-mob-sheet-btn {
+  flex: 1; padding: 11px 8px; text-align: center;
+  font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 600;
+  letter-spacing: .16em; text-transform: uppercase; cursor: pointer;
+  background: color-mix(in srgb, var(--msg-color) 16%, transparent);
+  border: 1px solid color-mix(in srgb, var(--msg-color) 45%, transparent);
+  color: var(--msg-color);
+}
+.fk-mob-sheet-btn:disabled { opacity: 0.6; cursor: wait; }
+.fk-mob-sheet-btn.ghost {
+  background: transparent;
+  border-color: color-mix(in srgb, var(--mute) 25%, transparent);
+  color: var(--mute);
+}
+.fk-mob-sheet-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,.55); z-index: 9998;
+}
+.fk-mob-sheet-wrap {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 9999;
+  animation: slideUpFade 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}

@@ -33,40 +33,30 @@ export default function TransferWindowBanner({ status, closesAt, opensAt, transf
 
   if (status === 'open') {
     return (
-      <div className="bg-[#00261A] border-b border-[#00C853]/20 px-4 py-2 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <span className="w-1.5 h-1.5 rounded-full bg-[#00C853] animate-pulse shrink-0" />
-          <span className="text-[#00C853] text-[10px] font-black uppercase tracking-widest">
-            Window Open
-          </span>
-          {!isUnlimited && transfersRemaining !== null && (
-            <span className="text-[#9E9E9E] text-[10px]">
-              · {transfersRemaining} transfer{transfersRemaining !== 1 ? 's' : ''} left
-            </span>
-          )}
-          {isUnlimited && (
-            <span className="text-[#9E9E9E] text-[10px]">· Unlimited</span>
-          )}
-        </div>
-        {closesIn && (
-          <span className="text-[#9E9E9E] text-[10px]">Closes in {closesIn}</span>
-        )}
+      <div className="fk-sysbar success">
+        <span className="fk-sysbar-dot" />
+        <span className="fk-sysbar-tag">Window Open</span>
+        <span className="fk-sysbar-msg">
+          {isUnlimited
+            ? 'Unlimited transfers'
+            : transfersRemaining !== null
+              ? `${transfersRemaining} transfer${transfersRemaining !== 1 ? 's' : ''} left`
+              : null}
+          {closesIn && <span>· Closes in {closesIn}</span>}
+        </span>
       </div>
     );
   }
 
   if (status === 'upcoming') {
     return (
-      <div className="bg-[#1A1200] border-b border-[#FFC107]/20 px-4 py-2 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <span className="w-1.5 h-1.5 rounded-full bg-[#FFC107] shrink-0" />
-          <span className="text-[#FFC107] text-[10px] font-black uppercase tracking-widest">
-            Window Closed
-          </span>
-        </div>
-        {opensIn && (
-          <span className="text-[#9E9E9E] text-[10px]">Opens in {opensIn}</span>
-        )}
+      <div className="fk-sysbar warning">
+        <span className="fk-sysbar-dot" />
+        <span className="fk-sysbar-tag">Window Closed</span>
+        <span className="fk-sysbar-msg">
+          Transfers locked
+          {opensIn && <span>· Opens in {opensIn}</span>}
+        </span>
       </div>
     );
   }
