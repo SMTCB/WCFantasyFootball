@@ -1,12 +1,12 @@
 import { memo } from 'react';
 
-// Colour for pts value — mirrors FormStrip scale
+// Colour for pts value — mirrors FormStrip scale, using design tokens
 function ptColor(pts) {
   if (pts === null || pts === undefined) return 'var(--mute)';
-  if (pts === 0)  return 'rgba(240,58,58,0.9)';
-  if (pts < 5)   return 'rgba(240,180,0,0.95)';
-  if (pts < 10)  return 'rgba(24,201,107,0.95)';
-  return '#F0B400';
+  if (pts === 0)  return 'var(--danger)';
+  if (pts < 5)   return 'var(--gold)';
+  if (pts < 10)  return 'var(--positive)';
+  return 'var(--gold)';
 }
 
 const TH = ({ children, right }) => (
@@ -26,7 +26,7 @@ const TD = ({ children, right, bold, color }) => (
 );
 
 export default memo(function PlayerStatsPanel({
-  detail, position, isOwned, canBuy, saving, isLocked, onAction,
+  detail, position, isOwned, canBuy, saving, isLocked, onAction, onViewStats,
 }) {
   const showCS = position === 'GK' || position === 'DEF';
 
@@ -86,12 +86,27 @@ export default memo(function PlayerStatsPanel({
         </div>
       )}
 
-      {/* ── Season totals ────────────────────────────────────── */}
-      {season && season.apps > 0 && (
-        <div className="fk-mono" style={{ fontSize: 8, color: 'var(--mute)', letterSpacing: '0.12em', marginBottom: 10 }}>
-          {season.apps} APPS · {season.goals}G · {season.assists}A · {season.pts} PTS · AVG {season.avgPts}/GW
-        </div>
-      )}
+      {/* ── Season totals + full stats link ─────────────────────── */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 10, flexWrap: 'wrap' }}>
+        {season && season.apps > 0 ? (
+          <div className="fk-mono" style={{ fontSize: 8, color: 'var(--mute)', letterSpacing: '0.12em' }}>
+            {season.apps} APPS · {season.goals}G · {season.assists}A · {season.pts} PTS · AVG {season.avgPts}/GW
+          </div>
+        ) : <span />}
+        {onViewStats && (
+          <button
+            onClick={onViewStats}
+            className="fk-mono transition-all active:scale-95"
+            style={{
+              padding: '5px 10px', border: '1px solid var(--cyan)',
+              color: 'var(--cyan)', background: 'transparent',
+              fontSize: 9, fontWeight: 800, letterSpacing: '0.14em', cursor: 'pointer',
+            }}
+          >
+            STATS ↗
+          </button>
+        )}
+      </div>
 
       {/* ── Action button ─────────────────────────────────────── */}
       {!isLocked && (

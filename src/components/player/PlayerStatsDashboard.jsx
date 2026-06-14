@@ -237,9 +237,9 @@ export default function PlayerStatsDashboard({ player, ownershipPct, onClose }) 
 
       {/* ── MOBILE ────────────────────────────────────────────── */}
       <div
-        className="lg:hidden"
+        className="flex lg:hidden"
         onClick={e => e.stopPropagation()}
-        style={{ width: '100%', height: '100%', background: 'var(--ink)', color: 'var(--paper)', display: 'flex', flexDirection: 'column', fontFamily: 'Archivo, sans-serif', overflow: 'hidden' }}
+        style={{ width: '100%', height: '100%', background: 'var(--ink)', color: 'var(--paper)', flexDirection: 'column', fontFamily: 'Archivo, sans-serif', overflow: 'hidden' }}
       >
         {/* back nav */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px', borderBottom: '1px solid var(--rule)', flexShrink: 0 }}>

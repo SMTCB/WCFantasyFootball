@@ -2456,12 +2456,6 @@ export default function SquadScreen() {
                   {selectedPlayer.fixtureStatus?.label || 'NO FIXTURE'}
                 </div>
               </div>
-              <div style={{ flex: 1, minWidth: 0, borderLeft: '1px solid rgba(255,255,255,0.07)', paddingLeft: 12 }}>
-                <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 8, color: 'var(--mute)', letterSpacing: '0.2em', marginBottom: 6 }}>OWNED BY</div>
-                <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 12, color: 'var(--paper)', letterSpacing: '-0.01em' }}>
-                  {ownershipMap[selectedPlayer.id] != null ? `${ownershipMap[selectedPlayer.id]}%` : '—'}
-                </div>
-              </div>
             </div>
             {/* View full stats dashboard */}
             <button
