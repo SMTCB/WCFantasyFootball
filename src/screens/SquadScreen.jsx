@@ -863,7 +863,7 @@ export default function SquadScreen() {
     return (
       <>
         <div
-          className="sticky top-0 z-40 flex items-center justify-between px-5 py-3"
+          className="sticky top-0 z-40 flex items-center justify-between pl-5 pr-6 lg:pr-5 py-3"
           style={{ background: 'rgba(13,17,23,0.97)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', borderBottom: '1px solid rgba(255,255,255,0.07)' }}
         >
           <div>
@@ -987,7 +987,7 @@ export default function SquadScreen() {
       <>
         {/* ── Sticky header ─────────────────────────────────────────── */}
         <div
-          className="sticky top-0 z-40 flex items-center justify-between px-5 py-3"
+          className="sticky top-0 z-40 flex items-center justify-between pl-5 pr-6 lg:pr-5 py-3"
           style={{ background: 'rgba(13,17,23,0.97)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', borderBottom: '1px solid rgba(255,255,255,0.07)' }}
         >
           <div>
@@ -1585,7 +1585,7 @@ export default function SquadScreen() {
 
       {/* â•â• STICKY HEADER â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
       <div
-        className="sticky top-0 z-40 flex items-center justify-between px-5 py-3"
+        className="sticky top-0 z-40 flex items-center justify-between pl-5 pr-6 lg:pr-5 py-3"
         style={{
           background: 'rgba(13,17,23,0.97)',
           backdropFilter: 'blur(20px)',

@@ -36,7 +36,13 @@ function MiniChart({ history }) {
     <div style={{ display: 'flex', gap: 4, alignItems: 'flex-end', height: 44 }}>
       {history.map((r, i) => (
         <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, justifyContent: 'flex-end' }}>
-          <div style={{ width: '100%', height: Math.max(3, (r.totalPts / max) * 32), background: r.totalPts >= 10 ? 'var(--positive)' : r.totalPts >= 5 ? 'var(--cyan)' : 'var(--mute)' }} />
+          <div style={{
+            width: '100%', height: Math.max(16, (r.totalPts / max) * 32),
+            background: r.totalPts >= 10 ? 'var(--positive)' : r.totalPts >= 5 ? 'var(--cyan)' : 'var(--mute)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}>
+            <span style={{ ...MO, fontSize: 8, color: 'var(--ink)', letterSpacing: 0 }}>{r.totalPts}</span>
+          </div>
           <div style={{ ...MO, fontSize: 8, color: 'var(--mute)', letterSpacing: '.06em' }}>{r.gw}</div>
         </div>
       ))}
@@ -110,9 +116,12 @@ function BreakdownItems({ sel, items }) {
       {!items.length && (
         <div style={{ ...MO, fontSize: 9, color: 'var(--mute)', padding: '12px 0' }}>NO SCORING DATA FOR THIS GW</div>
       )}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '11px 0 4px', marginTop: 4, borderTop: '2px solid var(--rule)' }}>
-        <span style={{ ...MO, fontSize: 10, color: 'var(--paper)' }}>TOTAL</span>
-        <span style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 28, color: 'var(--positive)', letterSpacing: '-0.02em' }}>{sel.totalPts}</span>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', padding: '11px 0 4px', marginTop: 4, borderTop: '2px solid var(--rule)' }}>
+        <div>
+          <span style={{ ...MO, fontSize: 10, color: 'var(--paper)' }}>TOTAL</span>
+          <div style={{ ...MO, fontSize: 7, color: 'var(--mute)', marginTop: 2, letterSpacing: '.16em' }}>ROUNDED TO NEAREST PT</div>
+        </div>
+        <span style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 28, color: 'var(--positive)', letterSpacing: '-0.02em' }}>~{sel.totalPts}</span>
       </div>
     </>
   );
