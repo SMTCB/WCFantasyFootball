@@ -23,6 +23,8 @@ import { useTransferWindow } from '../hooks/useTransferWindow';
 import FormStrip from '../components/FormStrip';
 import PlayerStatsPanel from '../components/PlayerStatsPanel';
 import TransferWindowBanner from '../components/TransferWindowBanner';
+import PlayerStatsDashboard from '../components/player/PlayerStatsDashboard';
+import { useLeagueOwnership } from '../hooks/useLeagueOwnership';
 
 // club cap is fetched dynamically per-round; default 3 until loaded
 
@@ -169,6 +171,12 @@ export default function MarketScreen() {
 
   // Expandable stats panel state
   const { expandedPlayerId, playerDetails, togglePanel } = usePlayerScoreDetail();
+
+  // League ownership % per player — used in full stats dashboard
+  const { ownershipMap } = useLeagueOwnership(activeLeague);
+
+  // Full stats dashboard modal — set to a player object to open
+  const [statsDashboardPlayer, setStatsDashboardPlayer] = useState(null);
 
   // Fetch squad for auto-fill
   // Keep a ref to the current players array so fetchSquad can access it
@@ -1281,6 +1289,7 @@ export default function MarketScreen() {
                   saving={saving}
                   isLocked={isLocked}
                   onAction={(action) => action === 'buy' ? handleBuy(p) : handleSell(p)}
+                  onViewStats={() => setStatsDashboardPlayer(p)}
                 />
               )}
               </div>
@@ -1311,6 +1320,15 @@ export default function MarketScreen() {
         </span>
       </div>
       {showScoringModal && <ScoringInfoModal onClose={() => setShowScoringModal(false)} />}
+
+      {/* Full player stats dashboard */}
+      {statsDashboardPlayer && (
+        <PlayerStatsDashboard
+          player={statsDashboardPlayer}
+          ownershipPct={ownershipMap[statsDashboardPlayer.id]}
+          onClose={() => setStatsDashboardPlayer(null)}
+        />
+      )}
 
       {/* ── Transfer Basket ─────────────────────────────────────────────────── */}
       {/* Uses createPortal so position:fixed renders relative to the viewport,  */}
