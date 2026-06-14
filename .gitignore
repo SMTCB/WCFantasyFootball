@@ -35,6 +35,10 @@ playwright-results.txt
 /*.png                      # All PNG files in root (e2e-*.png, flow*.png, etc)
 audit-contrast.js           # Temporary audit script
 e2e-setup.mjs              # Temporary E2E setup script
+# One-off report PDFs (e.g. scoring reports)
+/*.pdf
+# One-off scoring report script
+scripts/generate_scoring_report.py
 
 # Claude Code — local settings and ephemeral worktrees
 .claude/settings.local.json
