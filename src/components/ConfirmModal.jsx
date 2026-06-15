@@ -18,6 +18,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import Button from './Button';
+import { MessageIcon } from './messages/icons';
 
 const TITLE_ID = 'confirm-modal-title';
 
@@ -120,22 +121,38 @@ export default function ConfirmModal({
           <div style={{
             display:      'flex',
             alignItems:   'flex-start',
-            gap:          '8px',
+            gap:          '10px',
             padding:      '10px 12px',
-            borderRadius: '6px',
-            background:   'rgba(240,180,0,0.08)',
-            border:       '1px solid rgba(240,180,0,0.25)',
+            background:   'color-mix(in srgb, var(--warn) 9%, var(--ink-2))',
+            border:       '1px solid color-mix(in srgb, var(--warn) 22%, transparent)',
             marginBottom: '24px',
           }}>
-            <span className="fk-mono" style={{ fontSize: '9px', color: 'var(--gold)', flexShrink: 0 }}>!</span>
-            <p style={{
-              fontSize:   '12px',
-              lineHeight: 1.55,
-              color:      'var(--gold)',
-              margin:     0,
+            <div style={{
+              width:          '24px',
+              height:         '24px',
+              flexShrink:     0,
+              display:        'flex',
+              alignItems:     'center',
+              justifyContent: 'center',
+              background:     'color-mix(in srgb, var(--warn) 14%, transparent)',
+              border:         '1px solid color-mix(in srgb, var(--warn) 35%, transparent)',
+              color:          'var(--warn)',
             }}>
-              {warning}
-            </p>
+              <MessageIcon type="warning" style={{ width: 12, height: 12 }} />
+            </div>
+            <div>
+              <div className="fk-mono" style={{ fontSize: '9px', color: 'var(--warn)', marginBottom: '3px' }}>
+                Warning
+              </div>
+              <p style={{
+                fontSize:   '12px',
+                lineHeight: 1.55,
+                color:      'var(--paper)',
+                margin:     0,
+              }}>
+                {warning}
+              </p>
+            </div>
           </div>
         )}
 
