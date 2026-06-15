@@ -1,4 +1,4 @@
-// Edge Function: calculate-scores  (v26 — scoring v2 Bucket B: GK clean-sheet 45min threshold, goals_conceded 2nd+ penalty for GK/DEF)
+// Edge Function: calculate-scores  (v27 — round-per-player scoring to match UI display formula; persist effective XI/captain snapshot in points_breakdown)
 // Calculates fantasy points for all squads for a given fixture.
 // Called by ingest-match-events (Forza live path) or directly (mock/manual path).
 //
@@ -668,18 +668,23 @@ async function rollupSquads(fixture_id, pointsLookup, tournament_id) {
     }
 
     // Score the (auto-subbed) starting XI. Bench players not subbed in never score.
+    // B-05: each player's raw points are rounded to a whole number BEFORE the captain
+    // multiplier is applied and the result is summed — this matches the UI display
+    // formula (Math.round(rawPts) * mult) used by SquadScreen/RecapView/LiveScreen.
+    // Previously raw (unrounded) points were multiplied and summed, then rounded ONCE
+    // at the end — "round of sum" vs "sum of rounds" diverge and caused the squad
+    // total to disagree with the visible per-player breakdown by several points.
     for (const pid of pitchPlayers) {
-      let pts = fullRoundLookup[pid] ?? 0;   // ?? preserves legitimate negative scores (L1.3)
-      if (Number.isNaN(pts)) {
-        pts = 0;
+      let rawPts = fullRoundLookup[pid] ?? 0;   // ?? preserves legitimate negative scores (L1.3)
+      if (Number.isNaN(rawPts)) {
+        rawPts = 0;
         logError('error', 'NaN in points lookup', { fixture_id, player_id: pid }); // fire-and-forget
       }
       // Only captain / Triple Captain multipliers apply inside the XI.
       // The Matchday Joker no longer applies a multiplier — it is always an external
       // player (DB trigger enforces this) scored separately below.
       const captainMult = pid === effectiveCaptainId ? (isTripleCaptain ? 3 : 2) : 1;
-      pts *= captainMult;
-      total += pts;
+      total += Math.round(rawPts) * captainMult;
     }
 
     // Matchday Joker — external player bonus (real points, no multiplier):
@@ -690,11 +695,14 @@ async function rollupSquads(fixture_id, pointsLookup, tournament_id) {
     // anyway for safety (legacy rows pre-migration 143).
     if (jokerPid && !pitchPlayers.includes(jokerPid)) {
       const jokerRawPts = fullRoundLookup[jokerPid] ?? 0;
-      total += jokerRawPts;   // ×1 — real points, no multiplier
+      total += Math.round(jokerRawPts);   // ×1 — real points, no multiplier
     }
 
     // C2: the retired wildcard +10% multiplier is no longer applied.
-    total = Math.round(total); // integer points — no decimals in fantasy
+    // total is already an integer (sum of rounded per-player contributions) — the
+    // Math.round here is a no-op safeguard, kept so downstream arithmetic (penalty
+    // deduction, etc.) can never be left with a stray float from a future change.
+    total = Math.round(total);
 
     // Penalty transfers: deduct points for buys over the free-transfer limit.
     // Only applied on the FINAL scoring pass (when roundComplete=true) so the
@@ -730,6 +738,7 @@ async function rollupSquads(fixture_id, pointsLookup, tournament_id) {
       pitchPlayers.reduce((sum, pid) => sum + (pointsLookup[pid] ?? 0), 0) * 100
     ) / 100;
     const breakdown = {
+      ...existingBD,
       fixtures: {
         ...(existingBD.fixtures ?? {}),
         [fixture_id]: thisFixturePts,
@@ -737,6 +746,32 @@ async function rollupSquads(fixture_id, pointsLookup, tournament_id) {
       player_count: pitchPlayers.length,
     };
     if (penaltyDeduction > 0) breakdown.transfer_penalty_deduction = penaltyDeduction;
+
+    // Once the round is fully settled, snapshot the effective XI/captain that actually
+    // scored — RecapView reads this for completed matchdays instead of the manager's
+    // live squads.starting_xi/captain_id (which may have already moved on to the next
+    // matchday). auto_subs/captain_reassigned record WHY the effective XI/captain
+    // differ from the manager's own selection (for the explanatory tags in the UI).
+    if (roundComplete) {
+      breakdown.base_xi = baseXI;
+      breakdown.base_captain_id = squad.captain_id;
+      breakdown.effective_xi = pitchPlayers;
+      breakdown.effective_captain_id = effectiveCaptainId;
+      breakdown.is_triple_captain = isTripleCaptain;
+      if (jokerPid) breakdown.joker_player_id = jokerPid;
+      else delete breakdown.joker_player_id;
+
+      const autoSubs = [];
+      for (let i = 0; i < baseXI.length; i++) {
+        if (pitchPlayers[i] !== baseXI[i]) autoSubs.push({ out: baseXI[i], in: pitchPlayers[i] });
+      }
+      if (autoSubs.length) breakdown.auto_subs = autoSubs;
+      else delete breakdown.auto_subs;
+
+      if (effectiveCaptainId !== squad.captain_id) breakdown.captain_reassigned = true;
+      else delete breakdown.captain_reassigned;
+    }
+
     fantasyPointsUpserts.push({
       squad_id:         squad.id,
       matchday_id:      roundMatchdayId,

@@ -62,7 +62,7 @@ function FixtureRow({ f }) {
   );
 }
 
-function PlayerBreakdown({ breakdown, penaltyDeduction = 0, betDetails = [], tradeNet = 0, adjustment = 0 }) {
+function PlayerBreakdown({ breakdown, penaltyDeduction = 0, betDetails = [], tradeNet = 0 }) {
   if (!breakdown || breakdown === 'loading') {
     return (
       <div style={{ padding: '10px 24px', fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.18em', borderTop: '1px solid var(--rule)' }}>
@@ -91,7 +91,9 @@ function PlayerBreakdown({ breakdown, penaltyDeduction = 0, betDetails = [], tra
         const badges = [];
         if (p.triple)        badges.push({ s: '3×C',               c: 'var(--gold)' });
         else if (p.captain)  badges.push({ s: '©',                 c: 'var(--gold)' });
-        if (p.joker)         badges.push({ s: '2×',                c: 'var(--purple)' });
+        if (p.joker)         badges.push({ s: 'JOKER',             c: 'var(--purple)' });
+        if (p.autoSub)       badges.push({ s: 'AUTO-SUB',          c: 'var(--cyan)' });
+        if (p.captainMoved)  badges.push({ s: 'C MOVED',           c: 'var(--mute)' });
         if (p.goals)         badges.push({ s: `⚽×${p.goals}`,     c: 'var(--positive)' });
         if (p.assists)       badges.push({ s: `🅰×${p.assists}`,   c: 'var(--cyan)' });
         if (p.saves > 0)     badges.push({ s: `${p.saves}SV`,      c: 'var(--cyan)' });
@@ -131,23 +133,6 @@ function PlayerBreakdown({ breakdown, penaltyDeduction = 0, betDetails = [], tra
           </div>
           <span style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', textAlign: 'right' }}>—</span>
           <span style={{ fontFamily: DISPLAY, fontSize: 11, textAlign: 'right', color: 'var(--danger)' }}>−{penaltyDeduction}</span>
-        </div>
-      )}
-      {adjustment !== 0 && (
-        <div style={{
-          display: 'grid', gridTemplateColumns: '32px 1fr 50px 50px', gap: 8,
-          padding: '7px 24px', borderTop: '1px solid rgba(255,255,255,.08)',
-          background: 'rgba(255,255,255,.02)',
-        }}>
-          <span style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.1em' }}>—</span>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-            <span style={{ fontFamily: DISPLAY, fontSize: 11, color: 'var(--mute)' }}>Other adjustments</span>
-            <span style={{ fontFamily: MONO, fontSize: 8, color: 'rgba(255,255,255,.35)', letterSpacing: '.08em' }}>chips · subs</span>
-          </div>
-          <span style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', textAlign: 'right' }}>—</span>
-          <span style={{ fontFamily: DISPLAY, fontSize: 11, textAlign: 'right', color: adjustment > 0 ? 'var(--positive)' : 'var(--danger)' }}>
-            {adjustment > 0 ? `+${adjustment}` : adjustment}
-          </span>
         </div>
       )}
       {betDetails.map((b, bi) => (
@@ -204,7 +189,6 @@ export default function RecapView({ leagueId, tournamentId, members, currentUser
   const [loadingMds,       setLoadingMds]       = useState(true);
   const [loadingScores,    setLoadingScores]    = useState(false);
   const [breakdown,        setBreakdown]        = useState({});
-  const [adjustmentMap,    setAdjustmentMap]    = useState({});
   const fpRowsRef = useRef({});
   const [expandedUser,     setExpandedUser]     = useState(null);
   const [h2hStandings,     setH2hStandings]     = useState([]);
@@ -411,7 +395,6 @@ export default function RecapView({ leagueId, tournamentId, members, currentUser
     setScores([]);
     setFixtures([]);
     setBreakdown({});
-    setAdjustmentMap({});
     setExpandedUser(null);
 
     (async () => {
@@ -489,14 +472,41 @@ export default function RecapView({ leagueId, tournamentId, members, currentUser
         .order('created_at', { ascending: false }).limit(1).maybeSingle();
 
       if (!squadRow?.players) { setBreakdown(prev => ({ ...prev, [userId]: [] })); return; }
-      // Use starting_xi when set; fall back to first 11 of players array
-      const starters = (squadRow.starting_xi?.length ? squadRow.starting_xi : (squadRow.players || []).slice(0, 11));
+
+      // For a settled (roundComplete) matchday, calculate-scores persisted the
+      // exact effective XI/captain/joker that scored — read that snapshot
+      // verbatim instead of re-deriving it from the manager's (possibly
+      // already-advanced) live squad state. For an in-progress matchday, the
+      // manager's current starting_xi/captain_id IS the effective XI (no
+      // auto-subs/reassignment happen until the round completes).
+      const fp = fpRowsRef.current?.[squadRow.id];
+      const bd = fp?.points_breakdown;
+      const settled = !!bd?.effective_xi?.length;
+
+      let starters, captainId, isTripleCaptain, jokerPid, autoSubIns, captainReassigned;
+      if (settled) {
+        starters          = bd.effective_xi;
+        captainId         = bd.effective_captain_id;
+        isTripleCaptain   = !!bd.is_triple_captain;
+        jokerPid          = bd.joker_player_id ?? null;
+        autoSubIns        = new Set((bd.auto_subs ?? []).map(s => s.in));
+        captainReassigned = !!bd.captain_reassigned;
+      } else {
+        starters          = squadRow.starting_xi?.length ? squadRow.starting_xi : (squadRow.players || []).slice(0, 11);
+        captainId         = squadRow.captain_id;
+        isTripleCaptain   = !!squadRow.is_triple_captain;
+        jokerPid          = squadRow.joker_player_id ?? null;
+        autoSubIns        = new Set();
+        captainReassigned = false;
+      }
+
+      const idList = Array.from(new Set(jokerPid ? [...starters, jokerPid] : starters));
 
       const [{ data: playerRows }, { data: statRows }] = await Promise.all([
-        supabase.from('players').select('id, name, position').in('id', starters),
+        supabase.from('players').select('id, name, position').in('id', idList),
         supabase.from('player_match_stats')
           .select('player_id, fantasy_points, goals, assists, minutes_played, yellow_cards, red_cards, saves, key_passes, shots_on_target, big_chances_created')
-          .in('player_id', starters).in('fixture_id', fixtureIds),
+          .in('player_id', idList).in('fixture_id', fixtureIds),
       ]);
 
       const playerMeta = Object.fromEntries((playerRows || []).map(p => [p.id, p]));
@@ -516,32 +526,15 @@ export default function RecapView({ leagueId, tournamentId, members, currentUser
         s.bigChances += r.big_chances_created ?? 0;
       }
 
-      // If the squad's captain didn't feature this round (no minutes), scoring
-      // reassigns the captain bonus to the highest-scoring starter who played
-      // (effectiveCaptainId in calculate-scores). Mirror that here so the badge
-      // and multiplier land on the same player the GW total was computed from.
-      let effectiveCaptainId = squadRow.captain_id;
-      const captainStats = statsByPlayer[effectiveCaptainId];
-      if (!captainStats || !captainStats.minutes) {
-        let best = null;
-        for (const pid of starters) {
-          if (pid === squadRow.captain_id) continue;
-          const stats = statsByPlayer[pid];
-          if (!stats || stats.pts <= 0) continue;
-          if (!best || stats.pts > best.pts) best = { pid, pts: stats.pts };
-        }
-        effectiveCaptainId = best?.pid ?? null;
-      }
-
-      const rows = starters.map(pid => {
-        const meta    = playerMeta[pid] || { name: pid, position: '?' };
-        const stats   = statsByPlayer[pid];
-        const isCaptain = pid === effectiveCaptainId;
-        const isTriple  = isCaptain && squadRow.is_triple_captain;
-        // Apply the captain multiplier here so displayed player points sum to
-        // the GW total shown on the row above (which is itself captain-multiplied).
-        // Round the raw score BEFORE multiplying so e.g. 1.4 pts doubled reads
-        // as 1*2=2, not round(1.4*2)=3.
+      // Builds one breakdown row. Captain multiplier is applied AFTER rounding
+      // the raw score (matches calculate-scores v27 / UI display formula), so
+      // displayed player points sum to the GW total shown on the row above.
+      // The joker row (isJoker) is an extra player scored at ×1 — never captain.
+      function buildRow(pid, { isJoker = false } = {}) {
+        const meta = playerMeta[pid] || { name: pid, position: '?' };
+        const stats = statsByPlayer[pid];
+        const isCaptain = !isJoker && pid === captainId;
+        const isTriple  = isCaptain && isTripleCaptain;
         const mult = isTriple ? 3 : isCaptain ? 2 : 1;
         return {
           id: pid, name: meta.name, position: meta.position,
@@ -553,20 +546,21 @@ export default function RecapView({ leagueId, tournamentId, members, currentUser
           bigChances: stats?.bigChances ?? 0,
           captain: isCaptain,
           triple:  isTriple,
-          joker:   pid === squadRow.joker_player_id,
+          joker:   isJoker,
+          autoSub: autoSubIns.has(pid),
+          captainMoved: isCaptain && captainReassigned,
           hasStats: !!stats,
         };
-      }).sort((a, b) => positionSortIndex(a.position) - positionSortIndex(b.position));
+      }
 
-      // Reconcile against the GW total: any remaining gap (joker bonus,
-      // auto-subs swapping in a bench player, etc.) is shown as a single
-      // "Other adjustments" line so the breakdown always sums to the total.
-      const sumRows = rows.reduce((acc, p) => acc + (p.hasStats ? p.pts : 0), 0);
-      const fp = fpRowsRef.current?.[squadRow.id];
-      const target = fp != null ? Math.round(Number(fp.total)) + (fp.points_breakdown?.transfer_penalty_deduction ?? 0) : null;
-      const adjustment = target != null ? target - sumRows : 0;
+      const rows = starters
+        .map(pid => buildRow(pid))
+        .sort((a, b) => positionSortIndex(a.position) - positionSortIndex(b.position));
 
-      setAdjustmentMap(prev => ({ ...prev, [userId]: adjustment }));
+      if (jokerPid && !starters.includes(jokerPid)) {
+        rows.push(buildRow(jokerPid, { isJoker: true }));
+      }
+
       setBreakdown(prev => ({ ...prev, [userId]: rows }));
     } catch (e) {
       console.error('[RecapView] breakdown error:', e);
@@ -679,7 +673,7 @@ export default function RecapView({ leagueId, tournamentId, members, currentUser
             </div>
           </div>
         )}
-        {isOpen && <PlayerBreakdown breakdown={breakdown[s.user_id]} penaltyDeduction={s.penalty ?? 0} betDetails={betEntry?.bets ?? []} tradeNet={tradeNet} adjustment={adjustmentMap[s.user_id] ?? 0} />}
+        {isOpen && <PlayerBreakdown breakdown={breakdown[s.user_id]} penaltyDeduction={s.penalty ?? 0} betDetails={betEntry?.bets ?? []} tradeNet={tradeNet} />}
         {isOpen && <div style={{ height: 1, background: 'var(--rule)' }} />}
       </div>
     );
