@@ -1,12 +1,25 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-06-15 (League selection screens redesign — PR #541)  
+**Last Updated**: 2026-06-15 (Recap totals, captain-change warning, league sort, Live Centre polish — PR #543)  
 **E2E Test Suite**: `platform.spec.js` (36 tests × 2 browsers) passing in CI ✅  
 **Full Playbook Run**: `E2E_TEST_PLAYBOOK.md` v2.0 — all flows confirmed  
 **🟢 LAUNCH READY**: No critical (P0/P1) bugs open. All game mechanics functional. WC kick-off 2026-06-11.  
 **Live App**: https://wc-fantasy-football.vercel.app  
 **WC Kick-off**: 2026-06-11 19:00 UTC (Mexico vs South Africa)  
 **Supabase PostgREST max_rows**: 10,000 (raised from default 1,000 — 2026-06-08)
+
+---
+
+## ✅ Recap leaderboard totals, captain-change warning, league sort, Live Centre polish (2026-06-15) — PR #543
+
+**Reported** (Liga do Eder): (1) LEADERBOARD — sum of a manager's individual player points didn't match their displayed GW total (gonçalo mello, tommyazcue, rtrocado); (2) LEADERBOARD — clicking a manager on mobile only showed part of their roster, and the roster panel opened low/off-screen; (3) RECAP tab — player breakdown not sorted by position; (4) league pickers (Squad/Market/League/Live) not sorted alphabetically; (5) LIVE tab used the wrong font vs the rest of the app; (6) LIVE tab mobile league-ID cards were inconsistent widths.
+
+- **`RecapView.jsx`** — `toggleBreakdown` now (a) sorts the per-player breakdown GK→DEF→MID→FWD (`POSITION_ORDER`/`positionSortIndex`), (b) approximates `calculate-scores`'s effective-captain reassignment (if the recorded captain has 0 minutes, the bonus moves to the highest-scoring starter with `pts > 0`, matching the auto-sub logic), and (c) adds an "Other adjustments — chips · subs" row whenever `round(fantasy_points.total) + transfer_penalty_deduction` still differs from the sum of displayed player rows, so the breakdown always reconciles to the GW total shown on the row. This directly mitigates the reported mismatch; full per-player attribution for chip/auto-sub edge cases would need an Edge Function change to persist `points_breakdown` per player (tracked separately if it recurs).
+- **`LeagueScreen.jsx`** — the manager-roster modal opened from LEADERBOARD now renders via `createPortal(..., document.body)` (per the existing CLAUDE.md rule: any `position: fixed` modal inside `AppLayout#main-content` is broken on iOS by the `WebkitOverflowScrolling: touch` stacking context). Fixes both the "only part of the roster shows on mobile" bug and the "modal opens in the bottom half / off-screen" issue — same root cause as PRs #448/#474.
+- **League sorting** (alphabetical by name): `LeagueSelector.jsx` (inline `<select>` used on Squad/Market), `SelectLeaguePicker.jsx` ("Select a League" picker, desktop table + mobile cards), `LeagueScreen.jsx` "My Leagues" list, and `LiveScreen.jsx` league cards/selector.
+- **`LiveScreen.jsx`** — replaced all 80 occurrences of the invalid `className="mono"`/`className="display"` (not real Tailwind classes — Tailwind v4 only generates `font-mono`/`font-display` from the `--font-*` theme vars) with `font-mono`/`font-display`, fixing the Live Centre font mismatch. Mobile league selector cards changed from `minWidth: 140` (variable width, grew with name length) to a fixed `width: 140` with ellipsis overflow, so all cards render the same size.
+- **`SquadScreen.jsx`** — `setCaptain` now checks whether the outgoing captain already has points this round; if so, shows a confirm dialog ("Switching the armband ... will remove N pts ... cannot be reverted") before applying the change, matching the existing sub-to-bench warning pattern.
+- `npm run lint` (0 errors, pre-existing warnings only) and `npm run build` clean (no Rolldown TDZ issues). Verified via dev server preview (demo account, no league data): Live Centre renders with correct fonts/no console errors on desktop and mobile. Leaderboard modal, Recap breakdown, league-picker ordering and Live mobile card widths need a follow-up manual check against a real multi-league account.
 
 ---
 

@@ -21,7 +21,7 @@ export default function LeagueSelector({ value, onChange }) {
         const list = (data ?? []).map(r => ({
           id:   r.league_id,
           name: r.leagues?.name ?? r.league_id,
-        }));
+        })).sort((a, b) => a.name.localeCompare(b.name));
         setLeagues(list);
         if (!value && list.length === 1) onChange(list[0].id);
       });

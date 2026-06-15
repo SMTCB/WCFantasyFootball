@@ -1,9 +1,12 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '../../lib/supabase';
 import { MONO, DISPLAY, mgrHue, mgrMono } from './HubConstants';
 import { MgrTag, HubSectionLabel, MobSection } from './HubShared';
 
 // ── All helpers are module-level so React never sees new function references ──
+
+const POSITION_ORDER = { GK: 0, DEF: 1, MID: 2, FWD: 3 };
+const positionSortIndex = (pos) => POSITION_ORDER[(pos ?? '').toUpperCase().replace('FW', 'FWD')] ?? 99;
 
 function MatchdayNav({ allMatchdays, selected, onSelect, mobile }) {
   if (allMatchdays.length <= 1) return null;
@@ -59,7 +62,7 @@ function FixtureRow({ f }) {
   );
 }
 
-function PlayerBreakdown({ breakdown, penaltyDeduction = 0, betDetails = [], tradeNet = 0 }) {
+function PlayerBreakdown({ breakdown, penaltyDeduction = 0, betDetails = [], tradeNet = 0, adjustment = 0 }) {
   if (!breakdown || breakdown === 'loading') {
     return (
       <div style={{ padding: '10px 24px', fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.18em', borderTop: '1px solid var(--rule)' }}>
@@ -130,6 +133,23 @@ function PlayerBreakdown({ breakdown, penaltyDeduction = 0, betDetails = [], tra
           <span style={{ fontFamily: DISPLAY, fontSize: 11, textAlign: 'right', color: 'var(--danger)' }}>−{penaltyDeduction}</span>
         </div>
       )}
+      {adjustment !== 0 && (
+        <div style={{
+          display: 'grid', gridTemplateColumns: '32px 1fr 50px 50px', gap: 8,
+          padding: '7px 24px', borderTop: '1px solid rgba(255,255,255,.08)',
+          background: 'rgba(255,255,255,.02)',
+        }}>
+          <span style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.1em' }}>—</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+            <span style={{ fontFamily: DISPLAY, fontSize: 11, color: 'var(--mute)' }}>Other adjustments</span>
+            <span style={{ fontFamily: MONO, fontSize: 8, color: 'rgba(255,255,255,.35)', letterSpacing: '.08em' }}>chips · subs</span>
+          </div>
+          <span style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', textAlign: 'right' }}>—</span>
+          <span style={{ fontFamily: DISPLAY, fontSize: 11, textAlign: 'right', color: adjustment > 0 ? 'var(--positive)' : 'var(--danger)' }}>
+            {adjustment > 0 ? `+${adjustment}` : adjustment}
+          </span>
+        </div>
+      )}
       {betDetails.map((b, bi) => (
         <div key={bi} style={{
           display: 'grid', gridTemplateColumns: '32px 1fr 50px 50px', gap: 8,
@@ -184,6 +204,8 @@ export default function RecapView({ leagueId, tournamentId, members, currentUser
   const [loadingMds,       setLoadingMds]       = useState(true);
   const [loadingScores,    setLoadingScores]    = useState(false);
   const [breakdown,        setBreakdown]        = useState({});
+  const [adjustmentMap,    setAdjustmentMap]    = useState({});
+  const fpRowsRef = useRef({});
   const [expandedUser,     setExpandedUser]     = useState(null);
   const [h2hStandings,     setH2hStandings]     = useState([]);
   const [betMap,           setBetMap]           = useState({});
@@ -389,6 +411,7 @@ export default function RecapView({ leagueId, tournamentId, members, currentUser
     setScores([]);
     setFixtures([]);
     setBreakdown({});
+    setAdjustmentMap({});
     setExpandedUser(null);
 
     (async () => {
@@ -417,6 +440,7 @@ export default function RecapView({ leagueId, tournamentId, members, currentUser
         if (cancelled) return;
         if (fpErr) console.error('[RecapView] fantasy_points:', fpErr);
 
+        fpRowsRef.current = Object.fromEntries((fpRows ?? []).map(r => [r.squad_id, r]));
         const fpMap      = Object.fromEntries((fpRows ?? []).map(r => [r.squad_id, Number(r.total)]));
         // transfer_penalty_deduction is stored in points_breakdown when > 0 (set at round completion)
         const penaltyMap = Object.fromEntries(
@@ -492,10 +516,27 @@ export default function RecapView({ leagueId, tournamentId, members, currentUser
         s.bigChances += r.big_chances_created ?? 0;
       }
 
+      // If the squad's captain didn't feature this round (no minutes), scoring
+      // reassigns the captain bonus to the highest-scoring starter who played
+      // (effectiveCaptainId in calculate-scores). Mirror that here so the badge
+      // and multiplier land on the same player the GW total was computed from.
+      let effectiveCaptainId = squadRow.captain_id;
+      const captainStats = statsByPlayer[effectiveCaptainId];
+      if (!captainStats || !captainStats.minutes) {
+        let best = null;
+        for (const pid of starters) {
+          if (pid === squadRow.captain_id) continue;
+          const stats = statsByPlayer[pid];
+          if (!stats || stats.pts <= 0) continue;
+          if (!best || stats.pts > best.pts) best = { pid, pts: stats.pts };
+        }
+        effectiveCaptainId = best?.pid ?? null;
+      }
+
       const rows = starters.map(pid => {
         const meta    = playerMeta[pid] || { name: pid, position: '?' };
         const stats   = statsByPlayer[pid];
-        const isCaptain = pid === squadRow.captain_id;
+        const isCaptain = pid === effectiveCaptainId;
         const isTriple  = isCaptain && squadRow.is_triple_captain;
         // Apply the captain multiplier here so displayed player points sum to
         // the GW total shown on the row above (which is itself captain-multiplied).
@@ -515,7 +556,17 @@ export default function RecapView({ leagueId, tournamentId, members, currentUser
           joker:   pid === squadRow.joker_player_id,
           hasStats: !!stats,
         };
-      });
+      }).sort((a, b) => positionSortIndex(a.position) - positionSortIndex(b.position));
+
+      // Reconcile against the GW total: any remaining gap (joker bonus,
+      // auto-subs swapping in a bench player, etc.) is shown as a single
+      // "Other adjustments" line so the breakdown always sums to the total.
+      const sumRows = rows.reduce((acc, p) => acc + (p.hasStats ? p.pts : 0), 0);
+      const fp = fpRowsRef.current?.[squadRow.id];
+      const target = fp != null ? Math.round(Number(fp.total)) + (fp.points_breakdown?.transfer_penalty_deduction ?? 0) : null;
+      const adjustment = target != null ? target - sumRows : 0;
+
+      setAdjustmentMap(prev => ({ ...prev, [userId]: adjustment }));
       setBreakdown(prev => ({ ...prev, [userId]: rows }));
     } catch (e) {
       console.error('[RecapView] breakdown error:', e);
@@ -628,7 +679,7 @@ export default function RecapView({ leagueId, tournamentId, members, currentUser
             </div>
           </div>
         )}
-        {isOpen && <PlayerBreakdown breakdown={breakdown[s.user_id]} penaltyDeduction={s.penalty ?? 0} betDetails={betEntry?.bets ?? []} tradeNet={tradeNet} />}
+        {isOpen && <PlayerBreakdown breakdown={breakdown[s.user_id]} penaltyDeduction={s.penalty ?? 0} betDetails={betEntry?.bets ?? []} tradeNet={tradeNet} adjustment={adjustmentMap[s.user_id] ?? 0} />}
         {isOpen && <div style={{ height: 1, background: 'var(--rule)' }} />}
       </div>
     );
