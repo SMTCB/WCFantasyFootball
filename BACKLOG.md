@@ -1,12 +1,25 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-06-15 (CI fix: LeagueScreen "shows League heading" E2E test — PR #544)  
+**Last Updated**: 2026-06-15 (B-05/B-06 scoring consistency fix: round-per-player formula — PR #545)  
 **E2E Test Suite**: `platform.spec.js` (36 tests × 2 browsers) passing in CI ✅  
 **Full Playbook Run**: `E2E_TEST_PLAYBOOK.md` v2.0 — all flows confirmed  
 **🟢 LAUNCH READY**: No critical (P0/P1) bugs open. All game mechanics functional. WC kick-off 2026-06-11.  
 **Live App**: https://wc-fantasy-football.vercel.app  
 **WC Kick-off**: 2026-06-11 19:00 UTC (Mexico vs South Africa)  
 **Supabase PostgREST max_rows**: 10,000 (raised from default 1,000 — 2026-06-08)
+
+---
+
+## ✅ B-05/B-06: scoring consistency — round-per-player formula + persisted XI/captain snapshot (2026-06-15) — PR #545, calculate-scores v27
+
+**Reported** (Mundial do Eder, tournament 429): leaderboard `fantasy_points.total`/`league_members.total_points` could differ by ±1-3 from the sum of each player's displayed points — the classic "round of sum" vs "sum of rounds" mismatch (B-05), and the RecapView breakdown's "Other adjustments — chips · subs" catch-all row (added by PR #543) couldn't attribute the difference to a specific player/event (B-06). User flagged this as "the cornerstone of any fantasy league application" and asked for the proper fix even though it touches the live scoring pipeline mid-pilot.
+
+- **`calculate-scores` v27** — a squad's matchday `total` is now computed as `SUM over starting XI of ROUND(raw player points) * captain/triple multiplier`, matching the per-player points already shown in SquadScreen/RecapView/LiveScreen (`Math.round(rawPoints) * mult`). Resolves B-05: the GW pill always exactly equals the sum of the displayed player rows.
+- **`points_breakdown` snapshot (B-06)** — when a round is fully `roundComplete`, `calculate-scores` now persists `base_xi`, `base_captain_id`, `effective_xi`, `effective_captain_id`, `is_triple_captain`, `joker_player_id`, `auto_subs`, and `captain_reassigned` into `fantasy_points.points_breakdown`. This is the exact XI/captain/chip state that scored that round — no more client-side approximation.
+- **Migration 176** (`set_captain_round_per_player.sql`) — `set_captain()`'s mid-round self-heal of `fantasy_points.total` rewritten to use the same round-per-player formula as v27, so a captain change during a live round produces a total consistent with the new scoring.
+- **`RecapView.jsx`** — `PlayerBreakdown` rewritten: removed the "Other adjustments — chips · subs" catch-all row and the heuristic captain-reassignment guess entirely. `toggleBreakdown` now reads the persisted `points_breakdown` snapshot for settled (`roundComplete`) matchdays (`effective_xi`/`effective_captain_id`/`auto_subs`/`captain_reassigned`/`is_triple_captain`/`joker_player_id`) and falls back to the manager's live `starting_xi`/`captain_id`/`joker_player_id`/`is_triple_captain` for the in-progress matchday — which is itself the effective XI until the round completes. New badges: `AUTO-SUB` and `C MOVED` replace the old adjustment row with precise per-player attribution.
+- **Pilot verification (zero data deleted — only `fantasy_points.total`/`points_breakdown` and `league_members.total_points` recomputed via idempotent re-score)**: retroactive rescore of the 4 finished `429-r1` fixtures for Mundial do Eder — Mister Trocado `52 → 50 GW` / `TOT 53` (rank 1, incl. +3 bet reward), RTrocado `41 → 44 GW` / `TOT 44` (rank 2) — both now exactly equal the sum of their displayed per-player points. Pre-change snapshots saved to `backups/fantasy_points_429r1_pre_v27_20260615.json` and `backups/league_members_total_points_429_pre_v27_20260615.json`.
+- `npm run lint` (0 errors) and `npm run build` clean.
 
 ---
 
@@ -144,6 +157,63 @@
 
 ## 🚀 Open Backlog — Prioritised
 
+### P2 — MEDIUM
+
+| # | Item | Effort | Notes |
+|---|------|--------|-------|
+| B-07 | **[FEATURE] League archive/active toggle (commissioner-controlled, reversible)** | ~8–10h (2 PRs) | Requested 2026-06-15. Full requirements + decisions below. |
+
+#### B-07 detail — League archive/active toggle
+
+**Requirements**:
+1. Commissioner Admin menu action to flag a league `archived` (boolean toggle, reversible at any time).
+2. While archived, per-league background jobs (scoring, matchday sync, draft/cup crons) are skipped — resource management.
+3. Reactivating a league resumes from where it left off — **no retroactive/catch-up scoring** for rounds missed while archived (gap, not backfill).
+4. A "show archived leagues" toggle, **default OFF**, on every screen listing "my leagues" (Market, Squad, League/My Leagues, League pickers) — Live Centre is the one exception (see decisions below).
+5. Archived leagues get a clear visual tag/badge wherever they appear (when the toggle is on).
+
+**Decisions made (2026-06-15)**:
+- Auctions/bets with live deadlines in an archived league: **no special handling** — let `resolve-expired-auctions`/`auto-close-bets` continue as normal (simpler; leagues will close eventually anyway).
+- **LiveScreen always excludes archived leagues**, regardless of the show/hide toggle (Live Centre is about *current* activity).
+- Archived leagues get a visible **"ARCHIVED" tag/badge** in any list where they're shown.
+
+**Implementation plan** (from codebase research):
+
+1. **Schema** — new migration `176_`:
+   ```sql
+   ALTER TABLE leagues ADD COLUMN IF NOT EXISTS archived boolean DEFAULT false NOT NULL;
+   ALTER TABLE leagues ADD COLUMN IF NOT EXISTS archived_at timestamptz;
+   ```
+   Pattern precedent: migration 136 (`h2h_enabled`).
+
+2. **Commissioner UI** — `src/components/league/CommissionerPanel.jsx`: new "ARCHIVE LEAGUE" lifecycle card (desktop `LifecycleOp` + mobile `MobLifecycleCard`), reusing the existing `ToggleSwitch` component (line ~1302) and the EMERGENCY TRANSFERS toggle as the closest template (confirm dialog before archiving, given the resource/visibility impact). `src/hooks/useCommissioner.js`: new `archiveLeague`/`unarchiveLeague` actions following the `openTransferWindow`/`closeTransferWindow` pattern (lines ~78-100), writing `{ archived, archived_at }`.
+
+3. **"Show archived leagues" toggle, default OFF** — add a shared hook (e.g. `useShowArchived`, localStorage-backed) so state is consistent across screens. Wire into:
+   - `src/screens/MarketScreen.jsx` (league select query ~line 273-276)
+   - `src/screens/SquadScreen.jsx` (~line 108-138)
+   - `src/screens/LeagueScreen.jsx` "My Leagues" view (~line 396-426 query, ~1928-2060 render — both desktop and mobile blocks)
+   - `src/components/LeagueSelector.jsx` (~line 16-19)
+   - `src/components/league/SelectLeaguePicker.jsx` (PR #541's "Select a League" picker)
+   - `src/screens/RecapScreen.jsx` (~lines 305, 441, 454) — history view, included behind the toggle for consistency
+   - Each query needs `archived` added to the `leagues(...)` select; filtering via `.select('..., leagues!inner(...)').eq('leagues.archived', false)` when the toggle is off.
+   - **`src/screens/LiveScreen.jsx`** (~line 405-410): always filter `leagues.archived = false`, independent of the toggle — no UI toggle needed here.
+
+4. **"ARCHIVED" badge** — new small tag component (or extend `LeagueBadges.jsx`'s `TypeChip` pattern from PR #541) shown next to the league name wherever the show-archived toggle reveals an archived league.
+
+5. **Cron/Edge Function archival gates** (resource management):
+   - `supabase/functions/calculate-scores/index.js:511-515` — add `.eq('leagues.archived', false)` to the squads query. Highest-impact: this single change also gates gazette writes and H2H resolution for archived leagues (both downstream of this squads fetch), and runs every 2 min while matches are live.
+   - New migration updating `sync_squad_matchdays()` (originally migration 163) — add `AND l.archived = false` to the squads/leagues join (can't edit 163 directly — append-only).
+   - `supabase/functions/run-reverse-standings-draft/index.js:56-63` — add `.eq('leagues.archived', false)`.
+   - `supabase/functions/eliminate-cup-club/index.js:27-43` — filter `leagueIds` to non-archived before calling `sync_cup_eliminations`.
+
+6. **No-retroactive-scoring verification**: with #5 in place, `fantasy_points` (UNIQUE per `squad_id`/`matchday_id`, upserted per round) simply stops getting new rows for an archived league's squads — no historical-backfill cron exists, so reactivation naturally produces a *gap*, not a catch-up. One residual UX risk to test: on reactivation, `sync_squad_matchdays` may jump a squad's `matchday_id` straight from its frozen round to the tournament's current round in one step (possibly skipping several rounds) — verify this renders as a clean gap in Recap/gazette and doesn't look broken; smooth over if needed as a small follow-up.
+
+**Suggested delivery** (2 PRs):
+- PR A: migration 176 + commissioner archive toggle + cron/Edge Function archival gates (backend half).
+- PR B: shared show/hide-archived hook + badge + wiring across all league-list screens, LiveScreen exclusion (frontend half).
+
+---
+
 ### P3 — LOW
 
 | # | Item | Effort | Notes |
@@ -152,7 +222,9 @@
 | B-02 | **[TECH DEBT] Round-aware `transfer_reopen_hours` for group-stage rounds** | 1–2h | `get_transfer_window_status()` reopens the transfer market `last_kickoff(round) + 2h (hardcoded match-duration buffer) + transfer_reopen_hours` (league_config, currently 6 → 8h total). For group-stage rounds (r1–r3, no extra time/penalties, ~95-100min matches), the 2h hardcoded buffer already covers full-time + settling margin, so `transfer_reopen_hours` could drop to 1 (3h total) — giving managers more usable transfer time before the next round's deadline, with no extra risk vs knockout rounds (r6–r8) which need ET/penalties margin and should stay at 6. Implementation: small migration adding round-suffix-aware logic to `get_transfer_window_status()` (same pattern as migration 158's `club_cap_rules`: r1-r3→1, r4-r8→6). Safe to apply before round 1's reopen (Jun 18 10:00 UTC) — no launch-day pressure since round 1 doesn't reopen for ~a week. |
 | B-03 | **[FEATURE] Drop the knockout-stage second draft** | Low–Med | Currently group→knockout transition triggers a second lottery (commissioner sets `knockout_draft_deadline`, runs "RUN KNOCKOUT ALLOCATION"; managers can protect up to 5 players via `knockout_keep_submissions`/`submit_knockout_keeps`, migration 143; `run-draft-lottery` Pass 0 pre-allocates kept players then re-lotteries the rest). Proposal: treat group→knockout exactly like any other matchday transition — squads carry over unchanged, normal transfer window/club-cap apply (mechanism already generic: `sync_squad_matchdays` migration 163 advances `matchday_id`, `get_transfer_window_status` reopens the market, `cup_active_clubs`/`sync_cup_eliminations` already restrict the *market* pool to non-eliminated clubs independent of any draft). Effort: mostly hiding/disabling UI (CommissionerPanel knockout draft controls, `KnockoutKeepSelector` banner, DraftScreen knockout phase) — same `false &&`-flag pattern as `CHIPS_ENABLED`; `run-draft-lottery`'s knockout path is already manually-triggered so simply never calling it is a no-op (no code change strictly required). **Risk reassessed as low overall**: draft-mode leagues have unlimited transfers (no per-round limit/penalty, confirmed in `process-transfer`), so managers can freely offload eliminated-nation players and rebuild from the shrinking-but-available pool during the post-group reopen window — the "dead weight" concern from the original assessment doesn't apply. **Pool-depth concern also already handled automatically** by the existing no-repeat relaxation formula (migration 07, `calculate_relaxation_state`/`apply_relaxation_state`): `pressure = (n_managers × 15) / available_players` where `available_players` = non-eliminated-club players (`get_cup_pool_stats`/`get_cup_available_players`). As clubs are eliminated, `available_players` drops, pressure rises past `threshold = 0.6 + n_managers/40`, and the no-repeat rule auto-relaxes in tiers — tier 1 allows 1 repeat per squad across the league, tier 2 allows 3, tier 3 lifts the no-repeat rule entirely (`repeats_allowed = NULL`). This is the same mechanism cup leagues already rely on today, so a simultaneous post-group refresh by all managers won't hit an artificial repeat-rule wall even if the raw eliminated-club pool shrinks faster than squad turnover. No new work needed here — B-03 effort/risk stands as stated above with this mechanism as the existing safety net. |
 | B-04 | **[TECH DEBT] Scoring v2 Bucket C — verify direct free-kick/corner goal, MOTM, penalty won/committed feasibility during a live match** | TBD | Scoring v2 proposal (`Forza_Scoring_v2.xlsx`) Buckets A+B shipped 2026-06-13 (migration 175, calculate-scores v26). Bucket C items deferred — feasibility unconfirmed against live Forza API payloads: (1) **Direct free-kick/corner goal +1 (all positions)** — `periods` endpoint `goal` event `detail` field is only confirmed to return `"penalty"` or `null`; unclear if it ever returns a free-kick/corner indicator. (2) **MOTM +3 (all positions)** — no MOTM field found in any confirmed/undocumented endpoint (`/v1/matches/:id/lineups`, `/v2/matches/:id/player_statistics`, `/v3/matches/:id/lineups`, `/v2/matches/:id/periods`). (3) **Penalty won +1 / penalty committed -1 (all positions)** — no "penalty won/conceded" event type confirmed in the `periods` event stream (only `goal` with `detail="penalty"`, which tells us a penalty was *taken*, not who won/conceded it). **Action**: during the next live-match health check, pull raw JSON from `/v2/matches/:id/periods` and `/v3/matches/:id/lineups` for an in-progress fixture and grep for `motm`, `man_of_the_match`, `free_kick`, `corner`, `penalty_won`, `penalty_conceded`, `foul` fields not yet seen in sampled responses. If found, extend `ingest-match-events` to capture + `calculate-scores` to score (+1 all positions for free-kick/corner goal and penalty won, -1 for penalty committed, +3 MOTM). If absent, mark Bucket C permanently infeasible and remove from `Forza_Scoring_v2.xlsx` gap analysis. |
-| B-05 | **[TECH DEBT] GW pill total can differ ±1 from sum of displayed player points** | 1–2h | Reintroduced by PR #535 (2026-06-14): per-player points are now `Math.round(rawPoints)` so the same player shows the same score across all leagues (fixes the cross-league inconsistency bug). But the GW pill shows canonical `fantasy_points.total = Math.round(sum of raw points)` (computed server-side by `calculate-scores`) — summing the independently-rounded per-player rows can differ from this by ±1 (classic "sum of rounded ≠ rounded of sum"). **Proper fix**: change `calculate-scores` (next version, e.g. v27) so `fantasy_points.total` is itself computed as the **sum of each player's `Math.round(rawPoints)` (post-captain-mult)** — i.e. the same formula the frontend now uses — instead of rounding the squad sum once. This makes the pill match the displayed breakdown exactly, everywhere, while preserving per-player cross-league consistency (no apportionment). Requires: (1) `calculate-scores` Edge Function change + redeploy; (2) idempotent retroactive rescore of already-finished `429-r1`/`429-r2` fixtures (same technique as migration 175) so historical totals match the new formula. Low risk, contained, but touches the live scoring pipeline mid-tournament — schedule deliberately, not urgent (current discrepancy is rare and cosmetic). |
+| B-05 | ~~**[TECH DEBT] GW pill total can differ ±1 from sum of displayed player points**~~ | — | ✅ **Resolved 2026-06-15, PR #545** — `calculate-scores` v27 computes `fantasy_points.total` as the sum of each player's `Math.round(rawPoints) * mult`, matching the displayed breakdown exactly. See top-of-file entry for details. |
+| B-06 | ~~**[TECH DEBT] Persist per-player `points_breakdown` server-side for exact chip/auto-sub/captain-reassignment attribution**~~ | — | ✅ **Resolved 2026-06-15, PR #545** — `calculate-scores` v27 persists `effective_xi`/`effective_captain_id`/`auto_subs`/`captain_reassigned`/`is_triple_captain`/`joker_player_id` into `points_breakdown` on `roundComplete`; RecapView reads this snapshot directly, replacing the "Other adjustments" catch-all row from PR #543. |
+| B-08 | **[FEATURE] Multi-competition leagues (e.g. EPL + La Liga + Calcio in one league)** | 3–4 weeks (mini-squads-per-tournament) to 6–9 weeks (unified squad/pool) | Requested 2026-06-15 — assessment only, no design doc yet. **Core blocker**: `matchday_id = '{tournament_id}-r{N}'` is the backbone of squads, scoring, transfer windows, lineup locks, club caps, draft pools, and recap GW labels (~500 refs across migrations). Competitions run on different calendars (EPL GW34 ≠ La Liga J34 ≠ Serie A G34) — there is no shared "round" concept today; a multi-competition league needs a new synthetic-Gameweek abstraction with a per-tournament round-mapping table. **Required pieces**: (1) `league_tournaments` junction table replacing the single `leagues.tournament_id` FK + rewritten `create_league`; (2) synthetic GW model + round mapping; (3) player pool/draft/market union across tournaments with harmonized pricing (EPL prices vs smaller-league prices are set independently per migration 94); (4) club caps resolved per-player's own tournament; (5) calculate-scores routes each player to their tournament's `scoring_rules` (engine already exists, migration 80/175 — moderate lift) and matches fixtures by tournament; (6) per-player transfer/lineup lock windows instead of one league-wide window; (7) Live Centre/Recap aggregate fixtures across tournaments per GW; (8) cron jobs fan out per tournament referenced by any active league. **Compatibility rules requested**: (a) block mixing top-tier with minor leagues (e.g. EPL + Azerbaijan Premier League) — needs new `tournaments.competition_tier` classification, OR (recommended for pilot scale) a manually curated `competition_bundles` allowlist table with pre-built GW mappings — far less engineering; (b) block mixing league + cup formats — needs new `tournaments.competition_format` enum (`league`/`cup`/`hybrid`); cup tournaments have special-cased machinery (knockout keeps, cup_active_clubs, stage→round mapping) that doesn't generalize, recommend hard-blocking cup formats from multi-competition leagues entirely; (c) validate overlapping `starts_at`/`ends_at` and similar round cadence at league-creation time. **Open product decision** (determines which estimate applies): one unified 15-player squad drawn from a combined cross-competition pool, vs. 3 separate per-tournament mini-squads summing into one league total (cheaper — per-tournament squad/scoring logic mostly already works). **Recommendation**: treat as its own design doc (same pattern as `H2H_COMPETITION_DESIGN.md`) before starting — resolve the squad-composition decision first. |
 
 ---
 
