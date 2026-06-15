@@ -1,12 +1,22 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-06-15 (Recap totals, captain-change warning, league sort, Live Centre polish — PR #543)  
+**Last Updated**: 2026-06-15 (CI fix: LeagueScreen "shows League heading" E2E test — PR #544)  
 **E2E Test Suite**: `platform.spec.js` (36 tests × 2 browsers) passing in CI ✅  
 **Full Playbook Run**: `E2E_TEST_PLAYBOOK.md` v2.0 — all flows confirmed  
 **🟢 LAUNCH READY**: No critical (P0/P1) bugs open. All game mechanics functional. WC kick-off 2026-06-11.  
 **Live App**: https://wc-fantasy-football.vercel.app  
 **WC Kick-off**: 2026-06-11 19:00 UTC (Mexico vs South Africa)  
 **Supabase PostgREST max_rows**: 10,000 (raised from default 1,000 — 2026-06-08)
+
+---
+
+## ✅ CI fix: LeagueScreen "shows League heading" E2E test (2026-06-15) — PR #544
+
+**Reported**: CI "E2E Tests" job failing on `main` since PR #541 (2026-06-15) in `e2e/platform.spec.js:314` (`LeagueScreen › shows League heading`, mobile-chrome project).
+
+- **Root cause**: PR #541's `LeagueScreen.jsx` "My Leagues" redesign added a desktop/mobile split — both the `hidden lg:flex` (desktop) and `lg:hidden` (mobile) blocks render a `<div>My Leagues</div>` heading. The test's `main.getByText(/league/i).first()` matched the desktop heading first in DOM order, which is `display:none` on the mobile viewport, so `.first()` was never visible even though the mobile heading later in the DOM was.
+- **Fix**: `e2e/platform.spec.js` line 316 — added `.filter({ visible: true })` before `.first()` so the assertion targets the visible heading regardless of DOM order. Test-side fix only, no UI changes.
+- Verified: `npx playwright test e2e/platform.spec.js --project=mobile-chrome -g "shows League heading"` passes; full `platform.spec.js` suite (84 tests) passes; `npm run lint` clean (0 errors).
 
 ---
 

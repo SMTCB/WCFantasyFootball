@@ -313,7 +313,7 @@ test.describe('LeagueScreen', () => {
 
   test('shows League heading', async ({ page }) => {
     const main = page.locator('[data-testid="main-content"]');
-    await expect(main.getByText(/league/i).first()).toBeVisible();
+    await expect(main.getByText(/league/i).filter({ visible: true }).first()).toBeVisible();
   });
 
   test('renders league list or standings', async ({ page }) => {
