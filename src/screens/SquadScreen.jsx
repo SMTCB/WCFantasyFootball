@@ -712,19 +712,45 @@ export default function SquadScreen() {
   };
 
   const setCaptain = async () => {
-    try {
-      if (!selectedPlayer) return;
-      const isInStartingXI = squadData.players.some(p => p.id === selectedPlayer.id);
-      if (!isInStartingXI) {
-        showToast('Only players in your starting XI can be captain.', 'warning');
+    if (!selectedPlayer) return;
+    const isInStartingXI = squadData.players.some(p => p.id === selectedPlayer.id);
+    if (!isInStartingXI) {
+      showToast('Only players in your starting XI can be captain.', 'warning');
+      return;
+    }
+
+    // If the current captain has already scored points this round, warn that
+    // switching the armband removes their captain bonus and cannot be reverted.
+    const prevCaptain = allSquadPlayers.find(p => p.id === squadData.captainId);
+    if (prevCaptain) {
+      const mult  = squadData.isTripleCaptain ? 3 : 2;
+      const bonus = (prevCaptain.rawPoints ?? 0) * (mult - 1);
+      if (bonus > 0) {
+        const newPlayer = selectedPlayer;
+        setConfirm({
+          title:        `Change captain to ${newPlayer.name}?`,
+          body:         `${prevCaptain.name} has already scored points as captain this round. Switching the armband to ${newPlayer.name} will remove ${prevCaptain.name}'s captain bonus (${bonus} pts) from your total.`,
+          warning:      'This action cannot be reverted.',
+          confirmLabel: `Confirm (-${bonus} pts)`,
+          danger:       true,
+          onConfirm:    () => doSetCaptain(newPlayer),
+        });
+        setSelectedPlayer(null);
         return;
       }
+    }
+
+    await doSetCaptain(selectedPlayer);
+  };
+
+  const doSetCaptain = async (player) => {
+    try {
       setSaving(true);
       const prevCaptainId = squadData.captainId;
-      setSquadData({ ...squadData, captainId: selectedPlayer.id });
+      setSquadData({ ...squadData, captainId: player.id });
       const { data: result, error } = await supabase.rpc('set_captain', {
         p_squad_id: squadData.squadId,
-        p_player_id: selectedPlayer.id,
+        p_player_id: player.id,
       });
       if (error || !result?.ok) {
         // Persisting the armband failed — revert the optimistic update so the UI
@@ -733,7 +759,7 @@ export default function SquadScreen() {
         const code = result?.code ?? '';
         const msg  = result?.error ?? error?.message ?? 'Failed to set captain — please try again.';
         if (code === 'FIXTURE_STARTED') {
-          showToast(`Cannot make ${selectedPlayer.name} captain — their match has already started or finished this round.`, 'warning');
+          showToast(`Cannot make ${player.name} captain — their match has already started or finished this round.`, 'warning');
         } else {
           showToast(msg, 'error');
         }

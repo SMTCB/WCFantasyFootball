@@ -1,4 +1,5 @@
 import { useState, useEffect, useLayoutEffect, useCallback, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../hooks/useAuth';
@@ -288,10 +289,13 @@ export default function LeagueScreen() {
     }
     if (!ids.length) return;
     const { data: rows } = await supabase.from('players').select('id,name,position,club,price').in('id', ids);
-    setManagerRoster(rows ?? []);
+    setManagerRoster((rows ?? []).slice().sort((a, b) => positionSortIndex(a.position) - positionSortIndex(b.position)));
   };
 
   const normalizePos = (pos) => (pos ?? '').toUpperCase().replace('FW', 'FWD');
+
+  const POSITION_ORDER = { GK: 0, DEF: 1, MID: 2, FWD: 3 };
+  const positionSortIndex = (pos) => POSITION_ORDER[normalizePos(pos)] ?? 99;
 
   const validateAndSendProposal = async () => {
     if (isSendingProposal) return;
@@ -418,7 +422,8 @@ export default function LeagueScreen() {
         return acc;
       }, {});
 
-      setLeagues(data.map(r => ({ ...r, member_count: memberCounts[r.league_id] })) || []);
+      setLeagues((data.map(r => ({ ...r, member_count: memberCounts[r.league_id] })) || [])
+        .sort((a, b) => (a.leagues?.name ?? '').localeCompare(b.leagues?.name ?? '')));
     } catch (err) {
       console.error(err);
     } finally {
@@ -1802,7 +1807,7 @@ export default function LeagueScreen() {
             </div>
          )}
 
-         {managerTeamView && (
+         {managerTeamView && createPortal(
            <div className="fixed inset-0 z-50 flex items-end bg-black/80" onClick={() => setManagerTeamView(null)}>
              <div className="w-full h-[80vh] bg-[var(--ink)] rounded-t-2xl flex flex-col border-t border-[var(--rule)]" onClick={e => e.stopPropagation()}>
                <div className="p-6 border-b border-[var(--rule)] flex justify-between items-center">
@@ -1839,7 +1844,8 @@ export default function LeagueScreen() {
                  })}
                </div>
              </div>
-           </div>
+           </div>,
+           document.body
          )}
 
          {h2hTarget && (

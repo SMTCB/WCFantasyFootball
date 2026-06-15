@@ -7,6 +7,7 @@ const MONO = "'JetBrains Mono', monospace";
 // "Select a League" picker shown on Squad/Market when the user has multiple
 // leagues and none is active yet. Renders a desktop table and a mobile card list.
 export default function SelectLeaguePicker({ leagues, onSelect, eyebrow }) {
+  const sortedLeagues = [...leagues].sort((a, b) => (a.name ?? '').localeCompare(b.name ?? ''));
   return (
     <div className="min-h-screen bg-bg" style={{ color: 'var(--paper)' }}>
       {/* Desktop */}
@@ -26,7 +27,7 @@ export default function SelectLeaguePicker({ leagues, onSelect, eyebrow }) {
           <span style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.16em', textTransform: 'uppercase', textAlign: 'right', paddingRight: 16 }}>Rank</span>
           <span style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.16em', textTransform: 'uppercase', textAlign: 'right', paddingRight: 40 }}>Pts</span>
         </div>
-        {leagues.map(l => {
+        {sortedLeagues.map(l => {
           const tc = TYPE_COLOR[l.type] || 'var(--mute)';
           return (
             <div
@@ -78,10 +79,10 @@ export default function SelectLeaguePicker({ leagues, onSelect, eyebrow }) {
             </div>
           </div>
           <div style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.16em', textTransform: 'uppercase' }}>
-            {leagues.length} {leagues.length === 1 ? 'LEAGUE' : 'LEAGUES'}
+            {sortedLeagues.length} {sortedLeagues.length === 1 ? 'LEAGUE' : 'LEAGUES'}
           </div>
         </div>
-        {leagues.map(l => {
+        {sortedLeagues.map(l => {
           const tc = TYPE_COLOR[l.type] || 'var(--mute)';
           return (
             <div
