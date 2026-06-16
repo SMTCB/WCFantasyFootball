@@ -1400,6 +1400,49 @@ function useFreeTransferWindow(leagueId, commissioner) {
   return { activeFreeWindow, openFreeWindow, closeFreeWindow };
 }
 
+// Free transfers config — toggle that lifts the per-round transfer cap while the
+// window is open. Stored in league_config('free_transfers'). Classic leagues only;
+// draft leagues already have unlimited transfers via limitMatchdayId=null.
+// Follows the same dual-call pattern as useFreeTransferWindow.
+// ─────────────────────────────────────────────────────────────────────────────
+function useFreeTransfersConfig(leagueId, commissioner) {
+  const [freeTransfers, setFreeTransfersState] = useState(false);
+
+  const refresh = useCallback(() => {
+    if (!leagueId) return;
+    supabase
+      .from('league_config')
+      .select('config_value')
+      .eq('league_id', leagueId)
+      .eq('config_key', 'free_transfers')
+      .maybeSingle()
+      .then(({ data }) => { setFreeTransfersState(data?.config_value === true); });
+  }, [leagueId]);
+
+  useEffect(() => { refresh(); }, [refresh]);
+
+  const toggle = (enabled) => {
+    commissioner.commAction(async () => {
+      const { error } = await supabase
+        .from('league_config')
+        .upsert(
+          { league_id: leagueId, config_key: 'free_transfers', config_value: enabled },
+          { onConflict: 'league_id,config_key' }
+        );
+      if (error) throw new Error(error.message);
+      setFreeTransfersState(enabled);
+      commissioner.setCommMsg({
+        type: 'ok',
+        text: enabled
+          ? 'Free transfers ON — no per-round limit while the window is open.'
+          : 'Free transfers OFF — per-round limit restored.',
+      });
+    });
+  };
+
+  return { freeTransfers, toggleFreeTransfers: toggle };
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Lifecycle operation card
 // ─────────────────────────────────────────────────────────────────────────────
@@ -1506,6 +1549,8 @@ function LifecycleOps({ commissioner, leagueId, tournamentId, league = null, onH
   // Free transfer window state — emergency "open the market mid-matchday" toggle.
   // Shared with the mobile layout via useFreeTransferWindow.
   const { activeFreeWindow, openFreeWindow, closeFreeWindow } = useFreeTransferWindow(leagueId, commissioner);
+  // Free transfers config — lifts per-round cap while window is open (Classic leagues only).
+  const { freeTransfers, toggleFreeTransfers } = useFreeTransfersConfig(leagueId, commissioner);
 
   // groupStageStarted: true once at least one configured matchday fixture has kicked off.
   // Gating on kickoff_at (not deadline_at or fixture status) ensures the knockout draft
@@ -1648,15 +1693,48 @@ function LifecycleOps({ commissioner, leagueId, tournamentId, league = null, onH
                     <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.2em', color: 'var(--mute)' }}>LIMIT · BLANK = UNLIMITED</span>
                     <input type="number" min="1" value={windowTransfers} onChange={e => setWindowTransfers(e.target.value)} placeholder="e.g. 5" style={inputStyle} />
                   </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6, marginTop: 4 }}>
-                    <button onClick={openTransferWindow} disabled={commLoading} style={opBtnStyle('var(--positive)')}>OPEN</button>
-                    <button onClick={handleCloseNow}     disabled={commLoading} style={{ ...btnBase, width: '100%', background: 'transparent', border: '1px solid rgba(239,68,68,.33)', color: 'var(--danger)', cursor: commLoading ? 'not-allowed' : 'pointer', fontSize: 11 }}>CLOSE NOW</button>
-                  </div>
+                  <ToggleSwitch
+                    checked={!!league?.transfers_open}
+                    onChange={league?.transfers_open ? handleCloseNow : openTransferWindow}
+                    disabled={commLoading}
+                    labelOn="WINDOW OPEN"
+                    labelOff="WINDOW CLOSED"
+                  />
                 </div>
               )
             }
           />
           </div>
+
+          {/* Free transfers — Classic leagues only (draft leagues already have unlimited).
+              Lifts the per-round transfer cap while the window is open. Does NOT override
+              the open/closed window state — acts on top of normal window timing. */}
+          {league?.format !== 'noduplicate' && (
+          <LifecycleOp
+            title="FREE TRANSFERS"
+            status={freeTransfers ? 'ON' : 'OFF'}
+            statusTone={freeTransfers ? 'var(--positive)' : 'var(--mute)'}
+            sub="Removes the per-round transfer limit (normally 3 free + penalty buys) while the transfer window is open. Budget, position, club cap, and window timing still apply."
+            when="Enable mid-window when you want managers to make unlimited transfers — e.g. post-draft squad building or a generous transfer period. Disable to restore normal per-round limits."
+            primary={
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {freeTransfers && (
+                  <div style={{ padding: '8px 10px', background: 'rgba(24,201,107,0.06)', border: '1px solid rgba(24,201,107,0.25)', fontFamily: BODY, fontSize: 10, color: 'var(--positive)', lineHeight: 1.5 }}>
+                    <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.2em' }}>ON · </span>
+                    Transfer limit lifted — managers can buy freely while the window is open.
+                  </div>
+                )}
+                <ToggleSwitch
+                  checked={freeTransfers}
+                  onChange={() => toggleFreeTransfers(!freeTransfers)}
+                  disabled={commLoading}
+                  labelOn="FREE TRANSFERS ON"
+                  labelOff="FREE TRANSFERS OFF"
+                />
+              </div>
+            }
+          />
+          )}
 
           {/* Emergency mid-matchday transfer toggle — relevant to any deadline-controlled
               league (matchday-deadline lock applies regardless of league_mode). */}
@@ -2567,6 +2645,8 @@ export default function CommissionerPanel({ commissioner, leagueId, tournamentId
   // and the mobile lifecycle cards below. Called unconditionally (Rules of Hooks)
   // even though it's only rendered on one of the two layouts per render.
   const { activeFreeWindow, openFreeWindow, closeFreeWindow } = useFreeTransferWindow(leagueId, commissioner);
+  // Free transfers config — same dual-call pattern as useFreeTransferWindow above.
+  const { freeTransfers: mobFreeTransfers, toggleFreeTransfers: mobToggleFreeTransfers } = useFreeTransfersConfig(leagueId, commissioner);
 
   useEffect(() => {
     if (!_mobAllocDone || _mobKnockoutAllocDone || !tournamentId) { setGroupStageStarted(false); return; }
@@ -2674,13 +2754,37 @@ export default function CommissionerPanel({ commissioner, leagueId, tournamentId
                 Transfer windows for this league are governed by matchday deadlines, not manual open/close.
               </div>
             ) : (
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-                <button onClick={openTransferWindow} disabled={commLoading} style={{ ...mobBtn, background: 'var(--positive)', color: 'var(--ink)' }}>OPEN</button>
-                <button onClick={() => { if (window.confirm('Close the transfer window immediately?')) closeTransferWindow(); }} disabled={commLoading} style={{ ...mobBtn, background: 'transparent', color: 'var(--danger)', border: '1px solid rgba(239,68,68,.33)' }}>CLOSE NOW</button>
-              </div>
+              <ToggleSwitch
+                checked={!!league?.transfers_open}
+                onChange={league?.transfers_open
+                  ? () => { if (window.confirm('Close the transfer window immediately?')) closeTransferWindow(); }
+                  : openTransferWindow}
+                disabled={commLoading}
+                labelOn="WINDOW OPEN"
+                labelOff="WINDOW CLOSED"
+              />
             )}
           </MobLifecycleCard>
           </div>
+
+          {/* Free transfers (mobile) — Classic leagues only */}
+          {league?.format !== 'noduplicate' && (
+          <MobLifecycleCard title="FREE TRANSFERS" status={mobFreeTransfers ? 'ON' : 'OFF'} tone={mobFreeTransfers ? 'var(--positive)' : 'var(--mute)'} when="Enable when you want unlimited transfers — e.g. post-draft building. Disable to restore per-round limits.">
+            {mobFreeTransfers && (
+              <div style={{ padding: '8px 10px', background: 'rgba(24,201,107,0.06)', border: '1px solid rgba(24,201,107,0.25)', fontFamily: BODY, fontSize: 10, color: 'var(--positive)', lineHeight: 1.5 }}>
+                <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.2em' }}>ON · </span>
+                Transfer limit lifted — managers can buy freely while the window is open.
+              </div>
+            )}
+            <ToggleSwitch
+              checked={mobFreeTransfers}
+              onChange={() => mobToggleFreeTransfers(!mobFreeTransfers)}
+              disabled={commLoading}
+              labelOn="FREE TRANSFERS ON"
+              labelOff="FREE TRANSFERS OFF"
+            />
+          </MobLifecycleCard>
+          )}
 
           {mobIsDeadlineControlled && (
           <div data-tour="comm-emergency-transfers">

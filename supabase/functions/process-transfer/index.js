@@ -280,6 +280,22 @@ Deno.serve(async (req) => {
       limitMatchdayId = null;
     }
 
+    // Free transfers (classic leagues): commissioner can toggle unlimited transfers
+    // while the transfer window is open. Does not override the open/closed window
+    // period — it only lifts the per-round cap for transfers that are already allowed.
+    // Stored in league_config as { config_key: 'free_transfers', config_value: true }.
+    if (limitMatchdayId && leagueMode === 'classic') {
+      const { data: ftCfg } = await supabase
+        .from('league_config')
+        .select('config_value')
+        .eq('league_id', league_id)
+        .eq('config_key', 'free_transfers')
+        .maybeSingle();
+      if (ftCfg?.config_value === true) {
+        limitMatchdayId = null;
+      }
+    }
+
     // ── SELL ─────────────────────────────────────────────────────────────────
     if (action === 'sell') {
       if (!currentPlayers.includes(player_id)) {

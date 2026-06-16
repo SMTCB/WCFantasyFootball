@@ -84,6 +84,7 @@ export default function MarketScreen() {
   const [transferPenalty,   setTransferPenalty]   = useState(4);  // pts cost per extra buy (or array)
   const [activeMatchdayId,  setActiveMatchdayId]  = useState(null); // e.g. '623-r3'
   const [preCompetition,    setPreCompetition]    = useState(false); // true until first live/finished fixture
+  const [freeTransfers,     setFreeTransfers]     = useState(false); // classic league: unlimited transfers while window open
   const [clubCap,           setClubCap]           = useState(3);    // dynamic per-round, from club_cap_rules
   const [confirm,       setConfirm]       = useState(null);
   const [basket,        setBasket]        = useState([]);  // pending [{type:'buy'|'sell', player}]
@@ -105,7 +106,9 @@ export default function MarketScreen() {
   // from the matchday window lock — mirrors the same exemption in process-transfer —
   // so a manager left short by a draft lottery can keep using the Market to finish
   // building their squad even while the window shows 'upcoming'.
-  const isLocked = transferWindow.status === 'upcoming' && mySquad?.initial_build_complete !== false;
+  const isLocked = transferWindow.status === 'upcoming'
+    && mySquad !== null
+    && mySquad?.initial_build_complete !== false;
 
   // Basket-simulated squad state — applies pending buys/sells on top of the actual squad.
   // Used for all validation (canBuy, position/club caps) and display (budget, squad count,
@@ -137,6 +140,7 @@ export default function MarketScreen() {
     if (mySquad?.initial_build_complete === false)  return 0;
     if (preCompetition)                             return 0;
     if (isDraftLeague)                              return 0;
+    if (freeTransfers)                              return 0;
     const freeUsed    = (mySquad?.round_transfers  ?? {})[activeMatchdayId] ?? 0;
     const penaltyUsed = (mySquad?.penalty_transfers ?? {})[activeMatchdayId] ?? 0;
     const basketBuys  = basket.filter(b => b.type === 'buy').length;
@@ -145,7 +149,7 @@ export default function MarketScreen() {
     const costs = Array.isArray(transferPenalty) ? transferPenalty : [transferPenalty ?? 4];
     return [...Array(basketPenBuys)].reduce((sum, _, i) =>
       sum + (costs[Math.min(penaltyUsed + i, costs.length - 1)] ?? costs[costs.length - 1]), 0);
-  }, [basket, mySquad, activeMatchdayId, transfersPerRound, transferPenalty, transferWindow, preCompetition, isDraftLeague]);
+  }, [basket, mySquad, activeMatchdayId, transfersPerRound, transferPenalty, transferWindow, preCompetition, isDraftLeague, freeTransfers]);
 
   // Draft gate: noduplicate leagues with no processed allocation go to draft screen or recovery
   useEffect(() => {
@@ -379,10 +383,11 @@ export default function MarketScreen() {
           .from('league_config')
           .select('config_key, config_value')
           .eq('league_id', activeLeague)
-          .in('config_key', ['transfers_per_round', 'transfer_penalty']);
+          .in('config_key', ['transfers_per_round', 'transfer_penalty', 'free_transfers']);
         for (const row of cfgRows ?? []) {
           if (row.config_key === 'transfers_per_round') setTransfersPerRound(Number(row.config_value) || 3);
           if (row.config_key === 'transfer_penalty')    setTransferPenalty(row.config_value ?? 4);
+          if (row.config_key === 'free_transfers')      setFreeTransfers(row.config_value === true);
         }
       } catch (err) {
         console.error('MarketScreen: transfer config fetch failed', err);
@@ -752,7 +757,8 @@ export default function MarketScreen() {
               const isUnlimited = isDraftLeague
                 || mySquad?.initial_build_complete === false
                 || transferWindow?.windowType === 'unlimited'
-                || preCompetition;
+                || preCompetition
+                || freeTransfers;
               const freeUsed      = (mySquad?.round_transfers  ?? {})[activeMatchdayId] ?? 0;
               const penaltyUsed   = (mySquad?.penalty_transfers ?? {})[activeMatchdayId] ?? 0;
               const basketBuys    = basket.filter(b => b.type === 'buy').length;
