@@ -719,10 +719,16 @@ export default function LiveScreen() {
         for (const [pid, stats] of Object.entries(statsByPlayer)) {
           const p = playerMap[pid];
           if (!p) continue;
-          const isCap = pid === captainId;
-          const pts   = pointsMap[pid] ?? 0;
+          const isCap    = pid === captainId;
+          const isBench  = benchSet.has(pid);
+          const rawPts   = pointsMap[pid] ?? 0;
+          // Mirror the same captain-multiplier logic used on the pitch display:
+          // round raw first, then multiply — bench players never get the bonus.
+          const pts = (!isBench && isCap)
+            ? Math.round(rawPts) * (isTripleCap ? 3 : 2)
+            : rawPts;
           log.push({ key: `stat-${pid}`, playerName: p.name, club: p.club,
-                     position: p.position, isCap, isTripleCap, points: pts, ...stats });
+                     position: p.position, isCap, isTripleCap, isBench, points: pts, ...stats });
         }
         log.sort((a, b) => b.points - a.points);
         setLiveStatsLog(log);
