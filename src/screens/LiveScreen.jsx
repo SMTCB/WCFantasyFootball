@@ -112,20 +112,20 @@ function MiniTok({ p, activeLeague }) {
           pointerEvents: 'none',
         }}>{isTriple ? '3' : 'C'}</span>
       )}
+      {p.live && (
+        <span className="animate-live-pulse" style={{ position: 'absolute', top: -3, right: -3, zIndex: 2, width: 7, height: 7, borderRadius: '50%', background: 'var(--danger)', pointerEvents: 'none' }} />
+      )}
       <div style={{
         position: 'relative',
         padding: '4px 6px',
         background: 'rgba(15,18,24,.94)',
-        border: `1px solid ${isCaptain ? 'rgba(255,196,0,.5)' : p.live ? 'var(--danger)' : 'var(--rule)'}`,
+        border: `1px solid ${isCaptain ? 'rgba(255,196,0,.5)' : 'var(--rule)'}`,
         borderLeft: `2px solid ${isCaptain ? 'var(--gold)' : tone}`,
         borderRadius: 2,
         minWidth: cardMinW, maxWidth: cardMinW + 10, textAlign: 'center',
-        boxShadow: isCaptain ? '0 0 0 1px rgba(255,196,0,.15)' : p.live ? '0 0 0 2px rgba(239,68,68,.18)' : 'none',
+        boxShadow: isCaptain ? '0 0 0 1px rgba(255,196,0,.15)' : 'none',
         overflow: 'hidden',
       }}>
-        {p.live && (
-          <span className="animate-live-pulse" style={{ position: 'absolute', top: -3, right: -3, width: 6, height: 6, borderRadius: '50%', background: 'var(--danger)' }} />
-        )}
         <div style={{ fontFamily: 'Archivo Black', fontSize: (p.rowSize ?? 1) >= 5 ? 9 : 10, letterSpacing: '-0.01em', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
           {(p.name || '').split(' ').pop().toUpperCase()}
         </div>
@@ -1031,9 +1031,14 @@ export default function LiveScreen() {
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                   <span style={{ width: 3, height: 14, background: 'var(--gold)', flexShrink: 0 }} />
                   <span className="font-mono" style={{ fontSize: 11, color: 'var(--paper)', letterSpacing: '.22em' }}>POINTS LOG</span>
-                  <span className="font-mono" style={{ fontSize: 9, color: 'var(--mute)', letterSpacing: '.14em' }}>
-                    {hasLiveForActiveTournament ? '· LIVE · EVERY 60S' : liveStatsLog.length > 0 ? '· FINAL' : ''}
-                  </span>
+                  {hasLiveForActiveTournament ? (
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+                      <span className="animate-live-pulse" style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--danger)', flexShrink: 0 }} />
+                      <span className="font-mono" style={{ fontSize: 9, color: 'var(--mute)', letterSpacing: '.14em' }}>LIVE · EVERY 60S</span>
+                    </span>
+                  ) : liveStatsLog.length > 0 ? (
+                    <span className="font-mono" style={{ fontSize: 9, color: 'var(--mute)', letterSpacing: '.14em' }}>· FINAL</span>
+                  ) : null}
                 </div>
                 {liveStatsLog.length > 0 && (
                   <span className="font-mono" style={{ fontSize: 9, color: 'var(--mute)' }}>{liveStatsLog.length} PLAYERS</span>
@@ -1284,9 +1289,14 @@ export default function LiveScreen() {
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                   <span style={{ width: 3, height: 14, background: 'var(--gold)', flexShrink: 0 }} />
                   <span className="font-mono" style={{ fontSize: 10, color: 'var(--paper)', letterSpacing: '.22em' }}>POINTS LOG</span>
-                  <span className="font-mono" style={{ fontSize: 9, color: 'var(--mute)', marginLeft: 'auto' }}>
-                    {hasLiveForActiveTournament ? 'LIVE · UPDATES EVERY 60S' : liveStatsLog.length > 0 ? 'FINAL' : ''}
-                  </span>
+                  {hasLiveForActiveTournament ? (
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, marginLeft: 'auto' }}>
+                      <span className="animate-live-pulse" style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--danger)', flexShrink: 0 }} />
+                      <span className="font-mono" style={{ fontSize: 9, color: 'var(--mute)', letterSpacing: '.14em' }}>LIVE · UPDATES EVERY 60S</span>
+                    </span>
+                  ) : liveStatsLog.length > 0 ? (
+                    <span className="font-mono" style={{ fontSize: 9, color: 'var(--mute)', marginLeft: 'auto' }}>FINAL</span>
+                  ) : null}
                 </div>
                 {/* Preliminary disclaimer — shown only during a live match */}
                 {hasLiveForActiveTournament && liveStatsLog.length > 0 && (
