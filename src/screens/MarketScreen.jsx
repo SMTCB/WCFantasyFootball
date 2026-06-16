@@ -108,6 +108,7 @@ export default function MarketScreen() {
   // building their squad even while the window shows 'upcoming'.
   const isLocked = transferWindow.status === 'upcoming'
     && mySquad !== null
+    && mySquad?.id !== null
     && mySquad?.initial_build_complete !== false;
 
   // Basket-simulated squad state — applies pending buys/sells on top of the actual squad.
