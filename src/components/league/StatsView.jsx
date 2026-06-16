@@ -219,7 +219,7 @@ function PositionBreakdown({ positionPoints, currentUser }) {
               <span style={{ fontFamily: DISPLAY, fontSize: 11, marginLeft: 8 }}>{isMe ? 'You' : mgr.username}</span>
             </div>
             {/* Bar with inline pts labels */}
-            <div style={{ height: 20, display: 'flex', background: 'var(--ink-3)', overflow: 'hidden', borderRadius: 1 }}>
+            <div style={{ height: 24, display: 'flex', background: 'var(--ink-3)', overflow: 'hidden', borderRadius: 1 }}>
               {POS_ORDER.map(pos => {
                 const pts = mgr[pos] || 0;
                 if (!pts) return null;
@@ -230,8 +230,8 @@ function PositionBreakdown({ positionPoints, currentUser }) {
                     style={{ width: `${pct}%`, background: POS_COLORS[pos], flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}
                     title={`${pos}: ${pts} pts`}
                   >
-                    {pct >= 6 && (
-                      <span style={{ fontFamily: MONO, fontSize: 8, color: 'rgba(0,0,0,0.75)', fontWeight: 700, whiteSpace: 'nowrap' }}>
+                    {pct >= 5 && (
+                      <span style={{ fontFamily: MONO, fontSize: 10, color: 'rgba(0,0,0,0.85)', fontWeight: 800, whiteSpace: 'nowrap', letterSpacing: 0 }}>
                         {pts}
                       </span>
                     )}
