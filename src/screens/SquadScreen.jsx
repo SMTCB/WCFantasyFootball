@@ -719,6 +719,12 @@ export default function SquadScreen() {
       return;
     }
 
+    const newFixtureState = selectedPlayer.fixtureInfo?.state;
+    if (newFixtureState === 'live' || newFixtureState === 'finished') {
+      showToast(`Cannot make ${selectedPlayer.name} captain — their match has already started or finished this round.`, 'warning');
+      return;
+    }
+
     // If the current captain has already scored points this round, warn that
     // switching the armband removes their captain bonus and cannot be reverted.
     const prevCaptain = allSquadPlayers.find(p => p.id === squadData.captainId);
