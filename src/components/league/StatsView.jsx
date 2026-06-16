@@ -42,7 +42,6 @@ function ProgressionChart({ matchdayPoints, currentUser }) {
     const byUser = {};
     for (const p of (matchdayPoints || [])) {
       if (!byUser[p.user_id]) byUser[p.user_id] = { user_id: p.user_id, username: p.username, byGW: {} };
-      // Keep highest total if multiple squads collide on same (user, matchday)
       const cur = byUser[p.user_id].byGW[p.matchday_id] || 0;
       const val = Math.round(Number(p.total) || 0);
       if (val > cur) byUser[p.user_id].byGW[p.matchday_id] = val;
@@ -65,86 +64,112 @@ function ProgressionChart({ matchdayPoints, currentUser }) {
     );
   }
 
-  // SVG dimensions
-  const W = 620, H = 200;
-  const PAD = { top: 16, right: 96, bottom: 28, left: 42 };
+  // SVG dimensions — no right padding needed (labels moved to legend below)
+  const W = 520, H = 180;
+  const PAD = { top: 14, right: 12, bottom: 24, left: 40 };
   const cW = W - PAD.left - PAD.right;
   const cH = H - PAD.top - PAD.bottom;
   const maxPts = Math.max(...managerLines.flatMap(m => m.points), 1);
   const numGWs = matchdays.length;
 
-  const toX = i => PAD.left + (numGWs > 1 ? (i / (numGWs - 1)) * cW : cW / 2);
+  // Single GW: dots sit at left edge (start of x-axis), not mid-canvas
+  const toX = i => PAD.left + (numGWs > 1 ? (i / (numGWs - 1)) * cW : 0);
   const toY = v  => PAD.top + cH - Math.max(0, Math.min(1, v / maxPts)) * cH;
 
-  const yTicks = [0, 0.25, 0.5, 0.75, 1].map(t => ({ t, y: PAD.top + cH - t * cH, v: Math.round(maxPts * t) }));
+  const yTicks = [0, 0.25, 0.5, 0.75, 1].map(t => ({
+    t, y: PAD.top + cH - t * cH, v: Math.round(maxPts * t),
+  }));
 
   return (
-    <div style={{ overflowX: 'auto', overflowY: 'visible' }}>
-      <svg
-        viewBox={`0 0 ${W} ${H}`}
-        style={{ width: '100%', minWidth: 300, height: 'auto', display: 'block', overflow: 'visible' }}
-        aria-label="Points progression chart"
-      >
-        {/* Y grid + labels */}
-        {yTicks.map(({ t, y, v }) => (
-          <g key={t}>
-            <line x1={PAD.left} y1={y} x2={PAD.left + cW} y2={y} stroke="var(--rule)" strokeWidth={0.6} />
-            <text x={PAD.left - 6} y={y + 3.5} textAnchor="end" fontSize={8} fontFamily={MONO} fill="var(--mute)">
-              {v}
-            </text>
-          </g>
-        ))}
-
-        {/* X axis labels */}
-        {matchdays.map((gw, i) => (
-          <text key={gw.id} x={toX(i)} y={H - 6} textAnchor="middle" fontSize={8} fontFamily={MONO} fill="var(--mute)">
-            {gw.label}
-          </text>
-        ))}
-
-        {/* Manager lines — draw dimmed ones first, then "me" on top */}
-        {[...managerLines].reverse().map(mgr => {
-          const isMe  = currentUser?.id === mgr.user_id;
-          const hue   = mgrHue(mgr.username || '');
-          const pts   = mgr.points;
-          if (!pts.length) return null;
-
-          const d = pts.map((v, i) => `${i === 0 ? 'M' : 'L'}${toX(i).toFixed(1)},${toY(v).toFixed(1)}`).join(' ');
-          const lastX = toX(pts.length - 1);
-          const lastY = toY(pts[pts.length - 1]);
-          const label = (mgr.username || '').substring(0, 9).toUpperCase();
-
-          return (
-            <g key={mgr.user_id}>
-              <path
-                d={d}
-                fill="none"
-                stroke={hue}
-                strokeWidth={isMe ? 2.2 : 1.4}
-                strokeOpacity={isMe ? 1 : 0.65}
-                strokeLinejoin="round"
-              />
-              {pts.map((v, i) => (
-                <circle key={i} cx={toX(i)} cy={toY(v)} r={isMe ? 3.5 : 2.5} fill={hue} fillOpacity={isMe ? 1 : 0.65}>
-                  <title>{mgr.username}: {v} pts cumulative</title>
-                </circle>
-              ))}
-              {/* End-of-line label */}
-              <text
-                x={lastX + 7}
-                y={lastY + 3.5}
-                fontSize={isMe ? 9.5 : 8.5}
-                fontFamily={MONO}
-                fill={hue}
-                fontWeight={isMe ? 700 : 400}
-                fillOpacity={isMe ? 1 : 0.8}
-              >
-                {label}
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+      {/* Chart */}
+      <div style={{ overflowX: 'auto' }}>
+        <svg
+          viewBox={`0 0 ${W} ${H}`}
+          style={{ width: '100%', minWidth: 260, height: 'auto', display: 'block' }}
+          aria-label="Points progression chart"
+        >
+          {/* Y grid + labels */}
+          {yTicks.map(({ t, y, v }) => (
+            <g key={t}>
+              <line x1={PAD.left} y1={y} x2={PAD.left + cW} y2={y} stroke="var(--rule)" strokeWidth={0.6} />
+              <text x={PAD.left - 6} y={y + 3.5} textAnchor="end" fontSize={8} fontFamily={MONO} fill="var(--mute)">
+                {v}
               </text>
             </g>
+          ))}
+
+          {/* X axis labels */}
+          {matchdays.map((gw, i) => (
+            <text key={gw.id} x={toX(i)} y={H - 4} textAnchor="middle" fontSize={8} fontFamily={MONO} fill="var(--mute)">
+              {gw.label}
+            </text>
+          ))}
+
+          {/* Manager lines — dimmed first, "me" on top */}
+          {[...managerLines].reverse().map(mgr => {
+            const isMe = currentUser?.id === mgr.user_id;
+            const hue  = mgrHue(mgr.username || '');
+            const pts  = mgr.points;
+            if (!pts.length) return null;
+
+            const d = pts.map((v, i) => `${i === 0 ? 'M' : 'L'}${toX(i).toFixed(1)},${toY(v).toFixed(1)}`).join(' ');
+
+            return (
+              <g key={mgr.user_id}>
+                {numGWs > 1 && (
+                  <path
+                    d={d}
+                    fill="none"
+                    stroke={hue}
+                    strokeWidth={isMe ? 2.2 : 1.4}
+                    strokeOpacity={isMe ? 1 : 0.6}
+                    strokeLinejoin="round"
+                  />
+                )}
+                {pts.map((v, i) => (
+                  <circle
+                    key={i}
+                    cx={toX(i)}
+                    cy={toY(v)}
+                    r={isMe ? 4 : 3}
+                    fill={hue}
+                    fillOpacity={isMe ? 1 : 0.65}
+                  >
+                    <title>{mgr.username}: {v} pts{numGWs > 1 ? ' cumulative' : ''}</title>
+                  </circle>
+                ))}
+              </g>
+            );
+          })}
+        </svg>
+      </div>
+
+      {/* Legend — ranked, never overlaps */}
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px 20px' }}>
+        {managerLines.map((mgr, i) => {
+          const isMe = currentUser?.id === mgr.user_id;
+          const hue  = mgrHue(mgr.username || '');
+          return (
+            <div key={mgr.user_id} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <span style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', width: 14, textAlign: 'right' }}>
+                #{i + 1}
+              </span>
+              <span style={{ width: 8, height: 8, borderRadius: '50%', background: hue, flexShrink: 0 }} />
+              <span style={{
+                fontFamily: MONO, fontSize: 9, letterSpacing: '.1em',
+                color: isMe ? hue : 'var(--mute)',
+                fontWeight: isMe ? 700 : 400,
+              }}>
+                {(mgr.username || '').toUpperCase()}
+              </span>
+              <span style={{ fontFamily: DISPLAY, fontSize: 11, color: i === 0 ? 'var(--gold)' : 'var(--paper)' }}>
+                {mgr.final}
+              </span>
+            </div>
           );
         })}
-      </svg>
+      </div>
     </div>
   );
 }
