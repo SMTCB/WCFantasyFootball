@@ -1448,7 +1448,7 @@ function useFreeTransfersConfig(leagueId, commissioner) {
 // ─────────────────────────────────────────────────────────────────────────────
 function LifecycleOp({ title, status, statusTone = 'var(--mute)', sub, when, children, primary }) {
   return (
-    <div style={{ background: 'var(--ink-2)', border: '1px solid var(--rule)', display: 'flex', flexDirection: 'column', minHeight: 240 }}>
+    <div style={{ background: 'var(--ink-2)', border: '1px solid var(--rule)', display: 'flex', flexDirection: 'column', minHeight: 240, flex: 1 }}>
       <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--rule)', display: 'flex', alignItems: 'center', gap: 10 }}>
         <span style={{ width: 3, height: 12, background: statusTone, flexShrink: 0 }} />
         <span style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '.22em', color: 'var(--paper)' }}>{title}</span>
@@ -1484,9 +1484,6 @@ function LifecycleOps({ commissioner, leagueId, tournamentId, league = null, onH
     triggerDraftAllocation, triggerKnockoutAllocation,
     scoreFixtureId, setScoreFixtureId, triggerScores,
   } = commissioner;
-
-  // Override mode: allows editing transfer window fields even when deadline-controlled
-  const [twOverride, setTwOverride] = useState(false);
 
   // Draft submission tracker — shows which managers have submitted their pick list.
   // Reads only user_id + submitted_at (NOT player_ids) so the blind draft stays blind.
@@ -1595,10 +1592,13 @@ function LifecycleOps({ commissioner, leagueId, tournamentId, league = null, onH
     : league?.knockout_draft_deadline ? 'var(--positive)'
     : 'var(--warn)';
 
-  // AUDIT-58-A3: derive live status labels for the four LifecycleOp cards
-  const twStatus  = isDeadlineControlled ? 'DEADLINE-CONTROLLED'
+  // AUDIT-58-A3: derive live status labels for the LifecycleOp cards.
+  // Deadline-controlled leagues: show OPEN (OVERRIDE) when manually opened, AUTO-MANAGED otherwise.
+  const twStatus  = isDeadlineControlled
+                  ? (league?.transfers_open ? 'OPEN (OVERRIDE)' : 'AUTO-MANAGED')
                   : league?.transfers_open ? 'OPEN' : 'CLOSED';
-  const twTone    = isDeadlineControlled ? 'var(--warn)'
+  const twTone    = isDeadlineControlled
+                  ? (league?.transfers_open ? 'var(--positive)' : 'var(--warn)')
                   : league?.transfers_open ? 'var(--positive)' : 'var(--danger)';
 
   const draftStatus = !league?.draft_deadline ? 'NOT SET'
@@ -1645,63 +1645,49 @@ function LifecycleOps({ commissioner, leagueId, tournamentId, league = null, onH
         )}
       />
       <div style={{ padding: '18px 24px' }}>
-        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3" style={{ gap: 14, alignItems: 'start' }}>
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3" style={{ gap: 14 }}>
 
           {/* Transfer Window */}
-          <div data-tour="comm-transfer-window">
+          <div data-tour="comm-transfer-window" style={{ display: 'flex', flexDirection: 'column' }}>
           <LifecycleOp
             title="TRANSFER WINDOW"
             status={twStatus}
             statusTone={twTone}
-            sub="Sets when the transfer market is open for trading. Normally automatic — governed by matchday deadlines (open between gameweeks, closed during a live round)."
-            when="Use OVERRIDE to fix a wrong auto-schedule (e.g. a postponed fixture) or to open/close on a custom date. It still enforces the live-fixture price lock and the per-round transfer limit — for those, use EMERGENCY TRANSFERS instead."
+            sub="Controls when the transfer market is open. Toggle to open or close manually — combine with FREE TRANSFERS to also remove the per-round limit."
+            when="Deadline-controlled leagues auto-open between gameweeks. Toggle to override (e.g. open earlier, or close during a postponement). Price lock and per-round limits still apply unless you also enable FREE TRANSFERS."
             primary={
-              isDeadlineControlled && !twOverride ? (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {isDeadlineControlled ? (
                   <div style={{ padding: '8px 10px', background: 'var(--ink)', border: '1px solid var(--rule)', fontFamily: BODY, fontSize: 10, color: 'var(--mute)', lineHeight: 1.5 }}>
                     <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.2em', color: 'var(--warn)' }}>AUTO-MANAGED · </span>
-                    Opens and closes automatically based on matchday deadlines — no action needed most weeks. Use OVERRIDE only if this schedule is wrong or you need a custom open/close time.
+                    Opens and closes automatically based on matchday deadlines. Toggle to temporarily override.
                   </div>
-                  <button onClick={() => setTwOverride(true)} style={{ ...btnBase, width: '100%', background: 'transparent', border: '1px solid var(--rule)', color: 'var(--mute)', fontSize: 10 }}>
-                    OVERRIDE ↗
-                  </button>
-                </div>
-              ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                  {isDeadlineControlled && (
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '4px 8px', background: 'rgba(240,180,0,0.08)', border: '1px solid rgba(240,180,0,0.25)' }}>
-                      <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.18em', color: 'var(--warn)' }}>✏ OVERRIDE MODE</span>
-                      <button onClick={() => setTwOverride(false)} style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.14em', color: 'var(--mute)', background: 'transparent', border: '1px solid var(--rule)', padding: '2px 8px', cursor: 'pointer' }}>LOCK</button>
-                    </div>
-                  )}
-                  {isDeadlineControlled && (
-                    <div style={{ padding: '6px 8px', background: 'var(--ink)', border: '1px solid var(--rule)', fontFamily: BODY, fontSize: 10, color: 'var(--mute)', lineHeight: 1.4 }}>
-                      Note: OPEN here still respects the live-fixture price lock and the per-round transfer limit.
-                    </div>
-                  )}
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                      <span style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '.2em', color: 'var(--paper)' }}>OPENS</span>
-                      <input type="datetime-local" value={windowOpensAt} onChange={e => setWindowOpensAt(e.target.value)} style={{ ...inputStyle, colorScheme: 'dark', fontSize: 11 }} />
+                ) : (
+                  <>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                        <span style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '.2em', color: 'var(--paper)' }}>OPENS</span>
+                        <input type="datetime-local" value={windowOpensAt} onChange={e => setWindowOpensAt(e.target.value)} style={{ ...inputStyle, colorScheme: 'dark', fontSize: 11 }} />
+                      </div>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                        <span style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '.2em', color: 'var(--paper)' }}>CLOSES</span>
+                        <input type="datetime-local" value={windowClosesAt} onChange={e => setWindowClosesAt(e.target.value)} style={{ ...inputStyle, colorScheme: 'dark', fontSize: 11 }} />
+                      </div>
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                      <span style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '.2em', color: 'var(--paper)' }}>CLOSES</span>
-                      <input type="datetime-local" value={windowClosesAt} onChange={e => setWindowClosesAt(e.target.value)} style={{ ...inputStyle, colorScheme: 'dark', fontSize: 11 }} />
+                      <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.2em', color: 'var(--mute)' }}>LIMIT · BLANK = UNLIMITED</span>
+                      <input type="number" min="1" value={windowTransfers} onChange={e => setWindowTransfers(e.target.value)} placeholder="e.g. 5" style={inputStyle} />
                     </div>
-                  </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                    <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.2em', color: 'var(--mute)' }}>LIMIT · BLANK = UNLIMITED</span>
-                    <input type="number" min="1" value={windowTransfers} onChange={e => setWindowTransfers(e.target.value)} placeholder="e.g. 5" style={inputStyle} />
-                  </div>
-                  <ToggleSwitch
-                    checked={!!league?.transfers_open}
-                    onChange={league?.transfers_open ? handleCloseNow : openTransferWindow}
-                    disabled={commLoading}
-                    labelOn="WINDOW OPEN"
-                    labelOff="WINDOW CLOSED"
-                  />
-                </div>
-              )
+                  </>
+                )}
+                <ToggleSwitch
+                  checked={!!league?.transfers_open}
+                  onChange={league?.transfers_open ? handleCloseNow : openTransferWindow}
+                  disabled={commLoading}
+                  labelOn="WINDOW OPEN"
+                  labelOff="WINDOW CLOSED"
+                />
+              </div>
             }
           />
           </div>
@@ -1710,6 +1696,7 @@ function LifecycleOps({ commissioner, leagueId, tournamentId, league = null, onH
               Lifts the per-round transfer cap while the window is open. Does NOT override
               the open/closed window state — acts on top of normal window timing. */}
           {league?.format !== 'noduplicate' && (
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
           <LifecycleOp
             title="FREE TRANSFERS"
             status={freeTransfers ? 'ON' : 'OFF'}
@@ -1734,11 +1721,13 @@ function LifecycleOps({ commissioner, leagueId, tournamentId, league = null, onH
               </div>
             }
           />
+          </div>
           )}
 
           {/* Emergency mid-matchday transfer toggle — relevant to any deadline-controlled
               league (matchday-deadline lock applies regardless of league_mode). */}
           {isDeadlineControlled && (
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
           <LifecycleOp
             title="EMERGENCY TRANSFERS"
             status={activeFreeWindow ? 'ON' : 'OFF'}
@@ -1767,6 +1756,7 @@ function LifecycleOps({ commissioner, leagueId, tournamentId, league = null, onH
               </div>
             }
           />
+          </div>
           )}
 
           {/* Draft — draft mode only */}
@@ -2707,10 +2697,12 @@ export default function CommissionerPanel({ commissioner, leagueId, tournamentId
     // derived from `windowType` — it reflects the currently-active window's type, not
     // whether this league uses the matchday-deadline lock system at all.
     const mobIsDeadlineControlled = !!tournamentId;
-    const mobTwStatus = mobIsDeadlineControlled    ? 'DEADLINE-CONTROLLED'
-                      : league?.transfers_open     ? 'OPEN' : 'CLOSED';
-    const mobTwTone   = mobIsDeadlineControlled    ? 'var(--warn)'
-                      : league?.transfers_open     ? 'var(--positive)' : 'var(--danger)';
+    const mobTwStatus = mobIsDeadlineControlled
+                      ? (league?.transfers_open ? 'OPEN (OVERRIDE)' : 'AUTO-MANAGED')
+                      : league?.transfers_open ? 'OPEN' : 'CLOSED';
+    const mobTwTone   = mobIsDeadlineControlled
+                      ? (league?.transfers_open ? 'var(--positive)' : 'var(--warn)')
+                      : league?.transfers_open ? 'var(--positive)' : 'var(--danger)';
 
     const mobDraftStatus = !league?.draft_deadline ? 'NOT SET'
                          : mobAllocationDone       ? 'ALLOCATED'
@@ -2735,35 +2727,37 @@ export default function CommissionerPanel({ commissioner, leagueId, tournamentId
         <MobSectionHeader label="LIFECYCLE OPERATIONS" sub="SEASON CONTROLS" tone="var(--purple)" onHelp={() => setHelpModal('lifecycle')} />
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8, paddingBottom: 80 }}>
           <div data-tour="comm-transfer-window">
-          <MobLifecycleCard title="TRANSFER WINDOW" status={mobTwStatus} tone={mobTwTone} when="Open between gameweeks. Close 1h before MD kickoff.">
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-              <span style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '.2em', color: 'var(--paper)' }}>OPENS</span>
-              <input type="datetime-local" value={windowOpensAt} onChange={e => setWindowOpensAt(e.target.value)} style={{ ...mobInput, colorScheme: 'dark', fontSize: 11 }} />
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-              <span style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '.2em', color: 'var(--paper)' }}>CLOSES</span>
-              <input type="datetime-local" value={windowClosesAt} onChange={e => setWindowClosesAt(e.target.value)} style={{ ...mobInput, colorScheme: 'dark', fontSize: 11 }} />
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-              <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.2em', color: 'var(--mute)' }}>LIMIT · BLANK = UNLIMITED</span>
-              <input type="number" min="1" value={windowTransfers} onChange={e => setWindowTransfers(e.target.value)} placeholder="e.g. 5" style={mobInput} />
-            </div>
+          <MobLifecycleCard title="TRANSFER WINDOW" status={mobTwStatus} tone={mobTwTone} when="Deadline-controlled leagues auto-open between gameweeks. Toggle to override. Combine with FREE TRANSFERS to also remove the per-round limit.">
             {tournamentId ? (
               <div style={{ padding: '8px 10px', background: 'var(--ink)', border: '1px solid var(--rule)', fontFamily: BODY, fontSize: 10, color: 'var(--mute)', lineHeight: 1.5 }}>
-                <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.2em', color: 'var(--warn)' }}>DEADLINE-CONTROLLED · </span>
-                Transfer windows for this league are governed by matchday deadlines, not manual open/close.
+                <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.2em', color: 'var(--warn)' }}>AUTO-MANAGED · </span>
+                Opens and closes automatically based on matchday deadlines. Toggle to temporarily override.
               </div>
             ) : (
-              <ToggleSwitch
-                checked={!!league?.transfers_open}
-                onChange={league?.transfers_open
-                  ? () => { if (window.confirm('Close the transfer window immediately?')) closeTransferWindow(); }
-                  : openTransferWindow}
-                disabled={commLoading}
-                labelOn="WINDOW OPEN"
-                labelOff="WINDOW CLOSED"
-              />
+              <>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                  <span style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '.2em', color: 'var(--paper)' }}>OPENS</span>
+                  <input type="datetime-local" value={windowOpensAt} onChange={e => setWindowOpensAt(e.target.value)} style={{ ...mobInput, colorScheme: 'dark', fontSize: 11 }} />
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                  <span style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '.2em', color: 'var(--paper)' }}>CLOSES</span>
+                  <input type="datetime-local" value={windowClosesAt} onChange={e => setWindowClosesAt(e.target.value)} style={{ ...mobInput, colorScheme: 'dark', fontSize: 11 }} />
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                  <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.2em', color: 'var(--mute)' }}>LIMIT · BLANK = UNLIMITED</span>
+                  <input type="number" min="1" value={windowTransfers} onChange={e => setWindowTransfers(e.target.value)} placeholder="e.g. 5" style={mobInput} />
+                </div>
+              </>
             )}
+            <ToggleSwitch
+              checked={!!league?.transfers_open}
+              onChange={league?.transfers_open
+                ? () => { if (window.confirm('Close the transfer window immediately?')) closeTransferWindow(); }
+                : openTransferWindow}
+              disabled={commLoading}
+              labelOn="WINDOW OPEN"
+              labelOff="WINDOW CLOSED"
+            />
           </MobLifecycleCard>
           </div>
 
