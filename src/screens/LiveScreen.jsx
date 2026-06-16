@@ -182,6 +182,7 @@ function DesktopStatsRow({ s }) {
       {/* Name + club + tags */}
       <div style={{ minWidth: 0, display: 'flex', flexDirection: 'column', gap: 3 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          {s.live && <span className="animate-live-pulse" style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--danger)', flexShrink: 0 }} />}
           <span style={{ fontFamily: 'Archivo Black', fontSize: 13, letterSpacing: '-0.01em' }}>{name}</span>
           <span className="font-mono" style={{ fontSize: 9, color: 'var(--mute)' }}>{(s.club || '').split(' ').slice(0, 2).join(' ')}</span>
         </div>
@@ -236,6 +237,7 @@ function StatsLogRow({ s }) {
     }}>
       <div style={{ minWidth: 0, display: 'flex', flexDirection: 'column', gap: 3 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          {s.live && <span className="animate-live-pulse" style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--danger)', flexShrink: 0 }} />}
           <span style={{ fontFamily: 'Archivo Black', fontSize: 13, letterSpacing: '-0.01em' }}>{name}</span>
           <span className="font-mono" style={{ fontSize: 8, color: 'var(--mute)' }}>{s.position}</span>
           <span className="font-mono" style={{ fontSize: 8, color: 'var(--mute)', opacity: .6 }}>{(s.club || '').split(' ')[0]}</span>
@@ -728,7 +730,7 @@ export default function LiveScreen() {
             ? Math.round(rawPts) * (isTripleCap ? 3 : 2)
             : rawPts;
           log.push({ key: `stat-${pid}`, playerName: p.name, club: p.club,
-                     position: p.position, isCap, isTripleCap, isBench, points: pts, ...stats });
+                     position: p.position, isCap, isTripleCap, isBench, live: livePlayerSet.has(pid), points: pts, ...stats });
         }
         log.sort((a, b) => b.points - a.points);
         setLiveStatsLog(log);
