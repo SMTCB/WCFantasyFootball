@@ -759,18 +759,31 @@ export default function BetCreatorPanel({ leagueId, tournamentId, onCreated, com
                 {!title.trim()      ? ' · Add a title'             : ''}
               </div>
             )}
-            <button
-              onClick={handleCreate}
-              disabled={!canCreate}
-              style={{
-                padding: '13px', borderRadius: 3, cursor: canCreate ? 'pointer' : 'default', width: '100%',
-                background: 'var(--cyan)', color: '#000',
-                fontFamily: DISPLAY, fontSize: 12, fontWeight: 900, letterSpacing: '.08em',
-                border: 'none', transition: 'opacity 0.15s', opacity: canCreate ? 1 : 0.35,
-              }}
-            >
-              {saving ? 'CREATING…' : `CREATE BET · ${selectedOpts.length || 0} OPTIONS`}
-            </button>
+            <div style={{ display: 'flex', gap: 6, alignItems: 'stretch' }}>
+              <div style={{
+                flex: 1, padding: '9px 12px',
+                background: 'var(--ink)', border: '1px solid var(--rule)',
+                fontFamily: MONO, fontSize: 9, letterSpacing: '.16em',
+                color: canCreate ? 'var(--paper)' : 'var(--mute)',
+                display: 'flex', alignItems: 'center',
+              }}>
+                {selectedOpts.length || 0} OPTIONS SELECTED
+              </div>
+              <button
+                onClick={handleCreate}
+                disabled={!canCreate}
+                style={{
+                  background: 'transparent',
+                  border: `1px solid ${canCreate ? 'var(--cyan)' : 'var(--rule)'}`,
+                  color: canCreate ? 'var(--cyan)' : 'var(--mute)',
+                  fontFamily: MONO, fontSize: 9, letterSpacing: '.18em',
+                  padding: '0 16px', cursor: canCreate ? 'pointer' : 'not-allowed',
+                  flexShrink: 0, whiteSpace: 'nowrap',
+                }}
+              >
+                {saving ? 'CREATING…' : 'CREATE BET ↯'}
+              </button>
+            </div>
           </div>
         </>
       )}

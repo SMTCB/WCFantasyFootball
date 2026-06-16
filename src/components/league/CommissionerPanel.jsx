@@ -1634,6 +1634,16 @@ function LifecycleOps({ commissioner, leagueId, tournamentId, league = null, onH
     cursor: commLoading ? 'not-allowed' : 'pointer', fontSize: 11,
   });
 
+  // Compact inline action button — sits beside an input, replaces full-width CTAs
+  const compactBtn = (color, disabled) => ({
+    background: 'transparent',
+    border: `1px solid ${disabled ? 'var(--rule)' : color}`,
+    color: disabled ? 'var(--mute)' : color,
+    fontFamily: MONO, fontSize: 9, letterSpacing: '.18em',
+    padding: '0 14px', cursor: disabled ? 'not-allowed' : 'pointer',
+    flexShrink: 0, whiteSpace: 'nowrap',
+  });
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column' }}>
       <HubSectionLabel
@@ -1813,7 +1823,7 @@ function LifecycleOps({ commissioner, leagueId, tournamentId, league = null, onH
             (league.cup_phase && league.cup_phase !== 'pre_cup') ||
             !!league.knockout_draft_deadline
           ))) && (
-          <div data-tour="comm-knockout-draft">
+          <div data-tour="comm-knockout-draft" style={{ display: 'flex' }}>
           <LifecycleOp
             title="KNOCKOUT DRAFT"
             status={knockoutStatus}
@@ -1842,19 +1852,21 @@ function LifecycleOps({ commissioner, leagueId, tournamentId, league = null, onH
                     </div>
                   )}
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                    <span style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '.2em', color: 'var(--paper)' }}>KNOCKOUT DEADLINE</span>
-                    <input
-                      type="datetime-local"
-                      value={knockoutDeadline}
-                      onChange={e => setKnockoutDeadline(e.target.value)}
-                      style={{ ...inputStyle, colorScheme: 'dark', fontSize: 11 }}
-                    />
+                    <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.2em', color: 'var(--mute)' }}>KNOCKOUT DEADLINE</span>
+                    <div style={{ display: 'flex', gap: 6, alignItems: 'stretch' }}>
+                      <input
+                        type="datetime-local"
+                        value={knockoutDeadline}
+                        onChange={e => setKnockoutDeadline(e.target.value)}
+                        style={{ ...inputStyle, colorScheme: 'dark', fontSize: 11, flex: 1 }}
+                      />
+                      <button
+                        onClick={handleRunKnockoutAllocation}
+                        disabled={commLoading}
+                        style={compactBtn('var(--gold)', commLoading)}
+                      >RUN ↯</button>
+                    </div>
                   </div>
-                  <button
-                    onClick={handleRunKnockoutAllocation}
-                    disabled={commLoading}
-                    style={opBtnStyle('var(--gold)', 'var(--ink)')}
-                  >RUN KNOCKOUT ALLOCATION ↯</button>
                 </div>
               )
             }
@@ -1863,7 +1875,7 @@ function LifecycleOps({ commissioner, leagueId, tournamentId, league = null, onH
           )}
 
           {/* Score Recalculation */}
-          <div data-tour="comm-score-recalc">
+          <div data-tour="comm-score-recalc" style={{ display: 'flex' }}>
           <LifecycleOp
             title="SCORE RECALCULATION"
             status="UTILITY · ON-DEMAND"
@@ -1879,8 +1891,10 @@ function LifecycleOps({ commissioner, leagueId, tournamentId, league = null, onH
                   <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.2em', color: 'var(--warn)' }}>WHEN TO USE · </span>
                   Only if a specific match shows incorrect points (e.g. a data correction from the provider arrived after scoring ran). Enter the fixture ID and recalculate — safe to re-run, overwrites with latest data.
                 </div>
-                <input type="text" value={scoreFixtureId} onChange={e => setScoreFixtureId(e.target.value)} placeholder="Fixture ID — e.g. f-1219435455" style={inputStyle} />
-                <button onClick={triggerScores} disabled={commLoading || !scoreFixtureId} style={{ ...opBtnStyle('var(--warn)'), cursor: (commLoading || !scoreFixtureId) ? 'not-allowed' : 'pointer' }}>RECALCULATE ↯</button>
+                <div style={{ display: 'flex', gap: 6, alignItems: 'stretch' }}>
+                  <input type="text" value={scoreFixtureId} onChange={e => setScoreFixtureId(e.target.value)} placeholder="Fixture ID — e.g. f-1219435455" style={{ ...inputStyle, flex: 1 }} />
+                  <button onClick={triggerScores} disabled={commLoading || !scoreFixtureId} style={compactBtn('var(--warn)', commLoading || !scoreFixtureId)}>RECALC ↯</button>
+                </div>
               </div>
             }
           />
@@ -1888,7 +1902,9 @@ function LifecycleOps({ commissioner, leagueId, tournamentId, league = null, onH
 
           {/* H2H Calendar — only for Draft + H2H leagues */}
           {league?.h2h_enabled && (
-            <H2HCalendarSection leagueId={leagueId} tournamentId={tournamentId} />
+            <div style={{ display: 'flex' }}>
+              <H2HCalendarSection leagueId={leagueId} tournamentId={tournamentId} />
+            </div>
           )}
 
         </div>
@@ -1961,67 +1977,87 @@ function H2HCalendarSection({ leagueId, tournamentId, isMobile = false }) {
   };
 
   const isGenerated = scheduleCount !== null && scheduleCount > 0;
+  const genDisabled = generating || !startMatchday;
 
-  const sectionStyle = isMobile ? {} : {};
+  const infoBox = isGenerated ? (
+    <div style={{ padding: '8px 10px', background: 'var(--ink)', border: '1px solid rgba(34,197,94,0.25)', fontFamily: BODY, fontSize: 10, color: 'var(--mute)', lineHeight: 1.6 }}>
+      <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.2em', color: 'var(--positive)' }}>ACTIVE · </span>
+      H2H schedule is in place. Managers can view it on the H2H tab. Results are calculated automatically once every match in a round finishes.
+      <br /><br />
+      <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.2em', color: 'var(--warn)' }}>RE-GENERATE · </span>
+      To regenerate (e.g. after a new manager joins), pick a new start matchday below. Only unresolved future matchdays are overwritten — completed rounds are preserved.
+    </div>
+  ) : (
+    <div style={{ padding: '8px 10px', background: 'var(--ink)', border: '1px solid rgba(240,180,0,0.2)', fontFamily: BODY, fontSize: 10, color: 'var(--mute)', lineHeight: 1.6 }}>
+      <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.2em', color: 'var(--gold)' }}>SETUP REQUIRED · </span>
+      Pick the first matchday for H2H play and click Generate. All managers currently in the league will be included. If a new manager joins later, regenerate from the next unplayed matchday.
+    </div>
+  );
+
+  const selectAndBtn = (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+      <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.2em', color: 'var(--mute)' }}>START FROM MATCHDAY</span>
+      <div style={{ display: 'flex', gap: 6, alignItems: 'stretch' }}>
+        {matchdays.length > 0 ? (
+          <select
+            value={startMatchday}
+            onChange={e => setStartMatchday(e.target.value)}
+            style={{ ...inputStyle, cursor: 'pointer', flex: 1 }}
+          >
+            {matchdays.map(md => (
+              <option key={md} value={md}>{md}</option>
+            ))}
+          </select>
+        ) : (
+          <span style={{ fontFamily: MONO, fontSize: 10, color: 'var(--mute)', flex: 1 }}>Loading matchdays…</span>
+        )}
+        <button
+          onClick={generate}
+          disabled={genDisabled}
+          style={{
+            background: 'transparent',
+            border: `1px solid ${genDisabled ? 'var(--rule)' : 'var(--gold)'}`,
+            color: genDisabled ? 'var(--mute)' : 'var(--gold)',
+            fontFamily: MONO, fontSize: 9, letterSpacing: '.18em',
+            padding: '0 14px', cursor: genDisabled ? 'not-allowed' : 'pointer',
+            flexShrink: 0, whiteSpace: 'nowrap',
+          }}
+        >
+          {generating ? '…' : isGenerated ? 'REGEN ↻' : 'GENERATE ↻'}
+        </button>
+      </div>
+      {msg && (
+        <div style={{ padding: '8px 10px', background: msg.type === 'ok' ? 'rgba(34,197,94,0.08)' : 'rgba(239,68,68,0.08)', border: `1px solid ${msg.type === 'ok' ? 'rgba(34,197,94,0.3)' : 'rgba(239,68,68,0.3)'}`, fontFamily: MONO, fontSize: 10, color: msg.type === 'ok' ? 'var(--positive)' : 'var(--danger)', letterSpacing: '.1em' }}>
+          {msg.text}
+        </div>
+      )}
+    </div>
+  );
+
+  if (!isMobile) {
+    return (
+      <LifecycleOp
+        title="H2H CALENDAR"
+        status={isGenerated ? 'GENERATED' : 'NOT YET GENERATED'}
+        statusTone={isGenerated ? 'var(--positive)' : 'var(--gold)'}
+        when="After all managers join. Regenerate from the next unplayed matchday if a new manager joins later."
+      >
+        {infoBox}
+        {selectAndBtn}
+      </LifecycleOp>
+    );
+  }
 
   return (
-    <div style={sectionStyle}>
+    <div>
       <HubSectionLabel
         label="H2H CALENDAR"
         sub={isGenerated ? 'GENERATED' : 'NOT YET GENERATED'}
         tone={isGenerated ? 'var(--positive)' : 'var(--gold)'}
       />
       <div style={{ padding: '14px 20px', display: 'flex', flexDirection: 'column', gap: 10 }}>
-        {isGenerated ? (
-          <div style={{ padding: '8px 10px', background: 'var(--ink)', border: '1px solid rgba(34,197,94,0.25)', fontFamily: BODY, fontSize: 10, color: 'var(--mute)', lineHeight: 1.6 }}>
-            <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.2em', color: 'var(--positive)' }}>ACTIVE · </span>
-            H2H schedule is in place. Managers can view it on the H2H tab. Results are calculated automatically once every match in a round finishes.
-            <br /><br />
-            <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.2em', color: 'var(--warn)' }}>RE-GENERATE · </span>
-            To regenerate (e.g. after a new manager joins), pick a new start matchday below. Only unresolved future matchdays are overwritten — completed rounds are preserved.
-          </div>
-        ) : (
-          <div style={{ padding: '8px 10px', background: 'var(--ink)', border: '1px solid rgba(240,180,0,0.2)', fontFamily: BODY, fontSize: 10, color: 'var(--mute)', lineHeight: 1.6 }}>
-            <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.2em', color: 'var(--gold)' }}>SETUP REQUIRED · </span>
-            Pick the first matchday for H2H play and click Generate. All managers currently in the league will be included. If a new manager joins later, regenerate from the next unplayed matchday.
-          </div>
-        )}
-
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-          <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.2em', color: 'var(--mute)' }}>START FROM MATCHDAY</span>
-          {matchdays.length > 0 ? (
-            <select
-              value={startMatchday}
-              onChange={e => setStartMatchday(e.target.value)}
-              style={{ ...inputStyle, cursor: 'pointer' }}
-            >
-              {matchdays.map(md => (
-                <option key={md} value={md}>{md}</option>
-              ))}
-            </select>
-          ) : (
-            <span style={{ fontFamily: MONO, fontSize: 10, color: 'var(--mute)' }}>Loading matchdays…</span>
-          )}
-        </div>
-
-        <button
-          onClick={generate}
-          disabled={generating || !startMatchday}
-          style={{
-            padding: '11px 16px', border: 0, cursor: generating || !startMatchday ? 'not-allowed' : 'pointer',
-            fontFamily: DISPLAY, fontSize: 11, letterSpacing: '.18em', fontWeight: 400,
-            background: generating || !startMatchday ? 'var(--ink-3)' : 'var(--gold)',
-            color: generating || !startMatchday ? 'var(--mute)' : 'var(--ink)',
-          }}
-        >
-          {generating ? 'GENERATING…' : isGenerated ? 'REGENERATE CALENDAR ↻' : 'GENERATE CALENDAR ⚔️'}
-        </button>
-
-        {msg && (
-          <div style={{ padding: '8px 10px', background: msg.type === 'ok' ? 'rgba(34,197,94,0.08)' : 'rgba(239,68,68,0.08)', border: `1px solid ${msg.type === 'ok' ? 'rgba(34,197,94,0.3)' : 'rgba(239,68,68,0.3)'}`, fontFamily: MONO, fontSize: 10, color: msg.type === 'ok' ? 'var(--positive)' : 'var(--danger)', letterSpacing: '.1em' }}>
-            {msg.text}
-          </div>
-        )}
+        {infoBox}
+        {selectAndBtn}
       </div>
     </div>
   );
