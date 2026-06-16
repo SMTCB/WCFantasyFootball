@@ -214,21 +214,12 @@ function PositionBreakdown({ positionPoints, currentUser }) {
         return (
           <div key={mgr.user_id}>
             {/* Label row */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 5 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <MgrTag mono={mgrMono(mgr.username || '')} hue={hue} />
-                <span style={{ fontFamily: DISPLAY, fontSize: 11 }}>{isMe ? 'You' : mgr.username}</span>
-              </div>
-              <div style={{ display: 'flex', gap: 10 }}>
-                {POS_ORDER.filter(p => mgr[p] > 0).map(p => (
-                  <span key={p} style={{ fontFamily: MONO, fontSize: 9, color: POS_COLORS[p] }}>
-                    {mgr[p]}<span style={{ color: 'var(--mute)', marginLeft: 1 }}>{p}</span>
-                  </span>
-                ))}
-              </div>
+            <div style={{ display: 'flex', alignItems: 'center', marginBottom: 5 }}>
+              <MgrTag mono={mgrMono(mgr.username || '')} hue={hue} />
+              <span style={{ fontFamily: DISPLAY, fontSize: 11, marginLeft: 8 }}>{isMe ? 'You' : mgr.username}</span>
             </div>
-            {/* Bar */}
-            <div style={{ height: 10, display: 'flex', background: 'var(--ink-3)', overflow: 'hidden', borderRadius: 1 }}>
+            {/* Bar with inline pts labels */}
+            <div style={{ height: 20, display: 'flex', background: 'var(--ink-3)', overflow: 'hidden', borderRadius: 1 }}>
               {POS_ORDER.map(pos => {
                 const pts = mgr[pos] || 0;
                 if (!pts) return null;
@@ -236,11 +227,91 @@ function PositionBreakdown({ positionPoints, currentUser }) {
                 return (
                   <div
                     key={pos}
-                    style={{ width: `${pct}%`, background: POS_COLORS[pos], flexShrink: 0 }}
+                    style={{ width: `${pct}%`, background: POS_COLORS[pos], flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}
                     title={`${pos}: ${pts} pts`}
-                  />
+                  >
+                    {pct >= 6 && (
+                      <span style={{ fontFamily: MONO, fontSize: 8, color: 'rgba(0,0,0,0.75)', fontWeight: 700, whiteSpace: 'nowrap' }}>
+                        {pts}
+                      </span>
+                    )}
+                  </div>
                 );
               })}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+// ─── Captaincy hit rate ───────────────────────────────────────────────────────
+
+function CaptainHitRate({ captainHitData, currentUser }) {
+  if (!captainHitData || captainHitData.length === 0) {
+    return (
+      <div style={{ padding: '24px 0', textAlign: 'center', fontFamily: MONO, fontSize: 10, color: 'var(--mute)', letterSpacing: '.2em' }}>
+        AVAILABLE AFTER FIRST COMPLETED MATCHDAY
+      </div>
+    );
+  }
+
+  const maxRate = Math.max(...captainHitData.map(m => m.hits / (m.total || 1)), 0.01);
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+      {captainHitData.map(mgr => {
+        const isMe  = currentUser?.id === mgr.user_id;
+        const hue   = mgrHue(mgr.username || '');
+        const rate  = mgr.total > 0 ? mgr.hits / mgr.total : 0;
+        const pct   = Math.round(rate * 100);
+
+        return (
+          <div key={mgr.user_id}>
+            {/* Label row */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <MgrTag mono={mgrMono(mgr.username || '')} hue={hue} />
+                <span style={{ fontFamily: DISPLAY, fontSize: 11 }}>{isMe ? 'You' : mgr.username}</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                {/* Per-GW dots */}
+                <div style={{ display: 'flex', gap: 3 }}>
+                  {mgr.rounds.map(r => {
+                    const gwNum = r.matchday_id?.split('-r')[1] ?? '?';
+                    return (
+                      <div
+                        key={r.matchday_id}
+                        title={`GW${gwNum}: ${r.hit ? 'HIT' : 'MISS'} (${r.captain_pts} vs ${r.max_other_pts})`}
+                        style={{
+                          width: 16, height: 16, borderRadius: 2,
+                          background: r.hit ? 'var(--positive)' : 'var(--danger)',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        }}
+                      >
+                        <span style={{ fontFamily: MONO, fontSize: 7, color: 'rgba(0,0,0,0.8)', fontWeight: 700 }}>
+                          {gwNum}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+                <span style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.1em' }}>
+                  {mgr.hits}/{mgr.total}
+                </span>
+                <span style={{ fontFamily: DISPLAY, fontSize: 14, color: pct >= 50 ? 'var(--positive)' : 'var(--danger)', minWidth: 36, textAlign: 'right' }}>
+                  {pct}%
+                </span>
+              </div>
+            </div>
+            {/* Rate bar */}
+            <div style={{ height: 4, background: 'var(--ink-3)', borderRadius: 1, overflow: 'hidden' }}>
+              <div style={{
+                height: '100%',
+                width: `${(rate / maxRate) * 100}%`,
+                background: pct >= 50 ? 'var(--positive)' : 'var(--danger)',
+              }} />
             </div>
           </div>
         );
@@ -309,7 +380,7 @@ function BestGameweeks({ matchdayPoints, currentUser }) {
 
 // ─── Main export ──────────────────────────────────────────────────────────────
 
-export default function StatsView({ topScorers, teamMetrics, matchdayPoints, positionPoints, members, currentUser, statsLoading }) {
+export default function StatsView({ topScorers, teamMetrics, matchdayPoints, positionPoints, captainHitData, members, currentUser, statsLoading }) {
   const totalPts  = (topScorers || []).reduce((s, m) => s + Math.round(Number(m.total_points) || 0), 0);
   const avgPts    = teamMetrics?.avg_points != null
     ? Math.round(Number(teamMetrics.avg_points))
@@ -412,13 +483,13 @@ export default function StatsView({ topScorers, teamMetrics, matchdayPoints, pos
               <BestGameweeks matchdayPoints={matchdayPoints} currentUser={currentUser} />
             </section>
 
-            {/* Captaincy — placeholder */}
+            {/* Captaincy hit rate */}
             <section style={{ padding: '16px 22px', display: 'flex', flexDirection: 'column', gap: 10 }}>
-              <SectionHead accent="var(--gold)" label="CAPTAINCY · HIT RATE" badge="COMING SOON" />
-              <p style={{ fontFamily: BODY, fontSize: 12, color: 'var(--mute)', margin: 0, lineHeight: 1.6 }}>
-                Tracks how often each manager's captain outscored every other player in their squad that gameweek.
-                Requires at least two scored matchdays to calculate.
+              <SectionHead accent="var(--gold)" label="CAPTAINCY · HIT RATE" />
+              <p style={{ fontFamily: BODY, fontSize: 11, color: 'var(--mute)', margin: 0, lineHeight: 1.5 }}>
+                Did your captain outscore every other player in your XI that gameweek? Green = hit, red = miss.
               </p>
+              <CaptainHitRate captainHitData={captainHitData} currentUser={currentUser} />
             </section>
           </div>
 
