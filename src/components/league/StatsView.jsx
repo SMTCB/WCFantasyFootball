@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { MgrTag } from './HubShared';
 import { MONO, DISPLAY, BODY, mgrHue, mgrMono } from './HubConstants';
 
@@ -23,6 +23,14 @@ function SectionHead({ accent, label, badge }) {
           {badge}
         </span>
       )}
+    </div>
+  );
+}
+
+function EmptyState({ label }) {
+  return (
+    <div style={{ padding: '28px 0', textAlign: 'center', fontFamily: MONO, fontSize: 10, color: 'var(--mute)', letterSpacing: '.2em' }}>
+      {label}
     </div>
   );
 }
@@ -57,14 +65,9 @@ function ProgressionChart({ matchdayPoints, currentUser }) {
   }, [matchdayPoints, matchdays]);
 
   if (matchdays.length === 0) {
-    return (
-      <div style={{ padding: '32px 0', textAlign: 'center', fontFamily: MONO, fontSize: 10, color: 'var(--mute)', letterSpacing: '.2em' }}>
-        NO SCORED MATCHDAYS YET
-      </div>
-    );
+    return <EmptyState label="NO SCORED MATCHDAYS YET" />;
   }
 
-  // SVG dimensions — no right padding needed (labels moved to legend below)
   const W = 520, H = 180;
   const PAD = { top: 14, right: 12, bottom: 24, left: 40 };
   const cW = W - PAD.left - PAD.right;
@@ -72,7 +75,6 @@ function ProgressionChart({ matchdayPoints, currentUser }) {
   const maxPts = Math.max(...managerLines.flatMap(m => m.points), 1);
   const numGWs = matchdays.length;
 
-  // Single GW: dots sit at left edge (start of x-axis), not mid-canvas
   const toX = i => PAD.left + (numGWs > 1 ? (i / (numGWs - 1)) * cW : 0);
   const toY = v  => PAD.top + cH - Math.max(0, Math.min(1, v / maxPts)) * cH;
 
@@ -82,14 +84,12 @@ function ProgressionChart({ matchdayPoints, currentUser }) {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-      {/* Chart */}
       <div style={{ overflowX: 'auto' }}>
         <svg
           viewBox={`0 0 ${W} ${H}`}
           style={{ width: '100%', minWidth: 260, height: 'auto', display: 'block' }}
           aria-label="Points progression chart"
         >
-          {/* Y grid + labels */}
           {yTicks.map(({ t, y, v }) => (
             <g key={t}>
               <line x1={PAD.left} y1={y} x2={PAD.left + cW} y2={y} stroke="var(--rule)" strokeWidth={0.6} />
@@ -98,44 +98,24 @@ function ProgressionChart({ matchdayPoints, currentUser }) {
               </text>
             </g>
           ))}
-
-          {/* X axis labels */}
           {matchdays.map((gw, i) => (
             <text key={gw.id} x={toX(i)} y={H - 4} textAnchor="middle" fontSize={8} fontFamily={MONO} fill="var(--mute)">
               {gw.label}
             </text>
           ))}
-
-          {/* Manager lines — dimmed first, "me" on top */}
           {[...managerLines].reverse().map(mgr => {
             const isMe = currentUser?.id === mgr.user_id;
             const hue  = mgrHue(mgr.username || '');
             const pts  = mgr.points;
             if (!pts.length) return null;
-
             const d = pts.map((v, i) => `${i === 0 ? 'M' : 'L'}${toX(i).toFixed(1)},${toY(v).toFixed(1)}`).join(' ');
-
             return (
               <g key={mgr.user_id}>
                 {numGWs > 1 && (
-                  <path
-                    d={d}
-                    fill="none"
-                    stroke={hue}
-                    strokeWidth={isMe ? 2.2 : 1.4}
-                    strokeOpacity={isMe ? 1 : 0.6}
-                    strokeLinejoin="round"
-                  />
+                  <path d={d} fill="none" stroke={hue} strokeWidth={isMe ? 2.2 : 1.4} strokeOpacity={isMe ? 1 : 0.6} strokeLinejoin="round" />
                 )}
                 {pts.map((v, i) => (
-                  <circle
-                    key={i}
-                    cx={toX(i)}
-                    cy={toY(v)}
-                    r={isMe ? 4 : 3}
-                    fill={hue}
-                    fillOpacity={isMe ? 1 : 0.65}
-                  >
+                  <circle key={i} cx={toX(i)} cy={toY(v)} r={isMe ? 4 : 3} fill={hue} fillOpacity={isMe ? 1 : 0.65}>
                     <title>{mgr.username}: {v} pts{numGWs > 1 ? ' cumulative' : ''}</title>
                   </circle>
                 ))}
@@ -144,23 +124,15 @@ function ProgressionChart({ matchdayPoints, currentUser }) {
           })}
         </svg>
       </div>
-
-      {/* Legend — ranked, never overlaps */}
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px 20px' }}>
         {managerLines.map((mgr, i) => {
           const isMe = currentUser?.id === mgr.user_id;
           const hue  = mgrHue(mgr.username || '');
           return (
             <div key={mgr.user_id} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <span style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', width: 14, textAlign: 'right' }}>
-                #{i + 1}
-              </span>
+              <span style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', width: 14, textAlign: 'right' }}>#{i + 1}</span>
               <span style={{ width: 8, height: 8, borderRadius: '50%', background: hue, flexShrink: 0 }} />
-              <span style={{
-                fontFamily: MONO, fontSize: 9, letterSpacing: '.1em',
-                color: isMe ? hue : 'var(--mute)',
-                fontWeight: isMe ? 700 : 400,
-              }}>
+              <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.1em', color: isMe ? hue : 'var(--mute)', fontWeight: isMe ? 700 : 400 }}>
                 {(mgr.username || '').toUpperCase()}
               </span>
               <span style={{ fontFamily: DISPLAY, fontSize: 11, color: i === 0 ? 'var(--gold)' : 'var(--paper)' }}>
@@ -174,144 +146,85 @@ function ProgressionChart({ matchdayPoints, currentUser }) {
   );
 }
 
-// ─── Position breakdown (horizontal stacked bars per manager) ────────────────
+// ─── Season Totals + Position Breakdown (merged) ──────────────────────────────
 
-function PositionBreakdown({ positionPoints, currentUser }) {
+function SeasonTotalsWithPosition({ topScorers, positionPoints, currentUser }) {
   const rows = useMemo(() => {
-    return (positionPoints || [])
-      .map(m => ({
-        ...m,
-        total: POS_ORDER.reduce((s, p) => s + (m[p] || 0), 0),
-      }))
-      .sort((a, b) => b.total - a.total);
-  }, [positionPoints]);
+    const posMap = Object.fromEntries((positionPoints || []).map(p => [p.user_id, p]));
+    return (topScorers || []).map((scorer, i) => {
+      const pos = posMap[scorer.user_id] || {};
+      const posTotal = POS_ORDER.reduce((s, p) => s + (pos[p] || 0), 0);
+      return { ...scorer, rank: i + 1, posData: pos, posTotal };
+    });
+  }, [topScorers, positionPoints]);
 
-  const maxTotal = Math.max(...rows.map(r => r.total), 1);
+  const maxPosTotal = Math.max(...rows.map(r => r.posTotal), 1);
+  const hasPositionData = rows.some(r => r.posTotal > 0);
 
-  if (rows.length === 0) {
-    return (
-      <div style={{ padding: '24px 0', textAlign: 'center', fontFamily: MONO, fontSize: 10, color: 'var(--mute)', letterSpacing: '.2em' }}>
-        NO MATCH DATA YET
-      </div>
-    );
-  }
+  if (rows.length === 0) return <EmptyState label="NO MATCH DATA YET" />;
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-      {/* Legend */}
-      <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap' }}>
-        {POS_ORDER.map(pos => (
-          <div key={pos} style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-            <span style={{ width: 9, height: 9, background: POS_COLORS[pos], flexShrink: 0 }} />
-            <span style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.12em' }}>{pos}</span>
-          </div>
-        ))}
-      </div>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
+      {/* Position legend */}
+      {hasPositionData && (
+        <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap', marginBottom: 16 }}>
+          {POS_ORDER.map(pos => (
+            <div key={pos} style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+              <span style={{ width: 9, height: 9, background: POS_COLORS[pos], flexShrink: 0 }} />
+              <span style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.12em' }}>{pos}</span>
+            </div>
+          ))}
+        </div>
+      )}
 
       {rows.map(mgr => {
-        const isMe = currentUser?.id === mgr.user_id;
-        const hue  = mgrHue(mgr.username || '');
+        const isMe     = currentUser?.id === mgr.user_id;
+        const hue      = mgrHue(mgr.username || '');
+        const totalPts = Math.round(Number(mgr.total_points) || 0);
+
         return (
-          <div key={mgr.user_id}>
+          <div key={mgr.user_id} style={{ marginBottom: 14 }}>
             {/* Label row */}
-            <div style={{ display: 'flex', alignItems: 'center', marginBottom: 5 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
+              <span style={{
+                fontFamily: DISPLAY, fontSize: 13, minWidth: 28, textAlign: 'right',
+                color: mgr.rank === 1 ? 'var(--gold)' : 'var(--mute)',
+              }}>
+                #{mgr.rank}
+              </span>
               <MgrTag mono={mgrMono(mgr.username || '')} hue={hue} />
-              <span style={{ fontFamily: DISPLAY, fontSize: 11, marginLeft: 8 }}>{isMe ? 'You' : mgr.username}</span>
+              <span style={{ fontFamily: DISPLAY, fontSize: 12, flex: 1 }}>{isMe ? 'You' : mgr.username}</span>
+              <span style={{ fontFamily: DISPLAY, fontSize: 15, color: mgr.rank === 1 ? 'var(--gold)' : 'var(--paper)' }}>
+                {totalPts}
+                <span style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', marginLeft: 3 }}>PTS</span>
+              </span>
             </div>
-            {/* Bar with inline pts labels */}
-            <div style={{ height: 24, display: 'flex', background: 'var(--ink-3)', overflow: 'hidden', borderRadius: 1 }}>
-              {POS_ORDER.map(pos => {
-                const pts = mgr[pos] || 0;
-                if (!pts) return null;
-                const pct = (pts / maxTotal) * 100;
-                return (
-                  <div
-                    key={pos}
-                    style={{ width: `${pct}%`, background: POS_COLORS[pos], flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}
-                    title={`${pos}: ${pts} pts`}
-                  >
-                    {pct >= 5 && (
-                      <span style={{ fontFamily: MONO, fontSize: 10, color: 'rgba(0,0,0,0.85)', fontWeight: 800, whiteSpace: 'nowrap', letterSpacing: 0 }}>
-                        {pts}
-                      </span>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        );
-      })}
-    </div>
-  );
-}
 
-// ─── Captaincy hit rate ───────────────────────────────────────────────────────
-
-function CaptainHitRate({ captainHitData, currentUser }) {
-  if (!captainHitData || captainHitData.length === 0) {
-    return (
-      <div style={{ padding: '24px 0', textAlign: 'center', fontFamily: MONO, fontSize: 10, color: 'var(--mute)', letterSpacing: '.2em' }}>
-        AVAILABLE AFTER FIRST COMPLETED MATCHDAY
-      </div>
-    );
-  }
-
-  const maxRate = Math.max(...captainHitData.map(m => m.hits / (m.total || 1)), 0.01);
-
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-      {captainHitData.map(mgr => {
-        const isMe  = currentUser?.id === mgr.user_id;
-        const hue   = mgrHue(mgr.username || '');
-        const rate  = mgr.total > 0 ? mgr.hits / mgr.total : 0;
-        const pct   = Math.round(rate * 100);
-
-        return (
-          <div key={mgr.user_id}>
-            {/* Label row */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <MgrTag mono={mgrMono(mgr.username || '')} hue={hue} />
-                <span style={{ fontFamily: DISPLAY, fontSize: 11 }}>{isMe ? 'You' : mgr.username}</span>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                {/* Per-GW dots */}
-                <div style={{ display: 'flex', gap: 3 }}>
-                  {mgr.rounds.map(r => {
-                    const gwNum = r.matchday_id?.split('-r')[1] ?? '?';
+            {/* Stacked position bar */}
+            <div style={{ height: 22, display: 'flex', background: 'var(--ink-3)', overflow: 'hidden', borderRadius: 1, marginLeft: 38 }}>
+              {hasPositionData
+                ? POS_ORDER.map(pos => {
+                    const pts = mgr.posData[pos] || 0;
+                    if (!pts) return null;
+                    const pct = (pts / maxPosTotal) * 100;
                     return (
                       <div
-                        key={r.matchday_id}
-                        title={`GW${gwNum}: ${r.hit ? 'HIT' : 'MISS'} (${r.captain_pts} vs ${r.max_other_pts})`}
-                        style={{
-                          width: 16, height: 16, borderRadius: 2,
-                          background: r.hit ? 'var(--positive)' : 'var(--danger)',
-                          display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        }}
+                        key={pos}
+                        style={{ width: `${pct}%`, background: POS_COLORS[pos], display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}
+                        title={`${pos}: ${pts} pts`}
                       >
-                        <span style={{ fontFamily: MONO, fontSize: 7, color: 'rgba(0,0,0,0.8)', fontWeight: 700 }}>
-                          {gwNum}
-                        </span>
+                        {pct >= 6 && (
+                          <span style={{ fontFamily: MONO, fontSize: 9, color: 'rgba(0,0,0,0.85)', fontWeight: 800, whiteSpace: 'nowrap' }}>
+                            {pts}
+                          </span>
+                        )}
                       </div>
                     );
-                  })}
-                </div>
-                <span style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.1em' }}>
-                  {mgr.hits}/{mgr.total}
-                </span>
-                <span style={{ fontFamily: DISPLAY, fontSize: 14, color: pct >= 50 ? 'var(--positive)' : 'var(--danger)', minWidth: 36, textAlign: 'right' }}>
-                  {pct}%
-                </span>
-              </div>
-            </div>
-            {/* Rate bar */}
-            <div style={{ height: 4, background: 'var(--ink-3)', borderRadius: 1, overflow: 'hidden' }}>
-              <div style={{
-                height: '100%',
-                width: `${(rate / maxRate) * 100}%`,
-                background: pct >= 50 ? 'var(--positive)' : 'var(--danger)',
-              }} />
+                  })
+                : (
+                  <div style={{ width: `${(totalPts / Math.max(...rows.map(r => Math.round(Number(r.total_points) || 0)), 1)) * 100}%`, background: isMe ? hue : 'var(--cyan)', opacity: 0.6 }} />
+                )
+              }
             </div>
           </div>
         );
@@ -320,7 +233,7 @@ function CaptainHitRate({ captainHitData, currentUser }) {
   );
 }
 
-// ─── Best single GW panel ─────────────────────────────────────────────────────
+// ─── Best single GW ───────────────────────────────────────────────────────────
 
 function BestGameweeks({ matchdayPoints, currentUser }) {
   const bestByUser = useMemo(() => {
@@ -334,13 +247,7 @@ function BestGameweeks({ matchdayPoints, currentUser }) {
     return Object.values(map).sort((a, b) => b.pts - a.pts);
   }, [matchdayPoints]);
 
-  if (bestByUser.length === 0) {
-    return (
-      <div style={{ padding: '24px 0', textAlign: 'center', fontFamily: MONO, fontSize: 10, color: 'var(--mute)', letterSpacing: '.2em' }}>
-        NO MATCHDAY DATA YET
-      </div>
-    );
-  }
+  if (bestByUser.length === 0) return <EmptyState label="NO MATCHDAY DATA YET" />;
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -356,17 +263,11 @@ function BestGameweeks({ matchdayPoints, currentUser }) {
             border: `1px solid ${isMe ? hue + '44' : 'var(--rule)'}`,
             alignItems: 'center',
           }}>
-            <span style={{ fontFamily: DISPLAY, fontSize: 15, color: i === 0 ? 'var(--gold)' : 'var(--mute)' }}>
-              {i + 1}
-            </span>
+            <span style={{ fontFamily: DISPLAY, fontSize: 15, color: i === 0 ? 'var(--gold)' : 'var(--mute)' }}>{i + 1}</span>
             <MgrTag mono={mgrMono(m.username || '')} hue={hue} />
             <div>
               <div style={{ fontFamily: DISPLAY, fontSize: 12 }}>{isMe ? 'You' : m.username}</div>
-              {gwNum && (
-                <div style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.14em', marginTop: 2 }}>
-                  GW{gwNum}
-                </div>
-              )}
+              {gwNum && <div style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.14em', marginTop: 2 }}>GW{gwNum}</div>}
             </div>
             <span style={{ fontFamily: DISPLAY, fontSize: 18, color: i === 0 ? 'var(--gold)' : 'var(--paper)' }}>
               {m.pts}<span style={{ color: 'var(--mute)', fontSize: 10, marginLeft: 3 }}>PTS</span>
@@ -378,9 +279,232 @@ function BestGameweeks({ matchdayPoints, currentUser }) {
   );
 }
 
+// ─── Captaincy hit rate ───────────────────────────────────────────────────────
+
+function CaptainHitRate({ captainHitData, currentUser }) {
+  if (!captainHitData || captainHitData.length === 0) {
+    return <EmptyState label="AVAILABLE AFTER FIRST COMPLETED MATCHDAY" />;
+  }
+
+  const maxRate = Math.max(...captainHitData.map(m => m.hits / (m.total || 1)), 0.01);
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+      {captainHitData.map(mgr => {
+        const isMe  = currentUser?.id === mgr.user_id;
+        const hue   = mgrHue(mgr.username || '');
+        const rate  = mgr.total > 0 ? mgr.hits / mgr.total : 0;
+        const pct   = Math.round(rate * 100);
+        return (
+          <div key={mgr.user_id}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <MgrTag mono={mgrMono(mgr.username || '')} hue={hue} />
+                <span style={{ fontFamily: DISPLAY, fontSize: 11 }}>{isMe ? 'You' : mgr.username}</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <div style={{ display: 'flex', gap: 3 }}>
+                  {mgr.rounds.map(r => {
+                    const gwNum = r.matchday_id?.split('-r')[1] ?? '?';
+                    return (
+                      <div
+                        key={r.matchday_id}
+                        title={`GW${gwNum}: ${r.hit ? 'HIT' : 'MISS'} (${r.captain_pts} vs ${r.max_other_pts})`}
+                        style={{ width: 16, height: 16, borderRadius: 2, background: r.hit ? 'var(--positive)' : 'var(--danger)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                      >
+                        <span style={{ fontFamily: MONO, fontSize: 7, color: 'rgba(0,0,0,0.8)', fontWeight: 700 }}>{gwNum}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+                <span style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.1em' }}>{mgr.hits}/{mgr.total}</span>
+                <span style={{ fontFamily: DISPLAY, fontSize: 14, color: pct >= 50 ? 'var(--positive)' : 'var(--danger)', minWidth: 36, textAlign: 'right' }}>{pct}%</span>
+              </div>
+            </div>
+            <div style={{ height: 4, background: 'var(--ink-3)', borderRadius: 1, overflow: 'hidden' }}>
+              <div style={{ height: '100%', width: `${(rate / maxRate) * 100}%`, background: pct >= 50 ? 'var(--positive)' : 'var(--danger)' }} />
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+// ─── ROI Panel ────────────────────────────────────────────────────────────────
+
+const ROI_TAB_STYLES = {
+  base: {
+    fontFamily: MONO, fontSize: 10, letterSpacing: '.18em', padding: '5px 12px',
+    border: '1px solid var(--rule)', cursor: 'pointer', transition: 'all .15s',
+  },
+};
+
+function RoiPanel({ roiData, currentUser }) {
+  const [playerTab, setPlayerTab] = useState('best');
+  const { managerRoi = [], playerRoi = [] } = roiData || {};
+
+  // Manager ROI bar
+  const maxMgrRoi = Math.max(...managerRoi.map(m => m.roi), 0.01);
+
+  // Player lists — only played players (minutes > 0)
+  const playedPlayers = useMemo(() => playerRoi.filter(p => p.minutes > 0), [playerRoi]);
+  const bestPlayers   = useMemo(() => [...playedPlayers].sort((a, b) => b.roi - a.roi).slice(0, 7), [playedPlayers]);
+  const worstPlayers  = useMemo(() => [...playedPlayers].sort((a, b) => a.roi - b.roi).slice(0, 7), [playedPlayers]);
+  const displayPlayers = playerTab === 'best' ? bestPlayers : worstPlayers;
+
+  const noManagerData = managerRoi.length === 0 || managerRoi.every(m => m.squad_value === 0);
+  const noPlayerData  = playedPlayers.length === 0;
+
+  return (
+    <div className="flex flex-col lg:grid lg:grid-cols-2" style={{ gap: 0 }}>
+
+      {/* ── Manager ROI ───────────────────────────────────────────────── */}
+      <section style={{ padding: '16px 22px', borderRight: '1px solid var(--rule)', display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <SectionHead accent="var(--purple)" label="MANAGER ROI · PTS PER £M" />
+        <p style={{ fontFamily: BODY, fontSize: 11, color: 'var(--mute)', margin: 0, lineHeight: 1.5 }}>
+          Season points divided by current XI value. Who extracts the most from their budget?
+        </p>
+
+        {noManagerData
+          ? <EmptyState label="AVAILABLE AFTER FIRST SCORED MATCHDAY" />
+          : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              {managerRoi.map((mgr, i) => {
+                const isMe   = currentUser?.id === mgr.user_id;
+                const hue    = mgrHue(mgr.username || '');
+                const barPct = (mgr.roi / maxMgrRoi) * 100;
+                return (
+                  <div key={mgr.user_id}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 5 }}>
+                      <span style={{ fontFamily: DISPLAY, fontSize: 12, minWidth: 22, textAlign: 'right', color: i === 0 ? 'var(--gold)' : 'var(--mute)' }}>
+                        #{i + 1}
+                      </span>
+                      <MgrTag mono={mgrMono(mgr.username || '')} hue={hue} />
+                      <span style={{ fontFamily: DISPLAY, fontSize: 11, flex: 1 }}>{isMe ? 'You' : mgr.username}</span>
+                      <div style={{ textAlign: 'right' }}>
+                        <span style={{ fontFamily: DISPLAY, fontSize: 14, color: i === 0 ? 'var(--gold)' : 'var(--paper)' }}>
+                          {mgr.roi.toFixed(2)}
+                        </span>
+                        <span style={{ fontFamily: MONO, fontSize: 8, color: 'var(--mute)', marginLeft: 3 }}>PTS/£M</span>
+                      </div>
+                    </div>
+                    <div style={{ height: 6, background: 'var(--ink-3)', borderRadius: 1, overflow: 'hidden', marginLeft: 32 }}>
+                      <div style={{
+                        height: '100%', width: `${barPct}%`,
+                        background: i === 0 ? 'var(--gold)' : isMe ? hue : 'var(--purple)',
+                        opacity: isMe ? 1 : 0.7,
+                      }} />
+                    </div>
+                    <div style={{ fontFamily: MONO, fontSize: 8, color: 'var(--mute)', letterSpacing: '.1em', marginTop: 3, marginLeft: 32 }}>
+                      {mgr.total_points} PTS · £{mgr.squad_value.toFixed(1)}M XI
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )
+        }
+      </section>
+
+      {/* ── Player ROI (tabbed best/worst) ────────────────────────────── */}
+      <section style={{ padding: '16px 22px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+        {/* Header + tab toggle */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+          <SectionHead
+            accent={playerTab === 'best' ? 'var(--positive)' : 'var(--danger)'}
+            label={playerTab === 'best' ? 'BEST PLAYER ROI · VALUE PICKS' : 'WORST PLAYER ROI · EXPENSIVE FLOPS'}
+          />
+          <div style={{ display: 'flex', gap: 0, flexShrink: 0 }}>
+            {[['best', '↑ BEST'], ['worst', '↓ WORST']].map(([key, label]) => (
+              <button
+                key={key}
+                onClick={() => setPlayerTab(key)}
+                style={{
+                  ...ROI_TAB_STYLES.base,
+                  background: playerTab === key ? (key === 'best' ? 'var(--positive)' : 'var(--danger)') : 'transparent',
+                  color: playerTab === key ? 'rgba(0,0,0,0.85)' : 'var(--mute)',
+                  borderColor: playerTab === key ? 'transparent' : 'var(--rule)',
+                }}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <p style={{ fontFamily: BODY, fontSize: 11, color: 'var(--mute)', margin: 0, lineHeight: 1.5 }}>
+          {playerTab === 'best'
+            ? 'Pts per £M among players who have played. Underpriced gems that punch above their cost.'
+            : 'Lowest pts per £M among players who have played. Big price tags, small returns.'
+          }
+        </p>
+
+        {noPlayerData
+          ? <EmptyState label="AVAILABLE AFTER FIRST SCORED MATCHDAY" />
+          : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+              {/* Column headers */}
+              <div style={{ display: 'grid', gridTemplateColumns: '22px 28px 1fr auto auto auto', gap: 8, alignItems: 'center', padding: '4px 8px', marginBottom: 4 }}>
+                {['#', 'POS', 'PLAYER', 'PTS', '£M', 'ROI'].map(h => (
+                  <span key={h} style={{ fontFamily: MONO, fontSize: 8, color: 'var(--mute)', letterSpacing: '.16em', textAlign: h === 'PLAYER' ? 'left' : 'right' }}>{h}</span>
+                ))}
+              </div>
+
+              {displayPlayers.map((p, i) => {
+                const posColor = POS_COLORS[p.position] || 'var(--mute)';
+                const isGood   = playerTab === 'best';
+                const rankColor = i === 0 ? (isGood ? 'var(--positive)' : 'var(--danger)') : 'var(--mute)';
+                return (
+                  <div
+                    key={p.player_id}
+                    style={{
+                      display: 'grid', gridTemplateColumns: '22px 28px 1fr auto auto auto',
+                      gap: 8, alignItems: 'center', padding: '8px',
+                      background: i % 2 === 0 ? 'var(--ink-2)' : 'transparent',
+                      borderRadius: 2,
+                    }}
+                  >
+                    <span style={{ fontFamily: MONO, fontSize: 10, color: rankColor, textAlign: 'right' }}>
+                      {i + 1}
+                    </span>
+                    <span style={{
+                      fontFamily: MONO, fontSize: 8, letterSpacing: '.1em', textAlign: 'center',
+                      background: posColor, color: 'rgba(0,0,0,0.8)', padding: '2px 4px', borderRadius: 2, fontWeight: 700,
+                    }}>
+                      {p.position}
+                    </span>
+                    <span style={{ fontFamily: DISPLAY, fontSize: 11, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {p.name}
+                    </span>
+                    <span style={{ fontFamily: DISPLAY, fontSize: 12, textAlign: 'right' }}>{p.pts}</span>
+                    <span style={{ fontFamily: MONO, fontSize: 10, color: 'var(--mute)', textAlign: 'right' }}>
+                      {p.price.toFixed(1)}
+                    </span>
+                    <span style={{
+                      fontFamily: DISPLAY, fontSize: 13, textAlign: 'right',
+                      color: isGood ? (i === 0 ? 'var(--positive)' : 'var(--paper)') : (i === 0 ? 'var(--danger)' : 'var(--paper)'),
+                    }}>
+                      {p.roi.toFixed(2)}
+                    </span>
+                  </div>
+                );
+              })}
+
+              <div style={{ fontFamily: MONO, fontSize: 8, color: 'var(--mute)', letterSpacing: '.12em', marginTop: 6, textAlign: 'right' }}>
+                ROI = TOTAL PTS ÷ PRICE · PLAYED PLAYERS ONLY
+              </div>
+            </div>
+          )
+        }
+      </section>
+    </div>
+  );
+}
+
 // ─── Main export ──────────────────────────────────────────────────────────────
 
-export default function StatsView({ topScorers, teamMetrics, matchdayPoints, positionPoints, captainHitData, members, currentUser, statsLoading }) {
+export default function StatsView({ topScorers, teamMetrics, matchdayPoints, positionPoints, captainHitData, roiData, members, currentUser, statsLoading }) {
   const totalPts  = (topScorers || []).reduce((s, m) => s + Math.round(Number(m.total_points) || 0), 0);
   const avgPts    = teamMetrics?.avg_points != null
     ? Math.round(Number(teamMetrics.avg_points))
@@ -435,62 +559,33 @@ export default function StatsView({ topScorers, teamMetrics, matchdayPoints, pos
             <ProgressionChart matchdayPoints={matchdayPoints} currentUser={currentUser} />
           </section>
 
-          {/* ── Row 2: Top Scorers + Position Breakdown ──────────────── */}
-          <div className="flex flex-col lg:grid lg:grid-cols-2" style={{ borderBottom: '1px solid var(--rule)' }}>
-
-            {/* Top scorers */}
-            <section style={{ padding: '16px 22px', borderRight: '1px solid var(--rule)', borderBottom: '1px solid var(--rule)', display: 'flex', flexDirection: 'column', gap: 10 }}>
-              <SectionHead accent="var(--cyan)" label="SEASON TOTALS · LEADERBOARD" />
-              {(topScorers || []).map((scorer, i) => {
-                const hue    = mgrHue(scorer.username || '');
-                const isMe   = currentUser && scorer.user_id === currentUser.id;
-                const maxPts = topScorers?.[0]?.total_points || 1;
-                return (
-                  <div key={scorer.user_id} style={{ display: 'grid', gridTemplateColumns: 'auto auto 1fr auto auto', gap: 12, alignItems: 'center' }}>
-                    <MgrTag mono={mgrMono(scorer.username || '')} hue={hue} />
-                    <div>
-                      <div style={{ fontFamily: DISPLAY, fontSize: 12 }}>{isMe ? 'You' : scorer.username}</div>
-                      <div style={{ height: 4, background: 'var(--ink-3)', marginTop: 4, width: 120 }}>
-                        <div style={{ height: '100%', width: `${(scorer.total_points / maxPts) * 100}%`, background: i === 0 ? 'var(--gold)' : 'var(--cyan)' }} />
-                      </div>
-                    </div>
-                    <span style={{ flex: 1 }} />
-                    <span style={{ fontFamily: MONO, fontSize: 10, color: 'var(--mute)' }}>#{i + 1}</span>
-                    <span style={{ fontFamily: DISPLAY, fontSize: 14, color: i === 0 ? 'var(--gold)' : 'var(--paper)' }}>
-                      {Math.round(Number(scorer.total_points) || 0)}<span style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', marginLeft: 4 }}>PTS</span>
-                    </span>
-                  </div>
-                );
-              })}
-            </section>
-
-            {/* Position breakdown */}
-            <section style={{ padding: '16px 22px', borderBottom: '1px solid var(--rule)', display: 'flex', flexDirection: 'column', gap: 10 }}>
-              <SectionHead accent="var(--positive)" label="POINTS BY POSITION" />
-              <p style={{ fontFamily: BODY, fontSize: 11, color: 'var(--mute)', margin: 0, lineHeight: 1.5 }}>
-                Where each manager's points have come from across their current starting XI.
-              </p>
-              <PositionBreakdown positionPoints={positionPoints} currentUser={currentUser} />
-            </section>
-          </div>
+          {/* ── Row 2: Season Totals + Position Breakdown (merged, full width) */}
+          <section style={{ padding: '16px 22px', borderBottom: '1px solid var(--rule)', display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <SectionHead accent="var(--cyan)" label="SEASON TOTALS · POINTS BY POSITION" />
+            <p style={{ fontFamily: BODY, fontSize: 11, color: 'var(--mute)', margin: 0, lineHeight: 1.5 }}>
+              Leaderboard ranked by season total. Bars show how each manager's points break down by position.
+            </p>
+            <SeasonTotalsWithPosition topScorers={topScorers} positionPoints={positionPoints} currentUser={currentUser} />
+          </section>
 
           {/* ── Row 3: Best Single GW + Captaincy ────────────────────── */}
-          <div className="flex flex-col lg:grid lg:grid-cols-2">
-
-            {/* Best single GW */}
-            <section style={{ padding: '16px 22px', borderRight: '1px solid var(--rule)', display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <div className="flex flex-col lg:grid lg:grid-cols-2" style={{ borderBottom: '1px solid var(--rule)' }}>
+            <section style={{ padding: '16px 22px', borderRight: '1px solid var(--rule)', borderBottom: '1px solid var(--rule)', display: 'flex', flexDirection: 'column', gap: 10 }}>
               <SectionHead accent="var(--danger)" label="BEST SINGLE GAMEWEEK" />
               <BestGameweeks matchdayPoints={matchdayPoints} currentUser={currentUser} />
             </section>
-
-            {/* Captaincy hit rate */}
-            <section style={{ padding: '16px 22px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <section style={{ padding: '16px 22px', borderBottom: '1px solid var(--rule)', display: 'flex', flexDirection: 'column', gap: 10 }}>
               <SectionHead accent="var(--gold)" label="CAPTAINCY · HIT RATE" />
               <p style={{ fontFamily: BODY, fontSize: 11, color: 'var(--mute)', margin: 0, lineHeight: 1.5 }}>
                 Did your captain outscore every other player in your XI that gameweek? Green = hit, red = miss.
               </p>
               <CaptainHitRate captainHitData={captainHitData} currentUser={currentUser} />
             </section>
+          </div>
+
+          {/* ── Row 4: ROI (manager + player, 2-col) ─────────────────── */}
+          <div style={{ borderBottom: '1px solid var(--rule)' }}>
+            <RoiPanel roiData={roiData} currentUser={currentUser} />
           </div>
 
         </div>

@@ -169,7 +169,7 @@ export default function LeagueScreen() {
   const [currentGW, setCurrentGW] = useState('—'); // current GW label for league header
   const transferWindow = useTransferWindow(activeLeague?.league_id);
   const { auctions, pendingAuctions, closedAuctions, loading: auctionsLoading, placeBid, cancelListing, sellNow, confirmWin } = useAuctions(activeLeague?.league_id, mySquadId);
-  const { topScorers, teamMetrics, matchdayPoints, positionPoints, captainHitData, loading: statsLoading } = useLeagueStats(activeLeague?.league_id);
+  const { topScorers, teamMetrics, matchdayPoints, positionPoints, captainHitData, roiData, loading: statsLoading } = useLeagueStats(activeLeague?.league_id);
   const { leaderboard, loading: betLoading } = useBettingLeaderboard(activeLeague?.league_id);
 
   // Commissioner state + handlers consolidated into a single hook.
@@ -1563,6 +1563,7 @@ export default function LeagueScreen() {
              matchdayPoints={matchdayPoints}
              positionPoints={positionPoints}
              captainHitData={captainHitData}
+             roiData={roiData}
              members={members}
              currentUser={currentUser}
              statsLoading={statsLoading}
