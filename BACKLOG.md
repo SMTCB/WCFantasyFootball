@@ -1,12 +1,23 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-06-17 (B-02 round-aware transfer reopen — PR #563, migration 179)  
+**Last Updated**: 2026-06-17 (draft-redirect race condition on league switch — PR #564)  
 **E2E Test Suite**: `platform.spec.js` (36 tests × 2 browsers) passing in CI ✅  
 **Full Playbook Run**: `E2E_TEST_PLAYBOOK.md` v2.0 — all flows confirmed  
 **🟢 LAUNCH READY**: No critical (P0/P1) bugs open. All game mechanics functional. WC kick-off 2026-06-11.  
 **Live App**: https://wc-fantasy-football.vercel.app  
 **WC Kick-off**: 2026-06-11 19:00 UTC (Mexico vs South Africa)  
 **Supabase PostgREST max_rows**: 10,000 (raised from default 1,000 — 2026-06-08)
+
+---
+
+## ✅ Squad screen navigates to draft when switching leagues (2026-06-17) — PR #564
+
+**Reported**: Intermittent bug — switching leagues via the Squad screen dropdown sometimes redirected to the draft player-selection screen. Clicking back from there went to the LEAGUES tab (not back to SQUAD).
+
+- **Root cause**: `useLeagueConfig` never reset `loading: true` when `leagueId` changed. There was a one-render window after `activeLeague` changed where `cfg` still held the previous league's values with `loading: false`. The draft gate effect in `SquadScreen` fires on every `activeLeague` change — it saw `cfg.loading = false` (stale) and `cfg.format = "noduplicate"` (stale from the old league), then queried `draft_allocations` for the **new** league ID. If that league had no allocations, it navigated to draft. This only fires when both leagues are draft-format (`noduplicate`) AND the new league has no allocations — explaining the intermittent nature.
+- **Fix**: one-line change in `src/hooks/useLeagueConfig.js` — `setConfig(prev => ({ ...prev, loading: true }))` synchronously before starting the async fetch. The draft gate now always sees `cfg.loading = true` for the first render after a league switch and bails out correctly.
+- No migration, no data change. Pure client-side race condition fix.
+- `npm run lint` clean; no Rolldown TDZ risk (single-file hook change, no new imports).
 
 ---
 
