@@ -9,7 +9,7 @@ Complete index and overview of all project documentation organized by purpose an
 **Current Session & Progress**
 | File | Purpose | Audience | Last Updated |
 |------|---------|----------|--------------|
-| [BACKLOG.md](BACKLOG.md) | Session progress, completed features, post-MVP gaps | Team/PM | 2026-06-07 |
+| [BACKLOG.md](BACKLOG.md) | Session progress, completed features, post-MVP gaps | Team/PM | 2026-06-17 |
 | [CLEANUP_REPORT.md](CLEANUP_REPORT.md) | Git cleanup analysis, Notion verification, documentation audit | Dev team | 2026-05-17 |
 | [CODE_REVIEW_REPORT.md](CODE_REVIEW_REPORT.md) | Recent code quality assessment and findings | Developers | 2026-05-16 |
 
@@ -23,7 +23,7 @@ Complete index and overview of all project documentation organized by purpose an
 **Product & Strategy**
 | File | Purpose | Audience | Last Updated |
 |------|---------|----------|--------------|
-| [BACKLOG.md](BACKLOG.md) | Session progress, completed features, POST-MVP roadmap (contains product strategy) | Team/PM | 2026-06-07 |
+| [BACKLOG.md](BACKLOG.md) | Session progress, completed features, POST-MVP roadmap (contains product strategy) | Team/PM | 2026-06-17 |
 
 **Deployment & Launch**
 | File | Purpose | Audience | Last Updated |
@@ -73,6 +73,7 @@ Product roadmap, sprint planning, and business strategy.
 | [README.md](docs/product/README.md) | Product documentation index | Current status, phases, timeline |
 | [PIPELINE.md](docs/product/PIPELINE.md) | Sprint roadmap and delivery timeline | Phase 1–3, release dates, feature priority |
 | [12_MONTH_ROADMAP_2026_2027.md](docs/product/12_MONTH_ROADMAP_2026_2027.md) | Year-long strategic vision | Q2 2026–Q2 2027 planning (archived, reference) |
+| [MULTI_SPORT_EXPANSION.md](docs/product/MULTI_SPORT_EXPANSION.md) | Multi-sport platform strategy | Vision, F1/Tennis/Football roadmap, meta-league options, Sleeper competitive positioning |
 
 ### 📚 **docs/reference/** — Quick Lookup & Developer Guides
 
