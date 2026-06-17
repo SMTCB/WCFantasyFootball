@@ -7,6 +7,7 @@ export function useLeagueStats(leagueId) {
   const [matchdayPoints, setMatchdayPoints]  = useState([]);
   const [positionPoints, setPositionPoints]  = useState([]);
   const [captainHitData, setCaptainHitData]  = useState([]);
+  const [roiData,        setRoiData]         = useState({ managerRoi: [], playerRoi: [] });
   const [loading,        setLoading]         = useState(false);
   const [error,          setError]           = useState(null);
 
@@ -32,6 +33,10 @@ export function useLeagueStats(leagueId) {
           total_points: s.total_points,
           username:     s.users?.username || 'Unknown',
         }))
+      );
+
+      const ptsMap = Object.fromEntries(
+        (scorers ?? []).map(s => [s.user_id, Number(s.total_points) || 0])
       );
 
       // ── 2. Team metrics ───────────────────────────────────────────────────
@@ -79,6 +84,7 @@ export function useLeagueStats(leagueId) {
         setMatchdayPoints([]);
         setPositionPoints([]);
         setCaptainHitData([]);
+        setRoiData({ managerRoi: [], playerRoi: [] });
         return;
       }
 
@@ -118,21 +124,23 @@ export function useLeagueStats(leagueId) {
         const [{ data: playerPositions }, { data: currentXiStats }] = await Promise.all([
           supabase
             .from('players')
-            .select('forza_player_id, position')
+            .select('forza_player_id, position, name, price')
             .in('forza_player_id', allForzaIds),
           supabase
             .from('player_match_stats')
-            .select('player_id, fantasy_points')
+            .select('player_id, fantasy_points, minutes_played')
             .in('player_id', allCurrentXiIds),
         ]);
 
-        const posMap = Object.fromEntries(
-          (playerPositions || []).map(p => [p.forza_player_id, p.position])
-        );
-        const statsByPlayer = {};
+        const posMap   = Object.fromEntries((playerPositions || []).map(p => [p.forza_player_id, p.position]));
+        const priceMap = Object.fromEntries((playerPositions || []).map(p => [p.forza_player_id, Number(p.price) || 0]));
+        const nameMap  = Object.fromEntries((playerPositions || []).map(p => [p.forza_player_id, p.name || '']));
+
+        const statsByPlayer   = {};
+        const minutesByPlayer = {};
         for (const s of (currentXiStats || [])) {
-          statsByPlayer[s.player_id] =
-            (statsByPlayer[s.player_id] || 0) + Math.round(Number(s.fantasy_points) || 0);
+          statsByPlayer[s.player_id]   = (statsByPlayer[s.player_id]   || 0) + Math.round(Number(s.fantasy_points)  || 0);
+          minutesByPlayer[s.player_id] = (minutesByPlayer[s.player_id] || 0) + (Number(s.minutes_played) || 0);
         }
 
         setPositionPoints(
@@ -149,8 +157,44 @@ export function useLeagueStats(leagueId) {
             return { user_id: squad.user_id, username: squad.username, ...pos };
           })
         );
+
+        // ── ROI ───────────────────────────────────────────────────────────────
+        // Manager ROI: season total_points ÷ current XI value (sum of player prices)
+        const managerRoi = uniqueSquads.map(squad => {
+          const xi = squad.starting_xi?.length ? squad.starting_xi : (squad.players || []).slice(0, 11);
+          const squadValue = xi.reduce((sum, fpId) => {
+            const forzaId = fpId.split('-')[1];
+            return sum + (priceMap[forzaId] || 0);
+          }, 0);
+          const totalPts = ptsMap[squad.user_id] || 0;
+          const roi = squadValue > 0 ? totalPts / squadValue : 0;
+          return { user_id: squad.user_id, username: squad.username, total_points: totalPts, squad_value: squadValue, roi };
+        }).sort((a, b) => b.roi - a.roi);
+
+        // Player ROI: total fantasy pts ÷ price — deduplicated, played players only
+        const seenFpIds = new Set();
+        const playerRoi = allCurrentXiIds
+          .filter(fpId => {
+            if (seenFpIds.has(fpId)) return false;
+            seenFpIds.add(fpId);
+            return true;
+          })
+          .map(fpId => {
+            const forzaId = fpId.split('-')[1];
+            if (!forzaId) return null;
+            const price   = priceMap[forzaId] || 0;
+            if (price === 0) return null;
+            const pts     = statsByPlayer[fpId]   || 0;
+            const minutes = minutesByPlayer[fpId] || 0;
+            const roi     = pts / price;
+            return { player_id: fpId, name: nameMap[forzaId] || forzaId, position: posMap[forzaId] || '?', price, pts, minutes, roi };
+          })
+          .filter(Boolean);
+
+        setRoiData({ managerRoi, playerRoi });
       } else {
         setPositionPoints([]);
+        setRoiData({ managerRoi: [], playerRoi: [] });
       }
 
       // ── 6. Captaincy hit rate ─────────────────────────────────────────────
@@ -272,5 +316,5 @@ export function useLeagueStats(leagueId) {
     return () => { sub.unsubscribe(); };
   }, [leagueId, fetchStats]);
 
-  return { topScorers, teamMetrics, matchdayPoints, positionPoints, captainHitData, loading, error, refetch: fetchStats };
+  return { topScorers, teamMetrics, matchdayPoints, positionPoints, captainHitData, roiData, loading, error, refetch: fetchStats };
 }
