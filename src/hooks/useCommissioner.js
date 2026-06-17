@@ -48,6 +48,8 @@ export function useCommissioner(leagueId, tournamentId, onLeagueUpdated) {
   // ── Bet resolution ────────────────────────────────────────────────────────
   const [openBets,                 setOpenBets]                 = useState([]);
   const [resolutionBetsLoading,    setResolutionBetsLoading]    = useState(false);
+  const [allBets,                  setAllBets]                  = useState([]);
+  const [allBetsLoading,           setAllBetsLoading]           = useState(false);
   const [selectedBetForResolution, setSelectedBetForResolution] = useState(null);
   // Multi-select: array of selected answer keys (empty = nothing selected)
   const [betResolutionAnswers,     setBetResolutionAnswers]     = useState([]);
@@ -186,6 +188,51 @@ export function useCommissioner(leagueId, tournamentId, onLeagueUpdated) {
     }
   }, [leagueId]);
 
+  // ── Fetch ALL bets (history view) — all statuses, with per-answer pick breakdown ──
+  const fetchAllBets = useCallback(async () => {
+    if (!leagueId) return;
+    setAllBetsLoading(true);
+    try {
+      const { data: instances, error } = await supabase
+        .from('bet_instances')
+        .select('*')
+        .eq('league_id', leagueId)
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      if (!instances?.length) { setAllBets([]); return; }
+
+      const ids = instances.map(b => b.id);
+      const { data: subs } = await supabase
+        .from('bet_submissions')
+        .select('bet_instance_id, answer, is_correct, squads!squad_id(users!user_id(username))')
+        .in('bet_instance_id', ids);
+
+      // Build per-bet stats: total picks, winner count, picks grouped by answer key
+      const statMap = {};
+      (subs || []).forEach(s => {
+        if (!statMap[s.bet_instance_id]) {
+          statMap[s.bet_instance_id] = { total: 0, winners: 0, byAnswer: {} };
+        }
+        statMap[s.bet_instance_id].total++;
+        if (s.is_correct) statMap[s.bet_instance_id].winners++;
+        const name = s.squads?.users?.username ?? '—';
+        if (!statMap[s.bet_instance_id].byAnswer[s.answer]) {
+          statMap[s.bet_instance_id].byAnswer[s.answer] = [];
+        }
+        statMap[s.bet_instance_id].byAnswer[s.answer].push(name);
+      });
+
+      setAllBets(instances.map(b => ({
+        ...b,
+        stats: statMap[b.id] ?? { total: 0, winners: 0, byAnswer: {} },
+      })));
+    } catch (err) {
+      console.error('[fetchAllBets] failed:', err);
+    } finally {
+      setAllBetsLoading(false);
+    }
+  }, [leagueId]);
+
   // Wizard-driven create: accepts pre-assembled data so wizard state doesn't
   // need to be synced into hook state before calling.
   const createBetFromData = useCallback((data) => commAction(async () => {
@@ -221,8 +268,8 @@ export function useCommissioner(leagueId, tournamentId, onLeagueUpdated) {
     });
     if (error) throw new Error(error.message);
     setCommMsg({ type: 'ok', text: 'Bet created and published to the league.' });
-    await fetchOpenBets();
-  }), [commAction, leagueId, fetchOpenBets]);
+    await Promise.all([fetchOpenBets(), fetchAllBets()]);
+  }), [commAction, leagueId, fetchOpenBets, fetchAllBets]);
 
   // ── Bet resolution ────────────────────────────────────────────────────────
   const fetchBetSubmissions = useCallback(async (betId) => {
@@ -253,8 +300,8 @@ export function useCommissioner(leagueId, tournamentId, onLeagueUpdated) {
     setSelectedBetForResolution(null);
     setBetSubmissions([]);
     setAnswerGrouped({});
-    await fetchOpenBets();
-  }), [commAction, fetchOpenBets]);
+    await Promise.all([fetchOpenBets(), fetchAllBets()]);
+  }), [commAction, fetchOpenBets, fetchAllBets]);
 
   // Shared resolution helper — accepts an array of winning answer keys.
   // Pass [] for a "no winner" resolution (valid bet, 0 pts awarded).
@@ -284,8 +331,8 @@ export function useCommissioner(leagueId, tournamentId, onLeagueUpdated) {
     setSelectedBetForResolution(null);
     setBetSubmissions([]);
     setAnswerGrouped({});
-    await fetchOpenBets();
-  }), [commAction, selectedBetForResolution, fetchOpenBets]);
+    await Promise.all([fetchOpenBets(), fetchAllBets()]);
+  }), [commAction, selectedBetForResolution, fetchOpenBets, fetchAllBets]);
 
   // Resolve with one or more correct answers (at least one must be selected)
   const resolveBet = useCallback(() => {
@@ -306,6 +353,7 @@ export function useCommissioner(leagueId, tournamentId, onLeagueUpdated) {
     scoreFixtureId, setScoreFixtureId, triggerScores, triggerScoresLatestRound,
     createBetFromData,
     openBets, resolutionBetsLoading,
+    allBets, allBetsLoading, fetchAllBets,
     selectedBetForResolution, setSelectedBetForResolution,
     betResolutionAnswers, setBetResolutionAnswers, toggleBetResolutionAnswer,
     betSubmissions, answerGrouped,
