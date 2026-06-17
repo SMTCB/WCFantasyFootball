@@ -35,6 +35,7 @@ export function useLeagueConfig(leagueId) {
       return;
     }
 
+    setConfig(prev => ({ ...prev, loading: true }));
     let cancelled = false;
 
     (async () => {
