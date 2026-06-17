@@ -1101,10 +1101,71 @@ function CreateBetWizard({ onPublish, commLoading, memberCount, tournamentId, is
 // ─────────────────────────────────────────────────────────────────────────────
 // Resolve pending bets (Zone B right)
 // ─────────────────────────────────────────────────────────────────────────────
+// ── Void confirmation modal — platform-styled warning, no timer ───────────────
+function VoidConfirmModal({ bet, onConfirm, onCancel }) {
+  if (!bet) return null;
+  return (
+    <div
+      onClick={e => { if (e.target === e.currentTarget) onCancel(); }}
+      style={{
+        position: 'fixed', inset: 0, zIndex: 600,
+        background: 'rgba(0,0,0,0.78)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        padding: '16px',
+      }}
+    >
+      <div style={{
+        background: 'var(--ink-2)',
+        border: '1px solid rgba(239,68,68,.45)',
+        width: '100%', maxWidth: 440,
+        boxShadow: '0 24px 60px rgba(0,0,0,0.7)',
+      }}>
+        {/* Header */}
+        <div style={{
+          padding: '14px 18px',
+          borderBottom: '1px solid var(--rule)',
+          background: 'var(--ink)',
+          display: 'flex', alignItems: 'center', gap: 10,
+        }}>
+          <span style={{ width: 3, height: 12, background: 'var(--danger)', flexShrink: 0 }} />
+          <span style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '.22em', color: 'var(--danger)', flex: 1 }}>
+            VOID BET — CONFIRM
+          </span>
+          <button onClick={onCancel} style={{ background: 'none', border: 'none', color: 'var(--mute)', cursor: 'pointer', fontSize: 18, lineHeight: 1, padding: '0 2px' }}>✕</button>
+        </div>
+        {/* Body */}
+        <div style={{ padding: '18px 20px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <div style={{ fontFamily: DISPLAY, fontSize: 14, color: 'var(--paper)', lineHeight: 1.4 }}>
+            {bet.title}
+          </div>
+          <div style={{ padding: '10px 12px', background: 'rgba(239,68,68,.06)', border: '1px solid rgba(239,68,68,.25)', fontFamily: BODY, fontSize: 12, color: 'var(--paper)', lineHeight: 1.6 }}>
+            <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.22em', color: 'var(--danger)' }}>● WARNING · </span>
+            All picks will be cleared and no points awarded. This cannot be undone.
+          </div>
+          <div style={{ fontFamily: BODY, fontSize: 11, color: 'var(--mute)', lineHeight: 1.5 }}>
+            Use <b style={{ color: 'var(--warn)' }}>No Winner</b> instead if the bet was valid but nobody got it right.
+          </div>
+        </div>
+        {/* Footer */}
+        <div style={{ padding: '12px 18px', borderTop: '1px solid var(--rule)', display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+          <button onClick={onCancel} style={{ ...ghostBtn, fontSize: 9, padding: '8px 16px' }}>CANCEL</button>
+          <button
+            onClick={onConfirm}
+            style={{ ...btnBase, fontSize: 10, background: 'var(--danger)', color: 'var(--paper)', padding: '8px 18px' }}
+          >
+            VOID BET
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function ResolvePendingBets({ openBets, resolutionBetsLoading, setSelectedBetForResolution, betResolutionAnswers, toggleBetResolutionAnswer, setBetResolutionAnswers, betSubmissions, answerGrouped, fetchBetSubmissions, resolveBet, resolveNoWinner, voidBet, commLoading, commMsg, memberCount = 0 }) {
   const [expandedId, setExpandedId] = useState(null);
+  const [voidConfirmBet, setVoidConfirmBet] = useState(null); // {id, title} | null
 
-  const pending = (openBets || []).filter(b => b.status !== 'resolved');
+  const pending = (openBets || []).filter(b => b.status !== 'resolved' && b.status !== 'cancelled');
 
   const toggleCard = (betId) => {
     if (expandedId === betId) {
@@ -1133,6 +1194,11 @@ function ResolvePendingBets({ openBets, resolutionBetsLoading, setSelectedBetFor
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+      <VoidConfirmModal
+        bet={voidConfirmBet}
+        onConfirm={() => { voidBet(voidConfirmBet.id); setVoidConfirmBet(null); }}
+        onCancel={() => setVoidConfirmBet(null)}
+      />
       <HubSectionLabel
         label="RESOLVE BETS"
         sub={`${pending.length} PENDING · WAITING ON YOU`}
@@ -1250,10 +1316,7 @@ function ResolvePendingBets({ openBets, resolutionBetsLoading, setSelectedBetFor
                         <span style={{ flex: 1 }} />
                         {/* VOID — cancels the bet entirely (wrong setup / abandoned fixture) */}
                         <button
-                          onClick={() => {
-                            if (!window.confirm(`Void "${b.title}"? All picks cleared, no points awarded. Use "No Winner" instead if the bet was valid.`)) return;
-                            voidBet(b.id);
-                          }}
+                          onClick={() => setVoidConfirmBet({ id: b.id, title: b.title })}
                           disabled={commLoading}
                           style={{ ...ghostBtn, fontSize: 9 }}
                         >VOID</button>

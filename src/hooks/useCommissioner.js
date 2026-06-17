@@ -175,7 +175,7 @@ export function useCommissioner(leagueId, tournamentId, onLeagueUpdated) {
         .from('bet_instances')
         .select('*')
         .eq('league_id', leagueId)
-        .neq('status', 'resolved')
+        .not('status', 'in', '("resolved","cancelled")')
         .order('created_at', { ascending: false });
       if (error) throw error;
       setOpenBets(data || []);
