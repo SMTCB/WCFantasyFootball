@@ -1360,6 +1360,301 @@ function ResolvePendingBets({ openBets, resolutionBetsLoading, setSelectedBetFor
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Betting History — all bets (admin read-only, below CREATE / RESOLVE)
+// ─────────────────────────────────────────────────────────────────────────────
+const BH_STATUS = {
+  open:      { label: 'OPEN',     tone: 'var(--cyan)',     bg: 'rgba(0,180,216,.08)'  },
+  closed:    { label: 'PENDING',  tone: 'var(--gold)',     bg: 'rgba(224,168,0,.08)'  },
+  resolved:  { label: 'RESOLVED', tone: 'var(--positive)', bg: 'rgba(34,197,94,.08)'  },
+  cancelled: { label: 'VOIDED',   tone: 'var(--danger)',   bg: 'rgba(239,68,68,.08)'  },
+};
+
+function BettingHistory({ allBets, allBetsLoading, fetchAllBets, memberCount = 0, isMobile = false }) {
+  const [filter,     setFilter]     = useState('all');
+  const [expandedId, setExpandedId] = useState(null);
+
+  // Lazy-load: only fetch on first render, then kept in sync by mutations
+  useEffect(() => { fetchAllBets(); }, [fetchAllBets]);
+
+  const counts = {
+    all:       allBets.length,
+    open:      allBets.filter(b => b.status === 'open').length,
+    closed:    allBets.filter(b => b.status === 'closed').length,
+    resolved:  allBets.filter(b => b.status === 'resolved').length,
+    cancelled: allBets.filter(b => b.status === 'cancelled').length,
+  };
+
+  const filtered = filter === 'all' ? allBets : allBets.filter(b => b.status === filter);
+
+  const toggleExpand = (id) => setExpandedId(prev => prev === id ? null : id);
+
+  // Resolve the human-readable label for a given option key within a bet's options array
+  const optLabel = (bet, key) => {
+    const opts = Array.isArray(bet.options) ? bet.options : [];
+    return opts.find(o => (o.key ?? o) === key)?.label ?? key;
+  };
+
+  // Correct answer keys: support both correct_answers[] (new) and correct_answer (legacy)
+  const correctKeys = (bet) =>
+    (Array.isArray(bet.correct_answers) && bet.correct_answers.length ? bet.correct_answers : null)
+    ?? (bet.correct_answer ? [bet.correct_answer] : []);
+
+  const FILTER_TABS = [
+    { k: 'all',      label: 'ALL',      count: counts.all       },
+    { k: 'open',     label: 'OPEN',     count: counts.open      },
+    { k: 'closed',   label: 'PENDING',  count: counts.closed    },
+    { k: 'resolved', label: 'RESOLVED', count: counts.resolved  },
+    { k: 'cancelled',label: 'VOIDED',   count: counts.cancelled },
+  ].filter(t => t.k === 'all' || t.count > 0);
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column' }}>
+      <HubSectionLabel
+        label="BETTING HISTORY"
+        sub={`${counts.all} TOTAL · ALL STATUSES`}
+        tone="var(--purple)"
+        right={
+          <button
+            onClick={fetchAllBets}
+            disabled={allBetsLoading}
+            style={{ ...ghostBtn, fontSize: 9, padding: '4px 10px', opacity: allBetsLoading ? 0.5 : 1 }}
+          >↻ REFRESH</button>
+        }
+      />
+
+      {/* Filter tabs */}
+      <div style={{
+        display: 'flex', gap: 0, borderBottom: '1px solid var(--rule)',
+        background: 'var(--ink)', overflowX: 'auto', flexShrink: 0,
+      }}>
+        {FILTER_TABS.map((t, i) => {
+          const active = filter === t.k;
+          const cfg    = BH_STATUS[t.k] ?? { tone: 'var(--paper)' };
+          const tone   = t.k === 'all' ? 'var(--paper)' : cfg.tone;
+          return (
+            <button
+              key={t.k}
+              onClick={() => setFilter(t.k)}
+              style={{
+                background: 'transparent',
+                border: 0,
+                borderBottom: active ? `2px solid ${tone}` : '2px solid transparent',
+                borderRight: i < FILTER_TABS.length - 1 ? '1px solid var(--rule)' : 'none',
+                padding: isMobile ? '10px 14px' : '12px 18px',
+                cursor: 'pointer',
+                display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0,
+              }}
+            >
+              <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.18em', color: active ? tone : 'var(--mute)' }}>
+                {t.label}
+              </span>
+              <span style={{
+                fontFamily: MONO, fontSize: 8, letterSpacing: '.1em',
+                padding: '1px 5px',
+                background: active ? `${tone}18` : 'transparent',
+                border: `1px solid ${active ? `${tone}44` : 'var(--rule)'}`,
+                color: active ? tone : 'var(--mute)',
+              }}>{t.count}</span>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* List */}
+      <div style={{ display: 'flex', flexDirection: 'column', padding: isMobile ? '8px 14px 80px' : '12px 22px 32px', gap: 6 }}>
+        {allBetsLoading && (
+          <div style={{ padding: '18px', fontFamily: MONO, fontSize: 10, color: 'var(--mute)', letterSpacing: '.2em' }}>LOADING…</div>
+        )}
+        {!allBetsLoading && filtered.length === 0 && (
+          <div style={{ padding: '18px 14px', background: 'var(--ink-2)', border: '1px dashed var(--rule)', textAlign: 'center' }}>
+            <span style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '.22em', color: 'var(--mute)' }}>
+              {counts.all === 0 ? 'NO BETS CREATED YET' : 'NO BETS IN THIS CATEGORY'}
+            </span>
+          </div>
+        )}
+
+        {!allBetsLoading && filtered.map(bet => {
+          const isOpen  = expandedId === bet.id;
+          const cfg     = BH_STATUS[bet.status] ?? BH_STATUS.open;
+          const tone    = cfg.tone;
+          // Reuse the same glyph/tone helpers defined in ResolvePendingBets scope
+          const glyph = bet.template_id
+            ? (() => {
+                // We don't have the template slug here — derive from title heuristic
+                const t = (bet.title || '').toLowerCase();
+                if (t.includes('scorer') || t.includes('top'))  return '◉';
+                if (t.includes('result') || t.includes('match')) return '◈';
+                if (t.includes('clean'))                         return '🧤';
+                return '◈';
+              })()
+            : '◈';
+
+          const cKeys   = correctKeys(bet);
+          const stats   = bet.stats ?? { total: 0, winners: 0, byAnswer: {} };
+          const opts    = Array.isArray(bet.options) ? bet.options : [];
+
+          return (
+            <div
+              key={bet.id}
+              style={{
+                background: 'var(--ink-2)',
+                border: '1px solid var(--rule)',
+                borderLeft: `3px solid ${tone}`,
+              }}
+            >
+              {/* Collapsed header row */}
+              <button
+                onClick={() => toggleExpand(bet.id)}
+                style={{
+                  width: '100%', background: 'transparent', border: 0,
+                  padding: '11px 14px', display: 'flex', alignItems: 'center',
+                  gap: 10, cursor: 'pointer', textAlign: 'left',
+                }}
+              >
+                {/* Type glyph */}
+                <span style={{
+                  width: 20, height: 20, display: 'inline-flex', alignItems: 'center',
+                  justifyContent: 'center', background: `${tone}15`,
+                  border: `1px solid ${tone}55`, fontFamily: DISPLAY, fontSize: 11,
+                  color: tone, flexShrink: 0,
+                }}>{glyph}</span>
+
+                {/* Title */}
+                <span style={{
+                  fontFamily: DISPLAY, fontSize: isMobile ? 12 : 13, color: 'var(--paper)',
+                  flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                }}>{bet.title}</span>
+
+                {/* Picks count */}
+                <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.14em', color: 'var(--mute)', flexShrink: 0 }}>
+                  {stats.total}/{memberCount}
+                </span>
+
+                {/* Status chip */}
+                <span style={{
+                  fontFamily: MONO, fontSize: 8, letterSpacing: '.18em',
+                  padding: '2px 6px', border: `1px solid ${tone}44`,
+                  background: cfg.bg, color: tone, flexShrink: 0,
+                }}>{cfg.label}</span>
+
+                {/* Expand chevron */}
+                <span style={{ color: 'var(--mute)', fontFamily: MONO, fontSize: 12, flexShrink: 0 }}>
+                  {isOpen ? '−' : '+'}
+                </span>
+              </button>
+
+              {/* Expanded detail panel */}
+              {isOpen && (
+                <div style={{ borderTop: '1px solid var(--rule)', padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+
+                  {/* Meta row: reward · deadline */}
+                  <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                      <span style={{ fontFamily: MONO, fontSize: 8, letterSpacing: '.2em', color: 'var(--mute)' }}>REWARD</span>
+                      <span style={{ fontFamily: DISPLAY, fontSize: 14, color: 'var(--positive)' }}>+{bet.reward_value} PTS</span>
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                      <span style={{ fontFamily: MONO, fontSize: 8, letterSpacing: '.2em', color: 'var(--mute)' }}>DEADLINE</span>
+                      <span style={{ fontFamily: MONO, fontSize: 10, color: 'var(--paper)', letterSpacing: '.1em' }}>{fmtKickoff(bet.deadline_at)}</span>
+                    </div>
+                    {bet.scope_ref && (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                        <span style={{ fontFamily: MONO, fontSize: 8, letterSpacing: '.2em', color: 'var(--mute)' }}>SCOPE</span>
+                        <span style={{ fontFamily: MONO, fontSize: 10, color: 'var(--paper)', letterSpacing: '.1em' }}>{bet.scope_ref}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Correct answer(s) — resolved bets only */}
+                  {bet.status === 'resolved' && (
+                    <div style={{ padding: '8px 10px', background: 'rgba(34,197,94,.06)', border: '1px solid rgba(34,197,94,.25)', display: 'flex', flexDirection: 'column', gap: 6 }}>
+                      <span style={{ fontFamily: MONO, fontSize: 8, letterSpacing: '.22em', color: 'var(--positive)' }}>CORRECT ANSWER</span>
+                      {cKeys.length > 0 ? (
+                        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                          {cKeys.map(k => (
+                            <span key={k} style={{
+                              fontFamily: DISPLAY, fontSize: 12, color: 'var(--positive)',
+                              padding: '4px 8px', border: '1px solid rgba(34,197,94,.4)',
+                              background: 'rgba(34,197,94,.08)',
+                            }}>{optLabel(bet, k)}</span>
+                          ))}
+                        </div>
+                      ) : (
+                        <span style={{ fontFamily: DISPLAY, fontSize: 12, color: 'var(--mute)' }}>No winner</span>
+                      )}
+                      <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.14em', color: 'var(--positive)' }}>
+                        {stats.winners} / {stats.total} correct · +{bet.reward_value} pts each
+                      </span>
+                    </div>
+                  )}
+
+                  {/* Voided notice */}
+                  {bet.status === 'cancelled' && (
+                    <div style={{ padding: '8px 10px', background: 'rgba(239,68,68,.06)', border: '1px solid rgba(239,68,68,.25)' }}>
+                      <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.18em', color: 'var(--danger)' }}>
+                        VOIDED · All picks cleared — no points awarded
+                      </span>
+                    </div>
+                  )}
+
+                  {/* Pick breakdown — who chose what */}
+                  {stats.total > 0 && opts.length > 0 && (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                      <span style={{ fontFamily: MONO, fontSize: 8, letterSpacing: '.22em', color: 'var(--mute)' }}>
+                        PICK BREAKDOWN · {stats.total} SUBMISSION{stats.total !== 1 ? 'S' : ''}
+                      </span>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                        {opts.map(opt => {
+                          const key      = opt.key ?? opt;
+                          const label    = opt.label ?? opt;
+                          const pickers  = stats.byAnswer[key] ?? [];
+                          const isWinner = bet.status === 'resolved' && cKeys.includes(key);
+                          if (pickers.length === 0) return null;
+                          return (
+                            <div key={key} style={{
+                              display: 'flex', alignItems: 'flex-start', gap: 8,
+                              padding: '6px 8px',
+                              background: isWinner ? 'rgba(34,197,94,.05)' : 'var(--ink)',
+                              border: `1px solid ${isWinner ? 'rgba(34,197,94,.25)' : 'var(--rule)'}`,
+                            }}>
+                              <span style={{
+                                fontFamily: DISPLAY, fontSize: 11, color: isWinner ? 'var(--positive)' : 'var(--paper)',
+                                minWidth: isMobile ? 80 : 120, flexShrink: 0,
+                              }}>
+                                {isWinner && <span style={{ marginRight: 4 }}>✓</span>}{label}
+                              </span>
+                              <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', flex: 1 }}>
+                                {pickers.map(name => (
+                                  <MgrTag key={name} mono={mgrMono(name)} hue={mgrHue(name)} size={16} />
+                                ))}
+                              </div>
+                              <span style={{ fontFamily: MONO, fontSize: 8, letterSpacing: '.12em', color: 'var(--mute)', flexShrink: 0 }}>
+                                {pickers.length}
+                              </span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* No submissions yet */}
+                  {stats.total === 0 && (
+                    <div style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.18em', color: 'var(--mute)' }}>
+                      NO PICKS SUBMITTED YET
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Toggle switch (on/off control with a label)
 // ─────────────────────────────────────────────────────────────────────────────
 function ToggleSwitch({ checked, onChange, disabled, labelOn, labelOff }) {
@@ -2765,6 +3060,7 @@ export default function CommissionerPanel({ commissioner, leagueId, tournamentId
   const {
     commLoading, commMsg, setCommMsg,
     openBets, resolutionBetsLoading,
+    allBets, allBetsLoading, fetchAllBets,
     selectedBetForResolution, setSelectedBetForResolution,
     betResolutionAnswers, setBetResolutionAnswers, toggleBetResolutionAnswer,
     betSubmissions, answerGrouped,
@@ -3030,7 +3326,7 @@ export default function CommissionerPanel({ commissioner, leagueId, tournamentId
 
         {/* Resolve bets (mobile) */}
         <MobSectionHeader label="RESOLVE PENDING" sub="WAITING ON YOU" tone="var(--gold)" />
-        <div data-tour="comm-resolve" style={{ padding: '0 14px 80px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+        <div data-tour="comm-resolve" style={{ padding: '0 14px', display: 'flex', flexDirection: 'column', gap: 8 }}>
           <ResolvePendingBets
             openBets={openBets}
             resolutionBetsLoading={resolutionBetsLoading}
@@ -3050,6 +3346,15 @@ export default function CommissionerPanel({ commissioner, leagueId, tournamentId
             memberCount={memberCount}
           />
         </div>
+
+        {/* Betting history (mobile) */}
+        <BettingHistory
+          allBets={allBets}
+          allBetsLoading={allBetsLoading}
+          fetchAllBets={fetchAllBets}
+          memberCount={memberCount}
+          isMobile
+        />
 
       </div>
     );
@@ -3123,6 +3428,15 @@ export default function CommissionerPanel({ commissioner, leagueId, tournamentId
           />
         </div>
       </div>
+
+      {/* Zone D — Betting history (full width, below create/resolve) */}
+      <BettingHistory
+        allBets={allBets}
+        allBetsLoading={allBetsLoading}
+        fetchAllBets={fetchAllBets}
+        memberCount={memberCount}
+        isMobile={false}
+      />
 
     </div>
   );
