@@ -8,6 +8,7 @@ const POS_COLORS = {
   DEF: 'var(--cyan)',
   MID: 'var(--positive)',
   FWD: 'var(--danger)',
+  BET: 'var(--purple)',
 };
 const POS_ORDER = ['GK', 'DEF', 'MID', 'FWD'];
 
@@ -151,26 +152,31 @@ function ProgressionChart({ matchdayPoints, currentUser }) {
 function SeasonTotalsWithPosition({ topScorers, positionPoints, currentUser }) {
   const rows = useMemo(() => {
     const posMap = Object.fromEntries((positionPoints || []).map(p => [p.user_id, p]));
+    // topScorers is already ordered by total_points DESC from the DB query — preserve that order
     return (topScorers || []).map((scorer, i) => {
-      const pos = posMap[scorer.user_id] || {};
-      const posTotal = POS_ORDER.reduce((s, p) => s + (pos[p] || 0), 0);
-      return { ...scorer, rank: i + 1, posData: pos, posTotal };
-    }).sort((a, b) => b.posTotal - a.posTotal);  // sort by player points, high → low
+      const pos       = posMap[scorer.user_id] || {};
+      const totalPts  = Math.round(Number(scorer.total_points) || 0);
+      // posBarPts = sum of GK/DEF/MID/FWD from completed matchday proportional distribution
+      const posBarPts = POS_ORDER.reduce((s, p) => s + (pos[p] || 0), 0);
+      // betPts fills bar to exactly totalPts (absorbs bet rewards, trade pts, and rounding)
+      const betPts    = Math.max(0, totalPts - posBarPts);
+      const penaltyPts = Math.round(Number(pos.penalty_pts) || 0);
+      return { ...scorer, rank: i + 1, posData: pos, totalPts, posBarPts, betPts, penaltyPts };
+    });
   }, [topScorers, positionPoints]);
 
-  const hasPositionData = rows.some(r => r.posTotal > 0);
-  // Bar lengths scale to the highest player-pts total (not official total — those include bet rewards/penalties)
-  const maxPosTotal      = Math.max(...rows.map(r => r.posTotal), 1);
-  const maxTotalForLabel = Math.max(...rows.map(r => Math.round(Number(r.total_points) || 0)), 1);
+  const hasPositionData = rows.some(r => r.posBarPts > 0);
+  // All bars scale against the official #1 total — so leader always has the longest bar
+  const maxTotalPts = Math.max(...rows.map(r => r.totalPts), 1);
 
   if (rows.length === 0) return <EmptyState label="NO MATCH DATA YET" />;
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
-      {/* Position legend */}
+      {/* Legend */}
       {hasPositionData && (
         <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap', marginBottom: 16 }}>
-          {POS_ORDER.map(pos => (
+          {[...POS_ORDER, 'BET'].map(pos => (
             <div key={pos} style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
               <span style={{ width: 9, height: 9, background: POS_COLORS[pos], flexShrink: 0 }} />
               <span style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.12em' }}>{pos}</span>
@@ -180,44 +186,39 @@ function SeasonTotalsWithPosition({ topScorers, positionPoints, currentUser }) {
       )}
 
       {rows.map((mgr, chartIdx) => {
-        const isMe     = currentUser?.id === mgr.user_id;
-        const hue      = mgrHue(mgr.username || '');
-        const totalPts = Math.round(Number(mgr.total_points) || 0);
-        const isChartLeader = chartIdx === 0;  // highest player pts
+        const isMe    = currentUser?.id === mgr.user_id;
+        const hue     = mgrHue(mgr.username || '');
+        const isLeader = chartIdx === 0;
 
         return (
           <div key={mgr.user_id} style={{ marginBottom: 14 }}>
             {/* Label row */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
-              <span style={{
-                fontFamily: DISPLAY, fontSize: 13, minWidth: 28, textAlign: 'right',
-                color: 'var(--mute)',
-              }}>
+              <span style={{ fontFamily: DISPLAY, fontSize: 13, minWidth: 28, textAlign: 'right', color: 'var(--mute)' }}>
                 #{mgr.rank}
               </span>
               <MgrTag mono={mgrMono(mgr.username || '')} hue={hue} />
               <span style={{ fontFamily: DISPLAY, fontSize: 12, flex: 1 }}>{isMe ? 'You' : mgr.username}</span>
-              {/* Player pts (what the bar shows) + official total in secondary */}
               <div style={{ textAlign: 'right' }}>
-                <span style={{ fontFamily: DISPLAY, fontSize: 15, color: isChartLeader ? 'var(--gold)' : 'var(--paper)' }}>
-                  {mgr.posTotal}
-                  <span style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', marginLeft: 3 }}>PLR</span>
+                <span style={{ fontFamily: DISPLAY, fontSize: 15, color: isLeader ? 'var(--gold)' : 'var(--paper)' }}>
+                  {mgr.totalPts}
                 </span>
-                {totalPts !== mgr.posTotal && (
-                  <span style={{ fontFamily: MONO, fontSize: 8, color: 'var(--mute)', marginLeft: 6 }}>
-                    {totalPts} TOT
+                {mgr.penaltyPts > 0 && (
+                  <span style={{ fontFamily: MONO, fontSize: 8, color: 'var(--danger)', marginLeft: 5 }}>
+                    (inc. -{mgr.penaltyPts} xfer)
                   </span>
                 )}
               </div>
             </div>
 
-            {/* Stacked position bar — width scaled to max player pts */}
+            {/* Stacked bar — total width proportional to official total_points */}
             <div style={{ height: 22, display: 'flex', background: 'var(--ink-3)', overflow: 'hidden', borderRadius: 1, marginLeft: 38 }}>
-              {hasPositionData
-                ? POS_ORDER.map(pos => {
+              {hasPositionData ? (
+                <>
+                  {POS_ORDER.map(pos => {
                     const pts = mgr.posData[pos] || 0;
                     if (!pts) return null;
-                    const pct = (pts / maxPosTotal) * 100;
+                    const pct = (pts / maxTotalPts) * 100;
                     return (
                       <div
                         key={pos}
@@ -231,11 +232,26 @@ function SeasonTotalsWithPosition({ topScorers, positionPoints, currentUser }) {
                         )}
                       </div>
                     );
-                  })
-                : (
-                  <div style={{ width: `${(totalPts / maxTotalForLabel) * 100}%`, background: isMe ? hue : 'var(--cyan)', opacity: 0.6 }} />
-                )
-              }
+                  })}
+                  {mgr.betPts > 0 && (() => {
+                    const pct = (mgr.betPts / maxTotalPts) * 100;
+                    return (
+                      <div
+                        style={{ width: `${pct}%`, background: POS_COLORS.BET, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}
+                        title={`BET: ${mgr.betPts} pts`}
+                      >
+                        {pct >= 6 && (
+                          <span style={{ fontFamily: MONO, fontSize: 9, color: 'rgba(0,0,0,0.85)', fontWeight: 800, whiteSpace: 'nowrap' }}>
+                            {mgr.betPts}
+                          </span>
+                        )}
+                      </div>
+                    );
+                  })()}
+                </>
+              ) : (
+                <div style={{ width: `${(mgr.totalPts / maxTotalPts) * 100}%`, background: isMe ? hue : 'var(--cyan)', opacity: 0.6 }} />
+              )}
             </div>
           </div>
         );
@@ -574,7 +590,7 @@ export default function StatsView({ topScorers, teamMetrics, matchdayPoints, pos
           <section style={{ padding: '16px 22px', borderBottom: '1px solid var(--rule)', display: 'flex', flexDirection: 'column', gap: 10 }}>
             <SectionHead accent="var(--cyan)" label="SEASON TOTALS · POINTS BY POSITION" />
             <p style={{ fontFamily: BODY, fontSize: 11, color: 'var(--mute)', margin: 0, lineHeight: 1.5 }}>
-              Sorted by player points (PLR) — pure fantasy pts from your squad, high to low. TOT = official leaderboard total, which also includes bet rewards, trade bonuses, and transfer penalties. #N shows your official league rank.
+              Sorted by official leaderboard total — the #1 manager always has the longest bar. Segments show points by position (from completed matchdays) plus a BET stripe for bet rewards and trade bonuses. Transfer penalties are noted alongside the total but already reflected in it.
             </p>
             <SeasonTotalsWithPosition topScorers={topScorers} positionPoints={positionPoints} currentUser={currentUser} />
           </section>
