@@ -291,9 +291,10 @@ export default function SquadScreen() {
 
       const playerIds = squad.players || [];
 
-      // Build fixture query — filter by matchday_id column (not fixture id prefix).
-      // If the current round has no finished fixtures yet, fall back to the most
-      // recently completed round so the pitch always shows meaningful points.
+      // Fetch finished fixtures for the current matchday only — points are
+      // strictly per-round. Between rounds (new matchday, no finished fixtures
+      // yet) all players show 0 pts, which is correct: historical data belongs
+      // in RECAP, not on the live squad pitch.
       let fixturesQuery = supabase.from('fixtures').select('id, matchday_id').eq('status', 'finished');
       if (squad.matchday_id) {
         fixturesQuery = fixturesQuery.eq('matchday_id', squad.matchday_id);
@@ -327,23 +328,8 @@ export default function SquadScreen() {
         activeFixturesQuery,
       ]);
 
-      // If the current round has no finished fixtures, fall back to the last
-      // completed round so the pitch shows last-round stats rather than all zeros.
-      let fixtures = currentRoundFixtures;
-      if ((!fixtures || fixtures.length === 0) && squad.matchday_id && tournamentId) {
-        const { data: prevFixtures } = await supabase
-          .from('fixtures')
-          .select('id, matchday_id')
-          .eq('tournament_id', tournamentId)
-          .eq('status', 'finished')
-          .order('kickoff_at', { ascending: false })
-          .limit(30);
-        if (prevFixtures?.length) {
-          const latestMD = prevFixtures[0].matchday_id;
-          fixtures = prevFixtures.filter(f => f.matchday_id === latestMD);
-        }
-      }
       if (pErr) throw pErr;
+      const fixtures = currentRoundFixtures;
 
       // Sum fantasy_points across all finished fixtures for this matchday
       const finishedFixtureIds = new Set((fixtures || []).map(f => f.id));
