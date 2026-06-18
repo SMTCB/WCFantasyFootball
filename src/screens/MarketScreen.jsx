@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { normalizeIntelligence } from '../lib/intelligence';
-import { normalisePlayers } from '../lib/players';
+import { normalisePlayers, buildFixtureInfo, formatFixtureStatus } from '../lib/players';
 import { useAuth } from '../hooks/useAuth';
 import { useOnboarding } from '../hooks/useOnboarding';
 import { useTransfer } from '../hooks/useTransfer';
@@ -86,6 +86,7 @@ export default function MarketScreen() {
   const [preCompetition,    setPreCompetition]    = useState(false); // true until first live/finished fixture
   const [freeTransfers,     setFreeTransfers]     = useState(false); // classic league: unlimited transfers while window open
   const [clubCap,           setClubCap]           = useState(3);    // dynamic per-round, from club_cap_rules
+  const [activeRoundFixtures, setActiveRoundFixtures] = useState([]);
   const [confirm,       setConfirm]       = useState(null);
   const [basket,        setBasket]        = useState([]);  // pending [{type:'buy'|'sell', player}]
   const [confirming,    setConfirming]    = useState(false);
@@ -358,7 +359,16 @@ export default function MarketScreen() {
 
       // Only need matchday_id here — lock state is derived from transferWindow.status
       const { data: deadlineRow } = await deadlineQuery.limit(1).maybeSingle();
-      if (deadlineRow?.matchday_id) setActiveMatchdayId(deadlineRow.matchday_id);
+      const resolvedMatchdayId = deadlineRow?.matchday_id;
+      if (resolvedMatchdayId) {
+        setActiveMatchdayId(resolvedMatchdayId);
+        // Fetch fixtures for the active matchday to display fixture-timing indicator
+        const { data: fixturesData } = await supabase
+          .from('fixtures')
+          .select('home_team, away_team, status, kickoff_at, home_score, away_score')
+          .eq('matchday_id', resolvedMatchdayId);
+        setActiveRoundFixtures(fixturesData ?? []);
+      }
     } catch (err) {
       console.error('MarketScreen: deadline fetch failed', err);
     }
@@ -1192,6 +1202,15 @@ export default function MarketScreen() {
                     <div className="fk-mono mt-0.5" style={{ fontSize: 9, color: 'var(--mute)', letterSpacing: '0.14em' }}>
                       {p.club}{p.country ? ` · ${p.country}` : ''}
                     </div>
+                    {/* Fixture timing — active matchday only */}
+                    {(() => {
+                      const fs = formatFixtureStatus(buildFixtureInfo(p, activeRoundFixtures));
+                      return fs ? (
+                        <div className="fk-mono mt-0.5" style={{ fontSize: 9, color: fs.color, letterSpacing: '0.14em' }}>
+                          {fs.label}
+                        </div>
+                      ) : null;
+                    })()}
                     {/* Form strip — last 5 GW pts */}
                     <FormStrip rounds={statsMap[p.id]} />
                   </div>
