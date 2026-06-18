@@ -155,7 +155,7 @@ export function useLeagueStats(leagueId) {
         const [{ data: playerData }, { data: mdFixtures }] = await Promise.all([
           supabase.from('players').select('forza_player_id, position, name, price').in('forza_player_id', unionForzaIds),
           allMdIds.length > 0
-            ? supabase.from('fixtures').select('id, matchday_id').in('matchday_id', allMdIds)
+            ? supabase.from('fixtures').select('id, matchday_id, status').in('matchday_id', allMdIds)
             : Promise.resolve({ data: [] }),
         ]);
 
@@ -169,6 +169,14 @@ export function useLeagueStats(leagueId) {
           fixturesByMD[f.matchday_id].push(f.id);
         }
         const allHistFixtureIds = [...new Set(Object.values(fixturesByMD).flat())];
+
+        // Matchdays where ALL fixtures are finished — bench + captain metrics must only use final scores
+        const finishedMatchdays = new Set(
+          allMdIds.filter(mdId => {
+            const fxList = (mdFixtures || []).filter(f => f.matchday_id === mdId);
+            return fxList.length > 0 && fxList.every(f => f.status === 'finished');
+          })
+        );
 
         // Round 2: stats for historical XI + bench (fixture-scoped) + current XI (for ROI)
         const allHistAllPids = [...new Set([...allHistXiPids, ...allBenchPids])];
@@ -203,13 +211,14 @@ export function useLeagueStats(leagueId) {
 
             const uid              = meta.user_id;
             const xi               = row.points_breakdown.effective_xi;
+            const captainId        = row.points_breakdown?.effective_captain_id || null;
             const xiSet            = new Set(xi);
             const bench            = meta.players.filter(p => !xiSet.has(p));
             const fixtures         = fixturesByMD[row.matchday_id] || [];
             const matchdayTotal    = Math.max(0, Math.round(Number(row.total) || 0));
             const penaltyDeduction = Math.round(Number(row.points_breakdown?.transfer_penalty_deduction) || 0);
 
-            // ── Position accumulation ──
+            // ── Position accumulation (direct per-player; captain bonus → captain's position) ──
             if (!posAccum[uid]) {
               posAccum[uid] = { user_id: uid, username: meta.username, GK: 0, DEF: 0, MID: 0, FWD: 0, sum_fp_total: 0, penalty_pts: 0 };
             }
@@ -218,22 +227,34 @@ export function useLeagueStats(leagueId) {
 
             if (matchdayTotal > 0 && fixtures.length) {
               const rawPos = { GK: 0, DEF: 0, MID: 0, FWD: 0 };
-              let rawTotal = 0;
+              let xiRawTotal = 0;
+
               for (const pid of xi) {
                 const forzaId = pid.split('-')[1];
-                const pos = posMap[forzaId];
+                const pos     = posMap[forzaId];
                 if (!pos || !(pos in rawPos)) continue;
                 const pts = fixtures.reduce((s, fid) => s + (statsLookup[`${pid}|${fid}`] || 0), 0);
                 rawPos[pos] += pts;
-                rawTotal    += pts;
+                xiRawTotal  += pts;
               }
-              if (rawTotal > 0) {
+
+              // Captain bonus (2x/3x multiplier) goes entirely to the captain's position, not spread across all
+              const captainForzaId = captainId?.split('-')[1];
+              const captainPos     = captainForzaId ? posMap[captainForzaId] : null;
+              const captainBonus   = Math.max(0, matchdayTotal + penaltyDeduction - xiRawTotal);
+              if (captainPos && captainPos in rawPos && captainBonus > 0) {
+                rawPos[captainPos] += captainBonus;
+              }
+
+              // rawPos now sums to ≈ matchdayTotal + penaltyDeduction; scale proportionally to matchdayTotal
+              const rawPosTotal = Object.values(rawPos).reduce((s, v) => s + v, 0);
+              if (rawPosTotal > 0) {
                 const activePos = ['GK', 'DEF', 'MID', 'FWD'].filter(p => rawPos[p] > 0);
                 let allocated = 0;
                 for (let i = 0; i < activePos.length; i++) {
                   const pos = activePos[i];
                   const pts = i < activePos.length - 1
-                    ? Math.floor((rawPos[pos] / rawTotal) * matchdayTotal)
+                    ? Math.floor((rawPos[pos] / rawPosTotal) * matchdayTotal)
                     : Math.max(0, matchdayTotal - allocated);
                   posAccum[uid][pos] += pts;
                   allocated += pts;
@@ -241,11 +262,11 @@ export function useLeagueStats(leagueId) {
               }
             }
 
-            // ── Bench accumulation (opportunity cost: pts missed when bench outscores worst starter) ──
+            // ── Bench accumulation (opportunity cost — finished matchdays only) ──
             if (!benchAccum[uid]) {
               benchAccum[uid] = { user_id: uid, username: meta.username, totalMissedPts: 0, totalBenchPts: 0, gws: 0, rounds: [] };
             }
-            if (fixtures.length) {
+            if (fixtures.length && finishedMatchdays.has(row.matchday_id)) {
               const starterPts = xi.map(pid =>
                 fixtures.reduce((s, fid) => s + (statsLookup[`${pid}|${fid}`] || 0), 0)
               );
@@ -372,6 +393,7 @@ export function useLeagueStats(leagueId) {
             const fixtures  = fixturesByMD[row.matchday_id] || [];
 
             if (!captainId || !xi.length || !fixtures.length) continue;
+            if (!finishedMatchdays.has(row.matchday_id)) continue;
 
             if (!captainMap[uid]) {
               captainMap[uid] = { user_id: uid, username: meta.username, hits: 0, total: 0, rounds: [] };
