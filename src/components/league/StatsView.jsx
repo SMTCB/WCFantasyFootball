@@ -155,11 +155,13 @@ function SeasonTotalsWithPosition({ topScorers, positionPoints, currentUser }) {
       const pos = posMap[scorer.user_id] || {};
       const posTotal = POS_ORDER.reduce((s, p) => s + (pos[p] || 0), 0);
       return { ...scorer, rank: i + 1, posData: pos, posTotal };
-    });
+    }).sort((a, b) => b.posTotal - a.posTotal);  // sort by player points, high → low
   }, [topScorers, positionPoints]);
 
-  const maxTotalPts = Math.max(...rows.map(r => Math.round(Number(r.total_points) || 0)), 1);
   const hasPositionData = rows.some(r => r.posTotal > 0);
+  // Bar lengths scale to the highest player-pts total (not official total — those include bet rewards/penalties)
+  const maxPosTotal      = Math.max(...rows.map(r => r.posTotal), 1);
+  const maxTotalForLabel = Math.max(...rows.map(r => Math.round(Number(r.total_points) || 0)), 1);
 
   if (rows.length === 0) return <EmptyState label="NO MATCH DATA YET" />;
 
@@ -177,10 +179,11 @@ function SeasonTotalsWithPosition({ topScorers, positionPoints, currentUser }) {
         </div>
       )}
 
-      {rows.map(mgr => {
+      {rows.map((mgr, chartIdx) => {
         const isMe     = currentUser?.id === mgr.user_id;
         const hue      = mgrHue(mgr.username || '');
         const totalPts = Math.round(Number(mgr.total_points) || 0);
+        const isChartLeader = chartIdx === 0;  // highest player pts
 
         return (
           <div key={mgr.user_id} style={{ marginBottom: 14 }}>
@@ -188,25 +191,33 @@ function SeasonTotalsWithPosition({ topScorers, positionPoints, currentUser }) {
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
               <span style={{
                 fontFamily: DISPLAY, fontSize: 13, minWidth: 28, textAlign: 'right',
-                color: mgr.rank === 1 ? 'var(--gold)' : 'var(--mute)',
+                color: 'var(--mute)',
               }}>
                 #{mgr.rank}
               </span>
               <MgrTag mono={mgrMono(mgr.username || '')} hue={hue} />
               <span style={{ fontFamily: DISPLAY, fontSize: 12, flex: 1 }}>{isMe ? 'You' : mgr.username}</span>
-              <span style={{ fontFamily: DISPLAY, fontSize: 15, color: mgr.rank === 1 ? 'var(--gold)' : 'var(--paper)' }}>
-                {totalPts}
-                <span style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', marginLeft: 3 }}>PTS</span>
-              </span>
+              {/* Player pts (what the bar shows) + official total in secondary */}
+              <div style={{ textAlign: 'right' }}>
+                <span style={{ fontFamily: DISPLAY, fontSize: 15, color: isChartLeader ? 'var(--gold)' : 'var(--paper)' }}>
+                  {mgr.posTotal}
+                  <span style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', marginLeft: 3 }}>PLR</span>
+                </span>
+                {totalPts !== mgr.posTotal && (
+                  <span style={{ fontFamily: MONO, fontSize: 8, color: 'var(--mute)', marginLeft: 6 }}>
+                    {totalPts} TOT
+                  </span>
+                )}
+              </div>
             </div>
 
-            {/* Stacked position bar */}
+            {/* Stacked position bar — width scaled to max player pts */}
             <div style={{ height: 22, display: 'flex', background: 'var(--ink-3)', overflow: 'hidden', borderRadius: 1, marginLeft: 38 }}>
               {hasPositionData
                 ? POS_ORDER.map(pos => {
                     const pts = mgr.posData[pos] || 0;
                     if (!pts) return null;
-                    const pct = (pts / maxTotalPts) * 100;
+                    const pct = (pts / maxPosTotal) * 100;
                     return (
                       <div
                         key={pos}
@@ -222,7 +233,7 @@ function SeasonTotalsWithPosition({ topScorers, positionPoints, currentUser }) {
                     );
                   })
                 : (
-                  <div style={{ width: `${(totalPts / maxTotalPts) * 100}%`, background: isMe ? hue : 'var(--cyan)', opacity: 0.6 }} />
+                  <div style={{ width: `${(totalPts / maxTotalForLabel) * 100}%`, background: isMe ? hue : 'var(--cyan)', opacity: 0.6 }} />
                 )
               }
             </div>
@@ -309,7 +320,7 @@ function CaptainHitRate({ captainHitData, currentUser }) {
                     return (
                       <div
                         key={r.matchday_id}
-                        title={`GW${gwNum}: ${r.hit ? 'HIT' : 'MISS'} (${r.captain_pts} vs ${r.max_other_pts})`}
+                        title={`GW${gwNum}: ${r.hit ? '✓ HIT' : '✗ MISS'} — captain ${r.captain_pts}pts, best other ${r.max_other_pts}pts`}
                         style={{ width: 16, height: 16, borderRadius: 2, background: r.hit ? 'var(--positive)' : 'var(--danger)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                       >
                         <span style={{ fontFamily: MONO, fontSize: 7, color: 'rgba(0,0,0,0.8)', fontWeight: 700 }}>{gwNum}</span>
@@ -563,7 +574,7 @@ export default function StatsView({ topScorers, teamMetrics, matchdayPoints, pos
           <section style={{ padding: '16px 22px', borderBottom: '1px solid var(--rule)', display: 'flex', flexDirection: 'column', gap: 10 }}>
             <SectionHead accent="var(--cyan)" label="SEASON TOTALS · POINTS BY POSITION" />
             <p style={{ fontFamily: BODY, fontSize: 11, color: 'var(--mute)', margin: 0, lineHeight: 1.5 }}>
-              Leaderboard ranked by season total. Bars show how each manager's points break down by position.
+              Sorted by player points (PLR) — pure fantasy pts from your squad, high to low. TOT = official leaderboard total, which also includes bet rewards, trade bonuses, and transfer penalties. #N shows your official league rank.
             </p>
             <SeasonTotalsWithPosition topScorers={topScorers} positionPoints={positionPoints} currentUser={currentUser} />
           </section>
@@ -577,7 +588,7 @@ export default function StatsView({ topScorers, teamMetrics, matchdayPoints, pos
             <section style={{ padding: '16px 22px', borderBottom: '1px solid var(--rule)', display: 'flex', flexDirection: 'column', gap: 10 }}>
               <SectionHead accent="var(--gold)" label="CAPTAINCY · HIT RATE" />
               <p style={{ fontFamily: BODY, fontSize: 11, color: 'var(--mute)', margin: 0, lineHeight: 1.5 }}>
-                How often your captain was the top scorer in your active XI that gameweek. Green = captain outscored every other starter (correct armband). Red = someone else in your XI scored more.
+                Did your captain outscore every other player in YOUR XI that gameweek? Two managers with the same captain can have different results — it depends on their other 10 players. Hover each square to see captain pts vs best other player. Only completed gameweeks count.
               </p>
               <CaptainHitRate captainHitData={captainHitData} currentUser={currentUser} />
             </section>
