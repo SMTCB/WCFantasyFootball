@@ -1,4 +1,4 @@
-// Edge Function: calculate-scores  (v28 — store bench_players snapshot in points_breakdown at roundComplete so historical bench is not polluted by future transfers)
+// Edge Function: calculate-scores  (v28 — store bench_players snapshot in points_breakdown at roundComplete; bench derived from effective (post-auto-sub) XI, not baseXI)
 // Calculates fantasy points for all squads for a given fixture.
 // Called by ingest-match-events (Forza live path) or directly (mock/manual path).
 //
@@ -634,14 +634,16 @@ async function rollupSquads(fixture_id, pointsLookup, tournament_id) {
     // #17: at round completion, auto-sub DNP starters (0 min) for the highest-priority
     // bench player who played, keeping the formation valid. Bench priority = players-array
     // order. Before the round completes, score the XI as-is.
-    // bench is derived here (not inside the if block) so we can snapshot it in
-    // points_breakdown.bench_players at round completion — the squad.players array
-    // will be mutated by future transfers, so we must persist the historical bench now.
+    // bench is derived relative to baseXI so applyAutoSubs can pick from it.
+    // After auto-subs, benchPlayers is re-derived relative to pitchPlayers (the
+    // effective XI) — any player auto-subbed IN must not appear in both XI and bench.
     const bench = (squad.players || []).filter(pid => !baseXI.includes(pid));
     let pitchPlayers = baseXI;
     if (roundComplete) {
       pitchPlayers = applyAutoSubs(baseXI, bench, minutesLookup, posLookup);
     }
+    // Players not in the effective XI — this is what we store as historical bench.
+    const benchPlayers = (squad.players || []).filter(pid => !pitchPlayers.includes(pid));
     let total = 0;
 
     // L3.5: if the captain isn't in the (effective) XI, move the bonus to the highest
@@ -759,7 +761,7 @@ async function rollupSquads(fixture_id, pointsLookup, tournament_id) {
       breakdown.base_xi = baseXI;
       breakdown.base_captain_id = squad.captain_id;
       breakdown.effective_xi = pitchPlayers;
-      breakdown.bench_players = bench;
+      breakdown.bench_players = benchPlayers;
       breakdown.effective_captain_id = effectiveCaptainId;
       breakdown.is_triple_captain = isTripleCaptain;
       if (jokerPid) breakdown.joker_player_id = jokerPid;
