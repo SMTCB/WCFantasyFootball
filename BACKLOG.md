@@ -1,12 +1,75 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-06-18 (transfer toast count fix — PR #573)  
+**Last Updated**: 2026-06-18 (Forza Times interactive frontpage — PRs #574/#575)  
 **E2E Test Suite**: `platform.spec.js` (36 tests × 2 browsers) passing in CI ✅  
 **Full Playbook Run**: `E2E_TEST_PLAYBOOK.md` v2.0 — all flows confirmed  
 **🟢 LAUNCH READY**: No critical (P0/P1) bugs open. All game mechanics functional. WC kick-off 2026-06-11.  
 **Live App**: https://wc-fantasy-football.vercel.app  
 **WC Kick-off**: 2026-06-11 19:00 UTC (Mexico vs South Africa)  
 **Supabase PostgREST max_rows**: 10,000 (raised from default 1,000 — 2026-06-08)
+
+---
+
+## ✅ Forza Times interactive frontpage — AI editions, emoji reactions, letters to editor (2026-06-18) — PRs #574/#575, migrations 180–181
+
+**Requested**: Rework the FRONTPAGE "Forza Times" newspaper inside each league hub to promote daily interaction, banter, and roasting between managers. Previous version was static — standings snapshot, hardcoded quote, no way for members to respond.
+
+### Session 1 — Backend (migration 180, migration 181, Edge Function)
+
+**Three new tables** (migration 180, `180_interactive_frontpage.sql`):
+- `frontpage_editions` — one row per league per calendar day. Stores AI-generated content: `headline`, `deck`, `hot_take`, `wooden_spoon`, `transfer_rumour`. `edition_number` increments per league. `is_manual=true` + `generated_at < 12h ago` → the 05:00 UTC cron skips that league. RLS: league members SELECT; service role writes.
+- `frontpage_reactions` — emoji reactions per member per section per day. Five emojis (`🔥💀😂👑😤`), five sections (`lead`, `hot_take`, `transfers`, `scores`, `commissioner`). UNIQUE per `(league_id, edition_date, section_key, user_id, emoji)` — toggle pattern (insert = add, delete = remove). RLS: members SELECT; own-row INSERT/DELETE.
+- `frontpage_comments` — 140-char "letters to the editor" per section. INSERT: any member; DELETE: own row or commissioner.
+- `classified` added to `gazette_entry_type` enum — for commissioner classified ad posts (separate from `breaking_news`).
+
+**`generate-frontpage-edition` Edge Function** (`supabase/functions/generate-frontpage-edition/index.ts`) — ⚠️ **NOT YET DEPLOYED** (pending test-league deploy):
+- Two modes: cron (`{mode:'cron'}` + service-role JWT) and manual (`{league_id}` + user JWT with commissioner check).
+- Collects: standings (top 5 + bottom 1), last 24h transfers, last 3 chat messages, upcoming fixtures (next 48h), gazette entries (breaking_news, classified, activity), `league_config` pinned quote.
+- Calls Groq (`llama-3.1-8b-instant` via OpenAI-compatible endpoint) with a British tabloid system prompt; structured JSON output `{headline, deck, hot_take, wooden_spoon, transfer_rumour}`.
+- Writes/upserts `frontpage_editions`. Cron skip: `is_manual=true AND generated_at > now()-12h`. Manual rate limit: `is_manual=true AND generated_at > now()-4h` → 429.
+- `GROQ_API_KEY` stored as a Supabase Edge Function secret — never in code or git.
+
+**Cron** (migration 181): `generate-frontpage-editions` runs at `0 5 * * *` UTC — calls the Edge Function with `{mode:'cron'}` via `net.http_post`.
+
+### Session 2 — Frontend (PR #575)
+
+**Edition gate**: all new UI is gated on `frontpage_editions` row existing for today in the active league. If no row exists, the frontpage renders exactly as before. Real leagues see zero change until the Edge Function is deployed and triggered on a per-league basis.
+
+**New files:**
+- `src/hooks/useFrontpageEdition.js` — fetches today's edition, all reactions, all comments, and the pinned quote (`frontpage_pinned_quote` / `frontpage_pinned_quote_author` from `league_config`). Returns: `edition`, `pinnedQuote`, `toggleReaction` (optimistic), `getReactionCounts`, `isMyReaction`, `addComment`, `deleteComment`, `getComments`, `commentCount`, `EMOJIS`. Pinned quote is fetched alongside so it renders without a separate hook.
+- `src/components/league/FrontpageInteractive.jsx` — two exported components:
+  - `ReactionStrip` — five emoji toggle buttons with counts, highlighted border/background when user has reacted, no deps on portal (in-place).
+  - `LettersPanel` — collapsible "write a letter" panel. `timeAgoFT` formatter (just now / Xm / Xh / Xd). Shows existing letters with author + timestamp. Owner or commissioner can delete (✕ button). 140-char compose input with remaining-chars counter, Enter to send.
+
+**LeagueScreen.jsx changes:**
+- `frontpageEdition = useFrontpageEdition(activeLeague?.league_id)` hook call added.
+- Masthead `EDITION · #N` now shows real `edition_number` (fallback #1).
+- Lead story: AI `headline` + `deck` replace static text when edition exists; drop-cap preserved as fallback. `ReactionStrip` + `LettersPanel` for section `'lead'` appended after byline.
+- Secondary column: new TRANSFER WHISPERS box shows `transfer_rumour` when edition exists, with `ReactionStrip` + `LettersPanel` for section `'transfers'`.
+- Sidebar: pinned quote replaces hardcoded "May the best manager win." when set; label changes to COMMISSIONER SAYS. New dark HOT TAKE box below with `hot_take` content + `ReactionStrip` + `LettersPanel` for section `'hot_take'` (inverted colours: cream text on ink background).
+- After `GazetteNews`: reaction strip + letters for section `'commissioner'` added.
+- New 🥄 WOODEN SPOON WATCH section renders `wooden_spoon` below GazetteNews when edition exists.
+- Existing LATEST SCORES section gets `ReactionStrip` + `LettersPanel` for section `'scores'` appended at the bottom.
+
+**CommissionerPanel.jsx changes:**
+- `NewsPostForm` extended with a type selector tab row: **BREAKING NEWS** / **CLASSIFIED AD** / **PIN QUOTE**.
+  - Classified: posts `gazette_entries` with `entry_type='classified'` (different placeholder text).
+  - Pin Quote: two inputs (quote text + optional author); upserts `league_config` keys `frontpage_pinned_quote` + `frontpage_pinned_quote_author`. Appears as COMMISSIONER SAYS quote on the frontpage immediately.
+- New **AI SPECIAL EDITION** sub-section below the form: calls `supabase.functions.invoke('generate-frontpage-edition', { body: { league_id } })` with the user's JWT. Rate-limit and failure messages shown inline.
+
+### Deploy checklist (when ready to test)
+```bash
+# 1. Deploy the Edge Function
+npx supabase functions deploy generate-frontpage-edition --project-ref sssmvihxtqtohisghjet
+
+# 2. Set the Groq API key as a secret (paste your key when prompted)
+npx supabase secrets set GROQ_API_KEY=<your-new-key> --project-ref sssmvihxtqtohisghjet
+
+# 3. In your test league: Admin → League News → GENERATE SPECIAL EDITION →
+# 4. Refresh the Frontpage tab — AI edition + all interactive strips should appear
+```
+
+No data impact on real leagues (edition gate). Lint: 0 errors. Build: clean. Tests: 84/84 passed.
 
 ---
 
