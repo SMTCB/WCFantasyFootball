@@ -1501,7 +1501,7 @@ export default function SquadScreen() {
                       isOwn={true}
                       onToggle={() => toggleFlag(squadData.squadId, player.id)}
                     />
-                    {activeLeague && !isListed && (
+                    {activeLeague && !isListed && cfg.format === 'noduplicate' && (
                       <button
                         disabled={auctionBusy === player.id}
                         onClick={async () => {
@@ -1688,7 +1688,7 @@ export default function SquadScreen() {
             Tactical Sheet
           </div>
           <div className="flex items-center gap-2 flex-wrap">
-            <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 34, color: 'var(--paper)', lineHeight: 1.05, letterSpacing: '-0.01em' }}>
+            <div className="text-[22px] lg:text-[34px]" style={{ fontFamily: 'Archivo Black, sans-serif', color: 'var(--paper)', lineHeight: 1.05, letterSpacing: '-0.01em' }}>
               My Squad
             </div>
             <LeagueSelector value={activeLeague} onChange={setActiveLeague} />
@@ -1708,10 +1708,10 @@ export default function SquadScreen() {
           </div>
         </div>
 
-        {/* Right: KPI cluster — Transfers · Squad · Budget */}
-        <div className="flex items-center gap-5">
+        {/* Right: KPI cluster — Transfers (desktop only) · Squad · Budget */}
+        <div className="flex items-center gap-3 lg:gap-5">
           {windowKpi.text && (
-            <div className="text-right">
+            <div className="text-right hidden lg:block">
               <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 9, color: 'var(--mute)', letterSpacing: '.14em', textTransform: 'uppercase' }}>{windowKpi.label}</div>
               <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 14, color: windowKpi.color, letterSpacing: '-0.01em' }}>
                 {windowKpi.text}
@@ -2029,7 +2029,6 @@ export default function SquadScreen() {
                             padding: '9px 16px',
                             background: isStarter ? 'transparent' : 'rgba(255,255,255,0.015)',
                             borderBottom: '1px solid var(--rule)',
-                            borderLeft: isStarter ? '2px solid var(--cyan)' : '2px solid transparent',
                             opacity: isStarter ? 1 : 0.65,
                             cursor: 'pointer', textAlign: 'left',
                           }}
@@ -2071,8 +2070,8 @@ export default function SquadScreen() {
                           >
                             STATS ↗
                           </button>
-                          {/* Auction action */}
-                          {activeLeague && (
+                          {/* Auction action — draft leagues only (classic allows shared ownership) */}
+                          {activeLeague && cfg.format === 'noduplicate' && (
                             <div onClick={e => e.stopPropagation()} style={{ flexShrink: 0 }}>
                               {isListed ? (() => {
                                 const isConfirming = confirmCancelId === player.id;

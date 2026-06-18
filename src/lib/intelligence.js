@@ -14,10 +14,13 @@
 
 // ─── Status config ────────────────────────────────────────────────────────────
 export const LINEUP_STATUS = {
-  fit:      { emoji: '🟢', label: 'Fit',      color: '#22c55e', bg: 'rgba(34,197,94,0.12)',  risk: 0 },
-  doubt:    { emoji: '🟡', label: 'Doubtful', color: '#eab308', bg: 'rgba(234,179,8,0.12)',  risk: 1 },
-  returning:{ emoji: '🟠', label: 'Returns',  color: '#f97316', bg: 'rgba(249,115,22,0.12)', risk: 2 },
-  out:      { emoji: '🔴', label: 'OUT',      color: '#ef4444', bg: 'rgba(239,68,68,0.12)',  risk: 3 },
+  fit:       { emoji: '🟢', label: 'Fit',        color: '#22c55e', bg: 'rgba(34,197,94,0.12)',  risk: 0 },
+  doubt:     { emoji: '🟡', label: 'Doubtful',   color: '#eab308', bg: 'rgba(234,179,8,0.12)',  risk: 1 },
+  doubtful:  { emoji: '🟡', label: 'Doubtful',   color: '#eab308', bg: 'rgba(234,179,8,0.12)',  risk: 1 },
+  returning: { emoji: '🟠', label: 'Returns',    color: '#f97316', bg: 'rgba(249,115,22,0.12)', risk: 2 },
+  injured:   { emoji: '🔴', label: 'Injured',    color: '#ef4444', bg: 'rgba(239,68,68,0.12)',  risk: 3 },
+  suspended: { emoji: '🔴', label: 'Suspended',  color: '#ef4444', bg: 'rgba(239,68,68,0.12)',  risk: 3 },
+  out:       { emoji: '🔴', label: 'OUT',        color: '#ef4444', bg: 'rgba(239,68,68,0.12)',  risk: 3 },
 };
 
 /**
