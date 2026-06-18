@@ -25,23 +25,30 @@ function useCountdown(target) {
   return label;
 }
 
-export default function TransferWindowBanner({ status, closesAt, opensAt, transfersRemaining, isUnlimited }) {
+export default function TransferWindowBanner({ status, closesAt, opensAt, transfersRemaining, isUnlimited, windowType }) {
   const closesIn = useCountdown(status === 'open'     ? closesAt : null);
   const opensIn  = useCountdown(status === 'upcoming' ? opensAt  : null);
 
   if (status === 'loading' || status === 'no_window') return null;
 
   if (status === 'open') {
+    let transferLabel = null;
+    if (windowType === 'unlimited') {
+      // Admin-opened emergency window — genuinely no restrictions
+      transferLabel = 'Unlimited transfers';
+    } else if (isUnlimited) {
+      // Natural between-rounds window — free allowance applies, penalties beyond it
+      transferLabel = 'Free transfers available · extra buys cost points';
+    } else if (transfersRemaining !== null) {
+      transferLabel = `${transfersRemaining} transfer${transfersRemaining !== 1 ? 's' : ''} left`;
+    }
+
     return (
       <div className="fk-sysbar success">
         <span className="fk-sysbar-dot" />
         <span className="fk-sysbar-tag">Window Open</span>
         <span className="fk-sysbar-msg">
-          {isUnlimited
-            ? 'Unlimited transfers'
-            : transfersRemaining !== null
-              ? `${transfersRemaining} transfer${transfersRemaining !== 1 ? 's' : ''} left`
-              : null}
+          {transferLabel}
           {closesIn && <span>· Closes in {closesIn}</span>}
         </span>
       </div>
