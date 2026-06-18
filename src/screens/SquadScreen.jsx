@@ -621,8 +621,13 @@ export default function SquadScreen() {
     // If pitcher already scored, warn about deduction before confirming.
     // Use rawPoints (unmultiplied) — set_lineup's interim deduction is the raw
     // per-fixture score, not the captain-doubled display value.
+    // Only warn when the player's own fixture in the current matchday is
+    // live or finished — if it's still scheduled (or the round hasn't started
+    // yet), the displayed points come from the previous matchday fallback and
+    // set_lineup will return deduction=0 from the server anyway.
+    const fixtureStarted = ['live', 'finished'].includes(pitchPlayer.fixtureInfo?.status);
     const deductionPts = pitchPlayer.rawPoints ?? pitchPlayer.points;
-    if (deductionPts > 0) {
+    if (deductionPts > 0 && fixtureStarted) {
       setConfirm({
         title:        `Move ${pitchPlayer.name} to bench?`,
         body:         `${pitchPlayer.name} has scored ${deductionPts} pts this round. Moving them to the bench will deduct those points from your total.`,
