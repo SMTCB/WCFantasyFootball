@@ -309,6 +309,8 @@ function BestGameweeks({ matchdayPoints, currentUser }) {
 // ─── Captaincy hit rate ───────────────────────────────────────────────────────
 
 function CaptainHitRate({ captainHitData, currentUser }) {
+  const [activeTooltip, setActiveTooltip] = useState(null); // { uid, matchday_id }
+
   if (!captainHitData || captainHitData.length === 0) {
     return <EmptyState label="AVAILABLE AFTER FIRST COMPLETED MATCHDAY" />;
   }
@@ -322,6 +324,10 @@ function CaptainHitRate({ captainHitData, currentUser }) {
         const hue   = mgrHue(mgr.username || '');
         const rate  = mgr.total > 0 ? mgr.hits / mgr.total : 0;
         const pct   = Math.round(rate * 100);
+        const activeRound = mgr.rounds.find(
+          r => activeTooltip?.uid === mgr.user_id && activeTooltip?.matchday_id === r.matchday_id
+        );
+
         return (
           <div key={mgr.user_id}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
@@ -332,12 +338,26 @@ function CaptainHitRate({ captainHitData, currentUser }) {
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <div style={{ display: 'flex', gap: 3 }}>
                   {mgr.rounds.map(r => {
-                    const gwNum = r.matchday_id?.split('-r')[1] ?? '?';
+                    const gwNum   = r.matchday_id?.split('-r')[1] ?? '?';
+                    const isActive = activeTooltip?.uid === mgr.user_id && activeTooltip?.matchday_id === r.matchday_id;
                     return (
                       <div
                         key={r.matchday_id}
-                        title={`GW${gwNum}: ${r.hit ? '✓ HIT' : '✗ MISS'} — captain ${r.captain_pts}pts, best other ${r.max_other_pts}pts`}
-                        style={{ width: 16, height: 16, borderRadius: 2, background: r.hit ? 'var(--positive)' : 'var(--danger)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                        onMouseEnter={() => setActiveTooltip({ uid: mgr.user_id, matchday_id: r.matchday_id })}
+                        onMouseLeave={() => setActiveTooltip(null)}
+                        onClick={() => setActiveTooltip(t =>
+                          t?.uid === mgr.user_id && t?.matchday_id === r.matchday_id
+                            ? null
+                            : { uid: mgr.user_id, matchday_id: r.matchday_id }
+                        )}
+                        style={{
+                          width: 18, height: 18, borderRadius: 2,
+                          background: r.hit ? 'var(--positive)' : 'var(--danger)',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          cursor: 'pointer',
+                          outline: isActive ? '2px solid var(--paper)' : 'none',
+                          outlineOffset: 1,
+                        }}
                       >
                         <span style={{ fontFamily: MONO, fontSize: 7, color: 'rgba(0,0,0,0.8)', fontWeight: 700 }}>{gwNum}</span>
                       </div>
@@ -348,12 +368,90 @@ function CaptainHitRate({ captainHitData, currentUser }) {
                 <span style={{ fontFamily: DISPLAY, fontSize: 14, color: pct >= 50 ? 'var(--positive)' : 'var(--danger)', minWidth: 36, textAlign: 'right' }}>{pct}%</span>
               </div>
             </div>
+
+            {/* Tooltip — shown below squares when a GW square is hovered/tapped */}
+            {activeRound && (
+              <div style={{
+                margin: '4px 0 6px', padding: '7px 10px',
+                background: 'var(--ink-2)', border: `1px solid ${activeRound.hit ? 'var(--positive)' : 'var(--danger)'}44`,
+                borderRadius: 3, display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap',
+              }}>
+                <span style={{ fontFamily: MONO, fontSize: 9, color: activeRound.hit ? 'var(--positive)' : 'var(--danger)', letterSpacing: '.16em', flexShrink: 0 }}>
+                  GW{activeRound.matchday_id?.split('-r')[1]} · {activeRound.hit ? '✓ HIT' : '✗ MISS'}
+                </span>
+                <span style={{ fontFamily: BODY, fontSize: 11, color: 'var(--paper)' }}>
+                  Captain <strong>{activeRound.captain_name || activeRound.captain_id}</strong> scored <strong>{activeRound.captain_pts} pts</strong>
+                  {activeRound.hit
+                    ? <> — best in XI</>
+                    : <>, best other player scored <strong>{activeRound.max_other_pts} pts</strong></>
+                  }
+                </span>
+              </div>
+            )}
+
             <div style={{ height: 4, background: 'var(--ink-3)', borderRadius: 1, overflow: 'hidden' }}>
               <div style={{ height: '100%', width: `${(rate / maxRate) * 100}%`, background: pct >= 50 ? 'var(--positive)' : 'var(--danger)' }} />
             </div>
           </div>
         );
       })}
+    </div>
+  );
+}
+
+// ─── Bench points panel ───────────────────────────────────────────────────────
+
+function BenchPointsPanel({ benchData, currentUser }) {
+  if (!benchData || benchData.length === 0) {
+    return <EmptyState label="AVAILABLE AFTER FIRST COMPLETED MATCHDAY" />;
+  }
+
+  // Sort: lowest bench pts first (best selector at top)
+  const sorted = [...benchData].sort((a, b) => a.totalBenchPts - b.totalBenchPts);
+  const maxBenchPts = Math.max(...sorted.map(m => m.totalBenchPts), 1);
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+      {sorted.map((mgr, i) => {
+        const isMe  = currentUser?.id === mgr.user_id;
+        const hue   = mgrHue(mgr.username || '');
+        const avg   = mgr.gws > 0 ? (mgr.totalBenchPts / mgr.gws).toFixed(1) : '—';
+        // Color: green for low bench pts (good selection), amber/red for high
+        const relPos = sorted.length > 1 ? i / (sorted.length - 1) : 0; // 0 = best, 1 = worst
+        const barColor = relPos < 0.4 ? 'var(--positive)' : relPos < 0.7 ? 'var(--gold)' : 'var(--danger)';
+
+        return (
+          <div key={mgr.user_id}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 5 }}>
+              <span style={{ fontFamily: DISPLAY, fontSize: 12, minWidth: 22, textAlign: 'right', color: i === 0 ? 'var(--positive)' : 'var(--mute)' }}>
+                #{i + 1}
+              </span>
+              <MgrTag mono={mgrMono(mgr.username || '')} hue={hue} />
+              <span style={{ fontFamily: DISPLAY, fontSize: 11, flex: 1 }}>{isMe ? 'You' : mgr.username}</span>
+              <div style={{ textAlign: 'right' }}>
+                <span style={{ fontFamily: DISPLAY, fontSize: 14, color: i === 0 ? 'var(--positive)' : 'var(--paper)' }}>
+                  {mgr.totalBenchPts}
+                </span>
+                <span style={{ fontFamily: MONO, fontSize: 8, color: 'var(--mute)', marginLeft: 3 }}>PTS</span>
+                <span style={{ fontFamily: MONO, fontSize: 8, color: 'var(--mute)', marginLeft: 8 }}>
+                  {avg}/GW
+                </span>
+              </div>
+            </div>
+            <div style={{ height: 6, background: 'var(--ink-3)', borderRadius: 1, overflow: 'hidden', marginLeft: 32 }}>
+              <div style={{
+                height: '100%',
+                width: `${(mgr.totalBenchPts / maxBenchPts) * 100}%`,
+                background: barColor,
+                opacity: isMe ? 1 : 0.75,
+              }} />
+            </div>
+          </div>
+        );
+      })}
+      <div style={{ fontFamily: MONO, fontSize: 8, color: 'var(--mute)', letterSpacing: '.12em', marginTop: 4 }}>
+        LOWER = BETTER · BEST SELECTOR HAS FEWEST PTS LEFT ON BENCH
+      </div>
     </div>
   );
 }
@@ -531,7 +629,7 @@ function RoiPanel({ roiData, currentUser }) {
 
 // ─── Main export ──────────────────────────────────────────────────────────────
 
-export default function StatsView({ topScorers, teamMetrics, matchdayPoints, positionPoints, captainHitData, roiData, members, currentUser, statsLoading }) {
+export default function StatsView({ topScorers, teamMetrics, matchdayPoints, positionPoints, captainHitData, benchData, roiData, members, currentUser, statsLoading }) {
   const totalPts  = (topScorers || []).reduce((s, m) => s + Math.round(Number(m.total_points) || 0), 0);
   const avgPts    = teamMetrics?.avg_points != null
     ? Math.round(Number(teamMetrics.avg_points))
@@ -614,6 +712,15 @@ export default function StatsView({ topScorers, teamMetrics, matchdayPoints, pos
           <div style={{ borderBottom: '1px solid var(--rule)' }}>
             <RoiPanel roiData={roiData} currentUser={currentUser} />
           </div>
+
+          {/* ── Row 5: Points left on bench ──────────────────────────── */}
+          <section style={{ padding: '16px 22px', borderBottom: '1px solid var(--rule)', display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <SectionHead accent="var(--positive)" label="POINTS LEFT ON BENCH · SEASON TOTAL" />
+            <p style={{ fontFamily: BODY, fontSize: 11, color: 'var(--mute)', margin: 0, lineHeight: 1.5 }}>
+              Total points your 4 bench players accumulated in completed matchdays. The manager at the top made the best starting XI choices — their bench players barely scored. Higher up the list = less wasted potential.
+            </p>
+            <BenchPointsPanel benchData={benchData} currentUser={currentUser} />
+          </section>
 
         </div>
       )}
