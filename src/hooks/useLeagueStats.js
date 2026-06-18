@@ -75,9 +75,13 @@ export function useLeagueStats(leagueId) {
           uniqueSquads.push({ ...s, username: s.users?.username || 'Unknown' });
         }
       }
-      const squadIds      = uniqueSquads.map(s => s.id);
-      const squadIdToMeta = Object.fromEntries(
-        uniqueSquads.map(s => [s.id, { user_id: s.user_id, username: s.username }])
+      const squadIds = uniqueSquads.map(s => s.id);
+
+      // All squad IDs across the league (including older rows from pre-transfer periods)
+      // Used for fantasy_points fetch so we don't miss scored rounds tied to older squad rows
+      const allSquadIds = (leagueSquads || []).map(s => s.id);
+      const allSquadIdToMeta = Object.fromEntries(
+        (leagueSquads || []).map(s => [s.id, { user_id: s.user_id, username: s.users?.username || 'Unknown' }])
       );
 
       if (squadIds.length === 0) {
@@ -93,17 +97,17 @@ export function useLeagueStats(leagueId) {
       const { data: gwPts } = await supabase
         .from('fantasy_points')
         .select('squad_id, matchday_id, total, points_breakdown')
-        .in('squad_id', squadIds);
+        .in('squad_id', allSquadIds);
 
-      // Progression chart
+      // Progression chart — uses allSquadIdToMeta; ProgressionChart deduplicates per user+matchday by taking max
       setMatchdayPoints(
         (gwPts || [])
           .map(fp => ({
             squad_id:    fp.squad_id,
             matchday_id: fp.matchday_id,
             total:       fp.total,
-            user_id:     squadIdToMeta[fp.squad_id]?.user_id,
-            username:    squadIdToMeta[fp.squad_id]?.username,
+            user_id:     allSquadIdToMeta[fp.squad_id]?.user_id,
+            username:    allSquadIdToMeta[fp.squad_id]?.username,
           }))
           .filter(fp => fp.user_id)
       );
@@ -243,9 +247,16 @@ export function useLeagueStats(leagueId) {
 
         // Compute hit/miss per manager per completed round
         const captainMap = {};
+        const seenCaptainRounds = new Set();
         for (const row of captainRows) {
-          const meta = squadIdToMeta[row.squad_id];
+          const meta = allSquadIdToMeta[row.squad_id];
           if (!meta) continue;
+
+          // Dedup: same user+matchday counted only once (prefer first occurrence — captainRows
+          // inherits gwPts order which reflects all squads; first complete data wins)
+          const roundKey = `${meta.user_id}|${row.matchday_id}`;
+          if (seenCaptainRounds.has(roundKey)) continue;
+          seenCaptainRounds.add(roundKey);
 
           const uid       = meta.user_id;
           const xi        = row.points_breakdown?.effective_xi || [];
