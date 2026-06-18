@@ -1,12 +1,18 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-06-18 (MD1→MD2 transition bugs — PRs #570–#572)  
+**Last Updated**: 2026-06-18 (transfer toast count fix — PR #573)  
 **E2E Test Suite**: `platform.spec.js` (36 tests × 2 browsers) passing in CI ✅  
 **Full Playbook Run**: `E2E_TEST_PLAYBOOK.md` v2.0 — all flows confirmed  
 **🟢 LAUNCH READY**: No critical (P0/P1) bugs open. All game mechanics functional. WC kick-off 2026-06-11.  
 **Live App**: https://wc-fantasy-football.vercel.app  
 **WC Kick-off**: 2026-06-11 19:00 UTC (Mexico vs South Africa)  
 **Supabase PostgREST max_rows**: 10,000 (raised from default 1,000 — 2026-06-08)
+
+---
+
+## ✅ Transfer toast counts swaps not individual items (2026-06-18) — PR #573
+
+**Reported**: Success toast after confirming a basket said "2 transfers confirmed" when selling one player and buying another (1 swap = 2 basket items). The basket footer header already used `Math.max(sells, buys)` for display — the toast was using `basket.length` instead. One-line fix in `handleConfirmBasket`. No data or points impact.
 
 ---
 
