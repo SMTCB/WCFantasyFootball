@@ -602,7 +602,8 @@ export default function MarketScreen() {
     setBasket(prev => prev.filter(b => !succeeded.has(b.player.id)));
 
     if (errors.length === 0) {
-      showToast(`${basket.length} transfer${basket.length !== 1 ? 's' : ''} confirmed ✓`, 'success', 3000);
+      const numTransfers = Math.max(sells.length, buys.length);
+      showToast(`${numTransfers} transfer${numTransfers !== 1 ? 's' : ''} confirmed ✓`, 'success', 3000);
     } else if (succeeded.size > 0) {
       showToast(`${succeeded.size} succeeded, ${errors.length} failed: ${errors[0]}`, 'warning', 6000);
     } else {
