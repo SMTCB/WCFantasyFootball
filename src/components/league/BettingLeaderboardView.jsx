@@ -136,7 +136,7 @@ export default function BettingLeaderboardView({ leaderboard, currentUser, betLo
                       <div style={{ fontFamily: DISPLAY, fontSize: 12 }}>{rival.username}</div>
                       <div style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.14em', marginTop: 2 }}>{rival.accuracy_pct}% WIN RATE</div>
                     </div>
-                    <span style={{ fontFamily: DISPLAY, fontSize: 14, color: diff > 0 ? 'var(--danger)' : 'var(--positive)' }}>{diff > 0 ? '' : '+'}{-diff}</span>
+                    <span style={{ fontFamily: DISPLAY, fontSize: 14, color: diff > 0 ? 'var(--danger)' : diff < 0 ? 'var(--positive)' : 'var(--mute)' }}>{diff > 0 ? '+' : ''}{diff}</span>
                   </div>
                 );
               })}

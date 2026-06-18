@@ -158,7 +158,7 @@ function SeasonTotalsWithPosition({ topScorers, positionPoints, currentUser }) {
     });
   }, [topScorers, positionPoints]);
 
-  const maxPosTotal = Math.max(...rows.map(r => r.posTotal), 1);
+  const maxTotalPts = Math.max(...rows.map(r => Math.round(Number(r.total_points) || 0)), 1);
   const hasPositionData = rows.some(r => r.posTotal > 0);
 
   if (rows.length === 0) return <EmptyState label="NO MATCH DATA YET" />;
@@ -206,7 +206,7 @@ function SeasonTotalsWithPosition({ topScorers, positionPoints, currentUser }) {
                 ? POS_ORDER.map(pos => {
                     const pts = mgr.posData[pos] || 0;
                     if (!pts) return null;
-                    const pct = (pts / maxPosTotal) * 100;
+                    const pct = (pts / maxTotalPts) * 100;
                     return (
                       <div
                         key={pos}
@@ -222,7 +222,7 @@ function SeasonTotalsWithPosition({ topScorers, positionPoints, currentUser }) {
                     );
                   })
                 : (
-                  <div style={{ width: `${(totalPts / Math.max(...rows.map(r => Math.round(Number(r.total_points) || 0)), 1)) * 100}%`, background: isMe ? hue : 'var(--cyan)', opacity: 0.6 }} />
+                  <div style={{ width: `${(totalPts / maxTotalPts) * 100}%`, background: isMe ? hue : 'var(--cyan)', opacity: 0.6 }} />
                 )
               }
             </div>
@@ -577,7 +577,7 @@ export default function StatsView({ topScorers, teamMetrics, matchdayPoints, pos
             <section style={{ padding: '16px 22px', borderBottom: '1px solid var(--rule)', display: 'flex', flexDirection: 'column', gap: 10 }}>
               <SectionHead accent="var(--gold)" label="CAPTAINCY · HIT RATE" />
               <p style={{ fontFamily: BODY, fontSize: 11, color: 'var(--mute)', margin: 0, lineHeight: 1.5 }}>
-                Did your captain outscore every other player in your XI that gameweek? Green = hit, red = miss.
+                How often your captain was the top scorer in your active XI that gameweek. Green = captain outscored every other starter (correct armband). Red = someone else in your XI scored more.
               </p>
               <CaptainHitRate captainHitData={captainHitData} currentUser={currentUser} />
             </section>
