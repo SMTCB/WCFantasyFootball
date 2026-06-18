@@ -42,6 +42,8 @@ import ChatView               from '../components/league/ChatView';
 import CommissionerPanel      from '../components/league/CommissionerPanel';
 import RecapView             from '../components/league/RecapView';
 import H2HView               from '../components/league/H2HView';
+import { useFrontpageEdition } from '../hooks/useFrontpageEdition';
+import { ReactionStrip, LettersPanel } from '../components/league/FrontpageInteractive';
 
 const LEAGUE_TOUR_STEPS = [
   {
@@ -201,6 +203,7 @@ export default function LeagueScreen() {
   const [joinLoading,  setJoinLoading]  = useState(false);
   const [joinError,    setJoinError]    = useState('');
   const [frontpageActivityEntries, setFrontpageActivityEntries] = useState([]);
+  const frontpageEdition = useFrontpageEdition(activeLeague?.league_id);
 
   // Chat input state lives in ChatView — not needed here
   const { messages, loading: chatLoading, unreadCount, typingUsers, sendMessage, editMessage, deleteMessage, broadcastTyping, markChatAsRead, scrollEndRef } = useChatMessages(activeLeague?.league_id);
@@ -1307,6 +1310,10 @@ export default function LeagueScreen() {
            const ftSerif = "'Playfair Display', 'Times New Roman', serif";
            const ftMono = "'JetBrains Mono', monospace";
            const today = new Date().toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'long', year: 'numeric' });
+           const { edition: fpEd, pinnedQuote, toggleReaction, getReactionCounts, isMyReaction, addComment, deleteComment, getComments, EMOJIS: ftEmojis } = frontpageEdition;
+           const ftProps = { ftInk: FT_INK, ftRule: FT_RULE, ftMute: FT_MUTE, ftMono };
+           const letterProps = { ...ftProps, ftSerif, members, currentUserId: user?.id, isCommissioner, addComment, getComments, deleteComment };
+           const reactionProps = { ...ftProps, toggleReaction, getReactionCounts, isMyReaction, EMOJIS: ftEmojis };
            return (
              <div style={{ flex: 1, overflow: 'auto', padding: 'clamp(8px, 3vw, 20px) clamp(8px, 3vw, 28px) 40px', background: 'var(--ink)' }}>
                {members && members.length <= 1 ? (
@@ -1336,7 +1343,7 @@ export default function LeagueScreen() {
                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', fontFamily: ftMono, fontSize: 'clamp(8px, 2vw, 11px)', letterSpacing: '.18em', color: FT_INK, flexWrap: 'wrap', gap: 4 }}>
                      <span>VOL · I</span>
                      <span style={{ fontFamily: ftSerif, fontStyle: 'italic', fontSize: 'clamp(10px, 2.5vw, 14px)', letterSpacing: 0 }}>The Official Gazette of {name}</span>
-                     <span>EDITION · #1</span>
+                     <span>EDITION · #{fpEd?.edition_number ?? 1}</span>
                    </div>
                    <div style={{ textAlign: 'center', marginTop: 6 }}>
                      <div style={{ fontFamily: ftSerif, fontWeight: 900, fontStyle: 'italic', fontSize: 'clamp(38px, 10vw, 72px)', letterSpacing: '-0.03em', lineHeight: 0.9, color: FT_INK }}>FORZA TIMES</div>
@@ -1349,20 +1356,32 @@ export default function LeagueScreen() {
 
                    {/* Cover grid — 3-col on desktop, single col on mobile */}
                    <div className="grid grid-cols-1 lg:grid-cols-3" style={{ gap: 28 }}>
-                     {/* Lead story — standings snapshot */}
+                     {/* Lead story */}
                      <article>
                        <div style={{ fontFamily: ftMono, fontSize: 10, letterSpacing: '.22em', color: FT_RED, marginBottom: 8 }}>LEAGUE STANDINGS · LATEST</div>
                        <h1 style={{ fontFamily: ftSerif, fontWeight: 900, fontSize: 'clamp(24px, 6vw, 44px)', lineHeight: 0.98, letterSpacing: '-0.025em', color: FT_INK, marginBottom: 14 }}>
-                         {members[0] ? `${(members[0].users?.username || 'Unknown').toUpperCase()} leads the table.` : 'The season is yet to begin.'}
+                         {fpEd?.headline ?? (members[0] ? `${(members[0].users?.username || 'Unknown').toUpperCase()} leads the table.` : 'The season is yet to begin.')}
                        </h1>
                        <p style={{ fontFamily: ftSerif, fontSize: 16, lineHeight: 1.5, color: FT_INK, marginTop: 14 }}>
-                         <span style={{ float: 'left', fontFamily: ftSerif, fontWeight: 900, fontSize: 52, lineHeight: 0.85, paddingRight: 8, paddingTop: 4, color: FT_INK }}>{members[0] ? (members[0].users?.username?.[0] || 'T').toUpperCase() : 'T'}</span>
-                         {members[0] ? `he ${name} is underway with ${members.length} managers fighting for glory. ${members[0].users?.username || 'The leader'} currently tops the table with ${Math.round(members[0].total_points)} points, setting the pace for the rest of the field.` : 'he season hasn\'t started yet. Invite your rivals and prepare for battle.'}
+                         {fpEd?.deck ? fpEd.deck : (
+                           <>
+                             <span style={{ float: 'left', fontFamily: ftSerif, fontWeight: 900, fontSize: 52, lineHeight: 0.85, paddingRight: 8, paddingTop: 4, color: FT_INK }}>
+                               {members[0] ? (members[0].users?.username?.[0] || 'T').toUpperCase() : 'T'}
+                             </span>
+                             {members[0] ? `he ${name} is underway with ${members.length} managers fighting for glory. ${members[0].users?.username || 'The leader'} currently tops the table with ${Math.round(members[0].total_points)} points, setting the pace for the rest of the field.` : "he season hasn't started yet. Invite your rivals and prepare for battle."}
+                           </>
+                         )}
                        </p>
                        <div style={{ fontFamily: ftMono, fontSize: 10, letterSpacing: '.18em', color: FT_MUTE, marginTop: 12, textTransform: 'uppercase' }}>By the Forza Times Desk · {today}</div>
+                       {fpEd && (
+                         <>
+                           <ReactionStrip sectionKey="lead" {...reactionProps} />
+                           <LettersPanel sectionKey="lead" {...letterProps} />
+                         </>
+                       )}
                      </article>
 
-                     {/* Secondary column — Draft Report for Draft leagues; Transfer Activity for Classic */}
+                     {/* Secondary column — Draft Report / Transfer Activity + AI transfer rumour */}
                      <div style={{ borderLeft: `1px solid ${FT_RULE}`, borderRight: `1px solid ${FT_RULE}`, padding: '0 22px' }}>
                        {activeLeague?.leagues?.format === 'noduplicate' ? (
                          <>
@@ -1380,6 +1399,18 @@ export default function LeagueScreen() {
                              Classic mode is in effect. Any player can appear in multiple squads simultaneously — there is no draft or lottery. Head to the Market to sign players and start scoring points.
                            </p>
                          </>
+                       )}
+
+                       {/* AI transfer rumour — only when edition exists */}
+                       {fpEd?.transfer_rumour && (
+                         <div style={{ marginTop: 20, paddingTop: 16, borderTop: `1px solid ${FT_RULE}` }}>
+                           <div style={{ fontFamily: ftMono, fontSize: 9, letterSpacing: '.22em', color: FT_RED, marginBottom: 6 }}>TRANSFER WHISPERS</div>
+                           <p style={{ fontFamily: ftSerif, fontStyle: 'italic', fontSize: 14, lineHeight: 1.55, color: FT_INK }}>
+                             {fpEd.transfer_rumour}
+                           </p>
+                           <ReactionStrip sectionKey="transfers" {...reactionProps} />
+                           <LettersPanel sectionKey="transfers" {...letterProps} />
+                         </div>
                        )}
                      </div>
 
@@ -1404,24 +1435,59 @@ export default function LeagueScreen() {
                            </tbody>
                          </table>
                        </div>
-                       {/* Quote */}
+
+                       {/* Quote — pinned by commissioner, or static fallback */}
                        <div style={{ paddingLeft: 16, borderLeft: `4px solid ${FT_INK}`, marginTop: 18 }}>
-                         <div style={{ fontFamily: ftMono, fontSize: 9, letterSpacing: '.22em', color: FT_RED }}>THIS WEEK IN LEAGUE CHAT</div>
-                         <blockquote style={{ fontFamily: ftSerif, fontStyle: 'italic', fontSize: 18, lineHeight: 1.2, color: FT_INK, marginTop: 6 }}>
-                           "May the best manager win."
+                         <div style={{ fontFamily: ftMono, fontSize: 9, letterSpacing: '.22em', color: FT_RED }}>
+                           {pinnedQuote?.text ? 'COMMISSIONER SAYS' : 'THIS WEEK IN LEAGUE CHAT'}
+                         </div>
+                         <blockquote style={{ fontFamily: ftSerif, fontStyle: 'italic', fontSize: 18, lineHeight: 1.2, color: FT_INK, marginTop: 6, marginBottom: 0 }}>
+                           "{pinnedQuote?.text ?? 'May the best manager win.'}"
                          </blockquote>
+                         {pinnedQuote?.author && (
+                           <div style={{ fontFamily: ftMono, fontSize: 9, letterSpacing: '.16em', color: FT_MUTE, marginTop: 6 }}>
+                             — {pinnedQuote.author}
+                           </div>
+                         )}
                        </div>
+
+                       {/* AI hot take — only when edition exists */}
+                       {fpEd?.hot_take && (
+                         <div style={{ marginTop: 18, padding: '12px 14px', background: FT_INK, color: FT_PAPER }}>
+                           <div style={{ fontFamily: ftMono, fontSize: 9, letterSpacing: '.22em', color: FT_RED, marginBottom: 6 }}>HOT TAKE</div>
+                           <p style={{ fontFamily: ftSerif, fontStyle: 'italic', fontSize: 13, lineHeight: 1.5, margin: 0 }}>
+                             {fpEd.hot_take}
+                           </p>
+                           <ReactionStrip sectionKey="hot_take" {...reactionProps} ftInk={FT_PAPER} ftRule="#3A3E44" ftMute="#8A919A" ftMono={ftMono} />
+                           <LettersPanel sectionKey="hot_take" {...letterProps} ftInk={FT_PAPER} ftRule="#3A3E44" ftMute="#8A919A" ftMono={ftMono} ftSerif={ftSerif} />
+                         </div>
+                       )}
                      </aside>
                    </div>
 
-                   {/* Commissioner posts — last 3 breaking_news entries */}
+                   {/* Commissioner posts — last 3 gazette entries (breaking_news + classified) */}
                    <GazetteNews
                      leagueId={activeLeague?.league_id}
                      ftSerif={ftSerif} ftMono={ftMono}
                      ftInk={FT_INK} ftMute={FT_MUTE} ftRed={FT_RED} ftRule={FT_RULE}
                    />
+                   {fpEd && (
+                     <div style={{ marginTop: 8 }}>
+                       <ReactionStrip sectionKey="commissioner" {...reactionProps} />
+                       <LettersPanel sectionKey="commissioner" {...letterProps} />
+                     </div>
+                   )}
 
-                   {/* Recent scores + H2H results — activity entries */}
+                   {/* AI wooden spoon — only when edition exists */}
+                   {fpEd?.wooden_spoon && (
+                     <div style={{ marginTop: 24, borderTop: `2px solid ${FT_INK}`, paddingTop: 20 }}>
+                       <div style={{ fontFamily: ftMono, fontSize: 10, letterSpacing: '.22em', color: FT_RED, marginBottom: 8 }}>🥄 WOODEN SPOON WATCH</div>
+                       <p style={{ fontFamily: ftSerif, fontStyle: 'italic', fontSize: 15, lineHeight: 1.6, color: FT_INK, maxWidth: 600 }}>
+                         {fpEd.wooden_spoon}
+                       </p>
+                     </div>
+                   )}
+
                    {/* Recent Deals — auction_result + trade_result gazette entries */}
                    {frontpageActivityEntries.some(e => e.entry_type === 'auction_result' || e.entry_type === 'trade_result') && (() => {
                      const dealEntries = frontpageActivityEntries
@@ -1474,6 +1540,12 @@ export default function LeagueScreen() {
                              </div>
                            ))}
                          </div>
+                         {fpEd && (
+                           <div style={{ marginTop: 8 }}>
+                             <ReactionStrip sectionKey="scores" {...reactionProps} />
+                             <LettersPanel sectionKey="scores" {...letterProps} />
+                           </div>
+                         )}
                        </div>
                      );
                    })()}
