@@ -241,17 +241,27 @@ export function useLeagueStats(leagueId) {
               }
             }
 
-            // ── Bench accumulation ──
+            // ── Bench accumulation (opportunity cost: pts missed when bench outscores worst starter) ──
             if (!benchAccum[uid]) {
-              benchAccum[uid] = { user_id: uid, username: meta.username, totalBenchPts: 0, gws: 0, rounds: [] };
+              benchAccum[uid] = { user_id: uid, username: meta.username, totalMissedPts: 0, totalBenchPts: 0, gws: 0, rounds: [] };
             }
             if (fixtures.length) {
-              const benchPts = bench.reduce((sum, pid) =>
-                sum + fixtures.reduce((s, fid) => s + (statsLookup[`${pid}|${fid}`] || 0), 0), 0
+              const starterPts = xi.map(pid =>
+                fixtures.reduce((s, fid) => s + (statsLookup[`${pid}|${fid}`] || 0), 0)
               );
-              benchAccum[uid].totalBenchPts += benchPts;
+              const minStarterPts = starterPts.length > 0 ? Math.min(...starterPts) : 0;
+
+              let benchPts  = 0;
+              let missedPts = 0;
+              for (const pid of bench) {
+                const bPts  = fixtures.reduce((s, fid) => s + (statsLookup[`${pid}|${fid}`] || 0), 0);
+                benchPts   += bPts;
+                missedPts  += Math.max(0, bPts - minStarterPts);
+              }
+              benchAccum[uid].totalBenchPts  += benchPts;
+              benchAccum[uid].totalMissedPts += missedPts;
               benchAccum[uid].gws++;
-              benchAccum[uid].rounds.push({ matchday_id: row.matchday_id, bench_pts: benchPts });
+              benchAccum[uid].rounds.push({ matchday_id: row.matchday_id, bench_pts: benchPts, missed_pts: missedPts });
             }
           }
 
@@ -266,7 +276,7 @@ export function useLeagueStats(leagueId) {
             if (!benchAccum[s.user_id]) {
               benchAccum[s.user_id] = {
                 user_id: s.user_id, username: s.users?.username || 'Unknown',
-                totalBenchPts: 0, gws: 0, rounds: [],
+                totalMissedPts: 0, totalBenchPts: 0, gws: 0, rounds: [],
               };
             }
           }
@@ -278,13 +288,28 @@ export function useLeagueStats(leagueId) {
             }))
           );
           setBenchData(
-            Object.values(benchAccum).sort((a, b) => a.totalBenchPts - b.totalBenchPts)
+            Object.values(benchAccum).sort((a, b) => a.totalMissedPts - b.totalMissedPts)
           );
         } else {
+          // No effective_xi data — still accumulate penalty from gwPts rows (covers pre-v27 leagues)
+          const fallbackPenalty = {};
+          const seenFallbackRounds = new Set();
+          for (const fp of (gwPts || [])) {
+            const meta = allSquadIdToMeta[fp.squad_id];
+            if (!meta) continue;
+            const roundKey = `${meta.user_id}|${fp.matchday_id}`;
+            if (seenFallbackRounds.has(roundKey)) continue;
+            seenFallbackRounds.add(roundKey);
+            const penalty = Math.round(Number(fp.points_breakdown?.transfer_penalty_deduction) || 0);
+            if (penalty > 0) {
+              fallbackPenalty[meta.user_id] = (fallbackPenalty[meta.user_id] || 0) + penalty;
+            }
+          }
           setPositionPoints(
             (scorers ?? []).map(s => ({
               user_id: s.user_id, username: s.users?.username || 'Unknown',
-              GK: 0, DEF: 0, MID: 0, FWD: 0, sum_fp_total: 0, penalty_pts: 0, bet_pts: 0,
+              GK: 0, DEF: 0, MID: 0, FWD: 0, sum_fp_total: 0,
+              penalty_pts: fallbackPenalty[s.user_id] || 0, bet_pts: 0,
             }))
           );
           setBenchData([]);
@@ -364,7 +389,7 @@ export function useLeagueStats(leagueId) {
               ...xi.filter(p => p !== captainId).map(p => playerPts[p] || 0),
               0
             );
-            const isHit = captainPts > maxOtherPts;
+            const isHit = captainPts >= maxOtherPts;
             // Resolve captain name from nameMap (captain is always in effective_xi)
             const captainForzaId = captainId.split('-')[1];
             const captainName    = nameMap[captainForzaId] || captainId;
