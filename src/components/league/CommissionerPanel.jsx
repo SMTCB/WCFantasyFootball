@@ -2507,22 +2507,50 @@ function MobSectionHeader({ label, sub, tone, onHelp }) {
   );
 }
 
-// ── Breaking news form — posts to gazette_entries ─────────────────────────────
+// ── League News form — Breaking News / Classified Ad / Pin Quote / Special Edition
 function NewsPostForm({ leagueId, setCommMsg, isMobile = false }) {
-  const [headline, setHeadline] = useState('');
-  const [bulletsText, setBulletsText] = useState('');
-  const [posting, setPosting] = useState(false);
+  const [postType,     setPostType]     = useState('breaking_news');
+  const [headline,     setHeadline]     = useState('');
+  const [bulletsText,  setBulletsText]  = useState('');
+  const [quoteText,    setQuoteText]    = useState('');
+  const [quoteAuthor,  setQuoteAuthor]  = useState('');
+  const [posting,      setPosting]      = useState(false);
+  const [generating,   setGenerating]   = useState(false);
+
+  const POST_TYPES = [
+    { key: 'breaking_news', label: 'BREAKING NEWS' },
+    { key: 'classified',    label: 'CLASSIFIED AD'  },
+    { key: 'pin_quote',     label: 'PIN QUOTE'      },
+  ];
 
   const handlePost = async () => {
+    if (postType === 'pin_quote') {
+      if (!quoteText.trim()) return;
+      setPosting(true);
+      const rows = [
+        { league_id: leagueId, config_key: 'frontpage_pinned_quote',        config_value: quoteText.trim() },
+        { league_id: leagueId, config_key: 'frontpage_pinned_quote_author', config_value: quoteAuthor.trim() || '' },
+      ];
+      const { error } = await supabase
+        .from('league_config')
+        .upsert(rows, { onConflict: 'league_id,config_key' });
+      setPosting(false);
+      if (error) {
+        setCommMsg({ type: 'err', text: `Failed to pin quote: ${error.message}` });
+      } else {
+        setCommMsg({ type: 'ok', text: 'Quote pinned — visible on the Frontpage.' });
+        setQuoteText('');
+        setQuoteAuthor('');
+      }
+      return;
+    }
+
     if (!headline.trim()) return;
     setPosting(true);
-    const bullets = bulletsText
-      .split('\n')
-      .map(l => l.trim())
-      .filter(Boolean);
+    const bullets = bulletsText.split('\n').map(l => l.trim()).filter(Boolean);
     const { error } = await supabase.from('gazette_entries').insert({
       league_id:    leagueId,
-      entry_type:   'breaking_news',
+      entry_type:   postType,
       headline:     headline.trim(),
       bullets:      bullets.length ? bullets : null,
       published_at: new Date().toISOString(),
@@ -2531,50 +2559,151 @@ function NewsPostForm({ leagueId, setCommMsg, isMobile = false }) {
     if (error) {
       setCommMsg({ type: 'err', text: `Failed to post: ${error.message}` });
     } else {
-      setCommMsg({ type: 'ok', text: 'News posted to league activity.' });
+      setCommMsg({ type: 'ok', text: postType === 'classified' ? 'Classified posted.' : 'News posted to league activity.' });
       setHeadline('');
       setBulletsText('');
     }
   };
 
+  const handleGenerateEdition = async () => {
+    setGenerating(true);
+    const { error } = await supabase.functions.invoke('generate-frontpage-edition', {
+      body: { league_id: leagueId },
+    });
+    setGenerating(false);
+    if (error) {
+      const msg = error.message ?? '';
+      if (msg.includes('429') || msg.includes('RATE_LIMIT')) {
+        setCommMsg({ type: 'err', text: 'Edition generated recently — wait 4h before triggering again.' });
+      } else {
+        setCommMsg({ type: 'err', text: `Generation failed: ${msg}` });
+      }
+    } else {
+      setCommMsg({ type: 'ok', text: 'Special edition generated — refresh the Frontpage tab to see it.' });
+    }
+  };
+
   const pad = isMobile ? '0 14px' : '16px 24px';
+  const canPost = postType === 'pin_quote' ? !!quoteText.trim() : !!headline.trim();
 
   return (
-    <div style={{ padding: pad, display: 'flex', flexDirection: 'column', gap: 10 }}>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-        <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.2em', color: 'var(--paper)' }}>HEADLINE</span>
-        <input
-          type="text"
-          placeholder="e.g. Transfer window opens Monday — plan your moves"
-          value={headline}
-          onChange={e => setHeadline(e.target.value)}
-          style={{ ...inputStyle, colorScheme: 'dark' }}
-          maxLength={200}
-        />
+    <div style={{ padding: pad, display: 'flex', flexDirection: 'column', gap: 14 }}>
+      {/* Type selector */}
+      <div style={{ display: 'flex', gap: 0, borderBottom: '1px solid var(--rule)' }}>
+        {POST_TYPES.map(t => (
+          <button
+            key={t.key}
+            onClick={() => setPostType(t.key)}
+            style={{
+              padding: '6px 12px', border: 'none', cursor: 'pointer',
+              fontFamily: MONO, fontSize: 9, letterSpacing: '.16em',
+              background: postType === t.key ? 'var(--ink-3)' : 'transparent',
+              color: postType === t.key ? 'var(--paper)' : 'var(--mute)',
+              borderBottom: postType === t.key ? '2px solid var(--danger)' : '2px solid transparent',
+              marginBottom: -1,
+            }}
+          >
+            {t.label}
+          </button>
+        ))}
       </div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-        <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.2em', color: 'var(--mute)' }}>DETAILS · ONE LINE EACH (OPTIONAL)</span>
-        <textarea
-          placeholder={"Deadline: Sunday 22:00\nUse the market to find value\nTop tip: check injuries"}
-          value={bulletsText}
-          onChange={e => setBulletsText(e.target.value)}
-          rows={3}
-          style={{ ...inputStyle, resize: 'vertical', lineHeight: 1.5, colorScheme: 'dark' }}
-        />
-      </div>
+
+      {/* Fields */}
+      {postType === 'pin_quote' ? (
+        <>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+            <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.2em', color: 'var(--paper)' }}>QUOTE TEXT</span>
+            <input
+              type="text"
+              placeholder="e.g. May the best manager win — good luck everyone"
+              value={quoteText}
+              onChange={e => setQuoteText(e.target.value)}
+              maxLength={280}
+              style={{ ...inputStyle, colorScheme: 'dark' }}
+            />
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+            <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.2em', color: 'var(--mute)' }}>AUTHOR (OPTIONAL)</span>
+            <input
+              type="text"
+              placeholder="e.g. The Commissioner"
+              value={quoteAuthor}
+              onChange={e => setQuoteAuthor(e.target.value)}
+              maxLength={60}
+              style={{ ...inputStyle, colorScheme: 'dark' }}
+            />
+          </div>
+        </>
+      ) : (
+        <>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+            <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.2em', color: 'var(--paper)' }}>
+              {postType === 'classified' ? 'AD HEADLINE' : 'HEADLINE'}
+            </span>
+            <input
+              type="text"
+              placeholder={postType === 'classified'
+                ? 'e.g. WANTED: Left winger, experienced. Contact the market.'
+                : 'e.g. Transfer window opens Monday — plan your moves'}
+              value={headline}
+              onChange={e => setHeadline(e.target.value)}
+              maxLength={200}
+              style={{ ...inputStyle, colorScheme: 'dark' }}
+            />
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+            <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.2em', color: 'var(--mute)' }}>
+              DETAILS · ONE LINE EACH (OPTIONAL)
+            </span>
+            <textarea
+              placeholder={postType === 'classified'
+                ? 'Budget: €4.5M\nPreference: 4-3-3 roles'
+                : 'Deadline: Sunday 22:00\nUse the market to find value\nTop tip: check injuries'}
+              value={bulletsText}
+              onChange={e => setBulletsText(e.target.value)}
+              rows={3}
+              style={{ ...inputStyle, resize: 'vertical', lineHeight: 1.5, colorScheme: 'dark' }}
+            />
+          </div>
+        </>
+      )}
+
       <button
         onClick={handlePost}
-        disabled={posting || !headline.trim()}
+        disabled={posting || !canPost}
         style={{
           ...btnBase, fontSize: 11,
-          background: posting || !headline.trim() ? 'var(--ink-3)' : 'var(--danger)',
-          color: posting || !headline.trim() ? 'var(--mute)' : 'var(--paper)',
-          cursor: posting || !headline.trim() ? 'not-allowed' : 'pointer',
+          background: posting || !canPost ? 'var(--ink-3)' : 'var(--danger)',
+          color: posting || !canPost ? 'var(--mute)' : 'var(--paper)',
+          cursor: posting || !canPost ? 'not-allowed' : 'pointer',
           alignSelf: 'flex-start',
         }}
       >
-        {posting ? 'POSTING…' : 'POST TO LEAGUE →'}
+        {posting ? 'POSTING…' : postType === 'pin_quote' ? 'PIN QUOTE →' : 'POST TO LEAGUE →'}
       </button>
+
+      {/* Special Edition generator */}
+      <div style={{ borderTop: '1px solid var(--rule)', paddingTop: 14, marginTop: 4 }}>
+        <div style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.22em', color: 'var(--mute)', marginBottom: 8 }}>
+          AI SPECIAL EDITION · FORZA TIMES
+        </div>
+        <p style={{ fontFamily: MONO, fontSize: 10, color: 'var(--mute)', lineHeight: 1.5, marginBottom: 10 }}>
+          Generate a fresh AI-written edition now — headline, hot take, wooden spoon, transfer rumour. Shows immediately on the Frontpage. 4h rate limit.
+        </p>
+        <button
+          onClick={handleGenerateEdition}
+          disabled={generating}
+          style={{
+            ...btnBase, fontSize: 11,
+            background: generating ? 'var(--ink-3)' : 'var(--gold)',
+            color: generating ? 'var(--mute)' : 'var(--ink)',
+            cursor: generating ? 'not-allowed' : 'pointer',
+            alignSelf: 'flex-start',
+          }}
+        >
+          {generating ? 'GENERATING…' : 'GENERATE SPECIAL EDITION →'}
+        </button>
+      </div>
     </div>
   );
 }
