@@ -1,4 +1,4 @@
-// Edge Function: calculate-scores  (v28 — store bench_players snapshot in points_breakdown at roundComplete; bench derived from effective (post-auto-sub) XI, not baseXI)
+// Edge Function: calculate-scores  (v29 — live_xi snapshot on every pass; roundComplete uses snapshot when squad has advanced to next round)
 // Calculates fantasy points for all squads for a given fixture.
 // Called by ingest-match-events (Forza live path) or directly (mock/manual path).
 //
@@ -626,10 +626,19 @@ async function rollupSquads(fixture_id, pointsLookup, tournament_id) {
     const mgrKey = `${squad.league_id}:${squad.user_id}`;
     const isTripleCaptain = tcThisRound.has(mgrKey);   // C1: per-round, from chips_used
     const jokerPid = jokerThisRound[mgrKey] ?? null;    // C1: per-round, from daily_jokers
-    // Phase B: use starting_xi when set; fallback to players[0..10] for legacy squads
-    const baseXI = (squad.starting_xi?.length > 0)
+    // Phase B: use starting_xi when set; fallback to players[0..10] for legacy squads.
+    // IMPORTANT: if the squad has already advanced to a later round (matchday_id !== roundMatchdayId)
+    // the squad row reflects post-transfer state — use the live_xi snapshot from the last live
+    // scoring pass instead. This prevents the roundComplete pass from crediting players who were
+    // acquired AFTER the round ended but BEFORE the final scoring cron ran.
+    const currentXI = (squad.starting_xi?.length > 0)
       ? squad.starting_xi
       : (squad.players || []).slice(0, 11);
+    const existingBD = existingBDMap[squad.id] ?? {};
+    const squadAdvanced = roundComplete && squad.matchday_id !== roundMatchdayId;
+    const baseXI = (squadAdvanced && existingBD.live_xi?.length)
+      ? existingBD.live_xi
+      : currentXI;
 
     // #17: at round completion, auto-sub DNP starters (0 min) for the highest-priority
     // bench player who played, keeping the formation valid. Bench priority = players-array
@@ -637,13 +646,16 @@ async function rollupSquads(fixture_id, pointsLookup, tournament_id) {
     // bench is derived relative to baseXI so applyAutoSubs can pick from it.
     // After auto-subs, benchPlayers is re-derived relative to pitchPlayers (the
     // effective XI) — any player auto-subbed IN must not appear in both XI and bench.
-    const bench = (squad.players || []).filter(pid => !baseXI.includes(pid));
+    const allPlayers = squadAdvanced && existingBD.live_players?.length
+      ? existingBD.live_players
+      : (squad.players || []);
+    const bench = allPlayers.filter(pid => !baseXI.includes(pid));
     let pitchPlayers = baseXI;
     if (roundComplete) {
       pitchPlayers = applyAutoSubs(baseXI, bench, minutesLookup, posLookup);
     }
     // Players not in the effective XI — this is what we store as historical bench.
-    const benchPlayers = (squad.players || []).filter(pid => !pitchPlayers.includes(pid));
+    const benchPlayers = allPlayers.filter(pid => !pitchPlayers.includes(pid));
     let total = 0;
 
     // L3.5: if the captain isn't in the (effective) XI, move the bonus to the highest
@@ -738,7 +750,6 @@ async function rollupSquads(fixture_id, pointsLookup, tournament_id) {
     // independently caused the sum of fixtures[] to drift from the rounded `total`
     // (e.g. 1.5 + 2.5 each round to 2 + 3 = 5, while round(1.5+2.5) = 4). Any future
     // consumer summing fixtures[] should round the SUM, not each entry.
-    const existingBD = existingBDMap[squad.id] ?? {};
     const thisFixturePts = Math.round(
       pitchPlayers.reduce((sum, pid) => sum + (pointsLookup[pid] ?? 0), 0) * 100
     ) / 100;
@@ -749,6 +760,10 @@ async function rollupSquads(fixture_id, pointsLookup, tournament_id) {
         [fixture_id]: thisFixturePts,
       },
       player_count: pitchPlayers.length,
+      // Snapshot the XI and full squad on every live pass so the roundComplete pass can use
+      // it if the squad has already advanced to the next round by the time that pass runs.
+      live_xi:      currentXI,
+      live_players: squad.players || [],
     };
     if (penaltyDeduction > 0) breakdown.transfer_penalty_deduction = penaltyDeduction;
 
