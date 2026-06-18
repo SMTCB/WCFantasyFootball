@@ -1,4 +1,4 @@
-// Edge Function: calculate-scores  (v27 — round-per-player scoring to match UI display formula; persist effective XI/captain snapshot in points_breakdown)
+// Edge Function: calculate-scores  (v28 — store bench_players snapshot in points_breakdown at roundComplete so historical bench is not polluted by future transfers)
 // Calculates fantasy points for all squads for a given fixture.
 // Called by ingest-match-events (Forza live path) or directly (mock/manual path).
 //
@@ -634,9 +634,12 @@ async function rollupSquads(fixture_id, pointsLookup, tournament_id) {
     // #17: at round completion, auto-sub DNP starters (0 min) for the highest-priority
     // bench player who played, keeping the formation valid. Bench priority = players-array
     // order. Before the round completes, score the XI as-is.
+    // bench is derived here (not inside the if block) so we can snapshot it in
+    // points_breakdown.bench_players at round completion — the squad.players array
+    // will be mutated by future transfers, so we must persist the historical bench now.
+    const bench = (squad.players || []).filter(pid => !baseXI.includes(pid));
     let pitchPlayers = baseXI;
     if (roundComplete) {
-      const bench = (squad.players || []).filter(pid => !baseXI.includes(pid));
       pitchPlayers = applyAutoSubs(baseXI, bench, minutesLookup, posLookup);
     }
     let total = 0;
@@ -756,6 +759,7 @@ async function rollupSquads(fixture_id, pointsLookup, tournament_id) {
       breakdown.base_xi = baseXI;
       breakdown.base_captain_id = squad.captain_id;
       breakdown.effective_xi = pitchPlayers;
+      breakdown.bench_players = bench;
       breakdown.effective_captain_id = effectiveCaptainId;
       breakdown.is_triple_captain = isTripleCaptain;
       if (jokerPid) breakdown.joker_player_id = jokerPid;

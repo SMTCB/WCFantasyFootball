@@ -138,15 +138,14 @@ export function useLeagueStats(leagueId) {
       const allCurrForzaIds = [...new Set(allCurrentXiIds.map(id => id.split('-')[1]).filter(Boolean))];
       const unionForzaIds   = [...new Set([...allHistForzaIds, ...allCurrForzaIds])];
 
-      // Bench player IDs: squad.players minus effective_xi, across all scored rows
+      // Bench player IDs: read from points_breakdown.bench_players when available
+      // (stored by calculate-scores at roundComplete time, before any future transfers
+      // mutate squad.players). Fall back to empty — rows without this field are skipped
+      // in the bench accumulation loop to avoid counting transferred-in Round N+1 players
+      // as bench players for Round N.
       const allBenchPids = [
         ...new Set(
-          xiRows.flatMap(row => {
-            const meta = allSquadIdToMeta[row.squad_id];
-            if (!meta) return [];
-            const xiSet = new Set(row.points_breakdown.effective_xi);
-            return meta.players.filter(p => !xiSet.has(p));
-          })
+          xiRows.flatMap(row => row.points_breakdown?.bench_players || [])
         ),
       ];
 
@@ -212,8 +211,10 @@ export function useLeagueStats(leagueId) {
             const uid              = meta.user_id;
             const xi               = row.points_breakdown.effective_xi;
             const captainId        = row.points_breakdown?.effective_captain_id || null;
-            const xiSet            = new Set(xi);
-            const bench            = meta.players.filter(p => !xiSet.has(p));
+            // Use stored bench snapshot (written by calculate-scores at roundComplete time)
+            // so we see the historical bench, not the current post-transfer squad.
+            // Rows without bench_players (pre-v28 scoring) return [] — bench calc is skipped.
+            const bench            = row.points_breakdown?.bench_players || [];
             const fixtures         = fixturesByMD[row.matchday_id] || [];
             const matchdayTotal    = Math.max(0, Math.round(Number(row.total) || 0));
             const penaltyDeduction = Math.round(Number(row.points_breakdown?.transfer_penalty_deduction) || 0);
