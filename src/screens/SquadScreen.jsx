@@ -37,6 +37,7 @@ import ScoringInfoModal from '../components/ScoringInfoModal';
 import { usePlayerStats } from '../hooks/usePlayerStats';
 import { useLeagueOwnership } from '../hooks/useLeagueOwnership';
 import PlayerStatsDashboard from '../components/player/PlayerStatsDashboard';
+import { usePlayerCards } from '../hooks/usePlayerCards';
 import FormStrip from '../components/FormStrip';
 import KnockoutKeepSelector from '../components/KnockoutKeepSelector';
 import SelectLeaguePicker from '../components/league/SelectLeaguePicker';
@@ -93,6 +94,9 @@ export default function SquadScreen() {
   const [tournamentId,       setTournamentId]      = useState(null);
   const [showChipWizard,     setShowChipWizard]    = useState(false);
   const [showScoringModal,   setShowScoringModal]  = useState(false);
+
+  // Card warnings derived from player_match_stats (player_status table is unused)
+  const cardMap = usePlayerCards(tournamentId);
 
   // On mount: resolve which league to show
   useEffect(() => {
@@ -373,10 +377,16 @@ export default function SquadScreen() {
         const rawPts      = pointsMap[p.id] ?? 0;
         const mult        = (p.id === captainIdForPoints && isStarter) ? captainMult : 1;
         // normalisePlayer strips unknown keys — set isBench/isLineupLocked after the call
+        // Merge card intel (from player_match_stats) — only apply when player_status is unset ('fit')
+        const baseIntel = normalizeIntelligence(playerIntel);
+        const cardIntel = cardMap.get(p.id);
+        const mergedIntel = (cardIntel && baseIntel.status === 'fit')
+          ? { ...baseIntel, ...cardIntel }
+          : baseIntel;
         const normalised  = normalisePlayer({
           ...p,
           points: Math.round(rawPts) * mult,
-          intel:  normalizeIntelligence(playerIntel),
+          intel:  mergedIntel,
         });
         const fixtureInfo = buildFixtureInfo(p, activeRoundFixtures);
         const fixtureStatus = formatFixtureStatus(fixtureInfo);
@@ -1883,6 +1893,9 @@ export default function SquadScreen() {
                           <div style={{ flex: 1, minWidth: 0 }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                               <span style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 14, color: 'var(--paper)', letterSpacing: '-0.01em', textTransform: 'uppercase', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{surname}</span>
+                              {player.intel?.status !== 'fit' && (
+                                <span title={`${player.intel?.reason ?? player.intel?.status} — check ⚠️ STATUS tab`} style={{ fontSize: 10, flexShrink: 0, cursor: 'help' }}>⚠️</span>
+                              )}
                               {player.id === captainId && (
                                 <div style={{ width: 16, height: 16, borderRadius: '50%', background: 'var(--gold)', color: '#0A0A0A', fontFamily: 'Archivo Black, sans-serif', fontSize: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>C</div>
                               )}
@@ -1937,6 +1950,9 @@ export default function SquadScreen() {
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                             <span style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 14, color: 'var(--paper)', letterSpacing: '-0.01em', textTransform: 'uppercase', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{surname}</span>
+                            {player.intel?.status !== 'fit' && (
+                              <span title={`${player.intel?.reason ?? player.intel?.status} — check ⚠️ STATUS tab`} style={{ fontSize: 10, flexShrink: 0, cursor: 'help' }}>⚠️</span>
+                            )}
                             <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 7, color: posColor, border: `1px solid ${posColor}50`, padding: '1px 4px', flexShrink: 0, letterSpacing: '0.1em' }}>{player.position}</span>
                             {isSwapTarget && !isLocked && (
                               <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 7, color: 'var(--cyan)', border: '1px solid rgba(0,180,216,0.4)', padding: '1px 4px', flexShrink: 0, letterSpacing: '0.1em' }}>SWAP</span>
@@ -2041,6 +2057,9 @@ export default function SquadScreen() {
                           <div style={{ flex: 1, minWidth: 0 }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
                               <span style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 13, color: 'var(--paper)', letterSpacing: '-0.01em', textTransform: 'uppercase', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{player.name.split(' ').slice(-1)[0]}</span>
+                              {player.intel?.status !== 'fit' && (
+                                <span title={`${player.intel?.reason ?? player.intel?.status} — check ⚠️ STATUS tab`} style={{ fontSize: 10, flexShrink: 0, cursor: 'help' }}>⚠️</span>
+                              )}
                               {player.id === captainId && <div style={{ width: 14, height: 14, borderRadius: '50%', background: 'var(--gold)', color: '#0A0A0A', fontFamily: 'Archivo Black, sans-serif', fontSize: 7, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>C</div>}
                               {!isStarter && <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 7, color: 'var(--mute)', border: '1px solid var(--rule)', padding: '0 3px', flexShrink: 0 }}>SUB</span>}
                             </div>

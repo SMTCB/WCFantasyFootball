@@ -27,6 +27,7 @@ import PlayerStatsDashboard from '../components/player/PlayerStatsDashboard';
 import { useLeagueOwnership } from '../hooks/useLeagueOwnership';
 import SelectLeaguePicker from '../components/league/SelectLeaguePicker';
 import { deriveLeagueType } from '../components/league/LeagueBadgeHelpers';
+import { usePlayerCards } from '../hooks/usePlayerCards';
 
 // club cap is fetched dynamically per-round; default 3 until loaded
 
@@ -176,6 +177,9 @@ export default function MarketScreen() {
 
   // Form history — last 5 GW points per player for this tournament
   const { statsMap } = usePlayerStats(tournamentId);
+
+  // Card warnings derived from player_match_stats (player_status table is unused)
+  const cardMap = usePlayerCards(tournamentId);
 
   // Expandable stats panel state
   const { expandedPlayerId, playerDetails, togglePanel } = usePlayerScoreDetail();
@@ -1143,7 +1147,9 @@ export default function MarketScreen() {
             const hasLeague    = !!activeLeague;
             const canBuy       = hasLeague && !isOwned && !pendingBuy && !takenByOther && !limitReached && !clubFull && canAfford && effectiveSquadIds.length < squadSize;
             const isJoker      = p.id === todayJokerId;
-            const intel        = p.intel;
+            const baseIntel    = p.intel;
+            const cardIntel    = cardMap.get(p.id);
+            const intel        = (cardIntel && baseIntel?.status === 'fit') ? { ...baseIntel, ...cardIntel } : baseIntel;
 
             const isExpanded = expandedPlayerId === p.id;
 
@@ -1176,6 +1182,9 @@ export default function MarketScreen() {
                       >
                         {p.name.toUpperCase()}
                       </span>
+                      {intel?.status !== 'fit' && (
+                        <span title={`${intel?.reason ?? intel?.status} — check ⚠️ STATUS tab on My Squad`} style={{ fontSize: 10, flexShrink: 0, cursor: 'help' }}>⚠️</span>
+                      )}
                       {isOwned && p.id === mySquad?.captain_id && (
                         <div style={{ width: 14, height: 14, borderRadius: '50%', background: 'var(--gold)', color: '#0A0A0A', fontFamily: 'Archivo Black, sans-serif', fontSize: 7, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontWeight: 900 }}>C</div>
                       )}
