@@ -240,7 +240,7 @@ function SeasonTotalsWithPosition({ topScorers, positionPoints, currentUser }) {
                         style={{ width: `${pct}%`, background: POS_COLORS.BET, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}
                         title={`BET: ${mgr.betPts} pts`}
                       >
-                        {pct >= 6 && (
+                        {pct >= 3 && (
                           <span style={{ fontFamily: MONO, fontSize: 9, color: 'rgba(0,0,0,0.85)', fontWeight: 800, whiteSpace: 'nowrap' }}>
                             {mgr.betPts}
                           </span>
@@ -406,19 +406,18 @@ function BenchPointsPanel({ benchData, currentUser }) {
     return <EmptyState label="AVAILABLE AFTER FIRST COMPLETED MATCHDAY" />;
   }
 
-  // Sort: lowest bench pts first (best selector at top)
-  const sorted = [...benchData].sort((a, b) => a.totalBenchPts - b.totalBenchPts);
-  const maxBenchPts = Math.max(...sorted.map(m => m.totalBenchPts), 1);
+  // Sort: lowest missed pts first (0 = perfect selection, never left a better player on bench)
+  const sorted      = [...benchData].sort((a, b) => a.totalMissedPts - b.totalMissedPts);
+  const maxMissed   = Math.max(...sorted.map(m => m.totalMissedPts), 1);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
       {sorted.map((mgr, i) => {
-        const isMe  = currentUser?.id === mgr.user_id;
-        const hue   = mgrHue(mgr.username || '');
-        const avg   = mgr.gws > 0 ? (mgr.totalBenchPts / mgr.gws).toFixed(1) : '—';
-        // Color: green for low bench pts (good selection), amber/red for high
-        const relPos = sorted.length > 1 ? i / (sorted.length - 1) : 0; // 0 = best, 1 = worst
+        const isMe     = currentUser?.id === mgr.user_id;
+        const hue      = mgrHue(mgr.username || '');
+        const relPos   = sorted.length > 1 ? i / (sorted.length - 1) : 0;
         const barColor = relPos < 0.4 ? 'var(--positive)' : relPos < 0.7 ? 'var(--gold)' : 'var(--danger)';
+        const barPct   = (mgr.totalMissedPts / maxMissed) * 100;
 
         return (
           <div key={mgr.user_id}>
@@ -430,27 +429,24 @@ function BenchPointsPanel({ benchData, currentUser }) {
               <span style={{ fontFamily: DISPLAY, fontSize: 11, flex: 1 }}>{isMe ? 'You' : mgr.username}</span>
               <div style={{ textAlign: 'right' }}>
                 <span style={{ fontFamily: DISPLAY, fontSize: 14, color: i === 0 ? 'var(--positive)' : 'var(--paper)' }}>
-                  {mgr.totalBenchPts}
+                  {mgr.totalMissedPts}
                 </span>
-                <span style={{ fontFamily: MONO, fontSize: 8, color: 'var(--mute)', marginLeft: 3 }}>PTS</span>
-                <span style={{ fontFamily: MONO, fontSize: 8, color: 'var(--mute)', marginLeft: 8 }}>
-                  {avg}/GW
-                </span>
+                <span style={{ fontFamily: MONO, fontSize: 8, color: 'var(--mute)', marginLeft: 3 }}>MISSED</span>
+                {mgr.totalBenchPts > 0 && (
+                  <span style={{ fontFamily: MONO, fontSize: 8, color: 'var(--mute)', marginLeft: 8 }}>
+                    ({mgr.totalBenchPts} bench)
+                  </span>
+                )}
               </div>
             </div>
             <div style={{ height: 6, background: 'var(--ink-3)', borderRadius: 1, overflow: 'hidden', marginLeft: 32 }}>
-              <div style={{
-                height: '100%',
-                width: `${(mgr.totalBenchPts / maxBenchPts) * 100}%`,
-                background: barColor,
-                opacity: isMe ? 1 : 0.75,
-              }} />
+              <div style={{ height: '100%', width: `${barPct}%`, background: barColor, opacity: isMe ? 1 : 0.75 }} />
             </div>
           </div>
         );
       })}
       <div style={{ fontFamily: MONO, fontSize: 8, color: 'var(--mute)', letterSpacing: '.12em', marginTop: 4 }}>
-        LOWER = BETTER · BEST SELECTOR HAS FEWEST PTS LEFT ON BENCH
+        LOWER = BETTER · 0 = PERFECT SELECTION EVERY ROUND
       </div>
     </div>
   );
@@ -715,9 +711,9 @@ export default function StatsView({ topScorers, teamMetrics, matchdayPoints, pos
 
           {/* ── Row 5: Points left on bench ──────────────────────────── */}
           <section style={{ padding: '16px 22px', borderBottom: '1px solid var(--rule)', display: 'flex', flexDirection: 'column', gap: 10 }}>
-            <SectionHead accent="var(--positive)" label="POINTS LEFT ON BENCH · SEASON TOTAL" />
+            <SectionHead accent="var(--positive)" label="SELECTION EFFICIENCY · MISSED PTS" />
             <p style={{ fontFamily: BODY, fontSize: 11, color: 'var(--mute)', margin: 0, lineHeight: 1.5 }}>
-              Total points your 4 bench players accumulated in completed matchdays. The manager at the top made the best starting XI choices — their bench players barely scored. Higher up the list = less wasted potential.
+              Points missed by leaving a better player on the bench. Each gameweek, a bench player only adds to your missed total when they outscored your worst starter — the gap is what you left on the table. 0 = perfect selection every round. Total bench pts shown in brackets for context.
             </p>
             <BenchPointsPanel benchData={benchData} currentUser={currentUser} />
           </section>
