@@ -225,7 +225,7 @@ function SeasonTotalsWithPosition({ topScorers, positionPoints, currentUser }) {
                         style={{ width: `${pct}%`, background: POS_COLORS[pos], display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}
                         title={`${pos}: ${pts} pts`}
                       >
-                        {pct >= 6 && (
+                        {pct >= 3 && (
                           <span style={{ fontFamily: MONO, fontSize: 9, color: 'rgba(0,0,0,0.85)', fontWeight: 800, whiteSpace: 'nowrap' }}>
                             {pts}
                           </span>
@@ -431,12 +431,7 @@ function BenchPointsPanel({ benchData, currentUser }) {
                 <span style={{ fontFamily: DISPLAY, fontSize: 14, color: i === 0 ? 'var(--positive)' : 'var(--paper)' }}>
                   {mgr.totalMissedPts}
                 </span>
-                <span style={{ fontFamily: MONO, fontSize: 8, color: 'var(--mute)', marginLeft: 3 }}>MISSED</span>
-                {mgr.totalBenchPts > 0 && (
-                  <span style={{ fontFamily: MONO, fontSize: 8, color: 'var(--mute)', marginLeft: 8 }}>
-                    ({mgr.totalBenchPts} bench)
-                  </span>
-                )}
+                <span style={{ fontFamily: MONO, fontSize: 8, color: 'var(--mute)', marginLeft: 3 }}>MISSED PTS</span>
               </div>
             </div>
             <div style={{ height: 6, background: 'var(--ink-3)', borderRadius: 1, overflow: 'hidden', marginLeft: 32 }}>
@@ -713,7 +708,7 @@ export default function StatsView({ topScorers, teamMetrics, matchdayPoints, pos
           <section style={{ padding: '16px 22px', borderBottom: '1px solid var(--rule)', display: 'flex', flexDirection: 'column', gap: 10 }}>
             <SectionHead accent="var(--positive)" label="SELECTION EFFICIENCY · MISSED PTS" />
             <p style={{ fontFamily: BODY, fontSize: 11, color: 'var(--mute)', margin: 0, lineHeight: 1.5 }}>
-              Points missed by leaving a better player on the bench. Each gameweek, a bench player only adds to your missed total when they outscored your worst starter — the gap is what you left on the table. 0 = perfect selection every round. Total bench pts shown in brackets for context.
+              Only updated when a matchday is fully finished. Each gameweek: for every bench player who outscored your worst-scoring starter, the difference is a missed point. If no bench player beat a starter, you scored 0 — perfect selection. Updated once all fixtures in the round are complete.
             </p>
             <BenchPointsPanel benchData={benchData} currentUser={currentUser} />
           </section>
