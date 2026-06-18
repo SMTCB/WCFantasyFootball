@@ -1626,6 +1626,7 @@ export default function SquadScreen() {
         opensAt={transferWindow.opensAt}
         transfersRemaining={transferWindow.transfersRemaining}
         isUnlimited={transferWindow.isUnlimited}
+        windowType={transferWindow.windowType}
       />
 
       {/* ── Fetch error banner ──────────────────────────────────────────────── */}
