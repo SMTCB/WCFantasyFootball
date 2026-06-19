@@ -1,12 +1,44 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-06-19 (bench_players scoring pipeline hardening; B-09 bench-in-recap added to P2)  
+**Last Updated**: 2026-06-19 (MD1 v29 bug corrections + scoring integrity failsafe; backup verified; matchday alignment confirmed; BI-01/BI-02/BI-03 added)  
 **E2E Test Suite**: `platform.spec.js` (36 tests × 2 browsers) passing in CI ✅  
 **Full Playbook Run**: `E2E_TEST_PLAYBOOK.md` v2.0 — all flows confirmed  
 **🟢 LAUNCH READY**: No critical (P0/P1) bugs open. All game mechanics functional. WC kick-off 2026-06-11.  
 **Live App**: https://wc-fantasy-football.vercel.app  
 **WC Kick-off**: 2026-06-11 19:00 UTC (Mexico vs South Africa)  
 **Supabase PostgREST max_rows**: 10,000 (raised from default 1,000 — 2026-06-08)
+
+---
+
+## ✅ MD1 v29 bug — manual correction of 13 managers + scoring integrity failsafe (2026-06-19)
+
+**Root cause**: `calculate-scores` v29 overwrote `live_xi` on every live-scoring pass (05:00–16:29 UTC, 2026-06-18). At `roundComplete`, `effective_xi` was frozen from `live_xi` — which by then reflected the post-R2-transfer squad of any manager who made R2 buys before MD1 closed. 13 managers across 3 leagues (Mundial do Eder, Munaial '26, Draft Mundial 26) had wrong R1 Recap XIs and inflated/deflated point totals.
+
+**Corrections applied**: manual `UPDATE fantasy_points` + `aggregate_league_member_points` per affected manager. All verified against pre-correction backup. See `docs/ops/MD1_CORRECTION_RUNBOOK.md`.
+
+**Fixes deployed**:
+- `calculate-scores` **v30** — `live_xi` frozen once per squad per round (never overwritten after first pass). Protects R2+.
+- **Migration 182** — `squad_matchday_snapshots` table with `trg_snapshot_squads_on_kickoff` trigger. Captures XI/bench/captain for all squads at first fixture kickoff, immutable. Active from R3+ automatically. R2 snapshot manually backfilled 2026-06-19 15:45 UTC.
+
+**Backups saved** (2026-06-19 15:43 UTC) in `backups/`:
+- `fantasy_points_429_r1_corrected_20260619_154321.json` — final corrected MD1 state
+- `fantasy_points_429_r2_live_20260619_154321.json` — MD2 in-progress state
+- `squad_matchday_snapshots_429_20260619_154321.json` — 57 R2 squad snapshots
+- `squads_429_current_20260619_154321.json` — current live roster state
+
+**Architecture doc**: `docs/architecture/SCORING_INTEGRITY.md`
+
+**Open gaps** (see BI-01, BI-02, BI-03 in P2 below): RecapView doesn't yet use `squad_matchday_snapshots` as primary source; no automated backup cron; no lineup event log.
+
+**Backup coverage verified 2026-06-19**: All 57 managers across 9 real leagues confirmed — 55 with full 11-player XI + bench + captain, 2 partial squads (expected: Chris_crimmins + miguelcastrocarrapatoso@gmail.com never completed their squads). Username labels in backup JSON differ slightly from DB usernames (different join path) — always use `squad_id` for identification, not the name label. RTrocado correction (Draft Mundial 26 → 60) confirmed correct in live DB.
+
+**`squad_matchday_snapshots` known limitation**: captures XI/bench/captain at the **first fixture kickoff** of the round only. Mid-matchday bench swaps between fixtures (legal — `set_lineup` only locks players whose own fixture has started) are not captured here. Full audit trail of every swap requires the lineup event log (BI-03, not yet built). The snapshot + `points_breakdown.effective_xi` cover start and end state; BI-03 covers the intermediate path.
+
+**Matchday alignment confirmed 2026-06-19**:
+- `roundComplete` = `every fixture status = 'finished'` — consistent across scoring, H2H, auto-subs, gazette
+- XI/bench frozen per-player as each fixture finishes (`set_lineup` blocks sub-in once fixture is `live`/`finished`); after the last whistle of the round all swaps are impossible
+- Captain frozen same way (`set_captain` blocks if player's fixture is `live`/`finished`)
+- Matchday transition is **fully automatic** — `sync-squad-matchdays` cron runs every 30 min and advances ALL squads to the next round regardless of user action. The "matchday changes on transfers" note in the code refers to `execute_transfer_atomic` doing the same advance as a side effect — it's additive, not the sole trigger. Managers who make zero transfers still advance on the cron within 30 min of the last fixture finishing.
 
 ---
 
@@ -293,7 +325,10 @@ Group-stage rounds (r1–r3) now reopen the transfer window 3h after the last ki
 | # | Item | Effort | Notes |
 |---|------|--------|-------|
 | B-07 | **[FEATURE] League archive/active toggle (commissioner-controlled, reversible)** | ~8–10h (2 PRs) | Requested 2026-06-15. Full requirements + decisions below. |
-| B-09 | **[FEATURE] Bench scores in Recap — show bench player points below XI after matchday settles** | ~3–4h | Full implementation analysis below. |
+| B-09 | **[FEATURE] Bench scores in Recap — show bench player points below XI after matchday settles** | ~3–4h | Full implementation analysis below. Data available from R2 onwards (`bench_players` in `points_breakdown`). R1 has no bench data (v28 deployed after MD1 settled). |
+| BI-01 | **[TECH DEBT] RecapView: use `squad_matchday_snapshots` as primary XI source, fall back to `points_breakdown.effective_xi`** | ~2–3h | `squad_matchday_snapshots` (migration 182) is written at first kickoff and is immutable — it's a more trustworthy source than `effective_xi` which depends on the scoring pipeline running correctly. RecapView's `toggleBreakdown` currently reads `fp.points_breakdown.effective_xi` directly. Change: first try to read from `squad_matchday_snapshots WHERE league_id=X AND user_id=Y AND matchday_id=Z`; if found, use `starting_xi` + `players` from the snapshot as the authoritative XI/bench; fall back to `effective_xi` if no snapshot. This would make future v29-like bugs auto-correct in Recap without manual DB intervention. Note: R1 has NO snapshot (deployed after MD1 settled); R2 snapshot was manually backfilled 2026-06-19 (mid-round, not at kickoff). Only R3+ have fully clean kickoff-time snapshots. **Limitation**: snapshot only captures state at first fixture kickoff — mid-matchday bench swaps between fixtures are not recorded here (covered by BI-03). |
+| BI-02 | **[TECH DEBT] Automated pre-roundComplete backup to Supabase Storage** | ~4–6h | Currently backups are manual JSON exports to `backups/` (gitignored). A cron job that runs 30 min before the post-match scoring pass (e.g. 22:00 UTC daily) should: (1) export `squad_matchday_snapshots` for the active round to a dated JSON in Supabase Storage bucket `backups`; (2) export current `fantasy_points` for the active round; (3) log the backup reference. This eliminates reliance on a developer running manual queries. Pairs with the existing `squad_matchday_snapshots` table — the snapshot is already immutable, so the Storage export is just for auditability. |
+| BI-03 | **[TECH DEBT] Lineup event log — record every `set_lineup` call for full mid-matchday traceability** | ~3–4h | `squad_matchday_snapshots` only captures XI/bench at the first fixture kickoff of a round. Any bench swaps made between fixtures (legal — `set_lineup` only locks players whose own fixture has started) are invisible. To fully audit who had who on the pitch at any moment: create a `lineup_events` table (league_id, user_id, squad_id, matchday_id, player_out, player_in, deduction_pts, event_at TIMESTAMPTZ). Append a row on every `set_lineup` call (inside the existing RPC, after the swap is committed). No deletes — append-only. Together with `squad_matchday_snapshots` (start state) and `points_breakdown.effective_xi` (end state), this gives a complete timeline of every lineup state during a round. |
 
 #### B-07 detail — League archive/active toggle
 
