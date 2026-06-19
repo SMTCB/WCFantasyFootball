@@ -1,6 +1,6 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-06-19 (Forza Times polish: form-guide trend arrows, bets tracker, league_config RLS fix, transfer-whispers guard, LATEST SCORES fix — PRs #591–#593, migration 184)  
+**Last Updated**: 2026-06-19 (squad_events audit + bench efficiency selector — PRs #594–#595, migrations 185; session 4)  
 **E2E Test Suite**: `platform.spec.js` (36 tests × 2 browsers) passing in CI ✅  
 **Full Playbook Run**: `E2E_TEST_PLAYBOOK.md` v2.0 — all flows confirmed  
 **🟢 LAUNCH READY**: No critical (P0/P1) bugs open. All game mechanics functional. WC kick-off 2026-06-11.  
@@ -125,6 +125,20 @@ No data impact on real leagues (edition gate). Lint: 0 errors. Build: clean. Tes
 - Frontpage form guide future improvements deferred (user noted "adjustments to be made in the future" — no specific items captured yet; log when raised).
 - `GazetteNews.jsx` — classifieds could benefit from a distinct visual treatment beyond the CLASSIFIED badge (e.g. dotted border, italic text).
 - AI prompt could benefit from injecting last 3 rounds of scores to improve transfer_rumour accuracy.
+
+### Session 4 — squad_events audit QA + bench efficiency selector (PRs #594–#595, migration 185, 2026-06-19)
+
+**Migration 185** (`185_captain_change_meta_delta.sql`): `set_captain()` was logging empty `{}` meta for `captain_change` events in `squad_events`. Captures `v_old_total` from `fantasy_points` before the recompute and logs `delta_pts = new_total - old_total` in meta. Positive = points gained from the swap; negative = points lost (e.g. Akanji → Raphinha mid-round after Akanji had already scored). Applied directly to live DB, committed as migration 185 (184 was already taken by `league_config_rls` from session 3).
+
+**squad_events audit confirmed working** (BI-03 QA): queried `squad_events` table in Supabase SQL editor after live substitutions and captain changes. All 9 event types fire correctly. `captain_change` now includes `delta_pts` in meta. Useful query for player lookup: `SELECT name, position, nationality FROM players WHERE forza_player_id LIKE '%580728%'`.
+
+**PR #595 — Selection efficiency: per-round selector** (`StatsView.jsx`):
+- Replaced the single rolling bar with a `ROUND / AGG` pill selector styled identically to the RecapView matchday nav (cyan active border, `1px solid var(--rule)` inactive, MONO 10px, same letterSpacing).
+- **AGG** (default): rolling season total + `avg N / gw` sub-label.
+- **Individual rounds**: missed pts that GW only, re-sorted per selection, sub-label shows `perfect selection` or `N pts left on bench`.
+- 0 missed pts always renders as a green 2px bar stub (was invisible before).
+- Description updated to explain the opportunity-cost metric (bench player only counts if they outscored the worst XI starter).
+- No hook changes — uses existing `rounds[]` array in `benchAccum`. GW1 won't appear in the selector (no `bench_players` data pre-v28 scoring — correct behaviour, starts from GW2 onwards).
 
 ---
 
