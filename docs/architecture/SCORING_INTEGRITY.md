@@ -154,8 +154,9 @@ WHERE squad_id = '<id>' AND matchday_id = '<429-rN>';
 
 | Item | Status | Notes |
 |------|--------|-------|
-| Bench scores display in Recap (B-09) | Not built | `bench_players` in `points_breakdown` now correctly captures the bench. The display layer just needs to be built in `RecapView.jsx`. See BACKLOG item B-09. |
-| Automated pre-roundComplete backup | Not built | A cron that exports `squad_matchday_snapshots` and `fantasy_points` to a storage bucket immediately before the post-match scoring cron runs would eliminate the need for manual backups. |
+| Bench scores display in Recap (B-09) | ✅ Done (PR #588) | Bench players now appear below the XI in RecapView with a thin divider + BENCH label, muted styling (opacity 0.45), points displayed but never added to the total. Settled rounds use `points_breakdown.bench_players`; in-progress approximate from `squad.players − starting_xi`. R1 hides cleanly. |
+| Squad event log — mid-matchday swap traceability (BI-03) | ✅ Done (PR #589, migration 183) | `squad_events` append-only table. 9 event types: `transfer_buy`, `transfer_sell`, `auction_bid`, `auction_win`, `trade_propose`, `trade_accept`, `lineup_swap`, `captain_change`, `draft_pick`. Wired via `_log_squad_event()` SECURITY DEFINER helper (non-fatal). Together with `squad_matchday_snapshots` (start state) and `points_breakdown.effective_xi` (end state), this gives a complete timeline of every squad state during a round. |
+| Automated pre-roundComplete backup | Not built | A cron that exports `squad_matchday_snapshots` and `fantasy_points` to a storage bucket immediately before the post-match scoring cron runs would eliminate the need for manual backups. See BACKLOG BI-02. |
 
 ---
 
