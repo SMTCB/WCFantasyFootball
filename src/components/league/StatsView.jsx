@@ -402,22 +402,62 @@ function CaptainHitRate({ captainHitData, currentUser }) {
 // ─── Bench points panel ───────────────────────────────────────────────────────
 
 function BenchPointsPanel({ benchData, currentUser }) {
+  const [selectedGW, setSelectedGW] = useState('AGG');
+
   if (!benchData || benchData.length === 0) {
     return <EmptyState label="AVAILABLE AFTER FIRST COMPLETED MATCHDAY" />;
   }
 
-  // Sort: lowest missed pts first (0 = perfect selection, never left a better player on bench)
-  const sorted      = [...benchData].sort((a, b) => a.totalMissedPts - b.totalMissedPts);
-  const maxMissed   = Math.max(...sorted.map(m => m.totalMissedPts), 1);
+  const allGWs = [...new Set(benchData.flatMap(m => (m.rounds || []).map(r => r.matchday_id)))]
+    .sort((a, b) => parseInt(a.split('-r')[1] || 0) - parseInt(b.split('-r')[1] || 0));
+
+  const display = benchData.map(mgr => {
+    let pts, sub;
+    if (selectedGW === 'AGG') {
+      pts = mgr.totalMissedPts;
+      const avg = mgr.gws > 0 ? (mgr.totalMissedPts / mgr.gws).toFixed(1) : '0.0';
+      sub = `avg ${avg} / gw`;
+    } else {
+      const round = (mgr.rounds || []).find(r => r.matchday_id === selectedGW);
+      pts = round?.missed_pts ?? 0;
+      sub = pts === 0 ? 'perfect selection' : `${pts} pts left on bench`;
+    }
+    return { ...mgr, pts, sub };
+  }).sort((a, b) => a.pts - b.pts);
+
+  const maxPts = Math.max(...display.map(d => d.pts), 1);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-      {sorted.map((mgr, i) => {
+      {allGWs.length > 0 && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexWrap: 'wrap' }}>
+          <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.2em', color: 'var(--mute)', flexShrink: 0, marginRight: 4 }}>
+            ROUND
+          </span>
+          {['AGG', ...allGWs].map(gw => {
+            const active = selectedGW === gw;
+            const label  = gw === 'AGG' ? 'AGG' : String(gw).replace(/^.*-r/, '');
+            return (
+              <button key={gw} onClick={() => setSelectedGW(gw)} style={{
+                padding: '4px 9px', flexShrink: 0,
+                border: active ? '1px solid var(--cyan)' : '1px solid var(--rule)',
+                background: active ? 'rgba(0,180,216,.14)' : 'transparent',
+                color: active ? 'var(--cyan)' : 'var(--mute)',
+                fontFamily: MONO, fontSize: 10, letterSpacing: '.12em', cursor: 'pointer',
+              }}>
+                {label}
+              </button>
+            );
+          })}
+        </div>
+      )}
+
+      {display.map((mgr, i) => {
         const isMe     = currentUser?.id === mgr.user_id;
         const hue      = mgrHue(mgr.username || '');
-        const relPos   = sorted.length > 1 ? i / (sorted.length - 1) : 0;
-        const barColor = relPos < 0.4 ? 'var(--positive)' : relPos < 0.7 ? 'var(--gold)' : 'var(--danger)';
-        const barPct   = (mgr.totalMissedPts / maxMissed) * 100;
+        const relPos   = display.length > 1 ? i / (display.length - 1) : 0;
+        const barColor = mgr.pts === 0 ? 'var(--positive)' : relPos < 0.4 ? 'var(--positive)' : relPos < 0.7 ? 'var(--gold)' : 'var(--danger)';
+        const barPct   = mgr.pts === 0 ? 2 : (mgr.pts / maxPts) * 100;
 
         return (
           <div key={mgr.user_id}>
@@ -429,19 +469,25 @@ function BenchPointsPanel({ benchData, currentUser }) {
               <span style={{ fontFamily: DISPLAY, fontSize: 11, flex: 1 }}>{isMe ? 'You' : mgr.username}</span>
               <div style={{ textAlign: 'right' }}>
                 <span style={{ fontFamily: DISPLAY, fontSize: 14, color: i === 0 ? 'var(--positive)' : 'var(--paper)' }}>
-                  {mgr.totalMissedPts}
+                  {mgr.pts}
                 </span>
-                <span style={{ fontFamily: MONO, fontSize: 8, color: 'var(--mute)', marginLeft: 3 }}>MISSED PTS</span>
+                <span style={{ fontFamily: MONO, fontSize: 8, color: 'var(--mute)', marginLeft: 3 }}>MISSED</span>
               </div>
             </div>
             <div style={{ height: 6, background: 'var(--ink-3)', borderRadius: 1, overflow: 'hidden', marginLeft: 32 }}>
               <div style={{ height: '100%', width: `${barPct}%`, background: barColor, opacity: isMe ? 1 : 0.75 }} />
             </div>
+            <div style={{ fontFamily: MONO, fontSize: 8, color: 'var(--mute)', marginLeft: 32, marginTop: 3 }}>
+              {mgr.sub}
+            </div>
           </div>
         );
       })}
+
       <div style={{ fontFamily: MONO, fontSize: 8, color: 'var(--mute)', letterSpacing: '.12em', marginTop: 4 }}>
-        LOWER = BETTER · 0 = PERFECT SELECTION EVERY ROUND
+        {selectedGW === 'AGG'
+          ? 'AGG — rolling total across all completed rounds · lower = better · 0 = perfect season'
+          : `GW${String(selectedGW).replace(/^.*-r/, '')} — missed pts this round · 0 = perfect selection`}
       </div>
     </div>
   );
@@ -708,7 +754,7 @@ export default function StatsView({ topScorers, teamMetrics, matchdayPoints, pos
           <section style={{ padding: '16px 22px', borderBottom: '1px solid var(--rule)', display: 'flex', flexDirection: 'column', gap: 10 }}>
             <SectionHead accent="var(--positive)" label="SELECTION EFFICIENCY · MISSED PTS" />
             <p style={{ fontFamily: BODY, fontSize: 11, color: 'var(--mute)', margin: 0, lineHeight: 1.5 }}>
-              Only updated when a matchday is fully finished. Each gameweek: for every bench player who outscored your worst-scoring starter, the difference is a missed point. If no bench player beat a starter, you scored 0 — perfect selection. Updated once all fixtures in the round are complete.
+              How many points did you leave on the bench? For each bench player who outscored your worst-performing starter, the difference counts as a missed point. Zero means every bench player scored less than your weakest XI player — perfect selection. Use the round selector to inspect individual gameweeks or AGG for the rolling season total. Only completed matchdays count.
             </p>
             <BenchPointsPanel benchData={benchData} currentUser={currentUser} />
           </section>
