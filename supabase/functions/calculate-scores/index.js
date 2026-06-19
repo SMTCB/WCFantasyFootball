@@ -1,4 +1,4 @@
-// Edge Function: calculate-scores  (v30 — freeze live_xi snapshot when squad.matchday_id advances; v29 bug: roundComplete gate on squadAdvanced meant every live pass overwrote the snapshot with post-transfer XI)
+// Edge Function: calculate-scores  (v31 — settled-round guard: once effective_xi is frozen, refuse to rescore; v30 — freeze live_xi snapshot when squad.matchday_id advances; v29 bug: roundComplete gate on squadAdvanced meant every live pass overwrote the snapshot with post-transfer XI)
 // Calculates fantasy points for all squads for a given fixture.
 // Called by ingest-match-events (Forza live path) or directly (mock/manual path).
 //
@@ -612,6 +612,28 @@ async function rollupSquads(fixture_id, pointsLookup, tournament_id) {
     .from('fixtures').select('id, status').in('id', allRoundFixtureIds);
   const roundComplete = (roundFixStatus?.length ?? 0) > 0
     && roundFixStatus.every(f => f.status === 'finished');
+
+  // v31 INTEGRITY GUARD — "written in stone" rule.
+  // Once the roundComplete pass has run and written effective_xi into points_breakdown,
+  // that matchday's results are frozen. Any subsequent call for a fixture in the same
+  // round is a no-op: we log a warning and return without touching fantasy_points.
+  // This prevents manual re-triggers, stuck crons, or late-finisher passes from
+  // overwriting settled historical data.
+  if (roundComplete) {
+    const { data: settledRows } = await supabase
+      .from('fantasy_points')
+      .select('squad_id')
+      .eq('matchday_id', roundMatchdayId)
+      .not('points_breakdown->effective_xi', 'is', null)
+      .limit(1);
+
+    if (settledRows?.length) {
+      await logError('warning', 'Rescore of settled round blocked — matchday is frozen', {
+        fixture_id, roundMatchdayId,
+      });
+      return 0;
+    }
+  }
 
   // minutes played per player this round (max across the round's fixtures)
   const minutesLookup = {};
