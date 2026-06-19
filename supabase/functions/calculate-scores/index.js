@@ -1,4 +1,4 @@
-// Edge Function: calculate-scores  (v29 — live_xi snapshot on every pass; roundComplete uses snapshot when squad has advanced to next round)
+// Edge Function: calculate-scores  (v30 — freeze live_xi snapshot when squad.matchday_id advances; v29 bug: roundComplete gate on squadAdvanced meant every live pass overwrote the snapshot with post-transfer XI)
 // Calculates fantasy points for all squads for a given fixture.
 // Called by ingest-match-events (Forza live path) or directly (mock/manual path).
 //
@@ -585,6 +585,22 @@ async function rollupSquads(fixture_id, pointsLookup, tournament_id) {
     (existingFP ?? []).map(fp => [fp.squad_id, fp.points_breakdown ?? {}])
   );
 
+  // v30: load squad_matchday_snapshots for this round.
+  // These are written at fixture kickoff (before any transfer window re-opens) and are
+  // immutable (ON CONFLICT DO NOTHING). They are the most reliable source for baseXI
+  // and take priority over the live_xi in points_breakdown.
+  // Key: `${league_id}:${user_id}` — matches the mgrKey used per squad below.
+  const snapshotMap = {};
+  {
+    const { data: snapRows } = await supabase
+      .from('squad_matchday_snapshots')
+      .select('league_id, user_id, starting_xi, players, captain_id')
+      .eq('matchday_id', roundMatchdayId);
+    for (const r of snapRows ?? []) {
+      snapshotMap[`${r.league_id}:${r.user_id}`] = r;
+    }
+  }
+
   // ── Auto-subs (#17) data ─────────────────────────────────────────────────────
   // Auto-substitution replaces a starter who did NOT play with the highest-priority
   // bench player who did, provided the formation stays valid. To avoid subbing out a
@@ -628,17 +644,32 @@ async function rollupSquads(fixture_id, pointsLookup, tournament_id) {
     const jokerPid = jokerThisRound[mgrKey] ?? null;    // C1: per-round, from daily_jokers
     // Phase B: use starting_xi when set; fallback to players[0..10] for legacy squads.
     // IMPORTANT: if the squad has already advanced to a later round (matchday_id !== roundMatchdayId)
-    // the squad row reflects post-transfer state — use the live_xi snapshot from the last live
-    // scoring pass instead. This prevents the roundComplete pass from crediting players who were
-    // acquired AFTER the round ended but BEFORE the final scoring cron ran.
+    // the squad row reflects post-transfer state — use the frozen snapshot instead to avoid
+    // crediting players acquired AFTER the round's transfer window re-opened.
     const currentXI = (squad.starting_xi?.length > 0)
       ? squad.starting_xi
       : (squad.players || []).slice(0, 11);
     const existingBD = existingBDMap[squad.id] ?? {};
-    const squadAdvanced = roundComplete && squad.matchday_id !== roundMatchdayId;
-    const baseXI = (squadAdvanced && existingBD.live_xi?.length)
-      ? existingBD.live_xi
-      : currentXI;
+    // v30 FIX: drop the `roundComplete &&` gate that was here in v29.
+    // v29 bug: live passes (not roundComplete) always saw squadAdvanced=false, so they kept
+    // writing live_xi=currentXI even after the manager transferred. By the time the roundComplete
+    // pass fired, existingBD.live_xi already held the post-transfer (wrong) XI.
+    // Fix: squadAdvanced is now true on ANY pass once matchday_id advances.
+    const squadAdvanced = squad.matchday_id !== roundMatchdayId;
+
+    // baseXI priority (highest → lowest):
+    //   1. squad_matchday_snapshots: immutable kickoff snapshot (immune to transfer corruption)
+    //   2. existingBD.live_xi: frozen by v30 fix once squad advances (fallback for pre-182 rounds)
+    //   3. currentXI: squad.starting_xi / players[0..10] — only used when squad hasn't advanced
+    const snapshot = snapshotMap[mgrKey];
+    let baseXI;
+    if (squadAdvanced && snapshot?.starting_xi?.length) {
+      baseXI = snapshot.starting_xi;   // most reliable: immutable kickoff snapshot
+    } else if (squadAdvanced && existingBD.live_xi?.length) {
+      baseXI = existingBD.live_xi;     // v30 frozen snapshot in breakdown (pre-182 rounds)
+    } else {
+      baseXI = currentXI;              // squad still in this round — current XI is correct
+    }
 
     // #17: at round completion, auto-sub DNP starters (0 min) for the highest-priority
     // bench player who played, keeping the formation valid. Bench priority = players-array
@@ -646,9 +677,12 @@ async function rollupSquads(fixture_id, pointsLookup, tournament_id) {
     // bench is derived relative to baseXI so applyAutoSubs can pick from it.
     // After auto-subs, benchPlayers is re-derived relative to pitchPlayers (the
     // effective XI) — any player auto-subbed IN must not appear in both XI and bench.
-    const allPlayers = squadAdvanced && existingBD.live_players?.length
-      ? existingBD.live_players
-      : (squad.players || []);
+    // allPlayers priority mirrors baseXI: snapshot table → live_players breakdown → current
+    const allPlayers = (() => {
+      if (squadAdvanced && snapshot?.players?.length) return snapshot.players;
+      if (squadAdvanced && existingBD.live_players?.length) return existingBD.live_players;
+      return squad.players || [];
+    })();
     const bench = allPlayers.filter(pid => !baseXI.includes(pid));
     let pitchPlayers = baseXI;
     if (roundComplete) {
@@ -760,11 +794,21 @@ async function rollupSquads(fixture_id, pointsLookup, tournament_id) {
         [fixture_id]: thisFixturePts,
       },
       player_count: pitchPlayers.length,
-      // Snapshot the XI and full squad on every live pass so the roundComplete pass can use
-      // it if the squad has already advanced to the next round by the time that pass runs.
-      live_xi:      currentXI,
-      live_players: squad.players || [],
     };
+    // v30 FIX: freeze the live_xi snapshot once squad.matchday_id advances.
+    // While the squad is still in this matchday we write the snapshot as normal.
+    // Once the manager makes a next-round transfer (matchday_id advances), we stop
+    // updating live_xi so the pre-transfer XI is preserved for scoring.
+    if (!squadAdvanced) {
+      breakdown.live_xi      = currentXI;
+      breakdown.live_players = squad.players || [];
+    } else if (!existingBD.live_xi?.length) {
+      // Fallback: squad advanced before any live pass ran (e.g. pre-competition transfers
+      // that already moved matchday_id before MD1 kickoff). No valid snapshot exists.
+      console.warn(`[calculate-scores] squad ${squad.id} has no live_xi snapshot for round ${roundMatchdayId} (squad is at ${squad.matchday_id}) — scoring with current XI as approximation`);
+      breakdown.live_xi      = currentXI;
+      breakdown.live_players = squad.players || [];
+    }
     if (penaltyDeduction > 0) breakdown.transfer_penalty_deduction = penaltyDeduction;
 
     // Once the round is fully settled, snapshot the effective XI/captain that actually
