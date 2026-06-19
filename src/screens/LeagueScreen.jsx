@@ -206,6 +206,7 @@ export default function LeagueScreen() {
   const [frontpageFormData, setFrontpageFormData] = useState(null);
   const [frontpageLiveScores, setFrontpageLiveScores] = useState(null);
   const [frontpageBets, setFrontpageBets] = useState({ open: [], settled: [] });
+  const [frontpageBetStats, setFrontpageBetStats] = useState([]);
   const frontpageEdition = useFrontpageEdition(activeLeague?.league_id);
 
   // Chat input state lives in ChatView — not needed here
@@ -745,6 +746,39 @@ export default function LeagueScreen() {
           settled: all.filter(b => b.status === 'resolved').slice(0, 2),
         });
       });
+  }, [activeLeague?.league_id]);
+
+  // Frontpage: per-manager bet accuracy from resolved bet_submissions
+  useEffect(() => {
+    const lid = activeLeague?.league_id;
+    if (!lid) return;
+    (async () => {
+      try {
+        const { data: resolved } = await supabase
+          .from('bet_instances')
+          .select('id')
+          .eq('league_id', lid)
+          .eq('status', 'resolved');
+        if (!resolved?.length) return;
+        const ids = resolved.map(b => b.id);
+        const { data: subs } = await supabase
+          .from('bet_submissions')
+          .select('user_id, is_correct')
+          .in('bet_instance_id', ids);
+        if (!subs?.length) return;
+        const byUser = {};
+        for (const s of subs) {
+          if (!byUser[s.user_id]) byUser[s.user_id] = { total: 0, correct: 0 };
+          byUser[s.user_id].total += 1;
+          if (s.is_correct) byUser[s.user_id].correct += 1;
+        }
+        const stats = Object.entries(byUser).map(([uid, v]) => ({
+          userId: uid, total: v.total, correct: v.correct,
+          pct: v.total > 0 ? Math.round((v.correct / v.total) * 100) : 0,
+        })).sort((a, b) => b.total - a.total || b.correct - a.correct);
+        setFrontpageBetStats(stats);
+      } catch { /* non-fatal */ }
+    })();
   }, [activeLeague?.league_id]);
 
   // U42: Auto-clear only bet-type notification badge when viewing bets tab
@@ -1520,13 +1554,28 @@ export default function LeagueScreen() {
                                    </tr>
                                  </thead>
                                  <tbody>
-                                   {members.map((m, i) => {
+                                   {(() => {
+                                   // Identify completed GWs via gazette activity entries (roundComplete=true)
+                                   const completedGwNums = new Set(
+                                     frontpageActivityEntries
+                                       .filter(e => e.entry_type === 'activity')
+                                       .map(e => e.headline?.match(/GW\s*(\d+)/i)?.[1])
+                                       .filter(Boolean)
+                                   );
+                                   return members.map((m, i) => {
                                      const isMe = currentUser && m.user_id === currentUser.id;
                                      const mName = isMe ? 'You' : (m.users?.username || '—');
                                      const gwPts = frontpageFormData.matchdayIds.map(mid =>
                                        frontpageFormData.formMap[m.user_id]?.[mid] ?? null
                                      );
-                                     const last2 = gwPts.filter(p => p != null).slice(-2);
+                                     // Only compare completed GWs for trend (exclude in-progress)
+                                     const completedPts = frontpageFormData.matchdayIds
+                                       .map((mid, j) => {
+                                         const gwN = mid.split('-r')[1];
+                                         return completedGwNums.has(gwN) ? gwPts[j] : null;
+                                       })
+                                       .filter(p => p != null);
+                                     const last2 = completedPts.slice(-2);
                                      const trend = last2.length === 2
                                        ? (last2[1] > last2[0] ? '▲' : last2[1] < last2[0] ? '▼' : '—')
                                        : '—';
@@ -1542,7 +1591,8 @@ export default function LeagueScreen() {
                                          <td style={{ padding: '5px 6px', textAlign: 'right', color: trendColor, fontWeight: 700, fontSize: 11 }}>{trend}</td>
                                        </tr>
                                      );
-                                   })}
+                                   });
+                                   })()}
                                  </tbody>
                                </table>
                              </>
@@ -1557,8 +1607,8 @@ export default function LeagueScreen() {
                          </>
                        )}
 
-                       {/* AI transfer rumour — only when edition exists */}
-                       {fpEd?.transfer_rumour && (
+                       {/* AI transfer rumour — only when edition exists and non-empty */}
+                       {fpEd?.transfer_rumour?.trim() && (
                          <div style={{ marginTop: 20, paddingTop: 16, borderTop: `1px solid ${FT_RULE}` }}>
                            <div style={{ fontFamily: ftMono, fontSize: 9, letterSpacing: '.22em', color: FT_RED, marginBottom: 6 }}>TRANSFER WHISPERS</div>
                            <p style={{ fontFamily: ftSerif, fontStyle: 'italic', fontSize: 14, lineHeight: 1.55, color: FT_INK }}>
@@ -1701,6 +1751,50 @@ export default function LeagueScreen() {
                            </p>
                          </div>
                        )}
+                       {/* Bet tracker — per-manager accuracy stats with editorial sarcasm */}
+                       {frontpageBetStats.length > 0 && (() => {
+                         const maxTotal = Math.max(...frontpageBetStats.map(s => s.total));
+                         const oracle    = frontpageBetStats.find(s => s.total >= 2 && s.pct === 100);
+                         const contrarian= frontpageBetStats.find(s => s.total >= 2 && s.pct === 0);
+                         const gambler   = frontpageBetStats.find(s => s.total === maxTotal && s.total >= 3);
+                         const lines = [];
+                         if (oracle) {
+                           const n = members.find(m => m.user_id === oracle.userId)?.users?.username ?? 'Someone';
+                           lines.push(`${n} is running at ${oracle.pct}% accuracy — ${oracle.total} from ${oracle.total}. Either they have inside information or the rest of you should be paying closer attention.`);
+                         }
+                         if (contrarian && contrarian.userId !== oracle?.userId) {
+                           const n = members.find(m => m.user_id === contrarian.userId)?.users?.username ?? 'Someone';
+                           lines.push(`${n} has yet to get one right across ${contrarian.total} attempts. Respect the commitment to a losing strategy.`);
+                         }
+                         if (gambler && gambler.userId !== oracle?.userId && gambler.userId !== contrarian?.userId) {
+                           const n = members.find(m => m.user_id === gambler.userId)?.users?.username ?? 'Someone';
+                           lines.push(`${n} leads participation with ${gambler.total} entries — ${gambler.pct}% correct. Very active. Not always right. Points eventually tell the story.`);
+                         }
+                         if (!lines.length) return null;
+                         return (
+                           <div style={{ marginTop: 14, paddingTop: 14, borderTop: `1px solid ${FT_RULE}` }}>
+                             <div style={{ fontFamily: ftMono, fontSize: 9, letterSpacing: '.22em', color: FT_MUTE, marginBottom: 10, fontWeight: 700 }}>BET TRACKER</div>
+                             <div style={{ display: 'grid', gridTemplateColumns: `repeat(${Math.min(frontpageBetStats.length, 4)}, 1fr)`, gap: 10, marginBottom: 14 }}>
+                               {frontpageBetStats.slice(0, 4).map(s => {
+                                 const n = members.find(m => m.user_id === s.userId)?.users?.username ?? '—';
+                                 const barW = maxTotal > 0 ? Math.round((s.correct / maxTotal) * 100) : 0;
+                                 return (
+                                   <div key={s.userId} style={{ fontFamily: ftMono, fontSize: 9, color: FT_MUTE }}>
+                                     <div style={{ color: FT_INK, fontWeight: 700, fontSize: 10, marginBottom: 3, letterSpacing: '.04em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{n}</div>
+                                     <div style={{ height: 4, background: FT_RULE, borderRadius: 2, marginBottom: 3 }}>
+                                       <div style={{ height: '100%', width: `${barW}%`, background: s.pct >= 50 ? '#1A7F3C' : FT_RED, borderRadius: 2 }} />
+                                     </div>
+                                     <div style={{ letterSpacing: '.06em' }}>{s.correct}/{s.total} · {s.pct}%</div>
+                                   </div>
+                                 );
+                               })}
+                             </div>
+                             {lines.map((line, i) => (
+                               <p key={i} style={{ fontFamily: ftSerif, fontStyle: 'italic', fontSize: 12, color: FT_MUTE, lineHeight: 1.6, margin: i > 0 ? '8px 0 0' : 0 }}>{line}</p>
+                             ))}
+                           </div>
+                         );
+                       })()}
                      </div>
                    )}
 
@@ -1737,10 +1831,12 @@ export default function LeagueScreen() {
                      const scoreEntries = liveGwNum
                        ? allScoreEntries.filter(e => e.headline?.match(/GW\s*(\d+)/i)?.[1] !== liveGwNum)
                        : allScoreEntries;
-                     const gazetteCards = h2hEnabled
-                       ? [...h2hEntries.slice(0, 2), ...scoreEntries.slice(0, 2)]
-                       : scoreEntries.slice(0, 2);
+                     // When a live in-progress card exists, suppress historical gazette score cards
+                     // (they're confusing alongside a live card — history lives in RECAP)
                      const hasLive = frontpageLiveScores && frontpageLiveScores.rows.length > 0;
+                     const gazetteCards = h2hEnabled
+                       ? [...h2hEntries.slice(0, 2), ...(!hasLive ? scoreEntries.slice(0, 2) : [])]
+                       : (!hasLive ? scoreEntries.slice(0, 2) : []);
                      if (!hasLive && gazetteCards.length === 0) return null;
                      return (
                        <div style={{ marginTop: 24, borderTop: `2px solid ${FT_INK}`, paddingTop: 20 }}>
