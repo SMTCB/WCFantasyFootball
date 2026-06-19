@@ -1,6 +1,6 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-06-19 (B-10 double-GK guard; B-09 bench scores in Recap; BI-03 squad_events audit table — all squad mutations logged; PRs #587/#588/#589, migration 183)  
+**Last Updated**: 2026-06-19 (Forza Times polish: form-guide trend arrows, bets tracker, league_config RLS fix, transfer-whispers guard, LATEST SCORES fix — PRs #591–#593, migration 184)  
 **E2E Test Suite**: `platform.spec.js` (36 tests × 2 browsers) passing in CI ✅  
 **Full Playbook Run**: `E2E_TEST_PLAYBOOK.md` v2.0 — all flows confirmed  
 **🟢 LAUNCH READY**: No critical (P0/P1) bugs open. All game mechanics functional. WC kick-off 2026-06-11.  
@@ -54,7 +54,7 @@
 - `frontpage_comments` — 140-char "letters to the editor" per section. INSERT: any member; DELETE: own row or commissioner.
 - `classified` added to `gazette_entry_type` enum — for commissioner classified ad posts (separate from `breaking_news`).
 
-**`generate-frontpage-edition` Edge Function** (`supabase/functions/generate-frontpage-edition/index.ts`) — ⚠️ **NOT YET DEPLOYED** (pending test-league deploy):
+**`generate-frontpage-edition` Edge Function** (`supabase/functions/generate-frontpage-edition/index.ts`) — ✅ **DEPLOYED** (deployed 2026-06-18, running in production):
 - Two modes: cron (`{mode:'cron'}` + service-role JWT) and manual (`{league_id}` + user JWT with commissioner check).
 - Collects: standings (top 5 + bottom 1), last 24h transfers, last 3 chat messages, upcoming fixtures (next 48h), gazette entries (breaking_news, classified, activity), `league_config` pinned quote.
 - Calls Groq (`llama-3.1-8b-instant` via OpenAI-compatible endpoint) with a British tabloid system prompt; structured JSON output `{headline, deck, hot_take, wooden_spoon, transfer_rumour}`.
@@ -102,6 +102,29 @@ npx supabase secrets set GROQ_API_KEY=<your-new-key> --project-ref sssmvihxtqtoh
 ```
 
 No data impact on real leagues (edition gate). Lint: 0 errors. Build: clean. Tests: 84/84 passed.
+
+### Session 3 — Frontpage polish + RLS fix (PRs #591–#593, migration 184, 2026-06-19)
+
+**Migration 184** (`184_league_config_rls.sql`): `league_config` had RLS enabled since migration 66 with **zero policies** — every commissioner write (PIN QUOTE upsert, any `league_config` key) was silently blocked. Two policies added: member SELECT (`league_members` existence check) and commissioner write (INSERT/UPDATE/DELETE with `role='commissioner'`). Applied directly to live DB.
+
+**PR #591 — `generate-frontpage-edition` cron accepts `league_id`**: Added `body.league_id` filter in cron mode so a single league can be re-processed via service-role JWT without the 4h manual rate limit. Used to trigger fresh editions on-demand from CLI.
+
+**PR #592 — Classified + orphan strip fixes**:
+- `GazetteNews.jsx` now queries `in('entry_type', ['breaking_news', 'classified'])` — classified posts were being saved but never rendered on the frontpage.
+- Reaction strip / letters panel for the `'commissioner'` section moved **inside** `GazetteNews` and only renders when entries exist. Removed the orphan `<ReactionStrip>` that appeared below an empty gazette section.
+- Prompt improved to distinguish OVERALL STANDINGS leader (basis for hot_take/wooden_spoon) from LAST COMPLETED GAMEWEEK winner — AI was crediting the GW1 top-scorer as the league leader.
+- Form guide now filters `.lte('deadline_at', nowIso)` **before** `.limit(3)` to avoid pulling future deadlines.
+
+**PR #593 — Trend arrows, bets tracker, transfer whispers, latest scores**:
+- **Trend arrows**: form guide rows now only compare completed GWs (identified via gazette `activity` entries with `roundComplete=true`). In-progress rounds are excluded from the arrow calculation — was showing all ▼ because partial GW2 scores were lower than completed GW1 scores.
+- **Transfer whispers**: section hidden when `fpEd.transfer_rumour?.trim()` is falsy — was showing an empty section header when AI returned `""`.
+- **LATEST SCORES**: historical gazette score cards suppressed when a live in-progress card exists. Eliminates confusion of seeing "GBruschy leads GW1" alongside a live GW2 card.
+- **BET TRACKER**: new editorial section below settled bets. Fetches `bet_submissions` for all resolved `bet_instances`, computes per-manager accuracy. Mini bars (green ≥50%, red below), correct/total/%, and sarcastic editorial commentary: "The Oracle" (100% across 2+), "The Contrarian" (0% across 2+), "The Gambler" (most entries).
+
+**Known gaps / future polish** (not blocking, log here for next session):
+- Frontpage form guide future improvements deferred (user noted "adjustments to be made in the future" — no specific items captured yet; log when raised).
+- `GazetteNews.jsx` — classifieds could benefit from a distinct visual treatment beyond the CLASSIFIED badge (e.g. dotted border, italic text).
+- AI prompt could benefit from injecting last 3 rounds of scores to improve transfer_rumour accuracy.
 
 ---
 
