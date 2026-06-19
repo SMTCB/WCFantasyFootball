@@ -390,7 +390,13 @@ Deno.serve(async (req) => {
 
       const results = { processed: 0, skipped: 0, errors: 0 };
 
-      for (const league of activeLeagues) {
+      // 15s between leagues keeps token usage ~3,600 TPM — well under Groq's 6,000 TPM limit
+      const INTER_LEAGUE_DELAY_MS = 15_000;
+
+      for (let i = 0; i < activeLeagues.length; i++) {
+        const league = activeLeagues[i];
+        if (i > 0) await new Promise(resolve => setTimeout(resolve, INTER_LEAGUE_DELAY_MS));
+
         try {
           // Skip if a manual edition was generated in the last 12h
           const { data: todayEdition } = await sb
