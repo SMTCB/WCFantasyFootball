@@ -445,7 +445,7 @@ Deno.serve(async (req) => {
 function isValidFormation(ids, posLookup) {
   const c = { GK: 0, DEF: 0, MID: 0, FWD: 0 };
   for (const id of ids) { const p = posLookup[id]; if (c[p] !== undefined) c[p]++; }
-  return c.GK >= 1 && c.DEF >= 3 && c.DEF <= 5 && c.MID >= 2 && c.MID <= 5
+  return c.GK === 1 && c.DEF >= 3 && c.DEF <= 5 && c.MID >= 2 && c.MID <= 5
       && c.FWD >= 1 && c.FWD <= 3 && (c.GK + c.DEF + c.MID + c.FWD) === ids.length;
 }
 
