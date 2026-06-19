@@ -1,6 +1,6 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-06-18 (Forza Times interactive frontpage — PRs #574/#575)  
+**Last Updated**: 2026-06-19 (double-GK auto-sub bug identified — P0 added)  
 **E2E Test Suite**: `platform.spec.js` (36 tests × 2 browsers) passing in CI ✅  
 **Full Playbook Run**: `E2E_TEST_PLAYBOOK.md` v2.0 — all flows confirmed  
 **🟢 LAUNCH READY**: No critical (P0/P1) bugs open. All game mechanics functional. WC kick-off 2026-06-11.  
@@ -4179,7 +4179,7 @@ The Forza Football API integration is fully documented and analyzed (see `docs/a
 
 | Tier | Count | Effort | Timeline | Status |
 |------|-------|--------|----------|--------|
-| **P0 — BLOCKERS** | 5 | 14h (2 days) | **Before web launch** | 🔴 MUST FIX |
+| **P0 — BLOCKERS** | 6 | 15h (2 days) | **Before web launch** | 🔴 MUST FIX |
 | **P1 — HIGH** | 5 | 53h (6.6 days) | Phase 2a (weeks 1-4 post-launch) | 🟠 Important |
 | **P2 — MEDIUM** | 25 | 59.5h (7.5 days) | Phase 2b (weeks 5-12 post-launch) | 🟡 Nice-to-have |
 | **P3 — LOW** | 5 | 4.5h (0.6 days) | Phase 3+ (3+ months) | 🟢 Deferred |
@@ -4190,7 +4190,20 @@ P1+ items are deferred to post-launch phases and not blocking.
 
 ---
 
-### 🔴 P0 — BLOCKERS (All Must Ship Before Launch — 14 hours, 2 days)
+### 🔴 P0 — BLOCKERS (All Must Ship Before Launch — 15 hours, 2 days)
+
+**[TOP PRIORITY] Auto-sub double-GK formation guard** (1h)
+- **Severity**: 🔴 CRITICAL — `calculate-scores` can produce an invalid starting XI with 2 GKs after auto-sub
+- **Root cause**: `isValidFormation()` in `supabase/functions/calculate-scores/index.js:448` checks `c.GK >= 1` but never `c.GK <= 1`. When the first bench player in array order is a GK (e.g. backup keeper), it gets auto-subbed in alongside the starting GK, creating an illegal formation that inflates the squad's score by the second GK's points.
+- **Known affected case**: Gonçalo Mello, Liga Mundial do Eder, `429-r1` — Gregor Kobel (GK, 6 pts) wrongly auto-subbed in. Retroactive data correction deferred (score stands as-is for pilot stability).
+- **Fix**: One character change in `calculate-scores/index.js`:
+  ```js
+  // line 448 — change >= 1 to === 1
+  return c.GK === 1 && c.DEF >= 3 && c.DEF <= 5 && c.MID >= 2 && c.MID <= 5
+      && c.FWD >= 1 && c.FWD <= 3 && (c.GK + c.DEF + c.MID + c.FWD) === ids.length;
+  ```
+- **Deploy**: `npx supabase functions deploy calculate-scores --project-ref sssmvihxtqtohisghjet`
+- **Scope**: Also audit other leagues/squads for the same bug in past matchdays before closing (query `fantasy_points.breakdown->>'auto_subs'` for any GK-in swaps)
 
 **1. Auction RLS Allows Seller Spoofing** (CRITICAL SECURITY) (2h)
 - **Severity**: 🔴 CRITICAL — Players can be sold without owner consent
@@ -4241,6 +4254,18 @@ P1+ items are deferred to post-launch phases and not blocking.
 ### 🟠 P1 — HIGH (Phase 2a: Weeks 1-4 Post-Launch — 53 hours, 6.6 days)
 
 **Production Readiness & Resilience (Phase 2a must-haves):**
+
+**[NEW] Wire transfer log — populate the `transfers` table on every buy/sell** (2h)
+- **Severity**: 🟠 HIGH — Without a per-player transfer history, there is no way to audit or reconstruct squad state between rounds. Exposed as a critical gap in the MD1 scoring corruption incident (2026-06-19).
+- **Root cause**: The `transfers` table (columns: `league_id, user_id, round_number, player_out, player_in, transferred_at`) was created by an early migration but was never written to. `execute_transfer_atomic` only updates `squads.round_transfers` (a JSONB buy-count per round) and does not log individual player moves.
+- **Secondary gap**: For leagues with an unlimited/free transfer window, `execute_transfer_atomic` bypasses the per-round limit enforcement entirely, meaning `round_transfers` is also never written for those leagues. There is currently **no record at all** of how many transfers a manager in an unlimited league has made.
+- **Fix**:
+  1. At the end of `execute_transfer_atomic`, insert one row into `transfers` for each buy and each sell, with the current `matchday_id` as the round reference. Use `ON CONFLICT DO NOTHING` for idempotency.
+  2. For unlimited-window transfers, write the same row with a `window_type='unlimited'` marker so the audit trail is complete even when the limit isn't enforced.
+  3. Add `CREATE INDEX idx_transfers_league_user ON transfers(league_id, user_id, transferred_at DESC)`.
+- **Impact**: Enables post-round squad reconstruction, commissioner audits, and proof of which players were in a squad at any point in time. Also feeds the "Recent transfers" display in the Frontpage AI edition (currently sourced from the gazette, which only has summary entries).
+- **Migration**: `183_wire_transfer_log.sql`
+- **Priority**: HIGH — must ship before MD3 to protect future rounds
 
 **6. No Forza API Timeouts/Retries** (HIGH) (2d)
 - **Severity**: 🟠 HIGH — Hanging upstream API stalls every Edge Function indefinitely; cascades to user blocking
