@@ -203,6 +203,9 @@ export default function LeagueScreen() {
   const [joinLoading,  setJoinLoading]  = useState(false);
   const [joinError,    setJoinError]    = useState('');
   const [frontpageActivityEntries, setFrontpageActivityEntries] = useState([]);
+  const [frontpageFormData, setFrontpageFormData] = useState(null);
+  const [frontpageLiveScores, setFrontpageLiveScores] = useState(null);
+  const [frontpageBets, setFrontpageBets] = useState([]);
   const frontpageEdition = useFrontpageEdition(activeLeague?.league_id);
 
   // Chat input state lives in ChatView — not needed here
@@ -637,6 +640,88 @@ export default function LeagueScreen() {
       .order('published_at', { ascending: false })
       .limit(8)
       .then(({ data }) => setFrontpageActivityEntries(data ?? []));
+  }, [activeLeague?.league_id]);
+
+  // Frontpage: form guide (last 3 GWs) + in-progress live scores
+  useEffect(() => {
+    const lid = activeLeague?.league_id;
+    const tid = activeLeague?.leagues?.tournament_id;
+    if (!lid || !tid) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const { data: deadlines } = await supabase
+          .from('matchday_deadlines')
+          .select('matchday_id, deadline_at')
+          .eq('tournament_id', tid)
+          .order('deadline_at', { ascending: false })
+          .limit(4);
+        if (cancelled || !deadlines?.length) return;
+
+        const { data: squadsRaw } = await supabase
+          .from('squads')
+          .select('id, user_id')
+          .eq('league_id', lid)
+          .order('created_at', { ascending: false });
+        if (cancelled || !squadsRaw?.length) return;
+
+        const seenUsers = new Set();
+        const squads = squadsRaw.filter(s => {
+          if (seenUsers.has(s.user_id)) return false;
+          seenUsers.add(s.user_id);
+          return true;
+        });
+        const squadIds = squads.map(s => s.id);
+        const userIdBySquad = Object.fromEntries(squads.map(s => [s.id, s.user_id]));
+
+        const { data: fps } = await supabase
+          .from('fantasy_points')
+          .select('squad_id, matchday_id, total')
+          .in('squad_id', squadIds)
+          .in('matchday_id', deadlines.map(d => d.matchday_id));
+        if (cancelled) return;
+
+        const formMap = {};
+        for (const fp of fps ?? []) {
+          const uid = userIdBySquad[fp.squad_id];
+          if (!uid) continue;
+          if (!formMap[uid]) formMap[uid] = {};
+          const cur = formMap[uid][fp.matchday_id];
+          if (cur == null || fp.total > cur) formMap[uid][fp.matchday_id] = fp.total;
+        }
+
+        const now = Date.now();
+        const pastMds = deadlines
+          .filter(d => new Date(d.deadline_at).getTime() < now)
+          .slice(0, 3)
+          .reverse();
+        if (!cancelled) setFrontpageFormData({ matchdayIds: pastMds.map(d => d.matchday_id), formMap });
+
+        const latestMd = deadlines[0];
+        if (latestMd) {
+          const gwNum = latestMd.matchday_id.split('-r')[1] ?? '';
+          const rows = Object.entries(formMap)
+            .map(([uid, mdMap]) => ({ userId: uid, pts: mdMap[latestMd.matchday_id] ?? null }))
+            .filter(r => r.pts != null)
+            .sort((a, b) => b.pts - a.pts);
+          if (!cancelled && rows.length > 0) setFrontpageLiveScores({ matchdayId: latestMd.matchday_id, gwNum, rows });
+        }
+      } catch { /* non-fatal */ }
+    })();
+    return () => { cancelled = true; };
+  }, [activeLeague?.league_id, activeLeague?.leagues?.tournament_id]);
+
+  // Frontpage: recent bets
+  useEffect(() => {
+    const lid = activeLeague?.league_id;
+    if (!lid) return;
+    supabase.from('bet_instances')
+      .select('id, title, status, deadline_at, created_at')
+      .eq('league_id', lid)
+      .in('status', ['open', 'resolved'])
+      .order('created_at', { ascending: false })
+      .limit(4)
+      .then(({ data }) => setFrontpageBets(data ?? []));
   }, [activeLeague?.league_id]);
 
   // U42: Auto-clear only bet-type notification badge when viewing bets tab
@@ -1393,11 +1478,59 @@ export default function LeagueScreen() {
                          </>
                        ) : (
                          <>
-                           <div style={{ fontFamily: ftMono, fontSize: 9, letterSpacing: '.22em', color: FT_RED }}>LEAGUE ACTIVITY</div>
-                           <h2 style={{ fontFamily: ftSerif, fontWeight: 800, fontSize: 22, lineHeight: 1.02, letterSpacing: '-0.02em', color: FT_INK, marginTop: 6 }}>Open market — build freely</h2>
-                           <p style={{ fontFamily: ftSerif, fontSize: 14, color: FT_MUTE, lineHeight: 1.6, marginTop: 10 }}>
-                             Classic mode is in effect. Any player can appear in multiple squads simultaneously — there is no draft or lottery. Head to the Market to sign players and start scoring points.
-                           </p>
+                           <div style={{ fontFamily: ftMono, fontSize: 9, letterSpacing: '.22em', color: FT_RED }}>FORM GUIDE</div>
+                           {frontpageFormData?.matchdayIds?.length > 0 ? (
+                             <>
+                               <h2 style={{ fontFamily: ftSerif, fontWeight: 800, fontSize: 22, lineHeight: 1.02, letterSpacing: '-0.02em', color: FT_INK, marginTop: 6 }}>
+                                 Manager form — last {frontpageFormData.matchdayIds.length} GW{frontpageFormData.matchdayIds.length > 1 ? 's' : ''}
+                               </h2>
+                               <table style={{ width: '100%', marginTop: 12, borderCollapse: 'collapse', fontFamily: ftMono, fontSize: 10, color: FT_INK }}>
+                                 <thead>
+                                   <tr>
+                                     <th style={{ textAlign: 'left', padding: '4px 4px', fontWeight: 600, borderBottom: `1px solid ${FT_INK}`, letterSpacing: '.1em' }}>MANAGER</th>
+                                     {frontpageFormData.matchdayIds.map(mid => (
+                                       <th key={mid} style={{ textAlign: 'right', padding: '4px 6px', fontWeight: 600, borderBottom: `1px solid ${FT_INK}`, letterSpacing: '.1em' }}>
+                                         GW{mid.split('-r')[1]}
+                                       </th>
+                                     ))}
+                                     <th style={{ textAlign: 'right', padding: '4px 6px', fontWeight: 600, borderBottom: `1px solid ${FT_INK}`, letterSpacing: '.1em' }}>↑↓</th>
+                                   </tr>
+                                 </thead>
+                                 <tbody>
+                                   {members.map((m, i) => {
+                                     const isMe = currentUser && m.user_id === currentUser.id;
+                                     const mName = isMe ? 'You' : (m.users?.username || '—');
+                                     const gwPts = frontpageFormData.matchdayIds.map(mid =>
+                                       frontpageFormData.formMap[m.user_id]?.[mid] ?? null
+                                     );
+                                     const last2 = gwPts.filter(p => p != null).slice(-2);
+                                     const trend = last2.length === 2
+                                       ? (last2[1] > last2[0] ? '▲' : last2[1] < last2[0] ? '▼' : '—')
+                                       : '—';
+                                     const trendColor = trend === '▲' ? '#1A7F3C' : trend === '▼' ? FT_RED : FT_MUTE;
+                                     return (
+                                       <tr key={m.user_id} style={{ borderTop: i === 0 ? 'none' : `1px solid ${FT_RULE}`, background: isMe ? '#F7F3EA' : 'transparent' }}>
+                                         <td style={{ padding: '5px 4px', fontFamily: ftSerif, fontSize: 12, fontWeight: isMe ? 700 : 400 }}>{mName}</td>
+                                         {gwPts.map((pts, j) => (
+                                           <td key={j} style={{ padding: '5px 6px', textAlign: 'right', fontWeight: pts != null ? 600 : 400, color: pts != null ? FT_INK : FT_MUTE }}>
+                                             {pts != null ? Math.round(pts) : '—'}
+                                           </td>
+                                         ))}
+                                         <td style={{ padding: '5px 6px', textAlign: 'right', color: trendColor, fontWeight: 700, fontSize: 11 }}>{trend}</td>
+                                       </tr>
+                                     );
+                                   })}
+                                 </tbody>
+                               </table>
+                             </>
+                           ) : (
+                             <>
+                               <h2 style={{ fontFamily: ftSerif, fontWeight: 800, fontSize: 22, lineHeight: 1.02, letterSpacing: '-0.02em', color: FT_INK, marginTop: 6 }}>Open market — build freely</h2>
+                               <p style={{ fontFamily: ftSerif, fontSize: 14, color: FT_MUTE, lineHeight: 1.6, marginTop: 10 }}>
+                                 Classic mode is in effect. Head to the Market to sign players and start scoring points.
+                               </p>
+                             </>
+                           )}
                          </>
                        )}
 
@@ -1488,6 +1621,28 @@ export default function LeagueScreen() {
                      </div>
                    )}
 
+                   {/* Bets desk — recent/open bet markets */}
+                   {frontpageBets.length > 0 && (
+                     <div style={{ marginTop: 24, borderTop: `2px solid ${FT_INK}`, paddingTop: 20 }}>
+                       <div style={{ fontFamily: ftMono, fontSize: 10, letterSpacing: '.22em', color: FT_RED, marginBottom: 14 }}>🎰 BETS DESK · LATEST MARKETS</div>
+                       <div style={{ display: 'grid', gridTemplateColumns: `repeat(${Math.min(frontpageBets.length, 2)}, 1fr)`, gap: 16 }}>
+                         {frontpageBets.map(b => (
+                           <div key={b.id} style={{ borderLeft: `3px solid ${b.status === 'open' ? FT_INK : FT_RULE}`, paddingLeft: 14 }}>
+                             <div style={{ fontFamily: ftMono, fontSize: 9, letterSpacing: '.18em', color: b.status === 'open' ? '#1A7F3C' : FT_MUTE, marginBottom: 4, fontWeight: 600 }}>
+                               {b.status === 'open' ? '● OPEN' : 'SETTLED'}
+                             </div>
+                             <div style={{ fontFamily: ftSerif, fontWeight: 700, fontSize: 13, color: FT_INK, lineHeight: 1.3 }}>{b.title}</div>
+                             {b.deadline_at && b.status === 'open' && (
+                               <div style={{ fontFamily: ftMono, fontSize: 9, color: FT_MUTE, marginTop: 4, letterSpacing: '.06em' }}>
+                                 CLOSES {new Date(b.deadline_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
+                               </div>
+                             )}
+                           </div>
+                         ))}
+                       </div>
+                     </div>
+                   )}
+
                    {/* Recent Deals — auction_result + trade_result gazette entries */}
                    {frontpageActivityEntries.some(e => e.entry_type === 'auction_result' || e.entry_type === 'trade_result') && (() => {
                      const dealEntries = frontpageActivityEntries
@@ -1513,20 +1668,45 @@ export default function LeagueScreen() {
                      );
                    })()}
 
-                   {frontpageActivityEntries.length > 0 && (() => {
+                   {(() => {
                      const h2hEntries = frontpageActivityEntries.filter(e => e.headline?.startsWith('⚔️'));
-                     const scoreEntries = frontpageActivityEntries.filter(e => e.entry_type === 'activity' && !e.headline?.startsWith('⚔️'));
-                     const toShow = h2hEnabled
+                     const allScoreEntries = frontpageActivityEntries.filter(e => e.entry_type === 'activity' && !e.headline?.startsWith('⚔️'));
+                     // Exclude gazette entry if live card covers the same GW
+                     const liveGwNum = frontpageLiveScores?.gwNum;
+                     const scoreEntries = liveGwNum
+                       ? allScoreEntries.filter(e => e.headline?.match(/GW\s*(\d+)/i)?.[1] !== liveGwNum)
+                       : allScoreEntries;
+                     const gazetteCards = h2hEnabled
                        ? [...h2hEntries.slice(0, 2), ...scoreEntries.slice(0, 2)]
-                       : scoreEntries.slice(0, 3);
-                     if (toShow.length === 0) return null;
+                       : scoreEntries.slice(0, 2);
+                     const hasLive = frontpageLiveScores && frontpageLiveScores.rows.length > 0;
+                     if (!hasLive && gazetteCards.length === 0) return null;
                      return (
                        <div style={{ marginTop: 24, borderTop: `2px solid ${FT_INK}`, paddingTop: 20 }}>
                          <div style={{ fontFamily: ftMono, fontSize: 10, letterSpacing: '.22em', color: FT_RED, marginBottom: 14 }}>
                            {h2hEnabled ? 'LATEST SCORES & H2H RESULTS' : 'LATEST SCORES'}
                          </div>
-                         <div style={{ display: 'grid', gridTemplateColumns: `repeat(${Math.min(toShow.length, 2)}, 1fr)`, gap: 20 }}>
-                           {toShow.map(e => (
+                         <div style={{ display: 'grid', gridTemplateColumns: `repeat(${Math.min((hasLive ? 1 : 0) + gazetteCards.length, 2)}, 1fr)`, gap: 20 }}>
+                           {/* In-progress GW card */}
+                           {hasLive && (
+                             <div style={{ borderLeft: `3px solid ${FT_RED}`, paddingLeft: 14 }}>
+                               <div style={{ fontFamily: ftMono, fontSize: 9, letterSpacing: '.18em', color: FT_RED, marginBottom: 6, display: 'flex', alignItems: 'center', gap: 5 }}>
+                                 <span style={{ width: 6, height: 6, borderRadius: '50%', background: FT_RED, display: 'inline-block', flexShrink: 0 }} />
+                                 GW{frontpageLiveScores.gwNum} · IN PROGRESS
+                               </div>
+                               <div style={{ fontFamily: ftSerif, fontWeight: 700, fontSize: 13, color: FT_INK, marginBottom: 8, lineHeight: 1.3 }}>Scores so far</div>
+                               {frontpageLiveScores.rows.slice(0, 5).map((r, i) => {
+                                 const mName = members.find(m => m.user_id === r.userId)?.users?.username ?? '—';
+                                 return (
+                                   <div key={r.userId} style={{ fontFamily: ftMono, fontSize: 10, color: i === 0 ? FT_INK : FT_MUTE, marginBottom: 3, letterSpacing: '.06em', fontWeight: i === 0 ? 700 : 400 }}>
+                                     {i + 1}. {mName} · {Math.round(r.pts)} pts
+                                   </div>
+                                 );
+                               })}
+                             </div>
+                           )}
+                           {/* Gazette-based score cards (completed GWs) */}
+                           {gazetteCards.map(e => (
                              <div key={e.id} style={{ borderLeft: `3px solid ${FT_INK}`, paddingLeft: 14 }}>
                                <div style={{ fontFamily: ftMono, fontSize: 9, letterSpacing: '.18em', color: e.headline?.startsWith('⚔️') ? '#C07000' : FT_MUTE, marginBottom: 6 }}>
                                  {e.headline?.startsWith('⚔️') ? 'H2H RESULT' : 'SCORES'}
