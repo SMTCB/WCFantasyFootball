@@ -205,7 +205,7 @@ export default function LeagueScreen() {
   const [frontpageActivityEntries, setFrontpageActivityEntries] = useState([]);
   const [frontpageFormData, setFrontpageFormData] = useState(null);
   const [frontpageLiveScores, setFrontpageLiveScores] = useState(null);
-  const [frontpageBets, setFrontpageBets] = useState([]);
+  const [frontpageBets, setFrontpageBets] = useState({ open: [], settled: [] });
   const frontpageEdition = useFrontpageEdition(activeLeague?.league_id);
 
   // Chat input state lives in ChatView — not needed here
@@ -642,7 +642,7 @@ export default function LeagueScreen() {
       .then(({ data }) => setFrontpageActivityEntries(data ?? []));
   }, [activeLeague?.league_id]);
 
-  // Frontpage: form guide (last 3 GWs) + in-progress live scores
+  // Frontpage: form guide (last 3 past GWs) + in-progress live scores
   useEffect(() => {
     const lid = activeLeague?.league_id;
     const tid = activeLeague?.leagues?.tournament_id;
@@ -650,13 +650,30 @@ export default function LeagueScreen() {
     let cancelled = false;
     (async () => {
       try {
-        const { data: deadlines } = await supabase
+        const nowIso = new Date().toISOString();
+        // Past deadlines only (for form guide) — order DESC to get most recent 3 first
+        const { data: pastDeadlines } = await supabase
           .from('matchday_deadlines')
           .select('matchday_id, deadline_at')
           .eq('tournament_id', tid)
+          .lte('deadline_at', nowIso)
           .order('deadline_at', { ascending: false })
-          .limit(4);
-        if (cancelled || !deadlines?.length) return;
+          .limit(3);
+        // Most recent deadline regardless of past/future (for live card)
+        const { data: latestDeadlines } = await supabase
+          .from('matchday_deadlines')
+          .select('matchday_id, deadline_at')
+          .eq('tournament_id', tid)
+          .lte('deadline_at', nowIso)
+          .order('deadline_at', { ascending: false })
+          .limit(1);
+        if (cancelled) return;
+
+        const allMids = [...new Set([
+          ...(pastDeadlines ?? []).map(d => d.matchday_id),
+          ...(latestDeadlines ?? []).map(d => d.matchday_id),
+        ])];
+        if (!allMids.length) return;
 
         const { data: squadsRaw } = await supabase
           .from('squads')
@@ -678,7 +695,7 @@ export default function LeagueScreen() {
           .from('fantasy_points')
           .select('squad_id, matchday_id, total')
           .in('squad_id', squadIds)
-          .in('matchday_id', deadlines.map(d => d.matchday_id));
+          .in('matchday_id', allMids);
         if (cancelled) return;
 
         const formMap = {};
@@ -690,14 +707,14 @@ export default function LeagueScreen() {
           if (cur == null || fp.total > cur) formMap[uid][fp.matchday_id] = fp.total;
         }
 
-        const now = Date.now();
-        const pastMds = deadlines
-          .filter(d => new Date(d.deadline_at).getTime() < now)
-          .slice(0, 3)
-          .reverse();
-        if (!cancelled) setFrontpageFormData({ matchdayIds: pastMds.map(d => d.matchday_id), formMap });
+        // Form guide: past 3 GWs in chronological order (oldest → newest)
+        const pastMds = (pastDeadlines ?? []).slice(0, 3).reverse();
+        if (!cancelled && pastMds.length > 0) {
+          setFrontpageFormData({ matchdayIds: pastMds.map(d => d.matchday_id), formMap });
+        }
 
-        const latestMd = deadlines[0];
+        // Live scores: most recent past matchday that has fantasy_points data
+        const latestMd = latestDeadlines?.[0];
         if (latestMd) {
           const gwNum = latestMd.matchday_id.split('-r')[1] ?? '';
           const rows = Object.entries(formMap)
@@ -711,17 +728,23 @@ export default function LeagueScreen() {
     return () => { cancelled = true; };
   }, [activeLeague?.league_id, activeLeague?.leagues?.tournament_id]);
 
-  // Frontpage: recent bets
+  // Frontpage: recent bets (open markets + last 2 settled)
   useEffect(() => {
     const lid = activeLeague?.league_id;
     if (!lid) return;
     supabase.from('bet_instances')
-      .select('id, title, status, deadline_at, created_at')
+      .select('id, title, status, deadline_at, reward_type, reward_value, winners_count, total_submissions, correct_answer')
       .eq('league_id', lid)
       .in('status', ['open', 'resolved'])
       .order('created_at', { ascending: false })
-      .limit(4)
-      .then(({ data }) => setFrontpageBets(data ?? []));
+      .limit(8)
+      .then(({ data }) => {
+        const all = data ?? [];
+        setFrontpageBets({
+          open:    all.filter(b => b.status === 'open'),
+          settled: all.filter(b => b.status === 'resolved').slice(0, 2),
+        });
+      });
   }, [activeLeague?.league_id]);
 
   // U42: Auto-clear only bet-type notification badge when viewing bets tab
@@ -1598,18 +1621,17 @@ export default function LeagueScreen() {
                      </aside>
                    </div>
 
-                   {/* Commissioner posts — last 3 gazette entries (breaking_news + classified) */}
+                   {/* Commissioner posts — breaking_news + classified; reaction strip rendered inside when content exists */}
                    <GazetteNews
                      leagueId={activeLeague?.league_id}
                      ftSerif={ftSerif} ftMono={ftMono}
                      ftInk={FT_INK} ftMute={FT_MUTE} ftRed={FT_RED} ftRule={FT_RULE}
+                     fpEd={fpEd}
+                     ReactionStrip={ReactionStrip}
+                     LettersPanel={LettersPanel}
+                     reactionProps={reactionProps}
+                     letterProps={letterProps}
                    />
-                   {fpEd && (
-                     <div style={{ marginTop: 8 }}>
-                       <ReactionStrip sectionKey="commissioner" {...reactionProps} />
-                       <LettersPanel sectionKey="commissioner" {...letterProps} />
-                     </div>
-                   )}
 
                    {/* AI wooden spoon — only when edition exists */}
                    {fpEd?.wooden_spoon && (
@@ -1621,25 +1643,64 @@ export default function LeagueScreen() {
                      </div>
                    )}
 
-                   {/* Bets desk — recent/open bet markets */}
-                   {frontpageBets.length > 0 && (
+                   {/* Bets desk — open markets + settled results */}
+                   {(frontpageBets.open.length > 0 || frontpageBets.settled.length > 0) && (
                      <div style={{ marginTop: 24, borderTop: `2px solid ${FT_INK}`, paddingTop: 20 }}>
-                       <div style={{ fontFamily: ftMono, fontSize: 10, letterSpacing: '.22em', color: FT_RED, marginBottom: 14 }}>🎰 BETS DESK · LATEST MARKETS</div>
-                       <div style={{ display: 'grid', gridTemplateColumns: `repeat(${Math.min(frontpageBets.length, 2)}, 1fr)`, gap: 16 }}>
-                         {frontpageBets.map(b => (
-                           <div key={b.id} style={{ borderLeft: `3px solid ${b.status === 'open' ? FT_INK : FT_RULE}`, paddingLeft: 14 }}>
-                             <div style={{ fontFamily: ftMono, fontSize: 9, letterSpacing: '.18em', color: b.status === 'open' ? '#1A7F3C' : FT_MUTE, marginBottom: 4, fontWeight: 600 }}>
-                               {b.status === 'open' ? '● OPEN' : 'SETTLED'}
-                             </div>
-                             <div style={{ fontFamily: ftSerif, fontWeight: 700, fontSize: 13, color: FT_INK, lineHeight: 1.3 }}>{b.title}</div>
-                             {b.deadline_at && b.status === 'open' && (
-                               <div style={{ fontFamily: ftMono, fontSize: 9, color: FT_MUTE, marginTop: 4, letterSpacing: '.06em' }}>
-                                 CLOSES {new Date(b.deadline_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
+                       <div style={{ fontFamily: ftMono, fontSize: 10, letterSpacing: '.22em', color: FT_RED, marginBottom: 16 }}>🎰 BETS DESK</div>
+                       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 24 }}>
+                         {/* Open markets */}
+                         {frontpageBets.open.length > 0 && (
+                           <div>
+                             <div style={{ fontFamily: ftMono, fontSize: 9, letterSpacing: '.18em', color: '#1A7F3C', marginBottom: 10, fontWeight: 700 }}>● OPEN MARKETS</div>
+                             {frontpageBets.open.map((b, i) => (
+                               <div key={b.id} style={{ borderLeft: `3px solid ${FT_INK}`, paddingLeft: 12, marginBottom: i < frontpageBets.open.length - 1 ? 12 : 0 }}>
+                                 <div style={{ fontFamily: ftSerif, fontWeight: 700, fontSize: 13, color: FT_INK, lineHeight: 1.3 }}>{b.title}</div>
+                                 <div style={{ fontFamily: ftMono, fontSize: 9, color: FT_MUTE, marginTop: 4, letterSpacing: '.06em', display: 'flex', gap: 10 }}>
+                                   {b.deadline_at && <span>CLOSES {new Date(b.deadline_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</span>}
+                                   {b.total_submissions > 0 && <span>{b.total_submissions} ENTR{b.total_submissions === 1 ? 'Y' : 'IES'}</span>}
+                                   {b.reward_value > 0 && <span>+{b.reward_value} PTS</span>}
+                                 </div>
                                </div>
-                             )}
+                             ))}
                            </div>
-                         ))}
+                         )}
+                         {/* Settled results */}
+                         {frontpageBets.settled.length > 0 && (
+                           <div>
+                             <div style={{ fontFamily: ftMono, fontSize: 9, letterSpacing: '.18em', color: FT_MUTE, marginBottom: 10, fontWeight: 700 }}>RESULTS · SETTLED</div>
+                             {frontpageBets.settled.map((b, i) => {
+                               const hitRate = b.total_submissions > 0
+                                 ? Math.round((b.winners_count / b.total_submissions) * 100)
+                                 : null;
+                               return (
+                                 <div key={b.id} style={{ borderLeft: `3px solid ${FT_RULE}`, paddingLeft: 12, marginBottom: i < frontpageBets.settled.length - 1 ? 12 : 0 }}>
+                                   <div style={{ fontFamily: ftSerif, fontWeight: 700, fontSize: 13, color: FT_INK, lineHeight: 1.3 }}>{b.title}</div>
+                                   {b.correct_answer && (
+                                     <div style={{ fontFamily: ftMono, fontSize: 9, color: '#1A7F3C', marginTop: 3, letterSpacing: '.06em', fontWeight: 700 }}>
+                                       ✓ {b.correct_answer}
+                                     </div>
+                                   )}
+                                   <div style={{ fontFamily: ftMono, fontSize: 9, color: FT_MUTE, marginTop: 2, letterSpacing: '.06em' }}>
+                                     {b.winners_count ?? 0} winner{b.winners_count !== 1 ? 's' : ''}
+                                     {hitRate != null && ` · ${hitRate}% hit rate`}
+                                     {b.reward_value > 0 && ` · +${b.reward_value} pts each`}
+                                   </div>
+                                 </div>
+                               );
+                             })}
+                           </div>
+                         )}
                        </div>
+                       {/* Editorial commentary */}
+                       {frontpageBets.open.length > 0 && (
+                         <div style={{ marginTop: 14, paddingTop: 12, borderTop: `1px solid ${FT_RULE}` }}>
+                           <p style={{ fontFamily: ftSerif, fontStyle: 'italic', fontSize: 12, color: FT_MUTE, lineHeight: 1.6, margin: 0 }}>
+                             {frontpageBets.open.length === 1
+                               ? `There's one market open for business — place your bet before the deadline or forever hold your peace.`
+                               : `${frontpageBets.open.length} markets are open. Study the form, back your conviction. Points don't lie — managers who play the bets desk consistently gain an edge.`}
+                           </p>
+                         </div>
+                       )}
                      </div>
                    )}
 

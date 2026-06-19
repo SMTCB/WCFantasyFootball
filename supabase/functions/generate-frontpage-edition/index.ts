@@ -246,13 +246,13 @@ function buildPrompt(
 
   const prompt = `Generate a newspaper edition for the fantasy football league "${league.name}" (${sortedMembers.length} managers).
 
-STANDINGS:
+OVERALL STANDINGS (cumulative total points — #1 is the CURRENT LEAGUE LEADER):
 ${standingsLines.join('\n') || 'Season not yet started.'}
 
 LAST 24H TRANSFERS:
 ${transferLines.length ? transferLines.join('\n') : 'No transfers in the last 24 hours.'}
 
-LATEST ROUND SCORES:
+LAST COMPLETED GAMEWEEK (who scored the most points IN THAT SINGLE ROUND — different from the overall leader):
 ${lastScores?.headline ?? 'No completed rounds yet.'}
 
 UPCOMING FIXTURES (next 48h):
@@ -267,12 +267,14 @@ ${newsLines.length ? newsLines.join('\n') : 'None.'}
 ${classifiedLines.length ? 'CLASSIFIEDS:\n' + classifiedLines.join('\n') : ''}
 ${pinnedQuote ? `\nPINNED QUOTE OF THE WEEK: "${pinnedQuote}" — ${pinnedAuthor ?? 'The Commissioner'}` : ''}
 
+IMPORTANT: Base your headline and hot_take on the OVERALL STANDINGS (who leads the league overall), not just the last gameweek winner. The wooden_spoon should name the manager at the BOTTOM of the overall standings table (the last entry in the standings list above).
+
 Respond ONLY with a valid JSON object with exactly these keys:
 {
   "headline": "ALL-CAPS PUNCHY TABLOID HEADLINE, MAX 65 CHARACTERS",
-  "deck": "2-3 sentence article intro. Mention real manager names. Snarky but fair. Max 220 chars.",
-  "hot_take": "One provocative observation about the league. Max 90 chars.",
-  "wooden_spoon": "Gentle roast of the bottom-table manager by name. Max 90 chars.",
+  "deck": "2-3 sentence article intro. Mention the overall leader by name. Snarky but fair. Max 220 chars.",
+  "hot_take": "One provocative observation about the overall standings or form. Max 90 chars.",
+  "wooden_spoon": "Gentle roast of the BOTTOM-TABLE manager (last in standings) by name. Max 90 chars.",
   "transfer_rumour": "Tabloid spin on any transfer from the last 24h. Max 110 chars. Use null if no transfers."
 }`;
 
@@ -373,6 +375,9 @@ Deno.serve(async (req) => {
 
     // ── CRON mode ─────────────────────────────────────────────────────────────
     if (isCronMode) {
+      // Optional: restrict to a single league (for manual admin re-runs via service-role)
+      const cronLeagueId = body.league_id as string | undefined;
+
       // Collect all leagues with >1 member
       const { data: memberRows } = await sb
         .from('league_members')
@@ -384,9 +389,12 @@ Deno.serve(async (req) => {
         if (!leagueMap[row.league_id]) leagueMap[row.league_id] = { info: row.leagues, count: 0 };
         leagueMap[row.league_id].count++;
       }
-      const activeLeagues = Object.values(leagueMap)
+      let activeLeagues = Object.values(leagueMap)
         .filter(l => l.count > 1)
         .map(l => l.info);
+
+      // If a specific league_id was provided, restrict to just that one
+      if (cronLeagueId) activeLeagues = activeLeagues.filter(l => l.id === cronLeagueId);
 
       const results = { processed: 0, skipped: 0, errors: 0 };
 
