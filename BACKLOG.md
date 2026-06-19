@@ -1,6 +1,6 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-06-19 (double-GK auto-sub bug identified — P0 added)  
+**Last Updated**: 2026-06-19 (bench_players scoring pipeline hardening; B-09 bench-in-recap added to P2)  
 **E2E Test Suite**: `platform.spec.js` (36 tests × 2 browsers) passing in CI ✅  
 **Full Playbook Run**: `E2E_TEST_PLAYBOOK.md` v2.0 — all flows confirmed  
 **🟢 LAUNCH READY**: No critical (P0/P1) bugs open. All game mechanics functional. WC kick-off 2026-06-11.  
@@ -293,6 +293,7 @@ Group-stage rounds (r1–r3) now reopen the transfer window 3h after the last ki
 | # | Item | Effort | Notes |
 |---|------|--------|-------|
 | B-07 | **[FEATURE] League archive/active toggle (commissioner-controlled, reversible)** | ~8–10h (2 PRs) | Requested 2026-06-15. Full requirements + decisions below. |
+| B-09 | **[FEATURE] Bench scores in Recap — show bench player points below XI after matchday settles** | ~3–4h | Full implementation analysis below. |
 
 #### B-07 detail — League archive/active toggle
 
@@ -342,6 +343,35 @@ Group-stage rounds (r1–r3) now reopen the transfer window 3h after the last ki
 **Suggested delivery** (2 PRs):
 - PR A: migration 176 + commissioner archive toggle + cron/Edge Function archival gates (backend half).
 - PR B: shared show/hide-archived hook + badge + wiring across all league-list screens, LiveScreen exclusion (frontend half).
+
+---
+
+#### B-09 detail — Bench scores in Recap
+
+**What**: After a matchday fully settles (`roundComplete=true`), managers should be able to see their bench players' point scores below the starting XI in the Recap screen's player breakdown. This surfaces the "what if I'd started X instead of Y" data in a natural place.
+
+**Why it's safe to build now**: the data layer is already complete. `calculate-scores` v28+ stores `bench_players` (array of player IDs) in `points_breakdown` at `roundComplete`. `player_match_stats` already holds per-player stats for all players (XI + bench) of every team active in the round. No new DB columns or Edge Function changes needed.
+
+**Data availability caveat**: `bench_players` is only populated for rounds where v28+ ran at `roundComplete`. Round 1 (429-r1) has no bench data — the round settled before v28 was deployed and cannot be reconstructed (squad.players has since been mutated by transfers). Bench section simply hides for rounds without `bench_players` — clean fallback.
+
+**Implementation** (all in `src/components/league/RecapView.jsx`):
+
+1. **Extend `toggleBreakdown`** (currently line ~459): after fetching `fp.points_breakdown.effective_xi` player stats, also read `fp.points_breakdown.bench_players` (string array of player IDs). Query `player_match_stats` for these IDs across the same `fixtureIds` set — use the same `.in('player_id', benchPids)` filter already used for XI players.
+
+2. **Build bench rows** using the existing `buildRow(pid, {isJoker: false})` function — bench players never have a captain multiplier. Same columns: POS / PLAYER / MIN / PTS.
+
+3. **Render below the XI section** in `PlayerBreakdown` (currently line ~65): add a divider after the last XI row, then a small "BENCH" label (e.g. muted uppercase text, same font as column headers), then the bench player rows in a distinct colour (e.g. `text-[--ink]/50` muted vs XI's full opacity). No separator row needed if the styling is clearly distinct.
+
+4. **CRITICAL — bench pts must NEVER touch the total**: `gwTotal` (fed into `apportionToTotal`) is derived from `fp.total` (the server-calculated value) — do not add bench pts to it. The bench rows are display-only, like the penalty deduction footer row. The `apportionToTotal` call for XI player rows must remain unchanged.
+
+5. **Fallback**: if `fp.points_breakdown?.bench_players` is absent or empty (`[]`), render nothing after the XI. No error state needed.
+
+**Files to edit**:
+- `src/components/league/RecapView.jsx` — `PlayerBreakdown` component + `toggleBreakdown` async function. No other file changes required.
+
+**Effort estimate**: 3–4h. No DB migration, no Edge Function deploy, no new hooks. Pure frontend — extend existing RecapView logic with a second data fetch + render section.
+
+**IMPORTANT — do not break existing XI scoring**: the XI scoring logic (effective_xi, captain mult, auto-subs, bet/trade footer rows) is working correctly and must not be touched. Bench is strictly additive to the display, rendered after all existing XI rows and footer rows.
 
 ---
 
