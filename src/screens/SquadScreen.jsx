@@ -611,7 +611,7 @@ export default function SquadScreen() {
     // live or finished — if it's still scheduled (or the round hasn't started
     // yet), the displayed points come from the previous matchday fallback and
     // set_lineup will return deduction=0 from the server anyway.
-    const fixtureStarted = ['live', 'finished'].includes(pitchPlayer.fixtureInfo?.status);
+    const fixtureStarted = ['live', 'finished'].includes(pitchPlayer.fixtureInfo?.state);
     const deductionPts = pitchPlayer.rawPoints ?? pitchPlayer.points;
     if (deductionPts > 0 && fixtureStarted) {
       setConfirm({
