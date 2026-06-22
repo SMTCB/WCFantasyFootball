@@ -24,7 +24,7 @@
 **Current active branch:** `v2` (all redesign + new feature work)
 **v2 branch:** active — created off main, merged main regularly to pick up pilot bug fixes
 
-**Next action:** begin **Phase 1A Sprint P2P-0** (product decisions: coin pack SKUs, rake rate, spend cap) and **Phase 1B Sprint F1-0** (apply migrations 190–191: paddocks + F1 tables) — both unblocked. Also: **Phase 1D-B** (schema reproducibility baseline). See [F1_MODULE_IMPLEMENTATION_PLAN.md](../product/F1_MODULE_IMPLEMENTATION_PLAN.md) for Phase 1B full task lists.
+**Next action:** begin **Phase 1A Sprint P2P-0** (product decisions: coin pack SKUs, rake rate, spend cap) and **Phase 1B Sprint F1-0** (apply migrations 190–191: paddocks + F1 tables) — both unblocked. Also: **Phase 1D-B** (schema reproducibility baseline) and **Phase 2** tennis module (game dynamics spec ✅ done, ready for Sprint T-0). See [F1_MODULE_IMPLEMENTATION_PLAN.md](../product/F1_MODULE_IMPLEMENTATION_PLAN.md) and [TENNIS_MODULE_IMPLEMENTATION_PLAN.md](../product/TENNIS_MODULE_IMPLEMENTATION_PLAN.md) for full task lists.
 
 ---
 
@@ -401,36 +401,43 @@ The implementation roadmap linked above is comprehensive and self-contained. The
 
 **Status: ⬜ Not started**
 
-**Goal:** a bracket-pick tennis module using manual result entry (Phase 1 of the tennis strategy — TheSportsDB integration is Phase 2, post-sale). Commissioners enter match results; managers pick who advances each round of a Grand Slam.
+**Goal:** a season-long roster prediction game built around the full ATP calendar (14 events: 4 Grand Slams + 9 Masters 1000s + ATP Finals). Players join **The Player's Box** and compete across the season with a low-friction one-login-per-tournament model, Ace Cards, and a QF Captain mechanic.
 
-**Read first:**
-- [MULTI_SPORT_PLATFORM_ARCHITECTURE.md §5](MULTI_SPORT_PLATFORM_ARCHITECTURE.md) — manual result entry pattern (`manual_results` table, `manual` adapter)
-- [MULTI_SPORT_IMPLEMENTATION_PLAN.md](../product/MULTI_SPORT_IMPLEMENTATION_PLAN.md) — Sprint 6 and Sprint 7 (Tennis module detail)
-- [MULTI_SPORT_EXPANSION.md](../product/MULTI_SPORT_EXPANSION.md) — tennis vision and open product questions
+**Authoritative plan:** 📋 [TENNIS_MODULE_IMPLEMENTATION_PLAN.md](../product/TENNIS_MODULE_IMPLEMENTATION_PLAN.md)
+— read this before touching any tennis code. Contains the full game dynamics spec, all architecture decisions, complete schema SQL, RPC contracts, scoring engine pseudocode, and sprint-by-sprint task lists.
 
-**Why manual entry first:** the data coverage is the bottleneck, not the game mechanic. Manual entry ships something playable for the 2027 Australian Open. TheSportsDB integration is an enhancement that can be added later without changing any game tables.
+**Key architecture decisions (do not re-debate without reading the plan):**
+- **Game model:** roster ownership (pick 7 players across 4 seed tiers), earn points based on how far your players advance. NOT a bracket prediction model.
+- **Group concept:** **The Player's Box** (`player_boxes` + `player_box_members` tables, invite code join)
+- **Picks:** global per user — one roster per tournament regardless of how many Player's Boxes the user belongs to. Leaderboard filters by box membership.
+- **Ace Cards:** 4 per user per season (one of each type), server-side state in `tennis_ace_cards`. Not playable at ATP Finals. Forfeited if unused by season end.
+- **QF Captain:** mid-tournament window (48h) opens when 8 players remain. Captain earns 2× points if they reached QF or beyond.
+- **ATP Finals:** separate prediction slate mechanic (15 match winners across 2 login windows). No roster, no Ace Cards.
+- **Season:** Australian Open to ATP Finals (Jan–Nov). Best 4 of 9 Masters scores count (Masters Drop Rule). All 4 Slams mandatory.
+- **Data entry:** admin enters player seed list before tournament and eliminated players after each round. Auto-API is a post-sale enhancement.
+- **Framework:** Vite/React in this monorepo (same as F1)
+- **Chat & Gazette:** Circle-level only — no per-Player's-Box chat. `gazette_entry_type = 'tennis_result'` added.
+- **Trophy ledger:** holistic across all sports via `trophy_ledger` (migration 189). Season winner per Player's Box.
 
-### Sprint T-1 — Manual result entry + tennis tables
-**Status: ⬜ Not started**
-- [ ] `manual_results` table: `id`, `tournament_id`, `event_key` (e.g. 'ao-2027-r2'), `entered_by uuid references users`, `payload jsonb` (`{player_id, round_reached, eliminated_by}`)
-- [ ] `tennis_tournaments` table: `id`, `provider_key`, `name`, `surface`, `grand_slam boolean`, `draw_size`, `start_date`, `end_date`, `status`
-- [ ] `tennis_bracket_picks`: `id`, `user_id`, `league_id`, `tournament_id`, `picks jsonb` (`{round: player_id_picked_to_advance}`), `locked_at`
-- [ ] `tennis_fantasy_points`: `id`, `user_id`, `league_id`, `tournament_id`, `points numeric`, `breakdown jsonb`
-- [ ] `enter_tennis_result(p_tournament_id, p_event_key, p_payload)` RPC: commissioner-only, upserts `manual_results`
-- [ ] Gazette moment on result entry: "Commissioner: [Player] eliminated in Round 2 — [Player] advances"
-- [ ] Seed: 2027 Australian Open bracket (128-draw singles) as a `tennis_tournaments` row + initial empty `manual_results`
+### Sprint summary (see plan for full task lists)
 
-### Sprint T-2 — Pick submission + scoring
-**Status: ⬜ Not started**
-- [ ] `submit_tennis_picks(p_league_id, p_tournament_id, picks jsonb)` RPC: validates picks before tournament start; picks locked once the first match result is entered
-- [ ] `score-tennis-round` Edge Function: after each `manual_results` insert, scores `tennis_bracket_picks` against it; writes `tennis_fantasy_points`; scoring formula in `league_config` (`tennis.pts_correct_round_pick`, `tennis.pts_champion_pick`, etc.)
-- [ ] `get_module_standings()` for tennis: sums `tennis_fantasy_points.points` per user
-- [ ] `trophy_ledger` row emitted for tournament winner (C3 contract)
-- [ ] Tennis pick screen (`TennisPicksScreen.jsx`, thin): bracket display, pick form, result feed
+| Sprint | Goal | Effort | Migrations |
+|---|---|---|---|
+| **T-0** | Schema foundations + Player's Box RPCs | ~5h | 194, 195 |
+| **T-1** | Roster, Ace Card, QF Captain, ATP Finals submission RPCs | ~5h | — |
+| **T-2** | Admin tooling (player seeding + round result entry) | ~4h | — |
+| **T-3** | Scoring Edge Functions + season leaderboard RPC | ~6h | — |
+| **T-4** | UI screens (7 screens, thin) | ~8h | — |
 
-**Exit check:** picks submitted; commissioner enters a round result; scoring runs; standings update; trophy ledger row written; gazette entry appears in circle feed.
+**MVP complete after T-3. Full exit criteria checklist in the plan.**
 
-**Session notes for Phase 2:** *(update per session)*
+**Session notes for Phase 2:**
+
+**2026-06-22 — Game dynamics spec and implementation plan written:**
+- Game model confirmed: 7-player tiered roster (Seeds 1–4 / 5–16 / 17–32 / Unseeded), points for round reached, QF Captain 2×, 4 Ace Cards per season. ATP Finals is a separate 15-match prediction slate with tier-based scoring (250–7,500 pts).
+- Architecture decisions confirmed: The Player's Box naming; global picks (one roster per tournament per user); manual admin entry; Ace Cards server-side tracked; Masters Drop Rule (best 4 of 9); season Jan–Nov.
+- Full implementation plan written: [TENNIS_MODULE_IMPLEMENTATION_PLAN.md](../product/TENNIS_MODULE_IMPLEMENTATION_PLAN.md) — 5 sprints (~28h), complete schema SQL, RPC contracts, scoring pseudocode, 7 UI screens, exit criteria checklist.
+- Supersedes the placeholder Sprint T-1/T-2 plan that was in this document (wrong game model — bracket picks vs roster ownership).
 
 ---
 

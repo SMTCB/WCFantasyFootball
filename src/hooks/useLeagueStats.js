@@ -116,6 +116,24 @@ export function useLeagueStats(leagueId) {
           .filter(fp => fp.user_id)
       );
 
+      // Total fantasy_points across ALL rounds (including pre-v28 rounds without effective_xi).
+      // Used to correctly compute bet/trade bonus pts: total_points - allRoundsFpTotal.
+      // Without this, rounds missing effective_xi are excluded from posBarPts but included
+      // in total_points, causing the BET segment to absorb phantom fantasy pts.
+      const allRoundsFpTotal = {};
+      {
+        const _seenFp = new Set();
+        for (const fp of (gwPts || [])) {
+          const meta = allSquadIdToMeta[fp.squad_id];
+          if (!meta) continue;
+          const key = `${meta.user_id}|${fp.matchday_id}`;
+          if (_seenFp.has(key)) continue;
+          _seenFp.add(key);
+          allRoundsFpTotal[meta.user_id] = (allRoundsFpTotal[meta.user_id] || 0)
+            + Math.max(0, Math.round(Number(fp.total) || 0));
+        }
+      }
+
       // ── 5. Position breakdown + Bench pts + ROI + Captain hit rate ────────
       //    Position breakdown: effective_xi per completed matchday, proportional
       //    distribution of fantasy_points.total across GK/DEF/MID/FWD.
@@ -306,7 +324,10 @@ export function useLeagueStats(leagueId) {
           setPositionPoints(
             Object.values(posAccum).map(entry => ({
               ...entry,
-              bet_pts: Math.max(0, (ptsMap[entry.user_id] || 0) - entry.sum_fp_total),
+              // total_fp: all fantasy_points.total across all rounds (pre- and post-v28).
+              // StatsView uses this to cap betPts so pre-v28 rounds don't inflate the BET segment.
+              total_fp: allRoundsFpTotal[entry.user_id] || 0,
+              bet_pts: Math.max(0, (ptsMap[entry.user_id] || 0) - (allRoundsFpTotal[entry.user_id] || 0)),
             }))
           );
           setBenchData(
@@ -331,7 +352,9 @@ export function useLeagueStats(leagueId) {
             (scorers ?? []).map(s => ({
               user_id: s.user_id, username: s.users?.username || 'Unknown',
               GK: 0, DEF: 0, MID: 0, FWD: 0, sum_fp_total: 0,
-              penalty_pts: fallbackPenalty[s.user_id] || 0, bet_pts: 0,
+              total_fp: allRoundsFpTotal[s.user_id] || 0,
+              penalty_pts: fallbackPenalty[s.user_id] || 0,
+              bet_pts: Math.max(0, (ptsMap[s.user_id] || 0) - (allRoundsFpTotal[s.user_id] || 0)),
             }))
           );
           setBenchData([]);
