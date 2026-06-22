@@ -362,7 +362,7 @@ The implementation roadmap linked above is comprehensive and self-contained. The
 
 ## Phase 1D — Buyout Hygiene, Batch 1 (W1–W2)
 
-**Status: ⬜ Not started**
+**Status: 🔄 In progress — 1D-A done, 1D-B pending**
 
 **Goal:** close the two P0 diligence blockers from the buyout assessment. Small, independent, zero user impact. Can run simultaneously with Phase 0 foundation seams.
 
