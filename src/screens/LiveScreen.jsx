@@ -118,10 +118,10 @@ function MiniTok({ p, activeLeague }) {
       <div style={{
         position: 'relative',
         padding: '4px 6px',
-        background: 'rgba(15,18,24,.94)',
-        border: `1px solid ${isCaptain ? 'rgba(255,196,0,.5)' : 'var(--rule)'}`,
+        background: 'var(--card)',
+        border: `1px solid ${isCaptain ? 'rgba(184,114,14,.5)' : 'var(--rule)'}`,
         borderLeft: `2px solid ${isCaptain ? 'var(--gold)' : tone}`,
-        borderRadius: 2,
+        borderRadius: 4,
         minWidth: cardMinW, maxWidth: cardMinW + 10, textAlign: 'center',
         boxShadow: isCaptain ? '0 0 0 1px rgba(255,196,0,.15)' : 'none',
         overflow: 'hidden',

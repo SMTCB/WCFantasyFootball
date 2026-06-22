@@ -337,14 +337,14 @@ export default function AuthScreen() {
 // ── Sub-components ────────────────────────────────────────────────────────────
 function AuthShell({ children }) {
   return (
-    <div style={{ minHeight: '100svh', background: '#080A0E', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '24px' }}>
+    <div style={{ minHeight: '100svh', background: 'var(--shell)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '24px' }}>
       {/* Brandmark */}
       <div style={{ marginBottom: '40px', textAlign: 'center', display: 'flex', justifyContent: 'center' }}>
         <BrandMark theme="dark" scale={0.9} compact={false} />
       </div>
 
       {/* Card */}
-      <div style={{ width: '100%', maxWidth: '400px', background: 'var(--ink-2)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '8px', padding: '32px' }}>
+      <div style={{ width: '100%', maxWidth: '400px', background: 'var(--card)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '6px', padding: '32px' }}>
         {children}
       </div>
     </div>

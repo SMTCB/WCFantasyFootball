@@ -212,10 +212,10 @@ export default function AppLayout({ children }) {
         data-testid="mobile-nav"
         className="lg:hidden fixed bottom-0 left-0 right-0 z-50"
         style={{
-          background: 'rgba(15,18,24,0.97)',
+          background: 'var(--shell)',
           backdropFilter: 'blur(24px)',
           WebkitBackdropFilter: 'blur(24px)',
-          borderTop: '1px solid var(--rule)',
+          borderTop: '1px solid rgba(255,255,255,0.07)',
           paddingBottom: 'env(safe-area-inset-bottom)',
         }}
       >
