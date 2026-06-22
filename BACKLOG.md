@@ -1,12 +1,43 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-06-19 (squad_events audit + bench efficiency selector — PRs #594–#595, migrations 185; session 4)  
-**E2E Test Suite**: `platform.spec.js` (36 tests × 2 browsers) passing in CI ✅  
+**Last Updated**: 2026-06-22 (v2 Sprint UX-0 closed — all football screens Kit Light token pass complete, 84/84 tests green)  
+**E2E Test Suite**: `platform.spec.js` (84 tests × 1 browser config) passing ✅ — 84/84 on v2 branch 2026-06-22  
 **Full Playbook Run**: `E2E_TEST_PLAYBOOK.md` v2.0 — all flows confirmed  
 **🟢 LAUNCH READY**: No critical (P0/P1) bugs open. All game mechanics functional. WC kick-off 2026-06-11.  
 **Live App**: https://wc-fantasy-football.vercel.app  
 **WC Kick-off**: 2026-06-11 19:00 UTC (Mexico vs South Africa)  
 **Supabase PostgREST max_rows**: 10,000 (raised from default 1,000 — 2026-06-08)
+
+---
+
+## ✅ v2 Sprint UX-0 — Kit Light token pass complete (2026-06-21/22)
+
+**Branch**: `v2` — zero pilot impact. All changes are on v2 only; nothing merged to main.
+
+**What is Sprint UX-0**: The Kit Light visual identity (cream background, dark navy text, gold accents) is applied to all existing football screens via the CSS token system in `src/index.css`. No layout changes, no new features — purely a visual layer swap.
+
+**Key design decisions made:**
+- `var(--shell)` = `#18202E` (dark navy) is the **one dark element** in Kit Light. Mobile bottom nav, desktop sidebar, OnboardingWizard card, and swap mode banner all use it with `rgba(255,255,255,...)` text.
+- Desktop sidebar moved from `var(--ink-2)` (white) to `var(--shell)` — aligns with mobile bottom nav, makes `BrandMark theme="dark"` work correctly.
+- `LeagueInviteCard` is intentionally dark-branded (hardcoded `#070A0F` background) — not using CSS tokens, no changes needed or made.
+- `SquadScreen` MiniPitch/MiniTok green field (`#2D5A27`) deferred to Phase 2 — blocked on design spec for the pitch surface in a light context.
+
+**Files modified on v2 (4 commits: 75d1246, 1b4b24e, dfe8b2b, 3afb805):**
+- `src/index.css` — full `@theme` + `:root` Kit Light token rewrite (done pre-session)
+- `src/components/AppLayout.jsx` — desktop sidebar to `var(--shell)`, all nav text to `rgba(255,255,255,...)`
+- `src/components/BrandMark.jsx` — dark-theme `secondaryColor` fix (`var(--paper)` → `rgba(255,255,255,0.55)`)
+- `src/components/OnboardingWizard.jsx` — card background to `var(--shell)`
+- `src/screens/HomeScreen.jsx`, `LeagueScreen.jsx`, `RecapScreen.jsx`, `SettingsScreen.jsx`, `NotFoundScreen.jsx` — full token pass
+- `src/screens/MarketScreen.jsx` — audit pass: auto-fill button state, player row borders
+- `src/screens/LiveScreen.jsx` — audit pass: LEAGUE_TONES, event tags, transfer window badge, bench divider, inactive dot
+- `src/screens/SquadScreen.jsx` — audit pass (10 fixes): player names on light bg, SQUAD/BENCH badge, cancel-confirm states, swap borders, Joker muted text, VIEW STATS button, swap banner overlay text
+- `supabase/functions/_shared/auth.ts` — Phase 1D-A: `requireServiceRole()` now verifies HMAC-SHA256 signature before trusting JWT claims (was decoding without verification)
+- `supabase/functions/discover-tournament/index.js`, `sync-fixtures/index.js`, `sync-player-status/index.js`, `sync-players/index.js` — `await requireServiceRole(req)` (callers updated for async)
+- `docs/architecture/SALE_READY_PROJECT_PLAN.md` — Sprint UX-0 marked ✅ done, Phase 1D-A marked done, session notes added, next action updated
+
+**Test result**: 84/84 `platform.spec.js` passed on v2 branch (2026-06-22).
+
+**Next v2 session**: Phase 0 — Foundation Seams (migrations 186–188: sport abstraction, circle layer, coin wallet stub). Also Phase 1D-B (schema reproducibility baseline). See `SALE_READY_PROJECT_PLAN.md` for full specs.
 
 ---
 
@@ -461,6 +492,84 @@ Group-stage rounds (r1–r3) now reopen the transfer window 3h after the last ki
 | B-06 | ~~**[TECH DEBT] Persist per-player `points_breakdown` server-side for exact chip/auto-sub/captain-reassignment attribution**~~ | — | ✅ **Resolved 2026-06-15, PR #545** — `calculate-scores` v27 persists `effective_xi`/`effective_captain_id`/`auto_subs`/`captain_reassigned`/`is_triple_captain`/`joker_player_id` into `points_breakdown` on `roundComplete`; RecapView reads this snapshot directly, replacing the "Other adjustments" catch-all row from PR #543. |
 | B-07 | ~~**[TECH DEBT] `set_lineup` mid-round deduction doesn't account for captain multiplier when benching the current captain**~~ | — | ✅ **Resolved 2026-06-15, PR #547, migration 177** — `set_lineup` rewritten to use the same full v27 recompute as `set_captain` (migration 176): `total = SUM over the NEW starting XI of ROUND(player's round points) * (captain/triple mult or 1)`. See top-of-file entry for details. |
 | B-08 | **[FEATURE] Multi-competition leagues (e.g. EPL + La Liga + Calcio in one league)** | 3–4 weeks (mini-squads-per-tournament) to 6–9 weeks (unified squad/pool) | Requested 2026-06-15 — assessment only, no design doc yet. **Core blocker**: `matchday_id = '{tournament_id}-r{N}'` is the backbone of squads, scoring, transfer windows, lineup locks, club caps, draft pools, and recap GW labels (~500 refs across migrations). Competitions run on different calendars (EPL GW34 ≠ La Liga J34 ≠ Serie A G34) — there is no shared "round" concept today; a multi-competition league needs a new synthetic-Gameweek abstraction with a per-tournament round-mapping table. **Required pieces**: (1) `league_tournaments` junction table replacing the single `leagues.tournament_id` FK + rewritten `create_league`; (2) synthetic GW model + round mapping; (3) player pool/draft/market union across tournaments with harmonized pricing (EPL prices vs smaller-league prices are set independently per migration 94); (4) club caps resolved per-player's own tournament; (5) calculate-scores routes each player to their tournament's `scoring_rules` (engine already exists, migration 80/175 — moderate lift) and matches fixtures by tournament; (6) per-player transfer/lineup lock windows instead of one league-wide window; (7) Live Centre/Recap aggregate fixtures across tournaments per GW; (8) cron jobs fan out per tournament referenced by any active league. **Compatibility rules requested**: (a) block mixing top-tier with minor leagues (e.g. EPL + Azerbaijan Premier League) — needs new `tournaments.competition_tier` classification, OR (recommended for pilot scale) a manually curated `competition_bundles` allowlist table with pre-built GW mappings — far less engineering; (b) block mixing league + cup formats — needs new `tournaments.competition_format` enum (`league`/`cup`/`hybrid`); cup tournaments have special-cased machinery (knockout keeps, cup_active_clubs, stage→round mapping) that doesn't generalize, recommend hard-blocking cup formats from multi-competition leagues entirely; (c) validate overlapping `starts_at`/`ends_at` and similar round cadence at league-creation time. **Open product decision** (determines which estimate applies): one unified 15-player squad drawn from a combined cross-competition pool, vs. 3 separate per-tournament mini-squads summing into one league total (cheaper — per-tournament squad/scoring logic mostly already works). **Recommendation**: treat as its own design doc (same pattern as `H2H_COMPETITION_DESIGN.md`) before starting — resolve the squad-composition decision first. |
+
+---
+
+## 🪙 P2P COIN BETTING — Full Design Package (2026-06-20)
+
+**Status**: Design complete. No code shipped yet. Three documents are ready to hand off when development starts.
+
+**What it is**: a coin-based, manager-vs-manager betting system. Managers buy non-withdrawable virtual coins with real money, then stake coins on in-game propositions ("my GW total beats yours", "my striker outscores your striker", "I call this match result"). The system auto-resolves from data already in the database. Revenue = coin pack sales; rake on bets is a coin sink that drives repurchase, not a cash commission.
+
+**Why non-withdrawable virtual coins**: real-money P2P bets + commission = gambling-operator regulatory classification. Non-withdrawable coins = virtual goods software sale. This is the critical legal invariant — **no RPC, edge function, admin tool, or future feature may ever convert a coin balance back into money or a money-equivalent payout.**
+
+**Documents** (all committed to repo):
+
+| Document | Path | Covers |
+|---|---|---|
+| Technical Assessment | `docs/architecture/P2P_BETTING_TECHNICAL_ASSESSMENT.md` | What already exists; reuse map; risk register R1–R10 |
+| System Design | `docs/architecture/P2P_BETTING_SYSTEM_DESIGN.md` | Data model, RPC contracts, Stripe integration, security model, open decisions DECISION-1–6 |
+| Implementation Roadmap | `docs/product/P2P_BETTING_IMPLEMENTATION_ROADMAP.md` | 7-sprint delivery plan with testing strategy per sprint |
+
+---
+
+### Sprint overview
+
+| Sprint | Goal | Critical path |
+|---|---|---|
+| 0 | Decisions + Stripe spike | Resolve DECISION-1–6; Stripe test account + webhook round-trip |
+| 1 | Coin ledger foundation | `coin_wallets`, `coin_transactions`, `_apply_coin_delta` (FOR UPDATE lock), RLS, reconciliation invariant |
+| 2 | Coin purchase (Stripe) | `coin_packs`, `coin_purchases` (UNIQUE stripe_session_id), `create-coin-checkout` + `stripe-coin-webhook` edge functions |
+| 3 | P2P challenge core | `p2p_challenges`, create/accept/decline/cancel RPCs with escrow, expiry cron |
+| **4** | **Auto-resolution engine** | **MVP COMPLETE** — `resolve-p2p-challenges` cron, 3 proposition evaluators, rake burn, gazette entries, roundComplete gate |
+| 5 | Coin sinks + economy | `league_coin_pools` entry fees, wallet/transaction history screen, winnings leaderboard |
+| 6 | Hardening + white-label | Config-driven rake/packs/currency, responsible-play guards, reconciliation cron, buyer runbook |
+
+**Estimated timeline**: Sprint 0–4 = 6–8 weeks to a sellable demo. Sprint 0–6 = 9–13 weeks to buyer-handoff ready.
+
+---
+
+### Key technical decisions to resolve in Sprint 0 (DECISION-1 through DECISION-6)
+
+Before writing a single line of code, the following must be decided and written down (see the System Design doc for full context):
+
+- **DECISION-1**: Rake percentage (e.g. 10%) — fixed or configurable per-league at launch?
+- **DECISION-2**: Coin pack price points (e.g. 100 coins = £1.99, 500 = £7.99). These become Stripe product/price IDs.
+- **DECISION-3**: Starting/free coin grant for new managers (acquisition vs. economy integrity tradeoff).
+- **DECISION-4**: Challenge expiry window — how long an unaccepted challenge stays open before it auto-expires and refunds.
+- **DECISION-5**: Whether `league_coin_pools` (entry-fee prize pools) is MVP or Sprint 5 only.
+- **DECISION-6**: Minimum and maximum stake bounds (prevents zero-coin challenges and runaway bets).
+
+---
+
+### Architecture summary
+
+The system is built from two patterns already proven in production:
+
+- **`trade_proposals` lifecycle** → P2P challenge lifecycle (~75% reuse). The create/accept/decline/cancel/expire state machine is the same shape.
+- **Auction `place_bid` escrow** → coin escrow (~70% reuse). FOR UPDATE row locks, deterministic lock ordering to prevent deadlocks, balance-before-escrow check.
+- **`squad_events` ledger pattern** → append-only `coin_transactions` ledger (~90% reuse).
+- **`resolve-bets` cron** → `resolve-p2p-challenges` cron (~60% reuse). Same decoupled-from-scoring-pipeline, idempotent, roundComplete-gated pattern.
+
+Three MVP proposition types:
+- `gw_total` — compares each manager's `fantasy_points.total` for the challenge matchday
+- `player_vs_player` — sums named player's `player_match_stats.fantasy_points` across the round's fixtures
+- `match_result_pick` — reads `fixtures` home/away scores for the picked fixture
+
+---
+
+### Cross-cutting constraints (apply to every sprint)
+
+All CLAUDE.md conventions apply plus these specific to this feature:
+
+- **Coins are `bigint`** — integer-only, never fractional. Rake computed as integer division with remainder burned.
+- **Value moves ONLY through SECURITY DEFINER RPCs** — direct client writes to any coin column blocked by RLS + guard trigger.
+- **`FOR UPDATE` + deterministic lock ordering** — wallets locked in user_id order on every two-wallet operation (same rule as `accept_trade_proposal` migration 154).
+- **`stripe_session_id UNIQUE`** on `coin_purchases` — the idempotency key preventing Stripe double-credit (R2).
+- **Stripe secrets** in Supabase Edge Function secrets only (`STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`) — never `VITE_`-prefixed, never in git.
+- **Feature flag** — all UI gated on `league_coin_pools.p2p_betting_enabled` league config (default `false`). Real pilot leagues see zero change until explicitly enabled.
+- **Non-withdrawable invariant** — tested explicitly in Sprint 6 legal re-read. No code path may convert coins to money or money-equivalent.
+- **Next migration**: `186_` (coin_wallets + coin_transactions + _apply_coin_delta is Sprint 1's migration).
 
 ---
 
