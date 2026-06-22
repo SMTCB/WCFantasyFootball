@@ -4,6 +4,30 @@
 
 ---
 
+## 🚨 TWO-BRANCH FREEZE — READ BEFORE EVERY SESSION
+
+**This repo runs two branches simultaneously. Read this before touching git.**
+
+| Branch | Purpose | Deploy to Vercel? | Merge to main? |
+|--------|---------|-------------------|----------------|
+| `main` | Live football pilot (~50 users) | ✅ Auto on merge | N/A |
+| `v2` | Platform redesign + new features (P2P, multi-sport, Kit Light UI) | ❌ Never | ❌ NOT until pilot ends (~July 2026) and all Phase 3B pre-merge checks pass |
+
+**Rules Claude MUST follow — no exceptions:**
+
+1. **Pilot bug fixes go on `main` only.** Branch from `main` → fix → PR → merge → done.
+2. **v2 feature work goes on `v2` only.** Branch from `v2` (not main) → feature → PR into `v2` → merge.
+3. **NEVER merge `v2` into `main` directly.** The v2 branch contains an incomplete redesign, new DB migrations not yet applied to production, and feature flags for unreleased products. Merging it now would break the live app for real users. This merge only happens at Week 12 per [SALE_READY_PROJECT_PLAN.md](docs/architecture/SALE_READY_PROJECT_PLAN.md).
+4. **GitHub branch protection on `main` is enabled.** Direct `git push origin main` is blocked. All changes require a PR — this is the hardware backup in case the above rules are forgotten.
+5. **When in doubt about which branch:** check `git branch` and this table. If the task is a pilot bug fix → `main`. If it's part of the redesign or v2 features → `v2`. If unclear, ask before branching.
+
+**What `v2` contains today (June 2026):**
+- Kit Light CSS token system (`src/index.css` — full @theme + :root rewrite)
+- Partial Kit Light token pass on 7 screens (Market, Squad, Live, Auth, AppLayout, NotificationPanel, LeagueInviteCard)
+- This is Sprint UX-0 of the redesign plan — approximately 30% complete
+
+---
+
 ## 🚀 Quick Navigation — Start Here
 
 **First time in this project?** Use these guides in order:
