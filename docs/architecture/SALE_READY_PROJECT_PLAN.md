@@ -585,5 +585,5 @@ All documents this plan is built on — read these for design detail before star
 
 ---
 
-Last Updated: **2026-06-21**
+Last Updated: **2026-06-22**
 Author: session planning (Claude + user)

@@ -1,12 +1,26 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-06-22 (v2: Phase 0 Foundation Seams done; Phase 1B F1 module plan written — Sprint F1-0 ready to apply | main: BI-02 automated round backups + B-03 drop knockout draft UI — PR #604, migration 190)  
+**Last Updated**: 2026-06-22 (v2: Phase 2 Tennis module game dynamics spec + implementation plan written — PR #605 merged to v2)  
 **E2E Test Suite**: `platform.spec.js` (84 tests × 1 browser config) passing ✅ — 84/84 on v2 branch 2026-06-22  
 **Full Playbook Run**: `E2E_TEST_PLAYBOOK.md` v2.0 — all flows confirmed  
 **🟢 LAUNCH READY**: No critical (P0/P1) bugs open. All game mechanics functional. WC kick-off 2026-06-11.  
 **Live App**: https://wc-fantasy-football.vercel.app  
 **WC Kick-off**: 2026-06-11 19:00 UTC (Mexico vs South Africa)  
 **Supabase PostgREST max_rows**: 10,000 (raised from default 1,000 — 2026-06-08)
+
+---
+
+## ✅ v2 Phase 2 — Tennis module game dynamics spec + implementation plan written (2026-06-22)
+
+**Branch**: `v2` — PR #605. No DB changes this session (docs only).
+
+**What was done:**
+- Reviewed tennis game dynamics proposal; flagged and resolved all inconsistencies: QF captain data flow (admin enters round-by-round results, QF window opens when 8 players remain), Ace Cards excluded from ATP Finals (forfeited if unused), Masters Drop Rule naming, Dark Horse Insurance naming
+- Confirmed all open questions: The Player's Box naming; ATP only (no WTA); season Jan (Australian Open) → Nov (ATP Finals); rolling sum leaderboard with best-4-of-9 Masters; tier structure (Seeds 1–4 / 5–16 / 17–32 / Unseeded) consistent across all draw sizes
+- Wrote full game dynamics spec and implementation plan: **[TENNIS_MODULE_IMPLEMENTATION_PLAN.md](docs/product/TENNIS_MODULE_IMPLEMENTATION_PLAN.md)** — 12-table schema with SQL, complete RPC contracts, scoring engine pseudocode for all 4 Ace Cards + QF Captain + ATP Finals tier mapping, season leaderboard SQL, 5 sprints (~28h), 7 UI screens, exit criteria
+- Updated `SALE_READY_PROJECT_PLAN.md` Phase 2 to replace outdated bracket-pick placeholder with new plan reference and session notes
+
+**Next v2 session (Phase 2 Sprint T-0):** apply migrations 194–195 (Player's Box tables + tennis season/tournament/player/roster/ace-card/captain/score/ATP Finals tables). SQL is fully written in the plan. Confirm exact migration numbers after F1 Sprint F1-0 consumes 190–191.
 
 ---
 
