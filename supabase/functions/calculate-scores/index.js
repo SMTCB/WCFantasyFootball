@@ -510,7 +510,7 @@ async function rollupSquads(fixture_id, pointsLookup, tournament_id) {
 
   const { data: allSquadRows } = await supabase
     .from('squads')
-    .select('id, user_id, league_id, matchday_id, players, starting_xi, captain_id, created_at, penalty_transfers, leagues!inner(tournament_id)')
+    .select('id, user_id, league_id, matchday_id, players, starting_xi, captain_id, created_at, penalty_transfers, budget_remaining, round_transfers, initial_build_complete, leagues!inner(tournament_id)')
     .eq('leagues.tournament_id', tournament_id)
     .order('created_at', { ascending: false });
 
@@ -904,6 +904,14 @@ async function rollupSquads(fixture_id, pointsLookup, tournament_id) {
     );
   }
 
+  // Disaster-recovery backup: snapshot squad state, points, and leaderboard at
+  // roundComplete so we can restore XI/bench/totals without manual DB queries.
+  if (roundComplete) {
+    writeRoundBackup(roundMatchdayId, squads, fantasyPointsUpserts).catch(e =>
+      console.warn('[calculate-scores] round backup failed (non-critical):', e.message)
+    );
+  }
+
   // H2H resolution — only runs when every fixture in the round is finished
   if (roundComplete) {
     resolveH2HMatchday(roundMatchdayId, squads, fantasyPointsUpserts).catch(e =>
@@ -912,6 +920,67 @@ async function rollupSquads(fixture_id, pointsLookup, tournament_id) {
   }
 
   return squads.length;
+}
+
+// ── Round backup ──────────────────────────────────────────────────────────────
+// Writes a single row to round_backups the first time roundComplete fires for a
+// given matchday. Contains everything needed to restore XI, bench, points, and
+// leaderboard for all managers across all leagues in case of a scoring disaster.
+// Non-fatal — a failure here must never block the scoring pipeline.
+async function writeRoundBackup(roundMatchdayId, squads, fantasyPointsUpserts) {
+  // Idempotent: skip if a backup already exists for this round
+  const { data: existing } = await supabase
+    .from('round_backups')
+    .select('id')
+    .eq('matchday_id', roundMatchdayId)
+    .maybeSingle();
+  if (existing?.id) return;
+
+  // Fetch usernames so the backup is human-readable without extra joins
+  const userIds = [...new Set(squads.map(s => s.user_id))];
+  const { data: users } = await supabase
+    .from('users').select('id, username').in('id', userIds);
+  const usernameMap = Object.fromEntries((users ?? []).map(u => [u.id, u.username ?? 'unknown']));
+
+  // Squad snapshot: XI, bench (players − starting_xi), budget, transfer counters
+  const squadsSnapshot = squads.map(s => ({
+    squad_id:              s.id,
+    user_id:               s.user_id,
+    username:              usernameMap[s.user_id] ?? 'unknown',
+    league_id:             s.league_id,
+    matchday_id:           s.matchday_id,
+    players:               s.players              ?? [],
+    starting_xi:           s.starting_xi          ?? [],
+    captain_id:            s.captain_id           ?? null,
+    budget_remaining:      s.budget_remaining      ?? null,
+    round_transfers:       s.round_transfers       ?? {},
+    penalty_transfers:     s.penalty_transfers     ?? {},
+    initial_build_complete: s.initial_build_complete ?? false,
+  }));
+
+  // Fantasy points snapshot: the totals + full breakdown just written to DB
+  const fpSnapshot = fantasyPointsUpserts.map(fp => ({
+    squad_id:         fp.squad_id,
+    matchday_id:      fp.matchday_id,
+    total:            fp.total,
+    points_breakdown: fp.points_breakdown ?? null,
+  }));
+
+  // League members snapshot: leaderboard totals and ranks at roundComplete
+  const leagueIds = [...new Set(squads.map(s => s.league_id))];
+  const { data: lmRows } = await supabase
+    .from('league_members')
+    .select('league_id, user_id, total_points, rank')
+    .in('league_id', leagueIds);
+
+  await supabase.from('round_backups').insert({
+    matchday_id:             roundMatchdayId,
+    squads_snapshot:         squadsSnapshot,
+    fantasy_points_snapshot: fpSnapshot,
+    league_members_snapshot: lmRows ?? [],
+  });
+
+  console.log(`[calculate-scores] round backup written for ${roundMatchdayId} — ${squadsSnapshot.length} squads`);
 }
 
 async function writeGazetteEntries(fixture_id, roundMatchdayId, fantasyPointsUpserts, squads) {

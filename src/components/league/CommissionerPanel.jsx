@@ -13,6 +13,11 @@ const MONO    = "'JetBrains Mono', monospace";
 const DISPLAY = "'Archivo Black', sans-serif";
 const BODY    = "'Archivo', sans-serif";
 
+// Group → knockout transition is a normal transfer window (unlimited transfers,
+// surviving-nation pool, standard formation rules). No second draft is needed.
+// Set to true to re-enable the knockout draft UI if product direction changes.
+const KNOCKOUT_DRAFT_ENABLED = false;
+
 // ── Inlined from HubShared (TDZ-safe copies) ─────────────────────────────────
 function HubSectionLabel({ label, sub, tone = 'var(--cyan)', right, helpBtn }) {
   return (
@@ -2179,9 +2184,8 @@ function LifecycleOps({ commissioner, leagueId, tournamentId, league = null, onH
           </div>
           )}
 
-          {/* Knockout Draft — draft + cup format only (cup_phase transitions beyond pre_cup,
-              or admin has already set a knockout deadline) */}
-          {(!league || (league.format === 'noduplicate' && (
+          {/* Knockout Draft — disabled: group→knockout uses normal transfer window */}
+          {KNOCKOUT_DRAFT_ENABLED && (!league || (league.format === 'noduplicate' && (
             (league.cup_phase && league.cup_phase !== 'pre_cup') ||
             !!league.knockout_draft_deadline
           ))) && (
@@ -3358,8 +3362,8 @@ export default function CommissionerPanel({ commissioner, leagueId, tournamentId
           </div>
           )}
 
-          {/* Knockout Draft — cup-format Draft leagues only */}
-          {(!league || (league.format === 'noduplicate' && (
+          {/* Knockout Draft — disabled: group→knockout uses normal transfer window */}
+          {KNOCKOUT_DRAFT_ENABLED && (!league || (league.format === 'noduplicate' && (
             (league.cup_phase && league.cup_phase !== 'pre_cup') ||
             !!league.knockout_draft_deadline
           ))) && (() => {
