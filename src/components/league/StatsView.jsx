@@ -156,16 +156,31 @@ function SeasonTotalsWithPosition({ topScorers, positionPoints, currentUser }) {
     return (topScorers || []).map((scorer, i) => {
       const pos       = posMap[scorer.user_id] || {};
       const totalPts  = Math.round(Number(scorer.total_points) || 0);
-      // posBarPts = sum of GK/DEF/MID/FWD from completed matchday proportional distribution
+      // posBarPts = raw sum of GK/DEF/MID/FWD (only rounds with effective_xi data)
       const posBarPts = POS_ORDER.reduce((s, p) => s + (pos[p] || 0), 0);
-      // totalFp = sum of fantasy_points.total across ALL rounds (pre- and post-v28).
-      // Rounds missing effective_xi contribute to totalFp but not to posBarPts.
-      // BET segment = totalPts minus the larger of posBarPts or totalFp — avoids inflating
-      // BET by attributing pre-v28 unattributed fantasy pts to bet rewards.
-      const totalFp   = Math.round(Number(pos.total_fp) || 0);
-      const betPts    = Math.max(0, totalPts - Math.max(posBarPts, totalFp));
+      // totalFp = fantasy_points.total across ALL rounds (pre- and post-v28).
+      // Some rounds lack effective_xi so posBarPts < totalFp — scale position segments up
+      // proportionally so bars always sum to totalPts.
+      const totalFp    = Math.round(Number(pos.total_fp) || 0);
+      const fpTotal    = Math.max(posBarPts, totalFp);
+      const betPts     = Math.max(0, totalPts - fpTotal);
       const penaltyPts = Math.round(Number(pos.penalty_pts) || 0);
-      return { ...scorer, rank: i + 1, posData: pos, totalPts, posBarPts, betPts, penaltyPts };
+
+      // Scale each position segment so GK+DEF+MID+FWD sums to fpTotal (not just posBarPts)
+      const scale = posBarPts > 0 ? fpTotal / posBarPts : 1;
+      const activePos = POS_ORDER.filter(p => pos[p] > 0);
+      let allocated = 0;
+      const scaledPos = {};
+      for (let i = 0; i < activePos.length; i++) {
+        const p = activePos[i];
+        const v = i < activePos.length - 1
+          ? Math.floor(pos[p] * scale)
+          : Math.max(0, fpTotal - allocated);
+        scaledPos[p] = v;
+        allocated += v;
+      }
+
+      return { ...scorer, rank: i + 1, posData: pos, scaledPos, totalPts, posBarPts: fpTotal, betPts, penaltyPts };
     });
   }, [topScorers, positionPoints]);
 
@@ -220,7 +235,7 @@ function SeasonTotalsWithPosition({ topScorers, positionPoints, currentUser }) {
               {hasPositionData ? (
                 <>
                   {POS_ORDER.map(pos => {
-                    const pts = mgr.posData[pos] || 0;
+                    const pts = mgr.scaledPos?.[pos] || 0;
                     if (!pts) return null;
                     const pct = (pts / maxTotalPts) * 100;
                     return (
