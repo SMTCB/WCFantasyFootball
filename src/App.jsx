@@ -2,6 +2,7 @@ import { BrowserRouter, HashRouter, Routes, Route, Navigate, useNavigate, useSea
 import { useEffect, useState } from 'react';
 import { isNative } from './lib/capacitor';
 import { AuthProvider } from './context/AuthContext';
+import { SportProvider } from './context/SportContext';
 // useAuth is now a proper function wrapper (not a re-export), so importing it
 // alongside AuthProvider no longer creates a TDZ live binding.
 import { useAuth } from './hooks/useAuth';
@@ -27,6 +28,13 @@ import DraftScreen from './screens/DraftScreen';
 import DraftRecoveryScreen from './screens/DraftRecoveryScreen';
 import SettingsScreen from './screens/SettingsScreen';
 import NotFoundScreen from './screens/NotFoundScreen';
+import PaddockLobbyScreen from './screens/f1/PaddockLobbyScreen';
+import F1HomeScreen from './screens/f1/F1HomeScreen';
+import F1RaceBetScreen from './screens/f1/F1RaceBetScreen';
+import F1SeasonBetsScreen from './screens/f1/F1SeasonBetsScreen';
+import F1StandingsScreen from './screens/f1/F1StandingsScreen';
+import F1ReportScreen from './screens/f1/F1ReportScreen';
+import F1AdminScreen from './screens/f1/F1AdminScreen';
 import { useOnboarding } from './hooks/useOnboarding';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 import { ToastProvider } from './components/Toast';
@@ -100,9 +108,17 @@ function AppRoutes() {
                   <Route path="/predictions"      element={<ErrorBoundary screen="Bracket"><BracketScreen /></ErrorBoundary>} />
                   <Route path="/bracket"          element={<Navigate to="/predictions" replace />} />
                   <Route path="/admin"            element={<ErrorBoundary screen="Admin"><AdminSeedScreen /></ErrorBoundary>} />
-                  <Route path="/settings"         element={<ErrorBoundary screen="Settings"><SettingsScreen /></ErrorBoundary>} />
-                  <Route path="/join"             element={<JoinRoute />} />
-                  <Route path="*"                 element={<ErrorBoundary screen="NotFound"><NotFoundScreen /></ErrorBoundary>} />
+                  <Route path="/settings"                   element={<ErrorBoundary screen="Settings"><SettingsScreen /></ErrorBoundary>} />
+                  {/* F1 Module */}
+                  <Route path="/f1"                         element={<ErrorBoundary screen="F1Lobby"><PaddockLobbyScreen /></ErrorBoundary>} />
+                  <Route path="/f1/:paddockId"              element={<ErrorBoundary screen="F1Home"><F1HomeScreen /></ErrorBoundary>} />
+                  <Route path="/f1/:paddockId/picks/:round?" element={<ErrorBoundary screen="F1Picks"><F1RaceBetScreen /></ErrorBoundary>} />
+                  <Route path="/f1/:paddockId/season"       element={<ErrorBoundary screen="F1Season"><F1SeasonBetsScreen /></ErrorBoundary>} />
+                  <Route path="/f1/:paddockId/standings"    element={<ErrorBoundary screen="F1Standings"><F1StandingsScreen /></ErrorBoundary>} />
+                  <Route path="/f1/:paddockId/report"       element={<ErrorBoundary screen="F1Report"><F1ReportScreen /></ErrorBoundary>} />
+                  <Route path="/f1/:paddockId/admin"        element={<ErrorBoundary screen="F1Admin"><F1AdminScreen /></ErrorBoundary>} />
+                  <Route path="/join"                       element={<JoinRoute />} />
+                  <Route path="*"                           element={<ErrorBoundary screen="NotFound"><NotFoundScreen /></ErrorBoundary>} />
                 </Routes>
               </AppLayout>
             </ProtectedRoute>
@@ -120,11 +136,13 @@ const Router = isNative ? HashRouter : BrowserRouter;
 export default function App() {
   return (
     <AuthProvider>
-      <Router>
-        <ToastProvider>
-          <AppRoutes />
-        </ToastProvider>
-      </Router>
+      <SportProvider>
+        <Router>
+          <ToastProvider>
+            <AppRoutes />
+          </ToastProvider>
+        </Router>
+      </SportProvider>
     </AuthProvider>
   );
 }
