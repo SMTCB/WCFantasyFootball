@@ -14,7 +14,7 @@
 |---|---|---|---|
 | **0** | Foundation seams | W1 | ✅ Done |
 | **1A** | P2P Betting | W2–W7 | ⬜ Not started |
-| **1B** | F1 Module | W2–W5 | ⬜ Not started |
+| **1B** | F1 Module | W2–W5 | ✅ Done (Sprints 0–3, PR #606) |
 | **1C** | UX Redesign | W1–W9 | 🔄 In progress — Sprint UX-0 ✅ done, UX-1 next |
 | **1D** | Buyout hygiene — batch 1 | W1–W2 | 🔄 In progress — 1D-A done, 1D-B pending |
 | **2** | Tennis Module | W6–W8 | ⬜ Not started |
@@ -245,7 +245,7 @@ The implementation roadmap linked above is comprehensive and self-contained. The
 
 ## Phase 1B — F1 Module (W2–W5)
 
-**Status: ⬜ Not started**
+**Status: ✅ Done (Sprints 0–3, PR #606, 2026-06-22)**
 
 **Goal:** a prediction-based F1 module — managers pick P1/P2/P3 podium, DNF driver, team, and a special category question per race, plus season-long championship bets. Results auto-scored from OpenF1 data. Competitions isolated inside **Paddocks** (F1 equivalent of football leagues). Built on top of the existing FantasyF1 codebase, ported to Vite/React.
 
@@ -277,9 +277,17 @@ The implementation roadmap linked above is comprehensive and self-contained. The
 
 **MVP complete after F1-4. Full exit criteria in the plan.**
 
-**Session notes for Phase 1B:** *(update per session — mirror to plan's Session Notes section)*
+**Session notes for Phase 1B:**
 
-**2026-06-22 — Phase 1B scoped and plan created:**
+**2026-06-22 (session 2) — Sprints F1-0 through F1-3 complete:**
+- Migrations 191 (paddocks schema + F1 tables + RLS) and 192 (RPCs + 24-race 2026 calendar seed + special options) applied to live DB, verified correct.
+- All 7 screens built: PaddockLobbyScreen, F1HomeScreen, F1RaceBetScreen, F1SeasonBetsScreen, F1StandingsScreen, F1ReportScreen, F1AdminScreen.
+- Supporting files: SportContext, usePaddock hook, f1-data, scoring, openf1 lib files, 5 F1 nav icons, sport switcher in AppLayout sidebar.
+- score-f1-race Edge Function written (not yet deployed — run `npx supabase functions deploy score-f1-race --project-ref sssmvihxtqtohisghjet` before first admin scoring).
+- Build: zero errors, 0 lint errors confirmed. PR #606 merged into v2.
+- Sprint F1-4 (smoke tests in platform.spec.js) and F1-5 (OpenF1 sync cron) remain; both optional pre-MVP.
+
+**2026-06-22 (session 1) — Phase 1B scoped and plan created:**
 - Assessed existing FantasyF1 repo (github.com/SMTCB/FantasyF1). Game model is prediction bets (not fantasy squads): P1/P2/P3 podium + DNF + team + special category per race; 10-field season bets. OpenF1 as data provider (free, no API key). 3 clean migrations; scoring engine and OpenF1 client are framework-agnostic TypeScript, port directly.
 - Core gap: no group concept. Architecture decisions confirmed: **Paddock** naming; one set of bets per user per race (global, not per paddock); port to Vite/React (not keep as separate Next.js app); chat and gazette are Circle-level only; trophy ledger holistic via migration 189.
 - Full implementation plan written: [F1_MODULE_IMPLEMENTATION_PLAN.md](../product/F1_MODULE_IMPLEMENTATION_PLAN.md) — 5 sprints (~22h), migration SQL for 190–191 fully written, screen specs for all 7 screens, edge function contract, exit criteria checklist.
