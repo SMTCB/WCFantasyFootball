@@ -75,10 +75,11 @@
   --text-2:   #4B5568;   /* secondary text */
   --mute:     #8A97A8;   /* muted labels */
 
-  /* Accents */
-  --accent:     #1A6FA8;
-  --accent-bg:  rgba(26,111,168,.08);
-  --cyan:       #1A6FA8;   /* alias — components reference --cyan */
+  /* White-label accent cascade — operators override --brand-accent only */
+  --brand-accent: #1A6FA8;
+  --accent:       var(--brand-accent);
+  --accent-bg:    rgba(26,111,168,.08);   /* update manually if brand-accent changes */
+  --cyan:         var(--brand-accent);    /* alias — components reference --cyan */
   --gold:       #B8720E;
   --positive:   #166534;
   --pos:        #166534;
