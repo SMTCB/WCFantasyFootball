@@ -247,44 +247,37 @@ The implementation roadmap linked above is comprehensive and self-contained. The
 
 **Status: ⬜ Not started**
 
-**Goal:** a prediction-based F1 fantasy module where managers pick constructors/drivers per race, scored from OpenF1 data. Isolated to its own tables, plugs into the shared sport module contract (§3 of the architecture doc).
+**Goal:** a prediction-based F1 module — managers pick P1/P2/P3 podium, DNF driver, team, and a special category question per race, plus season-long championship bets. Results auto-scored from OpenF1 data. Competitions isolated inside **Paddocks** (F1 equivalent of football leagues). Built on top of the existing FantasyF1 codebase, ported to Vite/React.
 
-**Read first:**
-- [MULTI_SPORT_PLATFORM_ARCHITECTURE.md](MULTI_SPORT_PLATFORM_ARCHITECTURE.md) — §3 (Sport Module Contract), §5 (Data Provider Adapter)
-- [MULTI_SPORT_IMPLEMENTATION_PLAN.md](../product/MULTI_SPORT_IMPLEMENTATION_PLAN.md) — Sprint 4 and Sprint 5 (F1 module detail)
-- [MULTI_SPORT_EXPANSION.md](../product/MULTI_SPORT_EXPANSION.md) — F1 vision and open product questions
+**Authoritative plan:** 📋 [F1_MODULE_IMPLEMENTATION_PLAN.md](../product/F1_MODULE_IMPLEMENTATION_PLAN.md)
+— read this before touching any F1 code. Contains the full repo assessment, all architecture decisions, sprint-by-sprint task lists with SQL and pseudocode, and open decisions log.
 
-**Architecture rule:** F1 module owns its tables entirely. It never writes to football tables (`squads`, `fixtures`, `players`, `fantasy_points`, etc.). It emits to shared tables only: `gazette_entries`, `trophy_ledger`. It answers the module contract: `get_module_standings(league_id)` RPC.
+**Key architecture decisions (do not re-debate without reading the plan):**
+- **Game model:** prediction bets (P1/P2/P3 + DNF + team + special category), NOT fantasy squad
+- **Group concept:** **Paddock** (not league). `paddocks` + `paddock_members` tables, invite code join
+- **Bets:** global per user — one set of picks per race regardless of how many paddocks the user belongs to. Leaderboard = filter global scores by paddock membership
+- **Framework:** ported to Vite/React in this monorepo (not kept as a separate Next.js app)
+- **Chat:** Circle-level only — no per-paddock chat
+- **Gazette:** Circle-level only — post-race gazette entries appear in the Circle feed
+- **Trophy ledger:** holistic across all sports via `trophy_ledger` (migration 189)
+- **Data provider:** OpenF1 (open, no API key, free) — same adapter as assessed in FantasyF1 repo
 
-### Sprint F1-1 — OpenF1 adapter + F1 tables
-**Status: ⬜ Not started**
-- [ ] `supabase/functions/_shared/providers/openf1.ts`: OpenF1 API adapter implementing `SportDataAdapter` interface (see [MULTI_SPORT_PLATFORM_ARCHITECTURE.md §5](MULTI_SPORT_PLATFORM_ARCHITECTURE.md))
-  - `listEvents(tournamentKey)` → canonical race calendar events
-  - `getResults(eventKey)` → qualifying + race classifications (constructor and driver positions)
-  - `health()` → OpenF1 API status
-- [ ] F1-specific tables (all prefixed `f1_`):
-  - `f1_races`: `id`, `tournament_id`, `round_number`, `race_name`, `circuit`, `qualifying_at`, `race_at`, `status` ('scheduled'|'qualifying'|'race'|'finished')
-  - `f1_picks`: `id`, `user_id`, `league_id`, `race_id`, `p1_constructor`, `p2_constructor`, `p3_constructor`, `p1_driver`, `p2_driver`, `locked_at` (null = not yet locked)
-  - `f1_results`: `id`, `race_id`, `final_constructor_order jsonb`, `final_driver_order jsonb`, `entered_at`
-  - `f1_fantasy_points`: `id`, `user_id`, `league_id`, `race_id`, `points numeric`, `breakdown jsonb`
-- [ ] `sync-f1-calendar` Edge Function + cron (daily): reads OpenF1 race list, upserts `f1_races`
-- [ ] Seed the current F1 season calendar via migration
+**Architecture rule:** F1 module owns its tables entirely (`f1_races`, `f1_bets_race`, `f1_bets_year`, `f1_scores`, `f1_year_results`, `paddocks`, `paddock_members`). It never writes to football tables. It emits to shared tables only: `gazette_entries`, `trophy_ledger`. The `circle_paddocks` junction links paddocks into the Circle layer.
 
-### Sprint F1-2 — Picks + scoring engine
-**Status: ⬜ Not started**
-- [ ] `submit_f1_picks(p_league_id, p_race_id, picks jsonb)` RPC: validates picks before `qualifying_at` lock; `SECURITY DEFINER`; enforces no-duplicate driver/constructor picks
-- [ ] `lock_f1_picks(p_race_id)` RPC: fired by cron at qualifying start — sets `locked_at` on all `f1_picks` rows for this race; locked picks cannot be changed
-- [ ] `score-f1-race` Edge Function: called after race finishes; reads `f1_results`, scores `f1_picks`, writes `f1_fantasy_points`; scoring formula initially stubbed as config in `league_config` (`f1.pts_p1_constructor`, `f1.pts_p1_driver`, etc.)
-- [ ] `get_module_standings(p_league_id)` RPC for F1: sums `f1_fantasy_points.points` per user, returns `[{user_id, points, rank}]` — satisfies the sport module contract (C1)
-- [ ] `aggregate-f1-points` step: after each race, write `trophy_ledger` row for the race winner (C3)
-- [ ] Gazette entry on race complete: "Race N complete — X leads the F1 league with Y pts"
-- [ ] Picks screen (`F1PicksScreen.jsx`, thin): race calendar, pick form, standings table
+### Sprint summary (see plan for full task lists)
 
-**Dynamics stub note:** F1 scoring weights (`pts_p1_constructor`, etc.) are inserted as `league_config` defaults in the migration. The actual values are a product decision — populate with sensible defaults, flag for a dynamics session.
+| Sprint | Goal | Effort | Migrations |
+|---|---|---|---|
+| **F1-0** | DB schema — paddocks, F1 tables, RPCs, 2026 calendar seed | ~4h | 190, 191 |
+| **F1-1** | Port 5 screens + 3 lib files (scoring, OpenF1 client, data) to Vite/React | ~8h | — |
+| **F1-2** | Paddock management UI — create/join/switch, `usePaddock` hook | ~3h | — |
+| **F1-3** | Admin panel + `score-f1-race` Edge Function | ~5h | — |
+| **F1-4** | AppLayout sport switcher, `SportContext`, circle/gazette wiring | ~2h | 192 |
+| **F1-5** | OpenF1 sync cron — auto-populate `qualifying_at`/`race_at` *(optional, pre-sale)* | ~2h | 193 |
 
-**Exit check:** picks can be submitted and locked; after manually inserting a dummy race result, `score-f1-race` runs and `f1_fantasy_points` rows are written; standings RPC returns correct data; `trophy_ledger` gets a row; gazette entry appears in circle feed.
+**MVP complete after F1-4. Full exit criteria in the plan.**
 
-**Session notes for Phase 1B:** *(update per session)*
+**Session notes for Phase 1B:** *(update per session — mirror to plan's Session Notes section)*
 
 ---
 
