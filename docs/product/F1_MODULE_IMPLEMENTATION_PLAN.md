@@ -639,7 +639,11 @@ Sections:
 
 ## Session Notes
 
-*(Update per session. Date + what was done + next action.)*
+**2026-06-22 — Plan written (no DB changes):**
+- Assessed FantasyF1 repo. All architecture decisions confirmed (see Part I).
+- This document created. `SALE_READY_PROJECT_PLAN.md` Phase 1B updated to point here.
+- Migration SQL for 190–191 is written and ready to apply. No migrations executed this session.
+- Next action: open a v2 session, read Sprint F1-0, apply migrations 190 and 191 via `npx supabase db query --linked`, verify tables created, then begin Sprint F1-1 screen ports.
 
 ---
 

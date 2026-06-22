@@ -24,7 +24,7 @@
 **Current active branch:** `v2` (all redesign + new feature work)
 **v2 branch:** active — created off main, merged main regularly to pick up pilot bug fixes
 
-**Next action:** begin **Phase 1A Sprint P2P-0** (product decisions: coin pack SKUs, rake rate, spend cap) and **Phase 1B Sprint F1-1** (OpenF1 adapter + F1 tables) — both unblocked now that Phase 0 is done. Also: **Phase 1D-B** (schema reproducibility baseline, quick win, no dependencies).
+**Next action:** begin **Phase 1A Sprint P2P-0** (product decisions: coin pack SKUs, rake rate, spend cap) and **Phase 1B Sprint F1-0** (apply migrations 190–191: paddocks + F1 tables) — both unblocked. Also: **Phase 1D-B** (schema reproducibility baseline). See [F1_MODULE_IMPLEMENTATION_PLAN.md](../product/F1_MODULE_IMPLEMENTATION_PLAN.md) for Phase 1B full task lists.
 
 ---
 
@@ -278,6 +278,12 @@ The implementation roadmap linked above is comprehensive and self-contained. The
 **MVP complete after F1-4. Full exit criteria in the plan.**
 
 **Session notes for Phase 1B:** *(update per session — mirror to plan's Session Notes section)*
+
+**2026-06-22 — Phase 1B scoped and plan created:**
+- Assessed existing FantasyF1 repo (github.com/SMTCB/FantasyF1). Game model is prediction bets (not fantasy squads): P1/P2/P3 podium + DNF + team + special category per race; 10-field season bets. OpenF1 as data provider (free, no API key). 3 clean migrations; scoring engine and OpenF1 client are framework-agnostic TypeScript, port directly.
+- Core gap: no group concept. Architecture decisions confirmed: **Paddock** naming; one set of bets per user per race (global, not per paddock); port to Vite/React (not keep as separate Next.js app); chat and gazette are Circle-level only; trophy ledger holistic via migration 189.
+- Full implementation plan written: [F1_MODULE_IMPLEMENTATION_PLAN.md](../product/F1_MODULE_IMPLEMENTATION_PLAN.md) — 5 sprints (~22h), migration SQL for 190–191 fully written, screen specs for all 7 screens, edge function contract, exit criteria checklist.
+- Next: Sprint F1-0 — apply migrations 190 and 191 to v2 DB, verify paddock and F1 table creation.
 
 ---
 

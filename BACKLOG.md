@@ -1,12 +1,41 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-06-22 (v2 Sprint UX-0 closed — all football screens Kit Light token pass complete, 84/84 tests green)  
+**Last Updated**: 2026-06-22 (v2 Phase 0 Foundation Seams done; Phase 1B F1 module plan written — Sprint F1-0 ready to apply)  
 **E2E Test Suite**: `platform.spec.js` (84 tests × 1 browser config) passing ✅ — 84/84 on v2 branch 2026-06-22  
 **Full Playbook Run**: `E2E_TEST_PLAYBOOK.md` v2.0 — all flows confirmed  
 **🟢 LAUNCH READY**: No critical (P0/P1) bugs open. All game mechanics functional. WC kick-off 2026-06-11.  
 **Live App**: https://wc-fantasy-football.vercel.app  
 **WC Kick-off**: 2026-06-11 19:00 UTC (Mexico vs South Africa)  
 **Supabase PostgREST max_rows**: 10,000 (raised from default 1,000 — 2026-06-08)
+
+---
+
+## ✅ v2 Phase 1B — F1 module scoped + implementation plan written (2026-06-22)
+
+**Branch**: `v2` — commit `320e57c`. No DB changes this session.
+
+**What was done:**
+- Assessed the existing [FantasyF1 repo](https://github.com/SMTCB/FantasyF1) — game model (prediction bets: P1/P2/P3 + DNF + team + special category), schema (3 migrations, 6 tables), reusable assets (scoring engine, OpenF1 client, season data constants — all framework-agnostic TypeScript)
+- Confirmed architecture decisions: **Paddock** naming (F1 equivalent of league), one set of bets per user per race (global, shared across paddocks), port to Vite/React in this monorepo, chat and gazette at Circle level only, trophy ledger holistic across sports
+- Wrote full implementation plan: **[F1_MODULE_IMPLEMENTATION_PLAN.md](docs/product/F1_MODULE_IMPLEMENTATION_PLAN.md)** — 5 sprints (~22h), complete SQL for migrations 190–191 (paddocks + F1 tables + RPCs + 24-race calendar), screen-by-screen specs for all 7 screens, edge function contract, exit criteria
+- Updated `SALE_READY_PROJECT_PLAN.md` Phase 1B to point at the plan and reflect confirmed decisions
+
+**Next v2 session (Phase 1B Sprint F1-0):** apply migrations 190 and 191 to the v2 DB — creates `paddocks`, `paddock_members`, `circle_paddocks`, `f1_races`, `f1_bets_race`, `f1_bets_year`, `f1_scores`, `f1_year_results`, and all RPCs. SQL is written in the plan and ready to execute.
+
+---
+
+## ✅ v2 Phase 0 — Foundation Seams complete (2026-06-22)
+
+**Branch**: `v2` — commits `8a142d7`, `acebccb`. Three additive migrations applied to live DB. Zero pilot impact.
+
+**What was built:**
+- Migration 187 — `sports` table (football/f1/tennis) + `tournaments.sport_id` + `tournaments.provider`; all 4 existing tournaments backfilled to football/forza
+- Migration 188 — `circles`, `circle_members`, `circle_leagues` tables + `create_circle`, `join_circle_by_code`, `get_circle_feed` RPCs
+- Migration 189 — `trophy_ledger` table + `get_circle_meta_standings` RPC (v1 formula: trophy count with gold→silver→bronze tiebreak)
+- Pre-migration backup saved: `backups/pre_phase0_tournaments_20260622.json`
+- 84/84 `platform.spec.js` green on v2
+
+**Branch incident**: migration 189 was accidentally committed to `main` instead of `v2`. Caught immediately, undone with `git reset HEAD~1`, recommitted to correct branch. `main` confirmed clean.
 
 ---
 
@@ -37,7 +66,7 @@
 
 **Test result**: 84/84 `platform.spec.js` passed on v2 branch (2026-06-22).
 
-**Next v2 session**: Phase 0 — Foundation Seams (migrations 186–188: sport abstraction, circle layer, coin wallet stub). Also Phase 1D-B (schema reproducibility baseline). See `SALE_READY_PROJECT_PLAN.md` for full specs.
+**Next v2 session**: Phase 1B Sprint F1-0 (apply migrations 190–191) or Phase 1A Sprint P2P-0 (product decisions). See `SALE_READY_PROJECT_PLAN.md`.
 
 ---
 
