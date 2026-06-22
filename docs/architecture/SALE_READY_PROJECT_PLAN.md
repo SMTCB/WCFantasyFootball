@@ -12,7 +12,7 @@
 
 | Phase | Track | Weeks | Status |
 |---|---|---|---|
-| **0** | Foundation seams | W1 | ⬜ Not started |
+| **0** | Foundation seams | W1 | ✅ Done |
 | **1A** | P2P Betting | W2–W7 | ⬜ Not started |
 | **1B** | F1 Module | W2–W5 | ⬜ Not started |
 | **1C** | UX Redesign | W1–W9 | 🔄 In progress — Sprint UX-0 ✅ done, UX-1 next |
@@ -24,7 +24,7 @@
 **Current active branch:** `v2` (all redesign + new feature work)
 **v2 branch:** active — created off main, merged main regularly to pick up pilot bug fixes
 
-**Next action:** begin **Phase 0 — Foundation Seams** (migrations 186–188: sport abstraction, circle layer, coin wallet stub). Also: Phase 1D-B (schema reproducibility baseline, quick win). `SquadScreen` MiniPitch Kit Light surface deferred to Phase 2 (blocked on design spec).
+**Next action:** begin **Phase 1A Sprint P2P-0** (product decisions: coin pack SKUs, rake rate, spend cap) and **Phase 1B Sprint F1-1** (OpenF1 adapter + F1 tables) — both unblocked now that Phase 0 is done. Also: **Phase 1D-B** (schema reproducibility baseline, quick win, no dependencies).
 
 ---
 
@@ -126,45 +126,36 @@ The full football fantasy platform is live in production with ~50 pilot users. E
 
 ## Phase 0 — Foundation Seams (W1)
 
-**Status: ⬜ Not started**
+**Status: ✅ Done (v2 branch, 2026-06-22)**
 
 **Goal:** introduce the three schema primitives that unlock every v2 feature without any risk of rework later. All additive — zero changes to existing football tables or query paths.
 
-**Read first:**
-- [MULTI_SPORT_TECHNICAL_ASSESSMENT.md](MULTI_SPORT_TECHNICAL_ASSESSMENT.md) — why these three things are the load-bearing seams
-- [MULTI_SPORT_PLATFORM_ARCHITECTURE.md](MULTI_SPORT_PLATFORM_ARCHITECTURE.md) — §1 (Sport Abstraction), §2 (Circle Layer), §4 (Meta-League Engine)
-- [MULTI_SPORT_IMPLEMENTATION_PLAN.md](../product/MULTI_SPORT_IMPLEMENTATION_PLAN.md) — Sprint 1, Sprint 2, Sprint 3 (the detailed build specs)
+**What was built:**
 
-**What to build:**
+- [x] **Migration 187 — Sport abstraction** (`187_sport_abstraction.sql`)
+  - `sports` table with 3 seeded rows (football active, f1/tennis inactive) and deterministic IDs
+  - `tournaments.sport_id` + `tournaments.provider` added as nullable columns
+  - All 4 existing tournaments backfilled to football/forza
+  - Note: 186 was already taken by a pilot fix — numbering shifted by 1
 
-- [ ] **Migration 186 — Sport abstraction**
-  - New `sports` table: `id`, `slug` ('football'|'f1'|'tennis'), `name`, `game_model`, `data_provider`, `active`
-  - Seed: football (active), f1 (inactive), tennis (inactive)
-  - Add `tournaments.sport_id uuid references sports(id)` + `tournaments.provider text`
-  - Backfill all existing tournaments to `sport_id = football, provider = 'forza'`
-  - Test: insert a dummy non-football tournament row, confirm it works, confirm all football queries unchanged
-  - Delete the dummy row
+- [x] **Migration 188 — Circle layer** (`188_circle_layer.sql`)
+  - `circles`, `circle_members`, `circle_leagues` tables with RLS
+  - `create_circle(p_name)`, `join_circle_by_code(p_code)`, `get_circle_feed(p_circle_id, p_limit)` RPCs
+  - RLS ordering fix: all tables created before any policy (policies reference sibling tables)
 
-- [ ] **Migration 187 — Circle layer**
-  - New `circles` table: `id`, `name`, `created_by`, `invite_code`, `created_at`
-  - New `circle_members` table: `(circle_id, user_id)` PK, `role` ('owner'|'member'), `joined_at`
-  - New `circle_leagues` table: `(circle_id, league_id)` PK — links any league to a circle
-  - RLS: mirror `leagues`/`league_members` policy patterns
-  - `create_circle(p_name)` and `join_circle_by_code(p_code)` RPCs (model on `create_league` / `join_league_by_code`, using `auth.uid()`)
-  - `get_circle_feed(p_circle_id, p_limit)` RPC — union of `gazette_entries` across circle's leagues
+- [x] **Migration 189 — Trophy ledger stub** (`189_trophy_ledger.sql`)
+  - `trophy_ledger` table with full FK chain (circle→league→user→sport→tournament)
+  - `get_circle_meta_standings(p_circle_id)` RPC (v1: trophy count, tiebreak gold→silver→bronze)
+  - RPC body is explicit swap point for future formula upgrades
 
-- [ ] **Migration 188 — Trophy ledger stub**
-  - New `trophy_ledger` table: `id`, `circle_id`, `league_id`, `user_id`, `sport_id`, `tournament_id`, `trophy_type` ('round_win'|'event_win'|'season_win'), `tier` (nullable — 'bronze'|'silver'|'gold'), `awarded_at`, `meta jsonb`
-  - `get_circle_meta_standings(p_circle_id)` RPC stub (trophy count, v1 formula — body is a swap point)
-  - RLS: circle members SELECT, no direct INSERT (modules emit via SECURITY DEFINER helpers)
+- [x] **Smoke test:** 84/84 `platform.spec.js` green; pilot unaffected
 
-- [ ] **Smoke test:** `platform.spec.js` green; football league smoke pass clean; no existing queries affected
+**Next migration:** `190_`
 
-**Exit check:** a circle can be created and joined; a non-football tournament row can be inserted; `get_circle_feed` returns merged gazette entries; every football screen works identically to pre-phase.
-
-**Next migration after this phase:** `189_`
-
-**Session notes:** *(update when done)*
+**Session notes (2026-06-22):**
+- Migrations applied to live DB (single environment — no staging). All additive, zero pilot impact confirmed.
+- Pre-migration backup saved to `backups/pre_phase0_tournaments_20260622.json` (4 tournament rows).
+- Branch hygiene incident: migration 189 was accidentally committed to `main` due to undetected branch switch. Caught immediately, undone with `git reset HEAD~1`, recommitted to `v2`. `main` confirmed clean. Pushed both branches. Added branch-switch detection to session awareness.
 
 ---
 
