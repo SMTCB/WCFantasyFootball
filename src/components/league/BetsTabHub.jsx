@@ -60,7 +60,7 @@ function BetSection({ label, sub, tone, bets, squadId, onSubmitted }) {
                   {bet.scope_ref && <span style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.18em', flexShrink: 0 }}>· MD{bet.scope_ref}</span>}
                   {bet.status !== 'resolved' && (
                     <span style={{ fontFamily: MONO, fontSize: 10, color: 'var(--positive)', padding: '3px 7px', border: '1px solid rgba(34,197,94,.55)', background: 'rgba(34,197,94,.08)', letterSpacing: '.18em', flexShrink: 0 }}>
-                      +{bet.reward_value} {bet.reward_type === 'budget' ? 'M' : 'PTS'}
+                      +{bet.reward_type === 'budget' ? '€' : ''}{bet.reward_value} {bet.reward_type === 'budget' ? 'M' : 'PTS'}
                     </span>
                   )}
                   {bet.status === 'resolved' && bet.winners_count != null && bet.total_submissions != null && (
