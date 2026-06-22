@@ -836,8 +836,8 @@ export default function MarketScreen() {
               title={isLocked ? 'Transfer window closed' : emptySlots === 0 ? 'Squad is full' : `Fill ${emptySlots} empty slot${emptySlots > 1 ? 's' : ''}`}
               style={{
                 padding: '6px 10px',
-                background: isLocked ? 'rgba(239,68,68,0.06)' : 'rgba(0,196,232,0.08)',
-                border: isLocked ? '1px solid rgba(239,68,68,0.25)' : '1px solid rgba(0,196,232,0.25)',
+                background: isLocked ? 'rgba(185,28,28,0.06)' : 'var(--accent-bg)',
+                border: isLocked ? '1px solid rgba(185,28,28,0.25)' : '1px solid rgba(26,111,168,0.25)',
                 color: autoFilling ? 'var(--mute)' : isLocked ? 'var(--danger)' : 'var(--cyan)',
                 fontFamily: 'Archivo Black, sans-serif',
                 fontSize: 8,
@@ -1160,8 +1160,8 @@ export default function MarketScreen() {
                 className="flex items-center px-4 py-2.5 gap-3 transition-all duration-150"
                 style={{
                   borderBottom: isExpanded ? 'none' : '1px solid var(--rule)',
-                  background:   isOwned ? 'rgba(0,180,216,0.05)' : takenByOther ? 'rgba(239,68,68,0.02)' : 'transparent',
-                  borderLeft:   isOwned ? '2px solid var(--cyan)' : takenByOther ? '2px solid rgba(239,68,68,0.3)' : '2px solid transparent',
+                  background:   isOwned ? 'rgba(26,111,168,0.05)' : takenByOther ? 'rgba(185,28,28,0.02)' : 'transparent',
+                  borderLeft:   isOwned ? '2px solid var(--cyan)' : takenByOther ? '2px solid rgba(185,28,28,0.3)' : '2px solid transparent',
                   opacity:      takenByOther ? 0.65 : 1,
                 }}
               >

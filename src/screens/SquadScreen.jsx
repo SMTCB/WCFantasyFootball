@@ -1365,7 +1365,7 @@ export default function SquadScreen() {
             >
               
               <div className="flex-1 min-w-0">
-                <div className="text-[12px] font-semibold text-white truncate">{p.name}</div>
+                <div className="text-[12px] font-semibold text-[var(--paper)] truncate">{p.name}</div>
                 <div className="text-[9px] font-black uppercase tracking-wider mt-0.5" style={{ color: cfg.color }}>
                   {cfg.label}
                 </div>
@@ -1487,9 +1487,9 @@ export default function SquadScreen() {
                         letterSpacing: '0.1em',
                         textTransform: 'uppercase',
                         padding: '2px 6px',
-                        border: isBench ? '1px solid var(--rule)' : '1px solid rgba(0,180,216,0.4)',
+                        border: isBench ? '1px solid var(--rule)' : '1px solid rgba(26,111,168,0.4)',
                         color: isBench ? 'var(--mute)' : 'var(--cyan)',
-                        background: isBench ? 'transparent' : 'rgba(0,180,216,0.06)',
+                        background: isBench ? 'transparent' : 'var(--accent-bg)',
                         flexShrink: 0,
                         pointerEvents: 'none',
                       }}
@@ -1543,9 +1543,9 @@ export default function SquadScreen() {
                             letterSpacing: '0.1em',
                             textTransform: 'uppercase',
                             padding: '2px 6px',
-                            border: isConfirming ? '1px solid rgba(239,68,68,0.6)' : '1px solid rgba(240,180,0,0.4)',
+                            border: isConfirming ? '1px solid rgba(185,28,28,0.6)' : '1px solid rgba(240,180,0,0.4)',
                             color: isConfirming ? 'var(--danger)' : 'var(--gold)',
-                            background: isConfirming ? 'rgba(239,68,68,0.12)' : 'rgba(240,180,0,0.1)',
+                            background: isConfirming ? 'var(--neg-bg)' : 'rgba(240,180,0,0.1)',
                             flexShrink: 0,
                             cursor: 'pointer',
                             opacity: isCancelBusy ? 0.5 : 1,
@@ -1876,7 +1876,7 @@ export default function SquadScreen() {
                             padding: '9px 16px',
                             background: isSelected ? 'var(--accent-bg)' : isSwapTarget ? 'rgba(26,111,168,0.04)' : 'transparent',
                             borderBottom: '1px solid var(--rule)',
-                            borderLeft: isSelected ? '2px solid var(--cyan)' : isSwapTarget ? '2px solid rgba(0,180,216,0.3)' : '2px solid transparent',
+                            borderLeft: isSelected ? '2px solid var(--cyan)' : isSwapTarget ? '2px solid rgba(26,111,168,0.3)' : '2px solid transparent',
                             cursor: 'pointer', textAlign: 'left',
                           }}
                         >
@@ -1892,7 +1892,7 @@ export default function SquadScreen() {
                                 <div style={{ width: 16, height: 16, borderRadius: '50%', background: 'var(--gold)', color: '#0A0A0A', fontFamily: 'Archivo Black, sans-serif', fontSize: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>C</div>
                               )}
                               {isSwapTarget && (
-                                <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 7, color: 'var(--cyan)', border: '1px solid rgba(0,180,216,0.4)', padding: '1px 4px', flexShrink: 0, letterSpacing: '0.1em' }}>SWAP</span>
+                                <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 7, color: 'var(--cyan)', border: '1px solid rgba(26,111,168,0.4)', padding: '1px 4px', flexShrink: 0, letterSpacing: '0.1em' }}>SWAP</span>
                               )}
                             </div>
                             {player.fixtureStatus && (
@@ -1947,7 +1947,7 @@ export default function SquadScreen() {
                             )}
                             <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 7, color: posColor, border: `1px solid ${posColor}50`, padding: '1px 4px', flexShrink: 0, letterSpacing: '0.1em' }}>{player.position}</span>
                             {isSwapTarget && !isLocked && (
-                              <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 7, color: 'var(--cyan)', border: '1px solid rgba(0,180,216,0.4)', padding: '1px 4px', flexShrink: 0, letterSpacing: '0.1em' }}>SWAP</span>
+                              <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 7, color: 'var(--cyan)', border: '1px solid rgba(26,111,168,0.4)', padding: '1px 4px', flexShrink: 0, letterSpacing: '0.1em' }}>SWAP</span>
                             )}
                             {isLocked && (
                               <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 7, color: 'var(--mute)', border: '1px solid var(--rule)', padding: '1px 4px', flexShrink: 0, letterSpacing: '0.1em' }}>LOCKED</span>
@@ -2097,9 +2097,9 @@ export default function SquadScreen() {
                                       letterSpacing: '0.1em',
                                       textTransform: 'uppercase',
                                       padding: '3px 6px',
-                                      border: isConfirming ? '1px solid rgba(239,68,68,0.6)' : '1px solid rgba(240,180,0,0.4)',
+                                      border: isConfirming ? '1px solid rgba(185,28,28,0.6)' : '1px solid rgba(240,180,0,0.4)',
                                       color: isConfirming ? 'var(--danger)' : 'var(--gold)',
-                                      background: isConfirming ? 'rgba(239,68,68,0.12)' : 'rgba(240,180,0,0.1)',
+                                      background: isConfirming ? 'var(--neg-bg)' : 'rgba(240,180,0,0.1)',
                                       whiteSpace: 'nowrap',
                                       cursor: 'pointer',
                                       opacity: isCancelBusy ? 0.5 : 1,
@@ -2264,7 +2264,7 @@ export default function SquadScreen() {
                 </div>
                 <div style={{
                   fontSize: '10px',
-                  color: 'rgba(240,242,245,0.6)',
+                  color: 'var(--mute)',
                   textAlign: 'center',
                   marginBottom: '8px',
                   lineHeight: 1.4,
@@ -2475,7 +2475,7 @@ export default function SquadScreen() {
                     <div className="px-4 py-3 flex items-center gap-3">
                       <div className="w-8 h-8 flex items-center justify-center text-[10px] font-black shrink-0" style={{ background: 'rgba(224,168,0,0.15)', border: '1px solid rgba(224,168,0,0.4)', color: 'var(--gold)' }}>C</div>
                       <div className="flex-1 min-w-0">
-                        <div className="text-[13px] font-semibold text-white truncate">{cap.name}</div>
+                        <div className="text-[13px] font-semibold text-[var(--paper)] truncate">{cap.name}</div>
                         <div className="text-[10px] mt-0.5" style={{ color: 'var(--mute)' }}>{cap.position} · {cap.club} · €{cap.price}M</div>
                       </div>
                     </div>
@@ -2581,7 +2581,7 @@ export default function SquadScreen() {
             <button
               onClick={() => setStatsDashboardPlayer(selectedPlayer)}
               className="w-full mb-3 py-2 rounded-sm transition-all active:scale-95"
-              style={{ background: 'rgba(0,180,216,0.06)', color: 'var(--cyan)', border: '1px solid rgba(0,180,216,0.35)', fontFamily: 'Archivo Black, sans-serif', fontSize: '10px', letterSpacing: '0.18em', textTransform: 'uppercase' }}
+              style={{ background: 'var(--accent-bg)', color: 'var(--cyan)', border: '1px solid rgba(26,111,168,0.35)', fontFamily: 'Archivo Black, sans-serif', fontSize: '10px', letterSpacing: '0.18em', textTransform: 'uppercase' }}
             >
               VIEW FULL STATS DASHBOARD ↗
             </button>
@@ -2717,7 +2717,7 @@ export default function SquadScreen() {
             backdropFilter: 'blur(20px)',
             WebkitBackdropFilter: 'blur(20px)',
             borderTop: '2px solid var(--cyan)',
-            boxShadow: '0 -4px 24px rgba(0,180,216,0.12)',
+            boxShadow: '0 -4px 24px rgba(26,111,168,0.12)',
             paddingBottom: 'calc(12px + env(safe-area-inset-bottom))',
           }}
         >
@@ -2725,14 +2725,14 @@ export default function SquadScreen() {
             <div className="font-black text-[11px] uppercase tracking-widest" style={{ fontFamily: 'Archivo Black, sans-serif', color: 'var(--cyan)' }}>
               {selectedIsBench ? 'Select a starter to replace' : 'Select a bench player to bring on'}
             </div>
-            <div className="text-[10px] mt-0.5" style={{ color: 'var(--mute)', fontFamily: 'JetBrains Mono, monospace' }}>
+            <div className="text-[10px] mt-0.5" style={{ color: 'rgba(255,255,255,0.45)', fontFamily: 'JetBrains Mono, monospace' }}>
               Swapping out: {selectedPlayer?.name}
             </div>
           </div>
           <button
             onClick={() => { setSwapMode(false); setSelectedPlayer(null); }}
             className="px-4 py-1.5 rounded-sm font-bold uppercase text-[10px] tracking-widest"
-            style={{ background: 'rgba(255,255,255,0.06)', color: 'var(--paper)', border: '1px solid rgba(255,255,255,0.1)', fontFamily: 'Archivo Black, sans-serif' }}
+            style={{ background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.8)', border: '1px solid rgba(255,255,255,0.1)', fontFamily: 'Archivo Black, sans-serif' }}
           >
             Cancel
           </button>
@@ -2811,7 +2811,7 @@ function JokerList({ teams, squadPlayerIds, onSelect, saving }) {
     <div className="flex flex-col items-center justify-center gap-3 p-10 text-center">
       <div style={{ fontSize: '36px' }}>{emoji}</div>
       <div style={{ fontFamily: 'Archivo Black, sans-serif', fontWeight: 800, fontSize: '14px', textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--paper)' }}>{title}</div>
-      {sub && <div style={{ fontSize: '12px', color: 'rgba(240,242,245,0.45)', lineHeight: 1.5, maxWidth: '220px' }}>{sub}</div>}
+      {sub && <div style={{ fontSize: '12px', color: 'var(--mute)', lineHeight: 1.5, maxWidth: '220px' }}>{sub}</div>}
       {action}
     </div>
   );

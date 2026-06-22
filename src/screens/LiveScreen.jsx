@@ -6,7 +6,7 @@ import { useAuth } from '../hooks/useAuth';
 
 const REFRESH_MS = 60 * 1000; // 60s safety-net poll — Realtime handles sub-second updates
 
-const LEAGUE_TONES = ['#00B4D8', '#E0A800', '#A855F7', '#22C55E', '#F59E0B'];
+const LEAGUE_TONES = ['#1A6FA8', '#E0A800', '#A855F7', '#166534', '#F59E0B'];
 
 import { POS_ORDER, POS_PITCH_Y as POS_Y } from '../lib/formations';
 import ScoringInfoModal from '../components/ScoringInfoModal';
@@ -70,13 +70,13 @@ function MiniPitch({ players, activeLeague, gwLabel }) {
     }}>
       {/* position guide lines */}
       {[14, 38, 64, 88].map(y => (
-        <div key={y} style={{ position: 'absolute', left: 18, right: 18, top: `${y}%`, height: 1, background: 'rgba(0,180,216,.08)' }} />
+        <div key={y} style={{ position: 'absolute', left: 18, right: 18, top: `${y}%`, height: 1, background: 'rgba(26,111,168,.08)' }} />
       ))}
       {[{ y: 14, label: 'FWD' }, { y: 38, label: 'MID' }, { y: 64, label: 'DEF' }, { y: 88, label: 'GK' }].map(l => (
-        <div key={l.label} className="font-mono" style={{ position: 'absolute', left: 10, top: `${l.y}%`, transform: 'translateY(-50%)', fontSize: 8, color: 'rgba(0,180,216,.45)', background: '#0A0D12', padding: '1px 3px' }}>{l.label}</div>
+        <div key={l.label} className="font-mono" style={{ position: 'absolute', left: 10, top: `${l.y}%`, transform: 'translateY(-50%)', fontSize: 8, color: 'rgba(26,111,168,.55)', background: '#0A0D12', padding: '1px 3px' }}>{l.label}</div>
       ))}
       {/* centre circle */}
-      <div style={{ position: 'absolute', left: '50%', top: '50%', transform: 'translate(-50%,-50%)', width: '30%', aspectRatio: '1', borderRadius: '50%', border: '1px solid rgba(242,238,229,.04)' }} />
+      <div style={{ position: 'absolute', left: '50%', top: '50%', transform: 'translate(-50%,-50%)', width: '30%', aspectRatio: '1', borderRadius: '50%', border: '1px solid rgba(255,255,255,.05)' }} />
       {/* header */}
       <div style={{ position: 'absolute', top: 10, left: 14, right: 14, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div className="font-mono" style={{ fontSize: 9, color: 'var(--mute)', letterSpacing: '.22em' }}>STARTING XI · {formation}</div>
@@ -191,7 +191,7 @@ function DesktopStatsRow({ s }) {
             {tags.map(t => (
               <span key={t.label} className="font-mono" style={{
                 fontSize: 8, padding: '1px 5px', borderRadius: 2,
-                background: t.neg ? 'rgba(239,68,68,.15)' : 'rgba(34,197,94,.12)',
+                background: t.neg ? 'var(--neg-bg)' : 'var(--pos-bg)',
                 color: t.neg ? 'var(--danger)' : 'var(--positive)',
                 letterSpacing: '.1em',
               }}>{t.label}</span>
@@ -253,7 +253,7 @@ function StatsLogRow({ s }) {
               <span key={t} className="font-mono" style={{
                 fontSize: 8, padding: '1px 5px', borderRadius: 2,
                 background: t.startsWith('−') || t === 'YC' || t === 'RC' || t === 'PM'
-                  ? 'rgba(239,68,68,.15)' : 'rgba(34,197,94,.12)',
+                  ? 'var(--neg-bg)' : 'var(--pos-bg)',
                 color: t.startsWith('−') || t === 'YC' || t === 'RC' || t === 'PM'
                   ? 'var(--danger)' : 'var(--positive)',
                 letterSpacing: '.1em',
@@ -844,9 +844,9 @@ export default function LiveScreen() {
                 {lg.windowStatus && (
                   <span className="font-mono" style={{
                     fontSize: 8, letterSpacing: '.12em', padding: '1px 5px',
-                    border: `1px solid ${lg.windowStatus === 'open' ? 'rgba(34,197,94,.35)' : 'var(--rule)'}`,
+                    border: `1px solid ${lg.windowStatus === 'open' ? 'rgba(22,101,52,.35)' : 'var(--rule)'}`,
                     color: lg.windowStatus === 'open' ? 'var(--positive)' : 'var(--mute)',
-                    background: lg.windowStatus === 'open' ? 'rgba(34,197,94,.07)' : 'transparent',
+                    background: lg.windowStatus === 'open' ? 'var(--pos-bg)' : 'transparent',
                   }}>
                     {lg.windowStatus === 'open'
                       ? `OPEN${lg.windowClosesAt ? ' · ' + new Date(lg.windowClosesAt).toLocaleString([], { weekday: 'short', hour: '2-digit', minute: '2-digit' }) : ''}`
@@ -1276,10 +1276,10 @@ export default function LiveScreen() {
                     <div style={{ borderTop: '1px solid var(--rule)', paddingTop: 8, marginTop: 4 }}>
                       <div className="font-mono" style={{ fontSize: 9, color: 'var(--mute)', letterSpacing: '.16em', margin: '4px 0 8px' }}>BENCH · {benchPlayers.length}</div>
                       {benchPlayers.map((p, idx) => (
-                        <div key={p.id} style={{ display: 'grid', gridTemplateColumns: '18px 1fr auto', gap: 10, alignItems: 'center', padding: '7px 0', borderTop: idx ? '1px solid rgba(242,238,229,.04)' : 'none' }}>
+                        <div key={p.id} style={{ display: 'grid', gridTemplateColumns: '18px 1fr auto', gap: 10, alignItems: 'center', padding: '7px 0', borderTop: idx ? '1px solid rgba(24,32,46,.06)' : 'none' }}>
                           <div className="font-mono" style={{ fontSize: 8, color: 'var(--mute)', opacity: .6 }}>{idx + 1}</div>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                            <span style={{ width: 5, height: 5, borderRadius: '50%', background: p.live ? 'var(--danger)' : 'rgba(242,238,229,.2)', flexShrink: 0 }} className={p.live ? 'animate-live-pulse' : ''} />
+                            <span style={{ width: 5, height: 5, borderRadius: '50%', background: p.live ? 'var(--danger)' : 'rgba(24,32,46,.2)', flexShrink: 0 }} className={p.live ? 'animate-live-pulse' : ''} />
                             <span style={{ fontFamily: 'Archivo Black', fontSize: 12, letterSpacing: '-0.01em' }}>{(p.name || '').split(' ').pop().toUpperCase()}</span>
                             <span className="font-mono" style={{ fontSize: 8, color: 'var(--mute)' }}>{p.position}</span>
                           </div>

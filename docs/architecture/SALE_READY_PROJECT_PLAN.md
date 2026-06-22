@@ -15,7 +15,7 @@
 | **0** | Foundation seams | W1 | ⬜ Not started |
 | **1A** | P2P Betting | W2–W7 | ⬜ Not started |
 | **1B** | F1 Module | W2–W5 | ⬜ Not started |
-| **1C** | UX Redesign | W1–W9 | 🔄 In progress — Sprint UX-0 ~85% done |
+| **1C** | UX Redesign | W1–W9 | 🔄 In progress — Sprint UX-0 ~95% done |
 | **1D** | Buyout hygiene — batch 1 | W1–W2 | 🔄 In progress — 1D-A done, 1D-B pending |
 | **2** | Tennis Module | W6–W8 | ⬜ Not started |
 | **3A** | Buyout hygiene — batch 2 | W9–W11 | ⬜ Not started |
@@ -24,7 +24,7 @@
 **Current active branch:** `v2` (all redesign + new feature work)
 **v2 branch:** active — created off main, merged main regularly to pick up pilot bug fixes
 
-**Next action:** complete Sprint UX-0 (remaining: `platform.spec.js` green pass + `SquadScreen` Kit Light components), then begin Phase 0 foundation seams.
+**Next action:** run `platform.spec.js` green pass to close Sprint UX-0 (only remaining gate); `SquadScreen` MiniPitch surface deferred pending design spec. After that: begin Phase 0 foundation seams.
 
 ---
 
@@ -312,7 +312,7 @@ The implementation roadmap linked above is comprehensive and self-contained. The
 **Rolldown TDZ warning:** the redesign will add new imports across screens. Before adding any import to a child component of a large screen, grep whether the large screen already imports that module (CLAUDE.md — Vite v8 / Rolldown TDZ Rule). Run `npm run build` before any PR merge.
 
 ### Sprint UX-0 — New visual identity applied to football
-**Status: 🔄 In progress (v2 branch, ~85% done)**
+**Status: 🔄 In progress (v2 branch, ~95% done)**
 
 **What was done pre-kickoff (v2 branch, sessions Jun 2026):**
 - [x] Design tokens received and committed — source: `docs/platform_redesign/tokens/kit.css` + `TOKEN_MIGRATION.md`
@@ -324,6 +324,7 @@ The implementation roadmap linked above is comprehensive and self-contained. The
 - [x] `OnboardingWizard.jsx` — card background set to `var(--shell)` (immersive dark surface, correct for Kit Light one-dark-element principle) (2026-06-22)
 - [x] `BrandMark.jsx` — `secondaryColor` for dark theme fixed: `var(--paper)` → `rgba(255,255,255,0.55)` (was invisible on `var(--shell)` surface in Kit Light) (2026-06-22)
 - [x] `AppLayout.jsx` desktop sidebar — background moved from `var(--ink-2)` (white in Kit Light) to `var(--shell)` (dark navy); all `var(--mute)`/`var(--paper)` text replaced with `rgba(255,255,255,...)` equivalents for correct light-on-dark contrast (2026-06-22)
+- [x] **Audit pass — partial-pass screens** (2026-06-22): `MarketScreen`, `LiveScreen`, and `SquadScreen` each had residual old-palette rgba values missed in the initial pass. All identified instances fixed: old-cyan `rgba(0,180,216,...)` → `rgba(26,111,168,...)`, bright-green → `var(--pos-bg)`, bright-red → `var(--neg-bg)`, cream-on-dark-overlay text → `rgba(255,255,255,...)`. `LeagueInviteCard` intentionally untouched — it is a self-contained branded sharing card with hardcoded dark palette, not using CSS tokens.
 - [ ] `platform.spec.js` green after token pass (run before final PR merge)
 - [ ] `SquadScreen.jsx` Kit Light components — MiniPitch/MiniTok pitch surface (`#2D5A27`) needs full spec (deferred per design decision above; block on design handoff)
 
@@ -357,6 +358,13 @@ The implementation roadmap linked above is comprehensive and self-contained. The
 - Key decisions made: (1) OnboardingWizard keeps `var(--shell)` card bg — immersive full-screen is the "one dark element" in Kit Light; all white text inside is correct on that surface. (2) Desktop sidebar moved to `var(--shell)` — aligns with mobile bottom nav, makes BrandMark `theme="dark"` work correctly against a dark surface. (3) `BrandMark.secondaryColor` for dark theme fixed to `rgba(255,255,255,0.55)` — `var(--paper)` is dark navy in Kit Light and was invisible on shell.
 - Hardcoded old-dark rgba patterns replaced throughout: `rgba(0,180,216,...)` → `rgba(26,111,168,...)`, `rgba(242,238,229,...)` → `rgba(24,32,46,...)`, `text-white` on light surfaces → `text-[var(--paper)]`, `bg-cyan text-black` → `bg-cyan text-white` (accent is now dark navy, not light teal).
 - **Remaining for UX-0 completion:** run `platform.spec.js` to verify no visual regressions; `SquadScreen` Kit Light components (MiniPitch/MiniTok pitch surface) blocked on design spec for `#2D5A27` green field in light context.
+
+**2026-06-22 — Audit pass on partial-pass screens (session 4):**
+- `MarketScreen.jsx`: auto-fill button state colors (old cyan → accent-bg), player row owned/taken border colors.
+- `LiveScreen.jsx`: LEAGUE_TONES array (old cyan replaced with `#1A6FA8`), chart canvas overlay colors (correct: stays dark), event tags on light surface (`var(--pos-bg)`/`var(--neg-bg)`), transfer window badge border/bg, bench row divider, inactive player dot.
+- `SquadScreen.jsx` (10 changes): DangerList player name (`text-white` → `text-[var(--paper)]`), SQUAD/BENCH badge, cancel-confirm button state (desktop + mobile), swap target borders and SWAP badge (replace_all), Joker section muted text, captain name (`text-white` → `text-[var(--paper)]`), VIEW STATS button, swap banner subtitle and Cancel button (cream on dark overlay → `rgba(255,255,255,...)`), EmptyState sub text.
+- `LeagueInviteCard.jsx`: confirmed intentionally dark-themed (hardcoded `#070A0F`/gradient backgrounds, no CSS tokens). No changes — color values are correct for the dark branding card surface.
+- ESLint: 79 warnings, 0 errors (pre-existing warnings, no regressions).
 
 ---
 
