@@ -4,6 +4,7 @@ import BrandMark from './BrandMark';
 import SkipToContent from './SkipToContent';
 import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../lib/supabase';
+import { useSport } from '../context/SportContext';
 import {
   NavIconScores,
   NavIconSquad,
@@ -11,10 +12,14 @@ import {
   NavIconLive,
   NavIconMarket,
   NavIconRecap,
-  NavIconPredictions,
+  NavIconF1Calendar,
+  NavIconF1Picks,
+  NavIconF1Standings,
+  NavIconF1Report,
+  NavIconF1Season,
 } from './NavIcons';
 
-const NAV_ITEMS = [
+const FOOTBALL_NAV = [
   { key: 'scores',      label: 'SCORES',      path: '/',            Icon: NavIconScores,      desc: 'Match Scores & Fixtures' },
   { key: 'squad',       label: 'SQUAD',       path: '/squad',       Icon: NavIconSquad,       desc: 'Your Tactical Sheet' },
   { key: 'league',      label: 'LEAGUE',      path: '/league',      Icon: NavIconLeagues,     desc: 'League Standings & Chat' },
@@ -23,10 +28,24 @@ const NAV_ITEMS = [
   { key: 'recap',       label: 'RECAP',       path: '/recap',       Icon: NavIconRecap,       desc: 'Matchday Recap & Stats', desktopOnly: true },
 ];
 
+function buildF1Nav(paddockId) {
+  const base = paddockId ? `/f1/${paddockId}` : '/f1';
+  return [
+    { key: 'f1-calendar',  label: 'CALENDAR',  path: base,                    Icon: NavIconF1Calendar,  desc: 'Race Calendar' },
+    { key: 'f1-picks',     label: 'PICKS',     path: `${base}/picks`,         Icon: NavIconF1Picks,     desc: 'Race Predictions' },
+    { key: 'f1-standings', label: 'STANDINGS', path: `${base}/standings`,     Icon: NavIconF1Standings, desc: 'Paddock Standings' },
+    { key: 'f1-report',    label: 'REPORT',    path: `${base}/report`,        Icon: NavIconF1Report,    desc: 'Results & Breakdown' },
+    { key: 'f1-season',    label: 'SEASON',    path: `${base}/season`,        Icon: NavIconF1Season,    desc: 'Season Predictions' },
+  ];
+}
+
 export default function AppLayout({ children }) {
   const location = useLocation();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { activeSport, setActiveSport, activePaddockId } = useSport();
+  const isF1 = activeSport === 'f1';
+  const NAV_ITEMS = isF1 ? buildF1Nav(activePaddockId) : FOOTBALL_NAV;
   // user_metadata.username is set at signup but may be absent for older accounts.
   // Fall back to the users table (authoritative) then to email prefix.
   const [username, setUsername] = useState(
@@ -47,7 +66,10 @@ export default function AppLayout({ children }) {
     location.pathname === '/league' ||
     location.pathname === '/live' ||
     location.pathname === '/market' ||
-    /^\/league\/[^/]+$/.test(location.pathname); // /league/:leagueId (single param, no nested path)
+    location.pathname === '/f1' ||
+    /^\/league\/[^/]+$/.test(location.pathname) ||
+    /^\/f1\/[^/]+$/.test(location.pathname) ||
+    /^\/f1\/[^/]+\/(picks|standings|report|season)$/.test(location.pathname);
   const showBackButton = !isMainRoute;
 
   return (
@@ -80,10 +102,10 @@ export default function AppLayout({ children }) {
               (path !== '/' && location.pathname.startsWith(path));
             const liveColor = 'var(--danger)';
             const activeColor = isLive ? liveColor : 'var(--cyan)';
-            // If already on a league detail page, stay on that page instead of
-            // resetting to /league (which would drop the user back to the list).
+            // Stay on current detail page when tapping league/f1-calendar nav while already inside one
             const alreadyOnLeague = key === 'league' && location.pathname.startsWith('/league/');
-            const navTo = alreadyOnLeague
+            const alreadyOnPaddock = key === 'f1-calendar' && /^\/f1\/[^/]+/.test(location.pathname);
+            const navTo = (alreadyOnLeague || alreadyOnPaddock)
               ? location.pathname + location.search
               : path;
 
@@ -136,7 +158,37 @@ export default function AppLayout({ children }) {
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-4" style={{ borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+        <div className="px-5 py-4" style={{ borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+          {/* Sport Switcher */}
+          <div className="flex mb-4" style={{ background: 'rgba(255,255,255,0.06)', borderRadius: 6, padding: 3 }}>
+            {['football','f1'].map(sport => (
+              <button
+                key={sport}
+                onClick={() => {
+                  setActiveSport(sport);
+                  navigate(sport === 'f1' ? (activePaddockId ? `/f1/${activePaddockId}` : '/f1') : '/');
+                }}
+                style={{
+                  flex: 1,
+                  padding: '5px 0',
+                  borderRadius: 4,
+                  fontFamily: 'JetBrains Mono, monospace',
+                  fontSize: 9,
+                  fontWeight: 700,
+                  letterSpacing: '0.14em',
+                  textTransform: 'uppercase',
+                  cursor: 'pointer',
+                  border: 'none',
+                  transition: 'all 0.15s',
+                  background: activeSport === sport ? 'var(--cyan)' : 'transparent',
+                  color: activeSport === sport ? '#fff' : 'rgba(255,255,255,0.4)',
+                }}
+              >
+                {sport === 'football' ? '⚽' : '🏎'} {sport === 'football' ? 'FBL' : 'F1'}
+              </button>
+            ))}
+          </div>
+
           <Link
             to="/settings"
             title="Settings"
@@ -224,9 +276,9 @@ export default function AppLayout({ children }) {
             const isActive = location.pathname === path ||
               (path !== '/' && location.pathname.startsWith(path));
             const activeColor = isLive ? 'var(--danger)' : 'var(--cyan)';
-            // Stay on current league detail page when tapping LEAGUE nav while already in a league
             const alreadyOnLeague = key === 'league' && location.pathname.startsWith('/league/');
-            const navTo = alreadyOnLeague
+            const alreadyOnPaddockMobile = key === 'f1-calendar' && /^\/f1\/[^/]+/.test(location.pathname);
+            const navTo = (alreadyOnLeague || alreadyOnPaddockMobile)
               ? location.pathname + location.search
               : path;
 
