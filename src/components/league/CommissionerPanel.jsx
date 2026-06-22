@@ -1310,7 +1310,11 @@ function ResolvePendingBets({ openBets, resolutionBetsLoading, setSelectedBetFor
                       <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
                         <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.16em', color: 'var(--mute)' }}>
                           {canResolve
-                            ? <>AWARDS <b style={{ color: 'var(--positive)' }}>+{b.reward_value} PTS</b> TO {totalWinners} MGR{totalWinners !== 1 ? 'S' : ''}</>
+                            ? <>AWARDS <b style={{ color: 'var(--positive)' }}>
+                                {b.reward_type === 'budget'
+                                  ? `+€${b.reward_value}M BUDGET`
+                                  : `+${b.reward_value} PTS`}
+                              </b> TO {totalWinners} MGR{totalWinners !== 1 ? 'S' : ''}</>
                             : <span style={{ color: 'var(--mute)' }}>SELECT A WINNER OR USE NO WINNER →</span>}
                         </span>
                         <span style={{ flex: 1 }} />
