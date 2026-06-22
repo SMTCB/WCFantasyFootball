@@ -158,8 +158,12 @@ function SeasonTotalsWithPosition({ topScorers, positionPoints, currentUser }) {
       const totalPts  = Math.round(Number(scorer.total_points) || 0);
       // posBarPts = sum of GK/DEF/MID/FWD from completed matchday proportional distribution
       const posBarPts = POS_ORDER.reduce((s, p) => s + (pos[p] || 0), 0);
-      // betPts fills bar to exactly totalPts (absorbs bet rewards, trade pts, and rounding)
-      const betPts    = Math.max(0, totalPts - posBarPts);
+      // totalFp = sum of fantasy_points.total across ALL rounds (pre- and post-v28).
+      // Rounds missing effective_xi contribute to totalFp but not to posBarPts.
+      // BET segment = totalPts minus the larger of posBarPts or totalFp — avoids inflating
+      // BET by attributing pre-v28 unattributed fantasy pts to bet rewards.
+      const totalFp   = Math.round(Number(pos.total_fp) || 0);
+      const betPts    = Math.max(0, totalPts - Math.max(posBarPts, totalFp));
       const penaltyPts = Math.round(Number(pos.penalty_pts) || 0);
       return { ...scorer, rank: i + 1, posData: pos, totalPts, posBarPts, betPts, penaltyPts };
     });
