@@ -61,7 +61,7 @@ Deno.serve(async (req) => {
         { status: 405, headers: { 'Content-Type': 'application/json' } }
       );
     }
-    const authErr = requireServiceRole(req);
+    const authErr = await requireServiceRole(req);
     if (authErr) return authErr;
 
     const body = await req.json();

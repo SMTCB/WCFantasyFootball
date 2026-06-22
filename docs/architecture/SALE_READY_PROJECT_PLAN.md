@@ -15,16 +15,16 @@
 | **0** | Foundation seams | W1 | ⬜ Not started |
 | **1A** | P2P Betting | W2–W7 | ⬜ Not started |
 | **1B** | F1 Module | W2–W5 | ⬜ Not started |
-| **1C** | UX Redesign | W1–W9 | ⬜ Not started |
-| **1D** | Buyout hygiene — batch 1 | W1–W2 | ⬜ Not started |
+| **1C** | UX Redesign | W1–W9 | 🔄 In progress — Sprint UX-0 ~85% done |
+| **1D** | Buyout hygiene — batch 1 | W1–W2 | 🔄 In progress — 1D-A done, 1D-B pending |
 | **2** | Tennis Module | W6–W8 | ⬜ Not started |
 | **3A** | Buyout hygiene — batch 2 | W9–W11 | ⬜ Not started |
 | **3B** | v2 integration & deploy | W10–W12 | ⬜ Not started |
 
-**Current active branch:** `main` (football pilot only)
-**v2 branch:** not yet created → create as `v2` off current main before any work below
+**Current active branch:** `v2` (all redesign + new feature work)
+**v2 branch:** active — created off main, merged main regularly to pick up pilot bug fixes
 
-**Next action:** create v2 branch and begin Phase 0 (Foundation seams) and Phase 1C (UX Redesign) simultaneously.
+**Next action:** complete Sprint UX-0 (remaining: `platform.spec.js` green pass + `SquadScreen` Kit Light components), then begin Phase 0 foundation seams.
 
 ---
 
@@ -312,7 +312,7 @@ The implementation roadmap linked above is comprehensive and self-contained. The
 **Rolldown TDZ warning:** the redesign will add new imports across screens. Before adding any import to a child component of a large screen, grep whether the large screen already imports that module (CLAUDE.md — Vite v8 / Rolldown TDZ Rule). Run `npm run build` before any PR merge.
 
 ### Sprint UX-0 — New visual identity applied to football
-**Status: 🔄 In progress (v2 branch, ~35% done)**
+**Status: 🔄 In progress (v2 branch, ~85% done)**
 
 **What was done pre-kickoff (v2 branch, sessions Jun 2026):**
 - [x] Design tokens received and committed — source: `docs/platform_redesign/tokens/kit.css` + `TOKEN_MIGRATION.md`
@@ -320,9 +320,12 @@ The implementation roadmap linked above is comprehensive and self-contained. The
 - [x] `--brand-accent` / `--accent` white-label cascade wired (`--accent: var(--brand-accent)`)
 - [x] `AppLayout.jsx` mobile bottom nav updated to `var(--shell)`
 - [x] Partial screen pass: Market, Squad, Live, Auth, NotificationPanel, LeagueInviteCard
-- [ ] Remaining screens: Scores, League, Recap, Settings, Onboarding, ChipSelectorModal, NotFound
-- [ ] `BrandMark.jsx` update with new wordmark
-- [ ] `platform.spec.js` green after each screen
+- [x] Remaining screens token pass: HomeScreen (Scores), LeagueScreen, RecapScreen, SettingsScreen, NotFoundScreen (2026-06-21/22)
+- [x] `OnboardingWizard.jsx` — card background set to `var(--shell)` (immersive dark surface, correct for Kit Light one-dark-element principle) (2026-06-22)
+- [x] `BrandMark.jsx` — `secondaryColor` for dark theme fixed: `var(--paper)` → `rgba(255,255,255,0.55)` (was invisible on `var(--shell)` surface in Kit Light) (2026-06-22)
+- [x] `AppLayout.jsx` desktop sidebar — background moved from `var(--ink-2)` (white in Kit Light) to `var(--shell)` (dark navy); all `var(--mute)`/`var(--paper)` text replaced with `rgba(255,255,255,...)` equivalents for correct light-on-dark contrast (2026-06-22)
+- [ ] `platform.spec.js` green after token pass (run before final PR merge)
+- [ ] `SquadScreen.jsx` Kit Light components — MiniPitch/MiniTok pitch surface (`#2D5A27`) needs full spec (deferred per design decision above; block on design handoff)
 
 **Deferred decisions (do not block UX-0 continuation):**
 - **Tab count inside League Hub** — exact number and which tabs consolidate is TBD, pending multi-sport and P2P architecture decisions. Build tab structure to be variable. Resolve before Sprint UX-1.
@@ -347,7 +350,13 @@ The implementation roadmap linked above is comprehensive and self-contained. The
 - [ ] Tennis bracket pick screen (thin UI, coordinates with Phase 2)
 - [ ] Commissioner panel: extend to cover P2P config, F1 dynamics config, circle management
 
-**Session notes for Phase 1C:** *(update per session)*
+**Session notes for Phase 1C:**
+
+**2026-06-21/22 — Sprint UX-0 screens + BrandMark + sidebar (sessions 2 and 3):**
+- All remaining football screens received Kit Light token pass: `HomeScreen` (Scores), `LeagueScreen`, `RecapScreen`, `SettingsScreen`, `NotFoundScreen`, `OnboardingWizard`
+- Key decisions made: (1) OnboardingWizard keeps `var(--shell)` card bg — immersive full-screen is the "one dark element" in Kit Light; all white text inside is correct on that surface. (2) Desktop sidebar moved to `var(--shell)` — aligns with mobile bottom nav, makes BrandMark `theme="dark"` work correctly against a dark surface. (3) `BrandMark.secondaryColor` for dark theme fixed to `rgba(255,255,255,0.55)` — `var(--paper)` is dark navy in Kit Light and was invisible on shell.
+- Hardcoded old-dark rgba patterns replaced throughout: `rgba(0,180,216,...)` → `rgba(26,111,168,...)`, `rgba(242,238,229,...)` → `rgba(24,32,46,...)`, `text-white` on light surfaces → `text-[var(--paper)]`, `bg-cyan text-black` → `bg-cyan text-white` (accent is now dark navy, not light teal).
+- **Remaining for UX-0 completion:** run `platform.spec.js` to verify no visual regressions; `SquadScreen` Kit Light components (MiniPitch/MiniTok pitch surface) blocked on design spec for `#2D5A27` green field in light context.
 
 ---
 
@@ -360,11 +369,13 @@ The implementation roadmap linked above is comprehensive and self-contained. The
 **Read first:** [B2B_BUYOUT_TECHNICAL_DUE_DILIGENCE.md §2.5 and §3 (P0 items)](B2B_BUYOUT_TECHNICAL_DUE_DILIGENCE.md)
 
 ### Task 1D-A — Close the JWT signature gap (🔴 Critical)
-**Status: ⬜ Not started**
-- [ ] In `supabase/functions/_shared/auth.ts`, rewrite `requireServiceRole()` to verify the JWT signature on every path — remove the decode-only Path B that checks `role` claim without signature verification
-- [ ] Audit all 5+ Edge Functions that import `requireServiceRole()` — confirm they all get the fix
-- [ ] Deploy all affected functions: `npx supabase functions deploy <name> --project-ref sssmvihxtqtohisghjet`
-- [ ] Test: a request with a valid-shaped but forged service-role JWT is rejected with 401
+**Status: ✅ Done (code on v2 — deploy deferred to Week 12 merge)**
+- [x] In `supabase/functions/_shared/auth.ts`, rewrote `requireServiceRole()` to verify HMAC-SHA256 signature via `crypto.subtle` using `SUPABASE_JWT_SECRET`; made the function `async`; removed the signature-skipping decode-only Path B (2026-06-22)
+- [x] Audited all callers — 4 functions import it: `discover-tournament`, `sync-fixtures`, `sync-player-status`, `sync-players`; all updated with `await requireServiceRole(req)` (2026-06-22)
+- [ ] *(deferred to W12)* Deploy all affected functions: `npx supabase functions deploy discover-tournament sync-fixtures sync-player-status sync-players --project-ref sssmvihxtqtohisghjet`
+- [ ] *(deferred to W12)* Test: a request with a valid-shaped but forged service-role JWT is rejected with 401
+
+**Note:** these 4 functions are not deployed to prod from v2. Deploy happens at Week 12 merge. The pilot's live `_shared/auth.ts` on `main` is unchanged — pilot is unaffected.
 
 **Why this matters:** [B2B_BUYOUT_TECHNICAL_DUE_DILIGENCE.md §2.5](B2B_BUYOUT_TECHNICAL_DUE_DILIGENCE.md) — "A forged token with `role: service_role` in the payload would pass this path. This is the kind of finding that ends negotiations or knocks a material number off the price."
 
@@ -378,7 +389,13 @@ The implementation roadmap linked above is comprehensive and self-contained. The
 
 **Why this matters:** [B2B_BUYOUT_TECHNICAL_DUE_DILIGENCE.md §2.5](B2B_BUYOUT_TECHNICAL_DUE_DILIGENCE.md) — "The repo is not the source of truth for the schema — the live DB is. A buyer cannot stand up an identical environment from `git clone` + `migrate up`."
 
-**Session notes for Phase 1D:** *(update per session)*
+**Session notes for Phase 1D:**
+
+**2026-06-22 — Task 1D-A complete (code only, deploy deferred):**
+- `requireServiceRole()` in `_shared/auth.ts` rewritten as async; Path B now verifies HMAC-SHA256 signature via `crypto.subtle` using `SUPABASE_JWT_SECRET` before trusting any claim. Old Path B decoded the JWT payload without any signature check — a forged `{"role":"service_role"}` payload would have passed.
+- All 4 callers updated: `discover-tournament`, `sync-fixtures`, `sync-player-status`, `sync-players`.
+- None of these functions are deployed from v2 to prod — deploy happens at Week 12 merge alongside all other v2 changes. Pilot is unaffected.
+- Task 1D-B (schema reproducibility baseline) still pending — requires Docker-free pg_dump via Supabase dashboard SQL export; deferred to a standalone session.
 
 ---
 

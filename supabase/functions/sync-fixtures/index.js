@@ -64,7 +64,7 @@ function mapStatus(forzaStatus) {
 
 Deno.serve(async (req) => {
   if (req.method !== 'POST') return respond(405, { error: 'POST required' });
-  const authErr = requireServiceRole(req);
+  const authErr = await requireServiceRole(req);
   if (authErr) return authErr;
 
   let forza_id;

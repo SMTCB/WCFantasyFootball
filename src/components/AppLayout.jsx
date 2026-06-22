@@ -58,15 +58,15 @@ export default function AppLayout({ children }) {
       <nav
         data-testid="desktop-nav"
         className="hidden lg:flex fixed left-0 top-0 bottom-0 w-[220px] flex-col z-50"
-        style={{ background: 'var(--ink-2)', borderRight: '1px solid var(--rule)' }}
+        style={{ background: 'var(--shell)', borderRight: '1px solid rgba(255,255,255,0.08)' }}
       >
         {/* Editorial Brandmark + username */}
-        <div className="px-5 pt-6 pb-5" style={{ borderBottom: '1px solid var(--rule)' }}>
+        <div className="px-5 pt-6 pb-5" style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
           <BrandMark theme="dark" scale={0.72} />
           {username && (
             <div
               className="mt-2"
-              style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 9, letterSpacing: '0.12em', color: 'var(--mute)', textTransform: 'uppercase', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+              style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 9, letterSpacing: '0.12em', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
             >
               {username}
             </div>
@@ -94,20 +94,20 @@ export default function AppLayout({ children }) {
                 title={desc}
                 className="relative flex items-center gap-3 mx-3 px-3 py-2.5 transition-all duration-150"
                 style={{
-                  background:  isActive ? (isLive ? 'rgba(239,68,68,0.08)' : 'rgba(0,180,216,0.08)') : 'transparent',
-                  color:       isActive ? activeColor : 'var(--mute)',
+                  background:  isActive ? (isLive ? 'rgba(239,68,68,0.08)' : 'rgba(26,111,168,0.12)') : 'transparent',
+                  color:       isActive ? activeColor : 'rgba(255,255,255,0.45)',
                   borderLeft:  isActive ? `2px solid ${activeColor}` : '2px solid transparent',
                 }}
                 onMouseEnter={e => {
                   if (!isActive) {
-                    e.currentTarget.style.background = 'rgba(242,238,229,0.04)';
-                    e.currentTarget.style.color = isLive ? liveColor : 'var(--paper)';
+                    e.currentTarget.style.background = 'rgba(255,255,255,0.05)';
+                    e.currentTarget.style.color = isLive ? liveColor : 'rgba(255,255,255,0.85)';
                   }
                 }}
                 onMouseLeave={e => {
                   if (!isActive) {
                     e.currentTarget.style.background = 'transparent';
-                    e.currentTarget.style.color = 'var(--mute)';
+                    e.currentTarget.style.color = 'rgba(255,255,255,0.45)';
                   }
                 }}
               >
@@ -136,18 +136,18 @@ export default function AppLayout({ children }) {
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-4" style={{ borderTop: '1px solid var(--rule)' }}>
+        <div className="px-6 py-4" style={{ borderTop: '1px solid rgba(255,255,255,0.08)' }}>
           <Link
             to="/settings"
             title="Settings"
             className="block mb-3 text-xs font-semibold uppercase tracking-wider transition-colors"
-            style={{ color: 'var(--mute)', fontFamily: 'JetBrains Mono, monospace', letterSpacing: '0.15em' }}
+            style={{ color: 'rgba(255,255,255,0.45)', fontFamily: 'JetBrains Mono, monospace', letterSpacing: '0.15em' }}
             onMouseEnter={(e) => e.currentTarget.style.color = 'var(--cyan)'}
-            onMouseLeave={(e) => e.currentTarget.style.color = 'var(--mute)'}
+            onMouseLeave={(e) => e.currentTarget.style.color = 'rgba(255,255,255,0.45)'}
           >
             ⚙ Settings
           </Link>
-          <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '9px', letterSpacing: '0.15em', color: 'var(--mute)', textTransform: 'uppercase' }}>
+          <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '9px', letterSpacing: '0.15em', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase' }}>
             Alpha v0.1
           </div>
         </div>

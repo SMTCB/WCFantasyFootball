@@ -11,7 +11,7 @@
 export default function BrandMark({ theme = 'dark', scale = 1, compact = false }) {
   const isDark = theme === 'dark';
   const primaryColor   = isDark ? 'white'  : 'var(--ink)';
-  const secondaryColor = isDark ? 'var(--paper)'  : 'var(--mute)';
+  const secondaryColor = isDark ? 'rgba(255,255,255,0.55)' : 'var(--mute)';
   const slashColor     = 'var(--cyan)';
 
   if (compact) {

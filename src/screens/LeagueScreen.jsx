@@ -915,7 +915,7 @@ export default function LeagueScreen() {
       <div className="pb-16 min-h-screen bg-bg">
         <div className="flex items-center p-4 border-b border-border bg-surface sticky top-0 z-10">
           <button onClick={() => setView('list')} className="text-xl mr-4 text-text-secondary">←</button>
-          <h1 className="fz-display text-white text-[18px]">Initialize Campaign</h1>
+          <h1 className="fz-display text-[var(--paper)] text-[18px]">Initialize Campaign</h1>
         </div>
         <form onSubmit={handleCreateLeague} className="p-4 flex flex-col gap-6 mt-4">
           <div className="flex flex-col gap-2">
@@ -925,7 +925,7 @@ export default function LeagueScreen() {
                 type="text"
                 value={leagueName}
                 onChange={(e) => setLeagueName(e.target.value)}
-                className="w-full bg-transparent px-3 py-3 text-[15px] font-medium outline-none text-white"
+                className="w-full bg-transparent px-3 py-3 text-[15px] font-medium outline-none text-[var(--paper)]"
                 placeholder="e.g. Champions Draft League"
                 maxLength={40}
                 required
@@ -947,7 +947,7 @@ export default function LeagueScreen() {
                         : 'border-border bg-surface hover:border-cyan/40'
                     }`}
                   >
-                    <span className="text-[13px] font-bold uppercase tracking-wider text-white">{t.name}</span>
+                    <span className="text-[13px] font-bold uppercase tracking-wider text-[var(--paper)]">{t.name}</span>
                     {leagueTournament === t.forza_id && (
                       <span className="text-[9px] font-bold uppercase tracking-wider text-cyan border border-cyan/40 px-1 py-[1px] leading-none">Selected</span>
                     )}
@@ -1069,7 +1069,7 @@ export default function LeagueScreen() {
                     : 'border-border bg-surface hover:border-white/30'
                 }`}
               >
-                <span className="text-[11px] font-bold uppercase tracking-wider text-white">Classic</span>
+                <span className="text-[11px] font-bold uppercase tracking-wider text-[var(--paper)]">Classic</span>
                 <span className="text-[11px] leading-snug" style={{ color: 'var(--paper)' }}>All managers build freely — the same player can appear in any squad.</span>
                 <ul className="flex flex-col gap-[3px]">
                   <li className="text-[10px]" style={{ color: 'var(--mute)' }}>• No draft required · join and pick</li>
@@ -1089,7 +1089,7 @@ export default function LeagueScreen() {
                 }`}
               >
                 <div className="flex items-center gap-2 w-full">
-                  <span className="text-[11px] font-bold uppercase tracking-wider text-white">Draft</span>
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-[var(--paper)]">Draft</span>
                   <span className="text-[9px] font-bold uppercase tracking-wider text-cyan border border-cyan/40 rounded px-1 py-[1px] leading-none">Recommended</span>
                 </div>
                 <span className="text-[11px] leading-snug" style={{ color: 'var(--paper)' }}>Each player owned by one manager — allocated by blind draft lottery.</span>
@@ -1111,7 +1111,7 @@ export default function LeagueScreen() {
                 }`}
               >
                 <div className="flex items-center gap-2 w-full">
-                  <span className="text-[11px] font-bold uppercase tracking-wider text-white">Draft + H2H</span>
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-[var(--paper)]">Draft + H2H</span>
                   <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 8, color: 'var(--gold)', border: '1px solid rgba(240,180,0,0.4)', padding: '1px 5px', letterSpacing: '.14em' }}>⚔️ H2H</span>
                 </div>
                 <span className="text-[11px] leading-snug" style={{ color: 'var(--paper)' }}>Draft league with a parallel head-to-head competition each matchday.</span>
@@ -1126,7 +1126,7 @@ export default function LeagueScreen() {
               Both modes: max 3 players per club · position rules always apply · club cap relaxes in cup tournaments
             </p>
           </div>
-          <button type="submit" disabled={formLoading || !leagueName.trim()} className="w-full mt-4 bg-cyan text-black font-bold py-4 uppercase tracking-wider disabled:opacity-50">
+          <button type="submit" disabled={formLoading || !leagueName.trim()} className="w-full mt-4 bg-cyan text-white font-bold py-4 uppercase tracking-wider disabled:opacity-50">
             {formLoading ? 'Creating…' : 'Start Season'}
           </button>
         </form>
@@ -1192,7 +1192,7 @@ export default function LeagueScreen() {
                   onClick={() => setNewLeague(activeLeague?.leagues || activeLeague)}
                   data-tour="league-invite"
                   disabled={!joinCode}
-                  style={{ background: 'transparent', border: '1px solid rgba(0,180,216,.4)', color: 'var(--cyan)', padding: '6px 12px', fontFamily: MONO, fontSize: 10, letterSpacing: '.2em', cursor: joinCode ? 'pointer' : 'default', opacity: joinCode ? 1 : 0.4 }}
+                  style={{ background: 'transparent', border: '1px solid rgba(26,111,168,.4)', color: 'var(--cyan)', padding: '6px 12px', fontFamily: MONO, fontSize: 10, letterSpacing: '.2em', cursor: joinCode ? 'pointer' : 'default', opacity: joinCode ? 1 : 0.4 }}
                 >+ INVITE</button>
                 <button
                   onClick={() => view === 'commissioner' ? replayCommissionerTour() : replayLeagueTour()}
@@ -1231,7 +1231,7 @@ export default function LeagueScreen() {
                   onClick={() => setNewLeague(activeLeague?.leagues || activeLeague)}
                   data-tour="league-invite"
                   disabled={!joinCode}
-                  style={{ background: 'transparent', border: '1px solid rgba(0,180,216,.4)', color: 'var(--cyan)', padding: '4px 8px', fontFamily: MONO, fontSize: 9, letterSpacing: '.2em', cursor: joinCode ? 'pointer' : 'default', opacity: joinCode ? 1 : 0.4 }}
+                  style={{ background: 'transparent', border: '1px solid rgba(26,111,168,.4)', color: 'var(--cyan)', padding: '4px 8px', fontFamily: MONO, fontSize: 9, letterSpacing: '.2em', cursor: joinCode ? 'pointer' : 'default', opacity: joinCode ? 1 : 0.4 }}
                 >+ INVITE</button>
               </div>
             }
@@ -2001,13 +2001,13 @@ export default function LeagueScreen() {
          {showTradeBuilder && tradeTarget && (
             <div className="fixed inset-0 z-50 flex items-end outline-none bg-black/80 animate-in fade-in" onClick={() => setShowTradeBuilder(false)}>
                <div className="w-full h-[90vh] bg-[var(--ink)] rounded-t-2xl flex flex-col animate-in slide-in-from-bottom border-t border-[var(--rule)] relative" onClick={e => e.stopPropagation()}>
-                  <div className="w-full flex justify-center py-3"><div className="w-12 h-1.5 bg-[#2A2A2A] rounded-full" /></div>
+                  <div className="w-full flex justify-center py-3"><div className="w-12 h-1.5 bg-[var(--rule)] rounded-full" /></div>
                   <div className="px-6 py-4 border-b border-[var(--rule)] flex justify-between items-center">
                     <div>
                       <div className="text-[10px] text-[#1E88E5] font-black uppercase tracking-[.14em] mb-1">NEGOTIATION TABLE</div>
-                      <h2 className="text-xl font-bold text-white">Trade with {tradeTarget.name}</h2>
+                      <h2 className="text-xl font-bold text-[var(--paper)]">Trade with {tradeTarget.name}</h2>
                     </div>
-                    <button onClick={() => setShowTradeBuilder(false)} className="text-[var(--mute)] hover:text-white transition-colors">✕</button>
+                    <button onClick={() => setShowTradeBuilder(false)} className="text-[var(--mute)] hover:text-[var(--paper)] transition-colors">✕</button>
                   </div>
                   <div className="flex-1 overflow-y-auto px-6 py-8 flex flex-col gap-8 no-scrollbar">
                     {/* Incoming trade proposals */}
@@ -2128,7 +2128,7 @@ export default function LeagueScreen() {
                            const picked = mySquadPlayers.find(p => p.id === e.target.value);
                            setTradeMyPlayer(picked);
                            // tradeTheirPlayer is NOT cleared — mismatch warning + submit block handle it
-                         }} className="bg-[var(--ink)] border border-[var(--rule)] p-3 rounded-sm text-white text-[12px] font-bold outline-none text-center">
+                         }} className="bg-[var(--elev)] border border-[var(--rule)] p-3 rounded-sm text-[var(--paper)] text-[12px] font-bold outline-none text-center">
                            <option value="">{mySquadPlayers.length ? '(None)' : 'Loading…'}</option>
                            {[...mySquadPlayers].sort((a, b) => {
                              if (!tradeTheirPlayer) return 0;
@@ -2145,7 +2145,7 @@ export default function LeagueScreen() {
                             onClick={() => toggleListing(tradeMyPlayer.id)}
                             className={`text-[9px] font-black uppercase tracking-widest px-2 py-1 rounded border transition-all ${
                               myListings.has(tradeMyPlayer.id)
-                                ? 'border-[#00C853]/40 text-[#00C853] bg-[#00C853]/10'
+                                ? 'border-[var(--pos)]/40 text-[var(--pos)] bg-[var(--pos-bg)]'
                                 : 'border-[var(--rule)] text-[#555]'
                             }`}
                           >
@@ -2156,7 +2156,7 @@ export default function LeagueScreen() {
                       <div className="text-[#2A2A2A] text-xl mt-6 flex justify-center">↔</div>
                       <div className="flex flex-col gap-2">
                         <label className="text-[9px] font-black text-[var(--mute)] uppercase tracking-widest text-center">THEIR PLAYER</label>
-                        <select value={tradeTheirPlayer?.id || ''} onChange={(e) => setTradeTheirPlayer(theirSquadPlayers.find(p => p.id === e.target.value))} className="bg-[var(--ink)] border border-[var(--rule)] p-3 rounded-sm text-white text-[12px] font-bold outline-none text-center text-ellipsis overflow-hidden">
+                        <select value={tradeTheirPlayer?.id || ''} onChange={(e) => setTradeTheirPlayer(theirSquadPlayers.find(p => p.id === e.target.value))} className="bg-[var(--elev)] border border-[var(--rule)] p-3 rounded-sm text-[var(--paper)] text-[12px] font-bold outline-none text-center text-ellipsis overflow-hidden">
                            <option value="">{theirSquadPlayers.length ? '(None)' : 'Loading…'}</option>
                            {[...theirSquadPlayers].sort((a, b) => {
                              if (!tradeMyPlayer) return 0;
@@ -2173,7 +2173,7 @@ export default function LeagueScreen() {
                     
                     <div className="space-y-4 pt-6 border-t border-[var(--rule)]">
                       <div className="flex justify-between items-center mb-2">
-                        <span className="text-[12px] font-bold text-white">Add Cash Sweetener</span>
+                        <span className="text-[12px] font-bold text-[var(--paper)]">Add Cash Sweetener</span>
                         <span className="text-[14px] font-black text-positive">€{tradeCash.toFixed(1)}M</span>
                       </div>
                       <div className="flex items-center gap-4">
@@ -2186,7 +2186,7 @@ export default function LeagueScreen() {
 
                     <div className="space-y-4 pt-6 border-t border-[var(--rule)]">
                       <div className="flex justify-between items-center mb-2">
-                        <span className="text-[12px] font-bold text-white">Add Points Penalty</span>
+                        <span className="text-[12px] font-bold text-[var(--paper)]">Add Points Penalty</span>
                         <span className="text-[14px] font-black text-[#E53935]">{tradePoints} pts</span>
                       </div>
                       <div className="flex items-center gap-4">
@@ -2211,8 +2211,8 @@ export default function LeagueScreen() {
                     <button
                       disabled={isSendingProposal}
                       onClick={validateAndSendProposal}
-                      className="w-full py-4 bg-cyan text-black text-[13px] font-black uppercase tracking-widest rounded active:scale-95 shadow-[0_0_15px_rgba(0,180,216,0.3)]"
-                      style={{ backgroundColor: '#00B4D8' }}
+                      className="w-full py-4 bg-cyan text-white text-[13px] font-black uppercase tracking-widest rounded active:scale-95 shadow-[0_0_15px_rgba(26,111,168,0.3)]"
+                      style={{ backgroundColor: 'var(--accent)' }}
                     >
                       Broadcast Proposal
                     </button>
@@ -2226,7 +2226,7 @@ export default function LeagueScreen() {
              <div className="w-full h-[80vh] bg-[var(--ink)] rounded-t-2xl flex flex-col border-t border-[var(--rule)]" onClick={e => e.stopPropagation()}>
                <div className="p-6 border-b border-[var(--rule)] flex justify-between items-center">
                  <div>
-                    <h2 className="text-white font-bold text-lg">{managerTeamView.name}'s Roster</h2>
+                    <h2 className="text-[var(--paper)] font-bold text-lg">{managerTeamView.name}'s Roster</h2>
                     <p className="text-[10px] text-text-tertiary uppercase tracking-widest">Full 11-Man Tactical Squad</p>
                  </div>
                  <button onClick={() => setManagerTeamView(null)} className="text-[#555]">✕</button>
@@ -2241,16 +2241,16 @@ export default function LeagueScreen() {
                    <div key={i} className="flex items-center gap-3 bg-[var(--ink)] p-3 border border-[var(--rule)] rounded-sm relative overflow-hidden" style={{ borderLeft: `2px solid ${posColor}44` }}>
                      <div className="flex-1 min-w-0">
                        <div className="text-[10px] font-black uppercase tracking-tighter" style={{ color: posColor }}>{p.position} · {p.club}</div>
-                       <div className="text-[14px] font-bold text-white tracking-tight truncate">{p.name}</div>
+                       <div className="text-[14px] font-bold text-[var(--paper)] tracking-tight truncate">{p.name}</div>
                      </div>
                      <div className="text-right shrink-0 mr-2">
-                       <div className="text-[13px] font-black text-white">€{p.price}M</div>
+                       <div className="text-[13px] font-black text-[var(--paper)]">€{p.price}M</div>
                        <div className="text-[9px] font-bold" style={{ color: 'var(--positive)' }}>READY</div>
                      </div>
                      {activeLeague?.leagues?.format === 'noduplicate' && managerTeamView.user_id !== currentUser?.id && (
                        <button
                          onClick={() => { const t = { ...managerTeamView, squadId: squadByUserRef.current[managerTeamView.user_id] }; setTradeTarget(t); setTradeTheirPlayer(p); loadTradeSquads(managerTeamView.user_id); setManagerTeamView(null); setShowTradeBuilder(true); }}
-                         style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 9, letterSpacing: '.14em', color: 'var(--cyan)', background: 'transparent', border: '1px solid rgba(0,180,216,.3)', padding: '4px 8px', cursor: 'pointer', flexShrink: 0 }}
+                         style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 9, letterSpacing: '.14em', color: 'var(--accent)', background: 'transparent', border: '1px solid rgba(26,111,168,.3)', padding: '4px 8px', cursor: 'pointer', flexShrink: 0 }}
                        >TRADE</button>
                      )}
                    </div>
@@ -2331,9 +2331,9 @@ export default function LeagueScreen() {
   const emptyState = (
     <div className="p-8 text-center">
       <div className="fk-display" style={{ fontSize: 24, color: 'var(--gold)', marginBottom: '12px' }}>FFL</div>
-      <div className="text-[13px] font-bold uppercase tracking-wide text-white mb-2">No leagues yet</div>
+      <div className="text-[13px] font-bold uppercase tracking-wide text-[var(--paper)] mb-2">No leagues yet</div>
       <div className="text-[11px] text-text-secondary mb-6">Create a league or enter a friend's invite code below.</div>
-      <button onClick={() => setView('create')} className="px-6 py-3 bg-cyan text-black text-[11px] font-bold uppercase tracking-wider">
+      <button onClick={() => setView('create')} className="px-6 py-3 bg-cyan text-white text-[11px] font-bold uppercase tracking-wider">
         Create a League
       </button>
     </div>

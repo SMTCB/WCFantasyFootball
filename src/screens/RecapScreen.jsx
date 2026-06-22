@@ -79,7 +79,7 @@ function LeagueTag({ name }) {
     <span style={{
       fontFamily: MONO, fontSize: 10, fontWeight: 800, letterSpacing: '.12em',
       color: 'var(--cyan)', padding: '3px 8px',
-      border: '1px solid rgba(0,180,216,.35)',
+      border: '1px solid rgba(26,111,168,.35)',
       whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
       maxWidth: 200, flexShrink: 0,
     }}>
@@ -179,7 +179,7 @@ function LiveMatchdayCard({ card }) {
             fontFamily: MONO, fontSize: 8, letterSpacing: '.14em', flexShrink: 0,
             color: roundComplete ? 'var(--positive)' : 'var(--danger)',
             padding: '1px 5px',
-            border: `1px solid ${roundComplete ? 'rgba(34,197,94,.4)' : 'rgba(239,68,68,.4)'}`,
+            border: `1px solid ${roundComplete ? 'rgba(22,101,52,.4)' : 'rgba(185,28,28,.4)'}`,
           }}>
             {roundComplete ? 'COMPLETE' : 'IN PROGRESS'}
           </span>
