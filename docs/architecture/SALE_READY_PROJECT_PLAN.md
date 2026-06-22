@@ -15,7 +15,7 @@
 | **0** | Foundation seams | W1 | ⬜ Not started |
 | **1A** | P2P Betting | W2–W7 | ⬜ Not started |
 | **1B** | F1 Module | W2–W5 | ⬜ Not started |
-| **1C** | UX Redesign | W1–W9 | 🔄 In progress — Sprint UX-0 ~95% done |
+| **1C** | UX Redesign | W1–W9 | 🔄 In progress — Sprint UX-0 ✅ done, UX-1 next |
 | **1D** | Buyout hygiene — batch 1 | W1–W2 | 🔄 In progress — 1D-A done, 1D-B pending |
 | **2** | Tennis Module | W6–W8 | ⬜ Not started |
 | **3A** | Buyout hygiene — batch 2 | W9–W11 | ⬜ Not started |
@@ -24,7 +24,7 @@
 **Current active branch:** `v2` (all redesign + new feature work)
 **v2 branch:** active — created off main, merged main regularly to pick up pilot bug fixes
 
-**Next action:** run `platform.spec.js` green pass to close Sprint UX-0 (only remaining gate); `SquadScreen` MiniPitch surface deferred pending design spec. After that: begin Phase 0 foundation seams.
+**Next action:** begin **Phase 0 — Foundation Seams** (migrations 186–188: sport abstraction, circle layer, coin wallet stub). Also: Phase 1D-B (schema reproducibility baseline, quick win). `SquadScreen` MiniPitch Kit Light surface deferred to Phase 2 (blocked on design spec).
 
 ---
 
@@ -312,7 +312,7 @@ The implementation roadmap linked above is comprehensive and self-contained. The
 **Rolldown TDZ warning:** the redesign will add new imports across screens. Before adding any import to a child component of a large screen, grep whether the large screen already imports that module (CLAUDE.md — Vite v8 / Rolldown TDZ Rule). Run `npm run build` before any PR merge.
 
 ### Sprint UX-0 — New visual identity applied to football
-**Status: 🔄 In progress (v2 branch, ~95% done)**
+**Status: ✅ Done (v2 branch, 2026-06-22)**
 
 **What was done pre-kickoff (v2 branch, sessions Jun 2026):**
 - [x] Design tokens received and committed — source: `docs/platform_redesign/tokens/kit.css` + `TOKEN_MIGRATION.md`
@@ -325,7 +325,7 @@ The implementation roadmap linked above is comprehensive and self-contained. The
 - [x] `BrandMark.jsx` — `secondaryColor` for dark theme fixed: `var(--paper)` → `rgba(255,255,255,0.55)` (was invisible on `var(--shell)` surface in Kit Light) (2026-06-22)
 - [x] `AppLayout.jsx` desktop sidebar — background moved from `var(--ink-2)` (white in Kit Light) to `var(--shell)` (dark navy); all `var(--mute)`/`var(--paper)` text replaced with `rgba(255,255,255,...)` equivalents for correct light-on-dark contrast (2026-06-22)
 - [x] **Audit pass — partial-pass screens** (2026-06-22): `MarketScreen`, `LiveScreen`, and `SquadScreen` each had residual old-palette rgba values missed in the initial pass. All identified instances fixed: old-cyan `rgba(0,180,216,...)` → `rgba(26,111,168,...)`, bright-green → `var(--pos-bg)`, bright-red → `var(--neg-bg)`, cream-on-dark-overlay text → `rgba(255,255,255,...)`. `LeagueInviteCard` intentionally untouched — it is a self-contained branded sharing card with hardcoded dark palette, not using CSS tokens.
-- [ ] `platform.spec.js` green after token pass (run before final PR merge)
+- [x] `platform.spec.js` green — 84/84 passed (2026-06-22)
 - [ ] `SquadScreen.jsx` Kit Light components — MiniPitch/MiniTok pitch surface (`#2D5A27`) needs full spec (deferred per design decision above; block on design handoff)
 
 **Deferred decisions (do not block UX-0 continuation):**
