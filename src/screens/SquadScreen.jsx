@@ -61,6 +61,8 @@ const CHIPS = [
 
 // Set to true to re-enable chip UI (Triple Captain + Matchday Joker) post-pilot
 const CHIPS_ENABLED = false;
+// Set to true to re-enable knockout draft keeps UI post-pilot
+const KNOCKOUT_DRAFT_ENABLED = false;
 
 export default function SquadScreen() {
   const { user } = useAuth();
@@ -1616,8 +1618,8 @@ export default function SquadScreen() {
   return (
     <div className="min-h-screen bg-bg overflow-x-hidden">
 
-      {/* ── Knockout keep window (cup+draft leagues, group_stage phase only) ── */}
-      {activeLeague && <KnockoutKeepSelector leagueId={activeLeague} />}
+      {/* ── Knockout keep window — disabled: group→knockout uses normal transfer window ── */}
+      {KNOCKOUT_DRAFT_ENABLED && activeLeague && <KnockoutKeepSelector leagueId={activeLeague} />}
 
       {/* ── Transfer window status banner (U5) ──────────────────────────────── */}
       <TransferWindowBanner
