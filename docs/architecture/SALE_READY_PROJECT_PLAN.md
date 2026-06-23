@@ -17,7 +17,7 @@
 | **1B** | F1 Module | W2–W5 | ✅ Done (Sprints 0–3, PR #606) |
 | **1C** | UX Redesign | W1–W9 | 🔄 In progress — Sprint UX-0 ✅ done, UX-1 next |
 | **1D** | Buyout hygiene — batch 1 | W1–W2 | 🔄 In progress — 1D-A done, 1D-B pending |
-| **1E** | Clubhouse social architecture | W3–W8 | 🔄 In progress — CH-0 ✅ done (PR #607), CH-1 ✅ done (PR #608), CH-2 next |
+| **1E** | Clubhouse social architecture | W3–W8 | 🔄 In progress — CH-0 ✅ done (PR #607), CH-1 ✅ done (PR #608), CH-2 ✅ done (PR #609), CH-3 next |
 | **2** | Tennis Module | W6–W8 | ⬜ Not started |
 | **3A** | Buyout hygiene — batch 2 | W9–W11 | ⬜ Not started |
 | **3B** | v2 integration & deploy | W10–W12 | ⬜ Not started |
@@ -26,7 +26,7 @@
 **v2 branch:** active — created off main, merged main regularly to pick up pilot bug fixes
 
 **Next actions (parallel tracks):**
-- **Phase 1E — Clubhouse:** CH-2 next (chat channels + DMs — `ClubhouseChat.jsx`, `useClubhouseChat`, `useDirectMessages`, Realtime).
+- **Phase 1E — Clubhouse:** CH-3 next (Frontpage migrates to Clubhouse level — `generate-frontpage-edition` circle mode, cross-sport Forza Times, `frontpage_editions.circle_id` column).
 - **Phase 1A — P2P Betting:** 5 product decisions needed before Sprint 1 (Stripe deferred; see Sprint P2P-0). Can start Sprint 1 (coin ledger) once decisions are made.
 - **Phase 1D-B:** schema reproducibility baseline — standalone, can do any session.
 - **Phase 2 — Tennis:** game dynamics spec ✅ done; Sprint T-0 unblocked (CH-0 delivered `circle_player_boxes` junction table dependency).
@@ -475,14 +475,14 @@ The implementation roadmap linked above is comprehensive and self-contained. The
 - [x] AppLayout: CLUBHOUSE nav item (desktopOnly) added to both football and F1 navs; `/clubhouse` included in `isMainRoute` check
 
 ### Sprint CH-2 — Chat channels + DMs
-**Status: ⬜ Not started**
-- [ ] `ClubhouseChat.jsx` — channel list sidebar + message thread (same Realtime pattern as `useChatMessages`):
-  - General channel (always shown, created with Clubhouse)
-  - Custom channels (Clubhouse owner can create)
-  - 1-to-1 DMs (opened from member rail)
-- [ ] `useClubhouseChat(channelId)` hook — messages + Realtime INSERT subscription
-- [ ] `useDirectMessages(circleId, toUserId)` hook — DM thread + read receipt update
-- [ ] All message components use `createPortal` for any overlays (existing rule — PR #448)
+**Status: ✅ Done (PR #609, 2026-06-23)**
+- [x] `ClubhouseChat.jsx` — two-panel layout: channel list (180px) + message thread (flex-1), mobile-responsive (one panel at a time), owner-only channel creation form, Enter-to-send input
+  - General channel auto-selected on load (is_default = true)
+  - Custom channels — Clubhouse owner can create via inline form
+  - 1-to-1 DMs — opened from member list in DMS tab
+- [x] `useClubhouseChat(channelId)` hook — messages + Realtime INSERT subscription, batch username cache
+- [x] `useDirectMessages(circleId, toUserId)` hook — DM thread + read receipt auto-mark on load and arrival
+- [x] CHAT tab added to ClubhouseScreen, full-width outside max-640 container
 
 ### Sprint CH-3 — Frontpage migrates to Clubhouse level
 **Status: ⬜ Not started**
