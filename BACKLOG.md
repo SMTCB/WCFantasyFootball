@@ -1,12 +1,45 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-06-23 (v2: Phase 1E Clubhouse shell complete — CH-7/CH-8/CH-9 all shipped, PRs #613–#615)  
-**E2E Test Suite**: `platform.spec.js` (84 tests × 1 browser config) passing ✅ — 84/84 on v2 branch 2026-06-22  
+**Last Updated**: 2026-06-23 (v2: Tennis Sprint T-0 — schema foundations + 2026 ATP calendar, PR #617)  
+**E2E Test Suite**: `platform.spec.js` (84 tests × 1 browser config) passing ✅ — 84/84 on v2 branch 2026-06-23  
 **Full Playbook Run**: `E2E_TEST_PLAYBOOK.md` v2.0 — all flows confirmed  
 **🟢 LAUNCH READY**: No critical (P0/P1) bugs open. All game mechanics functional. WC kick-off 2026-06-11.  
 **Live App**: https://wc-fantasy-football.vercel.app  
 **WC Kick-off**: 2026-06-11 19:00 UTC (Mexico vs South Africa)  
 **Supabase PostgREST max_rows**: 10,000 (raised from default 1,000 — 2026-06-08)
+
+---
+
+## ✅ v2 Tennis Sprint T-0 — Schema foundations + 2026 ATP calendar (2026-06-23)
+
+**Branch**: `v2` — PR #617. Migrations 197–198.
+
+**What was built:**
+
+**Migration 197 — Core tables + Player's Box + calendar:**
+- `player_boxes`, `player_box_members`, `circle_player_boxes` (links boxes into Circle cross-sport layer)
+- `tennis_seasons` (2026 seeded), `tennis_tournaments` (14-event 2026 ATP calendar)
+- `tennis_tournament_type` + `tennis_surface` enums
+- RPCs: `create_player_box`, `join_player_box_by_code`, `get_my_player_boxes`
+- RLS on all 5 tables
+
+**Migration 198 — Game tables + gazette enum:**
+- `tennis_tournament_players` — `external_player_id INT` for API sync; partial unique index prevents duplicate API-sourced players while allowing multiple manual (NULL) entries
+- `tennis_rosters`, `tennis_qf_captains`, `tennis_ace_cards`
+- `tennis_tournament_scores` — shared table for standard tournaments and ATP Finals
+- `tennis_atp_finals_matches`, `tennis_atp_finals_picks`
+- `gazette_entry_type` extended: `'tennis_result'` added
+- RLS on all 7 tables
+
+**API integration (tennis-api-atp-wta-itf, 50 req/day free plan):**
+- `tennis_tournaments.external_id INT` — API season ID, populated on first admin sync
+- `tennis_tournament_players.external_player_id INT` — API player ID, partial unique index
+- No cron — all API calls admin-triggered only (~2 per tournament = ~28 calls for full season)
+- Full season budget: ~28 of 50 daily allowance, spread across Jan–Nov
+
+**Smoke tests passed:** 12 tables created, RLS on all, 14 tournament rows, 3 RPCs installed, `tennis_result` in enum, 84/84 E2E green, build clean.
+
+**Next v2 session:** Tennis Sprint T-1 — `submit_tennis_roster`, `set_tennis_qf_captain`, ATP Finals submission RPCs, `issue_season_ace_cards`. See `TENNIS_MODULE_IMPLEMENTATION_PLAN.md`.
 
 ---
 
