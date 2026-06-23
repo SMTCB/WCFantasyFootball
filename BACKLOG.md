@@ -1,12 +1,31 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-06-22 (BI-02 automated round backups + B-03 drop knockout draft UI — PR #604, migration 190)  
+**Last Updated**: 2026-06-23 (clean sheet flag bug fix — PR #616)  
 **E2E Test Suite**: `platform.spec.js` (36 tests × 2 browsers) passing in CI ✅  
 **Full Playbook Run**: `E2E_TEST_PLAYBOOK.md` v2.0 — all flows confirmed  
 **🟢 LAUNCH READY**: No critical (P0/P1) bugs open. All game mechanics functional. WC kick-off 2026-06-11.  
 **Live App**: https://wc-fantasy-football.vercel.app  
 **WC Kick-off**: 2026-06-11 19:00 UTC (Mexico vs South Africa)  
 **Supabase PostgREST max_rows**: 10,000 (raised from default 1,000 — 2026-06-08)
+
+---
+
+## ✅ Clean sheet not awarded for DEF/GK subbed off at 45–59 min (2026-06-23) — PR #616
+
+**Reported**: Cristian Romero (DEF, Argentina) played 57 min in R2 vs Austria, team kept a clean sheet, but received 0 clean sheet points.
+
+**Root cause**: `ingest-match-events/index.js` stored `clean_sheet: conceded === 0 && mins >= 60` — a 60-minute gate baked into the `player_match_stats.clean_sheet` flag. `calculate-scores` PATH A reads that flag directly via `scorePlayer()`. DEF/GK only need 45 min for a clean sheet, so any DEF/GK subbed off between 45–59 min in a clean sheet game was silently denied +4 pts. The 60-min gate belongs only in `scorePlayer()` inside `calculate-scores`, not in the stored flag.
+
+**Code fix** (PR #616, `ingest-match-events/index.js` line 475):
+- `clean_sheet: conceded === 0 && mins >= 60` → `clean_sheet: conceded === 0`
+- Deployed to production immediately after merge.
+
+**Data fix** (applied directly to DB):
+- 7 `player_match_stats` rows in R2 updated to `clean_sheet = true`:
+  Romero (ARG), Meunier (BEL), Hardani (IRN), Bombito (CAN), Cornelius (CAN), Cancelo (POR), Semedo (POR)
+- `calculate-scores` will recompute `fantasy_points` (+4 pts each), `breakdown` (CLEAN SHEET row), and squad totals automatically on its next pass via PATH A + `rollupSquads`.
+
+**v2 isolation confirmed**: diff `origin/main..origin/v2` verified — 20+ v2-only Clubhouse/F1 commits, none leaked to main. Only change on main is the one-line fix.
 
 ---
 
