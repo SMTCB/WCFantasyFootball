@@ -24,10 +24,10 @@ const FOOTBALL_NAV = [
   { key: 'scores',      label: 'SCORES',      path: '/',            Icon: NavIconScores,      desc: 'Match Scores & Fixtures' },
   { key: 'squad',       label: 'SQUAD',       path: '/squad',       Icon: NavIconSquad,       desc: 'Your Tactical Sheet' },
   { key: 'league',      label: 'LEAGUE',      path: '/league',      Icon: NavIconLeagues,     desc: 'League Standings & Chat' },
-  { key: 'live',        label: 'LIVE',        path: '/live',        Icon: NavIconLive,        desc: 'Live Points & Projections', isLive: true },
+  { key: 'live',        label: 'LIVE',        path: '/live',        Icon: NavIconLive,        desc: 'Live Points & Projections', isLive: true, desktopOnly: true },
   { key: 'market',      label: 'MARKET',      path: '/market',      Icon: NavIconMarket,      desc: 'Player Transfer Market' },
   { key: 'recap',       label: 'RECAP',       path: '/recap',       Icon: NavIconRecap,       desc: 'Matchday Recap & Stats', desktopOnly: true },
-  { key: 'clubhouse',  label: 'CLUBHOUSE',   path: '/clubhouse',   Icon: NavIconClubhouse,   desc: 'The Clubhouse — chat, bets & feed', desktopOnly: true },
+  { key: 'clubhouse',  label: 'CLUBHOUSE',   mobileLabel: 'CLUB',  path: '/clubhouse',   Icon: NavIconClubhouse,   desc: 'The Clubhouse — social hub' },
 ];
 
 function buildF1Nav(paddockId) {
@@ -276,7 +276,7 @@ export default function AppLayout({ children }) {
         }}
       >
         <div className="flex items-stretch h-16">
-          {NAV_ITEMS.filter(item => !item.desktopOnly).map(({ key, label, path, Icon, isLive }) => { // eslint-disable-line no-unused-vars
+          {NAV_ITEMS.filter(item => !item.desktopOnly).map(({ key, label, mobileLabel, path, Icon, isLive }) => { // eslint-disable-line no-unused-vars
             const isActive = location.pathname === path ||
               (path !== '/' && location.pathname.startsWith(path));
             const activeColor = isLive ? 'var(--danger)' : 'var(--cyan)';
@@ -310,7 +310,7 @@ export default function AppLayout({ children }) {
                   fontWeight:    600,
                   lineHeight:    1,
                 }}>
-                  {label}
+                  {mobileLabel ?? label}
                 </span>
 
                 {/* Live pulse dot (inactive state) */}

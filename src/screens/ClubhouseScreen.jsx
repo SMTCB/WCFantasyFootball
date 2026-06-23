@@ -181,7 +181,7 @@ function SportSection({ label, emoji, items, onEnter }) {
 }
 
 // ── Activity feed ─────────────────────────────────────────────────────────────
-function FeedEntry({ entry }) {
+function FeedEntry({ entry, onEnter }) {
   const typeLabel = {
     activity:      'GW RESULT',
     breaking_news: 'NEWS',
@@ -197,12 +197,20 @@ function FeedEntry({ entry }) {
     auction_result:'var(--positive)',
     trade_result:  'var(--positive)',
     draft_report:  'var(--mute)',
+    classified:    'var(--gold)',
   }[entry.entry_type] ?? 'var(--mute)';
 
   const ago = timeAgo(entry.created_at);
+  const clickable = onEnter && entry.league_id;
 
   return (
-    <div style={{ padding: '12px 0', borderBottom: '1px solid var(--rule)' }}>
+    <div
+      role={clickable ? 'button' : undefined}
+      tabIndex={clickable ? 0 : undefined}
+      onClick={clickable ? () => onEnter(entry.league_id) : undefined}
+      onKeyDown={clickable ? (e) => { if (e.key === 'Enter' || e.key === ' ') onEnter(entry.league_id); } : undefined}
+      style={{ padding: '12px 0', borderBottom: '1px solid var(--rule)', cursor: clickable ? 'pointer' : 'default' }}
+    >
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8, marginBottom: 4 }}>
         <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
           <span style={{ ...MONO, fontSize: 9, fontWeight: 700, letterSpacing: '0.12em', color: typeColor }}>{typeLabel}</span>
@@ -210,7 +218,10 @@ function FeedEntry({ entry }) {
             <span style={{ ...MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '0.08em' }}>{entry.league_name}</span>
           )}
         </div>
-        <span style={{ ...MONO, fontSize: 9, color: 'var(--mute)', whiteSpace: 'nowrap', letterSpacing: '0.08em' }}>{ago}</span>
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexShrink: 0 }}>
+          <span style={{ ...MONO, fontSize: 9, color: 'var(--mute)', whiteSpace: 'nowrap', letterSpacing: '0.08em' }}>{ago}</span>
+          {clickable && <span style={{ ...MONO, fontSize: 9, color: 'var(--accent)', letterSpacing: '0.08em' }}>→</span>}
+        </div>
       </div>
       <div style={{ ...BODY, fontSize: 13, color: 'var(--paper)', lineHeight: 1.4 }}>{entry.headline}</div>
     </div>
@@ -554,7 +565,7 @@ export default function ClubhouseScreen() {
                       📰 Activity
                     </div>
                     {feed.map(entry => (
-                      <FeedEntry key={entry.id} entry={entry} />
+                      <FeedEntry key={entry.id} entry={entry} onEnter={enterLeague} />
                     ))}
                   </div>
                 )}
