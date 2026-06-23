@@ -17,7 +17,7 @@
 | **1B** | F1 Module | W2–W5 | ✅ Done (Sprints 0–3, PR #606) |
 | **1C** | UX Redesign | W1–W9 | 🔄 In progress — Sprint UX-0 ✅ done, UX-1 next |
 | **1D** | Buyout hygiene — batch 1 | W1–W2 | 🔄 In progress — 1D-A done, 1D-B pending |
-| **1E** | Clubhouse social architecture | W3–W8 | 🔄 In progress — CH-0 ✅ done (PR #607), CH-1 ✅ done (PR #608), CH-2 ✅ done (PR #609), CH-3 ✅ done (PR #610), CH-4 ✅ done, CH-5 ✅ done (PR #611), CH-6 next |
+| **1E** | Clubhouse social architecture | W3–W8 | 🔄 In progress — CH-0–CH-6 ✅ done (PRs #607–#612), CH-7 next |
 | **2** | Tennis Module | W6–W8 | ⬜ Not started |
 | **3A** | Buyout hygiene — batch 2 | W9–W11 | ⬜ Not started |
 | **3B** | v2 integration & deploy | W10–W12 | ⬜ Not started |
@@ -26,7 +26,7 @@
 **v2 branch:** active — created off main, merged main regularly to pick up pilot bug fixes
 
 **Next actions (parallel tracks):**
-- **Phase 1E — Clubhouse:** CH-5 ✅ done — CH-6 next (gazette scoping: filter to competitive events only; CommissionerPanel bet panels retirement).
+- **Phase 1E — Clubhouse:** CH-6 ✅ done — CH-7 next (define what CH-7 covers).
 - **Phase 1A — P2P Betting:** 5 product decisions needed before Sprint 1 (Stripe deferred; see Sprint P2P-0). Can start Sprint 1 (coin ledger) once decisions are made.
 - **Phase 1D-B:** schema reproducibility baseline — standalone, can do any session.
 - **Phase 2 — Tennis:** game dynamics spec ✅ done; Sprint T-0 unblocked (CH-0 delivered `circle_player_boxes` junction table dependency).
@@ -538,6 +538,12 @@ The implementation roadmap linked above is comprehensive and self-contained. The
 - Remaining league tabs: Leaderboard, H2H (conditional), Recap, Trading (draft only), Stats, Admin (commissioner).
 - CommissionerPanel bet panels NOT removed — deferred to CH-6.
 - Next: CH-6 — gazette scoping (competitive events only) + CommissionerPanel bet panels retirement.
+
+**2026-06-23 — CH-6 complete**
+- `LeagueDetailView.jsx`: removed `bet_result` from `ENTRY_META`; removed `BETS` filter from activity feed filter bar. Feed now has ALL/GAME/TRADES only.
+- `CommissionerPanel.jsx`: removed `BetCreatorPanel` import; removed `BET_TYPES`, `BetCardPreview`, `CreateBetWizard`, `VoidConfirmModal`, `ResolvePendingBets`, `BettingHistory`, `MobBetPreview`, `MobCreateBet`; removed both desktop (Zone C/D) and mobile (BET MANAGEMENT/RESOLVE) render sections; condensed `commissioner` destructuring to `commLoading/commMsg/setCommMsg`. Net: −1681 lines, bundle 930 KB → 889 KB.
+- `BetCreatorPanel.jsx` file itself NOT deleted — kept for potential P2P Clubhouse repurposing.
+- Next: CH-7 (TBD).
 
 ---
 
