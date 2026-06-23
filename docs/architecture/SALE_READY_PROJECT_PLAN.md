@@ -17,7 +17,7 @@
 | **1B** | F1 Module | W2–W5 | ✅ Done (Sprints 0–3, PR #606) |
 | **1C** | UX Redesign | W1–W9 | 🔄 In progress — Sprint UX-0 ✅ done, UX-1 next |
 | **1D** | Buyout hygiene — batch 1 | W1–W2 | 🔄 In progress — 1D-A done, 1D-B pending |
-| **1E** | Clubhouse social architecture | W3–W8 | 🔄 In progress — CH-0–CH-8 ✅ done (PRs #607–#614), CH-9 next |
+| **1E** | Clubhouse social architecture | W3–W8 | ✅ Done — CH-0–CH-9 complete (PRs #607–#615). Clubhouse shell shipped. |
 | **2** | Tennis Module | W6–W8 | ⬜ Not started |
 | **3A** | Buyout hygiene — batch 2 | W9–W11 | ⬜ Not started |
 | **3B** | v2 integration & deploy | W10–W12 | ⬜ Not started |
@@ -26,7 +26,7 @@
 **v2 branch:** active — created off main, merged main regularly to pick up pilot bug fixes
 
 **Next actions (parallel tracks):**
-- **Phase 1E — Clubhouse:** CH-8 ✅ done — CH-9 next (notification badge + inbox, ~6h).
+- **Phase 1E — Clubhouse:** ✅ COMPLETE — CH-0–CH-9 all shipped (PRs #607–#615). Clubhouse shell done.
 - **Phase 1A — P2P Betting:** 5 product decisions needed before Sprint 1 (Stripe deferred; see Sprint P2P-0). Can start Sprint 1 (coin ledger) once decisions are made.
 - **Phase 1D-B:** schema reproducibility baseline — standalone, can do any session.
 - **Phase 2 — Tennis:** game dynamics spec ✅ done; Sprint T-0 unblocked (CH-0 delivered `circle_player_boxes` junction table dependency).
@@ -583,6 +583,22 @@ Recommend **Option A** — LIVE is the least frequently used standalone screen (
 
 ---
 
+### Sprint CH-9 — Notification badge + inbox
+**Status: ✅ Done — PR #615**
+
+#### CH-9 session notes (2026-06-23)
+- Migration 196 (`196_clubhouse_notification_triggers.sql`): 3 AFTER INSERT triggers — `notify_on_frontpage_edition` (circle-scoped frontpage editions), `notify_on_gazette_breaking_news` (breaking_news gazette entries via circle_leagues join), `notify_on_direct_message` (notifies to_user_id). All use DROP IF EXISTS + CREATE for idempotency.
+- **TDZ-safe badge architecture**: `ClubhouseNotifContext.js` is a pure `createContext()` file (zero risky imports). `ClubhouseNotifProvider.jsx` holds supabase/auth logic. AppLayout imports only the context file — no new shared modules in the AppLayout import chain, zero TDZ risk.
+- `App.jsx` wraps tree in `<ClubhouseNotifProvider>` between `SportProvider` and `Router`.
+- `ClubhouseNotifProvider`: resolves auth via `supabase.auth.getSession()` (not `useAuth` — TDZ avoidance); Realtime on `clubhouse_notifications` for INSERT (+1) and UPDATE (refetch); provides `{ unreadCount, resetBadge }`.
+- `AppLayout`: gold dot badge on CLUBHOUSE desktop nav item and mobile CLUB icon when `unreadCount > 0`; reads via `useContext(ClubhouseNotifContext)`.
+- `useClubhouse`: `notifications` state fetched in `fetchCircleData` (limit 50 DESC); Realtime INSERT subscription prepends to state (slice to 50); `markRead` / `markAllRead` optimistic + async DB write; `unreadCount` derived; all exported.
+- `ClubhouseScreen`: `InboxTab` component with TYPE_META badge map (`frontpage_edition`, `breaking_news`, `direct_message`); unread dot; MARK ALL READ; tap-to-navigate marks read and routes to `/league/:source_id`; INBOX tab label shows live count; render block wired.
+- Build: 0 errors, 195 modules, 0 lint errors.
+- **Phase 1E Clubhouse shell complete.** Next: Phase 1A (P2P coin ledger — 5 product decisions gate Sprint 1) or Phase 2 (Tennis Module).
+
+---
+
 ### Sprint CH-8 — Owner admin panel
 **Status: ✅ Done — PR #614**
 
@@ -605,7 +621,7 @@ Recommend **Option A** — LIVE is the least frequently used standalone screen (
 ---
 
 ### Sprint CH-9 — Notification badge + inbox
-**Status: ⬜ Not started**
+**Status: ✅ Done — PR #615**
 
 **Goal:** The `clubhouse_notifications` table from migration 193 is wired to nothing. This sprint makes it the live action-required inbox replacing `league_notifications` for v2.
 
