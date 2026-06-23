@@ -17,7 +17,7 @@
 | **1B** | F1 Module | W2–W5 | ✅ Done (Sprints 0–3, PR #606) |
 | **1C** | UX Redesign | W1–W9 | 🔄 In progress — Sprint UX-0 ✅ done, UX-1 next |
 | **1D** | Buyout hygiene — batch 1 | W1–W2 | 🔄 In progress — 1D-A done, 1D-B pending |
-| **1E** | Clubhouse social architecture | W3–W8 | 🔄 In progress — CH-0 ✅ done (PR #607), CH-1 ✅ done (PR #608), CH-2 ✅ done (PR #609), CH-3 next |
+| **1E** | Clubhouse social architecture | W3–W8 | 🔄 In progress — CH-0 ✅ done (PR #607), CH-1 ✅ done (PR #608), CH-2 ✅ done (PR #609), CH-3 ✅ done (PR #610), CH-4 next |
 | **2** | Tennis Module | W6–W8 | ⬜ Not started |
 | **3A** | Buyout hygiene — batch 2 | W9–W11 | ⬜ Not started |
 | **3B** | v2 integration & deploy | W10–W12 | ⬜ Not started |
@@ -26,7 +26,7 @@
 **v2 branch:** active — created off main, merged main regularly to pick up pilot bug fixes
 
 **Next actions (parallel tracks):**
-- **Phase 1E — Clubhouse:** CH-3 next (Frontpage migrates to Clubhouse level — `generate-frontpage-edition` circle mode, cross-sport Forza Times, `frontpage_editions.circle_id` column).
+- **Phase 1E — Clubhouse:** CH-4 next (League creation as Clubhouse-first flow — `LeagueCreationWizard` Step 0, `OnboardingWizard` rethink, `create_league`/`create_paddock` `p_circle_id` wired through).
 - **Phase 1A — P2P Betting:** 5 product decisions needed before Sprint 1 (Stripe deferred; see Sprint P2P-0). Can start Sprint 1 (coin ledger) once decisions are made.
 - **Phase 1D-B:** schema reproducibility baseline — standalone, can do any session.
 - **Phase 2 — Tennis:** game dynamics spec ✅ done; Sprint T-0 unblocked (CH-0 delivered `circle_player_boxes` junction table dependency).
@@ -485,12 +485,12 @@ The implementation roadmap linked above is comprehensive and self-contained. The
 - [x] CHAT tab added to ClubhouseScreen, full-width outside max-640 container
 
 ### Sprint CH-3 — Frontpage migrates to Clubhouse level
-**Status: ⬜ Not started**
-- [ ] `ALTER TABLE frontpage_editions ADD COLUMN circle_id uuid REFERENCES circles(id)` — nullable; existing league editions untouched
-- [ ] `generate-frontpage-edition` Edge Function: add `circle` mode — aggregates gazette entries from all leagues in the Clubhouse, generates a cross-sport edition (WC Round 2 + F1 Race 4 + Wimbledon Day 3 in a single Forza Times)
-- [ ] Clubhouse Frontpage: replaces per-league frontpage as the primary "Forza Times" surface; per-league frontpage generation retired (existing league editions readable as archive)
-- [ ] 05:00 UTC cron: generate editions for all Clubhouses with active competitions (not per-league)
-- [ ] Commissioner "Generate Special Edition" button moves to Clubhouse admin panel
+**Status: ✅ Done (PR #610, 2026-06-23)**
+- [x] Migration 194: `league_id` nullable on `frontpage_editions/reactions/comments`; `circle_id uuid` added to all three; partial unique indexes per scope; RLS policies for circle members; scope CHECK (league_id OR circle_id must be set)
+- [x] `generate-frontpage-edition` Edge Function: circle mode (`{circle_id}`) — owner auth, 4h rate limit, aggregates standings + gazette from all linked leagues + F1 paddock names; `buildCirclePrompt` produces cross-sport tabloid copy; `writeCircleEdition` separate from league write path; cron mode loops circles after leagues
+- [x] `useClubhouseFrontpage(circleId)` hook — mirrors `useFrontpageEdition` but circle-scoped; exports `refresh()` for post-generate reload
+- [x] `ClubhouseFrontpage.jsx` — cream newspaper layout (FORZA TIMES masthead, edition number, lead/hot-take/wooden-spoon/transfer-desk sections); emoji reactions + letters-to-editor on each section; owner-only Generate/Regenerate button with rate-limit error handling; empty state with publish CTA
+- [x] FORZA TIMES tab added to ClubhouseScreen MAIN_TABS (position 2, between HOME and CHAT); rendered full-width outside the 640px container
 
 ### Sprint CH-4 — League creation as Clubhouse-first flow
 **Status: ⬜ Not started**
