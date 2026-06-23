@@ -533,6 +533,84 @@ function FindTab({ searchClubhouses, joinCircleByCode }) {
   );
 }
 
+// ── Inbox tab ─────────────────────────────────────────────────────────────────
+function InboxTab({ notifications, onMarkRead, onMarkAll, onNavigate }) {
+  const TYPE_META = {
+    frontpage_edition: { badge: 'TIMES',    color: 'var(--accent)' },
+    breaking_news:     { badge: 'NEWS',     color: 'var(--danger)' },
+    direct_message:    { badge: 'DM',       color: 'var(--cyan)'   },
+  };
+
+  if (notifications.length === 0) {
+    return (
+      <div style={{ textAlign: 'center', padding: '48px 0', ...MONO, fontSize: 11, color: 'var(--mute)' }}>
+        No notifications yet.
+      </div>
+    );
+  }
+
+  const hasUnread = notifications.some(n => !n.read_at);
+
+  return (
+    <div>
+      {hasUnread && (
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 12 }}>
+          <button
+            onClick={onMarkAll}
+            style={{ padding: '6px 12px', background: 'transparent', border: '1px solid var(--rule)', borderRadius: 6, ...MONO, fontSize: 9, fontWeight: 700, letterSpacing: '0.1em', color: 'var(--mute)', cursor: 'pointer' }}
+          >
+            MARK ALL READ
+          </button>
+        </div>
+      )}
+
+      <div style={{ display: 'flex', flexDirection: 'column' }}>
+        {notifications.map(n => {
+          const meta  = TYPE_META[n.type] ?? { badge: n.type.toUpperCase(), color: 'var(--mute)' };
+          const isNew = !n.read_at;
+          const canNav = n.source_type === 'league' && n.source_id;
+
+          return (
+            <div
+              key={n.id}
+              role={canNav ? 'button' : undefined}
+              tabIndex={canNav ? 0 : undefined}
+              onClick={() => {
+                if (isNew) onMarkRead(n.id);
+                if (canNav) onNavigate(n.source_id);
+              }}
+              onKeyDown={canNav ? (e) => { if (e.key === 'Enter' || e.key === ' ') { if (isNew) onMarkRead(n.id); onNavigate(n.source_id); } } : undefined}
+              style={{
+                display: 'flex', gap: 12, padding: '12px 0',
+                borderBottom: '1px solid var(--rule)',
+                cursor: canNav ? 'pointer' : 'default',
+                opacity: isNew ? 1 : 0.55,
+              }}
+            >
+              {/* Unread dot */}
+              <div style={{ paddingTop: 4, flexShrink: 0, width: 8 }}>
+                {isNew && <div style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--accent)' }} />}
+              </div>
+
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 3 }}>
+                  <span style={{ ...MONO, fontSize: 9, fontWeight: 700, letterSpacing: '0.1em', color: meta.color }}>{meta.badge}</span>
+                  <span style={{ ...MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '0.07em' }}>{timeAgo(n.created_at)}</span>
+                </div>
+                <div style={{ ...BODY, fontSize: 13, color: 'var(--paper)', lineHeight: 1.4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {n.payload?.headline ?? n.payload?.preview ?? n.type}
+                </div>
+              </div>
+
+              {canNav && <span style={{ ...MONO, fontSize: 10, color: 'var(--accent)', alignSelf: 'center', flexShrink: 0 }}>→</span>}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 // ── Circle selector strip (when user is in multiple circles) ──────────────────
 function CircleSelector({ circles, activeCircleId, onChange }) {
   if (circles.length <= 1) return null;
@@ -579,6 +657,8 @@ export default function ClubhouseScreen() {
     competitions,
     feed,
     members,
+    notifications,
+    unreadCount,
     loading,
     createCircle,
     joinCircleByCode,
@@ -587,6 +667,8 @@ export default function ClubhouseScreen() {
     kickMember,
     linkLeague,
     getOwnerLinkableLeagues,
+    markRead,
+    markAllRead,
   } = useClubhouse();
 
   const [tab, setTab] = useState('home');
@@ -629,6 +711,7 @@ export default function ClubhouseScreen() {
     { key: 'home',     label: 'HOME'        },
     { key: 'times',    label: 'FORZA TIMES' },
     { key: 'chat',     label: 'CHAT'        },
+    { key: 'inbox',    label: unreadCount > 0 ? `INBOX (${unreadCount})` : 'INBOX' },
     { key: 'members',  label: 'MEMBERS'     },
     { key: 'find',     label: 'FIND'        },
     ...(isOwner ? [{ key: 'settings', label: 'SETTINGS' }] : []),
@@ -773,6 +856,16 @@ export default function ClubhouseScreen() {
                 isOwner={isOwner}
                 currentUserId={user?.id}
                 onKick={(userId) => kickMember(activeCircleId, userId)}
+              />
+            )}
+
+            {/* INBOX tab */}
+            {tab === 'inbox' && (
+              <InboxTab
+                notifications={notifications}
+                onMarkRead={markRead}
+                onMarkAll={() => markAllRead(activeCircleId)}
+                onNavigate={(leagueId) => navigate(`/league/${leagueId}`)}
               />
             )}
 

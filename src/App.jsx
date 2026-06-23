@@ -39,6 +39,7 @@ import F1AdminScreen from './screens/f1/F1AdminScreen';
 import { useOnboarding } from './hooks/useOnboarding';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 import { ToastProvider } from './components/Toast';
+import { ClubhouseNotifProvider } from './context/ClubhouseNotifProvider';
 
 // Redirect to set-password form when Supabase fires a PASSWORD_RECOVERY event.
 // This fires regardless of which URL the recovery link lands on.
@@ -140,11 +141,13 @@ export default function App() {
   return (
     <AuthProvider>
       <SportProvider>
-        <Router>
-          <ToastProvider>
-            <AppRoutes />
-          </ToastProvider>
-        </Router>
+        <ClubhouseNotifProvider>
+          <Router>
+            <ToastProvider>
+              <AppRoutes />
+            </ToastProvider>
+          </Router>
+        </ClubhouseNotifProvider>
       </SportProvider>
     </AuthProvider>
   );

@@ -9,6 +9,7 @@ export function useClubhouse() {
   const [competitions, setCompetitions] = useState({ football: [], f1: [], tennis: [] });
   const [feed, setFeed] = useState([]);
   const [members, setMembers] = useState([]);
+  const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -50,15 +51,22 @@ export function useClubhouse() {
       setCompetitions({ football: [], f1: [], tennis: [] });
       setFeed([]);
       setMembers([]);
+      setNotifications([]);
       return;
     }
-    const [compRes, feedRes, membersRes] = await Promise.all([
+    const [compRes, feedRes, membersRes, notifRes] = await Promise.all([
       supabase.rpc('get_clubhouse_competitions', { p_circle_id: circleId }),
       supabase.rpc('get_circle_feed', { p_circle_id: circleId, p_limit: 30 }),
       supabase
         .from('circle_members')
         .select('user_id, role, users(username)')
         .eq('circle_id', circleId),
+      supabase
+        .from('clubhouse_notifications')
+        .select('*')
+        .eq('circle_id', circleId)
+        .order('created_at', { ascending: false })
+        .limit(50),
     ]);
     if (!compRes.error) setCompetitions(compRes.data ?? { football: [], f1: [], tennis: [] });
     if (!feedRes.error) setFeed(feedRes.data ?? []);
@@ -71,6 +79,7 @@ export function useClubhouse() {
         }))
       );
     }
+    if (!notifRes.error) setNotifications(notifRes.data ?? []);
   }, []);
 
   useEffect(() => { fetchCircleData(activeCircleId); }, [activeCircleId, fetchCircleData]);
@@ -86,6 +95,22 @@ export function useClubhouse() {
       .subscribe();
     return () => { supabase.removeChannel(channel); };
   }, [activeCircleId, fetchCircleData]);
+
+  // Realtime: prepend new notifications as they arrive
+  useEffect(() => {
+    if (!activeCircleId) return;
+    const channel = supabase
+      .channel(`clubhouse-notif-${activeCircleId}`)
+      .on('postgres_changes', {
+        event: 'INSERT', schema: 'public',
+        table: 'clubhouse_notifications',
+        filter: `circle_id=eq.${activeCircleId}`,
+      }, (payload) => {
+        setNotifications(prev => [payload.new, ...prev].slice(0, 50));
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [activeCircleId]);
 
   const createCircle = useCallback(async (name) => {
     const { data, error: err } = await supabase.rpc('create_circle', { p_name: name.trim() });
@@ -158,6 +183,29 @@ export function useClubhouse() {
     return Array.isArray(data) ? data : [];
   }, []);
 
+  const markRead = useCallback(async (notifId) => {
+    const now = new Date().toISOString();
+    setNotifications(prev =>
+      prev.map(n => n.id === notifId ? { ...n, read_at: now } : n)
+    );
+    await supabase
+      .from('clubhouse_notifications')
+      .update({ read_at: now })
+      .eq('id', notifId);
+  }, []);
+
+  const markAllRead = useCallback(async (circleId) => {
+    const now = new Date().toISOString();
+    setNotifications(prev => prev.map(n => ({ ...n, read_at: n.read_at ?? now })));
+    await supabase
+      .from('clubhouse_notifications')
+      .update({ read_at: now })
+      .eq('circle_id', circleId)
+      .is('read_at', null);
+  }, []);
+
+  const unreadCount = notifications.filter(n => !n.read_at).length;
+
   const activeCircle = myCircles.find(c => c.id === activeCircleId) ?? null;
 
   return {
@@ -168,6 +216,8 @@ export function useClubhouse() {
     competitions,
     feed,
     members,
+    notifications,
+    unreadCount,
     loading,
     error,
     createCircle,
@@ -177,6 +227,8 @@ export function useClubhouse() {
     kickMember,
     linkLeague,
     getOwnerLinkableLeagues,
+    markRead,
+    markAllRead,
     refresh: fetchMyCircles,
   };
 }
