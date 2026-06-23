@@ -17,7 +17,7 @@
 | **1B** | F1 Module | W2–W5 | ✅ Done (Sprints 0–3, PR #606) |
 | **1C** | UX Redesign | W1–W9 | 🔄 In progress — Sprint UX-0 ✅ done, UX-1 next |
 | **1D** | Buyout hygiene — batch 1 | W1–W2 | 🔄 In progress — 1D-A done, 1D-B pending |
-| **1E** | Clubhouse social architecture | W3–W8 | 🔄 In progress — CH-0 ✅ done (PR #607), CH-1 ✅ done (PR #608), CH-2 ✅ done (PR #609), CH-3 ✅ done (PR #610), CH-4 ✅ done, CH-5 next |
+| **1E** | Clubhouse social architecture | W3–W8 | 🔄 In progress — CH-0 ✅ done (PR #607), CH-1 ✅ done (PR #608), CH-2 ✅ done (PR #609), CH-3 ✅ done (PR #610), CH-4 ✅ done, CH-5 ✅ done (PR #611), CH-6 next |
 | **2** | Tennis Module | W6–W8 | ⬜ Not started |
 | **3A** | Buyout hygiene — batch 2 | W9–W11 | ⬜ Not started |
 | **3B** | v2 integration & deploy | W10–W12 | ⬜ Not started |
@@ -26,7 +26,7 @@
 **v2 branch:** active — created off main, merged main regularly to pick up pilot bug fixes
 
 **Next actions (parallel tracks):**
-- **Phase 1E — Clubhouse:** CH-5 next (League view strip-down — remove Chat, Forza Times, bets from LeagueScreen; scope gazette to competitive events only).
+- **Phase 1E — Clubhouse:** CH-5 ✅ done — CH-6 next (gazette scoping: filter to competitive events only; CommissionerPanel bet panels retirement).
 - **Phase 1A — P2P Betting:** 5 product decisions needed before Sprint 1 (Stripe deferred; see Sprint P2P-0). Can start Sprint 1 (coin ledger) once decisions are made.
 - **Phase 1D-B:** schema reproducibility baseline — standalone, can do any session.
 - **Phase 2 — Tennis:** game dynamics spec ✅ done; Sprint T-0 unblocked (CH-0 delivered `circle_player_boxes` junction table dependency).
@@ -503,11 +503,12 @@ The implementation roadmap linked above is comprehensive and self-contained. The
 - [ ] `create_paddock` `p_circle_id` wiring — F1AdminScreen; deferred to Phase 2 Tennis sprint where paddocks become active
 
 ### Sprint CH-5 — League view strip-down
-**Status: ⬜ Not started**
-- [ ] `LeagueScreen.jsx`: remove `ChatView` import + tab; remove `useFrontpageEdition` + `FrontpageInteractive` imports + frontpage section; remove `BetsSection` + `useBettingLeaderboard` imports + bets tab
-- [ ] League ACTIVITY tab: keep `LeagueDetailView` gazette feed but scope to competitive events only (transfers, scoring, draft results, trades, auctions) — strip social commentary entries
-- [ ] Commissioner admin tab: remove bet creation/resolution panels; keep transfer window, draft controls, scoring tools
-- [ ] Verify no Rolldown TDZ regressions after removing the large import set from `LeagueScreen`
+**Status: ✅ Done — PR #611**
+- [x] `LeagueScreen.jsx`: removed `ChatView`, `useFrontpageEdition`, `FrontpageInteractive`, `BetsSection`, `useBettingLeaderboard`, `BetsTabHub`, `BettingLeaderboardView`, `useChatMessages`, `useMentions`, `useMessageSearch` imports + all associated hooks/effects/view blocks (~721 lines deleted)
+- [x] `HubShared.jsx`: removed `unreadChat`/`notifyBets` params; cleaned `frontpage`, `bets`, `betting`, `chat` entries from both `HubTabs` and `HubTabPills`
+- [x] 0 lint errors, clean Rolldown build — no TDZ regressions
+- [ ] League ACTIVITY tab gazette scoping (competitive events only) — deferred to CH-6
+- [ ] Commissioner admin tab bet panels removal — deferred to CH-6
 
 **What moves where:**
 | Feature | From | To |
@@ -530,6 +531,13 @@ The implementation roadmap linked above is comprehensive and self-contained. The
 - CH-3: Migration 194 extends `frontpage_editions/reactions/comments` with `circle_id` (nullable `league_id`); `useClubhouseFrontpage.js` hook; `ClubhouseFrontpage.jsx` cream newspaper layout; FORZA TIMES tab in ClubhouseScreen; `generate-frontpage-edition` Edge Function extended with circle mode.
 - CH-4: `LeagueScreen.jsx` create flow gains "Choose Clubhouse" Step 0 picker before the existing league form; `p_circle_id` wired to `create_league` RPC; `useClubhouseFrontpage` refreshRef → useState tick fix (0 lint errors).
 - Next: CH-5 — League view strip-down (move Chat + Forza Times out of LeagueScreen).
+
+**2026-06-23 — CH-5 complete**
+- `LeagueScreen.jsx`: removed FRONTPAGE (450-line IIFE), BETS (`BetsTabHub`), BETTING (`BettingLeaderboardView`), CHAT (`ChatView`) view blocks + all associated imports, hooks, effects (~721 lines net). Fixed JSX encoding corruption (curly quote U+201D in className attr from Node.js rewrite in prior session).
+- `HubShared.jsx`: dropped `unreadChat`/`notifyBets` params; removed frontpage/bets/betting/chat from both `HubTabs` + `HubTabPills` tab arrays.
+- Remaining league tabs: Leaderboard, H2H (conditional), Recap, Trading (draft only), Stats, Admin (commissioner).
+- CommissionerPanel bet panels NOT removed — deferred to CH-6.
+- Next: CH-6 — gazette scoping (competitive events only) + CommissionerPanel bet panels retirement.
 
 ---
 
