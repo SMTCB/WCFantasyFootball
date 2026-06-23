@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from './useAuth';
 
@@ -7,41 +7,33 @@ export const FT_EMOJIS = ['🔥', '💀', '😂', '👑', '😤'];
 export function useClubhouseFrontpage(circleId) {
   const { user } = useAuth();
   const today = new Date().toISOString().split('T')[0];
-  const [edition,   setEdition]   = useState(null);
-  const [reactions, setReactions] = useState([]);
-  const [comments,  setComments]  = useState([]);
-  const [loading,   setLoading]   = useState(false);
-  const refreshRef = useRef(0);
+  const [edition,      setEdition]      = useState(null);
+  const [reactions,    setReactions]    = useState([]);
+  const [comments,     setComments]     = useState([]);
+  const [loading,      setLoading]      = useState(false);
+  const [refreshTick,  setRefreshTick]  = useState(0);
 
   useEffect(() => {
     if (!circleId) { setEdition(null); setReactions([]); setComments([]); return; }
+    let cancelled = false;
     setLoading(true);
     Promise.all([
       supabase.from('frontpage_editions').select('*').eq('circle_id', circleId).eq('edition_date', today).maybeSingle(),
       supabase.from('frontpage_reactions').select('id, section_key, user_id, emoji').eq('circle_id', circleId).eq('edition_date', today),
       supabase.from('frontpage_comments').select('id, section_key, user_id, text, created_at').eq('circle_id', circleId).eq('edition_date', today).order('created_at', { ascending: true }),
     ]).then(([{ data: ed }, { data: rx }, { data: cm }]) => {
+      if (cancelled) return;
       setEdition(ed ?? null);
       setReactions(rx ?? []);
       setComments(cm ?? []);
       setLoading(false);
     });
-  }, [circleId, today, refreshRef.current]); // eslint-disable-line react-hooks/exhaustive-deps
+    return () => { cancelled = true; };
+  }, [circleId, today, refreshTick]);
 
   const refresh = useCallback(() => {
-    refreshRef.current += 1;
-    setLoading(true);
-    Promise.all([
-      supabase.from('frontpage_editions').select('*').eq('circle_id', circleId).eq('edition_date', today).maybeSingle(),
-      supabase.from('frontpage_reactions').select('id, section_key, user_id, emoji').eq('circle_id', circleId).eq('edition_date', today),
-      supabase.from('frontpage_comments').select('id, section_key, user_id, text, created_at').eq('circle_id', circleId).eq('edition_date', today).order('created_at', { ascending: true }),
-    ]).then(([{ data: ed }, { data: rx }, { data: cm }]) => {
-      setEdition(ed ?? null);
-      setReactions(rx ?? []);
-      setComments(cm ?? []);
-      setLoading(false);
-    });
-  }, [circleId, today]);
+    setRefreshTick(t => t + 1);
+  }, []);
 
   const toggleReaction = useCallback(async (sectionKey, emoji) => {
     if (!user || !circleId || !edition) return;

@@ -197,6 +197,11 @@ export default function LeagueScreen() {
   const [formLoading,      setFormLoading]      = useState(false);
   const [newLeague,        setNewLeague]        = useState(null);   // set after creation → shows invite card
   const [showModeHelp,     setShowModeHelp]     = useState(false);  // ? modal for Classic vs Draft
+  // CH-4: Clubhouse-first flow
+  const [createLeagueStep, setCreateLeagueStep] = useState(0);     // 0 = Clubhouse picker, 1 = league form
+  const [selectedCircleId, setSelectedCircleId] = useState(null);
+  const [myCircles,        setMyCircles]        = useState([]);
+  const [circlesLoading,   setCirclesLoading]   = useState(false);
 
   // Join-by-code state — U3: seed from ?joinCode= URL param (written by JoinRoute in App.jsx)
   const [joinCode,     setJoinCode]     = useState(() => searchParams.get('joinCode') ?? '');
@@ -447,6 +452,28 @@ export default function LeagueScreen() {
   // user.id is the stable identity; user object reference changes on token refresh
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id, fetchLeagues, fetchTournaments]);
+
+  // CH-4: reset Clubhouse picker step whenever user leaves the create view
+  useEffect(() => {
+    if (view !== 'create') { setCreateLeagueStep(0); setSelectedCircleId(null); }
+  }, [view]);
+
+  // CH-4: fetch user's Clubhouses when the create view opens (direct query, no useClubhouse import — TDZ risk)
+  useEffect(() => {
+    if (view !== 'create' || !user?.id) return;
+    let cancelled = false;
+    setCirclesLoading(true);
+    supabase
+      .from('circle_members')
+      .select('role, circles(id, name)')
+      .eq('user_id', user.id)
+      .then(({ data }) => {
+        if (cancelled) return;
+        setMyCircles((data ?? []).map(r => ({ id: r.circles?.id, name: r.circles?.name, role: r.role })).filter(c => c.id));
+        setCirclesLoading(false);
+      });
+    return () => { cancelled = true; };
+  }, [view, user?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // IMP-01: Fetch current GW for the active league's tournament.
   // Prefers the most recent past deadline (the round currently being played,
@@ -844,13 +871,15 @@ export default function LeagueScreen() {
     try {
       setFormLoading(true);
       const isH2H = leagueFormat === 'noduplicate_h2h';
-      const { data, error } = await supabase.rpc('create_league', {
+      const createArgs = {
         p_name:          leagueName.trim(),
         p_format:        isH2H ? 'noduplicate' : leagueFormat,
         p_user_id:       user?.id,
         p_tournament_id: leagueTournament,
         p_h2h_enabled:   isH2H,
-      });
+      };
+      if (selectedCircleId) createArgs.p_circle_id = selectedCircleId;
+      const { data, error } = await supabase.rpc('create_league', createArgs);
       if (error) throw error;
       setLeagueName('');
       setNewLeague(data);   // triggers invite card view
@@ -910,12 +939,73 @@ export default function LeagueScreen() {
     );
   }
 
+  if (view === 'create' && createLeagueStep === 0) {
+    const goBack = () => { setCreateLeagueStep(0); setSelectedCircleId(null); setView('list'); };
+    return (
+      <div className="pb-16 min-h-screen bg-bg">
+        <div className="flex items-center p-4 border-b border-border bg-surface sticky top-0 z-10">
+          <button onClick={goBack} className="text-xl mr-4 text-text-secondary">←</button>
+          <h1 className="fz-display text-[var(--paper)] text-[18px]">Choose Clubhouse</h1>
+        </div>
+        <div className="p-4 flex flex-col gap-4 mt-4">
+          <p style={{ fontFamily: 'monospace', fontSize: 10, letterSpacing: '.16em', color: 'var(--mute)', textTransform: 'uppercase', marginBottom: 4 }}>
+            Link this league to a Clubhouse so all members can access it together
+          </p>
+          {circlesLoading ? (
+            <p style={{ fontFamily: 'monospace', fontSize: 10, color: 'var(--mute)', letterSpacing: '.12em' }}>LOADING…</p>
+          ) : myCircles.length > 0 ? (
+            <div className="flex flex-col gap-2">
+              {myCircles.map(c => (
+                <button
+                  key={c.id}
+                  type="button"
+                  onClick={() => setSelectedCircleId(prev => prev === c.id ? null : c.id)}
+                  style={{
+                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                    padding: '14px 16px',
+                    border: `1px solid ${selectedCircleId === c.id ? 'var(--gold)' : 'rgba(255,255,255,0.1)'}`,
+                    background: selectedCircleId === c.id ? 'rgba(181,147,58,0.07)' : 'var(--surface)',
+                    cursor: 'pointer', textAlign: 'left', transition: 'border-color .15s',
+                  }}
+                >
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                    <span style={{ fontFamily: 'monospace', fontSize: 12, letterSpacing: '.1em', color: 'var(--paper)', fontWeight: 700 }}>{c.name}</span>
+                    <span style={{ fontFamily: 'monospace', fontSize: 9, letterSpacing: '.14em', color: 'var(--mute)', textTransform: 'uppercase' }}>{c.role}</span>
+                  </div>
+                  {selectedCircleId === c.id && (
+                    <span style={{ width: 18, height: 18, borderRadius: '50%', background: 'var(--gold)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      <span style={{ color: '#000', fontSize: 10, fontWeight: 900, lineHeight: 1 }}>✓</span>
+                    </span>
+                  )}
+                </button>
+              ))}
+            </div>
+          ) : (
+            <div style={{ padding: '20px 0', textAlign: 'center' }}>
+              <p style={{ fontFamily: 'monospace', fontSize: 10, color: 'var(--mute)', letterSpacing: '.12em', lineHeight: 1.6 }}>
+                YOU DON&apos;T HAVE A CLUBHOUSE YET<br />
+                <span style={{ color: 'rgba(255,255,255,0.3)' }}>Create one in the Clubhouse tab first,<br />or continue without linking.</span>
+              </p>
+            </div>
+          )}
+          <button
+            type="button"
+            onClick={() => setCreateLeagueStep(1)}
+            className="w-full mt-2 bg-cyan text-white font-bold py-4 uppercase tracking-wider"
+          >
+            {selectedCircleId ? 'Continue' : 'Continue without Clubhouse'}
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   if (view === 'create') {
     return (
       <div className="pb-16 min-h-screen bg-bg">
         <div className="flex items-center p-4 border-b border-border bg-surface sticky top-0 z-10">
-          <button onClick={() => setView('list')} className="text-xl mr-4 text-text-secondary">←</button>
-          <h1 className="fz-display text-[var(--paper)] text-[18px]">Initialize Campaign</h1>
+          <button onClick={() => setCreateLeagueStep(0)} className="text-xl mr-4 text-text-secondary">←</button>
+          <h1 className="fz-display text-[var(--paper)] text-[18px]">{selectedCircleId ? `${myCircles.find(c => c.id === selectedCircleId)?.name ?? 'Clubhouse'} · New League` : 'Initialize Campaign'}</h1>
         </div>
         <form onSubmit={handleCreateLeague} className="p-4 flex flex-col gap-6 mt-4">
           <div className="flex flex-col gap-2">
