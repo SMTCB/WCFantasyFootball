@@ -1,23 +1,17 @@
-import { useState, useEffect, useLayoutEffect, useCallback, useRef } from 'react';
+﻿import { useState, useEffect, useLayoutEffect, useCallback, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../hooks/useAuth';
-import { useChatMessages } from '../hooks/useChatMessages';
-import { useMentions } from '../hooks/useMentions';
-import { useMessageSearch } from '../hooks/useMessageSearch';
 import { useNotifications } from '../hooks/useNotifications';
 import { useToast } from '../hooks/useToast';
 import { useAuctions } from '../hooks/useAuctions';
 import { useLeagueStats } from '../hooks/useLeagueStats';
-import { useBettingLeaderboard } from '../hooks/useBettingLeaderboard';
 import SectionHeader from '../components/SectionHeader';
 import LeagueInviteCard from '../components/LeagueInviteCard';
 import H2HSheet from '../components/H2HSheet';
 import GazetteDraftReport from '../components/GazetteDraftReport';
-import GazetteNews        from '../components/GazetteNews';
 import TransferWindowBanner from '../components/TransferWindowBanner';
-import BetsSection from '../components/BetsSection';
 
 import NotificationPanel from '../components/NotificationPanel';
 import { useTransferWindow } from '../hooks/useTransferWindow';
@@ -33,17 +27,12 @@ import {
 import { MONO, DISPLAY } from '../components/league/HubConstants';
 import { TypeChip, RankBadge } from '../components/league/LeagueBadges';
 import { deriveLeagueType, TYPE_COLOR } from '../components/league/LeagueBadgeHelpers';
-import BetsTabHub             from '../components/league/BetsTabHub';
 import LeagueDetailView       from '../components/league/LeagueDetailView';
-import BettingLeaderboardView from '../components/league/BettingLeaderboardView';
 import TradingView            from '../components/league/TradingView';
 import StatsView              from '../components/league/StatsView';
-import ChatView               from '../components/league/ChatView';
 import CommissionerPanel      from '../components/league/CommissionerPanel';
 import RecapView             from '../components/league/RecapView';
 import H2HView               from '../components/league/H2HView';
-import { useFrontpageEdition } from '../hooks/useFrontpageEdition';
-import { ReactionStrip, LettersPanel } from '../components/league/FrontpageInteractive';
 
 const LEAGUE_TOUR_STEPS = [
   {
@@ -54,25 +43,12 @@ const LEAGUE_TOUR_STEPS = [
   {
     target: 'league-tabs',
     title:  'League Tabs',
-    body:   'Switch between Standings, Front Page, Bets, Auctions, Chat, and Stats. Commissioners also see an Admin tab.',
+    body:   'Switch between Standings, Recap, Trading, and Stats. Commissioners also see an Admin tab.',
   },
   {
     target: 'league-invite',
     title:  'Invite Your Mates',
     body:   'Share your league\'s invite code to bring new managers in. Once they join, the draft order is set automatically.',
-  },
-];
-
-const BETS_TOUR_STEPS = [
-  {
-    target: 'bets-header',
-    title:  'Bets & Predictions',
-    body:   'The Commissioner posts weekly challenges here — predict outcomes to earn bonus points. Picks lock at the deadline.',
-  },
-  {
-    target: 'bets-list',
-    title:  'Open Bets',
-    body:   'Each card shows the question, the options, and how many points you\'ll win. Tap an option to submit your pick.',
   },
 ];
 
@@ -125,7 +101,6 @@ export default function LeagueScreen() {
   const {
     showLeagueTour, completeLeagueTour, replayLeagueTour,
     showCommissionerTour, completeCommissionerTour, replayCommissionerTour,
-    showBetsTour, completeBetsTour, replayBetsTour,
   } = useOnboarding();
 
   const [leagues, setLeagues] = useState([]);
@@ -172,7 +147,6 @@ export default function LeagueScreen() {
   const transferWindow = useTransferWindow(activeLeague?.league_id);
   const { auctions, pendingAuctions, closedAuctions, loading: auctionsLoading, placeBid, cancelListing, sellNow, confirmWin } = useAuctions(activeLeague?.league_id, mySquadId);
   const { topScorers, teamMetrics, matchdayPoints, positionPoints, captainHitData, benchData, roiData, loading: statsLoading } = useLeagueStats(activeLeague?.league_id);
-  const { leaderboard, loading: betLoading } = useBettingLeaderboard(activeLeague?.league_id);
 
   // Commissioner state + handlers consolidated into a single hook.
   // The whole object is passed as a prop to CommissionerPanel.
@@ -207,16 +181,7 @@ export default function LeagueScreen() {
   const [joinCode,     setJoinCode]     = useState(() => searchParams.get('joinCode') ?? '');
   const [joinLoading,  setJoinLoading]  = useState(false);
   const [joinError,    setJoinError]    = useState('');
-  const [frontpageActivityEntries, setFrontpageActivityEntries] = useState([]);
-  const [frontpageFormData, setFrontpageFormData] = useState(null);
-  const [frontpageLiveScores, setFrontpageLiveScores] = useState(null);
-  const [frontpageBets, setFrontpageBets] = useState({ open: [], settled: [] });
-  const [frontpageBetStats, setFrontpageBetStats] = useState([]);
-  const frontpageEdition = useFrontpageEdition(activeLeague?.league_id);
-
-  // Chat input state lives in ChatView — not needed here
-  const { messages, loading: chatLoading, unreadCount, typingUsers, sendMessage, editMessage, deleteMessage, broadcastTyping, markChatAsRead, scrollEndRef } = useChatMessages(activeLeague?.league_id);
-  const { notifications, unreadCount: notificationCount, markAsRead: markNotificationAsRead, clearAll: clearAllNotifications, clearByType: clearNotificationsByType } = useNotifications(activeLeague?.league_id);
+  const { notifications, unreadCount: notificationCount, markAsRead: markNotificationAsRead, clearAll: clearAllNotifications } = useNotifications(activeLeague?.league_id);
   const {
     incoming: incomingTrades,
     outgoing: outgoingTrades,
@@ -227,8 +192,6 @@ export default function LeagueScreen() {
     rejectProposal,
     cancelProposal,
   } = useTradeProposals(activeLeague?.league_id, mySquadId);
-  const { mentionSearch, mentionMatches, selectedMention, mentionedUserIds, loadLeagueMembers, parseMentionPattern, insertMention, handleMentionNavigate, resetMentions } = useMentions(activeLeague?.league_id);
-  const { searchTerm, setSearchTerm, filteredMessages, clearSearch, resultCount } = useMessageSearch(messages);
 
   const toggleListing = async (playerId) => {
     const leagueId = activeLeague?.league_id;
@@ -363,14 +326,12 @@ export default function LeagueScreen() {
   // fetchOpenBets, fetchBetSubmissions, resolveBet — all from useCommissioner above.
   const viewToTab = (v) => {
     if (v === 'detail') return 'leaderboard';
-    if (v === 'betting_leaderboard') return 'betting';
     if (v === 'commissioner') return 'admin';
     if (v === 'auctions') return 'trading'; // legacy deep-link compat
     return v;
   };
   const tabToView = (t) => {
     if (t === 'leaderboard') return 'detail';
-    if (t === 'betting') return 'betting_leaderboard';
     if (t === 'admin') return 'commissioner';
     if (t === 'auctions') return 'trading'; // legacy deep-link compat
     return t;
@@ -641,13 +602,6 @@ export default function LeagueScreen() {
     }
   }, [view, activeLeague?.league_id]);
 
-  useEffect(() => {
-    if (view === 'chat' && activeLeague?.league_id) {
-      markChatAsRead();
-      loadLeagueMembers();
-    }
-  }, [view, activeLeague?.league_id, markChatAsRead, loadLeagueMembers]);
-
   // U32: Apply ?tab= URL param when a league loads
   useEffect(() => {
     if (!activeLeague?.league_id) return;
@@ -656,164 +610,6 @@ export default function LeagueScreen() {
   // Only apply on initial league load (activeLeague change), not on every searchParam change
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeLeague?.league_id]);
-
-  // Fetch recent activity entries for Frontpage (scores + H2H results)
-  useEffect(() => {
-    const lid = activeLeague?.league_id;
-    if (!lid) return;
-    supabase.from('gazette_entries')
-      .select('id, entry_type, headline, bullets, published_at')
-      .eq('league_id', lid)
-      .in('entry_type', ['activity', 'auction_result', 'trade_result'])
-      .order('published_at', { ascending: false })
-      .limit(8)
-      .then(({ data }) => setFrontpageActivityEntries(data ?? []));
-  }, [activeLeague?.league_id]);
-
-  // Frontpage: form guide (last 3 past GWs) + in-progress live scores
-  useEffect(() => {
-    const lid = activeLeague?.league_id;
-    const tid = activeLeague?.leagues?.tournament_id;
-    if (!lid || !tid) return;
-    let cancelled = false;
-    (async () => {
-      try {
-        const nowIso = new Date().toISOString();
-        // Past deadlines only (for form guide) — order DESC to get most recent 3 first
-        const { data: pastDeadlines } = await supabase
-          .from('matchday_deadlines')
-          .select('matchday_id, deadline_at')
-          .eq('tournament_id', tid)
-          .lte('deadline_at', nowIso)
-          .order('deadline_at', { ascending: false })
-          .limit(3);
-        // Most recent deadline regardless of past/future (for live card)
-        const { data: latestDeadlines } = await supabase
-          .from('matchday_deadlines')
-          .select('matchday_id, deadline_at')
-          .eq('tournament_id', tid)
-          .lte('deadline_at', nowIso)
-          .order('deadline_at', { ascending: false })
-          .limit(1);
-        if (cancelled) return;
-
-        const allMids = [...new Set([
-          ...(pastDeadlines ?? []).map(d => d.matchday_id),
-          ...(latestDeadlines ?? []).map(d => d.matchday_id),
-        ])];
-        if (!allMids.length) return;
-
-        const { data: squadsRaw } = await supabase
-          .from('squads')
-          .select('id, user_id')
-          .eq('league_id', lid)
-          .order('created_at', { ascending: false });
-        if (cancelled || !squadsRaw?.length) return;
-
-        const seenUsers = new Set();
-        const squads = squadsRaw.filter(s => {
-          if (seenUsers.has(s.user_id)) return false;
-          seenUsers.add(s.user_id);
-          return true;
-        });
-        const squadIds = squads.map(s => s.id);
-        const userIdBySquad = Object.fromEntries(squads.map(s => [s.id, s.user_id]));
-
-        const { data: fps } = await supabase
-          .from('fantasy_points')
-          .select('squad_id, matchday_id, total')
-          .in('squad_id', squadIds)
-          .in('matchday_id', allMids);
-        if (cancelled) return;
-
-        const formMap = {};
-        for (const fp of fps ?? []) {
-          const uid = userIdBySquad[fp.squad_id];
-          if (!uid) continue;
-          if (!formMap[uid]) formMap[uid] = {};
-          const cur = formMap[uid][fp.matchday_id];
-          if (cur == null || fp.total > cur) formMap[uid][fp.matchday_id] = fp.total;
-        }
-
-        // Form guide: past 3 GWs in chronological order (oldest → newest)
-        const pastMds = (pastDeadlines ?? []).slice(0, 3).reverse();
-        if (!cancelled && pastMds.length > 0) {
-          setFrontpageFormData({ matchdayIds: pastMds.map(d => d.matchday_id), formMap });
-        }
-
-        // Live scores: most recent past matchday that has fantasy_points data
-        const latestMd = latestDeadlines?.[0];
-        if (latestMd) {
-          const gwNum = latestMd.matchday_id.split('-r')[1] ?? '';
-          const rows = Object.entries(formMap)
-            .map(([uid, mdMap]) => ({ userId: uid, pts: mdMap[latestMd.matchday_id] ?? null }))
-            .filter(r => r.pts != null)
-            .sort((a, b) => b.pts - a.pts);
-          if (!cancelled && rows.length > 0) setFrontpageLiveScores({ matchdayId: latestMd.matchday_id, gwNum, rows });
-        }
-      } catch { /* non-fatal */ }
-    })();
-    return () => { cancelled = true; };
-  }, [activeLeague?.league_id, activeLeague?.leagues?.tournament_id]);
-
-  // Frontpage: recent bets (open markets + last 2 settled)
-  useEffect(() => {
-    const lid = activeLeague?.league_id;
-    if (!lid) return;
-    supabase.from('bet_instances')
-      .select('id, title, status, deadline_at, reward_type, reward_value, winners_count, total_submissions, correct_answer')
-      .eq('league_id', lid)
-      .in('status', ['open', 'resolved'])
-      .order('created_at', { ascending: false })
-      .limit(8)
-      .then(({ data }) => {
-        const all = data ?? [];
-        setFrontpageBets({
-          open:    all.filter(b => b.status === 'open'),
-          settled: all.filter(b => b.status === 'resolved').slice(0, 2),
-        });
-      });
-  }, [activeLeague?.league_id]);
-
-  // Frontpage: per-manager bet accuracy from resolved bet_submissions
-  useEffect(() => {
-    const lid = activeLeague?.league_id;
-    if (!lid) return;
-    (async () => {
-      try {
-        const { data: resolved } = await supabase
-          .from('bet_instances')
-          .select('id')
-          .eq('league_id', lid)
-          .eq('status', 'resolved');
-        if (!resolved?.length) return;
-        const ids = resolved.map(b => b.id);
-        const { data: subs } = await supabase
-          .from('bet_submissions')
-          .select('user_id, is_correct')
-          .in('bet_instance_id', ids);
-        if (!subs?.length) return;
-        const byUser = {};
-        for (const s of subs) {
-          if (!byUser[s.user_id]) byUser[s.user_id] = { total: 0, correct: 0 };
-          byUser[s.user_id].total += 1;
-          if (s.is_correct) byUser[s.user_id].correct += 1;
-        }
-        const stats = Object.entries(byUser).map(([uid, v]) => ({
-          userId: uid, total: v.total, correct: v.correct,
-          pct: v.total > 0 ? Math.round((v.correct / v.total) * 100) : 0,
-        })).sort((a, b) => b.total - a.total || b.correct - a.correct);
-        setFrontpageBetStats(stats);
-      } catch { /* non-fatal */ }
-    })();
-  }, [activeLeague?.league_id]);
-
-  // U42: Auto-clear only bet-type notification badge when viewing bets tab
-  useEffect(() => {
-    if (view === 'bets' && activeLeague?.league_id && notificationCount > 0) {
-      clearNotificationsByType('bet');
-    }
-  }, [view, activeLeague?.league_id, notificationCount, clearNotificationsByType]);
 
   // Realtime subscription: league standings — handles UPDATE (points change) and INSERT (new member joins)
   useEffect(() => {
@@ -1240,13 +1036,6 @@ export default function LeagueScreen() {
             onSkip={completeLeagueTour}
           />
         )}
-        {showBetsTour && view === 'bets' && (
-          <OnboardingTour
-            steps={BETS_TOUR_STEPS}
-            onComplete={completeBetsTour}
-            onSkip={completeBetsTour}
-          />
-        )}
         {showCommissionerTour && view === 'commissioner' && isCommissioner && (() => {
           const isDraftLeague = activeLeague?.leagues?.format === 'noduplicate';
           const filteredSteps = COMMISSIONER_TOUR_STEPS.filter(s => isDraftLeague || !s.draftOnly);
@@ -1455,28 +1244,24 @@ export default function LeagueScreen() {
         )}
 
 
-{/* â”€â”€ Desktop tabs (hidden on mobile) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+{/* Desktop tabs (hidden on mobile) */}
         <div className="hidden lg:block" data-tour="league-tabs">
           <HubTabs
             active={viewToTab(view)}
             onTab={setTab}
             isCommissioner={isCommissioner}
-            unreadChat={unreadCount}
-            notifyBets={notificationCount > 0}
             notifyTrading={(pendingAuctions ?? []).some(a => a.highest_bidder_id === user?.id && transferWindow.status === 'open') || auctions.some(a => a.highest_bidder_id === user?.id) || incomingTrades.length > 0}
             h2hEnabled={h2hEnabled}
             isDraftLeague={activeLeague?.leagues?.format === 'noduplicate'}
           />
         </div>
 
-        {/* â”€â”€ Mobile tab pills (hidden on desktop) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+        {/* Mobile tab pills (hidden on desktop) */}
         <div className="lg:hidden" data-tour="league-tabs">
           <HubTabPills
             active={viewToTab(view)}
             onTab={setTab}
             isCommissioner={isCommissioner}
-            unreadChat={unreadCount}
-            notifyBets={notificationCount > 0}
             notifyTrading={(pendingAuctions ?? []).some(a => a.highest_bidder_id === user?.id && transferWindow.status === 'open') || auctions.some(a => a.highest_bidder_id === user?.id) || incomingTrades.length > 0}
             h2hEnabled={h2hEnabled}
             isDraftLeague={activeLeague?.leagues?.format === 'noduplicate'}
@@ -1537,469 +1322,7 @@ export default function LeagueScreen() {
              h2hEnabled={h2hEnabled}
            />
          )}
-         {view === 'frontpage' && (() => {
-           const FT_PAPER = '#F2EEE5', FT_INK = '#0A0E14', FT_RULE = '#D8D2C6', FT_MUTE = '#5A6470', FT_RED = '#B0271E';
-           const ftSerif = "'Playfair Display', 'Times New Roman', serif";
-           const ftMono = "'JetBrains Mono', monospace";
-           const today = new Date().toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'long', year: 'numeric' });
-           const { edition: fpEd, pinnedQuote, toggleReaction, getReactionCounts, isMyReaction, addComment, deleteComment, getComments, EMOJIS: ftEmojis } = frontpageEdition;
-           const ftProps = { ftInk: FT_INK, ftRule: FT_RULE, ftMute: FT_MUTE, ftMono };
-           const letterProps = { ...ftProps, ftSerif, members, currentUserId: user?.id, isCommissioner, addComment, getComments, deleteComment };
-           const reactionProps = { ...ftProps, toggleReaction, getReactionCounts, isMyReaction, EMOJIS: ftEmojis };
-           return (
-             <div style={{ flex: 1, overflow: 'auto', padding: 'clamp(8px, 3vw, 20px) clamp(8px, 3vw, 28px) 40px', background: 'var(--ink)' }}>
-               {members && members.length <= 1 ? (
-                 /* Empty state */
-                 <div style={{ background: FT_PAPER, color: FT_INK, padding: '48px', textAlign: 'center', boxShadow: '0 30px 60px -20px rgba(0,0,0,.5)' }}>
-                   <div style={{ fontFamily: ftSerif, fontWeight: 900, fontStyle: 'italic', fontSize: 64, lineHeight: 0.9, color: FT_INK }}>FORZA TIMES</div>
-                   <div style={{ fontFamily: ftMono, fontSize: 11, color: FT_MUTE, letterSpacing: '.18em', marginTop: 16 }}>The Official Gazette</div>
-                   <div style={{ height: 1, background: FT_INK, margin: '20px 0 6px' }} />
-                   <div style={{ height: 4, background: FT_INK, marginBottom: 28 }} />
-                   <div style={{ fontFamily: ftSerif, fontSize: 22, color: FT_INK, marginBottom: 12 }}>League Created!</div>
-                   <p style={{ fontFamily: ftSerif, fontSize: 14, color: FT_MUTE, lineHeight: 1.6, maxWidth: 480, margin: '0 auto 24px' }}>
-                     Your league is ready. Invite friends via the INVITE button above, set up transfer windows in the Admin tab, and your Forza Times will come to life as the season unfolds.
-                   </p>
-                   <button onClick={() => setNewLeague(activeLeague?.leagues || activeLeague)} style={{ background: FT_INK, color: FT_PAPER, border: 'none', padding: '10px 24px', fontFamily: ftMono, fontSize: 11, letterSpacing: '.2em', cursor: 'pointer' }}>
-                     SHOW INVITE CODE →
-                   </button>
-                   <GazetteNews
-                     leagueId={activeLeague?.league_id}
-                     ftSerif={ftSerif} ftMono={ftMono}
-                     ftInk={FT_INK} ftMute={FT_MUTE} ftRed={FT_RED} ftRule={FT_RULE}
-                   />
-                 </div>
-               ) : (
-                 /* Newspaper layout */
-                 <div style={{ background: FT_PAPER, color: FT_INK, boxShadow: '0 30px 60px -20px rgba(0,0,0,.5), 0 2px 0 0 #C9C2B3', padding: 'clamp(16px, 5vw, 34px) clamp(14px, 5vw, 44px)' }}>
-                   {/* Masthead */}
-                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', fontFamily: ftMono, fontSize: 'clamp(8px, 2vw, 11px)', letterSpacing: '.18em', color: FT_INK, flexWrap: 'wrap', gap: 4 }}>
-                     <span>VOL · I</span>
-                     <span style={{ fontFamily: ftSerif, fontStyle: 'italic', fontSize: 'clamp(10px, 2.5vw, 14px)', letterSpacing: 0 }}>The Official Gazette of {name}</span>
-                     <span>EDITION · #{fpEd?.edition_number ?? 1}</span>
-                   </div>
-                   <div style={{ textAlign: 'center', marginTop: 6 }}>
-                     <div style={{ fontFamily: ftSerif, fontWeight: 900, fontStyle: 'italic', fontSize: 'clamp(38px, 10vw, 72px)', letterSpacing: '-0.03em', lineHeight: 0.9, color: FT_INK }}>FORZA TIMES</div>
-                     <div style={{ fontFamily: ftSerif, fontStyle: 'italic', fontSize: 'clamp(10px, 2vw, 13px)', color: FT_MUTE, marginTop: 6 }}>
-                       "All the points that's fit to print" · {today} · €0.00 to subscribers
-                     </div>
-                   </div>
-                   <div style={{ border: 0, height: 1, background: FT_INK, margin: '18px 0 4px' }} />
-                   <div style={{ height: 4, background: FT_INK, margin: '0 0 22px' }} />
 
-                   {/* Cover grid — 3-col on desktop, single col on mobile */}
-                   <div className="grid grid-cols-1 lg:grid-cols-3" style={{ gap: 28 }}>
-                     {/* Lead story */}
-                     <article>
-                       <div style={{ fontFamily: ftMono, fontSize: 10, letterSpacing: '.22em', color: FT_RED, marginBottom: 8 }}>LEAGUE STANDINGS · LATEST</div>
-                       <h1 style={{ fontFamily: ftSerif, fontWeight: 900, fontSize: 'clamp(24px, 6vw, 44px)', lineHeight: 0.98, letterSpacing: '-0.025em', color: FT_INK, marginBottom: 14 }}>
-                         {fpEd?.headline ?? (members[0] ? `${(members[0].users?.username || 'Unknown').toUpperCase()} leads the table.` : 'The season is yet to begin.')}
-                       </h1>
-                       <p style={{ fontFamily: ftSerif, fontSize: 16, lineHeight: 1.5, color: FT_INK, marginTop: 14 }}>
-                         {fpEd?.deck ? fpEd.deck : (
-                           <>
-                             <span style={{ float: 'left', fontFamily: ftSerif, fontWeight: 900, fontSize: 52, lineHeight: 0.85, paddingRight: 8, paddingTop: 4, color: FT_INK }}>
-                               {members[0] ? (members[0].users?.username?.[0] || 'T').toUpperCase() : 'T'}
-                             </span>
-                             {members[0] ? `he ${name} is underway with ${members.length} managers fighting for glory. ${members[0].users?.username || 'The leader'} currently tops the table with ${Math.round(members[0].total_points)} points, setting the pace for the rest of the field.` : "he season hasn't started yet. Invite your rivals and prepare for battle."}
-                           </>
-                         )}
-                       </p>
-                       <div style={{ fontFamily: ftMono, fontSize: 10, letterSpacing: '.18em', color: FT_MUTE, marginTop: 12, textTransform: 'uppercase' }}>By the Forza Times Desk · {today}</div>
-                       {fpEd && (
-                         <>
-                           <ReactionStrip sectionKey="lead" {...reactionProps} />
-                           <LettersPanel sectionKey="lead" {...letterProps} />
-                         </>
-                       )}
-                     </article>
-
-                     {/* Secondary column — Draft Report / Transfer Activity + AI transfer rumour */}
-                     <div style={{ borderLeft: `1px solid ${FT_RULE}`, borderRight: `1px solid ${FT_RULE}`, padding: '0 22px' }}>
-                       {activeLeague?.leagues?.format === 'noduplicate' ? (
-                         <>
-                           <div style={{ fontFamily: ftMono, fontSize: 9, letterSpacing: '.22em', color: FT_RED }}>DRAFT REPORT</div>
-                           <h2 style={{ fontFamily: ftSerif, fontWeight: 800, fontSize: 22, lineHeight: 1.02, letterSpacing: '-0.02em', color: FT_INK, marginTop: 6 }}>Squad allocations & latest picks</h2>
-                           <div style={{ marginTop: 12 }}>
-                             <GazetteDraftReport leagueId={activeLeague?.league_id} />
-                           </div>
-                         </>
-                       ) : (
-                         <>
-                           <div style={{ fontFamily: ftMono, fontSize: 9, letterSpacing: '.22em', color: FT_RED }}>FORM GUIDE</div>
-                           {frontpageFormData?.matchdayIds?.length > 0 ? (
-                             <>
-                               <h2 style={{ fontFamily: ftSerif, fontWeight: 800, fontSize: 22, lineHeight: 1.02, letterSpacing: '-0.02em', color: FT_INK, marginTop: 6 }}>
-                                 Manager form — last {frontpageFormData.matchdayIds.length} GW{frontpageFormData.matchdayIds.length > 1 ? 's' : ''}
-                               </h2>
-                               <table style={{ width: '100%', marginTop: 12, borderCollapse: 'collapse', fontFamily: ftMono, fontSize: 10, color: FT_INK }}>
-                                 <thead>
-                                   <tr>
-                                     <th style={{ textAlign: 'left', padding: '4px 4px', fontWeight: 600, borderBottom: `1px solid ${FT_INK}`, letterSpacing: '.1em' }}>MANAGER</th>
-                                     {frontpageFormData.matchdayIds.map(mid => (
-                                       <th key={mid} style={{ textAlign: 'right', padding: '4px 6px', fontWeight: 600, borderBottom: `1px solid ${FT_INK}`, letterSpacing: '.1em' }}>
-                                         GW{mid.split('-r')[1]}
-                                       </th>
-                                     ))}
-                                     <th style={{ textAlign: 'right', padding: '4px 6px', fontWeight: 600, borderBottom: `1px solid ${FT_INK}`, letterSpacing: '.1em' }}>↑↓</th>
-                                   </tr>
-                                 </thead>
-                                 <tbody>
-                                   {(() => {
-                                   // Identify completed GWs via gazette activity entries (roundComplete=true)
-                                   const completedGwNums = new Set(
-                                     frontpageActivityEntries
-                                       .filter(e => e.entry_type === 'activity')
-                                       .map(e => e.headline?.match(/GW\s*(\d+)/i)?.[1])
-                                       .filter(Boolean)
-                                   );
-                                   return members.map((m, i) => {
-                                     const isMe = currentUser && m.user_id === currentUser.id;
-                                     const mName = isMe ? 'You' : (m.users?.username || '—');
-                                     const gwPts = frontpageFormData.matchdayIds.map(mid =>
-                                       frontpageFormData.formMap[m.user_id]?.[mid] ?? null
-                                     );
-                                     // Only compare completed GWs for trend (exclude in-progress)
-                                     const completedPts = frontpageFormData.matchdayIds
-                                       .map((mid, j) => {
-                                         const gwN = mid.split('-r')[1];
-                                         return completedGwNums.has(gwN) ? gwPts[j] : null;
-                                       })
-                                       .filter(p => p != null);
-                                     const last2 = completedPts.slice(-2);
-                                     const trend = last2.length === 2
-                                       ? (last2[1] > last2[0] ? '▲' : last2[1] < last2[0] ? '▼' : '—')
-                                       : '—';
-                                     const trendColor = trend === '▲' ? '#1A7F3C' : trend === '▼' ? FT_RED : FT_MUTE;
-                                     return (
-                                       <tr key={m.user_id} style={{ borderTop: i === 0 ? 'none' : `1px solid ${FT_RULE}`, background: isMe ? '#F7F3EA' : 'transparent' }}>
-                                         <td style={{ padding: '5px 4px', fontFamily: ftSerif, fontSize: 12, fontWeight: isMe ? 700 : 400 }}>{mName}</td>
-                                         {gwPts.map((pts, j) => (
-                                           <td key={j} style={{ padding: '5px 6px', textAlign: 'right', fontWeight: pts != null ? 600 : 400, color: pts != null ? FT_INK : FT_MUTE }}>
-                                             {pts != null ? Math.round(pts) : '—'}
-                                           </td>
-                                         ))}
-                                         <td style={{ padding: '5px 6px', textAlign: 'right', color: trendColor, fontWeight: 700, fontSize: 11 }}>{trend}</td>
-                                       </tr>
-                                     );
-                                   });
-                                   })()}
-                                 </tbody>
-                               </table>
-                             </>
-                           ) : (
-                             <>
-                               <h2 style={{ fontFamily: ftSerif, fontWeight: 800, fontSize: 22, lineHeight: 1.02, letterSpacing: '-0.02em', color: FT_INK, marginTop: 6 }}>Open market — build freely</h2>
-                               <p style={{ fontFamily: ftSerif, fontSize: 14, color: FT_MUTE, lineHeight: 1.6, marginTop: 10 }}>
-                                 Classic mode is in effect. Head to the Market to sign players and start scoring points.
-                               </p>
-                             </>
-                           )}
-                         </>
-                       )}
-
-                       {/* AI transfer rumour — only when edition exists and non-empty */}
-                       {fpEd?.transfer_rumour?.trim() && (
-                         <div style={{ marginTop: 20, paddingTop: 16, borderTop: `1px solid ${FT_RULE}` }}>
-                           <div style={{ fontFamily: ftMono, fontSize: 9, letterSpacing: '.22em', color: FT_RED, marginBottom: 6 }}>TRANSFER WHISPERS</div>
-                           <p style={{ fontFamily: ftSerif, fontStyle: 'italic', fontSize: 14, lineHeight: 1.55, color: FT_INK }}>
-                             {fpEd.transfer_rumour}
-                           </p>
-                           <ReactionStrip sectionKey="transfers" {...reactionProps} />
-                           <LettersPanel sectionKey="transfers" {...letterProps} />
-                         </div>
-                       )}
-                     </div>
-
-                     {/* Sidebar */}
-                     <aside>
-                       {/* Standings box */}
-                       <div style={{ border: `2px solid ${FT_INK}`, padding: '14px 16px', background: '#EFEAE0' }}>
-                         <div style={{ fontFamily: ftMono, fontSize: 9, letterSpacing: '.22em', color: FT_INK }}>STANDINGS · LATEST</div>
-                         <div style={{ fontFamily: ftSerif, fontWeight: 900, fontStyle: 'italic', fontSize: 18, color: FT_INK, marginTop: 2 }}>Table at a glance</div>
-                         <table style={{ width: '100%', marginTop: 8, borderCollapse: 'collapse', fontFamily: ftMono, fontSize: 11, color: FT_INK }}>
-                           <tbody>
-                             {members.slice(0, 6).map((m, i) => {
-                               const mName = (currentUser && m.user_id === currentUser.id) ? 'You' : (m.users?.username || 'Unknown');
-                               return (
-                                 <tr key={m.user_id} style={{ borderTop: i === 0 ? 'none' : `1px solid ${FT_RULE}` }}>
-                                   <td style={{ padding: '5px 4px', width: 18 }}>{i + 1}</td>
-                                   <td style={{ padding: '5px 4px', fontFamily: ftSerif, fontSize: 12 }}>{mName}</td>
-                                   <td style={{ padding: '5px 4px', textAlign: 'right', fontWeight: 600 }}>{Math.round(m.total_points ?? 0)}</td>
-                                 </tr>
-                               );
-                             })}
-                           </tbody>
-                         </table>
-                       </div>
-
-                       {/* Quote — pinned by commissioner, or static fallback */}
-                       <div style={{ paddingLeft: 16, borderLeft: `4px solid ${FT_INK}`, marginTop: 18 }}>
-                         <div style={{ fontFamily: ftMono, fontSize: 9, letterSpacing: '.22em', color: FT_RED }}>
-                           {pinnedQuote?.text ? 'COMMISSIONER SAYS' : 'THIS WEEK IN LEAGUE CHAT'}
-                         </div>
-                         <blockquote style={{ fontFamily: ftSerif, fontStyle: 'italic', fontSize: 18, lineHeight: 1.2, color: FT_INK, marginTop: 6, marginBottom: 0 }}>
-                           "{pinnedQuote?.text ?? 'May the best manager win.'}"
-                         </blockquote>
-                         {pinnedQuote?.author && (
-                           <div style={{ fontFamily: ftMono, fontSize: 9, letterSpacing: '.16em', color: FT_MUTE, marginTop: 6 }}>
-                             — {pinnedQuote.author}
-                           </div>
-                         )}
-                       </div>
-
-                       {/* AI hot take — only when edition exists */}
-                       {fpEd?.hot_take && (
-                         <div style={{ marginTop: 18, padding: '12px 14px', background: FT_INK, color: FT_PAPER }}>
-                           <div style={{ fontFamily: ftMono, fontSize: 9, letterSpacing: '.22em', color: FT_RED, marginBottom: 6 }}>HOT TAKE</div>
-                           <p style={{ fontFamily: ftSerif, fontStyle: 'italic', fontSize: 13, lineHeight: 1.5, margin: 0 }}>
-                             {fpEd.hot_take}
-                           </p>
-                           <ReactionStrip sectionKey="hot_take" {...reactionProps} ftInk={FT_PAPER} ftRule="#3A3E44" ftMute="#8A919A" ftMono={ftMono} />
-                           <LettersPanel sectionKey="hot_take" {...letterProps} ftInk={FT_PAPER} ftRule="#3A3E44" ftMute="#8A919A" ftMono={ftMono} ftSerif={ftSerif} />
-                         </div>
-                       )}
-                     </aside>
-                   </div>
-
-                   {/* Commissioner posts — breaking_news + classified; reaction strip rendered inside when content exists */}
-                   <GazetteNews
-                     leagueId={activeLeague?.league_id}
-                     ftSerif={ftSerif} ftMono={ftMono}
-                     ftInk={FT_INK} ftMute={FT_MUTE} ftRed={FT_RED} ftRule={FT_RULE}
-                     fpEd={fpEd}
-                     ReactionStrip={ReactionStrip}
-                     LettersPanel={LettersPanel}
-                     reactionProps={reactionProps}
-                     letterProps={letterProps}
-                   />
-
-                   {/* AI wooden spoon — only when edition exists */}
-                   {fpEd?.wooden_spoon && (
-                     <div style={{ marginTop: 24, borderTop: `2px solid ${FT_INK}`, paddingTop: 20 }}>
-                       <div style={{ fontFamily: ftMono, fontSize: 10, letterSpacing: '.22em', color: FT_RED, marginBottom: 8 }}>🥄 WOODEN SPOON WATCH</div>
-                       <p style={{ fontFamily: ftSerif, fontStyle: 'italic', fontSize: 15, lineHeight: 1.6, color: FT_INK, maxWidth: 600 }}>
-                         {fpEd.wooden_spoon}
-                       </p>
-                     </div>
-                   )}
-
-                   {/* Bets desk — open markets + settled results */}
-                   {(frontpageBets.open.length > 0 || frontpageBets.settled.length > 0) && (
-                     <div style={{ marginTop: 24, borderTop: `2px solid ${FT_INK}`, paddingTop: 20 }}>
-                       <div style={{ fontFamily: ftMono, fontSize: 10, letterSpacing: '.22em', color: FT_RED, marginBottom: 16 }}>🎰 BETS DESK</div>
-                       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 24 }}>
-                         {/* Open markets */}
-                         {frontpageBets.open.length > 0 && (
-                           <div>
-                             <div style={{ fontFamily: ftMono, fontSize: 9, letterSpacing: '.18em', color: '#1A7F3C', marginBottom: 10, fontWeight: 700 }}>● OPEN MARKETS</div>
-                             {frontpageBets.open.map((b, i) => (
-                               <div key={b.id} style={{ borderLeft: `3px solid ${FT_INK}`, paddingLeft: 12, marginBottom: i < frontpageBets.open.length - 1 ? 12 : 0 }}>
-                                 <div style={{ fontFamily: ftSerif, fontWeight: 700, fontSize: 13, color: FT_INK, lineHeight: 1.3 }}>{b.title}</div>
-                                 <div style={{ fontFamily: ftMono, fontSize: 9, color: FT_MUTE, marginTop: 4, letterSpacing: '.06em', display: 'flex', gap: 10 }}>
-                                   {b.deadline_at && <span>CLOSES {new Date(b.deadline_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</span>}
-                                   {b.total_submissions > 0 && <span>{b.total_submissions} ENTR{b.total_submissions === 1 ? 'Y' : 'IES'}</span>}
-                                   {b.reward_value > 0 && <span>+{b.reward_value} PTS</span>}
-                                 </div>
-                               </div>
-                             ))}
-                           </div>
-                         )}
-                         {/* Settled results */}
-                         {frontpageBets.settled.length > 0 && (
-                           <div>
-                             <div style={{ fontFamily: ftMono, fontSize: 9, letterSpacing: '.18em', color: FT_MUTE, marginBottom: 10, fontWeight: 700 }}>RESULTS · SETTLED</div>
-                             {frontpageBets.settled.map((b, i) => {
-                               const hitRate = b.total_submissions > 0
-                                 ? Math.round((b.winners_count / b.total_submissions) * 100)
-                                 : null;
-                               return (
-                                 <div key={b.id} style={{ borderLeft: `3px solid ${FT_RULE}`, paddingLeft: 12, marginBottom: i < frontpageBets.settled.length - 1 ? 12 : 0 }}>
-                                   <div style={{ fontFamily: ftSerif, fontWeight: 700, fontSize: 13, color: FT_INK, lineHeight: 1.3 }}>{b.title}</div>
-                                   {b.correct_answer && (
-                                     <div style={{ fontFamily: ftMono, fontSize: 9, color: '#1A7F3C', marginTop: 3, letterSpacing: '.06em', fontWeight: 700 }}>
-                                       ✓ {b.correct_answer}
-                                     </div>
-                                   )}
-                                   <div style={{ fontFamily: ftMono, fontSize: 9, color: FT_MUTE, marginTop: 2, letterSpacing: '.06em' }}>
-                                     {b.winners_count ?? 0} winner{b.winners_count !== 1 ? 's' : ''}
-                                     {hitRate != null && ` · ${hitRate}% hit rate`}
-                                     {b.reward_value > 0 && ` · +${b.reward_value} pts each`}
-                                   </div>
-                                 </div>
-                               );
-                             })}
-                           </div>
-                         )}
-                       </div>
-                       {/* Editorial commentary */}
-                       {frontpageBets.open.length > 0 && (
-                         <div style={{ marginTop: 14, paddingTop: 12, borderTop: `1px solid ${FT_RULE}` }}>
-                           <p style={{ fontFamily: ftSerif, fontStyle: 'italic', fontSize: 12, color: FT_MUTE, lineHeight: 1.6, margin: 0 }}>
-                             {frontpageBets.open.length === 1
-                               ? `There's one market open for business — place your bet before the deadline or forever hold your peace.`
-                               : `${frontpageBets.open.length} markets are open. Study the form, back your conviction. Points don't lie — managers who play the bets desk consistently gain an edge.`}
-                           </p>
-                         </div>
-                       )}
-                       {/* Bet tracker — per-manager accuracy stats with editorial sarcasm */}
-                       {frontpageBetStats.length > 0 && (() => {
-                         const maxTotal = Math.max(...frontpageBetStats.map(s => s.total));
-                         const oracle    = frontpageBetStats.find(s => s.total >= 2 && s.pct === 100);
-                         const contrarian= frontpageBetStats.find(s => s.total >= 2 && s.pct === 0);
-                         const gambler   = frontpageBetStats.find(s => s.total === maxTotal && s.total >= 3);
-                         const lines = [];
-                         if (oracle) {
-                           const n = members.find(m => m.user_id === oracle.userId)?.users?.username ?? 'Someone';
-                           lines.push(`${n} is running at ${oracle.pct}% accuracy — ${oracle.total} from ${oracle.total}. Either they have inside information or the rest of you should be paying closer attention.`);
-                         }
-                         if (contrarian && contrarian.userId !== oracle?.userId) {
-                           const n = members.find(m => m.user_id === contrarian.userId)?.users?.username ?? 'Someone';
-                           lines.push(`${n} has yet to get one right across ${contrarian.total} attempts. Respect the commitment to a losing strategy.`);
-                         }
-                         if (gambler && gambler.userId !== oracle?.userId && gambler.userId !== contrarian?.userId) {
-                           const n = members.find(m => m.user_id === gambler.userId)?.users?.username ?? 'Someone';
-                           lines.push(`${n} leads participation with ${gambler.total} entries — ${gambler.pct}% correct. Very active. Not always right. Points eventually tell the story.`);
-                         }
-                         if (!lines.length) return null;
-                         return (
-                           <div style={{ marginTop: 14, paddingTop: 14, borderTop: `1px solid ${FT_RULE}` }}>
-                             <div style={{ fontFamily: ftMono, fontSize: 9, letterSpacing: '.22em', color: FT_MUTE, marginBottom: 10, fontWeight: 700 }}>BET TRACKER</div>
-                             <div style={{ display: 'grid', gridTemplateColumns: `repeat(${Math.min(frontpageBetStats.length, 4)}, 1fr)`, gap: 10, marginBottom: 14 }}>
-                               {frontpageBetStats.slice(0, 4).map(s => {
-                                 const n = members.find(m => m.user_id === s.userId)?.users?.username ?? '—';
-                                 const barW = maxTotal > 0 ? Math.round((s.correct / maxTotal) * 100) : 0;
-                                 return (
-                                   <div key={s.userId} style={{ fontFamily: ftMono, fontSize: 9, color: FT_MUTE }}>
-                                     <div style={{ color: FT_INK, fontWeight: 700, fontSize: 10, marginBottom: 3, letterSpacing: '.04em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{n}</div>
-                                     <div style={{ height: 4, background: FT_RULE, borderRadius: 2, marginBottom: 3 }}>
-                                       <div style={{ height: '100%', width: `${barW}%`, background: s.pct >= 50 ? '#1A7F3C' : FT_RED, borderRadius: 2 }} />
-                                     </div>
-                                     <div style={{ letterSpacing: '.06em' }}>{s.correct}/{s.total} · {s.pct}%</div>
-                                   </div>
-                                 );
-                               })}
-                             </div>
-                             {lines.map((line, i) => (
-                               <p key={i} style={{ fontFamily: ftSerif, fontStyle: 'italic', fontSize: 12, color: FT_MUTE, lineHeight: 1.6, margin: i > 0 ? '8px 0 0' : 0 }}>{line}</p>
-                             ))}
-                           </div>
-                         );
-                       })()}
-                     </div>
-                   )}
-
-                   {/* Recent Deals — auction_result + trade_result gazette entries */}
-                   {frontpageActivityEntries.some(e => e.entry_type === 'auction_result' || e.entry_type === 'trade_result') && (() => {
-                     const dealEntries = frontpageActivityEntries
-                       .filter(e => e.entry_type === 'auction_result' || e.entry_type === 'trade_result')
-                       .slice(0, 3);
-                     return (
-                       <div style={{ marginTop: 24, borderTop: `2px solid ${FT_INK}`, paddingTop: 20 }}>
-                         <div style={{ fontFamily: ftMono, fontSize: 10, letterSpacing: '.22em', color: FT_RED, marginBottom: 14 }}>TRANSFER DESK · RECENT DEALS</div>
-                         <div style={{ display: 'grid', gridTemplateColumns: `repeat(${Math.min(dealEntries.length, 3)}, 1fr)`, gap: 16 }}>
-                           {dealEntries.map(e => (
-                             <div key={e.id} style={{ borderLeft: `3px solid ${FT_INK}`, paddingLeft: 14 }}>
-                               <div style={{ fontFamily: ftMono, fontSize: 9, letterSpacing: '.18em', color: FT_MUTE, marginBottom: 4 }}>
-                                 {e.entry_type === 'trade_result' ? 'TRADE' : 'AUCTION'}
-                               </div>
-                               <div style={{ fontFamily: ftSerif, fontWeight: 700, fontSize: 13, color: FT_INK, marginBottom: 6, lineHeight: 1.3 }}>{e.headline}</div>
-                               {Array.isArray(e.bullets) && e.bullets.slice(0, 2).map((b, i) => (
-                                 <div key={i} style={{ fontFamily: ftMono, fontSize: 10, color: FT_MUTE, marginBottom: 2, letterSpacing: '.06em' }}>{typeof b === 'string' ? b : b?.text ?? ''}</div>
-                               ))}
-                             </div>
-                           ))}
-                         </div>
-                       </div>
-                     );
-                   })()}
-
-                   {(() => {
-                     const h2hEntries = frontpageActivityEntries.filter(e => e.headline?.startsWith('⚔️'));
-                     const allScoreEntries = frontpageActivityEntries.filter(e => e.entry_type === 'activity' && !e.headline?.startsWith('⚔️'));
-                     // Exclude gazette entry if live card covers the same GW
-                     const liveGwNum = frontpageLiveScores?.gwNum;
-                     const scoreEntries = liveGwNum
-                       ? allScoreEntries.filter(e => e.headline?.match(/GW\s*(\d+)/i)?.[1] !== liveGwNum)
-                       : allScoreEntries;
-                     // When a live in-progress card exists, suppress historical gazette score cards
-                     // (they're confusing alongside a live card — history lives in RECAP)
-                     const hasLive = frontpageLiveScores && frontpageLiveScores.rows.length > 0;
-                     const gazetteCards = h2hEnabled
-                       ? [...h2hEntries.slice(0, 2), ...(!hasLive ? scoreEntries.slice(0, 2) : [])]
-                       : (!hasLive ? scoreEntries.slice(0, 2) : []);
-                     if (!hasLive && gazetteCards.length === 0) return null;
-                     return (
-                       <div style={{ marginTop: 24, borderTop: `2px solid ${FT_INK}`, paddingTop: 20 }}>
-                         <div style={{ fontFamily: ftMono, fontSize: 10, letterSpacing: '.22em', color: FT_RED, marginBottom: 14 }}>
-                           {h2hEnabled ? 'LATEST SCORES & H2H RESULTS' : 'LATEST SCORES'}
-                         </div>
-                         <div style={{ display: 'grid', gridTemplateColumns: `repeat(${Math.min((hasLive ? 1 : 0) + gazetteCards.length, 2)}, 1fr)`, gap: 20 }}>
-                           {/* In-progress GW card */}
-                           {hasLive && (
-                             <div style={{ borderLeft: `3px solid ${FT_RED}`, paddingLeft: 14 }}>
-                               <div style={{ fontFamily: ftMono, fontSize: 9, letterSpacing: '.18em', color: FT_RED, marginBottom: 6, display: 'flex', alignItems: 'center', gap: 5 }}>
-                                 <span style={{ width: 6, height: 6, borderRadius: '50%', background: FT_RED, display: 'inline-block', flexShrink: 0 }} />
-                                 GW{frontpageLiveScores.gwNum} · IN PROGRESS
-                               </div>
-                               <div style={{ fontFamily: ftSerif, fontWeight: 700, fontSize: 13, color: FT_INK, marginBottom: 8, lineHeight: 1.3 }}>Scores so far</div>
-                               {frontpageLiveScores.rows.slice(0, 5).map((r, i) => {
-                                 const mName = members.find(m => m.user_id === r.userId)?.users?.username ?? '—';
-                                 return (
-                                   <div key={r.userId} style={{ fontFamily: ftMono, fontSize: 10, color: i === 0 ? FT_INK : FT_MUTE, marginBottom: 3, letterSpacing: '.06em', fontWeight: i === 0 ? 700 : 400 }}>
-                                     {i + 1}. {mName} · {Math.round(r.pts)} pts
-                                   </div>
-                                 );
-                               })}
-                             </div>
-                           )}
-                           {/* Gazette-based score cards (completed GWs) */}
-                           {gazetteCards.map(e => (
-                             <div key={e.id} style={{ borderLeft: `3px solid ${FT_INK}`, paddingLeft: 14 }}>
-                               <div style={{ fontFamily: ftMono, fontSize: 9, letterSpacing: '.18em', color: e.headline?.startsWith('⚔️') ? '#C07000' : FT_MUTE, marginBottom: 6 }}>
-                                 {e.headline?.startsWith('⚔️') ? 'H2H RESULT' : 'SCORES'}
-                               </div>
-                               <div style={{ fontFamily: ftSerif, fontWeight: 700, fontSize: 13, color: FT_INK, marginBottom: 8, lineHeight: 1.3 }}>
-                                 {e.headline}
-                               </div>
-                               {Array.isArray(e.bullets) && e.bullets.slice(0, 4).map((b, i) => (
-                                 <div key={i} style={{ fontFamily: ftMono, fontSize: 10, color: FT_MUTE, marginBottom: 3, letterSpacing: '.06em' }}>{b}</div>
-                               ))}
-                             </div>
-                           ))}
-                         </div>
-                         {fpEd && (
-                           <div style={{ marginTop: 8 }}>
-                             <ReactionStrip sectionKey="scores" {...reactionProps} />
-                             <LettersPanel sectionKey="scores" {...letterProps} />
-                           </div>
-                         )}
-                       </div>
-                     );
-                   })()}
-
-                   <div style={{ height: 1, background: FT_INK, margin: '24px 0 12px' }} />
-                   <div style={{ display: 'flex', justifyContent: 'space-between', fontFamily: ftMono, fontSize: 9, letterSpacing: '.22em', color: FT_MUTE }}>
-                     <span>EDITED BY THE FORZA TIMES DESK · {name.toUpperCase()}</span>
-                     <span>P. 01 OF 01</span>
-                   </div>
-                 </div>
-               )}
-             </div>
-           );
-         })()}
-
-         {view === 'bets' && (
-           <BetsTabHub
-             leagueId={activeLeague?.league_id}
-             squadId={mySquadId}
-             onReplayTour={replayBetsTour}
-             currentGW={currentGW}
-           />
-         )}
-
-         {view === 'betting_leaderboard' && (
-           <BettingLeaderboardView leaderboard={leaderboard} currentUser={currentUser} betLoading={betLoading} />
-         )}
          {(view === 'trading' || view === 'auctions') && (
            <TradingView
              auctions={auctions}
@@ -2026,34 +1349,6 @@ export default function LeagueScreen() {
            />
          )}
 
-         {view === 'chat' && (
-           <ChatView
-             members={members}
-             currentUser={currentUser}
-             messages={messages}
-             chatLoading={chatLoading}
-             unreadCount={unreadCount}
-             typingUsers={typingUsers}
-             sendMessage={sendMessage}
-             editMessage={editMessage}
-             deleteMessage={deleteMessage}
-             broadcastTyping={broadcastTyping}
-             scrollEndRef={scrollEndRef}
-             mentionSearch={mentionSearch}
-             mentionMatches={mentionMatches}
-             selectedMention={selectedMention}
-             mentionedUserIds={mentionedUserIds}
-             parseMentionPattern={parseMentionPattern}
-             insertMention={insertMention}
-             handleMentionNavigate={handleMentionNavigate}
-             resetMentions={resetMentions}
-             searchTerm={searchTerm}
-             setSearchTerm={setSearchTerm}
-             filteredMessages={filteredMessages}
-             clearSearch={clearSearch}
-             resultCount={resultCount}
-           />
-         )}
 
          {view === 'stats' && (
            <StatsView
