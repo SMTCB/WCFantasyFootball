@@ -472,7 +472,7 @@ Deno.serve(async (req) => {
 
         // Derived from match scores
         goals_conceded:  conceded,
-        clean_sheet:     conceded === 0 && mins >= 60,
+        clean_sheet:     conceded === 0, // minutes gate applied per-position in calculate-scores scorePlayer (GK/DEF≥45, MID≥60)
 
         // BPS and bonus — calculated by calculate-scores after this upsert
         bps_score:       0,

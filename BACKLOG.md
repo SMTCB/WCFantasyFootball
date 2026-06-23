@@ -115,6 +115,23 @@
 
 ---
 
+## ✅ Clean sheet not awarded for DEF/GK subbed off at 45–59 min (2026-06-23) — PR #616 (main)
+
+**Reported**: Cristian Romero (DEF, Argentina) played 57 min in R2 vs Austria, team kept a clean sheet, but received 0 clean sheet points.
+
+**Root cause**: `ingest-match-events/index.js` stored `clean_sheet: conceded === 0 && mins >= 60` — a 60-minute gate baked into the `player_match_stats.clean_sheet` flag. `calculate-scores` PATH A reads that flag directly via `scorePlayer()`. DEF/GK only need 45 min for a clean sheet, so any DEF/GK subbed off between 45–59 min in a clean sheet game was silently denied +4 pts. The 60-min gate belongs only in `scorePlayer()` inside `calculate-scores`, not in the stored flag.
+
+**Code fix** (PR #616, `ingest-match-events/index.js` line 475):
+- `clean_sheet: conceded === 0 && mins >= 60` → `clean_sheet: conceded === 0`
+- Deployed to production immediately after merge.
+
+**Data fix** (applied directly to DB):
+- 7 `player_match_stats` rows in R2 updated to `clean_sheet = true`:
+  Romero (ARG), Meunier (BEL), Hardani (IRN), Bombito (CAN), Cornelius (CAN), Cancelo (POR), Semedo (POR)
+- `calculate-scores` will recompute `fantasy_points` (+4 pts each), `breakdown` (CLEAN SHEET row), and squad totals automatically on its next pass via PATH A + `rollupSquads`.
+
+---
+
 ## ✅ MD1 v29 bug — manual correction of 13 managers + scoring integrity failsafe (2026-06-19)
 
 **Root cause**: `calculate-scores` v29 overwrote `live_xi` on every live-scoring pass (05:00–16:29 UTC, 2026-06-18). At `roundComplete`, `effective_xi` was frozen from `live_xi` — which by then reflected the post-R2-transfer squad of any manager who made R2 buys before MD1 closed. 13 managers across 3 leagues (Mundial do Eder, Munaial '26, Draft Mundial 26) had wrong R1 Recap XIs and inflated/deflated point totals.
