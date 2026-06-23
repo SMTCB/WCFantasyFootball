@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useClubhouse } from '../hooks/useClubhouse';
 import { useSport } from '../context/SportContext';
+import { useAuth } from '../hooks/useAuth';
 import ClubhouseChat from '../components/ClubhouseChat';
 import ClubhouseFrontpage from '../components/ClubhouseFrontpage';
 
@@ -229,7 +230,15 @@ function FeedEntry({ entry, onEnter }) {
 }
 
 // ── Members tab ───────────────────────────────────────────────────────────────
-function MembersTab({ members }) {
+function MembersTab({ members, isOwner, currentUserId, onKick }) {
+  const [kicking, setKicking] = useState(null);
+
+  async function handleKick(userId) {
+    setKicking(userId);
+    try { await onKick(userId); }
+    finally { setKicking(null); }
+  }
+
   if (members.length === 0) {
     return (
       <div style={{ textAlign: 'center', padding: '48px 0', ...MONO, fontSize: 11, color: 'var(--mute)' }}>
@@ -259,8 +268,179 @@ function MembersTab({ members }) {
           {m.role === 'owner' && (
             <span style={{ ...MONO, fontSize: 9, fontWeight: 700, letterSpacing: '0.12em', color: 'var(--accent)' }}>OWNER</span>
           )}
+          {isOwner && m.role !== 'owner' && m.user_id !== currentUserId && (
+            <button
+              onClick={() => handleKick(m.user_id)}
+              disabled={kicking === m.user_id}
+              style={{ padding: '5px 10px', background: 'transparent', border: '1px solid var(--danger)', borderRadius: 4, ...MONO, fontSize: 9, fontWeight: 700, letterSpacing: '0.1em', color: 'var(--danger)', cursor: 'pointer', flexShrink: 0 }}
+            >
+              {kicking === m.user_id ? '…' : 'KICK'}
+            </button>
+          )}
         </div>
       ))}
+    </div>
+  );
+}
+
+// ── Settings tab (owner only) ─────────────────────────────────────────────────
+function SettingsTab({ circle, activeCircleId, onUpdateSettings, onLinkLeague, getOwnerLinkableLeagues }) {
+  const [name,        setName]        = useState(circle.name);
+  const [isPublic,    setIsPublic]    = useState(circle.is_public);
+  const [p2pEnabled,  setP2pEnabled]  = useState(circle.p2p_betting_enabled);
+  const [savingName,  setSavingName]  = useState(false);
+  const [nameMsg,     setNameMsg]     = useState('');
+  const [linkableLeagues, setLinkableLeagues] = useState(null);
+  const [loadingLeagues,  setLoadingLeagues]  = useState(false);
+  const [linkingId,       setLinkingId]       = useState(null);
+  const [linkMsg,         setLinkMsg]         = useState('');
+
+  async function saveName(e) {
+    e.preventDefault();
+    if (!name.trim() || name.trim() === circle.name) return;
+    setSavingName(true); setNameMsg('');
+    try {
+      await onUpdateSettings({ name: name.trim() });
+      setNameMsg('Saved ✓');
+      setTimeout(() => setNameMsg(''), 2000);
+    } catch (err) {
+      setNameMsg(err.message);
+    } finally {
+      setSavingName(false);
+    }
+  }
+
+  async function togglePublic() {
+    const next = !isPublic;
+    setIsPublic(next);
+    try { await onUpdateSettings({ isPublic: next }); }
+    catch { setIsPublic(!next); }
+  }
+
+  async function toggleP2p() {
+    const next = !p2pEnabled;
+    setP2pEnabled(next);
+    try { await onUpdateSettings({ p2pEnabled: next }); }
+    catch { setP2pEnabled(!next); }
+  }
+
+  async function loadLinkableLeagues() {
+    setLoadingLeagues(true); setLinkMsg('');
+    try {
+      const result = await getOwnerLinkableLeagues(activeCircleId);
+      setLinkableLeagues(result);
+    } catch (err) {
+      setLinkMsg(err.message);
+    } finally {
+      setLoadingLeagues(false);
+    }
+  }
+
+  async function handleLink(leagueId) {
+    setLinkingId(leagueId); setLinkMsg('');
+    try {
+      await onLinkLeague(leagueId);
+      setLinkableLeagues(prev => prev.filter(l => l.id !== leagueId));
+      setLinkMsg('League linked ✓');
+      setTimeout(() => setLinkMsg(''), 2000);
+    } catch (err) {
+      setLinkMsg(err.message === 'NOT_COMMISSIONER' ? 'You must be commissioner of that league.' : err.message);
+    } finally {
+      setLinkingId(null);
+    }
+  }
+
+  const sectionLabel = (text) => (
+    <div style={{ ...MONO, fontSize: 9, letterSpacing: '0.16em', color: 'var(--mute)', textTransform: 'uppercase', marginBottom: 10, marginTop: 20 }}>
+      {text}
+    </div>
+  );
+
+  const toggle = (label, sublabel, value, onToggle) => (
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '12px 14px', background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 8 }}>
+      <div>
+        <div style={{ ...MONO, fontSize: 12, color: 'var(--paper)', fontWeight: 600 }}>{label}</div>
+        {sublabel && <div style={{ ...BODY, fontSize: 12, color: 'var(--mute)', marginTop: 2 }}>{sublabel}</div>}
+      </div>
+      <button
+        onClick={onToggle}
+        style={{
+          flexShrink: 0,
+          width: 44, height: 24, borderRadius: 12,
+          background: value ? 'var(--accent)' : 'var(--elev)',
+          border: 'none', cursor: 'pointer', position: 'relative', transition: 'background 0.15s',
+        }}
+        aria-checked={value}
+        role="switch"
+      >
+        <div style={{
+          position: 'absolute', top: 3, left: value ? 23 : 3,
+          width: 18, height: 18, borderRadius: '50%', background: '#fff',
+          transition: 'left 0.15s',
+        }} />
+      </button>
+    </div>
+  );
+
+  return (
+    <div>
+      {sectionLabel('Clubhouse Name')}
+      <form onSubmit={saveName} style={{ display: 'flex', gap: 8 }}>
+        <input
+          value={name}
+          onChange={e => setName(e.target.value)}
+          maxLength={40}
+          style={{ flex: 1, padding: '10px 12px', border: '1px solid var(--rule)', borderRadius: 6, ...BODY, fontSize: 14, color: 'var(--paper)', background: 'var(--card)', outline: 'none' }}
+        />
+        <button
+          type="submit"
+          disabled={savingName || !name.trim() || name.trim() === circle.name}
+          style={{ padding: '10px 16px', background: savingName || !name.trim() || name.trim() === circle.name ? 'var(--mute)' : 'var(--accent)', color: '#fff', border: 'none', borderRadius: 6, ...MONO, fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', cursor: 'pointer', whiteSpace: 'nowrap' }}
+        >
+          {savingName ? '…' : 'SAVE'}
+        </button>
+      </form>
+      {nameMsg && <div style={{ ...MONO, fontSize: 10, color: nameMsg.includes('✓') ? 'var(--positive)' : 'var(--danger)', marginTop: 6 }}>{nameMsg}</div>}
+
+      {sectionLabel('Visibility & Features')}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        {toggle('Public Clubhouse', 'Anyone can find and join via search.', isPublic, togglePublic)}
+        {toggle('P2P Betting', 'Enable peer-to-peer bets across this Clubhouse.', p2pEnabled, toggleP2p)}
+      </div>
+
+      {sectionLabel('Linked Leagues')}
+      {linkableLeagues === null ? (
+        <button
+          onClick={loadLinkableLeagues}
+          disabled={loadingLeagues}
+          style={{ width: '100%', padding: 12, border: '1px dashed var(--rule)', borderRadius: 8, background: 'transparent', color: loadingLeagues ? 'var(--mute)' : 'var(--accent)', ...MONO, fontSize: 10, letterSpacing: '0.1em', cursor: 'pointer' }}
+        >
+          {loadingLeagues ? 'LOADING…' : '+ LINK AN EXISTING LEAGUE →'}
+        </button>
+      ) : linkableLeagues.length === 0 ? (
+        <div style={{ ...MONO, fontSize: 11, color: 'var(--mute)', textAlign: 'center', padding: '16px 0' }}>
+          All your leagues are already linked — or you are not a commissioner of any unlinked league.
+        </div>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          {linkableLeagues.map(l => (
+            <div key={l.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, padding: '10px 14px', background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 8 }}>
+              <div>
+                <div style={{ ...HEAD, fontSize: 13, color: 'var(--paper)' }}>{l.name}</div>
+                {l.format && <div style={{ ...MONO, fontSize: 9, color: 'var(--mute)', marginTop: 2, textTransform: 'uppercase', letterSpacing: '0.08em' }}>{l.format}</div>}
+              </div>
+              <button
+                onClick={() => handleLink(l.id)}
+                disabled={linkingId === l.id}
+                style={{ padding: '7px 14px', background: linkingId === l.id ? 'var(--mute)' : 'var(--accent)', color: '#fff', border: 'none', borderRadius: 6, ...MONO, fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', cursor: 'pointer', whiteSpace: 'nowrap' }}
+              >
+                {linkingId === l.id ? '…' : 'LINK'}
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+      {linkMsg && <div style={{ ...MONO, fontSize: 10, color: linkMsg.includes('✓') ? 'var(--positive)' : 'var(--danger)', marginTop: 8 }}>{linkMsg}</div>}
     </div>
   );
 }
@@ -389,6 +569,7 @@ function CircleSelector({ circles, activeCircleId, onChange }) {
 export default function ClubhouseScreen() {
   const { circleId: routeCircleId } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const { setActiveSport, setActivePaddockId } = useSport();
   const {
     myCircles,
@@ -402,6 +583,10 @@ export default function ClubhouseScreen() {
     createCircle,
     joinCircleByCode,
     searchClubhouses,
+    updateSettings,
+    kickMember,
+    linkLeague,
+    getOwnerLinkableLeagues,
   } = useClubhouse();
 
   const [tab, setTab] = useState('home');
@@ -438,12 +623,15 @@ export default function ClubhouseScreen() {
     navigate(`/f1/${paddock.id}`);
   }
 
+  const isOwner = activeCircle?.role === 'owner';
+
   const MAIN_TABS = [
-    { key: 'home',       label: 'HOME'       },
-    { key: 'times',      label: 'FORZA TIMES' },
-    { key: 'chat',       label: 'CHAT'       },
-    { key: 'members',    label: 'MEMBERS'    },
-    { key: 'find',       label: 'FIND'       },
+    { key: 'home',     label: 'HOME'        },
+    { key: 'times',    label: 'FORZA TIMES' },
+    { key: 'chat',     label: 'CHAT'        },
+    { key: 'members',  label: 'MEMBERS'     },
+    { key: 'find',     label: 'FIND'        },
+    ...(isOwner ? [{ key: 'settings', label: 'SETTINGS' }] : []),
   ];
 
   return (
@@ -579,11 +767,29 @@ export default function ClubhouseScreen() {
             )}
 
             {/* MEMBERS tab */}
-            {tab === 'members' && <MembersTab members={members} />}
+            {tab === 'members' && (
+              <MembersTab
+                members={members}
+                isOwner={isOwner}
+                currentUserId={user?.id}
+                onKick={(userId) => kickMember(activeCircleId, userId)}
+              />
+            )}
 
             {/* FIND tab */}
             {tab === 'find' && (
               <FindTab searchClubhouses={searchClubhouses} joinCircleByCode={joinCircleByCode} />
+            )}
+
+            {/* SETTINGS tab — owner only */}
+            {tab === 'settings' && isOwner && activeCircle && (
+              <SettingsTab
+                circle={activeCircle}
+                activeCircleId={activeCircleId}
+                onUpdateSettings={(patch) => updateSettings(activeCircleId, patch)}
+                onLinkLeague={(leagueId) => linkLeague(activeCircleId, leagueId)}
+                getOwnerLinkableLeagues={getOwnerLinkableLeagues}
+              />
             )}
           </div>
 
