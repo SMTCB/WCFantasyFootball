@@ -14,7 +14,6 @@ const ENTRY_META = {
   rank_change:      { filter: 'GAME',   badge: 'RANKS',    color: 'var(--cyan)' },
   relaxation:       { filter: 'GAME',   badge: 'POOL',     color: 'var(--cyan)' },
   cup_elimination:  { filter: 'GAME',   badge: 'CUP',      color: 'var(--danger)' },
-  bet_result:       { filter: 'BETS',   badge: 'BETS',     color: '#A855F7' },
   transfer:         { filter: 'TRADES', badge: 'TRANSFER', color: 'var(--positive)' },
 };
 
@@ -296,7 +295,7 @@ export default function LeagueDetailView({ leagueId, members, currentUser, membe
           <div style={{ padding: '12px 18px', borderTop: '1px solid var(--rule)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
             <span style={{ fontFamily: MONO, fontSize: 10, color: 'var(--mute)', letterSpacing: '.18em' }}>FILTER</span>
             <div style={{ display: 'flex', gap: 6 }}>
-              {['ALL', 'GAME', 'BETS', 'TRADES'].map((f) => {
+              {['ALL', 'GAME', 'TRADES'].map((f) => {
                 const active = activityFilter === f;
                 return (
                   <button
