@@ -1,12 +1,43 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-06-22 (v2: Phase 2 Tennis module game dynamics spec + implementation plan written — PR #605 merged to v2)  
+**Last Updated**: 2026-06-23 (v2: Phase 1E Clubhouse shell complete — CH-7/CH-8/CH-9 all shipped, PRs #613–#615)  
 **E2E Test Suite**: `platform.spec.js` (84 tests × 1 browser config) passing ✅ — 84/84 on v2 branch 2026-06-22  
 **Full Playbook Run**: `E2E_TEST_PLAYBOOK.md` v2.0 — all flows confirmed  
 **🟢 LAUNCH READY**: No critical (P0/P1) bugs open. All game mechanics functional. WC kick-off 2026-06-11.  
 **Live App**: https://wc-fantasy-football.vercel.app  
 **WC Kick-off**: 2026-06-11 19:00 UTC (Mexico vs South Africa)  
 **Supabase PostgREST max_rows**: 10,000 (raised from default 1,000 — 2026-06-08)
+
+---
+
+## ✅ v2 Phase 1E — Clubhouse shell complete (2026-06-23)
+
+**Branch**: `v2` — PRs #613, #614, #615.
+
+**What was built (CH-7, CH-8, CH-9):**
+
+**CH-7 (PR #613) — Mobile nav + feed wiring + classified gazette type:**
+- Clubhouse added to mobile bottom nav (replacing LIVE on mobile; LIVE remains desktop-only)
+- `FeedEntry` tappable when `entry.league_id` present — navigates to `/league/:id`
+- `classified` gazette entry type registered in `LeagueDetailView.jsx` ENTRY_META
+
+**CH-8 (PR #614) — Owner admin panel:**
+- Migration 195: 4 SECURITY DEFINER RPCs — `update_circle_settings`, `kick_circle_member`, `link_league_to_circle`, `get_owner_linkable_leagues`
+- `SettingsTab` component (rename, public/P2P toggles, league linker) — owner-only
+- `MembersTab` upgraded with KICK buttons for non-owner members
+- No prod backup needed (circles tables are v2-only, migration 188)
+
+**CH-9 (PR #615) — Notification badge + inbox:**
+- Migration 196: DB triggers for `frontpage_editions`, `gazette_entries` (breaking_news), `direct_messages` — fan out to `clubhouse_notifications`
+- TDZ-safe badge split: `ClubhouseNotifContext.js` (pure createContext, zero imports) + `ClubhouseNotifProvider.jsx` (supabase/auth logic) — AppLayout imports only the context file, no Rolldown TDZ risk
+- `App.jsx` wraps tree in `ClubhouseNotifProvider`
+- `AppLayout`: gold dot badge on desktop CLUBHOUSE nav and mobile CLUB icon when unread > 0
+- `useClubhouse`: notifications state, realtime INSERT subscription, `markRead`/`markAllRead`, `unreadCount`
+- `ClubhouseScreen`: `InboxTab` (TYPE_META badges, unread dot, MARK ALL READ, tap-to-navigate + mark-read); INBOX tab label shows live count
+
+**Phase 1E status: COMPLETE.** Clubhouse shell is self-contained. P2P betting (Phase 1A) and Tennis (Phase 2) add content inside it.
+
+**Next v2 session:** Phase 1A Sprint P2P-0 (5 product decisions gate Sprint 1) or Phase 2 Sprint T-0 (migrations 194–195 for Player's Box). See `SALE_READY_PROJECT_PLAN.md`.
 
 ---
 
