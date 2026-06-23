@@ -109,19 +109,15 @@ export function HubActionBar({ onManageSquad, onMarket }) {
   );
 }
 
-// 8-tab hub navigation
-export function HubTabs({ active = 'leaderboard', onTab, isCommissioner = false, unreadChat = 0, notifyBets = false, notifyTrading = false, h2hEnabled = false, isDraftLeague = false }) {
+// League hub navigation — Chat, Frontpage and Bets live in Clubhouse (CH-5)
+export function HubTabs({ active = 'leaderboard', onTab, isCommissioner = false, notifyTrading = false, h2hEnabled = false, isDraftLeague = false }) {
   const tabs = [
     { id: 'leaderboard', label: 'LEADERBOARD' },
     ...(h2hEnabled ? [{ id: 'h2h', label: 'H2H ⚔️' }] : []),
     { id: 'recap',       label: 'RECAP' },
-    { id: 'frontpage',   label: 'FRONTPAGE' },
-    { id: 'bets',        label: 'BETS',     notify: notifyBets },
-    { id: 'betting',     label: 'BETTING' },
     // TRADING tab (auctions + trade proposals) is draft-only — Classic leagues use
     // shared player pools so exclusive ownership transfers don't apply.
     ...(isDraftLeague ? [{ id: 'trading', label: 'TRADING', notify: notifyTrading }] : []),
-    { id: 'chat',        label: 'CHAT',     count: unreadChat },
     { id: 'stats',       label: 'STATS' },
     ...(isCommissioner ? [{ id: 'admin', label: '⚙ ADMIN', dim: true }] : []),
   ];
@@ -289,16 +285,12 @@ export function HubLeagueHeader({ leagueName = 'LOADING…', memberCount = 0, gw
 }
 
 // Mobile horizontal-scroll hub tab pills — replaces HubTabs on mobile viewports.
-export function HubTabPills({ active = 'leaderboard', onTab, isCommissioner = false, unreadChat = 0, notifyBets = false, notifyTrading = false, h2hEnabled = false, isDraftLeague = false }) {
+export function HubTabPills({ active = 'leaderboard', onTab, isCommissioner = false, notifyTrading = false, h2hEnabled = false, isDraftLeague = false }) {
   const tabs = [
     { id: 'leaderboard', label: 'BOARD' },
     ...(h2hEnabled ? [{ id: 'h2h', label: 'H2H ⚔️' }] : []),
     { id: 'recap',       label: 'RECAP' },
-    { id: 'frontpage',   label: 'FRONTPAGE' },
-    { id: 'bets',        label: 'BETS',     notify: notifyBets },
-    { id: 'betting',     label: 'BETTING' },
     ...(isDraftLeague ? [{ id: 'trading', label: 'TRADING', notify: notifyTrading }] : []),
-    { id: 'chat',        label: 'CHAT',     count: unreadChat },
     { id: 'stats',       label: 'STATS' },
     ...(isCommissioner ? [{ id: 'admin', label: 'ADMIN' }] : []),
   ];
