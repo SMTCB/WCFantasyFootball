@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useClubhouse } from '../hooks/useClubhouse';
 import { useSport } from '../context/SportContext';
 import ClubhouseChat from '../components/ClubhouseChat';
+import ClubhouseFrontpage from '../components/ClubhouseFrontpage';
 
 const MONO = { fontFamily: 'JetBrains Mono, monospace' };
 const HEAD = { fontFamily: 'Archivo Black, sans-serif' };
@@ -427,10 +428,11 @@ export default function ClubhouseScreen() {
   }
 
   const MAIN_TABS = [
-    { key: 'home',    label: 'HOME'    },
-    { key: 'chat',    label: 'CHAT'    },
-    { key: 'members', label: 'MEMBERS' },
-    { key: 'find',    label: 'FIND'    },
+    { key: 'home',       label: 'HOME'       },
+    { key: 'times',      label: 'FORZA TIMES' },
+    { key: 'chat',       label: 'CHAT'       },
+    { key: 'members',    label: 'MEMBERS'    },
+    { key: 'find',       label: 'FIND'       },
   ];
 
   return (
@@ -489,7 +491,15 @@ export default function ClubhouseScreen() {
         <>
           <TabBar tabs={MAIN_TABS} active={tab} onChange={setTab} />
 
-          {/* CHAT tab — full-width, no padding constraint */}
+          {/* Full-width tabs — rendered outside the max-width container */}
+          {tab === 'times' && (
+            <ClubhouseFrontpage
+              circleId={activeCircleId}
+              circleName={activeCircle?.name}
+              isOwner={activeCircle?.role === 'owner'}
+            />
+          )}
+
           {tab === 'chat' && (
             <ClubhouseChat
               circleId={activeCircleId}
@@ -498,7 +508,7 @@ export default function ClubhouseScreen() {
             />
           )}
 
-          <div style={{ padding: '20px 16px', maxWidth: 640, margin: '0 auto', display: tab === 'chat' ? 'none' : undefined }}>
+          <div style={{ padding: '20px 16px', maxWidth: 640, margin: '0 auto', display: tab === 'times' || tab === 'chat' ? 'none' : undefined }}>
 
             {/* HOME tab */}
             {tab === 'home' && (
