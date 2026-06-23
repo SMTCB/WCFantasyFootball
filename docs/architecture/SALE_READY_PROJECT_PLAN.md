@@ -13,10 +13,11 @@
 | Phase | Track | Weeks | Status |
 |---|---|---|---|
 | **0** | Foundation seams | W1 | ✅ Done |
-| **1A** | P2P Betting | W2–W7 | ⬜ Not started |
+| **1A** | P2P Betting | W2–W7 | ⬜ Not started (Stripe deferred; Sprint 0 decisions needed) |
 | **1B** | F1 Module | W2–W5 | ✅ Done (Sprints 0–3, PR #606) |
 | **1C** | UX Redesign | W1–W9 | 🔄 In progress — Sprint UX-0 ✅ done, UX-1 next |
 | **1D** | Buyout hygiene — batch 1 | W1–W2 | 🔄 In progress — 1D-A done, 1D-B pending |
+| **1E** | Clubhouse social architecture | W3–W8 | ⬜ Not started — scoped 2026-06-23 |
 | **2** | Tennis Module | W6–W8 | ⬜ Not started |
 | **3A** | Buyout hygiene — batch 2 | W9–W11 | ⬜ Not started |
 | **3B** | v2 integration & deploy | W10–W12 | ⬜ Not started |
@@ -24,7 +25,12 @@
 **Current active branch:** `v2` (all redesign + new feature work)
 **v2 branch:** active — created off main, merged main regularly to pick up pilot bug fixes
 
-**Next action:** begin **Phase 1A Sprint P2P-0** (product decisions: coin pack SKUs, rake rate, spend cap) and **Phase 1B Sprint F1-0** (apply migrations 190–191: paddocks + F1 tables) — both unblocked. Also: **Phase 1D-B** (schema reproducibility baseline) and **Phase 2** tennis module (game dynamics spec ✅ done, ready for Sprint T-0). See [F1_MODULE_IMPLEMENTATION_PLAN.md](../product/F1_MODULE_IMPLEMENTATION_PLAN.md) and [TENNIS_MODULE_IMPLEMENTATION_PLAN.md](../product/TENNIS_MODULE_IMPLEMENTATION_PLAN.md) for full task lists.
+**Next actions (parallel tracks):**
+- **Phase 1E — Clubhouse:** scoped 2026-06-23; Sprint CH-0 (DB layer) is the first task — unblocked now.
+- **Phase 1A — P2P Betting:** 5 product decisions needed before Sprint 1 (Stripe deferred; see Sprint P2P-0). Can start Sprint 1 (coin ledger) once decisions are made.
+- **Phase 1D-B:** schema reproducibility baseline — standalone, can do any session.
+- **Phase 2 — Tennis:** game dynamics spec ✅ done; Sprint T-0 unblocked after Phase 1E CH-0 (needs `circle_player_boxes` junction table).
+- **Phase 1B remaining:** F1-4 smoke tests + F1-5 OpenF1 sync cron — both optional pre-MVP.
 
 ---
 
@@ -74,14 +80,17 @@ W1    W2    W3    W4    W5    W6    W7    W8    W9    W10   W11   W12
 │
 │─── Phase 0: Foundation seams (W1 only) ──────────────────────────────── prerequisite
 │
-│         └─── Phase 1A: P2P Betting (W2–W7) ──────────────────────── critical path
-│         └─── Phase 1B: F1 Module (W2–W5) ──────────────────── parallel
+│         └─── Phase 1A: P2P Betting (W2–W7, Stripe deferred) ─────── critical path
+│         └─── Phase 1B: F1 Module (W2–W5) ✅ DONE ──────────── parallel
 │─── Phase 1C: UX Redesign (W1–W9) ─────────────────────────────── parallel, longest
-│─── Phase 1D: Buyout hygiene batch 1 (W1–W2) ──── quick, does not block anything
+│─── Phase 1D: Buyout hygiene batch 1 (W1–W2) ──── quick
+│               └─── Phase 1E: Clubhouse social architecture (W3–W8) ── NEW, parallel
 │                                         └── Phase 2: Tennis (W6–W8) ── parallel
 │                                                            └── Phase 3A: Buyout batch 2 (W9–W11)
 │                                                                └── Phase 3B: v2 launch (W10–W12)
 ```
+
+**Phase 1E dependency note:** CH-0 (DB layer) must land before Tennis Sprint T-0 (which needs `circle_player_boxes`). CH-1 (Clubhouse shell UI) is the prerequisite for Phase 1C Sprint UX-1 (multi-sport shell) — they are the same thing viewed from different angles and should be built together.
 
 **Why P2P before F1:** P2P is the most complex system (coin ledger, Stripe, escrow, resolution engine) and has the most unknown in the estimate. Starting it earliest gives it the most runway. F1 is simpler (picks, scoring, OpenF1 adapter) and can complete in 4 weeks starting the same week.
 
@@ -156,6 +165,11 @@ The full football fantasy platform is live in production with ~50 pilot users. E
 - Migrations applied to live DB (single environment — no staging). All additive, zero pilot impact confirmed.
 - Pre-migration backup saved to `backups/pre_phase0_tournaments_20260622.json` (4 tournament rows).
 - Branch hygiene incident: migration 189 was accidentally committed to `main` due to undetected branch switch. Caught immediately, undone with `git reset HEAD~1`, recommitted to `v2`. `main` confirmed clean. Pushed both branches. Added branch-switch detection to session awareness.
+
+**Retrospective note (2026-06-23 — Clubhouse social architecture scoped):**
+- The "Circle" concept built in Phase 0 is the direct foundation for **The Clubhouse** (the renamed primary social container). No DB rename required — `circles` table stays as-is; "Clubhouse" is a UI label only.
+- `circle_paddocks` junction table (migration 191) already links F1 Paddocks to a Clubhouse. Pattern: `circle_leagues` (football) + `circle_paddocks` (F1) + `circle_player_boxes` (Tennis, TBD in Tennis migration).
+- Phase 1E builds on top of Phase 0 — the skeleton exists, the social features (chat channels, DMs, clubhouse-level frontpage, P2P flag) are what Phase 1E adds.
 
 ---
 
@@ -335,12 +349,15 @@ The implementation roadmap linked above is comprehensive and self-contained. The
 
 **Note:** the first 3–4 weeks of the pilot generate real user feedback on UX pain points. Hold back redesign decisions on navigation patterns and information architecture until that feedback is available (approximately W3–W4). Apply the new visual layer (colors, typography) immediately; restructure layouts after feedback.
 
-### Sprint UX-1 — Multi-sport shell
-**Status: ⬜ Not started**
-- [ ] `SportContext.jsx`: resolves active sport from active league's `tournament.sport_id`; exposes `{sport, gameModel}` to all screens
-- [ ] Module screen registry in `App.jsx`: football routes wrapped as "module #1"; F1 routes registered as "module #2"; URL shape `/:sport/:leagueId/...`; URL-compat shims for existing `/squad`, `/market`, etc.
-- [ ] Circle hub screen (`/`): cross-sport feed via `get_circle_feed()`, meta-standings via `get_circle_meta_standings()`, sport cards (football + F1 + tennis)
-- [ ] Profile / trophy cabinet screen: `trophy_ledger` filtered by `user_id`; shows all wins across sports
+### Sprint UX-1 — Clubhouse shell + multi-sport navigation
+**Status: ⬜ Not started — coordinates with Phase 1E Sprint CH-1**
+
+> **Note:** Phase 1E Sprint CH-1 and this sprint are the same screen from different angles. Build them together. `ClubhouseScreen.jsx` IS the multi-sport shell home. Do not build them separately.
+
+- [ ] `SportContext.jsx`: resolves active sport from the active league/paddock/box's `tournament.sport_id`; exposes `{sport, gameModel}` to all screens
+- [ ] Module screen registry in `App.jsx`: Clubhouse as home (`/`); football routes as module #1; F1 routes as module #2; Tennis routes as module #3; URL-compat shims for existing `/squad`, `/market`, etc.
+- [ ] `ClubhouseScreen.jsx` (`/`): cross-sport feed via `get_circle_feed()`, meta-standings via `get_circle_meta_standings()`, sport cards grouped by type (football leagues / F1 paddocks / tennis boxes), member rail
+- [ ] Profile / trophy cabinet screen: `trophy_ledger` filtered by `user_id`; all wins across sports
 
 ### Sprint UX-2 — P2P and F1 screens (final pass)
 **Status: ⬜ Not started**
@@ -402,6 +419,107 @@ The implementation roadmap linked above is comprehensive and self-contained. The
 - All 4 callers updated: `discover-tournament`, `sync-fixtures`, `sync-player-status`, `sync-players`.
 - None of these functions are deployed from v2 to prod — deploy happens at Week 12 merge alongside all other v2 changes. Pilot is unaffected.
 - Task 1D-B (schema reproducibility baseline) still pending — requires Docker-free pg_dump via Supabase dashboard SQL export; deferred to a standalone session.
+
+---
+
+## Phase 1E — Clubhouse Social Architecture (W3–W8)
+
+**Status: ⬜ Not started — scoped 2026-06-23**
+
+**Goal:** reframe the Circle layer (Phase 0) as **The Clubhouse** — the primary social container and onboarding entry point. Members are invited to a Clubhouse first; leagues in any sport are created within and linked to a Clubhouse. Social features (group chat, 1-to-1 DMs, cross-sport frontpage, P2P betting flag) live at Clubhouse level. League views are stripped to pure competitive mechanics. This is the key feature for a broadcaster wanting live and indirect social interaction around sport.
+
+**Design decisions confirmed (2026-06-23):**
+- **Name:** The Clubhouse (UI label). DB table stays `circles` — no migration rename.
+- **Social-first model:** the Clubhouse is the product. League membership is optional, not the entry ticket. A member can exist in a Clubhouse purely for chat and P2P betting — never joining any league. This is a first-class use case, not an edge case.
+- **Admin model:** Clubhouse owner assigns leagues/paddocks/boxes to the Clubhouse. Each league/paddock/box can have its own admin, who must be a Clubhouse member. Clubhouse owner responsibility scope is an open question — surfaces during build.
+- **Chat:** one general all-members channel auto-created per Clubhouse + owner-created additional channels + 1-to-1 DMs between Clubhouse members.
+- **Multiple leagues per sport per Clubhouse:** yes, fully supported — e.g. WC League + UCL League both in the same Clubhouse.
+- **Notifications:** consolidated to Clubhouse level only. No league-level notification inbox. Two sub-types: (1) activity/news → Clubhouse feed via `get_circle_feed()`; (2) action-required → `clubhouse_notifications` table (replaces `league_notifications` for v2) with `source_type` / `source_id` for deep-link context. Filter chips by sport. `league_notifications` on `main`/pilot is **completely untouched**.
+- **Discoverability:** `circles.is_public bool DEFAULT false`. Public Clubhouses are searchable via `search_clubhouses(p_query)` RPC; private ones are invite-code only. Owner toggles the setting.
+- **Migration strategy:** pilot football leagues manually linked to a Clubhouse when v2 ships post-WC. No automated migration, no changes to `main`.
+- **Commissioner bets:** nothing on pilot is touched. Commissioner bets retire naturally — no force-resolve tool, no migration. Existing pilot bets expire post-WC. Commissioner bet creation/resolution removed from League view in v2 (replaced by Clubhouse-level P2P).
+- **P2P challenges are Clubhouse-scoped, not league-scoped:** `p2p_challenges.league_id` is **nullable**. `circle_id` is required. Sport-specific propositions (`gw_total`, `player_vs_player`) still reference a `league_id`; general propositions (`match_result_pick`, custom wagers) only need `circle_id`. Non-playing members can create and accept P2P challenges.
+- **Pilot is absolutely untouched:** v2 branch cannot merge into `main` until Week 12. Every change in this plan is invisible to the live ~50-user pilot.
+
+**Foundation already built (Phase 0):**
+- `circles`, `circle_members`, `circle_leagues`, `circle_paddocks` tables + RLS ✅
+- `create_circle()`, `join_circle_by_code()`, `get_circle_feed()`, `get_circle_meta_standings()` RPCs ✅
+- `trophy_ledger` ✅
+- `circle_player_boxes` still needed (Tennis migration, Phase 2)
+
+**Architecture rule:** the Clubhouse is the social and navigation home. A league/paddock/player's box is a competitive game running inside a Clubhouse. The three-layer separation (DB → hooks → thin UI) applies here too — `useClubhouse()` is the stable data contract the UX redesign builds against.
+
+---
+
+### Sprint CH-0 — DB layer extensions
+**Status: ⬜ Not started**
+- [ ] **Migration 193:** `clubhouse_channels` (`id`, `circle_id`, `name`, `is_default bool`, `created_by`, `created_at`) — RLS: circle members read/write
+- [ ] **Migration 193:** `clubhouse_messages` (`id`, `channel_id`, `user_id`, `content text`, `created_at`) — RLS: circle members read; own-row insert; delete own or owner
+- [ ] **Migration 193:** `direct_messages` (`id`, `circle_id`, `from_user_id`, `to_user_id`, `content`, `created_at`, `read_at`) — RLS: read own rows only
+- [ ] **Migration 193:** `ALTER TABLE circles ADD COLUMN p2p_betting_enabled bool NOT NULL DEFAULT false`
+- [ ] **Migration 193:** `ALTER TABLE circles ADD COLUMN is_public bool NOT NULL DEFAULT false`
+- [ ] **Migration 193:** `clubhouse_notifications` table (`id`, `circle_id`, `user_id`, `source_type` CHECK IN ('league','paddock','box','clubhouse'), `source_id uuid`, `type text`, `payload jsonb`, `read_at`, `created_at`) — RLS: own rows only
+- [ ] **Migration 193:** update `create_circle()` RPC to auto-insert a "General" `clubhouse_channels` row on creation
+- [ ] **Migration 193:** update `create_league()` / `create_paddock()` RPCs to accept `p_circle_id uuid DEFAULT NULL` — if provided, inserts `circle_leagues` / `circle_paddocks` row on creation; validates caller is Clubhouse owner if `p_circle_id` provided
+- [ ] **Migration 193:** `get_clubhouse_competitions(p_circle_id)` RPC — returns all linked football leagues, F1 paddocks, tennis boxes grouped by sport (unified query across the three junction tables)
+- [ ] **Migration 193:** `search_clubhouses(p_query text)` RPC — returns public Clubhouses (`is_public=true`) matching name; caller need not be a member
+- [ ] Verify `platform.spec.js` still green after migration
+
+**P2P data model note for Sprint P2P-1 (coin ledger):** `p2p_challenges.league_id` must be nullable and `circle_id` must be required (non-nullable FK to `circles`). Sport-specific propositions (`gw_total`, `player_vs_player`) populate both; general propositions (`match_result_pick`, custom) populate only `circle_id`. This is a change from the original system design — update before writing the Sprint P2P-3 migration.
+
+### Sprint CH-1 — Clubhouse shell UI
+**Status: ⬜ Not started**
+- [ ] `ClubhouseScreen.jsx` — primary home screen:
+  - Header: Clubhouse name + member count + share invite button
+  - Sport cards: grouped by sport (Football → leagues, F1 → paddocks, Tennis → boxes) — uses `get_clubhouse_competitions()`
+  - Activity feed: cross-sport gazette entries via `get_circle_feed()` with Realtime subscription
+  - Member rail: avatar strip of all Clubhouse members; tap → DM
+  - Empty state for non-playing members: "Browse leagues → join what you want"
+- [ ] `useClubhouse(circleId)` hook — members, linked competitions by sport, feed, Realtime sub
+- [ ] App routing: `/clubhouse/:circleId` as primary home route; league/paddock/box routes scoped under it
+- [ ] AppLayout: Clubhouse selector at top of sidebar (if user is in multiple Clubhouses); sport cards within active Clubhouse
+
+### Sprint CH-2 — Chat channels + DMs
+**Status: ⬜ Not started**
+- [ ] `ClubhouseChat.jsx` — channel list sidebar + message thread (same Realtime pattern as `useChatMessages`):
+  - General channel (always shown, created with Clubhouse)
+  - Custom channels (Clubhouse owner can create)
+  - 1-to-1 DMs (opened from member rail)
+- [ ] `useClubhouseChat(channelId)` hook — messages + Realtime INSERT subscription
+- [ ] `useDirectMessages(circleId, toUserId)` hook — DM thread + read receipt update
+- [ ] All message components use `createPortal` for any overlays (existing rule — PR #448)
+
+### Sprint CH-3 — Frontpage migrates to Clubhouse level
+**Status: ⬜ Not started**
+- [ ] `ALTER TABLE frontpage_editions ADD COLUMN circle_id uuid REFERENCES circles(id)` — nullable; existing league editions untouched
+- [ ] `generate-frontpage-edition` Edge Function: add `circle` mode — aggregates gazette entries from all leagues in the Clubhouse, generates a cross-sport edition (WC Round 2 + F1 Race 4 + Wimbledon Day 3 in a single Forza Times)
+- [ ] Clubhouse Frontpage: replaces per-league frontpage as the primary "Forza Times" surface; per-league frontpage generation retired (existing league editions readable as archive)
+- [ ] 05:00 UTC cron: generate editions for all Clubhouses with active competitions (not per-league)
+- [ ] Commissioner "Generate Special Edition" button moves to Clubhouse admin panel
+
+### Sprint CH-4 — League creation as Clubhouse-first flow
+**Status: ⬜ Not started**
+- [ ] `LeagueCreationWizard.jsx`: add Step 0 — "Which Clubhouse?" (select from user's existing Clubhouses, or create new one). Cannot proceed to Step 1 (league name/format) without a Clubhouse selected.
+- [ ] `OnboardingWizard.jsx`: rethink for Clubhouse-first — new user creates/joins a Clubhouse before any league
+- [ ] `create_league` + `create_paddock` (+ future `create_player_box`): `p_circle_id` param wired through from wizard
+
+### Sprint CH-5 — League view strip-down
+**Status: ⬜ Not started**
+- [ ] `LeagueScreen.jsx`: remove `ChatView` import + tab; remove `useFrontpageEdition` + `FrontpageInteractive` imports + frontpage section; remove `BetsSection` + `useBettingLeaderboard` imports + bets tab
+- [ ] League ACTIVITY tab: keep `LeagueDetailView` gazette feed but scope to competitive events only (transfers, scoring, draft results, trades, auctions) — strip social commentary entries
+- [ ] Commissioner admin tab: remove bet creation/resolution panels; keep transfer window, draft controls, scoring tools
+- [ ] Verify no Rolldown TDZ regressions after removing the large import set from `LeagueScreen`
+
+**What moves where:**
+| Feature | From | To |
+|---|---|---|
+| Chat | League tab | Clubhouse (channels + DMs) |
+| Forza Times / Frontpage | League tab | Clubhouse home |
+| Commissioner bets | League admin | Retired (P2P betting at Clubhouse level replaces this) |
+| Gazette / activity | League tab | Stays in League (competitive events only) |
+| Standings, squad, market, scoring | League | Stays in League (unchanged) |
+
+**Session notes for Phase 1E:** *(update per session)*
 
 ---
 
@@ -539,13 +657,20 @@ These are product decisions that cannot be defaulted away. They must be made bef
 |---|---|---|
 | Coin pack SKUs and pricing | Sprint P2P-0 | ⬜ Not decided |
 | Rake rate (% of stake burned) | Sprint P2P-0 | ⬜ Not decided |
-| Spend cap policy (daily/weekly/none for MVP) | Sprint P2P-0 | ⬜ Not decided |
+| Free coin grant for new signups (amount or zero) | Sprint P2P-0 | ⬜ Not decided |
+| Challenge expiry window (how long a pending challenge stays open) | Sprint P2P-0 | ⬜ Not decided |
+| Min/max stake per challenge | Sprint P2P-0 | ⬜ Not decided |
+| Stripe deferred — add when ready | Sprint P2P-2 (Stripe) | ✅ Decided: build without Stripe; add later |
 | Meta-league scoring formula (trophy count vs Olympic points vs hybrid) | Phase 3B | ⬜ Deferred — build ledger first, formula is a swappable function |
-| F1 scoring weights (pts per constructor position, per driver position) | Sprint F1-2 | ⬜ Needs dynamics session |
-| Circle invite fan-out policy (auto-join leagues vs opt-in per league) | Sprint UX-1 | ⬜ Not decided |
-| Tennis scoring weights (pts per correct round pick) | Sprint T-2 | ⬜ Needs dynamics session |
+| Clubhouse commissioner model: who can create leagues within a Clubhouse? | Sprint CH-0 | ✅ Decided: Clubhouse owner only assigns leagues; each league has its own admin (must be Clubhouse member) |
+| Notification scope: extend `league_notifications` or add `clubhouse_notifications`? | Sprint CH-0 | ✅ Decided: `clubhouse_notifications` table (v2 only); `league_notifications` on pilot untouched |
+| Commissioner bets retirement | Sprint CH-5 | ✅ Decided: freeze/expire naturally post-WC; nothing on pilot touched |
+| Clubhouse discoverability | Sprint CH-0 | ✅ Decided: `is_public` toggle on `circles`; `search_clubhouses()` RPC; private = invite-code only |
+| Clubhouse admin responsibility scope | During build | ⬜ Open — will surface during CH-1/CH-4 build |
+| Non-playing member experience (empty state, P2P without leagues) | Sprint CH-1 | ⬜ UX needs designing — member with no leagues should feel welcome, not broken |
+| Tennis scoring weights (pts per correct round pick) | Sprint T-2 | ✅ Decided: use existing TENNIS_MODULE_IMPLEMENTATION_PLAN.md spec |
+| F1 scoring weights | Sprint F1-2 | ⬜ Needs dynamics session (F1-4 deferred) |
 | Staging environment budget (second Supabase project for buyer demos) | Phase 3A | ⬜ Not decided |
-| New visual identity spec (design tokens, typography, component library) | Sprint UX-0 | ⬜ Not received yet |
 
 ---
 
