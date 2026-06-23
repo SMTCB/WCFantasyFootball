@@ -1,5 +1,6 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useContext } from 'react';
+import { ClubhouseNotifContext } from '../context/ClubhouseNotifContext';
 import BrandMark from './BrandMark';
 import SkipToContent from './SkipToContent';
 import { useAuth } from '../hooks/useAuth';
@@ -47,6 +48,7 @@ export default function AppLayout({ children }) {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { activeSport, setActiveSport, activePaddockId } = useSport();
+  const { unreadCount } = useContext(ClubhouseNotifContext);
   const isF1 = activeSport === 'f1';
   const NAV_ITEMS = isF1 ? buildF1Nav(activePaddockId) : FOOTBALL_NAV;
   // user_metadata.username is set at signup but may be absent for older accounts.
@@ -155,6 +157,16 @@ export default function AppLayout({ children }) {
                     className="ml-auto w-1.5 h-1.5 rounded-full shrink-0 animate-live-pulse"
                     style={{ background: 'var(--danger)' }}
                   />
+                )}
+
+                {/* Unread notification badge (Clubhouse) */}
+                {key === 'clubhouse' && unreadCount > 0 && (
+                  <div
+                    className="ml-auto flex items-center justify-center rounded-full shrink-0"
+                    style={{ minWidth: 16, height: 16, background: 'var(--danger)', padding: '0 4px', fontFamily: 'JetBrains Mono, monospace', fontSize: 9, fontWeight: 700, color: '#fff' }}
+                  >
+                    {unreadCount > 99 ? '99+' : unreadCount}
+                  </div>
                 )}
               </Link>
             );
@@ -319,6 +331,16 @@ export default function AppLayout({ children }) {
                     className="absolute top-2 right-[calc(50%-14px)] w-1.5 h-1.5 rounded-full animate-live-pulse"
                     style={{ background: 'var(--danger)' }}
                   />
+                )}
+
+                {/* Unread notification badge (Clubhouse) */}
+                {key === 'clubhouse' && unreadCount > 0 && (
+                  <div
+                    className="absolute top-1.5 right-[calc(50%-18px)] flex items-center justify-center rounded-full"
+                    style={{ minWidth: 14, height: 14, background: 'var(--danger)', padding: '0 3px', fontFamily: 'JetBrains Mono, monospace', fontSize: 8, fontWeight: 700, color: '#fff' }}
+                  >
+                    {unreadCount > 99 ? '99' : unreadCount}
+                  </div>
                 )}
               </Link>
             );
