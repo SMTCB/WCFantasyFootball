@@ -17,7 +17,7 @@
 | **1B** | F1 Module | W2–W5 | ✅ Done (Sprints 0–3, PR #606) |
 | **1C** | UX Redesign | W1–W9 | 🔄 In progress — Sprint UX-0 ✅ done, UX-1 next |
 | **1D** | Buyout hygiene — batch 1 | W1–W2 | 🔄 In progress — 1D-A done, 1D-B pending |
-| **1E** | Clubhouse social architecture | W3–W8 | 🔄 In progress — CH-0–CH-6 ✅ done (PRs #607–#612), CH-7 next |
+| **1E** | Clubhouse social architecture | W3–W8 | 🔄 In progress — CH-0–CH-7 ✅ done (PRs #607–#613), CH-8 next |
 | **2** | Tennis Module | W6–W8 | ⬜ Not started |
 | **3A** | Buyout hygiene — batch 2 | W9–W11 | ⬜ Not started |
 | **3B** | v2 integration & deploy | W10–W12 | ⬜ Not started |
@@ -26,7 +26,7 @@
 **v2 branch:** active — created off main, merged main regularly to pick up pilot bug fixes
 
 **Next actions (parallel tracks):**
-- **Phase 1E — Clubhouse:** CH-6 ✅ done — CH-7 next (define what CH-7 covers).
+- **Phase 1E — Clubhouse:** CH-7 ✅ done — CH-8 next (owner admin panel + migration 195).
 - **Phase 1A — P2P Betting:** 5 product decisions needed before Sprint 1 (Stripe deferred; see Sprint P2P-0). Can start Sprint 1 (coin ledger) once decisions are made.
 - **Phase 1D-B:** schema reproducibility baseline — standalone, can do any session.
 - **Phase 2 — Tennis:** game dynamics spec ✅ done; Sprint T-0 unblocked (CH-0 delivered `circle_player_boxes` junction table dependency).
@@ -543,7 +543,86 @@ The implementation roadmap linked above is comprehensive and self-contained. The
 - `LeagueDetailView.jsx`: removed `bet_result` from `ENTRY_META`; removed `BETS` filter from activity feed filter bar. Feed now has ALL/GAME/TRADES only.
 - `CommissionerPanel.jsx`: removed `BetCreatorPanel` import; removed `BET_TYPES`, `BetCardPreview`, `CreateBetWizard`, `VoidConfirmModal`, `ResolvePendingBets`, `BettingHistory`, `MobBetPreview`, `MobCreateBet`; removed both desktop (Zone C/D) and mobile (BET MANAGEMENT/RESOLVE) render sections; condensed `commissioner` destructuring to `commLoading/commMsg/setCommMsg`. Net: −1681 lines, bundle 930 KB → 889 KB.
 - `BetCreatorPanel.jsx` file itself NOT deleted — kept for potential P2P Clubhouse repurposing.
-- Next: CH-7 (TBD).
+- Next: CH-7 — mobile nav + feed deep-link + classified entries.
+
+#### CH-7 session notes (2026-06-23)
+- Option A confirmed: replace LIVE with CLUBHOUSE on mobile nav.
+- `AppLayout.jsx`: `live` nav item → `desktopOnly: true`; `clubhouse` → `desktopOnly` removed, `mobileLabel: 'CLUB'` added; mobile render uses `mobileLabel ?? label`.
+- `ClubhouseScreen.jsx` `FeedEntry`: now accepts `onEnter` prop; if `entry.league_id` present, row is tappable (role=button, cursor:pointer, → chevron); navigates to `/league/${league_id}`. `classified` added to `typeColor` map (gold).
+- `LeagueDetailView.jsx` `ENTRY_META`: `classified` registered (`filter:'GAME'`, badge `CLASSIFIED`, color `var(--gold)`).
+- Build clean: 0 errors, 890 KB bundle (unchanged from CH-6).
+
+---
+
+### Sprint CH-7 — Mobile nav + feed polish
+**Status: ✅ Done — PR #613**
+
+**Goal:** Make the Clubhouse reachable on mobile and make the HOME feed interactive.
+
+**Product decision required before building:**
+The mobile nav has 5 fixed icons (Scores, Squad, League, Live, Market). The Clubhouse is a 6th item. Options:
+- **A** Replace LIVE with CLUBHOUSE on mobile (Live is still reachable via the score strip / league live tab)
+- **B** Add a 6th scrollable icon (breaks the grid but no icon lost)
+- **C** Show CLUBHOUSE only when the user belongs to at least one circle (conditional)
+
+Recommend **Option A** — LIVE is the least frequently used standalone screen (its content surfaces in the League and Score screens too).
+
+**Tasks:**
+- [ ] `NavIcons.jsx` + `AppLayout.jsx`: replace LIVE with CLUBHOUSE on mobile nav (or chosen option from decision above); add Clubhouse SVG nav icon
+- [ ] `ClubhouseScreen.jsx` `FeedEntry`: add `onClick` that navigates to `enterLeague()` / `enterPaddock()` for activity entries that have a `league_id` / source; clicking an activity card takes the user into the relevant competition
+- [ ] `ClubhouseScreen.jsx` HOME feed: register `classified` gazette type — show with a CLASSIFIED badge (gold, italic) in the feed; for now just headline + `timeAgo`, no body expansion needed
+
+**Rolldown check:** `AppLayout.jsx` already imports `NavIcons` — no new import depth risk.
+
+---
+
+### Sprint CH-8 — Owner admin panel
+**Status: ⬜ Not started**
+
+**Goal:** Give the Clubhouse owner control over their space. Without this, the owner cannot add existing leagues, change visibility, or manage membership.
+
+**Tasks:**
+- [ ] Add SETTINGS tab to `ClubhouseScreen` (owner-only — hidden from regular members)
+- [ ] **Visibility toggle**: `UPDATE circles SET is_public = !is_public WHERE id = circleId` — commissioner can make the Clubhouse public (searchable) or private (invite-code only); show current state with PRIVATE / PUBLIC badge in header
+- [ ] **P2P toggle**: `UPDATE circles SET p2p_betting_enabled = !p2p_betting_enabled` — gates the P2P sprint (Phase 1A); show status in SETTINGS
+- [ ] **Link existing league**: owner can add a league they administer that isn't yet in this Clubhouse — query `league_members WHERE user_id=owner AND role='commissioner'`, filter out already-linked ones, show as a picker; call `INSERT INTO circle_leagues (circle_id, league_id)` (needs a new `link_league_to_circle(p_circle_id, p_league_id)` RPC — validates caller is circle owner AND league commissioner; or a direct INSERT if RLS permits)
+- [ ] **Member management**: kick a member — `DELETE FROM circle_members WHERE circle_id=X AND user_id=Y` (commissioner-only RLS); show a KICK button on each member row in MEMBERS tab when viewer is owner
+- [ ] **Rename Clubhouse**: inline edit of `circles.name` (UPDATE, owner only)
+
+**Migration needed:** `195_clubhouse_owner_ops.sql`
+- `link_league_to_circle(p_circle_id uuid, p_league_id uuid)` RPC — validates caller is circle owner + league commissioner; inserts `circle_leagues`; idempotent (ON CONFLICT DO NOTHING)
+- `kick_circle_member(p_circle_id uuid, p_user_id uuid)` RPC — validates caller is circle owner; rejects if target is the owner; DELETE from `circle_members`
+- `update_circle_settings(p_circle_id uuid, p_is_public bool, p_p2p_enabled bool, p_name text)` RPC — validates caller is circle owner; partial update (only changes fields that differ)
+- RLS: add UPDATE policy on `circles` for owner (`circle_members.role='owner'`) — needed for the above RPCs and any direct client writes
+
+---
+
+### Sprint CH-9 — Notification badge + inbox
+**Status: ⬜ Not started**
+
+**Goal:** The `clubhouse_notifications` table from migration 193 is wired to nothing. This sprint makes it the live action-required inbox replacing `league_notifications` for v2.
+
+**What triggers a notification:**
+| Event | source_type | type |
+|---|---|---|
+| New Forza Times edition published for a linked league/circle | `clubhouse` | `forza_times` |
+| New breaking news gazette entry in a linked league | `league` | `breaking_news` |
+| New DM received | `clubhouse` | `dm` |
+| New bet/challenge created (Phase 1A, deferred) | `clubhouse` | `p2p_challenge` |
+
+**Tasks:**
+- [ ] **Write path**: DB trigger on `frontpage_editions INSERT` → fan out `INSERT INTO clubhouse_notifications` for every `circle_members.user_id` where the edition's `circle_id` matches; similar trigger on `gazette_entries INSERT` (type=`breaking_news`) for all members of linked circles — write as `195_` or `196_` migration
+- [ ] **Write path for DMs**: trigger on `direct_messages INSERT` → insert one notification for `to_user_id` (skip if `from_user_id === to_user_id`)
+- [ ] **Read path**: `useClubhouse()` gains `notifications: []` and `unreadCount: number` — query `clubhouse_notifications WHERE user_id=me AND read_at IS NULL ORDER BY created_at DESC LIMIT 20`; Realtime subscription for INSERT
+- [ ] **Badge**: CLUBHOUSE nav icon shows a red dot / count when `unreadCount > 0`
+- [ ] **INBOX tab** in `ClubhouseScreen` (new tab, shown when `unreadCount > 0` OR always): list of notification cards; tapping one navigates to the source (`source_type + source_id` determines route) and marks it read (`UPDATE clubhouse_notifications SET read_at = NOW() WHERE id = X`)
+- [ ] **Mark all read** button in INBOX tab
+
+**Note:** `league_notifications` on `main`/pilot is completely untouched. v2 only reads `clubhouse_notifications`.
+
+---
+
+**CH-7 → CH-8 → CH-9 recommended order.** CH-7 is ~2 hours (mobile nav decision + two small UI wires). CH-8 is ~4 hours (new migration + settings panel). CH-9 is ~6 hours (triggers + Realtime + badge + inbox). All three together complete the Clubhouse as a self-contained product before Phase 1A (P2P) and Phase 2 (Tennis) land inside it.
 
 ---
 

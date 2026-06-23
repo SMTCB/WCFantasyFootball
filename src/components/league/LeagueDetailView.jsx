@@ -15,6 +15,7 @@ const ENTRY_META = {
   relaxation:       { filter: 'GAME',   badge: 'POOL',     color: 'var(--cyan)' },
   cup_elimination:  { filter: 'GAME',   badge: 'CUP',      color: 'var(--danger)' },
   transfer:         { filter: 'TRADES', badge: 'TRANSFER', color: 'var(--positive)' },
+  classified:       { filter: 'GAME',   badge: 'CLASSIFIED', color: 'var(--gold)' },
 };
 
 // Normalise a single gazette bullet to a display string.
