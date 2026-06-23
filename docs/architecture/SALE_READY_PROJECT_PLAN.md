@@ -17,7 +17,7 @@
 | **1B** | F1 Module | W2–W5 | ✅ Done (Sprints 0–3, PR #606) |
 | **1C** | UX Redesign | W1–W9 | 🔄 In progress — Sprint UX-0 ✅ done, UX-1 next |
 | **1D** | Buyout hygiene — batch 1 | W1–W2 | 🔄 In progress — 1D-A done, 1D-B pending |
-| **1E** | Clubhouse social architecture | W3–W8 | 🔄 In progress — CH-0 ✅ done (PR #607), CH-1 ✅ done (PR #608), CH-2 ✅ done (PR #609), CH-3 ✅ done (PR #610), CH-4 next |
+| **1E** | Clubhouse social architecture | W3–W8 | 🔄 In progress — CH-0 ✅ done (PR #607), CH-1 ✅ done (PR #608), CH-2 ✅ done (PR #609), CH-3 ✅ done (PR #610), CH-4 ✅ done, CH-5 next |
 | **2** | Tennis Module | W6–W8 | ⬜ Not started |
 | **3A** | Buyout hygiene — batch 2 | W9–W11 | ⬜ Not started |
 | **3B** | v2 integration & deploy | W10–W12 | ⬜ Not started |
@@ -26,7 +26,7 @@
 **v2 branch:** active — created off main, merged main regularly to pick up pilot bug fixes
 
 **Next actions (parallel tracks):**
-- **Phase 1E — Clubhouse:** CH-4 next (League creation as Clubhouse-first flow — `LeagueCreationWizard` Step 0, `OnboardingWizard` rethink, `create_league`/`create_paddock` `p_circle_id` wired through).
+- **Phase 1E — Clubhouse:** CH-5 next (League view strip-down — remove Chat, Forza Times, bets from LeagueScreen; scope gazette to competitive events only).
 - **Phase 1A — P2P Betting:** 5 product decisions needed before Sprint 1 (Stripe deferred; see Sprint P2P-0). Can start Sprint 1 (coin ledger) once decisions are made.
 - **Phase 1D-B:** schema reproducibility baseline — standalone, can do any session.
 - **Phase 2 — Tennis:** game dynamics spec ✅ done; Sprint T-0 unblocked (CH-0 delivered `circle_player_boxes` junction table dependency).
@@ -493,10 +493,14 @@ The implementation roadmap linked above is comprehensive and self-contained. The
 - [x] FORZA TIMES tab added to ClubhouseScreen MAIN_TABS (position 2, between HOME and CHAT); rendered full-width outside the 640px container
 
 ### Sprint CH-4 — League creation as Clubhouse-first flow
-**Status: ⬜ Not started**
-- [ ] `LeagueCreationWizard.jsx`: add Step 0 — "Which Clubhouse?" (select from user's existing Clubhouses, or create new one). Cannot proceed to Step 1 (league name/format) without a Clubhouse selected.
-- [ ] `OnboardingWizard.jsx`: rethink for Clubhouse-first — new user creates/joins a Clubhouse before any league
-- [ ] `create_league` + `create_paddock` (+ future `create_player_box`): `p_circle_id` param wired through from wizard
+**Status: ✅ Done (2026-06-23)**
+- [x] `LeagueScreen.jsx` create flow: Step 0 "Choose Clubhouse" picker — shows user's Clubhouses (name + role), toggle-select with gold highlight; "Continue without Clubhouse" fallback when none exist or user skips
+- [x] `selectedCircleId` wired into `create_league` RPC as `p_circle_id` (only sent when non-null)
+- [x] Step resets automatically via `useEffect` when leaving the create view
+- [x] Circles fetched via direct Supabase query (avoids importing `useClubhouse` into `LeagueScreen` — TDZ risk)
+- [x] `useClubhouseFrontpage`: replaced `refreshRef.current` dependency-array pattern with `useState` tick counter — eliminated 2 React Compiler lint errors
+- [ ] `OnboardingWizard.jsx` Clubhouse-first rethink — deferred; wizard is rarely hit post-pilot; revisit for CH-5 or standalone session
+- [ ] `create_paddock` `p_circle_id` wiring — F1AdminScreen; deferred to Phase 2 Tennis sprint where paddocks become active
 
 ### Sprint CH-5 — League view strip-down
 **Status: ⬜ Not started**
@@ -520,6 +524,12 @@ The implementation roadmap linked above is comprehensive and self-contained. The
 - Migration 193 applied to shared Supabase DB (additive only — 4 new tables, 2 new columns on circles, 4 new/updated RPCs). Pilot is unaffected (no existing rows touched, no columns altered, no DROP).
 - `useClubhouse.js` and `ClubhouseScreen.jsx` are v2-only new files — nothing on `main` was touched.
 - Next: CH-2 (chat channels + DMs). No product decisions needed — schema already exists in migration 193.
+
+**2026-06-23 — CH-2 + CH-3 + CH-4 complete (same session)**
+- CH-2: `useClubhouseChat.js` + `useDirectMessages.js` + `ClubhouseChat.jsx` (two-panel channels/DMs, Realtime subscriptions); CHAT tab in ClubhouseScreen.
+- CH-3: Migration 194 extends `frontpage_editions/reactions/comments` with `circle_id` (nullable `league_id`); `useClubhouseFrontpage.js` hook; `ClubhouseFrontpage.jsx` cream newspaper layout; FORZA TIMES tab in ClubhouseScreen; `generate-frontpage-edition` Edge Function extended with circle mode.
+- CH-4: `LeagueScreen.jsx` create flow gains "Choose Clubhouse" Step 0 picker before the existing league form; `p_circle_id` wired to `create_league` RPC; `useClubhouseFrontpage` refreshRef → useState tick fix (0 lint errors).
+- Next: CH-5 — League view strip-down (move Chat + Forza Times out of LeagueScreen).
 
 ---
 
