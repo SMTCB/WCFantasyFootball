@@ -28,6 +28,7 @@ import DraftScreen from './screens/DraftScreen';
 import DraftRecoveryScreen from './screens/DraftRecoveryScreen';
 import SettingsScreen from './screens/SettingsScreen';
 import NotFoundScreen from './screens/NotFoundScreen';
+import ClubhouseScreen from './screens/ClubhouseScreen';
 import PaddockLobbyScreen from './screens/f1/PaddockLobbyScreen';
 import F1HomeScreen from './screens/f1/F1HomeScreen';
 import F1RaceBetScreen from './screens/f1/F1RaceBetScreen';
@@ -117,6 +118,8 @@ function AppRoutes() {
                   <Route path="/f1/:paddockId/standings"    element={<ErrorBoundary screen="F1Standings"><F1StandingsScreen /></ErrorBoundary>} />
                   <Route path="/f1/:paddockId/report"       element={<ErrorBoundary screen="F1Report"><F1ReportScreen /></ErrorBoundary>} />
                   <Route path="/f1/:paddockId/admin"        element={<ErrorBoundary screen="F1Admin"><F1AdminScreen /></ErrorBoundary>} />
+                  <Route path="/clubhouse"            element={<ErrorBoundary screen="Clubhouse"><ClubhouseScreen /></ErrorBoundary>} />
+                  <Route path="/clubhouse/:circleId"  element={<ErrorBoundary screen="Clubhouse"><ClubhouseScreen /></ErrorBoundary>} />
                   <Route path="/join"                       element={<JoinRoute />} />
                   <Route path="*"                           element={<ErrorBoundary screen="NotFound"><NotFoundScreen /></ErrorBoundary>} />
                 </Routes>

@@ -128,3 +128,13 @@ export const NavIconF1Season = ({ size = 24 }) => (
     <path d="M12 4L13.8 9.4H19.5L14.85 12.6L16.65 18L12 14.8L7.35 18L9.15 12.6L4.5 9.4H10.2L12 4Z" fill={CYAN} opacity="0.85" />
   </svg>
 );
+
+export const NavIconClubhouse = ({ size = 24 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="12" cy="7"   r="2.5" fill={CYAN} />
+    <circle cx="6.5"  cy="14" r="2"   fill={PAPER} />
+    <circle cx="17.5" cy="14" r="2"   fill={PAPER} />
+    <rect x="4" y="20" width="16" height="1.5" rx="0.75" fill={MUTE} opacity="0.4" />
+    <rect x="11" y="9.5" width="2" height="3" rx="1" fill={MUTE} opacity="0.3" />
+  </svg>
+);

@@ -12,6 +12,7 @@ import {
   NavIconLive,
   NavIconMarket,
   NavIconRecap,
+  NavIconClubhouse,
   NavIconF1Calendar,
   NavIconF1Picks,
   NavIconF1Standings,
@@ -26,6 +27,7 @@ const FOOTBALL_NAV = [
   { key: 'live',        label: 'LIVE',        path: '/live',        Icon: NavIconLive,        desc: 'Live Points & Projections', isLive: true },
   { key: 'market',      label: 'MARKET',      path: '/market',      Icon: NavIconMarket,      desc: 'Player Transfer Market' },
   { key: 'recap',       label: 'RECAP',       path: '/recap',       Icon: NavIconRecap,       desc: 'Matchday Recap & Stats', desktopOnly: true },
+  { key: 'clubhouse',  label: 'CLUBHOUSE',   path: '/clubhouse',   Icon: NavIconClubhouse,   desc: 'The Clubhouse — chat, bets & feed', desktopOnly: true },
 ];
 
 function buildF1Nav(paddockId) {
@@ -36,6 +38,7 @@ function buildF1Nav(paddockId) {
     { key: 'f1-standings', label: 'STANDINGS', path: `${base}/standings`,     Icon: NavIconF1Standings, desc: 'Paddock Standings' },
     { key: 'f1-report',    label: 'REPORT',    path: `${base}/report`,        Icon: NavIconF1Report,    desc: 'Results & Breakdown' },
     { key: 'f1-season',    label: 'SEASON',    path: `${base}/season`,        Icon: NavIconF1Season,    desc: 'Season Predictions' },
+    { key: 'clubhouse',    label: 'CLUBHOUSE', path: '/clubhouse',            Icon: NavIconClubhouse,   desc: 'The Clubhouse', desktopOnly: true },
   ];
 }
 
@@ -67,6 +70,7 @@ export default function AppLayout({ children }) {
     location.pathname === '/live' ||
     location.pathname === '/market' ||
     location.pathname === '/f1' ||
+    /^\/clubhouse(\/[^/]+)?$/.test(location.pathname) ||
     /^\/league\/[^/]+$/.test(location.pathname) ||
     /^\/f1\/[^/]+$/.test(location.pathname) ||
     /^\/f1\/[^/]+\/(picks|standings|report|season)$/.test(location.pathname);
