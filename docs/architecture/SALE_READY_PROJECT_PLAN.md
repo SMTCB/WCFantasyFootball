@@ -17,7 +17,7 @@
 | **1B** | F1 Module | W2–W5 | ✅ Done (Sprints 0–3, PR #606) |
 | **1C** | UX Redesign | W1–W9 | 🔄 In progress — Sprint UX-0 ✅ done, UX-1 next |
 | **1D** | Buyout hygiene — batch 1 | W1–W2 | 🔄 In progress — 1D-A done, 1D-B pending |
-| **1E** | Clubhouse social architecture | W3–W8 | ⬜ Not started — scoped 2026-06-23 |
+| **1E** | Clubhouse social architecture | W3–W8 | 🔄 In progress — CH-0 ✅ done (PR #607), CH-1 ✅ done (PR #608), CH-2 next |
 | **2** | Tennis Module | W6–W8 | ⬜ Not started |
 | **3A** | Buyout hygiene — batch 2 | W9–W11 | ⬜ Not started |
 | **3B** | v2 integration & deploy | W10–W12 | ⬜ Not started |
@@ -26,10 +26,10 @@
 **v2 branch:** active — created off main, merged main regularly to pick up pilot bug fixes
 
 **Next actions (parallel tracks):**
-- **Phase 1E — Clubhouse:** scoped 2026-06-23; Sprint CH-0 (DB layer) is the first task — unblocked now.
+- **Phase 1E — Clubhouse:** CH-2 next (chat channels + DMs — `ClubhouseChat.jsx`, `useClubhouseChat`, `useDirectMessages`, Realtime).
 - **Phase 1A — P2P Betting:** 5 product decisions needed before Sprint 1 (Stripe deferred; see Sprint P2P-0). Can start Sprint 1 (coin ledger) once decisions are made.
 - **Phase 1D-B:** schema reproducibility baseline — standalone, can do any session.
-- **Phase 2 — Tennis:** game dynamics spec ✅ done; Sprint T-0 unblocked after Phase 1E CH-0 (needs `circle_player_boxes` junction table).
+- **Phase 2 — Tennis:** game dynamics spec ✅ done; Sprint T-0 unblocked (CH-0 delivered `circle_player_boxes` junction table dependency).
 - **Phase 1B remaining:** F1-4 smoke tests + F1-5 OpenF1 sync cron — both optional pre-MVP.
 
 ---
@@ -452,32 +452,27 @@ The implementation roadmap linked above is comprehensive and self-contained. The
 ---
 
 ### Sprint CH-0 — DB layer extensions
-**Status: ⬜ Not started**
-- [ ] **Migration 193:** `clubhouse_channels` (`id`, `circle_id`, `name`, `is_default bool`, `created_by`, `created_at`) — RLS: circle members read/write
-- [ ] **Migration 193:** `clubhouse_messages` (`id`, `channel_id`, `user_id`, `content text`, `created_at`) — RLS: circle members read; own-row insert; delete own or owner
-- [ ] **Migration 193:** `direct_messages` (`id`, `circle_id`, `from_user_id`, `to_user_id`, `content`, `created_at`, `read_at`) — RLS: read own rows only
-- [ ] **Migration 193:** `ALTER TABLE circles ADD COLUMN p2p_betting_enabled bool NOT NULL DEFAULT false`
-- [ ] **Migration 193:** `ALTER TABLE circles ADD COLUMN is_public bool NOT NULL DEFAULT false`
-- [ ] **Migration 193:** `clubhouse_notifications` table (`id`, `circle_id`, `user_id`, `source_type` CHECK IN ('league','paddock','box','clubhouse'), `source_id uuid`, `type text`, `payload jsonb`, `read_at`, `created_at`) — RLS: own rows only
-- [ ] **Migration 193:** update `create_circle()` RPC to auto-insert a "General" `clubhouse_channels` row on creation
-- [ ] **Migration 193:** update `create_league()` / `create_paddock()` RPCs to accept `p_circle_id uuid DEFAULT NULL` — if provided, inserts `circle_leagues` / `circle_paddocks` row on creation; validates caller is Clubhouse owner if `p_circle_id` provided
-- [ ] **Migration 193:** `get_clubhouse_competitions(p_circle_id)` RPC — returns all linked football leagues, F1 paddocks, tennis boxes grouped by sport (unified query across the three junction tables)
-- [ ] **Migration 193:** `search_clubhouses(p_query text)` RPC — returns public Clubhouses (`is_public=true`) matching name; caller need not be a member
-- [ ] Verify `platform.spec.js` still green after migration
+**Status: ✅ Done — PR #607, migration 193, 2026-06-23**
+- [x] **Migration 193:** `clubhouse_channels` (`id`, `circle_id`, `name`, `is_default bool`, `created_by`, `created_at`) — RLS: circle members read/write
+- [x] **Migration 193:** `clubhouse_messages` (`id`, `channel_id`, `user_id`, `content text`, `created_at`) — RLS: circle members read; own-row insert; delete own or owner
+- [x] **Migration 193:** `direct_messages` (`id`, `circle_id`, `from_user_id`, `to_user_id`, `content`, `created_at`, `read_at`) — RLS: read own rows only
+- [x] **Migration 193:** `ALTER TABLE circles ADD COLUMN p2p_betting_enabled bool NOT NULL DEFAULT false`
+- [x] **Migration 193:** `ALTER TABLE circles ADD COLUMN is_public bool NOT NULL DEFAULT false`
+- [x] **Migration 193:** `clubhouse_notifications` table (`id`, `circle_id`, `user_id`, `source_type` CHECK IN ('league','paddock','box','clubhouse'), `source_id uuid`, `type text`, `payload jsonb`, `read_at`, `created_at`) — RLS: own rows only
+- [x] **Migration 193:** update `create_circle()` RPC to auto-insert a "General" `clubhouse_channels` row on creation
+- [x] **Migration 193:** update `create_league()` / `create_paddock()` RPCs to accept `p_circle_id uuid DEFAULT NULL` — if provided, inserts `circle_leagues` / `circle_paddocks` row on creation; validates caller is Clubhouse owner if `p_circle_id` provided
+- [x] **Migration 193:** `get_clubhouse_competitions(p_circle_id)` RPC — returns all linked football leagues, F1 paddocks, tennis boxes grouped by sport (unified query across the three junction tables)
+- [x] **Migration 193:** `search_clubhouses(p_query text)` RPC — returns public Clubhouses (`is_public=true`) matching name; caller need not be a member
+- [x] Verify `platform.spec.js` still green after migration — 84/84 green
 
 **P2P data model note for Sprint P2P-1 (coin ledger):** `p2p_challenges.league_id` must be nullable and `circle_id` must be required (non-nullable FK to `circles`). Sport-specific propositions (`gw_total`, `player_vs_player`) populate both; general propositions (`match_result_pick`, custom) populate only `circle_id`. This is a change from the original system design — update before writing the Sprint P2P-3 migration.
 
 ### Sprint CH-1 — Clubhouse shell UI
-**Status: ⬜ Not started**
-- [ ] `ClubhouseScreen.jsx` — primary home screen:
-  - Header: Clubhouse name + member count + share invite button
-  - Sport cards: grouped by sport (Football → leagues, F1 → paddocks, Tennis → boxes) — uses `get_clubhouse_competitions()`
-  - Activity feed: cross-sport gazette entries via `get_circle_feed()` with Realtime subscription
-  - Member rail: avatar strip of all Clubhouse members; tap → DM
-  - Empty state for non-playing members: "Browse leagues → join what you want"
-- [ ] `useClubhouse(circleId)` hook — members, linked competitions by sport, feed, Realtime sub
-- [ ] App routing: `/clubhouse/:circleId` as primary home route; league/paddock/box routes scoped under it
-- [ ] AppLayout: Clubhouse selector at top of sidebar (if user is in multiple Clubhouses); sport cards within active Clubhouse
+**Status: ✅ Done — PR #608, 2026-06-23**
+- [x] `ClubhouseScreen.jsx` — HOME tab (sport competition cards + gazette feed), MEMBERS tab, FIND tab (search public clubhouses); multi-clubhouse pill selector; empty-state for non-playing members
+- [x] `useClubhouse()` hook — circles list, active circle (localStorage), competitions-by-sport, cross-sport feed, members, Realtime gazette subscription; create/join/search actions
+- [x] App routing: `/clubhouse` and `/clubhouse/:circleId` routes in `App.jsx`; URL syncs active circle
+- [x] AppLayout: CLUBHOUSE nav item (desktopOnly) added to both football and F1 navs; `/clubhouse` included in `isMainRoute` check
 
 ### Sprint CH-2 — Chat channels + DMs
 **Status: ⬜ Not started**
@@ -519,7 +514,12 @@ The implementation roadmap linked above is comprehensive and self-contained. The
 | Gazette / activity | League tab | Stays in League (competitive events only) |
 | Standings, squad, market, scoring | League | Stays in League (unchanged) |
 
-**Session notes for Phase 1E:** *(update per session)*
+**Session notes for Phase 1E:**
+
+**2026-06-23 — CH-0 + CH-1 complete**
+- Migration 193 applied to shared Supabase DB (additive only — 4 new tables, 2 new columns on circles, 4 new/updated RPCs). Pilot is unaffected (no existing rows touched, no columns altered, no DROP).
+- `useClubhouse.js` and `ClubhouseScreen.jsx` are v2-only new files — nothing on `main` was touched.
+- Next: CH-2 (chat channels + DMs). No product decisions needed — schema already exists in migration 193.
 
 ---
 
