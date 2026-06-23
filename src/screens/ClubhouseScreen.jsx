@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useClubhouse } from '../hooks/useClubhouse';
 import { useSport } from '../context/SportContext';
+import ClubhouseChat from '../components/ClubhouseChat';
 
 const MONO = { fontFamily: 'JetBrains Mono, monospace' };
 const HEAD = { fontFamily: 'Archivo Black, sans-serif' };
@@ -427,6 +428,7 @@ export default function ClubhouseScreen() {
 
   const MAIN_TABS = [
     { key: 'home',    label: 'HOME'    },
+    { key: 'chat',    label: 'CHAT'    },
     { key: 'members', label: 'MEMBERS' },
     { key: 'find',    label: 'FIND'    },
   ];
@@ -487,7 +489,16 @@ export default function ClubhouseScreen() {
         <>
           <TabBar tabs={MAIN_TABS} active={tab} onChange={setTab} />
 
-          <div style={{ padding: '20px 16px', maxWidth: 640, margin: '0 auto' }}>
+          {/* CHAT tab — full-width, no padding constraint */}
+          {tab === 'chat' && (
+            <ClubhouseChat
+              circleId={activeCircleId}
+              members={members}
+              activeCircle={activeCircle}
+            />
+          )}
+
+          <div style={{ padding: '20px 16px', maxWidth: 640, margin: '0 auto', display: tab === 'chat' ? 'none' : undefined }}>
 
             {/* HOME tab */}
             {tab === 'home' && (
