@@ -114,6 +114,50 @@ export function useClubhouse() {
     return Array.isArray(data) ? data : [];
   }, []);
 
+  const updateSettings = useCallback(async (circleId, { name, isPublic, p2pEnabled }) => {
+    const { data, error: err } = await supabase.rpc('update_circle_settings', {
+      p_circle_id:   circleId,
+      p_name:        name        ?? null,
+      p_is_public:   isPublic    ?? null,
+      p_p2p_enabled: p2pEnabled  ?? null,
+    });
+    if (err) throw err;
+    if (data?.error) throw new Error(data.error);
+    await fetchMyCircles();
+    return data;
+  }, [fetchMyCircles]);
+
+  const kickMember = useCallback(async (circleId, userId) => {
+    const { data, error: err } = await supabase.rpc('kick_circle_member', {
+      p_circle_id: circleId,
+      p_user_id:   userId,
+    });
+    if (err) throw err;
+    if (data?.error) throw new Error(data.error);
+    await fetchCircleData(circleId);
+    return data;
+  }, [fetchCircleData]);
+
+  const linkLeague = useCallback(async (circleId, leagueId) => {
+    const { data, error: err } = await supabase.rpc('link_league_to_circle', {
+      p_circle_id: circleId,
+      p_league_id: leagueId,
+    });
+    if (err) throw err;
+    if (data?.error) throw new Error(data.error);
+    await fetchCircleData(circleId);
+    return data;
+  }, [fetchCircleData]);
+
+  const getOwnerLinkableLeagues = useCallback(async (circleId) => {
+    const { data, error: err } = await supabase.rpc('get_owner_linkable_leagues', {
+      p_circle_id: circleId,
+    });
+    if (err) throw err;
+    if (data?.error) throw new Error(data.error);
+    return Array.isArray(data) ? data : [];
+  }, []);
+
   const activeCircle = myCircles.find(c => c.id === activeCircleId) ?? null;
 
   return {
@@ -129,6 +173,10 @@ export function useClubhouse() {
     createCircle,
     joinCircleByCode,
     searchClubhouses,
+    updateSettings,
+    kickMember,
+    linkLeague,
+    getOwnerLinkableLeagues,
     refresh: fetchMyCircles,
   };
 }

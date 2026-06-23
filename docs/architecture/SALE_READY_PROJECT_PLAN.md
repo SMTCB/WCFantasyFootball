@@ -17,7 +17,7 @@
 | **1B** | F1 Module | W2–W5 | ✅ Done (Sprints 0–3, PR #606) |
 | **1C** | UX Redesign | W1–W9 | 🔄 In progress — Sprint UX-0 ✅ done, UX-1 next |
 | **1D** | Buyout hygiene — batch 1 | W1–W2 | 🔄 In progress — 1D-A done, 1D-B pending |
-| **1E** | Clubhouse social architecture | W3–W8 | 🔄 In progress — CH-0–CH-7 ✅ done (PRs #607–#613), CH-8 next |
+| **1E** | Clubhouse social architecture | W3–W8 | 🔄 In progress — CH-0–CH-8 ✅ done (PRs #607–#614), CH-9 next |
 | **2** | Tennis Module | W6–W8 | ⬜ Not started |
 | **3A** | Buyout hygiene — batch 2 | W9–W11 | ⬜ Not started |
 | **3B** | v2 integration & deploy | W10–W12 | ⬜ Not started |
@@ -26,7 +26,7 @@
 **v2 branch:** active — created off main, merged main regularly to pick up pilot bug fixes
 
 **Next actions (parallel tracks):**
-- **Phase 1E — Clubhouse:** CH-7 ✅ done — CH-8 next (owner admin panel + migration 195).
+- **Phase 1E — Clubhouse:** CH-8 ✅ done — CH-9 next (notification badge + inbox, ~6h).
 - **Phase 1A — P2P Betting:** 5 product decisions needed before Sprint 1 (Stripe deferred; see Sprint P2P-0). Can start Sprint 1 (coin ledger) once decisions are made.
 - **Phase 1D-B:** schema reproducibility baseline — standalone, can do any session.
 - **Phase 2 — Tennis:** game dynamics spec ✅ done; Sprint T-0 unblocked (CH-0 delivered `circle_player_boxes` junction table dependency).
@@ -552,6 +552,13 @@ The implementation roadmap linked above is comprehensive and self-contained. The
 - `LeagueDetailView.jsx` `ENTRY_META`: `classified` registered (`filter:'GAME'`, badge `CLASSIFIED`, color `var(--gold)`).
 - Build clean: 0 errors, 890 KB bundle (unchanged from CH-6).
 
+#### CH-8 session notes (2026-06-23)
+- Migration 195 (`195_clubhouse_owner_settings.sql`): 4 new SECURITY DEFINER RPCs — `update_circle_settings` (owner rename/toggle is_public/p2p), `kick_circle_member` (owner-only, cannot kick self), `link_league_to_circle` (validates circle owner AND league commissioner), `get_owner_linkable_leagues` (returns unlinked commissioner leagues for picker).
+- No prod backup required: circles/circle_members/circle_leagues created in migration 188 (v2-only, never deployed to prod).
+- `useClubhouse.js`: 4 new callbacks — `updateSettings`, `kickMember`, `linkLeague`, `getOwnerLinkableLeagues`.
+- `ClubhouseScreen.jsx`: SETTINGS tab added (owner-only, conditionally appended to MAIN_TABS). `SettingsTab` component: rename form, public/P2P toggles (optimistic UI), link-league picker (lazy-loaded). `MembersTab` gains KICK button per non-owner member (owner-only). `useAuth` imported for `user.id` guard on kick.
+- Build clean: 0 errors, 896 KB (+6 KB).
+
 ---
 
 ### Sprint CH-7 — Mobile nav + feed polish
@@ -577,7 +584,7 @@ Recommend **Option A** — LIVE is the least frequently used standalone screen (
 ---
 
 ### Sprint CH-8 — Owner admin panel
-**Status: ⬜ Not started**
+**Status: ✅ Done — PR #614**
 
 **Goal:** Give the Clubhouse owner control over their space. Without this, the owner cannot add existing leagues, change visibility, or manage membership.
 
