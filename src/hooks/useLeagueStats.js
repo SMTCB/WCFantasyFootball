@@ -282,22 +282,49 @@ export function useLeagueStats(leagueId) {
             }
 
             // ── Bench accumulation (opportunity cost — finished matchdays only) ──
+            // GK slot: head-to-head only (bench GK vs starting GK).
+            // Outfield slots: optimal selection from the combined pool of 10 starters + N bench outfielders.
             if (!benchAccum[uid]) {
               benchAccum[uid] = { user_id: uid, username: meta.username, totalMissedPts: 0, totalBenchPts: 0, gws: 0, rounds: [] };
             }
             if (fixtures.length && finishedMatchdays.has(row.matchday_id)) {
-              const starterPts = xi.map(pid =>
-                fixtures.reduce((s, fid) => s + (statsLookup[`${pid}|${fid}`] || 0), 0)
-              );
-              const minStarterPts = starterPts.length > 0 ? Math.min(...starterPts) : 0;
-
-              let benchPts  = 0;
-              let missedPts = 0;
-              for (const pid of bench) {
-                const bPts  = fixtures.reduce((s, fid) => s + (statsLookup[`${pid}|${fid}`] || 0), 0);
-                benchPts   += bPts;
-                missedPts  += Math.max(0, bPts - minStarterPts);
+              // Separate starters into GK and outfield
+              const starterGkPts      = [];
+              const starterOutfieldPts = [];
+              for (const pid of xi) {
+                const forzaId = pid.split('-')[1];
+                const pos     = posMap[forzaId];
+                const pts     = fixtures.reduce((s, fid) => s + (statsLookup[`${pid}|${fid}`] || 0), 0);
+                if (pos === 'GK') starterGkPts.push(pts);
+                else starterOutfieldPts.push(pts);
               }
+
+              // Separate bench into GK and outfield, accumulate total bench pts
+              const benchGkPts      = [];
+              const benchOutfieldPts = [];
+              let benchPts = 0;
+              for (const pid of bench) {
+                const forzaId = pid.split('-')[1];
+                const pos     = posMap[forzaId];
+                const pts     = fixtures.reduce((s, fid) => s + (statsLookup[`${pid}|${fid}`] || 0), 0);
+                benchPts += pts;
+                if (pos === 'GK') benchGkPts.push(pts);
+                else benchOutfieldPts.push(pts);
+              }
+
+              // GK missed: head-to-head (bench GK vs starting GK)
+              const starterGkPt = starterGkPts[0] ?? 0;
+              let missedPts = 0;
+              for (const bPts of benchGkPts) {
+                missedPts += Math.max(0, bPts - starterGkPt);
+              }
+
+              // Outfield missed: optimal N from combined pool vs actual starters
+              const combinedOutfield = [...starterOutfieldPts, ...benchOutfieldPts].sort((a, b) => b - a);
+              const optimalOutfieldSum = combinedOutfield.slice(0, starterOutfieldPts.length).reduce((s, v) => s + v, 0);
+              const actualOutfieldSum  = starterOutfieldPts.reduce((s, v) => s + v, 0);
+              missedPts += Math.max(0, optimalOutfieldSum - actualOutfieldSum);
+
               benchAccum[uid].totalBenchPts  += benchPts;
               benchAccum[uid].totalMissedPts += missedPts;
               benchAccum[uid].gws++;
@@ -379,6 +406,16 @@ export function useLeagueStats(leagueId) {
           return { user_id: squad.user_id, username: squad.username, total_points: totalPts, squad_value: squadValue, roi };
         }).sort((a, b) => b.roi - a.roi);
 
+        // Build player → owning managers map from current XIs
+        const playerOwners = {};
+        for (const squad of uniqueSquads) {
+          const xi = squad.starting_xi?.length ? squad.starting_xi : (squad.players || []).slice(0, 11);
+          for (const fpId of xi) {
+            if (!playerOwners[fpId]) playerOwners[fpId] = [];
+            playerOwners[fpId].push(squad.username);
+          }
+        }
+
         const seenFpIds = new Set();
         const playerRoi = allCurrentXiIds
           .filter(fpId => {
@@ -393,7 +430,7 @@ export function useLeagueStats(leagueId) {
             if (price === 0) return null;
             const pts     = statsByPlayer[fpId]   || 0;
             const minutes = minutesByPlayer[fpId] || 0;
-            return { player_id: fpId, name: nameMap[forzaId] || forzaId, position: posMap[forzaId] || '?', price, pts, minutes, roi: pts / price };
+            return { player_id: fpId, name: nameMap[forzaId] || forzaId, position: posMap[forzaId] || '?', price, pts, minutes, roi: pts / price, owners: playerOwners[fpId] || [] };
           })
           .filter(Boolean);
 

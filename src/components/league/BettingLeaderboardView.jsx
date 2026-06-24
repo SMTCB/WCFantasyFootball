@@ -1,7 +1,7 @@
 import { MgrTag, HubSectionLabel } from './HubShared';
 import { MONO, DISPLAY, mgrHue, mgrMono } from './HubConstants';
 
-export default function BettingLeaderboardView({ leaderboard, currentUser, betLoading }) {
+export default function BettingLeaderboardView({ leaderboard, myBetsByType, currentUser, betLoading }) {
   const myEntry = leaderboard?.find(e => currentUser && e.user_id === currentUser.id);
   const myIdx   = leaderboard?.findIndex(e => currentUser && e.user_id === currentUser.id) ?? -1;
 
@@ -115,13 +115,39 @@ export default function BettingLeaderboardView({ leaderboard, currentUser, betLo
           {/* Right rail — desktop only */}
           <aside className="hidden lg:flex" style={{ flexDirection: 'column', background: 'var(--ink-2)', overflow: 'auto' }}>
             <HubSectionLabel label="YOUR PERFORMANCE" sub="BY BET TYPE" tone="var(--gold)" />
-            <div style={{ padding: '14px 22px', display: 'flex', flexDirection: 'column', gap: 12, borderBottom: '1px solid var(--rule)' }}>
-              {myEntry ? (
-                <div style={{ fontFamily: "'Archivo', sans-serif", fontSize: 11, color: 'var(--mute)', lineHeight: 1.5 }}>
-                  Per-bet-type breakdown available once more data is collected.
-                </div>
+            <div style={{ padding: '14px 22px', display: 'flex', flexDirection: 'column', gap: 14, borderBottom: '1px solid var(--rule)' }}>
+              {myBetsByType?.length > 0 ? (
+                myBetsByType.map(bt => {
+                  const total   = bt.correct + bt.wrong;
+                  const correctPct = total > 0 ? (bt.correct / total) * 100 : 0;
+                  const wrongPct   = 100 - correctPct;
+                  return (
+                    <div key={bt.title}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 5 }}>
+                        <span style={{ fontFamily: DISPLAY, fontSize: 11 }}>{bt.title}</span>
+                        <span style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)' }}>
+                          <span style={{ color: 'var(--positive)' }}>{bt.correct}W</span>
+                          {' · '}
+                          <span style={{ color: 'var(--danger)' }}>{bt.wrong}L</span>
+                          {' · '}
+                          {Math.round(correctPct)}%
+                        </span>
+                      </div>
+                      <div style={{ height: 7, borderRadius: 2, overflow: 'hidden', background: 'var(--ink-3)', display: 'flex' }}>
+                        {correctPct > 0 && (
+                          <div style={{ width: `${correctPct}%`, background: 'var(--positive)', opacity: 0.85 }} />
+                        )}
+                        {wrongPct > 0 && (
+                          <div style={{ width: `${wrongPct}%`, background: 'var(--danger)', opacity: 0.5 }} />
+                        )}
+                      </div>
+                    </div>
+                  );
+                })
               ) : (
-                <div style={{ fontFamily: MONO, fontSize: 10, color: 'var(--mute)', letterSpacing: '.18em' }}>NO DATA YET</div>
+                <div style={{ fontFamily: MONO, fontSize: 10, color: 'var(--mute)', letterSpacing: '.18em' }}>
+                  {myEntry ? 'NO RESOLVED BETS FOR YOU YET' : 'NO BETS YET'}
+                </div>
               )}
             </div>
             <HubSectionLabel label="RIVALS WATCH" sub="BIGGEST GAP" tone="var(--purple)" />
@@ -136,7 +162,7 @@ export default function BettingLeaderboardView({ leaderboard, currentUser, betLo
                       <div style={{ fontFamily: DISPLAY, fontSize: 12 }}>{rival.username}</div>
                       <div style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.14em', marginTop: 2 }}>{rival.accuracy_pct}% WIN RATE</div>
                     </div>
-                    <span style={{ fontFamily: DISPLAY, fontSize: 14, color: diff > 0 ? 'var(--danger)' : diff < 0 ? 'var(--positive)' : 'var(--mute)' }}>{diff > 0 ? '+' : ''}{diff}</span>
+                    <span style={{ fontFamily: DISPLAY, fontSize: 14, color: diff > 0 ? 'var(--positive)' : diff < 0 ? 'var(--danger)' : 'var(--mute)' }}>{diff > 0 ? '+' : ''}{diff}</span>
                   </div>
                 );
               })}
