@@ -18,7 +18,7 @@
 | **1C** | UX Redesign | W1–W9 | 🔄 In progress — Sprint UX-0 ✅ done, UX-1 next |
 | **1D** | Buyout hygiene — batch 1 | W1–W2 | 🔄 In progress — 1D-A done, 1D-B pending |
 | **1E** | Clubhouse social architecture | W3–W8 | ✅ Done — CH-0–CH-9 complete (PRs #607–#615). Clubhouse shell shipped. |
-| **2** | Tennis Module | W6–W8 | 🔄 In progress — T-0–T-3 ✅ (PRs #617–620), T-4 UI next |
+| **2** | Tennis Module | W6–W8 | ✅ Done — T-0–T-4 complete (PRs #617–620, #625) |
 | **3A** | Buyout hygiene — batch 2 | W9–W11 | ⬜ Not started |
 | **3B** | v2 integration & deploy | W10–W12 | ⬜ Not started |
 
@@ -29,7 +29,7 @@
 - **Phase 1E — Clubhouse:** ✅ COMPLETE — CH-0–CH-9 all shipped (PRs #607–#615). Clubhouse shell done.
 - **Phase 1A — P2P Betting:** 5 product decisions needed before Sprint 1 (Stripe deferred; see Sprint P2P-0). Can start Sprint 1 (coin ledger) once decisions are made.
 - **Phase 1D-B:** schema reproducibility baseline — standalone, can do any session.
-- **Phase 2 — Tennis:** T-0–T-3 ✅ (PRs #617–620, migrations 197–201 + 4 Edge Functions). Sprint T-4 next (UI screens + hooks).
+- **Phase 2 — Tennis:** ✅ COMPLETE — T-0–T-4 all shipped (PRs #617–620 + #625). Full tennis module live on v2: 7 screens + 5 hooks + routes + Kit Light design.
 - **Phase 1B remaining:** F1-4 smoke tests + F1-5 OpenF1 sync cron — both optional pre-MVP.
 
 ---
@@ -651,7 +651,7 @@ Recommend **Option A** — LIVE is the least frequently used standalone screen (
 
 ## Phase 2 — Tennis Module (W6–W8)
 
-**Status: 🔄 In progress — T-0 through T-3 ✅ complete, T-4 (UI) next**
+**Status: ✅ Done — all sprints T-0 through T-4 complete (PR #625)**
 
 **Goal:** a season-long roster prediction game built around the full ATP calendar (14 events: 4 Grand Slams + 9 Masters 1000s + ATP Finals). Players join **The Player's Box** and compete across the season with a low-friction one-login-per-tournament model, Ace Cards, and a QF Captain mechanic.
 
@@ -680,9 +680,9 @@ Recommend **Option A** — LIVE is the least frequently used standalone screen (
 | **T-1** | Game RPCs (roster, ace card, QF captain, ATP Finals picks, scoring payload) | #618 | 199 | ✅ Done |
 | **T-2** | Admin RPCs (tournament lifecycle) + `sync-tennis-players` Edge Function | #619 | 200 + EF | ✅ Done |
 | **T-3** | `score-tennis-tournament` + `score-atp-finals` Edge Functions + leaderboard RPCs | #620 | 201 + 2 EF | ✅ Done |
-| **T-4** | UI screens (7 screens, 5 hooks) | — | — | ⬜ Next |
+| **T-4** | UI screens (7 screens, 5 hooks) | #625 | — | ✅ Done |
 
-**MVP complete after T-4. Backend is 100% built — T-4 is UI only.**
+**Phase 2 complete. Tennis MVP fully shipped.**
 
 **Session notes for Phase 2:**
 
@@ -728,6 +728,14 @@ Recommend **Option A** — LIVE is the least frequently used standalone screen (
 - `TennisProfileView.jsx` — user's season summary across all boxes
 - Hooks: `useTennisCalendar`, `useTennisTournament`, `useTennisLeaderboard`, `usePlayerBox`, `useTennisAdmin`
 - Route wiring in `App.jsx` + sport switcher integration
+
+**2026-06-24 — Sprint T-4 complete (PR #625):**
+- 5 hooks built: `usePlayerBox`, `useTennisCalendar`, `useTennisTournament`, `useTennisLeaderboard`, `useAtpFinalsPicks`
+- 7 screens built: `PlayerBoxScreen`, `TennisHomeScreen`, `TennisTournamentScreen`, `TennisLeaderboardScreen`, `TennisAtpFinalsScreen`, `TennisAdminScreen`, `TennisProfileView` (embedded)
+- All routes wired in `App.jsx` (`/tennis`, `/tennis/box`, `/tennis/tournament/:id`, `/tennis/leaderboard`, `/tennis/finals`, `/tennis/admin`)
+- `SportContext` extended with `activePlayerBoxId` / `setActivePlayerBoxId` (localStorage persisted, mirrors F1 paddock pattern)
+- Kit Light design throughout: `var(--bg)` warm off-white, `var(--shell)` dark header, `var(--card)` white cards, `var(--accent)` blue CTAs, 6px border radius, mixed-case labels, JetBrains Mono for metadata
+- 84/84 platform.spec.js tests green; build clean (0 errors)
 
 **2026-06-22 — Game dynamics spec and implementation plan written:**
 - Game model confirmed: 7-player tiered roster (Seeds 1–4 / 5–16 / 17–32 / Unseeded), points for round reached, QF Captain 2×, 4 Ace Cards per season. ATP Finals is a separate 15-match prediction slate.

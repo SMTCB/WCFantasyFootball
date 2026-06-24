@@ -9,6 +9,9 @@ export function SportProvider({ children }) {
   const [activePaddockId, setActivePaddockIdState] = useState(
     () => localStorage.getItem('activePaddockId') ?? null
   );
+  const [activePlayerBoxId, setActivePlayerBoxIdState] = useState(
+    () => localStorage.getItem('activePlayerBoxId') ?? null
+  );
 
   const setActiveSport = useCallback((sport) => {
     localStorage.setItem('activeSport', sport);
@@ -21,8 +24,18 @@ export function SportProvider({ children }) {
     setActivePaddockIdState(id);
   }, []);
 
+  const setActivePlayerBoxId = useCallback((id) => {
+    if (id) localStorage.setItem('activePlayerBoxId', id);
+    else localStorage.removeItem('activePlayerBoxId');
+    setActivePlayerBoxIdState(id);
+  }, []);
+
   return (
-    <SportContext.Provider value={{ activeSport, setActiveSport, activePaddockId, setActivePaddockId }}>
+    <SportContext.Provider value={{
+      activeSport, setActiveSport,
+      activePaddockId, setActivePaddockId,
+      activePlayerBoxId, setActivePlayerBoxId,
+    }}>
       {children}
     </SportContext.Provider>
   );

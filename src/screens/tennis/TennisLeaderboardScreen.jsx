@@ -1,0 +1,140 @@
+import { useNavigate } from 'react-router-dom';
+import { usePlayerBox } from '../../hooks/tennis/usePlayerBox';
+import { useTennisLeaderboard } from '../../hooks/tennis/useTennisLeaderboard';
+
+const MEDAL = ['🥇', '🥈', '🥉'];
+
+export default function TennisLeaderboardScreen() {
+  const navigate = useNavigate();
+  const { myBoxes, activeBox, setActivePlayerBoxId, loading: boxLoading } = usePlayerBox();
+  const { standings, seasonSummary, loading, error } = useTennisLeaderboard(activeBox?.player_box_id, 2026);
+
+  return (
+    <div style={{ background: 'var(--bg)', minHeight: '100vh', paddingBottom: 32 }}>
+      {/* Header */}
+      <div style={{ background: 'var(--shell)', padding: '20px 16px' }}>
+        <button onClick={() => navigate('/tennis')} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.5)', fontFamily: 'Archivo, sans-serif', fontSize: 13, cursor: 'pointer', padding: 0, marginBottom: 10 }}>
+          ← Tennis
+        </button>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+          <h1 style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 24, color: '#fff', margin: 0 }}>
+            Season Standings
+          </h1>
+          {myBoxes.length > 1 && (
+            <select
+              value={activeBox?.player_box_id ?? ''}
+              onChange={e => setActivePlayerBoxId(e.target.value)}
+              style={{ background: 'rgba(255,255,255,0.1)', color: '#fff', border: '1px solid rgba(255,255,255,0.2)', borderRadius: 6, padding: '6px 10px', fontFamily: 'Archivo, sans-serif', fontSize: 12, cursor: 'pointer' }}
+            >
+              {myBoxes.map(b => (
+                <option key={b.player_box_id} value={b.player_box_id}>{b.name}</option>
+              ))}
+            </select>
+          )}
+        </div>
+        <p style={{ fontFamily: 'Archivo, sans-serif', fontSize: 12, color: 'rgba(255,255,255,0.45)', margin: '4px 0 0' }}>
+          Grand Slams (all) + Best 4 Masters 1000s + ATP Finals
+        </p>
+      </div>
+
+      <div style={{ padding: '16px', maxWidth: 700, margin: '0 auto' }}>
+
+        {boxLoading || loading ? (
+          <div style={{ color: 'var(--mute)', fontFamily: 'JetBrains Mono, monospace', fontSize: 11, textAlign: 'center', padding: 40 }}>Loading…</div>
+        ) : !activeBox ? (
+          <div style={{ textAlign: 'center', padding: '40px 0' }}>
+            <p style={{ fontFamily: 'Archivo, sans-serif', fontSize: 14, color: 'var(--mute)', margin: '0 0 16px' }}>Join a Player's Box to see standings.</p>
+            <button onClick={() => navigate('/tennis/box')} style={{ padding: '10px 24px', background: 'var(--accent)', color: '#fff', border: 'none', borderRadius: 6, fontFamily: 'Archivo, sans-serif', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>
+              Join a box
+            </button>
+          </div>
+        ) : error ? (
+          <div style={{ fontFamily: 'Archivo, sans-serif', fontSize: 14, color: 'var(--neg)', padding: 16 }}>{error}</div>
+        ) : standings.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: '40px 0' }}>
+            <p style={{ fontFamily: 'Archivo, sans-serif', fontSize: 14, color: 'var(--mute)' }}>No scores yet — standings update after each tournament completes.</p>
+          </div>
+        ) : (
+          <>
+            {/* Masters Drop Rule note */}
+            <div style={{ background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 6, padding: '10px 14px', marginBottom: 16, display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+              <span style={{ fontSize: 16 }}>ℹ️</span>
+              <p style={{ fontFamily: 'Archivo, sans-serif', fontSize: 12, color: 'var(--text-2)', margin: 0 }}>
+                <strong>Masters Drop Rule:</strong> Only your best 4 Masters 1000 scores count. The worst score is dropped once 5 or more Masters are complete.
+              </p>
+            </div>
+
+            {/* Standings table */}
+            <div style={{ background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 6, overflow: 'hidden', marginBottom: 20 }}>
+              {/* Column headers */}
+              <div style={{ display: 'flex', alignItems: 'center', padding: '10px 16px', background: 'var(--elev)', borderBottom: '1px solid var(--rule)' }}>
+                <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 9, color: 'var(--mute)', textTransform: 'uppercase', letterSpacing: '0.1em', flex: 1 }}>Manager</span>
+                <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 9, color: 'var(--mute)', textTransform: 'uppercase', letterSpacing: '0.1em', width: 60, textAlign: 'right' }}>Slams</span>
+                <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 9, color: 'var(--mute)', textTransform: 'uppercase', letterSpacing: '0.1em', width: 70, textAlign: 'right' }}>Masters</span>
+                <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 9, color: 'var(--mute)', textTransform: 'uppercase', letterSpacing: '0.1em', width: 60, textAlign: 'right' }}>Finals</span>
+                <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 9, color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '0.1em', width: 70, textAlign: 'right', fontWeight: 700 }}>Total</span>
+              </div>
+
+              {standings.map((row, i) => (
+                <div key={row.user_id} style={{ display: 'flex', alignItems: 'center', padding: '12px 16px', borderBottom: i < standings.length - 1 ? '1px solid var(--rule)' : 'none', background: i === 0 ? 'rgba(184,114,14,0.04)' : 'transparent' }}>
+                  <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <span style={{ fontSize: i < 3 ? 16 : 14, fontFamily: 'Archivo Black, sans-serif', color: i < 3 ? 'var(--gold)' : 'var(--mute)', minWidth: 24 }}>
+                      {i < 3 ? MEDAL[i] : row.rank}
+                    </span>
+                    <span style={{ fontFamily: 'Archivo, sans-serif', fontSize: 14, color: 'var(--paper)', fontWeight: 500 }}>
+                      {row.username}
+                    </span>
+                    {row.tournaments_scored > 0 && (
+                      <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 9, color: 'var(--mute)', letterSpacing: '0.08em' }}>
+                        {row.tournaments_scored} played
+                      </span>
+                    )}
+                  </div>
+                  <span style={{ fontFamily: 'Archivo, sans-serif', fontSize: 13, color: 'var(--text-2)', width: 60, textAlign: 'right' }}>{row.slam_points > 0 ? row.slam_points.toLocaleString() : '—'}</span>
+                  <span style={{ fontFamily: 'Archivo, sans-serif', fontSize: 13, color: 'var(--text-2)', width: 70, textAlign: 'right' }}>{row.masters_points > 0 ? row.masters_points.toLocaleString() : '—'}</span>
+                  <span style={{ fontFamily: 'Archivo, sans-serif', fontSize: 13, color: 'var(--text-2)', width: 60, textAlign: 'right' }}>{row.finals_points > 0 ? row.finals_points.toLocaleString() : '—'}</span>
+                  <span style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 15, color: 'var(--accent)', width: 70, textAlign: 'right' }}>{row.season_total.toLocaleString()}</span>
+                </div>
+              ))}
+            </div>
+
+            {/* Per-tournament breakdown */}
+            {seasonSummary.length > 0 && (
+              <div style={{ background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 6, overflow: 'hidden' }}>
+                <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--rule)' }}>
+                  <span style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 14, color: 'var(--paper)' }}>Per-Tournament Breakdown</span>
+                </div>
+                <div style={{ overflowX: 'auto' }}>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', fontFamily: 'Archivo, sans-serif', fontSize: 13 }}>
+                    <thead>
+                      <tr style={{ background: 'var(--elev)' }}>
+                        <th style={{ padding: '8px 12px', textAlign: 'left', fontFamily: 'JetBrains Mono, monospace', fontSize: 9, color: 'var(--mute)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 400 }}>Manager</th>
+                        {seasonSummary[0]?.tournament_scores?.map(ts => (
+                          <th key={ts.tournament_id} style={{ padding: '8px 10px', textAlign: 'right', fontFamily: 'JetBrains Mono, monospace', fontSize: 9, color: 'var(--mute)', textTransform: 'uppercase', letterSpacing: '0.06em', fontWeight: 400, whiteSpace: 'nowrap', maxWidth: 80 }}>
+                            {ts.tournament_name?.split(' ').slice(0, 1).join(' ')}
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {seasonSummary.map((row, i) => (
+                        <tr key={row.user_id} style={{ borderBottom: i < seasonSummary.length - 1 ? '1px solid var(--rule)' : 'none' }}>
+                          <td style={{ padding: '10px 12px', color: 'var(--paper)', fontWeight: 500 }}>{row.username}</td>
+                          {row.tournament_scores?.map(ts => (
+                            <td key={ts.tournament_id} style={{ padding: '10px 10px', textAlign: 'right', color: ts.total_points > 0 ? 'var(--paper)' : 'var(--mute)' }}>
+                              {ts.total_points > 0 ? ts.total_points.toLocaleString() : '—'}
+                            </td>
+                          ))}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+          </>
+        )}
+      </div>
+    </div>
+  );
+}

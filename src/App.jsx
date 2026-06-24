@@ -36,6 +36,12 @@ import F1SeasonBetsScreen from './screens/f1/F1SeasonBetsScreen';
 import F1StandingsScreen from './screens/f1/F1StandingsScreen';
 import F1ReportScreen from './screens/f1/F1ReportScreen';
 import F1AdminScreen from './screens/f1/F1AdminScreen';
+import PlayerBoxScreen from './screens/tennis/PlayerBoxScreen';
+import TennisHomeScreen from './screens/tennis/TennisHomeScreen';
+import TennisTournamentScreen from './screens/tennis/TennisTournamentScreen';
+import TennisLeaderboardScreen from './screens/tennis/TennisLeaderboardScreen';
+import TennisAtpFinalsScreen from './screens/tennis/TennisAtpFinalsScreen';
+import TennisAdminScreen from './screens/tennis/TennisAdminScreen';
 import { useOnboarding } from './hooks/useOnboarding';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 import { ToastProvider } from './components/Toast';
@@ -119,6 +125,13 @@ function AppRoutes() {
                   <Route path="/f1/:paddockId/standings"    element={<ErrorBoundary screen="F1Standings"><F1StandingsScreen /></ErrorBoundary>} />
                   <Route path="/f1/:paddockId/report"       element={<ErrorBoundary screen="F1Report"><F1ReportScreen /></ErrorBoundary>} />
                   <Route path="/f1/:paddockId/admin"        element={<ErrorBoundary screen="F1Admin"><F1AdminScreen /></ErrorBoundary>} />
+                  {/* Tennis Module */}
+                  <Route path="/tennis"                       element={<ErrorBoundary screen="TennisHome"><TennisHomeScreen /></ErrorBoundary>} />
+                  <Route path="/tennis/box"                   element={<ErrorBoundary screen="PlayerBox"><PlayerBoxScreen /></ErrorBoundary>} />
+                  <Route path="/tennis/tournament/:id"        element={<ErrorBoundary screen="TennisTournament"><TennisTournamentScreen /></ErrorBoundary>} />
+                  <Route path="/tennis/leaderboard"           element={<ErrorBoundary screen="TennisLeaderboard"><TennisLeaderboardScreen /></ErrorBoundary>} />
+                  <Route path="/tennis/finals"                element={<ErrorBoundary screen="TennisAtpFinals"><TennisAtpFinalsScreen /></ErrorBoundary>} />
+                  <Route path="/tennis/admin"                 element={<ErrorBoundary screen="TennisAdmin"><TennisAdminScreen /></ErrorBoundary>} />
                   <Route path="/clubhouse"            element={<ErrorBoundary screen="Clubhouse"><ClubhouseScreen /></ErrorBoundary>} />
                   <Route path="/clubhouse/:circleId"  element={<ErrorBoundary screen="Clubhouse"><ClubhouseScreen /></ErrorBoundary>} />
                   <Route path="/join"                       element={<JoinRoute />} />
