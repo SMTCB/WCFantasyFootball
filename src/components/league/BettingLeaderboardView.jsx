@@ -115,40 +115,49 @@ export default function BettingLeaderboardView({ leaderboard, myBetsByType, curr
           {/* Right rail — desktop only */}
           <aside className="hidden lg:flex" style={{ flexDirection: 'column', background: 'var(--ink-2)', overflow: 'auto' }}>
             <HubSectionLabel label="YOUR PERFORMANCE" sub="BY BET TYPE" tone="var(--gold)" />
-            <div style={{ padding: '14px 22px', display: 'flex', flexDirection: 'column', gap: 14, borderBottom: '1px solid var(--rule)' }}>
-              {myBetsByType?.length > 0 ? (
-                myBetsByType.map(bt => {
-                  const total   = bt.correct + bt.wrong;
-                  const correctPct = total > 0 ? (bt.correct / total) * 100 : 0;
-                  const wrongPct   = 100 - correctPct;
-                  return (
-                    <div key={bt.title}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 5 }}>
-                        <span style={{ fontFamily: DISPLAY, fontSize: 11 }}>{bt.title}</span>
+            <div style={{ padding: '14px 22px', display: 'flex', flexDirection: 'column', gap: 16, borderBottom: '1px solid var(--rule)' }}>
+              {(myBetsByType || []).map(bt => {
+                const total      = bt.correct + bt.wrong;
+                const correctPct = total > 0 ? (bt.correct / total) * 100 : 0;
+                const wrongPct   = 100 - correctPct;
+                const hasData    = total > 0;
+                return (
+                  <div key={bt.slug}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 6 }}>
+                      <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.18em', color: hasData ? 'var(--paper)' : 'var(--mute)' }}>
+                        {bt.label}
+                      </span>
+                      {hasData ? (
                         <span style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)' }}>
                           <span style={{ color: 'var(--positive)' }}>{bt.correct}W</span>
                           {' · '}
                           <span style={{ color: 'var(--danger)' }}>{bt.wrong}L</span>
                           {' · '}
-                          {Math.round(correctPct)}%
+                          <span style={{ color: correctPct >= 50 ? 'var(--positive)' : 'var(--danger)' }}>
+                            {Math.round(correctPct)}%
+                          </span>
                         </span>
-                      </div>
-                      <div style={{ height: 7, borderRadius: 2, overflow: 'hidden', background: 'var(--ink-3)', display: 'flex' }}>
-                        {correctPct > 0 && (
-                          <div style={{ width: `${correctPct}%`, background: 'var(--positive)', opacity: 0.85 }} />
-                        )}
-                        {wrongPct > 0 && (
-                          <div style={{ width: `${wrongPct}%`, background: 'var(--danger)', opacity: 0.5 }} />
-                        )}
-                      </div>
+                      ) : (
+                        <span style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.12em' }}>NO BETS</span>
+                      )}
                     </div>
-                  );
-                })
-              ) : (
-                <div style={{ fontFamily: MONO, fontSize: 10, color: 'var(--mute)', letterSpacing: '.18em' }}>
-                  {myEntry ? 'NO RESOLVED BETS FOR YOU YET' : 'NO BETS YET'}
-                </div>
-              )}
+                    <div style={{ height: 8, borderRadius: 2, overflow: 'hidden', background: 'var(--ink-3)', display: 'flex' }}>
+                      {hasData ? (
+                        <>
+                          {correctPct > 0 && (
+                            <div style={{ width: `${correctPct}%`, background: 'var(--positive)', opacity: 0.85, transition: 'width .3s' }} />
+                          )}
+                          {wrongPct > 0 && (
+                            <div style={{ width: `${wrongPct}%`, background: 'var(--danger)', opacity: 0.5, transition: 'width .3s' }} />
+                          )}
+                        </>
+                      ) : (
+                        <div style={{ width: '100%', background: 'var(--ink-3)' }} />
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
             <HubSectionLabel label="RIVALS WATCH" sub="BIGGEST GAP" tone="var(--purple)" />
             <div style={{ padding: '14px 22px', display: 'flex', flexDirection: 'column', gap: 14 }}>
