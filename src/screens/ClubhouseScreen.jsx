@@ -875,6 +875,27 @@ export default function ClubhouseScreen() {
                   </div>
                   <div style={{ ...MONO, fontSize: 11, color: 'var(--mute)' }}>VIEW →</div>
                 </button>
+
+                {/* P2P Challenges shortcut */}
+                <button
+                  onClick={() => navigate('/challenges')}
+                  style={{
+                    width: '100%', marginTop: 10, padding: '14px 18px',
+                    background: 'var(--elev)', border: '1px solid var(--rule)',
+                    borderRadius: 10, cursor: 'pointer', textAlign: 'left',
+                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                  }}
+                >
+                  <div>
+                    <div style={{ ...MONO, fontSize: 9, letterSpacing: '0.18em', color: 'var(--mute)', marginBottom: 4 }}>
+                      P2P BETTING
+                    </div>
+                    <div style={{ ...MONO, fontSize: 15, fontWeight: 700, color: 'var(--paper)' }}>
+                      My Challenges
+                    </div>
+                  </div>
+                  <div style={{ ...MONO, fontSize: 11, color: 'var(--mute)' }}>VIEW →</div>
+                </button>
               </div>
             )}
 

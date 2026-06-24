@@ -1,5 +1,8 @@
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { useWallet } from '../hooks/useWallet';
+import { supabase } from '../lib/supabase';
 
 const MONO = 'JetBrains Mono, monospace';
 
@@ -23,7 +26,9 @@ function timeAgo(dateStr) {
 
 export default function WalletScreen() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const { wallet, loading } = useWallet(user?.id);
+  const [buyStatus, setBuyStatus] = useState(null); // null | 'loading' | 'coming_soon' | 'error'
 
   const balance     = wallet?.balance      ?? 0;
   const escrow      = wallet?.escrow       ?? 0;
@@ -75,7 +80,7 @@ export default function WalletScreen() {
         )}
       </div>
 
-      {/* Buy coins — Stripe coming soon */}
+      {/* Buy coins — Stripe-ready (returns 503 until keys are configured) */}
       <div style={{
         background: 'var(--elev)',
         border: '1px solid var(--rule)',
@@ -94,16 +99,34 @@ export default function WalletScreen() {
           ].map(({ coins, price }) => (
             <button
               key={coins}
-              disabled
+              disabled={buyStatus === 'loading'}
+              onClick={async () => {
+                setBuyStatus('loading');
+                try {
+                  const { error } = await supabase.functions.invoke('purchase-coins/create-payment-intent', {
+                    body: { pack_coins: coins },
+                  });
+                  // 503 means Stripe not yet configured — expected for now
+                  if (error?.context?.status === 503 || error?.message?.includes('STRIPE_NOT_CONFIGURED')) {
+                    setBuyStatus('coming_soon');
+                  } else if (error) {
+                    setBuyStatus('error');
+                  }
+                  // When Stripe IS configured: handle client_secret here with Stripe.js
+                } catch {
+                  setBuyStatus('coming_soon');
+                }
+                setTimeout(() => setBuyStatus(null), 3000);
+              }}
               style={{
                 flex: 1,
                 minWidth: 90,
                 padding: '10px 8px',
                 borderRadius: 8,
                 border: '1px solid var(--rule)',
-                background: 'var(--ink-3)',
-                cursor: 'not-allowed',
-                opacity: 0.5,
+                background: 'var(--shell)',
+                cursor: buyStatus === 'loading' ? 'wait' : 'pointer',
+                opacity: buyStatus === 'loading' ? 0.6 : 1,
               }}
             >
               <div style={{ fontFamily: MONO, fontSize: 13, fontWeight: 700, color: 'var(--accent)' }}>
@@ -116,8 +139,40 @@ export default function WalletScreen() {
           ))}
         </div>
         <div style={{ fontFamily: MONO, fontSize: 10, color: 'var(--mute)', marginTop: 12, textAlign: 'center' }}>
-          PAYMENTS COMING SOON
+          {buyStatus === 'coming_soon' && 'PAYMENTS COMING SOON'}
+          {buyStatus === 'error' && 'SOMETHING WENT WRONG — TRY AGAIN'}
+          {buyStatus === 'loading' && 'CONNECTING…'}
+          {!buyStatus && 'PAYMENTS COMING SOON'}
         </div>
+      </div>
+
+      {/* Quick link to Challenges */}
+      <div
+        role="button"
+        tabIndex={0}
+        onClick={() => navigate('/challenges')}
+        onKeyDown={e => e.key === 'Enter' && navigate('/challenges')}
+        style={{
+          background: 'var(--shell)',
+          border: '1px solid var(--rule)',
+          borderRadius: 12,
+          padding: '16px 20px',
+          marginBottom: 28,
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          cursor: 'pointer',
+        }}
+      >
+        <div>
+          <div style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '.18em', color: 'var(--mute)', marginBottom: 4 }}>
+            P2P BETTING
+          </div>
+          <div style={{ fontFamily: MONO, fontSize: 13, color: 'var(--paper)', fontWeight: 600 }}>
+            My Challenges
+          </div>
+        </div>
+        <span style={{ fontFamily: MONO, fontSize: 16, color: 'var(--mute)' }}>›</span>
       </div>
 
       {/* Transaction history */}
