@@ -1,6 +1,6 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-06-24 (v2: Tennis Sprint T-3 — scoring Edge Functions + leaderboard RPCs, PR #620)  
+**Last Updated**: 2026-06-24 (v2: Tennis Sprint T-4 — full UI complete, PR #625; Phase 2 Tennis Module 100% done)  
 **E2E Test Suite**: `platform.spec.js` (84 tests × 1 browser config) passing ✅ — 84/84 on v2 branch 2026-06-23  
 **Full Playbook Run**: `E2E_TEST_PLAYBOOK.md` v2.0 — all flows confirmed  
 **🟢 LAUNCH READY**: No critical (P0/P1) bugs open. All game mechanics functional. WC kick-off 2026-06-11.  
