@@ -28,6 +28,7 @@ import DraftScreen from './screens/DraftScreen';
 import DraftRecoveryScreen from './screens/DraftRecoveryScreen';
 import SettingsScreen from './screens/SettingsScreen';
 import WalletScreen from './screens/WalletScreen';
+import ChallengeScreen from './screens/ChallengeScreen';
 import NotFoundScreen from './screens/NotFoundScreen';
 import ClubhouseScreen from './screens/ClubhouseScreen';
 import PaddockLobbyScreen from './screens/f1/PaddockLobbyScreen';
@@ -119,6 +120,7 @@ function AppRoutes() {
                   <Route path="/admin"            element={<ErrorBoundary screen="Admin"><AdminSeedScreen /></ErrorBoundary>} />
                   <Route path="/settings"                   element={<ErrorBoundary screen="Settings"><SettingsScreen /></ErrorBoundary>} />
                   <Route path="/wallet"                     element={<ErrorBoundary screen="Wallet"><WalletScreen /></ErrorBoundary>} />
+                  <Route path="/challenges"                element={<ErrorBoundary screen="Challenges"><ChallengeScreen /></ErrorBoundary>} />
                   {/* F1 Module */}
                   <Route path="/f1"                         element={<ErrorBoundary screen="F1Lobby"><PaddockLobbyScreen /></ErrorBoundary>} />
                   <Route path="/f1/:paddockId"              element={<ErrorBoundary screen="F1Home"><F1HomeScreen /></ErrorBoundary>} />
