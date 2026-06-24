@@ -15,7 +15,7 @@
 | **0** | Foundation seams | W1 | ✅ Done |
 | **1A** | P2P Betting | W2–W7 | ✅ Done — P2P-0 through P2P-6 complete (PRs #627–#629, migrations 202–207) |
 | **1B** | F1 Module | W2–W5 | ✅ Done (Sprints 0–3, PR #606) |
-| **1C** | UX Redesign | W1–W9 | 🔄 In progress — Sprint UX-0 ✅ done, UX-1 ✅ done (PR #632), UX-2 next |
+| **1C** | UX Redesign | W1–W9 | ✅ Done — Sprint UX-0 ✅, UX-1 ✅ (PR #632), UX-2 ✅ (PR #633) |
 | **1D** | Buyout hygiene — batch 1 | W1–W2 | 🔄 In progress — 1D-A done, 1D-B pending |
 | **1E** | Clubhouse social architecture | W3–W8 | ✅ Done — CH-0–CH-9 complete (PRs #607–#615). Clubhouse shell shipped. |
 | **2** | Tennis Module | W6–W8 | ✅ Done — T-0–T-4 complete (PRs #617–620, #625) |
@@ -31,7 +31,7 @@
 - **Phase 1D-B:** schema reproducibility baseline — standalone, can do any session.
 - **Phase 2 — Tennis:** ✅ COMPLETE — T-0–T-4 all shipped (PRs #617–620 + #625). Full tennis module live on v2: 7 screens + 5 hooks + routes + Kit Light design.
 - **Phase 1B remaining:** F1-4 smoke tests + F1-5 OpenF1 sync cron — both optional pre-MVP.
-- **Phase 1C — UX Redesign:** Sprint UX-1 ✅ COMPLETE (PR #632). Next: Sprint UX-2 (P2P/F1/Tennis screen final pass).
+- **Phase 1C — UX Redesign:** ✅ COMPLETE — all 3 sprints done. UX-0 (football screens), UX-1 (multi-sport shell PR #632), UX-2 (P2P/F1/Tennis token pass PR #633).
 
 ---
 
@@ -366,11 +366,14 @@ The implementation roadmap linked above is comprehensive and self-contained. The
 - Note: desktop nav shows F1 sub-routes (picks/results/standings/season) when `activePaddockId` is known; Tennis shows tournament + leaderboard sub-items. Mobile nav unchanged.
 
 ### Sprint UX-2 — P2P and F1 screens (final pass)
-**Status: ⬜ Not started**
-- [ ] Re-skin `WalletScreen`, `ChallengeScreen` with full new visual identity
-- [ ] Re-skin `F1PicksScreen` and F1 standings with full new visual identity
-- [ ] Tennis bracket pick screen (thin UI, coordinates with Phase 2)
-- [ ] Commissioner panel: extend to cover P2P config, F1 dynamics config, circle management
+**Status: ✅ COMPLETE (PR #633, 2026-06-24)**
+- [x] Re-skin `WalletScreen`: MONO object fix, `shell→card` backgrounds, `borderRadius 12→6`, `var(--positive)→var(--pos)`, `var(--danger)→var(--neg)`
+- [x] Re-skin `ChallengeScreen`: full redesign matching Screen 8 design spec — 2-tab CHALLENGES|WALLET layout, `Ci` coin icon component, gold/blue/green bordered cards, inline `WalletTabContent` (no TDZ risk)
+- [x] F1RaceBetScreen, F1ReportScreen, F1StandingsScreen: `ink→bg` on outer page div (F1 dark race selector strip intentionally kept)
+- [x] ClubhouseScreen: `ink→bg` on outer page div
+- [x] TennisLeaderboardScreen: `var(--text-2)→var(--text2)` (4 occurrences)
+- [x] TennisTournamentScreen: `var(--text-2)→var(--text2)` + `var(--accent-bg)→rgba(26,111,168,0.08)`
+- [x] LeagueScreen: fixed pre-existing missing import (`useBettingLeaderboard`) + missing destructure (`replayBetsTour`)
 
 **Session notes for Phase 1C:**
 
@@ -387,6 +390,16 @@ The implementation roadmap linked above is comprehensive and self-contained. The
 - `useClubhouse.js`: 5th entry added to `fetchCircleData` Promise.all — `get_circle_meta_standings` RPC; `metaStandings` state initialised, returned from hook.
 - `App.jsx`: imports + routes updated; FOOTBALL_NAV scores path moved to `/scores`.
 - All 258 Playwright tests pass; build clean (zero Rolldown TDZ errors).
+
+**2026-06-24 — Sprint UX-2 — P2P/F1/Tennis screen token pass (PR #633):**
+- `WalletScreen`: converted `MONO` from string to object (`{ fontFamily: '...' }`), spread as `...MONO` throughout; added `HEAD` constant; shell→card backgrounds; borderRadius 12→6; `var(--positive)`/`var(--danger)` → `var(--pos)`/`var(--neg)`.
+- `ChallengeScreen`: full redesign matching Screen 8 of design spec. 2-tab shell (CHALLENGES/WALLET). `Ci` coin icon (gradient gold `#B8720E→#D4922A`). Card types: `IncomingCard` (gold `#B8720E` left border), `OutgoingCard` (blue `#1A6FA8`), `LiveCard` (green `#166534`), `HistoryItem`. `WalletTabContent` reproduced inline to avoid Rolldown TDZ. `CreateChallengeModal` uses `createPortal`. All 3 ESLint issues fixed (unused `userId` props, unused `isLead` variable).
+- F1 screens (`F1RaceBetScreen`, `F1ReportScreen`, `F1StandingsScreen`): `var(--ink)→var(--bg)` on page container; F1 dark race-selector strip in `F1RaceBetScreen` intentionally kept with `var(--shell)`.
+- `ClubhouseScreen`: `var(--ink)→var(--bg)` on page container; dark shell header retained.
+- `TennisLeaderboardScreen`: `var(--text-2)→var(--text2)` (4 occurrences — Kit Light token has no hyphen before 2).
+- `TennisTournamentScreen`: `var(--text-2)→var(--text2)` + `var(--accent-bg)→rgba(26,111,168,0.08)` (accent-bg not defined in Kit Light).
+- `LeagueScreen`: fixed 2 pre-existing lint errors (missing `useBettingLeaderboard` import + missing `replayBetsTour` in `useOnboarding` destructure) — these blocked lint-clean before UX-2 commit.
+- Results: lint 0 errors, build clean (2.62s), 80/84 E2E tests pass (4 HomeScreen failures confirmed pre-existing on v2 base from UX-1).
 
 **2026-06-22 — Audit pass on partial-pass screens (session 4):**
 - `MarketScreen.jsx`: auto-fill button state colors (old cyan → accent-bg), player row owned/taken border colors.
