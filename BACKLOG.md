@@ -1,12 +1,31 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-06-24 (Market league-switch draft detection fix — PR #626)  
+**Last Updated**: 2026-06-24 (Retroactive R2 clean sheet correction — migration 191, PR #630)  
 **E2E Test Suite**: `platform.spec.js` (36 tests × 2 browsers) passing in CI ✅  
 **Full Playbook Run**: `E2E_TEST_PLAYBOOK.md` v2.0 — all flows confirmed  
 **🟢 LAUNCH READY**: No critical (P0/P1) bugs open. All game mechanics functional. WC kick-off 2026-06-11.  
 **Live App**: https://wc-fantasy-football.vercel.app  
 **WC Kick-off**: 2026-06-11 19:00 UTC (Mexico vs South Africa)  
 **Supabase PostgREST max_rows**: 10,000 (raised from default 1,000 — 2026-06-08)
+
+---
+
+## ✅ Retroactive R2 clean sheet correction for 5 DEF players (2026-06-24) — migration 191, PR #630
+
+**Root cause follow-up**: PR #616 (previous session) fixed `ingest-match-events` to no longer bake the 60-min gate into the stored `clean_sheet` flag. However R2 was already `roundComplete`, so `calculate-scores`'s v29 settled-round guard blocked automatic recompute. The data fix applied in the previous session (setting `clean_sheet = true` on 7 rows) had no effect because PATH A reads `player_match_stats.clean_sheet` and recomputes `fantasy_points` — but the guard prevented the function from ever running.
+
+**Investigation findings**:
+- `calculate-scores-post-match` has a 24h window — by the time R2 gazette was written (06:00 UTC June 24), fixture `f-1219435615` (Argentina vs Austria, played June 22) was outside the window and would not have been reprocessed anyway.
+- Cancelo and Semedo (POR DEF, 45 min) were already correctly scored (`breakdown.clean_sheet = 4`) — the previous session incorrectly included them in the data fix list but no harm done.
+- Only 5 DEF rows actually needed fixing: Romero, Meunier, Cornelius, Bombito, Hardani.
+- Only 5 pilot squads had any of these players in their R2 `effective_xi`: Oliver Knott (Romero), SB7 (Meunier), Titan (Romero), tommyazcue (Romero), Zepp (Romero). None had affected players as captain.
+
+**Fix** (migration 191, PR #630 — `main` only, no v2 code):
+- `player_match_stats`: `fantasy_points += 4`, `breakdown.clean_sheet = 4` for 5 rows
+- `fantasy_points.total`: +4 for 5 affected rows (48→52, 66→70, 48→52, 78→82, 62→66)
+- `league_members.total_points`: re-aggregated for all 5 users; `trg_recompute_ranks` fired automatically
+
+**R3 snapshot verified**: `squad_matchday_snapshots` captured 57 squads across 11 leagues and 42 managers at exactly 19:00:00 UTC (R3 deadline/kickoff). `round_backups` for R3 not yet written — fires at roundComplete.
 
 ---
 
@@ -94,10 +113,10 @@ Note: several transfers have `matchday_id = null` in `squad_events` — expected
 - `clean_sheet: conceded === 0 && mins >= 60` → `clean_sheet: conceded === 0`
 - Deployed to production immediately after merge.
 
-**Data fix** (applied directly to DB):
+**Data fix** (applied directly to DB, session 2026-06-23):
 - 7 `player_match_stats` rows in R2 updated to `clean_sheet = true`:
   Romero (ARG), Meunier (BEL), Hardani (IRN), Bombito (CAN), Cornelius (CAN), Cancelo (POR), Semedo (POR)
-- `calculate-scores` will recompute `fantasy_points` (+4 pts each), `breakdown` (CLEAN SHEET row), and squad totals automatically on its next pass via PATH A + `rollupSquads`.
+- ⚠️ `calculate-scores` did NOT auto-recompute — R2 was `roundComplete`, v29 guard blocked PATH A. Retroactive DB fix applied in migration 191 (session 2026-06-24, PR #630). Cancelo/Semedo were already correct and didn't need fixing.
 
 **v2 isolation confirmed**: diff `origin/main..origin/v2` verified — 20+ v2-only Clubhouse/F1 commits, none leaked to main. Only change on main is the one-line fix.
 
