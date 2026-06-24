@@ -6,10 +6,11 @@ import { supabase } from '../lib/supabase';
  * Aggregates correct bets, accuracy %, and total rewards per user.
  * Subscribes to bet_submissions updates for realtime changes.
  */
-export function useBettingLeaderboard(leagueId) {
-  const [leaderboard, setLeaderboard] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+export function useBettingLeaderboard(leagueId, currentUserId) {
+  const [leaderboard, setLeaderboard]       = useState([]);
+  const [myBetsByType, setMyBetsByType]     = useState([]);
+  const [loading, setLoading]               = useState(false);
+  const [error, setError]                   = useState(null);
   const instanceIdsRef = useRef([]);
 
   const fetchLeaderboard = useCallback(async () => {
@@ -25,7 +26,7 @@ export function useBettingLeaderboard(leagueId) {
           user_id,
           squad_id,
           squads!squad_id(users!user_id(username)),
-          bet_instances!inner!bet_instance_id(league_id),
+          bet_instances!inner!bet_instance_id(league_id, title),
           is_correct,
           reward_awarded
         `)
@@ -39,6 +40,7 @@ export function useBettingLeaderboard(leagueId) {
 
       // Aggregate by user
       const userStats = {};
+      const typeStats = {};
       (entries ?? []).forEach(entry => {
         const userId = entry.user_id;
         if (!userStats[userId]) {
@@ -51,10 +53,16 @@ export function useBettingLeaderboard(leagueId) {
           };
         }
         userStats[userId].total_bets += 1;
-        if (entry.is_correct) {
-          userStats[userId].correct_bets += 1;
-        }
+        if (entry.is_correct) userStats[userId].correct_bets += 1;
         userStats[userId].total_rewards += entry.reward_awarded ?? 0;
+
+        // Per-type breakdown for the current user
+        if (currentUserId && entry.user_id === currentUserId) {
+          const title = entry.bet_instances?.title || 'Other';
+          if (!typeStats[title]) typeStats[title] = { title, correct: 0, wrong: 0 };
+          if (entry.is_correct) typeStats[title].correct += 1;
+          else typeStats[title].wrong += 1;
+        }
       });
 
       // Calculate accuracy % and sort by rewards
@@ -68,12 +76,13 @@ export function useBettingLeaderboard(leagueId) {
         .sort((a, b) => b.total_rewards - a.total_rewards);
 
       setLeaderboard(leaderboardData);
+      setMyBetsByType(Object.values(typeStats).sort((a, b) => (b.correct + b.wrong) - (a.correct + a.wrong)));
     } catch (err) {
       setError(err.message);
     } finally {
       setLoading(false);
     }
-  }, [leagueId]);
+  }, [leagueId, currentUserId]);
 
   useEffect(() => {
     fetchLeaderboard();
@@ -108,5 +117,5 @@ export function useBettingLeaderboard(leagueId) {
     };
   }, [leagueId, fetchLeaderboard]);
 
-  return { leaderboard, loading, error, refetch: fetchLeaderboard };
+  return { leaderboard, myBetsByType, loading, error, refetch: fetchLeaderboard };
 }

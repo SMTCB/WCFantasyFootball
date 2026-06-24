@@ -172,7 +172,7 @@ export default function LeagueScreen() {
   const transferWindow = useTransferWindow(activeLeague?.league_id);
   const { auctions, pendingAuctions, closedAuctions, loading: auctionsLoading, placeBid, cancelListing, sellNow, confirmWin } = useAuctions(activeLeague?.league_id, mySquadId);
   const { topScorers, teamMetrics, matchdayPoints, positionPoints, captainHitData, benchData, roiData, loading: statsLoading } = useLeagueStats(activeLeague?.league_id);
-  const { leaderboard, loading: betLoading } = useBettingLeaderboard(activeLeague?.league_id);
+  const { leaderboard, myBetsByType, loading: betLoading } = useBettingLeaderboard(activeLeague?.league_id, currentUser?.id);
 
   // Commissioner state + handlers consolidated into a single hook.
   // The whole object is passed as a prop to CommissionerPanel.
@@ -1908,7 +1908,7 @@ export default function LeagueScreen() {
          )}
 
          {view === 'betting_leaderboard' && (
-           <BettingLeaderboardView leaderboard={leaderboard} currentUser={currentUser} betLoading={betLoading} />
+           <BettingLeaderboardView leaderboard={leaderboard} myBetsByType={myBetsByType} currentUser={currentUser} betLoading={betLoading} />
          )}
          {(view === 'trading' || view === 'auctions') && (
            <TradingView
