@@ -1,12 +1,61 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-06-24 (v2: Tennis Sprint T-4 — full UI complete, PR #625; Phase 2 Tennis Module 100% done | main: Market league-switch draft fix — PR #626)  
+**Last Updated**: 2026-06-24 (v2: P2P betting layer 100% complete — all 7 sprints done, PRs #627–#629, migrations 202–207 | main: Market league-switch draft fix — PR #626)  
 **E2E Test Suite**: `platform.spec.js` (84 tests × 1 browser config) passing ✅ — 84/84 on v2 branch 2026-06-23  
 **Full Playbook Run**: `E2E_TEST_PLAYBOOK.md` v2.0 — all flows confirmed  
 **🟢 LAUNCH READY**: No critical (P0/P1) bugs open. All game mechanics functional. WC kick-off 2026-06-11.  
 **Live App**: https://wc-fantasy-football.vercel.app  
 **WC Kick-off**: 2026-06-11 19:00 UTC (Mexico vs South Africa)  
 **Supabase PostgREST max_rows**: 10,000 (raised from default 1,000 — 2026-06-08)
+
+---
+
+## ✅ v2 P2P Betting Layer — Sprints P2P-5 + P2P-6 (2026-06-24)
+
+**Branch**: `v2` — PRs #628–#629. Migrations 206–207.
+
+**What was built:**
+
+**P2P-5 (migration 206):**
+- `_debit_entry_fee()` internal SECURITY DEFINER — atomic balance debit before league join, REVOKED from all
+- `join_league_by_code` extended: reads `league_config.coin_entry_fee`, charges fee atomically (fail = no join)
+- `get_coin_economy_stats()` — aggregate platform health: circulating supply, in-escrow, purchase volume, entry fees collected, rake burned, challenge counts (won/tie/total)
+- `coin_transactions.type` CHECK extended with `entry_fee`
+- WalletScreen: `entry_fee` TYPE_META + PLATFORM ECONOMY stats panel (grid: circulating, in escrow, challenges, rake burned)
+- `p2p_challenge` and `p2p_result` gazette types registered in ENTRY_META (LeagueDetailView + RecapScreen)
+
+**P2P-6 (migration 207):**
+- `p2p_config` table per league: min_stake (default 10), max_stake (default 500), daily_challenge_limit (default 5), challenges_enabled (default true). RLS enabled.
+- `get_p2p_config(p_league_id)` — returns defaults if no row exists (upsert-on-first-save pattern)
+- `update_p2p_config(p_league_id, ...)` — commissioner-only UPSERT via RPC
+- `create_p2p_challenge` re-issued with 4 config guards: CHALLENGES_DISABLED, STAKE_TOO_LOW, STAKE_TOO_HIGH, DAILY_LIMIT_REACHED
+- RLS audit: confirmed enabled on all 5 P2P coin tables
+- Legal invariant comment in migration: coin_transactions type CHECK must NEVER gain withdrawal/payout type
+- CommissionerPanel `P2PChallengesConfig` component: entry fee + min/max stake inputs + enable toggle + save button — both mobile (MobLifecycleCard) and desktop (HubSectionLabel + panel) layouts
+
+**Architecture notes:**
+- Rake is burned (never credited): `get_coin_economy_stats` derives rake_burned by computing `FLOOR(stake*2*0.05)` from resolved non-tie challenges in DB — no separate rake transaction needed
+- Entry fee charges before member INSERT = fully atomic, no partial state possible
+- Stripe remains plug-in ready: 5-step checklist at top of `purchase-coins/index.ts`; zero code changes needed when keys are set
+- Next migration: `208_`
+
+---
+
+## ✅ v2 P2P Betting Layer — Sprints P2P-1 through P2P-4 (2026-06-24)
+
+**Branch**: `v2` — PRs #627. Migrations 202–205.
+
+**What was built:**
+
+**P2P-0 (decisions):** 500/1500/5000 coin packs at £1.99/£4.99/£12.99. 5% rake burned. Daily stake cap 1,000. Stripe deferred.
+
+**P2P-1 (migration 202):** `coin_wallets` (balance + escrow, FOR UPDATE lock), `coin_transactions` (append-only, type CHECK), `credit_coins()`/`debit_coins_to_escrow()`/`release_escrow()` SECURITY DEFINER RPCs, `guard_coin_columns` trigger, `admin_grant_coins()` service-role-only, `useWallet` hook.
+
+**P2P-2 (migration 203 + purchase-coins Edge Function):** `coin_packs` table (3 SKUs, stripe_price_id=NULL), Stripe webhook skeleton (503 until keys set), WalletScreen balance/history/buy UI.
+
+**P2P-3 (migration 204):** `p2p_challenges` table, 5 RPCs (create/accept/decline/cancel/get_my_challenges), expire cron (hourly), `useChallenges` hook (Realtime), `ChallengeScreen.jsx` (4 tabs + CreateChallengeModal).
+
+**P2P-4 (migration 205):** `resolve_p2p_challenge()` (service-role-only, roundComplete guard, escrow release, 5% rake burned, gazette p2p_result entry), `auto_resolve_p2p_challenges()` batch (FOR UPDATE SKIP LOCKED), 5-min pgcron, resolved pts comparison panel in ChallengeScreen.
 
 ---
 
