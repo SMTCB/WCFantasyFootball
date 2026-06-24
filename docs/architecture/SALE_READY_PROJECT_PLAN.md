@@ -18,7 +18,7 @@
 | **1C** | UX Redesign | W1–W9 | 🔄 In progress — Sprint UX-0 ✅ done, UX-1 next |
 | **1D** | Buyout hygiene — batch 1 | W1–W2 | 🔄 In progress — 1D-A done, 1D-B pending |
 | **1E** | Clubhouse social architecture | W3–W8 | ✅ Done — CH-0–CH-9 complete (PRs #607–#615). Clubhouse shell shipped. |
-| **2** | Tennis Module | W6–W8 | 🔄 In progress — Sprint T-0 ✅ done (PR #617), T-1 next |
+| **2** | Tennis Module | W6–W8 | 🔄 In progress — T-0 ✅ (PR #617), T-1 ✅ (PR #618), T-2 next |
 | **3A** | Buyout hygiene — batch 2 | W9–W11 | ⬜ Not started |
 | **3B** | v2 integration & deploy | W10–W12 | ⬜ Not started |
 
@@ -29,7 +29,7 @@
 - **Phase 1E — Clubhouse:** ✅ COMPLETE — CH-0–CH-9 all shipped (PRs #607–#615). Clubhouse shell done.
 - **Phase 1A — P2P Betting:** 5 product decisions needed before Sprint 1 (Stripe deferred; see Sprint P2P-0). Can start Sprint 1 (coin ledger) once decisions are made.
 - **Phase 1D-B:** schema reproducibility baseline — standalone, can do any session.
-- **Phase 2 — Tennis:** Sprint T-0 ✅ done (PR #617, migrations 197–198). Sprint T-1 next (roster/ace card/QF captain RPCs).
+- **Phase 2 — Tennis:** T-0 ✅ (PR #617, migrations 197–198) + T-1 ✅ (PR #618, migration 199). Sprint T-2 next (admin tooling RPCs + sync-tennis-players Edge Function).
 - **Phase 1B remaining:** F1-4 smoke tests + F1-5 OpenF1 sync cron — both optional pre-MVP.
 
 ---

@@ -1,12 +1,32 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-06-23 (v2: Tennis Sprint T-0 — schema foundations + 2026 ATP calendar, PR #617)  
+**Last Updated**: 2026-06-24 (v2: Tennis Sprint T-1 — game RPCs, PR #618)  
 **E2E Test Suite**: `platform.spec.js` (84 tests × 1 browser config) passing ✅ — 84/84 on v2 branch 2026-06-23  
 **Full Playbook Run**: `E2E_TEST_PLAYBOOK.md` v2.0 — all flows confirmed  
 **🟢 LAUNCH READY**: No critical (P0/P1) bugs open. All game mechanics functional. WC kick-off 2026-06-11.  
 **Live App**: https://wc-fantasy-football.vercel.app  
 **WC Kick-off**: 2026-06-11 19:00 UTC (Mexico vs South Africa)  
 **Supabase PostgREST max_rows**: 10,000 (raised from default 1,000 — 2026-06-08)
+
+---
+
+## ✅ v2 Tennis Sprint T-1 — Game RPCs (2026-06-24)
+
+**Branch**: `v2` — PR #618. Migration 199.
+
+**What was built:**
+
+**Migration 199 — 6 SECURITY DEFINER RPCs:**
+- `submit_tennis_roster`: tiered player validation, ace card consumption, idempotent re-submit (card already used for same tournament allowed), card swap support
+- `set_tennis_qf_captain`: QF window guards (`status='qf_captain_open'`, `qf_window_closes_at`), roster membership check, eliminated player guard
+- `submit_atp_finals_group_picks`: 12-pick validation against seeded match pairings
+- `submit_atp_finals_knockout_picks`: 3-pick validation (matches 13–15), requires all 12 group matches resolved
+- `get_tennis_tournament_for_user`: rich combined payload — tournament + players (ordered by tier/seed) + roster + captain + ace_cards + surviving_players — one RPC call per screen load
+- `issue_season_ace_cards`: issues 4 cards per user for all Player's Box members; restricted to service_role only (REVOKE from public/authenticated/anon); idempotent ON CONFLICT DO NOTHING
+
+**Key fix:** Ace card re-submit idempotency — `(used_tournament_id IS NULL OR used_tournament_id = p_tournament_id)` allows roster updates without forcing a card swap error.
+
+**Smoke tested:** all 6 RPCs verified against live v2 DB; `get_tennis_tournament_for_user` returned full valid payload.
 
 ---
 
