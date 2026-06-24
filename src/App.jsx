@@ -15,6 +15,8 @@ import ErrorBoundary from './components/ErrorBoundary';
 import AppLayout from './components/AppLayout';
 import OnboardingWizard from './components/OnboardingWizard';
 import { KeyboardShortcutsModal } from './components/KeyboardShortcutsModal';
+import MultiSportHomeScreen from './screens/MultiSportHomeScreen';
+import TrophyCabinetScreen from './screens/TrophyCabinetScreen';
 import HomeScreen from './screens/HomeScreen';
 import SquadScreen from './screens/SquadScreen';
 import AuthScreen from './screens/AuthScreen';
@@ -106,7 +108,8 @@ function AppRoutes() {
             <ProtectedRoute>
               <AppLayout>
                 <Routes>
-                  <Route path="/"                 element={<ErrorBoundary screen="Home"><HomeScreen /></ErrorBoundary>} />
+                  <Route path="/"                 element={<ErrorBoundary screen="MultiSportHome"><MultiSportHomeScreen /></ErrorBoundary>} />
+                  <Route path="/scores"           element={<ErrorBoundary screen="Home"><HomeScreen /></ErrorBoundary>} />
                   <Route path="/squad"            element={<ErrorBoundary screen="Squad"><SquadScreen /></ErrorBoundary>} />
                   <Route path="/league"           element={<ErrorBoundary screen="League"><LeagueScreen /></ErrorBoundary>} />
                   <Route path="/league/:leagueId" element={<ErrorBoundary screen="League"><LeagueScreen /></ErrorBoundary>} />
@@ -138,6 +141,7 @@ function AppRoutes() {
                   <Route path="/tennis/admin"                 element={<ErrorBoundary screen="TennisAdmin"><TennisAdminScreen /></ErrorBoundary>} />
                   <Route path="/clubhouse"            element={<ErrorBoundary screen="Clubhouse"><ClubhouseScreen /></ErrorBoundary>} />
                   <Route path="/clubhouse/:circleId"  element={<ErrorBoundary screen="Clubhouse"><ClubhouseScreen /></ErrorBoundary>} />
+                  <Route path="/trophy"           element={<ErrorBoundary screen="TrophyCabinet"><TrophyCabinetScreen /></ErrorBoundary>} />
                   <Route path="/join"                       element={<JoinRoute />} />
                   <Route path="*"                           element={<ErrorBoundary screen="NotFound"><NotFoundScreen /></ErrorBoundary>} />
                 </Routes>
