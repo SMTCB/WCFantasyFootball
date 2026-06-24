@@ -1,12 +1,37 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-06-24 (v2: Tennis Sprint T-1 — game RPCs, PR #618)  
+**Last Updated**: 2026-06-24 (v2: Tennis Sprint T-3 — scoring Edge Functions + leaderboard RPCs, PR #620)  
 **E2E Test Suite**: `platform.spec.js` (84 tests × 1 browser config) passing ✅ — 84/84 on v2 branch 2026-06-23  
 **Full Playbook Run**: `E2E_TEST_PLAYBOOK.md` v2.0 — all flows confirmed  
 **🟢 LAUNCH READY**: No critical (P0/P1) bugs open. All game mechanics functional. WC kick-off 2026-06-11.  
 **Live App**: https://wc-fantasy-football.vercel.app  
 **WC Kick-off**: 2026-06-11 19:00 UTC (Mexico vs South Africa)  
 **Supabase PostgREST max_rows**: 10,000 (raised from default 1,000 — 2026-06-08)
+
+---
+
+## ✅ v2 Tennis Sprint T-3 — Scoring Edge Functions + Leaderboard RPCs (2026-06-24)
+
+**Branch**: `v2` — PR #620. Migration 201 + 2 Edge Functions.
+
+**What was built:**
+
+**`score-tennis-tournament` Edge Function:**
+- Scores grand_slam + masters_1000 tournaments after all results are entered
+- Tier-based per-round points: T1=2/round, T2=3/round, T3=4/round, T4=6/round (dark horses rewarded)
+- QF Captain multiplier: captain's contribution doubled
+- Ace card bonuses: underdog_boost (+15 if T3/T4 reaches SF+), safety_net (+8 if T1 exits early), surface_specialist (+12 proxy if captain reaches SF+), dark_horse_insurance (T4 floor = 6 pts)
+- Writes to `tennis_tournament_scores`, posts `gazette_entries(tennis_result)`, calls `admin_complete_tournament`
+
+**`score-atp-finals` Edge Function:**
+- Scores 15-match pick'em: group=3pts, SF=5pts, Final=8pts (max 54 pts)
+- Partial scoring supported (call after any resolved matches, idempotent)
+- Marks completed when all 15 results are settled
+
+**Migration 201 — 3 read RPCs:**
+- `get_player_box_leaderboard`: season standings with Masters Drop Rule (worst standard tournament dropped when ≥5 completed). Returns rank, total, best, worst_dropped.
+- `get_tennis_season_summary`: per-tournament score grid for all box members (history screen)
+- `get_tennis_tournament_list`: 2026 ATP calendar with player counts + user roster status
 
 ---
 
