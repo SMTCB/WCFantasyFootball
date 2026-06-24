@@ -16,22 +16,26 @@
 | **1A** | P2P Betting | W2–W7 | ✅ Done — P2P-0 through P2P-6 complete (PRs #627–#629, migrations 202–207) |
 | **1B** | F1 Module | W2–W5 | ✅ Done (Sprints 0–3, PR #606) |
 | **1C** | UX Redesign | W1–W9 | ✅ Done — Sprint UX-0 ✅, UX-1 ✅ (PR #632), UX-2 ✅ (PR #633) |
-| **1D** | Buyout hygiene — batch 1 | W1–W2 | 🔄 In progress — 1D-A done, 1D-B pending |
+| **1D** | Buyout hygiene — batch 1 | W1–W2 | 🔄 In progress — 1D-A ✅ done, 1D-B ⏸ on hold (schema not yet settled) |
 | **1E** | Clubhouse social architecture | W3–W8 | ✅ Done — CH-0–CH-9 complete (PRs #607–#615). Clubhouse shell shipped. |
 | **2** | Tennis Module | W6–W8 | ✅ Done — T-0–T-4 complete (PRs #617–620, #625) |
-| **3A** | Buyout hygiene — batch 2 | W9–W11 | ⬜ Not started |
-| **3B** | v2 integration & deploy | W10–W12 | ⬜ Not started |
+| **3A** | Buyout hygiene — batch 2 | W9–W11 | 🎯 NEXT — start with 3A-B → 3A-A → 3A-C+D |
+| **3B** | v2 integration & deploy | W10–W12 | ⏸ On hold — after 3A complete |
 
 **Current active branch:** `v2` (all redesign + new feature work)
 **v2 branch:** active — created off main, merged main regularly to pick up pilot bug fixes
 
-**Next actions (parallel tracks):**
-- **Phase 1E — Clubhouse:** ✅ COMPLETE — CH-0–CH-9 all shipped (PRs #607–#615). Clubhouse shell done.
-- **Phase 1A — P2P Betting:** ✅ COMPLETE — all 7 sprints done (PRs #627–#629). Full coin ledger, Stripe skeleton, challenge lifecycle, auto-resolution, entry fees, economy stats, p2p_config. Next: plug in Stripe keys when account confirmed.
-- **Phase 1D-B:** schema reproducibility baseline — standalone, can do any session.
-- **Phase 2 — Tennis:** ✅ COMPLETE — T-0–T-4 all shipped (PRs #617–620 + #625). Full tennis module live on v2: 7 screens + 5 hooks + routes + Kit Light design.
-- **Phase 1B remaining:** F1-4 smoke tests + F1-5 OpenF1 sync cron — both optional pre-MVP.
-- **Phase 1C — UX Redesign:** ✅ COMPLETE — all 3 sprints done. UX-0 (football screens), UX-1 (multi-sport shell PR #632), UX-2 (P2P/F1/Tennis token pass PR #633).
+**🎯 NEXT SESSION: Phase 3A — Buyout Hygiene Batch 2**
+Start with **3A-B** (externalize project ref, ~1h) → **3A-A** (provider adapter seam, ~4h) → **3A-C + 3A-D** together (~3h). Zero pilot impact confirmed — all changes on v2 branch, no Edge Function deploys during the work.
+
+**Decisions locked (2026-06-24):**
+- **Stripe:** on hold — business decision, not a code gap. No action until Stripe account confirmed.
+- **Phase 1D-B (schema baseline):** on hold — schema may still change during testing. Revisit as the final step before 3B merge when schema is settled.
+- **Phase 3B (v2 deploy):** on hold — not until all 3A tasks are done.
+- **F1-4 smoke tests + F1-5 OpenF1 cron:** dropped — user will copy DB contents from the existing FantasyF1 platform directly into the v2 tables. Real data validates the integration; no sync cron needed.
+
+**Completed phases:**
+- Phase 0 ✅, Phase 1A ✅, Phase 1B ✅, Phase 1C ✅, Phase 1D-A ✅, Phase 1E ✅, Phase 2 ✅
 
 ---
 
@@ -305,7 +309,7 @@ The implementation roadmap linked above is comprehensive and self-contained. The
 - Supporting files: SportContext, usePaddock hook, f1-data, scoring, openf1 lib files, 5 F1 nav icons, sport switcher in AppLayout sidebar.
 - score-f1-race Edge Function written (not yet deployed — run `npx supabase functions deploy score-f1-race --project-ref sssmvihxtqtohisghjet` before first admin scoring).
 - Build: zero errors, 0 lint errors confirmed. PR #606 merged into v2.
-- Sprint F1-4 (smoke tests in platform.spec.js) and F1-5 (OpenF1 sync cron) remain; both optional pre-MVP.
+- Sprint F1-4 (smoke tests in platform.spec.js) and F1-5 (OpenF1 sync cron): **dropped (2026-06-24)**. User will copy DB contents directly from the existing FantasyF1 platform into the v2 F1 tables. Real data validates the integration end-to-end; no sync cron is needed. F1 module is effectively complete.
 
 **2026-06-22 (session 1) — Phase 1B scoped and plan created:**
 - Assessed existing FantasyF1 repo (github.com/SMTCB/FantasyF1). Game model is prediction bets (not fantasy squads): P1/P2/P3 podium + DNF + team + special category per race; 10-field season bets. OpenF1 as data provider (free, no API key). 3 clean migrations; scoring engine and OpenF1 client are framework-agnostic TypeScript, port directly.
@@ -430,7 +434,8 @@ The implementation roadmap linked above is comprehensive and self-contained. The
 **Why this matters:** [B2B_BUYOUT_TECHNICAL_DUE_DILIGENCE.md §2.5](B2B_BUYOUT_TECHNICAL_DUE_DILIGENCE.md) — "A forged token with `role: service_role` in the payload would pass this path. This is the kind of finding that ends negotiations or knocks a material number off the price."
 
 ### Task 1D-B — Schema reproducibility baseline
-**Status: ⬜ Not started**
+**Status: ⏸ On hold — revisit as the final step before Phase 3B merge**
+*Reason: schema is not yet settled — testing and further feature work may still produce migrations. Generating a baseline now would need to be redone. Hold until v2 feature set is locked.*
 - [ ] Generate a `000_baseline.sql` from the live DB: `pg_dump --schema-only` via Supabase dashboard (Docker is unavailable, so use the dashboard's SQL export feature)
 - [ ] Commit as `supabase/migrations/000_baseline.sql`
 - [ ] Move the 185 existing migration files to `supabase/migrations/archive/` — kept for lineage, not applied during a fresh setup
@@ -773,7 +778,11 @@ Recommend **Option A** — LIVE is the least frequently used standalone screen (
 
 ## Phase 3A — Buyout Hygiene, Batch 2 (W9–W11)
 
-**Status: ⬜ Not started**
+**Status: 🎯 NEXT — ready to start**
+
+**Recommended task order:** 3A-B first (~1h, sets up the others) → 3A-A (~4h) → 3A-C + 3A-D together (~3h).
+
+**Pilot safety confirmed (2026-06-24):** ALL four tasks have zero impact on the live pilot. All changes land on the v2 branch. Edge Functions are never auto-deployed — the production binaries are untouched until the explicit Week 12 deploy. The only risk would be accidentally running `supabase functions deploy` during a 3A session — Claude must not do this.
 
 **Goal:** move from buyout score ~6 to ~8 by addressing the portability and provider-independence gaps. These are infrastructure tasks that do not affect any game logic — safe to do after all product features are complete.
 
