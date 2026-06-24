@@ -17,7 +17,11 @@
  *   node scripts/e2e-setup.mjs --allow-prod
  */
 
-const PROD_URL = 'sssmvihxtqtohisghjet.supabase.co';
+// PROD_URL is used as a safety guard to prevent accidental runs against production.
+// Override via SUPABASE_PROJECT_REF env var if the production project changes.
+const PROD_URL = process.env.SUPABASE_PROJECT_REF
+  ? `${process.env.SUPABASE_PROJECT_REF}.supabase.co`
+  : 'sssmvihxtqtohisghjet.supabase.co';
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const ANON_KEY     = process.env.SUPABASE_PUBLISHABLE_KEY;

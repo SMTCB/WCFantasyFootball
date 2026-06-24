@@ -1,6 +1,6 @@
 // @ts-check
 // Scoring & Live Center E2E tests
-// Uses REAL Supabase data from production database (sssmvihxtqtohisghjet)
+// Uses REAL Supabase data from production database (set SUPABASE_URL env var to target a different project)
 // Fetches real players, fixtures, and match events for maximum test realism
 
 import { test, expect } from '@playwright/test';
@@ -8,8 +8,8 @@ import { createClient } from '@supabase/supabase-js';
 
 // ── Real Supabase Client ─────────────────────────────────────────────────────
 
-const SUPABASE_URL = 'https://sssmvihxtqtohisghjet.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNzc212aWh4dHF0b2hpc2doamV0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MDgyOTc5ODcsImV4cCI6MTcyMzg3Mzk4N30.LAeWx39REi6K2L46bY2g3PlvEaWM7p7TJdEZxtvXq8c';
+const SUPABASE_URL = process.env.SUPABASE_URL || 'https://sssmvihxtqtohisghjet.supabase.co';
+const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNzc212aWh4dHF0b2hpc2doamV0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MDgyOTc5ODcsImV4cCI6MTcyMzg3Mzk4N30.LAeWx39REi6K2L46bY2g3PlvEaWM7p7TJdEZxtvXq8c';
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 

@@ -1,12 +1,12 @@
 // purchase-coins Edge Function — P2P-2 Stripe-ready skeleton
 //
 // PLUG-IN CHECKLIST (when Stripe account is ready):
-//   1. npx supabase secrets set STRIPE_SECRET_KEY=sk_live_... --project-ref sssmvihxtqtohisghjet
-//   2. npx supabase secrets set STRIPE_WEBHOOK_SECRET=whsec_... --project-ref sssmvihxtqtohisghjet
+//   1. npx supabase secrets set STRIPE_SECRET_KEY=sk_live_... --project-ref $SUPABASE_PROJECT_REF
+//   2. npx supabase secrets set STRIPE_WEBHOOK_SECRET=whsec_... --project-ref $SUPABASE_PROJECT_REF
 //   3. In each coin_packs row, set stripe_price_id = 'price_...' from Stripe dashboard
 //   4. In Stripe dashboard: create webhook → https://<project>.supabase.co/functions/v1/purchase-coins
 //      → events: payment_intent.succeeded
-//   5. Deploy: npx supabase functions deploy purchase-coins --project-ref sssmvihxtqtohisghjet
+//   5. Deploy: npx supabase functions deploy purchase-coins --project-ref $SUPABASE_PROJECT_REF
 //
 // Until STRIPE_SECRET_KEY is set this function returns 503 with a clear error.
 // Callers (WalletScreen) show a "payments coming soon" message when they receive 503.
