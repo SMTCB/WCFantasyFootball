@@ -89,23 +89,65 @@ function ChallengeCard({ challenge, userId, onAccept, onDecline, onCancel, actio
         </div>
       </div>
 
-      {/* Stake */}
-      <div style={{ display: 'flex', gap: 16, marginBottom: 10, alignItems: 'center' }}>
-        <div style={{ textAlign: 'center' }}>
-          <div style={{ fontFamily: MONO, fontSize: 10, color: 'var(--mute)', marginBottom: 2 }}>STAKE</div>
-          <div style={{ fontFamily: MONO, fontSize: 18, fontWeight: 700, color: 'var(--accent)' }}>
-            {challenge.stake_coins.toLocaleString()}
+      {/* Resolved: pts comparison */}
+      {challenge.status === 'resolved' && challenge.challenger_pts != null ? (
+        <div style={{
+          display: 'flex', gap: 8, marginBottom: 10,
+          background: 'var(--elev)', borderRadius: 8, padding: '10px 12px',
+          alignItems: 'center',
+        }}>
+          {[
+            { name: challenge.challenger_username ?? 'Challenger', pts: challenge.challenger_pts, id: challenge.challenger_id },
+            { name: challenge.opponent_username ?? 'Opponent',    pts: challenge.opponent_pts,    id: challenge.opponent_id },
+          ].map((side, i) => {
+            const isWinner = challenge.winner_id === side.id;
+            const isTie    = challenge.winner_id == null;
+            const myPts    = side.pts ?? 0;
+            return (
+              <div key={i} style={{ flex: 1, textAlign: 'center' }}>
+                <div style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', marginBottom: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {side.name}
+                  {isWinner && <span style={{ color: 'var(--accent)', marginLeft: 4 }}>★</span>}
+                  {isTie    && <span style={{ color: 'var(--mute)',   marginLeft: 4 }}>—</span>}
+                </div>
+                <div style={{ fontFamily: MONO, fontSize: 22, fontWeight: 800, color: isWinner ? 'var(--accent)' : isTie ? 'var(--paper)' : 'var(--mute)' }}>
+                  {myPts}
+                </div>
+                <div style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)' }}>PTS</div>
+              </div>
+            );
+          })}
+          <div style={{ textAlign: 'center', padding: '0 4px' }}>
+            <div style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', marginBottom: 2 }}>
+              {challenge.winner_id == null ? 'DRAW' : 'WON'}
+            </div>
+            <div style={{ fontFamily: MONO, fontSize: 14, fontWeight: 700, color: challenge.winner_id == null ? 'var(--mute)' : 'var(--positive)' }}>
+              {challenge.winner_id == null
+                ? `${challenge.stake_coins.toLocaleString()} back`
+                : `+${Math.floor(challenge.stake_coins * 2 * 0.95).toLocaleString()}`}
+            </div>
+            <div style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)' }}>COINS</div>
           </div>
-          <div style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)' }}>COINS</div>
         </div>
-        <div style={{ flex: 1, textAlign: 'center' }}>
-          <div style={{ fontFamily: MONO, fontSize: 10, color: 'var(--mute)', marginBottom: 2 }}>PRIZE POOL</div>
-          <div style={{ fontFamily: MONO, fontSize: 18, fontWeight: 700, color: 'var(--paper)' }}>
-            {Math.floor(challenge.stake_coins * 2 * 0.95).toLocaleString()}
+      ) : (
+        /* Stake + prize pool (pending/accepted) */
+        <div style={{ display: 'flex', gap: 16, marginBottom: 10, alignItems: 'center' }}>
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ fontFamily: MONO, fontSize: 10, color: 'var(--mute)', marginBottom: 2 }}>STAKE</div>
+            <div style={{ fontFamily: MONO, fontSize: 18, fontWeight: 700, color: 'var(--accent)' }}>
+              {challenge.stake_coins.toLocaleString()}
+            </div>
+            <div style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)' }}>COINS</div>
           </div>
-          <div style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)' }}>AFTER 5% RAKE</div>
+          <div style={{ flex: 1, textAlign: 'center' }}>
+            <div style={{ fontFamily: MONO, fontSize: 10, color: 'var(--mute)', marginBottom: 2 }}>PRIZE POOL</div>
+            <div style={{ fontFamily: MONO, fontSize: 18, fontWeight: 700, color: 'var(--paper)' }}>
+              {Math.floor(challenge.stake_coins * 2 * 0.95).toLocaleString()}
+            </div>
+            <div style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)' }}>AFTER 5% RAKE</div>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Message */}
       {challenge.message && (
