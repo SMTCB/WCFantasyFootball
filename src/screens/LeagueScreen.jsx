@@ -18,6 +18,7 @@ import { useTransferWindow } from '../hooks/useTransferWindow';
 import { useCommissioner }   from '../hooks/useCommissioner';
 import { useTradeProposals } from '../hooks/useTradeProposals';
 import { useOnboarding } from '../hooks/useOnboarding';
+import { useBettingLeaderboard } from '../hooks/useBettingLeaderboard';
 import OnboardingTour from '../components/OnboardingTour';
 import {
   HubTopbar, HubActionBar, HubTabs,
@@ -101,6 +102,7 @@ export default function LeagueScreen() {
   const {
     showLeagueTour, completeLeagueTour, replayLeagueTour,
     showCommissionerTour, completeCommissionerTour, replayCommissionerTour,
+    replayBetsTour,
   } = useOnboarding();
 
   const [leagues, setLeagues] = useState([]);

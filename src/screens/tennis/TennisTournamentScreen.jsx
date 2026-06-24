@@ -122,7 +122,7 @@ export default function TennisTournamentScreen() {
             <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 15, color: 'var(--paper)', marginBottom: 4 }}>
               ⚡ QF Captain Window Open
             </div>
-            <p style={{ fontFamily: 'Archivo, sans-serif', fontSize: 13, color: 'var(--text-2)', margin: '0 0 14px' }}>
+            <p style={{ fontFamily: 'Archivo, sans-serif', fontSize: 13, color: 'var(--text2)', margin: '0 0 14px' }}>
               Select one of your surviving players as captain. They earn 2× points for the rest of the tournament.
             </p>
             {captain && (
@@ -176,7 +176,7 @@ export default function TennisTournamentScreen() {
               </div>
             ))}
             {usedCard && (
-              <div style={{ marginTop: 8, padding: '8px 12px', background: 'var(--elev)', borderRadius: 6, fontFamily: 'Archivo, sans-serif', fontSize: 12, color: 'var(--text-2)' }}>
+              <div style={{ marginTop: 8, padding: '8px 12px', background: 'var(--elev)', borderRadius: 6, fontFamily: 'Archivo, sans-serif', fontSize: 12, color: 'var(--text2)' }}>
                 {ACE_CARD_INFO[usedCard.card_type]?.icon} Ace Card played: <strong>{ACE_CARD_INFO[usedCard.card_type]?.label}</strong>
               </div>
             )}
@@ -228,7 +228,7 @@ export default function TennisTournamentScreen() {
                   <button
                     type="button"
                     onClick={() => setSelectedAce(null)}
-                    style={{ padding: '10px 14px', border: `1px solid ${!selectedAce ? 'var(--accent)' : 'var(--rule)'}`, borderRadius: 6, background: !selectedAce ? 'var(--accent-bg)' : 'var(--card)', textAlign: 'left', cursor: 'pointer', fontFamily: 'Archivo, sans-serif', fontSize: 13, color: 'var(--text-2)' }}
+                    style={{ padding: '10px 14px', border: `1px solid ${!selectedAce ? 'var(--accent)' : 'var(--rule)'}`, borderRadius: 6, background: !selectedAce ? 'rgba(26,111,168,0.08)' : 'var(--card)', textAlign: 'left', cursor: 'pointer', fontFamily: 'Archivo, sans-serif', fontSize: 13, color: 'var(--text2)' }}
                   >
                     No card this tournament
                   </button>
@@ -239,7 +239,7 @@ export default function TennisTournamentScreen() {
                         key={c.card_type}
                         type="button"
                         onClick={() => setSelectedAce(c.card_type)}
-                        style={{ padding: '10px 14px', border: `1px solid ${selectedAce === c.card_type ? 'var(--accent)' : 'var(--rule)'}`, borderRadius: 6, background: selectedAce === c.card_type ? 'var(--accent-bg)' : 'var(--card)', textAlign: 'left', cursor: 'pointer' }}
+                        style={{ padding: '10px 14px', border: `1px solid ${selectedAce === c.card_type ? 'var(--accent)' : 'var(--rule)'}`, borderRadius: 6, background: selectedAce === c.card_type ? 'rgba(26,111,168,0.08)' : 'var(--card)', textAlign: 'left', cursor: 'pointer' }}
                       >
                         <div style={{ fontFamily: 'Archivo, sans-serif', fontSize: 14, fontWeight: 600, color: 'var(--paper)', marginBottom: 2 }}>
                           {info.icon} {info.label}
@@ -292,7 +292,7 @@ export default function TennisTournamentScreen() {
 }
 
 function RosterRow({ player, isCaptain }) {
-  const tierColor = { 1: 'var(--gold)', 2: 'var(--accent)', 3: 'var(--text-2)', 4: 'var(--neg)' };
+  const tierColor = { 1: 'var(--gold)', 2: 'var(--accent)', 3: 'var(--text2)', 4: 'var(--neg)' };
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0', borderBottom: '1px solid var(--rule)' }}>
       <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 9, color: tierColor[player.tier] ?? 'var(--mute)', textTransform: 'uppercase', letterSpacing: '0.08em', minWidth: 16 }}>
