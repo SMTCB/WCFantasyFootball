@@ -1,12 +1,24 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-06-24 (GW2→GW3 transition checks + Live screen bug fix + Betting/Stats improvements — PRs #622–#624)  
+**Last Updated**: 2026-06-24 (Market league-switch draft detection fix — PR #626)  
 **E2E Test Suite**: `platform.spec.js` (36 tests × 2 browsers) passing in CI ✅  
 **Full Playbook Run**: `E2E_TEST_PLAYBOOK.md` v2.0 — all flows confirmed  
 **🟢 LAUNCH READY**: No critical (P0/P1) bugs open. All game mechanics functional. WC kick-off 2026-06-11.  
 **Live App**: https://wc-fantasy-football.vercel.app  
 **WC Kick-off**: 2026-06-11 19:00 UTC (Mexico vs South Africa)  
 **Supabase PostgREST max_rows**: 10,000 (raised from default 1,000 — 2026-06-08)
+
+---
+
+## ✅ Market league-switch loses draft mode state (2026-06-24) — PR #626
+
+**Reported**: Switching from a classic league to a draft league via the top-left LeagueSelector showed "3 free" transfers (not ∞) and no TAKEN ownership badges.
+
+**Root cause**: `LeagueSelector` onChange set `leagueFormat` to `found.format` — the derived uppercase label `'DRAFT'` from `deriveLeagueType`. But `isDraftLeague` checks `leagueFormat === 'noduplicate'` (raw DB value). `SelectLeaguePicker` (initial pick) already used `found.rawFormat` correctly; the switch handler didn't match.
+
+**Fix**: One-line change in `MarketScreen.jsx:744` — `found.format` → `found.rawFormat`.
+
+**Data integrity**: No duplicate player ownership found across any draft league. DB guards holding.
 
 ---
 
