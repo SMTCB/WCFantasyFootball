@@ -612,6 +612,137 @@ function useFreeTransfersConfig(leagueId, commissioner) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// P2P challenges config — entry fee (league_config) + stake limits (p2p_config)
+// ─────────────────────────────────────────────────────────────────────────────
+function P2PChallengesConfig({ leagueId, isMobile = false, commLoading }) {
+  const [entryFee, setEntryFee] = useState('');
+  const [minStake, setMinStake] = useState('10');
+  const [maxStake, setMaxStake] = useState('500');
+  const [enabled, setEnabled]   = useState(true);
+  const [saved, setSaved]       = useState(false);
+  const [saving, setSaving]     = useState(false);
+
+  useEffect(() => {
+    if (!leagueId) return;
+    // Load coin_entry_fee from league_config
+    supabase.from('league_config')
+      .select('config_value')
+      .eq('league_id', leagueId)
+      .eq('config_key', 'coin_entry_fee')
+      .maybeSingle()
+      .then(({ data }) => { if (data?.config_value != null) setEntryFee(String(data.config_value)); });
+    // Load stake limits from p2p_config via RPC
+    supabase.rpc('get_p2p_config', { p_league_id: leagueId })
+      .then(({ data }) => {
+        if (!data || data.error) return;
+        setMinStake(String(data.min_stake ?? 10));
+        setMaxStake(String(data.max_stake ?? 500));
+        setEnabled(data.challenges_enabled ?? true);
+      });
+  }, [leagueId]);
+
+  const save = async () => {
+    setSaving(true);
+    const fee = parseInt(entryFee, 10);
+    // Upsert coin_entry_fee in league_config
+    if (!isNaN(fee) && fee >= 0) {
+      await supabase.from('league_config').upsert(
+        [{ league_id: leagueId, config_key: 'coin_entry_fee', config_value: fee }],
+        { onConflict: 'league_id,config_key' }
+      );
+    } else if (entryFee === '' || entryFee === '0') {
+      await supabase.from('league_config').delete()
+        .eq('league_id', leagueId).eq('config_key', 'coin_entry_fee');
+    }
+    // Update p2p_config via RPC
+    await supabase.rpc('update_p2p_config', {
+      p_league_id: leagueId,
+      p_min_stake: parseInt(minStake, 10) || 10,
+      p_max_stake: parseInt(maxStake, 10) || 500,
+      p_challenges_enabled: enabled,
+    });
+    setSaving(false);
+    setSaved(true);
+    setTimeout(() => setSaved(false), 2500);
+  };
+
+  const inp = {
+    padding: '7px 10px',
+    borderRadius: 6,
+    border: '1px solid var(--rule)',
+    background: 'var(--ink)',
+    color: 'var(--paper)',
+    fontFamily: MONO,
+    fontSize: 12,
+    width: '100%',
+    boxSizing: 'border-box',
+  };
+
+  const row = { display: 'flex', flexDirection: 'column', gap: 4 };
+  const lbl = { fontFamily: MONO, fontSize: 9, letterSpacing: '.18em', color: 'var(--mute)' };
+
+  const content = (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+      <div style={row}>
+        <span style={lbl}>COIN ENTRY FEE (0 = free)</span>
+        <input type="number" min={0} step={10} value={entryFee} onChange={e => setEntryFee(e.target.value)} placeholder="0" style={inp} />
+        <span style={{ ...lbl, lineHeight: 1.5 }}>Charged to joiners via join_league_by_code. Leave blank or 0 to disable.</span>
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+        <div style={row}>
+          <span style={lbl}>MIN STAKE</span>
+          <input type="number" min={1} value={minStake} onChange={e => setMinStake(e.target.value)} style={inp} />
+        </div>
+        <div style={row}>
+          <span style={lbl}>MAX STAKE</span>
+          <input type="number" min={1} max={10000} value={maxStake} onChange={e => setMaxStake(e.target.value)} style={inp} />
+        </div>
+      </div>
+      <ToggleSwitch
+        checked={enabled}
+        onChange={() => setEnabled(v => !v)}
+        labelOn="CHALLENGES ENABLED"
+        labelOff="CHALLENGES DISABLED"
+      />
+      <button
+        onClick={save}
+        disabled={saving || commLoading}
+        style={{
+          padding: '9px 0',
+          borderRadius: 6,
+          border: 'none',
+          background: saved ? 'var(--positive)' : 'var(--gold)',
+          color: 'var(--ink)',
+          fontFamily: MONO,
+          fontSize: 10,
+          letterSpacing: '.18em',
+          fontWeight: 700,
+          cursor: saving ? 'wait' : 'pointer',
+          opacity: saving ? 0.7 : 1,
+        }}
+      >
+        {saved ? 'SAVED ✓' : saving ? 'SAVING…' : 'SAVE P2P CONFIG'}
+      </button>
+    </div>
+  );
+
+  if (isMobile) {
+    return (
+      <MobLifecycleCard title="P2P CHALLENGES" status={enabled ? 'ON' : 'OFF'} tone={enabled ? 'var(--positive)' : 'var(--mute)'} when="Set entry fee for new joiners and stake limits for challenges.">
+        {content}
+      </MobLifecycleCard>
+    );
+  }
+
+  return (
+    <div style={{ padding: '18px 24px', borderTop: '1px solid var(--rule)' }}>
+      <div style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '.22em', color: 'var(--mute)', marginBottom: 14 }}>P2P CHALLENGES CONFIG</div>
+      {content}
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Lifecycle operation card
 // ─────────────────────────────────────────────────────────────────────────────
 function LifecycleOp({ title, status, statusTone = 'var(--mute)', sub, when, children, primary }) {
@@ -1845,6 +1976,9 @@ export default function CommissionerPanel({ commissioner, leagueId, tournamentId
           </div>
         </div>
 
+          {/* P2P Challenges config (mobile) */}
+          <P2PChallengesConfig leagueId={leagueId} isMobile commLoading={commLoading} />
+
         {/* H2H Calendar (mobile) — only for Draft + H2H leagues */}
         {league?.h2h_enabled && (
           <>
@@ -1886,6 +2020,10 @@ export default function CommissionerPanel({ commissioner, leagueId, tournamentId
         league={league}
         onHelp={() => setHelpModal('lifecycle')}
       />
+
+      {/* P2P Challenges config */}
+      <HubSectionLabel label="P2P CHALLENGES" sub="COIN ENTRY FEE & STAKE LIMITS" tone="var(--gold)" />
+      <P2PChallengesConfig leagueId={leagueId} commLoading={commLoading} />
 
       {/* League News — breaking news form */}
       <HubSectionLabel label="LEAGUE NEWS" sub="POST TO ACTIVITY FEED" tone="var(--danger)" />

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { useWallet } from '../hooks/useWallet';
@@ -7,13 +7,14 @@ import { supabase } from '../lib/supabase';
 const MONO = 'JetBrains Mono, monospace';
 
 const TYPE_META = {
-  purchase: { label: 'PURCHASE',  color: 'var(--positive)' },
-  stake:    { label: 'STAKED',    color: 'var(--mute)' },
-  win:      { label: 'WIN',       color: 'var(--positive)' },
-  loss:     { label: 'LOSS',      color: 'var(--danger)' },
-  rake:     { label: 'RAKE',      color: 'var(--mute)' },
-  refund:   { label: 'REFUND',    color: 'var(--positive)' },
-  admin:    { label: 'BONUS',     color: 'var(--accent)' },
+  purchase:  { label: 'PURCHASE',   color: 'var(--positive)' },
+  stake:     { label: 'STAKED',     color: 'var(--mute)' },
+  win:       { label: 'WIN',        color: 'var(--positive)' },
+  loss:      { label: 'LOSS',       color: 'var(--danger)' },
+  rake:      { label: 'RAKE',       color: 'var(--mute)' },
+  refund:    { label: 'REFUND',     color: 'var(--positive)' },
+  admin:     { label: 'BONUS',      color: 'var(--accent)' },
+  entry_fee: { label: 'ENTRY FEE',  color: 'var(--mute)' },
 };
 
 function timeAgo(dateStr) {
@@ -29,10 +30,17 @@ export default function WalletScreen() {
   const navigate = useNavigate();
   const { wallet, loading } = useWallet(user?.id);
   const [buyStatus, setBuyStatus] = useState(null); // null | 'loading' | 'coming_soon' | 'error'
+  const [econStats, setEconStats] = useState(null);
 
-  const balance     = wallet?.balance      ?? 0;
-  const escrow      = wallet?.escrow       ?? 0;
+  const balance      = wallet?.balance      ?? 0;
+  const escrow       = wallet?.escrow       ?? 0;
   const transactions = wallet?.transactions ?? [];
+
+  useEffect(() => {
+    supabase.rpc('get_coin_economy_stats').then(({ data }) => {
+      if (data) setEconStats(data);
+    });
+  }, []);
 
   return (
     <div style={{ maxWidth: 480, margin: '0 auto', padding: '24px 16px 48px' }}>
@@ -174,6 +182,38 @@ export default function WalletScreen() {
         </div>
         <span style={{ fontFamily: MONO, fontSize: 16, color: 'var(--mute)' }}>›</span>
       </div>
+
+      {/* Economy stats — platform health snapshot */}
+      {econStats && (
+        <div style={{
+          background: 'var(--elev)',
+          border: '1px solid var(--rule)',
+          borderRadius: 12,
+          padding: '18px 20px',
+          marginBottom: 28,
+        }}>
+          <div style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '.18em', color: 'var(--mute)', marginBottom: 14 }}>
+            PLATFORM ECONOMY
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px 24px' }}>
+            {[
+              { label: 'CIRCULATING', value: Number(econStats.circulating).toLocaleString() },
+              { label: 'IN ESCROW',   value: Number(econStats.in_escrow).toLocaleString() },
+              { label: 'CHALLENGES',  value: econStats.challenges_total },
+              { label: 'RAKE BURNED', value: Number(econStats.rake_burned).toLocaleString() },
+            ].map(({ label, value }) => (
+              <div key={label}>
+                <div style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.15em', marginBottom: 2 }}>
+                  {label}
+                </div>
+                <div style={{ fontFamily: MONO, fontSize: 15, fontWeight: 700, color: 'var(--paper)' }}>
+                  {value}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Transaction history */}
       <div>

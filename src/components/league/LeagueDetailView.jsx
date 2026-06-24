@@ -4,18 +4,20 @@ import { MONO, DISPLAY, miniBtnStyle, mgrHue, mgrMono } from './HubConstants';
 import { supabase } from '../../lib/supabase';
 
 // Maps gazette entry_type (DB enum) to a filter category and display label.
-// Current enum values: draft_report, breaking_news, activity, auction_result, trade_result
+// Current enum values: draft_report, breaking_news, activity, auction_result, trade_result, p2p_challenge, p2p_result
 const ENTRY_META = {
-  draft_report:     { filter: 'GAME',   badge: 'DRAFT',    color: 'var(--gold)' },
-  breaking_news:    { filter: 'GAME',   badge: 'NEWS',     color: 'var(--danger)' },
-  activity:         { filter: 'GAME',   badge: 'SCORES',   color: 'var(--positive)' },
-  auction_result:   { filter: 'TRADES', badge: 'AUCTION',  color: 'var(--positive)' },
-  trade_result:     { filter: 'TRADES', badge: 'TRADE',    color: 'var(--cyan)' },
-  rank_change:      { filter: 'GAME',   badge: 'RANKS',    color: 'var(--cyan)' },
-  relaxation:       { filter: 'GAME',   badge: 'POOL',     color: 'var(--cyan)' },
-  cup_elimination:  { filter: 'GAME',   badge: 'CUP',      color: 'var(--danger)' },
-  transfer:         { filter: 'TRADES', badge: 'TRANSFER', color: 'var(--positive)' },
+  draft_report:     { filter: 'GAME',   badge: 'DRAFT',      color: 'var(--gold)' },
+  breaking_news:    { filter: 'GAME',   badge: 'NEWS',       color: 'var(--danger)' },
+  activity:         { filter: 'GAME',   badge: 'SCORES',     color: 'var(--positive)' },
+  auction_result:   { filter: 'TRADES', badge: 'AUCTION',    color: 'var(--positive)' },
+  trade_result:     { filter: 'TRADES', badge: 'TRADE',      color: 'var(--cyan)' },
+  rank_change:      { filter: 'GAME',   badge: 'RANKS',      color: 'var(--cyan)' },
+  relaxation:       { filter: 'GAME',   badge: 'POOL',       color: 'var(--cyan)' },
+  cup_elimination:  { filter: 'GAME',   badge: 'CUP',        color: 'var(--danger)' },
+  transfer:         { filter: 'TRADES', badge: 'TRANSFER',   color: 'var(--positive)' },
   classified:       { filter: 'GAME',   badge: 'CLASSIFIED', color: 'var(--gold)' },
+  p2p_challenge:    { filter: 'TRADES', badge: 'CHALLENGE',  color: 'var(--gold)' },
+  p2p_result:       { filter: 'TRADES', badge: 'P2P',        color: 'var(--gold)' },
 };
 
 // Normalise a single gazette bullet to a display string.
