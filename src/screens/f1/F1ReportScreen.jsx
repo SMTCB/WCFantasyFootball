@@ -37,7 +37,7 @@ export default function F1ReportScreen() {
   }
 
   return (
-    <div style={{ background: 'var(--ink)', minHeight: '100vh' }}>
+    <div style={{ background: 'var(--bg)', minHeight: '100vh' }}>
       <div style={{ background: 'var(--shell)', padding: '16px 16px 12px' }}>
         <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 9, letterSpacing: '0.18em', color: 'rgba(255,255,255,0.45)', marginBottom: 4 }}>
           RACE REPORT · 2026

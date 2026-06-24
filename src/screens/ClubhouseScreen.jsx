@@ -721,7 +721,7 @@ export default function ClubhouseScreen() {
   ];
 
   return (
-    <div style={{ minHeight: '100vh', background: 'var(--ink)', paddingBottom: 32 }}>
+    <div style={{ minHeight: '100vh', background: 'var(--bg)', paddingBottom: 32 }}>
 
       {/* Header */}
       <div style={{ background: 'var(--shell)', padding: '24px 20px 20px' }}>

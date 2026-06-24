@@ -4,15 +4,16 @@ import { useAuth } from '../hooks/useAuth';
 import { useWallet } from '../hooks/useWallet';
 import { supabase } from '../lib/supabase';
 
-const MONO = 'JetBrains Mono, monospace';
+const MONO = { fontFamily: 'JetBrains Mono, monospace' };
+const HEAD = { fontFamily: 'Archivo Black, sans-serif', letterSpacing: '-0.02em' };
 
 const TYPE_META = {
-  purchase:  { label: 'PURCHASE',   color: 'var(--positive)' },
+  purchase:  { label: 'PURCHASE',   color: 'var(--pos)' },
   stake:     { label: 'STAKED',     color: 'var(--mute)' },
-  win:       { label: 'WIN',        color: 'var(--positive)' },
-  loss:      { label: 'LOSS',       color: 'var(--danger)' },
+  win:       { label: 'WIN',        color: 'var(--pos)' },
+  loss:      { label: 'LOSS',       color: 'var(--neg)' },
   rake:      { label: 'RAKE',       color: 'var(--mute)' },
-  refund:    { label: 'REFUND',     color: 'var(--positive)' },
+  refund:    { label: 'REFUND',     color: 'var(--pos)' },
   admin:     { label: 'BONUS',      color: 'var(--accent)' },
   entry_fee: { label: 'ENTRY FEE',  color: 'var(--mute)' },
 };
@@ -47,39 +48,39 @@ export default function WalletScreen() {
 
       {/* Header */}
       <div style={{ marginBottom: 28 }}>
-        <div style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '.2em', color: 'var(--mute)', marginBottom: 6 }}>
+        <div style={{ ...MONO, fontSize: 10, letterSpacing: '.2em', color: 'var(--mute)', marginBottom: 6 }}>
           COIN WALLET
         </div>
-        <h1 style={{ fontSize: 26, fontWeight: 700, color: 'var(--paper)', margin: 0 }}>
+        <h1 style={{ ...HEAD, fontSize: 26, color: 'var(--paper)', margin: 0 }}>
           Your Balance
         </h1>
       </div>
 
       {/* Balance card */}
       <div style={{
-        background: 'var(--shell)',
+        background: 'var(--card)',
         border: '1px solid var(--rule)',
-        borderRadius: 12,
+        borderRadius: 6,
         padding: '28px 24px',
         marginBottom: 16,
         textAlign: 'center',
       }}>
         {loading ? (
-          <div style={{ fontFamily: MONO, fontSize: 13, color: 'var(--mute)' }}>Loading…</div>
+          <div style={{ ...MONO, fontSize: 13, color: 'var(--mute)' }}>Loading…</div>
         ) : (
           <>
-            <div style={{ fontFamily: MONO, fontSize: 11, letterSpacing: '.18em', color: 'var(--mute)', marginBottom: 8 }}>
+            <div style={{ ...MONO, fontSize: 11, letterSpacing: '.18em', color: 'var(--mute)', marginBottom: 8 }}>
               AVAILABLE
             </div>
-            <div style={{ fontSize: 52, fontWeight: 800, color: 'var(--accent)', lineHeight: 1, marginBottom: 4 }}>
+            <div style={{ ...HEAD, fontSize: 52, color: 'var(--accent)', lineHeight: 1, marginBottom: 4 }}>
               {balance.toLocaleString()}
             </div>
-            <div style={{ fontFamily: MONO, fontSize: 11, color: 'var(--mute)' }}>
+            <div style={{ ...MONO, fontSize: 11, color: 'var(--mute)' }}>
               COINS
             </div>
             {escrow > 0 && (
-              <div style={{ marginTop: 16, padding: '8px 14px', background: 'var(--elev)', borderRadius: 8, display: 'inline-block' }}>
-                <span style={{ fontFamily: MONO, fontSize: 11, color: 'var(--mute)' }}>
+              <div style={{ marginTop: 16, padding: '8px 14px', background: 'var(--elev)', borderRadius: 6, display: 'inline-block' }}>
+                <span style={{ ...MONO, fontSize: 11, color: 'var(--mute)' }}>
                   {escrow.toLocaleString()} IN ESCROW (active challenges)
                 </span>
               </div>
@@ -92,11 +93,11 @@ export default function WalletScreen() {
       <div style={{
         background: 'var(--elev)',
         border: '1px solid var(--rule)',
-        borderRadius: 12,
+        borderRadius: 6,
         padding: '20px 24px',
         marginBottom: 28,
       }}>
-        <div style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '.18em', color: 'var(--mute)', marginBottom: 12 }}>
+        <div style={{ ...MONO, fontSize: 10, letterSpacing: '.18em', color: 'var(--mute)', marginBottom: 12 }}>
           BUY COINS
         </div>
         <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
@@ -130,23 +131,23 @@ export default function WalletScreen() {
                 flex: 1,
                 minWidth: 90,
                 padding: '10px 8px',
-                borderRadius: 8,
+                borderRadius: 6,
                 border: '1px solid var(--rule)',
-                background: 'var(--shell)',
+                background: 'var(--card)',
                 cursor: buyStatus === 'loading' ? 'wait' : 'pointer',
                 opacity: buyStatus === 'loading' ? 0.6 : 1,
               }}
             >
-              <div style={{ fontFamily: MONO, fontSize: 13, fontWeight: 700, color: 'var(--accent)' }}>
+              <div style={{ ...MONO, fontSize: 13, fontWeight: 700, color: 'var(--accent)' }}>
                 {coins.toLocaleString()}
               </div>
-              <div style={{ fontFamily: MONO, fontSize: 10, color: 'var(--mute)', marginTop: 2 }}>
+              <div style={{ ...MONO, fontSize: 10, color: 'var(--mute)', marginTop: 2 }}>
                 {price}
               </div>
             </button>
           ))}
         </div>
-        <div style={{ fontFamily: MONO, fontSize: 10, color: 'var(--mute)', marginTop: 12, textAlign: 'center' }}>
+        <div style={{ ...MONO, fontSize: 10, color: 'var(--mute)', marginTop: 12, textAlign: 'center' }}>
           {buyStatus === 'coming_soon' && 'PAYMENTS COMING SOON'}
           {buyStatus === 'error' && 'SOMETHING WENT WRONG — TRY AGAIN'}
           {buyStatus === 'loading' && 'CONNECTING…'}
@@ -161,9 +162,9 @@ export default function WalletScreen() {
         onClick={() => navigate('/challenges')}
         onKeyDown={e => e.key === 'Enter' && navigate('/challenges')}
         style={{
-          background: 'var(--shell)',
+          background: 'var(--card)',
           border: '1px solid var(--rule)',
-          borderRadius: 12,
+          borderRadius: 6,
           padding: '16px 20px',
           marginBottom: 28,
           display: 'flex',
@@ -173,14 +174,14 @@ export default function WalletScreen() {
         }}
       >
         <div>
-          <div style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '.18em', color: 'var(--mute)', marginBottom: 4 }}>
+          <div style={{ ...MONO, fontSize: 10, letterSpacing: '.18em', color: 'var(--mute)', marginBottom: 4 }}>
             P2P BETTING
           </div>
-          <div style={{ fontFamily: MONO, fontSize: 13, color: 'var(--paper)', fontWeight: 600 }}>
+          <div style={{ ...MONO, fontSize: 13, color: 'var(--paper)', fontWeight: 600 }}>
             My Challenges
           </div>
         </div>
-        <span style={{ fontFamily: MONO, fontSize: 16, color: 'var(--mute)' }}>›</span>
+        <span style={{ ...MONO, fontSize: 16, color: 'var(--mute)' }}>›</span>
       </div>
 
       {/* Economy stats — platform health snapshot */}
@@ -188,11 +189,11 @@ export default function WalletScreen() {
         <div style={{
           background: 'var(--elev)',
           border: '1px solid var(--rule)',
-          borderRadius: 12,
+          borderRadius: 6,
           padding: '18px 20px',
           marginBottom: 28,
         }}>
-          <div style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '.18em', color: 'var(--mute)', marginBottom: 14 }}>
+          <div style={{ ...MONO, fontSize: 10, letterSpacing: '.18em', color: 'var(--mute)', marginBottom: 14 }}>
             PLATFORM ECONOMY
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px 24px' }}>
@@ -203,10 +204,10 @@ export default function WalletScreen() {
               { label: 'RAKE BURNED', value: Number(econStats.rake_burned).toLocaleString() },
             ].map(({ label, value }) => (
               <div key={label}>
-                <div style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.15em', marginBottom: 2 }}>
+                <div style={{ ...MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.15em', marginBottom: 2 }}>
                   {label}
                 </div>
-                <div style={{ fontFamily: MONO, fontSize: 15, fontWeight: 700, color: 'var(--paper)' }}>
+                <div style={{ ...MONO, fontSize: 15, fontWeight: 700, color: 'var(--paper)' }}>
                   {value}
                 </div>
               </div>
@@ -217,16 +218,16 @@ export default function WalletScreen() {
 
       {/* Transaction history */}
       <div>
-        <div style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '.18em', color: 'var(--mute)', marginBottom: 14 }}>
+        <div style={{ ...MONO, fontSize: 10, letterSpacing: '.18em', color: 'var(--mute)', marginBottom: 14 }}>
           TRANSACTION HISTORY
         </div>
 
         {loading ? (
-          <div style={{ fontFamily: MONO, fontSize: 12, color: 'var(--mute)', textAlign: 'center', padding: 24 }}>
+          <div style={{ ...MONO, fontSize: 12, color: 'var(--mute)', textAlign: 'center', padding: 24 }}>
             Loading…
           </div>
         ) : transactions.length === 0 ? (
-          <div style={{ fontFamily: MONO, fontSize: 12, color: 'var(--mute)', textAlign: 'center', padding: 24 }}>
+          <div style={{ ...MONO, fontSize: 12, color: 'var(--mute)', textAlign: 'center', padding: 24 }}>
             No transactions yet
           </div>
         ) : (
@@ -243,24 +244,19 @@ export default function WalletScreen() {
                   borderBottom: '1px solid var(--rule)',
                 }}>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                    <span style={{ fontFamily: MONO, fontSize: 11, color: meta.color, letterSpacing: '.1em' }}>
+                    <span style={{ ...MONO, fontSize: 11, color: meta.color, letterSpacing: '.1em' }}>
                       {meta.label}
                     </span>
                     {tx.meta?.reason && (
-                      <span style={{ fontFamily: MONO, fontSize: 10, color: 'var(--mute)' }}>
+                      <span style={{ ...MONO, fontSize: 10, color: 'var(--mute)' }}>
                         {tx.meta.reason.replace(/_/g, ' ')}
                       </span>
                     )}
-                    <span style={{ fontFamily: MONO, fontSize: 10, color: 'var(--mute)' }}>
+                    <span style={{ ...MONO, fontSize: 10, color: 'var(--mute)' }}>
                       {timeAgo(tx.created_at)}
                     </span>
                   </div>
-                  <span style={{
-                    fontFamily: MONO,
-                    fontSize: 15,
-                    fontWeight: 700,
-                    color: isCredit ? 'var(--positive)' : 'var(--danger)',
-                  }}>
+                  <span style={{ ...MONO, fontSize: 15, fontWeight: 700, color: isCredit ? 'var(--pos)' : 'var(--neg)' }}>
                     {isCredit ? '+' : '-'}{tx.amount.toLocaleString()}
                   </span>
                 </div>

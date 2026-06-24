@@ -110,7 +110,7 @@ export default function F1RaceBetScreen() {
   const specialOpts = race?.special_category_options ?? SPECIAL_OPTIONS[selectedRound] ?? null;
 
   return (
-    <div style={{ background: 'var(--ink)', paddingBottom: 40 }}>
+    <div style={{ background: 'var(--bg)', paddingBottom: 40 }}>
 
       {/* Race selector strip */}
       <div style={{ background: 'var(--shell)', padding: '12px 0', overflowX: 'auto' }}>

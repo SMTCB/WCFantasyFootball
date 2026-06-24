@@ -59,7 +59,7 @@ export default function TennisLeaderboardScreen() {
             {/* Masters Drop Rule note */}
             <div style={{ background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 6, padding: '10px 14px', marginBottom: 16, display: 'flex', gap: 10, alignItems: 'flex-start' }}>
               <span style={{ fontSize: 16 }}>ℹ️</span>
-              <p style={{ fontFamily: 'Archivo, sans-serif', fontSize: 12, color: 'var(--text-2)', margin: 0 }}>
+              <p style={{ fontFamily: 'Archivo, sans-serif', fontSize: 12, color: 'var(--text2)', margin: 0 }}>
                 <strong>Masters Drop Rule:</strong> Only your best 4 Masters 1000 scores count. The worst score is dropped once 5 or more Masters are complete.
               </p>
             </div>
@@ -90,9 +90,9 @@ export default function TennisLeaderboardScreen() {
                       </span>
                     )}
                   </div>
-                  <span style={{ fontFamily: 'Archivo, sans-serif', fontSize: 13, color: 'var(--text-2)', width: 60, textAlign: 'right' }}>{row.slam_points > 0 ? row.slam_points.toLocaleString() : '—'}</span>
-                  <span style={{ fontFamily: 'Archivo, sans-serif', fontSize: 13, color: 'var(--text-2)', width: 70, textAlign: 'right' }}>{row.masters_points > 0 ? row.masters_points.toLocaleString() : '—'}</span>
-                  <span style={{ fontFamily: 'Archivo, sans-serif', fontSize: 13, color: 'var(--text-2)', width: 60, textAlign: 'right' }}>{row.finals_points > 0 ? row.finals_points.toLocaleString() : '—'}</span>
+                  <span style={{ fontFamily: 'Archivo, sans-serif', fontSize: 13, color: 'var(--text2)', width: 60, textAlign: 'right' }}>{row.slam_points > 0 ? row.slam_points.toLocaleString() : '—'}</span>
+                  <span style={{ fontFamily: 'Archivo, sans-serif', fontSize: 13, color: 'var(--text2)', width: 70, textAlign: 'right' }}>{row.masters_points > 0 ? row.masters_points.toLocaleString() : '—'}</span>
+                  <span style={{ fontFamily: 'Archivo, sans-serif', fontSize: 13, color: 'var(--text2)', width: 60, textAlign: 'right' }}>{row.finals_points > 0 ? row.finals_points.toLocaleString() : '—'}</span>
                   <span style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 15, color: 'var(--accent)', width: 70, textAlign: 'right' }}>{row.season_total.toLocaleString()}</span>
                 </div>
               ))}
