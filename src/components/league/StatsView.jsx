@@ -633,9 +633,10 @@ function RoiPanel({ roiData, currentUser }) {
               </div>
 
               {displayPlayers.map((p, i) => {
-                const posColor = POS_COLORS[p.position] || 'var(--mute)';
-                const isGood   = playerTab === 'best';
+                const posColor  = POS_COLORS[p.position] || 'var(--mute)';
+                const isGood    = playerTab === 'best';
                 const rankColor = i === 0 ? (isGood ? 'var(--positive)' : 'var(--danger)') : 'var(--mute)';
+                const owners    = p.owners || [];
                 return (
                   <div
                     key={p.player_id}
@@ -655,9 +656,16 @@ function RoiPanel({ roiData, currentUser }) {
                     }}>
                       {p.position}
                     </span>
-                    <span style={{ fontFamily: DISPLAY, fontSize: 11, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {p.name}
-                    </span>
+                    <div style={{ overflow: 'hidden', minWidth: 0 }}>
+                      <div style={{ fontFamily: DISPLAY, fontSize: 11, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {p.name}
+                      </div>
+                      {owners.length > 0 && (
+                        <div style={{ fontFamily: MONO, fontSize: 8, color: 'var(--mute)', letterSpacing: '.08em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginTop: 1 }}>
+                          {owners.join(' · ')}
+                        </div>
+                      )}
+                    </div>
                     <span style={{ fontFamily: DISPLAY, fontSize: 12, textAlign: 'right' }}>{p.pts}</span>
                     <span style={{ fontFamily: MONO, fontSize: 10, color: 'var(--mute)', textAlign: 'right' }}>
                       {p.price.toFixed(1)}

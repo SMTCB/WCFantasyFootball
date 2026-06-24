@@ -1,6 +1,6 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-06-24 (v2: Tennis Sprint T-4 — full UI complete, PR #625; Phase 2 Tennis Module 100% done)  
+**Last Updated**: 2026-06-24 (v2: Tennis Sprint T-4 — full UI complete, PR #625; Phase 2 Tennis Module 100% done | main: Market league-switch draft fix — PR #626)  
 **E2E Test Suite**: `platform.spec.js` (84 tests × 1 browser config) passing ✅ — 84/84 on v2 branch 2026-06-23  
 **Full Playbook Run**: `E2E_TEST_PLAYBOOK.md` v2.0 — all flows confirmed  
 **🟢 LAUNCH READY**: No critical (P0/P1) bugs open. All game mechanics functional. WC kick-off 2026-06-11.  
@@ -193,7 +193,81 @@
 
 ---
 
-## ✅ Clean sheet not awarded for DEF/GK subbed off at 45–59 min (2026-06-23) — PR #616 (main)
+## ✅ Market league-switch loses draft mode state (2026-06-24) — PR #626
+
+**Reported**: Switching from a classic league to a draft league via the top-left LeagueSelector showed "3 free" transfers (not ∞) and no TAKEN ownership badges.
+
+**Root cause**: `LeagueSelector` onChange set `leagueFormat` to `found.format` — the derived uppercase label `'DRAFT'` from `deriveLeagueType`. But `isDraftLeague` checks `leagueFormat === 'noduplicate'` (raw DB value). `SelectLeaguePicker` (initial pick) already used `found.rawFormat` correctly; the switch handler didn't match.
+
+**Fix**: One-line change in `MarketScreen.jsx:744` — `found.format` → `found.rawFormat`.
+
+**Data integrity**: No duplicate player ownership found across any draft league. DB guards holding.
+
+---
+
+## ✅ GW2→GW3 transition: Live screen historical squad bug + Betting/Stats improvements (2026-06-24) — PRs #622–#624
+
+### GW2 closure sanity checks — all passing
+
+Verified at session start before opening GW3:
+- All 24 R2 fixtures: `status='finished'` ✅
+- Gazette `activity` entries: written for 11 leagues at 04:00:07 UTC ✅
+- `round_backups`: 57 squads captured at 04:00:07 UTC (`backed_up_at = 2026-06-24 04:00:07`) ✅
+- `squad_events` transfer logging: firing correctly (verified by reviewing today's entries) ✅
+- `squad_matchday_snapshots` GW2 rows: all `manual_backup_20260619` — correct; trigger active from R3+ ✅
+
+### PR #622 — Live screen shows post-transfer players for a settled round
+
+**Reported**: In league Mundial do Eder, user sold Raphinha and bought Messi today (June 24 06:05 UTC, after GW2 closed at 04:00 UTC). RECAP correctly showed the GW2 team; LIVE screen showed Messi (who played for Argentina in GW2) with 13 pts in "MY XI".
+
+**Root cause**: Live screen fetched `player_match_stats` for all current `squad.players` including the newly-transferred-in Messi for GW2 fixture IDs — he genuinely played and scored. GW2 `fantasy_points.total` (89 pts, correct from `effective_xi`) was never affected; only the display was wrong.
+
+**Fix**: When `fantasy_points.points_breakdown.effective_xi` exists (round settled), Live screen overrides:
+- `squadPlayerIds` → `[...effective_xi, ...bench_players]` (historical frozen snapshot)
+- `startingXi` → `effective_xi`
+- `captainId` → `effective_captain_id`
+- `isTripleCap` → `is_triple_captain`
+
+This is the same source RECAP reads. Only applies to settled rounds — live/active rounds continue reading from `squad.players` + `squad.starting_xi` as before. **Same class of bug as the MD1→MD2 incident; now permanently fixed for all future round transitions.**
+
+### Zepp's bet (Munaial '26) — confirmed user error, no system bug
+
+User claimed they bet "Netherlands win" vs Sweden but it saved as "Sweden win". DB check: Zepp's `bet_submissions` shows `answer = 'f-1219437898_away'` = "Sweden Win" (match ended Netherlands 5–1 Sweden). Three other managers also bet Sweden and all lost. Resolution: correctly marked `is_correct: false`. No data inconsistency found.
+
+### PR #623 — Betting/Stats improvements (4 items bundled)
+
+**(1) BETTING · YOUR PERFORMANCE** — replaced the "Per-bet-type breakdown available once more data is collected" placeholder with stacked bar charts (one per resolved bet, correct=green / wrong=red, W/L count + win %).
+
+**(2) BETTING · RIVALS WATCH** — `+` values changed from red (`var(--danger)`) to green (`var(--positive)`). Diff is `rival.total_rewards - my.total_rewards`; positive = rival ahead of you in betting pts.
+
+**(3) STATS · PLAYER ROI** — each player row now shows owning manager name(s) in small muted text below the player name. Built from `uniqueSquads` XI data already in the hook — no extra query.
+
+**(4) STATS · MISSED PTS** — logic rewritten with correct positional constraints:
+- **Before (wrong)**: `missedPts += max(0, bPts - min(ALL_XI_pts))` — used the minimum of every starter including GKs, making bench outfielders appear to miss pts even when they couldn't beat the worst non-GK.
+- **After (correct)**: GK head-to-head only (`bench_gk_pts - starter_gk_pts`); outfield missed = difference between optimal N outfield from the combined pool (10 starters + N bench outfielders) and actual outfield total. Example: bench GK same pts as starter = 0 missed; best bench outfielder same pts as worst outfield starter = 0 missed.
+
+### PR #624 — YOUR PERFORMANCE: 3 fixed bet-type buckets
+
+Reworked the YOUR PERFORMANCE bar chart into exactly 3 canonical buckets keyed by template slug:
+- **MATCH RESULT** (`match_result`)
+- **CLEAN SHEET** (`clean_sheet`)
+- **TOP SCORER** (`top_scorer`)
+
+All 3 always render regardless of how many bets exist. Empty bucket = flat grey bar + "NO BETS" label. Win% colour-coded green ≥50%, red below. Join path: `bet_submissions → bet_instances → bet_templates(slug)`. Player Block template (`player_block`, inactive) excluded from buckets.
+
+### squad_events log verified (GW3 open)
+
+Reviewed all `squad_events` rows since GW2 close. Active managers this morning:
+- **SB7**: Raphinha → Messi (MDE + Munaial '26) — both transfers logged with correct buy/sell pairs
+- **Francisco Pinheiro da Silva**: 3 sells + 3 buys + 2 lineup swaps + captain change → Messi (MDE)
+- **Zepp**: 5 sells + 5 buys — full squad rebuild (Munaial '26)
+- **Kiko**: 1 swap (Munaial '26)
+
+Note: several transfers have `matchday_id = null` in `squad_events` — expected, this field is only populated when passed explicitly by the RPC call. Does not affect scoring or squad state.
+
+---
+
+## ✅ Clean sheet not awarded for DEF/GK subbed off at 45–59 min (2026-06-23) — PR #616
 
 **Reported**: Cristian Romero (DEF, Argentina) played 57 min in R2 vs Austria, team kept a clean sheet, but received 0 clean sheet points.
 
