@@ -19,14 +19,22 @@ export function useBettingLeaderboard(leagueId, currentUserId) {
     setError(null);
 
     try {
+      // Fixed bucket order shown in YOUR PERFORMANCE
+      const BUCKETS = [
+        { slug: 'match_result', label: 'MATCH RESULT'  },
+        { slug: 'clean_sheet',  label: 'CLEAN SHEET'   },
+        { slug: 'top_scorer',   label: 'TOP SCORER'    },
+      ];
+
       // !inner ensures only rows with a matching bet_instance are returned
+      // Join through bet_templates to get the slug for bucketing
       const { data: entries, error: err } = await supabase
         .from('bet_submissions')
         .select(`
           user_id,
           squad_id,
           squads!squad_id(users!user_id(username)),
-          bet_instances!inner!bet_instance_id(league_id, title),
+          bet_instances!inner!bet_instance_id(league_id, bet_templates!template_id(slug)),
           is_correct,
           reward_awarded
         `)
@@ -38,9 +46,10 @@ export function useBettingLeaderboard(leagueId, currentUserId) {
       // Cache instance IDs so Realtime subscription can be scoped (L2.7)
       instanceIdsRef.current = [...new Set((entries ?? []).map(e => e.bet_instance_id).filter(Boolean))];
 
-      // Aggregate by user
-      const userStats = {};
-      const typeStats = {};
+      // Aggregate by user + bucket by template slug for the current user
+      const userStats   = {};
+      const bucketStats = Object.fromEntries(BUCKETS.map(b => [b.slug, { ...b, correct: 0, wrong: 0 }]));
+
       (entries ?? []).forEach(entry => {
         const userId = entry.user_id;
         if (!userStats[userId]) {
@@ -56,12 +65,13 @@ export function useBettingLeaderboard(leagueId, currentUserId) {
         if (entry.is_correct) userStats[userId].correct_bets += 1;
         userStats[userId].total_rewards += entry.reward_awarded ?? 0;
 
-        // Per-type breakdown for the current user
+        // Per-bucket breakdown for the current user
         if (currentUserId && entry.user_id === currentUserId) {
-          const title = entry.bet_instances?.title || 'Other';
-          if (!typeStats[title]) typeStats[title] = { title, correct: 0, wrong: 0 };
-          if (entry.is_correct) typeStats[title].correct += 1;
-          else typeStats[title].wrong += 1;
+          const slug = entry.bet_instances?.bet_templates?.slug;
+          if (slug && bucketStats[slug]) {
+            if (entry.is_correct) bucketStats[slug].correct += 1;
+            else bucketStats[slug].wrong += 1;
+          }
         }
       });
 
@@ -76,7 +86,8 @@ export function useBettingLeaderboard(leagueId, currentUserId) {
         .sort((a, b) => b.total_rewards - a.total_rewards);
 
       setLeaderboard(leaderboardData);
-      setMyBetsByType(Object.values(typeStats).sort((a, b) => (b.correct + b.wrong) - (a.correct + a.wrong)));
+      // Keep bucket order fixed; always return all 3 even if 0 bets
+      setMyBetsByType(BUCKETS.map(b => bucketStats[b.slug]));
     } catch (err) {
       setError(err.message);
     } finally {
