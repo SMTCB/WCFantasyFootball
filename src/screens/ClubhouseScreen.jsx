@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useClubhouse } from '../hooks/useClubhouse';
 import { useSport } from '../context/SportContext';
 import { useAuth } from '../hooks/useAuth';
+import { useWallet } from '../hooks/useWallet';
 import ClubhouseChat from '../components/ClubhouseChat';
 import ClubhouseFrontpage from '../components/ClubhouseFrontpage';
 
@@ -671,6 +672,8 @@ export default function ClubhouseScreen() {
     markAllRead,
   } = useClubhouse();
 
+  const { wallet } = useWallet(user?.id);
+
   const [tab, setTab] = useState('home');
   const [copied, setCopied] = useState(false);
 
@@ -846,6 +849,32 @@ export default function ClubhouseScreen() {
                     Activity from linked leagues will appear here.
                   </div>
                 )}
+
+                {/* Coin wallet shortcut */}
+                <button
+                  onClick={() => navigate('/wallet')}
+                  style={{
+                    width: '100%', marginTop: 24, padding: '14px 18px',
+                    background: 'var(--elev)', border: '1px solid var(--rule)',
+                    borderRadius: 10, cursor: 'pointer', textAlign: 'left',
+                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                  }}
+                >
+                  <div>
+                    <div style={{ ...MONO, fontSize: 9, letterSpacing: '0.18em', color: 'var(--mute)', marginBottom: 4 }}>
+                      COIN WALLET
+                    </div>
+                    <div style={{ ...MONO, fontSize: 18, fontWeight: 700, color: 'var(--accent)' }}>
+                      {(wallet?.balance ?? 0).toLocaleString()} <span style={{ fontSize: 11, color: 'var(--mute)', fontWeight: 400 }}>coins</span>
+                    </div>
+                    {(wallet?.escrow ?? 0) > 0 && (
+                      <div style={{ ...MONO, fontSize: 10, color: 'var(--mute)', marginTop: 2 }}>
+                        {wallet.escrow.toLocaleString()} in escrow
+                      </div>
+                    )}
+                  </div>
+                  <div style={{ ...MONO, fontSize: 11, color: 'var(--mute)' }}>VIEW →</div>
+                </button>
               </div>
             )}
 
