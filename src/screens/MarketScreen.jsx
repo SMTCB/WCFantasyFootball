@@ -741,7 +741,7 @@ export default function MarketScreen() {
               <LeagueSelector value={activeLeague} onChange={(lid) => {
                 setActiveLeague(lid);
                 const found = leagues?.find(l => l.id === lid);
-                if (found?.format) setLeagueFormat(found.format);
+                if (found?.rawFormat) setLeagueFormat(found.rawFormat);
                 if (found?.tournament_id) setTournamentId(found.tournament_id);
                 else resolveLeagueTournament(lid);
               }} />
