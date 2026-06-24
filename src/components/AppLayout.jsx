@@ -22,13 +22,13 @@ import {
 } from './NavIcons';
 
 const FOOTBALL_NAV = [
-  { key: 'scores',      label: 'SCORES',      path: '/',            Icon: NavIconScores,      desc: 'Match Scores & Fixtures' },
-  { key: 'squad',       label: 'SQUAD',       path: '/squad',       Icon: NavIconSquad,       desc: 'Your Tactical Sheet' },
-  { key: 'league',      label: 'LEAGUE',      path: '/league',      Icon: NavIconLeagues,     desc: 'League Standings & Chat' },
-  { key: 'live',        label: 'LIVE',        path: '/live',        Icon: NavIconLive,        desc: 'Live Points & Projections', isLive: true, desktopOnly: true },
-  { key: 'market',      label: 'MARKET',      path: '/market',      Icon: NavIconMarket,      desc: 'Player Transfer Market' },
-  { key: 'recap',       label: 'RECAP',       path: '/recap',       Icon: NavIconRecap,       desc: 'Matchday Recap & Stats', desktopOnly: true },
-  { key: 'clubhouse',  label: 'CLUBHOUSE',   mobileLabel: 'CLUB',  path: '/clubhouse',   Icon: NavIconClubhouse,   desc: 'The Clubhouse — social hub' },
+  { key: 'scores',     label: 'SCORES',     path: '/scores',    Icon: NavIconScores,    desc: 'Match Scores & Fixtures' },
+  { key: 'squad',      label: 'SQUAD',      path: '/squad',     Icon: NavIconSquad,     desc: 'Your Tactical Sheet' },
+  { key: 'league',     label: 'LEAGUE',     path: '/league',    Icon: NavIconLeagues,   desc: 'League Standings & Chat' },
+  { key: 'live',       label: 'LIVE',       path: '/live',      Icon: NavIconLive,      desc: 'Live Points & Projections', isLive: true, desktopOnly: true },
+  { key: 'market',     label: 'MARKET',     path: '/market',    Icon: NavIconMarket,    desc: 'Player Transfer Market' },
+  { key: 'recap',      label: 'RECAP',      path: '/recap',     Icon: NavIconRecap,     desc: 'Matchday Recap & Stats', desktopOnly: true },
+  { key: 'clubhouse',  label: 'CLUBHOUSE',  mobileLabel: 'CLUB', path: '/clubhouse', Icon: NavIconClubhouse, desc: 'The Clubhouse — social hub' },
 ];
 
 function buildF1Nav(paddockId) {
@@ -43,11 +43,78 @@ function buildF1Nav(paddockId) {
   ];
 }
 
+// ── Desktop sidebar grouped nav helpers ───────────────────────────────────────
+const MONO_STYLE = { fontFamily: 'JetBrains Mono, monospace' };
+
+function NavSectionLabel({ children }) {
+  return (
+    <div style={{
+      ...MONO_STYLE, fontSize: 7, letterSpacing: '0.2em', textTransform: 'uppercase',
+      color: 'rgba(255,255,255,.16)', padding: '10px 8px 4px',
+    }}>
+      {children}
+    </div>
+  );
+}
+
+function NavItem({ label, path, active, dotColor, tag, tagStyle, sub, onClick, badge }) {
+  const [hovered, setHovered] = useState(false);
+  const style = {
+    display: 'flex', alignItems: 'center', gap: 9,
+    padding: sub ? '6px 10px' : '7.5px 10px',
+    borderRadius: 5,
+    fontSize: sub ? 12 : 12.5,
+    fontWeight: 500,
+    color: active ? '#fff' : hovered ? 'rgba(255,255,255,.78)' : 'rgba(255,255,255,.46)',
+    cursor: 'pointer',
+    background: active ? 'rgba(255,255,255,.09)' : hovered ? 'rgba(255,255,255,.05)' : 'transparent',
+    transition: 'all .12s',
+    userSelect: 'none',
+    textDecoration: 'none',
+  };
+  const dotStyle = {
+    width: sub ? 3 : 5, height: sub ? 3 : 5, borderRadius: '50%',
+    background: active && dotColor ? dotColor : 'currentColor',
+    opacity: active ? 1 : 0.5,
+    flexShrink: 0, transition: 'all .12s',
+  };
+  return (
+    <Link
+      to={path}
+      onClick={onClick}
+      style={style}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
+      <span style={dotStyle} />
+      <span style={{ flex: 1 }}>{label}</span>
+      {tag && (
+        <span style={{
+          ...MONO_STYLE, fontSize: 6.5, letterSpacing: '0.08em', textTransform: 'uppercase',
+          padding: '1.5px 5px', borderRadius: 2, fontWeight: 600, flexShrink: 0, marginLeft: 'auto',
+          ...(tagStyle ?? {}),
+        }}>
+          {tag}
+        </span>
+      )}
+      {badge > 0 && (
+        <span style={{
+          minWidth: 16, height: 16, borderRadius: '50%', background: 'var(--danger)',
+          ...MONO_STYLE, fontSize: 9, fontWeight: 700, color: '#fff',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 4px',
+        }}>
+          {badge > 99 ? '99+' : badge}
+        </span>
+      )}
+    </Link>
+  );
+}
+
 export default function AppLayout({ children }) {
   const location = useLocation();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { activeSport, setActiveSport, activePaddockId } = useSport();
+  const { activeSport, activePaddockId } = useSport();
   const { unreadCount } = useContext(ClubhouseNotifContext);
   const isF1 = activeSport === 'f1';
   const NAV_ITEMS = isF1 ? buildF1Nav(activePaddockId) : FOOTBALL_NAV;
@@ -67,156 +134,177 @@ export default function AppLayout({ children }) {
   // Show back button on deeply nested routes (not main nav routes, not single-param routes like /league/:id)
   const isMainRoute =
     location.pathname === '/' ||
+    location.pathname === '/scores' ||
     location.pathname === '/squad' ||
     location.pathname === '/league' ||
     location.pathname === '/live' ||
     location.pathname === '/market' ||
+    location.pathname === '/recap' ||
+    location.pathname === '/trophy' ||
+    location.pathname === '/challenges' ||
+    location.pathname === '/wallet' ||
     location.pathname === '/f1' ||
     /^\/clubhouse(\/[^/]+)?$/.test(location.pathname) ||
     /^\/league\/[^/]+$/.test(location.pathname) ||
     /^\/f1\/[^/]+$/.test(location.pathname) ||
-    /^\/f1\/[^/]+\/(picks|standings|report|season)$/.test(location.pathname);
+    /^\/f1\/[^/]+\/(picks|standings|report|season)$/.test(location.pathname) ||
+    /^\/tennis(\/.*)?$/.test(location.pathname);
   const showBackButton = !isMainRoute;
 
   return (
     <div className="min-h-screen flex items-start" style={{ background: 'var(--ink)' }}>
       <SkipToContent targetId="main-content" />
 
-      {/* ── Desktop Left Sidebar ─────────────────────────────────────── */}
+      {/* ── Desktop Left Sidebar — grouped Platform / Sports / Community ── */}
       <nav
         data-testid="desktop-nav"
         className="hidden lg:flex fixed left-0 top-0 bottom-0 w-[220px] flex-col z-50"
         style={{ background: 'var(--shell)', borderRight: '1px solid rgba(255,255,255,0.08)' }}
       >
-        {/* Editorial Brandmark + username */}
-        <div className="px-5 pt-6 pb-5" style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
-          <BrandMark theme="dark" scale={0.72} />
-          {username && (
-            <div
-              className="mt-2"
-              style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 9, letterSpacing: '0.12em', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
-            >
-              {username}
-            </div>
-          )}
+        {/* Brand */}
+        <div style={{ padding: '16px 14px 13px', borderBottom: '1px solid rgba(255,255,255,.07)', display: 'flex', alignItems: 'center', gap: 9 }}>
+          <div style={{ width: 24, height: 24, borderRadius: 5, background: 'var(--accent)', display: 'grid', placeItems: 'center', fontFamily: 'Archivo Black, sans-serif', fontSize: 11, color: '#fff', flexShrink: 0 }}>
+            K
+          </div>
+          <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 13, color: '#fff', letterSpacing: '-0.01em' }}>
+            Fantasy<span style={{ color: 'rgba(255,255,255,.32)' }}>Kit</span>
+          </div>
         </div>
 
-        {/* Nav Links */}
-        <div className="flex-1 py-4 space-y-px">
-          {NAV_ITEMS.map(({ key, label, path, Icon, desc, isLive }) => { // eslint-disable-line no-unused-vars
-            const isActive = location.pathname === path ||
-              (path !== '/' && location.pathname.startsWith(path));
-            const liveColor = 'var(--danger)';
-            const activeColor = isLive ? liveColor : 'var(--cyan)';
-            // Stay on current detail page when tapping league/f1-calendar nav while already inside one
-            const alreadyOnLeague = key === 'league' && location.pathname.startsWith('/league/');
-            const alreadyOnPaddock = key === 'f1-calendar' && /^\/f1\/[^/]+/.test(location.pathname);
-            const navTo = (alreadyOnLeague || alreadyOnPaddock)
-              ? location.pathname + location.search
-              : path;
+        {/* Nav */}
+        <div style={{ padding: '8px 6px', flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 0, scrollbarWidth: 'none' }}>
 
-            return (
-              <Link
-                key={key}
-                to={navTo}
-                title={desc}
-                className="relative flex items-center gap-3 mx-3 px-3 py-2.5 transition-all duration-150"
-                style={{
-                  background:  isActive ? (isLive ? 'rgba(239,68,68,0.08)' : 'rgba(26,111,168,0.12)') : 'transparent',
-                  color:       isActive ? activeColor : 'rgba(255,255,255,0.45)',
-                  borderLeft:  isActive ? `2px solid ${activeColor}` : '2px solid transparent',
-                }}
-                onMouseEnter={e => {
-                  if (!isActive) {
-                    e.currentTarget.style.background = 'rgba(255,255,255,0.05)';
-                    e.currentTarget.style.color = isLive ? liveColor : 'rgba(255,255,255,0.85)';
-                  }
-                }}
-                onMouseLeave={e => {
-                  if (!isActive) {
-                    e.currentTarget.style.background = 'transparent';
-                    e.currentTarget.style.color = 'rgba(255,255,255,0.45)';
-                  }
-                }}
-              >
-                <Icon size={18} />
-                <span
-                  style={{
-                    fontFamily:    'JetBrains Mono, monospace',
-                    fontSize:      '10px',
-                    letterSpacing: '0.18em',
-                    fontWeight:    600,
-                  }}
-                >
-                  {label}
-                </span>
+          {/* PLATFORM */}
+          <NavSectionLabel>Platform</NavSectionLabel>
+          <NavItem
+            label="Home"
+            path="/"
+            active={location.pathname === '/'}
+            dotColor="var(--accent)"
+          />
 
-                {/* Live pulse dot */}
-                {isLive && (
-                  <div
-                    className="ml-auto w-1.5 h-1.5 rounded-full shrink-0 animate-live-pulse"
-                    style={{ background: 'var(--danger)' }}
-                  />
-                )}
+          {/* SPORTS */}
+          <NavSectionLabel>Sports</NavSectionLabel>
 
-                {/* Unread notification badge (Clubhouse) */}
-                {key === 'clubhouse' && unreadCount > 0 && (
-                  <div
-                    className="ml-auto flex items-center justify-center rounded-full shrink-0"
-                    style={{ minWidth: 16, height: 16, background: 'var(--danger)', padding: '0 4px', fontFamily: 'JetBrains Mono, monospace', fontSize: 9, fontWeight: 700, color: '#fff' }}
-                  >
-                    {unreadCount > 99 ? '99+' : unreadCount}
-                  </div>
-                )}
-              </Link>
-            );
-          })}
-        </div>
-
-        {/* Footer */}
-        <div className="px-5 py-4" style={{ borderTop: '1px solid rgba(255,255,255,0.08)' }}>
-          {/* Sport Switcher */}
-          <div className="flex mb-4" style={{ background: 'rgba(255,255,255,0.06)', borderRadius: 6, padding: 3 }}>
-            {['football','f1'].map(sport => (
-              <button
-                key={sport}
-                onClick={() => {
-                  setActiveSport(sport);
-                  navigate(sport === 'f1' ? (activePaddockId ? `/f1/${activePaddockId}` : '/f1') : '/');
-                }}
-                style={{
-                  flex: 1,
-                  padding: '5px 0',
-                  borderRadius: 4,
-                  fontFamily: 'JetBrains Mono, monospace',
-                  fontSize: 9,
-                  fontWeight: 700,
-                  letterSpacing: '0.14em',
-                  textTransform: 'uppercase',
-                  cursor: 'pointer',
-                  border: 'none',
-                  transition: 'all 0.15s',
-                  background: activeSport === sport ? 'var(--cyan)' : 'transparent',
-                  color: activeSport === sport ? '#fff' : 'rgba(255,255,255,0.4)',
-                }}
-              >
-                {sport === 'football' ? '⚽' : '🏎'} {sport === 'football' ? 'FBL' : 'F1'}
-              </button>
+          {/* Football — with sub-items */}
+          <NavItem
+            label="Football"
+            path="/scores"
+            active={['/scores','/squad','/league','/live','/market','/recap'].some(p => location.pathname === p || location.pathname.startsWith(p + '/'))}
+            dotColor="var(--accent)"
+            tag="GW"
+            tagStyle={{ background: 'rgba(26,111,168,.15)', color: 'var(--accent)' }}
+          />
+          <div style={{ paddingLeft: 16 }}>
+            {[
+              { label: 'Scores',    path: '/scores' },
+              { label: 'Squad',     path: '/squad'  },
+              { label: 'League',    path: '/league' },
+              { label: 'Market',    path: '/market' },
+              { label: 'Recap',     path: '/recap'  },
+            ].map(({ label, path }) => (
+              <NavItem
+                key={path}
+                label={label}
+                path={path}
+                active={location.pathname === path || (path !== '/scores' && location.pathname.startsWith(path + '/'))}
+                dotColor="var(--accent)"
+                sub
+              />
             ))}
           </div>
 
-          <Link
-            to="/settings"
-            title="Settings"
-            className="block mb-3 text-xs font-semibold uppercase tracking-wider transition-colors"
-            style={{ color: 'rgba(255,255,255,0.45)', fontFamily: 'JetBrains Mono, monospace', letterSpacing: '0.15em' }}
-            onMouseEnter={(e) => e.currentTarget.style.color = 'var(--cyan)'}
-            onMouseLeave={(e) => e.currentTarget.style.color = 'rgba(255,255,255,0.45)'}
-          >
-            ⚙ Settings
-          </Link>
-          <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '9px', letterSpacing: '0.15em', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase' }}>
-            Alpha v0.1
+          {/* Formula 1 */}
+          <NavItem
+            label="Formula 1"
+            path={activePaddockId ? `/f1/${activePaddockId}` : '/f1'}
+            active={location.pathname.startsWith('/f1')}
+            dotColor="var(--f1)"
+            tag="F1"
+            tagStyle={{ background: 'rgba(193,57,27,.2)', color: 'var(--f1)' }}
+          />
+          <div style={{ paddingLeft: 16 }}>
+            {(activePaddockId ? [
+              { label: 'Race Picks',  path: `/f1/${activePaddockId}/picks`     },
+              { label: 'Results',     path: `/f1/${activePaddockId}/report`    },
+              { label: 'Standings',   path: `/f1/${activePaddockId}/standings` },
+              { label: 'Season',      path: `/f1/${activePaddockId}/season`    },
+            ] : [{ label: 'Calendar', path: '/f1' }]).map(({ label, path }) => (
+              <NavItem
+                key={path}
+                label={label}
+                path={path}
+                active={location.pathname === path}
+                dotColor="var(--f1)"
+                sub
+              />
+            ))}
+          </div>
+
+          {/* Tennis */}
+          <NavItem
+            label="Tennis"
+            path="/tennis"
+            active={location.pathname.startsWith('/tennis')}
+            dotColor="var(--ten)"
+            tag="New"
+            tagStyle={{ background: 'rgba(26,138,107,.2)', color: 'var(--ten)' }}
+          />
+          <div style={{ paddingLeft: 16 }}>
+            {[
+              { label: 'Tournament', path: '/tennis'       },
+              { label: 'Leaderboard', path: '/tennis/leaderboard' },
+            ].map(({ label, path }) => (
+              <NavItem
+                key={path}
+                label={label}
+                path={path}
+                active={location.pathname === path}
+                dotColor="var(--ten)"
+                sub
+              />
+            ))}
+          </div>
+
+          {/* COMMUNITY */}
+          <NavSectionLabel>Community</NavSectionLabel>
+          <NavItem
+            label="My Group"
+            path="/clubhouse"
+            active={location.pathname.startsWith('/clubhouse')}
+            dotColor="rgba(255,255,255,.55)"
+            badge={unreadCount}
+          />
+          <NavItem
+            label="Trophy Cabinet"
+            path="/trophy"
+            active={location.pathname === '/trophy'}
+            dotColor="var(--gold)"
+          />
+          <NavItem
+            label="Coin Challenges"
+            path="/challenges"
+            active={location.pathname === '/challenges'}
+            dotColor="var(--gold)"
+            tag="Beta"
+            tagStyle={{ background: 'rgba(184,114,14,.15)', color: 'var(--gold)' }}
+          />
+          <NavItem
+            label="Settings"
+            path="/settings"
+            active={location.pathname === '/settings'}
+            dotColor="rgba(255,255,255,.35)"
+          />
+        </div>
+
+        {/* Footer */}
+        <div style={{ padding: '10px 12px', borderTop: '1px solid rgba(255,255,255,.07)', display: 'flex', alignItems: 'center', gap: 9 }}>
+          <div style={{ width: 26, height: 26, borderRadius: '50%', background: 'var(--accent)', display: 'grid', placeItems: 'center', fontFamily: 'Archivo Black, sans-serif', fontSize: 10, color: '#fff', flexShrink: 0 }}>
+            {username ? username[0].toUpperCase() : 'M'}
+          </div>
+          <div>
+            <div style={{ fontSize: 12, color: 'rgba(255,255,255,.68)', fontWeight: 600 }}>{username ?? 'Manager'}</div>
+            <div style={{ ...MONO_STYLE, fontSize: 7.5, letterSpacing: '0.06em', color: 'rgba(255,255,255,.26)' }}>Multi-sport</div>
           </div>
         </div>
       </nav>

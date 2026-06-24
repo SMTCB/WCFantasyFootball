@@ -9,6 +9,7 @@ export function useClubhouse() {
   const [competitions, setCompetitions] = useState({ football: [], f1: [], tennis: [] });
   const [feed, setFeed] = useState([]);
   const [members, setMembers] = useState([]);
+  const [metaStandings, setMetaStandings] = useState([]);
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -51,10 +52,11 @@ export function useClubhouse() {
       setCompetitions({ football: [], f1: [], tennis: [] });
       setFeed([]);
       setMembers([]);
+      setMetaStandings([]);
       setNotifications([]);
       return;
     }
-    const [compRes, feedRes, membersRes, notifRes] = await Promise.all([
+    const [compRes, feedRes, membersRes, notifRes, metaRes] = await Promise.all([
       supabase.rpc('get_clubhouse_competitions', { p_circle_id: circleId }),
       supabase.rpc('get_circle_feed', { p_circle_id: circleId, p_limit: 30 }),
       supabase
@@ -67,6 +69,7 @@ export function useClubhouse() {
         .eq('circle_id', circleId)
         .order('created_at', { ascending: false })
         .limit(50),
+      supabase.rpc('get_circle_meta_standings', { p_circle_id: circleId }),
     ]);
     if (!compRes.error) setCompetitions(compRes.data ?? { football: [], f1: [], tennis: [] });
     if (!feedRes.error) setFeed(feedRes.data ?? []);
@@ -80,6 +83,7 @@ export function useClubhouse() {
       );
     }
     if (!notifRes.error) setNotifications(notifRes.data ?? []);
+    if (!metaRes.error) setMetaStandings(metaRes.data ?? []);
   }, []);
 
   useEffect(() => { fetchCircleData(activeCircleId); }, [activeCircleId, fetchCircleData]);
@@ -216,6 +220,7 @@ export function useClubhouse() {
     competitions,
     feed,
     members,
+    metaStandings,
     notifications,
     unreadCount,
     loading,
