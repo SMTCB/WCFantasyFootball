@@ -105,7 +105,7 @@ The full football fantasy platform is live in production with ~50 pilot users. E
 **Infrastructure:**
 - Supabase project `sssmvihxtqtohisghjet` — PostgreSQL, Auth, Edge Functions, pgcron, Realtime
 - React 19 + Vite + Tailwind CSS 4 on Vercel, auto-deployed from `main`
-- 185 migrations applied; next migration number is `186_`
+- 185 migrations applied to `main`; v2 branch is at migration `201_` — next is `202_`
 - Capacitor iOS/Android native shells (not yet submitted to stores)
 
 **Football product (complete):**
@@ -651,7 +651,7 @@ Recommend **Option A** — LIVE is the least frequently used standalone screen (
 
 ## Phase 2 — Tennis Module (W6–W8)
 
-**Status: ⬜ Not started**
+**Status: 🔄 In progress — T-0 through T-3 ✅ complete, T-4 (UI) next**
 
 **Goal:** a season-long roster prediction game built around the full ATP calendar (14 events: 4 Grand Slams + 9 Masters 1000s + ATP Finals). Players join **The Player's Box** and compete across the season with a low-friction one-login-per-tournament model, Ace Cards, and a QF Captain mechanic.
 
@@ -663,33 +663,76 @@ Recommend **Option A** — LIVE is the least frequently used standalone screen (
 - **Group concept:** **The Player's Box** (`player_boxes` + `player_box_members` tables, invite code join)
 - **Picks:** global per user — one roster per tournament regardless of how many Player's Boxes the user belongs to. Leaderboard filters by box membership.
 - **Ace Cards:** 4 per user per season (one of each type), server-side state in `tennis_ace_cards`. Not playable at ATP Finals. Forfeited if unused by season end.
-- **QF Captain:** mid-tournament window (48h) opens when 8 players remain. Captain earns 2× points if they reached QF or beyond.
+- **QF Captain:** mid-tournament window (48h) opens when 8 players remain. Captain earns 2× points.
 - **ATP Finals:** separate prediction slate mechanic (15 match winners across 2 login windows). No roster, no Ace Cards.
-- **Season:** Australian Open to ATP Finals (Jan–Nov). Best 4 of 9 Masters scores count (Masters Drop Rule). All 4 Slams mandatory.
-- **Data entry:** admin enters player seed list before tournament and eliminated players after each round. Auto-API is a post-sale enhancement.
+- **Season:** Australian Open to ATP Finals (Jan–Nov). Best 4 of 9 Masters scores count (Masters Drop Rule, applied when ≥5 completed). All 4 Slams always counted.
+- **Data entry:** admin enters player list before tournament and eliminated players after each round. `sync-tennis-players` Edge Function syncs from RapidAPI (1 call per trigger — 50 req/day free plan budget).
+- **API:** RapidAPI `tennis-api-atp-wta-itf`, free plan, 50 req/day. All calls are admin-triggered only (never cron). ~28 total calls for a full 14-tournament season.
 - **Framework:** Vite/React in this monorepo (same as F1)
 - **Chat & Gazette:** Circle-level only — no per-Player's-Box chat. `gazette_entry_type = 'tennis_result'` added.
 - **Trophy ledger:** holistic across all sports via `trophy_ledger` (migration 189). Season winner per Player's Box.
 
-### Sprint summary (see plan for full task lists)
+### Sprint summary
 
-| Sprint | Goal | Effort | Migrations |
-|---|---|---|---|
-| **T-0** | Schema foundations + Player's Box RPCs | ~5h | 194, 195 |
-| **T-1** | Roster, Ace Card, QF Captain, ATP Finals submission RPCs | ~5h | — |
-| **T-2** | Admin tooling (player seeding + round result entry) | ~4h | — |
-| **T-3** | Scoring Edge Functions + season leaderboard RPC | ~6h | — |
-| **T-4** | UI screens (7 screens, thin) | ~8h | — |
+| Sprint | Goal | PR | Migrations / EF | Status |
+|---|---|---|---|---|
+| **T-0** | Schema + Player's Box + 2026 ATP calendar | #617 | 197, 198 | ✅ Done |
+| **T-1** | Game RPCs (roster, ace card, QF captain, ATP Finals picks, scoring payload) | #618 | 199 | ✅ Done |
+| **T-2** | Admin RPCs (tournament lifecycle) + `sync-tennis-players` Edge Function | #619 | 200 + EF | ✅ Done |
+| **T-3** | `score-tennis-tournament` + `score-atp-finals` Edge Functions + leaderboard RPCs | #620 | 201 + 2 EF | ✅ Done |
+| **T-4** | UI screens (7 screens, 5 hooks) | — | — | ⬜ Next |
 
-**MVP complete after T-3. Full exit criteria checklist in the plan.**
+**MVP complete after T-4. Backend is 100% built — T-4 is UI only.**
 
 **Session notes for Phase 2:**
 
+**2026-06-24 — Sprints T-0 through T-3 complete (PRs #617–#620):**
+
+**Sprint T-0 (migration 197 + 198, PR #617):**
+- `player_boxes`, `player_box_members`, `circle_player_boxes` (links boxes to Circle/Clubhouse layer)
+- `tennis_seasons` (2026 seeded), `tennis_tournaments` (14-event calendar: 4 GS + 9 M1000 + ATP Finals)
+- `tennis_tournament_type` + `tennis_surface` enums
+- `tennis_tournament_players` with `external_player_id INT` + partial unique index (allows manual NULLs, blocks API duplicates)
+- `tennis_rosters`, `tennis_qf_captains`, `tennis_ace_cards`, `tennis_tournament_scores`
+- `tennis_atp_finals_matches`, `tennis_atp_finals_picks`
+- `gazette_entry_type` extended with `'tennis_result'`
+- RPCs: `create_player_box`, `join_player_box_by_code`, `get_my_player_boxes`
+- RLS on all 12 tables
+
+**Sprint T-1 (migration 199, PR #618):**
+- `submit_tennis_roster`: tiered player validation (7 slots across T1/T2/T3/T4), ace card consumption, re-submit idempotency (`used_tournament_id IS NULL OR = p_tournament_id`), card swap support
+- `set_tennis_qf_captain`: status/window guards, roster membership, eliminated player check
+- `submit_atp_finals_group_picks` + `submit_atp_finals_knockout_picks`: full match-pairing validation
+- `get_tennis_tournament_for_user`: rich single-call payload (tournament + players + roster + captain + ace_cards + surviving_players)
+- `issue_season_ace_cards`: service_role-only, idempotent 4-card issuance per Player's Box member
+
+**Sprint T-2 (migration 200 + `sync-tennis-players` EF, PR #619):**
+- 9 service_role-only admin RPCs: `admin_open_tournament`, `admin_start_tournament`, `admin_seed_tournament_players`, `admin_enter_round_results`, `admin_open_qf_window`, `admin_set_champion`, `admin_complete_tournament`, `admin_seed_atp_finals_matches`, `admin_enter_atp_finals_result`
+- All restricted via REVOKE from public/authenticated/anon + GRANT to service_role
+- `sync-tennis-players` Edge Function: 1 API call per admin trigger; requires `external_id` set on tournament first; infers tier from seed (T1=1–4, T2=5–16, T3=17–32, T4=unseeded); handles homeTeam/awayTeam and player_home/player_away API naming; upserts via `admin_seed_tournament_players`
+
+**Sprint T-3 (migration 201 + 2 EFs, PR #620):**
+- `score-tennis-tournament`: T1=2pts/round, T2=3, T3=4, T4=6; QF captain ×2; ace card bonuses (underdog_boost +15, safety_net +8, surface_specialist +12 proxy, dark_horse_insurance T4 floor=6); writes `tennis_tournament_scores` + gazette + calls `admin_complete_tournament`
+- `score-atp-finals`: 15-match pick'em (group=3, SF=5, Final=8 pts, max 54); partial scoring supported; idempotent
+- `get_player_box_leaderboard`: season standings with Masters Drop Rule (worst standard score dropped when ≥5 standard tournaments complete); rank, total, best, worst_dropped
+- `get_tennis_season_summary`: per-tournament score grid for all box members (history screen)
+- `get_tennis_tournament_list`: full 2026 ATP calendar with player counts + `has_my_roster` flag
+
+**What T-4 needs to build (UI only — all data contracts are done):**
+- `TennisHomeScreen.jsx` — ATP calendar list with status chips, roster badge, `get_tennis_tournament_list` 
+- `TennisTournamentScreen.jsx` — tournament detail: pick 7 players, ace card selector, `submit_tennis_roster`
+- `TennisLeaderboardScreen.jsx` — Player's Box standings, per-tournament grid, `get_player_box_leaderboard` + `get_tennis_season_summary`
+- `TennisAtpFinalsScreen.jsx` — 15-match pick'em UI, `submit_atp_finals_*_picks`
+- `TennisAdminScreen.jsx` — admin panel: open tournament, seed players, enter results, open QF window
+- `PlayerBoxScreen.jsx` — create/join Player's Box, member list
+- `TennisProfileView.jsx` — user's season summary across all boxes
+- Hooks: `useTennisCalendar`, `useTennisTournament`, `useTennisLeaderboard`, `usePlayerBox`, `useTennisAdmin`
+- Route wiring in `App.jsx` + sport switcher integration
+
 **2026-06-22 — Game dynamics spec and implementation plan written:**
-- Game model confirmed: 7-player tiered roster (Seeds 1–4 / 5–16 / 17–32 / Unseeded), points for round reached, QF Captain 2×, 4 Ace Cards per season. ATP Finals is a separate 15-match prediction slate with tier-based scoring (250–7,500 pts).
+- Game model confirmed: 7-player tiered roster (Seeds 1–4 / 5–16 / 17–32 / Unseeded), points for round reached, QF Captain 2×, 4 Ace Cards per season. ATP Finals is a separate 15-match prediction slate.
 - Architecture decisions confirmed: The Player's Box naming; global picks (one roster per tournament per user); manual admin entry; Ace Cards server-side tracked; Masters Drop Rule (best 4 of 9); season Jan–Nov.
-- Full implementation plan written: [TENNIS_MODULE_IMPLEMENTATION_PLAN.md](../product/TENNIS_MODULE_IMPLEMENTATION_PLAN.md) — 5 sprints (~28h), complete schema SQL, RPC contracts, scoring pseudocode, 7 UI screens, exit criteria checklist.
-- Supersedes the placeholder Sprint T-1/T-2 plan that was in this document (wrong game model — bracket picks vs roster ownership).
+- Full implementation plan written: [TENNIS_MODULE_IMPLEMENTATION_PLAN.md](../product/TENNIS_MODULE_IMPLEMENTATION_PLAN.md) — 5 sprints, complete schema SQL, RPC contracts, scoring pseudocode, 7 UI screens, exit criteria checklist.
 
 ---
 
@@ -804,7 +847,7 @@ These are product decisions that cannot be defaulted away. They must be made bef
 
 These apply throughout the v2 build. They are documented in CLAUDE.md and the assessment docs — collected here for quick reference.
 
-1. **Migrations are append-only.** Next free number is `186_`. Never edit an applied migration.
+1. **Migrations are append-only.** Next free number on v2 is `202_` (main is at `191_`). Never edit an applied migration.
 2. **Backup before every migration.** `npx supabase db dump --linked` is broken on this machine (Docker unavailable) — `SELECT` the specific rows being changed and save to `backups/*.json` first.
 3. **Football stays green.** `platform.spec.js` and a manual football smoke pass at the end of every sprint that touches shared infrastructure.
 4. **Value moves only through `SECURITY DEFINER` RPCs.** Clients never write directly to coin or budget columns.
@@ -844,5 +887,5 @@ All documents this plan is built on — read these for design detail before star
 
 ---
 
-Last Updated: **2026-06-22**
+Last Updated: **2026-06-24**
 Author: session planning (Claude + user)
