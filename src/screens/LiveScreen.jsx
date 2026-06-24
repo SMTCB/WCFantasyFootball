@@ -541,19 +541,23 @@ export default function LiveScreen() {
 
       // 4b. Current GW points per league — fetched from fantasy_points for the active matchday.
       // This powers the GW pill on each league card (shows running total as fixtures score).
+      // points_breakdown is also fetched so we can use effective_xi/bench_players when the
+      // round is complete — prevents post-round transfers corrupting the historical XI display.
       const gwPtsByLeague = {};
+      const fpBreakdownBySquad = {};
       const allSquadIds = (squadRows || []).map(s => s.id).filter(Boolean);
       const gwMatchdayIds = [...new Set(Object.values(matchdayIdByTournament))];
       if (allSquadIds.length && gwMatchdayIds.length) {
         const squadIdToLeague = Object.fromEntries((squadRows || []).map(s => [s.id, s.league_id]));
         const { data: fpRows = [] } = await supabase
           .from('fantasy_points')
-          .select('squad_id, total, matchday_id')
+          .select('squad_id, total, matchday_id, points_breakdown')
           .in('squad_id', allSquadIds)
           .in('matchday_id', gwMatchdayIds);
         for (const fp of fpRows || []) {
           const lid = squadIdToLeague[fp.squad_id];
           if (lid) gwPtsByLeague[lid] = Number(fp.total ?? 0);
+          if (fp.points_breakdown) fpBreakdownBySquad[fp.squad_id] = fp.points_breakdown;
         }
       }
 
@@ -564,11 +568,24 @@ export default function LiveScreen() {
         : (memberships?.[0]?.league_id ?? null);
       const squadRow = squadByLeague[activeLeagueId] ?? null;
 
-      const squadPlayerIds  = squadRow?.players || [];
-      const startingXi      = squadRow?.starting_xi?.length > 0 ? squadRow.starting_xi : null;
+      // When a round is complete, points_breakdown.effective_xi and bench_players hold the
+      // exact players and lineup that were scored — use them to override the current squad
+      // so that post-round transfers don't pollute the historical display (e.g. a player
+      // bought after the round closes appearing in MY XI with stats from that round).
+      const activeBreakdown = squadRow ? fpBreakdownBySquad[squadRow.id] : null;
+      const settledEffectiveXi   = activeBreakdown?.effective_xi?.length  ? activeBreakdown.effective_xi   : null;
+      const settledBenchPlayers  = activeBreakdown?.bench_players?.length  ? activeBreakdown.bench_players  : null;
+      const roundIsSettled       = Boolean(settledEffectiveXi);
+
+      const squadPlayerIds  = roundIsSettled
+        ? [...(settledEffectiveXi || []), ...(settledBenchPlayers || [])]
+        : (squadRow?.players || []);
+      const startingXi      = roundIsSettled
+        ? settledEffectiveXi
+        : (squadRow?.starting_xi?.length > 0 ? squadRow.starting_xi : null);
       // Fall back to first starter when captain_id is null — mirrors SquadScreen behaviour.
-      const captainId       = squadRow?.captain_id ?? (startingXi?.[0] ?? squadPlayerIds[0] ?? null);
-      const isTripleCap     = squadRow?.is_triple_captain ?? false;
+      const captainId       = (activeBreakdown?.effective_captain_id) ?? squadRow?.captain_id ?? (startingXi?.[0] ?? squadPlayerIds[0] ?? null);
+      const isTripleCap     = activeBreakdown?.is_triple_captain ?? squadRow?.is_triple_captain ?? false;
 
       // 5. Player details + live stats in parallel — U50/U52: fetch minutes_played
       const [{ data: playerRows = [] }, { data: statsData = [] }] = await Promise.all([
