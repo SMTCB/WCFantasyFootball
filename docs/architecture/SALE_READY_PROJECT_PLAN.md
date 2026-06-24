@@ -15,7 +15,7 @@
 | **0** | Foundation seams | W1 | ✅ Done |
 | **1A** | P2P Betting | W2–W7 | ✅ Done — P2P-0 through P2P-6 complete (PRs #627–#629, migrations 202–207) |
 | **1B** | F1 Module | W2–W5 | ✅ Done (Sprints 0–3, PR #606) |
-| **1C** | UX Redesign | W1–W9 | 🔄 In progress — Sprint UX-0 ✅ done, UX-1 next |
+| **1C** | UX Redesign | W1–W9 | 🔄 In progress — Sprint UX-0 ✅ done, UX-1 ✅ done (PR #632), UX-2 next |
 | **1D** | Buyout hygiene — batch 1 | W1–W2 | 🔄 In progress — 1D-A done, 1D-B pending |
 | **1E** | Clubhouse social architecture | W3–W8 | ✅ Done — CH-0–CH-9 complete (PRs #607–#615). Clubhouse shell shipped. |
 | **2** | Tennis Module | W6–W8 | ✅ Done — T-0–T-4 complete (PRs #617–620, #625) |
@@ -31,7 +31,7 @@
 - **Phase 1D-B:** schema reproducibility baseline — standalone, can do any session.
 - **Phase 2 — Tennis:** ✅ COMPLETE — T-0–T-4 all shipped (PRs #617–620 + #625). Full tennis module live on v2: 7 screens + 5 hooks + routes + Kit Light design.
 - **Phase 1B remaining:** F1-4 smoke tests + F1-5 OpenF1 sync cron — both optional pre-MVP.
-- **Phase 1C — UX Redesign:** Sprint UX-1 (multi-sport shell) is the next active track.
+- **Phase 1C — UX Redesign:** Sprint UX-1 ✅ COMPLETE (PR #632). Next: Sprint UX-2 (P2P/F1/Tennis screen final pass).
 
 ---
 
@@ -356,14 +356,14 @@ The implementation roadmap linked above is comprehensive and self-contained. The
 **Note:** the first 3–4 weeks of the pilot generate real user feedback on UX pain points. Hold back redesign decisions on navigation patterns and information architecture until that feedback is available (approximately W3–W4). Apply the new visual layer (colors, typography) immediately; restructure layouts after feedback.
 
 ### Sprint UX-1 — Clubhouse shell + multi-sport navigation
-**Status: ⬜ Not started — coordinates with Phase 1E Sprint CH-1**
+**Status: ✅ Done — PR #632 (2026-06-24)**
 
-> **Note:** Phase 1E Sprint CH-1 and this sprint are the same screen from different angles. Build them together. `ClubhouseScreen.jsx` IS the multi-sport shell home. Do not build them separately.
-
-- [ ] `SportContext.jsx`: resolves active sport from the active league/paddock/box's `tournament.sport_id`; exposes `{sport, gameModel}` to all screens
-- [ ] Module screen registry in `App.jsx`: Clubhouse as home (`/`); football routes as module #1; F1 routes as module #2; Tennis routes as module #3; URL-compat shims for existing `/squad`, `/market`, etc.
-- [ ] `ClubhouseScreen.jsx` (`/`): cross-sport feed via `get_circle_feed()`, meta-standings via `get_circle_meta_standings()`, sport cards grouped by type (football leagues / F1 paddocks / tennis boxes), member rail
-- [ ] Profile / trophy cabinet screen: `trophy_ledger` filtered by `user_id`; all wins across sports
+- [x] `MultiSportHomeScreen.jsx` at `/`: personal dashboard with 3-sport module cards, gazette cross-sport feed, group meta-standings teaser
+- [x] `TrophyCabinetScreen.jsx` at `/trophy`: per-user trophy shelf grouped by sport (football/F1/tennis), dark profile header with overall rank + gold/silver counts
+- [x] `AppLayout.jsx` desktop sidebar redesigned: grouped PLATFORM / SPORTS / COMMUNITY nav with dot-based items, F1 and Tennis sub-items, no sport switcher toggle
+- [x] `useClubhouse.js`: `metaStandings` state + `get_circle_meta_standings` RPC added to `fetchCircleData` batch
+- [x] `App.jsx`: `HomeScreen` moved to `/scores`; `MultiSportHomeScreen` at `/`; `/trophy` route added
+- Note: desktop nav shows F1 sub-routes (picks/results/standings/season) when `activePaddockId` is known; Tennis shows tournament + leaderboard sub-items. Mobile nav unchanged.
 
 ### Sprint UX-2 — P2P and F1 screens (final pass)
 **Status: ⬜ Not started**
@@ -379,6 +379,14 @@ The implementation roadmap linked above is comprehensive and self-contained. The
 - Key decisions made: (1) OnboardingWizard keeps `var(--shell)` card bg — immersive full-screen is the "one dark element" in Kit Light; all white text inside is correct on that surface. (2) Desktop sidebar moved to `var(--shell)` — aligns with mobile bottom nav, makes BrandMark `theme="dark"` work correctly against a dark surface. (3) `BrandMark.secondaryColor` for dark theme fixed to `rgba(255,255,255,0.55)` — `var(--paper)` is dark navy in Kit Light and was invisible on shell.
 - Hardcoded old-dark rgba patterns replaced throughout: `rgba(0,180,216,...)` → `rgba(26,111,168,...)`, `rgba(242,238,229,...)` → `rgba(24,32,46,...)`, `text-white` on light surfaces → `text-[var(--paper)]`, `bg-cyan text-black` → `bg-cyan text-white` (accent is now dark navy, not light teal).
 - **Remaining for UX-0 completion:** run `platform.spec.js` to verify no visual regressions; `SquadScreen` Kit Light components (MiniPitch/MiniTok pitch surface) blocked on design spec for `#2D5A27` green field in light context.
+
+**2026-06-24 — Sprint UX-1 — Multi-Sport Navigation Shell (PR #632):**
+- `MultiSportHomeScreen.jsx` created: greeting header (time-of-day), 3 stats (sports/trophies/rank), 3-col sport module cards, gazette feed, right sidebar with group meta-standings table highlighting current user with "You" badge.
+- `TrophyCabinetScreen.jsx` created: dark shell header (avatar initial, username, per-sport dots, stats row: trophies/sports/gold/silver, overall group rank), sport breakdown 3-up grid, trophy shelf grouped by sport (football → F1 → tennis), sidebar with feed activity history + shareable card placeholder.
+- `AppLayout.jsx` desktop sidebar rewritten: `NavSectionLabel` + `NavItem` helper components; grouped PLATFORM (Home), SPORTS (Football with 5 sub-items, F1 with conditional sub-items, Tennis with sub-items), COMMUNITY (Group/Trophies/Challenges/Settings); footer shows avatar initial + username + "Multi-sport".
+- `useClubhouse.js`: 5th entry added to `fetchCircleData` Promise.all — `get_circle_meta_standings` RPC; `metaStandings` state initialised, returned from hook.
+- `App.jsx`: imports + routes updated; FOOTBALL_NAV scores path moved to `/scores`.
+- All 258 Playwright tests pass; build clean (zero Rolldown TDZ errors).
 
 **2026-06-22 — Audit pass on partial-pass screens (session 4):**
 - `MarketScreen.jsx`: auto-fill button state colors (old cyan → accent-bg), player row owned/taken border colors.
