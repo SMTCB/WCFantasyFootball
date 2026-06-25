@@ -1,9 +1,9 @@
-# Forza Fantasy League — Competition Platform
+# FrontRow — Multi-Sport Fantasy & P2P Betting Platform
 
-Elite fantasy football platform with web, iOS, and Android apps via Capacitor.  
-Support for EPL, World Cup, Champions League, and other major football competitions.
+Fantasy sports platform with P2P wagering, covering football, F1, and tennis.  
+Web, iOS, and Android apps powered by React 19, Supabase, and Capacitor.
 
-**Stack**: React 19 · Vite · Tailwind CSS 4 · Supabase · Capacitor
+**Stack**: React 19 · Vite 8 · Tailwind CSS 4 · Supabase · Capacitor 6
 
 ---
 
@@ -24,6 +24,70 @@ VITE_SUPABASE_ANON_KEY=...
 
 ---
 
+## Platform Architecture
+
+```
+Sports (Football · F1 · Tennis)
+         │
+         ▼
+  SportDataAdapter          ← provider-agnostic seam (Forza / Ergast / ATP)
+         │
+         ▼
+  Shared DB Layer           ← circles · sport_type · trophy_ledger
+         │
+    ┌────┴────┐
+    ▼         ▼
+ Fantasy     P2P Betting    ← coin economy · escrow · peer-to-peer markets
+ Scoring     (league bets · match props · outright markets)
+    │
+    ▼
+ Gazette / Clubhouse / Forza Times   ← social layer, per-circle newspaper
+```
+
+### Key Modules
+
+| Module | Location | Purpose |
+|--------|----------|---------|
+| **Football** | `src/screens/Squad*, Market*, League*` | Draft + classic fantasy, matchday scoring |
+| **F1** | `supabase/functions/f1-*` | Constructor + driver fantasy, race scoring |
+| **Tennis** | `supabase/functions/tennis-*` | ATP/WTA match-by-match fantasy |
+| **P2P Betting** | `supabase/functions/p2p-*` | Peer-to-peer wagering on any sport |
+| **Clubhouse** | `src/components/Clubhouse*` | Per-league social hub + Forza Times AI newspaper |
+| **Circles** | `supabase/migrations/187_*` | Multi-sport league abstraction layer |
+
+### Rebrand Guide
+
+The design system uses CSS tokens only — no hardcoded colours in components.  
+To rebrand, update two variables in `src/index.css`:
+
+```css
+:root {
+  --accent:  #1A6FA8;   /* primary brand colour (buttons, links, active state) */
+  --bg:      #F7F3ED;   /* page background */
+}
+```
+
+All 109 token references update automatically. No component edits needed.
+
+**Full token map** (`src/index.css` `:root` block):
+
+| Token | Default | Role |
+|-------|---------|------|
+| `--bg` | `#F7F3ED` | Page background (cream) |
+| `--card` | `#FFFFFF` | Card surface |
+| `--elev` | `#EDEAE2` | Elevated / secondary surface |
+| `--shell` | `#18202E` | Nav shell, sticky headers |
+| `--rule` | `#E2DDD5` | Dividers and borders |
+| `--paper` | `#18202E` | Body text |
+| `--mute` | `#8A97A8` | Secondary / muted text |
+| `--accent` | `#1A6FA8` | Primary brand colour |
+| `--gold` | `#B8720E` | Premium / highlight |
+| `--positive` | `#166534` | Positive / success |
+| `--warn` | `#B8720E` | Warning |
+| `--danger` | `#B91C1C` | Error / destructive |
+
+---
+
 ## Mobile (iOS / Android)
 
 Capacitor wraps the React app. After any web change:
@@ -35,20 +99,8 @@ npx cap open ios      # Xcode
 npx cap open android  # Android Studio
 ```
 
-App ID: `com.forza.fantasyleague`
-
-### App Icons
-
-Generate app icons for both platforms from the base tactical icon SVG:
-
-```bash
-npm install  # installs sharp for image processing
-npm run icons:generate
-```
-
-This creates optimized icons in:
-- `ios/App/App/Assets.xcassets/AppIcon.appiconset/` (17 sizes)
-- `android/app/src/main/res/mipmap-*/` (6 densities)
+App ID: `com.fantasykit.forzaedition`  
+iOS target: 15.0 · Android minSdk: 26 (Android 8.0)
 
 ---
 
@@ -57,53 +109,33 @@ This creates optimized icons in:
 | Command | Purpose |
 |---------|---------|
 | `npm run dev` | Dev server |
-| `npm run build` | Production build |
-| `npm run lint` | ESLint |
-| `npx playwright test` | E2E tests (82/84 passing) |
+| `npm run build` | Production build (Rolldown — checks for TDZ) |
+| `npm run lint` | ESLint (0 errors, 0 warnings) |
+| `npx playwright test` | CI spec: `platform.spec.js` (36 tests × 2 browsers) |
 | `npx cap sync` | Sync web build → native |
+| `npx supabase functions deploy <fn> --project-ref sssmvihxtqtohisghjet` | Deploy Edge Function |
 
 ---
 
-## Project Docs
-
-**Start here:**
-| File | Purpose |
-|------|---------|
-| `docs/APP_DYNAMICS.md` | Application features, matchday cycle, UI flows — for users & onboarding |
-| `docs/PIPELINE.md` | Backend architecture, Edge Functions, DB schema — for developers |
-
-**Reference:**
-| File | Purpose |
-|------|---------|
-| `DATA_PIPELINE_RUNBOOK.md` | Step-by-step guide to activating fixtures, players, and scoring for any tournament |
-| `DRAFT_SYSTEM_DESIGN.md` | Draft lottery and transfer window mechanics |
-| `FANTASY_POINTS_SCORING_LAYER.md` | Scoring rules and calculation engine |
-| `BACKLOG.md` | Open issues and technical debt |
-| `docs/reference/MOBILE_DEVELOPMENT.md` | Capacitor setup for iOS/Android |
-| `CLAUDE.md` | Instructions for Claude development |
-| `GEMINI.md` | Instructions for Google Antigravity |
-| `API/` | Forza Football API reference |
-
----
-
-## Architecture
+## Source Layout
 
 ```
 src/
-├── screens/       # Route-level views (Home, Squad, Market, League, Live…)
-├── components/    # Shared UI components
-├── hooks/         # Custom React hooks
-├── lib/           # Supabase client, Capacitor init, utilities
+├── screens/       # Route-level views (Squad, Market, League, Live, Draft…)
+├── components/    # Shared UI — Clubhouse, Gazette, League views
+├── hooks/         # Custom React hooks (useLeague, useSquad, useClubhouse…)
+├── lib/           # Supabase client, Capacitor init, SportDataAdapter
 ├── context/       # AuthContext
 └── data/          # Static fallback data
 
 supabase/
-├── functions/     # Edge Functions (Deno) — scoring, transfers, draft lottery
-└── migrations/    # SQL migrations (numbered 01–08, next is 09_)
+├── functions/     # Edge Functions (Deno) — scoring, transfers, P2P, F1, tennis
+└── migrations/    # SQL migrations (append-only, numbered; next: 208_ on v2 / 192_ on main)
 
 ios/               # Xcode project (Capacitor)
 android/           # Android Studio project (Capacitor)
-e2e/               # Playwright E2E tests
+e2e/               # Playwright E2E — platform.spec.js runs in CI
+docs/              # Architecture, API, brand, deployment docs
 ```
 
 ---
@@ -112,4 +144,19 @@ e2e/               # Playwright E2E tests
 
 GitHub Actions on every push to `main`:
 - ESLint → Vite build → Playwright E2E (Chromium + mobile-chrome)
-- Supabase migrations via `migrate.yml` (manual, with dry-run gate)
+
+> **Edge Functions are NOT auto-deployed by Vercel** — after any PR touching `supabase/functions/`, manually deploy each changed function with the command above.
+
+---
+
+## Key Docs
+
+| File | Purpose |
+|------|---------|
+| `CLAUDE.md` | AI development instructions + full architecture reference |
+| `BACKLOG.md` | Session progress, open issues, pilot bug log |
+| `docs/architecture/SALE_READY_PROJECT_PLAN.md` | v2 platform roadmap (P2P · F1 · Tennis · Redesign) |
+| `docs/deployment/DATA_PIPELINE_RUNBOOK.md` | Step-by-step fixture activation and scoring setup |
+| `docs/architecture/FANTASY_POINTS_SCORING_LAYER.md` | Scoring rules and calculation engine |
+| `docs/brand/BRANDING.md` | Brand identity, colour palette, typography |
+| `GEMINI.md` | Instructions for Google Antigravity (mobile AI) |

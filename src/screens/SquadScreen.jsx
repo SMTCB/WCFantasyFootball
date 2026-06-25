@@ -178,7 +178,7 @@ export default function SquadScreen() {
       if (!count || count === 0) navigate(`/league/${activeLeague}/draft`);
     })();
     return () => { cancelled = true; };
-  }, [cfg.loading, cfg.format, user?.id, activeLeague]);
+  }, [cfg.loading, cfg.format, user?.id, activeLeague, navigate]);
 
   // Form history — last 5 GW pts per player for the squad list strip
   const { statsMap: squadStatsMap } = usePlayerStats(tournamentId);
@@ -547,9 +547,10 @@ export default function SquadScreen() {
       setSquadData(EMPTY_SQUAD);
       setLoading(false);
     }
+  // tournamentId included so the fixture fallback re-runs after async resolution.
+  // fetchDailyStatus/fetchSquad deliberately excluded: they set state that triggers this effect
+  // — adding them would cause an infinite loop.
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  // tournamentId included so the fixture fallback (which needs it) re-runs after async resolution.
-  // squadData deliberately excluded: setting it inside fetchSquad would cause an infinite loop.
   }, [user?.id, activeLeague, leagues, tournamentId]);
 
   const fetchDailyStatus = async () => {

@@ -763,7 +763,9 @@ export default function LiveScreen() {
     } finally {
       setLoading(false);
     }
-  // activeLeague?.id in deps so the squad re-fetches whenever the user switches leagues
+  // activeLeague?.id covers tournament switches — tournamentId is read inside fetchAll via
+  // the same activeLeague object so it changes atomically with .id.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id, activeLeague?.id]);
 
   useEffect(() => {

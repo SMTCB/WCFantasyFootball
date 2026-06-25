@@ -170,7 +170,7 @@ export default function MarketScreen() {
       if (!count || count === 0) navigate(`/league/${activeLeague}/draft`);
     })();
     return () => { cancelled = true; };
-  }, [cfg.loading, cfg.format, user?.id, activeLeague]);
+  }, [cfg.loading, cfg.format, user?.id, activeLeague, navigate]);
 
   // League-scoped transfer state
   const { buy, sell, isTaken, takenBy, isOwnedBy, takenMapError, takenMap } = useTransfer(activeLeague);
@@ -470,6 +470,8 @@ export default function MarketScreen() {
     // Both states would produce an unfiltered 5000-player fetch; skip and wait.
     if (!activeLeague || !tournamentId) return;
     fetchMarketParams();
+  // fetchMarketParams is defined without useCallback — adding it would cause an infinite loop.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeLeague, tournamentId]);
 
   // Fetch per-round club cap whenever league + matchday are resolved
@@ -521,7 +523,7 @@ export default function MarketScreen() {
       if (pid !== todayJokerId) countryCounts[p.club] = (countryCounts[p.club] || 0) + 1;
     });
     return { posCounts, countryCounts };
-  }, [effectiveSquadIds, players, todayJokerId]);
+  }, [effectiveSquadIds, players, todayJokerId, mySquad]);
 
 
 

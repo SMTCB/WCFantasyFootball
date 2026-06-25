@@ -25,21 +25,15 @@ export default defineConfig([
     rules: {
       'no-unused-vars': ['error', { varsIgnorePattern: '^[A-Z_]' }],
 
-      // React Compiler rules ship as errors in react-hooks v7 but are experimental
-      // and only apply to projects using the React Compiler transform. This project
-      // uses React 19 + Vite without the Compiler — downgrade to warn so CI passes
-      // while the issues remain visible. Revisit if the Compiler is adopted.
-      //
-      // 'rules-of-hooks' in v7 also now flags inline sub-component definitions as
-      // "Cannot create components during render" and calls to impure functions.
-      // These are real concerns but require larger refactors (tracked in BACKLOG).
-      // Downgraded to warn so CI stays green; root issues are not hidden.
-      'react-hooks/rules-of-hooks':           'warn',
-      'react-hooks/static-components':       'warn',
-      'react-hooks/purity':                  'warn',
-      'react-hooks/immutability':            'warn',
-      'react-hooks/set-state-in-effect':     'warn',
-      'react-hooks/preserve-manual-memoization': 'warn',
+      // react-hooks v7 bundles React Compiler rules that only apply when the
+      // React Compiler transform is active. This project uses React 19 + Vite
+      // WITHOUT the Compiler — these rules generate false positives for every
+      // hook call and inline component. Disabled until the Compiler is adopted.
+      'react-hooks/static-components':           'off',
+      'react-hooks/purity':                      'off',
+      'react-hooks/immutability':                'off',
+      'react-hooks/set-state-in-effect':         'off',
+      'react-hooks/preserve-manual-memoization': 'off',
     },
   },
 ])

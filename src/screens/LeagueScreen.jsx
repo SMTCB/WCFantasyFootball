@@ -437,7 +437,7 @@ export default function LeagueScreen() {
         setCirclesLoading(false);
       });
     return () => { cancelled = true; };
-  }, [view, user?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [view, user?.id]);
 
   // IMP-01: Fetch current GW for the active league's tournament.
   // Prefers the most recent past deadline (the round currently being played,
@@ -603,6 +603,8 @@ export default function LeagueScreen() {
     if (view === 'commissioner' && activeLeague?.league_id) {
       fetchOpenBets();
     }
+  // fetchOpenBets is defined without useCallback — adding it would cause an infinite loop.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [view, activeLeague?.league_id]);
 
   // U32: Apply ?tab= URL param when a league loads
