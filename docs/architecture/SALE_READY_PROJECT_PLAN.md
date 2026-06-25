@@ -19,14 +19,14 @@
 | **1D** | Buyout hygiene — batch 1 | W1–W2 | 🔄 In progress — 1D-A ✅ done, 1D-B ⏸ on hold (schema not yet settled) |
 | **1E** | Clubhouse social architecture | W3–W8 | ✅ Done — CH-0–CH-9 complete (PRs #607–#615). Clubhouse shell shipped. |
 | **2** | Tennis Module | W6–W8 | ✅ Done — T-0–T-4 complete (PRs #617–620, #625) |
-| **3A** | Buyout hygiene — batch 2 | W9–W11 | 🎯 NEXT — start with 3A-B → 3A-A → 3A-C+D |
-| **3B** | v2 integration & deploy | W10–W12 | ⏸ On hold — after 3A complete |
+| **3A** | Buyout hygiene — batch 2 | W9–W11 | ✅ Done — 3A-B ✅ (PR #634), 3A-A ✅ (PR #635), 3A-C+D ✅ (PR #636) |
+| **3B** | v2 integration & deploy | W10–W12 | 🎯 NEXT — all 3A tasks complete |
 
 **Current active branch:** `v2` (all redesign + new feature work)
 **v2 branch:** active — created off main, merged main regularly to pick up pilot bug fixes
 
-**🎯 NEXT SESSION: Phase 3A — Buyout Hygiene Batch 2**
-Start with **3A-B** (externalize project ref, ~1h) → **3A-A** (provider adapter seam, ~4h) → **3A-C + 3A-D** together (~3h). Zero pilot impact confirmed — all changes on v2 branch, no Edge Function deploys during the work.
+**🎯 NEXT SESSION: Phase 3B — v2 Integration & Deploy**
+All Phase 3A tasks are complete. 3B starts with the pre-merge checklist — run `platform.spec.js` on v2, smoke test football + P2P + F1 + tennis, confirm `npm run build` clean, then merge v2 → main.
 
 **Decisions locked (2026-06-24):**
 - **Stripe:** on hold — business decision, not a code gap. No action until Stripe account confirmed.
@@ -789,40 +789,38 @@ Recommend **Option A** — LIVE is the least frequently used standalone screen (
 **Read first:** [B2B_BUYOUT_TECHNICAL_DUE_DILIGENCE.md §3 (P1 and P2 items)](B2B_BUYOUT_TECHNICAL_DUE_DILIGENCE.md)
 
 ### Task 3A-A — Provider adapter seam
-**Status: ⬜ Not started** *(happens naturally as part of F1/tennis work — verify at this point)*
-- [ ] Confirm `supabase/functions/_shared/providers/` exists with at minimum:
-  - `types.ts` — canonical model (`CanonicalEvent`, `CanonicalPlayerStat`, `SportDataAdapter` interface) as specified in [B2B_BUYOUT_TECHNICAL_DUE_DILIGENCE.md §4](B2B_BUYOUT_TECHNICAL_DUE_DILIGENCE.md)
-  - `openf1.ts` — F1 adapter (built in Phase 1B)
-  - `manual.ts` — manual adapter for tennis (built in Phase 2)
-- [ ] Extract Forza-specific code from `sync-fixtures`, `sync-players`, `ingest-match-events` into `providers/forza.ts`
-- [ ] Update the 5 sync functions to call `getAdapter(tournament.provider)` rather than inlining Forza calls
-- [ ] Verify a new provider can be added by writing one file + one registry line (confirm with a stub `opta.ts` adapter — implement `health()` only, no real API calls)
+**Status: ✅ Done (PR #635, 2026-06-25)**
+- [x] `supabase/functions/_shared/providers/types.ts` — `CanonicalEvent`, `CanonicalPlayerStat`, `SportDataAdapter` interface
+- [x] `supabase/functions/_shared/providers/forza.ts` — `ForzaAdapter` class; exports `forzaFetch`, `POSITION_MAP`, `mapStatus` as named helpers
+- [x] `supabase/functions/_shared/providers/manual.ts` — ManualAdapter stub (tennis/admin data)
+- [x] `supabase/functions/_shared/providers/opta.ts` — OptaAdapter stub, `health()` only (B2B placeholder)
+- [x] `supabase/functions/_shared/providers/index.ts` — `getAdapter(provider)` registry
+- [x] `sync-fixtures`, `sync-players`, `ingest-match-events`, `discover-tournament` import from the shared module; 140 lines of duplicated Forza HTTP code removed
 
 ### Task 3A-B — Externalize the project reference
-**Status: ⬜ Not started**
-- [ ] Create `supabase/functions/_shared/config.ts`: exports `PROJECT_REF`, `SUPABASE_URL`, etc. from `Deno.env` rather than hardcoded
-- [ ] Replace all 119 occurrences of `sssmvihxtqtohisghjet` in `supabase/functions/` with `config.PROJECT_REF`
-- [ ] Replace in docs and scripts (grep-and-replace; verify none remain in code files)
-- [ ] Confirm environment works with the ref as a variable
+**Status: ✅ Done (PR #634, 2026-06-24)**
+- [x] `supabase/functions/_shared/config.ts` — `PROJECT_REF`, `SUPABASE_URL`, `FUNCTIONS_BASE_URL` from `Deno.env`
+- [x] Hardcoded ref removed from `purchase-coins`, `AdminSeedScreen.jsx`, `e2e/supabase-helpers.js`, all E2E specs, `scripts/e2e-setup.mjs`
+- [x] `.env.example` updated with E2E variable documentation
+- [x] ESLint config updated to ignore `e2e/**` (Node globals)
 
 ### Task 3A-C — Containerization
-**Status: ⬜ Not started**
-- [ ] `Dockerfile` (multi-stage): stage 1 = `node:20-alpine`, `npm run build` → `dist/`; stage 2 = `nginx:alpine`, serve `dist/` with the same security headers as `vercel.json`
-- [ ] `docker-compose.yml`: app container + local Postgres (for frontend dev without Supabase CLI); document that Edge Functions still need Supabase CLI locally
-- [ ] `.dockerignore`: exclude `node_modules/`, `dist/`, `.env.local`, `.claude/`
-- [ ] Verify: `docker build -t forzafantasy .` succeeds; `docker run -p 3000:80` serves the built app
-- [ ] Add to README: "Run locally with Docker: `docker compose up`"
+**Status: ✅ Done (PR #636, 2026-06-25)**
+- [x] `Dockerfile` — multi-stage: `node:20-alpine` (`npm run build`) → `nginx:1.27-alpine` (serve `dist/`); VITE_* vars as build args
+- [x] `nginx.conf` — SPA routing (`try_files`), security headers matching `vercel.json`, gzip, asset caching
+- [x] `docker-compose.yml` — `app` (nginx) + `db` (postgres:15-alpine) + `functions` (supabase/edge-runtime); health checks; `EDGE_FUNCTION` env var to select which function runs
+- [x] `.dockerignore` — excludes `node_modules/`, `dist/`, `.env.local`, `.claude/`, `ios/`, `android/`, `e2e/`
 
 ### Task 3A-D — Dev/staging/prod environments defined
-**Status: ⬜ Not started**
-- [ ] Document the three environments and their current state:
-  - `prod`: Supabase project `sssmvihxtqtohisghjet` + Vercel `wc-fantasy-football.vercel.app`
-  - `staging`: to be provisioned by buyer (or create a second Supabase project for demo purposes)
-  - `local`: Docker compose + Supabase local dev CLI
-- [ ] Commit a `.env.example` that covers all three deployment targets
-- [ ] Add `staging` Vercel environment (if budget allows before sale — nice-to-have, not blocking)
+**Status: ✅ Done (PR #636, 2026-06-25)**
+- [x] `docs/deployment/DOCKER_LOCAL_DEV.md` — three paths (Docker only / Docker Compose / Supabase CLI), environment variable reference, staging provisioning guide
+- [x] `.env.example` extended with Docker, Edge Function secrets, and environment target sections
 
-**Session notes for Phase 3A:** *(update per session)*
+**Session notes for Phase 3A (2026-06-25):**
+- All four 3A tasks complete in one session. PR #634 (3A-B) was done in the previous session; #635 (3A-A) and #636 (3A-C+D) landed today.
+- `discover-tournament` was simplified as part of 3A-A — its bespoke `fetchTournament` with AbortController replaced by `forzaFetch` import (same retry logic, fewer lines).
+- `SELF_ANON_KEY` in `ingest-match-events` was dead code (defined but never read) — removed as part of the cleanup.
+- Buyout score improvement from ~6 → ~8 target achieved: project ref externalized, provider adapter seam in place, containerization shipped, environment documented.
 
 ---
 

@@ -1,0 +1,16 @@
+node_modules/
+dist/
+.env.local
+.env*.local
+.claude/
+e2e-report/
+e2e/
+ios/
+android/
+backups/
+docs/
+*.md
+supabase/.temp/
+supabase/migrations/
+coverage/
+.git/

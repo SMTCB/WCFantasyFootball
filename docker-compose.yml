@@ -1,0 +1,86 @@
+# docker-compose.yml — local development topology for Forza Fantasy League
+#
+# Quick start:
+#   cp .env.example .env.local     # fill in VITE_SUPABASE_URL + VITE_SUPABASE_ANON_KEY
+#   docker compose up --build
+#   open http://localhost:3000
+#
+# For the full Supabase stack (Auth, Realtime, pgcron, Edge Functions):
+#   npx supabase start             # starts all Supabase services in Docker
+#   docker compose up app          # run only the frontend, pointed at local Supabase
+#
+# See docs/deployment/DOCKER_LOCAL_DEV.md for the full setup guide.
+
+services:
+
+  # ── React frontend (Vite build → nginx) ──────────────────────────────────────
+  # VITE_* vars are baked into the JS bundle at build time.
+  # To point at a different Supabase project, rebuild with new args:
+  #   docker compose build --build-arg VITE_SUPABASE_URL=https://... app
+  app:
+    build:
+      context: .
+      args:
+        VITE_SUPABASE_URL: ${VITE_SUPABASE_URL}
+        VITE_SUPABASE_ANON_KEY: ${VITE_SUPABASE_ANON_KEY}
+        VITE_AUTH_ENABLED: ${VITE_AUTH_ENABLED:-true}
+    ports:
+      - "3000:80"
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # ── PostgreSQL ────────────────────────────────────────────────────────────────
+  # Vanilla Postgres 15 for schema exploration and unit tests.
+  # NOTE: Production uses supabase/postgres which adds pgcron, pg_net, and the
+  # Supabase Auth schema. To run the full schema locally, use `npx supabase start`
+  # (Supabase CLI) which brings up the complete Supabase stack including those extensions.
+  db:
+    image: postgres:15-alpine
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: postgres
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # ── Deno Edge Function runner ─────────────────────────────────────────────────
+  # Runs a single Edge Function for local development and integration testing.
+  # Set EDGE_FUNCTION to the function you want to run (defaults to sync-fixtures).
+  # Production scheduling (pgcron) is not available in this mode.
+  #
+  # Example — test sync-fixtures locally:
+  #   EDGE_FUNCTION=sync-fixtures docker compose up functions
+  #   curl -X POST http://localhost:54321 -H "Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY" \
+  #        -d '{"forza_id":"429"}'
+  functions:
+    image: supabase/edge-runtime:v1.50.0
+    ports:
+      - "54321:9000"
+    environment:
+      SUPABASE_URL: ${SUPABASE_URL:-http://db:5432}
+      SUPABASE_SERVICE_ROLE_KEY: ${SUPABASE_SERVICE_ROLE_KEY:-local-dev-service-key}
+      SUPABASE_ANON_KEY: ${VITE_SUPABASE_ANON_KEY}
+      FORZA_ACCESS_TOKEN: ${FORZA_ACCESS_TOKEN}
+      GROQ_API_KEY: ${GROQ_API_KEY}
+    volumes:
+      - ./supabase/functions:/home/deno/functions:ro
+    command:
+      - start
+      - --main-service
+      - /home/deno/functions/${EDGE_FUNCTION:-sync-fixtures}
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  pgdata:
