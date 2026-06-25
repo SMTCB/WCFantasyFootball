@@ -16,7 +16,7 @@ function Ci({ size = 'md' }) {
   return (
     <span style={{
       display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-      borderRadius: '50%', background: 'linear-gradient(145deg,#D4880F,#B8720E)',
+      borderRadius: '50%', background: 'var(--gold)',
       color: '#fff', ...HEAD, boxShadow: 'inset 0 -1px 0 rgba(0,0,0,.2)',
       flexShrink: 0, width: dim, height: dim, fontSize: fs, lineHeight: 1,
     }}>C</span>
