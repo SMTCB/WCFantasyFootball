@@ -120,6 +120,7 @@ Infrastructure, deployment procedures, and operational strategy.
 |------|---------|-------------|
 | [OBSERVABILITY_STRATEGY.md](docs/deployment/OBSERVABILITY_STRATEGY.md) | Lightweight observability design (no external SaaS) | 5-minute setup per function, self-pruning logs, production readiness |
 | [DATA_PIPELINE_RUNBOOK.md](docs/deployment/DATA_PIPELINE_RUNBOOK.md) | Active cron table + data activation steps for any tournament | All 13 active cron jobs, fixtures, scores, player status syncs |
+| [DOCKER_LOCAL_DEV.md](docs/deployment/DOCKER_LOCAL_DEV.md) | Three paths from `git clone` to running app (Docker / Compose / Supabase CLI) | Multi-stage Dockerfile, docker-compose topology, env var reference, staging provisioning |
 
 ---
 
@@ -210,7 +211,7 @@ docs/brand/                        # Design system
 docs/deployment/                   # Launch & ops
 ├── DATA_PIPELINE_RUNBOOK.md
 ├── OBSERVABILITY_STRATEGY.md
-└── OBSERVABILITY_STRATEGY.md
+└── DOCKER_LOCAL_DEV.md
 
 docs/testing/                      # Test strategy & coverage
 ├── README.md

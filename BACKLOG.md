@@ -1,12 +1,51 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-06-24 (v2: P2P betting layer 100% complete — all 7 sprints done, PRs #627–#629, migrations 202–207 | main: Market league-switch draft fix — PR #626)  
+**Last Updated**: 2026-06-25 (v2: Phase 3A Buyout Hygiene Batch 2 complete — PRs #634–#636; provider adapter seam, containerization, env docs | Phase 3B is next)  
 **E2E Test Suite**: `platform.spec.js` (84 tests × 1 browser config) passing ✅ — 84/84 on v2 branch 2026-06-23  
 **Full Playbook Run**: `E2E_TEST_PLAYBOOK.md` v2.0 — all flows confirmed  
 **🟢 LAUNCH READY**: No critical (P0/P1) bugs open. All game mechanics functional. WC kick-off 2026-06-11.  
 **Live App**: https://wc-fantasy-football.vercel.app  
 **WC Kick-off**: 2026-06-11 19:00 UTC (Mexico vs South Africa)  
 **Supabase PostgREST max_rows**: 10,000 (raised from default 1,000 — 2026-06-08)
+
+---
+
+## ✅ v2 Phase 3A — Buyout Hygiene Batch 2 (2026-06-25)
+
+**Branch**: `v2` — PRs #634 (3A-B), #635 (3A-A), #636 (3A-C+D). No migrations.
+
+**What was built:**
+
+**3A-B (PR #634) — ESLint on v2:**
+- ESLint extended to `supabase/functions/_shared/**` — buyer can verify shared utils without skipping linting
+- `e2e/**` added to `globalIgnores` (E2E specs are Playwright + Node, not Vite-bundled; were generating false positives)
+
+**3A-A (PR #635) — Provider adapter seam:**
+- `supabase/functions/_shared/providers/types.ts` — neutral interface: `CanonicalMatchStatus`, `CanonicalEvent`, `CanonicalPosition`, `CanonicalPlayerStat`, `SportDataAdapter` (`provider`, `listEvents()`, `getPlayerStats()`, `health()`)
+- `supabase/functions/_shared/providers/forza.ts` — `FORZA_BASE`, `POSITION_MAP`, `mapStatus()`, `forzaFetch()` (3-retry with exponential backoff on 429/5xx), `ForzaAdapter` class implementing `SportDataAdapter`
+- `supabase/functions/_shared/providers/manual.ts` — `ManualAdapter` stub (tennis/admin data — returns `[]`)
+- `supabase/functions/_shared/providers/opta.ts` — `OptaAdapter` placeholder (B2B — throws; `health()` returns `{ ok: false }`)
+- `supabase/functions/_shared/providers/index.ts` — `getAdapter(provider)` registry factory
+- Refactored 4 sync functions to import shared primitives: `sync-fixtures`, `sync-players`, `ingest-match-events`, `discover-tournament` — removed ~150 lines of duplicated Forza boilerplate across them
+- `SELF_ANON_KEY` dead code removed from `ingest-match-events` (was defined, never read)
+- `discover-tournament` 404 handling: `forzaFetch` throws `HTTP 404` → caught and returns `{ exists: false }` (preserves original behaviour)
+
+**3A-C+D (PR #636) — Containerisation + environment docs:**
+- `Dockerfile` (multi-stage): `node:20-alpine` builds with `VITE_*` as `ARG`/`ENV` → `nginx:1.27-alpine` serves `dist/`; ~25 MB image; healthcheck via `wget`
+- `nginx.conf`: SPA routing (`try_files`), security headers mirroring `vercel.json`, 1y asset caching, gzip
+- `docker-compose.yml`: 3 services — `app` (nginx, port 3000), `db` (postgres:15-alpine, port 5432, `pgdata` volume), `functions` (supabase/edge-runtime:v1.50.0, port 54321, `EDGE_FUNCTION` env var selects which function runs)
+- `.dockerignore`: excludes `node_modules/`, `dist/`, `.env*`, `.claude/`, `ios/`, `android/`, `docs/`, `supabase/migrations/`, etc.
+- `.env.example` extended: Docker/local dev section, Edge Function secrets section, environment targets table
+- `docs/deployment/DOCKER_LOCAL_DEV.md`: three paths (Option A Docker-only, Option B docker-compose, Option C Supabase CLI), env var reference table, secrets-per-environment matrix, staging provisioning guide
+- `docs/architecture/SALE_READY_PROJECT_PLAN.md` Phase 3A status updated to ✅ Done; Phase 3B marked as 🎯 NEXT
+
+**Architecture notes:**
+- Vite `VITE_*` vars are baked into the JS bundle at build time — must be Docker `--build-arg`, NOT runtime `environment:`. Documented in both Dockerfile and DOCKER_LOCAL_DEV.md.
+- `supabase/edge-runtime` image runs one function at a time via `--main-service`. Full multi-function routing requires `npx supabase start` (Supabase CLI). Limitation documented in compose comments.
+- Provider adapter seam is additive only — zero changes to live pipeline logic. Buyer plugs a new provider in by implementing `SportDataAdapter` and registering it in `providers/index.ts`.
+- No Edge Functions deployed during this session (v2 branch only; no pilot impact).
+
+**Next session: Phase 3B** — pre-merge checklist: `platform.spec.js` green on v2, football + P2P + F1 + tennis smoke passes, `npm run build` clean, then merge v2 → main → deploy all Edge Functions.
 
 ---
 
