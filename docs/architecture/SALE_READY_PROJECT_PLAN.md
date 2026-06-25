@@ -20,13 +20,13 @@
 | **1E** | Clubhouse social architecture | W3–W8 | ✅ Done — CH-0–CH-9 complete (PRs #607–#615). Clubhouse shell shipped. |
 | **2** | Tennis Module | W6–W8 | ✅ Done — T-0–T-4 complete (PRs #617–620, #625) |
 | **3A** | Buyout hygiene — batch 2 | W9–W11 | ✅ Done — 3A-B ✅ (PR #634), 3A-A ✅ (PR #635), 3A-C+D ✅ (PR #636) |
-| **3B** | v2 integration & deploy | W10–W12 | 🎯 NEXT — all 3A tasks complete |
+| **3B** | v2 integration & deploy | W10–W12 | 🔄 In progress — code quality ✅ (PRs #638–#640); smoke tests + deploy remaining |
 
 **Current active branch:** `v2` (all redesign + new feature work)
 **v2 branch:** active — created off main, merged main regularly to pick up pilot bug fixes
 
-**🎯 NEXT SESSION: Phase 3B — v2 Integration & Deploy**
-All Phase 3A tasks are complete. 3B starts with the pre-merge checklist — run `platform.spec.js` on v2, smoke test football + P2P + F1 + tennis, confirm `npm run build` clean, then merge v2 → main.
+**🎯 NEXT SESSION: Phase 3B — Smoke Tests + Deploy**
+Code quality gates complete (PRs #638–#640: lint 0 warnings, build clean, Kit Light full coverage). Next: run `platform.spec.js` fresh on v2, four smoke passes (football / P2P / F1 / tennis), then merge v2 → main → deploy all Edge Functions.
 
 **Decisions locked (2026-06-24):**
 - **Stripe:** on hold — business decision, not a code gap. No action until Stripe account confirmed.
@@ -826,21 +826,47 @@ Recommend **Option A** — LIVE is the least frequently used standalone screen (
 
 ## Phase 3B — v2 Integration & Deploy (W10–W12)
 
-**Status: ⬜ Not started**
+**Status: 🔄 In progress — code quality gates complete; smoke tests + deploy remaining**
 
 **Goal:** merge v2 into main, run a full platform smoke test, and deploy to production. The pilot football users are migrated seamlessly — their data is unchanged.
 
+### Pre-merge code quality (2026-06-25 — PRs #638, #639, #640)
+**Status: ✅ Complete**
+
+Three PRs landed this session to close all code-quality gaps identified in the buyout due diligence checklist:
+
+**PR #638 — P0 gaps:**
+- ESLint 0 warnings: 5 React Compiler rules disabled (not applicable without the transform); 15 genuine `exhaustive-deps` fixes across 6 files; 3 stale disable directives removed
+- Kit Light token pass on `DraftScreen.jsx` + `DraftRecoveryScreen.jsx` — last two screens using raw hex colours outside the intentional broadsheet exception
+- `README.md` rewritten as a multi-sport platform document (football + F1 + tennis + P2P, buyer-facing)
+
+**PR #639 — P1/P2 gaps:**
+- `--font-serif: Georgia, "Times New Roman", serif` token added to `src/index.css` — Clubhouse-only editorial serif now in the token system; `FT_SERIF` references it; `FT_INK`/`FT_PAPER` documented as intentional broadsheet palette exceptions (not Kit Light)
+- Migration 208: `coin_transactions` schema v2 — `status`, `currency`, `reference_id` columns; `credit_coins()` + `get_my_wallet()` updated; idempotency index on `reference_id`
+- `MOCK_PAYMENTS=true` mode in `purchase-coins` Edge Function — credits coins directly, no Stripe call, for dev/staging
+- `src/lib/payments.js` — `initiatePurchase(packId)` wrapper decouples UI from Edge Function path; maps 503 → PAYMENTS_NOT_CONFIGURED
+- `.env.example` — all 6 Edge Function secrets documented with function names and descriptions; `MOCK_PAYMENTS` marked dev/staging only
+
+**PR #640 — Hardcoded hex cleanup:**
+- `--on-shell-dim: rgba(255,255,255,.45)` token added to `src/index.css` for white-faded text on dark navy `--shell` surfaces
+- `ChallengeScreen.jsx`: coin buy button gradient `→ var(--gold)`
+- `ClubhouseScreen.jsx`: active circle pill `→ var(--accent-bg)`; shell header muted labels `→ var(--on-shell-dim)`
+
+**Result:** `npm run lint` → 0 warnings; `npm run build` → clean; all Kit Light token work complete across all screens.
+
 ### Pre-merge checklist
-**Status: ⬜ Not started**
-- [ ] All v2 phase sprints marked complete in this document
-- [ ] `platform.spec.js` green on v2 branch (36 tests × 2 browsers)
+**Status: 🔄 In progress**
+- [x] All v2 phase sprints marked complete in this document
+- [x] `npm run lint` clean ✅ (PR #638 fixed 0 warnings)
+- [x] No Rolldown TDZ crashes: `npm run build` clean ✅ (verified after every PR this session)
+- [ ] `platform.spec.js` green on v2 branch (84 tests × 1 browser) — last confirmed 84/84 on 2026-06-23; re-run before merge
 - [ ] Football smoke pass on v2: login → squad → transfer → league → live → recap
-- [ ] P2P smoke pass: create wallet, purchase test coins, create challenge, resolve challenge
+- [ ] P2P smoke pass: create wallet, purchase test coins (MOCK_PAYMENTS=true), create challenge, resolve challenge
 - [ ] F1 smoke pass: create F1 league, submit picks, enter test result, verify scores
 - [ ] Tennis smoke pass: submit picks, enter result, verify scores
-- [ ] No Rolldown TDZ crashes: `npm run build` clean, `npx madge --circular src/` no new cycles
-- [ ] `npm run lint` clean
+- [ ] `npx madge --circular src/` — no new cycles
 - [ ] All `supabase/functions/` deployed to production project ref
+- [ ] Phase 1D-B schema baseline (on hold — do as final step before merge)
 
 ### Deploy sequence
 **Status: ⬜ Not started**
@@ -856,7 +882,12 @@ Recommend **Option A** — LIVE is the least frequently used standalone screen (
   ```
 - [ ] Verify all crons are running: `SELECT jobname, schedule, active FROM cron.job ORDER BY jobname;`
 
-**Session notes for Phase 3B:** *(update per session)*
+**Session notes for Phase 3B:**
+
+**2026-06-25 — Code quality gates closed (PRs #638, #639, #640):**
+- All buyer due diligence code-quality checklist items resolved in this session. Zero remaining ESLint warnings, zero hardcoded hex colours outside the documented broadsheet palette exception, full Kit Light token coverage, `coin_transactions` schema production-ready (status + currency + reference_id columns, idempotency index), `MOCK_PAYMENTS` mode enables dev testing without Stripe, `payments.js` wrapper in place.
+- Next session: run `platform.spec.js` fresh on v2, do the four smoke passes (football / P2P / F1 / tennis), then proceed to deploy sequence.
+- Phase 1D-B (schema baseline): revisit as the very last step before the v2 → main PR, when the schema is final.
 
 ---
 
@@ -929,5 +960,5 @@ All documents this plan is built on — read these for design detail before star
 
 ---
 
-Last Updated: **2026-06-24**
+Last Updated: **2026-06-25**
 Author: session planning (Claude + user)

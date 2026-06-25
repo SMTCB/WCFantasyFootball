@@ -1,12 +1,29 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-06-25 (v2: P1/P2 due diligence — PR #639: coin_transactions schema v2 migration 208, MOCK_PAYMENTS mode, payments.js wrapper, --font-serif token, .env.example secrets docs; Phase 3B pre-merge checks next | pilot: own goal double-count fix PR #637)  
+**Last Updated**: 2026-06-25 (v2: due diligence wrap-up — PR #640: hardcoded hex cleanup ChallengeScreen + ClubhouseScreen, --on-shell-dim token; SALE_READY_PROJECT_PLAN.md Phase 3B updated; session closed | PR #639: coin_transactions schema v2 migration 208, MOCK_PAYMENTS mode, payments.js wrapper, --font-serif token | pilot: own goal fix PR #637)  
 **E2E Test Suite**: `platform.spec.js` (84 tests × 1 browser config) passing ✅ — 84/84 on v2 branch 2026-06-23  
 **Full Playbook Run**: `E2E_TEST_PLAYBOOK.md` v2.0 — all flows confirmed  
 **🟢 LAUNCH READY**: No critical (P0/P1) bugs open. All game mechanics functional. WC kick-off 2026-06-11.  
 **Live App**: https://wc-fantasy-football.vercel.app  
 **WC Kick-off**: 2026-06-11 19:00 UTC (Mexico vs South Africa)  
 **Supabase PostgREST max_rows**: 10,000 (raised from default 1,000 — 2026-06-08)
+
+---
+
+## ✅ v2 Hardcoded Hex Cleanup (2026-06-25) — PR #640
+
+**New CSS token: `--on-shell-dim: rgba(255,255,255,.45)`** — added to `src/index.css` for white-faded text on `--shell` (dark navy) surfaces. Pattern used in Clubhouse header eyebrow labels; likely to recur in other shell headers.
+
+**`src/screens/ChallengeScreen.jsx`:**
+- Coin buy button gradient `linear-gradient(145deg,#D4880F,#B8720E)` → `var(--gold)` (the gradient's dark stop is already `--gold`; flat token is cleaner)
+- All `#fff` instances kept — white text on colored button surfaces is the correct Kit Light on-surface pattern, not a theming gap
+
+**`src/screens/ClubhouseScreen.jsx`:**
+- Active circle pill background `rgba(26,111,168,0.15)` → `var(--accent-bg)` (0.08 opacity; visual difference minimal)
+- Shell header muted labels `rgba(255,255,255,0.45)` → `var(--on-shell-dim)` (2 occurrences, replace_all)
+- All `#fff` instances kept (same rationale as above — 10 occurrences on colored surfaces)
+
+**Result**: Zero hardcoded hex colours remaining on either screen that should be tokens. `npm run lint` 0 warnings, `npm run build` clean.
 
 ---
 
