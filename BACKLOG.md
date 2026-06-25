@@ -1,12 +1,36 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-06-24 (Retroactive R2 clean sheet correction — migration 191, PR #630)  
+**Last Updated**: 2026-06-25 (Own goal double-counted as regular goal — PR #637)  
 **E2E Test Suite**: `platform.spec.js` (36 tests × 2 browsers) passing in CI ✅  
 **Full Playbook Run**: `E2E_TEST_PLAYBOOK.md` v2.0 — all flows confirmed  
 **🟢 LAUNCH READY**: No critical (P0/P1) bugs open. All game mechanics functional. WC kick-off 2026-06-11.  
 **Live App**: https://wc-fantasy-football.vercel.app  
 **WC Kick-off**: 2026-06-11 19:00 UTC (Mexico vs South Africa)  
 **Supabase PostgREST max_rows**: 10,000 (raised from default 1,000 — 2026-06-08)
+
+---
+
+## ✅ Own goal double-counted as regular goal (2026-06-25) — PR #637
+
+**Reported**: Yassine Bounou (GK, Morocco) scored an own goal vs Haiti in R3. The GOALS stat showed 1 and the POINT BREAKDOWN showed +8 (GK goal) alongside the correct -2 (own goal), giving him a net +6 surplus of 7.5 pts instead of the correct -0.5 pts.
+
+**Root cause**: `ingest-match-events/index.js` line 452 — `goals: s.goals ?? ...`. Forza's E10 `player_statistics.goals` field **includes own goals in its count**. The E9 fallback path already excluded own goals correctly (`if (!isOwnGoal)` guard at line 162), but E10 is tried first and its `s.goals` value was used raw without subtracting own goals.
+
+**Code fix** (PR #637, `ingest-match-events/index.js` line 452):
+```js
+// Before
+goals: s.goals ?? periodsResult.goalsMap[fpid] ?? 0,
+// After
+goals: Math.max(0, (s.goals ?? periodsResult.goalsMap[fpid] ?? 0) - (ownGoalMap[fpid] ?? 0)),
+```
+`ownGoalMap` is already populated from E5 EventDigest (line 333). Deployed immediately after merge.
+
+**DB correction applied directly** (R3 not yet roundComplete — v29 guard not triggered):
+- `player_match_stats` (id `7d578a4b-db0d-4b44-ae31-984b058d2d02`): `goals 1→0`, `fantasy_points 7.5→-0.5`, `breakdown.goals 8→0`
+- `fantasy_points.total`: Francisco Pinheiro da Silva (Mundial do Eder, squad `db3ef5cd`) `26→18` (Bounou's rounded contribution: ROUND(7.5)=8 → ROUND(-0.5)=0, delta=-8)
+- `league_members.total_points`: re-aggregated via `aggregate_league_member_points` RPC; `trg_recompute_ranks` fired automatically
+
+**Self-healing**: R3 still has 18 scheduled fixtures (first at 20:00 UTC Jun 25). When the next fixture goes live, `calculate-scores-live` will recompute the full R3 round from the corrected `player_match_stats` and overwrite any remaining stale values.
 
 ---
 
