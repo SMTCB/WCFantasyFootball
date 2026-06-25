@@ -417,8 +417,10 @@ Deno.serve(async (req) => {
         forza_match_id: fmid,
 
         // From E10 — direct fields (fall back to E9 period events when E10 is absent, e.g. 404 on friendlies)
+        // Forza E10 player_statistics.goals includes own goals in the count; subtract them so a GK
+        // own goal isn't also scored as a regular goal (+8). E9 fallback already excludes own goals.
         minutes_played:  mins,
-        goals:           s.goals   ?? periodsResult.goalsMap[fpid]   ?? 0,
+        goals:           Math.max(0, (s.goals ?? periodsResult.goalsMap[fpid] ?? 0) - (ownGoalMap[fpid] ?? 0)),
         assists:         s.assists ?? periodsResult.assistsMap[fpid] ?? 0,
         yellow_cards:    s.yellow_cards      ?? 0,
         saves:           s.saves             ?? 0,

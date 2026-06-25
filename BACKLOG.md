@@ -1,12 +1,55 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-06-25 (v2: Phase 3A Buyout Hygiene Batch 2 complete — PRs #634–#636; provider adapter seam, containerization, env docs | Phase 3B is next)  
+**Last Updated**: 2026-06-25 (v2: Phase 3A Buyout Hygiene Batch 2 complete — PRs #634–#636; Phase 3B is next | pilot: own goal double-count fix PR #637)  
 **E2E Test Suite**: `platform.spec.js` (84 tests × 1 browser config) passing ✅ — 84/84 on v2 branch 2026-06-23  
 **Full Playbook Run**: `E2E_TEST_PLAYBOOK.md` v2.0 — all flows confirmed  
 **🟢 LAUNCH READY**: No critical (P0/P1) bugs open. All game mechanics functional. WC kick-off 2026-06-11.  
 **Live App**: https://wc-fantasy-football.vercel.app  
 **WC Kick-off**: 2026-06-11 19:00 UTC (Mexico vs South Africa)  
 **Supabase PostgREST max_rows**: 10,000 (raised from default 1,000 — 2026-06-08)
+
+---
+
+## ✅ Own goal double-counted as regular goal (2026-06-25) — PR #637
+
+**Reported**: Yassine Bounou (GK, Morocco) scored an own goal vs Haiti in R3. The GOALS stat showed 1 and the POINT BREAKDOWN showed +8 (GK goal) alongside the correct -2 (own goal), giving him a net +6 surplus of 7.5 pts instead of the correct -0.5 pts.
+
+**Root cause**: `ingest-match-events/index.js` line 452 — `goals: s.goals ?? ...`. Forza's E10 `player_statistics.goals` field **includes own goals in its count**. The E9 fallback path already excluded own goals correctly (`if (!isOwnGoal)` guard at line 162), but E10 is tried first and its `s.goals` value was used raw without subtracting own goals.
+
+**Code fix** (PR #637, `ingest-match-events/index.js` line 452):
+```js
+// Before
+goals: s.goals ?? periodsResult.goalsMap[fpid] ?? 0,
+// After
+goals: Math.max(0, (s.goals ?? periodsResult.goalsMap[fpid] ?? 0) - (ownGoalMap[fpid] ?? 0)),
+```
+`ownGoalMap` is already populated from E5 EventDigest (line 333). Deployed immediately after merge.
+
+**DB correction applied directly** (R3 not yet roundComplete — v29 guard not triggered):
+- `player_match_stats` (id `7d578a4b-db0d-4b44-ae31-984b058d2d02`): `goals 1→0`, `fantasy_points 7.5→-0.5`, `breakdown.goals 8→0`
+- `fantasy_points.total`: Francisco Pinheiro da Silva (Mundial do Eder, squad `db3ef5cd`) `26→18` (Bounou's rounded contribution: ROUND(7.5)=8 → ROUND(-0.5)=0, delta=-8)
+- `league_members.total_points`: re-aggregated via `aggregate_league_member_points` RPC; `trg_recompute_ranks` fired automatically
+
+**Self-healing**: R3 still has 18 scheduled fixtures (first at 20:00 UTC Jun 25). When the next fixture goes live, `calculate-scores-live` will recompute the full R3 round from the corrected `player_match_stats` and overwrite any remaining stale values.
+
+---
+
+## ✅ Retroactive R2 clean sheet correction for 5 DEF players (2026-06-24) — migration 191, PR #630
+
+**Root cause follow-up**: PR #616 (previous session) fixed `ingest-match-events` to no longer bake the 60-min gate into the stored `clean_sheet` flag. However R2 was already `roundComplete`, so `calculate-scores`'s v29 settled-round guard blocked automatic recompute. The data fix applied in the previous session (setting `clean_sheet = true` on 7 rows) had no effect because PATH A reads `player_match_stats.clean_sheet` and recomputes `fantasy_points` — but the guard prevented the function from ever running.
+
+**Investigation findings**:
+- `calculate-scores-post-match` has a 24h window — by the time R2 gazette was written (06:00 UTC June 24), fixture `f-1219435615` (Argentina vs Austria, played June 22) was outside the window and would not have been reprocessed anyway.
+- Cancelo and Semedo (POR DEF, 45 min) were already correctly scored (`breakdown.clean_sheet = 4`) — the previous session incorrectly included them in the data fix list but no harm done.
+- Only 5 DEF rows actually needed fixing: Romero, Meunier, Cornelius, Bombito, Hardani.
+- Only 5 pilot squads had any of these players in their R2 `effective_xi`: Oliver Knott (Romero), SB7 (Meunier), Titan (Romero), tommyazcue (Romero), Zepp (Romero). None had affected players as captain.
+
+**Fix** (migration 191, PR #630 — `main` only, no v2 code):
+- `player_match_stats`: `fantasy_points += 4`, `breakdown.clean_sheet = 4` for 5 rows
+- `fantasy_points.total`: +4 for 5 affected rows (48→52, 66→70, 48→52, 78→82, 62→66)
+- `league_members.total_points`: re-aggregated for all 5 users; `trg_recompute_ranks` fired automatically
+
+**R3 snapshot verified**: `squad_matchday_snapshots` captured 57 squads across 11 leagues and 42 managers at exactly 19:00:00 UTC (R3 deadline/kickoff). `round_backups` for R3 not yet written — fires at roundComplete.
 
 ---
 
@@ -365,10 +408,10 @@ Note: several transfers have `matchday_id = null` in `squad_events` — expected
 - `clean_sheet: conceded === 0 && mins >= 60` → `clean_sheet: conceded === 0`
 - Deployed to production immediately after merge.
 
-**Data fix** (applied directly to DB):
+**Data fix** (applied directly to DB, session 2026-06-23):
 - 7 `player_match_stats` rows in R2 updated to `clean_sheet = true`:
   Romero (ARG), Meunier (BEL), Hardani (IRN), Bombito (CAN), Cornelius (CAN), Cancelo (POR), Semedo (POR)
-- `calculate-scores` will recompute `fantasy_points` (+4 pts each), `breakdown` (CLEAN SHEET row), and squad totals automatically on its next pass via PATH A + `rollupSquads`.
+- ⚠️ `calculate-scores` did NOT auto-recompute — R2 was `roundComplete`, v29 guard blocked PATH A. Retroactive DB fix applied in migration 191 (session 2026-06-24, PR #630). Cancelo/Semedo were already correct and didn't need fixing.
 
 ---
 
