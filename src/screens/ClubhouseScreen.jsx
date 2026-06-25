@@ -627,7 +627,7 @@ function CircleSelector({ circles, activeCircleId, onChange }) {
             borderRadius: 20,
             border: '1px solid',
             borderColor: c.id === activeCircleId ? 'var(--accent)' : 'var(--rule)',
-            background: c.id === activeCircleId ? 'rgba(26,111,168,0.15)' : 'transparent',
+            background: c.id === activeCircleId ? 'var(--accent-bg)' : 'transparent',
             color: c.id === activeCircleId ? 'var(--accent)' : 'var(--mute)',
             ...MONO,
             fontSize: 10,
@@ -725,7 +725,7 @@ export default function ClubhouseScreen() {
 
       {/* Header */}
       <div style={{ background: 'var(--shell)', padding: '24px 20px 20px' }}>
-        <div style={{ ...MONO, fontSize: 10, letterSpacing: '0.18em', color: 'rgba(255,255,255,0.45)', textTransform: 'uppercase', marginBottom: 6 }}>
+        <div style={{ ...MONO, fontSize: 10, letterSpacing: '0.18em', color: 'var(--on-shell-dim)', textTransform: 'uppercase', marginBottom: 6 }}>
           🏠 The Clubhouse
         </div>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
@@ -734,7 +734,7 @@ export default function ClubhouseScreen() {
               {activeCircle ? activeCircle.name.toUpperCase() : 'CLUBHOUSE'}
             </h1>
             {activeCircle && (
-              <div style={{ ...MONO, fontSize: 10, color: 'rgba(255,255,255,0.45)', letterSpacing: '0.1em', marginTop: 6 }}>
+              <div style={{ ...MONO, fontSize: 10, color: 'var(--on-shell-dim)', letterSpacing: '0.1em', marginTop: 6 }}>
                 {members.length} {members.length === 1 ? 'MEMBER' : 'MEMBERS'}
                 {activeCircle.is_public && <span style={{ marginLeft: 8, color: 'var(--positive)' }}>· PUBLIC</span>}
               </div>
