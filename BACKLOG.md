@@ -1,12 +1,44 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-06-25 (v2: P0 due diligence gaps closed — PR #638: ESLint 0 warnings, Kit Light DraftScreen + DraftRecoveryScreen, README rewrite; Phase 3B pre-merge checks next | pilot: own goal double-count fix PR #637)  
+**Last Updated**: 2026-06-25 (v2: P1/P2 due diligence — PR #639: coin_transactions schema v2 migration 208, MOCK_PAYMENTS mode, payments.js wrapper, --font-serif token, .env.example secrets docs; Phase 3B pre-merge checks next | pilot: own goal double-count fix PR #637)  
 **E2E Test Suite**: `platform.spec.js` (84 tests × 1 browser config) passing ✅ — 84/84 on v2 branch 2026-06-23  
 **Full Playbook Run**: `E2E_TEST_PLAYBOOK.md` v2.0 — all flows confirmed  
 **🟢 LAUNCH READY**: No critical (P0/P1) bugs open. All game mechanics functional. WC kick-off 2026-06-11.  
 **Live App**: https://wc-fantasy-football.vercel.app  
 **WC Kick-off**: 2026-06-11 19:00 UTC (Mexico vs South Africa)  
 **Supabase PostgREST max_rows**: 10,000 (raised from default 1,000 — 2026-06-08)
+
+---
+
+## ✅ v2 P1/P2 Due Diligence Gaps (2026-06-25) — PR #639
+
+**P1 — ClubhouseFrontpage.jsx font + palette exceptions documented:**
+- `--font-serif: Georgia, "Times New Roman", serif` added to `src/index.css` as an explicit design token with a note that it's Clubhouse-only
+- `FT_SERIF` constant changed to `'var(--font-serif)'` — now goes through the token system
+- `FT_INK`/`FT_PAPER` kept as hardcoded values (intentional broadsheet palette, not Kit Light system) but documented with inline comments explaining the design rationale
+
+**P1 — Migration 208 (`208_coin_transactions_schema_v2.sql`):**
+- `status text NOT NULL DEFAULT 'completed' CHECK (status IN ('pending','completed','failed','reversed'))` — lifecycle tracking for purchase audit
+- `currency char(3) NOT NULL DEFAULT 'GBP'` — ISO 4217; all current rows backfilled as GBP
+- `reference_id text` — external key (Stripe payment_intent_id, mock ref) promoted from JSONB meta to an indexed column; `coin_txn_reference_id_idx` created for fast idempotency lookups
+- `credit_coins()` updated to accept `p_currency` + `p_reference_id` (backward-compatible defaults)
+- `get_my_wallet()` updated to return all three new fields in transaction rows
+- Existing purchase rows backfilled: `reference_id ← meta->>'stripe_payment_intent_id'`
+
+**P1 — purchase-coins Edge Function — `MOCK_PAYMENTS=true` mode:**
+- New `MOCK_PAYMENTS` env constant checked before the Stripe guard
+- `/create-payment-intent` route: when mock, validates JWT + pack, calls `credit_coins()` directly, returns `{ mock: true, coins_credited: N, pack_name, reference_id: 'mock_...' }`
+- Stripe webhook idempotency check updated to use `reference_id` column (indexed) instead of `meta->>'stripe_payment_intent_id'` JSONB path
+- Stripe `credit_coins` call updated to pass `p_currency: 'GBP'` + `p_reference_id: pi.id`
+
+**P2 — `src/lib/payments.js` — `initiatePurchase(packId)` wrapper:**
+- Single import decouples all purchase UI from the Edge Function name/path
+- Returns `{ mock, coinsCredited, packName }` in mock mode; `{ clientSecret }` in Stripe mode
+- Maps 503 → `PAYMENTS_NOT_CONFIGURED` error (callers show "coming soon" message)
+
+**P2 — `.env.example` — all Edge Function secrets documented:**
+- 6 secrets with function names: `SUPABASE_JWT_SECRET`, `FORZA_ACCESS_TOKEN`, `GROQ_API_KEY`, `RAPIDAPI_TENNIS_KEY`, `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`
+- `MOCK_PAYMENTS=true` documented as dev/staging-only (never set in production)
 
 ---
 
