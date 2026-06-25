@@ -3,15 +3,20 @@ import { supabase } from '../lib/supabase';
 import { useClubhouseFrontpage, FT_EMOJIS } from '../hooks/useClubhouseFrontpage';
 import { ReactionStrip, LettersPanel } from './league/FrontpageInteractive';
 
-// Newspaper palette — cream background to feel like an actual broadsheet
-const FT_INK    = '#1A1A18';
-const FT_PAPER  = '#F2EEE5';
+// Clubhouse Newspaper palette — intentional broadsheet design, NOT Kit Light tokens.
+// FT_INK (#1A1A18) and FT_PAPER (#F2EEE5) are warm editorial colours that differ from
+// the Kit Light --shell/--bg tokens by design: the newspaper sits inside a light-mode
+// card but uses its own cream/dark-ink axis for the broadsheet feel.
+// FT_SERIF uses var(--font-serif) — registered in src/index.css as the Clubhouse-only
+// serif token (Georgia). All other surfaces use the 3-font system (display/body/mono).
+const FT_INK    = '#1A1A18';   // intentional: warm dark ink (≠ --shell navy)
+const FT_PAPER  = '#F2EEE5';   // intentional: warm cream broadsheet (≠ --bg)
 const FT_CREAM  = '#EAE6DC';
 const FT_RULE   = '#C8C4BA';
 const FT_MUTE   = '#8A8680';
 const FT_GOLD   = '#B5933A';
 const FT_MONO   = 'JetBrains Mono, monospace';
-const FT_SERIF  = 'Georgia, "Times New Roman", serif';
+const FT_SERIF  = 'var(--font-serif)';  // Georgia — registered token, Clubhouse-only
 const FT_SLAB   = 'Archivo Black, Impact, sans-serif';
 const FT_BODY   = 'Archivo, sans-serif';
 

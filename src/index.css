@@ -47,6 +47,8 @@
   --font-display: 'Archivo Black', sans-serif;
   --font-body:    'Archivo', sans-serif;
   --font-mono:    'JetBrains Mono', monospace;
+  /* Clubhouse newspaper broadsheet only — intentional editorial serif */
+  --font-serif:   Georgia, "Times New Roman", serif;
 
   /* ── Backward-compat font aliases ───────────────────────────── */
   --font-inter: 'Archivo', sans-serif;

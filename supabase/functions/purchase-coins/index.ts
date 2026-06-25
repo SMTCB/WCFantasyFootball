@@ -14,10 +14,13 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
-const STRIPE_SECRET_KEY    = Deno.env.get('STRIPE_SECRET_KEY');
+const STRIPE_SECRET_KEY     = Deno.env.get('STRIPE_SECRET_KEY');
 const STRIPE_WEBHOOK_SECRET = Deno.env.get('STRIPE_WEBHOOK_SECRET');
-const SUPABASE_URL         = Deno.env.get('SUPABASE_URL')!;
-const SUPABASE_SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+const SUPABASE_URL          = Deno.env.get('SUPABASE_URL')!;
+const SUPABASE_SERVICE_KEY  = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+// Set MOCK_PAYMENTS=true in Supabase secrets for local/staging — credits coins directly,
+// no Stripe PaymentIntent created, no webhook required.
+const MOCK_PAYMENTS         = Deno.env.get('MOCK_PAYMENTS') === 'true';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -72,6 +75,46 @@ async function verifyStripeSignature(body: string, header: string): Promise<bool
 serve(async (req: Request) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
 
+  const url = new URL(req.url);
+
+  // ── Mock mode: credit coins directly — no Stripe, no webhook.
+  //    Activated by MOCK_PAYMENTS=true secret (local / staging only).
+  if (MOCK_PAYMENTS && url.pathname.endsWith('/create-payment-intent')) {
+    const authHeader = req.headers.get('authorization');
+    if (!authHeader) {
+      return new Response(JSON.stringify({ error: 'UNAUTHORIZED' }), { status: 401, headers: corsHeaders });
+    }
+    const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
+    const jwt = authHeader.replace('Bearer ', '');
+    const { data: { user }, error: authErr } = await supabase.auth.getUser(jwt);
+    if (authErr || !user) {
+      return new Response(JSON.stringify({ error: 'UNAUTHORIZED' }), { status: 401, headers: corsHeaders });
+    }
+    const { pack_id } = await req.json();
+    const { data: pack } = await supabase.from('coin_packs').select('*').eq('id', pack_id).eq('is_active', true).single();
+    if (!pack) {
+      return new Response(JSON.stringify({ error: 'PACK_NOT_FOUND' }), { status: 404, headers: corsHeaders });
+    }
+    const mockRef = `mock_${Date.now()}_${user.id.slice(0, 8)}`;
+    const { error: creditErr } = await supabase.rpc('credit_coins', {
+      p_user_id: user.id,
+      p_amount: pack.coins,
+      p_type: 'purchase',
+      p_challenge_id: null,
+      p_meta: { mock: true, pack_id: pack.id },
+      p_currency: 'GBP',
+      p_reference_id: mockRef,
+    });
+    if (creditErr) {
+      return new Response(JSON.stringify({ error: 'CREDIT_FAILED', message: creditErr.message }), { status: 500, headers: corsHeaders });
+    }
+    console.log(`purchase-coins [MOCK]: credited ${pack.coins} coins to ${user.id} (${mockRef})`);
+    return new Response(
+      JSON.stringify({ mock: true, coins_credited: pack.coins, pack_name: pack.name, reference_id: mockRef }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+    );
+  }
+
   // ── Check Stripe is configured before doing anything
   if (!STRIPE_SECRET_KEY || !STRIPE_WEBHOOK_SECRET) {
     return new Response(
@@ -79,8 +122,6 @@ serve(async (req: Request) => {
       { status: 503, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
     );
   }
-
-  const url = new URL(req.url);
 
   // ── Route 1: POST /purchase-coins/create-payment-intent
   //    Called by WalletScreen when user clicks a buy button.
@@ -161,10 +202,11 @@ serve(async (req: Request) => {
   const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
   // Idempotency: check if this payment_intent was already processed
+  // Uses the indexed reference_id column (migration 208) rather than the JSONB path.
   const { data: existing } = await supabase
     .from('coin_transactions')
     .select('id')
-    .eq('meta->>stripe_payment_intent_id', pi.id)
+    .eq('reference_id', pi.id)
     .limit(1);
 
   if (existing && existing.length > 0) {
@@ -172,14 +214,16 @@ serve(async (req: Request) => {
     return new Response(JSON.stringify({ received: true, duplicate: true }), { headers: corsHeaders });
   }
 
-  // Credit coins
+  // Credit coins — reference_id is the Stripe payment_intent id (migration 208 indexed column)
   const coins = parseInt(meta.coins, 10);
   const { error: creditErr } = await supabase.rpc('credit_coins', {
     p_user_id: meta.user_id,
     p_amount: coins,
     p_type: 'purchase',
     p_challenge_id: null,
-    p_meta: { stripe_payment_intent_id: pi.id, pack_id: meta.pack_id },
+    p_meta: { pack_id: meta.pack_id },
+    p_currency: 'GBP',
+    p_reference_id: pi.id as string,
   });
 
   if (creditErr) {
