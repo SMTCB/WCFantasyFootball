@@ -149,6 +149,9 @@ export function useChatMessages(leagueId) {
     } catch (err) {
       console.error('useChatMessages: broadcastTyping error', err);
     }
+  // user.user_metadata and user.username are read from the ref at call time — adding them
+  // here would recreate the callback on every profile update without affecting behaviour.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [leagueId, user?.id]);
 
   // Setup realtime subscription on mount
@@ -290,7 +293,6 @@ export function useChatMessages(leagueId) {
       console.error('[useChatMessages] sendMessage exception:', err);
       return { ok: false, error: err.message };
     }
-  // eslint-disable-next-line react-hooks/preserve-manual-memoization
   }, [leagueId, user?.id]);
 
   // Edit a message
