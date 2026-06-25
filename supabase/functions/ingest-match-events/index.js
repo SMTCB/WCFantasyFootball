@@ -22,40 +22,16 @@
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { logError as _logError } from '../_shared/log.ts';
+import { forzaFetch as forza, POSITION_MAP } from '../_shared/providers/forza.ts';
 
 const supabase = createClient(
   Deno.env.get('SUPABASE_URL'),
   Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
 );
 
-const FORZA_BASE      = 'https://api.forzafootball.com';
-const FORZA_TOKEN     = Deno.env.get('FORZA_ACCESS_TOKEN');
-const SELF_BASE_URL   = Deno.env.get('SUPABASE_URL');
-const SELF_ANON_KEY   = Deno.env.get('SUPABASE_ANON_KEY');
+const SELF_BASE_URL = Deno.env.get('SUPABASE_URL');
 
 const logError = (severity, message, context = {}) => _logError('ingest-match-events', severity, message, context);
-
-async function forza(path, retries = 3) {
-  const url = `${FORZA_BASE}${path}?access_token=${FORZA_TOKEN}`;
-  let lastErr;
-  for (let attempt = 1; attempt <= retries; attempt++) {
-    try {
-      const res = await fetch(url, { signal: AbortSignal.timeout(10_000) });
-      if (res.status === 204) return null;
-      if (res.status === 429 || (res.status >= 500 && res.status < 600)) {
-        lastErr = new Error(`Forza ${path} → HTTP ${res.status}`);
-        if (attempt < retries) await new Promise(r => setTimeout(r, attempt * 1_000));
-        continue;
-      }
-      if (!res.ok) throw new Error(`Forza ${path} → HTTP ${res.status}`);
-      return res.json();
-    } catch (err) {
-      lastErr = err;
-      if (attempt < retries) await new Promise(r => setTimeout(r, attempt * 1_000));
-    }
-  }
-  throw lastErr;
-}
 
 function respond(status, body) {
   return new Response(JSON.stringify(body), {
@@ -63,13 +39,6 @@ function respond(status, body) {
     headers: { 'Content-Type': 'application/json' },
   });
 }
-
-const POSITION_MAP = {
-  goalkeeper: 'GK',
-  defender:   'DEF',
-  midfielder: 'MID',
-  attacker:   'FWD',
-};
 
 // 2.5.c: parse added-time minutes e.g. "45+2" → 47, "90+3" → 93
 function parseMinute(s) {
