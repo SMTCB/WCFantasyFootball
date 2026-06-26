@@ -55,6 +55,8 @@ Sports (Football · F1 · Tennis)
 | **Clubhouse** | `src/components/Clubhouse*` | Per-league social hub + Forza Times AI newspaper |
 | **Circles** | `supabase/migrations/187_*` | Multi-sport league abstraction layer |
 
+> **Football scoring resilience:** Live scoring uses three additive crons — a 2-min live pass, 5-min event ingest, and a post-match cron at 22:30 UTC. Each cron is independent: if the live cron misses a match (API timeout, latency), the post-match cron at 22:30 UTC completes scoring correctly with no manual intervention. The platform is robust against transient live API failures; no points are permanently lost.
+
 ### Rebrand Guide
 
 The design system uses CSS tokens only — no hardcoded colours in components.  
@@ -85,6 +87,8 @@ All 109 token references update automatically. No component edits needed.
 | `--positive` | `#166534` | Positive / success |
 | `--warn` | `#B8720E` | Warning |
 | `--danger` | `#B91C1C` | Error / destructive |
+| `--on-shell` | `#ffffff` | Full-brightness text on dark shell surfaces |
+| `--accent-bg` | `color-mix(…8%)` | Accent tint for chips/badges (auto-derives from `--accent`) |
 
 ---
 
