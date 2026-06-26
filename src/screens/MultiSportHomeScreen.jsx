@@ -236,7 +236,7 @@ export default function MultiSportHomeScreen() {
                   Today
                 </span>
               </div>
-              <div style={{ padding: '0 15px' }}>
+              <div style={{ padding: '0 16px' }}>
                 {feed.slice(0, 8).map((item, i) => (
                   <GazetteItem key={item.id ?? i} item={item} />
                 ))}

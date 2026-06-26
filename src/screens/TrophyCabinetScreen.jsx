@@ -258,7 +258,7 @@ export default function TrophyCabinetScreen() {
               <button
                 style={{
                   width: '100%', ...MONO, fontSize: 8.5, letterSpacing: '0.12em', textTransform: 'uppercase',
-                  padding: '9px 0', borderRadius: 6, border: '1.5px solid var(--rule)', background: 'transparent',
+                  padding: '8px 0', borderRadius: 6, border: '1.5px solid var(--rule)', background: 'transparent',
                   color: 'var(--text2)', cursor: 'pointer',
                 }}
               >
