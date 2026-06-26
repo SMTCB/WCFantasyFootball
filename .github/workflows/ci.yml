@@ -39,6 +39,16 @@ jobs:
       - name: Circular dependency check
         run: npx madge --circular src/
 
+      # Guard against Windows UTF-16 / CRLF encoding corruption in SQL files (LOW-5)
+      # sql/ts/js files must be UTF-8 only — non-ASCII outside those ranges caused migration 154's bug
+      - name: Encoding check (no non-UTF-8 bytes in SQL/TS/JS)
+        run: |
+          find supabase/functions src -type f \( -name "*.sql" -o -name "*.ts" -o -name "*.js" -o -name "*.jsx" \) \
+            | xargs grep -rlP '[^\x00-\x7F\xC2-\xFD][\x80-\xBF]' 2>/dev/null \
+            | grep -v node_modules \
+            | (grep . && echo "❌ Non-UTF-8 bytes detected in the above files" && exit 1) \
+            || echo "✅ All source files are valid UTF-8"
+
       # Ensure Edge Functions are deployed whenever their code changes (DEPLOY-1)
       - name: Function drift check
         run: npm run check:drift

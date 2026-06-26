@@ -12,11 +12,6 @@ const MONO    = "'JetBrains Mono', monospace";
 const DISPLAY = "'Archivo Black', sans-serif";
 const BODY    = "'Archivo', sans-serif";
 
-// Group → knockout transition is a normal transfer window (unlimited transfers,
-// surviving-nation pool, standard formation rules). No second draft is needed.
-// Set to true to re-enable the knockout draft UI if product direction changes.
-const KNOCKOUT_DRAFT_ENABLED = false;
-
 // ── Inlined from HubShared (TDZ-safe copies) ─────────────────────────────────
 function HubSectionLabel({ label, sub, tone = 'var(--cyan)', right, helpBtn }) {
   return (
@@ -780,7 +775,7 @@ function LifecycleOps({ commissioner, leagueId, tournamentId, league = null, onH
     windowTransfers, setWindowTransfers,
     openTransferWindow, closeTransferWindow,
     draftDeadline, setDraftDeadline, setLeagueDraftDeadline,
-    triggerDraftAllocation, triggerKnockoutAllocation,
+    triggerDraftAllocation,
     scoreFixtureId, setScoreFixtureId, triggerScores,
   } = commissioner;
 
@@ -833,63 +828,11 @@ function LifecycleOps({ commissioner, leagueId, tournamentId, league = null, onH
   const deadlinePassed = league?.draft_deadline && new Date(league.draft_deadline) <= now;
   const allocationDone = league?.cup_phase && league.cup_phase !== 'pre_cup';
 
-  // Knockout allocation is done once cup_phase moves into an elimination phase.
-  // Declared here (before groupStageStarted useEffect) so it's initialised when
-  // the dependency array at that useEffect is evaluated — avoids a TDZ crash.
-  const knockoutAllocationDone = ['pre_elimination', 'round_of_16', 'quarter_final', 'semi_final', 'final'].includes(league?.cup_phase);
-
-  // Knockout draft local state
-  const [knockoutDeadline,    setKnockoutDeadline]    = useState('');
-  const [keepSubmissionCount, setKeepSubmissionCount] = useState(null);
-
   // Free transfer window state — emergency "open the market mid-matchday" toggle.
   // Shared with the mobile layout via useFreeTransferWindow.
   const { activeFreeWindow, openFreeWindow, closeFreeWindow } = useFreeTransferWindow(leagueId, commissioner);
   // Free transfers config — lifts per-round cap while window is open (Classic leagues only).
   const { freeTransfers, toggleFreeTransfers } = useFreeTransfersConfig(leagueId, commissioner);
-
-  // groupStageStarted: true once at least one configured matchday fixture has kicked off.
-  // Gating on kickoff_at (not deadline_at or fixture status) ensures the knockout draft
-  // section is locked until actual group-stage play begins — not just when the deadline
-  // passes or the group draft lottery ran. Scoped to matchday_deadlines so old historical
-  // fixtures in the same tournament don't produce false positives.
-  const [groupStageStarted,   setGroupStageStarted]   = useState(false);
-
-  useEffect(() => {
-    if (!allocationDone || knockoutAllocationDone || !tournamentId) { setGroupStageStarted(false); return; }
-    (async () => {
-      const { data: mds } = await supabase
-        .from('matchday_deadlines').select('matchday_id').eq('tournament_id', tournamentId);
-      const mdIds = (mds ?? []).map(r => r.matchday_id);
-      if (!mdIds.length) { setGroupStageStarted(false); return; }
-      const { count } = await supabase
-        .from('fixtures').select('id', { count: 'exact', head: true })
-        .eq('tournament_id', tournamentId)
-        .in('matchday_id', mdIds)
-        .lte('kickoff_at', new Date().toISOString());
-      setGroupStageStarted((count ?? 0) > 0);
-    })();
-  }, [allocationDone, knockoutAllocationDone, tournamentId]);
-
-  // Fetch keep submission count when the keep window is open (group_stage phase)
-  useEffect(() => {
-    if (league?.cup_phase !== 'group_stage' || !leagueId) { setKeepSubmissionCount(null); return; }
-    supabase
-      .from('knockout_keep_submissions')
-      .select('user_id', { count: 'exact', head: true })
-      .eq('league_id', leagueId)
-      .then(({ count }) => setKeepSubmissionCount(count ?? 0));
-  }, [league?.cup_phase, leagueId]);
-
-  const knockoutStatus = !allocationDone ? 'LOCKED'
-    : knockoutAllocationDone ? 'ALLOCATED'
-    : league?.knockout_draft_deadline ? 'DEADLINE SET'
-    : 'NOT SET';
-
-  const knockoutTone = !allocationDone ? 'var(--mute)'
-    : knockoutAllocationDone ? 'var(--positive)'
-    : league?.knockout_draft_deadline ? 'var(--positive)'
-    : 'var(--warn)';
 
   // AUDIT-58-A3: derive live status labels for the LifecycleOp cards.
   // Deadline-controlled leagues: show OPEN (OVERRIDE) when manually opened, AUTO-MANAGED otherwise.
@@ -917,14 +860,6 @@ function LifecycleOps({ commissioner, leagueId, tournamentId, league = null, onH
   const handleRunAllocation = () => {
     if (!window.confirm('This allocates squads for all managers. It cannot be undone without a manual reset. Continue?')) return;
     triggerDraftAllocation();
-  };
-
-  const handleRunKnockoutAllocation = async () => {
-    if (!window.confirm('This runs the knockout-phase draft allocation. It cannot be undone. Continue?')) return;
-    if (knockoutDeadline) {
-      await supabase.from('leagues').update({ knockout_draft_deadline: new Date(knockoutDeadline).toISOString() }).eq('id', leagueId);
-    }
-    triggerKnockoutAllocation();
   };
 
   const opBtnStyle = (bg, color = 'var(--ink)') => ({
@@ -1109,62 +1044,6 @@ function LifecycleOps({ commissioner, leagueId, tournamentId, league = null, onH
                     disabled={commLoading}
                     style={opBtnStyle('var(--gold)')}
                   >RUN ALLOCATION ↯</button>
-                </div>
-              )
-            }
-          />
-          </div>
-          )}
-
-          {/* Knockout Draft — disabled: group→knockout uses normal transfer window */}
-          {KNOCKOUT_DRAFT_ENABLED && (!league || (league.format === 'noduplicate' && (
-            (league.cup_phase && league.cup_phase !== 'pre_cup') ||
-            !!league.knockout_draft_deadline
-          ))) && (
-          <div data-tour="comm-knockout-draft" style={{ display: 'flex' }}>
-          <LifecycleOp
-            title="KNOCKOUT DRAFT"
-            status={knockoutStatus}
-            statusTone={knockoutTone}
-            sub="Second draft for the knockout phase. Same allocation logic as the group draft — managers submit 30 picks, lottery resolves conflicts."
-            when="After group stage allocation completes. Set before the first knockout match."
-            primary={
-              knockoutAllocationDone ? (
-                <div style={{ padding: '8px 10px', background: 'var(--ink)', border: '1px solid var(--rule)', fontFamily: BODY, fontSize: 10, color: 'var(--positive)', lineHeight: 1.5 }}>
-                  ✓ Knockout squads allocated
-                </div>
-              ) : !allocationDone ? (
-                <div style={{ padding: '8px 10px', background: 'var(--ink)', border: '1px solid var(--rule)', fontFamily: BODY, fontSize: 10, color: 'var(--mute)', lineHeight: 1.5 }}>
-                  Locked — complete group allocation first
-                </div>
-              ) : !groupStageStarted ? (
-                <div style={{ padding: '8px 10px', background: 'var(--ink)', border: '1px solid var(--rule)', fontFamily: BODY, fontSize: 10, color: 'var(--mute)', lineHeight: 1.5 }}>
-                  Locked — group stage fixtures have not kicked off yet
-                </div>
-              ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                  {/* Keep submission count — visible during the keep window */}
-                  {keepSubmissionCount !== null && (
-                    <div style={{ padding: '7px 10px', background: 'rgba(160,108,255,0.07)', border: '1px solid rgba(160,108,255,0.25)', fontFamily: MONO, fontSize: 9, letterSpacing: '.16em', color: '#a855f7', lineHeight: 1.5 }}>
-                      🛡️ KEEP SUBMISSIONS · {keepSubmissionCount} manager{keepSubmissionCount !== 1 ? 's' : ''} have protected players
-                    </div>
-                  )}
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                    <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.2em', color: 'var(--mute)' }}>KNOCKOUT DEADLINE</span>
-                    <div style={{ display: 'flex', gap: 6, alignItems: 'stretch' }}>
-                      <input
-                        type="datetime-local"
-                        value={knockoutDeadline}
-                        onChange={e => setKnockoutDeadline(e.target.value)}
-                        style={{ ...inputStyle, colorScheme: 'dark', fontSize: 11, flex: 1 }}
-                      />
-                      <button
-                        onClick={handleRunKnockoutAllocation}
-                        disabled={commLoading}
-                        style={compactBtn('var(--gold)', commLoading)}
-                      >RUN ↯</button>
-                    </div>
-                  </div>
                 </div>
               )
             }
@@ -1702,14 +1581,6 @@ function CommMsg({ msg, onDismiss }) {
 export default function CommissionerPanel({ commissioner, leagueId, tournamentId, windowType = null, memberCount = 0, leagueName = 'LEAGUE', league = null }) {
   const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' && window.innerWidth < 1024);
   const [helpModal, setHelpModal] = useState(null); // null | 'commissioner' | 'lifecycle'
-  const [mobKnockoutDeadline, setMobKnockoutDeadline] = useState('');
-
-  // Mirror of LifecycleOps state — needed by the mobile knockout draft IIFE below.
-  const [keepSubmissionCount, setKeepSubmissionCount] = useState(null);
-  const [groupStageStarted,   setGroupStageStarted]   = useState(false);
-
-  const _mobAllocDone         = !!(league?.cup_phase && league.cup_phase !== 'pre_cup');
-  const _mobKnockoutAllocDone = ['pre_elimination', 'round_of_16', 'quarter_final', 'semi_final', 'final'].includes(league?.cup_phase);
 
   // Emergency transfers — shared state/handlers across desktop LifecycleOps grid
   // and the mobile lifecycle cards below. Called unconditionally (Rules of Hooks)
@@ -1717,25 +1588,6 @@ export default function CommissionerPanel({ commissioner, leagueId, tournamentId
   const { activeFreeWindow, openFreeWindow, closeFreeWindow } = useFreeTransferWindow(leagueId, commissioner);
   // Free transfers config — same dual-call pattern as useFreeTransferWindow above.
   const { freeTransfers: mobFreeTransfers, toggleFreeTransfers: mobToggleFreeTransfers } = useFreeTransfersConfig(leagueId, commissioner);
-
-  useEffect(() => {
-    if (!_mobAllocDone || _mobKnockoutAllocDone || !tournamentId) { setGroupStageStarted(false); return; }
-    (async () => {
-      const { data: mds } = await supabase.from('matchday_deadlines').select('matchday_id').eq('tournament_id', tournamentId);
-      const mdIds = (mds ?? []).map(r => r.matchday_id);
-      if (!mdIds.length) { setGroupStageStarted(false); return; }
-      const { count } = await supabase.from('fixtures').select('id', { count: 'exact', head: true })
-        .eq('tournament_id', tournamentId).in('matchday_id', mdIds).lte('kickoff_at', new Date().toISOString());
-      setGroupStageStarted((count ?? 0) > 0);
-    })();
-  }, [_mobAllocDone, _mobKnockoutAllocDone, tournamentId]);
-
-  useEffect(() => {
-    if (league?.cup_phase !== 'group_stage' || !leagueId) { setKeepSubmissionCount(null); return; }
-    supabase.from('knockout_keep_submissions').select('user_id', { count: 'exact', head: true })
-      .eq('league_id', leagueId)
-      .then(({ count }) => setKeepSubmissionCount(count ?? 0));
-  }, [league?.cup_phase, leagueId]);
 
   useEffect(() => {
     const onResize = () => setIsMobile(window.innerWidth < 1024);
@@ -1902,64 +1754,6 @@ export default function CommissionerPanel({ commissioner, leagueId, tournamentId
           </MobLifecycleCard>
           </div>
           )}
-
-          {/* Knockout Draft — disabled: group→knockout uses normal transfer window */}
-          {KNOCKOUT_DRAFT_ENABLED && (!league || (league.format === 'noduplicate' && (
-            (league.cup_phase && league.cup_phase !== 'pre_cup') ||
-            !!league.knockout_draft_deadline
-          ))) && (() => {
-            const mobKnockoutAllocationDone = ['pre_elimination', 'round_of_16', 'quarter_final', 'semi_final', 'final'].includes(league?.cup_phase);
-            const mobKnockoutStatus = mobKnockoutAllocationDone ? 'ALLOCATED'
-              : league?.knockout_draft_deadline ? 'DEADLINE SET'
-              : 'NOT SET';
-            const mobKnockoutTone = mobKnockoutAllocationDone ? 'var(--positive)'
-              : league?.knockout_draft_deadline ? 'var(--positive)'
-              : 'var(--warn)';
-            return (
-              <div data-tour="comm-knockout-draft">
-              <MobLifecycleCard title="KNOCKOUT DRAFT" status={mobKnockoutStatus} tone={mobKnockoutTone} when="After group stage allocation. Before first knockout match.">
-                {mobKnockoutAllocationDone ? (
-                  <div style={{ padding: '8px 10px', background: 'var(--ink)', border: '1px solid var(--rule)', fontFamily: BODY, fontSize: 10, color: 'var(--positive)', lineHeight: 1.5 }}>
-                    ✓ Knockout squads allocated
-                  </div>
-                ) : !groupStageStarted ? (
-                  <div style={{ padding: '8px 10px', background: 'var(--ink)', border: '1px solid var(--rule)', fontFamily: BODY, fontSize: 10, color: 'var(--mute)', lineHeight: 1.5 }}>
-                    Locked — group stage fixtures have not kicked off yet
-                  </div>
-                ) : (
-                  <>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                      <span style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '.2em', color: 'var(--paper)' }}>KNOCKOUT DEADLINE</span>
-                      <input type="datetime-local" value={mobKnockoutDeadline} onChange={e => setMobKnockoutDeadline(e.target.value)} style={{ ...mobInput, colorScheme: 'dark', fontSize: 11 }} />
-                    </div>
-                    {keepSubmissionCount !== null && (
-                      <div style={{ padding: '6px 8px', background: 'rgba(160,108,255,0.07)', border: '1px solid rgba(160,108,255,0.25)', fontFamily: "'JetBrains Mono',monospace", fontSize: 9, letterSpacing: '.14em', color: '#a855f7' }}>
-                        🛡️ {keepSubmissionCount} manager{keepSubmissionCount !== 1 ? 's' : ''} have protected players
-                      </div>
-                    )}
-                    <button
-                      onClick={() => {
-                        if (!window.confirm('Run knockout-phase draft allocation? This cannot be undone.')) return;
-                        commissioner.commAction(async () => {
-                          if (mobKnockoutDeadline) {
-                            await supabase.from('leagues').update({ knockout_draft_deadline: new Date(mobKnockoutDeadline).toISOString() }).eq('id', leagueId);
-                          }
-                          const { error } = await supabase.functions.invoke('run-draft-lottery', {
-                            body: { league_id: leagueId, phase: 'knockout' },
-                          });
-                          if (error) throw new Error(error.message);
-                          setCommMsg({ type: 'ok', text: 'Knockout draft allocation complete.' });
-                        });
-                      }}
-                      disabled={commLoading}
-                      style={{ ...mobBtn, background: 'var(--gold)', color: 'var(--ink)' }}
-                    >RUN KNOCKOUT ALLOCATION ↯</button>
-                  </>
-                )}
-              </MobLifecycleCard>
-              </div>
-            );
-          })()}
 
           <div data-tour="comm-score-recalc">
           <MobLifecycleCard title="SCORE RECALCULATION" status="UTILITY" tone="var(--mute)" when="Only if a match shows incorrect points.">

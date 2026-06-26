@@ -12,7 +12,6 @@ const EMPTY_SQUAD = {
 import { getDangerZonePlayers, normalizeIntelligence, LINEUP_STATUS } from '../lib/intelligence';
 import { normalisePlayer, buildFixtureInfo, formatFixtureStatus } from '../lib/players';
 import { useAuth } from '../hooks/useAuth';
-import { useDeadlineCountdown } from '../hooks/useDeadlineCountdown';
 import { useTransferWindow } from '../hooks/useTransferWindow';
 import TransferWindowBanner from '../components/TransferWindowBanner';
 import { useOnboarding } from '../hooks/useOnboarding';
@@ -30,7 +29,6 @@ import PitchView from '../components/PitchView';
 import PlayerCard from '../components/PlayerCard';
 import PlayerPickerSheet from '../components/PlayerPickerSheet';
 import SectionHeader from '../components/SectionHeader';
-import PowerToolCard from '../components/PowerToolCard';
 import { AvailabilityBadge } from '../components/AvailabilityBadge';
 import { POS_ORDER, POS_LABEL, POS_BADGE_COLOR } from '../lib/formations';
 import ScoringInfoModal from '../components/ScoringInfoModal';
@@ -39,30 +37,10 @@ import { useLeagueOwnership } from '../hooks/useLeagueOwnership';
 import PlayerStatsDashboard from '../components/player/PlayerStatsDashboard';
 import { usePlayerCards } from '../hooks/usePlayerCards';
 import FormStrip from '../components/FormStrip';
-import KnockoutKeepSelector from '../components/KnockoutKeepSelector';
 import SelectLeaguePicker from '../components/league/SelectLeaguePicker';
 import { deriveLeagueType } from '../components/league/LeagueBadgeHelpers';
 
-// â"€â"€ Chip config â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
-const CHIPS = [
-  {
-    key:         'triple_captain',
-    label:       'Triple Captain',
-    description: 'All-or-Nothing: your captain scores 3× points — but 0 if they don\'t play.',
-    stateKey:    'isTripleCaptain',
-    dbField:     'is_triple_captain',
-    activeColor: 'var(--gold)',
-    activeStyle: { borderColor: 'rgba(240,180,0,0.35)', background: 'rgba(240,180,0,0.07)' },
-    inactiveStyle: { borderColor: 'var(--rule)', background: 'var(--elev)' },
-  },
-];
-
 // â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
-
-// Set to true to re-enable chip UI (Triple Captain + Matchday Joker) post-pilot
-const CHIPS_ENABLED = false;
-// Set to true to re-enable knockout draft keeps UI post-pilot
-const KNOCKOUT_DRAFT_ENABLED = false;
 
 export default function SquadScreen() {
   const { user } = useAuth();
@@ -72,12 +50,8 @@ export default function SquadScreen() {
   const leagueIdParam = searchParams.get('leagueId');
   const [activeLeague,       setActiveLeague]      = useState(leagueIdParam);
   const [leagues,            setLeagues]           = useState(null);   // null = not yet loaded
-  const [jokerPlayer,        setJokerPlayer]       = useState(null);
-  const [isJokerPickerOpen,  setIsJokerPickerOpen] = useState(false);
   const [squadData,          setSquadData]         = useState(null);
   const [loading,            setLoading]           = useState(true);
-  const [todayJokerId,       setTodayJokerId]      = useState(null);
-  const [playingTodayTeams,  setPlayingTodayTeams] = useState([]);
   const [selectedPlayer,     setSelectedPlayer]    = useState(null);
   const [swapMode,           setSwapMode]          = useState(false);
   const [saving,             setSaving]            = useState(false);
@@ -94,7 +68,6 @@ export default function SquadScreen() {
   const [pickerPos,          setPickerPos]         = useState(null);
   const [fetchError,         setFetchError]        = useState(null);
   const [tournamentId,       setTournamentId]      = useState(null);
-  const [showChipWizard,     setShowChipWizard]    = useState(false);
   const [showScoringModal,   setShowScoringModal]  = useState(false);
 
   // Card warnings derived from player_match_stats (player_status table is unused)
@@ -225,7 +198,6 @@ export default function SquadScreen() {
     try {
       setLoading(true);
       const userId = user?.id;
-      const today  = new Date().toISOString().split('T')[0];
 
       // â"€â"€ Transfer window lock check — use latest matchday deadline â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
       // U11: scope deadline check to this league's tournament; capture matchday_id for squad filter
@@ -253,22 +225,6 @@ export default function SquadScreen() {
         if (deadlineRow?.deadline_at) setWindowDeadline(new Date(deadlineRow.deadline_at));
         activeMatchdayId = deadlineRow?.matchday_id ?? null;
       }
-
-      // Query joker by matchday_id if known, else fall back to today's date
-      let jokerQuery = supabase.from('daily_jokers').select('player_id').eq('user_id', userId);
-      if (activeMatchdayId) {
-        jokerQuery = jokerQuery.eq('matchday_id', activeMatchdayId);
-      } else {
-        jokerQuery = jokerQuery.eq('joker_date', today);
-      }
-      const { data: jokerRec } = await jokerQuery.maybeSingle();
-      let jokerP = null;
-      if (jokerRec?.player_id) {
-        const { data: jp } = await supabase.from('players').select('*').eq('id', jokerRec.player_id).single();
-        if (jp) jokerP = { ...jp, isJoker: true };
-      }
-      setJokerPlayer(jokerP);
-      setTodayJokerId(jokerRec?.player_id || null);
 
       // Most-recent squad first — ensures we get the live matchday squad, not an older one
       // U11: filter squad by active matchday when known; fall back to newest row otherwise
@@ -456,7 +412,6 @@ export default function SquadScreen() {
         startingXi:      squad.starting_xi || [],
         lineupLocks:     lineupLocks,
         lockedIds:       lockedIds,
-        isWildcard:      squad.is_wildcard,
         isTripleCaptain: squad.is_triple_captain,
         locked_at:       squad.locked_at,
       });
@@ -473,8 +428,6 @@ export default function SquadScreen() {
   // Auto-fill hook — reusable across Squad, Market, League screens
   const { handleAutoFill, autoFilling, autoFillMsg } = useAutoFill(activeLeague, squadData, fetchSquad, takenMap, buy, cfg);
 
-  // Live countdown hook — pass tournamentId so it finds the correct deadline row.
-  const deadline = useDeadlineCountdown({ tournamentId });
   // Transfer window status for the sticky banner (open / upcoming / no_window).
   const transferWindow = useTransferWindow(activeLeague);
 
@@ -510,7 +463,7 @@ export default function SquadScreen() {
   }, [transferWindow.status, transferWindow.opensAt, transferWindow.closesAt]);
 
   // First-visit tour
-  const { showSquadTour, completeSquadTour, replaySquadTour } = useOnboarding();
+  const { showSquadTour, completeSquadTour } = useOnboarding();
 
   const SQUAD_TOUR_STEPS = [
     {
@@ -539,7 +492,6 @@ export default function SquadScreen() {
   useEffect(() => {
     if (activeLeague) {
       fetchSquad();
-      fetchDailyStatus();
     } else if (leagues !== null) {
       // No active league selected after leagues have loaded — show empty state.
       // squadData intentionally NOT in deps: including it caused an infinite loop
@@ -548,28 +500,13 @@ export default function SquadScreen() {
       setLoading(false);
     }
   // tournamentId included so the fixture fallback re-runs after async resolution.
-  // fetchDailyStatus/fetchSquad deliberately excluded: they set state that triggers this effect
-  // — adding them would cause an infinite loop.
+  // fetchSquad deliberately excluded: it sets state that triggers this effect
+  // — adding it would cause an infinite loop.
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id, activeLeague, leagues, tournamentId]);
 
-  const fetchDailyStatus = async () => {
-    try {
-      const userId = user?.id;
-      const today  = new Date().toISOString().split('T')[0];
-      const { data: joker } = await supabase.from('daily_jokers').select('player_id')
-        .eq('user_id', userId).eq('joker_date', today).maybeSingle();
-      if (joker) setTodayJokerId(joker.player_id);
-      const { data: fixtures } = await supabase.from('fixtures').select('home_team, away_team');
-      const teams = new Set();
-      fixtures?.forEach(f => { teams.add(f.home_team); teams.add(f.away_team); });
-      setPlayingTodayTeams(Array.from(teams));
-    } catch (err) { console.error('Daily status error', err); }
-  };
-
   // â"€â"€ Actions â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
   const handlePlayerClick = (player) => {
-    if (player.isJokerSlot) { setIsJokerPickerOpen(true); return; }
     if (swapMode && selectedPlayer) { handleSwap(selectedPlayer, player); return; }
     setSelectedPlayer(prev => prev?.id === player.id ? null : player);
   };
@@ -777,46 +714,12 @@ export default function SquadScreen() {
     } finally { setSaving(false); setSelectedPlayer(null); }
   };
 
-  const handleActivateJoker = async () => {
-    if (!selectedPlayer || saving) return;
-    try {
-      setSaving(true);
-      const userId     = user?.id;
-      const today      = new Date().toISOString().split('T')[0];
-      const matchdayId = squadData?.matchdayId ?? null;
-      const row = { user_id: userId, player_id: selectedPlayer.id, joker_date: today, league_id: squadData?.leagueId ?? null };
-      if (matchdayId) row.matchday_id = matchdayId;
-      const { error } = await supabase.from('daily_jokers').insert(row);
-      if (error) {
-        if (error.code === '23505') {
-          if ((error.message || '').includes('player_uq') || (error.details || '').includes('player_uq')) {
-            showToast('You\'ve already used this player as your Joker this season!', 'warning');
-          } else {
-            showToast('You already have a Joker for this matchday!', 'warning');
-          }
-        }
-        else throw error;
-      } else {
-        // DD-C13: mirror joker_player_id on squad for UI; scoring reads daily_jokers
-        // (above) so this sync failing is non-critical — log rather than block.
-        if (squadData?.squadId) {
-          const { error: syncErr } = await supabase.from('squads').update({ joker_player_id: selectedPlayer.id }).eq('id', squadData.squadId);
-          if (syncErr) console.warn('[SquadScreen] joker squad-sync failed:', syncErr.message);
-        }
-        setTodayJokerId(selectedPlayer.id); setSelectedPlayer(null);
-      }
-    } catch (err) { console.error(err); showToast('Failed to set Joker: ' + err.message, 'error'); }
-    finally { setSaving(false); }
-  };
-
-  // FB-021 + FB-023: confirm sell with captain/joker safety warnings
+  // FB-021 + FB-023: confirm sell with captain safety warnings
   const handleSellPlayer = () => {
     if (!selectedPlayer) return;
     const isCaptain = selectedPlayer.id === squadData.captainId;
-    const isJoker   = selectedPlayer.id === todayJokerId;
     const warnings  = [];
     if (isCaptain) warnings.push('This player is your captain — selling them removes the armband.');
-    if (isJoker)   warnings.push('This player is your Matchday Joker — selling them voids today\'s boost.');
 
     setConfirm({
       title:        `Remove ${selectedPlayer.name}?`,
@@ -843,88 +746,8 @@ export default function SquadScreen() {
         captainId:        newCaptainId,
         budget:           { ...squadData.budget, current: result.budget_remaining },
       });
-      if (todayJokerId === player.id) setTodayJokerId(null);
     } catch (err) { console.error(err); }
     finally { setSaving(false); setSelectedPlayer(null); }
-  };
-
-  // FB-023: chip toggle with confirmation (activating only — deactivating is safe)
-  const toggleChip = (chipKey) => {
-    const chip   = CHIPS.find(c => c.key === chipKey);
-    const curVal = squadData[chip.stateKey];
-    if (!curVal) {
-      // Activating — show confirm first
-      setConfirm({
-        title:        `Use ${chip.label}?`,
-        body:         chip.description,
-        warning:      'This cannot be undone for this matchday.',
-        confirmLabel: 'Activate',
-        danger:       false,
-        onConfirm:    () => doToggleChip(chipKey),
-      });
-    } else {
-      // Deactivating is safe — no confirm needed
-      doToggleChip(chipKey);
-    }
-  };
-
-  const doToggleChip = async (chipKey) => {
-    const chip = CHIPS.find(c => c.key === chipKey);
-    try {
-      setSaving(true);
-      const { data, error } = await supabase.rpc('activate_chip', {
-        p_user_id:   user?.id,
-        p_league_id: squadData.leagueId,
-        p_chip_type: chipKey,
-      });
-      if (error) throw error;
-      if (!data?.ok) {
-        if (data?.code === 'CHIP_ALREADY_USED') {
-          setFetchError(`${chip.label} has already been used this season and cannot be reactivated.`);
-        } else {
-          setFetchError(data?.error || 'Failed to toggle chip.');
-        }
-        return;
-      }
-      setSquadData({ ...squadData, [chip.stateKey]: data.active });
-    } finally { setSaving(false); }
-  };
-
-  const handleJokerSelection = async (player) => {
-    try {
-      setSaving(true);
-      const userId      = user?.id;
-      const today       = new Date().toISOString().split('T')[0];
-      const matchdayId  = squadData?.matchdayId ?? null;
-      const row = { user_id: userId, player_id: player.id, joker_date: today, league_id: squadData?.leagueId ?? null };
-      if (matchdayId) row.matchday_id = matchdayId;
-      const { error } = await supabase.from('daily_jokers').insert(row);
-      if (error) {
-        if (error.code === '23505') {
-          // Two unique constraints can fire:
-          // daily_jokers_user_league_player_uq  → same player used again this season
-          // daily_jokers_user_league_matchday_uq → already have a joker this matchday
-          const isRepeatPlayer = (error.message || '').includes('player_uq') || (error.details || '').includes('player_uq');
-          showToast(isRepeatPlayer
-            ? `${player.name} was already your Joker this season — pick a different player.`
-            : 'You already have a Joker for this matchday!',
-            'warning');
-        } else if ((error.message || '').includes('JOKER_OWN_SQUAD')) {
-          showToast('Pick a player outside your squad — your own players don\'t count as Joker.', 'warning');
-        } else {
-          throw error;
-        }
-      } else {
-        // DD-C13: mirror joker_player_id on squad for UI; scoring reads daily_jokers
-        // (above) so this sync failing is non-critical — log rather than block.
-        if (squadData?.squadId) {
-          const { error: syncErr } = await supabase.from('squads').update({ joker_player_id: player.id }).eq('id', squadData.squadId);
-          if (syncErr) console.warn('[SquadScreen] joker squad-sync failed:', syncErr.message);
-        }
-        setJokerPlayer(player); setTodayJokerId(player.id); setIsJokerPickerOpen(false);
-      }
-    } catch (err) { console.error(err); showToast('Failed to set Joker', 'error'); }
-    finally { setSaving(false); }
   };
 
   // No leagues — render full UI chrome with a "join league" prompt in the body.
@@ -941,7 +764,6 @@ export default function SquadScreen() {
       { id: 'list',  label: 'List'   },
       { id: 'status',label: 'Status' },
     ];
-    const showChips = false; // chips hidden for pilot
     return (
       <>
         <div
@@ -983,31 +805,14 @@ export default function SquadScreen() {
             </button>
           ))}
         </div>
-        {showChips ? (
-          <div className="px-4 py-4 max-w-lg mx-auto">
-            {CHIPS.map(chip => (
-              <div key={chip.key} className="mb-3 rounded p-4 border transition-all" style={chip.inactiveStyle}>
-                <div className="flex items-center justify-between gap-2 mb-1">
-                  <span className="fk-display text-[12px]" style={{ color: 'var(--paper)' }}>{chip.label.toUpperCase()}</span>
-                </div>
-                <p className="text-[11px] leading-relaxed mb-3" style={{ color: 'var(--mute)' }}>{chip.description}</p>
-                <button disabled className="w-full py-2 rounded text-[10px] font-black uppercase tracking-widest opacity-40"
-                  style={{ background: 'var(--elev)', color: 'var(--paper)', border: '1px solid var(--rule)' }}>
-                  No League Yet
-                </button>
-              </div>
-            ))}
+        <div className="min-h-[60vh] flex flex-col items-center justify-center px-6 gap-4">
+          <div className="text-[13px] font-black uppercase tracking-widest mb-2" style={{ color: 'var(--mute)', fontFamily: 'Archivo Black, sans-serif' }}>
+            No League Yet
           </div>
-        ) : (
-          <div className="min-h-[60vh] flex flex-col items-center justify-center px-6 gap-4">
-            <div className="text-[13px] font-black uppercase tracking-widest mb-2" style={{ color: 'var(--mute)', fontFamily: 'Archivo Black, sans-serif' }}>
-              No League Yet
-            </div>
-            <p style={{ color: 'var(--mute)', fontFamily: 'JetBrains Mono, monospace', fontSize: 11, textAlign: 'center', maxWidth: 260, lineHeight: 1.6 }}>
-              You need to join or create a league before building your squad.
-            </p>
-          </div>
-        )}
+          <p style={{ color: 'var(--mute)', fontFamily: 'JetBrains Mono, monospace', fontSize: 11, textAlign: 'center', maxWidth: 260, lineHeight: 1.6 }}>
+            You need to join or create a league before building your squad.
+          </p>
+        </div>
       </>
     );
   }
@@ -1035,7 +840,7 @@ export default function SquadScreen() {
     );
   }
 
-  const { budget, players, bench, captainId, locked_at } = squadData;
+  const { budget, players, bench, captainId } = squadData;
   // budgetLeft/budgetLow hoisted here so the empty-state shell can display them
   const budgetLeft = Number(budget.current.toFixed(1));
   const budgetLow  = budgetLeft < 5;
@@ -1054,7 +859,6 @@ export default function SquadScreen() {
       { id: 'list',  label: 'List'   },
       { id: 'status',label: 'Status' },
     ];
-    const showChips = false; // chips hidden for pilot
     return (
       <>
         {/* ── Sticky header ─────────────────────────────────────────── */}
@@ -1111,68 +915,38 @@ export default function SquadScreen() {
           ))}
         </div>
 
-        {/* ── Chips tab ─────────────────────────────────────────────── */}
-        {showChips ? (
-          <div className="px-4 py-4 max-w-lg mx-auto">
-            {CHIPS.map(chip => (
-              <div
-                key={chip.key}
-                className="mb-3 rounded p-4 border transition-all"
-                style={chip.inactiveStyle}
+        {/* ── No-squad message ─────────────────────────────────────── */}
+        <div className="min-h-[60vh] flex flex-col items-center justify-center px-6 gap-4">
+          <div className="text-[13px] font-black uppercase tracking-widest mb-2" style={{ color: 'var(--mute)', fontFamily: 'Archivo Black, sans-serif' }}>
+            No Squad Built Yet
+          </div>
+          <p style={{ color: 'var(--mute)', fontFamily: 'JetBrains Mono, monospace', fontSize: 11, textAlign: 'center', maxWidth: 280, lineHeight: 1.6 }}>
+            Head to the Transfer Market to sign players and build your squad.
+          </p>
+          <div style={{ display: 'flex', gap: 10, marginTop: 8 }}>
+            {cfg.format === 'noduplicate' ? (
+              <button onClick={() => navigate(`/market?leagueId=${activeLeague}`)} style={{ padding: '10px 22px', background: 'var(--gold)', color: 'var(--ink)', fontFamily: 'Archivo Black, sans-serif', fontSize: 11, letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer', border: 'none' }}>
+                Transfer Market →
+              </button>
+            ) : (
+              <button onClick={() => navigate(`/market?leagueId=${activeLeague}`)} style={{ padding: '10px 22px', background: 'var(--gold)', color: 'var(--ink)', fontFamily: 'Archivo Black, sans-serif', fontSize: 11, letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer', border: 'none' }}>
+                Transfer Market →
+              </button>
+            )}
+            {leagues && leagues.length > 1 && (
+              <button
+                onClick={() => setActiveLeague(null)}
+                style={{ padding: '10px 22px', background: 'transparent', border: '1px solid var(--rule)', color: 'var(--mute)', fontFamily: 'JetBrains Mono, monospace', fontSize: 10, letterSpacing: '.14em', cursor: 'pointer' }}
               >
-                <div className="flex items-center justify-between gap-2 mb-1">
-                  <span className="fk-display text-[12px]" style={{ color: 'var(--paper)' }}>
-                    {chip.label.toUpperCase()}
-                  </span>
-                </div>
-                <p className="text-[11px] leading-relaxed mb-3" style={{ color: 'var(--mute)' }}>
-                  {chip.description}
-                </p>
-                <button
-                  disabled
-                  className="w-full py-2 rounded text-[10px] font-black uppercase tracking-widest opacity-40"
-                  style={{ background: 'rgba(255,255,255,0.06)', color: 'var(--paper)', border: '1px solid rgba(255,255,255,0.12)' }}
-                >
-                  No Squad Yet
-                </button>
-              </div>
-            ))}
+                Switch League
+              </button>
+            )}
           </div>
-        ) : (
-          /* ── No-squad message ─────────────────────────────────────── */
-          <div className="min-h-[60vh] flex flex-col items-center justify-center px-6 gap-4">
-            <div className="text-[13px] font-black uppercase tracking-widest mb-2" style={{ color: 'var(--mute)', fontFamily: 'Archivo Black, sans-serif' }}>
-              No Squad Built Yet
-            </div>
-            <p style={{ color: 'var(--mute)', fontFamily: 'JetBrains Mono, monospace', fontSize: 11, textAlign: 'center', maxWidth: 280, lineHeight: 1.6 }}>
-              Head to the Transfer Market to sign players and build your squad.
-            </p>
-            <div style={{ display: 'flex', gap: 10, marginTop: 8 }}>
-              {cfg.format === 'noduplicate' ? (
-                <button onClick={() => navigate(`/market?leagueId=${activeLeague}`)} style={{ padding: '10px 22px', background: 'var(--gold)', color: 'var(--ink)', fontFamily: 'Archivo Black, sans-serif', fontSize: 11, letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer', border: 'none' }}>
-                  Transfer Market →
-                </button>
-              ) : (
-                <button onClick={() => navigate(`/market?leagueId=${activeLeague}`)} style={{ padding: '10px 22px', background: 'var(--gold)', color: 'var(--ink)', fontFamily: 'Archivo Black, sans-serif', fontSize: 11, letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer', border: 'none' }}>
-                  Transfer Market →
-                </button>
-              )}
-              {leagues && leagues.length > 1 && (
-                <button
-                  onClick={() => setActiveLeague(null)}
-                  style={{ padding: '10px 22px', background: 'transparent', border: '1px solid var(--rule)', color: 'var(--mute)', fontFamily: 'JetBrains Mono, monospace', fontSize: 10, letterSpacing: '.14em', cursor: 'pointer' }}
-                >
-                  Switch League
-                </button>
-              )}
-            </div>
-          </div>
-        )}
+        </div>
       </>
     );
   }
 
-  const isLocked        = deadline.isLocked;
   const allSquadPlayers = [...players, ...bench];
   const dangerPlayers   = getDangerZonePlayers(allSquadPlayers);
   const selectedIsBench = selectedPlayer && bench.some(b => b.id === selectedPlayer.id);
@@ -1181,166 +955,6 @@ export default function SquadScreen() {
   // â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
   // â"€â"€ Sub-components defined inside render for squad closure access â"€â"€â"€â"€â"€â"€â"€â"€â"€
   // â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
-
-  // Chip card (full description, toggle button)
-  const ChipCard = ({ chip }) => {
-    const isActive = squadData[chip.stateKey];
-    return (
-      <div
-        className="mx-4 mb-3 rounded p-4 border transition-all"
-        style={isActive ? chip.activeStyle : chip.inactiveStyle}
-      >
-        <div className="flex-1 min-w-0">
-            <div className="flex items-center justify-between gap-2 mb-1">
-              <span
-                className="fk-display text-[12px]"
-                style={{ color: isActive ? chip.activeColor : 'var(--paper)' }}
-              >
-                {chip.label.toUpperCase()}
-              </span>
-              {isActive && (
-                <span
-                  className="fk-mono text-[8px] px-2 py-0.5"
-                  style={{ color: chip.activeColor, border: `1px solid ${chip.activeColor}` }}
-                >
-                  ACTIVE
-                </span>
-              )}
-            </div>
-            <p className="text-[11px] leading-relaxed mb-3" style={{ color: 'var(--mute)' }}>
-              {chip.description}
-            </p>
-            <button
-              onClick={() => toggleChip(chip.key)}
-              disabled={saving || !!locked_at}
-              className="w-full py-2 rounded text-[10px] font-black uppercase tracking-widest transition-all active:scale-95 disabled:opacity-40"
-              style={isActive
-                ? { background: chip.activeColor + '22', color: chip.activeColor, border: `1px solid ${chip.activeColor}44` }
-                : { background: 'rgba(255,255,255,0.06)', color: 'var(--paper)', border: '1px solid rgba(255,255,255,0.12)' }
-              }
-            >
-              {locked_at ? 'Squad Locked' : isActive ? 'Deactivate' : 'Activate Chip'}
-            </button>
-          </div>
-        </div>
-    );
-  };
-
-  // Matchday Joker card
-  const JokerCard = () => (
-    <div className="mx-4 mb-3 rounded p-4 border" style={{ borderColor: 'rgba(157,95,245,0.2)', background: 'rgba(157,95,245,0.04)' }}>
-      <div className="flex-1 min-w-0">
-          <div className="fk-display text-[12px] mb-1" style={{ color: 'var(--pos-gk)' }}>
-            MATCHDAY JOKER
-          </div>
-          <p className="text-[11px] leading-relaxed mb-3" style={{ color: 'var(--mute)', fontFamily: 'Archivo, sans-serif' }}>
-            Pick one player outside your squad for this matchday. They score their real points as a bonus — no multiplier needed. One pick per matchday; each player can only be used once per season.
-          </p>
-          {todayJokerId ? (
-            <div className="fk-mono flex items-center gap-2 py-2 px-3" style={{ background: 'rgba(168,85,247,0.08)', border: '1px solid var(--pos-gk)', color: 'var(--pos-gk)', fontSize: 9 }}>
-              JOKER LOCKED FOR THIS MATCHDAY
-            </div>
-          ) : (
-            <button
-              onClick={() => setIsJokerPickerOpen(true)}
-              className="w-full py-2 rounded text-[10px] font-black uppercase tracking-widest transition-all active:scale-95"
-              style={{ background: 'rgba(157,95,245,0.12)', color: 'var(--pos-gk)', border: '1px solid rgba(157,95,245,0.3)' }}
-            >
-              Choose Matchday Joker
-            </button>
-          )}
-        </div>
-      </div>
-  );
-
-  // Chip Guide modal — detailed explanation + replay tutorial button
-  const CHIP_GUIDE = [
-    {
-      key: 'triple_captain',
-      icon: '👑',
-      label: 'Triple Captain',
-      color: 'var(--gold)',
-      what: 'Your captain scores 3× their fantasy points instead of the usual 2×. But if they don\'t start, they score 0.',
-      when: 'Save it for a matchday when your captain is a nailed-on starter against weak opposition.',
-      restriction: '1 use per season. High risk — do not activate if your captain is a doubt.',
-      tip: 'Check injury news on match day. Never activate this if there\'s any chance they\'re rested.',
-    },
-    {
-      key: 'joker',
-      icon: '⚡',
-      label: 'Matchday Joker',
-      color: 'var(--pos-gk)',
-      what: 'Pick one player from outside your 15-man squad. They score their real fantasy points as a bonus on top of your XI total — no multiplier, no squad slot required.',
-      when: 'Any matchday — use it to add a top performer you couldn\'t fit in your squad, or a player from a country you\'ve already maxed out.',
-      restriction: '1 pick per matchday. Each player can only be your Joker once per season — you can\'t pick the same player every matchday. Must be chosen before the matchday deadline.',
-      tip: 'Don\'t waste it on a player you already own. Pick someone great who didn\'t make your 15 this round.',
-    },
-  ];
-
-  const ChipWizardModal = () => (
-    <div className="fixed inset-0 z-[80] flex items-end lg:items-center justify-center" style={{ background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(4px)' }} onClick={() => setShowChipWizard(false)}>
-      <div
-        className="w-full lg:max-w-lg lg:mx-4 rounded-t-2xl lg:rounded-2xl flex flex-col animate-in slide-in-from-bottom"
-        style={{ background: 'var(--ink)', border: '1px solid var(--rule)', maxHeight: '90vh', overflow: 'hidden' }}
-        onClick={e => e.stopPropagation()}
-      >
-        {/* Header */}
-        <div style={{ padding: '20px 20px 14px', borderBottom: '1px solid var(--rule)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
-          <div>
-            <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 9, color: 'var(--cyan)', letterSpacing: '.18em', marginBottom: 4 }}>CHIP GUIDE</div>
-            <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 20, color: 'var(--paper)', letterSpacing: '-0.01em' }}>How Chips Work</div>
-          </div>
-          <button onClick={() => setShowChipWizard(false)} style={{ width: 30, height: 30, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(255,255,255,0.06)', border: '1px solid var(--rule)', color: 'var(--mute)', fontSize: 16, cursor: 'pointer', borderRadius: 4 }}>×</button>
-        </div>
-        {/* Chips */}
-        <div style={{ overflowY: 'auto', padding: '16px 20px 8px' }}>
-          {CHIP_GUIDE.map((c, i) => (
-            <div key={c.key} style={{ marginBottom: i < CHIP_GUIDE.length - 1 ? 20 : 8, paddingBottom: i < CHIP_GUIDE.length - 1 ? 20 : 0, borderBottom: i < CHIP_GUIDE.length - 1 ? '1px solid var(--rule)' : 'none' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
-                <span style={{ fontSize: 22 }}>{c.icon}</span>
-                <div>
-                  <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 14, color: c.color, letterSpacing: '0.04em', textTransform: 'uppercase' }}>{c.label}</div>
-                </div>
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                <div>
-                  <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 8, color: 'var(--mute)', letterSpacing: '.14em', textTransform: 'uppercase' }}>What it does · </span>
-                  <span style={{ fontFamily: 'Archivo, sans-serif', fontSize: 12, color: 'var(--paper)', lineHeight: 1.5 }}>{c.what}</span>
-                </div>
-                <div>
-                  <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 8, color: 'var(--cyan)', letterSpacing: '.14em', textTransform: 'uppercase' }}>When to use · </span>
-                  <span style={{ fontFamily: 'Archivo, sans-serif', fontSize: 12, color: 'var(--paper)', lineHeight: 1.5 }}>{c.when}</span>
-                </div>
-                <div>
-                  <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 8, color: 'var(--danger)', letterSpacing: '.14em', textTransform: 'uppercase' }}>Restrictions · </span>
-                  <span style={{ fontFamily: 'Archivo, sans-serif', fontSize: 12, color: 'var(--paper)', lineHeight: 1.5 }}>{c.restriction}</span>
-                </div>
-                <div style={{ padding: '8px 10px', background: `${c.color}0A`, border: `1px solid ${c.color}22`, borderRadius: 4, marginTop: 2 }}>
-                  <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 8, color: c.color, letterSpacing: '.14em', textTransform: 'uppercase' }}>💡 Tip · </span>
-                  <span style={{ fontFamily: 'Archivo, sans-serif', fontSize: 11, color: 'var(--paper)', lineHeight: 1.5, opacity: 0.85 }}>{c.tip}</span>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-        {/* Footer */}
-        <div style={{ padding: '14px 20px 20px', borderTop: '1px solid var(--rule)', display: 'flex', gap: 10, flexShrink: 0 }}>
-          <button
-            onClick={() => { setShowChipWizard(false); replaySquadTour(); }}
-            style={{ flex: 1, padding: '10px', background: 'transparent', border: '1px solid var(--rule)', color: 'var(--mute)', fontFamily: 'JetBrains Mono, monospace', fontSize: 9, letterSpacing: '.16em', textTransform: 'uppercase', cursor: 'pointer', borderRadius: 4 }}
-          >
-            ↺ REPLAY TUTORIAL
-          </button>
-          <button
-            onClick={() => setShowChipWizard(false)}
-            style={{ flex: 2, padding: '10px', background: 'var(--cyan)', border: 'none', color: 'var(--ink)', fontFamily: 'Archivo Black, sans-serif', fontSize: 11, letterSpacing: '.1em', textTransform: 'uppercase', cursor: 'pointer', borderRadius: 4 }}
-          >
-            GOT IT
-          </button>
-        </div>
-      </div>
-    </div>
-  );
 
   // Danger Zone vertical list (for sidebar / tools tab)
   const DangerList = () => {
@@ -1567,7 +1181,7 @@ export default function SquadScreen() {
                       variant="row"
                       isCaptain={player.id === captainId}
                       isTripleCaptain={squadData.isTripleCaptain}
-                      isJoker={player.id === todayJokerId}
+                      isJoker={false}
                       onClick={handlePlayerClick}
                       isSelected={selectedPlayer?.id === player.id}
                       isSwapTarget={swapMode && selectedPlayer?.id !== player.id}
@@ -1618,9 +1232,6 @@ export default function SquadScreen() {
   // â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
   return (
     <div className="min-h-screen bg-bg overflow-x-hidden">
-
-      {/* ── Knockout keep window — disabled: group→knockout uses normal transfer window ── */}
-      {KNOCKOUT_DRAFT_ENABLED && activeLeague && <KnockoutKeepSelector leagueId={activeLeague} />}
 
       {/* ── Transfer window status banner (U5) ──────────────────────────────── */}
       <TransferWindowBanner
@@ -2176,10 +1787,6 @@ export default function SquadScreen() {
           );
         })()}
 
-        {/* â"€â"€ CHIPS TAB â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€ */}
-        {/* CHIPS TAB hidden for pilot */}
-        {CHIPS_ENABLED && mobileTab === 'chips' && null}
-
         {/* â"€â"€ STATUS TAB â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€ */}
         {mobileTab === 'status' && (
           <div className="pb-24">
@@ -2188,126 +1795,6 @@ export default function SquadScreen() {
           </div>
         )}
 
-        {/* â"€â"€ TOOLS TAB (legacy fallback — now unused) â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€ */}
-        {CHIPS_ENABLED && mobileTab === 'tools' && (
-          <div className="pb-6">
-
-            {/* Section 1: Active Features Summary */}
-            {(squadData.isTripleCaptain || jokerPlayer) && (
-              <div className="mx-4 mt-4 mb-4 pb-3 border-b border-white/5">
-                <div className="text-[9px] font-black uppercase tracking-[0.1em]" style={{ color: 'var(--mute)', marginBottom: '8px' }}>
-                  Active Features
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  {squadData.isTripleCaptain && (
-                    <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded" style={{ background: 'rgba(240,180,0,0.1)', border: '1px solid rgba(240,180,0,0.25)' }}>
-                      
-                      <span className="text-[8px] font-black uppercase tracking-widest" style={{ color: 'var(--gold)' }}>Triple Capt.</span>
-                    </div>
-                  )}
-                  {jokerPlayer && (
-                    <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded" style={{ background: 'rgba(157,95,245,0.1)', border: '1px solid rgba(157,95,245,0.25)' }}>
-                      
-                      <span className="text-[8px] font-black uppercase tracking-widest" style={{ color: 'var(--pos-gk)' }}>Joker: {jokerPlayer.name.split(' ')[0]}</span>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* Section 2: Power Tools */}
-            <div className="mx-4" data-tour="squad-power-tools">
-              <div className="text-[11px] font-black uppercase tracking-[0.1em] mb-3" style={{ color: 'var(--gold)' }}>
-                POWER TOOLS
-              </div>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-4">
-                {/* Triple Captain */}
-                <PowerToolCard
-                  
-                  label="Triple Cap."
-                  description="3× captain points — or 0 if they don't play"
-                  isActive={squadData.isTripleCaptain}
-                  accentColor="var(--gold)"
-                  bgColor="rgba(240,180,0,0.08)"
-                  borderColor="rgba(240,180,0,0.15)"
-                  actionLabel={squadData.isTripleCaptain ? 'Active' : 'Activate'}
-                  onAction={() => {
-                    if (!isLocked) {
-                      setConfirm({
-                        title: squadData.isTripleCaptain ? 'Deactivate Triple Captain?' : 'Activate Triple Captain?',
-                        body: squadData.isTripleCaptain
-                          ? 'Your captain will earn normal points.'
-                          : 'Your captain will earn 3× points this matchday. 1 use per season.',
-                        onConfirm: () => doToggleChip('triple'),
-                        confirmLabel: 'Confirm',
-                        warning: squadData.isTripleCaptain ? null : 'This action cannot be undone this gameweek.',
-                      });
-                    }
-                  }}
-                />
-
-              </div>
-            </div>
-
-            {/* Section 3: Matchday Joker */}
-            <div className="mx-4 mb-4">
-              <div className="p-3 rounded-sm" style={{ background: 'var(--ink-2)', border: '1.5px solid rgba(157,95,245,0.15)' }}>
-                <div className="fk-display" style={{ fontSize: 16, textAlign: 'center', color: 'var(--pos-gk)', marginBottom: '4px' }}>JOKER</div>
-                <div style={{
-                  fontSize: '12px',
-                  fontFamily: 'Archivo Black, sans-serif',
-                  fontWeight: 900,
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.05em',
-                  color: 'var(--pos-gk)',
-                  textAlign: 'center',
-                  marginBottom: '4px',
-                }}>
-                  Matchday Joker
-                </div>
-                <div style={{
-                  fontSize: '10px',
-                  color: 'var(--mute)',
-                  textAlign: 'center',
-                  marginBottom: '8px',
-                  lineHeight: 1.4,
-                  fontFamily: 'Archivo, sans-serif',
-                }}>
-                  Pick one player outside your squad. They score their real points as a bonus — one pick per matchday, each player once per season.
-                </div>
-                <button
-                  onClick={() => setIsJokerPickerOpen(true)}
-                  disabled={isLocked}
-                  style={{
-                    width: '100%',
-                    padding: '8px 12px',
-                    background: jokerPlayer ? 'rgba(157,95,245,0.15)' : 'rgba(157,95,245,0.25)',
-                    color: 'var(--pos-gk)',
-                    border: '1px solid rgba(157,95,245,0.3)',
-                    borderRadius: '6px',
-                    fontSize: '10px',
-                    fontFamily: 'Archivo Black, sans-serif',
-                    fontWeight: 700,
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.05em',
-                    cursor: isLocked ? 'not-allowed' : 'pointer',
-                    opacity: isLocked ? 0.5 : 1,
-                  }}
-                >
-                  {jokerPlayer ? `âœ" Set: ${jokerPlayer.name}` : 'Pick Joker'}
-                </button>
-              </div>
-            </div>
-
-            {/* Section 4: Player Status */}
-            <div className="mx-4">
-              <SectionHeader title="PLAYER STATUS" accent="red" />
-              <div className="mt-3">
-                <DangerList />
-              </div>
-            </div>
-          </div>
-        )}
       </div>
 
       {/* â•â• DESKTOP LAYOUT â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
@@ -2381,10 +1868,9 @@ export default function SquadScreen() {
               <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
                 <PitchView
                   variant="desktop"
-                  squad={{ players, captainId, isTripleCaptain: squadData.isTripleCaptain, joker: jokerPlayer }}
+                  squad={{ players, captainId, isTripleCaptain: squadData.isTripleCaptain }}
                   onPlayerClick={handlePlayerClick}
                   selectedPlayerId={selectedPlayer?.id}
-                  jokerPlayerId={todayJokerId}
                   matchdayLabel={squadData.matchdayId ? `GW · ${squadData.matchdayId}` : ''}
                 />
               </div>
@@ -2459,10 +1945,6 @@ export default function SquadScreen() {
               </div>
             </>
           )}
-
-          {/* â"€â"€ CHIPS TAB â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€ */}
-          {/* CHIPS TAB hidden for pilot */}
-          {CHIPS_ENABLED && desktopTab === 'chips' && null}
 
           {/* â"€â"€ STATUS TAB â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€ */}
           {desktopTab === 'status' && (
@@ -2556,9 +2038,6 @@ export default function SquadScreen() {
                     {selectedPlayer.id === captainId && (
                       <span style={{ color: 'var(--gold)', background: 'rgba(224,168,0,0.12)', border: '1px solid rgba(224,168,0,0.3)', padding: '1px 6px', borderRadius: 2 }}>CAPTAIN</span>
                     )}
-                    {selectedPlayer.id === todayJokerId && (
-                      <span style={{ color: 'var(--pos-gk)', background: 'rgba(157,95,245,0.1)', border: '1px solid rgba(157,95,245,0.3)', padding: '1px 6px', borderRadius: 2 }}>JOKER</span>
-                    )}
                   </div>
                 </div>
               </div>
@@ -2649,38 +2128,6 @@ export default function SquadScreen() {
                 SELL
               </button>
             </div>
-            {/* Matchday Joker section — hidden for pilot (CHIPS_ENABLED=false) */}
-            {CHIPS_ENABLED && <div className="pt-3" style={{ borderTop: '1px solid rgba(255,255,255,0.07)' }}>
-              {todayJokerId ? (
-                <div className="flex items-center gap-2 p-2.5 rounded-sm" style={{ background: 'rgba(157,95,245,0.08)', border: '1px solid rgba(157,95,245,0.2)' }}>
-
-                  <div className="text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--pos-gk)', fontFamily: 'Archivo Black, sans-serif' }}>
-                    Joker already locked for today
-                  </div>
-                </div>
-              ) : (
-                <>
-                  <button
-                    onClick={handleActivateJoker}
-                    disabled={saving || !playingTodayTeams.includes(selectedPlayer.club)}
-                    className="w-full py-3 rounded-sm transition-all active:scale-95"
-                    style={{
-                      background: playingTodayTeams.includes(selectedPlayer.club) ? 'var(--pos-gk)' : 'rgba(255,255,255,0.08)',
-                      color: playingTodayTeams.includes(selectedPlayer.club) ? '#fff' : 'var(--mute)',
-                      border: playingTodayTeams.includes(selectedPlayer.club) ? 'none' : '1px solid rgba(255,255,255,0.07)',
-                      fontFamily: 'Archivo Black, sans-serif', fontSize: '11px', fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase',
-                      cursor: playingTodayTeams.includes(selectedPlayer.club) ? 'pointer' : 'not-allowed',
-                      boxShadow: playingTodayTeams.includes(selectedPlayer.club) ? '0 0 12px rgba(157,95,245,0.3)' : 'none',
-                    }}
-                  >
-                    {playingTodayTeams.includes(selectedPlayer.club) ? 'ACTIVATE JOKER' : 'âœ— Not Playing Today'}
-                  </button>
-                  <p className="mt-1.5 text-[9px] text-center uppercase tracking-wide" style={{ color: 'var(--mute)', fontFamily: 'Archivo, sans-serif' }}>
-                    1 Joker per matchday · Country limit exempt · Locked once set
-                  </p>
-                </>
-              )}
-            </div>}
           </div>
         </div>
         </>,
@@ -2688,8 +2135,6 @@ export default function SquadScreen() {
       )}
 
       {/* â•â• PLAYER PICKER SHEET â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
-      {CHIPS_ENABLED && showChipWizard && <ChipWizardModal />}
-
       {/* Full player stats dashboard */}
       {statsDashboardPlayer && (
         <PlayerStatsDashboard
@@ -2743,137 +2188,7 @@ export default function SquadScreen() {
       )}
 
       {/* â•â• JOKER PICKER MODAL â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
-      {CHIPS_ENABLED && isJokerPickerOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/90 backdrop-blur-sm" onClick={() => setIsJokerPickerOpen(false)} />
-          <div className="w-full max-w-lg bg-surface border border-purple/30 rounded-sm shadow-[0_0_50px_rgba(168,85,247,0.2)] overflow-hidden flex flex-col max-h-[80vh] relative z-10">
-            <div className="px-5 py-4 border-b border-border flex justify-between items-center bg-purple/5">
-              <div>
-                <div className="fz-label text-purple">Matchday Joker Selection</div>
-                <div className="fz-display text-lg text-white">CHOOSE YOUR 16TH MAN</div>
-              </div>
-              <button onClick={() => setIsJokerPickerOpen(false)} className="text-text-tertiary hover:text-white text-2xl">×</button>
-            </div>
-            {/* Only show team strip when there are fixtures */}
-            {playingTodayTeams.length > 0 && (
-              <div className="p-3 bg-bg flex items-center gap-2 border-b border-border">
-                <span className="text-[10px] text-text-tertiary uppercase tracking-widest font-black shrink-0">Playing Today:</span>
-                <div className="flex gap-2 overflow-x-auto pb-1">
-                  {playingTodayTeams.map(t => (
-                    <span key={t} className="px-2 py-0.5 bg-surface border border-border rounded-full text-[9px] text-white font-bold shrink-0">{t}</span>
-                  ))}
-                </div>
-              </div>
-            )}
-            <div className="flex-1 overflow-y-auto p-2 space-y-2">
-              <JokerList
-                teams={playingTodayTeams}
-                squadPlayerIds={[...players, ...bench].map(p => p.id)}
-                onSelect={handleJokerSelection}
-                saving={saving}
-              />
-            </div>
-            <div className="p-4 border-t border-border bg-surface text-[9px] text-text-tertiary uppercase text-center tracking-widest">
-              Must be outside your squad · Real points, no multiplier · Once per matchday, each player once per season
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
 
-// â"€â"€ Supporting UI: Joker picker list (FB-024: proper empty/error states) â"€â"€â"€â"€â"€
-function JokerList({ teams, squadPlayerIds, onSelect, saving }) {
-  const [players,    setPlayers]    = useState([]);
-  const [loading,    setLoading]    = useState(true);
-  const [fetchError, setFetchError] = useState(false);
-
-  const load = async () => {
-    setLoading(true);
-    setFetchError(false);
-    try {
-      const { data, error } = await supabase
-        .from('players').select('*')
-        .in('club', teams)
-        .order('price', { ascending: false });
-      if (error) throw error;
-      setPlayers(data || []);
-    } catch (err) {
-      console.error('[JokerList]', err);
-      setFetchError(true);
-    } finally { setLoading(false); }
-  };
-
-  useEffect(() => {
-    if (teams.length) load(); else setLoading(false);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [teams]);
-
-  const EmptyState = ({ emoji, title, sub, action }) => (
-    <div className="flex flex-col items-center justify-center gap-3 p-10 text-center">
-      <div style={{ fontSize: '36px' }}>{emoji}</div>
-      <div style={{ fontFamily: 'Archivo Black, sans-serif', fontWeight: 800, fontSize: '14px', textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--paper)' }}>{title}</div>
-      {sub && <div style={{ fontSize: '12px', color: 'var(--mute)', lineHeight: 1.5, maxWidth: '220px' }}>{sub}</div>}
-      {action}
-    </div>
-  );
-
-  if (loading) return (
-    <EmptyState title="Scouting Active Teams…" sub={null} action={
-      <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: '10px', letterSpacing: '0.15em', color: 'var(--mute)', textTransform: 'uppercase' }} className="animate-scan">Loading</div>
-    } />
-  );
-
-  // FB-024: error state with retry
-  if (fetchError) return (
-    <EmptyState title="Couldn't load players" sub="Check your connection and try again." action={
-      <button onClick={load} style={{ padding: '8px 20px', background: 'var(--gold)', color: 'var(--ink-2)', fontSize: '11px', fontFamily: 'Archivo Black, sans-serif', fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>
-        Retry
-      </button>
-    } />
-  );
-
-  // FB-024: no matches today
-  if (!teams.length) return (
-    <EmptyState title="No Matches Today" sub="The Matchday Joker is only available on matchdays. Check back when fixtures are scheduled." action={null} />
-  );
-
-  // Joker must be from outside the manager's own squad.
-  // Filter out own-squad players — the DB trigger also enforces this, but the
-  // picker should not show them at all to avoid confusing the user.
-  const availablePlayers = players.filter(p => !squadPlayerIds?.includes(p.id));
-
-  if (!availablePlayers.length) return (
-    <EmptyState emoji="🏟️" title="No available players" sub="All players from today's fixtures are already in your squad." action={null} />
-  );
-
-  const PlayerRow = ({ p }) => (
-    <button
-      key={p.id}
-      onClick={() => onSelect(p)}
-      disabled={saving}
-      className="w-full flex items-center gap-3 p-3 bg-bg border border-border hover:border-purple/50 rounded-sm transition-all group"
-    >
-      <div className="w-10 h-10 rounded-full border border-border flex items-center justify-center font-bold text-[10px] text-white bg-surface shrink-0 group-hover:border-purple/30">
-        {p.club.substring(0, 3)}
-      </div>
-      <div className="flex-1 text-left min-w-0">
-        <div className="text-[13px] font-bold text-white group-hover:text-purple transition-colors truncate">{p.name}</div>
-        <div className="text-[9px] text-text-tertiary uppercase tracking-tighter">
-          {p.position} · {p.club}
-        </div>
-      </div>
-      <div className="text-right shrink-0">
-        <div className="text-[13px] font-black text-cyan tabular-nums">€{p.price}M</div>
-        <div className="text-[8px] text-positive font-bold uppercase tracking-widest">Pick</div>
-      </div>
-    </button>
-  );
-
-  return (
-    <div className="space-y-1">
-      {availablePlayers.map(p => <PlayerRow key={p.id} p={p} />)}
-    </div>
-  );
-}
