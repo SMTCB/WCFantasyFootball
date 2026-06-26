@@ -20,13 +20,22 @@
 | **1E** | Clubhouse social architecture | W3–W8 | ✅ Done — CH-0–CH-9 complete (PRs #607–#615). Clubhouse shell shipped. |
 | **2** | Tennis Module | W6–W8 | ✅ Done — T-0–T-4 complete (PRs #617–620, #625) |
 | **3A** | Buyout hygiene — batch 2 | W9–W11 | ✅ Done — 3A-B ✅ (PR #634), 3A-A ✅ (PR #635), 3A-C+D ✅ (PR #636) |
-| **3B** | v2 integration & deploy | W10–W12 | 🔄 In progress — code quality ✅ (PRs #638–#640); smoke tests + deploy remaining |
+| **3B** | v2 integration & deploy | W10–W12 | 🔄 In progress — code quality ✅ (PRs #638–#641); smoke tests + deploy remaining |
 
 **Current active branch:** `v2` (all redesign + new feature work)
 **v2 branch:** active — created off main, merged main regularly to pick up pilot bug fixes
 
 **🎯 NEXT SESSION: Phase 3B — Smoke Tests + Deploy**
-Code quality gates complete (PRs #638–#640: lint 0 warnings, build clean, Kit Light full coverage). Next: run `platform.spec.js` fresh on v2, four smoke passes (football / P2P / F1 / tennis), then merge v2 → main → deploy all Edge Functions.
+All code quality gates complete (PRs #638–#641: lint 0 warnings, build clean, Kit Light full coverage, DD corrections done). **Before smoke tests:** apply migration 209 from the Supabase-linked PC (`supabase/migrations/209_coin_ledger_compliance.sql`). Then: run `platform.spec.js` fresh on v2, four smoke passes (football / P2P / F1 / tennis), then v2 → main merge → deploy all Edge Functions.
+
+**2026-06-26 — DD corrections complete (PR #641, v2 branch):**
+- Fixed pre-existing build blocker: `ClubhouseNotifProvider` and `ClubhouseNotifContext` were imported by `App.jsx`/`AppLayout.jsx` but never created; v2 branch was unbuildable before this session.
+- **Coin ledger compliance:** migration `209_coin_ledger_compliance.sql` created (NOT yet applied — run from Supabase-linked PC). `coin_transactions.currency` default `'GBP'` → `'FRC'`; type CHECK extended with `wager_placement`/`wager_win`/`wager_refund`; `credit_coins()` p_currency default updated.
+- **Console cleanup:** Vite 8 uses OXC (not esbuild) for transforms — `esbuild.drop` was silently ignored. Fixed `vite.config.js` to use `oxc: { transform: { targets: ['es2020'] } }`. Production bundle: 0 `console.log` confirmed. One `console.log` removed from `calculate-scores/index.js`.
+- **CSS tokens:** `--on-shell: #ffffff` added; `--accent-bg` changed to `color-mix(in srgb, var(--brand-accent) 8%, transparent)` (auto-derives on rebrand; Safari 16.2+/Chrome 111+).
+- **Hex color sweep:** `color: '#fff'` → `color: 'var(--on-shell)'` across F1 screens (×6), Tennis screens (×5), ClubhouseScreen, SquadScreen (×4). LiveScreen shell/accent hardcodes tokenised. MarketScreen `#F87171`/`#4ADE80` → `var(--neg)`/`var(--pos)`. LeagueScreen contrast fixes.
+- **Spacing scale:** off-scale px values (5, 7, 9, 15px) snapped to base-4 grid across ChallengeScreen, MultiSportHomeScreen, TrophyCabinetScreen, MarketScreen.
+- **README:** football live-data resilience note added; `--on-shell`/`--accent-bg` token rows added.
 
 **Decisions locked (2026-06-24):**
 - **Stripe:** on hold — business decision, not a code gap. No action until Stripe account confirmed.

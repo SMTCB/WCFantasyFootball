@@ -1,12 +1,30 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-06-25 (v2: due diligence wrap-up — PR #640: hardcoded hex cleanup ChallengeScreen + ClubhouseScreen, --on-shell-dim token; SALE_READY_PROJECT_PLAN.md Phase 3B updated; session closed | PR #639: coin_transactions schema v2 migration 208, MOCK_PAYMENTS mode, payments.js wrapper, --font-serif token | pilot: own goal fix PR #637)  
+**Last Updated**: 2026-06-26 (v2: DD corrections complete — PR #641: coin ledger compliance (migration 209 created, not applied), Vite 8/OXC console fix, --on-shell token, color-mix accent-bg, hex sweep F1+Tennis+Clubhouse+Squad+Live+Market screens, spacing scale snap, README football resilience note; also fixed pre-existing build blocker — ClubhouseNotifProvider was missing from v2, branch was unbuildable | 2026-06-25: PR #640: --on-shell-dim token, ChallengeScreen+ClubhouseScreen hex cleanup; PR #639: coin_transactions schema v2 migration 208, MOCK_PAYMENTS, --font-serif; pilot: own goal fix PR #637)  
 **E2E Test Suite**: `platform.spec.js` (84 tests × 1 browser config) passing ✅ — 84/84 on v2 branch 2026-06-23  
 **Full Playbook Run**: `E2E_TEST_PLAYBOOK.md` v2.0 — all flows confirmed  
 **🟢 LAUNCH READY**: No critical (P0/P1) bugs open. All game mechanics functional. WC kick-off 2026-06-11.  
 **Live App**: https://wc-fantasy-football.vercel.app  
 **WC Kick-off**: 2026-06-11 19:00 UTC (Mexico vs South Africa)  
 **Supabase PostgREST max_rows**: 10,000 (raised from default 1,000 — 2026-06-08)
+
+---
+
+## ✅ v2 DD Corrections (2026-06-26) — PR #641
+
+**Build blocker fixed:** `ClubhouseNotifProvider` + `ClubhouseNotifContext` were imported in `App.jsx`/`AppLayout.jsx` but never created — v2 was unbuildable. Both files created with Supabase Realtime subscription for unread notification badge count.
+
+**Coin ledger compliance:** `supabase/migrations/209_coin_ledger_compliance.sql` created (NOT applied — requires Supabase-linked PC). Changes `coin_transactions.currency` default from `'GBP'` to `'FRC'` (Frontrow Coin, internal virtual token); extends type CHECK with `wager_placement`/`wager_win`/`wager_refund`; updates `credit_coins()` p_currency default. Next migration: `210_`.
+
+**Vite 8/OXC config:** `vite.config.js` updated from factory-form `esbuild.drop` (silently ignored by Vite 8 OXC) to `oxc: { transform: { targets: ['es2020'] } }`. Build warning eliminated. Production bundle confirmed 0 `console.log`. One `console.log` removed from `calculate-scores/index.js`.
+
+**CSS tokens added:** `--on-shell: #ffffff` and `color-mix(in srgb, var(--brand-accent) 8%, transparent)` for `--accent-bg` (auto-derives on rebrand; Safari 16.2+/Chrome 111+).
+
+**Hex sweep:** `color: '#fff'` → `var(--on-shell)` on 6 F1 screens + 5 Tennis screens + ClubhouseScreen h1 + SquadScreen (×4 Archivo Black headers). LiveScreen shell gradient + accent rgba → tokens. MarketScreen `#F87171`/`#4ADE80` → `var(--neg)`/`var(--pos)`. LeagueScreen checkmark + ACCEPT button contrast corrected.
+
+**Spacing scale:** off-scale px (5, 7, 9, 15px) snapped to base-4 grid in ChallengeScreen (9 substitutions), MultiSportHomeScreen, TrophyCabinetScreen, MarketScreen.
+
+**README:** football live-data resilience paragraph added; `--on-shell`/`--accent-bg` token rows added.
 
 ---
 
