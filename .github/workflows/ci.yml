@@ -1,12 +1,12 @@
 name: CI
 
 # ─── Triggers ────────────────────────────────────────────────────────────────
-# Runs on every PR targeting main, and on every direct push to main.
+# Runs on every PR targeting main or v2, and on every direct push to either branch.
 on:
   push:
-    branches: [main]
+    branches: [main, v2]
   pull_request:
-    branches: [main]
+    branches: [main, v2]
 
 # Cancel in-progress CI runs for the same PR when a new commit is pushed
 concurrency:
@@ -16,7 +16,34 @@ concurrency:
 # ─── Jobs ────────────────────────────────────────────────────────────────────
 jobs:
 
-  # ── 1. Lint ────────────────────────────────────────────────────────────────
+  # ── 1. Security ────────────────────────────────────────────────────────────
+  security:
+    name: Security
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      # Fail CI on high or critical npm vulnerabilities (CI-1)
+      - name: npm audit
+        run: npm audit --audit-level=high
+
+      # Detect Rolldown TDZ trap — circular imports that cause production crashes (CODE-1)
+      - name: Circular dependency check
+        run: npx madge --circular src/
+
+      # Ensure Edge Functions are deployed whenever their code changes (DEPLOY-1)
+      - name: Function drift check
+        run: npm run check:drift
+
+  # ── 2. Lint ────────────────────────────────────────────────────────────────
   lint:
     name: Lint
     runs-on: ubuntu-latest
@@ -34,7 +61,7 @@ jobs:
       - name: Run ESLint
         run: npm run lint
 
-  # ── 2. Build ───────────────────────────────────────────────────────────────
+  # ── 3. Build ───────────────────────────────────────────────────────────────
   build:
     name: Build
     runs-on: ubuntu-latest
@@ -63,11 +90,11 @@ jobs:
           path: dist/
           retention-days: 7
 
-  # ── 3. Playwright E2E ──────────────────────────────────────────────────────
+  # ── 4. Playwright E2E ──────────────────────────────────────────────────────
   e2e:
     name: E2E Tests
     runs-on: ubuntu-latest
-    needs: [lint, build]   # Only run if lint + build pass
+    needs: [security, lint, build]   # Only run if all prior gates pass
     timeout-minutes: 60    # Browser install (~10 min) + platform.spec.js x2 projects (~25 min)
     env:
       VITE_SUPABASE_URL:      ${{ secrets.VITE_SUPABASE_URL }}
