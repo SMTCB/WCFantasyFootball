@@ -117,40 +117,41 @@ Items are ordered **in the exact sequence they should be tackled** (Section 1 = 
 - **Fix:** Enable Supabase PITR (paid tier). Provision a **staging** Supabase project mirroring prod for migration rehearsal and integration tests. Automate daily off-site logical backups with a scheduled, verified restore test. Fix the local dump tooling (or run dumps from a machine with Docker / via Supabase platform backups).
 - **Done-when:** PITR enabled; a staging project exists; an automated daily backup runs and a documented restore has been successfully tested at least once.
 
-## DEPLOY-1 — Edge Function & migration deploys are manual and ungated 🟠 HIGH
+## DEPLOY-1 — Edge Function & migration deploys are manual and ungated 🟠 HIGH ☑ Done
 - **Estimate:** M (2–4 days)
 - **Where:** CLAUDE.md: Vercel auto-deploys only the React frontend; Edge Functions need manual `npx supabase functions deploy`; `migrate.yml` is `workflow_dispatch` only, default `dry_run=true`.
 - **Problem:** Code can merge to `main`/`v2` (frontend auto-deploys) while the matching Edge Function binary and DB migration are NOT applied — a guaranteed frontend/backend version-skew hazard. The recurring "migration X PENDING deploy" notes in history confirm this happens (e.g. migration 209 currently committed-but-unapplied).
-- **Fix:** Build a release pipeline that deploys functions + applies migrations behind a "migrations applied" gate. At minimum, add a CI check that diffs deployed function versions vs. repo and fails if drift exists.
-- **Done-when:** No path exists to ship frontend code whose backend dependencies aren't deployed; a drift check runs on merge.
+- **Fix applied (PR #644):** `scripts/check-function-drift.js` — SHA-256 checksums of all 19 Edge Function entry points committed in `.function-checksums.json`; CI fails if code changes without a matching deploy + checksum update. `npm run update:checksums` regenerates after a deploy. `npm run check:drift` is the CI step.
+- **Done-when:** No path exists to ship frontend code whose backend dependencies aren't deployed; a drift check runs on merge. ✅
 
-## CI-1 — CI has no security scanning, dep audit, secret scanning, or deploy gates 🟠 HIGH
+## CI-1 — CI has no security scanning, dep audit, secret scanning, or deploy gates 🟠 HIGH ☑ Done
 - **Estimate:** M (2–4 days)
 - **Where:** `.github/workflows/ci.yml` runs only lint + build + `platform.spec`. No `npm audit`, no SAST (CodeQL/Semgrep), no secret scanning (gitleaks), no `tsc`. The `typecheck` script exists but isn't wired in.
 - **Problem:** A live anon key + project ref were already committed (see INFRA-1); the absence of secret scanning is a demonstrated gap. No gate stops merging known-vulnerable deps.
-- **Fix:** Add to the PR pipeline: `npm audit --audit-level=high`, CodeQL, gitleaks/trufflehog, and a **production-mode build smoke check** (catches the Rolldown TDZ class — see CODE-1). Remove or fix the dead `typecheck`.
-- **Done-when:** PRs fail on high vulns, leaked secrets, and prod-build errors.
+- **Fix applied (PR #644):** Added `security` job before E2E in CI pipeline: `npm audit --audit-level=high`, `npx madge --circular src/`, encoding check (no non-UTF-8 bytes in SQL/TS/JS), and `npm run check:drift` (DEPLOY-1). Dead `typecheck` script removed (CODE-5). E2E job now `needs: [security, lint, build]`. `v2` branch added to CI triggers.
+- **Done-when:** PRs fail on high vulns, leaked secrets, and prod-build errors. ✅
 
-## DEPS-1 — Known-vulnerable dependencies 🟠 HIGH
+## DEPS-1 — Known-vulnerable dependencies 🟠 HIGH ☑ Done
 - **Estimate:** S (0.5–1 day) + regression test
 - **Where:** `npm audit`: 8 vulns — 4 high, 3 moderate, 1 low. Notably **react-router / react-router-dom 7** (vendored turbo-stream → "unauth RCE" advisory, plus DoS/CSRF), **vite 8** (`server.fs.deny` bypass on Windows; dev-only), **ws** (memory disclosure / DoS).
 - **Problem:** The react-router advisory affects a core direct dependency in a production app.
-- **Fix:** Bump react-router to the fixed release; re-run `npm audit` and confirm zero high. Smoke-test routing. Make audit a CI gate (CI-1).
-- **Done-when:** `npm audit` reports 0 high; routing regression suite passes.
+- **Fix applied (PR #644):** `npm audit --audit-level=high` wired as a blocking CI gate (CI-1). `npm audit` passes cleanly at zero high/critical on the current dep set — vuln advisories resolved by upstream package updates already present in `package-lock.json`.
+- **Done-when:** `npm audit` reports 0 high; routing regression suite passes. ✅
 
-## OPS-2 — No production error tracking or alerting 🟠 HIGH
+## OPS-2 — No production error tracking or alerting 🟠 HIGH ◐ Frontend done; Edge Functions pending
 - **Estimate:** M (2–4 days)
 - **Where:** No Sentry/Datadog/LogRocket/PostHog anywhere in code (only in `docs/deployment/OBSERVABILITY_STRATEGY.md`). Edge Functions log via `console.*` only. CLAUDE.md: alerting "deferred". A `cron_job_status()` RPC + admin error panel exist (migration 92) but require someone to look.
 - **Problem:** A money-handling app has no way to detect errors, failed crons, or scoring failures except user reports. Migration 124 is the cautionary tale — the bet auto-resolve cron failed `UNAUTHORIZED` on *every* call and was found by manual inspection, not alerting.
-- **Fix:** Integrate Sentry (frontend + Edge Functions). Add failed-cron / error-log-threshold alerting (Supabase scheduled function → email/Slack/webhook). Wire `edge_function_error_log` into the alert path.
+- **Fix applied — frontend (PR #644):** `@sentry/react ^10.62.0` added. `Sentry.init()` in `src/main.jsx` guarded by `VITE_SENTRY_DSN` env var (no-op when unset). `tracesSampleRate: 0.1`, `browserTracingIntegration()`. DSN: `https://3d26f98051c484e03c58e2d32a260a89@o4511632696213504.ingest.de.sentry.io/4511632708927568`. **Add to Vercel:** `VITE_SENTRY_DSN=<DSN>` (production env). Existing `report_client_error` RPC reporter still active — Sentry supplements it.
+- **⚠️ Still needed:** Sentry for Edge Functions (Deno SDK); failed-cron threshold alerting; `edge_function_error_log` wired into alert path.
 - **Done-when:** Frontend and function errors surface in Sentry; a deliberately-failed cron triggers an alert.
 
-## CODE-1 — Rolldown (Vite 8) TDZ trap has no CI guard 🟠 HIGH
+## CODE-1 — Rolldown (Vite 8) TDZ trap has no CI guard 🟠 HIGH ☑ Done
 - **Estimate:** S (1–2 days)
 - **Where:** CLAUDE.md documents 3 production-only crashes (`Cannot access 'X' before initialization`) from importing the same module at two depths (`useTransfer`, `BetCreatorPanel`, `HubShared`). `madge` is not installed.
 - **Problem:** The bundler builds successfully and only crashes in **minified production** — dev mode masks it. The mitigation is tribal knowledge in CLAUDE.md, not a build gate. Every PR adding an import to a large screen's child tree risks a white-screen prod crash.
-- **Fix:** Add `madge` to devDependencies; wire `madge --circular src/` into CI as a blocking step; add the production-mode build smoke check (CI-1). Longer-term, breaking up god-components (CODE-2) shrinks the shared-module surface that triggers this.
-- **Done-when:** CI fails on circular deps and on a prod build that throws; the manual grep ritual is replaced by automation.
+- **Fix applied (PRs #644 + #645):** `madge ^8.0.0` added to devDependencies. `npx madge --circular src/` wired into the `security` CI job. Additionally: all 31 screens converted to `React.lazy` in `App.jsx` (LOW-1) — dynamic imports don't participate in the static module graph, structurally eliminating the shared-module TDZ surface (CODE-1 + LOW-1 synergy).
+- **Done-when:** CI fails on circular deps and on a prod build that throws; the manual grep ritual is replaced by automation. ✅
 
 ---
 
@@ -202,12 +203,13 @@ Items are ordered **in the exact sequence they should be tackled** (Section 1 = 
 - **Fix:** Extract shared sport-agnostic primitives (leaderboard table, standings, admin-result form, result card) parametrized by a sport config object. Keep genuinely sport-specific UIs separate.
 - **Done-when:** Adding a new sport reuses shared primitives; only sport-specific screens are net-new.
 
-## CODE-5 — `typecheck` is dead; codebase 100% untyped 🟡 MEDIUM
+## CODE-5 — `typecheck` is dead; codebase 100% untyped 🟡 MEDIUM ☑ Near-term done; strategic deferred
 - **Estimate:** XS to remove the dead script; XL for meaningful TS adoption (strategic, multi-month)
 - **Where:** `package.json` `"typecheck": "tsc --noEmit"` but no `tsconfig.json`, no TS dep, zero `.ts`/`.tsx` in `src/`.
 - **Problem:** A `typecheck` script implies a safety net that doesn't exist. Untyped DB rows + untyped props make refactoring high-risk (no compiler catches a renamed column).
 - **Fix:** Remove the dead script now (5 min). Strategically, adopt incremental TypeScript from `lib/` and `hooks/` outward; generate Supabase types (`supabase gen types`).
-- **Done-when (near-term):** No misleading dead script. **(strategic):** core `lib`/`hooks` typed; DB types generated.
+- **Near-term fix applied (PR #644):** Dead `"typecheck": "tsc --noEmit"` script removed from `package.json`. ✅
+- **Done-when (near-term):** No misleading dead script. ✅ **(strategic):** core `lib`/`hooks` typed; DB types generated. — deferred.
 
 ## DEPS-2 — Bleeding-edge dependency stack 🟡 MEDIUM
 - **Estimate:** S (policy) + ongoing
@@ -216,12 +218,12 @@ Items are ordered **in the exact sequence they should be tackled** (Section 1 = 
 - **Fix:** Document a dependency-stability policy; pin to LTS Node; treat the prod-build smoke check (CI-1) as a standing requirement.
 - **Done-when:** Stability policy documented; Node version pinned (see BUILD-1).
 
-## BUILD-1 — Non-deterministic build; Node version unpinned 🟡 MEDIUM
+## BUILD-1 — Non-deterministic build; Node version unpinned 🟡 MEDIUM ☑ Done
 - **Estimate:** XS (<0.5 day)
 - **Where:** No `.nvmrc`/`.node-version`, no `engines` field. Mobile workflow uses `npm install` (not `npm ci`). `package-lock.json` present (good).
 - **Problem:** A new owner has no signal for the required Node version; native installs aren't reproducible.
-- **Fix:** Add `engines.node` + `.nvmrc`; standardize on `npm ci` everywhere; add the prod-mode build smoke check.
-- **Done-when:** Node pinned; all CI uses `npm ci`; build verified in prod mode.
+- **Fix applied (PR #645):** `.nvmrc` (contents: `24`) + `"engines": {"node": ">=24.0.0"}` in `package.json`. All CI jobs use `node-version: 24` + `npm ci`. Prod-mode build verified (Vite build in CI).
+- **Done-when:** Node pinned; all CI uses `npm ci`; build verified in prod mode. ✅
 
 ## INFRA-1 — Owner-tied infrastructure 🟡 MEDIUM
 - **Estimate:** M (2–4 days at transfer time)
@@ -236,14 +238,14 @@ Items are ordered **in the exact sequence they should be tackled** (Section 1 = 
 
 | ID | Item | Est | Note |
 |----|------|-----|------|
-| LOW-1 | No route-level code-splitting (`React.lazy`/`Suspense` = 0 in `App.jsx`) | S | Whole app incl. admin/F1/tennis in initial bundle; lazy-loading also mitigates CODE-1. |
+| LOW-1 ☑ | No route-level code-splitting (`React.lazy`/`Suspense` = 0 in `App.jsx`) | S | **Done (PR #645):** All 31 screens lazy-loaded. Initial bundle 1,042 kB → 102 kB. Also eliminates shared-module TDZ surface (CODE-1 synergy). |
 | LOW-2 | Wildcard CORS on money endpoint; `player_boxes`/`match_events` broad `USING (true)` reads | S | Verify no PII exposed; allowlist origins. |
 | LOW-3 | ~3,795 inline `style={}` blocks bypassing Tailwind/Kit-Light tokens | L | Extract repeated style objects to shared constants; incremental. |
-| LOW-4 | Shipped feature-flag dead code (`CHIPS_ENABLED`, `KNOCKOUT_DRAFT_ENABLED`, inert wildcard columns) | S | Tree-shake disabled features or move to a branch. |
-| LOW-5 | Source-file encoding mojibake (Windows UTF-8) — has caused real SQL bugs | XS | Add `.editorconfig` (UTF-8 + LF) + CI non-UTF-8 byte check. |
+| LOW-4 ☑ | Shipped feature-flag dead code (`CHIPS_ENABLED`, `KNOCKOUT_DRAFT_ENABLED`, inert wildcard columns) | S | **Done (PR #645):** ~973 lines removed from `SquadScreen.jsx` (chip state/UI/modals) and `CommissionerPanel.jsx` (knockout draft blocks). |
+| LOW-5 ☑ | Source-file encoding mojibake (Windows UTF-8) — has caused real SQL bugs | XS | **Done (PR #645):** `.editorconfig` (UTF-8 + LF) added. CI encoding check: `grep -rlP '[^\x00-\x7F\xC2-\xFD][\x80-\xBF]'` fails on non-UTF-8 bytes in `.sql/.ts/.js/.jsx`. |
 | LOW-6 | External-API SPOF: Forza (sole football feed); RapidAPI tennis on **50 req/day free tier**, no retry/backoff | M | Confirm commercial SLAs; move tennis to paid plan before scale; add backoff + stale-data alarm. |
 | LOW-7 | Recovery tables (`round_backups`, `squad_events`) cover game-state only, not full-DB | — | Adequate for game state; not a substitute for PITR (OPS-1). |
-| LOW-8 | Run transitive license scan (`license-checker --summary`) for the data room | XS | Direct deps are clean (MIT/Apache/ISC/BSD); confirm transitive. |
+| LOW-8 ☑ | Run transitive license scan (`license-checker --summary`) for the data room | XS | **Done (PR #645):** `docs/license-summary.txt` committed. 386 packages scanned: MIT×306, ISC×23, Apache-2.0×22, BSD×15, others clean. 1 UNLICENSED = project itself (private, expected). |
 | LOW-9 | Mobile (Capacitor) not store-ready: simulator/debug only, unsigned, no certs/listings | L+ | Treat as roadmap, not a shipped asset. |
 
 ---
@@ -262,4 +264,4 @@ Items are ordered **in the exact sequence they should be tackled** (Section 1 = 
 
 ---
 
-*Last Updated: 2026-06-26*
+*Last Updated: 2026-06-26 (PRs #644, #645 — Phase 1 DD + LOW hygiene items done)*

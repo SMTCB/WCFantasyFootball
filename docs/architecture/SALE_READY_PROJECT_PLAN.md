@@ -20,13 +20,13 @@
 | **1E** | Clubhouse social architecture | W3–W8 | ✅ Done — CH-0–CH-9 complete (PRs #607–#615). Clubhouse shell shipped. |
 | **2** | Tennis Module | W6–W8 | ✅ Done — T-0–T-4 complete (PRs #617–620, #625) |
 | **3A** | Buyout hygiene — batch 2 | W9–W11 | ✅ Done — 3A-B ✅ (PR #634), 3A-A ✅ (PR #635), 3A-C+D ✅ (PR #636) |
-| **3B** | v2 integration & deploy | W10–W12 | 🔄 In progress — code quality ✅ (PRs #638–#641); smoke tests + deploy remaining |
+| **3B** | v2 integration & deploy | W10–W12 | 🔄 In progress — code quality ✅ (PRs #638–#645); smoke tests + deploy remaining |
 
 **Current active branch:** `v2` (all redesign + new feature work)
 **v2 branch:** active — created off main, merged main regularly to pick up pilot bug fixes
 
-**🎯 NEXT SESSION: Phase 3B — Smoke Tests + Deploy (on hold) + Phase 1 DD items**
-Phase 0 security gates closed (PR #643: SEC-1 through MONEY-1). **Pending DB actions on Supabase-linked PC before any deploy:** apply migrations 209, 210, 211 and deploy 5 Edge Functions (see table below). Phase 3B smoke tests and deploy remain on hold per previous decision. Next active work: Phase 1 DD items (DATA-1, OPS-1, DEPLOY-1, CI-1, DEPS-1, OPS-2, CODE-1).
+**🎯 NEXT SESSION: Phase 3B — Smoke Tests + Deploy (on hold) + remaining DD items**
+Phase 1 DD items complete (PRs #644–#645): DEPLOY-1 ☑, CI-1 ☑, DEPS-1 ☑, CODE-1 ☑, CODE-5 ☑ (near-term), OPS-2 ◐ (frontend Sentry done — Edge Functions pending), LOW-1 ☑, LOW-4 ☑, LOW-5 ☑, LOW-8 ☑, BUILD-1 ☑. **Pending before any deploy:** apply migrations 209, 210, 211 + deploy 5 Edge Functions + add `VITE_SENTRY_DSN` to Vercel (see tables below). Phase 3B smoke tests and deploy on hold. Remaining DD items: DATA-1, OPS-1 (Phase 1 — complex, deferred); TEST-1, DATA-2, DATA-3, CODE-3 (Phase 2); CODE-2, CODE-4, DEPS-2, INFRA-1, LOW-2/3/6/9 (Phase 3).
 
 **⚠️ PENDING DB & DEPLOY ACTIONS — Supabase-linked PC only**
 
@@ -42,8 +42,25 @@ Phase 0 security gates closed (PR #643: SEC-1 through MONEY-1). **Pending DB act
 | 8 | Deploy calculate-scores (SEC-3) | `npx supabase functions deploy calculate-scores --project-ref sssmvihxtqtohisghjet` | — |
 | 9 | Set FRONTEND_URL secret (MONEY-1 CORS) | `npx supabase secrets set FRONTEND_URL=https://wc-fantasy-football.vercel.app --project-ref sssmvihxtqtohisghjet` | — |
 | 10 | SEC-4: Rotate GitHub PAT, switch to SSH | See TECHNICAL_DUE_DILIGENCE.md → SEC-4 | Developer machine |
+| 11 | Add VITE_SENTRY_DSN to Vercel (OPS-2) | Vercel dashboard → Settings → Env vars → add `VITE_SENTRY_DSN=https://3d26f98051c484e03c58e2d32a260a89@o4511632696213504.ingest.de.sentry.io/4511632708927568` (Production) | — |
 
 **Next migration:** `212_`
+
+**2026-06-26 — Phase 1 DD + LOW hygiene items (PRs #644–#645, v2 branch):**
+- **PR #644 — DEPLOY-1 + CI-1 + DEPS-1 + CODE-1 + OPS-2 (frontend) + CODE-5 (near-term):**
+  - `scripts/check-function-drift.js` + `scripts/update-function-checksums.js` + `.function-checksums.json` — SHA-256 drift detection for all 19 Edge Functions; CI fails if code changes without a matching deploy (DEPLOY-1).
+  - `.github/workflows/ci.yml` — added `security` job: `npm audit --audit-level=high`, `npx madge --circular src/`, encoding check, `npm run check:drift`; `v2` branch added to triggers; E2E now `needs: [security, lint, build]` (CI-1).
+  - `npm audit` passes cleanly at zero high/critical (DEPS-1).
+  - `src/main.jsx` — `@sentry/react` init guarded by `VITE_SENTRY_DSN` env var; supplements existing `report_client_error` RPC reporter (OPS-2 frontend).
+  - `.env.example` — `VITE_SENTRY_DSN` documented. Dead `typecheck` script removed from `package.json` (CODE-5).
+  - `vite.config.js` — pre-existing ESLint `'mode' is defined but never used` error fixed.
+- **PR #645 — LOW-1 + LOW-4 + LOW-5 + LOW-8 + BUILD-1:**
+  - `src/App.jsx` — all 31 screens converted to `React.lazy` + `Suspense`; initial bundle 1,042 kB → 102 kB; also eliminates Rolldown TDZ surface (LOW-1 + CODE-1 synergy).
+  - `src/screens/SquadScreen.jsx` — ~765 lines of dead chip/joker code removed (CHIPS_ENABLED flag tree, all chip state/handlers/modals/sub-components) (LOW-4).
+  - `src/components/league/CommissionerPanel.jsx` — ~208 lines of dead knockout-draft code removed (KNOCKOUT_DRAFT_ENABLED flag tree, all associated state/effects/UI blocks) (LOW-4).
+  - `.editorconfig` (NEW) — UTF-8 + LF policy; CI encoding check added (LOW-5).
+  - `.nvmrc` (NEW, contents: `24`) + `"engines": {"node": ">=24.0.0"}` in `package.json` (BUILD-1).
+  - `docs/license-summary.txt` (NEW) — `license-checker --summary` output; 386 packages, all clean (MIT/ISC/Apache/BSD/MPL/BlueOak); 1 UNLICENSED = project itself (private, expected) (LOW-8).
 
 **2026-06-26 — DD corrections complete (PR #641, v2 branch):**
 - Fixed pre-existing build blocker: `ClubhouseNotifProvider` and `ClubhouseNotifContext` were imported by `App.jsx`/`AppLayout.jsx` but never created; v2 branch was unbuildable before this session.
