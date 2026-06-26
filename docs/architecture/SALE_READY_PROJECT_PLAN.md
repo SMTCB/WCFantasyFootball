@@ -28,6 +28,17 @@
 **🎯 NEXT SESSION: Phase 3B — Smoke Tests + Deploy**
 All code quality gates complete (PRs #638–#641: lint 0 warnings, build clean, Kit Light full coverage, DD corrections done). **Before smoke tests:** apply migration 209 from the Supabase-linked PC (`supabase/migrations/209_coin_ledger_compliance.sql`). Then: run `platform.spec.js` fresh on v2, four smoke passes (football / P2P / F1 / tennis), then v2 → main merge → deploy all Edge Functions.
 
+**⚠️ PENDING DB ACTION — Migration 209 (Supabase-linked PC only)**
+
+| Item | Detail |
+|------|--------|
+| **File** | `supabase/migrations/209_coin_ledger_compliance.sql` |
+| **Branch** | `v2` (file is committed, not yet applied to the DB) |
+| **Purpose** | Compliance gap: `coin_transactions.currency` was defaulting to `'GBP'` (a real ISO 4217 currency code) for virtual in-app coins — a regulatory red flag in a P2P betting product. This migration (a) changes the column default to `'FRC'` (Frontrow Coin, internal token code), (b) backfills any existing `'GBP'` rows to `'FRC'`, (c) extends the type `CHECK` constraint with spec-standard aliases `wager_placement`/`wager_win`/`wager_refund`, and (d) updates the `credit_coins()` RPC default. |
+| **How to apply** | `npx supabase db query --linked --file supabase/migrations/209_coin_ledger_compliance.sql` |
+| **Risk** | Low — column default + backfill + constraint extension. No rows deleted, no type changes. Backfill targets only rows where `currency = 'GBP'` (all virtual coins mislabelled). |
+| **Next migration** | `210_` |
+
 **2026-06-26 — DD corrections complete (PR #641, v2 branch):**
 - Fixed pre-existing build blocker: `ClubhouseNotifProvider` and `ClubhouseNotifContext` were imported by `App.jsx`/`AppLayout.jsx` but never created; v2 branch was unbuildable before this session.
 - **Coin ledger compliance:** migration `209_coin_ledger_compliance.sql` created (NOT yet applied — run from Supabase-linked PC). `coin_transactions.currency` default `'GBP'` → `'FRC'`; type CHECK extended with `wager_placement`/`wager_win`/`wager_refund`; `credit_coins()` p_currency default updated.
