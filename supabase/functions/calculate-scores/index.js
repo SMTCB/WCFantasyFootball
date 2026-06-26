@@ -24,6 +24,7 @@
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { logError as _logError } from '../_shared/log.ts';
+import { requireServiceRole } from '../_shared/auth.ts';
 
 const supabase = createClient(
   Deno.env.get('SUPABASE_URL'),
@@ -186,36 +187,16 @@ Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: CORS_HEADERS });
   if (req.method !== 'POST')    return respond(405, { error: 'POST required' });
 
-  // ── H6: Authorization guard ────────────────────────────────────────────────
-  // verify_jwt=false means Supabase doesn't enforce JWT automatically.
-  // Guard: service-role key (cron path) OR a valid user JWT (admin manual button).
-  // Blocks anon-key-only callers who could otherwise trigger global score recalcs.
-  //
-  // Two acceptance paths:
-  //  A) Exact match against SUPABASE_SERVICE_ROLE_KEY env var (new sb_secret_... format)
-  //  B) JWT payload has role=service_role (old eyJ... format still used by crons)
-  //  C) Valid authenticated user JWT
+  // ── Authorization guard ────────────────────────────────────────────────────
+  // verify_jwt=false — Supabase doesn't enforce JWT automatically.
+  // Acceptance paths (in order):
+  //  A) Service-role key exact match (SUPABASE_SERVICE_ROLE_KEY env var)
+  //  B) Old-format service-role JWT — HMAC-SHA256 verified via requireServiceRole()
+  //  C) Valid authenticated user JWT — fallback for admin manual rescore button
   const authHeader = req.headers.get('Authorization') ?? '';
-  const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
-
-  let isServiceRole = authHeader === `Bearer ${serviceRoleKey}`;
-
-  // Path B: old-format service-role JWT — decode payload and check role claim.
-  // Supabase JWTs are signed; we check the claim only (not the signature) because
-  // the JWT secret is not auto-injected. Acceptable: the guard prevents casual abuse,
-  // not cryptographic forgery — actual DB writes are scoped by the function's own client.
-  if (!isServiceRole) {
-    try {
-      const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : '';
-      const parts = token.split('.');
-      if (parts.length === 3) {
-        const payload = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')));
-        isServiceRole = payload.role === 'service_role';
-      }
-    } catch { /* malformed JWT — not service role */ }
-  }
-
-  if (!isServiceRole) {
+  const authErr = await requireServiceRole(req);
+  if (authErr) {
+    // Not service-role — fall back to valid authenticated user (admin manual button)
     const { data: { user } } = await supabase.auth.getUser(authHeader.replace('Bearer ', ''));
     if (!user) return respond(401, { error: 'Unauthorized' });
   }

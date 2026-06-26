@@ -1,4 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { requireServiceRole } from '../_shared/auth.ts';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // score-atp-finals — Scores the ATP Finals pick'em prediction game
@@ -44,6 +45,9 @@ Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
   }
+
+  const authErr = await requireServiceRole(req);
+  if (authErr) return authErr;
 
   try {
     const supabase = createClient(

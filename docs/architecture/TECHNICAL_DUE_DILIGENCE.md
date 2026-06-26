@@ -41,40 +41,63 @@ Items are ordered **in the exact sequence they should be tackled** (Section 1 = 
 
 > These are live, verified privilege-escalation / integrity holes. They are independently game-over for data integrity and must be closed before any acquirer security review or before real money flows.
 
-## SEC-1 — Admin privilege escalation: `is_admin` is client-writable 🔴 CRITICAL
+## SEC-1 — Admin privilege escalation: `is_admin` is client-writable 🔴 CRITICAL ◐ DB pending
 - **Estimate:** S (0.5–1 day)
 - **Where:** `supabase/migrations/47_rls_core_tables.sql:115-118` (the `users` UPDATE policy) + `supabase/migrations/191_f1_paddocks_schema.sql:4` (adds `is_admin boolean`). **No guard trigger on `users`** (verified — only `squads` and `coin_wallets` have column guards).
 - **Problem:** The `users` UPDATE RLS policy is `USING (id = auth.uid()) WITH CHECK (id = auth.uid())` — it restricts *which row* you can edit but **not which columns**. Migration 191 added `is_admin` to that same table. Any authenticated user can run `supabase.from('users').update({ is_admin: true }).eq('id', <own uid>)` and become an admin. `is_admin = true` gates the admin-write RLS on `f1_scores` (191:153), `f1_year_results` (191:176), and `f1_races` (191:75) — so a self-promoted user can rewrite F1 scores and results. `src/screens/f1/F1AdminScreen.jsx:33` reads the same column client-side to render the admin panel.
-- **Fix:** Add a `BEFORE UPDATE` trigger on `public.users` that rejects any client-initiated change to `is_admin` (and other identity/privilege columns), mirroring the existing `guard_squad_protected_columns()` pattern (migration 123). Admin assignment should only happen via a service-role RPC or the Supabase dashboard.
+- **Fix:** Migration `210_guard_users_is_admin.sql` — `guard_users_privilege_columns()` BEFORE UPDATE trigger blocks client-role writes to `is_admin` and `id`. Admin assignment still works via service-role (Supabase dashboard).
+- **⚠️ DB action required (Supabase-linked PC):** `npx supabase db query --linked < supabase/migrations/210_guard_users_is_admin.sql`
 - **Done-when:** A simulated authenticated JWT cannot set `is_admin=true`; service-role path still can.
 
-## SEC-2 — Scoring Edge Functions have no caller authorization 🔴 CRITICAL
+## SEC-2 — Scoring Edge Functions have no caller authorization 🔴 CRITICAL ☑ Code done
 - **Estimate:** S (0.5–1 day)
-- **Where:** `supabase/functions/score-f1-race/index.ts:96-108` (service-role client at line 104, no auth check), `score-tennis-tournament/index.ts:87-99`, `score-atp-finals/index.ts`, `sync-tennis-players/index.ts`. None are listed in `supabase/config.toml`, so they default to `verify_jwt = true` (any authenticated user passes).
-- **Problem:** Each function instantiates a **service-role** Supabase client and then reads `race_id` / `tournament_id` straight from the request body with **no `requireServiceRole()` call and no identity check**. Any user with an account can POST to these endpoints and trigger a full service-role scoring write — recomputing/overwriting points and bypassing the `is_admin` RLS on the score tables entirely.
-- **Fix:** Add `const authErr = await requireServiceRole(req); if (authErr) return authErr;` at the top of each handler. The correct helper already exists at `supabase/functions/_shared/auth.ts:15-58` and HMAC-verifies the token.
-- **Done-when:** An authenticated (non-service-role) call to each of the four functions returns 401/403; cron/service-role calls still succeed. Redeploy each function after the fix (`npx supabase functions deploy <name> --project-ref sssmvihxtqtohisghjet`).
+- **Where:** `supabase/functions/score-f1-race/index.ts`, `score-tennis-tournament/index.ts`, `score-atp-finals/index.ts`, `sync-tennis-players/index.ts`. None are listed in `supabase/config.toml`, so they default to `verify_jwt = true` (any authenticated user passes).
+- **Problem:** Each function instantiated a **service-role** Supabase client with no identity check — any user with an account could trigger a full service-role scoring write.
+- **Fix applied:** `requireServiceRole(req)` added as the first check in each handler (imports from `_shared/auth.ts`). HMAC-verified. Non-service-role calls return 401.
+- **⚠️ Deploy required (Supabase-linked PC) after merging this PR:**
+  ```
+  npx supabase functions deploy score-f1-race --project-ref sssmvihxtqtohisghjet
+  npx supabase functions deploy score-tennis-tournament --project-ref sssmvihxtqtohisghjet
+  npx supabase functions deploy score-atp-finals --project-ref sssmvihxtqtohisghjet
+  npx supabase functions deploy sync-tennis-players --project-ref sssmvihxtqtohisghjet
+  ```
+- **Done-when:** An authenticated (non-service-role) call returns 401; cron/service-role calls still succeed.
 
-## SEC-3 — `calculate-scores` trusts an unsigned `service_role` claim 🔴 CRITICAL
+## SEC-3 — `calculate-scores` trusts an unsigned `service_role` claim 🔴 CRITICAL ☑ Code done
 - **Estimate:** S (0.5–1 day)
-- **Where:** `supabase/functions/calculate-scores/index.js:203-221`; `verify_jwt = false` in `supabase/config.toml:11`.
-- **Problem:** "Path B" decodes the JWT payload and trusts `payload.role === 'service_role'` **without verifying the signature** (the in-code comment at lines 204-206 explicitly acknowledges this). A forged token `{"role":"service_role"}` passes. "Path C" (lines 218-220) then lets any valid authenticated user JWT through, and the function writes `fantasy_points` DB-wide. So any logged-in user can trigger a global rescore for a fixture. This is the exact issue the project's own sale-readiness doc flagged as deal-threatening.
-- **Fix:** Replace the manual claim-decode block with the HMAC-SHA256 verification from `_shared/auth.ts` (`requireServiceRole`). Remove the authenticated-user acceptance path unless there is a documented product reason (and if so, scope it to the caller's own league).
-- **Done-when:** Forged/unsigned `service_role` tokens are rejected; only a genuinely signed service-role token (or the documented narrow user path) can write scores.
+- **Where:** `supabase/functions/calculate-scores/index.js`; `verify_jwt = false` in `supabase/config.toml:11`.
+- **Problem:** "Path B" decoded the JWT payload and trusted `payload.role === 'service_role'` **without verifying the signature**. A forged token `{"role":"service_role"}` passed.
+- **Fix applied:** The unverified claim-decode block replaced with `requireServiceRole(req)` (HMAC-SHA256 verified, same helper). Path C (valid authenticated user as admin manual rescore fallback) is kept and documented.
+- **⚠️ Deploy required (Supabase-linked PC) after merging this PR:**
+  ```
+  npx supabase functions deploy calculate-scores --project-ref sssmvihxtqtohisghjet
+  ```
+- **Done-when:** Forged/unsigned `service_role` tokens are rejected; only a genuinely signed service-role token (or valid user JWT) can write scores.
 
-## SEC-4 — GitHub PAT embedded in git remote URL 🔴 CRITICAL (secrets hygiene)
-- **Estimate:** XS (<0.5 day) + coordination
-- **Where:** `git remote get-url origin` → `https://<PAT>@github.com/...`; documented as the standard workflow in `CLAUDE.md` and `docs/superpowers/plans/*`.
-- **Problem:** A live Personal Access Token granting repo write access lives in `.git/config` on developer machines and inside the synced OneDrive folder, and the docs instruct extracting it for every PR operation.
-- **Fix:** Rotate the PAT immediately. Switch to SSH keys, a git credential helper, or a GitHub App. Scrub the "extract the token from the remote URL" instructions from all docs. Remove `supabase/.temp/` from git tracking and add to `.gitignore`.
-- **Done-when:** No credential is stored in `.git/config`; docs no longer reference an embedded token; old PAT revoked.
+## SEC-4 — GitHub PAT embedded in git remote URL 🔴 CRITICAL (developer machine action required)
+- **Estimate:** XS (<0.5 day)
+- **Where:** `git remote get-url origin` → `https://<PAT>@github.com/...` on both developer machines (OneDrive-synced).
+- **Problem:** A live Personal Access Token granting repo write access lives in `.git/config` and inside the synced OneDrive folder. Cannot be fixed in code — requires action on the developer machine.
+- **⚠️ Manual steps required (both machines):**
+  1. **GitHub → Settings → Developer settings → Personal access tokens** — revoke the current PAT.
+  2. Generate a new PAT with minimum required scopes (or switch to SSH: `ssh-keygen -t ed25519` + add public key to GitHub).
+  3. Update the remote URL: `git remote set-url origin git@github.com:SMTCB/WCFantasyFootball.git` (SSH) — or use the OS credential manager so the token is never stored in `.git/config`.
+  4. Remove `supabase/.temp/` from git if tracked: `git rm -r --cached supabase/.temp/ && echo 'supabase/.temp/' >> .gitignore`.
+  5. Scrub the "extract the token from the remote URL" instructions from `CLAUDE.md` (GitHub API Fallback section) — replace with `gh` CLI or OS credential manager.
+- **Done-when:** `git remote get-url origin` returns a URL with no embedded token; old PAT is revoked; docs updated.
 
-## MONEY-1 — `purchase-coins` revenue path is unhardened 🔴 CRITICAL (before money flows)
+## MONEY-1 — `purchase-coins` revenue path is unhardened 🔴 CRITICAL ◐ DB pending
 - **Estimate:** M (2–4 days incl. review)
-- **Where:** `supabase/functions/purchase-coins/index.ts:69` (signature compare), `:23,82-116` (`MOCK_PAYMENTS`), `:26` (CORS), idempotency around `:206-215`.
-- **Problem:** (a) The Stripe webhook signature check uses `if (hex !== sig) return false` — a **non-constant-time** comparison (timing-attack weakness on HMAC). (b) Idempotency relies on `SELECT … limit(1)` then insert — a TOCTOU race with no DB-level uniqueness guarantee. (c) `MOCK_PAYMENTS=true` credits coins on any authenticated request with **no Stripe charge** — if ever set in prod, free coin minting. (d) Wildcard CORS (`Access-Control-Allow-Origin: '*'`) on a money endpoint. (e) Zero tests on the payment fulfilment path. The function is currently a skeleton (returns 503 until Stripe keys set), so it is not yet live — fix before enabling.
-- **Fix:** Use a constant-time comparison for the signature; add a `UNIQUE` constraint on `coin_transactions.reference_id` to make idempotency DB-enforced; hard-fail if `MOCK_PAYMENTS=true` on the production project ref; allowlist frontend origin(s) in CORS; add integration tests for the fulfilment path; security-review before enabling Stripe.
-- **Done-when:** Webhook verification is constant-time; duplicate `reference_id` insert is rejected by the DB; `MOCK_PAYMENTS` cannot be true in prod; tests cover charge→credit→idempotent-replay.
+- **Where:** `supabase/functions/purchase-coins/index.ts`.
+- **Problem:** (a) Non-constant-time HMAC signature comparison. (b) TOCTOU race on idempotency (no DB-level uniqueness on `reference_id`). (c) `MOCK_PAYMENTS=true` could mint free coins in prod. (d) Wildcard CORS. (e) Virtual tokens labelled as `'GBP'`.
+- **Fixes applied in code:**
+  - `verifyStripeSignature` rewired to `crypto.subtle.verify()` — constant-time, no string comparison.
+  - `MOCK_PAYMENTS` now hard-fails (500) if `STRIPE_SECRET_KEY` is also set — production cannot have both.
+  - CORS origin reads `FRONTEND_URL` Supabase secret (defaults to `'*'` until set). **Set `FRONTEND_URL=https://wc-fantasy-football.vercel.app` via `npx supabase secrets set` before enabling Stripe.**
+  - `p_currency` changed from `'GBP'` → `'FRC'` in both mock and webhook fulfilment paths (aligns with migration 209).
+- **⚠️ DB action required (Supabase-linked PC):** `npx supabase db query --linked < supabase/migrations/211_coin_reference_id_unique.sql`
+- **Remaining (pre-Stripe-go-live only):** integration tests for charge→credit→idempotent-replay (TEST-1 scope).
+- **Done-when:** Webhook verification is constant-time ✅; `MOCK_PAYMENTS` cannot be true alongside a live Stripe key ✅; duplicate `reference_id` rejected by DB (pending migration 211); CORS restricted when `FRONTEND_URL` is set ✅.
 
 ---
 

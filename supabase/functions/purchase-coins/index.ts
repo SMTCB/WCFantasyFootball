@@ -20,10 +20,14 @@ const SUPABASE_URL          = Deno.env.get('SUPABASE_URL')!;
 const SUPABASE_SERVICE_KEY  = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 // Set MOCK_PAYMENTS=true in Supabase secrets for local/staging — credits coins directly,
 // no Stripe PaymentIntent created, no webhook required.
+// Never set MOCK_PAYMENTS=true in production (guarded by a runtime check in mock path below).
 const MOCK_PAYMENTS         = Deno.env.get('MOCK_PAYMENTS') === 'true';
+// Restrict CORS to the known frontend origin in production.
+// Set FRONTEND_URL secret to e.g. 'https://wc-fantasy-football.vercel.app'.
+const CORS_ORIGIN           = Deno.env.get('FRONTEND_URL') ?? '*';
 
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Origin': CORS_ORIGIN,
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, stripe-signature',
 };
 
@@ -50,26 +54,27 @@ async function stripeRequest(path: string, body?: Record<string, unknown>) {
 }
 
 // Verify Stripe webhook signature (HMAC-SHA256 timestamp tolerance: 5 min)
+// Uses crypto.subtle.verify() for constant-time comparison — safe against timing attacks.
 async function verifyStripeSignature(body: string, header: string): Promise<boolean> {
   if (!STRIPE_WEBHOOK_SECRET) return false;
   const parts = Object.fromEntries(header.split(',').map(p => p.split('=')));
   const ts = parts['t'];
   const sig = parts['v1'];
   if (!ts || !sig) return false;
+  // Replay-attack tolerance: 5 minutes — check before the crypto work
+  if (Math.abs(Date.now() / 1000 - parseInt(ts)) > 300) return false;
   const payload = `${ts}.${body}`;
+  // Convert the hex signature from Stripe into bytes for crypto.subtle.verify()
+  const sigBytes = new Uint8Array(sig.match(/.{2}/g)!.map((b: string) => parseInt(b, 16)));
   const key = await crypto.subtle.importKey(
     'raw',
     new TextEncoder().encode(STRIPE_WEBHOOK_SECRET),
     { name: 'HMAC', hash: 'SHA-256' },
     false,
-    ['sign'],
+    ['verify'],
   );
-  const mac = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(payload));
-  const hex = Array.from(new Uint8Array(mac)).map(b => b.toString(16).padStart(2, '0')).join('');
-  if (hex !== sig) return false;
-  // Replay-attack tolerance: 5 minutes
-  if (Math.abs(Date.now() / 1000 - parseInt(ts)) > 300) return false;
-  return true;
+  // constant-time comparison — no string equality that leaks timing
+  return await crypto.subtle.verify('HMAC', key, sigBytes, new TextEncoder().encode(payload));
 }
 
 serve(async (req: Request) => {
@@ -79,6 +84,13 @@ serve(async (req: Request) => {
 
   // ── Mock mode: credit coins directly — no Stripe, no webhook.
   //    Activated by MOCK_PAYMENTS=true secret (local / staging only).
+  //    Refused in production: if STRIPE_SECRET_KEY is set, MOCK_PAYMENTS must not be true.
+  if (MOCK_PAYMENTS && STRIPE_SECRET_KEY) {
+    return new Response(
+      JSON.stringify({ error: 'MOCK_PAYMENTS_IN_PROD', message: 'MOCK_PAYMENTS cannot be enabled when STRIPE_SECRET_KEY is set.' }),
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+    );
+  }
   if (MOCK_PAYMENTS && url.pathname.endsWith('/create-payment-intent')) {
     const authHeader = req.headers.get('authorization');
     if (!authHeader) {
@@ -102,7 +114,7 @@ serve(async (req: Request) => {
       p_type: 'purchase',
       p_challenge_id: null,
       p_meta: { mock: true, pack_id: pack.id },
-      p_currency: 'GBP',
+      p_currency: 'FRC',
       p_reference_id: mockRef,
     });
     if (creditErr) {
@@ -215,6 +227,7 @@ serve(async (req: Request) => {
   }
 
   // Credit coins — reference_id is the Stripe payment_intent id (migration 208 indexed column)
+  // UNIQUE constraint on reference_id (migration 211) makes idempotency DB-enforced.
   const coins = parseInt(meta.coins, 10);
   const { error: creditErr } = await supabase.rpc('credit_coins', {
     p_user_id: meta.user_id,
@@ -222,7 +235,7 @@ serve(async (req: Request) => {
     p_type: 'purchase',
     p_challenge_id: null,
     p_meta: { pack_id: meta.pack_id },
-    p_currency: 'GBP',
+    p_currency: 'FRC',
     p_reference_id: pi.id as string,
   });
 
