@@ -28,6 +28,15 @@
 **🎯 NEXT SESSION: Phase 3B — Smoke Tests + Deploy (on hold) + remaining DD items**
 Phase 1 DD items complete (PRs #644–#645): DEPLOY-1 ☑, CI-1 ☑, DEPS-1 ☑, CODE-1 ☑, CODE-5 ☑ (near-term), OPS-2 ◐ (frontend Sentry done — Edge Functions pending), LOW-1 ☑, LOW-4 ☑, LOW-5 ☑, LOW-8 ☑, BUILD-1 ☑. **Pending before any deploy:** apply migrations 209, 210, 211 + deploy 5 Edge Functions + add `VITE_SENTRY_DSN` to Vercel (see tables below). Phase 3B smoke tests and deploy on hold. Remaining DD items: DATA-1, OPS-1 (Phase 1 — complex, deferred); TEST-1, DATA-2, DATA-3, CODE-3 (Phase 2); CODE-2, CODE-4, DEPS-2, INFRA-1, LOW-2/3/6/9 (Phase 3).
 
+**🛑 APPROVAL GATE — read before touching any row below**
+
+Every action in this table writes to the **one shared production Supabase project** (`sssmvihxtqtohisghjet`) — the same project that serves the live `main` pilot. None of these may be run automatically or "while we're at it." Claude must:
+1. State which specific row(s) it intends to run, in plain language, in chat.
+2. Wait for the user to explicitly say to proceed (a prior approval for a different item does NOT carry over).
+3. Only then execute — never batch-run multiple rows on a single approval.
+
+This applies on **both PCs**, every session, regardless of branch (`main` or `v2`). If a session starts and any row is still unchecked, treat it as untouched — do not assume the other machine ran it.
+
 **⚠️ PENDING DB & DEPLOY ACTIONS — Supabase-linked PC only**
 
 | # | Action | Command | Risk |

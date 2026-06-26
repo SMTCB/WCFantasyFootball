@@ -1,0 +1,1428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FantasyKit — Platform Assessment</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Archivo:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --ink: #1A1E26;
+    --ink-2: #2C3240;
+    --mute: #7A8394;
+    --paper: #F4F1EB;
+    --paper-2: #EDE9E1;
+    --paper-3: #E3DDD3;
+    --white: #FFFFFF;
+    --cyan: #00B4D8;
+    --gold: #E0A800;
+    --red: #EF4444;
+    --green: #22C55E;
+    --rule: #D8D2C8;
+
+    /* severity */
+    --sev-high: #EF4444;
+    --sev-med: #F59E0B;
+    --sev-low: #22C55E;
+
+    --max-w: 960px;
+  }
+
+  html { font-size: 16px; }
+
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'Archivo', sans-serif;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ── LAYOUT ── */
+  .container { max-width: var(--max-w); margin: 0 auto; padding: 0 32px; }
+
+  /* ── COVER ── */
+  .cover {
+    background: var(--ink);
+    color: var(--paper);
+    padding: 80px 0 60px;
+    margin-bottom: 64px;
+  }
+  .cover-inner { max-width: var(--max-w); margin: 0 auto; padding: 0 32px; }
+  .cover-eyebrow {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: .22em;
+    text-transform: uppercase;
+    color: var(--cyan);
+    margin-bottom: 16px;
+  }
+  .cover-title {
+    font-family: 'Archivo Black', sans-serif;
+    font-size: clamp(36px, 6vw, 64px);
+    letter-spacing: -0.02em;
+    line-height: 1;
+    color: var(--paper);
+    margin-bottom: 24px;
+  }
+  .cover-title span { color: var(--cyan); }
+  .cover-sub {
+    font-family: 'Archivo', sans-serif;
+    font-size: 18px;
+    color: rgba(244,241,235,.6);
+    max-width: 560px;
+    line-height: 1.6;
+    margin-bottom: 40px;
+  }
+  .cover-meta {
+    display: flex;
+    gap: 32px;
+    flex-wrap: wrap;
+  }
+  .cover-meta-item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .cover-meta-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    letter-spacing: .18em;
+    text-transform: uppercase;
+    color: var(--mute);
+  }
+  .cover-meta-value {
+    font-family: 'Archivo Black', sans-serif;
+    font-size: 15px;
+    color: var(--paper);
+  }
+
+  /* ── SUMMARY STRIP ── */
+  .summary-strip {
+    background: var(--ink-2);
+    color: var(--paper);
+    padding: 32px 0;
+    margin-bottom: 72px;
+  }
+  .summary-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1px;
+    background: rgba(255,255,255,.08);
+  }
+  .summary-cell {
+    background: var(--ink-2);
+    padding: 28px 32px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .summary-cell-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    letter-spacing: .2em;
+    text-transform: uppercase;
+    color: var(--mute);
+  }
+  .summary-cell-value {
+    font-family: 'Archivo Black', sans-serif;
+    font-size: 28px;
+    letter-spacing: -0.02em;
+    line-height: 1;
+  }
+  .summary-cell-value.cyan { color: var(--cyan); }
+  .summary-cell-value.gold { color: var(--gold); }
+  .summary-cell-value.red { color: var(--red); }
+  .summary-cell-desc {
+    font-size: 13px;
+    color: rgba(244,241,235,.5);
+    margin-top: 4px;
+    line-height: 1.5;
+  }
+
+  /* ── SECTION HEADER ── */
+  .section-header {
+    display: flex;
+    align-items: baseline;
+    gap: 16px;
+    margin-bottom: 32px;
+  }
+  .section-eyebrow {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: .22em;
+    text-transform: uppercase;
+    color: var(--mute);
+  }
+  .section-title {
+    font-family: 'Archivo Black', sans-serif;
+    font-size: 28px;
+    letter-spacing: -0.02em;
+    color: var(--ink);
+  }
+  hr.rule {
+    border: 0;
+    height: 1px;
+    background: var(--rule);
+    margin-bottom: 48px;
+  }
+
+  /* ── SECTION WRAPPER ── */
+  .section { margin-bottom: 80px; }
+
+  /* ── WHAT'S WORKING ── */
+  .working-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+  .working-card {
+    background: var(--white);
+    border: 1px solid var(--rule);
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .working-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    color: var(--green);
+    margin-bottom: 4px;
+  }
+  .working-tag::before {
+    content: '';
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--green);
+    flex-shrink: 0;
+  }
+  .working-title {
+    font-family: 'Archivo Black', sans-serif;
+    font-size: 15px;
+    letter-spacing: -0.01em;
+    color: var(--ink);
+  }
+  .working-desc {
+    font-size: 13px;
+    color: var(--mute);
+    line-height: 1.55;
+  }
+
+  /* ── FINDINGS ── */
+  .finding {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 40px;
+    align-items: start;
+    margin-bottom: 56px;
+    padding-bottom: 56px;
+    border-bottom: 1px solid var(--rule);
+  }
+  .finding:last-child { border-bottom: none; }
+  .finding-left {}
+  .finding-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+  .finding-number {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: .14em;
+    color: var(--mute);
+  }
+  .severity {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    letter-spacing: .18em;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    border-radius: 2px;
+  }
+  .severity.high { background: rgba(239,68,68,.1); color: var(--sev-high); }
+  .severity.medium { background: rgba(245,158,11,.1); color: var(--sev-med); }
+  .severity.low { background: rgba(34,197,94,.1); color: var(--sev-low); }
+
+  .finding-title {
+    font-family: 'Archivo Black', sans-serif;
+    font-size: 20px;
+    letter-spacing: -0.01em;
+    color: var(--ink);
+    margin-bottom: 12px;
+    line-height: 1.2;
+  }
+  .finding-body {
+    font-size: 14px;
+    color: var(--ink-2);
+    line-height: 1.65;
+    margin-bottom: 20px;
+  }
+  .finding-bullets {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .finding-bullets li {
+    font-size: 13px;
+    color: var(--ink-2);
+    padding-left: 16px;
+    position: relative;
+    line-height: 1.5;
+  }
+  .finding-bullets li::before {
+    content: '—';
+    position: absolute;
+    left: 0;
+    color: var(--mute);
+  }
+
+  .finding-right {}
+  .screenshot-wrap {
+    position: relative;
+    border: 1px solid var(--rule);
+    background: #0D1219;
+    overflow: hidden;
+  }
+  .screenshot-wrap img {
+    width: 100%;
+    display: block;
+    opacity: .85;
+  }
+  .screenshot-caption {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--mute);
+    margin-top: 8px;
+  }
+
+  /* annotation overlays */
+  .annotation {
+    position: absolute;
+    border: 2px solid var(--red);
+    pointer-events: none;
+  }
+  .annotation-label {
+    position: absolute;
+    background: var(--red);
+    color: white;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    letter-spacing: .12em;
+    padding: 2px 6px;
+    white-space: nowrap;
+    top: -20px;
+    left: 0;
+  }
+
+  /* ── DIRECTIONS ── */
+  .directions-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0;
+    border: 1px solid var(--rule);
+    margin-bottom: 48px;
+  }
+  .direction-card {
+    border-right: 1px solid var(--rule);
+    display: flex;
+    flex-direction: column;
+  }
+  .direction-card:last-child { border-right: none; }
+
+  .direction-mockup {
+    height: 220px;
+    position: relative;
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+
+  /* Direction A — Evolved Dark */
+  .dir-a .direction-mockup { background: #0D1219; }
+  .dir-a .dm-sidebar {
+    position: absolute; left: 0; top: 0; bottom: 0;
+    width: 32px; background: #111820;
+    border-right: 1px solid rgba(255,255,255,.06);
+    display: flex; flex-direction: column;
+    padding: 10px 0;
+    gap: 8px;
+    align-items: center;
+  }
+  .dir-a .dm-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: rgba(255,255,255,.15);
+  }
+  .dir-a .dm-dot.active { background: #00B4D8; }
+  .dir-a .dm-content { position: absolute; left: 32px; right: 0; top: 0; bottom: 0; padding: 12px; }
+  .dir-a .dm-header {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 7px; letter-spacing: .2em; text-transform: uppercase;
+    color: rgba(0,180,216,.6); margin-bottom: 2px;
+  }
+  .dir-a .dm-title {
+    font-family: 'Archivo Black', sans-serif;
+    font-size: 14px; color: #EEE9DF; margin-bottom: 10px;
+  }
+  .dir-a .dm-row {
+    background: #161E2A; border: 1px solid rgba(255,255,255,.07);
+    padding: 6px 8px; margin-bottom: 4px;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .dir-a .dm-chip {
+    width: 22px; height: 14px;
+    border: 1px solid #00B4D8;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'JetBrains Mono', monospace; font-size: 6px; color: #00B4D8;
+  }
+  .dir-a .dm-name {
+    font-family: 'Archivo Black', sans-serif;
+    font-size: 9px; color: #EEE9DF; letter-spacing: .01em;
+  }
+  .dir-a .dm-pts {
+    margin-left: auto;
+    font-family: 'Archivo Black', sans-serif;
+    font-size: 10px; color: #00B4D8;
+  }
+
+  /* Direction B — Light Mode */
+  .dir-b .direction-mockup { background: #F4F1EB; }
+  .dir-b .dm-sidebar {
+    position: absolute; left: 0; top: 0; bottom: 0;
+    width: 32px; background: #1A1E26;
+    display: flex; flex-direction: column;
+    padding: 10px 0; gap: 8px; align-items: center;
+  }
+  .dir-b .dm-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: rgba(255,255,255,.2);
+  }
+  .dir-b .dm-dot.active { background: #00B4D8; }
+  .dir-b .dm-content { position: absolute; left: 32px; right: 0; top: 0; bottom: 0; padding: 12px; }
+  .dir-b .dm-header {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 7px; letter-spacing: .2em; text-transform: uppercase;
+    color: #7A8394; margin-bottom: 2px;
+  }
+  .dir-b .dm-title {
+    font-family: 'Archivo Black', sans-serif;
+    font-size: 14px; color: #1A1E26; margin-bottom: 10px;
+  }
+  .dir-b .dm-row {
+    background: #FFFFFF; border: 1px solid #E3DDD3;
+    padding: 6px 8px; margin-bottom: 4px;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .dir-b .dm-chip {
+    width: 22px; height: 14px;
+    border: 1px solid #00B4D8;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'JetBrains Mono', monospace; font-size: 6px; color: #00B4D8;
+  }
+  .dir-b .dm-name {
+    font-family: 'Archivo Black', sans-serif;
+    font-size: 9px; color: #1A1E26;
+  }
+  .dir-b .dm-pts {
+    margin-left: auto;
+    font-family: 'Archivo Black', sans-serif;
+    font-size: 10px; color: #00B4D8;
+  }
+
+  /* Direction C — Premium Navy */
+  .dir-c .direction-mockup { background: #0B1022; }
+  .dir-c .dm-sidebar {
+    position: absolute; left: 0; top: 0; bottom: 0;
+    width: 32px; background: #0F1530;
+    border-right: 1px solid rgba(255,255,255,.04);
+    display: flex; flex-direction: column;
+    padding: 10px 0; gap: 8px; align-items: center;
+  }
+  .dir-c .dm-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: rgba(255,255,255,.12);
+  }
+  .dir-c .dm-dot.active { background: #4DB8FF; }
+  .dir-c .dm-content { position: absolute; left: 32px; right: 0; top: 0; bottom: 0; padding: 12px; }
+  .dir-c .dm-header {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 7px; letter-spacing: .2em; text-transform: uppercase;
+    color: rgba(77,184,255,.5); margin-bottom: 2px;
+  }
+  .dir-c .dm-title {
+    font-family: 'Archivo Black', sans-serif;
+    font-size: 14px; color: #E8E2D8; margin-bottom: 10px;
+  }
+  .dir-c .dm-row {
+    background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.06);
+    padding: 6px 8px; margin-bottom: 4px;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .dir-c .dm-chip {
+    width: 22px; height: 14px;
+    border: 1px solid #4DB8FF;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'JetBrains Mono', monospace; font-size: 6px; color: #4DB8FF;
+  }
+  .dir-c .dm-name {
+    font-family: 'Archivo Black', sans-serif;
+    font-size: 9px; color: #E8E2D8;
+  }
+  .dir-c .dm-pts {
+    margin-left: auto;
+    font-family: 'Archivo Black', sans-serif;
+    font-size: 10px; color: #4DB8FF;
+  }
+
+  .direction-body {
+    padding: 20px 24px 24px;
+    flex: 1;
+    background: var(--white);
+    border-top: 1px solid var(--rule);
+  }
+  .direction-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px; letter-spacing: .2em; text-transform: uppercase;
+    color: var(--mute); margin-bottom: 6px;
+  }
+  .direction-name {
+    font-family: 'Archivo Black', sans-serif;
+    font-size: 16px; letter-spacing: -0.01em; color: var(--ink);
+    margin-bottom: 8px;
+  }
+  .direction-desc {
+    font-size: 13px; color: #4A5568; line-height: 1.55;
+    margin-bottom: 16px;
+  }
+  .direction-tags {
+    display: flex; flex-wrap: wrap; gap: 6px;
+  }
+  .direction-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 8px; letter-spacing: .14em; text-transform: uppercase;
+    padding: 3px 8px; border: 1px solid var(--rule); color: var(--mute);
+    border-radius: 1px;
+  }
+  .direction-tag.risk-low { border-color: rgba(34,197,94,.4); color: #22C55E; background: rgba(34,197,94,.05); }
+  .direction-tag.risk-med { border-color: rgba(245,158,11,.4); color: #F59E0B; background: rgba(245,158,11,.05); }
+  .direction-tag.risk-high { border-color: rgba(239,68,68,.4); color: #EF4444; background: rgba(239,68,68,.05); }
+
+  /* ── RECOMMENDATION ── */
+  .rec-box {
+    background: var(--ink);
+    color: var(--paper);
+    padding: 40px 48px;
+    margin-bottom: 80px;
+  }
+  .rec-eyebrow {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px; letter-spacing: .22em; text-transform: uppercase;
+    color: var(--cyan); margin-bottom: 16px;
+  }
+  .rec-title {
+    font-family: 'Archivo Black', sans-serif;
+    font-size: 28px; letter-spacing: -0.02em; color: var(--paper);
+    margin-bottom: 20px; line-height: 1.1;
+  }
+  .rec-body {
+    font-size: 15px; color: rgba(244,241,235,.7); line-height: 1.7;
+    max-width: 720px; margin-bottom: 32px;
+  }
+  .rec-steps {
+    display: flex; flex-direction: column; gap: 0;
+    border: 1px solid rgba(255,255,255,.1);
+    max-width: 720px;
+  }
+  .rec-step {
+    display: grid;
+    grid-template-columns: 80px 1fr;
+    border-bottom: 1px solid rgba(255,255,255,.06);
+  }
+  .rec-step:last-child { border-bottom: none; }
+  .rec-step-phase {
+    padding: 16px 20px;
+    border-right: 1px solid rgba(255,255,255,.06);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px; letter-spacing: .2em; text-transform: uppercase;
+    color: var(--cyan); display: flex; align-items: center;
+  }
+  .rec-step-body {
+    padding: 16px 20px;
+  }
+  .rec-step-title {
+    font-family: 'Archivo Black', sans-serif;
+    font-size: 13px; color: var(--paper); margin-bottom: 4px;
+  }
+  .rec-step-desc {
+    font-size: 12px; color: rgba(244,241,235,.5); line-height: 1.5;
+  }
+
+  /* ── NAV ANATOMY ── */
+  .nav-diagram {
+    background: var(--white);
+    border: 1px solid var(--rule);
+    padding: 24px;
+    margin-bottom: 16px;
+  }
+  .nav-level {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+  .nav-level-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px; letter-spacing: .16em; text-transform: uppercase;
+    color: var(--mute); width: 60px; flex-shrink: 0;
+  }
+  .nav-items {
+    display: flex; gap: 6px; flex-wrap: wrap; align-items: center;
+  }
+  .nav-item {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px; letter-spacing: .12em; text-transform: uppercase;
+    padding: 4px 10px; background: var(--paper-2); color: var(--ink-2);
+    border: 1px solid var(--rule);
+  }
+  .nav-item.active { background: var(--ink); color: var(--paper); }
+  .nav-item.problem { background: rgba(239,68,68,.08); color: var(--red); border-color: rgba(239,68,68,.3); }
+  .nav-arrow {
+    color: var(--mute); font-size: 12px;
+  }
+  .nav-note {
+    font-size: 12px; color: var(--mute); margin-top: 8px;
+    padding-left: 72px; font-style: italic;
+  }
+
+  /* ── COLOUR ANALYSIS ── */
+  .color-compare {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+  .color-strip {
+    border: 1px solid var(--rule);
+    overflow: hidden;
+  }
+  .color-strip-header {
+    padding: 10px 14px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px; letter-spacing: .18em; text-transform: uppercase;
+    background: var(--paper-2); color: var(--mute); border-bottom: 1px solid var(--rule);
+  }
+  .color-swatch-row {
+    display: flex;
+  }
+  .color-swatch {
+    flex: 1; height: 40px;
+    position: relative;
+    display: flex; align-items: flex-end;
+    justify-content: center; padding-bottom: 4px;
+  }
+  .color-swatch-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 7px; color: rgba(255,255,255,.4); letter-spacing: .1em;
+  }
+  .color-annotation {
+    padding: 8px 14px;
+    font-size: 11px; color: var(--mute); line-height: 1.5;
+    border-top: 1px solid var(--rule);
+    background: var(--white);
+  }
+
+  /* ── FOOTER ── */
+  .footer {
+    background: var(--paper-2);
+    border-top: 1px solid var(--rule);
+    padding: 32px 0;
+    margin-top: 80px;
+  }
+  .footer-inner {
+    max-width: var(--max-w); margin: 0 auto; padding: 0 32px;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .footer-brand {
+    font-family: 'Archivo Black', sans-serif;
+    font-size: 13px; color: var(--ink);
+  }
+  .footer-meta {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px; letter-spacing: .18em; text-transform: uppercase;
+    color: var(--mute);
+  }
+
+  /* ── CALLOUT ── */
+  .callout {
+    border-left: 3px solid var(--cyan);
+    background: rgba(0,180,216,.05);
+    padding: 14px 20px;
+    margin: 16px 0;
+  }
+  .callout p {
+    font-size: 13px; color: var(--ink-2); line-height: 1.6;
+  }
+  .callout strong { color: var(--ink); }
+
+  /* inconsistency grid */
+  .inconsistency-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1px;
+    background: var(--rule);
+    border: 1px solid var(--rule);
+    margin-bottom: 12px;
+  }
+  .inc-cell {
+    padding: 16px;
+    background: var(--white);
+    display: flex; flex-direction: column; gap: 8px;
+  }
+  .inc-preview {
+    height: 80px;
+    border: 1px solid var(--rule);
+    overflow: hidden;
+    position: relative;
+  }
+  .inc-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px; letter-spacing: .16em; text-transform: uppercase;
+    color: var(--mute);
+  }
+  .inc-status {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px; letter-spacing: .14em; text-transform: uppercase;
+    padding: 2px 8px; display: inline-block; border-radius: 1px;
+  }
+  .inc-status.ok { background: rgba(34,197,94,.1); color: #22C55E; }
+  .inc-status.bad { background: rgba(239,68,68,.1); color: #EF4444; }
+  .inc-status.partial { background: rgba(245,158,11,.1); color: #F59E0B; }
+
+  /* pitch token comparison */
+  .token-compare {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    margin-bottom: 12px;
+  }
+  .token-example {
+    border: 1px solid var(--rule);
+    overflow: hidden;
+  }
+  .token-header {
+    padding: 8px 12px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px; letter-spacing: .16em; text-transform: uppercase;
+    background: var(--paper-2); color: var(--mute);
+    border-bottom: 1px solid var(--rule);
+  }
+  .token-body {
+    background: #0D1219;
+    padding: 20px; display: flex; gap: 8px; flex-wrap: wrap; justify-content: center;
+  }
+
+  /* old circle token */
+  .old-token {
+    display: flex; flex-direction: column; align-items: center; gap: 4px;
+  }
+  .old-circle {
+    width: 40px; height: 40px; border-radius: 50%;
+    background: rgba(0,180,216,.15); border: 2px solid #00B4D8;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #00B4D8;
+  }
+  .old-name {
+    font-family: 'Archivo Black', sans-serif;
+    font-size: 8px; color: #F2EEE5; text-transform: uppercase;
+  }
+
+  /* new pill token */
+  .new-token {
+    display: flex; align-items: center; gap: 8px;
+    background: rgba(15,18,24,.92); border: 1px solid #1E2530;
+    padding: 6px 10px 6px 8px; min-width: 120px;
+  }
+  .new-badge {
+    width: 28px; height: 28px; flex-shrink: 0;
+    border: 1.5px solid #00B4D8;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Archivo Black', sans-serif; font-size: 11px; color: #00B4D8;
+  }
+  .new-info { display: flex; flex-direction: column; gap: 2px; }
+  .new-name {
+    font-family: 'Archivo Black', sans-serif;
+    font-size: 9px; color: #F2EEE5; text-transform: uppercase; letter-spacing: .01em;
+  }
+  .new-meta {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 7px; color: #8B95A1; letter-spacing: .12em; text-transform: uppercase;
+  }
+
+  @media (max-width: 720px) {
+    .working-grid { grid-template-columns: 1fr; }
+    .finding { grid-template-columns: 1fr; }
+    .directions-grid { grid-template-columns: 1fr; }
+    .summary-grid { grid-template-columns: 1fr; }
+    .color-compare { grid-template-columns: 1fr; }
+    .token-compare { grid-template-columns: 1fr; }
+    .inconsistency-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ── COVER ── -->
+<div class="cover">
+  <div class="cover-inner">
+    <div class="cover-eyebrow">Design Assessment · June 2026</div>
+    <h1 class="cover-title">FantasyKit<br><span>Platform Review</span></h1>
+    <p class="cover-sub">A frank look at what the pilot is telling us — what's working, what isn't, and three concrete directions forward.</p>
+    <div class="cover-meta">
+      <div class="cover-meta-item">
+        <span class="cover-meta-label">Screens Reviewed</span>
+        <span class="cover-meta-value">14</span>
+      </div>
+      <div class="cover-meta-item">
+        <span class="cover-meta-label">Issues Found</span>
+        <span class="cover-meta-value">6</span>
+      </div>
+      <div class="cover-meta-item">
+        <span class="cover-meta-label">Directions</span>
+        <span class="cover-meta-value">3</span>
+      </div>
+      <div class="cover-meta-item">
+        <span class="cover-meta-label">Platform</span>
+        <span class="cover-meta-value">Web / Mobile</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── SUMMARY STRIP ── -->
+<div class="summary-strip">
+  <div class="container">
+    <div class="summary-grid">
+      <div class="summary-cell">
+        <span class="summary-cell-label">Verdict</span>
+        <span class="summary-cell-value gold">Strong bones,<br>wrong skin.</span>
+        <p class="summary-cell-desc">The data model, feature set and core interactions are solid. The aesthetic layer is working against them.</p>
+      </div>
+      <div class="summary-cell">
+        <span class="summary-cell-label">Root cause</span>
+        <span class="summary-cell-value cyan">Forza identity<br>misalignment.</span>
+        <p class="summary-cell-desc">The near-black palette and broadcast-data aesthetic suited a pitch deck. It isn't serving a daily-use social product.</p>
+      </div>
+      <div class="summary-cell">
+        <span class="summary-cell-label">Recommendation</span>
+        <span class="summary-cell-value" style="color:#F2EEE5">Refine now,<br>explore later.</span>
+        <p class="summary-cell-desc">Fix the most painful issues immediately. Run one exploratory direction in parallel for the next season launch.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ── WHAT'S WORKING ── -->
+<div class="container">
+  <div class="section">
+    <div class="section-header">
+      <span class="section-eyebrow">01</span>
+      <h2 class="section-title">What's working</h2>
+    </div>
+    <hr class="rule">
+    <div class="working-grid">
+      <div class="working-card">
+        <span class="working-tag">Working well</span>
+        <div class="working-title">Message components</div>
+        <p class="working-desc">Chat and messaging is the social backbone of the product. The components are clean, well-structured and feel native. Don't touch them.</p>
+      </div>
+      <div class="working-card">
+        <span class="working-tag">Working well</span>
+        <div class="working-title">Match Centre & Scores</div>
+        <p class="working-desc">The calendar and list views for fixtures are clear and functional. Good information hierarchy. The typography scale works at this density.</p>
+      </div>
+      <div class="working-card">
+        <span class="working-tag">Working well</span>
+        <div class="working-title">Bets & Predictions</div>
+        <p class="working-desc">The bet card pattern — deadline timer, reward pill, action button — is one of the clearest information layouts in the app. Solid work.</p>
+      </div>
+      <div class="working-card">
+        <span class="working-tag">Working well</span>
+        <div class="working-title">Pill token on the pitch</div>
+        <p class="working-desc">The horizontal nameplate with number badge is a big improvement over the old circle tokens. The concept is right; it just needs scaling up.</p>
+      </div>
+      <div class="working-card">
+        <span class="working-tag">Working well</span>
+        <div class="working-title">Type system</div>
+        <p class="working-desc">Archivo Black + JetBrains Mono is a strong, distinctive pairing. It's the identity. The problem is scale and application — not the fonts themselves.</p>
+      </div>
+      <div class="working-card">
+        <span class="working-tag">Working well</span>
+        <div class="working-title">Mobile structure</div>
+        <p class="working-desc">The mobile layout follows the same component system well. The squad pitch on mobile is a tighter, better-considered version of the desktop view.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── FINDINGS ── -->
+  <div class="section">
+    <div class="section-header">
+      <span class="section-eyebrow">02</span>
+      <h2 class="section-title">What needs to change</h2>
+    </div>
+    <hr class="rule">
+
+    <!-- Finding 1 -->
+    <div class="finding">
+      <div class="finding-left">
+        <div class="finding-header">
+          <span class="finding-number">01 /06</span>
+          <span class="severity high">Critical</span>
+        </div>
+        <h3 class="finding-title">The dark is too dark</h3>
+        <p class="finding-body">The app sits on #080A0E — essentially pure black. There's almost no surface variation between the page background, sidebar, cards, and hover states. Everything collapses into the same darkness.</p>
+        <ul class="finding-bullets">
+          <li>Background (#080A0E), cards (#0F1218), hover (#161B25) differ by only 6–10 lightness units. Imperceptible on most screens.</li>
+          <li>Small JetBrains Mono labels at 10–11px on near-black require effort to read — users shouldn't be working hard at a glance.</li>
+          <li>On laptop screens in normal daylight conditions the interface reads as oppressive, not premium.</li>
+          <li>The Forza gaming aesthetic (pure black background) works for a game HUD. A daily-use web product needs more breathing room.</li>
+        </ul>
+        <div class="callout" style="margin-top:16px;">
+          <p><strong>Fix:</strong> Raise all surface levels ~10 lightness units. Background → #0D1219. Cards → #131B26. Hover → #192233. The hierarchy becomes visible without changing the aesthetic.</p>
+        </div>
+      </div>
+      <div class="finding-right">
+        <div class="color-compare">
+          <div class="color-strip">
+            <div class="color-strip-header">Current surfaces — too close</div>
+            <div class="color-swatch-row">
+              <div class="color-swatch" style="background:#080A0E;"><span class="color-swatch-label">#080A0E</span></div>
+              <div class="color-swatch" style="background:#0F1218;"><span class="color-swatch-label">#0F1218</span></div>
+              <div class="color-swatch" style="background:#161B25;"><span class="color-swatch-label">#161B25</span></div>
+              <div class="color-swatch" style="background:#1E2530;"><span class="color-swatch-label">#1E2530</span></div>
+            </div>
+            <div class="color-annotation">Δ lightness between levels: 3, 4, 4 — barely distinguishable at a glance.</div>
+          </div>
+          <div class="color-strip">
+            <div class="color-strip-header">Proposed surfaces — readable</div>
+            <div class="color-swatch-row">
+              <div class="color-swatch" style="background:#0D1219;"><span class="color-swatch-label">#0D1219</span></div>
+              <div class="color-swatch" style="background:#131B26;"><span class="color-swatch-label">#131B26</span></div>
+              <div class="color-swatch" style="background:#192233;"><span class="color-swatch-label">#192233</span></div>
+              <div class="color-swatch" style="background:#1F2B3E;"><span class="color-swatch-label">#1F2B3E</span></div>
+            </div>
+            <div class="color-annotation">Δ lightness between levels: 6, 6, 5 — distinctly readable while remaining dark.</div>
+          </div>
+        </div>
+        <p style="font-size:12px;color:var(--mute);font-style:italic;">Same hue and chroma family — just lifted. Dark stays dark; hierarchy becomes visible.</p>
+      </div>
+    </div>
+
+    <!-- Finding 2 -->
+    <div class="finding">
+      <div class="finding-left">
+        <div class="finding-header">
+          <span class="finding-number">02 /06</span>
+          <span class="severity high">Critical</span>
+        </div>
+        <h3 class="finding-title">Navigation has three competing layers</h3>
+        <p class="finding-body">When inside a league, the user is simultaneously presented with three navigation systems that each claim prime vertical space. The mental model breaks down completely.</p>
+
+        <div class="nav-diagram">
+          <div class="nav-level">
+            <span class="nav-level-label">Layer 1</span>
+            <div class="nav-items">
+              <span class="nav-item">Scores</span>
+              <span class="nav-item active">League</span>
+              <span class="nav-item">Squad</span>
+              <span class="nav-item">Live</span>
+              <span class="nav-item">Market</span>
+            </div>
+          </div>
+          <div class="nav-level">
+            <span class="nav-level-label">Layer 2</span>
+            <div class="nav-items">
+              <span class="nav-item problem">▣ MANAGE SQUAD</span>
+              <span class="nav-item problem">▣ MARKET</span>
+            </div>
+          </div>
+          <div class="nav-level">
+            <span class="nav-level-label">Layer 3</span>
+            <div class="nav-items">
+              <span class="nav-item">Leaderboard</span>
+              <span class="nav-item active">Frontpage</span>
+              <span class="nav-item">Bets</span>
+              <span class="nav-item">Betting</span>
+              <span class="nav-item">Auctions</span>
+              <span class="nav-item">Chat</span>
+              <span class="nav-item">Stats</span>
+              <span class="nav-item">Admin</span>
+            </div>
+          </div>
+          <p class="nav-note">Layer 2 (MANAGE SQUAD / MARKET) isn't navigation — it's shortcuts. They belong in the sidebar or as contextual actions, not a persistent 48px strip.</p>
+        </div>
+
+        <ul class="finding-bullets">
+          <li>"Bets" and "Betting" as separate tabs is confusing — users can't tell them apart without clicking both.</li>
+          <li>The "← Back" affordance from league → league list is tiny and easy to miss.</li>
+          <li>8 tabs in the league hub is too many — it signals feature overload rather than a cohesive product.</li>
+          <li>The league name is truncated to "PREMIER FANT..." — a core identity element that shouldn't be cropped.</li>
+        </ul>
+      </div>
+      <div class="finding-right">
+        <div class="screenshot-wrap">
+          <img src="uploads/pasted-1778875158217-0.png" alt="League Hub navigation" style="width:100%;">
+        </div>
+        <p class="screenshot-caption">League Hub · Stats tab — three concurrent nav systems visible simultaneously</p>
+        <div class="callout" style="margin-top:12px;">
+          <p><strong>Fix:</strong> Remove the MANAGE SQUAD/MARKET sticky bar. Move them to the left sidebar as contextual actions when inside a league. Consolidate "Bets" and "Betting" into one tab. Consider grouping Auctions under Bets.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Finding 3 -->
+    <div class="finding">
+      <div class="finding-left">
+        <div class="finding-header">
+          <span class="finding-number">03 /06</span>
+          <span class="severity high">Critical</span>
+        </div>
+        <h3 class="finding-title">Three completely different visual languages coexist</h3>
+        <p class="finding-body">The app has never settled on one visual system. Three distinct aesthetics are running simultaneously, and users are context-switching between them on every tab change.</p>
+
+        <div class="inconsistency-grid">
+          <div class="inc-cell">
+            <div class="inc-preview" style="background:#080A0E; display:flex; align-items:center; justify-content:center; padding:8px;">
+              <div style="background:#0F1218;border:1px solid #1E2530;padding:8px 12px;width:100%;">
+                <div style="font-family:'JetBrains Mono',monospace;font-size:7px;color:#8B95A1;letter-spacing:.16em;text-transform:uppercase;">DEF · CHELSEA</div>
+                <div style="font-family:'Archivo Black',sans-serif;font-size:11px;color:#F2EEE5;">REECE JAMES</div>
+                <div style="font-family:'JetBrains Mono',monospace;font-size:8px;color:#00B4D8;margin-top:2px;">14 PTS</div>
+              </div>
+            </div>
+            <span class="inc-label">FORZAKIT Dark</span>
+            <span class="inc-status ok">Consistent</span>
+          </div>
+          <div class="inc-cell">
+            <div class="inc-preview" style="background:#F0EDE5; display:flex; align-items:center; justify-content:center; padding:8px; flex-direction:column; gap:2px;">
+              <div style="font-family:'Georgia',serif;font-size:9px;color:#888;letter-spacing:.12em;text-transform:uppercase;">The Official Gazette</div>
+              <div style="font-family:'Georgia',serif;font-size:14px;color:#1A1A1A;font-style:italic;font-weight:bold;">FORZA TIMES</div>
+              <div style="font-size:7px;color:#888;letter-spacing:.1em;text-transform:uppercase;margin-top:2px;">VOL. I · EDITION #1</div>
+            </div>
+            <span class="inc-label">Forza Times (Frontpage)</span>
+            <span class="inc-status bad">Totally alien</span>
+          </div>
+          <div class="inc-cell">
+            <div class="inc-preview" style="background:#111; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; padding:8px;">
+              <div style="background:#22C55E;color:white;font-family:'Archivo Black',sans-serif;font-size:8px;letter-spacing:.1em;padding:4px 12px;width:100%;text-align:center;">OPEN WINDOW</div>
+              <div style="background:#9333EA;color:white;font-family:'Archivo Black',sans-serif;font-size:8px;letter-spacing:.1em;padding:4px 12px;width:100%;text-align:center;">SEED CUP CLUBS</div>
+              <div style="background:#E0A800;color:#111;font-family:'Archivo Black',sans-serif;font-size:8px;letter-spacing:.1em;padding:4px 12px;width:100%;text-align:center;">RUN ALLOCATION</div>
+            </div>
+            <span class="inc-label">Admin Panel</span>
+            <span class="inc-status bad">Completely off</span>
+          </div>
+        </div>
+
+        <ul class="finding-bullets">
+          <li>The Forza Times (Frontpage) uses light cream, serif type, and a newspaper layout — completely opposite to every other screen.</li>
+          <li>The Admin panel has full-width green, purple, and gold buttons that look like Bootstrap scaffolding that was never styled.</li>
+          <li>The old circular token design (green pitch + circle avatars) still appears in some contexts alongside the newer pill tokens.</li>
+        </ul>
+      </div>
+      <div class="finding-right">
+        <div class="screenshot-wrap" style="margin-bottom:12px;">
+          <img src="uploads/pasted-1778874874805-0.png" alt="Forza Times - jarring light theme">
+        </div>
+        <p class="screenshot-caption" style="margin-bottom:16px;">Frontpage tab · "Forza Times" — a light newspaper inside a dark app</p>
+        <div class="screenshot-wrap">
+          <img src="uploads/pasted-1779290000018-0.png" alt="Admin panel - Bootstrap-style buttons">
+        </div>
+        <p class="screenshot-caption">Admin tab · Commissioner controls — green / purple / gold full-width buttons have no relationship to the design system</p>
+      </div>
+    </div>
+
+    <!-- Finding 4 -->
+    <div class="finding">
+      <div class="finding-left">
+        <div class="finding-header">
+          <span class="finding-number">04 /06</span>
+          <span class="severity medium">Moderate</span>
+        </div>
+        <h3 class="finding-title">Typography is too small across the board</h3>
+        <p class="finding-body">The type scale was tuned for a high-density broadcast display, not a web product used on laptop screens in all kinds of lighting. Almost every label needs to go up 1–2px.</p>
+        <ul class="finding-bullets">
+          <li>JetBrains Mono at 10–11px is the system's workhorse but it's at the very edge of comfortable reading — any antialiasing variation makes it feel smaller.</li>
+          <li>The eyebrow text ("TACTICAL SHEET", "COMPETITIVE CENTER") is barely visible at its current size and contrast.</li>
+          <li>The BUY buttons in the player market are too small to be confident primary actions.</li>
+          <li>Club codes below player names on the pitch read fine when zoomed but fail the glance test at normal viewing distance.</li>
+          <li>The sidebar nav labels (SCORES, SQUAD, LEAGUE…) with icons beside them are correct in concept but the text needs to be 13px, not 11px.</li>
+        </ul>
+        <div class="callout" style="margin-top:16px;">
+          <p><strong>Fix:</strong> Eyebrow labels → 11px minimum. Player name on pitch → 14px. Sidebar nav → 13px. Metadata below names → 10px (not 9px). Button labels → 11px. These are 1–2px changes with outsized readability impact.</p>
+        </div>
+      </div>
+      <div class="finding-right">
+        <div class="screenshot-wrap" style="margin-bottom:12px;">
+          <img src="uploads/pasted-1777991775963-0.png" alt="My Squad pitch view">
+        </div>
+        <p class="screenshot-caption" style="margin-bottom:16px;">My Squad · Pitch view — the rectangular tokens are good but the text inside reads small at viewing distance</p>
+        <div class="token-compare">
+          <div class="token-example">
+            <div class="token-header">Old — circular avatar</div>
+            <div class="token-body">
+              <div class="old-token">
+                <div class="old-circle">MB</div>
+                <span class="old-name">Mbappé</span>
+              </div>
+              <div class="old-token">
+                <div class="old-circle" style="border-color:#E0A800;color:#E0A800;background:rgba(224,168,0,.15);">VI</div>
+                <span class="old-name">Vinícius</span>
+              </div>
+            </div>
+          </div>
+          <div class="token-example">
+            <div class="token-header">New — pill token (correct direction)</div>
+            <div class="token-body" style="flex-direction:column;align-items:flex-start;">
+              <div class="new-token">
+                <div class="new-badge">9</div>
+                <div class="new-info">
+                  <span class="new-name">Mbappé</span>
+                  <span class="new-meta">RMA · 12 PTS</span>
+                </div>
+              </div>
+              <div class="new-token" style="margin-top:4px;">
+                <div class="new-badge" style="border-color:#E0A800;color:#0A0A0A;background:#E0A800;">7</div>
+                <div class="new-info">
+                  <span class="new-name">Vinícius Jr</span>
+                  <span class="new-meta">RMA · 9 PTS</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <p style="font-size:11px;color:var(--mute);margin-top:8px;">The new pill token direction is correct. Needs to be bigger and fully applied.</p>
+      </div>
+    </div>
+
+    <!-- Finding 5 -->
+    <div class="finding">
+      <div class="finding-left">
+        <div class="finding-header">
+          <span class="finding-number">05 /06</span>
+          <span class="severity medium">Moderate</span>
+        </div>
+        <h3 class="finding-title">The Forza brand is a liability</h3>
+        <p class="finding-body">The "FORZA | FANTASY LEAGUE" wordmark and the surrounding gaming aesthetic were the right call for a pitch deck. They're not the right call for a product that needs to feel warm, social, and accessible.</p>
+        <ul class="finding-bullets">
+          <li>The Forza name implies a formal partnership or licensing agreement. If that isn't in place, the product is exposed.</li>
+          <li>The "broadcast data overlay" aesthetic (mono everything, pure black, cyan only) works for a game UI that players interact with for hours. A fantasy app is checked multiple times a day in spare moments — it needs to feel lighter and faster.</li>
+          <li>The gaming aesthetic is at odds with the social features (chat, bets, frontpage) that are the product's real differentiators.</li>
+          <li>"ALPHA V0.1 · FORZA ECOSYSTEM" in the sidebar footer undermines confidence for pilot users.</li>
+        </ul>
+        <div class="callout" style="margin-top:16px;">
+          <p><strong>Fix:</strong> Rename to FantasyKit (or a clean standalone name) and create an independent visual identity. Preserve the typography system — it's strong. Change the branding, not the bones.</p>
+        </div>
+      </div>
+      <div class="finding-right">
+        <div class="screenshot-wrap" style="margin-bottom:12px;">
+          <img src="uploads/pasted-1777921959918-0.png" alt="ForzaKit wordmark">
+        </div>
+        <p class="screenshot-caption" style="margin-bottom:16px;">The FORZAKIT wordmark — implying a partnership that may not be sustainable</p>
+        <div class="screenshot-wrap">
+          <img src="uploads/pasted-1781476595043-0.png" alt="League select - dark and cold">
+        </div>
+        <p class="screenshot-caption">League select screen — cold, gamified aesthetic on a social feature</p>
+      </div>
+    </div>
+
+    <!-- Finding 6 -->
+    <div class="finding">
+      <div class="finding-left">
+        <div class="finding-header">
+          <span class="finding-number">06 /06</span>
+          <span class="severity low">Minor</span>
+        </div>
+        <h3 class="finding-title">League select has no context</h3>
+        <p class="finding-body">The league picker is the first contextual screen users hit after login. It's a plain list with names and nothing else — no current rank, no live status, no unread activity indicator.</p>
+        <ul class="finding-bullets">
+          <li>"TEST_2_H2H_DRAFT" and "TEXT_WC_CONTROL_CLASSIC" are test/internal names leaking into the pilot — these undermine trust and readability.</li>
+          <li>No visual distinction between active leagues, completed leagues, and draft-pending leagues.</li>
+          <li>No rank or points shown — the one number that would make users want to tap immediately.</li>
+          <li>The screen feels like a database admin panel, not the gateway to a social competition.</li>
+        </ul>
+        <div class="callout" style="margin-top:16px;">
+          <p><strong>Fix:</strong> Show rank, points and unread count on each league card. Add a status badge (LIVE / DRAFT / COMPLETE). This is a quick data addition with a large perceived quality improvement.</p>
+        </div>
+      </div>
+      <div class="finding-right">
+        <div class="screenshot-wrap" style="margin-bottom:12px;">
+          <img src="uploads/pasted-1781476595043-0.png" alt="League select">
+        </div>
+        <p class="screenshot-caption" style="margin-bottom:16px;">League select — a plain list with no context, rank, or status</p>
+        <div class="screenshot-wrap">
+          <img src="uploads/pasted-1781476804932-0.png" alt="My leagues list">
+        </div>
+        <p class="screenshot-caption">My Leagues list — green points are the only decoration; the rest is a blank dark table</p>
+      </div>
+    </div>
+
+  </div><!-- /findings -->
+
+
+  <!-- ── DIRECTIONS ── -->
+  <div class="section">
+    <div class="section-header">
+      <span class="section-eyebrow">03</span>
+      <h2 class="section-title">Three ways forward</h2>
+    </div>
+    <hr class="rule">
+    <p style="font-size:15px;color:var(--ink-2);max-width:680px;line-height:1.7;margin-bottom:40px;">These aren't mutually exclusive. Direction A is the minimum viable fix for the pilot. Directions B and C are explorations for what comes next. They can run in parallel.</p>
+
+    <div class="directions-grid">
+
+      <!-- A: Fix & Refine -->
+      <div class="direction-card dir-a">
+        <div class="direction-mockup">
+          <div class="dm-sidebar">
+            <div class="dm-dot"></div>
+            <div class="dm-dot active"></div>
+            <div class="dm-dot"></div>
+            <div class="dm-dot"></div>
+            <div class="dm-dot"></div>
+          </div>
+          <div class="dm-content">
+            <div class="dm-header">Tactical Sheet</div>
+            <div class="dm-title">My Squad</div>
+            <div class="dm-row">
+              <div class="dm-chip">FWD</div>
+              <span class="dm-name">MBAPPÉ</span>
+              <span class="dm-pts">12</span>
+            </div>
+            <div class="dm-row">
+              <div class="dm-chip" style="border-color:#E0A800;color:#E0A800;">MID</div>
+              <span class="dm-name">BELLINGHAM</span>
+              <span class="dm-pts">8</span>
+            </div>
+            <div class="dm-row">
+              <div class="dm-chip" style="border-color:#00B4D8;color:#00B4D8;">DEF</div>
+              <span class="dm-name">JAMES</span>
+              <span class="dm-pts">6</span>
+            </div>
+          </div>
+        </div>
+        <div class="direction-body">
+          <div class="direction-label">Direction A</div>
+          <div class="direction-name">Fix & Refine</div>
+          <p class="direction-desc">Surgical improvements within the current system. Raise surfaces, increase type sizes, fix navigation structure, and harmonise the inconsistent screens. The identity stays. The friction goes.</p>
+          <div class="direction-tags">
+            <span class="direction-tag risk-low">Low risk</span>
+            <span class="direction-tag">2–3 weeks</span>
+            <span class="direction-tag">Same codebase</span>
+            <span class="direction-tag">Recommended now</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- B: Light & Open -->
+      <div class="direction-card dir-b">
+        <div class="direction-mockup">
+          <div class="dm-sidebar">
+            <div class="dm-dot"></div>
+            <div class="dm-dot active"></div>
+            <div class="dm-dot"></div>
+            <div class="dm-dot"></div>
+            <div class="dm-dot"></div>
+          </div>
+          <div class="dm-content">
+            <div class="dm-header" style="color:#7A8394;">Tactical Sheet</div>
+            <div class="dm-title">My Squad</div>
+            <div class="dm-row">
+              <div class="dm-chip">FWD</div>
+              <span class="dm-name">MBAPPÉ</span>
+              <span class="dm-pts">12</span>
+            </div>
+            <div class="dm-row">
+              <div class="dm-chip" style="border-color:#E0A800;color:#E0A800;">MID</div>
+              <span class="dm-name">BELLINGHAM</span>
+              <span class="dm-pts">8</span>
+            </div>
+            <div class="dm-row">
+              <div class="dm-chip" style="border-color:#00B4D8;color:#00B4D8;">DEF</div>
+              <span class="dm-name">JAMES</span>
+              <span class="dm-pts">6</span>
+            </div>
+          </div>
+        </div>
+        <div class="direction-body">
+          <div class="direction-label">Direction B</div>
+          <div class="direction-name">Light & Open</div>
+          <p class="direction-desc">Flip to a warm white default with dark as a user toggle. Archivo Black and JetBrains Mono actually shine on a light ground — think premium sports analytics, not gaming. The Forza Times pattern becomes coherent.</p>
+          <div class="direction-tags">
+            <span class="direction-tag risk-med">Medium risk</span>
+            <span class="direction-tag">6–8 weeks</span>
+            <span class="direction-tag">Major rework</span>
+            <span class="direction-tag">Next season</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- C: Premium Navy -->
+      <div class="direction-card dir-c">
+        <div class="direction-mockup">
+          <div class="dm-sidebar">
+            <div class="dm-dot"></div>
+            <div class="dm-dot active" style="background:#4DB8FF;"></div>
+            <div class="dm-dot"></div>
+            <div class="dm-dot"></div>
+            <div class="dm-dot"></div>
+          </div>
+          <div class="dm-content">
+            <div class="dm-header">Tactical Sheet</div>
+            <div class="dm-title">My Squad</div>
+            <div class="dm-row">
+              <div class="dm-chip">FWD</div>
+              <span class="dm-name">MBAPPÉ</span>
+              <span class="dm-pts">12</span>
+            </div>
+            <div class="dm-row">
+              <div class="dm-chip" style="border-color:#E0A800;color:#E0A800;">MID</div>
+              <span class="dm-name">BELLINGHAM</span>
+              <span class="dm-pts">8</span>
+            </div>
+            <div class="dm-row">
+              <div class="dm-chip" style="border-color:#4DB8FF;color:#4DB8FF;">DEF</div>
+              <span class="dm-name">JAMES</span>
+              <span class="dm-pts">6</span>
+            </div>
+          </div>
+        </div>
+        <div class="direction-body">
+          <div class="direction-label">Direction C</div>
+          <div class="direction-name">Premium Navy</div>
+          <p class="direction-desc">Keep dark-first but make it feel intentional. A deep navy base (#0B1022) with real surface variation, warmer text, and reduced mono-label density. Think Bloomberg Terminal meets The Athletic — crafted data, not a game HUD.</p>
+          <div class="direction-tags">
+            <span class="direction-tag risk-med">Medium risk</span>
+            <span class="direction-tag">4–5 weeks</span>
+            <span class="direction-tag">Preserves dark</span>
+            <span class="direction-tag">Next season</span>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /directions-grid -->
+
+    <!-- Direction comparison table -->
+    <div style="overflow-x:auto;">
+      <table style="width:100%;border-collapse:collapse;font-size:13px;">
+        <thead>
+          <tr style="border-bottom:2px solid var(--rule);">
+            <th style="text-align:left;padding:10px 0;font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:var(--mute);font-weight:400;width:32%;">Consideration</th>
+            <th style="text-align:center;padding:10px 16px;font-family:'Archivo Black',sans-serif;font-size:11px;color:var(--ink);">A — Fix & Refine</th>
+            <th style="text-align:center;padding:10px 16px;font-family:'Archivo Black',sans-serif;font-size:11px;color:var(--ink);">B — Light & Open</th>
+            <th style="text-align:center;padding:10px 16px;font-family:'Archivo Black',sans-serif;font-size:11px;color:var(--ink);">C — Premium Navy</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr style="border-bottom:1px solid var(--rule);">
+            <td style="padding:10px 0;color:var(--ink-2);">Readability improvement</td>
+            <td style="text-align:center;padding:10px 16px;">Medium</td>
+            <td style="text-align:center;padding:10px 16px;color:#22C55E;font-weight:600;">High</td>
+            <td style="text-align:center;padding:10px 16px;">Medium-High</td>
+          </tr>
+          <tr style="border-bottom:1px solid var(--rule);">
+            <td style="padding:10px 0;color:var(--ink-2);">Dev effort</td>
+            <td style="text-align:center;padding:10px 16px;color:#22C55E;font-weight:600;">Low</td>
+            <td style="text-align:center;padding:10px 16px;color:#EF4444;">High</td>
+            <td style="text-align:center;padding:10px 16px;">Medium</td>
+          </tr>
+          <tr style="border-bottom:1px solid var(--rule);">
+            <td style="padding:10px 0;color:var(--ink-2);">Preserves current code</td>
+            <td style="text-align:center;padding:10px 16px;color:#22C55E;font-weight:600;">Yes</td>
+            <td style="text-align:center;padding:10px 16px;color:#EF4444;">No</td>
+            <td style="text-align:center;padding:10px 16px;">Mostly</td>
+          </tr>
+          <tr style="border-bottom:1px solid var(--rule);">
+            <td style="padding:10px 0;color:var(--ink-2);">Addresses root cause</td>
+            <td style="text-align:center;padding:10px 16px;">Partially</td>
+            <td style="text-align:center;padding:10px 16px;color:#22C55E;font-weight:600;">Fully</td>
+            <td style="text-align:center;padding:10px 16px;">Mostly</td>
+          </tr>
+          <tr style="border-bottom:1px solid var(--rule);">
+            <td style="padding:10px 0;color:var(--ink-2);">Social feature suitability</td>
+            <td style="text-align:center;padding:10px 16px;">Better</td>
+            <td style="text-align:center;padding:10px 16px;color:#22C55E;font-weight:600;">Best</td>
+            <td style="text-align:center;padding:10px 16px;">Good</td>
+          </tr>
+          <tr>
+            <td style="padding:10px 0;color:var(--ink-2);">Can ship for current pilot</td>
+            <td style="text-align:center;padding:10px 16px;color:#22C55E;font-weight:600;">Yes</td>
+            <td style="text-align:center;padding:10px 16px;color:#EF4444;">No</td>
+            <td style="text-align:center;padding:10px 16px;color:#EF4444;">No</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div><!-- /directions -->
+
+
+  <!-- ── RECOMMENDATION ── -->
+  <div class="rec-box">
+    <div class="rec-eyebrow">Recommendation</div>
+    <h2 class="rec-title">Ship A now.<br>Explore B or C for next season.</h2>
+    <p class="rec-body">Direction A is not a compromise — it's the right move for a live pilot with real users. The core platform has everything it needs to succeed. The dark palette, the type system, and the token concept are all worth keeping. What needs to go is the friction: the oppressive blackness, the three-layer nav, the inconsistent screens. These are solvable in two weeks without touching the data model or the component tree.</p>
+    <p class="rec-body" style="margin-top:-16px;">In parallel, run one design sprint exploring Direction B or C for the next season launch. The question isn't "fix the app" — it's "what does FantasyKit feel like when it's fully itself, not a Forza skin?"</p>
+    <div class="rec-steps">
+      <div class="rec-step">
+        <span class="rec-step-phase">Week 1</span>
+        <div class="rec-step-body">
+          <div class="rec-step-title">Raise surfaces, fix type scale</div>
+          <div class="rec-step-desc">Update tokens.css with new surface values. Increase base type by 1–2px across components. Immediate quality improvement.</div>
+        </div>
+      </div>
+      <div class="rec-step">
+        <span class="rec-step-phase">Week 2</span>
+        <div class="rec-step-body">
+          <div class="rec-step-title">Fix navigation & league hub</div>
+          <div class="rec-step-desc">Remove MANAGE SQUAD / MARKET sticky bar. Consolidate Bets tabs. Fix truncation. Add rank + status to league select.</div>
+        </div>
+      </div>
+      <div class="rec-step">
+        <span class="rec-step-phase">Week 3</span>
+        <div class="rec-step-body">
+          <div class="rec-step-title">Harmonise Admin & Frontpage</div>
+          <div class="rec-step-desc">Apply design system to Admin buttons. Decide on Forza Times — either embrace it and design it properly, or make Frontpage a dark feed.</div>
+        </div>
+      </div>
+      <div class="rec-step">
+        <span class="rec-step-phase">Sprint</span>
+        <div class="rec-step-body">
+          <div class="rec-step-title">Explore next-season direction</div>
+          <div class="rec-step-desc">Run one exploratory sprint on Direction B or C. Prototype key screens. Test with pilot users before committing.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /container -->
+
+<div class="footer">
+  <div class="footer-inner">
+    <span class="footer-brand">FantasyKit · Platform Assessment</span>
+    <span class="footer-meta">June 2026 · Design Review</span>
+  </div>
+</div>
+
+</body>
+</html>

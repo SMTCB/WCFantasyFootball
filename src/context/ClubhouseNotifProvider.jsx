@@ -1,40 +1,56 @@
-import { useEffect, useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
-import { useAuth } from '../hooks/useAuth';
 import { ClubhouseNotifContext } from './ClubhouseNotifContext';
 
 export function ClubhouseNotifProvider({ children }) {
-  const [unreadCount, setUnreadCount] = useState(0);
-  const { user } = useAuth();
-  const userId = user?.id ?? null;
+  const [userId, setUserId]       = useState(null);
+  const [unreadCount, setCount]   = useState(0);
 
+  // Resolve auth.uid() without importing useAuth (avoids TDZ in AppLayout chain)
   useEffect(() => {
-    if (!userId) { setUnreadCount(0); return; }
+    supabase.auth.getSession().then(({ data }) => {
+      setUserId(data.session?.user?.id ?? null);
+    });
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, session) => {
+      setUserId(session?.user?.id ?? null);
+    });
+    return () => subscription.unsubscribe();
+  }, []);
 
-    supabase
+  const fetchCount = useCallback(async () => {
+    if (!userId) { setCount(0); return; }
+    const { count } = await supabase
       .from('clubhouse_notifications')
       .select('id', { count: 'exact', head: true })
-      .is('read_at', null)
-      .then(({ count }) => setUnreadCount(count ?? 0));
-
-    const channel = supabase
-      .channel('global-clubhouse-notif')
-      .on('postgres_changes', {
-        event: 'INSERT',
-        schema: 'public',
-        table: 'clubhouse_notifications',
-        filter: `user_id=eq.${userId}`,
-      }, () => {
-        setUnreadCount(prev => prev + 1);
-      })
-      .subscribe();
-
-    return () => { supabase.removeChannel(channel); };
+      .eq('user_id', userId)
+      .is('read_at', null);
+    setCount(count ?? 0);
   }, [userId]);
 
+  useEffect(() => { fetchCount(); }, [fetchCount]);
+
+  // Realtime: +1 on new insert, re-fetch on update (mark-read events)
+  useEffect(() => {
+    if (!userId) return;
+    const ch = supabase
+      .channel(`notif-badge-${userId}`)
+      .on('postgres_changes', {
+        event: 'INSERT', schema: 'public',
+        table: 'clubhouse_notifications',
+        filter: `user_id=eq.${userId}`,
+      }, () => setCount(n => n + 1))
+      .on('postgres_changes', {
+        event: 'UPDATE', schema: 'public',
+        table: 'clubhouse_notifications',
+        filter: `user_id=eq.${userId}`,
+      }, () => fetchCount())
+      .subscribe();
+    return () => { supabase.removeChannel(ch); };
+  }, [userId, fetchCount]);
+
   return (
-    <ClubhouseNotifContext.Provider value={{ unreadCount }}>
+    <ClubhouseNotifContext value={{ unreadCount, resetBadge: fetchCount }}>
       {children}
-    </ClubhouseNotifContext.Provider>
+    </ClubhouseNotifContext>
   );
 }

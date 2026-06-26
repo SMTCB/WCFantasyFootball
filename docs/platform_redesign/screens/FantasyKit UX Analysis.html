@@ -1,0 +1,935 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FantasyKit — UX Simplification Analysis</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Archivo:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/kit.css">
+<template id="__bundler_thumbnail">
+  <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+    <rect width="100" height="100" fill="#18202E"/>
+    <rect x="30" y="30" width="40" height="40" rx="8" fill="#1A6FA8"/>
+    <text x="50" y="58" font-family="Archivo Black, sans-serif" font-size="22" fill="#fff" text-anchor="middle">FK</text>
+  </svg>
+</template>
+</head>
+<body>
+
+<!-- ───────────────────────── TOC ───────────────────────── -->
+<nav class="toc">
+  <div class="container toc-inner">
+    <span class="toc-brand">Fantasy<i>Kit</i> · UX</span>
+    <a href="#thesis">Thesis</a>
+    <a href="#f01">01 Next action</a>
+    <a href="#f02">02 Onboarding</a>
+    <a href="#f03">03 Hierarchy</a>
+    <a href="#f04">04 Focus</a>
+    <a href="#f05">05 Feedback</a>
+    <a href="#f06">06 Mobile</a>
+    <a href="#whitelabel">White label</a>
+    <a href="#roadmap">Roadmap</a>
+  </div>
+</nav>
+
+<!-- ───────────────────────── COVER ───────────────────────── -->
+<header class="cover">
+  <div class="container">
+    <div class="eyebrow cover-eyebrow">Kit (Light) · UX + UI Analysis · Round 2</div>
+    <h1 class="cover-title">The audit made it <em>readable</em>. This makes it <em>obvious</em>.</h1>
+    <p class="cover-sub">The first assessment fixed how the platform looks — surfaces, contrast, type, one visual language. This round fixes how it <strong>works</strong>: what to do next, how to learn it, and what matters most on every screen. Six prioritised improvements, each shown before and after, in the chosen Kit (Light) system.</p>
+    <div class="cover-meta">
+      <div class="cover-meta-item">
+        <span class="cover-meta-label">Direction</span>
+        <span class="cover-meta-value accent">Kit — Light</span>
+      </div>
+      <div class="cover-meta-item">
+        <span class="cover-meta-label">Scope</span>
+        <span class="cover-meta-value">Desktop + Mobile</span>
+      </div>
+      <div class="cover-meta-item">
+        <span class="cover-meta-label">Focus</span>
+        <span class="cover-meta-value">Primary actions · Onboarding · Hierarchy</span>
+      </div>
+      <div class="cover-meta-item">
+        <span class="cover-meta-label">Builds on</span>
+        <span class="cover-meta-value">Platform Assessment (6 findings)</span>
+      </div>
+      <div class="cover-meta-item">
+        <span class="cover-meta-label">Date</span>
+        <span class="cover-meta-value">June 2026</span>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- ───────────────────────── THESIS ───────────────────────── -->
+<section class="lead" id="thesis">
+  <div class="container">
+    <div class="eyebrow lead-eyebrow">00 — The thesis</div>
+    <h2 class="lead-h">A pretty screen still leaves people asking “…so what do I do now?”</h2>
+    <p class="lead-p">The Platform Assessment solved the <strong>visual</strong> problems: the near-black surfaces, the three competing visual languages, the type that was too small. Those fixes land in the Kit system. But a clean surface can still be confusing. Across the pilot, the friction that remains is <strong>behavioural</strong>, not cosmetic — managers can’t tell what’s urgent, new users are dropped into a fully-loaded dashboard with no guidance, and every number on a row shouts at the same volume.</p>
+    <p class="lead-p">These six improvements sit <strong>on top of</strong> the original six. They don’t touch the palette or the type pairing — they change what the interface asks of a person at each moment. Three principles drive all of them.</p>
+
+    <div class="principles">
+      <div class="principle">
+        <div class="principle-n">PRINCIPLE 01</div>
+        <h3 class="principle-h">Every screen answers “what now?”</h3>
+        <p class="principle-p">One unmissable next action per view, anchored to the deadline. Everything else is navigation, not a decision.</p>
+      </div>
+      <div class="principle">
+        <div class="principle-n">PRINCIPLE 02</div>
+        <h3 class="principle-h">Teach in context, never up front</h3>
+        <p class="principle-p">No tutorial wall. A first-run checklist and live empty states coach people through the one task in front of them.</p>
+      </div>
+      <div class="principle">
+        <div class="principle-n">PRINCIPLE 03</div>
+        <h3 class="principle-h">One number leads, the rest support</h3>
+        <p class="principle-p">Typographic roles give every row a single entry point for the eye. Mono is for labels, not for everything.</p>
+      </div>
+    </div>
+
+    <!-- matrix -->
+    <div class="matrix-wrap">
+      <div class="eyebrow matrix-cap">The six improvements, prioritised</div>
+      <table class="matrix">
+        <thead>
+          <tr>
+            <th>#</th><th>Improvement</th><th>Severity</th><th>Theme</th><th>Effort</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="m-id">01</td>
+            <td class="m-issue"><a class="m-issue-link" href="#f01"><span class="m-issue-t">No clear next action</span></a><span>Four equal entry points; the deadline ticks by passively.</span></td>
+            <td><span class="pill crit">Critical</span></td>
+            <td><span class="pill theme">Primary actions</span></td>
+            <td><span class="pill effort-s">Low</span></td>
+          </tr>
+          <tr>
+            <td class="m-id">02</td>
+            <td class="m-issue"><a class="m-issue-link" href="#f02"><span class="m-issue-t">New managers hit a wall</span></a><span>First login lands on a full dashboard with no squad, no guidance.</span></td>
+            <td><span class="pill crit">Critical</span></td>
+            <td><span class="pill theme">Onboarding</span></td>
+            <td><span class="pill effort-m">Medium</span></td>
+          </tr>
+          <tr>
+            <td class="m-id">03</td>
+            <td class="m-issue"><a class="m-issue-link" href="#f03"><span class="m-issue-t">Everything shouts at once</span></a><span>Names, points and labels share one weight; mono flattens it all.</span></td>
+            <td><span class="pill mod">Moderate</span></td>
+            <td><span class="pill theme">Hierarchy</span></td>
+            <td><span class="pill effort-s">Low</span></td>
+          </tr>
+          <tr>
+            <td class="m-id">04</td>
+            <td class="m-issue"><a class="m-issue-link" href="#f04"><span class="m-issue-t">Density without focus</span></a><span>Six stats per row bury the one that matters for the task.</span></td>
+            <td><span class="pill mod">Moderate</span></td>
+            <td><span class="pill theme">Hierarchy</span></td>
+            <td><span class="pill effort-m">Medium</span></td>
+          </tr>
+          <tr>
+            <td class="m-id">05</td>
+            <td class="m-issue"><a class="m-issue-link" href="#f05"><span class="m-issue-t">The system stays silent</span></a><span>Make a transfer and nothing confirms it or shows the impact.</span></td>
+            <td><span class="pill mod">Moderate</span></td>
+            <td><span class="pill theme">Confidence</span></td>
+            <td><span class="pill effort-s">Low</span></td>
+          </tr>
+          <tr>
+            <td class="m-id">06</td>
+            <td class="m-issue"><a class="m-issue-link" href="#f06"><span class="m-issue-t">Mobile is a shrunk desktop</span></a><span>Dense tables crammed into a phone; the key action is out of thumb reach.</span></td>
+            <td><span class="pill mod">Moderate</span></td>
+            <td><span class="pill theme">Mobile</span></td>
+            <td><span class="pill effort-m">Medium</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ───────────────────────── FINDING 01 ───────────────────────── -->
+<section class="finding" id="f01">
+  <div class="container">
+    <div class="f-top">
+      <span class="f-num">01</span>
+      <div class="f-tags">
+        <span class="pill crit">Critical</span>
+        <span class="pill theme">Primary actions</span>
+      </div>
+    </div>
+    <h3 class="f-title">There is no single “next action”</h3>
+
+    <div class="f-cols">
+      <p class="f-problem">Inside a league the manager is met with four entry points of identical weight — <strong>Manage Squad, Market, Bets, Feed</strong> — and a deadline that ticks by as a faint line of text in the corner. Nothing on the screen says <em>this</em> is the thing that’s urgent right now. New managers freeze; returning managers miss the deadline and field a broken team. The most consequential moment in fantasy — locking your squad before kick-off — has no home on the screen.</p>
+      <div class="f-rec">
+        <div class="f-rec-label">Recommendation</div>
+        <h4>Promote the deadline to a single action banner.</h4>
+        <p>Collapse the competing buttons into tabs and give the screen one unmistakable primary action, tied to the live deadline.</p>
+        <ul>
+          <li>Countdown + the exact task: “Set your GW13 squad.”</li>
+          <li>One filled primary button; everything else demoted to tabs.</li>
+          <li>State-aware: flips to “Squad locked ✓” once done.</li>
+        </ul>
+        <div class="f-impact">
+          <span class="f-impact-label">Expected impact</span>
+          <span class="f-impact-val">One decision per visit · fewer missed deadlines</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- before / after -->
+    <div class="figs">
+      <div class="fig-grid two">
+        <!-- BEFORE -->
+        <div class="fig">
+          <div class="fig-head"><span class="fig-tag before">Before</span><span class="fig-headnote">Current pilot — four equal buttons</span></div>
+          <div class="fig-frame">
+            <div class="mk dark">
+              <div class="mk-app">
+                <aside class="mk-side">
+                  <div class="mk-brand"><div class="mk-brand-mark">F</div><div class="mk-brand-name">Forza</div></div>
+                  <nav class="mk-nav">
+                    <div class="mk-nav-item"><span class="dot"></span>Scores</div>
+                    <div class="mk-nav-item on"><span class="dot"></span>League</div>
+                    <div class="mk-nav-item"><span class="dot"></span>Squad</div>
+                    <div class="mk-nav-item"><span class="dot"></span>Live</div>
+                    <div class="mk-nav-item"><span class="dot"></span>Market</div>
+                  </nav>
+                </aside>
+                <div class="mk-main">
+                  <div class="mk-head">
+                    <div class="mk-head-eyebrow">Competitive Centre</div>
+                    <div class="mk-head-row">
+                      <div class="mk-head-title">Premier League</div>
+                      <div class="mono" style="font-size:9px;color:var(--m-mute);letter-spacing:.1em">GW13 · Fri 19:00</div>
+                    </div>
+                    <div class="mk-btnrow" style="margin-top:14px">
+                      <div class="mk-btn ghost">Manage Squad</div>
+                      <div class="mk-btn ghost">Market</div>
+                      <div class="mk-btn ghost">Bets</div>
+                      <div class="mk-btn ghost">Feed</div>
+                    </div>
+                    <div class="mk-tabs" style="margin-top:14px">
+                      <div class="mk-tab on">Leaderboard</div>
+                      <div class="mk-tab">Feed</div>
+                      <div class="mk-tab">Bets</div>
+                    </div>
+                  </div>
+                  <div class="mk-body col" style="padding-top:14px">
+                    <div class="mk-lb-h" style="grid-template-columns:24px 1fr 48px 52px">
+                      <span>#</span><span>Team</span><span style="text-align:right">GW</span><span style="text-align:right">Tot</span>
+                    </div>
+                    <div class="mk-lb-row" style="grid-template-columns:24px 1fr 48px 52px"><div class="mk-rank top">1</div><div class="mk-team">Bragança</div><div class="mk-num sub">42</div><div class="mk-num tot">512</div></div>
+                    <div class="mk-lb-row me" style="grid-template-columns:24px 1fr 48px 52px"><div class="mk-rank">3</div><div class="mk-team">You <span class="mk-you">You</span></div><div class="mk-num sub">21</div><div class="mk-num tot">488</div></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <p class="fig-cap">Four ghost buttons compete for the eye; the deadline is the smallest text on the screen. <b>Nothing is prioritised.</b></p>
+        </div>
+        <!-- AFTER -->
+        <div class="fig">
+          <div class="fig-head"><span class="fig-tag after">After — Kit</span><span class="fig-headnote">One deadline-driven action banner</span></div>
+          <div class="fig-frame after">
+            <div class="mk">
+              <div class="mk-app">
+                <aside class="mk-side">
+                  <div class="mk-brand"><div class="mk-brand-mark">●</div><div class="mk-brand-name">Brand</div></div>
+                  <nav class="mk-nav">
+                    <div class="mk-nav-item"><span class="dot"></span>Scores</div>
+                    <div class="mk-nav-item on"><span class="dot"></span>League</div>
+                    <div class="mk-nav-item"><span class="dot"></span>Squad</div>
+                    <div class="mk-nav-item"><span class="dot"></span>Live</div>
+                    <div class="mk-nav-item"><span class="dot"></span>Market</div>
+                  </nav>
+                </aside>
+                <div class="mk-main">
+                  <div class="mk-head">
+                    <div class="mk-head-eyebrow">Competitive Centre</div>
+                    <div class="mk-head-row">
+                      <div class="mk-head-title">Premier League</div>
+                      <div class="mk-kpis"><div class="mk-kpi"><div class="mk-kpi-l">My Rank</div><div class="mk-kpi-v accent">#3</div></div><div class="mk-kpi"><div class="mk-kpi-l">Points</div><div class="mk-kpi-v">488</div></div></div>
+                    </div>
+                    <div class="mk-tabs">
+                      <div class="mk-tab on">Leaderboard</div>
+                      <div class="mk-tab">Feed</div>
+                      <div class="mk-tab">Bets</div>
+                      <div class="mk-tab">Squad</div>
+                      <div class="mk-tab">Market</div>
+                    </div>
+                  </div>
+                  <div class="mk-body col" style="padding-top:14px">
+                    <div class="mk-nextup">
+                      <div class="mk-nextup-clock"><b>2d 4h</b><span>left</span></div>
+                      <div class="mk-nextup-body">
+                        <div class="mk-nextup-k">Next up · Gameweek 13</div>
+                        <div class="mk-nextup-t">Set your squad</div>
+                        <div class="mk-nextup-s">3 players flagged · 1 free transfer available</div>
+                      </div>
+                      <div class="mk-btn primary lg">Open squad</div>
+                    </div>
+                    <div class="mk-lb-h" style="grid-template-columns:24px 1fr 60px;margin-top:4px">
+                      <span>#</span><span>Team</span><span style="text-align:right">Total</span>
+                    </div>
+                    <div class="mk-lb-row" style="grid-template-columns:24px 1fr 60px"><div class="mk-rank top">1</div><div class="mk-team">Bragança</div><div class="mk-num lead">512</div></div>
+                    <div class="mk-lb-row me" style="grid-template-columns:24px 1fr 60px"><div class="mk-rank">3</div><div class="mk-team">You <span class="mk-you">You</span></div><div class="mk-num lead">488</div></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <p class="fig-cap">The deadline becomes the spine of the screen: countdown, the exact task, and <b>one</b> filled action. Navigation drops into tabs.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- options -->
+    <div class="opts">
+      <div class="opts-head"><span class="t">Three ways to place it</span><span class="s">Same principle, different surface — toggle to compare.</span></div>
+      <div class="opts-grid">
+        <!-- A -->
+        <div class="opt pick">
+          <div class="opt-frame">
+            <div class="opt-canvas">
+              <div class="mk" style="width:100%;border-radius:6px;overflow:hidden;border:1px solid var(--rule)">
+                <div style="background:var(--shell);height:14px"></div>
+                <div style="padding:12px">
+                  <div class="mk-nextup">
+                    <div class="mk-nextup-clock"><b>2d</b><span>left</span></div>
+                    <div class="mk-nextup-body"><div class="mk-nextup-k">Next up</div><div class="mk-nextup-t">Set GW13 squad</div></div>
+                    <div class="mk-btn primary">Open</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="opt-foot">
+              <div class="opt-foot-top"><span class="opt-letter">A</span><span class="opt-name">Pinned banner</span><span class="opt-picktag">Recommended</span></div>
+              <p class="opt-desc">Sits under the header on every league screen. Always visible, never blocks content. Lowest effort, highest clarity.</p>
+            </div>
+          </div>
+        </div>
+        <!-- B -->
+        <div class="opt">
+          <div class="opt-frame">
+            <div class="opt-canvas">
+              <div class="mk" style="width:100%;height:108px;border-radius:6px;overflow:hidden;border:1px solid var(--rule);position:relative;background:var(--bg-2)">
+                <div style="position:absolute;inset:0;padding:10px;display:grid;grid-template-columns:1fr 1fr;gap:6px">
+                  <div class="mk-card" style="padding:8px"></div><div class="mk-card" style="padding:8px"></div>
+                </div>
+                <div style="position:absolute;right:10px;bottom:10px" class="mk-btn primary lg">⏱ 2d · Set squad</div>
+              </div>
+            </div>
+            <div class="opt-foot">
+              <div class="opt-foot-top"><span class="opt-letter">B</span><span class="opt-name">Action dock</span></div>
+              <p class="opt-desc">A floating pill, bottom-right on desktop and a FAB on mobile. Follows you across tabs, but overlaps content.</p>
+            </div>
+          </div>
+        </div>
+        <!-- C -->
+        <div class="opt">
+          <div class="opt-frame">
+            <div class="opt-canvas">
+              <div class="mk" style="width:100%;border-radius:6px;overflow:hidden;border:1px solid var(--rule)">
+                <div style="background:var(--accent);padding:12px 14px;color:#fff">
+                  <div class="mono" style="font-size:8px;letter-spacing:.14em;text-transform:uppercase;opacity:.8">Gameweek 13 deadline</div>
+                  <div class="black" style="font-size:16px;margin-top:4px">2d 4h to lock your squad</div>
+                  <div style="margin-top:9px;display:inline-flex;background:#fff;color:var(--accent);border-radius:5px;padding:6px 12px" class="mono"><span style="font-size:9px;letter-spacing:.12em;text-transform:uppercase;font-weight:600">Open squad →</span></div>
+                </div>
+              </div>
+            </div>
+            <div class="opt-foot">
+              <div class="opt-foot-top"><span class="opt-letter">C</span><span class="opt-name">Hero card</span></div>
+              <p class="opt-desc">A full-accent card at the top of the feed. Highest emphasis, but only on one tab and heavier on the eye.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="container"><div class="sec-rule"></div></div>
+
+<!-- ───────────────────────── FINDING 02 ───────────────────────── -->
+<section class="finding" id="f02">
+  <div class="container">
+    <div class="f-top">
+      <span class="f-num">02</span>
+      <div class="f-tags">
+        <span class="pill crit">Critical</span>
+        <span class="pill theme">Onboarding</span>
+      </div>
+    </div>
+    <h3 class="f-title">New managers are dropped into the deep end</h3>
+
+    <div class="f-cols">
+      <p class="f-problem">First login lands on the <strong>full dashboard</strong> — leaderboard, feed, bets, market — but with an empty squad, no rank, and no instructions. The most important early tasks (join a league, pick fifteen players, choose a captain) are scattered behind navigation a new user hasn’t learned yet. There’s no sense of progress and no obvious first step. The learning curve is a cliff, and it’s where pilots quietly lose people.</p>
+      <div class="f-rec">
+        <div class="f-rec-label">Recommendation</div>
+        <h4>A first-run checklist that teaches by doing.</h4>
+        <p>Until setup is complete, the dashboard yields to a three-step checklist. Each step is the real task, done in place — not a tutorial overlay.</p>
+        <ul>
+          <li>1 · Join or create a league</li>
+          <li>2 · Pick your 15 players</li>
+          <li>3 · Choose your captain</li>
+        </ul>
+        <p style="margin-top:12px">Once complete, it collapses to a slim progress chip. Empty states elsewhere coach the same way.</p>
+        <div class="f-impact">
+          <span class="f-impact-label">Expected impact</span>
+          <span class="f-impact-val">Faster time-to-first-squad · higher activation</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="figs">
+      <div class="fig-grid two">
+        <!-- BEFORE -->
+        <div class="fig">
+          <div class="fig-head"><span class="fig-tag before">Before</span><span class="fig-headnote">Empty dashboard, no guidance</span></div>
+          <div class="fig-frame">
+            <div class="mk dark">
+              <div class="mk-app">
+                <aside class="mk-side">
+                  <div class="mk-brand"><div class="mk-brand-mark">F</div><div class="mk-brand-name">Forza</div></div>
+                  <nav class="mk-nav">
+                    <div class="mk-nav-item on"><span class="dot"></span>League</div>
+                    <div class="mk-nav-item"><span class="dot"></span>Squad</div>
+                    <div class="mk-nav-item"><span class="dot"></span>Live</div>
+                    <div class="mk-nav-item"><span class="dot"></span>Market</div>
+                  </nav>
+                </aside>
+                <div class="mk-main">
+                  <div class="mk-head">
+                    <div class="mk-head-eyebrow">Competitive Centre</div>
+                    <div class="mk-head-row">
+                      <div class="mk-head-title">Premier League</div>
+                      <div class="mk-kpis"><div class="mk-kpi"><div class="mk-kpi-l">My Rank</div><div class="mk-kpi-v">—</div></div><div class="mk-kpi"><div class="mk-kpi-l">Points</div><div class="mk-kpi-v">0</div></div></div>
+                    </div>
+                    <div class="mk-tabs"><div class="mk-tab on">Leaderboard</div><div class="mk-tab">Feed</div><div class="mk-tab">Bets</div></div>
+                  </div>
+                  <div class="mk-body col" style="padding-top:16px">
+                    <div class="mk-lb-h" style="grid-template-columns:24px 1fr 52px"><span>#</span><span>Team</span><span style="text-align:right">Tot</span></div>
+                    <div style="padding:34px 0;text-align:center;color:var(--m-mute)" class="mono">
+                      <div style="font-size:10px;letter-spacing:.12em;text-transform:uppercase">No standings yet</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <p class="fig-cap">A new manager sees an empty table and a blank rank. <b>The three things they must do are nowhere on screen.</b></p>
+        </div>
+        <!-- AFTER -->
+        <div class="fig">
+          <div class="fig-head"><span class="fig-tag after">After — Kit</span><span class="fig-headnote">First-run checklist</span></div>
+          <div class="fig-frame after">
+            <div class="mk">
+              <div class="mk-app">
+                <aside class="mk-side">
+                  <div class="mk-brand"><div class="mk-brand-mark">●</div><div class="mk-brand-name">Brand</div></div>
+                  <nav class="mk-nav">
+                    <div class="mk-nav-item on"><span class="dot"></span>League</div>
+                    <div class="mk-nav-item"><span class="dot"></span>Squad</div>
+                    <div class="mk-nav-item"><span class="dot"></span>Live</div>
+                    <div class="mk-nav-item"><span class="dot"></span>Market</div>
+                  </nav>
+                </aside>
+                <div class="mk-main">
+                  <div class="mk-head">
+                    <div class="mk-head-eyebrow">Welcome — let’s get you set up</div>
+                    <div class="mk-head-row"><div class="mk-head-title">2 steps to your first squad</div></div>
+                  </div>
+                  <div class="mk-body col" style="padding-top:16px;gap:12px">
+                    <div style="display:flex;align-items:center;gap:10px">
+                      <div class="mk-prog" style="flex:1"><i style="width:34%"></i></div>
+                      <span class="mono" style="font-size:9px;letter-spacing:.1em;color:var(--mute)">1 / 3 done</span>
+                    </div>
+                    <div class="mk-steps">
+                      <div class="mk-step done"><div class="mk-step-n">✓</div><div class="mk-step-body"><b>Join a league</b><span>Premier League · 11 managers</span></div></div>
+                      <div class="mk-step active"><div class="mk-step-n">2</div><div class="mk-step-body"><b>Pick your 15 players</b><span>£100.0m budget · 0 of 15 chosen</span></div><div class="mk-btn primary">Start</div></div>
+                      <div class="mk-step"><div class="mk-step-n">3</div><div class="mk-step-body"><b>Choose your captain</b><span>Doubles their points this week</span></div></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <p class="fig-cap">The dashboard waits. One active step at a time, real progress, and a single button that starts the task. <b>The path is the screen.</b></p>
+        </div>
+      </div>
+
+      <!-- mobile + empty state -->
+      <div class="fig-grid two" style="margin-top:20px;grid-template-columns:auto 1fr;align-items:center">
+        <div class="fig">
+          <div class="fig-head"><span class="fig-tag after">After — Mobile</span></div>
+          <div style="display:flex;justify-content:center">
+            <div class="mk-phone">
+              <div class="mk">
+                <div class="mk-phone-screen">
+                  <div class="mk-status"><span class="t">9:41</span><span class="r"><i></i><i></i></span></div>
+                  <div class="mk-mtop"><div class="mk-mtop-eyebrow">Welcome</div><div class="mk-mtop-title">Get set up</div></div>
+                  <div class="mk-mscroll">
+                    <div style="display:flex;align-items:center;gap:9px"><div class="mk-prog" style="flex:1"><i style="width:34%"></i></div><span class="mono" style="font-size:8px;color:var(--mute)">1/3</span></div>
+                    <div class="mk-step done"><div class="mk-step-n">✓</div><div class="mk-step-body"><b>Join a league</b><span>Premier League</span></div></div>
+                    <div class="mk-step active"><div class="mk-step-n">2</div><div class="mk-step-body"><b>Pick your 15</b><span>0 of 15 chosen</span></div></div>
+                    <div class="mk-step"><div class="mk-step-n">3</div><div class="mk-step-body"><b>Choose captain</b><span>2× points</span></div></div>
+                    <div class="mk-btn primary block lg" style="margin-top:4px">Pick players →</div>
+                  </div>
+                  <div class="mk-tabbar">
+                    <div class="ti on"><span class="d"></span><span class="l">League</span></div>
+                    <div class="ti"><span class="d"></span><span class="l">Squad</span></div>
+                    <div class="ti"><span class="d"></span><span class="l">Live</span></div>
+                    <div class="ti"><span class="d"></span><span class="l">Market</span></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="fig">
+          <div class="fig-head"><span class="fig-tag after">Empty states coach too</span></div>
+          <div class="fig-frame after">
+            <div class="mk" style="padding:24px">
+              <div class="mk-empty">
+                <div class="mk-empty-ico">＋</div>
+                <b>Your pitch is empty</b>
+                <span>Pick 15 players to build your squad. We’ll suggest a balanced starting eleven you can tweak.</span>
+                <div class="mk-btn primary" style="margin-top:4px">Auto-pick a squad</div>
+              </div>
+            </div>
+          </div>
+          <p class="fig-cap">Every empty surface becomes a prompt with a way forward — never a dead end. An <b>auto-pick</b> escape hatch removes the blank-page freeze.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="container"><div class="sec-rule"></div></div>
+
+<!-- ───────────────────────── FINDING 03 ───────────────────────── -->
+<section class="finding" id="f03">
+  <div class="container">
+    <div class="f-top">
+      <span class="f-num">03</span>
+      <div class="f-tags">
+        <span class="pill mod">Moderate</span>
+        <span class="pill theme">Hierarchy</span>
+      </div>
+    </div>
+    <h3 class="f-title">Everything shouts at the same volume</h3>
+
+    <div class="f-cols">
+      <p class="f-problem">On a standings row the rank, the team name, the gameweek score and the season total are all rendered in roughly the same size and weight — and most of it in <strong>JetBrains Mono</strong>, which the pilot uses for nearly every value. With no typographic hierarchy, the eye has no entry point. Scanning for “where am I and how am I doing” takes real effort on a screen that should answer it instantly.</p>
+      <div class="f-rec">
+        <div class="f-rec-label">Recommendation</div>
+        <h4>Give every row one lead, one support, one label.</h4>
+        <p>A three-tier type system the whole product reuses:</p>
+        <ul>
+          <li><b>Lead</b> — the number that matters (Archivo Black, accent).</li>
+          <li><b>Support</b> — name in Archivo Black, secondary stats quiet.</li>
+          <li><b>Label</b> — mono, small, uppercase. For labels only.</li>
+        </ul>
+        <div class="f-impact">
+          <span class="f-impact-label">Expected impact</span>
+          <span class="f-impact-val">Read a standing in under a second</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="figs">
+      <div class="fig-grid two">
+        <!-- BEFORE -->
+        <div class="fig">
+          <div class="fig-head"><span class="fig-tag before">Before</span><span class="fig-headnote">All mono, one weight</span></div>
+          <div class="fig-frame">
+            <div class="mk dark" style="padding:18px">
+              <div class="mk-lb-h" style="grid-template-columns:28px 1fr 50px 50px 50px"><span>#</span><span>Team</span><span style="text-align:right">GW</span><span style="text-align:right">Tot</span><span style="text-align:right">+/-</span></div>
+              <div class="mk-lb-row" style="grid-template-columns:28px 1fr 50px 50px 50px;border-bottom:1px solid var(--m-rule)"><div class="mono" style="font-size:12px;color:var(--m-text)">1</div><div class="mono" style="font-size:12px;color:var(--m-text);text-transform:uppercase">Bragança</div><div class="mono" style="font-size:12px;text-align:right;color:var(--m-text)">42</div><div class="mono" style="font-size:12px;text-align:right;color:var(--m-text)">512</div><div class="mono" style="font-size:12px;text-align:right;color:var(--m-text)">+2</div></div>
+              <div class="mk-lb-row" style="grid-template-columns:28px 1fr 50px 50px 50px;border-bottom:1px solid var(--m-rule)"><div class="mono" style="font-size:12px;color:var(--m-text)">2</div><div class="mono" style="font-size:12px;color:var(--m-text);text-transform:uppercase">Admin XI</div><div class="mono" style="font-size:12px;text-align:right;color:var(--m-text)">38</div><div class="mono" style="font-size:12px;text-align:right;color:var(--m-text)">499</div><div class="mono" style="font-size:12px;text-align:right;color:var(--m-text)">0</div></div>
+              <div class="mk-lb-row" style="grid-template-columns:28px 1fr 50px 50px 50px;border-bottom:1px solid var(--m-rule)"><div class="mono" style="font-size:12px;color:var(--m-text)">3</div><div class="mono" style="font-size:12px;color:var(--m-text);text-transform:uppercase">You</div><div class="mono" style="font-size:12px;text-align:right;color:var(--m-text)">21</div><div class="mono" style="font-size:12px;text-align:right;color:var(--m-text)">488</div><div class="mono" style="font-size:12px;text-align:right;color:var(--m-text)">-1</div></div>
+              <div class="mk-lb-row" style="grid-template-columns:28px 1fr 50px 50px 50px"><div class="mono" style="font-size:12px;color:var(--m-text)">4</div><div class="mono" style="font-size:12px;color:var(--m-text);text-transform:uppercase">Sapphire</div><div class="mono" style="font-size:12px;text-align:right;color:var(--m-text)">35</div><div class="mono" style="font-size:12px;text-align:right;color:var(--m-text)">470</div><div class="mono" style="font-size:12px;text-align:right;color:var(--m-text)">+1</div></div>
+            </div>
+          </div>
+          <p class="fig-cap">Five values, one font, one weight. <b>Which number is “your score”?</b> You have to read every cell to find out.</p>
+        </div>
+        <!-- AFTER -->
+        <div class="fig">
+          <div class="fig-head"><span class="fig-tag after">After — Kit</span><span class="fig-headnote">Three type roles</span></div>
+          <div class="fig-frame after">
+            <div class="mk" style="padding:18px">
+              <div class="mk-lb-h" style="grid-template-columns:30px 1fr 60px 64px 30px"><span>#</span><span>Team</span><span style="text-align:right">GW13</span><span style="text-align:right">Total</span><span></span></div>
+              <div class="mk-lb-row" style="grid-template-columns:30px 1fr 60px 64px 30px"><div class="mk-rank top">1</div><div class="mk-team">Bragança</div><div class="mk-num sub">42</div><div class="mk-num lead">512</div><div class="mk-trend up">↑</div></div>
+              <div class="mk-lb-row" style="grid-template-columns:30px 1fr 60px 64px 30px"><div class="mk-rank">2</div><div class="mk-team">Admin XI</div><div class="mk-num sub">38</div><div class="mk-num lead">499</div><div class="mk-trend flat">–</div></div>
+              <div class="mk-lb-row me" style="grid-template-columns:30px 1fr 60px 64px 30px"><div class="mk-rank">3</div><div class="mk-team">You <span class="mk-you">You</span></div><div class="mk-num sub">21</div><div class="mk-num lead">488</div><div class="mk-trend down">↓</div></div>
+              <div class="mk-lb-row" style="grid-template-columns:30px 1fr 60px 64px 30px"><div class="mk-rank">4</div><div class="mk-team">Sapphire</div><div class="mk-num sub">35</div><div class="mk-num lead">470</div><div class="mk-trend up">↑</div></div>
+            </div>
+          </div>
+          <p class="fig-cap">Total points lead in accent, names anchor in Archivo Black, GW + trend recede. Your row is tinted. <b>The eye lands first time.</b></p>
+        </div>
+      </div>
+
+      <!-- legend -->
+      <div class="fig" style="margin-top:20px">
+        <div class="fig-head"><span class="fig-tag after">The type roles, reused everywhere</span></div>
+        <div class="fig-frame after">
+          <div class="mk" style="padding:24px;display:grid;grid-template-columns:repeat(3,1fr);gap:24px">
+            <div>
+              <div class="mono" style="font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);margin-bottom:10px">Lead</div>
+              <div class="black" style="font-size:34px;color:var(--accent);line-height:1">488</div>
+              <p style="font-size:12.5px;color:var(--text-2);margin-top:8px">Archivo Black, accent. The one value the screen is about.</p>
+            </div>
+            <div>
+              <div class="mono" style="font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);margin-bottom:10px">Support</div>
+              <div class="black" style="font-size:22px;color:var(--text);line-height:1">Cole Palmer</div>
+              <p style="font-size:12.5px;color:var(--text-2);margin-top:8px">Names in Archivo Black; secondary stats quiet and grey.</p>
+            </div>
+            <div>
+              <div class="mono" style="font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);margin-bottom:10px">Label</div>
+              <div class="mono" style="font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:var(--mute);line-height:1;padding-top:6px">GW13 · TOTAL</div>
+              <p style="font-size:12.5px;color:var(--text-2);margin-top:14px">Mono, small, uppercase — for labels only, never for the data itself.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="container"><div class="sec-rule"></div></div>
+
+<!-- ───────────────────────── FINDING 04 ───────────────────────── -->
+<section class="finding" id="f04">
+  <div class="container">
+    <div class="f-top">
+      <span class="f-num">04</span>
+      <div class="f-tags">
+        <span class="pill mod">Moderate</span>
+        <span class="pill theme">Hierarchy</span>
+      </div>
+    </div>
+    <h3 class="f-title">Density without focus</h3>
+
+    <div class="f-cols">
+      <p class="f-problem">The Player Market shows everything at once — price, form, total points, ownership, fixtures, value change — six values crammed onto every row. The data is good, but it’s undifferentiated, so the one number relevant to <em>this</em> task (can I afford them?) is buried among five you don’t need until you’re deciding. The list reads like a spreadsheet, not a place to make a choice.</p>
+      <div class="f-rec">
+        <div class="f-rec-label">Recommendation</div>
+        <h4>Lead with the task number. Reveal the rest on tap.</h4>
+        <p>Progressive disclosure: the row carries only what you need to scan; everything else lives in a player drawer one tap away.</p>
+        <ul>
+          <li>Row: position chip, name, form, and the price.</li>
+          <li>Tap → drawer with full stats, fixtures, and the action.</li>
+          <li>Same drawer pattern from Market, Squad and Leaderboard.</li>
+        </ul>
+        <div class="f-impact">
+          <span class="f-impact-label">Expected impact</span>
+          <span class="f-impact-val">Scannable list · decisions made in the drawer</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="figs">
+      <div class="fig-grid two">
+        <!-- BEFORE -->
+        <div class="fig">
+          <div class="fig-head"><span class="fig-tag before">Before</span><span class="fig-headnote">Six stats per row</span></div>
+          <div class="fig-frame">
+            <div class="mk dark" style="padding:14px 12px">
+              <div class="mk-lb-h" style="grid-template-columns:1fr 38px 38px 38px 38px 42px;padding-bottom:8px"><span>Player</span><span style="text-align:right">£</span><span style="text-align:right">Frm</span><span style="text-align:right">Pts</span><span style="text-align:right">Own</span><span style="text-align:right">Val</span></div>
+              <div class="mk-prow" style="grid-template-columns:none"><div class="av"></div><div class="pn"><b>Cole Palmer</b><span>CHE · MID</span></div><div class="mono" style="font-size:11px;display:flex;gap:9px;color:var(--m-text2)"><span>11.0</span><span>7.2</span><span>164</span><span>48%</span><span>+.3</span></div></div>
+              <div class="mk-prow"><div class="av"></div><div class="pn"><b>B. Saka</b><span>ARS · MID</span></div><div class="mono" style="font-size:11px;display:flex;gap:9px;color:var(--m-text2)"><span>10.2</span><span>6.8</span><span>151</span><span>41%</span><span>+.1</span></div></div>
+              <div class="mk-prow"><div class="av"></div><div class="pn"><b>E. Haaland</b><span>MCI · FWD</span></div><div class="mono" style="font-size:11px;display:flex;gap:9px;color:var(--m-text2)"><span>14.1</span><span>8.0</span><span>189</span><span>62%</span><span>-.2</span></div></div>
+            </div>
+          </div>
+          <p class="fig-cap">A wall of digits. To find an affordable midfielder you parse all six columns on every row. <b>The list does the storing; you do the work.</b></p>
+        </div>
+        <!-- AFTER -->
+        <div class="fig">
+          <div class="fig-head"><span class="fig-tag after">After — Kit</span><span class="fig-headnote">Scan row → tap → drawer</span></div>
+          <div class="fig-frame after">
+            <div class="mk" style="padding:14px 14px 16px">
+              <div class="mk-prow" style="border:0;padding:9px 4px"><div class="mk-poschip pos-mid"><span>MID</span></div><div class="pn"><b>Cole Palmer</b><span>CHE</span></div><div class="mk-pstat" style="margin-right:6px"><b>7.2</b><span>Form</span></div><div class="mk-price">£11.0</div></div>
+              <div class="mk-prow" style="border:0;padding:9px 4px;background:var(--accent-bg);border-radius:6px"><div class="mk-poschip pos-mid"><span>MID</span></div><div class="pn"><b>B. Saka</b><span>ARS</span></div><div class="mk-pstat" style="margin-right:6px"><b>6.8</b><span>Form</span></div><div class="mk-price">£10.2</div></div>
+              <!-- drawer -->
+              <div class="mk-drawer" style="margin-top:10px">
+                <div class="mk-drawer-top"><div class="mk-drawer-av"></div><div><div class="mk-drawer-name">Bukayo Saka</div><div class="mk-drawer-meta">Arsenal · Midfielder · £10.2m</div></div></div>
+                <div class="mk-drawer-stats">
+                  <div class="mk-dstat hi"><b>6.8</b><span>Form</span></div>
+                  <div class="mk-dstat"><b>151</b><span>Total</span></div>
+                  <div class="mk-dstat"><b>41%</b><span>Owned</span></div>
+                  <div class="mk-dstat"><b>ARS</b><span>vs LIV</span></div>
+                </div>
+                <div class="mk-drawer-act"><div class="mk-btn primary block">Sign — £10.2m</div><div class="mk-btn neutral">Compare</div></div>
+              </div>
+            </div>
+          </div>
+          <p class="fig-cap">The row shows form and price — enough to scan. The decision happens in a drawer with the full picture and the action. <b>Same pattern everywhere a player appears.</b></p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="container"><div class="sec-rule"></div></div>
+
+<!-- ───────────────────────── FINDING 05 ───────────────────────── -->
+<section class="finding" id="f05">
+  <div class="container">
+    <div class="f-top">
+      <span class="f-num">05</span>
+      <div class="f-tags">
+        <span class="pill mod">Moderate</span>
+        <span class="pill theme">Confidence</span>
+      </div>
+    </div>
+    <h3 class="f-title">The system stays silent</h3>
+
+    <div class="f-cols">
+      <p class="f-problem">Make a transfer, set a captain, place a bet — and the interface barely reacts. The list quietly re-renders and you’re left wondering: did that save? Without confirmation or a sense of consequence, managers re-check their squad, repeat actions, or worse, assume something worked when it didn’t. Fantasy is a game of small, reversible decisions; the interface should make each one feel <em>done</em> and show what it changed.</p>
+      <div class="f-rec">
+        <div class="f-rec-label">Recommendation</div>
+        <h4>Confirm every action and preview its impact.</h4>
+        <p>Two lightweight feedback patterns, applied consistently:</p>
+        <ul>
+          <li>A confirmation toast with a one-tap <b>Undo</b>.</li>
+          <li>A live impact preview before committing a change.</li>
+          <li>Saved-state markers so “locked” always looks locked.</li>
+        </ul>
+        <div class="f-impact">
+          <span class="f-impact-label">Expected impact</span>
+          <span class="f-impact-val">Fewer repeat actions · more trust in the app</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="figs">
+      <div class="fig-grid two">
+        <!-- BEFORE -->
+        <div class="fig">
+          <div class="fig-head"><span class="fig-tag before">Before</span><span class="fig-headnote">Action → nothing</span></div>
+          <div class="fig-frame">
+            <div class="mk dark" style="padding:16px">
+              <div class="mk-prow" style="border-bottom:1px solid var(--m-rule)"><div class="mk-poschip pos-mid"><span>MID</span></div><div class="pn"><b>B. Saka</b><span>ARS · signed</span></div><div class="mk-price" style="color:var(--m-text2)">£10.2</div></div>
+              <div class="mk-prow"><div class="mk-poschip pos-fwd"><span>FWD</span></div><div class="pn"><b>E. Haaland</b><span>MCI</span></div><div class="mk-price" style="color:var(--m-text2)">£14.1</div></div>
+              <div style="text-align:center;padding:22px 0 6px" class="mono"><span style="font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--m-mute)">— no confirmation shown —</span></div>
+            </div>
+          </div>
+          <p class="fig-cap">Saka is signed, but the screen gives no sign of it and no way back. <b>Did it work? Can I undo?</b> The manager can’t tell.</p>
+        </div>
+        <!-- AFTER -->
+        <div class="fig">
+          <div class="fig-head"><span class="fig-tag after">After — Kit</span><span class="fig-headnote">Toast + impact preview</span></div>
+          <div class="fig-frame after">
+            <div class="mk" style="padding:16px;display:flex;flex-direction:column;gap:14px">
+              <!-- impact preview -->
+              <div class="mk-card" style="display:flex;align-items:center;gap:12px">
+                <div class="mk-poschip pos-mid"><span>MID</span></div>
+                <div class="pn" style="flex:1"><b class="black" style="font-size:13px">Saka replaces Palmer</b><div class="mono" style="font-size:8.5px;letter-spacing:.08em;color:var(--mute);margin-top:2px">−£0.8m · within budget</div></div>
+                <div class="mk-impact"><b>+6</b><span>proj pts</span></div>
+              </div>
+              <div style="display:flex;gap:8px"><div class="mk-btn primary block">Confirm transfer</div><div class="mk-btn neutral">Cancel</div></div>
+              <!-- toast -->
+              <div class="mk-toast">
+                <div class="ck">✓</div>
+                <div class="tx"><b>Saka signed</b><span>Squad saved · GW13 locked in</span></div>
+                <div class="undo">Undo</div>
+              </div>
+            </div>
+          </div>
+          <p class="fig-cap">Before committing, a projected-points preview shows the upside; after, a toast confirms it with an <b>Undo</b>. The action feels finished.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="container"><div class="sec-rule"></div></div>
+
+<!-- ───────────────────────── FINDING 06 ───────────────────────── -->
+<section class="finding" id="f06">
+  <div class="container">
+    <div class="f-top">
+      <span class="f-num">06</span>
+      <div class="f-tags">
+        <span class="pill mod">Moderate</span>
+        <span class="pill theme">Mobile</span>
+      </div>
+    </div>
+    <h3 class="f-title">Mobile is a shrunk desktop</h3>
+
+    <div class="f-cols">
+      <p class="f-problem">On a phone the desktop tables come along unchanged — five columns squeezed edge to edge, text dropping to 9–10px, and a horizontal scroll to reach the numbers that matter. The primary action sits at the top of a tall page, out of thumb reach, while most fantasy management actually happens on mobile during the commute. The most-used breakpoint gets the least-considered layout.</p>
+      <div class="f-rec">
+        <div class="f-rec-label">Recommendation</div>
+        <h4>Rebuild for the thumb, not the spreadsheet.</h4>
+        <p>Mobile gets its own patterns from the same system — not a scaled table.</p>
+        <ul>
+          <li>Standings as cards: rank, name, one lead number.</li>
+          <li>Bottom tab bar for product nav; strip tabs inside league.</li>
+          <li>Primary action as a thumb-reachable button / FAB.</li>
+        </ul>
+        <div class="f-impact">
+          <span class="f-impact-label">Expected impact</span>
+          <span class="f-impact-val">One-thumb management · no pinch-and-scroll</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="figs">
+      <div class="fig-grid two" style="grid-template-columns:1fr 1fr;justify-items:center">
+        <!-- BEFORE -->
+        <div class="fig">
+          <div class="fig-head"><span class="fig-tag before">Before</span><span class="fig-headnote">Desktop table on a phone</span></div>
+          <div class="mk-phone">
+            <div class="mk dark">
+              <div class="mk-phone-screen">
+                <div class="mk-status"><span class="t">9:41</span><span class="r"><i></i><i></i></span></div>
+                <div class="mk-mtop"><div class="mk-mtop-eyebrow">Competitive Centre</div><div class="mk-mtop-title">Premier League</div></div>
+                <div class="mk-mscroll" style="gap:0;padding:12px 10px">
+                  <div class="mk-lb-h" style="grid-template-columns:18px 1fr 30px 34px 34px 26px"><span>#</span><span>Team</span><span style="text-align:right">GW</span><span style="text-align:right">Tot</span><span style="text-align:right">Val</span><span></span></div>
+                  <div class="mk-lb-row" style="grid-template-columns:18px 1fr 30px 34px 34px 26px;padding:9px 0"><div class="mono" style="font-size:9px;color:var(--m-text)">1</div><div class="mono" style="font-size:9px;color:var(--m-text);text-transform:uppercase;overflow:hidden;white-space:nowrap">Bragança</div><div class="mono" style="font-size:9px;text-align:right">42</div><div class="mono" style="font-size:9px;text-align:right">512</div><div class="mono" style="font-size:9px;text-align:right">98</div><div class="mono" style="font-size:9px;text-align:right;color:var(--m-pos)">↑</div></div>
+                  <div class="mk-lb-row" style="grid-template-columns:18px 1fr 30px 34px 34px 26px;padding:9px 0"><div class="mono" style="font-size:9px;color:var(--m-text)">2</div><div class="mono" style="font-size:9px;color:var(--m-text);text-transform:uppercase;overflow:hidden;white-space:nowrap">Admin XI</div><div class="mono" style="font-size:9px;text-align:right">38</div><div class="mono" style="font-size:9px;text-align:right">499</div><div class="mono" style="font-size:9px;text-align:right">95</div><div class="mono" style="font-size:9px;text-align:right;color:var(--m-mute)">–</div></div>
+                  <div class="mk-lb-row me" style="grid-template-columns:18px 1fr 30px 34px 34px 26px;padding:9px 0"><div class="mono" style="font-size:9px;color:var(--m-text)">3</div><div class="mono" style="font-size:9px;color:var(--m-text);text-transform:uppercase;overflow:hidden;white-space:nowrap">You</div><div class="mono" style="font-size:9px;text-align:right">21</div><div class="mono" style="font-size:9px;text-align:right">488</div><div class="mono" style="font-size:9px;text-align:right">91</div><div class="mono" style="font-size:9px;text-align:right;color:var(--m-neg)">↓</div></div>
+                  <div style="text-align:center;color:var(--m-mute);padding-top:12px" class="mono"><span style="font-size:8px;letter-spacing:.1em">⟷ scroll for more columns</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- AFTER -->
+        <div class="fig">
+          <div class="fig-head"><span class="fig-tag after">After — Kit</span><span class="fig-headnote">Cards + thumb action</span></div>
+          <div class="mk-phone">
+            <div class="mk">
+              <div class="mk-phone-screen">
+                <div class="mk-status"><span class="t">9:41</span><span class="r"><i></i><i></i></span></div>
+                <div class="mk-mtop"><div class="mk-mtop-eyebrow">Premier League · #3</div><div class="mk-mtop-title">Leaderboard</div></div>
+                <div class="mk-mtabs"><div class="mk-mtab on">Table</div><div class="mk-mtab">Feed</div><div class="mk-mtab">Bets</div><div class="mk-mtab">Squad</div></div>
+                <div class="mk-mscroll" style="gap:8px">
+                  <div class="mk-mcard"><div class="rk top">1</div><div class="nm"><b>Bragança</b><span>GW 42 · ↑ 2</span></div><div class="pt"><b>512</b><span>pts</span></div></div>
+                  <div class="mk-mcard"><div class="rk">2</div><div class="nm"><b>Admin XI</b><span>GW 38 · –</span></div><div class="pt"><b>499</b><span>pts</span></div></div>
+                  <div class="mk-mcard me"><div class="rk">3</div><div class="nm"><b>You</b><span>GW 21 · ↓ 1</span></div><div class="pt"><b>488</b><span>pts</span></div></div>
+                  <div class="mk-mcard"><div class="rk">4</div><div class="nm"><b>Sapphire</b><span>GW 35 · ↑ 1</span></div><div class="pt"><b>470</b><span>pts</span></div></div>
+                </div>
+                <div class="mk-fab">⏱ Set squad · 2d</div>
+                <div class="mk-tabbar">
+                  <div class="ti"><span class="d"></span><span class="l">Scores</span></div>
+                  <div class="ti on"><span class="d"></span><span class="l">League</span></div>
+                  <div class="ti"><span class="d"></span><span class="l">Squad</span></div>
+                  <div class="ti"><span class="d"></span><span class="l">Live</span></div>
+                  <div class="ti"><span class="d"></span><span class="l">Market</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <p class="fig-cap" style="text-align:center;margin-top:6px">Each manager becomes a card with a single lead number; the deadline action rides as a thumb-reachable FAB, and product nav moves to a bottom bar. <b>No horizontal scroll, no pinch.</b></p>
+    </div>
+  </div>
+</section>
+
+<div class="container"><div class="sec-rule"></div></div>
+
+<!-- ───────────────────────── WHITE LABEL ───────────────────────── -->
+<section class="sec" id="whitelabel">
+  <div class="container">
+    <div class="eyebrow" style="margin-bottom:16px">07 — White label</div>
+    <h2 class="lead-h" style="max-width:26ch">None of this is branded. It just re-skins.</h2>
+    <p class="lead-p">Every pattern in this document is built on the same three swappable values — <strong>accent colour, wordmark, data</strong>. The UX improvements ride on top of that: the action banner, the checklist, the type roles and the feedback toasts are identical whichever brand owns the screen. Here is finding 01’s action banner under three different clients, changing only the accent.</p>
+
+    <div class="wl-swaps">
+      <!-- FantasyKit default -->
+      <div class="wl-card">
+        <div class="wl-bar"><span class="wl-dot" style="background:#1A6FA8"></span><span class="wl-name">Placeholder</span><span class="wl-hex">#1A6FA8</span></div>
+        <div class="mk" style="padding:16px;--accent:#1A6FA8;--accent-bg:rgba(26,111,168,.08)">
+          <div class="mk-nextup" style="--m-accent:#1A6FA8;--m-accentbg:rgba(26,111,168,.08)">
+            <div class="mk-nextup-clock"><b>2d</b><span>left</span></div>
+            <div class="mk-nextup-body"><div class="mk-nextup-k">Next up · GW13</div><div class="mk-nextup-t">Set your squad</div></div>
+          </div>
+          <div class="mk-btn primary block" style="--m-accent:#1A6FA8;margin-top:12px">Open squad</div>
+        </div>
+      </div>
+      <!-- La Liga red -->
+      <div class="wl-card">
+        <div class="wl-bar"><span class="wl-dot" style="background:#CF1732"></span><span class="wl-name">LaLiga Fantasy</span><span class="wl-hex">#CF1732</span></div>
+        <div class="mk" style="padding:16px">
+          <div class="mk-nextup" style="--m-accent:#CF1732;--m-accentbg:rgba(207,23,50,.08)">
+            <div class="mk-nextup-clock"><b>2d</b><span>left</span></div>
+            <div class="mk-nextup-body"><div class="mk-nextup-k">Próximo · J13</div><div class="mk-nextup-t">Elige tu once</div></div>
+          </div>
+          <div class="mk-btn primary block" style="--m-accent:#CF1732;margin-top:12px">Abrir plantilla</div>
+        </div>
+      </div>
+      <!-- Broadcaster green -->
+      <div class="wl-card">
+        <div class="wl-bar"><span class="wl-dot" style="background:#1F7A52"></span><span class="wl-name">Sky Fantasy</span><span class="wl-hex">#1F7A52</span></div>
+        <div class="mk" style="padding:16px">
+          <div class="mk-nextup" style="--m-accent:#1F7A52;--m-accentbg:rgba(31,122,82,.08)">
+            <div class="mk-nextup-clock"><b>2d</b><span>left</span></div>
+            <div class="mk-nextup-body"><div class="mk-nextup-k">Next up · GW13</div><div class="mk-nextup-t">Set your squad</div></div>
+          </div>
+          <div class="mk-btn primary block" style="--m-accent:#1F7A52;margin-top:12px">Open squad</div>
+        </div>
+      </div>
+    </div>
+    <p class="fig-cap" style="margin-top:16px">One token changes; the behaviour, layout and hierarchy stay constant. A client is live in their own colours without touching a single interaction.</p>
+  </div>
+</section>
+
+<div class="container"><div class="sec-rule"></div></div>
+
+<!-- ───────────────────────── ROADMAP ───────────────────────── -->
+<section class="sec" id="roadmap">
+  <div class="container">
+    <div class="eyebrow" style="margin-bottom:16px">08 — Sequencing</div>
+    <h2 class="lead-h" style="max-width:24ch">Ship the cheap clarity wins first.</h2>
+    <p class="lead-p">Four of the six are low-effort and high-impact — they reshape existing screens rather than add new ones. Lead with those, then the two medium builds.</p>
+
+    <div class="roadmap">
+      <div class="phase">
+        <div class="phase-k">Phase 1 · Now</div>
+        <div class="phase-h">Clarity</div>
+        <div class="phase-when">~1 sprint · low effort</div>
+        <ul>
+          <li><b>01</b> Deadline action banner</li>
+          <li><b>03</b> Three type roles across lists</li>
+          <li><b>05</b> Toasts, undo & impact preview</li>
+        </ul>
+      </div>
+      <div class="phase">
+        <div class="phase-k">Phase 2 · Next</div>
+        <div class="phase-h">Depth</div>
+        <div class="phase-when">~2 sprints · medium effort</div>
+        <ul>
+          <li><b>04</b> Player drawer + progressive disclosure</li>
+          <li><b>06</b> Mobile cards, strip tabs & FAB</li>
+        </ul>
+      </div>
+      <div class="phase">
+        <div class="phase-k">Phase 3 · Launch</div>
+        <div class="phase-h">Activation</div>
+        <div class="phase-when">~2 sprints · medium effort</div>
+        <ul>
+          <li><b>02</b> First-run checklist</li>
+          <li><b>02</b> Empty-state coaching + auto-pick</li>
+          <li>Re-skin validation with a pilot client</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ───────────────────────── FOOTER ───────────────────────── -->
+<footer class="foot">
+  <div class="container foot-row">
+    <span class="foot-brand">FantasyKit · UX Simplification</span>
+    <span class="foot-meta">Kit (Light) · Round 2 · June 2026</span>
+  </div>
+</footer>
+
+</body>
+</html>

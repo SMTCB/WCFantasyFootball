@@ -22,13 +22,24 @@
 5. **When in doubt about which branch:** check `git branch` and this table. If the task is a pilot bug fix → `main`. If it's part of the redesign or v2 features → `v2`. If unclear, ask before branching.
 6. **🛑 If the session type is not stated, ASK before touching git.** The user works on two laptops and may open a session without specifying. Do not assume. Ask: "Is this a pilot bug fix (main) or platform revision (v2) session?" Do not run a single git command until the answer is confirmed. This rule overrides the Session Start Checklist below.
 
-**What `v2` contains today (June 2026):**
-- Kit Light CSS token system (`src/index.css` — full @theme + :root rewrite)
-- Sprint UX-0 ✅ complete — Kit Light token pass on all football screens; 84/84 platform tests green
-- Phase 1D-A ✅ complete (code only, deploy deferred to W12) — `requireServiceRole()` HMAC-SHA256 fix
-- Phase 0 ✅ complete — migrations 187–189: sport abstraction, circle layer, trophy ledger
-- Next up: Phase 1A P2P (needs product decisions) + Phase 1B F1 (ready to start)
+**What `v2` contains today (2026-06-26):**
+- Multi-sport platform: P2P coin betting, F1 module, Tennis module, Clubhouse social layer — all shipped (Phases 0–2 done)
+- UX redesign (Kit Light) complete across all screens
+- Phase 3B in progress — code-quality hardening done (PRs #638–#645); **DB migrations 209–211 + 5 Edge Function deploys + 2 secrets/env vars are written but NOT applied to production** — see the approval-gated table below
 - Full status: [SALE_READY_PROJECT_PLAN.md](docs/architecture/SALE_READY_PROJECT_PLAN.md)
+
+**🛑 NO SQL / MIGRATIONS / EDGE FUNCTION DEPLOYS WITHOUT EXPLICIT APPROVAL — every session, either PC**
+
+`v2`'s pending Supabase actions (3 migrations, 5 function deploys, 2 secrets) all write to the **one shared production project** (`sssmvihxtqtohisghjet`) that also serves the live `main` pilot. Full list + risk notes: [SALE_READY_PROJECT_PLAN.md § PENDING DB & DEPLOY ACTIONS](docs/architecture/SALE_READY_PROJECT_PLAN.md).
+
+Rule for Claude on both machines: never run any item from that table — or any other untracked migration/`db query --linked`/`functions deploy` call — without first naming the exact action in chat and getting an explicit "yes, run it" from the user **for that specific item**, in the current session. Approval does not carry across sessions or across items.
+
+**🔒 BRANCH PROTECTION ACTIVE** — Multiple safeguards prevent accidental v2→main merge:
+- ✅ Git pre-push hook (blocks direct pushes to main; prompts on v2)
+- ✅ GitHub branch protection rule (requires PR review, CI green, up-to-date)
+- ✅ Edge Functions not auto-deployed (manual deploy required)
+- ✅ Migrations manual-only (workflow_dispatch, not automatic)
+- **See [V2_BRANCH_PROTECTION.md](docs/architecture/V2_BRANCH_PROTECTION.md) for full details.**
 
 ---
 
