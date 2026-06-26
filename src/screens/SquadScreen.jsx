@@ -952,7 +952,7 @@ export default function SquadScreen() {
             <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 10, color: 'rgba(255,255,255,0.5)', letterSpacing: '.14em', textTransform: 'uppercase' }}>
               Tactical Sheet
             </div>
-            <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 34, color: '#fff', lineHeight: 1.05, letterSpacing: '-0.01em' }}>
+            <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 34, color: 'var(--on-shell)', lineHeight: 1.05, letterSpacing: '-0.01em' }}>
               My Squad
             </div>
           </div>
@@ -1067,7 +1067,7 @@ export default function SquadScreen() {
               Tactical Sheet
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-              <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 34, color: '#fff', lineHeight: 1.05, letterSpacing: '-0.01em' }}>
+              <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 34, color: 'var(--on-shell)', lineHeight: 1.05, letterSpacing: '-0.01em' }}>
                 My Squad
               </div>
               <LeagueSelector value={activeLeague} onChange={setActiveLeague} />
@@ -1693,7 +1693,7 @@ export default function SquadScreen() {
             Tactical Sheet
           </div>
           <div className="flex items-center gap-2 flex-wrap">
-            <div className="text-[22px] lg:text-[34px]" style={{ fontFamily: 'Archivo Black, sans-serif', color: '#fff', lineHeight: 1.05, letterSpacing: '-0.01em' }}>
+            <div className="text-[22px] lg:text-[34px]" style={{ fontFamily: 'Archivo Black, sans-serif', color: 'var(--on-shell)', lineHeight: 1.05, letterSpacing: '-0.01em' }}>
               My Squad
             </div>
             <LeagueSelector value={activeLeague} onChange={setActiveLeague} />
@@ -1726,7 +1726,7 @@ export default function SquadScreen() {
           <div className="text-right">
             <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 9, color: 'rgba(255,255,255,0.5)', letterSpacing: '.14em', textTransform: 'uppercase' }}>Squad</div>
             <div style={{ display: 'flex', alignItems: 'baseline', gap: 1 }}>
-              <span style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 20, color: '#fff', lineHeight: 1 }}>{allSquadPlayers.length}</span>
+              <span style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 20, color: 'var(--on-shell)', lineHeight: 1 }}>{allSquadPlayers.length}</span>
               <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 11, color: 'rgba(255,255,255,0.5)', letterSpacing: '.05em' }}>/15</span>
             </div>
           </div>

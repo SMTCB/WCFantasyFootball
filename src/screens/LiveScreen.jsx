@@ -64,7 +64,7 @@ function MiniPitch({ players, activeLeague, gwLabel }) {
   return (
     <div style={{
       position: 'relative', width: '100%', height: '100%',
-      background: 'linear-gradient(180deg, #0E1218 0%, #0A0D12 100%)',
+      background: 'linear-gradient(180deg, var(--shell) 0%, var(--shell) 100%)',
       borderRadius: 6, overflow: 'hidden',
       boxShadow: 'inset 0 0 0 1px var(--rule)',
     }}>
@@ -73,7 +73,7 @@ function MiniPitch({ players, activeLeague, gwLabel }) {
         <div key={y} style={{ position: 'absolute', left: 18, right: 18, top: `${y}%`, height: 1, background: 'rgba(26,111,168,.08)' }} />
       ))}
       {[{ y: 14, label: 'FWD' }, { y: 38, label: 'MID' }, { y: 64, label: 'DEF' }, { y: 88, label: 'GK' }].map(l => (
-        <div key={l.label} className="font-mono" style={{ position: 'absolute', left: 10, top: `${l.y}%`, transform: 'translateY(-50%)', fontSize: 8, color: 'rgba(26,111,168,.55)', background: '#0A0D12', padding: '1px 3px' }}>{l.label}</div>
+        <div key={l.label} className="font-mono" style={{ position: 'absolute', left: 10, top: `${l.y}%`, transform: 'translateY(-50%)', fontSize: 8, color: 'color-mix(in srgb, var(--accent) 55%, transparent)', background: 'var(--shell)', padding: '1px 3px' }}>{l.label}</div>
       ))}
       {/* centre circle */}
       <div style={{ position: 'absolute', left: '50%', top: '50%', transform: 'translate(-50%,-50%)', width: '30%', aspectRatio: '1', borderRadius: '50%', border: '1px solid rgba(255,255,255,.05)' }} />

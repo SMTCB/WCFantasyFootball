@@ -775,7 +775,7 @@ export default function LeagueScreen() {
                   </div>
                   {selectedCircleId === c.id && (
                     <span style={{ width: 18, height: 18, borderRadius: '50%', background: 'var(--gold)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                      <span style={{ color: '#000', fontSize: 10, fontWeight: 900, lineHeight: 1 }}>✓</span>
+                      <span style={{ color: 'var(--paper)', fontSize: 10, fontWeight: 900, lineHeight: 1 }}>✓</span>
                     </span>
                   )}
                 </button>
@@ -1457,7 +1457,7 @@ export default function LeagueScreen() {
                                   }
                                 }}
                                 style={{
-                                  background: 'var(--positive)', color: '#000', fontSize: 11,
+                                  background: 'var(--positive)', color: 'var(--on-shell)', fontSize: 11,
                                   fontWeight: 900, padding: '6px 14px', borderRadius: 2, border: 'none', cursor: 'pointer',
                                 }}
                               >

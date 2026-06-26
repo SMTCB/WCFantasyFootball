@@ -257,7 +257,7 @@ function MembersTab({ members, isOwner, currentUserId, onKick }) {
           style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px', background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 8 }}
         >
           <div style={{ width: 32, height: 32, borderRadius: '50%', background: m.role === 'owner' ? 'var(--accent)' : 'var(--elev)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-            <span style={{ ...MONO, fontSize: 12, fontWeight: 700, color: '#fff' }}>
+            <span style={{ ...MONO, fontSize: 12, fontWeight: 700, color: m.role === 'owner' ? 'var(--on-shell)' : 'var(--paper)' }}>
               {(m.username?.[0] ?? '?').toUpperCase()}
             </span>
           </div>
@@ -730,7 +730,7 @@ export default function ClubhouseScreen() {
         </div>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
           <div>
-            <h1 style={{ ...HEAD, fontSize: 26, color: '#fff', margin: 0, lineHeight: 1.1 }}>
+            <h1 style={{ ...HEAD, fontSize: 26, color: 'var(--on-shell)', margin: 0, lineHeight: 1.1 }}>
               {activeCircle ? activeCircle.name.toUpperCase() : 'CLUBHOUSE'}
             </h1>
             {activeCircle && (
