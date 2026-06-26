@@ -12,53 +12,31 @@
     --accent: #1a6fa8;
     --accent-light: #e8f3fb;
     --gold: #b8720e;
-    --gold-light: #fef9ed;
-    --pos: #166534;
-    --pos-light: #f0fdf4;
-    --neg: #991b1b;
-    --neg-light: #fef2f2;
-    --amber: #92400e;
-    --amber-light: #fffbeb;
     --paper: #18202e;
     --text2: #64748b;
     --border: #e2e8f0;
     --radius: 8px;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body {
-    font-family: 'Inter', system-ui, -apple-system, sans-serif;
-    background: var(--bg);
-    color: var(--paper);
-    min-height: 100vh;
-  }
+  body { font-family: 'Inter', system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--paper); min-height: 100vh; }
 
   /* ── Header ── */
-  header {
-    background: var(--shell);
-    color: white;
-    padding: 20px 32px 16px;
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 16px;
-    flex-wrap: wrap;
-  }
+  header { background: var(--shell); color: white; padding: 20px 32px 16px; display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
   .header-left h1 { font-size: 18px; font-weight: 800; letter-spacing: -0.02em; }
-  .header-left p { font-size: 12px; color: rgba(255,255,255,0.55); margin-top: 2px; }
+  .header-left p { font-size: 12px; color: rgba(255,255,255,0.5); margin-top: 2px; }
   .badge-bar { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
   .badge { font-size: 10px; font-weight: 700; letter-spacing: 0.05em; padding: 3px 8px; border-radius: 4px; }
   .badge-green { background: #166534; color: #dcfce7; }
   .badge-blue  { background: #1a6fa8; color: #e8f3fb; }
   .badge-amber { background: #92400e; color: #fef9ed; }
-  .badge-gray  { background: rgba(255,255,255,0.12); color: rgba(255,255,255,0.7); }
 
   /* ── Search + filter bar ── */
   .controls {
     background: var(--card);
     border-bottom: 1px solid var(--border);
-    padding: 12px 32px;
+    padding: 10px 32px;
     display: flex;
-    gap: 12px;
+    gap: 10px;
     align-items: center;
     flex-wrap: wrap;
     position: sticky;
@@ -66,140 +44,156 @@
     z-index: 100;
     box-shadow: 0 1px 4px rgba(0,0,0,0.06);
   }
+  .search-wrap { position: relative; flex: 1; min-width: 220px; }
+  .search-icon { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--text2); font-size: 13px; pointer-events: none; }
   #search {
-    flex: 1;
-    min-width: 220px;
-    padding: 8px 12px 8px 36px;
+    width: 100%;
+    padding: 7px 12px 7px 32px;
     border: 1px solid var(--border);
     border-radius: var(--radius);
-    font-size: 14px;
+    font-size: 13px;
     background: var(--bg);
     color: var(--paper);
     outline: none;
   }
   #search:focus { border-color: var(--accent); }
-  .search-wrap { position: relative; flex: 1; min-width: 220px; }
-  .search-icon { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--text2); font-size: 14px; pointer-events: none; }
-  .filter-chips { display: flex; gap: 6px; flex-wrap: wrap; }
+  .filter-chips { display: flex; gap: 5px; flex-wrap: wrap; }
   .chip {
-    padding: 5px 12px;
+    padding: 4px 11px;
     border-radius: 20px;
     font-size: 11px;
     font-weight: 700;
-    letter-spacing: 0.04em;
+    letter-spacing: 0.03em;
     border: 1px solid var(--border);
     background: white;
     color: var(--text2);
     cursor: pointer;
-    transition: all 0.12s;
+    transition: all 0.1s;
     white-space: nowrap;
+    user-select: none;
   }
   .chip:hover { border-color: var(--accent); color: var(--accent); }
   .chip.active { background: var(--accent); color: white; border-color: var(--accent); }
-  .chip.active-gold { background: var(--gold); color: white; border-color: var(--gold); }
-  #result-count { font-size: 12px; color: var(--text2); white-space: nowrap; }
+  #result-count { font-size: 11px; color: var(--text2); white-space: nowrap; margin-left: 4px; }
 
   /* ── Layout ── */
-  .layout { display: flex; gap: 0; min-height: calc(100vh - 120px); }
+  .layout { display: flex; min-height: calc(100vh - 110px); }
   .sidebar {
-    width: 220px;
-    min-width: 220px;
+    width: 210px;
+    min-width: 210px;
     background: white;
     border-right: 1px solid var(--border);
-    padding: 16px 0;
+    padding: 12px 0;
     position: sticky;
-    top: 52px;
-    height: calc(100vh - 52px);
+    top: 49px;
+    height: calc(100vh - 49px);
     overflow-y: auto;
+    flex-shrink: 0;
   }
-  .sidebar h3 { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; color: var(--text2); padding: 8px 16px 4px; text-transform: uppercase; }
+  .sidebar h3 { font-size: 9px; font-weight: 700; letter-spacing: 0.1em; color: var(--text2); padding: 10px 14px 4px; text-transform: uppercase; }
   .sidebar-item {
-    padding: 7px 16px;
+    padding: 7px 14px;
     font-size: 12px;
-    color: var(--text2);
+    color: #475569;
     cursor: pointer;
     display: flex;
     align-items: center;
     gap: 6px;
     border-left: 2px solid transparent;
     transition: all 0.1s;
+    user-select: none;
   }
   .sidebar-item:hover { background: var(--accent-light); color: var(--accent); border-left-color: var(--accent); }
   .sidebar-item.active { background: var(--accent-light); color: var(--accent); border-left-color: var(--accent); font-weight: 600; }
-  .sidebar-count { margin-left: auto; font-size: 10px; background: var(--border); border-radius: 10px; padding: 1px 6px; color: var(--text2); }
-  .main { flex: 1; padding: 24px 32px; }
+  .sidebar-count {
+    margin-left: auto;
+    font-size: 10px;
+    background: #f1f5f9;
+    border-radius: 10px;
+    padding: 1px 6px;
+    color: var(--text2);
+    min-width: 20px;
+    text-align: center;
+  }
+  .sidebar-item.active .sidebar-count { background: rgba(255,255,255,0.3); color: white; }
+  .main { flex: 1; padding: 22px 28px; min-width: 0; }
 
   /* ── Section headers ── */
   .section-header {
     display: flex;
     align-items: center;
     gap: 10px;
-    margin-bottom: 12px;
-    margin-top: 24px;
+    margin-bottom: 10px;
+    margin-top: 28px;
     padding-bottom: 8px;
     border-bottom: 2px solid var(--border);
+    scroll-margin-top: 60px;
   }
   .section-header:first-child { margin-top: 0; }
-  .section-title { font-size: 13px; font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase; }
-  .section-badge { font-size: 10px; padding: 2px 8px; border-radius: 4px; font-weight: 700; }
+  .section-title { font-size: 12px; font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase; }
+  .section-badge { font-size: 9px; padding: 2px 7px; border-radius: 4px; font-weight: 700; }
+  .sublabel { font-size: 10px; color: var(--text2); font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; margin: 14px 0 8px; }
 
-  /* ── Doc cards ── */
-  .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 10px; margin-bottom: 8px; }
+  /* ── Cards ── */
+  .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 9px; margin-bottom: 4px; }
   .card {
     background: white;
     border: 1px solid var(--border);
     border-radius: var(--radius);
-    padding: 12px 14px;
-    cursor: pointer;
-    transition: all 0.12s;
+    padding: 11px 13px;
+    cursor: default;
+    transition: border-color 0.1s, box-shadow 0.1s;
     position: relative;
   }
-  .card:hover { border-color: var(--accent); box-shadow: 0 2px 8px rgba(26,111,168,0.1); transform: translateY(-1px); }
-  .card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; margin-bottom: 4px; }
-  .card-name { font-size: 12px; font-weight: 700; color: var(--paper); line-height: 1.3; }
-  .card-type { font-size: 9px; font-weight: 700; letter-spacing: 0.06em; padding: 2px 6px; border-radius: 3px; white-space: nowrap; flex-shrink: 0; margin-top: 1px; }
-  .card-path { font-size: 10px; color: var(--text2); font-family: 'JetBrains Mono', monospace; margin-bottom: 5px; }
+  .card:hover { border-color: var(--accent); box-shadow: 0 2px 8px rgba(26,111,168,0.08); }
+  .card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; margin-bottom: 3px; }
+  .card-name { font-size: 12px; font-weight: 700; line-height: 1.3; }
+  .card-type { font-size: 9px; font-weight: 700; letter-spacing: 0.05em; padding: 2px 6px; border-radius: 3px; white-space: nowrap; flex-shrink: 0; margin-top: 1px; }
+  .card-path { font-size: 9px; color: var(--text2); font-family: 'Cascadia Code', 'JetBrains Mono', monospace; margin-bottom: 4px; }
   .card-desc { font-size: 11px; color: #475569; line-height: 1.5; }
-  .card-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
+  .card-tags { display: flex; flex-wrap: wrap; gap: 3px; margin-top: 6px; }
   .card-tag { font-size: 9px; padding: 1px 6px; border-radius: 3px; font-weight: 600; }
 
-  /* Type colours */
-  .t-tracker   { background: #fef9ed; color: #92400e; }
-  .t-plan      { background: #eff6ff; color: #1d4ed8; }
-  .t-arch      { background: #f5f3ff; color: #6d28d9; }
-  .t-design    { background: #fdf4ff; color: #86198f; }
-  .t-runbook   { background: #f0fdf4; color: #166534; }
-  .t-ref       { background: #f8fafc; color: #334155; }
-  .t-test      { background: #fef3c7; color: #92400e; }
-  .t-dd        { background: #fff1f0; color: #991b1b; }
-  .t-api       { background: #ecfdf5; color: #065f46; }
-  .t-archive   { background: #f8f8f8; color: #9ca3af; }
+  /* Type badge colours */
+  .t-tracker  { background: #fef9ed; color: #92400e; }
+  .t-plan     { background: #eff6ff; color: #1d4ed8; }
+  .t-arch     { background: #f5f3ff; color: #6d28d9; }
+  .t-design   { background: #fdf4ff; color: #86198f; }
+  .t-runbook  { background: #f0fdf4; color: #166534; }
+  .t-ref      { background: #f8fafc; color: #334155; border: 1px solid var(--border); }
+  .t-test     { background: #fef3c7; color: #92400e; }
+  .t-dd       { background: #fff1f0; color: #991b1b; }
+  .t-api      { background: #ecfdf5; color: #065f46; }
+  .t-archive  { background: #f3f4f6; color: #6b7280; }
+  .t-config   { background: #f1f5f9; color: #475569; border: 1px solid var(--border); }
+  .t-pitch    { background: #fff7ed; color: #c2410c; }
 
   /* Tag colours */
-  .tag-critical  { background: #fee2e2; color: #991b1b; }
-  .tag-live      { background: #dcfce7; color: #166534; }
-  .tag-v2        { background: #e8f3fb; color: #1a6fa8; }
-  .tag-buyout    { background: #fef9ed; color: #92400e; }
-  .tag-football  { background: #f0fdf4; color: #166534; }
-  .tag-f1        { background: #fff7ed; color: #c2410c; }
-  .tag-tennis    { background: #fdf4ff; color: #86198f; }
-  .tag-p2p       { background: #eff6ff; color: #1d4ed8; }
-  .tag-design    { background: #f5f3ff; color: #6d28d9; }
-  .tag-ops       { background: #f0fdf4; color: #166534; }
-  .tag-archived  { background: #f3f4f6; color: #6b7280; }
+  .tag-critical { background: #fee2e2; color: #991b1b; }
+  .tag-live     { background: #dcfce7; color: #166534; }
+  .tag-v2       { background: #e8f3fb; color: #1a6fa8; }
+  .tag-buyout   { background: #fef9ed; color: #92400e; }
+  .tag-football { background: #f0fdf4; color: #166534; }
+  .tag-f1       { background: #fff7ed; color: #c2410c; }
+  .tag-tennis   { background: #fdf4ff; color: #86198f; }
+  .tag-p2p      { background: #eff6ff; color: #1d4ed8; }
+  .tag-design   { background: #f5f3ff; color: #6d28d9; }
+  .tag-ops      { background: #f0fdf4; color: #166534; }
+  .tag-archived { background: #f3f4f6; color: #6b7280; }
+  .tag-ai       { background: #fdf4ff; color: #86198f; }
 
-  /* ── No results ── */
-  .no-results { text-align: center; padding: 64px 32px; color: var(--text2); }
-  .no-results h3 { font-size: 16px; margin-bottom: 8px; }
+  /* No-results */
+  .no-results { text-align: center; padding: 60px 32px; color: var(--text2); display: none; }
+  .no-results.visible { display: block; }
+  .no-results h3 { font-size: 15px; margin-bottom: 6px; }
 
-  /* ── Hidden ── */
   .hidden { display: none !important; }
 
   @media (max-width: 768px) {
     .sidebar { display: none; }
-    .main { padding: 16px; }
-    header { padding: 16px; }
-    .controls { padding: 10px 16px; }
+    .main { padding: 14px; }
+    header { padding: 14px; }
+    .controls { padding: 8px 14px; }
     .cards { grid-template-columns: 1fr; }
   }
 </style>
@@ -209,13 +203,13 @@
 <header>
   <div class="header-left">
     <h1>Forza Fantasy League — Documentation Index</h1>
-    <p>Last updated: 2026-06-26 · v2 branch · Multi-sport platform for sale</p>
+    <p>Last updated: 2026-06-26 · v2 branch · Multi-sport platform</p>
     <div class="badge-bar">
       <span class="badge badge-green">Football ✅ Live</span>
       <span class="badge badge-blue">F1 ✅ v2</span>
       <span class="badge badge-blue">Tennis ✅ v2</span>
       <span class="badge badge-blue">P2P ✅ v2</span>
-      <span class="badge badge-amber">3B Smoke Tests → Deploy</span>
+      <span class="badge badge-amber">Phase 3B → Smoke Tests + Deploy</span>
     </div>
   </div>
 </header>
@@ -223,14 +217,15 @@
 <div class="controls">
   <div class="search-wrap">
     <span class="search-icon">🔍</span>
-    <input id="search" type="text" placeholder="Search docs by name, description, or tag…" autocomplete="off">
+    <input id="search" type="text" placeholder="Search by name, description, or tag…" autocomplete="off">
   </div>
   <div class="filter-chips">
     <span class="chip active" data-filter="all">All</span>
-    <span class="chip" data-filter="tracker">Tracker</span>
-    <span class="chip" data-filter="platform_revision">Platform Revision</span>
+    <span class="chip" data-filter="critical">Start Here</span>
+    <span class="chip" data-filter="root">Root Files</span>
+    <span class="chip" data-filter="platform_revision">Platform v2</span>
     <span class="chip" data-filter="architecture">Architecture</span>
-    <span class="chip" data-filter="design">Design</span>
+    <span class="chip" data-filter="api">API</span>
     <span class="chip" data-filter="deployment">Deployment</span>
     <span class="chip" data-filter="reference">Reference</span>
     <span class="chip" data-filter="testing">Testing</span>
@@ -240,47 +235,103 @@
 </div>
 
 <div class="layout">
+
+  <!-- ── Sidebar ── -->
   <nav class="sidebar" id="sidebar">
-    <h3>Quick Jump</h3>
-    <div class="sidebar-item active" data-section="critical" onclick="scrollTo('critical')">⚡ Start Here <span class="sidebar-count" id="cnt-critical">3</span></div>
-    <div class="sidebar-item" data-section="platform_revision" onclick="scrollTo('platform_revision')">📋 Platform Revision <span class="sidebar-count" id="cnt-pr">—</span></div>
-    <div class="sidebar-item" data-section="architecture" onclick="scrollTo('architecture')">🏗️ Architecture <span class="sidebar-count" id="cnt-arch">—</span></div>
-    <div class="sidebar-item" data-section="api" onclick="scrollTo('api')">🔌 API <span class="sidebar-count" id="cnt-api">—</span></div>
-    <div class="sidebar-item" data-section="deployment" onclick="scrollTo('deployment')">🚀 Deployment <span class="sidebar-count" id="cnt-dep">—</span></div>
-    <div class="sidebar-item" data-section="reference" onclick="scrollTo('reference')">📚 Reference <span class="sidebar-count" id="cnt-ref">—</span></div>
-    <div class="sidebar-item" data-section="testing" onclick="scrollTo('testing')">🧪 Testing <span class="sidebar-count" id="cnt-test">—</span></div>
-    <div class="sidebar-item" data-section="archive" onclick="scrollTo('archive')">🗂️ Archive <span class="sidebar-count" id="cnt-archive">—</span></div>
+    <h3>Jump to</h3>
+    <div class="sidebar-item active" data-section="critical"         onclick="jumpTo('critical')">         ⚡ Start Here           <span class="sidebar-count" id="cnt-critical">0</span></div>
+    <div class="sidebar-item"        data-section="root"             onclick="jumpTo('root')">             🏠 Root Files           <span class="sidebar-count" id="cnt-root">0</span></div>
+    <div class="sidebar-item"        data-section="platform_revision" onclick="jumpTo('platform_revision')">📋 Platform v2          <span class="sidebar-count" id="cnt-pr">0</span></div>
+    <div class="sidebar-item"        data-section="architecture"     onclick="jumpTo('architecture')">     🏗️ Architecture        <span class="sidebar-count" id="cnt-arch">0</span></div>
+    <div class="sidebar-item"        data-section="api"              onclick="jumpTo('api')">              🔌 API                  <span class="sidebar-count" id="cnt-api">0</span></div>
+    <div class="sidebar-item"        data-section="deployment"       onclick="jumpTo('deployment')">       🚀 Deployment &amp; Ops <span class="sidebar-count" id="cnt-dep">0</span></div>
+    <div class="sidebar-item"        data-section="reference"        onclick="jumpTo('reference')">        📚 Reference            <span class="sidebar-count" id="cnt-ref">0</span></div>
+    <div class="sidebar-item"        data-section="testing"          onclick="jumpTo('testing')">          🧪 Testing              <span class="sidebar-count" id="cnt-test">0</span></div>
+    <div class="sidebar-item"        data-section="archive"          onclick="jumpTo('archive')">          🗂️ Archive              <span class="sidebar-count" id="cnt-archive">0</span></div>
   </nav>
 
-  <main class="main" id="main-content">
+  <!-- ── Main content ── -->
+  <main class="main">
 
-    <!-- CRITICAL / START HERE -->
+    <!-- START HERE -->
     <div class="section-header" id="section-critical">
       <span class="section-title">⚡ Start Here</span>
-      <span class="section-badge t-tracker">Read Every Session</span>
+      <span class="section-badge t-tracker">Read Every v2 Session</span>
     </div>
-    <div class="cards" id="cards-critical">
+    <div class="cards">
 
-      <div class="card" data-section="critical" data-tags="tracker v2 critical" data-name="TRACKER.md" data-desc="Central tracker: phase status, pending DB/deploy actions, pre-merge checklist, remaining DD items, open decisions. Single source of truth for the v2 build.">
+      <div class="card" data-section="critical" data-tags="tracker v2 open items pending deploy phase status" data-name="TRACKER.md" data-desc="Central tracker: phase status, 11 pending DB/deploy actions with approval gates, Phase 3B pre-merge checklist, remaining DD items, open product decisions. Single source of truth for v2.">
         <div class="card-top"><span class="card-name">TRACKER.md</span><span class="card-type t-tracker">TRACKER</span></div>
         <div class="card-path">docs/platform_revision/TRACKER.md</div>
-        <div class="card-desc">Central tracker: phase status, pending DB/deploy actions, pre-merge checklist, open decisions. Single source of truth for the v2 build.</div>
+        <div class="card-desc">Central open-items tracker: phase status, 11 pending DB/deploy actions, Phase 3B checklist, open decisions.</div>
         <div class="card-tags"><span class="card-tag tag-critical">READ FIRST</span><span class="card-tag tag-v2">v2</span></div>
       </div>
 
-      <div class="card" data-section="critical" data-tags="instructions ai git workflow v2" data-name="CLAUDE.md" data-desc="Instructions for Claude Code: two-branch freeze rules, git workflow, session start checklist, tech stack, project structure, all coding conventions.">
-        <div class="card-top"><span class="card-name">CLAUDE.md</span><span class="card-type t-ref">INSTRUCTIONS</span></div>
+      <div class="card" data-section="critical" data-tags="claude ai instructions git workflow session checklist tech stack" data-name="CLAUDE.md" data-desc="Instructions for Claude Code: two-branch freeze rules, git workflow, session start checklist, tech stack, project structure, all coding conventions. Every session starts here.">
+        <div class="card-top"><span class="card-name">CLAUDE.md</span><span class="card-type t-ref">SESSION INSTRUCTIONS</span></div>
         <div class="card-path">CLAUDE.md</div>
-        <div class="card-desc">Instructions for Claude Code: two-branch freeze rules, git workflow, session start checklist, tech stack, all coding conventions.</div>
-        <div class="card-tags"><span class="card-tag tag-critical">CRITICAL</span></div>
+        <div class="card-desc">Instructions for Claude Code: two-branch freeze rules, git workflow, session checklist, tech stack, coding conventions.</div>
+        <div class="card-tags"><span class="card-tag tag-critical">CRITICAL</span><span class="card-tag tag-ai">Claude AI</span></div>
       </div>
 
-      <div class="card" data-section="critical" data-tags="session log backlog completed v2" data-name="BACKLOG.md" data-desc="Live session log: completed PRs, migrations applied, bugs fixed, session notes. Historical record of everything that has been built.">
+      <div class="card" data-section="critical" data-tags="session log backlog completed PRs migrations bugs history" data-name="BACKLOG.md" data-desc="Live session log: every completed PR, migration applied, bug fixed, session notes. The chronological history of what has been built.">
         <div class="card-top"><span class="card-name">BACKLOG.md</span><span class="card-type t-plan">SESSION LOG</span></div>
         <div class="card-path">BACKLOG.md</div>
-        <div class="card-desc">Live session log: completed PRs, migrations applied, bugs fixed. Historical record of all work done.</div>
+        <div class="card-desc">Live session log: every completed PR, migration, bug fix. Chronological history of all work done.</div>
         <div class="card-tags"><span class="card-tag tag-live">Updated every session</span></div>
       </div>
+
+    </div>
+
+    <!-- ROOT FILES -->
+    <div class="section-header" id="section-root">
+      <span class="section-title">🏠 Root Files</span>
+      <span class="section-badge t-ref">Project Root</span>
+    </div>
+    <div class="cards">
+
+      <div class="card" data-section="root" data-tags="readme project overview quick start setup" data-name="README.md" data-desc="Project overview and quick-start: what the app does, tech stack summary, running locally, key links.">
+        <div class="card-top"><span class="card-name">README.md</span><span class="card-type t-ref">OVERVIEW</span></div>
+        <div class="card-path">README.md</div>
+        <div class="card-desc">Project overview and quick-start: what the app does, tech stack, running locally, key links.</div>
+        <div class="card-tags"></div>
+      </div>
+
+      <div class="card" data-section="root" data-tags="gemini google mobile android ios instructions ai" data-name="GEMINI.md" data-desc="Instructions for Google Antigravity (mobile AI): scope, branch conventions, iOS/Android native development guidance.">
+        <div class="card-top"><span class="card-name">GEMINI.md</span><span class="card-type t-ref">MOBILE AI</span></div>
+        <div class="card-path">GEMINI.md</div>
+        <div class="card-desc">Google Antigravity (mobile AI) instructions: scope, branch conventions, iOS/Android guidance.</div>
+        <div class="card-tags"><span class="card-tag tag-ai">Google AI</span></div>
+      </div>
+
+      <div class="card" data-section="root" data-tags="docs map text reference structure overview navigation" data-name="DOCS_MAP.md" data-desc="Text-based documentation map — concise overview of every folder and file. Quick reference without opening a browser.">
+        <div class="card-top"><span class="card-name">DOCS_MAP.md</span><span class="card-type t-ref">TEXT MAP</span></div>
+        <div class="card-path">DOCS_MAP.md</div>
+        <div class="card-desc">Text-based doc map — concise overview of every folder. Quick reference without needing a browser.</div>
+        <div class="card-tags"></div>
+      </div>
+
+      <div class="card" data-section="root" data-tags="docker dockerfile compose nginx local dev infrastructure" data-name="Dockerfile + docker-compose.yml" data-desc="Docker setup for local development and staging. nginx.conf for reverse-proxy config. See docs/deployment/DOCKER_LOCAL_DEV.md for usage guide.">
+        <div class="card-top"><span class="card-name">Dockerfile · docker-compose.yml · nginx.conf</span><span class="card-type t-config">DEV OPS CONFIG</span></div>
+        <div class="card-path">Dockerfile · docker-compose.yml · nginx.conf</div>
+        <div class="card-desc">Docker local dev setup. See docs/deployment/DOCKER_LOCAL_DEV.md for usage guide.</div>
+        <div class="card-tags"><span class="card-tag tag-ops">Ops</span></div>
+      </div>
+
+      <div class="card" data-section="root" data-tags="vite eslint playwright capacitor vercel package config build" data-name="Config files" data-desc="vite.config.js, eslint.config.js, playwright.config.js, capacitor.config.ts, vercel.json, package.json — build and tool configuration.">
+        <div class="card-top"><span class="card-name">Build &amp; Tool Config</span><span class="card-type t-config">CONFIG</span></div>
+        <div class="card-path">vite.config.js · eslint.config.js · playwright.config.js · capacitor.config.ts · vercel.json</div>
+        <div class="card-desc">Build and tool configuration: Vite bundler, ESLint, Playwright, Capacitor native, Vercel deployment.</div>
+        <div class="card-tags"></div>
+      </div>
+
+      <div class="card" data-section="root" data-tags="scripts utility build pdf icons matchday simulation drift check" data-name="scripts/" data-desc="Developer utility scripts: build-handover-pdfs.py, check-function-drift.js, simulate-matchday.js, generate-app-icons.js, verify-v2-protection.sh, e2e-setup.mjs, update-function-checksums.js, test-draft-algorithm.js.">
+        <div class="card-top"><span class="card-name">scripts/</span><span class="card-type t-config">SCRIPTS</span></div>
+        <div class="card-path">scripts/</div>
+        <div class="card-desc">Developer utilities: PDF generation, function-drift check, matchday simulation, app icons, e2e setup, draft algorithm test.</div>
+        <div class="card-tags"><span class="card-tag tag-ops">Ops</span></div>
+      </div>
+
     </div>
 
     <!-- PLATFORM REVISION -->
@@ -289,74 +340,75 @@
       <span class="section-badge t-dd">v2 — Sale Ready</span>
     </div>
 
-    <div style="font-size:11px;color:var(--text2);margin-bottom:10px;font-weight:600;">DUE DILIGENCE</div>
-    <div class="cards" id="cards-pr-dd">
+    <div class="sublabel">DUE DILIGENCE</div>
+    <div class="cards">
 
-      <div class="card" data-section="platform_revision" data-tags="sprint history phases p2p f1 tennis v2 plan" data-name="SALE_READY_PROJECT_PLAN.md" data-desc="Full sprint history for all v2 phases (0–3B): session notes, task breakdowns, architecture decisions, approved/rejected options. Reference for detailed context.">
+      <div class="card" data-section="platform_revision" data-tags="sprint history phases sessions decisions architecture v2 plan" data-name="SALE_READY_PROJECT_PLAN.md" data-desc="Full sprint history for all v2 phases (0–3B): session notes, task breakdowns, architecture decisions. Go here for detailed context on any phase.">
         <div class="card-top"><span class="card-name">SALE_READY_PROJECT_PLAN.md</span><span class="card-type t-plan">SPRINT HISTORY</span></div>
         <div class="card-path">docs/platform_revision/due_diligence/SALE_READY_PROJECT_PLAN.md</div>
-        <div class="card-desc">Full sprint history for all v2 phases (0–3B): session notes, decisions, task breakdowns. Go here for detailed context on any phase.</div>
+        <div class="card-desc">Full sprint history for v2 phases 0–3B: session notes, task breakdowns, architecture decisions.</div>
         <div class="card-tags"><span class="card-tag tag-v2">v2</span><span class="card-tag tag-buyout">Buyout</span></div>
       </div>
 
-      <div class="card" data-section="platform_revision" data-tags="buyout due diligence remediation SEC DATA CODE score" data-name="TECHNICAL_DUE_DILIGENCE.md" data-desc="DD remediation backlog indexed by SEC-/DATA-/CODE-/OPS- IDs. Phase 0 security gates closed. Phase 1-3 items remain.">
-        <div class="card-top"><span class="card-name">TECHNICAL_DUE_DILIGENCE.md</span><span class="card-type t-dd">DUE DILIGENCE</span></div>
-        <div class="card-path">docs/platform_revision/due_diligence/TECHNICAL_DUE_DILIGENCE.md</div>
-        <div class="card-desc">Remediation backlog indexed by SEC-/DATA-/CODE-/OPS- IDs. Phase 0 security gates ✅. Phase 1–3 items remain.</div>
-        <div class="card-tags"><span class="card-tag tag-buyout">Buyout</span><span class="card-tag tag-v2">v2</span></div>
-      </div>
-
-      <div class="card" data-section="platform_revision" data-tags="buyout acquirer DAZN Sky broadcaster score assessment" data-name="B2B_BUYOUT_TECHNICAL_DUE_DILIGENCE.md" data-desc="What a corporate acquirer (DAZN, Sky, broadcaster) tests in due diligence. Current score 4/10 → target 8/10. Gap analysis and remediation path.">
+      <div class="card" data-section="platform_revision" data-tags="buyout acquirer DAZN Sky broadcaster score assessment remediation" data-name="B2B_BUYOUT_TECHNICAL_DUE_DILIGENCE.md" data-desc="What a corporate acquirer (DAZN, Sky) tests in due diligence. Score 4/10 → 8/10. Gap analysis and remediation path.">
         <div class="card-top"><span class="card-name">B2B_BUYOUT_TECHNICAL_DUE_DILIGENCE.md</span><span class="card-type t-dd">BUYOUT ASSESSMENT</span></div>
         <div class="card-path">docs/platform_revision/architecture/B2B_BUYOUT_TECHNICAL_DUE_DILIGENCE.md</div>
-        <div class="card-desc">What a corporate acquirer tests in due diligence. Score: 4/10 → 8/10. Gap analysis and remediation sequencing.</div>
+        <div class="card-desc">What a corporate acquirer tests in DD. Score: 4/10 → 8/10 target. Gap analysis and remediation sequencing.</div>
         <div class="card-tags"><span class="card-tag tag-buyout">Buyout</span><span class="card-tag tag-critical">Strategic</span></div>
       </div>
 
-      <div class="card" data-section="platform_revision" data-tags="tech documentation handover buyer external" data-name="TECH_DOCUMENTATION.md" data-desc="Comprehensive technical reference for external handover: architecture, frontend, backend, data model, crons, Edge Functions, security, testing.">
+      <div class="card" data-section="platform_revision" data-tags="technical due diligence SEC DATA CODE OPS remediation backlog" data-name="TECHNICAL_DUE_DILIGENCE.md" data-desc="DD remediation backlog indexed by SEC-/DATA-/CODE-/OPS- IDs. Phase 0 security gates closed. Phases 1–3 items tracked here.">
+        <div class="card-top"><span class="card-name">TECHNICAL_DUE_DILIGENCE.md</span><span class="card-type t-dd">DD BACKLOG</span></div>
+        <div class="card-path">docs/platform_revision/due_diligence/TECHNICAL_DUE_DILIGENCE.md</div>
+        <div class="card-desc">Remediation backlog by SEC-/DATA-/CODE-/OPS- IDs. Phase 0 ✅. Phases 1–3 items remain.</div>
+        <div class="card-tags"><span class="card-tag tag-buyout">Buyout</span><span class="card-tag tag-v2">v2</span></div>
+      </div>
+
+      <div class="card" data-section="platform_revision" data-tags="tech documentation handover buyer external comprehensive" data-name="TECH_DOCUMENTATION.md" data-desc="Comprehensive technical reference for external handover: architecture, data model, Edge Functions, crons, security, CI/CD.">
         <div class="card-top"><span class="card-name">TECH_DOCUMENTATION.md</span><span class="card-type t-dd">HANDOVER DOC</span></div>
         <div class="card-path">docs/platform_revision/due_diligence/TECH_DOCUMENTATION.md</div>
-        <div class="card-desc">Comprehensive technical reference for external handover: architecture, data model, Edge Functions, security, CI/CD.</div>
+        <div class="card-desc">Comprehensive tech reference for external handover: architecture, data model, Edge Functions, security.</div>
         <div class="card-tags"><span class="card-tag tag-buyout">Buyout</span></div>
       </div>
 
-      <div class="card" data-section="platform_revision" data-tags="valuation analysis player pricing" data-name="VALUATION_ANALYSIS.md" data-desc="Player valuation model analysis. Brief.">
+      <div class="card" data-section="platform_revision" data-tags="valuation analysis player pricing methodology" data-name="VALUATION_ANALYSIS.md" data-desc="Player valuation model analysis and methodology.">
         <div class="card-top"><span class="card-name">VALUATION_ANALYSIS.md</span><span class="card-type t-dd">ANALYSIS</span></div>
         <div class="card-path">docs/platform_revision/due_diligence/VALUATION_ANALYSIS.md</div>
-        <div class="card-desc">Player valuation model analysis.</div>
+        <div class="card-desc">Player valuation model analysis and methodology.</div>
         <div class="card-tags"><span class="card-tag tag-buyout">Buyout</span></div>
       </div>
+
     </div>
 
-    <div style="font-size:11px;color:var(--text2);margin:16px 0 10px;font-weight:600;">ARCHITECTURE — v2 Specific</div>
-    <div class="cards" id="cards-pr-arch">
+    <div class="sublabel">ARCHITECTURE — v2 Specific</div>
+    <div class="cards">
 
-      <div class="card" data-section="platform_revision" data-tags="multi-sport platform circles sport abstraction trophy f1 tennis architecture" data-name="MULTI_SPORT_PLATFORM_ARCHITECTURE.md" data-desc="Target data model: circles, sport abstraction, trophy ledger, module contract, provider adapter seam. Key reference for platform extensibility.">
+      <div class="card" data-section="platform_revision" data-tags="multi-sport platform circles sport abstraction trophy ledger module" data-name="MULTI_SPORT_PLATFORM_ARCHITECTURE.md" data-desc="Target data model: circles, sport abstraction, trophy ledger, module contract, provider adapter seam. Core reference for platform extensibility.">
         <div class="card-top"><span class="card-name">MULTI_SPORT_PLATFORM_ARCHITECTURE.md</span><span class="card-type t-arch">ARCHITECTURE</span></div>
         <div class="card-path">docs/platform_revision/architecture/MULTI_SPORT_PLATFORM_ARCHITECTURE.md</div>
-        <div class="card-desc">Target data model: circles, sport abstraction, trophy ledger, module contract, provider adapter seam. Key for platform extensibility.</div>
+        <div class="card-desc">Target data model: circles, sport abstraction, trophy ledger, module contract, provider adapter seam.</div>
         <div class="card-tags"><span class="card-tag tag-v2">v2</span><span class="card-tag tag-f1">F1</span><span class="card-tag tag-tennis">Tennis</span></div>
       </div>
 
-      <div class="card" data-section="platform_revision" data-tags="P2P betting coins challenges stake escrow resolution stripe" data-name="P2P_BETTING_SYSTEM_DESIGN.md" data-desc="Full P2P data model, coin ledger, RPC contracts, challenge lifecycle, Stripe integration, security model, coin economy health.">
+      <div class="card" data-section="platform_revision" data-tags="P2P betting coins challenges stake escrow resolution stripe ledger" data-name="P2P_BETTING_SYSTEM_DESIGN.md" data-desc="Full P2P data model, coin ledger, RPC contracts, challenge lifecycle, Stripe integration, security model, coin economy health.">
         <div class="card-top"><span class="card-name">P2P_BETTING_SYSTEM_DESIGN.md</span><span class="card-type t-arch">ARCHITECTURE</span></div>
         <div class="card-path">docs/platform_revision/architecture/P2P_BETTING_SYSTEM_DESIGN.md</div>
         <div class="card-desc">Full P2P data model, coin ledger, RPC contracts, challenge lifecycle, Stripe integration, security model.</div>
         <div class="card-tags"><span class="card-tag tag-p2p">P2P</span><span class="card-tag tag-v2">v2</span></div>
       </div>
 
-      <div class="card" data-section="platform_revision" data-tags="v2 branch protection main pilot merge rules" data-name="V2_BRANCH_PROTECTION.md" data-desc="Rules for the v2 branch during the live pilot on main. What can and cannot be merged, data access patterns, safety gates.">
+      <div class="card" data-section="platform_revision" data-tags="v2 branch protection main pilot merge rules safety gates" data-name="V2_BRANCH_PROTECTION.md" data-desc="Rules for the v2 branch during the live pilot. What can and cannot be merged. Safety gates for Week 12 deploy.">
         <div class="card-top"><span class="card-name">V2_BRANCH_PROTECTION.md</span><span class="card-type t-runbook">BRANCH RULES</span></div>
         <div class="card-path">docs/platform_revision/architecture/V2_BRANCH_PROTECTION.md</div>
-        <div class="card-desc">Rules for v2 branch during live pilot. Merge strategy, data access, safety gates for Week 12 deploy.</div>
+        <div class="card-desc">Rules for v2 branch during live pilot: merge strategy, data access, safety gates for Week 12 deploy.</div>
         <div class="card-tags"><span class="card-tag tag-v2">v2</span><span class="card-tag tag-critical">Critical</span></div>
       </div>
 
-      <div class="card" data-section="platform_revision" data-tags="multi-sport technical assessment current state" data-name="MULTI_SPORT_TECHNICAL_ASSESSMENT.md" data-desc="Current-state grounding: what generalises already from football, what is football-coupled, gaps to close.">
+      <div class="card" data-section="platform_revision" data-tags="multi-sport technical assessment current state football coupled gaps" data-name="MULTI_SPORT_TECHNICAL_ASSESSMENT.md" data-desc="Current-state grounding: what generalises already from football, what is football-coupled, gaps to close.">
         <div class="card-top"><span class="card-name">MULTI_SPORT_TECHNICAL_ASSESSMENT.md</span><span class="card-type t-dd">ASSESSMENT</span></div>
         <div class="card-path">docs/platform_revision/architecture/MULTI_SPORT_TECHNICAL_ASSESSMENT.md</div>
-        <div class="card-desc">Current-state grounding: what generalises from football, what's football-coupled, gaps to close.</div>
-        <div class="card-tags"><span class="card-tag tag-v2">v2</span><span class="card-tag tag-buyout">Buyout</span></div>
+        <div class="card-desc">Current-state assessment: what generalises from football, what's football-coupled, gaps to close.</div>
+        <div class="card-tags"><span class="card-tag tag-v2">v2</span></div>
       </div>
 
       <div class="card" data-section="platform_revision" data-tags="P2P betting technical assessment reuse new risk" data-name="P2P_BETTING_TECHNICAL_ASSESSMENT.md" data-desc="What's reusable from football for P2P, what's genuinely new, and the risk register.">
@@ -365,77 +417,94 @@
         <div class="card-desc">What's reusable from football for P2P, what's genuinely new, and the risk register.</div>
         <div class="card-tags"><span class="card-tag tag-p2p">P2P</span><span class="card-tag tag-v2">v2</span></div>
       </div>
+
     </div>
 
-    <div style="font-size:11px;color:var(--text2);margin:16px 0 10px;font-weight:600;">MODULE PLANS</div>
-    <div class="cards" id="cards-pr-modules">
+    <div class="sublabel">MODULE PLANS</div>
+    <div class="cards">
 
-      <div class="card" data-section="platform_revision" data-tags="F1 paddock picks scoring OpenF1 implementation plan sprints" data-name="F1_MODULE_IMPLEMENTATION_PLAN.md" data-desc="Authoritative F1 module plan: paddocks, picks (P1/P2/P3/DNF/team), scoring, OpenF1 adapter. 5 sprints. All F1 code decisions live here.">
+      <div class="card" data-section="platform_revision" data-tags="F1 paddock picks scoring OpenF1 implementation sprints plan" data-name="F1_MODULE_IMPLEMENTATION_PLAN.md" data-desc="Authoritative F1 module plan: paddocks, picks (P1/P2/P3/DNF/team), scoring, OpenF1 adapter. 5 sprints. All F1 decisions live here.">
         <div class="card-top"><span class="card-name">F1_MODULE_IMPLEMENTATION_PLAN.md</span><span class="card-type t-plan">MODULE PLAN</span></div>
         <div class="card-path">docs/platform_revision/modules/F1_MODULE_IMPLEMENTATION_PLAN.md</div>
-        <div class="card-desc">Authoritative F1 module plan: paddocks, picks (P1/P2/P3/DNF/team), scoring, OpenF1 adapter. All F1 code decisions live here.</div>
+        <div class="card-desc">Authoritative F1 module plan: paddocks, picks (P1/P2/P3/DNF/team), scoring, OpenF1 adapter. All F1 decisions.</div>
         <div class="card-tags"><span class="card-tag tag-f1">F1</span><span class="card-tag tag-v2">v2</span></div>
       </div>
 
       <div class="card" data-section="platform_revision" data-tags="tennis player box roster ace cards ATP Finals scoring implementation plan" data-name="TENNIS_MODULE_IMPLEMENTATION_PLAN.md" data-desc="Authoritative tennis plan: Player's Box, 7-player tiered rosters, Ace Cards, QF Captain, ATP Finals pick'em, Masters Drop Rule, RapidAPI sync.">
         <div class="card-top"><span class="card-name">TENNIS_MODULE_IMPLEMENTATION_PLAN.md</span><span class="card-type t-plan">MODULE PLAN</span></div>
         <div class="card-path">docs/platform_revision/modules/TENNIS_MODULE_IMPLEMENTATION_PLAN.md</div>
-        <div class="card-desc">Authoritative tennis plan: Player's Box, 7-player tiered rosters, Ace Cards, QF Captain, ATP Finals, Masters Drop Rule.</div>
+        <div class="card-desc">Authoritative tennis plan: Player's Box, tiered rosters, Ace Cards, QF Captain, ATP Finals, Masters Drop Rule.</div>
         <div class="card-tags"><span class="card-tag tag-tennis">Tennis</span><span class="card-tag tag-v2">v2</span></div>
       </div>
 
-      <div class="card" data-section="platform_revision" data-tags="P2P betting sprints coin ledger challenges resolution delivery plan" data-name="P2P_BETTING_IMPLEMENTATION_ROADMAP.md" data-desc="Sprint-by-sprint P2P delivery plan (P2P-0 through P2P-6): conventions, DB migrations, acceptance criteria, Stripe integration.">
+      <div class="card" data-section="platform_revision" data-tags="P2P betting sprints coin ledger challenges delivery plan roadmap" data-name="P2P_BETTING_IMPLEMENTATION_ROADMAP.md" data-desc="Sprint-by-sprint P2P delivery plan (P2P-0 through P2P-6): conventions, DB migrations, acceptance criteria, Stripe integration.">
         <div class="card-top"><span class="card-name">P2P_BETTING_IMPLEMENTATION_ROADMAP.md</span><span class="card-type t-plan">MODULE PLAN</span></div>
         <div class="card-path">docs/platform_revision/modules/P2P_BETTING_IMPLEMENTATION_ROADMAP.md</div>
-        <div class="card-desc">Sprint-by-sprint P2P delivery plan (P2P-0 through P2P-6): conventions, migrations, acceptance criteria.</div>
+        <div class="card-desc">Sprint-by-sprint P2P delivery plan (P2P-0 through P2P-6): migrations, acceptance criteria, Stripe.</div>
         <div class="card-tags"><span class="card-tag tag-p2p">P2P</span><span class="card-tag tag-v2">v2</span></div>
       </div>
 
-      <div class="card" data-section="platform_revision" data-tags="multi-sport expansion strategy vision F1 tennis football" data-name="MULTI_SPORT_EXPANSION.md" data-desc="Vision, strategy, and open product questions for multi-sport platform expansion.">
+      <div class="card" data-section="platform_revision" data-tags="multi-sport expansion strategy vision F1 tennis football product" data-name="MULTI_SPORT_EXPANSION.md" data-desc="Vision, strategy, and open product questions for multi-sport platform expansion.">
         <div class="card-top"><span class="card-name">MULTI_SPORT_EXPANSION.md</span><span class="card-type t-plan">STRATEGY</span></div>
         <div class="card-path">docs/platform_revision/modules/MULTI_SPORT_EXPANSION.md</div>
         <div class="card-desc">Vision, strategy, and open product questions for multi-sport platform expansion.</div>
         <div class="card-tags"><span class="card-tag tag-v2">v2</span><span class="card-tag tag-buyout">Buyout</span></div>
       </div>
 
-      <div class="card" data-section="platform_revision" data-tags="multi-sport implementation plan sprints delivery" data-name="MULTI_SPORT_IMPLEMENTATION_PLAN.md" data-desc="Sprint-by-sprint multi-sport delivery plan with exit checks (Phases 0, 1B, 2).">
+      <div class="card" data-section="platform_revision" data-tags="multi-sport implementation plan delivery phases exit checks" data-name="MULTI_SPORT_IMPLEMENTATION_PLAN.md" data-desc="Sprint-by-sprint multi-sport delivery plan with exit checks (Phases 0, 1B, 2).">
         <div class="card-top"><span class="card-name">MULTI_SPORT_IMPLEMENTATION_PLAN.md</span><span class="card-type t-plan">MODULE PLAN</span></div>
         <div class="card-path">docs/platform_revision/modules/MULTI_SPORT_IMPLEMENTATION_PLAN.md</div>
         <div class="card-desc">Sprint-by-sprint multi-sport delivery plan with exit checks (Phases 0, 1B, 2).</div>
         <div class="card-tags"><span class="card-tag tag-v2">v2</span></div>
       </div>
+
     </div>
 
-    <div style="font-size:11px;color:var(--text2);margin:16px 0 10px;font-weight:600;">DESIGN SYSTEM</div>
-    <div class="cards" id="cards-pr-design">
+    <div class="sublabel">PITCH &amp; DESIGN</div>
+    <div class="cards">
 
-      <div class="card" data-section="platform_revision" data-tags="kit light design tokens CSS variables colors typography" data-name="kit.css (design tokens)" data-desc="Canonical Kit Light CSS design tokens: --bg, --shell, --card, --accent, --gold, --pos, --neg. Source of truth for all UI theming.">
-        <div class="card-top"><span class="card-name">kit.css</span><span class="card-type t-design">DESIGN TOKENS</span></div>
+      <div class="card" data-section="platform_revision" data-tags="product roadmap deck pitch HTML strategic presentation sale buyer" data-name="PRODUCT_ROADMAP_DECK.html" data-desc="Strategic product roadmap HTML presentation — buyer-facing pitch showing platform vision, modules, and roadmap.">
+        <div class="card-top"><span class="card-name">PRODUCT_ROADMAP_DECK.html</span><span class="card-type t-pitch">PITCH DECK</span></div>
+        <div class="card-path">docs/platform_revision/PRODUCT_ROADMAP_DECK.html</div>
+        <div class="card-desc">Strategic product roadmap HTML presentation for buyers — platform vision, modules, roadmap.</div>
+        <div class="card-tags"><span class="card-tag tag-buyout">Buyout</span><span class="card-tag tag-v2">v2</span></div>
+      </div>
+
+      <div class="card" data-section="platform_revision" data-tags="kit light design tokens CSS variables colors typography" data-name="kit.css" data-desc="Canonical Kit Light CSS design tokens: --bg, --shell, --card, --accent, --gold, --pos, --neg. Source of truth for all v2 UI theming.">
+        <div class="card-top"><span class="card-name">kit.css (design tokens)</span><span class="card-type t-design">DESIGN TOKENS</span></div>
         <div class="card-path">docs/platform_revision/design/tokens/kit.css</div>
-        <div class="card-desc">Canonical Kit Light CSS tokens: colors, typography, spacing. Source of truth for all UI theming on v2.</div>
+        <div class="card-desc">Canonical Kit Light CSS tokens: colors, typography, spacing. Source of truth for all v2 UI theming.</div>
         <div class="card-tags"><span class="card-tag tag-design">Design</span><span class="card-tag tag-v2">v2</span></div>
       </div>
 
-      <div class="card" data-section="platform_revision" data-tags="design brief kit light rationale context" data-name="BRIEF.md" data-desc="Platform redesign rationale and design brief — why Kit Light, what changed from the old Forza dark direction.">
+      <div class="card" data-section="platform_revision" data-tags="design brief kit light rationale context why" data-name="BRIEF.md" data-desc="Platform redesign rationale — why Kit Light, what changed from Forza dark direction, design principles.">
         <div class="card-top"><span class="card-name">BRIEF.md</span><span class="card-type t-design">DESIGN BRIEF</span></div>
         <div class="card-path">docs/platform_revision/design/BRIEF.md</div>
-        <div class="card-desc">Platform redesign rationale — why Kit Light, what changed from the old Forza dark direction.</div>
+        <div class="card-desc">Platform redesign rationale — why Kit Light, what changed from Forza dark, design principles.</div>
         <div class="card-tags"><span class="card-tag tag-design">Design</span></div>
       </div>
 
-      <div class="card" data-section="platform_revision" data-tags="token migration old new mapping CSS variables" data-name="TOKEN_MIGRATION.md" data-desc="Mapping from old Forza dark palette to Kit Light tokens. Reference for converting any legacy component.">
+      <div class="card" data-section="platform_revision" data-tags="token migration old new mapping CSS legacy convert" data-name="TOKEN_MIGRATION.md" data-desc="Mapping from old Forza dark palette to Kit Light tokens. Reference for converting any legacy component.">
         <div class="card-top"><span class="card-name">TOKEN_MIGRATION.md</span><span class="card-type t-design">MIGRATION GUIDE</span></div>
         <div class="card-path">docs/platform_revision/design/TOKEN_MIGRATION.md</div>
         <div class="card-desc">Old → new token mapping. Reference for converting any legacy component to Kit Light.</div>
         <div class="card-tags"><span class="card-tag tag-design">Design</span></div>
       </div>
 
-      <div class="card" data-section="platform_revision" data-tags="handoff status design session context" data-name="HANDOFF-STATUS.txt" data-desc="Session brief for design work: current state, Kit Light direction, what's been built, what to build next.">
-        <div class="card-top"><span class="card-name">HANDOFF-STATUS.txt</span><span class="card-type t-design">HANDOFF BRIEF</span></div>
-        <div class="card-path">docs/platform_revision/design/HANDOFF-STATUS.txt</div>
-        <div class="card-desc">Session brief for design work: current state, direction, what's built, what to build next.</div>
-        <div class="card-tags"><span class="card-tag tag-design">Design</span></div>
+      <div class="card" data-section="platform_revision" data-tags="handoff status design screens admin live centre league hub messages" data-name="Screen Handoffs" data-desc="Full screen design handoffs: admin tab, league hub, live centre, league select, message components, player modals. Kit Light compliant.">
+        <div class="card-top"><span class="card-name">Screen Handoffs</span><span class="card-type t-design">DESIGN HANDOFFS</span></div>
+        <div class="card-path">docs/platform_revision/design/design_handoffs/</div>
+        <div class="card-desc">Full screen design handoffs: admin tab, league hub, live centre, league select, message components, player modals.</div>
+        <div class="card-tags"><span class="card-tag tag-design">Design</span><span class="card-tag tag-v2">v2</span></div>
       </div>
+
+      <div class="card" data-section="platform_revision" data-tags="coin challenges screens UX P2P multi-sport identity" data-name="screens/ (Kit Light explorations)" data-desc="Kit Light screen explorations: coin challenges (v1+v2), multi-sport expansion, identity exploration, platform assessment, UX analysis.">
+        <div class="card-top"><span class="card-name">screens/ — Kit Light Explorations</span><span class="card-type t-design">EXPLORATIONS</span></div>
+        <div class="card-path">docs/platform_revision/design/screens/</div>
+        <div class="card-desc">Kit Light screen explorations: coin challenges, multi-sport, identity, platform assessment, UX analysis.</div>
+        <div class="card-tags"><span class="card-tag tag-design">Design</span><span class="card-tag tag-p2p">P2P</span></div>
+      </div>
+
     </div>
 
     <!-- CORE ARCHITECTURE -->
@@ -443,84 +512,113 @@
       <span class="section-title">🏗️ Core Architecture</span>
       <span class="section-badge t-arch">Football Platform Specs</span>
     </div>
-    <div class="cards" id="cards-architecture">
+    <div class="cards">
 
-      <div class="card" data-section="architecture" data-tags="scoring points calculation cron football" data-name="FANTASY_POINTS_SCORING_LAYER.md" data-desc="Definitive scoring formula: position multipliers, cron schedule, matchday timeline, clean sheet rules, bonus logic. Authoritative.">
+      <div class="card" data-section="architecture" data-tags="scoring points formula cron cron schedule matchday timeline football" data-name="FANTASY_POINTS_SCORING_LAYER.md" data-desc="Definitive scoring formula: position multipliers, cron schedule, matchday timeline, clean sheet rules, bonus logic.">
         <div class="card-top"><span class="card-name">FANTASY_POINTS_SCORING_LAYER.md</span><span class="card-type t-arch">ARCHITECTURE</span></div>
         <div class="card-path">docs/architecture/FANTASY_POINTS_SCORING_LAYER.md</div>
         <div class="card-desc">Definitive scoring formula: position multipliers, cron schedule, matchday timeline, clean sheet rules.</div>
         <div class="card-tags"><span class="card-tag tag-football">Football</span></div>
       </div>
 
-      <div class="card" data-section="architecture" data-tags="draft lottery allocation club cap no-repeat" data-name="DRAFT_SYSTEM_DESIGN.md" data-desc="Draft lottery, sealed-bid engine, allocation algorithm, no-repeat rules, club caps, two-phase mechanics.">
+      <div class="card" data-section="architecture" data-tags="draft lottery allocation club cap no-repeat football" data-name="DRAFT_SYSTEM_DESIGN.md" data-desc="Draft lottery, sealed-bid engine, allocation algorithm, no-repeat rules, club caps, two-phase mechanics.">
         <div class="card-top"><span class="card-name">DRAFT_SYSTEM_DESIGN.md</span><span class="card-type t-arch">ARCHITECTURE</span></div>
         <div class="card-path">docs/architecture/DRAFT_SYSTEM_DESIGN.md</div>
         <div class="card-desc">Draft lottery, sealed-bid engine, allocation algorithm, no-repeat rules, club caps, two-phase mechanics.</div>
         <div class="card-tags"><span class="card-tag tag-football">Football</span></div>
       </div>
 
-      <div class="card" data-section="architecture" data-tags="H2H head-to-head round robin schedule" data-name="H2H_COMPETITION_DESIGN.md" data-desc="Head-to-Head layered on draft leagues. Round-robin schedule, scoring config, multi-day gate, DB schema.">
+      <div class="card" data-section="architecture" data-tags="H2H head-to-head round robin schedule scoring football" data-name="H2H_COMPETITION_DESIGN.md" data-desc="Head-to-Head layered on draft leagues. Round-robin schedule, scoring config, multi-day gate, DB schema.">
         <div class="card-top"><span class="card-name">H2H_COMPETITION_DESIGN.md</span><span class="card-type t-arch">ARCHITECTURE</span></div>
         <div class="card-path">docs/architecture/H2H_COMPETITION_DESIGN.md</div>
         <div class="card-desc">Head-to-Head competition layer: round-robin schedule, scoring config, multi-day gate, DB schema.</div>
         <div class="card-tags"><span class="card-tag tag-football">Football</span></div>
       </div>
 
-      <div class="card" data-section="architecture" data-tags="auction two-phase bid confirm pending" data-name="AUCTION_SYSTEM_DESIGN.md" data-desc="Two-phase auction flow (bid → pending → confirm), state machine, void sweep, squad-full handling, UI spec.">
+      <div class="card" data-section="architecture" data-tags="auction two-phase bid confirm pending state machine football" data-name="AUCTION_SYSTEM_DESIGN.md" data-desc="Two-phase auction flow (bid → pending → confirm), state machine, void sweep, squad-full handling, UI spec.">
         <div class="card-top"><span class="card-name">AUCTION_SYSTEM_DESIGN.md</span><span class="card-type t-arch">ARCHITECTURE</span></div>
         <div class="card-path">docs/architecture/AUCTION_SYSTEM_DESIGN.md</div>
         <div class="card-desc">Two-phase auction flow (bid → pending → confirm), state machine, void sweep, squad-full handling.</div>
         <div class="card-tags"><span class="card-tag tag-football">Football</span></div>
       </div>
 
-      <div class="card" data-section="architecture" data-tags="transfer window open close config deadline" data-name="TRANSFER_WINDOW_SYSTEM.md" data-desc="Unified transfer model: auto open/close, config table, transfer limits, wildcard round, round-aware reopen hours.">
+      <div class="card" data-section="architecture" data-tags="transfer window open close config deadline limits football" data-name="TRANSFER_WINDOW_SYSTEM.md" data-desc="Unified transfer model: auto open/close, config table, transfer limits, wildcard round, round-aware reopen hours.">
         <div class="card-top"><span class="card-name">TRANSFER_WINDOW_SYSTEM.md</span><span class="card-type t-arch">ARCHITECTURE</span></div>
         <div class="card-path">docs/architecture/TRANSFER_WINDOW_SYSTEM.md</div>
         <div class="card-desc">Unified transfer model: auto open/close, config table, transfer limits, round-aware reopen hours.</div>
         <div class="card-tags"><span class="card-tag tag-football">Football</span></div>
       </div>
 
-      <div class="card" data-section="architecture" data-tags="starting XI bench lineup lock swap" data-name="STARTING_XI_AND_BENCH.md" data-desc="Starting XI selection, bench rules, points deduction, lineup change windows, lock mechanic.">
+      <div class="card" data-section="architecture" data-tags="starting XI bench lineup lock swap deduction football" data-name="STARTING_XI_AND_BENCH.md" data-desc="Starting XI selection, bench rules, points deduction on swap, lineup change windows, lock mechanic.">
         <div class="card-top"><span class="card-name">STARTING_XI_AND_BENCH.md</span><span class="card-type t-arch">ARCHITECTURE</span></div>
         <div class="card-path">docs/architecture/STARTING_XI_AND_BENCH.md</div>
-        <div class="card-desc">Starting XI selection, bench rules, points deduction, lineup change windows, lock mechanic.</div>
+        <div class="card-desc">Starting XI selection, bench rules, points deduction on swap, lineup change windows, lock mechanic.</div>
         <div class="card-tags"><span class="card-tag tag-football">Football</span></div>
       </div>
 
-      <div class="card" data-section="architecture" data-tags="pool relaxation club cap no-repeat formula" data-name="POOL_RELAXATION_SYSTEM.md" data-desc="Player-repeat + club-cap relaxation formulas. Tiers, config, SQL functions, Edge Function, React hook.">
+      <div class="card" data-section="architecture" data-tags="pool relaxation club cap no-repeat formula football" data-name="POOL_RELAXATION_SYSTEM.md" data-desc="Player-repeat + club-cap relaxation formulas. Tiers, config, SQL functions, Edge Function, React hook.">
         <div class="card-top"><span class="card-name">POOL_RELAXATION_SYSTEM.md</span><span class="card-type t-arch">ARCHITECTURE</span></div>
         <div class="card-path">docs/architecture/POOL_RELAXATION_SYSTEM.md</div>
         <div class="card-desc">Player-repeat + club-cap relaxation formulas. Tiers, config, SQL functions, Edge Function, React hook.</div>
         <div class="card-tags"><span class="card-tag tag-football">Football</span></div>
       </div>
 
-      <div class="card" data-section="architecture" data-tags="scoring integrity roundComplete lock idempotency cron" data-name="SCORING_INTEGRITY.md" data-desc="Scoring assurance: when scores lock, replay guards, audit trails, cron idempotency.">
+      <div class="card" data-section="architecture" data-tags="scoring integrity roundComplete lock idempotency cron guard" data-name="SCORING_INTEGRITY.md" data-desc="Scoring assurance: when scores lock, replay guards, audit trails, cron idempotency.">
         <div class="card-top"><span class="card-name">SCORING_INTEGRITY.md</span><span class="card-type t-arch">ARCHITECTURE</span></div>
         <div class="card-path">docs/architecture/SCORING_INTEGRITY.md</div>
         <div class="card-desc">Scoring assurance: when scores lock, replay guards, audit trails, cron idempotency.</div>
         <div class="card-tags"><span class="card-tag tag-football">Football</span></div>
       </div>
 
-      <div class="card" data-section="architecture" data-tags="live centre fixture filter squad display" data-name="LIVE_CENTRE_DESIGN.md" data-desc="Fixture filter logic, squad display, three-layer cascade, starting_xi authority.">
+      <div class="card" data-section="architecture" data-tags="live centre fixture filter squad display starting XI football" data-name="LIVE_CENTRE_DESIGN.md" data-desc="Fixture filter logic, squad display, three-layer cascade, starting_xi authority.">
         <div class="card-top"><span class="card-name">LIVE_CENTRE_DESIGN.md</span><span class="card-type t-arch">ARCHITECTURE</span></div>
         <div class="card-path">docs/architecture/LIVE_CENTRE_DESIGN.md</div>
         <div class="card-desc">Fixture filter logic, squad display, three-layer cascade, starting_xi authority.</div>
         <div class="card-tags"><span class="card-tag tag-football">Football</span></div>
       </div>
 
-      <div class="card" data-section="architecture" data-tags="chips triple captain joker wildcard scoring" data-name="CHIPS_TRIPLE_CAPTAIN_AND_MATCHDAY_JOKER.md" data-desc="Chip mechanics (wildcard, triple captain, joker). Scoring application, limits.">
-        <div class="card-top"><span class="card-name">CHIPS_TRIPLE_CAPTAIN_AND_MATCHDAY_JOKER.md</span><span class="card-type t-arch">ARCHITECTURE</span></div>
-        <div class="card-path">docs/architecture/CHIPS_TRIPLE_CAPTAIN_AND_MATCHDAY_JOKER.md</div>
-        <div class="card-desc">Chip mechanics (wildcard, triple captain, joker). Scoring application, limits.</div>
+      <div class="card" data-section="architecture" data-tags="app dynamics live match realtime subscriptions joker football" data-name="APP_DYNAMICS.md" data-desc="Live match updates, Realtime subscriptions, match state machine, Joker chip integration.">
+        <div class="card-top"><span class="card-name">APP_DYNAMICS.md</span><span class="card-type t-arch">ARCHITECTURE</span></div>
+        <div class="card-path">docs/architecture/APP_DYNAMICS.md</div>
+        <div class="card-desc">Live match updates, Realtime subscriptions, match state machine, Joker chip integration.</div>
         <div class="card-tags"><span class="card-tag tag-football">Football</span></div>
       </div>
 
-      <div class="card" data-section="architecture" data-tags="draft mechanics plain english glossary" data-name="DRAFT_MECHANICS_FOR_DUMMIES.md" data-desc="Plain-English walkthrough of the draft system. No jargon. Glossary included. Good for onboarding new contributors.">
-        <div class="card-top"><span class="card-name">DRAFT_MECHANICS_FOR_DUMMIES.md</span><span class="card-type t-ref">GUIDE</span></div>
-        <div class="card-path">docs/architecture/DRAFT_MECHANICS_FOR_DUMMIES.md</div>
-        <div class="card-desc">Plain-English walkthrough of the draft system. Glossary included. Good for onboarding.</div>
+      <div class="card" data-section="architecture" data-tags="chips triple captain joker wildcard scoring limits football" data-name="CHIPS_TRIPLE_CAPTAIN_AND_MATCHDAY_JOKER.md" data-desc="Chip mechanics (triple captain, joker). Scoring application, limits, per-round derivation.">
+        <div class="card-top"><span class="card-name">CHIPS_TRIPLE_CAPTAIN_AND_MATCHDAY_JOKER.md</span><span class="card-type t-arch">ARCHITECTURE</span></div>
+        <div class="card-path">docs/architecture/CHIPS_TRIPLE_CAPTAIN_AND_MATCHDAY_JOKER.md</div>
+        <div class="card-desc">Chip mechanics (triple captain, joker). Scoring application, limits, per-round derivation.</div>
         <div class="card-tags"><span class="card-tag tag-football">Football</span></div>
       </div>
+
+      <div class="card" data-section="architecture" data-tags="draft unlimited transfers bypass league mode draft football" data-name="DRAFT_UNLIMITED_TRANSFERS.md" data-desc="Draft leagues have unlimited buys/sells, no penalty. process-transfer league_mode bypass, MarketScreen isDraftLeague flag.">
+        <div class="card-top"><span class="card-name">DRAFT_UNLIMITED_TRANSFERS.md</span><span class="card-type t-arch">ARCHITECTURE</span></div>
+        <div class="card-path">docs/architecture/DRAFT_UNLIMITED_TRANSFERS.md</div>
+        <div class="card-desc">Draft leagues have unlimited buys/sells. process-transfer bypass, MarketScreen isDraftLeague flag.</div>
+        <div class="card-tags"><span class="card-tag tag-football">Football</span></div>
+      </div>
+
+      <div class="card" data-section="architecture" data-tags="formation rules 11-player pitch constraints football" data-name="FORMATION_RULES.md" data-desc="11-player pitch validation rules: position constraints, squad balance.">
+        <div class="card-top"><span class="card-name">FORMATION_RULES.md</span><span class="card-type t-arch">ARCHITECTURE</span></div>
+        <div class="card-path">docs/architecture/FORMATION_RULES.md</div>
+        <div class="card-desc">11-player pitch validation rules: position constraints, squad balance.</div>
+        <div class="card-tags"><span class="card-tag tag-football">Football</span></div>
+      </div>
+
+      <div class="card" data-section="architecture" data-tags="draft mechanics plain english glossary guide onboarding" data-name="DRAFT_MECHANICS_FOR_DUMMIES.md" data-desc="Plain-English walkthrough of the draft system — no jargon. Glossary included. Good for onboarding.">
+        <div class="card-top"><span class="card-name">DRAFT_MECHANICS_FOR_DUMMIES.md</span><span class="card-type t-ref">GUIDE</span></div>
+        <div class="card-path">docs/architecture/DRAFT_MECHANICS_FOR_DUMMIES.md</div>
+        <div class="card-desc">Plain-English draft walkthrough — no jargon. Glossary included. Good for new contributors.</div>
+        <div class="card-tags"><span class="card-tag tag-football">Football</span></div>
+      </div>
+
+      <div class="card" data-section="architecture" data-tags="transfers lineup guide user combined football" data-name="TRANSFERS_AND_LINEUP_GUIDE.md" data-desc="Combined user guide for transfers and lineup management. Covers both flows end-to-end.">
+        <div class="card-top"><span class="card-name">TRANSFERS_AND_LINEUP_GUIDE.md</span><span class="card-type t-ref">GUIDE</span></div>
+        <div class="card-path">docs/architecture/TRANSFERS_AND_LINEUP_GUIDE.md</div>
+        <div class="card-desc">Combined user guide for transfers and lineup management — both flows end-to-end.</div>
+        <div class="card-tags"><span class="card-tag tag-football">Football</span></div>
+      </div>
+
     </div>
 
     <!-- API -->
@@ -528,78 +626,80 @@
       <span class="section-title">🔌 API</span>
       <span class="section-badge t-api">Forza Football Integration</span>
     </div>
-    <div class="cards" id="cards-api">
+    <div class="cards">
 
-      <div class="card" data-section="api" data-tags="Forza Football API endpoints field reference auth" data-name="API_INTEGRATION_REFERENCE.md" data-desc="Field-by-field reference for Forza Football API integration. Endpoint map (E1–E16), scoring-layer alignment, JSON shape docs. Authoritative.">
+      <div class="card" data-section="api" data-tags="Forza Football API endpoints field reference auth JSON" data-name="API_INTEGRATION_REFERENCE.md" data-desc="Field-by-field Forza API reference. Endpoint map (E1–E16), scoring-layer alignment, JSON shapes. Authoritative.">
         <div class="card-top"><span class="card-name">API_INTEGRATION_REFERENCE.md</span><span class="card-type t-api">API REFERENCE</span></div>
         <div class="card-path">docs/api/API_INTEGRATION_REFERENCE.md</div>
         <div class="card-desc">Field-by-field Forza API reference. Endpoint map (E1–E16), scoring alignment, JSON shapes. Authoritative.</div>
         <div class="card-tags"><span class="card-tag tag-football">Football</span></div>
       </div>
 
-      <div class="card" data-section="api" data-tags="Forza API knowledge quirks debugging" data-name="FORZA_API_KNOWLEDGE.md" data-desc="Forza API quirks cheat sheet: known edge cases, debugging tips, rate limits, authentication patterns.">
+      <div class="card" data-section="api" data-tags="Forza API knowledge quirks edge cases debugging rate limit auth" data-name="FORZA_API_KNOWLEDGE.md" data-desc="Forza API quirks cheat sheet: known edge cases, debugging tips, rate limits, authentication patterns.">
         <div class="card-top"><span class="card-name">FORZA_API_KNOWLEDGE.md</span><span class="card-type t-api">API KNOWLEDGE</span></div>
         <div class="card-path">docs/api/FORZA_API_KNOWLEDGE.md</div>
-        <div class="card-desc">Forza API quirks cheat sheet: edge cases, debugging tips, rate limits, auth patterns.</div>
+        <div class="card-desc">Forza API quirks: edge cases, debugging tips, rate limits, auth patterns.</div>
         <div class="card-tags"><span class="card-tag tag-football">Football</span></div>
       </div>
 
-      <div class="card" data-section="api" data-tags="fit gap analysis API coverage missing endpoints" data-name="FIT_GAP_ANALYSIS.md" data-desc="Gap analysis between Forza API capabilities and platform requirements. Pre-implementation assessment.">
+      <div class="card" data-section="api" data-tags="fit gap analysis API coverage missing endpoints assessment" data-name="FIT_GAP_ANALYSIS.md" data-desc="Gap analysis between Forza API capabilities and platform requirements.">
         <div class="card-top"><span class="card-name">FIT_GAP_ANALYSIS.md</span><span class="card-type t-dd">ASSESSMENT</span></div>
         <div class="card-path">docs/api/FIT_GAP_ANALYSIS.md</div>
-        <div class="card-desc">Gap analysis between Forza API capabilities and platform requirements. Pre-implementation reference.</div>
+        <div class="card-desc">Gap analysis between Forza API capabilities and platform requirements.</div>
         <div class="card-tags"><span class="card-tag tag-football">Football</span></div>
       </div>
+
     </div>
 
-    <!-- DEPLOYMENT -->
+    <!-- DEPLOYMENT & OPS -->
     <div class="section-header" id="section-deployment">
-      <span class="section-title">🚀 Deployment & Ops</span>
+      <span class="section-title">🚀 Deployment &amp; Ops</span>
       <span class="section-badge t-runbook">Runbooks</span>
     </div>
-    <div class="cards" id="cards-deployment">
+    <div class="cards">
 
-      <div class="card" data-section="deployment" data-tags="data pipeline cron sync Forza fixtures players ops" data-name="DATA_PIPELINE_RUNBOOK.md" data-desc="How to sync data from Forza API. Active cron table, architecture overview, trigger names, Edge Functions reference. Authoritative for ops.">
+      <div class="card" data-section="deployment" data-tags="data pipeline cron sync Forza fixtures players ops architecture" data-name="DATA_PIPELINE_RUNBOOK.md" data-desc="How to sync data from Forza API. Active cron table, architecture overview, trigger names, Edge Functions reference.">
         <div class="card-top"><span class="card-name">DATA_PIPELINE_RUNBOOK.md</span><span class="card-type t-runbook">RUNBOOK</span></div>
         <div class="card-path">docs/deployment/DATA_PIPELINE_RUNBOOK.md</div>
-        <div class="card-desc">How to sync data from Forza API. Active cron table, architecture overview, trigger names, Edge Functions reference.</div>
+        <div class="card-desc">How to sync data from Forza API. Active cron table, architecture overview, Edge Functions reference.</div>
         <div class="card-tags"><span class="card-tag tag-ops">Ops</span><span class="card-tag tag-football">Football</span></div>
       </div>
 
-      <div class="card" data-section="deployment" data-tags="new tournament onboarding sport cookbook" data-name="ADDING_A_NEW_TOURNAMENT.md" data-desc="Step-by-step cookbook to onboard a new sport/tournament: Forza ID, API schema, seed database, wire crons, validate scoring.">
+      <div class="card" data-section="deployment" data-tags="new tournament onboarding sport cookbook step by step" data-name="ADDING_A_NEW_TOURNAMENT.md" data-desc="Step-by-step cookbook: new sport/tournament onboarding from Forza registration to live squads.">
         <div class="card-top"><span class="card-name">ADDING_A_NEW_TOURNAMENT.md</span><span class="card-type t-runbook">RUNBOOK</span></div>
         <div class="card-path">docs/deployment/ADDING_A_NEW_TOURNAMENT.md</div>
         <div class="card-desc">Step-by-step cookbook: new sport onboarding from Forza registration to live squads.</div>
         <div class="card-tags"><span class="card-tag tag-ops">Ops</span></div>
       </div>
 
-      <div class="card" data-section="deployment" data-tags="docker local dev compose setup" data-name="DOCKER_LOCAL_DEV.md" data-desc="Docker setup for local development: three paths (Docker only / Compose / Supabase CLI), environment variable reference, staging provisioning guide.">
+      <div class="card" data-section="deployment" data-tags="docker local dev compose setup staging environment" data-name="DOCKER_LOCAL_DEV.md" data-desc="Docker local dev setup: three paths, environment variable reference, staging provisioning.">
         <div class="card-top"><span class="card-name">DOCKER_LOCAL_DEV.md</span><span class="card-type t-runbook">RUNBOOK</span></div>
         <div class="card-path">docs/deployment/DOCKER_LOCAL_DEV.md</div>
-        <div class="card-desc">Docker local dev setup: three paths, environment variable reference, staging provisioning guide.</div>
+        <div class="card-desc">Docker local dev setup: three paths, environment variable reference, staging provisioning.</div>
         <div class="card-tags"><span class="card-tag tag-ops">Ops</span><span class="card-tag tag-v2">v2</span></div>
       </div>
 
       <div class="card" data-section="deployment" data-tags="observability Sentry logging metrics alerting strategy" data-name="OBSERVABILITY_STRATEGY.md" data-desc="Observability approach: Sentry, structured logging, metrics, alerting. Design document.">
         <div class="card-top"><span class="card-name">OBSERVABILITY_STRATEGY.md</span><span class="card-type t-arch">STRATEGY</span></div>
         <div class="card-path">docs/deployment/OBSERVABILITY_STRATEGY.md</div>
-        <div class="card-desc">Observability approach: Sentry, structured logging, metrics, alerting.</div>
+        <div class="card-desc">Observability approach: Sentry, structured logging, metrics, alerting strategy.</div>
         <div class="card-tags"><span class="card-tag tag-ops">Ops</span></div>
       </div>
 
-      <div class="card" data-section="deployment" data-tags="service key rotation API key procedure" data-name="SERVICE_KEY_ROTATION_RUNBOOK.md" data-desc="Service key rotation procedure: when and how to rotate Supabase service role key, update all dependents.">
+      <div class="card" data-section="deployment" data-tags="service key rotation API key procedure Supabase" data-name="SERVICE_KEY_ROTATION_RUNBOOK.md" data-desc="Service key rotation procedure: when and how to rotate Supabase service role key, update all dependents.">
         <div class="card-top"><span class="card-name">SERVICE_KEY_ROTATION_RUNBOOK.md</span><span class="card-type t-runbook">RUNBOOK</span></div>
         <div class="card-path">docs/deployment/SERVICE_KEY_ROTATION_RUNBOOK.md</div>
-        <div class="card-desc">Service key rotation procedure: when, how, and which dependents to update.</div>
+        <div class="card-desc">Service key rotation: when, how, and which dependents to update.</div>
         <div class="card-tags"><span class="card-tag tag-ops">Ops</span></div>
       </div>
 
-      <div class="card" data-section="deployment" data-tags="matchday correction rescore runbook ops" data-name="MD1_CORRECTION_RUNBOOK.md" data-desc="Post-matchday correction procedure: how to re-score a specific matchday after errors or retroactive fixes.">
+      <div class="card" data-section="deployment" data-tags="matchday correction rescore runbook post-match ops" data-name="MD1_CORRECTION_RUNBOOK.md" data-desc="Post-matchday correction procedure: how to re-score a specific matchday after errors or retroactive fixes.">
         <div class="card-top"><span class="card-name">MD1_CORRECTION_RUNBOOK.md</span><span class="card-type t-runbook">RUNBOOK</span></div>
         <div class="card-path">docs/ops/MD1_CORRECTION_RUNBOOK.md</div>
-        <div class="card-desc">Post-matchday correction procedure: how to re-score a specific matchday after errors.</div>
+        <div class="card-desc">Post-matchday correction procedure: re-score a specific matchday after errors.</div>
         <div class="card-tags"><span class="card-tag tag-ops">Ops</span><span class="card-tag tag-football">Football</span></div>
       </div>
+
     </div>
 
     <!-- REFERENCE -->
@@ -607,9 +707,9 @@
       <span class="section-title">📚 Reference</span>
       <span class="section-badge t-ref">Developer Guides</span>
     </div>
-    <div class="cards" id="cards-reference">
+    <div class="cards">
 
-      <div class="card" data-section="reference" data-tags="conventions naming code style git hooks" data-name="CONVENTIONS.md" data-desc="Code conventions: file naming, component structure, CSS, git workflow, naming patterns. Comprehensive reference.">
+      <div class="card" data-section="reference" data-tags="conventions naming code style git hooks patterns" data-name="CONVENTIONS.md" data-desc="Code conventions: file naming, component structure, CSS, git workflow, naming patterns.">
         <div class="card-top"><span class="card-name">CONVENTIONS.md</span><span class="card-type t-ref">REFERENCE</span></div>
         <div class="card-path">docs/reference/CONVENTIONS.md</div>
         <div class="card-desc">Code conventions: file naming, component structure, CSS, git workflow, naming patterns.</div>
@@ -619,16 +719,24 @@
       <div class="card" data-section="reference" data-tags="local dev setup Node npm Supabase CLI environment" data-name="LOCAL_DEVELOPMENT.md" data-desc="Dev environment setup: Node, npm, Supabase CLI, env vars, running the app locally.">
         <div class="card-top"><span class="card-name">LOCAL_DEVELOPMENT.md</span><span class="card-type t-runbook">SETUP GUIDE</span></div>
         <div class="card-path">docs/reference/LOCAL_DEVELOPMENT.md</div>
-        <div class="card-desc">Dev environment setup: Node, npm, Supabase CLI, env vars, running the app.</div>
+        <div class="card-desc">Dev environment setup: Node, npm, Supabase CLI, env vars, running the app locally.</div>
         <div class="card-tags"></div>
       </div>
 
-      <div class="card" data-section="reference" data-tags="mobile Capacitor iOS Android build native" data-name="MOBILE_DEVELOPMENT.md" data-desc="Mobile setup: Capacitor, iOS/Android emulators, build scripts, native plugin reference.">
+      <div class="card" data-section="reference" data-tags="mobile Capacitor iOS Android build native plugin" data-name="MOBILE_DEVELOPMENT.md" data-desc="Mobile setup: Capacitor, iOS/Android emulators, build scripts, native plugin reference.">
         <div class="card-top"><span class="card-name">MOBILE_DEVELOPMENT.md</span><span class="card-type t-runbook">SETUP GUIDE</span></div>
         <div class="card-path">docs/reference/MOBILE_DEVELOPMENT.md</div>
         <div class="card-desc">Mobile setup: Capacitor, iOS/Android emulators, build scripts, native plugin reference.</div>
         <div class="card-tags"></div>
       </div>
+
+      <div class="card" data-section="reference" data-tags="license npm dependencies MIT ISC Apache summary" data-name="license-summary.txt" data-desc="npm dependency license summary: MIT 306, ISC 23, Apache-2.0 22, BSD-2-Clause 11. Generated by license-checker.">
+        <div class="card-top"><span class="card-name">license-summary.txt</span><span class="card-type t-ref">REFERENCE</span></div>
+        <div class="card-path">docs/reference/license-summary.txt</div>
+        <div class="card-desc">npm dependency license summary: MIT 306, ISC 23, Apache-2.0 22, BSD-2-Clause 11.</div>
+        <div class="card-tags"><span class="card-tag tag-buyout">Buyout</span></div>
+      </div>
+
     </div>
 
     <!-- TESTING -->
@@ -636,161 +744,200 @@
       <span class="section-title">🧪 Testing</span>
       <span class="section-badge t-test">Playwright E2E</span>
     </div>
-    <div class="cards" id="cards-testing">
+    <div class="cards">
 
-      <div class="card" data-section="testing" data-tags="E2E playwright test execution flows steps" data-name="E2E_TEST_PLAYBOOK.md" data-desc="E2E test execution: setup, test matrix, step-by-step flows, Playwright config, assertions. Comprehensive self-contained reference.">
+      <div class="card" data-section="testing" data-tags="E2E playwright test execution flows steps matrix CI" data-name="E2E_TEST_PLAYBOOK.md" data-desc="E2E test execution: setup, test matrix, step-by-step flows, Playwright config, assertions.">
         <div class="card-top"><span class="card-name">E2E_TEST_PLAYBOOK.md</span><span class="card-type t-test">PLAYBOOK</span></div>
         <div class="card-path">docs/testing/E2E_TEST_PLAYBOOK.md</div>
-        <div class="card-desc">E2E test execution: setup, test matrix, step-by-step flows, assertions. Self-contained reference.</div>
+        <div class="card-desc">E2E test execution: setup, test matrix, step-by-step flows, Playwright config, assertions.</div>
         <div class="card-tags"></div>
       </div>
 
-      <div class="card" data-section="testing" data-tags="testing strategy unit integration E2E CI coverage" data-name="TESTING_STRATEGY.md" data-desc="Overall testing philosophy: unit/integration/E2E tiers, CI/CD, Playwright setup, best practices.">
+      <div class="card" data-section="testing" data-tags="testing strategy unit integration E2E CI coverage philosophy" data-name="TESTING_STRATEGY.md" data-desc="Overall testing philosophy: unit/integration/E2E tiers, CI/CD, Playwright setup, best practices.">
         <div class="card-top"><span class="card-name">TESTING_STRATEGY.md</span><span class="card-type t-test">STRATEGY</span></div>
         <div class="card-path">docs/testing/TESTING_STRATEGY.md</div>
         <div class="card-desc">Testing philosophy: unit/integration/E2E tiers, CI/CD, Playwright setup, best practices.</div>
         <div class="card-tags"></div>
       </div>
 
-      <div class="card" data-section="testing" data-tags="test results history coverage sessions" data-name="TEST_RESULTS.md" data-desc="Historical test results: which flows pass/fail, bugs found, session records.">
+      <div class="card" data-section="testing" data-tags="test results history coverage sessions pass fail bugs" data-name="TEST_RESULTS.md" data-desc="Historical test results: which flows pass/fail, bugs found, session records.">
         <div class="card-top"><span class="card-name">TEST_RESULTS.md</span><span class="card-type t-test">HISTORY</span></div>
         <div class="card-path">docs/testing/TEST_RESULTS.md</div>
         <div class="card-desc">Historical test results: which flows pass/fail, bugs found, session records.</div>
         <div class="card-tags"></div>
       </div>
+
+      <div class="card" data-section="testing" data-tags="e2e seed SQL fixtures playwright setup database" data-name="e2e seed fixtures" data-desc="SQL seed files for E2E test runs: e2e-seed.sql (base data) and e2e-seed-r35-scoring.sql (EPL Round 35 scoring data).">
+        <div class="card-top"><span class="card-name">e2e seed fixtures</span><span class="card-type t-test">TEST DATA</span></div>
+        <div class="card-path">e2e/fixtures/e2e-seed.sql · e2e-seed-r35-scoring.sql</div>
+        <div class="card-desc">SQL seed files for E2E test runs: base data and EPL Round 35 scoring data.</div>
+        <div class="card-tags"></div>
+      </div>
+
     </div>
 
     <!-- ARCHIVE -->
     <div class="section-header" id="section-archive">
       <span class="section-title">🗂️ Archive</span>
-      <span class="section-badge t-archive">Historical Reference</span>
+      <span class="section-badge t-archive">Historical Reference Only</span>
     </div>
-    <div class="cards" id="cards-archive">
+    <div class="cards">
 
-      <div class="card" data-section="archive" data-tags="old brand design forza dark direction archive" data-name="Brand — Forza Dark (archived)" data-desc="Historical Forza dark design direction — admin tab, league hub, live centre, player modals, scores. Superseded by Kit Light in docs/platform_revision/design/.">
+      <div class="card" data-section="archive" data-tags="old brand design forza dark direction historical archived" data-name="Brand — Forza Dark (archived)" data-desc="Historical Forza dark design direction: admin tab, league hub, live centre, player modals, scores, tokens. Superseded by Kit Light.">
         <div class="card-top"><span class="card-name">Brand — Forza Dark Direction</span><span class="card-type t-archive">ARCHIVED</span></div>
         <div class="card-path">docs/archive/brand-forza-dark/</div>
-        <div class="card-desc">Historical Forza dark design direction. Superseded by Kit Light in platform_revision/design/.</div>
+        <div class="card-desc">Historical Forza dark design. Superseded by Kit Light in platform_revision/design/.</div>
         <div class="card-tags"><span class="card-tag tag-archived">Archived</span><span class="card-tag tag-design">Design</span></div>
       </div>
 
-      <div class="card" data-section="archive" data-tags="completed sprint plans superpowers historical" data-name="Completed Sprint Plans" data-desc="Historical superpowers session plans (bug fixes, UI polish, commissioner guide, trade proposals, snake draft). Completed and archived.">
+      <div class="card" data-section="archive" data-tags="completed sprint plans superpowers historical finished" data-name="Completed Sprint Plans" data-desc="Five completed superpowers sprint plans from May–June 2026: bug fixes, UI polish, commissioner guide, trade proposals, snake draft.">
         <div class="card-top"><span class="card-name">Completed Sprint Plans</span><span class="card-type t-archive">ARCHIVED</span></div>
         <div class="card-path">docs/archive/completed-sprint-plans/</div>
-        <div class="card-desc">Historical superpowers session plans from May–June 2026. All completed.</div>
+        <div class="card-desc">Five completed sprint plans from May–June 2026. All shipped.</div>
         <div class="card-tags"><span class="card-tag tag-archived">Archived</span></div>
       </div>
 
-      <div class="card" data-section="archive" data-tags="code audit logic UI audit May 2026" data-name="Code & Logic Audits (May 2026)" data-desc="Comprehensive code, logic, and UI audits from May 2026. Historical reference for understanding the pre-pilot codebase state.">
-        <div class="card-top"><span class="card-name">Code & Logic Audits</span><span class="card-type t-archive">ARCHIVED</span></div>
-        <div class="card-path">docs/archive/ (CODE_AUDIT, LOGIC_AUDIT, UI_AUDIT files)</div>
-        <div class="card-desc">Comprehensive code, logic, and UI audits from May 2026. Historical reference.</div>
+      <div class="card" data-section="archive" data-tags="stale launch docs dry run app store assessment archived" data-name="Stale Launch Docs" data-desc="DRY_RUN_PREP_CHECKLIST.md and APP_STORE_ASSESSMENT.md — pre-pilot planning docs, superseded by current pilot operation.">
+        <div class="card-top"><span class="card-name">Stale Launch Docs</span><span class="card-type t-archive">ARCHIVED</span></div>
+        <div class="card-path">docs/archive/stale-launch-docs/</div>
+        <div class="card-desc">DRY_RUN_PREP_CHECKLIST, APP_STORE_ASSESSMENT, BUG_TRACKER (stale as of May 2026) — all superseded.</div>
         <div class="card-tags"><span class="card-tag tag-archived">Archived</span></div>
       </div>
+
+      <div class="card" data-section="archive" data-tags="stale product plans pipeline roadmap 12 month archived" data-name="Stale Product Plans" data-desc="PIPELINE.md and 12_MONTH_ROADMAP_2026_2027.md — early strategy docs superseded by TRACKER.md.">
+        <div class="card-top"><span class="card-name">Stale Product Plans</span><span class="card-type t-archive">ARCHIVED</span></div>
+        <div class="card-path">docs/archive/stale-product-plans/</div>
+        <div class="card-desc">PIPELINE.md and 12_MONTH_ROADMAP — early strategy docs superseded by TRACKER.md.</div>
+        <div class="card-tags"><span class="card-tag tag-archived">Archived</span></div>
+      </div>
+
     </div>
 
-    <div class="no-results hidden" id="no-results">
+    <div class="no-results" id="no-results">
       <h3>No documents found</h3>
-      <p>Try a different search term or clear the filter.</p>
+      <p>Try a different search term or clear the active filter.</p>
     </div>
 
   </main>
 </div>
 
 <script>
-  // ── Data ──────────────────────────────────────────────────────────────────
-  const SECTION_IDS = ['critical','platform_revision','architecture','api','deployment','reference','testing','archive'];
+  // ── Constants ─────────────────────────────────────────────────────────────
+  const SECTIONS = ['critical','root','platform_revision','architecture','api','deployment','reference','testing','archive'];
+  const COUNT_IDS = {
+    critical: 'cnt-critical',
+    root: 'cnt-root',
+    platform_revision: 'cnt-pr',
+    architecture: 'cnt-arch',
+    api: 'cnt-api',
+    deployment: 'cnt-dep',
+    reference: 'cnt-ref',
+    testing: 'cnt-test',
+    archive: 'cnt-archive'
+  };
 
-  // ── Search ────────────────────────────────────────────────────────────────
-  const searchInput = document.getElementById('search');
-  const chips = document.querySelectorAll('.chip');
-  const resultCount = document.getElementById('result-count');
   let activeFilter = 'all';
 
-  function normalise(str) { return str.toLowerCase().replace(/[-_]/g,' '); }
+  // ── DOM refs ──────────────────────────────────────────────────────────────
+  const searchInput  = document.getElementById('search');
+  const chips        = document.querySelectorAll('.chip');
+  const resultCount  = document.getElementById('result-count');
+  const noResults    = document.getElementById('no-results');
+  const allCards     = document.querySelectorAll('.card');
+  const sublabels    = document.querySelectorAll('.sublabel');
 
+  // ── Helpers ───────────────────────────────────────────────────────────────
+  function norm(s) { return (s || '').toLowerCase().replace(/[-_]/g, ' '); }
+
+  // ── Main update ───────────────────────────────────────────────────────────
   function updateDisplay() {
-    const q = normalise(searchInput.value.trim());
-    const cards = document.querySelectorAll('.card');
+    const q = norm(searchInput.value.trim());
     let visible = 0;
 
-    cards.forEach(card => {
-      const section = card.dataset.section || '';
-      const name = normalise(card.dataset.name || '');
-      const desc = normalise(card.dataset.desc || '');
-      const tags = normalise(card.dataset.tags || '');
-      const searchable = name + ' ' + desc + ' ' + tags;
-
-      const matchesFilter = activeFilter === 'all' || section === activeFilter ||
-        (activeFilter === 'platform_revision' && section === 'platform_revision');
-      const matchesSearch = !q || searchable.includes(q);
-
-      if (matchesFilter && matchesSearch) {
-        card.classList.remove('hidden');
-        visible++;
-      } else {
-        card.classList.add('hidden');
-      }
+    allCards.forEach(card => {
+      const section   = card.dataset.section || '';
+      const searchStr = norm(card.dataset.name) + ' ' + norm(card.dataset.desc) + ' ' + norm(card.dataset.tags);
+      const matchFilter = activeFilter === 'all' || section === activeFilter;
+      const matchSearch = !q || searchStr.includes(q);
+      const show = matchFilter && matchSearch;
+      card.classList.toggle('hidden', !show);
+      if (show) visible++;
     });
 
-    // Show/hide section headers
-    SECTION_IDS.forEach(id => {
+    // ── Section header visibility ─────────────────────────────────────────
+    SECTIONS.forEach(id => {
       const header = document.getElementById('section-' + id);
       if (!header) return;
-      // Count visible cards in this section
-      const sectionCards = document.querySelectorAll(`.card[data-section="${id}"]`);
-      const sectionVisible = Array.from(sectionCards).filter(c => !c.classList.contains('hidden')).length;
-      // Also check sub-sections for platform_revision
-      let anyVisible = sectionVisible > 0;
-      if (id === 'platform_revision') {
-        ['cards-pr-dd','cards-pr-arch','cards-pr-modules','cards-pr-design'].forEach(cid => {
-          const container = document.getElementById(cid);
-          if (container) {
-            const visibleInContainer = Array.from(container.querySelectorAll('.card')).filter(c => !c.classList.contains('hidden')).length;
-            if (visibleInContainer > 0) anyVisible = true;
-          }
-        });
-      }
+      const anyVisible = Array.from(document.querySelectorAll(`.card[data-section="${id}"]`))
+        .some(c => !c.classList.contains('hidden'));
       header.classList.toggle('hidden', !anyVisible);
-
-      // Hide sub-section labels too if empty (platform_revision)
-      if (id === 'platform_revision') {
-        const labels = document.querySelectorAll('[data-sublabel]');
-        labels.forEach(l => {
-          const rel = l.dataset.sublabel;
-          const container = document.getElementById(rel);
-          if (container) {
-            const v = Array.from(container.querySelectorAll('.card')).filter(c => !c.classList.contains('hidden')).length;
-            l.classList.toggle('hidden', v === 0);
-          }
-        });
-      }
     });
 
-    resultCount.textContent = visible + ' document' + (visible !== 1 ? 's' : '');
-    document.getElementById('no-results').classList.toggle('hidden', visible > 0);
+    // ── Sublabel visibility (within platform_revision) ────────────────────
+    sublabels.forEach(label => {
+      // find the next sibling .cards div
+      let sibling = label.nextElementSibling;
+      while (sibling && !sibling.classList.contains('cards')) sibling = sibling.nextElementSibling;
+      if (!sibling) return;
+      const anyVisible = Array.from(sibling.querySelectorAll('.card')).some(c => !c.classList.contains('hidden'));
+      label.classList.toggle('hidden', !anyVisible);
+    });
+
+    // ── Sidebar counters ──────────────────────────────────────────────────
+    SECTIONS.forEach(id => {
+      const count = Array.from(document.querySelectorAll(`.card[data-section="${id}"]`))
+        .filter(c => !c.classList.contains('hidden')).length;
+      const el = document.getElementById(COUNT_IDS[id]);
+      if (el) el.textContent = count;
+    });
+
+    // ── Result count ──────────────────────────────────────────────────────
+    resultCount.textContent = visible + ' doc' + (visible !== 1 ? 's' : '');
+    noResults.classList.toggle('visible', visible === 0);
   }
 
-  searchInput.addEventListener('input', updateDisplay);
+  // ── Jump-to section ───────────────────────────────────────────────────────
+  // NOTE: named jumpTo (not scrollTo) to avoid conflict with window.scrollTo
+  function jumpTo(sectionId) {
+    const el = document.getElementById('section-' + sectionId);
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
+    document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active'));
+    const target = document.querySelector(`.sidebar-item[data-section="${sectionId}"]`);
+    if (target) target.classList.add('active');
+  }
+
+  // ── Chip filter ───────────────────────────────────────────────────────────
   chips.forEach(chip => {
     chip.addEventListener('click', () => {
-      chips.forEach(c => c.classList.remove('active','active-gold'));
+      chips.forEach(c => c.classList.remove('active'));
       chip.classList.add('active');
       activeFilter = chip.dataset.filter;
       updateDisplay();
     });
   });
 
-  function scrollTo(sectionId) {
-    const el = document.getElementById('section-' + sectionId);
-    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active'));
-    const target = document.querySelector(`.sidebar-item[data-section="${sectionId}"]`);
-    if (target) target.classList.add('active');
-  }
+  // ── Search ────────────────────────────────────────────────────────────────
+  searchInput.addEventListener('input', updateDisplay);
 
-  // Initial count
+  // ── Highlight sidebar on scroll ───────────────────────────────────────────
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const id = entry.target.id.replace('section-', '');
+        document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active'));
+        const target = document.querySelector(`.sidebar-item[data-section="${id}"]`);
+        if (target) target.classList.add('active');
+      }
+    });
+  }, { rootMargin: '-10% 0px -80% 0px', threshold: 0 });
+
+  SECTIONS.forEach(id => {
+    const el = document.getElementById('section-' + id);
+    if (el) observer.observe(el);
+  });
+
+  // ── Init ──────────────────────────────────────────────────────────────────
   updateDisplay();
 </script>
 </body>
