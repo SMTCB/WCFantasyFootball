@@ -1,5 +1,5 @@
 import { BrowserRouter, HashRouter, Routes, Route, Navigate, useNavigate, useSearchParams } from 'react-router-dom';
-import { useEffect, useState } from 'react';
+import { lazy, Suspense, useEffect, useState } from 'react';
 import { isNative } from './lib/capacitor';
 import { AuthProvider } from './context/AuthContext';
 import { SportProvider } from './context/SportContext';
@@ -15,41 +15,48 @@ import ErrorBoundary from './components/ErrorBoundary';
 import AppLayout from './components/AppLayout';
 import OnboardingWizard from './components/OnboardingWizard';
 import { KeyboardShortcutsModal } from './components/KeyboardShortcutsModal';
-import MultiSportHomeScreen from './screens/MultiSportHomeScreen';
-import TrophyCabinetScreen from './screens/TrophyCabinetScreen';
-import HomeScreen from './screens/HomeScreen';
-import SquadScreen from './screens/SquadScreen';
-import AuthScreen from './screens/AuthScreen';
-import LeagueScreen from './screens/LeagueScreen';
-import AdminSeedScreen from './screens/AdminSeedScreen';
-import MarketScreen from './screens/MarketScreen';
-import LiveScreen from './screens/LiveScreen';
-import RecapScreen from './screens/RecapScreen';
-import BracketScreen from './screens/BracketScreen';
-import DraftScreen from './screens/DraftScreen';
-import DraftRecoveryScreen from './screens/DraftRecoveryScreen';
-import SettingsScreen from './screens/SettingsScreen';
-import WalletScreen from './screens/WalletScreen';
-import ChallengeScreen from './screens/ChallengeScreen';
-import NotFoundScreen from './screens/NotFoundScreen';
-import ClubhouseScreen from './screens/ClubhouseScreen';
-import PaddockLobbyScreen from './screens/f1/PaddockLobbyScreen';
-import F1HomeScreen from './screens/f1/F1HomeScreen';
-import F1RaceBetScreen from './screens/f1/F1RaceBetScreen';
-import F1SeasonBetsScreen from './screens/f1/F1SeasonBetsScreen';
-import F1StandingsScreen from './screens/f1/F1StandingsScreen';
-import F1ReportScreen from './screens/f1/F1ReportScreen';
-import F1AdminScreen from './screens/f1/F1AdminScreen';
-import PlayerBoxScreen from './screens/tennis/PlayerBoxScreen';
-import TennisHomeScreen from './screens/tennis/TennisHomeScreen';
-import TennisTournamentScreen from './screens/tennis/TennisTournamentScreen';
-import TennisLeaderboardScreen from './screens/tennis/TennisLeaderboardScreen';
-import TennisAtpFinalsScreen from './screens/tennis/TennisAtpFinalsScreen';
-import TennisAdminScreen from './screens/tennis/TennisAdminScreen';
 import { useOnboarding } from './hooks/useOnboarding';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 import { ToastProvider } from './components/Toast';
 import { ClubhouseNotifProvider } from './context/ClubhouseNotifProvider';
+
+// ── Route-level code splitting (LOW-1) ───────────────────────────────────────
+// Each screen is loaded only when its route is first visited. This shrinks the
+// initial JS bundle and eliminates the shared-module surface that causes
+// Rolldown TDZ crashes in production (CODE-1).
+const MultiSportHomeScreen  = lazy(() => import('./screens/MultiSportHomeScreen'));
+const TrophyCabinetScreen   = lazy(() => import('./screens/TrophyCabinetScreen'));
+const HomeScreen            = lazy(() => import('./screens/HomeScreen'));
+const SquadScreen           = lazy(() => import('./screens/SquadScreen'));
+const AuthScreen            = lazy(() => import('./screens/AuthScreen'));
+const LeagueScreen          = lazy(() => import('./screens/LeagueScreen'));
+const AdminSeedScreen       = lazy(() => import('./screens/AdminSeedScreen'));
+const MarketScreen          = lazy(() => import('./screens/MarketScreen'));
+const LiveScreen            = lazy(() => import('./screens/LiveScreen'));
+const RecapScreen           = lazy(() => import('./screens/RecapScreen'));
+const BracketScreen         = lazy(() => import('./screens/BracketScreen'));
+const DraftScreen           = lazy(() => import('./screens/DraftScreen'));
+const DraftRecoveryScreen   = lazy(() => import('./screens/DraftRecoveryScreen'));
+const SettingsScreen        = lazy(() => import('./screens/SettingsScreen'));
+const WalletScreen          = lazy(() => import('./screens/WalletScreen'));
+const ChallengeScreen       = lazy(() => import('./screens/ChallengeScreen'));
+const NotFoundScreen        = lazy(() => import('./screens/NotFoundScreen'));
+const ClubhouseScreen       = lazy(() => import('./screens/ClubhouseScreen'));
+// F1 module
+const PaddockLobbyScreen    = lazy(() => import('./screens/f1/PaddockLobbyScreen'));
+const F1HomeScreen          = lazy(() => import('./screens/f1/F1HomeScreen'));
+const F1RaceBetScreen       = lazy(() => import('./screens/f1/F1RaceBetScreen'));
+const F1SeasonBetsScreen    = lazy(() => import('./screens/f1/F1SeasonBetsScreen'));
+const F1StandingsScreen     = lazy(() => import('./screens/f1/F1StandingsScreen'));
+const F1ReportScreen        = lazy(() => import('./screens/f1/F1ReportScreen'));
+const F1AdminScreen         = lazy(() => import('./screens/f1/F1AdminScreen'));
+// Tennis module
+const PlayerBoxScreen       = lazy(() => import('./screens/tennis/PlayerBoxScreen'));
+const TennisHomeScreen      = lazy(() => import('./screens/tennis/TennisHomeScreen'));
+const TennisTournamentScreen = lazy(() => import('./screens/tennis/TennisTournamentScreen'));
+const TennisLeaderboardScreen = lazy(() => import('./screens/tennis/TennisLeaderboardScreen'));
+const TennisAtpFinalsScreen = lazy(() => import('./screens/tennis/TennisAtpFinalsScreen'));
+const TennisAdminScreen     = lazy(() => import('./screens/tennis/TennisAdminScreen'));
 
 // Redirect to set-password form when Supabase fires a PASSWORD_RECOVERY event.
 // This fires regardless of which URL the recovery link lands on.
@@ -95,6 +102,7 @@ function AppRoutes() {
         />
       )}
 
+      <Suspense fallback={null}>
       <Routes>
         {/* Public route — only reachable when auth is enabled */}
         <Route path="/auth" element={<AuthScreen />} />
@@ -150,6 +158,7 @@ function AppRoutes() {
           }
         />
       </Routes>
+      </Suspense>
     </>
   );
 }
