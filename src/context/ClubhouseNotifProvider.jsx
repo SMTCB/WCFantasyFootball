@@ -6,9 +6,10 @@ import { ClubhouseNotifContext } from './ClubhouseNotifContext';
 export function ClubhouseNotifProvider({ children }) {
   const [unreadCount, setUnreadCount] = useState(0);
   const { user } = useAuth();
+  const userId = user?.id ?? null;
 
   useEffect(() => {
-    if (!user) { setUnreadCount(0); return; }
+    if (!userId) { setUnreadCount(0); return; }
 
     supabase
       .from('clubhouse_notifications')
@@ -22,14 +23,14 @@ export function ClubhouseNotifProvider({ children }) {
         event: 'INSERT',
         schema: 'public',
         table: 'clubhouse_notifications',
-        filter: `user_id=eq.${user.id}`,
+        filter: `user_id=eq.${userId}`,
       }, () => {
         setUnreadCount(prev => prev + 1);
       })
       .subscribe();
 
     return () => { supabase.removeChannel(channel); };
-  }, [user?.id]);
+  }, [userId]);
 
   return (
     <ClubhouseNotifContext.Provider value={{ unreadCount }}>
