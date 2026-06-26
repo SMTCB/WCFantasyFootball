@@ -113,7 +113,7 @@ function IncomingCard({ challenge, onAccept, onDecline, loading }) {
           onClick={() => onAccept(challenge.id)}
           disabled={loading}
           style={{
-            flex: 1, padding: '9px 0', borderRadius: 6, cursor: loading ? 'not-allowed' : 'pointer',
+            flex: 1, padding: '8px 0', borderRadius: 6, cursor: loading ? 'not-allowed' : 'pointer',
             background: 'transparent', border: '1.5px solid var(--gold)',
             ...MONO, fontSize: 8.5, letterSpacing: '.14em', textTransform: 'uppercase',
             fontWeight: 600, color: 'var(--gold)', opacity: loading ? 0.6 : 1,
@@ -123,7 +123,7 @@ function IncomingCard({ challenge, onAccept, onDecline, loading }) {
           onClick={() => onDecline(challenge.id)}
           disabled={loading}
           style={{
-            flex: 1, padding: '9px 0', borderRadius: 6, cursor: loading ? 'not-allowed' : 'pointer',
+            flex: 1, padding: '8px 0', borderRadius: 6, cursor: loading ? 'not-allowed' : 'pointer',
             background: 'transparent', border: '1px solid var(--rule)',
             ...MONO, fontSize: 8.5, letterSpacing: '.14em', textTransform: 'uppercase',
             fontWeight: 500, color: 'var(--text2)', opacity: loading ? 0.6 : 1,
@@ -168,7 +168,7 @@ function OutgoingCard({ challenge, onCancel, loading }) {
         onClick={() => onCancel(challenge.id)}
         disabled={loading}
         style={{
-          padding: '7px', borderRadius: 6, border: '1px solid var(--rule)',
+          padding: '8px', borderRadius: 6, border: '1px solid var(--rule)',
           background: 'transparent', ...MONO, fontSize: 8, color: 'var(--mute)',
           cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? 0.6 : 1,
         }}
@@ -193,7 +193,7 @@ function LiveCard({ challenge, userId }) {
       overflow: 'hidden',
     }}>
       <div style={{
-        padding: '9px 13px', borderBottom: '1px solid var(--rule)',
+        padding: '8px 12px', borderBottom: '1px solid var(--rule)',
         display: 'flex', alignItems: 'center', gap: 8,
       }}>
         <span style={{ width: 7, height: 7, borderRadius: '50%', background: 'var(--pos)', flexShrink: 0 }} />
@@ -314,10 +314,10 @@ function WalletTabContent({ wallet, walletLoading }) {
 
         {/* Balance card */}
         <div style={{ background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 6 }}>
-          <div style={{ padding: '12px 15px', borderBottom: '1px solid var(--rule)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--rule)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div style={{ ...HEAD, fontSize: 13, letterSpacing: '-0.01em' }}>Coin Wallet</div>
           </div>
-          <div style={{ padding: '20px 15px', textAlign: 'center' }}>
+          <div style={{ padding: '20px 16px', textAlign: 'center' }}>
             {walletLoading ? (
               <div style={{ ...MONO, fontSize: 12, color: 'var(--mute)' }}>Loading…</div>
             ) : (
@@ -343,7 +343,7 @@ function WalletTabContent({ wallet, walletLoading }) {
                     setTimeout(() => setBuyStatus(null), 3000);
                   }}
                   style={{
-                    width: '100%', padding: '9px 0', borderRadius: 6,
+                    width: '100%', padding: '8px 0', borderRadius: 6,
                     border: '1.5px solid var(--rule)', background: 'transparent',
                     ...MONO, fontSize: 8.5, letterSpacing: '.12em', textTransform: 'uppercase',
                     color: 'var(--text2)', cursor: 'pointer',
@@ -358,10 +358,10 @@ function WalletTabContent({ wallet, walletLoading }) {
 
         {/* Coin packs */}
         <div style={{ background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 6 }}>
-          <div style={{ padding: '12px 15px', borderBottom: '1px solid var(--rule)' }}>
+          <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--rule)' }}>
             <div style={{ ...HEAD, fontSize: 13, letterSpacing: '-0.01em' }}>Buy Coins</div>
           </div>
-          <div style={{ padding: '14px 15px', display: 'flex', gap: 10 }}>
+          <div style={{ padding: '16px 16px', display: 'flex', gap: 10 }}>
             {[{ coins: 500, price: '£1.99' }, { coins: 1500, price: '£4.99' }, { coins: 5000, price: '£12.99' }].map(({ coins, price }) => (
               <div key={coins} style={{
                 flex: 1, padding: '12px 8px', borderRadius: 6,
@@ -373,16 +373,16 @@ function WalletTabContent({ wallet, walletLoading }) {
               </div>
             ))}
           </div>
-          <div style={{ padding: '0 15px 13px', ...MONO, fontSize: 8, color: 'var(--mute)', textAlign: 'center' }}>Payments coming soon</div>
+          <div style={{ padding: '0 16px 12px', ...MONO, fontSize: 8, color: 'var(--mute)', textAlign: 'center' }}>Payments coming soon</div>
         </div>
 
         {/* Economy stats */}
         {econStats && (
           <div style={{ background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 6 }}>
-            <div style={{ padding: '12px 15px', borderBottom: '1px solid var(--rule)' }}>
+            <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--rule)' }}>
               <div style={{ ...HEAD, fontSize: 13, letterSpacing: '-0.01em' }}>Platform Economy</div>
             </div>
-            <div style={{ padding: '14px 15px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px 24px' }}>
+            <div style={{ padding: '16px 16px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px 24px' }}>
               {[
                 { label: 'CIRCULATING', value: Number(econStats.circulating).toLocaleString() },
                 { label: 'IN ESCROW',   value: Number(econStats.in_escrow).toLocaleString() },
@@ -400,10 +400,10 @@ function WalletTabContent({ wallet, walletLoading }) {
 
         {/* Transaction history */}
         <div style={{ background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 6 }}>
-          <div style={{ padding: '12px 15px', borderBottom: '1px solid var(--rule)' }}>
+          <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--rule)' }}>
             <div style={{ ...HEAD, fontSize: 13, letterSpacing: '-0.01em' }}>Transaction History</div>
           </div>
-          <div style={{ padding: '0 15px' }}>
+          <div style={{ padding: '0 16px' }}>
             {walletLoading ? (
               <div style={{ ...MONO, fontSize: 12, color: 'var(--mute)', textAlign: 'center', padding: '24px 0' }}>Loading…</div>
             ) : transactions.length === 0 ? (
@@ -801,10 +801,10 @@ export default function ChallengeScreen() {
 
             {/* Wallet mini-card */}
             <div style={{ background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 6 }}>
-              <div style={{ padding: '12px 15px', borderBottom: '1px solid var(--rule)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--rule)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <div style={{ ...HEAD, fontSize: 13, letterSpacing: '-0.01em' }}>Coin Wallet</div>
               </div>
-              <div style={{ padding: '14px 15px' }}>
+              <div style={{ padding: '16px 16px' }}>
                 <div style={{ ...MONO, fontSize: 8.5, letterSpacing: '.16em', textTransform: 'uppercase', color: 'var(--mute)', marginBottom: 5 }}>Available balance</div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
                   <Ci size="xl" />
@@ -818,7 +818,7 @@ export default function ChallengeScreen() {
                 <button
                   onClick={() => setOuterTab('wallet')}
                   style={{
-                    width: '100%', padding: '9px 0', borderRadius: 6, border: '1.5px solid var(--rule)',
+                    width: '100%', padding: '8px 0', borderRadius: 6, border: '1.5px solid var(--rule)',
                     background: 'transparent', cursor: 'pointer',
                     ...MONO, fontSize: 8.5, letterSpacing: '.12em', textTransform: 'uppercase', color: 'var(--text2)',
                   }}
@@ -828,7 +828,7 @@ export default function ChallengeScreen() {
 
             {/* Season record */}
             <div style={{ background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 6 }}>
-              <div style={{ padding: '12px 15px', borderBottom: '1px solid var(--rule)' }}>
+              <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--rule)' }}>
                 <div style={{ ...HEAD, fontSize: 13, letterSpacing: '-0.01em' }}>Season record</div>
               </div>
               <div style={{ padding: '10px 14px' }}>
@@ -853,12 +853,12 @@ export default function ChallengeScreen() {
                           <div style={{ ...MONO, fontSize: 7.5, letterSpacing: '.1em', textTransform: 'uppercase', color: 'var(--mute)', marginTop: 2 }}>Void</div>
                         </div>
                       </div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 12, padding: '5px 0', borderBottom: '1px solid var(--rule)' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 12, padding: '4px 0', borderBottom: '1px solid var(--rule)' }}>
                         <span style={{ color: 'var(--text2)' }}>Net P&L</span>
                         <strong style={{ ...HEAD, fontSize: 13, letterSpacing: '-0.01em', color: netWL >= 0 ? 'var(--pos)' : 'var(--neg)' }}>{netWL >= 0 ? '+' : ''}{netWL.toLocaleString()} C</strong>
                       </div>
                       {total > 0 && (
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 12, padding: '5px 0' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 12, padding: '4px 0' }}>
                           <span style={{ color: 'var(--text2)' }}>Win rate</span>
                           <strong style={{ ...HEAD, fontSize: 13, letterSpacing: '-0.01em' }}>{Math.round(won / total * 100)}%</strong>
                         </div>

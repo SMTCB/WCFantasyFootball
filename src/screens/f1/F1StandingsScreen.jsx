@@ -30,7 +30,7 @@ export default function F1StandingsScreen() {
         <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 9, letterSpacing: '0.18em', color: 'rgba(255,255,255,0.45)', marginBottom: 4 }}>
           PADDOCK STANDINGS · 2026
         </div>
-        <h1 style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 22, color: '#fff', margin: 0 }}>STANDINGS</h1>
+        <h1 style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 22, color: 'var(--on-shell)', margin: 0 }}>STANDINGS</h1>
       </div>
 
       {/* View toggle */}

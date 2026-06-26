@@ -104,7 +104,7 @@ export default function F1HomeScreen() {
               onClick={() => setShowSelector(s => !s)}
               style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', textAlign: 'left' }}
             >
-              <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 20, color: '#fff', lineHeight: 1.1 }}>
+              <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 20, color: 'var(--on-shell)', lineHeight: 1.1 }}>
                 {activePaddock?.name ?? 'PADDOCK'} <span style={{ fontSize: 12, opacity: 0.5 }}>▾</span>
               </div>
             </button>

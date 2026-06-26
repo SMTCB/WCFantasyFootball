@@ -89,7 +89,7 @@ export default function TennisAdminScreen() {
         <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 9, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.14em', marginBottom: 4 }}>
           Admin
         </div>
-        <h1 style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 24, color: '#fff', margin: 0 }}>
+        <h1 style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 24, color: 'var(--on-shell)', margin: 0 }}>
           Tennis Admin Panel
         </h1>
       </div>

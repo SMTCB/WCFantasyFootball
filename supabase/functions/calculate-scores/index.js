@@ -980,7 +980,6 @@ async function writeRoundBackup(roundMatchdayId, squads, fantasyPointsUpserts) {
     league_members_snapshot: lmRows ?? [],
   });
 
-  console.log(`[calculate-scores] round backup written for ${roundMatchdayId} — ${squadsSnapshot.length} squads`);
 }
 
 async function writeGazetteEntries(fixture_id, roundMatchdayId, fantasyPointsUpserts, squads) {

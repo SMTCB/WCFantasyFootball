@@ -80,11 +80,15 @@
   /* White-label accent cascade — operators override --brand-accent only */
   --brand-accent: #1A6FA8;
   --accent:         var(--brand-accent);
-  --accent-bg:      rgba(26,111,168,.08);   /* update manually if brand-accent changes */
+  --accent-bg:      color-mix(in srgb, var(--brand-accent) 8%, transparent);
   --cyan:           var(--brand-accent);    /* alias — components reference --cyan */
   --gold:           #B8720E;
-  /* Text on --shell (dark navy) surfaces — alpha-white for muted eyebrow labels */
-  --on-shell-dim:   rgba(255,255,255,.45);
+  /* Text on --shell (dark navy) surfaces */
+  --on-shell:       #ffffff;               /* full-brightness text on shell/nav headers */
+  --on-shell-dim:   rgba(255,255,255,.45); /* muted eyebrow labels on shell */
+  /* ── Spacing scale (base-4) ────────────────────────────────────────────────
+     Use multiples of 4px only: 4 8 12 16 24 32 48 64 80 96px.
+     Any inline style with a non-4 value (5, 7, 9, 13, 15px) is off-scale. */
   --positive:   #166534;
   --pos:        #166534;
   --pos-bg:     rgba(22,101,52,.10);

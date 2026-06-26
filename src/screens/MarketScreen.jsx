@@ -716,7 +716,7 @@ export default function MarketScreen() {
           <div>
             <div
               className="fz-label"
-              style={{ color: isLocked ? '#F87171' : 'rgba(255,255,255,0.5)' }}
+              style={{ color: isLocked ? 'var(--neg)' : 'rgba(255,255,255,0.5)' }}
             >
               {isLocked ? 'WINDOW CLOSED' : 'Transfer Window'}
             </div>
@@ -756,7 +756,7 @@ export default function MarketScreen() {
               <div className="fz-label" style={{ color: 'rgba(255,255,255,0.5)', fontSize: 10 }}>Squad</div>
               <div
                 className="text-[16px] lg:text-[20px] font-black tabular-nums leading-tight"
-                style={{ fontFamily: 'Archivo Black, sans-serif', color: squadCount >= squadSize ? '#4ADE80' : 'rgba(255,255,255,0.9)' }}
+                style={{ fontFamily: 'Archivo Black, sans-serif', color: squadCount >= squadSize ? 'var(--pos)' : 'rgba(255,255,255,0.9)' }}
               >
                 {squadCount}
                 <span className="text-[10px] lg:text-[12px] font-normal" style={{ color: 'rgba(255,255,255,0.4)' }}>/{squadSize}</span>
@@ -787,7 +787,7 @@ export default function MarketScreen() {
               const costs         = Array.isArray(transferPenalty) ? transferPenalty : [transferPenalty ?? 4];
               const totalPenCost  = [...Array(basketPenBuys)].reduce((sum, _, i) =>
                 sum + (costs[Math.min(penaltyUsed + i, costs.length - 1)] ?? costs[costs.length - 1]), 0);
-              const freeColor     = isUnlimited ? '#4ADE80' : projFreeLeft === 0 ? '#F87171' : projFreeLeft <= 1 ? 'var(--gold)' : 'rgba(255,255,255,0.9)';
+              const freeColor     = isUnlimited ? 'var(--pos)' : projFreeLeft === 0 ? 'var(--neg)' : projFreeLeft <= 1 ? 'var(--gold)' : 'rgba(255,255,255,0.9)';
               return (
                 <div className="text-right">
                   <div className="fz-label" style={{ color: 'rgba(255,255,255,0.5)', fontSize: 10 }}>
@@ -998,7 +998,7 @@ export default function MarketScreen() {
               <button
                 onClick={() => { setSelectedTeams(new Set()); setShowTeamPicker(false); setTeamSearch(''); }}
                 style={{
-                  flex: 1, padding: '7px', background: 'transparent',
+                  flex: 1, padding: '8px', background: 'transparent',
                   border: '1px solid var(--rule)', color: 'var(--mute)',
                   fontFamily: 'Archivo Black, sans-serif', fontSize: 9, letterSpacing: '.1em',
                   textTransform: 'uppercase', cursor: 'pointer', borderRadius: 3,
@@ -1009,7 +1009,7 @@ export default function MarketScreen() {
               <button
                 onClick={() => { setShowTeamPicker(false); setTeamSearch(''); }}
                 style={{
-                  flex: 2, padding: '7px', background: 'var(--cyan)', border: 'none',
+                  flex: 2, padding: '8px', background: 'var(--cyan)', border: 'none',
                   color: 'var(--ink)', fontFamily: 'Archivo Black, sans-serif', fontSize: 9,
                   letterSpacing: '.1em', textTransform: 'uppercase', cursor: 'pointer', borderRadius: 3,
                 }}
