@@ -17,7 +17,7 @@ export default function TennisLeaderboardScreen() {
           ← Tennis
         </button>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
-          <h1 style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 24, color: '#fff', margin: 0 }}>
+          <h1 style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 24, color: 'var(--on-shell)', margin: 0 }}>
             Season Standings
           </h1>
           {myBoxes.length > 1 && (

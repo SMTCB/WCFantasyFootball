@@ -147,7 +147,7 @@ export default function F1AdminScreen() {
     <div style={{ background: 'var(--ink)', minHeight: '100vh', paddingBottom: 40 }}>
       <div style={{ background: 'var(--shell)', padding: '16px 16px 12px' }}>
         <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 9, letterSpacing: '0.18em', color: 'rgba(255,255,255,0.45)', marginBottom: 4 }}>⚡ ADMIN PANEL</div>
-        <h1 style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 22, color: '#fff', margin: 0 }}>F1 ADMIN</h1>
+        <h1 style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 22, color: 'var(--on-shell)', margin: 0 }}>F1 ADMIN</h1>
       </div>
 
       {/* Section tabs */}

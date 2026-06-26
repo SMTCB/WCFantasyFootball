@@ -68,7 +68,7 @@ export default function PlayerBoxScreen() {
         <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 10, letterSpacing: '0.18em', color: 'rgba(255,255,255,0.45)', textTransform: 'uppercase', marginBottom: 6 }}>
           🎾 Tennis · 2026
         </div>
-        <h1 style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 26, color: '#fff', margin: 0, lineHeight: 1.1 }}>
+        <h1 style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 26, color: 'var(--on-shell)', margin: 0, lineHeight: 1.1 }}>
           The Player's Box
         </h1>
         <p style={{ fontFamily: 'Archivo, sans-serif', fontSize: 13, color: 'rgba(255,255,255,0.55)', margin: '6px 0 0' }}>

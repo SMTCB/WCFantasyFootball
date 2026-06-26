@@ -41,7 +41,7 @@ export default function TennisHomeScreen() {
           🎾 Tennis · 2026 ATP Season
         </div>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-          <h1 style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 26, color: '#fff', margin: 0 }}>
+          <h1 style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 26, color: 'var(--on-shell)', margin: 0 }}>
             {activeBox ? activeBox.name : 'Tennis'}
           </h1>
           {myBoxes.length > 1 && (
