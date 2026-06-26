@@ -11,9 +11,10 @@
     "test": "playwright test",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
-    "typecheck": "tsc --noEmit",
     "icons:generate": "node scripts/generate-app-icons.js",
-    "native:sync": "npm run build && npx cap sync"
+    "native:sync": "npm run build && npx cap sync",
+    "check:drift": "node scripts/check-function-drift.js",
+    "update:checksums": "node scripts/update-function-checksums.js"
   },
   "dependencies": {
     "@capacitor/android": "^8.3.1",
@@ -31,6 +32,7 @@
     "@dnd-kit/utilities": "^3.2.2",
     "@emnapi/core": "^1.10.0",
     "@emnapi/runtime": "^1.10.0",
+    "@sentry/react": "^10.62.0",
     "@supabase/supabase-js": "^2.103.3",
     "@tailwindcss/vite": "^4.2.2",
     "modern-screenshot": "^4.7.0",
@@ -50,6 +52,7 @@
     "eslint-plugin-react-hooks": "^7.0.1",
     "eslint-plugin-react-refresh": "^0.5.2",
     "globals": "^17.4.0",
+    "madge": "^8.0.0",
     "sharp": "^0.33.0",
     "typescript": "^6.0.3",
     "vite": "^8.0.4"

@@ -1,10 +1,25 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
+import * as Sentry from "@sentry/react";
 import "./index.css";
 import App from "./App.jsx";
 // initNative is called inside App.jsx — importing capacitor.js here AND
 // having AuthContext.jsx import it too creates a Rolldown TDZ at the entry point.
 import { supabase } from "./lib/supabase.js";
+
+// ── Sentry (OPS-2) ────────────────────────────────────────────────────────────
+// Supplements the existing report_client_error RPC reporter below.
+// Only initialises when VITE_SENTRY_DSN is set (not in dev unless explicitly configured).
+if (import.meta.env.VITE_SENTRY_DSN) {
+  Sentry.init({
+    dsn: import.meta.env.VITE_SENTRY_DSN,
+    environment: import.meta.env.MODE,
+    // Capture 10 % of transactions for performance monitoring
+    tracesSampleRate: 0.1,
+    // Attach component stack to React errors
+    integrations: [Sentry.browserTracingIntegration()],
+  });
+}
 
 // ── Global error reporter (O3) ───────────────────────────────────────────────
 // Fire-and-forget: never block the UI on logging. Uses report_client_error RPC
