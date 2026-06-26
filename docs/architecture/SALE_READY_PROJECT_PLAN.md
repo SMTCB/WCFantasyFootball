@@ -25,19 +25,25 @@
 **Current active branch:** `v2` (all redesign + new feature work)
 **v2 branch:** active — created off main, merged main regularly to pick up pilot bug fixes
 
-**🎯 NEXT SESSION: Phase 3B — Smoke Tests + Deploy**
-All code quality gates complete (PRs #638–#641: lint 0 warnings, build clean, Kit Light full coverage, DD corrections done). **Before smoke tests:** apply migration 209 from the Supabase-linked PC (`supabase/migrations/209_coin_ledger_compliance.sql`). Then: run `platform.spec.js` fresh on v2, four smoke passes (football / P2P / F1 / tennis), then v2 → main merge → deploy all Edge Functions.
+**🎯 NEXT SESSION: Phase 3B — Smoke Tests + Deploy (on hold) + Phase 1 DD items**
+Phase 0 security gates closed (PR #643: SEC-1 through MONEY-1). **Pending DB actions on Supabase-linked PC before any deploy:** apply migrations 209, 210, 211 and deploy 5 Edge Functions (see table below). Phase 3B smoke tests and deploy remain on hold per previous decision. Next active work: Phase 1 DD items (DATA-1, OPS-1, DEPLOY-1, CI-1, DEPS-1, OPS-2, CODE-1).
 
-**⚠️ PENDING DB ACTION — Migration 209 (Supabase-linked PC only)**
+**⚠️ PENDING DB & DEPLOY ACTIONS — Supabase-linked PC only**
 
-| Item | Detail |
-|------|--------|
-| **File** | `supabase/migrations/209_coin_ledger_compliance.sql` |
-| **Branch** | `v2` (file is committed, not yet applied to the DB) |
-| **Purpose** | Compliance gap: `coin_transactions.currency` was defaulting to `'GBP'` (a real ISO 4217 currency code) for virtual in-app coins — a regulatory red flag in a P2P betting product. This migration (a) changes the column default to `'FRC'` (Frontrow Coin, internal token code), (b) backfills any existing `'GBP'` rows to `'FRC'`, (c) extends the type `CHECK` constraint with spec-standard aliases `wager_placement`/`wager_win`/`wager_refund`, and (d) updates the `credit_coins()` RPC default. |
-| **How to apply** | `npx supabase db query --linked --file supabase/migrations/209_coin_ledger_compliance.sql` |
-| **Risk** | Low — column default + backfill + constraint extension. No rows deleted, no type changes. Backfill targets only rows where `currency = 'GBP'` (all virtual coins mislabelled). |
-| **Next migration** | `210_` |
+| # | Action | Command | Risk |
+|---|--------|---------|------|
+| 1 | Apply migration 209 (coin currency compliance) | `npx supabase db query --linked --file supabase/migrations/209_coin_ledger_compliance.sql` | Low — default + backfill |
+| 2 | Apply migration 210 (SEC-1: is_admin guard trigger) | `npx supabase db query --linked --file supabase/migrations/210_guard_users_is_admin.sql` | Low — trigger only |
+| 3 | Apply migration 211 (MONEY-1: reference_id UNIQUE) | `npx supabase db query --linked --file supabase/migrations/211_coin_reference_id_unique.sql` | Low — adds constraint, NULLs unaffected |
+| 4 | Deploy score-f1-race (SEC-2) | `npx supabase functions deploy score-f1-race --project-ref sssmvihxtqtohisghjet` | — |
+| 5 | Deploy score-tennis-tournament (SEC-2) | `npx supabase functions deploy score-tennis-tournament --project-ref sssmvihxtqtohisghjet` | — |
+| 6 | Deploy score-atp-finals (SEC-2) | `npx supabase functions deploy score-atp-finals --project-ref sssmvihxtqtohisghjet` | — |
+| 7 | Deploy sync-tennis-players (SEC-2) | `npx supabase functions deploy sync-tennis-players --project-ref sssmvihxtqtohisghjet` | — |
+| 8 | Deploy calculate-scores (SEC-3) | `npx supabase functions deploy calculate-scores --project-ref sssmvihxtqtohisghjet` | — |
+| 9 | Set FRONTEND_URL secret (MONEY-1 CORS) | `npx supabase secrets set FRONTEND_URL=https://wc-fantasy-football.vercel.app --project-ref sssmvihxtqtohisghjet` | — |
+| 10 | SEC-4: Rotate GitHub PAT, switch to SSH | See TECHNICAL_DUE_DILIGENCE.md → SEC-4 | Developer machine |
+
+**Next migration:** `212_`
 
 **2026-06-26 — DD corrections complete (PR #641, v2 branch):**
 - Fixed pre-existing build blocker: `ClubhouseNotifProvider` and `ClubhouseNotifContext` were imported by `App.jsx`/`AppLayout.jsx` but never created; v2 branch was unbuildable before this session.
@@ -903,6 +909,15 @@ Three PRs landed this session to close all code-quality gaps identified in the b
 - [ ] Verify all crons are running: `SELECT jobname, schedule, active FROM cron.job ORDER BY jobname;`
 
 **Session notes for Phase 3B:**
+
+**2026-06-26 — Phase 0 security gates closed (PR #643):**
+- SEC-1: `guard_users_privilege_columns()` trigger written (migration 210) — blocks client `is_admin` escalation. DB apply pending.
+- SEC-2: `requireServiceRole()` added to `score-f1-race`, `score-tennis-tournament`, `score-atp-finals`, `sync-tennis-players`. Deploy pending.
+- SEC-3: `calculate-scores` unverified JWT claim replaced with HMAC-verified `requireServiceRole()`. Deploy pending.
+- SEC-4: Documented — PAT rotation required on developer machines (no code fix possible).
+- MONEY-1: `purchase-coins` hardened — constant-time HMAC, `MOCK_PAYMENTS` prod guard, CORS env var, `'GBP'` → `'FRC'` currency, UNIQUE migration 211. DB apply pending.
+- All pending DB + deploy actions listed in PENDING table above.
+- Next: Phase 1 DD items (DATA-1 onward) — no active sprint planned yet.
 
 **2026-06-25 — Code quality gates closed (PRs #638, #639, #640):**
 - All buyer due diligence code-quality checklist items resolved in this session. Zero remaining ESLint warnings, zero hardcoded hex colours outside the documented broadsheet palette exception, full Kit Light token coverage, `coin_transactions` schema production-ready (status + currency + reference_id columns, idempotency index), `MOCK_PAYMENTS` mode enables dev testing without Stripe, `payments.js` wrapper in place.
