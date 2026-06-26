@@ -8,8 +8,13 @@ export default defineConfig(({ mode }) => ({
     react(),
     tailwindcss(),
   ],
-  esbuild: {
-    drop: mode === 'production' ? ['console', 'debugger'] : [],
+  // Vite 8 uses OXC (not esbuild) for transforms — esbuild.drop has no effect.
+  // console.log is already DEV-gated in src/ (useChatMessages.js line 5).
+  // Verified: production bundle has zero console.log calls.
+  oxc: {
+    transform: {
+      targets: ['es2020'],
+    },
   },
   build: {
     sourcemap: true,
