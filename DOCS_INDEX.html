@@ -712,49 +712,35 @@
     <!-- CORE ARCHITECTURE -->
     <div class="section-header" id="section-architecture">
       <span class="section-title">🏗️ Core Architecture</span>
-      <span class="section-badge t-arch">Football Platform Specs</span>
+      <span class="section-badge t-arch">Football Platform Specs · 5 topic clusters</span>
     </div>
+
+    <div class="sublabel">Scoring &amp; Points</div>
     <div class="cards">
 
-      <div class="card" data-section="architecture" data-tags="scoring points formula cron cron schedule matchday timeline football" data-name="FANTASY_POINTS_SCORING_LAYER.md" data-desc="Definitive scoring formula: position multipliers, cron schedule, matchday timeline, clean sheet rules, bonus logic.">
+      <div class="card" data-section="architecture" data-tags="scoring points formula cron schedule matchday timeline football" data-name="FANTASY_POINTS_SCORING_LAYER.md" data-desc="Definitive scoring formula: position multipliers, cron schedule, matchday timeline, clean sheet rules, bonus logic.">
         <div class="card-top"><span class="card-name">FANTASY_POINTS_SCORING_LAYER.md</span><span class="card-type t-arch">ARCHITECTURE</span></div>
         <div class="card-path">docs/architecture/FANTASY_POINTS_SCORING_LAYER.md</div>
         <div class="card-desc">Definitive scoring formula: position multipliers, cron schedule, matchday timeline, clean sheet rules.</div>
         <div class="card-tags"><span class="card-tag tag-football">Football</span></div>
       </div>
 
+      <div class="card" data-section="architecture" data-tags="scoring integrity roundComplete lock idempotency cron guard" data-name="SCORING_INTEGRITY.md" data-desc="Scoring assurance: when scores lock, replay guards, audit trails, cron idempotency.">
+        <div class="card-top"><span class="card-name">SCORING_INTEGRITY.md</span><span class="card-type t-arch">ARCHITECTURE</span></div>
+        <div class="card-path">docs/architecture/SCORING_INTEGRITY.md</div>
+        <div class="card-desc">Scoring assurance: when scores lock, replay guards, audit trails, cron idempotency.</div>
+        <div class="card-tags"><span class="card-tag tag-football">Football</span></div>
+      </div>
+
+    </div>
+
+    <div class="sublabel">Draft System</div>
+    <div class="cards">
+
       <div class="card" data-section="architecture" data-tags="draft lottery allocation club cap no-repeat football" data-name="DRAFT_SYSTEM_DESIGN.md" data-desc="Draft lottery, sealed-bid engine, allocation algorithm, no-repeat rules, club caps, two-phase mechanics.">
         <div class="card-top"><span class="card-name">DRAFT_SYSTEM_DESIGN.md</span><span class="card-type t-arch">ARCHITECTURE</span></div>
         <div class="card-path">docs/architecture/DRAFT_SYSTEM_DESIGN.md</div>
         <div class="card-desc">Draft lottery, sealed-bid engine, allocation algorithm, no-repeat rules, club caps, two-phase mechanics.</div>
-        <div class="card-tags"><span class="card-tag tag-football">Football</span></div>
-      </div>
-
-      <div class="card" data-section="architecture" data-tags="H2H head-to-head round robin schedule scoring football" data-name="H2H_COMPETITION_DESIGN.md" data-desc="Head-to-Head layered on draft leagues. Round-robin schedule, scoring config, multi-day gate, DB schema.">
-        <div class="card-top"><span class="card-name">H2H_COMPETITION_DESIGN.md</span><span class="card-type t-arch">ARCHITECTURE</span></div>
-        <div class="card-path">docs/architecture/H2H_COMPETITION_DESIGN.md</div>
-        <div class="card-desc">Head-to-Head competition layer: round-robin schedule, scoring config, multi-day gate, DB schema.</div>
-        <div class="card-tags"><span class="card-tag tag-football">Football</span></div>
-      </div>
-
-      <div class="card" data-section="architecture" data-tags="auction two-phase bid confirm pending state machine football" data-name="AUCTION_SYSTEM_DESIGN.md" data-desc="Two-phase auction flow (bid → pending → confirm), state machine, void sweep, squad-full handling, UI spec.">
-        <div class="card-top"><span class="card-name">AUCTION_SYSTEM_DESIGN.md</span><span class="card-type t-arch">ARCHITECTURE</span></div>
-        <div class="card-path">docs/architecture/AUCTION_SYSTEM_DESIGN.md</div>
-        <div class="card-desc">Two-phase auction flow (bid → pending → confirm), state machine, void sweep, squad-full handling.</div>
-        <div class="card-tags"><span class="card-tag tag-football">Football</span></div>
-      </div>
-
-      <div class="card" data-section="architecture" data-tags="transfer window open close config deadline limits football" data-name="TRANSFER_WINDOW_SYSTEM.md" data-desc="Unified transfer model: auto open/close, config table, transfer limits, wildcard round, round-aware reopen hours.">
-        <div class="card-top"><span class="card-name">TRANSFER_WINDOW_SYSTEM.md</span><span class="card-type t-arch">ARCHITECTURE</span></div>
-        <div class="card-path">docs/architecture/TRANSFER_WINDOW_SYSTEM.md</div>
-        <div class="card-desc">Unified transfer model: auto open/close, config table, transfer limits, round-aware reopen hours.</div>
-        <div class="card-tags"><span class="card-tag tag-football">Football</span></div>
-      </div>
-
-      <div class="card" data-section="architecture" data-tags="starting XI bench lineup lock swap deduction football" data-name="STARTING_XI_AND_BENCH.md" data-desc="Starting XI selection, bench rules, points deduction on swap, lineup change windows, lock mechanic.">
-        <div class="card-top"><span class="card-name">STARTING_XI_AND_BENCH.md</span><span class="card-type t-arch">ARCHITECTURE</span></div>
-        <div class="card-path">docs/architecture/STARTING_XI_AND_BENCH.md</div>
-        <div class="card-desc">Starting XI selection, bench rules, points deduction on swap, lineup change windows, lock mechanic.</div>
         <div class="card-tags"><span class="card-tag tag-football">Football</span></div>
       </div>
 
@@ -765,10 +751,62 @@
         <div class="card-tags"><span class="card-tag tag-football">Football</span></div>
       </div>
 
-      <div class="card" data-section="architecture" data-tags="scoring integrity roundComplete lock idempotency cron guard" data-name="SCORING_INTEGRITY.md" data-desc="Scoring assurance: when scores lock, replay guards, audit trails, cron idempotency.">
-        <div class="card-top"><span class="card-name">SCORING_INTEGRITY.md</span><span class="card-type t-arch">ARCHITECTURE</span></div>
-        <div class="card-path">docs/architecture/SCORING_INTEGRITY.md</div>
-        <div class="card-desc">Scoring assurance: when scores lock, replay guards, audit trails, cron idempotency.</div>
+      <div class="card" data-section="architecture" data-tags="draft unlimited transfers bypass league mode draft football" data-name="DRAFT_UNLIMITED_TRANSFERS.md" data-desc="Draft leagues have unlimited buys/sells, no penalty. process-transfer league_mode bypass, MarketScreen isDraftLeague flag.">
+        <div class="card-top"><span class="card-name">DRAFT_UNLIMITED_TRANSFERS.md</span><span class="card-type t-arch">ARCHITECTURE</span></div>
+        <div class="card-path">docs/architecture/DRAFT_UNLIMITED_TRANSFERS.md</div>
+        <div class="card-desc">Draft leagues have unlimited buys/sells. process-transfer bypass, MarketScreen isDraftLeague flag.</div>
+        <div class="card-tags"><span class="card-tag tag-football">Football</span></div>
+      </div>
+
+      <div class="card" data-section="architecture" data-tags="draft mechanics plain english glossary guide onboarding" data-name="DRAFT_MECHANICS_FOR_DUMMIES.md" data-desc="Plain-English walkthrough of the draft system — no jargon. Glossary included. Good for onboarding.">
+        <div class="card-top"><span class="card-name">DRAFT_MECHANICS_FOR_DUMMIES.md</span><span class="card-type t-ref">GUIDE</span></div>
+        <div class="card-path">docs/architecture/DRAFT_MECHANICS_FOR_DUMMIES.md</div>
+        <div class="card-desc">Plain-English draft walkthrough — no jargon. Glossary included. Good for new contributors.</div>
+        <div class="card-tags"><span class="card-tag tag-football">Football</span></div>
+      </div>
+
+    </div>
+
+    <div class="sublabel">Squad &amp; Lineup</div>
+    <div class="cards">
+
+      <div class="card" data-section="architecture" data-tags="formation rules 11-player pitch constraints football" data-name="FORMATION_RULES.md" data-desc="11-player pitch validation rules: position constraints, squad balance.">
+        <div class="card-top"><span class="card-name">FORMATION_RULES.md</span><span class="card-type t-arch">ARCHITECTURE</span></div>
+        <div class="card-path">docs/architecture/FORMATION_RULES.md</div>
+        <div class="card-desc">11-player pitch validation rules: position constraints, squad balance.</div>
+        <div class="card-tags"><span class="card-tag tag-football">Football</span></div>
+      </div>
+
+      <div class="card" data-section="architecture" data-tags="starting XI bench lineup lock swap deduction football" data-name="STARTING_XI_AND_BENCH.md" data-desc="Starting XI selection, bench rules, points deduction on swap, lineup change windows, lock mechanic.">
+        <div class="card-top"><span class="card-name">STARTING_XI_AND_BENCH.md</span><span class="card-type t-arch">ARCHITECTURE</span></div>
+        <div class="card-path">docs/architecture/STARTING_XI_AND_BENCH.md</div>
+        <div class="card-desc">Starting XI selection, bench rules, points deduction on swap, lineup change windows, lock mechanic.</div>
+        <div class="card-tags"><span class="card-tag tag-football">Football</span></div>
+      </div>
+
+      <div class="card" data-section="architecture" data-tags="transfer window open close config deadline limits football" data-name="TRANSFER_WINDOW_SYSTEM.md" data-desc="Unified transfer model: auto open/close, config table, transfer limits, wildcard round, round-aware reopen hours.">
+        <div class="card-top"><span class="card-name">TRANSFER_WINDOW_SYSTEM.md</span><span class="card-type t-arch">ARCHITECTURE</span></div>
+        <div class="card-path">docs/architecture/TRANSFER_WINDOW_SYSTEM.md</div>
+        <div class="card-desc">Unified transfer model: auto open/close, config table, transfer limits, round-aware reopen hours.</div>
+        <div class="card-tags"><span class="card-tag tag-football">Football</span></div>
+      </div>
+
+      <div class="card" data-section="architecture" data-tags="transfers lineup guide user combined football" data-name="TRANSFERS_AND_LINEUP_GUIDE.md" data-desc="Combined user guide for transfers and lineup management. Covers both flows end-to-end.">
+        <div class="card-top"><span class="card-name">TRANSFERS_AND_LINEUP_GUIDE.md</span><span class="card-type t-ref">GUIDE</span></div>
+        <div class="card-path">docs/architecture/TRANSFERS_AND_LINEUP_GUIDE.md</div>
+        <div class="card-desc">Combined user guide for transfers and lineup management — both flows end-to-end.</div>
+        <div class="card-tags"><span class="card-tag tag-football">Football</span></div>
+      </div>
+
+    </div>
+
+    <div class="sublabel">Competition &amp; Live</div>
+    <div class="cards">
+
+      <div class="card" data-section="architecture" data-tags="H2H head-to-head round robin schedule scoring football" data-name="H2H_COMPETITION_DESIGN.md" data-desc="Head-to-Head layered on draft leagues. Round-robin schedule, scoring config, multi-day gate, DB schema.">
+        <div class="card-top"><span class="card-name">H2H_COMPETITION_DESIGN.md</span><span class="card-type t-arch">ARCHITECTURE</span></div>
+        <div class="card-path">docs/architecture/H2H_COMPETITION_DESIGN.md</div>
+        <div class="card-desc">Head-to-Head competition layer: round-robin schedule, scoring config, multi-day gate, DB schema.</div>
         <div class="card-tags"><span class="card-tag tag-football">Football</span></div>
       </div>
 
@@ -786,6 +824,11 @@
         <div class="card-tags"><span class="card-tag tag-football">Football</span></div>
       </div>
 
+    </div>
+
+    <div class="sublabel">Power Tools &amp; Market</div>
+    <div class="cards">
+
       <div class="card" data-section="architecture" data-tags="chips triple captain joker wildcard scoring limits football" data-name="CHIPS_TRIPLE_CAPTAIN_AND_MATCHDAY_JOKER.md" data-desc="Chip mechanics (triple captain, joker). Scoring application, limits, per-round derivation.">
         <div class="card-top"><span class="card-name">CHIPS_TRIPLE_CAPTAIN_AND_MATCHDAY_JOKER.md</span><span class="card-type t-arch">ARCHITECTURE</span></div>
         <div class="card-path">docs/architecture/CHIPS_TRIPLE_CAPTAIN_AND_MATCHDAY_JOKER.md</div>
@@ -793,31 +836,10 @@
         <div class="card-tags"><span class="card-tag tag-football">Football</span></div>
       </div>
 
-      <div class="card" data-section="architecture" data-tags="draft unlimited transfers bypass league mode draft football" data-name="DRAFT_UNLIMITED_TRANSFERS.md" data-desc="Draft leagues have unlimited buys/sells, no penalty. process-transfer league_mode bypass, MarketScreen isDraftLeague flag.">
-        <div class="card-top"><span class="card-name">DRAFT_UNLIMITED_TRANSFERS.md</span><span class="card-type t-arch">ARCHITECTURE</span></div>
-        <div class="card-path">docs/architecture/DRAFT_UNLIMITED_TRANSFERS.md</div>
-        <div class="card-desc">Draft leagues have unlimited buys/sells. process-transfer bypass, MarketScreen isDraftLeague flag.</div>
-        <div class="card-tags"><span class="card-tag tag-football">Football</span></div>
-      </div>
-
-      <div class="card" data-section="architecture" data-tags="formation rules 11-player pitch constraints football" data-name="FORMATION_RULES.md" data-desc="11-player pitch validation rules: position constraints, squad balance.">
-        <div class="card-top"><span class="card-name">FORMATION_RULES.md</span><span class="card-type t-arch">ARCHITECTURE</span></div>
-        <div class="card-path">docs/architecture/FORMATION_RULES.md</div>
-        <div class="card-desc">11-player pitch validation rules: position constraints, squad balance.</div>
-        <div class="card-tags"><span class="card-tag tag-football">Football</span></div>
-      </div>
-
-      <div class="card" data-section="architecture" data-tags="draft mechanics plain english glossary guide onboarding" data-name="DRAFT_MECHANICS_FOR_DUMMIES.md" data-desc="Plain-English walkthrough of the draft system — no jargon. Glossary included. Good for onboarding.">
-        <div class="card-top"><span class="card-name">DRAFT_MECHANICS_FOR_DUMMIES.md</span><span class="card-type t-ref">GUIDE</span></div>
-        <div class="card-path">docs/architecture/DRAFT_MECHANICS_FOR_DUMMIES.md</div>
-        <div class="card-desc">Plain-English draft walkthrough — no jargon. Glossary included. Good for new contributors.</div>
-        <div class="card-tags"><span class="card-tag tag-football">Football</span></div>
-      </div>
-
-      <div class="card" data-section="architecture" data-tags="transfers lineup guide user combined football" data-name="TRANSFERS_AND_LINEUP_GUIDE.md" data-desc="Combined user guide for transfers and lineup management. Covers both flows end-to-end.">
-        <div class="card-top"><span class="card-name">TRANSFERS_AND_LINEUP_GUIDE.md</span><span class="card-type t-ref">GUIDE</span></div>
-        <div class="card-path">docs/architecture/TRANSFERS_AND_LINEUP_GUIDE.md</div>
-        <div class="card-desc">Combined user guide for transfers and lineup management — both flows end-to-end.</div>
+      <div class="card" data-section="architecture" data-tags="auction two-phase bid confirm pending state machine football" data-name="AUCTION_SYSTEM_DESIGN.md" data-desc="Two-phase auction flow (bid → pending → confirm), state machine, void sweep, squad-full handling, UI spec.">
+        <div class="card-top"><span class="card-name">AUCTION_SYSTEM_DESIGN.md</span><span class="card-type t-arch">ARCHITECTURE</span></div>
+        <div class="card-path">docs/architecture/AUCTION_SYSTEM_DESIGN.md</div>
+        <div class="card-desc">Two-phase auction flow (bid → pending → confirm), state machine, void sweep, squad-full handling.</div>
         <div class="card-tags"><span class="card-tag tag-football">Football</span></div>
       </div>
 

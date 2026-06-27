@@ -113,6 +113,7 @@ From [TECHNICAL_DUE_DILIGENCE.md](due_diligence/TECHNICAL_DUE_DILIGENCE.md). Seq
 |------|-------------|
 | CODE-2 | TypeScript migration — convert `src/lib/`, `src/hooks/`, `src/context/` to `.ts`/`.tsx` |
 | CODE-4 | Component tests — Storybook or Playwright component tests for the 5 most complex components |
+| CODE-5 | Analytics instrumentation — replace stub `// TODO` in `src/hooks/useOnboarding.js:36` with Mixpanel/PostHog/Amplitude; all key flows (onboarding, draft, transfer, bet) tracked |
 | DEPS-2 | Supply chain hardening — `npm ci` with `--ignore-scripts`; `package-lock.json` integrity hash |
 | INFRA-1 | Multi-region readiness — document Supabase region selection rationale; buyer can migrate |
 | LOW-2 | Storybook or Ladle component catalogue |
@@ -185,4 +186,4 @@ These require a human decision before the relevant sprint can continue.
 
 ---
 
-Last Updated: **2026-06-26**
+Last Updated: **2026-06-27**
