@@ -27,6 +27,8 @@
 
 **Next session:** Phase 3B smoke tests → deploy sequence. See [Phase 3B checklist](#phase-3b-pre-merge-checklist) below.
 
+**Session 2026-06-27/28 (docs):** Repo mine map — DOCS_INDEX.html expanded to full repo explorer (source code, backend, mobile sections + architecture clustered into 5 topic groups). TRACKER.md consolidated as single SOT: 11 gaps filled from scattered docs (4 missing HMAC deploy rows, F1 data migration, SEC-4 steps inline, OPS-2 detail, P2P load test, CODE-6, 2 product decisions). SALE_READY_PROJECT_PLAN.md archived (read-only history). PR #648 merged.
+
 ---
 
 ## ⚠️ Pending DB & Deploy Actions
