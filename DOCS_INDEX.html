@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Forza Fantasy League — Docs Index</title>
+<title>Forza Fantasy League — Mine Map</title>
 <style>
   :root {
     --bg: #f5f4f0;
@@ -189,6 +189,19 @@
 
   .hidden { display: none !important; }
 
+  /* ── Repo tree ── */
+  .tree-section { margin-bottom: 8px; }
+  .tree-block { font-family: 'Cascadia Code','JetBrains Mono',monospace; font-size: 11.5px; background: white; border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 18px; line-height: 2; overflow-x: auto; }
+  .tree-root { font-weight: 800; font-size: 13px; color: var(--shell); margin-bottom: 2px; }
+  .tr { display: flex; gap: 6px; align-items: baseline; }
+  .tc { color: #94a3b8; user-select: none; flex-shrink: 0; white-space: pre; }
+  .tn { font-weight: 700; color: var(--shell); flex-shrink: 0; cursor: pointer; }
+  .tn:hover { color: var(--accent); text-decoration: underline; }
+  .td { color: var(--text2); font-size: 10.5px; }
+  .ti1 { padding-left: 16px; }
+  .ti2 { padding-left: 32px; }
+  .ti3 { padding-left: 48px; }
+
   @media (max-width: 768px) {
     .sidebar { display: none; }
     .main { padding: 14px; }
@@ -202,8 +215,8 @@
 
 <header>
   <div class="header-left">
-    <h1>Forza Fantasy League — Documentation Index</h1>
-    <p>Last updated: 2026-06-26 · v2 branch · Multi-sport platform</p>
+    <h1>Forza Fantasy League — Mine Map</h1>
+    <p>Complete repository map — source code, backend, docs, tooling · v2 branch · Last updated: 2026-06-27</p>
     <div class="badge-bar">
       <span class="badge badge-green">Football ✅ Live</span>
       <span class="badge badge-blue">F1 ✅ v2</span>
@@ -230,6 +243,9 @@
     <span class="chip" data-filter="reference">Reference</span>
     <span class="chip" data-filter="testing">Testing</span>
     <span class="chip" data-filter="archive">Archive</span>
+    <span class="chip" data-filter="src-code">Source Code</span>
+    <span class="chip" data-filter="backend">Backend</span>
+    <span class="chip" data-filter="mobile">Mobile</span>
   </div>
   <span id="result-count"></span>
 </div>
@@ -241,6 +257,9 @@
     <h3>Jump to</h3>
     <div class="sidebar-item active" data-section="critical"         onclick="jumpTo('critical')">         ⚡ Start Here           <span class="sidebar-count" id="cnt-critical">0</span></div>
     <div class="sidebar-item"        data-section="root"             onclick="jumpTo('root')">             🏠 Root Files           <span class="sidebar-count" id="cnt-root">0</span></div>
+    <div class="sidebar-item"        data-section="src-code"         onclick="jumpTo('src-code')">         📁 Source Code          <span class="sidebar-count" id="cnt-src">0</span></div>
+    <div class="sidebar-item"        data-section="backend"          onclick="jumpTo('backend')">          🗄️ Backend             <span class="sidebar-count" id="cnt-backend">0</span></div>
+    <div class="sidebar-item"        data-section="mobile"           onclick="jumpTo('mobile')">           📱 Mobile               <span class="sidebar-count" id="cnt-mobile">0</span></div>
     <div class="sidebar-item"        data-section="platform_revision" onclick="jumpTo('platform_revision')">📋 Platform v2          <span class="sidebar-count" id="cnt-pr">0</span></div>
     <div class="sidebar-item"        data-section="architecture"     onclick="jumpTo('architecture')">     🏗️ Architecture        <span class="sidebar-count" id="cnt-arch">0</span></div>
     <div class="sidebar-item"        data-section="api"              onclick="jumpTo('api')">              🔌 API                  <span class="sidebar-count" id="cnt-api">0</span></div>
@@ -252,6 +271,69 @@
 
   <!-- ── Main content ── -->
   <main class="main">
+
+    <!-- ── MINE MAP TREE (always visible, not filtered) ── -->
+    <div class="tree-section">
+      <div class="section-header" id="mine-map-tree" style="margin-top:0">
+        <span class="section-title">🗺️ Repo Mine Map</span>
+        <span class="section-badge t-ref">Full Directory Tree · click a folder to jump</span>
+      </div>
+      <div class="tree-block">
+        <div class="tree-root">📦 forza-fantasy-league/</div>
+        <div class="tr"><span class="tc">├──</span><span class="tn">📋 CLAUDE.md</span><span class="td">Session instructions for Claude Code — read every session</span></div>
+        <div class="tr"><span class="tc">├──</span><span class="tn">📋 BACKLOG.md</span><span class="td">Live session log — every PR, migration, and bug fix</span></div>
+        <div class="tr"><span class="tc">├──</span><span class="tn">📋 README.md</span><span class="td">Project overview and quick-start guide</span></div>
+        <div class="tr"><span class="tc">├──</span><span class="tn">📋 GEMINI.md</span><span class="td">Google Antigravity (mobile AI) instructions</span></div>
+        <div class="tr"><span class="tc">├──</span><span class="tn">🗺️ DOCS_INDEX.html</span><span class="td">← You are here — interactive repository mine map</span></div>
+        <div class="tr"><span class="tc">├──</span><span class="tn">⚙️ package.json</span><span class="td">npm dependencies and build scripts</span></div>
+        <div class="tr"><span class="tc">├──</span><span class="tn">⚙️ vite.config.js</span><span class="td">Vite bundler configuration (Rolldown/v8)</span></div>
+        <div class="tr"><span class="tc">├──</span><span class="tn">⚙️ eslint.config.js</span><span class="td">ESLint flat config v9</span></div>
+        <div class="tr"><span class="tc">├──</span><span class="tn">⚙️ playwright.config.js</span><span class="td">E2E test runner config</span></div>
+        <div class="tr"><span class="tc">├──</span><span class="tn">⚙️ capacitor.config.ts</span><span class="td">Capacitor native app config (app ID, plugins)</span></div>
+        <div class="tr"><span class="tc">├──</span><span class="tn">⚙️ vercel.json</span><span class="td">Vercel deployment settings and security headers</span></div>
+        <div class="tr"><span class="tc">├──</span><span class="tn">🐳 Dockerfile</span><span class="td">Multi-stage build: Vite → nginx static (production)</span></div>
+        <div class="tr"><span class="tc">├──</span><span class="tn">🐳 docker-compose.yml</span><span class="td">Local dev topology: app + postgres + Edge Functions</span></div>
+        <div class="tr"><span class="tc">│</span><span class="tc"></span></div>
+        <div class="tr"><span class="tc">├──</span><span class="tn" onclick="jumpTo('src-code')">📁 src/</span><span class="td">React application source (client-side)</span></div>
+        <div class="tr ti1"><span class="tc">├──</span><span class="tn">screens/</span><span class="td">20 route-level page components (football + F1 + Tennis + Clubhouse)</span></div>
+        <div class="tr ti1"><span class="tc">├──</span><span class="tn">components/</span><span class="td">30+ reusable UI components</span></div>
+        <div class="tr ti1"><span class="tc">├──</span><span class="tn">hooks/</span><span class="td">35+ custom React hooks (business logic)</span></div>
+        <div class="tr ti1"><span class="tc">├──</span><span class="tn">lib/</span><span class="td">supabase.js · capacitor.js · api.js · utils.js · players.js</span></div>
+        <div class="tr ti1"><span class="tc">└──</span><span class="tn">context/</span><span class="td">AuthContext.jsx — global auth state</span></div>
+        <div class="tr"><span class="tc">│</span><span class="tc"></span></div>
+        <div class="tr"><span class="tc">├──</span><span class="tn" onclick="jumpTo('backend')">🗄️ supabase/</span><span class="td">Backend infrastructure</span></div>
+        <div class="tr ti1"><span class="tc">├──</span><span class="tn">migrations/</span><span class="td">191+ SQL migration files (append-only numbered sequence)</span></div>
+        <div class="tr ti1"><span class="tc">└──</span><span class="tn">functions/</span><span class="td">21 Deno Edge Functions (deployed serverless)</span></div>
+        <div class="tr ti2"><span class="tc">├──</span><span class="tn">calculate-scores/</span><span class="td">Weekly fantasy points v32 — live + post-match + late-finishers crons</span></div>
+        <div class="tr ti2"><span class="tc">├──</span><span class="tn">process-transfer/</span><span class="td">Squad transfer: window, budget, club cap, limits</span></div>
+        <div class="tr ti2"><span class="tc">├──</span><span class="tn">ingest-match-events/</span><span class="td">Live event ingestion (every 5 min)</span></div>
+        <div class="tr ti2"><span class="tc">├──</span><span class="tn">sync-fixtures/</span><span class="td">Forza API fixture sync (every 30 min)</span></div>
+        <div class="tr ti2"><span class="tc">├──</span><span class="tn">score-f1-race/</span><span class="td">F1 race scoring (v2)</span></div>
+        <div class="tr ti2"><span class="tc">├──</span><span class="tn">score-tennis-tournament/</span><span class="td">Tennis scoring + Ace Cards (v2)</span></div>
+        <div class="tr ti2"><span class="tc">├──</span><span class="tn">generate-frontpage-edition/</span><span class="td">AI Forza Times via Groq llama-3.1-8b-instant (v2)</span></div>
+        <div class="tr ti2"><span class="tc">└──</span><span class="tn">… 14 more</span><span class="td">resolve-bets · run-draft-lottery · sync-players · purchase-coins · etc.</span></div>
+        <div class="tr"><span class="tc">│</span><span class="tc"></span></div>
+        <div class="tr"><span class="tc">├──</span><span class="tn" onclick="jumpTo('testing')">🧪 e2e/</span><span class="td">Playwright end-to-end tests</span></div>
+        <div class="tr ti1"><span class="tc">├──</span><span class="tn">tests/</span><span class="td">platform.spec.js (CI, 36 tests × 2 browsers) + 8 integration specs</span></div>
+        <div class="tr ti1"><span class="tc">└──</span><span class="tn">fixtures/</span><span class="td">SQL seed files for E2E test runs</span></div>
+        <div class="tr"><span class="tc">│</span><span class="tc"></span></div>
+        <div class="tr"><span class="tc">├──</span><span class="tn" onclick="jumpTo('mobile')">📱 ios/</span><span class="td">Capacitor iOS (Xcode) — target iOS 15.0</span></div>
+        <div class="tr"><span class="tc">├──</span><span class="tn" onclick="jumpTo('mobile')">📱 android/</span><span class="td">Capacitor Android (Studio) — minSdk 26, targetSdk 36</span></div>
+        <div class="tr"><span class="tc">├──</span><span class="tn">🛠️ scripts/</span><span class="td">Developer utility scripts (8 files)</span></div>
+        <div class="tr"><span class="tc">├──</span><span class="tn">🌐 public/</span><span class="td">Static assets (SVG logo, nav icons, favicon)</span></div>
+        <div class="tr"><span class="tc">├──</span><span class="tn">🏗️ infra/</span><span class="td">Infrastructure config — nginx.conf (SPA routing + cache headers)</span></div>
+        <div class="tr"><span class="tc">├──</span><span class="tn">💾 backups/</span><span class="td">Pre-migration row snapshots (gitignored)</span></div>
+        <div class="tr"><span class="tc">│</span><span class="tc"></span></div>
+        <div class="tr"><span class="tc">└──</span><span class="tn" onclick="jumpTo('platform_revision')">📚 docs/</span><span class="td">All documentation</span></div>
+        <div class="tr ti1"><span class="tc">├──</span><span class="tn" onclick="jumpTo('platform_revision')">platform_revision/</span><span class="td">v2 sale-ready platform — TRACKER.md, DD, architecture, modules, design</span></div>
+        <div class="tr ti1"><span class="tc">├──</span><span class="tn" onclick="jumpTo('architecture')">architecture/</span><span class="td">Football platform system design (15 docs)</span></div>
+        <div class="tr ti1"><span class="tc">├──</span><span class="tn" onclick="jumpTo('api')">api/</span><span class="td">Forza Football API integration (4 docs)</span></div>
+        <div class="tr ti1"><span class="tc">├──</span><span class="tn" onclick="jumpTo('deployment')">deployment/</span><span class="td">Runbooks and DevOps guides (6 docs)</span></div>
+        <div class="tr ti1"><span class="tc">├──</span><span class="tn" onclick="jumpTo('reference')">reference/</span><span class="td">Developer setup and conventions (4 docs)</span></div>
+        <div class="tr ti1"><span class="tc">├──</span><span class="tn" onclick="jumpTo('testing')">testing/</span><span class="td">Test strategy and results (4 docs)</span></div>
+        <div class="tr ti1"><span class="tc">└──</span><span class="tn" onclick="jumpTo('archive')">archive/</span><span class="td">Historical reference — brand-forza-dark, sprint plans, session audits, legacy configs</span></div>
+      </div>
+    </div>
 
     <!-- START HERE -->
     <div class="section-header" id="section-critical">
@@ -304,10 +386,10 @@
         <div class="card-tags"><span class="card-tag tag-ai">Google AI</span></div>
       </div>
 
-      <div class="card" data-section="root" data-tags="docs map text reference structure overview navigation" data-name="DOCS_MAP.md" data-desc="Text-based documentation map — concise overview of every folder and file. Quick reference without opening a browser.">
+      <div class="card" data-section="root" data-tags="docs map text reference CLI terminal pointer" data-name="DOCS_MAP.md" data-desc="Thin text-based pointer to DOCS_INDEX.html — for terminal/CLI contexts where HTML cannot be opened.">
         <div class="card-top"><span class="card-name">DOCS_MAP.md</span><span class="card-type t-ref">TEXT MAP</span></div>
-        <div class="card-path">DOCS_MAP.md</div>
-        <div class="card-desc">Text-based doc map — concise overview of every folder. Quick reference without needing a browser.</div>
+        <div class="card-path">docs/DOCS_MAP.md</div>
+        <div class="card-desc">Thin text-based pointer to DOCS_INDEX.html — for terminal/CLI contexts where HTML can't be opened.</div>
         <div class="card-tags"></div>
       </div>
 
@@ -334,6 +416,126 @@
 
     </div>
 
+    <!-- SOURCE CODE -->
+    <div class="section-header" id="section-src-code">
+      <span class="section-title">📁 Source Code</span>
+      <span class="section-badge t-arch">src/ — React Application</span>
+    </div>
+    <div class="cards">
+      <div class="card" data-section="src-code" data-tags="screens routes pages UI football v2 F1 tennis clubhouse" data-name="src/screens/" data-desc="20 route-level page components. Football: SquadScreen, LeagueScreen, LiveScreen, RecapScreen, MarketScreen, HomeScreen, DraftScreen, DraftRecoveryScreen, SettingsScreen, AuthScreen, AdminSeedScreen. v2 additions: MultiSportHomeScreen, ClubhouseScreen, ChallengeScreen, WalletScreen, TrophyCabinetScreen, BracketScreen. Plus f1/ and tennis/ screen subdirectories.">
+        <div class="card-top"><span class="card-name">src/screens/</span><span class="card-type t-arch">SCREENS</span></div>
+        <div class="card-path">src/screens/</div>
+        <div class="card-desc">20 route components: SquadScreen, LeagueScreen, LiveScreen, RecapScreen, MarketScreen + v2 additions (Clubhouse, Challenges, Wallet, TrophyCabinet) + F1 and Tennis subdirectories.</div>
+        <div class="card-tags"><span class="card-tag tag-football">Football</span><span class="card-tag tag-f1">F1</span><span class="card-tag tag-tennis">Tennis</span><span class="card-tag tag-v2">v2</span></div>
+      </div>
+      <div class="card" data-section="src-code" data-tags="components UI reusable layout player pitch formation chat league" data-name="src/components/" data-desc="30+ reusable UI components. Key: AppLayout (shell + nav + header), PitchView (formation display), PlayerCard, AuctionCard, BetsSection, ClubhouseChat, ClubhouseFrontpage, GazetteNews, H2HSheet, ScoringBreakdown, OnboardingWizard, ErrorBoundary. Plus league/ and messages/ subdirectories.">
+        <div class="card-top"><span class="card-name">src/components/</span><span class="card-type t-arch">COMPONENTS</span></div>
+        <div class="card-path">src/components/</div>
+        <div class="card-desc">30+ reusable UI components: AppLayout (main shell), PitchView (formation), PlayerCard, AuctionCard, BetsSection, ClubhouseChat/Frontpage, GazetteNews, H2HSheet, ScoringBreakdown, OnboardingWizard, ErrorBoundary.</div>
+        <div class="card-tags"><span class="card-tag tag-football">Football</span><span class="card-tag tag-v2">v2</span></div>
+      </div>
+      <div class="card" data-section="src-code" data-tags="hooks business logic state React custom football bets transfers auctions v2" data-name="src/hooks/" data-desc="35+ custom React hooks. Football: useAuth, useSquad, useTransfer, useTransferWindow, useLeague, useLeagueConfig, useLeagueStats, useAuctions, useTradeProposals, useBets, useChipSelection, useRelaxationState, useFrontpageEdition, useChatMessages. v2: useWallet, useChallenges, useClubhouse, useNotifications, useDirectMessages. Plus f1/ and tennis/ subdirectories.">
+        <div class="card-top"><span class="card-name">src/hooks/</span><span class="card-type t-arch">HOOKS</span></div>
+        <div class="card-path">src/hooks/</div>
+        <div class="card-desc">35+ custom React hooks: useAuth, useSquad, useTransfer, useTransferWindow, useLeague, useAuctions, useBets, useLeagueStats, useFrontpageEdition, useChatMessages + v2 hooks (useWallet, useChallenges, useClubhouse). F1 and Tennis subdirectories.</div>
+        <div class="card-tags"><span class="card-tag tag-football">Football</span><span class="card-tag tag-v2">v2</span></div>
+      </div>
+      <div class="card" data-section="src-code" data-tags="lib utilities supabase client capacitor native api forza players" data-name="src/lib/" data-desc="Core utilities and client initialisation: supabase.js (Supabase client), api.js (Forza Football API integration), capacitor.js (native plugin setup, exports isNative and platform), utils.js (general formatters), players.js (buildFixtureInfo, formatFixtureStatus).">
+        <div class="card-top"><span class="card-name">src/lib/</span><span class="card-type t-arch">UTILITIES</span></div>
+        <div class="card-path">src/lib/</div>
+        <div class="card-desc">Core utilities: supabase.js (client init), api.js (Forza Football API), capacitor.js (native plugins + isNative/platform exports), utils.js (formatters), players.js (fixture status helpers).</div>
+        <div class="card-tags"><span class="card-tag tag-football">Football</span></div>
+      </div>
+      <div class="card" data-section="src-code" data-tags="App router routes providers context auth entry point" data-name="src/App.jsx + src/main.jsx" data-desc="App.jsx: React Router v6 setup, all screen routes, AuthProvider + SportContext providers. main.jsx: Vite entry point, React 19 root render.">
+        <div class="card-top"><span class="card-name">src/App.jsx · src/main.jsx</span><span class="card-type t-arch">ENTRY POINTS</span></div>
+        <div class="card-path">src/App.jsx · src/main.jsx · src/context/AuthContext.jsx</div>
+        <div class="card-desc">App.jsx: React Router v6 setup, all routes, provider wrapping (AuthProvider, SportContext). main.jsx: Vite entry point, React 19 root. AuthContext.jsx: global auth state (user, session, signIn/Out).</div>
+        <div class="card-tags"></div>
+      </div>
+    </div>
+
+    <!-- BACKEND -->
+    <div class="section-header" id="section-backend">
+      <span class="section-title">🗄️ Backend</span>
+      <span class="section-badge t-runbook">Supabase — Migrations + Edge Functions</span>
+    </div>
+    <div class="cards">
+      <div class="card" data-section="backend" data-tags="migrations SQL database schema append-only numbered sequence Supabase" data-name="supabase/migrations/" data-desc="191+ SQL migration files numbered 01_ through 191_. Append-only — never modify an applied file, always create a new one. Applied via npx supabase db query --linked or workflow_dispatch. Last: 191_clean_sheet_retroactive_fix.sql. Each migration has a full entry in CLAUDE.md with exact changes made.">
+        <div class="card-top"><span class="card-name">supabase/migrations/</span><span class="card-type t-runbook">MIGRATIONS</span></div>
+        <div class="card-path">supabase/migrations/</div>
+        <div class="card-desc">191+ append-only SQL migration files (01_ → 191_). Never modify applied files — always create new. Applied via `npx supabase db query --linked`. Full change history in CLAUDE.md.</div>
+        <div class="card-tags"><span class="card-tag tag-ops">Ops</span><span class="card-tag tag-critical">Append-only</span></div>
+      </div>
+      <div class="card" data-section="backend" data-tags="calculate scores edge function fantasy points live cron scoring" data-name="calculate-scores/" data-desc="Core scoring Edge Function (v32). Three cron passes: live every 2 min (status=live fixtures), post-match 22:30 UTC (24h window), late-finishers 23:30+00:30 UTC (3h window). At roundComplete: auto-subs, H2H resolution, gazette activity entry, round_backups write.">
+        <div class="card-top"><span class="card-name">calculate-scores/</span><span class="card-type t-runbook">EDGE FUNCTION</span></div>
+        <div class="card-path">supabase/functions/calculate-scores/</div>
+        <div class="card-desc">Core scoring function (v32): 3 cron passes (live every 2min, post-match 22:30 UTC, late-finishers 23:30+00:30 UTC). At roundComplete: auto-subs, H2H resolution, gazette entry, round backup.</div>
+        <div class="card-tags"><span class="card-tag tag-football">Football</span><span class="card-tag tag-ops">Ops</span></div>
+      </div>
+      <div class="card" data-section="backend" data-tags="process transfer edge function squad budget window club cap limit" data-name="process-transfer/" data-desc="Squad transfer handler: validates transfer window, budget remaining, club cap, per-round limit (penalty tracking), initial_build_complete latch. Supports unlimited window bypass. Calls execute_transfer_atomic RPC.">
+        <div class="card-top"><span class="card-name">process-transfer/</span><span class="card-type t-runbook">EDGE FUNCTION</span></div>
+        <div class="card-path">supabase/functions/process-transfer/</div>
+        <div class="card-desc">Squad transfer handler: window check, budget guard, club cap enforcement, per-round limits, penalty tracking, initial_build_complete latch. Calls execute_transfer_atomic RPC.</div>
+        <div class="card-tags"><span class="card-tag tag-football">Football</span></div>
+      </div>
+      <div class="card" data-section="backend" data-tags="sync fixtures players Forza API cron football" data-name="sync-fixtures · sync-players · sync-player-status" data-desc="Data sync functions: sync-fixtures (every 30 min from Forza Football API), sync-players (6h cron), sync-player-status (injury/suspension updates). All use service-role JWT. sync-tennis-players is admin-triggered only (RapidAPI, 50 req/day limit).">
+        <div class="card-top"><span class="card-name">sync-fixtures · sync-players · sync-player-status</span><span class="card-type t-runbook">SYNC FUNCTIONS</span></div>
+        <div class="card-path">supabase/functions/sync-fixtures/ · sync-players/ · sync-player-status/ · sync-tennis-players/</div>
+        <div class="card-desc">Data sync: sync-fixtures (30-min cron from Forza API), sync-players (6h), sync-player-status (injury/suspension). sync-tennis-players is admin-triggered only (RapidAPI, 50 req/day).</div>
+        <div class="card-tags"><span class="card-tag tag-football">Football</span><span class="card-tag tag-tennis">Tennis</span><span class="card-tag tag-ops">Ops</span></div>
+      </div>
+      <div class="card" data-section="backend" data-tags="F1 tennis scoring edge function v2 sport ATP finals" data-name="score-f1-race · score-tennis-tournament · score-atp-finals" data-desc="v2 sport scoring functions. score-f1-race: F1 race picks scoring (admin-triggered). score-tennis-tournament: tier-based ATP points + Ace Cards + QF Captain (admin-triggered). score-atp-finals: 15-match pick'em, max 54 pts, idempotent partial scoring.">
+        <div class="card-top"><span class="card-name">score-f1-race · score-tennis-tournament · score-atp-finals</span><span class="card-type t-runbook">v2 SCORING</span></div>
+        <div class="card-path">supabase/functions/score-f1-race/ · score-tennis-tournament/ · score-atp-finals/</div>
+        <div class="card-desc">v2 sport scoring (all admin-triggered): F1 race scoring, tennis tier-based ATP points + Ace Cards + QF Captain, ATP Finals pick'em (max 54 pts, idempotent).</div>
+        <div class="card-tags"><span class="card-tag tag-f1">F1</span><span class="card-tag tag-tennis">Tennis</span><span class="card-tag tag-v2">v2</span></div>
+      </div>
+      <div class="card" data-section="backend" data-tags="frontpage AI Groq generate edition Forza Times v2" data-name="generate-frontpage-edition/" data-desc="Generates the AI Forza Times newspaper for each league. Uses Groq llama-3.1-8b-instant via OpenAI-compatible API. Two modes: cron (05:00 UTC daily, all leagues) and manual (commissioner-triggered, 4h rate limit). Output: headline, deck, hot_take, wooden_spoon, transfer_rumour. Requires GROQ_API_KEY secret.">
+        <div class="card-top"><span class="card-name">generate-frontpage-edition/</span><span class="card-type t-runbook">AI FUNCTION</span></div>
+        <div class="card-path">supabase/functions/generate-frontpage-edition/</div>
+        <div class="card-desc">AI Forza Times newspaper generator. Groq llama-3.1-8b-instant. Two modes: cron (05:00 UTC) and manual (commissioner, 4h rate limit). Output: headline, hot_take, wooden_spoon, transfer_rumour. Needs GROQ_API_KEY secret.</div>
+        <div class="card-tags"><span class="card-tag tag-ai">AI</span><span class="card-tag tag-v2">v2</span><span class="card-tag tag-football">Football</span></div>
+      </div>
+      <div class="card" data-section="backend" data-tags="lifecycle functions draft lottery bets resolve coins purchase events ingest" data-name="Lifecycle functions" data-desc="Remaining Edge Functions: run-draft-lottery (commissioner-triggered allocation), run-reverse-standings-draft (knockout elimination draft), resolve-bets (auto-resolve cron + commissioner), ingest-match-events (live events every 5 min), purchase-coins (Stripe coin top-up v2), eliminate-cup-club, auto-open-transfer-window, discover-tournament, calculate-relaxation.">
+        <div class="card-top"><span class="card-name">Lifecycle Functions (9 more)</span><span class="card-type t-runbook">EDGE FUNCTIONS</span></div>
+        <div class="card-path">supabase/functions/ — run-draft-lottery · run-reverse-standings-draft · resolve-bets · ingest-match-events · purchase-coins · eliminate-cup-club · auto-open-transfer-window · discover-tournament · calculate-relaxation</div>
+        <div class="card-desc">run-draft-lottery (manual), run-reverse-standings-draft (knockout), resolve-bets, ingest-match-events (5-min cron), purchase-coins (Stripe v2), eliminate-cup-club, auto-open-transfer-window, discover-tournament, calculate-relaxation.</div>
+        <div class="card-tags"><span class="card-tag tag-football">Football</span><span class="card-tag tag-ops">Ops</span><span class="card-tag tag-v2">v2</span></div>
+      </div>
+      <div class="card" data-section="backend" data-tags="scripts utility check drift simulate matchday draft icons pdf" data-name="scripts/" data-desc="8 developer utilities: check-function-drift.js (CI drift check against checksums), update-function-checksums.js, simulate-matchday.js, test-draft-algorithm.js, verify-v2-protection.sh (branch safety gates), generate-app-icons.js, build-handover-pdfs.py, e2e-setup.mjs.">
+        <div class="card-top"><span class="card-name">scripts/</span><span class="card-type t-runbook">DEV UTILITIES</span></div>
+        <div class="card-path">scripts/</div>
+        <div class="card-desc">8 developer utilities: check-function-drift.js (CI), update-function-checksums.js, simulate-matchday.js, test-draft-algorithm.js, verify-v2-protection.sh, generate-app-icons.js, build-handover-pdfs.py, e2e-setup.mjs.</div>
+        <div class="card-tags"><span class="card-tag tag-ops">Ops</span></div>
+      </div>
+    </div>
+
+    <!-- MOBILE -->
+    <div class="section-header" id="section-mobile">
+      <span class="section-title">📱 Mobile</span>
+      <span class="section-badge t-ref">Capacitor iOS + Android</span>
+    </div>
+    <div class="cards">
+      <div class="card" data-section="mobile" data-tags="iOS Xcode Capacitor native app iPhone iPad build" data-name="ios/" data-desc="Capacitor iOS native project (Xcode). App ID: com.fantasykit.forzaedition. Deployment target iOS 15.0. Build: npm run build && npx cap sync && npx cap open ios, then Build+Run in Xcode. CocoaPods for native dependencies.">
+        <div class="card-top"><span class="card-name">ios/</span><span class="card-type t-ref">iOS PROJECT</span></div>
+        <div class="card-path">ios/</div>
+        <div class="card-desc">Xcode project. App ID: com.fantasykit.forzaedition. iOS 15.0+. Build: npm run build → npx cap sync → npx cap open ios → Build+Run. CocoaPods dependencies.</div>
+        <div class="card-tags"></div>
+      </div>
+      <div class="card" data-section="mobile" data-tags="Android Studio Capacitor native app build Gradle" data-name="android/" data-desc="Capacitor Android native project (Android Studio). minSdk 26 (Android 8.0), targetSdk 36. Build: npm run build && npx cap sync && npx cap open android, then Run in Android Studio.">
+        <div class="card-top"><span class="card-name">android/</span><span class="card-type t-ref">ANDROID PROJECT</span></div>
+        <div class="card-path">android/</div>
+        <div class="card-desc">Android Studio project. minSdk 26 (Android 8.0), targetSdk 36. Build: npm run build → npx cap sync → npx cap open android → Run.</div>
+        <div class="card-tags"></div>
+      </div>
+      <div class="card" data-section="mobile" data-tags="capacitor config native app ID webDir plugins splash status bar" data-name="capacitor.config.ts" data-desc="Capacitor native configuration: appId (com.fantasykit.forzaedition), webDir (dist), server URL for dev. Plugin config: SplashScreen (auto-hide), StatusBar (style + color). Import isNative and platform from src/lib/capacitor.js for runtime platform detection.">
+        <div class="card-top"><span class="card-name">capacitor.config.ts</span><span class="card-type t-config">CONFIG</span></div>
+        <div class="card-path">capacitor.config.ts</div>
+        <div class="card-desc">Native config: appId, webDir (dist), server URL (dev), SplashScreen + StatusBar plugin config. Use src/lib/capacitor.js for isNative/platform detection at runtime.</div>
+        <div class="card-tags"></div>
+      </div>
+    </div>
+
     <!-- PLATFORM REVISION -->
     <div class="section-header" id="section-platform_revision">
       <span class="section-title">📋 Platform Revision</span>
@@ -343,11 +545,11 @@
     <div class="sublabel">DUE DILIGENCE</div>
     <div class="cards">
 
-      <div class="card" data-section="platform_revision" data-tags="sprint history phases sessions decisions architecture v2 plan" data-name="SALE_READY_PROJECT_PLAN.md" data-desc="Full sprint history for all v2 phases (0–3B): session notes, task breakdowns, architecture decisions. Go here for detailed context on any phase.">
-        <div class="card-top"><span class="card-name">SALE_READY_PROJECT_PLAN.md</span><span class="card-type t-plan">SPRINT HISTORY</span></div>
-        <div class="card-path">docs/platform_revision/due_diligence/SALE_READY_PROJECT_PLAN.md</div>
-        <div class="card-desc">Full sprint history for v2 phases 0–3B: session notes, task breakdowns, architecture decisions.</div>
-        <div class="card-tags"><span class="card-tag tag-v2">v2</span><span class="card-tag tag-buyout">Buyout</span></div>
+      <div class="card" data-section="platform_revision" data-tags="sprint history phases sessions decisions architecture v2 plan archive" data-name="SALE_READY_PROJECT_PLAN.md" data-desc="Read-only sprint history for all v2 phases (0–3B). Archived 2026-06-27 — open activities now live in TRACKER.md only.">
+        <div class="card-top"><span class="card-name">SALE_READY_PROJECT_PLAN.md</span><span class="card-type" style="background:#e2e8f0;color:#64748b">ARCHIVED</span></div>
+        <div class="card-path">docs/archive/session-audits/SALE_READY_PROJECT_PLAN.md</div>
+        <div class="card-desc">Read-only sprint history (phases 0–3B). Archived 2026-06-27 — open activities now live in TRACKER.md only.</div>
+        <div class="card-tags"><span class="card-tag tag-v2">v2</span></div>
       </div>
 
       <div class="card" data-section="platform_revision" data-tags="buyout acquirer DAZN Sky broadcaster score assessment remediation" data-name="B2B_BUYOUT_TECHNICAL_DUE_DILIGENCE.md" data-desc="What a corporate acquirer (DAZN, Sky) tests in due diligence. Score 4/10 → 8/10. Gap analysis and remediation path.">
@@ -510,49 +712,35 @@
     <!-- CORE ARCHITECTURE -->
     <div class="section-header" id="section-architecture">
       <span class="section-title">🏗️ Core Architecture</span>
-      <span class="section-badge t-arch">Football Platform Specs</span>
+      <span class="section-badge t-arch">Football Platform Specs · 5 topic clusters</span>
     </div>
+
+    <div class="sublabel">Scoring &amp; Points</div>
     <div class="cards">
 
-      <div class="card" data-section="architecture" data-tags="scoring points formula cron cron schedule matchday timeline football" data-name="FANTASY_POINTS_SCORING_LAYER.md" data-desc="Definitive scoring formula: position multipliers, cron schedule, matchday timeline, clean sheet rules, bonus logic.">
+      <div class="card" data-section="architecture" data-tags="scoring points formula cron schedule matchday timeline football" data-name="FANTASY_POINTS_SCORING_LAYER.md" data-desc="Definitive scoring formula: position multipliers, cron schedule, matchday timeline, clean sheet rules, bonus logic.">
         <div class="card-top"><span class="card-name">FANTASY_POINTS_SCORING_LAYER.md</span><span class="card-type t-arch">ARCHITECTURE</span></div>
         <div class="card-path">docs/architecture/FANTASY_POINTS_SCORING_LAYER.md</div>
         <div class="card-desc">Definitive scoring formula: position multipliers, cron schedule, matchday timeline, clean sheet rules.</div>
         <div class="card-tags"><span class="card-tag tag-football">Football</span></div>
       </div>
 
+      <div class="card" data-section="architecture" data-tags="scoring integrity roundComplete lock idempotency cron guard" data-name="SCORING_INTEGRITY.md" data-desc="Scoring assurance: when scores lock, replay guards, audit trails, cron idempotency.">
+        <div class="card-top"><span class="card-name">SCORING_INTEGRITY.md</span><span class="card-type t-arch">ARCHITECTURE</span></div>
+        <div class="card-path">docs/architecture/SCORING_INTEGRITY.md</div>
+        <div class="card-desc">Scoring assurance: when scores lock, replay guards, audit trails, cron idempotency.</div>
+        <div class="card-tags"><span class="card-tag tag-football">Football</span></div>
+      </div>
+
+    </div>
+
+    <div class="sublabel">Draft System</div>
+    <div class="cards">
+
       <div class="card" data-section="architecture" data-tags="draft lottery allocation club cap no-repeat football" data-name="DRAFT_SYSTEM_DESIGN.md" data-desc="Draft lottery, sealed-bid engine, allocation algorithm, no-repeat rules, club caps, two-phase mechanics.">
         <div class="card-top"><span class="card-name">DRAFT_SYSTEM_DESIGN.md</span><span class="card-type t-arch">ARCHITECTURE</span></div>
         <div class="card-path">docs/architecture/DRAFT_SYSTEM_DESIGN.md</div>
         <div class="card-desc">Draft lottery, sealed-bid engine, allocation algorithm, no-repeat rules, club caps, two-phase mechanics.</div>
-        <div class="card-tags"><span class="card-tag tag-football">Football</span></div>
-      </div>
-
-      <div class="card" data-section="architecture" data-tags="H2H head-to-head round robin schedule scoring football" data-name="H2H_COMPETITION_DESIGN.md" data-desc="Head-to-Head layered on draft leagues. Round-robin schedule, scoring config, multi-day gate, DB schema.">
-        <div class="card-top"><span class="card-name">H2H_COMPETITION_DESIGN.md</span><span class="card-type t-arch">ARCHITECTURE</span></div>
-        <div class="card-path">docs/architecture/H2H_COMPETITION_DESIGN.md</div>
-        <div class="card-desc">Head-to-Head competition layer: round-robin schedule, scoring config, multi-day gate, DB schema.</div>
-        <div class="card-tags"><span class="card-tag tag-football">Football</span></div>
-      </div>
-
-      <div class="card" data-section="architecture" data-tags="auction two-phase bid confirm pending state machine football" data-name="AUCTION_SYSTEM_DESIGN.md" data-desc="Two-phase auction flow (bid → pending → confirm), state machine, void sweep, squad-full handling, UI spec.">
-        <div class="card-top"><span class="card-name">AUCTION_SYSTEM_DESIGN.md</span><span class="card-type t-arch">ARCHITECTURE</span></div>
-        <div class="card-path">docs/architecture/AUCTION_SYSTEM_DESIGN.md</div>
-        <div class="card-desc">Two-phase auction flow (bid → pending → confirm), state machine, void sweep, squad-full handling.</div>
-        <div class="card-tags"><span class="card-tag tag-football">Football</span></div>
-      </div>
-
-      <div class="card" data-section="architecture" data-tags="transfer window open close config deadline limits football" data-name="TRANSFER_WINDOW_SYSTEM.md" data-desc="Unified transfer model: auto open/close, config table, transfer limits, wildcard round, round-aware reopen hours.">
-        <div class="card-top"><span class="card-name">TRANSFER_WINDOW_SYSTEM.md</span><span class="card-type t-arch">ARCHITECTURE</span></div>
-        <div class="card-path">docs/architecture/TRANSFER_WINDOW_SYSTEM.md</div>
-        <div class="card-desc">Unified transfer model: auto open/close, config table, transfer limits, round-aware reopen hours.</div>
-        <div class="card-tags"><span class="card-tag tag-football">Football</span></div>
-      </div>
-
-      <div class="card" data-section="architecture" data-tags="starting XI bench lineup lock swap deduction football" data-name="STARTING_XI_AND_BENCH.md" data-desc="Starting XI selection, bench rules, points deduction on swap, lineup change windows, lock mechanic.">
-        <div class="card-top"><span class="card-name">STARTING_XI_AND_BENCH.md</span><span class="card-type t-arch">ARCHITECTURE</span></div>
-        <div class="card-path">docs/architecture/STARTING_XI_AND_BENCH.md</div>
-        <div class="card-desc">Starting XI selection, bench rules, points deduction on swap, lineup change windows, lock mechanic.</div>
         <div class="card-tags"><span class="card-tag tag-football">Football</span></div>
       </div>
 
@@ -563,10 +751,62 @@
         <div class="card-tags"><span class="card-tag tag-football">Football</span></div>
       </div>
 
-      <div class="card" data-section="architecture" data-tags="scoring integrity roundComplete lock idempotency cron guard" data-name="SCORING_INTEGRITY.md" data-desc="Scoring assurance: when scores lock, replay guards, audit trails, cron idempotency.">
-        <div class="card-top"><span class="card-name">SCORING_INTEGRITY.md</span><span class="card-type t-arch">ARCHITECTURE</span></div>
-        <div class="card-path">docs/architecture/SCORING_INTEGRITY.md</div>
-        <div class="card-desc">Scoring assurance: when scores lock, replay guards, audit trails, cron idempotency.</div>
+      <div class="card" data-section="architecture" data-tags="draft unlimited transfers bypass league mode draft football" data-name="DRAFT_UNLIMITED_TRANSFERS.md" data-desc="Draft leagues have unlimited buys/sells, no penalty. process-transfer league_mode bypass, MarketScreen isDraftLeague flag.">
+        <div class="card-top"><span class="card-name">DRAFT_UNLIMITED_TRANSFERS.md</span><span class="card-type t-arch">ARCHITECTURE</span></div>
+        <div class="card-path">docs/architecture/DRAFT_UNLIMITED_TRANSFERS.md</div>
+        <div class="card-desc">Draft leagues have unlimited buys/sells. process-transfer bypass, MarketScreen isDraftLeague flag.</div>
+        <div class="card-tags"><span class="card-tag tag-football">Football</span></div>
+      </div>
+
+      <div class="card" data-section="architecture" data-tags="draft mechanics plain english glossary guide onboarding" data-name="DRAFT_MECHANICS_FOR_DUMMIES.md" data-desc="Plain-English walkthrough of the draft system — no jargon. Glossary included. Good for onboarding.">
+        <div class="card-top"><span class="card-name">DRAFT_MECHANICS_FOR_DUMMIES.md</span><span class="card-type t-ref">GUIDE</span></div>
+        <div class="card-path">docs/architecture/DRAFT_MECHANICS_FOR_DUMMIES.md</div>
+        <div class="card-desc">Plain-English draft walkthrough — no jargon. Glossary included. Good for new contributors.</div>
+        <div class="card-tags"><span class="card-tag tag-football">Football</span></div>
+      </div>
+
+    </div>
+
+    <div class="sublabel">Squad &amp; Lineup</div>
+    <div class="cards">
+
+      <div class="card" data-section="architecture" data-tags="formation rules 11-player pitch constraints football" data-name="FORMATION_RULES.md" data-desc="11-player pitch validation rules: position constraints, squad balance.">
+        <div class="card-top"><span class="card-name">FORMATION_RULES.md</span><span class="card-type t-arch">ARCHITECTURE</span></div>
+        <div class="card-path">docs/architecture/FORMATION_RULES.md</div>
+        <div class="card-desc">11-player pitch validation rules: position constraints, squad balance.</div>
+        <div class="card-tags"><span class="card-tag tag-football">Football</span></div>
+      </div>
+
+      <div class="card" data-section="architecture" data-tags="starting XI bench lineup lock swap deduction football" data-name="STARTING_XI_AND_BENCH.md" data-desc="Starting XI selection, bench rules, points deduction on swap, lineup change windows, lock mechanic.">
+        <div class="card-top"><span class="card-name">STARTING_XI_AND_BENCH.md</span><span class="card-type t-arch">ARCHITECTURE</span></div>
+        <div class="card-path">docs/architecture/STARTING_XI_AND_BENCH.md</div>
+        <div class="card-desc">Starting XI selection, bench rules, points deduction on swap, lineup change windows, lock mechanic.</div>
+        <div class="card-tags"><span class="card-tag tag-football">Football</span></div>
+      </div>
+
+      <div class="card" data-section="architecture" data-tags="transfer window open close config deadline limits football" data-name="TRANSFER_WINDOW_SYSTEM.md" data-desc="Unified transfer model: auto open/close, config table, transfer limits, wildcard round, round-aware reopen hours.">
+        <div class="card-top"><span class="card-name">TRANSFER_WINDOW_SYSTEM.md</span><span class="card-type t-arch">ARCHITECTURE</span></div>
+        <div class="card-path">docs/architecture/TRANSFER_WINDOW_SYSTEM.md</div>
+        <div class="card-desc">Unified transfer model: auto open/close, config table, transfer limits, round-aware reopen hours.</div>
+        <div class="card-tags"><span class="card-tag tag-football">Football</span></div>
+      </div>
+
+      <div class="card" data-section="architecture" data-tags="transfers lineup guide user combined football" data-name="TRANSFERS_AND_LINEUP_GUIDE.md" data-desc="Combined user guide for transfers and lineup management. Covers both flows end-to-end.">
+        <div class="card-top"><span class="card-name">TRANSFERS_AND_LINEUP_GUIDE.md</span><span class="card-type t-ref">GUIDE</span></div>
+        <div class="card-path">docs/architecture/TRANSFERS_AND_LINEUP_GUIDE.md</div>
+        <div class="card-desc">Combined user guide for transfers and lineup management — both flows end-to-end.</div>
+        <div class="card-tags"><span class="card-tag tag-football">Football</span></div>
+      </div>
+
+    </div>
+
+    <div class="sublabel">Competition &amp; Live</div>
+    <div class="cards">
+
+      <div class="card" data-section="architecture" data-tags="H2H head-to-head round robin schedule scoring football" data-name="H2H_COMPETITION_DESIGN.md" data-desc="Head-to-Head layered on draft leagues. Round-robin schedule, scoring config, multi-day gate, DB schema.">
+        <div class="card-top"><span class="card-name">H2H_COMPETITION_DESIGN.md</span><span class="card-type t-arch">ARCHITECTURE</span></div>
+        <div class="card-path">docs/architecture/H2H_COMPETITION_DESIGN.md</div>
+        <div class="card-desc">Head-to-Head competition layer: round-robin schedule, scoring config, multi-day gate, DB schema.</div>
         <div class="card-tags"><span class="card-tag tag-football">Football</span></div>
       </div>
 
@@ -584,6 +824,11 @@
         <div class="card-tags"><span class="card-tag tag-football">Football</span></div>
       </div>
 
+    </div>
+
+    <div class="sublabel">Power Tools &amp; Market</div>
+    <div class="cards">
+
       <div class="card" data-section="architecture" data-tags="chips triple captain joker wildcard scoring limits football" data-name="CHIPS_TRIPLE_CAPTAIN_AND_MATCHDAY_JOKER.md" data-desc="Chip mechanics (triple captain, joker). Scoring application, limits, per-round derivation.">
         <div class="card-top"><span class="card-name">CHIPS_TRIPLE_CAPTAIN_AND_MATCHDAY_JOKER.md</span><span class="card-type t-arch">ARCHITECTURE</span></div>
         <div class="card-path">docs/architecture/CHIPS_TRIPLE_CAPTAIN_AND_MATCHDAY_JOKER.md</div>
@@ -591,31 +836,10 @@
         <div class="card-tags"><span class="card-tag tag-football">Football</span></div>
       </div>
 
-      <div class="card" data-section="architecture" data-tags="draft unlimited transfers bypass league mode draft football" data-name="DRAFT_UNLIMITED_TRANSFERS.md" data-desc="Draft leagues have unlimited buys/sells, no penalty. process-transfer league_mode bypass, MarketScreen isDraftLeague flag.">
-        <div class="card-top"><span class="card-name">DRAFT_UNLIMITED_TRANSFERS.md</span><span class="card-type t-arch">ARCHITECTURE</span></div>
-        <div class="card-path">docs/architecture/DRAFT_UNLIMITED_TRANSFERS.md</div>
-        <div class="card-desc">Draft leagues have unlimited buys/sells. process-transfer bypass, MarketScreen isDraftLeague flag.</div>
-        <div class="card-tags"><span class="card-tag tag-football">Football</span></div>
-      </div>
-
-      <div class="card" data-section="architecture" data-tags="formation rules 11-player pitch constraints football" data-name="FORMATION_RULES.md" data-desc="11-player pitch validation rules: position constraints, squad balance.">
-        <div class="card-top"><span class="card-name">FORMATION_RULES.md</span><span class="card-type t-arch">ARCHITECTURE</span></div>
-        <div class="card-path">docs/architecture/FORMATION_RULES.md</div>
-        <div class="card-desc">11-player pitch validation rules: position constraints, squad balance.</div>
-        <div class="card-tags"><span class="card-tag tag-football">Football</span></div>
-      </div>
-
-      <div class="card" data-section="architecture" data-tags="draft mechanics plain english glossary guide onboarding" data-name="DRAFT_MECHANICS_FOR_DUMMIES.md" data-desc="Plain-English walkthrough of the draft system — no jargon. Glossary included. Good for onboarding.">
-        <div class="card-top"><span class="card-name">DRAFT_MECHANICS_FOR_DUMMIES.md</span><span class="card-type t-ref">GUIDE</span></div>
-        <div class="card-path">docs/architecture/DRAFT_MECHANICS_FOR_DUMMIES.md</div>
-        <div class="card-desc">Plain-English draft walkthrough — no jargon. Glossary included. Good for new contributors.</div>
-        <div class="card-tags"><span class="card-tag tag-football">Football</span></div>
-      </div>
-
-      <div class="card" data-section="architecture" data-tags="transfers lineup guide user combined football" data-name="TRANSFERS_AND_LINEUP_GUIDE.md" data-desc="Combined user guide for transfers and lineup management. Covers both flows end-to-end.">
-        <div class="card-top"><span class="card-name">TRANSFERS_AND_LINEUP_GUIDE.md</span><span class="card-type t-ref">GUIDE</span></div>
-        <div class="card-path">docs/architecture/TRANSFERS_AND_LINEUP_GUIDE.md</div>
-        <div class="card-desc">Combined user guide for transfers and lineup management — both flows end-to-end.</div>
+      <div class="card" data-section="architecture" data-tags="auction two-phase bid confirm pending state machine football" data-name="AUCTION_SYSTEM_DESIGN.md" data-desc="Two-phase auction flow (bid → pending → confirm), state machine, void sweep, squad-full handling, UI spec.">
+        <div class="card-top"><span class="card-name">AUCTION_SYSTEM_DESIGN.md</span><span class="card-type t-arch">ARCHITECTURE</span></div>
+        <div class="card-path">docs/architecture/AUCTION_SYSTEM_DESIGN.md</div>
+        <div class="card-desc">Two-phase auction flow (bid → pending → confirm), state machine, void sweep, squad-full handling.</div>
         <div class="card-tags"><span class="card-tag tag-football">Football</span></div>
       </div>
 
@@ -695,7 +919,7 @@
 
       <div class="card" data-section="deployment" data-tags="matchday correction rescore runbook post-match ops" data-name="MD1_CORRECTION_RUNBOOK.md" data-desc="Post-matchday correction procedure: how to re-score a specific matchday after errors or retroactive fixes.">
         <div class="card-top"><span class="card-name">MD1_CORRECTION_RUNBOOK.md</span><span class="card-type t-runbook">RUNBOOK</span></div>
-        <div class="card-path">docs/ops/MD1_CORRECTION_RUNBOOK.md</div>
+        <div class="card-path">docs/deployment/MD1_CORRECTION_RUNBOOK.md</div>
         <div class="card-desc">Post-matchday correction procedure: re-score a specific matchday after errors.</div>
         <div class="card-tags"><span class="card-tag tag-ops">Ops</span><span class="card-tag tag-football">Football</span></div>
       </div>
@@ -823,10 +1047,13 @@
 
 <script>
   // ── Constants ─────────────────────────────────────────────────────────────
-  const SECTIONS = ['critical','root','platform_revision','architecture','api','deployment','reference','testing','archive'];
+  const SECTIONS = ['critical','root','src-code','backend','mobile','platform_revision','architecture','api','deployment','reference','testing','archive'];
   const COUNT_IDS = {
     critical: 'cnt-critical',
     root: 'cnt-root',
+    'src-code': 'cnt-src',
+    backend: 'cnt-backend',
+    mobile: 'cnt-mobile',
     platform_revision: 'cnt-pr',
     architecture: 'cnt-arch',
     api: 'cnt-api',
