@@ -6,7 +6,7 @@
 >
 > **Branch:** `v2` — not deployed until Week 12. Live pilot runs on `main` and is completely untouched.
 >
-> **Detailed sprint history:** [SALE_READY_PROJECT_PLAN.md](due_diligence/SALE_READY_PROJECT_PLAN.md) — go there for full session notes, architecture decisions, and sprint task breakdowns.
+> **Detailed sprint history (archived):** [SALE_READY_PROJECT_PLAN.md](../../docs/archive/session-audits/SALE_READY_PROJECT_PLAN.md) — read-only historical record of all sprint notes, architecture decisions, and task breakdowns. **This file is no longer updated.** All open activities live in this TRACKER.
 
 ---
 
@@ -51,8 +51,13 @@
 | 7 | ⬜ | Deploy `sync-tennis-players` (SEC-2) | `npx supabase functions deploy sync-tennis-players --project-ref sssmvihxtqtohisghjet` |
 | 8 | ⬜ | Deploy `calculate-scores` (SEC-3) | `npx supabase functions deploy calculate-scores --project-ref sssmvihxtqtohisghjet` |
 | 9 | ⬜ | Set FRONTEND_URL secret (MONEY-1 CORS) | `npx supabase secrets set FRONTEND_URL=https://wc-fantasy-football.vercel.app --project-ref sssmvihxtqtohisghjet` |
-| 10 | ⬜ | SEC-4: Rotate GitHub PAT + switch to SSH | Manual — see [TECHNICAL_DUE_DILIGENCE.md](due_diligence/TECHNICAL_DUE_DILIGENCE.md) → SEC-4 |
-| 11 | ⬜ | Add `VITE_SENTRY_DSN` to Vercel (OPS-2) | Vercel dashboard → Settings → Env vars (Production only): `https://3d26f98051c484e03c58e2d32a260a89@o4511632696213504.ingest.de.sentry.io/4511632708927568` |
+| 10 | ⬜ | SEC-4: Rotate GitHub PAT + switch to SSH | **5 steps:** (1) Revoke current PAT in GitHub → Settings → Developer settings. (2) Generate a new PAT (SSH key preferred) with `repo` + `workflow` scopes only. (3) `git remote set-url origin https://<new-token>@github.com/SMTCB/WCFantasyFootball.git`. (4) Delete `supabase/.temp/` from git history if present. (5) Remove the "GitHub API Fallback" section in `CLAUDE.md` that embeds the token pattern. |
+| 11 | ⬜ | Add `VITE_SENTRY_DSN` to Vercel (OPS-2 frontend) | Vercel dashboard → Settings → Env vars (Production only): `https://3d26f98051c484e03c58e2d32a260a89@o4511632696213504.ingest.de.sentry.io/4511632708927568` |
+| 12 | ⬜ | Deploy `discover-tournament` (Phase 1D-A HMAC fix) | `npx supabase functions deploy discover-tournament --project-ref sssmvihxtqtohisghjet` |
+| 13 | ⬜ | Deploy `sync-fixtures` (Phase 1D-A HMAC fix) | `npx supabase functions deploy sync-fixtures --project-ref sssmvihxtqtohisghjet` |
+| 14 | ⬜ | Deploy `sync-player-status` (Phase 1D-A HMAC fix) | `npx supabase functions deploy sync-player-status --project-ref sssmvihxtqtohisghjet` |
+| 15 | ⬜ | Deploy `sync-players` (Phase 1D-A HMAC fix) | `npx supabase functions deploy sync-players --project-ref sssmvihxtqtohisghjet` |
+| 16 | ⬜ | F1 data migration — copy FantasyF1 DB contents into v2 tables | Manual — see [F1_MODULE_IMPLEMENTATION_PLAN.md](modules/F1_MODULE_IMPLEMENTATION_PLAN.md) → "Data Migration from FantasyF1" section. Requires Supabase-linked PC. |
 
 **Next migration on v2:** `212_`
 
@@ -73,7 +78,7 @@ These must all be green before opening the v2 → main PR.
 ### Final Steps (do last, in order)
 - [ ] Phase 1D-B: generate `000_baseline.sql` schema snapshot (on hold until schema settled)
 - [ ] Merge `main` into `v2` one final time (pick up any last pilot fixes)
-- [ ] Apply all pending DB actions (rows 1–11 in table above)
+- [ ] Apply all pending DB actions (rows 1–16 in table above)
 - [ ] Run `platform.spec.js` one final time after the merge
 
 ### Deploy Sequence
@@ -107,6 +112,8 @@ From [TECHNICAL_DUE_DILIGENCE.md](due_diligence/TECHNICAL_DUE_DILIGENCE.md). Seq
 | DATA-2 | GDPR deletion RPC — `delete_user_data(p_user_id)` cascades PII columns; admin-only | ~3h |
 | DATA-3 | Data classification doc — label each table column (PII / financial / game data / public) | ~2h |
 | CODE-3 | Error boundaries — `ErrorBoundary` wrapper on each major screen; fallback UI + Sentry capture | ~2h |
+| OPS-2 | Sentry for Edge Functions (frontend DSN deployed via row 11): (a) add Deno Sentry SDK to each Edge Function; (b) wire `edge_function_error_log` into alert path; (c) add failed-cron threshold alerting (≥3 consecutive failures → alert) | ~4h |
+| P2P-LOAD | Load test — 50 concurrent P2P challenges to verify coin ledger atomicity under contention. Deferred from Sprint P2P-6. Requires `MOCK_PAYMENTS=true` environment. | ~2h |
 
 ### Phase 3 — Before sale close
 | Item | Description |
@@ -120,6 +127,7 @@ From [TECHNICAL_DUE_DILIGENCE.md](due_diligence/TECHNICAL_DUE_DILIGENCE.md). Seq
 | LOW-3 | API rate-limit headers (429 with `Retry-After`) on all Edge Functions |
 | LOW-6 | Mobile push notifications (Capacitor + FCM/APNs) |
 | LOW-9 | Accessibility audit (WCAG 2.1 AA minimum) |
+| CODE-6 | Consolidate shared UI primitives (`LivePill`, `DeltaPill`, `LeagueChip`, `MiniTok`) into `src/components/shared/` — currently duplicated across Football/F1/Tennis screens |
 
 ---
 
@@ -135,6 +143,8 @@ These require a human decision before the relevant sprint can continue.
 | F1 scoring weights (pts per correct round pick) | F1 admin scoring | ⬜ Not decided (F1-4 deferred) |
 | Clubhouse admin responsibility scope | CH-8 follow-up | ⬜ Will surface during next Clubhouse iteration |
 | Stripe account confirmation | P2P Sprint P2P-2 completion | ⬜ Business decision — zero code changes needed when ready |
+| Football competition expansion — EPL, Champions League, La Liga (~3–5 weeks to seed per competition) | Phase 4+ revenue & retention | ⬜ Product decision — which competitions, which season, priority order |
+| Forza API licence transferability — confirm commercial terms transfer on acquisition; an unresolved dependency materially caps the sale price | Sale close / buyer diligence | ⬜ Business/legal — no code changes needed, but needs a written confirmation |
 
 ---
 
@@ -154,19 +164,22 @@ These require a human decision before the relevant sprint can continue.
 
 | Purpose | File |
 |---------|------|
-| Full sprint history + session notes | [SALE_READY_PROJECT_PLAN.md](due_diligence/SALE_READY_PROJECT_PLAN.md) |
+| **THIS FILE** — all open activities, pending deploys, DD items, product decisions | `TRACKER.md` ← you are here |
+| Sprint history (read-only archive) | [SALE_READY_PROJECT_PLAN.md](../../docs/archive/session-audits/SALE_READY_PROJECT_PLAN.md) — moved to archive 2026-06-27; do not update |
 | Buyout assessment (what an acquirer tests) | [B2B_BUYOUT_TECHNICAL_DUE_DILIGENCE.md](architecture/B2B_BUYOUT_TECHNICAL_DUE_DILIGENCE.md) |
-| DD remediation backlog (SEC-/DATA-/CODE- IDs) | [TECHNICAL_DUE_DILIGENCE.md](due_diligence/TECHNICAL_DUE_DILIGENCE.md) |
+| DD remediation detail (SEC-/DATA-/CODE- full specs + file paths) | [TECHNICAL_DUE_DILIGENCE.md](due_diligence/TECHNICAL_DUE_DILIGENCE.md) — item IDs mirror this tracker; go here for acceptance criteria |
 | Tech documentation for buyers | [TECH_DOCUMENTATION.md](due_diligence/TECH_DOCUMENTATION.md) |
+| Executive tech briefing (short) | [TECH_OVERVIEW.md](due_diligence/TECH_OVERVIEW.md) |
+| Valuation framework + negotiation levers | [VALUATION_ANALYSIS.md](due_diligence/VALUATION_ANALYSIS.md) |
 | P2P betting data model + security | [P2P_BETTING_SYSTEM_DESIGN.md](architecture/P2P_BETTING_SYSTEM_DESIGN.md) |
 | Multi-sport platform architecture | [MULTI_SPORT_PLATFORM_ARCHITECTURE.md](architecture/MULTI_SPORT_PLATFORM_ARCHITECTURE.md) |
-| F1 module plan (authoritative) | [F1_MODULE_IMPLEMENTATION_PLAN.md](modules/F1_MODULE_IMPLEMENTATION_PLAN.md) |
-| Tennis module plan (authoritative) | [TENNIS_MODULE_IMPLEMENTATION_PLAN.md](modules/TENNIS_MODULE_IMPLEMENTATION_PLAN.md) |
-| P2P sprint delivery plan | [P2P_BETTING_IMPLEMENTATION_ROADMAP.md](modules/P2P_BETTING_IMPLEMENTATION_ROADMAP.md) |
-| Design system tokens + handoffs | [design/](design/) |
+| Football competition expansion roadmap | [MULTI_SPORT_EXPANSION.md](modules/MULTI_SPORT_EXPANSION.md) |
+| F1 module — full spec + data migration notes | [F1_MODULE_IMPLEMENTATION_PLAN.md](modules/F1_MODULE_IMPLEMENTATION_PLAN.md) |
+| Tennis module — full spec (authoritative) | [TENNIS_MODULE_IMPLEMENTATION_PLAN.md](modules/TENNIS_MODULE_IMPLEMENTATION_PLAN.md) |
+| Design system tokens + screen handoffs | [design/](design/) |
 | v2 branch rules (what must NOT merge) | [V2_BRANCH_PROTECTION.md](architecture/V2_BRANCH_PROTECTION.md) |
 | Claude Code session instructions | [CLAUDE.md](../../CLAUDE.md) |
-| Live session log (completed PRs, bugs) | [BACKLOG.md](../../BACKLOG.md) |
+| Football pilot session log (completed PRs, bugs) | [BACKLOG.md](../../BACKLOG.md) |
 
 ---
 
@@ -186,4 +199,4 @@ These require a human decision before the relevant sprint can continue.
 
 ---
 
-Last Updated: **2026-06-27**
+Last Updated: **2026-06-27** (consolidated from SALE_READY_PROJECT_PLAN, F1/Tennis/P2P module plans, TECHNICAL_DUE_DILIGENCE, VALUATION_ANALYSIS — this is now the single source of truth for all v2 open activities)
