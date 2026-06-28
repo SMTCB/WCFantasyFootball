@@ -135,7 +135,7 @@ function processPeriodsData(periodsData, homeTeamForzaId) {
         });
       }
 
-      if (ev.type === 'missed_goal' && ev.detail === 'penalty') {
+      if (ev.type === 'missed_penalty' || (ev.type === 'missed_goal' && ev.detail === 'penalty')) {
         if (playerForzaId) result.penaltyMissed.add(playerForzaId);
         // Track which team missed so the opposing GK can receive penalty_saved credit
         if (ev.team_side) {

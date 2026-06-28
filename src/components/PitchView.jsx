@@ -196,6 +196,21 @@ function HybridToken({ player, no, x, y, isCaptain, onClick, isSelected, compact
             {player.fixtureStatus.label}
           </div>
         )}
+        {player.clubEliminated && (
+          <div style={{
+            fontFamily:    'JetBrains Mono, monospace',
+            fontSize:      8,
+            fontWeight:    800,
+            color:         'var(--danger)',
+            letterSpacing: '.1em',
+            marginTop:     1,
+            overflow:      'hidden',
+            textOverflow:  'ellipsis',
+            whiteSpace:    'nowrap',
+          }}>
+            ELIMINATED
+          </div>
+        )}
       </div>
 
       {/* Captain badge */}

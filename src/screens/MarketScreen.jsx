@@ -28,6 +28,7 @@ import { useLeagueOwnership } from '../hooks/useLeagueOwnership';
 import SelectLeaguePicker from '../components/league/SelectLeaguePicker';
 import { deriveLeagueType } from '../components/league/LeagueBadgeHelpers';
 import { usePlayerCards } from '../hooks/usePlayerCards';
+import { useEliminatedClubs } from '../hooks/useEliminatedClubs';
 
 // club cap is fetched dynamically per-round; default 3 until loaded
 
@@ -173,13 +174,16 @@ export default function MarketScreen() {
   }, [cfg.loading, cfg.format, user?.id, activeLeague]);
 
   // League-scoped transfer state
-  const { buy, sell, isTaken, takenBy, isOwnedBy, takenMapError, takenMap } = useTransfer(activeLeague);
+  const { buy, sell, isTaken, takenByAll, isOwnedBy, takenMapError, takenMap } = useTransfer(activeLeague);
 
   // Form history — last 5 GW points per player for this tournament
   const { statsMap } = usePlayerStats(tournamentId);
 
   // Card warnings derived from player_match_stats (player_status table is unused)
   const cardMap = usePlayerCards(tournamentId);
+
+  // Cup-mode knockout elimination — empty Set for classic leagues
+  const eliminatedClubs = useEliminatedClubs(activeLeague);
 
   // Expandable stats panel state
   const { expandedPlayerId, playerDetails, togglePanel } = usePlayerScoreDetail();
@@ -1140,13 +1144,14 @@ export default function MarketScreen() {
             // In Draft mode each player belongs to one manager — block if taken.
             // In Classic mode any player can be in multiple squads simultaneously.
             const takenByOther = isDraftLeague && !isOwned && isTaken(p.id);
-            const ownerName    = takenBy(p.id);
+            const ownerNames   = takenByAll(p.id).map(o => o.managerName).join(', ');
             const limitReached = stats.posCounts[p.position] >= POS_LIMITS[p.position];
             // U26: club cap guard — uses basket-simulated counts via stats
             const clubFull     = !isOwned && (stats.countryCounts[p.club] ?? 0) >= clubCap;
             const canAfford    = effectiveBudget >= p.price;
             const hasLeague    = !!activeLeague;
-            const canBuy       = hasLeague && !isOwned && !pendingBuy && !takenByOther && !limitReached && !clubFull && canAfford && effectiveSquadIds.length < squadSize;
+            const clubEliminated = eliminatedClubs.has(p.club);
+            const canBuy       = hasLeague && !isOwned && !pendingBuy && !takenByOther && !limitReached && !clubFull && !clubEliminated && canAfford && effectiveSquadIds.length < squadSize;
             const isJoker      = p.id === todayJokerId;
             const baseIntel    = p.intel;
             const cardIntel    = cardMap.get(p.id);
@@ -1160,9 +1165,9 @@ export default function MarketScreen() {
                 className="flex items-center px-4 py-2.5 gap-3 transition-all duration-150"
                 style={{
                   borderBottom: isExpanded ? 'none' : '1px solid var(--rule)',
-                  background:   isOwned ? 'rgba(0,180,216,0.05)' : takenByOther ? 'rgba(239,68,68,0.02)' : 'transparent',
-                  borderLeft:   isOwned ? '2px solid var(--cyan)' : takenByOther ? '2px solid rgba(239,68,68,0.3)' : '2px solid transparent',
-                  opacity:      takenByOther ? 0.65 : 1,
+                  background:   isOwned ? 'rgba(0,180,216,0.05)' : (takenByOther || clubEliminated) ? 'rgba(239,68,68,0.02)' : 'transparent',
+                  borderLeft:   isOwned ? '2px solid var(--cyan)' : (takenByOther || clubEliminated) ? '2px solid rgba(239,68,68,0.3)' : '2px solid transparent',
+                  opacity:      (takenByOther || (clubEliminated && !isOwned)) ? 0.65 : 1,
                 }}
               >
                 {/* Position chip — replaces circle avatar */}
@@ -1199,12 +1204,17 @@ export default function MarketScreen() {
                       )}
                       {takenByOther && (
                         <span className="fk-mono shrink-0" style={{ fontSize: 9, fontWeight: 800, color: 'var(--danger)', border: '1px solid var(--danger)', padding: '2px 6px' }}>
-                          {ownerName ? `TAKEN · ${ownerName}` : 'TAKEN'}
+                          {ownerNames ? `TAKEN · ${ownerNames}` : 'TAKEN'}
                         </span>
                       )}
                       {isJoker && (
                         <span className="fk-mono shrink-0" style={{ fontSize: 9, fontWeight: 800, color: 'var(--pos-gk)', border: '1px solid var(--pos-gk)', padding: '2px 6px' }}>
                           JOKER
+                        </span>
+                      )}
+                      {clubEliminated && (
+                        <span className="fk-mono shrink-0" style={{ fontSize: 9, fontWeight: 800, color: 'var(--danger)', border: '1px solid var(--danger)', padding: '2px 6px' }}>
+                          ELIMINATED
                         </span>
                       )}
                     </div>

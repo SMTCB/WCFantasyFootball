@@ -136,6 +136,15 @@ export default function PlayerRow({
                 SWAP
               </span>
             )}
+
+            {player.clubEliminated && (
+              <span
+                className="fk-mono shrink-0"
+                style={{ fontSize: 9, fontWeight: 800, color: 'var(--danger)', border: '1px solid var(--danger)', padding: '2px 6px' }}
+              >
+                ELIMINATED
+              </span>
+            )}
           </div>
 
           {/* Metadata line — club + fixture timing for the active matchday */}
