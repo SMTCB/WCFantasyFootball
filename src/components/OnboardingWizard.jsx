@@ -45,6 +45,16 @@ function buildSteps({ competitionName, budgetTotal, squadSize }) {
       skip:     'Skip intro',
     },
     {
+      id:               'clubhouse',
+      emoji:            '🏠',
+      kicker:           'Your digital home',
+      heading:          'Create your\nClubhouse',
+      body:             "A Clubhouse is where you and your friends play every sport together — Football leagues, F1 Paddocks, Tennis. Create one now, join with a code, or skip for now.",
+      cta:              'Create Clubhouse →',
+      skip:             'Skip for now',
+      isClubhouseStep:  true,
+    },
+    {
       id:       'squad',
       emoji:    '⚽',
       kicker:   'Step 1 of 4',
@@ -121,7 +131,7 @@ function ProgressDots({ current, total }) {
             width:      i === current ? '20px' : '6px',
             height:     '6px',
             borderRadius: '3px',
-            background: i === current ? 'var(--gold)' : 'rgba(255,255,255,0.2)',
+            background: i === current ? 'var(--gold)' : 'var(--rule)',
             transition: 'all 0.3s ease',
           }}
         />
@@ -142,6 +152,13 @@ export default function OnboardingWizard({ onComplete, onSkip, config = {}, user
   const [usernameInput,    setUsernameInput]    = useState('');
   const [usernameError,    setUsernameError]    = useState('');
   const [usernameSaving,   setUsernameSaving]   = useState(false);
+
+  // Clubhouse step state
+  const [clubhouseName,  setClubhouseName]  = useState('');
+  const [clubhouseCode,  setClubhouseCode]  = useState('');
+  const [clubhouseMode,  setClubhouseMode]  = useState('create'); // 'create' | 'join'
+  const [clubhouseBusy,  setClubhouseBusy]  = useState(false);
+  const [clubhouseError, setClubhouseError] = useState('');
 
   // Pre-fill with current username when the wizard mounts (if user is known)
   useEffect(() => {
@@ -192,6 +209,33 @@ export default function OnboardingWizard({ onComplete, onSkip, config = {}, user
         }
       }
     }
+
+    // Handle Clubhouse step — create or join if inputs are filled, else fall through (skip)
+    if (current.isClubhouseStep) {
+      if (clubhouseMode === 'create' && clubhouseName.trim().length >= 2) {
+        setClubhouseBusy(true); setClubhouseError('');
+        try {
+          await supabase.rpc('create_circle', { p_name: clubhouseName.trim() });
+        } catch (e) {
+          setClubhouseError(e.message || 'Could not create Clubhouse');
+          setClubhouseBusy(false);
+          return;
+        }
+        setClubhouseBusy(false);
+      } else if (clubhouseMode === 'join' && clubhouseCode.trim().length >= 4) {
+        setClubhouseBusy(true); setClubhouseError('');
+        try {
+          await supabase.rpc('join_circle_by_code', { p_invite_code: clubhouseCode.trim().toUpperCase() });
+        } catch (e) {
+          setClubhouseError(e.message === 'INVALID_CODE' ? 'Code not found — check and try again.' : (e.message || 'Could not join Clubhouse'));
+          setClubhouseBusy(false);
+          return;
+        }
+        setClubhouseBusy(false);
+      }
+      // If neither condition met (empty inputs), fall through and advance step (skip behaviour)
+    }
+
     if (isLast) {
       handleFinish(route);
     } else {
@@ -218,7 +262,7 @@ export default function OnboardingWizard({ onComplete, onSkip, config = {}, user
         position:      'fixed',
         inset:         0,
         zIndex:        9999,
-        background:    'rgba(7, 10, 15, 0.97)',
+        background:    'rgba(247, 243, 237, 0.98)',
         display:       'flex',
         flexDirection: 'column',
         alignItems:    'center',
@@ -237,8 +281,8 @@ export default function OnboardingWizard({ onComplete, onSkip, config = {}, user
         position:   'absolute',
         inset:      0,
         backgroundImage: `
-          linear-gradient(rgba(240,180,0,0.03) 1px, transparent 1px),
-          linear-gradient(90deg, rgba(240,180,0,0.03) 1px, transparent 1px)
+          linear-gradient(rgba(184,114,14,0.02) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(184,114,14,0.02) 1px, transparent 1px)
         `,
         backgroundSize: '48px 48px',
         pointerEvents: 'none',
@@ -254,11 +298,11 @@ export default function OnboardingWizard({ onComplete, onSkip, config = {}, user
           width:        '100%',
           maxWidth:     '440px',
           flexShrink:   0,
-          background:   'var(--shell)',
-          border:       '1px solid rgba(255,255,255,0.08)',
+          background:   'var(--card)',
+          border:       '1px solid var(--rule)',
           borderRadius: '16px',
           padding:      '40px 36px 32px',
-          boxShadow:    '0 32px 80px rgba(0,0,0,0.4)',
+          boxShadow:    '0 8px 32px rgba(24,32,46,0.12)',
         }}
       >
         {/* Top bar: progress + skip */}
@@ -269,7 +313,7 @@ export default function OnboardingWizard({ onComplete, onSkip, config = {}, user
               onClick={handleSkip}
               style={{
                 fontSize:      '11px',
-                color:         'rgba(255,255,255,0.35)',
+                color:         'var(--mute)',
                 letterSpacing: '0.05em',
                 fontFamily:    'Archivo Black, sans-serif',
                 background:    'none',
@@ -293,7 +337,7 @@ export default function OnboardingWizard({ onComplete, onSkip, config = {}, user
             color:        'var(--gold)',
           }}
         >
-          {current.id === 'welcome' ? 'FFL' : current.id === 'squad' ? 'SQD' : current.id === 'league' ? 'LGE' : 'GO'}
+          {current.id === 'welcome' ? 'FFL' : current.id === 'clubhouse' ? 'CLB' : current.id === 'squad' ? 'SQD' : current.id === 'league' ? 'LGE' : 'GO'}
         </div>
 
         {/* Kicker */}
@@ -332,7 +376,7 @@ export default function OnboardingWizard({ onComplete, onSkip, config = {}, user
           style={{
             fontSize:     '14px',
             lineHeight:   1.65,
-            color:        'rgba(240,242,245,0.6)',
+            color:        'var(--text-2)',
             marginBottom: '36px',
           }}
         >
@@ -357,8 +401,8 @@ export default function OnboardingWizard({ onComplete, onSkip, config = {}, user
                 color: 'var(--paper)',
                 textAlign: 'center',
                 padding: '12px 16px',
-                background: 'rgba(255,255,255,0.06)',
-                border: `1px solid ${usernameError ? 'var(--danger)' : usernameInput.trim().length >= 3 ? 'var(--gold)' : 'rgba(255,255,255,0.15)'}`,
+                background: 'rgba(24,32,46,0.04)',
+                border: `1px solid ${usernameError ? 'var(--danger)' : usernameInput.trim().length >= 3 ? 'var(--gold)' : 'var(--rule)'}`,
                 borderRadius: 8,
                 outline: 'none',
                 boxSizing: 'border-box',
@@ -370,21 +414,84 @@ export default function OnboardingWizard({ onComplete, onSkip, config = {}, user
                 {usernameError}
               </p>
             )}
-            <p style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 10, color: 'rgba(255,255,255,0.3)', textAlign: 'center', letterSpacing: '.08em' }}>
+            <p style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 10, color: 'var(--mute)', textAlign: 'center', letterSpacing: '.08em' }}>
               3–30 characters · can be changed later in Settings
             </p>
+          </div>
+        )}
+
+        {/* Clubhouse step UI */}
+        {current.isClubhouseStep && (
+          <div style={{ width: '100%', marginBottom: 20, display: 'flex', flexDirection: 'column', gap: 12 }}>
+            {/* Mode toggle */}
+            <div style={{ display: 'flex', gap: 0, border: '1px solid var(--rule)', borderRadius: 6, overflow: 'hidden' }}>
+              {['create', 'join'].map(m => (
+                <button
+                  key={m}
+                  type="button"
+                  onClick={() => { setClubhouseMode(m); setClubhouseError(''); }}
+                  style={{
+                    flex: 1, padding: '9px 0', border: 'none', cursor: 'pointer',
+                    fontFamily: 'Archivo Black, sans-serif', fontSize: 11, letterSpacing: '0.08em',
+                    textTransform: 'uppercase',
+                    background: clubhouseMode === m ? 'var(--accent)' : 'transparent',
+                    color: clubhouseMode === m ? '#fff' : 'var(--mute)',
+                  }}
+                >
+                  {m === 'create' ? 'Create' : 'Join'}
+                </button>
+              ))}
+            </div>
+
+            {clubhouseMode === 'create' ? (
+              <input
+                type="text"
+                value={clubhouseName}
+                onChange={e => { setClubhouseName(e.target.value); setClubhouseError(''); }}
+                onKeyDown={e => { if (e.key === 'Enter') advance(); }}
+                placeholder="e.g. The Sunday League"
+                maxLength={40}
+                autoFocus
+                style={{
+                  width: '100%', padding: '12px 14px', fontFamily: 'Archivo, sans-serif', fontSize: 15,
+                  color: 'var(--paper)', background: 'var(--elev)', border: '1px solid var(--rule)',
+                  borderRadius: 6, outline: 'none', boxSizing: 'border-box',
+                }}
+              />
+            ) : (
+              <input
+                type="text"
+                value={clubhouseCode}
+                onChange={e => { setClubhouseCode(e.target.value.toUpperCase()); setClubhouseError(''); }}
+                placeholder="INVITE CODE"
+                maxLength={8}
+                autoFocus
+                style={{
+                  width: '100%', padding: '12px 14px', fontFamily: 'JetBrains Mono, monospace', fontSize: 18,
+                  fontWeight: 700, letterSpacing: '0.25em', textTransform: 'uppercase',
+                  color: 'var(--paper)', background: 'var(--elev)', border: '1px solid var(--rule)',
+                  borderRadius: 6, outline: 'none', boxSizing: 'border-box',
+                }}
+              />
+            )}
+
+            {clubhouseError && (
+              <p style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 11, color: 'var(--danger)', letterSpacing: '.08em', margin: 0 }}>
+                {clubhouseError}
+              </p>
+            )}
           </div>
         )}
 
         {/* CTA */}
         <button
           onClick={() => advance(current.ctaRoute)}
-          disabled={usernameSaving}
+          disabled={usernameSaving || clubhouseBusy}
           style={{
             width:         '100%',
             padding:       '14px 24px',
             background:    'var(--gold)',
-            color:         'var(--ink-2)',
+            color:         'var(--paper)',
             fontSize:      '13px',
             fontFamily:    'Archivo Black, sans-serif',
             fontWeight:    800,
@@ -398,7 +505,10 @@ export default function OnboardingWizard({ onComplete, onSkip, config = {}, user
           onMouseEnter={e => { e.target.style.opacity = '0.88'; e.target.style.transform = 'translateY(-1px)'; }}
           onMouseLeave={e => { e.target.style.opacity = '1';    e.target.style.transform = 'translateY(0)'; }}
         >
-          {usernameSaving ? 'Saving…' : current.cta}
+          {(usernameSaving || clubhouseBusy) ? 'Please wait…'
+            : current.isClubhouseStep
+              ? (clubhouseMode === 'create' ? 'Create Clubhouse →' : 'Join Clubhouse →')
+              : current.cta}
         </button>
 
         {/* Step counter */}
@@ -407,7 +517,7 @@ export default function OnboardingWizard({ onComplete, onSkip, config = {}, user
             textAlign:     'center',
             marginTop:     '20px',
             fontSize:      '10px',
-            color:         'rgba(255,255,255,0.2)',
+            color:         'var(--mute)',
             fontFamily:    'Archivo Black, sans-serif',
             letterSpacing: '0.1em',
           }}
@@ -421,12 +531,12 @@ export default function OnboardingWizard({ onComplete, onSkip, config = {}, user
         style={{
           marginTop:     '20px',
           fontSize:      '11px',
-          color:         'rgba(255,255,255,0.18)',
+          color:         'var(--mute)',
           fontFamily:    'Archivo Black, sans-serif',
           letterSpacing: '0.08em',
         }}
       >
-        Press <kbd style={{ background: 'rgba(255,255,255,0.08)', padding: '1px 5px', borderRadius: '3px' }}>→</kbd> to advance
+        Press <kbd style={{ background: 'var(--rule)', padding: '1px 5px', borderRadius: '3px' }}>→</kbd> to advance
       </div>
     </div>
   );

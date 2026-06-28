@@ -20,12 +20,13 @@
 import { useState, useCallback, useEffect } from 'react';
 
 const K = {
-  wizard:       'forzakit_onboarding_done',
-  squad:        'forzakit_tour_squad_done',
-  market:       'forzakit_tour_market_done',
-  league:       'forzakit_tour_league_done',
-  commissioner: 'forzakit_tour_commissioner_done',
-  bets:         'forzakit_tour_bets_done',
+  wizard:            'forzakit_onboarding_done',
+  squad:             'forzakit_tour_squad_done',
+  market:            'forzakit_tour_market_done',
+  league:            'forzakit_tour_league_done',
+  commissioner:      'forzakit_tour_commissioner_done',
+  bets:              'forzakit_tour_bets_done',
+  clubhouseStepDone: 'forzakit_onboarding_clubhouse_done',
 };
 
 function get(key)       { return localStorage.getItem(key) === 'true'; }

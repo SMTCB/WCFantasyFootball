@@ -277,14 +277,14 @@ export default function PitchView({
 
   // Outer container sizing
   const outerStyle = isCompact
-    ? { position: 'relative', width: '100%', height: 220, background: 'var(--ink)', padding: '12px 16px 14px' }
+    ? { position: 'relative', width: '100%', height: 220, background: '#2a5035', padding: '12px 16px 14px' }
     : variant === 'desktop'
-    ? { flex: 1, position: 'relative', background: 'var(--ink)', padding: '28px 40px 32px' }
+    ? { flex: 1, position: 'relative', background: '#2a5035', padding: '28px 40px 32px' }
     : {
         position:    'relative',
         width:       '100%',
         aspectRatio: '3/2',
-        background:  'var(--ink)',
+        background:  '#2a5035',
         padding:     '16px 20px 20px',
       };
 
@@ -302,7 +302,7 @@ export default function PitchView({
     >
       <div style={{
         ...insetStyle,
-        background:   'linear-gradient(180deg, var(--ink-2) 0%, var(--ink) 100%)',
+        background:   'linear-gradient(180deg, #3d6e4a 0%, #2a5035 100%)',
         borderRadius: 8,
         overflow:     'hidden',
         boxShadow:    'inset 0 0 0 1px var(--rule)',
@@ -316,7 +316,20 @@ export default function PitchView({
             right:      24,
             top:        `${y}%`,
             height:     1,
-            background: 'rgba(0,180,216,.10)',
+            background: 'rgba(255,255,255,0.18)',
+          }} />
+        ))}
+
+        {/* ── Depth bands ────────────────────────────────────────── */}
+        {[34, 58, 81].map(y => (
+          <div key={`band-${y}`} style={{
+            position:   'absolute',
+            left:       0,
+            right:      0,
+            top:        `${y}%`,
+            height:     '12%',
+            background: 'linear-gradient(180deg, rgba(0,0,0,0.08) 0%, transparent 100%)',
+            pointerEvents: 'none',
           }} />
         ))}
 
@@ -334,8 +347,8 @@ export default function PitchView({
             transform:     'translateY(-50%)',
             fontFamily:    'JetBrains Mono, monospace',
             fontSize:      9,
-            color:         'rgba(0,180,216,.5)',
-            background:    '#0A0D12',
+            color:         'rgba(255,255,255,0.7)',
+            background:    'rgba(0,0,0,0.3)',
             padding:       '2px 4px',
             letterSpacing: '.18em',
             zIndex:        5,
@@ -351,7 +364,7 @@ export default function PitchView({
           right:      '10%',
           top:        '50%',
           height:     1,
-          background: 'rgba(242,238,229,.08)',
+          background: 'rgba(255,255,255,0.18)',
         }} />
         <div style={{
           position:     'absolute',
@@ -361,7 +374,7 @@ export default function PitchView({
           width:        160,
           height:       160,
           borderRadius: '50%',
-          border:       '1px solid rgba(242,238,229,.06)',
+          border:       '1px solid rgba(255,255,255,0.18)',
         }} />
 
         {/* ── Fixture context strip ───────────────────────────────── */}
