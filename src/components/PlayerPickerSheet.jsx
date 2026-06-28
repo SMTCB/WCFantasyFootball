@@ -165,7 +165,7 @@ export default function PlayerPickerSheet({ position, budget, takenMap, isOwnedB
                       <span className="text-[10px]" style={{ color: 'var(--mute)' }}>{p.club}</span>
                       {taken && (
                         <span className="text-[9px] font-black" style={{ color: 'var(--danger)', fontFamily: 'Archivo Black, sans-serif' }}>
-                          TAKEN — {takenMap[p.id].managerName}
+                          TAKEN — {takenMap[p.id].map(o => o.managerName).join(', ')}
                         </span>
                       )}
                       {owned && (

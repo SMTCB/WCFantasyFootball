@@ -36,6 +36,7 @@ import { usePlayerStats } from '../hooks/usePlayerStats';
 import { useLeagueOwnership } from '../hooks/useLeagueOwnership';
 import PlayerStatsDashboard from '../components/player/PlayerStatsDashboard';
 import { usePlayerCards } from '../hooks/usePlayerCards';
+import { useEliminatedClubs } from '../hooks/useEliminatedClubs';
 import FormStrip from '../components/FormStrip';
 import SelectLeaguePicker from '../components/league/SelectLeaguePicker';
 import { deriveLeagueType } from '../components/league/LeagueBadgeHelpers';
@@ -72,6 +73,7 @@ export default function SquadScreen() {
 
   // Card warnings derived from player_match_stats (player_status table is unused)
   const cardMap = usePlayerCards(tournamentId);
+  const eliminatedClubs = useEliminatedClubs(activeLeague, tournamentId);
 
   // On mount: resolve which league to show
   useEffect(() => {
@@ -336,7 +338,8 @@ export default function SquadScreen() {
         const fixtureStatus = formatFixtureStatus(fixtureInfo);
         // rawPoints: unmultiplied per-fixture score, used for swap-out deduction
         // warnings (set_lineup's interim deduction is the raw value, not captain-doubled).
-        return { ...normalised, rawPoints: Math.round(rawPts), isBench: !isStarter, isLineupLocked: isLocked, fixtureInfo, fixtureStatus };
+        const clubEliminated = eliminatedClubs.has(p.club);
+        return { ...normalised, rawPoints: Math.round(rawPts), isBench: !isStarter, isLineupLocked: isLocked, fixtureInfo, fixtureStatus, clubEliminated };
       });
 
       // Enforce formation rules: 1 GK, 3-5 DEF, 2-4 MID, 1-2 FWD, total 11
@@ -423,7 +426,7 @@ export default function SquadScreen() {
       setLoading(false);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user?.id, activeLeague, tournamentId]);
+  }, [user?.id, activeLeague, tournamentId, eliminatedClubs]);
 
   // Auto-fill hook — reusable across Squad, Market, League screens
   const { handleAutoFill, autoFilling, autoFillMsg } = useAutoFill(activeLeague, squadData, fetchSquad, takenMap, buy, cfg);

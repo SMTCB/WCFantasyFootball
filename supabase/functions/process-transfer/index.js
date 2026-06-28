@@ -280,6 +280,26 @@ Deno.serve(async (req) => {
       limitMatchdayId = null;
     }
 
+    // Group→knockout transition (classic leagues): automatic unlimited transfers,
+    // no commissioner toggle needed. Driven by club_cap_rules.unlimited_transfers
+    // for the squad's current round_suffix — a single row edit moves this to a
+    // different round for any tournament. Independent of the manual free_transfers
+    // toggle below (either condition lifts the cap).
+    if (limitMatchdayId && leagueMode === 'classic' && tournamentId && squad.matchday_id) {
+      const roundSuffix = squad.matchday_id.split('-')[1] ?? null;
+      if (roundSuffix) {
+        const { data: capRule } = await supabase
+          .from('club_cap_rules')
+          .select('unlimited_transfers')
+          .eq('tournament_id', tournamentId)
+          .eq('round_suffix', roundSuffix)
+          .maybeSingle();
+        if (capRule?.unlimited_transfers === true) {
+          limitMatchdayId = null;
+        }
+      }
+    }
+
     // Free transfers (classic leagues): commissioner can toggle unlimited transfers
     // while the transfer window is open. Does not override the open/closed window
     // period — it only lifts the per-round cap for transfers that are already allowed.

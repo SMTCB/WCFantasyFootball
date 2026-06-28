@@ -60,13 +60,18 @@ export function useTransfer(leagueId) {
 
       const usernameMap = Object.fromEntries((profiles ?? []).map(p => [p.id, p.username]));
 
+      // Relaxation tiers allow the same player to be owned by multiple managers
+      // at once, so each player_id maps to an array of owners (not a single one).
       const map = {};
       for (const squad of squads) {
         const managerName = squad.user_id === user?.id
           ? 'You'
           : (usernameMap[squad.user_id] ?? 'Unknown');
         for (const pid of (squad.players ?? [])) {
-          map[pid] = { userId: squad.user_id, managerName };
+          if (!map[pid]) map[pid] = [];
+          if (!map[pid].some(o => o.userId === squad.user_id)) {
+            map[pid].push({ userId: squad.user_id, managerName });
+          }
         }
       }
       setTakenMap(map);
@@ -93,10 +98,12 @@ export function useTransfer(leagueId) {
     }
 
     // Optimistic update: mark this player as owned by current manager
-    setTakenMap(prev => ({
-      ...prev,
-      [player.id]: { userId: user?.id, managerName: 'You' },
-    }));
+    // (additive — other existing owners under relaxation are preserved)
+    setTakenMap(prev => {
+      const existing = prev[player.id] ?? [];
+      if (existing.some(o => o.userId === user?.id)) return prev;
+      return { ...prev, [player.id]: [...existing, { userId: user?.id, managerName: 'You' }] };
+    });
 
     return {
       ok:                  true,
@@ -120,19 +127,23 @@ export function useTransfer(leagueId) {
       return { ok: false, error: data?.error ?? 'Transfer failed' };
     }
 
-    // Optimistic update: remove player from takenMap
+    // Optimistic update: remove only the current manager from this player's owner list
     setTakenMap(prev => {
+      const existing = prev[player.id] ?? [];
+      const remaining = existing.filter(o => o.userId !== user?.id);
       const next = { ...prev };
-      delete next[player.id];
+      if (remaining.length) next[player.id] = remaining;
+      else delete next[player.id];
       return next;
     });
 
     return { ok: true, players: data.players, budget_remaining: data.budget_remaining };
-  }, [leagueId]);
+  }, [leagueId, user]);
 
-  const isTaken    = useCallback((playerId) => !!takenMap[playerId], [takenMap]);
-  const takenBy    = useCallback((playerId) => takenMap[playerId]?.managerName ?? null, [takenMap]);
-  const isOwnedBy  = useCallback((playerId) => takenMap[playerId]?.userId === user?.id, [takenMap, user]);
+  const isTaken     = useCallback((playerId) => !!takenMap[playerId]?.length, [takenMap]);
+  const takenBy     = useCallback((playerId) => takenMap[playerId]?.[0]?.managerName ?? null, [takenMap]);
+  const takenByAll  = useCallback((playerId) => takenMap[playerId] ?? [], [takenMap]);
+  const isOwnedBy   = useCallback((playerId) => (takenMap[playerId] ?? []).some(o => o.userId === user?.id), [takenMap, user]);
 
-  return { takenMap, takenMapLoading, takenMapError, buy, sell, isTaken, takenBy, isOwnedBy, reload: loadTakenMap };
+  return { takenMap, takenMapLoading, takenMapError, buy, sell, isTaken, takenBy, takenByAll, isOwnedBy, reload: loadTakenMap };
 }

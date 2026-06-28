@@ -422,12 +422,12 @@ Deno.serve(async (req) => {
 
 // ─── Shared helpers ────────────────────────────────────────────────────────────
 
-// Auto-sub helpers (#17). Formation: 1 GK, 3–5 DEF, 2–5 MID, 1–3 FWD (11 total).
+// Auto-sub helpers (#17). Formation: exactly 1 GK, at least 1 DEF/MID/FWD (11 total).
 function isValidFormation(ids, posLookup) {
   const c = { GK: 0, DEF: 0, MID: 0, FWD: 0 };
   for (const id of ids) { const p = posLookup[id]; if (c[p] !== undefined) c[p]++; }
-  return c.GK === 1 && c.DEF >= 3 && c.DEF <= 5 && c.MID >= 2 && c.MID <= 5
-      && c.FWD >= 1 && c.FWD <= 3 && (c.GK + c.DEF + c.MID + c.FWD) === ids.length;
+  return c.GK === 1 && c.DEF >= 1 && c.MID >= 1
+      && c.FWD >= 1 && (c.GK + c.DEF + c.MID + c.FWD) === ids.length;
 }
 
 // Replace DNP starters (0 minutes) with the highest-priority bench player who played,
