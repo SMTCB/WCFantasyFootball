@@ -121,7 +121,7 @@ function ProgressDots({ current, total }) {
             width:      i === current ? '20px' : '6px',
             height:     '6px',
             borderRadius: '3px',
-            background: i === current ? 'var(--gold)' : 'rgba(255,255,255,0.2)',
+            background: i === current ? 'var(--gold)' : 'var(--rule)',
             transition: 'all 0.3s ease',
           }}
         />
@@ -218,7 +218,7 @@ export default function OnboardingWizard({ onComplete, onSkip, config = {}, user
         position:      'fixed',
         inset:         0,
         zIndex:        9999,
-        background:    'rgba(7, 10, 15, 0.97)',
+        background:    'rgba(247, 243, 237, 0.98)',
         display:       'flex',
         flexDirection: 'column',
         alignItems:    'center',
@@ -237,8 +237,8 @@ export default function OnboardingWizard({ onComplete, onSkip, config = {}, user
         position:   'absolute',
         inset:      0,
         backgroundImage: `
-          linear-gradient(rgba(240,180,0,0.03) 1px, transparent 1px),
-          linear-gradient(90deg, rgba(240,180,0,0.03) 1px, transparent 1px)
+          linear-gradient(rgba(184,114,14,0.02) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(184,114,14,0.02) 1px, transparent 1px)
         `,
         backgroundSize: '48px 48px',
         pointerEvents: 'none',
@@ -254,11 +254,11 @@ export default function OnboardingWizard({ onComplete, onSkip, config = {}, user
           width:        '100%',
           maxWidth:     '440px',
           flexShrink:   0,
-          background:   'var(--shell)',
-          border:       '1px solid rgba(255,255,255,0.08)',
+          background:   'var(--card)',
+          border:       '1px solid var(--rule)',
           borderRadius: '16px',
           padding:      '40px 36px 32px',
-          boxShadow:    '0 32px 80px rgba(0,0,0,0.4)',
+          boxShadow:    '0 8px 32px rgba(24,32,46,0.12)',
         }}
       >
         {/* Top bar: progress + skip */}
@@ -269,7 +269,7 @@ export default function OnboardingWizard({ onComplete, onSkip, config = {}, user
               onClick={handleSkip}
               style={{
                 fontSize:      '11px',
-                color:         'rgba(255,255,255,0.35)',
+                color:         'var(--mute)',
                 letterSpacing: '0.05em',
                 fontFamily:    'Archivo Black, sans-serif',
                 background:    'none',
@@ -317,7 +317,7 @@ export default function OnboardingWizard({ onComplete, onSkip, config = {}, user
             fontFamily:   'Archivo Black, sans-serif',
             fontWeight:   900,
             lineHeight:   1.05,
-            color:        'var(--paper)',
+            color:        'var(--text)',
             textTransform: 'uppercase',
             letterSpacing: '-0.01em',
             marginBottom: '20px',
@@ -332,7 +332,7 @@ export default function OnboardingWizard({ onComplete, onSkip, config = {}, user
           style={{
             fontSize:     '14px',
             lineHeight:   1.65,
-            color:        'rgba(240,242,245,0.6)',
+            color:        'var(--text-2)',
             marginBottom: '36px',
           }}
         >
@@ -354,11 +354,11 @@ export default function OnboardingWizard({ onComplete, onSkip, config = {}, user
                 width: '100%',
                 fontFamily: 'JetBrains Mono, monospace',
                 fontSize: 16,
-                color: 'var(--paper)',
+                color: 'var(--text)',
                 textAlign: 'center',
                 padding: '12px 16px',
-                background: 'rgba(255,255,255,0.06)',
-                border: `1px solid ${usernameError ? 'var(--danger)' : usernameInput.trim().length >= 3 ? 'var(--gold)' : 'rgba(255,255,255,0.15)'}`,
+                background: 'rgba(24,32,46,0.04)',
+                border: `1px solid ${usernameError ? 'var(--danger)' : usernameInput.trim().length >= 3 ? 'var(--gold)' : 'var(--rule)'}`,
                 borderRadius: 8,
                 outline: 'none',
                 boxSizing: 'border-box',
@@ -370,7 +370,7 @@ export default function OnboardingWizard({ onComplete, onSkip, config = {}, user
                 {usernameError}
               </p>
             )}
-            <p style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 10, color: 'rgba(255,255,255,0.3)', textAlign: 'center', letterSpacing: '.08em' }}>
+            <p style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 10, color: 'var(--mute)', textAlign: 'center', letterSpacing: '.08em' }}>
               3–30 characters · can be changed later in Settings
             </p>
           </div>
@@ -384,7 +384,7 @@ export default function OnboardingWizard({ onComplete, onSkip, config = {}, user
             width:         '100%',
             padding:       '14px 24px',
             background:    'var(--gold)',
-            color:         'var(--ink-2)',
+            color:         'var(--paper)',
             fontSize:      '13px',
             fontFamily:    'Archivo Black, sans-serif',
             fontWeight:    800,
@@ -407,7 +407,7 @@ export default function OnboardingWizard({ onComplete, onSkip, config = {}, user
             textAlign:     'center',
             marginTop:     '20px',
             fontSize:      '10px',
-            color:         'rgba(255,255,255,0.2)',
+            color:         'var(--mute)',
             fontFamily:    'Archivo Black, sans-serif',
             letterSpacing: '0.1em',
           }}
@@ -421,12 +421,12 @@ export default function OnboardingWizard({ onComplete, onSkip, config = {}, user
         style={{
           marginTop:     '20px',
           fontSize:      '11px',
-          color:         'rgba(255,255,255,0.18)',
+          color:         'var(--mute)',
           fontFamily:    'Archivo Black, sans-serif',
           letterSpacing: '0.08em',
         }}
       >
-        Press <kbd style={{ background: 'rgba(255,255,255,0.08)', padding: '1px 5px', borderRadius: '3px' }}>→</kbd> to advance
+        Press <kbd style={{ background: 'var(--rule)', padding: '1px 5px', borderRadius: '3px' }}>→</kbd> to advance
       </div>
     </div>
   );
