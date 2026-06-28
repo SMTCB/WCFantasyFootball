@@ -42,13 +42,22 @@ function inferTier(seed: number | null): number {
 }
 
 function extractNationality(playerData: Record<string, unknown>): string | null {
-  // API may return country as iocCode, country_code, or nationality
+  // API may return country as iocCode, country_code, countryAcr, or nationality
   return (
     (playerData.iocCode as string) ||
     (playerData.country_code as string) ||
+    (playerData.countryAcr as string) ||
     (playerData.nationality as string) ||
     null
   );
+}
+
+// seed1/seed2 on a fixture can be a numeric string ("17"), a qualifier/wildcard
+// code ("q", "WC"), or null. Only numeric values denote an actual draw seed.
+function parseSeed(raw: unknown): number | null {
+  if (typeof raw === 'number') return raw;
+  if (typeof raw === 'string' && /^\d+$/.test(raw)) return parseInt(raw, 10);
+  return null;
 }
 
 Deno.serve(async (req) => {
@@ -115,7 +124,9 @@ Deno.serve(async (req) => {
     }
 
     // ── 2. Call RapidAPI — 1 request (our entire budget for this trigger) ─────
-    const apiUrl = `${RAPIDAPI_BASE}/atp/fixtures/tournament/${tournament.external_id}`;
+    // pageSize=300 covers a full Grand Slam round in one call (confirmed:
+    // Wimbledon 2026 R1 = 64 fixtures, hasNextPage=false at this size).
+    const apiUrl = `${RAPIDAPI_BASE}/atp/fixtures/tournament/${tournament.external_id}?pageSize=300`;
     console.log(`[sync-tennis-players] Fetching: ${apiUrl}`);
 
     const apiResp = await fetch(apiUrl, {
@@ -138,9 +149,10 @@ Deno.serve(async (req) => {
 
     // ── 3. Extract unique players from fixture list ───────────────────────────
     // API returns fixtures (matches) in a draw. We collect all unique players.
-    // Expected shape: { data: [ { homeTeam: { id, name, country, seed }, awayTeam: {...} }, ... ] }
-    // or: { fixtures: [ { player_home: {...}, player_away: {...} }, ... ] }
-    // We handle both common shapes defensively.
+    // Confirmed live shape (Wimbledon 2026 dry run): { data: [ { player1Id, player2Id,
+    // seed1, seed2, player1: { id, name, countryAcr }, player2: { id, name, countryAcr } }, ... ] }
+    // Also tolerates homeTeam/awayTeam or player_home/player_away shapes with a
+    // nested side.seed, in case other tournament types differ.
 
     const fixtures: Record<string, unknown>[] = (
       (apiData.data as Record<string, unknown>[]) ||
@@ -171,18 +183,26 @@ Deno.serve(async (req) => {
     }>();
 
     for (const fixture of fixtures) {
-      // Try both homeTeam/awayTeam and player_home/player_away naming conventions
-      const sides = [
-        (fixture.homeTeam as Record<string, unknown>) || (fixture.player_home as Record<string, unknown>),
-        (fixture.awayTeam as Record<string, unknown>) || (fixture.player_away as Record<string, unknown>),
-      ].filter(Boolean);
+      // Try player1/player2 (confirmed live shape), then homeTeam/awayTeam,
+      // then player_home/player_away. Seed may live at fixture level
+      // (seed1/seed2) or nested on the side object (side.seed).
+      const sidePairs: [Record<string, unknown> | undefined, unknown][] = [
+        [
+          (fixture.player1 as Record<string, unknown>) || (fixture.homeTeam as Record<string, unknown>) || (fixture.player_home as Record<string, unknown>),
+          fixture.seed1,
+        ],
+        [
+          (fixture.player2 as Record<string, unknown>) || (fixture.awayTeam as Record<string, unknown>) || (fixture.player_away as Record<string, unknown>),
+          fixture.seed2,
+        ],
+      ];
 
-      for (const side of sides) {
+      for (const [side, fixtureSeed] of sidePairs) {
         if (!side) continue;
         const pid = (side.id as number) || (side.player_id as number);
         if (!pid || playerMap.has(pid)) continue;
 
-        const seed = (side.seed as number) || null;
+        const seed = parseSeed(fixtureSeed) ?? parseSeed(side.seed);
         playerMap.set(pid, {
           player_name: (side.name as string) || (side.player_name as string) || `Player ${pid}`,
           nationality: extractNationality(side),
