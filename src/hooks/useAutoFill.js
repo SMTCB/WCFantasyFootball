@@ -8,7 +8,7 @@ import { supabase } from '../lib/supabase';
  * @param {string}   leagueId     - Active league UUID
  * @param {object}   squadData    - Squad object (from MarketScreen)
  * @param {function} fetchSquad   - Callback to refresh squad (unused during fill; kept for API compat)
- * @param {object}   takenMap     - { [playerId]: { userId, managerName } } from useTransfer
+ * @param {object}   takenMap     - { [playerId]: Array<{ userId, managerName }> } from useTransfer
  * @param {function} addToBasket  - (player) => void  — adds a buy item to the basket
  * @param {object}   cfg          - League config from useLeagueConfig
  * @param {Array}    basket       - Current basket items [{type, player}] — pending sells/buys applied before fill
@@ -116,7 +116,7 @@ export function useAutoFill(leagueId, squadData, fetchSquad, takenMap = {}, addT
       const othersIds = isDraftLeague
         ? new Set(
             Object.entries(takenMap || {})
-              .filter(([, v]) => v?.userId !== undefined && v?.userId !== currentUserId)
+              .filter(([, owners]) => (owners ?? []).some(o => o.userId !== undefined && o.userId !== currentUserId))
               .map(([id]) => id)
           )
         : new Set();
@@ -146,7 +146,7 @@ export function useAutoFill(leagueId, squadData, fetchSquad, takenMap = {}, addT
         if (typeof p === 'object' && p?.club) clubCounts[p.club] = (clubCounts[p.club] ?? 0) + 1;
       }
 
-      const minPer = cfg.minFormation ?? { GK: 1, DEF: 3, MID: 2, FWD: 1 };
+      const minPer = cfg.minFormation ?? { GK: 1, DEF: 1, MID: 1, FWD: 1 };
       const maxPer = POS_LIMITS      ?? { GK: 2, DEF: 5, MID: 5, FWD: 3 };
 
       // ── Slots needed per position ────────────────────────────────────────
