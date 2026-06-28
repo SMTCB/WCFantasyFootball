@@ -1,6 +1,6 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-06-26 (v2: DD corrections complete — PR #641: coin ledger compliance (migration 209 created, not applied), Vite 8/OXC console fix, --on-shell token, color-mix accent-bg, hex sweep F1+Tennis+Clubhouse+Squad+Live+Market screens, spacing scale snap, README football resilience note; also fixed pre-existing build blocker — ClubhouseNotifProvider was missing from v2, branch was unbuildable | 2026-06-25: PR #640: --on-shell-dim token, ChallengeScreen+ClubhouseScreen hex cleanup; PR #639: coin_transactions schema v2 migration 208, MOCK_PAYMENTS, --font-serif; pilot: own goal fix PR #637)  
+**Last Updated**: 2026-06-28 (v2: dry-run UX fixes PR #665 — Clubhouse creation bug fixed, SCORES+LIVE merged with FIXTURES sub-tab, F1HomeScreen CALENDAR/PADDOCKS two-section layout, ClubhouseScreen THE FRONTROW + RECAP tab, TRACKER.md updated with session notes and remaining UX items UX-3/UX-5/ARCH-1–3 deferred to future sessions)  
 **E2E Test Suite**: `platform.spec.js` (84 tests × 1 browser config) passing ✅ — 84/84 on v2 branch 2026-06-23  
 **Full Playbook Run**: `E2E_TEST_PLAYBOOK.md` v2.0 — all flows confirmed  
 **🟢 LAUNCH READY**: No critical (P0/P1) bugs open. All game mechanics functional. WC kick-off 2026-06-11.  

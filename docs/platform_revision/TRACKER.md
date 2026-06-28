@@ -25,7 +25,10 @@
 | **3A** | Buyout hygiene batch 2 (provider adapter, containerisation, envs) | ✅ Done | PRs #634–#636 |
 | **3B** | v2 integration & deploy | 🔄 In progress | Code quality gates ✅ — smoke tests + deploy remaining |
 
-**Next session:** Phase 3B smoke tests → deploy sequence. See [Phase 3B checklist](#phase-3b-pre-merge-checklist) below.
+**Next session options (choose one):**
+- **UX polish** — pitch view redesign (UX-5), onboarding Kit Light (UX-3), Clubhouse validation gate (UX-5 table item), F1 harmonisation (UX-7)
+- **ARCH-1** — Migration 215: Clubhouse-centric DB model (add `clubhouse_id` to leagues/paddocks/player_boxes, update creation RPCs)
+- **Phase 3B smoke tests** → deploy sequence — see [Phase 3B checklist](#phase-3b-pre-merge-checklist) below
 
 **Session 2026-06-27/28 (docs):** Repo mine map — DOCS_INDEX.html expanded to full repo explorer (source code, backend, mobile sections + architecture clustered into 5 topic groups). TRACKER.md consolidated as single SOT: 11 gaps filled from scattered docs (4 missing HMAC deploy rows, F1 data migration, SEC-4 steps inline, OPS-2 detail, P2P load test, CODE-6, 2 product decisions). SALE_READY_PROJECT_PLAN.md archived (read-only history). PR #648 merged.
 
@@ -34,6 +37,8 @@
 **Session 2026-06-28 (Wimbledon dry run + auth bug fix):** Used Wimbledon 2026 (real tournament, started 2026-06-29) as a live dry run of the Tennis module per `docs/testing/TENNIS_MODULE_TEST_PLAN.md`. **Discovered `requireServiceRole()` (`_shared/auth.ts`) was unreachable in practice** for all 4 functions that import it (`sync-tennis-players`, `score-tennis-tournament`, `score-atp-finals`, `score-f1-race`) — neither its exact-match path (masked `sb_secret_...` keys) nor its legacy-JWT HMAC path (no `SUPABASE_JWT_SECRET` secret configured) could be satisfied by anything outside Supabase's own infra. Rows 5–7 above had been "deployed" in an earlier session but were never actually callable. Fixed in two PRs: **#662** added a third auth path — exact match against a new `ADMIN_TRIGGER_KEY` secret, additive only, scoped to these 4 functions (confirmed via grep no other function imports this module). **#663** fixed a second, separate blocker found immediately after #662 shipped: none of the 4 functions had a `supabase/config.toml` entry, so the API Gateway defaulted `verify_jwt=true` and rejected the non-JWT `ADMIN_TRIGGER_KEY` bearer token before the function code ran; added explicit `verify_jwt = false` for all 4, matching the existing `calculate-scores` pattern. **Rule for future admin-triggered functions:** `requireServiceRole` + `verify_jwt = false` in `config.toml` must always be added together — one without the other still 401s. After the fix: opened Wimbledon 2026 via `admin_open_tournament` (real RapidAPI `external_id=21337`, tournament row `9bf04949-49af-4d92-b523-3ba15757fba8`), synced the full 128-player R1 draw via `sync-tennis-players` in 1 API call (`pageSize=300`), confirmed correct tier breakdown `{T1:4, T2:12, T3:16, T4:96}` after deleting 2 stale placeholder player rows + 1 stale test roster that FK'd to them (pre-existing dev/test leftovers, not caused by this session — partial unique index on `external_player_id` doesn't dedupe NULL-keyed rows). Also added `VITE_AUTH_ENABLED=true` to Vercel Preview scoped to the `v2` git branch only (Production untouched) — Preview had been running in demo mode (no `VITE_AUTH_ENABLED` set there at all), which would have skipped real Supabase Auth/RLS checks during the dry run. Remaining: create test Player Box + submit real roster, run through scoring once Wimbledon results land. Full detail in `docs/testing/TENNIS_MODULE_TEST_PLAN.md`.
 
 **Session 2026-06-28 (deploy catch-up, rows 1–9 + 12–15):** Rows 1–9 and 12–15 above applied/deployed from the Supabase-linked PC. **Unplanned find:** migration 208 (`coin_transactions_schema_v2`) had never actually run against production — 209 failed on first attempt with `column "currency" does not exist` because it assumed 208 was already live. Applied 208 first (approved), then 209. **Bug found in both 208 and 209:** the trailing `REVOKE ALL ON FUNCTION credit_coins FROM ...` was a bare reference with no arg-type list; once `CREATE OR REPLACE FUNCTION credit_coins(...)` introduced a 7-arg overload alongside prod's original 5-arg version, the bare `REVOKE` became ambiguous (`function name "credit_coins" is not unique`) and rolled back the whole transaction. Fixed by qualifying the `REVOKE` with the explicit 7-arg signature in both files; verified all existing 5-arg callers (`purchase-coins`, migrations 202/204/205) still resolve unambiguously. Fix merged via [PR #659](https://github.com/SMTCB/WCFantasyFootball/pull/659). Migration 210 (touches shared `public.users` table) was backed up first per the pilot-data safety rule — see `backups/users_pre_migration210_20260628_153715.json` (75 rows). Row 8 (`calculate-scores`) deploy preceded by a live-fixture check on tournaments 429/623 — confirmed empty before deploying. **Cleanup:** found and deleted an orphaned Edge Function (`slug: swift-responder`, actually an old `discover-tournament` deploy under the wrong slug) — the correctly-slugged `discover-tournament` was unaffected and remains active.
+
+**Session 2026-06-28 (dry-run UX fixes, PR #665):** Tennis/platform dry run surfaced 7 UX/bug items. **Completed in this session (PR #665, merged into v2):** (1) **Clubhouse creation bug** — clicking Create cleared the form without showing the new clubhouse. Root cause: `fetchMyCircles()` inside `createCircle` set `loading=true`, which unmounted `ClubhouseLobby`, then remounted with blank form if RLS timing returned empty. Fix: optimistic state update adds the new circle to `myCircles` immediately; `fetchMyCircles` runs in the background without triggering the loading state. (2) **SCORES + LIVE merged** — SCORES tab removed from mobile nav; LIVE becomes the primary mobile tab (first position, no longer `desktopOnly`). `/scores` routes now redirect to `/live`. Desktop Football sub-nav "Scores" → "Live". LiveScreen gained a third mobile tab **FIXTURES** (alongside MY XI and POINTS) that fetches all matchday fixtures (`live` + `finished` + `scheduled`) and displays them with status indicator, scoreline, and kickoff time. (3) **The FrontRow** — ClubhouseScreen `FORZA TIMES` tab renamed to `THE FRONTROW`; RECAP cross-sport tab added; Tennis SportSection added to HOME tab. (4) **F1HomeScreen restructured** — CALENDAR | PADDOCKS two-section top bar; PADDOCKS section has 2×2 card grid (Championship Standings, Year Bets, Race Bets, Report) + ADMIN button in header + leaderboard preview; background uses `var(--bg)` Kit Light. **Remaining dry-run items deferred to dedicated sessions:** UX-2 (pitch view redesign), UX-3 (onboarding Kit Light), UX-5 (Clubhouse frontend validation gate), UX-7 (F1 harmonisation), ARCH-1–3 (Clubhouse-centric DB migration).
 
 ---
 
@@ -109,16 +114,21 @@ These must all be green before opening the v2 → main PR.
 
 Captured 2026-06-28 during Tennis dry run. These are the open items from that session's feedback.
 
-### Completed this session
+### Completed
+| Item | Description | Status | PR |
+|------|-------------|--------|----|
+| BUG-1 | Clubhouse creation bug (click Create → screen clears, nothing created) | ✅ Done | #665 |
+| UX-1 | "The FrontRow" — Gazette renamed, moved to Clubhouse nav; RECAP cross-sport tab added | ✅ Done | #665 |
+| UX-2 | RECAP moved to Clubhouse level (cross-sport tab in ClubhouseScreen) | ✅ Done | #665 |
+| UX-4 | Football SCORES tab merged into LIVE tab — LIVE is primary mobile tab; FIXTURES sub-tab added to LiveScreen | ✅ Done | #665 |
+| UX-6 | F1 nav restructured: CALENDAR / PADDOCKS top-bar sections; 2×2 card grid; ADMIN in header | ✅ Done | #665 |
+
+### Deferred — Requires dedicated session
 | Item | Description | Status |
 |------|-------------|--------|
-| BUG-1 | Clubhouse creation bug (click Create → screen clears, nothing created) | ⬜ In progress |
-| UX-1 | Gazette → rebranded as "The FrontRow", moved to Clubhouse nav (below My Group) | ⬜ Pending |
-| UX-2 | RECAP moved to Clubhouse level (cross-sport, not inside Football) | ⬜ Pending |
 | UX-3 | Onboarding wizard aligned to Kit Light (currently still dark theme) | ⬜ Pending |
-| UX-4 | Football SCORES tab merged into LIVE tab (results + live in one tab) | ⬜ Pending |
-| UX-5 | Pitch view redesign — light green field, connecting lines, player boxes readable | ⬜ Pending |
-| UX-6 | F1 nav restructured: top bar = Calendar / Paddocks, Paddocks has ADMIN button + Standings / Year Bets / Race Bets / Report sub-sections | ⬜ Pending |
+| UX-5 | Pitch view redesign — light green field, connecting lines between rows, readable player tokens | ⬜ Pending |
+| UX-7 | F1 screen: harmonise look & feel with reference design | ⬜ Pending |
 
 ### Deferred — Requires dedicated session
 | Item | Description | Effort | Notes |
