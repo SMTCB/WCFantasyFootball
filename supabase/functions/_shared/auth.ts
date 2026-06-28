@@ -5,6 +5,14 @@
 //   A) Exact Bearer match against SUPABASE_SERVICE_ROLE_KEY (new sb_secret_... format)
 //   B) Old-format service-role JWT (eyJ... — still used by cron commands) — signature
 //      verified with HMAC-SHA256 using SUPABASE_JWT_SECRET, then role=service_role checked
+//   C) Exact Bearer match against ADMIN_TRIGGER_KEY — a manually-set secret for
+//      one-off admin-triggered calls (curl from terminal) when the real
+//      SUPABASE_SERVICE_ROLE_KEY value is masked by the dashboard/CLI and no
+//      working legacy JWT exists. Added 2026-06-28: discovered that on
+//      projects migrated to the new Supabase key system, neither Path A nor
+//      Path B can be satisfied by anyone outside Supabase's own infra, which
+//      left score-tennis-tournament / score-atp-finals / score-f1-race /
+//      sync-tennis-players permanently uncallable.
 //
 // Usage:
 //   import { requireServiceRole } from '../_shared/auth.ts';
@@ -18,6 +26,10 @@ export async function requireServiceRole(req: Request): Promise<Response | null>
 
   // Path A: exact match (new sb_secret_... format or old eyJ... stored as env var)
   if (serviceKey && auth === `Bearer ${serviceKey}`) return null;
+
+  // Path C: manually-set admin trigger key (see note above)
+  const adminKey = Deno.env.get('ADMIN_TRIGGER_KEY') ?? '';
+  if (adminKey && auth === `Bearer ${adminKey}`) return null;
 
   // Path B: old-format eyJ... JWT sent by cron commands — verify HMAC-SHA256 signature
   // before trusting any claim in the payload.
