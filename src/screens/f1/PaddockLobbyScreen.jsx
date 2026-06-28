@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { usePaddock } from '../../hooks/f1/usePaddock';
 import { useSport } from '../../context/SportContext';
+import { supabase } from '../../lib/supabase';
 
 export default function PaddockLobbyScreen() {
   const navigate = useNavigate();
@@ -14,13 +15,21 @@ export default function PaddockLobbyScreen() {
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
   const [copied, setCopied] = useState(null);
+  const [myCircles, setMyCircles] = useState([]);
+  const [selectedCircleId, setSelectedCircleId] = useState(null);
+
+  useEffect(() => {
+    supabase.rpc('get_my_circles').then(({ data }) => {
+      if (data?.length) setMyCircles(data);
+    });
+  }, []);
 
   async function handleCreate(e) {
     e.preventDefault();
     if (!name.trim()) return;
     setBusy(true); setErr('');
     try {
-      const id = await createPaddock(name.trim());
+      const id = await createPaddock(name.trim(), selectedCircleId ?? undefined);
       setActiveSport('f1');
       navigate(`/f1/${id}`);
     } catch (e) {
@@ -60,22 +69,22 @@ export default function PaddockLobbyScreen() {
   ];
 
   return (
-    <div className="min-h-screen" style={{ background: 'var(--ink)', paddingBottom: 32 }}>
+    <div className="min-h-screen" style={{ background: 'var(--bg)', paddingBottom: 32 }}>
       {/* Header */}
-      <div style={{ background: 'var(--shell)', padding: '24px 20px 20px' }}>
-        <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 10, letterSpacing: '0.18em', color: 'rgba(255,255,255,0.45)', textTransform: 'uppercase', marginBottom: 6 }}>
+      <div style={{ background: 'var(--card)', padding: '24px 20px 20px' }}>
+        <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 10, letterSpacing: '0.18em', color: 'var(--mute)', textTransform: 'uppercase', marginBottom: 6 }}>
           🏎 Formula 1 · 2026
         </div>
-        <h1 style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 26, color: 'var(--on-shell)', margin: 0, lineHeight: 1.1 }}>
+        <h1 style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 26, color: 'var(--paper)', margin: 0, lineHeight: 1.1 }}>
           PADDOCK
         </h1>
-        <p style={{ fontFamily: 'Archivo, sans-serif', fontSize: 13, color: 'rgba(255,255,255,0.55)', margin: '6px 0 0' }}>
+        <p style={{ fontFamily: 'Archivo, sans-serif', fontSize: 13, color: 'var(--text-2)', margin: '6px 0 0' }}>
           Your private prediction group — create one or join a friend's.
         </p>
       </div>
 
       {/* Tabs */}
-      <div style={{ borderBottom: '1px solid var(--rule)', display: 'flex', gap: 0 }}>
+      <div style={{ background: 'var(--card)', borderBottom: '1px solid var(--rule)', display: 'flex', gap: 0 }}>
         {TABS.map(t => (
           <button
             key={t.key}
@@ -180,6 +189,23 @@ export default function PaddockLobbyScreen() {
         {/* CREATE */}
         {tab === 'create' && (
           <form onSubmit={handleCreate} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            {myCircles.length > 0 && (
+              <div>
+                <label style={{ display: 'block', fontFamily: 'JetBrains Mono, monospace', fontSize: 10, letterSpacing: '0.12em', color: 'var(--mute)', marginBottom: 8, textTransform: 'uppercase' }}>
+                  Clubhouse (optional)
+                </label>
+                <select
+                  value={selectedCircleId ?? ''}
+                  onChange={e => setSelectedCircleId(e.target.value || null)}
+                  style={{ width: '100%', padding: '12px 14px', border: '1px solid var(--rule)', borderRadius: 6, fontFamily: 'Archivo, sans-serif', fontSize: 15, color: 'var(--paper)', background: 'var(--card)', outline: 'none', boxSizing: 'border-box', cursor: 'pointer' }}
+                >
+                  <option value="">No clubhouse</option>
+                  {myCircles.map(c => (
+                    <option key={c.id} value={c.id}>{c.name}</option>
+                  ))}
+                </select>
+              </div>
+            )}
             <div>
               <label style={{ display: 'block', fontFamily: 'JetBrains Mono, monospace', fontSize: 10, letterSpacing: '0.12em', color: 'var(--mute)', marginBottom: 8, textTransform: 'uppercase' }}>
                 Paddock Name
