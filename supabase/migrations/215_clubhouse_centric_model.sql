@@ -93,13 +93,13 @@ $$;
 
 -- ── 5. Update create_league: add p_circle_id parameter ───────────────────────
 -- Based on the current h2h-enabled overload (migration 136).
--- Drops and recreates with the additional p_circle_id uuid DEFAULT NULL parameter.
+-- The new 6-param signature is a NEW overload — PostgreSQL treats it as distinct
+-- from the existing 5-param overload, so CREATE OR REPLACE is safe and preserves
+-- all GRANT EXECUTE permissions on the existing overloads.
 -- Writes circle_id on the leagues INSERT and also inserts into circle_leagues
 -- junction for backwards compatibility.
 
-DROP FUNCTION IF EXISTS create_league(text, text, uuid, text, boolean);
-
-CREATE FUNCTION create_league(
+CREATE OR REPLACE FUNCTION create_league(
   p_name          text,
   p_format        text,
   p_user_id       uuid,          -- ignored; auth.uid() used instead
