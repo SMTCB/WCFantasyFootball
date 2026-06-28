@@ -69,4 +69,4 @@ BEGIN
     (p_user_id, p_type, p_amount, p_challenge_id, p_meta, p_currency, p_reference_id);
 END;
 $$;
-REVOKE ALL ON FUNCTION credit_coins FROM public, authenticated, anon;
+REVOKE ALL ON FUNCTION credit_coins(uuid, int, text, uuid, jsonb, char(3), text) FROM public, authenticated, anon;
