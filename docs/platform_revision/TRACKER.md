@@ -76,7 +76,9 @@
 
 **Rows 10, 11, 16 deferred** — not Supabase actions (10/11) or blocked on source access (16). Pick up in a future session.
 
-**Next migration on v2:** `216_` (215 committed, pending DB apply from Supabase-linked PC)
+**Next migration on v2:** `216_`
+
+**Session 2026-06-28 (migration 215 applied):** `215_clubhouse_centric_model.sql` applied to prod from the Supabase-linked PC (this session's local `v2` was 4 commits behind `origin/v2` — pulled first). Backed up `leagues`/`paddocks`/`player_boxes` id+name snapshots before running (`backups/*_pre_migration215_20260628_231738.json`). Verified: `circle_id` column live on all 3 tables (NULL on existing rows — no junction-table data to backfill yet); `create_league` 6-arg overload, `create_paddock` (2-arg), `create_player_box` (3-arg) all updated and present in `pg_proc`.
 
 ---
 
