@@ -31,6 +31,8 @@
 
 **Session 2026-06-28 (v2 sync + tennis test plan):** Vercel v2 build fixed via `.npmrc` `legacy-peer-deps=true` (PR #654 — madge@8.0.0 peer dep conflict). Tennis module test plan created at `docs/testing/TENNIS_MODULE_TEST_PLAN.md` with 13 scenarios across 5 modules + Wimbledon dry-run checklist (PR #655). v2 ← main sync: PRs #616/#622–624/#626/#630/#637/#650–653 merged via PR #656 — 1 conflict in MarketScreen.jsx resolved (v2 Kit Light color kept, main `clubEliminated` logic adopted). Incoming main migrations 192–194 renamed → 212–214 to avoid collision with existing v2 migrations. Next migration: `215_`.
 
+**Session 2026-06-28 (deploy catch-up, rows 1–9 + 12–15):** Rows 1–9 and 12–15 above applied/deployed from the Supabase-linked PC. **Unplanned find:** migration 208 (`coin_transactions_schema_v2`) had never actually run against production — 209 failed on first attempt with `column "currency" does not exist` because it assumed 208 was already live. Applied 208 first (approved), then 209. **Bug found in both 208 and 209:** the trailing `REVOKE ALL ON FUNCTION credit_coins FROM ...` was a bare reference with no arg-type list; once `CREATE OR REPLACE FUNCTION credit_coins(...)` introduced a 7-arg overload alongside prod's original 5-arg version, the bare `REVOKE` became ambiguous (`function name "credit_coins" is not unique`) and rolled back the whole transaction. Fixed by qualifying the `REVOKE` with the explicit 7-arg signature in both files; verified all existing 5-arg callers (`purchase-coins`, migrations 202/204/205) still resolve unambiguously. Fix merged via [PR #659](https://github.com/SMTCB/WCFantasyFootball/pull/659). Migration 210 (touches shared `public.users` table) was backed up first per the pilot-data safety rule — see `backups/users_pre_migration210_20260628_153715.json` (75 rows). Row 8 (`calculate-scores`) deploy preceded by a live-fixture check on tournaments 429/623 — confirmed empty before deploying. **Cleanup:** found and deleted an orphaned Edge Function (`slug: swift-responder`, actually an old `discover-tournament` deploy under the wrong slug) — the correctly-slugged `discover-tournament` was unaffected and remains active.
+
 ---
 
 ## ⚠️ Pending DB & Deploy Actions
@@ -46,22 +48,24 @@
 
 | # | Status | Action | Command |
 |---|--------|--------|---------|
-| 1 | ⬜ | Apply migration 209 — coin currency compliance | `npx supabase db query --linked --file supabase/migrations/209_coin_ledger_compliance.sql` |
-| 2 | ⬜ | Apply migration 210 — SEC-1 is_admin guard trigger | `npx supabase db query --linked --file supabase/migrations/210_guard_users_is_admin.sql` |
-| 3 | ⬜ | Apply migration 211 — MONEY-1 reference_id UNIQUE | `npx supabase db query --linked --file supabase/migrations/211_coin_reference_id_unique.sql` |
-| 4 | ⬜ | Deploy `score-f1-race` (SEC-2) | `npx supabase functions deploy score-f1-race --project-ref sssmvihxtqtohisghjet` |
-| 5 | ⬜ | Deploy `score-tennis-tournament` (SEC-2) | `npx supabase functions deploy score-tennis-tournament --project-ref sssmvihxtqtohisghjet` |
-| 6 | ⬜ | Deploy `score-atp-finals` (SEC-2) | `npx supabase functions deploy score-atp-finals --project-ref sssmvihxtqtohisghjet` |
-| 7 | ⬜ | Deploy `sync-tennis-players` (SEC-2) | `npx supabase functions deploy sync-tennis-players --project-ref sssmvihxtqtohisghjet` |
-| 8 | ⬜ | Deploy `calculate-scores` (SEC-3) | `npx supabase functions deploy calculate-scores --project-ref sssmvihxtqtohisghjet` |
-| 9 | ⬜ | Set FRONTEND_URL secret (MONEY-1 CORS) | `npx supabase secrets set FRONTEND_URL=https://wc-fantasy-football.vercel.app --project-ref sssmvihxtqtohisghjet` |
+| 1 | ✅ | Apply migration 209 — coin currency compliance | `npx supabase db query --linked --file supabase/migrations/209_coin_ledger_compliance.sql` |
+| 2 | ✅ | Apply migration 210 — SEC-1 is_admin guard trigger | `npx supabase db query --linked --file supabase/migrations/210_guard_users_is_admin.sql` |
+| 3 | ✅ | Apply migration 211 — MONEY-1 reference_id UNIQUE | `npx supabase db query --linked --file supabase/migrations/211_coin_reference_id_unique.sql` |
+| 4 | ✅ | Deploy `score-f1-race` (SEC-2) | `npx supabase functions deploy score-f1-race --project-ref sssmvihxtqtohisghjet` |
+| 5 | ✅ | Deploy `score-tennis-tournament` (SEC-2) | `npx supabase functions deploy score-tennis-tournament --project-ref sssmvihxtqtohisghjet` |
+| 6 | ✅ | Deploy `score-atp-finals` (SEC-2) | `npx supabase functions deploy score-atp-finals --project-ref sssmvihxtqtohisghjet` |
+| 7 | ✅ | Deploy `sync-tennis-players` (SEC-2) | `npx supabase functions deploy sync-tennis-players --project-ref sssmvihxtqtohisghjet` |
+| 8 | ✅ | Deploy `calculate-scores` (SEC-3) | `npx supabase functions deploy calculate-scores --project-ref sssmvihxtqtohisghjet` |
+| 9 | ✅ | Set FRONTEND_URL secret (MONEY-1 CORS) | `npx supabase secrets set FRONTEND_URL=https://wc-fantasy-football.vercel.app --project-ref sssmvihxtqtohisghjet` |
 | 10 | ⬜ | SEC-4: Rotate GitHub PAT + switch to SSH | **5 steps:** (1) Revoke current PAT in GitHub → Settings → Developer settings. (2) Generate a new PAT (SSH key preferred) with `repo` + `workflow` scopes only. (3) `git remote set-url origin https://<new-token>@github.com/SMTCB/WCFantasyFootball.git`. (4) Delete `supabase/.temp/` from git history if present. (5) Remove the "GitHub API Fallback" section in `CLAUDE.md` that embeds the token pattern. |
 | 11 | ⬜ | Add `VITE_SENTRY_DSN` to Vercel (OPS-2 frontend) | Vercel dashboard → Settings → Env vars (Production only): `https://3d26f98051c484e03c58e2d32a260a89@o4511632696213504.ingest.de.sentry.io/4511632708927568` |
-| 12 | ⬜ | Deploy `discover-tournament` (Phase 1D-A HMAC fix) | `npx supabase functions deploy discover-tournament --project-ref sssmvihxtqtohisghjet` |
-| 13 | ⬜ | Deploy `sync-fixtures` (Phase 1D-A HMAC fix) | `npx supabase functions deploy sync-fixtures --project-ref sssmvihxtqtohisghjet` |
-| 14 | ⬜ | Deploy `sync-player-status` (Phase 1D-A HMAC fix) | `npx supabase functions deploy sync-player-status --project-ref sssmvihxtqtohisghjet` |
-| 15 | ⬜ | Deploy `sync-players` (Phase 1D-A HMAC fix) | `npx supabase functions deploy sync-players --project-ref sssmvihxtqtohisghjet` |
+| 12 | ✅ | Deploy `discover-tournament` (Phase 1D-A HMAC fix) | `npx supabase functions deploy discover-tournament --project-ref sssmvihxtqtohisghjet` |
+| 13 | ✅ | Deploy `sync-fixtures` (Phase 1D-A HMAC fix) | `npx supabase functions deploy sync-fixtures --project-ref sssmvihxtqtohisghjet` |
+| 14 | ✅ | Deploy `sync-player-status` (Phase 1D-A HMAC fix) | `npx supabase functions deploy sync-player-status --project-ref sssmvihxtqtohisghjet` |
+| 15 | ✅ | Deploy `sync-players` (Phase 1D-A HMAC fix) | `npx supabase functions deploy sync-players --project-ref sssmvihxtqtohisghjet` |
 | 16 | ⬜ | F1 data migration — copy FantasyF1 DB contents into v2 tables | Manual — see [F1_MODULE_IMPLEMENTATION_PLAN.md](modules/F1_MODULE_IMPLEMENTATION_PLAN.md) → "Data Migration from FantasyF1" section. Requires Supabase-linked PC. |
+
+**Rows 10, 11, 16 deferred** — not Supabase actions (10/11) or blocked on source access (16). Pick up in a future session.
 
 **Next migration on v2:** `215_`
 
