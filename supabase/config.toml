@@ -10,6 +10,18 @@ entrypoint = "./functions/calculate-relaxation/index.js"
 entrypoint = "./functions/calculate-scores/index.js"
 verify_jwt = false
 
+[functions.sync-tennis-players]
+verify_jwt = false
+
+[functions.score-tennis-tournament]
+verify_jwt = false
+
+[functions.score-atp-finals]
+verify_jwt = false
+
+[functions.score-f1-race]
+verify_jwt = false
+
 [functions.discover-tournament]
 entrypoint = "./functions/discover-tournament/index.js"
 verify_jwt = false
