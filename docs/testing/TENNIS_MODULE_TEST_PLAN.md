@@ -13,10 +13,24 @@ All scenarios must pass before Phase 3B smoke tests and v2 → main merge.
 | Item | Status | Notes |
 |------|--------|-------|
 | Tennis DB tables (migrations 197–201) | ✅ Applied to prod | `tennis_tournaments`, `player_boxes`, `tennis_rosters`, etc. |
-| `sync-tennis-players` Edge Function | ⬜ Deploy pending | TRACKER row 7 — must deploy before any live dry run |
-| `score-tennis-tournament` Edge Function | ⬜ Deploy pending | TRACKER row 5 |
-| `score-atp-finals` Edge Function | ⬜ Deploy pending | TRACKER row 6 |
-| `RAPIDAPI_TENNIS_KEY` secret | ❓ Confirm set | Check: `npx supabase secrets list --project-ref sssmvihxtqtohisghjet` |
+| `sync-tennis-players` Edge Function | ✅ Deployed + working | TRACKER row 7. Deployed earlier, but unreachable until the 2026-06-28 auth fix below — see note |
+| `score-tennis-tournament` Edge Function | ✅ Deployed | TRACKER row 5. Same auth fix applies — untested live yet, fix verified via `sync-tennis-players` |
+| `score-atp-finals` Edge Function | ✅ Deployed | TRACKER row 6. Same auth fix applies — not yet exercised live |
+| `RAPIDAPI_TENNIS_KEY` secret | ✅ Confirmed set | Verified working — real RapidAPI call succeeded 2026-06-28 (Wimbledon draw synced) |
+| `ADMIN_TRIGGER_KEY` secret | ✅ Added 2026-06-28 | New secret — see "Auth fix" note below. Required to call any of the 4 admin-only tennis/F1 functions from outside Supabase's own infra |
+| `VITE_AUTH_ENABLED` (Vercel Preview, `v2` branch) | ✅ Added 2026-06-28 | Preview-only, scoped to the `v2` git branch. Production untouched. Needed so this dry run exercises real Supabase Auth + RLS instead of demo mode — see "Preview auth" note below |
+
+### ⚠️ Auth fix required before this dry run could even start (2026-06-28)
+
+`sync-tennis-players`, `score-tennis-tournament`, `score-atp-finals`, and `score-f1-race` all share `requireServiceRole()` in `supabase/functions/_shared/auth.ts`, which on this project's new Supabase API key system could not be satisfied by anyone outside Supabase's own infra — neither the exact-match path (masked `sb_secret_...` keys) nor the legacy-JWT HMAC path (no `SUPABASE_JWT_SECRET` configured) worked. All 4 functions were effectively uncallable in production despite TRACKER.md showing them as "✅ deployed" — deployed is not the same as reachable. Fixed in two parts:
+1. **PR #662** — added a third auth path to `requireServiceRole`: exact match against a new `ADMIN_TRIGGER_KEY` secret, for manual/admin-triggered calls only.
+2. **PR #663** — discovered a second, gateway-level blocker: these 4 functions had no entry in `supabase/config.toml`, so the Supabase API Gateway defaulted `verify_jwt=true` and rejected the non-JWT-shaped `ADMIN_TRIGGER_KEY` bearer token before the function even ran. Added explicit `verify_jwt = false` entries for all 4 functions, matching the existing `calculate-scores` pattern.
+
+Both fixes are additive and scoped to exactly these 4 v2-only functions (confirmed via grep — no other function imports `_shared/auth.ts`). Zero impact on `main`/pilot functions. **Implication for future sessions:** any new admin-triggered Edge Function using `requireServiceRole` must also get a `verify_jwt = false` entry in `config.toml`, or it will silently 401 at the gateway regardless of what the function code does.
+
+### Preview auth note (2026-06-28)
+
+`VITE_AUTH_ENABLED` was set only for Vercel **Production** (confirmed via `vercel env ls`) — Preview deployments (incl. any `v2` PR preview) ran in demo mode with no real Supabase Auth session, meaning RLS-gated RPCs like `submit_tennis_roster` were never actually exercised by preview testing. Added `VITE_AUTH_ENABLED=true` scoped to Preview + `v2` branch only (not all Preview branches, not Production) so this dry run hits the real `auth.uid()`-gated path. Takes effect on the next push to `v2`.
 
 **Naming note:** The user-facing card called "Qualifier Insurance" in these test scenarios maps to the code/DB name `dark_horse_insurance`. Both names refer to the same card: +50 pts per round a Tier 4 player advances past R32.
 
@@ -28,16 +42,18 @@ Wimbledon 2026 starts 2026-06-29. Use this as the live integration test for the 
 
 ### Pre-conditions (run in order, each needs explicit approval)
 
-| Step | Action | Command / Notes |
-|------|--------|-----------------|
-| 1 | Deploy `sync-tennis-players` EF | `npx supabase functions deploy sync-tennis-players --project-ref sssmvihxtqtohisghjet` |
-| 2 | Confirm `RAPIDAPI_TENNIS_KEY` secret is set | `npx supabase secrets list --project-ref sssmvihxtqtohisghjet` |
-| 3 | Find Wimbledon row in `tennis_tournaments` | `SELECT id, name, external_id, status FROM tennis_tournaments WHERE name ILIKE '%wimbledon%';` |
-| 4 | Open the tournament (sets external_id + status='upcoming') | Call `admin_open_tournament` RPC with the Wimbledon `id` and its RapidAPI external_id |
-| 5 | Sync the Wimbledon draw from RapidAPI (1 API call) | Call `sync-tennis-players` EF with `{ tournament_id: <id> }` — uses 1 of 50 daily API credits |
-| 6 | Verify player tiers seeded correctly | `SELECT tier, COUNT(*) FROM tennis_tournament_players WHERE tournament_id='<id>' GROUP BY tier;` — expect T1=4, T2=12, T3=16, T4=unseeded remainder |
-| 7 | Create a test Player Box | Via UI: TennisHomeScreen → Create Box (or call `create_player_box` RPC) |
-| 8 | Submit a test roster | Via UI: TennisTournamentScreen → submit 7 players (1 T1, 2 T2, 2 T3, 2 T4) |
+| Step | Action | Command / Notes | Status |
+|------|--------|-----------------|--------|
+| 1 | Deploy `sync-tennis-players` EF | `npx supabase functions deploy sync-tennis-players --project-ref sssmvihxtqtohisghjet` | ✅ Done — redeployed 2026-06-28 after the `config.toml` fix |
+| 2 | Confirm `RAPIDAPI_TENNIS_KEY` secret is set | `npx supabase secrets list --project-ref sssmvihxtqtohisghjet` | ✅ Confirmed working |
+| 3 | Find Wimbledon row in `tennis_tournaments` | `SELECT id, name, external_id, status FROM tennis_tournaments WHERE name ILIKE '%wimbledon%';` | ✅ Done — `id = 9bf04949-49af-4d92-b523-3ba15757fba8` |
+| 4 | Open the tournament (sets external_id + status='upcoming') | Call `admin_open_tournament` RPC with the Wimbledon `id` and its RapidAPI external_id | ✅ Done — real `external_id = 21337`, status now `roster_open` |
+| 5 | Sync the Wimbledon draw from RapidAPI (1 API call) | Call `sync-tennis-players` EF with `{ tournament_id: <id> }` — uses 1 of 50 daily API credits | ✅ Done — `pageSize=300` returned the full R1 draw (64 fixtures) in 1 call |
+| 6 | Verify player tiers seeded correctly | `SELECT tier, COUNT(*) FROM tennis_tournament_players WHERE tournament_id='<id>' GROUP BY tier;` — expect T1=4, T2=12, T3=16, T4=unseeded remainder | ✅ Confirmed `{T1:4, T2:12, T3:16, T4:96}` = 128, after deleting 2 stale placeholder rows + 1 stale test roster that referenced them (see note below) |
+| 7 | Create a test Player Box | Via UI: TennisHomeScreen → Create Box (or call `create_player_box` RPC) | ⬜ Not started |
+| 8 | Submit a test roster | Via UI: TennisTournamentScreen → submit 7 players (1 T1, 2 T2, 2 T3, 2 T4) | ⬜ Not started |
+
+**Stale data cleanup (2026-06-28):** initial tier count was 130, not 128 — two leftover placeholder rows (fake "Carlos Alcaraz" and fake "Christopher Eubanks", both `external_player_id IS NULL`) were not deduped against the real synced data because the unique index `tennis_ttp_external_id_idx` is a partial index (`WHERE external_player_id IS NOT NULL`). One pre-existing test `tennis_rosters` row referenced both via FK and had to be deleted first. **Lesson for future syncs:** any tournament with prior manual/test player rows should be checked for `external_player_id IS NULL` stragglers before trusting a tier-count match.
 
 ### Post-tournament validation (after Wimbledon completes)
 - Call `admin_enter_round_results` for each round as results come in
@@ -337,8 +353,9 @@ Wimbledon 2026 starts 2026-06-29. Use this as the live integration test for the 
 
 | Date | Tester | Module | Scenario | Result | Notes |
 |------|--------|--------|----------|--------|-------|
-| — | — | — | — | — | Awaiting Wimbledon dry run |
+| 2026-06-28 | Claude | Pre-conditions | Steps 1–6 (deploy, secret, find, open, sync, verify tiers) | ✅ Pass | Required an unplanned auth fix (PRs #662/#663) before any function call would succeed — see notes above |
+| — | — | Module 1–5 | All scenarios | ⬜ Pending | Awaiting Player Box creation + roster submission (steps 7–8) |
 
 ---
 
-Last Updated: **2026-06-28** (initial version — Wimbledon 2026 dry run)
+Last Updated: **2026-06-28** (pre-condition steps 1–6 complete; auth fix for 4 admin functions; Preview env auth enabled for v2)
