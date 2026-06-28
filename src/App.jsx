@@ -117,7 +117,7 @@ function AppRoutes() {
               <AppLayout>
                 <Routes>
                   <Route path="/"                 element={<ErrorBoundary screen="MultiSportHome"><MultiSportHomeScreen /></ErrorBoundary>} />
-                  <Route path="/scores"           element={<ErrorBoundary screen="Home"><HomeScreen /></ErrorBoundary>} />
+                  <Route path="/scores"           element={<Navigate to="/live" replace />} />
                   <Route path="/squad"            element={<ErrorBoundary screen="Squad"><SquadScreen /></ErrorBoundary>} />
                   <Route path="/league"           element={<ErrorBoundary screen="League"><LeagueScreen /></ErrorBoundary>} />
                   <Route path="/league/:leagueId" element={<ErrorBoundary screen="League"><LeagueScreen /></ErrorBoundary>} />

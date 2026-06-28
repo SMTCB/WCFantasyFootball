@@ -711,12 +711,13 @@ export default function ClubhouseScreen() {
   const isOwner = activeCircle?.role === 'owner';
 
   const MAIN_TABS = [
-    { key: 'home',     label: 'HOME'        },
-    { key: 'times',    label: 'FORZA TIMES' },
-    { key: 'chat',     label: 'CHAT'        },
-    { key: 'inbox',    label: unreadCount > 0 ? `INBOX (${unreadCount})` : 'INBOX' },
-    { key: 'members',  label: 'MEMBERS'     },
-    { key: 'find',     label: 'FIND'        },
+    { key: 'home',      label: 'HOME'           },
+    { key: 'frontrow',  label: 'THE FRONTROW'   },
+    { key: 'recap',     label: 'RECAP'          },
+    { key: 'chat',      label: 'CHAT'           },
+    { key: 'inbox',     label: unreadCount > 0 ? `INBOX (${unreadCount})` : 'INBOX' },
+    { key: 'members',   label: 'MEMBERS'        },
+    { key: 'find',      label: 'FIND'           },
     ...(isOwner ? [{ key: 'settings', label: 'SETTINGS' }] : []),
   ];
 
@@ -777,7 +778,7 @@ export default function ClubhouseScreen() {
           <TabBar tabs={MAIN_TABS} active={tab} onChange={setTab} />
 
           {/* Full-width tabs — rendered outside the max-width container */}
-          {tab === 'times' && (
+          {tab === 'frontrow' && (
             <ClubhouseFrontpage
               circleId={activeCircleId}
               circleName={activeCircle?.name}
@@ -793,7 +794,24 @@ export default function ClubhouseScreen() {
             />
           )}
 
-          <div style={{ padding: '20px 16px', maxWidth: 640, margin: '0 auto', display: tab === 'times' || tab === 'chat' ? 'none' : undefined }}>
+          {tab === 'recap' && (
+            <div style={{ padding: '20px 16px', maxWidth: 640, margin: '0 auto' }}>
+              <div style={{ ...MONO, fontSize: 9, letterSpacing: '0.18em', color: 'var(--mute)', textTransform: 'uppercase', marginBottom: 20 }}>
+                📋 Clubhouse Recap — All Sports
+              </div>
+              {feed.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '40px 0', color: 'var(--mute)', ...MONO, fontSize: 12 }}>
+                  Activity from linked leagues and competitions will appear here.
+                </div>
+              ) : (
+                feed.map(entry => (
+                  <FeedEntry key={entry.id} entry={entry} onEnter={enterLeague} />
+                ))
+              )}
+            </div>
+          )}
+
+          <div style={{ padding: '20px 16px', maxWidth: 640, margin: '0 auto', display: tab === 'frontrow' || tab === 'chat' || tab === 'recap' ? 'none' : undefined }}>
 
             {/* HOME tab */}
             {tab === 'home' && (
@@ -811,9 +829,15 @@ export default function ClubhouseScreen() {
                   items={competitions.f1}
                   onEnter={enterPaddock}
                 />
+                <SportSection
+                  label="Tennis"
+                  emoji="🎾"
+                  items={competitions.tennis}
+                  onEnter={item => navigate(`/tennis/${item.id}`)}
+                />
 
                 {/* Non-playing member empty state */}
-                {competitions.football.length === 0 && competitions.f1.length === 0 && (
+                {competitions.football.length === 0 && competitions.f1.length === 0 && competitions.tennis.length === 0 && (
                   <div style={{ textAlign: 'center', padding: '32px 0 24px' }}>
                     <div style={{ fontSize: 32, marginBottom: 12 }}>🏟️</div>
                     <p style={{ ...HEAD, fontSize: 16, color: 'var(--paper)', margin: '0 0 8px' }}>

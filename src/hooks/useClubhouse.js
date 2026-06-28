@@ -120,8 +120,22 @@ export function useClubhouse() {
     const { data, error: err } = await supabase.rpc('create_circle', { p_name: name.trim() });
     if (err) throw err;
     if (data?.error) throw new Error(data.error);
+    // Optimistic update — add the new circle to state immediately so the UI
+    // transitions without a loading flash (which unmounts/remounts the form).
+    const optimistic = {
+      id: data.circle_id,
+      name: name.trim(),
+      invite_code: data.invite_code,
+      is_public: false,
+      p2p_betting_enabled: false,
+      created_by: null,
+      created_at: new Date().toISOString(),
+      role: 'owner',
+    };
+    setMyCircles(prev => [optimistic, ...prev]);
     setActiveCircleId(data.circle_id);
-    await fetchMyCircles();
+    // Background refresh — gets the authoritative server row without triggering loading
+    fetchMyCircles().catch(() => {});
     return data;
   }, [fetchMyCircles, setActiveCircleId]);
 
