@@ -17,6 +17,7 @@
  */
 
 import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import Button from './Button';
 import { MessageIcon } from './messages/icons';
 
@@ -57,7 +58,7 @@ export default function ConfirmModal({
 
   const confirmVariant = danger ? 'danger' : 'gold';
 
-  return (
+  return createPortal(
     /* Backdrop */
     <div
       onClick={() => { if (!loading) onCancel(); }}
@@ -181,6 +182,7 @@ export default function ConfirmModal({
           </Button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
