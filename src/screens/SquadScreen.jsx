@@ -100,7 +100,7 @@ export default function SquadScreen() {
 
   // Card warnings derived from player_match_stats (player_status table is unused)
   const cardMap = usePlayerCards(tournamentId);
-  const eliminatedClubs = useEliminatedClubs(activeLeague);
+  const eliminatedClubs = useEliminatedClubs(activeLeague, tournamentId);
 
   // On mount: resolve which league to show
   useEffect(() => {

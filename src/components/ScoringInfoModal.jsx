@@ -73,10 +73,10 @@ const UNIVERSAL = [
 const SQUAD_RULES = [
   { label: 'Squad Size',   val: '15 players' },
   { label: 'Starting XI',  val: '11 players' },
-  { label: 'Goalkeepers',  val: '1 GK' },
-  { label: 'Defenders',    val: '3 – 5' },
-  { label: 'Midfielders',  val: '2 – 5' },
-  { label: 'Forwards',     val: '1 – 3' },
+  { label: 'Goalkeepers',  val: 'Exactly 1' },
+  { label: 'Defenders',    val: 'At least 1' },
+  { label: 'Midfielders',  val: 'At least 1' },
+  { label: 'Forwards',     val: 'At least 1' },
   { label: 'Max per Club', val: '3 players' },
   { label: 'Budget',       val: '€50M' },
 ];

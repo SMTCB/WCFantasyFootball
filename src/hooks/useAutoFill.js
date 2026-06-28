@@ -146,7 +146,7 @@ export function useAutoFill(leagueId, squadData, fetchSquad, takenMap = {}, addT
         if (typeof p === 'object' && p?.club) clubCounts[p.club] = (clubCounts[p.club] ?? 0) + 1;
       }
 
-      const minPer = cfg.minFormation ?? { GK: 1, DEF: 3, MID: 2, FWD: 1 };
+      const minPer = cfg.minFormation ?? { GK: 1, DEF: 1, MID: 1, FWD: 1 };
       const maxPer = POS_LIMITS      ?? { GK: 2, DEF: 5, MID: 5, FWD: 3 };
 
       // ── Slots needed per position ────────────────────────────────────────

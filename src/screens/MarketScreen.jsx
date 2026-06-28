@@ -182,8 +182,9 @@ export default function MarketScreen() {
   // Card warnings derived from player_match_stats (player_status table is unused)
   const cardMap = usePlayerCards(tournamentId);
 
-  // Cup-mode knockout elimination — empty Set for classic leagues
-  const eliminatedClubs = useEliminatedClubs(activeLeague);
+  // Eliminated clubs — cup_active_clubs for draft/cup leagues, derived from
+  // tournament fixtures for classic leagues (see useEliminatedClubs)
+  const eliminatedClubs = useEliminatedClubs(activeLeague, tournamentId);
 
   // Expandable stats panel state
   const { expandedPlayerId, playerDetails, togglePanel } = usePlayerScoreDetail();
