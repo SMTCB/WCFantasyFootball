@@ -22,10 +22,9 @@ import {
 } from './NavIcons';
 
 const FOOTBALL_NAV = [
-  { key: 'scores',     label: 'SCORES',     path: '/scores',    Icon: NavIconScores,    desc: 'Match Scores & Fixtures' },
+  { key: 'live',       label: 'LIVE',       path: '/live',      Icon: NavIconLive,      desc: 'Live Scores & Fixtures', isLive: true },
   { key: 'squad',      label: 'SQUAD',      path: '/squad',     Icon: NavIconSquad,     desc: 'Your Tactical Sheet' },
   { key: 'league',     label: 'LEAGUE',     path: '/league',    Icon: NavIconLeagues,   desc: 'League Standings & Chat' },
-  { key: 'live',       label: 'LIVE',       path: '/live',      Icon: NavIconLive,      desc: 'Live Points & Projections', isLive: true, desktopOnly: true },
   { key: 'market',     label: 'MARKET',     path: '/market',    Icon: NavIconMarket,    desc: 'Player Transfer Market' },
   { key: 'recap',      label: 'RECAP',      path: '/recap',     Icon: NavIconRecap,     desc: 'Matchday Recap & Stats', desktopOnly: true },
   { key: 'clubhouse',  label: 'CLUBHOUSE',  mobileLabel: 'CLUB', path: '/clubhouse', Icon: NavIconClubhouse, desc: 'The Clubhouse — social hub' },
@@ -134,7 +133,8 @@ export default function AppLayout({ children }) {
   // Show back button on deeply nested routes (not main nav routes, not single-param routes like /league/:id)
   const isMainRoute =
     location.pathname === '/' ||
-    location.pathname === '/scores' ||
+    location.pathname === '/scores' || // legacy redirect still resolves
+
     location.pathname === '/squad' ||
     location.pathname === '/league' ||
     location.pathname === '/live' ||
@@ -189,15 +189,15 @@ export default function AppLayout({ children }) {
           {/* Football — with sub-items */}
           <NavItem
             label="Football"
-            path="/scores"
-            active={['/scores','/squad','/league','/live','/market','/recap'].some(p => location.pathname === p || location.pathname.startsWith(p + '/'))}
+            path="/live"
+            active={['/scores','/live','/squad','/league','/market','/recap'].some(p => location.pathname === p || location.pathname.startsWith(p + '/'))}
             dotColor="var(--accent)"
             tag="GW"
             tagStyle={{ background: 'rgba(26,111,168,.15)', color: 'var(--accent)' }}
           />
           <div style={{ paddingLeft: 16 }}>
             {[
-              { label: 'Scores',    path: '/scores' },
+              { label: 'Live',      path: '/live'   },
               { label: 'Squad',     path: '/squad'  },
               { label: 'League',    path: '/league' },
               { label: 'Market',    path: '/market' },
@@ -207,7 +207,7 @@ export default function AppLayout({ children }) {
                 key={path}
                 label={label}
                 path={path}
-                active={location.pathname === path || (path !== '/scores' && location.pathname.startsWith(path + '/'))}
+                active={location.pathname === path || location.pathname.startsWith(path + '/')}
                 dotColor="var(--accent)"
                 sub
               />

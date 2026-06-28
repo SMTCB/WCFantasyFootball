@@ -376,6 +376,7 @@ export default function LiveScreen() {
   const [mobileTab,     setMobileTab]     = useState('squad');
   const [currentGW,     setCurrentGW]     = useState('—');
   const [benchPlayers,  setBenchPlayers]  = useState([]);
+  const [allFixtures,   setAllFixtures]   = useState([]);
 
   const initialSet = useRef(false);
 
@@ -453,6 +454,22 @@ export default function LiveScreen() {
         awayGoals: f.away_score ?? 0,
       }));
       setLiveFixtures(enrichedFix);
+
+      // All fixtures for the active matchday — used by the FIXTURES tab.
+      if (activeMatchdayIds.length) {
+        const { data: allFix = [] } = await supabase
+          .from('fixtures')
+          .select('id, home_team, away_team, status, kickoff_at, minute, home_score, away_score, tournament_id, matchday_id')
+          .in('matchday_id', activeMatchdayIds)
+          .order('kickoff_at', { ascending: true });
+        setAllFixtures((allFix || []).map(f => ({
+          ...f,
+          homeGoals: f.home_score ?? 0,
+          awayGoals: f.away_score ?? 0,
+        })));
+      } else if (enrichedFix.length) {
+        setAllFixtures(enrichedFix);
+      }
 
       // Stats window: live fixtures + all finished fixtures in the active matchday(s).
       // Using matchday scope (not a time window) so multi-day WC matchdays stay visible
@@ -1217,8 +1234,9 @@ export default function LiveScreen() {
         {/* Segmented tabs */}
         <div style={{ display: 'flex', padding: '0 18px', borderBottom: '1px solid var(--rule)' }}>
           {[
-            { id: 'squad',  label: `MY XI · ${activeLeague?.short || '—'}` },
-            { id: 'events', label: liveStatsLog.length > 0 ? `POINTS · ${liveStatsLog.length}` : 'POINTS' },
+            { id: 'squad',    label: `MY XI · ${activeLeague?.short || '—'}` },
+            { id: 'events',   label: liveStatsLog.length > 0 ? `POINTS · ${liveStatsLog.length}` : 'POINTS' },
+            { id: 'fixtures', label: allFixtures.length > 0 ? `FIXTURES · ${allFixtures.length}` : 'FIXTURES' },
           ].map(t => {
             const isActive = mobileTab === t.id;
             return (
@@ -1310,7 +1328,73 @@ export default function LiveScreen() {
                 </>
               )}
             </div>
+          ) : mobileTab === 'fixtures' ? (
+            /* ── FIXTURES tab ─── */
+            <div style={{ padding: '8px 18px 32px' }}>
+              {allFixtures.length === 0 ? (
+                nextFixture ? (
+                  <div style={{ padding: '24px 0', textAlign: 'center' }}>
+                    <div className="font-mono" style={{ fontSize: 9, color: 'var(--mute)', letterSpacing: '.18em', marginBottom: 12 }}>NEXT MATCH</div>
+                    <div style={{ fontFamily: 'Archivo Black', fontSize: 18 }}>
+                      {teamCode(nextFixture.home_team)}
+                      <span style={{ color: 'var(--mute)', margin: '0 10px', fontFamily: 'Archivo, sans-serif', fontWeight: 400 }}>vs</span>
+                      {teamCode(nextFixture.away_team)}
+                    </div>
+                    <div className="font-mono" style={{ fontSize: 10, color: 'var(--mute)', marginTop: 8 }}>
+                      {nextFixture.kickoff_at ? new Date(nextFixture.kickoff_at).toLocaleDateString('en-GB', { weekday: 'short', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : '—'}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="font-mono" style={{ fontSize: 10, color: 'var(--mute)', padding: '24px 0', textAlign: 'center', letterSpacing: '.18em' }}>NO FIXTURES THIS ROUND</div>
+                )
+              ) : (
+                allFixtures.map((f, i) => {
+                  const isLive = f.status === 'live';
+                  const isFT   = f.status === 'finished';
+                  const isPST  = f.status === 'postponed' || f.status === 'cancelled' || f.status === 'abandoned';
+                  const isHT   = f.minute === 45 || f.status === 'halftime';
+                  const statusLabel = isPST ? 'PST' : isFT ? 'FT' : isHT ? 'HT' : isLive && f.minute ? `${f.minute}'` : null;
+                  return (
+                    <div
+                      key={f.id}
+                      style={{
+                        display: 'flex', alignItems: 'center', gap: 12,
+                        padding: '11px 0',
+                        borderTop: i ? '1px solid var(--rule)' : 'none',
+                      }}
+                    >
+                      <div style={{ width: 36, flexShrink: 0, textAlign: 'center' }}>
+                        {isLive ? (
+                          <span className="animate-live-pulse" style={{ display: 'inline-block', width: 7, height: 7, borderRadius: '50%', background: 'var(--danger)' }} />
+                        ) : (
+                          <span className="font-mono" style={{ fontSize: 9, color: isPST ? 'var(--gold)' : 'var(--mute)', letterSpacing: '.1em' }}>
+                            {statusLabel || new Date(f.kickoff_at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}
+                          </span>
+                        )}
+                      </div>
+                      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 2 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                          <span style={{ fontFamily: 'Archivo Black', fontSize: 13, letterSpacing: '-0.01em' }}>{teamCode(f.home_team)}</span>
+                          {(isFT || isLive || isHT) ? (
+                            <span style={{ fontFamily: 'Archivo Black', fontSize: 16, color: 'var(--cyan)', margin: '0 10px' }}>{f.homeGoals}–{f.awayGoals}</span>
+                          ) : (
+                            <span className="font-mono" style={{ fontSize: 10, color: 'var(--mute)', margin: '0 10px' }}>vs</span>
+                          )}
+                          <span style={{ fontFamily: 'Archivo Black', fontSize: 13, letterSpacing: '-0.01em' }}>{teamCode(f.away_team)}</span>
+                        </div>
+                        {isLive && statusLabel && (
+                          <div className="font-mono" style={{ fontSize: 9, color: 'var(--danger)', letterSpacing: '.14em', textAlign: 'center' }}>
+                            {isHT ? 'HALF TIME' : `${statusLabel} MIN`}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
           ) : (
+            /* ── EVENTS / POINTS LOG tab ─── */
             <>
               <div style={{ padding: '12px 18px 0' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -1325,7 +1409,6 @@ export default function LiveScreen() {
                     <span className="font-mono" style={{ fontSize: 9, color: 'var(--mute)', marginLeft: 'auto' }}>FINAL</span>
                   ) : null}
                 </div>
-                {/* Preliminary disclaimer — shown only during a live match */}
                 {hasLiveForActiveTournament && liveStatsLog.length > 0 && (
                   <div className="font-mono" style={{ fontSize: 8, color: 'var(--mute)', letterSpacing: '.12em', marginTop: 5, paddingLeft: 11, opacity: .7 }}>
                     PRELIMINARY — FINAL POINTS CALCULATED AFTER THE MATCH

@@ -105,6 +105,34 @@ These must all be green before opening the v2 → main PR.
 
 ---
 
+## Dry Run Feedback — UX / Product Items
+
+Captured 2026-06-28 during Tennis dry run. These are the open items from that session's feedback.
+
+### Completed this session
+| Item | Description | Status |
+|------|-------------|--------|
+| BUG-1 | Clubhouse creation bug (click Create → screen clears, nothing created) | ⬜ In progress |
+| UX-1 | Gazette → rebranded as "The FrontRow", moved to Clubhouse nav (below My Group) | ⬜ Pending |
+| UX-2 | RECAP moved to Clubhouse level (cross-sport, not inside Football) | ⬜ Pending |
+| UX-3 | Onboarding wizard aligned to Kit Light (currently still dark theme) | ⬜ Pending |
+| UX-4 | Football SCORES tab merged into LIVE tab (results + live in one tab) | ⬜ Pending |
+| UX-5 | Pitch view redesign — light green field, connecting lines, player boxes readable | ⬜ Pending |
+| UX-6 | F1 nav restructured: top bar = Calendar / Paddocks, Paddocks has ADMIN button + Standings / Year Bets / Race Bets / Report sub-sections | ⬜ Pending |
+
+### Deferred — Requires dedicated session
+| Item | Description | Effort | Notes |
+|------|-------------|--------|-------|
+| ARCH-1 | **Clubhouse-centric model — DB migration** (Migration 215): add `clubhouse_id FK NOT NULL` (nullable first, then constrained) to `leagues`, `player_boxes` (Tennis), `paddocks` (F1). Update `create_league`, `create_player_box`, `create_paddock` RPCs to accept `p_clubhouse_id`. Retroactively assign existing competitions to clubhouses. | ~3h (DB + 3 RPC updates + 3 UI flows) | Blocked on: user must be a Clubhouse admin to create any sport element. Frontend-only validation added now (BUG-1 session) as a bridge. |
+| ARCH-2 | **F1 Clubhouse assignment** — `create_paddock` creation flow must offer a clubhouse picker (same as ARCH-1 pattern for leagues and player boxes) | ~1h | Part of ARCH-1 |
+| ARCH-3 | **Onboarding rethink** — first-time user should be routed through Clubhouse creation/join before entering any sport module | ~2h | Depends on ARCH-1 being live |
+| UX-7 | F1 screen: harmonise look & feel with https://fantasy-f1-p3jq.vercel.app/ (reference only — do NOT hardcode any credentials or URLs) | ~2h | Low urgency, aesthetic |
+
+### Product vision note (2026-06-28)
+The overarching goal is for this to feel like **a place where friends gather to watch sports together**, not a "fantasy sports frankenstein". The Clubhouse is the central, most distinctive element. Every sport module (Football, F1, Tennis) should feel like an activity that happens *within* a Clubhouse — not a separate product stitched together. This should inform every design decision: navigation, naming, onboarding, and how competitions are created and discovered.
+
+---
+
 ## Remaining DD Items
 
 From [TECHNICAL_DUE_DILIGENCE.md](due_diligence/TECHNICAL_DUE_DILIGENCE.md). Sequenced by phase.
@@ -152,6 +180,8 @@ These require a human decision before the relevant sprint can continue.
 | Non-playing member UX (user in Clubhouse with no leagues) | Clubhouse empty state | ⬜ Needs design |
 | F1 scoring weights (pts per correct round pick) | F1 admin scoring | ⬜ Not decided (F1-4 deferred) |
 | Clubhouse admin responsibility scope | CH-8 follow-up | ⬜ Will surface during next Clubhouse iteration |
+| **Clubhouse-centric model** — every sport element (league, paddock, player box) must belong to a Clubhouse; only Clubhouse admins can create them | ARCH-1/2/3 | ✅ **Decided 2026-06-28** — implement via migration 215 in next dedicated session; frontend-only validation added as bridge |
+| The FrontRow — Gazette is rebranded "The FrontRow", lives at Clubhouse level in nav (below My Group) | UX-1 | ✅ **Decided 2026-06-28** |
 | Stripe account confirmation | P2P Sprint P2P-2 completion | ⬜ Business decision — zero code changes needed when ready |
 | Football competition expansion — EPL, Champions League, La Liga (~3–5 weeks to seed per competition) | Phase 4+ revenue & retention | ⬜ Product decision — which competitions, which season, priority order |
 | Forza API licence transferability — confirm commercial terms transfer on acquisition; an unresolved dependency materially caps the sale price | Sale close / buyer diligence | ⬜ Business/legal — no code changes needed, but needs a written confirmation |
