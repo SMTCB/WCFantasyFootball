@@ -26,9 +26,9 @@
 | **3B** | v2 integration & deploy | 🔄 In progress | Code quality gates ✅ — smoke tests + deploy remaining |
 
 **Next session options (choose one):**
-- **UX polish** — pitch view redesign (UX-5), onboarding Kit Light (UX-3), Clubhouse validation gate (UX-5 table item), F1 harmonisation (UX-7)
-- **ARCH-1** — Migration 215: Clubhouse-centric DB model (add `clubhouse_id` to leagues/paddocks/player_boxes, update creation RPCs)
 - **Phase 3B smoke tests** → deploy sequence — see [Phase 3B checklist](#phase-3b-pre-merge-checklist) below
+- **DD items** — TEST-1 (Vitest coverage), CODE-3 (error boundaries), OPS-2 (Sentry)
+- **Migration 215 DB apply** — committed but not yet applied to prod (requires Supabase-linked PC)
 
 **Session 2026-06-27/28 (docs):** Repo mine map — DOCS_INDEX.html expanded to full repo explorer (source code, backend, mobile sections + architecture clustered into 5 topic groups). TRACKER.md consolidated as single SOT: 11 gaps filled from scattered docs (4 missing HMAC deploy rows, F1 data migration, SEC-4 steps inline, OPS-2 detail, P2P load test, CODE-6, 2 product decisions). SALE_READY_PROJECT_PLAN.md archived (read-only history). PR #648 merged.
 
@@ -37,6 +37,8 @@
 **Session 2026-06-28 (Wimbledon dry run + auth bug fix):** Used Wimbledon 2026 (real tournament, started 2026-06-29) as a live dry run of the Tennis module per `docs/testing/TENNIS_MODULE_TEST_PLAN.md`. **Discovered `requireServiceRole()` (`_shared/auth.ts`) was unreachable in practice** for all 4 functions that import it (`sync-tennis-players`, `score-tennis-tournament`, `score-atp-finals`, `score-f1-race`) — neither its exact-match path (masked `sb_secret_...` keys) nor its legacy-JWT HMAC path (no `SUPABASE_JWT_SECRET` secret configured) could be satisfied by anything outside Supabase's own infra. Rows 5–7 above had been "deployed" in an earlier session but were never actually callable. Fixed in two PRs: **#662** added a third auth path — exact match against a new `ADMIN_TRIGGER_KEY` secret, additive only, scoped to these 4 functions (confirmed via grep no other function imports this module). **#663** fixed a second, separate blocker found immediately after #662 shipped: none of the 4 functions had a `supabase/config.toml` entry, so the API Gateway defaulted `verify_jwt=true` and rejected the non-JWT `ADMIN_TRIGGER_KEY` bearer token before the function code ran; added explicit `verify_jwt = false` for all 4, matching the existing `calculate-scores` pattern. **Rule for future admin-triggered functions:** `requireServiceRole` + `verify_jwt = false` in `config.toml` must always be added together — one without the other still 401s. After the fix: opened Wimbledon 2026 via `admin_open_tournament` (real RapidAPI `external_id=21337`, tournament row `9bf04949-49af-4d92-b523-3ba15757fba8`), synced the full 128-player R1 draw via `sync-tennis-players` in 1 API call (`pageSize=300`), confirmed correct tier breakdown `{T1:4, T2:12, T3:16, T4:96}` after deleting 2 stale placeholder player rows + 1 stale test roster that FK'd to them (pre-existing dev/test leftovers, not caused by this session — partial unique index on `external_player_id` doesn't dedupe NULL-keyed rows). Also added `VITE_AUTH_ENABLED=true` to Vercel Preview scoped to the `v2` git branch only (Production untouched) — Preview had been running in demo mode (no `VITE_AUTH_ENABLED` set there at all), which would have skipped real Supabase Auth/RLS checks during the dry run. Remaining: create test Player Box + submit real roster, run through scoring once Wimbledon results land. Full detail in `docs/testing/TENNIS_MODULE_TEST_PLAN.md`.
 
 **Session 2026-06-28 (deploy catch-up, rows 1–9 + 12–15):** Rows 1–9 and 12–15 above applied/deployed from the Supabase-linked PC. **Unplanned find:** migration 208 (`coin_transactions_schema_v2`) had never actually run against production — 209 failed on first attempt with `column "currency" does not exist` because it assumed 208 was already live. Applied 208 first (approved), then 209. **Bug found in both 208 and 209:** the trailing `REVOKE ALL ON FUNCTION credit_coins FROM ...` was a bare reference with no arg-type list; once `CREATE OR REPLACE FUNCTION credit_coins(...)` introduced a 7-arg overload alongside prod's original 5-arg version, the bare `REVOKE` became ambiguous (`function name "credit_coins" is not unique`) and rolled back the whole transaction. Fixed by qualifying the `REVOKE` with the explicit 7-arg signature in both files; verified all existing 5-arg callers (`purchase-coins`, migrations 202/204/205) still resolve unambiguously. Fix merged via [PR #659](https://github.com/SMTCB/WCFantasyFootball/pull/659). Migration 210 (touches shared `public.users` table) was backed up first per the pilot-data safety rule — see `backups/users_pre_migration210_20260628_153715.json` (75 rows). Row 8 (`calculate-scores`) deploy preceded by a live-fixture check on tournaments 429/623 — confirmed empty before deploying. **Cleanup:** found and deleted an orphaned Edge Function (`slug: swift-responder`, actually an old `discover-tournament` deploy under the wrong slug) — the correctly-slugged `discover-tournament` was unaffected and remains active.
+
+**Session 2026-06-28 (UX-3/5/7 + ARCH-1/2/3, PR #666):** Completed all 6 remaining dry-run items from the deferred table. **UX-3**: OnboardingWizard full Kit Light token pass — overlay var(--bg), card var(--card)/var(--rule), all near-white/dark rgba values replaced; also fixed undefined `var(--text)` → `var(--paper)`. **UX-5**: PitchView green field — `linear-gradient(#3d6e4a → #2a5035)` pitch surface, white `rgba(255,255,255,0.18)` lane lines and markings, depth-shading bands at 34/58/81%, outer container `var(--bg)`. **UX-7**: PaddockLobbyScreen `var(--ink)` → `var(--bg)`, header `var(--shell)` → `var(--card)`, tab strip background added. **ARCH-1**: Migration 215 committed — nullable `circle_id uuid REFERENCES circles(id)` added to leagues/paddocks/player_boxes, backfill from junction tables, `create_paddock`/`create_player_box` updated to write `circle_id` directly, new `create_league` 6-param overload with `p_circle_id DEFAULT NULL`; NOT yet applied to DB (requires Supabase-linked PC). **ARCH-2**: PaddockLobbyScreen CREATE tab — `get_my_circles` RPC on mount, `<select>` picker above name field (renders only when user has circles), `createPaddock(name, circleId)` call updated. **ARCH-3**: New Clubhouse step in OnboardingWizard — CREATE/JOIN toggle, name/code inputs, calls `create_circle`/`join_circle_by_code` RPCs, falls through on skip, inserted between welcome and squad steps; `clubhouseStepDone` key added to useOnboarding. All 6 items: lint clean, build clean (1.74s, 0 errors).
 
 **Session 2026-06-28 (dry-run UX fixes, PR #665):** Tennis/platform dry run surfaced 7 UX/bug items. **Completed in this session (PR #665, merged into v2):** (1) **Clubhouse creation bug** — clicking Create cleared the form without showing the new clubhouse. Root cause: `fetchMyCircles()` inside `createCircle` set `loading=true`, which unmounted `ClubhouseLobby`, then remounted with blank form if RLS timing returned empty. Fix: optimistic state update adds the new circle to `myCircles` immediately; `fetchMyCircles` runs in the background without triggering the loading state. (2) **SCORES + LIVE merged** — SCORES tab removed from mobile nav; LIVE becomes the primary mobile tab (first position, no longer `desktopOnly`). `/scores` routes now redirect to `/live`. Desktop Football sub-nav "Scores" → "Live". LiveScreen gained a third mobile tab **FIXTURES** (alongside MY XI and POINTS) that fetches all matchday fixtures (`live` + `finished` + `scheduled`) and displays them with status indicator, scoreline, and kickoff time. (3) **The FrontRow** — ClubhouseScreen `FORZA TIMES` tab renamed to `THE FRONTROW`; RECAP cross-sport tab added; Tennis SportSection added to HOME tab. (4) **F1HomeScreen restructured** — CALENDAR | PADDOCKS two-section top bar; PADDOCKS section has 2×2 card grid (Championship Standings, Year Bets, Race Bets, Report) + ADMIN button in header + leaderboard preview; background uses `var(--bg)` Kit Light. **Remaining dry-run items deferred to dedicated sessions:** UX-2 (pitch view redesign), UX-3 (onboarding Kit Light), UX-5 (Clubhouse frontend validation gate), UX-7 (F1 harmonisation), ARCH-1–3 (Clubhouse-centric DB migration).
 
@@ -74,7 +76,7 @@
 
 **Rows 10, 11, 16 deferred** — not Supabase actions (10/11) or blocked on source access (16). Pick up in a future session.
 
-**Next migration on v2:** `215_`
+**Next migration on v2:** `216_` (215 committed, pending DB apply from Supabase-linked PC)
 
 ---
 
@@ -123,20 +125,15 @@ Captured 2026-06-28 during Tennis dry run. These are the open items from that se
 | UX-4 | Football SCORES tab merged into LIVE tab — LIVE is primary mobile tab; FIXTURES sub-tab added to LiveScreen | ✅ Done | #665 |
 | UX-6 | F1 nav restructured: CALENDAR / PADDOCKS top-bar sections; 2×2 card grid; ADMIN in header | ✅ Done | #665 |
 
-### Deferred — Requires dedicated session
-| Item | Description | Status |
-|------|-------------|--------|
-| UX-3 | Onboarding wizard aligned to Kit Light (currently still dark theme) | ⬜ Pending |
-| UX-5 | Pitch view redesign — light green field, connecting lines between rows, readable player tokens | ⬜ Pending |
-| UX-7 | F1 screen: harmonise look & feel with reference design | ⬜ Pending |
-
-### Deferred — Requires dedicated session
-| Item | Description | Effort | Notes |
-|------|-------------|--------|-------|
-| ARCH-1 | **Clubhouse-centric model — DB migration** (Migration 215): add `clubhouse_id FK NOT NULL` (nullable first, then constrained) to `leagues`, `player_boxes` (Tennis), `paddocks` (F1). Update `create_league`, `create_player_box`, `create_paddock` RPCs to accept `p_clubhouse_id`. Retroactively assign existing competitions to clubhouses. | ~3h (DB + 3 RPC updates + 3 UI flows) | Blocked on: user must be a Clubhouse admin to create any sport element. Frontend-only validation added now (BUG-1 session) as a bridge. |
-| ARCH-2 | **F1 Clubhouse assignment** — `create_paddock` creation flow must offer a clubhouse picker (same as ARCH-1 pattern for leagues and player boxes) | ~1h | Part of ARCH-1 |
-| ARCH-3 | **Onboarding rethink** — first-time user should be routed through Clubhouse creation/join before entering any sport module | ~2h | Depends on ARCH-1 being live |
-| UX-7 | F1 screen: harmonise look & feel with https://fantasy-f1-p3jq.vercel.app/ (reference only — do NOT hardcode any credentials or URLs) | ~2h | Low urgency, aesthetic |
+### Completed (this session — PR #666)
+| Item | Description | Status | PR |
+|------|-------------|--------|----|
+| UX-3 | OnboardingWizard Kit Light — all dark inline colours replaced with var(--bg)/var(--card)/var(--paper)/var(--rule)/var(--mute) tokens | ✅ Done | #666 |
+| UX-5 | PitchView green field — linear-gradient green surface, white lane lines, depth bands, outer bg var(--bg) | ✅ Done | #666 |
+| UX-7 | PaddockLobbyScreen Kit Light — var(--ink)/var(--shell) → var(--bg)/var(--card); tab strip background added | ✅ Done | #666 |
+| ARCH-1 | Migration 215 — circle_id FK (nullable) on leagues/paddocks/player_boxes; backfill from junction tables; create_paddock + create_player_box write circle_id directly; new create_league 6-param overload | ✅ Code done — DB apply pending Supabase-linked PC | #666 |
+| ARCH-2 | Clubhouse picker in PaddockLobbyScreen CREATE tab — get_my_circles RPC, select dropdown, wired to createPaddock circleId param | ✅ Done | #666 |
+| ARCH-3 | OnboardingWizard Clubhouse step — create/join flow (create_circle / join_circle_by_code RPCs) inserted between welcome and squad steps | ✅ Done | #666 |
 
 ### Product vision note (2026-06-28)
 The overarching goal is for this to feel like **a place where friends gather to watch sports together**, not a "fantasy sports frankenstein". The Clubhouse is the central, most distinctive element. Every sport module (Football, F1, Tennis) should feel like an activity that happens *within* a Clubhouse — not a separate product stitched together. This should inform every design decision: navigation, naming, onboarding, and how competitions are created and discovered.
@@ -249,4 +246,4 @@ These require a human decision before the relevant sprint can continue.
 
 ---
 
-Last Updated: **2026-06-28** (v2 sync from main PRs #616/#622–626/#630/#637/#650–653 via PR #656; migrations 212–214 added; next migration `215_`)
+Last Updated: **2026-06-28** (PR #666: UX-3/5/7 + ARCH-1/2/3 complete; migration 215 committed, pending DB apply; next migration `216_`)
