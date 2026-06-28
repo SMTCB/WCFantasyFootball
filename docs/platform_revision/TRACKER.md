@@ -29,6 +29,8 @@
 
 **Session 2026-06-27/28 (docs):** Repo mine map — DOCS_INDEX.html expanded to full repo explorer (source code, backend, mobile sections + architecture clustered into 5 topic groups). TRACKER.md consolidated as single SOT: 11 gaps filled from scattered docs (4 missing HMAC deploy rows, F1 data migration, SEC-4 steps inline, OPS-2 detail, P2P load test, CODE-6, 2 product decisions). SALE_READY_PROJECT_PLAN.md archived (read-only history). PR #648 merged.
 
+**Session 2026-06-28 (v2 sync + tennis test plan):** Vercel v2 build fixed via `.npmrc` `legacy-peer-deps=true` (PR #654 — madge@8.0.0 peer dep conflict). Tennis module test plan created at `docs/testing/TENNIS_MODULE_TEST_PLAN.md` with 13 scenarios across 5 modules + Wimbledon dry-run checklist (PR #655). v2 ← main sync: PRs #616/#622–624/#626/#630/#637/#650–653 merged via PR #656 — 1 conflict in MarketScreen.jsx resolved (v2 Kit Light color kept, main `clubEliminated` logic adopted). Incoming main migrations 192–194 renamed → 212–214 to avoid collision with existing v2 migrations. Next migration: `215_`.
+
 ---
 
 ## ⚠️ Pending DB & Deploy Actions
@@ -61,7 +63,7 @@
 | 15 | ⬜ | Deploy `sync-players` (Phase 1D-A HMAC fix) | `npx supabase functions deploy sync-players --project-ref sssmvihxtqtohisghjet` |
 | 16 | ⬜ | F1 data migration — copy FantasyF1 DB contents into v2 tables | Manual — see [F1_MODULE_IMPLEMENTATION_PLAN.md](modules/F1_MODULE_IMPLEMENTATION_PLAN.md) → "Data Migration from FantasyF1" section. Requires Supabase-linked PC. |
 
-**Next migration on v2:** `212_`
+**Next migration on v2:** `215_`
 
 ---
 
@@ -187,7 +189,7 @@ These require a human decision before the relevant sprint can continue.
 
 ## Cross-Cutting Rules (Every Sprint)
 
-1. **Migrations are append-only.** Next free number on v2: `212_`. Never edit an applied migration.
+1. **Migrations are append-only.** Next free number on v2: `215_`. Never edit an applied migration.
 2. **Backup before every migration.** Docker unavailable — `SELECT` affected rows and save to `backups/*.json` first.
 3. **Football stays green.** `platform.spec.js` + manual smoke pass after any sprint touching shared infrastructure.
 4. **Value moves only through `SECURITY DEFINER` RPCs.** Clients never write directly to coin or budget columns.
@@ -201,4 +203,4 @@ These require a human decision before the relevant sprint can continue.
 
 ---
 
-Last Updated: **2026-06-27** (consolidated from SALE_READY_PROJECT_PLAN, F1/Tennis/P2P module plans, TECHNICAL_DUE_DILIGENCE, VALUATION_ANALYSIS — this is now the single source of truth for all v2 open activities)
+Last Updated: **2026-06-28** (v2 sync from main PRs #616/#622–626/#630/#637/#650–653 via PR #656; migrations 212–214 added; next migration `215_`)
