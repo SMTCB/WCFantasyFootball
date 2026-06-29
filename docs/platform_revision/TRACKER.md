@@ -24,10 +24,9 @@
 | **2** | Tennis Module (Player's Box, roster picks, Ace Cards, ATP Finals) | ✅ Done | Sprints T-0 through T-4 (PRs #617–#620, #625) |
 | **3A** | Buyout hygiene batch 2 (provider adapter, containerisation, envs) | ✅ Done | PRs #634–#636 |
 | **3B** | v2 integration & deploy | 🔄 In progress | Code quality gates ✅ — smoke tests + deploy remaining |
-| **R** | Clubhouse-Centric Redesign (IA/UX) | 🔄 Phase C done — Phase D next | Phase A PR #671, Phase B PR #675, Phase C PR #676. Migration 217 deferred (blocked by live pilot). Design: [CLUBHOUSE_CENTRIC_REDESIGN.md](architecture/CLUBHOUSE_CENTRIC_REDESIGN.md). See [workstream](#clubhouse-centric-redesign-workstream) below. |
+| **R** | Clubhouse-Centric Redesign (IA/UX) | ✅ Done — Phase D closed | Phase A PR #671, Phase B PR #675, Phase C PR #676, Phase D PR #677. Migration 217 deferred (blocked by live pilot). Design: [CLUBHOUSE_CENTRIC_REDESIGN.md](architecture/CLUBHOUSE_CENTRIC_REDESIGN.md). See [workstream](#clubhouse-centric-redesign-workstream) below. |
 
 **Next session options (choose one):**
-- **Redesign Phase D** — Naming pass ("Clubhouse"/"Competition", no user-facing "circle") + visual polish from mock (Screen 7 accent system).
 - **DD items** — TEST-1 (Vitest coverage), CODE-3 (error boundaries), OPS-2 (Sentry)
 - **Phase 3B smoke tests** → deploy sequence — see [Phase 3B checklist](#phase-3b-pre-merge-checklist) below
 
@@ -129,9 +128,9 @@ Sequenced so the *feel* changes first (Phase A) before deeper data/state work.
 - [x] Extract `CompetitionResultsHeader` (Tier 2) as one shared component (`src/components/competition/CompetitionResultsHeader.jsx`)
 - [x] Adopted in football (`LeagueDetailView` desktop standings), F1 (`F1StandingsScreen`), tennis (`TennisLeaderboardScreen`)
 
-### Phase D — Taxonomy & polish
-- [ ] Naming pass: "Clubhouse" everywhere (retire "My Group"/"circle" in UI); "Competition" on shared surfaces
-- [ ] Top-nav-bar visual treatment from the reference mock (Kit Light + sport accent system)
+### Phase D — Taxonomy & polish ✅ Done — PR #677 (2026-06-29)
+- [x] Naming pass: "Clubhouse" everywhere (retire "My Group"/"circle" in UI); "Competition" on shared surfaces
+- [x] Competition card visual treatment from the reference mock (sport-coloured top bar + pill badge, member avatar strip, stats panel)
 
 ---
 
@@ -301,4 +300,4 @@ These require a human decision before the relevant sprint can continue.
 
 ---
 
-Last Updated: **2026-06-29** (Phase C closed: PR #676 merged — `useActiveCompetition` hook, `CompetitionResultsHeader` shared component, `SportContext.activeSport` removed. Next: Phase D — taxonomy + visual polish.)
+Last Updated: **2026-06-29** (Phase D closed: PR #677 merged — sidebar "My Clubhouse" → "Clubhouse", `AllCompetitions` unified sport-coloured grid with member avatar strip + stats panel in the header. Clubhouse-Centric Redesign fully complete (Phases A–D). Next: DD items or Phase 3B smoke tests.)
