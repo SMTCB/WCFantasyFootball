@@ -160,7 +160,7 @@ All three are **bespoke** grid/flex tables with rank + name + sport-specific poi
    Then refresh `ClubhouseProvider.competitions` and navigate into the new competition.
 2. **Wire tennis into `get_clubhouse_competitions`.** Migration `216_`: extend the RPC's tennis branch to read `player_boxes WHERE circle_id = p_circle_id` (and/or the `circle_player_boxes` junction). Today it returns `[]`. Return `{id,name,sport:'tennis'}` shape consistent with the others.
 3. **Single location model.** Introduce a `useActiveCompetition()` selector (derive `{ clubhouseId, competitionId, sport }` from `ClubhouseProvider.activeCircleId` + the current route). Migrate `activePaddockId`/`activePlayerBoxId` consumers to read `competitionId` from it. Retire `SportContext.activeSport` (sport is now derived). Keep localStorage persistence of `clubhouseId`.
-4. **Enforce the invariant in the schema.** Migration `217_` (separate from the RPC change): after (a) the create flow guarantees new competitions always carry `circle_id`, and (b) a one-off orphan backfill, set `circle_id NOT NULL` on `leagues`, `paddocks`, `player_boxes`. **Approval-gated.** First `SELECT` orphan rows (`WHERE circle_id IS NULL`) to `backups/orphans_pre_217_*.json`; resolve them (assign to a clubhouse or archive) before adding the constraint.
+4. **Enforce the invariant in the schema.** Migration `217_` (separate from the RPC change): after (a) the create flow guarantees new competitions always carry `circle_id`, and (b) a one-off orphan backfill, set `circle_id NOT NULL` on `leagues`, `paddocks`, `player_boxes`. **🛑 DO NOT RUN UNTIL THE WORLD CUP PILOT ENDS — see the full warning under "⚠️ Pending DB actions" below.** This migration hits the shared production DB and 7 real pilot leagues currently have no `circle_id`; applying it mid-pilot risks corrupting live data.
 5. **Demote optional linking.** `link_league_to_circle` / `getOwnerLinkableLeagues` stay as repair/migration tooling but are removed from the normal user UI (the SETTINGS "link existing league" affordance).
 
 ### Files touched
@@ -168,23 +168,20 @@ new `NewCompetitionFlow.jsx`, `ClubhouseProvider.jsx` (refresh after create), `A
 
 ### ⚠️ Pending DB actions — run on the Supabase-linked PC
 
-Both migration files are committed to the repo (`supabase/migrations/`). They have NOT been applied to the production DB yet. Run them in order from the machine that has `npx supabase` linked to project `sssmvihxtqtohisghjet`.
+**Step 1 — Migration 216 — ✅ APPLIED to production 2026-06-29.** Pure `CREATE OR REPLACE FUNCTION`, no table/data writes, no pilot dependency (verified: `main` branch has zero references to `get_clubhouse_competitions` or `circle_id`). Replaced the hardcoded `'[]'::json` tennis branch in `get_clubhouse_competitions` with a live `circle_player_boxes` junction query.
 
-**Step 1 — Migration 216 (straightforward, run immediately):**
-```bash
-npx supabase db query --linked --file supabase/migrations/216_wire_tennis_competitions.sql
-```
-Replaces the hardcoded `'[]'::json` tennis branch in `get_clubhouse_competitions` with a live `circle_player_boxes` junction query. No destructive changes — pure `CREATE OR REPLACE FUNCTION`.
+**Step 2 — Migration 217 — 🛑🛑🛑 DO NOT RUN UNTIL THE WORLD CUP PILOT ENDS. 🛑🛑🛑**
 
-**Step 2 — Migration 217 (approval-gated, pre-flight required first):**
+`217_circle_id_not_null.sql` touches the **same shared production database** that runs the live World Cup pilot (`sssmvihxtqtohisghjet` — no dev/staging split). The pre-flight check (run 2026-06-29) found 18 orphan `leagues` rows, **7 of which are real, currently-active pilot leagues with real users mid-tournament**: Mundial do Eder, Mundial Gordo Vai a Baliza, RANKS FC World Cup Fantasy, Draft Mundial 26, Munaial '26, FIXO DRAFT MUNDIAL 26, Miami WC Fantasy Testers. (The other 11 `leagues` rows + 1 `paddocks` row + 1 `player_boxes` row are test/E2E leftovers, not pilot data.)
 
-Run these three SELECTs first and confirm all return 0 rows:
+Applying `NOT NULL` while those 7 leagues have no `circle_id` will either fail the migration outright or — worse — corrupt live pilot data mid-competition. **This is not a routine "run after pre-flight" migration. It is a deep-impact, pilot-blocking action that must wait until the World Cup pilot has ended** (target ~July 2026, per the Week-12 merge gate in [SALE_READY_PROJECT_PLAN.md](SALE_READY_PROJECT_PLAN.md)) **and an explicit clubhouse-mapping decision has been made for those 7 leagues.** Orphan snapshot saved to `backups/orphans_pre_217_20260629.json`.
+
+Do not run the SELECTs-then-apply sequence below until that condition is met:
 ```sql
 SELECT id, name FROM leagues      WHERE circle_id IS NULL;
 SELECT id, name FROM paddocks     WHERE circle_id IS NULL;
 SELECT id, name FROM player_boxes WHERE circle_id IS NULL;
 ```
-Save results to `backups/orphans_pre_217_<date>.json`. If any rows appear, assign them to a clubhouse (or archive) before proceeding. Once all three return 0 rows, apply the constraint:
 ```bash
 npx supabase db query --linked --file supabase/migrations/217_circle_id_not_null.sql
 ```
@@ -250,7 +247,7 @@ new `competition/CompetitionResultsHeader.jsx`; `LeagueDetailView.jsx`, `F1Stand
 | ~~2~~ | ~~Sidebar rebuild (remove SPORTS section, add Clubhouse switcher + Tier-1)~~ | A | ✅ Shipped in #671 |
 | ~~3~~ | ~~`CompetitionTopBar` + `CompetitionScreenNav` + mobile parity~~ | A | ✅ Shipped in #671 |
 | ~~4~~ | ~~`NewCompetitionFlow` + `+` wiring + `refreshCompetitions` + migration files 216/217 committed~~ | B | ✅ Done — PR #675 |
-| **5** | Run migration 216 (row 17, Supabase-linked PC) + run migration 217 post orphan-check (row 18) + `useActiveCompetition` location model collapse | **B** | ⬜ Next (requires Supabase-linked PC for migrations) |
+| **5** | Migration 216 ✅ applied 2026-06-29. Migration 217 🛑 **DO NOT RUN until World Cup pilot ends** (deep pilot-impact, see banner above). `useActiveCompetition` location model collapse | **B** | ⬜ Next — 217 explicitly excluded until pilot ends |
 | 6 | `CompetitionResultsHeader` extraction + adopt in 3 sports | C | ⬜ |
 | 7 | Taxonomy + visual polish | D | ⬜ |
 
@@ -267,4 +264,4 @@ Each PR: lint + build + `platform.spec.js` + madge green; update [TRACKER.md](..
 
 ---
 
-Last Updated: **2026-06-29** (Phase B frontend shipped PR #675; migrations 216/217 committed, pending Supabase-linked PC — see ⚠️ Pending DB actions block in Phase B; `useActiveCompetition` collapse deferred to next B PR)
+Last Updated: **2026-06-29** (Phase B frontend shipped PR #675; migration 216 applied to production; **migration 217 is 🛑 DO NOT RUN until the World Cup pilot ends — deep pilot-impact, see banner under "Pending DB actions" in Phase B**; `useActiveCompetition` collapse deferred to next B PR)

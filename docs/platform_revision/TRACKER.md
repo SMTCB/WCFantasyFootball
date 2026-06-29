@@ -86,9 +86,15 @@
 | 15 | ✅ | Deploy `sync-players` (Phase 1D-A HMAC fix) | `npx supabase functions deploy sync-players --project-ref sssmvihxtqtohisghjet` |
 | 16 | ⬜ | F1 data migration — copy FantasyF1 DB contents into v2 tables | Manual — see [F1_MODULE_IMPLEMENTATION_PLAN.md](modules/F1_MODULE_IMPLEMENTATION_PLAN.md) → "Data Migration from FantasyF1" section. Requires Supabase-linked PC. |
 | 17 | ✅ | Apply migration 216 — wire tennis into `get_clubhouse_competitions` | Applied 2026-06-29. `npx supabase db query --linked --file supabase/migrations/216_wire_tennis_competitions.sql` — replaces hardcoded `'[]'::json` tennis branch with live `circle_player_boxes` junction query. Pure function replace, zero data touched. |
-| 18 | 🛑 BLOCKED | Apply migration 217 — `circle_id NOT NULL` on leagues/paddocks/player_boxes | **Pre-flight run 2026-06-29 — orphans found, NOT cleared for apply.** `leagues`: 18 NULL rows (7 are real live pilot leagues: Mundial do Eder, Mundial Gordo Vai a Baliza, RANKS FC World Cup Fantasy, Draft Mundial 26, Munaial '26, FIXO DRAFT MUNDIAL 26, Miami WC Fantasy Testers; remaining 11 are test/E2E leftovers). `paddocks`: 1 NULL (`TEST_1_F1`, test only). `player_boxes`: 1 NULL (`TEST_WIMBLEDON_1`, test only). Snapshot saved: `backups/orphans_pre_217_20260629.json`. **User decision 2026-06-29: hold off entirely — do not run 217, do not touch any orphan rows (real or test) until there's a clubhouse-mapping plan for the 7 real leagues.** Do not re-attempt without a fresh explicit go-ahead that addresses those 7 leagues specifically. |
+| 18 | 🛑 **DO NOT RUN — see banner below** | Apply migration 217 — `circle_id NOT NULL` on leagues/paddocks/player_boxes | **Pre-flight run 2026-06-29 — orphans found, NOT cleared for apply.** `leagues`: 18 NULL rows (7 are real live pilot leagues: Mundial do Eder, Mundial Gordo Vai a Baliza, RANKS FC World Cup Fantasy, Draft Mundial 26, Munaial '26, FIXO DRAFT MUNDIAL 26, Miami WC Fantasy Testers; remaining 11 are test/E2E leftovers). `paddocks`: 1 NULL (`TEST_1_F1`, test only). `player_boxes`: 1 NULL (`TEST_WIMBLEDON_1`, test only). Snapshot saved: `backups/orphans_pre_217_20260629.json`. **User decision 2026-06-29: hold off entirely — do not run 217, do not touch any orphan rows (real or test) until there's a clubhouse-mapping plan for the 7 real leagues.** Do not re-attempt without a fresh explicit go-ahead that addresses those 7 leagues specifically. |
 
-**Rows 10, 11, 16 pending** — not Supabase actions (10/11) or blocked on source access (16). **Row 17 done. Row 18 blocked on product decision** — see note above, not just a "need linked PC" item anymore.
+> ## 🛑🛑🛑 MIGRATION 217 — DO NOT RUN UNTIL THE WORLD CUP PILOT ENDS 🛑🛑🛑
+>
+> **`217_circle_id_not_null.sql` touches the SAME PRODUCTION DATABASE that runs the live World Cup pilot** (`sssmvihxtqtohisghjet` — there is no dev/staging split). The 18 orphan `leagues` rows it would lock down include **7 real, currently-active pilot leagues with real users mid-tournament** (Mundial do Eder, Mundial Gordo Vai a Baliza, RANKS FC World Cup Fantasy, Draft Mundial 26, Munaial '26, FIXO DRAFT MUNDIAL 26, Miami WC Fantasy Testers). Applying this `NOT NULL` constraint while those leagues have no `circle_id` will either fail outright or corrupt live pilot data mid-competition.
+>
+> **Rule: do not run this migration — and do not backfill/assign `circle_id` on any pilot league — until the World Cup pilot has ended (target ~July 2026, per [SALE_READY_PROJECT_PLAN.md](architecture/SALE_READY_PROJECT_PLAN.md) Week-12 gate) and an explicit clubhouse-mapping decision has been made for those 7 leagues.** This is not a "needs Supabase-linked PC" task — it is a deep-impact, pilot-blocking action. Any session that reaches this row should stop and flag it, not run it.
+
+**Rows 10, 11, 16 pending** — not Supabase actions (10/11) or blocked on source access (16). **Row 17 done. Row 18 — see 🛑 banner above, do not run.**
 
 **Next migration on v2:** `218_`
 
@@ -117,7 +123,7 @@ Sequenced so the *feel* changes first (Phase A) before deeper data/state work.
 - [x] `refreshCompetitions()` added to `useClubhouse` return — calls `fetchCircleData(activeCircleId)`; consumed in AppLayout to refresh top bar after create/join
 - [ ] Collapse `SportContext` + `useClubhouse` active-IDs into one `useActiveCompetition()` location model — deferred to Phase B follow-up PR
 - [x] Migration 216: wire tennis into `get_clubhouse_competitions` — applied 2026-06-29 (row 17)
-- [ ] Migration 217: `circle_id NOT NULL` — **BLOCKED**, see row 18: 7 real pilot leagues have no clubhouse, user said hold off until there's a mapping plan for them
+- [ ] Migration 217: `circle_id NOT NULL` — 🛑 **DO NOT RUN until World Cup pilot ends** — see row 18 banner: touches the shared production DB, 7 real pilot leagues have no clubhouse, deep pilot-impact risk, not just a product decision to make whenever convenient
 
 ### Phase C — Shared spine template
 - [ ] Extract `CompetitionResultsHeader` (Tier 2) as one shared component
