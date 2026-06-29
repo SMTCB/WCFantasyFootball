@@ -16,7 +16,7 @@ function extractActiveCompId(pathname) {
   return null;
 }
 
-export function CompetitionTopBar({ competitions, pathname }) {
+export function CompetitionTopBar({ competitions, pathname, onAdd }) {
   const navigate = useNavigate();
   const active = extractActiveCompId(pathname);
 
@@ -74,22 +74,25 @@ export function CompetitionTopBar({ competitions, pathname }) {
         );
       })}
 
-      {/* + Add competition — Phase B placeholder */}
+      {/* + Add competition */}
       <button
-        disabled
-        title="Add competition — coming soon"
+        onClick={onAdd}
+        title="Add competition"
         style={{
           flexShrink: 0,
           padding: '0 14px',
           background: 'transparent',
           border: 'none',
           borderBottom: '2px solid transparent',
-          cursor: 'not-allowed',
+          cursor: 'pointer',
           fontFamily: 'JetBrains Mono, monospace',
           fontSize: 16,
-          color: 'var(--rule)',
+          color: 'var(--mute)',
           lineHeight: 1,
+          transition: 'color .12s',
         }}
+        onMouseEnter={e => { e.currentTarget.style.color = 'var(--paper)'; }}
+        onMouseLeave={e => { e.currentTarget.style.color = 'var(--mute)'; }}
       >
         +
       </button>

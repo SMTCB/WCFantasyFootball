@@ -225,11 +225,10 @@ new `competition/CompetitionResultsHeader.jsx`; `LeagueDetailView.jsx`, `F1Stand
 | ~~1~~ | ~~`ClubhouseProvider` + merge homes (`/` → Clubhouse Overview, delete `MultiSportHomeScreen`)~~ | A | ✅ Shipped in #671 |
 | ~~2~~ | ~~Sidebar rebuild (remove SPORTS section, add Clubhouse switcher + Tier-1)~~ | A | ✅ Shipped in #671 |
 | ~~3~~ | ~~`CompetitionTopBar` + `CompetitionScreenNav` + mobile parity~~ | A | ✅ Shipped in #671 |
-| **4** | `NewCompetitionFlow` + `+` wiring + demote old lobbies | **B** | ⬜ Next |
-| **5** | Migration 216 (tennis in `get_clubhouse_competitions`) + `useActiveCompetition` location model | **B** | ⬜ Next (requires Supabase-linked PC for migration) |
-| **6** | Migration 217 (`circle_id NOT NULL`, orphan backfill) — **approval-gated** | **B** | ⬜ Next (requires Supabase-linked PC) |
-| 7 | `CompetitionResultsHeader` extraction + adopt in 3 sports | C | ⬜ |
-| 8 | Taxonomy + visual polish | D | ⬜ |
+| **4** | `NewCompetitionFlow` + `+` wiring + `refreshCompetitions` + migration files 216/217 committed | **B** | ✅ Frontend done — pending PR merge |
+| **5** | Run migration 216 (row 17, Supabase-linked PC) + run migration 217 post orphan-check (row 18) + `useActiveCompetition` location model collapse | **B** | ⬜ Next (requires Supabase-linked PC for migrations) |
+| 6 | `CompetitionResultsHeader` extraction + adopt in 3 sports | C | ⬜ |
+| 7 | Taxonomy + visual polish | D | ⬜ |
 
 Each PR: lint + build + `platform.spec.js` + madge green; update [TRACKER.md](../TRACKER.md).
 
@@ -244,4 +243,4 @@ Each PR: lint + build + `platform.spec.js` + madge green; update [TRACKER.md](..
 
 ---
 
-Last Updated: **2026-06-29** (Phase A shipped PR #671; current-state reference updated to post-Phase-A)
+Last Updated: **2026-06-29** (Phase B frontend shipped; migrations 216/217 committed, pending Supabase-linked PC; `useActiveCompetition` collapse deferred to next B PR)
