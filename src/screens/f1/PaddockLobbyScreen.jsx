@@ -1,12 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { usePaddock } from '../../hooks/f1/usePaddock';
-import { useSport } from '../../context/SportContext';
 import { supabase } from '../../lib/supabase';
 
 export default function PaddockLobbyScreen() {
   const navigate = useNavigate();
-  const { setActiveSport } = useSport();
   const { myPaddocks, loading, createPaddock, joinPaddockByCode, setActivePaddockId } = usePaddock();
 
   const [tab, setTab] = useState('my');   // 'my' | 'create' | 'join'
@@ -30,7 +28,6 @@ export default function PaddockLobbyScreen() {
     setBusy(true); setErr('');
     try {
       const id = await createPaddock(name.trim(), selectedCircleId ?? undefined);
-      setActiveSport('f1');
       navigate(`/f1/${id}`);
     } catch (e) {
       setErr(e.message === 'F1_SPORT_NOT_FOUND' ? 'F1 sport not configured — contact admin.' : e.message);
@@ -43,7 +40,6 @@ export default function PaddockLobbyScreen() {
     setBusy(true); setErr('');
     try {
       const id = await joinPaddockByCode(code.trim());
-      setActiveSport('f1');
       navigate(`/f1/${id}`);
     } catch (e) {
       setErr(e.message === 'PADDOCK_NOT_FOUND' ? 'Invite code not found — check the code and try again.' : e.message);
@@ -52,7 +48,6 @@ export default function PaddockLobbyScreen() {
 
   function enterPaddock(id) {
     setActivePaddockId(id);
-    setActiveSport('f1');
     navigate(`/f1/${id}`);
   }
 

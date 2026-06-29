@@ -46,7 +46,7 @@ function RaceStatusBadge({ race }) {
 export default function F1HomeScreen() {
   const { paddockId } = useParams();
   const navigate = useNavigate();
-  const { setActivePaddockId, setActiveSport } = useSport();
+  const { setActivePaddockId } = useSport();
   const { myPaddocks, activePaddock, setActivePaddockId: switchPaddock } = usePaddock();
 
   const [races, setRaces] = useState([]);
@@ -56,11 +56,8 @@ export default function F1HomeScreen() {
   const [section, setSection] = useState('calendar'); // 'calendar' | 'paddocks'
 
   useEffect(() => {
-    if (paddockId) {
-      setActivePaddockId(paddockId);
-      setActiveSport('f1');
-    }
-  }, [paddockId, setActivePaddockId, setActiveSport]);
+    if (paddockId) setActivePaddockId(paddockId);
+  }, [paddockId, setActivePaddockId]);
 
   useEffect(() => {
     async function load() {
