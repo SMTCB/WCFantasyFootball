@@ -224,6 +224,11 @@ export function useClubhouse() {
 
   const activeCircle = myCircles.find(c => c.id === activeCircleId) ?? null;
 
+  const refreshCompetitions = useCallback(
+    () => fetchCircleData(activeCircleId),
+    [fetchCircleData, activeCircleId]
+  );
+
   return {
     myCircles,
     activeCircle,
@@ -247,5 +252,6 @@ export function useClubhouse() {
     markRead,
     markAllRead,
     refresh: fetchMyCircles,
+    refreshCompetitions,
   };
 }

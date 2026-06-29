@@ -27,13 +27,16 @@
 | **R** | Clubhouse-Centric Redesign (IA/UX) | 🔄 Phase A done — Phase B next | Phase A shipped PR #671. Design: [CLUBHOUSE_CENTRIC_REDESIGN.md](architecture/CLUBHOUSE_CENTRIC_REDESIGN.md). See [workstream](#clubhouse-centric-redesign-workstream) below. |
 
 **Next session options (choose one):**
-- **Redesign Phase B** — Entry unification + state/schema (single competition creation flow, collapse SportContext + useClubhouse, migrations 216/217). See [workstream](#clubhouse-centric-redesign-workstream).
+- **Redesign Phase B follow-up (Supabase-linked PC)** — Run migrations 216 + 217 (rows 17/18 in pending table). Then finish `useActiveCompetition` location-model collapse (deferred from this session).
+- **Redesign Phase C** — `CompetitionResultsHeader` shared component + adopt in football/F1/tennis.
+- **Redesign Phase D** — Naming pass ("Clubhouse"/"Competition") + visual polish from mock.
 - **DD items** — TEST-1 (Vitest coverage), CODE-3 (error boundaries), OPS-2 (Sentry)
 - **Phase 3B smoke tests** → deploy sequence — see [Phase 3B checklist](#phase-3b-pre-merge-checklist) below
-- **DD items** — TEST-1 (Vitest coverage), CODE-3 (error boundaries), OPS-2 (Sentry)
 - **Row 11** — Add `VITE_SENTRY_DSN` to Vercel (can be done from any machine)
 
 **Session 2026-06-29 (Clubhouse-centric redesign — assessment + design):** Product assessment of the multi-sport platform's "common vision." Diagnosed 6 concrete causes of the "fantasy-sports frankenstein" feel: (1) sidebar morphs per sport (`activeSport`-driven `FOOTBALL_NAV`/`buildF1Nav`/Tennis nav swap), (2) two competing home screens (`/` MultiSportHome + `/clubhouse`), Clubhouse buried under COMMUNITY, (3) `circle_id` nullable / competitions born orphaned, (4) two disconnected state models (`SportContext` ⊥ `useClubhouse`), (5) three reinvented sport lobbies, (6) taxonomy drift (My Group/Clubhouse/circle). Agreed unifying concept: **Clubhouse is the room, sports are tables in it** — every competition always belongs to a clubhouse (structural invariant), shared 3-tier spine (Tier 1 clubhouse surfaces = identical / Tier 2 results header = same skeleton / Tier 3 unit = sport divergence). Nav model: **sidebar = clubhouse spine (sport-agnostic, never morphs), top bar = competition tabs (named comps, sport-colored)**. User approved **full A–D redesign**. Two docs written, no code touched: [CLUBHOUSE_CENTRIC_REDESIGN.md](architecture/CLUBHOUSE_CENTRIC_REDESIGN.md) (vision/why-what) + [CLUBHOUSE_CENTRIC_REDESIGN_IMPLEMENTATION_PLAN.md](architecture/CLUBHOUSE_CENTRIC_REDESIGN_IMPLEMENTATION_PLAN.md) (self-contained phase-by-phase build plan with current-state reference, cross-cutting rules, per-phase functional+technical specs, acceptance criteria, and an 8-PR breakdown — written to be executed cold in dedicated sessions). Key finding embedded in the plan: `useClubhouse` is a hook not a provider (MultiSportHomeScreen + ClubhouseScreen double-fetch) → Phase A promotes it to `ClubhouseProvider`; football screens are global routes while F1/tennis are id-scoped → secondary screen strip is built per selected competition's sport; `get_clubhouse_competitions` stubs tennis as `[]` → Phase B wires it (migration 216); `circle_id NOT NULL` is migration 217 (approval-gated, orphan-backfill first). Next: Redesign Phase A (Shell & IA), PR 1.
+
+**Session 2026-06-29 (Redesign Phase B, PR TBD):** Phase B frontend complete. New `NewCompetitionFlow.jsx` — portal modal (createPortal to body per rule), sport picker step + per-sport create forms (Football: name+tournament+format+H2H; F1/Tennis: name only) + join-by-code section with sport selector. Calls RPCs directly via supabase client (no hook imports — avoids TDZ since AppLayout imports useClubhouseContext and SportContext which usePaddock/usePlayerBox transitively pull in). `refreshCompetitions` added to `useClubhouse` return (calls `fetchCircleData(activeCircleId)`). `CompetitionTopBar` `+` button enabled with `onAdd` prop. `AppLayout` manages `showNewCompFlow` state, passes `circleId` + `refreshCompetitions` as props (not context — TDZ safe). Two migration files committed but NOT yet applied: `216_wire_tennis_competitions.sql` (replaces hardcoded tennis `[]` with `circle_player_boxes` join, row 17 in pending table) and `217_circle_id_not_null.sql` (approval-gated, orphan pre-flight required, row 18). `useActiveCompetition` location-model collapse deferred to next Phase B PR. Build: 0 errors, 1 pre-existing lint warning. Madge: no new cycles. 84/84 platform tests passing.
 
 **Session 2026-06-29 (Redesign Phase A, PR #671):** Implemented Phase A of the Clubhouse-Centric Redesign (frontend-only, no schema). New files: `ClubhouseContext.js` (context + hook, split to avoid Rolldown TDZ), `ClubhouseProvider.jsx` (singleton at app root), `CompetitionTopBar.jsx` (prop-only flat competition tabs, sport-colored, returns null with zero competitions), `CompetitionScreenNav.jsx` (secondary strip per active sport — football/F1/tennis, returns null on non-sport routes). Modified: `AppLayout.jsx` rewritten — static clubhouse spine sidebar (never morphs), uses `useClubhouseContext()`, renders both new components; `App.jsx` — `ClubhouseProvider` added, `<Route path="/" element={<Navigate to="/clubhouse" replace />}>`; `ClubhouseScreen.jsx` — switched to `useClubhouseContext()`. Deleted `MultiSportHomeScreen.jsx`. Test infra fix: `playwright.config.js` added `channel: 'chrome'` (system Chrome) because `chromium_headless_shell-1217` binary is missing on this machine (headless shell install fails). Two `platform.spec.js` assertion fixes: `.first()` on strict-mode sidebar `getByText(/clubhouse/i)`, URL pattern `/\/(clubhouse)?$/` for 404 redirect test. **84/84 tests passing.** Key architecture note: `NavIcons.jsx` is imported both by `AppLayout` (depth 1) and `CompetitionScreenNav` (depth 2 via AppLayout) — safe because NavIcons is a leaf module (no local imports); Rolldown evaluates it first with no TDZ. Next: Phase B (entry unification + migration 216/217, requires Supabase-linked PC for DB actions).
 
@@ -82,10 +85,12 @@
 | 14 | ✅ | Deploy `sync-player-status` (Phase 1D-A HMAC fix) | `npx supabase functions deploy sync-player-status --project-ref sssmvihxtqtohisghjet` |
 | 15 | ✅ | Deploy `sync-players` (Phase 1D-A HMAC fix) | `npx supabase functions deploy sync-players --project-ref sssmvihxtqtohisghjet` |
 | 16 | ⬜ | F1 data migration — copy FantasyF1 DB contents into v2 tables | Manual — see [F1_MODULE_IMPLEMENTATION_PLAN.md](modules/F1_MODULE_IMPLEMENTATION_PLAN.md) → "Data Migration from FantasyF1" section. Requires Supabase-linked PC. |
+| 17 | ⬜ | Apply migration 216 — wire tennis into `get_clubhouse_competitions` | `npx supabase db query --linked --file supabase/migrations/216_wire_tennis_competitions.sql` — replaces hardcoded `'[]'::json` tennis branch with live `circle_player_boxes` junction query |
+| 18 | ⚠️ GATE | Apply migration 217 — `circle_id NOT NULL` on leagues/paddocks/player_boxes | **Pre-flight required first:** `SELECT id, name FROM leagues WHERE circle_id IS NULL;` + same for `paddocks` + `player_boxes`. All must return 0 rows. Save results to `backups/orphans_pre_217_*.json`. Then: `npx supabase db query --linked --file supabase/migrations/217_circle_id_not_null.sql` |
 
-**Rows 10, 11, 16 deferred** — not Supabase actions (10/11) or blocked on source access (16). Pick up in a future session.
+**Rows 10, 11, 16, 17, 18 pending** — 10/11 not Supabase actions; 16 blocked on source access; 17/18 need Supabase-linked PC (18 also needs orphan pre-flight + explicit approval).
 
-**Next migration on v2:** `216_`
+**Next migration on v2:** `218_`
 
 **Session 2026-06-28 (migration 215 applied):** `215_clubhouse_centric_model.sql` applied to prod from the Supabase-linked PC (this session's local `v2` was 4 commits behind `origin/v2` — pulled first). Backed up `leagues`/`paddocks`/`player_boxes` id+name snapshots before running (`backups/*_pre_migration215_20260628_231738.json`). Verified: `circle_id` column live on all 3 tables (NULL on existing rows — no junction-table data to backfill yet); `create_league` 6-arg overload, `create_paddock` (2-arg), `create_player_box` (3-arg) all updated and present in `pg_proc`.
 
@@ -107,11 +112,12 @@ Sequenced so the *feel* changes first (Phase A) before deeper data/state work.
 - [x] `playwright.config.js` channel:chrome (system Chrome; chromium_headless_shell missing on this machine)
 - [x] `platform.spec.js`: 84/84 passing
 
-### Phase B — Entry unification + state/schema
-- [ ] Single "+ New competition" flow launched from clubhouse (sport picker, auto-sets `circle_id`); retire the 3 lobbies as user flows
-- [ ] Collapse `SportContext` + `useClubhouse` active-IDs into one location model `{ clubhouseId, competitionId, sport }`
-- [ ] Migration 216: wire tennis into `get_clubhouse_competitions` (currently stubbed `[]`)
-- [ ] Migration 217: `circle_id NOT NULL` on `leagues`/`paddocks`/`player_boxes` (⚠️ approval gate — backup + orphan-check first, no Docker → SELECT to `backups/*.json`)
+### Phase B — Entry unification + state/schema ✅ Frontend done — DB pending linked PC
+- [x] Single "+ New competition" flow (`NewCompetitionFlow.jsx`) — portal modal, sport picker, per-sport create form, join-by-code; `+` button wired in `CompetitionTopBar`; self-portals to `document.body` (createPortal rule). Props-only design (no local hook imports from AppLayout's dep tree — TDZ safe)
+- [x] `refreshCompetitions()` added to `useClubhouse` return — calls `fetchCircleData(activeCircleId)`; consumed in AppLayout to refresh top bar after create/join
+- [ ] Collapse `SportContext` + `useClubhouse` active-IDs into one `useActiveCompetition()` location model — deferred to Phase B follow-up PR
+- [ ] Migration 216: wire tennis into `get_clubhouse_competitions` (file committed: `216_wire_tennis_competitions.sql`) — **run row 17 in pending DB table above**
+- [ ] Migration 217: `circle_id NOT NULL` (file committed: `217_circle_id_not_null.sql`) — **run row 18 after orphan pre-flight — approval-gated**
 
 ### Phase C — Shared spine template
 - [ ] Extract `CompetitionResultsHeader` (Tier 2) as one shared component

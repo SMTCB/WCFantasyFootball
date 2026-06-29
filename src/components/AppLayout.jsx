@@ -9,6 +9,7 @@ import { supabase } from '../lib/supabase';
 import { useSport } from '../context/SportContext';
 import { CompetitionTopBar } from './CompetitionTopBar';
 import { CompetitionScreenNav } from './CompetitionScreenNav';
+import NewCompetitionFlow from './NewCompetitionFlow';
 import {
   NavIconLive,
   NavIconSquad,
@@ -121,7 +122,8 @@ export default function AppLayout({ children }) {
   const { user } = useAuth();
   const { activePaddockId } = useSport();
   const { unreadCount } = useContext(ClubhouseNotifContext);
-  const { competitions } = useClubhouseContext();
+  const { competitions, activeCircleId, refreshCompetitions } = useClubhouseContext();
+  const [showNewCompFlow, setShowNewCompFlow] = useState(false);
 
   // Derive sport from route — sidebar never morphs, mobile bar does
   const isF1     = location.pathname.startsWith('/f1');
@@ -286,6 +288,7 @@ export default function AppLayout({ children }) {
         <CompetitionTopBar
           competitions={competitions}
           pathname={location.pathname}
+          onAdd={() => setShowNewCompFlow(true)}
         />
 
         {/* Competition screen nav — screens within the active sport/competition */}
@@ -298,6 +301,15 @@ export default function AppLayout({ children }) {
           {children}
         </div>
       </div>
+
+      {/* New Competition modal — self-portals to document.body */}
+      {showNewCompFlow && (
+        <NewCompetitionFlow
+          circleId={activeCircleId}
+          onCreated={refreshCompetitions}
+          onClose={() => setShowNewCompFlow(false)}
+        />
+      )}
 
       {/* ── Mobile Bottom Bar ─────────────────────────────────────────── */}
       <nav
