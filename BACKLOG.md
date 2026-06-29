@@ -1,12 +1,47 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-06-28 (ConfirmModal scroll-jump fix — PR #653; starting-XI formation relaxed + eliminated tag fix — PR #652)  
+**Last Updated**: 2026-06-29 (Knockout scoring — shootout pts, ET minutes fix, bet override — PR #672, migration 192)  
 **E2E Test Suite**: `platform.spec.js` (36 tests × 2 browsers) passing in CI ✅  
 **Full Playbook Run**: `E2E_TEST_PLAYBOOK.md` v2.0 — all flows confirmed  
 **🟢 LAUNCH READY**: No critical (P0/P1) bugs open. All game mechanics functional. WC kick-off 2026-06-11.  
 **Live App**: https://wc-fantasy-football.vercel.app  
 **WC Kick-off**: 2026-06-11 19:00 UTC (Mexico vs South Africa)  
 **Supabase PostgREST max_rows**: 10,000 (raised from default 1,000 — 2026-06-08)
+
+---
+
+## 🔴 P0 — DEPLOY-672: Apply migration 192 + deploy 2 Edge Functions to production
+
+**Reference ID**: `DEPLOY-672` — search this string to find this item.
+
+**Context**: PR #672 (merged 2026-06-29) shipped knockout-stage scoring improvements. The code is live on Vercel but the DB migration and Edge Functions have NOT been applied to production yet. These must be run before the next WC knockout fixture kicks off.
+
+**Steps to run (in order) on a machine with Supabase CLI linked:**
+
+```bash
+# 1. Apply migration — adds shootout_scored/missed/saved columns + commissioner bet override
+npx supabase db query --linked < supabase/migrations/192_knockout_scoring.sql
+
+# 2. Deploy ingest-match-events — ET detection (90→120 min) + shootout period routing
+npx supabase functions deploy ingest-match-events --project-ref sssmvihxtqtohisghjet
+
+# 3. Deploy calculate-scores — shootout scoring rules (miss -1, save +0.5, score +1)
+npx supabase functions deploy calculate-scores --project-ref sssmvihxtqtohisghjet
+```
+
+**What was shipped in PR #672:**
+- `player_match_stats` gets 3 new columns: `shootout_scored`, `shootout_missed`, `shootout_saved`
+- `resolve_bet` updated: commissioners can now override auto-resolved bets (old rewards reversed, leaderboard re-aggregated)
+- `ingest-match-events`: ET-aware match duration (auto-detects 90 vs 120 min from event data); shootout period detected by `period.name/type` containing "penalt"; shootout events tracked separately from regular penalty events
+- `calculate-scores`: shootout scoring: player scores +1, player misses −1, GK saves +0.5 (universal rules, not position-specific)
+- Commissioner panel: resolved bets now show with "AUTO-RESOLVED" badge + OVERRIDE button
+
+**Why urgent**: Without the migration, `ingest-match-events` will fail to upsert `player_match_stats` on any fixture where the shootout columns are referenced. Without the Edge Function deploys, ET minutes will still be hardcoded to 90 and shootout events will be ignored.
+
+**Verify after deploy:**
+1. Run `SELECT column_name FROM information_schema.columns WHERE table_name='player_match_stats' AND column_name LIKE 'shootout%';` — should return 3 rows
+2. For a past fixture in ET, check `SELECT minutes_played FROM player_match_stats WHERE fixture_id='...' LIMIT 5;` — starters should show 120
+3. Commissioner panel → RESOLVE BETS → confirm resolved match_result bets appear with AUTO-RESOLVED badge
 
 ---
 
