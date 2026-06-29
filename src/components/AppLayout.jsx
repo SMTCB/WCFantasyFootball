@@ -1,16 +1,18 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useState, useEffect, useContext } from 'react';
 import { ClubhouseNotifContext } from '../context/ClubhouseNotifContext';
+import { useClubhouseContext } from '../context/ClubhouseContext';
 import BrandMark from './BrandMark';
 import SkipToContent from './SkipToContent';
 import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../lib/supabase';
 import { useSport } from '../context/SportContext';
+import { CompetitionTopBar } from './CompetitionTopBar';
+import { CompetitionScreenNav } from './CompetitionScreenNav';
 import {
-  NavIconScores,
+  NavIconLive,
   NavIconSquad,
   NavIconLeagues,
-  NavIconLive,
   NavIconMarket,
   NavIconRecap,
   NavIconClubhouse,
@@ -18,31 +20,35 @@ import {
   NavIconF1Picks,
   NavIconF1Standings,
   NavIconF1Report,
-  NavIconF1Season,
 } from './NavIcons';
 
+// ── Mobile bottom-bar nav items ───────────────────────────────────────────────
 const FOOTBALL_NAV = [
-  { key: 'live',       label: 'LIVE',       path: '/live',      Icon: NavIconLive,      desc: 'Live Scores & Fixtures', isLive: true },
-  { key: 'squad',      label: 'SQUAD',      path: '/squad',     Icon: NavIconSquad,     desc: 'Your Tactical Sheet' },
-  { key: 'league',     label: 'LEAGUE',     path: '/league',    Icon: NavIconLeagues,   desc: 'League Standings & Chat' },
-  { key: 'market',     label: 'MARKET',     path: '/market',    Icon: NavIconMarket,    desc: 'Player Transfer Market' },
-  { key: 'recap',      label: 'RECAP',      path: '/recap',     Icon: NavIconRecap,     desc: 'Matchday Recap & Stats', desktopOnly: true },
-  { key: 'clubhouse',  label: 'CLUBHOUSE',  mobileLabel: 'CLUB', path: '/clubhouse', Icon: NavIconClubhouse, desc: 'The Clubhouse — social hub' },
+  { key: 'live',      label: 'LIVE',      path: '/live',      Icon: NavIconLive,      isLive: true },
+  { key: 'squad',     label: 'SQUAD',     path: '/squad',     Icon: NavIconSquad   },
+  { key: 'league',    label: 'LEAGUE',    path: '/league',    Icon: NavIconLeagues },
+  { key: 'market',    label: 'MARKET',    path: '/market',    Icon: NavIconMarket  },
+  { key: 'clubhouse', label: 'CLUB',      path: '/clubhouse', Icon: NavIconClubhouse },
 ];
 
 function buildF1Nav(paddockId) {
   const base = paddockId ? `/f1/${paddockId}` : '/f1';
   return [
-    { key: 'f1-calendar',  label: 'CALENDAR',  path: base,                    Icon: NavIconF1Calendar,  desc: 'Race Calendar' },
-    { key: 'f1-picks',     label: 'PICKS',     path: `${base}/picks`,         Icon: NavIconF1Picks,     desc: 'Race Predictions' },
-    { key: 'f1-standings', label: 'STANDINGS', path: `${base}/standings`,     Icon: NavIconF1Standings, desc: 'Paddock Standings' },
-    { key: 'f1-report',    label: 'REPORT',    path: `${base}/report`,        Icon: NavIconF1Report,    desc: 'Results & Breakdown' },
-    { key: 'f1-season',    label: 'SEASON',    path: `${base}/season`,        Icon: NavIconF1Season,    desc: 'Season Predictions' },
-    { key: 'clubhouse',    label: 'CLUBHOUSE', path: '/clubhouse',            Icon: NavIconClubhouse,   desc: 'The Clubhouse', desktopOnly: true },
+    { key: 'f1-calendar',  label: 'CAL',      path: base,                    Icon: NavIconF1Calendar  },
+    { key: 'f1-picks',     label: 'PICKS',    path: `${base}/picks`,         Icon: NavIconF1Picks     },
+    { key: 'f1-standings', label: 'STD',      path: `${base}/standings`,     Icon: NavIconF1Standings },
+    { key: 'f1-report',    label: 'REPORT',   path: `${base}/report`,        Icon: NavIconF1Report    },
+    { key: 'clubhouse',    label: 'CLUB',     path: '/clubhouse',            Icon: NavIconClubhouse   },
   ];
 }
 
-// ── Desktop sidebar grouped nav helpers ───────────────────────────────────────
+const TENNIS_NAV = [
+  { key: 'ten-home',   label: 'HOME',  path: '/tennis',             Icon: NavIconRecap    },
+  { key: 'ten-lb',     label: 'TABLE', path: '/tennis/leaderboard', Icon: NavIconLeagues  },
+  { key: 'clubhouse',  label: 'CLUB',  path: '/clubhouse',          Icon: NavIconClubhouse },
+];
+
+// ── Desktop sidebar helpers ───────────────────────────────────────────────────
 const MONO_STYLE = { fontFamily: 'JetBrains Mono, monospace' };
 
 function NavSectionLabel({ children }) {
@@ -113,28 +119,28 @@ export default function AppLayout({ children }) {
   const location = useLocation();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { activeSport, activePaddockId } = useSport();
+  const { activePaddockId } = useSport();
   const { unreadCount } = useContext(ClubhouseNotifContext);
-  const isF1 = activeSport === 'f1';
-  const NAV_ITEMS = isF1 ? buildF1Nav(activePaddockId) : FOOTBALL_NAV;
-  // user_metadata.username is set at signup but may be absent for older accounts.
-  // Fall back to the users table (authoritative) then to email prefix.
+  const { competitions } = useClubhouseContext();
+
+  // Derive sport from route — sidebar never morphs, mobile bar does
+  const isF1     = location.pathname.startsWith('/f1');
+  const isTennis = location.pathname.startsWith('/tennis');
+  const MOBILE_NAV = isF1 ? buildF1Nav(activePaddockId) : isTennis ? TENNIS_NAV : FOOTBALL_NAV;
+
   const [username, setUsername] = useState(
     user?.user_metadata?.username ?? user?.email?.split('@')[0] ?? null
   );
   useEffect(() => {
     if (!user?.id) return;
-    // If metadata already has it, use it immediately and skip the DB round-trip.
     if (user.user_metadata?.username) { setUsername(user.user_metadata.username); return; }
     supabase.from('users').select('username').eq('id', user.id).maybeSingle()
       .then(({ data }) => { if (data?.username) setUsername(data.username); });
   }, [user?.id, user?.user_metadata?.username]);
 
-  // Show back button on deeply nested routes (not main nav routes, not single-param routes like /league/:id)
   const isMainRoute =
     location.pathname === '/' ||
-    location.pathname === '/scores' || // legacy redirect still resolves
-
+    location.pathname === '/scores' ||
     location.pathname === '/squad' ||
     location.pathname === '/league' ||
     location.pathname === '/live' ||
@@ -155,7 +161,7 @@ export default function AppLayout({ children }) {
     <div className="min-h-screen flex items-start" style={{ background: 'var(--ink)' }}>
       <SkipToContent targetId="main-content" />
 
-      {/* ── Desktop Left Sidebar — grouped Platform / Sports / Community ── */}
+      {/* ── Desktop Left Sidebar — Clubhouse spine (never morphs) ── */}
       <nav
         data-testid="desktop-nav"
         className="hidden lg:flex fixed left-0 top-0 bottom-0 w-[220px] flex-col z-50"
@@ -171,105 +177,13 @@ export default function AppLayout({ children }) {
           </div>
         </div>
 
-        {/* Nav */}
+        {/* Nav — clubhouse-centric, never morphs */}
         <div style={{ padding: '8px 6px', flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 0, scrollbarWidth: 'none' }}>
 
-          {/* PLATFORM */}
-          <NavSectionLabel>Platform</NavSectionLabel>
+          {/* CLUBHOUSE */}
+          <NavSectionLabel>Clubhouse</NavSectionLabel>
           <NavItem
-            label="Home"
-            path="/"
-            active={location.pathname === '/'}
-            dotColor="var(--accent)"
-          />
-
-          {/* SPORTS */}
-          <NavSectionLabel>Sports</NavSectionLabel>
-
-          {/* Football — with sub-items */}
-          <NavItem
-            label="Football"
-            path="/live"
-            active={['/scores','/live','/squad','/league','/market','/recap'].some(p => location.pathname === p || location.pathname.startsWith(p + '/'))}
-            dotColor="var(--accent)"
-            tag="GW"
-            tagStyle={{ background: 'rgba(26,111,168,.15)', color: 'var(--accent)' }}
-          />
-          <div style={{ paddingLeft: 16 }}>
-            {[
-              { label: 'Live',      path: '/live'   },
-              { label: 'Squad',     path: '/squad'  },
-              { label: 'League',    path: '/league' },
-              { label: 'Market',    path: '/market' },
-              { label: 'Recap',     path: '/recap'  },
-            ].map(({ label, path }) => (
-              <NavItem
-                key={path}
-                label={label}
-                path={path}
-                active={location.pathname === path || location.pathname.startsWith(path + '/')}
-                dotColor="var(--accent)"
-                sub
-              />
-            ))}
-          </div>
-
-          {/* Formula 1 */}
-          <NavItem
-            label="Formula 1"
-            path={activePaddockId ? `/f1/${activePaddockId}` : '/f1'}
-            active={location.pathname.startsWith('/f1')}
-            dotColor="var(--f1)"
-            tag="F1"
-            tagStyle={{ background: 'rgba(193,57,27,.2)', color: 'var(--f1)' }}
-          />
-          <div style={{ paddingLeft: 16 }}>
-            {(activePaddockId ? [
-              { label: 'Race Picks',  path: `/f1/${activePaddockId}/picks`     },
-              { label: 'Results',     path: `/f1/${activePaddockId}/report`    },
-              { label: 'Standings',   path: `/f1/${activePaddockId}/standings` },
-              { label: 'Season',      path: `/f1/${activePaddockId}/season`    },
-            ] : [{ label: 'Calendar', path: '/f1' }]).map(({ label, path }) => (
-              <NavItem
-                key={path}
-                label={label}
-                path={path}
-                active={location.pathname === path}
-                dotColor="var(--f1)"
-                sub
-              />
-            ))}
-          </div>
-
-          {/* Tennis */}
-          <NavItem
-            label="Tennis"
-            path="/tennis"
-            active={location.pathname.startsWith('/tennis')}
-            dotColor="var(--ten)"
-            tag="New"
-            tagStyle={{ background: 'rgba(26,138,107,.2)', color: 'var(--ten)' }}
-          />
-          <div style={{ paddingLeft: 16 }}>
-            {[
-              { label: 'Tournament', path: '/tennis'       },
-              { label: 'Leaderboard', path: '/tennis/leaderboard' },
-            ].map(({ label, path }) => (
-              <NavItem
-                key={path}
-                label={label}
-                path={path}
-                active={location.pathname === path}
-                dotColor="var(--ten)"
-                sub
-              />
-            ))}
-          </div>
-
-          {/* COMMUNITY */}
-          <NavSectionLabel>Community</NavSectionLabel>
-          <NavItem
-            label="My Group"
+            label="My Clubhouse"
             path="/clubhouse"
             active={location.pathname.startsWith('/clubhouse') && !location.search.includes('tab=frontrow')}
             dotColor="rgba(255,255,255,.55)"
@@ -282,6 +196,9 @@ export default function AppLayout({ children }) {
             dotColor="var(--gold)"
             sub
           />
+
+          {/* COMMUNITY */}
+          <NavSectionLabel>Community</NavSectionLabel>
           <NavItem
             label="Trophy Cabinet"
             path="/trophy"
@@ -304,7 +221,7 @@ export default function AppLayout({ children }) {
           />
         </div>
 
-        {/* Footer */}
+        {/* Footer — username */}
         <div style={{ padding: '10px 12px', borderTop: '1px solid rgba(255,255,255,.07)', display: 'flex', alignItems: 'center', gap: 9 }}>
           <div style={{ width: 26, height: 26, borderRadius: '50%', background: 'var(--accent)', display: 'grid', placeItems: 'center', fontFamily: 'Archivo Black, sans-serif', fontSize: 10, color: '#fff', flexShrink: 0 }}>
             {username ? username[0].toUpperCase() : 'M'}
@@ -328,7 +245,7 @@ export default function AppLayout({ children }) {
           WebkitOverflowScrolling: 'touch',
         }}
       >
-        {/* Mobile top bar — back affordance on nested routes, settings gear always */}
+        {/* Mobile top bar */}
         <div
           className="lg:hidden sticky top-0 z-40 flex items-center justify-between px-4"
           style={{ background: 'var(--ink)', borderBottom: '1px solid var(--rule)', minHeight: 44 }}
@@ -365,6 +282,18 @@ export default function AppLayout({ children }) {
           </Link>
         </div>
 
+        {/* Competition top bar — flat list of competition tabs (sport-colored) */}
+        <CompetitionTopBar
+          competitions={competitions}
+          pathname={location.pathname}
+        />
+
+        {/* Competition screen nav — screens within the active sport/competition */}
+        <CompetitionScreenNav
+          pathname={location.pathname}
+          paddockId={activePaddockId}
+        />
+
         <div className="animate-page-enter">
           {children}
         </div>
@@ -383,7 +312,7 @@ export default function AppLayout({ children }) {
         }}
       >
         <div className="flex items-stretch h-16">
-          {NAV_ITEMS.filter(item => !item.desktopOnly).map(({ key, label, mobileLabel, path, Icon, isLive }) => { // eslint-disable-line no-unused-vars
+          {MOBILE_NAV.map(({ key, label, path, Icon, isLive }) => { // eslint-disable-line no-unused-vars
             const isActive = location.pathname === path ||
               (path !== '/' && location.pathname.startsWith(path));
             const activeColor = isLive ? 'var(--danger)' : 'var(--cyan)';
@@ -417,10 +346,10 @@ export default function AppLayout({ children }) {
                   fontWeight:    600,
                   lineHeight:    1,
                 }}>
-                  {mobileLabel ?? label}
+                  {label}
                 </span>
 
-                {/* Live pulse dot (inactive state) */}
+                {/* Live pulse dot */}
                 {isLive && !isActive && (
                   <div
                     className="absolute top-2 right-[calc(50%-14px)] w-1.5 h-1.5 rounded-full animate-live-pulse"
@@ -428,7 +357,7 @@ export default function AppLayout({ children }) {
                   />
                 )}
 
-                {/* Unread notification badge (Clubhouse) */}
+                {/* Unread badge (Clubhouse) */}
                 {key === 'clubhouse' && unreadCount > 0 && (
                   <div
                     className="absolute top-1.5 right-[calc(50%-18px)] flex items-center justify-center rounded-full"

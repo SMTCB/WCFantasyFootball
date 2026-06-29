@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
-import { useClubhouse } from '../hooks/useClubhouse';
+import { useClubhouseContext } from '../context/ClubhouseContext';
 import { useSport } from '../context/SportContext';
 import { useAuth } from '../hooks/useAuth';
 import { useWallet } from '../hooks/useWallet';
@@ -659,6 +659,7 @@ export default function ClubhouseScreen() {
     competitions,
     feed,
     members,
+    metaStandings,
     notifications,
     unreadCount,
     loading,
@@ -671,7 +672,7 @@ export default function ClubhouseScreen() {
     getOwnerLinkableLeagues,
     markRead,
     markAllRead,
-  } = useClubhouse();
+  } = useClubhouseContext();
 
   const { wallet } = useWallet(user?.id);
 
@@ -921,6 +922,38 @@ export default function ClubhouseScreen() {
                   </div>
                   <div style={{ ...MONO, fontSize: 11, color: 'var(--mute)' }}>VIEW →</div>
                 </button>
+
+                {/* Meta standings — cross-sport leaderboard */}
+                {metaStandings.length > 0 && (
+                  <div style={{ marginTop: 24 }}>
+                    <div style={{ ...MONO, fontSize: 9, letterSpacing: '0.18em', color: 'var(--mute)', textTransform: 'uppercase', marginBottom: 10 }}>
+                      🏆 Meta Rankings
+                    </div>
+                    {metaStandings.slice(0, 6).map((entry, i) => (
+                      <div
+                        key={entry.user_id ?? i}
+                        style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 0', borderBottom: '1px solid var(--rule)' }}
+                      >
+                        <span style={{ ...MONO, fontSize: 10, fontWeight: 700, color: i < 3 ? 'var(--gold)' : 'var(--mute)', minWidth: 18 }}>
+                          {entry.rank ?? i + 1}
+                        </span>
+                        <span style={{ ...BODY, fontSize: 13, color: 'var(--paper)', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {entry.username ?? '—'}
+                        </span>
+                        {(entry.trophy_count ?? 0) > 0 && (
+                          <span style={{ ...MONO, fontSize: 10, color: 'var(--gold)', flexShrink: 0 }}>
+                            🏆 {entry.trophy_count}
+                          </span>
+                        )}
+                        {entry.total_points !== undefined && (
+                          <span style={{ ...MONO, fontSize: 11, fontWeight: 700, color: 'var(--paper)', flexShrink: 0 }}>
+                            {entry.total_points}
+                          </span>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
 

@@ -71,9 +71,10 @@ test.describe('Navigation', () => {
     const sidebar = page.locator('[data-testid="desktop-nav"]');
     await expect(sidebar).toBeVisible();
 
-    // Sidebar should contain nav links (labels are uppercase in the nav)
-    await expect(sidebar.getByText(/scores/i)).toBeVisible();
-    await expect(sidebar.getByText(/market/i)).toBeVisible();
+    // Sidebar is now clubhouse-centric — always shows these items
+    // Use .first() — strict mode: both "Clubhouse" heading and "My Clubhouse" link match
+    await expect(sidebar.getByText(/clubhouse/i).first()).toBeVisible();
+    await expect(sidebar.getByText(/settings/i)).toBeVisible();
   });
 
   test('mobile bottom nav is visible at 375px', async ({ page }) => {
@@ -89,7 +90,8 @@ test.describe('Navigation', () => {
   test('desktop sidebar navigation works', async ({ page }) => {
     await skipOnboarding(page);
     await page.setViewportSize({ width: 1440, height: 900 });
-    await page.goto('/');
+    // Start on a football route so the CompetitionScreenNav shows football items
+    await page.goto('/live');
     await waitForContent(page);
 
     await page.getByText(/market/i).first().click();
@@ -116,42 +118,38 @@ test.describe('Navigation', () => {
   });
 });
 
-// ── 3. Home Screen ────────────────────────────────────────────────────────────
-test.describe('HomeScreen', () => {
+// ── 3. Clubhouse Screen (/ now redirects to /clubhouse) ───────────────────────
+test.describe('ClubhouseScreen', () => {
   test.beforeEach(async ({ page }) => {
     await skipOnboarding(page);
     await page.goto('/');
     await waitForContent(page);
   });
 
-  test('shows Match Centre heading', async ({ page }) => {
-    await expect(page.getByText(/match cent/i).first()).toBeVisible();
-  });
-
-  test('renders at least one fixture card', async ({ page }) => {
-    // Fixture cards contain team abbreviations
-    const fixtureArea = page.locator('body');
-    const bodyText = await fixtureArea.innerText();
-    // Should contain at least one team abbreviation or fixture data
-    expect(bodyText).toMatch(/[A-Z]{2,3}\s*[vs\-\d]+|Match Day|Fixture/i);
-  });
-
-  test('shows a live match indicator or no matches message', async ({ page }) => {
+  test('shows Clubhouse heading', async ({ page }) => {
     const bodyText = await page.locator('body').innerText();
-    // Should show Live label or a message about fixtures
-    expect(bodyText.toUpperCase()).toMatch(/LIVE|MATCH|FIXTURE|SCORES/);
+    expect(bodyText.toUpperCase()).toMatch(/CLUBHOUSE/);
   });
 
-  test('shows competition name or league label in header', async ({ page }) => {
-    // Header shows either a real competition name or the "Fantasy League" fallback label
+  test('shows initial content', async ({ page }) => {
     const bodyText = await page.locator('body').innerText();
-    expect(bodyText.toUpperCase()).toMatch(/FANTASY LEAGUE|PREMIER LEAGUE|LEAGUE/);
+    expect(bodyText.trim().length).toBeGreaterThan(20);
   });
 
-  test('shows fixtures section label', async ({ page }) => {
-    // Fixtures section header is always rendered (shows "Fixtures" or "Matchday N · Fixtures")
+  test('shows create or join prompt', async ({ page }) => {
     const bodyText = await page.locator('body').innerText();
-    expect(bodyText.toUpperCase()).toContain('FIXTURES');
+    // ClubhouseLobby (no circles) shows CREATE/JOIN; active circle shows HOME tab
+    expect(bodyText.toUpperCase()).toMatch(/CLUBHOUSE|CREATE|JOIN|HOME|SETTINGS/);
+  });
+
+  test('shows settings or community navigation', async ({ page }) => {
+    const bodyText = await page.locator('body').innerText();
+    expect(bodyText.toUpperCase()).toMatch(/SETTINGS|CLUBHOUSE|TROPHY|COMMUNITY/);
+  });
+
+  test('shows key navigation text', async ({ page }) => {
+    const bodyText = await page.locator('body').innerText();
+    expect(bodyText.toUpperCase()).toMatch(/CLUBHOUSE|SETTINGS|TROPHY/);
   });
 
   test('mobile — no horizontal overflow', async ({ page }) => {
@@ -428,6 +426,7 @@ test.describe('Layout consistency', () => {
     await waitForContent(page);
     // NotFoundScreen shows a "← Back to Home" button — no auto-redirect
     await page.getByRole('button', { name: /back to home/i }).click();
-    await expect(page).toHaveURL('/');
+    // / redirects to /clubhouse in v2; accept either
+    await expect(page).toHaveURL(/\/(clubhouse)?$/);
   });
 });

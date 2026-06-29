@@ -19,12 +19,12 @@ import { useOnboarding } from './hooks/useOnboarding';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 import { ToastProvider } from './components/Toast';
 import { ClubhouseNotifProvider } from './context/ClubhouseNotifProvider';
+import { ClubhouseProvider } from './context/ClubhouseProvider';
 
 // ── Route-level code splitting (LOW-1) ───────────────────────────────────────
 // Each screen is loaded only when its route is first visited. This shrinks the
 // initial JS bundle and eliminates the shared-module surface that causes
 // Rolldown TDZ crashes in production (CODE-1).
-const MultiSportHomeScreen  = lazy(() => import('./screens/MultiSportHomeScreen'));
 const TrophyCabinetScreen   = lazy(() => import('./screens/TrophyCabinetScreen'));
 const HomeScreen            = lazy(() => import('./screens/HomeScreen'));
 const SquadScreen           = lazy(() => import('./screens/SquadScreen'));
@@ -116,7 +116,7 @@ function AppRoutes() {
             <ProtectedRoute>
               <AppLayout>
                 <Routes>
-                  <Route path="/"                 element={<ErrorBoundary screen="MultiSportHome"><MultiSportHomeScreen /></ErrorBoundary>} />
+                  <Route path="/"                 element={<Navigate to="/clubhouse" replace />} />
                   <Route path="/scores"           element={<Navigate to="/live" replace />} />
                   <Route path="/squad"            element={<ErrorBoundary screen="Squad"><SquadScreen /></ErrorBoundary>} />
                   <Route path="/league"           element={<ErrorBoundary screen="League"><LeagueScreen /></ErrorBoundary>} />
@@ -172,11 +172,13 @@ export default function App() {
     <AuthProvider>
       <SportProvider>
         <ClubhouseNotifProvider>
-          <Router>
-            <ToastProvider>
-              <AppRoutes />
-            </ToastProvider>
-          </Router>
+          <ClubhouseProvider>
+            <Router>
+              <ToastProvider>
+                <AppRoutes />
+              </ToastProvider>
+            </Router>
+          </ClubhouseProvider>
         </ClubhouseNotifProvider>
       </SportProvider>
     </AuthProvider>
