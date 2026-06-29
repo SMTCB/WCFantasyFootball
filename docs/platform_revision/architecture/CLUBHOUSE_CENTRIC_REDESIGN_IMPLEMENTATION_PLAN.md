@@ -64,7 +64,7 @@ All three are bespoke tables — structurally similar, parameterizable. Phase C 
 ### Schema groundwork already in place
 
 - **Migration 215** added nullable `circle_id uuid REFERENCES circles(id)` to `leagues`, `paddocks`, `player_boxes`; backfilled from junction tables; updated the 3 creation RPCs to write `circle_id` directly; added the `create_league` 6-param overload. Applied to production 2026-06-28.
-- **Next migration number on v2: `216_`.**
+- **Next migration number on v2: `218_`.**
 
 ### Competition surfaces (Phase C extracts a shared header from these)
 
@@ -89,7 +89,7 @@ All three are **bespoke** grid/flex tables with rank + name + sport-specific poi
 ### Schema groundwork already in place
 
 - **Migration 215** added nullable `circle_id uuid REFERENCES circles(id)` to `leagues`, `paddocks`, `player_boxes`; backfilled from junction tables; updated the 3 creation RPCs to write `circle_id` directly; added the `create_league` 6-param overload. Applied to production 2026-06-28.
-- **Next migration number on v2: `216_`.**
+- **Next migration number on v2: `218_`.**
 
 ---
 
@@ -225,7 +225,7 @@ new `competition/CompetitionResultsHeader.jsx`; `LeagueDetailView.jsx`, `F1Stand
 | ~~1~~ | ~~`ClubhouseProvider` + merge homes (`/` → Clubhouse Overview, delete `MultiSportHomeScreen`)~~ | A | ✅ Shipped in #671 |
 | ~~2~~ | ~~Sidebar rebuild (remove SPORTS section, add Clubhouse switcher + Tier-1)~~ | A | ✅ Shipped in #671 |
 | ~~3~~ | ~~`CompetitionTopBar` + `CompetitionScreenNav` + mobile parity~~ | A | ✅ Shipped in #671 |
-| **4** | `NewCompetitionFlow` + `+` wiring + `refreshCompetitions` + migration files 216/217 committed | **B** | ✅ Frontend done — pending PR merge |
+| ~~4~~ | ~~`NewCompetitionFlow` + `+` wiring + `refreshCompetitions` + migration files 216/217 committed~~ | B | ✅ Done — PR #675 |
 | **5** | Run migration 216 (row 17, Supabase-linked PC) + run migration 217 post orphan-check (row 18) + `useActiveCompetition` location model collapse | **B** | ⬜ Next (requires Supabase-linked PC for migrations) |
 | 6 | `CompetitionResultsHeader` extraction + adopt in 3 sports | C | ⬜ |
 | 7 | Taxonomy + visual polish | D | ⬜ |

@@ -281,7 +281,7 @@ These require a human decision before the relevant sprint can continue.
 
 ## Cross-Cutting Rules (Every Sprint)
 
-1. **Migrations are append-only.** Next free number on v2: `215_`. Never edit an applied migration.
+1. **Migrations are append-only.** Next free number on v2: `218_`. Never edit an applied migration.
 2. **Backup before every migration.** Docker unavailable — `SELECT` affected rows and save to `backups/*.json` first.
 3. **Football stays green.** `platform.spec.js` + manual smoke pass after any sprint touching shared infrastructure.
 4. **Value moves only through `SECURITY DEFINER` RPCs.** Clients never write directly to coin or budget columns.
@@ -295,4 +295,4 @@ These require a human decision before the relevant sprint can continue.
 
 ---
 
-Last Updated: **2026-06-28** (PR #666: UX-3/5/7 + ARCH-1/2/3 complete; migration 215 committed, pending DB apply; next migration `216_`)
+Last Updated: **2026-06-29** (PR #675: Phase B frontend complete — NewCompetitionFlow, + button wired, refreshCompetitions; migrations 216/217 committed, pending Supabase-linked PC; next migration `218_`)
