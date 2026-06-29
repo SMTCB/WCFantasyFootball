@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { useClubhouse } from '../hooks/useClubhouse';
 import { useSport } from '../context/SportContext';
 import { useAuth } from '../hooks/useAuth';
@@ -648,6 +648,7 @@ function CircleSelector({ circles, activeCircleId, onChange }) {
 export default function ClubhouseScreen() {
   const { circleId: routeCircleId } = useParams();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { user } = useAuth();
   const { setActiveSport, setActivePaddockId } = useSport();
   const {
@@ -674,7 +675,7 @@ export default function ClubhouseScreen() {
 
   const { wallet } = useWallet(user?.id);
 
-  const [tab, setTab] = useState('home');
+  const [tab, setTab] = useState(() => searchParams.get('tab') ?? 'home');
   const [copied, setCopied] = useState(false);
 
   // Honour explicit URL param
