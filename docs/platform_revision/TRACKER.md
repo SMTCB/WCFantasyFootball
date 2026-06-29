@@ -24,11 +24,15 @@
 | **2** | Tennis Module (Player's Box, roster picks, Ace Cards, ATP Finals) | ✅ Done | Sprints T-0 through T-4 (PRs #617–#620, #625) |
 | **3A** | Buyout hygiene batch 2 (provider adapter, containerisation, envs) | ✅ Done | PRs #634–#636 |
 | **3B** | v2 integration & deploy | 🔄 In progress | Code quality gates ✅ — smoke tests + deploy remaining |
+| **R** | Clubhouse-Centric Redesign (IA/UX) | 🔄 Planned — doc complete | Full A–D redesign approved 2026-06-29. Design: [CLUBHOUSE_CENTRIC_REDESIGN.md](architecture/CLUBHOUSE_CENTRIC_REDESIGN.md). See [workstream](#clubhouse-centric-redesign-workstream) below. |
 
 **Next session options (choose one):**
+- **Redesign Phase A** — Shell & IA (sidebar spine + top-bar competition tabs + single home). See [workstream](#clubhouse-centric-redesign-workstream).
 - **Phase 3B smoke tests** → deploy sequence — see [Phase 3B checklist](#phase-3b-pre-merge-checklist) below
 - **DD items** — TEST-1 (Vitest coverage), CODE-3 (error boundaries), OPS-2 (Sentry)
 - **Row 11** — Add `VITE_SENTRY_DSN` to Vercel (can be done from any machine)
+
+**Session 2026-06-29 (Clubhouse-centric redesign — assessment + design):** Product assessment of the multi-sport platform's "common vision." Diagnosed 6 concrete causes of the "fantasy-sports frankenstein" feel: (1) sidebar morphs per sport (`activeSport`-driven `FOOTBALL_NAV`/`buildF1Nav`/Tennis nav swap), (2) two competing home screens (`/` MultiSportHome + `/clubhouse`), Clubhouse buried under COMMUNITY, (3) `circle_id` nullable / competitions born orphaned, (4) two disconnected state models (`SportContext` ⊥ `useClubhouse`), (5) three reinvented sport lobbies, (6) taxonomy drift (My Group/Clubhouse/circle). Agreed unifying concept: **Clubhouse is the room, sports are tables in it** — every competition always belongs to a clubhouse (structural invariant), shared 3-tier spine (Tier 1 clubhouse surfaces = identical / Tier 2 results header = same skeleton / Tier 3 unit = sport divergence). Nav model: **sidebar = clubhouse spine (sport-agnostic, never morphs), top bar = competition tabs (named comps, sport-colored)**. User approved **full A–D redesign**. Two docs written, no code touched: [CLUBHOUSE_CENTRIC_REDESIGN.md](architecture/CLUBHOUSE_CENTRIC_REDESIGN.md) (vision/why-what) + [CLUBHOUSE_CENTRIC_REDESIGN_IMPLEMENTATION_PLAN.md](architecture/CLUBHOUSE_CENTRIC_REDESIGN_IMPLEMENTATION_PLAN.md) (self-contained phase-by-phase build plan with current-state reference, cross-cutting rules, per-phase functional+technical specs, acceptance criteria, and an 8-PR breakdown — written to be executed cold in dedicated sessions). Key finding embedded in the plan: `useClubhouse` is a hook not a provider (MultiSportHomeScreen + ClubhouseScreen double-fetch) → Phase A promotes it to `ClubhouseProvider`; football screens are global routes while F1/tennis are id-scoped → secondary screen strip is built per selected competition's sport; `get_clubhouse_competitions` stubs tennis as `[]` → Phase B wires it (migration 216); `circle_id NOT NULL` is migration 217 (approval-gated, orphan-backfill first). Next: Redesign Phase A (Shell & IA), PR 1.
 
 **Session 2026-06-29:** v2 ← main sync (PRs #650–653, #658, #667, #668) — 3 merge conflicts resolved (BACKLOG.md header, MarketScreen Kit Light color kept, generate-frontpage-edition chat `is_deleted.is.null` bug fix taken). Full codebase audit confirmed all phases are feature-complete with no implementation gaps. Two Clubhouse nav bugs fixed (PR #669): (1) creating a Clubhouse bounced back to empty lobby — root cause was background `fetchMyCircles()` in `createCircle` racing with RLS visibility, returning empty, and calling `setActiveCircleId(null)` to wipe the optimistic state; fixed by removing the background fetch and guarding the `setActiveCircleId(null)` branch in `fetchMyCircles`; (2) The FrontRow had no sidebar entry — added sub-NavItem linking to `/clubhouse?tab=frontrow`; `ClubhouseScreen` now reads `?tab=` query param on mount. Next migration: `216_`.
 
@@ -81,6 +85,35 @@
 **Next migration on v2:** `216_`
 
 **Session 2026-06-28 (migration 215 applied):** `215_clubhouse_centric_model.sql` applied to prod from the Supabase-linked PC (this session's local `v2` was 4 commits behind `origin/v2` — pulled first). Backed up `leagues`/`paddocks`/`player_boxes` id+name snapshots before running (`backups/*_pre_migration215_20260628_231738.json`). Verified: `circle_id` column live on all 3 tables (NULL on existing rows — no junction-table data to backfill yet); `create_league` 6-arg overload, `create_paddock` (2-arg), `create_player_box` (3-arg) all updated and present in `pg_proc`.
+
+---
+
+## Clubhouse-Centric Redesign Workstream
+
+**Approved 2026-06-29 (full A–D). Design doc:** [architecture/CLUBHOUSE_CENTRIC_REDESIGN.md](architecture/CLUBHOUSE_CENTRIC_REDESIGN.md) (why/what). **Build plan:** [architecture/CLUBHOUSE_CENTRIC_REDESIGN_IMPLEMENTATION_PLAN.md](architecture/CLUBHOUSE_CENTRIC_REDESIGN_IMPLEMENTATION_PLAN.md) (phase-by-phase how, self-contained for dedicated sessions, 8-PR breakdown).
+
+**Concept:** the Clubhouse is the room, sports are tables in it. Sidebar = clubhouse spine (never morphs); top bar = named competition tabs (sport-colored). Shared 3-tier spine: Tier 1 clubhouse surfaces (identical) → Tier 2 results header (same skeleton) → Tier 3 unit (sport divergence).
+
+Sequenced so the *feel* changes first (Phase A) before deeper data/state work.
+
+### Phase A — Shell & IA (frontend, no schema)
+- [ ] Sidebar becomes the sport-agnostic clubhouse spine + clubhouse switcher; remove `activeSport`-driven nav swapping
+- [ ] Top bar = competition tabs (one per active competition in the clubhouse, sport-colored, named comps not sport categories); secondary strip for competition screens
+- [ ] `/` → active clubhouse Overview; merge `MultiSportHomeScreen` into Clubhouse Overview (retire duplicate home)
+
+### Phase B — Entry unification + state/schema
+- [ ] Single "+ New competition" flow launched from clubhouse (sport picker, auto-sets `circle_id`); retire the 3 lobbies as user flows
+- [ ] Collapse `SportContext` + `useClubhouse` active-IDs into one location model `{ clubhouseId, competitionId, sport }`
+- [ ] Migration 216: wire tennis into `get_clubhouse_competitions` (currently stubbed `[]`)
+- [ ] Migration 217: `circle_id NOT NULL` on `leagues`/`paddocks`/`player_boxes` (⚠️ approval gate — backup + orphan-check first, no Docker → SELECT to `backups/*.json`)
+
+### Phase C — Shared spine template
+- [ ] Extract `CompetitionResultsHeader` (Tier 2) as one shared component
+- [ ] Refactor football / F1 / tennis competition views onto Tier 2 + Tier 3 (behavior-preserving)
+
+### Phase D — Taxonomy & polish
+- [ ] Naming pass: "Clubhouse" everywhere (retire "My Group"/"circle" in UI); "Competition" on shared surfaces
+- [ ] Top-nav-bar visual treatment from the reference mock (Kit Light + sport accent system)
 
 ---
 
