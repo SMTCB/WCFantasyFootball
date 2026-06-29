@@ -48,6 +48,7 @@ export default defineConfig({
       name: 'desktop-chrome',
       use: {
         ...devices['Desktop Chrome'],
+        channel: 'chrome',
         viewport: { width: 1440, height: 900 },
       },
     },
@@ -55,6 +56,7 @@ export default defineConfig({
       name: 'mobile-chrome',
       use: {
         ...devices['Pixel 5'],
+        channel: 'chrome',
         viewport: { width: 375, height: 812 },
       },
     },
