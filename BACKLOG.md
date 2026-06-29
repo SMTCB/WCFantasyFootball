@@ -1,12 +1,20 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-06-29 (v2: merged main PRs #650–653 #658 #667 #668; dry-run UX fixes PR #665; UX-3/5/7 + ARCH-1/2/3 PR #666)  
+**Last Updated**: 2026-06-29 (v2: merged main PRs #650–653 #658 #667 #668; Clubhouse nav bugs fixed PR #669)  
 **E2E Test Suite**: `platform.spec.js` (84 tests × 1 browser config) passing ✅ — 84/84 on v2 branch 2026-06-23  
 **Full Playbook Run**: `E2E_TEST_PLAYBOOK.md` v2.0 — all flows confirmed  
 **🟢 LAUNCH READY**: No critical (P0/P1) bugs open. All game mechanics functional. WC kick-off 2026-06-11.  
 **Live App**: https://wc-fantasy-football.vercel.app  
 **WC Kick-off**: 2026-06-11 19:00 UTC (Mexico vs South Africa)  
 **Supabase PostgREST max_rows**: 10,000 (raised from default 1,000 — 2026-06-08)
+
+---
+
+## ✅ v2 Clubhouse nav bugs (2026-06-29) — PR #669
+
+**Clubhouse creation bounce-back** — after creating a Clubhouse the user was sent back to the empty lobby. Root cause: `createCircle` called `fetchMyCircles()` in the background; that fetch raced with RLS visibility, returned an empty circle list, and called `setActiveCircleId(null)`, wiping the optimistic state. Fixed: removed the background fetch from `createCircle` (optimistic update is sufficient); removed the `else { setActiveCircleId(null) }` branch from `fetchMyCircles` so it never clears the active circle when the fetch returns empty.
+
+**The FrontRow missing from sidebar** — the newspaper tab existed inside ClubhouseScreen but had no direct sidebar entry. Fixed: added a "The FrontRow" sub-NavItem in `AppLayout.jsx` linking to `/clubhouse?tab=frontrow`; `ClubhouseScreen` now reads the `?tab=` query param on mount via a lazy `useState` initialiser.
 
 ---
 
