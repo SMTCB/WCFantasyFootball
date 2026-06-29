@@ -85,10 +85,10 @@
 | 14 | ✅ | Deploy `sync-player-status` (Phase 1D-A HMAC fix) | `npx supabase functions deploy sync-player-status --project-ref sssmvihxtqtohisghjet` |
 | 15 | ✅ | Deploy `sync-players` (Phase 1D-A HMAC fix) | `npx supabase functions deploy sync-players --project-ref sssmvihxtqtohisghjet` |
 | 16 | ⬜ | F1 data migration — copy FantasyF1 DB contents into v2 tables | Manual — see [F1_MODULE_IMPLEMENTATION_PLAN.md](modules/F1_MODULE_IMPLEMENTATION_PLAN.md) → "Data Migration from FantasyF1" section. Requires Supabase-linked PC. |
-| 17 | ⬜ | Apply migration 216 — wire tennis into `get_clubhouse_competitions` | `npx supabase db query --linked --file supabase/migrations/216_wire_tennis_competitions.sql` — replaces hardcoded `'[]'::json` tennis branch with live `circle_player_boxes` junction query |
-| 18 | ⚠️ GATE | Apply migration 217 — `circle_id NOT NULL` on leagues/paddocks/player_boxes | **Pre-flight required first:** `SELECT id, name FROM leagues WHERE circle_id IS NULL;` + same for `paddocks` + `player_boxes`. All must return 0 rows. Save results to `backups/orphans_pre_217_*.json`. Then: `npx supabase db query --linked --file supabase/migrations/217_circle_id_not_null.sql` |
+| 17 | ✅ | Apply migration 216 — wire tennis into `get_clubhouse_competitions` | Applied 2026-06-29. `npx supabase db query --linked --file supabase/migrations/216_wire_tennis_competitions.sql` — replaces hardcoded `'[]'::json` tennis branch with live `circle_player_boxes` junction query. Pure function replace, zero data touched. |
+| 18 | 🛑 BLOCKED | Apply migration 217 — `circle_id NOT NULL` on leagues/paddocks/player_boxes | **Pre-flight run 2026-06-29 — orphans found, NOT cleared for apply.** `leagues`: 18 NULL rows (7 are real live pilot leagues: Mundial do Eder, Mundial Gordo Vai a Baliza, RANKS FC World Cup Fantasy, Draft Mundial 26, Munaial '26, FIXO DRAFT MUNDIAL 26, Miami WC Fantasy Testers; remaining 11 are test/E2E leftovers). `paddocks`: 1 NULL (`TEST_1_F1`, test only). `player_boxes`: 1 NULL (`TEST_WIMBLEDON_1`, test only). Snapshot saved: `backups/orphans_pre_217_20260629.json`. **User decision 2026-06-29: hold off entirely — do not run 217, do not touch any orphan rows (real or test) until there's a clubhouse-mapping plan for the 7 real leagues.** Do not re-attempt without a fresh explicit go-ahead that addresses those 7 leagues specifically. |
 
-**Rows 10, 11, 16, 17, 18 pending** — 10/11 not Supabase actions; 16 blocked on source access; 17/18 need Supabase-linked PC (18 also needs orphan pre-flight + explicit approval).
+**Rows 10, 11, 16 pending** — not Supabase actions (10/11) or blocked on source access (16). **Row 17 done. Row 18 blocked on product decision** — see note above, not just a "need linked PC" item anymore.
 
 **Next migration on v2:** `218_`
 
@@ -116,8 +116,8 @@ Sequenced so the *feel* changes first (Phase A) before deeper data/state work.
 - [x] Single "+ New competition" flow (`NewCompetitionFlow.jsx`) — portal modal, sport picker, per-sport create form, join-by-code; `+` button wired in `CompetitionTopBar`; self-portals to `document.body` (createPortal rule). Props-only design (no local hook imports from AppLayout's dep tree — TDZ safe)
 - [x] `refreshCompetitions()` added to `useClubhouse` return — calls `fetchCircleData(activeCircleId)`; consumed in AppLayout to refresh top bar after create/join
 - [ ] Collapse `SportContext` + `useClubhouse` active-IDs into one `useActiveCompetition()` location model — deferred to Phase B follow-up PR
-- [ ] Migration 216: wire tennis into `get_clubhouse_competitions` (file committed: `216_wire_tennis_competitions.sql`) — **run row 17 in pending DB table above**
-- [ ] Migration 217: `circle_id NOT NULL` (file committed: `217_circle_id_not_null.sql`) — **run row 18 after orphan pre-flight — approval-gated**
+- [x] Migration 216: wire tennis into `get_clubhouse_competitions` — applied 2026-06-29 (row 17)
+- [ ] Migration 217: `circle_id NOT NULL` — **BLOCKED**, see row 18: 7 real pilot leagues have no clubhouse, user said hold off until there's a mapping plan for them
 
 ### Phase C — Shared spine template
 - [ ] Extract `CompetitionResultsHeader` (Tier 2) as one shared component
