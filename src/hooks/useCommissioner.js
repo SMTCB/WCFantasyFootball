@@ -168,7 +168,7 @@ export function useCommissioner(leagueId, tournamentId, onLeagueUpdated) {
     });
   }), [commAction, leagueId]);
 
-  // ── Fetch open/unresolved bets — declared first so createBetDirect can use it ──
+  // ── Fetch bets available for commissioner action (open + resolved for override) ──
   const fetchOpenBets = useCallback(async () => {
     if (!leagueId) return;
     setResolutionBetsLoading(true);
@@ -177,7 +177,7 @@ export function useCommissioner(leagueId, tournamentId, onLeagueUpdated) {
         .from('bet_instances')
         .select('*')
         .eq('league_id', leagueId)
-        .not('status', 'in', '("resolved","cancelled")')
+        .not('status', 'in', '("cancelled")')
         .order('created_at', { ascending: false });
       if (error) throw error;
       setOpenBets(data || []);
@@ -315,17 +315,17 @@ export function useCommissioner(leagueId, tournamentId, onLeagueUpdated) {
     if (data?.ok === false) {
       const msg = data.error === 'BET_STILL_OPEN'   ? 'Bet deadline has not passed yet — close the bet first.'
                 : data.error === 'UNAUTHORIZED'     ? 'Only the commissioner can resolve bets.'
-                : data.error === 'ALREADY_RESOLVED' ? 'This bet is already resolved.'
                 : (data.error || 'Failed to resolve bet');
       throw new Error(msg);
     }
     const winners = data?.winners ?? 0;
     const noWinner = answers.length === 0;
+    const wasOverride = selectedBetForResolution?.status === 'resolved';
     setCommMsg({
       type: 'ok',
       text: noWinner
-        ? `Resolved with no winner — ${data?.total ?? 0} picks graded, 0 pts awarded.`
-        : `Resolved — ${winners} manager${winners !== 1 ? 's' : ''} correct out of ${data?.total ?? 0}.`,
+        ? `${wasOverride ? 'Override applied' : 'Resolved'} — no winner — ${data?.total ?? 0} picks graded.`
+        : `${wasOverride ? 'Override applied' : 'Resolved'} — ${winners} manager${winners !== 1 ? 's' : ''} correct out of ${data?.total ?? 0}.`,
     });
     setBetResolutionAnswers([]);
     setSelectedBetForResolution(null);

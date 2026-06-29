@@ -43,11 +43,15 @@ const FALLBACK_POINTS = {
 };
 
 const FALLBACK_UNIVERSAL = {
-  minute_per_90: 1,
-  own_goal:      -2,
-  yellow_card:   -1,
-  red_card:      -3,
-  penalty_missed: -1,
+  minute_per_90:    1,
+  own_goal:         -2,
+  yellow_card:      -1,
+  red_card:         -3,
+  penalty_missed:   -1,
+  // Penalty shootout — scored differently from regular in-match penalties
+  shootout_scored:  1,
+  shootout_missed:  -1,
+  shootout_saved:   0.5,   // GK only (applied per save, not per miss — ingest sets correct count)
 };
 
 // ─── Load scoring rules from DB ────────────────────────────────────────────────
@@ -140,6 +144,11 @@ function scorePlayer(stats, position, POINTS, UNIVERSAL) {
   pts += (stats.shots_on_target    ?? 0) * (rules.shot_on_target     ?? 0);
   pts += (stats.big_chances_created ?? 0) * (rules.big_chance_created ?? 0);
 
+  // Penalty shootout — separate from regular penalty scoring
+  pts += (stats.shootout_scored ?? 0) * (UNIVERSAL.shootout_scored ?? 0);
+  pts += (stats.shootout_missed ?? 0) * (UNIVERSAL.shootout_missed ?? 0);
+  pts += (stats.shootout_saved  ?? 0) * (UNIVERSAL.shootout_saved  ?? 0);
+
   return Math.round(pts * 100) / 100;
 }
 
@@ -165,6 +174,12 @@ function buildBreakdown(stats, pos, POINTS, UNIVERSAL) {
     key_passes:        (stats.key_passes         ?? 0) * (rules.key_pass           ?? 0),
     shots_on_target:   (stats.shots_on_target    ?? 0) * (rules.shot_on_target     ?? 0),
     big_chances:       (stats.big_chances_created ?? 0) * (rules.big_chance_created ?? 0),
+    // Penalty shootout
+    ...(((stats.shootout_scored ?? 0) || (stats.shootout_missed ?? 0) || (stats.shootout_saved ?? 0)) ? {
+      shootout_scored: (stats.shootout_scored ?? 0) * (UNIVERSAL.shootout_scored ?? 0),
+      shootout_missed: (stats.shootout_missed ?? 0) * (UNIVERSAL.shootout_missed ?? 0),
+      shootout_saved:  (stats.shootout_saved  ?? 0) * (UNIVERSAL.shootout_saved  ?? 0),
+    } : {}),
   };
 }
 
