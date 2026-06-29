@@ -271,9 +271,16 @@ export default function AppLayout({ children }) {
           <NavItem
             label="My Group"
             path="/clubhouse"
-            active={location.pathname.startsWith('/clubhouse')}
+            active={location.pathname.startsWith('/clubhouse') && !location.search.includes('tab=frontrow')}
             dotColor="rgba(255,255,255,.55)"
             badge={unreadCount}
+          />
+          <NavItem
+            label="The FrontRow"
+            path="/clubhouse?tab=frontrow"
+            active={location.pathname.startsWith('/clubhouse') && location.search.includes('tab=frontrow')}
+            dotColor="var(--gold)"
+            sub
           />
           <NavItem
             label="Trophy Cabinet"

@@ -35,9 +35,9 @@ export function useClubhouse() {
       if (circles.length > 0) {
         const stillExists = circles.some(c => c.id === activeCircleId);
         if (!stillExists) setActiveCircleId(circles[0].id);
-      } else {
-        setActiveCircleId(null);
       }
+      // Don't clear activeCircleId when circles returns empty — the row may not
+      // be RLS-visible yet immediately after creation (race with optimistic update).
     } catch (e) {
       setError(e.message);
     } finally {
@@ -134,8 +134,6 @@ export function useClubhouse() {
     };
     setMyCircles(prev => [optimistic, ...prev]);
     setActiveCircleId(data.circle_id);
-    // Background refresh — gets the authoritative server row without triggering loading
-    fetchMyCircles().catch(() => {});
     return data;
   }, [fetchMyCircles, setActiveCircleId]);
 
