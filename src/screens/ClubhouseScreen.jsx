@@ -10,6 +10,12 @@ import ClubhouseFrontpage from '../components/ClubhouseFrontpage';
 const MONO = { fontFamily: 'JetBrains Mono, monospace' };
 const HEAD = { fontFamily: 'Archivo Black, sans-serif' };
 const BODY = { fontFamily: 'Archivo, sans-serif' };
+const AVATAR_COLORS = ['var(--accent)', 'var(--f1)', 'var(--ten)', 'var(--gold)', '#7C3AED', '#4B5568'];
+const SPORT_META = {
+  football: { label: 'Football', emoji: '⚽', color: 'var(--accent)' },
+  f1:       { label: 'F1',       emoji: '🏁', color: 'var(--f1)'    },
+  tennis:   { label: 'Tennis',   emoji: '🎾', color: 'var(--ten)'   },
+};
 
 function timeAgo(isoString) {
   const diff = (Date.now() - new Date(isoString)) / 1000;
@@ -90,7 +96,7 @@ function ClubhouseLobby({ createCircle, joinCircleByCode }) {
           YOUR CLUBHOUSE
         </h2>
         <p style={{ ...BODY, fontSize: 14, color: 'var(--mute)', margin: 0 }}>
-          A shared space for your group — chat, compete, and bet across every sport.
+          Your shared space — chat, compete, and bet across every sport.
         </p>
       </div>
 
@@ -151,32 +157,59 @@ function ClubhouseLobby({ createCircle, joinCircleByCode }) {
   );
 }
 
-// ── Competition cards ─────────────────────────────────────────────────────────
-function SportSection({ label, emoji, items, onEnter }) {
-  if (items.length === 0) return null;
+// ── Unified competition cards (all sports, one grid) ─────────────────────────
+function AllCompetitions({ competitions, onEnter }) {
+  const allComps = [
+    ...(competitions.football ?? []).map(c => ({ ...c, sport: 'football' })),
+    ...(competitions.f1      ?? []).map(c => ({ ...c, sport: 'f1'       })),
+    ...(competitions.tennis  ?? []).map(c => ({ ...c, sport: 'tennis'   })),
+  ];
+  if (allComps.length === 0) return null;
   return (
     <div style={{ marginBottom: 24 }}>
-      <div style={{ ...MONO, fontSize: 9, letterSpacing: '0.18em', color: 'var(--mute)', textTransform: 'uppercase', marginBottom: 10 }}>
-        {emoji} {label}
+      <div style={{ ...MONO, fontSize: 9, letterSpacing: '0.18em', color: 'var(--mute)', textTransform: 'uppercase', marginBottom: 12 }}>
+        COMPETITIONS
       </div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-        {items.map(item => (
-          <button
-            key={item.id}
-            onClick={() => onEnter(item)}
-            style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 14px', background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 8, cursor: 'pointer', textAlign: 'left', width: '100%' }}
-          >
-            <div>
-              <div style={{ ...HEAD, fontSize: 14, color: 'var(--paper)' }}>{item.name}</div>
-              {item.format && (
-                <div style={{ ...MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '0.1em', marginTop: 2, textTransform: 'uppercase' }}>
-                  {item.format}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: 10 }}>
+        {allComps.map(item => {
+          const meta = SPORT_META[item.sport] ?? SPORT_META.football;
+          return (
+            <button
+              key={`${item.sport}-${item.id}`}
+              onClick={() => onEnter(item, item.sport)}
+              style={{
+                display: 'flex', flexDirection: 'column',
+                background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 8,
+                overflow: 'hidden', cursor: 'pointer', textAlign: 'left', padding: 0,
+              }}
+            >
+              {/* Sport-coloured accent bar */}
+              <div style={{ height: 3, background: meta.color, flexShrink: 0 }} />
+              <div style={{ padding: '13px 15px', flex: 1, display: 'flex', flexDirection: 'column' }}>
+                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8, marginBottom: 6 }}>
+                  <div style={{ ...HEAD, fontSize: 14, color: 'var(--paper)', lineHeight: 1.25 }}>{item.name}</div>
+                  <span style={{
+                    flexShrink: 0,
+                    ...MONO, fontSize: 8, fontWeight: 700, letterSpacing: '0.1em',
+                    color: meta.color,
+                    background: `color-mix(in srgb, ${meta.color} 12%, transparent)`,
+                    padding: '2px 8px', borderRadius: 100, textTransform: 'uppercase',
+                  }}>
+                    {meta.emoji} {meta.label}
+                  </span>
                 </div>
-              )}
-            </div>
-            <span style={{ ...MONO, fontSize: 10, color: 'var(--accent)', letterSpacing: '0.1em' }}>ENTER →</span>
-          </button>
-        ))}
+                {item.format && (
+                  <div style={{ ...MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+                    {item.format}
+                  </div>
+                )}
+                <div style={{ marginTop: 'auto', paddingTop: 8, display: 'flex', justifyContent: 'flex-end' }}>
+                  <span style={{ ...MONO, fontSize: 10, color: 'var(--mute)', letterSpacing: '0.08em' }}>ENTER →</span>
+                </div>
+              </div>
+            </button>
+          );
+        })}
       </div>
     </div>
   );
@@ -710,6 +743,8 @@ export default function ClubhouseScreen() {
   }
 
   const isOwner = activeCircle?.role === 'owner';
+  const totalComps  = (competitions.football?.length ?? 0) + (competitions.f1?.length ?? 0) + (competitions.tennis?.length ?? 0);
+  const activeSports = [(competitions.football?.length ?? 0) > 0, (competitions.f1?.length ?? 0) > 0, (competitions.tennis?.length ?? 0) > 0].filter(Boolean).length;
 
   const MAIN_TABS = [
     { key: 'home',      label: 'HOME'           },
@@ -726,36 +761,83 @@ export default function ClubhouseScreen() {
     <div style={{ minHeight: '100vh', background: 'var(--bg)', paddingBottom: 32 }}>
 
       {/* Header */}
-      <div style={{ background: 'var(--shell)', padding: '24px 20px 20px' }}>
-        <div style={{ ...MONO, fontSize: 10, letterSpacing: '0.18em', color: 'var(--on-shell-dim)', textTransform: 'uppercase', marginBottom: 6 }}>
-          🏠 The Clubhouse
+      <div style={{ background: 'var(--shell)', padding: '20px 20px 18px' }}>
+        <div style={{ ...MONO, fontSize: 10, letterSpacing: '0.18em', color: 'var(--on-shell-dim)', textTransform: 'uppercase', marginBottom: 8 }}>
+          🏠 THE CLUBHOUSE
         </div>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
-          <div>
-            <h1 style={{ ...HEAD, fontSize: 26, color: 'var(--on-shell)', margin: 0, lineHeight: 1.1 }}>
+          {/* Left: name + member avatars */}
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <h1 style={{ ...HEAD, fontSize: 24, color: 'var(--on-shell)', margin: 0, lineHeight: 1.1 }}>
               {activeCircle ? activeCircle.name.toUpperCase() : 'CLUBHOUSE'}
             </h1>
             {activeCircle && (
-              <div style={{ ...MONO, fontSize: 10, color: 'var(--on-shell-dim)', letterSpacing: '0.1em', marginTop: 6 }}>
-                {members.length} {members.length === 1 ? 'MEMBER' : 'MEMBERS'}
-                {activeCircle.is_public && <span style={{ marginLeft: 8, color: 'var(--positive)' }}>· PUBLIC</span>}
+              <div style={{ display: 'flex', alignItems: 'center', marginTop: 10 }}>
+                {members.slice(0, 5).map((m, i) => (
+                  <div
+                    key={m.user_id}
+                    style={{
+                      width: 24, height: 24, borderRadius: '50%',
+                      background: AVATAR_COLORS[i % AVATAR_COLORS.length],
+                      display: 'grid', placeItems: 'center',
+                      fontFamily: 'Archivo Black, sans-serif', fontSize: 9, color: '#fff',
+                      border: '2px solid var(--shell)',
+                      marginRight: -6, position: 'relative', zIndex: 5 - i,
+                      flexShrink: 0,
+                    }}
+                  >
+                    {(m.username?.[0] ?? '?').toUpperCase()}
+                  </div>
+                ))}
+                {members.length > 5 && (
+                  <div style={{
+                    width: 24, height: 24, borderRadius: '50%',
+                    background: 'rgba(255,255,255,0.15)',
+                    display: 'grid', placeItems: 'center',
+                    ...MONO, fontSize: 7.5, color: 'rgba(255,255,255,0.55)',
+                    border: '2px solid var(--shell)',
+                    marginRight: -6, zIndex: 0, flexShrink: 0,
+                  }}>
+                    +{members.length - 5}
+                  </div>
+                )}
+                <span style={{ ...MONO, fontSize: 8, letterSpacing: '0.08em', color: 'rgba(255,255,255,0.45)', marginLeft: 18, flexShrink: 0 }}>
+                  {members.length} {members.length === 1 ? 'MEMBER' : 'MEMBERS'}
+                  {activeCircle.is_public && <span style={{ color: 'var(--positive)', marginLeft: 6 }}>· PUBLIC</span>}
+                </span>
               </div>
             )}
           </div>
-          {activeCircle?.invite_code && (
-            <button
-              onClick={copyCode}
-              title="Copy invite code"
-              style={{ flexShrink: 0, padding: '8px 14px', background: 'var(--elev)', border: '1px solid var(--rule)', borderRadius: 6, cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}
-            >
-              <span style={{ ...MONO, fontSize: 13, fontWeight: 700, letterSpacing: '0.2em', color: 'var(--paper)' }}>
-                {activeCircle.invite_code}
-              </span>
-              <span style={{ ...MONO, fontSize: 8, letterSpacing: '0.1em', color: copied ? 'var(--positive)' : 'var(--mute)' }}>
-                {copied ? 'COPIED ✓' : 'COPY CODE'}
-              </span>
-            </button>
-          )}
+
+          {/* Right: stats + invite code */}
+          <div style={{ flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 10 }}>
+            {activeCircle && totalComps > 0 && (
+              <div style={{ display: 'flex', gap: 20 }}>
+                <div style={{ textAlign: 'right' }}>
+                  <div style={{ ...HEAD, fontSize: 20, color: '#fff', letterSpacing: '-0.02em', lineHeight: 1 }}>{activeSports}</div>
+                  <div style={{ ...MONO, fontSize: 7, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.3)', marginTop: 2 }}>SPORTS</div>
+                </div>
+                <div style={{ textAlign: 'right' }}>
+                  <div style={{ ...HEAD, fontSize: 20, color: '#fff', letterSpacing: '-0.02em', lineHeight: 1 }}>{totalComps}</div>
+                  <div style={{ ...MONO, fontSize: 7, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.3)', marginTop: 2 }}>COMPETITIONS</div>
+                </div>
+              </div>
+            )}
+            {activeCircle?.invite_code && (
+              <button
+                onClick={copyCode}
+                title="Copy invite code"
+                style={{ padding: '6px 12px', background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 6, cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}
+              >
+                <span style={{ ...MONO, fontSize: 12, fontWeight: 700, letterSpacing: '0.2em', color: '#fff' }}>
+                  {activeCircle.invite_code}
+                </span>
+                <span style={{ ...MONO, fontSize: 7.5, letterSpacing: '0.1em', color: copied ? 'var(--positive)' : 'rgba(255,255,255,0.4)' }}>
+                  {copied ? 'COPIED ✓' : 'COPY CODE'}
+                </span>
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
@@ -802,7 +884,7 @@ export default function ClubhouseScreen() {
               </div>
               {feed.length === 0 ? (
                 <div style={{ textAlign: 'center', padding: '40px 0', color: 'var(--mute)', ...MONO, fontSize: 12 }}>
-                  Activity from linked leagues and competitions will appear here.
+                  Activity will appear here once competitions start.
                 </div>
               ) : (
                 feed.map(entry => (
@@ -817,42 +899,32 @@ export default function ClubhouseScreen() {
             {/* HOME tab */}
             {tab === 'home' && (
               <div>
-                {/* Sport competition cards */}
-                <SportSection
-                  label="Football"
-                  emoji="⚽"
-                  items={competitions.football}
-                  onEnter={enterLeague}
-                />
-                <SportSection
-                  label="Formula 1"
-                  emoji="🏎"
-                  items={competitions.f1}
-                  onEnter={enterPaddock}
-                />
-                <SportSection
-                  label="Tennis"
-                  emoji="🎾"
-                  items={competitions.tennis}
-                  onEnter={item => navigate(`/tennis/${item.id}`)}
+                {/* All competition cards — unified grid */}
+                <AllCompetitions
+                  competitions={competitions}
+                  onEnter={(item, sport) => {
+                    if (sport === 'football') enterLeague(item);
+                    else if (sport === 'f1') enterPaddock(item);
+                    else navigate(`/tennis/${item.id}`);
+                  }}
                 />
 
-                {/* Non-playing member empty state */}
+                {/* Empty state — no competitions yet */}
                 {competitions.football.length === 0 && competitions.f1.length === 0 && competitions.tennis.length === 0 && (
                   <div style={{ textAlign: 'center', padding: '32px 0 24px' }}>
                     <div style={{ fontSize: 32, marginBottom: 12 }}>🏟️</div>
                     <p style={{ ...HEAD, fontSize: 16, color: 'var(--paper)', margin: '0 0 8px' }}>
-                      No leagues linked yet
+                      No competitions yet
                     </p>
                     <p style={{ ...BODY, fontSize: 13, color: 'var(--mute)', margin: '0 0 20px' }}>
-                      The Clubhouse owner can create leagues and link them here.<br />
-                      You can still chat and place bets without playing.
+                      Create a Football league, F1 Paddock, or Tennis Player Box to get started.<br />
+                      You can also chat and bet without playing.
                     </p>
                     <button
                       onClick={() => navigate('/league')}
                       style={{ padding: '10px 24px', background: 'var(--accent)', color: '#fff', border: 'none', borderRadius: 6, ...MONO, fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', cursor: 'pointer' }}
                     >
-                      BROWSE LEAGUES →
+                      + CREATE A COMPETITION →
                     </button>
                   </div>
                 )}
@@ -869,9 +941,9 @@ export default function ClubhouseScreen() {
                   </div>
                 )}
 
-                {feed.length === 0 && (competitions.football.length > 0 || competitions.f1.length > 0) && (
+                {feed.length === 0 && totalComps > 0 && (
                   <div style={{ ...MONO, fontSize: 11, color: 'var(--mute)', textAlign: 'center', padding: '32px 0' }}>
-                    Activity from linked leagues will appear here.
+                    Activity will appear here once competitions start.
                   </div>
                 )}
 
