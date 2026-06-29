@@ -23,26 +23,48 @@ You are always inside a **Clubhouse**. The **left sidebar** is the Clubhouse spi
 
 ## Current-state reference
 
-*(Facts a session needs, verified 2026-06-29. File line numbers may drift — confirm with grep.)*
+*(Updated after Phase A shipped, PR #671, 2026-06-29. File line numbers may drift — confirm with grep.)*
 
-### Shell & routing
+### Shell & routing — POST Phase A
 
 | File | What it is now |
 |------|----------------|
-| `src/components/AppLayout.jsx` | The shell. Desktop **left sidebar** with 3 sections: **PLATFORM** (Home `/`), **SPORTS** (Football + subs, Formula 1 + subs, Tennis + subs), **COMMUNITY** (My Group `/clubhouse`, The FrontRow, Trophy Cabinet, Coin Challenges, Settings). The sidebar **morphs per sport**: `const NAV_ITEMS = isF1 ? buildF1Nav(activePaddockId) : FOOTBALL_NAV;` (line ~119), where `isF1 = activeSport === 'f1'`. `FOOTBALL_NAV` (lines 24–31) and `buildF1Nav()` (lines 33–43) define per-sport items; the Tennis nav is inline in the sidebar JSX. Mobile bottom bar renders `NAV_ITEMS.filter(i => !i.desktopOnly)`. `NavItem` component at line 59. `isMainRoute` regex block (lines 134–152) controls the mobile back button. Consumes `unreadCount` from `ClubhouseNotifContext`. |
-| `src/App.jsx` | Router. `/` → `MultiSportHomeScreen`. All screens lazy-loaded (`lazy(() => import(...))`) and wrapped per-route in `<ErrorBoundary screen="...">`. Provider nesting: `AuthProvider → SportProvider → ClubhouseNotifProvider → Router → ToastProvider → AppRoutes`. Football screens are **global routes** (`/squad`, `/market`, `/live`, `/recap`, `/league`, `/league/:leagueId`) — the active league is implicit. F1 screens are **paddock-scoped** (`/f1/:paddockId`, `/f1/:paddockId/picks`, `/standings`, `/report`, `/season`). Tennis: `/tennis`, `/tennis/box`, `/tennis/tournament/:id`, `/tennis/leaderboard`, `/tennis/finals`. Clubhouse: `/clubhouse`, `/clubhouse/:circleId`. |
-| `src/context/SportContext.jsx` | Tiny localStorage-backed context: `{ activeSport, activePaddockId, activePlayerBoxId }` + setters. `activeSport` drives which sidebar nav shows. |
-| `src/hooks/useClubhouse.js` | **A hook, not a provider.** Each screen that calls `useClubhouse()` gets its own independent state + fetches. Exposes: `myCircles`, `activeCircle`, `activeCircleId`, `setActiveCircleId` (localStorage `activeCircleId`), `competitions` (`{football,f1,tennis}`), `feed`, `members`, `metaStandings`, `notifications`, `unreadCount`, and RPC actions: `create_circle`, `join_circle_by_code`, `search_clubhouses`, `update_circle_settings`, `kick_circle_member`, `link_league_to_circle`, `get_owner_linkable_leagues`. On mount it fetches `circle_members → circles`; on `activeCircleId` change it fires 5 parallel RPCs (`get_clubhouse_competitions`, `get_circle_feed`, members query, `clubhouse_notifications` query, `get_circle_meta_standings`). Realtime channels per circle for feed + notifications. |
-| `src/context/ClubhouseNotifContext.js` + `ClubhouseNotifProvider.jsx` | Lightweight cross-circle unread badge counter (`unreadCount`) used by AppLayout. Separate from `useClubhouse`'s per-circle `unreadCount`. |
+| `src/components/AppLayout.jsx` | The shell. Desktop **left sidebar** is now a **static clubhouse spine** — two sections: **CLUBHOUSE** (My Clubhouse `/clubhouse`, The FrontRow `/clubhouse?tab=frontrow`) and **COMMUNITY** (Trophy Cabinet `/trophy`, Coin Challenges `/challenges`, Settings `/settings`). Sidebar never morphs per sport. Renders `<CompetitionTopBar competitions={competitions} pathname={...} />` above page content and `<CompetitionScreenNav pathname={...} paddockId={activePaddockId} />` as a secondary strip. Consumes `{ competitions }` from `useClubhouseContext()`. Mobile bottom bar uses `MOBILE_NAV` derived from `isF1`/`isTennis` path detection (not `activeSport`). |
+| `src/App.jsx` | Router. `/` → `<Navigate to="/clubhouse" replace />`. Provider nesting: `AuthProvider → SportProvider → ClubhouseNotifProvider → ClubhouseProvider → Router → ToastProvider → AppRoutes`. All other routes unchanged. |
+| `src/context/ClubhouseContext.js` | Context + `useClubhouseContext()` hook. Split into its own file (separate from Provider) to avoid Rolldown TDZ. Throws if consumed outside `ClubhouseProvider`. |
+| `src/context/ClubhouseProvider.jsx` | Calls `useClubhouse()` **once** at app root; provides its return value via `ClubhouseContext`. Replaces the per-screen `useClubhouse()` instantiation pattern. |
+| `src/components/CompetitionTopBar.jsx` | Prop-only: `{ competitions, pathname }`. Flattens `{football,f1,tennis}` into one scrollable tab list, each `{id,name,sport}`. Sport-colored active indicator. Returns `null` when `allComps.length === 0` (safe in demo mode). `+` button placeholder (Phase B wires it). |
+| `src/components/CompetitionScreenNav.jsx` | Prop-only: `{ pathname, paddockId }`. Returns `null` on non-sport routes (clubhouse, settings, etc.). `FOOTBALL_SCREENS`: LIVE/SQUAD/LEAGUE/MARKET/RECAP. `buildF1Screens(paddockId)`: CALENDAR/PICKS/STANDINGS/REPORT/SEASON. `TENNIS_SCREENS`: HOME/LEADERBOARD. Sport detected from `pathname` (not `activeSport`). |
+| `src/context/SportContext.jsx` | Still exists. `activePaddockId`/`activePlayerBoxId` still used. **`activeSport` is no longer used to choose the sidebar nav** (sidebar is static). Phase B will collapse this. |
+| `src/hooks/useClubhouse.js` | Implementation hook — still exported for `ClubhouseProvider` to call. Not called directly by screens any more (except via context). Exposes: `myCircles`, `activeCircle`, `activeCircleId`, `competitions` (`{football,f1,tennis}`), `feed`, `members`, `metaStandings`, `notifications`, `unreadCount`, and RPC actions. Tennis stubbed as `[]` in `get_clubhouse_competitions` — wired in Phase B (migration 216). |
+| `src/context/ClubhouseNotifContext.js` + `ClubhouseNotifProvider.jsx` | Unchanged. Lightweight cross-circle unread badge counter used by AppLayout. |
+| `src/screens/ClubhouseScreen.jsx` | Single home screen, reached at `/` (via redirect) and `/clubhouse`. Uses `useClubhouseContext()` (not direct `useClubhouse()`). Tabs: HOME / THE FRONTROW / RECAP / CHAT / INBOX (n) / MEMBERS / FIND / SETTINGS. No-circle → `ClubhouseLobby` (CREATE/JOIN). |
+| ~~`src/screens/MultiSportHomeScreen.jsx`~~ | **Deleted** (Phase A). Was 326 lines. Content folded into ClubhouseScreen. |
 
-### The two home screens (Phase A merges these)
+### Competition surfaces (Phase C extracts a shared header from these)
 
-| File | What it renders | Data |
-|------|------------------|------|
-| `src/screens/MultiSportHomeScreen.jsx` | Header (active-sports count / trophies / group rank); **sport module cards** (`SportModuleCard`, CTA paths `/squad`, `/f1`, `/tennis`); **Activity Gazette** (feed, 8 items); trophy teaser + **meta-rank table** (top 6). No-circle welcome state. | `useClubhouse()` — `activeCircle`, `competitions`, `feed`, `metaStandings` |
-| `src/screens/ClubhouseScreen.jsx` | Tabs: **HOME** (per-sport `SportSection` cards from `competitions`), **THE FRONTROW**, **RECAP**, **CHAT**, **INBOX (n)**, **MEMBERS**, **FIND**, **SETTINGS** (owner). Multi-circle selector pills. No-circle → `ClubhouseLobby` (CREATE/JOIN tabs). HOME card ENTER targets: football → `navigate('/league/${id}')`; F1 → set sport ctx + `navigate('/f1/${id}')`; tennis → `navigate('/tennis/${id}')`. | `useClubhouse()` |
+| Sport | Results/standings surface (Tier 2) | Columns | Per-manager unit (Tier 3) |
+|-------|-----------------------------------|---------|---------------------------|
+| Football | `src/components/league/LeagueDetailView.jsx` (standings table). Tabs in `HubShared.jsx` `HubTabs`: leaderboard, h2h?, recap, trading?, stats, admin. | rank, manager, TOT, (H2H?) | Squad (via VIEW button → squad view) |
+| F1 | `src/screens/f1/F1StandingsScreen.jsx` (RPC `get_paddock_leaderboard`) | rank/medal, driver/display_name, race_points, year_points, total_points | Race picks (`F1RaceBetScreen`), season bets |
+| Tennis | `src/screens/tennis/TennisLeaderboardScreen.jsx` (`useTennisLeaderboard`) | rank/medal, username, slam_points, masters_points, finals_points, season_total | Roster (`TennisTournamentScreen`) |
 
-> These two screens are near-duplicates of the same data. **The merge target is: one Clubhouse home, reached at `/`.**
+All three are bespoke tables — structurally similar, parameterizable. Phase C extracts one shared component.
+
+### Creation RPCs (Phase B unifies the entry into these)
+
+| Sport | RPC | Frontend call site | Params | circle binding |
+|-------|-----|--------------------|--------|----------------|
+| Football | `create_league` | direct `supabase.rpc` in `LeagueScreen.jsx` (~line 675) | `p_name`, `p_format`, `p_user_id`, `p_tournament_id`, `p_h2h_enabled`, **`p_circle_id`** (optional) | 6-param overload in migration 215; writes `leagues.circle_id` + `circle_leagues` junction |
+| F1 | `create_paddock` | `usePaddock().createPaddock(name, circleId)` (`src/hooks/f1/usePaddock.js`) | `p_name`, **`p_circle_id`** (optional) | migration 215; writes `paddocks.circle_id` + junction |
+| Tennis | `create_player_box` | `usePlayerBox().createPlayerBox(name, circleId)` (`src/hooks/tennis/usePlayerBox.js`) | `p_name`, `p_season_year` (=2026), **`p_circle_id`** (optional) | migration 215; writes `player_boxes.circle_id` + junction |
+
+`get_clubhouse_competitions` returns `{ football:[...], f1:[...], tennis:[] }` — **tennis is still stubbed empty**. Phase B (migration 216) wires it.
+
+### Schema groundwork already in place
+
+- **Migration 215** added nullable `circle_id uuid REFERENCES circles(id)` to `leagues`, `paddocks`, `player_boxes`; backfilled from junction tables; updated the 3 creation RPCs to write `circle_id` directly; added the `create_league` 6-param overload. Applied to production 2026-06-28.
+- **Next migration number on v2: `216_`.**
 
 ### Competition surfaces (Phase C extracts a shared header from these)
 
@@ -82,9 +104,11 @@ All three are **bespoke** grid/flex tables with rank + name + sport-specific poi
 
 ---
 
-## Phase A — Shell & IA (frontend only, no schema)
+## Phase A — Shell & IA (frontend only, no schema) ✅ DONE — PR #671 (2026-06-29)
 
 **Goal:** the *feel* changes. Sidebar becomes the sport-agnostic Clubhouse spine; competitions move to a top bar; one home at `/`. No data-model or RPC changes.
+
+> **Status:** Shipped as a single PR (#671) into `v2`. All acceptance criteria met. 84/84 `platform.spec.js` tests passing. See session note in [TRACKER.md](../TRACKER.md) for exact file changes and architecture notes.
 
 ### Functional spec
 
@@ -196,16 +220,16 @@ new `competition/CompetitionResultsHeader.jsx`; `LeagueDetailView.jsx`, `F1Stand
 
 ## Suggested PR breakdown
 
-| PR | Scope | Phase |
-|----|-------|-------|
-| 1 | `ClubhouseProvider` + merge homes (`/` → Clubhouse Overview, delete `MultiSportHomeScreen`) | A |
-| 2 | Sidebar rebuild (remove SPORTS section, add Clubhouse switcher + Tier-1) | A |
-| 3 | `CompetitionTopBar` + `CompetitionScreenNav` + mobile parity | A |
-| 4 | `NewCompetitionFlow` + `+` wiring + demote old lobbies | B |
-| 5 | Migration 216 (tennis in `get_clubhouse_competitions`) + `useActiveCompetition` location model | B |
-| 6 | Migration 217 (`circle_id NOT NULL`, orphan backfill) — **approval-gated** | B |
-| 7 | `CompetitionResultsHeader` extraction + adopt in 3 sports | C |
-| 8 | Taxonomy + visual polish | D |
+| PR | Scope | Phase | Status |
+|----|-------|-------|--------|
+| ~~1~~ | ~~`ClubhouseProvider` + merge homes (`/` → Clubhouse Overview, delete `MultiSportHomeScreen`)~~ | A | ✅ Shipped in #671 |
+| ~~2~~ | ~~Sidebar rebuild (remove SPORTS section, add Clubhouse switcher + Tier-1)~~ | A | ✅ Shipped in #671 |
+| ~~3~~ | ~~`CompetitionTopBar` + `CompetitionScreenNav` + mobile parity~~ | A | ✅ Shipped in #671 |
+| **4** | `NewCompetitionFlow` + `+` wiring + demote old lobbies | **B** | ⬜ Next |
+| **5** | Migration 216 (tennis in `get_clubhouse_competitions`) + `useActiveCompetition` location model | **B** | ⬜ Next (requires Supabase-linked PC for migration) |
+| **6** | Migration 217 (`circle_id NOT NULL`, orphan backfill) — **approval-gated** | **B** | ⬜ Next (requires Supabase-linked PC) |
+| 7 | `CompetitionResultsHeader` extraction + adopt in 3 sports | C | ⬜ |
+| 8 | Taxonomy + visual polish | D | ⬜ |
 
 Each PR: lint + build + `platform.spec.js` + madge green; update [TRACKER.md](../TRACKER.md).
 
@@ -220,4 +244,4 @@ Each PR: lint + build + `platform.spec.js` + madge green; update [TRACKER.md](..
 
 ---
 
-Last Updated: **2026-06-29**
+Last Updated: **2026-06-29** (Phase A shipped PR #671; current-state reference updated to post-Phase-A)
