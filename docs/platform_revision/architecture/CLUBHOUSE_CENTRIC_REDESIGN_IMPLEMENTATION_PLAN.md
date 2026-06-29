@@ -166,6 +166,30 @@ All three are **bespoke** grid/flex tables with rank + name + sport-specific poi
 ### Files touched
 new `NewCompetitionFlow.jsx`, `ClubhouseProvider.jsx` (refresh after create), `AppLayout`/`CompetitionTopBar` (`+` wiring), `usePaddock.js`/`usePlayerBox.js` (unchanged signatures — already accept circleId), redirect or remove `PaddockLobbyScreen.jsx`/`PlayerBoxScreen.jsx` and the `LeagueScreen` picker; migrations `216_` (RPC) and `217_` (NOT NULL).
 
+### ⚠️ Pending DB actions — run on the Supabase-linked PC
+
+Both migration files are committed to the repo (`supabase/migrations/`). They have NOT been applied to the production DB yet. Run them in order from the machine that has `npx supabase` linked to project `sssmvihxtqtohisghjet`.
+
+**Step 1 — Migration 216 (straightforward, run immediately):**
+```bash
+npx supabase db query --linked --file supabase/migrations/216_wire_tennis_competitions.sql
+```
+Replaces the hardcoded `'[]'::json` tennis branch in `get_clubhouse_competitions` with a live `circle_player_boxes` junction query. No destructive changes — pure `CREATE OR REPLACE FUNCTION`.
+
+**Step 2 — Migration 217 (approval-gated, pre-flight required first):**
+
+Run these three SELECTs first and confirm all return 0 rows:
+```sql
+SELECT id, name FROM leagues      WHERE circle_id IS NULL;
+SELECT id, name FROM paddocks     WHERE circle_id IS NULL;
+SELECT id, name FROM player_boxes WHERE circle_id IS NULL;
+```
+Save results to `backups/orphans_pre_217_<date>.json`. If any rows appear, assign them to a clubhouse (or archive) before proceeding. Once all three return 0 rows, apply the constraint:
+```bash
+npx supabase db query --linked --file supabase/migrations/217_circle_id_not_null.sql
+```
+Adds `NOT NULL` to `leagues.circle_id`, `paddocks.circle_id`, `player_boxes.circle_id`.
+
 ### Acceptance criteria
 - Every create/join goes through the clubhouse flow; the three old lobbies no longer appear as primary entry points.
 - A newly created competition immediately appears as a top-bar tab in the current clubhouse.
@@ -243,4 +267,4 @@ Each PR: lint + build + `platform.spec.js` + madge green; update [TRACKER.md](..
 
 ---
 
-Last Updated: **2026-06-29** (Phase B frontend shipped; migrations 216/217 committed, pending Supabase-linked PC; `useActiveCompetition` collapse deferred to next B PR)
+Last Updated: **2026-06-29** (Phase B frontend shipped PR #675; migrations 216/217 committed, pending Supabase-linked PC — see ⚠️ Pending DB actions block in Phase B; `useActiveCompetition` collapse deferred to next B PR)
