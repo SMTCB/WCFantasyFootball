@@ -198,7 +198,9 @@ Adds `NOT NULL` to `leagues.circle_id`, `paddocks.circle_id`, `player_boxes.circ
 
 ---
 
-## Phase C — Shared spine template
+## Phase C — Shared spine template ✅ DONE — PR #676 (2026-06-29)
+
+> **Status:** Shipped. `useActiveCompetition()` hook + `CompetitionResultsHeader` component extracted; adopted in all three sports. All checks green: lint (0 errors), build TDZ-free, madge no cycles, 84/84 platform tests. `SportContext.activeSport` removed entirely.
 
 **Goal:** every competition renders the same Tier-2 results header above its Tier-3 unit; the header is one component, not three.
 
@@ -250,7 +252,7 @@ new `competition/CompetitionResultsHeader.jsx`; `LeagueDetailView.jsx`, `F1Stand
 | ~~3~~ | ~~`CompetitionTopBar` + `CompetitionScreenNav` + mobile parity~~ | A | ✅ Shipped in #671 |
 | ~~4~~ | ~~`NewCompetitionFlow` + `+` wiring + `refreshCompetitions` + migration files 216/217 committed~~ | B | ✅ Done — PR #675 |
 | ~~5~~ | ~~Migration 216 applied. Migration 217 🛑 excluded (pilot-blocked). `useActiveCompetition` carried to Phase C.~~ | B | ✅ Closed |
-| 6 | `useActiveCompetition()` location model + `CompetitionResultsHeader` extraction + adopt in 3 sports | C | ⬜ |
+| ~~6~~ | ~~`useActiveCompetition()` location model + `CompetitionResultsHeader` extraction + adopt in 3 sports~~ | C | ✅ Done — PR #676 |
 | 7 | Taxonomy + visual polish | D | ⬜ |
 
 Each PR: lint + build + `platform.spec.js` + madge green; update [TRACKER.md](../TRACKER.md).
@@ -266,4 +268,4 @@ Each PR: lint + build + `platform.spec.js` + madge green; update [TRACKER.md](..
 
 ---
 
-Last Updated: **2026-06-29** (Phase B closed — PR #675; migration 216 applied; migration 217 🛑 pilot-blocked; `useActiveCompetition` carried into Phase C. Next: Phase C.)
+Last Updated: **2026-06-29** (Phase C closed — PR #676; `useActiveCompetition` hook, `CompetitionResultsHeader` component, `activeSport` removed. Next: Phase D — taxonomy + visual polish.)
