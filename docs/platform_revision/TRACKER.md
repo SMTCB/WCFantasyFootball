@@ -27,7 +27,7 @@
 | **R** | Clubhouse-Centric Redesign (IA/UX) | 🔄 Phase A done — Phase B next | Phase A shipped PR #671. Design: [CLUBHOUSE_CENTRIC_REDESIGN.md](architecture/CLUBHOUSE_CENTRIC_REDESIGN.md). See [workstream](#clubhouse-centric-redesign-workstream) below. |
 
 **Next session options (choose one):**
-- **Redesign Phase B follow-up (Supabase-linked PC)** — Run migrations 216 + 217 (rows 17/18 in pending table). Then finish `useActiveCompetition` location-model collapse (deferred from this session).
+- **Redesign Phase B follow-up** — Finish `useActiveCompetition` location-model collapse (deferred from Phase B). Migration 216 ✅ applied. Migration 217 🛑 blocked until World Cup pilot ends — see row 18 banner.
 - **Redesign Phase C** — `CompetitionResultsHeader` shared component + adopt in football/F1/tennis.
 - **Redesign Phase D** — Naming pass ("Clubhouse"/"Competition") + visual polish from mock.
 - **DD items** — TEST-1 (Vitest coverage), CODE-3 (error boundaries), OPS-2 (Sentry)
@@ -301,4 +301,4 @@ These require a human decision before the relevant sprint can continue.
 
 ---
 
-Last Updated: **2026-06-29** (PR #675: Phase B frontend complete — NewCompetitionFlow, + button wired, refreshCompetitions; migrations 216/217 committed, pending Supabase-linked PC; next migration `218_`)
+Last Updated: **2026-06-29** (PR #675: Phase B frontend complete; migration 216 applied; migration 217 blocked until World Cup pilot ends ~July 2026; next migration `218_`)
