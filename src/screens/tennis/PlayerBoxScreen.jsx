@@ -1,13 +1,11 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { usePlayerBox } from '../../hooks/tennis/usePlayerBox';
-import { useSport } from '../../context/SportContext';
 
 const SURFACE_ICON = { hard: '🎾', clay: '🟫', grass: '🌿', hard_indoor: '🏟️' };
 
 export default function PlayerBoxScreen() {
   const navigate = useNavigate();
-  const { setActiveSport } = useSport();
   const { myBoxes, loading, createPlayerBox, joinByCode, setActivePlayerBoxId } = usePlayerBox();
 
   const [tab, setTab] = useState('my');
@@ -23,7 +21,6 @@ export default function PlayerBoxScreen() {
     setBusy(true); setErr('');
     try {
       const id = await createPlayerBox(name.trim());
-      setActiveSport('tennis');
       navigate(`/tennis?box=${id}`);
     } catch (e) {
       setErr(e.message === 'TENNIS_SPORT_NOT_FOUND' ? 'Tennis sport not configured — contact admin.' : e.message);
@@ -36,7 +33,6 @@ export default function PlayerBoxScreen() {
     setBusy(true); setErr('');
     try {
       const id = await joinByCode(code.trim());
-      setActiveSport('tennis');
       navigate(`/tennis?box=${id}`);
     } catch (e) {
       setErr(e.message === 'PLAYER_BOX_NOT_FOUND' ? 'Invite code not found — check the code and try again.' : e.message);
@@ -45,7 +41,6 @@ export default function PlayerBoxScreen() {
 
   function enterBox(id) {
     setActivePlayerBoxId(id);
-    setActiveSport('tennis');
     navigate('/tennis');
   }
 

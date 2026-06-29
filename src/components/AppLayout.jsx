@@ -6,7 +6,7 @@ import BrandMark from './BrandMark';
 import SkipToContent from './SkipToContent';
 import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../lib/supabase';
-import { useSport } from '../context/SportContext';
+import { useActiveCompetition } from '../hooks/useActiveCompetition';
 import { CompetitionTopBar } from './CompetitionTopBar';
 import { CompetitionScreenNav } from './CompetitionScreenNav';
 import NewCompetitionFlow from './NewCompetitionFlow';
@@ -120,15 +120,13 @@ export default function AppLayout({ children }) {
   const location = useLocation();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { activePaddockId } = useSport();
   const { unreadCount } = useContext(ClubhouseNotifContext);
   const { competitions, activeCircleId, refreshCompetitions } = useClubhouseContext();
+  const { sport, competitionId } = useActiveCompetition();
   const [showNewCompFlow, setShowNewCompFlow] = useState(false);
 
-  // Derive sport from route — sidebar never morphs, mobile bar does
-  const isF1     = location.pathname.startsWith('/f1');
-  const isTennis = location.pathname.startsWith('/tennis');
-  const MOBILE_NAV = isF1 ? buildF1Nav(activePaddockId) : isTennis ? TENNIS_NAV : FOOTBALL_NAV;
+  // Mobile bottom bar is the active competition's screens; sidebar never changes
+  const MOBILE_NAV = sport === 'f1' ? buildF1Nav(competitionId) : sport === 'tennis' ? TENNIS_NAV : FOOTBALL_NAV;
 
   const [username, setUsername] = useState(
     user?.user_metadata?.username ?? user?.email?.split('@')[0] ?? null
@@ -294,7 +292,7 @@ export default function AppLayout({ children }) {
         {/* Competition screen nav — screens within the active sport/competition */}
         <CompetitionScreenNav
           pathname={location.pathname}
-          paddockId={activePaddockId}
+          paddockId={competitionId}
         />
 
         <div className="animate-page-enter">

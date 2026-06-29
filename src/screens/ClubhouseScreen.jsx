@@ -650,7 +650,7 @@ export default function ClubhouseScreen() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { user } = useAuth();
-  const { setActiveSport, setActivePaddockId } = useSport();
+  const { setActivePaddockId } = useSport();
   const {
     myCircles,
     activeCircle,
@@ -705,7 +705,6 @@ export default function ClubhouseScreen() {
   }
 
   function enterPaddock(paddock) {
-    setActiveSport('f1');
     setActivePaddockId(paddock.id);
     navigate(`/f1/${paddock.id}`);
   }

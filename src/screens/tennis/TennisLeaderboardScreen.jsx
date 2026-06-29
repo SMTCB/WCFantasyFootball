@@ -1,8 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { usePlayerBox } from '../../hooks/tennis/usePlayerBox';
 import { useTennisLeaderboard } from '../../hooks/tennis/useTennisLeaderboard';
-
-const MEDAL = ['🥇', '🥈', '🥉'];
+import { CompetitionResultsHeader } from '../../components/competition/CompetitionResultsHeader';
 
 export default function TennisLeaderboardScreen() {
   const navigate = useNavigate();
@@ -66,21 +65,20 @@ export default function TennisLeaderboardScreen() {
 
             {/* Standings table */}
             <div style={{ background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 6, overflow: 'hidden', marginBottom: 20 }}>
-              {/* Column headers */}
-              <div style={{ display: 'flex', alignItems: 'center', padding: '10px 16px', background: 'var(--elev)', borderBottom: '1px solid var(--rule)' }}>
-                <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 9, color: 'var(--mute)', textTransform: 'uppercase', letterSpacing: '0.1em', flex: 1 }}>Manager</span>
-                <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 9, color: 'var(--mute)', textTransform: 'uppercase', letterSpacing: '0.1em', width: 60, textAlign: 'right' }}>Slams</span>
-                <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 9, color: 'var(--mute)', textTransform: 'uppercase', letterSpacing: '0.1em', width: 70, textAlign: 'right' }}>Masters</span>
-                <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 9, color: 'var(--mute)', textTransform: 'uppercase', letterSpacing: '0.1em', width: 60, textAlign: 'right' }}>Finals</span>
-                <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 9, color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '0.1em', width: 70, textAlign: 'right', fontWeight: 700 }}>Total</span>
-              </div>
-
-              {standings.map((row, i) => (
-                <div key={row.user_id} style={{ display: 'flex', alignItems: 'center', padding: '12px 16px', borderBottom: i < standings.length - 1 ? '1px solid var(--rule)' : 'none', background: i === 0 ? 'rgba(184,114,14,0.04)' : 'transparent' }}>
-                  <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <span style={{ fontSize: i < 3 ? 16 : 14, fontFamily: 'Archivo Black, sans-serif', color: i < 3 ? 'var(--gold)' : 'var(--mute)', minWidth: 24 }}>
-                      {i < 3 ? MEDAL[i] : row.rank}
-                    </span>
+              <CompetitionResultsHeader
+                rows={standings}
+                columns={[
+                  { key: 'slams',   label: 'SLAMS',   width: '60px',  accessor: r => r.slam_points   > 0 ? r.slam_points.toLocaleString()   : '—', color: 'var(--text-2)' },
+                  { key: 'masters', label: 'MASTERS', width: '70px',  accessor: r => r.masters_points > 0 ? r.masters_points.toLocaleString() : '—', color: 'var(--text-2)' },
+                  { key: 'finals',  label: 'FINALS',  width: '60px',  accessor: r => r.finals_points  > 0 ? r.finals_points.toLocaleString()  : '—', color: 'var(--text-2)' },
+                  { key: 'total',   label: 'TOTAL',   width: '70px',  accessor: r => r.season_total.toLocaleString() },
+                ]}
+                accent="var(--ten)"
+                activeColumnKey="total"
+                highlightUserId={null}
+                useMedals
+                renderName={(row) => (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                     <span style={{ fontFamily: 'Archivo, sans-serif', fontSize: 14, color: 'var(--paper)', fontWeight: 500 }}>
                       {row.username}
                     </span>
@@ -90,12 +88,11 @@ export default function TennisLeaderboardScreen() {
                       </span>
                     )}
                   </div>
-                  <span style={{ fontFamily: 'Archivo, sans-serif', fontSize: 13, color: 'var(--text2)', width: 60, textAlign: 'right' }}>{row.slam_points > 0 ? row.slam_points.toLocaleString() : '—'}</span>
-                  <span style={{ fontFamily: 'Archivo, sans-serif', fontSize: 13, color: 'var(--text2)', width: 70, textAlign: 'right' }}>{row.masters_points > 0 ? row.masters_points.toLocaleString() : '—'}</span>
-                  <span style={{ fontFamily: 'Archivo, sans-serif', fontSize: 13, color: 'var(--text2)', width: 60, textAlign: 'right' }}>{row.finals_points > 0 ? row.finals_points.toLocaleString() : '—'}</span>
-                  <span style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 15, color: 'var(--accent)', width: 70, textAlign: 'right' }}>{row.season_total.toLocaleString()}</span>
-                </div>
-              ))}
+                )}
+                emptyMessage="No scores yet — standings update after each tournament completes."
+                rowPadding="12px 16px"
+                gap={8}
+              />
             </div>
 
             {/* Per-tournament breakdown */}
