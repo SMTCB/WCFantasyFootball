@@ -107,11 +107,11 @@ async function collectData(sb: ReturnType<typeof createClient>, league: { id: st
       .order('transferred_at', { ascending: false })
       .limit(5),
 
-    // Chat — last 3 non-deleted messages
+    // Chat — last 3 non-deleted messages (include NULL is_deleted rows for safety)
     sb.from('chat_messages')
       .select('message, user_id')
       .eq('league_id', league.id)
-      .eq('is_deleted', false)
+      .or('is_deleted.eq.false,is_deleted.is.null')
       .order('created_at', { ascending: false })
       .limit(3),
 
@@ -272,8 +272,8 @@ IMPORTANT: Base your headline and hot_take on the OVERALL STANDINGS (who leads t
 Respond ONLY with a valid JSON object with exactly these keys:
 {
   "headline": "ALL-CAPS PUNCHY TABLOID HEADLINE, MAX 65 CHARACTERS",
-  "deck": "2-3 sentence article intro. Mention the overall leader by name. Snarky but fair. Max 220 chars.",
-  "hot_take": "One provocative observation about the overall standings or form. Max 90 chars.",
+  "deck": "2-3 sentence article intro. Mention the overall leader by name. Snarky but fair. Weave in a chat quote or banter if there are recent messages. Max 220 chars.",
+  "hot_take": "One provocative observation — riff on the recent league chat or current standings form. Max 90 chars.",
   "wooden_spoon": "Gentle roast of the BOTTOM-TABLE manager (last in standings) by name. Max 90 chars.",
   "transfer_rumour": "Tabloid spin on any transfer from the last 24h. Max 110 chars. Use null if no transfers."
 }`;
