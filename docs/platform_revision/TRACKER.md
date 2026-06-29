@@ -24,15 +24,18 @@
 | **2** | Tennis Module (Player's Box, roster picks, Ace Cards, ATP Finals) | ✅ Done | Sprints T-0 through T-4 (PRs #617–#620, #625) |
 | **3A** | Buyout hygiene batch 2 (provider adapter, containerisation, envs) | ✅ Done | PRs #634–#636 |
 | **3B** | v2 integration & deploy | 🔄 In progress | Code quality gates ✅ — smoke tests + deploy remaining |
-| **R** | Clubhouse-Centric Redesign (IA/UX) | 🔄 Planned — doc complete | Full A–D redesign approved 2026-06-29. Design: [CLUBHOUSE_CENTRIC_REDESIGN.md](architecture/CLUBHOUSE_CENTRIC_REDESIGN.md). See [workstream](#clubhouse-centric-redesign-workstream) below. |
+| **R** | Clubhouse-Centric Redesign (IA/UX) | 🔄 Phase A done — Phase B next | Phase A shipped PR #671. Design: [CLUBHOUSE_CENTRIC_REDESIGN.md](architecture/CLUBHOUSE_CENTRIC_REDESIGN.md). See [workstream](#clubhouse-centric-redesign-workstream) below. |
 
 **Next session options (choose one):**
-- **Redesign Phase A** — Shell & IA (sidebar spine + top-bar competition tabs + single home). See [workstream](#clubhouse-centric-redesign-workstream).
+- **Redesign Phase B** — Entry unification + state/schema (single competition creation flow, collapse SportContext + useClubhouse, migrations 216/217). See [workstream](#clubhouse-centric-redesign-workstream).
+- **DD items** — TEST-1 (Vitest coverage), CODE-3 (error boundaries), OPS-2 (Sentry)
 - **Phase 3B smoke tests** → deploy sequence — see [Phase 3B checklist](#phase-3b-pre-merge-checklist) below
 - **DD items** — TEST-1 (Vitest coverage), CODE-3 (error boundaries), OPS-2 (Sentry)
 - **Row 11** — Add `VITE_SENTRY_DSN` to Vercel (can be done from any machine)
 
 **Session 2026-06-29 (Clubhouse-centric redesign — assessment + design):** Product assessment of the multi-sport platform's "common vision." Diagnosed 6 concrete causes of the "fantasy-sports frankenstein" feel: (1) sidebar morphs per sport (`activeSport`-driven `FOOTBALL_NAV`/`buildF1Nav`/Tennis nav swap), (2) two competing home screens (`/` MultiSportHome + `/clubhouse`), Clubhouse buried under COMMUNITY, (3) `circle_id` nullable / competitions born orphaned, (4) two disconnected state models (`SportContext` ⊥ `useClubhouse`), (5) three reinvented sport lobbies, (6) taxonomy drift (My Group/Clubhouse/circle). Agreed unifying concept: **Clubhouse is the room, sports are tables in it** — every competition always belongs to a clubhouse (structural invariant), shared 3-tier spine (Tier 1 clubhouse surfaces = identical / Tier 2 results header = same skeleton / Tier 3 unit = sport divergence). Nav model: **sidebar = clubhouse spine (sport-agnostic, never morphs), top bar = competition tabs (named comps, sport-colored)**. User approved **full A–D redesign**. Two docs written, no code touched: [CLUBHOUSE_CENTRIC_REDESIGN.md](architecture/CLUBHOUSE_CENTRIC_REDESIGN.md) (vision/why-what) + [CLUBHOUSE_CENTRIC_REDESIGN_IMPLEMENTATION_PLAN.md](architecture/CLUBHOUSE_CENTRIC_REDESIGN_IMPLEMENTATION_PLAN.md) (self-contained phase-by-phase build plan with current-state reference, cross-cutting rules, per-phase functional+technical specs, acceptance criteria, and an 8-PR breakdown — written to be executed cold in dedicated sessions). Key finding embedded in the plan: `useClubhouse` is a hook not a provider (MultiSportHomeScreen + ClubhouseScreen double-fetch) → Phase A promotes it to `ClubhouseProvider`; football screens are global routes while F1/tennis are id-scoped → secondary screen strip is built per selected competition's sport; `get_clubhouse_competitions` stubs tennis as `[]` → Phase B wires it (migration 216); `circle_id NOT NULL` is migration 217 (approval-gated, orphan-backfill first). Next: Redesign Phase A (Shell & IA), PR 1.
+
+**Session 2026-06-29 (Redesign Phase A, PR #671):** Implemented Phase A of the Clubhouse-Centric Redesign (frontend-only, no schema). New files: `ClubhouseContext.js` (context + hook, split to avoid Rolldown TDZ), `ClubhouseProvider.jsx` (singleton at app root), `CompetitionTopBar.jsx` (prop-only flat competition tabs, sport-colored, returns null with zero competitions), `CompetitionScreenNav.jsx` (secondary strip per active sport — football/F1/tennis, returns null on non-sport routes). Modified: `AppLayout.jsx` rewritten — static clubhouse spine sidebar (never morphs), uses `useClubhouseContext()`, renders both new components; `App.jsx` — `ClubhouseProvider` added, `<Route path="/" element={<Navigate to="/clubhouse" replace />}>`; `ClubhouseScreen.jsx` — switched to `useClubhouseContext()`. Deleted `MultiSportHomeScreen.jsx`. Test infra fix: `playwright.config.js` added `channel: 'chrome'` (system Chrome) because `chromium_headless_shell-1217` binary is missing on this machine (headless shell install fails). Two `platform.spec.js` assertion fixes: `.first()` on strict-mode sidebar `getByText(/clubhouse/i)`, URL pattern `/\/(clubhouse)?$/` for 404 redirect test. **84/84 tests passing.** Key architecture note: `NavIcons.jsx` is imported both by `AppLayout` (depth 1) and `CompetitionScreenNav` (depth 2 via AppLayout) — safe because NavIcons is a leaf module (no local imports); Rolldown evaluates it first with no TDZ. Next: Phase B (entry unification + migration 216/217, requires Supabase-linked PC for DB actions).
 
 **Session 2026-06-29:** v2 ← main sync (PRs #650–653, #658, #667, #668) — 3 merge conflicts resolved (BACKLOG.md header, MarketScreen Kit Light color kept, generate-frontpage-edition chat `is_deleted.is.null` bug fix taken). Full codebase audit confirmed all phases are feature-complete with no implementation gaps. Two Clubhouse nav bugs fixed (PR #669): (1) creating a Clubhouse bounced back to empty lobby — root cause was background `fetchMyCircles()` in `createCircle` racing with RLS visibility, returning empty, and calling `setActiveCircleId(null)` to wipe the optimistic state; fixed by removing the background fetch and guarding the `setActiveCircleId(null)` branch in `fetchMyCircles`; (2) The FrontRow had no sidebar entry — added sub-NavItem linking to `/clubhouse?tab=frontrow`; `ClubhouseScreen` now reads `?tab=` query param on mount. Next migration: `216_`.
 
@@ -96,10 +99,13 @@
 
 Sequenced so the *feel* changes first (Phase A) before deeper data/state work.
 
-### Phase A — Shell & IA (frontend, no schema)
-- [ ] Sidebar becomes the sport-agnostic clubhouse spine + clubhouse switcher; remove `activeSport`-driven nav swapping
-- [ ] Top bar = competition tabs (one per active competition in the clubhouse, sport-colored, named comps not sport categories); secondary strip for competition screens
-- [ ] `/` → active clubhouse Overview; merge `MultiSportHomeScreen` into Clubhouse Overview (retire duplicate home)
+### Phase A — Shell & IA (frontend, no schema) ✅ Done — PR #671
+- [x] Sidebar becomes the sport-agnostic clubhouse spine + clubhouse switcher; `activeSport`-driven nav swapping removed
+- [x] Top bar = competition tabs (one per active competition in the clubhouse, sport-colored, named comps not sport categories); secondary strip for competition screens
+- [x] `/` → `/clubhouse` redirect; `MultiSportHomeScreen` deleted (merged into ClubhouseScreen)
+- [x] `ClubhouseProvider` singleton at app root; `ClubhouseContext` split to avoid Rolldown TDZ
+- [x] `playwright.config.js` channel:chrome (system Chrome; chromium_headless_shell missing on this machine)
+- [x] `platform.spec.js`: 84/84 passing
 
 ### Phase B — Entry unification + state/schema
 - [ ] Single "+ New competition" flow launched from clubhouse (sport picker, auto-sets `circle_id`); retire the 3 lobbies as user flows
