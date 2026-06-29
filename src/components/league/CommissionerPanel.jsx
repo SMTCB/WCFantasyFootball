@@ -1170,7 +1170,10 @@ function ResolvePendingBets({ openBets, resolutionBetsLoading, setSelectedBetFor
   const [expandedId, setExpandedId] = useState(null);
   const [voidConfirmBet, setVoidConfirmBet] = useState(null); // {id, title} | null
 
-  const pending = (openBets || []).filter(b => b.status !== 'resolved' && b.status !== 'cancelled');
+  // Pending = open/closed bets that need resolution. Resolved = already resolved (override eligible).
+  const pending  = (openBets || []).filter(b => b.status !== 'resolved' && b.status !== 'cancelled');
+  const resolved = (openBets || []).filter(b => b.status === 'resolved');
+  const allActionable = [...pending, ...resolved];
 
   const toggleCard = (betId) => {
     if (expandedId === betId) {
@@ -1206,26 +1209,28 @@ function ResolvePendingBets({ openBets, resolutionBetsLoading, setSelectedBetFor
       />
       <HubSectionLabel
         label="RESOLVE BETS"
-        sub={`${pending.length} PENDING · WAITING ON YOU`}
+        sub={`${pending.length} PENDING · ${resolved.length} RESOLVED (OVERRIDE ELIGIBLE)`}
         tone="var(--gold)"
         right={<span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.22em', color: 'var(--mute)' }}>AUTO-RESOLVE IS OFF</span>}
       />
       <div style={{ padding: '14px 22px 6px', fontFamily: BODY, fontSize: 11, color: 'var(--mute)', lineHeight: 1.5 }}>
         Pick a bet, enter the result, hit <b style={{ color: 'var(--gold)' }}>RESOLVE</b>. Points are awarded immediately.
+        Auto-resolved bets appear below and can be overridden if the result was set incorrectly.
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: '8px 22px 22px', overflow: 'auto', flex: 1 }}>
         {resolutionBetsLoading ? (
           <div style={{ padding: '18px', fontFamily: MONO, fontSize: 10, color: 'var(--mute)', letterSpacing: '.2em' }}>LOADING BETS…</div>
-        ) : pending.length === 0 ? (
+        ) : allActionable.length === 0 ? (
           <div style={{ padding: '18px 14px', background: 'var(--ink-2)', border: '1px dashed var(--rule)', textAlign: 'center' }}>
             <span style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '.22em', color: 'var(--mute)' }}>NOTHING TO RESOLVE · ALL CAUGHT UP</span>
           </div>
-        ) : pending.map(b => {
-          const isOpen = expandedId === b.id;
-          const tone   = typeTone(b.template_id);
-          const glyph  = typeGlyph(b.template_id);
-          const opts   = Array.isArray(b.options) ? b.options : [];
+        ) : allActionable.map(b => {
+          const isOpen       = expandedId === b.id;
+          const isResolved   = b.status === 'resolved';
+          const tone         = isResolved ? 'var(--mute)' : typeTone(b.template_id);
+          const glyph        = typeGlyph(b.template_id);
+          const opts         = Array.isArray(b.options) ? b.options : [];
           const currentAnswers = isOpen ? betResolutionAnswers : [];
 
           return (
@@ -1236,15 +1241,26 @@ function ResolvePendingBets({ openBets, resolutionBetsLoading, setSelectedBetFor
               >
                 <span style={{ width: 22, height: 22, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: `${tone}15`, border: `1px solid ${tone}55`, fontFamily: DISPLAY, fontSize: 12, color: tone }}>{glyph}</span>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 2, flex: 1, minWidth: 0 }}>
-                  <span style={{ fontFamily: DISPLAY, fontSize: 13, color: 'var(--paper)' }}>{b.title}</span>
-                  <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.16em', color: 'var(--mute)' }}>{b.scope_ref || b.scope_type || ''}</span>
+                  <span style={{ fontFamily: DISPLAY, fontSize: 13, color: isResolved ? 'var(--text-2)' : 'var(--paper)' }}>{b.title}</span>
+                  <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.16em', color: 'var(--mute)' }}>
+                    {b.scope_ref || b.scope_type || ''}
+                    {isResolved && b.correct_answer ? ` · RESULT: ${b.correct_answer.toUpperCase()}` : ''}
+                  </span>
                 </div>
-                <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.22em', color: 'var(--gold)' }}>● PENDING</span>
+                {isResolved
+                  ? <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.22em', color: 'var(--mute)' }}>✓ AUTO-RESOLVED</span>
+                  : <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.22em', color: 'var(--gold)' }}>● PENDING</span>}
                 <span style={{ color: 'var(--mute)', fontFamily: MONO, fontSize: 14 }}>{isOpen ? '−' : '+'}</span>
               </button>
 
               {isOpen && (
                 <div style={{ padding: '4px 14px 14px', display: 'flex', flexDirection: 'column', gap: 12, borderTop: '1px solid var(--rule)' }}>
+                  {/* Override notice for already-resolved bets */}
+                  {isResolved && (
+                    <div style={{ padding: '8px 10px', background: 'rgba(184,114,14,.06)', border: '1px solid rgba(184,114,14,.25)', fontFamily: BODY, fontSize: 11, color: 'var(--gold)', lineHeight: 1.5 }}>
+                      This bet was auto-resolved as <b>{b.correct_answer?.toUpperCase()}</b>. Selecting a different answer will override the result — points already awarded will be reversed and recalculated.
+                    </div>
+                  )}
                   {/* Who picked what */}
                   {Object.keys(answerGrouped).length > 0 && (
                     <div>
@@ -1348,7 +1364,7 @@ function ResolvePendingBets({ openBets, resolutionBetsLoading, setSelectedBetFor
                             color: canResolve ? 'var(--ink)' : 'var(--mute)',
                             cursor: canResolve ? 'pointer' : 'not-allowed',
                           }}
-                        >{commLoading ? 'RESOLVING…' : 'RESOLVE →'}</button>
+                        >{commLoading ? 'RESOLVING…' : isResolved ? 'OVERRIDE →' : 'RESOLVE →'}</button>
                       </div>
                     );
                   })()}
