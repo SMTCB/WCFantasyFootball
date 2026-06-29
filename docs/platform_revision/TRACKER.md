@@ -24,11 +24,10 @@
 | **2** | Tennis Module (Player's Box, roster picks, Ace Cards, ATP Finals) | ✅ Done | Sprints T-0 through T-4 (PRs #617–#620, #625) |
 | **3A** | Buyout hygiene batch 2 (provider adapter, containerisation, envs) | ✅ Done | PRs #634–#636 |
 | **3B** | v2 integration & deploy | 🔄 In progress | Code quality gates ✅ — smoke tests + deploy remaining |
-| **R** | Clubhouse-Centric Redesign (IA/UX) | 🔄 Phase A done — Phase B next | Phase A shipped PR #671. Design: [CLUBHOUSE_CENTRIC_REDESIGN.md](architecture/CLUBHOUSE_CENTRIC_REDESIGN.md). See [workstream](#clubhouse-centric-redesign-workstream) below. |
+| **R** | Clubhouse-Centric Redesign (IA/UX) | 🔄 Phase B done — Phase C next | Phase A PR #671, Phase B PR #675. Migration 217 deferred (blocked by live pilot — see row 18 banner). `useActiveCompetition` collapse carried into Phase C. Design: [CLUBHOUSE_CENTRIC_REDESIGN.md](architecture/CLUBHOUSE_CENTRIC_REDESIGN.md). See [workstream](#clubhouse-centric-redesign-workstream) below. |
 
 **Next session options (choose one):**
-- **Redesign Phase B follow-up** — Finish `useActiveCompetition` location-model collapse (deferred from Phase B). Migration 216 ✅ applied. Migration 217 🛑 blocked until World Cup pilot ends — see row 18 banner.
-- **Redesign Phase C** — `CompetitionResultsHeader` shared component + adopt in football/F1/tennis.
+- **Redesign Phase C** — `CompetitionResultsHeader` shared component + adopt in football/F1/tennis. Pick up `useActiveCompetition` location-model collapse here (carried from Phase B).
 - **Redesign Phase D** — Naming pass ("Clubhouse"/"Competition") + visual polish from mock.
 - **DD items** — TEST-1 (Vitest coverage), CODE-3 (error boundaries), OPS-2 (Sentry)
 - **Phase 3B smoke tests** → deploy sequence — see [Phase 3B checklist](#phase-3b-pre-merge-checklist) below
@@ -118,14 +117,15 @@ Sequenced so the *feel* changes first (Phase A) before deeper data/state work.
 - [x] `playwright.config.js` channel:chrome (system Chrome; chromium_headless_shell missing on this machine)
 - [x] `platform.spec.js`: 84/84 passing
 
-### Phase B — Entry unification + state/schema ✅ Frontend done — DB pending linked PC
+### Phase B — Entry unification + state/schema ✅ Done — PR #675 (2026-06-29)
 - [x] Single "+ New competition" flow (`NewCompetitionFlow.jsx`) — portal modal, sport picker, per-sport create form, join-by-code; `+` button wired in `CompetitionTopBar`; self-portals to `document.body` (createPortal rule). Props-only design (no local hook imports from AppLayout's dep tree — TDZ safe)
 - [x] `refreshCompetitions()` added to `useClubhouse` return — calls `fetchCircleData(activeCircleId)`; consumed in AppLayout to refresh top bar after create/join
-- [ ] Collapse `SportContext` + `useClubhouse` active-IDs into one `useActiveCompetition()` location model — deferred to Phase B follow-up PR
 - [x] Migration 216: wire tennis into `get_clubhouse_competitions` — applied 2026-06-29 (row 17)
-- [ ] Migration 217: `circle_id NOT NULL` — 🛑 **DO NOT RUN until World Cup pilot ends** — see row 18 banner: touches the shared production DB, 7 real pilot leagues have no clubhouse, deep pilot-impact risk, not just a product decision to make whenever convenient
+- ➡️ `useActiveCompetition()` location model collapse — **carried into Phase C** (no blocker, just sequencing)
+- 🛑 Migration 217: `circle_id NOT NULL` — **blocked until World Cup pilot ends** — see row 18 banner (7 live pilot leagues have no `circle_id`; applying the constraint now would require a pilot-impacting backfill decision)
 
 ### Phase C — Shared spine template
+- [ ] `useActiveCompetition()` location model collapse (carried from Phase B) — derive `{ clubhouseId, competitionId, sport }` from route; retire `SportContext.activeSport` for nav
 - [ ] Extract `CompetitionResultsHeader` (Tier 2) as one shared component
 - [ ] Refactor football / F1 / tennis competition views onto Tier 2 + Tier 3 (behavior-preserving)
 
@@ -301,4 +301,4 @@ These require a human decision before the relevant sprint can continue.
 
 ---
 
-Last Updated: **2026-06-29** (PR #675: Phase B frontend complete; migration 216 applied; migration 217 blocked until World Cup pilot ends ~July 2026; next migration `218_`)
+Last Updated: **2026-06-29** (Phase B closed: PR #675 merged, migration 216 applied; migration 217 blocked by live pilot; `useActiveCompetition` carried to Phase C. Next: Phase C.)

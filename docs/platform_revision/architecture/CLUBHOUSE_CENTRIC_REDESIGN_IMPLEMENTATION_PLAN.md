@@ -35,8 +35,8 @@ You are always inside a **Clubhouse**. The **left sidebar** is the Clubhouse spi
 | `src/context/ClubhouseProvider.jsx` | Calls `useClubhouse()` **once** at app root; provides its return value via `ClubhouseContext`. Replaces the per-screen `useClubhouse()` instantiation pattern. |
 | `src/components/CompetitionTopBar.jsx` | Prop-only: `{ competitions, pathname }`. Flattens `{football,f1,tennis}` into one scrollable tab list, each `{id,name,sport}`. Sport-colored active indicator. Returns `null` when `allComps.length === 0` (safe in demo mode). `+` button placeholder (Phase B wires it). |
 | `src/components/CompetitionScreenNav.jsx` | Prop-only: `{ pathname, paddockId }`. Returns `null` on non-sport routes (clubhouse, settings, etc.). `FOOTBALL_SCREENS`: LIVE/SQUAD/LEAGUE/MARKET/RECAP. `buildF1Screens(paddockId)`: CALENDAR/PICKS/STANDINGS/REPORT/SEASON. `TENNIS_SCREENS`: HOME/LEADERBOARD. Sport detected from `pathname` (not `activeSport`). |
-| `src/context/SportContext.jsx` | Still exists. `activePaddockId`/`activePlayerBoxId` still used. **`activeSport` is no longer used to choose the sidebar nav** (sidebar is static). Phase B will collapse this. |
-| `src/hooks/useClubhouse.js` | Implementation hook — still exported for `ClubhouseProvider` to call. Not called directly by screens any more (except via context). Exposes: `myCircles`, `activeCircle`, `activeCircleId`, `competitions` (`{football,f1,tennis}`), `feed`, `members`, `metaStandings`, `notifications`, `unreadCount`, and RPC actions. Tennis stubbed as `[]` in `get_clubhouse_competitions` — wired in Phase B (migration 216). |
+| `src/context/SportContext.jsx` | Still exists. `activePaddockId`/`activePlayerBoxId` still used. **`activeSport` is no longer used to choose the sidebar nav** (sidebar is static). Phase C will collapse this via `useActiveCompetition()`. |
+| `src/hooks/useClubhouse.js` | Implementation hook — still exported for `ClubhouseProvider` to call. Not called directly by screens any more (except via context). Exposes: `myCircles`, `activeCircle`, `activeCircleId`, `competitions` (`{football,f1,tennis}`), `feed`, `members`, `metaStandings`, `notifications`, `unreadCount`, and RPC actions. Tennis wired via migration 216 (applied 2026-06-29). |
 | `src/context/ClubhouseNotifContext.js` + `ClubhouseNotifProvider.jsx` | Unchanged. Lightweight cross-circle unread badge counter used by AppLayout. |
 | `src/screens/ClubhouseScreen.jsx` | Single home screen, reached at `/` (via redirect) and `/clubhouse`. Uses `useClubhouseContext()` (not direct `useClubhouse()`). Tabs: HOME / THE FRONTROW / RECAP / CHAT / INBOX (n) / MEMBERS / FIND / SETTINGS. No-circle → `ClubhouseLobby` (CREATE/JOIN). |
 | ~~`src/screens/MultiSportHomeScreen.jsx`~~ | **Deleted** (Phase A). Was 326 lines. Content folded into ClubhouseScreen. |
@@ -59,7 +59,7 @@ All three are bespoke tables — structurally similar, parameterizable. Phase C 
 | F1 | `create_paddock` | `usePaddock().createPaddock(name, circleId)` (`src/hooks/f1/usePaddock.js`) | `p_name`, **`p_circle_id`** (optional) | migration 215; writes `paddocks.circle_id` + junction |
 | Tennis | `create_player_box` | `usePlayerBox().createPlayerBox(name, circleId)` (`src/hooks/tennis/usePlayerBox.js`) | `p_name`, `p_season_year` (=2026), **`p_circle_id`** (optional) | migration 215; writes `player_boxes.circle_id` + junction |
 
-`get_clubhouse_competitions` returns `{ football:[...], f1:[...], tennis:[] }` — **tennis is still stubbed empty**. Phase B (migration 216) wires it.
+`get_clubhouse_competitions` returns `{ football:[...], f1:[...], tennis:[...] }` — tennis wired via migration 216 (applied 2026-06-29).
 
 ### Schema groundwork already in place
 
@@ -84,7 +84,7 @@ All three are **bespoke** grid/flex tables with rank + name + sport-specific poi
 | F1 | `create_paddock` | `usePaddock().createPaddock(name, circleId)` (`src/hooks/f1/usePaddock.js`) | `p_name`, **`p_circle_id`** (optional) | migration 215; writes `paddocks.circle_id` + junction |
 | Tennis | `create_player_box` | `usePlayerBox().createPlayerBox(name, circleId)` (`src/hooks/tennis/usePlayerBox.js`) | `p_name`, `p_season_year` (=2026), **`p_circle_id`** (optional) | migration 215; writes `player_boxes.circle_id` + junction |
 
-`get_clubhouse_competitions` (clubhouse-social migration) currently returns `{ football:[{id,name,format,sport}], f1:[{id,name,sport}], tennis:[] }` — **tennis is stubbed empty** (no tennis branch wired yet). Phase B/C must wire tennis.
+`get_clubhouse_competitions` returns `{ football:[{id,name,format,sport}], f1:[{id,name,sport}], tennis:[{id,name,sport}] }` — all three sports wired (migration 216 applied 2026-06-29).
 
 ### Schema groundwork already in place
 
@@ -141,7 +141,9 @@ All three are **bespoke** grid/flex tables with rank + name + sport-specific poi
 
 ---
 
-## Phase B — Entry unification + single location state + schema
+## Phase B — Entry unification + single location state + schema ✅ DONE — PR #675 (2026-06-29)
+
+> **Status:** Shipped. `NewCompetitionFlow` portal, `+` button wired, migration 216 applied. Migration 217 excluded — 🛑 blocked until World Cup pilot ends (7 live pilot leagues have no `circle_id`). `useActiveCompetition` location-model collapse carried into Phase C (no technical blocker — sequencing only).
 
 **Goal:** there is one way to create/join a competition (from the clubhouse), one location-state model, and the clubhouse binding is enforced in the DB.
 
@@ -247,8 +249,8 @@ new `competition/CompetitionResultsHeader.jsx`; `LeagueDetailView.jsx`, `F1Stand
 | ~~2~~ | ~~Sidebar rebuild (remove SPORTS section, add Clubhouse switcher + Tier-1)~~ | A | ✅ Shipped in #671 |
 | ~~3~~ | ~~`CompetitionTopBar` + `CompetitionScreenNav` + mobile parity~~ | A | ✅ Shipped in #671 |
 | ~~4~~ | ~~`NewCompetitionFlow` + `+` wiring + `refreshCompetitions` + migration files 216/217 committed~~ | B | ✅ Done — PR #675 |
-| **5** | Migration 216 ✅ applied 2026-06-29. Migration 217 🛑 **DO NOT RUN until World Cup pilot ends** (deep pilot-impact, see banner above). `useActiveCompetition` location model collapse | **B** | ⬜ Next — 217 explicitly excluded until pilot ends |
-| 6 | `CompetitionResultsHeader` extraction + adopt in 3 sports | C | ⬜ |
+| ~~5~~ | ~~Migration 216 applied. Migration 217 🛑 excluded (pilot-blocked). `useActiveCompetition` carried to Phase C.~~ | B | ✅ Closed |
+| 6 | `useActiveCompetition()` location model + `CompetitionResultsHeader` extraction + adopt in 3 sports | C | ⬜ |
 | 7 | Taxonomy + visual polish | D | ⬜ |
 
 Each PR: lint + build + `platform.spec.js` + madge green; update [TRACKER.md](../TRACKER.md).
@@ -264,4 +266,4 @@ Each PR: lint + build + `platform.spec.js` + madge green; update [TRACKER.md](..
 
 ---
 
-Last Updated: **2026-06-29** (Phase B frontend shipped PR #675; migration 216 applied to production; **migration 217 is 🛑 DO NOT RUN until the World Cup pilot ends — deep pilot-impact, see banner under "Pending DB actions" in Phase B**; `useActiveCompetition` collapse deferred to next B PR)
+Last Updated: **2026-06-29** (Phase B closed — PR #675; migration 216 applied; migration 217 🛑 pilot-blocked; `useActiveCompetition` carried into Phase C. Next: Phase C.)
