@@ -49,7 +49,7 @@ function buildSteps({ competitionName, budgetTotal, squadSize }) {
       emoji:            '🏠',
       kicker:           'Your digital home',
       heading:          'Create your\nClubhouse',
-      body:             "A Clubhouse is where you and your friends play every sport together — Football leagues, F1 Paddocks, Tennis. Create one now, join with a code, or skip for now.",
+      body:             "A Clubhouse is where you and your friends play every sport together — Football, F1, and Tennis competitions. Create one now, join with a code, or skip for now.",
       cta:              'Create Clubhouse →',
       skip:             'Skip for now',
       isClubhouseStep:  true,

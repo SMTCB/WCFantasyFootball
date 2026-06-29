@@ -183,7 +183,7 @@ export default function AppLayout({ children }) {
           {/* CLUBHOUSE */}
           <NavSectionLabel>Clubhouse</NavSectionLabel>
           <NavItem
-            label="My Clubhouse"
+            label="Clubhouse"
             path="/clubhouse"
             active={location.pathname.startsWith('/clubhouse') && !location.search.includes('tab=frontrow')}
             dotColor="rgba(255,255,255,.55)"
