@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, Fragment } from 'react';
 import { MgrTag, HubSectionLabel } from './HubShared';
 import { MONO, DISPLAY, miniBtnStyle, mgrHue, mgrMono } from './HubConstants';
 import { useHashtags } from '../../hooks/useHashtags';
@@ -24,6 +24,32 @@ function useIsDesktop() {
     return () => window.removeEventListener('resize', handler);
   }, []);
   return desktop;
+}
+
+function msgDateKey(ts) {
+  const d = new Date(ts);
+  return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+}
+
+function formatDateLabel(ts) {
+  const d = new Date(ts);
+  const today = new Date();
+  const yesterday = new Date(today);
+  yesterday.setDate(today.getDate() - 1);
+  const same = (a, b) => a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+  if (same(d, today)) return 'TODAY';
+  if (same(d, yesterday)) return 'YESTERDAY';
+  return d.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' }).toUpperCase();
+}
+
+function DateDivider({ label, mobile }) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: mobile ? '10px 16px 4px' : '10px 0 4px' }}>
+      <div style={{ flex: 1, height: 1, background: 'var(--rule)' }} />
+      <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 9, color: 'var(--mute)', letterSpacing: '.22em' }}>{label}</span>
+      <div style={{ flex: 1, height: 1, background: 'var(--rule)' }} />
+    </div>
+  );
 }
 
 /** Render message text — highlights @mentions and #hashtags as clickable spans. */
@@ -173,10 +199,13 @@ export default function ChatView({
                 <span style={{ fontFamily: "'Archivo', sans-serif", fontSize: 12, color: 'var(--mute)' }}>No messages match "{searchTerm}"</span>
               </div>
             )}
-            {filteredMessages.map((msg) => {
+            {filteredMessages.map((msg, idx) => {
               const msgHue = mgrHue(msg.userName || '');
+              const showDivider = idx === 0 || msgDateKey(msg.createdAt) !== msgDateKey(filteredMessages[idx - 1].createdAt);
               return (
-                <div key={msg.id} style={{ display: 'grid', gridTemplateColumns: '38px 1fr', gap: 12, alignItems: 'flex-start' }}>
+                <Fragment key={msg.id}>
+                  {showDivider && <DateDivider label={formatDateLabel(msg.createdAt)} />}
+                <div style={{ display: 'grid', gridTemplateColumns: '38px 1fr', gap: 12, alignItems: 'flex-start' }}>
                   <div style={{ paddingTop: 2 }}>
                     <MgrTag mono={mgrMono(msg.isOwnMessage ? 'You' : (msg.userName || ''))} hue={msg.isOwnMessage ? 'var(--cyan)' : msgHue} size={22} />
                   </div>
@@ -219,6 +248,7 @@ export default function ChatView({
                     )}
                   </div>
                 </div>
+                </Fragment>
               );
             })}
             <div ref={scrollEndRef} />
@@ -403,13 +433,6 @@ export default function ChatView({
         </div>
       )}
 
-      {/* Date divider */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 16px 4px' }}>
-        <div style={{ flex: 1, height: 1, background: 'var(--rule)' }} />
-        <span style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.22em' }}>TODAY</span>
-        <div style={{ flex: 1, height: 1, background: 'var(--rule)' }} />
-      </div>
-
       {/* Message list */}
       <div style={{ flex: 1, overflow: 'auto' }}>
         {chatLoading && (
@@ -422,10 +445,13 @@ export default function ChatView({
             <span style={{ fontFamily: "'Archivo', sans-serif", fontSize: 12, color: 'var(--mute)' }}>No messages yet.</span>
           </div>
         )}
-        {filteredMessages.map((msg) => {
+        {filteredMessages.map((msg, idx) => {
           const msgHue = mgrHue(msg.userName || '');
+          const showDivider = idx === 0 || msgDateKey(msg.createdAt) !== msgDateKey(filteredMessages[idx - 1].createdAt);
           return (
-            <div key={msg.id} style={{ padding: '6px 16px', display: 'grid', gridTemplateColumns: '30px 1fr', gap: 8, alignItems: 'flex-start' }}>
+            <Fragment key={msg.id}>
+              {showDivider && <DateDivider label={formatDateLabel(msg.createdAt)} mobile />}
+            <div style={{ padding: '6px 16px', display: 'grid', gridTemplateColumns: '30px 1fr', gap: 8, alignItems: 'flex-start' }}>
               <div style={{ paddingTop: 2 }}>
                 <MgrTag mono={mgrMono(msg.isOwnMessage ? 'You' : (msg.userName || ''))} hue={msg.isOwnMessage ? 'var(--cyan)' : msgHue} size={20} />
               </div>
@@ -449,6 +475,7 @@ export default function ChatView({
                 )}
               </div>
             </div>
+            </Fragment>
           );
         })}
         <div ref={scrollEndRef} style={{ height: 14 }} />
