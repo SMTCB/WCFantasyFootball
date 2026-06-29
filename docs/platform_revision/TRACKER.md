@@ -124,10 +124,10 @@ Sequenced so the *feel* changes first (Phase A) before deeper data/state work.
 - ➡️ `useActiveCompetition()` location model collapse — **carried into Phase C** (no blocker, just sequencing)
 - 🛑 Migration 217: `circle_id NOT NULL` — **blocked until World Cup pilot ends** — see row 18 banner (7 live pilot leagues have no `circle_id`; applying the constraint now would require a pilot-impacting backfill decision)
 
-### Phase C — Shared spine template
-- [ ] `useActiveCompetition()` location model collapse (carried from Phase B) — derive `{ clubhouseId, competitionId, sport }` from route; retire `SportContext.activeSport` for nav
-- [ ] Extract `CompetitionResultsHeader` (Tier 2) as one shared component
-- [ ] Refactor football / F1 / tennis competition views onto Tier 2 + Tier 3 (behavior-preserving)
+### Phase C — Shared spine template ✅ Done — PR #676 (2026-06-29)
+- [x] `useActiveCompetition()` location model collapse — `{sport, competitionId}` from pathname; `SportContext.activeSport` removed entirely
+- [x] Extract `CompetitionResultsHeader` (Tier 2) as one shared component (`src/components/competition/CompetitionResultsHeader.jsx`)
+- [x] Adopted in football (`LeagueDetailView` desktop standings), F1 (`F1StandingsScreen`), tennis (`TennisLeaderboardScreen`)
 
 ### Phase D — Taxonomy & polish
 - [ ] Naming pass: "Clubhouse" everywhere (retire "My Group"/"circle" in UI); "Competition" on shared surfaces
@@ -140,7 +140,7 @@ Sequenced so the *feel* changes first (Phase A) before deeper data/state work.
 These must all be green before opening the v2 → main PR.
 
 ### Smoke Tests
-- [ ] `platform.spec.js` green on v2 (84 tests × 1 browser) — last confirmed 84/84 on 2026-06-23
+- [ ] `platform.spec.js` green on v2 (84 tests × 1 browser) — last confirmed 84/84 on 2026-06-29
 - [ ] Football smoke pass: login → squad → transfer → league → live → recap
 - [ ] P2P smoke pass: create wallet → purchase test coins (`MOCK_PAYMENTS=true`) → create challenge → resolve
 - [ ] F1 smoke pass: create paddock → submit picks → enter test result → verify scores
@@ -301,4 +301,4 @@ These require a human decision before the relevant sprint can continue.
 
 ---
 
-Last Updated: **2026-06-29** (Phase B closed: PR #675 merged, migration 216 applied; migration 217 blocked by live pilot; `useActiveCompetition` carried to Phase C. Next: Phase C.)
+Last Updated: **2026-06-29** (Phase C closed: PR #676 merged — `useActiveCompetition` hook, `CompetitionResultsHeader` shared component, `SportContext.activeSport` removed. Next: Phase D — taxonomy + visual polish.)
