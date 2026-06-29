@@ -1,6 +1,6 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-06-28 (v2: dry-run UX fixes PR #665 — Clubhouse creation bug fixed, SCORES+LIVE merged with FIXTURES sub-tab, F1HomeScreen CALENDAR/PADDOCKS two-section layout, ClubhouseScreen THE FRONTROW + RECAP tab, TRACKER.md updated with session notes and remaining UX items UX-3/UX-5/ARCH-1–3 deferred to future sessions)  
+**Last Updated**: 2026-06-29 (v2: merged main PRs #650–653 #658 #667 #668; dry-run UX fixes PR #665; UX-3/5/7 + ARCH-1/2/3 PR #666)  
 **E2E Test Suite**: `platform.spec.js` (84 tests × 1 browser config) passing ✅ — 84/84 on v2 branch 2026-06-23  
 **Full Playbook Run**: `E2E_TEST_PLAYBOOK.md` v2.0 — all flows confirmed  
 **🟢 LAUNCH READY**: No critical (P0/P1) bugs open. All game mechanics functional. WC kick-off 2026-06-11.  
@@ -74,6 +74,32 @@
 **P2 — `.env.example` — all Edge Function secrets documented:**
 - 6 secrets with function names: `SUPABASE_JWT_SECRET`, `FORZA_ACCESS_TOKEN`, `GROQ_API_KEY`, `RAPIDAPI_TENNIS_KEY`, `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`
 - `MOCK_PAYMENTS=true` documented as dev/staging-only (never set in production)
+
+---
+
+## ✅ Starting-XI formation relaxed + missing ELIMINATED tag fix (2026-06-28) — PR #652, migration 194
+
+**Reported**: (1) Couldn't field a starting XI with only 2 defenders. (2) ELIMINATED tag missing for a genuinely-eliminated club's player (Uruguay/Valverde) in the Market.
+
+**Formation rule** — relaxed from `1 GK, 3–5 DEF, 2–5 MID, 1–3 FWD` to `exactly 1 GK, at least 1 DEF/MID/FWD, 11 total`, across all 5 enforcement layers:
+- `useLeagueConfig.js` client default
+- `useAutoFill.js` fallback
+- `ScoringInfoModal.jsx` informational copy
+- `set_lineup()` SQL RPC (migration 194) — server-authoritative gate
+- `calculate-scores` auto-sub validator (redeployed)
+- Migration 194 also patched the 18 leagues with a DB-level `min_formation` override baked in at creation time (would otherwise have kept enforcing the old rule). Pre-change snapshot: `backups/leagues_min_formation_pre_194_20260628.json`.
+
+**ELIMINATED tag** — root cause: `useEliminatedClubs` only checked `cup_active_clubs`, a table populated for draft/cup-mode leagues only. Classic leagues never have rows there, so the hook always returned an empty set regardless of actual elimination status. Fixed by deriving elimination from tournament fixtures directly when no cup pool exists for the league (`MarketScreen.jsx` + `SquadScreen.jsx` now pass `tournamentId` into the hook).
+
+---
+
+## ✅ ConfirmModal scroll-jump on sell (2026-06-28) — PR #653
+
+**Reported**: Clicking SELL on a player on the Market screen sometimes made the page jump almost to the bottom of the screen.
+
+**Root cause**: `ConfirmModal` (the "this is your captain/Joker — sell anyway?" dialog, triggered only when selling your captain or active Matchday Joker) used `position: fixed` without `createPortal`. Mounted inside `AppLayout#main-content` (`WebkitOverflowScrolling: touch`), iOS Safari computes `position: fixed` relative to that scroll container instead of the viewport — so `inset:0` stretched across the full player-list scroll height. The modal's flex-centering then placed it near the middle of that oversized area, and the Cancel button's `.focus()` on mount auto-scrolled it into view, producing the jump. Same bug class as PR #448 (ScoringInfoModal) and PR #474 (player action sheet) — `ConfirmModal` had been missed.
+
+**Fix**: `ConfirmModal.jsx` now portals to `document.body` internally, fixing every current usage (Market + Squad sell warnings) and any future usage automatically.
 
 ---
 

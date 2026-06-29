@@ -92,7 +92,7 @@ async function collectLeagueData(sb: ReturnType<typeof createClient>, league: { 
   ] = await Promise.all([
     sb.from('league_members').select('user_id, total_points, rank').eq('league_id', league.id).order('rank', { ascending: true }).limit(7),
     sb.from('transfers').select('user_id, player_in, player_out, transferred_at').eq('league_id', league.id).gte('transferred_at', since24h).order('transferred_at', { ascending: false }).limit(5),
-    sb.from('chat_messages').select('message, user_id').eq('league_id', league.id).eq('is_deleted', false).order('created_at', { ascending: false }).limit(3),
+    sb.from('chat_messages').select('message, user_id').eq('league_id', league.id).or('is_deleted.eq.false,is_deleted.is.null').order('created_at', { ascending: false }).limit(3),
     sb.from('fixtures').select('home_team, away_team, kickoff_at').eq('tournament_id', league.tournament_id).eq('status', 'scheduled').lte('kickoff_at', next48h).gte('kickoff_at', new Date().toISOString()).order('kickoff_at').limit(4),
     sb.from('gazette_entries').select('entry_type, headline').eq('league_id', league.id).in('entry_type', ['breaking_news', 'classified', 'activity']).order('published_at', { ascending: false }).limit(9),
     sb.from('league_config').select('config_key, config_value').eq('league_id', league.id).in('config_key', ['frontpage_pinned_quote', 'frontpage_pinned_quote_author']),
@@ -209,11 +209,11 @@ Base headline/hot_take on overall standings. wooden_spoon = the LAST-PLACED mana
 
 Respond ONLY with valid JSON:
 {
-  "headline": "ALL-CAPS TABLOID HEADLINE, MAX 65 CHARS",
-  "deck": "2-3 sentence intro. Name the overall leader. Snarky but fair. Max 220 chars.",
-  "hot_take": "One provocative observation about standings or form. Max 90 chars.",
-  "wooden_spoon": "Gentle roast of the bottom-table manager by name. Max 90 chars.",
-  "transfer_rumour": "Tabloid spin on any transfer from last 24h. null if no transfers. Max 110 chars."
+  "headline": "ALL-CAPS PUNCHY TABLOID HEADLINE, MAX 65 CHARACTERS",
+  "deck": "2-3 sentence article intro. Mention the overall leader by name. Snarky but fair. Weave in a chat quote or banter if there are recent messages. Max 220 chars.",
+  "hot_take": "One provocative observation — riff on the recent league chat or current standings form. Max 90 chars.",
+  "wooden_spoon": "Gentle roast of the BOTTOM-TABLE manager (last in standings) by name. Max 90 chars.",
+  "transfer_rumour": "Tabloid spin on any transfer from the last 24h. Max 110 chars. Use null if no transfers."
 }`;
 
   return { prompt, rawInput };
