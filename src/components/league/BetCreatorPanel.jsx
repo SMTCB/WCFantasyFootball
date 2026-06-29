@@ -243,9 +243,8 @@ export default function BetCreatorPanel({ leagueId, tournamentId, onCreated, com
   }, [tournamentId]);
 
   // ── Fetch: fixtures scoped to the next matchday, plus not-yet-started ─────
-  // fixtures from the current matchday that kick off tomorrow or later (so a
-  // bet can still be created on a later leg of an in-progress matchday without
-  // touching games that have already kicked off or start later today).
+  // fixtures from the current matchday that haven't kicked off yet (with at
+  // least 1 hour to go), so commissioners can create bets on same-day games.
   const fetchFixtures = useCallback(async () => {
     if (!tournamentId) return;
     setLoading(true);
@@ -271,13 +270,11 @@ export default function BetCreatorPanel({ leagueId, tournamentId, onCreated, com
         .in('matchday_id', matchdayIds)
         .order('kickoff_at', { ascending: true });
 
-      const tomorrowStart = new Date();
-      tomorrowStart.setUTCHours(0, 0, 0, 0);
-      tomorrowStart.setUTCDate(tomorrowStart.getUTCDate() + 1);
+      const oneHourFromNow = new Date(Date.now() + 60 * 60 * 1000);
 
       const filtered = (data || []).filter(f => {
         if (next && f.matchday_id === next.matchday_id) return true;
-        if (current && f.matchday_id === current.matchday_id) return new Date(f.kickoff_at) >= tomorrowStart;
+        if (current && f.matchday_id === current.matchday_id) return new Date(f.kickoff_at) >= oneHourFromNow;
         return false;
       });
 
@@ -291,7 +288,7 @@ export default function BetCreatorPanel({ leagueId, tournamentId, onCreated, com
 
   // ── Fetch: unique teams from the next matchday (for clean_sheet bets) ────
   // Same current+next window as fetchFixtures, restricted to teams whose
-  // current-matchday fixture hasn't kicked off before tomorrow.
+  // current-matchday fixture hasn't kicked off yet (with at least 1 hour to go).
   const fetchTeams = useCallback(async () => {
     if (!tournamentId) return;
     setLoading(true);
@@ -315,13 +312,11 @@ export default function BetCreatorPanel({ leagueId, tournamentId, onCreated, com
         .in('matchday_id', matchdayIds)
         .order('kickoff_at', { ascending: true });
 
-      const tomorrowStart = new Date();
-      tomorrowStart.setUTCHours(0, 0, 0, 0);
-      tomorrowStart.setUTCDate(tomorrowStart.getUTCDate() + 1);
+      const oneHourFromNow = new Date(Date.now() + 60 * 60 * 1000);
 
       const filtered = (data || []).filter(f => {
         if (next && f.matchday_id === next.matchday_id) return true;
-        if (current && f.matchday_id === current.matchday_id) return new Date(f.kickoff_at) >= tomorrowStart;
+        if (current && f.matchday_id === current.matchday_id) return new Date(f.kickoff_at) >= oneHourFromNow;
         return false;
       });
 
