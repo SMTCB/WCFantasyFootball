@@ -1,12 +1,13 @@
 import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '../lib/supabase';
 import { normalisePlayers } from '../lib/players';
+import BottomSheet from './shared/BottomSheet';
 
 const POS_CONFIG = {
-  GK:  { label: 'GK',  color: 'var(--gold)', bg: 'rgba(240,180,0,0.14)'  },
-  DEF: { label: 'DEF', color: 'var(--cyan)', bg: 'rgba(0,196,232,0.14)'  },
-  MID: { label: 'MID', color: 'var(--pos-gk)', bg: 'rgba(157,95,245,0.14)' },
-  FWD: { label: 'FWD', color: 'var(--danger)', bg: 'rgba(240,58,58,0.14)'  },
+  GK:  { label: 'GK',  color: 'var(--gold)', bg: 'rgba(184,114,14,0.12)'  },
+  DEF: { label: 'DEF', color: 'var(--cyan)', bg: 'rgba(26,111,168,0.12)'  },
+  MID: { label: 'MID', color: 'var(--pos-gk)', bg: 'rgba(140,73,201,0.12)' },
+  FWD: { label: 'FWD', color: 'var(--danger)', bg: 'rgba(185,28,28,0.12)'  },
 };
 
 const POS_LABEL = { GK: 'Goalkeeper', DEF: 'Defender', MID: 'Midfielder', FWD: 'Forward' };
@@ -31,7 +32,6 @@ export default function PlayerPickerSheet({ position, budget, takenMap, isOwnedB
         .eq('is_active', true)
         .eq('position', position);
 
-      // Filter by tournament if provided
       if (tournamentId) {
         query = query.eq('tournament_id', tournamentId);
       }
@@ -63,27 +63,20 @@ export default function PlayerPickerSheet({ position, budget, takenMap, isOwnedB
   const posCfg = POS_CONFIG[position] ?? POS_CONFIG.MID;
 
   return (
-    <>
-      {/* Backdrop */}
+    <BottomSheet open onClose={onClose}>
       <div
-        className="fixed inset-0 z-40"
-        style={{ background: 'rgba(0,0,0,0.6)' }}
-        onClick={onClose}
-      />
-
-      {/* Sheet */}
-      <div
-        className="fixed bottom-0 left-0 right-0 z-50 flex flex-col"
         style={{
-          background:   'var(--ink-2)',
-          borderTop:    '1px solid rgba(255,255,255,0.08)',
+          background:   'var(--card)',
+          borderTop:    '2px solid var(--rule)',
           borderRadius: '16px 16px 0 0',
           maxHeight:    '85vh',
+          display:      'flex',
+          flexDirection: 'column',
         }}
       >
         {/* Handle */}
         <div className="flex justify-center pt-3 pb-1 shrink-0">
-          <div className="w-9 h-1 rounded-full" style={{ background: 'rgba(255,255,255,0.15)' }} />
+          <div className="w-9 h-1 rounded-full" style={{ background: 'var(--rule)' }} />
         </div>
 
         {/* Header */}
@@ -102,7 +95,7 @@ export default function PlayerPickerSheet({ position, budget, takenMap, isOwnedB
           <button
             onClick={onClose}
             className="w-8 h-8 rounded-full flex items-center justify-center"
-            style={{ background: 'rgba(255,255,255,0.06)', color: 'var(--mute)', fontSize: '16px' }}
+            style={{ background: 'var(--elev)', color: 'var(--mute)', fontSize: '16px', border: '1px solid var(--rule)' }}
           >
             ✕
           </button>
@@ -117,8 +110,8 @@ export default function PlayerPickerSheet({ position, budget, takenMap, isOwnedB
             onChange={e => setSearch(e.target.value)}
             className="w-full px-3 py-2.5 rounded-sm text-[13px]"
             style={{
-              background:   'rgba(255,255,255,0.05)',
-              border:       '1px solid rgba(255,255,255,0.1)',
+              background:   'var(--elev)',
+              border:       '1px solid var(--rule)',
               color:        'var(--paper)',
               outline:      'none',
             }}
@@ -144,14 +137,14 @@ export default function PlayerPickerSheet({ position, budget, takenMap, isOwnedB
                   key={p.id}
                   className="flex items-center px-5 py-3 gap-3"
                   style={{
-                    borderBottom: '1px solid rgba(255,255,255,0.04)',
-                    opacity: (taken || (owned)) ? 0.55 : 1,
+                    borderBottom: '1px solid var(--rule)',
+                    opacity: (taken || owned) ? 0.55 : 1,
                   }}
                 >
                   {/* Avatar */}
                   <div
                     className="w-10 h-10 rounded-full shrink-0 flex items-center justify-center font-black text-[10px] uppercase"
-                    style={{ background: posCfg.bg, border: `1.5px solid ${posCfg.color}50`, color: posCfg.color, fontFamily: 'Archivo Black, sans-serif' }}
+                    style={{ background: posCfg.bg, border: `1.5px solid ${posCfg.color}`, color: posCfg.color, fontFamily: 'Archivo Black, sans-serif' }}
                   >
                     {p.club?.substring(0, 3)}
                   </div>
@@ -192,12 +185,13 @@ export default function PlayerPickerSheet({ position, budget, takenMap, isOwnedB
                         onClick={() => handleBuy(p)}
                         className="px-3 py-1.5 rounded text-[11px] font-black uppercase tracking-wide"
                         style={{
-                          background:    'rgba(24,201,107,0.15)',
-                          border:        '1px solid rgba(24,201,107,0.35)',
+                          background:    'var(--pos-bg)',
+                          border:        '1px solid var(--positive)',
                           color:         'var(--positive)',
                           fontFamily:    'Archivo Black, sans-serif',
                           opacity:       isBuying ? 0.5 : 1,
                           letterSpacing: '0.08em',
+                          minHeight:     '36px',
                         }}
                       >
                         {isBuying ? '…' : 'Buy'}
@@ -210,6 +204,6 @@ export default function PlayerPickerSheet({ position, budget, takenMap, isOwnedB
           )}
         </div>
       </div>
-    </>
+    </BottomSheet>
   );
 }
