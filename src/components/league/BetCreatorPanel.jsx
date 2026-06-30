@@ -200,7 +200,7 @@ export default function BetCreatorPanel({ leagueId, tournamentId, onCreated, com
         .select('id, name, position, club')
         .in('position', ['FWD', 'MID', 'DEF'])
         .order('price', { ascending: false })
-        .limit(80);
+        .limit(200);
 
       // Only filter by tournament when we have one
       if (tournamentId) pq = pq.eq('tournament_id', tournamentId);
@@ -589,17 +589,36 @@ export default function BetCreatorPanel({ leagueId, tournamentId, onCreated, com
                   </span>
                 )}
               </div>
-              {selectedOpts.length > 0 && (
-                <button
-                  onClick={() => setSelectedOpts([])}
-                  style={{
-                    fontFamily: MONO, fontSize: 9, color: 'var(--danger)', letterSpacing: '.15em',
-                    background: 'none', border: 'none', cursor: 'pointer', padding: '2px 0',
-                  }}
-                >
-                  CLEAR
-                </button>
-              )}
+              <div style={{ display: 'flex', gap: 10 }}>
+                {isPlayerBet && filteredPlayers.length > 0 && (
+                  <button
+                    onClick={() => {
+                      setSelectedOpts(filteredPlayers.map(p => ({
+                        key: p.id,
+                        label: p.name,
+                        meta: { club: p.club, pos: p.position },
+                      })));
+                    }}
+                    style={{
+                      fontFamily: MONO, fontSize: 9, color: 'var(--cyan)', letterSpacing: '.15em',
+                      background: 'none', border: 'none', cursor: 'pointer', padding: '2px 0',
+                    }}
+                  >
+                    ALL ({filteredPlayers.length})
+                  </button>
+                )}
+                {selectedOpts.length > 0 && (
+                  <button
+                    onClick={() => setSelectedOpts([])}
+                    style={{
+                      fontFamily: MONO, fontSize: 9, color: 'var(--danger)', letterSpacing: '.15em',
+                      background: 'none', border: 'none', cursor: 'pointer', padding: '2px 0',
+                    }}
+                  >
+                    CLEAR
+                  </button>
+                )}
+              </div>
             </div>
 
             {loading ? (
@@ -614,6 +633,28 @@ export default function BetCreatorPanel({ leagueId, tournamentId, onCreated, com
                 ) : null}
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 4, maxHeight: 260, overflowY: 'auto' }}>
+                  {/* "None" — bet that no team keeps a clean sheet */}
+                  {(() => {
+                    const sel = isTeamSelected('none');
+                    return (
+                      <button
+                        onClick={() => toggleTeam('none')}
+                        style={{
+                          width: '100%', padding: '10px 12px', textAlign: 'left', cursor: 'pointer',
+                          background: sel ? 'rgba(0,196,232,0.1)' : 'rgba(255,255,255,0.03)',
+                          border: `1px solid ${sel ? 'rgba(0,196,232,0.4)' : 'rgba(255,255,255,0.06)'}`,
+                          borderRadius: 3, transition: 'all 0.12s',
+                          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                        }}
+                      >
+                        <div>
+                          <span style={{ fontFamily: DISPLAY, fontSize: 13, color: sel ? 'var(--cyan)' : 'var(--paper)' }}>None</span>
+                          <span style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', marginLeft: 8, letterSpacing: '.1em' }}>no clean sheet this matchday</span>
+                        </div>
+                        {sel && <span style={{ color: 'var(--cyan)', fontSize: 14 }}>✓</span>}
+                      </button>
+                    );
+                  })()}
                   {teams.map(name => {
                     const sel = isTeamSelected(name);
                     return (
