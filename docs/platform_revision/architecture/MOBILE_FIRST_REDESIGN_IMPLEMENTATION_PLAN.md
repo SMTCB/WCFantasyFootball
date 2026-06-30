@@ -284,4 +284,4 @@ Each PR: lint + build (TDZ) + `platform.spec.js` + madge green; update the [Mobi
 
 ---
 
-Last Updated: **2026-06-30**
+Last Updated: **2026-06-30** — **Workstream complete.** All 10 PRs shipped across phases M0–M4 (PRs #682–689). M4 delivered: tap-target sweep ≥44px on RecapView/SquadScreen/MarketScreen; `PlayerPickerSheet` `createPortal` + Kit Light token pass; `@media (640–1023px)` tablet tier in `index.css`. `MarketScreen` full progressive-disclosure header deferred to a future P3 item (per-row button heights fixed; full BottomSheet filter rewrite not in scope for this workstream). This document is now a historical build record — the workstream is closed.
