@@ -166,16 +166,20 @@ function processPeriodsData(periodsData, homeTeamForzaId) {
       const playerForzaId = ev.player?.id ? String(ev.player.id) : null;
 
       if (isShootout) {
-        // Shootout scored (goal event in a shootout period)
-        if (ev.type === 'goal' && playerForzaId) {
-          result.shootoutScoredMap[playerForzaId] = (result.shootoutScoredMap[playerForzaId] ?? 0) + 1;
-        }
-        // Shootout miss — player gets -1 pt; opposing GK gets +0.5 pt
-        if (ev.type === 'missed_penalty' || (ev.type === 'missed_goal' && ev.detail === 'penalty')) {
-          if (playerForzaId) result.shootoutMissed.add(playerForzaId);
-          if (ev.team_side) {
-            result.shootoutSavedByTeamSide[ev.team_side] =
-              (result.shootoutSavedByTeamSide[ev.team_side] ?? 0) + 1;
+        // Forza emits shootout kicks as a single unified event type — not 'goal'/'missed_penalty'
+        // like in-game penalties. Shape: { type: 'penalty_shootout_shot', player, scored, team_side }.
+        if (ev.type === 'penalty_shootout_shot' && playerForzaId) {
+          if (ev.scored === true) {
+            result.shootoutScoredMap[playerForzaId] = (result.shootoutScoredMap[playerForzaId] ?? 0) + 1;
+          } else if (ev.scored === false) {
+            // Shootout miss — player gets -1 pt; opposing GK gets +0.5 pt.
+            // Forza doesn't distinguish save vs off-target on this endpoint, so every miss
+            // is credited to the opposing GK as a save (per product decision 2026-06-30).
+            result.shootoutMissed.add(playerForzaId);
+            if (ev.team_side) {
+              result.shootoutSavedByTeamSide[ev.team_side] =
+                (result.shootoutSavedByTeamSide[ev.team_side] ?? 0) + 1;
+            }
           }
         }
         // Shootout events not pushed to activityEvents (not shown on Live screen)
