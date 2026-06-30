@@ -25,6 +25,7 @@
 | **3A** | Buyout hygiene batch 2 (provider adapter, containerisation, envs) | ✅ Done | PRs #634–#636 |
 | **3B** | v2 integration & deploy | 🔄 In progress | Code quality gates ✅ — smoke tests + deploy remaining |
 | **R** | Clubhouse-Centric Redesign (IA/UX) | ✅ Done — Phase D closed | Phase A PR #671, Phase B PR #675, Phase C PR #676, Phase D PR #677. Migration 217 deferred (blocked by live pilot). Design: [CLUBHOUSE_CENTRIC_REDESIGN.md](architecture/CLUBHOUSE_CENTRIC_REDESIGN.md). See [workstream](#clubhouse-centric-redesign-workstream) below. |
+| **M** | Mobile-First Redesign (sub-`lg` UX) | 📋 Assessment validated — build not started | Assessment + implementation plan written 2026-06-30, no code touched. 5 phases M0–M4. Design: [MOBILE_FIRST_REDESIGN.md](architecture/MOBILE_FIRST_REDESIGN.md). See [workstream](#mobile-first-redesign-workstream) below. |
 
 **Next session options (choose one):**
 - **DD items** — TEST-1 (Vitest coverage), CODE-3 (error boundaries), OPS-2 (Sentry)
@@ -134,6 +135,42 @@ Sequenced so the *feel* changes first (Phase A) before deeper data/state work.
 
 ---
 
+## Mobile-First Redesign Workstream
+
+**Assessment validated 2026-06-30. Design doc:** [architecture/MOBILE_FIRST_REDESIGN.md](architecture/MOBILE_FIRST_REDESIGN.md) (why/what). **Build plan:** [architecture/MOBILE_FIRST_REDESIGN_IMPLEMENTATION_PLAN.md](architecture/MOBILE_FIRST_REDESIGN_IMPLEMENTATION_PLAN.md) (phase-by-phase how).
+
+**Concept:** below `lg` the thumb is the primary input, the deadline is the primary message, and one card-based, sheet-driven pattern language is the only way to render. Root cause diagnosed: mobile quality is *accidental* — the good patterns exist in the mature football screens (Tier A: SquadScreen/LiveScreen/LeagueDetailView) but were never extracted into reusable primitives, so newer multi-sport screens reinvented (Tier B: mobile-first column) and the P2P/Trophy screens regressed to desktop-first (Tier C: broken at 375px). Fix = define + build the mobile pattern-language primitives once, then route every screen through them. **Scope: sub-`lg` only.**
+
+Sequenced worst-breakage-first, highest-leverage shared component early.
+
+### Phase M0 — Foundations (primitives + token fixes) ⬜
+- [ ] `useViewport()` / `useIsMobile()` hook (single `matchMedia`; mobile<640 / tablet 640–1023 / desktop≥1024)
+- [ ] Define `--f1`/`--ten`/`--f1bg`/`--tenbg` tokens (referenced by 8+ components, **defined nowhere** today — latent bug); fix `--r-sm`/`--r-md` skeleton mismatch; add `env(safe-area-inset-top)` to the sticky mobile top bar
+- [ ] Consolidate the **one** `<BottomSheet>` (portaled, safe-area, Kit Light) — `ActionSheet` + hand-rolled un-portaled `PlayerPickerSheet` converge
+- [ ] Build `<PrimaryActionBar>`/FAB primitive + standings card-mode scaffolding
+
+### Phase M1 — The shared spine on mobile ⬜
+- [ ] `CompetitionResultsHeader` mobile card mode (fixes Football/F1/Tennis standings in one change)
+- [ ] Kill the Tennis 14-column horizontal `<table>`
+- [ ] Collapsing `<TabStrip>` for Clubhouse (8-tab no-scroll) + League (`HubTabPills` 6-pill)
+
+### Phase M2 — Fix the broken screens (Tier C) ⬜
+- [ ] `ChallengeScreen` mobile DOM — sidebar folds inline, "New Challenge" to thumb zone
+- [ ] `TrophyCabinetScreen` mobile DOM — same pattern
+
+### Phase M3 — Primary-action pass ⬜
+- [ ] Every key screen gets one thumb-anchored `<PrimaryActionBar>` tied to its deadline/next-step
+- [ ] Surface the deadline countdown on mobile (currently `hidden lg:block` on Squad)
+
+### Phase M4 — Parity & polish ⬜
+- [ ] `MarketScreen` mobile DOM (tall sticky header → progressive disclosure)
+- [ ] 44px tap-target sweep; `PlayerPickerSheet`→`<BottomSheet>` migration; reduce dual-render cost
+- [ ] Tablet tier (`md` two-up cards / wider sheets)
+
+> **Deferred follow-up (NOT in this workstream):** [UX-DESKTOP-1](#phase-3--before-sale-close) — the Tier B multi-sport screens (Clubhouse/F1/Tennis) render as a narrow centred ribbon on desktop (they're mobile-first columns that don't scale *up*). This is the inverse of mobile optimization and would mean editing desktop DOM, so it's logged in the Phase 3 DD table for a later, separate decision. Captured here so it isn't lost.
+
+---
+
 ## Phase 3B Pre-Merge Checklist
 
 These must all be green before opening the v2 → main PR.
@@ -227,6 +264,7 @@ From [TECHNICAL_DUE_DILIGENCE.md](due_diligence/TECHNICAL_DUE_DILIGENCE.md). Seq
 | LOW-6 | Mobile push notifications (Capacitor + FCM/APNs) |
 | LOW-9 | Accessibility audit (WCAG 2.1 AA minimum) |
 | CODE-6 | Consolidate shared UI primitives (`LivePill`, `DeltaPill`, `LeagueChip`, `MiniTok`) into `src/components/shared/` — currently duplicated across Football/F1/Tennis screens |
+| UX-DESKTOP-1 | **Tier B desktop scale-up** — the multi-sport screens (Clubhouse, all F1, all Tennis) are mobile-first columns capped at `maxWidth: 480–700px`, so on a wide desktop they render as a narrow centred ribbon that wastes the screen. The inverse of the [Mobile-First Redesign](architecture/MOBILE_FIRST_REDESIGN.md) (which is sub-`lg` only). Give these screens proper desktop layouts (multi-column / use the width). Surfaced 2026-06-30 during the mobile assessment; deferred as a separate, future decision. |
 
 ---
 
@@ -300,4 +338,6 @@ These require a human decision before the relevant sprint can continue.
 
 ---
 
-Last Updated: **2026-06-29** (Phase D closed: PR #677 merged — sidebar "My Clubhouse" → "Clubhouse", `AllCompetitions` unified sport-coloured grid with member avatar strip + stats panel in the header. Clubhouse-Centric Redesign fully complete (Phases A–D). Next: DD items or Phase 3B smoke tests.)
+**Session 2026-06-30 (Mobile-First Redesign — assessment + plan):** Mobile/tablet UX assessment mirroring the Clubhouse exercise. Four parallel survey agents mapped the current sub-`lg` reality across the shell, football screens, multi-sport screens, and design system. Diagnosed three tiers with no shared contract: **Tier A** (SquadScreen/LiveScreen/LeagueDetailView) is genuinely mobile-adapted (dedicated `lg:hidden` DOM, card rows, portaled bottom sheets — the quality bar); **Tier B** (Clubhouse/F1/Tennis) is mobile-first columns that don't scale up (desktop = stretched phone); **Tier C** (ChallengeScreen/TrophyCabinetScreen) is desktop-first with a fixed 256px sidebar, **broken at 375px**. Root cause: mobile quality is *accidental* — good patterns never extracted into reusable primitives, so `CompetitionResultsHeader` (the Phase-C shared component) propagates a desktop dense-grid to all 3 sports' mobile standings; no `useViewport` hook; binary `lg:` (1024px) split, no tablet tier; `--f1`/`--ten` tokens referenced-but-undefined; no top safe-area inset; two divergent bottom-sheet impls; no FAB anywhere. Fix = an 8-primitive mobile pattern language + 5-phase delivery (M0 foundations → M1 shared spine → M2 fix broken screens → M3 primary-action pass → M4 parity/polish), worst-breakage-first, **sub-`lg` scope only**. User validated the assessment; Tier B desktop-ribbon logged as UX-DESKTOP-1 (Phase 3 DD, separate future decision). Two docs written, **no code touched**: [MOBILE_FIRST_REDESIGN.md](architecture/MOBILE_FIRST_REDESIGN.md) + [MOBILE_FIRST_REDESIGN_IMPLEMENTATION_PLAN.md](architecture/MOBILE_FIRST_REDESIGN_IMPLEMENTATION_PLAN.md). Next: Mobile Phase M0.
+
+Last Updated: **2026-06-30** (Mobile-First Redesign assessment + implementation plan written, validated by user — new workstream M, sub-`lg` scope; Tier B desktop scale-up logged as UX-DESKTOP-1. No code touched. Next: Mobile Phase M0, or prior options — DD items / Phase 3B smoke tests.)
