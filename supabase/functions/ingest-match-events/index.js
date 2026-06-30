@@ -51,6 +51,24 @@ function parseMinute(s) {
   return base + extra;
 }
 
+// Derive match duration from period events. Returns 90 for normal time, 120 for
+// ET. Shootout periods are excluded — their minutes don't reflect field time.
+// Capped at 120 to guard against stray data.
+function getMatchDurationMinutes(periodsData) {
+  if (!periodsData?.periods) return 90;
+  let maxMin = 90;
+  for (const period of periodsData.periods) {
+    const pName = String(period.name ?? '').toLowerCase();
+    const pType = String(period.type ?? period.period_type ?? '').toLowerCase();
+    if (pName.includes('penalt') || pType.includes('penalt')) continue; // shootout — skip
+    for (const ev of period.events ?? []) {
+      const min = parseMinute(ev.match_minute ?? '');
+      if (min > maxMin) maxMin = min;
+    }
+  }
+  return Math.min(120, maxMin);
+}
+
 // ── Build a flat player stats map from E10 player_statistics ─────────────────
 // E10 shape: { player_statistics: { goals: [{player_id, team_id, value, rank}…], … } }
 // Returns: { [forza_player_id]: { goals, assists, minutes_played, … } }
@@ -74,27 +92,70 @@ function flattenPlayerStats(raw) {
 //   penaltyMissed:           Set<forza_player_id>,
 //   penaltyMissedByTeamSide: { 'home'|'away': count },   ← used to credit opposing GK
 //   penaltyScoredMap:        { [forza_player_id]: count },
-//   activityEvents:          []
+//   activityEvents:          [],
+//   // Penalty shootout — routed here when period.name/type contains 'penalt':
+//   shootoutScoredMap:       { [forza_player_id]: count },  // +1 pt each
+//   shootoutMissed:          Set<forza_player_id>,          // -1 pt each
+//   shootoutSavedByTeamSide: { 'home'|'away': count },     // opposing GK +0.5 pt each
+//   hasShootout:             boolean,
 // }
-// Note: penalty_saved per GK is derived in the main statsUpserts loop, not here,
-// because we need to know each player's team side to find "their" opposing GK.
 function processPeriodsData(periodsData, homeTeamForzaId) {
   const result = {
     redCards:                new Set(),
     penaltyMissed:           new Set(),
-    penaltyMissedByTeamSide: {},   // 'home'|'away' → number of missed penalties by that team
-    penaltyScoredMap:        {},   // forza_player_id → penalties scored count
-    goalsMap:                {},   // forza_player_id → regular goal count (E9 fallback for when E10 is absent)
-    assistsMap:              {},   // forza_player_id → assist count (E9 fallback)
+    penaltyMissedByTeamSide: {},
+    penaltyScoredMap:        {},
+    goalsMap:                {},
+    assistsMap:              {},
     activityEvents:          [],
+    // Shootout tracking
+    shootoutScoredMap:       {},
+    shootoutMissed:          new Set(),
+    shootoutSavedByTeamSide: {},
+    hasShootout:             false,
   };
 
   if (!periodsData?.periods) return result;
 
   for (const period of periodsData.periods) {
+    // Detect penalty-shootout period by name or type field.
+    // Forza uses various naming: "Penalty Shootout", "penalties", period.type="penalties", etc.
+    // Numeric period.id=5 is also a common convention.
+    const pName = String(period.name ?? '').toLowerCase();
+    const pType = String(period.type ?? period.period_type ?? '').toLowerCase();
+    const isShootout = pName.includes('penalt') || pType.includes('penalt') ||
+                       (typeof period.id === 'number' && period.id === 5);
+
+    if (isShootout) {
+      result.hasShootout = true;
+      console.log(`[ingest-match-events] Shootout period detected: name="${period.name}" type="${period.type}" id=${period.id}`);
+    }
+
     for (const ev of period.events ?? []) {
-      const isHome      = ev.team_side === 'home';
       const playerForzaId = ev.player?.id ? String(ev.player.id) : null;
+
+      if (isShootout) {
+        // Forza emits shootout kicks as a single unified event type — not 'goal'/'missed_penalty'
+        // like in-game penalties. Shape: { type: 'penalty_shootout_shot', player, scored, team_side }.
+        if (ev.type === 'penalty_shootout_shot' && playerForzaId) {
+          if (ev.scored === true) {
+            result.shootoutScoredMap[playerForzaId] = (result.shootoutScoredMap[playerForzaId] ?? 0) + 1;
+          } else if (ev.scored === false) {
+            // Shootout miss — player gets -1 pt; opposing GK gets +0.5 pt.
+            // Forza doesn't distinguish save vs off-target on this endpoint, so every miss
+            // is credited to the opposing GK as a save (per product decision 2026-06-30).
+            result.shootoutMissed.add(playerForzaId);
+            if (ev.team_side) {
+              result.shootoutSavedByTeamSide[ev.team_side] =
+                (result.shootoutSavedByTeamSide[ev.team_side] ?? 0) + 1;
+            }
+          }
+        }
+        // Shootout events not pushed to activityEvents (not shown on Live screen)
+        continue;
+      }
+
+      // ── Regular period event handling ─────────────────────────────────────────
 
       if (ev.type === 'card' && ev.detail === 'red' && playerForzaId) {
         result.redCards.add(playerForzaId);
@@ -106,7 +167,6 @@ function processPeriodsData(periodsData, homeTeamForzaId) {
 
       if (ev.type === 'missed_penalty' || (ev.type === 'missed_goal' && ev.detail === 'penalty')) {
         if (playerForzaId) result.penaltyMissed.add(playerForzaId);
-        // Track which team missed so the opposing GK can receive penalty_saved credit
         if (ev.team_side) {
           result.penaltyMissedByTeamSide[ev.team_side] =
             (result.penaltyMissedByTeamSide[ev.team_side] ?? 0) + 1;
@@ -121,13 +181,10 @@ function processPeriodsData(periodsData, homeTeamForzaId) {
         const isPenalty = ev.detail === 'penalty';
         const isOwnGoal = ev.detail === 'own_goal';
 
-        // Track penalty scored per player (for FWD +1 bonus in scoring)
         if (isPenalty && playerForzaId) {
           result.penaltyScoredMap[playerForzaId] = (result.penaltyScoredMap[playerForzaId] ?? 0) + 1;
         }
 
-        // E9 fallback goal/assist maps — used in step 9 when E10 player_statistics is absent (e.g. 404 on friendlies).
-        // Own goals excluded here — they are tracked separately via E5 EventDigest own_goal_count.
         if (!isOwnGoal && playerForzaId) {
           result.goalsMap[playerForzaId] = (result.goalsMap[playerForzaId] ?? 0) + 1;
         }
@@ -136,7 +193,6 @@ function processPeriodsData(periodsData, homeTeamForzaId) {
           result.assistsMap[assistForzaId] = (result.assistsMap[assistForzaId] ?? 0) + 1;
         }
 
-        // Own goals are detected via E5 EventDigest own_goal_count — skip here
         result.activityEvents.push({
           type: 'goal',
           player_forza_id: playerForzaId,
@@ -284,6 +340,13 @@ Deno.serve(async (req) => {
     const minutesMap    = {};  // forza_player_id → minutes_played (E5 fallback)
     const lineupTeamMap = {};  // forza_player_id → forza_team_id  (E5 fallback)
 
+    // ET-aware: detect match duration (90 or 120) from period event minutes so
+    // players who played through extra time get correct E5-fallback minutes.
+    const matchDurationMinutes = getMatchDurationMinutes(periodsData);
+    if (matchDurationMinutes > 90) {
+      console.log(`[ingest-match-events] Extra time detected — using ${matchDurationMinutes} min as match duration for ${fmid}`);
+    }
+
     if (lineupsData?.lineups) {
       for (const side of ['home', 'away']) {
         const lineup      = lineupsData.lineups[side];
@@ -293,7 +356,7 @@ Deno.serve(async (req) => {
         for (const p of (lineup.pitch_players ?? [])) {
           if (!p.player_id) continue;
           const fpid = String(p.player_id);
-          minutesMap[fpid]    = 90;           // starters play 90 unless subbed off
+          minutesMap[fpid]    = matchDurationMinutes; // starters play full match unless subbed off
           lineupTeamMap[fpid] = teamForzaId;
           if (!playerLookup[fpid] && p.position)
             playerLookup[fpid] = { id: null, position: POSITION_MAP[p.position] ?? 'MID' };
@@ -328,11 +391,11 @@ Deno.serve(async (req) => {
       if (ev.player_forza_id && minutesMap[ev.player_forza_id] !== undefined) {
         minutesMap[ev.player_forza_id] = Math.min(minutesMap[ev.player_forza_id], minInt);
       }
-      // Player subbed IN: played from this minute to 90
+      // Player subbed IN: played from this minute to end of match
       if (ev.player_in_forza_id) {
         minutesMap[ev.player_in_forza_id] = Math.max(
           minutesMap[ev.player_in_forza_id] ?? 0,
-          90 - minInt
+          Math.max(0, matchDurationMinutes - minInt)
         );
       }
     }
@@ -401,7 +464,7 @@ Deno.serve(async (req) => {
       const conceded = teamId ? (concededByTeam[teamId] ?? 0) : 0;
       const mins     = s.minutes_played ?? minutesMap[fpid] ?? 0;
 
-      // Penalty save: GKs only. If the opposing team missed a penalty, this GK saved it.
+      // Penalty save (regular in-match): GKs only. Opposing team missed → this GK saved.
       // (Approximation: can't distinguish save from post/bar, but saves are the vast majority.)
       const teamSide    = teamId === homeId ? 'home' : teamId === awayId ? 'away' : null;
       const oppTeamSide = teamSide === 'home' ? 'away' : teamSide === 'away' ? 'home' : null;
@@ -409,6 +472,11 @@ Deno.serve(async (req) => {
       // not to all GKs in the squad (backup would get +5 from the bench).
       const penaltySaved = (internal.position === 'GK' && oppTeamSide && mins > 0)
         ? (periodsResult.penaltyMissedByTeamSide[oppTeamSide] ?? 0)
+        : 0;
+
+      // Shootout GK save: if opposing team missed a shootout penalty, this GK saved it.
+      const shootoutSaved = (internal.position === 'GK' && oppTeamSide && mins > 0)
+        ? (periodsResult.shootoutSavedByTeamSide[oppTeamSide] ?? 0)
         : 0;
 
       statsUpserts.push({
@@ -436,7 +504,12 @@ Deno.serve(async (req) => {
         red_cards:       periodsResult.redCards.has(fpid)      ? 1 : 0,
         penalty_missed:  periodsResult.penaltyMissed.has(fpid) ? 1 : 0,
         penalty_saved:   penaltySaved,
-        penalty_scored:  periodsResult.penaltyScoredMap[fpid] ?? 0,  // TDD-08: restored now that column exists
+        penalty_scored:  periodsResult.penaltyScoredMap[fpid] ?? 0,
+
+        // From E9 shootout period — scored differently from regular penalties
+        shootout_scored: periodsResult.shootoutScoredMap[fpid] ?? 0,
+        shootout_missed: periodsResult.shootoutMissed.has(fpid) ? 1 : 0,
+        shootout_saved:  shootoutSaved,
 
         // From E5 EventDigest — only source for own goals
         own_goals:       ownGoalMap[fpid] ?? 0,

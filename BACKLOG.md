@@ -1,12 +1,45 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-06-29 (v2: merged main PRs #650–653 #658 #667 #668; Clubhouse nav bugs fixed PR #669)  
+**Last Updated**: 2026-06-30 (v2: merged main PRs #672–#680 — shootout scoring, duplicate-fixture fix; Redesign Phases A–D complete)  
 **E2E Test Suite**: `platform.spec.js` (84 tests × 1 browser config) passing ✅ — 84/84 on v2 branch 2026-06-23  
 **Full Playbook Run**: `E2E_TEST_PLAYBOOK.md` v2.0 — all flows confirmed  
 **🟢 LAUNCH READY**: No critical (P0/P1) bugs open. All game mechanics functional. WC kick-off 2026-06-11.  
 **Live App**: https://wc-fantasy-football.vercel.app  
 **WC Kick-off**: 2026-06-11 19:00 UTC (Mexico vs South Africa)  
 **Supabase PostgREST max_rows**: 10,000 (raised from default 1,000 — 2026-06-08)
+
+---
+
+## ✅ DEPLOY-672: migration 192 + 2 Edge Function deploys — APPLIED 2026-06-29
+
+**Reference ID**: `DEPLOY-672` — search this string to find this item.
+
+**Context**: PR #672 (merged 2026-06-29) shipped knockout-stage scoring improvements. Applied to production same day from this PC.
+
+**Actions completed:**
+1. ✅ Migration 192 applied (`npx supabase db query --linked < supabase/migrations/192_knockout_scoring.sql`) — `player_match_stats` gained `shootout_scored`/`shootout_missed`/`shootout_saved` columns (verified via `information_schema.columns`); `resolve_bet()` (both overloads) rewritten with commissioner override for already-resolved bets.
+2. ✅ `ingest-match-events` redeployed — ET detection (90→120 min) + shootout period routing.
+3. ✅ `calculate-scores` redeployed — shootout scoring rules (score +1, miss −1, GK save +0.5).
+
+Pre-change snapshot of the old `resolve_bet` definition saved to `backups/pre_migration192_resolve_bet_20260629.json`.
+
+**Verify in a live knockout match when one reaches a shootout**: confirm `shootout_*` columns populate on `player_match_stats` and ET starters show `minutes_played=120`.
+
+---
+
+## ✅ Round-of-32 duplicate-fixture scoring bug — FIXED 2026-06-29
+
+**Reported**: Brazil v Japan live, score showing correctly (1-1) but zero player/squad scoring.
+
+**Root cause**: Forza re-issued new match IDs for 5 of the 16 Round-of-32 fixtures (tournament 429, `round_number=4`) after the bracket was confirmed. The old placeholder fixture rows (`f-1220xxxxxx`) carried the manually-backfilled `matchday_id='429-r4'` tag (from migration 130), but Forza's live feed switched to writing scores/events to new match IDs (`f-1217xxxxxx`) that had no `matchday_id` — so `calculate-scores`'s `rollupSquads()` skipped them entirely (`fixture has no round_number`).
+
+**Affected matches** (5 of 16): Brazil v Japan, Germany v Paraguay, Netherlands v Morocco, Côte d'Ivoire v Norway, USA v Bosnia. The other 11 Round-of-32 matches were unaffected (single fixture row each, already on the new ID).
+
+**Fix applied**: for each pair, moved `matchday_id`/`round_number` onto the live/correct row; nulled them on the stale row (required briefly disabling `trg_preserve_manual_matchday_id`, then re-enabling). Manually invoked `calculate-scores` for the Brazil-Japan fixture to backfill immediately — 57 squads scored correctly. The remaining 4 matches will score correctly automatically once live (no further action needed).
+
+Backup of all 10 affected fixture rows pre-change: `backups/pre_fixture_dedup_429r4_20260629.json`.
+
+**Follow-up (not yet actioned)**: if Forza re-issues match IDs again for later knockout rounds (R16, QF, SF, Final), this same duplicate pattern will likely recur. Consider a periodic duplicate-fixture detection query (by `home_team_forza_id`+`away_team_forza_id`+`kickoff_at`) rather than relying on a user noticing a live match with no scoring.
 
 ---
 
