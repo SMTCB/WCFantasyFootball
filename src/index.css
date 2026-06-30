@@ -829,3 +829,31 @@ button, a {
   position: fixed; left: 0; right: 0; bottom: 0; z-index: 9999;
   animation: slideUpFade 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
+
+/* ── Tablet tier (640–1023px) ────────────────────────────────────── */
+/* Two-up competition card grid on tablet without triggering desktop sidebar */
+@media (min-width: 640px) and (max-width: 1023px) {
+  /* AllCompetitions grid: two cards per row instead of one-column-stacked */
+  .fk-competition-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+
+  /* Bottom sheets on tablet: constrained width, centered, rounded all sides */
+  .fk-mob-sheet-wrap {
+    left: 50%;
+    right: auto;
+    width: min(520px, 92vw);
+    transform: translateX(-50%);
+    border-radius: 12px 12px 0 0;
+  }
+
+  /* PlayerPickerSheet and BottomSheet on tablet: cap width */
+  [data-sheet-tablet] {
+    max-width: 520px;
+    left: 50% !important;
+    right: auto !important;
+    transform: translateX(-50%);
+  }
+}

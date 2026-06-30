@@ -179,4 +179,4 @@ Each phase ships as its own PR(s) into `v2`; lint + build (Rolldown TDZ) + `plat
 
 ---
 
-Last Updated: **2026-06-30**
+Last Updated: **2026-06-30** — **Workstream complete.** All phases M0–M4 shipped (PRs #682–689). The eight primitives are in place; every screen meets the ≥44px tap-target floor; one `<BottomSheet>`/`createPortal` pattern is consistent; tablet tier added. Deferred: `MarketScreen` full progressive-disclosure header (logged as P3); Tier B desktop scale-up (logged as `UX-DESKTOP-1` in [TRACKER.md](../TRACKER.md)).

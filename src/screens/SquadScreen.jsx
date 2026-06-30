@@ -2079,7 +2079,7 @@ export default function SquadScreen() {
                 <button
                   onClick={setCaptain}
                   disabled={saving || captainId === selectedPlayer.id}
-                  className="flex-1 py-2.5 rounded-sm transition-all active:scale-95 disabled:opacity-30"
+                  className="flex-1 py-3 rounded-sm transition-all active:scale-95 disabled:opacity-30"
                   style={{
                     background: captainId === selectedPlayer.id ? 'rgba(224,168,0,0.12)' : 'var(--gold)',
                     color: captainId === selectedPlayer.id ? 'var(--gold)' : '#0A0A0A',
@@ -2109,7 +2109,7 @@ export default function SquadScreen() {
                     } finally { setSaving(false); }
                   }}
                   disabled={saving}
-                  className="flex-1 py-2.5 rounded-sm transition-all active:scale-95 disabled:opacity-40"
+                  className="flex-1 py-3 rounded-sm transition-all active:scale-95 disabled:opacity-40"
                   style={{ background: 'var(--cyan)', color: '#0A0A0A', border: '1px solid var(--cyan)', fontFamily: 'Archivo Black, sans-serif', fontSize: '11px', letterSpacing: '0.12em', textTransform: 'uppercase' }}
                 >
                   ADD TO PITCH
@@ -2119,7 +2119,7 @@ export default function SquadScreen() {
                 <button
                   onClick={() => setSwapMode(true)}
                   disabled={saving || (selectedIsBench && squadData.players.length >= 11 && squadData.bench.length === 1)}
-                  className="flex-1 py-2.5 rounded-sm transition-all active:scale-95 disabled:opacity-40"
+                  className="flex-1 py-3 rounded-sm transition-all active:scale-95 disabled:opacity-40"
                   style={{ background: 'transparent', color: 'var(--cyan)', border: '1px solid var(--cyan)', fontFamily: 'Archivo Black, sans-serif', fontSize: '11px', letterSpacing: '0.12em', textTransform: 'uppercase' }}
                 >
                   {selectedIsBench ? 'SUB IN' : 'SUB OUT'}
@@ -2128,7 +2128,7 @@ export default function SquadScreen() {
               <button
                 onClick={handleSellPlayer}
                 disabled={saving}
-                className="px-5 py-2.5 rounded-sm transition-all active:scale-95 disabled:opacity-40"
+                className="px-5 py-3 rounded-sm transition-all active:scale-95 disabled:opacity-40"
                 style={{ background: 'transparent', color: 'var(--danger)', border: '1px solid var(--danger)', fontFamily: 'Archivo Black, sans-serif', fontSize: '11px', letterSpacing: '0.12em', textTransform: 'uppercase' }}
               >
                 SELL
