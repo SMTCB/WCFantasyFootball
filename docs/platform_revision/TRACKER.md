@@ -149,12 +149,12 @@ Sequenced worst-breakage-first, highest-leverage shared component early.
 - [x] Consolidate the **one** `<BottomSheet>` (portaled, safe-area, Kit Light) — `ActionSheet` + `PlayerPickerSheet` migrated — PR #683 (`src/components/shared/BottomSheet.jsx`)
 - [x] Build `<PrimaryActionBar>`/FAB primitive + `CompetitionResultsHeader` card-mode scaffolding — PR #684 (`src/components/shared/PrimaryActionBar.jsx`, `CompetitionResultsHeader.jsx`)
 
-> **Note:** `useViewport` is currently duplicated as a private hook inside `CompetitionResultsHeader` (M0 PR3 merged before M0 PR1 can be consumed). M1 should replace the private hook with `import { useIsMobile } from '../../hooks/useViewport'` when wiring consumers.
+### Phase M1 — The shared spine on mobile ✅
+- [x] Wire `CompetitionResultsHeader` card-mode at consumers (Football/F1/Tennis standings) — `useIsMobile` real import; `leadColumnKey="total"` per sport — PR #685
+- [x] Kill the Tennis 14-column horizontal `<table>` — `hidden lg:block` / `lg:hidden` chip-card split — PR #685
+- [x] Collapsing `<TabStrip>` for Clubhouse (8-tab) + League (`HubTabPills` 6-pill) — `src/components/shared/TabStrip.jsx`; Clubhouse `flex:1` → scrollable underline; League delegates to TabStrip pill variant — PR #686
 
-### Phase M1 — The shared spine on mobile ⬜
-- [ ] Wire `CompetitionResultsHeader` card-mode at consumers (Football/F1/Tennis standings) — replace private `useIsMobile` with the real hook import; set `leadColumnKey` per sport
-- [ ] Kill the Tennis 14-column horizontal `<table>`
-- [ ] Collapsing `<TabStrip>` for Clubhouse (8-tab no-scroll) + League (`HubTabPills` 6-pill)
+**M0 recovery (PRs #682/#683 content re-landed in PR #685):** `useViewport.js`, `--f1`/`--ten` tokens, `.safe-top`/`.pt-safe`, AppLayout iOS notch padding.
 
 ### Phase M2 — Fix the broken screens (Tier C) ⬜
 - [ ] `ChallengeScreen` mobile DOM — sidebar folds inline, "New Challenge" to thumb zone
@@ -344,4 +344,4 @@ These require a human decision before the relevant sprint can continue.
 
 **Session 2026-06-30 (Mobile-First Redesign — Phase M0 implementation):** All Phase M0 foundation primitives shipped in 3 sequential PRs into `v2`. PR #682: `src/hooks/useViewport.js` (`useViewport`/`useIsMobile` hook, SSR-safe matchMedia); `--f1`/`--ten`/`--f1bg`/`--tenbg` tokens defined in `index.css` (8+ components were referencing them undefined); `--r-sm`/`--r-md` skeleton alias fixed; `env(safe-area-inset-top)` added to the sticky mobile top bar in `AppLayout`. PR #683: `src/components/shared/BottomSheet.jsx` (portaled thin shell over `.fk-mob-sheet-*` CSS); `ActionSheet` migrated to use it; `PlayerPickerSheet` rewritten to use `<BottomSheet>` + full Kit Light token pass. PR #684: `src/components/shared/PrimaryActionBar.jsx` (thumb-zone FAB portaled to `document.body`, hidden on desktop via `lg:hidden`, state-aware props); `CompetitionResultsHeader.jsx` mobile card-mode branch added (`leadColumnKey` prop, private `useIsMobile` hook, card layout < 640px, desktop grid pixel-identical). All 3 PRs: lint 0 errors, Rolldown TDZ build clean, madge 0 circular deps. Next: **Mobile Phase M1** — wire `CompetitionResultsHeader` card-mode at Football/F1/Tennis consumer screens; kill Tennis 14-column table; collapsing TabStrip.
 
-Last Updated: **2026-06-30** (Phase M0 done — PRs #682/#683/#684; all primitives in v2. Next: Phase M1 — shared spine on mobile.)
+Last Updated: **2026-06-30** (Phase M1 done — PRs #685/#686; M0 recovery + standings card-mode + TabStrip. Next: Phase M2 — ChallengeScreen + TrophyCabinetScreen mobile DOM.)
