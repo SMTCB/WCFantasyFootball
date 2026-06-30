@@ -25,7 +25,7 @@
 | **3A** | Buyout hygiene batch 2 (provider adapter, containerisation, envs) | ✅ Done | PRs #634–#636 |
 | **3B** | v2 integration & deploy | 🔄 In progress | Code quality gates ✅ — smoke tests + deploy remaining |
 | **R** | Clubhouse-Centric Redesign (IA/UX) | ✅ Done — Phase D closed | Phase A PR #671, Phase B PR #675, Phase C PR #676, Phase D PR #677. Migration 217 deferred (blocked by live pilot). Design: [CLUBHOUSE_CENTRIC_REDESIGN.md](architecture/CLUBHOUSE_CENTRIC_REDESIGN.md). See [workstream](#clubhouse-centric-redesign-workstream) below. |
-| **M** | Mobile-First Redesign (sub-`lg` UX) | 🔄 Phase M0 done — M1 next | Phase M0 primitives shipped (PRs #682, #683, #684): `useViewport`, sport tokens, safe-area, `<BottomSheet>`, `<PrimaryActionBar>`, `CompetitionResultsHeader` card-mode scaffold. Design: [MOBILE_FIRST_REDESIGN.md](architecture/MOBILE_FIRST_REDESIGN.md). See [workstream](#mobile-first-redesign-workstream) below. |
+| **M** | Mobile-First Redesign (sub-`lg` UX) | 🔄 Phase M2 done — M3 next | M0 (PRs #682–684), M1 (PRs #685–686), M2 (PR #687). Design: [MOBILE_FIRST_REDESIGN.md](architecture/MOBILE_FIRST_REDESIGN.md). See [workstream](#mobile-first-redesign-workstream) below. |
 
 **Next session options (choose one):**
 - **DD items** — TEST-1 (Vitest coverage), CODE-3 (error boundaries), OPS-2 (Sentry)
@@ -156,9 +156,9 @@ Sequenced worst-breakage-first, highest-leverage shared component early.
 
 **M0 recovery (PRs #682/#683 content re-landed in PR #685):** `useViewport.js`, `--f1`/`--ten` tokens, `.safe-top`/`.pt-safe`, AppLayout iOS notch padding.
 
-### Phase M2 — Fix the broken screens (Tier C) ⬜
-- [ ] `ChallengeScreen` mobile DOM — sidebar folds inline, "New Challenge" to thumb zone
-- [ ] `TrophyCabinetScreen` mobile DOM — same pattern
+### Phase M2 — Fix the broken screens (Tier C) ✅ Done — PR #687 (2026-06-30)
+- [x] `ChallengeScreen` mobile DOM — sidebar folds inline above challenges, ⚔ New Challenge to PrimaryActionBar in thumb zone, Sent+Live grid stacks, page scrolls naturally
+- [x] `TrophyCabinetScreen` mobile DOM — dark header stats wrap, sport grid auto-fill collapses to 1-col, sidebar folds inline, Export button moved to body with ≥44px touch target
 
 ### Phase M3 — Primary-action pass ⬜
 - [ ] Every key screen gets one thumb-anchored `<PrimaryActionBar>` tied to its deadline/next-step
@@ -344,4 +344,4 @@ These require a human decision before the relevant sprint can continue.
 
 **Session 2026-06-30 (Mobile-First Redesign — Phase M0 implementation):** All Phase M0 foundation primitives shipped in 3 sequential PRs into `v2`. PR #682: `src/hooks/useViewport.js` (`useViewport`/`useIsMobile` hook, SSR-safe matchMedia); `--f1`/`--ten`/`--f1bg`/`--tenbg` tokens defined in `index.css` (8+ components were referencing them undefined); `--r-sm`/`--r-md` skeleton alias fixed; `env(safe-area-inset-top)` added to the sticky mobile top bar in `AppLayout`. PR #683: `src/components/shared/BottomSheet.jsx` (portaled thin shell over `.fk-mob-sheet-*` CSS); `ActionSheet` migrated to use it; `PlayerPickerSheet` rewritten to use `<BottomSheet>` + full Kit Light token pass. PR #684: `src/components/shared/PrimaryActionBar.jsx` (thumb-zone FAB portaled to `document.body`, hidden on desktop via `lg:hidden`, state-aware props); `CompetitionResultsHeader.jsx` mobile card-mode branch added (`leadColumnKey` prop, private `useIsMobile` hook, card layout < 640px, desktop grid pixel-identical). All 3 PRs: lint 0 errors, Rolldown TDZ build clean, madge 0 circular deps. Next: **Mobile Phase M1** — wire `CompetitionResultsHeader` card-mode at Football/F1/Tennis consumer screens; kill Tennis 14-column table; collapsing TabStrip.
 
-Last Updated: **2026-06-30** (Phase M1 done — PRs #685/#686; M0 recovery + standings card-mode + TabStrip. Next: Phase M2 — ChallengeScreen + TrophyCabinetScreen mobile DOM.)
+Last Updated: **2026-06-30** (Phase M2 done — PR #687; ChallengeScreen + TrophyCabinetScreen mobile DOM. Next: Phase M3 — Primary-action pass (Squad deadline on mobile + PrimaryActionBar across key screens).)
