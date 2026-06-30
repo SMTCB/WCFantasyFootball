@@ -29,6 +29,7 @@ import SelectLeaguePicker from '../components/league/SelectLeaguePicker';
 import { deriveLeagueType } from '../components/league/LeagueBadgeHelpers';
 import { usePlayerCards } from '../hooks/usePlayerCards';
 import { useEliminatedClubs } from '../hooks/useEliminatedClubs';
+import { useIsMobile } from '../hooks/useViewport';
 
 // club cap is fetched dynamically per-round; default 3 until loaded
 
@@ -60,6 +61,7 @@ const MARKET_TOUR_STEPS = [
 export default function MarketScreen() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const isMobile = useIsMobile();
   const { show: showToast } = useToast();
   const [searchParams] = useSearchParams();
   const leagueId = searchParams.get('leagueId') || searchParams.get('league');
@@ -1409,12 +1411,14 @@ export default function MarketScreen() {
         return (
           <div
             style={{
-              position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 9000,
+              position: 'fixed',
+              bottom: isMobile ? 'calc(64px + env(safe-area-inset-bottom))' : 0,
+              left: 0, right: 0, zIndex: 9000,
               background: 'rgba(13,17,23,0.98)',
               backdropFilter: 'blur(24px)',
               WebkitBackdropFilter: 'blur(24px)',
               borderTop: '2px solid var(--gold)',
-              paddingBottom: 'max(16px, env(safe-area-inset-bottom))',
+              paddingBottom: isMobile ? '12px' : 'max(16px, env(safe-area-inset-bottom))',
             }}
           >
             <div style={{ maxWidth: 640, margin: '0 auto', padding: '10px 16px 0' }}>

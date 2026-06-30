@@ -40,6 +40,8 @@ import { useEliminatedClubs } from '../hooks/useEliminatedClubs';
 import FormStrip from '../components/FormStrip';
 import SelectLeaguePicker from '../components/league/SelectLeaguePicker';
 import { deriveLeagueType } from '../components/league/LeagueBadgeHelpers';
+import { useIsMobile } from '../hooks/useViewport';
+import PrimaryActionBar from '../components/shared/PrimaryActionBar';
 
 // â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
 
@@ -433,6 +435,7 @@ export default function SquadScreen() {
 
   // Transfer window status for the sticky banner (open / upcoming / no_window).
   const transferWindow = useTransferWindow(activeLeague);
+  const isMobile = useIsMobile();
 
   // KPI header: when window is in recovery (upcoming), count down to opensAt.
   // When open, use the deadline countdown (closes at next matchday).
@@ -1330,7 +1333,7 @@ export default function SquadScreen() {
         {/* Right: KPI cluster — Transfers (desktop only) · Squad · Budget */}
         <div className="flex items-center gap-3 lg:gap-5">
           {windowKpi.text && (
-            <div className="text-right hidden lg:block">
+            <div className="text-right hidden lg:block" aria-hidden="true">
               <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 9, color: 'rgba(255,255,255,0.5)', letterSpacing: '.14em', textTransform: 'uppercase' }}>{windowKpi.label}</div>
               <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 14, color: windowKpi.color, letterSpacing: '-0.01em' }}>
                 {windowKpi.text}
@@ -2191,6 +2194,25 @@ export default function SquadScreen() {
       )}
 
       {/* â•â• JOKER PICKER MODAL â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
+      {/* Mobile transfer-window action bar */}
+      {isMobile && (() => {
+        const isOpen     = transferWindow.status === 'open';
+        const isUpcoming = transferWindow.status === 'upcoming';
+        const barState   = isOpen ? 'action' : 'locked';
+        const barLabel   = isOpen ? 'Transfer window open' : isUpcoming ? 'Window closed' : 'Window closed';
+        const barCountdown = windowKpi.text
+          ? (isUpcoming ? 'Opens in ' : 'Closes in ') + windowKpi.text
+          : undefined;
+        return (
+          <PrimaryActionBar
+            label={barLabel}
+            countdown={barCountdown}
+            state={barState}
+            accent={isOpen ? windowKpi.color : undefined}
+            onPress={isOpen ? () => {} : undefined}
+          />
+        );
+      })()}
     </div>
   );
 }
