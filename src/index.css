@@ -103,6 +103,16 @@
   --pos-def:  #1A6FA8;
   --pos-mid:  #B8720E;
   --pos-fwd:  #B91C1C;
+
+  /* Sport accent tokens — used by F1, Tennis, and cross-sport components */
+  --f1:     #E10600;
+  --ten:    #1B7A52;
+  --f1bg:   color-mix(in srgb, var(--f1)  8%, transparent);
+  --tenbg:  color-mix(in srgb, var(--ten) 8%, transparent);
+
+  /* Skeleton radius aliases — CSS classes use --r-sm/--r-md */
+  --r-sm:   var(--radius-sm);
+  --r-md:   var(--radius-md);
 }
 
 /* ── Global Base ─────────────────────────────────────────────────── */
@@ -144,6 +154,12 @@ body {
 }
 .pb-safe {
   padding-bottom: env(safe-area-inset-bottom);
+}
+.safe-top {
+  padding-top: env(safe-area-inset-top);
+}
+.pt-safe {
+  padding-top: env(safe-area-inset-top);
 }
 
 /* ── FORZAKIT Typography ──────────────────────────────────────────── */
