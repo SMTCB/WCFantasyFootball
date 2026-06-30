@@ -3,6 +3,8 @@ import { createPortal } from 'react-dom';
 import { useAuth } from '../hooks/useAuth';
 import { useChallenges } from '../hooks/useChallenges';
 import { useWallet } from '../hooks/useWallet';
+import { useIsMobile } from '../hooks/useViewport';
+import PrimaryActionBar from '../components/shared/PrimaryActionBar';
 import { supabase } from '../lib/supabase';
 
 const MONO = { fontFamily: 'JetBrains Mono, monospace' };
@@ -577,9 +579,107 @@ function CreateChallengeModal({ onClose, onCreate, wallet, leagueId, leagueMatch
 // helper to avoid inline fn expression error
 function challenge_stake(stake) { return stake; }
 
+// ── Sidebar content (shared between desktop sidebar and mobile inline) ────────
+function SidebarContent({ balance, escrow, netWL, history, userId, onNewChallenge, onGoToWallet, isMobile }) {
+  const won    = history.filter(c => c.winner_id === userId).length;
+  const lost   = history.filter(c => c.status === 'resolved' && c.winner_id !== userId && c.winner_id != null).length;
+  const voided = history.filter(c => c.status !== 'resolved').length;
+  const total  = history.filter(c => c.status === 'resolved').length;
+
+  return (
+    <>
+      {/* New challenge CTA — desktop only; mobile uses PrimaryActionBar */}
+      {!isMobile && (
+        <button
+          onClick={onNewChallenge}
+          style={{
+            width: '100%', padding: '12px 24px', borderRadius: 6, border: 'none',
+            background: 'var(--gold)', color: '#fff', cursor: 'pointer',
+            ...MONO, fontSize: 9.5, letterSpacing: '.12em', textTransform: 'uppercase',
+            fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+            boxShadow: '0 6px 24px -6px rgba(184,114,14,.5)',
+          }}
+        >⚔ New Challenge</button>
+      )}
+
+      {/* Wallet mini-card */}
+      <div style={{ background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 6 }}>
+        <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--rule)' }}>
+          <div style={{ ...HEAD, fontSize: 13, letterSpacing: '-0.01em' }}>Coin Wallet</div>
+        </div>
+        <div style={{ padding: '16px 16px' }}>
+          <div style={{ ...MONO, fontSize: 8.5, letterSpacing: '.16em', textTransform: 'uppercase', color: 'var(--mute)', marginBottom: 5 }}>Available balance</div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+            <Ci size="xl" />
+            <span style={{ ...HEAD, fontSize: 28, letterSpacing: '-0.03em', lineHeight: 1, color: 'var(--gold)' }}>{balance.toLocaleString()}</span>
+          </div>
+          {escrow > 0 && (
+            <div style={{ ...MONO, fontSize: 8.5, color: 'var(--mute)', marginBottom: 13 }}>
+              {escrow.toLocaleString()} coins locked in challenges
+            </div>
+          )}
+          <button
+            onClick={onGoToWallet}
+            style={{
+              width: '100%', padding: '8px 0', borderRadius: 6, border: '1.5px solid var(--rule)',
+              background: 'transparent', cursor: 'pointer',
+              ...MONO, fontSize: 8.5, letterSpacing: '.12em', textTransform: 'uppercase', color: 'var(--text2)',
+            }}
+          >Buy Coins →</button>
+        </div>
+      </div>
+
+      {/* Season record */}
+      <div style={{ background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 6 }}>
+        <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--rule)' }}>
+          <div style={{ ...HEAD, fontSize: 13, letterSpacing: '-0.01em' }}>Season record</div>
+        </div>
+        <div style={{ padding: '10px 14px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', textAlign: 'center', paddingBottom: 10, marginBottom: 8, borderBottom: '1px solid var(--rule)' }}>
+            <div style={{ padding: '6px 0' }}>
+              <div style={{ ...HEAD, fontSize: 22, letterSpacing: '-0.02em', color: 'var(--pos)' }}>{won}</div>
+              <div style={{ ...MONO, fontSize: 7.5, letterSpacing: '.1em', textTransform: 'uppercase', color: 'var(--mute)', marginTop: 2 }}>Won</div>
+            </div>
+            <div style={{ padding: '6px 0', borderLeft: '1px solid var(--rule)', borderRight: '1px solid var(--rule)' }}>
+              <div style={{ ...HEAD, fontSize: 22, letterSpacing: '-0.02em', color: 'var(--neg)' }}>{lost}</div>
+              <div style={{ ...MONO, fontSize: 7.5, letterSpacing: '.1em', textTransform: 'uppercase', color: 'var(--mute)', marginTop: 2 }}>Lost</div>
+            </div>
+            <div style={{ padding: '6px 0' }}>
+              <div style={{ ...HEAD, fontSize: 22, letterSpacing: '-0.02em', color: 'var(--mute)' }}>{voided}</div>
+              <div style={{ ...MONO, fontSize: 7.5, letterSpacing: '.1em', textTransform: 'uppercase', color: 'var(--mute)', marginTop: 2 }}>Void</div>
+            </div>
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 12, padding: '4px 0', borderBottom: '1px solid var(--rule)' }}>
+            <span style={{ color: 'var(--text2)' }}>Net P&L</span>
+            <strong style={{ ...HEAD, fontSize: 13, letterSpacing: '-0.01em', color: netWL >= 0 ? 'var(--pos)' : 'var(--neg)' }}>{netWL >= 0 ? '+' : ''}{netWL.toLocaleString()} C</strong>
+          </div>
+          {total > 0 && (
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 12, padding: '4px 0' }}>
+              <span style={{ color: 'var(--text2)' }}>Win rate</span>
+              <strong style={{ ...HEAD, fontSize: 13, letterSpacing: '-0.01em' }}>{Math.round(won / total * 100)}%</strong>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* How it works info */}
+      <div style={{ background: 'var(--elev)', border: '1px solid var(--rule)', borderRadius: 6 }}>
+        <div style={{ padding: '13px 14px' }}>
+          <div style={{ ...HEAD, fontSize: 12.5, letterSpacing: '-0.01em', marginBottom: 6 }}>How Challenges work</div>
+          <div style={{ fontSize: 12, color: 'var(--text2)', lineHeight: 1.55 }}>
+            Challenge any league manager to a GW Total bet. Both stake coins — winner takes 95%, 5% rake burned.
+          </div>
+          <div style={{ marginTop: 9, ...MONO, fontSize: 8, color: 'var(--mute)', letterSpacing: '.04em' }}>Stakes held in escrow until result</div>
+        </div>
+      </div>
+    </>
+  );
+}
+
 // ── Main screen ───────────────────────────────────────────────────────────────
 export default function ChallengeScreen() {
   const { user } = useAuth();
+  const isMobile = useIsMobile();
   const { wallet, loading: walletLoading } = useWallet(user?.id);
   const {
     incoming, outgoing, active, history, loading,
@@ -619,7 +719,6 @@ export default function ChallengeScreen() {
 
   const balance  = wallet?.balance  ?? 0;
   const escrow   = wallet?.escrow   ?? 0;
-  // compute net W/L from history
   const netWL = history.reduce((sum, c) => {
     if (c.winner_id === user?.id) return sum + Math.floor(c.stake_coins * 2 * 0.95) - c.stake_coins;
     if (c.status === 'resolved' && c.winner_id !== user?.id && c.winner_id != null) return sum - c.stake_coins;
@@ -631,8 +730,13 @@ export default function ChallengeScreen() {
     { key: 'wallet',     label: 'Wallet'     },
   ];
 
+  // Mobile: page scrolls in document flow; Desktop: fixed-height flex column
+  const rootStyle = isMobile
+    ? { display: 'flex', flexDirection: 'column', background: 'var(--bg)', minHeight: '100%' }
+    : { height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: 'var(--bg)' };
+
   return (
-    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: 'var(--bg)' }}>
+    <div style={rootStyle}>
 
       {/* Toast */}
       {toast && createPortal(
@@ -649,14 +753,14 @@ export default function ChallengeScreen() {
       )}
 
       {/* Header */}
-      <div style={{ background: 'var(--card)', borderBottom: '1px solid var(--rule)', padding: '14px 26px 0', flexShrink: 0 }}>
+      <div style={{ background: 'var(--card)', borderBottom: '1px solid var(--rule)', padding: isMobile ? '14px 16px 0' : '14px 26px 0', flexShrink: 0 }}>
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', paddingBottom: 12, gap: 16 }}>
           <div>
             <div style={{ ...MONO, fontSize: 9, letterSpacing: '.18em', textTransform: 'uppercase', color: 'var(--mute)', marginBottom: 4 }}>P2P Betting</div>
-            <div style={{ ...HEAD, fontSize: 23, letterSpacing: '-0.025em', color: 'var(--text)', lineHeight: 1 }}>Coin Challenges</div>
+            <div style={{ ...HEAD, fontSize: 23, letterSpacing: '-0.025em', color: 'var(--paper)', lineHeight: 1 }}>Coin Challenges</div>
           </div>
           {/* Key stats */}
-          <div style={{ display: 'flex', gap: 22, alignItems: 'flex-start', paddingTop: 2 }}>
+          <div style={{ display: 'flex', gap: isMobile ? 14 : 22, alignItems: 'flex-start', paddingTop: 2 }}>
             <div style={{ textAlign: 'right' }}>
               <div style={{ ...MONO, fontSize: 7.5, letterSpacing: '.12em', textTransform: 'uppercase', color: 'var(--mute)', marginBottom: 3 }}>Balance</div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 6, justifyContent: 'flex-end', marginTop: 2 }}>
@@ -664,10 +768,12 @@ export default function ChallengeScreen() {
                 <span style={{ ...HEAD, fontSize: 18, letterSpacing: '-0.02em', color: 'var(--gold)' }}>{balance.toLocaleString()}</span>
               </div>
             </div>
-            <div style={{ textAlign: 'right' }}>
-              <div style={{ ...MONO, fontSize: 7.5, letterSpacing: '.12em', textTransform: 'uppercase', color: 'var(--mute)', marginBottom: 3 }}>In escrow</div>
-              <div style={{ ...HEAD, fontSize: 18, letterSpacing: '-0.02em', color: 'var(--text)' }}>{escrow.toLocaleString()}</div>
-            </div>
+            {!isMobile && (
+              <div style={{ textAlign: 'right' }}>
+                <div style={{ ...MONO, fontSize: 7.5, letterSpacing: '.12em', textTransform: 'uppercase', color: 'var(--mute)', marginBottom: 3 }}>In escrow</div>
+                <div style={{ ...HEAD, fontSize: 18, letterSpacing: '-0.02em', color: 'var(--paper)' }}>{escrow.toLocaleString()}</div>
+              </div>
+            )}
             <div style={{ textAlign: 'right' }}>
               <div style={{ ...MONO, fontSize: 7.5, letterSpacing: '.12em', textTransform: 'uppercase', color: 'var(--mute)', marginBottom: 3 }}>Net W/L</div>
               <div style={{ ...HEAD, fontSize: 18, letterSpacing: '-0.02em', color: netWL >= 0 ? 'var(--pos)' : 'var(--neg)' }}>
@@ -684,7 +790,7 @@ export default function ChallengeScreen() {
               key={t.key}
               onClick={() => setOuterTab(t.key)}
               style={{
-                fontSize: 12.5, fontWeight: 600, color: outerTab === t.key ? 'var(--text)' : 'var(--mute)',
+                fontSize: 12.5, fontWeight: 600, color: outerTab === t.key ? 'var(--paper)' : 'var(--mute)',
                 padding: '9px 14px', position: 'relative', cursor: 'pointer',
                 background: 'transparent', border: 'none', whiteSpace: 'nowrap',
               }}
@@ -703,7 +809,27 @@ export default function ChallengeScreen() {
 
       {/* Challenges tab */}
       {outerTab === 'challenges' && (
-        <div style={{ flex: 1, overflowY: 'auto', padding: '20px 26px', display: 'flex', gap: 20 }}>
+        <div style={{
+          flex: 1,
+          overflowY: isMobile ? 'visible' : 'auto',
+          padding: isMobile ? '16px 16px 88px' : '20px 26px',
+          display: 'flex',
+          flexDirection: isMobile ? 'column' : 'row',
+          gap: 20,
+        }}>
+
+          {/* Mobile: sidebar content folded above challenges */}
+          {isMobile && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+              <SidebarContent
+                balance={balance} escrow={escrow} netWL={netWL}
+                history={history} userId={user?.id}
+                onNewChallenge={() => setShowCreate(true)}
+                onGoToWallet={() => setOuterTab('wallet')}
+                isMobile={true}
+              />
+            </div>
+          )}
 
           {/* Main column */}
           <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -735,8 +861,12 @@ export default function ChallengeScreen() {
               )}
             </div>
 
-            {/* Sent + Live grid */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+            {/* Sent + Live — 2-col on desktop, stacked on mobile */}
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
+              gap: 14,
+            }}>
               <div>
                 <div style={{ ...MONO, fontSize: 8.5, letterSpacing: '.16em', textTransform: 'uppercase', color: 'var(--mute)', marginBottom: 9 }}>Sent · awaiting</div>
                 {outgoing.length === 0 ? (
@@ -784,108 +914,34 @@ export default function ChallengeScreen() {
             )}
           </div>
 
-          {/* Right sidebar */}
-          <div style={{ width: 256, flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 14 }}>
-
-            {/* New challenge CTA */}
-            <button
-              onClick={() => setShowCreate(true)}
-              style={{
-                width: '100%', padding: '12px 24px', borderRadius: 6, border: 'none',
-                background: 'var(--gold)', color: '#fff', cursor: 'pointer',
-                ...MONO, fontSize: 9.5, letterSpacing: '.12em', textTransform: 'uppercase',
-                fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-                boxShadow: '0 6px 24px -6px rgba(184,114,14,.5)',
-              }}
-            >⚔ New Challenge</button>
-
-            {/* Wallet mini-card */}
-            <div style={{ background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 6 }}>
-              <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--rule)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <div style={{ ...HEAD, fontSize: 13, letterSpacing: '-0.01em' }}>Coin Wallet</div>
-              </div>
-              <div style={{ padding: '16px 16px' }}>
-                <div style={{ ...MONO, fontSize: 8.5, letterSpacing: '.16em', textTransform: 'uppercase', color: 'var(--mute)', marginBottom: 5 }}>Available balance</div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-                  <Ci size="xl" />
-                  <span style={{ ...HEAD, fontSize: 28, letterSpacing: '-0.03em', lineHeight: 1, color: 'var(--gold)' }}>{balance.toLocaleString()}</span>
-                </div>
-                {escrow > 0 && (
-                  <div style={{ ...MONO, fontSize: 8.5, color: 'var(--mute)', marginBottom: 13 }}>
-                    {escrow.toLocaleString()} coins locked in challenges
-                  </div>
-                )}
-                <button
-                  onClick={() => setOuterTab('wallet')}
-                  style={{
-                    width: '100%', padding: '8px 0', borderRadius: 6, border: '1.5px solid var(--rule)',
-                    background: 'transparent', cursor: 'pointer',
-                    ...MONO, fontSize: 8.5, letterSpacing: '.12em', textTransform: 'uppercase', color: 'var(--text2)',
-                  }}
-                >Buy Coins →</button>
-              </div>
+          {/* Desktop: right sidebar */}
+          {!isMobile && (
+            <div style={{ width: 256, flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 14 }}>
+              <SidebarContent
+                balance={balance} escrow={escrow} netWL={netWL}
+                history={history} userId={user?.id}
+                onNewChallenge={() => setShowCreate(true)}
+                onGoToWallet={() => setOuterTab('wallet')}
+                isMobile={false}
+              />
             </div>
-
-            {/* Season record */}
-            <div style={{ background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 6 }}>
-              <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--rule)' }}>
-                <div style={{ ...HEAD, fontSize: 13, letterSpacing: '-0.01em' }}>Season record</div>
-              </div>
-              <div style={{ padding: '10px 14px' }}>
-                {(() => {
-                  const won   = history.filter(c => c.winner_id === user?.id).length;
-                  const lost  = history.filter(c => c.status === 'resolved' && c.winner_id !== user?.id && c.winner_id != null).length;
-                  const voided = history.filter(c => c.status !== 'resolved').length;
-                  const total = history.filter(c => c.status === 'resolved').length;
-                  return (
-                    <>
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', textAlign: 'center', paddingBottom: 10, marginBottom: 8, borderBottom: '1px solid var(--rule)' }}>
-                        <div style={{ padding: '6px 0' }}>
-                          <div style={{ ...HEAD, fontSize: 22, letterSpacing: '-0.02em', color: 'var(--pos)' }}>{won}</div>
-                          <div style={{ ...MONO, fontSize: 7.5, letterSpacing: '.1em', textTransform: 'uppercase', color: 'var(--mute)', marginTop: 2 }}>Won</div>
-                        </div>
-                        <div style={{ padding: '6px 0', borderLeft: '1px solid var(--rule)', borderRight: '1px solid var(--rule)' }}>
-                          <div style={{ ...HEAD, fontSize: 22, letterSpacing: '-0.02em', color: 'var(--neg)' }}>{lost}</div>
-                          <div style={{ ...MONO, fontSize: 7.5, letterSpacing: '.1em', textTransform: 'uppercase', color: 'var(--mute)', marginTop: 2 }}>Lost</div>
-                        </div>
-                        <div style={{ padding: '6px 0' }}>
-                          <div style={{ ...HEAD, fontSize: 22, letterSpacing: '-0.02em', color: 'var(--mute)' }}>{voided}</div>
-                          <div style={{ ...MONO, fontSize: 7.5, letterSpacing: '.1em', textTransform: 'uppercase', color: 'var(--mute)', marginTop: 2 }}>Void</div>
-                        </div>
-                      </div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 12, padding: '4px 0', borderBottom: '1px solid var(--rule)' }}>
-                        <span style={{ color: 'var(--text2)' }}>Net P&L</span>
-                        <strong style={{ ...HEAD, fontSize: 13, letterSpacing: '-0.01em', color: netWL >= 0 ? 'var(--pos)' : 'var(--neg)' }}>{netWL >= 0 ? '+' : ''}{netWL.toLocaleString()} C</strong>
-                      </div>
-                      {total > 0 && (
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 12, padding: '4px 0' }}>
-                          <span style={{ color: 'var(--text2)' }}>Win rate</span>
-                          <strong style={{ ...HEAD, fontSize: 13, letterSpacing: '-0.01em' }}>{Math.round(won / total * 100)}%</strong>
-                        </div>
-                      )}
-                    </>
-                  );
-                })()}
-              </div>
-            </div>
-
-            {/* How it works info */}
-            <div style={{ background: 'var(--elev)', border: '1px solid var(--rule)', borderRadius: 6 }}>
-              <div style={{ padding: '13px 14px' }}>
-                <div style={{ ...HEAD, fontSize: 12.5, letterSpacing: '-0.01em', marginBottom: 6 }}>How Challenges work</div>
-                <div style={{ fontSize: 12, color: 'var(--text2)', lineHeight: 1.55 }}>
-                  Challenge any league manager to a GW Total bet. Both stake coins — winner takes 95%, 5% rake burned.
-                </div>
-                <div style={{ marginTop: 9, ...MONO, fontSize: 8, color: 'var(--mute)', letterSpacing: '.04em' }}>Stakes held in escrow until result</div>
-              </div>
-            </div>
-          </div>
+          )}
         </div>
       )}
 
       {/* Wallet tab */}
       {outerTab === 'wallet' && (
         <WalletTabContent wallet={wallet} walletLoading={walletLoading} />
+      )}
+
+      {/* Mobile: PrimaryActionBar for ⚔ New Challenge */}
+      {isMobile && outerTab === 'challenges' && (
+        <PrimaryActionBar
+          label="⚔ New Challenge"
+          state="action"
+          onPress={() => setShowCreate(true)}
+          accent="var(--gold)"
+        />
       )}
 
       {/* Create challenge modal */}

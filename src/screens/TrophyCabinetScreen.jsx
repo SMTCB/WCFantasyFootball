@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useClubhouse } from '../hooks/useClubhouse';
 import { useAuth } from '../hooks/useAuth';
+import { useIsMobile } from '../hooks/useViewport';
 import { supabase } from '../lib/supabase';
 
 const MONO = { fontFamily: 'JetBrains Mono, monospace' };
@@ -76,6 +77,7 @@ function ActivityItem({ item }) {
 // ── Main screen ────────────────────────────────────────────────────────────────
 export default function TrophyCabinetScreen() {
   const { user } = useAuth();
+  const isMobile = useIsMobile();
   const { activeCircle, activeCircleId, competitions, feed, metaStandings } = useClubhouse();
   const [trophies, setTrophies] = useState([]);
 
@@ -114,21 +116,56 @@ export default function TrophyCabinetScreen() {
     competitions.tennis.length > 0   && 'tennis',
   ].filter(Boolean);
 
+  // Shareable card — rendered inline on mobile, in sidebar on desktop
+  const shareableCard = (
+    <div style={{ background: 'var(--elev)', border: '1px solid var(--rule)', borderRadius: 6 }}>
+      <div style={{ padding: '16px', textAlign: 'center' }}>
+        <div style={{ ...MONO, fontSize: 8.5, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--mute)', marginBottom: 8 }}>
+          Shareable card
+        </div>
+        <div style={{ ...HEAD, fontSize: 15, letterSpacing: '-0.01em', marginBottom: 4 }}>{username}</div>
+        <div style={{ fontSize: 12, color: 'var(--text2)', marginBottom: 12 }}>
+          {myTrophies} trophies · {activeSports.length} sport{activeSports.length !== 1 ? 's' : ''}
+          {activeCircle ? ` · ${activeCircle.name}` : ''}
+        </div>
+        <button
+          style={{
+            width: '100%', ...MONO, fontSize: 8.5, letterSpacing: '0.12em', textTransform: 'uppercase',
+            padding: '8px 0', borderRadius: 6, border: '1.5px solid var(--rule)', background: 'transparent',
+            color: 'var(--text2)', cursor: 'pointer', minHeight: 44,
+          }}
+        >
+          Export image →
+        </button>
+      </div>
+    </div>
+  );
+
+  // Mobile: page scrolls in document flow; Desktop: fixed-height flex column
+  const rootStyle = isMobile
+    ? { display: 'flex', flexDirection: 'column', background: 'var(--bg)', minHeight: '100%' }
+    : { height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: 'var(--bg)' };
+
   return (
-    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: 'var(--bg)' }}>
+    <div style={rootStyle}>
 
       {/* ── Dark header ── */}
-      <div style={{ background: 'var(--shell)', padding: '24px 26px 22px', display: 'flex', gap: 20, alignItems: 'flex-start', flexShrink: 0 }}>
+      <div style={{
+        background: 'var(--shell)',
+        padding: isMobile ? '20px 16px 18px' : '24px 26px 22px',
+        display: 'flex', gap: 16, alignItems: 'flex-start', flexShrink: 0,
+        flexWrap: isMobile ? 'wrap' : 'nowrap',
+      }}>
         {/* Avatar */}
-        <div style={{ width: 58, height: 58, borderRadius: 10, background: 'var(--accent)', display: 'grid', placeItems: 'center', ...HEAD, fontSize: 23, color: '#fff', flexShrink: 0 }}>
+        <div style={{ width: 52, height: 52, borderRadius: 10, background: 'var(--accent)', display: 'grid', placeItems: 'center', ...HEAD, fontSize: 21, color: '#fff', flexShrink: 0 }}>
           {initial}
         </div>
 
-        <div style={{ flex: 1 }}>
-          <div style={{ ...HEAD, fontSize: 23, color: '#fff', lineHeight: 1 }}>{username}</div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ ...HEAD, fontSize: 21, color: '#fff', lineHeight: 1 }}>{username}</div>
 
-          {/* Per-sport ranks */}
-          <div style={{ display: 'flex', gap: 14, marginTop: 7, flexWrap: 'wrap' }}>
+          {/* Per-sport badges */}
+          <div style={{ display: 'flex', gap: 12, marginTop: 6, flexWrap: 'wrap' }}>
             {activeSports.map(sport => (
               <div key={sport} style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, color: 'rgba(255,255,255,.55)' }}>
                 <div style={{ width: 5, height: 5, borderRadius: '50%', background: SPORT_CONFIG[sport].color, flexShrink: 0 }} />
@@ -137,57 +174,68 @@ export default function TrophyCabinetScreen() {
             ))}
           </div>
 
-          {/* Stats row */}
-          <div style={{ display: 'flex', gap: 26, marginTop: 18, paddingTop: 16, borderTop: '1px solid rgba(255,255,255,.09)' }}>
-            <div>
-              <div style={{ ...HEAD, fontSize: 24, color: '#fff', letterSpacing: '-0.02em' }}>{myTrophies}</div>
-              <div style={{ ...MONO, fontSize: 7.5, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'rgba(255,255,255,.3)', marginTop: 1 }}>Trophies</div>
-            </div>
-            <div>
-              <div style={{ ...HEAD, fontSize: 24, color: '#fff', letterSpacing: '-0.02em' }}>{activeSports.length || '—'}</div>
-              <div style={{ ...MONO, fontSize: 7.5, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'rgba(255,255,255,.3)', marginTop: 1 }}>Sports</div>
-            </div>
-            <div>
-              <div style={{ ...HEAD, fontSize: 24, color: 'var(--gold)', letterSpacing: '-0.02em' }}>{myGold}</div>
-              <div style={{ ...MONO, fontSize: 7.5, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'rgba(255,255,255,.3)', marginTop: 1 }}>Gold</div>
-            </div>
-            <div>
-              <div style={{ ...HEAD, fontSize: 24, color: 'rgba(255,255,255,.65)', letterSpacing: '-0.02em' }}>{mySilver}</div>
-              <div style={{ ...MONO, fontSize: 7.5, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'rgba(255,255,255,.3)', marginTop: 1 }}>Silver</div>
-            </div>
+          {/* Stats row — wraps on mobile */}
+          <div style={{
+            display: 'flex', gap: isMobile ? 18 : 26, marginTop: 16, paddingTop: 14,
+            borderTop: '1px solid rgba(255,255,255,.09)', flexWrap: 'wrap',
+          }}>
+            {[
+              { value: myTrophies,            label: 'Trophies', color: '#fff' },
+              { value: activeSports.length || '—', label: 'Sports',   color: '#fff' },
+              { value: myGold,                label: 'Gold',     color: 'var(--gold)' },
+              { value: mySilver,              label: 'Silver',   color: 'rgba(255,255,255,.65)' },
+            ].map(({ value, label, color }) => (
+              <div key={label}>
+                <div style={{ ...HEAD, fontSize: 22, color, letterSpacing: '-0.02em' }}>{value}</div>
+                <div style={{ ...MONO, fontSize: 7.5, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'rgba(255,255,255,.3)', marginTop: 1 }}>{label}</div>
+              </div>
+            ))}
           </div>
         </div>
 
-        {/* Overall rank */}
+        {/* Overall rank — beside avatar row on desktop; full-width row on mobile */}
         {myRank != null && (
-          <div style={{ marginLeft: 'auto', textAlign: 'center', flexShrink: 0 }}>
-            <div style={{ ...HEAD, fontSize: 38, color: 'var(--gold)', letterSpacing: '-0.03em', lineHeight: 1 }}>
+          <div style={{
+            textAlign: isMobile ? 'left' : 'center',
+            flexShrink: 0,
+            ...(isMobile ? { width: '100%', paddingTop: 12, borderTop: '1px solid rgba(255,255,255,.09)', display: 'flex', alignItems: 'center', gap: 12 } : {}),
+          }}>
+            <div style={{ ...HEAD, fontSize: isMobile ? 28 : 38, color: 'var(--gold)', letterSpacing: '-0.03em', lineHeight: 1 }}>
               #{myRank}
             </div>
-            <div style={{ ...MONO, fontSize: 7.5, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'rgba(255,255,255,.35)' }}>
-              Group overall
-            </div>
-            {activeCircle && (
-              <div style={{ ...MONO, fontSize: 8, letterSpacing: '0.08em', color: 'rgba(255,255,255,.3)', marginTop: 4 }}>
-                {activeCircle.name}
+            <div>
+              <div style={{ ...MONO, fontSize: 7.5, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'rgba(255,255,255,.35)' }}>
+                Group overall
               </div>
-            )}
+              {activeCircle && (
+                <div style={{ ...MONO, fontSize: 8, letterSpacing: '0.08em', color: 'rgba(255,255,255,.3)', marginTop: 2 }}>
+                  {activeCircle.name}
+                </div>
+              )}
+            </div>
           </div>
         )}
       </div>
 
       {/* ── Body ── */}
-      <div style={{ flex: 1, overflowY: 'auto', padding: '20px 26px', display: 'flex', gap: 20 }}>
+      <div style={{
+        flex: 1,
+        overflowY: isMobile ? 'visible' : 'auto',
+        padding: isMobile ? '16px 16px 24px' : '20px 26px',
+        display: 'flex',
+        flexDirection: isMobile ? 'column' : 'row',
+        gap: 20,
+      }}>
 
         {/* Main column */}
         <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 16 }}>
 
-          {/* Sport breakdown */}
+          {/* Sport breakdown — auto-fill collapses to 1-col at 375px */}
           <div>
             <div style={{ ...MONO, fontSize: 8.5, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--mute)', marginBottom: 9 }}>
               Season standing by sport
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: 10 }}>
               <SportBreakdownCard sport="football" competitions={competitions} />
               <SportBreakdownCard sport="f1"       competitions={competitions} />
               <SportBreakdownCard sport="tennis"   competitions={competitions} />
@@ -225,48 +273,32 @@ export default function TrophyCabinetScreen() {
               </div>
             </div>
           )}
+
+          {/* Mobile: export card inline below trophies */}
+          {isMobile && shareableCard}
         </div>
 
-        {/* Right sidebar */}
-        <div style={{ width: 256, flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 14 }}>
+        {/* Desktop: right sidebar */}
+        {!isMobile && (
+          <div style={{ width: 256, flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 14 }}>
 
-          {/* Activity history */}
-          {feed.length > 0 && (
-            <div style={{ background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 6 }}>
-              <div style={{ padding: '12px 15px', borderBottom: '1px solid var(--rule)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <div style={{ ...HEAD, fontSize: 13 }}>Activity history</div>
+            {/* Activity history */}
+            {feed.length > 0 && (
+              <div style={{ background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 6 }}>
+                <div style={{ padding: '12px 15px', borderBottom: '1px solid var(--rule)' }}>
+                  <div style={{ ...HEAD, fontSize: 13 }}>Activity history</div>
+                </div>
+                <div style={{ padding: '10px 14px' }}>
+                  {feed.slice(0, 8).map((item, i) => (
+                    <ActivityItem key={item.id ?? i} item={item} />
+                  ))}
+                </div>
               </div>
-              <div style={{ padding: '10px 14px' }}>
-                {feed.slice(0, 8).map((item, i) => (
-                  <ActivityItem key={item.id ?? i} item={item} />
-                ))}
-              </div>
-            </div>
-          )}
+            )}
 
-          {/* Shareable card */}
-          <div style={{ background: 'var(--elev)', border: '1px solid var(--rule)', borderRadius: 6 }}>
-            <div style={{ padding: '16px', textAlign: 'center' }}>
-              <div style={{ ...MONO, fontSize: 8.5, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--mute)', marginBottom: 8 }}>
-                Shareable card
-              </div>
-              <div style={{ ...HEAD, fontSize: 15, letterSpacing: '-0.01em', marginBottom: 4 }}>{username}</div>
-              <div style={{ fontSize: 12, color: 'var(--text2)', marginBottom: 12 }}>
-                {myTrophies} trophies · {activeSports.length} sport{activeSports.length !== 1 ? 's' : ''}
-                {activeCircle ? ` · ${activeCircle.name}` : ''}
-              </div>
-              <button
-                style={{
-                  width: '100%', ...MONO, fontSize: 8.5, letterSpacing: '0.12em', textTransform: 'uppercase',
-                  padding: '8px 0', borderRadius: 6, border: '1.5px solid var(--rule)', background: 'transparent',
-                  color: 'var(--text2)', cursor: 'pointer',
-                }}
-              >
-                Export image →
-              </button>
-            </div>
+            {shareableCard}
           </div>
-        </div>
+        )}
       </div>
     </div>
   );
