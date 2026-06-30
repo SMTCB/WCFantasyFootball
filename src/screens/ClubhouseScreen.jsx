@@ -6,6 +6,7 @@ import { useAuth } from '../hooks/useAuth';
 import { useWallet } from '../hooks/useWallet';
 import ClubhouseChat from '../components/ClubhouseChat';
 import ClubhouseFrontpage from '../components/ClubhouseFrontpage';
+import TabStrip from '../components/shared/TabStrip';
 
 const MONO = { fontFamily: 'JetBrains Mono, monospace' };
 const HEAD = { fontFamily: 'Archivo Black, sans-serif' };
@@ -23,36 +24,6 @@ function timeAgo(isoString) {
   if (diff < 3600)  return `${Math.floor(diff / 60)}m ago`;
   if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
   return `${Math.floor(diff / 86400)}d ago`;
-}
-
-// ── Shared tab bar ────────────────────────────────────────────────────────────
-function TabBar({ tabs, active, onChange }) {
-  return (
-    <div style={{ display: 'flex', borderBottom: '1px solid var(--rule)' }}>
-      {tabs.map(t => (
-        <button
-          key={t.key}
-          onClick={() => onChange(t.key)}
-          style={{
-            flex: 1,
-            padding: '12px 0',
-            ...MONO,
-            fontSize: 10,
-            fontWeight: 700,
-            letterSpacing: '0.14em',
-            cursor: 'pointer',
-            border: 'none',
-            borderBottom: active === t.key ? '2px solid var(--accent)' : '2px solid transparent',
-            background: 'transparent',
-            color: active === t.key ? 'var(--accent)' : 'var(--mute)',
-            marginBottom: -1,
-          }}
-        >
-          {t.label}
-        </button>
-      ))}
-    </div>
-  );
 }
 
 // ── Empty / no-circles state ──────────────────────────────────────────────────
@@ -100,7 +71,7 @@ function ClubhouseLobby({ createCircle, joinCircleByCode }) {
         </p>
       </div>
 
-      <TabBar tabs={TABS} active={tab} onChange={t => { setTab(t); setErr(''); }} />
+      <TabStrip variant="underline" tabs={TABS} active={tab} onTab={t => { setTab(t); setErr(''); }} />
 
       <div style={{ paddingTop: 24 }}>
         {tab === 'create' && (
@@ -751,7 +722,7 @@ export default function ClubhouseScreen() {
     { key: 'frontrow',  label: 'THE FRONTROW'   },
     { key: 'recap',     label: 'RECAP'          },
     { key: 'chat',      label: 'CHAT'           },
-    { key: 'inbox',     label: unreadCount > 0 ? `INBOX (${unreadCount})` : 'INBOX' },
+    { key: 'inbox',     label: 'INBOX', count: unreadCount > 0 ? unreadCount : undefined },
     { key: 'members',   label: 'MEMBERS'        },
     { key: 'find',      label: 'FIND'           },
     ...(isOwner ? [{ key: 'settings', label: 'SETTINGS' }] : []),
@@ -858,7 +829,7 @@ export default function ClubhouseScreen() {
         <ClubhouseLobby createCircle={createCircle} joinCircleByCode={joinCircleByCode} />
       ) : (
         <>
-          <TabBar tabs={MAIN_TABS} active={tab} onChange={setTab} />
+          <TabStrip variant="underline" tabs={MAIN_TABS} active={tab} onTab={setTab} />
 
           {/* Full-width tabs — rendered outside the max-width container */}
           {tab === 'frontrow' && (
