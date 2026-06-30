@@ -1,6 +1,7 @@
 /* eslint-disable react-refresh/only-export-components */
 // Shared chrome primitives for the League Hub.
 // All components use inline styles + CSS custom properties to match the design spec exactly.
+import TabStrip from '../shared/TabStrip';
 //
 // IMPORTANT: string constants (MONO, DISPLAY, mgrMono, miniBtnStyle) live in
 // HubConstants.js (a leaf module with no React). Import constants from there in
@@ -287,34 +288,14 @@ export function HubLeagueHeader({ leagueName = 'LOADING…', memberCount = 0, gw
 // Mobile horizontal-scroll hub tab pills — replaces HubTabs on mobile viewports.
 export function HubTabPills({ active = 'leaderboard', onTab, isCommissioner = false, notifyTrading = false, h2hEnabled = false, isDraftLeague = false }) {
   const tabs = [
-    { id: 'leaderboard', label: 'BOARD' },
-    ...(h2hEnabled ? [{ id: 'h2h', label: 'H2H ⚔️' }] : []),
-    { id: 'recap',       label: 'RECAP' },
-    ...(isDraftLeague ? [{ id: 'trading', label: 'TRADING', notify: notifyTrading }] : []),
-    { id: 'stats',       label: 'STATS' },
-    ...(isCommissioner ? [{ id: 'admin', label: 'ADMIN' }] : []),
+    { key: 'leaderboard', label: 'BOARD' },
+    ...(h2hEnabled ? [{ key: 'h2h', label: 'H2H ⚔️' }] : []),
+    { key: 'recap',       label: 'RECAP' },
+    ...(isDraftLeague ? [{ key: 'trading', label: 'TRADING', notify: notifyTrading }] : []),
+    { key: 'stats',       label: 'STATS' },
+    ...(isCommissioner ? [{ key: 'admin', label: 'ADMIN' }] : []),
   ];
-  return (
-    <div style={{ display: 'flex', gap: 6, padding: '10px 18px', overflowX: 'auto', borderBottom: '1px solid var(--rule)', background: 'var(--ink)', flexShrink: 0, scrollbarWidth: 'none' }}>
-      {tabs.map(t => {
-        const isActive = t.id === active;
-        return (
-          <button key={t.id} onClick={() => onTab(t.id)} style={{
-            flex: '0 0 auto', padding: '7px 12px', cursor: 'pointer', whiteSpace: 'nowrap',
-            background: isActive ? 'var(--cyan)' : 'transparent',
-            border: isActive ? '1px solid var(--cyan)' : '1px solid var(--rule)',
-            color: isActive ? 'var(--ink)' : 'var(--mute)',
-            fontFamily: MONO, fontSize: 10, letterSpacing: '.18em', fontWeight: 600,
-            display: 'inline-flex', alignItems: 'center', gap: 5,
-          }}>
-            {t.label}
-            {t.notify && !isActive && <span style={{ width: 5, height: 5, borderRadius: '50%', background: 'var(--danger)', flexShrink: 0 }} />}
-            {!!t.count && !isActive && <span style={{ color: 'var(--cyan)', fontSize: 9 }}>{t.count}</span>}
-          </button>
-        );
-      })}
-    </div>
-  );
+  return <TabStrip variant="pill" accent="var(--cyan)" tabs={tabs} active={active} onTab={onTab} />;
 }
 
 // Mobile 3-dot form indicator — compact subset of FormDots for tight rows.
