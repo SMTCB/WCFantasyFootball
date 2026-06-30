@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import { supabase } from '../lib/supabase';
 import { normalisePlayers } from '../lib/players';
 
@@ -62,12 +63,12 @@ export default function PlayerPickerSheet({ position, budget, takenMap, isOwnedB
 
   const posCfg = POS_CONFIG[position] ?? POS_CONFIG.MID;
 
-  return (
+  return createPortal((
     <>
       {/* Backdrop */}
       <div
         className="fixed inset-0 z-40"
-        style={{ background: 'rgba(0,0,0,0.6)' }}
+        style={{ background: 'rgba(0,0,0,0.55)' }}
         onClick={onClose}
       />
 
@@ -75,15 +76,15 @@ export default function PlayerPickerSheet({ position, budget, takenMap, isOwnedB
       <div
         className="fixed bottom-0 left-0 right-0 z-50 flex flex-col"
         style={{
-          background:   'var(--ink-2)',
-          borderTop:    '1px solid rgba(255,255,255,0.08)',
+          background:   'var(--card)',
+          borderTop:    '1px solid var(--rule)',
           borderRadius: '16px 16px 0 0',
           maxHeight:    '85vh',
         }}
       >
         {/* Handle */}
         <div className="flex justify-center pt-3 pb-1 shrink-0">
-          <div className="w-9 h-1 rounded-full" style={{ background: 'rgba(255,255,255,0.15)' }} />
+          <div className="w-9 h-1 rounded-full" style={{ background: 'var(--rule)' }} />
         </div>
 
         {/* Header */}
@@ -102,7 +103,7 @@ export default function PlayerPickerSheet({ position, budget, takenMap, isOwnedB
           <button
             onClick={onClose}
             className="w-8 h-8 rounded-full flex items-center justify-center"
-            style={{ background: 'rgba(255,255,255,0.06)', color: 'var(--mute)', fontSize: '16px' }}
+            style={{ background: 'var(--elev)', color: 'var(--mute)', fontSize: '16px' }}
           >
             ✕
           </button>
@@ -117,8 +118,8 @@ export default function PlayerPickerSheet({ position, budget, takenMap, isOwnedB
             onChange={e => setSearch(e.target.value)}
             className="w-full px-3 py-2.5 rounded-sm text-[13px]"
             style={{
-              background:   'rgba(255,255,255,0.05)',
-              border:       '1px solid rgba(255,255,255,0.1)',
+              background:   'var(--elev)',
+              border:       '1px solid var(--rule)',
               color:        'var(--paper)',
               outline:      'none',
             }}
@@ -144,7 +145,7 @@ export default function PlayerPickerSheet({ position, budget, takenMap, isOwnedB
                   key={p.id}
                   className="flex items-center px-5 py-3 gap-3"
                   style={{
-                    borderBottom: '1px solid rgba(255,255,255,0.04)',
+                    borderBottom: '1px solid var(--rule)',
                     opacity: (taken || (owned)) ? 0.55 : 1,
                   }}
                 >
@@ -211,5 +212,5 @@ export default function PlayerPickerSheet({ position, budget, takenMap, isOwnedB
         </div>
       </div>
     </>
-  );
+  ), document.body);
 }

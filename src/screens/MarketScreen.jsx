@@ -1257,9 +1257,10 @@ export default function MarketScreen() {
                     <div
                       className="fk-mono"
                       style={{
-                        minWidth: 56, padding: '6px 10px', textAlign: 'center',
+                        minWidth: 56, padding: '10px 10px', minHeight: 44, textAlign: 'center',
                         border: '1px solid var(--rule)', color: 'var(--mute)',
                         fontSize: 10, fontWeight: 800, opacity: 0.6,
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
                       }}
                     >
                       LOCKED
@@ -1270,7 +1271,7 @@ export default function MarketScreen() {
                       onClick={() => setBasket(prev => prev.filter(b => b.player.id !== p.id))}
                       className="fk-mono transition-all active:scale-95"
                       style={{
-                        minWidth: 56, padding: '6px 10px',
+                        minWidth: 56, padding: '10px 10px', minHeight: 44,
                         border: '1px solid var(--gold)',
                         color: 'var(--gold)',
                         background: 'rgba(240,180,0,0.08)',
@@ -1286,7 +1287,7 @@ export default function MarketScreen() {
                       onClick={() => setBasket(prev => prev.filter(b => b.player.id !== p.id))}
                       className="fk-mono transition-all active:scale-95"
                       style={{
-                        minWidth: 56, padding: '6px 10px',
+                        minWidth: 56, padding: '10px 10px', minHeight: 44,
                         border: '1px solid var(--gold)',
                         color: 'var(--gold)',
                         background: 'rgba(240,180,0,0.08)',
@@ -1302,7 +1303,7 @@ export default function MarketScreen() {
                       disabled={confirming}
                       className="fk-mono transition-all active:scale-95 disabled:opacity-40"
                       style={{
-                        minWidth: 56, padding: '6px 10px',
+                        minWidth: 56, padding: '10px 10px', minHeight: 44,
                         border: '1px solid var(--danger)',
                         color: 'var(--danger)',
                         background: 'transparent',
@@ -1315,9 +1316,10 @@ export default function MarketScreen() {
                     <div
                       className="fk-mono"
                       style={{
-                        minWidth: 56, padding: '6px 10px', textAlign: 'center',
+                        minWidth: 56, padding: '10px 10px', minHeight: 44, textAlign: 'center',
                         border: '1px solid rgba(240,58,58,0.4)', color: 'var(--danger)',
                         fontSize: 10, fontWeight: 800, letterSpacing: '0.1em', opacity: 0.85,
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
                       }}
                     >
                       CLUB FULL
@@ -1334,7 +1336,7 @@ export default function MarketScreen() {
                       }
                       className="fk-mono transition-all active:scale-95"
                       style={{
-                        minWidth: 56, padding: '6px 10px',
+                        minWidth: 56, padding: '10px 10px', minHeight: 44,
                         border: `1px solid ${canBuy ? 'var(--cyan)' : 'var(--rule)'}`,
                         color: canBuy ? 'var(--cyan)' : 'var(--mute)',
                         background: 'transparent',
