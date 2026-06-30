@@ -86,6 +86,17 @@
   /* Text on --shell (dark navy) surfaces */
   --on-shell:       #ffffff;               /* full-brightness text on shell/nav headers */
   --on-shell-dim:   rgba(255,255,255,.45); /* muted eyebrow labels on shell */
+
+  /* ── Sport accent palette ──────────────────────────────────────────────── */
+  --f1:    #E10600;   /* Formula 1 — Ferrari red        */
+  --f1bg:  rgba(225,6,0,.08);
+  --ten:   #1B7A52;   /* Tennis — Wimbledon green        */
+  --tenbg: rgba(27,122,82,.08);
+
+  /* ── Radius aliases (matches Tailwind @theme --radius-*) ──────────────── */
+  --r-sm:  4px;
+  --r-md:  6px;
+
   /* ── Spacing scale (base-4) ────────────────────────────────────────────────
      Use multiples of 4px only: 4 8 12 16 24 32 48 64 80 96px.
      Any inline style with a non-4 value (5, 7, 9, 13, 15px) is off-scale. */
@@ -139,6 +150,12 @@ body {
 }
 
 /* ── Safe-area helpers ────────────────────────────────────────────── */
+.safe-top {
+  padding-top: env(safe-area-inset-top);
+}
+.pt-safe {
+  padding-top: env(safe-area-inset-top);
+}
 .safe-bottom {
   padding-bottom: max(12px, env(safe-area-inset-bottom));
 }

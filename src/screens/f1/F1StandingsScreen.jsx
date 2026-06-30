@@ -73,6 +73,7 @@ export default function F1StandingsScreen() {
               </div>
             </div>
           )}
+          leadColumnKey="total"
           loading={loading}
           emptyMessage="No standings yet — picks will score after the first race."
           emptyIcon="🏁"
