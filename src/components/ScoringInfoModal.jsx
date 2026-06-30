@@ -13,6 +13,7 @@ const POSITIONS = [
       { label: 'Clean Sheet',         val: '+4', note: '45+ min' },
       { label: 'Save',                val: '+0.5' },
       { label: 'Penalty Saved',       val: '+5' },
+      { label: 'Shootout Save',       val: '+0.5', note: 'per opponent miss' },
       { label: 'Tackle Won',          val: '+0.5' },
       { label: 'Interception',        val: '+0.25' },
       { label: 'Key Pass',            val: '+0.25' },
@@ -68,6 +69,8 @@ const UNIVERSAL = [
   { label: 'Red Card',         val: '−3',  neg: true  },
   { label: 'Own Goal',         val: '−2',  neg: true  },
   { label: 'Penalty Missed',   val: '−2',  neg: true  },
+  { label: 'Shootout Goal',    val: '+1',  neg: false },
+  { label: 'Shootout Miss',    val: '−1',  neg: true  },
 ];
 
 const SQUAD_RULES = [
