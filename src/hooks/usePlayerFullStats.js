@@ -21,9 +21,12 @@ const BREAKDOWN_LABELS = {
   yellow_cards: 'YELLOW CARD',
   red_cards: 'RED CARD',
   penalty_missed: 'PENALTY MISSED',
+  shootout_scored: 'SHOOTOUT GOAL',
+  shootout_missed: 'SHOOTOUT MISS',
+  shootout_saved: 'SHOOTOUT SAVE',
 };
 
-const NEG_KEYS = new Set(['own_goals', 'yellow_cards', 'red_cards', 'penalty_missed']);
+const NEG_KEYS = new Set(['own_goals', 'yellow_cards', 'red_cards', 'penalty_missed', 'shootout_missed']);
 
 // Converts a GW record's breakdown JSONB + bonus points into display rows.
 // gw.totalPts is authoritative — these items are display-only.
