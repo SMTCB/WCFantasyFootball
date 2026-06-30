@@ -1,23 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useIsMobile } from '../../hooks/useViewport';
 
 const MEDAL = ['🥇', '🥈', '🥉'];
 const MONO  = 'JetBrains Mono, monospace';
 const DISP  = 'Archivo Black, sans-serif';
-
-// TODO(M0): replace with `import { useIsMobile } from '../../hooks/useViewport'`
-//           once PR1 (claude/v2-m0-pr1-viewport-tokens) is merged into v2.
-function useIsMobile() {
-  const [isMobile, setIsMobile] = useState(
-    () => typeof window !== 'undefined' && window.innerWidth < 640
-  );
-  useEffect(() => {
-    const mql = window.matchMedia('(max-width: 639px)');
-    const handler = () => setIsMobile(mql.matches);
-    mql.addEventListener('change', handler);
-    return () => mql.removeEventListener('change', handler);
-  }, []);
-  return isMobile;
-}
 
 /**
  * Shared Tier-2 standings table used by Football, F1, and Tennis.

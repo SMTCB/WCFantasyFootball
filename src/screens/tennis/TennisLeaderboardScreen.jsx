@@ -89,6 +89,7 @@ export default function TennisLeaderboardScreen() {
                     )}
                   </div>
                 )}
+                leadColumnKey="total"
                 emptyMessage="No scores yet — standings update after each tournament completes."
                 rowPadding="12px 16px"
                 gap={8}
@@ -101,7 +102,9 @@ export default function TennisLeaderboardScreen() {
                 <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--rule)' }}>
                   <span style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 14, color: 'var(--paper)' }}>Per-Tournament Breakdown</span>
                 </div>
-                <div style={{ overflowX: 'auto' }}>
+
+                {/* Desktop: wide multi-column table (hidden on mobile — requires sideways scroll at 375px) */}
+                <div className="hidden lg:block" style={{ overflowX: 'auto' }}>
                   <table style={{ width: '100%', borderCollapse: 'collapse', fontFamily: 'Archivo, sans-serif', fontSize: 13 }}>
                     <thead>
                       <tr style={{ background: 'var(--elev)' }}>
@@ -126,6 +129,54 @@ export default function TennisLeaderboardScreen() {
                       ))}
                     </tbody>
                   </table>
+                </div>
+
+                {/* Mobile: per-manager cards with tournament scores as chips */}
+                <div className="lg:hidden">
+                  {seasonSummary.map((row, i) => (
+                    <div
+                      key={row.user_id}
+                      style={{
+                        padding: '12px 16px',
+                        borderBottom: i < seasonSummary.length - 1 ? '1px solid var(--rule)' : 'none',
+                      }}
+                    >
+                      <div style={{
+                        fontFamily: 'Archivo, sans-serif',
+                        fontSize: 13,
+                        fontWeight: 600,
+                        color: 'var(--paper)',
+                        marginBottom: 6,
+                      }}>
+                        {row.username}
+                      </div>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+                        {row.tournament_scores?.filter(ts => ts.total_points > 0).map(ts => (
+                          <span
+                            key={ts.tournament_id}
+                            style={{
+                              fontFamily: 'JetBrains Mono, monospace',
+                              fontSize: 9,
+                              letterSpacing: '0.06em',
+                              color: 'var(--ten)',
+                              background: 'color-mix(in srgb, var(--ten) 10%, transparent)',
+                              border: '1px solid color-mix(in srgb, var(--ten) 25%, transparent)',
+                              borderRadius: 4,
+                              padding: '3px 7px',
+                              whiteSpace: 'nowrap',
+                            }}
+                          >
+                            {ts.tournament_name?.split(' ').slice(0, 2).join(' ')} · {ts.total_points}
+                          </span>
+                        ))}
+                        {!row.tournament_scores?.some(ts => ts.total_points > 0) && (
+                          <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 9, color: 'var(--mute)' }}>
+                            No scores yet
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
             )}

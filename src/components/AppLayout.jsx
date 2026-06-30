@@ -248,7 +248,7 @@ export default function AppLayout({ children }) {
         {/* Mobile top bar */}
         <div
           className="lg:hidden sticky top-0 z-40 flex items-center justify-between px-4"
-          style={{ background: 'var(--ink)', borderBottom: '1px solid var(--rule)', minHeight: 44 }}
+          style={{ background: 'var(--ink)', borderBottom: '1px solid var(--rule)', minHeight: 44, paddingTop: 'env(safe-area-inset-top)' }}
         >
           {showBackButton ? (
             <button
