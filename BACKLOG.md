@@ -1,12 +1,35 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-06-29 (DEPLOY-672 applied to production; Round-of-32 duplicate-fixture scoring bug fixed)  
+**Last Updated**: 2026-06-30 (shootout event detection bug fixed + rescored; shootout breakdown display added)  
 **E2E Test Suite**: `platform.spec.js` (36 tests × 2 browsers) passing in CI ✅  
 **Full Playbook Run**: `E2E_TEST_PLAYBOOK.md` v2.0 — all flows confirmed  
 **🟢 LAUNCH READY**: No critical (P0/P1) bugs open. All game mechanics functional. WC kick-off 2026-06-11.  
 **Live App**: https://wc-fantasy-football.vercel.app  
 **WC Kick-off**: 2026-06-11 19:00 UTC (Mexico vs South Africa)  
 **Supabase PostgREST max_rows**: 10,000 (raised from default 1,000 — 2026-06-08)
+
+---
+
+## ✅ Shootout event detection fix + rescore + breakdown display (2026-06-30) — PRs #678, #679, #680
+
+**Context**: Two Round-of-32 knockout matches went to extra time and penalty shootouts (Netherlands vs Morocco, Germany vs Paraguay). Shootout scoring columns (`shootout_scored`/`shootout_missed`/`shootout_saved`) were all zero for every player despite the DB columns existing (migration 192) and ET minutes being correct.
+
+**Root cause (PR #678)**: `ingest-match-events` shootout-period detection worked (`period.type.includes('penalt')`), but the event-type matching inside it looked for `goal` and `missed_penalty` event types — the same types used for in-game penalties. Forza's actual shootout kicks are sent as a single unified `penalty_shootout_shot` event type with a `scored: true/false` boolean. No error was logged; the events simply never matched, so the data was silently dropped.
+
+**Product decision**: Forza's `penalty_shootout_shot` event has no field to distinguish a goalkeeper save from an off-target miss. Every miss is credited to the opposing GK as a save (+0.5 pts). Documented in code comment.
+
+**Fix applied (PR #678)**:
+- Rewrote the shootout event detection block to match on `ev.type === 'penalty_shootout_shot'` and branch on `ev.scored === true/false`.
+- `ingest-match-events` redeployed to production.
+- Both fixtures re-ingested: `shootout_scored/missed/saved` now populated correctly (e.g. Bounou 3 saves, Verbruggen 2 saves — cross-verified against the actual shootout sequence).
+- Both fixtures rescored via `calculate-scores`: 35 of 57 squads had `fantasy_points.total` updated for round `429-r4`; `league_members.total_points` re-aggregated automatically.
+- Pre/post rescore snapshots saved to `backups/pre_shootout_rescore_fantasy_points_20260630.json` + `post_shootout_rescore_*.json`.
+
+**Breakdown display (PRs #679 + #680)**:
+- **PR #679**: `RecapView.jsx` (Recap player breakdown card) — added `shootout_scored/missed/saved` to SELECT and badge rendering (`PK✓×N`, `PK✗×N`, `N PK SV`). `ScoringInfoModal.jsx` — added Shootout Save (+0.5, GK), Shootout Goal (+1), Shootout Miss (−1) to rules display.
+- **PR #680**: `usePlayerFullStats.js` (player detail BREAKDOWN tab in Squad/Market) — `BREAKDOWN_LABELS` was missing the three shootout keys, so line items were silently dropped even though the `TOTAL` was already correct. Added `SHOOTOUT GOAL`, `SHOOTOUT MISS` (negative), `SHOOTOUT SAVE` labels.
+
+**Next migration**: `193_`
 
 ---
 
