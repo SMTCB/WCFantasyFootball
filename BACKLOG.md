@@ -1,12 +1,44 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-06-30 (shootout event detection bug fixed + rescored; shootout breakdown display added)  
+**Last Updated**: 2026-06-30 (bet/market improvements + sync_cup_eliminations v2; PRs #691, #692)  
 **E2E Test Suite**: `platform.spec.js` (36 tests × 2 browsers) passing in CI ✅  
 **Full Playbook Run**: `E2E_TEST_PLAYBOOK.md` v2.0 — all flows confirmed  
 **🟢 LAUNCH READY**: No critical (P0/P1) bugs open. All game mechanics functional. WC kick-off 2026-06-11.  
 **Live App**: https://wc-fantasy-football.vercel.app  
 **WC Kick-off**: 2026-06-11 19:00 UTC (Mexico vs South Africa)  
 **Supabase PostgREST max_rows**: 10,000 (raised from default 1,000 — 2026-06-08)
+
+---
+
+## ✅ Bet/Market improvements + sync_cup_eliminations v2 (2026-06-30) — PRs #691, #692, migration 195
+
+**Changes in PR #691** — committed to a branch (also contains prior session's PR #690 context):
+
+**1. Clean Sheet bet "None" option**: Managers can now bet on "no team keeping a clean sheet". Added as a selectable row at the top of the team picker in `BetCreatorPanel.jsx`. Stored as `key: 'none', label: 'None'` in `selectedOpts`, rendered in `InlineOptions` as a normal pick for the player-facing `BetWidget.jsx`.
+
+**2. Top Scorer bet player search**: Commissioner player fetch limit raised from 80 → 200. Added "ALL (N)" SELECT ALL button next to CLEAR in the player section — lets the commissioner instantly select all filtered players rather than scrolling a short list. Managers already had search via the `InlineOptions` component's built-in search box.
+
+**3. Market smart filters**: Three new filters in `MarketScreen.jsx` between the price filter and position tabs:
+- **Hide Eliminated** — removes players from clubs with `eliminated_at IS NOT NULL` in `cup_active_clubs` (draft/cup leagues) or clubs with no remaining fixtures (classic leagues). Red when active.
+- **Hide Taken** — draft leagues only. Removes players owned by other managers (`isTaken(p.id) && !owned.includes(p.id)`). Red when active.
+- **Min pts** — number input (step=5). Sums the last-5-GW `statsMap` values per player; excludes players whose total < threshold. Cyan when active.
+- "Reset" button appears when any filter is active.
+
+**4. ELIMINATED tag client-side safety check** (in `useEliminatedClubs.js`): after fetching `cup_active_clubs`, the hook now fetches all tournament fixtures and removes any DB-eliminated club that has a future scheduled fixture. This prevents the race where `sync_cup_eliminations` ran before Forza published the next-round bracket — the Norway false-positive scenario.
+
+**Changes in PR #692** — migration 195 (`195_sync_cup_eliminations_v2.sql`):
+
+**sync_cup_eliminations v2**: Full rewrite fixing two recurring bugs:
+1. **6h timer → round-complete guard**: replaced `EXTRACT(EPOCH FROM NOW() - last_finished.kickoff_at) > 21600` with a check that all other fixtures in the same `matchday_id` are also `finished`. Once the full round is settled, Forza has published the next round's bracket — much more reliable than a wall-clock delay.
+2. **Penalty-shootout elimination**: for fixtures where `home_score = away_score` (draw), the function now queries `player_match_stats.shootout_scored` per nationality. If the club's shootout goals < opponent's, the club is eliminated. Previously all draws were skipped ("we'd rather under-eliminate"), leaving Netherlands (lost 2-3 PSO vs Morocco) and Germany (lost 3-4 PSO vs Paraguay) un-eliminated until manual fix.
+3. **Self-heal block**: the function already had a self-heal path (reinstate clubs incorrectly marked eliminated if they have a future fixture) — preserved intact.
+
+**Manual data fixes applied in this session** (before migration 195):
+- Norway: `eliminated_at` cleared (was incorrectly set before Forza published R5 fixture)
+- Côte d'Ivoire: `eliminate_cup_club()` called for all 5 pilot leagues (clear 1-2 loss vs Norway, but 6h guard had blocked auto-elimination)
+- Germany: `eliminate_cup_club()` called for all 5 pilot leagues (1-1 draw, lost 3-4 PSO)
+
+**Next migration**: `196_`
 
 ---
 
