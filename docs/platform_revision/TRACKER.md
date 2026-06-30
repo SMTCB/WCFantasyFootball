@@ -25,7 +25,7 @@
 | **3A** | Buyout hygiene batch 2 (provider adapter, containerisation, envs) | ✅ Done | PRs #634–#636 |
 | **3B** | v2 integration & deploy | 🔄 In progress | Code quality gates ✅ — smoke tests + deploy remaining |
 | **R** | Clubhouse-Centric Redesign (IA/UX) | ✅ Done — Phase D closed | Phase A PR #671, Phase B PR #675, Phase C PR #676, Phase D PR #677. Migration 217 deferred (blocked by live pilot). Design: [CLUBHOUSE_CENTRIC_REDESIGN.md](architecture/CLUBHOUSE_CENTRIC_REDESIGN.md). See [workstream](#clubhouse-centric-redesign-workstream) below. |
-| **M** | Mobile-First Redesign (sub-`lg` UX) | 📋 Assessment validated — build not started | Assessment + implementation plan written 2026-06-30, no code touched. 5 phases M0–M4. Design: [MOBILE_FIRST_REDESIGN.md](architecture/MOBILE_FIRST_REDESIGN.md). See [workstream](#mobile-first-redesign-workstream) below. |
+| **M** | Mobile-First Redesign (sub-`lg` UX) | 🔄 Phase M0 done — M1 next | Phase M0 primitives shipped (PRs #682, #683, #684): `useViewport`, sport tokens, safe-area, `<BottomSheet>`, `<PrimaryActionBar>`, `CompetitionResultsHeader` card-mode scaffold. Design: [MOBILE_FIRST_REDESIGN.md](architecture/MOBILE_FIRST_REDESIGN.md). See [workstream](#mobile-first-redesign-workstream) below. |
 
 **Next session options (choose one):**
 - **DD items** — TEST-1 (Vitest coverage), CODE-3 (error boundaries), OPS-2 (Sentry)
@@ -143,14 +143,16 @@ Sequenced so the *feel* changes first (Phase A) before deeper data/state work.
 
 Sequenced worst-breakage-first, highest-leverage shared component early.
 
-### Phase M0 — Foundations (primitives + token fixes) ⬜
-- [ ] `useViewport()` / `useIsMobile()` hook (single `matchMedia`; mobile<640 / tablet 640–1023 / desktop≥1024)
-- [ ] Define `--f1`/`--ten`/`--f1bg`/`--tenbg` tokens (referenced by 8+ components, **defined nowhere** today — latent bug); fix `--r-sm`/`--r-md` skeleton mismatch; add `env(safe-area-inset-top)` to the sticky mobile top bar
-- [ ] Consolidate the **one** `<BottomSheet>` (portaled, safe-area, Kit Light) — `ActionSheet` + hand-rolled un-portaled `PlayerPickerSheet` converge
-- [ ] Build `<PrimaryActionBar>`/FAB primitive + standings card-mode scaffolding
+### Phase M0 — Foundations (primitives + token fixes) ✅ Done — PRs #682, #683, #684 (2026-06-30)
+- [x] `useViewport()` / `useIsMobile()` hook — PR #682 (`src/hooks/useViewport.js`)
+- [x] Define `--f1`/`--ten`/`--f1bg`/`--tenbg` tokens; fix `--r-sm`/`--r-md` skeleton mismatch; add `env(safe-area-inset-top)` to the sticky mobile top bar — PR #682 (`src/index.css`, `AppLayout.jsx`)
+- [x] Consolidate the **one** `<BottomSheet>` (portaled, safe-area, Kit Light) — `ActionSheet` + `PlayerPickerSheet` migrated — PR #683 (`src/components/shared/BottomSheet.jsx`)
+- [x] Build `<PrimaryActionBar>`/FAB primitive + `CompetitionResultsHeader` card-mode scaffolding — PR #684 (`src/components/shared/PrimaryActionBar.jsx`, `CompetitionResultsHeader.jsx`)
+
+> **Note:** `useViewport` is currently duplicated as a private hook inside `CompetitionResultsHeader` (M0 PR3 merged before M0 PR1 can be consumed). M1 should replace the private hook with `import { useIsMobile } from '../../hooks/useViewport'` when wiring consumers.
 
 ### Phase M1 — The shared spine on mobile ⬜
-- [ ] `CompetitionResultsHeader` mobile card mode (fixes Football/F1/Tennis standings in one change)
+- [ ] Wire `CompetitionResultsHeader` card-mode at consumers (Football/F1/Tennis standings) — replace private `useIsMobile` with the real hook import; set `leadColumnKey` per sport
 - [ ] Kill the Tennis 14-column horizontal `<table>`
 - [ ] Collapsing `<TabStrip>` for Clubhouse (8-tab no-scroll) + League (`HubTabPills` 6-pill)
 
@@ -340,4 +342,6 @@ These require a human decision before the relevant sprint can continue.
 
 **Session 2026-06-30 (Mobile-First Redesign — assessment + plan):** Mobile/tablet UX assessment mirroring the Clubhouse exercise. Four parallel survey agents mapped the current sub-`lg` reality across the shell, football screens, multi-sport screens, and design system. Diagnosed three tiers with no shared contract: **Tier A** (SquadScreen/LiveScreen/LeagueDetailView) is genuinely mobile-adapted (dedicated `lg:hidden` DOM, card rows, portaled bottom sheets — the quality bar); **Tier B** (Clubhouse/F1/Tennis) is mobile-first columns that don't scale up (desktop = stretched phone); **Tier C** (ChallengeScreen/TrophyCabinetScreen) is desktop-first with a fixed 256px sidebar, **broken at 375px**. Root cause: mobile quality is *accidental* — good patterns never extracted into reusable primitives, so `CompetitionResultsHeader` (the Phase-C shared component) propagates a desktop dense-grid to all 3 sports' mobile standings; no `useViewport` hook; binary `lg:` (1024px) split, no tablet tier; `--f1`/`--ten` tokens referenced-but-undefined; no top safe-area inset; two divergent bottom-sheet impls; no FAB anywhere. Fix = an 8-primitive mobile pattern language + 5-phase delivery (M0 foundations → M1 shared spine → M2 fix broken screens → M3 primary-action pass → M4 parity/polish), worst-breakage-first, **sub-`lg` scope only**. User validated the assessment; Tier B desktop-ribbon logged as UX-DESKTOP-1 (Phase 3 DD, separate future decision). Two docs written, **no code touched**: [MOBILE_FIRST_REDESIGN.md](architecture/MOBILE_FIRST_REDESIGN.md) + [MOBILE_FIRST_REDESIGN_IMPLEMENTATION_PLAN.md](architecture/MOBILE_FIRST_REDESIGN_IMPLEMENTATION_PLAN.md). Next: Mobile Phase M0.
 
-Last Updated: **2026-06-30** (Mobile-First Redesign assessment + implementation plan written, validated by user — new workstream M, sub-`lg` scope; Tier B desktop scale-up logged as UX-DESKTOP-1. No code touched. Next: Mobile Phase M0, or prior options — DD items / Phase 3B smoke tests.)
+**Session 2026-06-30 (Mobile-First Redesign — Phase M0 implementation):** All Phase M0 foundation primitives shipped in 3 sequential PRs into `v2`. PR #682: `src/hooks/useViewport.js` (`useViewport`/`useIsMobile` hook, SSR-safe matchMedia); `--f1`/`--ten`/`--f1bg`/`--tenbg` tokens defined in `index.css` (8+ components were referencing them undefined); `--r-sm`/`--r-md` skeleton alias fixed; `env(safe-area-inset-top)` added to the sticky mobile top bar in `AppLayout`. PR #683: `src/components/shared/BottomSheet.jsx` (portaled thin shell over `.fk-mob-sheet-*` CSS); `ActionSheet` migrated to use it; `PlayerPickerSheet` rewritten to use `<BottomSheet>` + full Kit Light token pass. PR #684: `src/components/shared/PrimaryActionBar.jsx` (thumb-zone FAB portaled to `document.body`, hidden on desktop via `lg:hidden`, state-aware props); `CompetitionResultsHeader.jsx` mobile card-mode branch added (`leadColumnKey` prop, private `useIsMobile` hook, card layout < 640px, desktop grid pixel-identical). All 3 PRs: lint 0 errors, Rolldown TDZ build clean, madge 0 circular deps. Next: **Mobile Phase M1** — wire `CompetitionResultsHeader` card-mode at Football/F1/Tennis consumer screens; kill Tennis 14-column table; collapsing TabStrip.
+
+Last Updated: **2026-06-30** (Phase M0 done — PRs #682/#683/#684; all primitives in v2. Next: Phase M1 — shared spine on mobile.)
