@@ -1,12 +1,12 @@
 # Technical Due Diligence (V2) — Implementation Plan
 
-**Self-contained, phase-by-phase plan to clear the [Technical Due Diligence (V2) backlog](../due_diligence/TECHNICAL_DUE_DILIGENCE_V2.md) and move the buyout-readiness score from 6.5/10 → 8/10. Written to be picked up cold — each work item restates the problem, the exact files, the steps, the verification, and the pilot-safety constraints, so no re-discovery is needed.**
+**Self-contained, phase-by-phase plan to clear the [Technical Due Diligence backlog](../due_diligence/TECHNICAL_DUE_DILIGENCE.md) and move the buyout-readiness score from 6.5/10 → 8/10. Written to be picked up cold — each work item restates the problem, the exact files, the steps, the verification, and the pilot-safety constraints, so no re-discovery is needed.**
 
 ---
 
 ## How to use this document
 
-- Read the **[DD V2 backlog](../due_diligence/TECHNICAL_DUE_DILIGENCE_V2.md)** for the *why* and the full evidence per item. This document is the *how* and the *order*.
+- Read the **[DD backlog](../due_diligence/TECHNICAL_DUE_DILIGENCE.md)** for the *why* and the full evidence per item. This document is the *how* and the *order*.
 - Work top-down. The **[sequence](#the-sequence-at-a-glance)** is dependency-ordered: items unlock later items (DATA-1 unblocks OPS-1 and TEST-1; the schema baseline is the keystone).
 - Each work item is its own PR (or small PR cluster) into `v2`. The **ID matches the DD doc** (e.g. `DATA-1`, `ARCH-2`) — use it in commits/PRs.
 - Before any session, read **[Cross-cutting rules](#cross-cutting-rules-read-before-every-session)** — they encode the pilot-safety and branch constraints that override normal workflow.
@@ -282,9 +282,9 @@ Dependency-ordered. **Phase A is the keystone — do it first**: it unblocks the
 
 ## Related Documents
 
-- [Technical Due Diligence (V2)](../due_diligence/TECHNICAL_DUE_DILIGENCE_V2.md) — the backlog this plan executes (IDs, severities, evidence)
-- [B2B Buyout Technical Due Diligence (V2)](B2B_BUYOUT_TECHNICAL_DUE_DILIGENCE_V2.md) — the acquirer-lens score (6.5→8 path)
-- [Technical Documentation (V2)](../due_diligence/TECH_DOCUMENTATION_V2.md) — the engineering reference
+- [Technical Due Diligence](../due_diligence/TECHNICAL_DUE_DILIGENCE.md) — the backlog this plan executes (IDs, severities, evidence)
+- [B2B Buyout Technical Due Diligence](B2B_BUYOUT_TECHNICAL_DUE_DILIGENCE.md) — the acquirer-lens score (6.5→8 path)
+- [Technical Documentation](../due_diligence/TECH_DOCUMENTATION.md) — the engineering reference
 - [TRACKER.md](../TRACKER.md) — the authoritative live-state + approval gate
 - [CLAUDE.md](../../../CLAUDE.md) — pilot safeguards, branch freeze, migration rules
 

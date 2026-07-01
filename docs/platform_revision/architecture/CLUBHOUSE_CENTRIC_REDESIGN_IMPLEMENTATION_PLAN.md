@@ -227,7 +227,7 @@ new `competition/CompetitionResultsHeader.jsx`; `LeagueDetailView.jsx`, `F1Stand
 
 ---
 
-## Phase D — Taxonomy & polish
+## Phase D — Taxonomy & polish ✅ DONE — PR #677 (2026-06-29)
 
 **Goal:** one vocabulary; the top-nav-bar visual treatment from the reference mock.
 
@@ -253,7 +253,7 @@ new `competition/CompetitionResultsHeader.jsx`; `LeagueDetailView.jsx`, `F1Stand
 | ~~4~~ | ~~`NewCompetitionFlow` + `+` wiring + `refreshCompetitions` + migration files 216/217 committed~~ | B | ✅ Done — PR #675 |
 | ~~5~~ | ~~Migration 216 applied. Migration 217 🛑 excluded (pilot-blocked). `useActiveCompetition` carried to Phase C.~~ | B | ✅ Closed |
 | ~~6~~ | ~~`useActiveCompetition()` location model + `CompetitionResultsHeader` extraction + adopt in 3 sports~~ | C | ✅ Done — PR #676 |
-| 7 | Taxonomy + visual polish | D | ⬜ |
+| ~~7~~ | ~~Taxonomy + visual polish~~ | D | ✅ Done — PR #677 |
 
 Each PR: lint + build + `platform.spec.js` + madge green; update [TRACKER.md](../TRACKER.md).
 
@@ -268,4 +268,4 @@ Each PR: lint + build + `platform.spec.js` + madge green; update [TRACKER.md](..
 
 ---
 
-Last Updated: **2026-06-29** (Phase C closed — PR #676; `useActiveCompetition` hook, `CompetitionResultsHeader` component, `activeSport` removed. Next: Phase D — taxonomy + visual polish.)
+Last Updated: **2026-06-29** (Phase D closed — PR #677; naming pass to "Clubhouse"/"Competition" + competition-card visual treatment. **Workstream A–D complete.** Migration 217 (`circle_id NOT NULL`) remains 🛑 blocked until the World Cup pilot ends — see [TRACKER.md](../TRACKER.md) row 18.)

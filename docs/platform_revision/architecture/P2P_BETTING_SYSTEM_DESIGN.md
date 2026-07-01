@@ -412,14 +412,16 @@ Stored in a `platform_config` table (or per-league `league_config` where league-
 
 ---
 
-## Open Decisions (resolve in Sprint 0)
+## Open Decisions — RESOLVED
 
-- **DECISION-1** — Wallet scope: user-global (recommended) vs per-league. *Recommendation: user-global.*
-- **DECISION-2** — Stripe model: per-tenant keys (recommended for clean handover) vs platform-collected.
-- **DECISION-3** — Rake destination: pure burn (recommended, simplest, deflationary) vs house wallet (enables future promos but adds an accountable balance).
-- **DECISION-4** — MVP proposition set: confirm `gw_total` + `player_vs_player` + `match_result_pick` is the right first three.
-- **DECISION-5** — Push handling: full refund both (recommended) vs rake-on-push.
-- **DECISION-6** — Responsible-play scope for MVP vs deferred to Sprint 6 (depends on target launch jurisdiction).
+> **Status (2026-07-01):** the P2P module has shipped (migrations 202–207, PRs #627–#629; see [TRACKER.md](../TRACKER.md) Phase 1A). All six Sprint-0 decisions below were resolved as recommended and are reflected in the built system. The one remaining open item is the *business* Stripe-account confirmation (zero code impact) and the launch-jurisdiction responsible-play scope — both tracked in the TRACKER's "Open Product Decisions" table.
+
+- **DECISION-1** — Wallet scope. ✅ **Resolved: user-global** (one balance per user, spent across leagues; entry-fee pools handled by the pool table). As built in migration 202.
+- **DECISION-2** — Stripe model. ✅ **Resolved: per-tenant keys** (config-driven, not hardcoded — clean handover). Payment path built with `MOCK_PAYMENTS` toggle; live Stripe-account connection is a business decision, tracked in the TRACKER.
+- **DECISION-3** — Rake destination. ✅ **Resolved: pure burn** (deflationary, no accountable house balance). As built in the resolution engine (migration 205).
+- **DECISION-4** — MVP proposition set. ✅ **Resolved:** `gw_total` + `player_vs_player` + `match_result_pick` shipped as the first three challenge types (migration 204).
+- **DECISION-5** — Push handling. ✅ **Resolved: full refund both** on a push (no rake on a tie). As built in the resolution engine.
+- **DECISION-6** — Responsible-play scope. ⬜ **Deferred** — depends on the target launch jurisdiction; revisit before a real-money go-live. Tracked as an open product decision in the TRACKER.
 
 ---
 
