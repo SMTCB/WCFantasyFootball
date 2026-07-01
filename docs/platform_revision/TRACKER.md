@@ -390,7 +390,8 @@ These require a human decision before the relevant sprint can continue.
 | DD remediation detail (SEC-/DATA-/CODE- full specs + file paths) | [TECHNICAL_DUE_DILIGENCE.md](due_diligence/TECHNICAL_DUE_DILIGENCE.md) — item IDs mirror this tracker; go here for acceptance criteria |
 | Tech documentation for buyers | [TECH_DOCUMENTATION.md](due_diligence/TECH_DOCUMENTATION.md) |
 | Executive tech briefing (short) | [TECH_OVERVIEW.md](due_diligence/TECH_OVERVIEW.md) |
-| Valuation framework + negotiation levers | [VALUATION_ANALYSIS.md](due_diligence/VALUATION_ANALYSIS.md) |
+| Valuation framework + negotiation levers (🔒 **INTERNAL ONLY** — has target price/floor; never share with valuers/buyers) | [VALUATION_ANALYSIS.md](due_diligence/VALUATION_ANALYSIS.md) |
+| **Platform brief for independent valuation** (🤝 **shareable** — functional + technical, price-free, for handing to a valuer/expert) | [PLATFORM_VALUATION_BRIEF.md](due_diligence/PLATFORM_VALUATION_BRIEF.md) |
 | P2P betting data model + security | [P2P_BETTING_SYSTEM_DESIGN.md](architecture/P2P_BETTING_SYSTEM_DESIGN.md) |
 | Multi-sport platform architecture | [MULTI_SPORT_PLATFORM_ARCHITECTURE.md](architecture/MULTI_SPORT_PLATFORM_ARCHITECTURE.md) |
 | Football competition expansion roadmap | [MULTI_SPORT_EXPANSION.md](modules/MULTI_SPORT_EXPANSION.md) |
