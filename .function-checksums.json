@@ -1,13 +1,14 @@
 {
-  "_note": "SHA-256 of each supabase/functions/*/index.{ts,js} at last deploy. Run 'npm run update:checksums' after every function deploy, then commit this file. CI fails if checksums drift.",
+  "_note": "SHA-256 of each supabase/functions/*/index.{ts,js} + combined _shared/*.ts at last deploy. Run 'npm run update:checksums' after every function deploy, then commit this file. CI fails if checksums drift.",
+  "_shared_hash": "1db7fd907316e2611f3a6c4a653cd1e4b58043ce8c09996155d4462e942cf39b",
   "auto-open-transfer-window": "b4bdcc87d6cf66b96518eb8c20ee80b37991e8f7f58e257f1d8300646b8bf216",
   "calculate-relaxation": "b31dd146379e7d21a043489da92f0a9b3ea9399f0276faf21973216b0e524138",
-  "calculate-scores": "58f31556cb6548040a7f4ae41d53c74e739e0170fa0ebc377ef6d0606fe73046",
+  "calculate-scores": "9a9645153e197a06674a9846a5c386a6bf55c1c2f9521365426b14e27e291f17",
   "discover-tournament": "9ddf92d4135adbb54e769589e15a5de65e5a7b779a854d6c39fe561ee0a2f21a",
   "eliminate-cup-club": "9449e26a3380b41d872fe1b8ebc17ec8b4d2045c972f242bf18ce388c9d0fe41",
-  "generate-frontpage-edition": "8c3b5c49c87061d1cb4e0aba786cf5a31f5dcd1240eba1883ed4422c2ffc16ab",
-  "ingest-match-events": "c2b441a4e5a109a97678c3686a7dc9c09eb14b118930643fbc3c365174800218",
-  "process-transfer": "6d46ff83900fa0ae1f8ca8b71bac3eab9556cd0d75711f15f49ec79cc0efae9b",
+  "generate-frontpage-edition": "729e86b57df7df6703be6b446601d535a02dd40046893aa3a2c18addbe4234a6",
+  "ingest-match-events": "a7794aafcf4970270358e6a994e5e55b4fa3d86c0a137bdaeec22520548103ce",
+  "process-transfer": "35ec2c2b8df911f7faac1cba603b927c2f53ff6cfe08a5e5f084c25cbe13aa97",
   "purchase-coins": "37457781f7a42d0b67ff67a2665a607f0677a33959e29a69fe8e0d3bc0870e32",
   "resolve-bets": "3814f23aeefb625a4cb4859843aee94f663dbb98bb2d280969bec7ee6478e06a",
   "run-draft-lottery": "267333e80dde963df8c0c09af304b718e26151b31d24aade4e50192ad925859d",
@@ -18,5 +19,5 @@
   "sync-fixtures": "1136a22a8ebef0c33a587ae456ec80944c5eebfcebfafbfcb6b73d76e235d3b7",
   "sync-player-status": "361bd30009aeaf79033bb2a7a6d81b302f0101e5ae44ca7fa58b776908099339",
   "sync-players": "5ffabf8c32bc2cd445c1445f70b6a43a4214b119cb624f0f9489b41c86a05c7d",
-  "sync-tennis-players": "3c3c7df356d2376c4a37e528ed26ffbe4ae21e0b6dc4ad7ad5f55b806780029b"
+  "sync-tennis-players": "e04be97b6d90c157eba71ad0f95b68ff3b9068178b0f32d900be4714a8928661"
 }

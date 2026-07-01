@@ -23,6 +23,19 @@ function hashFile(p) {
   return createHash('sha256').update(readFileSync(p)).digest('hex');
 }
 
+// Hash all _shared/*.ts files combined — changing any shared module bumps this
+// and causes CI to flag every function for redeployment (they bundle _shared at deploy).
+function hashShared() {
+  const sharedDir = join(functionsDir, '_shared');
+  if (!existsSync(sharedDir)) return null;
+  const h = createHash('sha256');
+  for (const f of readdirSync(sharedDir).sort()) {
+    if (!f.endsWith('.ts')) continue;
+    h.update(f).update(readFileSync(join(sharedDir, f)));
+  }
+  return h.digest('hex');
+}
+
 function discoverFunctions() {
   const entries = {};
   for (const fn of readdirSync(functionsDir)) {
@@ -49,6 +62,7 @@ const current = discoverFunctions();
 const drifted = [];
 const added   = [];
 
+// Check per-function index files
 for (const [fn, p] of Object.entries(current)) {
   const hash = hashFile(p);
   if (!(fn in committed)) {
@@ -56,6 +70,18 @@ for (const [fn, p] of Object.entries(current)) {
   } else if (committed[fn] !== hash) {
     drifted.push(fn);
   }
+}
+
+// Check _shared — if it changed, every function needs redeployment
+const currentSharedHash = hashShared();
+if (currentSharedHash !== null && committed._shared_hash !== currentSharedHash) {
+  const allFunctions = Object.keys(current);
+  for (const fn of allFunctions) {
+    if (!drifted.includes(fn) && !added.includes(fn)) {
+      drifted.push(fn);
+    }
+  }
+  console.error('⚠️   _shared/*.ts changed — all functions need redeployment (they bundle _shared at deploy time).\n');
 }
 
 if (drifted.length === 0 && added.length === 0) {
