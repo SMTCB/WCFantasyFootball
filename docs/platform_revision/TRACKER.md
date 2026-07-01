@@ -12,53 +12,59 @@
 
 ## ▶️ Execution Queue — every open item, tagged by where it runs
 
-**This is the pick-up-and-run list.** Each row says *where* it executes so you can batch work per machine. Tags:
+**This is the pick-up-and-run list.** Each row says *where* it runs (WHERE tag) **and its pilot-risk level (RISK tag)** so you can pick zero-risk work safely from either PC.
 
-- **`[SUPABASE-PC]`** — must run from the Supabase-linked PC (`db query --linked`, `functions deploy`, `secrets set`). **Every one is approval-gated** — Claude names the row and waits for an explicit "yes, run row N" before executing (see [Pending DB & Deploy Actions](#️-pending-db--deploy-actions)).
-- **`[CODE]`** — code/docs work; any PC with the repo. Normal branch → PR into `v2`.
-- **`[VERCEL]`** — Vercel dashboard/CLI (env vars, redeploy).
-- **`[BUSINESS]`** — a human/legal/product decision, no code. See [Open Product Decisions](#open-product-decisions).
-- **`[BLOCKED]`** — do not start; blocker noted.
+> ## 🛡️ ABSOLUTE RULE — ZERO PILOT RISK
+> **The live World Cup football pilot (~50 real users) runs on the shared production Supabase project `sssmvihxtqtohisghjet`. There is no dev/staging split and no point-in-time recovery.** Nothing in this queue may put that pilot at risk. Any item that *could* touch pilot data, pilot-used tables, or the live football scoring path is flagged **🔴 PILOT-IMPACTING — DEFER** and must **not** be started until either (a) a staging environment exists (OPS-1/B1) to rehearse it, or (b) the pilot has ended. When in doubt, treat it as 🔴 and ask. **This rule overrides schedule, convenience, and buyout-readiness pressure.**
+
+**WHERE tags:** `[SUPABASE-PC]` (Supabase-linked PC only; every one approval-gated) · `[CODE]` (any repo PC → PR into `v2`) · `[VERCEL]` (Vercel dashboard) · `[BUSINESS]` (human/legal decision) · `[BLOCKED]` (do not start; blocker noted).
+
+**RISK tags (pilot safety — read before starting any item):**
+- **🟢 ZERO** — cannot touch the pilot. Code/docs on `v2`, or Supabase actions that are pure-additive DDL touching only v2-exclusive tables the pilot never reads. Safe anytime.
+- **🟡 SHARED-DB** — runs against the shared prod project but only on v2-exclusive tables/functions, or is pure-additive DDL. Low risk, **not zero** (same physical DB) → requires a row backup + per-item approval. Never run during a live match window.
+- **🔴 PILOT-IMPACTING** — touches (or redeploys) something the live football pilot actively uses: the `tournaments`/`leagues`/`squads`/`fixtures` spine, shared RPCs, or the live `calculate-scores`/`discover-tournament`/`sync-*` football functions. **DEFER** — do the zero-risk parts now, hold the risky part until staging exists or the pilot ends.
 
 Order within each group is dependency-ordered. Detail for each item is in the linked section below — this table is the index, not a replacement.
 
 ### 🔴 Approval-gated Supabase actions (do on the Supabase-linked PC)
-| Do | Tag | Item | Detail |
-|----|-----|------|--------|
-| ⬜ | `[SUPABASE-PC]` | Apply migration **219** — GDPR `delete_user_data` RPC (pure DDL, safe, deletes nothing) | [row 19](#️-pending-db--deploy-actions) |
-| ⬜ | `[SUPABASE-PC]` | Apply migration **218** — `no_external_cash_out` constraint (LEGAL-1, pure DDL) | [row 26](#️-pending-db--deploy-actions) |
-| ⬜ | `[SUPABASE-PC]` | `secrets set SENTRY_DSN=...` (OPS-2 edge activation) | [row 11 note](#️-pending-db--deploy-actions) |
-| ⬜ | `[SUPABASE-PC]` | Deploy 6 fns for OPS-2 `logError`: `purchase-coins`, `discover-tournament`, `sync-tennis-players`, `score-atp-finals`, `score-f1-race`, `score-tennis-tournament` | [rows 20–25](#️-pending-db--deploy-actions) |
-| ⬜ | `[SUPABASE-PC]` | F1 data migration — copy FantasyF1 DB into v2 tables | [row 16](#️-pending-db--deploy-actions) |
-| 🛑 | `[BLOCKED]` | Migration **217** (`circle_id NOT NULL`) — **DO NOT RUN until World Cup pilot ends** | [row 18 banner](#-migration-217--do-not-run-until-the-world-cup-pilot-ends-) |
+| Do | WHERE | RISK | Item | Detail |
+|----|-------|------|------|--------|
+| ⬜ | `[SUPABASE-PC]` | 🟡 SHARED-DB | Apply migration **219** — GDPR `delete_user_data` RPC. Pure DDL; creates a function, deletes nothing on apply; the pilot never calls it. | [row 19](#️-pending-db--deploy-actions) |
+| ⬜ | `[SUPABASE-PC]` | 🟡 SHARED-DB | Apply migration **218** — `no_external_cash_out` constraint on `coin_transactions` (a v2-only table; pilot doesn't use coins). Pure additive DDL. | [row 26](#️-pending-db--deploy-actions) |
+| ⬜ | `[SUPABASE-PC]` | 🟡 SHARED-DB | `secrets set SENTRY_DSN=...` (OPS-2 edge activation). Adds a secret; changes no pilot behaviour. | [row 11 note](#️-pending-db--deploy-actions) |
+| ⬜ | `[SUPABASE-PC]` | 🟡 SHARED-DB (5 fns) / 🔴 (1 fn) | Deploy 6 fns for OPS-2 `logError`: `purchase-coins`, `sync-tennis-players`, `score-atp-finals`, `score-f1-race`, `score-tennis-tournament` are 🟡 (v2-only). **`discover-tournament` is 🔴 — the live football pilot uses it; redeploy only outside a match window, ideally after a staging rehearsal, or defer it.** | [rows 20–25](#️-pending-db--deploy-actions) |
+| ⬜ | `[SUPABASE-PC]` | 🟡 SHARED-DB | F1 data migration — copy FantasyF1 DB into v2 F1 tables (v2-only tables). | [row 16](#️-pending-db--deploy-actions) |
+| 🛑 | `[BLOCKED]` | 🔴 PILOT-IMPACTING | Migration **217** (`circle_id NOT NULL`) — locks down `leagues` incl. 7 live pilot leagues. **DO NOT RUN until World Cup pilot ends.** | [row 18 banner](#-migration-217--do-not-run-until-the-world-cup-pilot-ends-) |
 
 ### 🖥️ Frontend/infra config
-| Do | Tag | Item | Detail |
-|----|-----|------|--------|
-| ⬜ | `[VERCEL]` | Add `VITE_SENTRY_DSN` env var (Production) then redeploy (OPS-2 frontend activation) | [row 11](#️-pending-db--deploy-actions) |
+| Do | WHERE | RISK | Item | Detail |
+|----|-------|------|------|--------|
+| ⬜ | `[VERCEL]` | 🟡 SHARED-DB | Add `VITE_SENTRY_DSN` env var (Production) + redeploy (OPS-2 frontend). Frontend-only; adds error capture, no pilot-data path. Redeploy is a standard Vercel build the pilot already receives on every merge. | [row 11](#️-pending-db--deploy-actions) |
 
 ### 💻 Code / docs work (any repo PC → PR into `v2`)
-| Do | Tag | Item | Detail |
-|----|-----|------|--------|
-| ⬜ | `[CODE]` | **OPS-2 part (c)** — failed-cron alerting (≥3 consecutive failures → alert). *Last code piece of OPS-2.* | [Phase 2 DD](#phase-2--post-3b-before-buyer-demos) |
-| ⬜ | `[CODE]` | **P2P-LOAD** — 50-concurrent-challenge load test (needs `MOCK_PAYMENTS=true`) | [Phase 2 DD](#phase-2--post-3b-before-buyer-demos) |
-| ⬜ | `[CODE]` | **GDPR-2** — build user-data export (portability) | [Phase 3 DD](#phase-3--before-sale-close) |
-| ⬜ | `[CODE]` | **DATA-RECON** — diff repo RPC bodies vs live prod; reconcile *(needs A1/DATA-1 first)* | [Phase 1 DD](#phase-1--complex-currently-deferred) |
-| ⬜ | `[CODE]` | **CODE-3 / CODE-2 / CODE-4 / CODE-5 / CODE-6 / DEPS-2 / INFRA-1 / LOW-2/3/6/9** — maintainability & polish backlog | [Phase 3 DD](#phase-3--before-sale-close) |
-| ⬜ | `[CODE]` | **UX-DESKTOP-1** — Tier B multi-sport screens desktop scale-up | [Phase 3 DD](#phase-3--before-sale-close) |
-| ⬜ | `[BLOCKED]` | **A1 / DATA-1** — schema baseline (`schema.sql`) — the keystone. *Blocked: needs a `[SUPABASE-PC]` prod dump (approval-gated) first, then code.* Unblocks B1, DATA-RECON, staging. | [Phase 1 DD](#phase-1--complex-currently-deferred) |
-| ⬜ | `[BLOCKED]` | **OPS-1 / B1** — PITR + staging project. *Blocked on A1.* | [Phase 1 DD](#phase-1--complex-currently-deferred) |
+| Do | WHERE | RISK | Item | Detail |
+|----|-------|------|------|--------|
+| ⬜ | `[CODE]` | 🟢 ZERO | **OPS-2 part (c)** — failed-cron alerting (≥3 consecutive failures → alert). *Last code piece of OPS-2.* Code on v2; activation is separate. | [Phase 2 DD](#phase-2--post-3b-before-buyer-demos) |
+| ⬜ | `[CODE]` | 🟢 ZERO | **P2P-LOAD** — 50-concurrent-challenge load test against a local/`MOCK_PAYMENTS=true` env, never prod. | [Phase 2 DD](#phase-2--post-3b-before-buyer-demos) |
+| ⬜ | `[CODE]` | 🟢 ZERO | **GDPR-2** — build user-data export (portability). New code path; doesn't alter pilot data. | [Phase 3 DD](#phase-3--before-sale-close) |
+| ⬜ | `[CODE]` | 🟢 ZERO | **ARCH-2 / C1 (code half)** — refactor 4 sync fns onto `getAdapter()` + migrate `sync-player-status` onto the shared client + adapter-conformance test. Code on v2; **deploying the touched football fns is the 🔴 half below — keep them separate.** | [Phase 3 DD](#phase-3--before-sale-close) |
+| ⬜ | `[CODE]` | 🟢 ZERO | **CODE-3/2/4/5/6 · DEPS-2 · INFRA-1 (docs) · LOW-2/3/9 · M0-BOTTOMSHEET · UX-DESKTOP-1** — maintainability & polish. Frontend/docs on v2. | [Phase 3 DD](#phase-3--before-sale-close) |
+| ⬜ | `[CODE]` | 🟡 SHARED-DB | **DATA-RECON** — diff repo RPC bodies vs live prod; reconcile *(needs A1/DATA-1 first)*. Read-only diff is safe; **any reconciling migration that re-creates a shared RPC is 🔴 — rehearse on staging.** | [Phase 1 DD](#phase-1--complex-currently-deferred) |
+| ⬜ | `[BLOCKED]` | 🔴 PILOT-IMPACTING | **A1 / DATA-1** — schema baseline. The `pg_dump --schema-only` read is safe, but the item's *purpose* touches the shared schema; do the dump + rebuild-proof against a **clean/staging** DB, never mutate prod. Keystone; unblocks B1, DATA-RECON. | [Phase 1 DD](#phase-1--complex-currently-deferred) |
+| ⬜ | `[BLOCKED]` | 🟡 SHARED-DB | **OPS-1 / B1** — PITR + **separate** staging Supabase project. *Blocked on A1.* Staging is a new project (not the pilot's) → building it is 🟡; **enabling PITR on the prod project is a safe, additive, high-value pilot protection (do it early).** | [Phase 1 DD](#phase-1--complex-currently-deferred) |
+| ⬜ | `[CODE]`+`[SUPABASE-PC]` | 🔴 PILOT-IMPACTING | **ARCH-1 / C2 (trophy emission)** — modifies the **live `calculate-scores`** football function + a new migration. **DEFER the deploy until staging or pilot-end;** the migration+helper can be written on v2 (🟢) but not deployed to the live scorer. | [Phase 3 DD](#phase-3--before-sale-close) |
+| ⬜ | `[CODE]`+`[SUPABASE-PC]` | 🔴 PILOT-IMPACTING | **ARCH-2 / C1 (DB rename half)** — `tournaments.forza_id → provider_key`. `tournaments` is the live football spine; rename cascades to pilot FKs. **DEFER until staging exists** (migration 220). Write it on v2; do not apply. | [Phase 3 DD](#phase-3--before-sale-close) |
 
 ### ⚖️ Business / legal decisions (no code)
-| Do | Tag | Item | Detail |
-|----|-----|------|--------|
-| ⬜ | `[BUSINESS]` | **SEC-4** — rotate GitHub PAT + switch to SSH (also touches `[CODE]`: remove token pattern from CLAUDE.md) | [row 10](#️-pending-db--deploy-actions) |
-| ⬜ | `[BUSINESS]` | **GDPR-1** — Groq DPA / data-minimisation review before real-PII launch | [Phase 3 DD](#phase-3--before-sale-close) |
-| ⬜ | `[BUSINESS]` | **GDPR-3** — objection-handling automation (or document manual process) | [Phase 3 DD](#phase-3--before-sale-close) |
-| ⬜ | `[BUSINESS]` | Stripe account confirmation · Forza API licence transferability · football-competition expansion · staging env · meta-league formula · non-playing-member UX | [Open Product Decisions](#open-product-decisions) |
+| Do | WHERE | RISK | Item | Detail |
+|----|-------|------|------|--------|
+| ⬜ | `[BUSINESS]` | 🟢 ZERO | **SEC-4** — rotate GitHub PAT + switch to SSH (also `[CODE]`: remove token pattern from CLAUDE.md). Credential hygiene; no pilot-data path. | [row 10](#️-pending-db--deploy-actions) |
+| ⬜ | `[BUSINESS]` | 🟢 ZERO | **GDPR-1** — Groq DPA / data-minimisation review before real-PII launch. | [Phase 3 DD](#phase-3--before-sale-close) |
+| ⬜ | `[BUSINESS]` | 🟢 ZERO | **GDPR-3** — objection-handling automation (or document manual process). | [Phase 3 DD](#phase-3--before-sale-close) |
+| ⬜ | `[BUSINESS]` | 🟢 ZERO | Stripe account confirmation · Forza API licence transferability · football-competition expansion · staging env · meta-league formula · non-playing-member UX. | [Open Product Decisions](#open-product-decisions) |
 
-### 🚦 Then: Phase 3B ship sequence
-Once the above are cleared, run the [Phase 3B Pre-Merge Checklist](#phase-3b-pre-merge-checklist) (smoke tests → final main→v2 merge → apply pending DB actions → v2→main PR → deploy all Edge Functions → verify crons). **This is the gate to going live — needs its own explicit go-ahead.**
+### 🚦 Then: Phase 3B ship sequence — 🔴 the whole sequence is PILOT-IMPACTING
+The [Phase 3B Pre-Merge Checklist](#phase-3b-pre-merge-checklist) merges v2 → main and deploys everything to production — **it is inherently 🔴 PILOT-IMPACTING and is the go-live gate.** Do not begin it until every 🔴 item above has been rehearsed on staging (or the pilot has ended) and it has its **own explicit go-ahead**.
 
 ---
 
@@ -130,6 +136,8 @@ Once the above are cleared, run the [Phase 3B Pre-Merge Checklist](#phase-3b-pre
 > 3. Never batch-run multiple rows on one approval.
 >
 > These must run from the **Supabase-linked PC only**.
+>
+> **🛡️ Pilot-risk marker in the Status column:** a plain ⬜ pending row is 🟡 SHARED-DB (pure-additive DDL or a v2-only table/function — back up + approve, never during a live match). A **⬜ 🔴** row is **PILOT-IMPACTING** — it redeploys or alters something the live football pilot uses; do NOT run it during the pilot without a staging rehearsal or an explicit pilot-end decision. See the **Execution Queue risk taxonomy** at the top of this file.
 
 | # | Status | Action | Command |
 |---|--------|--------|---------|
@@ -153,7 +161,7 @@ Once the above are cleared, run the [Phase 3B Pre-Merge Checklist](#phase-3b-pre
 | 18 | 🛑 **DO NOT RUN — see banner below** | Apply migration 217 — `circle_id NOT NULL` on leagues/paddocks/player_boxes | **Pre-flight run 2026-06-29 — orphans found, NOT cleared for apply.** `leagues`: 18 NULL rows (7 are real live pilot leagues: Mundial do Eder, Mundial Gordo Vai a Baliza, RANKS FC World Cup Fantasy, Draft Mundial 26, Munaial '26, FIXO DRAFT MUNDIAL 26, Miami WC Fantasy Testers; remaining 11 are test/E2E leftovers). `paddocks`: 1 NULL (`TEST_1_F1`, test only). `player_boxes`: 1 NULL (`TEST_WIMBLEDON_1`, test only). Snapshot saved: `backups/orphans_pre_217_20260629.json`. **User decision 2026-06-29: hold off entirely — do not run 217, do not touch any orphan rows (real or test) until there's a clubhouse-mapping plan for the 7 real leagues.** Do not re-attempt without a fresh explicit go-ahead that addresses those 7 leagues specifically. |
 | 19 | ⬜ | Apply migration 219 — GDPR `delete_user_data` RPC (DATA-2) | `npx supabase db query --linked --file supabase/migrations/219_delete_user_data.sql` — **Pure DDL: creates the `delete_user_data(uuid)` function + grants only. Deletes zero rows from prod. The function only runs when explicitly called with a user's ID (e.g. on an account-deletion request) — applying this migration has no effect on any existing data.** No backup needed. |
 | 20 | ⬜ | Deploy `purchase-coins` (OPS-2 logError, PR #698) | `npx supabase functions deploy purchase-coins --project-ref sssmvihxtqtohisghjet` |
-| 21 | ⬜ | Deploy `discover-tournament` (OPS-2 logError, PR #698) | `npx supabase functions deploy discover-tournament --project-ref sssmvihxtqtohisghjet` |
+| 21 | ⬜ 🔴 | Deploy `discover-tournament` (OPS-2 logError, PR #698) | 🔴 **PILOT-IMPACTING — the live football pilot uses this function.** Redeploy only outside a live-match window, ideally after a staging rehearsal, or defer until the pilot ends. `npx supabase functions deploy discover-tournament --project-ref sssmvihxtqtohisghjet` |
 | 22 | ⬜ | Deploy `sync-tennis-players` (OPS-2 logError, PR #698) | `npx supabase functions deploy sync-tennis-players --project-ref sssmvihxtqtohisghjet` |
 | 23 | ⬜ | Deploy `score-atp-finals` (OPS-2 logError, PR #698) | `npx supabase functions deploy score-atp-finals --project-ref sssmvihxtqtohisghjet` |
 | 24 | ⬜ | Deploy `score-f1-race` (OPS-2 logError, PR #698) | `npx supabase functions deploy score-f1-race --project-ref sssmvihxtqtohisghjet` |
@@ -313,10 +321,11 @@ The overarching goal is for this to feel like **a place where friends gather to 
 From [TECHNICAL_DUE_DILIGENCE.md](due_diligence/TECHNICAL_DUE_DILIGENCE.md). Sequenced by phase.
 
 ### Phase 1 — Complex, currently deferred
-| Item | Description | Effort |
-|------|-------------|--------|
-| DATA-1 | PII audit — map all columns storing PII, add `pg_audit` event logging | ~4h |
-| OPS-1 | Structured logging — replace ad-hoc `console.log` in Edge Functions with a uniform `log(level, msg, context)` helper | ~3h |
+| Item | Description | Effort | Pilot risk |
+|------|-------------|--------|-----------|
+| DATA-1 | **Reproducible schema baseline** — commit an authoritative `supabase/schema.sql` (via `pg_dump --schema-only`), archive the 243 migrations as history, separate data-fixes, prove a clean rebuild. The keystone (unblocks OPS-1, DATA-RECON, staging). | ~1–1.5 wk | 🔴 the dump is read-only/safe, but prove the rebuild against a **clean/staging** DB — never mutate the prod pilot schema |
+| OPS-1 | **PITR + staging** — enable point-in-time recovery on the prod project; stand up a **separate** staging Supabase project (built from `schema.sql`, synthetic data only). *Blocked on DATA-1.* | ~1 wk | 🟡 staging is a new project; **enabling PITR on prod is additive + protective — safe and high-value, do early** |
+| DATA-RECON | Diff every repo `CREATE OR REPLACE FUNCTION` against live prod bodies; reconcile so repo == prod. *Renamed from the old "DATA-2".* Blocked on DATA-1. | L | 🟡 read-only diff is safe; **any reconciling migration that re-creates a shared/pilot RPC is 🔴 — rehearse on staging** |
 
 ### Phase 2 — Post-3B, before buyer demos
 | Item | Description | Effort | Status |
@@ -325,27 +334,30 @@ From [TECHNICAL_DUE_DILIGENCE.md](due_diligence/TECHNICAL_DUE_DILIGENCE.md). Seq
 | DATA-2 | GDPR deletion RPC — `delete_user_data(p_user_id)` cascades PII columns; admin-only | ~3h | ✅ Code done (PR #697). **⚠️ Migration NOT yet applied to prod** — `supabase/migrations/219_delete_user_data.sql` written but the function does not exist in the DB until row 19 in the pending table is run. Safe to apply (pure DDL, no data touched). |
 | DATA-3 | Data classification doc — label each table column (PII / financial / game data / public) | ~2h | ✅ Done — [`DATA_CLASSIFICATION.md`](due_diligence/DATA_CLASSIFICATION.md) (PR #697) |
 | CODE-3 | Error boundaries — `ErrorBoundary` wrapper on each major screen; fallback UI + Sentry capture | ~2h | ✅ Done (PR #695) |
-| OPS-2 | Sentry for Edge Functions (frontend DSN deployed via row 11): (a) add Deno Sentry SDK to each Edge Function; (b) wire `edge_function_error_log` into alert path; (c) add failed-cron threshold alerting (≥3 consecutive failures → alert) | ~4h | ✅ Code done (PR #698). **⚠️ 6 function deploys + `SENTRY_DSN` Supabase secret + Vercel `VITE_SENTRY_DSN` (rows 11, 20–25) still pending approval.** Failed-cron alerting (part c) not yet built. |
-| P2P-LOAD | Load test — 50 concurrent P2P challenges to verify coin ledger atomicity under contention. Deferred from Sprint P2P-6. Requires `MOCK_PAYMENTS=true` environment. | ~2h | ⬜ |
+| OPS-2 | Sentry for Edge Functions (frontend DSN deployed via row 11): (a) add Deno Sentry SDK to each Edge Function; (b) wire `edge_function_error_log` into alert path; (c) add failed-cron threshold alerting (≥3 consecutive failures → alert) | ~4h | ✅ Code done (PR #698). **⚠️ 6 function deploys + `SENTRY_DSN` Supabase secret + Vercel `VITE_SENTRY_DSN` (rows 11, 20–25) still pending approval.** Failed-cron alerting (part c) not yet built. **Pilot risk:** part (c) code = 🟢 ZERO; the 6 deploys = 🟡 SHARED-DB except **`discover-tournament` = 🔴 (pilot uses it — deploy outside a match window / after staging rehearsal, or defer)**. |
+| P2P-LOAD | Load test — 50 concurrent P2P challenges to verify coin ledger atomicity under contention. Deferred from Sprint P2P-6. Requires `MOCK_PAYMENTS=true` environment. | ~2h | ⬜ · 🟢 ZERO pilot risk (local/mock env, never prod) |
 
 ### Phase 3 — Before sale close
-| Item | Description |
-|------|-------------|
-| CODE-2 | TypeScript migration — convert `src/lib/`, `src/hooks/`, `src/context/` to `.ts`/`.tsx` |
-| CODE-4 | Component tests — Storybook or Playwright component tests for the 5 most complex components |
-| CODE-5 | Analytics instrumentation — replace stub `// TODO` in `src/hooks/useOnboarding.js:36` with Mixpanel/PostHog/Amplitude; all key flows (onboarding, draft, transfer, bet) tracked |
-| DEPS-2 | Supply chain hardening — `npm ci` with `--ignore-scripts`; `package-lock.json` integrity hash |
-| INFRA-1 | Multi-region readiness — document Supabase region selection rationale; buyer can migrate |
-| LOW-2 | Storybook or Ladle component catalogue |
-| LOW-3 | API rate-limit headers (429 with `Retry-After`) on all Edge Functions |
-| LOW-6 | Mobile push notifications (Capacitor + FCM/APNs) |
-| LOW-9 | Accessibility audit (WCAG 2.1 AA minimum) |
-| CODE-6 | Consolidate shared UI primitives (`LivePill`, `DeltaPill`, `LeagueChip`, `MiniTok`) into `src/components/shared/` — currently duplicated across Football/F1/Tennis screens |
-| M0-BOTTOMSHEET | Extract the shared `<BottomSheet>` primitive (portaled, safe-area, Kit Light) that Mobile M0 intended but never landed — `ActionSheet.jsx` + `PlayerPickerSheet.jsx` currently `createPortal` onto the `.fk-mob-sheet-*` CSS classes independently. Nice-to-have DRY cleanup, not a bug. Pairs with CODE-6. Surfaced 2026-07-01 audit. |
-| UX-DESKTOP-1 | **Tier B desktop scale-up** — the multi-sport screens (Clubhouse, all F1, all Tennis) are mobile-first columns capped at `maxWidth: 480–700px`, so on a wide desktop they render as a narrow centred ribbon that wastes the screen. The inverse of the [Mobile-First Redesign](architecture/MOBILE_FIRST_REDESIGN.md) (which is sub-`lg` only). Give these screens proper desktop layouts (multi-column / use the width). Surfaced 2026-06-30 during the mobile assessment; deferred as a separate, future decision. |
-| GDPR-1 | **Groq DPA / data-minimisation** — `generate-frontpage-edition` sends league + chat-excerpt data to Groq. Flagged in [`DATA_CLASSIFICATION.md`](due_diligence/DATA_CLASSIFICATION.md) as needing a DPA review or data-minimisation before any real-PII launch. Business/legal + possible code (minimise the payload). Surfaced 2026-07-01. |
-| GDPR-2 | **Data portability (Right to Access/Portability)** — no export endpoint exists; `DATA_CLASSIFICATION.md` marks Access (`GET /api/me`) and Portability as "future". Build a user-data export (JSON) covering the same tables `delete_user_data` touches. Surfaced 2026-07-01. |
-| GDPR-3 | **Objection automation** — Right-to-Object is currently a manual flow per `DATA_CLASSIFICATION.md`; no automation. Low priority; document the manual process or automate. Surfaced 2026-07-01. |
+| Item | Description | Pilot risk |
+|------|-------------|-----------|
+| ARCH-2 (code half) | Refactor 4 sync fns onto `getAdapter()` + migrate `sync-player-status` + adapter-conformance test. Code on `v2`. | 🟢 ZERO (code on v2; do NOT deploy the touched football fns) |
+| ARCH-2 (DB half) | Migration `220_provider_generalisation.sql` — rename `tournaments.forza_id`→`provider_key`, drop `NOT NULL`. | 🔴 PILOT-IMPACTING — `tournaments` is the live football spine; **DEFER until staging exists or pilot ends**; write on v2, don't apply |
+| ARCH-1 | Wire trophy emission — `award_trophy` helper + call from each settlement path so the cross-sport meta-standing is non-empty. Modifies the **live `calculate-scores`** football fn. | 🔴 PILOT-IMPACTING — **DEFER the deploy**; write migration+helper on v2, do not deploy to the live scorer until staging/pilot-end |
+| CODE-2 | TypeScript migration — convert `src/lib/`, `src/hooks/`, `src/context/` to `.ts`/`.tsx` | 🟢 ZERO |
+| CODE-4 | Component tests — Storybook or Playwright component tests for the 5 most complex components | 🟢 ZERO |
+| CODE-5 | Analytics instrumentation — replace stub `// TODO` in `src/hooks/useOnboarding.js:36` with Mixpanel/PostHog/Amplitude; all key flows (onboarding, draft, transfer, bet) tracked | 🟢 ZERO |
+| DEPS-2 | Supply chain hardening — `npm ci` with `--ignore-scripts`; `package-lock.json` integrity hash | 🟢 ZERO |
+| INFRA-1 | Multi-region readiness — document Supabase region selection rationale; buyer can migrate | 🟢 ZERO (docs) |
+| LOW-2 | Storybook or Ladle component catalogue | 🟢 ZERO |
+| LOW-3 | API rate-limit headers (429 with `Retry-After`) on all Edge Functions | 🔴 touches every deployed fn incl. pilot's — code on v2 🟢, **deploy is 🔴/defer** |
+| LOW-6 | Mobile push notifications (Capacitor + FCM/APNs) | 🟢 ZERO |
+| LOW-9 | Accessibility audit (WCAG 2.1 AA minimum) | 🟢 ZERO |
+| CODE-6 | Consolidate shared UI primitives (`LivePill`, `DeltaPill`, `LeagueChip`, `MiniTok`) into `src/components/shared/` — currently duplicated across Football/F1/Tennis screens | 🟢 ZERO |
+| M0-BOTTOMSHEET | Extract the shared `<BottomSheet>` primitive (portaled, safe-area, Kit Light) that Mobile M0 intended but never landed — `ActionSheet.jsx` + `PlayerPickerSheet.jsx` currently `createPortal` onto the `.fk-mob-sheet-*` CSS classes independently. Nice-to-have DRY cleanup, not a bug. Pairs with CODE-6. Surfaced 2026-07-01 audit. | 🟢 ZERO |
+| UX-DESKTOP-1 | **Tier B desktop scale-up** — the multi-sport screens (Clubhouse, all F1, all Tennis) are mobile-first columns capped at `maxWidth: 480–700px`, so on a wide desktop they render as a narrow centred ribbon that wastes the screen. The inverse of the [Mobile-First Redesign](architecture/MOBILE_FIRST_REDESIGN.md) (which is sub-`lg` only). Give these screens proper desktop layouts (multi-column / use the width). Surfaced 2026-06-30 during the mobile assessment; deferred as a separate, future decision. | 🟢 ZERO |
+| GDPR-1 | **Groq DPA / data-minimisation** — `generate-frontpage-edition` sends league + chat-excerpt data to Groq. Flagged in [`DATA_CLASSIFICATION.md`](due_diligence/DATA_CLASSIFICATION.md) as needing a DPA review or data-minimisation before any real-PII launch. Business/legal + possible code (minimise the payload). Surfaced 2026-07-01. | 🟢 ZERO (review/business) |
+| GDPR-2 | **Data portability (Right to Access/Portability)** — no export endpoint exists; `DATA_CLASSIFICATION.md` marks Access (`GET /api/me`) and Portability as "future". Build a user-data export (JSON) covering the same tables `delete_user_data` touches. Surfaced 2026-07-01. | 🟢 ZERO |
+| GDPR-3 | **Objection automation** — Right-to-Object is currently a manual flow per `DATA_CLASSIFICATION.md`; no automation. Low priority; document the manual process or automate. Surfaced 2026-07-01. | 🟢 ZERO |
 
 ---
 
@@ -406,6 +418,7 @@ These require a human decision before the relevant sprint can continue.
 
 ## Cross-Cutting Rules (Every Sprint)
 
+0. **🛡️ ZERO PILOT RISK — the overriding rule.** The live World Cup football pilot runs on the shared prod project `sssmvihxtqtohisghjet` (no staging, no PITR). No task may risk it. Before starting ANY item, check its **RISK tag** in the **Execution Queue** (top of this file): 🟢 = safe; 🟡 = shared DB, back up + approve, not during a live match; 🔴 = pilot-impacting, **defer** until staging exists or the pilot ends. When unsure, treat as 🔴 and ask. This overrides schedule and buyout-readiness pressure.
 1. **Migrations are append-only.** Next free number on v2: `220_`. Never edit an applied migration.
 2. **Backup before every migration.** Docker unavailable — `SELECT` affected rows and save to `backups/*.json` first.
 3. **Football stays green.** `platform.spec.js` + manual smoke pass after any sprint touching shared infrastructure.
@@ -424,4 +437,4 @@ These require a human decision before the relevant sprint can continue.
 
 **Session 2026-06-30 (Mobile-First Redesign — Phase M0 implementation):** All Phase M0 foundation primitives shipped in 3 sequential PRs into `v2`. PR #682: `src/hooks/useViewport.js` (`useViewport`/`useIsMobile` hook, SSR-safe matchMedia); `--f1`/`--ten`/`--f1bg`/`--tenbg` tokens defined in `index.css` (8+ components were referencing them undefined); `--r-sm`/`--r-md` skeleton alias fixed; `env(safe-area-inset-top)` added to the sticky mobile top bar in `AppLayout`. PR #683: `src/components/shared/BottomSheet.jsx` (portaled thin shell over `.fk-mob-sheet-*` CSS); `ActionSheet` migrated to use it; `PlayerPickerSheet` rewritten to use `<BottomSheet>` + full Kit Light token pass. PR #684: `src/components/shared/PrimaryActionBar.jsx` (thumb-zone FAB portaled to `document.body`, hidden on desktop via `lg:hidden`, state-aware props); `CompetitionResultsHeader.jsx` mobile card-mode branch added (`leadColumnKey` prop, private `useIsMobile` hook, card layout < 640px, desktop grid pixel-identical). All 3 PRs: lint 0 errors, Rolldown TDZ build clean, madge 0 circular deps. Next: **Mobile Phase M1** — wire `CompetitionResultsHeader` card-mode at Football/F1/Tennis consumer screens; kill Tennis 14-column table; collapsing TabStrip.
 
-Last Updated: **2026-07-01** (Docs audit + DD-doc consolidation: 5 stale V1 DD docs archived to `docs/archive/superseded-dd-2026-06-30/`, `_V2` docs promoted to canonical names + committed, all cross-links repaired; Clubhouse plan Phase D + P2P open-decisions status refreshed; GDPR-1/2/3 added to Phase 3 DD backlog; **▶️ Execution Queue added at top** (open items tagged by machine); DD backlog + impl plan synced with #697/#698; DATA-2 ID collision resolved → reconciliation task renamed DATA-RECON. **Audit pass 3:** verified all pending Supabase actions map to their originating item (added migration 218/LEGAL-1 as pending row 26); closed stale never-merged PRs #682/#683 (superseded by #685 M0 recovery); corrected Phase M0 record — the `<BottomSheet>` primitive was never built (logged as backlog M0-BOTTOMSHEET; no code broken). Earlier same day: OPS-2 logError code done — PR #698; CODE-3 — PR #695; A2+BUILD-1+C3+B2 — PR #694; DATA-2 migration `219_delete_user_data.sql` written, apply pending row 19; DATA-3 `DATA_CLASSIFICATION.md` written. Next migration: 220_. Next: OPS-2 remaining deploys/secret, P2P-LOAD, or Phase 3B smoke tests.)
+Last Updated: **2026-07-01** (Docs audit + DD-doc consolidation: 5 stale V1 DD docs archived to `docs/archive/superseded-dd-2026-06-30/`, `_V2` docs promoted to canonical names + committed, all cross-links repaired; Clubhouse plan Phase D + P2P open-decisions status refreshed; GDPR-1/2/3 added to Phase 3 DD backlog; **▶️ Execution Queue added at top** (open items tagged by machine); DD backlog + impl plan synced with #697/#698; DATA-2 ID collision resolved → reconciliation task renamed DATA-RECON. **Audit pass 3:** verified all pending Supabase actions map to their originating item (added migration 218/LEGAL-1 as pending row 26); closed stale never-merged PRs #682/#683 (superseded by #685 M0 recovery); corrected Phase M0 record — the `<BottomSheet>` primitive was never built (logged as backlog M0-BOTTOMSHEET; no code broken). **Audit pass 4 (pilot-safety):** added a **pilot-risk taxonomy (🟢 ZERO / 🟡 SHARED-DB / 🔴 PILOT-IMPACTING)** and stamped a RISK tag on **every** open item — Execution Queue, Pending DB table (row 21 `discover-tournament` = 🔴), and DD Phase 1/2/3 tables; added the ZERO-PILOT-RISK banner + Cross-Cutting Rule #0. Split ARCH-2/C1 into a 🟢 code half (do now on v2) and a 🔴 DB-rename half (defer until staging/pilot-end); same split flagged for ARCH-1. Fixed stale migration numbers in the DD plan (`218/219` → next free `220_`). **Governing principle: nothing touches the live pilot; anything that might is deferred.** Earlier same day: OPS-2 logError code done — PR #698; CODE-3 — PR #695; A2+BUILD-1+C3+B2 — PR #694; DATA-2 migration `219_delete_user_data.sql` written, apply pending row 19; DATA-3 `DATA_CLASSIFICATION.md` written. Next migration: 220_. Next: OPS-2 remaining deploys/secret, P2P-LOAD, or Phase 3B smoke tests.)
