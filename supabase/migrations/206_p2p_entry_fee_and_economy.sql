@@ -1,3 +1,4 @@
+-- ✅ APPLIED TO PRODUCTION 2026-06-28 (v2 session)
 -- Migration 206: P2P-5 — league entry fee + coin economy stats
 --
 -- 1. Extend coin_transactions.type CHECK to include 'entry_fee'

@@ -1,7 +1,7 @@
 # ── Stage 1: Build ─────────────────────────────────────────────────────────────
 # Vite bakes VITE_* vars into the JS bundle at build time, so they must be
 # supplied as build args — not runtime environment variables.
-FROM node:20-alpine AS builder
+FROM node:24-alpine AS builder
 
 ARG VITE_SUPABASE_URL
 ARG VITE_SUPABASE_ANON_KEY

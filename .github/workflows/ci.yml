@@ -100,11 +100,66 @@ jobs:
           path: dist/
           retention-days: 7
 
-  # ── 4. Playwright E2E ──────────────────────────────────────────────────────
+  # ── 4. Unit / integration tests (B2 — TEST-1) ─────────────────────────────
+  # Runs the RPC regression tests against an ephemeral Postgres — no prod reads.
+  # Parallel to security + lint; gated before E2E.
+  # NOTE: these tests require supabase/schema.sql to exist (Phase A1).
+  # Until A1 is done the job is skipped (schema.sql absent → setup.js exits 1
+  # but we catch that gracefully).
+  unit-tests:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    needs: [security, lint]
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      TEST_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/postgres
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Load schema (skip if schema.sql not yet generated — Phase A1)
+        run: |
+          if [ -f supabase/schema.sql ]; then
+            psql "$TEST_DATABASE_URL" < supabase/schema.sql
+            echo "✅ schema.sql loaded"
+          else
+            echo "⚠️  supabase/schema.sql not found — unit tests will be skipped until Phase A1 produces it."
+            echo "SKIP_UNIT_TESTS=true" >> $GITHUB_ENV
+          fi
+
+      - name: Load seed
+        if: env.SKIP_UNIT_TESTS != 'true'
+        run: psql "$TEST_DATABASE_URL" < tests/unit/seed.sql
+
+      - name: Run unit tests
+        if: env.SKIP_UNIT_TESTS != 'true'
+        run: npm run test:unit
+
+  # ── 5. Playwright E2E ──────────────────────────────────────────────────────
   e2e:
     name: E2E Tests
     runs-on: ubuntu-latest
-    needs: [security, lint, build]   # Only run if all prior gates pass
+    needs: [security, lint, build, unit-tests]   # Only run if all prior gates pass
     timeout-minutes: 60    # Browser install (~10 min) + platform.spec.js x2 projects (~25 min)
     env:
       VITE_SUPABASE_URL:      ${{ secrets.VITE_SUPABASE_URL }}

@@ -6,6 +6,18 @@ import { defineConfig, globalIgnores } from 'eslint/config'
 
 export default defineConfig([
   globalIgnores(['dist', 'supabase/functions/**', '.claude/**', 'e2e-report/**', 'Skills/**', 'android/**', 'ios/**', 'scripts/**', 'e2e/**', 'node_modules/**', 'docs/**']),
+  // Node.js globals for test harness scripts (B2 — TEST-1)
+  {
+    files: ['tests/**/*.{js,cjs,mjs}'],
+    languageOptions: {
+      ecmaVersion: 2022,
+      globals: { ...globals.node },
+      sourceType: 'module',
+    },
+    rules: {
+      'no-unused-vars': ['error', { varsIgnorePattern: '^[A-Z_]', argsIgnorePattern: '^_' }],
+    },
+  },
   {
     files: ['**/*.{js,jsx}'],
     extends: [

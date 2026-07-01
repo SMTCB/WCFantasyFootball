@@ -1,3 +1,4 @@
+-- ✅ APPLIED TO PRODUCTION 2026-06-28 (TRACKER row 2)
 -- Migration 210: Guard users.is_admin from direct client writes (SEC-1)
 --
 -- Problem: The users UPDATE RLS policy restricts *which row* a user can edit

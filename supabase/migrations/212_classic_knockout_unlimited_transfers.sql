@@ -1,3 +1,4 @@
+-- ✅ APPLIED TO PRODUCTION 2026-06-28 (v2 session)
 -- Migration 192: automatic unlimited transfers for classic leagues during the
 -- group→knockout transition.
 --

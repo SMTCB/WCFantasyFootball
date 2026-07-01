@@ -1,3 +1,4 @@
+-- ✅ APPLIED TO PRODUCTION 2026-06-28 (v2 session)
 -- Migration 203: P2P-2 — coin_packs table (Stripe-ready skeleton)
 -- stripe_price_id is NULL until Stripe is configured — purchase-coins Edge Function
 -- checks for this and returns a helpful error until keys are set.

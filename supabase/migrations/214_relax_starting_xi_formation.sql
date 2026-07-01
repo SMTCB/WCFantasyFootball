@@ -1,3 +1,4 @@
+-- ✅ APPLIED TO PRODUCTION 2026-06-28 (v2 session)
 -- Migration 194: relax starting-XI formation rule.
 --
 -- Reported bug: managers couldn't field a 2-defender XI. Old rule was

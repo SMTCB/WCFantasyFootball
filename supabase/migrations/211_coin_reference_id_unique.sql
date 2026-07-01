@@ -1,3 +1,4 @@
+-- ✅ APPLIED TO PRODUCTION 2026-06-28 (TRACKER row 3)
 -- Migration 211: UNIQUE constraint on coin_transactions.reference_id (MONEY-1)
 --
 -- Problem: Migration 208 added a regular index on reference_id but not a UNIQUE
