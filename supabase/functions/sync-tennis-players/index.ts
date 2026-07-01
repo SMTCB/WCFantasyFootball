@@ -1,5 +1,6 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { requireServiceRole } from '../_shared/auth.ts';
+import { logError } from '../_shared/log.ts';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // sync-tennis-players — Admin-triggered only (never cron)
@@ -262,7 +263,7 @@ Deno.serve(async (req) => {
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
     );
   } catch (err) {
-    console.error('[sync-tennis-players] Unhandled error:', err);
+    await logError('sync-tennis-players', 'error', String(err));
     return new Response(
       JSON.stringify({ error: 'INTERNAL_ERROR', detail: String(err) }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },

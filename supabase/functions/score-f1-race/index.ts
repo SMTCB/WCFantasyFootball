@@ -1,5 +1,6 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { requireServiceRole } from '../_shared/auth.ts';
+import { logError } from '../_shared/log.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -170,6 +171,7 @@ Deno.serve(async (req) => {
     });
 
   } catch (err) {
+    await logError('score-f1-race', 'error', String(err));
     return new Response(JSON.stringify({ error: err.message }), {
       status: 400,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

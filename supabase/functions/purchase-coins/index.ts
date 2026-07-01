@@ -13,6 +13,7 @@
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { logError } from '../_shared/log.ts';
 
 const STRIPE_SECRET_KEY     = Deno.env.get('STRIPE_SECRET_KEY');
 const STRIPE_WEBHOOK_SECRET = Deno.env.get('STRIPE_WEBHOOK_SECRET');
@@ -207,7 +208,7 @@ serve(async (req: Request) => {
   const meta = pi.metadata as { user_id?: string; pack_id?: string; coins?: string };
 
   if (!meta.user_id || !meta.coins) {
-    console.error('purchase-coins: missing metadata on payment_intent', pi.id);
+    await logError('purchase-coins', 'error', 'Missing metadata on payment_intent', { payment_intent_id: pi.id });
     return new Response(JSON.stringify({ error: 'MISSING_METADATA' }), { status: 400, headers: corsHeaders });
   }
 
@@ -240,7 +241,7 @@ serve(async (req: Request) => {
   });
 
   if (creditErr) {
-    console.error('purchase-coins: credit_coins failed', creditErr);
+    await logError('purchase-coins', 'error', 'credit_coins webhook fulfillment failed', { error: creditErr.message, pi_id: String(pi.id) });
     return new Response(JSON.stringify({ error: 'CREDIT_FAILED', message: creditErr.message }), { status: 500, headers: corsHeaders });
   }
 

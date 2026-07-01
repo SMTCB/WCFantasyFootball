@@ -1,5 +1,6 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { requireServiceRole } from '../_shared/auth.ts';
+import { logError } from '../_shared/log.ts';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // score-atp-finals — Scores the ATP Finals pick'em prediction game
@@ -203,7 +204,7 @@ Deno.serve(async (req) => {
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
     );
   } catch (err) {
-    console.error('[score-atp-finals] Error:', err);
+    await logError('score-atp-finals', 'error', String(err));
     return new Response(
       JSON.stringify({ error: 'INTERNAL_ERROR', detail: String(err) }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },

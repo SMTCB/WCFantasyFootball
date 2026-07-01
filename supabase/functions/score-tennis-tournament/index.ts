@@ -1,5 +1,6 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { requireServiceRole } from '../_shared/auth.ts';
+import { logError } from '../_shared/log.ts';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // score-tennis-tournament — Scores a completed standard tennis tournament
@@ -314,7 +315,7 @@ Deno.serve(async (req) => {
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
     );
   } catch (err) {
-    console.error('[score-tennis-tournament] Error:', err);
+    await logError('score-tennis-tournament', 'error', String(err));
     return new Response(
       JSON.stringify({ error: 'INTERNAL_ERROR', detail: String(err) }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
