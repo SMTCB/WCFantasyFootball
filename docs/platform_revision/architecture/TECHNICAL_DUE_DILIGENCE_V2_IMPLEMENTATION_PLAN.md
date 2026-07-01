@@ -1,12 +1,12 @@
 # Technical Due Diligence (V2) — Implementation Plan
 
-**Self-contained, phase-by-phase plan to clear the [Technical Due Diligence (V2) backlog](../due_diligence/TECHNICAL_DUE_DILIGENCE_V2.md) and move the buyout-readiness score from 6.5/10 → 8/10. Written to be picked up cold — each work item restates the problem, the exact files, the steps, the verification, and the pilot-safety constraints, so no re-discovery is needed.**
+**Self-contained, phase-by-phase plan to clear the [Technical Due Diligence backlog](../due_diligence/TECHNICAL_DUE_DILIGENCE.md) and move the buyout-readiness score from 6.5/10 → 8/10. Written to be picked up cold — each work item restates the problem, the exact files, the steps, the verification, and the pilot-safety constraints, so no re-discovery is needed.**
 
 ---
 
 ## How to use this document
 
-- Read the **[DD V2 backlog](../due_diligence/TECHNICAL_DUE_DILIGENCE_V2.md)** for the *why* and the full evidence per item. This document is the *how* and the *order*.
+- Read the **[DD backlog](../due_diligence/TECHNICAL_DUE_DILIGENCE.md)** for the *why* and the full evidence per item. This document is the *how* and the *order*.
 - Work top-down. The **[sequence](#the-sequence-at-a-glance)** is dependency-ordered: items unlock later items (DATA-1 unblocks OPS-1 and TEST-1; the schema baseline is the keystone).
 - Each work item is its own PR (or small PR cluster) into `v2`. The **ID matches the DD doc** (e.g. `DATA-1`, `ARCH-2`) — use it in commits/PRs.
 - Before any session, read **[Cross-cutting rules](#cross-cutting-rules-read-before-every-session)** — they encode the pilot-safety and branch constraints that override normal workflow.
@@ -57,7 +57,7 @@ Dependency-ordered. **Phase A is the keystone — do it first**: it unblocks the
 1. **Branch discipline.** Branch from `v2` as `claude/v2-dd-<item-id>` (e.g. `claude/v2-dd-data-1`). PR base **must** be `v2`. Never PR into `main`.
 2. **Pilot-data safety.** The live Supabase project (`sssmvihxtqtohisghjet`) is the *only* environment and serves ~50 live pilot users on `main`. Before any migration or destructive query: `SELECT` the affected rows, show them, and wait for explicit confirmation (see [CLAUDE.md Pilot Safeguards]). `npx supabase db dump --linked` is broken on the build machine (Docker unavailable) — back up affected rows to `backups/*.json` instead.
 3. **Approval gate per item.** Every 🔴 prod-touching action must be named in chat with a per-item explicit "yes, run it" *in the current session*. Approval does not carry across items or sessions.
-4. **Migrations are append-only.** Never edit an applied migration. New numbered file only. **Next migration number on `v2` is `219_`.**
+4. **Migrations are append-only.** Never edit an applied migration. New numbered file only. **Next migration number on `v2` is `220_`** (218 = LEGAL-1, 219 = delete_user_data; both written, apply pending). If two Phase-C items both need a migration, they take 220, 221, … in the order they're built.
 5. **Edge Functions are not auto-deployed.** After any PR touching `supabase/functions/`, deploy manually (`npx supabase functions deploy <name> --project-ref sssmvihxtqtohisghjet`) and run `npm run update:checksums` + commit (the CI drift gate fails otherwise).
 6. **Rolldown TDZ rule.** Before adding an `import` to a child of a large screen (`LeagueScreen`, `SquadScreen`, `MarketScreen`), `grep` whether that screen already imports the module at another depth. If so, don't add it — inline/prop it. Run `npm run build` (TDZ only surfaces in the minified prod build). `madge --circular` is a CI gate.
 7. **Verify before "done".** `npm run lint` (0 errors), `npm run build` (clean), `npx playwright test --project=desktop-chrome --project=mobile-chrome` (platform.spec green), `npx madge --circular src/`. For DB items, re-run the verification query and show the result.
@@ -97,7 +97,7 @@ Dependency-ordered. **Phase A is the keystone — do it first**: it unblocks the
 
 **Pre-flight (read-only — safe):**
 1. Confirm Docker availability on the Supabase-linked PC (the build machine lacks it). If unavailable, run the dump from the Supabase platform: **Dashboard → Database → Backups / or `pg_dump` via the connection string** (Settings → Database → Connection string). The CLI path `npx supabase db dump --linked --schema-only` needs Docker.
-2. `npx supabase db query --linked "SELECT proname, pg_get_functiondef(oid) FROM pg_proc WHERE pronamespace = 'public'::regnamespace ORDER BY proname;"` — capture **all live function bodies** to `backups/live_functions_<date>.sql` (feeds DATA-2 reconciliation in B2).
+2. `npx supabase db query --linked "SELECT proname, pg_get_functiondef(oid) FROM pg_proc WHERE pronamespace = 'public'::regnamespace ORDER BY proname;"` — capture **all live function bodies** to `backups/live_functions_<date>.sql` (feeds DATA-RECON reconciliation in B2).
 
 **Steps:**
 1. **🔴 Approval-gated, read-only dump:** `pg_dump --schema-only --no-owner --no-privileges "<prod-connection-string>" > supabase/schema.sql`. (Schema only — no data; safe, but name it in chat first since it reads prod.) Include extensions, RLS policies, functions, triggers, cron jobs, and grants.
@@ -141,17 +141,19 @@ Dependency-ordered. **Phase A is the keystone — do it first**: it unblocks the
 
 **Risk notes:** enabling PITR is non-destructive. The staging project is isolated — the only risk is accidentally pointing staging env vars at prod; double-check the URL.
 
-## B2 — TEST-1 + DATA-2: Seeded test harness for hotspot RPCs 🟢 code-only · XL
+## B2 — TEST-1 + DATA-RECON: Seeded test harness for hotspot RPCs 🟢 code-only · XL
+
+> **ID note:** the repo↔prod RPC reconciliation task is **DATA-RECON** (was labelled "DATA-2" in earlier drafts). "DATA-2" now refers exclusively to the GDPR `delete_user_data` RPC (done, PR #697). See [TECHNICAL_DUE_DILIGENCE.md](../due_diligence/TECHNICAL_DUE_DILIGENCE.md).
 
 **Goal:** the core money/game-logic RPCs have automated regression tests in CI against an ephemeral DB; no test reads production. Reconcile repo function bodies against live.
 
 **Depends on:** A1 (`schema.sql` to seed) and ideally the `backups/live_functions_<date>.sql` capture from A1 pre-flight.
 
 **Steps:**
-1. **Reconcile (DATA-2):** diff every repo `CREATE OR REPLACE FUNCTION` against the captured live `pg_get_functiondef` output. Where they differ, the live version is authoritative (functions were hand-patched) — fold the live body into `schema.sql` / a new migration so repo == prod. Record discrepancies found.
+1. **Reconcile (DATA-RECON):** diff every repo `CREATE OR REPLACE FUNCTION` against the captured live `pg_get_functiondef` output. Where they differ, the live version is authoritative (functions were hand-patched) — fold the live body into `schema.sql` / a new migration so repo == prod. Record discrepancies found.
 2. **Choose the harness.** Recommended: **pgTAP** (runs in-database, closest to the SECURITY DEFINER/RLS semantics) or a **Deno integration suite** hitting a local Supabase (`supabase start`). Avoid Vitest-mocking the DB — the value is in exercising real RPC/RLS behavior. Add the framework + a `npm run test:unit` script + CI wiring.
 3. **Seed deterministically.** A fixtures file that builds: 2 leagues (classic + draft), 4 squads, a fixture set with known stats, a bet, an auction listing, a coin wallet. Loaded from `schema.sql` + a seed script into the compose Postgres.
-4. **Cover the fragility hotspots first** (DD DATA-2 patch-count order): `execute_transfer_atomic` (budget, club cap, window, penalty, initial-build latch), `resolve_bet` (commissioner override, auto-resolve, re-aggregation), `set_lineup` (lock, fixture-status, point recompute), `calculate-scores` math (per-90/per-60, clean-sheet gate, captain, auto-subs, idempotency), `place_bid`/`confirm_auction_win` (escrow, budget at confirmation), coin RPCs (`credit_coins`/`debit_coins_to_escrow`/`release_escrow` — and assert no cash-out path). Happy-path + at least one edge case each.
+4. **Cover the fragility hotspots first** (DD DATA-RECON patch-count order): `execute_transfer_atomic` (budget, club cap, window, penalty, initial-build latch), `resolve_bet` (commissioner override, auto-resolve, re-aggregation), `set_lineup` (lock, fixture-status, point recompute), `calculate-scores` math (per-90/per-60, clean-sheet gate, captain, auto-subs, idempotency), `place_bid`/`confirm_auction_win` (escrow, budget at confirmation), coin RPCs (`credit_coins`/`debit_coins_to_escrow`/`release_escrow` — and assert no cash-out path). Happy-path + at least one edge case each.
 5. **Repoint the 8 manual logic specs** (`scoring-pipeline`, `scoring`, `draft-*`, `multi-league-and-bets`, `autofill-draft-classic`, `features`) at the seeded local/staging DB instead of prod; remove the `expect(length).toBeGreaterThan(0)` prod-assumption assertions.
 6. **Wire into CI** as a job before E2E (parallel to `security`), running against an ephemeral DB (GitHub Actions `services: postgres` or `supabase start`).
 
@@ -183,7 +185,7 @@ Dependency-ordered. **Phase A is the keystone — do it first**: it unblocks the
 **Steps:**
 1. **Consume the adapter in the sync functions.** In `sync-fixtures`, `sync-players`, `ingest-match-events`, `discover-tournament`: replace inline `forza(path)` + raw-JSON parsing with `getAdapter(tournament.provider).listEvents(...)` / `.getPlayerStats(...)`, writing the `CanonicalEvent`/`CanonicalPlayerStat` model. The `ForzaAdapter` methods already exist in `_shared/providers/forza.ts` — extend them to emit every field the DB writes (the canonical types may need a few more stat fields — see `types.ts`).
 2. **Migrate `sync-player-status`** onto the shared `forzaFetch` (remove its inline `FORZA_BASE`).
-3. **🔴 Additive migration `218_provider_generalisation.sql`:** `ALTER TABLE tournaments RENAME COLUMN forza_id TO provider_key;` (values preserved — every child FK still joins, just renamed); the `provider`/`sport_id` columns already exist (mig 187); `ALTER COLUMN provider_key DROP NOT NULL`. **Pre-flight:** grep every reference to `forza_id` in functions/RPCs/migrations and confirm the rename doesn't break a join (child tables reference `tournaments(forza_id)` — the rename cascades to the constraint name, not the FK target, so verify). **Back up** `tournaments` rows first.
+3. **🔴 Additive migration `220_provider_generalisation.sql`** (next free number — 218 is LEGAL-1, 219 is delete_user_data)**:** `ALTER TABLE tournaments RENAME COLUMN forza_id TO provider_key;` (values preserved — every child FK still joins, just renamed); the `provider`/`sport_id` columns already exist (mig 187); `ALTER COLUMN provider_key DROP NOT NULL`. **Pre-flight:** grep every reference to `forza_id` in functions/RPCs/migrations and confirm the rename doesn't break a join (child tables reference `tournaments(forza_id)` — the rename cascades to the constraint name, not the FK target, so verify). **Back up** `tournaments` rows first.
 4. **Adapter-conformance test** (folds into B2's harness): one fixture set asserted against the canonical model, so a buyer can drop in `opta.ts` and prove parity. The `OptaAdapter` stub is the template.
 5. Deploy the 5 touched functions + `npm run update:checksums` + commit.
 
@@ -196,7 +198,7 @@ Dependency-ordered. **Phase A is the keystone — do it first**: it unblocks the
 **Goal:** completing a round/event in any sport writes a trophy, so `get_circle_meta_standings` is non-empty and the cross-sport leaderboard demos. Today `trophy_ledger` has no writer.
 
 **Steps:**
-1. **🔴 Migration `218_award_trophy.sql`** (or next free number): an `award_trophy(p_circle_id, p_league_id, p_user_id, p_sport_id, p_tournament_id, p_trophy_type, p_tier)` SECURITY DEFINER helper that inserts into `trophy_ledger` (idempotent — guard against double-award per round/event).
+1. **🔴 Migration `award_trophy.sql`** (next free number — `220_` or higher; 218/219 are taken): an `award_trophy(p_circle_id, p_league_id, p_user_id, p_sport_id, p_tournament_id, p_trophy_type, p_tier)` SECURITY DEFINER helper that inserts into `trophy_ledger` (idempotent — guard against double-award per round/event).
 2. **Call it from each settlement path:**
    - Football: in `calculate-scores` `roundComplete` branch — award `round_win` to the round's top scorer (and `season_win` at season end). Needs the league's `circle_id` (now on `leagues`).
    - F1: in `score-f1-race` — `event_win` to the race's top predictor; `season_win` at season finalize.
@@ -270,7 +272,7 @@ Dependency-ordered. **Phase A is the keystone — do it first**: it unblocks the
 - [x] **A2** Migration files + DD docs agree with live applied-state. ✅ PR #694
 - [ ] **B1** PITR enabled; staging project from `schema.sql`; daily backup + tested restore.
 - [x] **B2** (skeleton) Hotspot RPCs test-covered in CI against an ephemeral DB; no test reads prod. Activates once A1 ships `schema.sql`. ✅ PR #694
-- [ ] **B3** Sentry live (FE + edge); failed-cron alerting fires. *(FE captureException ✅ PR #695; `_shared/log.ts` envelope ✅ PR #696; remaining: 2 approval-gated secrets + 6 fns + cron alerting)*
+- [ ] **B3** Sentry live (FE + edge); failed-cron alerting fires. *(FE captureException ✅ PR #695; `_shared/log.ts` envelope ✅ PR #696; `logError` in all 6 remaining fns ✅ PR #698; remaining: 2 approval-gated secrets (rows 11, 20–25 deploys) + cron alerting part c)*
 - [ ] **C1** Sync functions consume the canonical model; `tournaments.provider_key`; conformance test passes.
 - [ ] **C2** Trophy emission wired; meta-leaderboard non-empty.
 - [x] **C3** No-cash-out is a schema constraint + test artifact. ✅ Migration 218 + PR #694
@@ -282,9 +284,9 @@ Dependency-ordered. **Phase A is the keystone — do it first**: it unblocks the
 
 ## Related Documents
 
-- [Technical Due Diligence (V2)](../due_diligence/TECHNICAL_DUE_DILIGENCE_V2.md) — the backlog this plan executes (IDs, severities, evidence)
-- [B2B Buyout Technical Due Diligence (V2)](B2B_BUYOUT_TECHNICAL_DUE_DILIGENCE_V2.md) — the acquirer-lens score (6.5→8 path)
-- [Technical Documentation (V2)](../due_diligence/TECH_DOCUMENTATION_V2.md) — the engineering reference
+- [Technical Due Diligence](../due_diligence/TECHNICAL_DUE_DILIGENCE.md) — the backlog this plan executes (IDs, severities, evidence)
+- [B2B Buyout Technical Due Diligence](B2B_BUYOUT_TECHNICAL_DUE_DILIGENCE.md) — the acquirer-lens score (6.5→8 path)
+- [Technical Documentation](../due_diligence/TECH_DOCUMENTATION.md) — the engineering reference
 - [TRACKER.md](../TRACKER.md) — the authoritative live-state + approval gate
 - [CLAUDE.md](../../../CLAUDE.md) — pilot safeguards, branch freeze, migration rules
 
