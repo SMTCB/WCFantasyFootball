@@ -34,7 +34,7 @@ Dependency-ordered. **Phase A is the keystone — do it first**: it unblocks the
 | **A2** | **DEPLOY-2** — stamp applied-state into migration headers + reconcile docs | 🟡 Medium | XS | 🟢 code-only | ✅ **Done — PR #694 (2026-07-01)** | clean DD lineage |
 | **B1** | **OPS-1** — PITR + staging project + automated backups | 🔴 Critical | M + infra | 🔴 prod-config | ⬜ Blocked on A1 | safe rehearsal for everything |
 | **B2** | **TEST-1** — seeded test harness for hotspot RPCs | 🔴 Critical / 🟠 High | XL | 🟢 code-only (local DB) | ✅ **Done (skeleton) — PR #694 (2026-07-01).** `tests/unit/` with 13 test cases across transfer/bet/coins; CI job with ephemeral Postgres. Activates fully once A1 produces `supabase/schema.sql`. | regression safety for C-all |
-| **B3** | **OPS-2** — activate Sentry (FE) + edge error tracking + cron alerting | 🟠 High | S–M | 🔴 Vercel/secret + code | 🔄 **In progress** — FE wiring done (PR #695, 2026-07-01); Edge Functions + cron alerting next | observability |
+| **B3** | **OPS-2** — activate Sentry (FE) + edge error tracking + cron alerting | 🟠 High | S–M | 🔴 Vercel/secret + code | 🔄 **In progress** — FE captureException (PR #695) ✅; `_shared/log.ts` Sentry envelope (PR #696) ✅; drift script covers `_shared` (PR #696) ✅; **remaining:** (1) 🔴 set `SENTRY_DSN` Supabase secret, (2) 🔴 set `VITE_SENTRY_DSN` in Vercel (TRACKER row 11), (3) 6 fns still missing `logError` (`purchase-coins`, `discover-tournament`, `sync-tennis-players`, `score-atp-finals`, `score-f1-race`, `score-tennis-tournament`), (4) cron alerting not yet built | observability |
 | **BUILD-1** | **BUILD-1** — Dockerfile Node 20→24 | 🟡 Medium | XS | 🟢 code-only | ✅ **Done — PR #694 (2026-07-01)** | consistent build |
 | **C1** | **ARCH-2** — finish provider seam: consume canonical model; `forza_id`→`provider_key` | 🟡 Medium | L | 🔴 migration + deploy | ⬜ | feed-swap story |
 | **C2** | **ARCH-1** — wire trophy emission (meta-leaderboard becomes real) | 🟡 Medium | S–M | 🔴 migration + deploy | ⬜ | multi-sport demo |
@@ -46,7 +46,7 @@ Dependency-ordered. **Phase A is the keystone — do it first**: it unblocks the
 
 **Total to reach 8/10 (Phases A–C): ~6–10 engineer-weeks.** Phase D is ongoing team-readiness, not gating for the buyout score.
 
-**Completed so far (2026-07-01):** A2 ✅, BUILD-1 ✅, C3 ✅, B2-skeleton ✅, CODE-3 ✅. B3 (OPS-2) in progress.
+**Completed so far (2026-07-01):** A2 ✅, BUILD-1 ✅, C3 ✅, B2-skeleton ✅, CODE-3 ✅, OPS-2 code ✅ (PRs #695 + #696). B3 remaining: 2 approval-gated secrets + 6 fns missing `logError` + cron alerting.
 
 > **Why this order:** the DD doc orders by severity; this plan orders by *dependency*. A reproducible schema (A1) is the precondition for a staging project (B1) and a seeded test DB (B2), and it removes the top remaining buyer-DD blocker (Test C). Everything in Phase C is independent of A/B and can be parallelized once Phase A lands, but each Phase C migration is *safer to rehearse* once B1 (staging) exists — so B1 before C is preferred, not mandatory.
 
@@ -67,7 +67,7 @@ Dependency-ordered. **Phase A is the keystone — do it first**: it unblocks the
 
 ## Current-state reference (verified 2026-07-01)
 
-*(Branch `v2`, HEAD `0a1f994`. Confirm line numbers with `grep`.)*
+*(Branch `v2`, HEAD `5c58ac4`. Confirm line numbers with `grep`.)*
 
 | Fact | Detail |
 |------|--------|
@@ -79,7 +79,7 @@ Dependency-ordered. **Phase A is the keystone — do it first**: it unblocks the
 | **Coin ledger** | `coin_transactions.type` CHECK (mig 209, applied) lists no withdrawal/payout type; no cash-out RPC exists (grep clean). Guard trigger `guard_coin_columns` on `coin_wallets`. The no-cash-out rule is enforced by *absence*, not a positive constraint. |
 | **Security (Phase 0 — all done)** | `_shared/auth.ts` `requireServiceRole()` HMAC-verifies + `SUPABASE_SERVICE_ROLE_KEY`/`ADMIN_TRIGGER_KEY` exact-match paths. `is_admin` guarded (mig 210, applied). `purchase-coins` constant-time/mock-safe/FRC/idempotent (mig 211 `reference_id` UNIQUE applied). 4 scoring fns + `calculate-scores` gated. |
 | **Testing** | Only `e2e/platform.spec.js` runs in CI (render smoke). 8 logic specs `testIgnore`'d in `playwright.config.js`, assert against **live prod data**. No Vitest/Jest. `"test": "playwright test"`. `docker-compose.yml` provides local Postgres (`postgres:15-alpine`) + Deno runner. |
-| **Observability** | `@sentry/react ^10.62.0`; `Sentry.init()` in `src/main.jsx` guarded by `VITE_SENTRY_DSN`. **`VITE_SENTRY_DSN` not set in Vercel — no capture in prod** (TRACKER row 11 ⬜). `ErrorBoundary.componentDidCatch` now calls `Sentry.captureException` ✅ (PR #695) — live once row 11 is set. Edge functions: console only (OPS-2 edge step pending). `edge_function_error_log` table + `cron_job_status()` RPC exist; no alert path. |
+| **Observability** | `@sentry/react ^10.62.0`; `Sentry.init()` in `src/main.jsx` guarded by `VITE_SENTRY_DSN`. **`VITE_SENTRY_DSN` not set in Vercel** (TRACKER row 11 🔴 pending) — no FE capture in prod yet. `ErrorBoundary.componentDidCatch` calls `Sentry.captureException` ✅ (PR #695). `_shared/log.ts` `logError()` now forwards `error`/`critical` to Sentry envelope API ✅ (PR #696) — active once `SENTRY_DSN` Supabase secret is set (🔴 approval-gated). 6 fns missing `logError`: `purchase-coins`, `discover-tournament`, `sync-tennis-players`, `score-atp-finals`, `score-f1-race`, `score-tennis-tournament`. `check-function-drift.js` + `.function-checksums.json` now track `_shared_hash` ✅ (PR #696). `edge_function_errors` table + `cron_job_status()` RPC exist; no automated alert path for cron failures. |
 | **Build** | `.nvmrc=24`, `engines>=24`, CI `npm ci` Node 24. `Dockerfile` line 4 `FROM node:24-alpine` ✅ (fixed PR #694). `.npmrc legacy-peer-deps=true`. |
 | **CI** | `.github/workflows/ci.yml`: `security` (audit/madge/encoding/drift) → `lint` → `build` → `e2e` (`needs:[security,lint,build]`); triggers `main`+`v2`. `migrate.yml` manual dry-run. `mobile.yml` not on `v2`. |
 | **Data layer** | 117 `supabase.from(` (24 files) + 76 `supabase.rpc(` (33 files) in `src/`. No TanStack Query/SWR. God components: `SquadScreen` 2,219 / `LeagueScreen` 1,894 / `CommissionerPanel` 1,828 / `MarketScreen` 1,547 / `LiveScreen` 1,445. |
@@ -164,9 +164,9 @@ Dependency-ordered. **Phase A is the keystone — do it first**: it unblocks the
 **Goal:** production errors and failed crons actually surface. Today Sentry is coded but inert (no DSN in Vercel); edge functions log to console only.
 
 **Steps:**
-1. **🔴 Activate frontend Sentry:** add `VITE_SENTRY_DSN` to Vercel (Production env) — the DSN is in [TRACKER row 11](../TRACKER.md#-pending-db--deploy-actions). Redeploy (`vercel deploy --prod`, or merge to trigger). Confirm a test error appears in Sentry. (DSN is a publishable ingest key, not a secret.)
-2. **Edge function error tracking:** add the Deno Sentry SDK (or a thin `reportError()` in `_shared/log.ts` that POSTs to Sentry's ingest API) and wrap each function's top-level handler. Deploy the touched functions + `npm run update:checksums`.
-3. **Failed-cron alerting:** add a scheduled function (or extend `cron_job_status()`) that checks `cron.job_run_details` for failures in the last hour and alerts (Sentry event / email / webhook) above a threshold. The cautionary tale: mig 124's auto-resolve cron failed on *every* call and was found by manual inspection — this closes that gap.
+1. **🔴 Activate frontend Sentry:** add `VITE_SENTRY_DSN` to Vercel (Production env) — the DSN is in [TRACKER row 11](../TRACKER.md#-pending-db--deploy-actions). Redeploy (`vercel deploy --prod`, or merge to trigger). Confirm a test error appears in Sentry. (DSN is a publishable ingest key, not a secret.) *(Approval-gated — name in chat, wait for yes.)*
+2. **Edge function error tracking:** ✅ **Done (PR #696).** `_shared/log.ts` `logError()` now calls `reportToSentry()` — Sentry envelope HTTP API (no SDK), fires for `error`/`critical` severity, gated on `SENTRY_DSN` Supabase secret. **Remaining:** (a) 🔴 set `SENTRY_DSN` Supabase secret (`npx supabase secrets set SENTRY_DSN=<dsn> --project-ref sssmvihxtqtohisghjet` — Supabase-linked PC, approval-gated); (b) wire `logError` into the 6 functions that don't import it yet: `purchase-coins`, `discover-tournament`, `sync-tennis-players`, `score-atp-finals`, `score-f1-race`, `score-tennis-tournament`; (c) deploy those 6 + run `npm run update:checksums`.
+3. **Failed-cron alerting:** add a scheduled function (or extend `cron_job_status()`) that checks `cron.job_run_details` for failures in the last hour and alerts (Sentry event / email / webhook) above a threshold. The cautionary tale: mig 124's auto-resolve cron failed on *every* call and was found by manual inspection — this closes that gap. *(Not yet built.)*
 
 **Done-when:** a deliberately-thrown frontend error and a deliberately-failed cron both produce an alert.
 
@@ -270,7 +270,7 @@ Dependency-ordered. **Phase A is the keystone — do it first**: it unblocks the
 - [x] **A2** Migration files + DD docs agree with live applied-state. ✅ PR #694
 - [ ] **B1** PITR enabled; staging project from `schema.sql`; daily backup + tested restore.
 - [x] **B2** (skeleton) Hotspot RPCs test-covered in CI against an ephemeral DB; no test reads prod. Activates once A1 ships `schema.sql`. ✅ PR #694
-- [ ] **B3** Sentry live (FE + edge); failed-cron alerting fires. *(FE captureException done — PR #695; Edge Functions + cron alerting pending)*
+- [ ] **B3** Sentry live (FE + edge); failed-cron alerting fires. *(FE captureException ✅ PR #695; `_shared/log.ts` envelope ✅ PR #696; remaining: 2 approval-gated secrets + 6 fns + cron alerting)*
 - [ ] **C1** Sync functions consume the canonical model; `tournaments.provider_key`; conformance test passes.
 - [ ] **C2** Trophy emission wired; meta-leaderboard non-empty.
 - [x] **C3** No-cash-out is a schema constraint + test artifact. ✅ Migration 218 + PR #694
@@ -292,4 +292,4 @@ Dependency-ordered. **Phase A is the keystone — do it first**: it unblocks the
 
 *Last Updated: 2026-07-01. Execute against branch `v2`. Confirm session type and the per-item approval gate before any prod-touching action.*
 
-**Session 2026-07-01 progress:** A2 ✅ (PR #694 — applied-state stamps on migrations 202–216), BUILD-1 ✅ (PR #694 — Dockerfile Node 24), C3 ✅ (PR #694 — migration 218 `no_external_cash_out` constraint), B2 skeleton ✅ (PR #694 — `tests/unit/` harness with 13 test cases + CI job), CODE-3 ✅ (PR #695 — Sentry `captureException` in `ErrorBoundary` + `AppShell` guard). OPS-2 edge/cron alerting in progress next.
+**Session 2026-07-01 progress:** A2 ✅ (PR #694 — applied-state stamps on migrations 202–216), BUILD-1 ✅ (PR #694 — Dockerfile Node 24), C3 ✅ (PR #694 — migration 218 `no_external_cash_out` constraint), B2 skeleton ✅ (PR #694 — `tests/unit/` harness with 13 test cases + CI job), CODE-3 ✅ (PR #695 — Sentry `captureException` in `ErrorBoundary` + `AppShell` guard), OPS-2 code ✅ (PR #696 — `_shared/log.ts` Sentry envelope API + drift script covers `_shared`). B3 remaining: `SENTRY_DSN` Supabase secret (🔴), Vercel `VITE_SENTRY_DSN` TRACKER row 11 (🔴), 6 fns missing `logError`, cron alerting.
