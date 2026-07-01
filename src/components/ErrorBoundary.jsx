@@ -9,15 +9,32 @@
  *   <ErrorBoundary screen="SquadScreen">
  *     <SquadScreen />
  *   </ErrorBoundary>
+ *
+ * Variant — shell guard (wraps AppLayout to catch nav/shell crashes):
+ *   <ErrorBoundary screen="AppShell" variant="shell">
+ *     <AppLayout>...</AppLayout>
+ *   </ErrorBoundary>
  */
 
 import { Component } from 'react';
+import * as Sentry from '@sentry/react';
 
-// ── Lightweight crash reporter ────────────────────────────────────────────────
-// Delegates to window.__reportClientError (wired in main.jsx) which calls the
-// report_client_error RPC (migration 71). Falls back to console.error only.
+// ── Crash reporter ─────────────────────────────────────────────────────────────
+// Dual-writes to: (1) Sentry (when DSN configured), (2) report_client_error RPC
+// (migration 71 — window.__reportClientError wired in main.jsx).
 function reportError(error, errorInfo, screen) {
   console.error(`[ErrorBoundary] Crash on screen: ${screen}`, error, errorInfo);
+
+  // Sentry — only active when VITE_SENTRY_DSN is set
+  if (import.meta.env.VITE_SENTRY_DSN) {
+    Sentry.withScope((scope) => {
+      scope.setTag('screen', screen);
+      scope.setContext('componentStack', { stack: errorInfo?.componentStack ?? null });
+      Sentry.captureException(error);
+    });
+  }
+
+  // DB reporter (migration 71)
   if (typeof window.__reportClientError === 'function') {
     window.__reportClientError(
       error?.message ?? String(error),
@@ -43,7 +60,6 @@ export default class ErrorBoundary extends Component {
   }
 
   handleReload = () => {
-    // Reset boundary state then reload the page
     this.setState({ hasError: false, error: null });
     window.location.reload();
   };
@@ -56,14 +72,15 @@ export default class ErrorBoundary extends Component {
   render() {
     if (!this.state.hasError) return this.props.children;
 
-    const screen = this.props.screen ?? 'this screen';
-    const isDev  = import.meta.env.DEV;
+    const screen    = this.props.screen ?? 'this screen';
+    const isShell   = this.props.variant === 'shell';
+    const isDev     = import.meta.env.DEV;
 
     return (
       <div
         style={{
-          minHeight: '100svh',
-          background: 'var(--ink)',
+          minHeight: isShell ? '100svh' : '60svh',
+          background: 'var(--bg)',
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
@@ -73,7 +90,7 @@ export default class ErrorBoundary extends Component {
         }}
       >
         {/* Icon */}
-        <div style={{ fontSize: '40px', marginBottom: '20px', opacity: 0.6 }}>⚡</div>
+        <div style={{ fontSize: '40px', marginBottom: '20px', opacity: 0.5 }}>⚡</div>
 
         {/* Heading */}
         <div
@@ -101,7 +118,9 @@ export default class ErrorBoundary extends Component {
             marginBottom: '28px',
           }}
         >
-          {screen} crashed unexpectedly. Your squad data is safe — this is a display error only.
+          {isShell
+            ? 'The app shell crashed. Reload to recover — your data is safe.'
+            : `${screen} crashed unexpectedly. Your squad data is safe — this is a display error only.`}
         </div>
 
         {/* Dev-only error detail */}
@@ -153,7 +172,7 @@ export default class ErrorBoundary extends Component {
             style={{
               padding: '12px 28px',
               background: 'var(--cyan)',
-              color: 'var(--ink)',
+              color: '#fff',
               border: 'none',
               borderRadius: '4px',
               fontSize: '11px',
@@ -172,7 +191,7 @@ export default class ErrorBoundary extends Component {
               padding: '12px 28px',
               background: 'transparent',
               color: 'var(--mute)',
-              border: '1px solid rgba(255,255,255,0.1)',
+              border: '1px solid var(--rule)',
               borderRadius: '4px',
               fontSize: '11px',
               fontWeight: 800,

@@ -114,6 +114,7 @@ function AppRoutes() {
           path="/*"
           element={
             <ProtectedRoute>
+              <ErrorBoundary screen="AppShell" variant="shell">
               <AppLayout>
                 <Routes>
                   <Route path="/"                 element={<Navigate to="/clubhouse" replace />} />
@@ -154,6 +155,7 @@ function AppRoutes() {
                   <Route path="*"                           element={<ErrorBoundary screen="NotFound"><NotFoundScreen /></ErrorBoundary>} />
                 </Routes>
               </AppLayout>
+              </ErrorBoundary>
             </ProtectedRoute>
           }
         />
