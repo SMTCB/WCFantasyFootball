@@ -28,8 +28,10 @@
 | **M** | Mobile-First Redesign (sub-`lg` UX) | ✅ Done — all phases complete | M0 (PRs #682–684), M1 (PRs #685–686), M2 (PR #687), M3 (PR #688), M4 (PR #689). Design: [MOBILE_FIRST_REDESIGN.md](architecture/MOBILE_FIRST_REDESIGN.md). See [workstream](#mobile-first-redesign-workstream) below. |
 
 **Next session options (choose one):**
-- **DD items** — TEST-1 (Vitest coverage), CODE-3 (error boundaries), OPS-2 (Sentry)
+- **DD items** — CODE-3 (error boundaries), OPS-2 (Sentry), DATA-1/2/3 (PII / GDPR)
 - **Phase 3B smoke tests** → deploy sequence — see [Phase 3B checklist](#phase-3b-pre-merge-checklist) below
+
+**Session 2026-07-01 (DD — A2, BUILD-1, C3, B2, PR #694):** Four DD items shipped into v2. **A2 (DEPLOY-2):** Applied-state stamps (`-- ✅ APPLIED TO PRODUCTION ...`) added as first line to migrations 202–216 — any file reader now knows what is live without consulting TRACKER. **BUILD-1:** `Dockerfile` `node:20-alpine` → `node:24-alpine`, matching `package.json` `engines>=24` and `.nvmrc`. **C3 (LEGAL-1):** New migration `218_no_cash_out_constraint.sql` — renames the anonymous `coin_transactions` CHECK to the named constraint `no_external_cash_out` (same allowed-type scope, explicit legal label), adds `COMMENT ON CONSTRAINT` and `COMMENT ON TABLE` for coin_transactions and coin_wallets documenting the FRC internal-only rule, includes a `DO $$ ... $$` audit block that asserts zero existing rows have a disallowed type (withdrawal/cash_out/payout/redeem/transfer_out). **B2 (TEST-1):** RPC regression test harness skeleton in `tests/unit/` — `helpers.js` (pg Client wrapper, `callRpc` with JWT-claim simulation, begin/rollback transaction helpers), `setup.js` (schema + seed loader with graceful exit if `supabase/schema.sql` absent — Phase A1 dependency), `seed.sql` (fixed UUIDs for 2 leagues, 3 squads, 16 players across 5 clubs/nations, 1 bet, 1 auction, 1 matchday), `transfer.test.js` (6 cases: happy path, over-budget, club cap, closed window, over-round-limit penalty, initial-build latch), `bet.test.js` (4 cases: commissioner resolve, cron blocked while open, double-resolve guard, points re-aggregated), `coins.test.js` (3 RPC cases + 5 LEGAL-1 schema assertions including pg error code 23514 on cash_out INSERT). CI `unit-tests` job added in `ci.yml` (Postgres 15 service, parallel to `security`/`lint`, graceful skip if `supabase/schema.sql` absent, gates `e2e`). `package.json`: `test:unit` + `test:unit:watch` scripts + `pg@^8.13.3` devDep. `eslint.config.js`: Node globals block for `tests/**`. Lint: 0 errors. Build: clean, no TDZ. Next migration: `219_`.
 
 **Session 2026-06-30 (Phase M4 — parity & polish, PR #689):** Phase M4 complete — closes the Mobile-First Redesign workstream. Four target areas: **(1) Tap-target sweep (≥44px):** RecapView `MatchdayNav` buttons `padding: 4→8px + minHeight:44`; SquadScreen action-sheet buttons `py-2.5→py-3`; MarketScreen per-row action buttons (LOCKED/SELLING/BUYING/SELL/CLUB FULL/BUY) `padding: 6→10px + minHeight:44`. **(2) PlayerPickerSheet portal fix:** added `createPortal(…, document.body)` — fixes iOS WebKit `WebkitOverflowScrolling:touch` stacking context trap that was causing the sheet's backdrop and taps to render incorrectly; updated stale dark-theme tokens (`var(--ink-2)` → `var(--card)`, `rgba(255,255,255,0.05)` → `var(--elev)`, `rgba(255,255,255,0.1)` → `var(--rule)`, handle `rgba(255,255,255,0.15)` → `var(--rule)`, X button bg `rgba(255,255,255,0.06)` → `var(--elev)`, row divider `rgba(255,255,255,0.04)` → `var(--rule)`). **(3) Tablet tier:** `index.css` `@media (640–1023px)` block — `.fk-mob-sheet-wrap` centred at max 520px wide with `border-radius:12px 12px 0 0`; `[data-sheet-tablet]` generic selector for any future sheet that opts in; `.fk-competition-grid` class for two-up card layout (ClubhouseScreen `AllCompetitions` already uses `auto-fill minmax(240px, 1fr)` which naturally gives 2-col at 640px — CSS class is a future hook). Lint: 0 errors. Build: clean (2.00s). Madge: no circular deps. platform.spec.js: running.
 
@@ -97,7 +99,7 @@
 
 **Rows 10, 11, 16 pending** — not Supabase actions (10/11) or blocked on source access (16). **Row 17 done. Row 18 — see 🛑 banner above, do not run.**
 
-**Next migration on v2:** `218_`
+**Next migration on v2:** `219_`
 
 **Session 2026-06-28 (migration 215 applied):** `215_clubhouse_centric_model.sql` applied to prod from the Supabase-linked PC (this session's local `v2` was 4 commits behind `origin/v2` — pulled first). Backed up `leagues`/`paddocks`/`player_boxes` id+name snapshots before running (`backups/*_pre_migration215_20260628_231738.json`). Verified: `circle_id` column live on all 3 tables (NULL on existing rows — no junction-table data to backfill yet); `create_league` 6-arg overload, `create_paddock` (2-arg), `create_player_box` (3-arg) all updated and present in `pg_proc`.
 
@@ -247,14 +249,14 @@ From [TECHNICAL_DUE_DILIGENCE.md](due_diligence/TECHNICAL_DUE_DILIGENCE.md). Seq
 | OPS-1 | Structured logging — replace ad-hoc `console.log` in Edge Functions with a uniform `log(level, msg, context)` helper | ~3h |
 
 ### Phase 2 — Post-3B, before buyer demos
-| Item | Description | Effort |
-|------|-------------|--------|
-| TEST-1 | Coverage metrics — integrate Vitest + `@vitest/coverage-v8`; target 60% line coverage on hooks and RPCs | ~6h |
-| DATA-2 | GDPR deletion RPC — `delete_user_data(p_user_id)` cascades PII columns; admin-only | ~3h |
-| DATA-3 | Data classification doc — label each table column (PII / financial / game data / public) | ~2h |
-| CODE-3 | Error boundaries — `ErrorBoundary` wrapper on each major screen; fallback UI + Sentry capture | ~2h |
-| OPS-2 | Sentry for Edge Functions (frontend DSN deployed via row 11): (a) add Deno Sentry SDK to each Edge Function; (b) wire `edge_function_error_log` into alert path; (c) add failed-cron threshold alerting (≥3 consecutive failures → alert) | ~4h |
-| P2P-LOAD | Load test — 50 concurrent P2P challenges to verify coin ledger atomicity under contention. Deferred from Sprint P2P-6. Requires `MOCK_PAYMENTS=true` environment. | ~2h |
+| Item | Description | Effort | Status |
+|------|-------------|--------|--------|
+| TEST-1 | ~~Coverage metrics — integrate Vitest + `@vitest/coverage-v8`~~. **B2 delivered instead:** RPC regression test harness (`tests/unit/`) with Node built-in runner + ephemeral Postgres; 13 test cases across transfer/bet/coins. Activates fully once Phase A1 produces `supabase/schema.sql`. | ~6h | ✅ Done (PR #694) |
+| DATA-2 | GDPR deletion RPC — `delete_user_data(p_user_id)` cascades PII columns; admin-only | ~3h | ⬜ |
+| DATA-3 | Data classification doc — label each table column (PII / financial / game data / public) | ~2h | ⬜ |
+| CODE-3 | Error boundaries — `ErrorBoundary` wrapper on each major screen; fallback UI + Sentry capture | ~2h | ⬜ |
+| OPS-2 | Sentry for Edge Functions (frontend DSN deployed via row 11): (a) add Deno Sentry SDK to each Edge Function; (b) wire `edge_function_error_log` into alert path; (c) add failed-cron threshold alerting (≥3 consecutive failures → alert) | ~4h | ⬜ |
+| P2P-LOAD | Load test — 50 concurrent P2P challenges to verify coin ledger atomicity under contention. Deferred from Sprint P2P-6. Requires `MOCK_PAYMENTS=true` environment. | ~2h | ⬜ |
 
 ### Phase 3 — Before sale close
 | Item | Description |
@@ -329,7 +331,7 @@ These require a human decision before the relevant sprint can continue.
 
 ## Cross-Cutting Rules (Every Sprint)
 
-1. **Migrations are append-only.** Next free number on v2: `218_`. Never edit an applied migration.
+1. **Migrations are append-only.** Next free number on v2: `219_`. Never edit an applied migration.
 2. **Backup before every migration.** Docker unavailable — `SELECT` affected rows and save to `backups/*.json` first.
 3. **Football stays green.** `platform.spec.js` + manual smoke pass after any sprint touching shared infrastructure.
 4. **Value moves only through `SECURITY DEFINER` RPCs.** Clients never write directly to coin or budget columns.
@@ -347,4 +349,4 @@ These require a human decision before the relevant sprint can continue.
 
 **Session 2026-06-30 (Mobile-First Redesign — Phase M0 implementation):** All Phase M0 foundation primitives shipped in 3 sequential PRs into `v2`. PR #682: `src/hooks/useViewport.js` (`useViewport`/`useIsMobile` hook, SSR-safe matchMedia); `--f1`/`--ten`/`--f1bg`/`--tenbg` tokens defined in `index.css` (8+ components were referencing them undefined); `--r-sm`/`--r-md` skeleton alias fixed; `env(safe-area-inset-top)` added to the sticky mobile top bar in `AppLayout`. PR #683: `src/components/shared/BottomSheet.jsx` (portaled thin shell over `.fk-mob-sheet-*` CSS); `ActionSheet` migrated to use it; `PlayerPickerSheet` rewritten to use `<BottomSheet>` + full Kit Light token pass. PR #684: `src/components/shared/PrimaryActionBar.jsx` (thumb-zone FAB portaled to `document.body`, hidden on desktop via `lg:hidden`, state-aware props); `CompetitionResultsHeader.jsx` mobile card-mode branch added (`leadColumnKey` prop, private `useIsMobile` hook, card layout < 640px, desktop grid pixel-identical). All 3 PRs: lint 0 errors, Rolldown TDZ build clean, madge 0 circular deps. Next: **Mobile Phase M1** — wire `CompetitionResultsHeader` card-mode at Football/F1/Tennis consumer screens; kill Tennis 14-column table; collapsing TabStrip.
 
-Last Updated: **2026-06-30** (Phase M4 done — PR #689; tap-target sweep ≥44px across RecapView/SquadScreen/MarketScreen, PlayerPickerSheet createPortal + Kit Light, tablet @media tier. Mobile-First Redesign workstream fully complete — M0 through M4. Next: DD items (TEST-1, CODE-3, OPS-2) or Phase 3B smoke tests.)
+Last Updated: **2026-07-01** (DD items A2 + BUILD-1 + C3 + B2 done — PR #694. Applied-state stamps on migrations 202–216; Dockerfile Node 24; no_external_cash_out constraint (migration 218); RPC test harness skeleton in tests/unit/ with CI job. Next migration: 219_. Next: CODE-3 (error boundaries), OPS-2 (Sentry), or Phase 3B smoke tests.)
