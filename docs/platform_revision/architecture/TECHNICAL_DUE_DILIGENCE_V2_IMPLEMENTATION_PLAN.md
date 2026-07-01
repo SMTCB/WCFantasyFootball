@@ -97,7 +97,7 @@ Dependency-ordered. **Phase A is the keystone — do it first**: it unblocks the
 
 **Pre-flight (read-only — safe):**
 1. Confirm Docker availability on the Supabase-linked PC (the build machine lacks it). If unavailable, run the dump from the Supabase platform: **Dashboard → Database → Backups / or `pg_dump` via the connection string** (Settings → Database → Connection string). The CLI path `npx supabase db dump --linked --schema-only` needs Docker.
-2. `npx supabase db query --linked "SELECT proname, pg_get_functiondef(oid) FROM pg_proc WHERE pronamespace = 'public'::regnamespace ORDER BY proname;"` — capture **all live function bodies** to `backups/live_functions_<date>.sql` (feeds DATA-2 reconciliation in B2).
+2. `npx supabase db query --linked "SELECT proname, pg_get_functiondef(oid) FROM pg_proc WHERE pronamespace = 'public'::regnamespace ORDER BY proname;"` — capture **all live function bodies** to `backups/live_functions_<date>.sql` (feeds DATA-RECON reconciliation in B2).
 
 **Steps:**
 1. **🔴 Approval-gated, read-only dump:** `pg_dump --schema-only --no-owner --no-privileges "<prod-connection-string>" > supabase/schema.sql`. (Schema only — no data; safe, but name it in chat first since it reads prod.) Include extensions, RLS policies, functions, triggers, cron jobs, and grants.
@@ -141,17 +141,19 @@ Dependency-ordered. **Phase A is the keystone — do it first**: it unblocks the
 
 **Risk notes:** enabling PITR is non-destructive. The staging project is isolated — the only risk is accidentally pointing staging env vars at prod; double-check the URL.
 
-## B2 — TEST-1 + DATA-2: Seeded test harness for hotspot RPCs 🟢 code-only · XL
+## B2 — TEST-1 + DATA-RECON: Seeded test harness for hotspot RPCs 🟢 code-only · XL
+
+> **ID note:** the repo↔prod RPC reconciliation task is **DATA-RECON** (was labelled "DATA-2" in earlier drafts). "DATA-2" now refers exclusively to the GDPR `delete_user_data` RPC (done, PR #697). See [TECHNICAL_DUE_DILIGENCE.md](../due_diligence/TECHNICAL_DUE_DILIGENCE.md).
 
 **Goal:** the core money/game-logic RPCs have automated regression tests in CI against an ephemeral DB; no test reads production. Reconcile repo function bodies against live.
 
 **Depends on:** A1 (`schema.sql` to seed) and ideally the `backups/live_functions_<date>.sql` capture from A1 pre-flight.
 
 **Steps:**
-1. **Reconcile (DATA-2):** diff every repo `CREATE OR REPLACE FUNCTION` against the captured live `pg_get_functiondef` output. Where they differ, the live version is authoritative (functions were hand-patched) — fold the live body into `schema.sql` / a new migration so repo == prod. Record discrepancies found.
+1. **Reconcile (DATA-RECON):** diff every repo `CREATE OR REPLACE FUNCTION` against the captured live `pg_get_functiondef` output. Where they differ, the live version is authoritative (functions were hand-patched) — fold the live body into `schema.sql` / a new migration so repo == prod. Record discrepancies found.
 2. **Choose the harness.** Recommended: **pgTAP** (runs in-database, closest to the SECURITY DEFINER/RLS semantics) or a **Deno integration suite** hitting a local Supabase (`supabase start`). Avoid Vitest-mocking the DB — the value is in exercising real RPC/RLS behavior. Add the framework + a `npm run test:unit` script + CI wiring.
 3. **Seed deterministically.** A fixtures file that builds: 2 leagues (classic + draft), 4 squads, a fixture set with known stats, a bet, an auction listing, a coin wallet. Loaded from `schema.sql` + a seed script into the compose Postgres.
-4. **Cover the fragility hotspots first** (DD DATA-2 patch-count order): `execute_transfer_atomic` (budget, club cap, window, penalty, initial-build latch), `resolve_bet` (commissioner override, auto-resolve, re-aggregation), `set_lineup` (lock, fixture-status, point recompute), `calculate-scores` math (per-90/per-60, clean-sheet gate, captain, auto-subs, idempotency), `place_bid`/`confirm_auction_win` (escrow, budget at confirmation), coin RPCs (`credit_coins`/`debit_coins_to_escrow`/`release_escrow` — and assert no cash-out path). Happy-path + at least one edge case each.
+4. **Cover the fragility hotspots first** (DD DATA-RECON patch-count order): `execute_transfer_atomic` (budget, club cap, window, penalty, initial-build latch), `resolve_bet` (commissioner override, auto-resolve, re-aggregation), `set_lineup` (lock, fixture-status, point recompute), `calculate-scores` math (per-90/per-60, clean-sheet gate, captain, auto-subs, idempotency), `place_bid`/`confirm_auction_win` (escrow, budget at confirmation), coin RPCs (`credit_coins`/`debit_coins_to_escrow`/`release_escrow` — and assert no cash-out path). Happy-path + at least one edge case each.
 5. **Repoint the 8 manual logic specs** (`scoring-pipeline`, `scoring`, `draft-*`, `multi-league-and-bets`, `autofill-draft-classic`, `features`) at the seeded local/staging DB instead of prod; remove the `expect(length).toBeGreaterThan(0)` prod-assumption assertions.
 6. **Wire into CI** as a job before E2E (parallel to `security`), running against an ephemeral DB (GitHub Actions `services: postgres` or `supabase start`).
 
@@ -270,7 +272,7 @@ Dependency-ordered. **Phase A is the keystone — do it first**: it unblocks the
 - [x] **A2** Migration files + DD docs agree with live applied-state. ✅ PR #694
 - [ ] **B1** PITR enabled; staging project from `schema.sql`; daily backup + tested restore.
 - [x] **B2** (skeleton) Hotspot RPCs test-covered in CI against an ephemeral DB; no test reads prod. Activates once A1 ships `schema.sql`. ✅ PR #694
-- [ ] **B3** Sentry live (FE + edge); failed-cron alerting fires. *(FE captureException ✅ PR #695; `_shared/log.ts` envelope ✅ PR #696; remaining: 2 approval-gated secrets + 6 fns + cron alerting)*
+- [ ] **B3** Sentry live (FE + edge); failed-cron alerting fires. *(FE captureException ✅ PR #695; `_shared/log.ts` envelope ✅ PR #696; `logError` in all 6 remaining fns ✅ PR #698; remaining: 2 approval-gated secrets (rows 11, 20–25 deploys) + cron alerting part c)*
 - [ ] **C1** Sync functions consume the canonical model; `tournaments.provider_key`; conformance test passes.
 - [ ] **C2** Trophy emission wired; meta-leaderboard non-empty.
 - [x] **C3** No-cash-out is a schema constraint + test artifact. ✅ Migration 218 + PR #694

@@ -1,7 +1,7 @@
 # Technical Due Diligence — Remediation Backlog & Current State
 
 **Platform:** Forza Fantasy League (multi-sport fantasy: Football + F1 + Tennis + P2P coins)
-**Branch reviewed:** `v2` (HEAD `e19ad5d`, 2026-07-01 — incorporates DD remediation PRs #694–#696)
+**Branch reviewed:** `v2` (2026-07-01 — incorporates DD remediation PRs #694–#698)
 **Scope:** ~41K LOC React/Vite frontend · 21 Supabase Edge Functions (19 deployable) · 243 SQL migrations · Capacitor iOS/Android
 **Purpose:** Internal action document AND buyer-DD simulation. This is a **re-verification** of the original 2026-06-26 due-diligence pass (archived at [docs/archive/superseded-dd-2026-06-30/TECHNICAL_DUE_DILIGENCE.md](../../archive/superseded-dd-2026-06-30/TECHNICAL_DUE_DILIGENCE.md)) against the current codebase. Every claim below was re-greped/re-read on 2026-06-30 (item statuses refreshed through 2026-07-01); status reflects what is actually on disk, cross-checked against the project's own [TRACKER.md](../TRACKER.md) "Pending DB & Deploy Actions" table — **the TRACKER is the live single source of truth for open items.**
 **Status legend:** ☐ Not started · ◐ In progress · ☑ Done · ✅ Verified-done-and-live
@@ -29,7 +29,7 @@ The original DD documents predate (or only partially reflect) a large remediatio
 | **Test coverage (TEST-1)** | open | ◐ `tests/unit/` skeleton ✅ PR #694 — 13 test cases (transfer/bet/coins), CI ephemeral Postgres job; activates fully once A1 ships `schema.sql` | **Skeleton done, full activation blocked on DATA-1** |
 | **Data-fetching layer (CODE-3)** | open | ❌ Still raw Supabase (117 `.from` / 76 `.rpc` in `src/`) | **Unchanged** |
 | **PITR / staging / backups (OPS-1)** | open | ❌ Unchanged (single env, no PITR, manual JSON backups) | **Unchanged** |
-| **Sentry / alerting (OPS-2)** | ◐ FE done | ◐ FE `captureException` ✅ PR #695; Edge `_shared/log.ts` envelope ✅ PR #696; **not active** — `VITE_SENTRY_DSN` + `SENTRY_DSN` secrets not yet set; 6 fns missing `logError`; cron alerting not built | **Code complete, activation pending** |
+| **Sentry / alerting (OPS-2)** | ◐ FE done | ◐ FE `captureException` ✅ PR #695; Edge `_shared/log.ts` envelope ✅ PR #696; `logError` wired into all 6 remaining fns ✅ PR #698; **not active** — `VITE_SENTRY_DSN` + `SENTRY_DSN` secrets not yet set (rows 11, 20–25); cron alerting (part c) not built | **Code complete, activation + cron-alerting pending** |
 
 **Net assessment:** the deal-blocking Phase 0 security gate is **closed**, and the two structural buyer-DD blockers the B2B report called fatal (no containerization, provider lock-in) are **closed / substantially de-risked**. The remaining open items are concentrated in **data-layer reproducibility, automated testing, observability activation, and operational DR** — exactly the "transition-to-scale" cluster, none of which require re-architecture.
 
@@ -49,7 +49,7 @@ Items are ordered **in the sequence they should be tackled** (Section 1 = do fir
 |-------|-------|-------|--------|-----------|
 | 1 | **Phase 0 — Pre-close security gate** | SEC-1, SEC-2, SEC-3, MONEY-1 | ✅ **DONE** | Closed in code + applied to prod. SEC-4 (PAT rotation) still open. |
 | 2 | **Phase 1 — Stabilize foundations** | DATA-1, OPS-1, DEPLOY-1, CI-1, DEPS-1, OPS-2, CODE-1 | ◐ **Mostly done** | DEPLOY-1/CI-1/DEPS-1/CODE-1 ✅. DATA-1, OPS-1 still open; OPS-2 code ✅, activation pending (2 secrets). |
-| 3 | **Phase 2 — De-risk core logic** | TEST-1, DATA-2, DATA-3, CODE-3 | ◐ **Partial** | DATA-3 ✅ (mig 209 applied). LEGAL-1 ✅ (mig 218, named constraint). TEST-1 skeleton ✅ PR #694 (blocks on DATA-1 for full activation). DATA-2, CODE-3 open. |
+| 3 | **Phase 2 — De-risk core logic** | TEST-1, DATA-2, DATA-3, DATA-RECON, CODE-3 | ◐ **Partial** | DATA-3 ✅ (mig 209 applied) + `DATA_CLASSIFICATION.md` ✅ (PR #697). LEGAL-1 ✅ (mig 218, named constraint, PR #694). DATA-2 (GDPR `delete_user_data`) code ✅ PR #697 (apply pending row 19). TEST-1 skeleton ✅ PR #694 (blocks on DATA-1 for full activation). DATA-RECON (repo↔prod RPC diff), CODE-3 open. |
 | 4 | **Phase 3 — Team-ready & scale** | CODE-2, CODE-4, CODE-5, DEPS-2, BUILD-1, INFRA-1, polish | ◐ **Partial** | CODE-5/BUILD-1 ✅ PR #694. CODE-2 improved. INFRA-1 partly done (project-ref externalized). |
 
 **Remaining indicative effort to "acquirer-ready":** down from ~5–6 engineer-months to **~3–4 engineer-months**, now concentrated on schema baseline + test harness + DR/staging rather than security.
@@ -142,17 +142,24 @@ Items are ordered **in the sequence they should be tackled** (Section 1 = do fir
 - **Fix:** Stand up local Postgres (the new `docker-compose.yml`/`supabase start` makes this trivial now) with deterministic seed data. Build a pgTAP/Deno suite covering the fragility-hotspot RPCs (DATA-2): `resolve_bet`, `execute_transfer_atomic`, `set_lineup`, `place_bid`, `confirm_auction_win`, the coin RPCs, and the `calculate-scores` math. Repoint Playwright logic specs at seeded local/staging. Wire into CI. **This is now the highest-value engineering investment** — its main precondition (a local DB) is already in place via DATA-1's containerization sibling.
 - **Done-when:** Core RPCs have happy-path + edge-case tests in CI against an ephemeral DB; no test reads production.
 
-## DATA-2 — Core RPCs are fragility hotspots 🟠 HIGH ☐ STILL OPEN
-- **Estimate:** L (overlaps TEST-1)
-- **Where:** Patch counts unchanged in spirit and now higher: `resolve_bet`, `execute_transfer_atomic`, `set_lineup`, `place_bid`, `accept_trade_proposal`, `get_transfer_window_status`, `set_captain` each patched many times across migrations 130–192. Migration 161 still records "logic was patched into the live function ahead of this file being committed."
+## DATA-2 — GDPR `delete_user_data` RPC 🟠 HIGH ✅ CODE DONE (apply pending)
+- **Estimate:** ~3h
+- **Where:** `supabase/migrations/219_delete_user_data.sql` (PR #697). `delete_user_data(p_user_id uuid)` SECURITY DEFINER RPC covering 27 tables across 7 categories (delete / anonymise / PII-wipe); auth gate `auth.uid() = p_user_id OR is_admin`.
+- **Status:** Migration file written; **NOT yet applied to prod** — pure DDL, safe (deletes zero rows on apply; runs only when explicitly called). Apply is TRACKER row 19. Companion doc: [`DATA_CLASSIFICATION.md`](DATA_CLASSIFICATION.md).
+- **Done-when:** ✅ migration written (PR #697); ⬜ migration 219 applied (TRACKER row 19).
+
+## DATA-RECON — Core RPCs are fragility hotspots (repo↔prod reconciliation) 🟠 HIGH ☐ STILL OPEN
+> **Note:** this item was previously labelled "DATA-2" in earlier drafts. Renamed to **DATA-RECON** to avoid an ID collision with the GDPR deletion item above (which the TRACKER + this backlog both now call DATA-2). Same rename applied in [TECHNICAL_DUE_DILIGENCE_V2_IMPLEMENTATION_PLAN.md](../architecture/TECHNICAL_DUE_DILIGENCE_V2_IMPLEMENTATION_PLAN.md).
+- **Estimate:** L (overlaps TEST-1; part of implementation-plan phase B2)
+- **Where:** Patch counts high: `resolve_bet`, `execute_transfer_atomic`, `set_lineup`, `place_bid`, `accept_trade_proposal`, `get_transfer_window_status`, `set_captain` each patched many times across migrations 130–192. Migration 161 still records "logic was patched into the live function ahead of this file being committed."
 - **Problem:** Hand-patching means repo function bodies may not match live; the volume of total-failure bugs (mig 153 every trade errored; mig 124 bets never auto-resolved; mig 168 one live fixture locked every sub-out) indicates the logic was hardened by trial-and-error in prod.
 - **Fix:** Diff every repo `CREATE OR REPLACE FUNCTION` against live `pg_get_functiondef`; reconcile into the DATA-1 baseline. Front-load these RPCs' test coverage.
 - **Done-when:** Repo function bodies provably match prod; hotspot RPCs are test-covered.
 
-## DATA-3 — Coin/P2P ledger compliance 🟠 HIGH ✅ DONE (compliance review still external)
-- **Where:** `supabase/migrations/209_coin_ledger_compliance.sql` — **applied** (TRACKER row 1). `coin_transactions.type` CHECK now `('purchase','stake','win','loss','rake','refund','admin','entry_fee','wager_placement','wager_win','wager_refund')` — **no withdrawal/payout type**. Currency corrected GBP→FRC.
-- **Residual (see new item LEGAL-1):** the no-cash-out rule is enforced by *absence* (no withdrawal RPC, no Stripe payout call, no cash-out type) — **not** by a positive schema invariant. Adequate today; should be a hard constraint before any real-money expansion. Legal/compliance sign-off on the virtual-token model is an external gate, still recommended before enabling Stripe at scale.
-- **Done-when:** ✅ 209 applied; ledger no longer represents tokens as fiat.
+## DATA-3 — Coin/P2P ledger compliance + data classification 🟠 HIGH ✅ DONE (compliance review still external)
+- **Where:** `supabase/migrations/209_coin_ledger_compliance.sql` — **applied** (TRACKER row 1). `coin_transactions.type` CHECK now `('purchase','stake','win','loss','rake','refund','admin','entry_fee','wager_placement','wager_win','wager_refund')` — **no withdrawal/payout type**. Currency corrected GBP→FRC. Field-level data classification delivered in [`DATA_CLASSIFICATION.md`](DATA_CLASSIFICATION.md) (PR #697).
+- **Residual (now closed by LEGAL-1):** the no-cash-out rule was previously enforced by *absence* only; migration 218 (PR #694) added the positive `no_external_cash_out` schema constraint. Legal/compliance sign-off on the virtual-token model remains an external gate before enabling Stripe at scale.
+- **Done-when:** ✅ 209 applied; ledger no longer represents tokens as fiat; ✅ `DATA_CLASSIFICATION.md` written.
 
 ## CODE-3 — No data-fetching layer (raw Supabase scattered) 🟡 MEDIUM ☐ STILL OPEN
 - **Estimate:** L→XL
@@ -212,16 +219,15 @@ Items are ordered **in the sequence they should be tackled** (Section 1 = do fir
 - **Fix:** (1) Refactor the 4 sync functions to call `getAdapter(tournament.provider).listEvents(...)` and write the canonical model (the `ForzaAdapter` methods already exist). (2) Migrate `sync-player-status` onto the shared client. (3) Additive migration: rename `forza_id`→`provider_key`, add `provider`/`sport_id`, drop the football-implied `NOT NULL`. (4) Write an adapter-conformance test so a buyer can prove an `opta.ts` reaches parity.
 - **Done-when:** Sync functions never touch provider JSON shape; a new provider = one new adapter file + registry line + conformance pass.
 
-## LEGAL-1 — No-cash-out invariant is structural, not schema-enforced 🟡 MEDIUM ☐ NEW (refines B2B Objective 4)
-- **Where:** `coin_transactions.type` CHECK (migration 209) lists no withdrawal/payout type; no `withdraw_coins`/`cash_out`/`process_withdrawal` RPC exists anywhere (grep clean); coins only flow in (purchase/win/admin) or balance↔escrow.
-- **Problem:** The legal invariant ("coins NEVER convert to money") is enforced by *absence*, not by a positive constraint. Nothing structurally forbids a future RPC from decrementing a balance to an external party under a `refund`/`admin` label.
-- **Fix:** Make the no-cash-out rule a hard guarantee — keep the type-CHECK with no cash-out type **and** document/test that no RPC pays a processor from a coin balance; keep the wager ledger and the Stripe purchase rail as separable modules so legal can review the ledger in isolation. (Low cost; high diligence value if/when real-money features are contemplated.)
-- **Done-when:** A reviewer can point to a schema/test artifact (not just a doc) confirming no coin→cash edge.
+## LEGAL-1 — No-cash-out invariant is structural, not schema-enforced 🟡 MEDIUM ✅ DONE — migration 218 (PR #694)
+- **Where:** `supabase/migrations/218_no_cash_out_constraint.sql` (PR #694) renames the anonymous `coin_transactions` type-CHECK to the named `no_external_cash_out` constraint, adds `COMMENT ON CONSTRAINT`/`COMMENT ON TABLE` documenting the FRC internal-only rule, and a `DO $$...$$` audit block asserting zero existing rows use a disallowed type. Backed by LEGAL-1 schema assertions in `tests/unit/coins.test.js` (pg error code 23514 on a cash_out INSERT).
+- **Status:** Migration file written; apply pending (bundle with the next approved migration batch — pure DDL, safe). Compliance sign-off on the virtual-token model remains an external legal gate before enabling Stripe at scale.
+- **Done-when:** ✅ named constraint + comments + test artifact exist (a reviewer can point to schema/test, not just a doc).
 
-## DEPLOY-2 — Migration files do not record their applied state 🟡 MEDIUM ☐ NEW
+## DEPLOY-2 — Migration files do not record their applied state 🟡 MEDIUM ✅ DONE — A2 (PR #694)
 - **Where:** Migrations 209/210/211 (and the 5 function deploys) are marked ✅ applied in `TRACKER.md`, but the **migration file headers** still read "DO NOT APPLY from this machine" / "APPLY FROM SUPABASE-LINKED PC", and the *original* `TECHNICAL_DUE_DILIGENCE.md` still says "◐ DB pending."
 - **Problem:** Live state is recorded **only** in a prose tracker, not in the artifacts themselves. An acquirer doing file-level DD (the normal mode) would mis-read the security posture as worse than it is — the inverse of the usual risk, but still a diligence-friction red flag (it signals "source of truth is out-of-band," reinforcing DATA-1).
-- **Fix:** Stamp "APPLIED <date> to prod" into applied migration headers; reconcile the original DD doc's Phase-0 markers to match TRACKER (this V2 doc does so).
+- **Fix:** ✅ Applied-state stamps (`-- ✅ APPLIED TO PRODUCTION ...`) added as the first line of migrations 202–216 (A2, PR #694). Live state is now legible from the artifacts, not only from TRACKER prose.
 - **Done-when:** Migration files + DD docs agree with live state without consulting an external tracker.
 
 ---

@@ -10,6 +10,58 @@
 
 ---
 
+## ▶️ Execution Queue — every open item, tagged by where it runs
+
+**This is the pick-up-and-run list.** Each row says *where* it executes so you can batch work per machine. Tags:
+
+- **`[SUPABASE-PC]`** — must run from the Supabase-linked PC (`db query --linked`, `functions deploy`, `secrets set`). **Every one is approval-gated** — Claude names the row and waits for an explicit "yes, run row N" before executing (see [Pending DB & Deploy Actions](#️-pending-db--deploy-actions)).
+- **`[CODE]`** — code/docs work; any PC with the repo. Normal branch → PR into `v2`.
+- **`[VERCEL]`** — Vercel dashboard/CLI (env vars, redeploy).
+- **`[BUSINESS]`** — a human/legal/product decision, no code. See [Open Product Decisions](#open-product-decisions).
+- **`[BLOCKED]`** — do not start; blocker noted.
+
+Order within each group is dependency-ordered. Detail for each item is in the linked section below — this table is the index, not a replacement.
+
+### 🔴 Approval-gated Supabase actions (do on the Supabase-linked PC)
+| Do | Tag | Item | Detail |
+|----|-----|------|--------|
+| ⬜ | `[SUPABASE-PC]` | Apply migration **219** — GDPR `delete_user_data` RPC (pure DDL, safe, deletes nothing) | [row 19](#️-pending-db--deploy-actions) |
+| ⬜ | `[SUPABASE-PC]` | Apply migration **218** — `no_external_cash_out` constraint (LEGAL-1, pure DDL) | new — bundle with 219 |
+| ⬜ | `[SUPABASE-PC]` | `secrets set SENTRY_DSN=...` (OPS-2 edge activation) | [row 11 note](#️-pending-db--deploy-actions) |
+| ⬜ | `[SUPABASE-PC]` | Deploy 6 fns for OPS-2 `logError`: `purchase-coins`, `discover-tournament`, `sync-tennis-players`, `score-atp-finals`, `score-f1-race`, `score-tennis-tournament` | [rows 20–25](#️-pending-db--deploy-actions) |
+| ⬜ | `[SUPABASE-PC]` | F1 data migration — copy FantasyF1 DB into v2 tables | [row 16](#️-pending-db--deploy-actions) |
+| 🛑 | `[BLOCKED]` | Migration **217** (`circle_id NOT NULL`) — **DO NOT RUN until World Cup pilot ends** | [row 18 banner](#-migration-217--do-not-run-until-the-world-cup-pilot-ends-) |
+
+### 🖥️ Frontend/infra config
+| Do | Tag | Item | Detail |
+|----|-----|------|--------|
+| ⬜ | `[VERCEL]` | Add `VITE_SENTRY_DSN` env var (Production) then redeploy (OPS-2 frontend activation) | [row 11](#️-pending-db--deploy-actions) |
+
+### 💻 Code / docs work (any repo PC → PR into `v2`)
+| Do | Tag | Item | Detail |
+|----|-----|------|--------|
+| ⬜ | `[CODE]` | **OPS-2 part (c)** — failed-cron alerting (≥3 consecutive failures → alert). *Last code piece of OPS-2.* | [Phase 2 DD](#phase-2--post-3b-before-buyer-demos) |
+| ⬜ | `[CODE]` | **P2P-LOAD** — 50-concurrent-challenge load test (needs `MOCK_PAYMENTS=true`) | [Phase 2 DD](#phase-2--post-3b-before-buyer-demos) |
+| ⬜ | `[CODE]` | **GDPR-2** — build user-data export (portability) | [Phase 3 DD](#phase-3--before-sale-close) |
+| ⬜ | `[CODE]` | **DATA-RECON** — diff repo RPC bodies vs live prod; reconcile *(needs A1/DATA-1 first)* | [Phase 1 DD](#phase-1--complex-currently-deferred) |
+| ⬜ | `[CODE]` | **CODE-3 / CODE-2 / CODE-4 / CODE-5 / CODE-6 / DEPS-2 / INFRA-1 / LOW-2/3/6/9** — maintainability & polish backlog | [Phase 3 DD](#phase-3--before-sale-close) |
+| ⬜ | `[CODE]` | **UX-DESKTOP-1** — Tier B multi-sport screens desktop scale-up | [Phase 3 DD](#phase-3--before-sale-close) |
+| ⬜ | `[BLOCKED]` | **A1 / DATA-1** — schema baseline (`schema.sql`) — the keystone. *Blocked: needs a `[SUPABASE-PC]` prod dump (approval-gated) first, then code.* Unblocks B1, DATA-RECON, staging. | [Phase 1 DD](#phase-1--complex-currently-deferred) |
+| ⬜ | `[BLOCKED]` | **OPS-1 / B1** — PITR + staging project. *Blocked on A1.* | [Phase 1 DD](#phase-1--complex-currently-deferred) |
+
+### ⚖️ Business / legal decisions (no code)
+| Do | Tag | Item | Detail |
+|----|-----|------|--------|
+| ⬜ | `[BUSINESS]` | **SEC-4** — rotate GitHub PAT + switch to SSH (also touches `[CODE]`: remove token pattern from CLAUDE.md) | [row 10](#️-pending-db--deploy-actions) |
+| ⬜ | `[BUSINESS]` | **GDPR-1** — Groq DPA / data-minimisation review before real-PII launch | [Phase 3 DD](#phase-3--before-sale-close) |
+| ⬜ | `[BUSINESS]` | **GDPR-3** — objection-handling automation (or document manual process) | [Phase 3 DD](#phase-3--before-sale-close) |
+| ⬜ | `[BUSINESS]` | Stripe account confirmation · Forza API licence transferability · football-competition expansion · staging env · meta-league formula · non-playing-member UX | [Open Product Decisions](#open-product-decisions) |
+
+### 🚦 Then: Phase 3B ship sequence
+Once the above are cleared, run the [Phase 3B Pre-Merge Checklist](#phase-3b-pre-merge-checklist) (smoke tests → final main→v2 merge → apply pending DB actions → v2→main PR → deploy all Edge Functions → verify crons). **This is the gate to going live — needs its own explicit go-ahead.**
+
+---
+
 ## Phase Status
 
 | Phase | Track | Status | Notes |
@@ -32,7 +84,7 @@
 - **Phase 3B smoke tests** → deploy sequence — see [Phase 3B checklist](#phase-3b-pre-merge-checklist) below
 - **Approval-gated deploys** — rows 19–25 (GDPR RPC + 6 OPS-2 function deploys), requires Supabase-linked PC
 
-**Session 2026-07-01 (docs audit + DD-doc consolidation):** Full audit of `docs/platform_revision/architecture/` + `due_diligence/` against this TRACKER and git/code state. **Finding:** tracking discipline is strong — TRACKER, git history, and on-disk migration/code state all agree (migrations through 219 present, next 220_, 217 blocked, `tests/unit/` harness present). The one real tracking gap was a **V1/V2 doc duplication with inconsistent git-tracking**: four authoritative `_V2` DD docs were superseding stale V1 files but were sitting *uncommitted* on disk (only `TECHNICAL_DUE_DILIGENCE_V2.md` was tracked). **Resolved this session:** the 5 stale V1 docs (`TECHNICAL_DUE_DILIGENCE`, `TECH_DOCUMENTATION`, `TECH_OVERVIEW`, `VALUATION_ANALYSIS` in due_diligence/ + `B2B_BUYOUT_TECHNICAL_DUE_DILIGENCE` in architecture/) moved to `docs/archive/superseded-dd-2026-06-30/`; each `_V2` doc promoted to the canonical (no-suffix) name and committed; all internal `_V2.md` cross-links repaired; `(V2)` dropped from titles. Also refreshed stale status in two architecture plans: Clubhouse redesign plan Phase D marked ✅ done (PR #677, was showing ⬜/"Next: Phase D"); P2P design "Open Decisions (Sprint 0)" marked resolved (module shipped, migrations 202–207). **Known residual:** migration `218_no_cash_out_constraint.sql` line 29 has a comment pointing at the old `TECHNICAL_DUE_DILIGENCE_V2.md` path — left as-is (append-only migration rule; harmless comment). Added GDPR gaps from `DATA_CLASSIFICATION.md` to the DD backlog below (Groq DPA, data-portability, objection automation). No code touched.
+**Session 2026-07-01 (docs audit + DD-doc consolidation):** Full audit of `docs/platform_revision/architecture/` + `due_diligence/` against this TRACKER and git/code state. **Finding:** tracking discipline is strong — TRACKER, git history, and on-disk migration/code state all agree (migrations through 219 present, next 220_, 217 blocked, `tests/unit/` harness present). The one real tracking gap was a **V1/V2 doc duplication with inconsistent git-tracking**: four authoritative `_V2` DD docs were superseding stale V1 files but were sitting *uncommitted* on disk (only `TECHNICAL_DUE_DILIGENCE_V2.md` was tracked). **Resolved this session:** the 5 stale V1 docs (`TECHNICAL_DUE_DILIGENCE`, `TECH_DOCUMENTATION`, `TECH_OVERVIEW`, `VALUATION_ANALYSIS` in due_diligence/ + `B2B_BUYOUT_TECHNICAL_DUE_DILIGENCE` in architecture/) moved to `docs/archive/superseded-dd-2026-06-30/`; each `_V2` doc promoted to the canonical (no-suffix) name and committed; all internal `_V2.md` cross-links repaired; `(V2)` dropped from titles. Also refreshed stale status in two architecture plans: Clubhouse redesign plan Phase D marked ✅ done (PR #677, was showing ⬜/"Next: Phase D"); P2P design "Open Decisions (Sprint 0)" marked resolved (module shipped, migrations 202–207). **Known residual:** migration `218_no_cash_out_constraint.sql` line 29 has a comment pointing at the old `TECHNICAL_DUE_DILIGENCE_V2.md` path — left as-is (append-only migration rule; harmless comment). Added GDPR-1/2/3 from `DATA_CLASSIFICATION.md` to the DD backlog below (Groq DPA, data-portability, objection automation). **Second pass same session:** (1) synced the DD backlog + implementation plan with today's #697/#698 — DATA-2 (GDPR delete_user_data), LEGAL-1 (mig 218), DEPLOY-2 (applied-state stamps) and OPS-2 logError all moved from open→done. (2) **Resolved a DATA-2 ID collision:** the RPC repo↔prod reconciliation task (previously also called "DATA-2") was renamed **DATA-RECON** everywhere; "DATA-2" now means only the GDPR deletion RPC. (3) Added the **▶️ Execution Queue** at the top of this file — every open item tagged `[SUPABASE-PC]`/`[CODE]`/`[VERCEL]`/`[BUSINESS]`/`[BLOCKED]` in dependency order, so work can be batched per machine. No code touched.
 
 **Session 2026-07-01 (DD — OPS-2 code complete, PR #698):** Wired `logError` from `_shared/log.ts` into the 6 remaining Edge Functions that were using bare `console.error` or no error logging: `purchase-coins` (2 error paths: missing webhook metadata + credit_coins webhook failure), `discover-tournament` (outer catch), `sync-tennis-players` (outer catch), `score-atp-finals` (outer catch), `score-f1-race` (outer catch), `score-tennis-tournament` (outer catch). All errors now flow to `edge_function_errors` DB table + Sentry envelope (once `SENTRY_DSN` secret is set, row 11). `.function-checksums.json` regenerated. **Still pending:** rows 11 + 20–25 (Sentry secret + 6 function deploys, each needs per-item approval). OPS-2 part (c) — failed-cron alerting — not yet built.
 
@@ -368,4 +420,4 @@ These require a human decision before the relevant sprint can continue.
 
 **Session 2026-06-30 (Mobile-First Redesign — Phase M0 implementation):** All Phase M0 foundation primitives shipped in 3 sequential PRs into `v2`. PR #682: `src/hooks/useViewport.js` (`useViewport`/`useIsMobile` hook, SSR-safe matchMedia); `--f1`/`--ten`/`--f1bg`/`--tenbg` tokens defined in `index.css` (8+ components were referencing them undefined); `--r-sm`/`--r-md` skeleton alias fixed; `env(safe-area-inset-top)` added to the sticky mobile top bar in `AppLayout`. PR #683: `src/components/shared/BottomSheet.jsx` (portaled thin shell over `.fk-mob-sheet-*` CSS); `ActionSheet` migrated to use it; `PlayerPickerSheet` rewritten to use `<BottomSheet>` + full Kit Light token pass. PR #684: `src/components/shared/PrimaryActionBar.jsx` (thumb-zone FAB portaled to `document.body`, hidden on desktop via `lg:hidden`, state-aware props); `CompetitionResultsHeader.jsx` mobile card-mode branch added (`leadColumnKey` prop, private `useIsMobile` hook, card layout < 640px, desktop grid pixel-identical). All 3 PRs: lint 0 errors, Rolldown TDZ build clean, madge 0 circular deps. Next: **Mobile Phase M1** — wire `CompetitionResultsHeader` card-mode at Football/F1/Tennis consumer screens; kill Tennis 14-column table; collapsing TabStrip.
 
-Last Updated: **2026-07-01** (Docs audit + DD-doc consolidation: 5 stale V1 DD docs archived to `docs/archive/superseded-dd-2026-06-30/`, `_V2` docs promoted to canonical names + committed, all cross-links repaired; Clubhouse plan Phase D + P2P open-decisions status refreshed; GDPR-1/2/3 added to Phase 3 DD backlog. Earlier same day: OPS-2 logError code done — PR #698; CODE-3 — PR #695; A2+BUILD-1+C3+B2 — PR #694; DATA-2 migration `219_delete_user_data.sql` written, apply pending row 19; DATA-3 `DATA_CLASSIFICATION.md` written. Next migration: 220_. Next: OPS-2 remaining deploys/secret, P2P-LOAD, or Phase 3B smoke tests.)
+Last Updated: **2026-07-01** (Docs audit + DD-doc consolidation: 5 stale V1 DD docs archived to `docs/archive/superseded-dd-2026-06-30/`, `_V2` docs promoted to canonical names + committed, all cross-links repaired; Clubhouse plan Phase D + P2P open-decisions status refreshed; GDPR-1/2/3 added to Phase 3 DD backlog; **▶️ Execution Queue added at top** (open items tagged by machine); DD backlog + impl plan synced with #697/#698; DATA-2 ID collision resolved → reconciliation task renamed DATA-RECON. Earlier same day: OPS-2 logError code done — PR #698; CODE-3 — PR #695; A2+BUILD-1+C3+B2 — PR #694; DATA-2 migration `219_delete_user_data.sql` written, apply pending row 19; DATA-3 `DATA_CLASSIFICATION.md` written. Next migration: 220_. Next: OPS-2 remaining deploys/secret, P2P-LOAD, or Phase 3B smoke tests.)
