@@ -257,7 +257,7 @@ From [TECHNICAL_DUE_DILIGENCE.md](due_diligence/TECHNICAL_DUE_DILIGENCE.md). Seq
 | Item | Description | Effort | Status |
 |------|-------------|--------|--------|
 | TEST-1 | ~~Coverage metrics — integrate Vitest + `@vitest/coverage-v8`~~. **B2 delivered instead:** RPC regression test harness (`tests/unit/`) with Node built-in runner + ephemeral Postgres; 13 test cases across transfer/bet/coins. Activates fully once Phase A1 produces `supabase/schema.sql`. | ~6h | ✅ Done (PR #694) |
-| DATA-2 | GDPR deletion RPC — `delete_user_data(p_user_id)` cascades PII columns; admin-only | ~3h | ✅ Done (PR TBD — migration 219_, pending apply) |
+| DATA-2 | GDPR deletion RPC — `delete_user_data(p_user_id)` cascades PII columns; admin-only | ~3h | ✅ Done (PR #697 — migration 219_ written, apply pending row 19) |
 | DATA-3 | Data classification doc — label each table column (PII / financial / game data / public) | ~2h | ✅ Done — [`DATA_CLASSIFICATION.md`](due_diligence/DATA_CLASSIFICATION.md) |
 | CODE-3 | Error boundaries — `ErrorBoundary` wrapper on each major screen; fallback UI + Sentry capture | ~2h | ✅ Done (PR #695) |
 | OPS-2 | Sentry for Edge Functions (frontend DSN deployed via row 11): (a) add Deno Sentry SDK to each Edge Function; (b) wire `edge_function_error_log` into alert path; (c) add failed-cron threshold alerting (≥3 consecutive failures → alert) | ~4h | ⬜ |
