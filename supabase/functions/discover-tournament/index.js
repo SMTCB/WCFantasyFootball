@@ -5,6 +5,7 @@
 
 import { requireServiceRole } from '../_shared/auth.ts';
 import { forzaFetch } from '../_shared/providers/forza.ts';
+import { logError } from '../_shared/log.ts';
 
 // DATA-17: redact access_token from any log output
 function redactToken(str) {
@@ -92,7 +93,7 @@ Deno.serve(async (req) => {
       }
     );
   } catch (error) {
-    console.error('[discover-tournament] Error:', error.message);
+    await logError('discover-tournament', 'error', error.message);
     return new Response(
       JSON.stringify({
         error: error.message,
