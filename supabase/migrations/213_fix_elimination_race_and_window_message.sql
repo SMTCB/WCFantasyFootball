@@ -1,3 +1,4 @@
+-- ✅ APPLIED TO PRODUCTION 2026-06-28 (v2 session)
 -- Migration 193: fix two bugs reported same day as migration 192.
 --
 -- BUG 1 — false club eliminations (Portugal, Colombia, etc. wrongly marked eliminated).

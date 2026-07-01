@@ -1,3 +1,4 @@
+-- ✅ APPLIED TO PRODUCTION 2026-06-28 (v2 session)
 -- Migration 205: P2P-4 — auto-resolution engine
 --
 -- Adds:

@@ -1,3 +1,4 @@
+-- ✅ APPLIED TO PRODUCTION 2026-06-28 (TRACKER row: session note 2026-06-28)
 -- Migration 215: Clubhouse-centric model — direct circle_id FK on competition tables
 -- Adds a nullable circle_id column to leagues, paddocks, and player_boxes so each
 -- competition can be directly queried by Clubhouse without joining via junction tables.

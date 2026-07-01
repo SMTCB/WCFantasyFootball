@@ -1,3 +1,4 @@
+-- ✅ APPLIED TO PRODUCTION 2026-06-29 (TRACKER row 17)
 -- 216_wire_tennis_competitions.sql
 -- Wire tennis player_boxes into get_clubhouse_competitions.
 -- Previously the tennis branch was hard-coded to return '[]'::json.

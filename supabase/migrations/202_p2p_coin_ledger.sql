@@ -1,3 +1,4 @@
+-- ✅ APPLIED TO PRODUCTION 2026-06-28 (v2 session)
 -- ── Migration 202: P2P Coin Ledger (Sprint P2P-1) ─────────────────────────────
 -- coin_wallets, coin_transactions, guard trigger, 6 RPCs, seed 500-coin welcome bonus
 

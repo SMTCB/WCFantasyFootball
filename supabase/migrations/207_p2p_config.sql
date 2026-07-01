@@ -1,3 +1,4 @@
+-- ✅ APPLIED TO PRODUCTION 2026-06-28 (v2 session)
 -- Migration 207: P2P-6 — p2p_config + RLS audit
 --
 -- 1. p2p_config table — white-label config per league (future: per circle)

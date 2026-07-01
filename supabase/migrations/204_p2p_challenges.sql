@@ -1,3 +1,4 @@
+-- ✅ APPLIED TO PRODUCTION 2026-06-28 (v2 session)
 -- Migration 204: P2P-3 — challenge core
 -- p2p_challenges table + 4 RPCs + gazette enum + coin_transactions FK + expire cron
 

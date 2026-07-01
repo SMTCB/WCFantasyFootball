@@ -1,3 +1,4 @@
+-- ✅ APPLIED TO PRODUCTION 2026-06-28 (TRACKER row 1)
 -- ── Migration 209: Coin ledger compliance ──────────────────────────────────────
 -- (a) currency default: 'GBP' → 'FRC' (Frontrow Coin — internal virtual token,
 --     NOT ISO 4217. Using a real currency code was a compliance gap.)

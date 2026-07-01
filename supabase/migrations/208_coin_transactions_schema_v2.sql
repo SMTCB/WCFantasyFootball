@@ -1,3 +1,4 @@
+-- ✅ APPLIED TO PRODUCTION 2026-06-28 (v2 session)
 -- ── Migration 208: coin_transactions schema v2 ───────────────────────────────
 -- Adds three columns missing from the original 202_ schema:
 --   status       — lifecycle state (pending → completed | failed | reversed)
