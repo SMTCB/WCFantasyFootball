@@ -1250,6 +1250,9 @@ function ResolvePendingBets({ openBets, resolutionBetsLoading, setSelectedBetFor
                 <span style={{ width: 22, height: 22, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: `${tone}15`, border: `1px solid ${tone}55`, fontFamily: DISPLAY, fontSize: 12, color: tone }}>{glyph}</span>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 2, flex: 1, minWidth: 0 }}>
                   <span style={{ fontFamily: DISPLAY, fontSize: 13, color: isResolved ? 'var(--text-2)' : 'var(--paper)' }}>{b.title}</span>
+                  {b.prompt && b.prompt !== b.title && (
+                    <span style={{ fontFamily: "'Archivo', sans-serif", fontSize: 11, color: 'var(--text-2)', lineHeight: 1.4, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{b.prompt}</span>
+                  )}
                   <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.16em', color: 'var(--mute)' }}>
                     {b.scope_ref || b.scope_type || ''}
                     {resolvedLabel ? ` · RESULT: ${resolvedLabel.toUpperCase()}` : ''}
