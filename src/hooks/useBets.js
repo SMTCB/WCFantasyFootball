@@ -21,7 +21,7 @@ export function useBets(leagueId, squadId) {
         .from('bet_instances')
         .select(`
           *,
-          template:bet_templates(slug, answer_type, scope_type)
+          template:bet_templates(slug, answer_type, scope_type, category)
         `)
         .eq('league_id', leagueId)
         .in('status', ['open', 'closed', 'resolved'])
