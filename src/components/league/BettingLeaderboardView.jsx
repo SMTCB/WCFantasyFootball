@@ -50,15 +50,18 @@ function PerformanceBetRow({ bt }) {
 }
 
 function PerformanceByType({ myBetsByType }) {
-  const [openCats, setOpenCats] = useState(() => new Set(CAT_ORDER));
+  const [openCats, setOpenCats] = useState(() => new Set());
   const toggleCat = (cat) => setOpenCats(prev => {
     const next = new Set(prev);
     if (next.has(cat)) next.delete(cat); else next.add(cat);
     return next;
   });
 
+  // Only show bet types where the user has at least one resolved bet
+  const activeBets = (myBetsByType || []).filter(bt => bt.correct + bt.wrong > 0);
+
   const groups = {};
-  for (const bt of (myBetsByType || [])) {
+  for (const bt of activeBets) {
     const cat = bt.category ?? 'custom';
     if (!groups[cat]) groups[cat] = [];
     groups[cat].push(bt);
