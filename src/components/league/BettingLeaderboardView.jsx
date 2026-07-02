@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { MgrTag, HubSectionLabel } from './HubShared';
 import { MONO, DISPLAY, mgrHue, mgrMono } from './HubConstants';
 
@@ -49,6 +50,13 @@ function PerformanceBetRow({ bt }) {
 }
 
 function PerformanceByType({ myBetsByType }) {
+  const [openCats, setOpenCats] = useState(() => new Set(CAT_ORDER));
+  const toggleCat = (cat) => setOpenCats(prev => {
+    const next = new Set(prev);
+    if (next.has(cat)) next.delete(cat); else next.add(cat);
+    return next;
+  });
+
   const groups = {};
   for (const bt of (myBetsByType || [])) {
     const cat = bt.category ?? 'custom';
@@ -68,22 +76,33 @@ function PerformanceByType({ myBetsByType }) {
   return (
     <div style={{ borderBottom: '1px solid var(--rule)' }}>
       {activeCats.map(cat => {
-        const meta = CAT_META[cat];
-        const bets = groups[cat];
+        const meta    = CAT_META[cat];
+        const bets    = groups[cat];
         const withData = bets.filter(b => b.correct + b.wrong > 0);
+        const isOpen  = openCats.has(cat);
         return (
           <div key={cat} style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
-            {/* Category header */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 22px 4px', background: 'rgba(255,255,255,0.02)' }}>
+            {/* Category header — clickable to collapse */}
+            <button
+              onClick={() => toggleCat(cat)}
+              style={{
+                width: '100%', display: 'flex', alignItems: 'center', gap: 6,
+                padding: '8px 22px', background: 'rgba(255,255,255,0.02)',
+                border: 'none', cursor: 'pointer', textAlign: 'left',
+              }}
+            >
               <span style={{ fontSize: 9 }}>{meta.icon}</span>
-              <span style={{ fontFamily: MONO, fontSize: 8, color: meta.color, letterSpacing: '.22em' }}>{meta.label}</span>
+              <span style={{ fontFamily: MONO, fontSize: 8, color: meta.color, letterSpacing: '.22em', flex: 1 }}>{meta.label}</span>
               <span style={{ fontFamily: MONO, fontSize: 8, color: 'var(--mute)', letterSpacing: '.1em' }}>
                 {withData.length}/{bets.length}
               </span>
-            </div>
-            <div style={{ padding: '8px 22px 12px', display: 'flex', flexDirection: 'column', gap: 12 }}>
-              {bets.map(bt => <PerformanceBetRow key={bt.slug} bt={bt} />)}
-            </div>
+              <span style={{ fontFamily: MONO, fontSize: 10, color: 'var(--mute)', marginLeft: 8 }}>{isOpen ? '−' : '+'}</span>
+            </button>
+            {isOpen && (
+              <div style={{ padding: '8px 22px 12px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+                {bets.map(bt => <PerformanceBetRow key={bt.slug} bt={bt} />)}
+              </div>
+            )}
           </div>
         );
       })}
