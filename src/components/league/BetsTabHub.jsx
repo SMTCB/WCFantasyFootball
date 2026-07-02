@@ -273,7 +273,7 @@ export default function BetsTabHub({ leagueId, squadId, onReplayTour, currentGW 
               defaultOpen={false}
             />
 
-            {/* RESULTS — collapsible, default collapsed */}
+            {/* RESULTS — collapsible, default open so history is visible */}
             <BetSection
               label="RESULTS"
               sub="HISTORY"
@@ -282,7 +282,7 @@ export default function BetsTabHub({ leagueId, squadId, onReplayTour, currentGW 
               squadId={squadId}
               onSubmitted={refetch}
               collapsible={true}
-              defaultOpen={false}
+              defaultOpen={true}
             />
           </>
         )}

@@ -19,11 +19,38 @@ export function useBettingLeaderboard(leagueId, currentUserId) {
     setError(null);
 
     try {
-      // Fixed bucket order shown in YOUR PERFORMANCE
+      // All bet types shown in YOUR PERFORMANCE, grouped by category
       const BUCKETS = [
-        { slug: 'match_result', label: 'MATCH RESULT'  },
-        { slug: 'clean_sheet',  label: 'CLEAN SHEET'   },
-        { slug: 'top_scorer',   label: 'TOP SCORER'    },
+        // MATCH
+        { slug: 'match_result',      label: 'MATCH RESULT',      category: 'match'   },
+        { slug: 'first_team_score',  label: 'FIRST SCORER',      category: 'match'   },
+        { slug: 'clean_sheet',       label: 'CLEAN SHEET',       category: 'match'   },
+        { slug: 'lead_at_halftime',  label: 'HALFTIME LEAD',     category: 'match'   },
+        { slug: 'second_half_winner',label: '2ND HALF WINNER',   category: 'match'   },
+        { slug: 'winning_margin',    label: 'WINNING MARGIN',    category: 'match'   },
+        { slug: 'most_corners_team', label: 'MOST CORNERS',      category: 'match'   },
+        { slug: 'penalty_in_match',  label: 'PENALTY',           category: 'match'   },
+        { slug: 'red_card_in_match', label: 'RED CARD',          category: 'match'   },
+        { slug: 'btts',              label: 'BTTS',              category: 'match'   },
+        { slug: 'btts_first_half',   label: 'BTTS — 1ST HALF',  category: 'match'   },
+        { slug: 'comeback_win',      label: 'COMEBACK WIN',      category: 'match'   },
+        // STATS
+        { slug: 'goals_ou',          label: 'GOALS O/U',         category: 'stats'   },
+        { slug: 'first_half_goals_ou',label: '1ST HALF GOALS O/U',category: 'stats' },
+        { slug: 'shots_on_target_ou',label: 'SHOTS ON TARGET O/U',category: 'stats' },
+        { slug: 'total_corners_ou',  label: 'TOTAL CORNERS O/U', category: 'stats'   },
+        { slug: 'card_count_ou',     label: 'CARD COUNT O/U',    category: 'stats'   },
+        { slug: 'total_offsides_ou', label: 'OFFSIDES O/U',      category: 'stats'   },
+        { slug: 'total_subs_ou',     label: 'SUBS O/U',          category: 'stats'   },
+        { slug: 'goal_interval',     label: 'GOAL INTERVAL',     category: 'stats'   },
+        // PLAYERS
+        { slug: 'top_scorer',        label: 'TOP SCORER',        category: 'players' },
+        { slug: 'anytime_goalscorer',label: 'ANYTIME SCORER',    category: 'players' },
+        { slug: 'yellow_card',       label: 'YELLOW CARD',       category: 'players' },
+        { slug: 'man_of_match',      label: 'MAN OF MATCH',      category: 'players' },
+        // CUSTOM
+        { slug: 'free_bet',          label: 'FREE BET',          category: 'custom'  },
+        { slug: 'player_block',      label: 'PLAYER BLOCK',      category: 'custom'  },
       ];
 
       // !inner ensures only rows with a matching bet_instance are returned
