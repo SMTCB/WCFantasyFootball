@@ -92,7 +92,7 @@ function BetCard({ bet, squadId, onSubmitted }) {
 // ── Category strip (inside a section) ────────────────────────────────────────
 
 function CategoryStrip({ category, bets, squadId, onSubmitted, collapsible }) {
-  const [open, setOpen] = useState(true);
+  const [open, setOpen] = useState(false);
   const meta = CAT_META[category] ?? CAT_META.custom;
   return (
     <div style={{ marginBottom: 4 }}>
