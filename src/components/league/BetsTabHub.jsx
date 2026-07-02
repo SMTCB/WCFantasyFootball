@@ -91,17 +91,32 @@ function BetCard({ bet, squadId, onSubmitted }) {
 
 // ── Category strip (inside a section) ────────────────────────────────────────
 
-function CategoryStrip({ category, bets, squadId, onSubmitted }) {
+function CategoryStrip({ category, bets, squadId, onSubmitted, collapsible }) {
+  const [open, setOpen] = useState(true);
   const meta = CAT_META[category] ?? CAT_META.custom;
   return (
     <div style={{ marginBottom: 4 }}>
-      {/* Category label */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: 'clamp(5px, 1.5vw, 8px) clamp(12px, 4vw, 24px)', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+      {/* Category label — clickable when collapsible */}
+      <div
+        role={collapsible ? 'button' : undefined}
+        tabIndex={collapsible ? 0 : undefined}
+        onClick={collapsible ? () => setOpen(o => !o) : undefined}
+        onKeyDown={collapsible ? (e) => { if (e.key === 'Enter' || e.key === ' ') setOpen(o => !o); } : undefined}
+        style={{
+          display: 'flex', alignItems: 'center', gap: 6,
+          padding: 'clamp(5px, 1.5vw, 8px) clamp(12px, 4vw, 24px)',
+          borderBottom: '1px solid rgba(255,255,255,0.04)',
+          cursor: collapsible ? 'pointer' : 'default',
+        }}
+      >
         <span style={{ fontSize: 10 }}>{meta.icon}</span>
-        <span style={{ fontFamily: MONO, fontSize: 8, color: meta.color, letterSpacing: '.2em' }}>{meta.label}</span>
+        <span style={{ fontFamily: MONO, fontSize: 8, color: meta.color, letterSpacing: '.2em', flex: 1 }}>{meta.label}</span>
         <span style={{ fontFamily: MONO, fontSize: 8, color: 'var(--mute)', letterSpacing: '.12em' }}>{bets.length}</span>
+        {collapsible && (
+          <span style={{ fontFamily: MONO, fontSize: 10, color: 'var(--mute)', marginLeft: 8 }}>{open ? '−' : '+'}</span>
+        )}
       </div>
-      {bets.map(bet => (
+      {(!collapsible || open) && bets.map(bet => (
         <BetCard key={bet.id} bet={bet} squadId={squadId} onSubmitted={onSubmitted} />
       ))}
     </div>
@@ -112,7 +127,7 @@ function CategoryStrip({ category, bets, squadId, onSubmitted }) {
 
 const CAT_ORDER = ['match', 'stats', 'players', 'custom'];
 
-function BetSection({ label, sub, tone, bets, squadId, onSubmitted, collapsible, defaultOpen }) {
+function BetSection({ label, sub, tone, bets, squadId, onSubmitted, collapsible, defaultOpen, categoriesCollapsible }) {
   const [open, setOpen] = useState(defaultOpen);
   if (!bets.length) return null;
 
@@ -180,7 +195,7 @@ function BetSection({ label, sub, tone, bets, squadId, onSubmitted, collapsible,
         <div>
           {showCategoryLabels
             ? cats.map(cat => (
-                <CategoryStrip key={cat} category={cat} bets={byCategory[cat]} squadId={squadId} onSubmitted={onSubmitted} />
+                <CategoryStrip key={cat} category={cat} bets={byCategory[cat]} squadId={squadId} onSubmitted={onSubmitted} collapsible={categoriesCollapsible} />
               ))
             : bets.map(bet => (
                 <BetCard key={bet.id} bet={bet} squadId={squadId} onSubmitted={onSubmitted} />
@@ -273,7 +288,7 @@ export default function BetsTabHub({ leagueId, squadId, onReplayTour, currentGW 
               defaultOpen={false}
             />
 
-            {/* RESULTS — collapsible, default open so history is visible */}
+            {/* RESULTS — collapsible section + collapsible categories within */}
             <BetSection
               label="RESULTS"
               sub="HISTORY"
@@ -283,6 +298,7 @@ export default function BetsTabHub({ leagueId, squadId, onReplayTour, currentGW 
               onSubmitted={refetch}
               collapsible={true}
               defaultOpen={true}
+              categoriesCollapsible={true}
             />
           </>
         )}
