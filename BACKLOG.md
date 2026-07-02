@@ -1,12 +1,105 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-06-30 (v2: merged main PRs #672–#680 — shootout scoring, duplicate-fixture fix; Redesign Phases A–D complete)  
+**Last Updated**: 2026-07-02 (Bets admin UX polish + mobile overlap fix; PRs #700–#704)  
 **E2E Test Suite**: `platform.spec.js` (84 tests × 1 browser config) passing ✅ — 84/84 on v2 branch 2026-06-23  
 **Full Playbook Run**: `E2E_TEST_PLAYBOOK.md` v2.0 — all flows confirmed  
 **🟢 LAUNCH READY**: No critical (P0/P1) bugs open. All game mechanics functional. WC kick-off 2026-06-11.  
 **Live App**: https://wc-fantasy-football.vercel.app  
 **WC Kick-off**: 2026-06-11 19:00 UTC (Mexico vs South Africa)  
 **Supabase PostgREST max_rows**: 10,000 (raised from default 1,000 — 2026-06-08)
+
+---
+
+## ✅ Bets admin UX polish + mobile layout fix (2026-07-02) — PRs #700–#704
+
+### PR #700 — Bet category taxonomy + BetCreatorPanel restructure
+
+Introduced a `category` column on `bet_templates` (migration 193: `ALTER TABLE bet_templates ADD COLUMN IF NOT EXISTS category TEXT DEFAULT 'match'`). All 26 active templates seeded with categories: `match` (12 types), `stats` (8), `players` (4), `custom` (2). `BetCreatorPanel` type-selector rebuilt from 3 hardcoded tiles to a scrollable categorised list; category headers (MATCH / STATS / PLAYERS / CUSTOM) are sticky dividers. `SLUG_STYLE` map in `BetsTabHub` extended to cover all 26 slugs with glyphs and accent colours.
+
+### PR #701 — Resolved bet label, visual distinction, RESULTS section defaults, Your Performance groups
+
+**(1) Auto-resolve label** — `CommissionerPanel` RESOLVE BETS panel was showing raw option keys (e.g. `F-1219435446_HOME`) in the resolved-bet subtitle and override notice. Fixed by looking up the human-readable label from the `opts` array: `opts.find(o => (o.key ?? o) === b.correct_answer)?.label ?? b.correct_answer`.
+
+**(2) Resolved bet visual distinction** — resolved bet cards now render with a green tint (`rgba(34,197,94,0.04)` background + `rgba(34,197,94,0.2)` border + `rgba(34,197,94,0.6)` left accent). Badge changed from plain `✓ AUTO-RESOLVED` text to a filled green `✓ RESOLVED` chip.
+
+**(3) RESULTS section open by default** — `BetsTabHub` RESULTS `BetSection` changed from `defaultOpen={false}` to `defaultOpen={true}` so bet history is immediately visible.
+
+**(4) Your Performance — all 26 bet types in 4 collapsible categories** — `useBettingLeaderboard` `BUCKETS` array expanded from 3 to 26 entries each with a `category` field. `BettingLeaderboardView` restructured: `PerformanceByType` component groups `myBetsByType` by category and renders collapsible category headers (`CAT_META`: MATCH ⚽ / STATS 📊 / PLAYERS 🎯 / CUSTOM ✏).
+
+### PR #702 — Collapsible categories in BETS and BETTING tabs
+
+**(1) BETS tab** — `CategoryStrip` gained a `collapsible` prop; when true the category header is clickable with `+/−` toggle. RESULTS section passes `categoriesCollapsible={true}`; OPEN and PENDING sections do not.
+
+**(2) BETTING tab** — `PerformanceByType` category headers are now `<button>` elements that toggle open/closed state per category. `openCats` Set tracks which are open.
+
+### PR #703 — Mobile overlap fix: BetCreatorPanel Step 2 fully stacked
+
+`datetime-local` on iOS Safari has an intrinsic minimum width (~200px for the date/time text) that overflows a flex row alongside the reward field on a 375px screen, even with `flex:1, minWidth:0, boxSizing:border-box`. Changed Step 2 layout from a single `display:flex` row to `flexDirection:column`: **DEADLINE** on its own full-width row (datetime-local takes 100% width, no sibling), **REWARD** (number 80px + select) on a separate row below. Also added `boxSizing: 'border-box'` to the FROM (OPTIONAL) field for consistency.
+
+### PR #704 — Categories collapsed by default; hide empty performance types
+
+**(1) BetsTabHub `CategoryStrip`** — `useState(true)` → `useState(false)`: category strips start collapsed, user expands on demand.
+
+**(2) BettingLeaderboardView `PerformanceByType`** — two changes:
+- `useState(() => new Set(CAT_ORDER))` → `useState(() => new Set())`: all category groups start collapsed.
+- Filter `myBetsByType` before grouping to only include bet types where `correct + wrong > 0` — eliminates the ~22 unused rows that showed as empty grey bars. Only bet types the user has actually played appear.
+
+**GitHub token updated**: remote URL updated to new PAT (`ghp_o8WPIc3...`) — old token expired. Use new token for all future API calls.
+
+---
+
+## ✅ Bet/Market improvements + sync_cup_eliminations v2 (2026-06-30) — PRs #691, #692, migration 195
+
+**Changes in PR #691** — committed to a branch (also contains prior session's PR #690 context):
+
+**1. Clean Sheet bet "None" option**: Managers can now bet on "no team keeping a clean sheet". Added as a selectable row at the top of the team picker in `BetCreatorPanel.jsx`. Stored as `key: 'none', label: 'None'` in `selectedOpts`, rendered in `InlineOptions` as a normal pick for the player-facing `BetWidget.jsx`.
+
+**2. Top Scorer bet player search**: Commissioner player fetch limit raised from 80 → 200. Added "ALL (N)" SELECT ALL button next to CLEAR in the player section — lets the commissioner instantly select all filtered players rather than scrolling a short list. Managers already had search via the `InlineOptions` component's built-in search box.
+
+**3. Market smart filters**: Three new filters in `MarketScreen.jsx` between the price filter and position tabs:
+- **Hide Eliminated** — removes players from clubs with `eliminated_at IS NOT NULL` in `cup_active_clubs` (draft/cup leagues) or clubs with no remaining fixtures (classic leagues). Red when active.
+- **Hide Taken** — draft leagues only. Removes players owned by other managers (`isTaken(p.id) && !owned.includes(p.id)`). Red when active.
+- **Min pts** — number input (step=5). Sums the last-5-GW `statsMap` values per player; excludes players whose total < threshold. Cyan when active.
+- "Reset" button appears when any filter is active.
+
+**4. ELIMINATED tag client-side safety check** (in `useEliminatedClubs.js`): after fetching `cup_active_clubs`, the hook now fetches all tournament fixtures and removes any DB-eliminated club that has a future scheduled fixture. This prevents the race where `sync_cup_eliminations` ran before Forza published the next-round bracket — the Norway false-positive scenario.
+
+**Changes in PR #692** — migration 195 (`195_sync_cup_eliminations_v2.sql`):
+
+**sync_cup_eliminations v2**: Full rewrite fixing two recurring bugs:
+1. **6h timer → round-complete guard**: replaced `EXTRACT(EPOCH FROM NOW() - last_finished.kickoff_at) > 21600` with a check that all other fixtures in the same `matchday_id` are also `finished`. Once the full round is settled, Forza has published the next round's bracket — much more reliable than a wall-clock delay.
+2. **Penalty-shootout elimination**: for fixtures where `home_score = away_score` (draw), the function now queries `player_match_stats.shootout_scored` per nationality. If the club's shootout goals < opponent's, the club is eliminated. Previously all draws were skipped ("we'd rather under-eliminate"), leaving Netherlands (lost 2-3 PSO vs Morocco) and Germany (lost 3-4 PSO vs Paraguay) un-eliminated until manual fix.
+3. **Self-heal block**: the function already had a self-heal path (reinstate clubs incorrectly marked eliminated if they have a future fixture) — preserved intact.
+
+**Manual data fixes applied in this session** (before migration 195):
+- Norway: `eliminated_at` cleared (was incorrectly set before Forza published R5 fixture)
+- Côte d'Ivoire: `eliminate_cup_club()` called for all 5 pilot leagues (clear 1-2 loss vs Norway, but 6h guard had blocked auto-elimination)
+- Germany: `eliminate_cup_club()` called for all 5 pilot leagues (1-1 draw, lost 3-4 PSO)
+
+**Next migration**: `196_`
+
+---
+
+## ✅ Shootout event detection fix + rescore + breakdown display (2026-06-30) — PRs #678, #679, #680
+
+**Context**: Two Round-of-32 knockout matches went to extra time and penalty shootouts (Netherlands vs Morocco, Germany vs Paraguay). Shootout scoring columns (`shootout_scored`/`shootout_missed`/`shootout_saved`) were all zero for every player despite the DB columns existing (migration 192) and ET minutes being correct.
+
+**Root cause (PR #678)**: `ingest-match-events` shootout-period detection worked (`period.type.includes('penalt')`), but the event-type matching inside it looked for `goal` and `missed_penalty` event types — the same types used for in-game penalties. Forza's actual shootout kicks are sent as a single unified `penalty_shootout_shot` event type with a `scored: true/false` boolean. No error was logged; the events simply never matched, so the data was silently dropped.
+
+**Product decision**: Forza's `penalty_shootout_shot` event has no field to distinguish a goalkeeper save from an off-target miss. Every miss is credited to the opposing GK as a save (+0.5 pts). Documented in code comment.
+
+**Fix applied (PR #678)**:
+- Rewrote the shootout event detection block to match on `ev.type === 'penalty_shootout_shot'` and branch on `ev.scored === true/false`.
+- `ingest-match-events` redeployed to production.
+- Both fixtures re-ingested: `shootout_scored/missed/saved` now populated correctly (e.g. Bounou 3 saves, Verbruggen 2 saves — cross-verified against the actual shootout sequence).
+- Both fixtures rescored via `calculate-scores`: 35 of 57 squads had `fantasy_points.total` updated for round `429-r4`; `league_members.total_points` re-aggregated automatically.
+- Pre/post rescore snapshots saved to `backups/pre_shootout_rescore_fantasy_points_20260630.json` + `post_shootout_rescore_*.json`.
+
+**Breakdown display (PRs #679 + #680)**:
+- **PR #679**: `RecapView.jsx` (Recap player breakdown card) — added `shootout_scored/missed/saved` to SELECT and badge rendering (`PK✓×N`, `PK✗×N`, `N PK SV`). `ScoringInfoModal.jsx` — added Shootout Save (+0.5, GK), Shootout Goal (+1), Shootout Miss (−1) to rules display.
+- **PR #680**: `usePlayerFullStats.js` (player detail BREAKDOWN tab in Squad/Market) — `BREAKDOWN_LABELS` was missing the three shootout keys, so line items were silently dropped even though the `TOTAL` was already correct. Added `SHOOTOUT GOAL`, `SHOOTOUT MISS` (negative), `SHOOTOUT SAVE` labels.
+
+**Next migration**: `193_`
 
 ---
 

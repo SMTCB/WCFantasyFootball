@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+﻿import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../../lib/supabase';
 // HubShared is NOT imported here — LeagueScreen imports it directly, and
 // CommissionerPanel→HubShared at depth 2 causes a Rolldown TDZ crash in
@@ -30,6 +30,16 @@ function MgrTag({ mono = '???', hue = '#8B95A1', size = 18, dim = false }) {
     <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', minWidth: size + 10, height: size, padding: '0 4px', background: dim ? 'transparent' : `${hue}18`, border: `1px solid ${hue}${dim ? '44' : '66'}`, color: hue, fontFamily: MONO, fontSize: size <= 16 ? 9 : 10, letterSpacing: '.12em', fontWeight: 600, lineHeight: 1, flexShrink: 0 }}>{mono}</span>
   );
 }
+
+const _HUES = ['#00B4D8','#E0A800','#A855F7','#22C55E','#F59E0B','#34D399','#7DD3FC','#FB7185','#FCD34D','#C4B5FD','#67E8F9'];
+function mgrHue(str = '') { let h = 0; for (let i = 0; i < str.length; i++) h = (h * 31 + str.charCodeAt(i)) & 0xffff; return _HUES[h % _HUES.length]; }
+const mgrMono = (u = '') => u.substring(0, 3).toUpperCase() || '???';
+
+const BET_TYPES = [
+  { id: 'top-scorer',   label: 'TOP SCORER',   glyph: '◉', tone: 'var(--cyan)',     templateId: 'top_scorer',   hint: 'Who scores the most goals across the fixture / gameweek?', body: 'Auto-resolves at final whistle. Tie-break: assists → minutes.' },
+  { id: 'match-result', label: 'MATCH RESULT', glyph: '◈', tone: 'var(--positive)', templateId: 'match_result', hint: 'Predict the outcome of a single fixture.', body: 'Options are auto-generated: HOME · DRAW · AWAY. Resolves at FT.' },
+  { id: 'clean-sheet',  label: 'CLEAN SHEET',  glyph: '🧤', tone: 'var(--cyan)',    templateId: 'clean_sheet',  hint: 'Pick a team to keep a clean sheet.', body: 'Select the teams in play. Managers pick one — commissioner resolves after the match.' },
+];
 
 const inputStyle = {
   background: 'var(--ink)', border: '1px solid var(--rule)', color: 'var(--paper)',
@@ -458,6 +468,1193 @@ function RewardStepper({ value, onChange }) {
   );
 }
 
+function BetCardPreview({ betType, title, reward, closes, fixtureObj, players, blockPlayer }) {
+  const meta = BET_TYPES.find(t => t.id === betType);
+  if (!meta) {
+    return (
+      <div style={{ background: 'var(--ink)', border: '1px dashed var(--rule)', padding: '22px 18px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, color: 'var(--mute)' }}>
+        <span style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '.22em' }}>NO BET YET</span>
+        <span style={{ fontFamily: BODY, fontSize: 11, textAlign: 'center' }}>Choose a type to see the live preview.</span>
+      </div>
+    );
+  }
+  const options = betType === 'match-result'
+    ? (fixtureObj ? [`${fixtureObj.home_team} Win`, 'DRAW', `${fixtureObj.away_team} Win`] : ['HOME', 'DRAW', 'AWAY'])
+    : betType === 'top-scorer'
+      ? players.slice(0, 4).map(p => typeof p === 'object' ? p.name : p.split(' (')[0])
+      : blockPlayer ? [typeof blockPlayer === 'object' ? blockPlayer.name : blockPlayer.split(' (')[0]] : [];
+
+  return (
+    <div style={{ background: 'var(--ink)', border: '1px solid var(--rule)', borderLeft: `3px solid ${meta.tone}`, padding: '14px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        <span style={{ width: 22, height: 22, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: `${meta.tone}15`, border: `1px solid ${meta.tone}55`, fontFamily: DISPLAY, fontSize: 12, color: meta.tone }}>{meta.glyph}</span>
+        <span style={{ fontFamily: DISPLAY, fontSize: 13, color: meta.tone, letterSpacing: '-0.01em' }}>{meta.label}</span>
+        <span style={{ flex: 1 }} />
+        <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.18em', color: 'var(--positive)', padding: '2px 6px', border: '1px solid rgba(34,197,94,.33)', background: 'rgba(34,197,94,.08)' }}>+{reward} PTS</span>
+      </div>
+      <div style={{ fontFamily: BODY, fontSize: 12, color: 'var(--paper)', lineHeight: 1.45 }}>
+        {title || <span style={{ color: 'var(--mute)' }}>(title pending)</span>}
+      </div>
+      {options.length > 0 && (
+        <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}>
+          {options.map(o => (
+            <span key={o} style={{ padding: '4px 8px', fontFamily: DISPLAY, fontSize: 10, letterSpacing: '-0.01em', border: '1px solid var(--rule)', color: 'var(--paper)' }}>{o}</span>
+          ))}
+        </div>
+      )}
+      <div style={{ display: 'flex', gap: 10, alignItems: 'center', marginTop: 2 }}>
+        <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.18em', color: 'var(--mute)' }}>● LOCKS {closes || '—'}</span>
+        <span style={{ flex: 1 }} />
+        <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.18em', color: 'var(--cyan)' }}>MAKE PICK →</span>
+      </div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Create Bet Wizard (Zone B left)
+// ─────────────────────────────────────────────────────────────────────────────
+function CreateBetWizard({ onPublish, commLoading, memberCount, tournamentId, isMobile = false }) {
+  const [step,        setStep]   = useState(1);
+  const [betType,     setBetType] = useState(null);
+  const [fixture,     setFixture] = useState('');      // single fixture id (match-result / player-block)
+  const [selectedFixtures, setSelectedFixtures] = useState([]); // multi-fixture ids for top-scorer (max 4)
+  const [players,     setPlayers] = useState([]);      // selected player objects for top-scorer
+  const [blockPlayer, setBlock]   = useState(null);    // player object for player-block
+  const [reward,      setReward]  = useState(5);
+  const [closes,      setCloses]  = useState('');
+  const [title,       setTitle]   = useState('');
+
+  // DB data
+  const [dbFixtures,    setDbFixtures]    = useState([]);  // next-gameday scheduled fixtures
+  const [allDbFixtures, setAllDbFixtures] = useState([]);  // all future scheduled fixtures
+  const [allPlayers,    setAllPlayers]    = useState([]);  // all players in tournament
+  const [dataLoading,   setDataLoading]   = useState(false);
+
+  // Modal state
+  const [showPlayerModal,  setShowPlayerModal]  = useState(false);
+  const [playerSearch,     setPlayerSearch]     = useState('');
+  const [showFixtureModal, setShowFixtureModal] = useState(false);
+  const [fixtureSearch,    setFixtureSearch]    = useState('');
+
+  // Load real fixtures + players from DB when tournamentId is available
+  useEffect(() => {
+    if (!tournamentId) return;
+    setDataLoading(true);
+    const now = new Date().toISOString();
+    Promise.all([
+      supabase.from('fixtures')
+        .select('id, home_team, away_team, kickoff_at')
+        .eq('tournament_id', tournamentId)
+        .eq('status', 'scheduled')
+        .gte('kickoff_at', now)
+        .order('kickoff_at', { ascending: true })
+        .limit(40),
+      supabase.from('players')
+        .select('id, name, position, club')
+        .eq('tournament_id', tournamentId)
+        .eq('is_active', true)
+        .in('position', ['FWD', 'MID', 'DEF', 'GK'])
+        .order('price', { ascending: false })
+        .limit(300),
+    ]).then(([{ data: fx }, { data: pl }]) => {
+      const allFx = fx || [];
+      // Group to next gameday: fixtures within 7 days of the first one
+      let nextGameday = allFx;
+      if (allFx.length > 0) {
+        const first = new Date(allFx[0].kickoff_at).getTime();
+        const cutoff = first + 7 * 24 * 60 * 60 * 1000;
+        nextGameday = allFx.filter(f => new Date(f.kickoff_at).getTime() <= cutoff);
+      }
+      setDbFixtures(nextGameday);
+      setAllDbFixtures(allFx);
+
+      const allPl = pl || [];
+      setAllPlayers(allPl);
+      // Default top-scorer pool: top 5 FWD+MID by price
+      setPlayers(allPl.filter(p => ['FWD', 'MID'].includes(p.position)).slice(0, 5));
+    }).catch(e => console.error('[CreateBetWizard] data load error:', e))
+      .finally(() => setDataLoading(false));
+  }, [tournamentId]);
+
+  const typeMeta    = BET_TYPES.find(t => t.id === betType) || null;
+  const fixtureMeta = allDbFixtures.find(f => f.id === fixture) || null;
+
+  const autoTitle = (() => {
+    if (!typeMeta) return '';
+    if (betType === 'top-scorer') {
+      const fxObjs = allDbFixtures.filter(f => selectedFixtures.includes(f.id));
+      const scope = fxObjs.length === 1
+        ? `${fxObjs[0].home_team} vs ${fxObjs[0].away_team}`
+        : fxObjs.length > 1 ? `${fxObjs.length} matches` : 'Matchday';
+      return `Top scorer · ${scope}`;
+    }
+    if (betType === 'match-result') return fixtureMeta ? `Result · ${fixtureMeta.home_team} vs ${fixtureMeta.away_team}` : 'Match result';
+    if (betType === 'player-block') return blockPlayer ? `Block · ${blockPlayer.name}` : 'Player block';
+    return '';
+  })();
+  const computedTitle = title || autoTitle;
+
+  const canStep2 = !!betType;
+  const canStep3 = betType === 'top-scorer'
+    ? players.length >= 2
+    : !!fixture && (betType !== 'player-block' || !!blockPlayer);
+  const canStep4 = !!reward && !!closes;
+
+  const reset = () => {
+    setStep(1); setBetType(null); setFixture(''); setBlock(null);
+    setSelectedFixtures([]);
+    setReward(5); setCloses(''); setTitle('');
+    setPlayers(allPlayers.filter(p => ['FWD', 'MID'].includes(p.position)).slice(0, 5));
+  };
+
+  const handlePublish = () => {
+    let options = [];
+    let scopeType = 'match';
+    let scopeRef  = null;
+
+    if (betType === 'match-result') {
+      options = [
+        { key: `${fixture}_home`, label: `${fixtureMeta?.home_team || 'Home'} Win`, meta: {} },
+        { key: `${fixture}_draw`, label: 'Draw', meta: {} },
+        { key: `${fixture}_away`, label: `${fixtureMeta?.away_team || 'Away'} Win`, meta: {} },
+      ];
+      scopeRef = fixture || null;
+    } else if (betType === 'top-scorer') {
+      options   = players.map(p => ({ key: p.id, label: p.name, meta: { club: p.club, pos: p.position } }));
+      scopeType = 'matchday';
+      scopeRef  = selectedFixtures.join(',') || null;
+    } else if (betType === 'player-block') {
+      options  = blockPlayer
+        ? [{ key: blockPlayer.id, label: blockPlayer.name, meta: { club: blockPlayer.club, pos: blockPlayer.position } }]
+        : [];
+      scopeRef = fixture || null;
+    }
+
+    onPublish({
+      title:       computedTitle,
+      prompt:      computedTitle,
+      deadline:    closes,
+      rewardValue: String(reward),
+      scopeType,
+      scopeRef,
+      templateId:  typeMeta.templateId,
+      options,
+    });
+    reset();
+  };
+
+  // Shared fixture picker (single-select) used by match-result and player-block
+  const SingleFixturePicker = ({ accentColor = 'var(--cyan)' }) => (
+    <WizField label="Fixture · Next gameday" sub="Bet will resolve at this match's final whistle.">
+      {dataLoading ? (
+        <div style={{ fontFamily: MONO, fontSize: 10, color: 'var(--mute)', letterSpacing: '.18em' }}>LOADING FIXTURES…</div>
+      ) : dbFixtures.length === 0 ? (
+        <div style={{ fontFamily: MONO, fontSize: 10, color: 'var(--danger)', letterSpacing: '.16em', padding: '10px 0' }}>
+          {allDbFixtures.length > 0 ? 'NO FIXTURES IN NEXT 7 DAYS — TRY A DIFFERENT ROUND' : 'NO UPCOMING SCHEDULED FIXTURES FOUND'}
+        </div>
+      ) : (
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+          {dbFixtures.map(f => {
+            const picked = fixture === f.id;
+            return (
+              <button key={f.id} onClick={() => setFixture(f.id)} style={{
+                textAlign: 'left', cursor: 'pointer',
+                background: picked ? `${accentColor}15` : 'var(--ink)',
+                border: picked ? `1px solid ${accentColor}` : '1px solid var(--rule)',
+                padding: '10px 12px', display: 'flex', alignItems: 'center', gap: 10,
+              }}>
+                <span style={{ width: 12, height: 12, borderRadius: '50%', border: `1.5px solid ${picked ? accentColor : 'var(--rule)'}`, background: picked ? accentColor : 'transparent', flexShrink: 0 }} />
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 2, flex: 1, minWidth: 0 }}>
+                  <span style={{ fontFamily: DISPLAY, fontSize: 12, color: 'var(--paper)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{f.home_team} vs {f.away_team}</span>
+                  <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.14em', color: 'var(--mute)' }}>{fmtKickoff(f.kickoff_at)}</span>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </WizField>
+  );
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+      <HubSectionLabel
+        label="CREATE BET"
+        sub="A new prediction for the league"
+        tone="var(--cyan)"
+        right={
+          <button onClick={reset} style={{ ...ghostBtn, fontSize: 9, padding: '5px 10px' }}>↻ RESET</button>
+        }
+      />
+
+      {/* Step rail */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', borderBottom: '1px solid var(--rule)', background: 'var(--ink)', flexShrink: 0 }}>
+        {[
+          { n: 1, label: 'TYPE',    reached: true,     done: !!betType },
+          { n: 2, label: 'CONFIG',  reached: canStep2, done: canStep3  },
+          { n: 3, label: 'REWARD',  reached: canStep3, done: canStep4  },
+          { n: 4, label: 'PUBLISH', reached: canStep4, done: false     },
+        ].map(s => {
+          const active = step === s.n;
+          const railTone = !s.reached ? 'var(--mute)' : (active ? 'var(--cyan)' : (s.done ? 'var(--positive)' : 'var(--paper)'));
+          return (
+            <button key={s.n}
+              disabled={!s.reached}
+              onClick={() => s.reached && setStep(s.n)}
+              style={{
+                background: 'transparent',
+                borderTop: 'none',
+                borderBottom: active ? `2px solid ${railTone}` : '2px solid transparent',
+                borderLeft: 'none',
+                borderRight: s.n < 4 ? '1px solid var(--rule)' : 'none',
+                padding: isMobile ? '10px 6px' : '14px 16px',
+                cursor: s.reached ? 'pointer' : 'not-allowed',
+                color: railTone,
+                display: 'flex', alignItems: 'center', justifyContent: isMobile ? 'center' : 'flex-start', gap: isMobile ? 4 : 10,
+              }}
+            >
+              <span style={{
+                width: 20, height: 20, borderRadius: '50%', flexShrink: 0,
+                border: `1.5px solid ${railTone}`,
+                background: s.done ? railTone : 'transparent',
+                color: s.done ? 'var(--ink)' : railTone,
+                display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                fontFamily: MONO, fontSize: 9, fontWeight: 600,
+              }}>{s.done ? '✓' : s.n}</span>
+              {isMobile ? (
+                <span style={{ fontFamily: MONO, fontSize: 8, letterSpacing: '.14em', color: railTone }}>{s.label}</span>
+              ) : (
+                <span style={{ display: 'flex', flexDirection: 'column' }}>
+                  <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.22em', color: 'var(--mute)' }}>STEP {s.n}</span>
+                  <span style={{ fontFamily: MONO, fontSize: 11, letterSpacing: '.18em', color: railTone }}>{s.label}</span>
+                </span>
+              )}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Body: form left, live preview right (preview hidden on mobile) */}
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 300px', minHeight: 0, flex: 1 }}>
+        <div style={{ padding: isMobile ? '16px 14px' : '22px 24px', display: 'flex', flexDirection: 'column', gap: 16, borderRight: isMobile ? 'none' : '1px solid var(--rule)', overflow: 'auto' }}>
+
+          {/* ── Step 1: Bet type ── */}
+          {step === 1 && (
+            <>
+              <WizHelp num="01" label="WHAT KIND OF BET?" hint="Each type uses a different resolution rule. Pick one — you can change it before publishing." />
+              <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', gap: 8 }}>
+                {BET_TYPES.map(t => {
+                  const picked = betType === t.id;
+                  return (
+                    <button key={t.id} onClick={() => setBetType(t.id)} style={{
+                      textAlign: 'left', cursor: 'pointer',
+                      background: picked ? `${t.tone}10` : 'var(--ink-2)',
+                      border: picked ? `1px solid ${t.tone}` : '1px solid var(--rule)',
+                      borderLeft: picked ? `3px solid ${t.tone}` : '3px solid transparent',
+                      padding: isMobile ? '12px 14px' : '14px 16px',
+                      display: 'flex', flexDirection: isMobile ? 'row' : 'column',
+                      alignItems: isMobile ? 'center' : 'flex-start',
+                      gap: isMobile ? 12 : 8,
+                      minHeight: isMobile ? 0 : 140,
+                    }}>
+                      <span style={{ width: 30, height: 30, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: `${t.tone}18`, border: `1px solid ${t.tone}55`, fontFamily: DISPLAY, fontSize: 15, color: t.tone }}>{t.glyph}</span>
+                      <span style={{ fontFamily: DISPLAY, fontSize: 14, letterSpacing: '-0.01em', color: 'var(--paper)' }}>{t.label}</span>
+                      <span style={{ fontFamily: BODY, fontSize: 11, lineHeight: 1.4, color: 'var(--mute)' }}>{t.hint}</span>
+                      <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.16em', color: t.tone, marginTop: 'auto' }}>{picked ? '● SELECTED' : 'CHOOSE →'}</span>
+                    </button>
+                  );
+                })}
+              </div>
+              <NextBar onNext={() => setStep(2)} canNext={canStep2} hint={!betType ? 'Pick a bet type to continue.' : ''} />
+            </>
+          )}
+
+          {/* ── Step 2: Configure ── */}
+          {step === 2 && (
+            <>
+              <WizHelp num="02" label="CONFIGURE" hint={typeMeta?.body || 'Set up the bet details.'} />
+
+              {/* Match Result: single fixture */}
+              {betType === 'match-result' && (
+                <>
+                  <SingleFixturePicker accentColor="var(--cyan)" />
+                  <div style={{ padding: '10px 12px', background: 'var(--ink)', border: '1px solid var(--rule)', fontFamily: BODY, fontSize: 11, lineHeight: 1.5, color: 'var(--mute)' }}>
+                    <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.2em', color: 'var(--positive)' }}>● AUTO</span>{' '}
+                    Options: <b style={{ color: 'var(--paper)' }}>{fixtureMeta?.home_team || 'HOME'} WIN · DRAW · {fixtureMeta?.away_team || 'AWAY'} WIN</b>
+                  </div>
+                </>
+              )}
+
+              {/* Top Scorer: multi-fixture scope + player pool */}
+              {betType === 'top-scorer' && (
+                <>
+                  <WizField label={`Match scope · ${selectedFixtures.length}/4 selected`} sub="Goals count across these matches. Leave empty for the full matchday.">
+                    {dataLoading ? (
+                      <div style={{ fontFamily: MONO, fontSize: 10, color: 'var(--mute)', letterSpacing: '.18em' }}>LOADING FIXTURES…</div>
+                    ) : dbFixtures.length === 0 ? (
+                      <div style={{ fontFamily: MONO, fontSize: 10, color: 'var(--mute)', letterSpacing: '.16em', padding: '10px 0' }}>NO UPCOMING FIXTURES FOUND</div>
+                    ) : (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                        {dbFixtures.map(f => {
+                          const on     = selectedFixtures.includes(f.id);
+                          const atMax  = !on && selectedFixtures.length >= 4;
+                          return (
+                            <button key={f.id} onClick={() => {
+                              if (on) setSelectedFixtures(prev => prev.filter(x => x !== f.id));
+                              else if (!atMax) setSelectedFixtures(prev => [...prev, f.id]);
+                            }} style={{
+                              textAlign: 'left', cursor: atMax ? 'not-allowed' : 'pointer',
+                              background: on ? 'rgba(0,180,216,.08)' : 'var(--ink)',
+                              border: on ? '1px solid var(--cyan)' : '1px solid var(--rule)',
+                              padding: '8px 10px', display: 'flex', alignItems: 'center', gap: 8,
+                              opacity: atMax ? 0.4 : 1,
+                            }}>
+                              <span style={{ width: 14, height: 14, border: `1.5px solid ${on ? 'var(--cyan)' : 'var(--rule)'}`, background: on ? 'var(--cyan)' : 'transparent', flexShrink: 0, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontFamily: MONO, fontSize: 9, color: 'var(--ink)' }}>{on ? '✓' : ''}</span>
+                              <div style={{ flex: 1, minWidth: 0 }}>
+                                <div style={{ fontFamily: DISPLAY, fontSize: 12, color: 'var(--paper)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{f.home_team} vs {f.away_team}</div>
+                                <div style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.12em' }}>{fmtKickoff(f.kickoff_at)}</div>
+                              </div>
+                            </button>
+                          );
+                        })}
+                        {selectedFixtures.length < 4 && (
+                          <button onClick={() => setShowFixtureModal(true)} style={{
+                            padding: '8px 10px', cursor: 'pointer', textAlign: 'left',
+                            background: 'rgba(224,168,0,.04)', border: '1px dashed rgba(224,168,0,.4)',
+                            color: 'var(--gold)', fontFamily: MONO, fontSize: 10, letterSpacing: '.14em',
+                          }}>+ ADD MATCH FROM ANOTHER ROUND</button>
+                        )}
+                      </div>
+                    )}
+                  </WizField>
+
+                  <WizField label={`Player pool · ${players.length}/8`} sub="Managers pick one. Click a chip to remove.">
+                    <PlayerChipPool selected={players} onChange={setPlayers} onAddCustom={() => setShowPlayerModal(true)} />
+                    {players.length < 2 && (
+                      <div style={{ fontFamily: MONO, fontSize: 9, color: 'var(--danger)', letterSpacing: '.16em', marginTop: 6 }}>ADD AT LEAST 2 PLAYERS</div>
+                    )}
+                  </WizField>
+                </>
+              )}
+
+              {/* Player Block: single player + single fixture */}
+              {betType === 'player-block' && (
+                <>
+                  <WizField label="Block target" sub="Managers pick this player to block — if they flop, they earn points.">
+                    {blockPlayer ? (
+                      <div style={{ display: 'flex', gap: 10, alignItems: 'center', padding: '10px 12px', background: 'rgba(239,68,68,.06)', border: '1px solid rgba(239,68,68,.3)' }}>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontFamily: DISPLAY, fontSize: 13, color: 'var(--danger)' }}>{blockPlayer.name}</div>
+                          <div style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.14em' }}>{blockPlayer.club} · {blockPlayer.position}</div>
+                        </div>
+                        <button onClick={() => setBlock(null)} style={{ background: 'none', border: 'none', color: 'var(--danger)', cursor: 'pointer', fontSize: 16, lineHeight: 1 }}>✕</button>
+                      </div>
+                    ) : (
+                      <button onClick={() => setShowPlayerModal(true)} style={{
+                        padding: '12px', cursor: 'pointer', width: '100%', textAlign: 'center',
+                        background: 'rgba(239,68,68,.04)', border: '1px dashed rgba(239,68,68,.4)',
+                        color: 'var(--danger)', fontFamily: MONO, fontSize: 10, letterSpacing: '.18em',
+                      }}>SELECT PLAYER TO BLOCK →</button>
+                    )}
+                  </WizField>
+                  <SingleFixturePicker accentColor="var(--danger)" />
+                </>
+              )}
+
+              <NextBar
+                onBack={() => setStep(1)}
+                onNext={() => setStep(3)}
+                canNext={canStep3}
+                hint={
+                  betType === 'top-scorer'
+                    ? (players.length < 2 ? 'Add at least 2 players to continue.' : '')
+                    : !fixture
+                      ? 'Pick a fixture to continue.'
+                      : (betType === 'player-block' && !blockPlayer ? 'Select a block target too.' : '')
+                }
+              />
+            </>
+          )}
+
+          {/* ── Step 3: Reward ── */}
+          {step === 3 && (
+            <>
+              <WizHelp num="03" label="HOW MUCH IS IT WORTH?" hint="Reward in points. Tougher bets pay more. Closes-at locks picks; after that no manager can change." />
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+                <WizField label="Reward · base points" sub="Awarded to every manager who gets it right.">
+                  <RewardStepper value={reward} onChange={setReward} />
+                </WizField>
+                <WizField label="Picks close at" sub="Set before the first kickoff.">
+                  <input type="datetime-local" value={closes} onChange={e => setCloses(e.target.value)} style={inputStyle} />
+                </WizField>
+              </div>
+              <WizField label="Bet title" sub={`Shown in BETS tab. Leave blank to use: "${autoTitle}"`}>
+                <input type="text" value={title} onChange={e => setTitle(e.target.value)} placeholder={autoTitle} style={inputStyle} />
+              </WizField>
+              <NextBar onBack={() => setStep(2)} onNext={() => setStep(4)} canNext={canStep4} />
+            </>
+          )}
+
+          {/* ── Step 4: Publish ── */}
+          {step === 4 && (
+            <>
+              <WizHelp num="04" label="REVIEW & PUBLISH" hint="The preview on the right is exactly what every manager will see in the BETS tab. Publishing notifies the league." />
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <SummaryRow k="TYPE"    v={typeMeta?.label} />
+                {betType !== 'top-scorer' && fixtureMeta && (
+                  <SummaryRow k="FIXTURE" v={`${fixtureMeta.home_team} vs ${fixtureMeta.away_team}`} sub={fmtKickoff(fixtureMeta.kickoff_at)} />
+                )}
+                {betType === 'top-scorer' && (
+                  <>
+                    <SummaryRow k="PLAYER POOL" v={`${players.length} players`} sub={players.map(p => p.name).join(', ')} />
+                    <SummaryRow k="MATCH SCOPE" v={selectedFixtures.length === 0 ? 'Full matchday' : `${selectedFixtures.length} match${selectedFixtures.length > 1 ? 'es' : ''}`} />
+                  </>
+                )}
+                {betType === 'player-block' && <SummaryRow k="BLOCK TARGET" v={blockPlayer?.name || '—'} sub={blockPlayer ? `${blockPlayer.club} · ${blockPlayer.position}` : ''} />}
+                {betType === 'match-result' && <SummaryRow k="OPTIONS" v={`${fixtureMeta?.home_team || 'Home'} Win · Draw · ${fixtureMeta?.away_team || 'Away'} Win`} />}
+                <SummaryRow k="REWARD" v={`+${reward} PTS`} tone="var(--positive)" />
+                <SummaryRow k="LOCKS"  v={closes ? new Date(closes).toLocaleString('en-GB') : '—'} />
+                <SummaryRow k="TITLE"  v={computedTitle} />
+              </div>
+              <div style={{ padding: '10px 12px', background: 'rgba(224,168,0,.06)', border: '1px solid rgba(224,168,0,.33)', fontFamily: BODY, fontSize: 11, lineHeight: 1.5, color: 'var(--paper)' }}>
+                <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.22em', color: 'var(--gold)' }}>● NOTE</span>{' '}
+                Publishing pushes a notification to <b>{memberCount} managers</b> and opens picks immediately.
+              </div>
+              <div style={{ display: 'flex', gap: 10 }}>
+                <button onClick={() => setStep(3)} style={ghostBtn}>← BACK</button>
+                <button
+                  onClick={handlePublish}
+                  disabled={commLoading}
+                  style={{ ...btnBase, background: 'var(--positive)', color: 'var(--ink)', flex: 1, fontSize: 12 }}
+                >
+                  {commLoading ? 'PUBLISHING…' : 'PUBLISH BET →'}
+                </button>
+              </div>
+            </>
+          )}
+        </div>
+
+        {/* Live preview panel — desktop only */}
+        {!isMobile && <aside style={{ padding: '18px', background: 'var(--ink-2)', display: 'flex', flexDirection: 'column', gap: 10, overflow: 'auto' }}>
+          <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.22em', color: 'var(--mute)' }}>LIVE PREVIEW · WHAT MANAGERS WILL SEE</span>
+          <BetCardPreview
+            betType={betType}
+            title={computedTitle}
+            reward={reward}
+            closes={closes}
+            fixtureObj={fixtureMeta}
+            players={players}
+            blockPlayer={blockPlayer}
+          />
+          <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.16em', color: 'var(--mute)', lineHeight: 1.5 }}>
+            UPDATES AS YOU EDIT. THIS CARD APPEARS IN THE <b style={{ color: 'var(--cyan)' }}>BETS TAB</b> FOR EVERY MANAGER ONCE PUBLISHED.
+          </span>
+        </aside>}
+      </div>
+
+      {/* ── Player picker modal ── */}
+      {showPlayerModal && (
+        <div
+          style={{ position: 'fixed', inset: 0, zIndex: 300, background: 'rgba(0,0,0,0.85)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+          onClick={e => { if (e.target === e.currentTarget) { setShowPlayerModal(false); setPlayerSearch(''); } }}
+        >
+          <div style={{ background: 'var(--ink)', border: '1px solid var(--rule)', width: isMobile ? 'calc(100vw - 32px)' : 380, maxHeight: '80vh', display: 'flex', flexDirection: 'column', boxShadow: '0 20px 60px rgba(0,0,0,0.6)' }}>
+            <div style={{ padding: '12px 14px', borderBottom: '1px solid var(--rule)', display: 'flex', alignItems: 'center', gap: 10 }}>
+              <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.22em', color: 'var(--cyan)', flex: 1 }}>SELECT PLAYER</span>
+              <button onClick={() => { setShowPlayerModal(false); setPlayerSearch(''); }} style={{ background: 'none', border: 'none', color: 'var(--mute)', cursor: 'pointer', fontSize: 18, lineHeight: 1 }}>✕</button>
+            </div>
+            <div style={{ padding: '8px 10px', borderBottom: '1px solid var(--rule)' }}>
+              <input
+                autoFocus
+                type="text"
+                placeholder="Search by name or club…"
+                value={playerSearch}
+                onChange={e => setPlayerSearch(e.target.value)}
+                style={{ width: '100%', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', color: 'var(--paper)', fontSize: 12, padding: '8px 10px', outline: 'none', boxSizing: 'border-box' }}
+              />
+            </div>
+            <div style={{ flex: 1, overflowY: 'auto' }}>
+              {allPlayers
+                .filter(p => {
+                  const q = playerSearch.toLowerCase();
+                  return !q || p.name.toLowerCase().includes(q) || (p.club || '').toLowerCase().includes(q);
+                })
+                .slice(0, 60)
+                .map(p => (
+                  <button key={p.id} onClick={() => {
+                    if (betType === 'player-block') {
+                      setBlock(p);
+                    } else {
+                      // Top scorer: add to front of list, cap at 8 (last is dropped)
+                      setPlayers(prev => {
+                        if (prev.find(x => x.id === p.id)) return prev;
+                        return [p, ...prev.slice(0, 7)];
+                      });
+                    }
+                    setShowPlayerModal(false);
+                    setPlayerSearch('');
+                  }} style={{
+                    width: '100%', textAlign: 'left', padding: '10px 14px',
+                    background: 'transparent', border: 0,
+                    borderBottom: '1px solid rgba(255,255,255,0.04)',
+                    cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 10, color: 'var(--paper)',
+                  }}>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontFamily: DISPLAY, fontSize: 12, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name}</div>
+                      <div style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.12em' }}>{p.club}</div>
+                    </div>
+                    <span style={{ fontFamily: MONO, fontSize: 9, color: 'var(--cyan)', letterSpacing: '.14em', flexShrink: 0 }}>{p.position}</span>
+                  </button>
+                ))}
+              {allPlayers.length === 0 && !dataLoading && (
+                <div style={{ padding: '20px', fontFamily: MONO, fontSize: 10, color: 'var(--mute)', textAlign: 'center', letterSpacing: '.18em' }}>NO PLAYERS FOUND · CHECK TOURNAMENT</div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Additional fixture picker modal (for top-scorer "Add Match") ── */}
+      {showFixtureModal && (
+        <div
+          style={{ position: 'fixed', inset: 0, zIndex: 300, background: 'rgba(0,0,0,0.85)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+          onClick={e => { if (e.target === e.currentTarget) { setShowFixtureModal(false); setFixtureSearch(''); } }}
+        >
+          <div style={{ background: 'var(--ink)', border: '1px solid var(--rule)', width: isMobile ? 'calc(100vw - 32px)' : 400, maxHeight: '80vh', display: 'flex', flexDirection: 'column', boxShadow: '0 20px 60px rgba(0,0,0,0.6)' }}>
+            <div style={{ padding: '12px 14px', borderBottom: '1px solid var(--rule)', display: 'flex', alignItems: 'center', gap: 10 }}>
+              <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.22em', color: 'var(--gold)', flex: 1 }}>ADD MATCH FROM ANOTHER ROUND</span>
+              <button onClick={() => { setShowFixtureModal(false); setFixtureSearch(''); }} style={{ background: 'none', border: 'none', color: 'var(--mute)', cursor: 'pointer', fontSize: 18, lineHeight: 1 }}>✕</button>
+            </div>
+            <div style={{ padding: '8px 10px', borderBottom: '1px solid var(--rule)' }}>
+              <input
+                autoFocus
+                type="text"
+                placeholder="Search team…"
+                value={fixtureSearch}
+                onChange={e => setFixtureSearch(e.target.value)}
+                style={{ width: '100%', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', color: 'var(--paper)', fontSize: 12, padding: '8px 10px', outline: 'none', boxSizing: 'border-box' }}
+              />
+            </div>
+            <div style={{ flex: 1, overflowY: 'auto' }}>
+              {allDbFixtures
+                .filter(f => !selectedFixtures.includes(f.id))
+                .filter(f => {
+                  const q = fixtureSearch.toLowerCase();
+                  return !q || f.home_team.toLowerCase().includes(q) || f.away_team.toLowerCase().includes(q);
+                })
+                .slice(0, 40)
+                .map(f => (
+                  <button key={f.id} onClick={() => {
+                    if (selectedFixtures.length < 4) {
+                      setSelectedFixtures(prev => [...prev, f.id]);
+                    }
+                    setShowFixtureModal(false);
+                    setFixtureSearch('');
+                  }} style={{
+                    width: '100%', textAlign: 'left', padding: '10px 14px',
+                    background: 'transparent', border: 0,
+                    borderBottom: '1px solid rgba(255,255,255,0.04)',
+                    cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: 2, color: 'var(--paper)',
+                  }}>
+                    <div style={{ fontFamily: DISPLAY, fontSize: 12 }}>{f.home_team} vs {f.away_team}</div>
+                    <div style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.12em' }}>{fmtKickoff(f.kickoff_at)}</div>
+                  </button>
+                ))}
+              {allDbFixtures.length === 0 && !dataLoading && (
+                <div style={{ padding: '20px', fontFamily: MONO, fontSize: 10, color: 'var(--mute)', textAlign: 'center', letterSpacing: '.18em' }}>NO UPCOMING FIXTURES FOUND</div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Resolve pending bets (Zone B right)
+// ─────────────────────────────────────────────────────────────────────────────
+// ── Void confirmation modal — platform-styled warning, no timer ───────────────
+function VoidConfirmModal({ bet, onConfirm, onCancel }) {
+  if (!bet) return null;
+  return (
+    <div
+      onClick={e => { if (e.target === e.currentTarget) onCancel(); }}
+      style={{
+        position: 'fixed', inset: 0, zIndex: 600,
+        background: 'rgba(0,0,0,0.78)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        padding: '16px',
+      }}
+    >
+      <div style={{
+        background: 'var(--ink-2)',
+        border: '1px solid rgba(239,68,68,.45)',
+        width: '100%', maxWidth: 440,
+        boxShadow: '0 24px 60px rgba(0,0,0,0.7)',
+      }}>
+        {/* Header */}
+        <div style={{
+          padding: '14px 18px',
+          borderBottom: '1px solid var(--rule)',
+          background: 'var(--ink)',
+          display: 'flex', alignItems: 'center', gap: 10,
+        }}>
+          <span style={{ width: 3, height: 12, background: 'var(--danger)', flexShrink: 0 }} />
+          <span style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '.22em', color: 'var(--danger)', flex: 1 }}>
+            VOID BET — CONFIRM
+          </span>
+          <button onClick={onCancel} style={{ background: 'none', border: 'none', color: 'var(--mute)', cursor: 'pointer', fontSize: 18, lineHeight: 1, padding: '0 2px' }}>✕</button>
+        </div>
+        {/* Body */}
+        <div style={{ padding: '18px 20px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <div style={{ fontFamily: DISPLAY, fontSize: 14, color: 'var(--paper)', lineHeight: 1.4 }}>
+            {bet.title}
+          </div>
+          <div style={{ padding: '10px 12px', background: 'rgba(239,68,68,.06)', border: '1px solid rgba(239,68,68,.25)', fontFamily: BODY, fontSize: 12, color: 'var(--paper)', lineHeight: 1.6 }}>
+            <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.22em', color: 'var(--danger)' }}>● WARNING · </span>
+            All picks will be cleared and no points awarded. This cannot be undone.
+          </div>
+          <div style={{ fontFamily: BODY, fontSize: 11, color: 'var(--mute)', lineHeight: 1.5 }}>
+            Use <b style={{ color: 'var(--warn)' }}>No Winner</b> instead if the bet was valid but nobody got it right.
+          </div>
+        </div>
+        {/* Footer */}
+        <div style={{ padding: '12px 18px', borderTop: '1px solid var(--rule)', display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+          <button onClick={onCancel} style={{ ...ghostBtn, fontSize: 9, padding: '8px 16px' }}>CANCEL</button>
+          <button
+            onClick={onConfirm}
+            style={{ ...btnBase, fontSize: 10, background: 'var(--danger)', color: 'var(--paper)', padding: '8px 18px' }}
+          >
+            VOID BET
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ResolvePendingBets({ openBets, resolutionBetsLoading, setSelectedBetForResolution, betResolutionAnswers, toggleBetResolutionAnswer, setBetResolutionAnswers, betSubmissions, answerGrouped, fetchBetSubmissions, resolveBet, resolveNoWinner, voidBet, commLoading, commMsg, memberCount = 0 }) {
+  const [expandedId, setExpandedId] = useState(null);
+  const [voidConfirmBet, setVoidConfirmBet] = useState(null); // {id, title} | null
+
+  // Pending = open/closed bets that need resolution. Resolved = already resolved (override eligible).
+  const pending  = (openBets || []).filter(b => b.status !== 'resolved' && b.status !== 'cancelled');
+  const resolved = (openBets || []).filter(b => b.status === 'resolved');
+  const allActionable = [...pending, ...resolved];
+
+  const toggleCard = (betId) => {
+    if (expandedId === betId) {
+      setExpandedId(null);
+    } else {
+      setExpandedId(betId);
+      setSelectedBetForResolution(openBets.find(b => b.id === betId) || null);
+      setBetResolutionAnswers([]);
+      fetchBetSubmissions(betId);
+    }
+  };
+
+  const typeTone = (templateId) => {
+    if (templateId === 'top_scorer')   return 'var(--cyan)';
+    if (templateId === 'match_result') return 'var(--positive)';
+    if (templateId === 'player_block') return 'var(--danger)';
+    return 'var(--paper)';
+  };
+
+  const typeGlyph = (templateId) => {
+    if (templateId === 'top_scorer')   return '◉';
+    if (templateId === 'match_result') return '◈';
+    if (templateId === 'player_block') return '⛌';
+    return '◈';
+  };
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+      <VoidConfirmModal
+        bet={voidConfirmBet}
+        onConfirm={() => { voidBet(voidConfirmBet.id); setVoidConfirmBet(null); }}
+        onCancel={() => setVoidConfirmBet(null)}
+      />
+      <HubSectionLabel
+        label="RESOLVE BETS"
+        sub={`${pending.length} PENDING · ${resolved.length} RESOLVED (OVERRIDE ELIGIBLE)`}
+        tone="var(--gold)"
+        right={<span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.22em', color: 'var(--mute)' }}>AUTO-RESOLVE IS OFF</span>}
+      />
+      <div style={{ padding: '14px 22px 6px', fontFamily: BODY, fontSize: 11, color: 'var(--mute)', lineHeight: 1.5 }}>
+        Pick a bet, enter the result, hit <b style={{ color: 'var(--gold)' }}>RESOLVE</b>. Points are awarded immediately.
+        Auto-resolved bets appear below and can be overridden if the result was set incorrectly.
+      </div>
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: '8px 22px 22px', overflow: 'auto', flex: 1 }}>
+        {resolutionBetsLoading ? (
+          <div style={{ padding: '18px', fontFamily: MONO, fontSize: 10, color: 'var(--mute)', letterSpacing: '.2em' }}>LOADING BETS…</div>
+        ) : allActionable.length === 0 ? (
+          <div style={{ padding: '18px 14px', background: 'var(--ink-2)', border: '1px dashed var(--rule)', textAlign: 'center' }}>
+            <span style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '.22em', color: 'var(--mute)' }}>NOTHING TO RESOLVE · ALL CAUGHT UP</span>
+          </div>
+        ) : allActionable.map(b => {
+          const isOpen       = expandedId === b.id;
+          const isResolved   = b.status === 'resolved';
+          const tone         = isResolved ? 'var(--mute)' : typeTone(b.template_id);
+          const glyph        = typeGlyph(b.template_id);
+          const opts         = Array.isArray(b.options) ? b.options : [];
+          const currentAnswers = isOpen ? betResolutionAnswers : [];
+
+          const resolvedLabel = isResolved && b.correct_answer
+            ? (opts.find(o => (o.key ?? o) === b.correct_answer)?.label ?? b.correct_answer)
+            : null;
+
+          return (
+            <div key={b.id} style={{
+              background: isResolved ? 'rgba(34,197,94,0.04)' : 'var(--ink-2)',
+              border: isResolved ? '1px solid rgba(34,197,94,0.2)' : '1px solid var(--rule)',
+              borderLeft: isResolved ? '3px solid rgba(34,197,94,0.6)' : `3px solid ${tone}`,
+            }}>
+              <button
+                onClick={() => toggleCard(b.id)}
+                style={{ width: '100%', background: 'transparent', border: 0, color: 'var(--paper)', padding: '12px 14px', display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer', textAlign: 'left' }}
+              >
+                <span style={{ width: 22, height: 22, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: `${tone}15`, border: `1px solid ${tone}55`, fontFamily: DISPLAY, fontSize: 12, color: tone }}>{glyph}</span>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 2, flex: 1, minWidth: 0 }}>
+                  <span style={{ fontFamily: DISPLAY, fontSize: 13, color: isResolved ? 'var(--text-2)' : 'var(--paper)' }}>{b.title}</span>
+                  <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.16em', color: 'var(--mute)' }}>
+                    {b.scope_ref || b.scope_type || ''}
+                    {resolvedLabel ? ` · RESULT: ${resolvedLabel.toUpperCase()}` : ''}
+                  </span>
+                </div>
+                {isResolved
+                  ? <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.18em', color: 'var(--positive)', background: 'rgba(34,197,94,0.12)', border: '1px solid rgba(34,197,94,0.35)', padding: '2px 7px' }}>✓ RESOLVED</span>
+                  : <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.22em', color: 'var(--gold)' }}>● PENDING</span>}
+                <span style={{ color: 'var(--mute)', fontFamily: MONO, fontSize: 14 }}>{isOpen ? '−' : '+'}</span>
+              </button>
+
+              {isOpen && (
+                <div style={{ padding: '4px 14px 14px', display: 'flex', flexDirection: 'column', gap: 12, borderTop: isResolved ? '1px solid rgba(34,197,94,0.15)' : '1px solid var(--rule)' }}>
+                  {/* Override notice for already-resolved bets */}
+                  {isResolved && (
+                    <div style={{ padding: '8px 10px', background: 'rgba(34,197,94,0.06)', border: '1px solid rgba(34,197,94,0.25)', fontFamily: BODY, fontSize: 11, color: 'var(--positive)', lineHeight: 1.5 }}>
+                      This bet was resolved as <b>{resolvedLabel?.toUpperCase() ?? b.correct_answer}</b>. Selecting a different answer will override the result — points already awarded will be reversed and recalculated.
+                    </div>
+                  )}
+                  {/* Who picked what */}
+                  {Object.keys(answerGrouped).length > 0 && (
+                    <div>
+                      <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.22em', color: 'var(--mute)' }}>WHO PICKED WHAT · {betSubmissions.length}/{memberCount}</span>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 8 }}>
+                        {Object.entries(answerGrouped).map(([optKey, usernames]) => (
+                          <div key={optKey} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                            <span style={{ fontFamily: DISPLAY, fontSize: 11, minWidth: 80, color: 'var(--paper)' }}>
+                              {opts.find(o => (o.key ?? o) === optKey)?.label ?? optKey}
+                            </span>
+                            <div style={{ display: 'flex', gap: 3, flexWrap: 'wrap' }}>
+                              {usernames.slice(0, 6).map(name => (
+                                <MgrTag key={name} mono={mgrMono(name)} hue={mgrHue(name)} size={16} />
+                              ))}
+                            </div>
+                            <span style={{ flex: 1 }} />
+                            <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.14em', color: 'var(--mute)' }}>{usernames.length} MGRS</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Multi-select answer chips — click to toggle, multiple allowed for ties */}
+                  <WizField
+                    label="CORRECT ANSWER(S)"
+                    sub={opts.length > 0
+                      ? 'Select all correct options — click to toggle. Multiple selections allowed for ties.'
+                      : 'No predefined options — type the answer key manually below.'}
+                  >
+                    <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                      {opts.map(opt => {
+                        const optKey   = opt.key ?? opt;
+                        const optLabel = opt.label ?? opt;
+                        const picked   = currentAnswers.includes(optKey);
+                        const subCount = answerGrouped[optKey]?.length ?? 0;
+                        return (
+                          <button key={optKey} onClick={() => toggleBetResolutionAnswer(optKey)} style={{
+                            padding: '7px 11px', cursor: 'pointer',
+                            background: picked ? 'rgba(34,197,94,.08)' : 'var(--ink)',
+                            border: picked ? '1px solid var(--positive)' : '1px solid var(--rule)',
+                            color: picked ? 'var(--positive)' : 'var(--paper)',
+                            fontFamily: DISPLAY, fontSize: 11, letterSpacing: '-0.01em',
+                            display: 'flex', flexDirection: 'column', gap: 2, textAlign: 'left',
+                          }}>
+                            <span>{picked ? '✓ ' : ''}{optLabel}</span>
+                            {subCount > 0 && <span style={{ fontFamily: MONO, fontSize: 8, letterSpacing: '.14em', color: picked ? 'var(--positive)' : 'var(--mute)' }}>{subCount} MGRS</span>}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    {/* Free-text fallback only when there are no predefined options */}
+                    {opts.length === 0 && (
+                      <input
+                        placeholder="Type answer key manually…"
+                        value={currentAnswers[0] ?? ''}
+                        onChange={e => setBetResolutionAnswers(e.target.value ? [e.target.value] : [])}
+                        style={{ ...inputStyle, marginTop: 6, fontSize: 11 }}
+                      />
+                    )}
+                  </WizField>
+
+                  {/* Footer: AWARDS count + action buttons */}
+                  {(() => {
+                    const totalWinners = currentAnswers.reduce((sum, ak) => sum + (answerGrouped[ak]?.length ?? 0), 0);
+                    const canResolve = currentAnswers.length > 0;
+                    return (
+                      <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+                        <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.16em', color: 'var(--mute)' }}>
+                          {canResolve
+                            ? <>AWARDS <b style={{ color: 'var(--positive)' }}>
+                                {b.reward_type === 'budget'
+                                  ? `+€${b.reward_value}M BUDGET`
+                                  : `+${b.reward_value} PTS`}
+                              </b> TO {totalWinners} MGR{totalWinners !== 1 ? 'S' : ''}</>
+                            : <span style={{ color: 'var(--mute)' }}>SELECT A WINNER OR USE NO WINNER →</span>}
+                        </span>
+                        <span style={{ flex: 1 }} />
+                        {/* VOID — cancels the bet entirely (wrong setup / abandoned fixture) */}
+                        <button
+                          onClick={() => setVoidConfirmBet({ id: b.id, title: b.title })}
+                          disabled={commLoading}
+                          style={{ ...ghostBtn, fontSize: 9 }}
+                        >VOID</button>
+                        {/* NO WINNER — bet was valid but no option was correct (0 pts, stays resolved) */}
+                        <button
+                          onClick={() => {
+                            if (!window.confirm(`Resolve "${b.title}" with no winner? 0 pts will be awarded. This cannot be undone.`)) return;
+                            resolveNoWinner();
+                          }}
+                          disabled={commLoading}
+                          style={{ ...ghostBtn, fontSize: 9, borderColor: 'rgba(245,158,11,.4)', color: 'var(--warn)' }}
+                        >NO WINNER</button>
+                        {/* RESOLVE — awards pts to managers who picked a selected option */}
+                        <button
+                          disabled={commLoading || !canResolve}
+                          onClick={resolveBet}
+                          style={{
+                            ...btnBase, fontSize: 11,
+                            background: canResolve ? 'var(--gold)' : 'var(--ink-3)',
+                            color: canResolve ? 'var(--ink)' : 'var(--mute)',
+                            cursor: canResolve ? 'pointer' : 'not-allowed',
+                          }}
+                        >{commLoading ? 'RESOLVING…' : isResolved ? 'OVERRIDE →' : 'RESOLVE →'}</button>
+                      </div>
+                    );
+                  })()}
+                  {/* Inline error — visible without scrolling to top */}
+                  {commMsg?.type === 'err' && isOpen && (
+                    <div style={{ padding: '8px 10px', background: 'rgba(239,68,68,.08)', border: '1px solid rgba(239,68,68,.3)', color: 'var(--danger)', fontFamily: BODY, fontSize: 12 }}>
+                      {commMsg.text}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Betting History — all bets (admin read-only, below CREATE / RESOLVE)
+// ─────────────────────────────────────────────────────────────────────────────
+const BH_STATUS = {
+  open:      { label: 'OPEN',     tone: 'var(--cyan)',     bg: 'rgba(0,180,216,.08)'  },
+  closed:    { label: 'PENDING',  tone: 'var(--gold)',     bg: 'rgba(224,168,0,.08)'  },
+  resolved:  { label: 'RESOLVED', tone: 'var(--positive)', bg: 'rgba(34,197,94,.08)'  },
+  cancelled: { label: 'VOIDED',   tone: 'var(--danger)',   bg: 'rgba(239,68,68,.08)'  },
+};
+
+function BettingHistory({ allBets, allBetsLoading, fetchAllBets, memberCount = 0, isMobile = false }) {
+  const [filter,     setFilter]     = useState('all');
+  const [expandedId, setExpandedId] = useState(null);
+
+  // Lazy-load: only fetch on first render, then kept in sync by mutations
+  useEffect(() => { fetchAllBets(); }, [fetchAllBets]);
+
+  const counts = {
+    all:       allBets.length,
+    open:      allBets.filter(b => b.status === 'open').length,
+    closed:    allBets.filter(b => b.status === 'closed').length,
+    resolved:  allBets.filter(b => b.status === 'resolved').length,
+    cancelled: allBets.filter(b => b.status === 'cancelled').length,
+  };
+
+  const filtered = filter === 'all' ? allBets : allBets.filter(b => b.status === filter);
+
+  const toggleExpand = (id) => setExpandedId(prev => prev === id ? null : id);
+
+  // Resolve the human-readable label for a given option key within a bet's options array
+  const optLabel = (bet, key) => {
+    const opts = Array.isArray(bet.options) ? bet.options : [];
+    return opts.find(o => (o.key ?? o) === key)?.label ?? key;
+  };
+
+  // Correct answer keys: support both correct_answers[] (new) and correct_answer (legacy)
+  const correctKeys = (bet) =>
+    (Array.isArray(bet.correct_answers) && bet.correct_answers.length ? bet.correct_answers : null)
+    ?? (bet.correct_answer ? [bet.correct_answer] : []);
+
+  const FILTER_TABS = [
+    { k: 'all',      label: 'ALL',      count: counts.all       },
+    { k: 'open',     label: 'OPEN',     count: counts.open      },
+    { k: 'closed',   label: 'PENDING',  count: counts.closed    },
+    { k: 'resolved', label: 'RESOLVED', count: counts.resolved  },
+    { k: 'cancelled',label: 'VOIDED',   count: counts.cancelled },
+  ].filter(t => t.k === 'all' || t.count > 0);
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column' }}>
+      <HubSectionLabel
+        label="BETTING HISTORY"
+        sub={`${counts.all} TOTAL · ALL STATUSES`}
+        tone="var(--purple)"
+        right={
+          <button
+            onClick={fetchAllBets}
+            disabled={allBetsLoading}
+            style={{ ...ghostBtn, fontSize: 9, padding: '4px 10px', opacity: allBetsLoading ? 0.5 : 1 }}
+          >↻ REFRESH</button>
+        }
+      />
+
+      {/* Filter tabs */}
+      <div style={{
+        display: 'flex', gap: 0, borderBottom: '1px solid var(--rule)',
+        background: 'var(--ink)', overflowX: 'auto', flexShrink: 0,
+      }}>
+        {FILTER_TABS.map((t, i) => {
+          const active = filter === t.k;
+          const cfg    = BH_STATUS[t.k] ?? { tone: 'var(--paper)' };
+          const tone   = t.k === 'all' ? 'var(--paper)' : cfg.tone;
+          return (
+            <button
+              key={t.k}
+              onClick={() => setFilter(t.k)}
+              style={{
+                background: 'transparent',
+                border: 0,
+                borderBottom: active ? `2px solid ${tone}` : '2px solid transparent',
+                borderRight: i < FILTER_TABS.length - 1 ? '1px solid var(--rule)' : 'none',
+                padding: isMobile ? '10px 14px' : '12px 18px',
+                cursor: 'pointer',
+                display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0,
+              }}
+            >
+              <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.18em', color: active ? tone : 'var(--mute)' }}>
+                {t.label}
+              </span>
+              <span style={{
+                fontFamily: MONO, fontSize: 8, letterSpacing: '.1em',
+                padding: '1px 5px',
+                background: active ? `${tone}18` : 'transparent',
+                border: `1px solid ${active ? `${tone}44` : 'var(--rule)'}`,
+                color: active ? tone : 'var(--mute)',
+              }}>{t.count}</span>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* List */}
+      <div style={{ display: 'flex', flexDirection: 'column', padding: isMobile ? '8px 14px 80px' : '12px 22px 32px', gap: 6 }}>
+        {allBetsLoading && (
+          <div style={{ padding: '18px', fontFamily: MONO, fontSize: 10, color: 'var(--mute)', letterSpacing: '.2em' }}>LOADING…</div>
+        )}
+        {!allBetsLoading && filtered.length === 0 && (
+          <div style={{ padding: '18px 14px', background: 'var(--ink-2)', border: '1px dashed var(--rule)', textAlign: 'center' }}>
+            <span style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '.22em', color: 'var(--mute)' }}>
+              {counts.all === 0 ? 'NO BETS CREATED YET' : 'NO BETS IN THIS CATEGORY'}
+            </span>
+          </div>
+        )}
+
+        {!allBetsLoading && filtered.map(bet => {
+          const isOpen  = expandedId === bet.id;
+          const cfg     = BH_STATUS[bet.status] ?? BH_STATUS.open;
+          const tone    = cfg.tone;
+          // Reuse the same glyph/tone helpers defined in ResolvePendingBets scope
+          const glyph = bet.template_id
+            ? (() => {
+                // We don't have the template slug here — derive from title heuristic
+                const t = (bet.title || '').toLowerCase();
+                if (t.includes('scorer') || t.includes('top'))  return '◉';
+                if (t.includes('result') || t.includes('match')) return '◈';
+                if (t.includes('clean'))                         return '🧤';
+                return '◈';
+              })()
+            : '◈';
+
+          const cKeys   = correctKeys(bet);
+          const stats   = bet.stats ?? { total: 0, winners: 0, byAnswer: {} };
+          const opts    = Array.isArray(bet.options) ? bet.options : [];
+
+          return (
+            <div
+              key={bet.id}
+              style={{
+                background: 'var(--ink-2)',
+                border: '1px solid var(--rule)',
+                borderLeft: `3px solid ${tone}`,
+              }}
+            >
+              {/* Collapsed header row */}
+              <button
+                onClick={() => toggleExpand(bet.id)}
+                style={{
+                  width: '100%', background: 'transparent', border: 0,
+                  padding: '11px 14px', display: 'flex', alignItems: 'center',
+                  gap: 10, cursor: 'pointer', textAlign: 'left',
+                }}
+              >
+                {/* Type glyph */}
+                <span style={{
+                  width: 20, height: 20, display: 'inline-flex', alignItems: 'center',
+                  justifyContent: 'center', background: `${tone}15`,
+                  border: `1px solid ${tone}55`, fontFamily: DISPLAY, fontSize: 11,
+                  color: tone, flexShrink: 0,
+                }}>{glyph}</span>
+
+                {/* Title */}
+                <span style={{
+                  fontFamily: DISPLAY, fontSize: isMobile ? 12 : 13, color: 'var(--paper)',
+                  flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                }}>{bet.title}</span>
+
+                {/* Picks count */}
+                <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.14em', color: 'var(--mute)', flexShrink: 0 }}>
+                  {stats.total}/{memberCount}
+                </span>
+
+                {/* Status chip */}
+                <span style={{
+                  fontFamily: MONO, fontSize: 8, letterSpacing: '.18em',
+                  padding: '2px 6px', border: `1px solid ${tone}44`,
+                  background: cfg.bg, color: tone, flexShrink: 0,
+                }}>{cfg.label}</span>
+
+                {/* Expand chevron */}
+                <span style={{ color: 'var(--mute)', fontFamily: MONO, fontSize: 12, flexShrink: 0 }}>
+                  {isOpen ? '−' : '+'}
+                </span>
+              </button>
+
+              {/* Expanded detail panel */}
+              {isOpen && (
+                <div style={{ borderTop: '1px solid var(--rule)', padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+
+                  {/* Meta row: reward · deadline */}
+                  <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                      <span style={{ fontFamily: MONO, fontSize: 8, letterSpacing: '.2em', color: 'var(--mute)' }}>REWARD</span>
+                      <span style={{ fontFamily: DISPLAY, fontSize: 14, color: 'var(--positive)' }}>+{bet.reward_value} PTS</span>
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                      <span style={{ fontFamily: MONO, fontSize: 8, letterSpacing: '.2em', color: 'var(--mute)' }}>DEADLINE</span>
+                      <span style={{ fontFamily: MONO, fontSize: 10, color: 'var(--paper)', letterSpacing: '.1em' }}>{fmtKickoff(bet.deadline_at)}</span>
+                    </div>
+                    {bet.scope_ref && (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                        <span style={{ fontFamily: MONO, fontSize: 8, letterSpacing: '.2em', color: 'var(--mute)' }}>SCOPE</span>
+                        <span style={{ fontFamily: MONO, fontSize: 10, color: 'var(--paper)', letterSpacing: '.1em' }}>{bet.scope_ref}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Correct answer(s) — resolved bets only */}
+                  {bet.status === 'resolved' && (
+                    <div style={{ padding: '8px 10px', background: 'rgba(34,197,94,.06)', border: '1px solid rgba(34,197,94,.25)', display: 'flex', flexDirection: 'column', gap: 6 }}>
+                      <span style={{ fontFamily: MONO, fontSize: 8, letterSpacing: '.22em', color: 'var(--positive)' }}>CORRECT ANSWER</span>
+                      {cKeys.length > 0 ? (
+                        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                          {cKeys.map(k => (
+                            <span key={k} style={{
+                              fontFamily: DISPLAY, fontSize: 12, color: 'var(--positive)',
+                              padding: '4px 8px', border: '1px solid rgba(34,197,94,.4)',
+                              background: 'rgba(34,197,94,.08)',
+                            }}>{optLabel(bet, k)}</span>
+                          ))}
+                        </div>
+                      ) : (
+                        <span style={{ fontFamily: DISPLAY, fontSize: 12, color: 'var(--mute)' }}>No winner</span>
+                      )}
+                      <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.14em', color: 'var(--positive)' }}>
+                        {stats.winners} / {stats.total} correct · +{bet.reward_value} pts each
+                      </span>
+                    </div>
+                  )}
+
+                  {/* Voided notice */}
+                  {bet.status === 'cancelled' && (
+                    <div style={{ padding: '8px 10px', background: 'rgba(239,68,68,.06)', border: '1px solid rgba(239,68,68,.25)' }}>
+                      <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.18em', color: 'var(--danger)' }}>
+                        VOIDED · All picks cleared — no points awarded
+                      </span>
+                    </div>
+                  )}
+
+                  {/* Pick breakdown — who chose what */}
+                  {stats.total > 0 && opts.length > 0 && (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                      <span style={{ fontFamily: MONO, fontSize: 8, letterSpacing: '.22em', color: 'var(--mute)' }}>
+                        PICK BREAKDOWN · {stats.total} SUBMISSION{stats.total !== 1 ? 'S' : ''}
+                      </span>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                        {opts.map(opt => {
+                          const key      = opt.key ?? opt;
+                          const label    = opt.label ?? opt;
+                          const pickers  = stats.byAnswer[key] ?? [];
+                          const isWinner = bet.status === 'resolved' && cKeys.includes(key);
+                          if (pickers.length === 0) return null;
+                          return (
+                            <div key={key} style={{
+                              display: 'flex', alignItems: 'flex-start', gap: 8,
+                              padding: '6px 8px',
+                              background: isWinner ? 'rgba(34,197,94,.05)' : 'var(--ink)',
+                              border: `1px solid ${isWinner ? 'rgba(34,197,94,.25)' : 'var(--rule)'}`,
+                            }}>
+                              <span style={{
+                                fontFamily: DISPLAY, fontSize: 11, color: isWinner ? 'var(--positive)' : 'var(--paper)',
+                                minWidth: isMobile ? 80 : 120, flexShrink: 0,
+                              }}>
+                                {isWinner && <span style={{ marginRight: 4 }}>✓</span>}{label}
+                              </span>
+                              <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', flex: 1 }}>
+                                {pickers.map(name => (
+                                  <MgrTag key={name} mono={mgrMono(name)} hue={mgrHue(name)} size={16} />
+                                ))}
+                              </div>
+                              <span style={{ fontFamily: MONO, fontSize: 8, letterSpacing: '.12em', color: 'var(--mute)', flexShrink: 0 }}>
+                                {pickers.length}
+                              </span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* No submissions yet */}
+                  {stats.total === 0 && (
+                    <div style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.18em', color: 'var(--mute)' }}>
+                      NO PICKS SUBMITTED YET
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Toggle switch (on/off control with a label)

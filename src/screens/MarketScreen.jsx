@@ -81,6 +81,9 @@ export default function MarketScreen() {
   const [teamSearch,    setTeamSearch]    = useState('');
   const [priceMin,      setPriceMin]      = useState(0);
   const [priceMax,      setPriceMax]      = useState(15);
+  const [filterHideEliminated, setFilterHideEliminated] = useState(false);
+  const [filterHideTaken,      setFilterHideTaken]      = useState(false);
+  const [filterMinScore,       setFilterMinScore]       = useState(0);
   const [budget,          setBudget]          = useState(0);      // loaded from league config
   const [saving,          setSaving]          = useState(false);
   // Transfer quota
@@ -630,23 +633,34 @@ export default function MarketScreen() {
   }, [players]);
 
   const filteredPlayers = useMemo(() => {
+    const owned = mySquad?.players ?? [];
     const filtered = players.filter(p => {
       const matchesPos    = filterPos === 'ALL' || p.position === filterPos;
       const matchesSearch = !searchQuery || p.name?.toLowerCase().includes(searchQuery.toLowerCase());
       const matchesTeam   = selectedTeams.size === 0 || selectedTeams.has(p.club);
       const price         = p.price ?? 0;
       const matchesPrice  = price >= priceMin && price <= priceMax;
+
+      if (filterHideEliminated && eliminatedClubs.has(p.club) && !owned.includes(p.id)) return false;
+      if (filterHideTaken && isDraftLeague && isTaken(p.id) && !owned.includes(p.id)) return false;
+      if (filterMinScore > 0) {
+        const rounds = statsMap[p.id];
+        const total  = rounds ? rounds.reduce((s, v) => s + (v ?? 0), 0) : 0;
+        if (total < filterMinScore) return false;
+      }
+
       return matchesPos && matchesSearch && matchesTeam && matchesPrice;
     });
     // Own players always float to the top; within each group sort by price descending
-    const owned = mySquad?.players ?? [];
     return filtered.sort((a, b) => {
       const aOwned = owned.includes(a.id) ? 1 : 0;
       const bOwned = owned.includes(b.id) ? 1 : 0;
       if (aOwned !== bOwned) return bOwned - aOwned;
       return b.price - a.price;
     });
-  }, [players, filterPos, searchQuery, selectedTeams, priceMin, priceMax, mySquad]);
+  }, [players, filterPos, searchQuery, selectedTeams, priceMin, priceMax, mySquad,
+      filterHideEliminated, filterHideTaken, filterMinScore,
+      eliminatedClubs, isDraftLeague, isTaken, statsMap]);
   const squadCount  = effectiveSquadIds.length;
   const emptySlots  = Math.max(0, squadSize - squadCount);
   const [showScoringModal, setShowScoringModal] = useState(false);
@@ -1078,6 +1092,79 @@ export default function MarketScreen() {
             </button>
           )}
         </div>
+
+        {/* Smart filter toggles — hide eliminated / hide taken / min score */}
+        {(() => {
+          const hasEliminated = eliminatedClubs.size > 0;
+          const hasTaken      = isDraftLeague;
+          const hasScores     = Object.keys(statsMap).length > 0;
+          if (!hasEliminated && !hasTaken && !hasScores) return null;
+          const activeFilters = (filterHideEliminated ? 1 : 0) + (filterHideTaken ? 1 : 0) + (filterMinScore > 0 ? 1 : 0);
+          return (
+            <div className="px-4 pb-2.5 flex flex-wrap items-center gap-2" style={{ borderTop: '1px solid rgba(255,255,255,0.04)' }}>
+              {hasEliminated && (
+                <button
+                  onClick={() => setFilterHideEliminated(v => !v)}
+                  style={{
+                    padding: '4px 9px', borderRadius: 3, cursor: 'pointer', fontSize: 9, fontWeight: 700,
+                    fontFamily: 'Archivo Black, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase',
+                    background: filterHideEliminated ? 'rgba(239,68,68,0.15)' : 'rgba(255,255,255,0.04)',
+                    border: `1px solid ${filterHideEliminated ? 'rgba(239,68,68,0.5)' : 'rgba(255,255,255,0.08)'}`,
+                    color: filterHideEliminated ? 'var(--danger)' : 'var(--mute)',
+                  }}
+                >
+                  {filterHideEliminated ? '✕ ' : ''}Hide Eliminated
+                </button>
+              )}
+              {hasTaken && (
+                <button
+                  onClick={() => setFilterHideTaken(v => !v)}
+                  style={{
+                    padding: '4px 9px', borderRadius: 3, cursor: 'pointer', fontSize: 9, fontWeight: 700,
+                    fontFamily: 'Archivo Black, sans-serif', letterSpacing: '.08em', textTransform: 'uppercase',
+                    background: filterHideTaken ? 'rgba(239,68,68,0.15)' : 'rgba(255,255,255,0.04)',
+                    border: `1px solid ${filterHideTaken ? 'rgba(239,68,68,0.5)' : 'rgba(255,255,255,0.08)'}`,
+                    color: filterHideTaken ? 'var(--danger)' : 'var(--mute)',
+                  }}
+                >
+                  {filterHideTaken ? '✕ ' : ''}Hide Taken
+                </button>
+              )}
+              {hasScores && (
+                <div className="flex items-center gap-1.5">
+                  <span style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 9, letterSpacing: '.08em', color: filterMinScore > 0 ? 'var(--cyan)' : 'var(--mute)', textTransform: 'uppercase', flexShrink: 0 }}>
+                    Min pts
+                  </span>
+                  <input
+                    type="number"
+                    min={0} step={1}
+                    value={filterMinScore}
+                    onChange={e => setFilterMinScore(Math.max(0, Number(e.target.value)))}
+                    style={{
+                      width: 44, padding: '3px 6px', textAlign: 'center',
+                      background: filterMinScore > 0 ? 'rgba(0,196,232,0.08)' : 'rgba(255,255,255,0.06)',
+                      border: `1px solid ${filterMinScore > 0 ? 'rgba(0,196,232,0.35)' : 'rgba(255,255,255,0.12)'}`,
+                      borderRadius: 3, color: filterMinScore > 0 ? 'var(--cyan)' : 'var(--paper)',
+                      fontFamily: 'Archivo, sans-serif', fontSize: 11, outline: 'none',
+                    }}
+                  />
+                </div>
+              )}
+              {activeFilters > 0 && (
+                <button
+                  onClick={() => { setFilterHideEliminated(false); setFilterHideTaken(false); setFilterMinScore(0); }}
+                  style={{
+                    background: 'none', border: 'none', color: 'var(--mute)', cursor: 'pointer',
+                    fontFamily: 'Archivo Black, sans-serif', fontSize: 8, letterSpacing: '.1em',
+                    textTransform: 'uppercase',
+                  }}
+                >
+                  Reset
+                </button>
+              )}
+            </div>
+          );
+        })()}
 
         {/* Position filter tabs — dot shows red/yellow/green fill status */}
         <div
