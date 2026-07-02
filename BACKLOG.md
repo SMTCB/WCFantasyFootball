@@ -1,12 +1,50 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-06-30 (bet/market improvements + sync_cup_eliminations v2; PRs #691, #692)  
+**Last Updated**: 2026-07-02 (Bets admin UX polish + mobile overlap fix; PRs #700–#704)  
 **E2E Test Suite**: `platform.spec.js` (36 tests × 2 browsers) passing in CI ✅  
 **Full Playbook Run**: `E2E_TEST_PLAYBOOK.md` v2.0 — all flows confirmed  
 **🟢 LAUNCH READY**: No critical (P0/P1) bugs open. All game mechanics functional. WC kick-off 2026-06-11.  
 **Live App**: https://wc-fantasy-football.vercel.app  
 **WC Kick-off**: 2026-06-11 19:00 UTC (Mexico vs South Africa)  
 **Supabase PostgREST max_rows**: 10,000 (raised from default 1,000 — 2026-06-08)
+
+---
+
+## ✅ Bets admin UX polish + mobile layout fix (2026-07-02) — PRs #700–#704
+
+### PR #700 — Bet category taxonomy + BetCreatorPanel restructure
+
+Introduced a `category` column on `bet_templates` (migration 193: `ALTER TABLE bet_templates ADD COLUMN IF NOT EXISTS category TEXT DEFAULT 'match'`). All 26 active templates seeded with categories: `match` (12 types), `stats` (8), `players` (4), `custom` (2). `BetCreatorPanel` type-selector rebuilt from 3 hardcoded tiles to a scrollable categorised list; category headers (MATCH / STATS / PLAYERS / CUSTOM) are sticky dividers. `SLUG_STYLE` map in `BetsTabHub` extended to cover all 26 slugs with glyphs and accent colours.
+
+### PR #701 — Resolved bet label, visual distinction, RESULTS section defaults, Your Performance groups
+
+**(1) Auto-resolve label** — `CommissionerPanel` RESOLVE BETS panel was showing raw option keys (e.g. `F-1219435446_HOME`) in the resolved-bet subtitle and override notice. Fixed by looking up the human-readable label from the `opts` array: `opts.find(o => (o.key ?? o) === b.correct_answer)?.label ?? b.correct_answer`.
+
+**(2) Resolved bet visual distinction** — resolved bet cards now render with a green tint (`rgba(34,197,94,0.04)` background + `rgba(34,197,94,0.2)` border + `rgba(34,197,94,0.6)` left accent). Badge changed from plain `✓ AUTO-RESOLVED` text to a filled green `✓ RESOLVED` chip.
+
+**(3) RESULTS section open by default** — `BetsTabHub` RESULTS `BetSection` changed from `defaultOpen={false}` to `defaultOpen={true}` so bet history is immediately visible.
+
+**(4) Your Performance — all 26 bet types in 4 collapsible categories** — `useBettingLeaderboard` `BUCKETS` array expanded from 3 to 26 entries each with a `category` field. `BettingLeaderboardView` restructured: `PerformanceByType` component groups `myBetsByType` by category and renders collapsible category headers (`CAT_META`: MATCH ⚽ / STATS 📊 / PLAYERS 🎯 / CUSTOM ✏).
+
+### PR #702 — Collapsible categories in BETS and BETTING tabs
+
+**(1) BETS tab** — `CategoryStrip` gained a `collapsible` prop; when true the category header is clickable with `+/−` toggle. RESULTS section passes `categoriesCollapsible={true}`; OPEN and PENDING sections do not.
+
+**(2) BETTING tab** — `PerformanceByType` category headers are now `<button>` elements that toggle open/closed state per category. `openCats` Set tracks which are open.
+
+### PR #703 — Mobile overlap fix: BetCreatorPanel Step 2 fully stacked
+
+`datetime-local` on iOS Safari has an intrinsic minimum width (~200px for the date/time text) that overflows a flex row alongside the reward field on a 375px screen, even with `flex:1, minWidth:0, boxSizing:border-box`. Changed Step 2 layout from a single `display:flex` row to `flexDirection:column`: **DEADLINE** on its own full-width row (datetime-local takes 100% width, no sibling), **REWARD** (number 80px + select) on a separate row below. Also added `boxSizing: 'border-box'` to the FROM (OPTIONAL) field for consistency.
+
+### PR #704 — Categories collapsed by default; hide empty performance types
+
+**(1) BetsTabHub `CategoryStrip`** — `useState(true)` → `useState(false)`: category strips start collapsed, user expands on demand.
+
+**(2) BettingLeaderboardView `PerformanceByType`** — two changes:
+- `useState(() => new Set(CAT_ORDER))` → `useState(() => new Set())`: all category groups start collapsed.
+- Filter `myBetsByType` before grouping to only include bet types where `correct + wrong > 0` — eliminates the ~22 unused rows that showed as empty grey bars. Only bet types the user has actually played appear.
+
+**GitHub token updated**: remote URL updated to new PAT (`ghp_o8WPIc3...`) — old token expired. Use new token for all future API calls.
 
 ---
 
