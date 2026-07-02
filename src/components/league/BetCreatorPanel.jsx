@@ -653,41 +653,41 @@ export default function BetCreatorPanel({ leagueId, tournamentId, onCreated, com
                     type="datetime-local"
                     value={windowFrom}
                     onChange={e => setWindowFrom(e.target.value)}
-                    style={{ width: '100%', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', color: 'var(--paper)', fontSize: 16, padding: '7px 8px', borderRadius: 3, outline: 'none', colorScheme: 'dark', boxSizing: 'border-box' }}
+                    style={{ width: '100%', boxSizing: 'border-box', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', color: 'var(--paper)', fontSize: 16, padding: '7px 8px', borderRadius: 3, outline: 'none', colorScheme: 'dark' }}
                   />
                 </div>
               )}
-              <div style={{ display: 'flex', gap: 8, alignItems: 'flex-end' }}>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontFamily: MONO, fontSize: 8, color: 'var(--mute)', letterSpacing: '.15em', marginBottom: 5 }}>
-                    {isMatchdayPlayer ? 'PICKS CLOSE' : 'DEADLINE'}
-                  </div>
-                  <input
-                    type="datetime-local"
-                    value={deadline}
-                    onChange={e => { setDeadline(e.target.value); deadlineEdited.current = true; }}
-                    style={{ width: '100%', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', color: deadline ? 'var(--paper)' : 'var(--danger)', fontSize: 16, padding: '7px 8px', borderRadius: 3, outline: 'none', colorScheme: 'dark', boxSizing: 'border-box' }}
-                  />
+              {/* Deadline — full width row */}
+              <div>
+                <div style={{ fontFamily: MONO, fontSize: 8, color: 'var(--mute)', letterSpacing: '.15em', marginBottom: 5 }}>
+                  {isMatchdayPlayer ? 'PICKS CLOSE' : 'DEADLINE'}
                 </div>
-                <div style={{ flexShrink: 0 }}>
-                  <div style={{ fontFamily: MONO, fontSize: 8, color: 'var(--mute)', letterSpacing: '.15em', marginBottom: 5 }}>REWARD</div>
-                  <div style={{ display: 'flex', gap: 5 }}>
-                    <input
-                      type="number"
-                      value={rewardValue}
-                      onChange={e => setRewardValue(e.target.value)}
-                      min="1"
-                      style={{ width: 64, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', color: 'var(--paper)', fontSize: 16, padding: '7px 6px', borderRadius: 3, outline: 'none' }}
-                    />
-                    <select
-                      value={rewardType}
-                      onChange={e => setRewardType(e.target.value)}
-                      style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', color: 'var(--paper)', fontSize: 16, padding: '7px 4px', borderRadius: 3, outline: 'none' }}
-                    >
-                      <option value="points">pts</option>
-                      <option value="budget">€M</option>
-                    </select>
-                  </div>
+                <input
+                  type="datetime-local"
+                  value={deadline}
+                  onChange={e => { setDeadline(e.target.value); deadlineEdited.current = true; }}
+                  style={{ width: '100%', boxSizing: 'border-box', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', color: deadline ? 'var(--paper)' : 'var(--danger)', fontSize: 16, padding: '7px 8px', borderRadius: 3, outline: 'none', colorScheme: 'dark' }}
+                />
+              </div>
+              {/* Reward — own row below */}
+              <div>
+                <div style={{ fontFamily: MONO, fontSize: 8, color: 'var(--mute)', letterSpacing: '.15em', marginBottom: 5 }}>REWARD</div>
+                <div style={{ display: 'flex', gap: 5 }}>
+                  <input
+                    type="number"
+                    value={rewardValue}
+                    onChange={e => setRewardValue(e.target.value)}
+                    min="1"
+                    style={{ width: 80, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', color: 'var(--paper)', fontSize: 16, padding: '7px 6px', borderRadius: 3, outline: 'none' }}
+                  />
+                  <select
+                    value={rewardType}
+                    onChange={e => setRewardType(e.target.value)}
+                    style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', color: 'var(--paper)', fontSize: 16, padding: '7px 6px', borderRadius: 3, outline: 'none' }}
+                  >
+                    <option value="points">pts</option>
+                    <option value="budget">€M</option>
+                  </select>
                 </div>
               </div>
             </div>
