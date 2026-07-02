@@ -1233,8 +1233,16 @@ function ResolvePendingBets({ openBets, resolutionBetsLoading, setSelectedBetFor
           const opts         = Array.isArray(b.options) ? b.options : [];
           const currentAnswers = isOpen ? betResolutionAnswers : [];
 
+          const resolvedLabel = isResolved && b.correct_answer
+            ? (opts.find(o => (o.key ?? o) === b.correct_answer)?.label ?? b.correct_answer)
+            : null;
+
           return (
-            <div key={b.id} style={{ background: 'var(--ink-2)', border: '1px solid var(--rule)', borderLeft: `3px solid ${tone}` }}>
+            <div key={b.id} style={{
+              background: isResolved ? 'rgba(34,197,94,0.04)' : 'var(--ink-2)',
+              border: isResolved ? '1px solid rgba(34,197,94,0.2)' : '1px solid var(--rule)',
+              borderLeft: isResolved ? '3px solid rgba(34,197,94,0.6)' : `3px solid ${tone}`,
+            }}>
               <button
                 onClick={() => toggleCard(b.id)}
                 style={{ width: '100%', background: 'transparent', border: 0, color: 'var(--paper)', padding: '12px 14px', display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer', textAlign: 'left' }}
@@ -1244,21 +1252,21 @@ function ResolvePendingBets({ openBets, resolutionBetsLoading, setSelectedBetFor
                   <span style={{ fontFamily: DISPLAY, fontSize: 13, color: isResolved ? 'var(--text-2)' : 'var(--paper)' }}>{b.title}</span>
                   <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.16em', color: 'var(--mute)' }}>
                     {b.scope_ref || b.scope_type || ''}
-                    {isResolved && b.correct_answer ? ` · RESULT: ${b.correct_answer.toUpperCase()}` : ''}
+                    {resolvedLabel ? ` · RESULT: ${resolvedLabel.toUpperCase()}` : ''}
                   </span>
                 </div>
                 {isResolved
-                  ? <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.22em', color: 'var(--mute)' }}>✓ AUTO-RESOLVED</span>
+                  ? <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.18em', color: 'var(--positive)', background: 'rgba(34,197,94,0.12)', border: '1px solid rgba(34,197,94,0.35)', padding: '2px 7px' }}>✓ RESOLVED</span>
                   : <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.22em', color: 'var(--gold)' }}>● PENDING</span>}
                 <span style={{ color: 'var(--mute)', fontFamily: MONO, fontSize: 14 }}>{isOpen ? '−' : '+'}</span>
               </button>
 
               {isOpen && (
-                <div style={{ padding: '4px 14px 14px', display: 'flex', flexDirection: 'column', gap: 12, borderTop: '1px solid var(--rule)' }}>
+                <div style={{ padding: '4px 14px 14px', display: 'flex', flexDirection: 'column', gap: 12, borderTop: isResolved ? '1px solid rgba(34,197,94,0.15)' : '1px solid var(--rule)' }}>
                   {/* Override notice for already-resolved bets */}
                   {isResolved && (
-                    <div style={{ padding: '8px 10px', background: 'rgba(184,114,14,.06)', border: '1px solid rgba(184,114,14,.25)', fontFamily: BODY, fontSize: 11, color: 'var(--gold)', lineHeight: 1.5 }}>
-                      This bet was auto-resolved as <b>{b.correct_answer?.toUpperCase()}</b>. Selecting a different answer will override the result — points already awarded will be reversed and recalculated.
+                    <div style={{ padding: '8px 10px', background: 'rgba(34,197,94,0.06)', border: '1px solid rgba(34,197,94,0.25)', fontFamily: BODY, fontSize: 11, color: 'var(--positive)', lineHeight: 1.5 }}>
+                      This bet was resolved as <b>{resolvedLabel?.toUpperCase() ?? b.correct_answer}</b>. Selecting a different answer will override the result — points already awarded will be reversed and recalculated.
                     </div>
                   )}
                   {/* Who picked what */}
