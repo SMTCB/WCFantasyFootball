@@ -83,8 +83,9 @@ export function useCommissioner(leagueId, tournamentId, onLeagueUpdated) {
     // A blank Close field used to default to a flat +48h regardless of fixture
     // timing, which could leave a "standard" window open straight through a
     // live match (no live-lock warning like the emergency/unlimited window has).
-    // Cap the default to just before the tournament's next kickoff, same
-    // convention as auto-open-transfer-window and the natural matchday window.
+    // Cap the default to the tournament's next kickoff — the same instant the
+    // natural (non-manual) matchday window closes — so a manually-opened window
+    // doesn't behave differently from the auto-managed one.
     let closes;
     if (windowClosesAt) {
       closes = new Date(windowClosesAt).toISOString();
@@ -104,8 +105,8 @@ export function useCommissioner(leagueId, tournamentId, onLeagueUpdated) {
         nextKickoff = data?.kickoff_at ?? null;
       }
       if (nextKickoff) {
-        const oneHourBefore = new Date(new Date(nextKickoff).getTime() - 3600 * 1000);
-        closes = (oneHourBefore < fortyEightH ? oneHourBefore : fortyEightH).toISOString();
+        const kickoff = new Date(nextKickoff);
+        closes = (kickoff < fortyEightH ? kickoff : fortyEightH).toISOString();
       } else {
         closes = fortyEightH.toISOString();
       }
