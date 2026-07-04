@@ -2,14 +2,16 @@ import { memo } from 'react';
 
 // 5-cell coloured form strip showing last-GW fantasy points.
 // rounds: array up to 5 — most recent first. null = no data that GW.
-// Colour scale: null=ghost, 0=red, 1–4=amber, 5–9=green, 10+=gold
+// Colour scale: null=ghost, 0=red, 1–4=amber, 5–9=green, 10+=cyan
+// (10+ used to reuse the same amber hue as 1–4, just more opaque —
+// visually indistinguishable at a glance. Cyan gives every tier its own hue.)
 
 function cellBg(pts) {
   if (pts === null || pts === undefined) return 'rgba(255,255,255,0.06)';
   if (pts === 0)  return 'rgba(240,58,58,0.45)';
   if (pts < 5)   return 'rgba(240,180,0,0.4)';
   if (pts < 10)  return 'rgba(24,201,107,0.4)';
-  return 'rgba(240,180,0,0.75)';
+  return 'rgba(0,180,216,0.4)';
 }
 
 function cellColor(pts) {
@@ -17,7 +19,7 @@ function cellColor(pts) {
   if (pts === 0)  return 'rgba(240,58,58,0.9)';
   if (pts < 5)   return 'rgba(240,180,0,0.95)';
   if (pts < 10)  return 'rgba(24,201,107,0.95)';
-  return '#F0B400';
+  return '#00B4D8';
 }
 
 export default memo(function FormStrip({ rounds }) {
