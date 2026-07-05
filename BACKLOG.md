@@ -1,12 +1,24 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-07-02 (Bets admin UX polish + mobile overlap fix; PRs #700–#704)  
+**Last Updated**: 2026-07-05 (Free Bet duplicate-guard fix; PR #709)  
 **E2E Test Suite**: `platform.spec.js` (36 tests × 2 browsers) passing in CI ✅  
 **Full Playbook Run**: `E2E_TEST_PLAYBOOK.md` v2.0 — all flows confirmed  
 **🟢 LAUNCH READY**: No critical (P0/P1) bugs open. All game mechanics functional. WC kick-off 2026-06-11.  
 **Live App**: https://wc-fantasy-football.vercel.app  
 **WC Kick-off**: 2026-06-11 19:00 UTC (Mexico vs South Africa)  
 **Supabase PostgREST max_rows**: 10,000 (raised from default 1,000 — 2026-06-08)
+
+---
+
+## ✅ Free Bet duplicate-guard fix (2026-07-05) — PR #709
+
+**Bug**: Reported in Mundial do Eder — creating a second custom "Free Bet" failed with `An active "Free Bet" bet already exists`, even though the two bets asked entirely different questions.
+
+**Root cause**: `BetCreatorPanel.handleCreate`'s duplicate-instance guard is keyed on `(league_id, template_id, scope_ref)` and applies to every bet template generically — correct for fixture-scoped templates (Match Result, Goals O/U, etc.), where `scope_ref` is the fixture ID and different matches can each have their own concurrent instance. `free_bet` is the only template with `scopeType: 'tournament'` and no fixture selection, so `scope_ref` is always `null` — the guard degenerated into "only one Free Bet per league until the previous one is resolved or cancelled" (the block persisted even after the bet's deadline passed, since `closed` status still counts as active).
+
+**Fix**: `free_bet` is now exempt from the duplicate-instance guard (`src/components/league/BetCreatorPanel.jsx` line ~552) — every other template's duplicate protection is unchanged. Free-form custom bets have no meaningful "duplicate" concept by design, so multiple simultaneous instances are now allowed.
+
+No migration or Edge Function involved — pure frontend fix, live on Vercel via `main` auto-deploy.
 
 ---
 
