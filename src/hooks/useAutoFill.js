@@ -12,8 +12,9 @@ import { supabase } from '../lib/supabase';
  * @param {function} addToBasket  - (player) => void  — adds a buy item to the basket
  * @param {object}   cfg          - League config from useLeagueConfig
  * @param {Array}    basket       - Current basket items [{type, player}] — pending sells/buys applied before fill
+ * @param {object}   relaxation   - { repeatsAllowed } from useRelaxationState — null = unlimited sharing
  */
-export function useAutoFill(leagueId, squadData, fetchSquad, takenMap = {}, addToBasket, cfg = {}, basket = []) {
+export function useAutoFill(leagueId, squadData, fetchSquad, takenMap = {}, addToBasket, cfg = {}, basket = [], relaxation = {}) {
   const [autoFilling, setAutoFilling] = useState(false);
   const [autoFillMsg, setAutoFillMsg] = useState(null);
   const clearMsgTimerRef = useRef(null);
@@ -110,13 +111,21 @@ export function useAutoFill(leagueId, squadData, fetchSquad, takenMap = {}, addT
         ...pendingBuyIds,
       ]);
 
-      // B2: noduplicate leagues exclude players taken by others
+      // B2: noduplicate leagues exclude players taken by others — but only beyond
+      // the league's current no-repeat relaxation allowance (per-league, mirrors
+      // process-transfer's server-side check; unaffected by other leagues' tiers).
       const currentUserId = freshUser?.id;
       const isDraftLeague = (cfg.format ?? '') === 'noduplicate';
+      const relaxUnlimited = relaxation?.repeatsAllowed === null;
+      const relaxAllowed   = relaxation?.repeatsAllowed ?? 0;
       const othersIds = isDraftLeague
         ? new Set(
             Object.entries(takenMap || {})
-              .filter(([, owners]) => (owners ?? []).some(o => o.userId !== undefined && o.userId !== currentUserId))
+              .filter(([, owners]) => {
+                if (relaxUnlimited) return false;
+                const otherCount = (owners ?? []).filter(o => o.userId !== undefined && o.userId !== currentUserId).length;
+                return otherCount > relaxAllowed;
+              })
               .map(([id]) => id)
           )
         : new Set();
@@ -246,7 +255,7 @@ export function useAutoFill(leagueId, squadData, fetchSquad, takenMap = {}, addT
       clearMsgTimerRef.current = setTimeout(() => setAutoFillMsg(null), 7000);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [leagueId, squadData, addToBasket, takenMap, cfg, basket]);
+  }, [leagueId, squadData, addToBasket, takenMap, cfg, basket, relaxation]);
 
   return { handleAutoFill, autoFilling, autoFillMsg };
 }
