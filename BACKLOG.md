@@ -1,12 +1,24 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-07-12 (Tier 1 shared-ownership Buy button fix; PR #711)  
+**Last Updated**: 2026-07-12 (Classic-mode free transfers raised 5→6; PR #713)  
 **E2E Test Suite**: `platform.spec.js` (36 tests × 2 browsers) passing in CI ✅  
 **Full Playbook Run**: `E2E_TEST_PLAYBOOK.md` v2.0 — all flows confirmed  
 **🟢 LAUNCH READY**: No critical (P0/P1) bugs open. All game mechanics functional. WC kick-off 2026-06-11.  
 **Live App**: https://wc-fantasy-football.vercel.app  
 **WC Kick-off**: 2026-06-11 19:00 UTC (Mexico vs South Africa)  
 **Supabase PostgREST max_rows**: 10,000 (raised from default 1,000 — 2026-06-08)
+
+---
+
+## ✅ Classic-mode free transfers raised to 6 (2026-07-12) — migration 196, PR #713
+
+**Request**: raise the number of free (non-penalty) transfers allowed per round in classic-mode leagues to 6.
+
+**Mechanism**: `league_config.transfers_per_round` drives the per-round free-transfer limit inside `execute_transfer_atomic()` (migration 157). Draft-mode (`league_mode='draft'`) leagues bypass this limit entirely (`process-transfer` sets `limitMatchdayId=null` for them), so the value only has a real effect on classic leagues.
+
+**Change**: `UPDATE league_config SET config_value='6' WHERE config_key='transfers_per_round' AND league.league_mode='classic'` — applied to all 12 classic leagues (6 real pilot leagues + 6 E2E test leagues, confirmed via `AskUserQuestion`). Both live `create_league()` overloads (5-param and 6-param/`p_circle_id`) updated so the seed is format-aware: classic-format leagues now seed `transfers_per_round=6`, draft-format (`noduplicate`) leagues keep seeding `3` (irrelevant to them either way, kept for consistency). No frontend change needed — `MarketScreen.jsx` already reads `transfers_per_round` dynamically from `league_config`.
+
+Pre-change snapshot: `backups/pre_migration196_classic_transfers_per_round_20260712.json` (gitignored).
 
 ---
 
