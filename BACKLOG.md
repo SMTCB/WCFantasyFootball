@@ -1,12 +1,22 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-07-05 (Free Bet duplicate-guard fix; PR #709)  
+**Last Updated**: 2026-07-12 (Tier 1 shared-ownership Buy button fix; PR #711)  
 **E2E Test Suite**: `platform.spec.js` (36 tests × 2 browsers) passing in CI ✅  
 **Full Playbook Run**: `E2E_TEST_PLAYBOOK.md` v2.0 — all flows confirmed  
 **🟢 LAUNCH READY**: No critical (P0/P1) bugs open. All game mechanics functional. WC kick-off 2026-06-11.  
 **Live App**: https://wc-fantasy-football.vercel.app  
 **WC Kick-off**: 2026-06-11 19:00 UTC (Mexico vs South Africa)  
 **Supabase PostgREST max_rows**: 10,000 (raised from default 1,000 — 2026-06-08)
+
+---
+
+## ✅ Tier 1+ shared-ownership Buy button fix (2026-07-12) — PR #711
+
+**Bug**: Semi-finals stage (4 teams remaining) exposed a gap in the no-repeat relaxation formula (`docs/architecture/POOL_RELAXATION_SYSTEM.md`) — as clubs get eliminated, draft leagues relax the one-owner-per-player cap per a per-league tier (`league_config.current_repeats_allowed`: Tier 0 = strict single owner, Tier 1 = up to 2 owners, Tier 2 = up to 4, Tier 3 = unlimited). `process-transfer`'s server-side check already enforced this correctly, but the Market screen's Buy button and `useAutoFill`'s candidate pool unconditionally excluded ANY player owned by another manager — so Tier 1+ leagues could never actually buy a shared-ownership player through the UI even though the backend would accept it.
+
+**Fix**: `MarketScreen.jsx`'s `takenByOther`/`canBuy` logic and `useAutoFill.js`'s `othersIds` exclusion set are now tier-aware, driven by `useRelaxationState(activeLeague)` — scoped strictly **per league** (never a global toggle; switching leagues re-fetches that league's own tier). A player owned by fewer managers than the league's current `repeatsAllowed` now shows a gold "SHARED · <names>" badge and an enabled Buy button; once the tier's cap is reached it still shows "TAKEN" and stays disabled. Added `RelaxationBanner` (new component) on the Market screen, shown only in Tier 1 leagues (`repeatsAllowed === 1`), explaining that up to two managers can currently own the same player.
+
+No backend/migration changes — `process-transfer`'s `PLAYER_TAKEN` check (`supabase/functions/process-transfer/index.js` line ~439) remains the authoritative guard and is unchanged, so Tier 0 leagues stay protected regardless of any frontend state.
 
 ---
 
