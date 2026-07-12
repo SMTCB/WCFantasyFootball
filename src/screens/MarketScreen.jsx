@@ -1255,7 +1255,6 @@ export default function MarketScreen() {
             const canShareBuy     = ownedByOther && (relaxUnlimited || otherOwners.length <= relaxAllowed);
             const takenByOther    = ownedByOther && !canShareBuy;
             const ownerNames      = otherOwners.map(o => o.managerName).join(', ');
-            const coOwnedByOther  = isDraftLeague && isOwned && otherOwners.length > 0;
             const limitReached = stats.posCounts[p.position] >= POS_LIMITS[p.position];
             // U26: club cap guard — uses basket-simulated counts via stats
             const clubFull     = !isOwned && (stats.countryCounts[p.club] ?? 0) >= clubCap;
@@ -1313,19 +1312,14 @@ export default function MarketScreen() {
                           {isDraftLeague ? 'OWNED · YOU' : 'OWNED'}
                         </span>
                       )}
-                      {coOwnedByOther && (
-                        <span className="fk-mono shrink-0" style={{ fontSize: 9, fontWeight: 800, color: 'var(--gold)', border: '1px solid var(--gold)', padding: '2px 6px' }}>
-                          {`+ ${ownerNames}`}
+                      {isDraftLeague && (isOwned || canShareBuy) && otherOwners.map(o => (
+                        <span key={o.userId} className="fk-mono shrink-0" style={{ fontSize: 9, fontWeight: 800, color: 'var(--gold)', border: '1px solid var(--gold)', padding: '2px 6px' }}>
+                          {`OWNED · ${o.managerName}`}
                         </span>
-                      )}
+                      ))}
                       {takenByOther && (
                         <span className="fk-mono shrink-0" style={{ fontSize: 9, fontWeight: 800, color: 'var(--danger)', border: '1px solid var(--danger)', padding: '2px 6px' }}>
                           {ownerNames ? `TAKEN · ${ownerNames}` : 'TAKEN'}
-                        </span>
-                      )}
-                      {canShareBuy && (
-                        <span className="fk-mono shrink-0" style={{ fontSize: 9, fontWeight: 800, color: 'var(--gold)', border: '1px solid var(--gold)', padding: '2px 6px' }}>
-                          {ownerNames ? `SHARED · ${ownerNames}` : 'SHARED'}
                         </span>
                       )}
                       {isJoker && (
