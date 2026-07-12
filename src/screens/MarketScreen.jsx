@@ -1246,13 +1246,16 @@ export default function MarketScreen() {
             // the club pool shrinks — up to `repeatsAllowed` OTHER managers may also own
             // this player before a buy is actually blocked (null = unlimited sharing).
             // In Classic mode any player can be in multiple squads simultaneously.
-            const otherOwners     = isOwned ? [] : takenByAll(p.id);
+            // otherOwners always excludes me (not gated on isOwned) so a shared player
+            // I already own still surfaces who else holds it — see co-owned badge below.
+            const otherOwners     = takenByAll(p.id).filter(o => o.userId !== user?.id);
             const ownedByOther    = isDraftLeague && !isOwned && otherOwners.length > 0;
             const relaxUnlimited  = relaxationRepeatsAllowed === null;
             const relaxAllowed    = relaxationRepeatsAllowed ?? 0;
             const canShareBuy     = ownedByOther && (relaxUnlimited || otherOwners.length <= relaxAllowed);
             const takenByOther    = ownedByOther && !canShareBuy;
             const ownerNames      = otherOwners.map(o => o.managerName).join(', ');
+            const coOwnedByOther  = isDraftLeague && isOwned && otherOwners.length > 0;
             const limitReached = stats.posCounts[p.position] >= POS_LIMITS[p.position];
             // U26: club cap guard — uses basket-simulated counts via stats
             const clubFull     = !isOwned && (stats.countryCounts[p.club] ?? 0) >= clubCap;
@@ -1308,6 +1311,11 @@ export default function MarketScreen() {
                       {isOwned && (
                         <span className="fk-mono shrink-0" style={{ fontSize: 9, fontWeight: 800, color: 'var(--cyan)', border: '1px solid var(--cyan)', padding: '2px 6px' }}>
                           {isDraftLeague ? 'OWNED · YOU' : 'OWNED'}
+                        </span>
+                      )}
+                      {coOwnedByOther && (
+                        <span className="fk-mono shrink-0" style={{ fontSize: 9, fontWeight: 800, color: 'var(--gold)', border: '1px solid var(--gold)', padding: '2px 6px' }}>
+                          {`+ ${ownerNames}`}
                         </span>
                       )}
                       {takenByOther && (
