@@ -4,7 +4,7 @@ import { supabase } from '../lib/supabase';
 /**
  * Expandable per-player scoring history — shared between MarketScreen and
  * SquadScreen. Tracks which player's panel is open and lazily fetches/caches
- * their last-5-GW breakdown + season summary from player_match_stats.
+ * their full-season GW-by-GW breakdown + season summary from player_match_stats.
  */
 export function usePlayerScoreDetail() {
   const [expandedPlayerId, setExpandedPlayerId] = useState(null);
@@ -60,7 +60,7 @@ export function usePlayerScoreDetail() {
       const sorted = Object.entries(byMD)
         .sort((a, b) => b[1].kickoff.localeCompare(a[1].kickoff));
 
-      const rounds = sorted.slice(0, 5).map(([md, r]) => ({
+      const rounds = sorted.map(([md, r]) => ({
         gw:      md.includes('-r') ? `R${md.split('-r')[1]}` : md,
         fixture: r.fixture,
         goals:   r.goals,
