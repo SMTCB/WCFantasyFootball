@@ -547,9 +547,10 @@ export default function BetCreatorPanel({ leagueId, tournamentId, onCreated, com
 
       const scopeRef = selectedFixture?.id ?? null;
 
-      // Duplicate-instance guard
+      // Duplicate-instance guard — skipped for free_bet: it's fully custom/user-authored,
+      // so multiple simultaneous instances are expected and there's no "duplicate" to catch.
       const tplId = templateIds.current[template.slug];
-      if (tplId) {
+      if (tplId && template.slug !== 'free_bet') {
         let dupQ = supabase
           .from('bet_instances')
           .select('id, title')

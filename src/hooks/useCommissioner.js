@@ -79,7 +79,39 @@ export function useCommissioner(leagueId, tournamentId, onLeagueUpdated) {
   // ── Transfer window ───────────────────────────────────────────────────────
   const openTransferWindow = useCallback(() => commAction(async () => {
     const opens  = windowOpensAt  ? new Date(windowOpensAt).toISOString()  : new Date().toISOString();
-    const closes = windowClosesAt ? new Date(windowClosesAt).toISOString() : new Date(Date.now() + 48 * 3600 * 1000).toISOString();
+
+    // A blank Close field used to default to a flat +48h regardless of fixture
+    // timing, which could leave a "standard" window open straight through a
+    // live match (no live-lock warning like the emergency/unlimited window has).
+    // Cap the default to the tournament's next kickoff — the same instant the
+    // natural (non-manual) matchday window closes — so a manually-opened window
+    // doesn't behave differently from the auto-managed one.
+    let closes;
+    if (windowClosesAt) {
+      closes = new Date(windowClosesAt).toISOString();
+    } else {
+      const fortyEightH = new Date(Date.now() + 48 * 3600 * 1000);
+      let nextKickoff = null;
+      if (tournamentId) {
+        const { data } = await supabase
+          .from('fixtures')
+          .select('kickoff_at')
+          .eq('tournament_id', tournamentId)
+          .eq('status', 'scheduled')
+          .gt('kickoff_at', new Date().toISOString())
+          .order('kickoff_at', { ascending: true })
+          .limit(1)
+          .maybeSingle();
+        nextKickoff = data?.kickoff_at ?? null;
+      }
+      if (nextKickoff) {
+        const kickoff = new Date(nextKickoff);
+        closes = (kickoff < fortyEightH ? kickoff : fortyEightH).toISOString();
+      } else {
+        closes = fortyEightH.toISOString();
+      }
+    }
+
     const { error } = await supabase.from('transfer_windows').insert({
       league_id:           leagueId,
       opens_at:            opens,
@@ -89,7 +121,7 @@ export function useCommissioner(leagueId, tournamentId, onLeagueUpdated) {
     if (error) throw new Error(error.message);
     await supabase.from('leagues').update({ transfers_open: true }).eq('id', leagueId);
     setCommMsg({ type: 'ok', text: 'Transfer window opened.' });
-  }), [commAction, leagueId, windowOpensAt, windowClosesAt, windowTransfers]);
+  }), [commAction, leagueId, tournamentId, windowOpensAt, windowClosesAt, windowTransfers]);
 
   const closeTransferWindow = useCallback(() => commAction(async () => {
     const { error } = await supabase.from('transfer_windows')

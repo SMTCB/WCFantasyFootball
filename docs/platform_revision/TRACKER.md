@@ -178,7 +178,7 @@ The [Phase 3B Pre-Merge Checklist](#phase-3b-pre-merge-checklist) merges v2 → 
 
 **Rows 10, 11, 16, 19–26 pending** — 10/11 are not Supabase actions; 16 blocked on source access; 19 + 26 are pure DDL (safe, no approval needed beyond "yes, run row N"); 20–25 are OPS-2 function deploys (each needs per-item approval). **Row 17 done. Row 18 — see 🛑 banner above, do not run.**
 
-**Next migration on v2:** `222_`
+**Next migration on v2:** `223_`
 
 **Session 2026-06-28 (migration 215 applied):** `215_clubhouse_centric_model.sql` applied to prod from the Supabase-linked PC (this session's local `v2` was 4 commits behind `origin/v2` — pulled first). Backed up `leagues`/`paddocks`/`player_boxes` id+name snapshots before running (`backups/*_pre_migration215_20260628_231738.json`). Verified: `circle_id` column live on all 3 tables (NULL on existing rows — no junction-table data to backfill yet); `create_league` 6-arg overload, `create_paddock` (2-arg), `create_player_box` (3-arg) all updated and present in `pg_proc`.
 
@@ -423,7 +423,7 @@ These require a human decision before the relevant sprint can continue.
 ## Cross-Cutting Rules (Every Sprint)
 
 0. **🛡️ ZERO PILOT RISK — the overriding rule.** The live World Cup football pilot runs on the shared prod project `sssmvihxtqtohisghjet` (no staging, no PITR). No task may risk it. Before starting ANY item, check its **RISK tag** in the **Execution Queue** (top of this file): 🟢 = safe; 🟡 = shared DB, back up + approve, not during a live match; 🔴 = pilot-impacting, **defer** until staging exists or the pilot ends. When unsure, treat as 🔴 and ask. This overrides schedule and buyout-readiness pressure.
-1. **Migrations are append-only.** Next free number on v2: `220_`. Never edit an applied migration.
+1. **Migrations are append-only.** Next free number on v2: `223_`. Never edit an applied migration.
 2. **Backup before every migration.** Docker unavailable — `SELECT` affected rows and save to `backups/*.json` first.
 3. **Football stays green.** `platform.spec.js` + manual smoke pass after any sprint touching shared infrastructure.
 4. **Value moves only through `SECURITY DEFINER` RPCs.** Clients never write directly to coin or budget columns.

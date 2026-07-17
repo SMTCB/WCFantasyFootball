@@ -1,12 +1,46 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-07-02 (Bets admin UX polish + mobile overlap fix; PRs #700–#704)  
-**E2E Test Suite**: `platform.spec.js` (84 tests × 1 browser config) passing ✅ — 84/84 on v2 branch 2026-06-23  
+**Last Updated**: 2026-07-12 (Classic-mode free transfers raised 5→6; PR #713)  
+**E2E Test Suite**: full `e2e/` suite passing on v2 ✅ — 262 passed / 33 conditionally-skipped, 2026-07-17  
 **Full Playbook Run**: `E2E_TEST_PLAYBOOK.md` v2.0 — all flows confirmed  
 **🟢 LAUNCH READY**: No critical (P0/P1) bugs open. All game mechanics functional. WC kick-off 2026-06-11.  
 **Live App**: https://wc-fantasy-football.vercel.app  
 **WC Kick-off**: 2026-06-11 19:00 UTC (Mexico vs South Africa)  
 **Supabase PostgREST max_rows**: 10,000 (raised from default 1,000 — 2026-06-08)
+
+---
+
+## ✅ Classic-mode free transfers raised to 6 (2026-07-12) — migration 196, PR #713
+
+**Request**: raise the number of free (non-penalty) transfers allowed per round in classic-mode leagues to 6.
+
+**Mechanism**: `league_config.transfers_per_round` drives the per-round free-transfer limit inside `execute_transfer_atomic()` (migration 157). Draft-mode (`league_mode='draft'`) leagues bypass this limit entirely (`process-transfer` sets `limitMatchdayId=null` for them), so the value only has a real effect on classic leagues.
+
+**Change**: `UPDATE league_config SET config_value='6' WHERE config_key='transfers_per_round' AND league.league_mode='classic'` — applied to all 12 classic leagues (6 real pilot leagues + 6 E2E test leagues, confirmed via `AskUserQuestion`). Both live `create_league()` overloads (5-param and 6-param/`p_circle_id`) updated so the seed is format-aware: classic-format leagues now seed `transfers_per_round=6`, draft-format (`noduplicate`) leagues keep seeding `3` (irrelevant to them either way, kept for consistency). No frontend change needed — `MarketScreen.jsx` already reads `transfers_per_round` dynamically from `league_config`.
+
+Pre-change snapshot: `backups/pre_migration196_classic_transfers_per_round_20260712.json` (gitignored).
+
+---
+
+## ✅ Tier 1+ shared-ownership Buy button fix (2026-07-12) — PR #711
+
+**Bug**: Semi-finals stage (4 teams remaining) exposed a gap in the no-repeat relaxation formula (`docs/architecture/POOL_RELAXATION_SYSTEM.md`) — as clubs get eliminated, draft leagues relax the one-owner-per-player cap per a per-league tier (`league_config.current_repeats_allowed`: Tier 0 = strict single owner, Tier 1 = up to 2 owners, Tier 2 = up to 4, Tier 3 = unlimited). `process-transfer`'s server-side check already enforced this correctly, but the Market screen's Buy button and `useAutoFill`'s candidate pool unconditionally excluded ANY player owned by another manager — so Tier 1+ leagues could never actually buy a shared-ownership player through the UI even though the backend would accept it.
+
+**Fix**: `MarketScreen.jsx`'s `takenByOther`/`canBuy` logic and `useAutoFill.js`'s `othersIds` exclusion set are now tier-aware, driven by `useRelaxationState(activeLeague)` — scoped strictly **per league** (never a global toggle; switching leagues re-fetches that league's own tier). A player owned by fewer managers than the league's current `repeatsAllowed` now shows a gold "SHARED · <names>" badge and an enabled Buy button; once the tier's cap is reached it still shows "TAKEN" and stays disabled. Added `RelaxationBanner` (new component) on the Market screen, shown only in Tier 1 leagues (`repeatsAllowed === 1`), explaining that up to two managers can currently own the same player.
+
+No backend/migration changes — `process-transfer`'s `PLAYER_TAKEN` check (`supabase/functions/process-transfer/index.js` line ~439) remains the authoritative guard and is unchanged, so Tier 0 leagues stay protected regardless of any frontend state.
+
+---
+
+## ✅ Free Bet duplicate-guard fix (2026-07-05) — PR #709
+
+**Bug**: Reported in Mundial do Eder — creating a second custom "Free Bet" failed with `An active "Free Bet" bet already exists`, even though the two bets asked entirely different questions.
+
+**Root cause**: `BetCreatorPanel.handleCreate`'s duplicate-instance guard is keyed on `(league_id, template_id, scope_ref)` and applies to every bet template generically — correct for fixture-scoped templates (Match Result, Goals O/U, etc.), where `scope_ref` is the fixture ID and different matches can each have their own concurrent instance. `free_bet` is the only template with `scopeType: 'tournament'` and no fixture selection, so `scope_ref` is always `null` — the guard degenerated into "only one Free Bet per league until the previous one is resolved or cancelled" (the block persisted even after the bet's deadline passed, since `closed` status still counts as active).
+
+**Fix**: `free_bet` is now exempt from the duplicate-instance guard (`src/components/league/BetCreatorPanel.jsx` line ~552) — every other template's duplicate protection is unchanged. Free-form custom bets have no meaningful "duplicate" concept by design, so multiple simultaneous instances are now allowed.
+
+No migration or Edge Function involved — pure frontend fix, live on Vercel via `main` auto-deploy.
 
 ---
 

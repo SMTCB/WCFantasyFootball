@@ -776,7 +776,7 @@ Always create a new file — never modify existing migrations.
 
 | 215 | `215_clubhouse_centric_model.sql` | Session 2026-06-28 (v2 branch only): add nullable `circle_id uuid REFERENCES circles(id)` to `leagues`, `paddocks`, `player_boxes`; backfill from junction tables (`circle_leagues`, `circle_paddocks`, `circle_player_boxes`); `CREATE OR REPLACE FUNCTION create_paddock` writes `circle_id` directly (was already in signature but not persisted); `CREATE OR REPLACE FUNCTION create_player_box` same fix; new 6-param `create_league` overload adds `p_circle_id uuid DEFAULT NULL` (inserts both `leagues.circle_id` and `circle_leagues` row for backwards compat). **⚠️ File committed, NOT yet applied to production DB** — apply from Supabase-linked PC. |
 
-**Next migration**: `218_` (v2 branch) / `193_` (main)
+**Next migration**: `223_` (v2 — single canonical numbering; main fully synced into v2 as of 2026-07-17)
 
 **Key pipeline facts (2026-06-29 — Redesign Phase C, PR #676, v2 branch):**
 - **`useActiveCompetition()` hook** (`src/hooks/useActiveCompetition.js`): derives `{sport, competitionId}` from `useLocation().pathname` only — no context, no global state. Football matched by `/league/`, `/live`, `/squad`, `/market`, `/recap`; F1 by `/f1/`; tennis by `/tennis/tournament/`. `SportContext.activeSport`/`setActiveSport` **removed entirely**. `AppLayout`, `ClubhouseScreen`, `F1HomeScreen`, `PaddockLobbyScreen`, `PlayerBoxScreen` all cleaned of `setActiveSport()` calls. `SportContext` retains `activePaddockId`/`activePlayerBoxId` (used by `usePaddock`/`usePlayerBox` for localStorage).
