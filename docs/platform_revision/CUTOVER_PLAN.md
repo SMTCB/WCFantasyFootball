@@ -35,7 +35,7 @@
 ### Git
 - v2 is **~151 commits ahead / 0 behind** main after the final sync (was 14 behind; synced 2026-07-17).
 - Merge-conflict preview of v2→main: **only `BACKLOG.md`** conflicts; all code auto-merges.
-- Migration folder on v2 carries duplicate numbers from past main-syncs (191×2, 192×3, 193×3, 194×2 — e.g. `192_classic_knockout_unlimited_transfers.sql` ≡ `212_…`). Cosmetic; DB state is correct. Optional dedupe pre-merge.
+- Migration folder on v2 carried duplicate numbers from past main-syncs. ✅ Deduped 2026-07-17: `192_classic_knockout_unlimited_transfers.sql`, `193_fix_elimination_race_and_window_message.sql`, `194_relax_starting_xi_formation.sql` deleted (byte-identical content to `212_…`/`213_…`/`214_…`, confirmed by diff). `191_clean_sheet_retroactive_fix.sql` (main-native, no renumbered twin), `191_f1_paddocks_schema.sql`, `192_knockout_scoring.sql`, `192_f1_rpcs_and_seed.sql`, `193_clubhouse_social.sql`, `193_cup_elimination_require_loss.sql`, `194_clubhouse_frontpage.sql` are distinct content sharing a number by coincidence — kept as-is (numbering collisions are cosmetic in this repo; DB state doesn't depend on filenames, see CLAUDE.md's migration-numbering note).
 
 ### Database (shared prod project `sssmvihxtqtohisghjet` — serves the pilot AND v2)
 - **Already applied & pilot-proven**: 187–189, 191–201 (F1/Clubhouse/Tennis schemas), 202–216, 220 — weeks of safe coexistence with the live pilot.
@@ -53,7 +53,7 @@
 |---|------|--------|
 | 1 | Fix v2 CI (lock file + checksum line endings) | ✅ PR #720 (2026-07-17) — all 6 CI jobs green, incl. Unit + E2E for the first time on v2 |
 | 2 | Final main→v2 sync (14 commits; migration 196→222 renumber; BACKLOG.md conflict) | ✅ PR #721 (2026-07-17) |
-| 3 | **Clubhouse mapping decision + backfill migration for the 7 real pilot leagues** | ⬜ **USER DECISION — see §3** |
+| 3 | **Clubhouse mapping decision + backfill migration for the retained subset of the 7 real pilot leagues (post data-cleansing)** | ⬜ **USER DECISION — see §3** |
 | 4 | **Enable PITR on prod Supabase project** (Dashboard → Database → Backups → PITR; needs Pro plan add-on) | ⬜ Supabase-linked PC / dashboard |
 | 5 | Full DB backup at cutover (`pg_dump` via connection string from the Supabase-linked PC, or dashboard backup) | ⬜ at Phase 1 |
 | 6 | Phase 3B smoke passes: platform.spec ✅ (262/262 on 2026-07-17) · football · P2P (`MOCK_PAYMENTS=true`) · F1 · tennis | ⬜ football/P2P/F1/tennis manual passes at Phase 3 |
@@ -62,7 +62,7 @@
 
 ### 🟡 PRE-MERGE — RECOMMENDED (not blocking)
 
-- Migration folder dedupe on v2 (delete the 191/192/193/194 duplicates whose content lives at 212/213/214 etc.).
+- ✅ Migration folder dedupe on v2 — done 2026-07-17 (see §1 Git note).
 - `000_baseline.sql` schema snapshot (Phase 1D-B): `pg_dump --schema-only` from the Supabase-linked PC at cutover — the exact pre-merge schema as revert reference.
 - OPS-2 leftovers: `SENTRY_DSN` secret + Vercel `VITE_SENTRY_DSN` (TRACKER row 11) + the 6 function deploys (rows 20–25 — these happen anyway in Phase 2's deploy-all) + failed-cron alerting (part c, not built).
 - Recover git stash `stash@{0}` ("backlog BI-01 close — needs to go on main"); prune ~6 local + ~12 remote stale `claude/*` branches; `git worktree prune` the 5 stale worktrees.
@@ -86,18 +86,25 @@
 **The 7 leagues** (orphan snapshot: `backups/orphans_pre_217_20260629.json`; 11 more NULL rows are test/E2E leftovers, plus `TEST_1_F1` paddock and `TEST_WIMBLEDON_1` player box):
 Mundial do Eder · Mundial Gordo Vai a Baliza · RANKS FC World Cup Fantasy · Draft Mundial 26 · Munaial '26 · FIXO DRAFT MUNDIAL 26 · Miami WC Fantasy Testers
 
-**Decision options:**
+**Decision options (superseded — see "Decided direction" below):**
 
 | Option | What happens | Pros | Cons |
 |--------|--------------|------|------|
-| **A. One clubhouse per league** (recommended default) | Backfill migration creates 7 circles named after each league, sets `circle_id`, inserts every `league_members` row into `circle_members` (commissioner → clubhouse owner) | Zero user action needed; everyone returns to a working room; matches the "friends gather" vision 1-to-1 | If the same friend group ran 2 leagues they get 2 clubhouses (they can consolidate later) |
+| **A. One clubhouse per league** | Backfill migration creates one circle named after each league, sets `circle_id`, inserts every `league_members` row into `circle_members` (commissioner → clubhouse owner) | Zero user action needed; everyone returns to a working room; matches the "friends gather" vision 1-to-1 | If the same friend group ran 2 leagues they get 2 clubhouses (they can consolidate later) |
 | **B. Merge overlapping member groups into shared clubhouses** | Analyse member overlap first; leagues sharing ≥N members share one clubhouse | Fewer, more natural rooms | Needs a manual review pass; naming is ambiguous; more complex migration |
 | **C. Let users self-organise** | No backfill; pilot users see the create-clubhouse lobby; league discovery relies on them creating/joining and… nothing re-attaches old leagues automatically | No migration | **Breaks continuity — old leagues unreachable from UI. Not viable without extra "claim your league" code. Avoid.** |
 | **D. Archive the pilot** | Pilot leagues stay orphaned; users start fresh in the new platform; history preserved in DB only | Simplest | Pilot users lose visible history/trophies — bad for the ~50 pilot users' trust |
 
-**What the decision unblocks:** the backfill migration (next free number) + migration 217 (`circle_id NOT NULL`) + deletion/mapping of the 11 test-league orphans.
+**Decided direction (2026-07-17, user call):** a hybrid of B/D scoped down by a manual **data-cleansing pass at pilot end**, not a pure A/B/C/D pick:
 
-**Suggested next step:** pick Option A unless there's a known friend-group overlap worth honouring; a session can then run the member-overlap query (§7 Q2) to sanity-check before writing the backfill.
+1. The pilot ends ~2026-07-20 (WC final, ~3 days out from when this note was written). The user will then do a **big DB cleanup** by hand.
+2. As part of that cleanup, the user selects **which subset of the 7 real pilot leagues to retain** for historical/reference purposes — explicitly **not all seven**. The rest are cleaned out (deleted/archived) during the same pass, so they never need a `circle_id` at all.
+3. The **retained leagues are consolidated into ONE new clubhouse** (not one clubhouse per league — this replaces Option A's 1:1 mapping for whatever subset survives the cleanup).
+4. That single clubhouse doubles as the **immediate post-merge sanity-check dataset** — real historical pilot data the user can open right after the cutover to confirm the merge worked, without waiting on fresh v2 activity.
+
+**Still open:** the exact list of which leagues to keep (user is deciding closer to pilot end). The backfill migration can't be finalized until that list exists — a fresh session should ask for it before writing the migration if it isn't already recorded here.
+
+**What this unblocks:** the backfill migration (next free number, `223_`) targeting only the retained subset + migration 217 (`circle_id NOT NULL`) + deletion of both the non-retained real leagues and the 11 test-league orphans (same cleanup pass, §7 Q2 can help spot member overlap if useful context for picking the subset).
 
 ---
 
@@ -108,8 +115,8 @@ Mundial do Eder · Mundial Gordo Vai a Baliza · RANKS FC World Cup Fantasy · D
 1. ✅ ~~Fix v2 CI~~ (PR #720).
 2. ✅ ~~Final main→v2 sync~~ (2026-07-17; repeat step is built into Phase 2 in case late pilot fixes land).
 3. ⬜ **Enable PITR** on `sssmvihxtqtohisghjet` (dashboard). Do this immediately — it protects the pilot's final rounds too.
-4. ⬜ **Make the §3 decision** → write the clubhouse backfill migration on v2 (do not apply).
-5. ⬜ Optional: migration dedupe, OPS-2 part (c), Sentry secrets, git hygiene, stash recovery.
+4. ⬜ **Finalize the retained-leagues list** (§3 — the direction is decided, the specific list isn't yet) → write the clubhouse backfill migration on v2 targeting that subset (do not apply; applies in Phase 2 step 6c, after the Phase 2 step 6b data cleansing).
+5. ✅ Migration dedupe done 2026-07-17. Still optional: OPS-2 part (c), Sentry secrets, git hygiene, stash recovery.
 
 ### Phase 1 — Pilot ends: freeze & block
 
@@ -128,7 +135,9 @@ Mundial do Eder · Mundial Gordo Vai a Baliza · RANKS FC World Cup Fantasy · D
 5. Vercel auto-deploys behind the password wall. Verify the deployment builds.
 6. DB actions from the Supabase-linked PC (per-item approval as usual):
    a. Apply 218, 219 (pure DDL, no data). ~~Verify 221~~ ✅ done 2026-07-17 — already live.
-   b. Run the **clubhouse backfill** for the 7 pilot leagues (§3). **Hold 217.**
+   b. **Data cleansing (user-led)** — per §3's decided direction: user reviews the 7 real pilot leagues and picks which subset to retain for historical/reference purposes (not all 7). Non-retained leagues and their data are cleaned out here (confirm with the user exactly what "cleaned out" means — delete vs. archive-only — before running any DELETE; SELECT-first per the Pilot Safeguards in CLAUDE.md). Do this **after** the Phase 1 full DB backup so the pre-cleanup state is recoverable.
+   c. Run the **clubhouse backfill**, scoped only to the leagues retained in step (b), consolidating them into **one new clubhouse** (not one per league — see §3). This clubhouse is also the post-merge sanity-check dataset used in Phase 3 step 2.
+   d. **Hold 217** until Phase 4 step 3 (needs a zero-orphan check first — §7 Q5 — which now only has to account for the non-retained leagues being gone, not mapped).
 7. **Deploy ALL 19 Edge Functions** — the authoritative list is `.function-checksums.json` (don't trust older hand-written lists):
    `auto-open-transfer-window calculate-relaxation calculate-scores discover-tournament eliminate-cup-club generate-frontpage-edition ingest-match-events process-transfer purchase-coins resolve-bets run-draft-lottery run-reverse-standings-draft score-atp-finals score-f1-race score-tennis-tournament sync-fixtures sync-player-status sync-players sync-tennis-players`
    Then `npm run update:checksums` + commit.
@@ -137,7 +146,7 @@ Mundial do Eder · Mundial Gordo Vai a Baliza · RANKS FC World Cup Fantasy · D
 ### Phase 3 — Test behind the wall
 
 1. `platform.spec.js` already ran in the PR's CI; re-run locally if anything was deployed after the merge.
-2. Manual smoke passes (Phase 3B checklist): **football** (login as a real pilot user — verify squad, points history, trophies, and that their league appears inside its new clubhouse) · **P2P** (wallet → mock coins → challenge → resolve) · **F1** (paddock → picks → test result → scores) · **tennis** (picks → result → scores).
+2. Manual smoke passes (Phase 3B checklist): **football** (login as a real pilot user whose league was retained in the Phase 2 data cleansing — verify squad, points history, trophies, and that their league appears inside the new consolidated clubhouse; this is the sanity-check dataset from §3) · **P2P** (wallet → mock coins → challenge → resolve) · **F1** (paddock → picks → test result → scores) · **tennis** (picks → result → scores).
 3. `SELECT * FROM cron_job_status();` — no failing jobs.
 4. Watch Sentry / `edge_function_errors` for anything new.
 
@@ -208,4 +217,4 @@ To resume this work cold: (1) confirm session type = **platform revision (v2)**;
 
 Related: [TRACKER.md](../TRACKER.md) · [V2_BRANCH_PROTECTION.md](architecture/V2_BRANCH_PROTECTION.md) · [CLUBHOUSE_CENTRIC_REDESIGN_IMPLEMENTATION_PLAN.md](architecture/CLUBHOUSE_CENTRIC_REDESIGN_IMPLEMENTATION_PLAN.md) · Phase 3B checklist in TRACKER · `backups/orphans_pre_217_20260629.json`
 
-Last Updated: **2026-07-17**
+Last Updated: **2026-07-17** (data-cleansing step + migration dedupe added same day, separate session)
