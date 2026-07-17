@@ -16,19 +16,29 @@ const root = join(__dirname, '..');
 const checksumFile = join(root, '.function-checksums.json');
 const functionsDir = join(root, 'supabase', 'functions');
 
-function hashFile(p) {
-  return createHash('sha256').update(readFileSync(p)).digest('hex');
+// Normalize CRLF→LF before hashing so checksums match across Windows
+// working trees (core.autocrlf=true) and Linux CI checkouts.
+function normalizedBytes(p) {
+  return readFileSync(p, 'utf8').replace(/\r\n/g, '\n');
 }
 
-// Hash all _shared/*.ts files combined — stored as _shared_hash in the JSON.
-// When any shared module changes, this value changes and CI flags all functions.
+function hashFile(p) {
+  return createHash('sha256').update(normalizedBytes(p)).digest('hex');
+}
+
+// Hash all _shared/**/*.ts files combined (recursive — includes providers/) —
+// stored as _shared_hash in the JSON. When any shared module changes, this
+// value changes and CI flags all functions.
 function hashShared() {
   const sharedDir = join(functionsDir, '_shared');
   if (!existsSync(sharedDir)) return null;
   const h = createHash('sha256');
-  for (const f of readdirSync(sharedDir).sort()) {
-    if (!f.endsWith('.ts')) continue;
-    h.update(f).update(readFileSync(join(sharedDir, f)));
+  const files = readdirSync(sharedDir, { recursive: true })
+    .map(String)
+    .filter((f) => f.endsWith('.ts'))
+    .sort();
+  for (const f of files) {
+    h.update(f.replace(/\\/g, '/')).update(normalizedBytes(join(sharedDir, f)));
   }
   return h.digest('hex');
 }
