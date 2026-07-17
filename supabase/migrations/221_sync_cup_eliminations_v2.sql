@@ -1,3 +1,4 @@
+-- ✅ APPLIED TO PRODUCTION 2026-06-30 (main session, as migration 195 — verified live 2026-07-17: prod prosrc contains the shootout logic; do NOT re-apply)
 -- Migration 221 (renumbered from 195 for v2 branch): sync_cup_eliminations v2 — fix two recurring elimination bugs
 --
 -- Bug 1: 6h guard causes false negatives for clear-loss teams (e.g. Côte d'Ivoire)

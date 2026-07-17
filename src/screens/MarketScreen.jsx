@@ -20,9 +20,11 @@ import { POS_CONFIG, POS_FILTER_ORDER } from '../lib/formations';
 import { usePlayerStats } from '../hooks/usePlayerStats';
 import { usePlayerScoreDetail } from '../hooks/usePlayerScoreDetail';
 import { useTransferWindow } from '../hooks/useTransferWindow';
+import { useRelaxationState } from '../hooks/useRelaxationState';
 import FormStrip from '../components/FormStrip';
 import PlayerStatsPanel from '../components/PlayerStatsPanel';
 import TransferWindowBanner from '../components/TransferWindowBanner';
+import RelaxationBanner from '../components/RelaxationBanner';
 import PlayerStatsDashboard from '../components/player/PlayerStatsDashboard';
 import { useLeagueOwnership } from '../hooks/useLeagueOwnership';
 import SelectLeaguePicker from '../components/league/SelectLeaguePicker';
@@ -181,6 +183,11 @@ export default function MarketScreen() {
   // League-scoped transfer state
   const { buy, sell, isTaken, takenByAll, isOwnedBy, takenMapError, takenMap } = useTransfer(activeLeague);
 
+  // No-repeat relaxation state — scoped to this specific league (pool pressure
+  // varies per league, so this must never be treated as a global toggle).
+  const relaxation = useRelaxationState(activeLeague);
+  const relaxationRepeatsAllowed = relaxation.repeatsAllowed; // null = unlimited
+
   // Form history — last 5 GW points per player for this tournament
   const { statsMap } = usePlayerStats(tournamentId);
 
@@ -259,7 +266,7 @@ export default function MarketScreen() {
   }, []);
 
   // Auto-fill hook — adds suggestions to basket (no DB writes until basket confirmed)
-  const { handleAutoFill, autoFilling, autoFillMsg } = useAutoFill(activeLeague, mySquad, fetchSquad, takenMap, addToBasket, cfg, basket);
+  const { handleAutoFill, autoFilling, autoFillMsg } = useAutoFill(activeLeague, mySquad, fetchSquad, takenMap, addToBasket, cfg, basket, relaxation);
 
   // Mirror auto-fill messages to the toast system so they're always visible
   const prevAutoFillMsg = useRef(null);
@@ -719,6 +726,11 @@ export default function MarketScreen() {
 
       {/* â"€â"€ Transfer Window Status Banner â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€ */}
       <TransferWindowBanner {...transferWindow} />
+
+      {/* -- Shared Ownership (relaxation) Banner -- Tier 1 draft leagues only -- */}
+      <RelaxationBanner
+        show={isDraftLeague && !relaxation.loading && relaxationRepeatsAllowed === 1}
+      />
 
       {/* â"€â"€ Sticky Header â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€ */}
       <div
@@ -1233,10 +1245,20 @@ export default function MarketScreen() {
             // Basket pending state
             const pendingSell  = basket.some(b => b.type === 'sell' && b.player.id === p.id);
             const pendingBuy   = basket.some(b => b.type === 'buy'  && b.player.id === p.id);
-            // In Draft mode each player belongs to one manager — block if taken.
+            // In Draft mode a player normally belongs to one manager, but the no-repeat
+            // relaxation formula (per-league, see useRelaxationState) can lift that cap as
+            // the club pool shrinks — up to `repeatsAllowed` OTHER managers may also own
+            // this player before a buy is actually blocked (null = unlimited sharing).
             // In Classic mode any player can be in multiple squads simultaneously.
-            const takenByOther = isDraftLeague && !isOwned && isTaken(p.id);
-            const ownerNames   = takenByAll(p.id).map(o => o.managerName).join(', ');
+            // otherOwners always excludes me (not gated on isOwned) so a shared player
+            // I already own still surfaces who else holds it — see co-owned badge below.
+            const otherOwners     = takenByAll(p.id).filter(o => o.userId !== user?.id);
+            const ownedByOther    = isDraftLeague && !isOwned && otherOwners.length > 0;
+            const relaxUnlimited  = relaxationRepeatsAllowed === null;
+            const relaxAllowed    = relaxationRepeatsAllowed ?? 0;
+            const canShareBuy     = ownedByOther && (relaxUnlimited || otherOwners.length <= relaxAllowed);
+            const takenByOther    = ownedByOther && !canShareBuy;
+            const ownerNames      = otherOwners.map(o => o.managerName).join(', ');
             const limitReached = stats.posCounts[p.position] >= POS_LIMITS[p.position];
             // U26: club cap guard — uses basket-simulated counts via stats
             const clubFull     = !isOwned && (stats.countryCounts[p.club] ?? 0) >= clubCap;
@@ -1294,6 +1316,11 @@ export default function MarketScreen() {
                           {isDraftLeague ? 'OWNED · YOU' : 'OWNED'}
                         </span>
                       )}
+                      {isDraftLeague && (isOwned || canShareBuy) && otherOwners.map(o => (
+                        <span key={o.userId} className="fk-mono shrink-0" style={{ fontSize: 9, fontWeight: 800, color: 'var(--gold)', border: '1px solid var(--gold)', padding: '2px 6px' }}>
+                          {`OWNED · ${o.managerName}`}
+                        </span>
+                      ))}
                       {takenByOther && (
                         <span className="fk-mono shrink-0" style={{ fontSize: 9, fontWeight: 800, color: 'var(--danger)', border: '1px solid var(--danger)', padding: '2px 6px' }}>
                           {ownerNames ? `TAKEN · ${ownerNames}` : 'TAKEN'}
