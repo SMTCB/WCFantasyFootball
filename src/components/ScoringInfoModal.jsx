@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { createPortal } from 'react-dom';
+import { useState } from 'react';
+import BottomSheet from './shared/BottomSheet';
 
 const MONO    = 'var(--font-mono, monospace)';
 const DISPLAY = 'Archivo Black, sans-serif';
@@ -136,31 +136,16 @@ function InfoBox({ children }) {
 export default function ScoringInfoModal({ onClose, initialTab }) {
   const [tab, setTab] = useState(initialTab ?? 'scoring');
 
-  useEffect(() => {
-    const onKey = (e) => { if (e.key === 'Escape') onClose(); };
-    document.addEventListener('keydown', onKey);
-    return () => document.removeEventListener('keydown', onKey);
-  }, [onClose]);
-
   const meta = TAB_META[tab];
 
-  return createPortal(
-    <div
-      onClick={onClose}
-      style={{
-        position: 'fixed', inset: 0, zIndex: 9999,
-        background: 'rgba(0,0,0,.7)', display: 'flex',
-        alignItems: 'flex-end', justifyContent: 'center',
-      }}
+  return (
+    <BottomSheet
+      onClose={onClose}
+      background="var(--ink)"
+      maxWidth={480}
+      showHandle={false}
+      contentStyle={{ padding: '0 0 32px' }}
     >
-      <div
-        onClick={e => e.stopPropagation()}
-        style={{
-          width: '100%', maxWidth: 480,
-          background: 'var(--ink)', borderRadius: '16px 16px 0 0',
-          padding: '0 0 32px', maxHeight: '85vh', overflowY: 'auto',
-        }}
-      >
         {/* Sticky header */}
         <div style={{
           position: 'sticky', top: 0, background: 'var(--ink)', zIndex: 1,
@@ -335,8 +320,6 @@ export default function ScoringInfoModal({ onClose, initialTab }) {
             </Section>
           </>
         )}
-      </div>
-    </div>,
-    document.body
+    </BottomSheet>
   );
 }

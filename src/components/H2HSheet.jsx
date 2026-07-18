@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
+import BottomSheet from './shared/BottomSheet';
 
 /**
  * H2HSheet — Feature 05: Head-to-Head Records
@@ -165,17 +166,7 @@ export default function H2HSheet({ leagueId, myId, rival, myName = 'You', onClos
   const lossPct = total > 0 ? Math.round((h2h.losses / total) * 100) : 0;
 
   return (
-    <>
-      {/* Backdrop */}
-      <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50" onClick={onClose} />
-
-      {/* Sheet */}
-      <div className="fixed bottom-0 left-0 right-0 z-50 max-w-md mx-auto rounded-t-2xl pb-safe shadow-2xl max-h-[90vh] flex flex-col" style={{ background: 'var(--ink)', borderTopColor: 'rgba(255,255,255,0.08)' }}>
-        {/* Handle */}
-        <div className="flex justify-center pt-3 pb-1 shrink-0">
-          <div className="w-10 h-1 rounded-full bg-white/10" />
-        </div>
-
+    <BottomSheet onClose={onClose} background="var(--ink)" maxHeight="90vh" maxWidth={448}>
         {/* Header */}
         <div className="px-5 pt-2 pb-4 border-b border-white/5 shrink-0">
           <div className="flex items-center justify-between">
@@ -308,7 +299,6 @@ export default function H2HSheet({ leagueId, myId, rival, myName = 'You', onClos
           {/* Bottom padding */}
           <div className="h-8" />
         </div>
-      </div>
-    </>
+    </BottomSheet>
   );
 }
