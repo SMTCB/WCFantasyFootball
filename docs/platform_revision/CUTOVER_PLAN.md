@@ -39,8 +39,9 @@
 
 ### Database (shared prod project `sssmvihxtqtohisghjet` — serves the pilot AND v2)
 - **Already applied & pilot-proven**: 187–189, 191–201 (F1/Clubhouse/Tennis schemas), 202–216, 220 — weeks of safe coexistence with the live pilot.
-- **Pending apply**: 218 (no-cash-out constraint, pure DDL) and 219 (GDPR delete RPC, pure DDL) — that's all. 221 verified already live (main's `195`, 2026-06-30); 222 already live (main's `196`, 2026-07-12) — both stamped, do NOT re-apply. F1 data copy (TRACKER row 16) is separate manual work.
+- **Pending apply**: 218 (no-cash-out constraint, pure DDL), 219 (GDPR delete RPC, pure DDL), and **226** (see 🔴 note below). 221 verified already live (main's `195`, 2026-06-30); 222 already live (main's `196`, 2026-07-12) — both stamped, do NOT re-apply. F1 data copy (TRACKER row 16) is separate manual work.
 - **217 (`circle_id NOT NULL`)**: 🛑 blocked — apply only in Phase 4 (see §5) after the clubhouse backfill and a stability window.
+- **🔴 226 (`credit_coins()` overload + `_create_user_wallet()` signup trigger) — CONFIRMED PILOT-IMPACTING, discovered 2026-07-18.** Written to fix a bug surfaced by `scripts/p2p-load-test.js` run locally, initially assumed v2-only (the `coin_wallets`/`coin_transactions` tables are). Read-only production verification found otherwise: `trg_create_wallet_on_signup` fires `AFTER INSERT ON auth.users` — shared infra, not gated by branch — and `supabase_auth_admin`'s `search_path` is hardcoded to `auth` only (`pg_roles.rolconfig`, confirmed), so the trigger's unqualified `credit_coins(...)` call can't resolve. The unhandled exception aborts the whole `auth.users` INSERT, meaning **every new user signup currently fails outright** in production (not just "no wallet" — the account itself is never created). Existing users/logins are unaffected (login doesn't INSERT into `auth.users`). Last successful signup in prod: 2026-06-19 (predates this finding by a month — no confirmed real casualty, but any signup attempted since would very likely fail). Fix is a self-contained `DROP FUNCTION`/`CREATE OR REPLACE`, no data touched: `supabase/migrations/226_fix_credit_coins_overload_and_wallet_trigger.sql`. **User decision 2026-07-18: hold — pilot ends in ~24h, apply at cutover** (see row 9 below and Phase 2 step 6a). Full detail: [TRACKER.md](TRACKER.md) row 28. **If a real user needs to sign up before cutover, this stops being a "deal with it later" item — escalate immediately and consider applying 226 early** (it's low-risk and isolated; there's no reason it strictly has to wait for the merge window other than the user's stated preference to batch it).
 - **No PITR, no staging, no dump tooling on this machine** (Docker broken). PITR enablement is Phase 0's most important action.
 
 ---
@@ -59,6 +60,7 @@
 | 6 | Phase 3B smoke passes: platform.spec ✅ (262/262 on 2026-07-17) · football · P2P (`MOCK_PAYMENTS=true`) · F1 · tennis | ⬜ football/P2P/F1/tennis manual passes at Phase 3 |
 | 7 | Access-blocking mechanism chosen & tested (recommended: Vercel password protection — §4 Phase 1) | ⬜ |
 | 8 | Verify migration 221 vs main's 195 in prod | ✅ 2026-07-17 — prod `sync_cup_eliminations` contains the v2 shootout logic; 221 stamped APPLIED, do not re-apply |
+| 9 | **Apply migration 226 — fixes signup-breaking `credit_coins()`/`_create_user_wallet()` bug, CONFIRMED live in prod** | ⬜ **held by user 2026-07-18, apply at Phase 2 step 6a** — see §1 Database note above and [TRACKER.md](TRACKER.md) row 28. Escalate/apply early if a real signup is needed before cutover. |
 
 ### 🟡 PRE-MERGE — RECOMMENDED (not blocking)
 
@@ -134,7 +136,7 @@ Mundial do Eder · Mundial Gordo Vai a Baliza · RANKS FC World Cup Fantasy · D
 4. **Merge with a MERGE COMMIT, not squash.** 151 commits / ~79k lines: a merge commit gives one-command revert (`git revert -m 1 <sha>`) and preserves v2 history for bisecting. This intentionally deviates from the repo's squash habit — record the merge SHA in the TRACKER.
 5. Vercel auto-deploys behind the password wall. Verify the deployment builds.
 6. DB actions from the Supabase-linked PC (per-item approval as usual):
-   a. Apply 218, 219 (pure DDL, no data). ~~Verify 221~~ ✅ done 2026-07-17 — already live.
+   a. Apply 218, 219, **226** (pure DDL/`CREATE OR REPLACE`, no data). ~~Verify 221~~ ✅ done 2026-07-17 — already live. **226 fixes a confirmed signup-breaking bug (§1 Database note, TRACKER row 28) — do not skip this one**, and if it hasn't already been applied earlier (see §2 row 9 — it can be applied any time before this step if a real signup is needed sooner), apply it here at the latest.
    b. **Data cleansing (user-led)** — per §3's decided direction: user reviews the 7 real pilot leagues and picks which subset to retain for historical/reference purposes (not all 7). Non-retained leagues and their data are cleaned out here (confirm with the user exactly what "cleaned out" means — delete vs. archive-only — before running any DELETE; SELECT-first per the Pilot Safeguards in CLAUDE.md). Do this **after** the Phase 1 full DB backup so the pre-cleanup state is recoverable.
    c. Run the **clubhouse backfill**, scoped only to the leagues retained in step (b), consolidating them into **one new clubhouse** (not one per league — see §3). This clubhouse is also the post-merge sanity-check dataset used in Phase 3 step 2.
    d. **Hold 217** until Phase 4 step 3 (needs a zero-orphan check first — §7 Q5 — which now only has to account for the non-retained leagues being gone, not mapped).
@@ -217,4 +219,6 @@ To resume this work cold: (1) confirm session type = **platform revision (v2)**;
 
 Related: [TRACKER.md](../TRACKER.md) · [V2_BRANCH_PROTECTION.md](architecture/V2_BRANCH_PROTECTION.md) · [CLUBHOUSE_CENTRIC_REDESIGN_IMPLEMENTATION_PLAN.md](architecture/CLUBHOUSE_CENTRIC_REDESIGN_IMPLEMENTATION_PLAN.md) · Phase 3B checklist in TRACKER · `backups/orphans_pre_217_20260629.json`
 
-Last Updated: **2026-07-17** (data-cleansing step + migration dedupe added same day, separate session)
+Last Updated: **2026-07-18** (🔴 migration 226 flagged — signup-breaking `credit_coins()`/`_create_user_wallet()` bug confirmed live in prod, not v2-only as first assumed; §1 Database, §2 row 9, Phase 2 step 6a. User held it — pilot ends in ~24h, apply at cutover. See [TRACKER.md](TRACKER.md) row 28 for full technical detail.)
+
+Previous: **2026-07-17** (data-cleansing step + migration dedupe added same day, separate session)

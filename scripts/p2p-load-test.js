@@ -21,9 +21,12 @@
 // What it does:
 //   Test A — single-wallet race: one user (500-coin welcome bonus) fires
 //     10 concurrent 100-coin challenges. Exactly 5 must succeed, 5 must
-//     fail with INSUFFICIENT_BALANCE, and the wallet must end at
-//     balance=0/escrow=500. Also probes create_p2p_challenge's known
-//     5-second challenge_id backfill window for misattribution under load.
+//     fail with INSUFFICIENT_BALANCE and/or DAILY_LIMIT_REACHED (the
+//     default daily_challenge_limit is 5 — same as 500/100 — so either
+//     guard can legitimately reject the losing half of the race), and
+//     the wallet must end at balance=0/escrow=500. Also probes
+//     create_p2p_challenge's known 5-second challenge_id backfill window
+//     for misattribution under load.
 //   Test B — 25 pairs (50 users) fire concurrent create_p2p_challenge,
 //     then concurrent accept_p2p_challenge (50 concurrent ops total,
 //     touching 50 distinct wallets). Every wallet must reconcile to
@@ -176,14 +179,22 @@ async function main() {
   const whaleRejected = whaleResults.filter((r) => r.status === 'rejected' || r.value?.error);
   console.log(`   ${whaleSucceeded.length} succeeded, ${whaleRejected.length} rejected`);
 
-  const unexpectedWhaleErrors = whaleRejected.filter((r) => !(rpcErrorMessage(r) ?? '').includes('INSUFFICIENT_BALANCE'));
+  // create_p2p_challenge's daily_challenge_limit guard (default 5, from
+  // p2p_config) runs before the balance check — with 500/100 the limit is
+  // numerically identical to the balance ceiling, so a losing concurrent
+  // request can legitimately be rejected by either guard depending on which
+  // one it hits first. Both are expected, valid rejection reasons here.
+  const EXPECTED_REJECTIONS = ['INSUFFICIENT_BALANCE', 'DAILY_LIMIT_REACHED'];
+  const unexpectedWhaleErrors = whaleRejected.filter(
+    (r) => !EXPECTED_REJECTIONS.some((reason) => (rpcErrorMessage(r) ?? '').includes(reason)),
+  );
   if (whaleSucceeded.length !== 5) {
     fail(`Expected exactly 5 successful challenges (500/100), got ${whaleSucceeded.length}`);
   } else {
     ok('Exactly 5 of 10 concurrent challenges succeeded, as expected (500 balance / 100 stake)');
   }
   if (unexpectedWhaleErrors.length > 0) {
-    fail(`${unexpectedWhaleErrors.length} rejection(s) were NOT the expected INSUFFICIENT_BALANCE error — possible ledger bug`);
+    fail(`${unexpectedWhaleErrors.length} rejection(s) were NOT an expected INSUFFICIENT_BALANCE/DAILY_LIMIT_REACHED error — possible ledger bug`);
     unexpectedWhaleErrors.forEach((r) => console.error('   ', rpcErrorMessage(r)));
   }
 
