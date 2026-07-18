@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
-import { createPortal } from 'react-dom';
 import { supabase } from '../lib/supabase';
 import { normalisePlayers } from '../lib/players';
+import BottomSheet from './shared/BottomSheet';
 
 const POS_CONFIG = {
   GK:  { label: 'GK',  color: 'var(--gold)', bg: 'rgba(240,180,0,0.14)'  },
@@ -63,30 +63,8 @@ export default function PlayerPickerSheet({ position, budget, takenMap, isOwnedB
 
   const posCfg = POS_CONFIG[position] ?? POS_CONFIG.MID;
 
-  return createPortal((
-    <>
-      {/* Backdrop */}
-      <div
-        className="fixed inset-0 z-40"
-        style={{ background: 'rgba(0,0,0,0.55)' }}
-        onClick={onClose}
-      />
-
-      {/* Sheet */}
-      <div
-        className="fixed bottom-0 left-0 right-0 z-50 flex flex-col"
-        style={{
-          background:   'var(--card)',
-          borderTop:    '1px solid var(--rule)',
-          borderRadius: '16px 16px 0 0',
-          maxHeight:    '85vh',
-        }}
-      >
-        {/* Handle */}
-        <div className="flex justify-center pt-3 pb-1 shrink-0">
-          <div className="w-9 h-1 rounded-full" style={{ background: 'var(--rule)' }} />
-        </div>
-
+  return (
+    <BottomSheet onClose={onClose}>
         {/* Header */}
         <div className="px-5 pb-3 shrink-0 flex items-center justify-between">
           <div>
@@ -210,7 +188,6 @@ export default function PlayerPickerSheet({ position, budget, takenMap, isOwnedB
             })
           )}
         </div>
-      </div>
-    </>
-  ), document.body);
+    </BottomSheet>
+  );
 }
