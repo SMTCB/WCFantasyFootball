@@ -1,10 +1,19 @@
 /**
  * Coin RPCs — unit tests (B2 / TEST-1 + LEGAL-1 / C3)
  *
+ * Real schema (confirmed against supabase/schema.sql):
+ *  - coin_wallets column is `escrow`, not `escrow_balance`.
+ *  - coin_transactions has NO `balance_after` column
+ *    (id, user_id, type, amount, challenge_id, meta, created_at, status, currency, reference_id).
+ *  - release_escrow(p_user_id, p_amount, p_challenge_id, p_meta) moves coins from
+ *    that SAME user's escrow back to their OWN balance (a self-refund, e.g. on a
+ *    declined/cancelled challenge) — it does NOT transfer to a different recipient.
+ *    Winner payouts are a separate flow (resolve_p2p_challenge), not covered here.
+ *
  * Covers:
  *  ✓ credit_coins: balance increases correctly
- *  ✓ debit_coins_to_escrow: balance decreases, escrow_balance increases
- *  ✓ release_escrow: escrow cleared, recipient balance increases
+ *  ✓ debit_coins_to_escrow: balance decreases, escrow increases
+ *  ✓ release_escrow: escrow cleared, own balance restored
  *  ✓ LEGAL-1 assertion: no cash-out type exists in coin_transactions CHECK constraint
  *  ✓ LEGAL-1 assertion: no withdraw/payout/cash_out RPC exists
  */
@@ -40,7 +49,7 @@ describe('coin RPCs', () => {
   // ── 2. debit_coins_to_escrow ─────────────────────────────────────────────────
   it('debit_coins_to_escrow moves coins from balance to escrow', async () => {
     const before = await queryOne(
-      'SELECT balance, escrow_balance FROM coin_wallets WHERE user_id=$1', [USER_A]
+      'SELECT balance, escrow FROM coin_wallets WHERE user_id=$1', [USER_A]
     );
 
     await callRpc('debit_coins_to_escrow', {
@@ -49,51 +58,59 @@ describe('coin RPCs', () => {
     });
 
     const after = await queryOne(
-      'SELECT balance, escrow_balance FROM coin_wallets WHERE user_id=$1', [USER_A]
+      'SELECT balance, escrow FROM coin_wallets WHERE user_id=$1', [USER_A]
     );
-    assert.equal(after.balance,         before.balance - 50,  'balance should decrease by 50');
-    assert.equal(after.escrow_balance,  before.escrow_balance + 50, 'escrow should increase by 50');
+    assert.equal(after.balance, before.balance - 50, 'balance should decrease by 50');
+    assert.equal(after.escrow,  before.escrow + 50,  'escrow should increase by 50');
   });
 
   it('debit_coins_to_escrow rejects when balance is insufficient', async () => {
+    // Real function RAISE EXCEPTIONs 'INSUFFICIENT_BALANCE' — a hard throw,
+    // not a returned error object. A hard throw aborts the enclosing Postgres
+    // transaction (this test's beginTx() BEGIN), so a SAVEPOINT is needed to
+    // keep the transaction usable for the assertion query below.
+    await query('SAVEPOINT before_throw');
+
     let threw = false;
+    let message = '';
     try {
       await callRpc('debit_coins_to_escrow', {
         p_user_id: USER_B,  // USER_B has 200 coins
         p_amount:  9999,
       });
-    } catch {
+    } catch (err) {
       threw = true;
+      message = err.message || '';
+      await query('ROLLBACK TO SAVEPOINT before_throw');
     }
 
-    if (!threw) {
-      // Some RPCs return an error object instead of throwing
-      const wallet = await queryOne('SELECT balance FROM coin_wallets WHERE user_id=$1', [USER_B]);
-      // Balance must be unchanged — the debit must not have succeeded silently
-      assert.equal(wallet.balance, 200, 'Balance must be unchanged on insufficient funds');
-    }
+    assert.ok(threw, 'Expected debit_coins_to_escrow to throw on insufficient balance');
+    assert.ok(message.includes('INSUFFICIENT_BALANCE'),
+      `Expected INSUFFICIENT_BALANCE error, got: ${message}`);
+
+    const wallet = await queryOne('SELECT balance FROM coin_wallets WHERE user_id=$1', [USER_B]);
+    assert.equal(wallet.balance, 200, 'Balance must be unchanged on insufficient funds');
   });
 
   // ── 3. release_escrow ───────────────────────────────────────────────────────
-  it('release_escrow clears escrow and credits the recipient', async () => {
-    // First put 100 into escrow for user A
+  // Real signature: release_escrow(p_user_id, p_amount, p_challenge_id, p_meta).
+  // It refunds coins from a user's OWN escrow back to their OWN balance (e.g. on
+  // a declined/cancelled challenge) — there is no separate recipient parameter.
+  it('release_escrow moves coins from escrow back to the same user\'s balance', async () => {
     await callRpc('debit_coins_to_escrow', { p_user_id: USER_A, p_amount: 100 });
 
-    const beforeB = await queryOne('SELECT balance FROM coin_wallets WHERE user_id=$1', [USER_B]);
+    const before = await queryOne('SELECT balance, escrow FROM coin_wallets WHERE user_id=$1', [USER_A]);
+    assert.equal(before.escrow, 100, 'escrow should hold the 100 debited above');
 
     await callRpc('release_escrow', {
-      p_from_user_id: USER_A,
-      p_to_user_id:   USER_B,
-      p_amount:       100,
+      p_user_id: USER_A,
+      p_amount:  100,
     });
 
-    const afterA = await queryOne(
-      'SELECT escrow_balance FROM coin_wallets WHERE user_id=$1', [USER_A]
-    );
-    const afterB = await queryOne('SELECT balance FROM coin_wallets WHERE user_id=$1', [USER_B]);
+    const after = await queryOne('SELECT balance, escrow FROM coin_wallets WHERE user_id=$1', [USER_A]);
 
-    assert.equal(afterA.escrow_balance, 0,                    'escrow should be cleared');
-    assert.equal(afterB.balance, beforeB.balance + 100,       'recipient balance should increase');
+    assert.equal(after.escrow, 0, 'escrow should be cleared');
+    assert.equal(after.balance, before.balance + 100, 'balance should be restored by the released amount');
   });
 });
 
@@ -120,8 +137,8 @@ describe('LEGAL-1 — no-cash-out schema guarantee', () => {
     let rejected = false;
     try {
       await query(`
-        INSERT INTO coin_transactions (user_id, amount, type, balance_after)
-        VALUES ($1, 100, 'cash_out', 0)
+        INSERT INTO coin_transactions (user_id, amount, type)
+        VALUES ($1, 100, 'cash_out')
       `, [USER_A]);
     } catch (err) {
       // Postgres will throw a check_violation (23514)
@@ -134,8 +151,8 @@ describe('LEGAL-1 — no-cash-out schema guarantee', () => {
     let rejected = false;
     try {
       await query(`
-        INSERT INTO coin_transactions (user_id, amount, type, balance_after)
-        VALUES ($1, 100, 'withdrawal', 0)
+        INSERT INTO coin_transactions (user_id, amount, type)
+        VALUES ($1, 100, 'withdrawal')
       `, [USER_A]);
     } catch (err) {
       rejected = err.code === '23514' || err.message?.includes('no_external_cash_out');

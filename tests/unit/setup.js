@@ -44,6 +44,10 @@ async function run() {
       console.log('✅  Schema loaded');
     }
 
+    // schema.sql (a pg_dump artifact) sets search_path='' for the session and
+    // never restores it, so unqualified table names below would fail to resolve.
+    await client.query("SET search_path TO 'public'");
+
     console.log('Loading seed…');
     const seed = readFileSync(SEED_PATH, 'utf8');
     await client.query(seed);

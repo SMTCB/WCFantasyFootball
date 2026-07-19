@@ -37,25 +37,27 @@
 -- Auction listing
 -- AUCTION_1 = 'eeeeeeee-0000-4000-e000-000000000001'
 
--- ── Users ─────────────────────────────────────────────────────────────────────
+-- ── Auth users (coin_wallets.user_id and others FK to auth.users, not public.users) ──
 
-INSERT INTO users (id, username, email)
+-- handle_new_user() trigger fires on insert and creates the matching public.users
+-- row itself (username from raw_user_meta_data) — do not also INSERT INTO users below.
+INSERT INTO auth.users (id, raw_user_meta_data)
 VALUES
-  ('aaaaaaaa-0000-4000-a000-000000000001', 'test_user_a', 'test_a@example.com'),
-  ('aaaaaaaa-0000-4000-a000-000000000002', 'test_user_b', 'test_b@example.com'),
-  ('aaaaaaaa-0000-4000-a000-000000000099', 'test_commissioner', 'test_commissioner@example.com')
+  ('aaaaaaaa-0000-4000-a000-000000000001', '{"username":"test_user_a"}'::jsonb),
+  ('aaaaaaaa-0000-4000-a000-000000000002', '{"username":"test_user_b"}'::jsonb),
+  ('aaaaaaaa-0000-4000-a000-000000000099', '{"username":"test_commissioner"}'::jsonb)
 ON CONFLICT (id) DO NOTHING;
 
 -- ── Tournament ────────────────────────────────────────────────────────────────
 
-INSERT INTO tournaments (id, name, provider, provider_key, sport_id)
+INSERT INTO tournaments (forza_id, name, slug, provider)
 VALUES
-  ('TEST_429', 'Test World Cup 2026', 'forza', 'TEST_429', NULL)
-ON CONFLICT (id) DO NOTHING;
+  ('TEST_429', 'Test World Cup 2026', 'test-world-cup-2026', 'forza')
+ON CONFLICT (forza_id) DO NOTHING;
 
 -- ── Leagues ───────────────────────────────────────────────────────────────────
 
-INSERT INTO leagues (id, name, format, tournament_id, created_by, league_mode, invite_code)
+INSERT INTO leagues (id, name, format, tournament_id, created_by, league_mode, join_code)
 VALUES
   ('bbbbbbbb-0000-4000-b000-000000000001', 'TEST_Classic_League', 'classic', 'TEST_429',
    'aaaaaaaa-0000-4000-a000-000000000099', 'classic', 'TEST-CLS-001'),
@@ -76,7 +78,7 @@ ON CONFLICT (league_id, user_id) DO NOTHING;
 
 -- ── League config ─────────────────────────────────────────────────────────────
 
-INSERT INTO league_config (league_id, key, value)
+INSERT INTO league_config (league_id, config_key, config_value)
 VALUES
   ('bbbbbbbb-0000-4000-b000-000000000001', 'budget', '100'),
   ('bbbbbbbb-0000-4000-b000-000000000001', 'free_transfers_per_round', '3'),
@@ -84,15 +86,25 @@ VALUES
   ('bbbbbbbb-0000-4000-b000-000000000001', 'transfer_penalty', '4'),
   ('bbbbbbbb-0000-4000-b000-000000000002', 'budget', '100'),
   ('bbbbbbbb-0000-4000-b000-000000000002', 'draft_list_size', '45')
-ON CONFLICT (league_id, key) DO NOTHING;
+ON CONFLICT (league_id, config_key) DO NOTHING;
 
 -- ── Matchday deadlines ────────────────────────────────────────────────────────
 
-INSERT INTO matchday_deadlines (league_id, matchday_id, deadline_at)
+INSERT INTO matchday_deadlines (tournament_id, matchday_id, deadline_at)
 VALUES
-  ('bbbbbbbb-0000-4000-b000-000000000001', 'TEST_429-r1', NOW() + INTERVAL '7 days'),
-  ('bbbbbbbb-0000-4000-b000-000000000002', 'TEST_429-r1', NOW() + INTERVAL '7 days')
-ON CONFLICT (league_id, matchday_id) DO NOTHING;
+  ('TEST_429', 'TEST_429-r1', NOW() + INTERVAL '7 days')
+ON CONFLICT (matchday_id) DO NOTHING;
+
+-- ── Teams (clubs referenced by players.forza_team_id) ──────────────────────────
+
+INSERT INTO teams (forza_team_id, tournament_id, name)
+VALUES
+  ('CLUB_ARG', 'TEST_429', 'Argentina'),
+  ('CLUB_BRA', 'TEST_429', 'Brazil'),
+  ('CLUB_ENG', 'TEST_429', 'England'),
+  ('CLUB_FRA', 'TEST_429', 'France'),
+  ('CLUB_GER', 'TEST_429', 'Germany')
+ON CONFLICT (forza_team_id) DO NOTHING;
 
 -- ── Players (15 per club so we can test club cap) ─────────────────────────────
 
@@ -127,7 +139,7 @@ ON CONFLICT (id) DO NOTHING;
 -- captain: test-fwd-eng-01
 
 INSERT INTO squads (
-  id, league_id, user_id, matchday_id,
+  id, league_id, user_id, matchday_id, tournament_id,
   players, starting_xi, captain_id,
   budget_remaining, initial_build_complete, round_transfers
 )
@@ -136,6 +148,7 @@ VALUES (
   'bbbbbbbb-0000-4000-b000-000000000001',
   'aaaaaaaa-0000-4000-a000-000000000001',
   'TEST_429-r1',
+  'TEST_429',
   ARRAY[
     'test-gk-arg-01','test-def-arg-01','test-def-arg-02',
     'test-def-bra-01','test-mid-bra-01','test-mid-bra-02',
@@ -157,7 +170,7 @@ ON CONFLICT (id) DO NOTHING;
 
 -- SQUAD_B_CLASSIC: user B, 11 players, budget 45.5
 INSERT INTO squads (
-  id, league_id, user_id, matchday_id,
+  id, league_id, user_id, matchday_id, tournament_id,
   players, starting_xi, captain_id,
   budget_remaining, initial_build_complete, round_transfers
 )
@@ -166,6 +179,7 @@ VALUES (
   'bbbbbbbb-0000-4000-b000-000000000001',
   'aaaaaaaa-0000-4000-a000-000000000002',
   'TEST_429-r1',
+  'TEST_429',
   ARRAY[
     'test-gk-arg-01','test-def-arg-01','test-def-bra-01',
     'test-mid-bra-01','test-mid-bra-02','test-mid-eng-01',
@@ -187,7 +201,7 @@ ON CONFLICT (id) DO NOTHING;
 
 -- SQUAD_A_DRAFT: user A, draft league, 8 players (incomplete — initial_build_complete false)
 INSERT INTO squads (
-  id, league_id, user_id, matchday_id,
+  id, league_id, user_id, matchday_id, tournament_id,
   players, starting_xi, captain_id,
   budget_remaining, initial_build_complete, round_transfers
 )
@@ -196,6 +210,7 @@ VALUES (
   'bbbbbbbb-0000-4000-b000-000000000002',
   'aaaaaaaa-0000-4000-a000-000000000001',
   'TEST_429-r1',
+  'TEST_429',
   ARRAY[
     'test-gk-arg-01','test-def-arg-01','test-def-arg-02',
     'test-def-bra-01','test-mid-bra-01','test-mid-bra-02',
@@ -214,18 +229,18 @@ ON CONFLICT (id) DO NOTHING;
 INSERT INTO fixtures (
   id, tournament_id, matchday_id, round_number,
   home_team, away_team, home_team_forza_id, away_team_forza_id,
-  kickoff_at, status
+  kickoff_at, competition, status
 )
 VALUES (
   'test-fixture-0001', 'TEST_429', 'TEST_429-r1', 1,
   'England', 'France', 'CLUB_ENG', 'CLUB_FRA',
-  NOW() + INTERVAL '2 days', 'scheduled'
+  NOW() + INTERVAL '2 days', 'Test World Cup 2026', 'scheduled'
 )
 ON CONFLICT (id) DO NOTHING;
 
 -- ── Coin wallets ──────────────────────────────────────────────────────────────
 
-INSERT INTO coin_wallets (user_id, balance, escrow_balance)
+INSERT INTO coin_wallets (user_id, balance, escrow)
 VALUES
   ('aaaaaaaa-0000-4000-a000-000000000001', 500, 0),
   ('aaaaaaaa-0000-4000-a000-000000000002', 200, 0),
@@ -235,20 +250,20 @@ ON CONFLICT (user_id) DO NOTHING;
 -- ── Bet instance ──────────────────────────────────────────────────────────────
 
 INSERT INTO bet_instances (
-  id, league_id, title, description,
-  bet_type, answer_type, scope_type,
-  options, deadline_at, status, created_by
+  id, league_id, title, prompt,
+  options, reward_type, reward_value,
+  deadline_at, scope_type, status
 )
 VALUES (
   'dddddddd-0000-4000-d000-000000000001',
   'bbbbbbbb-0000-4000-b000-000000000001',
   'Test Bet — Match Result',
   'Who wins England vs France?',
-  'standard', 'option_pick', 'match',
   '["England","France","Draw"]'::jsonb,
+  'points', 5,
   NOW() + INTERVAL '2 days',
-  'open',
-  'aaaaaaaa-0000-4000-a000-000000000099'
+  'match',
+  'open'
 )
 ON CONFLICT (id) DO NOTHING;
 
@@ -256,13 +271,13 @@ ON CONFLICT (id) DO NOTHING;
 
 INSERT INTO auction_listings (
   id, league_id, seller_id, player_id,
-  min_bid, current_bid, highest_bidder_id,
+  starting_bid, current_bid, highest_bidder_id,
   status, deadline_at
 )
 VALUES (
   'eeeeeeee-0000-4000-e000-000000000001',
   'bbbbbbbb-0000-4000-b000-000000000001',
-  'aaaaaaaa-0000-4000-a000-000000000002',  -- seller: user B
+  'cccccccc-0000-4000-c000-000000000002',  -- seller: squad B (user B's classic squad)
   'test-mid-fra-01',
   2.0, 2.0, NULL,
   'open',

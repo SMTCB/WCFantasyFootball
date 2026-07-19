@@ -51,6 +51,7 @@ tests/unit/
 - **Node built-in test runner** (`node:test` + `node:assert`) — zero new dependencies.
 - **`pg` client** (already a transitive dep via `@supabase/supabase-js`) — raw SQL calls to exercise real RPC/RLS semantics, not a mocked client.
 - **Ephemeral DB** — each test file runs inside a transaction that is rolled back after the file completes, so tests are fully isolated and the seed state is restored between files.
+- **`--test-concurrency=1`** — Node's test runner parallelizes across files by default. Because every file's transactions operate on the same fixed seed row IDs (e.g. `SQUAD_A`/`SQUAD_B`), two files updating those rows at the same time can deadlock (Postgres error `40P01`) even though each file is internally correct. Running files serially avoids this; it costs ~1.5s total, not worth trading for parallel speed.
 - **No Supabase CLI required** — the docker-compose Postgres is vanilla `postgres:15-alpine`. Extensions that Supabase adds (pgcron, pg_net, auth schema) are either stubbed in `seed.sql` or skipped for tests that don't need them. SECURITY DEFINER functions that need `auth.uid()` are tested via a `SET LOCAL role` session variable set in `helpers.js`.
 - **Why not Vitest/Jest?** This repo has no bundler config for tests. Node's built-in runner requires no config file, produces TAP-compatible output for CI, and doesn't interact with Vite's module resolution.
 
