@@ -59,6 +59,3 @@ verify_jwt = false
 [functions.sync-players]
 entrypoint = "./functions/sync-players/index.js"
 verify_jwt = false
-
-[functions.test-forza-api]
-entrypoint = "./functions/test-forza-api/index.js"
