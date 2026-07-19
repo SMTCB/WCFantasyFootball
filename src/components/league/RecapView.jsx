@@ -103,6 +103,7 @@ function PlayerBreakdown({ breakdown, benchBreakdown = [], penaltyDeduction = 0,
         if (p.shootoutScored > 0) badges.push({ s: `PK✓×${p.shootoutScored}`, c: 'var(--positive)' });
         if (p.shootoutMissed > 0) badges.push({ s: `PK✗×${p.shootoutMissed}`, c: 'var(--danger)' });
         if (p.shootoutSaved > 0)  badges.push({ s: `${p.shootoutSaved}PK SV`,  c: 'var(--cyan)' });
+        if (p.goalsConceded > 1)  badges.push({ s: `GA×${p.goalsConceded}`,    c: 'var(--danger)' });
         if (p.yellow)        badges.push({ s: '🟨',                c: 'var(--warn)' });
         if (p.red)           badges.push({ s: '🟥',                c: 'var(--danger)' });
         return (
@@ -553,14 +554,14 @@ export default function RecapView({ leagueId, tournamentId, members, currentUser
       const [{ data: playerRows }, { data: statRows }] = await Promise.all([
         supabase.from('players').select('id, name, position').in('id', idList),
         supabase.from('player_match_stats')
-          .select('player_id, fantasy_points, goals, assists, minutes_played, yellow_cards, red_cards, saves, key_passes, shots_on_target, big_chances_created, shootout_scored, shootout_missed, shootout_saved')
+          .select('player_id, fantasy_points, goals, assists, minutes_played, yellow_cards, red_cards, saves, key_passes, shots_on_target, big_chances_created, shootout_scored, shootout_missed, shootout_saved, goals_conceded')
           .in('player_id', idList).in('fixture_id', fixtureIds),
       ]);
 
       const playerMeta = Object.fromEntries((playerRows || []).map(p => [p.id, p]));
       const statsByPlayer = {};
       for (const r of statRows || []) {
-        if (!statsByPlayer[r.player_id]) statsByPlayer[r.player_id] = { pts: 0, goals: 0, assists: 0, minutes: 0, yellow: 0, red: 0, saves: 0, keyPasses: 0, sot: 0, bigChances: 0, shootoutScored: 0, shootoutMissed: 0, shootoutSaved: 0 };
+        if (!statsByPlayer[r.player_id]) statsByPlayer[r.player_id] = { pts: 0, goals: 0, assists: 0, minutes: 0, yellow: 0, red: 0, saves: 0, keyPasses: 0, sot: 0, bigChances: 0, shootoutScored: 0, shootoutMissed: 0, shootoutSaved: 0, goalsConceded: 0 };
         const s = statsByPlayer[r.player_id];
         s.pts       += r.fantasy_points      ?? 0;
         s.goals     += r.goals               ?? 0;
@@ -575,6 +576,7 @@ export default function RecapView({ leagueId, tournamentId, members, currentUser
         s.shootoutScored += r.shootout_scored ?? 0;
         s.shootoutMissed += r.shootout_missed ?? 0;
         s.shootoutSaved  += r.shootout_saved  ?? 0;
+        s.goalsConceded  += r.goals_conceded  ?? 0;
       }
 
       // Builds one breakdown row. Captain multiplier is applied AFTER rounding
@@ -598,6 +600,7 @@ export default function RecapView({ leagueId, tournamentId, members, currentUser
           shootoutScored: stats?.shootoutScored ?? 0,
           shootoutMissed: stats?.shootoutMissed ?? 0,
           shootoutSaved:  stats?.shootoutSaved  ?? 0,
+          goalsConceded:  stats?.goalsConceded  ?? 0,
           captain: isCaptain,
           triple:  isTriple,
           joker:   isJoker,
