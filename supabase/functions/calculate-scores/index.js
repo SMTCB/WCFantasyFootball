@@ -126,9 +126,11 @@ function scorePlayer(stats, position, POINTS, UNIVERSAL) {
     pts += rules.clean_sheet;
   }
 
-  // Goals conceded beyond the first incur a penalty for GK/DEF
-  const concededBeyondFirst = Math.max(0, (stats.goals_conceded ?? 0) - 1);
-  pts += concededBeyondFirst * (rules.conceded_2plus_penalty ?? 0);
+  // Goals conceded beyond the first incur a penalty for GK/DEF — only if the player actually appeared
+  if (mins > 0) {
+    const concededBeyondFirst = Math.max(0, (stats.goals_conceded ?? 0) - 1);
+    pts += concededBeyondFirst * (rules.conceded_2plus_penalty ?? 0);
+  }
 
   pts += (stats.penalty_saved  ?? 0) * (rules.penalty_saved  ?? 0);
   pts += (stats.own_goals      ?? 0) * UNIVERSAL.own_goal;
@@ -161,7 +163,7 @@ function buildBreakdown(stats, pos, POINTS, UNIVERSAL) {
     goals:             (stats.goals              ?? 0) * rules.goal,
     assists:           (stats.assists            ?? 0) * rules.assist,
     clean_sheet:       (stats.clean_sheet && mins >= ((p === 'DEF' || p === 'GK') ? 45 : 60) && rules.clean_sheet > 0) ? rules.clean_sheet : 0,
-    goals_conceded:    Math.max(0, (stats.goals_conceded ?? 0) - 1) * (rules.conceded_2plus_penalty ?? 0),
+    goals_conceded:    mins > 0 ? Math.max(0, (stats.goals_conceded ?? 0) - 1) * (rules.conceded_2plus_penalty ?? 0) : 0,
     own_goals:         (stats.own_goals          ?? 0) * UNIVERSAL.own_goal,
     yellow_cards:      (stats.yellow_cards       ?? 0) * UNIVERSAL.yellow_card,
     red_cards:         (stats.red_cards          ?? 0) * UNIVERSAL.red_card,
