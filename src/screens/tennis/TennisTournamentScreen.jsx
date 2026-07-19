@@ -131,7 +131,10 @@ export default function TennisTournamentScreen() {
               </div>
             )}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {survivingPlayers.map(p => (
+              {survivingPlayers
+                .map(id => players.find(pl => pl.id === id))
+                .filter(Boolean)
+                .map(p => (
                 <button
                   key={p.id}
                   disabled={captainBusy}

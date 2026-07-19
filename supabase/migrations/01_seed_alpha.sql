@@ -65,8 +65,18 @@ VALUES
 ON CONFLICT DO NOTHING;
 
 -- 10. Add Other Members to the League
+-- Ana / Ricardo users were referenced below but never inserted here — FK violation
+-- on any fresh replay (local rebuild dry run, 2026-07-19). Adding them so this
+-- decades-old dummy seed file can actually run end to end; no production impact,
+-- migration 01 already applied to prod long ago.
+INSERT INTO users (id, username, avatar_url, xp)
+VALUES
+  ('11111111-1111-1111-1111-111111111111', 'Ana', 'https://api.dicebear.com/7.x/avataaars/svg?seed=Ana', 980),
+  ('22222222-2222-2222-2222-222222222222', 'Ricardo', 'https://api.dicebear.com/7.x/avataaars/svg?seed=Ricardo', 860)
+ON CONFLICT (id) DO NOTHING;
+
 INSERT INTO league_members (league_id, user_id, rank, total_points)
-VALUES 
+VALUES
   ('11111111-1111-1111-1111-111111111111', '11111111-1111-1111-1111-111111111111', 2, 287),
   ('11111111-1111-1111-1111-111111111111', '22222222-2222-2222-2222-222222222222', 3, 271)
 ON CONFLICT DO NOTHING;

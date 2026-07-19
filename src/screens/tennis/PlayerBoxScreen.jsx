@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { usePlayerBox } from '../../hooks/tennis/usePlayerBox';
+import { supabase } from '../../lib/supabase';
 
 const SURFACE_ICON = { hard: '🎾', clay: '🟫', grass: '🌿', hard_indoor: '🏟️' };
 
@@ -14,13 +15,24 @@ export default function PlayerBoxScreen() {
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
   const [copied, setCopied] = useState(null);
+  const [myCircles, setMyCircles] = useState([]);
+  const [selectedCircleId, setSelectedCircleId] = useState(null);
+
+  useEffect(() => {
+    supabase.rpc('get_my_circles').then(({ data }) => {
+      if (data?.length) {
+        setMyCircles(data);
+        setSelectedCircleId(data[0].id);
+      }
+    });
+  }, []);
 
   async function handleCreate(e) {
     e.preventDefault();
-    if (!name.trim()) return;
+    if (!name.trim() || !selectedCircleId) return;
     setBusy(true); setErr('');
     try {
-      const id = await createPlayerBox(name.trim());
+      const id = await createPlayerBox(name.trim(), selectedCircleId);
       navigate(`/tennis?box=${id}`);
     } catch (e) {
       setErr(e.message === 'TENNIS_SPORT_NOT_FOUND' ? 'Tennis sport not configured — contact admin.' : e.message);
@@ -162,7 +174,28 @@ export default function PlayerBoxScreen() {
 
         {/* CREATE */}
         {tab === 'create' && (
+          myCircles.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '40px 0' }}>
+              <p style={{ fontFamily: 'Archivo, sans-serif', color: 'var(--mute)', fontSize: 14, margin: 0 }}>
+                You need a Clubhouse before creating a Player's Box. Create or join one from the Clubhouse tab first.
+              </p>
+            </div>
+          ) : (
           <form onSubmit={handleCreate} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <div>
+              <label style={{ display: 'block', fontFamily: 'JetBrains Mono, monospace', fontSize: 10, letterSpacing: '0.12em', color: 'var(--mute)', marginBottom: 8, textTransform: 'uppercase' }}>
+                Clubhouse
+              </label>
+              <select
+                value={selectedCircleId ?? ''}
+                onChange={e => setSelectedCircleId(e.target.value || null)}
+                style={{ width: '100%', padding: '12px 14px', border: '1px solid var(--rule)', borderRadius: 6, fontFamily: 'Archivo, sans-serif', fontSize: 15, color: 'var(--paper)', background: 'var(--card)', outline: 'none', boxSizing: 'border-box', cursor: 'pointer' }}
+              >
+                {myCircles.map(c => (
+                  <option key={c.id} value={c.id}>{c.name}</option>
+                ))}
+              </select>
+            </div>
             <div>
               <label style={{ display: 'block', fontFamily: 'JetBrains Mono, monospace', fontSize: 10, letterSpacing: '0.12em', color: 'var(--mute)', marginBottom: 8, textTransform: 'uppercase' }}>
                 Box Name
@@ -178,12 +211,13 @@ export default function PlayerBoxScreen() {
             {err && <div style={{ fontFamily: 'Archivo, sans-serif', fontSize: 13, color: 'var(--neg)' }}>{err}</div>}
             <button
               type="submit"
-              disabled={busy || !name.trim()}
-              style={{ padding: '13px', background: busy || !name.trim() ? 'var(--mute)' : 'var(--accent)', color: '#fff', border: 'none', borderRadius: 6, fontFamily: 'Archivo, sans-serif', fontSize: 14, fontWeight: 600, cursor: busy || !name.trim() ? 'default' : 'pointer' }}
+              disabled={busy || !name.trim() || !selectedCircleId}
+              style={{ padding: '13px', background: busy || !name.trim() || !selectedCircleId ? 'var(--mute)' : 'var(--accent)', color: '#fff', border: 'none', borderRadius: 6, fontFamily: 'Archivo, sans-serif', fontSize: 14, fontWeight: 600, cursor: busy || !name.trim() || !selectedCircleId ? 'default' : 'pointer' }}
             >
               {busy ? 'Creating…' : 'Create Player\'s Box →'}
             </button>
           </form>
+          )
         )}
 
         {/* JOIN */}

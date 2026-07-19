@@ -4,6 +4,7 @@ import { useTennisCalendar } from '../../hooks/tennis/useTennisCalendar';
 import { supabase } from '../../lib/supabase';
 
 const STATUS_ORDER = ['upcoming', 'roster_open', 'in_progress', 'qf_captain_open', 'completed'];
+const ROUND_REACHED_OPTIONS = ['r128', 'r64', 'r32', 'r16', 'qf', 'sf', 'runner_up', 'champion'];
 
 export default function TennisAdminScreen() {
   const navigate = useNavigate();
@@ -18,6 +19,8 @@ export default function TennisAdminScreen() {
   const [playersJson, setPlayersJson] = useState('');
   // Eliminated player IDs (multi-select)
   const [eliminatedIds, setEliminatedIds] = useState([]);
+  const [eliminatedRound, setEliminatedRound] = useState(ROUND_REACHED_OPTIONS[0]);
+  const [eliminatedRoundsWon, setEliminatedRoundsWon] = useState(0);
   // ATP Finals specific
   const [atpMatchNumber, setAtpMatchNumber] = useState('');
   const [atpWinnerId, setAtpWinnerId] = useState('');
@@ -40,10 +43,17 @@ export default function TennisAdminScreen() {
     } finally { setBusy(false); }
   }
 
-  async function openTournament() { await rpc('admin_open_tournament', { p_tournament_id: selected }); }
+  async function openTournament() {
+    const rosterLockAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+    await rpc('admin_open_tournament', { p_tournament_id: selected, p_roster_lock_at: rosterLockAt.toISOString() });
+  }
   async function startTournament() { await rpc('admin_start_tournament', { p_tournament_id: selected }); }
   async function completeTournament() { await rpc('admin_complete_tournament', { p_tournament_id: selected }); }
-  async function openQfWindow() { await rpc('admin_open_qf_window', { p_tournament_id: selected }); }
+  async function openQfWindow() {
+    const opensAt = new Date();
+    const closesAt = new Date(opensAt.getTime() + 48 * 60 * 60 * 1000);
+    await rpc('admin_open_qf_window', { p_tournament_id: selected, p_opens_at: opensAt.toISOString(), p_closes_at: closesAt.toISOString() });
+  }
 
   async function seedPlayers() {
     let parsed;
@@ -54,14 +64,19 @@ export default function TennisAdminScreen() {
 
   async function enterResults() {
     if (eliminatedIds.length === 0) { setErr('Select at least one eliminated player.'); return; }
-    await rpc('admin_enter_round_results', { p_tournament_id: selected, p_eliminated_player_ids: eliminatedIds });
+    const p_eliminations = eliminatedIds.map(player_id => ({
+      player_id,
+      round_reached: eliminatedRound,
+      rounds_won: Number(eliminatedRoundsWon) || 0,
+    }));
+    await rpc('admin_enter_round_results', { p_tournament_id: selected, p_eliminations });
     setEliminatedIds([]);
     refresh();
   }
 
   async function enterAtpResult() {
     if (!atpMatchNumber || !atpWinnerId) { setErr('Enter match number and winner ID.'); return; }
-    await rpc('admin_enter_atp_finals_result', { p_season_year: 2026, p_match_number: parseInt(atpMatchNumber, 10), p_winner_id: atpWinnerId });
+    await rpc('admin_enter_atp_finals_result', { p_season_year: 2026, p_match_number: parseInt(atpMatchNumber, 10), p_winner_player_id: atpWinnerId });
     setAtpMatchNumber(''); setAtpWinnerId('');
   }
 
@@ -163,14 +178,36 @@ export default function TennisAdminScreen() {
             {!isAtp && ['in_progress', 'qf_captain_open'].includes(t.status) && (
               <Section title="Enter Round Results — Eliminated Players">
                 <p style={{ fontFamily: 'Archivo, sans-serif', fontSize: 12, color: 'var(--mute)', margin: '0 0 10px' }}>
-                  Select all players eliminated in this round. Their <code>round_reached</code> will be set automatically.
+                  Select all players eliminated in this round, and set the round they were eliminated in.
                 </p>
+                <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 10 }}>
+                  <label style={{ display: 'flex', flexDirection: 'column', gap: 4, fontFamily: 'Archivo, sans-serif', fontSize: 11, color: 'var(--mute)' }}>
+                    Round reached
+                    <select
+                      value={eliminatedRound}
+                      onChange={e => setEliminatedRound(e.target.value)}
+                      style={{ padding: '8px 10px', border: '1px solid var(--rule)', borderRadius: 6, fontFamily: 'JetBrains Mono, monospace', fontSize: 13, color: 'var(--paper)', background: 'var(--card)', outline: 'none' }}
+                    >
+                      {ROUND_REACHED_OPTIONS.map(r => <option key={r} value={r}>{r}</option>)}
+                    </select>
+                  </label>
+                  <label style={{ display: 'flex', flexDirection: 'column', gap: 4, fontFamily: 'Archivo, sans-serif', fontSize: 11, color: 'var(--mute)' }}>
+                    Rounds won
+                    <input
+                      type="number"
+                      min={0}
+                      value={eliminatedRoundsWon}
+                      onChange={e => setEliminatedRoundsWon(e.target.value)}
+                      style={{ width: 80, padding: '8px 10px', border: '1px solid var(--rule)', borderRadius: 6, fontFamily: 'JetBrains Mono, monospace', fontSize: 13, color: 'var(--paper)', background: 'var(--card)', outline: 'none' }}
+                    />
+                  </label>
+                </div>
                 <PlayerMultiSelect
                   tournamentId={selected}
                   selected={eliminatedIds}
                   onChange={setEliminatedIds}
                 />
-                <AdminBtn label={`Mark ${eliminatedIds.length} player(s) eliminated`} onClick={enterResults} disabled={busy || eliminatedIds.length === 0} />
+                <AdminBtn label={`Mark ${eliminatedIds.length} player(s) eliminated at ${eliminatedRound}`} onClick={enterResults} disabled={busy || eliminatedIds.length === 0} />
               </Section>
             )}
 
