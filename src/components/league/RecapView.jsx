@@ -579,6 +579,22 @@ export default function RecapView({ leagueId, tournamentId, members, currentUser
         s.goalsConceded  += r.goals_conceded  ?? 0;
       }
 
+      // For an in-progress round, mirror calculate-scores' live captain
+      // reassignment (index.js ~L734-758): if the nominal captain isn't in the
+      // starting XI (e.g. their team was already eliminated and the manager
+      // never re-captained), the bonus moves live to the highest positive
+      // scorer in the XI. Without this, the header total (server-authoritative,
+      // already reassigned) can be higher than the sum of the displayed rows.
+      if (!settled && captainId && !starterSet.has(captainId)) {
+        let bestPid = null, bestRaw = 0;
+        for (const pid of starters) {
+          const raw = statsByPlayer[pid]?.pts ?? 0;
+          if (raw > bestRaw) { bestRaw = raw; bestPid = pid; }
+        }
+        captainId = bestPid;
+        captainReassigned = !!bestPid;
+      }
+
       // Builds one breakdown row. Captain multiplier is applied AFTER rounding
       // the raw score (matches calculate-scores v27 / UI display formula), so
       // displayed player points sum to the GW total shown on the row above.
