@@ -78,11 +78,11 @@
 |---|------|--------|
 | 1 | Fix v2 CI (lock file + checksum line endings) | ✅ PR #720 (2026-07-17) — all 6 CI jobs green, incl. Unit + E2E for the first time on v2 |
 | 2 | Final main→v2 sync (14 commits; migration 196→222 renumber; BACKLOG.md conflict) | ✅ PR #721 (2026-07-17) |
-| 3 | **Clubhouse mapping decision + backfill migration for the retained subset of the 7 real pilot leagues (post data-cleansing)** | ⬜ **USER DECISION — see §3** |
+| 3 | **Clubhouse mapping decision (✅ resolved 2026-07-23 — keep all 7 leagues, see §3) + write/apply the `223_` backfill migration** | ⬜ decision resolved; migration not yet written — needs per-item approval before writing/applying |
 | 4 | **Enable PITR on prod Supabase project** (Dashboard → Database → Backups → PITR; needs Pro plan add-on) | ⬜ Supabase-linked PC / dashboard |
 | 5 | Full DB backup at cutover (`pg_dump` via connection string from the Supabase-linked PC, or dashboard backup) | ⬜ at Phase 1 |
 | 6 | Phase 3B smoke passes: platform.spec ✅ (262/262 on 2026-07-17) · football · P2P (`MOCK_PAYMENTS=true`) · F1 · tennis | ⬜ football/P2P/F1/tennis manual passes at Phase 3 |
-| 7 | Access-blocking mechanism chosen & tested (recommended: Vercel password protection — §4 Phase 1) | ⬜ |
+| 7 | Access-blocking mechanism chosen & tested | ✅ **resolved 2026-07-23**: Vercel Password Protection is Pro/Enterprise-only (confirmed — not on this account's Hobby plan), so the custom maintenance-mode middleware is the mechanism. `middleware.js` merged to `main` via PR #736 (2026-07-23) — dormant by default (`MAINTENANCE_MODE` unset), activates only when that env var is set to `"true"` in Vercel + redeployed. See §4 Phase 1 step 2 and §6. |
 | 8 | Verify migration 221 vs main's 195 in prod | ✅ 2026-07-17 — prod `sync_cup_eliminations` contains the v2 shootout logic; 221 stamped APPLIED, do not re-apply |
 | 9 | **Apply migration 226 — fixes signup-breaking `credit_coins()`/`_create_user_wallet()` bug, CONFIRMED live in prod** | ⬜ **held by user 2026-07-18, apply at Phase 2 step 6a** — see §1 Database note above and [TRACKER.md](TRACKER.md) row 28. Escalate/apply early if a real signup is needed before cutover. |
 | 10 | `create_league()` overload ambiguity (migration 229, TRACKER row 31) — possibly already live-broken on `main` (migration 215's ambiguous overload is already in prod; `main`'s `LeagueScreen.jsx` sends the exact param shape that reproduces it locally). | ✅ **decision 2026-07-19: no separate verification — pilot ends in ~12h, not worth investigating pre-merge.** Just include migration 229 in the normal Phase 2 step 6a DB-actions bundle; it's a pure `DROP FUNCTION` on a stale overload, safe regardless of whether it was already broken on `main`. |
@@ -127,13 +127,13 @@ Mundial do Eder · Mundial Gordo Vai a Baliza · RANKS FC World Cup Fantasy · D
 **Decided direction (2026-07-17, user call):** a hybrid of B/D scoped down by a manual **data-cleansing pass at pilot end**, not a pure A/B/C/D pick:
 
 1. The pilot ends ~2026-07-20 (WC final, ~3 days out from when this note was written). The user will then do a **big DB cleanup** by hand.
-2. As part of that cleanup, the user selects **which subset of the 7 real pilot leagues to retain** for historical/reference purposes — explicitly **not all seven**. The rest are cleaned out (deleted/archived) during the same pass, so they never need a `circle_id` at all.
+2. As part of that cleanup, the user selects **which subset of the 7 real pilot leagues to retain** for historical/reference purposes. The rest are cleaned out (deleted/archived) during the same pass, so they never need a `circle_id` at all.
 3. The **retained leagues are consolidated into ONE new clubhouse** (not one clubhouse per league — this replaces Option A's 1:1 mapping for whatever subset survives the cleanup).
 4. That single clubhouse doubles as the **immediate post-merge sanity-check dataset** — real historical pilot data the user can open right after the cutover to confirm the merge worked, without waiting on fresh v2 activity.
 
-**Still open:** the exact list of which leagues to keep (user is deciding closer to pilot end). The backfill migration can't be finalized until that list exists — a fresh session should ask for it before writing the migration if it isn't already recorded here.
+**✅ RESOLVED (2026-07-23, user call): keep all 7 real pilot leagues — no further pruning.** The data-cleansing pass ran today: 11 dummy/test leagues were deleted from prod (full row-data backups taken first per Pilot Safeguards, `backups/` — leagues/members/squads/squad_events/bet_instances/bet_submissions/gazette_entries/draft_submissions/auction_listings/auction_bids/trade_proposals for each deleted league). Post-delete verification confirms exactly 7 leagues remain: **Mundial do Eder · Mundial Gordo Vai a Baliza · RANKS FC World Cup Fantasy · Draft Mundial 26 · Munaial '26 · FIXO DRAFT MUNDIAL 26 · Miami WC Fantasy Testers.** The user is keeping all of them — "which subset to retain" (point 2 above) is answered as "all of them," not a further-pruned list.
 
-**What this unblocks:** the backfill migration (next free number, `223_`) targeting only the retained subset + migration 217 (`circle_id NOT NULL`) + deletion of both the non-retained real leagues and the 11 test-league orphans (same cleanup pass, §7 Q2 can help spot member overlap if useful context for picking the subset).
+**What this unblocks:** the backfill migration (next free number, `223_`) can now be written targeting **all 7 leagues**, consolidating them into the single new clubhouse per point 3 above, followed by migration 217 (`circle_id NOT NULL`). The 11 test-league orphans (unrelated to the 7 real leagues) still need their own delete-vs-map call at Phase 4 step 3 (§7 Q5). **Not yet done:** the `223_` backfill migration itself hasn't been written — per CLAUDE.md, do not write or apply it without naming it explicitly and getting per-item approval in a live session.
 
 ---
 
@@ -144,13 +144,13 @@ Mundial do Eder · Mundial Gordo Vai a Baliza · RANKS FC World Cup Fantasy · D
 1. ✅ ~~Fix v2 CI~~ (PR #720).
 2. ✅ ~~Final main→v2 sync~~ (2026-07-17; repeat step is built into Phase 2 in case late pilot fixes land).
 3. ⬜ **Enable PITR** on `sssmvihxtqtohisghjet` (dashboard). Do this immediately — it protects the pilot's final rounds too.
-4. ⬜ **Finalize the retained-leagues list** (§3 — the direction is decided, the specific list isn't yet) → write the clubhouse backfill migration on v2 targeting that subset (do not apply; applies in Phase 2 step 6c, after the Phase 2 step 6b data cleansing).
+4. ⬜ **Retained-leagues list is finalized** (§3 — resolved 2026-07-23: all 7 leagues, no further pruning; the 11 dummy/test leagues were already deleted from prod today, backups taken) → write the clubhouse backfill migration (`223_`) on v2 targeting all 7 (do not apply; applies in Phase 2 step 6c — step 6b's data-cleansing is now already done, nothing further to clean).
 5. ✅ Migration dedupe done 2026-07-17. Still optional: OPS-2 part (c), Sentry secrets, git hygiene, stash recovery.
 
 ### Phase 1 — Pilot ends: freeze & block
 
 1. Confirm the final WC round settled: `roundComplete` gazette entries exist and `round_backups` has the final round's row (§7 Q3).
-2. **Block access — Vercel password protection**: Vercel dashboard → Project → Settings → Deployment Protection → enable **Password Protection** for Production. Zero code, instant on/off. (There is deliberately no in-app maintenance mode — don't build one for this.)
+2. **Block access — maintenance-mode middleware**: Vercel dashboard → Project → Settings → Environment Variables (Production) → set `MAINTENANCE_MODE="true"` and `MAINTENANCE_BYPASS_TOKEN=<random secret>` → `vercel deploy --prod` (env var changes need a redeploy to take effect, per `.env.example`). Blocks page loads with a branded "work in progress" screen; commissioner/tester access via `https://<domain>/unlock?token=<the secret>` (sets a 30-day bypass cookie). To reopen: set `MAINTENANCE_MODE="false"` (or remove it) and redeploy. Does **not** block direct Supabase REST/Realtime calls from a browser that already holds the anon key — page-load gating only.
 3. Full DB backup from the Supabase-linked PC: `pg_dump "$(npx supabase --linked db url 2>/dev/null || echo '<connection string from dashboard>')" > backups/pre_cutover_$(date +%Y%m%d).sql` — or a dashboard-triggered backup. Save the `cron.job` list too (§7 Q4).
 4. Optional: `000_baseline.sql` schema-only dump (Phase 1D-B) while you're there.
 5. Crons can stay running — with no live fixtures the scoring/sync crons no-op.
@@ -161,11 +161,11 @@ Mundial do Eder · Mundial Gordo Vai a Baliza · RANKS FC World Cup Fantasy · D
 2. Local gates on v2: `npm run lint` · `npm run build` · `npx madge --circular src/` · `npx playwright test`.
 3. Open PR **`v2` → `main`**. CI runs the full suite on the PR.
 4. **Merge with a MERGE COMMIT, not squash.** 151 commits / ~79k lines: a merge commit gives one-command revert (`git revert -m 1 <sha>`) and preserves v2 history for bisecting. This intentionally deviates from the repo's squash habit — record the merge SHA in the TRACKER.
-5. Vercel auto-deploys behind the password wall. Verify the deployment builds.
+5. Vercel auto-deploys behind the maintenance-mode wall (already merged, just needs `MAINTENANCE_MODE="true"` + redeploy per Phase 1 step 2). Verify the deployment builds.
 6. DB actions from the Supabase-linked PC (per-item approval as usual):
    a. Apply 218, 219, **226**, **227, 228, 229, 230, 231, 232** (pure DDL/`CREATE OR REPLACE`, no data — TRACKER rows 29–34, found during the 2026-07-19 Tennis/Chat/Bets dry run). ~~Verify 221~~ ✅ done 2026-07-17 — already live. **226 fixes a confirmed signup-breaking bug (§1 Database note, TRACKER row 28) — do not skip this one**, and if it hasn't already been applied earlier (see §2 row 9 — it can be applied any time before this step if a real signup is needed sooner), apply it here at the latest. **232 fixes a confirmed live `resolve_bet` bug shared with `main` (TRACKER row 34)** — same rationale, lower urgency (cosmetic/self-correcting, not blocking). 227/228/230/231 are v2-only and purely additive/corrective — no ordering constraints, apply anytime in this step. 229 needs no pre-check per row 10 above — just run it.
-   b. **Data cleansing (user-led)** — per §3's decided direction: user reviews the 7 real pilot leagues and picks which subset to retain for historical/reference purposes (not all 7). Non-retained leagues and their data are cleaned out here (confirm with the user exactly what "cleaned out" means — delete vs. archive-only — before running any DELETE; SELECT-first per the Pilot Safeguards in CLAUDE.md). Do this **after** the Phase 1 full DB backup so the pre-cleanup state is recoverable.
-   c. Run the **clubhouse backfill**, scoped only to the leagues retained in step (b), consolidating them into **one new clubhouse** (not one per league — see §3). This clubhouse is also the post-merge sanity-check dataset used in Phase 3 step 2.
+   b. ✅ ~~Data cleansing (user-led)~~ — **done 2026-07-23**: user reviewed the 18 NULL-`circle_id` leagues and kept all 7 real pilot leagues; the 11 dummy/test leagues were deleted (backups taken first, per-table, `backups/dummy_*_pre_delete_20260723.json`). Nothing further to clean here — this step is now a no-op, kept for audit-trail continuity.
+   c. Run the **clubhouse backfill** (`223_`), scoped to all 7 retained leagues, consolidating them into **one new clubhouse** (not one per league — see §3). This clubhouse is also the post-merge sanity-check dataset used in Phase 3 step 2.
    d. **Hold 217** until Phase 4 step 3 (needs a zero-orphan check first — §7 Q5 — which now only has to account for the non-retained leagues being gone, not mapped).
 7. **Deploy ALL 19 Edge Functions** — the authoritative list is `.function-checksums.json` (don't trust older hand-written lists):
    `auto-open-transfer-window calculate-relaxation calculate-scores discover-tournament eliminate-cup-club generate-frontpage-edition ingest-match-events process-transfer purchase-coins resolve-bets run-draft-lottery run-reverse-standings-draft score-atp-finals score-f1-race score-tennis-tournament sync-fixtures sync-player-status sync-players sync-tennis-players`
@@ -183,7 +183,7 @@ Mundial do Eder · Mundial Gordo Vai a Baliza · RANKS FC World Cup Fantasy · D
 
 ### Phase 4 — Reopen (or revert)
 
-1. Remove the Vercel password. Announce.
+1. Set `MAINTENANCE_MODE="false"` (or remove the var) in Vercel Production env vars, `vercel deploy --prod`. Announce.
 2. Stability window (suggest 3–7 days) with Sentry watch.
 3. Then, and only then: apply **migration 217** (pre-flight orphan check §7 Q5 must return zero rows first — the backfill in Phase 2 handles the 7 real leagues; decide delete-vs-map for the 11 test orphans at the same time).
 4. Start the post-merge queue (§2 🟢).
@@ -206,8 +206,11 @@ Key design choices that make this safe: **additive first, constraint (217) last,
 
 ## 6. Access-blocking decision record
 
-**Recommended: Vercel Password Protection** (Production). Zero code, instant toggle, testable in 2 minutes, doesn't disturb deployments, and Phase 3 testers just enter the password.
-Alternatives considered: `VITE_MAINTENANCE_MODE` splash (needs code + a redeploy each way; nothing exists in the codebase today) · pausing the Vercel project (blunt; blocks testers too). Note password protection may require a paid Vercel feature — verify on the account before Phase 1; fallback is the maintenance-flag splash (small PR).
+**✅ RESOLVED (2026-07-23): custom maintenance-mode middleware**, not Vercel Password Protection.
+
+Verified 2026-07-23: Vercel Password Protection requires Pro + the Advanced Deployment Protection add-on (~$150/mo) or Enterprise — it is **not** available on the Hobby (free) plan this project is on. Hobby's "Vercel Authentication" only gates *preview* deployments, not production. So the originally-recommended approach doesn't work here.
+
+Built instead: Vercel Edge Middleware (`middleware.js`, root of the repo) that gates every production page load behind a branded "work in progress" screen when `MAINTENANCE_MODE="true"` (Production env var), with a cookie-based bypass at `/unlock?token=<MAINTENANCE_BYPASS_TOKEN>` for commissioners/testers. Merged to `main` via PR #736 (2026-07-23) — dormant until the env var is set, so merging it carried zero pilot risk. Needs a `vercel deploy --prod` both to activate (Phase 1 step 2) and to deactivate (Phase 4 step 1). Config documented in `.env.example`. Does not block direct Supabase API calls — page-load gating only, same limitation any client-side approach would have.
 
 ---
 
@@ -242,11 +245,15 @@ UNION ALL SELECT 'player_boxes', id, name FROM player_boxes WHERE circle_id IS N
 
 ## 8. Fresh-session pickup guide
 
-To resume this work cold: (1) confirm session type = **platform revision (v2)**; (2) read this file top to bottom; (3) check [TRACKER.md](../TRACKER.md) for anything newer; (4) find the current phase — the first unchecked ⬜ in §2-critical / §4 — and continue from there. The §3 decision gates Phase 2 step 6c and Phase 4 step 3; if it's still open, ask the user before touching anything clubhouse-related.
+To resume this work cold: (1) confirm session type = **platform revision (v2)**; (2) read this file top to bottom; (3) check [TRACKER.md](../TRACKER.md) for anything newer; (4) find the current phase — the first unchecked ⬜ in §2-critical / §4 — and continue from there. The §3 decision is **resolved** (2026-07-23 — keep all 7 leagues); what's still open is writing the `223_` backfill migration itself (Phase 0 step 4 / Phase 2 step 6c) — do not write or apply it without per-item approval in a live session.
 
 Related: [TRACKER.md](../TRACKER.md) · [V2_BRANCH_PROTECTION.md](architecture/V2_BRANCH_PROTECTION.md) · [CLUBHOUSE_CENTRIC_REDESIGN_IMPLEMENTATION_PLAN.md](architecture/CLUBHOUSE_CENTRIC_REDESIGN_IMPLEMENTATION_PLAN.md) · Phase 3B checklist in TRACKER · `backups/orphans_pre_217_20260629.json`
 
-Last Updated: **2026-07-19** (🧪 local backend dry run — migrations 218/219/226/217 + `tests/unit/*` + `p2p-load-test.js` + 10 Edge Functions re-validated against a clean Docker rebuild, all clean; new local-only `supabase/config.toml` stale-entry fix (uncommitted); no change to any hold decision below. §1 "Local backend dry run" note. This does NOT satisfy §2 row 6's UI-level Phase 3B smoke passes — those still need a running frontend.)
+Last Updated: **2026-07-23** (✅ §2 row 7 / §6 access-blocking mechanism resolved — Vercel Password Protection confirmed unavailable on this account's Hobby plan (Pro+add-on or Enterprise only); switched to the custom `middleware.js` maintenance-mode gate, merged to `main` via PR #736, dormant until `MAINTENANCE_MODE="true"` is set + redeployed. §4 Phase 1 step 2, Phase 2 step 5, Phase 4 step 1, §6 all updated. **The v2→main merge itself was explicitly NOT performed this session** — critical gates (§2 rows 3-6, 9: `223_` migration unwritten, PITR not enabled, no cutover backup, Phase 3B smoke tests not run, migration 226 not applied) remain open; user asked to "proceed with the main deploy from v2" but this was declined per CLAUDE.md's merge-gate rule pending those items.)
+
+Previous: **2026-07-23** (✅ §3 clubhouse decision resolved — user confirmed keeping all 7 real pilot leagues, no further pruning. Data-cleansing pass executed same day: 11 dummy/test leagues deleted from prod with per-table backups (`backups/dummy_*_pre_delete_20260723.json`); verified exactly 7 leagues remain with original member counts. §2 row 3, §3, §4 Phase 0 step 4, §4 Phase 2 step 6b, §8 all updated to reflect this. `223_` backfill migration still not written — unblocked now, needs per-item approval before writing/applying.)
+
+Previous: **2026-07-19** (🧪 local backend dry run — migrations 218/219/226/217 + `tests/unit/*` + `p2p-load-test.js` + 10 Edge Functions re-validated against a clean Docker rebuild, all clean; new local-only `supabase/config.toml` stale-entry fix (uncommitted); no change to any hold decision below. §1 "Local backend dry run" note. This does NOT satisfy §2 row 6's UI-level Phase 3B smoke passes — those still need a running frontend.)
 
 Previous: **2026-07-18** (🐛 `resolve_bet` statement-ordering bug flagged — confirmed live on `main` via the new `tests/unit/bet.test.js` harness; total_points lags after bet resolution until an unrelated re-aggregation event. §1 "Known code bug" note, §2 🟢 POST-MERGE. User held it — no prod touch during the pilot; fix at cutover alongside the other DB actions.)
 
