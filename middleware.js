@@ -142,14 +142,14 @@ export default function middleware(request) {
 
   if (url.pathname === '/unlock') {
     const supplied = url.searchParams.get('token');
-    const res = Response.redirect(new URL('/', url), 307);
+    const headers = new Headers({ location: new URL('/', url).toString() });
     if (bypassToken && supplied === bypassToken) {
-      res.headers.append(
+      headers.append(
         'set-cookie',
         `${COOKIE_NAME}=${supplied}; Path=/; Max-Age=2592000; HttpOnly; Secure; SameSite=Lax`
       );
     }
-    return res;
+    return new Response(null, { status: 307, headers });
   }
 
   const cookieHeader = request.headers.get('cookie') || '';
