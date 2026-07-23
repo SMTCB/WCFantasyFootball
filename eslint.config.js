@@ -48,4 +48,11 @@ export default defineConfig([
       'react-hooks/preserve-manual-memoization': 'off',
     },
   },
+  {
+    // Vercel Edge Middleware — runs on Vercel's edge runtime, not the browser.
+    files: ['middleware.js'],
+    languageOptions: {
+      globals: { ...globals.node, Response: 'readonly', Request: 'readonly', URL: 'readonly' },
+    },
+  },
 ])
