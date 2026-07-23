@@ -3,7 +3,7 @@ import { supabase } from '../lib/supabase';
 import { teamCode } from '../lib/fixtures';
 
 // Maps player_match_stats.breakdown JSONB keys -> display labels.
-// All 16 keys are always present in the row; zero values are skipped.
+// All keys are always present in the row; zero values are skipped.
 const BREAKDOWN_LABELS = {
   minutes: 'APPEARANCE',
   goals: 'GOALS',
@@ -24,9 +24,10 @@ const BREAKDOWN_LABELS = {
   shootout_scored: 'SHOOTOUT GOAL',
   shootout_missed: 'SHOOTOUT MISS',
   shootout_saved: 'SHOOTOUT SAVE',
+  goals_conceded: 'GOALS CONCEDED',
 };
 
-const NEG_KEYS = new Set(['own_goals', 'yellow_cards', 'red_cards', 'penalty_missed', 'shootout_missed']);
+const NEG_KEYS = new Set(['own_goals', 'yellow_cards', 'red_cards', 'penalty_missed', 'shootout_missed', 'goals_conceded']);
 
 // Converts a GW record's breakdown JSONB + bonus points into display rows.
 // gw.totalPts is authoritative — these items are display-only.

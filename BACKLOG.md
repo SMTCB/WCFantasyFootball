@@ -1,12 +1,31 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-07-12 (Classic-mode free transfers raised 5→6; PR #713)  
-**E2E Test Suite**: full `e2e/` suite passing on v2 ✅ — 262 passed / 33 conditionally-skipped, 2026-07-17  
+**Last Updated**: 2026-07-23 (v2/main sync ahead of cutover; latest main fix: goals_conceded penalty appearance-gate, PR #731)  
+**E2E Test Suite**: full `e2e/` suite passing on v2 ✅ — 262 passed / 33 conditionally-skipped, 2026-07-17; `platform.spec.js` (36 tests × 2 browsers) passing in CI ✅
 **Full Playbook Run**: `E2E_TEST_PLAYBOOK.md` v2.0 — all flows confirmed  
 **🟢 LAUNCH READY**: No critical (P0/P1) bugs open. All game mechanics functional. WC kick-off 2026-06-11.  
 **Live App**: https://wc-fantasy-football.vercel.app  
 **WC Kick-off**: 2026-06-11 19:00 UTC (Mexico vs South Africa)  
 **Supabase PostgREST max_rows**: 10,000 (raised from default 1,000 — 2026-06-08)
+
+---
+
+## ✅ goals_conceded penalty applied to unused substitutes (2026-07-19) — PR #731
+
+**Context**: England vs France (round `429-r8`) — several England players who did NOT play (John Stones, James Trafford) showed a `-1.5` fantasy-points penalty despite 0 minutes played. Reported by user.
+
+**Root cause**: `goals_conceded` (team-level, from `matchInfo.score.current`) is written to `player_match_stats` for every squad-listed player regardless of appearance (this part is correct/expected). `calculate-scores`'s `scorePlayer()`/`buildBreakdown()` applied the `conceded_2plus_penalty` (GK/DEF, -0.5 per goal beyond the first) with no minutes-played gate — unlike `clean_sheet`, which already has one. Players who never appeared were incorrectly charged the full team penalty.
+
+**Fix (`supabase/functions/calculate-scores/index.js`)**: gated the `goals_conceded` penalty on `mins > 0` in both `scorePlayer()` and `buildBreakdown()`, matching the existing `clean_sheet` minutes-gate and the `penalty_saved`/`shootout_saved` appearance-gating pattern in `ingest-match-events`.
+
+**Scope confirmed via DB query**: 432 `player_match_stats` rows across 69 fixtures / all 8 WC matchdays (429-r1 through r8) were affected, totalling -407.5 wrongful penalty points. Rounds r1–r7 were already `roundComplete` (settled — leaderboards/H2H/gazette finalized) at the time of the fix; only r8 (England-France's round) was still live/unsettled.
+
+**Actions completed**:
+- `calculate-scores` redeployed to production with the fix.
+- Fixture `f-1217858442` (England vs France) rescored via direct Edge Function invocation (`{"fixture_id":"f-1217858442"}`) — 57 `player_match_stats` rows + 57 squads updated. Verified: Stones and Trafford (0 min) now `0.00` (was `-1.50`); Reece James and Ibrahima Konaté (who played) correctly unchanged.
+- Confirmed 2 real pilot squads had Stones/Trafford in their round-8 starting XI — their `fantasy_points.total` updated automatically as part of the rescore.
+
+**Deferred — historical rounds r1–r7 NOT corrected**: those 339 affected rows remain uncorrected since the rounds are already settled (leaderboards/H2H/bet resolutions finalized on the old, wrong totals). Retroactively fixing them would shift already-published standings. Flagged to user for an explicit go/no-go decision; not touched without confirmation per Pilot Safeguards.
 
 ---
 
