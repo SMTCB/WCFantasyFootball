@@ -10,7 +10,7 @@ Redesign of the Clubhouse — the room every Frontrow user spends most of their 
 **High-fidelity.** Exact colors, typography, spacing, and component states are final. Recreate pixel-accurately using the codebase's existing libraries. Copy in the mockups (names, numbers, messages) is placeholder/sample data — wire to real data sources.
 
 ## Platform rebrand
-The platform is renamed **FantasyKit → Frontrow** ("Your seat to all the action"). Replace any FantasyKit wordmark/logo in the app shell with the Frontrow logo (see `logo/` in this folder). The gazette feature is separately named "The FrontRow" (existing product feature, unrelated naming collision — kept as-is per product brief, not renamed).
+The platform is renamed **FantasyKit → Frontrow** ("Your seat to all the action"). Replace any FantasyKit wordmark/logo in the app shell with the Frontrow logo (see `../logo/`, a sibling folder at `design_v2/logo/`). The gazette feature is separately named "The FrontRow" (existing product feature, unrelated naming collision — kept as-is per product brief, not renamed).
 
 ## Screens
 Each screen below ships as a desktop (≥1024px) + mobile (390px) pair in the HTML canvas, labeled with a code (S-01…S-08).
@@ -84,13 +84,13 @@ Reconciled Kit Light tokens (current production values — see comment in the HT
 **Type:** Archivo Black (display/headlines), Archivo 400–600 (body/UI), JetBrains Mono (eyebrows/labels/metadata only, used sparingly). Mixed case except uppercase eyebrows. **Radius:** 6px throughout the UI (logo badge chrome is the one exception at 24px, decorative). Gazette exception uses Georgia serif + its own cream/ink palette (see S-04).
 
 ## Assets
-`logo/` in this folder — the finalized Frontrow logo system (moved from the original logo handoff package):
+`../logo/` (sibling folder, `design_v2/logo/`) — the finalized Frontrow logo system (moved from the original logo handoff package):
 - `assets/frontrow-logo-primary.svg` / `-live.svg` — the wordmark icon ("The Tiers": 3 stacked bars, gold + accent blue). Use `-primary` everywhere in UI chrome; `-live` (breathing gold halo) is reserved for live-state indicators only.
 - `assets/frontrow-football-normal.svg` / `-live.svg`, `frontrow-tennis-normal.svg` / `-live.svg`, `frontrow-f1-normal.svg` / `-live.svg` — per-sport badge glyphs (104×104, white rounded-square chrome, bird's-eye line drawing of each sport's playing surface). Used in the S-07 New Competition sport picker. `-live` variants add a pulsing gold corner dot for in-progress events — recreate the pulse with the codebase's own animation approach, not the SVG's embedded reference animation.
-- `logo/README.md` — full construction spec (exact measurements, color values, "adding a new sport later" guidance).
+- `../logo/README.md` — full construction spec (exact measurements, color values, "adding a new sport later" guidance).
 
 No other external image assets are used — avatars are colored initial circles (inline, no image files), and all icons other than the sport marks are built from CSS/text glyphs.
 
 ## Files
 - `Clubhouse Home Redesign.html` — all 8 screens, desktop + mobile, on a pannable canvas. Open directly in a browser.
-- `logo/` — Frontrow logo + sport mark SVGs and their spec.
+- `../logo/` — Frontrow logo + sport mark SVGs and their spec (sibling folder, `design_v2/logo/`).
