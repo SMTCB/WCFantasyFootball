@@ -18,7 +18,7 @@ F1 is one of three sport modules that plug into a Clubhouse (the other two are F
 
 ## Read First — Design Tokens
 
-Use the same reconciled Kit Light token table as the Clubhouse and Tennis briefs (`docs/platform_revision/design/design_handoffs/clubhouse_core/README.md`) — not the older `BRIEF.md` names. The token that matters most here:
+Use the same reconciled Kit Light token table as the Clubhouse and Tennis briefs (`docs/platform_revision/design/design_handoffs/clubhouse_core/README_CLUBHOUSE.md`) — not the older `BRIEF.md` names. The token that matters most here:
 
 | Token | Hex | Usage |
 |---|---|---|
@@ -171,7 +171,7 @@ Two F1-specific mockups already exist in `docs/platform_revision/design/screens/
 | `docs/platform_revision/modules/F1_MODULE_IMPLEMENTATION_PLAN.md` | Full functional/scoring spec this module was built from |
 | `docs/platform_revision/design/screens/Multi-Sport - Coin Challenges v2.html` | Existing F1 concept mockups (Screens 2 &amp; 3) — aspirational reference, see discrepancy note above |
 | `https://fantasy-f1-p3jq.vercel.app/` | Original standalone FantasyF1 app this module was ported from |
-| `docs/platform_revision/design/design_handoffs/clubhouse_core/README.md` | Companion brief — token table, Clubhouse chrome |
+| `docs/platform_revision/design/design_handoffs/clubhouse_core/README_CLUBHOUSE.md` | Companion brief — token table, Clubhouse chrome |
 | `docs/platform_revision/design/design_handoffs/tennis_module/README.md` | Companion brief — Tennis module (same format) |
 
 ---
