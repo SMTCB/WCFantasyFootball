@@ -23,7 +23,7 @@ export default function ProtectedRoute({ children }) {
     return (
       <div className="min-h-screen bg-bg flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
-          <BrandMark theme="dark" scale={1.1} />
+          <BrandMark theme="light" scale={1.1} />
           <div
             className="text-[10px] font-black uppercase tracking-[0.2em] animate-pulse"
             style={{ color: 'var(--mute)', fontFamily: 'Archivo Black, sans-serif' }}

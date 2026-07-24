@@ -2,7 +2,7 @@ import { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
   appId: 'com.forza.fantasyleague',
-  appName: 'Forza Fantasy League',
+  appName: 'Frontrow',
   webDir: 'dist',
   server: {
     androidScheme: 'https',

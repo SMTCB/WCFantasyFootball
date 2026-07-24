@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 @theme {
-  /* ── FantasyKit — Kit Light surfaces ────────────────────────── */
+  /* ── Frontrow — Kit Light surfaces ────────────────────────── */
   --color-ink:   #F7F3ED;   /* page background (warm off-white)   */
   --color-ink-2: #FFFFFF;   /* card surface                        */
   --color-ink-3: #EDEAE2;   /* elevated panels / table headers     */

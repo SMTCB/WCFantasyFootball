@@ -1,9 +1,6 @@
-<svg width="100" height="100" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <!-- Tactical Icon — exact spec from FORZA_BRANDMARK_ICON v1.9 -->
-  <!-- FWD Line (cyan) -->
-  <rect x="10" y="28" width="80" height="12" rx="2" fill="#00B4D8"/>
-  <!-- MID Line (paper) -->
-  <rect x="10" y="44" width="50" height="12" rx="2" fill="#F2EEE5"/>
-  <!-- DEF Line (mute) -->
-  <rect x="10" y="60" width="22" height="12" rx="2" fill="#8B95A1"/>
+<svg width="100" height="60" viewBox="0 0 100 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Frontrow mark — "The Tiers". Spec: docs/platform_revision/design_v2/logo/README.md -->
+  <rect x="0" y="0" width="32" height="14" rx="5" fill="#B8720E"/>
+  <rect x="0" y="23" width="60" height="14" rx="5" fill="#1A6FA8"/>
+  <rect x="0" y="46" width="88" height="14" rx="5" fill="#1A6FA8"/>
 </svg>
