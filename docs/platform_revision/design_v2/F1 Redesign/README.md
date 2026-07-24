@@ -11,7 +11,7 @@ Visual redesign of Frontrow's F1 module — the per-race and season-long predict
 
 ## Design System Context
 This module must match two companion handoffs already implemented/designed against the same tokens:
-- **Clubhouse Core** (`docs/platform_revision/design/design_handoffs/clubhouse_core/README.md`) — global chrome: sidebar, competition top bar, card language.
+- **Clubhouse Core** (`docs/platform_revision/design/design_handoffs/clubhouse_core/README_CLUBHOUSE.md`) — global chrome: sidebar, competition top bar, card language.
 - **Tennis module** (`docs/platform_revision/design/design_handoffs/tennis_module/README.md`) — same brief format, same token set; F1 reuses its shared-chrome markup verbatim (sidebar, top bar, card system) and its dimming/status-pill conventions, but diverges deliberately in two places: F1's Home header is a **dark shell** (not Tennis's cream header) and F1 keeps its own 5-item secondary tab row (Calendar/Picks/Standings/Report/Season) rather than Tennis's 2-tab pattern.
 
 ## The Core Design Decision: Where F1 Red Goes

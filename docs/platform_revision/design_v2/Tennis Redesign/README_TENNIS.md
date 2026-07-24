@@ -18,7 +18,7 @@ Tennis is one of three sport modules that plug into a Clubhouse (the other two a
 
 ## Read First — Design Tokens
 
-Use the same reconciled Kit Light token table as the Clubhouse brief (`docs/platform_revision/design/design_handoffs/clubhouse_core/README.md`) — do not use the older `BRIEF.md` names. The one token that matters most here:
+Use the same reconciled Kit Light token table as the Clubhouse brief (`docs/platform_revision/design/design_handoffs/clubhouse_core/README_CLUBHOUSE.md`) — do not use the older `BRIEF.md` names. The one token that matters most here:
 
 | Token | Hex | Usage |
 |---|---|---|
@@ -154,7 +154,7 @@ Because this is a checkpoint game rather than a live dashboard, the *states* mat
 | `src/components/CompetitionTopBar.jsx`, `CompetitionScreenNav.jsx` | Global nav chrome tennis plugs into |
 | `docs/platform_revision/modules/TENNIS_MODULE_IMPLEMENTATION_PLAN.md` | Full functional/scoring spec this module was built from |
 | `docs/testing/TENNIS_MODULE_TEST_PLAN.md` | QA scenarios, confirms current production state |
-| `docs/platform_revision/design/design_handoffs/clubhouse_core/README.md` | Companion brief — token table, Clubhouse chrome |
+| `docs/platform_revision/design/design_handoffs/clubhouse_core/README_CLUBHOUSE.md` | Companion brief — token table, Clubhouse chrome |
 
 ---
 

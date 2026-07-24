@@ -121,7 +121,7 @@ Today `/challenges` is a **global** route with no Clubhouse context — it's wha
 | `src/hooks/useWallet.js` | Wallet balance/escrow/transactions — unaffected by this work, referenced by the sidebar mini-card |
 | `docs/platform_revision/architecture/P2P_BETTING_CLUBHOUSE_SCOPE_TECH_SPEC.md` | Companion technical spec — full data model, RPC contracts, migration plan |
 | `docs/platform_revision/architecture/P2P_BETTING_SYSTEM_DESIGN.md` | Original coin-economy design (rake, escrow, ledger) — unchanged by this work, background only |
-| `docs/platform_revision/design/design_handoffs/clubhouse_core/README.md` | Sibling brief — token table, sidebar spec, multi-Clubhouse switcher this screen inherits |
+| `docs/platform_revision/design/design_handoffs/clubhouse_core/README_CLUBHOUSE.md` | Sibling brief — token table, sidebar spec, multi-Clubhouse switcher this screen inherits |
 
 ---
 
