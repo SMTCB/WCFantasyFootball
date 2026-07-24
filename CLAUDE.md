@@ -4,42 +4,20 @@
 
 ---
 
-## 🚨 TWO-BRANCH FREEZE — READ BEFORE EVERY SESSION
+## 🚨 SINGLE BRANCH — `main` ONLY
 
-**This repo runs two branches simultaneously. Read this before touching git.**
-
-| Branch | Purpose | Deploy to Vercel? | Merge to main? |
-|--------|---------|-------------------|----------------|
-| `main` | Live football pilot (~50 users) | ✅ Auto on merge | N/A |
-| `v2` | Platform redesign + new features (P2P, multi-sport, Kit Light UI) | ❌ Never | ❌ NOT until pilot ends (~July 2026) and all Phase 3B pre-merge checks pass |
+**The v2→main cutover executed 2026-07-24 (PR #742, commit `f229b70`). The `v2` branch has been deleted — its content is now in `main`. This repo runs one branch again: `main`.**
 
 **Rules Claude MUST follow — no exceptions:**
 
-1. **Pilot bug fixes go on `main` only.** Branch from `main` → fix → PR → merge → done.
-2. **v2 feature work goes on `v2` only.** Branch from `v2` (not main) → feature → PR into `v2` → merge.
-3. **NEVER merge `v2` into `main` directly.** The v2 branch contains an incomplete redesign, new DB migrations not yet applied to production, and feature flags for unreleased products. Merging it now would break the live app for real users. This merge only happens at Week 12 per [SALE_READY_PROJECT_PLAN.md](docs/architecture/SALE_READY_PROJECT_PLAN.md).
-4. **GitHub branch protection on `main` is enabled.** Direct `git push origin main` is blocked. All changes require a PR — this is the hardware backup in case the above rules are forgotten.
-5. **When in doubt about which branch:** check `git branch` and this table. If the task is a pilot bug fix → `main`. If it's part of the redesign or v2 features → `v2`. If unclear, ask before branching.
-6. **🛑 If the session type is not stated, ASK before touching git.** The user works on two laptops and may open a session without specifying. Do not assume. Ask: "Is this a pilot bug fix (main) or platform revision (v2) session?" Do not run a single git command until the answer is confirmed. This rule overrides the Session Start Checklist below.
+1. **All work — pilot bug fixes and platform-redesign work alike — happens on `main`.** Branch from `main` → work → PR → merge → done. There is no second branch to route work to.
+2. **GitHub branch protection on `main` is enabled.** Direct `git push origin main` is blocked. All changes require a PR.
+3. **The site is currently walled behind maintenance mode** (`MAINTENANCE_MODE=true`, custom Edge Middleware in `middleware.js`) — deliberately paused post-cutover. **Do not touch `MAINTENANCE_MODE`, resume the paused Phase 3/4 cutover work, or apply migration 217 without the user explicitly asking in a current session.** This is a standing instruction, not a one-time pause. See [CUTOVER_PLAN.md](docs/platform_revision/CUTOVER_PLAN.md) for the full runbook and current state.
+4. **If a session references old `v2`-branch workflow** (a stale doc, a memory, a habit from before 2026-07-24) — that guidance is obsolete. Flag it and proceed on `main`.
 
-**What `v2` contains today (2026-06-26):**
-- Multi-sport platform: P2P coin betting, F1 module, Tennis module, Clubhouse social layer — all shipped (Phases 0–2 done)
-- UX redesign (Kit Light) complete across all screens
-- Phase 3B in progress — code-quality hardening done (PRs #638–#645); **DB migrations 209–211 + 5 Edge Function deploys + 2 secrets/env vars are written but NOT applied to production** — see the approval-gated table below
-- Full status: [SALE_READY_PROJECT_PLAN.md](docs/architecture/SALE_READY_PROJECT_PLAN.md)
+**🛑 NO SQL / MIGRATIONS / EDGE FUNCTION DEPLOYS WITHOUT EXPLICIT APPROVAL — every session**
 
-**🛑 NO SQL / MIGRATIONS / EDGE FUNCTION DEPLOYS WITHOUT EXPLICIT APPROVAL — every session, either PC**
-
-`v2`'s pending Supabase actions (3 migrations, 5 function deploys, 2 secrets) all write to the **one shared production project** (`sssmvihxtqtohisghjet`) that also serves the live `main` pilot. Full list + risk notes: [SALE_READY_PROJECT_PLAN.md § PENDING DB & DEPLOY ACTIONS](docs/architecture/SALE_READY_PROJECT_PLAN.md).
-
-Rule for Claude on both machines: never run any item from that table — or any other untracked migration/`db query --linked`/`functions deploy` call — without first naming the exact action in chat and getting an explicit "yes, run it" from the user **for that specific item**, in the current session. Approval does not carry across sessions or across items.
-
-**🔒 BRANCH PROTECTION ACTIVE** — Multiple safeguards prevent accidental v2→main merge:
-- ✅ Git pre-push hook (blocks direct pushes to main; prompts on v2)
-- ✅ GitHub branch protection rule (requires PR review, CI green, up-to-date)
-- ✅ Edge Functions not auto-deployed (manual deploy required)
-- ✅ Migrations manual-only (workflow_dispatch, not automatic)
-- **See [V2_BRANCH_PROTECTION.md](docs/architecture/V2_BRANCH_PROTECTION.md) for full details.**
+Never run a migration, `db query --linked` write, or `functions deploy` without first naming the exact action in chat and getting an explicit "yes, run it" from the user **for that specific item**, in the current session. Approval does not carry across sessions or across items.
 
 ---
 
@@ -644,7 +622,7 @@ Current migration count and full session-by-session pipeline facts have been mov
 
 - Always create a new numbered migration file — never modify an already-applied one (append-only, non-negotiable — see [Pilot Safeguards](#-pilot-safeguards--read-before-every-db-operation)).
 - Check [MIGRATION_LOG.md](docs/architecture/MIGRATION_LOG.md) (or `ls supabase/migrations/` for the true source of truth) for the next free migration number before creating one.
-- For current in-flight migration/deploy status, check [TRACKER.md](docs/platform_revision/TRACKER.md) (v2 sessions) or [BACKLOG.md](BACKLOG.md) (main sessions) — those are the live status docs, not this file.
+- For current in-flight migration/deploy status, check [TRACKER.md](docs/platform_revision/TRACKER.md) or [BACKLOG.md](BACKLOG.md) — those are the live status docs, not this file.
 
 ---
 
@@ -767,99 +745,36 @@ vercel inspect wc-fantasy-football.vercel.app  # deployment details
 
 **CLAUDE CODE: Do this automatically every session. User should NOT run any of these commands — that's Claude's job.**
 
-### Step 0 — Determine session type (MANDATORY, do this before anything else)
-
-**This project runs on two branches simultaneously. The user works on two laptops. A session opening without a stated type is common — do not guess.**
-
-Read the user's opening message. Look for explicit signals:
-- **"bug fix"**, **"pilot"**, **"production"**, **"main"**, or a specific user-reported issue → `main` session
-- **"v2"**, **"platform"**, **"roadmap"**, **"P2P"**, **"F1"**, **"redesign"**, **"SALE_READY"** → `v2` session
-
-**If no signal is present: ask before touching git.** Use this exact question:
-
-> "Before I start — is this a **pilot bug fix** (goes to production on `main`) or a **platform revision** session (v2 branch, not deployed)?"
-
-Do not run a single `git` command, do not read `BACKLOG.md`, do not create a branch, until the session type is confirmed.
-
----
-
-### Path A — Pilot bug fix session (`main`)
-
-*Use when: fixing something broken for the ~50 live pilot users. Changes go to production.*
-
 1. **Orient yourself:**
    - This file (CLAUDE.md) ✓
-   - [BACKLOG.md](BACKLOG.md) — pilot bug backlog
+   - [BACKLOG.md](BACKLOG.md) — open work
+   - If the task touches the platform-revision modules (P2P, F1, Tennis, Clubhouse) or the design redesign, also check [TRACKER.md](docs/platform_revision/TRACKER.md) and [CUTOVER_PLAN.md](docs/platform_revision/CUTOVER_PLAN.md) for current state
 
 2. **Sync and branch from `main`:**
    ```bash
    git checkout main
    git pull origin main
    git status  # must be clean
-   git checkout -b claude/your-fix-description
+   git checkout -b claude/your-work-description
    ```
 
 3. **Develop, commit, push, PR, merge** per [Git Workflow](#git-workflow--version-control) rules.
-   PR base: `main`. After merge, Vercel auto-deploys.
+   PR base: `main`. After merge, Vercel auto-deploys — **note the site is currently walled behind maintenance mode**, so a merge won't be publicly visible until the wall comes down (see the standing instruction above).
 
 4. **Test before pushing:**
    ```bash
    npm run lint
-   npx playwright test
-   ```
-
-5. **After merge:** update [BACKLOG.md](BACKLOG.md) and move Notion card to Done.
-
-6. **⚠️ Do NOT touch `v2` branch during a `main` session**, even if you notice something related to v2 work. Note it and handle in a separate v2 session.
-
----
-
-### Path B — Platform revision session (`v2`)
-
-*Use when: building the sale-ready platform (P2P betting, F1/tennis modules, UX redesign). Changes are NOT deployed until Week 12.*
-
-1. **Orient yourself:**
-   - This file (CLAUDE.md) ✓
-   - [SALE_READY_PROJECT_PLAN.md](docs/architecture/SALE_READY_PROJECT_PLAN.md) — read Quick Status table and last session notes
-   - Check `git log --oneline -10` on `v2` to confirm current state
-
-2. **Sync `v2` with latest pilot fixes from `main`:**
-   ```bash
-   git checkout v2
-   git pull origin v2
-   git fetch origin main
-   git merge origin/main
-   # resolve any conflicts (rare — main touches football files, v2 adds new ones)
-   git push origin v2
-   ```
-
-3. **Create a feature branch from `v2`:**
-   ```bash
-   git checkout -b claude/v2-your-feature-description
-   # NOTE: branch name starts with claude/v2- to make it visually distinct
-   ```
-
-4. **Develop, commit, push, PR into `v2`** (NOT into `main`).
-   PR base must be `v2`. Verify this before creating the PR.
-
-5. **Test before pushing:**
-   ```bash
-   npm run lint
    npx playwright test  # platform.spec.js must stay green
-   npm run build        # Rolldown TDZ check — must produce zero errors
+   npm run build         # Rolldown TDZ check — must produce zero errors
    ```
 
-6. **After merge:** update `SALE_READY_PROJECT_PLAN.md` Quick Status and session notes. Update memory.
+5. **After merge:** update [BACKLOG.md](BACKLOG.md) (and `TRACKER.md` if the work touched platform-revision modules) and move the Notion card to Done.
 
-7. **🚫 NEVER open a PR from a v2 feature branch into `main`.** If you catch yourself about to do this, stop and tell the user.
+6. **Before any DB migration** — save a backup of affected rows first (Docker unavailable, so `SELECT` the rows and save to `backups/*.json`; see [Pilot Safeguards](#️-pilot-safeguards--read-before-every-db-operation))
 
----
+7. **Dev server:** `npm run dev` → http://localhost:5173
 
-### Common to both paths
-
-- **Before any DB migration** — save a backup of affected rows first (Docker unavailable, so `SELECT` the rows and save to `backups/*.json`; see [Pilot Safeguards](#️-pilot-safeguards--read-before-every-db-operation))
-- **Dev server:** `npm run dev` → http://localhost:5173
-- **Edge Functions are NOT auto-deployed by Vercel** — after any PR touching `supabase/functions/`, manually deploy each changed function
+8. **Edge Functions are NOT auto-deployed by Vercel** — after any PR touching `supabase/functions/`, manually deploy each changed function
 
 ---
 
