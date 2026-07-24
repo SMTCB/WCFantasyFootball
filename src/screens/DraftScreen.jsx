@@ -75,41 +75,42 @@ function SortableRow({ p, idx, listLength, onMoveUp, onMoveDown, onRemove }) {
       style={{ ...style, touchAction: 'none', userSelect: 'none' }}
       {...attributes}
       {...listeners}
-      className="flex items-center gap-2 bg-[#111] rounded-sm px-2 py-2 cursor-grab active:cursor-grabbing"
+      className="flex items-center gap-2 rounded-sm px-2 py-2 cursor-grab active:cursor-grabbing border border-[var(--rule)]"
+    style={{ background: 'var(--card)' }}
     >
       {/* Visual drag affordance — the whole row is the grab target */}
       <span
-        className="text-[#555] shrink-0 select-none"
+        className="text-[var(--mute)] shrink-0 select-none"
         style={{ fontSize: 13, lineHeight: 1, padding: '0 2px', fontWeight: 900 }}
         aria-hidden="true"
       >
         ⠿
       </span>
-      <span className="text-[#444] text-[10px] font-black w-4 text-right shrink-0">{idx + 1}</span>
+      <span className="text-[var(--mute)] text-[10px] font-black w-4 text-right shrink-0">{idx + 1}</span>
       <span
         className="text-[9px] font-black px-1.5 py-0.5 rounded-sm shrink-0"
         style={{ color: POS_CONFIG[p.position]?.color, background: POS_CONFIG[p.position]?.bg }}
       >
         {p.position}
       </span>
-      <span className="text-white text-[11px] font-bold flex-1 truncate">{p.name}</span>
-      <span className="text-[#444] text-[10px] shrink-0">€{p.price}M</span>
+      <span className="text-[var(--paper)] text-[11px] font-bold flex-1 truncate">{p.name}</span>
+      <span className="text-[var(--mute)] text-[10px] shrink-0">€{p.price}M</span>
       {/* ▲▼ kept as fallback — useful on desktop and for accessibility */}
       <div className="flex flex-col gap-0.5 shrink-0">
         <button
           onClick={() => onMoveUp(idx)}
           disabled={idx === 0}
-          className="text-[#444] hover:text-white disabled:opacity-20 text-[10px] leading-none"
+          className="text-[var(--mute)] hover:text-[var(--paper)] disabled:opacity-20 text-[10px] leading-none"
         >▲</button>
         <button
           onClick={() => onMoveDown(idx)}
           disabled={idx === listLength - 1}
-          className="text-[#444] hover:text-white disabled:opacity-20 text-[10px] leading-none"
+          className="text-[var(--mute)] hover:text-[var(--paper)] disabled:opacity-20 text-[10px] leading-none"
         >▼</button>
       </div>
       <button
         onClick={() => onRemove(p.id)}
-        className="text-[#333] hover:text-[#E53935] text-[14px] leading-none shrink-0 transition-colors"
+        className="text-[var(--mute)] hover:text-[var(--danger)] text-[14px] leading-none shrink-0 transition-colors"
       >✕</button>
     </div>
   );
@@ -207,7 +208,7 @@ export default function DraftScreen() {
   // If the lottery has already been processed, redirect straight to squad management
   useEffect(() => {
     if (isProcessed) navigate(`/league/${leagueId}`);
-  }, [isProcessed, leagueId]);
+  }, [isProcessed, leagueId, navigate]);
 
   // Position counts in current list
   const posCounts = useMemo(() =>
@@ -358,7 +359,7 @@ export default function DraftScreen() {
         }, { onConflict: 'league_id,user_id,phase' }).then(null, () => {});
       }
     };
-  }, [list, submitted, leagueId, user?.id]);
+  }, [list, submitted, leagueId, user?.id, phase]);
 
   // U23: 2-minute heartbeat — saves if dirty regardless of whether list changed recently.
   // Prevents the 30s debounce from never firing during continuous editing.
@@ -413,8 +414,8 @@ export default function DraftScreen() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#0A0A0A] flex items-center justify-center">
-        <div className="text-[#9E9E9E] text-[12px] font-bold uppercase tracking-widest animate-pulse">
+      <div className="min-h-screen bg-[var(--bg)] flex items-center justify-center">
+        <div className="text-[var(--mute)] text-[12px] font-bold uppercase tracking-widest animate-pulse">
           Loading Draft...
         </div>
       </div>
@@ -423,39 +424,39 @@ export default function DraftScreen() {
 
   if (submitted) {
     return (
-      <div className="min-h-screen bg-[#0A0A0A] flex flex-col items-center justify-center px-6 gap-6">
+      <div className="min-h-screen bg-[var(--bg)] flex flex-col items-center justify-center px-6 gap-6">
         <div className="text-[40px]">✅</div>
         <div className="text-center">
-          <div className="text-white font-black text-xl uppercase tracking-widest mb-2">
+          <div className="text-[var(--paper)] font-black text-xl uppercase tracking-widest mb-2">
             Draft Submitted
           </div>
-          <div className="text-[#9E9E9E] text-[12px]">
+          <div className="text-[var(--mute)] text-[12px]">
             {list.length} players ranked. Lottery runs when the admin triggers it.
           </div>
         </div>
         <div className="w-full max-w-sm space-y-2">
           {list.map((p, i) => (
-            <div key={p.id} className="flex items-center gap-3 bg-[#111] rounded-sm px-3 py-2">
-              <span className="text-[#555] text-[11px] font-black w-5">{i + 1}</span>
+            <div key={p.id} className="flex items-center gap-3 bg-[var(--card)] rounded-sm px-3 py-2">
+              <span className="text-[var(--mute)] text-[11px] font-black w-5">{i + 1}</span>
               <span
                 className="text-[9px] font-black px-1.5 py-0.5 rounded-sm"
                 style={{ color: POS_CONFIG[p.position]?.color, background: POS_CONFIG[p.position]?.bg }}
               >
                 {p.position}
               </span>
-              <span className="text-white text-[12px] font-bold flex-1">{p.name}</span>
-              <span className="text-[#555] text-[11px]">€{p.price}M</span>
+              <span className="text-[var(--paper)] text-[12px] font-bold flex-1">{p.name}</span>
+              <span className="text-[var(--mute)] text-[11px]">€{p.price}M</span>
             </div>
           ))}
         </div>
         {isProcessed ? (
-          <div className="text-[#555] text-[11px] uppercase tracking-widest">
+          <div className="text-[var(--mute)] text-[11px] uppercase tracking-widest">
             Lottery complete — list locked
           </div>
         ) : (
           <button
             onClick={() => setSubmitted(false)}
-            className="text-[#9E9E9E] text-[11px] uppercase tracking-widest underline"
+            className="text-[var(--mute)] text-[11px] uppercase tracking-widest underline"
           >
             Edit list
           </button>
@@ -471,17 +472,17 @@ export default function DraftScreen() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0A0A0A] flex flex-col">
+    <div className="min-h-screen bg-[var(--bg)] flex flex-col">
 
       {/* Header */}
-      <div className="bg-[#111111] border-b border-[#1E1E1E] px-4 pt-10 pb-4 sticky top-0 z-20">
+      <div className="bg-[var(--shell)] border-b border-[var(--rule)] px-4 pt-10 pb-4 sticky top-0 z-20">
         <div className="flex items-center justify-between mb-3">
-          <button onClick={() => navigate(`/league/${leagueId}`)} className="text-[#9E9E9E] text-[20px] leading-none">←</button>
+          <button onClick={() => navigate(`/league/${leagueId}`)} className="text-[var(--mute)] text-[20px] leading-none">←</button>
           <div className="text-center">
-            <div className="text-[10px] font-black uppercase tracking-[0.4em] text-[#9E9E9E] font-serif">
+            <div className="text-[10px] font-black uppercase tracking-[0.4em] text-[var(--mute)] font-serif">
               Draft
             </div>
-            <div className="text-white font-black text-[15px] uppercase tracking-wider">
+            <div className="text-[var(--paper)] font-black text-[15px] uppercase tracking-wider">
               Build Your List
             </div>
           </div>
@@ -493,12 +494,12 @@ export default function DraftScreen() {
           <div className="flex items-center gap-1.5">
             {deadline
               ? countdown === 'CLOSED'
-                ? <span className="text-[#555] text-[10px] uppercase tracking-widest">Submission window closed</span>
+                ? <span className="text-[var(--mute)] text-[10px] uppercase tracking-widest">Submission window closed</span>
                 : <>
-                    <span className="text-[#9E9E9E] text-[10px] uppercase tracking-widest">Suggested deadline in</span>
-                    <span className="text-[#FFC107] text-[10px] font-black">{countdown}</span>
+                    <span className="text-[var(--mute)] text-[10px] uppercase tracking-widest">Suggested deadline in</span>
+                    <span className="text-[10px] font-black" style={{ color: 'var(--warn)' }}>{countdown}</span>
                   </>
-              : <span className="text-[#555] text-[10px] uppercase tracking-widest">Open until lottery runs</span>
+              : <span className="text-[var(--mute)] text-[10px] uppercase tracking-widest">Open until lottery runs</span>
             }
           </div>
           <div className="flex gap-3">
@@ -507,7 +508,7 @@ export default function DraftScreen() {
                 <div className="text-[9px] font-black" style={{ color: POS_CONFIG[pos].color }}>
                   {posCounts[pos] ?? 0}
                 </div>
-                <div className="text-[8px] text-[#555] uppercase">{pos}</div>
+                <div className="text-[8px] text-[var(--mute)] uppercase">{pos}</div>
               </div>
             ))}
           </div>
@@ -520,26 +521,26 @@ export default function DraftScreen() {
           className="px-4 py-2.5 flex items-center justify-between gap-3 text-[11px] font-bold"
           style={{
             background: relaxation.pressure >= 0.9
-              ? 'rgba(240,58,58,0.12)'
+              ? 'var(--neg-bg)'
               : relaxation.pressure >= 0.7
-              ? 'rgba(255,193,7,0.10)'
-              : 'rgba(24,201,107,0.08)',
-            borderBottom: '1px solid rgba(255,255,255,0.06)',
+              ? 'rgba(184,114,14,0.10)'
+              : 'var(--pos-bg)',
+            borderBottom: '1px solid var(--rule)',
           }}
         >
           <div className="flex items-center gap-2">
             <span style={{
               color: relaxation.pressure >= 0.9 ? 'var(--danger)'
-                   : relaxation.pressure >= 0.7 ? '#FFC107'
+                   : relaxation.pressure >= 0.7 ? 'var(--warn)'
                    : 'var(--positive)',
             }}>
               {relaxation.pressure >= 0.9 ? '🔴' : relaxation.pressure >= 0.7 ? '🟡' : '🟢'}
             </span>
-            <span style={{ color: '#9E9E9E' }}>
+            <span style={{ color: 'var(--mute)' }}>
               Pool pressure{' '}
               <span style={{
                 color: relaxation.pressure >= 0.9 ? 'var(--danger)'
-                     : relaxation.pressure >= 0.7 ? '#FFC107'
+                     : relaxation.pressure >= 0.7 ? 'var(--warn)'
                      : 'var(--positive)',
                 fontFamily: 'Archivo Black, sans-serif',
                 fontWeight: 900,
@@ -553,7 +554,7 @@ export default function DraftScreen() {
                 : ' — strict no-repeat'}
             </span>
           </div>
-          <span style={{ color: '#555', fontFamily: 'Archivo Black, sans-serif', fontSize: '10px' }}>
+          <span style={{ color: 'var(--mute)', fontFamily: 'Archivo Black, sans-serif', fontSize: '10px' }}>
             {relaxation.availablePool} players available
           </span>
         </div>
@@ -562,10 +563,10 @@ export default function DraftScreen() {
       <div className="flex flex-col flex-1 overflow-hidden">
 
         {/* Your ranked list */}
-        <div className="px-4 py-3 border-b border-[#1E1E1E]">
+        <div className="px-4 py-3 border-b border-[var(--rule)]">
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-1.5">
-              <span className="text-[10px] font-black uppercase tracking-widest text-[#9E9E9E]">
+              <span className="text-[10px] font-black uppercase tracking-widest text-[var(--mute)]">
                 Your List — {list.length}/{DRAFT_LIST_SIZE}
               </span>
               <button
@@ -578,7 +579,7 @@ export default function DraftScreen() {
               <button
                 onClick={autoComplete}
                 disabled={list.length >= DRAFT_LIST_SIZE}
-                className="text-[9px] font-black uppercase tracking-widest px-2.5 py-1 border border-[#2A2A2A] text-[#9E9E9E] bg-[#1A1A1A] disabled:opacity-30 disabled:cursor-not-allowed active:scale-95 transition-transform"
+                className="text-[9px] font-black uppercase tracking-widest px-2.5 py-1 border border-[var(--rule)] text-[var(--mute)] bg-[var(--elev)] disabled:opacity-30 disabled:cursor-not-allowed active:scale-95 transition-transform"
               >
                 ⚡ Auto-Fill
               </button>
@@ -587,9 +588,9 @@ export default function DraftScreen() {
                 disabled={list.length === 0 || saving}
                 className="text-[9px] font-black uppercase tracking-widest px-2.5 py-1 disabled:opacity-30 disabled:cursor-not-allowed active:scale-95 transition-transform"
                 style={{
-                  background: list.length > 0 ? '#00C853' : '#1A1A1A',
-                  color:      list.length > 0 ? '#000'    : '#555',
-                  border:     list.length > 0 ? 'none'    : '1px solid #2A2A2A',
+                  background: list.length > 0 ? 'var(--positive)' : 'var(--elev)',
+                  color:      list.length > 0 ? '#fff'            : 'var(--mute)',
+                  border:     list.length > 0 ? 'none'            : '1px solid var(--rule)',
                 }}
               >
                 {saving ? '...' : `Submit (${list.length})`}
@@ -598,7 +599,7 @@ export default function DraftScreen() {
           </div>
 
           {list.length === 0 ? (
-            <div className="text-center py-4 text-[#333] text-[11px] font-bold uppercase tracking-widest border border-dashed border-[#222] rounded-sm">
+            <div className="text-center py-4 text-[var(--mute)] text-[11px] font-bold uppercase tracking-widest border border-dashed border-[var(--rule)] rounded-sm">
               Add up to {DRAFT_LIST_SIZE} players — #1 is your highest priority
             </div>
           ) : (
@@ -632,18 +633,18 @@ export default function DraftScreen() {
               <DragOverlay>
                 {activePlayer && (
                   <div
-                    className="flex items-center gap-2 bg-[#1A1A1A] border border-[#444] rounded-sm px-2 py-2 shadow-xl"
+                    className="flex items-center gap-2 bg-[var(--elev)] border border-[var(--rule)] rounded-sm px-2 py-2 shadow-xl"
                     style={{ width: '320px', maxWidth: '85vw' }}
                   >
-                    <span className="text-[#666] shrink-0 select-none" style={{ fontSize: 13, fontWeight: 900 }}>⠿</span>
+                    <span className="text-[var(--mute)] shrink-0 select-none" style={{ fontSize: 13, fontWeight: 900 }}>⠿</span>
                     <span
                       className="text-[9px] font-black px-1.5 py-0.5 rounded-sm shrink-0"
                       style={{ color: POS_CONFIG[activePlayer.position]?.color, background: POS_CONFIG[activePlayer.position]?.bg }}
                     >
                       {activePlayer.position}
                     </span>
-                    <span className="text-white text-[11px] font-bold truncate flex-1">{activePlayer.name}</span>
-                    <span className="text-[#666] text-[10px] shrink-0">€{activePlayer.price}M</span>
+                    <span className="text-[var(--paper)] text-[11px] font-bold truncate flex-1">{activePlayer.name}</span>
+                    <span className="text-[var(--mute)] text-[10px] shrink-0">€{activePlayer.price}M</span>
                   </div>
                 )}
               </DragOverlay>
@@ -654,13 +655,13 @@ export default function DraftScreen() {
         {/* Player pool */}
         <div className="flex-1 flex flex-col overflow-hidden">
           {/* Search + filter */}
-          <div className="px-4 py-2 border-b border-[#1E1E1E] space-y-2">
+          <div className="px-4 py-2 border-b border-[var(--rule)] space-y-2">
             <input
               type="text"
               placeholder="Search players..."
               value={search}
               onChange={e => setSearch(e.target.value)}
-              className="w-full bg-[#111] border border-[#2A2A2A] rounded-sm px-3 py-2 text-white text-[12px] outline-none placeholder:text-[#444] focus:border-[#444]"
+              className="w-full bg-[var(--card)] border border-[var(--rule)] rounded-sm px-3 py-2 text-[var(--paper)] text-[12px] outline-none placeholder:text-[var(--mute)] focus:border-[var(--rule)]"
             />
             <div className="flex gap-2">
               {POS_FILTER_ORDER.map(pos => (
@@ -670,7 +671,7 @@ export default function DraftScreen() {
                   className={`flex-1 py-1.5 rounded text-[10px] font-black uppercase tracking-wider transition-all ${
                     filterPos === pos
                       ? 'bg-white text-black'
-                      : 'bg-[#111] text-[#555] border border-[#1E1E1E]'
+                      : 'bg-[var(--card)] text-[var(--mute)] border border-[var(--rule)]'
                   }`}
                 >
                   {pos}
@@ -684,8 +685,8 @@ export default function DraftScreen() {
                   onClick={() => setShowClubPicker(v => !v)}
                   className="w-full flex items-center justify-between px-3 py-2 rounded-sm text-[10px] font-black uppercase tracking-wider transition-all"
                   style={{
-                    background: filterClubs.size > 0 ? 'rgba(0,180,216,0.12)' : 'rgba(255,255,255,0.04)',
-                    border: filterClubs.size > 0 ? '1px solid rgba(0,180,216,0.4)' : '1px solid rgba(255,255,255,0.1)',
+                    background: filterClubs.size > 0 ? 'var(--accent-bg)' : 'var(--elev)',
+                    border: filterClubs.size > 0 ? '1px solid rgba(26,111,168,0.4)' : '1px solid var(--rule)',
                     color: filterClubs.size > 0 ? 'var(--cyan)' : 'var(--mute)',
                   }}
                 >
@@ -696,7 +697,7 @@ export default function DraftScreen() {
                 {showClubPicker && (
                   <div
                     className="absolute left-0 right-0 z-20 rounded-sm mt-1 overflow-hidden"
-                    style={{ background: '#1A1A1A', border: '1px solid rgba(255,255,255,0.1)' }}
+                    style={{ background: 'var(--card)', border: '1px solid var(--rule)' }}
                   >
                     <div className="p-2">
                       <input
@@ -704,7 +705,7 @@ export default function DraftScreen() {
                         placeholder="Search clubs..."
                         value={clubSearch}
                         onChange={e => setClubSearch(e.target.value)}
-                        className="w-full bg-[#111] border border-[#2A2A2A] rounded-sm px-2 py-1.5 text-white text-[10px] outline-none placeholder:text-[#444]"
+                        className="w-full bg-[var(--card)] border border-[var(--rule)] rounded-sm px-2 py-1.5 text-[var(--paper)] text-[10px] outline-none placeholder:text-[var(--mute)]"
                         onClick={e => e.stopPropagation()}
                       />
                     </div>
@@ -728,7 +729,7 @@ export default function DraftScreen() {
                                 })}
                                 className="accent-cyan-400 w-3 h-3"
                               />
-                              <span className="text-[10px] text-[#ccc] font-medium tracking-wide flex-1">{club}</span>
+                              <span className="text-[10px] text-[var(--paper)] font-medium tracking-wide flex-1">{club}</span>
                             </label>
                           );
                         })}
@@ -736,7 +737,7 @@ export default function DraftScreen() {
                     <div className="flex gap-2 p-2 border-t border-white/5">
                       <button
                         onClick={() => { setFilterClubs(new Set()); setClubSearch(''); }}
-                        className="flex-1 py-1.5 text-[9px] font-black uppercase tracking-wider text-[#555] hover:text-white transition-colors"
+                        className="flex-1 py-1.5 text-[9px] font-black uppercase tracking-wider text-[var(--mute)] hover:text-[var(--paper)] transition-colors"
                       >
                         Clear
                       </button>
@@ -757,7 +758,7 @@ export default function DraftScreen() {
           {/* Player rows */}
           <div className="flex-1 overflow-y-auto px-4 py-2 space-y-1.5">
             {filtered.length === 0 && (
-              <div className="text-center py-8 text-[#333] text-[11px] font-bold uppercase tracking-widest">
+              <div className="text-center py-8 text-[var(--mute)] text-[11px] font-bold uppercase tracking-widest">
                 No players found
               </div>
             )}
@@ -769,7 +770,7 @@ export default function DraftScreen() {
               return (
                 <div key={p.id}>
                   <div
-                    className={`flex items-center gap-3 bg-[#111] rounded-sm px-3 py-2.5 cursor-pointer transition-opacity ${disabled ? 'opacity-40' : 'active:opacity-70'}`}
+                    className={`flex items-center gap-3 bg-[var(--card)] rounded-sm px-3 py-2.5 cursor-pointer transition-opacity ${disabled ? 'opacity-40' : 'active:opacity-70'}`}
                     onClick={() => !disabled && setExpandedId(isExpanded ? null : p.id)}
                   >
                     <span
@@ -778,26 +779,26 @@ export default function DraftScreen() {
                     >
                       {p.position}
                     </span>
-                    <span className="text-white text-[12px] font-bold flex-1 truncate">{p.name}</span>
-                    <span className="text-[#555] text-[11px] shrink-0">{p.club}</span>
-                    <span className="text-[#9E9E9E] text-[11px] font-bold shrink-0">€{p.price}M</span>
+                    <span className="text-[var(--paper)] text-[12px] font-bold flex-1 truncate">{p.name}</span>
+                    <span className="text-[var(--mute)] text-[11px] shrink-0">{p.club}</span>
+                    <span className="text-[var(--mute)] text-[11px] font-bold shrink-0">€{p.price}M</span>
                     {!disabled && (
-                      <span className="text-[#9E9E9E] text-[11px] shrink-0">{isExpanded ? '▲' : '+'}</span>
+                      <span className="text-[var(--mute)] text-[11px] shrink-0">{isExpanded ? '▲' : '+'}</span>
                     )}
                   </div>
                   {isExpanded && !disabled && (
-                    <div className="bg-[#0D0D0D] border border-[#1E1E1E] border-t-0 rounded-b-lg px-3 py-2 flex items-center justify-between">
-                      <div className="text-[10px] text-[#9E9E9E]">
+                    <div className="border border-[var(--rule)] border-t-0 rounded-b-lg px-3 py-2 flex items-center justify-between" style={{ background: 'var(--elev)' }}>
+                      <div className="text-[10px] text-[var(--mute)]">
                         {p.points > 0 && <span>{Math.round(p.points)} pts · </span>}
                         {p.intel?.status !== 'fit' && (
-                          <span className="text-[#FFC107]">{p.intel?.status} · </span>
+                          <span style={{ color: 'var(--warn)' }}>{p.intel?.status} · </span>
                         )}
                         <span>#{list.length + 1} priority</span>
                       </div>
                       <button
                         onClick={() => addPlayer(p)}
-                        className="bg-cyan text-black text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded active:scale-95 transition-transform"
-                        style={{ backgroundColor: '#00B4D8' }}
+                        className="text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded active:scale-95 transition-transform"
+                        style={{ backgroundColor: 'var(--accent)', color: '#fff' }}
                       >
                         Add to List
                       </button>
@@ -812,21 +813,21 @@ export default function DraftScreen() {
 
       {/* Save status */}
       {(lastSaved || saveError) && (
-        <div className={`px-4 py-1.5 text-center text-[10px] font-bold ${saveError ? 'text-[#E53935]' : 'text-[#555]'}`}>
+        <div className={`px-4 py-1.5 text-center text-[10px] font-bold ${saveError ? 'text-[var(--danger)]' : 'text-[var(--mute)]'}`}>
           {saveError || `Draft saved ${lastSaved.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`}
         </div>
       )}
 
       {/* Bottom action bar */}
-      <div className="bg-[#111111] border-t border-[#1E1E1E] px-4 py-4">
+      <div className="bg-[var(--shell)] border-t border-[var(--rule)] px-4 py-4">
         <button
           onClick={handleSubmit}
           disabled={list.length === 0 || saving}
           className="w-full py-3.5 text-[11px] font-black uppercase tracking-widest rounded transition-all disabled:opacity-30 disabled:cursor-not-allowed active:scale-95"
           style={{
-            background:      list.length > 0 ? '#00C853' : undefined,
-            color:           list.length > 0 ? '#000'    : '#555',
-            backgroundColor: list.length === 0 ? '#1A1A1A' : undefined,
+            background:      list.length > 0 ? 'var(--positive)' : undefined,
+            color:           list.length > 0 ? '#fff'            : 'var(--mute)',
+            backgroundColor: list.length === 0 ? 'var(--elev)' : undefined,
           }}
         >
           {saving ? 'Saving...' : list.length === 0 ? 'Add players to your list' : `Submit List (${list.length})`}

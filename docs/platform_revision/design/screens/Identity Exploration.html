@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FantasyKit — Identity Exploration</title>
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Archivo:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #111827; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel" src="design-canvas.jsx"></script>
+<script type="text/babel">
+
+// ─────────────────────────────────────────────
+// DESIGN TOKENS
+// ─────────────────────────────────────────────
+
+const KIT = {
+  id: 'kit', label: '01 — KIT', tagline: 'Light-first · Warm · Editorial',
+  bg: '#F7F3ED', card: '#FFFFFF', elevated: '#EDEAE2', shell: '#18202E',
+  text: '#18202E', text2: '#4B5568', mute: '#8A97A8', rule: '#E2DDD5',
+  accent: '#1A6FA8', accentBg: 'rgba(26,111,168,.08)',
+  gold: '#B8720E', positive: '#166534', danger: '#B91C1C',
+  r: '6px', caps: false, mono: false,
+};
+
+const STADIUM = {
+  id: 'stadium', label: '02 — STADIUM', tagline: 'Dark-first · Precise · Data-native',
+  bg: '#0C1120', card: '#131E35', elevated: '#192744', shell: '#0F1830',
+  text: '#E8E3D8', text2: '#A8B4C4', mute: '#6B7A90', rule: 'rgba(255,255,255,.07)',
+  accent: '#4AADDB', accentBg: 'rgba(74,173,219,.1)',
+  gold: '#D4940A', positive: '#22C55E', danger: '#EF4444',
+  r: '2px', caps: true, mono: true,
+};
+
+const LALIGA = {
+  ...KIT,
+  accent: '#CF1732', accentBg: 'rgba(207,23,50,.08)', gold: '#E87C22',
+};
+
+// ─────────────────────────────────────────────
+// DATA
+// ─────────────────────────────────────────────
+
+const EPL_ROWS = [
+  { rank:1, name:'admin',         gw:32, total:287, trend:'↑', me:false },
+  { rank:2, name:'S.T.C.Bragança',gw:18, total:142, trend:'—', me:false },
+  { rank:3, name:'Demo',          gw:21, total:138, trend:'↓', me:true  },
+  { rank:4, name:'RivalFC',       gw:15, total:112, trend:'—', me:false },
+  { rank:5, name:'TacticoFC',     gw:27, total:98,  trend:'↑', me:false },
+  { rank:6, name:'NightOwls',     gw:8,  total:74,  trend:'↓', me:false },
+];
+
+const LL_ROWS = [
+  { rank:1, name:'RM Fantasy',    gw:41, total:312, trend:'↑', me:false },
+  { rank:2, name:'Culé Manager',  gw:28, total:248, trend:'—', me:false },
+  { rank:3, name:'AtléticoFan',   gw:35, total:201, trend:'↑', me:true  },
+  { rank:4, name:'VillaRoyal',    gw:19, total:178, trend:'—', me:false },
+  { rank:5, name:'SevillaXI',     gw:22, total:144, trend:'↓', me:false },
+];
+
+const XI = [
+  { no:1,  pos:'GK',  name:'ALISSON',    club:'LIV', pts:4,  status:'fit',   cap:false, x:50, y:87 },
+  { no:2,  pos:'DEF', name:'JONES',      club:'SUN', pts:6,  status:'fit',   cap:false, x:13, y:69 },
+  { no:5,  pos:'DEF', name:'ROBINSON',   club:'FUL', pts:6,  status:'fit',   cap:false, x:37, y:69 },
+  { no:4,  pos:'DEF', name:'ADARABIOYO', club:'CHE', pts:4,  status:'doubt', cap:false, x:63, y:69 },
+  { no:3,  pos:'DEF', name:'UDOGIE',     club:'TOT', pts:8,  status:'fit',   cap:false, x:87, y:69 },
+  { no:8,  pos:'MID', name:'TIELEMANS',  club:'AST', pts:5,  status:'fit',   cap:false, x:21, y:47 },
+  { no:10, pos:'MID', name:'BUENDÍA',    club:'AST', pts:7,  status:'fit',   cap:false, x:50, y:47 },
+  { no:7,  pos:'MID', name:'KULUSEVSKI', club:'TOT', pts:9,  status:'fit',   cap:false, x:79, y:47 },
+  { no:11, pos:'FWD', name:'SOLANKE',    club:'TOT', pts:3,  status:'fit',   cap:false, x:19, y:24 },
+  { no:9,  pos:'FWD', name:'ISIDOR',     club:'SUN', pts:12, status:'fit',   cap:false, x:50, y:24 },
+  { no:17, pos:'FWD', name:'PALMER',     club:'CHE', pts:14, status:'fit',   cap:true,  x:81, y:24 },
+];
+
+const BENCH = [
+  { no:12, pos:'GK',  name:'PICKFORD',  club:'EVE', pts:2  },
+  { no:15, pos:'DEF', name:'MYKOLENKO', club:'EVE', pts:3  },
+  { no:20, pos:'MID', name:'BENTANCUR', club:'TOT', pts:5  },
+  { no:22, pos:'FWD', name:'BALOGUN',   club:'AST', pts:10 },
+];
+
+// ─────────────────────────────────────────────
+// SHARED COMPONENTS
+// ─────────────────────────────────────────────
+
+function FK_Sidebar({ t, active, brand, brandColor }) {
+  const bc = brandColor || t.accent;
+  const navItems = ['Scores','League','Squad','Live','Market'];
+  const icons    = ['◈','◎','▣','●','◉'];
+  return (
+    <div style={{ width:200, flexShrink:0, background:t.shell, display:'flex', flexDirection:'column', height:'100%', borderRight:'1px solid rgba(255,255,255,.04)' }}>
+      <div style={{ padding:'20px 20px 18px', borderBottom:'1px solid rgba(255,255,255,.06)' }}>
+        <div style={{ fontFamily:'Archivo Black', fontSize: t.mono ? 15 : 18, letterSpacing: t.mono ? '.06em' : '-0.01em', color:'#fff', lineHeight:1 }}>{brand || 'FK'}</div>
+        <div style={{ fontFamily:'JetBrains Mono', fontSize:8, color:'rgba(255,255,255,.3)', marginTop:4, letterSpacing:'.14em', textTransform:'uppercase' }}>Fantasy Platform</div>
+      </div>
+      <div style={{ flex:1, padding:'12px 10px', display:'flex', flexDirection:'column', gap:2 }}>
+        {navItems.map((item,i) => {
+          const on = item === active;
+          return (
+            <div key={item} style={{ display:'flex', alignItems:'center', gap:10, padding:'9px 10px', borderRadius:t.r, background: on ? 'rgba(255,255,255,.06)' : 'transparent', borderLeft: on ? `2px solid ${bc}` : '2px solid transparent', cursor:'pointer' }}>
+              <span style={{ fontSize:12, color: on ? '#fff' : 'rgba(255,255,255,.3)' }}>{icons[i]}</span>
+              <span style={{ fontFamily: t.mono ? 'JetBrains Mono' : 'Archivo', fontSize: t.mono ? 10 : 13, fontWeight: t.mono ? 400 : 500, letterSpacing: t.mono ? '.14em' : '.01em', textTransform: t.mono ? 'uppercase' : 'none', color: on ? '#fff' : 'rgba(255,255,255,.4)' }}>{item}</span>
+            </div>
+          );
+        })}
+      </div>
+      <div style={{ padding:'14px 20px', borderTop:'1px solid rgba(255,255,255,.05)' }}>
+        <div style={{ fontFamily:'JetBrains Mono', fontSize:7, color:'rgba(255,255,255,.18)', letterSpacing:'.14em', textTransform:'uppercase' }}>FantasyKit · v1.0</div>
+      </div>
+    </div>
+  );
+}
+
+function FK_PageHeader({ t, eyebrow, title, kpis, tabs, activeTab, bottomRule=true }) {
+  return (
+    <div style={{ padding:'20px 32px 0', borderBottom: bottomRule ? `1px solid ${t.rule}` : 'none', background:t.bg, flexShrink:0 }}>
+      <div style={{ fontFamily:'JetBrains Mono', fontSize:10, letterSpacing:'.2em', textTransform:'uppercase', color:t.mute, marginBottom:4 }}>{eyebrow}</div>
+      <div style={{ display:'flex', alignItems:'flex-end', justifyContent:'space-between', marginBottom:16 }}>
+        <div style={{ fontFamily:'Archivo Black', fontSize:26, letterSpacing:'-0.02em', color:t.text, lineHeight:1 }}>{title}</div>
+        {kpis && (
+          <div style={{ display:'flex', gap:24 }}>
+            {kpis.map(([lbl,val,colored])=>(
+              <div key={lbl} style={{ textAlign:'right' }}>
+                <div style={{ fontFamily:'JetBrains Mono', fontSize:9, letterSpacing:'.16em', textTransform:'uppercase', color:t.mute }}>{lbl}</div>
+                <div style={{ fontFamily:'Archivo Black', fontSize:18, color: colored ? t.accent : t.text }}>{val}</div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+      {tabs && (
+        <div style={{ display:'flex' }}>
+          {tabs.map(tab => {
+            const on = tab === activeTab;
+            return (
+              <div key={tab} style={{ padding:'8px 18px', fontFamily:'JetBrains Mono', fontSize:10, letterSpacing:'.16em', textTransform:'uppercase', color: on ? t.text : t.mute, borderBottom: on ? `2px solid ${t.accent}` : '2px solid transparent', cursor:'pointer', marginBottom:-1 }}>{tab}</div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────
+// FOUNDATION ARTBOARD
+// ─────────────────────────────────────────────
+
+function Foundation({ t }) {
+  const surfaces = [{c:t.bg,n:'BG'},{c:t.card,n:'Card'},{c:t.elevated,n:'Raised'},{c:t.shell,n:'Shell'}];
+  const accents  = [{c:t.accent,n:'Primary'},{c:t.gold,n:'Gold'},{c:t.positive,n:'Green'},{c:t.danger,n:'Alert'}];
+
+  return (
+    <div style={{ width:'100%', height:'100%', background:t.bg, padding:32, display:'flex', flexDirection:'column', gap:26, fontFamily:'Archivo, sans-serif' }}>
+      {/* Header */}
+      <div>
+        <div style={{ fontFamily:'JetBrains Mono', fontSize:10, letterSpacing:'.2em', textTransform:'uppercase', color:t.mute, marginBottom:6 }}>{t.label}</div>
+        <div style={{ fontFamily:'Archivo Black', fontSize:32, letterSpacing:'-0.02em', lineHeight:1, color:t.text }}>{t.label.split('— ')[1]}</div>
+        <div style={{ fontSize:14, color:t.text2, marginTop:6 }}>{t.tagline}</div>
+      </div>
+
+      {/* Colors + Type */}
+      <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:32 }}>
+        <div>
+          <div style={{ fontFamily:'JetBrains Mono', fontSize:9, letterSpacing:'.18em', textTransform:'uppercase', color:t.mute, marginBottom:10 }}>Surfaces</div>
+          <div style={{ display:'flex', gap:6, marginBottom:16 }}>
+            {surfaces.map(s=>(
+              <div key={s.n} style={{ flex:1 }}>
+                <div style={{ height:36, background:s.c, border:`1px solid ${t.rule}`, borderRadius:t.r }} />
+                <div style={{ fontFamily:'JetBrains Mono', fontSize:7, color:t.mute, marginTop:4, textAlign:'center', letterSpacing:'.1em', textTransform:'uppercase' }}>{s.n}</div>
+              </div>
+            ))}
+          </div>
+          <div style={{ fontFamily:'JetBrains Mono', fontSize:9, letterSpacing:'.18em', textTransform:'uppercase', color:t.mute, marginBottom:10 }}>Accents</div>
+          <div style={{ display:'flex', gap:6 }}>
+            {accents.map(a=>(
+              <div key={a.n} style={{ flex:1 }}>
+                <div style={{ height:36, background:a.c, borderRadius:t.r }} />
+                <div style={{ fontFamily:'JetBrains Mono', fontSize:7, color:t.mute, marginTop:4, textAlign:'center', letterSpacing:'.1em', textTransform:'uppercase' }}>{a.n}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div>
+          <div style={{ fontFamily:'JetBrains Mono', fontSize:9, letterSpacing:'.18em', textTransform:'uppercase', color:t.mute, marginBottom:10 }}>Type scale</div>
+          <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
+            <div style={{ fontFamily:'Archivo Black', fontSize:22, letterSpacing:'-0.02em', color:t.text, lineHeight:1, textTransform: t.caps ? 'uppercase' : 'none' }}>
+              {t.caps ? 'COLE PALMER' : 'Cole Palmer'}
+            </div>
+            <div style={{ height:1, background:t.rule }} />
+            <div style={{ fontFamily:'Archivo Black', fontSize:14, letterSpacing:'-0.01em', color:t.text }}>
+              {t.caps ? 'SECTION HEADING' : 'Section heading'}
+            </div>
+            <div style={{ fontSize:13, color:t.text2, lineHeight:1.6 }}>
+              Body text for readable content — Archivo 400 at 13–14px.
+            </div>
+            <div style={{ fontFamily:'JetBrains Mono', fontSize:10, letterSpacing:'.18em', textTransform:'uppercase', color:t.mute }}>
+              CHE · 14 PTS · GW 12
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Components */}
+      <div>
+        <div style={{ fontFamily:'JetBrains Mono', fontSize:9, letterSpacing:'.18em', textTransform:'uppercase', color:t.mute, marginBottom:10 }}>Components</div>
+        {/* Player row */}
+        <div style={{ background:t.card, border:`1px solid ${t.rule}`, borderRadius:t.r, padding:'10px 14px', display:'flex', alignItems:'center', gap:10, marginBottom:8 }}>
+          <div style={{ width:34, height:18, border:`1px solid ${t.accent}`, borderRadius:'2px', display:'flex', alignItems:'center', justifyContent:'center' }}>
+            <span style={{ fontFamily:'JetBrains Mono', fontSize:8, color:t.accent, letterSpacing:'.08em' }}>MID</span>
+          </div>
+          <div style={{ width:7, height:7, borderRadius:'50%', background:t.positive, flexShrink:0 }} />
+          <span style={{ fontFamily:'Archivo Black', fontSize:13, color:t.text, letterSpacing:'-0.01em', textTransform: t.caps ? 'uppercase' : 'none' }}>
+            {t.caps ? 'COLE PALMER' : 'Cole Palmer'}
+          </span>
+          <span style={{ fontFamily:'JetBrains Mono', fontSize:9, color:t.mute, letterSpacing:'.1em', marginLeft:4 }}>CHE</span>
+          <span style={{ fontFamily:'Archivo Black', fontSize:15, color:t.accent, marginLeft:'auto' }}>14</span>
+          <span style={{ fontFamily:'JetBrains Mono', fontSize:9, color:t.mute, letterSpacing:'.1em' }}>PTS</span>
+          <div style={{ border:`1px solid ${t.rule}`, borderRadius:t.r, padding:'4px 10px', fontFamily:'JetBrains Mono', fontSize:8, letterSpacing:'.12em', textTransform:'uppercase', color:t.text2 }}>Transfer</div>
+        </div>
+        {/* Bet card */}
+        <div style={{ background:t.card, border:`1px solid ${t.rule}`, borderRadius:t.r, padding:'10px 14px', display:'flex', alignItems:'center', gap:12, marginBottom:16 }}>
+          <div style={{ width:7, height:7, borderRadius:'50%', background:t.accent, flexShrink:0 }} />
+          <div style={{ flex:1 }}>
+            <div style={{ fontFamily:'Archivo Black', fontSize:12, color:t.text, textTransform: t.caps ? 'uppercase' : 'none' }}>{t.caps ? 'MD5 TOP SCORER' : 'MD5 Top Scorer'}</div>
+            <div style={{ fontSize:11, color:t.text2, marginTop:2 }}>Who will score the most goals?</div>
+          </div>
+          <div style={{ fontFamily:'JetBrains Mono', fontSize:8, color:t.mute, letterSpacing:'.1em' }}>2h 36m left</div>
+          <div style={{ background:t.accent, borderRadius:t.r, padding:'5px 12px', fontFamily:'JetBrains Mono', fontSize:8, letterSpacing:'.14em', textTransform:'uppercase', color:'#fff' }}>Pick</div>
+        </div>
+        {/* Buttons */}
+        <div style={{ display:'flex', gap:8 }}>
+          <div style={{ background:t.accent, borderRadius:t.r, padding:'7px 16px', fontFamily:'JetBrains Mono', fontSize:9, letterSpacing:'.16em', textTransform:'uppercase', color:'#FFF' }}>Primary</div>
+          <div style={{ border:`1px solid ${t.accent}`, borderRadius:t.r, padding:'7px 16px', fontFamily:'JetBrains Mono', fontSize:9, letterSpacing:'.16em', textTransform:'uppercase', color:t.accent }}>Secondary</div>
+          <div style={{ border:`1px solid ${t.rule}`, borderRadius:t.r, padding:'7px 16px', fontFamily:'JetBrains Mono', fontSize:9, letterSpacing:'.16em', textTransform:'uppercase', color:t.text2 }}>Neutral</div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────
+// LEAGUE HUB SCREEN
+// ─────────────────────────────────────────────
+
+function LeagueHub({ t, leagueName, rows, brand, brandColor }) {
+  const bc = brandColor || t.accent;
+  const data = rows || EPL_ROWS;
+  const tabs = ['Leaderboard','Feed','Bets','Squad','Market'];
+
+  return (
+    <div style={{ width:'100%', height:'100%', background:t.bg, display:'flex', fontFamily:'Archivo, sans-serif' }}>
+      <FK_Sidebar t={t} active="League" brand={brand} brandColor={bc} />
+
+      <div style={{ flex:1, display:'flex', flexDirection:'column', minWidth:0 }}>
+        <FK_PageHeader
+          t={t}
+          eyebrow={t.caps ? 'COMPETITIVE CENTRE' : 'Competitive Centre'}
+          title={leagueName}
+          kpis={[['GW','12',false],['My Rank','#3',false],['My Pts','138',true]]}
+          tabs={tabs}
+          activeTab="Leaderboard"
+        />
+
+        {/* Body */}
+        <div style={{ flex:1, display:'flex', overflow:'hidden' }}>
+          {/* Leaderboard */}
+          <div style={{ flex:1, padding:'24px 32px', minWidth:0 }}>
+            <div style={{ fontFamily:'JetBrains Mono', fontSize:9, letterSpacing:'.18em', textTransform:'uppercase', color:t.mute, marginBottom:16 }}>
+              Standings · Season 2026
+            </div>
+            {/* Header row */}
+            <div style={{ display:'grid', gridTemplateColumns:'40px 1fr 80px 80px 36px', padding:'6px 8px', borderBottom:`2px solid ${t.rule}`, marginBottom:2 }}>
+              {['#','Team','GW12','Total',''].map((h,i)=>(
+                <div key={i} style={{ fontFamily:'JetBrains Mono', fontSize:9, letterSpacing:'.14em', textTransform:'uppercase', color:t.mute, textAlign: i >= 2 ? 'right' : 'left' }}>{h}</div>
+              ))}
+            </div>
+            {/* Data rows */}
+            {data.map(row=>(
+              <div key={row.rank} style={{ display:'grid', gridTemplateColumns:'40px 1fr 80px 80px 36px', padding:'12px 8px', borderBottom:`1px solid ${t.rule}`, alignItems:'center', background: row.me ? t.accentBg : 'transparent', borderRadius: row.me ? t.r : 0 }}>
+                <div style={{ fontFamily:'Archivo Black', fontSize:13, color: row.rank <= 3 ? bc : t.mute }}>{row.rank}</div>
+                <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+                  <div style={{ fontFamily:'Archivo Black', fontSize:13, color:t.text, letterSpacing:'-0.01em', textTransform: t.caps ? 'uppercase' : 'none' }}>{row.name}</div>
+                  {row.me && <span style={{ fontFamily:'JetBrains Mono', fontSize:8, color:bc, letterSpacing:'.1em', textTransform:'uppercase', border:`1px solid ${bc}`, padding:'1px 5px', borderRadius:'2px' }}>You</span>}
+                </div>
+                <div style={{ fontFamily:'Archivo Black', fontSize:14, color:bc, textAlign:'right' }}>{row.gw}</div>
+                <div style={{ fontFamily:'Archivo Black', fontSize:14, color:t.text, textAlign:'right' }}>{row.total}</div>
+                <div style={{ fontSize:13, color: row.trend==='↑' ? t.positive : row.trend==='↓' ? t.danger : t.mute, textAlign:'right' }}>{row.trend}</div>
+              </div>
+            ))}
+          </div>
+
+          {/* Right panel */}
+          <div style={{ width:256, borderLeft:`1px solid ${t.rule}`, padding:'24px 20px', display:'flex', flexDirection:'column', gap:20, background: t.caps ? t.card : t.bg, flexShrink:0 }}>
+            {/* Deadline */}
+            <div>
+              <div style={{ fontFamily:'JetBrains Mono', fontSize:9, letterSpacing:'.18em', textTransform:'uppercase', color:t.mute, marginBottom:10 }}>Next Deadline</div>
+              <div style={{ background:t.elevated, borderRadius:t.r, padding:'12px 14px', border:`1px solid ${t.rule}` }}>
+                <div style={{ fontFamily:'Archivo Black', fontSize:14, color:t.text, marginBottom:2 }}>Gameweek 13</div>
+                <div style={{ fontFamily:'JetBrains Mono', fontSize:10, color:t.mute, letterSpacing:'.12em' }}>Fri 21 Jun · 19:00</div>
+                <div style={{ marginTop:10, height:3, background:t.rule, borderRadius:2 }}>
+                  <div style={{ width:'40%', height:'100%', background:bc, borderRadius:2 }} />
+                </div>
+                <div style={{ fontFamily:'JetBrains Mono', fontSize:8, color:t.mute, letterSpacing:'.1em', marginTop:4 }}>2d 4h remaining</div>
+              </div>
+            </div>
+
+            {/* Activity */}
+            <div>
+              <div style={{ fontFamily:'JetBrains Mono', fontSize:9, letterSpacing:'.18em', textTransform:'uppercase', color:t.mute, marginBottom:10 }}>Recent Activity</div>
+              {[
+                { user:'admin',          msg:'Scored 32 pts this week',  time:'2h' },
+                { user:'S.T.C.Bragança', msg:'Signed Bukayo Saka',       time:'5h' },
+                { user:'Demo',           msg:'Ready for GW13!',          time:'8h' },
+              ].map((a,i)=>(
+                <div key={i} style={{ padding:'10px 0', borderBottom:`1px solid ${t.rule}`, display:'flex', gap:10, alignItems:'flex-start' }}>
+                  <div style={{ width:28, height:28, borderRadius: t.caps ? '2px' : '50%', background:bc, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+                    <span style={{ fontFamily:'Archivo Black', fontSize:11, color:'#fff' }}>{a.user[0].toUpperCase()}</span>
+                  </div>
+                  <div style={{ flex:1, minWidth:0 }}>
+                    <div style={{ fontFamily:'Archivo', fontWeight:600, fontSize:11, color:t.text, marginBottom:1, whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>{a.user}</div>
+                    <div style={{ fontSize:11, color:t.text2, lineHeight:1.4 }}>{a.msg}</div>
+                  </div>
+                  <div style={{ fontFamily:'JetBrains Mono', fontSize:8, color:t.mute, flexShrink:0 }}>{a.time}</div>
+                </div>
+              ))}
+            </div>
+
+            {/* My squad card */}
+            <div>
+              <div style={{ fontFamily:'JetBrains Mono', fontSize:9, letterSpacing:'.18em', textTransform:'uppercase', color:t.mute, marginBottom:10 }}>My Squad</div>
+              <div style={{ background:t.elevated, borderRadius:t.r, padding:'12px 14px', border:`1px solid ${t.rule}`, display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+                <div>
+                  <div style={{ fontFamily:'Archivo Black', fontSize:22, color:t.text, lineHeight:1 }}>138 <span style={{ fontSize:11, color:t.mute, fontFamily:'Archivo', fontWeight:400 }}>pts</span></div>
+                  <div style={{ fontFamily:'JetBrains Mono', fontSize:9, color:t.mute, letterSpacing:'.1em', marginTop:3 }}>GW12 · 21 pts</div>
+                </div>
+                <div style={{ border:`1px solid ${bc}`, borderRadius:t.r, padding:'6px 12px', fontFamily:'JetBrains Mono', fontSize:8, letterSpacing:'.14em', textTransform:'uppercase', color:bc }}>Manage</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────
+// SQUAD / PITCH SCREEN
+// ─────────────────────────────────────────────
+
+function PitchToken({ t, p }) {
+  const sc = p.status === 'fit' ? t.positive : p.status === 'doubt' ? t.gold : t.danger;
+  return (
+    <div style={{ position:'absolute', left:`${p.x}%`, top:`${p.y}%`, transform:'translate(-50%,-50%)', display:'flex', alignItems:'center', gap:8, padding:'7px 10px 7px 8px', background:'rgba(11,18,36,.93)', backdropFilter:'blur(4px)', border:`1px solid ${p.cap ? t.gold : 'rgba(255,255,255,.1)'}`, borderRadius:t.r, minWidth:128, zIndex:1 }}>
+      <div style={{ width:30, height:30, flexShrink:0, background: p.cap ? t.gold : 'transparent', border:`1.5px solid ${p.cap ? t.gold : t.accent}`, borderRadius:'2px', display:'flex', alignItems:'center', justifyContent:'center', fontFamily:'Archivo Black', fontSize:12, color: p.cap ? '#0A0A0A' : t.accent }}>{p.no}</div>
+      <div style={{ flex:1, minWidth:0 }}>
+        <div style={{ display:'flex', alignItems:'center', gap:5 }}>
+          <div style={{ width:6, height:6, borderRadius:'50%', background:sc, flexShrink:0 }} />
+          <span style={{ fontFamily:'Archivo Black', fontSize:11, letterSpacing:'-.01em', textTransform:'uppercase', color:t.text, whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>{p.name}</span>
+        </div>
+        <div style={{ fontFamily:'JetBrains Mono', fontSize:8, color:t.mute, letterSpacing:'.12em', marginTop:2 }}>{p.club} · {p.pts} PTS</div>
+      </div>
+      {p.cap && (
+        <div style={{ position:'absolute', top:-7, right:-7, width:16, height:16, borderRadius:'50%', background:t.gold, color:'#0A0A0A', fontFamily:'Archivo Black', fontSize:8, display:'flex', alignItems:'center', justifyContent:'center', border:`2px solid ${t.bg}` }}>C</div>
+      )}
+    </div>
+  );
+}
+
+function PosChipInline({ t, pos }) {
+  const cols = { GK:'#A855F7', DEF:t.accent, MID:t.gold, FWD:t.danger };
+  const c = cols[pos] || t.accent;
+  return (
+    <div style={{ width:28, height:16, border:`1px solid ${c}`, borderRadius:'2px', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+      <span style={{ fontFamily:'JetBrains Mono', fontSize:7, color:c, letterSpacing:'.08em' }}>{pos}</span>
+    </div>
+  );
+}
+
+function SquadScreen({ t }) {
+  return (
+    <div style={{ width:'100%', height:'100%', background:t.bg, display:'flex', fontFamily:'Archivo, sans-serif' }}>
+      <FK_Sidebar t={t} active="Squad" />
+
+      <div style={{ flex:1, display:'flex', flexDirection:'column', minWidth:0 }}>
+        <FK_PageHeader
+          t={t}
+          eyebrow="TACTICAL SHEET"
+          title="My Squad"
+          kpis={[['Squad','11/15',false],['Budget','£3M',true],['Transfers','1 free',false]]}
+          tabs={['PITCH','LIST','STATUS']}
+          activeTab="PITCH"
+        />
+
+        {/* Pitch + bench */}
+        <div style={{ flex:1, padding:'16px 28px 20px', display:'flex', flexDirection:'column', gap:12, minHeight:0 }}>
+          {/* Pitch */}
+          <div style={{ flex:1, position:'relative', background:'linear-gradient(180deg,#0E1828 0%,#09101E 100%)', borderRadius:'6px', border:`1px solid rgba(255,255,255,.07)`, overflow:'hidden', minHeight:0 }}>
+            {/* Lane lines */}
+            {[24,46,68,88].map(y=>(
+              <div key={y} style={{ position:'absolute', left:24, right:24, top:`${y}%`, height:1, background:`rgba(74,173,219,.11)` }} />
+            ))}
+            {/* Lane labels */}
+            {[['FWD',24],['MID',46],['DEF',68],['GK',88]].map(([l,y])=>(
+              <div key={l} style={{ position:'absolute', left:16, top:`${y}%`, transform:'translateY(-50%)', fontFamily:'JetBrains Mono', fontSize:8, color:'rgba(74,173,219,.42)', letterSpacing:'.18em', background:'#09101E', padding:'1px 4px' }}>{l}</div>
+            ))}
+            {/* Centre accent */}
+            <div style={{ position:'absolute', left:'50%', top:'50%', transform:'translate(-50%,-50%)', width:110, height:110, borderRadius:'50%', border:'1px solid rgba(255,255,255,.04)' }} />
+            <div style={{ position:'absolute', left:'12%', right:'12%', top:'50%', height:1, background:'rgba(255,255,255,.04)' }} />
+            {/* Context */}
+            <div style={{ position:'absolute', top:12, left:16, right:16, display:'flex', justifyContent:'space-between' }}>
+              <span style={{ fontFamily:'JetBrains Mono', fontSize:9, color:t.mute, letterSpacing:'.18em' }}>STARTING XI · 4-3-3</span>
+              <span style={{ fontFamily:'JetBrains Mono', fontSize:9, color:t.mute, letterSpacing:'.18em' }}>GW 12 · vs RIVALS FC</span>
+            </div>
+            {/* Tokens */}
+            {XI.map(p=><PitchToken key={p.no} t={t} p={p} />)}
+          </div>
+
+          {/* Bench */}
+          <div>
+            <div style={{ fontFamily:'JetBrains Mono', fontSize:9, letterSpacing:'.18em', textTransform:'uppercase', color:t.mute, marginBottom:8 }}>Bench</div>
+            <div style={{ display:'flex', gap:8 }}>
+              {BENCH.map(p=>(
+                <div key={p.no} style={{ flex:1, background:t.card, border:`1px solid ${t.rule}`, borderRadius:t.r, padding:'8px 10px', display:'flex', alignItems:'center', gap:8 }}>
+                  <PosChipInline t={t} pos={p.pos} />
+                  <span style={{ fontFamily:'Archivo Black', fontSize:10, color:t.text, textTransform:'uppercase', letterSpacing:'-.01em', flex:1, whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>{p.name}</span>
+                  <span style={{ fontFamily:'Archivo Black', fontSize:12, color:t.accent }}>{p.pts}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────
+// MOBILE SCREEN (Direction 1)
+// ─────────────────────────────────────────────
+
+function MobileLeague({ t, rows, brand, brandColor }) {
+  const bc = brandColor || t.accent;
+  const data = rows || EPL_ROWS;
+  return (
+    <div style={{ width:'100%', height:'100%', background:t.bg, display:'flex', flexDirection:'column', fontFamily:'Archivo, sans-serif', overflow:'hidden' }}>
+      {/* Status bar */}
+      <div style={{ background:t.shell, padding:'10px 16px 8px', display:'flex', justifyContent:'space-between', flexShrink:0 }}>
+        <span style={{ fontFamily:'JetBrains Mono', fontSize:9, color:'rgba(255,255,255,.5)', letterSpacing:'.12em' }}>9:41</span>
+        <span style={{ fontFamily:'Archivo Black', fontSize:11, color:'#fff', letterSpacing:'.02em' }}>{brand || 'FK'}</span>
+        <span style={{ fontFamily:'JetBrains Mono', fontSize:9, color:'rgba(255,255,255,.5)' }}>●●●</span>
+      </div>
+      {/* Header */}
+      <div style={{ padding:'14px 16px 0', borderBottom:`1px solid ${t.rule}`, background:t.bg, flexShrink:0 }}>
+        <div style={{ fontFamily:'JetBrains Mono', fontSize:9, letterSpacing:'.18em', textTransform:'uppercase', color:t.mute, marginBottom:3 }}>Competitive Centre</div>
+        <div style={{ fontFamily:'Archivo Black', fontSize:20, letterSpacing:'-0.02em', color:t.text, marginBottom:12, lineHeight:1 }}>
+          {brand ? (brand.length > 16 ? brand.slice(0,14)+'…' : brand) : 'Premier Fantasy'}
+        </div>
+        {/* Stats row */}
+        <div style={{ display:'flex', gap:16, marginBottom:12 }}>
+          {[['Rank','#3'],['Points','138'],['GW12','21 pts']].map(([l,v])=>(
+            <div key={l}>
+              <div style={{ fontFamily:'JetBrains Mono', fontSize:8, letterSpacing:'.14em', textTransform:'uppercase', color:t.mute }}>{l}</div>
+              <div style={{ fontFamily:'Archivo Black', fontSize:14, color:t.text }}>{v}</div>
+            </div>
+          ))}
+        </div>
+        {/* Tabs */}
+        <div style={{ display:'flex', gap:0, overflowX:'auto' }}>
+          {['Standings','Feed','Bets','Squad'].map((tab,i)=>(
+            <div key={tab} style={{ padding:'6px 12px', fontFamily:'JetBrains Mono', fontSize:9, letterSpacing:'.14em', textTransform:'uppercase', color: i===0 ? t.text : t.mute, borderBottom: i===0 ? `2px solid ${bc}` : '2px solid transparent', whiteSpace:'nowrap', marginBottom:-1 }}>{tab}</div>
+          ))}
+        </div>
+      </div>
+      {/* List */}
+      <div style={{ flex:1, overflowY:'hidden', padding:'8px 0' }}>
+        {data.map(row=>(
+          <div key={row.rank} style={{ display:'flex', alignItems:'center', gap:12, padding:'10px 16px', borderBottom:`1px solid ${t.rule}`, background: row.me ? t.accentBg : 'transparent' }}>
+            <div style={{ fontFamily:'Archivo Black', fontSize:12, color: row.rank<=3 ? bc : t.mute, width:20, textAlign:'center' }}>{row.rank}</div>
+            <div style={{ flex:1, minWidth:0 }}>
+              <div style={{ fontFamily:'Archivo Black', fontSize:13, color:t.text, letterSpacing:'-0.01em', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
+                {row.name}
+                {row.me && <span style={{ fontFamily:'JetBrains Mono', fontSize:8, color:bc, marginLeft:6, letterSpacing:'.1em' }}>YOU</span>}
+              </div>
+              <div style={{ fontFamily:'JetBrains Mono', fontSize:8, color:t.mute, letterSpacing:'.1em', textTransform:'uppercase', marginTop:1 }}>Season total</div>
+            </div>
+            <div>
+              <div style={{ fontFamily:'Archivo Black', fontSize:14, color:bc, textAlign:'right' }}>{row.gw}</div>
+              <div style={{ fontFamily:'JetBrains Mono', fontSize:8, color:t.mute, textAlign:'right' }}>{row.total} tot</div>
+            </div>
+            <div style={{ fontSize:12, color: row.trend==='↑' ? t.positive : row.trend==='↓' ? t.danger : t.mute }}>{row.trend}</div>
+          </div>
+        ))}
+      </div>
+      {/* Bottom nav */}
+      <div style={{ background:t.shell, borderTop:`1px solid rgba(255,255,255,.06)`, padding:'8px 0 12px', display:'flex', justifyContent:'space-around', flexShrink:0 }}>
+        {[['◈','Scores'],['◎','League'],['▣','Squad'],['●','Live'],['◉','Market']].map(([icon,lbl],i)=>(
+          <div key={lbl} style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:3 }}>
+            <span style={{ fontSize:14, color: i===1 ? bc : 'rgba(255,255,255,.35)' }}>{icon}</span>
+            <span style={{ fontFamily:'JetBrains Mono', fontSize:8, letterSpacing:'.1em', textTransform:'uppercase', color: i===1 ? bc : 'rgba(255,255,255,.3)' }}>{lbl}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────
+// MAIN APP
+// ─────────────────────────────────────────────
+
+function IdentityExploration() {
+  return (
+    <DesignCanvas title="FantasyKit — Identity & Direction Exploration">
+
+      <DCSection id="foundation" title="01 — Visual Foundation">
+        <DCArtboard id="f-kit" label="Direction 1 · Kit (Light)" width={720} height={560}>
+          <Foundation t={KIT} />
+        </DCArtboard>
+        <DCArtboard id="f-stadium" label="Direction 2 · Stadium (Dark)" width={720} height={560}>
+          <Foundation t={STADIUM} />
+        </DCArtboard>
+      </DCSection>
+
+      <DCSection id="screens" title="02 — Key Screens">
+        <DCArtboard id="s-league-kit" label="Direction 1 · League Hub" width={1280} height={760}>
+          <LeagueHub t={KIT} leagueName="Premier Fantasy League" />
+        </DCArtboard>
+        <DCArtboard id="s-squad-stadium" label="Direction 2 · My Squad (Pitch)" width={1280} height={760}>
+          <SquadScreen t={STADIUM} />
+        </DCArtboard>
+      </DCSection>
+
+      <DCSection id="mobile" title="03 — Mobile">
+        <DCArtboard id="mob-kit" label="Direction 1 · Mobile (390×844)" width={390} height={844}>
+          <MobileLeague t={KIT} />
+        </DCArtboard>
+        <DCArtboard id="mob-stadium" label="Direction 2 · Mobile (390×844)" width={390} height={844}>
+          <MobileLeague t={STADIUM} />
+        </DCArtboard>
+      </DCSection>
+
+      <DCSection id="whitelabel" title="04 — White Label Preview">
+        <DCArtboard id="wl-laliga" label="Client Brand Applied · La Liga Fantasy" width={1280} height={760}>
+          <LeagueHub t={LALIGA} leagueName="LaLiga Fantasy 2026" rows={LL_ROWS} brand="LaLiga Fantasy" brandColor="#CF1732" />
+        </DCArtboard>
+        <DCArtboard id="wl-mob-laliga" label="Client Brand · Mobile" width={390} height={844}>
+          <MobileLeague t={LALIGA} rows={LL_ROWS} brand="LaLiga Fantasy" brandColor="#CF1732" />
+        </DCArtboard>
+      </DCSection>
+
+    </DesignCanvas>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<IdentityExploration />);
+</script>
+</body>
+</html>

@@ -20,8 +20,9 @@ import { supabase, FUNCTIONS_BASE } from '../lib/supabase';
 import { useAuth } from '../hooks/useAuth';
 
 // ─── Edge Function caller ─────────────────────────────────────────────────────
-const FUNCTIONS_URL = FUNCTIONS_BASE
-  ?? 'https://sssmvihxtqtohisghjet.supabase.co/functions/v1';
+// FUNCTIONS_BASE is derived from VITE_SUPABASE_URL in src/lib/supabase.js.
+// If null, VITE_SUPABASE_URL is not configured — set it in .env.local.
+const FUNCTIONS_URL = FUNCTIONS_BASE ?? '';
 
 async function callFunction(name, body) {
   const { data: { session } } = await supabase.auth.getSession();

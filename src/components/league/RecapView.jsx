@@ -26,7 +26,7 @@ function MatchdayNav({ allMatchdays, selected, onSelect, mobile }) {
         const isLive = md.isLive;
         return (
           <button key={md.matchday_id} onClick={() => onSelect(md.matchday_id)} style={{
-            padding: '4px 9px', flexShrink: 0, display: 'flex', alignItems: 'center', gap: 4,
+            padding: '8px 9px', minHeight: 44, flexShrink: 0, display: 'flex', alignItems: 'center', gap: 4,
             border: active ? `1px solid ${isLive ? 'var(--danger)' : 'var(--cyan)'}` : '1px solid var(--rule)',
             background: active ? (isLive ? 'rgba(239,68,68,.12)' : 'rgba(0,180,216,.14)') : 'transparent',
             color: active ? (isLive ? 'var(--danger)' : 'var(--cyan)') : 'var(--mute)',

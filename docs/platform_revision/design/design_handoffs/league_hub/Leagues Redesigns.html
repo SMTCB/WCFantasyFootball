@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>FORZAKIT — League Hub Redesigns</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Archivo:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700;1,900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="src/squad-shared.css">
+<style>
+  @keyframes fkPulse { 0%,100%{opacity:1} 50%{opacity:.35} }
+  button:focus{outline:none}
+  .fk-rule { height:1px; background:var(--rule); border:0; }
+</style>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel" src="design-canvas.jsx"></script>
+<script type="text/babel" src="src/league-data.jsx"></script>
+<script type="text/babel" src="src/league-shared.jsx"></script>
+<script type="text/babel" src="src/league-leaderboard.jsx"></script>
+<script type="text/babel" src="src/league-frontpage.jsx"></script>
+<script type="text/babel" src="src/league-bets.jsx"></script>
+<script type="text/babel" src="src/league-auctions.jsx"></script>
+<script type="text/babel" src="src/league-chat-stats.jsx"></script>
+
+<script type="text/babel" data-presets="react">
+function App(){
+  return (
+    <DesignCanvas
+      title="FORZAKIT · League Hub — Tab redesigns"
+      subtitle="One screen per tab inside the Competitive Center. Each tab is a fully-rendered desktop view aligned with the FORZAKIT system. Drill-ins (Manager profile, Make Pick, Auction detail, Article view) shown below as clickable secondary screens."
+    >
+      <DCSection id="hub-tabs" title="Tabs — the seven primary views">
+        <DCArtboard id="t-leaderboard" label="LEADERBOARD" width={1440} height={920} background="#06070A">
+          <LeaderboardTab/>
+        </DCArtboard>
+        <DCArtboard id="t-frontpage" label="FRONTPAGE · Forza Times" width={1440} height={1280} background="#06070A">
+          <FrontpageTab/>
+        </DCArtboard>
+        <DCArtboard id="t-bets" label="BETS" width={1440} height={1080} background="#06070A">
+          <BetsTab/>
+        </DCArtboard>
+        <DCArtboard id="t-betting" label="BETTING" width={1440} height={920} background="#06070A">
+          <BettingTab/>
+        </DCArtboard>
+        <DCArtboard id="t-auctions" label="AUCTIONS" width={1440} height={1080} background="#06070A">
+          <AuctionsTab/>
+        </DCArtboard>
+        <DCArtboard id="t-chat" label="CHAT" width={1440} height={920} background="#06070A">
+          <ChatTab/>
+        </DCArtboard>
+        <DCArtboard id="t-stats" label="STATS" width={1440} height={920} background="#06070A">
+          <StatsTab/>
+        </DCArtboard>
+      </DCSection>
+
+      <DCSection id="drill-ins" title="Drill-ins — additional clickable screens">
+        <DCArtboard id="d-manager" label="MANAGER PROFILE" width={1440} height={920} background="#06070A">
+          <ManagerProfileScreen id="rai"/>
+        </DCArtboard>
+        <DCArtboard id="d-pick" label="MAKE PICK" width={1440} height={840} background="#06070A">
+          <MakePickScreen/>
+        </DCArtboard>
+        <DCArtboard id="d-auction" label="AUCTION DETAIL" width={1440} height={920} background="#06070A">
+          <AuctionDetailScreen/>
+        </DCArtboard>
+        <DCArtboard id="d-article" label="FORZA TIMES · ARTICLE" width={1440} height={1100} background="#06070A">
+          <ForzaArticleScreen/>
+        </DCArtboard>
+      </DCSection>
+    </DesignCanvas>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>

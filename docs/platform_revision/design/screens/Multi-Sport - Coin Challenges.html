@@ -1,0 +1,1947 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FantasyKit — Multi-Sport Expansion</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Archivo:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<template id="__bundler_thumbnail">
+<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+<rect width="100" height="100" fill="#18202E"/>
+<circle cx="28" cy="56" r="13" fill="#1A6FA8" opacity=".85"/>
+<circle cx="50" cy="56" r="13" fill="#C1391B" opacity=".85"/>
+<circle cx="72" cy="56" r="13" fill="#1A8A6B" opacity=".85"/>
+<rect x="20" y="26" width="60" height="2.5" rx="1.25" fill="rgba(255,255,255,.14)"/>
+</svg>
+</template>
+<style>
+/* ── TOKENS ──────────────────────────────────────────────── */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#F7F3ED;--bg2:#F1ECE3;--card:#FFFFFF;--elev:#EDEAE2;
+  --shell:#18202E;--shell2:#202B3D;
+  --text:#18202E;--text2:#4B5568;--mute:#8A97A8;
+  --rule:#E2DDD5;--rule2:#ECE7DF;
+  --accent:#1A6FA8;--abg:rgba(26,111,168,.08);--a2:#15597f;
+  --gold:#B8720E;--gbg:rgba(184,114,14,.10);
+  --pos:#166534;--pbg:rgba(22,101,52,.10);
+  --neg:#B91C1C;--nbg:rgba(185,28,28,.08);
+  --f1:#C1391B;--f1bg:rgba(193,57,27,.09);
+  --ten:#1A8A6B;--tenbg:rgba(26,138,107,.09);
+  --r:6px;--rsm:4px;--sw:222px
+}
+
+/* ── BASE ────────────────────────────────────────────────── */
+html,body{height:100%;overflow:hidden}
+body{
+  font-family:'Archivo',system-ui,sans-serif;font-size:13.5px;
+  color:var(--text);background:#0e0e0e;
+  -webkit-font-smoothing:antialiased;line-height:1.5;
+  display:flex;flex-direction:column
+}
+.mono{font-family:'JetBrains Mono',monospace}
+.blk{font-family:'Archivo Black',sans-serif;letter-spacing:-0.02em}
+
+/* ── PROTO BAR ───────────────────────────────────────────── */
+.pbar{
+  background:#0e0e0e;border-bottom:1px solid rgba(255,255,255,.07);
+  padding:7px 16px;display:flex;align-items:center;gap:4px;
+  flex-shrink:0;overflow-x:auto;scrollbar-width:none
+}
+.pbar::-webkit-scrollbar{display:none}
+.plbl{
+  font-family:'JetBrains Mono';font-size:8.5px;letter-spacing:.14em;text-transform:uppercase;
+  color:rgba(255,255,255,.28);padding-right:14px;border-right:1px solid rgba(255,255,255,.08);
+  margin-right:8px;white-space:nowrap;flex-shrink:0
+}
+.pb{
+  font-family:'JetBrains Mono';font-size:8px;letter-spacing:.08em;text-transform:uppercase;
+  padding:5px 11px;border-radius:4px;border:1px solid rgba(255,255,255,.08);
+  color:rgba(255,255,255,.38);cursor:pointer;background:transparent;
+  white-space:nowrap;transition:all .12s;flex-shrink:0
+}
+.pb:hover{color:rgba(255,255,255,.75);background:rgba(255,255,255,.06)}
+.pb.on{border-color:transparent;color:#fff}
+.pb.on[data-c="home"]{background:var(--accent)}
+.pb.on[data-c="f1"]{background:var(--f1)}
+.pb.on[data-c="ten"]{background:var(--ten)}
+.pb.on[data-c="trophy"]{background:var(--gold)}
+.pb.on[data-c="group"]{background:var(--shell2);border:1px solid rgba(255,255,255,.14)}
+.pb.on[data-c="chal"]{background:var(--gold)}
+.si.on[data-s="chal"] .sdot{background:var(--gold)}
+.shtab.on.gold::after{background:var(--gold)}
+@keyframes chpls{0%,100%{opacity:1}50%{opacity:.3}}
+
+/* ═══════════════════════════════════════════════════════════
+   SCREEN 8 — COIN CHALLENGES
+   ═══════════════════════════════════════════════════════════ */
+.ci{display:inline-flex;align-items:center;justify-content:center;border-radius:50%;background:linear-gradient(145deg,#D4880F,#B8720E);color:#fff;font-family:'Archivo Black',sans-serif;box-shadow:inset 0 -1px 0 rgba(0,0,0,.2);flex-shrink:0;width:15px;height:15px;font-size:7.5px;line-height:1}
+.ci.lg{width:20px;height:20px;font-size:10px}
+.ci.xl{width:26px;height:26px;font-size:13px}
+.ci.sm{width:11px;height:11px;font-size:5.5px}
+.ca{display:inline-flex;align-items:center;gap:5px}
+.can{font-family:'Archivo Black',sans-serif;color:var(--gold);letter-spacing:-0.02em;line-height:1;font-size:15px}
+.ca.xl .can{font-size:34px}
+.ca.lg .can{font-size:20px}
+.ca.sm .can{font-size:12px}
+.can.pos{color:var(--pos)}
+.can.neg{color:var(--neg)}
+.chc{background:var(--card);border:1px solid rgba(184,114,14,.3);border-left:3px solid var(--gold);border-radius:var(--r);padding:12px 14px;display:flex;flex-direction:column;gap:9px}
+.chc-opp{font-family:'Archivo Black',sans-serif;font-size:14px;color:var(--text);letter-spacing:-0.01em}
+.chc-exp{margin-left:auto;font-family:'JetBrains Mono';font-size:8.5px;color:var(--gold);letter-spacing:.04em}
+.chc-sum{font-size:13px;color:var(--text2);line-height:1.45}
+.chc-st{display:flex;align-items:center;gap:20px}
+.chc-sl{font-family:'JetBrains Mono';font-size:7.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--mute);margin-bottom:4px}
+.chc-acts{display:flex;gap:8px}
+.chc-acc{flex:1;padding:9px 0;border-radius:var(--r);cursor:pointer;background:transparent;border:1.5px solid var(--gold);font-family:'JetBrains Mono';font-size:8.5px;letter-spacing:.14em;text-transform:uppercase;font-weight:600;color:var(--gold);transition:all .12s}
+.chc-acc:hover{background:var(--gold);color:#fff}
+.chc-dec{flex:1;padding:9px 0;border-radius:var(--r);cursor:pointer;background:transparent;border:1px solid var(--rule);font-family:'JetBrains Mono';font-size:8.5px;letter-spacing:.14em;text-transform:uppercase;font-weight:500;color:var(--text2)}
+.opc{background:var(--card);border:1px solid var(--rule);border-left:3px solid var(--accent);border-radius:var(--r);padding:11px 13px;display:flex;flex-direction:column;gap:7px}
+.opc-hd{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.opc-to{font-family:'Archivo Black',sans-serif;font-size:14px;color:var(--text);letter-spacing:-0.01em}
+.opc-wait{margin-left:auto;font-family:'JetBrains Mono';font-size:8px;color:var(--mute)}
+.opc-sum{font-size:13px;color:var(--text2);line-height:1.45}
+.lvc{background:var(--card);border:1px solid rgba(22,101,52,.28);border-left:3px solid var(--pos);border-radius:var(--r);overflow:hidden}
+.lvc-hd{padding:9px 13px;border-bottom:1px solid var(--rule);display:flex;align-items:center;gap:8px}
+.lvc-vs{display:flex}
+.lvc-side{flex:1;padding:12px 10px;text-align:center}
+.lvc-side.lead{background:var(--pbg)}
+.lvc-sep{width:1px;background:var(--rule);align-self:stretch}
+.lvc-lbl{font-family:'JetBrains Mono';font-size:7.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--mute);margin-bottom:4px}
+.lvc-lbl.lead{color:var(--pos)}
+.lvc-scr{font-family:'Archivo Black',sans-serif;font-size:34px;letter-spacing:-0.03em;line-height:1;color:var(--text)}
+.lvc-scr.lead{color:var(--pos)}
+.lvc-ft{display:flex;align-items:center;justify-content:space-between;padding:8px 13px;background:var(--elev);border-top:1px solid var(--rule);font-family:'JetBrains Mono';font-size:8.5px}
+.stld{background:var(--card);border:1px solid var(--rule);border-radius:var(--r);padding:10px 13px;display:flex;align-items:center;gap:12px}
+.stld-inf{flex:1;min-width:0}
+.stld-hd{display:flex;align-items:center;gap:7px;margin-bottom:2px}
+.stld-nm{font-family:'Archivo Black',sans-serif;font-size:13px;color:var(--text);letter-spacing:-0.01em}
+.stld-sub{font-family:'JetBrains Mono';font-size:8px;color:var(--mute);letter-spacing:.04em}
+.stld-amt{text-align:right;flex-shrink:0}
+.stld-n{font-family:'Archivo Black',sans-serif;font-size:15px;letter-spacing:-0.02em}
+.stld-n.win{color:var(--pos)}
+.stld-n.loss{color:var(--neg)}
+.stld-n.draw{color:var(--mute)}
+.stld-lbl{font-family:'JetBrains Mono';font-size:7.5px;color:var(--mute);margin-top:2px}
+.btn-p.g{background:var(--gold)}.btn-p.g:hover{background:#9a5e0b}
+.fl-chk{width:16px;height:16px;border-radius:50%;border:2px solid var(--rule);flex-shrink:0;display:grid;place-items:center;transition:all .12s}
+.fl-chk.on{border-color:var(--accent);background:var(--accent)}
+.step-prog{display:flex;gap:6px;padding:0 0 14px}
+.step-dot{height:3px;flex:1;border-radius:3px}
+.step-dot.done{background:var(--accent)}
+.step-dot.curr{background:var(--gold)}
+.step-dot.next{background:var(--rule)}
+.fl-prop{background:var(--card);border:2px solid var(--rule);border-radius:var(--r);overflow:hidden;cursor:pointer;transition:border-color .14s}
+.fl-prop.sel{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent),0 8px 24px -10px rgba(26,111,168,.25)}
+.fl-prop:hover:not(.sel){border-color:rgba(26,111,168,.4)}
+.fl-row{display:flex;align-items:center;gap:10px;padding:10px 6px;border-bottom:1px solid var(--rule2);cursor:pointer;transition:background .1s}
+.fl-row:last-child{border-bottom:0}
+.fl-row.sel{background:var(--abg);border-radius:var(--rsm);border-bottom:none;margin-bottom:2px}
+
+
+.psep{width:1px;height:12px;background:rgba(255,255,255,.1);margin:0 4px;flex-shrink:0}
+
+/* ── APP SHELL ───────────────────────────────────────────── */
+.app{display:flex;flex:1;overflow:hidden}
+
+/* ── SIDEBAR ─────────────────────────────────────────────── */
+.sbar{width:var(--sw);flex-shrink:0;background:var(--shell);display:flex;flex-direction:column;overflow:hidden}
+.sbar-brand{padding:16px 14px 13px;border-bottom:1px solid rgba(255,255,255,.07);display:flex;align-items:center;gap:9px}
+.sbar-mark{width:24px;height:24px;border-radius:5px;background:var(--accent);display:grid;place-items:center;font-family:'Archivo Black';font-size:11px;color:#fff;flex-shrink:0}
+.sbar-name{font-family:'Archivo Black';font-size:13px;color:#fff;letter-spacing:-0.01em}
+.sbar-name em{color:rgba(255,255,255,.32);font-style:normal}
+.snav{padding:8px 6px;flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:0;scrollbar-width:none}
+.snav::-webkit-scrollbar{display:none}
+.sngl{font-family:'JetBrains Mono';font-size:7px;letter-spacing:.2em;text-transform:uppercase;color:rgba(255,255,255,.16);padding:10px 8px 4px}
+.si{
+  display:flex;align-items:center;gap:9px;padding:7.5px 10px;
+  border-radius:5px;font-size:12.5px;font-weight:500;
+  color:rgba(255,255,255,.46);cursor:pointer;transition:all .12s;user-select:none
+}
+.si:hover{color:rgba(255,255,255,.78);background:rgba(255,255,255,.05)}
+.si.on{color:#fff;background:rgba(255,255,255,.09)}
+.sdot{width:5px;height:5px;border-radius:50%;background:currentColor;opacity:.5;flex-shrink:0;transition:all .12s}
+.si.on .sdot{opacity:1}
+.si.on[data-s="home"] .sdot{background:var(--accent)}
+.si.on[data-s="f1"] .sdot{background:var(--f1)}
+.si.on[data-s="ten"] .sdot{background:var(--ten)}
+.si.on[data-s="trophy"] .sdot{background:var(--gold)}
+.stag{font-family:'JetBrains Mono';font-size:6.5px;letter-spacing:.08em;text-transform:uppercase;padding:1.5px 5px;border-radius:2px;font-weight:600;flex-shrink:0;margin-left:auto}
+.stag.f1{background:rgba(193,57,27,.2);color:var(--f1)}
+.stag.ten{background:rgba(26,138,107,.2);color:var(--ten)}
+.ssub{padding-left:16px}
+.ssub .si{font-size:12px;padding:6px 10px}
+.ssub .sdot{width:3px;height:3px}
+.sbar-foot{padding:10px 12px;border-top:1px solid rgba(255,255,255,.07);display:flex;align-items:center;gap:9px}
+.sav{width:26px;height:26px;border-radius:50%;background:var(--accent);display:grid;place-items:center;font-family:'Archivo Black';font-size:10px;color:#fff;flex-shrink:0}
+.sun{font-size:12px;color:rgba(255,255,255,.68);font-weight:600}
+.sum{font-family:'JetBrains Mono';font-size:7.5px;letter-spacing:.06em;color:rgba(255,255,255,.26)}
+
+/* ── SCREENS ─────────────────────────────────────────────── */
+.screens{flex:1;overflow:hidden;position:relative}
+.scr{display:none;height:100%;flex-direction:column;overflow:hidden;background:var(--bg)}
+.scr.on{display:flex}
+
+/* Screen head */
+.sh{background:var(--card);border-bottom:1px solid var(--rule);padding:14px 26px 0;flex-shrink:0}
+.sh-top{display:flex;align-items:flex-start;justify-content:space-between;padding-bottom:12px;gap:16px}
+.sh-ey{font-family:'JetBrains Mono';font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:var(--mute);margin-bottom:4px}
+.sh-ttl{font-family:'Archivo Black';font-size:23px;letter-spacing:-0.025em;color:var(--text);line-height:1}
+.sh-r{display:flex;gap:22px;align-items:flex-start;padding-top:2px}
+.kv{text-align:right}
+.kl{font-family:'JetBrains Mono';font-size:7.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--mute);margin-bottom:3px}
+.kn{font-family:'Archivo Black';font-size:18px;letter-spacing:-0.02em}
+.kn.a{color:var(--accent)}.kn.f1{color:var(--f1)}.kn.t{color:var(--ten)}.kn.g{color:var(--gold)}
+.shtabs{display:flex}
+.shtab{font-size:12.5px;font-weight:600;color:var(--mute);padding:9px 14px;position:relative;cursor:pointer;transition:color .12s;white-space:nowrap}
+.shtab:hover{color:var(--text2)}
+.shtab.on{color:var(--text)}
+.shtab.on::after{content:"";position:absolute;left:14px;right:14px;bottom:-1px;height:2px;background:var(--accent);border-radius:1px}
+.shtab.on.f1::after{background:var(--f1)}
+.shtab.on.t::after{background:var(--ten)}
+
+/* Screen body */
+.scb{flex:1;overflow-y:auto;padding:20px 26px;display:flex;gap:20px}
+.scm{flex:1;min-width:0;display:flex;flex-direction:column;gap:16px}
+.scs{width:256px;flex-shrink:0;display:flex;flex-direction:column;gap:14px}
+
+/* ── SHARED COMPONENTS ───────────────────────────────────── */
+.slbl{font-family:'JetBrains Mono';font-size:8.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--mute);margin-bottom:9px}
+.card{background:var(--card);border:1px solid var(--rule);border-radius:var(--r)}
+.ch{padding:12px 15px;border-bottom:1px solid var(--rule);display:flex;align-items:center;justify-content:space-between}
+.ch-t{font-family:'Archivo Black';font-size:13px;letter-spacing:-0.01em}
+.cb{padding:14px 15px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;font-family:'JetBrains Mono';font-size:8.5px;letter-spacing:.12em;text-transform:uppercase;padding:8px 16px;border-radius:var(--r);font-weight:500;cursor:pointer;border:none;white-space:nowrap;transition:all .12s}
+.btn-p{background:var(--accent);color:#fff}.btn-p:hover{background:var(--a2)}
+.btn-p.f1{background:var(--f1)}.btn-p.f1:hover{background:#a5301a}
+.btn-p.t{background:var(--ten)}.btn-p.t:hover{background:#157358}
+.btn-o{border:1.5px solid var(--rule);color:var(--text2);background:transparent}.btn-o:hover{border-color:var(--accent);color:var(--accent)}
+.btn-sm{padding:5px 10px;font-size:7.5px}.btn-lg{padding:12px 24px;font-size:9.5px}.btn-bl{width:100%;display:flex}
+.s-live{display:inline-flex;align-items:center;gap:5px;font-family:'JetBrains Mono';font-size:7.5px;letter-spacing:.1em;text-transform:uppercase;padding:3px 8px;border-radius:100px;background:var(--nbg);color:var(--neg)}
+.s-live::before{content:"";width:4px;height:4px;border-radius:50%;background:currentColor;display:inline-block}
+.s-soon{display:inline-flex;align-items:center;gap:5px;font-family:'JetBrains Mono';font-size:7.5px;letter-spacing:.1em;text-transform:uppercase;padding:3px 8px;border-radius:100px;background:var(--abg);color:var(--accent)}
+.s-done{display:inline-flex;align-items:center;gap:5px;font-family:'JetBrains Mono';font-size:7.5px;letter-spacing:.1em;text-transform:uppercase;padding:3px 8px;border-radius:100px;background:var(--elev);color:var(--mute)}
+.spil{font-family:'JetBrains Mono';font-size:7px;letter-spacing:.1em;text-transform:uppercase;padding:2px 7px;border-radius:100px;font-weight:600}
+.spil.fb{background:var(--abg);color:var(--accent)}.spil.f1{background:var(--f1bg);color:var(--f1)}
+.spil.ten{background:var(--tenbg);color:var(--ten)}.spil.grass{background:var(--tenbg);color:var(--ten)}
+.spil.neu{background:var(--elev);color:var(--text2)}
+
+/* Leaderboard */
+.lg{display:grid;align-items:center}
+.lhd{border-bottom:2px solid var(--rule);padding:0 6px 7px}
+.lhd span{font-family:'JetBrains Mono';font-size:7.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--mute)}
+.lr{padding:10px 6px;border-bottom:1px solid var(--rule2)}
+.lr:last-child{border-bottom:0}
+.lr.me{background:var(--abg);border-radius:var(--rsm);border-bottom:none;margin-bottom:2px}
+.lr.me.f1{background:var(--f1bg)}.lr.me.t{background:var(--tenbg)}
+.lrk{font-family:'Archivo Black';font-size:12px;color:var(--mute)}
+.lrk.top{color:var(--accent)}.lrk.topf1{color:var(--f1)}.lrk.topt{color:var(--ten)}
+.lnm{font-family:'Archivo Black';font-size:13px;letter-spacing:-0.01em;color:var(--text);display:flex;align-items:center;gap:7px}
+.ytag{font-family:'JetBrains Mono';font-size:6px;letter-spacing:.1em;text-transform:uppercase;border:1px solid var(--accent);color:var(--accent);border-radius:2px;padding:1px 3px}
+.ytag.f1{border-color:var(--f1);color:var(--f1)}.ytag.t{border-color:var(--ten);color:var(--ten)}
+.lnum{font-family:'Archivo Black';font-size:14px;text-align:right;letter-spacing:-0.01em;color:var(--accent)}
+.lnum.f1{color:var(--f1)}.lnum.t{color:var(--ten)}
+.lnum.sub{color:var(--text2);font-size:11px;font-family:'Archivo';font-weight:400}
+.ltrd{font-size:11px;text-align:right}.ltrd.up{color:var(--pos)}.ltrd.dn{color:var(--neg)}.ltrd.fl{color:var(--mute)}
+
+/* Deadline banner */
+.dl{display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--rule);border-left:3px solid var(--accent);border-radius:var(--r);padding:12px 15px}
+.dl.f1{border-left-color:var(--f1)}.dl.t{border-left-color:var(--ten)}.dl.g{border-left-color:var(--gold)}
+.dlc{display:flex;flex-direction:column;align-items:center;justify-content:center;background:var(--abg);border-radius:var(--rsm);padding:7px 12px;min-width:58px;flex-shrink:0}
+.dlc.f1{background:var(--f1bg)}.dlc.t{background:var(--tenbg)}.dlc.g{background:var(--gbg)}
+.dlcn{font-family:'Archivo Black';font-size:17px;letter-spacing:-0.02em;color:var(--accent);line-height:1}
+.dlcn.f1{color:var(--f1)}.dlcn.t{color:var(--ten)}.dlcn.g{color:var(--gold)}
+.dlcl{font-family:'JetBrains Mono';font-size:7px;letter-spacing:.12em;text-transform:uppercase;color:var(--mute);margin-top:2px}
+.dlb{flex:1;min-width:0}
+.dley{font-family:'JetBrains Mono';font-size:7.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--mute);margin-bottom:3px}
+.dltt{font-family:'Archivo Black';font-size:14px;color:var(--text);letter-spacing:-0.01em;line-height:1.1}
+.dlsb{font-size:11px;color:var(--text2);margin-top:2px}
+
+/* Points guide row */
+.ptrow{display:flex;justify-content:space-between;align-items:center;font-size:12px;padding:5px 0;border-bottom:1px solid var(--rule2)}
+.ptrow:last-child{border-bottom:0}
+.ptrow span{color:var(--text2)}.ptrow strong{font-family:'Archivo Black';font-size:13px;letter-spacing:-0.01em}
+
+/* ═══════════════════════════════════════════════════════════
+   SCREEN 1 — MULTI-SPORT HOME
+   ═══════════════════════════════════════════════════════════ */
+.smod-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.smod{background:var(--card);border:1px solid var(--rule);border-radius:var(--r);overflow:hidden;cursor:pointer;transition:box-shadow .15s}
+.smod:hover{box-shadow:0 4px 16px -8px rgba(24,32,46,.18)}
+.smod-bar{height:3px}
+.smod-bar.fb{background:var(--accent)}.smod-bar.f1{background:var(--f1)}.smod-bar.ten{background:var(--ten)}
+.smod-in{padding:14px 16px 16px}
+.smod-hd{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:11px}
+.smod-name{font-family:'Archivo Black';font-size:15px;letter-spacing:-0.01em}
+.smod-league{font-family:'JetBrains Mono';font-size:7.5px;letter-spacing:.1em;color:var(--mute);text-transform:uppercase;margin-top:2px}
+.smod-rkl{font-family:'JetBrains Mono';font-size:7.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--mute)}
+.smod-big{font-family:'Archivo Black';font-size:30px;letter-spacing:-0.03em;line-height:1}
+.smod-big.fb{color:var(--accent)}.smod-big.f1{color:var(--f1)}.smod-big.ten{color:var(--ten)}
+.smod-stats{display:flex;gap:14px;margin-top:7px}
+.smod-sv{font-family:'Archivo Black';font-size:12px}.smod-sl{font-family:'JetBrains Mono';font-size:7px;letter-spacing:.08em;text-transform:uppercase;color:var(--mute)}
+.smod-act{margin-top:13px;border-top:1px solid var(--rule2);padding-top:11px;display:flex;align-items:center;justify-content:space-between;gap:10px}
+.smod-nx{font-size:12px;color:var(--text2);line-height:1.35}
+.smod-nx strong{display:block;font-weight:600;font-size:12.5px;color:var(--text)}
+.smod-dl{font-family:'JetBrains Mono';font-size:7.5px;letter-spacing:.08em;color:var(--gold)}
+
+/* Gazette */
+.gaz{display:flex;flex-direction:column}
+.gitem{display:flex;align-items:flex-start;gap:11px;padding:11px 0;border-bottom:1px solid var(--rule2)}
+.gitem:last-child{border-bottom:0}
+.gdot{width:7px;height:7px;border-radius:50%;flex-shrink:0;margin-top:4px}
+.gdot.fb{background:var(--accent)}.gdot.f1{background:var(--f1)}.gdot.ten{background:var(--ten)}
+.ghl{font-size:13.5px;font-weight:600;color:var(--text);line-height:1.35;flex:1}
+.gme{font-family:'JetBrains Mono';font-size:8px;letter-spacing:.08em;color:var(--mute);margin-top:3px}
+.gpts{font-family:'Archivo Black';font-size:15px;flex-shrink:0}
+.gpts.fb{color:var(--accent)}.gpts.f1{color:var(--f1)}.gpts.ten{color:var(--ten)}
+
+/* Trophy teaser */
+.tsr{background:var(--shell);border-radius:var(--r);padding:16px 20px;display:flex;align-items:center;gap:16px;color:#fff}
+.tsrn{font-family:'Archivo Black';font-size:36px;letter-spacing:-0.03em;line-height:1;flex-shrink:0;color:var(--gold)}
+.tsrl{font-family:'JetBrains Mono';font-size:7.5px;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.38);margin-top:2px}
+.tsrb{flex:1}
+.tsrh{font-family:'Archivo Black';font-size:15px;letter-spacing:-0.01em;line-height:1.2}
+.tsrs{font-size:12px;color:rgba(255,255,255,.55);margin-top:4px}
+.tsrrow{display:flex;gap:8px;margin-top:10px}
+.tsrico{width:26px;height:26px;border-radius:5px;display:grid;place-items:center;font-size:13px}
+.tsrico.fb{background:rgba(26,111,168,.25)}.tsrico.f1{background:rgba(193,57,27,.25)}.tsrico.ten{background:rgba(26,138,107,.25)}
+
+/* ═══════════════════════════════════════════════════════════
+   SCREEN 2 — F1 PREDICTION FORM
+   ═══════════════════════════════════════════════════════════ */
+.race-hdr{background:var(--card);border:1px solid var(--rule);border-radius:var(--r);padding:18px 22px;display:flex;align-items:center;gap:18px}
+.race-emb{width:52px;height:52px;border-radius:8px;background:var(--f1bg);display:grid;place-items:center;flex-shrink:0}
+.race-gp{font-family:'Archivo Black';font-size:20px;letter-spacing:-0.02em;line-height:1}
+.race-circ{font-family:'JetBrains Mono';font-size:9px;letter-spacing:.1em;color:var(--mute);text-transform:uppercase;margin-top:4px}
+.race-meta{display:flex;gap:8px;margin-top:7px;flex-wrap:wrap;align-items:center}
+.race-cd{margin-left:auto;text-align:right;flex-shrink:0}
+.race-cdn{font-family:'Archivo Black';font-size:26px;letter-spacing:-0.03em;color:var(--f1);line-height:1}
+.race-cdl{font-family:'JetBrains Mono';font-size:7.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--mute)}
+
+.pred-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.pf{background:var(--card);border:1px solid var(--rule);border-radius:var(--r);padding:13px 15px;cursor:pointer;transition:border-color .14s}
+.pf:hover{border-color:var(--f1)}
+.pf.filled{border-color:rgba(193,57,27,.4)}
+.pf.p1{border-top:2.5px solid var(--gold)}.pf.p2{border-top:2.5px solid var(--mute)}.pf.p3{border-top:2.5px solid #A0522D}
+.pf.dnf{border-top:2.5px solid var(--neg)}.pf.team{border-top:2.5px solid var(--f1)}.pf.spec{border-top:2.5px solid var(--ten)}
+.pf-lbl{font-family:'JetBrains Mono';font-size:8px;letter-spacing:.14em;text-transform:uppercase;color:var(--mute);margin-bottom:7px}
+.pf-drv{font-family:'Archivo Black';font-size:16px;letter-spacing:-0.01em;color:var(--text);line-height:1}
+.pf-drv.empty{font-family:'Archivo';font-weight:400;font-size:13px;color:var(--mute)}
+.pf-team{display:flex;align-items:center;gap:6px;margin-top:4px}
+.tdot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.tdot.rbr{background:#1E41FF}.tdot.fer{background:#DC0000}.tdot.mcl{background:#FF8000}
+.tdot.mer{background:#00D2BE}.tdot.ast{background:#006F62}.tdot.wil{background:#64B5F6}
+.pf-sub{font-family:'JetBrains Mono';font-size:8px;letter-spacing:.06em;color:var(--mute)}
+
+.seascol{background:var(--card);border:1px solid var(--rule);border-radius:var(--r);overflow:hidden}
+.seascol-hd{padding:12px 15px;display:flex;align-items:center;justify-content:space-between;cursor:pointer}
+.seascol-t{font-family:'Archivo Black';font-size:13px;letter-spacing:-0.01em;display:flex;align-items:center;gap:10px}
+.seascol-tog{font-family:'JetBrains Mono';font-size:8px;letter-spacing:.1em;text-transform:uppercase;color:var(--accent)}
+.seascol-body{padding:12px 15px;border-top:1px solid var(--rule);display:grid;grid-template-columns:1fr 1fr;gap:10px}
+
+.sub-state{background:var(--pbg);border:1.5px solid var(--pos);border-radius:var(--r);padding:13px 16px;display:flex;align-items:center;gap:11px}
+.sub-ck{width:28px;height:28px;border-radius:50%;background:var(--pos);display:grid;place-items:center;color:#fff;font-size:13px;flex-shrink:0}
+.sub-ttl{font-family:'Archivo Black';font-size:14px;letter-spacing:-0.01em;color:var(--pos)}
+.sub-meta{font-size:11.5px;color:var(--text2)}
+
+/* ═══════════════════════════════════════════════════════════
+   SCREEN 3 — F1 RESULTS
+   ═══════════════════════════════════════════════════════════ */
+.podium{display:flex;align-items:flex-end;justify-content:center;gap:14px;background:var(--card);border:1px solid var(--rule);border-radius:var(--r);padding:20px 22px}
+.pod{display:flex;flex-direction:column;align-items:center;gap:6px;flex:1;max-width:150px}
+.podplat{width:100%;border-radius:6px 6px 0 0;display:flex;align-items:flex-end;justify-content:center;padding-bottom:8px}
+.pod.p1 .podplat{background:rgba(184,114,14,.1);border-top:3px solid var(--gold);height:88px}
+.pod.p2 .podplat{background:rgba(138,151,168,.1);border-top:3px solid var(--mute);height:66px}
+.pod.p3 .podplat{background:rgba(160,82,45,.08);border-top:3px solid #A0522D;height:50px}
+.pod-pos{font-family:'Archivo Black';font-size:26px;color:var(--text);letter-spacing:-0.02em}
+.pod.p1 .pod-pos{color:var(--gold);font-size:32px}
+.pod-drv{font-family:'Archivo Black';font-size:14px;letter-spacing:-0.01em;text-align:center}
+.pod-tm{font-family:'JetBrains Mono';font-size:8px;letter-spacing:.08em;text-transform:uppercase;color:var(--mute);text-align:center}
+
+.cmpg{display:grid;align-items:center}
+.cmphd{border-bottom:2px solid var(--rule);padding:0 6px 7px}
+.cmphd span{font-family:'JetBrains Mono';font-size:7.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--mute)}
+.cmpr{padding:9px 6px;border-bottom:1px solid var(--rule2)}
+.cmpr:last-child{border-bottom:0}
+.cmpl{font-family:'JetBrains Mono';font-size:8px;letter-spacing:.12em;text-transform:uppercase;color:var(--mute)}
+.cmpm,.cmpa{font-family:'Archivo Black';font-size:13px;letter-spacing:-0.01em}
+.cmpico{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;flex-shrink:0;font-size:11px}
+.cmpico.ok{background:var(--pbg);color:var(--pos)}.cmpico.x{background:var(--nbg);color:var(--neg)}
+.cmppts{font-family:'Archivo Black';font-size:14px;color:var(--f1);text-align:right;letter-spacing:-0.01em}
+.cmppts.z{color:var(--mute)}
+
+/* ═══════════════════════════════════════════════════════════
+   SCREEN 4 — TENNIS LOBBY
+   ═══════════════════════════════════════════════════════════ */
+.th{background:var(--card);border:1px solid var(--rule);border-radius:var(--r);padding:18px 22px;display:flex;align-items:center;gap:18px}
+.th-emb{width:52px;height:52px;border-radius:8px;background:var(--tenbg);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.th-name{font-family:'Archivo Black';font-size:20px;letter-spacing:-0.02em;line-height:1}
+.th-info{display:flex;gap:8px;align-items:center;margin-top:7px;flex-wrap:wrap}
+.th-cd{margin-left:auto;text-align:right;flex-shrink:0}
+.th-cdn{font-family:'Archivo Black';font-size:26px;letter-spacing:-0.03em;color:var(--ten);line-height:1}
+.th-cdl{font-family:'JetBrains Mono';font-size:7.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--mute)}
+
+.pslots{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}
+.pslot{background:var(--card);border:1.5px dashed var(--rule);border-radius:var(--r);padding:13px 12px;display:flex;flex-direction:column;gap:7px;cursor:pointer;transition:all .13s;min-height:100px;position:relative}
+.pslot.filled{border-style:solid;border-color:var(--ten);background:var(--tenbg)}
+.pslot.captain{border-color:var(--gold);background:var(--gbg)}
+.pslot.empty:hover{border-color:var(--ten);background:rgba(26,138,107,.04)}
+.psn{font-family:'JetBrains Mono';font-size:8px;letter-spacing:.14em;text-transform:uppercase;color:var(--mute)}
+.psp{font-family:'Archivo Black';font-size:13.5px;letter-spacing:-0.01em;line-height:1.2}
+.psp.empty{font-family:'Archivo';font-weight:400;font-size:12.5px;color:var(--mute)}
+.psseed{font-family:'JetBrains Mono';font-size:8px;letter-spacing:.06em;color:var(--mute)}
+.capbadge{position:absolute;top:7px;right:7px;background:var(--gold);color:#fff;font-family:'Archivo Black';font-size:8.5px;padding:2px 6px;border-radius:3px}
+.pscta{font-family:'JetBrains Mono';font-size:7.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--mute);margin-top:auto}
+
+.ppg{display:grid;align-items:center}
+.pphd{border-bottom:2px solid var(--rule);padding:0 6px 7px}
+.pphd span{font-family:'JetBrains Mono';font-size:7.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--mute)}
+.ppr{padding:9px 6px;border-bottom:1px solid var(--rule2);cursor:pointer;transition:background .1s}
+.ppr:hover{background:var(--bg2);border-radius:var(--rsm)}
+.ppr:last-child{border-bottom:0}
+.ppseed{font-family:'Archivo Black';font-size:12px;color:var(--mute)}
+.ppseed.top{color:var(--ten)}
+.ppname{font-family:'Archivo Black';font-size:13px;letter-spacing:-0.01em}
+.ppnat{font-family:'JetBrains Mono';font-size:8px;letter-spacing:.08em;color:var(--mute)}
+.ppadd{font-family:'JetBrains Mono';font-size:7.5px;letter-spacing:.08em;text-transform:uppercase;padding:4px 10px;border-radius:var(--rsm);border:1.5px solid var(--ten);color:var(--ten);cursor:pointer;transition:all .12s;text-align:right}
+.ppadd:hover{background:var(--ten);color:#fff}.ppadd.picked{background:var(--ten);color:#fff;border-color:var(--ten)}
+
+/* ═══════════════════════════════════════════════════════════
+   SCREEN 5 — TENNIS LIVE
+   ═══════════════════════════════════════════════════════════ */
+.plive-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}
+.plc{background:var(--card);border:1px solid var(--rule);border-radius:var(--r);padding:13px 12px;display:flex;flex-direction:column;gap:8px;position:relative}
+.plc.captain{border-color:var(--gold)}.plc.elim{opacity:.52}
+.plcname{font-family:'Archivo Black';font-size:13px;letter-spacing:-0.01em;line-height:1.2}
+.plcpts{font-family:'Archivo Black';font-size:24px;letter-spacing:-0.02em;color:var(--ten);line-height:1}
+.plcpts.cap{color:var(--gold)}
+.plcptsl{font-family:'JetBrains Mono';font-size:7px;letter-spacing:.1em;text-transform:uppercase;color:var(--mute)}
+.plccap{position:absolute;top:7px;right:7px;background:var(--gold);color:#fff;font-family:'Archivo Black';font-size:8px;padding:2px 6px;border-radius:3px}
+.plcst{font-family:'JetBrains Mono';font-size:7.5px;letter-spacing:.08em;text-transform:uppercase}
+.plcst.live{color:var(--gold)}.plcst.adv{color:var(--ten)}.plcst.elim{color:var(--neg)}
+.rnds{display:flex;gap:2px}
+.rnd{height:3px;border-radius:1.5px;flex:1}
+.rnd.won{background:var(--ten)}.rnd.live{background:var(--gold)}.rnd.lost{background:var(--neg)}.rnd.empty{background:var(--rule)}
+
+.ptbk{background:var(--card);border:1px solid var(--rule);border-radius:var(--r);overflow:hidden}
+.ptbk-hd{display:grid;background:var(--bg2);padding:9px 14px;border-bottom:1px solid var(--rule)}
+.ptbk-hd span{font-family:'JetBrains Mono';font-size:7.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--mute);text-align:right}
+.ptbk-hd span:first-child{text-align:left}
+.ptbk-r{display:grid;padding:9px 14px;border-bottom:1px solid var(--rule2);align-items:center}
+.ptbk-r:last-child{border-bottom:0}
+.ptbkn{font-family:'Archivo Black';font-size:13px;letter-spacing:-0.01em}
+.ptbkc{font-family:'JetBrains Mono';font-size:11px;color:var(--text2);text-align:right}
+.ptbkc.s{color:var(--ten);font-weight:600}.ptbkc.cap{color:var(--gold);font-weight:600}.ptbkc.z{color:var(--mute);opacity:.6}
+.ptbkt{font-family:'Archivo Black';font-size:14px;color:var(--ten);text-align:right;letter-spacing:-0.01em}
+.ptbkt.cap{color:var(--gold)}
+
+/* ═══════════════════════════════════════════════════════════
+   SCREEN 6 — TROPHY CABINET
+   ═══════════════════════════════════════════════════════════ */
+.profhdr{background:var(--shell);padding:24px 26px 22px;display:flex;gap:20px;align-items:flex-start;flex-shrink:0}
+.profav{width:58px;height:58px;border-radius:10px;background:var(--accent);display:grid;place-items:center;font-family:'Archivo Black';font-size:23px;color:#fff;flex-shrink:0}
+.profname{font-family:'Archivo Black';font-size:23px;color:#fff;letter-spacing:-0.02em;line-height:1}
+.profsports{display:flex;gap:14px;margin-top:7px;flex-wrap:wrap}
+.profsr{display:flex;align-items:center;gap:5px;font-size:12px;color:rgba(255,255,255,.55)}
+.profsr strong{color:#fff;font-weight:700}
+.profdot{width:5px;height:5px;border-radius:50%;flex-shrink:0}
+.profdot.fb{background:var(--accent)}.profdot.f1{background:var(--f1)}.profdot.ten{background:var(--ten)}
+.profr{margin-left:auto;text-align:center;flex-shrink:0}
+.profrn{font-family:'Archivo Black';font-size:38px;color:var(--gold);letter-spacing:-0.03em;line-height:1}
+.profrl{font-family:'JetBrains Mono';font-size:7.5px;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.35)}
+.profstats{display:flex;gap:26px;margin-top:18px;padding-top:16px;border-top:1px solid rgba(255,255,255,.09)}
+.psv{font-family:'Archivo Black';font-size:24px;color:#fff;letter-spacing:-0.02em}
+.psl{font-family:'JetBrains Mono';font-size:7.5px;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.3);margin-top:1px}
+
+.tshelf{display:flex;flex-direction:column;gap:18px}
+.tsh-hd{display:flex;align-items:center;gap:9px;margin-bottom:10px}
+.tsh-nm{font-family:'Archivo Black';font-size:13.5px;letter-spacing:-0.01em}
+.trophies{display:flex;gap:9px;flex-wrap:wrap}
+.tcard{background:var(--card);border:1px solid var(--rule);border-radius:var(--r);padding:11px 13px;min-width:108px}
+.tcard-ico{font-size:18px;margin-bottom:5px}
+.tcard-nm{font-family:'Archivo Black';font-size:11.5px;letter-spacing:-0.01em;line-height:1.25}
+.tcard-dt{font-family:'JetBrains Mono';font-size:7.5px;letter-spacing:.08em;color:var(--mute);margin-top:3px}
+
+.spbk{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.spbk-c{background:var(--card);border:1px solid var(--rule);border-radius:var(--r);padding:14px 15px}
+.spbk-nm{font-family:'JetBrains Mono';font-size:8px;letter-spacing:.14em;text-transform:uppercase;color:var(--mute);margin-bottom:7px}
+.spbk-rk{font-family:'Archivo Black';font-size:27px;letter-spacing:-0.03em;line-height:1}
+.spbk-rk.fb{color:var(--accent)}.spbk-rk.f1{color:var(--f1)}.spbk-rk.ten{color:var(--ten)}
+.spbk-d{font-size:11.5px;color:var(--text2);margin-top:5px}
+
+.actv{display:flex;flex-direction:column}
+.ai{display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px solid var(--rule2)}
+.ai:last-child{border-bottom:0}
+.aidot{width:7px;height:7px;border-radius:50%;flex-shrink:0;margin-top:5px}
+.aidot.fb{background:var(--accent)}.aidot.f1{background:var(--f1)}.aidot.ten{background:var(--ten)}
+.aitxt{font-size:12.5px;color:var(--text);line-height:1.45;flex:1}
+.aidt{font-family:'JetBrains Mono';font-size:7.5px;letter-spacing:.08em;color:var(--mute);flex-shrink:0}
+
+/* ═══════════════════════════════════════════════════════════
+   SCREEN 7 — GROUP HUB
+   ═══════════════════════════════════════════════════════════ */
+.grphdr{background:var(--shell);padding:20px 26px;display:flex;gap:18px;align-items:center;flex-shrink:0}
+.grpico{width:48px;height:48px;border-radius:9px;background:rgba(255,255,255,.1);display:grid;place-items:center;font-family:'Archivo Black';font-size:15px;color:rgba(255,255,255,.55);flex-shrink:0}
+.grpname{font-family:'Archivo Black';font-size:21px;color:#fff;letter-spacing:-0.02em}
+.grpmbs{display:flex;align-items:center;margin-top:7px}
+.grpav{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;font-family:'Archivo Black';font-size:9px;color:#fff;border:2px solid var(--shell);margin-right:-6px}
+.grpmc{font-family:'JetBrains Mono';font-size:8px;letter-spacing:.08em;color:rgba(255,255,255,.45);margin-left:14px}
+.grpr{margin-left:auto;display:flex;gap:24px}
+.grpsv{font-family:'Archivo Black';font-size:20px;color:#fff;letter-spacing:-0.02em;text-align:right}
+.grpsl{font-family:'JetBrains Mono';font-size:7px;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.3);text-align:right}
+
+.glgs{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.glg{background:var(--card);border:1px solid var(--rule);border-radius:var(--r);overflow:hidden}
+.glg-bar{height:3px}.glg-bar.fb{background:var(--accent)}.glg-bar.f1{background:var(--f1)}.glg-bar.ten{background:var(--ten)}
+.glg-b{padding:13px 15px}
+.glg-nm{font-family:'Archivo Black';font-size:13.5px;letter-spacing:-0.01em}
+.glg-lead{font-size:12px;color:var(--text2);margin-top:5px}
+.glg-lead strong{color:var(--text);font-weight:600}
+.glg-pts{font-size:11.5px;color:var(--mute);margin-top:3px;font-family:'JetBrains Mono';letter-spacing:.04em}
+
+.mlbg{display:grid;align-items:center}
+.mlbhd{border-bottom:2px solid var(--rule);padding:0 6px 7px}
+.mlbhd span{font-family:'JetBrains Mono';font-size:7.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--mute);text-align:right}
+.mlbhd .nm-col{text-align:left}
+.mlbr{padding:10px 6px;border-bottom:1px solid var(--rule2);align-items:center}
+.mlbr:last-child{border-bottom:0}
+.mlbr.me{background:var(--abg);border-radius:var(--rsm);border-bottom:none;margin-bottom:2px}
+.mrk{font-family:'Archivo Black';font-size:12.5px;color:var(--mute)}
+.mrk.top{color:var(--accent)}
+.mmgr{font-family:'Archivo Black';font-size:13px;letter-spacing:-0.01em;display:flex;align-items:center;gap:7px}
+.mspt{font-family:'JetBrains Mono';font-size:10px;color:var(--text2);text-align:right}
+.mtot{font-family:'Archivo Black';font-size:14.5px;color:var(--text);text-align:right;letter-spacing:-0.01em}
+
+.feed{display:flex;flex-direction:column}
+.fi{display:flex;gap:10px;align-items:flex-start;padding:11px 0;border-bottom:1px solid var(--rule2)}
+.fi:last-child{border-bottom:0}
+.fiav{width:28px;height:28px;border-radius:50%;flex-shrink:0;display:grid;place-items:center;font-family:'Archivo Black';font-size:10px;color:#fff}
+.fitxt{font-size:12.5px;color:var(--text);line-height:1.45;flex:1}
+.fitxt strong{font-weight:600}
+.fitm{font-family:'JetBrains Mono';font-size:7.5px;letter-spacing:.08em;color:var(--mute);flex-shrink:0}
+</style>
+</head>
+<body>
+
+<!-- PROTOTYPE BAR -->
+<div class="pbar">
+  <span class="plbl">FantasyKit · Multi-Sport</span>
+  <button class="pb on" data-scr="s-home" data-c="home">01 · Home</button>
+  <div class="psep"></div>
+  <button class="pb" data-scr="s-f1p" data-c="f1">02 · F1 Prediction</button>
+  <button class="pb" data-scr="s-f1r" data-c="f1">03 · F1 Results</button>
+  <div class="psep"></div>
+  <button class="pb" data-scr="s-tl" data-c="ten">04 · Tennis Lobby</button>
+  <button class="pb" data-scr="s-tt" data-c="ten">05 · Tennis Live</button>
+  <div class="psep"></div>
+  <button class="pb" data-scr="s-trophy" data-c="trophy">06 · Trophy Cabinet</button>
+  <button class="pb" data-scr="s-group" data-c="group">07 · Group Hub</button>
+  <div class="psep"></div>
+  <button class="pb" data-scr="s-chal" data-c="chal">08 · Coin Challenges</button>
+</div>
+
+<!-- APP -->
+<div class="app">
+
+  <!-- SIDEBAR -->
+  <aside class="sbar">
+    <div class="sbar-brand">
+      <div class="sbar-mark">K</div>
+      <div class="sbar-name">Fantasy<em>Kit</em></div>
+    </div>
+    <nav class="snav">
+      <div class="sngl">Platform</div>
+      <div class="si on" data-s="home" data-scr="s-home"><span class="sdot"></span>Home</div>
+      <div class="sngl">Sports</div>
+      <div class="si" data-s="fb"><span class="sdot"></span>Football<span class="stag" style="background:rgba(26,111,168,.15);color:var(--accent)">GW29</span></div>
+      <div class="si" data-s="f1" data-scr="s-f1p"><span class="sdot"></span>Formula 1<span class="stag f1">F1</span></div>
+      <div class="ssub">
+        <div class="si" data-s="f1" data-scr="s-f1p"><span class="sdot"></span>Race Prediction</div>
+        <div class="si" data-s="f1" data-scr="s-f1r"><span class="sdot"></span>Results</div>
+      </div>
+      <div class="si" data-s="ten" data-scr="s-tl"><span class="sdot"></span>Tennis<span class="stag ten">New</span></div>
+      <div class="ssub">
+        <div class="si" data-s="ten" data-scr="s-tl"><span class="sdot"></span>Wimbledon Lobby</div>
+        <div class="si" data-s="ten" data-scr="s-tt"><span class="sdot"></span>Live Tracker</div>
+      </div>
+      <div class="sngl">Community</div>
+      <div class="si" data-s="group" data-scr="s-group"><span class="sdot"></span>My Group</div>
+      <div class="si" data-s="trophy" data-scr="s-trophy"><span class="sdot"></span>Trophy Cabinet</div>
+      <div class="si" data-s="chal" data-scr="s-chal"><span class="sdot"></span>Coin Challenges<span class="stag" style="background:rgba(184,114,14,.15);color:var(--gold)">Beta</span></div>
+    </nav>
+    <div class="sbar-foot">
+      <div class="sav">M</div>
+      <div>
+        <div class="sun">Marco R.</div>
+        <div class="sum">Multi-sport · S2</div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- SCREENS -->
+  <div class="screens">
+
+    <!-- ══════════════════════════════════════════════════
+         SCREEN 1 — MULTI-SPORT HOME
+         ══════════════════════════════════════════════════ -->
+    <div class="scr on" id="s-home">
+      <div class="sh">
+        <div class="sh-top">
+          <div>
+            <div class="sh-ey">Multi-Sport Hub · Season 2</div>
+            <div class="sh-ttl">Good afternoon, Marco</div>
+          </div>
+          <div class="sh-r">
+            <div class="kv"><div class="kl">Active sports</div><div class="kn a">3</div></div>
+            <div class="kv"><div class="kl">Trophies won</div><div class="kn g">7</div></div>
+            <div class="kv"><div class="kl">Group rank</div><div class="kn">#2</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="scb">
+        <div class="scm">
+          <!-- Sport modules -->
+          <div>
+            <div class="slbl">Your active sports</div>
+            <div class="smod-grid">
+              <div class="smod" onclick="goTo('s-home')">
+                <div class="smod-bar fb"></div>
+                <div class="smod-in">
+                  <div class="smod-hd">
+                    <div><div class="smod-name">Football</div><div class="smod-league">Premier League · 11 mgrs</div></div>
+                    <span class="s-live">Live</span>
+                  </div>
+                  <div class="smod-rkl">Your rank</div>
+                  <div class="smod-big fb">#3</div>
+                  <div class="smod-stats">
+                    <div><div class="smod-sv">488</div><div class="smod-sl">Season pts</div></div>
+                    <div><div class="smod-sv">21</div><div class="smod-sl">GW29 pts</div></div>
+                  </div>
+                  <div class="smod-act">
+                    <div class="smod-nx"><strong>GW29 — 2 games tonight</strong>Saka &amp; Haaland playing</div>
+                    <button class="btn btn-p btn-sm">Live →</button>
+                  </div>
+                </div>
+              </div>
+              <div class="smod" onclick="goTo('s-f1p')">
+                <div class="smod-bar f1"></div>
+                <div class="smod-in">
+                  <div class="smod-hd">
+                    <div><div class="smod-name">Formula 1</div><div class="smod-league">Formula Fun · 6 mgrs</div></div>
+                    <span class="s-soon" style="background:var(--f1bg);color:var(--f1)">3 days</span>
+                  </div>
+                  <div class="smod-rkl">Your rank</div>
+                  <div class="smod-big f1">#2</div>
+                  <div class="smod-stats">
+                    <div><div class="smod-sv">168</div><div class="smod-sl">Season pts</div></div>
+                    <div><div class="smod-sv">23</div><div class="smod-sl">Last race pts</div></div>
+                  </div>
+                  <div class="smod-act">
+                    <div class="smod-nx"><strong>British GP picks open</strong><span class="smod-dl">Closes Sat 14:00</span></div>
+                    <button class="btn btn-p f1 btn-sm">Predict →</button>
+                  </div>
+                </div>
+              </div>
+              <div class="smod" onclick="goTo('s-tl')">
+                <div class="smod-bar ten"></div>
+                <div class="smod-in">
+                  <div class="smod-hd">
+                    <div><div class="smod-name">Tennis</div><div class="smod-league">Wimbledon '26 · 6 mgrs</div></div>
+                    <span class="s-live">R4 Live</span>
+                  </div>
+                  <div class="smod-rkl">Your rank</div>
+                  <div class="smod-big ten">#1</div>
+                  <div class="smod-stats">
+                    <div><div class="smod-sv">28</div><div class="smod-sl">Tournament pts</div></div>
+                    <div><div class="smod-sv">3/5</div><div class="smod-sl">Still alive</div></div>
+                  </div>
+                  <div class="smod-act">
+                    <div class="smod-nx"><strong>Alcaraz — Centre Court QF</strong>Your captain is playing</div>
+                    <button class="btn btn-p t btn-sm">Track →</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Gazette -->
+          <div class="card">
+            <div class="ch"><div class="ch-t">Activity Gazette</div><span class="s-done">Today</span></div>
+            <div class="cb">
+              <div class="gaz">
+                <div class="gitem">
+                  <div class="gdot ten"></div>
+                  <div><div class="ghl">Alcaraz survives 5-set thriller — your captain advances to QF</div><div class="gme">Tennis · Wimbledon R4 · 2h ago</div></div>
+                  <div class="gpts ten">+14</div>
+                </div>
+                <div class="gitem">
+                  <div class="gdot fb"></div>
+                  <div><div class="ghl">Bragança closes to 13 pts off top with a 38-point gameweek</div><div class="gme">Football · GW29 · 4h ago</div></div>
+                  <div class="gpts fb">38</div>
+                </div>
+                <div class="gitem">
+                  <div class="gdot f1"></div>
+                  <div><div class="ghl">Bragança nails the British GP podium — takes F1 season lead by 7 pts</div><div class="gme">F1 · British GP · 3 days ago</div></div>
+                  <div class="gpts f1">28</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="scs">
+          <!-- Trophy teaser -->
+          <div class="tsr">
+            <div><div class="tsrn">7</div><div class="tsrl">Trophies</div></div>
+            <div class="tsrb">
+              <div class="tsrh">2nd overall in The Usual Suspects</div>
+              <div class="tsrs">35 pts behind Marco · tight race</div>
+              <div class="tsrrow">
+                <div class="tsrico fb">⚽</div>
+                <div class="tsrico f1">🏁</div>
+                <div class="tsrico ten">🎾</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Group mini-table -->
+          <div class="card">
+            <div class="ch"><div class="ch-t">Group Meta-Rank</div><span class="slbl" style="margin:0">Season 2</span></div>
+            <div class="cb" style="padding:10px 12px">
+              <div class="lg" style="grid-template-columns:22px 1fr 50px">
+                <div class="lhd"><span>#</span><span>Manager</span><span style="text-align:right">Meta</span></div>
+                <div class="lr"><div class="lrk top">1</div><div class="lnm">Marco</div><div class="lnum" style="font-size:13px">728</div></div>
+                <div class="lr me"><div class="lrk">2</div><div class="lnm">You <span class="ytag">You</span></div><div class="lnum" style="font-size:13px">693</div></div>
+                <div class="lr"><div class="lrk">3</div><div class="lnm">Bragança</div><div class="lnum" style="font-size:13px">689</div></div>
+                <div class="lr"><div class="lrk">4</div><div class="lnm">Sapphire</div><div class="lnum" style="font-size:13px">641</div></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Up next -->
+          <div class="card">
+            <div class="ch"><div class="ch-t">Up next</div></div>
+            <div class="cb" style="display:flex;flex-direction:column;gap:10px">
+              <div class="dl t">
+                <div class="dlc t"><div class="dlcn t" style="font-size:15px">QF</div><div class="dlcl">Today</div></div>
+                <div class="dlb">
+                  <div class="dley">Wimbledon QF</div>
+                  <div class="dltt">Alcaraz — Centre Court</div>
+                  <div class="dlsb">Captain 2× active</div>
+                </div>
+              </div>
+              <div class="dl f1">
+                <div class="dlc f1"><div class="dlcn f1">3d</div><div class="dlcl">left</div></div>
+                <div class="dlb">
+                  <div class="dley">British GP · Predictions</div>
+                  <div class="dltt">Set your race picks</div>
+                  <div class="dlsb">Closes Sat 21 Jun 14:00</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════
+         SCREEN 2 — F1 PREDICTION FORM
+         ══════════════════════════════════════════════════ -->
+    <div class="scr" id="s-f1p">
+      <div class="sh">
+        <div class="sh-top">
+          <div>
+            <div class="sh-ey">Formula 1 · Formula Fun League · Round 10</div>
+            <div class="sh-ttl">Race Predictions</div>
+          </div>
+          <div class="sh-r" style="align-items:center">
+            <div class="kv"><div class="kl">Your rank</div><div class="kn f1">#2</div></div>
+            <div class="kv"><div class="kl">Season pts</div><div class="kn">168</div></div>
+            <div style="display:flex;gap:4px;align-items:center;margin-left:4px">
+              <button class="pb on" id="f1-btn-open" data-c="f1" onclick="f1State('open')" style="font-size:8px">Open</button>
+              <button class="pb" id="f1-btn-sub" data-c="f1" onclick="f1State('sub')" style="font-size:8px">Submitted</button>
+            </div>
+          </div>
+        </div>
+        <div class="shtabs">
+          <div class="shtab on f1">Race Picks</div>
+          <div class="shtab">Season Long</div>
+          <div class="shtab">Group Picks</div>
+        </div>
+      </div>
+      <div class="scb">
+        <div class="scm">
+          <!-- Race header -->
+          <div class="race-hdr">
+            <div class="race-emb">
+              <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+                <rect x="3" y="3" width="22" height="22" rx="3" stroke="var(--f1)" stroke-width="1.5" fill="none"/>
+                <rect x="3" y="3" width="7" height="7" fill="var(--f1)" opacity=".5"/>
+                <rect x="17" y="3" width="5" height="7" fill="var(--f1)" opacity=".3"/>
+                <rect x="3" y="15" width="5" height="7" fill="var(--f1)" opacity=".3"/>
+                <rect x="10" y="15" width="7" height="7" fill="var(--f1)" opacity=".5"/>
+                <rect x="20" y="15" width="5" height="7" fill="var(--f1)" opacity=".3"/>
+              </svg>
+            </div>
+            <div>
+              <div class="race-gp">British Grand Prix</div>
+              <div class="race-circ">Silverstone Circuit · Round 10 of 24</div>
+              <div class="race-meta">
+                <span class="spil f1">Formula Fun</span>
+                <span class="s-soon" style="background:var(--f1bg);color:var(--f1)">Picks open</span>
+                <span class="spil neu">6 managers</span>
+              </div>
+            </div>
+            <div class="race-cd">
+              <div class="race-cdn">3d 14h</div>
+              <div class="race-cdl">to race start</div>
+            </div>
+          </div>
+
+          <!-- OPEN STATE -->
+          <div id="f1-open">
+            <div class="slbl">Race predictions — 4 of 6 filled</div>
+            <div class="pred-grid">
+              <div class="pf p1 filled">
+                <div class="pf-lbl">P1 — Race Winner</div>
+                <div class="pf-drv">Max Verstappen</div>
+                <div class="pf-team"><div class="tdot rbr"></div><div class="pf-sub">Red Bull Racing</div></div>
+              </div>
+              <div class="pf p2 filled">
+                <div class="pf-lbl">P2 — Second Place</div>
+                <div class="pf-drv">Lewis Hamilton</div>
+                <div class="pf-team"><div class="tdot fer"></div><div class="pf-sub">Scuderia Ferrari</div></div>
+              </div>
+              <div class="pf p3 filled">
+                <div class="pf-lbl">P3 — Third Place</div>
+                <div class="pf-drv">Lando Norris</div>
+                <div class="pf-team"><div class="tdot mcl"></div><div class="pf-sub">McLaren</div></div>
+              </div>
+              <div class="pf dnf filled">
+                <div class="pf-lbl">DNF Pick</div>
+                <div class="pf-drv">F. Alonso</div>
+                <div class="pf-team"><div class="tdot ast"></div><div class="pf-sub">Aston Martin</div></div>
+              </div>
+              <div class="pf team">
+                <div class="pf-lbl">Team with most points</div>
+                <div class="pf-drv empty">Select constructor…</div>
+                <div class="pf-team"><div class="pf-sub">6 constructors available</div></div>
+              </div>
+              <div class="pf spec">
+                <div class="pf-lbl">Most positions gained</div>
+                <div class="pf-drv empty">Select driver…</div>
+                <div class="pf-team"><div class="pf-sub">Bonus prediction +6 pts</div></div>
+              </div>
+            </div>
+            <!-- Season long collapsible -->
+            <div class="seascol" style="margin-top:12px">
+              <div class="seascol-hd">
+                <div class="seascol-t">Season-long predictions <span class="spil f1">Lock anytime</span></div>
+                <div class="seascol-tog">Show ↓</div>
+              </div>
+            </div>
+            <div style="margin-top:14px;display:flex;gap:10px;align-items:center">
+              <button class="btn btn-p f1 btn-lg">Lock in predictions →</button>
+              <span style="font-size:11.5px;color:var(--mute)">2 fields empty · deadline in 3d 14h</span>
+            </div>
+          </div>
+
+          <!-- SUBMITTED STATE (hidden) -->
+          <div id="f1-sub" style="display:none">
+            <div class="sub-state">
+              <div class="sub-ck">✓</div>
+              <div><div class="sub-ttl">Predictions locked</div><div class="sub-meta">Submitted Tue 11:42 · British GP · 6 of 6 predictions complete</div></div>
+            </div>
+            <div class="slbl" style="margin-top:16px">Your locked picks</div>
+            <div class="pred-grid">
+              <div class="pf p1 filled" style="cursor:default"><div class="pf-lbl">P1 — Race Winner</div><div class="pf-drv">Max Verstappen</div><div class="pf-team"><div class="tdot rbr"></div><div class="pf-sub">Red Bull Racing</div></div></div>
+              <div class="pf p2 filled" style="cursor:default"><div class="pf-lbl">P2 — Second Place</div><div class="pf-drv">Lewis Hamilton</div><div class="pf-team"><div class="tdot fer"></div><div class="pf-sub">Scuderia Ferrari</div></div></div>
+              <div class="pf p3 filled" style="cursor:default"><div class="pf-lbl">P3 — Third Place</div><div class="pf-drv">Lando Norris</div><div class="pf-team"><div class="tdot mcl"></div><div class="pf-sub">McLaren</div></div></div>
+              <div class="pf dnf filled" style="cursor:default"><div class="pf-lbl">DNF Pick</div><div class="pf-drv">F. Alonso</div><div class="pf-team"><div class="tdot ast"></div><div class="pf-sub">Aston Martin</div></div></div>
+              <div class="pf team filled" style="cursor:default"><div class="pf-lbl">Team with most points</div><div class="pf-drv">Red Bull Racing</div><div class="pf-team"><div class="tdot rbr"></div><div class="pf-sub">Constructor pick</div></div></div>
+              <div class="pf spec filled" style="cursor:default"><div class="pf-lbl">Most positions gained</div><div class="pf-drv">George Russell</div><div class="pf-team"><div class="tdot mer"></div><div class="pf-sub">Mercedes</div></div></div>
+            </div>
+            <div style="margin-top:12px;font-size:12px;color:var(--mute)">Group picks revealed after race deadline — check back Saturday 14:00</div>
+          </div>
+        </div>
+
+        <div class="scs">
+          <div class="dl f1">
+            <div class="dlc f1"><div class="dlcn f1">3d</div><div class="dlcl">left</div></div>
+            <div class="dlb">
+              <div class="dley">Prediction deadline</div>
+              <div class="dltt">Sat 21 Jun · 14:00</div>
+              <div class="dlsb">Race starts 15:00 BST</div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="ch"><div class="ch-t">F1 League standings</div><span class="spil f1">Race 10</span></div>
+            <div class="cb" style="padding:10px 12px">
+              <div class="lg" style="grid-template-columns:22px 1fr 46px">
+                <div class="lhd"><span>#</span><span>Manager</span><span style="text-align:right">Pts</span></div>
+                <div class="lr"><div class="lrk topf1">1</div><div class="lnm">Bragança</div><div class="lnum f1" style="font-size:13px">175</div></div>
+                <div class="lr me f1"><div class="lrk">2</div><div class="lnm">You <span class="ytag f1">You</span></div><div class="lnum f1" style="font-size:13px">168</div></div>
+                <div class="lr"><div class="lrk">3</div><div class="lnm">Marco</div><div class="lnum f1" style="font-size:13px">145</div></div>
+                <div class="lr"><div class="lrk">4</div><div class="lnm">Admin</div><div class="lnum f1" style="font-size:13px">132</div></div>
+                <div class="lr"><div class="lrk">5</div><div class="lnm">Sapphire</div><div class="lnum f1" style="font-size:13px">128</div></div>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="ch"><div class="ch-t">Points guide</div></div>
+            <div class="cb" style="padding:10px 15px">
+              <div class="ptrow"><span>Correct P1</span><strong style="color:var(--f1)">15 pts</strong></div>
+              <div class="ptrow"><span>Correct P2</span><strong style="color:var(--f1)">12 pts</strong></div>
+              <div class="ptrow"><span>Correct P3</span><strong style="color:var(--f1)">10 pts</strong></div>
+              <div class="ptrow"><span>Correct DNF</span><strong style="color:var(--f1)">5 pts</strong></div>
+              <div class="ptrow"><span>Correct team</span><strong style="color:var(--f1)">8 pts</strong></div>
+              <div class="ptrow"><span>Special pick</span><strong style="color:var(--f1)">6 pts</strong></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════
+         SCREEN 3 — F1 RESULTS
+         ══════════════════════════════════════════════════ -->
+    <div class="scr" id="s-f1r">
+      <div class="sh">
+        <div class="sh-top">
+          <div>
+            <div class="sh-ey">Formula 1 · British Grand Prix · Round 10</div>
+            <div class="sh-ttl">Race Results</div>
+          </div>
+          <div class="sh-r">
+            <div class="kv"><div class="kl">Race pts</div><div class="kn f1">23</div></div>
+            <div class="kv"><div class="kl">Season rank</div><div class="kn">#2</div></div>
+            <div class="kv"><div class="kl">Season pts</div><div class="kn">168</div></div>
+          </div>
+        </div>
+        <div class="shtabs">
+          <div class="shtab on f1">Results</div>
+          <div class="shtab">Season Standings</div>
+          <div class="shtab">Group Picks</div>
+        </div>
+      </div>
+      <div class="scb">
+        <div class="scm">
+          <!-- Podium -->
+          <div class="card">
+            <div class="ch"><div class="ch-t">British Grand Prix — Podium</div><span class="s-done">Silverstone · Finished</span></div>
+            <div class="cb" style="padding:20px 24px">
+              <div class="podium">
+                <div class="pod p2">
+                  <div class="pod-drv">Lewis Hamilton</div>
+                  <div class="pod-tm">Scuderia Ferrari</div>
+                  <div class="podplat"><div class="pod-pos">2</div></div>
+                </div>
+                <div class="pod p1">
+                  <div class="pod-drv">Max Verstappen</div>
+                  <div class="pod-tm">Red Bull Racing</div>
+                  <div class="podplat"><div class="pod-pos">1</div></div>
+                </div>
+                <div class="pod p3">
+                  <div class="pod-drv">Lando Norris</div>
+                  <div class="pod-tm">McLaren F1 Team</div>
+                  <div class="podplat"><div class="pod-pos">3</div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Picks comparison -->
+          <div class="card">
+            <div class="ch">
+              <div class="ch-t">Your picks vs. actual result</div>
+              <div style="font-family:'Archivo Black';font-size:16px;color:var(--f1)">23 pts <span style="font-family:'Archivo';font-weight:400;font-size:12px;color:var(--mute)">this race</span></div>
+            </div>
+            <div class="cb" style="padding:0 14px">
+              <div class="cmpg" style="grid-template-columns:58px 1fr 1fr 28px 44px">
+                <div class="cmphd"><span>Field</span><span>Your pick</span><span>Actual</span><span></span><span style="text-align:right">Pts</span></div>
+                <div class="cmpr"><div class="cmpl">P1</div><div class="cmpm">Verstappen</div><div class="cmpa">Verstappen</div><div class="cmpico ok">✓</div><div class="cmppts">15</div></div>
+                <div class="cmpr"><div class="cmpl">P2</div><div class="cmpm">Hamilton</div><div class="cmpa">Hamilton</div><div class="cmpico ok">✓</div><div class="cmppts">12</div></div>
+                <div class="cmpr"><div class="cmpl">P3</div><div class="cmpm">Norris</div><div class="cmpa">Norris</div><div class="cmpico ok">✓</div><div class="cmppts">10</div></div>
+                <div class="cmpr"><div class="cmpl">DNF</div><div class="cmpm">Alonso</div><div class="cmpa">L. Stroll</div><div class="cmpico x">✗</div><div class="cmppts z">0</div></div>
+                <div class="cmpr"><div class="cmpl">Team</div><div class="cmpm">Red Bull</div><div class="cmpa">Red Bull</div><div class="cmpico ok">✓</div><div class="cmppts">8</div></div>
+                <div class="cmpr"><div class="cmpl">Special</div><div class="cmpm">Russell</div><div class="cmpa">O. Piastri</div><div class="cmpico x">✗</div><div class="cmppts z">0</div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="scs">
+          <div class="card" style="background:var(--f1bg);border-color:rgba(193,57,27,.2)">
+            <div class="cb" style="text-align:center;padding:18px">
+              <div style="font-family:'JetBrains Mono';font-size:8.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--f1);margin-bottom:6px">Your race score</div>
+              <div style="font-family:'Archivo Black';font-size:48px;color:var(--f1);letter-spacing:-0.03em;line-height:1">23</div>
+              <div style="font-size:12px;color:var(--text2);margin-top:4px">3 of 6 correct · moved to #2 season</div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="ch"><div class="ch-t">Race leaderboard</div></div>
+            <div class="cb" style="padding:10px 12px">
+              <div class="lg" style="grid-template-columns:22px 1fr 38px 46px">
+                <div class="lhd"><span>#</span><span>Manager</span><span style="text-align:right">Race</span><span style="text-align:right">Season</span></div>
+                <div class="lr"><div class="lrk topf1">1</div><div class="lnm">Bragança</div><div class="lnum sub">28</div><div class="lnum f1" style="font-size:13px">175</div></div>
+                <div class="lr me f1"><div class="lrk">2</div><div class="lnm">You <span class="ytag f1">You</span></div><div class="lnum sub">23</div><div class="lnum f1" style="font-size:13px">168</div></div>
+                <div class="lr"><div class="lrk">3</div><div class="lnm">Marco</div><div class="lnum sub">18</div><div class="lnum f1" style="font-size:13px">145</div></div>
+                <div class="lr"><div class="lrk">4</div><div class="lnm">Admin</div><div class="lnum sub">12</div><div class="lnum f1" style="font-size:13px">132</div></div>
+                <div class="lr"><div class="lrk">5</div><div class="lnm">Sapphire</div><div class="lnum sub">15</div><div class="lnum f1" style="font-size:13px">128</div></div>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="ch"><div class="ch-t">Gazette entry</div></div>
+            <div class="cb">
+              <div style="font-size:13px;color:var(--text);line-height:1.5">Bragança nailed all three podium positions — 28 pts this race, takes season lead by 7. You scored 23 — climbed to #2.</div>
+              <div style="font-family:'JetBrains Mono';font-size:8px;letter-spacing:.08em;color:var(--mute);margin-top:7px">British GP · 3 days ago</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════
+         SCREEN 4 — TENNIS TOURNAMENT LOBBY
+         ══════════════════════════════════════════════════ -->
+    <div class="scr" id="s-tl">
+      <div class="sh">
+        <div class="sh-top">
+          <div>
+            <div class="sh-ey">Tennis · Wimbledon 2026 · Pre-tournament picks</div>
+            <div class="sh-ttl">Tournament Lobby</div>
+          </div>
+          <div class="sh-r">
+            <div class="kv"><div class="kl">Picks made</div><div class="kn t">3 / 5</div></div>
+            <div class="kv"><div class="kl">Pool</div><div class="kn">Open draw</div></div>
+          </div>
+        </div>
+        <div class="shtabs">
+          <div class="shtab on t">My Picks</div>
+          <div class="shtab">Player Pool</div>
+          <div class="shtab">Seedings</div>
+        </div>
+      </div>
+      <div class="scb">
+        <div class="scm">
+          <!-- Tournament header -->
+          <div class="th">
+            <div class="th-emb">
+              <svg width="30" height="30" viewBox="0 0 30 30" fill="none">
+                <circle cx="15" cy="15" r="12" stroke="var(--ten)" stroke-width="1.5" fill="none"/>
+                <path d="M3 15 Q15 5 27 15" stroke="var(--ten)" stroke-width="1" fill="none" opacity=".5"/>
+                <path d="M3 15 Q15 25 27 15" stroke="var(--ten)" stroke-width="1" fill="none" opacity=".5"/>
+                <line x1="15" y1="3" x2="15" y2="27" stroke="var(--ten)" stroke-width="1" opacity=".5"/>
+              </svg>
+            </div>
+            <div>
+              <div class="th-name">The Championships, Wimbledon</div>
+              <div class="th-info">
+                <span class="spil grass">Grass</span>
+                <span class="spil neu">All England Club · SW19</span>
+                <span class="s-soon" style="background:var(--tenbg);color:var(--ten)">Draw open</span>
+              </div>
+            </div>
+            <div class="th-cd">
+              <div class="th-cdn">48h</div>
+              <div class="th-cdl">to deadline</div>
+            </div>
+          </div>
+
+          <!-- Pick slots -->
+          <div>
+            <div class="slbl">Your 5 picks — tap captain badge to transfer it</div>
+            <div class="pslots">
+              <div class="pslot captain">
+                <div class="capbadge">2×</div>
+                <div class="psn">Pick 1 · Captain</div>
+                <div class="psp">Carlos Alcaraz</div>
+                <div class="psseed">Seed [2] · ESP</div>
+                <div class="pscta">Tap to change →</div>
+              </div>
+              <div class="pslot filled">
+                <div class="psn">Pick 2</div>
+                <div class="psp">Jannik Sinner</div>
+                <div class="psseed">Seed [1] · ITA</div>
+              </div>
+              <div class="pslot filled">
+                <div class="psn">Pick 3</div>
+                <div class="psp">Novak Djokovic</div>
+                <div class="psseed">Seed [3] · SRB</div>
+              </div>
+              <div class="pslot empty">
+                <div class="psn">Pick 4</div>
+                <div class="psp empty">Empty — add player</div>
+                <div class="pscta">Pick from pool →</div>
+              </div>
+              <div class="pslot empty">
+                <div class="psn">Pick 5</div>
+                <div class="psp empty">Empty — add player</div>
+                <div class="pscta">Pick from pool →</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Player pool -->
+          <div class="card">
+            <div class="ch"><div class="ch-t">Player pool — Top seedings</div><span class="s-soon" style="background:var(--tenbg);color:var(--ten)">128 players</span></div>
+            <div class="cb" style="padding:0 14px">
+              <div class="ppg" style="grid-template-columns:36px 1fr 44px 72px 60px">
+                <div class="pphd"><span>Seed</span><span>Player</span><span>Nat</span><span style="text-align:right">World Rk</span><span style="text-align:right"></span></div>
+                <div class="ppr"><div class="ppseed top">[1]</div><div class="ppname">Jannik Sinner</div><div class="ppnat">ITA</div><div class="lnum sub" style="text-align:right">#1</div><div class="ppadd picked">Picked</div></div>
+                <div class="ppr"><div class="ppseed top">[2]</div><div class="ppname">Carlos Alcaraz</div><div class="ppnat">ESP</div><div class="lnum sub" style="text-align:right">#2</div><div class="ppadd picked">Picked</div></div>
+                <div class="ppr"><div class="ppseed top">[3]</div><div class="ppname">Novak Djokovic</div><div class="ppnat">SRB</div><div class="lnum sub" style="text-align:right">#3</div><div class="ppadd picked">Picked</div></div>
+                <div class="ppr"><div class="ppseed">[4]</div><div class="ppname">Daniil Medvedev</div><div class="ppnat">RUS</div><div class="lnum sub" style="text-align:right">#4</div><div class="ppadd">+ Add</div></div>
+                <div class="ppr"><div class="ppseed">[5]</div><div class="ppname">Alexander Zverev</div><div class="ppnat">GER</div><div class="lnum sub" style="text-align:right">#5</div><div class="ppadd">+ Add</div></div>
+                <div class="ppr"><div class="ppseed">[6]</div><div class="ppname">Holger Rune</div><div class="ppnat">DEN</div><div class="lnum sub" style="text-align:right">#6</div><div class="ppadd">+ Add</div></div>
+                <div class="ppr"><div class="ppseed">[7]</div><div class="ppname">Casper Ruud</div><div class="ppnat">NOR</div><div class="lnum sub" style="text-align:right">#7</div><div class="ppadd">+ Add</div></div>
+                <div class="ppr"><div class="ppseed">[8]</div><div class="ppname">Andrey Rublev</div><div class="ppnat">RUS</div><div class="lnum sub" style="text-align:right">#8</div><div class="ppadd">+ Add</div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="scs">
+          <div class="dl t">
+            <div class="dlc t"><div class="dlcn t">48h</div><div class="dlcl">left</div></div>
+            <div class="dlb">
+              <div class="dley">Pick deadline</div>
+              <div class="dltt">Mon 22 Jun · 09:00</div>
+              <div class="dlsb">Locks at first serve</div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="ch"><div class="ch-t">Points per round</div></div>
+            <div class="cb" style="padding:10px 15px">
+              <div class="ptrow"><span>Win R1 (R64)</span><strong style="color:var(--ten)">1 pt</strong></div>
+              <div class="ptrow"><span>Win R2 (R32)</span><strong style="color:var(--ten)">2 pts</strong></div>
+              <div class="ptrow"><span>Win R3 (R16)</span><strong style="color:var(--ten)">3 pts</strong></div>
+              <div class="ptrow"><span>Quarter-final</span><strong style="color:var(--ten)">5 pts</strong></div>
+              <div class="ptrow"><span>Semi-final</span><strong style="color:var(--ten)">8 pts</strong></div>
+              <div class="ptrow"><span>Runner-up</span><strong style="color:var(--ten)">15 pts</strong></div>
+              <div class="ptrow"><span>Winner</span><strong style="color:var(--ten)">30 pts</strong></div>
+              <div style="margin-top:10px;padding-top:8px;border-top:1px solid var(--rule);font-size:12px;color:var(--text2)">Captain earns <strong style="color:var(--gold)">2×</strong> on all rounds</div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="ch"><div class="ch-t">Wimbledon League</div></div>
+            <div class="cb" style="padding:10px 12px">
+              <div class="lg" style="grid-template-columns:22px 1fr 44px">
+                <div class="lhd"><span>#</span><span>Manager</span><span style="text-align:right">Pts</span></div>
+                <div class="lr me t"><div class="lrk topt">1</div><div class="lnm">You <span class="ytag t">You</span></div><div class="lnum t" style="font-size:13px">—</div></div>
+                <div class="lr"><div class="lrk">2</div><div class="lnm">Marco</div><div class="lnum t" style="font-size:13px">—</div></div>
+                <div class="lr"><div class="lrk">3</div><div class="lnm">Bragança</div><div class="lnum t" style="font-size:13px">—</div></div>
+                <div class="lr"><div class="lrk">4</div><div class="lnm">Sapphire</div><div class="lnum t" style="font-size:13px">—</div></div>
+              </div>
+              <div style="font-size:11.5px;color:var(--mute);margin-top:10px;font-family:'JetBrains Mono';letter-spacing:.04em">Scores start when tournament begins</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════
+         SCREEN 5 — TENNIS LIVE TRACKER
+         ══════════════════════════════════════════════════ -->
+    <div class="scr" id="s-tt">
+      <div class="sh">
+        <div class="sh-top">
+          <div>
+            <div class="sh-ey">Tennis · Wimbledon 2026 · Quarter-finals underway</div>
+            <div class="sh-ttl">Live Tracker</div>
+          </div>
+          <div class="sh-r">
+            <div class="kv"><div class="kl">Your pts</div><div class="kn t">28</div></div>
+            <div class="kv"><div class="kl">League rank</div><div class="kn">#1</div></div>
+            <div class="kv"><div class="kl">Still alive</div><div class="kn t">3/5</div></div>
+          </div>
+        </div>
+        <div class="shtabs">
+          <div class="shtab on t">My Picks</div>
+          <div class="shtab">League Table</div>
+          <div class="shtab">Tournament</div>
+        </div>
+      </div>
+      <div class="scb">
+        <div class="scm">
+          <div>
+            <div class="slbl">Your 5 picks — QF round</div>
+            <div class="plive-grid">
+              <!-- Pick 1: Alcaraz, captain, live QF -->
+              <div class="plc captain">
+                <div class="plccap">2×</div>
+                <div class="plcname">Carlos Alcaraz</div>
+                <div class="plcpts cap">28</div>
+                <div class="plcptsl">pts (captain 2×)</div>
+                <div class="plcst live">● QF — playing now</div>
+                <div class="rnds"><div class="rnd won"></div><div class="rnd won"></div><div class="rnd won"></div><div class="rnd live"></div><div class="rnd empty"></div></div>
+              </div>
+              <!-- Pick 2: Sinner, QF today -->
+              <div class="plc">
+                <div class="plcname">Jannik Sinner</div>
+                <div class="plcpts">7</div>
+                <div class="plcptsl">pts earned</div>
+                <div class="plcst live">● QF — on court 1</div>
+                <div class="rnds"><div class="rnd won"></div><div class="rnd won"></div><div class="rnd won"></div><div class="rnd live"></div><div class="rnd empty"></div></div>
+              </div>
+              <!-- Pick 3: Djokovic, eliminated R3 -->
+              <div class="plc elim">
+                <div class="plcname">Novak Djokovic</div>
+                <div class="plcpts" style="color:var(--mute)">3</div>
+                <div class="plcptsl">pts earned</div>
+                <div class="plcst elim">Eliminated R3</div>
+                <div class="rnds"><div class="rnd won"></div><div class="rnd won"></div><div class="rnd lost"></div><div class="rnd empty"></div><div class="rnd empty"></div></div>
+              </div>
+              <!-- Pick 4: Rune, QF today -->
+              <div class="plc">
+                <div class="plcname">Holger Rune</div>
+                <div class="plcpts">7</div>
+                <div class="plcptsl">pts earned</div>
+                <div class="plcst adv">QF — scheduled 17:00</div>
+                <div class="rnds"><div class="rnd won"></div><div class="rnd won"></div><div class="rnd won"></div><div class="rnd empty"></div><div class="rnd empty"></div></div>
+              </div>
+              <!-- Pick 5: Zverev, eliminated R2 -->
+              <div class="plc elim">
+                <div class="plcname">Alex Zverev</div>
+                <div class="plcpts" style="color:var(--mute)">1</div>
+                <div class="plcptsl">pts earned</div>
+                <div class="plcst elim">Eliminated R2</div>
+                <div class="rnds"><div class="rnd won"></div><div class="rnd lost"></div><div class="rnd empty"></div><div class="rnd empty"></div><div class="rnd empty"></div></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Points breakdown -->
+          <div class="ptbk">
+            <div class="ptbk-hd" style="grid-template-columns:1fr 40px 40px 40px 40px 40px 56px">
+              <span style="text-align:left">Player</span><span>R1</span><span>R2</span><span>R3</span><span>QF</span><span>SF+</span><span>Total</span>
+            </div>
+            <div class="ptbk-r" style="grid-template-columns:1fr 40px 40px 40px 40px 40px 56px">
+              <div class="ptbkn">Alcaraz <span style="font-family:'JetBrains Mono';font-size:7.5px;color:var(--gold)">Captain</span></div>
+              <div class="ptbkc s">1</div><div class="ptbkc s">2</div><div class="ptbkc s">3</div><div class="ptbkc live" style="color:var(--gold)">+5</div><div class="ptbkc z">—</div><div class="ptbkt cap">28 ×2</div>
+            </div>
+            <div class="ptbk-r" style="grid-template-columns:1fr 40px 40px 40px 40px 40px 56px">
+              <div class="ptbkn">Jannik Sinner</div>
+              <div class="ptbkc s">1</div><div class="ptbkc s">2</div><div class="ptbkc s">3</div><div class="ptbkc live" style="color:var(--gold)">+5</div><div class="ptbkc z">—</div><div class="ptbkt">7</div>
+            </div>
+            <div class="ptbk-r" style="grid-template-columns:1fr 40px 40px 40px 40px 40px 56px">
+              <div class="ptbkn">Novak Djokovic</div>
+              <div class="ptbkc s">1</div><div class="ptbkc s">2</div><div class="ptbkc" style="color:var(--neg)">out</div><div class="ptbkc z">—</div><div class="ptbkc z">—</div><div class="ptbkt">3</div>
+            </div>
+            <div class="ptbk-r" style="grid-template-columns:1fr 40px 40px 40px 40px 40px 56px">
+              <div class="ptbkn">Holger Rune</div>
+              <div class="ptbkc s">1</div><div class="ptbkc s">2</div><div class="ptbkc s">3</div><div class="ptbkc live" style="color:var(--gold)">+5</div><div class="ptbkc z">—</div><div class="ptbkt">7</div>
+            </div>
+            <div class="ptbk-r" style="grid-template-columns:1fr 40px 40px 40px 40px 40px 56px">
+              <div class="ptbkn">Alex Zverev</div>
+              <div class="ptbkc s">1</div><div class="ptbkc" style="color:var(--neg)">out</div><div class="ptbkc z">—</div><div class="ptbkc z">—</div><div class="ptbkc z">—</div><div class="ptbkt">1</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="scs">
+          <div class="card">
+            <div class="ch"><div class="ch-t">Wimbledon League</div><span class="s-live">QF live</span></div>
+            <div class="cb" style="padding:10px 12px">
+              <div class="lg" style="grid-template-columns:22px 1fr 44px">
+                <div class="lhd"><span>#</span><span>Manager</span><span style="text-align:right">Pts</span></div>
+                <div class="lr me t"><div class="lrk topt">1</div><div class="lnm">You <span class="ytag t">You</span></div><div class="lnum t" style="font-size:13px">28</div></div>
+                <div class="lr"><div class="lrk">2</div><div class="lnm">Carvalho</div><div class="lnum t" style="font-size:13px">22</div></div>
+                <div class="lr"><div class="lrk">3</div><div class="lnm">Marco</div><div class="lnum t" style="font-size:13px">21</div></div>
+                <div class="lr"><div class="lrk">4</div><div class="lnm">Bragança</div><div class="lnum t" style="font-size:13px">15</div></div>
+                <div class="lr"><div class="lrk">5</div><div class="lnm">Admin</div><div class="lnum t" style="font-size:13px">12</div></div>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="ch"><div class="ch-t">Today's order of play</div></div>
+            <div class="cb" style="display:flex;flex-direction:column;gap:10px">
+              <div class="dl t" style="padding:10px 13px">
+                <div class="dlc t" style="min-width:46px;padding:6px 10px"><div class="dlcn t" style="font-size:13px">CC</div><div class="dlcl">Now</div></div>
+                <div class="dlb">
+                  <div class="dley">Your captain</div>
+                  <div class="dltt" style="font-size:13px">Alcaraz v Medvedev</div>
+                  <div class="dlsb">Centre Court · 2× active</div>
+                </div>
+              </div>
+              <div class="dl t" style="padding:10px 13px">
+                <div class="dlc t" style="min-width:46px;padding:6px 10px"><div class="dlcn t" style="font-size:13px">C1</div><div class="dlcl">Live</div></div>
+                <div class="dlb">
+                  <div class="dley">Your pick</div>
+                  <div class="dltt" style="font-size:13px">Sinner v Rune</div>
+                  <div class="dlsb">Court 1 · both your picks!</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════
+         SCREEN 6 — TROPHY CABINET
+         ══════════════════════════════════════════════════ -->
+    <div class="scr" id="s-trophy">
+      <div class="profhdr">
+        <div class="profav">M</div>
+        <div style="flex:1">
+          <div class="profname">Marco Rossi</div>
+          <div class="profsports">
+            <div class="profsr"><div class="profdot fb"></div>Football: <strong>#3</strong></div>
+            <div class="profsr"><div class="profdot f1"></div>Formula 1: <strong>#2</strong></div>
+            <div class="profsr"><div class="profdot ten"></div>Tennis: <strong>#1</strong></div>
+          </div>
+          <div class="profstats">
+            <div><div class="psv">7</div><div class="psl">Trophies</div></div>
+            <div><div class="psv">S2</div><div class="psl">Season</div></div>
+            <div><div class="psv">3</div><div class="psl">Sports</div></div>
+          </div>
+        </div>
+        <div class="profr">
+          <div class="profrn">#2</div>
+          <div class="profrl">Group overall</div>
+          <div style="font-family:'JetBrains Mono';font-size:8px;letter-spacing:.08em;color:rgba(255,255,255,.3);margin-top:4px">35 pts behind Marco</div>
+        </div>
+      </div>
+      <div class="scb" style="padding-top:20px">
+        <div class="scm">
+          <!-- Sport breakdown -->
+          <div>
+            <div class="slbl">Season standings by sport</div>
+            <div class="spbk">
+              <div class="spbk-c">
+                <div class="spbk-nm">Football</div>
+                <div class="spbk-rk fb">#3</div>
+                <div class="spbk-d">488 pts · Premier League<br>13 pts off #2</div>
+              </div>
+              <div class="spbk-c">
+                <div class="spbk-nm">Formula 1</div>
+                <div class="spbk-rk f1">#2</div>
+                <div class="spbk-d">168 pts · Formula Fun<br>7 pts off leader</div>
+              </div>
+              <div class="spbk-c">
+                <div class="spbk-nm">Tennis</div>
+                <div class="spbk-rk ten">#1</div>
+                <div class="spbk-d">28 pts · Wimbledon '26<br>6 pts clear of 2nd</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Trophy shelf -->
+          <div class="tshelf">
+            <div>
+              <div class="tsh-hd"><span class="spil fb">Football</span><span class="tsh-nm">Football trophies</span></div>
+              <div class="trophies">
+                <div class="tcard"><div class="tcard-ico">🏆</div><div class="tcard-nm">GW Winner</div><div class="tcard-dt">GW32 · S2</div></div>
+                <div class="tcard"><div class="tcard-ico">🏆</div><div class="tcard-nm">GW Winner</div><div class="tcard-dt">GW18 · S2</div></div>
+                <div class="tcard"><div class="tcard-ico">🏆</div><div class="tcard-nm">GW Winner</div><div class="tcard-dt">GW07 · S1</div></div>
+                <div class="tcard"><div class="tcard-ico">🥈</div><div class="tcard-nm">Season Runner-up</div><div class="tcard-dt">Season 1</div></div>
+              </div>
+            </div>
+            <div>
+              <div class="tsh-hd"><span class="spil f1">F1</span><span class="tsh-nm">Formula 1 trophies</span></div>
+              <div class="trophies">
+                <div class="tcard"><div class="tcard-ico">🏆</div><div class="tcard-nm">Race winner</div><div class="tcard-dt">Bahrain GP · S2</div></div>
+                <div class="tcard"><div class="tcard-ico">⭐</div><div class="tcard-nm">Top predictor</div><div class="tcard-dt">Abu Dhabi GP · S1</div></div>
+                <div class="tcard"><div class="tcard-ico">⭐</div><div class="tcard-nm">Top predictor</div><div class="tcard-dt">Monaco GP · S1</div></div>
+              </div>
+            </div>
+            <div>
+              <div class="tsh-hd"><span class="spil ten">Tennis</span><span class="tsh-nm">Tennis trophies</span></div>
+              <div class="trophies">
+                <div class="tcard"><div class="tcard-ico">🏆</div><div class="tcard-nm">Tournament winner</div><div class="tcard-dt">Wimbledon '25</div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="scs">
+          <div class="card">
+            <div class="ch"><div class="ch-t">Activity history</div></div>
+            <div class="cb" style="padding:10px 14px">
+              <div class="actv">
+                <div class="ai"><div class="aidot ten"></div><div class="aitxt">Alcaraz QF win — captain scoring live at Wimbledon '26</div><div class="aidt">Today</div></div>
+                <div class="ai"><div class="aidot fb"></div><div class="aitxt">Won GW32 — 3 pts clear of Bragança</div><div class="aidt">2w ago</div></div>
+                <div class="ai"><div class="aidot f1"></div><div class="aitxt">Nailed the Bahrain GP podium — 28 race pts, race win</div><div class="aidt">Apr '26</div></div>
+                <div class="ai"><div class="aidot ten"></div><div class="aitxt">Djokovic pick won Wimbledon '25 — tournament trophy</div><div class="aidt">Jul '25</div></div>
+                <div class="ai"><div class="aidot fb"></div><div class="aitxt">Won GW18 — huge week, overtook Marco briefly</div><div class="aidt">Jan '26</div></div>
+                <div class="ai"><div class="aidot f1"></div><div class="aitxt">Joined Formula 1 module — first multi-sport season</div><div class="aidt">Feb '26</div></div>
+              </div>
+            </div>
+          </div>
+          <div class="card" style="background:var(--elev);border-color:var(--rule)">
+            <div class="cb" style="text-align:center;padding:16px">
+              <div style="font-family:'JetBrains Mono';font-size:8.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--mute);margin-bottom:8px">Shareable card</div>
+              <div style="font-family:'Archivo Black';font-size:15px;letter-spacing:-0.01em;color:var(--text);margin-bottom:4px">Marco Rossi</div>
+              <div style="font-size:12px;color:var(--text2);margin-bottom:12px">7 trophies · 3 sports · Season 2</div>
+              <button class="btn btn-o btn-bl" style="justify-content:center">Export image →</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════
+         SCREEN 7 — GROUP HUB
+         ══════════════════════════════════════════════════ -->
+    <div class="scr" id="s-group">
+      <div class="grphdr">
+        <div class="grpico">US</div>
+        <div style="flex:1">
+          <div class="grpname">The Usual Suspects</div>
+          <div class="grpmbs">
+            <div class="grpav" style="background:#1A6FA8">M</div>
+            <div class="grpav" style="background:#C1391B">B</div>
+            <div class="grpav" style="background:#1A8A6B">A</div>
+            <div class="grpav" style="background:#B8720E">S</div>
+            <div class="grpav" style="background:#7C3AED">C</div>
+            <div class="grpav" style="background:#4B5568">R</div>
+            <div class="grpmc">6 members · Season 2</div>
+          </div>
+        </div>
+        <div class="grpr">
+          <div><div class="grpsv">3</div><div class="grpsl">Active sports</div></div>
+          <div><div class="grpsv">18</div><div class="grpsl">Active leagues</div></div>
+        </div>
+      </div>
+      <div class="scb" style="padding-top:18px">
+        <div class="scm">
+          <!-- Active leagues -->
+          <div>
+            <div class="slbl">Active competitions</div>
+            <div class="glgs">
+              <div class="glg">
+                <div class="glg-bar fb"></div>
+                <div class="glg-b">
+                  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px"><div class="glg-nm">Premier League Fantasy</div><span class="spil fb">Football</span></div>
+                  <div class="glg-lead">Leading: <strong>Marco</strong> · 512 pts</div>
+                  <div class="glg-pts">GW29 · 11 managers · 2 games tonight</div>
+                </div>
+              </div>
+              <div class="glg">
+                <div class="glg-bar f1"></div>
+                <div class="glg-b">
+                  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px"><div class="glg-nm">Formula Fun</div><span class="spil f1">F1</span></div>
+                  <div class="glg-lead">Leading: <strong>Bragança</strong> · 175 pts</div>
+                  <div class="glg-pts">Round 10 · 6 managers · Picks open</div>
+                </div>
+              </div>
+              <div class="glg">
+                <div class="glg-bar ten"></div>
+                <div class="glg-b">
+                  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px"><div class="glg-nm">Wimbledon '26</div><span class="spil ten">Tennis</span></div>
+                  <div class="glg-lead">Leading: <strong>You</strong> · 28 pts</div>
+                  <div class="glg-pts">QF underway · 6 managers · Grass</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Meta leaderboard -->
+          <div class="card">
+            <div class="ch"><div class="ch-t">Cross-sport meta-leaderboard</div><span class="s-done">Season 2 · TBD model</span></div>
+            <div class="cb" style="padding:0 14px">
+              <div class="mlbg" style="grid-template-columns:24px 1fr 60px 60px 60px 56px">
+                <div class="mlbhd"><span class="nm-col">#</span><span class="nm-col">Manager</span><span>Football</span><span>F1</span><span>Tennis</span><span>Meta</span></div>
+                <div class="mlbr lg" style="grid-template-columns:24px 1fr 60px 60px 60px 56px"><div class="mrk top">1</div><div class="mmgr">Marco</div><div class="mspt">512</div><div class="mspt">145</div><div class="mspt">21</div><div class="mtot">728</div></div>
+                <div class="mlbr me lg" style="grid-template-columns:24px 1fr 60px 60px 60px 56px"><div class="mrk">2</div><div class="mmgr">You <span class="ytag">You</span></div><div class="mspt">488</div><div class="mspt">168</div><div class="mspt">28</div><div class="mtot">684</div></div>
+                <div class="mlbr lg" style="grid-template-columns:24px 1fr 60px 60px 60px 56px"><div class="mrk">3</div><div class="mmgr">Bragança</div><div class="mspt">499</div><div class="mspt">175</div><div class="mspt">15</div><div class="mtot">689</div></div>
+                <div class="mlbr lg" style="grid-template-columns:24px 1fr 60px 60px 60px 56px"><div class="mrk">4</div><div class="mmgr">Sapphire</div><div class="mspt">470</div><div class="mspt">128</div><div class="mspt">22</div><div class="mtot">620</div></div>
+                <div class="mlbr lg" style="grid-template-columns:24px 1fr 60px 60px 60px 56px"><div class="mrk">5</div><div class="mmgr">Carvalho</div><div class="mspt">451</div><div class="mspt">115</div><div class="mspt">22</div><div class="mtot">588</div></div>
+                <div class="mlbr lg" style="grid-template-columns:24px 1fr 60px 60px 60px 56px"><div class="mrk">6</div><div class="mmgr">Admin</div><div class="mspt">438</div><div class="mspt">132</div><div class="mspt">12</div><div class="mtot">582</div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="scs">
+          <div class="card">
+            <div class="ch"><div class="ch-t">Group activity feed</div><span class="s-done">Today</span></div>
+            <div class="cb" style="padding:10px 14px">
+              <div class="feed">
+                <div class="fi">
+                  <div class="fiav" style="background:var(--accent)">M</div>
+                  <div><div class="fitxt"><strong>Marco</strong> is playing Alcaraz QF on Centre Court now — captain active</div><div class="fitm">2h ago</div></div>
+                </div>
+                <div class="fi">
+                  <div class="fiav" style="background:var(--neg)">B</div>
+                  <div><div class="fitxt"><strong>Bragança</strong> nailed the British GP podium — 28 pts, takes F1 lead</div><div class="fitm">3d ago</div></div>
+                </div>
+                <div class="fi">
+                  <div class="fiav" style="background:var(--ten)">Y</div>
+                  <div><div class="fitxt"><strong>You</strong> moved to #1 in Wimbledon league — Alcaraz through to QF</div><div class="fitm">2h ago</div></div>
+                </div>
+                <div class="fi">
+                  <div class="fiav" style="background:#7C3AED">C</div>
+                  <div><div class="fitxt"><strong>Carvalho</strong> scored 38 pts in GW29 — closes the gap in football</div><div class="fitm">4h ago</div></div>
+                </div>
+                <div class="fi">
+                  <div class="fiav" style="background:var(--gold)">S</div>
+                  <div><div class="fitxt"><strong>Sapphire</strong> joined the F1 league — Formula Fun now 6 managers</div><div class="fitm">1w ago</div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="card" style="background:var(--abg);border-color:rgba(26,111,168,.2)">
+            <div class="cb">
+              <div style="font-family:'Archivo Black';font-size:14px;letter-spacing:-0.01em;margin-bottom:4px">Invite to the group</div>
+              <div style="font-size:12px;color:var(--text2);margin-bottom:12px;line-height:1.45">Bring a friend into all 3 sports at once — one invite, full cross-sport access</div>
+              <button class="btn btn-p btn-bl" style="justify-content:center">Send invite link</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- ══════════════════════════════════════════════════
+         SCREEN 8 — COIN CHALLENGES
+         ══════════════════════════════════════════════════ -->
+    <div class="scr" id="s-chal" data-screen-label="08-Coin Challenges">
+
+      <!-- OVERVIEW HEADER -->
+      <div id="chal-sh-ov" class="sh">
+        <div class="sh-top">
+          <div>
+            <div class="sh-ey">The Gaffer's Cup · GW31 · Coin Feature</div>
+            <div class="sh-ttl">Coin Challenges</div>
+          </div>
+          <div class="sh-r">
+            <div class="kv"><div class="kl">Balance</div><div style="display:flex;align-items:center;gap:6px;margin-top:2px"><span class="ci lg">C</span><span class="kn g">1,240</span></div></div>
+            <div class="kv"><div class="kl">In escrow</div><div class="kn">400</div></div>
+            <div class="kv"><div class="kl">Net W/L</div><div class="kn" style="color:var(--pos)">+135</div></div>
+          </div>
+        </div>
+        <div class="shtabs">
+          <div class="shtab on gold">Challenges</div>
+          <div class="shtab" onclick="showChalView('c1')" style="cursor:pointer">Create</div>
+          <div class="shtab">Wallet</div>
+        </div>
+      </div>
+
+      <!-- CREATE FLOW HEADER (hidden by default) -->
+      <div id="chal-sh-fl" class="sh" style="display:none;padding-bottom:16px">
+        <div class="sh-top">
+          <div>
+            <div class="sh-ey" id="chal-fl-ey">New Challenge · The Gaffer's Cup · GW31</div>
+            <div class="sh-ttl" id="chal-fl-ttl">Pick an opponent</div>
+          </div>
+          <div class="sh-r">
+            <button class="btn btn-o btn-sm" id="chal-fl-back" onclick="showChalView('ov')">← Cancel</button>
+          </div>
+        </div>
+        <div class="step-prog" id="chal-step-dots" style="margin-top:4px">
+          <div class="step-dot curr"></div>
+          <div class="step-dot next"></div>
+          <div class="step-dot next"></div>
+        </div>
+        <div style="font-family:'JetBrains Mono';font-size:8px;letter-spacing:.12em;text-transform:uppercase;color:var(--gold)" id="chal-fl-step">Step 1 of 3</div>
+      </div>
+
+      <!-- SCREEN BODY -->
+      <div class="scb">
+
+        <!-- ── VIEW: OVERVIEW (default) ── -->
+        <div id="chal-v-ov" style="display:flex;gap:20px;width:100%">
+          <div class="scm">
+
+            <div>
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+                <span class="slbl" style="margin-bottom:0">Incoming</span>
+                <span style="background:var(--gbg);color:var(--gold);font-family:'JetBrains Mono';font-size:8.5px;letter-spacing:.06em;padding:1px 8px;border-radius:100px;font-weight:600">2</span>
+              </div>
+              <div style="background:var(--gbg);border:1px solid rgba(184,114,14,.18);border-radius:var(--r);padding:13px 14px;display:flex;flex-direction:column;gap:10px">
+                <div class="chc">
+                  <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap"><span class="chc-opp">RTrocado</span><span style="background:var(--abg);color:var(--accent);font-family:'JetBrains Mono';font-size:7.5px;letter-spacing:.1em;text-transform:uppercase;padding:2px 7px;border-radius:100px">#1 · GW Total</span><span class="chc-exp">⏱ 18 hrs</span></div>
+                  <div class="chc-sum">RTrocado thinks his GW total will beat yours this round</div>
+                  <div class="chc-st"><div><div class="chc-sl">Stake each</div><span class="ca"><span class="ci">C</span><span class="can">300</span></span></div><div><div class="chc-sl">Net win</div><span class="ca"><span class="ci">C</span><span class="can pos">270</span></span></div></div>
+                  <div class="chc-acts"><button class="chc-acc">Accept</button><button class="chc-dec">Decline</button></div>
+                </div>
+                <div class="chc">
+                  <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap"><span class="chc-opp">MattP</span><span style="background:var(--gbg);color:var(--gold);font-family:'JetBrains Mono';font-size:7.5px;letter-spacing:.1em;text-transform:uppercase;padding:2px 7px;border-radius:100px">#5 · Player Duel</span><span class="chc-exp">⏱ 6 hrs</span></div>
+                  <div class="chc-sum">Salah (MattP) vs Saka (yours) — whose player scores more this GW?</div>
+                  <div class="chc-st"><div><div class="chc-sl">Stake each</div><span class="ca"><span class="ci">C</span><span class="can">150</span></span></div><div><div class="chc-sl">Net win</div><span class="ca"><span class="ci">C</span><span class="can pos">135</span></span></div></div>
+                  <div class="chc-acts"><button class="chc-acc">Accept</button><button class="chc-dec">Decline</button></div>
+                </div>
+              </div>
+            </div>
+
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+              <div>
+                <div class="slbl">Sent · awaiting</div>
+                <div class="opc">
+                  <div class="opc-hd"><span class="opc-to">→ GBruschy</span><span style="background:var(--pbg);color:var(--pos);font-family:'JetBrains Mono';font-size:7.5px;letter-spacing:.1em;text-transform:uppercase;padding:2px 7px;border-radius:100px">#7 · Match Result</span><span class="opc-wait">Awaiting · 2d</span></div>
+                  <div class="opc-sum">Arsenal vs Chelsea — you called Arsenal win</div>
+                  <div style="display:flex;align-items:center;gap:5px;margin-top:4px"><span class="ca sm"><span class="ci sm">C</span><span class="can">200</span></span><span style="font-family:'JetBrains Mono';font-size:8px;color:var(--mute)">staked · expires 2d</span></div>
+                </div>
+              </div>
+              <div>
+                <div style="display:flex;align-items:center;gap:7px;margin-bottom:9px"><span class="s-live">Live</span><span class="slbl" style="margin-bottom:0">GW31</span></div>
+                <div class="lvc">
+                  <div class="lvc-hd"><span style="width:7px;height:7px;border-radius:50%;background:var(--pos);flex-shrink:0;animation:chpls 1.8s infinite"></span><span style="flex:1;font-family:'JetBrains Mono';font-size:8.5px;color:var(--mute);letter-spacing:.04em">vs PabloK · GW Total · GW31</span><span class="ca sm"><span class="ci sm">C</span><span class="can">250</span></span></div>
+                  <div class="lvc-vs"><div class="lvc-side lead"><div class="lvc-lbl lead">You</div><div class="lvc-scr lead">47</div><div style="font-family:'JetBrains Mono';font-size:7px;color:var(--pos);margin-top:2px">pts</div></div><div class="lvc-sep"></div><div class="lvc-side"><div class="lvc-lbl">PabloK</div><div class="lvc-scr">39</div><div style="font-family:'JetBrains Mono';font-size:7px;color:var(--mute);margin-top:2px">pts</div></div></div>
+                  <div class="lvc-ft"><span style="color:var(--pos);letter-spacing:.04em">↑ +8 lead</span><span style="color:var(--mute)">3 fixtures left</span></div>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <div class="slbl">Settled this season</div>
+              <div style="display:flex;flex-direction:column;gap:7px">
+                <div class="stld"><div class="stld-inf"><div class="stld-hd"><span class="stld-nm">You won</span><span style="font-family:'JetBrains Mono';font-size:8px;color:var(--mute)">vs GBruschy · GW30</span></div><div class="stld-sub">GW Total Battle · 68—55 pts</div></div><div class="stld-amt"><div style="display:flex;align-items:center;gap:4px"><span class="stld-n win">+225</span><span class="ci sm">C</span></div><div class="stld-lbl">after rake</div></div></div>
+                <div class="stld"><div class="stld-inf"><div class="stld-hd"><span class="stld-nm">MattP won</span><span style="font-family:'JetBrains Mono';font-size:8px;color:var(--mute)">vs MattP · GW30</span></div><div class="stld-sub">Player Duel · Haaland 4 — Watkins 11</div></div><div class="stld-amt"><div style="display:flex;align-items:center;gap:4px"><span class="stld-n loss">−90</span><span class="ci sm">C</span></div></div></div>
+                <div class="stld"><div class="stld-inf"><div class="stld-hd"><span class="stld-nm">No result</span><span style="font-family:'JetBrains Mono';font-size:8px;color:var(--mute)">vs SaraW · GW29</span></div><div class="stld-sub">Match Result · Arsenal–Chelsea postponed</div></div><div class="stld-amt"><div style="display:flex;align-items:center;gap:4px"><span class="stld-n draw">150</span><span class="ci sm">C</span></div><div class="stld-lbl">returned</div></div></div>
+              </div>
+            </div>
+
+          </div>
+          <div class="scs">
+            <button class="btn btn-lg btn-bl" style="background:var(--gold);color:#fff;justify-content:center;gap:8px;border:none;box-shadow:0 6px 24px -6px rgba(184,114,14,.5)" onclick="showChalView('c1')">⚔ New Challenge</button>
+            <div class="card">
+              <div class="ch"><div class="ch-t">Coin Wallet</div><span class="s-done">GW31</span></div>
+              <div class="cb">
+                <div class="slbl" style="margin-bottom:5px">Available balance</div>
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><span class="ci xl">C</span><span style="font-family:'Archivo Black';font-size:28px;color:var(--gold);letter-spacing:-0.03em;line-height:1">1,240</span></div>
+                <div style="font-family:'JetBrains Mono';font-size:8.5px;color:var(--mute);margin-bottom:13px">400 coins locked in challenges</div>
+                <button class="btn btn-o btn-bl" style="justify-content:center">Buy Coins →</button>
+              </div>
+            </div>
+            <div class="card">
+              <div class="ch"><div class="ch-t">Season record</div></div>
+              <div class="cb" style="padding:10px 14px">
+                <div style="display:grid;grid-template-columns:1fr 1fr 1fr;text-align:center;padding-bottom:10px;margin-bottom:8px;border-bottom:1px solid var(--rule2)">
+                  <div style="padding:6px 0"><div style="font-family:'Archivo Black';font-size:22px;color:var(--pos);letter-spacing:-0.02em">3</div><div style="font-family:'JetBrains Mono';font-size:7.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--mute);margin-top:2px">Won</div></div>
+                  <div style="padding:6px 0;border-left:1px solid var(--rule);border-right:1px solid var(--rule)"><div style="font-family:'Archivo Black';font-size:22px;color:var(--neg);letter-spacing:-0.02em">2</div><div style="font-family:'JetBrains Mono';font-size:7.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--mute);margin-top:2px">Lost</div></div>
+                  <div style="padding:6px 0"><div style="font-family:'Archivo Black';font-size:22px;color:var(--mute);letter-spacing:-0.02em">1</div><div style="font-family:'JetBrains Mono';font-size:7.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--mute);margin-top:2px">Void</div></div>
+                </div>
+                <div class="ptrow"><span>Net P&amp;L</span><strong style="color:var(--pos)">+135 C</strong></div>
+                <div class="ptrow"><span>Win rate</span><strong>60%</strong></div>
+                <div class="ptrow"><span>Avg stake</span><strong>183 C</strong></div>
+              </div>
+            </div>
+            <div class="card" style="background:var(--elev)">
+              <div class="cb" style="padding:13px 14px">
+                <div style="font-family:'Archivo Black';font-size:12.5px;letter-spacing:-0.01em;margin-bottom:6px">How Challenges work</div>
+                <div style="font-size:12px;color:var(--text2);line-height:1.55">Challenge any league manager to a GW Total, Player Duel, or Match Result. Both stake coins — winner takes 90%, platform keeps 10%.</div>
+                <div style="margin-top:9px;font-family:'JetBrains Mono';font-size:8px;color:var(--mute);letter-spacing:.04em">Stakes held in escrow until result</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── VIEW: STEP 1 — PICK OPPONENT ── -->
+        <div id="chal-v-c1" style="display:none;justify-content:center;width:100%">
+          <div style="width:100%;max-width:640px;display:flex;flex-direction:column;gap:16px">
+            <div class="card">
+              <div class="ch"><div class="ch-t">League managers</div><span class="slbl" style="margin:0">7 available · PabloK selected</span></div>
+              <div class="cb" style="padding:0 14px">
+                <div style="display:flex;align-items:center;gap:10px;padding:0 6px 7px;border-bottom:2px solid var(--rule)">
+                  <div style="width:16px;flex-shrink:0"></div>
+                  <div style="flex:1;font-family:'JetBrains Mono';font-size:7.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--mute)">Manager</div>
+                  <div style="width:38px;text-align:right;font-family:'JetBrains Mono';font-size:7.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--mute)">Rank</div>
+                  <div style="width:54px;text-align:right;font-family:'JetBrains Mono';font-size:7.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--mute)">GW pts</div>
+                  <div style="width:62px;text-align:right;font-family:'JetBrains Mono';font-size:7.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--mute)">Season</div>
+                </div>
+
+                <div class="fl-row">
+                  <div class="fl-chk"></div>
+                  <div style="flex:1"><div class="lnm">RTrocado</div></div>
+                  <div style="width:38px;text-align:right"><span style="font-family:'Archivo Black';font-size:12px;color:var(--mute)">#1</span></div>
+                  <div style="width:54px;text-align:right"><span style="font-family:'Archivo Black';font-size:14px;letter-spacing:-0.01em;color:var(--text)">67</span></div>
+                  <div style="width:62px;text-align:right"><span style="font-family:'JetBrains Mono';font-size:11px;color:var(--mute)">1,024</span></div>
+                </div>
+                <div class="fl-row sel">
+                  <div class="fl-chk on"><div style="width:5px;height:5px;border-radius:50%;background:#fff"></div></div>
+                  <div style="flex:1"><div class="lnm">PabloK <span class="ytag">Selected</span></div></div>
+                  <div style="width:38px;text-align:right"><span style="font-family:'Archivo Black';font-size:12px;color:var(--accent)">#2</span></div>
+                  <div style="width:54px;text-align:right"><span style="font-family:'Archivo Black';font-size:14px;letter-spacing:-0.01em;color:var(--accent)">61</span></div>
+                  <div style="width:62px;text-align:right"><span style="font-family:'JetBrains Mono';font-size:11px;color:var(--mute)">978</span></div>
+                </div>
+                <div class="fl-row">
+                  <div class="fl-chk"></div>
+                  <div style="flex:1"><div class="lnm">CarlosF</div></div>
+                  <div style="width:38px;text-align:right"><span style="font-family:'Archivo Black';font-size:12px;color:var(--mute)">#4</span></div>
+                  <div style="width:54px;text-align:right"><span style="font-family:'Archivo Black';font-size:14px;letter-spacing:-0.01em;color:var(--text)">58</span></div>
+                  <div style="width:62px;text-align:right"><span style="font-family:'JetBrains Mono';font-size:11px;color:var(--mute)">871</span></div>
+                </div>
+                <div class="fl-row">
+                  <div class="fl-chk"></div>
+                  <div style="flex:1"><div class="lnm">MattP</div></div>
+                  <div style="width:38px;text-align:right"><span style="font-family:'Archivo Black';font-size:12px;color:var(--mute)">#5</span></div>
+                  <div style="width:54px;text-align:right"><span style="font-family:'Archivo Black';font-size:14px;letter-spacing:-0.01em;color:var(--text)">48</span></div>
+                  <div style="width:62px;text-align:right"><span style="font-family:'JetBrains Mono';font-size:11px;color:var(--mute)">844</span></div>
+                </div>
+                <div class="fl-row">
+                  <div class="fl-chk"></div>
+                  <div style="flex:1"><div class="lnm">SaraW</div></div>
+                  <div style="width:38px;text-align:right"><span style="font-family:'Archivo Black';font-size:12px;color:var(--mute)">#6</span></div>
+                  <div style="width:54px;text-align:right"><span style="font-family:'Archivo Black';font-size:14px;letter-spacing:-0.01em;color:var(--text)">52</span></div>
+                  <div style="width:62px;text-align:right"><span style="font-family:'JetBrains Mono';font-size:11px;color:var(--mute)">820</span></div>
+                </div>
+                <div class="fl-row">
+                  <div class="fl-chk"></div>
+                  <div style="flex:1"><div class="lnm">GBruschy</div></div>
+                  <div style="width:38px;text-align:right"><span style="font-family:'Archivo Black';font-size:12px;color:var(--mute)">#7</span></div>
+                  <div style="width:54px;text-align:right"><span style="font-family:'Archivo Black';font-size:14px;letter-spacing:-0.01em;color:var(--text)">39</span></div>
+                  <div style="width:62px;text-align:right"><span style="font-family:'JetBrains Mono';font-size:11px;color:var(--mute)">793</span></div>
+                </div>
+                <div class="fl-row">
+                  <div class="fl-chk"></div>
+                  <div style="flex:1"><div class="lnm">TomH</div></div>
+                  <div style="width:38px;text-align:right"><span style="font-family:'Archivo Black';font-size:12px;color:var(--mute)">#8</span></div>
+                  <div style="width:54px;text-align:right"><span style="font-family:'Archivo Black';font-size:14px;letter-spacing:-0.01em;color:var(--text)">44</span></div>
+                  <div style="width:62px;text-align:right"><span style="font-family:'JetBrains Mono';font-size:11px;color:var(--mute)">761</span></div>
+                </div>
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between">
+              <button class="btn btn-o" onclick="showChalView('ov')">Cancel</button>
+              <button class="btn btn-p g btn-lg" onclick="showChalView('c2')">Next: Pick proposition →</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── VIEW: STEP 2 — PICK PROPOSITION ── -->
+        <div id="chal-v-c2" style="display:none;justify-content:center;width:100%">
+          <div style="width:100%;max-width:640px;display:flex;flex-direction:column;gap:14px">
+            <div style="font-family:'JetBrains Mono';font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--mute)">Choose how you'll settle it</div>
+
+                <div class="fl-prop sel">
+                  <div style="padding:13px 15px;display:flex;align-items:flex-start;gap:10px">
+                    <div style="width:18px;height:18px;border-radius:50%;border:2px solid var(--accent);background:var(--accent);display:grid;place-items:center;flex-shrink:0;margin-top:2px"><div style="width:6px;height:6px;border-radius:50%;background:#fff"></div></div>
+                    <div style="flex:1;min-width:0">
+                      <div style="display:flex;align-items:center;gap:8px;margin-bottom:5px">
+                        <span style="font-family:'Archivo Black';font-size:14px;color:var(--text);letter-spacing:-0.01em">GW Total Battle</span>
+                        <span style="background:var(--abg);color:var(--accent);font-family:'JetBrains Mono';font-size:7.5px;letter-spacing:.1em;text-transform:uppercase;padding:2px 7px;border-radius:100px">GW Total</span>
+                      </div>
+                      <div style="font-size:12.5px;color:var(--text2);line-height:1.45">My GW total vs yours — whoever scores more points wins. Auto-resolved at GW end, no extra setup needed.</div>
+                    </div>
+                  </div>
+                  <div style="padding:10px 15px;border-top:1px solid var(--rule);background:var(--abg);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
+                    <div style="display:flex;align-items:center;gap:12px"><div style="text-align:center"><div style="font-family:'Archivo Black';font-size:22px;color:var(--accent);letter-spacing:-0.03em;line-height:1">54</div><div style="font-family:'JetBrains Mono';font-size:7px;color:var(--mute);margin-top:2px">You</div></div><div style="font-family:'JetBrains Mono';font-size:10px;color:var(--mute)">vs</div><div style="text-align:center"><div style="font-family:'Archivo Black';font-size:22px;color:var(--text2);letter-spacing:-0.03em;line-height:1">61</div><div style="font-family:'JetBrains Mono';font-size:7px;color:var(--mute);margin-top:2px">PabloK</div></div></div>
+                    <span style="font-family:'JetBrains Mono';font-size:8px;color:var(--accent);letter-spacing:.06em">✓ Auto-resolves at GW end</span>
+                  </div>
+                </div>
+
+                <div class="fl-prop">
+                  <div style="padding:13px 15px;display:flex;align-items:flex-start;gap:10px">
+                    <div style="width:18px;height:18px;border-radius:50%;border:2px solid var(--rule);background:transparent;display:grid;place-items:center;flex-shrink:0;margin-top:2px"></div>
+                    <div style="flex:1;min-width:0">
+                      <div style="display:flex;align-items:center;gap:8px;margin-bottom:5px">
+                        <span style="font-family:'Archivo Black';font-size:14px;color:var(--text);letter-spacing:-0.01em">Player Duel</span>
+                        <span style="background:var(--gbg);color:var(--gold);font-family:'JetBrains Mono';font-size:7.5px;letter-spacing:.1em;text-transform:uppercase;padding:2px 7px;border-radius:100px">Player Duel</span>
+                      </div>
+                      <div style="font-size:12.5px;color:var(--text2);line-height:1.45">Pick one player from each squad. Whose player scores more this GW wins. Requires selection from both sides.</div>
+                    </div>
+                  </div>
+                  <div style="padding:10px 15px;border-top:1px solid var(--rule);background:var(--elev);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
+                    <div style="display:flex;align-items:center;gap:8px"><div style="background:var(--abg);border:1px solid var(--accent);border-radius:3px;padding:3px 9px;font-family:'JetBrains Mono';font-size:8px;color:var(--accent)">MID Salah</div><div style="font-family:'JetBrains Mono';font-size:9px;color:var(--mute)">vs</div><div style="background:var(--elev);border:1px dashed var(--mute);border-radius:3px;padding:3px 9px;font-family:'JetBrains Mono';font-size:8px;color:var(--mute)">Pick theirs →</div></div>
+                    <span style="font-family:'JetBrains Mono';font-size:8px;color:var(--gold);letter-spacing:.06em">Requires player selection</span>
+                  </div>
+                </div>
+
+                <div class="fl-prop">
+                  <div style="padding:13px 15px;display:flex;align-items:flex-start;gap:10px">
+                    <div style="width:18px;height:18px;border-radius:50%;border:2px solid var(--rule);background:transparent;display:grid;place-items:center;flex-shrink:0;margin-top:2px"></div>
+                    <div style="flex:1;min-width:0">
+                      <div style="display:flex;align-items:center;gap:8px;margin-bottom:5px">
+                        <span style="font-family:'Archivo Black';font-size:14px;color:var(--text);letter-spacing:-0.01em">Match Result</span>
+                        <span style="background:var(--pbg);color:var(--pos);font-family:'JetBrains Mono';font-size:7.5px;letter-spacing:.1em;text-transform:uppercase;padding:2px 7px;border-radius:100px">Match Result</span>
+                      </div>
+                      <div style="font-size:12.5px;color:var(--text2);line-height:1.45">Predict the result of a specific fixture — Win, Draw, or Loss. If your call is right, you win.</div>
+                    </div>
+                  </div>
+                  <div style="padding:10px 15px;border-top:1px solid var(--rule);background:var(--elev);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
+                    <div style="display:flex;align-items:center;gap:6px"><div style="font-family:'JetBrains Mono';font-size:9.5px;color:var(--pos);font-weight:500">Arsenal</div><div style="background:var(--pbg);border:1px solid var(--pos);border-radius:3px;padding:2px 8px;font-family:'JetBrains Mono';font-size:8px;color:var(--pos)">Win</div><div style="font-family:'JetBrains Mono';font-size:9px;color:var(--mute)">vs Chelsea</div></div>
+                    <span style="font-family:'JetBrains Mono';font-size:8px;color:var(--pos);letter-spacing:.06em">Pick from GW31 fixtures</span>
+                  </div>
+                </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-top:2px">
+              <button class="btn btn-o" onclick="showChalView('c1')">← Back</button>
+              <button class="btn btn-p g btn-lg" onclick="showChalView('c3')">Next: Set stake →</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── VIEW: STEP 3 — SET STAKE ── -->
+        <div id="chal-v-c3" style="display:none;justify-content:center;width:100%">
+          <div style="width:100%;max-width:620px;display:flex;flex-direction:column;gap:16px">
+            <div style="display:flex;gap:16px">
+              <div style="flex:1">
+                <div class="card">
+                  <div class="cb" style="padding:22px 20px">
+                    <div style="text-align:center;margin-bottom:22px">
+                      <div style="font-family:'JetBrains Mono';font-size:8.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--mute);margin-bottom:10px">Staking each</div>
+                      <div style="display:flex;align-items:center;justify-content:center;gap:10px"><span class="ci xl">C</span><span style="font-family:'Archivo Black';font-size:56px;color:var(--gold);letter-spacing:-0.04em;line-height:1">300</span></div>
+                      <div style="font-family:'JetBrains Mono';font-size:9px;color:var(--mute);margin-top:7px">coins each manager</div>
+                    </div>
+                    <div style="position:relative;height:6px;border-radius:3px;background:var(--elev);margin-bottom:8px">
+                      <div style="position:absolute;left:0;top:0;height:100%;width:56%;border-radius:3px;background:var(--gold)"></div>
+                      <div style="position:absolute;left:calc(56% - 12px);top:-9px;width:24px;height:24px;border-radius:50%;background:var(--card);border:2.5px solid var(--gold);box-shadow:0 2px 10px rgba(184,114,14,.35)"></div>
+                    </div>
+                    <div style="display:flex;justify-content:space-between;margin-top:10px">
+                      <span style="font-family:'JetBrains Mono';font-size:8.5px;color:var(--mute)">50</span>
+                      <span style="font-family:'JetBrains Mono';font-size:8.5px;color:var(--mute)">100</span>
+                      <span style="font-family:'JetBrains Mono';font-size:8.5px;color:var(--mute)">200</span>
+                      <span style="font-family:'JetBrains Mono';font-size:8.5px;color:var(--gold);font-weight:700">300 ●</span>
+                      <span style="font-family:'JetBrains Mono';font-size:8.5px;color:var(--mute)">400</span>
+                      <span style="font-family:'JetBrains Mono';font-size:8.5px;color:var(--mute)">500</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div style="width:240px;flex-shrink:0;display:flex;flex-direction:column;gap:12px">
+                <div class="card">
+                  <div class="ch"><div class="ch-t">What's at stake</div></div>
+                  <div style="padding:11px 15px;border-bottom:1px solid var(--rule);display:flex;justify-content:space-between;align-items:center"><span style="font-size:13px;color:var(--text2)">If you win</span><span class="ca"><span class="ci">C</span><span class="can pos" style="font-size:16px">+270</span></span></div>
+                  <div style="padding:11px 15px;border-bottom:1px solid var(--rule);display:flex;justify-content:space-between;align-items:center"><span style="font-size:13px;color:var(--text2)">If you lose</span><span style="font-family:'Archivo Black';font-size:16px;color:var(--neg);letter-spacing:-0.02em">−300</span></div>
+                  <div style="padding:9px 15px;background:var(--elev);display:flex;justify-content:space-between"><span style="font-family:'JetBrains Mono';font-size:8.5px;color:var(--mute)">Rake 10%</span><span style="font-family:'JetBrains Mono';font-size:8.5px;color:var(--mute)">30 coins</span></div>
+                </div>
+                <div style="display:flex;align-items:center;gap:7px;padding:10px 13px;background:var(--card);border:1px solid var(--rule);border-radius:var(--r)">
+                  <div style="width:16px;height:16px;border-radius:50%;background:var(--pbg);display:grid;place-items:center;flex-shrink:0"><span style="font-size:8px;color:var(--pos)">✓</span></div>
+                  <div><div style="font-family:'JetBrains Mono';font-size:8.5px;color:var(--mute)">After staking</div><div style="font-family:'Archivo Black';font-size:13px;color:var(--text)">940 coins left</div></div>
+                </div>
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between">
+              <button class="btn btn-o" onclick="showChalView('c2')">← Back</button>
+              <button class="btn btn-p g btn-lg" onclick="showChalView('cf')">Review challenge →</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── VIEW: CONFIRM ── -->
+        <div id="chal-v-cf" style="display:none;justify-content:center;width:100%">
+          <div style="width:100%;max-width:560px;display:flex;flex-direction:column;gap:16px">
+            <div class="card" style="overflow:hidden">
+              <div style="background:var(--shell);padding:16px 22px">
+                <div style="font-family:'JetBrains Mono';font-size:8px;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.38);margin-bottom:7px">Challenging</div>
+                <div style="display:flex;align-items:center;gap:12px">
+                  <div style="font-family:'Archivo Black';font-size:24px;color:#fff;letter-spacing:-0.02em;line-height:1">PabloK</div>
+                  <span style="font-family:'JetBrains Mono';font-size:9px;color:var(--accent);background:var(--abg);padding:2px 9px;border-radius:3px">#2</span>
+                  <div style="margin-left:auto;text-align:right"><div style="font-family:'JetBrains Mono';font-size:8px;color:rgba(255,255,255,.38);margin-bottom:2px">GW31 score</div><div style="font-family:'Archivo Black';font-size:19px;color:rgba(255,255,255,.78);letter-spacing:-0.02em">61 pts</div></div>
+                </div>
+              </div>
+              <div style="padding:13px 22px;border-bottom:1px solid var(--rule);display:flex;justify-content:space-between;align-items:center"><span style="font-family:'JetBrains Mono';font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--mute)">Proposition</span><div style="display:flex;align-items:center;gap:8px"><span style="font-family:'Archivo Black';font-size:14px;color:var(--text);letter-spacing:-0.01em">GW Total Battle</span><span style="background:var(--abg);color:var(--accent);font-family:'JetBrains Mono';font-size:7.5px;letter-spacing:.1em;text-transform:uppercase;padding:2px 7px;border-radius:100px">GW31</span></div></div>
+              <div style="padding:13px 22px;border-bottom:1px solid var(--rule);display:flex;justify-content:space-between;align-items:center"><span style="font-family:'JetBrains Mono';font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--mute)">Stake each</span><span class="ca lg"><span class="ci lg">C</span><span class="can">300</span></span></div>
+              <div style="padding:13px 22px;border-bottom:1px solid var(--rule);display:flex;justify-content:space-between;align-items:center"><span style="font-family:'JetBrains Mono';font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--mute)">If you win</span><span class="ca lg"><span class="ci lg">C</span><span class="can pos">270</span></span></div>
+              <div style="padding:13px 22px;border-bottom:1px solid var(--rule);display:flex;justify-content:space-between;align-items:center"><span style="font-family:'JetBrains Mono';font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--mute)">If you lose</span><span style="font-family:'Archivo Black';font-size:20px;color:var(--neg);letter-spacing:-0.02em">−300</span></div>
+              <div style="padding:11px 22px;background:var(--elev)"><span style="font-family:'JetBrains Mono';font-size:9px;color:var(--mute);letter-spacing:.04em">⏱ Expires 24 hrs if not accepted · Platform rake 10%</span></div>
+            </div>
+            <button class="btn btn-lg btn-bl" style="background:var(--gold);color:#fff;justify-content:center;gap:10px;border:none;font-family:'Archivo Black';font-size:16px;padding:18px;letter-spacing:-0.01em;box-shadow:0 8px 28px -8px rgba(184,114,14,.55)" onclick="showChalView('ov')">Send Challenge →</button>
+            <div style="text-align:center;font-family:'JetBrains Mono';font-size:9px;color:var(--mute);letter-spacing:.04em">300 coins held in escrow until GW31 settles</div>
+            <button class="btn btn-o" style="align-self:flex-start" onclick="showChalView('c3')">← Back</button>
+          </div>
+        </div>
+
+      </div><!-- /scb -->
+    </div><!-- /s-chal -->
+  </div><!-- /screens -->
+</div><!-- /app -->
+
+<script>
+function goTo(id) {
+  // Proto bar
+  document.querySelectorAll('.pbar .pb').forEach(b => b.classList.remove('on'));
+  const pb = document.querySelector(`.pbar .pb[data-scr="${id}"]`);
+  if (pb) pb.classList.add('on');
+  // Screens
+  document.querySelectorAll('.scr').forEach(s => s.classList.remove('on'));
+  const scr = document.getElementById(id);
+  if (scr) scr.classList.add('on');
+  if (id === 's-chal') showChalView('ov');
+  // Sidebar
+  const maps = {
+    's-home': 'home', 's-f1p': 'f1', 's-f1r': 'f1',
+    's-tl': 'ten', 's-tt': 'ten',
+    's-trophy': 'trophy', 's-group': 'group',
+    's-chal': 'chal'
+  };
+  document.querySelectorAll('.si').forEach(i => i.classList.remove('on'));
+  const sport = maps[id];
+  if (sport) {
+    document.querySelectorAll(`.si[data-s="${sport}"]`).forEach(i => i.classList.add('on'));
+    document.querySelectorAll(`.si[data-scr="${id}"]`).forEach(i => i.classList.add('on'));
+  }
+}
+
+// Proto bar clicks
+document.querySelectorAll('.pbar .pb[data-scr]').forEach(btn => {
+  btn.addEventListener('click', () => goTo(btn.dataset.scr));
+});
+
+// Sidebar clicks
+document.querySelectorAll('.si[data-scr]').forEach(item => {
+  item.addEventListener('click', () => goTo(item.dataset.scr));
+});
+
+// F1 form state toggle
+function f1State(state) {
+  const open = document.getElementById('f1-open');
+  const sub  = document.getElementById('f1-sub');
+  const bo = document.getElementById('f1-btn-open');
+  const bs = document.getElementById('f1-btn-sub');
+  if (state === 'open') {
+    open.style.display = ''; sub.style.display = 'none';
+    bo.classList.add('on'); bs.classList.remove('on');
+  } else {
+    open.style.display = 'none'; sub.style.display = '';
+    bs.classList.add('on'); bo.classList.remove('on');
+  }
+}
+
+// Season collapsible
+document.querySelector('.seascol-hd').addEventListener('click', function() {
+  const body = this.parentElement.querySelector('.seascol-body');
+  if (!body) {
+    const el = document.createElement('div');
+    el.className = 'seascol-body';
+    el.innerHTML = `
+      <div class="pf spec filled"><div class="pf-lbl">Drivers' Champion</div><div class="pf-drv">Max Verstappen</div><div class="pf-team"><div class="tdot rbr"></div><div class="pf-sub">Red Bull Racing</div></div></div>
+      <div class="pf team"><div class="pf-lbl">Constructors' Champion</div><div class="pf-drv empty">Select team…</div><div class="pf-team"><div class="pf-sub">Season-long pick</div></div></div>`;
+    this.parentElement.appendChild(el);
+    this.querySelector('.seascol-tog').textContent = 'Hide ↑';
+  } else {
+    body.remove();
+    this.querySelector('.seascol-tog').textContent = 'Show ↓';
+  }
+});
+
+function showChalView(v) {
+  ['ov','c1','c2','c3','cf'].forEach(function(id) {
+    var el = document.getElementById('chal-v-' + id);
+    if (el) el.style.display = 'none';
+  });
+  var isFlow = v !== 'ov';
+  var shOv = document.getElementById('chal-sh-ov');
+  var shFl = document.getElementById('chal-sh-fl');
+  if (shOv) shOv.style.display = isFlow ? 'none' : '';
+  if (shFl) shFl.style.display = isFlow ? '' : 'none';
+  var target = document.getElementById('chal-v-' + v);
+  if (target) target.style.display = 'flex';
+  if (isFlow) {
+    var meta = {
+      c1: { ttl:'Pick an opponent',   ey:"New Challenge · The Gaffer's Cup · GW31", step:'Step 1 of 3', dots:['curr','next','next'], back:'ov', bl:'← Cancel' },
+      c2: { ttl:'Pick a proposition', ey:'New Challenge · vs PabloK · GW31',         step:'Step 2 of 3', dots:['done','curr','next'], back:'c1', bl:'← Back'   },
+      c3: { ttl:'Set your stake',     ey:'New Challenge · GW Total · vs PabloK',      step:'Step 3 of 3', dots:['done','done','curr'], back:'c2', bl:'← Back'   },
+      cf: { ttl:'Review & send',      ey:'New Challenge · All steps complete',             step:'Review',      dots:['done','done','done'], back:'c3', bl:'← Back'   }
+    };
+    var m = meta[v];
+    if (m) {
+      document.getElementById('chal-fl-ttl').textContent = m.ttl;
+      document.getElementById('chal-fl-ey').textContent  = m.ey;
+      document.getElementById('chal-fl-step').textContent = m.step;
+      var btn = document.getElementById('chal-fl-back');
+      btn.textContent = m.bl;
+      (function(back){ btn.onclick = function(){ showChalView(back); }; })(m.back);
+      var dots = document.querySelectorAll('#chal-step-dots .step-dot');
+      dots.forEach(function(d,i){ d.className = 'step-dot ' + m.dots[i]; });
+    }
+  }
+}
+</script>
+</body>
+</html>

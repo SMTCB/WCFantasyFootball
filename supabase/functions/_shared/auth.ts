@@ -3,32 +3,65 @@
 //
 // Accepts:
 //   A) Exact Bearer match against SUPABASE_SERVICE_ROLE_KEY (new sb_secret_... format)
-//   B) Old-format service-role JWT (eyJ... — still used by cron commands) — decoded
-//      and checked for role=service_role claim (signature not verified; acceptable since
-//      the guard prevents casual abuse, and actual DB writes use the function's own client)
+//   B) Old-format service-role JWT (eyJ... — still used by cron commands) — signature
+//      verified with HMAC-SHA256 using SUPABASE_JWT_SECRET, then role=service_role checked
+//   C) Exact Bearer match against ADMIN_TRIGGER_KEY — a manually-set secret for
+//      one-off admin-triggered calls (curl from terminal) when the real
+//      SUPABASE_SERVICE_ROLE_KEY value is masked by the dashboard/CLI and no
+//      working legacy JWT exists. Added 2026-06-28: discovered that on
+//      projects migrated to the new Supabase key system, neither Path A nor
+//      Path B can be satisfied by anyone outside Supabase's own infra, which
+//      left score-tennis-tournament / score-atp-finals / score-f1-race /
+//      sync-tennis-players permanently uncallable.
 //
 // Usage:
 //   import { requireServiceRole } from '../_shared/auth.ts';
 //   // at the top of your handler, after method check:
-//   const authErr = requireServiceRole(req);
+//   const authErr = await requireServiceRole(req);
 //   if (authErr) return authErr;
 
-export function requireServiceRole(req: Request): Response | null {
+export async function requireServiceRole(req: Request): Promise<Response | null> {
   const auth       = req.headers.get('Authorization') ?? '';
   const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
 
-  // Path A: exact match (new key format)
+  // Path A: exact match (new sb_secret_... format or old eyJ... stored as env var)
   if (serviceKey && auth === `Bearer ${serviceKey}`) return null;
 
-  // Path B: old-format eyJ... service-role JWT — check role claim
-  try {
-    const token = auth.startsWith('Bearer ') ? auth.slice(7) : '';
-    const parts = token.split('.');
-    if (parts.length === 3) {
-      const payload = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')));
-      if (payload.role === 'service_role') return null;
-    }
-  } catch { /* malformed JWT */ }
+  // Path C: manually-set admin trigger key (see note above)
+  const adminKey = Deno.env.get('ADMIN_TRIGGER_KEY') ?? '';
+  if (adminKey && auth === `Bearer ${adminKey}`) return null;
+
+  // Path B: old-format eyJ... JWT sent by cron commands — verify HMAC-SHA256 signature
+  // before trusting any claim in the payload.
+  const jwtSecret = Deno.env.get('SUPABASE_JWT_SECRET') ?? '';
+  if (jwtSecret) {
+    try {
+      const token = auth.startsWith('Bearer ') ? auth.slice(7) : '';
+      const parts = token.split('.');
+      if (parts.length === 3) {
+        const signingInput = `${parts[0]}.${parts[1]}`;
+        const b64sig = parts[2].replace(/-/g, '+').replace(/_/g, '/');
+        const sigBytes = Uint8Array.from(atob(b64sig), (c) => c.charCodeAt(0));
+        const cryptoKey = await crypto.subtle.importKey(
+          'raw',
+          new TextEncoder().encode(jwtSecret),
+          { name: 'HMAC', hash: 'SHA-256' },
+          false,
+          ['verify'],
+        );
+        const valid = await crypto.subtle.verify(
+          'HMAC',
+          cryptoKey,
+          sigBytes,
+          new TextEncoder().encode(signingInput),
+        );
+        if (valid) {
+          const payload = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')));
+          if (payload.role === 'service_role') return null;
+        }
+      }
+    } catch { /* malformed JWT or crypto error — fall through to 401 */ }
+  }
 
   return new Response(JSON.stringify({ error: 'Unauthorized' }), {
     status: 401,

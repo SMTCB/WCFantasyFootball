@@ -69,7 +69,7 @@ export default function LeagueInviteCard({ league, onDone }) {
     try {
       const dataUrl = await domToPng(cardRef.current, {
         scale: 2,
-        backgroundColor: '#0F1218',   // --ink-2 resolved value
+        backgroundColor: '#FFFFFF',   // --card resolved value
       });
       const link = document.createElement('a');
       link.download = `${league.name.replace(/\s+/g, '-')}-invite.png`;

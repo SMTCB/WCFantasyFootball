@@ -159,7 +159,7 @@ export default function DraftRecoveryScreen() {
       if (need > 0) missing.push({ pos, need });
     }
     return missing;
-  }, [posCounts]);
+  }, [posCounts, SQUAD_POS_CAPS]);
 
   // Filtered available pool
   const available = useMemo(() => {
@@ -217,8 +217,8 @@ export default function DraftRecoveryScreen() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#0A0A0A] flex items-center justify-center">
-        <div className="text-[#9E9E9E] text-[12px] font-bold uppercase tracking-widest animate-pulse">
+      <div className="min-h-screen bg-[var(--bg)] flex items-center justify-center">
+        <div className="text-[var(--mute)] text-[12px] font-bold uppercase tracking-widest animate-pulse">
           Loading...
         </div>
       </div>
@@ -227,20 +227,20 @@ export default function DraftRecoveryScreen() {
 
   if (done) {
     return (
-      <div className="min-h-screen bg-[#0A0A0A] flex flex-col items-center justify-center px-6 gap-6">
+      <div className="min-h-screen bg-[var(--bg)] flex flex-col items-center justify-center px-6 gap-6">
         <div className="text-[40px]">✅</div>
         <div className="text-center">
-          <div className="text-white font-black text-xl uppercase tracking-widest mb-2">
+          <div className="text-[var(--paper)] font-black text-xl uppercase tracking-widest mb-2">
             Squad Complete
           </div>
-          <div className="text-[#9E9E9E] text-[12px]">
+          <div className="text-[var(--mute)] text-[12px]">
             All {SQUAD_SIZE} players locked in. Budget used: €{budgetUsed.toFixed(1)}M
           </div>
         </div>
         <button
           onClick={() => navigate(`/league/${leagueId}`)}
           className="text-cyan text-[11px] uppercase tracking-widest underline"
-          style={{ color: '#00B4D8' }}
+          style={{ color: 'var(--accent)' }}
         >
           Back to League
         </button>
@@ -249,17 +249,17 @@ export default function DraftRecoveryScreen() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0A0A0A] flex flex-col">
+    <div className="min-h-screen bg-[var(--bg)] flex flex-col">
 
       {/* Header */}
-      <div className="bg-[#111111] border-b border-[#1E1E1E] px-4 pt-10 pb-4 sticky top-0 z-20">
+      <div className="bg-[var(--shell)] border-b border-[var(--rule)] px-4 pt-10 pb-4 sticky top-0 z-20">
         <div className="flex items-center justify-between mb-3">
-          <button onClick={() => navigate(`/league/${leagueId}`)} className="text-[#9E9E9E] text-[20px] leading-none">←</button>
+          <button onClick={() => navigate(`/league/${leagueId}`)} className="text-[var(--mute)] text-[20px] leading-none">←</button>
           <div className="text-center">
-            <div className="text-[10px] font-black uppercase tracking-[0.4em] text-[#9E9E9E] font-serif">
+            <div className="text-[10px] font-black uppercase tracking-[0.4em] text-[var(--mute)] font-serif">
               Draft Recovery
             </div>
-            <div className="text-white font-black text-[15px] uppercase tracking-wider">
+            <div className="text-[var(--paper)] font-black text-[15px] uppercase tracking-wider">
               Fill Your Gaps
             </div>
           </div>
@@ -269,12 +269,12 @@ export default function DraftRecoveryScreen() {
         {/* Status bar */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-1.5">
-            <span className="text-[#FFC107] text-[10px] font-black">{displaySlots}</span>
-            <span className="text-[#9E9E9E] text-[10px] uppercase tracking-widest">slots remaining</span>
+            <span className="text-[10px] font-black" style={{ color: 'var(--warn)' }}>{displaySlots}</span>
+            <span className="text-[var(--mute)] text-[10px] uppercase tracking-widest">slots remaining</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <span className="text-[#9E9E9E] text-[10px] uppercase tracking-widest">Budget</span>
-            <span className={`text-[10px] font-black ${budgetLeft < 10 ? 'text-[#E53935]' : 'text-[#00C853]'}`}>
+            <span className="text-[var(--mute)] text-[10px] uppercase tracking-widest">Budget</span>
+            <span className="text-[10px] font-black" style={{ color: budgetLeft < 10 ? 'var(--danger)' : 'var(--positive)' }}>
               €{budgetLeft.toFixed(1)}M
             </span>
           </div>
@@ -291,7 +291,7 @@ export default function DraftRecoveryScreen() {
                 >
                   {pos}
                 </span>
-                <span className="text-[#9E9E9E] text-[9px]">×{need}</span>
+                <span className="text-[var(--mute)] text-[9px]">×{need}</span>
               </div>
             ))}
           </div>
@@ -304,21 +304,21 @@ export default function DraftRecoveryScreen() {
           className="px-4 py-2.5 flex items-center justify-between gap-3 text-[11px] font-bold"
           style={{
             background: relaxation.pressure >= 0.9
-              ? 'rgba(240,58,58,0.12)'
+              ? 'var(--neg-bg)'
               : relaxation.pressure >= 0.7
-              ? 'rgba(255,193,7,0.10)'
-              : 'rgba(24,201,107,0.08)',
-            borderBottom: '1px solid rgba(255,255,255,0.06)',
+              ? 'rgba(184,114,14,0.10)'
+              : 'var(--pos-bg)',
+            borderBottom: '1px solid var(--rule)',
           }}
         >
           <div className="flex items-center gap-2">
-            <span style={{ color: relaxation.pressure >= 0.9 ? 'var(--danger)' : relaxation.pressure >= 0.7 ? '#FFC107' : 'var(--positive)' }}>
+            <span style={{ color: relaxation.pressure >= 0.9 ? 'var(--danger)' : relaxation.pressure >= 0.7 ? 'var(--warn)' : 'var(--positive)' }}>
               {relaxation.pressure >= 0.9 ? '🔴' : relaxation.pressure >= 0.7 ? '🟡' : '🟢'}
             </span>
-            <span style={{ color: '#9E9E9E' }}>
+            <span style={{ color: 'var(--mute)' }}>
               Pool pressure{' '}
               <span style={{
-                color: relaxation.pressure >= 0.9 ? 'var(--danger)' : relaxation.pressure >= 0.7 ? '#FFC107' : 'var(--positive)',
+                color: relaxation.pressure >= 0.9 ? 'var(--danger)' : relaxation.pressure >= 0.7 ? 'var(--warn)' : 'var(--positive)',
                 fontFamily: 'Archivo Black, sans-serif',
                 fontWeight: 900,
               }}>
@@ -331,7 +331,7 @@ export default function DraftRecoveryScreen() {
                 : ' — strict no-repeat'}
             </span>
           </div>
-          <span style={{ color: '#555', fontFamily: 'Archivo Black, sans-serif', fontSize: '10px' }}>
+          <span style={{ color: 'var(--mute)', fontFamily: 'Archivo Black, sans-serif', fontSize: '10px' }}>
             {relaxation.availablePool} available
           </span>
         </div>
@@ -339,14 +339,14 @@ export default function DraftRecoveryScreen() {
 
       {/* Alert banner */}
       {allocation ? (
-        <div className="bg-[#1A1200] border-b border-[#FFC107]/20 px-4 py-2.5">
-          <div className="text-[#FFC107] text-[11px] font-bold">
+        <div className="border-b px-4 py-2.5" style={{ background: 'rgba(184,114,14,0.08)', borderColor: 'rgba(184,114,14,0.25)' }}>
+          <div className="text-[11px] font-bold" style={{ color: 'var(--warn)' }}>
             ⚠ {displaySlots} player{displaySlots !== 1 ? 's' : ''} couldn't be auto-allocated during the draft — pick them now, first come first served.
           </div>
         </div>
       ) : (
-        <div className="bg-[#1A0000] border-b border-[#E53935]/20 px-4 py-2.5">
-          <div className="text-[#E53935] text-[11px] font-bold">
+        <div className="border-b px-4 py-2.5" style={{ background: 'var(--neg-bg)', borderColor: 'rgba(185,28,28,0.25)' }}>
+          <div className="text-[11px] font-bold" style={{ color: 'var(--danger)' }}>
             You missed the draft deadline. Build your full squad from what's available — first come first served.
           </div>
         </div>
@@ -354,21 +354,21 @@ export default function DraftRecoveryScreen() {
 
       {/* Error */}
       {error && (
-        <div className="px-4 py-2 bg-[#1A0000] border-b border-[#E53935]/20">
-          <div className="text-[#E53935] text-[11px] font-bold">{error}</div>
+        <div className="border-b px-4 py-2" style={{ background: 'var(--neg-bg)', borderColor: 'rgba(185,28,28,0.25)' }}>
+          <div className="text-[11px] font-bold" style={{ color: 'var(--danger)' }}>{error}</div>
         </div>
       )}
 
       {/* Player pool */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Search + filter */}
-        <div className="px-4 py-2 border-b border-[#1E1E1E] space-y-2">
+        <div className="px-4 py-2 border-b border-[var(--rule)] space-y-2">
           <input
             type="text"
             placeholder="Search available players..."
             value={search}
             onChange={e => setSearch(e.target.value)}
-            className="w-full bg-[#111] border border-[#2A2A2A] rounded-sm px-3 py-2 text-white text-[12px] outline-none placeholder:text-[#444] focus:border-[#444]"
+            className="w-full bg-[var(--card)] border border-[var(--rule)] rounded-sm px-3 py-2 text-[var(--paper)] text-[12px] outline-none placeholder:text-[var(--mute)] focus:border-[var(--mute)]"
           />
           <div className="flex gap-2">
             {POS_FILTER_ORDER.map(pos => (
@@ -378,7 +378,7 @@ export default function DraftRecoveryScreen() {
                 className={`flex-1 py-1.5 rounded text-[10px] font-black uppercase tracking-wider transition-all ${
                   filterPos === pos
                     ? 'bg-white text-black'
-                    : 'bg-[#111] text-[#555] border border-[#1E1E1E]'
+                    : 'bg-[var(--card)] text-[var(--mute)] border border-[var(--rule)]'
                 }`}
               >
                 {pos}
@@ -390,7 +390,7 @@ export default function DraftRecoveryScreen() {
         {/* Player rows */}
         <div className="flex-1 overflow-y-auto px-4 py-2 space-y-1.5">
           {available.length === 0 && (
-            <div className="text-center py-8 text-[#333] text-[11px] font-bold uppercase tracking-widest">
+            <div className="text-center py-8 text-[var(--mute)] text-[11px] font-bold uppercase tracking-widest">
               No available players
             </div>
           )}
@@ -404,7 +404,7 @@ export default function DraftRecoveryScreen() {
               <div
                 key={p.id}
                 onClick={() => !disabled && !isBusy && pickPlayer(p)}
-                className={`flex items-center gap-3 bg-[#111] rounded-sm px-3 py-3 transition-all ${
+                className={`flex items-center gap-3 bg-[var(--card)] rounded-sm px-3 py-3 transition-all ${
                   disabled ? 'opacity-35' : 'cursor-pointer active:opacity-70'
                 } ${isBusy ? 'animate-pulse' : ''}`}
               >
@@ -414,16 +414,16 @@ export default function DraftRecoveryScreen() {
                 >
                   {p.position}
                 </span>
-                <span className="text-white text-[12px] font-bold flex-1 truncate">{p.name}</span>
-                <span className="text-[#555] text-[11px] shrink-0">{p.club}</span>
-                <span className={`text-[11px] font-bold shrink-0 ${overBudget ? 'text-[#E53935]' : 'text-[#9E9E9E]'}`}>
+                <span className="text-[var(--paper)] text-[12px] font-bold flex-1 truncate">{p.name}</span>
+                <span className="text-[var(--mute)] text-[11px] shrink-0">{p.club}</span>
+                <span className="text-[11px] font-bold shrink-0" style={{ color: overBudget ? 'var(--danger)' : 'var(--mute)' }}>
                   €{p.price}M
                 </span>
                 {!disabled && (
-                  <span className="text-[#00C853] text-[18px] leading-none shrink-0 font-black">+</span>
+                  <span className="text-[18px] leading-none shrink-0 font-black" style={{ color: 'var(--positive)' }}>+</span>
                 )}
                 {posAtCap && (
-                  <span className="text-[9px] text-[#555] shrink-0 uppercase">cap</span>
+                  <span className="text-[9px] text-[var(--mute)] shrink-0 uppercase">cap</span>
                 )}
               </div>
             );

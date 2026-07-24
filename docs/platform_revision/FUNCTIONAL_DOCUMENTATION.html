@@ -1,0 +1,1338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FantasyKit — Platform Functional Specification</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Archivo:ital,wght@0,400;0,500;0,600;0,700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ── TOKENS ──────────────────────────────────── */
+:root {
+  --bg:#F7F3ED; --card:#FFFFFF; --elev:#EDEAE2;
+  --shell:#18202E; --shell2:#202B3D;
+  --text:#18202E; --text2:#4B5568; --mute:#8A97A8;
+  --rule:#E2DDD5; --rule2:#ECE7DF;
+  --accent:#1A6FA8; --abg:rgba(26,111,168,.09);
+  --gold:#B8720E; --gbg:rgba(184,114,14,.10);
+  --pos:#166534; --pbg:rgba(22,101,52,.10);
+  --neg:#B91C1C; --nbg:rgba(185,28,28,.08);
+  --gk:#8C49C9; --def:#1A6FA8; --mid:#B8720E; --fwd:#B91C1C;
+  --r:8px; --rsm:4px;
+  --dur:.48s; --ease:cubic-bezier(.4,0,.2,1);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden;background:var(--shell)}
+body{font-family:'Archivo',sans-serif;-webkit-font-smoothing:antialiased}
+
+/* ── KEYFRAMES ──────────────────────────────── */
+@keyframes float {
+  0%,100%{transform:translateY(0) rotate(0deg)}
+  33%{transform:translateY(-12px) rotate(2deg)}
+  66%{transform:translateY(6px) rotate(-1deg)}
+}
+@keyframes pulse-glow {
+  0%,100%{box-shadow:0 0 0 0 rgba(26,111,168,.4)}
+  50%{box-shadow:0 0 0 10px rgba(26,111,168,0)}
+}
+@keyframes pulse-gold {
+  0%,100%{box-shadow:0 0 0 0 rgba(184,114,14,.5)}
+  50%{box-shadow:0 0 0 10px rgba(184,114,14,0)}
+}
+@keyframes shimmer {
+  0%{background-position:-400px 0}
+  100%{background-position:400px 0}
+}
+@keyframes gradient-shift {
+  0%,100%{background-position:0% 50%}
+  50%{background-position:100% 50%}
+}
+@keyframes spin-slow {
+  from{transform:rotate(0deg)}
+  to{transform:rotate(360deg)}
+}
+@keyframes border-glow {
+  0%,100%{border-color:rgba(26,111,168,.3);box-shadow:0 0 0 0 rgba(26,111,168,.2)}
+  50%{border-color:rgba(26,111,168,.8);box-shadow:0 0 20px rgba(26,111,168,.25)}
+}
+@keyframes border-glow-gold {
+  0%,100%{border-color:rgba(184,114,14,.3);box-shadow:0 0 0 0 rgba(184,114,14,.2)}
+  50%{border-color:rgba(184,114,14,.8);box-shadow:0 0 20px rgba(184,114,14,.25)}
+}
+@keyframes ripple {
+  0%{transform:scale(1);opacity:1}
+  100%{transform:scale(2.5);opacity:0}
+}
+@keyframes typewriter {
+  from{width:0}
+  to{width:100%}
+}
+@keyframes blink {
+  0%,100%{opacity:1} 50%{opacity:0}
+}
+@keyframes reveal-up {
+  from{opacity:0;transform:translateY(24px)}
+  to{opacity:1;transform:translateY(0)}
+}
+@keyframes count-flash {
+  0%{color:var(--accent);text-shadow:0 0 20px rgba(26,111,168,.8)}
+  100%{text-shadow:none}
+}
+@keyframes live-pulse {
+  0%,100%{opacity:1;transform:scale(1)}
+  50%{opacity:.6;transform:scale(.85)}
+}
+@keyframes card-hover-lift {
+  from{transform:translateY(0) scale(1)}
+  to{transform:translateY(-4px) scale(1.01)}
+}
+@keyframes slide-badge {
+  from{opacity:0;transform:translateX(12px)}
+  to{opacity:1;transform:translateX(0)}
+}
+
+/* ── DECK ────────────────────────────────────── */
+.deck{position:fixed;inset:0;overflow:hidden;perspective:1200px}
+
+/* ── SLIDES ──────────────────────────────────── */
+.slide{
+  position:absolute;inset:0;display:flex;flex-direction:column;
+  background:var(--bg);
+  opacity:0;visibility:hidden;pointer-events:none;
+  transform:translateY(48px) scale(.98);
+  transition:opacity var(--dur) var(--ease),
+             transform var(--dur) var(--ease),
+             visibility 0s var(--dur);
+  will-change:transform,opacity;
+}
+.slide.active{
+  opacity:1;visibility:visible;pointer-events:all;
+  transform:translateY(0) scale(1);
+  transition:opacity var(--dur) var(--ease),
+             transform var(--dur) var(--ease),
+             visibility 0s 0s;
+}
+.slide.exit-up{
+  opacity:0;transform:translateY(-40px) scale(.97);
+  transition:opacity var(--dur) var(--ease),
+             transform var(--dur) var(--ease),
+             visibility 0s var(--dur);
+}
+.slide.exit-down{
+  opacity:0;transform:translateY(40px) scale(.97);
+  transition:opacity var(--dur) var(--ease),
+             transform var(--dur) var(--ease),
+             visibility 0s var(--dur);
+}
+.slide-dark{background:var(--shell)}
+
+/* ── SLIDE LAYOUT ───────────────────────────── */
+.s-head{
+  flex-shrink:0;padding:22px 48px 16px;
+  border-bottom:1px solid var(--rule);
+  background:var(--card);
+  display:flex;align-items:center;gap:14px;
+  position:relative;overflow:hidden;
+}
+.s-head::after{
+  content:"";position:absolute;bottom:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,var(--accent),var(--gold),var(--pos),var(--accent));
+  background-size:200% 100%;
+  animation:gradient-shift 4s ease infinite;
+}
+.slide-dark .s-head{background:var(--shell2);border-color:rgba(255,255,255,.08)}
+.s-head-ey{font-family:'JetBrains Mono';font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:var(--mute);flex-shrink:0}
+.s-head-title{font-family:'Archivo Black';font-size:14px;letter-spacing:-0.01em;flex:1}
+.slide-dark .s-head-title{color:#fff}
+.slide-dark .s-head-ey{color:rgba(255,255,255,.3)}
+.slide-dark .s-head::after{opacity:.5}
+
+/* Section label badge in header */
+.s-head-badge{
+  font-family:'JetBrains Mono';font-size:8px;letter-spacing:.12em;text-transform:uppercase;
+  padding:3px 8px;border-radius:3px;background:var(--abg);color:var(--accent);
+  animation:slide-badge .4s var(--ease) both;
+}
+
+.s-body{
+  flex:1;overflow-y:auto;padding:28px 48px 72px;scroll-behavior:smooth;
+}
+.s-body::-webkit-scrollbar{width:3px}
+.s-body::-webkit-scrollbar-track{background:transparent}
+.s-body::-webkit-scrollbar-thumb{background:var(--rule);border-radius:2px}
+
+/* ── COVER SLIDE ────────────────────────────── */
+.slide-cover{background:var(--shell);justify-content:center}
+.slide-cover .s-body{overflow:hidden;padding:0}
+.cover-inner{max-width:980px;margin:0 auto;padding:48px 48px;position:relative;z-index:1}
+
+/* Particle canvas */
+#particles{position:absolute;inset:0;opacity:.4;z-index:0}
+
+/* ── CHROME ─────────────────────────────────── */
+.progress-bar{position:fixed;top:0;left:0;height:3px;z-index:200;transition:width .5s var(--ease);
+  background:linear-gradient(90deg,var(--accent),var(--gold),#5FA9D6);
+  box-shadow:0 0 10px rgba(26,111,168,.5);
+}
+
+.side-dots{position:fixed;right:18px;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:10px;z-index:100}
+.sd{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.2);cursor:pointer;transition:all .3s;border:none;padding:0;position:relative}
+.sd::after{content:"";position:absolute;inset:-3px;border-radius:50%;border:1.5px solid rgba(255,255,255,.0);transition:all .3s}
+.sd.on{background:#5FA9D6;transform:scale(1.35)}
+.sd.on::after{border-color:rgba(95,169,214,.4);animation:ripple 1.5s ease-out infinite}
+.sd:hover{background:rgba(255,255,255,.5)}
+
+.nav-arrows{position:fixed;bottom:22px;right:22px;display:flex;align-items:center;gap:8px;z-index:100}
+.nav-btn{
+  width:40px;height:40px;border-radius:50%;
+  background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);
+  color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;
+  font-size:14px;transition:all .25s;backdrop-filter:blur(10px);
+}
+.nav-btn:hover:not(:disabled){background:rgba(95,169,214,.25);border-color:rgba(95,169,214,.5);transform:scale(1.1);box-shadow:0 0 14px rgba(95,169,214,.3)}
+.nav-btn:disabled{opacity:.25;cursor:default}
+.nav-counter{font-family:'JetBrains Mono';font-size:9.5px;letter-spacing:.1em;color:rgba(255,255,255,.4);min-width:32px;text-align:center}
+.kbd-hint{position:fixed;bottom:28px;left:50%;transform:translateX(-50%);font-family:'JetBrains Mono';font-size:8.5px;letter-spacing:.14em;color:rgba(255,255,255,.2);text-transform:uppercase;z-index:100;pointer-events:none}
+
+/* ── ANIMATION HELPERS ───────────────────────── */
+.anim{opacity:0;transform:translateY(20px);transition:opacity .55s var(--ease),transform .55s var(--ease)}
+.anim.in{opacity:1;transform:translateY(0)}
+.d1{transition-delay:.07s}.d2{transition-delay:.14s}.d3{transition-delay:.21s}
+.d4{transition-delay:.28s}.d5{transition-delay:.35s}.d6{transition-delay:.42s}
+.anim-scale{opacity:0;transform:scale(.92);transition:opacity .5s var(--ease),transform .5s var(--ease)}
+.anim-scale.in{opacity:1;transform:scale(1)}
+.anim-left{opacity:0;transform:translateX(-20px);transition:opacity .5s var(--ease),transform .5s var(--ease)}
+.anim-left.in{opacity:1;transform:translateX(0)}
+
+/* ── TYPOGRAPHY ──────────────────────────────── */
+.sec-ey{font-family:'JetBrains Mono';font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:var(--mute);margin-bottom:8px}
+.sec-h{font-family:'Archivo Black';font-size:clamp(22px,3vw,38px);letter-spacing:-0.025em;line-height:1.05;margin-bottom:8px}
+.sec-sub{font-size:14.5px;color:var(--text2);max-width:60ch;line-height:1.6;margin-bottom:26px}
+.h3{font-family:'Archivo Black';font-size:14.5px;letter-spacing:-0.01em;margin-bottom:8px;margin-top:22px}
+.body-text{font-size:13px;color:var(--text2);line-height:1.65;margin-bottom:12px}
+.label{font-family:'JetBrains Mono';font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:var(--mute);display:block;margin-bottom:10px}
+
+/* ── GRIDS ───────────────────────────────────── */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.g6{display:grid;grid-template-columns:repeat(6,1fr);gap:10px}
+@media(max-width:900px){.g3,.g4{grid-template-columns:1fr 1fr}}
+@media(max-width:600px){.g2,.g3,.g4,.g6{grid-template-columns:1fr}}
+
+/* ── 3D CARD TILT ────────────────────────────── */
+.tilt{transform-style:preserve-3d;transition:transform .3s var(--ease),box-shadow .3s;will-change:transform}
+.tilt:hover{box-shadow:0 16px 40px rgba(0,0,0,.12)}
+
+/* ── CARD VARIANTS ───────────────────────────── */
+.kit-card{background:var(--card);border:1px solid var(--rule);border-radius:var(--r);padding:16px 18px;transition:box-shadow .25s,border-color .25s,transform .25s}
+.kit-card:hover{box-shadow:0 8px 24px rgba(0,0,0,.08);border-color:rgba(26,111,168,.25);transform:translateY(-2px)}
+
+.kit-card-acc{
+  background:var(--card);border:1.5px solid var(--accent);border-radius:var(--r);padding:16px 18px;
+  animation:border-glow 3s ease-in-out infinite;
+  box-shadow:0 0 0 0 rgba(26,111,168,.2);
+  transition:transform .25s;
+}
+.kit-card-acc:hover{transform:translateY(-2px)}
+
+.kit-card-gold{
+  background:var(--card);border:1.5px solid var(--gold);border-radius:var(--r);padding:16px 18px;
+  animation:border-glow-gold 3s ease-in-out infinite;
+  transition:transform .25s;
+}
+.kit-card-gold:hover{transform:translateY(-2px)}
+
+.kit-card-dark{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:var(--r);padding:16px 18px}
+
+/* ── STAT TILES ──────────────────────────────── */
+.stat-tile{
+  background:var(--card);border:1px solid var(--rule);border-radius:var(--r);padding:18px 20px;
+  transition:all .3s var(--ease);cursor:default;position:relative;overflow:hidden;
+}
+.stat-tile::before{
+  content:"";position:absolute;inset:0;
+  background:linear-gradient(135deg,rgba(26,111,168,.05),transparent 60%);
+  opacity:0;transition:opacity .3s;
+}
+.stat-tile:hover{transform:translateY(-4px) scale(1.02);box-shadow:0 12px 32px rgba(0,0,0,.1);border-color:var(--accent)}
+.stat-tile:hover::before{opacity:1}
+.stat-n{font-family:'Archivo Black';font-size:30px;letter-spacing:-0.03em;color:var(--accent);line-height:1}
+.stat-l{font-family:'JetBrains Mono';font-size:8px;letter-spacing:.14em;text-transform:uppercase;color:var(--mute);margin-top:5px}
+.stat-sub{font-size:11px;color:var(--text2);margin-top:3px}
+
+/* ── FEATURE CARDS ───────────────────────────── */
+.feat-card{
+  background:var(--card);border:1px solid var(--rule);border-radius:var(--r);padding:18px 18px;
+  transition:all .3s var(--ease);cursor:default;
+}
+.feat-card:hover{transform:translateY(-5px) scale(1.01);box-shadow:0 14px 36px rgba(0,0,0,.1);border-color:var(--accent)}
+.feat-icon{width:32px;height:32px;border-radius:var(--rsm);background:var(--abg);display:flex;align-items:center;justify-content:center;font-size:16px;margin-bottom:10px;transition:transform .3s}
+.feat-card:hover .feat-icon{transform:rotate(10deg) scale(1.15)}
+.feat-icon.gold{background:var(--gbg)}
+.feat-icon.pos{background:var(--pbg)}
+.feat-icon.neg{background:var(--nbg)}
+.feat-icon.purple{background:rgba(140,73,201,.1)}
+.feat-h{font-family:'Archivo Black';font-size:12.5px;letter-spacing:-0.01em;margin-bottom:3px}
+.feat-p{font-size:12px;color:var(--text2);line-height:1.5}
+
+/* ── DATA TABLE ──────────────────────────────── */
+.data-tbl{width:100%;border-collapse:collapse;background:var(--card);border:1px solid var(--rule);border-radius:var(--r);overflow:hidden;margin-bottom:16px;font-size:12.5px}
+.data-tbl th{font-family:'JetBrains Mono';font-size:8px;letter-spacing:.13em;text-transform:uppercase;color:var(--mute);padding:9px 14px;border-bottom:2px solid var(--rule);background:var(--elev);text-align:left;font-weight:500}
+.data-tbl td{padding:9px 14px;border-bottom:1px solid var(--rule2);vertical-align:top;line-height:1.4;transition:background .15s}
+.data-tbl tr:hover td{background:rgba(26,111,168,.04)}
+.data-tbl tr:last-child td{border-bottom:0}
+.data-tbl td b{font-family:'Archivo Black';font-size:12.5px}
+
+/* ── CHIPS ───────────────────────────────────── */
+.chip{display:inline-flex;align-items:center;font-family:'JetBrains Mono';font-size:8.5px;letter-spacing:.06em;padding:2px 7px;border-radius:3px;font-weight:500}
+.chip-acc{color:var(--accent);background:var(--abg)}
+.chip-gold{color:var(--gold);background:var(--gbg)}
+.chip-pos{color:var(--pos);background:var(--pbg)}
+.chip-neg{color:var(--neg);background:var(--nbg)}
+.chip-mute{color:var(--mute);background:var(--elev)}
+
+.pos-pts{font-family:'Archivo Black';font-size:13px;color:var(--pos)}
+.neg-pts{font-family:'Archivo Black';font-size:13px;color:var(--neg)}
+
+/* ── FLOW STEPS ──────────────────────────────── */
+.flow-step{display:flex;gap:12px;margin-bottom:12px}
+.flow-num{
+  width:28px;height:28px;border-radius:50%;background:var(--accent);color:#fff;
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Archivo Black';font-size:12px;flex-shrink:0;margin-top:1px;
+  transition:transform .25s,box-shadow .25s;
+}
+.flow-step:hover .flow-num{transform:scale(1.15);box-shadow:0 0 14px rgba(26,111,168,.4);animation:pulse-glow .8s ease}
+.flow-body-h{font-family:'Archivo Black';font-size:12.5px;letter-spacing:-0.01em;margin-bottom:2px}
+.flow-body-p{font-size:12px;color:var(--text2);line-height:1.5}
+
+/* ── CALLOUTS ────────────────────────────────── */
+.callout{background:var(--abg);border:1px solid rgba(26,111,168,.2);border-radius:var(--r);padding:12px 16px;margin:12px 0;transition:transform .25s}
+.callout:hover{transform:translateX(3px)}
+.callout.gold{background:var(--gbg);border-color:rgba(184,114,14,.25)}
+.callout.pos{background:var(--pbg);border-color:rgba(22,101,52,.25)}
+.callout-h{font-family:'Archivo Black';font-size:12px;color:var(--accent);margin-bottom:3px}
+.callout.gold .callout-h{color:var(--gold)}
+.callout.pos .callout-h{color:var(--pos)}
+.callout-p{font-size:12px;color:var(--text2);line-height:1.55}
+
+/* ── ACE CARDS ───────────────────────────────── */
+.ace-card{
+  background:var(--card);border:1px solid var(--rule);border-radius:var(--r);
+  padding:16px;position:relative;overflow:hidden;
+  transition:all .35s var(--ease);transform-style:preserve-3d;cursor:default;
+}
+.ace-card::before{content:"";position:absolute;top:0;left:0;right:0;height:3px}
+.ace-card::after{
+  content:"";position:absolute;inset:0;
+  background:radial-gradient(circle at 80% 20%,rgba(255,255,255,.15),transparent 50%);
+  opacity:0;transition:opacity .35s;
+}
+.ace-card:hover{transform:translateY(-6px) rotateX(4deg);box-shadow:0 18px 48px rgba(0,0,0,.14)}
+.ace-card:hover::after{opacity:1}
+.ace-card.underdog::before{background:linear-gradient(90deg,var(--neg),#e55)}
+.ace-card.safety::before{background:linear-gradient(90deg,var(--gold),#f0a740)}
+.ace-card.surface::before{background:linear-gradient(90deg,var(--pos),#27ae5e)}
+.ace-card.dark::before{background:linear-gradient(90deg,var(--gk),#b070e0)}
+.ace-card:hover.underdog{border-color:var(--neg);box-shadow:0 18px 40px rgba(185,28,28,.18)}
+.ace-card:hover.safety{border-color:var(--gold);box-shadow:0 18px 40px rgba(184,114,14,.18)}
+.ace-card:hover.surface{border-color:var(--pos);box-shadow:0 18px 40px rgba(22,101,52,.18)}
+.ace-card:hover.dark{border-color:var(--gk);box-shadow:0 18px 40px rgba(140,73,201,.18)}
+.ace-card-ey{font-family:'JetBrains Mono';font-size:7.5px;letter-spacing:.15em;text-transform:uppercase;color:var(--mute);margin-bottom:5px}
+.ace-card-h{font-family:'Archivo Black';font-size:13px;margin-bottom:4px}
+.ace-card-p{font-size:11.5px;color:var(--text2);line-height:1.5}
+.ace-card-pts{font-family:'JetBrains Mono';font-size:8.5px;letter-spacing:.05em;color:var(--pos);margin-top:8px;font-weight:600}
+
+/* ── LIST ────────────────────────────────────── */
+ul.flist{list-style:none;padding:0}
+ul.flist li{font-size:12px;color:var(--text2);padding:3px 0 3px 14px;position:relative;line-height:1.5;transition:color .2s}
+ul.flist li::before{content:"—";position:absolute;left:0;color:var(--mute);font-size:10px}
+ul.flist li:hover{color:var(--text)}
+ul.flist li b{color:var(--text);font-weight:600}
+
+/* ── POSITION BADGES ─────────────────────────── */
+.pos-badge{width:26px;height:26px;border-radius:3px;display:flex;align-items:center;justify-content:center;font-family:'JetBrains Mono';font-size:8px;font-weight:600;color:#fff;flex-shrink:0;transition:transform .25s}
+.pos-badge:hover{transform:scale(1.2) rotate(5deg)}
+.pos-badge.gk{background:var(--gk)}
+.pos-badge.def{background:var(--def)}
+.pos-badge.mid{background:var(--mid)}
+.pos-badge.fwd{background:var(--fwd)}
+
+/* ── PILLS & SPORT BAND ──────────────────────── */
+.pill-row{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:22px}
+.sport-pill{
+  display:inline-flex;align-items:center;gap:7px;
+  background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);
+  border-radius:100px;padding:6px 14px;
+  font-family:'JetBrains Mono';font-size:9px;letter-spacing:.1em;text-transform:uppercase;
+  color:rgba(255,255,255,.65);transition:all .25s;cursor:default;
+}
+.sport-pill:hover{background:rgba(255,255,255,.14);border-color:rgba(255,255,255,.3);color:#fff;transform:translateY(-1px)}
+.sport-dot{width:6px;height:6px;border-radius:50%}
+.sport-dot.live{animation:live-pulse 1.4s ease-in-out infinite}
+
+.sport-band{border-radius:var(--r);padding:18px 22px;margin-bottom:18px;color:#fff;position:relative;overflow:hidden}
+.sport-band.football{background:linear-gradient(120deg,#18202E,#1A3A5C,#18202E);background-size:200% 200%;animation:gradient-shift 6s ease infinite}
+.sport-band.f1{background:linear-gradient(120deg,#1a0a0a,#5C1A1A,#1a0a0a);background-size:200% 200%;animation:gradient-shift 6s ease infinite}
+.sport-band.tennis{background:linear-gradient(120deg,#0a1a0a,#1A5C2A,#0a1a0a);background-size:200% 200%;animation:gradient-shift 6s ease infinite}
+.sport-band.clubhouse{background:linear-gradient(120deg,#0f0f18,#1A1A5C,#0f0f18);background-size:200% 200%;animation:gradient-shift 6s ease infinite}
+.sport-band.p2p{background:linear-gradient(120deg,#18140a,#5C4A1A,#18140a);background-size:200% 200%;animation:gradient-shift 6s ease infinite}
+.sport-band::after{content:"";position:absolute;inset:0;background:radial-gradient(400px 200px at 80% 50%,rgba(255,255,255,.07),transparent);pointer-events:none}
+.sport-band-ey{font-family:'JetBrains Mono';font-size:8px;letter-spacing:.16em;text-transform:uppercase;color:rgba(255,255,255,.35);margin-bottom:4px}
+.sport-band-h{font-family:'Archivo Black';font-size:18px;letter-spacing:-0.02em;line-height:1.1}
+.sport-band-h em{color:#5FA9D6;font-style:normal}
+.sport-band-sub{font-size:12.5px;color:rgba(255,255,255,.48);margin-top:5px}
+.sport-band-meta{display:flex;flex-wrap:wrap;gap:4px 24px;margin-top:12px;padding-top:12px;border-top:1px solid rgba(255,255,255,.1)}
+.sbm-l{font-family:'JetBrains Mono';font-size:7px;letter-spacing:.13em;text-transform:uppercase;color:rgba(255,255,255,.28)}
+.sbm-v{font-family:'Archivo Black';font-size:10.5px}
+
+/* ── LIVE DOT ────────────────────────────────── */
+.live-badge{display:inline-flex;align-items:center;gap:5px;font-family:'JetBrains Mono';font-size:8px;letter-spacing:.12em;text-transform:uppercase;color:var(--neg);background:var(--nbg);border-radius:3px;padding:2px 7px}
+.live-dot{width:6px;height:6px;border-radius:50%;background:var(--neg);animation:live-pulse 1s ease-in-out infinite}
+
+/* ── FORMATION DISPLAY ───────────────────────── */
+.formation-grid{display:flex;flex-direction:column;gap:8px;margin:8px 0}
+.formation-row{display:flex;gap:6px;justify-content:center;flex-wrap:wrap}
+.f-token{
+  background:var(--elev);border:1px solid var(--rule);border-radius:5px;
+  padding:6px 12px;font-family:'JetBrains Mono';font-size:9.5px;font-weight:600;
+  color:var(--text2);transition:all .25s;cursor:default;
+}
+.f-token:hover{background:var(--accent);color:#fff;transform:scale(1.06);border-color:var(--accent)}
+
+/* ── SPINNER ICON ────────────────────────────── */
+.spin-icon{display:inline-block;animation:spin-slow 8s linear infinite;font-size:20px}
+
+/* ── HIGHLIGHT PULSE ─────────────────────────── */
+.hl-acc{color:var(--accent);font-weight:700}
+.glow-text{color:var(--accent);text-shadow:0 0 20px rgba(26,111,168,.4)}
+.glow-gold{color:var(--gold);text-shadow:0 0 20px rgba(184,114,14,.4)}
+</style>
+</head>
+<body>
+
+<!-- ── CHROME ──────────────────────────────────────── -->
+<div class="progress-bar" id="prog"></div>
+<div class="side-dots" id="dots"></div>
+<div class="nav-arrows">
+  <button class="nav-btn" id="btnPrev" onclick="navigate(-1)" title="Previous ↑">↑</button>
+  <span class="nav-counter" id="counter">1 / 11</span>
+  <button class="nav-btn" id="btnNext" onclick="navigate(1)" title="Next ↓">↓</button>
+</div>
+<p class="kbd-hint">← → Arrow keys or swipe</p>
+
+<!-- ── DECK ───────────────────────────────────────── -->
+<div class="deck" id="deck">
+
+<!-- ════════════════════════════════
+     SLIDE 0 · COVER
+════════════════════════════════ -->
+<div class="slide slide-cover active" data-title="FantasyKit Platform" data-section="Cover">
+  <canvas id="particles"></canvas>
+  <div class="s-body">
+    <div class="cover-inner">
+      <p class="anim" style="font-family:'JetBrains Mono';font-size:9.5px;letter-spacing:.22em;text-transform:uppercase;color:rgba(255,255,255,.3);margin-bottom:22px">
+        FantasyKit · Platform Functional Specification · June 2026 · <span style="color:rgba(185,28,28,.7)">Confidential</span>
+      </p>
+
+      <div style="overflow:hidden;margin-bottom:4px">
+        <h1 class="anim d1" id="cover-h" style="font-family:'Archivo Black';font-size:clamp(40px,6vw,70px);letter-spacing:-0.03em;line-height:.94;color:#fff">
+          Multi-Sport<br>
+          <span style="background:linear-gradient(90deg,#5FA9D6,#3DE8C8,#5FA9D6);background-size:200%;-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;animation:gradient-shift 3s ease infinite">Fantasy</span><br>
+          Gaming Platform
+        </h1>
+      </div>
+
+      <p class="anim d2" style="font-size:15px;color:rgba(255,255,255,.5);max-width:54ch;line-height:1.6;margin:16px 0 28px">
+        Production-ready · 3 live sports · AI social layer · P2P coin economy ·<br>iOS &amp; Android native. <span style="color:rgba(255,255,255,.75);font-weight:600">Built to be acquired.</span>
+      </p>
+
+      <div class="pill-row anim d3">
+        <span class="sport-pill"><span class="sport-dot live" style="background:#B91C1C"></span>Football — Live Pilot</span>
+        <span class="sport-pill"><span class="sport-dot" style="background:#B91C1C"></span>Formula 1 — Built</span>
+        <span class="sport-pill"><span class="sport-dot" style="background:#166534"></span>Tennis — Built</span>
+        <span class="sport-pill"><span class="sport-dot" style="background:#8C49C9"></span>P2P Betting — Built</span>
+        <span class="sport-pill"><span class="sport-dot" style="background:#B8720E"></span>Clubhouse — Built</span>
+      </div>
+
+      <div class="g6 anim d4">
+        <div class="stat-tile" style="background:rgba(255,255,255,.05);border-color:rgba(255,255,255,.1)">
+          <div class="stat-n" data-count="3" style="color:#5FA9D6">3</div>
+          <div class="stat-l" style="color:rgba(255,255,255,.3)">Sports</div>
+          <div class="stat-sub" style="color:rgba(255,255,255,.4)">Football · F1 · Tennis</div>
+        </div>
+        <div class="stat-tile" style="background:rgba(255,255,255,.05);border-color:rgba(255,255,255,.1)">
+          <div class="stat-n" data-count="21" style="color:#5FA9D6">21</div>
+          <div class="stat-l" style="color:rgba(255,255,255,.3)">Edge Functions</div>
+          <div class="stat-sub" style="color:rgba(255,255,255,.4)">Scoring · AI · Payments</div>
+        </div>
+        <div class="stat-tile" style="background:rgba(255,255,255,.05);border-color:rgba(255,255,255,.1)">
+          <div class="stat-n" data-count="229" style="color:#5FA9D6">229</div>
+          <div class="stat-l" style="color:rgba(255,255,255,.3)">Migrations</div>
+          <div class="stat-sub" style="color:rgba(255,255,255,.4)">Full audit trail</div>
+        </div>
+        <div class="stat-tile" style="background:rgba(255,255,255,.05);border-color:rgba(255,255,255,.1)">
+          <div class="stat-n" style="font-size:22px;color:#5FA9D6">~40k</div>
+          <div class="stat-l" style="color:rgba(255,255,255,.3)">Lines of Code</div>
+          <div class="stat-sub" style="color:rgba(255,255,255,.4)">React + Deno/TS</div>
+        </div>
+        <div class="stat-tile" style="background:rgba(255,255,255,.05);border-color:rgba(255,255,255,.1)">
+          <div class="stat-n" data-count="50" style="color:#5FA9D6">~50</div>
+          <div class="stat-l" style="color:rgba(255,255,255,.3)">Live Users</div>
+          <div class="stat-sub" style="color:rgba(255,255,255,.4)">WC 2026 Pilot</div>
+        </div>
+        <div class="stat-tile" style="background:rgba(255,255,255,.05);border-color:rgba(255,255,255,.1)">
+          <div class="stat-n" style="font-size:18px;line-height:1.2;color:#5FA9D6">iOS<br>+<br>Droid</div>
+          <div class="stat-l" style="color:rgba(255,255,255,.3)">Mobile</div>
+          <div class="stat-sub" style="color:rgba(255,255,255,.4)">Capacitor native</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════
+     SLIDE 1 · PLATFORM
+════════════════════════════════ -->
+<div class="slide" data-title="Platform Architecture" data-section="Platform">
+  <div class="s-head">
+    <span class="s-head-ey">01 · Platform</span>
+    <span class="s-head-title">Architecture Overview</span>
+    <span class="s-head-badge">What a buyer acquires</span>
+  </div>
+  <div class="s-body">
+    <div class="g3 anim">
+      <div class="feat-card tilt"><div class="feat-icon">⚽</div><div class="feat-h">Football</div><p class="feat-p">Full fantasy engine — squad, transfers, live scoring, draft, cup, H2H. Live pilot running on WC 2026.</p></div>
+      <div class="feat-card tilt"><div class="feat-icon" style="background:rgba(185,28,28,.08)">🏎️</div><div class="feat-h">Formula 1</div><p class="feat-p">Race-by-race predictions, Paddock groups, season championship bets, auto-scored via OpenF1 API.</p></div>
+      <div class="feat-card tilt"><div class="feat-icon pos">🎾</div><div class="feat-h">Tennis</div><p class="feat-p">Seasonal roster game — 14 ATP events, tier-constrained picks, Ace Card power-ups, ATP Finals slate.</p></div>
+      <div class="feat-card tilt"><div class="feat-icon purple">💬</div><div class="feat-h">Clubhouse</div><p class="feat-p">AI daily newspaper (Groq LLM), gazette feed, real-time chat, emoji reactions, commissioner broadcasts.</p></div>
+      <div class="feat-card tilt"><div class="feat-icon gold">🪙</div><div class="feat-h">P2P Betting</div><p class="feat-p">Virtual coin economy via Stripe. GW total challenges, player duels, match result props. Non-withdrawable design.</p></div>
+      <div class="feat-card tilt"><div class="feat-icon pos">🏆</div><div class="feat-h">Circles &amp; Trophies</div><p class="feat-p">Cross-sport friend groups with unified gazette, shared trophy ledger across all three sports.</p></div>
+    </div>
+
+    <div class="g2 anim d2" style="margin-top:4px">
+      <div class="kit-card-acc">
+        <p class="feat-h" style="color:var(--accent)"><span class="spin-icon" style="font-size:14px">⭕</span> The Circles Layer</p>
+        <p class="feat-p">A Circle is a cross-sport friend group — the primary social unit. One Circle, competing across Football, F1, and Tennis under a shared identity. Unified gazette, trophy ledger, and meta-season leaderboard sit on top. Sports are independent inside; the Circle is the glue.</p>
+      </div>
+      <div class="kit-card-gold">
+        <p class="feat-h" style="color:var(--gold)">⚡ Config-Driven Tenancy</p>
+        <p class="feat-p">Scoring rules, coin packs, rake rates, club caps — all database rows, zero code constants. A new competition or tournament is an insert, not a deployment. White-label re-skin: 3 CSS tokens.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════
+     SLIDE 2 · FOOTBALL MODES
+════════════════════════════════ -->
+<div class="slide" data-title="Football — Game Modes" data-section="Football">
+  <div class="s-head">
+    <span class="s-head-ey">02 · Football</span>
+    <span class="s-head-title">League Setup &amp; Game Modes</span>
+    <span class="s-head-badge">Classic vs. Draft</span>
+  </div>
+  <div class="s-body">
+    <div class="sport-band football anim">
+      <p class="sport-band-ey">Module Status</p>
+      <p class="sport-band-h">Fantasy Football — <em>Running on WC 2026</em></p>
+      <p class="sport-band-sub">All mechanics described here are production-verified with ~50 real managers.</p>
+      <div class="sport-band-meta">
+        <div><span class="sbm-l">Modes</span><br><span class="sbm-v">Classic &amp; Draft</span></div>
+        <div><span class="sbm-l">H2H</span><br><span class="sbm-v">Supported</span></div>
+        <div><span class="sbm-l">Tournaments</span><br><span class="sbm-v">Config-driven</span></div>
+        <div><span class="sbm-l">Status</span><br><span class="sbm-v" style="color:#5FA9D6"><span class="sport-dot live" style="background:#3DE8C8;display:inline-block;margin-right:4px;width:5px;height:5px;border-radius:50%"></span>Live</span></div>
+      </div>
+    </div>
+
+    <div class="g2 anim d1" style="margin-bottom:14px">
+      <div class="kit-card-acc">
+        <p class="feat-h" style="color:var(--accent)">Classic Mode</p>
+        <p class="feat-p" style="margin-bottom:8px">Any manager can own any player simultaneously. No draft — buy freely from the open market within budget and position limits.</p>
+        <ul class="flist">
+          <li><b>Player Repeats:</b> Allowed across all managers</li>
+          <li><b>Market:</b> Full open pool always visible</li>
+          <li><b>Transfers:</b> 3 per matchday (buy or sell)</li>
+          <li><b>Best for:</b> Casual leagues, season formats</li>
+        </ul>
+      </div>
+      <div class="kit-card-gold">
+        <p class="feat-h" style="color:var(--gold)">Draft Mode</p>
+        <p class="feat-p" style="margin-bottom:8px">Each player belongs to exactly one manager. Snake-draft lottery before first matchday. Market only shows unallocated players.</p>
+        <ul class="flist">
+          <li><b>Player Repeats:</b> Forbidden (auto-relaxes in cup knockouts)</li>
+          <li><b>Draft:</b> 45-slot ranked wish-list → commissioner lottery</li>
+          <li><b>Transfers:</b> FCFS from unallocated pool only</li>
+          <li><b>Best for:</b> Competitive leagues, cup formats</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="anim d2">
+      <p class="label">League Configuration — All database-driven</p>
+      <table class="data-tbl">
+        <thead><tr><th>Setting</th><th>Default</th><th>Purpose</th></tr></thead>
+        <tbody>
+          <tr><td><b>Budget</b></td><td>£100M</td><td>Total squad value cap enforced at every transfer</td></tr>
+          <tr><td><b>Squad Size</b></td><td>15 players</td><td>Full roster including 4 bench players</td></tr>
+          <tr><td><b>Club Cap</b></td><td>3 per club (r1–r4)</td><td>Auto-relaxes in later cup rounds (4 → 5 → unlimited)</td></tr>
+          <tr><td><b>Transfers/Round</b></td><td>3 free</td><td>Extra buys allowed with configurable −4 pts penalty each</td></tr>
+          <tr><td><b>H2H Mode</b></td><td>Optional</td><td>Berger circle round-robin schedule alongside classic standings</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════
+     SLIDE 3 · FOOTBALL SCORING
+════════════════════════════════ -->
+<div class="slide" data-title="Football — Scoring Engine" data-section="Football">
+  <div class="s-head">
+    <span class="s-head-ey">02 · Football</span>
+    <span class="s-head-title">Fantasy Points Scoring Engine</span>
+    <span class="s-head-badge">Position-specific · per-tournament config</span>
+  </div>
+  <div class="s-body">
+    <div class="callout anim" style="margin-bottom:14px">
+      <p class="callout-h">⚙️ Fully configurable per tournament</p>
+      <p class="callout-p">All point values are rows in <code>scoring_rules</code> keyed by <code>tournament_id</code>. A new EPL or UCL profile requires no code change — only a database insert. Values below reflect the live WC 2026 configuration (v2 scoring).</p>
+    </div>
+
+    <div class="g2 anim d1">
+      <div>
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+          <span class="pos-badge gk">GK</span>
+          <span style="font-family:'Archivo Black';font-size:13px">Goalkeeper</span>
+        </div>
+        <table class="data-tbl">
+          <thead><tr><th>Event</th><th>Pts</th></tr></thead>
+          <tbody>
+            <tr><td>Minutes played (per 90)</td><td><span class="pos-pts">+1</span></td></tr>
+            <tr><td>Goal scored</td><td><span class="pos-pts">+8</span></td></tr>
+            <tr><td>Clean sheet (≥45 min)</td><td><span class="pos-pts">+4</span></td></tr>
+            <tr><td>Penalty save</td><td><span class="pos-pts">+5</span></td></tr>
+            <tr><td>Goal conceded penalty</td><td><span class="neg-pts">−0.5</span></td></tr>
+            <tr><td>Red card</td><td><span class="neg-pts">−3</span></td></tr>
+          </tbody>
+        </table>
+
+        <div style="display:flex;align-items:center;gap:8px;margin:12px 0 8px">
+          <span class="pos-badge mid">MID</span>
+          <span style="font-family:'Archivo Black';font-size:13px">Midfielder</span>
+        </div>
+        <table class="data-tbl">
+          <thead><tr><th>Event</th><th>Pts</th></tr></thead>
+          <tbody>
+            <tr><td>Minutes (per 90)</td><td><span class="pos-pts">+1</span></td></tr>
+            <tr><td>Goal scored</td><td><span class="pos-pts">+5</span></td></tr>
+            <tr><td>Assist</td><td><span class="pos-pts">+3</span></td></tr>
+            <tr><td>Clean sheet (≥60 min)</td><td><span class="pos-pts">+1</span></td></tr>
+            <tr><td>Key pass / Interception</td><td><span class="pos-pts">+0.25</span></td></tr>
+            <tr><td>Red card</td><td><span class="neg-pts">−3</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div>
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+          <span class="pos-badge def">DEF</span>
+          <span style="font-family:'Archivo Black';font-size:13px">Defender</span>
+        </div>
+        <table class="data-tbl">
+          <thead><tr><th>Event</th><th>Pts</th></tr></thead>
+          <tbody>
+            <tr><td>Minutes (per 90)</td><td><span class="pos-pts">+1</span></td></tr>
+            <tr><td>Goal scored</td><td><span class="pos-pts">+6</span></td></tr>
+            <tr><td>Clean sheet (≥45 min)</td><td><span class="pos-pts">+4</span></td></tr>
+            <tr><td>Tackle won</td><td><span class="pos-pts">+0.5</span></td></tr>
+            <tr><td>Interception</td><td><span class="pos-pts">+0.25</span></td></tr>
+            <tr><td>Yellow card</td><td><span class="neg-pts">−1</span></td></tr>
+          </tbody>
+        </table>
+
+        <div style="display:flex;align-items:center;gap:8px;margin:12px 0 8px">
+          <span class="pos-badge fwd">FWD</span>
+          <span style="font-family:'Archivo Black';font-size:13px">Forward</span>
+        </div>
+        <table class="data-tbl">
+          <thead><tr><th>Event</th><th>Pts</th></tr></thead>
+          <tbody>
+            <tr><td>Minutes (per 90)</td><td><span class="pos-pts">+1</span></td></tr>
+            <tr><td>Goal scored</td><td><span class="pos-pts">+4</span></td></tr>
+            <tr><td>Assist</td><td><span class="pos-pts">+3</span></td></tr>
+            <tr><td>Big chance created</td><td><span class="pos-pts">+0.5</span></td></tr>
+            <tr><td>Penalty missed</td><td><span class="neg-pts">−2</span></td></tr>
+            <tr><td>Red card</td><td><span class="neg-pts">−3</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="anim d2">
+      <p class="label" style="margin-top:8px">Live Scoring Pipeline</p>
+      <table class="data-tbl">
+        <thead><tr><th>Job</th><th>Frequency</th><th>Purpose</th></tr></thead>
+        <tbody>
+          <tr><td><b>calculate-scores-live</b></td><td>Every 2 min</td><td>Real-time point accumulation while fixtures are live</td></tr>
+          <tr><td><b>flip-fixtures-live</b></td><td>Every 2 min</td><td>Flips scheduled→live at kickoff, independent of data sync</td></tr>
+          <tr><td><b>ingest-match-events</b></td><td>Every 5 min</td><td>Goals, cards, subs from Forza Football API</td></tr>
+          <tr><td><b>calculate-scores-post-match</b></td><td>22:30 UTC daily</td><td>Final scores + H2H resolution after all fixtures complete</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════
+     SLIDE 4 · FOOTBALL SQUAD
+════════════════════════════════ -->
+<div class="slide" data-title="Football — Squad & Draft" data-section="Football">
+  <div class="s-head">
+    <span class="s-head-ey">02 · Football</span>
+    <span class="s-head-title">Squad, Draft System &amp; Power Chips</span>
+    <span class="s-head-badge">Mechanics depth</span>
+  </div>
+  <div class="s-body">
+    <div class="g2 anim">
+      <div>
+        <p class="label">Valid Formations (always 1 GK)</p>
+        <div class="formation-grid" style="margin-bottom:14px">
+          <div class="formation-row">
+            <div class="f-token">4-4-2</div>
+            <div class="f-token">4-3-3</div>
+            <div class="f-token">3-5-2</div>
+          </div>
+          <div class="formation-row">
+            <div class="f-token">5-3-2</div>
+            <div class="f-token">4-5-1</div>
+            <div class="f-token">3-4-3</div>
+          </div>
+        </div>
+
+        <p class="label">Power Chips</p>
+        <table class="data-tbl">
+          <thead><tr><th>Chip</th><th>Effect</th><th>Frequency</th></tr></thead>
+          <tbody>
+            <tr><td><b>Captain</b></td><td>Selected player ×2</td><td>Every round</td></tr>
+            <tr><td><b>Triple Captain</b></td><td>Captain earns ×3 not ×2</td><td>1× per season</td></tr>
+            <tr><td><b>Bench Boost</b></td><td>All 15 players score</td><td>1× per season</td></tr>
+            <tr><td><b>Daily Joker</b></td><td>1 player ×2 + club cap exempt</td><td>Every round</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="anim d1">
+        <p class="label" style="margin-top:0">Draft System — 4-Phase Flow</p>
+        <div class="flow-step"><div class="flow-num">1</div><div><p class="flow-body-h">Wish List</p><p class="flow-body-p">Rank up to 45 players in priority order. No constraints at submission — hedging allowed. Revisable until commissioner fires the lottery.</p></div></div>
+        <div class="flow-step"><div class="flow-num">2</div><div><p class="flow-body-h">Snake Lottery</p><p class="flow-body-p">Random pick order → direction reverses every round. Player awarded if: available, within position cap, budget, and club cap. Skipped if wish list exhausted.</p></div></div>
+        <div class="flow-step"><div class="flow-num">3</div><div><p class="flow-body-h">Squad Recovery</p><p class="flow-body-p">Incomplete squads enter FCFS market. <code>initial_build_complete</code> flag flips true at 15 players — enforcing normal transfer limits thereafter.</p></div></div>
+        <div class="flow-step"><div class="flow-num">4</div><div><p class="flow-body-h">Cup Keep Window</p><p class="flow-body-p">Before knockout draft, managers protect up to 5 players. Pre-allocated in Pass 0 before snake runs.</p></div></div>
+
+        <div class="callout gold" style="margin-top:4px">
+          <p class="callout-h">Auto-Relaxation Engine</p>
+          <p class="callout-p">Club cap auto-expands as clubs are eliminated: 3→4→5→unlimited. Player-repeat unlocks in tiers as pool pressure rises. Zero commissioner effort.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════
+     SLIDE 5 · F1
+════════════════════════════════ -->
+<div class="slide" data-title="F1 — Paddock Game" data-section="F1">
+  <div class="s-head">
+    <span class="s-head-ey">03 · Formula 1</span>
+    <span class="s-head-title">Paddock Prediction Game</span>
+    <span class="s-head-badge">24-race 2026 calendar</span>
+  </div>
+  <div class="s-body">
+    <div class="sport-band f1 anim">
+      <p class="sport-band-ey">Module Status · v2 Branch</p>
+      <p class="sport-band-h">F1 Paddocks — <em>Screens, logic &amp; DB complete</em></p>
+      <p class="sport-band-sub">24-race 2026 calendar seeded. Data via OpenF1 (free, no API key required).</p>
+      <div class="sport-band-meta">
+        <div><span class="sbm-l">Races</span><br><span class="sbm-v">24 (2026 cal.)</span></div>
+        <div><span class="sbm-l">Data</span><br><span class="sbm-v">OpenF1 (free)</span></div>
+        <div><span class="sbm-l">Screens</span><br><span class="sbm-v">7 screens</span></div>
+        <div><span class="sbm-l">Edge Fn</span><br><span class="sbm-v">score-f1-race</span></div>
+      </div>
+    </div>
+
+    <div class="g2 anim d1">
+      <div>
+        <p class="h3" style="margin-top:0">Paddock Groups</p>
+        <p class="body-text">A Paddock is a closed group competing on the same leaderboard. 8-char invite code. Predictions are shared across all Paddocks — one set per race per user.</p>
+
+        <p class="label" style="margin-top:14px">Per-Race Cycle</p>
+        <div class="flow-step"><div class="flow-num">1</div><div><p class="flow-body-h">Make Picks</p><p class="flow-body-p">P1, P2, P3 (exact order) · DNF driver · Top constructor · Special category answer</p></div></div>
+        <div class="flow-step"><div class="flow-num">2</div><div><p class="flow-body-h">Auto-Lock</p><p class="flow-body-p">Picks lock 5 min before race start (via OpenF1 session time or admin override)</p></div></div>
+        <div class="flow-step"><div class="flow-num">3</div><div><p class="flow-body-h">Scored</p><p class="flow-body-p">Admin enters results → engine scores each pick → Paddock leaderboard updates</p></div></div>
+
+        <div class="callout" style="margin-top:8px">
+          <p class="callout-h">All-Correct Bonus: +3 pts</p>
+          <p class="callout-p">All 6 categories correct earns a flat +3 bonus. Creates bracket-buster moments and comeback potential.</p>
+        </div>
+      </div>
+
+      <div class="anim d2">
+        <p class="h3" style="margin-top:0">Scoring &amp; Special Categories</p>
+        <table class="data-tbl" style="margin-bottom:12px">
+          <thead><tr><th>Category</th><th>Notes</th></tr></thead>
+          <tbody>
+            <tr><td><b>P1 Race Winner</b></td><td>Highest-value pick</td></tr>
+            <tr><td><b>P2 / P3</b></td><td>Partial credit for wrong position</td></tr>
+            <tr><td><b>DNF Prediction</b></td><td>Any confirmed DNF driver</td></tr>
+            <tr><td><b>Top Constructor</b></td><td>Most points-scoring team in race</td></tr>
+            <tr><td><b>Special Category</b></td><td>18 unique questions across 24 races</td></tr>
+          </tbody>
+        </table>
+
+        <p class="label">Season Championship Bets (1× per season, 10 questions)</p>
+        <ul class="flist">
+          <li><b>Driver:</b> Champion · P2 · P3</li>
+          <li><b>Constructor:</b> Champion · Last-place constructor</li>
+          <li><b>Stats:</b> Most poles · Most podiums (no win)</li>
+          <li><b>Drama:</b> Race with fewest finishers · Most DNF driver</li>
+          <li><b>Wildcard:</b> First mid-season driver swap</li>
+        </ul>
+
+        <div class="callout gold" style="margin-top:10px">
+          <p class="callout-h">Special Category Examples</p>
+          <p class="callout-p">Fastest lap driver · Total pit stops · Safety car appearances · First driver penalised · Driver with most overtakes · Qualifying bonus round</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════
+     SLIDE 6 · TENNIS — ROSTER
+════════════════════════════════ -->
+<div class="slide" data-title="Tennis — Player's Box" data-section="Tennis">
+  <div class="s-head">
+    <span class="s-head-ey">04 · Tennis</span>
+    <span class="s-head-title">Player's Box — Seasonal Roster Game</span>
+    <span class="s-head-badge">14 ATP events · once per tournament</span>
+  </div>
+  <div class="s-body">
+    <div class="sport-band tennis anim">
+      <p class="sport-band-ey">Module Status · v2 Branch</p>
+      <p class="sport-band-h">Tennis Player's Box — <em>DB, RPCs, scoring &amp; admin complete</em></p>
+      <p class="sport-band-sub">14 ATP events seeded for 2026. RapidAPI ATP/WTA/ITF (50 req/day free tier).</p>
+      <div class="sport-band-meta">
+        <div><span class="sbm-l">Events</span><br><span class="sbm-v">4 Slams + 9 Masters + Finals</span></div>
+        <div><span class="sbm-l">Interaction</span><br><span class="sbm-v">Once per tournament</span></div>
+        <div><span class="sbm-l">Scoring Fn</span><br><span class="sbm-v">score-tennis-tournament</span></div>
+      </div>
+    </div>
+
+    <div class="g2 anim d1">
+      <div>
+        <p class="label">Tier System — 7 players per tournament</p>
+        <table class="data-tbl" style="margin-bottom:14px">
+          <thead><tr><th>Tier</th><th>Seeds</th><th>Required</th></tr></thead>
+          <tbody>
+            <tr><td><b>Tier 1</b> — Elites</td><td>Seeds 1–4</td><td>1 player</td></tr>
+            <tr><td><b>Tier 2</b> — Contenders</td><td>Seeds 5–16</td><td>2 players</td></tr>
+            <tr><td><b>Tier 3</b> — Dark Horses</td><td>Seeds 17–32</td><td>2 players</td></tr>
+            <tr><td><b>Tier 4</b> — Unseeded</td><td>Unseeded</td><td>2 players</td></tr>
+          </tbody>
+        </table>
+
+        <p class="label">Points per Round Reached</p>
+        <table class="data-tbl">
+          <thead><tr><th>Round</th><th>Masters 1000</th><th>Grand Slam</th></tr></thead>
+          <tbody>
+            <tr><td><b>Champion</b></td><td><span class="pos-pts">1,000</span></td><td><span class="pos-pts">2,000</span></td></tr>
+            <tr><td><b>Runner-Up</b></td><td><span class="pos-pts">600</span></td><td><span class="pos-pts">1,200</span></td></tr>
+            <tr><td><b>Semifinals</b></td><td><span class="pos-pts">360</span></td><td><span class="pos-pts">720</span></td></tr>
+            <tr><td><b>Quarterfinals</b></td><td><span class="pos-pts">180</span></td><td><span class="pos-pts">360</span></td></tr>
+            <tr><td><b>R16</b></td><td><span class="pos-pts">90</span></td><td><span class="pos-pts">180</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="anim d2">
+        <div class="kit-card-gold" style="margin-bottom:12px">
+          <p class="feat-h" style="color:var(--gold)">⚡ QF Captain ×2 Multiplier</p>
+          <p class="feat-p">After QF draw is set, admin opens a 48h window. Pick one surviving roster player as captain. Reaches QF or beyond → total tournament score ×2. Eliminated before QF = no bonus. Mid-season decision point that revives interest in every tournament.</p>
+        </div>
+
+        <div class="kit-card-acc" style="margin-bottom:12px">
+          <p class="feat-h" style="color:var(--accent)">Masters Drop Rule — Built-in Forgiveness</p>
+          <p class="feat-p">Season total = all 4 Grand Slams + <b>best 4 of 9</b> Masters + ATP Finals. Once ≥5 Masters complete, the 5 lowest scores auto-drop. Computed in <code>get_player_box_leaderboard</code> RPC. No user action needed. Creates late-season competitiveness.</p>
+        </div>
+
+        <div class="kit-card">
+          <p class="feat-h">One Login Per Tournament</p>
+          <p class="feat-p">Set roster once before draw — earns points passively as players advance. Lowest-friction fantasy format for casual players. App re-engagement driven by Clubhouse + notifications, not daily decisions.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════
+     SLIDE 7 · ACE CARDS & ATP FINALS
+════════════════════════════════ -->
+<div class="slide" data-title="Tennis — Ace Cards & ATP Finals" data-section="Tennis">
+  <div class="s-head">
+    <span class="s-head-ey">04 · Tennis</span>
+    <span class="s-head-title">Ace Cards &amp; ATP Finals Slate</span>
+    <span class="s-head-badge">Power-ups + season finale prediction</span>
+  </div>
+  <div class="s-body">
+    <p class="label anim">Ace Cards — 4 per user per season, one per tournament (not available at ATP Finals)</p>
+    <div class="g2 anim d1" style="margin-bottom:18px">
+      <div class="ace-card underdog">
+        <p class="ace-card-ey">Ace Card · Risk Play</p>
+        <p class="ace-card-h">Underdog Boost</p>
+        <p class="ace-card-p">Doubles all points earned by your 2 Tier 4 (unseeded) picks for the entire tournament. High-risk upside for backing unknowns.</p>
+        <p class="ace-card-pts">↑ Tier 4 pts ×2 · tournament-wide</p>
+      </div>
+      <div class="ace-card safety">
+        <p class="ace-card-ey">Ace Card · Insurance</p>
+        <p class="ace-card-h">Safety Net</p>
+        <p class="ace-card-p">Earns +200 flat bonus if your Tier 1 pick is eliminated in the 1st or 2nd main-draw match. Turns early upsets into silver linings.</p>
+        <p class="ace-card-pts">↑ +200 pts if Tier 1 exits early</p>
+      </div>
+      <div class="ace-card surface">
+        <p class="ace-card-ey">Ace Card · Power Play</p>
+        <p class="ace-card-h">Surface Specialist</p>
+        <p class="ace-card-p">Doubles total points earned by ALL 7 players in your roster for the entire tournament. The highest-value card — use wisely.</p>
+        <p class="ace-card-pts">↑ ALL 7 players ×2 · tournament-wide</p>
+      </div>
+      <div class="ace-card dark">
+        <p class="ace-card-ey">Ace Card · Accumulator</p>
+        <p class="ace-card-h">Dark Horse Insurance</p>
+        <p class="ace-card-p">+50 bonus for every round your Tier 4 players advance past the Round of 32. Rewards deep unseeded runs.</p>
+        <p class="ace-card-pts">↑ +50 per Tier 4 per round past R32</p>
+      </div>
+    </div>
+
+    <div class="g2 anim d2">
+      <div>
+        <p class="label">ATP Finals — Two-Phase Prediction Slate</p>
+        <div class="flow-step"><div class="flow-num">1</div><div><p class="flow-body-h">Before Group Stage</p><p class="flow-body-p">Predict winners of all 12 group-stage matches. Locks at first ball served.</p></div></div>
+        <div class="flow-step"><div class="flow-num">2</div><div><p class="flow-body-h">After Groups — Before Semis</p><p class="flow-body-p">Predict 2 semifinal winners + champion. Locks before first semifinal. No roster, no Ace Cards — pure prediction.</p></div></div>
+      </div>
+
+      <div>
+        <p class="label">ATP Finals Scoring Tiers (15 matches)</p>
+        <table class="data-tbl">
+          <thead><tr><th>Correct of 15</th><th>Tier</th><th>Points</th></tr></thead>
+          <tbody>
+            <tr><td>1–5</td><td>Unforced Error</td><td><span class="pos-pts">250</span></td></tr>
+            <tr><td>6–9</td><td>Deuce</td><td><span class="pos-pts">750</span></td></tr>
+            <tr><td>10–12</td><td>Match Point</td><td><span class="pos-pts">1,800</span></td></tr>
+            <tr><td>13–14</td><td>Championship Point</td><td><span class="pos-pts">3,500</span></td></tr>
+            <tr><td><b>15 / 15</b></td><td><b>🏆 The Perfect Slate</b></td><td><span class="pos-pts" style="font-size:18px">7,500</span></td></tr>
+          </tbody>
+        </table>
+        <div class="callout pos">
+          <p class="callout-h">Season Formula</p>
+          <p class="callout-p">4 Grand Slams + best 4 of 9 Masters (drop rule applied) + ATP Finals. Leaderboard updates after each event completes.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════
+     SLIDE 8 · CLUBHOUSE
+════════════════════════════════ -->
+<div class="slide" data-title="Clubhouse & Social" data-section="Clubhouse">
+  <div class="s-head">
+    <span class="s-head-ey">05 · Clubhouse</span>
+    <span class="s-head-title">Social Layer &amp; Daily Engagement</span>
+    <span class="s-head-badge">AI newspaper · gazette · reactions</span>
+  </div>
+  <div class="s-body">
+    <div class="sport-band clubhouse anim">
+      <p class="sport-band-ey">Module Status · v2 Branch — Complete</p>
+      <p class="sport-band-h">Clubhouse — <em>Gazette · AI Newspaper · Chat · Reactions</em></p>
+      <p class="sport-band-sub">Daily AI edition generated by Groq llama-3.1-8b-instant. Realtime chat via Supabase WebSocket.</p>
+    </div>
+
+    <div class="g2 anim d1">
+      <div>
+        <p class="label">The Gazette — Auto-Firing Activity Feed</p>
+        <table class="data-tbl" style="margin-bottom:12px">
+          <thead><tr><th>Entry Type</th><th>Trigger</th></tr></thead>
+          <tbody>
+            <tr><td><span class="chip chip-acc">activity</span></td><td>Round complete — standings + top scorer summary</td></tr>
+            <tr><td><span class="chip chip-gold">draft_report</span></td><td>After lottery — contested picks analysis</td></tr>
+            <tr><td><span class="chip chip-acc">auction_result</span></td><td>Auction sold — player, winner, price</td></tr>
+            <tr><td><span class="chip chip-pos">trade_result</span></td><td>Trade accepted — swap + points sweetener</td></tr>
+            <tr><td><span class="chip chip-mute">breaking_news</span></td><td>Commissioner free-form post</td></tr>
+            <tr><td><span class="chip chip-mute">classified</span></td><td>Commissioner classified ad / banter post</td></tr>
+          </tbody>
+        </table>
+
+        <div class="kit-card-acc" style="margin-bottom:8px">
+          <p class="feat-h">AI Newspaper — 05:00 UTC Daily</p>
+          <p class="feat-p">Reads: standings top5+bottom1, last 24h transfers, last 3 chat messages, upcoming fixtures 48h, gazette entries, commissioner quote. Outputs: <b>Headline + Deck</b> · <b>Hot Take</b> · <b>Wooden Spoon</b> · <b>Transfer Rumour</b>.</p>
+        </div>
+      </div>
+
+      <div class="anim d2">
+        <p class="label">Interactive Reactions &amp; Letters</p>
+        <div class="kit-card" style="margin-bottom:8px">
+          <p class="feat-h">🔥 💀 😂 👑 😤 — Per-section reactions</p>
+          <p class="feat-p">5 emoji · 5 sections (lead / hot_take / transfers / scores / commissioner). Tap to toggle. Highlighted when active. Reaction counts visible to all members.</p>
+        </div>
+        <div class="kit-card" style="margin-bottom:8px">
+          <p class="feat-h">Letters to the Editor</p>
+          <p class="feat-p">140-char comments per section. Owner/commissioner can delete. Collapsible. Enter to send. Member engagement without leaving the app.</p>
+        </div>
+        <div class="kit-card" style="margin-bottom:16px">
+          <p class="feat-h">Commissioner Says</p>
+          <p class="feat-p">Pin a quote visible in every edition's sidebar. Personalises each league's newspaper. Set via admin panel.</p>
+        </div>
+
+        <p class="label">What Makes the Social Layer Sticky</p>
+        <ul class="flist">
+          <li><b>Daily re-engagement:</b> AI newspaper = daily reason to open</li>
+          <li><b>Async participation:</b> React/comment without playing</li>
+          <li><b>Event-driven spikes:</b> Round completions, bets, trades → gazette</li>
+          <li><b>Cross-sport container:</b> Circle feed active even in off-season</li>
+          <li><b>Chat as AI fuel:</b> Members influence tomorrow's edition today</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════
+     SLIDE 9 · P2P BETTING
+════════════════════════════════ -->
+<div class="slide" data-title="P2P Coin Betting" data-section="P2P Betting">
+  <div class="s-head">
+    <span class="s-head-ey">06 · P2P Betting</span>
+    <span class="s-head-title">Coin Economy &amp; P2P Challenges</span>
+    <span class="s-head-badge">Stripe · closed economy · non-withdrawable</span>
+  </div>
+  <div class="s-body">
+    <div class="sport-band p2p anim">
+      <p class="sport-band-ey">Module Status · v2 Branch — Stripe-ready</p>
+      <p class="sport-band-h">P2P Coin Betting — <em>Pending first production deploy</em></p>
+      <p class="sport-band-sub">Buyer connects their own Stripe account. Coin ledger, challenge logic, and auto-resolution cron are complete.</p>
+      <div class="sport-band-meta">
+        <div><span class="sbm-l">Payment Rail</span><br><span class="sbm-v">Stripe Checkout</span></div>
+        <div><span class="sbm-l">Economy</span><br><span class="sbm-v">Closed / Non-withdrawable</span></div>
+        <div><span class="sbm-l">Rake</span><br><span class="sbm-v">5% (configurable)</span></div>
+        <div><span class="sbm-l">Resolution</span><br><span class="sbm-v">Auto-cron every 15 min</span></div>
+      </div>
+    </div>
+
+    <div class="g2 anim d1">
+      <div>
+        <div class="callout gold" style="margin-bottom:12px">
+          <p class="callout-h">Legal Design: Non-Withdrawable Closed Economy</p>
+          <p class="callout-p">Real money → coins via Stripe. Coins never convert back to cash. CHECK constraints enforce the invariant at DB layer (not just app logic). Platform stays in "game ledger" territory, not regulated gambling.</p>
+        </div>
+
+        <p class="label">Proposition Types</p>
+        <table class="data-tbl" style="margin-bottom:12px">
+          <thead><tr><th>Type</th><th>Resolution Source</th></tr></thead>
+          <tbody>
+            <tr><td><b>GW Total</b></td><td>Both managers' full matchday fantasy points</td></tr>
+            <tr><td><b>Player vs Player</b></td><td>Specific player fantasy pts vs. another player</td></tr>
+            <tr><td><b>Match Result Pick</b></td><td>Both pick a fixture result — correct wins</td></tr>
+          </tbody>
+        </table>
+
+        <p class="label">Rake Formula</p>
+        <p class="body-text"><code>rake = round(2 × stake × rate)</code>. Winner gets <code>2 × stake − rake</code>. Rake burns via a <code>commission</code> ledger entry — no house wallet, pure deflationary economy accelerating re-purchase.</p>
+      </div>
+
+      <div class="anim d2">
+        <p class="label">Challenge Lifecycle</p>
+        <div class="flow-step"><div class="flow-num">1</div><div><p class="flow-body-h">Create</p><p class="flow-body-p">Select proposition + stake. Stake locked from balance to escrow (<code>stake_lock</code> transaction).</p></div></div>
+        <div class="flow-step"><div class="flow-num">2</div><div><p class="flow-body-h">Accept / Decline</p><p class="flow-body-p">Opponent accepts (their stake locks) or declines (challenger refunded immediately, no rake).</p></div></div>
+        <div class="flow-step"><div class="flow-num">3</div><div><p class="flow-body-h">Auto-Resolution</p><p class="flow-body-p">Cron every 15 min. Resolves only after <code>roundComplete = true</code>. Idempotent — safe to re-run.</p></div></div>
+
+        <p class="label" style="margin-top:14px">Security Architecture</p>
+        <ul class="flist">
+          <li><b>Server-authoritative:</b> All coin moves via SECURITY DEFINER RPCs</li>
+          <li><b>FOR UPDATE locks:</b> Deterministic order, prevents deadlocks</li>
+          <li><b>ALREADY_RESOLVED guard:</b> Idempotent — resolves exactly once</li>
+          <li><b>Stripe HMAC-SHA256:</b> Webhook signature verification</li>
+          <li><b>Nightly reconciliation:</b> <code>wallet.balance = SUM(transactions)</code></li>
+          <li><b>Daily spend cap:</b> Configurable responsible-play limit per user</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════
+     SLIDE 10 · TECHNOLOGY
+════════════════════════════════ -->
+<div class="slide" data-title="Technology Stack" data-section="Technology">
+  <div class="s-head">
+    <span class="s-head-ey">07 · Technology</span>
+    <span class="s-head-title">Technical Stack &amp; Buyer Assets</span>
+    <span class="s-head-badge">Serverless · auditable · config-driven</span>
+  </div>
+  <div class="s-body">
+    <div class="g2 anim">
+      <div>
+        <p class="label">Full Technology Stack</p>
+        <table class="data-tbl" style="margin-bottom:14px">
+          <thead><tr><th>Layer</th><th>Technology</th></tr></thead>
+          <tbody>
+            <tr><td style="font-family:'JetBrains Mono';font-size:8.5px;color:var(--accent)">Frontend</td><td><b>React 19</b> + Vite 8 (Rolldown) + Tailwind CSS 4</td></tr>
+            <tr><td style="font-family:'JetBrains Mono';font-size:8.5px;color:var(--accent)">Database</td><td><b>PostgreSQL</b> on Supabase — 229 migrations, RLS, SECURITY DEFINER RPCs</td></tr>
+            <tr><td style="font-family:'JetBrains Mono';font-size:8.5px;color:var(--accent)">Auth</td><td><b>Supabase Auth</b> — JWT, email/password, OAuth-ready</td></tr>
+            <tr><td style="font-family:'JetBrains Mono';font-size:8.5px;color:var(--accent)">Functions</td><td><b>21 Deno/TS Edge Functions</b> — scoring, payments, AI, admin</td></tr>
+            <tr><td style="font-family:'JetBrains Mono';font-size:8.5px;color:var(--accent)">Realtime</td><td><b>Supabase Realtime</b> — chat, live scores via WebSocket</td></tr>
+            <tr><td style="font-family:'JetBrains Mono';font-size:8.5px;color:var(--accent)">Scheduling</td><td><b>pg_cron</b> — sync, scoring, resolution, AI newspaper cron</td></tr>
+            <tr><td style="font-family:'JetBrains Mono';font-size:8.5px;color:var(--accent)">APIs</td><td>Forza Football · OpenF1 · RapidAPI ATP · Groq LLM</td></tr>
+            <tr><td style="font-family:'JetBrains Mono';font-size:8.5px;color:var(--accent)">Payments</td><td><b>Stripe</b> Checkout + Webhooks, per-tenant keys</td></tr>
+            <tr><td style="font-family:'JetBrains Mono';font-size:8.5px;color:var(--accent)">Hosting</td><td><b>Vercel</b> (frontend auto-deploy) + <b>Supabase</b> (backend)</td></tr>
+            <tr><td style="font-family:'JetBrains Mono';font-size:8.5px;color:var(--accent)">Mobile</td><td><b>Capacitor 6</b> — iOS 15+ · Android 8.0+ (ready to compile)</td></tr>
+            <tr><td style="font-family:'JetBrains Mono';font-size:8.5px;color:var(--accent)">CI/CD</td><td><b>GitHub Actions</b> + Playwright E2E (84 tests, 2 browsers, per PR)</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="anim d1">
+        <p class="label">Buyer Asset Inventory</p>
+        <table class="data-tbl" style="margin-bottom:12px">
+          <thead><tr><th>Asset</th><th>Status</th></tr></thead>
+          <tbody>
+            <tr><td><b>Football engine</b> — squad, scoring, draft, H2H</td><td><span class="chip chip-pos">● Live</span></td></tr>
+            <tr><td><b>F1 module</b> — paddocks, race picks, scoring</td><td><span class="chip chip-acc">Built</span></td></tr>
+            <tr><td><b>Tennis module</b> — box, ace cards, ATP Finals</td><td><span class="chip chip-acc">Built</span></td></tr>
+            <tr><td><b>P2P coin betting</b> — wallet, Stripe, challenges</td><td><span class="chip chip-acc">Built</span></td></tr>
+            <tr><td><b>Clubhouse</b> — gazette, AI newspaper, chat</td><td><span class="chip chip-acc">Built</span></td></tr>
+            <tr><td><b>Circles</b> — cross-sport groups, trophy ledger</td><td><span class="chip chip-acc">Built</span></td></tr>
+            <tr><td><b>White-label skin</b> — 3-token re-brand</td><td><span class="chip chip-acc">Built</span></td></tr>
+            <tr><td><b>iOS + Android native apps</b></td><td><span class="chip chip-gold">Ready to compile</span></td></tr>
+            <tr><td><b>Commissioner admin panel</b></td><td><span class="chip chip-pos">● Live</span></td></tr>
+            <tr><td><b>CI pipeline</b> — lint, build, 84 E2E tests</td><td><span class="chip chip-pos">● Live</span></td></tr>
+          </tbody>
+        </table>
+
+        <div class="callout pos">
+          <p class="callout-h">Architecture Principles</p>
+          <p class="callout-p"><b>Server-authoritative:</b> All value mutations in PostgreSQL RPCs — clients cannot tamper. <b>Idempotent pipelines:</b> Any job can re-run safely. <b>Append-only audit trail:</b> squad_events, coin_transactions, round_backups — disputes resolvable from history. <b>Config-driven:</b> New competition = DB insert, not a deployment.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /deck -->
+
+<!-- ── SCRIPT ─────────────────────────────────────── -->
+<script>
+/* ── Particle background ──────────────────────── */
+(function(){
+  const c = document.getElementById('particles');
+  if(!c) return;
+  const ctx = c.getContext('2d');
+  let W, H, pts;
+
+  function resize(){
+    W = c.width = c.offsetWidth;
+    H = c.height = c.offsetHeight;
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  function mkPt(){
+    return {
+      x: Math.random()*W, y: Math.random()*H,
+      r: Math.random()*1.5+.5,
+      vx: (Math.random()-.5)*.4,
+      vy: (Math.random()-.5)*.4,
+      a: Math.random()*.7+.2
+    };
+  }
+  pts = Array.from({length:70}, mkPt);
+
+  function draw(){
+    ctx.clearRect(0,0,W,H);
+    // lines
+    for(let i=0;i<pts.length;i++){
+      for(let j=i+1;j<pts.length;j++){
+        const dx=pts[i].x-pts[j].x, dy=pts[i].y-pts[j].y;
+        const d=Math.sqrt(dx*dx+dy*dy);
+        if(d<130){
+          ctx.beginPath();
+          ctx.strokeStyle=`rgba(95,169,214,${.3*(1-d/130)})`;
+          ctx.lineWidth=.5;
+          ctx.moveTo(pts[i].x,pts[i].y);
+          ctx.lineTo(pts[j].x,pts[j].y);
+          ctx.stroke();
+        }
+      }
+    }
+    // dots
+    pts.forEach(p=>{
+      ctx.beginPath();
+      ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+      ctx.fillStyle=`rgba(95,169,214,${p.a})`;
+      ctx.fill();
+      p.x+=p.vx; p.y+=p.vy;
+      if(p.x<0||p.x>W) p.vx*=-1;
+      if(p.y<0||p.y>H) p.vy*=-1;
+    });
+    requestAnimationFrame(draw);
+  }
+  draw();
+})();
+
+/* ── Count-up animation ───────────────────────── */
+function countUp(el, target, dur=1200){
+  const start = Date.now();
+  const isNum = typeof target === 'number';
+  function tick(){
+    const pct = Math.min((Date.now()-start)/dur,1);
+    const ease = 1-Math.pow(1-pct,3);
+    el.textContent = isNum ? Math.round(target*ease) : el.textContent;
+    if(pct<1) requestAnimationFrame(tick);
+    else {
+      el.style.animation='count-flash .5s ease';
+    }
+  }
+  tick();
+}
+
+/* ── 3D tilt cards ────────────────────────────── */
+function initTilt(){
+  document.querySelectorAll('.tilt').forEach(card=>{
+    card.addEventListener('mousemove', e=>{
+      const r = card.getBoundingClientRect();
+      const x = (e.clientX - r.left - r.width/2) / (r.width/2);
+      const y = (e.clientY - r.top - r.height/2) / (r.height/2);
+      card.style.transform = `perspective(600px) rotateY(${x*8}deg) rotateX(${-y*8}deg) scale(1.02)`;
+    });
+    card.addEventListener('mouseleave', ()=>{
+      card.style.transform = '';
+    });
+  });
+}
+
+/* ── Slide engine ─────────────────────────────── */
+const slides = [...document.querySelectorAll('.slide')];
+const total = slides.length;
+let current = 0, isAnimating = false;
+
+// Build dots
+const dotsEl = document.getElementById('dots');
+slides.forEach((s,i)=>{
+  const b = document.createElement('button');
+  b.className='sd'+(i===0?' on':'');
+  b.title = s.dataset.title||'';
+  b.onclick = ()=>goTo(i);
+  dotsEl.appendChild(b);
+});
+
+function updateChrome(){
+  document.getElementById('counter').textContent=(current+1)+' / '+total;
+  document.getElementById('prog').style.width=((current+1)/total*100)+'%';
+  dotsEl.querySelectorAll('.sd').forEach((d,i)=>d.classList.toggle('on',i===current));
+  document.getElementById('btnPrev').disabled = current===0;
+  document.getElementById('btnNext').disabled = current===total-1;
+}
+
+function triggerAnimations(slide){
+  const els = slide.querySelectorAll('.anim,.anim-scale,.anim-left');
+  els.forEach(el=>{el.classList.remove('in');void el.offsetWidth;});
+  requestAnimationFrame(()=>els.forEach(el=>el.classList.add('in')));
+
+  // Count-up for stat tiles
+  slide.querySelectorAll('[data-count]').forEach(el=>{
+    const target = parseInt(el.dataset.count);
+    countUp(el, target);
+  });
+
+  // Init tilt for this slide
+  initTilt();
+}
+
+function goTo(idx, dir){
+  if(isAnimating || idx===current || idx<0 || idx>=total) return;
+  isAnimating = true;
+  const from = slides[current];
+  const to = slides[idx];
+  const d = dir!==undefined ? dir : (idx>current?1:-1);
+
+  from.classList.add(d>0?'exit-up':'exit-down');
+
+  to.style.transform = d>0?'translateY(48px) scale(.98)':'translateY(-48px) scale(.98)';
+  to.style.opacity = '0';
+  to.style.visibility = 'visible';
+  to.style.pointerEvents = 'none';
+  to.classList.remove('active','exit-up','exit-down');
+
+  // Small delay so the incoming slide starts just after the outgoing
+  setTimeout(()=>{
+    from.classList.remove('active','exit-up','exit-down');
+    from.style.cssText='';
+    from.style.visibility='hidden';
+
+    to.style.cssText='';
+    to.classList.add('active');
+    current=idx;
+    updateChrome();
+    triggerAnimations(to);
+    setTimeout(()=>{isAnimating=false;},100);
+  }, 380);
+}
+
+function navigate(d){ goTo(current+d, d); }
+
+// Keyboard
+document.addEventListener('keydown', e=>{
+  if(['ArrowDown','ArrowRight','PageDown'].includes(e.key)){e.preventDefault();navigate(1);}
+  else if(['ArrowUp','ArrowLeft','PageUp'].includes(e.key)){e.preventDefault();navigate(-1);}
+});
+
+// Touch swipe
+let tY=0;
+document.addEventListener('touchstart',e=>{tY=e.touches[0].clientY;},{passive:true});
+document.addEventListener('touchend',e=>{
+  const dy=tY-e.changedTouches[0].clientY;
+  if(Math.abs(dy)>55) navigate(dy>0?1:-1);
+},{passive:true});
+
+// Scroll wheel
+let wt;
+document.addEventListener('wheel',e=>{
+  const sb = e.target.closest('.s-body');
+  if(sb){
+    const atBot = sb.scrollHeight-sb.scrollTop-sb.clientHeight<4;
+    const atTop = sb.scrollTop<4;
+    if(e.deltaY>0&&!atBot) return;
+    if(e.deltaY<0&&!atTop) return;
+  }
+  e.preventDefault();
+  clearTimeout(wt);
+  wt = setTimeout(()=>navigate(e.deltaY>0?1:-1),70);
+},{passive:false});
+
+/* ── Hover shimmer on table rows ─────────────── */
+document.querySelectorAll('.data-tbl tbody tr').forEach(row=>{
+  row.addEventListener('mouseenter',()=>{
+    row.style.background='rgba(26,111,168,.06)';
+    row.style.transition='background .15s';
+  });
+  row.addEventListener('mouseleave',()=>{
+    row.style.background='';
+  });
+});
+
+/* ── Init ─────────────────────────────────────── */
+updateChrome();
+triggerAnimations(slides[0]);
+</script>
+</body>
+</html>

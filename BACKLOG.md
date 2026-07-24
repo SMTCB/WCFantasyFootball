@@ -1,7 +1,7 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-07-19 (goals_conceded penalty appearance-gate fix; PR #731)  
-**E2E Test Suite**: `platform.spec.js` (36 tests × 2 browsers) passing in CI ✅  
+**Last Updated**: 2026-07-23 (v2/main sync ahead of cutover; latest main fix: goals_conceded penalty appearance-gate, PR #731)  
+**E2E Test Suite**: full `e2e/` suite passing on v2 ✅ — 262 passed / 33 conditionally-skipped, 2026-07-17; `platform.spec.js` (36 tests × 2 browsers) passing in CI ✅
 **Full Playbook Run**: `E2E_TEST_PLAYBOOK.md` v2.0 — all flows confirmed  
 **🟢 LAUNCH READY**: No critical (P0/P1) bugs open. All game mechanics functional. WC kick-off 2026-06-11.  
 **Live App**: https://wc-fantasy-football.vercel.app  
@@ -189,6 +189,81 @@ Backup of all 10 affected fixture rows pre-change: `backups/pre_fixture_dedup_42
 
 ---
 
+## ✅ v2 Clubhouse nav bugs (2026-06-29) — PR #669
+
+**Clubhouse creation bounce-back** — after creating a Clubhouse the user was sent back to the empty lobby. Root cause: `createCircle` called `fetchMyCircles()` in the background; that fetch raced with RLS visibility, returned an empty circle list, and called `setActiveCircleId(null)`, wiping the optimistic state. Fixed: removed the background fetch from `createCircle` (optimistic update is sufficient); removed the `else { setActiveCircleId(null) }` branch from `fetchMyCircles` so it never clears the active circle when the fetch returns empty.
+
+**The FrontRow missing from sidebar** — the newspaper tab existed inside ClubhouseScreen but had no direct sidebar entry. Fixed: added a "The FrontRow" sub-NavItem in `AppLayout.jsx` linking to `/clubhouse?tab=frontrow`; `ClubhouseScreen` now reads the `?tab=` query param on mount via a lazy `useState` initialiser.
+
+---
+
+## ✅ v2 DD Corrections (2026-06-26) — PR #641
+
+**Build blocker fixed:** `ClubhouseNotifProvider` + `ClubhouseNotifContext` were imported in `App.jsx`/`AppLayout.jsx` but never created — v2 was unbuildable. Both files created with Supabase Realtime subscription for unread notification badge count.
+
+**Coin ledger compliance:** `supabase/migrations/209_coin_ledger_compliance.sql` created (NOT applied — requires Supabase-linked PC). Changes `coin_transactions.currency` default from `'GBP'` to `'FRC'` (Frontrow Coin, internal virtual token); extends type CHECK with `wager_placement`/`wager_win`/`wager_refund`; updates `credit_coins()` p_currency default. Next migration: `210_`.
+
+**Vite 8/OXC config:** `vite.config.js` updated from factory-form `esbuild.drop` (silently ignored by Vite 8 OXC) to `oxc: { transform: { targets: ['es2020'] } }`. Build warning eliminated. Production bundle confirmed 0 `console.log`. One `console.log` removed from `calculate-scores/index.js`.
+
+**CSS tokens added:** `--on-shell: #ffffff` and `color-mix(in srgb, var(--brand-accent) 8%, transparent)` for `--accent-bg` (auto-derives on rebrand; Safari 16.2+/Chrome 111+).
+
+**Hex sweep:** `color: '#fff'` → `var(--on-shell)` on 6 F1 screens + 5 Tennis screens + ClubhouseScreen h1 + SquadScreen (×4 Archivo Black headers). LiveScreen shell gradient + accent rgba → tokens. MarketScreen `#F87171`/`#4ADE80` → `var(--neg)`/`var(--pos)`. LeagueScreen checkmark + ACCEPT button contrast corrected.
+
+**Spacing scale:** off-scale px (5, 7, 9, 15px) snapped to base-4 grid in ChallengeScreen (9 substitutions), MultiSportHomeScreen, TrophyCabinetScreen, MarketScreen.
+
+**README:** football live-data resilience paragraph added; `--on-shell`/`--accent-bg` token rows added.
+
+---
+
+## ✅ v2 Hardcoded Hex Cleanup (2026-06-25) — PR #640
+
+**New CSS token: `--on-shell-dim: rgba(255,255,255,.45)`** — added to `src/index.css` for white-faded text on `--shell` (dark navy) surfaces. Pattern used in Clubhouse header eyebrow labels; likely to recur in other shell headers.
+
+**`src/screens/ChallengeScreen.jsx`:**
+- Coin buy button gradient `linear-gradient(145deg,#D4880F,#B8720E)` → `var(--gold)` (the gradient's dark stop is already `--gold`; flat token is cleaner)
+- All `#fff` instances kept — white text on colored button surfaces is the correct Kit Light on-surface pattern, not a theming gap
+
+**`src/screens/ClubhouseScreen.jsx`:**
+- Active circle pill background `rgba(26,111,168,0.15)` → `var(--accent-bg)` (0.08 opacity; visual difference minimal)
+- Shell header muted labels `rgba(255,255,255,0.45)` → `var(--on-shell-dim)` (2 occurrences, replace_all)
+- All `#fff` instances kept (same rationale as above — 10 occurrences on colored surfaces)
+
+**Result**: Zero hardcoded hex colours remaining on either screen that should be tokens. `npm run lint` 0 warnings, `npm run build` clean.
+
+---
+
+## ✅ v2 P1/P2 Due Diligence Gaps (2026-06-25) — PR #639
+
+**P1 — ClubhouseFrontpage.jsx font + palette exceptions documented:**
+- `--font-serif: Georgia, "Times New Roman", serif` added to `src/index.css` as an explicit design token with a note that it's Clubhouse-only
+- `FT_SERIF` constant changed to `'var(--font-serif)'` — now goes through the token system
+- `FT_INK`/`FT_PAPER` kept as hardcoded values (intentional broadsheet palette, not Kit Light system) but documented with inline comments explaining the design rationale
+
+**P1 — Migration 208 (`208_coin_transactions_schema_v2.sql`):**
+- `status text NOT NULL DEFAULT 'completed' CHECK (status IN ('pending','completed','failed','reversed'))` — lifecycle tracking for purchase audit
+- `currency char(3) NOT NULL DEFAULT 'GBP'` — ISO 4217; all current rows backfilled as GBP
+- `reference_id text` — external key (Stripe payment_intent_id, mock ref) promoted from JSONB meta to an indexed column; `coin_txn_reference_id_idx` created for fast idempotency lookups
+- `credit_coins()` updated to accept `p_currency` + `p_reference_id` (backward-compatible defaults)
+- `get_my_wallet()` updated to return all three new fields in transaction rows
+- Existing purchase rows backfilled: `reference_id ← meta->>'stripe_payment_intent_id'`
+
+**P1 — purchase-coins Edge Function — `MOCK_PAYMENTS=true` mode:**
+- New `MOCK_PAYMENTS` env constant checked before the Stripe guard
+- `/create-payment-intent` route: when mock, validates JWT + pack, calls `credit_coins()` directly, returns `{ mock: true, coins_credited: N, pack_name, reference_id: 'mock_...' }`
+- Stripe webhook idempotency check updated to use `reference_id` column (indexed) instead of `meta->>'stripe_payment_intent_id'` JSONB path
+- Stripe `credit_coins` call updated to pass `p_currency: 'GBP'` + `p_reference_id: pi.id`
+
+**P2 — `src/lib/payments.js` — `initiatePurchase(packId)` wrapper:**
+- Single import decouples all purchase UI from the Edge Function name/path
+- Returns `{ mock, coinsCredited, packName }` in mock mode; `{ clientSecret }` in Stripe mode
+- Maps 503 → `PAYMENTS_NOT_CONFIGURED` error (callers show "coming soon" message)
+
+**P2 — `.env.example` — all Edge Function secrets documented:**
+- 6 secrets with function names: `SUPABASE_JWT_SECRET`, `FORZA_ACCESS_TOKEN`, `GROQ_API_KEY`, `RAPIDAPI_TENNIS_KEY`, `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`
+- `MOCK_PAYMENTS=true` documented as dev/staging-only (never set in production)
+
+---
+
 ## ✅ Starting-XI formation relaxed + missing ELIMINATED tag fix (2026-06-28) — PR #652, migration 194
 
 **Reported**: (1) Couldn't field a starting XI with only 2 defenders. (2) ELIMINATED tag missing for a genuinely-eliminated club's player (Uruguay/Valverde) in the Market.
@@ -255,6 +330,312 @@ goals: Math.max(0, (s.goals ?? periodsResult.goalsMap[fpid] ?? 0) - (ownGoalMap[
 - `league_members.total_points`: re-aggregated for all 5 users; `trg_recompute_ranks` fired automatically
 
 **R3 snapshot verified**: `squad_matchday_snapshots` captured 57 squads across 11 leagues and 42 managers at exactly 19:00:00 UTC (R3 deadline/kickoff). `round_backups` for R3 not yet written — fires at roundComplete.
+
+---
+
+## ✅ v2 Phase 3A — Buyout Hygiene Batch 2 (2026-06-25)
+
+**Branch**: `v2` — PRs #634 (3A-B), #635 (3A-A), #636 (3A-C+D). No migrations.
+
+**What was built:**
+
+**3A-B (PR #634) — ESLint on v2:**
+- ESLint extended to `supabase/functions/_shared/**` — buyer can verify shared utils without skipping linting
+- `e2e/**` added to `globalIgnores` (E2E specs are Playwright + Node, not Vite-bundled; were generating false positives)
+
+**3A-A (PR #635) — Provider adapter seam:**
+- `supabase/functions/_shared/providers/types.ts` — neutral interface: `CanonicalMatchStatus`, `CanonicalEvent`, `CanonicalPosition`, `CanonicalPlayerStat`, `SportDataAdapter` (`provider`, `listEvents()`, `getPlayerStats()`, `health()`)
+- `supabase/functions/_shared/providers/forza.ts` — `FORZA_BASE`, `POSITION_MAP`, `mapStatus()`, `forzaFetch()` (3-retry with exponential backoff on 429/5xx), `ForzaAdapter` class implementing `SportDataAdapter`
+- `supabase/functions/_shared/providers/manual.ts` — `ManualAdapter` stub (tennis/admin data — returns `[]`)
+- `supabase/functions/_shared/providers/opta.ts` — `OptaAdapter` placeholder (B2B — throws; `health()` returns `{ ok: false }`)
+- `supabase/functions/_shared/providers/index.ts` — `getAdapter(provider)` registry factory
+- Refactored 4 sync functions to import shared primitives: `sync-fixtures`, `sync-players`, `ingest-match-events`, `discover-tournament` — removed ~150 lines of duplicated Forza boilerplate across them
+- `SELF_ANON_KEY` dead code removed from `ingest-match-events` (was defined, never read)
+- `discover-tournament` 404 handling: `forzaFetch` throws `HTTP 404` → caught and returns `{ exists: false }` (preserves original behaviour)
+
+**3A-C+D (PR #636) — Containerisation + environment docs:**
+- `Dockerfile` (multi-stage): `node:20-alpine` builds with `VITE_*` as `ARG`/`ENV` → `nginx:1.27-alpine` serves `dist/`; ~25 MB image; healthcheck via `wget`
+- `nginx.conf`: SPA routing (`try_files`), security headers mirroring `vercel.json`, 1y asset caching, gzip
+- `docker-compose.yml`: 3 services — `app` (nginx, port 3000), `db` (postgres:15-alpine, port 5432, `pgdata` volume), `functions` (supabase/edge-runtime:v1.50.0, port 54321, `EDGE_FUNCTION` env var selects which function runs)
+- `.dockerignore`: excludes `node_modules/`, `dist/`, `.env*`, `.claude/`, `ios/`, `android/`, `docs/`, `supabase/migrations/`, etc.
+- `.env.example` extended: Docker/local dev section, Edge Function secrets section, environment targets table
+- `docs/deployment/DOCKER_LOCAL_DEV.md`: three paths (Option A Docker-only, Option B docker-compose, Option C Supabase CLI), env var reference table, secrets-per-environment matrix, staging provisioning guide
+- `docs/architecture/SALE_READY_PROJECT_PLAN.md` Phase 3A status updated to ✅ Done; Phase 3B marked as 🎯 NEXT
+
+**Architecture notes:**
+- Vite `VITE_*` vars are baked into the JS bundle at build time — must be Docker `--build-arg`, NOT runtime `environment:`. Documented in both Dockerfile and DOCKER_LOCAL_DEV.md.
+- `supabase/edge-runtime` image runs one function at a time via `--main-service`. Full multi-function routing requires `npx supabase start` (Supabase CLI). Limitation documented in compose comments.
+- Provider adapter seam is additive only — zero changes to live pipeline logic. Buyer plugs a new provider in by implementing `SportDataAdapter` and registering it in `providers/index.ts`.
+- No Edge Functions deployed during this session (v2 branch only; no pilot impact).
+
+**Next session: Phase 3B** — pre-merge checklist: `platform.spec.js` green on v2, football + P2P + F1 + tennis smoke passes, `npm run build` clean, then merge v2 → main → deploy all Edge Functions.
+
+---
+
+## ✅ v2 P0 Due Diligence Gaps (2026-06-25) — PR #638
+
+**Branch**: `claude/v2-p0-due-diligence-gaps` → merged into `v2`.
+
+Three gaps identified in buyer due diligence checklist, all resolved:
+
+**P0-1 — ESLint zero warnings:**
+- `eslint.config.js`: disabled 5 React Compiler rules (`static-components`, `purity`, `immutability`, `set-state-in-effect`, `preserve-manual-memoization`) — they ship in react-hooks v7 but only apply when the React Compiler transform is active. This project uses React 19 + Vite without it.
+- Fixed 15 genuine `exhaustive-deps` warnings across 6 files: added `navigate` to dep arrays (stable per React Router), added missing state/prop deps where safe, added `eslint-disable-next-line` with explanatory comments where adding would cause infinite loops.
+- Removed 3 now-stale `eslint-disable` directives.
+- Result: `npm run lint` → 0 errors, 0 warnings.
+
+**P0-2 — Kit Light token pass on DraftScreen.jsx:**
+- Replaced all ~40 hardcoded dark hex values with Kit Light CSS variables.
+- Backgrounds: `bg-[var(--bg)]` (page), `bg-[var(--card)]` (rows), `bg-[var(--shell)]` (header/bottom bar), `bg-[var(--elev)]` (elevated surfaces, drag ghost, auto-fill button).
+- Borders: `border-[var(--rule)]` throughout.
+- Text: `text-[var(--paper)]` (primary), `text-[var(--mute)]` (secondary/muted/disabled).
+- Inline styles: `var(--positive)` (submit button, submit state), `var(--warn)` (deadline countdown, pool pressure warning), `var(--danger)` (save error), `var(--accent)` ("Add to List" button), `var(--neg-bg)` / amber tint / `var(--pos-bg)` (pool pressure banners).
+- Submit button text: `'#000'` → `'#fff'` (correct contrast on dark green `--positive`).
+
+**P0-3 — Kit Light token pass on DraftRecoveryScreen.jsx:**
+- Same mapping as DraftScreen.
+- Alert banners updated: amber warning (`bg-[#1A1200]` + `text-[#FFC107]`) → `rgba(184,114,14,0.08)` tint + `var(--warn)`; danger banner (`bg-[#1A0000]`) → `var(--neg-bg)` + `var(--danger)`.
+- Budget indicator: ternary classes → single inline `style={{ color: budgetLeft < 10 ? 'var(--danger)' : 'var(--positive)' }}`.
+
+**P0-4 — README.md rewrite:**
+- Platform name updated to "FrontRow — Multi-Sport Fantasy & P2P Betting Platform".
+- Architecture diagram: Sports → SportDataAdapter → Shared DB Layer → Fantasy/P2P branches.
+- Sport modules table (Football, F1, Tennis, P2P, Clubhouse, Circles).
+- **Rebrand guide**: change `--accent` + `--bg` in `src/index.css` to rebrand — 109 references update automatically.
+- Full CSS token reference table (13 tokens: `--bg`, `--card`, `--elev`, `--shell`, `--rule`, `--paper`, `--mute`, `--accent`, `--gold`, `--positive`, `--warn`, `--danger`).
+- Key commands corrected; migration count updated.
+
+---
+
+## ✅ v2 P2P Betting Layer — Sprints P2P-5 + P2P-6 (2026-06-24)
+
+**Branch**: `v2` — PRs #628–#629. Migrations 206–207.
+
+**What was built:**
+
+**P2P-5 (migration 206):**
+- `_debit_entry_fee()` internal SECURITY DEFINER — atomic balance debit before league join, REVOKED from all
+- `join_league_by_code` extended: reads `league_config.coin_entry_fee`, charges fee atomically (fail = no join)
+- `get_coin_economy_stats()` — aggregate platform health: circulating supply, in-escrow, purchase volume, entry fees collected, rake burned, challenge counts (won/tie/total)
+- `coin_transactions.type` CHECK extended with `entry_fee`
+- WalletScreen: `entry_fee` TYPE_META + PLATFORM ECONOMY stats panel (grid: circulating, in escrow, challenges, rake burned)
+- `p2p_challenge` and `p2p_result` gazette types registered in ENTRY_META (LeagueDetailView + RecapScreen)
+
+**P2P-6 (migration 207):**
+- `p2p_config` table per league: min_stake (default 10), max_stake (default 500), daily_challenge_limit (default 5), challenges_enabled (default true). RLS enabled.
+- `get_p2p_config(p_league_id)` — returns defaults if no row exists (upsert-on-first-save pattern)
+- `update_p2p_config(p_league_id, ...)` — commissioner-only UPSERT via RPC
+- `create_p2p_challenge` re-issued with 4 config guards: CHALLENGES_DISABLED, STAKE_TOO_LOW, STAKE_TOO_HIGH, DAILY_LIMIT_REACHED
+- RLS audit: confirmed enabled on all 5 P2P coin tables
+- Legal invariant comment in migration: coin_transactions type CHECK must NEVER gain withdrawal/payout type
+- CommissionerPanel `P2PChallengesConfig` component: entry fee + min/max stake inputs + enable toggle + save button — both mobile (MobLifecycleCard) and desktop (HubSectionLabel + panel) layouts
+
+**Architecture notes:**
+- Rake is burned (never credited): `get_coin_economy_stats` derives rake_burned by computing `FLOOR(stake*2*0.05)` from resolved non-tie challenges in DB — no separate rake transaction needed
+- Entry fee charges before member INSERT = fully atomic, no partial state possible
+- Stripe remains plug-in ready: 5-step checklist at top of `purchase-coins/index.ts`; zero code changes needed when keys are set
+- Next migration: `208_`
+
+---
+
+## ✅ v2 P2P Betting Layer — Sprints P2P-1 through P2P-4 (2026-06-24)
+
+**Branch**: `v2` — PRs #627. Migrations 202–205.
+
+**What was built:**
+
+**P2P-0 (decisions):** 500/1500/5000 coin packs at £1.99/£4.99/£12.99. 5% rake burned. Daily stake cap 1,000. Stripe deferred.
+
+**P2P-1 (migration 202):** `coin_wallets` (balance + escrow, FOR UPDATE lock), `coin_transactions` (append-only, type CHECK), `credit_coins()`/`debit_coins_to_escrow()`/`release_escrow()` SECURITY DEFINER RPCs, `guard_coin_columns` trigger, `admin_grant_coins()` service-role-only, `useWallet` hook.
+
+**P2P-2 (migration 203 + purchase-coins Edge Function):** `coin_packs` table (3 SKUs, stripe_price_id=NULL), Stripe webhook skeleton (503 until keys set), WalletScreen balance/history/buy UI.
+
+**P2P-3 (migration 204):** `p2p_challenges` table, 5 RPCs (create/accept/decline/cancel/get_my_challenges), expire cron (hourly), `useChallenges` hook (Realtime), `ChallengeScreen.jsx` (4 tabs + CreateChallengeModal).
+
+**P2P-4 (migration 205):** `resolve_p2p_challenge()` (service-role-only, roundComplete guard, escrow release, 5% rake burned, gazette p2p_result entry), `auto_resolve_p2p_challenges()` batch (FOR UPDATE SKIP LOCKED), 5-min pgcron, resolved pts comparison panel in ChallengeScreen.
+
+---
+
+## ✅ v2 Tennis Sprint T-3 — Scoring Edge Functions + Leaderboard RPCs (2026-06-24)
+
+**Branch**: `v2` — PR #620. Migration 201 + 2 Edge Functions.
+
+**What was built:**
+
+**`score-tennis-tournament` Edge Function:**
+- Scores grand_slam + masters_1000 tournaments after all results are entered
+- Tier-based per-round points: T1=2/round, T2=3/round, T3=4/round, T4=6/round (dark horses rewarded)
+- QF Captain multiplier: captain's contribution doubled
+- Ace card bonuses: underdog_boost (+15 if T3/T4 reaches SF+), safety_net (+8 if T1 exits early), surface_specialist (+12 proxy if captain reaches SF+), dark_horse_insurance (T4 floor = 6 pts)
+- Writes to `tennis_tournament_scores`, posts `gazette_entries(tennis_result)`, calls `admin_complete_tournament`
+
+**`score-atp-finals` Edge Function:**
+- Scores 15-match pick'em: group=3pts, SF=5pts, Final=8pts (max 54 pts)
+- Partial scoring supported (call after any resolved matches, idempotent)
+- Marks completed when all 15 results are settled
+
+**Migration 201 — 3 read RPCs:**
+- `get_player_box_leaderboard`: season standings with Masters Drop Rule (worst standard tournament dropped when ≥5 completed). Returns rank, total, best, worst_dropped.
+- `get_tennis_season_summary`: per-tournament score grid for all box members (history screen)
+- `get_tennis_tournament_list`: 2026 ATP calendar with player counts + user roster status
+
+---
+
+## ✅ v2 Tennis Sprint T-1 — Game RPCs (2026-06-24)
+
+**Branch**: `v2` — PR #618. Migration 199.
+
+**What was built:**
+
+**Migration 199 — 6 SECURITY DEFINER RPCs:**
+- `submit_tennis_roster`: tiered player validation, ace card consumption, idempotent re-submit (card already used for same tournament allowed), card swap support
+- `set_tennis_qf_captain`: QF window guards (`status='qf_captain_open'`, `qf_window_closes_at`), roster membership check, eliminated player guard
+- `submit_atp_finals_group_picks`: 12-pick validation against seeded match pairings
+- `submit_atp_finals_knockout_picks`: 3-pick validation (matches 13–15), requires all 12 group matches resolved
+- `get_tennis_tournament_for_user`: rich combined payload — tournament + players (ordered by tier/seed) + roster + captain + ace_cards + surviving_players — one RPC call per screen load
+- `issue_season_ace_cards`: issues 4 cards per user for all Player's Box members; restricted to service_role only (REVOKE from public/authenticated/anon); idempotent ON CONFLICT DO NOTHING
+
+**Key fix:** Ace card re-submit idempotency — `(used_tournament_id IS NULL OR used_tournament_id = p_tournament_id)` allows roster updates without forcing a card swap error.
+
+**Smoke tested:** all 6 RPCs verified against live v2 DB; `get_tennis_tournament_for_user` returned full valid payload.
+
+---
+
+## ✅ v2 Tennis Sprint T-0 — Schema foundations + 2026 ATP calendar (2026-06-23)
+
+**Branch**: `v2` — PR #617. Migrations 197–198.
+
+**What was built:**
+
+**Migration 197 — Core tables + Player's Box + calendar:**
+- `player_boxes`, `player_box_members`, `circle_player_boxes` (links boxes into Circle cross-sport layer)
+- `tennis_seasons` (2026 seeded), `tennis_tournaments` (14-event 2026 ATP calendar)
+- `tennis_tournament_type` + `tennis_surface` enums
+- RPCs: `create_player_box`, `join_player_box_by_code`, `get_my_player_boxes`
+- RLS on all 5 tables
+
+**Migration 198 — Game tables + gazette enum:**
+- `tennis_tournament_players` — `external_player_id INT` for API sync; partial unique index prevents duplicate API-sourced players while allowing multiple manual (NULL) entries
+- `tennis_rosters`, `tennis_qf_captains`, `tennis_ace_cards`
+- `tennis_tournament_scores` — shared table for standard tournaments and ATP Finals
+- `tennis_atp_finals_matches`, `tennis_atp_finals_picks`
+- `gazette_entry_type` extended: `'tennis_result'` added
+- RLS on all 7 tables
+
+**API integration (tennis-api-atp-wta-itf, 50 req/day free plan):**
+- `tennis_tournaments.external_id INT` — API season ID, populated on first admin sync
+- `tennis_tournament_players.external_player_id INT` — API player ID, partial unique index
+- No cron — all API calls admin-triggered only (~2 per tournament = ~28 calls for full season)
+- Full season budget: ~28 of 50 daily allowance, spread across Jan–Nov
+
+**Smoke tests passed:** 12 tables created, RLS on all, 14 tournament rows, 3 RPCs installed, `tennis_result` in enum, 84/84 E2E green, build clean.
+
+**Next v2 session:** Tennis Sprint T-1 — `submit_tennis_roster`, `set_tennis_qf_captain`, ATP Finals submission RPCs, `issue_season_ace_cards`. See `TENNIS_MODULE_IMPLEMENTATION_PLAN.md`.
+
+---
+
+## ✅ v2 Phase 1E — Clubhouse shell complete (2026-06-23)
+
+**Branch**: `v2` — PRs #613, #614, #615.
+
+**What was built (CH-7, CH-8, CH-9):**
+
+**CH-7 (PR #613) — Mobile nav + feed wiring + classified gazette type:**
+- Clubhouse added to mobile bottom nav (replacing LIVE on mobile; LIVE remains desktop-only)
+- `FeedEntry` tappable when `entry.league_id` present — navigates to `/league/:id`
+- `classified` gazette entry type registered in `LeagueDetailView.jsx` ENTRY_META
+
+**CH-8 (PR #614) — Owner admin panel:**
+- Migration 195: 4 SECURITY DEFINER RPCs — `update_circle_settings`, `kick_circle_member`, `link_league_to_circle`, `get_owner_linkable_leagues`
+- `SettingsTab` component (rename, public/P2P toggles, league linker) — owner-only
+- `MembersTab` upgraded with KICK buttons for non-owner members
+- No prod backup needed (circles tables are v2-only, migration 188)
+
+**CH-9 (PR #615) — Notification badge + inbox:**
+- Migration 196: DB triggers for `frontpage_editions`, `gazette_entries` (breaking_news), `direct_messages` — fan out to `clubhouse_notifications`
+- TDZ-safe badge split: `ClubhouseNotifContext.js` (pure createContext, zero imports) + `ClubhouseNotifProvider.jsx` (supabase/auth logic) — AppLayout imports only the context file, no Rolldown TDZ risk
+- `App.jsx` wraps tree in `ClubhouseNotifProvider`
+- `AppLayout`: gold dot badge on desktop CLUBHOUSE nav and mobile CLUB icon when unread > 0
+- `useClubhouse`: notifications state, realtime INSERT subscription, `markRead`/`markAllRead`, `unreadCount`
+- `ClubhouseScreen`: `InboxTab` (TYPE_META badges, unread dot, MARK ALL READ, tap-to-navigate + mark-read); INBOX tab label shows live count
+
+**Phase 1E status: COMPLETE.** Clubhouse shell is self-contained. P2P betting (Phase 1A) and Tennis (Phase 2) add content inside it.
+
+**Next v2 session:** Phase 1A Sprint P2P-0 (5 product decisions gate Sprint 1) or Phase 2 Sprint T-0 (migrations 194–195 for Player's Box). See `SALE_READY_PROJECT_PLAN.md`.
+
+---
+
+## ✅ v2 Phase 2 — Tennis module game dynamics spec + implementation plan written (2026-06-22)
+
+**Branch**: `v2` — PR #605. No DB changes this session (docs only).
+
+**What was done:**
+- Reviewed tennis game dynamics proposal; flagged and resolved all inconsistencies: QF captain data flow (admin enters round-by-round results, QF window opens when 8 players remain), Ace Cards excluded from ATP Finals (forfeited if unused), Masters Drop Rule naming, Dark Horse Insurance naming
+- Confirmed all open questions: The Player's Box naming; ATP only (no WTA); season Jan (Australian Open) → Nov (ATP Finals); rolling sum leaderboard with best-4-of-9 Masters; tier structure (Seeds 1–4 / 5–16 / 17–32 / Unseeded) consistent across all draw sizes
+- Wrote full game dynamics spec and implementation plan: **[TENNIS_MODULE_IMPLEMENTATION_PLAN.md](docs/product/TENNIS_MODULE_IMPLEMENTATION_PLAN.md)** — 12-table schema with SQL, complete RPC contracts, scoring engine pseudocode for all 4 Ace Cards + QF Captain + ATP Finals tier mapping, season leaderboard SQL, 5 sprints (~28h), 7 UI screens, exit criteria
+- Updated `SALE_READY_PROJECT_PLAN.md` Phase 2 to replace outdated bracket-pick placeholder with new plan reference and session notes
+
+**Next v2 session (Phase 2 Sprint T-0):** apply migrations 194–195 (Player's Box tables + tennis season/tournament/player/roster/ace-card/captain/score/ATP Finals tables). SQL is fully written in the plan. Confirm exact migration numbers after F1 Sprint F1-0 consumes 190–191.
+
+---
+
+## ✅ v2 Phase 1B — F1 module scoped + implementation plan written (2026-06-22)
+
+**Branch**: `v2` — commit `320e57c`. No DB changes this session.
+
+**What was done:**
+- Assessed the existing [FantasyF1 repo](https://github.com/SMTCB/FantasyF1) — game model (prediction bets: P1/P2/P3 + DNF + team + special category), schema (3 migrations, 6 tables), reusable assets (scoring engine, OpenF1 client, season data constants — all framework-agnostic TypeScript)
+- Confirmed architecture decisions: **Paddock** naming (F1 equivalent of league), one set of bets per user per race (global, shared across paddocks), port to Vite/React in this monorepo, chat and gazette at Circle level only, trophy ledger holistic across sports
+- Wrote full implementation plan: **[F1_MODULE_IMPLEMENTATION_PLAN.md](docs/product/F1_MODULE_IMPLEMENTATION_PLAN.md)** — 5 sprints (~22h), complete SQL for migrations 190–191 (paddocks + F1 tables + RPCs + 24-race calendar), screen-by-screen specs for all 7 screens, edge function contract, exit criteria
+- Updated `SALE_READY_PROJECT_PLAN.md` Phase 1B to point at the plan and reflect confirmed decisions
+
+**Next v2 session (Phase 1B Sprint F1-0):** apply migrations 190 and 191 to the v2 DB — creates `paddocks`, `paddock_members`, `circle_paddocks`, `f1_races`, `f1_bets_race`, `f1_bets_year`, `f1_scores`, `f1_year_results`, and all RPCs. SQL is written in the plan and ready to execute.
+
+---
+
+## ✅ v2 Phase 0 — Foundation Seams complete (2026-06-22)
+
+**Branch**: `v2` — commits `8a142d7`, `acebccb`. Three additive migrations applied to live DB. Zero pilot impact.
+
+**What was built:**
+- Migration 187 — `sports` table (football/f1/tennis) + `tournaments.sport_id` + `tournaments.provider`; all 4 existing tournaments backfilled to football/forza
+- Migration 188 — `circles`, `circle_members`, `circle_leagues` tables + `create_circle`, `join_circle_by_code`, `get_circle_feed` RPCs
+- Migration 189 — `trophy_ledger` table + `get_circle_meta_standings` RPC (v1 formula: trophy count with gold→silver→bronze tiebreak)
+- Pre-migration backup saved: `backups/pre_phase0_tournaments_20260622.json`
+- 84/84 `platform.spec.js` green on v2
+
+**Branch incident**: migration 189 was accidentally committed to `main` instead of `v2`. Caught immediately, undone with `git reset HEAD~1`, recommitted to correct branch. `main` confirmed clean.
+
+---
+
+## ✅ v2 Sprint UX-0 — Kit Light token pass complete (2026-06-21/22)
+
+**Branch**: `v2` — zero pilot impact. All changes are on v2 only; nothing merged to main.
+
+**What is Sprint UX-0**: The Kit Light visual identity (cream background, dark navy text, gold accents) is applied to all existing football screens via the CSS token system in `src/index.css`. No layout changes, no new features — purely a visual layer swap.
+
+**Key design decisions made:**
+- `var(--shell)` = `#18202E` (dark navy) is the **one dark element** in Kit Light. Mobile bottom nav, desktop sidebar, OnboardingWizard card, and swap mode banner all use it with `rgba(255,255,255,...)` text.
+- Desktop sidebar moved from `var(--ink-2)` (white) to `var(--shell)` — aligns with mobile bottom nav, makes `BrandMark theme="dark"` work correctly.
+- `LeagueInviteCard` is intentionally dark-branded (hardcoded `#070A0F` background) — not using CSS tokens, no changes needed or made.
+- `SquadScreen` MiniPitch/MiniTok green field (`#2D5A27`) deferred to Phase 2 — blocked on design spec for the pitch surface in a light context.
+
+**Files modified on v2 (4 commits: 75d1246, 1b4b24e, dfe8b2b, 3afb805):**
+- `src/index.css` — full `@theme` + `:root` Kit Light token rewrite (done pre-session)
+- `src/components/AppLayout.jsx` — desktop sidebar to `var(--shell)`, all nav text to `rgba(255,255,255,...)`
+- `src/components/BrandMark.jsx` — dark-theme `secondaryColor` fix (`var(--paper)` → `rgba(255,255,255,0.55)`)
+- `src/components/OnboardingWizard.jsx` — card background to `var(--shell)`
+- `src/screens/HomeScreen.jsx`, `LeagueScreen.jsx`, `RecapScreen.jsx`, `SettingsScreen.jsx`, `NotFoundScreen.jsx` — full token pass
+- `src/screens/MarketScreen.jsx` — audit pass: auto-fill button state, player row borders
+- `src/screens/LiveScreen.jsx` — audit pass: LEAGUE_TONES, event tags, transfer window badge, bench divider, inactive dot
+- `src/screens/SquadScreen.jsx` — audit pass (10 fixes): player names on light bg, SQUAD/BENCH badge, cancel-confirm states, swap borders, Joker muted text, VIEW STATS button, swap banner overlay text
+- `supabase/functions/_shared/auth.ts` — Phase 1D-A: `requireServiceRole()` now verifies HMAC-SHA256 signature before trusting JWT claims (was decoding without verification)
+- `supabase/functions/discover-tournament/index.js`, `sync-fixtures/index.js`, `sync-player-status/index.js`, `sync-players/index.js` — `await requireServiceRole(req)` (callers updated for async)
+- `docs/architecture/SALE_READY_PROJECT_PLAN.md` — Sprint UX-0 marked ✅ done, Phase 1D-A marked done, session notes added, next action updated
+
+**Test result**: 84/84 `platform.spec.js` passed on v2 branch (2026-06-22).
+
+**Next v2 session**: Phase 1B Sprint F1-0 (apply migrations 190–191) or Phase 1A Sprint P2P-0 (product decisions). See `SALE_READY_PROJECT_PLAN.md`.
 
 ---
 
@@ -346,8 +727,6 @@ Note: several transfers have `matchday_id = null` in `squad_events` — expected
 - 7 `player_match_stats` rows in R2 updated to `clean_sheet = true`:
   Romero (ARG), Meunier (BEL), Hardani (IRN), Bombito (CAN), Cornelius (CAN), Cancelo (POR), Semedo (POR)
 - ⚠️ `calculate-scores` did NOT auto-recompute — R2 was `roundComplete`, v29 guard blocked PATH A. Retroactive DB fix applied in migration 191 (session 2026-06-24, PR #630). Cancelo/Semedo were already correct and didn't need fixing.
-
-**v2 isolation confirmed**: diff `origin/main..origin/v2` verified — 20+ v2-only Clubhouse/F1 commits, none leaked to main. Only change on main is the one-line fix.
 
 ---
 
@@ -816,6 +1195,84 @@ Group-stage rounds (r1–r3) now reopen the transfer window 3h after the last ki
 | B-06 | ~~**[TECH DEBT] Persist per-player `points_breakdown` server-side for exact chip/auto-sub/captain-reassignment attribution**~~ | — | ✅ **Resolved 2026-06-15, PR #545** — `calculate-scores` v27 persists `effective_xi`/`effective_captain_id`/`auto_subs`/`captain_reassigned`/`is_triple_captain`/`joker_player_id` into `points_breakdown` on `roundComplete`; RecapView reads this snapshot directly, replacing the "Other adjustments" catch-all row from PR #543. |
 | B-07 | ~~**[TECH DEBT] `set_lineup` mid-round deduction doesn't account for captain multiplier when benching the current captain**~~ | — | ✅ **Resolved 2026-06-15, PR #547, migration 177** — `set_lineup` rewritten to use the same full v27 recompute as `set_captain` (migration 176): `total = SUM over the NEW starting XI of ROUND(player's round points) * (captain/triple mult or 1)`. See top-of-file entry for details. |
 | B-08 | **[FEATURE] Multi-competition leagues (e.g. EPL + La Liga + Calcio in one league)** | 3–4 weeks (mini-squads-per-tournament) to 6–9 weeks (unified squad/pool) | Requested 2026-06-15 — assessment only, no design doc yet. **Core blocker**: `matchday_id = '{tournament_id}-r{N}'` is the backbone of squads, scoring, transfer windows, lineup locks, club caps, draft pools, and recap GW labels (~500 refs across migrations). Competitions run on different calendars (EPL GW34 ≠ La Liga J34 ≠ Serie A G34) — there is no shared "round" concept today; a multi-competition league needs a new synthetic-Gameweek abstraction with a per-tournament round-mapping table. **Required pieces**: (1) `league_tournaments` junction table replacing the single `leagues.tournament_id` FK + rewritten `create_league`; (2) synthetic GW model + round mapping; (3) player pool/draft/market union across tournaments with harmonized pricing (EPL prices vs smaller-league prices are set independently per migration 94); (4) club caps resolved per-player's own tournament; (5) calculate-scores routes each player to their tournament's `scoring_rules` (engine already exists, migration 80/175 — moderate lift) and matches fixtures by tournament; (6) per-player transfer/lineup lock windows instead of one league-wide window; (7) Live Centre/Recap aggregate fixtures across tournaments per GW; (8) cron jobs fan out per tournament referenced by any active league. **Compatibility rules requested**: (a) block mixing top-tier with minor leagues (e.g. EPL + Azerbaijan Premier League) — needs new `tournaments.competition_tier` classification, OR (recommended for pilot scale) a manually curated `competition_bundles` allowlist table with pre-built GW mappings — far less engineering; (b) block mixing league + cup formats — needs new `tournaments.competition_format` enum (`league`/`cup`/`hybrid`); cup tournaments have special-cased machinery (knockout keeps, cup_active_clubs, stage→round mapping) that doesn't generalize, recommend hard-blocking cup formats from multi-competition leagues entirely; (c) validate overlapping `starts_at`/`ends_at` and similar round cadence at league-creation time. **Open product decision** (determines which estimate applies): one unified 15-player squad drawn from a combined cross-competition pool, vs. 3 separate per-tournament mini-squads summing into one league total (cheaper — per-tournament squad/scoring logic mostly already works). **Recommendation**: treat as its own design doc (same pattern as `H2H_COMPETITION_DESIGN.md`) before starting — resolve the squad-composition decision first. |
+
+---
+
+## 🪙 P2P COIN BETTING — Full Design Package (2026-06-20)
+
+**Status**: Design complete. No code shipped yet. Three documents are ready to hand off when development starts.
+
+**What it is**: a coin-based, manager-vs-manager betting system. Managers buy non-withdrawable virtual coins with real money, then stake coins on in-game propositions ("my GW total beats yours", "my striker outscores your striker", "I call this match result"). The system auto-resolves from data already in the database. Revenue = coin pack sales; rake on bets is a coin sink that drives repurchase, not a cash commission.
+
+**Why non-withdrawable virtual coins**: real-money P2P bets + commission = gambling-operator regulatory classification. Non-withdrawable coins = virtual goods software sale. This is the critical legal invariant — **no RPC, edge function, admin tool, or future feature may ever convert a coin balance back into money or a money-equivalent payout.**
+
+**Documents** (all committed to repo):
+
+| Document | Path | Covers |
+|---|---|---|
+| Technical Assessment | `docs/architecture/P2P_BETTING_TECHNICAL_ASSESSMENT.md` | What already exists; reuse map; risk register R1–R10 |
+| System Design | `docs/architecture/P2P_BETTING_SYSTEM_DESIGN.md` | Data model, RPC contracts, Stripe integration, security model, open decisions DECISION-1–6 |
+| Implementation Roadmap | `docs/product/P2P_BETTING_IMPLEMENTATION_ROADMAP.md` | 7-sprint delivery plan with testing strategy per sprint |
+
+---
+
+### Sprint overview
+
+| Sprint | Goal | Critical path |
+|---|---|---|
+| 0 | Decisions + Stripe spike | Resolve DECISION-1–6; Stripe test account + webhook round-trip |
+| 1 | Coin ledger foundation | `coin_wallets`, `coin_transactions`, `_apply_coin_delta` (FOR UPDATE lock), RLS, reconciliation invariant |
+| 2 | Coin purchase (Stripe) | `coin_packs`, `coin_purchases` (UNIQUE stripe_session_id), `create-coin-checkout` + `stripe-coin-webhook` edge functions |
+| 3 | P2P challenge core | `p2p_challenges`, create/accept/decline/cancel RPCs with escrow, expiry cron |
+| **4** | **Auto-resolution engine** | **MVP COMPLETE** — `resolve-p2p-challenges` cron, 3 proposition evaluators, rake burn, gazette entries, roundComplete gate |
+| 5 | Coin sinks + economy | `league_coin_pools` entry fees, wallet/transaction history screen, winnings leaderboard |
+| 6 | Hardening + white-label | Config-driven rake/packs/currency, responsible-play guards, reconciliation cron, buyer runbook |
+
+**Estimated timeline**: Sprint 0–4 = 6–8 weeks to a sellable demo. Sprint 0–6 = 9–13 weeks to buyer-handoff ready.
+
+---
+
+### Key technical decisions to resolve in Sprint 0 (DECISION-1 through DECISION-6)
+
+Before writing a single line of code, the following must be decided and written down (see the System Design doc for full context):
+
+- **DECISION-1**: Rake percentage (e.g. 10%) — fixed or configurable per-league at launch?
+- **DECISION-2**: Coin pack price points (e.g. 100 coins = £1.99, 500 = £7.99). These become Stripe product/price IDs.
+- **DECISION-3**: Starting/free coin grant for new managers (acquisition vs. economy integrity tradeoff).
+- **DECISION-4**: Challenge expiry window — how long an unaccepted challenge stays open before it auto-expires and refunds.
+- **DECISION-5**: Whether `league_coin_pools` (entry-fee prize pools) is MVP or Sprint 5 only.
+- **DECISION-6**: Minimum and maximum stake bounds (prevents zero-coin challenges and runaway bets).
+
+---
+
+### Architecture summary
+
+The system is built from two patterns already proven in production:
+
+- **`trade_proposals` lifecycle** → P2P challenge lifecycle (~75% reuse). The create/accept/decline/cancel/expire state machine is the same shape.
+- **Auction `place_bid` escrow** → coin escrow (~70% reuse). FOR UPDATE row locks, deterministic lock ordering to prevent deadlocks, balance-before-escrow check.
+- **`squad_events` ledger pattern** → append-only `coin_transactions` ledger (~90% reuse).
+- **`resolve-bets` cron** → `resolve-p2p-challenges` cron (~60% reuse). Same decoupled-from-scoring-pipeline, idempotent, roundComplete-gated pattern.
+
+Three MVP proposition types:
+- `gw_total` — compares each manager's `fantasy_points.total` for the challenge matchday
+- `player_vs_player` — sums named player's `player_match_stats.fantasy_points` across the round's fixtures
+- `match_result_pick` — reads `fixtures` home/away scores for the picked fixture
+
+---
+
+### Cross-cutting constraints (apply to every sprint)
+
+All CLAUDE.md conventions apply plus these specific to this feature:
+
+- **Coins are `bigint`** — integer-only, never fractional. Rake computed as integer division with remainder burned.
+- **Value moves ONLY through SECURITY DEFINER RPCs** — direct client writes to any coin column blocked by RLS + guard trigger.
+- **`FOR UPDATE` + deterministic lock ordering** — wallets locked in user_id order on every two-wallet operation (same rule as `accept_trade_proposal` migration 154).
+- **`stripe_session_id UNIQUE`** on `coin_purchases` — the idempotency key preventing Stripe double-credit (R2).
+- **Stripe secrets** in Supabase Edge Function secrets only (`STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`) — never `VITE_`-prefixed, never in git.
+- **Feature flag** — all UI gated on `league_coin_pools.p2p_betting_enabled` league config (default `false`). Real pilot leagues see zero change until explicitly enabled.
+- **Non-withdrawable invariant** — tested explicitly in Sprint 6 legal re-read. No code path may convert coins to money or money-equivalent.
+- **Next migration**: `186_` (coin_wallets + coin_transactions + _apply_coin_delta is Sprint 1's migration).
 
 ---
 

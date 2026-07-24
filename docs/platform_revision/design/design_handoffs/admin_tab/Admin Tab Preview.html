@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>FORZAKIT — Admin Tab · Design Handoff Preview</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Archivo:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700;1,900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="squad-shared.css">
+<style>
+  @keyframes fkPulse { 0%,100%{opacity:1} 50%{opacity:.35} }
+  button:focus{outline:none}
+  .fk-rule { height:1px; background:var(--rule); border:0; }
+</style>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel" src="design-canvas.jsx"></script>
+<script type="text/babel" src="league-data.jsx"></script>
+<script type="text/babel" src="league-shared.jsx"></script>
+<script type="text/babel" src="league-mobile-shared.jsx"></script>
+<script type="text/babel" src="league-admin.jsx"></script>
+<script type="text/babel" src="league-mobile-admin.jsx"></script>
+
+<script type="text/babel" data-presets="react">
+function App(){
+  return (
+    <DesignCanvas
+      title="FORZAKIT · ADMIN TAB · Design Handoff"
+      subtitle="Commissioner controls — desktop (1440 wide) + mobile (390 wide). Bet creation as a guided 4-step wizard with live preview. Resolve flow as expandable list. Lifecycle ops as graded action cards."
+    >
+      <DCSection id="desktop" title="Desktop · 1440 × 1640">
+        <DCArtboard id="t-admin" label="ADMIN — commissioner controls" width={1440} height={1640} background="#06070A">
+          <AdminTab/>
+        </DCArtboard>
+      </DCSection>
+      <DCSection id="mobile" title="Mobile · 390 × 2400">
+        <DCArtboard id="m-admin" label="ADMIN — mobile · accordion wizard" width={390} height={2400} background="#06070A">
+          <MobAdmin/>
+        </DCArtboard>
+      </DCSection>
+    </DesignCanvas>
+  );
+}
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>

@@ -18,7 +18,7 @@ function groupByDate(fixtures) {
 function groupByComp(fixtures) {
   const m = new Map();
   for (const f of fixtures) {
-    const comp = COMPS[f.comp] || { code: f.comp, name: f.comp, tone: '#00B4D8' };
+    const comp = COMPS[f.comp] || { code: f.comp, name: f.comp, tone: 'var(--accent)' };
     if (!m.has(f.comp)) m.set(f.comp, { ...comp, fixtures: [] });
     m.get(f.comp).fixtures.push(f);
   }
@@ -450,7 +450,7 @@ function DayCell({ cell, matches, isWeekend }) {
     ? 'transparent'
     : hasMatches
       ? 'var(--ink-2)'
-      : isWeekend ? 'rgba(15,18,24,.35)' : 'transparent';
+      : isWeekend ? 'rgba(26,111,168,.06)' : 'transparent';
 
   return (
     <div style={{
@@ -688,7 +688,7 @@ export default function HomeScreen() {
 
   const liveCount   = useMemo(() => filtered.filter(f => f.status === 'LIVE').length, [filtered]);
   const availableComps = useMemo(
-    () => Object.keys(counts).map(k => COMPS[k] || { code: k, name: k, tone: '#00B4D8' }),
+    () => Object.keys(counts).map(k => COMPS[k] || { code: k, name: k, tone: 'var(--accent)' }),
     [counts],
   );
   const dateGroups = useMemo(() => groupByDate(filtered), [filtered]);
@@ -799,7 +799,7 @@ export default function HomeScreen() {
             {[{ id: 'list', label: 'LIST' }, { id: 'week', label: 'WEEK' }, { id: 'month', label: 'MONTH' }].map((o, i) => (
               <button key={o.id} onClick={() => setViewMode(o.id)} style={{
                 padding: '7px 14px',
-                background: viewMode === o.id ? 'rgba(0,180,216,.08)' : 'transparent',
+                background: viewMode === o.id ? 'var(--accent-bg)' : 'transparent',
                 color: viewMode === o.id ? 'var(--cyan)' : 'var(--mute)',
                 border: 'none',
                 borderRight: i < 2 ? '1px solid var(--rule)' : 'none',
@@ -817,7 +817,7 @@ export default function HomeScreen() {
                 {[{ id: 'date', label: 'DATE' }, { id: 'comp', label: 'COMPETITION' }].map((o, i) => (
                   <button key={o.id} onClick={() => setView(o.id)} style={{
                     padding: '7px 14px',
-                    background: view === o.id ? 'rgba(0,180,216,.08)' : 'transparent',
+                    background: view === o.id ? 'var(--accent-bg)' : 'transparent',
                     color: view === o.id ? 'var(--cyan)' : 'var(--mute)',
                     border: 'none', borderRight: i === 0 ? '1px solid var(--rule)' : 'none',
                     fontFamily: 'JetBrains Mono, monospace', fontSize: 10,
@@ -883,7 +883,7 @@ export default function HomeScreen() {
             {[{ id: 'date', label: 'DATE' }, { id: 'comp', label: 'COMP' }].map((o, i) => (
               <button key={o.id} onClick={() => setView(o.id)} style={{
                 flex: 1, padding: '6px 0',
-                background: view === o.id ? 'rgba(0,180,216,.08)' : 'transparent',
+                background: view === o.id ? 'var(--accent-bg)' : 'transparent',
                 color: view === o.id ? 'var(--cyan)' : 'var(--mute)',
                 border: 'none', borderRight: i === 0 ? '1px solid var(--rule)' : 'none',
                 fontFamily: 'JetBrains Mono, monospace', fontSize: 9, letterSpacing: '.18em', cursor: 'pointer',
@@ -922,7 +922,7 @@ export default function HomeScreen() {
         {/* Row B: comp chips */}
         <div style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 2 }}>
           <AllChip active={filter === 'ALL'} count={filtered.length} onClick={() => setFilter('ALL')} />
-          {Object.keys(counts).map(k => COMPS[k] || { code: k, name: k, tone: '#00B4D8' }).map(c => (
+          {Object.keys(counts).map(k => COMPS[k] || { code: k, name: k, tone: 'var(--accent)' }).map(c => (
             <CompChip key={c.code} comp={c} count={counts[c.code] || 0} active={filter === c.code} onClick={() => setFilter(c.code)} />
           ))}
         </div>

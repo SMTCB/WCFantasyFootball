@@ -181,8 +181,8 @@ export default function SettingsScreen() {
                     fontSize: 13,
                     color: 'var(--paper)',
                     padding: '8px 12px',
-                    background: 'rgba(242, 238, 229, 0.04)',
-                    border: `1px solid ${usernameInput.trim() !== currentUsername && usernameInput.trim() ? 'var(--cyan)' : 'var(--rule)'}`,
+                    background: 'rgba(24,32,46,.04)',
+                    border: `1px solid ${usernameInput.trim() !== currentUsername && usernameInput.trim() ? 'var(--accent)' : 'var(--rule)'}`,
                     borderRadius: 4,
                     outline: 'none',
                   }}
@@ -198,11 +198,11 @@ export default function SettingsScreen() {
                     textTransform: 'uppercase',
                     padding: '8px 16px',
                     background: (!usernameLoaded || isSavingUsername || usernameInput.trim() === currentUsername || !usernameInput.trim())
-                      ? 'var(--ink-3)'
-                      : 'var(--cyan)',
+                      ? 'var(--elev)'
+                      : 'var(--accent)',
                     color: (!usernameLoaded || isSavingUsername || usernameInput.trim() === currentUsername || !usernameInput.trim())
                       ? 'var(--mute)'
-                      : '#000',
+                      : '#fff',
                     border: '1px solid var(--rule)',
                     borderRadius: 4,
                     cursor: (!usernameLoaded || isSavingUsername || usernameInput.trim() === currentUsername || !usernameInput.trim())
@@ -235,7 +235,7 @@ export default function SettingsScreen() {
                 fontSize: 13,
                 color: 'var(--mute)',
                 padding: '8px 12px',
-                background: 'rgba(242, 238, 229, 0.02)',
+                background: 'rgba(24,32,46,.02)',
                 borderRadius: 4,
                 border: '1px solid var(--rule)',
               }}>
@@ -290,8 +290,8 @@ export default function SettingsScreen() {
                 letterSpacing: '0.08em',
                 textTransform: 'uppercase',
                 padding: '10px 16px',
-                background: isChangingPassword ? 'var(--mute)' : 'var(--cyan)',
-                color: '#000',
+                background: isChangingPassword ? 'var(--elev)' : 'var(--accent)',
+                color: isChangingPassword ? 'var(--mute)' : '#fff',
                 border: 'none',
                 borderRadius: 4,
                 cursor: isChangingPassword ? 'wait' : 'pointer',
@@ -323,20 +323,20 @@ export default function SettingsScreen() {
               letterSpacing: '0.08em',
               textTransform: 'uppercase',
               padding: '10px 16px',
-              background: 'rgba(0, 180, 216, 0.12)',
-              color: 'var(--cyan)',
-              border: '1px solid rgba(0, 180, 216, 0.25)',
+              background: 'var(--accent-bg)',
+              color: 'var(--accent)',
+              border: '1px solid rgba(26,111,168,.25)',
               borderRadius: 4,
               cursor: 'pointer',
               transition: 'all 150ms',
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.background = 'rgba(0, 180, 216, 0.2)';
-              e.currentTarget.style.borderColor = 'var(--cyan)';
+              e.currentTarget.style.background = 'rgba(26,111,168,.16)';
+              e.currentTarget.style.borderColor = 'var(--accent)';
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.background = 'rgba(0, 180, 216, 0.12)';
-              e.currentTarget.style.borderColor = 'rgba(0, 180, 216, 0.25)';
+              e.currentTarget.style.background = 'var(--accent-bg)';
+              e.currentTarget.style.borderColor = 'rgba(26,111,168,.25)';
             }}
           >
             ↻ Replay Tour
@@ -351,20 +351,20 @@ export default function SettingsScreen() {
               letterSpacing: '0.08em',
               textTransform: 'uppercase',
               padding: '10px 16px',
-              background: 'rgba(239, 68, 68, 0.12)',
-              color: 'var(--danger)',
-              border: '1px solid rgba(239, 68, 68, 0.25)',
+              background: 'var(--neg-bg)',
+              color: 'var(--neg)',
+              border: '1px solid rgba(185,28,28,.25)',
               borderRadius: 4,
               cursor: 'pointer',
               transition: 'all 150ms',
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.background = 'rgba(239, 68, 68, 0.2)';
-              e.currentTarget.style.borderColor = 'var(--danger)';
+              e.currentTarget.style.background = 'rgba(185,28,28,.16)';
+              e.currentTarget.style.borderColor = 'var(--neg)';
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.background = 'rgba(239, 68, 68, 0.12)';
-              e.currentTarget.style.borderColor = 'rgba(239, 68, 68, 0.25)';
+              e.currentTarget.style.background = 'var(--neg-bg)';
+              e.currentTarget.style.borderColor = 'rgba(185,28,28,.25)';
             }}
           >
             ← Logout

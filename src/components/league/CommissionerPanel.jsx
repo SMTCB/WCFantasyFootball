@@ -1,6 +1,5 @@
-import { useState, useEffect, useCallback } from 'react';
+﻿import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../../lib/supabase';
-import BetCreatorPanel from './BetCreatorPanel';
 // HubShared is NOT imported here — LeagueScreen imports it directly, and
 // CommissionerPanel→HubShared at depth 2 causes a Rolldown TDZ crash in
 // the production bundle. All four exports are inlined below instead.
@@ -12,11 +11,6 @@ import BetCreatorPanel from './BetCreatorPanel';
 const MONO    = "'JetBrains Mono', monospace";
 const DISPLAY = "'Archivo Black', sans-serif";
 const BODY    = "'Archivo', sans-serif";
-
-// Group → knockout transition is a normal transfer window (unlimited transfers,
-// surviving-nation pool, standard formation rules). No second draft is needed.
-// Set to true to re-enable the knockout draft UI if product direction changes.
-const KNOCKOUT_DRAFT_ENABLED = false;
 
 // ── Inlined from HubShared (TDZ-safe copies) ─────────────────────────────────
 function HubSectionLabel({ label, sub, tone = 'var(--cyan)', right, helpBtn }) {
@@ -36,9 +30,16 @@ function MgrTag({ mono = '???', hue = '#8B95A1', size = 18, dim = false }) {
     <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', minWidth: size + 10, height: size, padding: '0 4px', background: dim ? 'transparent' : `${hue}18`, border: `1px solid ${hue}${dim ? '44' : '66'}`, color: hue, fontFamily: MONO, fontSize: size <= 16 ? 9 : 10, letterSpacing: '.12em', fontWeight: 600, lineHeight: 1, flexShrink: 0 }}>{mono}</span>
   );
 }
+
 const _HUES = ['#00B4D8','#E0A800','#A855F7','#22C55E','#F59E0B','#34D399','#7DD3FC','#FB7185','#FCD34D','#C4B5FD','#67E8F9'];
 function mgrHue(str = '') { let h = 0; for (let i = 0; i < str.length; i++) h = (h * 31 + str.charCodeAt(i)) & 0xffff; return _HUES[h % _HUES.length]; }
 const mgrMono = (u = '') => u.substring(0, 3).toUpperCase() || '???';
+
+const BET_TYPES = [
+  { id: 'top-scorer',   label: 'TOP SCORER',   glyph: '◉', tone: 'var(--cyan)',     templateId: 'top_scorer',   hint: 'Who scores the most goals across the fixture / gameweek?', body: 'Auto-resolves at final whistle. Tie-break: assists → minutes.' },
+  { id: 'match-result', label: 'MATCH RESULT', glyph: '◈', tone: 'var(--positive)', templateId: 'match_result', hint: 'Predict the outcome of a single fixture.', body: 'Options are auto-generated: HOME · DRAW · AWAY. Resolves at FT.' },
+  { id: 'clean-sheet',  label: 'CLEAN SHEET',  glyph: '🧤', tone: 'var(--cyan)',    templateId: 'clean_sheet',  hint: 'Pick a team to keep a clean sheet.', body: 'Select the teams in play. Managers pick one — commissioner resolves after the match.' },
+];
 
 const inputStyle = {
   background: 'var(--ink)', border: '1px solid var(--rule)', color: 'var(--paper)',
@@ -127,32 +128,6 @@ function HelpOverlay({ topic, onClose }) {
         {
           heading: 'Score Recalculation',
           body: 'Re-fetches stats from Forza Football and reapplies the scoring engine. Safe to run multiple times — idempotent. Use "Score Latest Round" after any completed matchday, or enter a specific fixture ID to fix a single match.',
-        },
-      ],
-    },
-    bets: {
-      title: 'BET MANAGEMENT — HOW IT WORKS',
-      sections: [
-        {
-          heading: 'Create Bet — 4-step wizard',
-          rows: [
-            ['Step 1 · TYPE', 'Choose Top Scorer (who scores most?), Match Result (Home/Draw/Away), or Clean Sheet (pick a team — earns points if they keep a clean sheet).'],
-            ['Step 2 · CONFIGURE', 'Select the fixture(s) or teams. For Top Scorer, define the player pool (2–8 players). For Clean Sheet, select all teams playing in the window.'],
-            ['Step 3 · REWARD', 'Set the point value (stepper +/−) and the picks lock deadline. Must be before the first kickoff.'],
-            ['Step 4 · PUBLISH', 'Review the live preview. Publishing notifies all managers and opens picks immediately.'],
-          ],
-        },
-        {
-          heading: 'After publishing',
-          body: 'A bet can be edited freely until the first manager submits a pick. After any pick is submitted, only VOID is available — edits are blocked server-side.',
-        },
-        {
-          heading: 'Resolve Bets',
-          body: 'After a match finishes, expand a pending bet card, select the winning option, and click RESOLVE. Points are awarded instantly. Use VOID if the fixture is cancelled or postponed — all picks are refunded with no points awarded.',
-        },
-        {
-          heading: 'Auto-resolve',
-          body: 'Auto-resolve is OFF. All resolutions require manual commissioner action. Match Result bets can be resolved manually even though the options are auto-generated.',
         },
       ],
     },
@@ -278,12 +253,6 @@ function computePhases(league, memberCount = 0, windowType = null) {
     { id: 'season',     label: `IN SEASON · ${memberCount} MGRS`, state: stateFor(3), sub: inSeason ? 'Live' : 'Awaiting allocation' },
   ];
 }
-
-const BET_TYPES = [
-  { id: 'top-scorer',   label: 'TOP SCORER',   glyph: '◉', tone: 'var(--cyan)',     templateId: 'top_scorer',   hint: 'Who scores the most goals across the fixture / gameweek?', body: 'Auto-resolves at final whistle. Tie-break: assists → minutes.' },
-  { id: 'match-result', label: 'MATCH RESULT', glyph: '◈', tone: 'var(--positive)', templateId: 'match_result', hint: 'Predict the outcome of a single fixture.', body: 'Options are auto-generated: HOME · DRAW · AWAY. Resolves at FT.' },
-  { id: 'clean-sheet',  label: 'CLEAN SHEET',  glyph: '🧤', tone: 'var(--cyan)',    templateId: 'clean_sheet',  hint: 'Pick a team to keep a clean sheet.', body: 'Select the teams in play. Managers pick one — commissioner resolves after the match.' },
-];
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Season stepper (Zone A)
@@ -1838,6 +1807,137 @@ function useFreeTransfersConfig(leagueId, commissioner) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// P2P challenges config — entry fee (league_config) + stake limits (p2p_config)
+// ─────────────────────────────────────────────────────────────────────────────
+function P2PChallengesConfig({ leagueId, isMobile = false, commLoading }) {
+  const [entryFee, setEntryFee] = useState('');
+  const [minStake, setMinStake] = useState('10');
+  const [maxStake, setMaxStake] = useState('500');
+  const [enabled, setEnabled]   = useState(true);
+  const [saved, setSaved]       = useState(false);
+  const [saving, setSaving]     = useState(false);
+
+  useEffect(() => {
+    if (!leagueId) return;
+    // Load coin_entry_fee from league_config
+    supabase.from('league_config')
+      .select('config_value')
+      .eq('league_id', leagueId)
+      .eq('config_key', 'coin_entry_fee')
+      .maybeSingle()
+      .then(({ data }) => { if (data?.config_value != null) setEntryFee(String(data.config_value)); });
+    // Load stake limits from p2p_config via RPC
+    supabase.rpc('get_p2p_config', { p_league_id: leagueId })
+      .then(({ data }) => {
+        if (!data || data.error) return;
+        setMinStake(String(data.min_stake ?? 10));
+        setMaxStake(String(data.max_stake ?? 500));
+        setEnabled(data.challenges_enabled ?? true);
+      });
+  }, [leagueId]);
+
+  const save = async () => {
+    setSaving(true);
+    const fee = parseInt(entryFee, 10);
+    // Upsert coin_entry_fee in league_config
+    if (!isNaN(fee) && fee >= 0) {
+      await supabase.from('league_config').upsert(
+        [{ league_id: leagueId, config_key: 'coin_entry_fee', config_value: fee }],
+        { onConflict: 'league_id,config_key' }
+      );
+    } else if (entryFee === '' || entryFee === '0') {
+      await supabase.from('league_config').delete()
+        .eq('league_id', leagueId).eq('config_key', 'coin_entry_fee');
+    }
+    // Update p2p_config via RPC
+    await supabase.rpc('update_p2p_config', {
+      p_league_id: leagueId,
+      p_min_stake: parseInt(minStake, 10) || 10,
+      p_max_stake: parseInt(maxStake, 10) || 500,
+      p_challenges_enabled: enabled,
+    });
+    setSaving(false);
+    setSaved(true);
+    setTimeout(() => setSaved(false), 2500);
+  };
+
+  const inp = {
+    padding: '7px 10px',
+    borderRadius: 6,
+    border: '1px solid var(--rule)',
+    background: 'var(--ink)',
+    color: 'var(--paper)',
+    fontFamily: MONO,
+    fontSize: 12,
+    width: '100%',
+    boxSizing: 'border-box',
+  };
+
+  const row = { display: 'flex', flexDirection: 'column', gap: 4 };
+  const lbl = { fontFamily: MONO, fontSize: 9, letterSpacing: '.18em', color: 'var(--mute)' };
+
+  const content = (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+      <div style={row}>
+        <span style={lbl}>COIN ENTRY FEE (0 = free)</span>
+        <input type="number" min={0} step={10} value={entryFee} onChange={e => setEntryFee(e.target.value)} placeholder="0" style={inp} />
+        <span style={{ ...lbl, lineHeight: 1.5 }}>Charged to joiners via join_league_by_code. Leave blank or 0 to disable.</span>
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+        <div style={row}>
+          <span style={lbl}>MIN STAKE</span>
+          <input type="number" min={1} value={minStake} onChange={e => setMinStake(e.target.value)} style={inp} />
+        </div>
+        <div style={row}>
+          <span style={lbl}>MAX STAKE</span>
+          <input type="number" min={1} max={10000} value={maxStake} onChange={e => setMaxStake(e.target.value)} style={inp} />
+        </div>
+      </div>
+      <ToggleSwitch
+        checked={enabled}
+        onChange={() => setEnabled(v => !v)}
+        labelOn="CHALLENGES ENABLED"
+        labelOff="CHALLENGES DISABLED"
+      />
+      <button
+        onClick={save}
+        disabled={saving || commLoading}
+        style={{
+          padding: '9px 0',
+          borderRadius: 6,
+          border: 'none',
+          background: saved ? 'var(--positive)' : 'var(--gold)',
+          color: 'var(--ink)',
+          fontFamily: MONO,
+          fontSize: 10,
+          letterSpacing: '.18em',
+          fontWeight: 700,
+          cursor: saving ? 'wait' : 'pointer',
+          opacity: saving ? 0.7 : 1,
+        }}
+      >
+        {saved ? 'SAVED ✓' : saving ? 'SAVING…' : 'SAVE P2P CONFIG'}
+      </button>
+    </div>
+  );
+
+  if (isMobile) {
+    return (
+      <MobLifecycleCard title="P2P CHALLENGES" status={enabled ? 'ON' : 'OFF'} tone={enabled ? 'var(--positive)' : 'var(--mute)'} when="Set entry fee for new joiners and stake limits for challenges.">
+        {content}
+      </MobLifecycleCard>
+    );
+  }
+
+  return (
+    <div style={{ padding: '18px 24px', borderTop: '1px solid var(--rule)' }}>
+      <div style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '.22em', color: 'var(--mute)', marginBottom: 14 }}>P2P CHALLENGES CONFIG</div>
+      {content}
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Lifecycle operation card
 // ─────────────────────────────────────────────────────────────────────────────
 function LifecycleOp({ title, status, statusTone = 'var(--mute)', sub, when, children, primary }) {
@@ -1875,7 +1975,7 @@ function LifecycleOps({ commissioner, leagueId, tournamentId, league = null, onH
     windowTransfers, setWindowTransfers,
     openTransferWindow, closeTransferWindow,
     draftDeadline, setDraftDeadline, setLeagueDraftDeadline,
-    triggerDraftAllocation, triggerKnockoutAllocation,
+    triggerDraftAllocation,
     scoreFixtureId, setScoreFixtureId, triggerScores,
   } = commissioner;
 
@@ -1928,63 +2028,11 @@ function LifecycleOps({ commissioner, leagueId, tournamentId, league = null, onH
   const deadlinePassed = league?.draft_deadline && new Date(league.draft_deadline) <= now;
   const allocationDone = league?.cup_phase && league.cup_phase !== 'pre_cup';
 
-  // Knockout allocation is done once cup_phase moves into an elimination phase.
-  // Declared here (before groupStageStarted useEffect) so it's initialised when
-  // the dependency array at that useEffect is evaluated — avoids a TDZ crash.
-  const knockoutAllocationDone = ['pre_elimination', 'round_of_16', 'quarter_final', 'semi_final', 'final'].includes(league?.cup_phase);
-
-  // Knockout draft local state
-  const [knockoutDeadline,    setKnockoutDeadline]    = useState('');
-  const [keepSubmissionCount, setKeepSubmissionCount] = useState(null);
-
   // Free transfer window state — emergency "open the market mid-matchday" toggle.
   // Shared with the mobile layout via useFreeTransferWindow.
   const { activeFreeWindow, openFreeWindow, closeFreeWindow } = useFreeTransferWindow(leagueId, commissioner);
   // Free transfers config — lifts per-round cap while window is open (Classic leagues only).
   const { freeTransfers, toggleFreeTransfers } = useFreeTransfersConfig(leagueId, commissioner);
-
-  // groupStageStarted: true once at least one configured matchday fixture has kicked off.
-  // Gating on kickoff_at (not deadline_at or fixture status) ensures the knockout draft
-  // section is locked until actual group-stage play begins — not just when the deadline
-  // passes or the group draft lottery ran. Scoped to matchday_deadlines so old historical
-  // fixtures in the same tournament don't produce false positives.
-  const [groupStageStarted,   setGroupStageStarted]   = useState(false);
-
-  useEffect(() => {
-    if (!allocationDone || knockoutAllocationDone || !tournamentId) { setGroupStageStarted(false); return; }
-    (async () => {
-      const { data: mds } = await supabase
-        .from('matchday_deadlines').select('matchday_id').eq('tournament_id', tournamentId);
-      const mdIds = (mds ?? []).map(r => r.matchday_id);
-      if (!mdIds.length) { setGroupStageStarted(false); return; }
-      const { count } = await supabase
-        .from('fixtures').select('id', { count: 'exact', head: true })
-        .eq('tournament_id', tournamentId)
-        .in('matchday_id', mdIds)
-        .lte('kickoff_at', new Date().toISOString());
-      setGroupStageStarted((count ?? 0) > 0);
-    })();
-  }, [allocationDone, knockoutAllocationDone, tournamentId]);
-
-  // Fetch keep submission count when the keep window is open (group_stage phase)
-  useEffect(() => {
-    if (league?.cup_phase !== 'group_stage' || !leagueId) { setKeepSubmissionCount(null); return; }
-    supabase
-      .from('knockout_keep_submissions')
-      .select('user_id', { count: 'exact', head: true })
-      .eq('league_id', leagueId)
-      .then(({ count }) => setKeepSubmissionCount(count ?? 0));
-  }, [league?.cup_phase, leagueId]);
-
-  const knockoutStatus = !allocationDone ? 'LOCKED'
-    : knockoutAllocationDone ? 'ALLOCATED'
-    : league?.knockout_draft_deadline ? 'DEADLINE SET'
-    : 'NOT SET';
-
-  const knockoutTone = !allocationDone ? 'var(--mute)'
-    : knockoutAllocationDone ? 'var(--positive)'
-    : league?.knockout_draft_deadline ? 'var(--positive)'
-    : 'var(--warn)';
 
   // AUDIT-58-A3: derive live status labels for the LifecycleOp cards.
   // Deadline-controlled leagues: show OPEN (OVERRIDE) when manually opened, AUTO-MANAGED otherwise.
@@ -2012,14 +2060,6 @@ function LifecycleOps({ commissioner, leagueId, tournamentId, league = null, onH
   const handleRunAllocation = () => {
     if (!window.confirm('This allocates squads for all managers. It cannot be undone without a manual reset. Continue?')) return;
     triggerDraftAllocation();
-  };
-
-  const handleRunKnockoutAllocation = async () => {
-    if (!window.confirm('This runs the knockout-phase draft allocation. It cannot be undone. Continue?')) return;
-    if (knockoutDeadline) {
-      await supabase.from('leagues').update({ knockout_draft_deadline: new Date(knockoutDeadline).toISOString() }).eq('id', leagueId);
-    }
-    triggerKnockoutAllocation();
   };
 
   const opBtnStyle = (bg, color = 'var(--ink)') => ({
@@ -2204,62 +2244,6 @@ function LifecycleOps({ commissioner, leagueId, tournamentId, league = null, onH
                     disabled={commLoading}
                     style={opBtnStyle('var(--gold)')}
                   >RUN ALLOCATION ↯</button>
-                </div>
-              )
-            }
-          />
-          </div>
-          )}
-
-          {/* Knockout Draft — disabled: group→knockout uses normal transfer window */}
-          {KNOCKOUT_DRAFT_ENABLED && (!league || (league.format === 'noduplicate' && (
-            (league.cup_phase && league.cup_phase !== 'pre_cup') ||
-            !!league.knockout_draft_deadline
-          ))) && (
-          <div data-tour="comm-knockout-draft" style={{ display: 'flex' }}>
-          <LifecycleOp
-            title="KNOCKOUT DRAFT"
-            status={knockoutStatus}
-            statusTone={knockoutTone}
-            sub="Second draft for the knockout phase. Same allocation logic as the group draft — managers submit 30 picks, lottery resolves conflicts."
-            when="After group stage allocation completes. Set before the first knockout match."
-            primary={
-              knockoutAllocationDone ? (
-                <div style={{ padding: '8px 10px', background: 'var(--ink)', border: '1px solid var(--rule)', fontFamily: BODY, fontSize: 10, color: 'var(--positive)', lineHeight: 1.5 }}>
-                  ✓ Knockout squads allocated
-                </div>
-              ) : !allocationDone ? (
-                <div style={{ padding: '8px 10px', background: 'var(--ink)', border: '1px solid var(--rule)', fontFamily: BODY, fontSize: 10, color: 'var(--mute)', lineHeight: 1.5 }}>
-                  Locked — complete group allocation first
-                </div>
-              ) : !groupStageStarted ? (
-                <div style={{ padding: '8px 10px', background: 'var(--ink)', border: '1px solid var(--rule)', fontFamily: BODY, fontSize: 10, color: 'var(--mute)', lineHeight: 1.5 }}>
-                  Locked — group stage fixtures have not kicked off yet
-                </div>
-              ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                  {/* Keep submission count — visible during the keep window */}
-                  {keepSubmissionCount !== null && (
-                    <div style={{ padding: '7px 10px', background: 'rgba(160,108,255,0.07)', border: '1px solid rgba(160,108,255,0.25)', fontFamily: MONO, fontSize: 9, letterSpacing: '.16em', color: '#a855f7', lineHeight: 1.5 }}>
-                      🛡️ KEEP SUBMISSIONS · {keepSubmissionCount} manager{keepSubmissionCount !== 1 ? 's' : ''} have protected players
-                    </div>
-                  )}
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                    <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.2em', color: 'var(--mute)' }}>KNOCKOUT DEADLINE</span>
-                    <div style={{ display: 'flex', gap: 6, alignItems: 'stretch' }}>
-                      <input
-                        type="datetime-local"
-                        value={knockoutDeadline}
-                        onChange={e => setKnockoutDeadline(e.target.value)}
-                        style={{ ...inputStyle, colorScheme: 'dark', fontSize: 11, flex: 1 }}
-                      />
-                      <button
-                        onClick={handleRunKnockoutAllocation}
-                        disabled={commLoading}
-                        style={compactBtn('var(--gold)', commLoading)}
-                      >RUN ↯</button>
-                    </div>
-                  </div>
                 </div>
               )
             }
@@ -2770,389 +2754,6 @@ function MobStepHeader({ n, label, state, onClick, summary }) {
   );
 }
 
-// ── Mobile bet preview (shown in Step 4) ──────────────────────────────────────
-function MobBetPreview({ betType, title, reward, closes, fixtureObj, players, blockPlayer }) {
-  const meta = BET_TYPES.find(t => t.id === betType);
-  if (!meta) return (
-    <div style={{ padding: '16px', border: '1px dashed var(--rule)', textAlign: 'center' }}>
-      <span style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '.22em', color: 'var(--mute)' }}>NO BET YET</span>
-    </div>
-  );
-  const opts = betType === 'match-result'
-    ? (fixtureObj ? [`${fixtureObj.home_team} Win`, 'Draw', `${fixtureObj.away_team} Win`] : ['HOME', 'DRAW', 'AWAY'])
-    : betType === 'top-scorer'
-      ? players.slice(0, 4).map(p => typeof p === 'object' ? p.name : p)
-      : blockPlayer ? [typeof blockPlayer === 'object' ? blockPlayer.name : blockPlayer] : [];
-  return (
-    <div>
-      <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.22em', color: 'var(--mute)' }}>LIVE PREVIEW · MANAGER VIEW</span>
-      <div style={{ marginTop: 8, background: 'var(--ink)', border: '1px solid var(--rule)', borderLeft: `3px solid ${meta.tone}`, padding: '12px', display: 'flex', flexDirection: 'column', gap: 8 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <span style={{ width: 22, height: 22, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: `${meta.tone}15`, border: `1px solid ${meta.tone}55`, fontFamily: DISPLAY, fontSize: 12, color: meta.tone }}>{meta.glyph}</span>
-          <span style={{ fontFamily: DISPLAY, fontSize: 12, color: meta.tone }}>{meta.label}</span>
-          <span style={{ flex: 1 }} />
-          <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.18em', color: 'var(--positive)', padding: '2px 6px', border: '1px solid rgba(34,197,94,.55)' }}>+{reward} PTS</span>
-        </div>
-        <div style={{ fontFamily: "'Archivo', sans-serif", fontSize: 12, color: title ? 'var(--paper)' : 'var(--mute)', lineHeight: 1.4 }}>{title || '(title pending)'}</div>
-        {opts.length > 0 && (
-          <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}>
-            {opts.map(o => <span key={o} style={{ padding: '4px 8px', fontFamily: DISPLAY, fontSize: 10, border: '1px solid var(--rule)', color: 'var(--paper)' }}>{o}</span>)}
-          </div>
-        )}
-        {closes && <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.18em', color: 'var(--mute)' }}>● LOCKS {new Date(closes).toLocaleString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</span>}
-      </div>
-    </div>
-  );
-}
-
-// ── Mobile accordion Create Bet wizard ─────────────────────────────────────────
-function MobCreateBet({ tournamentId, onPublish, commLoading, memberCount }) {
-  const [step, setStep]               = useState(1);
-  const [betType, setBetType]         = useState(null);
-  const [fixture, setFixture]         = useState('');
-  const [selectedFixtures, setSelectedFixtures] = useState([]);
-  const [players, setPlayers]         = useState([]);
-  const [blockPlayer, setBlock]       = useState(null);
-  const [reward, setReward]           = useState(5);
-  const [closes, setCloses]           = useState('');
-  const [title, setTitle]             = useState('');
-
-  const [dbFixtures, setDbFixtures]       = useState([]);
-  const [allDbFixtures, setAllDbFixtures] = useState([]);
-  const [allPlayers, setAllPlayers]       = useState([]);
-  const [dataLoading, setDataLoading]     = useState(false);
-  const [showPlayerModal, setShowPlayerModal]   = useState(false);
-  const [playerSearch, setPlayerSearch]         = useState('');
-  const [showFixtureModal, setShowFixtureModal] = useState(false);
-  const [fixtureSearch, setFixtureSearch]       = useState('');
-
-  useEffect(() => {
-    if (!tournamentId) return;
-    setDataLoading(true);
-    const now = new Date().toISOString();
-    Promise.all([
-      supabase.from('fixtures').select('id, home_team, away_team, kickoff_at')
-        .eq('tournament_id', tournamentId).eq('status', 'scheduled').gte('kickoff_at', now)
-        .order('kickoff_at', { ascending: true }).limit(40),
-      supabase.from('players').select('id, name, position, club')
-        .eq('tournament_id', tournamentId).eq('is_active', true).in('position', ['FWD', 'MID', 'DEF', 'GK'])
-        .order('price', { ascending: false }).limit(300),
-    ]).then(([{ data: fx }, { data: pl }]) => {
-      const allFx = fx || [];
-      let nextDay = allFx;
-      if (allFx.length) {
-        const cutoff = new Date(allFx[0].kickoff_at).getTime() + 7 * 24 * 60 * 60 * 1000;
-        nextDay = allFx.filter(f => new Date(f.kickoff_at).getTime() <= cutoff);
-      }
-      setDbFixtures(nextDay);
-      setAllDbFixtures(allFx);
-      const allPl = pl || [];
-      setAllPlayers(allPl);
-      setPlayers(allPl.filter(p => ['FWD', 'MID'].includes(p.position)).slice(0, 5));
-    }).finally(() => setDataLoading(false));
-  }, [tournamentId]);
-
-  const typeMeta = BET_TYPES.find(t => t.id === betType) || null;
-  const fixtureMeta = allDbFixtures.find(f => f.id === fixture) || null;
-
-  const autoTitle = (() => {
-    if (!typeMeta) return '';
-    if (betType === 'top-scorer') {
-      const fxObjs = allDbFixtures.filter(f => selectedFixtures.includes(f.id));
-      const scope = fxObjs.length === 1 ? `${fxObjs[0].home_team} vs ${fxObjs[0].away_team}` : fxObjs.length > 1 ? `${fxObjs.length} matches` : 'Matchday';
-      return `Top scorer · ${scope}`;
-    }
-    if (betType === 'match-result') return fixtureMeta ? `Result · ${fixtureMeta.home_team} vs ${fixtureMeta.away_team}` : 'Match result';
-    if (betType === 'player-block') return blockPlayer ? `Block · ${blockPlayer.name}` : 'Player block';
-    return '';
-  })();
-  const computedTitle = title || autoTitle;
-
-  const canTo = (n) => {
-    if (n === 1) return true;
-    if (n === 2) return !!betType;
-    if (n === 3) return betType === 'top-scorer' ? players.length >= 2 : !!fixture && (betType !== 'player-block' || !!blockPlayer);
-    if (n === 4) return canTo(3) && !!reward && !!closes;
-    return false;
-  };
-  const stepState = (n) => n === step ? 'active' : n < step ? 'done' : 'todo';
-
-  const handlePublish = () => {
-    let options = [], scopeType = 'match', scopeRef = null;
-    if (betType === 'match-result') {
-      options = [
-        { key: `${fixture}_home`, label: `${fixtureMeta?.home_team || 'Home'} Win`, meta: {} },
-        { key: `${fixture}_draw`, label: 'Draw', meta: {} },
-        { key: `${fixture}_away`, label: `${fixtureMeta?.away_team || 'Away'} Win`, meta: {} },
-      ];
-      scopeRef = fixture || null;
-    } else if (betType === 'top-scorer') {
-      options = players.map(p => ({ key: p.id, label: p.name, meta: { club: p.club, pos: p.position } }));
-      scopeType = 'matchday'; scopeRef = selectedFixtures.join(',') || null;
-    } else if (betType === 'player-block') {
-      options = blockPlayer ? [{ key: blockPlayer.id, label: blockPlayer.name, meta: { club: blockPlayer.club, pos: blockPlayer.position } }] : [];
-      scopeRef = fixture || null;
-    }
-    onPublish({ title: computedTitle, prompt: computedTitle, deadline: closes, rewardValue: String(reward), scopeType, scopeRef, templateId: typeMeta.templateId, options });
-    setStep(1); setBetType(null); setFixture(''); setSelectedFixtures([]); setBlock(null);
-    setReward(5); setCloses(''); setTitle('');
-    setPlayers(allPlayers.filter(p => ['FWD', 'MID'].includes(p.position)).slice(0, 5));
-  };
-
-  // Step summaries (shown in done step headers)
-  const step2Summary = (() => {
-    if (betType === 'top-scorer') return `${players.length} players${selectedFixtures.length ? ` · ${selectedFixtures.length} matches` : ''}`;
-    const f = allDbFixtures.find(x => x.id === fixture);
-    return f ? `${f.home_team} vs ${f.away_team}` : null;
-  })();
-
-  const mobInputStyle = { ...inputStyle, colorScheme: 'dark', width: '100%', boxSizing: 'border-box' };
-  const mobNextBtn = (enabled) => ({
-    flex: 1, padding: '12px 14px', border: 0,
-    cursor: enabled ? 'pointer' : 'not-allowed',
-    fontFamily: DISPLAY, fontSize: 12, letterSpacing: '.18em',
-    background: enabled ? 'var(--cyan)' : 'var(--ink-3)',
-    color: enabled ? 'var(--ink)' : 'var(--mute)',
-  });
-  const mobBackBtn = {
-    padding: '12px 14px', border: '1px solid var(--rule)', cursor: 'pointer',
-    background: 'transparent', color: 'var(--mute)',
-    fontFamily: MONO, fontWeight: 600, fontSize: 11, letterSpacing: '.22em',
-  };
-
-  return (
-    <div style={{ background: 'var(--ink-2)', border: '1px solid var(--rule)', margin: '0 14px', display: 'flex', flexDirection: 'column' }}>
-
-      {/* Step 1 — TYPE */}
-      <MobStepHeader n="1" label="TYPE" state={stepState(1)} onClick={() => setStep(1)} summary={step > 1 ? typeMeta?.label : null} />
-      {step === 1 && (
-        <div style={{ padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 8, borderBottom: '1px solid var(--rule)' }}>
-          {BET_TYPES.map(t => {
-            const picked = betType === t.id;
-            return (
-              <button key={t.id} onClick={() => setBetType(t.id)} style={{
-                background: picked ? `${t.tone}10` : 'var(--ink)',
-                border: picked ? `1px solid ${t.tone}` : '1px solid var(--rule)',
-                borderLeft: picked ? `3px solid ${t.tone}` : '3px solid transparent',
-                padding: '12px 14px', textAlign: 'left', cursor: 'pointer',
-                display: 'flex', alignItems: 'center', gap: 12,
-              }}>
-                <span style={{ width: 28, height: 28, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: `${t.tone}18`, border: `1px solid ${t.tone}55`, fontFamily: DISPLAY, fontSize: 13, color: t.tone, flexShrink: 0 }}>{t.glyph}</span>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 2, flex: 1, minWidth: 0 }}>
-                  <span style={{ fontFamily: DISPLAY, fontSize: 13, color: 'var(--paper)', letterSpacing: '-0.01em' }}>{t.label}</span>
-                  <span style={{ fontSize: 11, color: 'var(--mute)', fontFamily: "'Archivo', sans-serif" }}>{t.description}</span>
-                </div>
-                {picked && <span style={{ color: t.tone, fontFamily: MONO, fontSize: 13 }}>✓</span>}
-              </button>
-            );
-          })}
-          <button disabled={!canTo(2)} onClick={() => canTo(2) && setStep(2)} style={{ ...mobNextBtn(canTo(2)), marginTop: 4 }}>NEXT →</button>
-        </div>
-      )}
-
-      {/* Step 2 — CONFIGURE */}
-      <MobStepHeader n="2" label="CONFIGURE" state={stepState(2)} onClick={() => canTo(2) && setStep(2)} summary={step > 2 ? step2Summary : null} />
-      {step === 2 && (
-        <div style={{ padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 14, borderBottom: '1px solid var(--rule)' }}>
-          {/* Fixture / match scope */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            <span style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '.22em', color: 'var(--paper)' }}>
-              {betType === 'top-scorer' ? `MATCH SCOPE · ${selectedFixtures.length}/4 (OPTIONAL)` : 'FIXTURE · NEXT GAMEDAY'}
-            </span>
-            {dataLoading ? (
-              <span style={{ fontFamily: MONO, fontSize: 10, color: 'var(--mute)', letterSpacing: '.18em' }}>LOADING…</span>
-            ) : dbFixtures.length === 0 ? (
-              <span style={{ fontFamily: MONO, fontSize: 10, color: 'var(--danger)', letterSpacing: '.16em' }}>NO UPCOMING FIXTURES FOUND</span>
-            ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                {dbFixtures.map(f => {
-                  const isMulti = betType === 'top-scorer';
-                  const picked  = isMulti ? selectedFixtures.includes(f.id) : fixture === f.id;
-                  const atMax   = isMulti && !picked && selectedFixtures.length >= 4;
-                  return (
-                    <button key={f.id} onClick={() => {
-                      if (isMulti) {
-                        if (picked) setSelectedFixtures(p => p.filter(x => x !== f.id));
-                        else if (!atMax) setSelectedFixtures(p => [...p, f.id]);
-                      } else setFixture(f.id);
-                    }} style={{
-                      background: picked ? 'rgba(0,180,216,.08)' : 'var(--ink)',
-                      border: picked ? '1px solid var(--cyan)' : '1px solid var(--rule)',
-                      padding: '10px 12px', cursor: atMax ? 'not-allowed' : 'pointer',
-                      display: 'flex', alignItems: 'center', gap: 10, textAlign: 'left',
-                      opacity: atMax ? 0.4 : 1,
-                    }}>
-                      <span style={{
-                        width: 14, height: 14,
-                        borderRadius: isMulti ? 0 : '50%',
-                        border: `1.5px solid ${picked ? 'var(--cyan)' : 'var(--rule)'}`,
-                        background: picked ? 'var(--cyan)' : 'transparent',
-                        flexShrink: 0,
-                        display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                        fontFamily: MONO, fontSize: 9, color: 'var(--ink)',
-                      }}>{isMulti && picked ? '✓' : ''}</span>
-                      <span style={{ fontFamily: DISPLAY, fontSize: 12, color: 'var(--paper)', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{f.home_team} vs {f.away_team}</span>
-                      <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.14em', color: 'var(--mute)', flexShrink: 0 }}>{fmtKickoff(f.kickoff_at)}</span>
-                    </button>
-                  );
-                })}
-                {betType === 'top-scorer' && selectedFixtures.length < 4 && (
-                  <button onClick={() => setShowFixtureModal(true)} style={{ padding: '10px 12px', cursor: 'pointer', textAlign: 'left', background: 'rgba(224,168,0,.04)', border: '1px dashed rgba(224,168,0,.4)', color: 'var(--gold)', fontFamily: MONO, fontSize: 10, letterSpacing: '.14em' }}>
-                    + ADD MATCH FROM ANOTHER ROUND
-                  </button>
-                )}
-              </div>
-            )}
-          </div>
-
-          {/* Top scorer player pool */}
-          {betType === 'top-scorer' && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-              <span style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '.22em', color: 'var(--paper)' }}>PLAYER POOL · {players.length}/8</span>
-              <PlayerChipPool selected={players} onChange={setPlayers} onAddCustom={() => setShowPlayerModal(true)} />
-              {players.length < 2 && <span style={{ fontFamily: MONO, fontSize: 9, color: 'var(--danger)', letterSpacing: '.16em' }}>ADD AT LEAST 2 PLAYERS</span>}
-            </div>
-          )}
-
-          {/* Player block target */}
-          {betType === 'player-block' && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-              <span style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '.22em', color: 'var(--paper)' }}>BLOCK TARGET</span>
-              {blockPlayer ? (
-                <div style={{ display: 'flex', gap: 10, alignItems: 'center', padding: '10px 12px', background: 'rgba(239,68,68,.06)', border: '1px solid rgba(239,68,68,.3)' }}>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontFamily: DISPLAY, fontSize: 13, color: 'var(--danger)' }}>{blockPlayer.name}</div>
-                    <div style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.12em' }}>{blockPlayer.club} · {blockPlayer.position}</div>
-                  </div>
-                  <button onClick={() => setBlock(null)} style={{ background: 'none', border: 'none', color: 'var(--danger)', cursor: 'pointer', fontSize: 16, lineHeight: 1 }}>✕</button>
-                </div>
-              ) : (
-                <button onClick={() => setShowPlayerModal(true)} style={{ padding: '12px', cursor: 'pointer', width: '100%', textAlign: 'center', background: 'rgba(239,68,68,.04)', border: '1px dashed rgba(239,68,68,.4)', color: 'var(--danger)', fontFamily: MONO, fontSize: 10, letterSpacing: '.18em' }}>
-                  SELECT PLAYER TO BLOCK →
-                </button>
-              )}
-            </div>
-          )}
-
-          {/* Match result auto note */}
-          {betType === 'match-result' && fixture && (
-            <div style={{ padding: '10px 12px', background: 'var(--ink)', border: '1px solid var(--rule)', fontSize: 11, color: 'var(--mute)', fontFamily: "'Archivo', sans-serif", lineHeight: 1.5 }}>
-              <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.2em', color: 'var(--positive)' }}>● AUTO</span>{' '}
-              Options: <b style={{ color: 'var(--paper)' }}>{fixtureMeta?.home_team || 'HOME'} WIN · DRAW · {fixtureMeta?.away_team || 'AWAY'} WIN</b>
-            </div>
-          )}
-
-          <div style={{ display: 'flex', gap: 8 }}>
-            <button onClick={() => setStep(1)} style={mobBackBtn}>← BACK</button>
-            <button disabled={!canTo(3)} onClick={() => canTo(3) && setStep(3)} style={mobNextBtn(canTo(3))}>NEXT →</button>
-          </div>
-        </div>
-      )}
-
-      {/* Step 3 — REWARD & LOCK */}
-      <MobStepHeader n="3" label="REWARD & LOCK" state={stepState(3)} onClick={() => canTo(3) && setStep(3)} summary={step > 3 && reward && closes ? `+${reward} pts · locks ${new Date(closes).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}` : null} />
-      {step === 3 && (
-        <div style={{ padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 14, borderBottom: '1px solid var(--rule)' }}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            <span style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '.22em', color: 'var(--paper)' }}>REWARD · POINTS</span>
-            <div style={{ display: 'flex', border: '1px solid var(--rule)', background: 'var(--ink)', width: 'fit-content' }}>
-              <button onClick={() => setReward(Math.max(1, reward - 1))} style={{ background: 'transparent', border: 0, color: 'var(--paper)', padding: '10px 18px', fontSize: 16, cursor: 'pointer', borderRight: '1px solid var(--rule)' }}>−</button>
-              <span style={{ padding: '10px 22px', fontFamily: DISPLAY, fontSize: 18, color: 'var(--positive)', minWidth: 70, textAlign: 'center' }}>+{reward}</span>
-              <button onClick={() => setReward(reward + 1)} style={{ background: 'transparent', border: 0, color: 'var(--paper)', padding: '10px 18px', fontSize: 16, cursor: 'pointer', borderLeft: '1px solid var(--rule)' }}>+</button>
-            </div>
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            <span style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '.22em', color: 'var(--paper)' }}>PICKS LOCK AT</span>
-            <input type="datetime-local" value={closes} onChange={e => setCloses(e.target.value)} style={mobInputStyle} />
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            <span style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '.22em', color: 'var(--paper)' }}>TITLE</span>
-            <input type="text" value={title} onChange={e => setTitle(e.target.value)} placeholder={autoTitle || 'Auto-derived title'} style={mobInputStyle} />
-          </div>
-          <div style={{ display: 'flex', gap: 8 }}>
-            <button onClick={() => setStep(2)} style={mobBackBtn}>← BACK</button>
-            <button disabled={!canTo(4)} onClick={() => canTo(4) && setStep(4)} style={mobNextBtn(canTo(4))}>NEXT →</button>
-          </div>
-        </div>
-      )}
-
-      {/* Step 4 — REVIEW & PUBLISH */}
-      <MobStepHeader n="4" label="REVIEW & PUBLISH" state={stepState(4)} onClick={() => canTo(4) && setStep(4)} summary={null} />
-      {step === 4 && (
-        <div style={{ padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 12 }}>
-          <MobBetPreview betType={betType} title={computedTitle} reward={reward} closes={closes} fixtureObj={fixtureMeta} players={players} blockPlayer={blockPlayer} />
-          <div style={{ padding: '10px 12px', background: 'rgba(224,168,0,.06)', border: '1px solid rgba(224,168,0,.55)', fontSize: 11, lineHeight: 1.5, color: 'var(--paper)', fontFamily: "'Archivo', sans-serif" }}>
-            <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.22em', color: 'var(--gold)' }}>● NOTE</span>{' '}
-            Publishing notifies <b>{memberCount} managers</b> and opens picks immediately.
-          </div>
-          <div style={{ display: 'flex', gap: 8 }}>
-            <button onClick={() => setStep(3)} style={mobBackBtn}>← BACK</button>
-            <button onClick={handlePublish} disabled={commLoading} style={{ flex: 1, padding: '12px 14px', border: 0, cursor: commLoading ? 'not-allowed' : 'pointer', fontFamily: DISPLAY, fontSize: 12, letterSpacing: '.18em', background: commLoading ? 'var(--ink-3)' : 'var(--positive)', color: commLoading ? 'var(--mute)' : 'var(--ink)' }}>
-              {commLoading ? 'PUBLISHING…' : 'PUBLISH BET →'}
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Player picker modal */}
-      {showPlayerModal && (
-        <div style={{ position: 'fixed', inset: 0, zIndex: 300, background: 'rgba(0,0,0,0.85)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-          onClick={e => { if (e.target === e.currentTarget) { setShowPlayerModal(false); setPlayerSearch(''); } }}>
-          <div style={{ background: 'var(--ink)', border: '1px solid var(--rule)', width: 'calc(100vw - 32px)', maxWidth: 400, maxHeight: '80vh', display: 'flex', flexDirection: 'column' }}>
-            <div style={{ padding: '12px 14px', borderBottom: '1px solid var(--rule)', display: 'flex', alignItems: 'center', gap: 10 }}>
-              <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.22em', color: 'var(--cyan)', flex: 1 }}>SELECT PLAYER</span>
-              <button onClick={() => { setShowPlayerModal(false); setPlayerSearch(''); }} style={{ background: 'none', border: 'none', color: 'var(--mute)', cursor: 'pointer', fontSize: 18, lineHeight: 1 }}>✕</button>
-            </div>
-            <div style={{ padding: '8px 10px', borderBottom: '1px solid var(--rule)' }}>
-              <input autoFocus type="text" placeholder="Search by name or club…" value={playerSearch} onChange={e => setPlayerSearch(e.target.value)} style={{ width: '100%', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', color: 'var(--paper)', fontSize: 12, padding: '8px 10px', outline: 'none', boxSizing: 'border-box' }} />
-            </div>
-            <div style={{ flex: 1, overflowY: 'auto' }}>
-              {allPlayers.filter(p => { const q = playerSearch.toLowerCase(); return !q || p.name.toLowerCase().includes(q) || (p.club || '').toLowerCase().includes(q); }).slice(0, 60).map(p => (
-                <button key={p.id} onClick={() => {
-                  if (betType === 'player-block') { setBlock(p); }
-                  else { setPlayers(prev => prev.find(x => x.id === p.id) ? prev : [p, ...prev.slice(0, 7)]); }
-                  setShowPlayerModal(false); setPlayerSearch('');
-                }} style={{ width: '100%', textAlign: 'left', padding: '10px 14px', background: 'transparent', border: 0, borderBottom: '1px solid rgba(255,255,255,0.04)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 10, color: 'var(--paper)' }}>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontFamily: DISPLAY, fontSize: 12, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name}</div>
-                    <div style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.12em' }}>{p.club}</div>
-                  </div>
-                  <span style={{ fontFamily: MONO, fontSize: 9, color: 'var(--cyan)', letterSpacing: '.14em', flexShrink: 0 }}>{p.position}</span>
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Additional fixture modal */}
-      {showFixtureModal && (
-        <div style={{ position: 'fixed', inset: 0, zIndex: 300, background: 'rgba(0,0,0,0.85)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-          onClick={e => { if (e.target === e.currentTarget) { setShowFixtureModal(false); setFixtureSearch(''); } }}>
-          <div style={{ background: 'var(--ink)', border: '1px solid var(--rule)', width: 'calc(100vw - 32px)', maxWidth: 420, maxHeight: '80vh', display: 'flex', flexDirection: 'column' }}>
-            <div style={{ padding: '12px 14px', borderBottom: '1px solid var(--rule)', display: 'flex', alignItems: 'center', gap: 10 }}>
-              <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '.22em', color: 'var(--gold)', flex: 1 }}>ADD MATCH</span>
-              <button onClick={() => { setShowFixtureModal(false); setFixtureSearch(''); }} style={{ background: 'none', border: 'none', color: 'var(--mute)', cursor: 'pointer', fontSize: 18, lineHeight: 1 }}>✕</button>
-            </div>
-            <div style={{ padding: '8px 10px', borderBottom: '1px solid var(--rule)' }}>
-              <input autoFocus type="text" placeholder="Search team…" value={fixtureSearch} onChange={e => setFixtureSearch(e.target.value)} style={{ width: '100%', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', color: 'var(--paper)', fontSize: 12, padding: '8px 10px', outline: 'none', boxSizing: 'border-box' }} />
-            </div>
-            <div style={{ flex: 1, overflowY: 'auto' }}>
-              {allDbFixtures.filter(f => !selectedFixtures.includes(f.id)).filter(f => { const q = fixtureSearch.toLowerCase(); return !q || f.home_team.toLowerCase().includes(q) || f.away_team.toLowerCase().includes(q); }).slice(0, 40).map(f => (
-                <button key={f.id} onClick={() => { if (selectedFixtures.length < 4) setSelectedFixtures(p => [...p, f.id]); setShowFixtureModal(false); setFixtureSearch(''); }}
-                  style={{ width: '100%', textAlign: 'left', padding: '10px 14px', background: 'transparent', border: 0, borderBottom: '1px solid rgba(255,255,255,0.04)', cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: 2, color: 'var(--paper)' }}>
-                  <div style={{ fontFamily: DISPLAY, fontSize: 12 }}>{f.home_team} vs {f.away_team}</div>
-                  <div style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.12em' }}>{fmtKickoff(f.kickoff_at)}</div>
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
 // ─────────────────────────────────────────────────────────────────────────────
 // Feedback message
 // ─────────────────────────────────────────────────────────────────────────────
@@ -3179,15 +2780,7 @@ function CommMsg({ msg, onDismiss }) {
 // ─────────────────────────────────────────────────────────────────────────────
 export default function CommissionerPanel({ commissioner, leagueId, tournamentId, windowType = null, memberCount = 0, leagueName = 'LEAGUE', league = null }) {
   const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' && window.innerWidth < 1024);
-  const [helpModal, setHelpModal] = useState(null); // null | 'commissioner' | 'lifecycle' | 'bets'
-  const [mobKnockoutDeadline, setMobKnockoutDeadline] = useState('');
-
-  // Mirror of LifecycleOps state — needed by the mobile knockout draft IIFE below.
-  const [keepSubmissionCount, setKeepSubmissionCount] = useState(null);
-  const [groupStageStarted,   setGroupStageStarted]   = useState(false);
-
-  const _mobAllocDone         = !!(league?.cup_phase && league.cup_phase !== 'pre_cup');
-  const _mobKnockoutAllocDone = ['pre_elimination', 'round_of_16', 'quarter_final', 'semi_final', 'final'].includes(league?.cup_phase);
+  const [helpModal, setHelpModal] = useState(null); // null | 'commissioner' | 'lifecycle'
 
   // Emergency transfers — shared state/handlers across desktop LifecycleOps grid
   // and the mobile lifecycle cards below. Called unconditionally (Rules of Hooks)
@@ -3197,39 +2790,12 @@ export default function CommissionerPanel({ commissioner, leagueId, tournamentId
   const { freeTransfers: mobFreeTransfers, toggleFreeTransfers: mobToggleFreeTransfers } = useFreeTransfersConfig(leagueId, commissioner);
 
   useEffect(() => {
-    if (!_mobAllocDone || _mobKnockoutAllocDone || !tournamentId) { setGroupStageStarted(false); return; }
-    (async () => {
-      const { data: mds } = await supabase.from('matchday_deadlines').select('matchday_id').eq('tournament_id', tournamentId);
-      const mdIds = (mds ?? []).map(r => r.matchday_id);
-      if (!mdIds.length) { setGroupStageStarted(false); return; }
-      const { count } = await supabase.from('fixtures').select('id', { count: 'exact', head: true })
-        .eq('tournament_id', tournamentId).in('matchday_id', mdIds).lte('kickoff_at', new Date().toISOString());
-      setGroupStageStarted((count ?? 0) > 0);
-    })();
-  }, [_mobAllocDone, _mobKnockoutAllocDone, tournamentId]);
-
-  useEffect(() => {
-    if (league?.cup_phase !== 'group_stage' || !leagueId) { setKeepSubmissionCount(null); return; }
-    supabase.from('knockout_keep_submissions').select('user_id', { count: 'exact', head: true })
-      .eq('league_id', leagueId)
-      .then(({ count }) => setKeepSubmissionCount(count ?? 0));
-  }, [league?.cup_phase, leagueId]);
-
-  useEffect(() => {
     const onResize = () => setIsMobile(window.innerWidth < 1024);
     window.addEventListener('resize', onResize);
     return () => window.removeEventListener('resize', onResize);
   }, []);
 
-  const {
-    commLoading, commMsg, setCommMsg,
-    openBets, resolutionBetsLoading,
-    allBets, allBetsLoading, fetchAllBets,
-    selectedBetForResolution, setSelectedBetForResolution,
-    betResolutionAnswers, setBetResolutionAnswers, toggleBetResolutionAnswer,
-    betSubmissions, answerGrouped,
-    fetchBetSubmissions, fetchOpenBets, resolveBet, resolveNoWinner, voidBet,
-  } = commissioner;
+  const { commLoading, commMsg, setCommMsg } = commissioner;
 
   if (isMobile) {
     // ── Mobile layout ────────────────────────────────────────────────────────
@@ -3389,64 +2955,6 @@ export default function CommissionerPanel({ commissioner, leagueId, tournamentId
           </div>
           )}
 
-          {/* Knockout Draft — disabled: group→knockout uses normal transfer window */}
-          {KNOCKOUT_DRAFT_ENABLED && (!league || (league.format === 'noduplicate' && (
-            (league.cup_phase && league.cup_phase !== 'pre_cup') ||
-            !!league.knockout_draft_deadline
-          ))) && (() => {
-            const mobKnockoutAllocationDone = ['pre_elimination', 'round_of_16', 'quarter_final', 'semi_final', 'final'].includes(league?.cup_phase);
-            const mobKnockoutStatus = mobKnockoutAllocationDone ? 'ALLOCATED'
-              : league?.knockout_draft_deadline ? 'DEADLINE SET'
-              : 'NOT SET';
-            const mobKnockoutTone = mobKnockoutAllocationDone ? 'var(--positive)'
-              : league?.knockout_draft_deadline ? 'var(--positive)'
-              : 'var(--warn)';
-            return (
-              <div data-tour="comm-knockout-draft">
-              <MobLifecycleCard title="KNOCKOUT DRAFT" status={mobKnockoutStatus} tone={mobKnockoutTone} when="After group stage allocation. Before first knockout match.">
-                {mobKnockoutAllocationDone ? (
-                  <div style={{ padding: '8px 10px', background: 'var(--ink)', border: '1px solid var(--rule)', fontFamily: BODY, fontSize: 10, color: 'var(--positive)', lineHeight: 1.5 }}>
-                    ✓ Knockout squads allocated
-                  </div>
-                ) : !groupStageStarted ? (
-                  <div style={{ padding: '8px 10px', background: 'var(--ink)', border: '1px solid var(--rule)', fontFamily: BODY, fontSize: 10, color: 'var(--mute)', lineHeight: 1.5 }}>
-                    Locked — group stage fixtures have not kicked off yet
-                  </div>
-                ) : (
-                  <>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                      <span style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '.2em', color: 'var(--paper)' }}>KNOCKOUT DEADLINE</span>
-                      <input type="datetime-local" value={mobKnockoutDeadline} onChange={e => setMobKnockoutDeadline(e.target.value)} style={{ ...mobInput, colorScheme: 'dark', fontSize: 11 }} />
-                    </div>
-                    {keepSubmissionCount !== null && (
-                      <div style={{ padding: '6px 8px', background: 'rgba(160,108,255,0.07)', border: '1px solid rgba(160,108,255,0.25)', fontFamily: "'JetBrains Mono',monospace", fontSize: 9, letterSpacing: '.14em', color: '#a855f7' }}>
-                        🛡️ {keepSubmissionCount} manager{keepSubmissionCount !== 1 ? 's' : ''} have protected players
-                      </div>
-                    )}
-                    <button
-                      onClick={() => {
-                        if (!window.confirm('Run knockout-phase draft allocation? This cannot be undone.')) return;
-                        commissioner.commAction(async () => {
-                          if (mobKnockoutDeadline) {
-                            await supabase.from('leagues').update({ knockout_draft_deadline: new Date(mobKnockoutDeadline).toISOString() }).eq('id', leagueId);
-                          }
-                          const { error } = await supabase.functions.invoke('run-draft-lottery', {
-                            body: { league_id: leagueId, phase: 'knockout' },
-                          });
-                          if (error) throw new Error(error.message);
-                          setCommMsg({ type: 'ok', text: 'Knockout draft allocation complete.' });
-                        });
-                      }}
-                      disabled={commLoading}
-                      style={{ ...mobBtn, background: 'var(--gold)', color: 'var(--ink)' }}
-                    >RUN KNOCKOUT ALLOCATION ↯</button>
-                  </>
-                )}
-              </MobLifecycleCard>
-              </div>
-            );
-          })()}
-
           <div data-tour="comm-score-recalc">
           <MobLifecycleCard title="SCORE RECALCULATION" status="UTILITY" tone="var(--mute)" when="Only if a match shows incorrect points.">
             <div style={{ padding: '8px 10px', background: 'var(--ink)', border: '1px solid var(--rule)', fontFamily: BODY, fontSize: 10, color: 'var(--mute)', lineHeight: 1.6, marginBottom: 8 }}>
@@ -3462,6 +2970,9 @@ export default function CommissionerPanel({ commissioner, leagueId, tournamentId
           </div>
         </div>
 
+          {/* P2P Challenges config (mobile) */}
+          <P2PChallengesConfig leagueId={leagueId} isMobile commLoading={commLoading} />
+
         {/* H2H Calendar (mobile) — only for Draft + H2H leagues */}
         {league?.h2h_enabled && (
           <>
@@ -3475,50 +2986,6 @@ export default function CommissionerPanel({ commissioner, leagueId, tournamentId
         {/* League news (mobile) */}
         <MobSectionHeader label="LEAGUE NEWS" sub="POST TO ACTIVITY FEED" tone="var(--danger)" />
         <NewsPostForm leagueId={leagueId} setCommMsg={setCommMsg} isMobile />
-
-        {/* Bet management (mobile) — moved below lifecycle ops */}
-        <MobSectionHeader label="BET MANAGEMENT" sub="CREATE & RESOLVE" tone="var(--cyan)" onHelp={() => setHelpModal('bets')} />
-        <div data-tour="comm-bets" style={{ padding: '0 14px' }}>
-          <BetCreatorPanel
-            leagueId={leagueId}
-            tournamentId={tournamentId}
-            onCreated={fetchOpenBets}
-            commLoading={commLoading}
-            setCommMsg={setCommMsg}
-          />
-        </div>
-
-        {/* Resolve bets (mobile) */}
-        <MobSectionHeader label="RESOLVE PENDING" sub="WAITING ON YOU" tone="var(--gold)" />
-        <div data-tour="comm-resolve" style={{ padding: '0 14px', display: 'flex', flexDirection: 'column', gap: 8 }}>
-          <ResolvePendingBets
-            openBets={openBets}
-            resolutionBetsLoading={resolutionBetsLoading}
-            selectedBetForResolution={selectedBetForResolution}
-            setSelectedBetForResolution={setSelectedBetForResolution}
-            betResolutionAnswers={betResolutionAnswers}
-            setBetResolutionAnswers={setBetResolutionAnswers}
-            toggleBetResolutionAnswer={toggleBetResolutionAnswer}
-            betSubmissions={betSubmissions}
-            answerGrouped={answerGrouped}
-            fetchBetSubmissions={fetchBetSubmissions}
-            resolveBet={resolveBet}
-            resolveNoWinner={resolveNoWinner}
-            voidBet={voidBet}
-            commLoading={commLoading}
-            commMsg={commMsg}
-            memberCount={memberCount}
-          />
-        </div>
-
-        {/* Betting history (mobile) */}
-        <BettingHistory
-          allBets={allBets}
-          allBetsLoading={allBetsLoading}
-          fetchAllBets={fetchAllBets}
-          memberCount={memberCount}
-          isMobile
-        />
 
       </div>
     );
@@ -3548,59 +3015,13 @@ export default function CommissionerPanel({ commissioner, leagueId, tournamentId
         onHelp={() => setHelpModal('lifecycle')}
       />
 
+      {/* P2P Challenges config */}
+      <HubSectionLabel label="P2P CHALLENGES" sub="COIN ENTRY FEE & STAKE LIMITS" tone="var(--gold)" />
+      <P2PChallengesConfig leagueId={leagueId} commLoading={commLoading} />
+
       {/* League News — breaking news form */}
       <HubSectionLabel label="LEAGUE NEWS" sub="POST TO ACTIVITY FEED" tone="var(--danger)" />
       <NewsPostForm leagueId={leagueId} setCommMsg={setCommMsg} />
-
-      {/* Zone C — Bet management (two columns) */}
-      <HubSectionLabel
-        label="BET MANAGEMENT"
-        sub="CREATE & RESOLVE PREDICTIONS"
-        tone="var(--cyan)"
-        helpBtn={
-          <button onClick={() => setHelpModal('bets')} style={helpBtnStyle} title="How does bet management work?">?</button>
-        }
-      />
-      <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', borderBottom: '1px solid var(--rule)', minHeight: 600 }}>
-        <div data-tour="comm-bets" style={{ borderRight: '1px solid var(--rule)', display: 'flex', flexDirection: 'column', overflow: 'hidden', padding: 20 }}>
-          <BetCreatorPanel
-            leagueId={leagueId}
-            tournamentId={tournamentId}
-            onCreated={fetchOpenBets}
-            commLoading={commLoading}
-            setCommMsg={setCommMsg}
-          />
-        </div>
-        <div data-tour="comm-resolve" style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-          <ResolvePendingBets
-            openBets={openBets}
-            resolutionBetsLoading={resolutionBetsLoading}
-            selectedBetForResolution={selectedBetForResolution}
-            setSelectedBetForResolution={setSelectedBetForResolution}
-            betResolutionAnswers={betResolutionAnswers}
-            setBetResolutionAnswers={setBetResolutionAnswers}
-            toggleBetResolutionAnswer={toggleBetResolutionAnswer}
-            betSubmissions={betSubmissions}
-            answerGrouped={answerGrouped}
-            fetchBetSubmissions={fetchBetSubmissions}
-            resolveBet={resolveBet}
-            resolveNoWinner={resolveNoWinner}
-            voidBet={voidBet}
-            commLoading={commLoading}
-            commMsg={commMsg}
-            memberCount={memberCount}
-          />
-        </div>
-      </div>
-
-      {/* Zone D — Betting history (full width, below create/resolve) */}
-      <BettingHistory
-        allBets={allBets}
-        allBetsLoading={allBetsLoading}
-        fetchAllBets={fetchAllBets}
-        memberCount={memberCount}
-        isMobile={false}
-      />
 
     </div>
   );

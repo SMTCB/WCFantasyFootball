@@ -85,3 +85,4 @@ backend/.env
 .vercel
 .env*
 backups/
+docs/architecture/VALUATION_ANALYSIS.md

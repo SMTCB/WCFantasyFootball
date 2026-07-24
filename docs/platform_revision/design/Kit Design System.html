@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FantasyKit — Kit Design System</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Archivo:ital,wght@0,400;0,500;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ─── KIT LIGHT TOKENS — source of truth ──────────────────── */
+:root {
+  --bg:       #F7F3ED; --card:    #FFFFFF;  --elev:   #EDEAE2;
+  --shell:    #18202E; --shell2:  #202B3D;
+  --text:     #18202E; --text2:   #4B5568;  --mute:   #8A97A8;
+  --rule:     #E2DDD5; --rule2:   #ECE7DF;
+  --accent:   #1A6FA8; --abg:     rgba(26,111,168,.08); --a2: #15597f;
+  --gold:     #B8720E; --gbg:     rgba(184,114,14,.10);
+  --pos:      #166534; --pbg:     rgba(22,101,52,.10);
+  --neg:      #B91C1C; --nbg:     rgba(185,28,28,.08);
+  --gk:       #8C49C9; --def:     #1A6FA8;
+  --mid:      #B8720E; --fwd:     #B91C1C;
+  --r: 6px;   --rsm: 4px; --rlg: 10px;
+}
+
+/* ─── DOC CHROME ───────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body { background: var(--bg); color: var(--text); font-family: 'Archivo', sans-serif; line-height: 1.6; -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
+.wrap { max-width: 1160px; margin: 0 auto; padding: 0 40px; }
+.blk { font-family: 'Archivo Black', sans-serif; letter-spacing: -0.02em; }
+.mono { font-family: 'JetBrains Mono', monospace; }
+code { font-family: 'JetBrains Mono'; font-size: 11.5px; background: var(--elev); padding: 2px 7px; border-radius: 3px; color: var(--accent); white-space: nowrap; }
+
+/* STICKY TOC */
+.toc { position: sticky; top: 0; z-index: 20; background: rgba(247,243,237,.88); backdrop-filter: blur(10px); border-bottom: 1px solid var(--rule); }
+.toc-in { max-width: 1160px; margin: 0 auto; padding: 0 40px; display: flex; align-items: center; height: 52px; overflow-x: auto; scrollbar-width: none; gap: 4px; }
+.toc-in::-webkit-scrollbar { display: none; }
+.toc-brand { font-family: 'Archivo Black'; font-size: 14px; margin-right: 24px; white-space: nowrap; color: var(--text); flex-shrink: 0; letter-spacing: -0.01em; }
+.toc-brand em { color: var(--accent); font-style: normal; }
+.toc a { font-size: 12.5px; color: var(--text2); text-decoration: none; padding: 7px 11px; border-radius: var(--rsm); white-space: nowrap; font-weight: 500; flex-shrink: 0; }
+.toc a:hover { background: var(--abg); color: var(--accent); }
+
+/* COVER */
+.cover { background: var(--shell); color: #fff; padding: 80px 0 64px; position: relative; overflow: hidden; }
+.cover::after { content: ""; position: absolute; inset: 0; background: radial-gradient(900px 300px at 90% -10%, rgba(26,111,168,.28), transparent 58%); pointer-events: none; }
+.cover-in { position: relative; z-index: 1; }
+.cover-ey { font-family: 'JetBrains Mono'; font-size: 11px; letter-spacing: .2em; text-transform: uppercase; color: rgba(255,255,255,.38); margin-bottom: 20px; }
+.cover-h { font-family: 'Archivo Black'; font-size: clamp(40px, 5.5vw, 68px); letter-spacing: -0.03em; line-height: 0.98; }
+.cover-h em { color: #5FA9D6; font-style: normal; }
+.cover-sub { font-size: 17px; color: rgba(255,255,255,.6); max-width: 58ch; margin-top: 22px; line-height: 1.55; text-wrap: pretty; }
+.cover-meta { display: flex; flex-wrap: wrap; gap: 10px 48px; margin-top: 44px; padding-top: 28px; border-top: 1px solid rgba(255,255,255,.1); }
+.cm-item { display: flex; flex-direction: column; gap: 5px; }
+.cm-l { font-family: 'JetBrains Mono'; font-size: 10px; letter-spacing: .16em; text-transform: uppercase; color: rgba(255,255,255,.33); }
+.cm-v { font-family: 'Archivo Black'; font-size: 14px; letter-spacing: -0.01em; }
+.cm-v.acc { color: #5FA9D6; }
+
+/* SECTION */
+.sec { padding: 72px 0 0; }
+.sec-rule { height: 1px; background: var(--rule); margin: 72px 0 0; }
+.sec-ey { font-family: 'JetBrains Mono'; font-size: 10px; letter-spacing: .2em; text-transform: uppercase; color: var(--mute); margin-bottom: 12px; }
+.sec-h { font-family: 'Archivo Black'; font-size: clamp(24px, 3vw, 36px); letter-spacing: -0.025em; line-height: 1.06; margin-bottom: 8px; }
+.sec-sub { font-size: 15.5px; color: var(--text2); max-width: 66ch; line-height: 1.6; margin-bottom: 40px; text-wrap: pretty; }
+.label { font-family: 'JetBrains Mono'; font-size: 10px; letter-spacing: .18em; text-transform: uppercase; color: var(--mute); display: block; margin-bottom: 14px; }
+.label.mt { margin-top: 40px; }
+
+/* SWATCH GRID */
+.sw-grid { display: grid; gap: 10px; margin-bottom: 24px; }
+.sw-grid.g4 { grid-template-columns: repeat(4, 1fr); }
+.sw-grid.g5 { grid-template-columns: repeat(5, 1fr); }
+.swatch { background: var(--card); border: 1px solid var(--rule); border-radius: var(--r); overflow: hidden; }
+.sw-color { height: 68px; }
+.sw-info { padding: 11px 13px; }
+.sw-var { font-family: 'JetBrains Mono'; font-size: 9.5px; letter-spacing: .06em; color: var(--accent); margin-bottom: 3px; }
+.sw-hex { font-family: 'Archivo Black'; font-size: 13px; letter-spacing: -0.01em; }
+.sw-name { font-size: 11.5px; color: var(--text2); margin-top: 2px; line-height: 1.4; }
+
+/* TYPE TABLE */
+.type-tbl { width: 100%; border-collapse: collapse; background: var(--card); border: 1px solid var(--rule); border-radius: var(--r); overflow: hidden; margin-bottom: 40px; }
+.type-tbl th { font-family: 'JetBrains Mono'; font-size: 9px; letter-spacing: .14em; text-transform: uppercase; color: var(--mute); padding: 11px 18px; border-bottom: 2px solid var(--rule); background: var(--elev); text-align: left; font-weight: 500; }
+.type-tbl td { padding: 14px 18px; border-bottom: 1px solid var(--rule2); vertical-align: middle; }
+.type-tbl tr:last-child td { border-bottom: 0; }
+.type-spec { font-family: 'JetBrains Mono'; font-size: 10px; letter-spacing: .02em; color: var(--mute); }
+.type-fam { font-family: 'JetBrains Mono'; font-size: 10px; letter-spacing: .04em; color: var(--accent); }
+
+/* COMP GRID */
+.comp-grid { display: grid; gap: 14px; margin-bottom: 40px; }
+.comp-grid.g2 { grid-template-columns: 1fr 1fr; }
+.comp-grid.g3 { grid-template-columns: repeat(3, 1fr); }
+.comp-grid.g4 { grid-template-columns: repeat(4, 1fr); }
+@media (max-width: 800px) { .comp-grid.g3, .comp-grid.g4 { grid-template-columns: 1fr 1fr; } .sw-grid.g4, .sw-grid.g5 { grid-template-columns: 1fr 1fr; } }
+.comp-card { background: var(--card); border: 1px solid var(--rule); border-radius: var(--r); overflow: hidden; }
+.comp-demo { padding: 28px 20px; background: var(--bg); display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 10px; min-height: 80px; }
+.comp-demo.pad { padding: 20px; }
+.comp-demo.dark { background: var(--shell); }
+.comp-demo.pitch-bg { background: #2D5A27; }
+.comp-meta { padding: 12px 14px; border-top: 1px solid var(--rule); }
+.comp-name { font-family: 'Archivo Black'; font-size: 12.5px; letter-spacing: -0.01em; margin-bottom: 3px; }
+.comp-tokens { font-family: 'JetBrains Mono'; font-size: 9.5px; letter-spacing: .04em; color: var(--mute); line-height: 1.7; }
+
+/* ─── KIT COMPONENTS ─────────────────────────────────────── */
+
+/* Buttons */
+.btn { display: inline-flex; align-items: center; gap: 7px; font-family: 'Archivo'; font-weight: 600; font-size: 13px; padding: 10px 18px; border-radius: var(--r); cursor: pointer; border: 0; line-height: 1; white-space: nowrap; }
+.btn-primary { background: var(--accent); color: #fff; }
+.btn-ghost   { background: transparent; color: var(--text2); border: 1.5px solid var(--rule); }
+.btn-outline { background: transparent; color: var(--accent); border: 1.5px solid var(--accent); }
+.btn-danger  { background: transparent; color: var(--neg); border: 1.5px solid var(--neg); }
+.btn-gold    { background: var(--gold); color: #fff; }
+.btn-sm { font-size: 11.5px; padding: 7px 13px; }
+
+/* Chips */
+.pos-chip { display: inline-flex; align-items: center; justify-content: center; font-family: 'JetBrains Mono'; font-size: 10px; letter-spacing: .06em; font-weight: 600; padding: 3px 7px; border-radius: 3px; border: 1.5px solid currentColor; }
+.pos-gk  { color: var(--gk);  background: rgba(140,73,201,.08); }
+.pos-def { color: var(--def); background: rgba(26,111,168,.08); }
+.pos-mid { color: var(--mid); background: rgba(184,114,14,.08); }
+.pos-fwd { color: var(--fwd); background: rgba(185,28,28,.08); }
+
+/* Status / trend */
+.status-pill { display: inline-flex; align-items: center; gap: 5px; font-family: 'JetBrains Mono'; font-size: 9.5px; letter-spacing: .1em; text-transform: uppercase; padding: 3px 9px; border-radius: 100px; font-weight: 500; }
+.s-fit   { color: var(--pos);  background: var(--pbg); }
+.s-doubt { color: var(--gold); background: var(--gbg); }
+.s-out   { color: var(--neg);  background: var(--nbg); }
+.s-dot   { width: 5px; height: 5px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
+
+.trend { font-family: 'Archivo Black'; font-size: 11px; }
+.t-up   { color: var(--pos); }
+.t-dn   { color: var(--neg); }
+.t-flat { color: var(--mute); }
+
+/* Manager monogram */
+.mgr { display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; border-radius: 4px; font-family: 'JetBrains Mono'; font-size: 10px; font-weight: 600; letter-spacing: .04em; flex-shrink: 0; }
+
+/* "You" tag */
+.you-tag { font-family: 'JetBrains Mono'; font-size: 8px; letter-spacing: .1em; text-transform: uppercase; color: var(--accent); border: 1px solid var(--accent); border-radius: 2px; padding: 1px 5px; display: inline-block; }
+
+/* Cards */
+.kit-card      { background: var(--card); border: 1px solid var(--rule); border-radius: var(--r); }
+.kit-card-acc  { background: var(--card); border: 1px solid var(--rule); border-left: 3px solid var(--accent); border-radius: var(--r); }
+.kit-card-gold { background: var(--card); border: 1px solid var(--rule); border-left: 3px solid var(--gold); border-radius: var(--r); }
+.kit-card-elev { background: var(--elev); border: 1px solid var(--rule); border-radius: var(--r); }
+.card-pad { padding: 16px 18px; }
+
+/* Tab strip */
+.tabs { display: flex; border-bottom: 1px solid var(--rule); }
+.tab-item { font-size: 13px; font-weight: 600; color: var(--mute); padding: 10px 16px; position: relative; white-space: nowrap; font-family: 'Archivo'; }
+.tab-item.on { color: var(--text); }
+.tab-item.on::after { content: ""; position: absolute; left: 16px; right: 16px; bottom: -1px; height: 2px; background: var(--accent); border-radius: 2px; }
+.tab-item .ntag { display: inline-block; width: 6px; height: 6px; background: var(--neg); border-radius: 50%; margin-left: 5px; vertical-align: 1px; }
+
+/* Standings row */
+.lb-header { display: grid; grid-template-columns: 28px 1fr 52px 52px; gap: 12px; padding: 8px 16px; border-bottom: 2px solid var(--rule); background: var(--elev); }
+.lb-header span { font-family: 'JetBrains Mono'; font-size: 9px; letter-spacing: .12em; text-transform: uppercase; color: var(--mute); font-weight: 500; }
+.lb-header span:last-child { text-align: right; }
+.lb-row { display: grid; grid-template-columns: 28px 1fr 52px 52px; align-items: center; gap: 12px; padding: 11px 16px; border-bottom: 1px solid var(--rule2); }
+.lb-row.me { background: var(--abg); border-left: 2px solid var(--accent); padding-left: 14px; border-bottom-color: transparent; }
+.lb-rank { font-family: 'Archivo Black'; font-size: 13px; color: var(--mute); }
+.lb-rank.top { color: var(--accent); }
+.lb-mgr { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.lb-name { font-family: 'Archivo Black'; font-size: 13.5px; letter-spacing: -0.01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lb-gw { font-family: 'Archivo Black'; font-size: 14px; color: var(--accent); text-align: right; }
+.lb-tot { font-family: 'Archivo Black'; font-size: 14px; text-align: right; }
+.lb-sub { font-family: 'JetBrains Mono'; font-size: 8.5px; color: var(--mute); display: block; text-align: right; letter-spacing: .04em; }
+
+/* Player row */
+.player-row { display: flex; align-items: center; gap: 11px; padding: 11px 16px; border-bottom: 1px solid var(--rule2); }
+.p-name { flex: 1; min-width: 0; }
+.p-name b { font-family: 'Archivo Black'; font-size: 13.5px; letter-spacing: -0.01em; display: block; }
+.p-name span { font-family: 'JetBrains Mono'; font-size: 9px; letter-spacing: .06em; color: var(--mute); }
+.p-stat { text-align: right; min-width: 40px; }
+.p-stat b { font-family: 'Archivo Black'; font-size: 14px; display: block; }
+.p-stat span { font-family: 'JetBrains Mono'; font-size: 8px; letter-spacing: .08em; text-transform: uppercase; color: var(--mute); }
+.p-price { font-family: 'Archivo Black'; font-size: 14px; min-width: 50px; text-align: right; color: var(--text); }
+
+/* Pitch token */
+.pitch-tok { background: rgba(247,243,237,.97); border: 1px solid rgba(255,255,255,.4); border-left: 2px solid var(--def); border-radius: 3px; padding: 5px 10px; min-width: 90px; display: inline-block; position: relative; box-shadow: 0 1px 3px rgba(0,0,0,.18), 0 0 0 1px rgba(0,0,0,.06); }
+.pitch-tok .cap-badge { position: absolute; top: -7px; left: -7px; width: 16px; height: 16px; background: var(--gold); border-radius: 50%; border: 1.5px solid #fff; display: flex; align-items: center; justify-content: center; font-family: 'Archivo Black'; font-size: 8px; color: #fff; }
+.pitch-tok .pn { font-family: 'Archivo Black'; font-size: 10px; letter-spacing: -0.01em; }
+.pitch-tok .pm { font-family: 'JetBrains Mono'; font-size: 8px; letter-spacing: .04em; color: var(--mute); display: flex; gap: 5px; align-items: center; margin-top: 2px; }
+.pitch-tok .pm b { color: var(--accent); font-weight: 700; }
+.pitch-tok.live { border-color: rgba(185,28,28,.5); border-left-color: var(--neg); box-shadow: 0 0 0 1.5px rgba(185,28,28,.18), 0 2px 6px rgba(0,0,0,.16); }
+.live-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--neg); display: inline-block; animation: pulse 1.4s ease-in-out infinite; }
+@keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:.3; } }
+
+/* Deadline banner */
+.deadline { display: flex; align-items: center; gap: 16px; background: var(--card); border: 1px solid var(--rule); border-left: 3px solid var(--accent); border-radius: var(--r); padding: 14px 18px; }
+.deadline.urgent { border-left-color: var(--gold); }
+.dl-clock { background: var(--abg); border-radius: var(--rsm); padding: 8px 12px; display: flex; flex-direction: column; align-items: center; min-width: 62px; flex-shrink: 0; }
+.dl-clock b { font-family: 'Archivo Black'; font-size: 22px; color: var(--accent); line-height: 1; letter-spacing: -0.02em; }
+.deadline.urgent .dl-clock { background: var(--gbg); }
+.deadline.urgent .dl-clock b { color: var(--gold); }
+.dl-clock span { font-family: 'JetBrains Mono'; font-size: 7.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--mute); margin-top: 3px; }
+.dl-body { flex: 1; min-width: 0; }
+.dl-k { font-family: 'JetBrains Mono'; font-size: 9px; letter-spacing: .14em; text-transform: uppercase; color: var(--mute); margin-bottom: 4px; }
+.dl-t { font-family: 'Archivo Black'; font-size: 15px; letter-spacing: -0.01em; line-height: 1.2; }
+.dl-s { font-size: 12.5px; color: var(--text2); margin-top: 2px; }
+
+/* Toast */
+.toast { display: flex; align-items: center; gap: 12px; background: var(--shell); color: #fff; border-radius: var(--r); padding: 12px 16px; box-shadow: 0 8px 24px -8px rgba(0,0,0,.35); width: 100%; }
+.toast-ck { width: 24px; height: 24px; border-radius: 50%; background: var(--pos); display: grid; place-items: center; flex-shrink: 0; font-size: 12px; }
+.toast-tx { flex: 1; }
+.toast-tx b { font-family: 'Archivo Black'; font-size: 13px; display: block; letter-spacing: -0.01em; }
+.toast-tx span { font-size: 11.5px; color: rgba(255,255,255,.55); }
+.toast-undo { font-family: 'JetBrains Mono'; font-size: 8.5px; letter-spacing: .12em; text-transform: uppercase; color: #5FA9D6; white-space: nowrap; }
+
+/* Empty state */
+.empty { border: 1.5px dashed var(--rule); border-radius: var(--r); padding: 30px 24px; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 10px; }
+.empty-ico { width: 44px; height: 44px; border-radius: 50%; background: var(--abg); display: grid; place-items: center; color: var(--accent); font-size: 22px; flex-shrink: 0; }
+.empty b { font-family: 'Archivo Black'; font-size: 15px; letter-spacing: -0.01em; }
+.empty p { font-size: 12.5px; color: var(--text2); max-width: 26ch; line-height: 1.5; }
+
+/* Sidebar nav */
+.nav-demo { background: var(--shell); border-radius: var(--r); padding: 16px 12px; display: flex; flex-direction: column; gap: 2px; }
+.nav-brand { font-family: 'Archivo Black'; font-size: 15px; color: #fff; padding: 0 8px 14px; margin-bottom: 4px; border-bottom: 1px solid rgba(255,255,255,.07); letter-spacing: -0.01em; }
+.nav-brand em { color: #5FA9D6; font-style: normal; }
+.nav-item { display: flex; align-items: center; gap: 9px; padding: 8px 10px; border-radius: var(--rsm); font-size: 13px; color: rgba(255,255,255,.44); font-weight: 500; }
+.nav-item.on { background: rgba(255,255,255,.07); color: #fff; }
+.nav-item .ndot { width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,.3); flex-shrink: 0; }
+.nav-item.on .ndot { background: var(--accent); }
+
+/* Bottom tab bar */
+.tab-bar { background: var(--shell); border-radius: 0 0 var(--r) var(--r); border-top: 1px solid rgba(255,255,255,.07); padding: 8px 4px 12px; display: flex; justify-content: space-around; }
+.tb-item { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 0 8px; }
+.tb-dot { width: 5px; height: 5px; border-radius: 50%; background: rgba(255,255,255,.28); }
+.tb-label { font-family: 'JetBrains Mono'; font-size: 7.5px; letter-spacing: .06em; text-transform: uppercase; color: rgba(255,255,255,.35); }
+.tb-item.on .tb-dot { background: var(--accent); }
+.tb-item.on .tb-label { color: #fff; }
+
+/* Full-width card */
+.full-card { background: var(--card); border: 1px solid var(--rule); border-radius: var(--r); padding: 22px 24px; margin-bottom: 20px; }
+
+/* FOOTER */
+.footer { margin-top: 96px; background: var(--shell); padding: 44px 0; }
+.footer-in { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; }
+.footer-brand { font-family: 'Archivo Black'; font-size: 15px; color: #fff; letter-spacing: -0.01em; }
+.footer-brand em { color: #5FA9D6; font-style: normal; }
+.footer-meta { font-family: 'JetBrains Mono'; font-size: 10px; letter-spacing: .1em; color: rgba(255,255,255,.38); }
+</style>
+</head>
+<body>
+
+<!-- ── STICKY NAV ─────────────────────────────────────────── -->
+<nav class="toc">
+  <div class="toc-in">
+    <span class="toc-brand">Fantasy<em>Kit</em> · Kit System</span>
+    <a href="#foundation">Foundation</a>
+    <a href="#shell">Shell &amp; Nav</a>
+    <a href="#components">Components</a>
+    <a href="#patterns">Patterns</a>
+    <a href="#whitelabel">White Label</a>
+  </div>
+</nav>
+
+<!-- ── COVER ─────────────────────────────────────────────── -->
+<header class="cover">
+  <div class="wrap cover-in">
+    <p class="cover-ey">FantasyKit · Design System · Direction 1 · June 2026</p>
+    <h1 class="cover-h">Kit <em>Design</em><br>System</h1>
+    <p class="cover-sub">The visual language for FantasyKit's white-label SaaS redesign. Light-first, warm, editorial. Clean enough for any broadcaster, club, or media company to make it their own in 3 token swaps.</p>
+    <div class="cover-meta">
+      <div class="cm-item"><span class="cm-l">Direction</span><span class="cm-v acc">Kit (Light) — Committed</span></div>
+      <div class="cm-item"><span class="cm-l">Dark Mode</span><span class="cm-v">Stadium palette (toggle)</span></div>
+      <div class="cm-item"><span class="cm-l">White Label</span><span class="cm-v">3-token swap</span></div>
+      <div class="cm-item"><span class="cm-l">Border Radius</span><span class="cm-v">6px throughout</span></div>
+      <div class="cm-item"><span class="cm-l">Capitalisation</span><span class="cm-v">Mixed case (not all-caps)</span></div>
+    </div>
+  </div>
+</header>
+
+<!-- ══════════════════════════════════════════════════════════
+     01 · FOUNDATION
+     ══════════════════════════════════════════════════════════ -->
+<section id="foundation" class="sec">
+  <div class="wrap">
+    <p class="sec-ey">01 · Foundation</p>
+    <h2 class="sec-h">Color, Type &amp; Spacing Tokens</h2>
+    <p class="sec-sub">All values are CSS custom properties on <code>:root</code>. Imported from <code>tokens/kit.css</code>. The white-label principle: a client re-skin changes only <code>--accent</code> (their brand colour), their wordmark, and their data. Everything else stays constant.</p>
+
+    <!-- SURFACES -->
+    <span class="label">Surfaces</span>
+    <div class="sw-grid g4">
+      <div class="swatch"><div class="sw-color" style="background:#F7F3ED; border-bottom:1px solid #E2DDD5;"></div><div class="sw-info"><div class="sw-var">--bg</div><div class="sw-hex">#F7F3ED</div><div class="sw-name">Warm off-white page background</div></div></div>
+      <div class="swatch"><div class="sw-color" style="background:#FFFFFF; border-bottom:1px solid #E2DDD5;"></div><div class="sw-info"><div class="sw-var">--card</div><div class="sw-hex">#FFFFFF</div><div class="sw-name">Card surface on top of bg</div></div></div>
+      <div class="swatch"><div class="sw-color" style="background:#EDEAE2; border-bottom:1px solid #E2DDD5;"></div><div class="sw-info"><div class="sw-var">--elev</div><div class="sw-hex">#EDEAE2</div><div class="sw-name">Elevated panel, table headers</div></div></div>
+      <div class="swatch"><div class="sw-color" style="background:#18202E;"></div><div class="sw-info"><div class="sw-var">--shell</div><div class="sw-hex">#18202E</div><div class="sw-name">Sidebar + shell — the ONE dark element in Kit Light</div></div></div>
+    </div>
+
+    <!-- TEXT -->
+    <span class="label mt">Text &amp; Rules</span>
+    <div class="sw-grid g4">
+      <div class="swatch"><div class="sw-color" style="background:#18202E;"></div><div class="sw-info"><div class="sw-var">--text</div><div class="sw-hex">#18202E</div><div class="sw-name">Primary text (same as shell)</div></div></div>
+      <div class="swatch"><div class="sw-color" style="background:#4B5568;"></div><div class="sw-info"><div class="sw-var">--text-2</div><div class="sw-hex">#4B5568</div><div class="sw-name">Secondary / body text</div></div></div>
+      <div class="swatch"><div class="sw-color" style="background:#8A97A8;"></div><div class="sw-info"><div class="sw-var">--mute</div><div class="sw-hex">#8A97A8</div><div class="sw-name">Muted labels, metadata</div></div></div>
+      <div class="swatch"><div class="sw-color" style="background:#E2DDD5; border-bottom:1px solid #ccc;"></div><div class="sw-info"><div class="sw-var">--rule</div><div class="sw-hex">#E2DDD5</div><div class="sw-name">All borders and dividers</div></div></div>
+    </div>
+
+    <!-- ACCENTS -->
+    <span class="label mt">Accent &amp; Semantic</span>
+    <div class="sw-grid g5">
+      <div class="swatch"><div class="sw-color" style="background:#1A6FA8;"></div><div class="sw-info"><div class="sw-var">--accent</div><div class="sw-hex">#1A6FA8</div><div class="sw-name">Primary — buttons, active states, lead numbers</div></div></div>
+      <div class="swatch"><div class="sw-color" style="background:#B8720E;"></div><div class="sw-info"><div class="sw-var">--gold</div><div class="sw-hex">#B8720E</div><div class="sw-name">Captain badge, deadline urgency</div></div></div>
+      <div class="swatch"><div class="sw-color" style="background:#166534;"></div><div class="sw-info"><div class="sw-var">--pos</div><div class="sw-hex">#166534</div><div class="sw-name">Positive deltas, wins, fit status</div></div></div>
+      <div class="swatch"><div class="sw-color" style="background:#B91C1C;"></div><div class="sw-info"><div class="sw-var">--neg</div><div class="sw-hex">#B91C1C</div><div class="sw-name">Negative deltas, danger, live indicator</div></div></div>
+      <div class="swatch"><div style="display:grid; grid-template-columns:1fr 1fr; height:68px;"><div style="background:#8C49C9; display:grid; place-items:center;"><span style="color:#fff;font-family:'JetBrains Mono';font-size:10px;letter-spacing:.06em;">GK</span></div><div style="background:#1A6FA8; display:grid; place-items:center;"><span style="color:#fff;font-family:'JetBrains Mono';font-size:10px;letter-spacing:.06em;">DEF</span></div><div style="background:#B8720E; display:grid; place-items:center;"><span style="color:#fff;font-family:'JetBrains Mono';font-size:10px;letter-spacing:.06em;">MID</span></div><div style="background:#B91C1C; display:grid; place-items:center;"><span style="color:#fff;font-family:'JetBrains Mono';font-size:10px;letter-spacing:.06em;">FWD</span></div></div><div class="sw-info"><div class="sw-var">Position palette (Kit Light)</div><div class="sw-hex" style="font-size:11px;">#8C49C9 · #1A6FA8 · #B8720E · #B91C1C</div></div></div>
+    </div>
+
+    <!-- TYPOGRAPHY -->
+    <span class="label mt">Typography System</span>
+    <table class="type-tbl">
+      <thead><tr><th style="width:34%">Rendered Sample</th><th>Role</th><th>Family · Weight</th><th>Size · Tracking</th><th>Usage</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><span style="font-family:'Archivo Black';font-size:30px;letter-spacing:-0.025em;line-height:1;">Salah</span></td>
+          <td><span class="type-fam">Display</span></td>
+          <td><span class="type-spec">Archivo Black · 900</span></td>
+          <td><span class="type-spec">24–64px · −0.025em</span></td>
+          <td style="font-size:12px;color:var(--text2);">Page titles, player names, big numbers, lead score</td>
+        </tr>
+        <tr>
+          <td><span style="font-family:'Archivo Black';font-size:15px;letter-spacing:-0.01em;">League Hub</span></td>
+          <td><span class="type-fam">UI Label</span></td>
+          <td><span class="type-spec">Archivo Black · 900</span></td>
+          <td><span class="type-spec">13–17px · −0.01em</span></td>
+          <td style="font-size:12px;color:var(--text2);">Card titles, tab names, manager names, standings</td>
+        </tr>
+        <tr>
+          <td><span style="font-family:'Archivo';font-size:14px;font-weight:500;">Deadline tonight at 18:30</span></td>
+          <td><span class="type-fam">Body</span></td>
+          <td><span class="type-spec">Archivo · 400–600</span></td>
+          <td><span class="type-spec">13–16px · 0</span></td>
+          <td style="font-size:12px;color:var(--text2);">Descriptions, help copy, captions, form labels</td>
+        </tr>
+        <tr>
+          <td><span style="font-family:'JetBrains Mono';font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:#8A97A8;">GW 28 · LIVE</span></td>
+          <td><span class="type-fam">Mono Eyebrow</span></td>
+          <td><span class="type-spec">JetBrains Mono · 500</span></td>
+          <td><span class="type-spec">9–12px · .14–.22em · uppercase</span></td>
+          <td style="font-size:12px;color:var(--text2);"><strong>Sparingly</strong> — eyebrows, status pills, data labels. Not for all text.</td>
+        </tr>
+        <tr>
+          <td><span style="font-family:'Archivo Black';font-size:38px;letter-spacing:-0.02em;color:#1A6FA8;line-height:1;">314</span><span style="font-family:'JetBrains Mono';font-size:9px;letter-spacing:.1em;color:#8A97A8;margin-left:8px;">PTS</span></td>
+          <td><span class="type-fam">Lead Number</span></td>
+          <td><span class="type-spec">Archivo Black · 900</span></td>
+          <td><span class="type-spec">28–48px · −0.02em · var(--accent)</span></td>
+          <td style="font-size:12px;color:var(--text2);">Primary stats: rank, total points, GW score — always in accent blue</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- SPACING -->
+    <span class="label mt">Spacing Scale · 4px base</span>
+    <div class="full-card">
+      <div style="display:grid; grid-template-columns: repeat(4,1fr); gap:20px;">
+        <div><div style="background:var(--accent);border-radius:2px;height:8px;width:4px;margin-bottom:8px;"></div><div style="font-family:'JetBrains Mono';font-size:9.5px;letter-spacing:.06em;color:var(--mute);">--s-1</div><div style="font-family:'Archivo Black';font-size:13px;">4px</div><div style="font-size:11.5px;color:var(--text2);">Inner gaps</div></div>
+        <div><div style="background:var(--accent);border-radius:2px;height:8px;width:8px;margin-bottom:8px;"></div><div style="font-family:'JetBrains Mono';font-size:9.5px;letter-spacing:.06em;color:var(--mute);">--s-2</div><div style="font-family:'Archivo Black';font-size:13px;">8px</div><div style="font-size:11.5px;color:var(--text2);">Compact padding</div></div>
+        <div><div style="background:var(--accent);border-radius:2px;height:8px;width:12px;margin-bottom:8px;"></div><div style="font-family:'JetBrains Mono';font-size:9.5px;letter-spacing:.06em;color:var(--mute);">--s-3</div><div style="font-family:'Archivo Black';font-size:13px;">12px</div><div style="font-size:11.5px;color:var(--text2);">Standard padding</div></div>
+        <div><div style="background:var(--accent);border-radius:2px;height:8px;width:16px;margin-bottom:8px;"></div><div style="font-family:'JetBrains Mono';font-size:9.5px;letter-spacing:.06em;color:var(--mute);">--s-4</div><div style="font-family:'Archivo Black';font-size:13px;">16px</div><div style="font-size:11.5px;color:var(--text2);">Component padding</div></div>
+        <div><div style="background:var(--accent);border-radius:2px;height:8px;width:20px;margin-bottom:8px;"></div><div style="font-family:'JetBrains Mono';font-size:9.5px;letter-spacing:.06em;color:var(--mute);">--s-5</div><div style="font-family:'Archivo Black';font-size:13px;">20px</div><div style="font-size:11.5px;color:var(--text2);">Section pad (sm)</div></div>
+        <div><div style="background:var(--accent);border-radius:2px;height:8px;width:24px;margin-bottom:8px;"></div><div style="font-family:'JetBrains Mono';font-size:9.5px;letter-spacing:.06em;color:var(--mute);">--s-6</div><div style="font-family:'Archivo Black';font-size:13px;">24px</div><div style="font-size:11.5px;color:var(--text2);">Section padding</div></div>
+        <div><div style="background:var(--accent);border-radius:2px;height:8px;width:32px;margin-bottom:8px;"></div><div style="font-family:'JetBrains Mono';font-size:9.5px;letter-spacing:.06em;color:var(--mute);">--s-7</div><div style="font-family:'Archivo Black';font-size:13px;">32px</div><div style="font-size:11.5px;color:var(--text2);">Between sections</div></div>
+        <div><div style="background:var(--accent);border-radius:2px;height:8px;width:40px;margin-bottom:8px;"></div><div style="font-family:'JetBrains Mono';font-size:9.5px;letter-spacing:.06em;color:var(--mute);">--s-8</div><div style="font-family:'Archivo Black';font-size:13px;">40px</div><div style="font-size:11.5px;color:var(--text2);">Section pad (lg)</div></div>
+      </div>
+      <div style="margin-top:20px; padding-top:16px; border-top:1px solid var(--rule); display:flex; gap:32px; flex-wrap:wrap;">
+        <div><span style="font-family:'JetBrains Mono';font-size:9.5px;letter-spacing:.06em;color:var(--mute);">Border radius</span><div style="font-size:13.5px;color:var(--text2);margin-top:4px;"><strong style="color:var(--text);">6px</strong> — all cards, buttons, chips &nbsp;|&nbsp; <strong style="color:var(--text);">4px</strong> (--rsm) — small chips, tags &nbsp;|&nbsp; <strong style="color:var(--text);">50%</strong> — monogram circles, dots</div></div>
+        <div><span style="font-family:'JetBrains Mono';font-size:9.5px;letter-spacing:.06em;color:var(--mute);">Elevation</span><div style="font-size:13.5px;color:var(--text2);margin-top:4px;">No shadows in Kit Light. Depth via surface tone: <code>--bg</code> → <code>--card</code> → <code>--elev</code>. Shell is isolated dark.</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════════
+     02 · SHELL & NAVIGATION
+     ══════════════════════════════════════════════════════════ -->
+<div class="sec-rule"></div>
+<section id="shell" class="sec">
+  <div class="wrap">
+    <p class="sec-ey">02 · Shell &amp; Navigation</p>
+    <h2 class="sec-h">App Shell &amp; Navigation Patterns</h2>
+    <p class="sec-sub">The defining structural decision: a dark navy sidebar anchors the chrome. Warm white fills the content area. No dual CTA bars inside tabs. Mobile uses a bottom tab bar — the sidebar is replaced entirely, not overlaid.</p>
+
+    <div class="comp-grid g2">
+      <!-- Desktop sidebar -->
+      <div class="comp-card">
+        <div class="comp-demo dark" style="align-items:stretch; padding:0; flex-direction:column;">
+          <div class="nav-demo" style="border-radius:0; flex:1;">
+            <div class="nav-brand">Fantasy<em>Kit</em></div>
+            <div class="nav-item"><span class="ndot"></span>Scores</div>
+            <div class="nav-item on"><span class="ndot"></span>League</div>
+            <div class="nav-item"><span class="ndot"></span>My Squad</div>
+            <div class="nav-item"><span class="ndot"></span>Live <span style="width:6px;height:6px;background:var(--neg);border-radius:50%;display:inline-block;margin-left:4px;"></span></div>
+            <div class="nav-item"><span class="ndot"></span>Market</div>
+          </div>
+        </div>
+        <div class="comp-meta">
+          <div class="comp-name">Desktop Sidebar Nav</div>
+          <div class="comp-tokens">bg --shell #18202E · active bg rgba(255,255,255,.07) · active text #fff<br>inactive text rgba(255,255,255,.44) · dot = --accent when active<br>width: 220px · font: Archivo 500 13px</div>
+        </div>
+      </div>
+
+      <!-- Tab strip + mobile bar -->
+      <div style="display:flex; flex-direction:column; gap:14px;">
+        <div class="comp-card">
+          <div class="comp-demo" style="padding:0; flex-direction:column;">
+            <div class="tabs" style="width:100%; padding:0 4px;">
+              <div class="tab-item on">Leaderboard</div>
+              <div class="tab-item">Feed</div>
+              <div class="tab-item">Bets <span class="ntag"></span></div>
+              <div class="tab-item">Squad</div>
+              <div class="tab-item">Market</div>
+            </div>
+          </div>
+          <div class="comp-meta">
+            <div class="comp-name">League Hub Tab Strip</div>
+            <div class="comp-tokens">5 tabs max · active: --text + 2px --accent underline<br>inactive: --mute · Archivo 600 13px · no competing CTA bar</div>
+          </div>
+        </div>
+        <div class="comp-card">
+          <div class="comp-demo dark" style="padding:0; flex-direction:column;">
+            <div class="tab-bar" style="width:100%; border-radius:0;">
+              <div class="tb-item"><div class="tb-dot"></div><div class="tb-label">Scores</div></div>
+              <div class="tb-item on"><div class="tb-dot"></div><div class="tb-label">League</div></div>
+              <div class="tb-item"><div class="tb-dot"></div><div class="tb-label">Squad</div></div>
+              <div class="tb-item"><div class="tb-dot"></div><div class="tb-label">Live</div></div>
+              <div class="tb-item"><div class="tb-dot"></div><div class="tb-label">Market</div></div>
+            </div>
+          </div>
+          <div class="comp-meta">
+            <div class="comp-name">Mobile Bottom Tab Bar</div>
+            <div class="comp-tokens">bg --shell · replaces sidebar on mobile entirely<br>active: --accent dot + white label · JetBrains Mono 7.5px</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════════
+     03 · COMPONENTS
+     ══════════════════════════════════════════════════════════ -->
+<div class="sec-rule"></div>
+<section id="components" class="sec">
+  <div class="wrap">
+    <p class="sec-ey">03 · Components</p>
+    <h2 class="sec-h">Component Library</h2>
+    <p class="sec-sub">All components use the Kit Light tokens. Interactive states: hover darkens bg by 8%, focus shows a 2px --accent ring. Disabled: opacity 0.45, pointer-events none.</p>
+
+    <!-- BUTTONS -->
+    <span class="label">Buttons</span>
+    <div class="comp-grid g3">
+      <div class="comp-card"><div class="comp-demo"><button class="btn btn-primary">Set My Squad</button></div><div class="comp-meta"><div class="comp-name">Primary</div><div class="comp-tokens">bg --accent · color #fff · font Archivo 600 13px<br>padding 10px 18px · radius --r 6px</div></div></div>
+      <div class="comp-card"><div class="comp-demo"><button class="btn btn-outline">View League</button></div><div class="comp-meta"><div class="comp-name">Outline</div><div class="comp-tokens">border 1.5px --accent · color --accent<br>transparent bg · same font + padding</div></div></div>
+      <div class="comp-card"><div class="comp-demo"><button class="btn btn-ghost">Cancel</button></div><div class="comp-meta"><div class="comp-name">Ghost</div><div class="comp-tokens">border 1.5px --rule · color --text-2<br>use for secondary / back actions</div></div></div>
+      <div class="comp-card"><div class="comp-demo"><button class="btn btn-gold">Make Captain</button></div><div class="comp-meta"><div class="comp-name">Gold (captain actions)</div><div class="comp-tokens">bg --gold #B8720E · color #fff<br>use for captain, urgent deadline CTAs</div></div></div>
+      <div class="comp-card"><div class="comp-demo"><button class="btn btn-danger">Sell Player</button></div><div class="comp-meta"><div class="comp-name">Danger</div><div class="comp-tokens">border 1.5px --neg · color --neg<br>for destructive / irreversible actions</div></div></div>
+      <div class="comp-card"><div class="comp-demo"><button class="btn btn-primary btn-sm">Quick Fill</button><button class="btn btn-ghost btn-sm">Invite</button></div><div class="comp-meta"><div class="comp-name">Small variant</div><div class="comp-tokens">font 11.5px · padding 7px 13px<br>same radius — use in toolbars / headers</div></div></div>
+    </div>
+
+    <!-- CHIPS & BADGES -->
+    <span class="label mt">Position Chips, Status &amp; Badges</span>
+    <div class="comp-grid g4">
+      <div class="comp-card"><div class="comp-demo"><span class="pos-chip pos-gk">GK</span><span class="pos-chip pos-def">DEF</span><span class="pos-chip pos-mid">MID</span><span class="pos-chip pos-fwd">FWD</span></div><div class="comp-meta"><div class="comp-name">Position Chips</div><div class="comp-tokens">JetBrains Mono 10px · 1.5px border currentColor<br>bg = position color at 8% opacity · radius 3px</div></div></div>
+      <div class="comp-card"><div class="comp-demo"><span class="status-pill s-fit"><span class="s-dot"></span>Fit</span><span class="status-pill s-doubt"><span class="s-dot"></span>Doubt</span><span class="status-pill s-out"><span class="s-dot"></span>Out</span></div><div class="comp-meta"><div class="comp-name">Player Status Pills</div><div class="comp-tokens">Fit --pos · Doubt --gold · Out --neg<br>bg at 10% · JetBrains Mono 9.5px · radius 100px</div></div></div>
+      <div class="comp-card">
+        <div class="comp-demo" style="gap:8px;">
+          <div class="mgr" style="background:rgba(26,111,168,.14);border:1px solid rgba(26,111,168,.35);color:#1A6FA8;">AW</div>
+          <div class="mgr" style="background:rgba(140,73,201,.14);border:1px solid rgba(140,73,201,.35);color:#8C49C9;">JL</div>
+          <div class="mgr" style="background:rgba(166,101,52,.14);border:1px solid rgba(166,101,52,.35);color:#A66534;">MR</div>
+          <div class="mgr" style="background:rgba(184,114,14,.14);border:1px solid rgba(184,114,14,.35);color:#B8720E;">EK</div>
+        </div>
+        <div class="comp-meta"><div class="comp-name">Manager Monogram</div><div class="comp-tokens">26px · border-radius 4px · each manager gets unique hue<br>bg = hue at 14% · border = hue at 35% · JetBrains Mono 10px</div></div>
+      </div>
+      <div class="comp-card"><div class="comp-demo"><span class="trend t-up">▲ 2</span><span class="trend t-dn">▼ 1</span><span class="trend t-flat" style="font-family:'JetBrains Mono';font-size:11px;">—</span><span class="you-tag">You</span></div><div class="comp-meta"><div class="comp-name">Trend &amp; "You" Tag</div><div class="comp-tokens">Trend: Archivo Black 11px · ▲ --pos · ▼ --neg · = --mute<br>You tag: JetBrains Mono 8px · --accent border · radius 2px</div></div></div>
+    </div>
+
+    <!-- CARDS -->
+    <span class="label mt">Card Variants</span>
+    <div class="comp-grid g3">
+      <div class="comp-card"><div class="comp-demo"><div class="kit-card card-pad" style="width:200px;"><div style="font-family:'Archivo Black';font-size:14px;margin-bottom:4px;">Standard Card</div><div style="font-size:13px;color:var(--text2);">White bg, --rule border, 6px radius. The base container for all content.</div></div></div><div class="comp-meta"><div class="comp-name">Card</div><div class="comp-tokens">bg --card · border 1px --rule · radius --r 6px · pad 16–24px</div></div></div>
+      <div class="comp-card"><div class="comp-demo"><div class="kit-card-acc card-pad" style="width:200px;"><div style="font-family:'Archivo Black';font-size:14px;margin-bottom:4px;">Accent Card</div><div style="font-size:13px;color:var(--text2);">Left 3px border signals something actionable or highlighted.</div></div></div><div class="comp-meta"><div class="comp-name">Accent Card (left border)</div><div class="comp-tokens">+ border-left: 3px solid --accent<br>use for active league, deadline, highlights</div></div></div>
+      <div class="comp-card"><div class="comp-demo"><div class="kit-card-elev card-pad" style="width:200px;"><div style="font-family:'Archivo Black';font-size:14px;margin-bottom:4px;">Elevated Surface</div><div style="font-size:13px;color:var(--text2);">Table headers, side panels, grouped metadata.</div></div></div><div class="comp-meta"><div class="comp-name">Elevated Card</div><div class="comp-tokens">bg --elev #EDEAE2 (slightly darker than bg)<br>used for panel headers, raised sections</div></div></div>
+    </div>
+
+    <!-- STANDINGS ROW — KEY PATTERN -->
+    <span class="label mt">Standings Row — Three-Tier Type Hierarchy</span>
+    <div style="background:var(--card); border:1px solid var(--rule); border-radius:var(--r); overflow:hidden; margin-bottom:14px;">
+      <div class="lb-header"><span>#</span><span>Manager</span><span style="text-align:right;">GW</span><span style="text-align:right;">TOT</span></div>
+      <div class="lb-row">
+        <div class="lb-rank top">1</div>
+        <div class="lb-mgr"><div class="mgr" style="background:rgba(26,111,168,.14);border:1px solid rgba(26,111,168,.35);color:#1A6FA8;font-size:10px;width:24px;height:24px;">AW</div><span class="lb-name">Alex Williams</span></div>
+        <div class="lb-gw">82</div>
+        <div class="lb-tot">344</div>
+      </div>
+      <div class="lb-row me">
+        <div class="lb-rank top">2</div>
+        <div class="lb-mgr"><div class="mgr" style="background:rgba(140,73,201,.14);border:1px solid rgba(140,73,201,.35);color:#8C49C9;font-size:10px;width:24px;height:24px;">JL</div><span class="lb-name">Jordan Lee</span><span class="you-tag" style="margin-left:6px;">You</span></div>
+        <div class="lb-gw">76</div>
+        <div class="lb-tot">331</div>
+      </div>
+      <div class="lb-row">
+        <div class="lb-rank">3</div>
+        <div class="lb-mgr"><div class="mgr" style="background:rgba(184,114,14,.14);border:1px solid rgba(184,114,14,.35);color:#B8720E;font-size:10px;width:24px;height:24px;">EK</div><span class="lb-name">Emma Kowalski</span></div>
+        <div class="lb-gw">71</div>
+        <div class="lb-tot">328</div>
+      </div>
+    </div>
+    <div style="background:var(--card); border:1px solid var(--rule); border-radius:var(--r); padding:16px 18px; font-size:13.5px; color:var(--text2); line-height:1.6;">
+      <strong style="color:var(--text); font-family:'Archivo Black'; font-size:13px;">Three-tier type hierarchy (Finding 03):</strong>&nbsp;
+      GW number = <code>--accent</code> Archivo Black 14px (lead — draws eye).
+      Manager name = <code>--text</code> Archivo Black 13.5px (primary).
+      TOT = <code>--text</code> Archivo Black (secondary).
+      Metadata labels = <code>--mute</code> JetBrains Mono 9px (label tier).
+      Your row: <code>--abg</code> background + 2px <code>--accent</code> left edge.
+    </div>
+
+    <!-- PLAYER MARKET ROW -->
+    <span class="label mt">Player Market Row</span>
+    <div style="background:var(--card); border:1px solid var(--rule); border-radius:var(--r); overflow:hidden; margin-bottom:14px;">
+      <div class="player-row">
+        <span class="pos-chip pos-fwd">FWD</span>
+        <div class="p-name"><b>Erling Haaland</b><span>Man City · Norway</span></div>
+        <div class="p-stat"><b style="color:var(--pos);">+12</b><span>FORM</span></div>
+        <div class="p-stat"><b>7.2</b><span>PPG</span></div>
+        <div class="p-price">€14M</div>
+        <button class="btn btn-primary btn-sm" style="margin-left:8px;">Sign</button>
+      </div>
+      <div class="player-row">
+        <span class="pos-chip pos-mid">MID</span>
+        <div class="p-name"><b>Bukayo Saka</b><span>Arsenal · England</span></div>
+        <div class="p-stat"><b style="color:var(--pos);">+8</b><span>FORM</span></div>
+        <div class="p-stat"><b>6.1</b><span>PPG</span></div>
+        <div class="p-price">€11M</div>
+        <button class="btn btn-ghost btn-sm" style="margin-left:8px;">View</button>
+      </div>
+    </div>
+    <div style="background:var(--card); border:1px solid var(--rule); border-radius:var(--r); padding:16px 18px; font-size:13.5px; color:var(--text2);">
+      <strong style="color:var(--text); font-family:'Archivo Black'; font-size:13px;">Player row anatomy:</strong>
+      Position chip → Player name (Archivo Black) + club (Mono muted) → Form delta (--pos/--neg) + PPG stat → Price (Archivo Black) → Action button.
+      On tap → opens a player drawer with full stats (Finding 04: progressive disclosure).
+    </div>
+
+    <!-- PITCH TOKEN -->
+    <span class="label mt">Player Pitch Token — Kit Light treatment</span>
+    <div style="background: #2D5A27; border-radius: var(--r); padding: 32px 24px; display:flex; flex-wrap:wrap; gap:20px; align-items:center; justify-content:center; margin-bottom:14px;">
+      <div style="position:relative;display:inline-block;">
+        <div class="pitch-tok">
+          <div class="cap-badge">C</div>
+          <div class="pn">Haaland</div>
+          <div class="pm"><span>MCI</span><span style="width:3px;height:3px;background:var(--mute);border-radius:50%;display:inline-block;"></span><b>12</b></div>
+        </div>
+      </div>
+      <div style="position:relative;display:inline-block;">
+        <div class="pitch-tok live" style="border-left-color:var(--neg);">
+          <div class="live-dot" style="position:absolute;top:-3px;right:-3px;"></div>
+          <div class="pn">Salah</div>
+          <div class="pm"><span>LIV</span><span style="width:3px;height:3px;background:var(--mute);border-radius:50%;display:inline-block;"></span><b style="color:var(--neg);">−2</b></div>
+        </div>
+      </div>
+      <div style="position:relative;display:inline-block;">
+        <div class="pitch-tok" style="border-left-color:var(--gk);">
+          <div class="pn">Raya</div>
+          <div class="pm"><span>ARS</span><span style="width:3px;height:3px;background:var(--mute);border-radius:50%;display:inline-block;"></span><b>6</b></div>
+        </div>
+      </div>
+    </div>
+    <div style="background:var(--card); border:1px solid var(--rule); border-radius:var(--r); padding:16px 18px; font-size:13.5px; color:var(--text2);">
+      <strong style="color:var(--text); font-family:'Archivo Black'; font-size:13px;">Pitch token on Kit Light:</strong>
+      bg <code>rgba(247,243,237,.97)</code> (warm white) on green pitch surface.
+      Box shadow: <code>0 1px 3px rgba(0,0,0,.18), 0 0 0 1px rgba(0,0,0,.06)</code> — essential for separation.
+      Left edge: 2px position color. Captain: gold circle badge top-left.
+      Live: replace rule border with <code>--neg</code> + red pulsing dot top-right.
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════════
+     04 · PATTERNS
+     ══════════════════════════════════════════════════════════ -->
+<div class="sec-rule"></div>
+<section id="patterns" class="sec">
+  <div class="wrap">
+    <p class="sec-ey">04 · Patterns</p>
+    <h2 class="sec-h">Screen-Level Patterns</h2>
+    <p class="sec-sub">Six new UX improvements introduced in the Kit Light direction. All are documented in full in <code>screens/FantasyKit UX Analysis.html</code>.</p>
+
+    <div class="comp-grid g2" style="margin-bottom:40px;">
+      <!-- Deadline banner -->
+      <div class="comp-card">
+        <div class="comp-demo" style="flex-direction:column; gap:12px; align-items:stretch;">
+          <div class="deadline">
+            <div class="dl-clock"><b>4h</b><span>Until GW28</span></div>
+            <div class="dl-body"><div class="dl-k">Finding 01 · Next action</div><div class="dl-t">Set your squad before the deadline</div><div class="dl-s">7 of 15 players confirmed — 8 left</div></div>
+            <button class="btn btn-primary btn-sm" style="flex-shrink:0;">Set Squad</button>
+          </div>
+          <div class="deadline urgent">
+            <div class="dl-clock"><b>22m</b><span>URGENT</span></div>
+            <div class="dl-body"><div class="dl-k">Deadline approaching</div><div class="dl-t">Confirm your squad now</div><div class="dl-s">Missing: captain + 3 subs</div></div>
+            <button class="btn btn-gold btn-sm" style="flex-shrink:0;">Fix Now</button>
+          </div>
+        </div>
+        <div class="comp-meta">
+          <div class="comp-name">Deadline Action Banner (Finding 01)</div>
+          <div class="comp-tokens">Standard: --accent left border + clock bg --abg<br>Urgent: --gold left border + clock bg --gbg<br>Replaces multiple competing CTA buttons</div>
+        </div>
+      </div>
+
+      <!-- Toast + empty state -->
+      <div style="display:flex; flex-direction:column; gap:14px;">
+        <div class="comp-card">
+          <div class="comp-demo dark" style="flex-direction:column; align-items:stretch; gap:10px;">
+            <div class="toast">
+              <div class="toast-ck">✓</div>
+              <div class="toast-tx"><b>Haaland signed</b><span>Budget updated · 3 transfers left</span></div>
+              <span class="toast-undo">Undo</span>
+            </div>
+          </div>
+          <div class="comp-meta">
+            <div class="comp-name">Toast Notification (Finding 05)</div>
+            <div class="comp-tokens">bg --shell · positive check --pos · Undo in #5FA9D6<br>auto-dismiss 4s · Undo halts dismiss · bottom of viewport</div>
+          </div>
+        </div>
+        <div class="comp-card">
+          <div class="comp-demo" style="flex-direction:column; align-items:stretch;">
+            <div class="empty">
+              <div class="empty-ico">⚽</div>
+              <b>Your squad is empty</b>
+              <p>Pick 15 players to start scoring points in your leagues</p>
+              <button class="btn btn-primary btn-sm">Pick Players</button>
+            </div>
+          </div>
+          <div class="comp-meta">
+            <div class="comp-name">Empty State (Finding 02)</div>
+            <div class="comp-tokens">1.5px dashed --rule border · --abg icon circle<br>Always includes a coaching CTA — never just blank</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Section label bar -->
+    <span class="label mt">Section Label Bar — used throughout</span>
+    <div style="background:var(--card); border:1px solid var(--rule); border-radius:var(--r); overflow:hidden; margin-bottom:14px;">
+      <div style="display:flex; align-items:center; gap:10px; padding:11px 18px; border-bottom:1px solid var(--rule); background:var(--elev);">
+        <div style="width:3px; height:14px; background:var(--accent); border-radius:1px; flex-shrink:0;"></div>
+        <span style="font-family:'JetBrains Mono';font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--text);font-weight:500;">League Activity</span>
+        <span style="font-family:'JetBrains Mono';font-size:10px;letter-spacing:.1em;color:var(--mute);">· Latest</span>
+        <span style="margin-left:auto; font-family:'JetBrains Mono';font-size:9.5px;letter-spacing:.06em;color:var(--accent);">View all →</span>
+      </div>
+    </div>
+    <div style="background:var(--card); border:1px solid var(--rule); border-radius:var(--r); padding:14px 18px; font-size:13.5px; color:var(--text2);">
+      Section label bar anatomy: <code>3px × 14px</code> solid bar in section tone + JetBrains Mono 10px label (.18em tracking, uppercase) + optional subtext + optional right action. Background: <code>--elev</code>. Border-bottom: 1px <code>--rule</code>.
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════════
+     05 · WHITE LABEL
+     ══════════════════════════════════════════════════════════ -->
+<div class="sec-rule"></div>
+<section id="whitelabel" class="sec">
+  <div class="wrap">
+    <p class="sec-ey">05 · White Label</p>
+    <h2 class="sec-h">3-Token Client Re-skin</h2>
+    <p class="sec-sub">A client override requires changing exactly three values. Everything else — typography, spacing, component shapes, layout patterns — stays constant. The system was designed for this from the ground up.</p>
+
+    <div style="display:grid; grid-template-columns: repeat(3,1fr); gap:16px; margin-bottom:32px;">
+      <!-- FantasyKit default -->
+      <div class="comp-card">
+        <div style="background:var(--shell); padding:14px 16px; display:flex; align-items:center; gap:10px;">
+          <div style="width:16px;height:16px;border-radius:4px;background:#1A6FA8;flex-shrink:0;"></div>
+          <span style="font-family:'Archivo Black';font-size:14px;color:#fff;letter-spacing:-0.01em;">FantasyKit</span>
+          <span style="font-family:'JetBrains Mono';font-size:9px;letter-spacing:.06em;color:rgba(255,255,255,.35);margin-left:auto;">DEFAULT</span>
+        </div>
+        <div style="padding:14px 16px;">
+          <div style="font-family:'JetBrains Mono';font-size:9.5px;letter-spacing:.08em;color:var(--mute);margin-bottom:8px;">--accent</div>
+          <div style="font-family:'Archivo Black';font-size:15px;color:#1A6FA8;margin-bottom:12px;">#1A6FA8</div>
+          <div class="lb-row" style="border:1px solid var(--rule);border-radius:var(--rsm);padding:10px;"><div class="lb-rank top" style="font-size:12px;">1</div><div class="lb-mgr"><span class="lb-name" style="font-size:13px;">Alex Williams</span></div><div class="lb-gw" style="font-size:13px;">82</div><div class="lb-tot" style="font-size:13px;">344</div></div>
+        </div>
+      </div>
+
+      <!-- La Liga red -->
+      <div class="comp-card" style="border-color: rgba(207,23,50,.3);">
+        <div style="background:#1a0a0e; padding:14px 16px; display:flex; align-items:center; gap:10px;">
+          <div style="width:16px;height:16px;border-radius:4px;background:#CF1732;flex-shrink:0;"></div>
+          <span style="font-family:'Archivo Black';font-size:14px;color:#fff;letter-spacing:-0.01em;">La Liga Fantasy</span>
+          <span style="font-family:'JetBrains Mono';font-size:9px;letter-spacing:.06em;color:rgba(255,255,255,.35);margin-left:auto;">RED SKIN</span>
+        </div>
+        <div style="padding:14px 16px;">
+          <div style="font-family:'JetBrains Mono';font-size:9.5px;letter-spacing:.08em;color:var(--mute);margin-bottom:8px;">--accent swapped to</div>
+          <div style="font-family:'Archivo Black';font-size:15px;color:#CF1732;margin-bottom:12px;">#CF1732</div>
+          <div style="border:1px solid var(--rule);border-radius:var(--rsm);padding:10px;display:grid;grid-template-columns:28px 1fr 52px 52px;gap:12px;align-items:center;"><div style="font-family:'Archivo Black';font-size:12px;color:#CF1732;">1</div><div style="font-family:'Archivo Black';font-size:13px;">Rodríguez, J.</div><div style="font-family:'Archivo Black';font-size:13px;color:#CF1732;text-align:right;">78</div><div style="font-family:'Archivo Black';font-size:13px;text-align:right;">344</div></div>
+        </div>
+      </div>
+
+      <!-- Custom brand slot -->
+      <div class="comp-card" style="border-style:dashed;">
+        <div style="background:var(--elev); padding:14px 16px; display:flex; align-items:center; gap:10px;">
+          <div style="width:16px;height:16px;border-radius:4px;border:1.5px dashed var(--mute);flex-shrink:0;"></div>
+          <span style="font-family:'Archivo Black';font-size:14px;color:var(--mute);letter-spacing:-0.01em;">Your Brand</span>
+          <span style="font-family:'JetBrains Mono';font-size:9px;letter-spacing:.06em;color:var(--mute);margin-left:auto;">CUSTOM</span>
+        </div>
+        <div style="padding:20px 16px;">
+          <div style="font-family:'JetBrains Mono';font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--mute);margin-bottom:16px;">Change only these 3 values:</div>
+          <div style="display:flex;flex-direction:column;gap:10px;">
+            <div style="display:flex;align-items:center;gap:10px;"><code style="flex-shrink:0;">--accent</code><span style="font-size:13px;color:var(--text2);">Your primary brand colour</span></div>
+            <div style="display:flex;align-items:center;gap:10px;"><code style="flex-shrink:0;">--brand-name</code><span style="font-size:13px;color:var(--text2);">Your logo / wordmark</span></div>
+            <div style="display:flex;align-items:center;gap:10px;"><code style="flex-shrink:0;">data</code><span style="font-size:13px;color:var(--text2);">League &amp; team names</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="full-card">
+      <div style="font-family:'Archivo Black';font-size:16px;letter-spacing:-0.01em;margin-bottom:10px;">What stays constant across all clients</div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;font-size:13.5px;color:var(--text2);">
+        <div><strong style="color:var(--text);font-size:13px;display:block;margin-bottom:6px;">Typography</strong>Archivo Black · Archivo · JetBrains Mono. Always. No font substitution per client.</div>
+        <div><strong style="color:var(--text);font-size:13px;display:block;margin-bottom:6px;">Spacing &amp; radius</strong>4px base scale · 6px radius. Clients cannot request different padding or corner styles.</div>
+        <div><strong style="color:var(--text);font-size:13px;display:block;margin-bottom:6px;">Component shapes</strong>All buttons, cards, chips, rows stay identical. The accent colour cascades into them automatically.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="footer">
+  <div class="wrap footer-in">
+    <div class="footer-brand">Fantasy<em>Kit</em></div>
+    <div class="footer-meta">Kit Design System · Direction 1 · June 2026 · For Claude Code handoff</div>
+  </div>
+</footer>
+
+</body>
+</html>

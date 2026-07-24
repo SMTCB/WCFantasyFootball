@@ -6,7 +6,7 @@ import { useAuth } from '../hooks/useAuth';
 
 const REFRESH_MS = 60 * 1000; // 60s safety-net poll — Realtime handles sub-second updates
 
-const LEAGUE_TONES = ['#00B4D8', '#E0A800', '#A855F7', '#22C55E', '#F59E0B'];
+const LEAGUE_TONES = ['#1A6FA8', '#E0A800', '#A855F7', '#166534', '#F59E0B'];
 
 import { POS_ORDER, POS_PITCH_Y as POS_Y } from '../lib/formations';
 import ScoringInfoModal from '../components/ScoringInfoModal';
@@ -64,19 +64,19 @@ function MiniPitch({ players, activeLeague, gwLabel }) {
   return (
     <div style={{
       position: 'relative', width: '100%', height: '100%',
-      background: 'linear-gradient(180deg, #0E1218 0%, #0A0D12 100%)',
+      background: 'linear-gradient(180deg, var(--shell) 0%, var(--shell) 100%)',
       borderRadius: 6, overflow: 'hidden',
       boxShadow: 'inset 0 0 0 1px var(--rule)',
     }}>
       {/* position guide lines */}
       {[14, 38, 64, 88].map(y => (
-        <div key={y} style={{ position: 'absolute', left: 18, right: 18, top: `${y}%`, height: 1, background: 'rgba(0,180,216,.08)' }} />
+        <div key={y} style={{ position: 'absolute', left: 18, right: 18, top: `${y}%`, height: 1, background: 'rgba(26,111,168,.08)' }} />
       ))}
       {[{ y: 14, label: 'FWD' }, { y: 38, label: 'MID' }, { y: 64, label: 'DEF' }, { y: 88, label: 'GK' }].map(l => (
-        <div key={l.label} className="font-mono" style={{ position: 'absolute', left: 10, top: `${l.y}%`, transform: 'translateY(-50%)', fontSize: 8, color: 'rgba(0,180,216,.45)', background: '#0A0D12', padding: '1px 3px' }}>{l.label}</div>
+        <div key={l.label} className="font-mono" style={{ position: 'absolute', left: 10, top: `${l.y}%`, transform: 'translateY(-50%)', fontSize: 8, color: 'color-mix(in srgb, var(--accent) 55%, transparent)', background: 'var(--shell)', padding: '1px 3px' }}>{l.label}</div>
       ))}
       {/* centre circle */}
-      <div style={{ position: 'absolute', left: '50%', top: '50%', transform: 'translate(-50%,-50%)', width: '30%', aspectRatio: '1', borderRadius: '50%', border: '1px solid rgba(242,238,229,.04)' }} />
+      <div style={{ position: 'absolute', left: '50%', top: '50%', transform: 'translate(-50%,-50%)', width: '30%', aspectRatio: '1', borderRadius: '50%', border: '1px solid rgba(255,255,255,.05)' }} />
       {/* header */}
       <div style={{ position: 'absolute', top: 10, left: 14, right: 14, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div className="font-mono" style={{ fontSize: 9, color: 'var(--mute)', letterSpacing: '.22em' }}>STARTING XI · {formation}</div>
@@ -118,10 +118,10 @@ function MiniTok({ p, activeLeague }) {
       <div style={{
         position: 'relative',
         padding: '4px 6px',
-        background: 'rgba(15,18,24,.94)',
-        border: `1px solid ${isCaptain ? 'rgba(255,196,0,.5)' : 'var(--rule)'}`,
+        background: 'var(--card)',
+        border: `1px solid ${isCaptain ? 'rgba(184,114,14,.5)' : 'var(--rule)'}`,
         borderLeft: `2px solid ${isCaptain ? 'var(--gold)' : tone}`,
-        borderRadius: 2,
+        borderRadius: 4,
         minWidth: cardMinW, maxWidth: cardMinW + 10, textAlign: 'center',
         boxShadow: isCaptain ? '0 0 0 1px rgba(255,196,0,.15)' : 'none',
         overflow: 'hidden',
@@ -191,7 +191,7 @@ function DesktopStatsRow({ s }) {
             {tags.map(t => (
               <span key={t.label} className="font-mono" style={{
                 fontSize: 8, padding: '1px 5px', borderRadius: 2,
-                background: t.neg ? 'rgba(239,68,68,.15)' : 'rgba(34,197,94,.12)',
+                background: t.neg ? 'var(--neg-bg)' : 'var(--pos-bg)',
                 color: t.neg ? 'var(--danger)' : 'var(--positive)',
                 letterSpacing: '.1em',
               }}>{t.label}</span>
@@ -253,7 +253,7 @@ function StatsLogRow({ s }) {
               <span key={t} className="font-mono" style={{
                 fontSize: 8, padding: '1px 5px', borderRadius: 2,
                 background: t.startsWith('−') || t === 'YC' || t === 'RC' || t === 'PM'
-                  ? 'rgba(239,68,68,.15)' : 'rgba(34,197,94,.12)',
+                  ? 'var(--neg-bg)' : 'var(--pos-bg)',
                 color: t.startsWith('−') || t === 'YC' || t === 'RC' || t === 'PM'
                   ? 'var(--danger)' : 'var(--positive)',
                 letterSpacing: '.1em',
@@ -376,6 +376,7 @@ export default function LiveScreen() {
   const [mobileTab,     setMobileTab]     = useState('squad');
   const [currentGW,     setCurrentGW]     = useState('—');
   const [benchPlayers,  setBenchPlayers]  = useState([]);
+  const [allFixtures,   setAllFixtures]   = useState([]);
 
   const initialSet = useRef(false);
 
@@ -453,6 +454,22 @@ export default function LiveScreen() {
         awayGoals: f.away_score ?? 0,
       }));
       setLiveFixtures(enrichedFix);
+
+      // All fixtures for the active matchday — used by the FIXTURES tab.
+      if (activeMatchdayIds.length) {
+        const { data: allFix = [] } = await supabase
+          .from('fixtures')
+          .select('id, home_team, away_team, status, kickoff_at, minute, home_score, away_score, tournament_id, matchday_id')
+          .in('matchday_id', activeMatchdayIds)
+          .order('kickoff_at', { ascending: true });
+        setAllFixtures((allFix || []).map(f => ({
+          ...f,
+          homeGoals: f.home_score ?? 0,
+          awayGoals: f.away_score ?? 0,
+        })));
+      } else if (enrichedFix.length) {
+        setAllFixtures(enrichedFix);
+      }
 
       // Stats window: live fixtures + all finished fixtures in the active matchday(s).
       // Using matchday scope (not a time window) so multi-day WC matchdays stay visible
@@ -763,7 +780,9 @@ export default function LiveScreen() {
     } finally {
       setLoading(false);
     }
-  // activeLeague?.id in deps so the squad re-fetches whenever the user switches leagues
+  // activeLeague?.id covers tournament switches — tournamentId is read inside fetchAll via
+  // the same activeLeague object so it changes atomically with .id.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id, activeLeague?.id]);
 
   useEffect(() => {
@@ -861,9 +880,9 @@ export default function LiveScreen() {
                 {lg.windowStatus && (
                   <span className="font-mono" style={{
                     fontSize: 8, letterSpacing: '.12em', padding: '1px 5px',
-                    border: `1px solid ${lg.windowStatus === 'open' ? 'rgba(34,197,94,.35)' : 'var(--rule)'}`,
+                    border: `1px solid ${lg.windowStatus === 'open' ? 'rgba(22,101,52,.35)' : 'var(--rule)'}`,
                     color: lg.windowStatus === 'open' ? 'var(--positive)' : 'var(--mute)',
-                    background: lg.windowStatus === 'open' ? 'rgba(34,197,94,.07)' : 'transparent',
+                    background: lg.windowStatus === 'open' ? 'var(--pos-bg)' : 'transparent',
                   }}>
                     {lg.windowStatus === 'open'
                       ? `OPEN${lg.windowClosesAt ? ' · ' + new Date(lg.windowClosesAt).toLocaleString([], { weekday: 'short', hour: '2-digit', minute: '2-digit' }) : ''}`
@@ -1215,8 +1234,9 @@ export default function LiveScreen() {
         {/* Segmented tabs */}
         <div style={{ display: 'flex', padding: '0 18px', borderBottom: '1px solid var(--rule)' }}>
           {[
-            { id: 'squad',  label: `MY XI · ${activeLeague?.short || '—'}` },
-            { id: 'events', label: liveStatsLog.length > 0 ? `POINTS · ${liveStatsLog.length}` : 'POINTS' },
+            { id: 'squad',    label: `MY XI · ${activeLeague?.short || '—'}` },
+            { id: 'events',   label: liveStatsLog.length > 0 ? `POINTS · ${liveStatsLog.length}` : 'POINTS' },
+            { id: 'fixtures', label: allFixtures.length > 0 ? `FIXTURES · ${allFixtures.length}` : 'FIXTURES' },
           ].map(t => {
             const isActive = mobileTab === t.id;
             return (
@@ -1293,10 +1313,10 @@ export default function LiveScreen() {
                     <div style={{ borderTop: '1px solid var(--rule)', paddingTop: 8, marginTop: 4 }}>
                       <div className="font-mono" style={{ fontSize: 9, color: 'var(--mute)', letterSpacing: '.16em', margin: '4px 0 8px' }}>BENCH · {benchPlayers.length}</div>
                       {benchPlayers.map((p, idx) => (
-                        <div key={p.id} style={{ display: 'grid', gridTemplateColumns: '18px 1fr auto', gap: 10, alignItems: 'center', padding: '7px 0', borderTop: idx ? '1px solid rgba(242,238,229,.04)' : 'none' }}>
+                        <div key={p.id} style={{ display: 'grid', gridTemplateColumns: '18px 1fr auto', gap: 10, alignItems: 'center', padding: '7px 0', borderTop: idx ? '1px solid rgba(24,32,46,.06)' : 'none' }}>
                           <div className="font-mono" style={{ fontSize: 8, color: 'var(--mute)', opacity: .6 }}>{idx + 1}</div>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                            <span style={{ width: 5, height: 5, borderRadius: '50%', background: p.live ? 'var(--danger)' : 'rgba(242,238,229,.2)', flexShrink: 0 }} className={p.live ? 'animate-live-pulse' : ''} />
+                            <span style={{ width: 5, height: 5, borderRadius: '50%', background: p.live ? 'var(--danger)' : 'rgba(24,32,46,.2)', flexShrink: 0 }} className={p.live ? 'animate-live-pulse' : ''} />
                             <span style={{ fontFamily: 'Archivo Black', fontSize: 12, letterSpacing: '-0.01em' }}>{(p.name || '').split(' ').pop().toUpperCase()}</span>
                             <span className="font-mono" style={{ fontSize: 8, color: 'var(--mute)' }}>{p.position}</span>
                           </div>
@@ -1308,7 +1328,73 @@ export default function LiveScreen() {
                 </>
               )}
             </div>
+          ) : mobileTab === 'fixtures' ? (
+            /* ── FIXTURES tab ─── */
+            <div style={{ padding: '8px 18px 32px' }}>
+              {allFixtures.length === 0 ? (
+                nextFixture ? (
+                  <div style={{ padding: '24px 0', textAlign: 'center' }}>
+                    <div className="font-mono" style={{ fontSize: 9, color: 'var(--mute)', letterSpacing: '.18em', marginBottom: 12 }}>NEXT MATCH</div>
+                    <div style={{ fontFamily: 'Archivo Black', fontSize: 18 }}>
+                      {teamCode(nextFixture.home_team)}
+                      <span style={{ color: 'var(--mute)', margin: '0 10px', fontFamily: 'Archivo, sans-serif', fontWeight: 400 }}>vs</span>
+                      {teamCode(nextFixture.away_team)}
+                    </div>
+                    <div className="font-mono" style={{ fontSize: 10, color: 'var(--mute)', marginTop: 8 }}>
+                      {nextFixture.kickoff_at ? new Date(nextFixture.kickoff_at).toLocaleDateString('en-GB', { weekday: 'short', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : '—'}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="font-mono" style={{ fontSize: 10, color: 'var(--mute)', padding: '24px 0', textAlign: 'center', letterSpacing: '.18em' }}>NO FIXTURES THIS ROUND</div>
+                )
+              ) : (
+                allFixtures.map((f, i) => {
+                  const isLive = f.status === 'live';
+                  const isFT   = f.status === 'finished';
+                  const isPST  = f.status === 'postponed' || f.status === 'cancelled' || f.status === 'abandoned';
+                  const isHT   = f.minute === 45 || f.status === 'halftime';
+                  const statusLabel = isPST ? 'PST' : isFT ? 'FT' : isHT ? 'HT' : isLive && f.minute ? `${f.minute}'` : null;
+                  return (
+                    <div
+                      key={f.id}
+                      style={{
+                        display: 'flex', alignItems: 'center', gap: 12,
+                        padding: '11px 0',
+                        borderTop: i ? '1px solid var(--rule)' : 'none',
+                      }}
+                    >
+                      <div style={{ width: 36, flexShrink: 0, textAlign: 'center' }}>
+                        {isLive ? (
+                          <span className="animate-live-pulse" style={{ display: 'inline-block', width: 7, height: 7, borderRadius: '50%', background: 'var(--danger)' }} />
+                        ) : (
+                          <span className="font-mono" style={{ fontSize: 9, color: isPST ? 'var(--gold)' : 'var(--mute)', letterSpacing: '.1em' }}>
+                            {statusLabel || new Date(f.kickoff_at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}
+                          </span>
+                        )}
+                      </div>
+                      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 2 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                          <span style={{ fontFamily: 'Archivo Black', fontSize: 13, letterSpacing: '-0.01em' }}>{teamCode(f.home_team)}</span>
+                          {(isFT || isLive || isHT) ? (
+                            <span style={{ fontFamily: 'Archivo Black', fontSize: 16, color: 'var(--cyan)', margin: '0 10px' }}>{f.homeGoals}–{f.awayGoals}</span>
+                          ) : (
+                            <span className="font-mono" style={{ fontSize: 10, color: 'var(--mute)', margin: '0 10px' }}>vs</span>
+                          )}
+                          <span style={{ fontFamily: 'Archivo Black', fontSize: 13, letterSpacing: '-0.01em' }}>{teamCode(f.away_team)}</span>
+                        </div>
+                        {isLive && statusLabel && (
+                          <div className="font-mono" style={{ fontSize: 9, color: 'var(--danger)', letterSpacing: '.14em', textAlign: 'center' }}>
+                            {isHT ? 'HALF TIME' : `${statusLabel} MIN`}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
           ) : (
+            /* ── EVENTS / POINTS LOG tab ─── */
             <>
               <div style={{ padding: '12px 18px 0' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -1323,7 +1409,6 @@ export default function LiveScreen() {
                     <span className="font-mono" style={{ fontSize: 9, color: 'var(--mute)', marginLeft: 'auto' }}>FINAL</span>
                   ) : null}
                 </div>
-                {/* Preliminary disclaimer — shown only during a live match */}
                 {hasLiveForActiveTournament && liveStatsLog.length > 0 && (
                   <div className="font-mono" style={{ fontSize: 8, color: 'var(--mute)', letterSpacing: '.12em', marginTop: 5, paddingLeft: 11, opacity: .7 }}>
                     PRELIMINARY — FINAL POINTS CALCULATED AFTER THE MATCH

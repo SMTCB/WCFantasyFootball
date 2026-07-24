@@ -1,0 +1,70 @@
+/* ── Forzakit shared tokens (lifted from the pitch deck) ───── */
+:root{
+  --paper:#F2EEE5;
+  --ink:#080A0E;
+  --ink-2:#0F1218;
+  --ink-3:#161B25;
+  --ink-4:#1E2530;
+  --mute:#8B95A1;
+  --rule:#1E2530;
+  --pitch:#0F1218;
+  --chalk:#F2EEE5;
+  --cyan:#00B4D8;
+  --gold:#E0A800;
+  --positive:#22C55E;
+  --warn:#F59E0B;
+  --danger:#EF4444;
+  --purple:#A855F7;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:#06070A;color:var(--paper);font-family:'Archivo',sans-serif;}
+
+.display{font-family:'Archivo Black',sans-serif;font-weight:900;letter-spacing:-0.02em;line-height:0.9;text-transform:uppercase}
+.mono{font-family:'JetBrains Mono',monospace;text-transform:uppercase;letter-spacing:.14em}
+.eyebrow{font-family:'JetBrains Mono',monospace;letter-spacing:.22em;text-transform:uppercase;color:var(--mute);font-weight:500;font-size:11px}
+
+/* Artboard chrome */
+.sq-frame{
+  background:var(--ink);
+  color:var(--paper);
+  width:100%;height:100%;
+  display:flex;flex-direction:column;
+  font-family:'Archivo',sans-serif;
+  position:relative;
+}
+.sq-topbar{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:18px 24px;border-bottom:1px solid var(--rule);
+}
+.sq-topbar .left{display:flex;align-items:center;gap:14px}
+.sq-topbar .wm{font-family:'Archivo Black',sans-serif;font-size:18px;letter-spacing:-0.01em}
+.sq-topbar .wm b{color:var(--cyan)}
+.sq-topbar .crumb{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--mute)}
+.sq-topbar .right{display:flex;align-items:center;gap:18px}
+.sq-topbar .budget{font-family:'Archivo Black',sans-serif;font-size:18px}
+.sq-topbar .budget span{color:var(--mute);font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.14em;margin-right:8px;font-weight:400}
+
+.sq-tabs{display:flex;gap:24px;padding:14px 24px;border-bottom:1px solid var(--rule)}
+.sq-tabs .tab{font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--mute);padding-bottom:6px;position:relative}
+.sq-tabs .tab.active{color:var(--paper)}
+.sq-tabs .tab.active::after{content:"";position:absolute;left:0;right:0;bottom:-15px;height:2px;background:var(--cyan)}
+.sq-tabs .tab .dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--danger);margin-left:6px;vertical-align:middle}
+
+/* Common pitch sizing helper — formation: 4-3-3 + GK */
+.formation{
+  display:grid;
+  grid-template-rows: 1fr 1fr 1fr 1fr;
+  align-items:center;
+  height:100%;
+  padding:24px 0;
+}
+.row{display:flex;justify-content:space-around;align-items:center}
+.row.fwd{justify-content:space-around;padding:0 8%}
+.row.mid{justify-content:space-around;padding:0 4%}
+.row.def{justify-content:space-around;padding:0 0}
+.row.gk{justify-content:center}
+
+/* Status colors */
+.s-fit{background:var(--positive)}
+.s-doubt{background:var(--gold)}
+.s-out{background:var(--danger)}

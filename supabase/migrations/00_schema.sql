@@ -1,3 +1,12 @@
+-- 0. Enable extensions used by later migrations' cron/http calls.
+-- On hosted Supabase these are pre-enabled by the platform outside migration
+-- history, so no earlier migration ever created them explicitly — a fresh
+-- local rebuild (db reset) has neither, and every cron.schedule()/net.http_post()
+-- call from migration 03 onward fails with "schema does not exist" without this.
+-- IF NOT EXISTS makes this a no-op anywhere they're already enabled (prod/main).
+CREATE EXTENSION IF NOT EXISTS pg_cron;
+CREATE EXTENSION IF NOT EXISTS pg_net;
+
 -- 1. Create Enums if missing
 DO $$ BEGIN CREATE TYPE league_format AS ENUM ('classic', 'auction', 'noduplicate', 'hybrid'); EXCEPTION WHEN duplicate_object THEN null; END $$;
 DO $$ BEGIN CREATE TYPE match_status AS ENUM ('scheduled', 'live', 'finished'); EXCEPTION WHEN duplicate_object THEN null; END $$;

@@ -51,12 +51,12 @@ export default function NotificationPanel({ notifications, unreadCount, onMarkAs
       {isOpen && (
         <div
           className="absolute top-full right-0 mt-2 w-80 rounded-md shadow-2xl z-50 overflow-hidden"
-          style={{ background: '#0F1218', border: '1px solid rgba(255,255,255,0.15)', isolation: 'isolate' }}
+          style={{ background: 'var(--card)', border: '1px solid var(--rule)', isolation: 'isolate' }}
         >
           {/* Header */}
           <div
             className="flex items-center justify-between px-4 py-3"
-            style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}
+            style={{ borderBottom: '1px solid var(--rule)' }}
           >
             <span
               className="text-[11px] font-black uppercase tracking-widest"
@@ -85,10 +85,10 @@ export default function NotificationPanel({ notifications, unreadCount, onMarkAs
               notifications.map((n) => (
                 <div
                   key={n.id}
-                  className="relative flex items-start gap-3 px-4 py-3 cursor-pointer transition-colors hover:bg-white/5"
+                  className="relative flex items-start gap-3 px-4 py-3 cursor-pointer transition-colors hover:bg-black/5"
                   style={{
-                    borderBottom: '1px solid rgba(255,255,255,0.04)',
-                    background: !n.is_read ? 'rgba(0,180,216,0.04)' : undefined,
+                    borderBottom: '1px solid var(--rule)',
+                    background: !n.is_read ? 'var(--accent-bg)' : undefined,
                   }}
                   onClick={() => {
                     if (!n.is_read) onMarkAsRead?.(n.id);

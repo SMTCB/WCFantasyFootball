@@ -20,8 +20,8 @@ test.describe.configure({ retries: 0 });
 
 // ── Config ────────────────────────────────────────────────────────────────────
 
-const SUPABASE_URL      = 'https://sssmvihxtqtohisghjet.supabase.co';
-const SUPABASE_ANON_KEY = 'sb_publishable_IQF1vJEiydutRmDa6XgDUA_FHTlWX0b';
+const SUPABASE_URL      = process.env.SUPABASE_URL || 'https://sssmvihxtqtohisghjet.supabase.co';
+const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY || 'sb_publishable_IQF1vJEiydutRmDa6XgDUA_FHTlWX0b';
 const E2E_SECRET        = 'forzakit-e2e-2026';
 
 const EPL_TOURNAMENT  = '426'; // Premier League 2025-26
@@ -74,7 +74,7 @@ async function provisionTestUsers() {
 
 /** Inject a Supabase session into a Playwright page before navigation. */
 function injectSession(page, session) {
-  const projectRef = 'sssmvihxtqtohisghjet';
+  const projectRef = SUPABASE_URL.match(/\/\/([^.]+)\./)?.[1] ?? 'sssmvihxtqtohisghjet';
   const key        = `sb-${projectRef}-auth-token`;
   const value      = JSON.stringify({
     access_token:  session.access_token,

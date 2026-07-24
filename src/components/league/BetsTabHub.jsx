@@ -129,9 +129,8 @@ const CAT_ORDER = ['match', 'stats', 'players', 'custom'];
 
 function BetSection({ label, sub, tone, bets, squadId, onSubmitted, collapsible, defaultOpen, categoriesCollapsible }) {
   const [open, setOpen] = useState(defaultOpen);
-  if (!bets.length) return null;
 
-  // Group by category
+  // Group by category — must be before any early return (hooks rules)
   const byCategory = useMemo(() => {
     const map = {};
     for (const bet of bets) {
@@ -141,6 +140,8 @@ function BetSection({ label, sub, tone, bets, squadId, onSubmitted, collapsible,
     }
     return map;
   }, [bets]);
+
+  if (!bets.length) return null;
 
   const cats = CAT_ORDER.filter(c => byCategory[c]?.length);
   const showCategoryLabels = cats.length > 1;

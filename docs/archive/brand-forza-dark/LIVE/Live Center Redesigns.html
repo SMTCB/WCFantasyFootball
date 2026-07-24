@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>FORZAKIT — Live Centre Redesigns</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Archivo:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="squad-shared.css">
+<style>
+  @keyframes fkPulse { 0%,100%{opacity:1} 50%{opacity:.35} }
+  button:focus{outline:none}
+</style>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel" src="design-canvas.jsx"></script>
+<script type="text/babel" src="squad-data.jsx"></script>
+<script type="text/babel" src="final-squad-desktop.jsx"></script>
+<script type="text/babel" src="live-data.jsx"></script>
+<script type="text/babel" src="live-desktop.jsx"></script>
+<script type="text/babel" src="live-mobile.jsx"></script>
+
+<script type="text/babel" data-presets="react">
+function App(){
+  return (
+    <DesignCanvas
+      title="FORZAKIT · Live Centre — Chosen direction"
+      subtitle="Desktop V1 with league selector: click a league to swap the squad shown on the pitch. Mobile pairs M1's big league cards with M2's tabs. Events feed is always cross-league (every player, every league)."
+    >
+      <DCSection id="chosen" title="Chosen direction — Live Centre">
+        <DCArtboard id="d-final" label="Desktop · Click a league card to scope the pitch · Events stay cross-league" width={1440} height={920} background="#06070A">
+          <LiveV1Desktop/>
+        </DCArtboard>
+        <DCArtboard id="m-final-events" label="Mobile · Default tab = Events (all leagues)" width={390} height={920} background="#06070A">
+          <LiveMobileFinal initialTab="events"/>
+        </DCArtboard>
+        <DCArtboard id="m-final-squad" label="Mobile · Squad tab — captain follows the picked league" width={390} height={920} background="#06070A">
+          <LiveMobileFinal initialTab="squad"/>
+        </DCArtboard>
+        <DCArtboard id="m-final-alt" label="Mobile · Sunday League Kings selected — Triple Captain Abraham (3×C)" width={390} height={920} background="#06070A">
+          <LiveMobileFinal initialLeague="sunday" initialTab="squad"/>
+        </DCArtboard>
+      </DCSection>
+
+      <DCSection id="system" title="How it behaves">
+        <DCArtboard id="notes" label="Interaction model" width={1280} height={420} background="#0F1218">
+          <div style={{padding:'30px 40px',color:'var(--paper)',background:'#0F1218',fontFamily:'Archivo,sans-serif',height:'100%',display:'flex',flexDirection:'column',gap:12}}>
+            <div className="eyebrow">SYSTEM · Live Centre</div>
+            <div className="display" style={{fontSize:28,letterSpacing:'-0.02em'}}>One pitch, one feed, four leagues — never confused.</div>
+            <div style={{display:'grid',gridTemplateColumns:'repeat(4, 1fr)',gap:24,marginTop:6,fontSize:12,lineHeight:1.55,color:'#C9CDD3'}}>
+              <div>
+                <div className="mono" style={{fontSize:10,color:'var(--cyan)',marginBottom:6}}>LEAGUE SELECTOR</div>
+                Four cards across the top of the body show every Forza Fantasy League you're in, with live total + delta. Tap to focus a league. The active card gets the league's tone wash + 2px bottom edge.
+              </div>
+              <div>
+                <div className="mono" style={{fontSize:10,color:'var(--cyan)',marginBottom:6}}>PITCH = SCOPED</div>
+                The mini pitch reflects the focused league's setup — captain marker (gold C) shifts to the right player, Triple Captain shows "3" instead of "C", and the pitch title carries the league name.
+              </div>
+              <div>
+                <div className="mono" style={{fontSize:10,color:'var(--cyan)',marginBottom:6}}>EVENTS = CROSS-LEAGUE</div>
+                The feed always shows every player in every league. Same goal in 3 leagues = 3 rows, each with its own delta (chips/captains can make them differ). The league chip on every row keeps it readable.
+              </div>
+              <div>
+                <div className="mono" style={{fontSize:10,color:'var(--cyan)',marginBottom:6}}>MOBILE PARITY</div>
+                Same selector model — bigger cards because they need to be tappable. Tabs: <b>MY XI</b> (scoped) and <b>EVENTS</b> (cross-league). Switching league updates the captain marker on the Squad tab.
+              </div>
+            </div>
+          </div>
+        </DCArtboard>
+      </DCSection>
+
+      <DCSection id="explorations" title="Earlier explorations (reference)">
+        <DCArtboard id="v2-d" label="V2 · Banner pitch + grouped feed (one card per real-world event)" width={1440} height={1100} background="#06070A">
+          <LiveV2Desktop/>
+        </DCArtboard>
+        <DCArtboard id="v3-d" label="V3 · Three-pane with league rail (more compressed)" width={1440} height={900} background="#06070A">
+          <LiveV3Desktop/>
+        </DCArtboard>
+        <DCArtboard id="m1" label="M1 · Earlier mobile — full team list above feed" width={390} height={920} background="#06070A">
+          <LiveMobileV1/>
+        </DCArtboard>
+        <DCArtboard id="m3" label="M3 · Earlier mobile — summary-first single league" width={390} height={920} background="#06070A">
+          <LiveMobileV3/>
+        </DCArtboard>
+      </DCSection>
+    </DesignCanvas>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>

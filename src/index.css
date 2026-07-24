@@ -1,87 +1,127 @@
 @import "tailwindcss";
 
 @theme {
-  /* ── Forza Fantasy League Surfaces ──────────────────────────── */
-  --color-ink:   #080A0E;
-  --color-ink-2: #0F1218;
-  --color-ink-3: #161B25;
-  --color-rule:  #1E2530;
+  /* ── FantasyKit — Kit Light surfaces ────────────────────────── */
+  --color-ink:   #F7F3ED;   /* page background (warm off-white)   */
+  --color-ink-2: #FFFFFF;   /* card surface                        */
+  --color-ink-3: #EDEAE2;   /* elevated panels / table headers     */
+  --color-rule:  #E2DDD5;   /* borders and dividers                */
 
   /* ── Backward-compat aliases ─────────────────────────────────── */
-  --color-bg:               #080A0E;
-  --color-surface:          #0F1218;
-  --color-surface-2:        #161B25;
-  --color-surface-3:        #161B25;
-  --color-surface-elevated: #161B25;
-  --color-border:           #1E2530;
-  --color-border-2:         #1E2530;
+  --color-bg:               #F7F3ED;
+  --color-surface:          #FFFFFF;
+  --color-surface-2:        #EDEAE2;
+  --color-surface-3:        #EDEAE2;
+  --color-surface-elevated: #EDEAE2;
+  --color-border:           #E2DDD5;
+  --color-border-2:         #E2DDD5;
 
   /* ── Foreground ─────────────────────────────────────────────── */
-  --color-paper: #F2EEE5;
-  --color-mute:  #8B95A1;
+  --color-paper: #18202E;   /* primary text (dark navy)            */
+  --color-mute:  #8A97A8;   /* muted labels / metadata             */
 
   /* ── Backward-compat text aliases ───────────────────────────── */
-  --color-text-primary:   #F2EEE5;
-  --color-text-secondary: #8B95A1;
-  --color-text-tertiary:  #3D4B5C;
+  --color-text-primary:   #18202E;
+  --color-text-secondary: #4B5568;
+  --color-text-tertiary:  #8A97A8;
 
   /* ── Accents ────────────────────────────────────────────────── */
-  --color-cyan:     #00B4D8;
-  --color-gold:     #E0A800;
-  --color-positive: #22C55E;
-  --color-warn:     #F59E0B;
-  --color-danger:   #EF4444;
+  --color-cyan:     #1A6FA8;   /* accent blue (buttons, active states) */
+  --color-gold:     #B8720E;   /* captain, deadline urgency            */
+  --color-positive: #166534;   /* positive deltas, wins                */
+  --color-warn:     #B8720E;   /* warnings — share gold tone           */
+  --color-danger:   #B91C1C;   /* negative deltas, danger              */
 
   /* ── Backward-compat accent aliases ─────────────────────────── */
-  --color-negative: #EF4444;
-  --color-live:     #EF4444;
-  --color-purple:   #A855F7;
+  --color-negative: #B91C1C;
+  --color-live:     #B91C1C;
+  --color-purple:   #8C49C9;
 
   /* ── Position tones ─────────────────────────────────────────── */
-  --color-pos-gk:  #A855F7;
-  --color-pos-def: #00B4D8;
-  --color-pos-mid: #E0A800;
-  --color-pos-fwd: #EF4444;
+  --color-pos-gk:  #8C49C9;   /* GK — purple      */
+  --color-pos-def: #1A6FA8;   /* DEF — accent blue */
+  --color-pos-mid: #B8720E;   /* MID — gold        */
+  --color-pos-fwd: #B91C1C;   /* FWD — danger red  */
 
   /* ── Typography ─────────────────────────────────────────────── */
   --font-display: 'Archivo Black', sans-serif;
   --font-body:    'Archivo', sans-serif;
   --font-mono:    'JetBrains Mono', monospace;
+  /* Clubhouse newspaper broadsheet only — intentional editorial serif */
+  --font-serif:   Georgia, "Times New Roman", serif;
 
   /* ── Backward-compat font aliases ───────────────────────────── */
   --font-inter: 'Archivo', sans-serif;
 
-  /* ── Radii — keep sharp ─────────────────────────────────────── */
-  --radius-sm: 2px;
-  --radius-md: 4px;
+  /* ── Radii — Kit Light uses 6px throughout ──────────────────── */
+  --radius-sm: 4px;
+  --radius-md: 6px;
 }
 
 /* ── CSS custom properties (non-Tailwind — used in inline styles) ── */
 :root {
-  --ink:      #080A0E;
-  --ink-2:    #0F1218;
-  --ink-3:    #161B25;
-  --rule:     #1E2530;
-  --paper:    #F2EEE5;
-  --mute:     #8B95A1;
-  --cyan:     #00B4D8;
-  --gold:     #E0A800;
-  --positive: #22C55E;
-  --warn:     #F59E0B;
-  --danger:   #EF4444;
-  --purple:   #A855F7;
-  --pos-gk:   #A855F7;
-  --pos-def:  #00B4D8;
-  --pos-mid:  #E0A800;
-  --pos-fwd:  #EF4444;
+  /* Kit Light surface scale */
+  --bg:       #F7F3ED;   /* page background  */
+  --card:     #FFFFFF;   /* card surface     */
+  --elev:     #EDEAE2;   /* elevated panels  */
+  --shell:    #18202E;   /* sidebar — the ONE dark element */
+
+  /* Backward-compat surface aliases */
+  --ink:      #F7F3ED;
+  --ink-2:    #FFFFFF;
+  --ink-3:    #EDEAE2;
+  --rule:     #E2DDD5;
+
+  /* Text */
+  --paper:    #18202E;   /* primary text */
+  --text-2:   #4B5568;   /* secondary text */
+  --mute:     #8A97A8;   /* muted labels */
+
+  /* White-label accent cascade — operators override --brand-accent only */
+  --brand-accent: #1A6FA8;
+  --accent:         var(--brand-accent);
+  --accent-bg:      color-mix(in srgb, var(--brand-accent) 8%, transparent);
+  --cyan:           var(--brand-accent);    /* alias — components reference --cyan */
+  --gold:           #B8720E;
+  /* Text on --shell (dark navy) surfaces */
+  --on-shell:       #ffffff;               /* full-brightness text on shell/nav headers */
+  --on-shell-dim:   rgba(255,255,255,.45); /* muted eyebrow labels on shell */
+
+  /* ── Sport accent palette ──────────────────────────────────────────────── */
+  --f1:    #E10600;   /* Formula 1 — Ferrari red        */
+  --f1bg:  rgba(225,6,0,.08);
+  --ten:   #1B7A52;   /* Tennis — Wimbledon green        */
+  --tenbg: rgba(27,122,82,.08);
+
+  /* ── Radius aliases (matches Tailwind @theme --radius-*) ──────────────── */
+  --r-sm:  4px;
+  --r-md:  6px;
+
+  /* ── Spacing scale (base-4) ────────────────────────────────────────────────
+     Use multiples of 4px only: 4 8 12 16 24 32 48 64 80 96px.
+     Any inline style with a non-4 value (5, 7, 9, 13, 15px) is off-scale. */
+  --positive:   #166534;
+  --pos:        #166534;
+  --pos-bg:     rgba(22,101,52,.10);
+  --warn:       #B8720E;
+  --danger:     #B91C1C;
+  --neg:        #B91C1C;
+  --neg-bg:     rgba(185,28,28,.08);
+  --purple:     #8C49C9;
+
+  /* Position tones */
+  --pos-gk:   #8C49C9;
+  --pos-def:  #1A6FA8;
+  --pos-mid:  #B8720E;
+  --pos-fwd:  #B91C1C;
 }
 
 /* ── Global Base ─────────────────────────────────────────────────── */
 :root {
-  background-color: #080A0E;
-  color: #F2EEE5;
+  background-color: #F7F3ED;
+  color: #18202E;
   font-family: 'Archivo', sans-serif;
-  color-scheme: dark;
+  color-scheme: light;
 }
 
 html {
@@ -94,7 +134,7 @@ body {
   margin: 0;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background-color: #080A0E;
+  background-color: #F7F3ED;
   touch-action: manipulation;
   overscroll-behavior-y: none;
   overflow-x: hidden;
@@ -110,6 +150,12 @@ body {
 }
 
 /* ── Safe-area helpers ────────────────────────────────────────────── */
+.safe-top {
+  padding-top: env(safe-area-inset-top);
+}
+.pt-safe {
+  padding-top: env(safe-area-inset-top);
+}
 .safe-bottom {
   padding-bottom: max(12px, env(safe-area-inset-bottom));
 }
@@ -183,19 +229,19 @@ body {
 
 /* ── Surface Utilities ───────────────────────────────────────────── */
 .fz-surface {
-  background: var(--ink-2);
+  background: var(--card);
   border: 1px solid var(--rule);
 }
 
 .fz-surface-elevated {
-  background: var(--ink-3);
+  background: var(--elev);
   border: 1px solid var(--rule);
 }
 
 .fz-card {
-  background: var(--ink-2);
+  background: var(--card);
   border: 1px solid var(--rule);
-  border-radius: 4px;
+  border-radius: 6px;
 }
 
 /* ── Accent Lines ────────────────────────────────────────────────── */
@@ -782,4 +828,32 @@ button, a {
 .fk-mob-sheet-wrap {
   position: fixed; left: 0; right: 0; bottom: 0; z-index: 9999;
   animation: slideUpFade 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* ── Tablet tier (640–1023px) ────────────────────────────────────── */
+/* Two-up competition card grid on tablet without triggering desktop sidebar */
+@media (min-width: 640px) and (max-width: 1023px) {
+  /* AllCompetitions grid: two cards per row instead of one-column-stacked */
+  .fk-competition-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+
+  /* Bottom sheets on tablet: constrained width, centered, rounded all sides */
+  .fk-mob-sheet-wrap {
+    left: 50%;
+    right: auto;
+    width: min(520px, 92vw);
+    transform: translateX(-50%);
+    border-radius: 12px 12px 0 0;
+  }
+
+  /* PlayerPickerSheet and BottomSheet on tablet: cap width */
+  [data-sheet-tablet] {
+    max-width: 520px;
+    left: 50% !important;
+    right: auto !important;
+    transform: translateX(-50%);
+  }
 }

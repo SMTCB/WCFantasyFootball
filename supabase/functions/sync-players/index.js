@@ -14,6 +14,7 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { logError } from '../_shared/log.ts';
 import { requireServiceRole } from '../_shared/auth.ts';
+import { forzaFetch as forza, POSITION_MAP } from '../_shared/providers/forza.ts';
 
 const FN      = 'sync-players';
 const supabase = createClient(
@@ -21,44 +22,12 @@ const supabase = createClient(
   Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
 );
 
-const FORZA_BASE  = 'https://api.forzafootball.com';
-const FORZA_TOKEN = Deno.env.get('FORZA_ACCESS_TOKEN');
-
-async function forza(path, retries = 3) {
-  const url = `${FORZA_BASE}${path}?access_token=${FORZA_TOKEN}`;
-  let lastErr;
-  for (let attempt = 1; attempt <= retries; attempt++) {
-    try {
-      const res = await fetch(url, { signal: AbortSignal.timeout(10_000) });
-      if (res.status === 204) return null;
-      if (res.status === 429 || (res.status >= 500 && res.status < 600)) {
-        lastErr = new Error(`Forza ${path} → HTTP ${res.status}`);
-        if (attempt < retries) await new Promise(r => setTimeout(r, attempt * 1_000));
-        continue;
-      }
-      if (!res.ok) throw new Error(`Forza ${path} → HTTP ${res.status}`);
-      return res.json();
-    } catch (err) {
-      lastErr = err;
-      if (attempt < retries) await new Promise(r => setTimeout(r, attempt * 1_000));
-    }
-  }
-  throw lastErr;
-}
-
 function respond(status, body) {
   return new Response(JSON.stringify(body), {
     status,
     headers: { 'Content-Type': 'application/json' },
   });
 }
-
-const POSITION_MAP = {
-  goalkeeper: 'GK',
-  defender:   'DEF',
-  midfielder: 'MID',
-  attacker:   'FWD',
-};
 
 // Skip placeholder fixture entries (e.g. '1E', 'W101', '3A/3B/3C/3D/3F')
 function isRealTeam(name) {
@@ -72,7 +41,7 @@ function isRealTeam(name) {
 
 Deno.serve(async (req) => {
   if (req.method !== 'POST') return respond(405, { error: 'POST required' });
-  const authErr = requireServiceRole(req);
+  const authErr = await requireServiceRole(req);
   if (authErr) return authErr;
 
   let forza_id;

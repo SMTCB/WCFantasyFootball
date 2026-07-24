@@ -1,0 +1,25 @@
+-- Migration 229: fix ambiguous create_league() overload
+--
+-- Bug found during v2 cutover dry-run (Chat UI pass, local rebuild).
+-- 215_clubhouse_centric_model.sql added a new 6-arg overload
+-- create_league(p_name, p_format, p_user_id, p_tournament_id, p_h2h_enabled,
+-- p_circle_id DEFAULT NULL) "for backwards compat", alongside the existing
+-- 5-arg create_league(p_name, p_format, p_user_id, p_tournament_id,
+-- p_h2h_enabled) from an earlier migration. Same bug class as migration 226
+-- (credit_coins): CREATE OR REPLACE only replaces a function with the
+-- IDENTICAL parameter list, so this created a second, coexisting overload
+-- rather than replacing the first.
+--
+-- Every call site that creates a league without a Clubhouse selected
+-- (LeagueScreen.jsx's "Continue without Clubhouse" path, createArgs only
+-- adds p_circle_id when selectedCircleId is truthy) sends exactly 5 named
+-- params, which now matches BOTH overloads (the 6-arg version's trailing
+-- p_circle_id has a DEFAULT) -> PostgREST PGRST203 "Could not choose the
+-- best candidate function" on every such call. Reproduced live: creating a
+-- Classic-format league with no Clubhouse selected failed 100% of the time
+-- with a 300 Multiple Choices / PGRST203 response.
+--
+-- Fix: drop the stale 5-arg signature, same pattern as migration 226. The
+-- 6-arg version's p_circle_id DEFAULT NULL means every existing 5-arg call
+-- site keeps working with zero code changes.
+DROP FUNCTION IF EXISTS public.create_league(text, text, uuid, text, boolean);

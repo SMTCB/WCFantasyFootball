@@ -4,9 +4,8 @@
 // Output: { found: true, tournaments: [{ id, name, region, season_status }] }
 
 import { requireServiceRole } from '../_shared/auth.ts';
-
-const FORZA_API_BASE = 'https://api.forzafootball.com';
-const FORZA_TOKEN = Deno.env.get('FORZA_ACCESS_TOKEN');
+import { forzaFetch } from '../_shared/providers/forza.ts';
+import { logError } from '../_shared/log.ts';
 
 // DATA-17: redact access_token from any log output
 function redactToken(str) {
@@ -14,43 +13,15 @@ function redactToken(str) {
 }
 
 // Helper: test if a tournament ID exists and get its info
-async function fetchTournament(tournamentId, retries = 3, timeout = 10000) {
-  const url = `${FORZA_API_BASE}/v1/tournaments/${tournamentId}?access_token=${FORZA_TOKEN}`;
-
-  for (let attempt = 0; attempt < retries; attempt++) {
-    try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), timeout);
-
-      const response = await fetch(url, { signal: controller.signal });
-      clearTimeout(timeoutId);
-
-      // 200 = exists, 404 = doesn't exist
-      if (response.ok) {
-        const data = await response.json();
-        return { exists: true, data };
-      } else if (response.status === 404) {
-        return { exists: false };
-      } else {
-        // Retry on 5xx errors
-        if (response.status >= 500) {
-          console.log(`[Attempt ${attempt + 1}] HTTP ${response.status} for tournament ${tournamentId}, retrying...`);
-          continue;
-        }
-        return { exists: false, status: response.status };
-      }
-    } catch (error) {
-      if (attempt < retries - 1) {
-        // DATA-17: never log raw URLs containing access_token
-        console.log(`[Attempt ${attempt + 1}] Error fetching tournament ${tournamentId}: ${redactToken(error.message)}, retrying...`);
-        await new Promise(r => setTimeout(r, 2000)); // 2s backoff
-        continue;
-      }
-      return { exists: false, error: redactToken(error.message) };
-    }
+async function fetchTournament(tournamentId) {
+  try {
+    const data = await forzaFetch(`/v1/tournaments/${tournamentId}`, 3);
+    return { exists: true, data };
+  } catch (error) {
+    // 404s surface as an Error from forzaFetch — treat as non-existent
+    if (error.message?.includes('HTTP 404')) return { exists: false };
+    return { exists: false, error: redactToken(error.message) };
   }
-
-  return { exists: false, error: 'Max retries exceeded' };
 }
 
 Deno.serve(async (req) => {
@@ -61,7 +32,7 @@ Deno.serve(async (req) => {
         { status: 405, headers: { 'Content-Type': 'application/json' } }
       );
     }
-    const authErr = requireServiceRole(req);
+    const authErr = await requireServiceRole(req);
     if (authErr) return authErr;
 
     const body = await req.json();
@@ -122,7 +93,7 @@ Deno.serve(async (req) => {
       }
     );
   } catch (error) {
-    console.error('[discover-tournament] Error:', error.message);
+    await logError('discover-tournament', 'error', error.message);
     return new Response(
       JSON.stringify({
         error: error.message,

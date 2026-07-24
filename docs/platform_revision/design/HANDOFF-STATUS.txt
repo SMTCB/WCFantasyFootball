@@ -1,0 +1,309 @@
+================================================================================
+FANTASYKIT — REDESIGN STATUS & FRESH SESSION BRIEF
+Kit (Light) direction · June 2026
+================================================================================
+
+READ THIS FIRST when picking up the redesign in a new session.
+It tells you what exists, what's been decided, and what to build next.
+
+
+────────────────────────────────────────────────────────────────────────────────
+THE SITUATION IN ONE PARAGRAPH
+────────────────────────────────────────────────────────────────────────────────
+
+FantasyKit is a fantasy football platform repositioning as a white-label SaaS.
+The old "Forza" dark aesthetic is being retired. A new light direction ("Kit")
+has been chosen. The full platform has already been designed in dark and handed
+off to engineering — those specs exist as HTML prototypes in this project. The
+light direction has been decided and proven at concept level but NOT yet built
+as full dev-ready screens. The next job is to build those Kit (Light) screens.
+
+
+────────────────────────────────────────────────────────────────────────────────
+WHAT THE LIVE APP LOOKS LIKE TODAY
+────────────────────────────────────────────────────────────────────────────────
+
+URL:       https://wc-fantasy-football.vercel.app
+Email:     demo@fantasykit.test
+Password:  ForzaDemo2026!
+
+Dark near-black surfaces (#080A0E), cyan accent (#00B4D8), all-caps JetBrains
+Mono everywhere, Archivo Black for display. The app has 5 main nav sections:
+Scores · League · Squad · Live · Market.
+
+The original Platform Assessment (redesign/Platform Assessment.html) documented
+6 critical issues with this direction. Those are considered fixed by switching
+to Kit (Light). Do not repeat them — they are already addressed.
+
+
+────────────────────────────────────────────────────────────────────────────────
+THE KIT (LIGHT) DESIGN TOKENS — SOURCE OF TRUTH
+────────────────────────────────────────────────────────────────────────────────
+
+These are the exact values to use. Do not invent new colours.
+
+  Surface
+    Background:       #F7F3ED   (warm off-white, the base layer)
+    Card:             #FFFFFF   (white cards on top of background)
+    Raised surface:   #EDEAE2   (slightly darker than background, for panels)
+    Shell / sidebar:  #18202E   (dark navy — the ONE dark element in the light theme)
+
+  Text
+    Primary:          #18202E   (same as shell — dark navy)
+    Secondary:        #4B5568   (medium grey)
+    Muted / labels:   #8A97A8   (light grey, for metadata)
+    Rule / border:    #E2DDD5   (warm light grey for dividers)
+
+  Accent
+    Primary accent:   #1A6FA8   (blue — buttons, active states, lead numbers)
+    Accent bg:        rgba(26,111,168,.08)   (very light blue tint for highlights)
+    Gold:             #B8720E   (for captain, warnings, deadline urgency)
+    Positive:         #166534   (dark green for good deltas, wins)
+    Danger:           #B91C1C   (dark red for negative deltas, losses)
+
+  Shape
+    Border radius:    6px
+    Capitalisation:   Mixed case (NOT all-caps like the old dark direction)
+    Mono font usage:  Sparingly — labels and metadata only, not for all data
+
+  Typography (unchanged from dark direction)
+    Headlines / names: Archivo Black
+    Body / UI:         Archivo 400 / 500 / 600
+    Data / labels:     JetBrains Mono (used sparingly)
+
+  White-label principle:
+    A client re-skin requires changing only 3 values:
+      --brand-accent  (their primary colour)
+      --brand-name    (their logo/wordmark)
+      their data      (league name, team names)
+    Everything else stays constant.
+
+
+────────────────────────────────────────────────────────────────────────────────
+WHAT HAS ALREADY BEEN BUILT (DARK DIRECTION — REFERENCE ONLY)
+────────────────────────────────────────────────────────────────────────────────
+
+Four folders contain complete, interactive HTML prototype handoffs in the OLD
+dark Forza direction. These are dev-ready specs with full component anatomy,
+interaction rules, data shapes, and copy. Use them as the structural reference
+when building Kit (Light) versions — the layouts and component vocabulary carry
+over; only the visual tokens and a few UX patterns change.
+
+  design_handoff_league_hub/
+    → Leagues Redesigns.html    (desktop — open in browser, interactive)
+    → Leagues Mobile.html       (mobile — open in browser, interactive)
+    → README.md                 (full component spec, data interfaces, copy)
+    Covers: Leaderboard, Frontpage (Forza Times newspaper), Bets, Betting
+    performance, Auctions, Chat, Stats, Admin tab. Plus drill-ins:
+    Manager Profile, Make Pick, Auction Detail, Article view.
+    Both desktop (1440px) and mobile (390px) are fully designed.
+
+  design_handoff_player_modals/
+    → Player Modals.html        (interactive)
+    → README.md                 (component spec)
+    Covers: PlayerStatsDashboard (full GW history + point breakdown),
+    PlayerActionModal full (unlocked squad), PlayerActionModal minimal
+    (locked/live squad).
+
+  design_handoff_live_centre/
+    → Live Center Redesigns.html  (interactive)
+    → README.md                   (component spec)
+    → screenshots/                (static reference renders)
+    Covers: Live match view. Desktop = mini pitch + cross-league events feed.
+    Mobile = league selector + MY XI tab + EVENTS tab.
+
+  design_handoff_admin_tab/
+    → Admin Tab Preview.html
+    → README.md
+
+  Root-level files (dark direction, reference):
+    FORZAKIT Final.html         → Squad pitch view + Player Market (dark)
+    squad-*.jsx, market-*.jsx   → source components for the above
+    live-*.jsx, league-*.jsx    → source components for handoffs
+    tokens.css                  → OLD dark tokens (do not use for Kit Light)
+
+
+────────────────────────────────────────────────────────────────────────────────
+WHAT HAS BEEN BUILT (KIT LIGHT DIRECTION — CONCEPT LEVEL)
+────────────────────────────────────────────────────────────────────────────────
+
+  redesign/Identity Exploration.html
+    A design canvas (pan/zoom) showing the Kit direction at concept level.
+    Sections: Visual Foundation · Key Screens · Mobile · White Label.
+    Contains: colour/type/component swatches for both directions,
+    a League Hub leaderboard screen, a Squad pitch (dark only), mobile
+    League Hub, and a La Liga Fantasy brand-swap demo.
+    Open in browser. Use arrow keys / scroll to navigate artboards.
+    NOTE: requires redesign/design-canvas.jsx to be in the same folder (it is).
+
+  redesign/FantasyKit UX Analysis.html  (+ redesign/assets/kit.css)
+    A long-form analysis document identifying 6 NEW UX/UI improvements
+    BEYOND the original 6 findings. Built in the Kit (Light) aesthetic.
+    Each finding has: before (dark) / after (light) mockups, rationale,
+    and a recommendation. Finding 01 has 3 directional options.
+    Also contains: white-label brand swap demo, phased roadmap.
+
+    The 6 new improvements are:
+      01 · No clear next action (deadline-driven primary CTA banner)
+      02 · No onboarding (first-run checklist + empty-state coaching)
+      03 · Flat visual hierarchy (three type roles: lead / support / label)
+      04 · Density without focus (player drawer / progressive disclosure)
+      05 · Silent system (action feedback: toasts, undo, impact preview)
+      06 · Mobile = shrunk desktop (card patterns, thumb-reach FAB)
+
+  redesign/Platform Assessment.html
+    The original audit document (6 findings, 3 directions considered).
+    Read this for context on WHY the direction changed. Do not repeat
+    its findings in new work — they are already addressed by Kit Light.
+
+
+────────────────────────────────────────────────────────────────────────────────
+WHAT NEEDS TO BE BUILT NEXT (KIT LIGHT FULL HANDOFFS)
+────────────────────────────────────────────────────────────────────────────────
+
+None of the design_handoff_* folders have been ported to Kit Light yet.
+The following screens need to be built as full hi-fi Kit Light prototypes,
+incorporating BOTH the existing dark screen structure AND the 6 new UX fixes.
+
+Priority order (from the UX Analysis roadmap):
+
+  PHASE 1 — Build first (low effort, highest impact)
+  ─────────────────────────────────────────────────
+  1. League Hub — Leaderboard tab
+     The most-visited screen. Must include:
+     - Kit Light tokens throughout
+     - Dark sidebar (--shell: #18202E) + warm white content area
+     - Deadline action banner (Finding 01): countdown + "Set your squad" + one CTA
+     - Three-tier type hierarchy on standings rows (Finding 03):
+         lead number = accent Archivo Black, name = Archivo Black, GW = mono small
+     - Tab-only nav (no competing button row)
+     - Right panel: deadline card, recent activity, my squad card
+     - Desktop (1280px) + Mobile (390px) as cards + FAB
+     Reference the dark version in design_handoff_league_hub/ for structure.
+
+  2. Player Market
+     Must include:
+     - Kit Light tokens
+     - Clean scannable rows: position chip, name, form, price (Finding 04)
+     - Player drawer on tap: full stats + action + impact preview (Findings 04+05)
+     - Action feedback: toast + undo after signing (Finding 05)
+     Reference: FORZAKIT Final.html (dark market) for structure.
+
+  3. Action feedback patterns (system-wide)
+     - Toast component (Finding 05)
+     - Points-impact preview chip (Finding 05)
+     - Squad locked / saved state markers
+     These appear across League Hub, Market, and Squad.
+
+  PHASE 2 — Build next (medium effort)
+  ─────────────────────────────────────
+  4. My Squad — pitch view in Kit Light
+     This is a different design problem from the dark pitch. The pitch surface
+     needs to work on a light background (not just invert — redesign the field).
+     Player tokens adapt to light. Captain marker still gold.
+     Reference: FORZAKIT Final.html dark pitch + Identity Exploration concept.
+
+  5. Mobile patterns (across all screens)
+     - Card-based leaderboard (Finding 06)
+     - Bottom tab bar for product nav
+     - Strip tabs inside League Hub
+     - Thumb-reachable FAB for primary action
+     Reference: design_handoff_league_hub/Leagues Mobile.html (dark) for structure.
+
+  PHASE 3 — Launch prep
+  ──────────────────────
+  6. Onboarding / First-run experience (Finding 02)
+     - 3-step checklist: join league → pick 15 → choose captain
+     - Progress tracking
+     - Empty-state coaching (pitch, leaderboard, market)
+     - Auto-pick escape hatch
+     This screen does NOT exist in any dark handoff — it is net new.
+
+  7. Remaining League Hub tabs in Kit Light
+     - Frontpage (Forza Times newspaper — keep the cream paper, update chrome)
+     - Bets & Predictions
+     - Auctions
+     - Chat
+     - Stats
+     Reference: design_handoff_league_hub/ for full structure.
+
+  8. Player Modal in Kit Light
+     Reference: design_handoff_player_modals/ for structure.
+
+  9. Live Centre in Kit Light
+     Reference: design_handoff_live_centre/ for structure.
+
+  10. White-label validation
+      Apply a client brand (e.g. La Liga red #CF1732) across one full screen
+      to confirm the 3-token swap works end-to-end.
+
+
+────────────────────────────────────────────────────────────────────────────────
+HOW TO START A FRESH SESSION
+────────────────────────────────────────────────────────────────────────────────
+
+1. Read this file (HANDOFF-STATUS.txt) — you have just done that.
+
+2. Open redesign/FantasyKit UX Analysis.html in the browser to see the Kit
+   Light aesthetic and the before/after mockups for all 6 UX improvements.
+   This is your visual reference for the light direction.
+
+3. Open redesign/Identity Exploration.html to see the Foundation artboards
+   (type scale, component swatches, colour system) for Kit Light.
+
+4. Open design_handoff_league_hub/Leagues Redesigns.html to see the full
+   structural reference for the League Hub in the dark direction.
+   Read design_handoff_league_hub/README.md for component anatomy.
+
+5. Build the Kit Light League Hub as the first deliverable — it is the
+   highest-priority screen and demonstrates all the key improvements at once.
+
+6. Use the Kit tokens table above (not tokens.css at the project root —
+   that file has the OLD dark tokens). Or import redesign/assets/kit.css
+   which has the light system already defined as CSS custom properties.
+
+
+────────────────────────────────────────────────────────────────────────────────
+IMPORTANT DECISIONS ALREADY MADE (DO NOT REVISIT)
+────────────────────────────────────────────────────────────────────────────────
+
+- Kit (Light) is the chosen direction. Stadium (Dark) becomes dark mode only.
+- "FantasyKit" name and Forza brand are retired. Wordmark is a placeholder.
+- Archivo Black + Archivo + JetBrains Mono type pairing is kept (unchanged).
+- Mono (JetBrains Mono) is used sparingly — labels only, not for all data.
+- Border radius is 6px (not the old sharp 2-4px).
+- Mixed case, not all-caps, throughout (except label eyebrows).
+- White-label means 3-token swap: --brand-accent, --brand-name, their data.
+- Navigation: left sidebar (desktop) + bottom tab bar (mobile). No dual CTA bar.
+- Inside League: 5 tabs max (Leaderboard, Feed, Bets, Squad, Market). Not 8.
+- The Forza Times (Frontpage) newspaper keeps its cream paper inside the
+  light chrome — it remains the brand showcase moment.
+
+
+────────────────────────────────────────────────────────────────────────────────
+FILE MAP — WHERE EVERYTHING LIVES
+────────────────────────────────────────────────────────────────────────────────
+
+  redesign/
+    BRIEF.md                        Original redesign brief and direction decision
+    HANDOFF-STATUS.txt              This file
+    Platform Assessment.html        Original 6-finding audit (dark direction issues)
+    Identity Exploration.html       Kit vs Stadium concept exploration canvas
+    FantasyKit UX Analysis.html     New 6-finding UX analysis (light direction)
+    assets/kit.css                  Kit (Light) CSS tokens + doc + mockup system
+
+  design_handoff_league_hub/        Full dark League Hub handoff (reference)
+  design_handoff_player_modals/     Full dark Player Modal handoff (reference)
+  design_handoff_live_centre/       Full dark Live Centre handoff (reference)
+  design_handoff_admin_tab/         Full dark Admin Tab handoff (reference)
+
+  (root level — dark direction source files, reference only)
+    FORZAKIT Final.html             Dark Squad + Market prototype
+    tokens.css                      OLD dark tokens (do not use)
+    squad-*.jsx, market-*.jsx       Dark squad/market source components
+    league-*.jsx                    Dark league source components
+    live-*.jsx                      Dark live centre source components
+
+================================================================================
+END OF STATUS BRIEF
+================================================================================

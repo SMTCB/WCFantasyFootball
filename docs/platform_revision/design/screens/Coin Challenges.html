@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FantasyKit — Coin Challenges</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Archivo:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<template id="__bundler_thumbnail">
+  <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+    <rect width="100" height="100" fill="#18202E"/>
+    <circle cx="50" cy="48" r="22" fill="url(#cg)"/>
+    <defs><radialGradient id="cg" cx="38%" cy="34%"><stop offset="0%" stop-color="#D4880F"/><stop offset="100%" stop-color="#B8720E"/></radialGradient></defs>
+    <circle cx="50" cy="48" r="16" fill="none" stroke="rgba(255,255,255,.2)" stroke-width="1.5"/>
+    <text x="50" y="54" font-family="Archivo Black, sans-serif" font-size="16" fill="white" text-anchor="middle">C</text>
+    <text x="50" y="82" font-family="Archivo Black, sans-serif" font-size="7" fill="rgba(255,255,255,.5)" text-anchor="middle" letter-spacing="1">COIN CHALLENGES</text>
+  </svg>
+</template>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; overflow: hidden; }
+  body { background: #0a0a0a; font-family: 'Archivo', sans-serif; -webkit-font-smoothing: antialiased; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<script type="text/babel" src="design-canvas.jsx"></script>
+<script type="text/babel" src="challenges-data.jsx"></script>
+<script type="text/babel" src="challenges-shared.jsx"></script>
+<script type="text/babel" src="challenges-screens-A.jsx"></script>
+<script type="text/babel" src="challenges-screens-B.jsx"></script>
+
+<script type="text/babel" data-presets="react">
+function App() {
+  return (
+    <DesignCanvas
+      title="FantasyKit · Coin Challenges"
+      subtitle="8 screens · Kit Light · Mobile-first 375px + desktop 1280px where layout differs · June 2026"
+    >
+
+      {/* ── SCREEN 1 — CHALLENGES TAB ── */}
+      <DCSection id="s1" title="01 — Challenges Tab (league hub)">
+        <DCArtboard id="s1-mob"  label="MOBILE · 375"   width={375}  height={1380} background="#EDEAE2">
+          <ChallengesTabMobile/>
+        </DCArtboard>
+        <DCArtboard id="s1-desk" label="DESKTOP · 1280" width={1280} height={860}  background="#E2DDD5">
+          <ChallengesTabDesktop/>
+        </DCArtboard>
+      </DCSection>
+
+      {/* ── SCREEN 2 — CREATE A CHALLENGE ── */}
+      <DCSection id="s2" title="02 — Create a Challenge (3-step flow)">
+        <DCArtboard id="s2-s1" label="STEP 1 · Pick Opponent"    width={375} height={660}  background="#EDEAE2">
+          <CreateStep1/>
+        </DCArtboard>
+        <DCArtboard id="s2-s2" label="STEP 2 · Pick Proposition" width={375} height={740}  background="#EDEAE2">
+          <CreateStep2/>
+        </DCArtboard>
+        <DCArtboard id="s2-s3" label="STEP 3 · Set Stake"        width={375} height={760}  background="#EDEAE2">
+          <CreateStep3/>
+        </DCArtboard>
+        <DCArtboard id="s2-cf" label="CONFIRM · Review & Send"   width={375} height={680}  background="#EDEAE2">
+          <CreateConfirm/>
+        </DCArtboard>
+      </DCSection>
+
+      {/* ── SCREEN 3 — INCOMING CHALLENGE ── */}
+      <DCSection id="s3" title="03 — Incoming Challenge moment">
+        <DCArtboard id="s3-toast" label="NOTIFICATION · Feed / toast" width={375} height={220} background="#0D1219">
+          <IncomingToast/>
+        </DCArtboard>
+        <DCArtboard id="s3-sheet" label="CHALLENGE SHEET · Full detail" width={375} height={790} background="#0D1219">
+          <IncomingSheet/>
+        </DCArtboard>
+      </DCSection>
+
+      {/* ── SCREEN 4 — LIVE TRACKER ── */}
+      <DCSection id="s4" title="04 — Live Challenge Tracker">
+        <DCArtboard id="s4-live" label="LIVE WIDGET · Squad / challenges tab" width={375} height={360} background="#EDEAE2">
+          <LiveTracker/>
+        </DCArtboard>
+      </DCSection>
+
+      {/* ── SCREEN 5 — RESOLUTION ── */}
+      <DCSection id="s5" title="05 — Resolution moment (three states)">
+        <DCArtboard id="s5-win"  label="WIN STATE"       width={375} height={660} background="#EDEAE2">
+          <ResolutionWin/>
+        </DCArtboard>
+        <DCArtboard id="s5-loss" label="LOSS STATE"      width={375} height={580} background="#EDEAE2">
+          <ResolutionLoss/>
+        </DCArtboard>
+        <DCArtboard id="s5-draw" label="DRAW / VOID"     width={375} height={560} background="#EDEAE2">
+          <ResolutionDraw/>
+        </DCArtboard>
+      </DCSection>
+
+      {/* ── SCREEN 6 — WALLET ── */}
+      <DCSection id="s6" title="06 — Coin Wallet">
+        <DCArtboard id="s6-mob"  label="MOBILE · 375"   width={375}  height={900}  background="#EDEAE2">
+          <WalletMobile/>
+        </DCArtboard>
+        <DCArtboard id="s6-desk" label="DESKTOP · 1280" width={1280} height={700}  background="#E2DDD5">
+          <WalletDesktop/>
+        </DCArtboard>
+      </DCSection>
+
+      {/* ── SCREEN 7 — BUY COINS ── */}
+      <DCSection id="s7" title="07 — Buy Coins (Stripe entry)">
+        <DCArtboard id="s7-mob"  label="MOBILE · 375"   width={375}  height={800}  background="#EDEAE2">
+          <BuyCoinsMobile/>
+        </DCArtboard>
+        <DCArtboard id="s7-desk" label="DESKTOP · 1280" width={1280} height={620}  background="#E2DDD5">
+          <BuyCoinsDesktop/>
+        </DCArtboard>
+      </DCSection>
+
+      {/* ── SCREEN 8 — ACTIVITY FEED ── */}
+      <DCSection id="s8" title="08 — Activity Feed integration">
+        <DCArtboard id="s8-mob"  label="MOBILE · Feed tab"  width={375}  height={680} background="#EDEAE2">
+          <ActivityFeedMobile/>
+        </DCArtboard>
+        <DCArtboard id="s8-desk" label="DESKTOP · Feed tab" width={1280} height={500} background="#E2DDD5">
+          <ActivityFeedDesktop/>
+        </DCArtboard>
+      </DCSection>
+
+    </DesignCanvas>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>

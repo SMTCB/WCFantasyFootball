@@ -31,6 +31,7 @@ import SelectLeaguePicker from '../components/league/SelectLeaguePicker';
 import { deriveLeagueType } from '../components/league/LeagueBadgeHelpers';
 import { usePlayerCards } from '../hooks/usePlayerCards';
 import { useEliminatedClubs } from '../hooks/useEliminatedClubs';
+import { useIsMobile } from '../hooks/useViewport';
 
 // club cap is fetched dynamically per-round; default 3 until loaded
 
@@ -62,6 +63,7 @@ const MARKET_TOUR_STEPS = [
 export default function MarketScreen() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const isMobile = useIsMobile();
   const { show: showToast } = useToast();
   const [searchParams] = useSearchParams();
   const leagueId = searchParams.get('leagueId') || searchParams.get('league');
@@ -176,7 +178,7 @@ export default function MarketScreen() {
       if (!count || count === 0) navigate(`/league/${activeLeague}/draft`);
     })();
     return () => { cancelled = true; };
-  }, [cfg.loading, cfg.format, user?.id, activeLeague]);
+  }, [cfg.loading, cfg.format, user?.id, activeLeague, navigate]);
 
   // League-scoped transfer state
   const { buy, sell, isTaken, takenByAll, isOwnedBy, takenMapError, takenMap } = useTransfer(activeLeague);
@@ -485,6 +487,8 @@ export default function MarketScreen() {
     // Both states would produce an unfiltered 5000-player fetch; skip and wait.
     if (!activeLeague || !tournamentId) return;
     fetchMarketParams();
+  // fetchMarketParams is defined without useCallback — adding it would cause an infinite loop.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeLeague, tournamentId]);
 
   // Fetch per-round club cap whenever league + matchday are resolved
@@ -536,7 +540,7 @@ export default function MarketScreen() {
       if (pid !== todayJokerId) countryCounts[p.club] = (countryCounts[p.club] || 0) + 1;
     });
     return { posCounts, countryCounts };
-  }, [effectiveSquadIds, players, todayJokerId]);
+  }, [effectiveSquadIds, players, todayJokerId, mySquad]);
 
 
 
@@ -732,7 +736,7 @@ export default function MarketScreen() {
       <div
         className="sticky top-0"
         style={{
-          background: 'rgba(13,17,23,0.97)',
+          background: 'var(--shell)',
           backdropFilter: 'blur(20px)',
           WebkitBackdropFilter: 'blur(20px)',
           borderBottom: '1px solid rgba(255,255,255,0.07)',
@@ -745,14 +749,14 @@ export default function MarketScreen() {
           <div>
             <div
               className="fz-label"
-              style={{ color: isLocked ? 'var(--danger)' : 'var(--mute)' }}
+              style={{ color: isLocked ? 'var(--neg)' : 'rgba(255,255,255,0.5)' }}
             >
               {isLocked ? 'WINDOW CLOSED' : 'Transfer Window'}
             </div>
             <div className="flex items-center gap-2 mt-0.5">
               <div
                 className="text-[18px] lg:text-[24px] font-black uppercase leading-tight tracking-tight"
-                style={{ fontFamily: 'Archivo Black, sans-serif', color: 'var(--paper)' }}
+                style={{ fontFamily: 'Archivo Black, sans-serif', color: '#fff' }}
               >
                 Player Market
               </div>
@@ -782,13 +786,13 @@ export default function MarketScreen() {
           <div className="flex items-center gap-3 lg:gap-5 flex-wrap lg:flex-nowrap">
             {/* Squad count */}
             <div className="text-right">
-              <div className="fz-label" style={{ color: 'var(--mute)', fontSize: 10 }}>Squad</div>
+              <div className="fz-label" style={{ color: 'rgba(255,255,255,0.5)', fontSize: 10 }}>Squad</div>
               <div
                 className="text-[16px] lg:text-[20px] font-black tabular-nums leading-tight"
-                style={{ fontFamily: 'Archivo Black, sans-serif', color: squadCount >= squadSize ? 'var(--positive)' : 'var(--paper)' }}
+                style={{ fontFamily: 'Archivo Black, sans-serif', color: squadCount >= squadSize ? 'var(--pos)' : 'rgba(255,255,255,0.9)' }}
               >
                 {squadCount}
-                <span className="text-[10px] lg:text-[12px] font-normal" style={{ color: 'var(--mute)' }}>/{squadSize}</span>
+                <span className="text-[10px] lg:text-[12px] font-normal" style={{ color: 'rgba(255,255,255,0.4)' }}>/{squadSize}</span>
               </div>
             </div>
 
@@ -816,10 +820,10 @@ export default function MarketScreen() {
               const costs         = Array.isArray(transferPenalty) ? transferPenalty : [transferPenalty ?? 4];
               const totalPenCost  = [...Array(basketPenBuys)].reduce((sum, _, i) =>
                 sum + (costs[Math.min(penaltyUsed + i, costs.length - 1)] ?? costs[costs.length - 1]), 0);
-              const freeColor     = isUnlimited ? 'var(--positive)' : projFreeLeft === 0 ? 'var(--danger)' : projFreeLeft <= 1 ? 'var(--gold)' : 'var(--paper)';
+              const freeColor     = isUnlimited ? 'var(--pos)' : projFreeLeft === 0 ? 'var(--neg)' : projFreeLeft <= 1 ? 'var(--gold)' : 'rgba(255,255,255,0.9)';
               return (
                 <div className="text-right">
-                  <div className="fz-label" style={{ color: 'var(--mute)', fontSize: 10 }}>
+                  <div className="fz-label" style={{ color: 'rgba(255,255,255,0.5)', fontSize: 10 }}>
                     Transfers{!isUnlimited && isEst ? ' (est.)' : ''}
                   </div>
                   <div
@@ -828,7 +832,7 @@ export default function MarketScreen() {
                     title={isUnlimited ? 'Unlimited transfers — build your squad freely' : `${projFreeLeft} free transfer${projFreeLeft !== 1 ? 's' : ''} remaining this round`}
                   >
                     {isUnlimited ? '∞' : projFreeLeft}
-                    <span className="text-[10px] lg:text-[12px] font-normal" style={{ color: 'var(--mute)' }}>
+                    <span className="text-[10px] lg:text-[12px] font-normal" style={{ color: 'rgba(255,255,255,0.4)' }}>
                       {isUnlimited ? ' free' : ' free'}
                     </span>
                   </div>
@@ -867,8 +871,8 @@ export default function MarketScreen() {
               title={isLocked ? 'Transfer window closed' : emptySlots === 0 ? 'Squad is full' : `Fill ${emptySlots} empty slot${emptySlots > 1 ? 's' : ''}`}
               style={{
                 padding: '6px 10px',
-                background: isLocked ? 'rgba(239,68,68,0.06)' : 'rgba(0,196,232,0.08)',
-                border: isLocked ? '1px solid rgba(239,68,68,0.25)' : '1px solid rgba(0,196,232,0.25)',
+                background: isLocked ? 'rgba(185,28,28,0.06)' : 'var(--accent-bg)',
+                border: isLocked ? '1px solid rgba(185,28,28,0.25)' : '1px solid rgba(26,111,168,0.25)',
                 color: autoFilling ? 'var(--mute)' : isLocked ? 'var(--danger)' : 'var(--cyan)',
                 fontFamily: 'Archivo Black, sans-serif',
                 fontSize: 8,
@@ -936,8 +940,8 @@ export default function MarketScreen() {
             className="flex-1 outline-none text-[13px]"
             style={{
               padding: '8px 12px',
-              background: 'rgba(255,255,255,0.04)',
-              border: '1px solid rgba(255,255,255,0.1)',
+              background: 'var(--card)',
+              border: '1px solid rgba(255,255,255,0.15)',
               borderRadius: '4px',
               color: 'var(--paper)',
               fontFamily: 'Archivo, sans-serif',
@@ -949,8 +953,8 @@ export default function MarketScreen() {
             onClick={() => setShowTeamPicker(v => !v)}
             style={{
               padding: '8px 12px', flexShrink: 0,
-              background: selectedTeams.size > 0 ? 'rgba(0,180,216,0.12)' : 'rgba(255,255,255,0.04)',
-              border: selectedTeams.size > 0 ? '1px solid rgba(0,180,216,0.4)' : '1px solid rgba(255,255,255,0.1)',
+              background: selectedTeams.size > 0 ? 'rgba(26,111,168,0.2)' : 'rgba(255,255,255,0.06)',
+              border: selectedTeams.size > 0 ? '1px solid rgba(26,111,168,0.5)' : '1px solid rgba(255,255,255,0.12)',
               borderRadius: '4px',
               color: selectedTeams.size > 0 ? 'var(--cyan)' : 'var(--mute)',
               fontFamily: 'Archivo Black, sans-serif',
@@ -966,9 +970,9 @@ export default function MarketScreen() {
         {showTeamPicker && (
           <div style={{
             position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 60,
-            background: 'var(--ink)', border: '1px solid rgba(255,255,255,0.12)',
+            background: 'var(--card)', border: '1px solid var(--rule)',
             borderTop: 'none', maxHeight: 320, display: 'flex', flexDirection: 'column',
-            boxShadow: '0 8px 32px rgba(0,0,0,0.6)',
+            boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
           }}>
             {/* Team search */}
             <div style={{ padding: '10px 14px', borderBottom: '1px solid var(--rule)', flexShrink: 0 }}>
@@ -980,7 +984,7 @@ export default function MarketScreen() {
                 autoFocus
                 style={{
                   width: '100%', padding: '6px 10px', outline: 'none',
-                  background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
+                  background: 'var(--elev)', border: '1px solid var(--rule)',
                   borderRadius: 3, color: 'var(--paper)', fontFamily: 'Archivo, sans-serif', fontSize: 12,
                   caretColor: 'var(--cyan)',
                 }}
@@ -1003,13 +1007,13 @@ export default function MarketScreen() {
                       style={{
                         width: '100%', textAlign: 'left', padding: '9px 14px',
                         display: 'flex', alignItems: 'center', gap: 10,
-                        background: checked ? 'rgba(0,180,216,0.08)' : 'transparent',
-                        border: 'none', borderBottom: '1px solid rgba(255,255,255,0.04)',
+                        background: checked ? 'var(--accent-bg)' : 'transparent',
+                        border: 'none', borderBottom: '1px solid var(--rule)',
                         cursor: 'pointer',
                       }}
                     >
                       <div style={{
-                        width: 14, height: 14, border: checked ? 'none' : '1px solid rgba(255,255,255,0.25)',
+                        width: 14, height: 14, border: checked ? 'none' : '1px solid var(--rule)',
                         background: checked ? 'var(--cyan)' : 'transparent',
                         borderRadius: 2, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
                       }}>
@@ -1027,7 +1031,7 @@ export default function MarketScreen() {
               <button
                 onClick={() => { setSelectedTeams(new Set()); setShowTeamPicker(false); setTeamSearch(''); }}
                 style={{
-                  flex: 1, padding: '7px', background: 'transparent',
+                  flex: 1, padding: '8px', background: 'transparent',
                   border: '1px solid var(--rule)', color: 'var(--mute)',
                   fontFamily: 'Archivo Black, sans-serif', fontSize: 9, letterSpacing: '.1em',
                   textTransform: 'uppercase', cursor: 'pointer', borderRadius: 3,
@@ -1038,7 +1042,7 @@ export default function MarketScreen() {
               <button
                 onClick={() => { setShowTeamPicker(false); setTeamSearch(''); }}
                 style={{
-                  flex: 2, padding: '7px', background: 'var(--cyan)', border: 'none',
+                  flex: 2, padding: '8px', background: 'var(--cyan)', border: 'none',
                   color: 'var(--ink)', fontFamily: 'Archivo Black, sans-serif', fontSize: 9,
                   letterSpacing: '.1em', textTransform: 'uppercase', cursor: 'pointer', borderRadius: 3,
                 }}
@@ -1064,7 +1068,7 @@ export default function MarketScreen() {
                 onChange={e => setPriceMin(Math.min(Number(e.target.value), priceMax))}
                 style={{
                   width: 44, padding: '4px 6px', textAlign: 'center',
-                  background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)',
+                  background: 'var(--card)', border: '1px solid rgba(255,255,255,0.15)',
                   borderRadius: 3, color: 'var(--paper)', fontFamily: 'Archivo, sans-serif', fontSize: 11,
                   outline: 'none',
                 }}
@@ -1080,7 +1084,7 @@ export default function MarketScreen() {
                 onChange={e => setPriceMax(Math.max(Number(e.target.value), priceMin))}
                 style={{
                   width: 44, padding: '4px 6px', textAlign: 'center',
-                  background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)',
+                  background: 'var(--card)', border: '1px solid rgba(255,255,255,0.15)',
                   borderRadius: 3, color: 'var(--paper)', fontFamily: 'Archivo, sans-serif', fontSize: 11,
                   outline: 'none',
                 }}
@@ -1275,7 +1279,7 @@ export default function MarketScreen() {
                 className="flex items-center px-4 py-2.5 gap-3 transition-all duration-150"
                 style={{
                   borderBottom: isExpanded ? 'none' : '1px solid var(--rule)',
-                  background:   isOwned ? 'rgba(0,180,216,0.05)' : (takenByOther || clubEliminated) ? 'rgba(239,68,68,0.02)' : 'transparent',
+                  background:   isOwned ? 'rgba(26,111,168,0.05)' : (takenByOther || clubEliminated) ? 'rgba(239,68,68,0.02)' : 'transparent',
                   borderLeft:   isOwned ? '2px solid var(--cyan)' : (takenByOther || clubEliminated) ? '2px solid rgba(239,68,68,0.3)' : '2px solid transparent',
                   opacity:      (takenByOther || (clubEliminated && !isOwned)) ? 0.65 : 1,
                 }}
@@ -1367,9 +1371,10 @@ export default function MarketScreen() {
                     <div
                       className="fk-mono"
                       style={{
-                        minWidth: 56, padding: '6px 10px', textAlign: 'center',
+                        minWidth: 56, padding: '10px 10px', minHeight: 44, textAlign: 'center',
                         border: '1px solid var(--rule)', color: 'var(--mute)',
                         fontSize: 10, fontWeight: 800, opacity: 0.6,
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
                       }}
                     >
                       LOCKED
@@ -1380,7 +1385,7 @@ export default function MarketScreen() {
                       onClick={() => setBasket(prev => prev.filter(b => b.player.id !== p.id))}
                       className="fk-mono transition-all active:scale-95"
                       style={{
-                        minWidth: 56, padding: '6px 10px',
+                        minWidth: 56, padding: '10px 10px', minHeight: 44,
                         border: '1px solid var(--gold)',
                         color: 'var(--gold)',
                         background: 'rgba(240,180,0,0.08)',
@@ -1396,7 +1401,7 @@ export default function MarketScreen() {
                       onClick={() => setBasket(prev => prev.filter(b => b.player.id !== p.id))}
                       className="fk-mono transition-all active:scale-95"
                       style={{
-                        minWidth: 56, padding: '6px 10px',
+                        minWidth: 56, padding: '10px 10px', minHeight: 44,
                         border: '1px solid var(--gold)',
                         color: 'var(--gold)',
                         background: 'rgba(240,180,0,0.08)',
@@ -1412,7 +1417,7 @@ export default function MarketScreen() {
                       disabled={confirming}
                       className="fk-mono transition-all active:scale-95 disabled:opacity-40"
                       style={{
-                        minWidth: 56, padding: '6px 10px',
+                        minWidth: 56, padding: '10px 10px', minHeight: 44,
                         border: '1px solid var(--danger)',
                         color: 'var(--danger)',
                         background: 'transparent',
@@ -1425,9 +1430,10 @@ export default function MarketScreen() {
                     <div
                       className="fk-mono"
                       style={{
-                        minWidth: 56, padding: '6px 10px', textAlign: 'center',
+                        minWidth: 56, padding: '10px 10px', minHeight: 44, textAlign: 'center',
                         border: '1px solid rgba(240,58,58,0.4)', color: 'var(--danger)',
                         fontSize: 10, fontWeight: 800, letterSpacing: '0.1em', opacity: 0.85,
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
                       }}
                     >
                       CLUB FULL
@@ -1444,7 +1450,7 @@ export default function MarketScreen() {
                       }
                       className="fk-mono transition-all active:scale-95"
                       style={{
-                        minWidth: 56, padding: '6px 10px',
+                        minWidth: 56, padding: '10px 10px', minHeight: 44,
                         border: `1px solid ${canBuy ? 'var(--cyan)' : 'var(--rule)'}`,
                         color: canBuy ? 'var(--cyan)' : 'var(--mute)',
                         background: 'transparent',
@@ -1488,7 +1494,7 @@ export default function MarketScreen() {
       {/* Bottom rule reminder */}
       <div
         className="px-5 py-3 text-center"
-        style={{ borderTop: '1px solid rgba(255,255,255,0.05)' }}
+        style={{ borderTop: '1px solid var(--rule)' }}
       >
         <span
           className="text-[9px] font-semibold uppercase tracking-wider"
@@ -1521,12 +1527,14 @@ export default function MarketScreen() {
         return (
           <div
             style={{
-              position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 9000,
+              position: 'fixed',
+              bottom: isMobile ? 'calc(64px + env(safe-area-inset-bottom))' : 0,
+              left: 0, right: 0, zIndex: 9000,
               background: 'rgba(13,17,23,0.98)',
               backdropFilter: 'blur(24px)',
               WebkitBackdropFilter: 'blur(24px)',
               borderTop: '2px solid var(--gold)',
-              paddingBottom: 'max(16px, env(safe-area-inset-bottom))',
+              paddingBottom: isMobile ? '12px' : 'max(16px, env(safe-area-inset-bottom))',
             }}
           >
             <div style={{ maxWidth: 640, margin: '0 auto', padding: '10px 16px 0' }}>
@@ -1563,7 +1571,7 @@ export default function MarketScreen() {
                       style={{
                         display: 'flex', alignItems: 'center', gap: 6,
                         padding: '5px 0',
-                        borderBottom: i < numTransfers - 1 ? '1px solid rgba(255,255,255,0.05)' : 'none',
+                        borderBottom: i < numTransfers - 1 ? '1px solid var(--rule)' : 'none',
                       }}
                     >
                       {/* OUT side */}
@@ -1581,11 +1589,11 @@ export default function MarketScreen() {
                             >×</button>
                           </>
                         ) : (
-                          <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.15)' }}>—</span>
+                          <span style={{ fontSize: 11, color: 'var(--mute)' }}>—</span>
                         )}
                       </div>
                       {/* Divider */}
-                      <span style={{ color: 'rgba(255,255,255,0.2)', fontSize: 12, flexShrink: 0 }}>⇄</span>
+                      <span style={{ color: 'var(--text-2)', fontSize: 12, flexShrink: 0 }}>⇄</span>
                       {/* IN side */}
                       <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 4, minWidth: 0 }}>
                         {buy ? (
@@ -1601,7 +1609,7 @@ export default function MarketScreen() {
                             >×</button>
                           </>
                         ) : (
-                          <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.15)' }}>—</span>
+                          <span style={{ fontSize: 11, color: 'var(--mute)' }}>—</span>
                         )}
                       </div>
                     </div>
@@ -1617,7 +1625,7 @@ export default function MarketScreen() {
                   style={{
                     flex: 1, padding: '10px 8px',
                     background: 'transparent',
-                    border: '1px solid rgba(255,255,255,0.12)',
+                    border: '1px solid var(--rule)',
                     color: 'var(--mute)',
                     fontFamily: 'Archivo Black, sans-serif',
                     fontSize: 9, letterSpacing: '.12em', textTransform: 'uppercase',

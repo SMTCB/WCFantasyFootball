@@ -25,6 +25,9 @@ export default function LeagueSelector({ value, onChange }) {
         setLeagues(list);
         if (!value && list.length === 1) onChange(list[0].id);
       });
+  // onChange/value are parent-provided callbacks — adding them would re-fetch on every parent render.
+  // This effect only needs to re-run when the authenticated user changes.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id]);
 
   if (leagues.length === 0) return null;
