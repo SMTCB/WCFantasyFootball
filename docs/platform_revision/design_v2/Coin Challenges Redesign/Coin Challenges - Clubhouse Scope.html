@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8">
+<meta name="design_doc_mode" content="canvas">
+<title>Coin Challenges — Clubhouse Scope</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=Archivo+Black&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#F7F3ED;--card:#FFFFFF;--elev:#EDEAE2;--shell:#18202E;--text:#18202E;--text2:#4B5568;--mute:#8A97A8;--rule:#E2DDD5;--rule2:#ECE7DF;--accent:#1A6FA8;--accbg:rgba(26,111,168,.08);--gold:#B8720E;--goldbg:rgba(184,114,14,.08);--goldbd:rgba(184,114,14,.32);--pos:#166534;--posbg:rgba(22,101,52,.1);--neg:#B91C1C;--negbg:rgba(185,28,28,.08);--owner:#8C49C9;--ownerbg:rgba(140,73,201,.09);--ownerbd:rgba(140,73,201,.32);--r:6px;--fd:'Archivo Black',sans-serif;--fb:'Archivo',sans-serif;--fm:'JetBrains Mono',monospace}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--fb);color:var(--text);-webkit-font-smoothing:antialiased}
+.mono{font-family:var(--fm)}
+.blk{font-family:var(--fd);letter-spacing:-0.02em}
+.frame-wrap{position:absolute}
+.frame-label{font-family:var(--fm);font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:#7A8492;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.frame-label .n{background:var(--shell);color:#fff;border-radius:3px;padding:2px 7px;font-size:10px}
+.win{background:var(--bg);border-radius:10px;overflow:hidden;box-shadow:0 2px 4px rgba(24,32,46,.08),0 30px 60px -30px rgba(24,32,46,.35);position:relative}
+.pair{display:flex;gap:28px;align-items:flex-start}
+.tag{font-family:var(--fm);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--mute);margin-bottom:8px}
+/* doc */
+.doc{width:680px;background:var(--card);border:1px solid var(--rule);border-radius:10px;padding:36px 34px}
+.doc h1{font-family:var(--fd);font-size:24px;letter-spacing:-0.02em;margin-bottom:6px}
+.doc .sub{font-size:13px;color:var(--mute);margin-bottom:26px}
+.doc h2{font-family:var(--fd);font-size:14px;letter-spacing:-0.01em;margin:22px 0 8px;color:var(--accent)}
+.doc h2:first-of-type{margin-top:0}
+.doc p{font-size:13.5px;color:#4B5568;line-height:1.6;text-wrap:pretty}
+.doc p+p{margin-top:8px}
+.doc strong{color:var(--text);font-weight:600}
+.doc ul{margin:10px 0 0 0;list-style:none;display:flex;flex-direction:column;gap:7px}
+.doc li{font-size:13px;color:#4B5568;line-height:1.5;padding-left:16px;position:relative}
+.doc li::before{content:"→";position:absolute;left:0;color:var(--accent)}
+/* sidebar */
+.sidebar{width:212px;flex-shrink:0;background:var(--shell);color:#fff;display:flex;flex-direction:column;padding:16px 12px}
+.sb-brand{display:flex;align-items:center;gap:9px;padding:0 6px 14px;margin-bottom:10px;border-bottom:1px solid rgba(255,255,255,.08)}
+.sb-mark{width:24px;height:24px;border-radius:6px;background:var(--accent);display:grid;place-items:center;font-family:var(--fd);font-size:13px;flex-shrink:0}
+.sb-brandname{font-family:var(--fd);font-size:14px;letter-spacing:-0.01em}
+.sb-section{font-family:var(--fm);font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.35);padding:12px 10px 6px}
+.sb-item{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:var(--r);font-size:12.5px;color:rgba(255,255,255,.6);font-weight:500}
+.sb-item.on{background:rgba(255,255,255,.09);color:#fff}
+.sb-item.sub{padding-left:26px;font-size:12px}
+.sb-tag{margin-left:auto;font-family:var(--fm);font-size:7.5px;letter-spacing:.08em;color:rgba(255,255,255,.42);border:1px solid rgba(255,255,255,.22);border-radius:3px;padding:1px 5px}
+.sb-foot{margin-top:auto;display:flex;align-items:center;gap:9px;padding:10px 10px 0;border-top:1px solid rgba(255,255,255,.08)}
+.av{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;font-family:var(--fd);font-size:10px;color:#fff;flex-shrink:0}
+.sb-foot b{display:block;font-size:12px}
+.sb-foot span{font-family:var(--fm);font-size:8.5px;color:rgba(255,255,255,.4)}
+/* page header */
+.phdr{background:var(--shell);color:#fff;padding:16px 26px;display:flex;align-items:center;gap:18px;flex-shrink:0}
+.phdr-bc{font-family:var(--fm);font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.42);margin-bottom:5px}
+.phdr-ttl{display:flex;align-items:center;gap:9px}
+.phdr-ttl .t{font-family:var(--fd);font-size:21px;letter-spacing:-0.01em}
+.betatag{font-family:var(--fm);font-size:8px;letter-spacing:.1em;text-transform:uppercase;border:1px solid rgba(255,255,255,.28);color:rgba(255,255,255,.7);border-radius:100px;padding:2px 8px}
+.phdr-r{margin-left:auto;display:flex;align-items:center;gap:22px;flex-shrink:0}
+.wstat{text-align:right}
+.wstat .k{font-family:var(--fm);font-size:8px;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.4)}
+.wstat .v{font-family:var(--fd);font-size:17px;color:var(--gold);letter-spacing:-0.02em;display:flex;align-items:center;gap:5px;justify-content:flex-end}
+/* buttons */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;font-family:var(--fm);font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;padding:9px 18px;border-radius:var(--r);font-weight:600;cursor:pointer;border:none;white-space:nowrap}
+.btn-gold{background:var(--gold);color:#fff}
+.btn-accent{background:var(--accent);color:#fff}
+.btn-owner{background:var(--owner);color:#fff}
+.btn-o{background:transparent;border:1.5px solid var(--rule);color:var(--text2)}
+.btn-o.gold{border-color:var(--gold);color:var(--gold)}
+.btn-o.accent{border-color:var(--accent);color:var(--accent)}
+.btn-o.neg{border-color:var(--neg);color:var(--neg)}
+.btn-sm{padding:7px 12px;font-size:8.5px}
+.btn-bl{width:100%}
+/* body layout */
+.body2{display:flex;flex:1;min-height:0}
+.main{flex:1;min-width:0;padding:18px 24px;display:flex;flex-direction:column;gap:20px}
+.rail{width:250px;flex-shrink:0;padding:18px 20px;display:flex;flex-direction:column;gap:14px;border-left:1px solid var(--rule);background:var(--card)}
+.slbl{display:flex;align-items:center;gap:8px;font-family:var(--fm);font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--mute);margin-bottom:2px}
+.slbl.owner{color:var(--owner)}
+.slbl .cnt{background:var(--elev);color:var(--text);border-radius:100px;padding:1px 7px;font-weight:600}
+.sect{display:flex;flex-direction:column;gap:9px}
+.cardgrid{display:flex;flex-direction:column;gap:9px}
+/* generic card */
+.ccard{background:var(--card);border:1px solid var(--rule);border-radius:var(--r);padding:13px 15px;display:flex;flex-direction:column;gap:9px}
+.b-gold{border-color:var(--goldbd);border-left:3px solid var(--gold)}
+.b-accent{border-left:3px solid var(--accent)}
+.b-pos{border-color:rgba(22,101,52,.3);border-left:3px solid var(--pos)}
+.arbcard{border:1.5px dashed var(--mute);background:var(--elev);border-radius:var(--r);padding:13px 15px;display:flex;flex-direction:column;gap:9px}
+.arbcard.owner{border-color:var(--owner);background:var(--ownerbg)}
+.crow{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.opp{font-family:var(--fd);font-size:14px;color:var(--text);letter-spacing:-0.01em}
+.tbadge{font-family:var(--fm);font-size:8.5px;letter-spacing:.1em;text-transform:uppercase;padding:3px 8px;border-radius:100px;font-weight:600;white-space:nowrap}
+.tbadge.competitor{color:var(--gold);background:var(--goldbg)}
+.tbadge.freeform{color:var(--accent);background:var(--accbg)}
+.sumtxt{font-size:12.5px;color:var(--text2);line-height:1.45}
+.meta{font-family:var(--fm);font-size:8.5px;color:var(--mute);letter-spacing:.04em}
+.meta.warn{color:var(--gold)}
+.stakerow{display:flex;align-items:center;gap:20px}
+.sk .l{font-family:var(--fm);font-size:7.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--mute);margin-bottom:4px}
+.coin{display:inline-flex;align-items:center;justify-content:center;width:13px;height:13px;border-radius:50%;background:linear-gradient(145deg,#D4880F,#B8720E);color:#fff;font-family:var(--fd);font-size:6.5px;flex-shrink:0}
+.camt{display:inline-flex;align-items:center;gap:5px;font-family:var(--fd);font-size:15px;color:var(--gold);letter-spacing:-0.02em}
+.camt.pos{color:var(--pos)}.camt.neg{color:var(--neg)}.camt.sm{font-size:12px}
+.acts{display:flex;gap:8px}
+.dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.dot.live{background:var(--pos)}
+.livelbl{display:inline-flex;align-items:center;gap:5px;font-family:var(--fm);font-size:8px;letter-spacing:.12em;text-transform:uppercase;color:var(--pos)}
+/* live scorecard */
+.lvbox{display:flex;border:1px solid var(--rule);border-radius:var(--r);overflow:hidden}
+.lvside{flex:1;padding:10px 8px;text-align:center}
+.lvside.lead{background:var(--posbg)}
+.lvsep{width:1px;background:var(--rule)}
+.lvlbl{font-family:var(--fm);font-size:7px;letter-spacing:.12em;text-transform:uppercase;color:var(--mute);margin-bottom:3px}
+.lvlbl.lead{color:var(--pos)}
+.lvscr{font-family:var(--fd);font-size:24px;letter-spacing:-0.02em;color:var(--text)}
+.lvscr.lead{color:var(--pos)}
+/* history row */
+.hrow{background:var(--card);border:1px solid var(--rule);border-radius:var(--r);padding:10px 14px;display:flex;align-items:center;gap:12px}
+.hrow .inf{flex:1;min-width:0}
+.hrow .nm{font-family:var(--fd);font-size:13px;color:var(--text)}
+.hrow .sub{font-family:var(--fm);font-size:8px;color:var(--mute);margin-top:2px}
+.hrow .amt{text-align:right;flex-shrink:0}
+.hrow .n{font-family:var(--fd);font-size:15px;letter-spacing:-0.02em}
+.hrow .n.win{color:var(--pos)}.hrow .n.loss{color:var(--neg)}
+/* rail cards */
+.rcard{background:var(--card);border:1px solid var(--rule);border-radius:var(--r);padding:14px 15px}
+.rcard .k{font-family:var(--fm);font-size:8.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--mute);margin-bottom:8px}
+.rline{display:flex;justify-content:space-between;align-items:center;font-size:12px;padding:5px 0;border-bottom:1px solid var(--rule2)}
+.rline:last-child{border-bottom:0}
+.rline .v{font-family:var(--fd);font-size:13px}
+/* drawer mini mockups */
+.drawer{width:372px;flex-shrink:0;background:var(--card);border:1px solid var(--rule);border-radius:10px;display:flex;flex-direction:column;height:660px}
+.dr-hd{padding:16px 18px 0;border-bottom:1px solid var(--rule)}
+.stepdots{display:flex;gap:5px;margin-bottom:10px}
+.stepdot{flex:1;height:3px;border-radius:2px;background:var(--rule)}
+.stepdot.done{background:var(--accent)}
+.stepdot.curr{background:var(--gold)}
+.dr-ey{font-family:var(--fm);font-size:8px;letter-spacing:.16em;text-transform:uppercase;color:var(--mute);margin-bottom:5px}
+.dr-ttl{font-family:var(--fd);font-size:19px;letter-spacing:-0.02em;padding-bottom:14px}
+.dr-body{flex:1;overflow:hidden;padding:16px 18px;display:flex;flex-direction:column;gap:12px}
+.dr-foot{padding:14px 18px 16px;border-top:1px solid var(--rule);display:flex;gap:8px}
+.searchbar{display:flex;align-items:center;gap:8px;background:var(--elev);border-radius:100px;padding:9px 14px;color:var(--mute);font-size:12.5px}
+.mrow{display:grid;grid-template-columns:30px 1fr auto;align-items:center;gap:10px;padding:8px 10px;border-radius:var(--r)}
+.mrow.sel{background:var(--accbg);outline:1.5px solid var(--accent)}
+.mrow .nm{font-family:var(--fd);font-size:13px}
+.mrow .sub{font-family:var(--fm);font-size:8px;color:var(--mute)}
+.rdot{width:17px;height:17px;border-radius:50%;border:2px solid var(--rule);flex-shrink:0}
+.rdot.on{border-color:var(--accent);background:var(--accent)}
+.bettype{display:flex;gap:12px;align-items:flex-start;padding:15px 16px;border:2px solid var(--rule);border-radius:var(--r);cursor:pointer}
+.bettype.sel.competitor{border-color:var(--gold);background:var(--goldbg)}
+.bettype.sel.freeform{border-color:var(--accent);background:var(--accbg)}
+.bettype .ic{width:34px;height:34px;border-radius:8px;display:grid;place-items:center;font-size:16px;flex-shrink:0}
+.bettype .t{font-family:var(--fd);font-size:14.5px}
+.bettype .d{font-size:11.5px;color:var(--text2);line-height:1.4;margin-top:2px}
+.chip{font-family:var(--fm);font-size:10px;letter-spacing:.06em;padding:8px 13px;border-radius:100px;border:1.5px solid var(--rule);color:var(--text2);cursor:pointer;white-space:nowrap}
+.chip.sel{border-color:var(--accent);background:var(--accbg);color:var(--accent);font-weight:600}
+.chip.sel.g{border-color:var(--gold);background:var(--goldbg);color:var(--gold)}
+.chiprow{display:flex;gap:8px;flex-wrap:wrap}
+.fieldlbl{font-family:var(--fm);font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--mute);margin-bottom:8px}
+.taframe{border:1.5px solid var(--rule);border-radius:var(--r);padding:12px 14px;font-size:13px;color:var(--text);line-height:1.5;min-height:70px}
+.ccount{font-family:var(--fm);font-size:9px;color:var(--mute);text-align:right;margin-top:5px}
+.rangebar{height:6px;border-radius:3px;background:var(--elev);position:relative;margin:10px 0}
+.rangebar i{position:absolute;left:0;top:0;bottom:0;border-radius:3px;background:var(--gold)}
+.rangebar i.f{background:var(--accent)}
+.rangethumb{width:20px;height:20px;border-radius:50%;background:#fff;border:3px solid var(--gold);position:absolute;top:50%;transform:translate(-50%,-50%)}
+.rangethumb.f{border-color:var(--accent)}
+.calcbox{background:var(--elev);border-radius:var(--r);padding:12px 14px;display:flex;justify-content:space-between;align-items:center}
+.emptybox{border:1.5px dashed var(--rule);border-radius:var(--r);padding:22px 18px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:10px}
+.emptybox .t{font-family:var(--fd);font-size:14px}
+.emptybox .d{font-size:12px;color:var(--text2);line-height:1.5;max-width:220px}
+/* mobile phone shell */
+.phone{width:390px;flex-shrink:0;background:var(--bg);border-radius:32px;overflow:hidden;border:8px solid var(--shell);position:relative;display:flex;flex-direction:column}
+.pstat{height:30px;background:var(--shell);display:flex;align-items:center;justify-content:center}
+.pstat span{color:#fff;font-family:var(--fd);font-size:11px}
+.pfoot{height:16px;background:var(--shell)}
+.mhdr{background:var(--shell);color:#fff;padding:12px 16px}
+.mhdr .bc{font-family:var(--fm);font-size:8px;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.4);margin-bottom:4px}
+.mhdr .row{display:flex;align-items:center;gap:8px}
+.mhdr .t{font-family:var(--fd);font-size:18px}
+.mfab{margin:0 16px 14px;background:var(--gold);color:#fff;text-align:center;padding:13px;border-radius:var(--r);font-family:var(--fm);font-size:10px;letter-spacing:.14em;text-transform:uppercase;font-weight:600;box-shadow:0 8px 20px -6px rgba(184,114,14,.5)}
+.mbottomnav{height:56px;background:var(--shell);display:flex;flex-shrink:0}
+.mbn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px}
+.mbn .d{width:5px;height:5px;border-radius:50%;background:rgba(255,255,255,.28)}
+.mbn .l{font-family:var(--fm);font-size:7px;letter-spacing:.06em;text-transform:uppercase;color:rgba(255,255,255,.42)}
+.mbn.on .d{background:var(--accent)}.mbn.on .l{color:#fff}
+.mbody{flex:1;overflow:hidden;padding:14px 16px;display:flex;flex-direction:column;gap:12px}
+</style></head>
+<body style="background:#0e0e0e">
+
+<div class="frame-wrap" style="left:0;top:0">
+<div class="frame-label"><span class="n">00</span>Composition point of view</div>
+<div class="doc">
+<h1>Coin Challenges — Clubhouse scope + Freeform bets</h1>
+<div class="sub">Kit Light · reconciled tokens · desktop 1440 &amp; mobile 390, paired by screen</div>
+<h2>What's changing, what isn't</h2>
+<p>Additive to the existing, already-Kit-Light screen: a real <strong>member picker</strong> replaces the raw-ID field, a <strong>Competitor / Freeform</strong> choice opens the create flow, and a net-new <strong>declare → confirm/dispute → owner arbitrates</strong> lifecycle exists for Freeform only (Competitor bets still auto-resolve off the GW total). Layout, wallet sidebar and card anatomy are untouched.</p>
+<h2>Bet-type identity — the color call</h2>
+<p><strong>Competitor keeps gold</strong> — it already owns stakes, the primary CTA and the incoming-card border. <strong>Freeform takes accent blue</strong> — unclaimed on this screen for bet identity, and already reads as "the other kind of thing" against gold elsewhere in the product.</p>
+<h2>The dispute state needed its own visual language</h2>
+<p>Disputed/pending-arbitration is a <strong>lifecycle status, not a bet type</strong> — it gets a neutral dashed treatment instead of gold or blue. The owner's decision action borrows <strong>purple</strong>, already in the system as the GK position tone, repurposed here as a one-off "owner/arbitration" role marker.</p>
+<h2>Member picker &amp; mobile progressive disclosure</h2>
+<p>The opponent list reuses the <strong>Members tab row</strong> (avatar, name, search). On mobile, bet-type, opponent, bet detail and stake become <strong>four separate full screens</strong> instead of one long sheet.</p>
+<h2>How this doc is organized</h2>
+<p>Each numbered screen (S01–S10) pairs its <strong>desktop</strong> artboard directly with the matching <strong>mobile 390</strong> artboard, side by side, for easy tracking.</p>
+</div>
+</div>
+
+<div class="frame-wrap" style="left:740px;top:0">
+<div class="frame-label"><span class="n">S01</span>Coin Challenges Hub — owner view</div>
+<div class="pair">
+<div><div class="tag">Desktop 1440</div>
+<div class="win" style="width:1400px;display:flex">
+<div class="sidebar">
+<div class="sb-brand"><div class="sb-mark">F</div><div class="sb-brandname">FantasyKit</div></div>
+<div class="sb-section">Clubhouse</div>
+<div class="sb-item">🏠 Clubhouse</div>
+<div class="sb-item sub">The FrontRow</div>
+<div class="sb-section">Community</div>
+<div class="sb-item">🏆 Trophy Cabinet</div>
+<div class="sb-item on">🪙 Coin Challenges<span class="sb-tag">BETA</span></div>
+<div class="sb-item">⚙ Settings</div>
+<div class="sb-foot"><div class="av" style="background:var(--accent)">Y</div><div><b>You</b><span>Owner · Multi-sport</span></div></div>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;min-width:0">
+<div class="phdr">
+<div><div class="phdr-bc">🏠 THE USUAL SUSPECTS</div><div class="phdr-ttl"><span class="t">Coin Challenges</span><span class="betatag">Beta</span></div></div>
+<div class="phdr-r">
+<div class="wstat"><div class="k">Wallet balance</div><div class="v"><span class="coin">C</span>1,240</div></div>
+<div class="wstat"><div class="k">In escrow</div><div class="v" style="color:rgba(255,255,255,.7)">400</div></div>
+<button class="btn btn-gold">+ New Challenge</button>
+</div>
+</div>
+<div class="body2">
+<div class="main">
+
+<div class="sect">
+<div class="slbl owner">⚖ Arbitration needed<span class="cnt">1</span></div>
+<div class="arbcard owner">
+<div class="crow"><span class="opp">Bea vs Marco</span><span class="tbadge freeform">Freeform</span><span class="meta" style="margin-left:auto;color:var(--owner)">Both staked 200 · frozen in escrow</span></div>
+<div class="sumtxt">"Who buys the next round after the derby?" — Bea declared herself the winner, Marco disputed and declared himself the winner instead. As Clubhouse owner, you have the final call.</div>
+<div class="acts"><button class="btn btn-owner btn-sm">Review &amp; decide →</button></div>
+</div>
+</div>
+
+<div class="sect">
+<div class="slbl">Your move<span class="cnt">2</span></div>
+<div class="cardgrid">
+<div class="ccard" style="border:1px solid var(--rule);border-left:3px solid var(--gold)">
+<div class="crow"><span class="opp">Sam</span><span class="tbadge freeform">Freeform</span><span class="meta warn" style="margin-left:auto">⏱ Respond within 24 hrs</span></div>
+<div class="sumtxt">"Will Haaland score a hat-trick vs City?" — Sam declared: <strong style="color:var(--text)">Sam wins</strong>.</div>
+<div class="stakerow"><div class="sk"><div class="l">Stake each</div><div class="camt sm">150</div></div><div class="sk"><div class="l">If you confirm</div><div class="camt sm neg">−150</div></div></div>
+<div class="acts"><button class="btn btn-o accent btn-sm">Confirm — Sam wins</button><button class="btn btn-o neg btn-sm">Dispute</button></div>
+</div>
+<div class="ccard" style="border:1px solid var(--rule2);opacity:.75">
+<div class="crow"><span class="opp">→ Priya</span><span class="tbadge freeform">Freeform</span><span class="meta" style="margin-left:auto">Awaiting Priya's response</span></div>
+<div class="sumtxt">"Total corner count over 11.5 in the derby?" — you declared: <strong style="color:var(--text)">Push, no winner</strong>.</div>
+</div>
+</div>
+</div>
+
+<div class="sect">
+<div class="slbl">Incoming<span class="cnt">2</span></div>
+<div class="cardgrid">
+<div class="ccard b-gold">
+<div class="crow"><span class="opp">Carlos</span><span class="tbadge competitor">Competitor</span><span class="meta" style="margin-left:auto;color:var(--gold)">⏱ 18 hrs</span></div>
+<div class="sumtxt">Carlos thinks his GW31 total beats yours in Premier League Fantasy.</div>
+<div class="stakerow"><div class="sk"><div class="l">Stake each</div><div class="camt sm">300</div></div><div class="sk"><div class="l">Net win</div><div class="camt sm pos">270</div></div></div>
+<div class="acts"><button class="btn btn-o gold btn-sm">Accept</button><button class="btn btn-o btn-sm">Decline</button></div>
+</div>
+<div class="ccard" style="border:1px solid var(--accbg);border-left:3px solid var(--accent)">
+<div class="crow"><span class="opp">Priya</span><span class="tbadge freeform">Freeform</span><span class="meta" style="margin-left:auto;color:var(--accent)">⏱ 6 hrs</span></div>
+<div class="sumtxt">"Will it rain at kickoff Saturday?" — Priya's bet.</div>
+<div class="stakerow"><div class="sk"><div class="l">Stake each</div><div class="camt sm">100</div></div><div class="sk"><div class="l">Net win</div><div class="camt sm pos">95</div></div></div>
+<div class="acts"><button class="btn btn-o accent btn-sm">Accept</button><button class="btn btn-o btn-sm">Decline</button></div>
+</div>
+</div>
+</div>
+
+<div class="sect">
+<div class="slbl">Live<span class="cnt">2</span></div>
+<div class="cardgrid">
+<div class="ccard b-pos">
+<div class="crow"><span class="livelbl"><span class="dot live"></span>Live</span><span class="meta" style="flex:1">GW31 · vs Marco</span><span class="tbadge competitor">Competitor</span></div>
+<div class="lvbox"><div class="lvside lead"><div class="lvlbl lead">You</div><div class="lvscr lead">47</div></div><div class="lvsep"></div><div class="lvside"><div class="lvlbl">Marco</div><div class="lvscr">39</div></div></div>
+<div class="crow"><span class="meta" style="color:var(--pos)">↑ Leading by 8 pts</span><span class="camt sm" style="margin-left:auto">250</span></div>
+</div>
+<div class="ccard b-accent">
+<div class="crow"><span class="livelbl"><span class="dot live"></span>Live</span><span class="meta" style="flex:1">Both staked · no auto-result</span><span class="tbadge freeform">Freeform</span></div>
+<div class="sumtxt" style="font-size:14px;color:var(--text)">"Who buys the next round — you or Tom?"</div>
+<div class="crow"><span class="camt sm">150</span><button class="btn btn-o accent btn-sm" style="margin-left:auto">Declare Result</button></div>
+</div>
+</div>
+</div>
+
+<div class="sect">
+<div class="slbl">Sent — awaiting accept<span class="cnt">1</span></div>
+<div class="ccard" style="border:1px solid var(--rule);border-left:3px solid var(--accent)">
+<div class="crow"><span class="opp">→ Sam</span><span class="tbadge freeform">Freeform</span><span class="meta" style="margin-left:auto">Awaiting · 1 day left</span></div>
+<div class="sumtxt">"Will extra time be needed in the derby?"</div>
+<div class="camt sm">100<span class="mono" style="font-size:9px;color:var(--mute);margin-left:5px;font-weight:400">staked</span></div>
+</div>
+</div>
+
+<div class="sect">
+<div class="slbl">History<span class="cnt">4</span></div>
+<div class="cardgrid">
+<div class="hrow"><div class="inf"><div class="nm">You won <span class="tbadge competitor" style="margin-left:6px">Competitor</span></div><div class="sub">vs Bea · GW30 · GW Total Battle · 68—55 pts</div></div><div class="amt"><div class="n win">+225</div><div class="mono" style="font-size:7.5px;color:var(--mute)">after rake</div></div></div>
+<div class="hrow"><div class="inf"><div class="nm">Priya won <span class="tbadge competitor" style="margin-left:6px">Competitor</span></div><div class="sub">vs Priya · GW30 · Player Duel · 4—11 pts</div></div><div class="amt"><div class="n loss">−100</div></div></div>
+<div class="hrow"><div class="inf"><div class="nm">You won <span class="tbadge freeform" style="margin-left:6px">Freeform</span></div><div class="sub">vs Carlos · "Who scores first — Haaland or Salah?" · answer: Salah · mutually confirmed</div></div><div class="amt"><div class="n win">+142</div><div class="mono" style="font-size:7.5px;color:var(--mute)">after rake</div></div></div>
+<div class="hrow"><div class="inf"><div class="nm">Marco won <span class="tbadge freeform" style="margin-left:6px">Freeform</span></div><div class="sub">vs Marco · "Will VAR overturn the penalty?" · answer: No · resolved by You (owner)</div></div><div class="amt"><div class="n loss">−100</div></div></div>
+</div>
+</div>
+
+</div>
+<div class="rail">
+<div class="rcard"><div class="k">Coin wallet</div><div class="rline"><span>Balance</span><span class="v" style="color:var(--gold)">1,240</span></div><div class="rline"><span>In escrow</span><span class="v">400</span></div><div class="rline"><span>Daily stake cap</span><span class="v">1,000 / 2,000</span></div></div>
+<div class="rcard"><div class="k">Season record</div><div class="rline"><span>Played</span><span class="v">18</span></div><div class="rline"><span>Won</span><span class="v" style="color:var(--pos)">11</span></div><div class="rline"><span>Net coins</span><span class="v" style="color:var(--pos)">+340</span></div></div>
+<div class="rcard"><div class="k">How it works</div><div style="font-size:11.5px;color:var(--text2);line-height:1.55">Challenge anyone in this Clubhouse. Competitor bets settle automatically off a real result. Freeform bets need both sides to agree — disagree, and the Clubhouse owner decides.</div></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+<div><div class="tag">Mobile 390</div>
+<div class="phone">
+<div class="pstat"><span>9:41</span></div>
+<div class="mhdr"><div class="bc">🏠 THE USUAL SUSPECTS</div><div class="row"><span class="t">Coin Challenges</span><span class="betatag">Beta</span><span style="margin-left:auto;font-family:var(--fm);font-size:11px;color:var(--gold);display:flex;align-items:center;gap:4px"><span class="coin">C</span>1,240</span></div></div>
+<div class="mbody">
+<div class="arbcard owner"><div class="crow"><span class="opp" style="font-size:13px">Bea vs Marco</span><span class="tbadge freeform">Freeform</span></div><div class="sumtxt" style="font-size:11.5px">Arbitration needed — tap to decide</div></div>
+<div class="slbl">Your move<span class="cnt">1</span></div>
+<div class="ccard" style="border:1px solid var(--rule);border-left:3px solid var(--gold)"><div class="crow"><span class="opp" style="font-size:13px">Sam</span><span class="tbadge freeform">Freeform</span></div><div class="sumtxt" style="font-size:11.5px">Sam declared: <strong style="color:var(--text)">Sam wins</strong></div><div class="acts"><button class="btn btn-o accent btn-sm">Confirm</button><button class="btn btn-o neg btn-sm">Dispute</button></div></div>
+<div class="slbl">Incoming<span class="cnt">2</span></div>
+<div class="ccard b-gold"><div class="crow"><span class="opp" style="font-size:13px">Carlos</span><span class="tbadge competitor">Competitor</span></div><div class="sumtxt" style="font-size:11.5px">GW31 total battle · stake 300</div></div>
+</div>
+<div class="mfab">+ New Challenge</div>
+<div class="mbottomnav"><div class="mbn"><div class="d"></div><div class="l">Club</div></div><div class="mbn"><div class="d"></div><div class="l">Trophy</div></div><div class="mbn on"><div class="d"></div><div class="l">Coins</div></div><div class="mbn"><div class="d"></div><div class="l">Settings</div></div></div>
+<div class="pfoot"></div>
+</div>
+</div>
+</div>
+</div>
+
+<div class="frame-wrap" style="left:740px;top:1770px">
+<div class="frame-label"><span class="n">S02</span>Create Challenge · Step 1 — Bet Type</div>
+<div class="pair">
+<div><div class="tag">Desktop</div>
+<div class="drawer">
+<div class="dr-hd"><div class="stepdots"><div class="stepdot curr"></div><div class="stepdot"></div><div class="stepdot"></div><div class="stepdot"></div></div><div class="dr-ey">New Challenge</div><div class="dr-ttl">What kind of bet?</div></div>
+<div class="dr-body">
+<div class="bettype sel competitor"><div class="ic" style="background:var(--goldbg)">🏆</div><div><div class="t">Competitor</div><div class="d">Bet on a real result — pick a competition, points settle it automatically.</div></div></div>
+<div class="bettype"><div class="ic" style="background:var(--elev)">💬</div><div><div class="t">Freeform</div><div class="d">Bet on anything. No competition needed — you and your opponent agree on the outcome.</div></div></div>
+</div>
+<div class="dr-foot"><button class="btn btn-o btn-bl">Cancel</button><button class="btn btn-gold btn-bl">Continue →</button></div>
+</div>
+</div>
+<div><div class="tag">Mobile</div>
+<div class="phone">
+<div class="pstat"><span>9:41</span></div>
+<div class="mhdr"><div class="bc">NEW CHALLENGE · STEP 1 OF 4</div><div class="row"><span class="t">What kind of bet?</span></div></div>
+<div class="mbody">
+<div class="bettype sel competitor"><div class="ic" style="background:var(--goldbg)">🏆</div><div><div class="t">Competitor</div><div class="d">Bet on a real result.</div></div></div>
+<div class="bettype"><div class="ic" style="background:var(--elev)">💬</div><div><div class="t">Freeform</div><div class="d">Bet on anything — you both agree the outcome.</div></div></div>
+</div>
+<div class="dr-foot"><button class="btn btn-gold btn-bl">Continue →</button></div>
+<div class="pfoot"></div>
+</div>
+</div>
+</div>
+</div>
+
+<div class="frame-wrap" style="left:740px;top:2560px">
+<div class="frame-label"><span class="n">S03</span>Create Challenge · Step 2 — Opponent Picker</div>
+<div class="pair">
+<div><div class="tag">Desktop</div>
+<div class="drawer">
+<div class="dr-hd"><div class="stepdots"><div class="stepdot done"></div><div class="stepdot curr"></div><div class="stepdot"></div><div class="stepdot"></div></div><div class="dr-ey">Freeform · Step 2 of 4</div><div class="dr-ttl">Pick an opponent</div></div>
+<div class="dr-body">
+<div class="searchbar">🔍 Search members…</div>
+<div style="display:flex;flex-direction:column;gap:2px">
+<div class="mrow"><div class="av" style="background:#1A6FA8;width:30px;height:30px">M</div><div><div class="nm">Marco</div><div class="sub">Rank #4 · joined Jan '25</div></div><div class="rdot"></div></div>
+<div class="mrow"><div class="av" style="background:#C1391B;width:30px;height:30px">B</div><div><div class="nm">Bea</div><div class="sub">Rank #7</div></div><div class="rdot"></div></div>
+<div class="mrow sel"><div class="av" style="background:#B8720E;width:30px;height:30px">S</div><div><div class="nm">Sam</div><div class="sub">Rank #2</div></div><div class="rdot on"></div></div>
+<div class="mrow"><div class="av" style="background:#7C3AED;width:30px;height:30px">P</div><div><div class="nm">Priya</div><div class="sub">Rank #5</div></div><div class="rdot"></div></div>
+<div class="mrow"><div class="av" style="background:#4B5568;width:30px;height:30px">T</div><div><div class="nm">Tom</div><div class="sub">Rank #8</div></div><div class="rdot"></div></div>
+</div>
+</div>
+<div class="dr-foot"><button class="btn btn-o btn-bl">← Back</button><button class="btn btn-accent btn-bl">Continue →</button></div>
+</div>
+</div>
+<div><div class="tag">Mobile</div>
+<div class="phone">
+<div class="pstat"><span>9:41</span></div>
+<div class="mhdr"><div class="bc">FREEFORM · STEP 2 OF 4</div><div class="row"><span class="t">Pick an opponent</span></div></div>
+<div class="mbody">
+<div class="searchbar">🔍 Search members…</div>
+<div style="display:flex;flex-direction:column;gap:2px">
+<div class="mrow"><div class="av" style="background:#1A6FA8;width:30px;height:30px">M</div><div><div class="nm">Marco</div></div><div class="rdot"></div></div>
+<div class="mrow sel"><div class="av" style="background:#B8720E;width:30px;height:30px">S</div><div><div class="nm">Sam</div></div><div class="rdot on"></div></div>
+<div class="mrow"><div class="av" style="background:#7C3AED;width:30px;height:30px">P</div><div><div class="nm">Priya</div></div><div class="rdot"></div></div>
+</div>
+</div>
+<div class="dr-foot"><button class="btn btn-o" style="flex:0 0 auto;padding:9px 14px">←</button><button class="btn btn-accent btn-bl">Continue →</button></div>
+<div class="pfoot"></div>
+</div>
+</div>
+</div>
+</div>
+
+<div class="frame-wrap" style="left:740px;top:3350px">
+<div class="frame-label"><span class="n">S04</span>Create Challenge · Step 3a — Competitor detail (competition + gameweek)</div>
+<div class="pair">
+<div><div class="tag">Desktop</div>
+<div class="drawer">
+<div class="dr-hd"><div class="stepdots"><div class="stepdot done"></div><div class="stepdot done"></div><div class="stepdot curr"></div><div class="stepdot"></div></div><div class="dr-ey">Competitor · vs Marco</div><div class="dr-ttl">Pick a competition</div></div>
+<div class="dr-body">
+<div class="chiprow"><span class="chip sel g">⚽ Premier League Fantasy</span><span class="chip">🏁 Formula Fun</span><span class="chip">🎾 Wimbledon Box</span><span class="chip">⚽ Sunday League Redux</span></div>
+<div><div class="fieldlbl">Which gameweek?</div><div class="chiprow"><span class="chip sel g">GW31 · current</span><span class="chip">GW32 · next</span></div></div>
+<div class="meta" style="margin-top:6px">Whoever's GW total is higher wins — settles automatically at final whistle.</div>
+</div>
+<div class="dr-foot"><button class="btn btn-o btn-bl">← Back</button><button class="btn btn-gold btn-bl">Continue →</button></div>
+</div>
+</div>
+<div><div class="tag">Mobile</div>
+<div class="phone">
+<div class="pstat"><span>9:41</span></div>
+<div class="mhdr"><div class="bc">COMPETITOR · STEP 3 OF 4 · VS MARCO</div><div class="row"><span class="t">Pick a competition</span></div></div>
+<div class="mbody">
+<div class="chiprow"><span class="chip sel g">⚽ Premier League Fantasy</span><span class="chip">🏁 Formula Fun</span><span class="chip">🎾 Wimbledon Box</span></div>
+<div><div class="fieldlbl">Which gameweek?</div><div class="chiprow"><span class="chip sel g">GW31 · current</span><span class="chip">GW32 · next</span></div></div>
+</div>
+<div class="dr-foot"><button class="btn btn-o" style="flex:0 0 auto;padding:9px 14px">←</button><button class="btn btn-gold btn-bl">Continue →</button></div>
+<div class="pfoot"></div>
+</div>
+</div>
+</div>
+</div>
+
+<div class="frame-wrap" style="left:740px;top:4110px">
+<div class="frame-label"><span class="n">S05</span>Create Challenge · Step 3b — Freeform detail (question)</div>
+<div class="pair">
+<div><div class="tag">Desktop</div>
+<div class="drawer">
+<div class="dr-hd"><div class="stepdots"><div class="stepdot done"></div><div class="stepdot done"></div><div class="stepdot curr"></div><div class="stepdot"></div></div><div class="dr-ey">Freeform · vs Sam</div><div class="dr-ttl">What's the bet?</div></div>
+<div class="dr-body">
+<div><div class="fieldlbl">Question — what's being decided</div><div class="taframe">Will it rain at kickoff for Saturday's derby?</div><div class="ccount">96 / 140</div></div>
+<div><div class="fieldlbl">Message <span style="text-transform:none;font-weight:400">(optional — trash talk goes here)</span></div><div class="taframe" style="min-height:44px;color:var(--mute)">Bring an umbrella, Sam.</div></div>
+</div>
+<div class="dr-foot"><button class="btn btn-o btn-bl">← Back</button><button class="btn btn-accent btn-bl">Continue →</button></div>
+</div>
+</div>
+<div><div class="tag">Mobile</div>
+<div class="phone">
+<div class="pstat"><span>9:41</span></div>
+<div class="mhdr"><div class="bc">FREEFORM · STEP 3 OF 4 · VS SAM</div><div class="row"><span class="t">What's the bet?</span></div></div>
+<div class="mbody">
+<div><div class="fieldlbl">Question</div><div class="taframe">Will it rain at kickoff Saturday?</div><div class="ccount">108 / 140</div></div>
+<div><div class="fieldlbl">Message (optional)</div><div class="taframe" style="min-height:44px;color:var(--mute)">Bring an umbrella.</div></div>
+</div>
+<div class="dr-foot"><button class="btn btn-o" style="flex:0 0 auto;padding:9px 14px">←</button><button class="btn btn-accent btn-bl">Continue →</button></div>
+<div class="pfoot"></div>
+</div>
+</div>
+</div>
+</div>
+
+<div class="frame-wrap" style="left:740px;top:4860px">
+<div class="frame-label"><span class="n">S06</span>Create Challenge · Step 4 — Stake &amp; Review</div>
+<div class="pair">
+<div><div class="tag">Desktop</div>
+<div class="drawer">
+<div class="dr-hd"><div class="stepdots"><div class="stepdot done"></div><div class="stepdot done"></div><div class="stepdot done"></div><div class="stepdot curr"></div></div><div class="dr-ey">Freeform · vs Sam</div><div class="dr-ttl">Set your stake</div></div>
+<div class="dr-body">
+<div class="chiprow"><span class="chip">50</span><span class="chip">100</span><span class="chip sel">250</span><span class="chip">500</span><span class="chip">Custom</span></div>
+<div class="rangebar"><i class="f" style="width:50%"></i><div class="rangethumb f" style="left:50%"></div></div>
+<div class="calcbox"><div><div class="fieldlbl" style="margin:0">You stake</div><div class="camt">250</div></div><div style="text-align:right"><div class="fieldlbl" style="margin:0">Net win (5% rake)</div><div class="camt pos">237</div></div></div>
+<div class="meta">"Will it rain at kickoff for Saturday's derby?" · vs Sam</div>
+</div>
+<div class="dr-foot"><button class="btn btn-o btn-bl">← Back</button><button class="btn btn-accent btn-bl">Send Challenge →</button></div>
+</div>
+</div>
+<div><div class="tag">Mobile</div>
+<div class="phone">
+<div class="pstat"><span>9:41</span></div>
+<div class="mhdr"><div class="bc">FREEFORM · STEP 4 OF 4 · VS SAM</div><div class="row"><span class="t">Set your stake</span></div></div>
+<div class="mbody">
+<div class="chiprow"><span class="chip">50</span><span class="chip sel">100</span><span class="chip">250</span><span class="chip">Custom</span></div>
+<div class="calcbox"><div><div class="fieldlbl" style="margin:0">You stake</div><div class="camt">100</div></div><div style="text-align:right"><div class="fieldlbl" style="margin:0">Net win</div><div class="camt pos">95</div></div></div>
+</div>
+<div class="dr-foot"><button class="btn btn-o" style="flex:0 0 auto;padding:9px 14px">←</button><button class="btn btn-accent btn-bl">Send Challenge →</button></div>
+<div class="pfoot"></div>
+</div>
+</div>
+</div>
+</div>
+
+<div class="frame-wrap" style="left:740px;top:5610px">
+<div class="frame-label"><span class="n">S07</span>Create Challenge · Empty states</div>
+<div class="pair">
+<div><div class="tag">Desktop</div>
+<div class="pair" style="gap:20px">
+<div class="emptybox" style="width:320px">
+<div class="t">Nobody to challenge yet</div>
+<div class="d">You're the only member of this Clubhouse. Invite your group before you can send a challenge.</div>
+<button class="btn btn-gold btn-sm">Invite to Clubhouse</button>
+</div>
+<div class="emptybox" style="width:320px">
+<div class="t">No competitions yet</div>
+<div class="d">This Clubhouse doesn't have a football league, F1 paddock or tennis box yet — add one to bet on a real result.</div>
+<button class="btn btn-gold btn-sm">Add a competition</button>
+<span class="meta" style="color:var(--accent)">or try a Freeform bet instead →</span>
+</div>
+</div>
+</div>
+<div><div class="tag">Mobile</div>
+<div class="phone">
+<div class="pstat"><span>9:41</span></div>
+<div class="mhdr"><div class="bc">NEW CHALLENGE</div><div class="row"><span class="t">Empty states</span></div></div>
+<div class="mbody">
+<div class="emptybox"><div class="t">Nobody to challenge yet</div><div class="d">You're the only member of this Clubhouse. Invite your group first.</div><button class="btn btn-gold btn-sm">Invite to Clubhouse</button></div>
+<div class="emptybox"><div class="t">No competitions yet</div><div class="d">Add a football league, F1 paddock or tennis box to bet on a real result.</div><button class="btn btn-gold btn-sm">Add a competition</button></div>
+</div>
+<div class="pfoot"></div>
+</div>
+</div>
+</div>
+</div>
+
+<div class="frame-wrap" style="left:740px;top:6270px">
+<div class="frame-label"><span class="n">S08</span>Freeform lifecycle — live → your move → disputed → settled</div>
+<div class="pair">
+<div><div class="tag">Desktop</div>
+<div class="pair" style="gap:16px">
+<div class="ccard b-accent" style="width:270px">
+<div class="crow"><span class="livelbl"><span class="dot live"></span>Live</span><span class="tbadge freeform" style="margin-left:auto">Freeform</span></div>
+<div class="sumtxt" style="font-size:14px;color:var(--text)">"Who buys the next round — you or Tom?"</div>
+<div class="crow"><span class="camt sm">150</span><span class="meta" style="margin-left:auto">Both staked · escrow held</span></div>
+<button class="btn btn-o accent btn-sm btn-bl">Declare Result</button>
+</div>
+<div class="ccard" style="width:270px;border:1px solid var(--rule);border-left:3px solid var(--gold)">
+<div class="crow"><span class="meta" style="color:var(--gold)">● Your move</span><span class="tbadge freeform" style="margin-left:auto">Freeform</span></div>
+<div class="sumtxt" style="font-size:14px;color:var(--text)">"Will Haaland score a hat-trick vs City?"</div>
+<div class="sumtxt">Sam declared: <strong style="color:var(--text)">Sam wins</strong>. Confirm to settle, or dispute if you disagree.</div>
+<div class="acts"><button class="btn btn-o accent btn-sm">Confirm</button><button class="btn btn-o neg btn-sm">Dispute</button></div>
+</div>
+<div class="arbcard" style="width:270px">
+<div class="crow"><span class="meta" style="color:var(--text2)">⚖ Pending arbitration</span><span class="tbadge freeform" style="margin-left:auto">Freeform</span></div>
+<div class="sumtxt" style="font-size:14px;color:var(--text)">"Who buys the next round after the derby?"</div>
+<div class="sumtxt">You said <strong>Bea won</strong>. Bea said <strong>you won</strong>. Stakes are frozen — the Clubhouse owner will decide.</div>
+<div class="camt sm" style="opacity:.6">200 <span class="mono" style="font-size:8px;color:var(--mute);font-weight:400;margin-left:4px">frozen</span></div>
+</div>
+<div style="display:flex;flex-direction:column;gap:10px;width:270px">
+<div class="hrow"><div class="inf"><div class="nm" style="font-size:12.5px">You won</div><div class="sub">"Who scores first?" · mutually confirmed</div></div><div class="amt"><div class="n win" style="font-size:13px">+142</div></div></div>
+<div class="hrow"><div class="inf"><div class="nm" style="font-size:12.5px">Marco won</div><div class="sub">"VAR overturn?" · resolved by You (owner)</div></div><div class="amt"><div class="n loss" style="font-size:13px">−100</div></div></div>
+</div>
+</div>
+</div>
+<div><div class="tag">Mobile</div>
+<div class="phone">
+<div class="pstat"><span>9:41</span></div>
+<div class="mhdr"><div class="bc">FREEFORM · LIFECYCLE</div><div class="row"><span class="t">All states</span></div></div>
+<div class="mbody">
+<div class="ccard b-accent"><div class="crow"><span class="livelbl"><span class="dot live"></span>Live</span><span class="tbadge freeform" style="margin-left:auto">Freeform</span></div><div class="sumtxt" style="font-size:13px;color:var(--text)">"Who buys the next round?"</div><button class="btn btn-o accent btn-sm btn-bl">Declare Result</button></div>
+<div class="ccard" style="border:1px solid var(--rule);border-left:3px solid var(--gold)"><div class="crow"><span class="meta" style="color:var(--gold)">● Your move</span></div><div class="sumtxt" style="font-size:13px;color:var(--text)">Sam declared: <strong>Sam wins</strong></div><div class="acts"><button class="btn btn-o accent btn-sm">Confirm</button><button class="btn btn-o neg btn-sm">Dispute</button></div></div>
+<div class="arbcard"><div class="crow"><span class="meta">⚖ Pending arbitration</span></div><div class="sumtxt" style="font-size:13px">Frozen — owner will decide.</div></div>
+</div>
+<div class="pfoot"></div>
+</div>
+</div>
+</div>
+</div>
+
+<div class="frame-wrap" style="left:740px;top:7020px">
+<div class="frame-label"><span class="n">S09</span>Declare Result flow</div>
+<div class="pair">
+<div><div class="tag">Desktop</div>
+<div class="drawer" style="width:360px;height:auto">
+<div class="dr-hd"><div class="dr-ey">Declare Result · vs Sam</div><div class="dr-ttl" style="font-size:17px">Who won this one?</div></div>
+<div class="dr-body" style="padding-top:0">
+<div class="sumtxt">"Will Haaland score a hat-trick vs City?"</div>
+<div style="display:flex;flex-direction:column;gap:2px">
+<div class="mrow sel"><div class="av" style="background:var(--accent);width:30px;height:30px">Y</div><div><div class="nm">You win</div></div><div class="rdot on"></div></div>
+<div class="mrow"><div class="av" style="background:#B8720E;width:30px;height:30px">S</div><div><div class="nm">Sam wins</div></div><div class="rdot"></div></div>
+<div class="mrow"><div class="av" style="background:var(--elev);width:30px;height:30px;color:var(--mute)">—</div><div><div class="nm">Push — no winner</div></div><div class="rdot"></div></div>
+</div>
+<div class="meta warn">⚠ Sam will be asked to confirm or dispute this. Real coins move once they respond — choose carefully.</div>
+</div>
+<div class="dr-foot"><button class="btn btn-o btn-bl">Cancel</button><button class="btn btn-accent btn-bl">Submit declaration →</button></div>
+</div>
+</div>
+<div><div class="tag">Mobile</div>
+<div class="phone">
+<div class="pstat"><span>9:41</span></div>
+<div class="mhdr"><div class="bc">DECLARE RESULT · VS SAM</div><div class="row"><span class="t">Who won this one?</span></div></div>
+<div class="mbody">
+<div class="sumtxt">"Will Haaland score a hat-trick vs City?"</div>
+<div style="display:flex;flex-direction:column;gap:2px">
+<div class="mrow sel"><div class="av" style="background:var(--accent);width:30px;height:30px">Y</div><div><div class="nm">You win</div></div><div class="rdot on"></div></div>
+<div class="mrow"><div class="av" style="background:#B8720E;width:30px;height:30px">S</div><div><div class="nm">Sam wins</div></div><div class="rdot"></div></div>
+<div class="mrow"><div class="av" style="background:var(--elev);width:30px;height:30px;color:var(--mute)">—</div><div><div class="nm">Push — no winner</div></div><div class="rdot"></div></div>
+</div>
+<div class="meta warn">⚠ Sam will be asked to confirm or dispute. Choose carefully.</div>
+</div>
+<div class="dr-foot"><button class="btn btn-o btn-bl">Cancel</button><button class="btn btn-accent btn-bl">Submit →</button></div>
+<div class="pfoot"></div>
+</div>
+</div>
+</div>
+</div>
+
+<div class="frame-wrap" style="left:740px;top:7730px">
+<div class="frame-label"><span class="n">S10</span>Owner Arbitration</div>
+<div class="pair">
+<div><div class="tag">Desktop</div>
+<div class="pair" style="gap:22px">
+<div class="arbcard owner" style="width:300px">
+<div class="crow"><span class="opp">Bea vs Marco</span><span class="tbadge freeform">Freeform</span></div>
+<div class="sumtxt">"Who buys the next round after the derby?" — both parties disagree. 400 coins frozen in escrow.</div>
+<button class="btn btn-owner btn-sm btn-bl">Review &amp; decide →</button>
+</div>
+<div class="drawer" style="width:480px;height:auto">
+<div class="dr-hd"><div class="dr-ey" style="color:var(--owner)">⚖ ARBITRATION · THE USUAL SUSPECTS</div><div class="dr-ttl">Bea vs Marco</div></div>
+<div class="dr-body" style="padding-top:0">
+<div class="sumtxt" style="font-size:14px;color:var(--text)">"Who buys the next round after the derby?"</div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+<div class="ccard" style="border:1px solid var(--rule)"><div class="crow"><div class="av" style="background:#C1391B">B</div><div class="nm" style="font-family:var(--fd);font-size:13px">Bea claims</div></div><div class="sumtxt">Bea says <strong style="color:var(--text)">she won</strong> — Marco never showed up.</div></div>
+<div class="ccard" style="border:1px solid var(--rule)"><div class="crow"><div class="av" style="background:#1A6FA8">M</div><div class="nm" style="font-family:var(--fd);font-size:13px">Marco claims</div></div><div class="sumtxt">Marco says <strong style="color:var(--text)">he won</strong> — bought the first round, that's the rule.</div></div>
+</div>
+<div class="calcbox"><span class="meta">Stake each</span><span class="camt sm">200</span></div>
+</div>
+<div class="dr-foot" style="flex-wrap:wrap"><button class="btn btn-owner btn-bl">Award Bea</button><button class="btn btn-owner btn-bl">Award Marco</button><button class="btn btn-o btn-bl">Void — return stakes</button></div>
+</div>
+</div>
+</div>
+<div><div class="tag">Mobile</div>
+<div class="phone">
+<div class="pstat"><span>9:41</span></div>
+<div class="mhdr"><div class="bc">⚖ ARBITRATION</div><div class="row"><span class="t">Bea vs Marco</span></div></div>
+<div class="mbody">
+<div class="sumtxt" style="font-size:13px;color:var(--text)">"Who buys the next round after the derby?"</div>
+<div class="ccard" style="border:1px solid var(--rule)"><div class="crow"><div class="av" style="background:#C1391B">B</div><span class="blk" style="font-size:13px">Bea claims she won</span></div></div>
+<div class="ccard" style="border:1px solid var(--rule)"><div class="crow"><div class="av" style="background:#1A6FA8">M</div><span class="blk" style="font-size:13px">Marco claims he won</span></div></div>
+</div>
+<div class="dr-foot" style="flex-wrap:wrap;gap:8px"><button class="btn btn-owner btn-bl">Award Bea</button><button class="btn btn-owner btn-bl">Award Marco</button></div>
+<div class="pfoot"></div>
+</div>
+</div>
+</div>
+</div>
+
+<template id="__bundler_thumbnail"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 70"><rect width="100" height="70" fill="#18202E"/><circle cx="30" cy="35" r="14" fill="#B8720E"/><circle cx="62" cy="35" r="14" fill="#1A6FA8"/></svg></template>
+</body></html>
