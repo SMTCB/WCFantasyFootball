@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html><head><meta charset="UTF-8">
+<meta name="design_doc_mode" content="canvas">
+<title>Frontrow — F1 Module Design Proposal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=Archivo+Black&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#F7F3ED;--card:#FFFFFF;--elev:#EDEAE2;--shell:#18202E;--paper:#18202E;--mute:#8A97A8;--rule:#E2DDD5;--accent:#1A6FA8;--accent-bg:rgba(26,111,168,.08);--gold:#B8720E;--gold-bg:rgba(184,114,14,.10);--positive:#166534;--positive-bg:rgba(22,101,52,.10);--danger:#B91C1C;--danger-bg:rgba(185,28,28,.08);--f1:#E10600;--f1-bg:rgba(225,6,0,.08);--ten:#1B7A52;--r:6px;--font-d:'Archivo Black',sans-serif;--font-b:'Archivo',sans-serif;--font-m:'JetBrains Mono',monospace}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font-b);color:var(--paper);background:#DCD6C8}
+a{color:inherit;text-decoration:none}
+a:hover{color:var(--f1)}
+.mono{font-family:var(--font-m)}
+.eyebrow{font-family:var(--font-m);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--mute);font-weight:500}
+.frame-wrap{position:absolute}
+.win{background:var(--bg);border-radius:10px;overflow:hidden;box-shadow:0 2px 4px rgba(24,32,46,.08),0 30px 60px -30px rgba(24,32,46,.35);position:relative}
+.screenhead{display:flex;align-items:baseline;gap:12px;margin-bottom:16px}
+.screencode{font-family:var(--font-m);background:var(--f1);color:#fff;border-radius:4px;padding:3px 9px;font-size:11px;letter-spacing:.06em;flex-shrink:0}
+.screentitle{font-family:var(--font-d);font-size:18px;letter-spacing:-0.01em}
+.screenframes{display:flex;align-items:flex-start;gap:40px}
+.frametag{font-family:var(--font-m);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:#7A8492;margin-bottom:8px}
+.screendesc{max-width:1900px;margin-top:18px;font-size:12.5px;color:#4B5568;line-height:1.65;background:var(--card);border:1px solid var(--rule);border-radius:8px;padding:14px 18px;text-wrap:pretty}
+.screendesc b{color:var(--paper);font-weight:600}
+.doc{width:680px;background:var(--card);border:1px solid var(--rule);border-radius:10px;padding:36px 34px}
+.doc h1{font-family:var(--font-d);font-size:24px;letter-spacing:-0.02em;margin-bottom:6px}
+.doc .sub{font-size:13px;color:var(--mute);margin-bottom:26px}
+.doc h2{font-family:var(--font-d);font-size:14px;letter-spacing:-0.01em;margin:22px 0 8px;color:var(--f1)}
+.doc h2:first-of-type{margin-top:0}
+.doc p{font-size:13.5px;color:#4B5568;line-height:1.6;text-wrap:pretty}
+.doc p+p{margin-top:8px}
+.doc strong{color:var(--paper);font-weight:600}
+.doc table{width:100%;border-collapse:collapse;margin-top:10px}
+.doc td{font-size:12px;padding:5px 0;border-bottom:1px dashed var(--rule);color:#4B5568}
+.doc td:first-child{color:var(--paper);font-weight:600;width:44%}
+/* shared chrome, lifted verbatim from Clubhouse Core / Tennis handoffs */
+.compbar{background:var(--card);border-bottom:1px solid var(--rule);display:flex;align-items:center;gap:6px;padding:0 16px;flex-shrink:0;overflow-x:auto;overflow-y:hidden;scrollbar-width:none}
+.compbar::-webkit-scrollbar{display:none}
+.comppill{display:flex;align-items:center;gap:7px;font-size:12px;font-weight:600;color:var(--mute);padding:0 10px;height:100%;border-bottom:2px solid transparent;white-space:nowrap}
+.comppill.home{color:var(--accent)}
+.comppill .dot{width:6px;height:6px;border-radius:50%;background:currentColor}
+.comppill .dot.fb{background:var(--accent)}
+.comppill .dot.f1{background:var(--f1)}
+.comppill .dot.ten{background:var(--ten)}
+.comppill.on{color:var(--paper);border-bottom-color:var(--f1)}
+.compplus{margin-left:auto;color:var(--mute);font-size:16px;font-weight:700}
+.sidebar{width:220px;flex-shrink:0;background:var(--shell);color:#fff;display:flex;flex-direction:column;padding:16px 12px}
+.sb-brand{display:flex;align-items:center;gap:10px;padding:0 6px 14px;margin-bottom:12px;border-bottom:1px solid rgba(255,255,255,.08)}
+.sb-brandname{font-family:var(--font-d);font-size:14px;letter-spacing:-0.01em;color:var(--bg)}
+.sw-active-label{padding:0 6px 14px;font-size:12px;font-weight:600;display:flex;align-items:center;gap:5px;color:rgba(255,255,255,.85)}
+.sb-section{font-family:var(--font-m);font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.35);padding:12px 10px 6px}
+.sb-item{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:var(--r);font-size:12.5px;color:rgba(255,255,255,.6);font-weight:500}
+.sb-item.on{background:rgba(255,255,255,.08);color:#fff}
+.sb-item.sub{padding-left:26px;font-size:12px}
+.sb-tag{margin-left:auto;font-family:var(--font-m);font-size:7.5px;letter-spacing:.08em;color:rgba(255,255,255,.4);border:1px solid rgba(255,255,255,.2);border-radius:3px;padding:1px 5px}
+.sb-foot{margin-top:auto;display:flex;align-items:center;gap:9px;padding:10px 10px 0;border-top:1px solid rgba(255,255,255,.08)}
+.av{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;font-family:var(--font-d);font-size:10.5px;color:#fff;flex-shrink:0}
+.sb-foot b{display:block;font-size:12px}
+.sb-foot span{font-family:var(--font-m);font-size:8.5px;color:rgba(255,255,255,.4)}
+.main{flex:1;min-width:0;overflow:hidden;padding:18px 22px;display:flex;flex-direction:column;gap:16px}
+.slbl{font-family:var(--font-m);font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--mute);margin-bottom:9px;display:flex;align-items:center;gap:8px}
+.slbl .cnt{background:var(--elev);color:var(--paper);border-radius:100px;padding:1px 7px}
+.slbl .go{margin-left:auto;color:var(--f1);font-weight:600;text-transform:none;letter-spacing:0}
+.mtopstrip{height:44px;background:var(--card);border-bottom:1px solid var(--rule);display:flex;align-items:center;padding:0 14px;flex-shrink:0}
+.mtopstrip .u{font-size:12.5px;font-weight:600}
+.mtopstrip .gear{margin-left:auto;font-size:15px;color:var(--mute)}
+.mcompbar{height:38px}
+.mtabrow{display:flex;gap:14px;padding:0 14px;background:var(--card);border-bottom:1px solid var(--rule);overflow:hidden;flex-shrink:0}
+.mtabitem{font-size:11.5px;font-weight:600;color:var(--mute);padding:9px 0;position:relative;white-space:nowrap}
+.mtabitem.on{color:var(--paper)}
+.mtabitem.on::after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:2px;background:var(--f1)}
+.mcontent{flex:1;overflow:hidden;padding:12px 14px;display:flex;flex-direction:column;gap:12px}
+.mbottomnav{height:60px;background:var(--shell);display:flex;flex-shrink:0}
+.mbn-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px}
+.mbn-item .d{width:5px;height:5px;border-radius:50%;background:rgba(255,255,255,.3)}
+.mbn-item .l{font-family:var(--font-m);font-size:8px;letter-spacing:.06em;text-transform:uppercase;color:rgba(255,255,255,.4);display:flex;align-items:center;gap:3px}
+.mbn-item.on .d{background:var(--f1)}
+.mbn-item.on .l{color:#fff}
+/* checkered flag motif — the one recurring F1 decorative device */
+.checker{height:6px;background-image:linear-gradient(45deg,#18202E 25%,transparent 25%),linear-gradient(-45deg,#18202E 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#18202E 75%),linear-gradient(-45deg,transparent 75%,#18202E 75%);background-size:8px 8px;background-position:0 0,0 4px,4px -4px,-4px 0}
+.checker.onred{background-image:linear-gradient(45deg,#fff 25%,transparent 25%),linear-gradient(-45deg,#fff 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#fff 75%),linear-gradient(-45deg,transparent 75%,#fff 75%)}
+/* F1 home header — dark shell, distinct from Tennis's cream header */
+.f1hdr{background:var(--shell);color:#fff;flex-shrink:0}
+.f1hdr-top{display:flex;align-items:center;gap:18px;padding:18px 26px 16px}
+.f1hdr-ey{font-family:var(--font-m);font-size:10px;letter-spacing:.16em;color:var(--f1);margin-bottom:7px;font-weight:600}
+.f1hdr-name{font-family:var(--font-d);font-size:22px;letter-spacing:-0.01em;display:flex;align-items:center;gap:8px}
+.f1hdr-name .chev{font-size:12px;color:rgba(255,255,255,.4)}
+.f1hdr-meta{font-size:12px;color:rgba(255,255,255,.5);margin-top:7px;display:flex;align-items:center;gap:10px}
+.f1hdr-r{margin-left:auto;flex-shrink:0}
+.adminpill{font-family:var(--font-m);font-size:10px;letter-spacing:.08em;font-weight:700;color:#fff;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.25);border-radius:100px;padding:7px 14px}
+.mf1hdr{background:var(--shell);color:#fff;padding:14px 16px;flex-shrink:0}
+.mf1hdr .nm{font-family:var(--font-d);font-size:17px;margin-top:4px;display:flex;align-items:center;gap:6px}
+.mf1hdr .mt{font-size:11px;color:rgba(255,255,255,.5);margin-top:5px}
+.f1tabrow{background:var(--card);border-bottom:1px solid var(--rule);display:flex;gap:2px;padding:0 26px;flex-shrink:0}
+.f1tabitem{font-size:12.5px;font-weight:600;color:var(--mute);padding:11px 12px;position:relative;white-space:nowrap}
+.f1tabitem.on{color:var(--paper)}
+.f1tabitem.on::after{content:"";position:absolute;left:12px;right:12px;bottom:-1px;height:2px;background:var(--f1);border-radius:2px}
+/* next-race countdown card — the emotional center of Home */
+.racebanner{background:var(--f1);color:#fff;border-radius:var(--r);overflow:hidden}
+.racebanner-in{padding:18px 22px;display:flex;align-items:center;gap:18px}
+.racebanner .flag{font-size:30px;flex-shrink:0}
+.racebanner .k{font-family:var(--font-m);font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.75);margin-bottom:4px}
+.racebanner .t{font-family:var(--font-d);font-size:19px;letter-spacing:-0.01em}
+.racebanner .s{font-size:12px;color:rgba(255,255,255,.8);margin-top:4px}
+.racebanner .cd{margin-left:auto;text-align:center;flex-shrink:0;padding-right:6px}
+.racebanner .cd b{font-family:var(--font-d);font-size:24px;display:block;letter-spacing:-0.01em}
+.racebanner .cd span{font-family:var(--font-m);font-size:8px;letter-spacing:.1em;color:rgba(255,255,255,.7);text-transform:uppercase}
+.racebanner .cta{background:#fff;color:var(--f1);font-family:var(--font-m);font-size:11px;letter-spacing:.08em;font-weight:700;border-radius:var(--r);padding:11px 18px;white-space:nowrap;flex-shrink:0}
+.seasonlist{background:var(--card);border:1px solid var(--rule);border-radius:var(--r);overflow:hidden}
+.race-row{display:flex;align-items:center;gap:12px;padding:10px 16px;border-bottom:1px solid var(--rule)}
+.race-row:last-child{border-bottom:none}
+.race-row.dim{opacity:.42}
+.race-row.next{background:var(--f1-bg);border-left:3px solid var(--f1);padding-left:13px}
+.race-rnd{font-family:var(--font-m);font-size:10px;color:var(--mute);width:26px;flex-shrink:0}
+.race-flag{font-size:16px;flex-shrink:0;width:20px}
+.race-nm{font-family:var(--font-d);font-size:13px;flex-shrink:0;width:190px}
+.sprinttag{font-family:var(--font-m);font-size:7.5px;letter-spacing:.06em;background:var(--elev);color:var(--mute);padding:2px 6px;border-radius:100px;flex-shrink:0}
+.race-dates{font-family:var(--font-m);font-size:10.5px;color:var(--mute);width:80px;flex-shrink:0}
+.race-status{margin-left:auto;flex-shrink:0}
+.statuspill{font-family:var(--font-m);font-size:9px;letter-spacing:.05em;padding:5px 11px;border-radius:100px;white-space:nowrap}
+.statuspill.upcoming{background:var(--elev);color:var(--mute)}
+.statuspill.open{background:var(--f1);color:#fff;font-weight:700}
+.statuspill.live{background:var(--gold);color:#fff;font-weight:700}
+.statuspill.quali{background:var(--accent-bg);color:var(--accent)}
+.winnertag{font-family:var(--font-m);font-size:10.5px;color:var(--paper);font-weight:600}
+.paddockgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.pcard{background:var(--card);border:1px solid var(--rule);border-radius:var(--r);padding:16px;display:flex;align-items:center;gap:12px}
+.pcard .ic{width:34px;height:34px;border-radius:var(--r);background:var(--f1-bg);color:var(--f1);display:grid;place-items:center;font-size:16px;flex-shrink:0}
+.pcard .t{font-family:var(--font-d);font-size:13.5px}
+.pcard .s{font-size:11px;color:var(--mute);margin-top:2px}
+.mypicksbtn{background:var(--shell);color:#fff;border-radius:var(--r);padding:14px 18px;display:flex;align-items:center;gap:10px;font-family:var(--font-d);font-size:14px}
+.mypicksbtn .arw{margin-left:auto;color:rgba(255,255,255,.5)}
+.toppaddock{background:var(--card);border:1px solid var(--rule);border-radius:var(--r);overflow:hidden}
+.tp-row{display:grid;grid-template-columns:26px 1fr 60px;gap:8px;align-items:center;padding:9px 14px;border-bottom:1px solid var(--rule);font-size:12.5px}
+.tp-row:last-child{border-bottom:none}
+.medal{width:20px;height:20px;border-radius:50%;display:grid;place-items:center;font-family:var(--font-d);font-size:9.5px;color:#fff}
+.medal.g{background:#B8860B}.medal.s{background:#94A3B8}.medal.b{background:#B0703A}
+.rankno{width:20px;text-align:center;font-family:var(--font-m);font-size:11px;color:var(--mute)}
+.tp-nm{display:flex;align-items:center;gap:8px;font-weight:600}
+.tp-you{color:var(--f1)}
+/* Race Picks */
+.racehdr{background:var(--card);border-bottom:1px solid var(--rule);padding:16px 26px;display:flex;align-items:center;gap:16px;flex-shrink:0}
+.racehdr .flag{font-size:24px}
+.racehdr-nm{font-family:var(--font-d);font-size:19px}
+.racehdr-meta{font-size:11.5px;color:var(--mute);margin-top:4px;display:flex;align-items:center;gap:8px}
+.racehdr-r{margin-left:auto;text-align:right;flex-shrink:0}
+.roundstrip{display:flex;gap:6px;padding:12px 26px;background:var(--card);border-bottom:1px solid var(--rule);overflow-x:auto;flex-shrink:0;scrollbar-width:none}
+.roundstrip::-webkit-scrollbar{display:none}
+.roundpill{font-family:var(--font-m);font-size:10.5px;font-weight:700;padding:7px 12px;border-radius:100px;background:var(--elev);color:var(--mute);flex-shrink:0;white-space:nowrap}
+.roundpill.on{background:var(--f1);color:#fff}
+.roundpill.finished{background:transparent;color:var(--mute);border:1px solid var(--rule)}
+.lockbanner{border-radius:var(--r);padding:13px 18px;display:flex;align-items:center;gap:12px;font-size:12.5px}
+.lockbanner.locked{background:var(--elev);color:var(--mute)}
+.lockbanner.editable{background:var(--f1-bg);color:#8a1300}
+.lockbanner.editable b{color:var(--f1)}
+.lockbanner.finished{background:var(--positive-bg);color:#0f3d24}
+.lockbanner .ic{font-size:16px}
+.formsec{background:var(--card);border:1px solid var(--rule);border-radius:var(--r);padding:16px;margin-bottom:12px}
+.formsec-t{font-family:var(--font-m);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--mute);margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.formsec-t .pts{margin-left:auto;color:var(--f1);font-weight:700}
+.podiumrow{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.podiumslot{border:1.5px solid var(--rule);border-radius:var(--r);padding:12px}
+.podiumslot.p1{border-color:var(--f1)}
+.podiumslot .pos{font-family:var(--font-d);font-size:11px;color:var(--mute);margin-bottom:8px}
+.podiumslot.p1 .pos{color:var(--f1)}
+.drivercard{display:flex;align-items:center;gap:9px}
+.driveravatar{width:30px;height:30px;border-radius:50%;background:var(--elev);display:grid;place-items:center;font-family:var(--font-d);font-size:11px;color:var(--paper);flex-shrink:0}
+.drivername{font-family:var(--font-d);font-size:13px}
+.driversub{font-family:var(--font-m);font-size:9px;color:var(--mute);margin-top:2px}
+.changelink{margin-left:auto;font-family:var(--font-m);font-size:9.5px;color:var(--f1);font-weight:700;flex-shrink:0}
+.dnfrow{display:flex;align-items:center;gap:10px}
+.teamchip{display:flex;align-items:center;gap:8px;border:1.5px solid var(--rule);border-radius:100px;padding:7px 14px 7px 8px;font-size:12px;font-weight:600}
+.teamdot{width:12px;height:12px;border-radius:3px;flex-shrink:0}
+.teamgrid{display:flex;gap:8px;flex-wrap:wrap}
+.teamgrid .teamchip{cursor:default}
+.teamgrid .teamchip.on{border-color:var(--f1);background:var(--f1-bg);color:var(--f1)}
+.spec-toggles{display:flex;gap:8px;flex-wrap:wrap}
+.spec-toggle{border:1.5px solid var(--rule);border-radius:var(--r);padding:9px 14px;font-size:12px;font-weight:600;color:var(--paper)}
+.spec-toggle.on{border-color:var(--f1);background:var(--f1-bg);color:var(--f1)}
+.spec-label{font-size:12.5px;color:var(--paper);margin-bottom:10px;font-weight:600}
+.scoreguide{display:flex;gap:0;background:var(--card);border:1px solid var(--rule);border-radius:var(--r);overflow-x:auto;flex-shrink:0}
+.sg-item{padding:10px 14px;border-right:1px solid var(--rule);flex-shrink:0;white-space:nowrap}
+.sg-item:last-child{border-right:none}
+.sg-item .n{font-family:var(--font-d);font-size:13px;color:var(--f1)}
+.sg-item .l{font-family:var(--font-m);font-size:8px;color:var(--mute);letter-spacing:.05em;text-transform:uppercase;margin-top:1px}
+.savebar{background:var(--f1);color:#fff;font-family:var(--font-m);font-size:12px;letter-spacing:.06em;font-weight:700;padding:13px;border-radius:var(--r);text-align:center}
+.savebar.locked{background:var(--elev);color:var(--mute)}
+.savebar.saving{background:var(--gold)}
+.variantcard{flex:1;background:var(--card);border:1px solid var(--rule);border-radius:var(--r);padding:14px}
+.variantcard .vt{font-family:var(--font-m);font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--mute);margin-bottom:10px}
+/* Standings */
+.viewtoggle{display:flex;gap:3px;background:var(--elev);border-radius:100px;padding:3px}
+.viewtoggle .seg{font-family:var(--font-m);font-size:10.5px;font-weight:700;padding:7px 16px;border-radius:100px;color:var(--mute)}
+.viewtoggle .seg.on{background:var(--f1);color:#fff}
+.ldrtable{width:100%;border-collapse:collapse}
+.ldrtable th{font-family:var(--font-m);font-size:9px;letter-spacing:.06em;color:var(--mute);text-align:left;padding:9px 12px;border-bottom:1px solid var(--rule);text-transform:uppercase}
+.ldrtable td{padding:10px 12px;border-bottom:1px solid var(--rule);font-size:12.5px}
+.ldrtable tr.you td{background:var(--f1-bg)}
+.scorelegend{background:var(--card);border:1px solid var(--rule);border-radius:var(--r);padding:11px 16px;font-size:11px;color:var(--mute);display:flex;gap:16px;flex-wrap:wrap}
+.scorelegend b{color:var(--paper)}
+/* Report accordion */
+.accrow{background:var(--card);border:1px solid var(--rule);border-radius:var(--r);overflow:hidden;margin-bottom:10px}
+.acchead{display:flex;align-items:center;gap:14px;padding:14px 18px}
+.acchead .rnd{font-family:var(--font-m);font-size:10px;color:var(--mute);width:28px}
+.acchead .flag{font-size:18px}
+.acchead .nm{font-family:var(--font-d);font-size:14px}
+.acchead .dt{font-family:var(--font-m);font-size:10px;color:var(--mute);margin-left:4px}
+.acchead .tot{margin-left:auto;font-family:var(--font-d);font-size:16px;color:var(--f1)}
+.acchead .chev{font-size:12px;color:var(--mute);margin-left:14px}
+.accbody{border-top:1px solid var(--rule);padding:16px 18px}
+.podiumviz{display:flex;align-items:flex-end;justify-content:center;gap:8px;margin-bottom:16px;height:110px}
+.podiumblock{width:90px;border-radius:4px 4px 0 0;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding:8px 4px;color:#fff}
+.podiumblock .pn{font-family:var(--font-d);font-size:11px}
+.podiumblock .ps{font-family:var(--font-m);font-size:8px;opacity:.8;margin-top:2px}
+.podiumblock.b1{background:var(--f1);height:100px}
+.podiumblock.b2{background:#3D4759;height:78px}
+.podiumblock.b3{background:#B0703A;height:60px}
+.cmp-table{width:100%;border-collapse:collapse}
+.cmp-table th{font-family:var(--font-m);font-size:8.5px;letter-spacing:.05em;color:var(--mute);text-align:left;padding:7px 10px;border-bottom:1px solid var(--rule);text-transform:uppercase}
+.cmp-table td{padding:8px 10px;border-bottom:1px solid var(--rule);font-size:11.5px}
+.cmp-table tr:last-child td{border-bottom:none}
+.cmp-right{color:var(--positive);font-weight:600}
+.cmp-wrong{color:var(--danger)}
+.cmp-pts{text-align:right;font-family:var(--font-m);font-size:10.5px}
+.bonuscallout{background:var(--gold-bg);border:1px solid rgba(184,114,14,.25);border-radius:var(--r);padding:10px 14px;font-size:12px;color:#7a5a10;margin-top:12px;display:flex;gap:8px;align-items:center}
+.nopickscard{padding:20px;text-align:center;color:var(--mute);font-size:12.5px}
+/* Season Bets */
+.seasongrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.betcard{position:relative;background:var(--card);border:1px solid var(--rule);border-radius:var(--r);padding:13px 15px}
+.betcard .q{font-family:var(--font-m);font-size:9px;color:var(--mute);letter-spacing:.04em;text-transform:uppercase;margin-bottom:7px;padding-right:70px}
+.betcard .a{font-family:var(--font-d);font-size:14.5px}
+.betcard.correct{border-color:var(--positive);background:var(--positive-bg)}
+.betcard.wrong{border-color:var(--danger);background:var(--danger-bg)}
+.betcard .res{position:absolute;top:13px;right:15px;font-family:var(--font-m);font-size:9px;font-weight:700}
+.betcard.correct .res{color:var(--positive)}
+.betcard.wrong .res{color:var(--danger)}
+/* Lobby & Admin */
+.lobbytabs{display:flex;gap:2px;background:var(--elev);border-radius:var(--r);padding:3px;width:fit-content}
+.lobbytab{font-family:var(--font-m);font-size:11px;font-weight:700;padding:8px 16px;border-radius:4px;color:var(--mute)}
+.lobbytab.on{background:#fff;color:var(--paper)}
+.paddockcard{background:var(--card);border:1px solid var(--rule);border-radius:var(--r);padding:15px 18px;display:flex;align-items:center;gap:14px}
+.paddockcard .nm{font-family:var(--font-d);font-size:14px}
+.paddockcard .mt{font-size:11px;color:var(--mute);margin-top:3px}
+.invchip{font-family:var(--font-m);font-size:11px;background:var(--elev);border-radius:100px;padding:6px 12px;color:var(--paper);white-space:nowrap;margin-left:auto}
+.formfield{margin-bottom:12px}
+.formfield label{display:block;font-family:var(--font-m);font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--mute);margin-bottom:6px}
+.forminput{border:1.5px solid var(--rule);border-radius:var(--r);padding:10px 12px;font-size:13px;color:var(--paper);background:#fff}
+.primarybtn{background:var(--f1);color:#fff;font-family:var(--font-m);font-size:11px;letter-spacing:.08em;font-weight:700;padding:12px;border-radius:var(--r);text-align:center}
+.adminsec{background:var(--card);border:1px solid var(--rule);border-radius:var(--r);overflow:hidden;margin-bottom:14px}
+.adminsec-hd{background:var(--elev);padding:11px 16px;font-family:var(--font-m);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--paper);font-weight:700;border-bottom:1px solid var(--rule)}
+.adminrow{display:flex;align-items:center;gap:12px;padding:11px 16px;border-bottom:1px solid var(--rule)}
+.adminrow:last-child{border-bottom:none}
+.togglepill{font-family:var(--font-m);font-size:9.5px;font-weight:700;padding:6px 12px;border-radius:100px;background:var(--positive-bg);color:var(--positive)}
+.togglepill.off{background:var(--danger-bg);color:var(--danger)}
+</style>
+</head>
+<body>
+
+<div class="frame-wrap" style="left:0px;top:0px">
+<div class="doc">
+<h1>Frontrow — F1 module design proposal</h1>
+<div class="sub">Kit Light · reconciled tokens · aligned to Clubhouse Core (V2_DESIGN) and the Tennis module</div>
+<h2>Reused as-is</h2>
+<p>All global chrome — 220px dark sidebar, competition top-bar pill strip, card/elevation language, type system (Archivo Black / Archivo / JetBrains Mono), 6px radius — is lifted directly from Clubhouse Core, same as Tennis. F1's own secondary nav differs from Tennis's 2-item pattern: F1 needs five destinations (Calendar/Picks/Standings/Report/Season), so it keeps its own tab row rather than borrowing Tennis's Home/Leaderboard toggle.</p>
+<h2>Where red actually goes</h2>
+<p>Today red only lives in nav chrome and Standings. This pass gives F1 a real identity across all six screens, but deliberately narrow: <strong>--f1</strong> marks brand and action — the Home header shell, the next-race countdown banner, the active round pill, podium P1 slot, Save/Submit buttons, Report's total figures and podium-viz top block, the Standings toggle. It is <strong>never</strong> used for correctness signaling — right/wrong picks in Report and Season Bets stay on the app's existing <strong>positive/danger</strong> tokens, same as everywhere else in the product. That split matters because F1's own brand red (#E10600, Ferrari-saturated) sits close enough to the semantic danger red (#B91C1C, a duller brick) that blurring the two would make a correct-pick chip look like an error state. Keeping them separate is the load-bearing decision in this brief.</p>
+<h2>The checkered flag as the one motif</h2>
+<p>Rather than invent new iconography, a thin checkered strip — the sport's single most recognizable object — recurs as a quiet accent: under the next-race banner corner, at the top of the Report's podium visualization. Small, monochrome, never decorative filler.</p>
+<h2>Home: countdown first, calendar second</h2>
+<p>The next-race card is solid red, full width, with the countdown numerals treated at display scale — the one thing on the page that outranks the 24-row calendar below it. The calendar itself borrows Tennis's dimming trick (upcoming rows at 42% opacity) but swaps status pills for F1's own vocabulary: qualifying/live/finished-with-winner-name.</p>
+<h2>Race Picks: one flexible slot, not three components</h2>
+<p>Podium, DNF and Team are stable card shapes every round. Special Category is not — it's built as a single component that swaps its inner render (driver picker / team picker / toggle buttons) rather than three separate screens, so the round-to-round variability lives in one place in the form, not scattered across conditional layouts.</p>
+<h2>Report: the podium block earns its place</h2>
+<p>The old aspirational mockup's podium visualization is real craft worth keeping — it's added here above the pick-by-pick comparison table, using actual race results (not scores) so it reads as "what happened" before the table explains "how you did against it."</p>
+<h2>Bets are global, not per-paddock</h2>
+<p>The paddock switcher in the F1 header changes whose leaderboard you see — it does not imply a different set of picks. Nothing in the Race Picks or Season Bets screens is paddock-scoped UI; only Standings and the Report's comparison-to-others (out of scope here) are.</p>
+<table>
+<tr><td>P1 exact</td><td>10 pts</td></tr><tr><td>P2 exact</td><td>8 pts</td></tr><tr><td>P3 exact</td><td>6 pts</td></tr>
+<tr><td>Right driver, wrong spot</td><td>3 pts</td></tr><tr><td>Correct DNF</td><td>5 pts</td></tr>
+<tr><td>Correct team</td><td>5 pts</td></tr><tr><td>Correct special</td><td>5 pts</td></tr><tr><td>All-six bonus</td><td>3 pts</td></tr>
+</table>
+</div>
+</div>
+
+<!-- ============ F1-01 HOME ============ -->
+<div class="frame-wrap" style="left:0px;top:1450px">
+<div class="screenhead"><span class="screencode">F1-01</span><span class="screentitle">F1 Home</span></div>
+<div class="screenframes">
+<div><div class="frametag">Desktop 1440</div>
+<div class="win" style="width:1440px;height:1060px;display:flex">
+<div class="sidebar">
+<div class="sb-brand"><svg viewBox="0 0 80 45" width="30" height="17"><rect x="0" y="0" width="26" height="11" rx="4" fill="#B8720E"></rect><rect x="0" y="17" width="48" height="11" rx="4" fill="#1A6FA8"></rect><rect x="0" y="34" width="70" height="11" rx="4" fill="#1A6FA8"></rect></svg><div class="sb-brandname">Frontrow</div></div>
+<div class="sw-active-label">The Usual Suspects</div>
+<div class="sb-section">Clubhouse</div>
+<div class="sb-item">🏠 Clubhouse</div>
+<div class="sb-item sub">The FrontRow</div>
+<div class="sb-section">Community</div>
+<div class="sb-item">🏆 Trophy Cabinet</div>
+<div class="sb-item">🪙 Coin Challenges<span class="sb-tag">BETA</span></div>
+<div class="sb-item">⚙ Settings</div>
+<div class="sb-foot"><div class="av" style="background:var(--f1)">Y</div><div><b>You</b><span>Multi-sport</span></div></div>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;min-width:0">
+<div class="compbar" style="height:40px">
+<div class="comppill"><span class="mono">🏠</span>Clubhouse</div>
+<div class="comppill"><span class="dot fb"></span>Premier League Fantasy</div>
+<div class="comppill on"><span class="dot f1"></span>Formula Fun</div>
+<div class="comppill"><span class="dot ten"></span>Wimbledon '26 Box</div>
+<div class="compplus">+</div>
+</div>
+<div class="f1hdr">
+<div class="f1hdr-top">
+<div><div class="f1hdr-ey">🏎 FORMULA 1 · 2026</div><div class="f1hdr-name">Formula Fun <span class="chev">▾</span></div><div class="f1hdr-meta"><b style="color:#fff">9 members</b> · 13/24 races run</div></div>
+<div class="f1hdr-r"><span class="adminpill">ADMIN</span></div>
+</div>
+</div>
+<div class="checker"></div>
+<div class="f1tabrow"><div class="f1tabitem on">Calendar</div><div class="f1tabitem">Paddocks</div></div>
+<div class="main" style="overflow-y:auto">
+<div class="racebanner">
+<div class="racebanner-in">
+<div class="flag">🇬🇧</div>
+<div><div class="k">Next race · Round 14</div><div class="t">British Grand Prix</div><div class="s">Silverstone Circuit</div></div>
+<div class="cd"><b>2d 6h</b><span>to race</span></div>
+<div class="cta">Submit picks for R14 →</div>
+</div>
+</div>
+<div>
+<div class="slbl">2026 season<span class="cnt">24 races</span></div>
+<div class="seasonlist">
+<div class="race-row dim"><span class="race-rnd">R11</span><span class="race-flag">🇪🇸</span><span class="race-nm">Spanish GP</span><span class="race-dates">JUN 21</span><span class="race-status"><span class="winnertag">🏆 K. Andrade</span></span></div>
+<div class="race-row dim"><span class="race-rnd">R12</span><span class="race-flag">🇦🇹</span><span class="race-nm">Austrian GP</span><span class="race-dates">JUN 28</span><span class="race-status"><span class="sprinttag">· SPRINT</span><span class="winnertag" style="margin-left:10px">🏆 L. Voss</span></span></div>
+<div class="race-row dim"><span class="race-rnd">R13</span><span class="race-flag">🇭🇺</span><span class="race-nm">Hungarian GP</span><span class="race-dates">JUL 5</span><span class="race-status"><span class="winnertag">🏆 F. Marchetti</span></span></div>
+<div class="race-row next"><span class="race-rnd">R14</span><span class="race-flag">🇬🇧</span><span class="race-nm">British GP</span><span class="race-dates">JUL 26</span><span class="race-status"><span class="statuspill open">Picks open</span></span></div>
+<div class="race-row"><span class="race-rnd">R15</span><span class="race-flag">🇧🇪</span><span class="race-nm">Belgian GP</span><span class="race-dates">AUG 2</span><span class="race-status"><span class="sprinttag">· SPRINT</span><span class="statuspill upcoming" style="margin-left:10px">Upcoming</span></span></div>
+<div class="race-row"><span class="race-rnd">R16</span><span class="race-flag">🇳🇱</span><span class="race-nm">Dutch GP</span><span class="race-dates">AUG 23</span><span class="race-status"><span class="statuspill upcoming">Upcoming</span></span></div>
+<div class="race-row"><span class="race-rnd">R17</span><span class="race-flag">🇮🇹</span><span class="race-nm">Italian GP</span><span class="race-dates">SEP 6</span><span class="race-status"><span class="statuspill upcoming">Upcoming</span></span></div>
+<div class="race-row"><span class="race-rnd">R18</span><span class="race-flag">🇦🇿</span><span class="race-nm">Azerbaijan GP</span><span class="race-dates">SEP 20</span><span class="race-status"><span class="statuspill upcoming">Upcoming</span></span></div>
+<div class="race-row"><span class="race-rnd">R19</span><span class="race-flag">🇸🇬</span><span class="race-nm">Singapore GP</span><span class="race-dates">OCT 4</span><span class="race-status"><span class="statuspill upcoming">Upcoming</span></span></div>
+<div class="race-row"><span class="race-rnd">R20</span><span class="race-flag">🇺🇸</span><span class="race-nm">United States GP</span><span class="race-dates">OCT 18</span><span class="race-status"><span class="statuspill upcoming">Upcoming</span></span></div>
+</div>
+</div>
+<div>
+<div class="slbl">Paddocks<span class="go">See all →</span></div>
+<div class="mypicksbtn">🏁 My Picks — R14 British GP<span class="arw">→</span></div>
+<div class="paddockgrid" style="margin-top:12px">
+<div class="pcard"><span class="ic">🏆</span><div><div class="t">Standings</div><div class="s">You're 2nd of 9</div></div></div>
+<div class="pcard"><span class="ic">📋</span><div><div class="t">Year Bets</div><div class="s">Locked for season</div></div></div>
+<div class="pcard"><span class="ic">🏎</span><div><div class="t">Race Picks</div><div class="s">R14 due in 2d 6h</div></div></div>
+<div class="pcard"><span class="ic">📰</span><div><div class="t">Report</div><div class="s">13 races scored</div></div></div>
+</div>
+<div class="slbl" style="margin-top:14px">Top of the paddock</div>
+<div class="toppaddock">
+<div class="tp-row"><span class="medal g">1</span><span class="tp-nm"><div class="av" style="width:20px;height:20px;font-size:9px;background:var(--gold)">M</div>Marco</span><span style="font-weight:700">318</span></div>
+<div class="tp-row"><span class="medal s">2</span><span class="tp-nm tp-you"><div class="av" style="width:20px;height:20px;font-size:9px;background:var(--f1)">Y</div>You</span><span style="font-weight:700">294</span></div>
+<div class="tp-row"><span class="medal b">3</span><span class="tp-nm"><div class="av" style="width:20px;height:20px;font-size:9px;background:var(--accent)">A</div>Ana</span><span style="font-weight:700">266</span></div>
+<div class="tp-row"><span class="rankno">4</span><span class="tp-nm"><div class="av" style="width:20px;height:20px;font-size:9px;background:var(--positive)">B</div>Bea</span><span style="font-weight:700">241</span></div>
+<div class="tp-row"><span class="rankno">5</span><span class="tp-nm"><div class="av" style="width:20px;height:20px;font-size:9px;background:var(--indoor,#6B5B95)">S</div>Sam</span><span style="font-weight:700">220</span></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div><div class="frametag">Mobile 390</div>
+<div class="win" style="width:390px;height:900px;display:flex;flex-direction:column">
+<div class="mtopstrip"><div class="u">Formula Fun</div><div class="gear">⚙</div></div>
+<div class="compbar mcompbar"><div class="comppill"><span class="mono">🏠</span>Clubhouse</div><div class="comppill"><span class="dot fb"></span>PL Fantasy</div><div class="comppill on"><span class="dot f1"></span>Formula Fun</div></div>
+<div class="mf1hdr"><div class="f1hdr-ey">🏎 FORMULA 1 · 2026</div><div class="nm">Formula Fun</div><div class="mt">9 members · 13/24 races run</div></div>
+<div class="checker"></div>
+<div class="mtabrow"><div class="mtabitem on">Calendar</div><div class="mtabitem">Paddocks</div></div>
+<div class="mcontent">
+<div class="racebanner">
+<div class="racebanner-in" style="padding:14px 16px;gap:12px;flex-wrap:wrap">
+<div class="flag" style="font-size:24px">🇬🇧</div>
+<div><div class="k">Next · R14</div><div class="t" style="font-size:16px">British GP</div></div>
+<div class="cd" style="margin-left:auto"><b style="font-size:19px">2d 6h</b><span>to race</span></div>
+</div>
+<div class="cta" style="margin:0 14px 14px;text-align:center">Submit picks →</div>
+</div>
+<div>
+<div class="slbl">Season<span class="cnt">24</span></div>
+<div class="seasonlist">
+<div class="race-row next"><span class="race-flag">🇬🇧</span><span class="race-nm" style="width:auto;flex:1">British GP</span><span class="statuspill open">Open</span></div>
+<div class="race-row"><span class="race-flag">🇧🇪</span><span class="race-nm" style="width:auto;flex:1">Belgian GP</span><span class="statuspill upcoming">Upcoming</span></div>
+<div class="race-row"><span class="race-flag">🇳🇱</span><span class="race-nm" style="width:auto;flex:1">Dutch GP</span><span class="statuspill upcoming">Upcoming</span></div>
+</div>
+</div>
+<div class="mypicksbtn">🏁 My Picks — R14<span class="arw">→</span></div>
+<div>
+<div class="slbl">Top of the paddock</div>
+<div class="toppaddock">
+<div class="tp-row"><span class="medal g">1</span><span class="tp-nm"><div class="av" style="width:20px;height:20px;font-size:9px;background:var(--gold)">M</div>Marco</span><span style="font-weight:700">318</span></div>
+<div class="tp-row"><span class="medal s">2</span><span class="tp-nm tp-you"><div class="av" style="width:20px;height:20px;font-size:9px;background:var(--f1)">Y</div>You</span><span style="font-weight:700">294</span></div>
+</div>
+</div>
+</div>
+<div class="mbottomnav">
+<div class="mbn-item on"><div class="d"></div><div class="l">Cal</div></div>
+<div class="mbn-item"><div class="d"></div><div class="l">Picks</div></div>
+<div class="mbn-item"><div class="d"></div><div class="l">Std</div></div>
+<div class="mbn-item"><div class="d"></div><div class="l">Report</div></div>
+<div class="mbn-item"><div class="d"></div><div class="l">Club</div></div>
+</div>
+</div>
+</div>
+</div>
+<div class="screendesc">The dark-shell header is the one deliberate break from Tennis's cream header — it reads as a cockpit instrument, not a season ledger, and gives the checkered strip somewhere natural to sit. <b>Next-race banner</b> is solid F1 red, full-width, with the countdown at display type scale — it's the only thing on the page that outranks the calendar. <b>Season list</b> reuses Tennis's dimming trick for upcoming rows but swaps in F1 status language (picks open/qualifying/live) and shows the winner's name once a race is scored, not just a result tag. Mobile bottom nav carries all five F1 destinations including Season (as CLUB→ replaced by dedicated slots per the brief's nav gap) — <b>Season Bets is reached via the Paddocks tab's card grid on mobile</b>, matching current shipped behavior; we did not add a sixth nav slot since five is already the practical max.</div>
+</div>
+
+<!-- ============ F1-02 RACE PICKS ============ -->
+<div class="frame-wrap" style="left:0px;top:2800px">
+<div class="screenhead"><span class="screencode">F1-02</span><span class="screentitle">Race Picks</span></div>
+<div class="screenframes">
+<div><div class="frametag">Desktop 1440</div>
+<div class="win" style="width:1440px;height:1220px;display:flex">
+<div class="sidebar">
+<div class="sb-brand"><svg viewBox="0 0 80 45" width="30" height="17"><rect x="0" y="0" width="26" height="11" rx="4" fill="#B8720E"></rect><rect x="0" y="17" width="48" height="11" rx="4" fill="#1A6FA8"></rect><rect x="0" y="34" width="70" height="11" rx="4" fill="#1A6FA8"></rect></svg><div class="sb-brandname">Frontrow</div></div>
+<div class="sw-active-label">The Usual Suspects</div>
+<div class="sb-section">Clubhouse</div>
+<div class="sb-item">🏠 Clubhouse</div>
+<div class="sb-item sub">The FrontRow</div>
+<div class="sb-section">Community</div>
+<div class="sb-item">🏆 Trophy Cabinet</div>
+<div class="sb-item">🪙 Coin Challenges<span class="sb-tag">BETA</span></div>
+<div class="sb-item">⚙ Settings</div>
+<div class="sb-foot"><div class="av" style="background:var(--f1)">Y</div><div><b>You</b><span>Multi-sport</span></div></div>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;min-width:0">
+<div class="compbar" style="height:40px"><div class="comppill"><span class="mono">🏠</span>Clubhouse</div><div class="comppill on"><span class="dot f1"></span>Formula Fun</div></div>
+<div class="roundstrip">
+<div class="roundpill finished">R11</div><div class="roundpill finished">R12</div><div class="roundpill finished">R13</div><div class="roundpill on">R14</div><div class="roundpill">R15</div><div class="roundpill">R16</div><div class="roundpill">R17</div><div class="roundpill">R18</div><div class="roundpill">R19</div><div class="roundpill">R20</div>
+</div>
+<div class="racehdr"><span class="flag">🇬🇧</span><div><div class="racehdr-nm">British Grand Prix</div><div class="racehdr-meta">Round 14 · Jul 26 · Silverstone Circuit</div></div><div class="racehdr-r"><div class="tourhdr-cd mono" style="color:var(--f1);font-weight:700;font-size:12px">2d 6h left</div><div class="mono" style="font-size:9px;color:var(--mute);letter-spacing:.06em;text-transform:uppercase">Picks close at qualifying</div></div></div>
+<div style="flex:1;overflow-y:auto;padding:18px 22px;max-width:760px">
+<div class="lockbanner editable" style="margin-bottom:16px"><span class="ic">✏️</span><div>Picks <b>saved and editable</b> until qualifying begins. You can change any field until then.</div></div>
+<div class="formsec">
+<div class="formsec-t">Podium · P1 / P2 / P3<span class="pts">10 / 8 / 6 pts</span></div>
+<div class="podiumrow">
+<div class="podiumslot p1"><div class="pos">P1</div><div class="drivercard"><div class="driveravatar">LV</div><div><div class="drivername">L. Voss</div><div class="driversub">MERIDIAN</div></div><span class="changelink">Change</span></div></div>
+<div class="podiumslot"><div class="pos">P2</div><div class="drivercard"><div class="driveravatar">FM</div><div><div class="drivername">F. Marchetti</div><div class="driversub">SCARLATTI</div></div><span class="changelink">Change</span></div></div>
+<div class="podiumslot"><div class="pos">P3</div><div class="drivercard"><div class="driveravatar">KA</div><div><div class="drivername">K. Andrade</div><div class="driversub">MERIDIAN</div></div><span class="changelink">Change</span></div></div>
+</div>
+</div>
+<div class="formsec">
+<div class="formsec-t">DNF driver <span style="color:var(--mute);font-weight:400;text-transform:none;letter-spacing:0">(optional)</span><span class="pts">5 pts</span></div>
+<div class="dnfrow"><div class="drivercard" style="flex:1"><div class="driveravatar">SH</div><div><div class="drivername">S. Halversen</div><div class="driversub">KESTREL</div></div></div><span class="changelink">Change</span></div>
+</div>
+<div class="formsec">
+<div class="formsec-t">Team with most points<span class="pts">5 pts</span></div>
+<div class="teamgrid">
+<div class="teamchip on"><span class="teamdot" style="background:var(--f1)"></span>Meridian</div>
+<div class="teamchip"><span class="teamdot" style="background:var(--accent)"></span>Scarlatti</div>
+<div class="teamchip"><span class="teamdot" style="background:var(--gold)"></span>Vantage</div>
+<div class="teamchip"><span class="teamdot" style="background:var(--ten)"></span>Nordwind</div>
+<div class="teamchip"><span class="teamdot" style="background:#6B5B95"></span>Solaris</div>
+</div>
+</div>
+<div class="formsec">
+<div class="formsec-t">Special category · R14<span class="pts">5 pts</span></div>
+<div class="spec-label">Will there be a Safety Car during the race?</div>
+<div class="spec-toggles"><span class="spec-toggle on">Yes</span><span class="spec-toggle">No</span></div>
+</div>
+<div class="scoreguide" style="margin-bottom:16px">
+<div class="sg-item"><div class="n">10</div><div class="l">P1 exact</div></div>
+<div class="sg-item"><div class="n">8</div><div class="l">P2 exact</div></div>
+<div class="sg-item"><div class="n">6</div><div class="l">P3 exact</div></div>
+<div class="sg-item"><div class="n">3</div><div class="l">Right driver, wrong spot</div></div>
+<div class="sg-item"><div class="n">5</div><div class="l">Correct DNF</div></div>
+<div class="sg-item"><div class="n">5</div><div class="l">Correct team</div></div>
+<div class="sg-item"><div class="n">5</div><div class="l">Correct special</div></div>
+<div class="sg-item"><div class="n">+3</div><div class="l">All-six bonus</div></div>
+</div>
+<div class="savebar">Save picks →</div>
+</div>
+</div>
+</div>
+</div>
+<div><div class="frametag">Mobile 390</div>
+<div class="win" style="width:390px;height:1220px;display:flex;flex-direction:column">
+<div class="mtopstrip"><div class="u">R14 · British GP</div><div class="gear">⚙</div></div>
+<div class="roundstrip" style="padding:10px 14px"><div class="roundpill finished">R12</div><div class="roundpill finished">R13</div><div class="roundpill on">R14</div><div class="roundpill">R15</div><div class="roundpill">R16</div></div>
+<div class="mcontent">
+<div class="lockbanner editable">✏️ Editable until qualifying · <b>2d 6h left</b></div>
+<div class="formsec">
+<div class="formsec-t">Podium<span class="pts">10/8/6</span></div>
+<div style="display:flex;flex-direction:column;gap:8px">
+<div class="podiumslot p1" style="padding:9px 11px"><div class="pos">P1</div><div class="drivercard"><div class="driveravatar" style="width:26px;height:26px;font-size:10px">LV</div><div class="drivername" style="font-size:12px">L. Voss</div><span class="changelink">Change</span></div></div>
+<div class="podiumslot" style="padding:9px 11px"><div class="pos">P2</div><div class="drivercard"><div class="driveravatar" style="width:26px;height:26px;font-size:10px">FM</div><div class="drivername" style="font-size:12px">F. Marchetti</div><span class="changelink">Change</span></div></div>
+<div class="podiumslot" style="padding:9px 11px"><div class="pos">P3</div><div class="drivercard"><div class="driveravatar" style="width:26px;height:26px;font-size:10px">KA</div><div class="drivername" style="font-size:12px">K. Andrade</div><span class="changelink">Change</span></div></div>
+</div>
+</div>
+<div class="formsec">
+<div class="formsec-t">Special category<span class="pts">5</span></div>
+<div class="spec-label" style="font-size:11.5px">Safety Car during the race?</div>
+<div class="spec-toggles"><span class="spec-toggle on">Yes</span><span class="spec-toggle">No</span></div>
+</div>
+<div class="savebar">Save picks →</div>
+</div>
+</div>
+</div>
+</div>
+<div class="screendesc">The richest form in the module. Podium/DNF/Team are stable card shapes; <b>Special Category is one flexible component</b> whose interior swaps by question type (see the three variants below) rather than three separate screens. The scoring-guide strip stays visible while filling the form — no need to leave to check point values. Lock banner shown here in its <b>editable</b> state (F1-red tint); locked/finished states shown separately below.</div>
+</div>
+
+<!-- ============ F1-02b SPECIAL CATEGORY VARIANTS + LOCK STATES ============ -->
+<div class="frame-wrap" style="left:0px;top:4200px">
+<div class="screenhead"><span class="screencode">F1-02b</span><span class="screentitle">Special Category — three input variants, and lock states</span></div>
+<div style="display:flex;gap:16px;width:1440px;margin-bottom:20px">
+<div class="variantcard">
+<div class="vt">Variant A · Driver picker</div>
+<div class="spec-label">Which driver will set the fastest lap?</div>
+<div class="drivercard"><div class="driveravatar">HB</div><div><div class="drivername">H. Bergström</div><div class="driversub">NORDWIND</div></div><span class="changelink">Change</span></div>
+</div>
+<div class="variantcard">
+<div class="vt">Variant B · Team picker</div>
+<div class="spec-label">Which team locks out the front row?</div>
+<div class="teamgrid"><div class="teamchip on"><span class="teamdot" style="background:var(--f1)"></span>Meridian</div><div class="teamchip"><span class="teamdot" style="background:var(--accent)"></span>Scarlatti</div><div class="teamchip"><span class="teamdot" style="background:var(--gold)"></span>Vantage</div></div>
+</div>
+<div class="variantcard">
+<div class="vt">Variant C · Multiple choice</div>
+<div class="spec-label">Will there be a red flag stoppage?</div>
+<div class="spec-toggles"><span class="spec-toggle">Yes</span><span class="spec-toggle on">No</span></div>
+</div>
+</div>
+<div style="display:flex;gap:16px;width:1440px">
+<div class="variantcard"><div class="vt">Lock state · locked</div><div class="lockbanner locked"><span class="ic">🔒</span>Picks locked — qualifying has started for R14. Results post after the race.</div></div>
+<div class="variantcard"><div class="vt">Lock state · finished, result shown</div><div class="lockbanner finished"><span class="ic">🏁</span>Race finished. <b>P1 L. Voss</b> · P2 F. Marchetti · P3 K. Andrade — see your score in Report.</div></div>
+</div>
+<div class="screendesc" style="width:1440px">All three Special Category shapes render inside the same form-section slot with no layout shift between rounds. Lock states use neutral grey (locked, waiting) and positive green (finished — calm, not urgent) — never F1 red, which stays reserved for "act now."</div>
+</div>
+
+<!-- ============ F1-03 STANDINGS ============ -->
+<div class="frame-wrap" style="left:0px;top:5000px">
+<div class="screenhead"><span class="screencode">F1-03</span><span class="screentitle">Standings</span></div>
+<div class="win" style="width:1000px;height:760px;display:flex;flex-direction:column">
+<div class="compbar" style="height:40px"><div class="comppill"><span class="mono">🏠</span>Clubhouse</div><div class="comppill on"><span class="dot f1"></span>Formula Fun</div></div>
+<div class="f1tabrow"><div class="f1tabitem">Calendar</div><div class="f1tabitem">Picks</div><div class="f1tabitem on">Standings</div><div class="f1tabitem">Report</div><div class="f1tabitem">Season</div></div>
+<div style="padding:18px 22px;display:flex;flex-direction:column;gap:14px">
+<div style="display:flex;align-items:center;gap:14px"><div class="screentitle" style="font-size:18px">Paddock Standings</div><div class="viewtoggle" style="margin-left:auto"><span class="seg on">Total</span><span class="seg">Race pts</span><span class="seg">Season pts</span></div></div>
+<table class="ldrtable">
+<tr><th>#</th><th>Manager</th><th>Race pts</th><th>Season pts</th><th>Total</th></tr>
+<tr><td><span class="medal g">1</span></td><td style="font-weight:700">Marco</td><td>228</td><td>90</td><td style="font-weight:700">318</td></tr>
+<tr class="you"><td><span class="medal s">2</span></td><td style="font-weight:700;color:var(--f1)">You</td><td>214</td><td>80</td><td style="font-weight:700">294</td></tr>
+<tr><td><span class="medal b">3</span></td><td style="font-weight:700">Ana</td><td>196</td><td>70</td><td style="font-weight:700">266</td></tr>
+<tr><td><span class="rankno">4</span></td><td>Bea</td><td>181</td><td>60</td><td style="font-weight:700">241</td></tr>
+<tr><td><span class="rankno">5</span></td><td>Sam</td><td>170</td><td>50</td><td style="font-weight:700">220</td></tr>
+<tr><td><span class="rankno">6</span></td><td>Chidi</td><td>142</td><td>40</td><td style="font-weight:700">182</td></tr>
+</table>
+<div class="scorelegend"><b>P1</b> 10 · <b>P2</b> 8 · <b>P3</b> 6 · <b>Right driver, wrong spot</b> 3 · <b>DNF</b> 5 · <b>Team</b> 5 · <b>Special</b> 5 · <b>All-six bonus</b> +3</div>
+</div>
+</div>
+<div class="screendesc" style="width:1000px">Already the module's red template — kept largely as-is. The 3-way toggle re-sorts the same rows rather than swapping table shape, so switching views never causes layout jump. Scoring legend footer stays put across all three views.</div>
+</div>
+
+<!-- ============ F1-04 REPORT ============ -->
+<div class="frame-wrap" style="left:0px;top:5920px">
+<div class="screenhead"><span class="screencode">F1-04</span><span class="screentitle">Report</span></div>
+<div class="win" style="width:1000px;height:1180px;display:flex;flex-direction:column">
+<div class="compbar" style="height:40px"><div class="comppill"><span class="mono">🏠</span>Clubhouse</div><div class="comppill on"><span class="dot f1"></span>Formula Fun</div></div>
+<div class="f1tabrow"><div class="f1tabitem">Calendar</div><div class="f1tabitem">Picks</div><div class="f1tabitem">Standings</div><div class="f1tabitem on">Report</div><div class="f1tabitem">Season</div></div>
+<div style="padding:18px 22px;overflow-y:auto">
+<div class="accrow">
+<div class="acchead"><span class="rnd">R14</span><span class="flag">🇬🇧</span><span class="nm">British GP</span><span class="dt">Jul 26</span><span class="tot">27 pts</span><span class="chev">▾</span></div>
+<div class="accbody">
+<div class="checker" style="width:120px;margin:0 auto 10px"></div>
+<div class="podiumviz">
+<div class="podiumblock b2"><div class="pn">F. Marchetti</div><div class="ps">P2</div></div>
+<div class="podiumblock b1"><div class="pn">L. Voss</div><div class="ps">P1</div></div>
+<div class="podiumblock b3"><div class="pn">K. Andrade</div><div class="ps">P3</div></div>
+</div>
+<table class="cmp-table">
+<tr><th>Field</th><th>Your pick</th><th>Actual</th><th>Pts</th></tr>
+<tr><td>P1</td><td class="cmp-right">L. Voss</td><td>L. Voss</td><td class="cmp-pts cmp-right">+10</td></tr>
+<tr><td>P2</td><td class="cmp-right">F. Marchetti</td><td>F. Marchetti</td><td class="cmp-pts cmp-right">+8</td></tr>
+<tr><td>P3</td><td class="cmp-right">K. Andrade</td><td>K. Andrade</td><td class="cmp-pts cmp-right">+6</td></tr>
+<tr><td>DNF</td><td class="cmp-wrong">S. Halversen</td><td>N. Kovac</td><td class="cmp-pts cmp-wrong">+0</td></tr>
+<tr><td>Team</td><td class="cmp-right">Meridian</td><td>Meridian</td><td class="cmp-pts cmp-right">+5</td></tr>
+<tr><td>Special: Safety Car?</td><td class="cmp-wrong">No</td><td>Yes</td><td class="cmp-pts cmp-wrong">+0</td></tr>
+</table>
+</div>
+</div>
+<div class="accrow">
+<div class="acchead"><span class="rnd">R13</span><span class="flag">🇭🇺</span><span class="nm">Hungarian GP</span><span class="dt">Jul 5</span><span class="tot">37 pts</span><span class="chev">▸</span></div>
+</div>
+<div class="accrow">
+<div class="acchead"><span class="rnd">R12</span><span class="flag">🇦🇹</span><span class="nm">Austrian GP</span><span class="dt">Jun 28</span><span class="tot">15 pts</span><span class="chev">▸</span></div>
+</div>
+<div class="accrow">
+<div class="acchead" style="opacity:.5"><span class="rnd">R11</span><span class="flag">🇪🇸</span><span class="nm">Spanish GP</span><span class="dt">Jun 21</span><span class="tot" style="color:var(--mute)">—</span></div>
+<div class="accbody" style="opacity:.5"><div class="nopickscard">No picks submitted for this round.</div></div>
+</div>
+</div>
+</div>
+<div class="screendesc" style="width:1000px">The R14 row is expanded to show the full craft: the old mockup's podium visualization, kept, using actual results (P1 tallest, F1-red) so it reads before the table. <b>Pick-by-pick comparison</b> uses green/red for right/wrong — never F1 red — plus a per-field point value, so a user can see exactly which field cost them points. An all-correct round would add a gold bonus callout beneath the table. The dimmed final row is the "forgot to pick" state.</div>
+</div>
+
+<!-- ============ F1-05 SEASON BETS ============ -->
+<div class="frame-wrap" style="left:0px;top:7250px">
+<div class="screenhead"><span class="screencode">F1-05</span><span class="screentitle">Season Bets</span></div>
+<div class="screenframes">
+<div><div class="frametag">Open / editable</div>
+<div class="win" style="width:700px;height:780px;display:flex;flex-direction:column">
+<div class="compbar" style="height:40px"><div class="comppill"><span class="mono">🏠</span>Clubhouse</div><div class="comppill on"><span class="dot f1"></span>Formula Fun</div></div>
+<div class="f1tabrow"><div class="f1tabitem">Calendar</div><div class="f1tabitem">Picks</div><div class="f1tabitem">Standings</div><div class="f1tabitem">Report</div><div class="f1tabitem on">Season</div></div>
+<div style="padding:18px 22px">
+<div class="lockbanner editable" style="margin-bottom:14px"><span class="ic">✏️</span>10 season-long predictions — <b>lock before Round 15</b>. Editable until then.</div>
+<div class="seasongrid">
+<div class="betcard"><div class="q">Champion</div><div class="a">L. Voss</div></div>
+<div class="betcard"><div class="q">Runner-up</div><div class="a">F. Marchetti</div></div>
+<div class="betcard"><div class="q">Constructors' champion</div><div class="a">Meridian</div></div>
+<div class="betcard"><div class="q">Last-place constructor</div><div class="a">Draco</div></div>
+<div class="betcard"><div class="q">Fewest-finishers race</div><div class="a">Belgian GP</div></div>
+<div class="betcard"><div class="q">Most-DNFs driver</div><div class="a">N. Kovac</div></div>
+<div class="betcard"><div class="q">First driver replaced</div><div class="a">W. Sorensen</div></div>
+<div class="betcard"><div class="q">Most poles</div><div class="a">L. Voss</div></div>
+<div class="betcard"><div class="q">Most podiums w/o a win</div><div class="a">K. Andrade</div></div>
+<div class="betcard"><div class="q">P3 in championship</div><div class="a">K. Andrade</div></div>
+</div>
+<div class="savebar" style="margin-top:14px">Lock in season bets →</div>
+</div>
+</div>
+</div>
+<div><div class="frametag">Final results revealed</div>
+<div class="win" style="width:700px;height:780px;display:flex;flex-direction:column">
+<div class="compbar" style="height:40px"><div class="comppill"><span class="mono">🏠</span>Clubhouse</div><div class="comppill on"><span class="dot f1"></span>Formula Fun</div></div>
+<div class="f1tabrow"><div class="f1tabitem">Calendar</div><div class="f1tabitem">Picks</div><div class="f1tabitem">Standings</div><div class="f1tabitem">Report</div><div class="f1tabitem on">Season</div></div>
+<div style="padding:18px 22px">
+<div class="lockbanner finished" style="margin-bottom:14px"><span class="ic">🏁</span>Season complete — 7 of 10 correct.</div>
+<div class="seasongrid">
+<div class="betcard correct"><span class="res">✓ CORRECT</span><div class="q">Champion</div><div class="a">L. Voss</div></div>
+<div class="betcard wrong"><span class="res">✗ WRONG</span><div class="q">Runner-up</div><div class="a">F. Marchetti</div></div>
+<div class="betcard correct"><span class="res">✓ CORRECT</span><div class="q">Constructors' champion</div><div class="a">Meridian</div></div>
+<div class="betcard correct"><span class="res">✓ CORRECT</span><div class="q">Last-place constructor</div><div class="a">Draco</div></div>
+<div class="betcard wrong"><span class="res">✗ WRONG</span><div class="q">Fewest-finishers race</div><div class="a">Belgian GP</div></div>
+<div class="betcard correct"><span class="res">✓ CORRECT</span><div class="q">Most-DNFs driver</div><div class="a">N. Kovac</div></div>
+<div class="betcard correct"><span class="res">✓ CORRECT</span><div class="q">First driver replaced</div><div class="a">W. Sorensen</div></div>
+<div class="betcard wrong"><span class="res">✗ WRONG</span><div class="q">Most poles</div><div class="a">L. Voss</div></div>
+<div class="betcard correct"><span class="res">✓ CORRECT</span><div class="q">Most podiums w/o a win</div><div class="a">K. Andrade</div></div>
+<div class="betcard correct"><span class="res">✓ CORRECT</span><div class="q">P3 in championship</div><div class="a">K. Andrade</div></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="screendesc" style="width:1440px">Treated as a season-long wager, not a settings form — 10 bold predictions in a 2-column grid, sized and weighted like the rest of the module's display type. Locked state (left) uses the same editable-red tint as Race Picks for consistency. Revealed state swaps each card's border to positive/danger with a result tag — again, never F1 red for correctness.</div>
+</div>
+
+<!-- ============ F1-06 PADDOCK LOBBY ============ -->
+<div class="frame-wrap" style="left:0px;top:8250px">
+<div class="screenhead"><span class="screencode">F1-06</span><span class="screentitle">Paddock Lobby</span></div>
+<div class="win" style="width:640px;height:640px;display:flex;flex-direction:column">
+<div class="compbar" style="height:40px"><div class="comppill home"><span class="mono">🏎</span>F1</div></div>
+<div style="padding:20px 24px">
+<div class="screentitle" style="font-size:19px;margin-bottom:14px">Paddocks</div>
+<div class="lobbytabs" style="margin-bottom:16px"><span class="lobbytab on">My Paddocks</span><span class="lobbytab">Create</span><span class="lobbytab">Join</span></div>
+<div style="display:flex;flex-direction:column;gap:10px">
+<div class="paddockcard"><span class="ic" style="width:34px;height:34px;border-radius:6px;background:var(--f1-bg);color:var(--f1);display:grid;place-items:center;font-size:16px">🏎</span><div><div class="nm">Formula Fun</div><div class="mt">9 members · 2nd place</div></div><span class="invchip">FF-8K2M1 ⧉</span></div>
+<div class="paddockcard"><span class="ic" style="width:34px;height:34px;border-radius:6px;background:var(--f1-bg);color:var(--f1);display:grid;place-items:center;font-size:16px">🏎</span><div><div class="nm">Office Paddock</div><div class="mt">14 members · 6th place</div></div><span class="invchip">OP-3Q9X7 ⧉</span></div>
+</div>
+</div>
+</div>
+<div class="screendesc" style="width:640px">Structurally identical to Tennis's Player's Box screen — same three-tab pattern (My Paddocks / Create / Join), same card shape, same invite-code chip — reused deliberately for cross-sport consistency rather than redesigned. Low-frequency utility screen; no need for novelty here.</div>
+</div>
+
+<!-- ============ F1-07 ADMIN ============ -->
+<div class="frame-wrap" style="left:0px;top:9050px">
+<div class="screenhead"><span class="screencode">F1-07</span><span class="screentitle">Admin panel</span></div>
+<div class="win" style="width:900px;height:680px;display:flex;flex-direction:column">
+<div class="compbar" style="height:40px"><div class="comppill"><span class="mono">🏠</span>Clubhouse</div><div class="comppill on"><span class="dot f1"></span>Formula Fun</div></div>
+<div style="padding:18px 22px">
+<div class="screentitle" style="font-size:18px;margin-bottom:14px">Admin — Formula Fun</div>
+<div class="adminsec">
+<div class="adminsec-hd">Race Results · R14 British GP</div>
+<div class="adminrow"><span style="font-size:12.5px;width:110px;color:var(--mute)">P1 / P2 / P3</span><span style="font-size:12.5px">L. Voss · F. Marchetti · K. Andrade</span><span class="togglepill" style="margin-left:auto">Fetched from OpenF1</span></div>
+<div class="adminrow"><span style="font-size:12.5px;width:110px;color:var(--mute)">DNF driver</span><span style="font-size:12.5px">N. Kovac</span></div>
+<div class="adminrow"><span style="font-size:12.5px;width:110px;color:var(--mute)">Special answer</span><span style="font-size:12.5px">Yes — Safety Car (Lap 22)</span></div>
+<div class="adminrow"><span class="primarybtn" style="margin-left:auto">Trigger scoring →</span></div>
+</div>
+<div class="adminsec">
+<div class="adminsec-hd">Season Bets</div>
+<div class="adminrow"><span style="font-size:12.5px">Lock season predictions</span><span class="togglepill" style="margin-left:auto">Locked</span></div>
+<div class="adminrow"><span style="font-size:12.5px">Enter final results</span><span class="togglepill off" style="margin-left:auto">Not entered</span></div>
+</div>
+</div>
+</div>
+<div class="screendesc" style="width:900px">Internal ops tool, single operator, low design priority — restyled to match the system (card/section chrome, mono labels, F1-red primary button) without new interaction patterns. OpenF1-fetched fields get a neutral "fetched" pill so an admin can tell auto-filled data from manual entry at a glance.</div>
+</div>
+
+<template id="__bundler_thumbnail"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 70"><rect width="100" height="70" fill="#E10600"></rect><circle cx="50" cy="35" r="16" fill="none" stroke="#fff" stroke-width="4"></circle><rect x="20" y="52" width="60" height="6" fill="#fff"></rect></svg></template>
+</body></html>

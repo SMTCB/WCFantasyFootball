@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="design_doc_mode" content="canvas">
+<title>Frontrow — Logo System</title>
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Archivo:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#F7F3ED;--card:#FFFFFF;--elev:#EDEAE2;--shell:#18202E;--text:#18202E;--text2:#4B5568;--mute:#8A97A8;--rule:#E2DDD5;--accent:#1A6FA8;--accent-bg:rgba(26,111,168,.08);--gold:#B8720E}
+body{font-family:'Archivo',sans-serif;color:var(--text)}
+.eyebrow{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--mute)}
+.frame{position:absolute;background:var(--card);border:1px solid var(--rule);border-radius:12px;overflow:hidden}
+.intro{left:40px;top:40px;width:1660px;height:96px;display:flex;align-items:center;gap:32px;padding:0 32px}
+.intro h1{font-family:'Archivo Black';font-size:26px;letter-spacing:-0.02em}
+.intro .tag{font-size:15px;font-style:italic;color:var(--text2)}
+.intro .sep{width:1px;height:36px;background:var(--rule)}
+.card{width:640px;height:760px;display:flex;flex-direction:column}
+.card .head{padding:28px 28px 16px}
+.card .head .name{font-family:'Archivo Black';font-size:22px;letter-spacing:-0.01em;margin-top:6px}
+.card .head p{font-size:13px;color:var(--text2);line-height:1.55;margin-top:8px}
+.rule{height:1px;background:var(--rule)}
+.stage{padding:32px 28px;display:flex;align-items:center;justify-content:center;height:170px;background:var(--elev)}
+.lockup-row{padding:22px 28px;display:flex;align-items:center;gap:14px}
+.lockup-row.on-dark{background:var(--shell)}
+.wordmark{font-family:'Archivo Black';font-size:26px;letter-spacing:-0.01em;color:var(--text)}
+.on-dark .wordmark{color:#F7F3ED}
+.tagline-row{padding:0 28px 18px;display:flex;flex-direction:column;gap:4px}
+.tagline-row .wm-sm{font-family:'Archivo Black';font-size:17px;letter-spacing:-0.01em}
+.tagline-row .line{font-size:12px;font-style:italic;color:var(--mute)}
+.sizes-row{margin-top:auto;padding:18px 28px 24px;display:flex;align-items:flex-end;gap:22px;background:var(--elev)}
+.size-item{display:flex;flex-direction:column;align-items:center;gap:8px}
+.size-item .lbl{font-family:'JetBrains Mono';font-size:9px;letter-spacing:.1em;color:var(--mute)}
+.icon-inline{display:flex;align-items:center;justify-content:center}
+.badge-tag{position:absolute;top:16px;right:16px;font-family:'JetBrains Mono';font-size:9px;letter-spacing:.14em;text-transform:uppercase;padding:4px 9px;border-radius:20px}
+.badge-tag.locked{background:var(--accent-bg);color:var(--accent)}
+.badge-tag.live{background:rgba(184,114,14,.1);color:var(--gold)}
+
+/* Tiers mark */
+.mk-a{display:flex;flex-direction:column;gap:6px}
+.mk-a .bar{height:11px;border-radius:4px;background:var(--accent)}
+.mk-a .b1{width:26px;background:var(--gold)}
+.mk-a .b2{width:48px}
+.mk-a .b3{width:70px}
+.mk-a.sm{gap:3px}
+.mk-a.sm .bar{height:5px;border-radius:2px}
+.mk-a.sm .b1{width:12px}
+.mk-a.sm .b2{width:22px}
+.mk-a.sm .b3{width:32px}
+.mk-a.tiny{gap:2px}
+.mk-a.tiny .bar{height:3px;border-radius:1px}
+.mk-a.tiny .b1{width:7px}
+.mk-a.tiny .b2{width:13px}
+.mk-a.tiny .b3{width:19px}
+.bar.glow{animation:liveGlow 2.2s ease-in-out infinite}
+@keyframes liveGlow{0%,100%{box-shadow:0 0 0 0 rgba(184,114,14,.5)}50%{box-shadow:0 0 0 9px rgba(184,114,14,0)}}
+
+.section-head{position:absolute;font-family:'Archivo Black';font-size:20px;letter-spacing:-0.01em}
+.section-sub{position:absolute;font-family:'JetBrains Mono';font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--mute)}
+
+/* Sport marks — dedicated glyphs, shared chrome + gold signature dot */
+.sport-card{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:28px}
+.sp-badge{width:104px;height:104px;border-radius:24px;background:var(--card);border:1px solid var(--rule);position:relative;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.sig-dot{position:absolute;top:13px;right:13px;width:8px;height:8px;border-radius:50%;background:var(--gold)}
+.glyph-circle{width:36px;height:36px;border-radius:50%;background:var(--front)}
+.glyph-diamond{width:30px;height:30px;background:var(--front);transform:rotate(45deg)}
+.glyph-checker{width:34px;height:34px;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:3px;border-radius:4px;overflow:hidden}
+.glyph-checker span{background:var(--front)}
+.glyph-checker span:nth-child(2),.glyph-checker span:nth-child(3){background:var(--elev)}
+.sp-name{font-family:'Archivo Black';font-size:16px}
+.sp-desc{font-family:'JetBrains Mono';font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--mute);text-align:center}
+.more-badge{width:104px;height:104px;border-radius:24px;border:2px dashed var(--rule);display:flex;align-items:center;justify-content:center;color:var(--mute);font-family:'Archivo Black';font-size:26px}
+.sig-dot.pulse::after{content:'';position:absolute;inset:0;border-radius:50%;background:var(--gold);animation:livePing 1.8s ease-out infinite}
+@keyframes livePing{0%{transform:scale(.9);opacity:.6}75%{transform:scale(2.6);opacity:0}100%{opacity:0}}
+.pitch-fb{width:40px;height:52px;border:2.5px solid var(--front);border-radius:4px;position:relative}
+.pitch-fb::before{content:'';position:absolute;left:0;right:0;top:50%;height:2.5px;background:var(--front);transform:translateY(-50%)}
+.pitch-fb .cc{position:absolute;width:15px;height:15px;border:2.5px solid var(--front);border-radius:50%;top:50%;left:50%;transform:translate(-50%,-50%);background:var(--card)}
+.court-tn{width:34px;height:58px;border:2.5px solid var(--front);border-radius:2px;position:relative;background:var(--card)}
+.court-tn .net{position:absolute;left:0;right:0;top:50%;height:2.5px;background:var(--front);transform:translateY(-50%)}
+.court-tn .svc{position:absolute;left:4px;right:4px;height:2px;background:var(--front)}
+.court-tn .svc.top{top:24%}
+.court-tn .svc.bot{top:74%}
+.court-tn .ctick{position:absolute;left:50%;width:2px;background:var(--front);transform:translateX(-50%)}
+.court-tn .ctick.top{top:24%;height:26%}
+.court-tn .ctick.bot{top:50%;height:24%}
+.track-f1{width:72px;height:54px;overflow:visible}
+.track-f1 path,.track-f1 line{stroke:var(--front);fill:none}
+.cmp-card{padding:24px 28px;display:flex;flex-direction:column;gap:14px}
+.cmp-card .title-row{display:flex;align-items:baseline;justify-content:space-between}
+.sp-title{font-family:'Archivo Black';font-size:18px}
+.sp-note{font-family:'JetBrains Mono';font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--mute)}
+.cmp-row{display:flex;gap:24px;align-items:center;flex:1}
+.cmp-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:10px;background:var(--elev);border-radius:10px;padding:20px 10px}
+.st-lbl{font-family:'JetBrains Mono';font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--mute)}
+</style>
+</head>
+<body>
+
+<div class="frame intro">
+  <div>
+    <div class="eyebrow">Decision</div>
+    <h1>Frontrow — locked direction</h1>
+  </div>
+  <div class="sep"></div>
+  <div class="tag">"Your seat to all the action"</div>
+  <div class="sep"></div>
+  <div class="eyebrow">Primary mark: The Tiers (static) · Live state: Breathing Front Row</div>
+</div>
+
+<div class="frame card" style="left:40px;top:172px">
+  <span class="badge-tag locked">Primary — static</span>
+  <div class="head">
+    <div class="eyebrow">Logo</div>
+    <div class="name">The Tiers</div>
+    <p>Stacked bars read as stadium rows and as the leaderboard ranking at the heart of the game. The gold bar up top is the shortest — your seat, closest to the action.</p>
+  </div>
+  <div class="rule"></div>
+  <div class="stage"><div class="mk-a"><div class="bar b1"></div><div class="bar b2"></div><div class="bar b3"></div></div></div>
+  <div class="rule"></div>
+  <div class="lockup-row"><div class="mk-a sm"><div class="bar b1"></div><div class="bar b2"></div><div class="bar b3"></div></div><div class="wordmark">Frontrow</div></div>
+  <div class="lockup-row on-dark"><div class="mk-a sm"><div class="bar b1"></div><div class="bar b2"></div><div class="bar b3"></div></div><div class="wordmark">Frontrow</div></div>
+  <div class="tagline-row"><div class="wm-sm">Frontrow</div><div class="line">Your seat to all the action</div></div>
+  <div class="sizes-row">
+    <div class="size-item"><div class="icon-inline"><div class="mk-a sm"><div class="bar b1"></div><div class="bar b2"></div><div class="bar b3"></div></div></div><div class="lbl">48PX</div></div>
+    <div class="size-item"><div class="icon-inline"><div class="mk-a tiny"><div class="bar b1"></div><div class="bar b2"></div><div class="bar b3"></div></div></div><div class="lbl">24PX</div></div>
+  </div>
+</div>
+
+<div class="frame card" style="left:720px;top:172px">
+  <span class="badge-tag live">Live state</span>
+  <div class="head">
+    <div class="eyebrow">Direction 2, kept</div>
+    <div class="name">Breathing Front Row</div>
+    <p>No added element — the gold front-row bar breathes with a soft halo, like a heartbeat. Reserved for live moments (in-play badges, live scores) — the static logo above stays still.</p>
+  </div>
+  <div class="rule"></div>
+  <div class="stage"><div class="mk-a"><div class="bar b1 glow"></div><div class="bar b2"></div><div class="bar b3"></div></div></div>
+  <div class="rule"></div>
+  <div class="lockup-row"><div class="mk-a sm"><div class="bar b1 glow"></div><div class="bar b2"></div><div class="bar b3"></div></div><div class="wordmark">Frontrow</div></div>
+  <div class="lockup-row on-dark"><div class="mk-a sm"><div class="bar b1 glow"></div><div class="bar b2"></div><div class="bar b3"></div></div><div class="wordmark">Frontrow</div><span style="margin-left:auto;font-family:'JetBrains Mono';font-size:10px;letter-spacing:.16em;color:var(--gold)">● LIVE</span></div>
+  <div class="tagline-row"><div class="line">Used for: live score badges, in-play indicators, the app's live centre — not the static wordmark.</div></div>
+  <div class="sizes-row">
+    <div class="size-item"><div class="icon-inline"><div class="mk-a sm"><div class="bar b1 glow"></div><div class="bar b2"></div><div class="bar b3"></div></div></div><div class="lbl">BADGE</div></div>
+    <div class="size-item"><div class="icon-inline"><div class="mk-a tiny"><div class="bar b1 glow"></div><div class="bar b2"></div><div class="bar b3"></div></div></div><div class="lbl">FAVICON</div></div>
+  </div>
+</div>
+
+<div class="section-head" style="left:40px;top:972px">Multi-sport marks — top-view glyphs</div>
+<div class="section-sub" style="left:40px;top:1004px">Football and tennis are now minimal bird's-eye pitch/court diagrams instead of a generic ball/diamond. F1 shown two ways for comparison. Every mark ships as a Normal (default) and Live (pulsing gold dot) pair.</div>
+
+<div class="frame cmp-card" style="left:40px;top:1050px;width:860px;height:260px">
+  <div class="title-row"><span class="sp-title">Frontrow Football</span><span class="sp-note">Pitch top-view · green</span></div>
+  <div class="cmp-row">
+    <div class="cmp-item"><div class="sp-badge" style="--front:oklch(0.52 0.12 152)"><div class="pitch-fb"><div class="cc"></div></div></div><span class="st-lbl">Normal</span></div>
+    <div class="cmp-item"><div class="sp-badge" style="--front:oklch(0.52 0.12 152)"><div class="pitch-fb"><div class="cc"></div></div><div class="sig-dot pulse"></div></div><span class="st-lbl">Live</span></div>
+  </div>
+</div>
+
+<div class="frame cmp-card" style="left:920px;top:1050px;width:860px;height:260px">
+  <div class="title-row"><span class="sp-title">Frontrow Tennis</span><span class="sp-note">Court top-view · violet</span></div>
+  <div class="cmp-row">
+    <div class="cmp-item"><div class="sp-badge" style="--front:oklch(0.5 0.14 300)"><div class="court-tn"><div class="net"></div><div class="svc top"></div><div class="svc bot"></div><div class="ctick top"></div><div class="ctick bot"></div></div></div><span class="st-lbl">Normal</span></div>
+    <div class="cmp-item"><div class="sp-badge" style="--front:oklch(0.5 0.14 300)"><div class="court-tn"><div class="net"></div><div class="svc top"></div><div class="svc bot"></div><div class="ctick top"></div><div class="ctick bot"></div></div><div class="sig-dot pulse"></div></div><span class="st-lbl">Live</span></div>
+  </div>
+</div>
+
+<div class="frame cmp-card" style="left:40px;top:1330px;width:860px;height:260px">
+  <div class="title-row"><span class="sp-title">Frontrow F1 — checker (kept)</span><span class="sp-note">Racing red</span></div>
+  <div class="cmp-row">
+    <div class="cmp-item"><div class="sp-badge" style="--front:oklch(0.55 0.16 28)"><div class="glyph-checker"><span></span><span></span><span></span><span></span></div></div><span class="st-lbl">Normal</span></div>
+    <div class="cmp-item"><div class="sp-badge" style="--front:oklch(0.55 0.16 28)"><div class="glyph-checker"><span></span><span></span><span></span><span></span></div><div class="sig-dot pulse"></div></div><span class="st-lbl">Live</span></div>
+  </div>
+</div>
+
+<div class="frame cmp-card" style="left:920px;top:1330px;width:860px;height:260px">
+  <div class="title-row"><span class="sp-title">Frontrow F1 — track top-view</span><span class="sp-note">For comparison · racing red</span></div>
+  <div class="cmp-row">
+    <div class="cmp-item"><div class="sp-badge" style="--front:oklch(0.55 0.16 28)"><svg class="track-f1" viewBox="0 0 120 90" fill="none"><path d="M22,52 C16,36 28,20 48,18 C64,16 60,29 76,27 C92,25 100,36 92,47 C85,56 73,50 65,58 C57,66 62,76 48,79 C34,82 20,74 16,62 C14,56 20,56 22,52 Z" stroke-width="5" stroke-linejoin="round" stroke-linecap="round"/><line x1="22" y1="6" x2="22" y2="20" stroke-width="4" stroke-linecap="round"/></svg></div><span class="st-lbl">Normal</span></div>
+    <div class="cmp-item"><div class="sp-badge" style="--front:oklch(0.55 0.16 28)"><svg class="track-f1" viewBox="0 0 120 90" fill="none"><path d="M22,52 C16,36 28,20 48,18 C64,16 60,29 76,27 C92,25 100,36 92,47 C85,56 73,50 65,58 C57,66 62,76 48,79 C34,82 20,74 16,62 C14,56 20,56 22,52 Z" stroke-width="5" stroke-linejoin="round" stroke-linecap="round"/><line x1="22" y1="6" x2="22" y2="20" stroke-width="4" stroke-linecap="round"/></svg><div class="sig-dot pulse"></div></div><span class="st-lbl">Live</span></div>
+  </div>
+</div>
+
+</body>
+</html>
