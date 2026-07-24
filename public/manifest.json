@@ -1,7 +1,7 @@
 {
-  "name": "Forza Fantasy League",
-  "short_name": "Forza Fantasy",
-  "description": "The elite World Cup fantasy experience for the Forza ecosystem.",
+  "name": "Frontrow",
+  "short_name": "Frontrow",
+  "description": "Frontrow: your seat to all the action — multi-sport fantasy leagues for football, F1, and tennis.",
   "start_url": "/",
   "display": "standalone",
   "orientation": "portrait",

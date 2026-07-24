@@ -1,57 +1,48 @@
 /**
- * BrandMark — Editorial Brandmark
- * Exact implementation from brand guidelines FORZA_BRANDMARK_ICON v1.9
+ * BrandMark — Frontrow logo lockup ("The Tiers")
+ * Source: docs/platform_revision/design_v2/logo/README.md — do not invent new proportions/colors here.
  *
  * Props:
- *   theme    'dark' | 'light'  — color scheme (default: 'dark')
+ *   theme    'dark' | 'light'  — color scheme (default: 'dark'). 'dark' = warm-white wordmark for use
+ *                                 on the --shell dark surface; 'light' = --paper wordmark for --bg/--card surfaces.
  *   scale    number            — transform scale multiplier (default: 1)
- *   compact  boolean           — single-line shorthand (default: false)
+ *   compact  boolean           — smaller icon + single-line wordmark, no tagline (default: false)
  */
+
+function TiersMark({ size = 36 }) {
+  const width = (size * 80) / 45;
+  return (
+    <svg width={width} height={size} viewBox="0 0 80 45" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style={{ flexShrink: 0 }}>
+      <rect x="0" y="0" width="26" height="11" rx="4" fill="#B8720E" />
+      <rect x="0" y="17" width="48" height="11" rx="4" fill="#1A6FA8" />
+      <rect x="0" y="34" width="70" height="11" rx="4" fill="#1A6FA8" />
+    </svg>
+  );
+}
 
 export default function BrandMark({ theme = 'dark', scale = 1, compact = false }) {
   const isDark = theme === 'dark';
-  const primaryColor   = isDark ? 'white'  : 'var(--ink)';
-  const secondaryColor = isDark ? 'rgba(255,255,255,0.55)' : 'var(--mute)';
-  const slashColor     = 'var(--cyan)';
+  // On the --shell dark surface the wordmark flips to warm white (#F7F3ED), never pure white.
+  const wordmarkColor = isDark ? '#F7F3ED' : 'var(--paper)';
 
   if (compact) {
     return (
       <div style={{
         display:         'flex',
         alignItems:      'center',
-        gap:             '8px',
+        gap:             '10px',
         transform:       `scale(${scale})`,
         transformOrigin: 'left center',
       }}>
+        <TiersMark size={16} />
         <span style={{
-          fontFamily:    'Archivo Black, sans-serif',
-          fontSize:      '14px',
-          fontWeight:    900,
-          fontStyle:     'italic',
-          textTransform: 'uppercase',
-          letterSpacing: '-0.02em',
-          color:         primaryColor,
-          lineHeight:    1,
+          fontFamily: 'Archivo Black, sans-serif',
+          fontSize:   '15px',
+          fontWeight: 900,
+          color:      wordmarkColor,
+          lineHeight: 1,
         }}>
-          FORZA
-        </span>
-        <div style={{
-          width:     '2px',
-          height:    '16px',
-          background: slashColor,
-          transform: 'rotate(15deg)',
-          flexShrink: 0,
-        }} />
-        <span style={{
-          fontFamily:    'Archivo Black, sans-serif',
-          fontSize:      '11px',
-          fontWeight:    900,
-          textTransform: 'uppercase',
-          letterSpacing: '-0.01em',
-          color:         secondaryColor,
-          lineHeight:    1,
-        }}>
-          LEAGUE
+          Frontrow
         </span>
       </div>
     );
@@ -60,58 +51,21 @@ export default function BrandMark({ theme = 'dark', scale = 1, compact = false }
   return (
     <div style={{
       display:         'flex',
-      alignItems:      'baseline',
+      alignItems:      'center',
+      gap:             '14px',
       transform:       `scale(${scale})`,
       transformOrigin: 'left center',
     }}>
-      {/* FORZA */}
+      <TiersMark size={36} />
       <span style={{
-        fontFamily:    'Archivo Black, sans-serif',
-        fontSize:      '36px',
-        fontWeight:    900,
-        fontStyle:     'italic',
-        textTransform: 'uppercase',
-        letterSpacing: '-0.02em',
-        color:         primaryColor,
-        lineHeight:    1,
+        fontFamily: 'Archivo Black, sans-serif',
+        fontSize:   '32px',
+        fontWeight: 900,
+        color:      wordmarkColor,
+        lineHeight: 1,
       }}>
-        FORZA
+        Frontrow
       </span>
-
-      {/* The Aligned Slash — 3px, 15° */}
-      <div style={{
-        width:      '3px',
-        height:     '36px',
-        background: slashColor,
-        margin:     '0 10px',
-        transform:  'rotate(15deg)',
-        alignSelf:  'center',
-        flexShrink: 0,
-      }} />
-
-      {/* FANTASY / LEAGUE stacked */}
-      <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 0.9 }}>
-        <span style={{
-          fontFamily:    'Archivo Black, sans-serif',
-          fontSize:      '17px',
-          fontWeight:    900,
-          textTransform: 'uppercase',
-          letterSpacing: '-0.01em',
-          color:         secondaryColor,
-        }}>
-          FANTASY
-        </span>
-        <span style={{
-          fontFamily:    'Archivo Black, sans-serif',
-          fontSize:      '17px',
-          fontWeight:    900,
-          textTransform: 'uppercase',
-          letterSpacing: '-0.01em',
-          color:         secondaryColor,
-        }}>
-          LEAGUE
-        </span>
-      </div>
     </div>
   );
 }
