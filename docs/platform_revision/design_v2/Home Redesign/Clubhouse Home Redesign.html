@@ -1,0 +1,868 @@
+<!DOCTYPE html>
+<html><head><meta charset="UTF-8">
+<meta name="design_doc_mode" content="canvas">
+<title>Frontrow — Clubhouse Home Design Proposal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=Archivo+Black&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#F7F3ED;--card:#FFFFFF;--elev:#EDEAE2;--shell:#18202E;--paper:#18202E;--mute:#8A97A8;--rule:#E2DDD5;--accent:#1A6FA8;--accent-bg:rgba(26,111,168,.08);--gold:#B8720E;--gold-bg:rgba(184,114,14,.10);--positive:#166534;--positive-bg:rgba(22,101,52,.10);--danger:#B91C1C;--danger-bg:rgba(185,28,28,.08);--f1:#E10600;--f1-bg:rgba(225,6,0,.10);--ten:#1B7A52;--ten-bg:rgba(27,122,82,.10);--on-shell:#FFFFFF;--on-shell-dim:rgba(255,255,255,.45);--r:6px;--font-d:'Archivo Black',sans-serif;--font-b:'Archivo',sans-serif;--font-m:'JetBrains Mono',monospace}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font-b);color:var(--paper)}
+a{color:inherit;text-decoration:none}
+a:hover{color:var(--accent)}
+.mono{font-family:var(--font-m)}
+.eyebrow{font-family:var(--font-m);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--mute);font-weight:500}
+.frame-wrap{position:absolute}
+.win{background:var(--bg);border-radius:10px;overflow:hidden;box-shadow:0 2px 4px rgba(24,32,46,.08),0 30px 60px -30px rgba(24,32,46,.35);position:relative}
+
+/* screen block scaffolding */
+.screenhead{display:flex;align-items:baseline;gap:12px;margin-bottom:16px}
+.screencode{font-family:var(--font-m);background:var(--shell);color:#fff;border-radius:4px;padding:3px 9px;font-size:11px;letter-spacing:.06em;flex-shrink:0}
+.screentitle{font-family:var(--font-d);font-size:18px;letter-spacing:-0.01em}
+.screenframes{display:flex;align-items:flex-start;gap:40px}
+.frametag{font-family:var(--font-m);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:#7A8492;margin-bottom:8px}
+.screendesc{max-width:1900px;margin-top:18px;font-size:12.5px;color:#4B5568;line-height:1.65;background:var(--card);border:1px solid var(--rule);border-radius:8px;padding:14px 18px;text-wrap:pretty}
+.screendesc b{color:var(--paper);font-weight:600}
+
+/* write-up panel */
+.doc{width:660px;background:var(--card);border:1px solid var(--rule);border-radius:10px;padding:36px 34px}
+.doc h1{font-family:var(--font-d);font-size:24px;letter-spacing:-0.02em;margin-bottom:6px}
+.doc .sub{font-size:13px;color:var(--mute);margin-bottom:26px}
+.doc h2{font-family:var(--font-d);font-size:14px;letter-spacing:-0.01em;margin:22px 0 8px;color:var(--accent)}
+.doc h2:first-of-type{margin-top:0}
+.doc p{font-size:13.5px;color:#4B5568;line-height:1.6;text-wrap:pretty}
+.doc p+p{margin-top:8px}
+.doc strong{color:var(--paper);font-weight:600}
+.doc ul{margin:10px 0 0 0;list-style:none;display:flex;flex-direction:column;gap:7px}
+.doc li{font-size:13px;color:#4B5568;line-height:1.5;padding-left:16px;position:relative}
+.doc li::before{content:"→";position:absolute;left:0;color:var(--accent)}
+.doc hr{border:0;border-top:1px solid var(--rule);margin:24px 0}
+
+/* shared app chrome */
+.compbar{background:var(--card);border-bottom:1px solid var(--rule);display:flex;align-items:center;gap:6px;padding:0 16px;flex-shrink:0;overflow-x:auto;overflow-y:hidden;scrollbar-width:none}
+.compbar::-webkit-scrollbar{display:none}
+.comppill{display:flex;align-items:center;gap:7px;font-size:12px;font-weight:600;color:var(--mute);padding:0 10px;height:100%;border-bottom:2px solid transparent;white-space:nowrap}
+.comppill .dot{width:6px;height:6px;border-radius:50%;background:currentColor}
+.comppill.home{color:var(--accent);border-bottom-color:var(--accent)}
+.comppill.home .dot{background:var(--accent)}
+.comppill.on{color:var(--paper);border-bottom-color:var(--f1)}
+.comppill .dot.fb{background:var(--accent)}
+.comppill .dot.f1{background:var(--f1)}
+.comppill .dot.ten{background:var(--ten)}
+.compplus{margin-left:auto;color:var(--mute);font-size:16px;font-weight:700}
+
+.clubhdr{background:var(--shell);color:#fff;padding:18px 26px;display:flex;align-items:center;gap:20px;flex-shrink:0}
+.clubhdr-ey{font-family:var(--font-m);font-size:10px;letter-spacing:.16em;color:var(--on-shell-dim);margin-bottom:6px}
+.clubhdr-name{font-family:var(--font-d);font-size:22px;letter-spacing:-0.01em;text-transform:uppercase}
+.avrow{display:flex;align-items:center;margin-top:10px}
+.av{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;font-family:var(--font-d);font-size:10.5px;color:#fff;border:2px solid var(--shell);margin-left:-8px}
+.av:first-child{margin-left:0}
+.avmeta{font-size:11.5px;color:rgba(255,255,255,.55);margin-left:10px}
+.avmeta b{color:#fff;font-weight:600}
+.pubtag{font-family:var(--font-m);font-size:9px;letter-spacing:.1em;color:#5FA9D6}
+.clubhdr-r{margin-left:auto;display:flex;align-items:center;gap:22px;flex-shrink:0}
+.chstat{text-align:right}
+.chstat b{display:block;font-family:var(--font-d);font-size:17px;letter-spacing:-0.01em}
+.chstat span{font-family:var(--font-m);font-size:8.5px;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.45)}
+.invchip{font-family:var(--font-m);font-size:11px;letter-spacing:.04em;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);border-radius:100px;padding:7px 12px;color:#fff;display:flex;align-items:center;gap:6px}
+
+/* redesigned notification icon (no more emoji bell) */
+.notif-btn{width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,.08);display:grid;place-items:center;position:relative;flex-shrink:0}
+.notif-ico{width:15px;height:11px;border:1.6px solid #fff;border-radius:2px 2px 4px 4px;position:relative}
+.notif-ico::before{content:"";position:absolute;left:-2px;right:-2px;top:4px;height:1.6px;background:#fff}
+.notif-badge{position:absolute;top:-3px;right:-3px;background:var(--danger);color:#fff;font-family:var(--font-m);font-size:8px;font-weight:700;border-radius:100px;padding:1px 4px;min-width:14px;text-align:center;border:2px solid var(--shell)}
+
+.tabrow{background:var(--card);border-bottom:1px solid var(--rule);display:flex;gap:2px;padding:0 26px;flex-shrink:0}
+.tabitem{font-size:12.5px;font-weight:600;color:var(--mute);padding:11px 12px;position:relative;white-space:nowrap}
+.tabitem.on{color:var(--paper)}
+.tabitem.on::after{content:"";position:absolute;left:12px;right:12px;bottom:-1px;height:2px;background:var(--accent);border-radius:2px}
+
+.body2{display:flex;flex:1;min-height:0;overflow:hidden}
+.main{flex:1;min-width:0;overflow:hidden;padding:18px 22px;display:flex;flex-direction:column;gap:16px}
+.slbl{font-family:var(--font-m);font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--mute);margin-bottom:9px;display:flex;align-items:center;gap:8px}
+.slbl .cnt{background:var(--elev);color:var(--paper);border-radius:100px;padding:1px 7px}
+
+.shortcuts{display:flex;gap:12px}
+.sc-card{flex:1;background:var(--card);border:1px solid var(--rule);border-radius:var(--r);padding:12px 14px;min-width:0}
+.sc-card .k{font-family:var(--font-m);font-size:8.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--mute);margin-bottom:6px}
+.sc-card .v{font-family:var(--font-d);font-size:18px;letter-spacing:-0.01em}
+.sc-card .sv{font-size:11px;color:var(--mute);margin-top:2px}
+.sc-card.gold .v{color:var(--gold)}
+
+.compgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.compcard{background:var(--card);border:1px solid var(--rule);border-radius:var(--r);overflow:hidden;display:flex;flex-direction:column}
+.compcard-bar{height:3px}
+.compcard-bar.fb{background:var(--accent)}
+.compcard-bar.f1{background:var(--f1)}
+.compcard-bar.ten{background:var(--ten)}
+.compcard-b{padding:12px 14px}
+.compcard-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+.sportbadge{font-family:var(--font-m);font-size:8.5px;letter-spacing:.08em;text-transform:uppercase;padding:2px 7px;border-radius:100px;display:flex;align-items:center;gap:4px}
+.sportbadge.fb{background:var(--accent-bg);color:var(--accent)}
+.sportbadge.f1{background:var(--f1-bg);color:var(--f1)}
+.sportbadge.ten{background:var(--ten-bg);color:var(--ten)}
+.compcard-nm{font-family:var(--font-d);font-size:14px;letter-spacing:-0.01em}
+.compcard-fmt{font-size:11.5px;color:var(--mute);margin:5px 0 9px}
+.compcard-enter{font-family:var(--font-m);font-size:9.5px;letter-spacing:.1em;color:var(--accent);font-weight:600}
+
+.frontrow-teaser{background:#F2EEE5;border:1px solid #E2D9C4;border-radius:var(--r);padding:14px 16px;color:#1A1A18}
+.frontrow-teaser .k{font-family:var(--font-m);font-size:8.5px;letter-spacing:.14em;text-transform:uppercase;color:#8A7A5C;margin-bottom:6px}
+.frontrow-teaser .hl{font-family:Georgia,serif;font-weight:700;font-size:15px;letter-spacing:-0.01em;line-height:1.25}
+.frontrow-teaser .go{font-family:var(--font-m);font-size:9.5px;letter-spacing:.08em;color:var(--accent);margin-top:8px;display:inline-block;font-weight:600}
+
+.feed{display:flex;flex-direction:column;overflow:hidden}
+.feed-item{display:flex;align-items:baseline;gap:10px;padding:9px 0;border-bottom:1px solid var(--rule)}
+.feedbadge{font-family:var(--font-m);font-size:8px;letter-spacing:.08em;text-transform:uppercase;padding:2px 6px;border-radius:3px;flex-shrink:0}
+.feedbadge.fb{background:var(--accent-bg);color:var(--accent)}
+.feedbadge.auc{background:var(--positive-bg);color:var(--positive)}
+.feedbadge.cls{background:var(--gold-bg);color:var(--gold)}
+.feed-txt{font-size:12.5px;flex:1;min-width:0}
+.feed-src{color:var(--mute);font-size:11px;margin-left:6px}
+.feed-t{font-family:var(--font-m);font-size:10px;color:var(--mute);flex-shrink:0}
+
+/* chat (rail + full) */
+.chatrail{width:330px;flex-shrink:0;border-left:1px solid var(--rule);background:var(--card);display:flex;flex-direction:column;min-height:0}
+.chat-hd{padding:14px 16px 10px;border-bottom:1px solid var(--rule)}
+.chat-hd .t{font-family:var(--font-d);font-size:14px;margin-bottom:10px}
+.chat-toggle{display:flex;background:var(--elev);border-radius:100px;padding:3px}
+.chat-toggle span{flex:1;text-align:center;font-family:var(--font-m);font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;padding:6px;border-radius:100px;color:var(--mute);font-weight:600}
+.chat-toggle span.on{background:var(--card);color:var(--paper)}
+.chlist{padding:8px 8px;border-bottom:1px solid var(--rule);display:flex;flex-direction:column;gap:1px}
+.chlist-item{display:flex;align-items:center;gap:8px;padding:7px 8px;border-radius:var(--r);font-size:12.5px;color:#4B5568}
+.chlist-item.on{background:var(--accent-bg);color:var(--accent);font-weight:600}
+.chthread{flex:1;overflow:hidden;padding:12px 16px;display:flex;flex-direction:column;gap:14px;min-height:0}
+.msg-group{display:flex;gap:9px}
+.msg-group .av{margin-left:0;border:none;width:26px;height:26px}
+.msg-body{flex:1;min-width:0}
+.msg-hd{display:flex;align-items:baseline;gap:7px;margin-bottom:3px}
+.msg-hd b{font-size:12px}
+.msg-hd span{font-family:var(--font-m);font-size:9px;color:var(--mute)}
+.msg-line{font-size:12.5px;color:#3a4353;line-height:1.5}
+.msg-me{align-self:flex-end;max-width:76%;background:var(--accent);color:#fff;border-radius:12px 12px 2px 12px;padding:8px 12px;font-size:12.5px}
+.msg-me-meta{font-family:var(--font-m);font-size:8.5px;color:var(--mute);text-align:right;margin-top:3px}
+.chat-compose{border-top:1px solid var(--rule);padding:10px 12px;display:flex;gap:8px}
+.chat-compose .inp{flex:1;background:var(--elev);border-radius:100px;padding:9px 14px;font-size:12px;color:var(--mute)}
+.chat-compose .send{width:34px;height:34px;border-radius:50%;background:var(--accent);color:#fff;display:grid;place-items:center;font-size:13px;flex-shrink:0}
+.chatfull{display:flex;flex:1;min-height:0;overflow:hidden}
+.chatfull .chlistcol{width:290px;flex-shrink:0;border-right:1px solid var(--rule);display:flex;flex-direction:column;background:var(--card)}
+.chatfull .chthread{flex:1;padding:20px 26px}
+.chatfull .msg-group,.chatfull .msg-me{max-width:640px}
+.mchat-back{display:flex;align-items:center;gap:8px;font-size:12.5px;font-weight:600;color:var(--accent)}
+
+/* sidebar */
+.sidebar{width:220px;flex-shrink:0;background:var(--shell);color:#fff;display:flex;flex-direction:column;padding:16px 12px}
+.sb-brand{display:flex;align-items:center;gap:10px;padding:0 6px 14px;margin-bottom:12px;border-bottom:1px solid rgba(255,255,255,.08)}
+.sb-brandname{font-family:var(--font-d);font-size:14px;letter-spacing:-0.01em;color:var(--bg)}
+.switcher{display:flex;flex-wrap:wrap;gap:7px;padding:0 6px 12px}
+.sw-circle{width:30px;height:30px;border-radius:9px;display:grid;place-items:center;font-family:var(--font-d);font-size:11px;flex-shrink:0;position:relative}
+.sw-circle.on{box-shadow:0 0 0 2px var(--shell),0 0 0 3.5px var(--accent)}
+.sw-add{width:30px;height:30px;border-radius:9px;border:1.5px dashed rgba(255,255,255,.25);display:grid;place-items:center;color:rgba(255,255,255,.4);font-size:14px;flex-shrink:0}
+.sw-active-label{padding:0 6px 14px;font-size:12px;font-weight:600;display:flex;align-items:center;gap:5px;color:rgba(255,255,255,.85)}
+.sb-section{font-family:var(--font-m);font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.35);padding:12px 10px 6px}
+.sb-item{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:var(--r);font-size:12.5px;color:rgba(255,255,255,.6);font-weight:500}
+.sb-item.on{background:rgba(255,255,255,.08);color:#fff}
+.sb-item.sub{padding-left:26px;font-size:12px}
+.sb-badge{margin-left:auto;background:var(--danger);color:#fff;font-family:var(--font-m);font-size:8.5px;border-radius:100px;padding:1px 6px}
+.sb-tag{margin-left:auto;font-family:var(--font-m);font-size:7.5px;letter-spacing:.08em;color:rgba(255,255,255,.4);border:1px solid rgba(255,255,255,.2);border-radius:3px;padding:1px 5px}
+.sb-foot{margin-top:auto;display:flex;align-items:center;gap:9px;padding:10px 10px 0;border-top:1px solid rgba(255,255,255,.08)}
+.sb-foot .av{width:26px;height:26px;border:none;margin:0}
+.sb-foot b{display:block;font-size:12px}
+.sb-foot span{font-family:var(--font-m);font-size:8.5px;color:rgba(255,255,255,.4)}
+
+/* mobile chrome */
+.mtopstrip{height:44px;background:var(--card);border-bottom:1px solid var(--rule);display:flex;align-items:center;padding:0 14px;flex-shrink:0}
+.mtopstrip .u{font-size:12.5px;font-weight:600}
+.mtopstrip .gear{margin-left:auto;font-size:15px;color:var(--mute)}
+.mcompbar{height:38px}
+.mclubhdr{background:var(--shell);color:#fff;padding:14px 16px;flex-shrink:0}
+.mclubhdr .toprow{display:flex;align-items:center}
+.mclubhdr .nm{font-family:var(--font-d);font-size:17px;text-transform:uppercase;margin-top:4px}
+.mswitcher{display:flex;gap:8px;padding:10px 14px;overflow:hidden;border-bottom:1px solid var(--rule);flex-shrink:0}
+.msw-card{flex-shrink:0;display:flex;align-items:center;gap:6px;background:var(--card);border:1px solid var(--rule);border-radius:100px;padding:5px 10px 5px 5px}
+.msw-card.on{border-color:var(--accent);background:var(--accent-bg)}
+.msw-card .c{width:20px;height:20px;border-radius:6px;display:grid;place-items:center;font-family:var(--font-d);font-size:8.5px;color:#fff}
+.msw-card .t{font-size:11px;font-weight:600}
+.mtabrow{display:flex;gap:14px;padding:0 14px;background:var(--card);border-bottom:1px solid var(--rule);overflow:hidden;flex-shrink:0}
+.mtabitem{font-size:11.5px;font-weight:600;color:var(--mute);padding:9px 0;position:relative;white-space:nowrap}
+.mtabitem.on{color:var(--paper)}
+.mtabitem.on::after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:2px;background:var(--accent)}
+.mcontent{flex:1;overflow:hidden;padding:12px 14px;display:flex;flex-direction:column;gap:12px}
+.mshortcuts{display:flex;gap:8px;overflow:hidden;flex-shrink:0}
+.mshortcuts .sc-card{min-width:118px;padding:12px 14px 14px}
+.mcompgrid{display:flex;flex-direction:column;gap:8px}
+.mbottomnav{height:60px;background:var(--shell);display:flex;flex-shrink:0}
+.mbn-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px}
+.mbn-item .d{width:5px;height:5px;border-radius:50%;background:rgba(255,255,255,.3)}
+.mbn-item .l{font-family:var(--font-m);font-size:8px;letter-spacing:.06em;text-transform:uppercase;color:rgba(255,255,255,.4);display:flex;align-items:center;gap:3px}
+.mbn-item.on .d{background:var(--accent)}
+.mbn-item.on .l{color:#fff}
+.mbn-dot{background:var(--danger);color:#fff;border-radius:100px;padding:0 4px;font-size:7px}
+
+/* lobby */
+.lobby{background:var(--bg);display:flex;align-items:center;justify-content:center;padding:40px}
+.lobby-card{max-width:520px;text-align:center}
+.lobby-card .ey{color:var(--accent);margin-bottom:16px}
+.lobby-card h1{font-family:var(--font-d);font-size:30px;letter-spacing:-0.02em;line-height:1.15;margin-bottom:14px}
+.lobby-card p{font-size:14.5px;color:#4B5568;line-height:1.6;margin-bottom:28px}
+.lobby-opts{display:flex;gap:14px}
+.lobby-opts.stack{flex-direction:column}
+.lobby-opt{flex:1;background:var(--card);border:1px solid var(--rule);border-radius:var(--r);padding:20px 18px;text-align:left}
+.lobby-opt.primary{background:var(--shell);border-color:var(--shell);color:#fff}
+.lobby-opt .k{font-family:var(--font-m);font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--mute);margin-bottom:8px}
+.lobby-opt.primary .k{color:rgba(255,255,255,.45)}
+.lobby-opt .t{font-family:var(--font-d);font-size:15px;margin-bottom:6px}
+.lobby-opt .s{font-size:12px;color:var(--mute);margin-bottom:14px}
+.lobby-opt.primary .s{color:rgba(255,255,255,.55)}
+.lobby-btn{display:block;text-align:center;font-family:var(--font-m);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;font-weight:600;background:var(--accent);color:#fff;border-radius:var(--r);padding:11px}
+.lobby-opt.primary .lobby-btn{background:#fff;color:var(--shell)}
+.lobby-inp{background:var(--elev);border-radius:var(--r);padding:10px 12px;font-family:var(--font-m);font-size:12px;color:var(--mute);margin-bottom:10px}
+
+/* frontrow gazette */
+.gazette{background:#F2EEE5;color:#1A1A18;flex:1;overflow:hidden;padding:26px 40px}
+.gaz-masthead{text-align:center;border-bottom:3px double #1A1A18;padding-bottom:14px;margin-bottom:18px}
+.gaz-masthead .t{font-family:Georgia,serif;font-weight:700;font-size:34px;letter-spacing:-0.01em}
+.gaz-masthead .m{font-family:var(--font-m);font-size:9.5px;letter-spacing:.1em;color:#6b6152;margin-top:6px}
+.gaz-lead{text-align:center;max-width:640px;margin:0 auto 22px}
+.gaz-lead h2{font-family:Georgia,serif;font-weight:700;font-size:26px;line-height:1.2;margin-bottom:10px}
+.gaz-lead .deck{font-family:Georgia,serif;font-style:italic;font-size:15px;color:#4a4436;line-height:1.5}
+.gaz-cols{display:grid;grid-template-columns:1fr 1fr 1fr;gap:24px;border-top:1px solid #cfc6ae;padding-top:18px}
+.gaz-sec .k{font-family:var(--font-m);font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:#8A7A5C;margin-bottom:8px}
+.gaz-sec h3{font-family:Georgia,serif;font-weight:700;font-size:16px;margin-bottom:8px;line-height:1.25}
+.gaz-sec p{font-size:12.5px;color:#4a4436;line-height:1.55}
+.gaz-react{display:flex;gap:6px;margin-top:12px}
+.gaz-react span{background:rgba(26,26,24,.06);border-radius:100px;padding:3px 9px;font-size:11px;display:flex;align-items:center;gap:4px}
+.gaz-comment{margin-top:10px;font-family:var(--font-m);font-size:10px;color:var(--accent);font-weight:600}
+.gaz-regen{margin-left:auto;font-family:var(--font-m);font-size:9.5px;color:#8A7A5C;display:flex;align-items:center;gap:6px}
+.gazette-m{background:#F2EEE5;color:#1A1A18;flex:1;overflow:hidden;padding:18px 16px;display:flex;flex-direction:column;gap:16px}
+.gazette-m .gaz-masthead .t{font-size:24px}
+.gazette-m .gaz-lead h2{font-size:19px}
+
+/* members */
+.mem-list{display:flex;flex-direction:column;overflow:hidden}
+.mem-row{display:flex;align-items:center;gap:12px;padding:12px 4px;border-bottom:1px solid var(--rule)}
+.mem-row .av{width:36px;height:36px;font-size:13px;border:none;margin:0}
+.mem-name{font-family:var(--font-d);font-size:13px;display:flex;align-items:center}
+.mem-owner-tag{font-family:var(--font-m);font-size:8px;letter-spacing:.08em;color:var(--gold);border:1px solid var(--gold);border-radius:3px;padding:1px 5px;margin-left:6px}
+.mem-meta{font-size:11px;color:var(--mute);margin-top:2px}
+.mem-stats{margin-left:auto;text-align:right;font-family:var(--font-m);font-size:10px;color:var(--mute);flex-shrink:0}
+.mem-remove{margin-left:16px;font-family:var(--font-m);font-size:9.5px;letter-spacing:.08em;color:var(--danger);font-weight:600;flex-shrink:0}
+.mem-row-m{display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--rule);border-radius:var(--r);padding:11px 13px}
+
+/* new competition modal / sheet */
+.modal-backdrop{position:absolute;inset:0;background:rgba(24,32,46,.55);display:flex;align-items:center;justify-content:center}
+.modal-card{width:460px;background:var(--card);border-radius:12px;padding:26px 26px 22px;box-shadow:0 30px 60px -20px rgba(0,0,0,.4)}
+.modal-title{font-family:var(--font-d);font-size:18px;margin-bottom:4px}
+.modal-sub{font-size:12.5px;color:var(--mute);margin-bottom:18px}
+.sportpick{display:flex;gap:12px;margin-bottom:18px}
+.sportpick-tile{flex:1;border:1.5px solid var(--rule);border-radius:var(--r);padding:14px 8px;text-align:center}
+.sportpick-tile.on{border-color:var(--accent);background:var(--accent-bg)}
+.sportpick-tile svg{width:48px;height:48px;margin-bottom:8px}
+.sportpick-tile span{font-size:11.5px;font-weight:600;display:block}
+.modal-field{margin-bottom:14px}
+.modal-field label{font-family:var(--font-m);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--mute);display:block;margin-bottom:6px}
+.modal-input{background:var(--elev);border-radius:var(--r);padding:11px 13px;font-size:13px;color:var(--paper)}
+.modal-select{background:var(--elev);border-radius:var(--r);padding:11px 13px;font-size:13px;color:var(--paper);display:flex;justify-content:space-between;align-items:center}
+.modal-actions{display:flex;gap:10px;margin-top:20px}
+.modal-btn{flex:1;text-align:center;font-family:var(--font-m);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;font-weight:600;padding:12px;border-radius:var(--r)}
+.modal-btn.primary{background:var(--accent);color:#fff}
+.modal-btn.ghost{border:1px solid var(--rule);color:var(--mute)}
+.sheet-backdrop{position:absolute;inset:0;background:rgba(24,32,46,.55);display:flex;align-items:flex-end}
+.sheet-card{width:100%;background:var(--card);border-radius:18px 18px 0 0;padding:18px 20px 24px}
+.sheet-handle{width:36px;height:4px;background:var(--rule);border-radius:100px;margin:0 auto 16px}
+
+/* notif panel + screen */
+.notif-panel{position:absolute;top:70px;right:26px;width:360px;background:var(--card);border:1px solid var(--rule);border-radius:10px;box-shadow:0 20px 50px -20px rgba(0,0,0,.35);overflow:hidden}
+.notif-panel-hd{display:flex;align-items:center;padding:14px 16px;border-bottom:1px solid var(--rule)}
+.notif-panel-hd .t{font-family:var(--font-d);font-size:14px}
+.notif-panel-hd .mk{margin-left:auto;font-family:var(--font-m);font-size:9.5px;color:var(--accent);font-weight:600}
+.notif-item{display:flex;gap:10px;padding:12px 16px;border-bottom:1px solid var(--rule)}
+.notif-item.unread{background:var(--accent-bg)}
+.notif-dot{width:7px;height:7px;border-radius:50%;background:var(--accent);flex-shrink:0;margin-top:5px}
+.notif-item:not(.unread) .notif-dot{background:transparent}
+.notif-body b{font-size:12.5px;display:block;margin-bottom:2px}
+.notif-body span{font-size:11px;color:var(--mute)}
+</style>
+</head>
+<body>
+
+<div class="frame-wrap" style="left:0px;top:0px">
+<div class="doc">
+<h1>Frontrow — Clubhouse Home design proposal</h1>
+<div class="sub">Kit Light · reconciled tokens · desktop 1440 &amp; mobile 390</div>
+<h2>The composition call</h2>
+<p>Home, Recap and Chat merge into <strong>one Discord/Slack-style view</strong>: a main column (competitions grid + activity feed, Recap folded in) alongside a <strong>persistent chat rail</strong> — always visible, never a tab you leave to check. The Forza Times keeps its own broadsheet identity (deliberate) but surfaces as a teaser card inside the main column.</p>
+<p>Eight tabs become five — <strong>Home · The FrontRow · Members · Find · Settings</strong>. Inbox drops from a tab to a notification panel in the header. Chat fully merges into Home on desktop; on mobile, where there's no room for a rail, it's its own screen (S-06).</p>
+<h2>Sidebar &amp; multi-Clubhouse switching</h2>
+<p>The switcher moves into the sidebar as a row of identity circles beneath the brand mark — one click from anywhere. A single-Clubhouse user never sees the row; a five-Clubhouse user gets a wrapping grid. The in-page pill row is removed.</p>
+<h2>Top bar — no active competition</h2>
+<p>On Home, a dedicated <strong>🏠 Clubhouse pill</strong> leads the competition strip and takes the accent-active treatment. Inside a competition, the pattern flips.</p>
+<h2>Update — rebrand + new screens</h2>
+<p>Platform renamed <strong>FantasyKit → Frontrow</strong> ("Your seat to all the action") — the Tiers logo mark now replaces the placeholder wordmark in the sidebar. Added since the last round: <strong>Members</strong> (S-05), a full-width <strong>Chat</strong> screen (S-06), the <strong>New Competition</strong> flow using the real sport marks (S-07), and a redesigned <strong>Notifications</strong> panel replacing the emoji bell (S-08). Every screen below now ships as a desktop + mobile pair with a code and description for handoff.</p>
+</div>
+</div>
+
+<!-- ============ S-01 CLUBHOUSE HOME ============ -->
+<div class="frame-wrap" style="left:0px;top:1080px">
+<div class="screenhead"><span class="screencode">S-01</span><span class="screentitle">Clubhouse Home</span></div>
+<div class="screenframes">
+<div><div class="frametag">Desktop 1440</div>
+<div class="win" style="width:1440px;height:940px;display:flex">
+<div class="sidebar">
+<div class="sb-brand"><svg viewBox="0 0 80 45" width="30" height="17"><rect x="0" y="0" width="26" height="11" rx="4" fill="#B8720E"></rect><rect x="0" y="17" width="48" height="11" rx="4" fill="#1A6FA8"></rect><rect x="0" y="34" width="70" height="11" rx="4" fill="#1A6FA8"></rect></svg><div class="sb-brandname">Frontrow</div></div>
+<div class="switcher">
+<div class="sw-circle on" style="background:var(--accent)">US</div>
+<div class="sw-circle" style="background:var(--gold)">OT</div>
+<div class="sw-circle" style="background:var(--f1)">RC</div>
+<div class="sw-add">+</div>
+</div>
+<div class="sw-active-label">The Usual Suspects ⌄</div>
+<div class="sb-section">Clubhouse</div>
+<div class="sb-item on">🏠 Clubhouse<span class="sb-badge">3</span></div>
+<div class="sb-item sub">The FrontRow</div>
+<div class="sb-section">Community</div>
+<div class="sb-item">🏆 Trophy Cabinet</div>
+<div class="sb-item">🪙 Coin Challenges<span class="sb-tag">BETA</span></div>
+<div class="sb-item">⚙ Settings</div>
+<div class="sb-foot"><div class="av" style="background:var(--accent)">Y</div><div><b>You</b><span>Multi-sport</span></div></div>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;min-width:0">
+<div class="compbar" style="height:40px">
+<div class="comppill home"><span class="mono">🏠</span>Clubhouse</div>
+<div class="comppill"><span class="dot fb"></span>Premier League Fantasy</div>
+<div class="comppill"><span class="dot f1"></span>Formula Fun</div>
+<div class="comppill"><span class="dot ten"></span>Wimbledon '26 Box</div>
+<div class="comppill"><span class="dot fb"></span>Sunday League Redux</div>
+<div class="compplus">+</div>
+</div>
+<div class="clubhdr">
+<div>
+<div class="clubhdr-ey">🏠 THE CLUBHOUSE</div>
+<div class="clubhdr-name">The Usual Suspects</div>
+<div class="avrow">
+<div class="av" style="background:var(--accent)">M</div>
+<div class="av" style="background:var(--danger)">B</div>
+<div class="av" style="background:var(--positive)">A</div>
+<div class="av" style="background:var(--gold)">S</div>
+<div class="av" style="background:var(--f1)">C</div>
+<div class="av" style="background:rgba(255,255,255,.15)">+4</div>
+<div class="avmeta"><b>9 members</b> · <span class="pubtag">PUBLIC</span></div>
+</div>
+</div>
+<div class="clubhdr-r">
+<div class="chstat"><b>3</b><span>Sports</span></div>
+<div class="chstat"><b>5</b><span>Competitions</span></div>
+<div class="invchip">FK-8X2Q9 ⧉</div>
+<div class="notif-btn"><div class="notif-ico"></div><div class="notif-badge">3</div></div>
+</div>
+</div>
+<div class="tabrow">
+<div class="tabitem on">Home</div>
+<div class="tabitem">The FrontRow</div>
+<div class="tabitem">Members</div>
+<div class="tabitem">Find</div>
+<div class="tabitem">Settings</div>
+</div>
+<div class="body2">
+<div class="main">
+<div>
+<div class="slbl">Quick access</div>
+<div class="shortcuts">
+<div class="sc-card"><div class="k">Coin Wallet</div><div class="v">$2,450</div><div class="sv">$180 in escrow</div></div>
+<div class="sc-card"><div class="k">P2P Challenges</div><div class="v">3 active</div><div class="sv">2 awaiting your move</div></div>
+<div class="sc-card gold"><div class="k">Meta Rank</div><div class="v">#2 of 9</div><div class="sv">35 pts behind Marco</div></div>
+</div>
+</div>
+<div>
+<div class="slbl">Competitions<span class="cnt">5</span></div>
+<div class="compgrid">
+<div class="compcard"><div class="compcard-bar fb"></div><div class="compcard-b"><div class="compcard-top"><span class="sportbadge fb">⚽ Football</span></div><div class="compcard-nm">Premier League Fantasy</div><div class="compcard-fmt">H2H · 11 managers</div><div class="compcard-enter">ENTER →</div></div></div>
+<div class="compcard"><div class="compcard-bar f1"></div><div class="compcard-b"><div class="compcard-top"><span class="sportbadge f1">🏁 F1</span></div><div class="compcard-nm">Formula Fun</div><div class="compcard-fmt">Prediction league · 6 racers</div><div class="compcard-enter">ENTER →</div></div></div>
+<div class="compcard"><div class="compcard-bar ten"></div><div class="compcard-b"><div class="compcard-top"><span class="sportbadge ten">🎾 Tennis</span></div><div class="compcard-nm">Wimbledon '26 Box</div><div class="compcard-fmt">Player box · 6 entrants</div><div class="compcard-enter">ENTER →</div></div></div>
+<div class="compcard"><div class="compcard-bar fb"></div><div class="compcard-b"><div class="compcard-top"><span class="sportbadge fb">⚽ Football</span></div><div class="compcard-nm">Sunday League Redux</div><div class="compcard-fmt">Classic · 8 managers</div><div class="compcard-enter">ENTER →</div></div></div>
+</div>
+</div>
+<div class="frontrow-teaser">
+<div class="k">The Forza Times · Edition 14</div>
+<div class="hl">Marco seizes GW29 in a last-gasp thriller</div>
+<span class="go">Read today's edition →</span>
+</div>
+<div style="flex:1;min-height:0;display:flex;flex-direction:column">
+<div class="slbl">Activity</div>
+<div class="feed">
+<div class="feed-item"><span class="feedbadge fb">GW RESULT</span><span class="feed-txt">Marco takes GW29 with a 62-point haul<span class="feed-src">Premier League Fantasy</span></span><span class="feed-t">2h ago</span></div>
+<div class="feed-item"><span class="feedbadge fb">NEWS</span><span class="feed-txt">British GP predictions lock in 3 days<span class="feed-src">Formula Fun</span></span><span class="feed-t">4h ago</span></div>
+<div class="feed-item"><span class="feedbadge auc">AUCTION</span><span class="feed-txt">Auction closed — Bea lands the top striker for 58cr<span class="feed-src">Sunday League Redux</span></span><span class="feed-t">6h ago</span></div>
+<div class="feed-item"><span class="feedbadge cls">CLASSIFIED</span><span class="feed-txt">Wanted: a left-back who doesn't rage-quit mid-season<span class="feed-src">The Forza Times</span></span><span class="feed-t">1d ago</span></div>
+</div>
+</div>
+</div>
+<div class="chatrail">
+<div class="chat-hd"><div class="t">Chat</div><div class="chat-toggle"><span class="on">Channels</span><span>DMs</span></div></div>
+<div class="chlist">
+<div class="chlist-item on"># general</div>
+<div class="chlist-item"># transfers-banter</div>
+<div class="chlist-item"># f1-paddock</div>
+<div class="chlist-item"># off-topic</div>
+</div>
+<div class="chthread">
+<div class="msg-group"><div class="av" style="background:var(--accent)">M</div><div class="msg-body"><div class="msg-hd"><b>Marco</b><span>6:42 PM</span></div><div class="msg-line">anyone else think Haaland's nailed on for a hat trick tonight</div><div class="msg-line">8 minutes till kickoff</div></div></div>
+<div class="msg-group"><div class="av" style="background:var(--danger)">B</div><div class="msg-body"><div class="msg-hd"><b>Bea</b><span>7:01 PM</span></div><div class="msg-line">the auction bankrupted me lol</div></div></div>
+<div class="msg-me">worth it for that striker though</div>
+<div class="msg-me-meta">7:03 PM · read</div>
+</div>
+<div class="chat-compose"><div class="inp">Message #general…</div><div class="send">➤</div></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div><div class="frametag">Mobile 390</div>
+<div class="win" style="width:390px;height:900px;display:flex;flex-direction:column">
+<div class="mtopstrip"><div class="u">The Usual Suspects</div><div class="gear">⚙</div></div>
+<div class="compbar mcompbar">
+<div class="comppill home"><span class="mono">🏠</span>Clubhouse</div>
+<div class="comppill"><span class="dot fb"></span>PL Fantasy</div>
+<div class="comppill"><span class="dot f1"></span>Formula Fun</div>
+<div class="comppill"><span class="dot ten"></span>Wimbledon</div>
+</div>
+<div class="mclubhdr">
+<div class="toprow"><div class="clubhdr-ey">🏠 THE CLUBHOUSE</div><div class="notif-btn" style="margin-left:auto"><div class="notif-ico"></div><div class="notif-badge">3</div></div></div>
+<div class="nm">The Usual Suspects</div>
+<div class="avrow">
+<div class="av" style="background:var(--accent);border-color:var(--shell)">M</div>
+<div class="av" style="background:var(--danger);border-color:var(--shell)">B</div>
+<div class="av" style="background:var(--positive);border-color:var(--shell)">A</div>
+<div class="av" style="background:rgba(255,255,255,.15);border-color:var(--shell)">+6</div>
+<div class="avmeta"><b>9 members</b> · <span class="pubtag">PUBLIC</span></div>
+</div>
+</div>
+<div class="mswitcher">
+<div class="msw-card on"><div class="c" style="background:var(--accent)">US</div><div class="t">Usual Suspects</div></div>
+<div class="msw-card"><div class="c" style="background:var(--gold)">OT</div><div class="t">Old Timers</div></div>
+<div class="msw-card"><div class="c" style="background:var(--f1)">RC</div><div class="t">Race Club</div></div>
+</div>
+<div class="mtabrow">
+<div class="mtabitem on">Home</div>
+<div class="mtabitem">FrontRow</div>
+<div class="mtabitem">Chat</div>
+<div class="mtabitem">Members</div>
+<div class="mtabitem">Find</div>
+<div class="mtabitem">Settings</div>
+</div>
+<div class="mcontent">
+<div>
+<div class="slbl">Quick access</div>
+<div class="mshortcuts">
+<div class="sc-card"><div class="k">Wallet</div><div class="v">$2,450</div><div class="sv">$180 escrow</div></div>
+<div class="sc-card"><div class="k">P2P</div><div class="v">3 active</div><div class="sv">2 to review</div></div>
+<div class="sc-card gold"><div class="k">Meta Rank</div><div class="v">#2 / 9</div><div class="sv">−35 pts</div></div>
+</div>
+</div>
+<div>
+<div class="slbl">Competitions<span class="cnt">5</span></div>
+<div class="mcompgrid">
+<div class="compcard"><div class="compcard-bar fb"></div><div class="compcard-b"><div class="compcard-top"><span class="sportbadge fb">⚽ Football</span><span class="compcard-enter">ENTER →</span></div><div class="compcard-nm">Premier League Fantasy</div><div class="compcard-fmt">H2H · 11 managers</div></div></div>
+<div class="compcard"><div class="compcard-bar f1"></div><div class="compcard-b"><div class="compcard-top"><span class="sportbadge f1">🏁 F1</span><span class="compcard-enter">ENTER →</span></div><div class="compcard-nm">Formula Fun</div><div class="compcard-fmt">Prediction league · 6 racers</div></div></div>
+</div>
+</div>
+<div class="frontrow-teaser">
+<div class="k">The Forza Times · Ed. 14</div>
+<div class="hl">Marco seizes GW29 in a last-gasp thriller</div>
+<span class="go">Read today's edition →</span>
+</div>
+<div>
+<div class="slbl">Activity</div>
+<div class="feed">
+<div class="feed-item"><span class="feedbadge fb">GW RESULT</span><span class="feed-txt">Marco takes GW29 with a 62-pt haul</span><span class="feed-t">2h</span></div>
+</div>
+</div>
+</div>
+<div class="mbottomnav">
+<div class="mbn-item on"><div class="d"></div><div class="l">Club <span class="mbn-dot">3</span></div></div>
+<div class="mbn-item"><div class="d"></div><div class="l">Trophy</div></div>
+<div class="mbn-item"><div class="d"></div><div class="l">Coins</div></div>
+<div class="mbn-item"><div class="d"></div><div class="l">Settings</div></div>
+</div>
+</div>
+</div>
+</div>
+<div class="screendesc">Merged Home/Recap/Chat composition. Left sidebar (global, 220px) is unaffected by route. Body: 5-tab row (Home/FrontRow/Members/Find/Settings) then a two-zone layout — <b>main column</b> (quick-access shortcuts, competitions grid, FrontRow teaser card linking to S-04, activity feed) + <b>persistent 330px chat rail</b> (channel/DM toggle, grouped thread, compose — full-width version in S-06). Mobile drops the rail out of Home (see S-06 for the dedicated screen) and adds a "Chat" item to the secondary tab row; bottom tab bar mirrors the sidebar's Community section, with Club always present and carrying the unread badge.</div>
+</div>
+
+<!-- ============ S-02 GLOBAL CHROME ============ -->
+<div class="frame-wrap" style="left:0px;top:2260px">
+<div class="screenhead"><span class="screencode">S-02</span><span class="screentitle">Global Chrome — Sidebar, Clubhouse Switcher &amp; Top Bar</span></div>
+<div class="screenframes">
+<div><div class="frametag">Desktop — sidebar (1 vs 5 Clubhouses) + top bar states</div>
+<div class="win" style="width:900px;height:700px;padding:24px;background:var(--bg);box-shadow:0 2px 4px rgba(24,32,46,.08),0 30px 60px -30px rgba(24,32,46,.35)">
+<div style="display:flex;gap:24px;margin-bottom:22px">
+<div style="flex:1">
+<div class="eyebrow" style="margin-bottom:10px">1 clubhouse — no switcher needed</div>
+<div class="sidebar" style="height:460px;border-radius:8px">
+<div class="sb-brand"><svg viewBox="0 0 80 45" width="30" height="17"><rect x="0" y="0" width="26" height="11" rx="4" fill="#B8720E"></rect><rect x="0" y="17" width="48" height="11" rx="4" fill="#1A6FA8"></rect><rect x="0" y="34" width="70" height="11" rx="4" fill="#1A6FA8"></rect></svg><div class="sb-brandname">Frontrow</div></div>
+<div class="sb-section">Clubhouse</div>
+<div class="sb-item on">🏠 Clubhouse</div>
+<div class="sb-item sub">The FrontRow</div>
+<div class="sb-section">Community</div>
+<div class="sb-item">🏆 Trophy Cabinet</div>
+<div class="sb-item">🪙 Coin Challenges<span class="sb-tag">BETA</span></div>
+<div class="sb-item">⚙ Settings</div>
+<div class="sb-foot"><div class="av" style="background:var(--accent)">Y</div><div><b>You</b><span>Multi-sport</span></div></div>
+</div>
+</div>
+<div style="flex:1">
+<div class="eyebrow" style="margin-bottom:10px">5 clubhouses — switcher wraps, still one click</div>
+<div class="sidebar" style="height:460px;border-radius:8px">
+<div class="sb-brand"><svg viewBox="0 0 80 45" width="30" height="17"><rect x="0" y="0" width="26" height="11" rx="4" fill="#B8720E"></rect><rect x="0" y="17" width="48" height="11" rx="4" fill="#1A6FA8"></rect><rect x="0" y="34" width="70" height="11" rx="4" fill="#1A6FA8"></rect></svg><div class="sb-brandname">Frontrow</div></div>
+<div class="switcher">
+<div class="sw-circle on" style="background:var(--accent)">US</div>
+<div class="sw-circle" style="background:var(--gold)">OT</div>
+<div class="sw-circle" style="background:var(--f1)">RC</div>
+<div class="sw-circle" style="background:var(--positive)">WK</div>
+<div class="sw-circle" style="background:var(--danger)">SB</div>
+<div class="sw-add">+</div>
+</div>
+<div class="sw-active-label">The Usual Suspects ⌄</div>
+<div class="sb-section">Clubhouse</div>
+<div class="sb-item on">🏠 Clubhouse<span class="sb-badge">3</span></div>
+<div class="sb-item sub">The FrontRow</div>
+<div class="sb-section">Community</div>
+<div class="sb-item">🏆 Trophy Cabinet</div>
+<div class="sb-item">🪙 Coin Challenges<span class="sb-tag">BETA</span></div>
+<div class="sb-item">⚙ Settings</div>
+<div class="sb-foot"><div class="av" style="background:var(--accent)">Y</div><div><b>You</b><span>Multi-sport</span></div></div>
+</div>
+</div>
+</div>
+<div><div class="eyebrow" style="margin-bottom:6px">Top bar — on Clubhouse Home</div>
+<div class="compbar" style="height:40px;border-radius:8px;border:1px solid var(--rule);margin-bottom:16px">
+<div class="comppill home"><span class="mono">🏠</span>Clubhouse</div>
+<div class="comppill"><span class="dot fb"></span>Premier League Fantasy</div>
+<div class="comppill"><span class="dot f1"></span>Formula Fun</div>
+<div class="comppill"><span class="dot ten"></span>Wimbledon '26 Box</div>
+<div class="compplus">+</div>
+</div>
+<div class="eyebrow" style="margin-bottom:6px">Top bar — inside a competition</div>
+<div class="compbar" style="height:40px;border-radius:8px;border:1px solid var(--rule)">
+<div class="comppill"><span class="mono">🏠</span>Clubhouse</div>
+<div class="comppill on"><span class="dot fb"></span>Premier League Fantasy</div>
+<div class="comppill"><span class="dot f1"></span>Formula Fun</div>
+<div class="comppill"><span class="dot ten"></span>Wimbledon '26 Box</div>
+<div class="compplus">+</div>
+</div>
+</div>
+</div>
+</div>
+<div><div class="frametag">Mobile equivalent</div>
+<div class="win" style="width:390px;height:420px;display:flex;flex-direction:column">
+<div class="compbar mcompbar">
+<div class="comppill home"><span class="mono">🏠</span>Clubhouse</div>
+<div class="comppill"><span class="dot fb"></span>PL Fantasy</div>
+<div class="comppill"><span class="dot f1"></span>Formula Fun</div>
+</div>
+<div class="mswitcher">
+<div class="msw-card on"><div class="c" style="background:var(--accent)">US</div><div class="t">Usual Suspects</div></div>
+<div class="msw-card"><div class="c" style="background:var(--gold)">OT</div><div class="t">Old Timers</div></div>
+<div class="msw-card"><div class="c" style="background:var(--f1)">RC</div><div class="t">Race Club</div></div>
+</div>
+<div style="flex:1;background:var(--bg);padding:16px"><div class="eyebrow">No sidebar on mobile — switcher renders here as identity cards, always above the content; Community items collapse into the bottom bar below.</div></div>
+<div class="mbottomnav">
+<div class="mbn-item on"><div class="d"></div><div class="l">Club <span class="mbn-dot">3</span></div></div>
+<div class="mbn-item"><div class="d"></div><div class="l">Trophy</div></div>
+<div class="mbn-item"><div class="d"></div><div class="l">Coins</div></div>
+<div class="mbn-item"><div class="d"></div><div class="l">Settings</div></div>
+</div>
+</div>
+</div>
+</div>
+<div class="screendesc">Sidebar is global chrome, identical on every route. New: the Slack-style Clubhouse switcher renders only when the user belongs to &gt;1 Clubhouse. Mobile has no sidebar; the equivalent switcher is a horizontal card strip at the top of Clubhouse screens, and Community-section items collapse into the bottom tab bar with Club always present and carrying the unread badge. Top bar: a dedicated 🏠 Clubhouse pill takes the accent-active state only when no competition is open.</div>
+</div>
+
+<!-- ============ S-03 LOBBY ============ -->
+<div class="frame-wrap" style="left:0px;top:3170px">
+<div class="screenhead"><span class="screencode">S-03</span><span class="screentitle">Clubhouse Lobby (empty state)</span></div>
+<div class="screenframes">
+<div><div class="frametag">Desktop 700</div>
+<div class="win" style="width:700px;height:560px">
+<div class="lobby" style="height:100%">
+<div class="lobby-card">
+<div class="eyebrow ey">WELCOME TO FRONTROW</div>
+<h1>Every game you play lives in one room.</h1>
+<p>Create a Clubhouse for your group, or join one with an invite code — football leagues, F1 paddocks and tennis boxes all show up inside it.</p>
+<div class="lobby-opts">
+<div class="lobby-opt primary"><div class="k">Start fresh</div><div class="t">Create a Clubhouse</div><div class="s">Name it, invite your group, add competitions as you go</div><span class="lobby-btn">Create Clubhouse</span></div>
+<div class="lobby-opt"><div class="k">Have a code?</div><div class="t">Join with an invite</div><div class="lobby-inp">FK-XXXXX</div><span class="lobby-btn">Join Clubhouse</span></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div><div class="frametag">Mobile 390</div>
+<div class="win" style="width:390px;height:700px">
+<div class="lobby" style="height:100%;padding:28px 24px">
+<div class="lobby-card">
+<div class="eyebrow ey">WELCOME TO FRONTROW</div>
+<h1 style="font-size:24px">Every game you play lives in one room.</h1>
+<p style="font-size:13.5px">Create a Clubhouse for your group, or join one with an invite code.</p>
+<div class="lobby-opts stack">
+<div class="lobby-opt primary"><div class="k">Start fresh</div><div class="t">Create a Clubhouse</div><div class="s">Name it, invite your group</div><span class="lobby-btn">Create Clubhouse</span></div>
+<div class="lobby-opt"><div class="k">Have a code?</div><div class="t">Join with an invite</div><div class="lobby-inp">FK-XXXXX</div><span class="lobby-btn">Join Clubhouse</span></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="screendesc">First-run screen for a user with zero Clubhouses (<b>ClubhouseLobby</b>). Two equal paths, no default bias: create fresh or join by code. Mobile stacks the option cards vertically instead of side-by-side.</div>
+</div>
+
+<!-- ============ S-04 FRONTROW GAZETTE ============ -->
+<div class="frame-wrap" style="left:0px;top:4080px">
+<div class="screenhead"><span class="screencode">S-04</span><span class="screentitle">The FrontRow (gazette)</span></div>
+<div class="screenframes">
+<div><div class="frametag">Desktop 1160</div>
+<div class="win" style="width:1160px;height:600px;display:flex;flex-direction:column">
+<div class="compbar" style="height:38px">
+<div class="comppill"><span class="mono">🏠</span>Clubhouse</div>
+<div class="comppill"><span class="dot fb"></span>Premier League Fantasy</div>
+<div class="comppill"><span class="dot f1"></span>Formula Fun</div>
+</div>
+<div class="tabrow"><div class="tabitem">Home</div><div class="tabitem on">The FrontRow</div><div class="tabitem">Members</div><div class="tabitem">Find</div><div class="tabitem">Settings</div></div>
+<div class="gazette">
+<div class="gaz-masthead"><div class="t">THE FORZA TIMES</div><div class="m">EDITION 14 · JULY 24, 2026 · THE USUAL SUSPECTS <span class="gaz-regen">↻ Regenerate (owner · next in 3h12m)</span></div></div>
+<div class="gaz-lead"><h2>Marco seizes GW29 in a last-gasp thriller, as Bea's auction gamble finally pays off</h2><div class="deck">A 62-point haul from the league's quietest manager rewrites the table with nine gameweeks to go.</div></div>
+<div class="gaz-cols">
+<div class="gaz-sec"><div class="k">Hot Take</div><h3>Bea's striker gamble was never a gamble</h3><p>58 credits for one player looked reckless in June. It looks like foresight now.</p><div class="gaz-react"><span>🔥 12</span><span>😂 4</span><span>👏 7</span></div><div class="gaz-comment">💬 8 letters to the editor →</div></div>
+<div class="gaz-sec"><div class="k">Wooden Spoon</div><h3>Sam's midfield sat on the bench — again</h3><p>Three gameweeks running, the league's most expensive bench.</p><div class="gaz-react"><span>💀 9</span><span>😬 5</span></div><div class="gaz-comment">💬 3 letters to the editor →</div></div>
+<div class="gaz-sec"><div class="k">Transfer Desk</div><h3>Ana's early move on the new striker</h3><p>Locked him in two gameweeks before the price rise. Early word wins.</p><div class="gaz-react"><span>📈 6</span><span>👀 3</span></div><div class="gaz-comment">💬 2 letters to the editor →</div></div>
+</div>
+</div>
+</div>
+</div>
+<div><div class="frametag">Mobile 390</div>
+<div class="win" style="width:390px;height:844px;display:flex;flex-direction:column">
+<div class="compbar mcompbar"><div class="comppill"><span class="mono">🏠</span>Clubhouse</div><div class="comppill"><span class="dot fb"></span>PL Fantasy</div></div>
+<div class="mtabrow"><div class="mtabitem">Home</div><div class="mtabitem on">FrontRow</div><div class="mtabitem">Chat</div><div class="mtabitem">Members</div></div>
+<div class="gazette-m">
+<div class="gaz-masthead"><div class="t">THE FORZA TIMES</div><div class="m">ED. 14 · JUL 24, 2026<br><span class="gaz-regen" style="margin:6px 0 0">↻ Regenerate (owner · 3h12m)</span></div></div>
+<div class="gaz-lead"><h2>Marco seizes GW29 in a last-gasp thriller</h2><div class="deck">A 62-point haul from the league's quietest manager rewrites the table with nine gameweeks to go.</div></div>
+<div class="gaz-sec"><div class="k">Hot Take</div><h3>Bea's striker gamble was never a gamble</h3><p>58 credits for one player looked reckless in June. It looks like foresight now.</p><div class="gaz-react"><span>🔥 12</span><span>😂 4</span><span>👏 7</span></div><div class="gaz-comment">💬 8 letters to the editor →</div></div>
+<div class="gaz-sec"><div class="k">Wooden Spoon</div><h3>Sam's midfield sat on the bench — again</h3><div class="gaz-react"><span>💀 9</span><span>😬 5</span></div><div class="gaz-comment">💬 3 letters to the editor →</div></div>
+</div>
+</div>
+</div>
+</div>
+<div class="screendesc">The Forza Times — intentionally breaks Kit Light for a cream/dark-ink broadsheet palette (kept per brief). Owner can regenerate (4h cooldown). Every section supports emoji reactions + a comment thread ("letters to the editor"). Mobile stacks sections vertically instead of 3 columns and adds the FrontRow item to the secondary tab row.</div>
+</div>
+
+<!-- ============ S-05 MEMBERS ============ -->
+<div class="frame-wrap" style="left:0px;top:5170px">
+<div class="screenhead"><span class="screencode">S-05</span><span class="screentitle">Members</span></div>
+<div class="screenframes">
+<div><div class="frametag">Desktop 1440</div>
+<div class="win" style="width:1440px;height:760px;display:flex">
+<div class="sidebar">
+<div class="sb-brand"><svg viewBox="0 0 80 45" width="30" height="17"><rect x="0" y="0" width="26" height="11" rx="4" fill="#B8720E"></rect><rect x="0" y="17" width="48" height="11" rx="4" fill="#1A6FA8"></rect><rect x="0" y="34" width="70" height="11" rx="4" fill="#1A6FA8"></rect></svg><div class="sb-brandname">Frontrow</div></div>
+<div class="switcher"><div class="sw-circle on" style="background:var(--accent)">US</div><div class="sw-circle" style="background:var(--gold)">OT</div><div class="sw-add">+</div></div>
+<div class="sw-active-label">The Usual Suspects ⌄</div>
+<div class="sb-section">Clubhouse</div>
+<div class="sb-item on">🏠 Clubhouse</div>
+<div class="sb-item sub">The FrontRow</div>
+<div class="sb-section">Community</div>
+<div class="sb-item">🏆 Trophy Cabinet</div>
+<div class="sb-item">🪙 Coin Challenges<span class="sb-tag">BETA</span></div>
+<div class="sb-item">⚙ Settings</div>
+<div class="sb-foot"><div class="av" style="background:var(--accent)">Y</div><div><b>You</b><span>Multi-sport</span></div></div>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;min-width:0">
+<div class="compbar" style="height:40px"><div class="comppill home"><span class="mono">🏠</span>Clubhouse</div><div class="comppill"><span class="dot fb"></span>Premier League Fantasy</div></div>
+<div class="clubhdr">
+<div><div class="clubhdr-ey">🏠 THE CLUBHOUSE</div><div class="clubhdr-name">The Usual Suspects</div></div>
+<div class="clubhdr-r"><div class="notif-btn"><div class="notif-ico"></div><div class="notif-badge">3</div></div></div>
+</div>
+<div class="tabrow"><div class="tabitem">Home</div><div class="tabitem">The FrontRow</div><div class="tabitem on">Members</div><div class="tabitem">Find</div><div class="tabitem">Settings</div></div>
+<div style="padding:20px 26px;overflow:hidden;flex:1">
+<div class="slbl">9 members</div>
+<div class="mem-list">
+<div class="mem-row"><div class="av" style="background:var(--accent)">M</div><div style="flex:1"><div class="mem-name">Marco<span class="mem-owner-tag">OWNER</span></div><div class="mem-meta">Joined Feb 2025</div></div><div class="mem-stats">5 competitions<br>728 meta pts</div></div>
+<div class="mem-row"><div class="av" style="background:var(--positive)">Y</div><div style="flex:1"><div class="mem-name">You</div><div class="mem-meta">Joined Feb 2025</div></div><div class="mem-stats">5 competitions<br>693 meta pts</div></div>
+<div class="mem-row"><div class="av" style="background:var(--danger)">B</div><div style="flex:1"><div class="mem-name">Bea</div><div class="mem-meta">Joined Mar 2025</div></div><div class="mem-stats">4 competitions<br>689 meta pts</div><div class="mem-remove">Remove</div></div>
+<div class="mem-row"><div class="av" style="background:var(--gold)">S</div><div style="flex:1"><div class="mem-name">Sam</div><div class="mem-meta">Joined Mar 2025</div></div><div class="mem-stats">3 competitions<br>641 meta pts</div><div class="mem-remove">Remove</div></div>
+<div class="mem-row"><div class="av" style="background:var(--f1)">C</div><div style="flex:1"><div class="mem-name">Chidi</div><div class="mem-meta">Joined Apr 2025</div></div><div class="mem-stats">4 competitions<br>612 meta pts</div><div class="mem-remove">Remove</div></div>
+<div class="mem-row"><div class="av" style="background:var(--ten)">A</div><div style="flex:1"><div class="mem-name">Ana</div><div class="mem-meta">Joined May 2025</div></div><div class="mem-stats">3 competitions<br>588 meta pts</div><div class="mem-remove">Remove</div></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div><div class="frametag">Mobile 390</div>
+<div class="win" style="width:390px;height:844px;display:flex;flex-direction:column">
+<div class="mtopstrip"><div class="u">Members</div><div class="gear">⚙</div></div>
+<div class="mtabrow"><div class="mtabitem">Home</div><div class="mtabitem">FrontRow</div><div class="mtabitem">Chat</div><div class="mtabitem on">Members</div><div class="mtabitem">Find</div></div>
+<div class="mcontent">
+<div class="slbl">9 members</div>
+<div style="display:flex;flex-direction:column;gap:8px;overflow:hidden">
+<div class="mem-row-m"><div class="av" style="background:var(--accent);border:none">M</div><div style="flex:1"><div class="mem-name">Marco<span class="mem-owner-tag">OWNER</span></div><div class="mem-meta">728 meta pts</div></div></div>
+<div class="mem-row-m"><div class="av" style="background:var(--positive);border:none">Y</div><div style="flex:1"><div class="mem-name">You</div><div class="mem-meta">693 meta pts</div></div></div>
+<div class="mem-row-m"><div class="av" style="background:var(--danger);border:none">B</div><div style="flex:1"><div class="mem-name">Bea</div><div class="mem-meta">689 meta pts</div></div><div class="mem-remove">Remove</div></div>
+<div class="mem-row-m"><div class="av" style="background:var(--gold);border:none">S</div><div style="flex:1"><div class="mem-name">Sam</div><div class="mem-meta">641 meta pts</div></div><div class="mem-remove">Remove</div></div>
+<div class="mem-row-m"><div class="av" style="background:var(--f1);border:none">C</div><div style="flex:1"><div class="mem-name">Chidi</div><div class="mem-meta">612 meta pts</div></div><div class="mem-remove">Remove</div></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="screendesc">Owner-pinned-first roster (gold OWNER tag). <b>Remove</b> shows only for the signed-in owner, and never on their own row. Each row surfaces join date/cross-sport activity so it doubles as a lightweight standing check. Mobile condenses rows to single-column cards with the same actions.</div>
+</div>
+
+<!-- ============ S-06 CHAT ============ -->
+<div class="frame-wrap" style="left:0px;top:6260px">
+<div class="screenhead"><span class="screencode">S-06</span><span class="screentitle">Chat</span></div>
+<div class="screenframes">
+<div><div class="frametag">Desktop 1440 — full-width (expanded from the S-01 rail)</div>
+<div class="win" style="width:1440px;height:760px;display:flex">
+<div class="sidebar">
+<div class="sb-brand"><svg viewBox="0 0 80 45" width="30" height="17"><rect x="0" y="0" width="26" height="11" rx="4" fill="#B8720E"></rect><rect x="0" y="17" width="48" height="11" rx="4" fill="#1A6FA8"></rect><rect x="0" y="34" width="70" height="11" rx="4" fill="#1A6FA8"></rect></svg><div class="sb-brandname">Frontrow</div></div>
+<div class="sb-section">Clubhouse</div>
+<div class="sb-item on">🏠 Clubhouse</div>
+<div class="sb-item sub">The FrontRow</div>
+<div class="sb-section">Community</div>
+<div class="sb-item">🏆 Trophy Cabinet</div>
+<div class="sb-item">🪙 Coin Challenges<span class="sb-tag">BETA</span></div>
+<div class="sb-item">⚙ Settings</div>
+<div class="sb-foot"><div class="av" style="background:var(--accent)">Y</div><div><b>You</b><span>Multi-sport</span></div></div>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;min-width:0">
+<div class="compbar" style="height:40px"><div class="comppill home"><span class="mono">🏠</span>Clubhouse</div><div class="comppill"><span class="dot fb"></span>Premier League Fantasy</div></div>
+<div class="clubhdr"><div><div class="clubhdr-ey">🏠 THE CLUBHOUSE</div><div class="clubhdr-name">The Usual Suspects</div></div><div class="clubhdr-r"><div class="notif-btn"><div class="notif-ico"></div><div class="notif-badge">3</div></div></div></div>
+<div class="tabrow"><div class="tabitem on">Home</div><div class="tabitem">The FrontRow</div><div class="tabitem">Members</div><div class="tabitem">Find</div><div class="tabitem">Settings</div></div>
+<div class="chatfull">
+<div class="chlistcol">
+<div class="chat-hd"><div class="t">Chat</div><div class="chat-toggle"><span class="on">Channels</span><span>DMs</span></div></div>
+<div class="chlist">
+<div class="chlist-item on"># general</div>
+<div class="chlist-item"># transfers-banter</div>
+<div class="chlist-item"># f1-paddock</div>
+<div class="chlist-item"># off-topic</div>
+</div>
+</div>
+<div class="chthread">
+<div class="msg-group"><div class="av" style="background:var(--accent)">M</div><div class="msg-body"><div class="msg-hd"><b>Marco</b><span>6:42 PM</span></div><div class="msg-line">anyone else think Haaland's nailed on for a hat trick tonight</div><div class="msg-line">8 minutes till kickoff</div></div></div>
+<div class="msg-group"><div class="av" style="background:var(--danger)">B</div><div class="msg-body"><div class="msg-hd"><b>Bea</b><span>7:01 PM</span></div><div class="msg-line">the auction bankrupted me lol</div><div class="msg-line">worst decision of my season tbh</div></div></div>
+<div class="msg-me">worth it for that striker though</div>
+<div class="msg-me-meta">7:03 PM · read</div>
+<div class="msg-group"><div class="av" style="background:var(--gold)">S</div><div class="msg-body"><div class="msg-hd"><b>Sam</b><span>7:12 PM</span></div><div class="msg-line">kickoff!! 🔥</div></div></div>
+</div>
+<div class="chat-compose" style="align-items:center;padding:14px 26px"><div class="inp">Message #general…</div><div class="send">➤</div></div>
+</div>
+</div>
+</div>
+</div>
+<div><div class="frametag">Mobile 390 — collapsed one-pane, back button</div>
+<div class="win" style="width:390px;height:844px;display:flex;flex-direction:column">
+<div class="mtopstrip"><div class="mchat-back">← Channels</div><div class="gear">⚙</div></div>
+<div style="background:var(--card);border-bottom:1px solid var(--rule);padding:10px 14px;display:flex;align-items:center;gap:8px"><b style="font-size:13px"># general</b></div>
+<div class="chthread" style="flex:1">
+<div class="msg-group"><div class="av" style="background:var(--accent)">M</div><div class="msg-body"><div class="msg-hd"><b>Marco</b><span>6:42 PM</span></div><div class="msg-line">anyone else think Haaland's nailed on for a hat trick tonight</div><div class="msg-line">8 minutes till kickoff</div></div></div>
+<div class="msg-group"><div class="av" style="background:var(--danger)">B</div><div class="msg-body"><div class="msg-hd"><b>Bea</b><span>7:01 PM</span></div><div class="msg-line">the auction bankrupted me lol</div></div></div>
+<div class="msg-me">worth it for that striker though</div>
+<div class="msg-me-meta">7:03 PM · read</div>
+<div class="msg-group"><div class="av" style="background:var(--gold)">S</div><div class="msg-body"><div class="msg-hd"><b>Sam</b><span>7:12 PM</span></div><div class="msg-line">kickoff!! 🔥</div></div></div>
+</div>
+<div class="chat-compose"><div class="inp">Message #general…</div><div class="send">➤</div></div>
+</div>
+</div>
+</div>
+<div class="screendesc">The two-pane <b>ClubhouseChat</b> pattern at full width — this is what the S-01 rail expands into on its own screen. Channels (owner-creatable, default #general) and DMs share one left list via a toggle; consecutive same-sender messages group under one timestamp, DMs render as read-receipted bubbles. Below ~1024px this collapses to the single thread pane shown on mobile, with a back button returning to the channel/DM list (same list markup as the desktop left pane, shown full-screen).</div>
+</div>
+
+<!-- ============ S-07 NEW COMPETITION ============ -->
+<div class="frame-wrap" style="left:0px;top:7370px">
+<div class="screenhead"><span class="screencode">S-07</span><span class="screentitle">New Competition</span></div>
+<div class="screenframes">
+<div><div class="frametag">Desktop 1440 — centered modal over Home</div>
+<div class="win" style="width:1440px;height:900px;position:relative">
+<div style="filter:blur(1px);opacity:.5">
+<div class="compbar" style="height:40px"><div class="comppill home"><span class="mono">🏠</span>Clubhouse</div><div class="comppill"><span class="dot fb"></span>Premier League Fantasy</div></div>
+<div class="clubhdr"><div><div class="clubhdr-ey">🏠 THE CLUBHOUSE</div><div class="clubhdr-name">The Usual Suspects</div></div></div>
+</div>
+<div class="modal-backdrop">
+<div class="modal-card">
+<div class="modal-title">Create a competition</div>
+<div class="modal-sub">Adds to The Usual Suspects — every member gets access</div>
+<label class="modal-field" style="margin-bottom:8px"><label style="font-family:var(--font-m);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--mute);display:block;margin-bottom:8px">Sport</label></label>
+<div class="sportpick">
+<div class="sportpick-tile on"><svg viewBox="0 0 104 104"><rect x="0.5" y="0.5" width="103" height="103" rx="24" fill="#FFFFFF" stroke="#E2DDD5"></rect><rect x="32" y="26" width="40" height="52" rx="4" fill="none" stroke="oklch(0.52 0.12 152)" stroke-width="2.5"></rect><line x1="32" y1="52" x2="72" y2="52" stroke="oklch(0.52 0.12 152)" stroke-width="2.5"></line><circle cx="52" cy="52" r="7.5" fill="#FFFFFF" stroke="oklch(0.52 0.12 152)" stroke-width="2.5"></circle></svg><span>Football</span></div>
+<div class="sportpick-tile"><svg viewBox="0 0 104 104"><rect x="0.5" y="0.5" width="103" height="103" rx="24" fill="#FFFFFF" stroke="#E2DDD5"></rect><rect x="35" y="23" width="34" height="58" rx="2" fill="none" stroke="oklch(0.5 0.14 300)" stroke-width="2.5"></rect><line x1="35" y1="52" x2="69" y2="52" stroke="oklch(0.5 0.14 300)" stroke-width="2"></line><line x1="39" y1="37" x2="65" y2="37" stroke="oklch(0.5 0.14 300)" stroke-width="2"></line><line x1="39" y1="66" x2="65" y2="66" stroke="oklch(0.5 0.14 300)" stroke-width="2"></line><line x1="52" y1="37" x2="52" y2="52" stroke="oklch(0.5 0.14 300)" stroke-width="2"></line><line x1="52" y1="52" x2="52" y2="66" stroke="oklch(0.5 0.14 300)" stroke-width="2"></line></svg><span>Tennis</span></div>
+<div class="sportpick-tile"><svg viewBox="0 0 104 104"><rect x="0.5" y="0.5" width="103" height="103" rx="24" fill="#FFFFFF" stroke="#E2DDD5"></rect><g transform="translate(11,17) scale(0.72)" fill="none" stroke="oklch(0.55 0.16 28)"><path d="M22,52 C16,36 28,20 48,18 C64,16 60,29 76,27 C92,25 100,36 92,47 C85,56 73,50 65,58 C57,66 62,76 48,79 C34,82 20,74 16,62 C14,56 20,56 22,52 Z" stroke-width="6.5" stroke-linejoin="round" stroke-linecap="round"></path><line x1="22" y1="6" x2="22" y2="20" stroke-width="5" stroke-linecap="round"></line></g></svg><span>F1</span></div>
+</div>
+<div class="modal-field"><label>Competition name</label><div class="modal-input">Sunday League Redux</div></div>
+<div class="modal-field"><label>Format</label><div class="modal-select"><span>Classic — season-long points</span><span>⌄</span></div></div>
+<div class="modal-actions"><span class="modal-btn ghost">Cancel</span><span class="modal-btn primary">Create competition</span></div>
+</div>
+</div>
+</div>
+</div>
+<div><div class="frametag">Mobile 390 — bottom sheet</div>
+<div class="win" style="width:390px;height:844px;position:relative">
+<div style="filter:blur(1px);opacity:.5">
+<div class="compbar mcompbar"><div class="comppill home"><span class="mono">🏠</span>Clubhouse</div></div>
+<div class="mclubhdr"><div class="clubhdr-ey">🏠 THE CLUBHOUSE</div><div class="nm">The Usual Suspects</div></div>
+</div>
+<div class="sheet-backdrop">
+<div class="sheet-card">
+<div class="sheet-handle"></div>
+<div class="modal-title">Create a competition</div>
+<div class="modal-sub">Adds to The Usual Suspects</div>
+<div class="sportpick">
+<div class="sportpick-tile on"><svg viewBox="0 0 104 104"><rect x="0.5" y="0.5" width="103" height="103" rx="24" fill="#FFFFFF" stroke="#E2DDD5"></rect><rect x="32" y="26" width="40" height="52" rx="4" fill="none" stroke="oklch(0.52 0.12 152)" stroke-width="2.5"></rect><line x1="32" y1="52" x2="72" y2="52" stroke="oklch(0.52 0.12 152)" stroke-width="2.5"></line><circle cx="52" cy="52" r="7.5" fill="#FFFFFF" stroke="oklch(0.52 0.12 152)" stroke-width="2.5"></circle></svg><span>Football</span></div>
+<div class="sportpick-tile"><svg viewBox="0 0 104 104"><rect x="0.5" y="0.5" width="103" height="103" rx="24" fill="#FFFFFF" stroke="#E2DDD5"></rect><rect x="35" y="23" width="34" height="58" rx="2" fill="none" stroke="oklch(0.5 0.14 300)" stroke-width="2.5"></rect><line x1="35" y1="52" x2="69" y2="52" stroke="oklch(0.5 0.14 300)" stroke-width="2"></line><line x1="39" y1="37" x2="65" y2="37" stroke="oklch(0.5 0.14 300)" stroke-width="2"></line><line x1="39" y1="66" x2="65" y2="66" stroke="oklch(0.5 0.14 300)" stroke-width="2"></line><line x1="52" y1="37" x2="52" y2="52" stroke="oklch(0.5 0.14 300)" stroke-width="2"></line><line x1="52" y1="52" x2="52" y2="66" stroke="oklch(0.5 0.14 300)" stroke-width="2"></line></svg><span>Tennis</span></div>
+<div class="sportpick-tile"><svg viewBox="0 0 104 104"><rect x="0.5" y="0.5" width="103" height="103" rx="24" fill="#FFFFFF" stroke="#E2DDD5"></rect><g transform="translate(11,17) scale(0.72)" fill="none" stroke="oklch(0.55 0.16 28)"><path d="M22,52 C16,36 28,20 48,18 C64,16 60,29 76,27 C92,25 100,36 92,47 C85,56 73,50 65,58 C57,66 62,76 48,79 C34,82 20,74 16,62 C14,56 20,56 22,52 Z" stroke-width="6.5" stroke-linejoin="round" stroke-linecap="round"></path><line x1="22" y1="6" x2="22" y2="20" stroke-width="5" stroke-linecap="round"></line></g></svg><span>F1</span></div>
+</div>
+<div class="modal-field"><label>Competition name</label><div class="modal-input">Sunday League Redux</div></div>
+<div class="modal-field"><label>Format</label><div class="modal-select"><span>Classic — season-long</span><span>⌄</span></div></div>
+<div class="modal-actions"><span class="modal-btn ghost">Cancel</span><span class="modal-btn primary">Create</span></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="screendesc">Opened from the "+" at the end of the top-bar pill strip, or the competitions-grid empty-state CTA. Sport step uses the real Frontrow sport marks (not emoji) so the picker doubles as brand reinforcement; selected tile gets the accent ring. Mobile trades the centered modal for a bottom sheet.</div>
+</div>
+
+<!-- ============ S-08 NOTIFICATIONS ============ -->
+<div class="frame-wrap" style="left:0px;top:8470px">
+<div class="screenhead"><span class="screencode">S-08</span><span class="screentitle">Notifications</span></div>
+<div class="screenframes">
+<div><div class="frametag">Desktop 1440 — dropdown panel</div>
+<div class="win" style="width:1440px;height:900px;position:relative">
+<div class="compbar" style="height:40px"><div class="comppill home"><span class="mono">🏠</span>Clubhouse</div><div class="comppill"><span class="dot fb"></span>Premier League Fantasy</div></div>
+<div class="clubhdr"><div><div class="clubhdr-ey">🏠 THE CLUBHOUSE</div><div class="clubhdr-name">The Usual Suspects</div></div><div class="clubhdr-r"><div class="notif-btn"><div class="notif-ico"></div><div class="notif-badge">3</div></div></div></div>
+<div class="notif-panel">
+<div class="notif-panel-hd"><div class="t">Notifications</div><span class="mk">Mark all read</span></div>
+<div class="notif-item unread"><div class="notif-dot"></div><div class="notif-body"><b>Marco takes GW29 with a 62-point haul</b><span>Premier League Fantasy · 2h ago</span></div></div>
+<div class="notif-item unread"><div class="notif-dot"></div><div class="notif-body"><b>British GP predictions lock in 3 days</b><span>Formula Fun · 4h ago</span></div></div>
+<div class="notif-item unread"><div class="notif-dot"></div><div class="notif-body"><b>Sam replied in #general</b><span>Chat · 5h ago</span></div></div>
+<div class="notif-item"><div class="notif-dot"></div><div class="notif-body"><b>Auction closed — Bea lands the top striker</b><span>Sunday League Redux · 6h ago</span></div></div>
+<div class="notif-item"><div class="notif-dot"></div><div class="notif-body"><b>New edition of The Forza Times is out</b><span>The FrontRow · 1d ago</span></div></div>
+</div>
+</div>
+</div>
+<div><div class="frametag">Mobile 390 — dedicated screen</div>
+<div class="win" style="width:390px;height:844px;display:flex;flex-direction:column">
+<div class="mtopstrip"><div class="mchat-back">← Notifications</div><span class="mono" style="margin-left:auto;font-size:10px;color:var(--accent);font-weight:600">Mark all read</span></div>
+<div style="overflow:hidden;flex:1">
+<div class="notif-item unread"><div class="notif-dot"></div><div class="notif-body"><b>Marco takes GW29 with a 62-point haul</b><span>Premier League Fantasy · 2h ago</span></div></div>
+<div class="notif-item unread"><div class="notif-dot"></div><div class="notif-body"><b>British GP predictions lock in 3 days</b><span>Formula Fun · 4h ago</span></div></div>
+<div class="notif-item unread"><div class="notif-dot"></div><div class="notif-body"><b>Sam replied in #general</b><span>Chat · 5h ago</span></div></div>
+<div class="notif-item"><div class="notif-dot"></div><div class="notif-body"><b>Auction closed — Bea lands the top striker</b><span>Sunday League Redux · 6h ago</span></div></div>
+<div class="notif-item"><div class="notif-dot"></div><div class="notif-body"><b>New edition of The Forza Times is out</b><span>The FrontRow · 1d ago</span></div></div>
+</div>
+</div>
+</div>
+</div>
+<div class="screendesc">Replaces the emoji bell with a two-tone tray icon + accent unread dot per row and a <b>--danger</b> count pill on the trigger (no more yellow). Desktop opens as a dropdown anchored under the header icon; mobile is a dedicated full screen since there's no room for a dropdown at that width. Both support tap-to-mark-read and mark-all-read; every item deep-links into its competition, chat thread, or FrontRow edition.</div>
+</div>
+
+<template id="__bundler_thumbnail"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 70"><rect width="100" height="70" fill="#18202E"></rect><rect x="15" y="18" width="26" height="11" rx="4" fill="#B8720E"></rect><rect x="15" y="35" width="48" height="11" rx="4" fill="#1A6FA8"></rect><rect x="15" y="52" width="70" height="11" rx="4" fill="#1A6FA8"></rect></svg></template>
+</body></html>

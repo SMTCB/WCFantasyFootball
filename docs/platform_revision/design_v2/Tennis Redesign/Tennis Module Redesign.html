@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+<html><head><meta charset="UTF-8">
+<meta name="design_doc_mode" content="canvas">
+<title>Frontrow — Tennis Module Design Proposal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=Archivo+Black&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#F7F3ED;--card:#FFFFFF;--elev:#EDEAE2;--shell:#18202E;--paper:#18202E;--mute:#8A97A8;--rule:#E2DDD5;--accent:#1A6FA8;--accent-bg:rgba(26,111,168,.08);--gold:#B8720E;--gold-bg:rgba(184,114,14,.10);--positive:#166534;--positive-bg:rgba(22,101,52,.10);--danger:#B91C1C;--danger-bg:rgba(185,28,28,.08);--f1:#E10600;--f1-bg:rgba(225,6,0,.10);--ten:#1B7A52;--ten-bg:rgba(27,122,82,.10);--on-shell:#FFFFFF;--on-shell-dim:rgba(255,255,255,.45);--hard:#3D6EA5;--clay:#C1622D;--indoor:#6B5B95;--r:6px;--font-d:'Archivo Black',sans-serif;--font-b:'Archivo',sans-serif;--font-m:'JetBrains Mono',monospace}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font-b);color:var(--paper);background:#DCD6C8}
+a{color:inherit;text-decoration:none}
+a:hover{color:var(--ten)}
+.mono{font-family:var(--font-m)}
+.eyebrow{font-family:var(--font-m);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--mute);font-weight:500}
+.frame-wrap{position:absolute}
+.win{background:var(--bg);border-radius:10px;overflow:hidden;box-shadow:0 2px 4px rgba(24,32,46,.08),0 30px 60px -30px rgba(24,32,46,.35);position:relative}
+.screenhead{display:flex;align-items:baseline;gap:12px;margin-bottom:16px}
+.screencode{font-family:var(--font-m);background:var(--ten);color:#fff;border-radius:4px;padding:3px 9px;font-size:11px;letter-spacing:.06em;flex-shrink:0}
+.screentitle{font-family:var(--font-d);font-size:18px;letter-spacing:-0.01em}
+.screenframes{display:flex;align-items:flex-start;gap:40px}
+.frametag{font-family:var(--font-m);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:#7A8492;margin-bottom:8px}
+.screendesc{max-width:1900px;margin-top:18px;font-size:12.5px;color:#4B5568;line-height:1.65;background:var(--card);border:1px solid var(--rule);border-radius:8px;padding:14px 18px;text-wrap:pretty}
+.screendesc b{color:var(--paper);font-weight:600}
+.doc{width:680px;background:var(--card);border:1px solid var(--rule);border-radius:10px;padding:36px 34px}
+.doc h1{font-family:var(--font-d);font-size:24px;letter-spacing:-0.02em;margin-bottom:6px}
+.doc .sub{font-size:13px;color:var(--mute);margin-bottom:26px}
+.doc h2{font-family:var(--font-d);font-size:14px;letter-spacing:-0.01em;margin:22px 0 8px;color:var(--ten)}
+.doc h2:first-of-type{margin-top:0}
+.doc p{font-size:13.5px;color:#4B5568;line-height:1.6;text-wrap:pretty}
+.doc p+p{margin-top:8px}
+.doc strong{color:var(--paper);font-weight:600}
+.doc ul{margin:10px 0 0 0;list-style:none;display:flex;flex-direction:column;gap:7px}
+.doc li{font-size:13px;color:#4B5568;line-height:1.5;padding-left:16px;position:relative}
+.doc li::before{content:"→";position:absolute;left:0;color:var(--ten)}
+.doc hr{border:0;border-top:1px solid var(--rule);margin:24px 0}
+/* shared chrome (reused verbatim from the Clubhouse Home Redesign handoff) */
+.compbar{background:var(--card);border-bottom:1px solid var(--rule);display:flex;align-items:center;gap:6px;padding:0 16px;flex-shrink:0;overflow-x:auto;overflow-y:hidden;scrollbar-width:none}
+.compbar::-webkit-scrollbar{display:none}
+.comppill{display:flex;align-items:center;gap:7px;font-size:12px;font-weight:600;color:var(--mute);padding:0 10px;height:100%;border-bottom:2px solid transparent;white-space:nowrap}
+.comppill .dot{width:6px;height:6px;border-radius:50%;background:currentColor}
+.comppill.home{color:var(--accent)}
+.comppill.home .dot{background:var(--accent)}
+.comppill .dot.fb{background:var(--accent)}
+.comppill .dot.f1{background:var(--f1)}
+.comppill .dot.ten{background:var(--ten)}
+.comppill.on{color:var(--paper);border-bottom-color:var(--ten)}
+.compplus{margin-left:auto;color:var(--mute);font-size:16px;font-weight:700}
+.sidebar{width:220px;flex-shrink:0;background:var(--shell);color:#fff;display:flex;flex-direction:column;padding:16px 12px}
+.sb-brand{display:flex;align-items:center;gap:10px;padding:0 6px 14px;margin-bottom:12px;border-bottom:1px solid rgba(255,255,255,.08)}
+.sb-brandname{font-family:var(--font-d);font-size:14px;letter-spacing:-0.01em;color:var(--bg)}
+.sw-active-label{padding:0 6px 14px;font-size:12px;font-weight:600;display:flex;align-items:center;gap:5px;color:rgba(255,255,255,.85)}
+.sb-section{font-family:var(--font-m);font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.35);padding:12px 10px 6px}
+.sb-item{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:var(--r);font-size:12.5px;color:rgba(255,255,255,.6);font-weight:500}
+.sb-item.on{background:rgba(255,255,255,.08);color:#fff}
+.sb-item.sub{padding-left:26px;font-size:12px}
+.sb-tag{margin-left:auto;font-family:var(--font-m);font-size:7.5px;letter-spacing:.08em;color:rgba(255,255,255,.4);border:1px solid rgba(255,255,255,.2);border-radius:3px;padding:1px 5px}
+.sb-foot{margin-top:auto;display:flex;align-items:center;gap:9px;padding:10px 10px 0;border-top:1px solid rgba(255,255,255,.08)}
+.av{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;font-family:var(--font-d);font-size:10.5px;color:#fff;flex-shrink:0}
+.sb-foot .av{width:26px;height:26px}
+.sb-foot b{display:block;font-size:12px}
+.sb-foot span{font-family:var(--font-m);font-size:8.5px;color:rgba(255,255,255,.4)}
+.tabrow{background:var(--card);border-bottom:1px solid var(--rule);display:flex;gap:2px;padding:0 26px;flex-shrink:0}
+.tabitem{font-size:12.5px;font-weight:600;color:var(--mute);padding:11px 12px;position:relative;white-space:nowrap}
+.tabitem.on{color:var(--paper)}
+.tabitem.on::after{content:"";position:absolute;left:12px;right:12px;bottom:-1px;height:2px;background:var(--ten);border-radius:2px}
+.body2{display:flex;flex:1;min-height:0;overflow:hidden}
+.main{flex:1;min-width:0;overflow:hidden;padding:18px 22px;display:flex;flex-direction:column;gap:16px}
+.slbl{font-family:var(--font-m);font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--mute);margin-bottom:9px;display:flex;align-items:center;gap:8px}
+.slbl .cnt{background:var(--elev);color:var(--paper);border-radius:100px;padding:1px 7px}
+.slbl .go{margin-left:auto;color:var(--ten);font-weight:600;text-transform:none;letter-spacing:0}
+.sc-card{flex:1;background:var(--card);border:1px solid var(--rule);border-radius:var(--r);padding:12px 14px;min-width:0}
+.sc-card .k{font-family:var(--font-m);font-size:8.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--mute);margin-bottom:6px}
+.sc-card .v{font-family:var(--font-d);font-size:18px;letter-spacing:-0.01em}
+.sc-card .sv{font-size:11px;color:var(--mute);margin-top:2px}
+.mtopstrip{height:44px;background:var(--card);border-bottom:1px solid var(--rule);display:flex;align-items:center;padding:0 14px;flex-shrink:0}
+.mtopstrip .u{font-size:12.5px;font-weight:600}
+.mtopstrip .gear{margin-left:auto;font-size:15px;color:var(--mute)}
+.mcompbar{height:38px}
+.mtabrow{display:flex;gap:14px;padding:0 14px;background:var(--card);border-bottom:1px solid var(--rule);overflow:hidden;flex-shrink:0}
+.mtabitem{font-size:11.5px;font-weight:600;color:var(--mute);padding:9px 0;position:relative;white-space:nowrap}
+.mtabitem.on{color:var(--paper)}
+.mtabitem.on::after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:2px;background:var(--ten)}
+.mcontent{flex:1;overflow:hidden;padding:12px 14px;display:flex;flex-direction:column;gap:12px}
+.mbottomnav{height:60px;background:var(--shell);display:flex;flex-shrink:0}
+.mbn-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px}
+.mbn-item .d{width:5px;height:5px;border-radius:50%;background:rgba(255,255,255,.3)}
+.mbn-item .l{font-family:var(--font-m);font-size:8px;letter-spacing:.06em;text-transform:uppercase;color:rgba(255,255,255,.4);display:flex;align-items:center;gap:3px}
+.mbn-item.on .d{background:var(--ten)}
+.mbn-item.on .l{color:#fff}
+/* tennis-specific */
+.seashdr{background:var(--card);border-bottom:1px solid var(--rule);padding:18px 26px;display:flex;align-items:center;gap:20px;flex-shrink:0;position:relative}
+.seashdr::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--ten)}
+.seashdr-ey{font-family:var(--font-m);font-size:10px;letter-spacing:.16em;color:var(--ten);margin-bottom:6px;font-weight:600}
+.seashdr-name{font-family:var(--font-d);font-size:23px;letter-spacing:-0.01em}
+.seashdr-meta{font-size:12px;color:var(--mute);margin-top:7px;display:flex;align-items:center;gap:10px}
+.seashdr-r{margin-left:auto;display:flex;align-items:center;gap:12px;flex-shrink:0}
+.invchip-l{font-family:var(--font-m);font-size:11px;background:var(--elev);border-radius:100px;padding:6px 12px;color:var(--paper);display:flex;gap:6px;align-items:center;white-space:nowrap}
+.mseashdr{background:var(--card);border-bottom:1px solid var(--rule);padding:14px 16px;flex-shrink:0;position:relative}
+.mseashdr::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--ten)}
+.mseashdr .nm{font-family:var(--font-d);font-size:18px;margin-top:4px}
+.mseashdr .mt{font-size:11px;color:var(--mute);margin-top:5px}
+.actionbanner{background:var(--ten);color:#fff;border-radius:var(--r);padding:16px 20px;display:flex;align-items:center;gap:16px}
+.actionbanner.gold{background:var(--gold)}
+.actionbanner .k{font-family:var(--font-m);font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.72);margin-bottom:4px}
+.actionbanner .t{font-family:var(--font-d);font-size:17px;letter-spacing:-0.01em}
+.actionbanner .s{font-size:12px;color:rgba(255,255,255,.8);margin-top:3px}
+.actionbanner .cta{margin-left:auto;background:#fff;color:var(--ten);font-family:var(--font-m);font-size:11px;letter-spacing:.08em;font-weight:700;border-radius:var(--r);padding:11px 18px;white-space:nowrap;flex-shrink:0}
+.actionbanner.gold .cta{color:var(--gold)}
+.standmini{background:var(--card);border:1px solid var(--rule);border-radius:var(--r);overflow:hidden}
+.standmini-hd{display:grid;grid-template-columns:26px 1fr 50px 55px 55px;gap:8px;padding:8px 14px;font-family:var(--font-m);font-size:8.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--mute);border-bottom:1px solid var(--rule)}
+.standmini-row{display:grid;grid-template-columns:26px 1fr 50px 55px 55px;gap:8px;align-items:center;padding:9px 14px;border-bottom:1px solid var(--rule);font-size:12.5px}
+.standmini-row:last-child{border-bottom:none}
+.medal{width:20px;height:20px;border-radius:50%;display:grid;place-items:center;font-family:var(--font-d);font-size:9.5px;color:#fff}
+.medal.g{background:#B8860B}.medal.s{background:#94A3B8}.medal.b{background:#B0703A}
+.rankno{width:20px;text-align:center;font-family:var(--font-m);font-size:11px;color:var(--mute)}
+.standmini-nm{display:flex;align-items:center;gap:8px;font-weight:600}
+.standmini-you{color:var(--ten)}
+.cal-list{background:var(--card);border:1px solid var(--rule);border-radius:var(--r);overflow:hidden}
+.cal-row{display:flex;align-items:center;gap:14px;padding:11px 16px;border-bottom:1px solid var(--rule)}
+.cal-row:last-child{border-bottom:none}
+.cal-row.dim{opacity:.42}
+.surfdot{width:9px;height:9px;border-radius:2px;flex-shrink:0}
+.cal-name{font-family:var(--font-d);font-size:13px;flex-shrink:0;width:170px}
+.cal-type{font-family:var(--font-m);font-size:8px;letter-spacing:.08em;padding:2px 7px;border-radius:100px;flex-shrink:0;white-space:nowrap}
+.cal-type.slam{background:var(--gold-bg);color:var(--gold)}
+.cal-type.masters{background:var(--elev);color:var(--mute)}
+.cal-type.finals{background:var(--ten-bg);color:var(--ten)}
+.cal-dates{font-family:var(--font-m);font-size:10.5px;color:var(--mute);width:110px;flex-shrink:0}
+.cal-status{margin-left:auto;display:flex;align-items:center;gap:10px;flex-shrink:0}
+.statuspill{font-family:var(--font-m);font-size:9px;letter-spacing:.05em;padding:5px 11px;border-radius:100px;white-space:nowrap}
+.statuspill.upcoming{background:var(--elev);color:var(--mute)}
+.statuspill.open{background:var(--ten);color:#fff;font-weight:700}
+.statuspill.progress{background:var(--accent-bg);color:var(--accent)}
+.statuspill.captain{background:var(--gold);color:#fff;font-weight:700}
+.statuspill.done{background:transparent;color:var(--mute);border:1px solid var(--rule)}
+.resulttag{font-family:var(--font-m);font-size:10px;color:var(--paper);font-weight:600;width:74px;text-align:right}
+.setchip{font-family:var(--font-m);font-size:9px;color:var(--positive);display:flex;align-items:center;gap:3px;white-space:nowrap}
+.tourhdr{background:var(--card);border-bottom:1px solid var(--rule);padding:16px 26px;display:flex;align-items:center;gap:16px;flex-shrink:0}
+.tourhdr-nm{font-family:var(--font-d);font-size:19px}
+.tourhdr-meta{font-size:11.5px;color:var(--mute);margin-top:4px;display:flex;align-items:center;gap:8px}
+.tourhdr-r{margin-left:auto;text-align:right}
+.tourhdr-cd{font-family:var(--font-m);font-size:11px;color:var(--danger);font-weight:700}
+.tourhdr-cdl{font-family:var(--font-m);font-size:8.5px;color:var(--mute);letter-spacing:.08em;text-transform:uppercase}
+.tierblock{background:var(--card);border:1px solid var(--rule);border-radius:var(--r);overflow:hidden;margin-bottom:12px}
+.tierhead{display:flex;align-items:baseline;gap:10px;padding:11px 16px;background:var(--elev);border-bottom:1px solid var(--rule)}
+.tiernum{font-family:var(--font-d);font-size:13px}
+.tiername{font-family:var(--font-m);font-size:9px;color:var(--mute);letter-spacing:.06em;text-transform:uppercase}
+.tierslots{margin-left:auto;font-family:var(--font-m);font-size:10px;color:var(--mute)}
+.playerrow{display:flex;align-items:center;gap:12px;padding:9px 16px;border-bottom:1px solid var(--rule)}
+.playerrow:last-child{border-bottom:none}
+.playerrow.picked{background:var(--ten-bg)}
+.playerrow.used{opacity:.38}
+.seedbadge{width:24px;height:24px;border-radius:50%;background:var(--elev);display:grid;place-items:center;font-family:var(--font-m);font-size:9.5px;color:var(--mute);flex-shrink:0}
+.ctyflag{width:16px;height:11px;border-radius:2px;flex-shrink:0}
+.playername{font-family:var(--font-d);font-size:12.5px;flex:1}
+.playersub{font-family:var(--font-m);font-size:9.5px;color:var(--mute);margin-left:8px}
+.pickbtn{font-family:var(--font-m);font-size:9px;letter-spacing:.06em;padding:6px 12px;border-radius:var(--r);border:1px solid var(--ten);color:var(--ten);font-weight:700;flex-shrink:0;white-space:nowrap}
+.pickbtn.on{background:var(--ten);color:#fff;border-color:var(--ten)}
+.rostersum{background:var(--card);border:1px solid var(--rule);border-radius:var(--r);padding:16px;position:sticky;top:0}
+.rostersum-t{font-family:var(--font-d);font-size:14px;margin-bottom:10px}
+.rosterprog{height:4px;background:var(--elev);border-radius:100px;overflow:hidden;margin-bottom:14px}
+.rosterprog .fill{height:100%;background:var(--ten)}
+.sum-tier{margin-bottom:12px}
+.sum-tier .lbl{font-family:var(--font-m);font-size:8.5px;color:var(--mute);letter-spacing:.08em;margin-bottom:6px;text-transform:uppercase}
+.sum-slot{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px dashed var(--rule);font-size:12px}
+.sum-slot.empty{color:var(--mute);font-style:italic}
+.sum-slot .sn{width:16px;height:16px;border-radius:50%;background:var(--elev);display:grid;place-items:center;font-family:var(--font-m);font-size:8px;color:var(--mute);flex-shrink:0}
+.acegrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:6px}
+.acecard{border:1.5px solid var(--rule);border-radius:var(--r);padding:9px 10px}
+.acecard.on{border-color:var(--gold);background:var(--gold-bg)}
+.acecard.used{opacity:.35}
+.acecard .t{font-family:var(--font-d);font-size:10.5px}
+.acecard .s{font-size:9.5px;color:var(--mute);margin-top:3px;line-height:1.3}
+.locksquadbtn{width:100%;background:var(--ten);color:#fff;font-family:var(--font-m);font-size:11px;letter-spacing:.08em;font-weight:700;padding:13px;border-radius:var(--r);text-align:center;margin-top:14px}
+.rndtag{font-family:var(--font-m);font-size:9px;padding:3px 8px;border-radius:100px;flex-shrink:0;white-space:nowrap}
+.rndtag.alive{background:var(--positive-bg);color:var(--positive)}
+.rndtag.out{background:var(--danger-bg);color:var(--danger)}
+.rndtag.champ{background:var(--gold-bg);color:var(--gold);font-weight:700}
+.capstar{color:var(--gold);font-size:13px;flex-shrink:0}
+.acetag{font-family:var(--font-m);font-size:8.5px;color:var(--gold);border:1px solid var(--gold);border-radius:3px;padding:2px 6px;flex-shrink:0}
+.capchoice{display:flex;align-items:center;gap:12px;padding:13px 16px;border:1.5px solid var(--rule);border-radius:var(--r);margin-bottom:8px}
+.capchoice.on{border-color:var(--gold);background:var(--gold-bg)}
+.capradio{width:18px;height:18px;border-radius:50%;border:2px solid var(--rule);flex-shrink:0;position:relative}
+.capradio.on{border-color:var(--gold)}
+.capradio.on::after{content:"";position:absolute;inset:3px;border-radius:50%;background:var(--gold)}
+.capbtn{width:100%;background:var(--gold);color:#fff;font-family:var(--font-m);font-size:11px;letter-spacing:.08em;font-weight:700;padding:13px;border-radius:var(--r);text-align:center;margin-top:8px}
+.scorehero{text-align:center;padding:30px;background:var(--card);border:1px solid var(--rule);border-radius:var(--r)}
+.scorehero .k{font-family:var(--font-m);font-size:10px;color:var(--mute);letter-spacing:.12em;margin-bottom:10px}
+.scorehero .big{font-family:var(--font-d);font-size:56px;letter-spacing:-0.02em;color:var(--ten)}
+.scorebreak{display:flex;gap:10px;justify-content:center;margin-top:16px}
+.scorebreak .pill{background:var(--elev);border-radius:var(--r);padding:9px 16px;text-align:center;min-width:100px}
+.scorebreak .pill b{display:block;font-family:var(--font-d);font-size:16px}
+.scorebreak .pill span{font-family:var(--font-m);font-size:8px;color:var(--mute);letter-spacing:.04em}
+.waitcard{background:var(--card);border:1px solid var(--rule);border-radius:var(--r);padding:30px;text-align:center;color:var(--mute)}
+.waitcard .ic{font-size:26px;margin-bottom:10px}
+.waitcard .t{font-family:var(--font-d);font-size:14px;color:var(--paper);margin-bottom:5px}
+.ldrtable{width:100%;border-collapse:collapse}
+.ldrtable th{font-family:var(--font-m);font-size:9px;letter-spacing:.06em;color:var(--mute);text-align:left;padding:9px 12px;border-bottom:1px solid var(--rule);text-transform:uppercase}
+.ldrtable td{padding:10px 12px;border-bottom:1px solid var(--rule);font-size:12.5px}
+.ldrtable tr.you td{background:var(--ten-bg)}
+.mastersnote{background:var(--gold-bg);border:1px solid rgba(184,114,14,.25);border-radius:var(--r);padding:11px 14px;font-size:12px;color:#7a5a10;display:flex;gap:8px;align-items:flex-start}
+.ldrcard-m{background:var(--card);border:1px solid var(--rule);border-radius:var(--r);padding:13px 14px;margin-bottom:8px}
+.ldrcard-m-hd{display:flex;align-items:center;gap:10px;margin-bottom:9px}
+.ldrcard-m-tot{margin-left:auto;font-family:var(--font-d);font-size:16px}
+.resultchip{width:22px;height:22px;border-radius:4px;display:grid;place-items:center;font-family:var(--font-m);font-size:8.5px;color:#fff;flex-shrink:0}
+.chiprow{display:flex;gap:4px;flex-wrap:wrap}
+.tiercard-row{display:flex;align-items:center;gap:12px;padding:9px 14px;border-bottom:1px solid var(--rule)}
+.tiercard-row:last-child{border-bottom:none}
+.tiernum-badge{width:26px;height:26px;border-radius:50%;background:var(--elev);display:grid;place-items:center;font-family:var(--font-d);font-size:10px;color:var(--mute);flex-shrink:0}
+.tiercard-row.top .tiernum-badge{background:var(--gold);color:#fff}
+.matchtoggle{display:flex;gap:8px;padding:11px 14px;border-bottom:1px solid var(--rule);align-items:center}
+.matchtoggle:last-child{border-bottom:none}
+.mt-opt{flex:1;border:1.5px solid var(--rule);border-radius:var(--r);padding:9px 12px;font-size:12px;font-weight:600;text-align:center}
+.mt-opt.on{border-color:var(--ten);background:var(--ten-bg);color:var(--ten)}
+.mt-opt.correct{border-color:var(--positive);background:var(--positive-bg);color:var(--positive)}
+.mt-opt.wrong{border-color:var(--danger);background:var(--danger-bg);color:var(--danger);opacity:.6}
+.mt-vs{font-family:var(--font-m);font-size:9px;color:var(--mute);flex-shrink:0}
+</style>
+</head>
+<body>
+
+<div class="frame-wrap" style="left:0px;top:0px">
+<div class="doc">
+<h1>Frontrow — Tennis module design proposal</h1>
+<div class="sub">Kit Light · reconciled tokens · aligned to the Clubhouse Core system (V2_DESIGN)</div>
+<h2>Reused as-is</h2>
+<p>All chrome — 220px dark sidebar, competition top-bar pill strip, card/elevation language, type system (Archivo Black / Archivo / JetBrains Mono), 6px radius — is lifted directly from the Clubhouse Core handoff. Nothing about global chrome changes for Tennis; only the in-competition secondary nav is new (<strong>Home · Leaderboard</strong>, two items, matching the sparse 3-item mobile bottom nav from the brief).</p>
+<h2>The green question</h2>
+<p>The brief asked whether Tennis should lean hard into <strong>--ten</strong> the way F1 leans into red, or stay a quieter "clean scoreboard." We went quieter: green is reserved for <strong>primary actions and identity moments</strong> — the season accent bar, the "pick your squad" state, pick buttons, the roster progress fill — never for dense data or decoration. Captain and urgency states use <strong>gold</strong>, not green, so the QF Captain window reads as its own distinct moment rather than "more tennis." This matches the module's own rhythm: checkpoint-based and calm, not a live dashboard.</p>
+<h2>The calendar problem</h2>
+<p>14 tournaments in one list risks reading as a spreadsheet. We solved it with three moves: a <strong>surface-colour dot</strong> per row (hard/clay/grass/indoor) for instant scanning, a single <strong>status pill</strong> per row whose colour does all the "what do I do now" work (green = act now, gold = urgent, accent = in progress, outline = done, muted = not yet), and upcoming rows <strong>dimmed to 42% opacity</strong> and non-interactive so the eye lands on what's actionable. The action banner above the calendar is the one un-missable element on the page — solid green fill, white text — and it's the only thing on Home that disappears entirely when nothing needs the user's attention.</p>
+<h2>The roster picker</h2>
+<p>Built as four independent tier blocks (never one long list) so the 1-2-2-2 slot structure is legible at a glance, with a <strong>sticky roster-summary rail</strong> on the right that fills in as picks are made — the same pattern a checkout flow uses to keep the user oriented across a long form. A player already used elsewhere greys out immediately. The Ace Card sits below the tiers, not above — it's a bonus decision, not the entry point.</p>
+<h2>QF Captain — urgent, not alarming</h2>
+<p>Gold, not red or danger. A visible countdown chip communicates urgency without borrowing the danger-red vocabulary reserved for destructive actions elsewhere in the product.</p>
+<h2>ATP Finals</h2>
+<p>The named, escalating scoring tiers (<em>Unforced Error → The Perfect Slate</em>) are treated as a standing reference card, always visible while picking — the closest thing this module has to a slot-machine payout ladder, and worth the showcase treatment the brief invited.</p>
+</div>
+</div>
+
+<!-- ============ T-01 TENNIS HOME ============ -->
+<div class="frame-wrap" style="left:0px;top:1080px">
+<div class="screenhead"><span class="screencode">T-01</span><span class="screentitle">Tennis Home</span></div>
+<div class="screenframes">
+<div><div class="frametag">Desktop 1440</div>
+<div class="win" style="width:1440px;height:980px;display:flex">
+<div class="sidebar">
+<div class="sb-brand"><svg viewBox="0 0 80 45" width="30" height="17"><rect x="0" y="0" width="26" height="11" rx="4" fill="#B8720E"></rect><rect x="0" y="17" width="48" height="11" rx="4" fill="#1A6FA8"></rect><rect x="0" y="34" width="70" height="11" rx="4" fill="#1A6FA8"></rect></svg><div class="sb-brandname">Frontrow</div></div>
+<div class="sw-active-label">The Usual Suspects</div>
+<div class="sb-section">Clubhouse</div>
+<div class="sb-item">🏠 Clubhouse</div>
+<div class="sb-item sub">The FrontRow</div>
+<div class="sb-section">Community</div>
+<div class="sb-item">🏆 Trophy Cabinet</div>
+<div class="sb-item">🪙 Coin Challenges<span class="sb-tag">BETA</span></div>
+<div class="sb-item">⚙ Settings</div>
+<div class="sb-foot"><div class="av" style="background:var(--ten)">Y</div><div><b>You</b><span>Multi-sport</span></div></div>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;min-width:0">
+<div class="compbar" style="height:40px">
+<div class="comppill"><span class="mono">🏠</span>Clubhouse</div>
+<div class="comppill"><span class="dot fb"></span>Premier League Fantasy</div>
+<div class="comppill"><span class="dot f1"></span>Formula Fun</div>
+<div class="comppill on"><span class="dot ten"></span>Wimbledon '26 Box</div>
+<div class="compplus">+</div>
+</div>
+<div class="seashdr">
+<div>
+<div class="seashdr-ey">🎾 TENNIS · 2026 ATP SEASON</div>
+<div class="seashdr-name">Wimbledon '26 Box</div>
+<div class="seashdr-meta"><b style="color:var(--paper);font-weight:600">6 entrants</b> · Player's Box</div>
+</div>
+<div class="seashdr-r"><div class="invchip-l">TB-4M9K2 ⧉</div></div>
+</div>
+<div class="tabrow"><div class="tabitem on">Home</div><div class="tabitem">Leaderboard</div></div>
+<div class="main" style="overflow-y:auto">
+<div class="actionbanner">
+<div><div class="k">Roster picks open · Canadian Open</div><div class="t">Build your 7-player squad — closes in 2d 6h</div><div class="s">Seeds are locked. Pick before the draw to avoid a scramble.</div></div>
+<div class="cta">Pick your squad →</div>
+</div>
+<div style="display:flex;gap:16px">
+<div style="flex:1">
+<div class="slbl">Season standings<span class="go">View full table →</span></div>
+<div class="standmini">
+<div class="standmini-hd"><span>#</span><span>Manager</span><span>Slams</span><span>Masters</span><span>Total</span></div>
+<div class="standmini-row"><span class="medal g">1</span><span class="standmini-nm"><div class="av" style="width:20px;height:20px;font-size:9px;background:var(--accent)">M</div>Marco</span><span>420</span><span>380</span><span style="font-weight:700">800</span></div>
+<div class="standmini-row"><span class="medal s">2</span><span class="standmini-nm standmini-you"><div class="av" style="width:20px;height:20px;font-size:9px;background:var(--ten)">Y</div>You</span><span>390</span><span>350</span><span style="font-weight:700">740</span></div>
+<div class="standmini-row"><span class="medal b">3</span><span class="standmini-nm"><div class="av" style="width:20px;height:20px;font-size:9px;background:var(--positive)">A</div>Ana</span><span>310</span><span>340</span><span style="font-weight:700">650</span></div>
+<div class="standmini-row"><span class="rankno">4</span><span class="standmini-nm"><div class="av" style="width:20px;height:20px;font-size:9px;background:var(--danger)">B</div>Bea</span><span>280</span><span>310</span><span style="font-weight:700">590</span></div>
+<div class="standmini-row"><span class="rankno">5</span><span class="standmini-nm"><div class="av" style="width:20px;height:20px;font-size:9px;background:var(--gold)">S</div>Sam</span><span>260</span><span>280</span><span style="font-weight:700">540</span></div>
+</div>
+</div>
+</div>
+<div>
+<div class="slbl">2026 calendar<span class="cnt">14</span></div>
+<div class="cal-list">
+<div class="cal-row"><span class="surfdot" style="background:var(--hard)"></span><span class="cal-name">Australian Open</span><span class="cal-type slam">GRAND SLAM</span><span class="cal-dates">JAN 12–25</span><span class="cal-status"><span class="setchip">✓ Squad set</span><span class="resulttag">R16</span><span class="statuspill done">Completed</span></span></div>
+<div class="cal-row"><span class="surfdot" style="background:var(--hard)"></span><span class="cal-name">Indian Wells Masters</span><span class="cal-type masters">MASTERS 1000</span><span class="cal-dates">MAR 9–22</span><span class="cal-status"><span class="setchip">✓ Squad set</span><span class="resulttag">QF</span><span class="statuspill done">Completed</span></span></div>
+<div class="cal-row"><span class="surfdot" style="background:var(--hard)"></span><span class="cal-name">Miami Open</span><span class="cal-type masters">MASTERS 1000</span><span class="cal-dates">MAR 23–APR 5</span><span class="cal-status"><span class="setchip">✓ Squad set</span><span class="resulttag">R32</span><span class="statuspill done">Completed</span></span></div>
+<div class="cal-row"><span class="surfdot" style="background:var(--clay)"></span><span class="cal-name">Monte-Carlo Masters</span><span class="cal-type masters">MASTERS 1000</span><span class="cal-dates">APR 12–19</span><span class="cal-status"><span class="setchip">✓ Squad set</span><span class="resulttag">SF</span><span class="statuspill done">Completed</span></span></div>
+<div class="cal-row"><span class="surfdot" style="background:var(--clay)"></span><span class="cal-name">Madrid Open</span><span class="cal-type masters">MASTERS 1000</span><span class="cal-dates">APR 26–MAY 3</span><span class="cal-status"><span class="setchip">✓ Squad set</span><span class="resulttag">R16</span><span class="statuspill done">Completed</span></span></div>
+<div class="cal-row"><span class="surfdot" style="background:var(--clay)"></span><span class="cal-name">Italian Open</span><span class="cal-type masters">MASTERS 1000</span><span class="cal-dates">MAY 4–11</span><span class="cal-status"><span class="setchip">✓ Squad set</span><span class="resulttag">Runner-up</span><span class="statuspill done">Completed</span></span></div>
+<div class="cal-row"><span class="surfdot" style="background:var(--clay)"></span><span class="cal-name">Roland Garros</span><span class="cal-type slam">GRAND SLAM</span><span class="cal-dates">MAY 24–JUN 7</span><span class="cal-status"><span class="setchip">✓ Squad set</span><span class="resulttag">QF</span><span class="statuspill done">Completed</span></span></div>
+<div class="cal-row"><span class="surfdot" style="background:var(--ten)"></span><span class="cal-name">Wimbledon</span><span class="cal-type slam">GRAND SLAM</span><span class="cal-dates">JUN 29–JUL 12</span><span class="cal-status"><span class="setchip">✓ Squad set</span><span class="resulttag">🏆 Champion</span><span class="statuspill done">Completed</span></span></div>
+<div class="cal-row"><span class="surfdot" style="background:var(--hard)"></span><span class="cal-name">Canadian Open</span><span class="cal-type masters">MASTERS 1000</span><span class="cal-dates">JUL 27–AUG 2</span><span class="cal-status"><span class="statuspill open">Pick your squad</span></span></div>
+<div class="cal-row dim"><span class="surfdot" style="background:var(--hard)"></span><span class="cal-name">Cincinnati Open</span><span class="cal-type masters">MASTERS 1000</span><span class="cal-dates">AUG 10–16</span><span class="cal-status"><span class="statuspill upcoming">Upcoming</span></span></div>
+<div class="cal-row dim"><span class="surfdot" style="background:var(--hard)"></span><span class="cal-name">US Open</span><span class="cal-type slam">GRAND SLAM</span><span class="cal-dates">AUG 31–SEP 13</span><span class="cal-status"><span class="statuspill upcoming">Upcoming</span></span></div>
+<div class="cal-row dim"><span class="surfdot" style="background:var(--hard)"></span><span class="cal-name">Shanghai Masters</span><span class="cal-type masters">MASTERS 1000</span><span class="cal-dates">OCT 5–11</span><span class="cal-status"><span class="statuspill upcoming">Upcoming</span></span></div>
+<div class="cal-row dim"><span class="surfdot" style="background:var(--indoor)"></span><span class="cal-name">Rolex Paris Masters</span><span class="cal-type masters">MASTERS 1000</span><span class="cal-dates">OCT 26–NOV 1</span><span class="cal-status"><span class="statuspill upcoming">Upcoming</span></span></div>
+<div class="cal-row dim"><span class="surfdot" style="background:var(--indoor)"></span><span class="cal-name">ATP Finals</span><span class="cal-type finals">SEASON FINALE</span><span class="cal-dates">NOV 15–22</span><span class="cal-status"><span class="statuspill upcoming">Upcoming</span></span></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div><div class="frametag">Mobile 390</div>
+<div class="win" style="width:390px;height:900px;display:flex;flex-direction:column">
+<div class="mtopstrip"><div class="u">Wimbledon '26 Box</div><div class="gear">⚙</div></div>
+<div class="compbar mcompbar"><div class="comppill"><span class="mono">🏠</span>Clubhouse</div><div class="comppill"><span class="dot fb"></span>PL Fantasy</div><div class="comppill on"><span class="dot ten"></span>Wimbledon '26</div></div>
+<div class="mseashdr"><div class="seashdr-ey">🎾 TENNIS · 2026 ATP</div><div class="nm">Wimbledon '26 Box</div><div class="mt">6 entrants · TB-4M9K2 ⧉</div></div>
+<div class="mtabrow"><div class="mtabitem on">Home</div><div class="mtabitem">Leaderboard</div></div>
+<div class="mcontent">
+<div class="actionbanner"><div><div class="k">Picks open · Canadian Open</div><div class="t">Closes in 2d 6h</div></div><div class="cta">Pick →</div></div>
+<div>
+<div class="slbl">Standings<span class="go">Full table →</span></div>
+<div class="standmini">
+<div class="standmini-row"><span class="medal g">1</span><span class="standmini-nm"><div class="av" style="width:20px;height:20px;font-size:9px;background:var(--accent)">M</div>Marco</span><span style="grid-column:span 2"></span><span style="font-weight:700">800</span></div>
+<div class="standmini-row"><span class="medal s">2</span><span class="standmini-nm standmini-you"><div class="av" style="width:20px;height:20px;font-size:9px;background:var(--ten)">Y</div>You</span><span style="grid-column:span 2"></span><span style="font-weight:700">740</span></div>
+<div class="standmini-row"><span class="medal b">3</span><span class="standmini-nm"><div class="av" style="width:20px;height:20px;font-size:9px;background:var(--positive)">A</div>Ana</span><span style="grid-column:span 2"></span><span style="font-weight:700">650</span></div>
+</div>
+</div>
+<div>
+<div class="slbl">2026 calendar<span class="cnt">14</span></div>
+<div class="cal-list">
+<div class="cal-row"><span class="surfdot" style="background:var(--ten)"></span><span class="cal-name" style="width:auto;flex:1">Wimbledon</span><span class="resulttag">🏆</span></div>
+<div class="cal-row"><span class="surfdot" style="background:var(--hard)"></span><span class="cal-name" style="width:auto;flex:1">Canadian Open</span><span class="statuspill open">Pick squad</span></div>
+<div class="cal-row dim"><span class="surfdot" style="background:var(--hard)"></span><span class="cal-name" style="width:auto;flex:1">Cincinnati Open</span><span class="statuspill upcoming">Upcoming</span></div>
+<div class="cal-row dim"><span class="surfdot" style="background:var(--hard)"></span><span class="cal-name" style="width:auto;flex:1">US Open</span><span class="statuspill upcoming">Upcoming</span></div>
+</div>
+</div>
+</div>
+<div class="mbottomnav">
+<div class="mbn-item on"><div class="d"></div><div class="l">Home</div></div>
+<div class="mbn-item"><div class="d"></div><div class="l">Table</div></div>
+<div class="mbn-item"><div class="d"></div><div class="l">Club</div></div>
+</div>
+</div>
+</div>
+</div>
+<div class="screendesc">Season overview — the daily-use tennis screen. <b>Action banner</b> (solid green, top of body) only renders when a roster window or QF-captain window is open; it disappears entirely otherwise. <b>Standings snapshot</b> shows the box's top 5 across Slams/Masters/Total with a "View full table" link into T-06. The <b>14-row calendar</b> is the season at a glance: surface-colour dot, type badge, dates, and one status pill per row that carries all the "what do I do now" signal — upcoming rows dim to 42% and become non-interactive. Mobile drops to a 3-item bottom nav (<b>Home · Table · Club</b>) — no live tab, no market tab, nothing to manage day to day.</div>
+</div>
+
+<!-- ============ T-02 ROSTER PICKER ============ -->
+<div class="frame-wrap" style="left:0px;top:2361px">
+<div class="screenhead"><span class="screencode">T-02</span><span class="screentitle">Tournament — Roster Picker</span></div>
+<div class="screenframes">
+<div><div class="frametag">Desktop 1440</div>
+<div class="win" style="width:1440px;height:1040px;display:flex">
+<div class="sidebar">
+<div class="sb-brand"><svg viewBox="0 0 80 45" width="30" height="17"><rect x="0" y="0" width="26" height="11" rx="4" fill="#B8720E"></rect><rect x="0" y="17" width="48" height="11" rx="4" fill="#1A6FA8"></rect><rect x="0" y="34" width="70" height="11" rx="4" fill="#1A6FA8"></rect></svg><div class="sb-brandname">Frontrow</div></div>
+<div class="sw-active-label">The Usual Suspects</div>
+<div class="sb-section">Clubhouse</div>
+<div class="sb-item">🏠 Clubhouse</div>
+<div class="sb-item sub">The FrontRow</div>
+<div class="sb-section">Community</div>
+<div class="sb-item">🏆 Trophy Cabinet</div>
+<div class="sb-item">🪙 Coin Challenges<span class="sb-tag">BETA</span></div>
+<div class="sb-item">⚙ Settings</div>
+<div class="sb-foot"><div class="av" style="background:var(--ten)">Y</div><div><b>You</b><span>Multi-sport</span></div></div>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;min-width:0">
+<div class="compbar" style="height:40px"><div class="comppill"><span class="mono">🏠</span>Clubhouse</div><div class="comppill on"><span class="dot ten"></span>Wimbledon '26 Box</div></div>
+<div class="tourhdr"><span class="surfdot" style="background:var(--hard);width:11px;height:11px"></span><div><div class="tourhdr-nm">Canadian Open</div><div class="tourhdr-meta">Masters 1000 · Hard · Jul 27–Aug 2</div></div><div class="tourhdr-r"><div class="tourhdr-cd">2d 6h left</div><div class="tourhdr-cdl">Roster picks close</div></div></div>
+<div style="flex:1;overflow-y:auto;padding:18px 22px;display:flex;gap:18px">
+<div style="flex:1;min-width:0">
+<div class="tierblock">
+<div class="tierhead"><span class="tiernum">Tier 1</span><span class="tiername">Seeds 1–4</span><span class="tierslots">1 of 1 picked</span></div>
+<div class="playerrow picked"><span class="seedbadge">1</span><span class="ctyflag" style="background:var(--hard)"></span><span class="playername">N. Kessler<span class="playersub">GER</span></span><span class="pickbtn on">✓ Picked</span></div>
+<div class="playerrow"><span class="seedbadge">2</span><span class="ctyflag" style="background:var(--clay)"></span><span class="playername">R. Amaro<span class="playersub">ESP</span></span><span class="pickbtn">+ Pick</span></div>
+<div class="playerrow"><span class="seedbadge">3</span><span class="ctyflag" style="background:var(--indoor)"></span><span class="playername">J. Halvorsen<span class="playersub">NOR</span></span><span class="pickbtn">+ Pick</span></div>
+<div class="playerrow"><span class="seedbadge">4</span><span class="ctyflag" style="background:var(--gold)"></span><span class="playername">T. Okafor<span class="playersub">NGA</span></span><span class="pickbtn">+ Pick</span></div>
+</div>
+<div class="tierblock">
+<div class="tierhead"><span class="tiernum">Tier 2</span><span class="tiername">Seeds 5–16</span><span class="tierslots">2 of 2 picked</span></div>
+<div class="playerrow picked"><span class="seedbadge">5</span><span class="ctyflag" style="background:var(--indoor)"></span><span class="playername">M. Brandt<span class="playersub">AUT</span></span><span class="pickbtn on">✓ Picked</span></div>
+<div class="playerrow"><span class="seedbadge">6</span><span class="ctyflag" style="background:var(--gold)"></span><span class="playername">D. Petrov<span class="playersub">BUL</span></span><span class="pickbtn">+ Pick</span></div>
+<div class="playerrow used"><span class="seedbadge">7</span><span class="ctyflag" style="background:var(--accent)"></span><span class="playername">L. Fournier<span class="playersub">FRA</span></span><span class="pickbtn">Used elsewhere</span></div>
+<div class="playerrow picked"><span class="seedbadge">16</span><span class="ctyflag" style="background:var(--clay)"></span><span class="playername">F. Rossi<span class="playersub">ITA</span></span><span class="pickbtn on">✓ Picked</span></div>
+</div>
+<div class="tierblock">
+<div class="tierhead"><span class="tiernum">Tier 3</span><span class="tiername">Seeds 17–32</span><span class="tierslots">2 of 2 picked</span></div>
+<div class="playerrow picked"><span class="seedbadge">17</span><span class="ctyflag" style="background:var(--hard)"></span><span class="playername">B. Keller<span class="playersub">SUI</span></span><span class="pickbtn on">✓ Picked</span></div>
+<div class="playerrow"><span class="seedbadge">18</span><span class="ctyflag" style="background:var(--gold)"></span><span class="playername">O. Adeyemi<span class="playersub">NGA</span></span><span class="pickbtn">+ Pick</span></div>
+<div class="playerrow picked"><span class="seedbadge">28</span><span class="ctyflag" style="background:var(--indoor)"></span><span class="playername">K. Ivanov<span class="playersub">BUL</span></span><span class="pickbtn on">✓ Picked</span></div>
+</div>
+<div class="tierblock">
+<div class="tierhead"><span class="tiernum">Tier 4</span><span class="tiername">Dark Horses · Unseeded</span><span class="tierslots">2 of 2 picked</span></div>
+<div class="playerrow picked"><span class="seedbadge">—</span><span class="ctyflag" style="background:var(--accent)"></span><span class="playername">Y. Kimura<span class="playersub">JPN</span></span><span class="pickbtn on">✓ Picked</span></div>
+<div class="playerrow picked"><span class="seedbadge">—</span><span class="ctyflag" style="background:var(--clay)"></span><span class="playername">C. Whitfield<span class="playersub">GBR</span></span><span class="pickbtn on">✓ Picked</span></div>
+<div class="playerrow"><span class="seedbadge">—</span><span class="ctyflag" style="background:var(--gold)"></span><span class="playername">R. Alavi<span class="playersub">IRI</span></span><span class="pickbtn">+ Pick</span></div>
+</div>
+</div>
+<div style="width:300px;flex-shrink:0">
+<div class="rostersum">
+<div class="rostersum-t">Your squad</div>
+<div class="rosterprog"><div class="fill" style="width:100%"></div></div>
+<div class="sum-tier"><div class="lbl">Tier 1</div><div class="sum-slot"><span class="sn">1</span>N. Kessler</div></div>
+<div class="sum-tier"><div class="lbl">Tier 2</div><div class="sum-slot"><span class="sn">5</span>M. Brandt</div><div class="sum-slot"><span class="sn">16</span>F. Rossi</div></div>
+<div class="sum-tier"><div class="lbl">Tier 3</div><div class="sum-slot"><span class="sn">17</span>B. Keller</div><div class="sum-slot"><span class="sn">28</span>K. Ivanov</div></div>
+<div class="sum-tier"><div class="lbl">Tier 4 · Dark Horses</div><div class="sum-slot"><span class="sn">—</span>Y. Kimura</div><div class="sum-slot"><span class="sn">—</span>C. Whitfield</div></div>
+<hr style="border:0;border-top:1px solid var(--rule);margin:4px 0 12px">
+<div class="lbl" style="font-family:var(--font-m);font-size:8.5px;color:var(--mute);letter-spacing:.08em;margin-bottom:8px;text-transform:uppercase">Ace card · optional</div>
+<div class="acegrid">
+<div class="acecard on"><div class="t">Surface Specialist</div><div class="s">2× your entire roster</div></div>
+<div class="acecard"><div class="t">Underdog Boost</div><div class="s">2× your Tier 4 picks</div></div>
+<div class="acecard used"><div class="t">Safety Net</div><div class="s">Used this season</div></div>
+<div class="acecard"><div class="t">Dark Horse Insurance</div><div class="s">Bonus per round past R32</div></div>
+</div>
+<div class="locksquadbtn">Lock in squad →</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div><div class="frametag">Mobile 390</div>
+<div class="win" style="width:390px;height:1040px;display:flex;flex-direction:column">
+<div class="mtopstrip"><div class="u">Canadian Open</div><div class="gear">⚙</div></div>
+<div style="background:var(--card);border-bottom:1px solid var(--rule);padding:10px 16px;display:flex;align-items:center;gap:10px"><span class="surfdot" style="background:var(--hard);width:10px;height:10px"></span><span style="font-size:11.5px;color:var(--mute)">Masters 1000 · Hard</span><span class="tourhdr-cd" style="margin-left:auto;font-size:10.5px">2d 6h left</span></div>
+<div class="mcontent" style="gap:14px">
+<div class="rostersum" style="position:static;padding:12px 14px">
+<div class="rostersum-t" style="font-size:12.5px;margin-bottom:6px">Your squad · 7 of 7</div>
+<div class="rosterprog"><div class="fill" style="width:100%"></div></div>
+<div style="display:flex;gap:4px;flex-wrap:wrap"><span class="sum-slot" style="border:none;padding:3px 8px;background:var(--elev);border-radius:100px;font-size:10.5px">N. Kessler</span><span class="sum-slot" style="border:none;padding:3px 8px;background:var(--elev);border-radius:100px;font-size:10.5px">M. Brandt</span><span class="sum-slot" style="border:none;padding:3px 8px;background:var(--elev);border-radius:100px;font-size:10.5px">+5 more</span></div>
+</div>
+<div class="tierblock">
+<div class="tierhead"><span class="tiernum">Tier 1</span><span class="tiername">Seeds 1–4</span><span class="tierslots">1/1</span></div>
+<div class="playerrow picked"><span class="seedbadge">1</span><span class="playername">N. Kessler<span class="playersub">GER</span></span><span class="pickbtn on">✓</span></div>
+<div class="playerrow"><span class="seedbadge">2</span><span class="playername">R. Amaro<span class="playersub">ESP</span></span><span class="pickbtn">+</span></div>
+</div>
+<div class="tierblock">
+<div class="tierhead"><span class="tiernum">Tier 2</span><span class="tiername">Seeds 5–16</span><span class="tierslots">2/2</span></div>
+<div class="playerrow picked"><span class="seedbadge">5</span><span class="playername">M. Brandt<span class="playersub">AUT</span></span><span class="pickbtn on">✓</span></div>
+<div class="playerrow picked"><span class="seedbadge">16</span><span class="playername">F. Rossi<span class="playersub">ITA</span></span><span class="pickbtn on">✓</span></div>
+</div>
+<div class="lbl" style="font-family:var(--font-m);font-size:8.5px;color:var(--mute);letter-spacing:.08em;text-transform:uppercase">Ace card</div>
+<div class="acegrid">
+<div class="acecard on"><div class="t">Surface Specialist</div><div class="s">2× entire roster</div></div>
+<div class="acecard"><div class="t">Underdog Boost</div><div class="s">2× Tier 4</div></div>
+</div>
+</div>
+<div style="padding:0 14px 14px"><div class="locksquadbtn">Lock in squad →</div></div>
+</div>
+</div>
+</div>
+<div class="screendesc">The richest interaction in the module. Four independent tier blocks (never one long list) so the 1-2-2-2 structure stays legible; a player already used in another tier greys out with "Used elsewhere." The <b>sticky roster-summary rail</b> fills in live and holds the optional <b>Ace Card</b> grid below the tiers — one per tournament, greyed once a type is spent for the season. Mobile collapses the summary into a compact progress card pinned above the tier lists.</div>
+</div>
+
+<!-- ============ T-03 LOCKED SQUAD ============ -->
+<div class="frame-wrap" style="left:0px;top:3702px">
+<div class="screenhead"><span class="screencode">T-03</span><span class="screentitle">Tournament — Locked Squad (completed)</span></div>
+<div class="screenframes">
+<div><div class="frametag">Desktop 1440</div>
+<div class="win" style="width:1440px;height:820px;display:flex">
+<div class="sidebar">
+<div class="sb-brand"><svg viewBox="0 0 80 45" width="30" height="17"><rect x="0" y="0" width="26" height="11" rx="4" fill="#B8720E"></rect><rect x="0" y="17" width="48" height="11" rx="4" fill="#1A6FA8"></rect><rect x="0" y="34" width="70" height="11" rx="4" fill="#1A6FA8"></rect></svg><div class="sb-brandname">Frontrow</div></div>
+<div class="sw-active-label">The Usual Suspects</div>
+<div class="sb-section">Clubhouse</div>
+<div class="sb-item">🏠 Clubhouse</div>
+<div class="sb-item sub">The FrontRow</div>
+<div class="sb-section">Community</div>
+<div class="sb-item">🏆 Trophy Cabinet</div>
+<div class="sb-item">🪙 Coin Challenges<span class="sb-tag">BETA</span></div>
+<div class="sb-item">⚙ Settings</div>
+<div class="sb-foot"><div class="av" style="background:var(--ten)">Y</div><div><b>You</b><span>Multi-sport</span></div></div>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;min-width:0">
+<div class="compbar" style="height:40px"><div class="comppill"><span class="mono">🏠</span>Clubhouse</div><div class="comppill on"><span class="dot ten"></span>Wimbledon '26 Box</div></div>
+<div class="tourhdr"><span class="surfdot" style="background:var(--ten);width:11px;height:11px"></span><div><div class="tourhdr-nm">Wimbledon</div><div class="tourhdr-meta">Grand Slam · Grass · Jun 29–Jul 12 · <span class="acetag">Surface Specialist played</span></div></div><div class="tourhdr-r"><div class="tourhdr-cd" style="color:var(--ten)">🏆 Champion</div><div class="tourhdr-cdl">Final result</div></div></div>
+<div style="flex:1;overflow-y:auto;padding:18px 22px">
+<div class="tierblock">
+<div class="tierhead"><span class="tiernum">Tier 1</span><span class="tiername">Seeds 1–4</span></div>
+<div class="playerrow"><span class="seedbadge">1</span><span class="playername">N. Kessler<span class="playersub">GER</span></span><span class="capstar">★</span><span class="rndtag champ">🏆 Champion</span></div>
+</div>
+<div class="tierblock">
+<div class="tierhead"><span class="tiernum">Tier 2</span><span class="tiername">Seeds 5–16</span></div>
+<div class="playerrow"><span class="seedbadge">5</span><span class="playername">M. Brandt<span class="playersub">AUT</span></span><span class="rndtag out">Out · R16</span></div>
+<div class="playerrow"><span class="seedbadge">16</span><span class="playername">F. Rossi<span class="playersub">ITA</span></span><span class="rndtag out">Out · QF</span></div>
+</div>
+<div class="tierblock">
+<div class="tierhead"><span class="tiernum">Tier 3</span><span class="tiername">Seeds 17–32</span></div>
+<div class="playerrow"><span class="seedbadge">17</span><span class="playername">B. Keller<span class="playersub">SUI</span></span><span class="rndtag out">Out · R32</span></div>
+<div class="playerrow"><span class="seedbadge">28</span><span class="playername">K. Ivanov<span class="playersub">BUL</span></span><span class="rndtag out">Out · R64</span></div>
+</div>
+<div class="tierblock">
+<div class="tierhead"><span class="tiernum">Tier 4</span><span class="tiername">Dark Horses · Unseeded</span></div>
+<div class="playerrow"><span class="seedbadge">—</span><span class="playername">Y. Kimura<span class="playersub">JPN</span></span><span class="rndtag out">Out · R128</span></div>
+<div class="playerrow"><span class="seedbadge">—</span><span class="playername">C. Whitfield<span class="playersub">GBR</span></span><span class="rndtag out">Out · R32</span></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div><div class="frametag">Two quiet waiting states</div>
+<div class="win" style="width:460px;height:820px;display:flex;flex-direction:column">
+<div class="tourhdr"><span class="surfdot" style="background:var(--hard);width:11px;height:11px"></span><div><div class="tourhdr-nm">Cincinnati Open</div><div class="tourhdr-meta">Masters 1000 · Hard · Aug 10–16</div></div></div>
+<div style="padding:22px"><div class="waitcard"><div class="ic">🕒</div><div class="t">Roster not yet open</div><div>Seeding for this draw hasn't been finalized. Check back closer to Aug 10.</div></div></div>
+<div class="tourhdr" style="border-top:1px solid var(--rule)"><span class="surfdot" style="background:var(--hard);width:11px;height:11px"></span><div><div class="tourhdr-nm">US Open</div><div class="tourhdr-meta">Grand Slam · Hard · Aug 31–Sep 13</div></div><div class="tourhdr-r"><span class="statuspill progress" style="font-size:9.5px">In progress</span></div></div>
+<div style="padding:22px"><div class="waitcard"><div class="ic">⏳</div><div class="t">In progress, no QF window yet</div><div>Your squad is locked in. The captain pick opens once 8 players remain in the draw.</div></div></div>
+</div>
+</div>
+</div>
+<div class="screendesc">Read-only version of the same 4-tier structure. Each player shows a round-reached tag (green = still alive mid-tournament, red-outline = eliminated with the round shown, gold = champion), a gold star marks the captain, and the played Ace Card surfaces as a tag in the header rather than buried in a tier row. Right: the two low-frequency waiting states — calm, single-card, no data to misread as "broken."</div>
+</div>
+
+<!-- ============ T-04 QF CAPTAIN ============ -->
+<div class="frame-wrap" style="left:0px;top:5575px">
+<div class="screenhead"><span class="screencode">T-04</span><span class="screentitle">Tournament — QF Captain Picker</span></div>
+<div class="screenframes">
+<div><div class="frametag">Desktop 1440</div>
+<div class="win" style="width:1440px;height:700px;display:flex">
+<div class="sidebar">
+<div class="sb-brand"><svg viewBox="0 0 80 45" width="30" height="17"><rect x="0" y="0" width="26" height="11" rx="4" fill="#B8720E"></rect><rect x="0" y="17" width="48" height="11" rx="4" fill="#1A6FA8"></rect><rect x="0" y="34" width="70" height="11" rx="4" fill="#1A6FA8"></rect></svg><div class="sb-brandname">Frontrow</div></div>
+<div class="sw-active-label">The Usual Suspects</div>
+<div class="sb-section">Clubhouse</div>
+<div class="sb-item">🏠 Clubhouse</div>
+<div class="sb-item sub">The FrontRow</div>
+<div class="sb-section">Community</div>
+<div class="sb-item">🏆 Trophy Cabinet</div>
+<div class="sb-item">🪙 Coin Challenges<span class="sb-tag">BETA</span></div>
+<div class="sb-item">⚙ Settings</div>
+<div class="sb-foot"><div class="av" style="background:var(--ten)">Y</div><div><b>You</b><span>Multi-sport</span></div></div>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;min-width:0">
+<div class="compbar" style="height:40px"><div class="comppill"><span class="mono">🏠</span>Clubhouse</div><div class="comppill on"><span class="dot ten"></span>Wimbledon '26 Box</div></div>
+<div class="tourhdr"><span class="surfdot" style="background:var(--ten);width:11px;height:11px"></span><div><div class="tourhdr-nm">Wimbledon</div><div class="tourhdr-meta">Grand Slam · Grass · 8 players remain</div></div></div>
+<div style="padding:22px;max-width:560px">
+<div class="actionbanner gold" style="margin-bottom:18px"><div><div class="k">QF Captain window · 48 hours</div><div class="t">Pick a captain from your surviving roster</div><div class="s">Your captain scores 2× for the rest of the tournament.</div></div></div>
+<div class="capchoice on"><span class="capradio on"></span><div style="flex:1"><div class="playername" style="font-size:13.5px">N. Kessler<span class="playersub">GER · Seed 1 · Tier 1</span></div></div><span class="rndtag alive">Alive · QF</span></div>
+<div class="capchoice"><span class="capradio"></span><div style="flex:1"><div class="playername" style="font-size:13.5px">F. Rossi<span class="playersub">ITA · Seed 16 · Tier 2</span></div></div><span class="rndtag alive">Alive · QF</span></div>
+<div class="capbtn">Confirm captain →</div>
+</div>
+</div>
+</div>
+</div>
+<div><div class="frametag">Mobile 390</div>
+<div class="win" style="width:390px;height:700px;display:flex;flex-direction:column">
+<div class="mtopstrip"><div class="u">Wimbledon</div><div class="gear">⚙</div></div>
+<div class="mcontent">
+<div class="actionbanner gold"><div><div class="k">QF Captain · 48h</div><div class="t">Pick your captain</div></div></div>
+<div class="capchoice on"><span class="capradio on"></span><div style="flex:1"><div class="playername" style="font-size:13px">N. Kessler<span class="playersub">GER · Seed 1</span></div></div><span class="rndtag alive">QF</span></div>
+<div class="capchoice"><span class="capradio"></span><div style="flex:1"><div class="playername" style="font-size:13px">F. Rossi<span class="playersub">ITA · Seed 16</span></div></div><span class="rndtag alive">QF</span></div>
+<div class="capbtn">Confirm captain →</div>
+</div>
+</div>
+</div>
+</div>
+<div class="screendesc">High-stakes, time-boxed, deliberately <b>gold not red</b> — urgent without being alarming (danger-red stays reserved for destructive/negative states elsewhere). Only surviving roster players are selectable; the countdown chip in the banner is the one place real urgency shows.</div>
+</div>
+
+<!-- ============ T-05 FINAL SCORE ============ -->
+<div class="frame-wrap" style="left:0px;top:6556px">
+<div class="screenhead"><span class="screencode">T-05</span><span class="screentitle">Tournament — Final Score Card</span></div>
+<div class="screenframes">
+<div><div class="frametag">Desktop 900</div>
+<div class="win" style="width:900px;height:620px;display:flex;flex-direction:column">
+<div class="compbar" style="height:40px"><div class="comppill"><span class="mono">🏠</span>Clubhouse</div><div class="comppill on"><span class="dot ten"></span>Wimbledon '26 Box</div></div>
+<div class="tourhdr"><span class="surfdot" style="background:var(--ten);width:11px;height:11px"></span><div><div class="tourhdr-nm">Wimbledon</div><div class="tourhdr-meta">Grand Slam · Grass · Completed</div></div></div>
+<div style="padding:26px">
+<div class="scorehero">
+<div class="k">Your Wimbledon result</div>
+<div class="big">720</div>
+<div class="scorebreak">
+<div class="pill"><b>300</b><span>BASE</span></div>
+<div class="pill"><b>+300</b><span>ACE CARD BONUS</span></div>
+<div class="pill"><b>+120</b><span>CAPTAIN BONUS</span></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="screendesc">Total broken into base + Ace Card bonus + captain bonus, each a distinct pill so the "why" behind the number is legible without a tooltip.</div>
+</div>
+
+<!-- ============ T-06 LEADERBOARD ============ -->
+<div class="frame-wrap" style="left:0px;top:7457px">
+<div class="screenhead"><span class="screencode">T-06</span><span class="screentitle">Leaderboard</span></div>
+<div class="screenframes">
+<div><div class="frametag">Desktop 1440</div>
+<div class="win" style="width:1440px;height:900px;display:flex">
+<div class="sidebar">
+<div class="sb-brand"><svg viewBox="0 0 80 45" width="30" height="17"><rect x="0" y="0" width="26" height="11" rx="4" fill="#B8720E"></rect><rect x="0" y="17" width="48" height="11" rx="4" fill="#1A6FA8"></rect><rect x="0" y="34" width="70" height="11" rx="4" fill="#1A6FA8"></rect></svg><div class="sb-brandname">Frontrow</div></div>
+<div class="sw-active-label">The Usual Suspects</div>
+<div class="sb-section">Clubhouse</div>
+<div class="sb-item">🏠 Clubhouse</div>
+<div class="sb-item sub">The FrontRow</div>
+<div class="sb-section">Community</div>
+<div class="sb-item">🏆 Trophy Cabinet</div>
+<div class="sb-item">🪙 Coin Challenges<span class="sb-tag">BETA</span></div>
+<div class="sb-item">⚙ Settings</div>
+<div class="sb-foot"><div class="av" style="background:var(--ten)">Y</div><div><b>You</b><span>Multi-sport</span></div></div>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;min-width:0">
+<div class="compbar" style="height:40px"><div class="comppill"><span class="mono">🏠</span>Clubhouse</div><div class="comppill on"><span class="dot ten"></span>Wimbledon '26 Box</div></div>
+<div class="seashdr" style="padding:14px 26px"><div class="seashdr-name" style="font-size:18px">Season Leaderboard</div></div>
+<div class="tabrow"><div class="tabitem">Home</div><div class="tabitem on">Leaderboard</div></div>
+<div style="padding:18px 22px;overflow-y:auto">
+<div class="mastersnote" style="margin-bottom:14px"><span>⚠</span><div><b>Masters Drop Rule active</b> — 5 of 9 Masters 1000 events are complete. Only your <b>best 4 Masters results</b> count toward Total; your lowest is currently dropped.</div></div>
+<table class="ldrtable">
+<tr><th>#</th><th>Manager</th><th>Slams</th><th>Masters</th><th>Finals</th><th>Total</th><th>Played</th></tr>
+<tr><td><span class="medal g">1</span></td><td style="font-weight:700">Marco</td><td>420</td><td>380</td><td>—</td><td style="font-weight:700">800</td><td><span class="chiprow"><span class="mono" style="font-size:10px;color:var(--mute)">8 played</span></span></td></tr>
+<tr class="you"><td><span class="medal s">2</span></td><td style="font-weight:700;color:var(--ten)">You</td><td>390</td><td>350</td><td>—</td><td style="font-weight:700">740</td><td><span class="mono" style="font-size:10px;color:var(--mute)">8 played</span></td></tr>
+<tr><td><span class="medal b">3</span></td><td style="font-weight:700">Ana</td><td>310</td><td>340</td><td>—</td><td style="font-weight:700">650</td><td><span class="mono" style="font-size:10px;color:var(--mute)">8 played</span></td></tr>
+<tr><td><span class="rankno">4</span></td><td>Bea</td><td>280</td><td>310</td><td>—</td><td style="font-weight:700">590</td><td><span class="mono" style="font-size:10px;color:var(--mute)">8 played</span></td></tr>
+<tr><td><span class="rankno">5</span></td><td>Sam</td><td>260</td><td>280</td><td>—</td><td style="font-weight:700">540</td><td><span class="mono" style="font-size:10px;color:var(--mute)">8 played</span></td></tr>
+<tr><td><span class="rankno">6</span></td><td>Chidi</td><td>210</td><td>240</td><td>—</td><td style="font-weight:700">450</td><td><span class="mono" style="font-size:10px;color:var(--mute)">8 played</span></td></tr>
+</table>
+</div>
+</div>
+</div>
+</div>
+<div><div class="frametag">Mobile 390 — per-tournament breakdown fallback</div>
+<div class="win" style="width:390px;height:900px;display:flex;flex-direction:column">
+<div class="mtopstrip"><div class="u">Leaderboard</div><div class="gear">⚙</div></div>
+<div class="mtabrow"><div class="mtabitem">Home</div><div class="mtabitem on">Leaderboard</div></div>
+<div class="mcontent">
+<div class="mastersnote" style="font-size:11px"><span>⚠</span><div><b>Drop rule active</b> — best 4 of 9 Masters count.</div></div>
+<div class="ldrcard-m">
+<div class="ldrcard-m-hd"><span class="medal g">1</span><div class="av" style="width:22px;height:22px;font-size:9.5px;background:var(--accent)">M</div><b style="font-size:13px">Marco</b><span class="ldrcard-m-tot">800</span></div>
+<div class="chiprow"><span class="resultchip" style="background:var(--gold)">🏆</span><span class="resultchip" style="background:var(--positive)">QF</span><span class="resultchip" style="background:var(--positive)">R32</span><span class="resultchip" style="background:var(--accent)">SF</span><span class="resultchip" style="background:var(--danger)">R16</span><span class="resultchip" style="background:var(--gold)">F</span><span class="resultchip" style="background:var(--positive)">QF</span><span class="resultchip" style="background:var(--gold)">🏆</span></div>
+</div>
+<div class="ldrcard-m" style="border-color:var(--ten)">
+<div class="ldrcard-m-hd"><span class="medal s">2</span><div class="av" style="width:22px;height:22px;font-size:9.5px;background:var(--ten)">Y</div><b style="font-size:13px;color:var(--ten)">You</b><span class="ldrcard-m-tot">740</span></div>
+<div class="chiprow"><span class="resultchip" style="background:var(--positive)">R16</span><span class="resultchip" style="background:var(--positive)">QF</span><span class="resultchip" style="background:var(--danger)">R32</span><span class="resultchip" style="background:var(--accent)">SF</span><span class="resultchip" style="background:var(--danger)">R16</span><span class="resultchip" style="background:var(--gold)">F</span><span class="resultchip" style="background:var(--positive)">QF</span><span class="resultchip" style="background:var(--gold)">🏆</span></div>
+</div>
+<div class="ldrcard-m">
+<div class="ldrcard-m-hd"><span class="medal b">3</span><div class="av" style="width:22px;height:22px;font-size:9.5px;background:var(--positive)">A</div><b style="font-size:13px">Ana</b><span class="ldrcard-m-tot">650</span></div>
+<div class="chiprow"><span class="resultchip" style="background:var(--danger)">R32</span><span class="resultchip" style="background:var(--accent)">SF</span><span class="resultchip" style="background:var(--positive)">R16</span><span class="resultchip" style="background:var(--danger)">R64</span><span class="resultchip" style="background:var(--positive)">QF</span><span class="resultchip" style="background:var(--accent)">SF</span><span class="resultchip" style="background:var(--danger)">R32</span><span class="resultchip" style="background:var(--positive)">R16</span></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="screendesc">Desktop: full Slams/Masters/Finals/Total matrix, medals on top 3, "your row" tinted green. The <b>Masters Drop Rule note</b> sits above the table, not in a tooltip — it directly changes how a user reads their own total once 5+ Masters are complete. Mobile swaps the matrix for per-manager cards with colour-tinted round-reached chips (gold = final/champion, green = deep run, accent = mid-tournament, red = early exit) — a genuine responsive redesign, not a reflowed table.</div>
+</div>
+
+<!-- ============ T-07 ATP FINALS ============ -->
+<div class="frame-wrap" style="left:0px;top:8658px">
+<div class="screenhead"><span class="screencode">T-07</span><span class="screentitle">ATP Finals</span></div>
+<div class="screenframes">
+<div><div class="frametag">Desktop 1440</div>
+<div class="win" style="width:1440px;height:960px;display:flex">
+<div class="sidebar">
+<div class="sb-brand"><svg viewBox="0 0 80 45" width="30" height="17"><rect x="0" y="0" width="26" height="11" rx="4" fill="#B8720E"></rect><rect x="0" y="17" width="48" height="11" rx="4" fill="#1A6FA8"></rect><rect x="0" y="34" width="70" height="11" rx="4" fill="#1A6FA8"></rect></svg><div class="sb-brandname">Frontrow</div></div>
+<div class="sw-active-label">The Usual Suspects</div>
+<div class="sb-section">Clubhouse</div>
+<div class="sb-item">🏠 Clubhouse</div>
+<div class="sb-item sub">The FrontRow</div>
+<div class="sb-section">Community</div>
+<div class="sb-item">🏆 Trophy Cabinet</div>
+<div class="sb-item">🪙 Coin Challenges<span class="sb-tag">BETA</span></div>
+<div class="sb-item">⚙ Settings</div>
+<div class="sb-foot"><div class="av" style="background:var(--ten)">Y</div><div><b>You</b><span>Multi-sport</span></div></div>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;min-width:0">
+<div class="compbar" style="height:40px"><div class="comppill"><span class="mono">🏠</span>Clubhouse</div><div class="comppill on"><span class="dot ten"></span>Wimbledon '26 Box</div></div>
+<div class="tourhdr"><span class="surfdot" style="background:var(--indoor);width:11px;height:11px"></span><div><div class="tourhdr-nm">ATP Finals</div><div class="tourhdr-meta">Season finale · Indoor · Nov 15–22 · Group stage open</div></div><div class="tourhdr-r"><div class="tourhdr-cd">3d 14h left</div><div class="tourhdr-cdl">Group picks lock</div></div></div>
+<div style="flex:1;overflow-y:auto;padding:18px 22px;display:flex;gap:18px">
+<div style="width:340px;flex-shrink:0">
+<div class="tierblock">
+<div class="tierhead" style="background:var(--gold-bg)"><span class="tiername" style="color:var(--gold);font-weight:700">Scoring tiers · full slate</span></div>
+<div class="tiercard-row"><span class="tiernum-badge">1</span><div style="flex:1"><div style="font-weight:600;font-size:12.5px">Unforced Error</div><div class="playersub" style="margin:0">1–5 / 15 correct</div></div><b class="mono" style="font-size:12px">250</b></div>
+<div class="tiercard-row"><span class="tiernum-badge">2</span><div style="flex:1"><div style="font-weight:600;font-size:12.5px">Rally Player</div><div class="playersub" style="margin:0">6–8 / 15 correct</div></div><b class="mono" style="font-size:12px">750</b></div>
+<div class="tiercard-row"><span class="tiernum-badge">3</span><div style="flex:1"><div style="font-weight:600;font-size:12.5px">Break Point</div><div class="playersub" style="margin:0">9–11 / 15 correct</div></div><b class="mono" style="font-size:12px">1,750</b></div>
+<div class="tiercard-row"><span class="tiernum-badge">4</span><div style="flex:1"><div style="font-weight:600;font-size:12.5px">Match Point</div><div class="playersub" style="margin:0">12–14 / 15 correct</div></div><b class="mono" style="font-size:12px">3,500</b></div>
+<div class="tiercard-row top"><span class="tiernum-badge">5</span><div style="flex:1"><div style="font-weight:700;font-size:12.5px;color:var(--gold)">🏆 The Perfect Slate</div><div class="playersub" style="margin:0">15 / 15 correct</div></div><b class="mono" style="font-size:12px;color:var(--gold)">7,500</b></div>
+</div>
+</div>
+<div style="flex:1">
+<div class="tierblock">
+<div class="tierhead"><span class="tiername">Group Stage · Red Group</span><span class="tierslots">6 of 6 picked</span></div>
+<div class="matchtoggle"><span class="mt-opt on">N. Kessler</span><span class="mt-vs">vs</span><span class="mt-opt">R. Amaro</span></div>
+<div class="matchtoggle"><span class="mt-opt correct">N. Kessler</span><span class="mt-vs">vs</span><span class="mt-opt wrong">J. Halvorsen</span></div>
+<div class="matchtoggle"><span class="mt-opt">R. Amaro</span><span class="mt-vs">vs</span><span class="mt-opt on">J. Halvorsen</span></div>
+</div>
+<div class="tierblock">
+<div class="tierhead"><span class="tiername">Knockout · Semis &amp; Final</span><span class="tierslots">Unlocks after group stage</span></div>
+<div class="matchtoggle" style="opacity:.4"><span class="mt-opt">TBD</span><span class="mt-vs">vs</span><span class="mt-opt">TBD</span></div>
+<div class="matchtoggle" style="opacity:.4"><span class="mt-opt">TBD</span><span class="mt-vs">vs</span><span class="mt-opt">TBD</span></div>
+<div class="matchtoggle" style="opacity:.4"><span class="mt-opt">Finalist A</span><span class="mt-vs">vs</span><span class="mt-opt">Finalist B</span></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="screendesc">The season's one-off format — predict every match, not pick a squad. The <b>scoring tiers card</b> (Unforced Error → 🏆 The Perfect Slate) stays visible as a standing reference while picking, built to feel like a countdown to a big payoff. Group stage is 12 two-player toggle picks submitted together; correct/incorrect/actual-winner get distinct green/red states once results land. Knockout (2 semis + final) stays locked and greyed until the group stage locks.</div>
+</div>
+
+<template id="__bundler_thumbnail"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 70"><rect width="100" height="70" fill="#1B7A52"></rect><circle cx="50" cy="35" r="18" fill="none" stroke="#fff" stroke-width="3"></circle><line x1="32" y1="35" x2="68" y2="35" stroke="#fff" stroke-width="2"></line></svg></template>
+</body></html>
