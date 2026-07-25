@@ -160,8 +160,27 @@ function MessageThread({ title, titlePrefix, messages, loading, onSend, onDelete
   );
 }
 
+// ── Compact list row (rail layout) ────────────────────────────────────────────
+function RailListItem({ label, active, onClick }) {
+  return (
+    <button
+      onClick={onClick}
+      style={{
+        width: '100%', textAlign: 'left', padding: '7px 8px', borderRadius: 6,
+        background: active ? 'var(--accent-bg)' : 'transparent',
+        border: 'none', cursor: 'pointer',
+        ...MONO, fontSize: 12.5, fontWeight: active ? 600 : 400,
+        color: active ? 'var(--accent)' : '#4B5568',
+        overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+      }}
+    >
+      {label}
+    </button>
+  );
+}
+
 // ── Main component ────────────────────────────────────────────────────────────
-export default function ClubhouseChat({ circleId, members, activeCircle }) {
+export default function ClubhouseChat({ circleId, members, activeCircle, layout = 'panes' }) {
   const { user } = useAuth();
   const [channels, setChannels] = useState([]);
   const [chatMode, setChatMode] = useState('channel');
@@ -260,6 +279,69 @@ export default function ClubhouseChat({ circleId, members, activeCircle }) {
   }
 
   const otherMembers = members.filter(m => m.user_id !== user?.id);
+
+  if (layout === 'rail') {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
+        {/* Header + mode toggle */}
+        <div style={{ padding: '14px 16px 10px', borderBottom: '1px solid var(--rule)', flexShrink: 0 }}>
+          <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 14, color: 'var(--paper)', marginBottom: 10 }}>Chat</div>
+          <div style={{ display: 'flex', gap: 6 }}>
+            {['channel', 'dm'].map(mode => (
+              <button
+                key={mode}
+                onClick={() => switchMode(mode)}
+                style={{
+                  padding: '4px 10px', borderRadius: 100,
+                  background: chatMode === mode ? 'var(--accent-bg)' : 'transparent',
+                  border: 'none', cursor: 'pointer',
+                  ...MONO, fontSize: 10, fontWeight: chatMode === mode ? 700 : 400,
+                  letterSpacing: '0.06em',
+                  color: chatMode === mode ? 'var(--accent)' : 'var(--mute)',
+                }}
+              >
+                {mode === 'channel' ? 'Channels' : 'DMs'}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Compact always-visible list */}
+        <div style={{ padding: '8px 8px', borderBottom: '1px solid var(--rule)', display: 'flex', flexDirection: 'column', gap: 1, maxHeight: 150, overflowY: 'auto', flexShrink: 0 }}>
+          {chatMode === 'channel' && channels.map(ch => (
+            <RailListItem key={ch.id} label={`# ${ch.name}`} active={selectedChannelId === ch.id} onClick={() => setSelectedChannelId(ch.id)} />
+          ))}
+          {chatMode === 'dm' && otherMembers.length === 0 && (
+            <div style={{ padding: '6px 8px', ...MONO, fontSize: 10, color: 'var(--mute)' }}>No other members yet.</div>
+          )}
+          {chatMode === 'dm' && otherMembers.map(m => (
+            <RailListItem key={m.user_id} label={m.username} active={selectedDmUserId === m.user_id} onClick={() => setSelectedDmUserId(m.user_id)} />
+          ))}
+        </div>
+
+        {/* Thread */}
+        {!hasSelection ? (
+          <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 0 }}>
+            <span style={{ ...MONO, fontSize: 11, color: 'var(--mute)', letterSpacing: '0.1em' }}>
+              {chatMode === 'channel' ? 'SELECT A CHANNEL' : 'SELECT A MEMBER'}
+            </span>
+          </div>
+        ) : (
+          <MessageThread
+            title={threadTitle}
+            titlePrefix={threadTitlePrefix}
+            messages={messages}
+            loading={loading}
+            onSend={sendMessage}
+            onDelete={onDelete}
+            scrollEndRef={scrollEndRef}
+            isOwner={isOwner}
+            isDm={chatMode === 'dm'}
+          />
+        )}
+      </div>
+    );
+  }
 
   return (
     <div style={{ display: 'flex', height: 'calc(100vh - 220px)', minHeight: 400, overflow: 'hidden' }}>
