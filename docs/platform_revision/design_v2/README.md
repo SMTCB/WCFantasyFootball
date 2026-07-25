@@ -14,14 +14,14 @@ Each `design_v2` module folder also carries a copy of its original brief for ref
 
 The product is being renamed **Frontrow** — *"Your seat to all the action."* This surfaced through the Home Redesign brief/output, not through a prior product decision recorded elsewhere. Replace the FantasyKit wordmark/logo across the app shell with the Frontrow logo system (`logo/`). The in-app gazette feature name, "The FrontRow," is a separate, pre-existing feature name kept as-is — an intentional naming collision, not the same thing as the platform rebrand.
 
-## Status: design-complete for all four; three of four implemented in React
+## Status: design-complete for all four; Coin Challenges Competitor path implemented, Freeform in progress
 
 | Module | Folder | Screens | Notes | Implementation |
 |---|---|---|---|---|
 | Clubhouse Home + global chrome | `Home Redesign/` | S-01–S-08 | Merges Home/Recap/Chat into one persistent-rail layout; sidebar, top bar, Members, Chat, The FrontRow gazette, New Competition, Notifications | ✅ **Implemented** — merged to `main` (multiple PRs, see BACKLOG.md) |
 | F1 module | `F1 Redesign/` | F1-01–F1-07 (+F1-02b variants) | UI/layout only, no scoring changes; gives F1 a consistent red identity without colliding with semantic correct/incorrect colors | ✅ **Implemented** — PR [#758](https://github.com/SMTCB/WCFantasyFootball/pull/758), merged to `main` 2026-07-25 |
 | Tennis module | `Tennis Redesign/` | T-01–T-06 | Tiered roster picks, QF Captain window, Ace Cards, season leaderboard with Masters drop rule | ✅ **Implemented** — PR [#758](https://github.com/SMTCB/WCFantasyFootball/pull/758), merged to `main` 2026-07-25 |
-| Coin Challenges (P2P) | `Coin Challenges Redesign/` | S01–S10 | Extends P2P bets to Clubhouse scope + adds Freeform prop bets (declare → confirm/dispute → owner-arbitrates lifecycle) | ⬜ **Not started** — next module to build |
+| Coin Challenges (P2P) | `Coin Challenges Redesign/` | S01–S10 | Extends P2P bets to Clubhouse scope + adds Freeform prop bets (declare → confirm/dispute → owner-arbitrates lifecycle) | 🔶 **In progress** — PRs A/B/C shipped: [#760](https://github.com/SMTCB/WCFantasyFootball/pull/760) (double-refund fix, migration 235), [#761](https://github.com/SMTCB/WCFantasyFootball/pull/761) (circle scope, migration 236), [#762](https://github.com/SMTCB/WCFantasyFootball/pull/762) (circle-scoped create + frontend, migrations 237–238). Competitor-path creation is circle-scoped and live. PR D (Freeform bets + lifecycle, S02/S05/S08–S10, migration 239) not yet started |
 
 Every module is built against the same reconciled **Kit Light** token set (see below) — nothing here is a competing design language.
 
@@ -49,9 +49,9 @@ Typography: **Archivo Black** (display/headlines/wordmark), **Archivo** (body/UI
 
 ## What's next
 
-**Coin Challenges Redesign (S01–S10) is the only module left to implement.** Start a fresh session pointed at [`Coin Challenges Redesign/README.md`](Coin%20Challenges%20Redesign/README.md) — same handoff format as the F1/Tennis briefs that were just implemented (mockup HTML + screen-by-screen spec + design tokens). Also read [`Coin Challenges Redesign/README_COIN.md`](Coin%20Challenges%20Redesign/README_COIN.md) (the original product brief) and [`../architecture/P2P_BETTING_CLUBHOUSE_SCOPE_TECH_SPEC.md`](../architecture/P2P_BETTING_CLUBHOUSE_SCOPE_TECH_SPEC.md) (the engineering companion — target schema, RLS rewrite, and three proposed migrations 235–237, none written yet). This work restyles/extends `ChallengeScreen.jsx` and friends the same way the F1/Tennis sessions restyled their existing screens — reuse real components (`IncomingCard`, `OpenCard`, `ActiveCard`, `SettledCard`), don't copy the mockup markup.
+**Coin Challenges Redesign (S01–S10): Competitor path done, Freeform path (PR D) is what's left.** Migrations 235–238 are written and applied to prod; PRs A/B/C (#760, #761, #762) are merged. `ChallengeScreen.jsx`'s create flow is now circle-scoped (`useClubhouseContext()`), fixing the live bug where challenge creation was hardcoded to a null league. Remaining work is **PR D**: a new migration **239** (widen `bet_type`/`status` CHECKs, add `resolution_mode`/`question`/`proposed_winner_id`/`proposed_by`/`proposed_at`/`dispute_deadline` columns, and RPCs `declare_freeform_result`/`confirm_freeform_result`/`dispute_freeform_result`/`arbitrate_freeform_result`/`auto_void_stale_disputes`), plus frontend for design screens S02 (bet-type picker), S05 (question field), and S08–S10 (Your Move card, owner arbitration card, Declare Result flow, Owner Arbitration screen). See [`Coin Challenges Redesign/README.md`](Coin%20Challenges%20Redesign/README.md) and [`../architecture/P2P_BETTING_CLUBHOUSE_SCOPE_TECH_SPEC.md`](../architecture/P2P_BETTING_CLUBHOUSE_SCOPE_TECH_SPEC.md) for the full spec (note: the tech spec's migration numbers 235–237 are superseded — see actual applied migrations in `supabase/migrations/`). Freeform rake is 5%, same as Competitor bets; disputed freeform bets auto-refund after a 7-day owner-inactivity timeout (`auto_void_stale_disputes` cron).
 
 This repo is single-branch (`main` only, since the 2026-07-24 cutover) — branch from `main`, PR back into `main`, same as every other session.
 
 ---
-Last Updated: 2026-07-25
+Last Updated: 2026-07-25 (PR C — circle-scoped challenge creation — merged; PR D — freeform bets — pending)
