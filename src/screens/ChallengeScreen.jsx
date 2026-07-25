@@ -60,6 +60,20 @@ function gwLabel(matchdayId) {
   return parts.length === 2 ? `GW${parts[1]}` : matchdayId;
 }
 
+// ── Bet-type identity badge (gold = Competitor, accent = Freeform) ────────────
+function TypeBadge({ betType }) {
+  const isFree = betType === 'freeform';
+  return (
+    <span style={{
+      background: isFree ? 'var(--abg)' : 'var(--gbg)', color: isFree ? 'var(--accent)' : 'var(--gold)',
+      ...MONO, fontSize: 7.5, letterSpacing: '.1em', textTransform: 'uppercase',
+      padding: '2px 7px', borderRadius: 100, flexShrink: 0,
+    }}>
+      {isFree ? 'Freeform' : 'Competitor'}
+    </span>
+  );
+}
+
 // ── Incoming challenge card (gold border) ─────────────────────────────────────
 function IncomingCard({ challenge, onAccept, onDecline, loading }) {
   const netWin = Math.floor(challenge.stake_coins * 2 * 0.95) - challenge.stake_coins;
@@ -79,17 +93,17 @@ function IncomingCard({ challenge, onAccept, onDecline, loading }) {
         <span style={{ ...HEAD, fontSize: 14, color: 'var(--text)', letterSpacing: '-0.01em' }}>
           {challenge.challenger_username ?? 'Challenger'}
         </span>
-        <span style={{
-          background: 'var(--abg)', color: 'var(--accent)',
-          ...MONO, fontSize: 7.5, letterSpacing: '.1em', textTransform: 'uppercase',
-          padding: '2px 7px', borderRadius: 100,
-        }}>
-          {gwLabel(challenge.matchday_id)} · GW Total
-        </span>
+        <TypeBadge betType={challenge.bet_type} />
         <span style={{ marginLeft: 'auto', ...MONO, fontSize: 8.5, color: 'var(--gold)', letterSpacing: '.04em' }}>
           ⏱ {timeUntil(challenge.expires_at)}
         </span>
       </div>
+
+      {challenge.bet_type === 'freeform' ? (
+        <div style={{ fontSize: 13.5, color: 'var(--text)', fontWeight: 600, lineHeight: 1.4 }}>{challenge.question}</div>
+      ) : (
+        <div style={{ ...MONO, fontSize: 9, color: 'var(--mute)' }}>{gwLabel(challenge.matchday_id)} · GW Total</div>
+      )}
 
       {/* Message */}
       {challenge.message && (
@@ -155,10 +169,14 @@ function OutgoingCard({ challenge, onCancel, loading }) {
         <span style={{ ...HEAD, fontSize: 14, color: 'var(--text)', letterSpacing: '-0.01em' }}>
           → {challenge.opponent_username ?? 'Opponent'}
         </span>
+        <TypeBadge betType={challenge.bet_type} />
         <span style={{ marginLeft: 'auto', ...MONO, fontSize: 8, color: 'var(--mute)' }}>
           Awaiting · {timeUntil(challenge.expires_at)}
         </span>
       </div>
+      {challenge.bet_type === 'freeform' && (
+        <div style={{ fontSize: 13, color: 'var(--text)', fontWeight: 600, lineHeight: 1.4 }}>{challenge.question}</div>
+      )}
       {challenge.message && (
         <div style={{ fontSize: 13, color: 'var(--text2)', lineHeight: 1.45 }}>{challenge.message}</div>
       )}
@@ -180,8 +198,12 @@ function OutgoingCard({ challenge, onCancel, loading }) {
   );
 }
 
-// ── Live / active card (green border + score display) ─────────────────────────
-function LiveCard({ challenge, userId }) {
+// ── Live / active card (green border + score display, or freeform lifecycle) ──
+function LiveCard({ challenge, userId, onDeclare, onConfirm, onDispute, loading }) {
+  if (challenge.bet_type === 'freeform') {
+    return <FreeformLiveCard challenge={challenge} userId={userId} onDeclare={onDeclare} onConfirm={onConfirm} onDispute={onDispute} loading={loading} />;
+  }
+
   const myPts   = challenge.challenger_id === userId ? challenge.challenger_pts : challenge.opponent_pts;
   const oppPts  = challenge.challenger_id === userId ? challenge.opponent_pts : challenge.challenger_pts;
   const oppName = challenge.challenger_id === userId ? challenge.opponent_username : challenge.challenger_username;
@@ -245,6 +267,251 @@ function LiveCard({ challenge, userId }) {
   );
 }
 
+// ── Freeform lifecycle card: live → your-move/awaiting → pending arbitration ──
+function FreeformLiveCard({ challenge, userId, onDeclare, onConfirm, onDispute, loading }) {
+  const oppName = challenge.challenger_id === userId ? challenge.opponent_username : challenge.challenger_username;
+  const isProposer = challenge.proposed_by === userId;
+  const proposerName = challenge.proposed_by === challenge.challenger_id ? challenge.challenger_username : challenge.opponent_username;
+  const winnerLabel = challenge.proposed_winner_id == null
+    ? 'a push (no winner)'
+    : challenge.proposed_winner_id === userId ? 'you' : (challenge.proposed_winner_username ?? oppName);
+
+  if (challenge.status === 'disputed') {
+    return (
+      <div style={{
+        background: 'var(--elev)', border: '1.5px dashed var(--mute)', borderRadius: 6,
+        padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 8,
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+          <TypeBadge betType="freeform" />
+          <span style={{ ...MONO, fontSize: 8, color: 'var(--mute)' }}>vs {oppName ?? 'Opponent'}</span>
+        </div>
+        <div style={{ fontSize: 13.5, color: 'var(--text)', fontWeight: 600, lineHeight: 1.4 }}>{challenge.question}</div>
+        <div style={{ ...MONO, fontSize: 10, color: 'var(--mute)', lineHeight: 1.5 }}>
+          ⚖ Disputed — the Clubhouse owner will review and decide.
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 2 }}>
+          <CoinAmt amount={challenge.stake_coins} size="sm" />
+          <span style={{ ...MONO, fontSize: 8, color: 'var(--mute)' }}>frozen in escrow</span>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div style={{
+      background: 'var(--card)',
+      border: '1px solid rgba(26,111,168,.28)',
+      borderLeft: `3px solid ${challenge.proposed_by && !isProposer ? 'var(--gold)' : 'var(--accent)'}`,
+      borderRadius: 6, padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 9,
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+        <TypeBadge betType="freeform" />
+        <span style={{ ...MONO, fontSize: 8, color: 'var(--mute)' }}>vs {oppName ?? 'Opponent'}</span>
+        <span style={{ marginLeft: 'auto' }}><CoinAmt amount={challenge.stake_coins} size="sm" /></span>
+      </div>
+      <div style={{ fontSize: 13.5, color: 'var(--text)', fontWeight: 600, lineHeight: 1.4 }}>{challenge.question}</div>
+
+      {!challenge.proposed_by ? (
+        <>
+          <div style={{ ...MONO, fontSize: 9, color: 'var(--mute)' }}>Both staked · escrow held</div>
+          <button
+            onClick={() => onDeclare(challenge)}
+            disabled={loading}
+            style={{
+              padding: '9px 0', borderRadius: 6, border: '1.5px solid var(--accent)',
+              background: 'transparent', color: 'var(--accent)', cursor: loading ? 'not-allowed' : 'pointer',
+              ...MONO, fontSize: 8.5, letterSpacing: '.12em', textTransform: 'uppercase', fontWeight: 600,
+              opacity: loading ? 0.6 : 1,
+            }}
+          >Declare Result</button>
+        </>
+      ) : isProposer ? (
+        <div style={{ ...MONO, fontSize: 10, color: 'var(--mute)', lineHeight: 1.5 }}>
+          You declared <strong style={{ color: 'var(--text)' }}>{winnerLabel}</strong> — waiting for {oppName} to confirm or dispute.
+        </div>
+      ) : (
+        <>
+          <div style={{ fontSize: 12.5, color: 'var(--text2)', lineHeight: 1.5 }}>
+            <strong style={{ color: 'var(--text)' }}>{proposerName}</strong> declared: <strong style={{ color: 'var(--text)' }}>{winnerLabel}</strong>{challenge.proposed_winner_id == null ? '' : ' wins'}. Confirm to settle, or dispute if you disagree.
+          </div>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button
+              onClick={() => onConfirm(challenge.id)}
+              disabled={loading}
+              style={{
+                flex: 1, padding: '8px 0', borderRadius: 6, border: '1.5px solid var(--accent)',
+                background: 'transparent', color: 'var(--accent)', cursor: loading ? 'not-allowed' : 'pointer',
+                ...MONO, fontSize: 8.5, letterSpacing: '.12em', textTransform: 'uppercase', fontWeight: 600, opacity: loading ? 0.6 : 1,
+              }}
+            >Confirm</button>
+            <button
+              onClick={() => onDispute(challenge.id)}
+              disabled={loading}
+              style={{
+                flex: 1, padding: '8px 0', borderRadius: 6, border: '1.5px solid var(--neg)',
+                background: 'transparent', color: 'var(--neg)', cursor: loading ? 'not-allowed' : 'pointer',
+                ...MONO, fontSize: 8.5, letterSpacing: '.12em', textTransform: 'uppercase', fontWeight: 600, opacity: loading ? 0.6 : 1,
+              }}
+            >Dispute</button>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+// ── Declare Result drawer (S09) ────────────────────────────────────────────────
+function DeclareResultModal({ challenge, userId, onClose, onSubmit }) {
+  const oppName = challenge.challenger_id === userId ? challenge.opponent_username : challenge.challenger_username;
+  const [pick, setPick]           = useState(null); // 'me' | 'opponent' | 'push'
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError]         = useState(null);
+
+  async function handleSubmit() {
+    if (!pick) { setError('Choose an outcome'); return; }
+    const winnerId = pick === 'me' ? userId : pick === 'opponent'
+      ? (challenge.challenger_id === userId ? challenge.opponent_id : challenge.challenger_id)
+      : null;
+    setSubmitting(true); setError(null);
+    try { await onSubmit(winnerId); onClose(); }
+    catch (e) { setError(e.message); setSubmitting(false); }
+  }
+
+  return createPortal(
+    <div
+      style={{ position: 'fixed', inset: 0, zIndex: 200, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}
+      onClick={e => { if (e.target === e.currentTarget) onClose(); }}
+    >
+      <div style={{ position: 'fixed', inset: 0, background: 'rgba(18,24,32,.42)', zIndex: -1 }} onClick={onClose} />
+      <div style={{
+        width: '100%', maxWidth: 480, background: 'var(--card)',
+        border: '1px solid var(--rule)', borderTopLeftRadius: 12, borderTopRightRadius: 12,
+        padding: '22px 24px 18px', maxHeight: '90vh', overflowY: 'auto',
+      }}>
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 14 }}>
+          <div>
+            <div style={{ ...MONO, fontSize: 8, letterSpacing: '.16em', textTransform: 'uppercase', color: 'var(--mute)', marginBottom: 5 }}>Declare Result</div>
+            <div style={{ ...HEAD, fontSize: 19, color: 'var(--text)', lineHeight: 1.3 }}>{challenge.question}</div>
+          </div>
+          <button
+            onClick={onClose}
+            style={{ width: 30, height: 30, borderRadius: '50%', border: '1.5px solid var(--rule)', background: 'transparent', cursor: 'pointer', display: 'grid', placeItems: 'center', fontSize: 17, color: 'var(--text2)', flexShrink: 0 }}
+          >×</button>
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 14 }}>
+          <PickerRow selected={pick === 'me'} onClick={() => setPick('me')}>
+            <span style={{ flex: 1, fontSize: 13, color: 'var(--text)', fontWeight: 600 }}>You won</span>
+            <RadioDot selected={pick === 'me'} />
+          </PickerRow>
+          <PickerRow selected={pick === 'opponent'} onClick={() => setPick('opponent')}>
+            <span style={{ flex: 1, fontSize: 13, color: 'var(--text)', fontWeight: 600 }}>{oppName} won</span>
+            <RadioDot selected={pick === 'opponent'} />
+          </PickerRow>
+          <PickerRow selected={pick === 'push'} onClick={() => setPick('push')}>
+            <span style={{ flex: 1, fontSize: 13, color: 'var(--text)', fontWeight: 600 }}>Push — no winner</span>
+            <RadioDot selected={pick === 'push'} />
+          </PickerRow>
+        </div>
+
+        <div style={{ background: 'var(--gbg)', border: '1px solid rgba(184,114,14,.18)', borderRadius: 6, padding: '10px 12px', ...MONO, fontSize: 10, color: 'var(--gold)', lineHeight: 1.5, marginBottom: 14 }}>
+          ⚠ Real coins move once {oppName} confirms — choose carefully. If they disagree, the Clubhouse owner will settle it.
+        </div>
+
+        {error && <div style={{ ...MONO, fontSize: 11, color: 'var(--neg)', marginBottom: 12 }}>{error}</div>}
+
+        <button
+          onClick={handleSubmit} disabled={submitting || !pick}
+          style={{
+            width: '100%', padding: '12px', borderRadius: 6, border: 'none', cursor: (submitting || !pick) ? 'not-allowed' : 'pointer',
+            background: pick ? 'var(--accent)' : 'var(--elev)', color: pick ? '#fff' : 'var(--mute)',
+            ...MONO, fontSize: 9, letterSpacing: '.14em', textTransform: 'uppercase', fontWeight: 600,
+            opacity: submitting ? 0.7 : 1,
+          }}
+        >
+          {submitting ? 'Submitting…' : 'Declare Result'}
+        </button>
+      </div>
+    </div>,
+    document.body,
+  );
+}
+
+// ── Owner Arbitration drawer (S10) ─────────────────────────────────────────────
+function ArbitrationModal({ challenge, onClose, onSubmit }) {
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError]           = useState(null);
+  const proposerName = challenge.proposed_by === challenge.challenger_id ? challenge.challenger_username : challenge.opponent_username;
+  const proposedWinnerLabel = challenge.proposed_winner_id == null
+    ? 'a push'
+    : challenge.proposed_winner_id === challenge.challenger_id ? challenge.challenger_username : challenge.opponent_username;
+
+  async function handle(winnerId) {
+    setSubmitting(true); setError(null);
+    try { await onSubmit(winnerId); onClose(); }
+    catch (e) { setError(e.message); setSubmitting(false); }
+  }
+
+  return createPortal(
+    <div
+      style={{ position: 'fixed', inset: 0, zIndex: 200, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}
+      onClick={e => { if (e.target === e.currentTarget) onClose(); }}
+    >
+      <div style={{ position: 'fixed', inset: 0, background: 'rgba(18,24,32,.42)', zIndex: -1 }} onClick={onClose} />
+      <div style={{
+        width: '100%', maxWidth: 500, background: 'var(--card)',
+        border: '1px solid var(--rule)', borderTopLeftRadius: 12, borderTopRightRadius: 12,
+        padding: '22px 24px 18px', maxHeight: '90vh', overflowY: 'auto',
+      }}>
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 14 }}>
+          <div>
+            <div style={{ ...MONO, fontSize: 8, letterSpacing: '.16em', textTransform: 'uppercase', color: 'var(--purple)', marginBottom: 5 }}>⚖ Owner Arbitration</div>
+            <div style={{ ...HEAD, fontSize: 19, color: 'var(--text)', lineHeight: 1.3 }}>{challenge.question}</div>
+          </div>
+          <button
+            onClick={onClose}
+            style={{ width: 30, height: 30, borderRadius: '50%', border: '1.5px solid var(--rule)', background: 'transparent', cursor: 'pointer', display: 'grid', placeItems: 'center', fontSize: 17, color: 'var(--text2)', flexShrink: 0 }}
+          >×</button>
+        </div>
+
+        <div style={{ display: 'flex', gap: 10, marginBottom: 14 }}>
+          <div style={{ flex: 1, background: 'var(--elev)', border: '1px solid var(--rule)', borderRadius: 6, padding: '10px 12px' }}>
+            <div style={{ ...MONO, fontSize: 8, color: 'var(--mute)', marginBottom: 4 }}>CHALLENGER</div>
+            <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)' }}>{challenge.challenger_username}</div>
+          </div>
+          <div style={{ flex: 1, background: 'var(--elev)', border: '1px solid var(--rule)', borderRadius: 6, padding: '10px 12px' }}>
+            <div style={{ ...MONO, fontSize: 8, color: 'var(--mute)', marginBottom: 4 }}>OPPONENT</div>
+            <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)' }}>{challenge.opponent_username}</div>
+          </div>
+        </div>
+
+        <div style={{ background: 'rgba(140,73,201,.09)', border: '1px solid rgba(140,73,201,.32)', borderRadius: 6, padding: '10px 12px', fontSize: 12.5, color: 'var(--text2)', lineHeight: 1.5, marginBottom: 16 }}>
+          <strong style={{ color: 'var(--text)' }}>{proposerName}</strong> declared <strong style={{ color: 'var(--text)' }}>{proposedWinnerLabel}</strong>{challenge.proposed_winner_id == null ? '' : ' the winner'}, and the other party disputed it. Stakes (<strong style={{ color: 'var(--text)' }}>{challenge.stake_coins}</strong> coins each) are frozen in escrow until you decide.
+        </div>
+
+        {error && <div style={{ ...MONO, fontSize: 11, color: 'var(--neg)', marginBottom: 12 }}>{error}</div>}
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <button
+            onClick={() => handle(challenge.challenger_id)} disabled={submitting}
+            style={{ padding: '11px', borderRadius: 6, border: '1.5px solid var(--accent)', background: 'transparent', color: 'var(--accent)', cursor: submitting ? 'not-allowed' : 'pointer', ...MONO, fontSize: 9, letterSpacing: '.1em', textTransform: 'uppercase', fontWeight: 600, opacity: submitting ? 0.6 : 1 }}
+          >Award {challenge.challenger_username}</button>
+          <button
+            onClick={() => handle(challenge.opponent_id)} disabled={submitting}
+            style={{ padding: '11px', borderRadius: 6, border: '1.5px solid var(--accent)', background: 'transparent', color: 'var(--accent)', cursor: submitting ? 'not-allowed' : 'pointer', ...MONO, fontSize: 9, letterSpacing: '.1em', textTransform: 'uppercase', fontWeight: 600, opacity: submitting ? 0.6 : 1 }}
+          >Award {challenge.opponent_username}</button>
+          <button
+            onClick={() => handle(null)} disabled={submitting}
+            style={{ padding: '11px', borderRadius: 6, border: '1.5px solid var(--mute)', background: 'transparent', color: 'var(--mute)', cursor: submitting ? 'not-allowed' : 'pointer', ...MONO, fontSize: 9, letterSpacing: '.1em', textTransform: 'uppercase', fontWeight: 600, opacity: submitting ? 0.6 : 1 }}
+          >Void — return stakes</button>
+        </div>
+      </div>
+    </div>,
+    document.body,
+  );
+}
+
 // ── Settled / history item ────────────────────────────────────────────────────
 function HistoryItem({ challenge, userId }) {
   const won     = challenge.winner_id === userId;
@@ -268,12 +535,17 @@ function HistoryItem({ challenge, userId }) {
       padding: '10px 13px', display: 'flex', alignItems: 'center', gap: 12,
     }}>
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 2 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 2, flexWrap: 'wrap' }}>
           <span style={{ ...HEAD, fontSize: 13, color: 'var(--text)', letterSpacing: '-0.01em' }}>{label}</span>
-          <span style={{ ...MONO, fontSize: 8, color: 'var(--mute)' }}>vs {oppName} · {gwLabel(challenge.matchday_id)}</span>
+          <TypeBadge betType={challenge.bet_type} />
+          {challenge.bet_type !== 'freeform' && (
+            <span style={{ ...MONO, fontSize: 8, color: 'var(--mute)' }}>vs {oppName} · {gwLabel(challenge.matchday_id)}</span>
+          )}
         </div>
         <div style={{ ...MONO, fontSize: 8, color: 'var(--mute)', letterSpacing: '.04em' }}>
-          GW Total Battle{challenge.challenger_pts != null ? ` · ${challenge.challenger_pts}—${challenge.opponent_pts} pts` : ''}
+          {challenge.bet_type === 'freeform'
+            ? challenge.question
+            : `GW Total Battle${challenge.challenger_pts != null ? ` · ${challenge.challenger_pts}—${challenge.opponent_pts} pts` : ''}`}
         </div>
       </div>
       <div style={{ textAlign: 'right', flexShrink: 0 }}>
@@ -540,17 +812,20 @@ function CreateChallengeModal({ onClose, onCreate, wallet, circleId, circleName,
   const opponents = (members ?? []).filter(m => m.user_id !== currentUserId);
   const hasOpponents    = opponents.length > 0;
   const hasCompetitions = (footballLeagues ?? []).length > 0;
-  const blocked = !circleId || !hasOpponents || !hasCompetitions;
+  const blocked = !circleId || !hasOpponents;
 
+  const [betType, setBetType]       = useState(hasCompetitions ? 'gw_total' : 'freeform');
   const [opponentId, setOpponentId] = useState(null);
   const [leagueId, setLeagueId]     = useState(null);
   const [gw, setGw]                 = useState(null); // 'current' | 'next'
+  const [question, setQuestion]     = useState('');
   const [stakeCoins, setStakeCoins] = useState(100);
   const [message, setMessage]       = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError]           = useState(null);
 
-  const { current, next, loading: gwLoading } = useGameweekOptions(leagueId);
+  const isFreeform = betType === 'freeform';
+  const { current, next, loading: gwLoading } = useGameweekOptions(isFreeform ? null : leagueId);
   const matchdayId = gw === 'current' ? current?.matchday_id : gw === 'next' ? next?.matchday_id : null;
 
   const balance    = wallet?.balance ?? 0;
@@ -560,13 +835,23 @@ function CreateChallengeModal({ onClose, onCreate, wallet, circleId, circleName,
 
   async function handleSubmit() {
     if (!opponentId) { setError('Pick an opponent'); return; }
-    if (!leagueId)   { setError('Pick a competition'); return; }
-    if (!matchdayId) { setError('Pick a gameweek'); return; }
+    if (isFreeform) {
+      if (!question.trim()) { setError('Describe what you’re betting on'); return; }
+      if (question.trim().length > 140) { setError('Question is too long'); return; }
+    } else {
+      if (!leagueId)   { setError('Pick a competition'); return; }
+      if (!matchdayId) { setError('Pick a gameweek'); return; }
+    }
     if (stakeCoins < 10) { setError('Minimum stake is 10 coins'); return; }
     if (overBudget)  { setError('Insufficient balance'); return; }
     setSubmitting(true); setError(null);
     try {
-      await onCreate({ circleId, betType: 'gw_total', opponentId, leagueId, matchdayId, stakeCoins, message: message || null });
+      await onCreate({
+        circleId, betType, opponentId, stakeCoins, message: message || null,
+        leagueId: isFreeform ? null : leagueId,
+        matchdayId: isFreeform ? null : matchdayId,
+        question: isFreeform ? question.trim() : null,
+      });
       onClose();
     } catch (e) {
       const friendly = {
@@ -579,6 +864,9 @@ function CreateChallengeModal({ onClose, onCreate, wallet, circleId, circleName,
         NOT_LEAGUE_MEMBER:          'You are not a member of that league',
         OPPONENT_NOT_MEMBER:        'That member is not in that league',
         INSUFFICIENT_BALANCE:       'Insufficient coins',
+        BET_TYPE_NOT_SUPPORTED:     'That bet type is not available yet',
+        QUESTION_REQUIRED:          'Describe what you’re betting on',
+        QUESTION_TOO_LONG:          'Question is too long (140 chars max)',
       }[e.message] ?? e.message;
       setError(friendly);
     }
@@ -600,7 +888,7 @@ function CreateChallengeModal({ onClose, onCreate, wallet, circleId, circleName,
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 18 }}>
           <div>
             <div style={{ ...MONO, fontSize: 8, letterSpacing: '.16em', textTransform: 'uppercase', color: 'var(--mute)', marginBottom: 5 }}>New Challenge</div>
-            <div style={{ ...HEAD, fontSize: 20, color: 'var(--text)' }}>Send a GW Total Bet</div>
+            <div style={{ ...HEAD, fontSize: 20, color: 'var(--text)' }}>{isFreeform ? 'Send a Freeform Bet' : 'Send a GW Total Bet'}</div>
           </div>
           <button
             onClick={onClose}
@@ -615,24 +903,50 @@ function CreateChallengeModal({ onClose, onCreate, wallet, circleId, circleName,
                 <div style={{ ...HEAD, fontSize: 16, color: 'var(--text)', marginBottom: 8 }}>No Clubhouse selected</div>
                 <div style={{ fontSize: 13, color: 'var(--text2)', lineHeight: 1.5 }}>Join or create a Clubhouse before starting a challenge.</div>
               </>
-            ) : !hasOpponents ? (
+            ) : (
               <>
                 <div style={{ ...HEAD, fontSize: 16, color: 'var(--text)', marginBottom: 8 }}>Nobody to challenge yet</div>
                 <div style={{ fontSize: 13, color: 'var(--text2)', lineHeight: 1.5 }}>
                   Invite more managers to {circleName ?? 'this Clubhouse'} before you can send a challenge.
                 </div>
               </>
-            ) : (
-              <>
-                <div style={{ ...HEAD, fontSize: 16, color: 'var(--text)', marginBottom: 8 }}>No competitions yet</div>
-                <div style={{ fontSize: 13, color: 'var(--text2)', lineHeight: 1.5 }}>
-                  Link a football league to this Clubhouse in Settings to start Competitor challenges.
-                </div>
-              </>
             )}
           </div>
         ) : (
           <>
+            {/* Bet-type picker */}
+            <div style={{ marginBottom: 14 }}>
+              <span style={{ ...MONO, fontSize: 9, letterSpacing: '.12em', textTransform: 'uppercase', color: 'var(--mute)', display: 'block', marginBottom: 6 }}>Bet Type</span>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <button
+                  onClick={() => hasCompetitions && setBetType('gw_total')}
+                  disabled={!hasCompetitions}
+                  style={{
+                    flex: 1, textAlign: 'left', padding: '10px 12px', borderRadius: 8, cursor: hasCompetitions ? 'pointer' : 'not-allowed',
+                    background: betType === 'gw_total' ? 'var(--gbg)' : 'var(--elev)',
+                    border: `2px solid ${betType === 'gw_total' ? 'var(--gold)' : 'var(--rule)'}`,
+                    opacity: hasCompetitions ? 1 : 0.5,
+                  }}
+                >
+                  <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)', marginBottom: 2 }}>🏆 Competitor</div>
+                  <div style={{ ...MONO, fontSize: 9, color: 'var(--mute)' }}>
+                    {hasCompetitions ? 'Auto-resolved GW total' : 'No competitions linked'}
+                  </div>
+                </button>
+                <button
+                  onClick={() => setBetType('freeform')}
+                  style={{
+                    flex: 1, textAlign: 'left', padding: '10px 12px', borderRadius: 8, cursor: 'pointer',
+                    background: isFreeform ? 'var(--abg)' : 'var(--elev)',
+                    border: `2px solid ${isFreeform ? 'var(--accent)' : 'var(--rule)'}`,
+                  }}
+                >
+                  <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)', marginBottom: 2 }}>💬 Freeform</div>
+                  <div style={{ ...MONO, fontSize: 9, color: 'var(--mute)' }}>Settle by agreement</div>
+                </button>
+              </div>
+            </div>
+
             {/* Opponent picker */}
             <div style={{ marginBottom: 14 }}>
               <span style={{ ...MONO, fontSize: 9, letterSpacing: '.12em', textTransform: 'uppercase', color: 'var(--mute)', display: 'block', marginBottom: 6 }}>Opponent</span>
@@ -647,31 +961,48 @@ function CreateChallengeModal({ onClose, onCreate, wallet, circleId, circleName,
               </div>
             </div>
 
-            {/* Competition picker */}
-            <div style={{ marginBottom: 14 }}>
-              <span style={{ ...MONO, fontSize: 9, letterSpacing: '.12em', textTransform: 'uppercase', color: 'var(--mute)', display: 'block', marginBottom: 6 }}>Competition</span>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                {footballLeagues.map(l => (
-                  <Chip key={l.id} selected={leagueId === l.id} onClick={() => { setLeagueId(l.id); setGw(null); }}>{l.name}</Chip>
-                ))}
-              </div>
-            </div>
+            {isFreeform ? (
+              /* Question field */
+              <label style={{ display: 'block', marginBottom: 14 }}>
+                <span style={{ ...MONO, fontSize: 9, letterSpacing: '.12em', textTransform: 'uppercase', color: 'var(--mute)', display: 'block', marginBottom: 6 }}>
+                  What are you betting on? (<span style={{ color: question.length > 140 ? 'var(--neg)' : 'var(--mute)' }}>{140 - question.length}</span> chars)
+                </span>
+                <textarea
+                  maxLength={140} value={question} onChange={e => setQuestion(e.target.value)}
+                  placeholder="Will it rain at kickoff for Saturday's derby?"
+                  rows={2}
+                  style={{ width: '100%', boxSizing: 'border-box', padding: '10px 12px', borderRadius: 6, background: 'var(--elev)', border: '1px solid var(--rule)', color: 'var(--text)', ...BODY, fontSize: 13, resize: 'none', fontFamily: 'inherit' }}
+                />
+              </label>
+            ) : (
+              <>
+                {/* Competition picker */}
+                <div style={{ marginBottom: 14 }}>
+                  <span style={{ ...MONO, fontSize: 9, letterSpacing: '.12em', textTransform: 'uppercase', color: 'var(--mute)', display: 'block', marginBottom: 6 }}>Competition</span>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                    {footballLeagues.map(l => (
+                      <Chip key={l.id} selected={leagueId === l.id} onClick={() => { setLeagueId(l.id); setGw(null); }}>{l.name}</Chip>
+                    ))}
+                  </div>
+                </div>
 
-            {/* Gameweek picker */}
-            {leagueId && (
-              <div style={{ marginBottom: 14 }}>
-                <span style={{ ...MONO, fontSize: 9, letterSpacing: '.12em', textTransform: 'uppercase', color: 'var(--mute)', display: 'block', marginBottom: 6 }}>Gameweek</span>
-                {gwLoading ? (
-                  <div style={{ ...MONO, fontSize: 11, color: 'var(--mute)' }}>Loading…</div>
-                ) : !current && !next ? (
-                  <div style={{ ...MONO, fontSize: 11, color: 'var(--mute)' }}>No upcoming gameweeks found.</div>
-                ) : (
-                  <div style={{ display: 'flex', gap: 8 }}>
-                    {current && <Chip selected={gw === 'current'} onClick={() => setGw('current')}>Current · {gwLabel(current.matchday_id)}</Chip>}
-                    {next    && <Chip selected={gw === 'next'}    onClick={() => setGw('next')}>Next · {gwLabel(next.matchday_id)}</Chip>}
+                {/* Gameweek picker */}
+                {leagueId && (
+                  <div style={{ marginBottom: 14 }}>
+                    <span style={{ ...MONO, fontSize: 9, letterSpacing: '.12em', textTransform: 'uppercase', color: 'var(--mute)', display: 'block', marginBottom: 6 }}>Gameweek</span>
+                    {gwLoading ? (
+                      <div style={{ ...MONO, fontSize: 11, color: 'var(--mute)' }}>Loading…</div>
+                    ) : !current && !next ? (
+                      <div style={{ ...MONO, fontSize: 11, color: 'var(--mute)' }}>No upcoming gameweeks found.</div>
+                    ) : (
+                      <div style={{ display: 'flex', gap: 8 }}>
+                        {current && <Chip selected={gw === 'current'} onClick={() => setGw('current')}>Current · {gwLabel(current.matchday_id)}</Chip>}
+                        {next    && <Chip selected={gw === 'next'}    onClick={() => setGw('next')}>Next · {gwLabel(next.matchday_id)}</Chip>}
+                      </div>
+                    )}
                   </div>
                 )}
-              </div>
+              </>
             )}
 
             {/* Stake */}
@@ -825,7 +1156,7 @@ function SidebarContent({ balance, escrow, netWL, history, userId, onNewChalleng
         <div style={{ padding: '13px 14px' }}>
           <div style={{ ...HEAD, fontSize: 12.5, letterSpacing: '-0.01em', marginBottom: 6 }}>How Challenges work</div>
           <div style={{ fontSize: 12, color: 'var(--text2)', lineHeight: 1.55 }}>
-            Challenge any league manager to a GW Total bet. Both stake coins — winner takes 95%, 5% rake burned.
+            Challenge any Clubhouse member to a Competitor (auto-resolved GW Total) or Freeform (settle-by-agreement) bet. Both stake coins — winner takes 95%, 5% rake burned.
           </div>
           <div style={{ marginTop: 9, ...MONO, fontSize: 8, color: 'var(--mute)', letterSpacing: '.04em' }}>Stakes held in escrow until result</div>
         </div>
@@ -841,14 +1172,22 @@ export default function ChallengeScreen() {
   const { wallet, loading: walletLoading } = useWallet(user?.id);
   const { activeCircleId, activeCircle, members, competitions } = useClubhouseContext();
   const {
-    incoming, outgoing, active, history, loading,
+    incoming, outgoing, active, disputed, history, loading,
     createChallenge, acceptChallenge, declineChallenge, cancelChallenge,
+    declareResult, confirmResult, disputeResult, arbitrateResult,
   } = useChallenges(user?.id, activeCircleId);
 
   const [outerTab, setOuterTab] = useState('challenges');
   const [showCreate, setShowCreate] = useState(false);
   const [actionLoading, setAction]  = useState(false);
   const [toast, setToast]           = useState(null);
+  const [declaringChallenge, setDeclaringChallenge]     = useState(null);
+  const [arbitratingChallenge, setArbitratingChallenge] = useState(null);
+
+  const isOwner = activeCircle?.role === 'owner';
+  const myDisputed    = disputed.filter(c => c.challenger_id === user?.id || c.opponent_id === user?.id);
+  const ownerDisputed = isOwner ? disputed.filter(c => c.challenger_id !== user?.id && c.opponent_id !== user?.id) : [];
+  const liveChallenges = [...active, ...myDisputed];
 
   const showToast = useCallback((msg, isError = false) => {
     setToast({ msg, isError });
@@ -874,6 +1213,30 @@ export default function ChallengeScreen() {
     try { await cancelChallenge(id); showToast('Challenge cancelled — coins returned.'); }
     catch (e) { showToast(e.message, true); }
     setAction(false);
+  }
+
+  async function handleDeclareSubmit(winnerId) {
+    await declareResult(declaringChallenge.id, winnerId);
+    showToast('Result declared — waiting for confirmation.');
+  }
+
+  async function handleConfirm(id) {
+    setAction(true);
+    try { await confirmResult(id); showToast('Confirmed — coins settled!'); }
+    catch (e) { showToast(e.message, true); }
+    setAction(false);
+  }
+
+  async function handleDispute(id) {
+    setAction(true);
+    try { await disputeResult(id); showToast('Disputed — the Clubhouse owner has been notified.'); }
+    catch (e) { showToast(e.message, true); }
+    setAction(false);
+  }
+
+  async function handleArbitrateSubmit(winnerId) {
+    await arbitrateResult(arbitratingChallenge.id, winnerId);
+    showToast(winnerId ? 'Arbitrated — coins settled.' : 'Voided — both stakes returned.');
   }
 
   const balance  = wallet?.balance  ?? 0;
@@ -1050,17 +1413,55 @@ export default function ChallengeScreen() {
                   </span>
                   <span style={{ ...MONO, fontSize: 8.5, letterSpacing: '.16em', textTransform: 'uppercase', color: 'var(--mute)' }}>Active</span>
                 </div>
-                {active.length === 0 ? (
+                {liveChallenges.length === 0 ? (
                   <div style={{ background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 6, padding: '16px', ...MONO, fontSize: 11, color: 'var(--mute)', textAlign: 'center' }}>
                     No live challenges.
                   </div>
                 ) : (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                    {active.map(c => <LiveCard key={c.id} challenge={c} userId={user?.id} />)}
+                    {liveChallenges.map(c => (
+                      <LiveCard
+                        key={c.id} challenge={c} userId={user?.id}
+                        onDeclare={setDeclaringChallenge} onConfirm={handleConfirm} onDispute={handleDispute}
+                        loading={actionLoading}
+                      />
+                    ))}
                   </div>
                 )}
               </div>
             </div>
+
+            {/* Owner arbitration — disputed freeform bets between other members */}
+            {isOwner && ownerDisputed.length > 0 && (
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+                  <div style={{ ...MONO, fontSize: 8.5, letterSpacing: '.16em', textTransform: 'uppercase', color: 'var(--purple)' }}>⚖ Arbitration needed</div>
+                  <span style={{
+                    background: 'rgba(140,73,201,.12)', color: 'var(--purple)',
+                    ...MONO, fontSize: 8.5, letterSpacing: '.06em', padding: '1px 8px',
+                    borderRadius: 100, fontWeight: 600,
+                  }}>{ownerDisputed.length}</span>
+                </div>
+                <div style={{ background: 'rgba(140,73,201,.06)', border: '1px solid rgba(140,73,201,.24)', borderRadius: 6, padding: '13px 14px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  {ownerDisputed.map(c => (
+                    <div key={c.id} style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 6, padding: '10px 12px' }}>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: 12.5, fontWeight: 600, color: 'var(--text)', marginBottom: 3 }}>{c.question}</div>
+                        <div style={{ ...MONO, fontSize: 9, color: 'var(--mute)' }}>{c.challenger_username} vs {c.opponent_username} · <CoinAmt amount={c.stake_coins} size="sm" /></div>
+                      </div>
+                      <button
+                        onClick={() => setArbitratingChallenge(c)}
+                        style={{
+                          flexShrink: 0, padding: '8px 12px', borderRadius: 6, border: '1.5px solid var(--purple)',
+                          background: 'transparent', color: 'var(--purple)', cursor: 'pointer',
+                          ...MONO, fontSize: 8.5, letterSpacing: '.1em', textTransform: 'uppercase', fontWeight: 600,
+                        }}
+                      >Review</button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* Settled history */}
             {history.length > 0 && (
@@ -1114,6 +1515,25 @@ export default function ChallengeScreen() {
           currentUserId={user?.id}
           members={members}
           footballLeagues={competitions.football}
+        />
+      )}
+
+      {/* Declare Result modal */}
+      {declaringChallenge && (
+        <DeclareResultModal
+          challenge={declaringChallenge}
+          userId={user?.id}
+          onClose={() => setDeclaringChallenge(null)}
+          onSubmit={handleDeclareSubmit}
+        />
+      )}
+
+      {/* Owner Arbitration modal */}
+      {arbitratingChallenge && (
+        <ArbitrationModal
+          challenge={arbitratingChallenge}
+          onClose={() => setArbitratingChallenge(null)}
+          onSubmit={handleArbitrateSubmit}
         />
       )}
     </div>
