@@ -61,7 +61,7 @@ export function useClubhouse() {
       supabase.rpc('get_circle_feed', { p_circle_id: circleId, p_limit: 30 }),
       supabase
         .from('circle_members')
-        .select('user_id, role, users(username)')
+        .select('user_id, role, joined_at, users(username)')
         .eq('circle_id', circleId),
       supabase
         .from('clubhouse_notifications')
@@ -79,6 +79,7 @@ export function useClubhouse() {
           user_id: row.user_id,
           role: row.role,
           username: row.users?.username ?? '?',
+          joined_at: row.joined_at,
         }))
       );
     }
