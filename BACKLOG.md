@@ -1,6 +1,6 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-07-23 (v2/main sync ahead of cutover; latest main fix: goals_conceded penalty appearance-gate, PR #731)  
+**Last Updated**: 2026-07-25 (Coin Challenges Redesign PRs A/B/C — circle-scoped P2P challenges, PRs #760–#762)  
 **E2E Test Suite**: full `e2e/` suite passing on v2 ✅ — 262 passed / 33 conditionally-skipped, 2026-07-17; `platform.spec.js` (36 tests × 2 browsers) passing in CI ✅
 **Full Playbook Run**: `E2E_TEST_PLAYBOOK.md` v2.0 — all flows confirmed  
 **🟢 LAUNCH READY**: No critical (P0/P1) bugs open. All game mechanics functional. WC kick-off 2026-06-11.  
@@ -9,6 +9,16 @@
 **Supabase PostgREST max_rows**: 10,000 (raised from default 1,000 — 2026-06-08)
 
 ---
+
+## ✅ Coin Challenges Redesign — circle-scoped P2P challenges (2026-07-25) — PRs #760–#762, migrations 235–238
+
+Part of the last unbuilt `design_v2` redesign module (see [`docs/platform_revision/design_v2/README.md`](docs/platform_revision/design_v2/README.md)). Extends P2P Coin Challenges from single-football-league scope to Clubhouse (circle) scope. Freeform prop bets (PR D) still to come.
+
+- **PR A (#760, migration 235):** Fixed a live double-refund bug — `decline_p2p_challenge`/`cancel_p2p_challenge`/`expire_stale_challenges` each called `release_escrow()` (which logs its own refund) and then *also* called `credit_coins(..., 'refund', ...)`, double-crediting the challenger's stake on every decline/cancel/expiry.
+- **PR B (#761, migration 236):** Additive schema — `p2p_challenges` gained `circle_id`/`paddock_id`/`player_box_id`, backfilled from `leagues.circle_id`, `league_id` made nullable, SELECT RLS rewritten onto `is_circle_member(circle_id)`.
+- **PR C (#762, migrations 237–238):** `create_p2p_challenge`/`get_my_challenges` rewritten to be circle-scoped (`p_circle_id`/`p_bet_type` replace single-league params). Shipped with matching frontend (`useChallenges.js`, `ChallengeScreen.jsx` now circle-aware via `useClubhouseContext()`) — **this also fixes a live bug** where `ChallengeScreen.jsx` hardcoded `leagueId={null}`, meaning challenge creation had been silently failing every time in prod. `CreateChallengeModal` rewritten with a real member picker, competition/gameweek chip pickers, and expanded error copy. Migration 238 fixes an over-broad `anon` grant found in 237 mid-session (`REVOKE ALL ... FROM PUBLIC` doesn't revoke Supabase's automatic per-role grants) — closed before any exploit occurred.
+- **Known pre-existing gaps, not introduced by this work:** `SquadScreen › shows budget in header` E2E test fails on both browsers (confirmed pre-existing via git stash test); CI `Security` (npm audit) failing as it has on the last several merges to main (dependency vulnerabilities, unrelated). Manual browser verification wasn't possible this session (app requires auth, local Supabase unreachable — Docker unavailable).
+- **Remaining:** PR D — freeform bets (migration 239, new RPCs for declare/confirm/dispute/arbitrate lifecycle, frontend for design screens S02/S05/S08–S10).
 
 ## ✅ goals_conceded penalty applied to unused substitutes (2026-07-19) — PR #731
 
