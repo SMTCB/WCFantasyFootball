@@ -1,10 +1,10 @@
 # Platform Revision — Central Tracker
 
-**Read this at the start of every v2 session. Everything that is open, pending, or blocked lives here.**
+**Read this at the start of any platform-revision session. Everything that is open, pending, or blocked lives here.**
 
 > **Goal:** ship a multi-sport platform (Football + F1 + Tennis + P2P betting) that can be presented to a buyer with all features implemented — not on a roadmap. Target buyout score: **8/10**.
 >
-> **Branch:** `v2` — not deployed until Week 12. Live pilot runs on `main` and is completely untouched.
+> **Branch:** `main` — the only branch. The `v2` branch this document describes throughout its history was merged into `main` via the cutover (PR #742, commit `f229b70`, 2026-07-24) and deleted 2026-07-25. All references to `v2` below are historical — accurate as of when each session note was written, not a description of current repo state. See [CUTOVER_PLAN.md](CUTOVER_PLAN.md) for the full cutover record.
 >
 > **Detailed sprint history (archived):** [SALE_READY_PROJECT_PLAN.md](../../docs/archive/session-audits/SALE_READY_PROJECT_PLAN.md) — read-only historical record of all sprint notes, architecture decisions, and task breakdowns. **This file is no longer updated.** All open activities live in this TRACKER.
 
@@ -85,7 +85,7 @@ The [Phase 3B Pre-Merge Checklist](#phase-3b-pre-merge-checklist) merges v2 → 
 | **1E** | Clubhouse social architecture (channels, DMs, frontpage, inbox) | ✅ Done | Sprints CH-0 through CH-9 (PRs #607–#615) |
 | **2** | Tennis Module (Player's Box, roster picks, Ace Cards, ATP Finals) | ✅ Done | Sprints T-0 through T-4 (PRs #617–#620, #625) |
 | **3A** | Buyout hygiene batch 2 (provider adapter, containerisation, envs) | ✅ Done | PRs #634–#636 |
-| **3B** | v2 integration & deploy | 🔄 In progress — paused | **v2→main merge DONE 2026-07-24, commit `f229b70`.** Edge Functions deployed (Task #9 done). Phase 3 smoke tests started but **deliberately paused** 2026-07-24 (user: pilot is over, no active competition, nothing for users to do — no urgency to reopen). Maintenance wall (`MAINTENANCE_MODE=true`) **stays up intentionally** across the session boundary — confirmed still returning 503 as of 2026-07-24. Migration 217 **deliberately left unapplied** — no stability-window clock has started. Next v2 session's focus shifts to the Clubhouse-scoped screen redesign (Claude Design output) before Phase 3/4 resume. |
+| **3B** | v2 integration & deploy | 🔄 In progress — paused | **v2→main merge DONE 2026-07-24, commit `f229b70`.** Edge Functions deployed (Task #9 done). Phase 3 smoke tests started but **deliberately paused** 2026-07-24 (user: pilot is over, no active competition, nothing for users to do — no urgency to reopen). Maintenance wall (`MAINTENANCE_MODE=true`) **stays up intentionally** across the session boundary — confirmed still returning 503 as of 2026-07-24. Migration 217 **deliberately left unapplied** — no stability-window clock has started. The `v2` branch itself was deleted 2026-07-25 (repo is single-branch `main` since). Focus shifted to the Clubhouse-scoped screen redesign (Claude Design output): Home Redesign done pre-cutover, F1 + Tennis Redesigns shipped 2026-07-25 ([PR #758](https://github.com/SMTCB/WCFantasyFootball/pull/758)); Coin Challenges Redesign is the one module left, see [`design_v2/README.md`](design_v2/README.md). Phase 3/4 resume still awaits explicit user go-ahead. |
 | **R** | Clubhouse-Centric Redesign (IA/UX) | ✅ Done — Phase D closed | Phase A PR #671, Phase B PR #675, Phase C PR #676, Phase D PR #677. Migration 217 deferred (blocked by live pilot). Design: [CLUBHOUSE_CENTRIC_REDESIGN.md](architecture/CLUBHOUSE_CENTRIC_REDESIGN.md). See [workstream](#clubhouse-centric-redesign-workstream) below. |
 | **M** | Mobile-First Redesign (sub-`lg` UX) | ✅ Done — all phases complete | M0 (PRs #682–684), M1 (PRs #685–686), M2 (PR #687), M3 (PR #688), M4 (PR #689). Design: [MOBILE_FIRST_REDESIGN.md](architecture/MOBILE_FIRST_REDESIGN.md). See [workstream](#mobile-first-redesign-workstream) below. |
 
@@ -417,11 +417,11 @@ These require a human decision before the relevant sprint can continue.
 
 | Module | Screens | Hooks | DB (migrations) | Edge Functions | Status |
 |--------|---------|-------|----------------|----------------|--------|
-| **Football** | 11 screens | 10 hooks | 191 migrations (main) | `calculate-scores`, `process-transfer`, `process-trade`, `update-player-status`, `handle-chat-notifications`, `generate-frontpage-edition` | ✅ Live on main |
-| **Clubhouse** | `ClubhouseScreen` + tabs | `useClubhouse`, `useClubhouseChat`, `useDirectMessages`, `useClubhouseFrontpage` | Migrations 188, 193–196 (v2) | `generate-frontpage-edition` (extended) | ✅ v2 only |
-| **P2P Betting** | `WalletScreen`, `ChallengeScreen` | `useWallet`, `useChallenges` | Migrations 202–207 (v2) | `purchase-coins`, `resolve-p2p-challenges` | ✅ v2 only — Stripe plug-in ready |
-| **F1** | 7 screens | `usePaddock`, `useF1Bets`, `useF1Standings` | Migrations 190–192 (v2) | `score-f1-race` | ✅ v2 only — deploy pending |
-| **Tennis** | 7 screens | `usePlayerBox`, `useTennisCalendar`, `useTennisTournament`, `useTennisLeaderboard`, `useAtpFinalsPicks` | Migrations 197–201 (v2) | `score-tennis-tournament`, `score-atp-finals`, `sync-tennis-players` | ✅ v2 only — deploy pending |
+| **Football** | 11 screens | 10 hooks | 191+ migrations | `calculate-scores`, `process-transfer`, `process-trade`, `update-player-status`, `handle-chat-notifications`, `generate-frontpage-edition` | ✅ Live on `main`; Home Redesign (Kit Light) shipped |
+| **Clubhouse** | `ClubhouseScreen` + tabs | `useClubhouse`, `useClubhouseChat`, `useDirectMessages`, `useClubhouseFrontpage` | Migrations 188, 193–196 | `generate-frontpage-edition` (extended) | ✅ Live on `main` (merged at cutover) |
+| **P2P Betting** | `WalletScreen`, `ChallengeScreen` | `useWallet`, `useChallenges` | Migrations 202–207 | `purchase-coins`, `resolve-p2p-challenges` | ✅ Live on `main` (merged at cutover) — Stripe plug-in ready; **Coin Challenges Redesign (S01–S10) not yet implemented**, see [`design_v2/README.md`](design_v2/README.md) |
+| **F1** | 7 screens | `usePaddock`, `useF1Bets`, `useF1Standings` | Migrations 190–192 | `score-f1-race` | ✅ Live on `main` — Redesign (F1-01–F1-07) shipped [PR #758](https://github.com/SMTCB/WCFantasyFootball/pull/758) 2026-07-25 |
+| **Tennis** | 7 screens | `usePlayerBox`, `useTennisCalendar`, `useTennisTournament`, `useTennisLeaderboard`, `useAtpFinalsPicks` | Migrations 197–201 | `score-tennis-tournament`, `score-atp-finals`, `sync-tennis-players` | ✅ Live on `main` — Redesign (T-01–T-07) shipped [PR #758](https://github.com/SMTCB/WCFantasyFootball/pull/758) 2026-07-25 |
 
 ---
 
@@ -444,7 +444,7 @@ These require a human decision before the relevant sprint can continue.
 | F1 module — full spec + data migration notes | [F1_MODULE_IMPLEMENTATION_PLAN.md](modules/F1_MODULE_IMPLEMENTATION_PLAN.md) |
 | Tennis module — full spec (authoritative) | [TENNIS_MODULE_IMPLEMENTATION_PLAN.md](modules/TENNIS_MODULE_IMPLEMENTATION_PLAN.md) |
 | Design system tokens + screen handoffs | [design/](design/) |
-| v2 branch rules (what must NOT merge) | [V2_BRANCH_PROTECTION.md](architecture/V2_BRANCH_PROTECTION.md) |
+| ⚠️ OBSOLETE — v2 branch protection rules (v2 branch deleted 2026-07-25) | [V2_BRANCH_PROTECTION.md](architecture/V2_BRANCH_PROTECTION.md) |
 | Claude Code session instructions | [CLAUDE.md](../../CLAUDE.md) |
 | Football pilot session log (completed PRs, bugs) | [BACKLOG.md](../../BACKLOG.md) |
 

@@ -4,6 +4,11 @@
 
 ---
 
+> ## ⚠️ OBSOLETE — kept for historical record only
+> The `v2` branch this document describes was merged into `main` via the cutover (PR #742, commit `f229b70`, 2026-07-24) and **deleted 2026-07-25**. The repo is single-branch (`main` only) again — every protection mechanism below that references a separate `v2` branch (pre-push hook prompt, "when v2→main merge is approved" section, monitoring script) no longer applies. See [CUTOVER_PLAN.md](../CUTOVER_PLAN.md) for what actually happened. Do not follow the instructions below as current guidance.
+
+---
+
 ## 🚨 CRITICAL RULE
 
 **v2 and main must NEVER merge without explicit written approval.**

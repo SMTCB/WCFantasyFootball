@@ -14,16 +14,16 @@ Each `design_v2` module folder also carries a copy of its original brief for ref
 
 The product is being renamed **Frontrow** — *"Your seat to all the action."* This surfaced through the Home Redesign brief/output, not through a prior product decision recorded elsewhere. Replace the FantasyKit wordmark/logo across the app shell with the Frontrow logo system (`logo/`). The in-app gazette feature name, "The FrontRow," is a separate, pre-existing feature name kept as-is — an intentional naming collision, not the same thing as the platform rebrand.
 
-## Status: all four core modules are design-complete
+## Status: design-complete for all four; three of four implemented in React
 
-| Module | Folder | Screens | Notes |
-|---|---|---|---|
-| Clubhouse Home + global chrome | `Home Redesign/` | S-01–S-08 | Merges Home/Recap/Chat into one persistent-rail layout; sidebar, top bar, Members, Chat, The FrontRow gazette, New Competition, Notifications |
-| Coin Challenges (P2P) | `Coin Challenges Redesign/` | S01–S10 | Extends P2P bets to Clubhouse scope + adds Freeform prop bets (declare → confirm/dispute → owner-arbitrates lifecycle) |
-| F1 module | `F1 Redesign/` | F1-01–F1-07 (+F1-02b variants) | UI/layout only, no scoring changes; gives F1 a consistent red identity without colliding with semantic correct/incorrect colors |
-| Tennis module | `Tennis Redesign/` | T-01–T-06 | Tiered roster picks, QF Captain window, Ace Cards, season leaderboard with Masters drop rule |
+| Module | Folder | Screens | Notes | Implementation |
+|---|---|---|---|---|
+| Clubhouse Home + global chrome | `Home Redesign/` | S-01–S-08 | Merges Home/Recap/Chat into one persistent-rail layout; sidebar, top bar, Members, Chat, The FrontRow gazette, New Competition, Notifications | ✅ **Implemented** — merged to `main` (multiple PRs, see BACKLOG.md) |
+| F1 module | `F1 Redesign/` | F1-01–F1-07 (+F1-02b variants) | UI/layout only, no scoring changes; gives F1 a consistent red identity without colliding with semantic correct/incorrect colors | ✅ **Implemented** — PR [#758](https://github.com/SMTCB/WCFantasyFootball/pull/758), merged to `main` 2026-07-25 |
+| Tennis module | `Tennis Redesign/` | T-01–T-06 | Tiered roster picks, QF Captain window, Ace Cards, season leaderboard with Masters drop rule | ✅ **Implemented** — PR [#758](https://github.com/SMTCB/WCFantasyFootball/pull/758), merged to `main` 2026-07-25 |
+| Coin Challenges (P2P) | `Coin Challenges Redesign/` | S01–S10 | Extends P2P bets to Clubhouse scope + adds Freeform prop bets (declare → confirm/dispute → owner-arbitrates lifecycle) | ⬜ **Not started** — next module to build |
 
-Every module is built against the same reconciled **Kit Light** token set (see below) — nothing here is a competing design language, and none of the four should be re-briefed before implementation.
+Every module is built against the same reconciled **Kit Light** token set (see below) — nothing here is a competing design language.
 
 ## Logo system
 
@@ -49,7 +49,9 @@ Typography: **Archivo Black** (display/headlines/wordmark), **Archivo** (body/UI
 
 ## What's next
 
-Per [`TRACKER.md`](../TRACKER.md), the next v2 session's stated focus is implementing these designs into the React codebase — not resuming Phase 3/4 of the cutover (maintenance wall and migration 217 stay untouched until the user explicitly says otherwise). Suggested order: **Home Redesign first** (it's the global chrome everything else sits inside — sidebar, top bar, Clubhouse switcher), then the three module screens can land independently in any order.
+**Coin Challenges Redesign (S01–S10) is the only module left to implement.** Start a fresh session pointed at [`Coin Challenges Redesign/README.md`](Coin%20Challenges%20Redesign/README.md) — same handoff format as the F1/Tennis briefs that were just implemented (mockup HTML + screen-by-screen spec + design tokens). Also read [`Coin Challenges Redesign/README_COIN.md`](Coin%20Challenges%20Redesign/README_COIN.md) (the original product brief) and [`../architecture/P2P_BETTING_CLUBHOUSE_SCOPE_TECH_SPEC.md`](../architecture/P2P_BETTING_CLUBHOUSE_SCOPE_TECH_SPEC.md) (the engineering companion — target schema, RLS rewrite, and three proposed migrations 235–237, none written yet). This work restyles/extends `ChallengeScreen.jsx` and friends the same way the F1/Tennis sessions restyled their existing screens — reuse real components (`IncomingCard`, `OpenCard`, `ActiveCard`, `SettledCard`), don't copy the mockup markup.
+
+This repo is single-branch (`main` only, since the 2026-07-24 cutover) — branch from `main`, PR back into `main`, same as every other session.
 
 ---
-Last Updated: 2026-07-24
+Last Updated: 2026-07-25
