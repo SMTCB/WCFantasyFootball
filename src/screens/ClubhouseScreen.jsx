@@ -30,101 +30,111 @@ function timeAgo(isoString) {
 
 // ── Empty / no-circles state ──────────────────────────────────────────────────
 function ClubhouseLobby({ createCircle, joinCircleByCode }) {
-  const [tab, setTab] = useState('create');
+  const [creating, setCreating] = useState(false);
   const [name, setName] = useState('');
   const [code, setCode] = useState('');
-  const [busy, setBusy] = useState(false);
-  const [err, setErr] = useState('');
-
-  const TABS = [
-    { key: 'create', label: 'CREATE' },
-    { key: 'join',   label: 'JOIN'   },
-  ];
+  const [busy, setBusy] = useState(null); // 'create' | 'join' | null
+  const [createErr, setCreateErr] = useState('');
+  const [joinErr, setJoinErr] = useState('');
 
   async function handleCreate(e) {
     e.preventDefault();
     if (!name.trim()) return;
-    setBusy(true); setErr('');
+    setBusy('create'); setCreateErr('');
     try { await createCircle(name.trim()); }
-    catch (e) { setErr(e.message === 'NAME_REQUIRED' ? 'Please enter a name.' : e.message); }
-    finally { setBusy(false); }
+    catch (e) { setCreateErr(e.message === 'NAME_REQUIRED' ? 'Please enter a name.' : e.message); }
+    finally { setBusy(null); }
   }
 
   async function handleJoin(e) {
     e.preventDefault();
     if (code.trim().length < 6) return;
-    setBusy(true); setErr('');
+    setBusy('join'); setJoinErr('');
     try { await joinCircleByCode(code.trim()); }
     catch (e) {
-      setErr(e.message === 'INVALID_CODE' ? 'Code not found — check and try again.' : e.message);
+      setJoinErr(e.message === 'INVALID_CODE' ? 'Code not found — check and try again.' : e.message);
     }
-    finally { setBusy(false); }
+    finally { setBusy(null); }
   }
 
   return (
-    <div style={{ maxWidth: 480, margin: '0 auto', padding: '0 16px 32px' }}>
-      <div style={{ textAlign: 'center', padding: '48px 0 32px' }}>
-        <div style={{ fontSize: 40, marginBottom: 12 }}>🏠</div>
-        <h2 style={{ ...HEAD, fontSize: 22, color: 'var(--paper)', margin: '0 0 8px' }}>
-          YOUR CLUBHOUSE
-        </h2>
-        <p style={{ ...BODY, fontSize: 14, color: 'var(--mute)', margin: 0 }}>
-          Your shared space — chat, compete, and bet across every sport.
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px 16px', minHeight: '60vh' }}>
+      <div style={{ maxWidth: 560, textAlign: 'center' }}>
+        <div style={{ ...MONO, fontSize: 10.5, letterSpacing: '0.14em', color: 'var(--accent)', textTransform: 'uppercase', marginBottom: 14 }}>
+          Welcome to Frontrow
+        </div>
+        <h1 style={{ ...HEAD, fontSize: 26, color: 'var(--paper)', letterSpacing: '-0.02em', lineHeight: 1.15, margin: '0 0 14px' }}>
+          Every game you play lives in one room.
+        </h1>
+        <p style={{ ...BODY, fontSize: 14.5, color: 'var(--mute)', lineHeight: 1.6, margin: '0 0 28px' }}>
+          Create a Clubhouse for your group, or join one with an invite code — football leagues, F1 paddocks and tennis boxes all show up inside it.
         </p>
-      </div>
 
-      <TabStrip variant="underline" tabs={TABS} active={tab} onTab={t => { setTab(t); setErr(''); }} />
-
-      <div style={{ paddingTop: 24 }}>
-        {tab === 'create' && (
-          <form onSubmit={handleCreate} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-            <div>
-              <label style={{ display: 'block', ...MONO, fontSize: 10, letterSpacing: '0.12em', color: 'var(--mute)', marginBottom: 8, textTransform: 'uppercase' }}>
-                Clubhouse Name
-              </label>
-              <input
-                value={name}
-                onChange={e => setName(e.target.value)}
-                placeholder="e.g. The Friday Night Crew"
-                maxLength={40}
-                style={{ width: '100%', padding: '12px 14px', border: '1px solid var(--rule)', borderRadius: 6, ...BODY, fontSize: 15, color: 'var(--paper)', background: 'var(--card)', outline: 'none', boxSizing: 'border-box' }}
-              />
+        <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap', textAlign: 'left' }}>
+          {/* Create — primary, dark shell fill */}
+          <div style={{ flex: '1 1 240px', background: 'var(--shell)', border: '1px solid var(--shell)', borderRadius: 8, padding: '20px 18px', color: '#fff' }}>
+            <div style={{ ...MONO, fontSize: 9, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.45)', marginBottom: 8 }}>
+              Start fresh
             </div>
-            {err && <div style={{ ...MONO, fontSize: 11, color: 'var(--danger)' }}>{err}</div>}
-            <button
-              type="submit"
-              disabled={busy || !name.trim()}
-              style={{ padding: 13, background: busy || !name.trim() ? 'var(--mute)' : 'var(--accent)', color: '#fff', border: 'none', borderRadius: 6, ...MONO, fontSize: 11, fontWeight: 700, letterSpacing: '0.14em', cursor: busy || !name.trim() ? 'default' : 'pointer' }}
-            >
-              {busy ? 'CREATING…' : 'CREATE CLUBHOUSE →'}
-            </button>
-          </form>
-        )}
+            <div style={{ ...HEAD, fontSize: 15, marginBottom: 6 }}>Create a Clubhouse</div>
+            <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.55)', marginBottom: 14 }}>
+              Name it, invite your group, add competitions as you go
+            </div>
 
-        {tab === 'join' && (
-          <form onSubmit={handleJoin} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-            <div>
-              <label style={{ display: 'block', ...MONO, fontSize: 10, letterSpacing: '0.12em', color: 'var(--mute)', marginBottom: 8, textTransform: 'uppercase' }}>
-                Invite Code
-              </label>
+            {creating ? (
+              <form onSubmit={handleCreate} style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <input
+                  autoFocus
+                  value={name}
+                  onChange={e => setName(e.target.value)}
+                  placeholder="e.g. The Friday Night Crew"
+                  maxLength={40}
+                  style={{ width: '100%', padding: '10px 12px', border: '1px solid rgba(255,255,255,0.2)', borderRadius: 6, ...BODY, fontSize: 14, color: '#fff', background: 'rgba(255,255,255,0.08)', outline: 'none', boxSizing: 'border-box' }}
+                />
+                {createErr && <div style={{ ...MONO, fontSize: 10.5, color: '#FF8A8A' }}>{createErr}</div>}
+                <button
+                  type="submit"
+                  disabled={busy === 'create' || !name.trim()}
+                  style={{ display: 'block', textAlign: 'center', padding: 11, background: '#fff', color: 'var(--shell)', border: 'none', borderRadius: 6, ...MONO, fontSize: 10.5, fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', cursor: busy === 'create' || !name.trim() ? 'default' : 'pointer', opacity: busy === 'create' || !name.trim() ? 0.6 : 1 }}
+                >
+                  {busy === 'create' ? 'Creating…' : 'Create Clubhouse'}
+                </button>
+              </form>
+            ) : (
+              <button
+                onClick={() => setCreating(true)}
+                style={{ display: 'block', width: '100%', textAlign: 'center', padding: 11, background: '#fff', color: 'var(--shell)', border: 'none', borderRadius: 6, ...MONO, fontSize: 10.5, fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', cursor: 'pointer' }}
+              >
+                Create Clubhouse
+              </button>
+            )}
+          </div>
+
+          {/* Join — secondary, always-visible code input */}
+          <div style={{ flex: '1 1 240px', background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 8, padding: '20px 18px' }}>
+            <div style={{ ...MONO, fontSize: 9, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--mute)', marginBottom: 8 }}>
+              Have a code?
+            </div>
+            <div style={{ ...HEAD, fontSize: 15, color: 'var(--paper)', marginBottom: 6 }}>Join with an invite</div>
+            <form onSubmit={handleJoin} style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 8 }}>
               <input
                 value={code}
                 onChange={e => setCode(e.target.value.toUpperCase())}
-                placeholder="8-CHARACTER CODE"
+                placeholder="FK-XXXXX"
                 maxLength={8}
-                style={{ width: '100%', padding: '12px 14px', border: '1px solid var(--rule)', borderRadius: 6, ...MONO, fontSize: 18, fontWeight: 700, letterSpacing: '0.25em', color: 'var(--paper)', background: 'var(--card)', outline: 'none', boxSizing: 'border-box', textTransform: 'uppercase' }}
+                style={{ width: '100%', padding: '10px 12px', background: 'var(--elev)', border: 'none', borderRadius: 6, ...MONO, fontSize: 13, fontWeight: 600, letterSpacing: '0.1em', color: 'var(--paper)', outline: 'none', boxSizing: 'border-box' }}
               />
-            </div>
-            {err && <div style={{ ...MONO, fontSize: 11, color: 'var(--danger)' }}>{err}</div>}
-            <button
-              type="submit"
-              disabled={busy || code.trim().length < 6}
-              style={{ padding: 13, background: busy || code.trim().length < 6 ? 'var(--mute)' : 'var(--accent)', color: '#fff', border: 'none', borderRadius: 6, ...MONO, fontSize: 11, fontWeight: 700, letterSpacing: '0.14em', cursor: busy || code.trim().length < 6 ? 'default' : 'pointer' }}
-            >
-              {busy ? 'JOINING…' : 'JOIN CLUBHOUSE →'}
-            </button>
-          </form>
-        )}
+              {joinErr && <div style={{ ...MONO, fontSize: 10.5, color: 'var(--danger)' }}>{joinErr}</div>}
+              <button
+                type="submit"
+                disabled={busy === 'join' || code.trim().length < 6}
+                style={{ display: 'block', textAlign: 'center', padding: 11, background: 'var(--accent)', color: '#fff', border: 'none', borderRadius: 6, ...MONO, fontSize: 10.5, fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', cursor: busy === 'join' || code.trim().length < 6 ? 'default' : 'pointer', opacity: busy === 'join' || code.trim().length < 6 ? 0.6 : 1 }}
+              >
+                {busy === 'join' ? 'Joining…' : 'Join Clubhouse'}
+              </button>
+            </form>
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -261,7 +271,12 @@ function FeedEntry({ entry, onEnter }) {
 }
 
 // ── Members tab ───────────────────────────────────────────────────────────────
-function MembersTab({ members, isOwner, currentUserId, onKick }) {
+function formatJoinDate(isoString) {
+  if (!isoString) return null;
+  return new Date(isoString).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
+function MembersTab({ members, isOwner, currentUserId, onKick, metaStandings }) {
   const [kicking, setKicking] = useState(null);
 
   async function handleKick(userId) {
@@ -277,39 +292,64 @@ function MembersTab({ members, isOwner, currentUserId, onKick }) {
       </div>
     );
   }
+  const metaByUser = new Map((metaStandings ?? []).map(s => [s.user_id, s]));
   const owners  = members.filter(m => m.role === 'owner');
   const regular = members.filter(m => m.role !== 'owner');
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-      {[...owners, ...regular].map(m => (
-        <div
-          key={m.user_id}
-          style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px', background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 8 }}
-        >
-          <div style={{ width: 32, height: 32, borderRadius: '50%', background: m.role === 'owner' ? 'var(--accent)' : 'var(--elev)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-            <span style={{ ...MONO, fontSize: 12, fontWeight: 700, color: m.role === 'owner' ? 'var(--on-shell)' : 'var(--paper)' }}>
-              {(m.username?.[0] ?? '?').toUpperCase()}
-            </span>
-          </div>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ ...MONO, fontSize: 12, color: 'var(--paper)', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-              {m.username}
+      {[...owners, ...regular].map(m => {
+        const meta = metaByUser.get(m.user_id);
+        const joinDate = formatJoinDate(m.joined_at);
+        return (
+          <div
+            key={m.user_id}
+            style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px', background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 8, flexWrap: 'wrap' }}
+          >
+            <div style={{ width: 32, height: 32, borderRadius: '50%', background: m.role === 'owner' ? 'var(--accent)' : 'var(--elev)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <span style={{ ...MONO, fontSize: 12, fontWeight: 700, color: m.role === 'owner' ? 'var(--on-shell)' : 'var(--paper)' }}>
+                {(m.username?.[0] ?? '?').toUpperCase()}
+              </span>
             </div>
+            <div style={{ flex: 1, minWidth: 120 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <span style={{ ...MONO, fontSize: 12, color: 'var(--paper)', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {m.username}
+                </span>
+                {m.role === 'owner' && (
+                  <span style={{
+                    ...MONO, fontSize: 8, fontWeight: 700, letterSpacing: '0.1em', color: 'var(--gold)',
+                    border: '1px solid var(--gold)', borderRadius: 4, padding: '1px 5px', flexShrink: 0,
+                  }}>
+                    OWNER
+                  </span>
+                )}
+              </div>
+              {joinDate && (
+                <div style={{ ...MONO, fontSize: 9.5, color: 'var(--mute)', marginTop: 2 }}>
+                  Joined {joinDate}
+                </div>
+              )}
+            </div>
+            <div style={{ display: 'flex', gap: 14, flexShrink: 0 }}>
+              {meta && (
+                <div style={{ textAlign: 'right' }}>
+                  <div style={{ ...MONO, fontSize: 12, fontWeight: 700, color: 'var(--paper)' }}>{meta.trophy_count}</div>
+                  <div style={{ ...MONO, fontSize: 8, color: 'var(--mute)', letterSpacing: '0.06em' }}>TROPHIES</div>
+                </div>
+              )}
+            </div>
+            {isOwner && m.role !== 'owner' && m.user_id !== currentUserId && (
+              <button
+                onClick={() => handleKick(m.user_id)}
+                disabled={kicking === m.user_id}
+                style={{ padding: '5px 10px', background: 'transparent', border: '1px solid var(--danger)', borderRadius: 4, ...MONO, fontSize: 9, fontWeight: 700, letterSpacing: '0.1em', color: 'var(--danger)', cursor: 'pointer', flexShrink: 0 }}
+              >
+                {kicking === m.user_id ? '…' : 'KICK'}
+              </button>
+            )}
           </div>
-          {m.role === 'owner' && (
-            <span style={{ ...MONO, fontSize: 9, fontWeight: 700, letterSpacing: '0.12em', color: 'var(--accent)' }}>OWNER</span>
-          )}
-          {isOwner && m.role !== 'owner' && m.user_id !== currentUserId && (
-            <button
-              onClick={() => handleKick(m.user_id)}
-              disabled={kicking === m.user_id}
-              style={{ padding: '5px 10px', background: 'transparent', border: '1px solid var(--danger)', borderRadius: 4, ...MONO, fontSize: 9, fontWeight: 700, letterSpacing: '0.1em', color: 'var(--danger)', cursor: 'pointer', flexShrink: 0 }}
-            >
-              {kicking === m.user_id ? '…' : 'KICK'}
-            </button>
-          )}
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }
@@ -1056,6 +1096,7 @@ export default function ClubhouseScreen() {
                   isOwner={isOwner}
                   currentUserId={user?.id}
                   onKick={(userId) => kickMember(activeCircleId, userId)}
+                  metaStandings={metaStandings}
                 />
               )}
 
