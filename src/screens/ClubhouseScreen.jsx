@@ -4,6 +4,8 @@ import { useClubhouseContext } from '../context/ClubhouseContext';
 import { useSport } from '../context/SportContext';
 import { useAuth } from '../hooks/useAuth';
 import { useWallet } from '../hooks/useWallet';
+import { useChallenges } from '../hooks/useChallenges';
+import { useClubhouseFrontpage } from '../hooks/useClubhouseFrontpage';
 import ClubhouseChat from '../components/ClubhouseChat';
 import ClubhouseFrontpage from '../components/ClubhouseFrontpage';
 import TabStrip from '../components/shared/TabStrip';
@@ -125,6 +127,30 @@ function ClubhouseLobby({ createCircle, joinCircleByCode }) {
         )}
       </div>
     </div>
+  );
+}
+
+// ── Quick-access shortcut card ────────────────────────────────────────────────
+function ShortcutCard({ eyebrow, value, sublabel, onClick }) {
+  return (
+    <button
+      onClick={onClick}
+      style={{
+        flex: '1 1 160px', minWidth: 150, textAlign: 'left', cursor: 'pointer',
+        background: 'var(--elev)', border: '1px solid var(--rule)', borderRadius: 8,
+        padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 4,
+      }}
+    >
+      <div style={{ ...MONO, fontSize: 8.5, letterSpacing: '0.14em', color: 'var(--mute)', textTransform: 'uppercase' }}>
+        {eyebrow}
+      </div>
+      <div style={{ ...HEAD, fontSize: 15, color: 'var(--paper)', lineHeight: 1.1 }}>
+        {value}
+      </div>
+      {sublabel && (
+        <div style={{ ...MONO, fontSize: 10, color: 'var(--mute)' }}>{sublabel}</div>
+      )}
+    </button>
   );
 }
 
@@ -538,112 +564,104 @@ function FindTab({ searchClubhouses, joinCircleByCode }) {
   );
 }
 
-// ── Inbox tab ─────────────────────────────────────────────────────────────────
-function InboxTab({ notifications, onMarkRead, onMarkAll, onNavigate }) {
+// ── Notification bell + dropdown (S-08) ───────────────────────────────────────
+function NotifBell({ notifications, unreadCount, onMarkRead, onMarkAll, onNavigate }) {
+  const [open, setOpen] = useState(false);
   const TYPE_META = {
     frontpage_edition: { badge: 'TIMES',    color: 'var(--accent)' },
     breaking_news:     { badge: 'NEWS',     color: 'var(--danger)' },
     direct_message:    { badge: 'DM',       color: 'var(--cyan)'   },
   };
 
-  if (notifications.length === 0) {
-    return (
-      <div style={{ textAlign: 'center', padding: '48px 0', ...MONO, fontSize: 11, color: 'var(--mute)' }}>
-        No notifications yet.
-      </div>
-    );
-  }
-
-  const hasUnread = notifications.some(n => !n.read_at);
-
   return (
-    <div>
-      {hasUnread && (
-        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 12 }}>
-          <button
-            onClick={onMarkAll}
-            style={{ padding: '6px 12px', background: 'transparent', border: '1px solid var(--rule)', borderRadius: 6, ...MONO, fontSize: 9, fontWeight: 700, letterSpacing: '0.1em', color: 'var(--mute)', cursor: 'pointer' }}
-          >
-            MARK ALL READ
-          </button>
+    <div style={{ position: 'relative', flexShrink: 0 }}>
+      <button
+        onClick={() => setOpen(o => !o)}
+        title="Notifications"
+        style={{
+          position: 'relative', width: 32, height: 32, borderRadius: 6,
+          background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.15)',
+          cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+        }}
+      >
+        {/* Two-tone tray/inbox glyph — CSS-built, not an emoji */}
+        <div style={{ width: 14, height: 11, border: '1.5px solid rgba(255,255,255,0.7)', borderTop: 'none', borderRadius: '0 0 2px 2px', position: 'relative' }}>
+          <div style={{ position: 'absolute', top: -1, left: -1.5, right: -1.5, height: 1.5, background: 'rgba(255,255,255,0.7)' }} />
         </div>
-      )}
+        {unreadCount > 0 && (
+          <span style={{
+            position: 'absolute', top: -4, right: -4, minWidth: 15, height: 15, borderRadius: 100,
+            background: 'var(--danger)', color: '#fff', ...MONO, fontSize: 8.5, fontWeight: 700,
+            display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 3px',
+          }}>
+            {unreadCount > 9 ? '9+' : unreadCount}
+          </span>
+        )}
+      </button>
 
-      <div style={{ display: 'flex', flexDirection: 'column' }}>
-        {notifications.map(n => {
-          const meta  = TYPE_META[n.type] ?? { badge: n.type.toUpperCase(), color: 'var(--mute)' };
-          const isNew = !n.read_at;
-          const canNav = n.source_type === 'league' && n.source_id;
-
-          return (
-            <div
-              key={n.id}
-              role={canNav ? 'button' : undefined}
-              tabIndex={canNav ? 0 : undefined}
-              onClick={() => {
-                if (isNew) onMarkRead(n.id);
-                if (canNav) onNavigate(n.source_id);
-              }}
-              onKeyDown={canNav ? (e) => { if (e.key === 'Enter' || e.key === ' ') { if (isNew) onMarkRead(n.id); onNavigate(n.source_id); } } : undefined}
-              style={{
-                display: 'flex', gap: 12, padding: '12px 0',
-                borderBottom: '1px solid var(--rule)',
-                cursor: canNav ? 'pointer' : 'default',
-                opacity: isNew ? 1 : 0.55,
-              }}
-            >
-              {/* Unread dot */}
-              <div style={{ paddingTop: 4, flexShrink: 0, width: 8 }}>
-                {isNew && <div style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--accent)' }} />}
-              </div>
-
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 3 }}>
-                  <span style={{ ...MONO, fontSize: 9, fontWeight: 700, letterSpacing: '0.1em', color: meta.color }}>{meta.badge}</span>
-                  <span style={{ ...MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '0.07em' }}>{timeAgo(n.created_at)}</span>
-                </div>
-                <div style={{ ...BODY, fontSize: 13, color: 'var(--paper)', lineHeight: 1.4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                  {n.payload?.headline ?? n.payload?.preview ?? n.type}
-                </div>
-              </div>
-
-              {canNav && <span style={{ ...MONO, fontSize: 10, color: 'var(--accent)', alignSelf: 'center', flexShrink: 0 }}>→</span>}
+      {open && (
+        <>
+          <div onClick={() => setOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 40 }} />
+          <div style={{
+            position: 'absolute', top: 40, right: 0, width: 340, maxWidth: '90vw', zIndex: 41,
+            background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 10,
+            boxShadow: '0 8px 28px rgba(0,0,0,0.18)', overflow: 'hidden',
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 14px', borderBottom: '1px solid var(--rule)' }}>
+              <span style={{ ...HEAD, fontSize: 13, color: 'var(--paper)' }}>Notifications</span>
+              {unreadCount > 0 && (
+                <button
+                  onClick={onMarkAll}
+                  style={{ ...MONO, fontSize: 9, fontWeight: 700, letterSpacing: '0.08em', color: 'var(--accent)', background: 'transparent', border: 'none', cursor: 'pointer' }}
+                >
+                  MARK ALL READ
+                </button>
+              )}
             </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
-// ── Circle selector strip (when user is in multiple circles) ──────────────────
-function CircleSelector({ circles, activeCircleId, onChange }) {
-  if (circles.length <= 1) return null;
-  return (
-    <div style={{ display: 'flex', gap: 6, overflowX: 'auto', padding: '10px 16px', borderBottom: '1px solid var(--rule)', scrollbarWidth: 'none' }}>
-      {circles.map(c => (
-        <button
-          key={c.id}
-          onClick={() => onChange(c.id)}
-          style={{
-            flexShrink: 0,
-            padding: '6px 14px',
-            borderRadius: 20,
-            border: '1px solid',
-            borderColor: c.id === activeCircleId ? 'var(--accent)' : 'var(--rule)',
-            background: c.id === activeCircleId ? 'var(--accent-bg)' : 'transparent',
-            color: c.id === activeCircleId ? 'var(--accent)' : 'var(--mute)',
-            ...MONO,
-            fontSize: 10,
-            fontWeight: 700,
-            letterSpacing: '0.1em',
-            cursor: 'pointer',
-            whiteSpace: 'nowrap',
-          }}
-        >
-          {c.name}
-        </button>
-      ))}
+            <div style={{ maxHeight: 360, overflowY: 'auto' }}>
+              {notifications.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '32px 0', ...MONO, fontSize: 11, color: 'var(--mute)' }}>
+                  No notifications yet.
+                </div>
+              ) : notifications.map(n => {
+                const meta   = TYPE_META[n.type] ?? { badge: n.type.toUpperCase(), color: 'var(--mute)' };
+                const isNew  = !n.read_at;
+                const canNav = n.source_type === 'league' && n.source_id;
+                return (
+                  <div
+                    key={n.id}
+                    role={canNav ? 'button' : undefined}
+                    tabIndex={canNav ? 0 : undefined}
+                    onClick={() => {
+                      if (isNew) onMarkRead(n.id);
+                      if (canNav) { onNavigate(n.source_id); setOpen(false); }
+                    }}
+                    style={{
+                      display: 'flex', gap: 8, alignItems: 'flex-start', padding: '10px 14px',
+                      borderBottom: '1px solid var(--rule)',
+                      background: isNew ? 'var(--accent-bg)' : 'transparent',
+                      cursor: canNav ? 'pointer' : 'default',
+                    }}
+                  >
+                    <div style={{ paddingTop: 5, flexShrink: 0, width: 6 }}>
+                      {isNew && <div style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--accent)' }} />}
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 3 }}>
+                        <span style={{ ...MONO, fontSize: 9, fontWeight: 700, letterSpacing: '0.1em', color: meta.color }}>{meta.badge}</span>
+                        <span style={{ ...MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '0.07em' }}>{timeAgo(n.created_at)}</span>
+                      </div>
+                      <div style={{ ...BODY, fontSize: 12.5, color: 'var(--paper)', lineHeight: 1.4 }}>
+                        {n.payload?.headline ?? n.payload?.preview ?? n.type}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 }
@@ -679,9 +697,18 @@ export default function ClubhouseScreen() {
   } = useClubhouseContext();
 
   const { wallet } = useWallet(user?.id);
+  const { active: activeChallenges, incoming: incomingChallenges } = useChallenges(user?.id);
+  const frontpage = useClubhouseFrontpage(activeCircleId);
 
   const [tab, setTab] = useState(() => searchParams.get('tab') ?? 'home');
   const [copied, setCopied] = useState(false);
+  const [isDesktop, setIsDesktop] = useState(() => typeof window !== 'undefined' ? window.innerWidth >= 1024 : true);
+
+  useEffect(() => {
+    const handler = () => setIsDesktop(window.innerWidth >= 1024);
+    window.addEventListener('resize', handler);
+    return () => window.removeEventListener('resize', handler);
+  }, []);
 
   // Honour explicit URL param
   useEffect(() => {
@@ -717,12 +744,17 @@ export default function ClubhouseScreen() {
   const totalComps  = (competitions.football?.length ?? 0) + (competitions.f1?.length ?? 0) + (competitions.tennis?.length ?? 0);
   const activeSports = [(competitions.football?.length ?? 0) > 0, (competitions.f1?.length ?? 0) > 0, (competitions.tennis?.length ?? 0) > 0].filter(Boolean).length;
 
+  const myStandingIndex = metaStandings.findIndex(e => e.user_id === user?.id);
+  const myStanding  = myStandingIndex >= 0 ? metaStandings[myStandingIndex] : null;
+  const myRank      = myStanding ? (myStanding.rank ?? myStandingIndex + 1) : null;
+  const leadPoints  = metaStandings[0]?.total_points;
+  const pointsBehind = myStanding && leadPoints !== undefined ? leadPoints - (myStanding.total_points ?? 0) : null;
+
+  // 5 tabs on desktop (chat lives in the persistent rail); 6 on mobile (chat gets its own tab, no rail)
   const MAIN_TABS = [
     { key: 'home',      label: 'HOME'           },
     { key: 'frontrow',  label: 'THE FRONTROW'   },
-    { key: 'recap',     label: 'RECAP'          },
-    { key: 'chat',      label: 'CHAT'           },
-    { key: 'inbox',     label: 'INBOX', count: unreadCount > 0 ? unreadCount : undefined },
+    ...(!isDesktop ? [{ key: 'chat', label: 'CHAT' }] : []),
     { key: 'members',   label: 'MEMBERS'        },
     { key: 'find',      label: 'FIND'           },
     ...(isOwner ? [{ key: 'settings', label: 'SETTINGS' }] : []),
@@ -780,45 +812,66 @@ export default function ClubhouseScreen() {
             )}
           </div>
 
-          {/* Right: stats + invite code */}
-          <div style={{ flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 10 }}>
-            {activeCircle && totalComps > 0 && (
-              <div style={{ display: 'flex', gap: 20 }}>
-                <div style={{ textAlign: 'right' }}>
-                  <div style={{ ...HEAD, fontSize: 20, color: '#fff', letterSpacing: '-0.02em', lineHeight: 1 }}>{activeSports}</div>
-                  <div style={{ ...MONO, fontSize: 7, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.3)', marginTop: 2 }}>SPORTS</div>
+          {/* Right: notif bell + stats + invite code */}
+          <div style={{ flexShrink: 0, display: 'flex', alignItems: 'flex-start', gap: 14 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 10 }}>
+              {activeCircle && totalComps > 0 && (
+                <div style={{ display: 'flex', gap: 20 }}>
+                  <div style={{ textAlign: 'right' }}>
+                    <div style={{ ...HEAD, fontSize: 20, color: '#fff', letterSpacing: '-0.02em', lineHeight: 1 }}>{activeSports}</div>
+                    <div style={{ ...MONO, fontSize: 7, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.3)', marginTop: 2 }}>SPORTS</div>
+                  </div>
+                  <div style={{ textAlign: 'right' }}>
+                    <div style={{ ...HEAD, fontSize: 20, color: '#fff', letterSpacing: '-0.02em', lineHeight: 1 }}>{totalComps}</div>
+                    <div style={{ ...MONO, fontSize: 7, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.3)', marginTop: 2 }}>COMPETITIONS</div>
+                  </div>
                 </div>
-                <div style={{ textAlign: 'right' }}>
-                  <div style={{ ...HEAD, fontSize: 20, color: '#fff', letterSpacing: '-0.02em', lineHeight: 1 }}>{totalComps}</div>
-                  <div style={{ ...MONO, fontSize: 7, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.3)', marginTop: 2 }}>COMPETITIONS</div>
-                </div>
-              </div>
-            )}
-            {activeCircle?.invite_code && (
-              <button
-                onClick={copyCode}
-                title="Copy invite code"
-                style={{ padding: '6px 12px', background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 6, cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}
-              >
-                <span style={{ ...MONO, fontSize: 12, fontWeight: 700, letterSpacing: '0.2em', color: '#fff' }}>
-                  {activeCircle.invite_code}
-                </span>
-                <span style={{ ...MONO, fontSize: 7.5, letterSpacing: '0.1em', color: copied ? 'var(--positive)' : 'rgba(255,255,255,0.4)' }}>
-                  {copied ? 'COPIED ✓' : 'COPY CODE'}
-                </span>
-              </button>
-            )}
+              )}
+              {activeCircle?.invite_code && (
+                <button
+                  onClick={copyCode}
+                  title="Copy invite code"
+                  style={{ padding: '6px 12px', background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 6, cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}
+                >
+                  <span style={{ ...MONO, fontSize: 12, fontWeight: 700, letterSpacing: '0.2em', color: '#fff' }}>
+                    {activeCircle.invite_code}
+                  </span>
+                  <span style={{ ...MONO, fontSize: 7.5, letterSpacing: '0.1em', color: copied ? 'var(--positive)' : 'rgba(255,255,255,0.4)' }}>
+                    {copied ? 'COPIED ✓' : 'COPY CODE'}
+                  </span>
+                </button>
+              )}
+            </div>
+            <NotifBell
+              notifications={notifications}
+              unreadCount={unreadCount}
+              onMarkRead={markRead}
+              onMarkAll={() => markAllRead(activeCircleId)}
+              onNavigate={(leagueId) => navigate(`/league/${leagueId}`)}
+            />
           </div>
         </div>
       </div>
 
-      {/* Circle selector (multi-clubhouse) */}
-      {myCircles.length > 1 && (
-        <CircleSelector
-          circles={myCircles}
-          activeCircleId={activeCircleId}
-          onChange={id => { setActiveCircleId(id); navigate(`/clubhouse/${id}`, { replace: true }); }}
-        />
+      {/* Clubhouse switcher (multi-clubhouse, mobile only — desktop uses the sidebar switcher) */}
+      {!isDesktop && myCircles.length > 1 && (
+        <div style={{ display: 'flex', gap: 6, overflowX: 'auto', padding: '10px 16px', borderBottom: '1px solid var(--rule)', scrollbarWidth: 'none' }}>
+          {myCircles.map(c => (
+            <button
+              key={c.id}
+              onClick={() => { setActiveCircleId(c.id); navigate(`/clubhouse/${c.id}`, { replace: true }); }}
+              style={{
+                flexShrink: 0, padding: '6px 14px', borderRadius: 20, border: '1px solid',
+                borderColor: c.id === activeCircleId ? 'var(--accent)' : 'var(--rule)',
+                background: c.id === activeCircleId ? 'var(--accent-bg)' : 'transparent',
+                color: c.id === activeCircleId ? 'var(--accent)' : 'var(--mute)',
+                ...MONO, fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', cursor: 'pointer', whiteSpace: 'nowrap',
+              }}
+            >
+              {c.name}
+            </button>
+          ))}
+        </div>
       )}
 
       {loading ? (
@@ -840,7 +893,8 @@ export default function ClubhouseScreen() {
             />
           )}
 
-          {tab === 'chat' && (
+          {/* Chat is its own tab only on mobile — desktop gets the persistent rail below */}
+          {tab === 'chat' && !isDesktop && (
             <ClubhouseChat
               circleId={activeCircleId}
               members={members}
@@ -848,28 +902,33 @@ export default function ClubhouseScreen() {
             />
           )}
 
-          {tab === 'recap' && (
-            <div style={{ padding: '20px 16px', maxWidth: 640, margin: '0 auto' }}>
-              <div style={{ ...MONO, fontSize: 9, letterSpacing: '0.18em', color: 'var(--mute)', textTransform: 'uppercase', marginBottom: 20 }}>
-                📋 Clubhouse Recap — All Sports
-              </div>
-              {feed.length === 0 ? (
-                <div style={{ textAlign: 'center', padding: '40px 0', color: 'var(--mute)', ...MONO, fontSize: 12 }}>
-                  Activity will appear here once competitions start.
+          {/* HOME tab — main column + persistent chat rail (desktop) */}
+          {tab === 'home' && (
+            <div style={{ display: 'flex', alignItems: 'stretch' }}>
+              <div style={{ flex: 1, minWidth: 0, boxSizing: 'border-box', padding: '18px 22px', display: 'flex', flexDirection: 'column', gap: 16 }}>
+
+                {/* Quick-access shortcuts */}
+                <div style={{ display: 'flex', gap: 10, overflowX: isDesktop ? 'visible' : 'auto', flexWrap: isDesktop ? 'wrap' : 'nowrap' }}>
+                  <ShortcutCard
+                    eyebrow="Coin Wallet"
+                    value={`${(wallet?.balance ?? 0).toLocaleString()} coins`}
+                    sublabel={(wallet?.escrow ?? 0) > 0 ? `${wallet.escrow.toLocaleString()} in escrow` : undefined}
+                    onClick={() => navigate('/wallet')}
+                  />
+                  <ShortcutCard
+                    eyebrow="P2P Challenges"
+                    value={`${activeChallenges.length} active`}
+                    sublabel={incomingChallenges.length > 0 ? `${incomingChallenges.length} awaiting your move` : 'No pending requests'}
+                    onClick={() => navigate('/challenges')}
+                  />
+                  <ShortcutCard
+                    eyebrow="Meta Rank"
+                    value={myRank ? `#${myRank} of ${metaStandings.length}` : '—'}
+                    sublabel={pointsBehind !== null ? (pointsBehind > 0 ? `${pointsBehind} pts behind` : 'In the lead') : undefined}
+                    onClick={() => navigate('/trophy')}
+                  />
                 </div>
-              ) : (
-                feed.map(entry => (
-                  <FeedEntry key={entry.id} entry={entry} onEnter={enterLeague} />
-                ))
-              )}
-            </div>
-          )}
 
-          <div style={{ padding: '20px 16px', maxWidth: 640, margin: '0 auto', display: tab === 'frontrow' || tab === 'chat' || tab === 'recap' ? 'none' : undefined }}>
-
-            {/* HOME tab */}
-            {tab === 'home' && (
-              <div>
                 {/* All competition cards — unified grid */}
                 <AllCompetitions
                   competitions={competitions}
@@ -900,11 +959,28 @@ export default function ClubhouseScreen() {
                   </div>
                 )}
 
+                {/* FrontRow teaser */}
+                <button
+                  onClick={() => setTab('frontrow')}
+                  style={{
+                    textAlign: 'left', cursor: 'pointer', border: '1px solid #E5DFC8', borderRadius: 8,
+                    background: '#F2EEE5', padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 4,
+                  }}
+                >
+                  <div style={{ ...MONO, fontSize: 8.5, letterSpacing: '0.14em', color: '#8A8368', textTransform: 'uppercase' }}>
+                    THE FRONTROW{frontpage.edition ? ` · EDITION #${frontpage.edition.edition_number}` : ''}
+                  </div>
+                  <div style={{ fontFamily: 'Georgia, serif', fontSize: 15, color: '#1A1A18', fontStyle: frontpage.edition ? 'normal' : 'italic' }}>
+                    {frontpage.edition?.headline ?? 'No edition published yet today.'}
+                  </div>
+                  <div style={{ ...MONO, fontSize: 10, color: '#8A8368', marginTop: 2 }}>READ THE FRONTROW →</div>
+                </button>
+
                 {/* Activity feed */}
                 {feed.length > 0 && (
-                  <div style={{ marginTop: 8 }}>
+                  <div>
                     <div style={{ ...MONO, fontSize: 9, letterSpacing: '0.18em', color: 'var(--mute)', textTransform: 'uppercase', marginBottom: 12 }}>
-                      📰 Activity
+                      Activity
                     </div>
                     {feed.map(entry => (
                       <FeedEntry key={entry.id} entry={entry} onEnter={enterLeague} />
@@ -913,138 +989,51 @@ export default function ClubhouseScreen() {
                 )}
 
                 {feed.length === 0 && totalComps > 0 && (
-                  <div style={{ ...MONO, fontSize: 11, color: 'var(--mute)', textAlign: 'center', padding: '32px 0' }}>
+                  <div style={{ ...MONO, fontSize: 11, color: 'var(--mute)', textAlign: 'center', padding: '16px 0' }}>
                     Activity will appear here once competitions start.
                   </div>
                 )}
-
-                {/* Coin wallet shortcut */}
-                <button
-                  onClick={() => navigate('/wallet')}
-                  style={{
-                    width: '100%', marginTop: 24, padding: '14px 18px',
-                    background: 'var(--elev)', border: '1px solid var(--rule)',
-                    borderRadius: 10, cursor: 'pointer', textAlign: 'left',
-                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                  }}
-                >
-                  <div>
-                    <div style={{ ...MONO, fontSize: 9, letterSpacing: '0.18em', color: 'var(--mute)', marginBottom: 4 }}>
-                      COIN WALLET
-                    </div>
-                    <div style={{ ...MONO, fontSize: 18, fontWeight: 700, color: 'var(--accent)' }}>
-                      {(wallet?.balance ?? 0).toLocaleString()} <span style={{ fontSize: 11, color: 'var(--mute)', fontWeight: 400 }}>coins</span>
-                    </div>
-                    {(wallet?.escrow ?? 0) > 0 && (
-                      <div style={{ ...MONO, fontSize: 10, color: 'var(--mute)', marginTop: 2 }}>
-                        {wallet.escrow.toLocaleString()} in escrow
-                      </div>
-                    )}
-                  </div>
-                  <div style={{ ...MONO, fontSize: 11, color: 'var(--mute)' }}>VIEW →</div>
-                </button>
-
-                {/* P2P Challenges shortcut */}
-                <button
-                  onClick={() => navigate('/challenges')}
-                  style={{
-                    width: '100%', marginTop: 10, padding: '14px 18px',
-                    background: 'var(--elev)', border: '1px solid var(--rule)',
-                    borderRadius: 10, cursor: 'pointer', textAlign: 'left',
-                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                  }}
-                >
-                  <div>
-                    <div style={{ ...MONO, fontSize: 9, letterSpacing: '0.18em', color: 'var(--mute)', marginBottom: 4 }}>
-                      P2P BETTING
-                    </div>
-                    <div style={{ ...MONO, fontSize: 15, fontWeight: 700, color: 'var(--paper)' }}>
-                      My Challenges
-                    </div>
-                  </div>
-                  <div style={{ ...MONO, fontSize: 11, color: 'var(--mute)' }}>VIEW →</div>
-                </button>
-
-                {/* Meta standings — cross-sport leaderboard */}
-                {metaStandings.length > 0 && (
-                  <div style={{ marginTop: 24 }}>
-                    <div style={{ ...MONO, fontSize: 9, letterSpacing: '0.18em', color: 'var(--mute)', textTransform: 'uppercase', marginBottom: 10 }}>
-                      🏆 Meta Rankings
-                    </div>
-                    {metaStandings.slice(0, 6).map((entry, i) => (
-                      <div
-                        key={entry.user_id ?? i}
-                        style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 0', borderBottom: '1px solid var(--rule)' }}
-                      >
-                        <span style={{ ...MONO, fontSize: 10, fontWeight: 700, color: i < 3 ? 'var(--gold)' : 'var(--mute)', minWidth: 18 }}>
-                          {entry.rank ?? i + 1}
-                        </span>
-                        <span style={{ ...BODY, fontSize: 13, color: 'var(--paper)', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                          {entry.username ?? '—'}
-                        </span>
-                        {(entry.trophy_count ?? 0) > 0 && (
-                          <span style={{ ...MONO, fontSize: 10, color: 'var(--gold)', flexShrink: 0 }}>
-                            🏆 {entry.trophy_count}
-                          </span>
-                        )}
-                        {entry.total_points !== undefined && (
-                          <span style={{ ...MONO, fontSize: 11, fontWeight: 700, color: 'var(--paper)', flexShrink: 0 }}>
-                            {entry.total_points}
-                          </span>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                )}
               </div>
-            )}
 
-            {/* MEMBERS tab */}
-            {tab === 'members' && (
-              <MembersTab
-                members={members}
-                isOwner={isOwner}
-                currentUserId={user?.id}
-                onKick={(userId) => kickMember(activeCircleId, userId)}
-              />
-            )}
+              {/* Persistent chat rail — desktop only; mobile uses the Chat tab */}
+              {isDesktop && (
+                <div style={{ width: 330, flexShrink: 0, borderLeft: '1px solid var(--rule)' }}>
+                  <ClubhouseChat
+                    circleId={activeCircleId}
+                    members={members}
+                    activeCircle={activeCircle}
+                    layout="rail"
+                  />
+                </div>
+              )}
+            </div>
+          )}
 
-            {/* INBOX tab */}
-            {tab === 'inbox' && (
-              <InboxTab
-                notifications={notifications}
-                onMarkRead={markRead}
-                onMarkAll={() => markAllRead(activeCircleId)}
-                onNavigate={(leagueId) => navigate(`/league/${leagueId}`)}
-              />
-            )}
+          {/* Remaining tabs share the max-width reading container */}
+          {(tab === 'members' || tab === 'find' || (tab === 'settings' && isOwner)) && (
+            <div style={{ padding: '20px 16px', maxWidth: 640, margin: '0 auto' }}>
+              {tab === 'members' && (
+                <MembersTab
+                  members={members}
+                  isOwner={isOwner}
+                  currentUserId={user?.id}
+                  onKick={(userId) => kickMember(activeCircleId, userId)}
+                />
+              )}
 
-            {/* FIND tab */}
-            {tab === 'find' && (
-              <FindTab searchClubhouses={searchClubhouses} joinCircleByCode={joinCircleByCode} />
-            )}
+              {tab === 'find' && (
+                <FindTab searchClubhouses={searchClubhouses} joinCircleByCode={joinCircleByCode} />
+              )}
 
-            {/* SETTINGS tab — owner only */}
-            {tab === 'settings' && isOwner && activeCircle && (
-              <SettingsTab
-                circle={activeCircle}
-                activeCircleId={activeCircleId}
-                onUpdateSettings={(patch) => updateSettings(activeCircleId, patch)}
-                onLinkLeague={(leagueId) => linkLeague(activeCircleId, leagueId)}
-                getOwnerLinkableLeagues={getOwnerLinkableLeagues}
-              />
-            )}
-          </div>
-
-          {/* Add another clubhouse strip */}
-          {tab === 'home' && (
-            <div style={{ maxWidth: 640, margin: '0 auto', padding: '0 16px' }}>
-              <button
-                onClick={() => setTab('find')}
-                style={{ width: '100%', padding: 12, border: '1px dashed var(--rule)', borderRadius: 8, background: 'transparent', color: 'var(--mute)', ...MONO, fontSize: 10, letterSpacing: '0.1em', cursor: 'pointer' }}
-              >
-                + JOIN OR CREATE ANOTHER CLUBHOUSE
-              </button>
+              {tab === 'settings' && isOwner && activeCircle && (
+                <SettingsTab
+                  circle={activeCircle}
+                  activeCircleId={activeCircleId}
+                  onUpdateSettings={(patch) => updateSettings(activeCircleId, patch)}
+                  onLinkLeague={(leagueId) => linkLeague(activeCircleId, leagueId)}
+                  getOwnerLinkableLeagues={getOwnerLinkableLeagues}
+                />
+              )}
             </div>
           )}
         </>
