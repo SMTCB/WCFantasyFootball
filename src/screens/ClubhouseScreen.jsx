@@ -893,12 +893,13 @@ export default function ClubhouseScreen() {
             />
           )}
 
-          {/* Chat is its own tab only on mobile — desktop gets the persistent rail below */}
-          {tab === 'chat' && !isDesktop && (
+          {/* Chat tab — mobile's only view of chat; desktop reaches it via the rail's expand button (S-06) */}
+          {tab === 'chat' && (
             <ClubhouseChat
               circleId={activeCircleId}
               members={members}
               activeCircle={activeCircle}
+              layout="full"
             />
           )}
 
@@ -1003,6 +1004,7 @@ export default function ClubhouseScreen() {
                     members={members}
                     activeCircle={activeCircle}
                     layout="rail"
+                    onExpand={() => setTab('chat')}
                   />
                 </div>
               )}
