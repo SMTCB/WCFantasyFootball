@@ -606,9 +606,10 @@ function FindTab({ searchClubhouses, joinCircleByCode }) {
 
 // ── Notification bell + dropdown (S-08) ───────────────────────────────────────
 const NOTIF_TYPE_META = {
-  frontpage_edition: { badge: 'TIMES',    color: 'var(--accent)' },
-  breaking_news:     { badge: 'NEWS',     color: 'var(--danger)' },
-  direct_message:    { badge: 'DM',       color: 'var(--cyan)'   },
+  frontpage_edition:  { badge: 'TIMES',     color: 'var(--accent)' },
+  breaking_news:      { badge: 'NEWS',      color: 'var(--danger)' },
+  direct_message:     { badge: 'DM',        color: 'var(--cyan)'   },
+  arbitration_needed: { badge: 'ARBITRATE', color: 'var(--purple)' },
 };
 
 function NotifList({ notifications, onMarkRead, onNavigate, onNavigated }) {
@@ -622,7 +623,7 @@ function NotifList({ notifications, onMarkRead, onNavigate, onNavigated }) {
   return notifications.map(n => {
     const meta   = NOTIF_TYPE_META[n.type] ?? { badge: n.type.toUpperCase(), color: 'var(--mute)' };
     const isNew  = !n.read_at;
-    const canNav = n.source_type === 'league' && n.source_id;
+    const canNav = (n.source_type === 'league' || n.source_type === 'p2p_challenge') && n.source_id;
     return (
       <div
         key={n.id}
@@ -630,7 +631,7 @@ function NotifList({ notifications, onMarkRead, onNavigate, onNavigated }) {
         tabIndex={canNav ? 0 : undefined}
         onClick={() => {
           if (isNew) onMarkRead(n.id);
-          if (canNav) { onNavigate(n.source_id); onNavigated?.(); }
+          if (canNav) { onNavigate(n); onNavigated?.(); }
         }}
         style={{
           display: 'flex', gap: 8, alignItems: 'flex-start', padding: '10px 14px',
@@ -923,7 +924,7 @@ export default function ClubhouseScreen() {
               onMarkRead={markRead}
               onMarkAll={() => markAllRead(activeCircleId)}
               isDesktop={isDesktop}
-              onNavigate={(leagueId) => navigate(`/league/${leagueId}`)}
+              onNavigate={(n) => navigate(n.source_type === 'p2p_challenge' ? '/challenges' : `/league/${n.source_id}`)}
             />
           </div>
         </div>

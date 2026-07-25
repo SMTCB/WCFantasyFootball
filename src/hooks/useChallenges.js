@@ -40,11 +40,12 @@ export function useChallenges(userId, circleId = null) {
     c => c.challenger_id === userId && c.status === 'pending',
   );
   const active = challenges.filter(c => c.status === 'accepted');
+  const disputed = challenges.filter(c => c.status === 'disputed');
   const history = challenges.filter(
     c => ['resolved', 'expired', 'declined', 'cancelled'].includes(c.status),
   );
 
-  async function createChallenge({ circleId: cid, betType, opponentId, leagueId, matchdayId, stakeCoins, message }) {
+  async function createChallenge({ circleId: cid, betType, opponentId, leagueId, matchdayId, stakeCoins, message, question }) {
     const { data, error: err } = await supabase.rpc('create_p2p_challenge', {
       p_circle_id:   cid,
       p_opponent_id: opponentId,
@@ -53,6 +54,7 @@ export function useChallenges(userId, circleId = null) {
       p_message:     message ?? null,
       p_league_id:   leagueId ?? null,
       p_matchday_id: matchdayId ?? null,
+      p_question:    question ?? null,
     });
     if (err) throw new Error(err.message);
     await fetchChallenges();
@@ -77,11 +79,44 @@ export function useChallenges(userId, circleId = null) {
     await fetchChallenges();
   }
 
+  // Freeform lifecycle: declare -> confirm/dispute -> (if disputed) owner arbitrates.
+  // winnerId of null means "push" (declare/confirm) or "void" (arbitrate) — refunds both stakes.
+  async function declareResult(challengeId, winnerId) {
+    const { error: err } = await supabase.rpc('declare_freeform_result', {
+      p_challenge_id: challengeId,
+      p_winner_id:    winnerId ?? null,
+    });
+    if (err) throw new Error(err.message);
+    await fetchChallenges();
+  }
+
+  async function confirmResult(challengeId) {
+    const { error: err } = await supabase.rpc('confirm_freeform_result', { p_challenge_id: challengeId });
+    if (err) throw new Error(err.message);
+    await fetchChallenges();
+  }
+
+  async function disputeResult(challengeId) {
+    const { error: err } = await supabase.rpc('dispute_freeform_result', { p_challenge_id: challengeId });
+    if (err) throw new Error(err.message);
+    await fetchChallenges();
+  }
+
+  async function arbitrateResult(challengeId, winnerId) {
+    const { error: err } = await supabase.rpc('arbitrate_freeform_result', {
+      p_challenge_id: challengeId,
+      p_winner_id:    winnerId ?? null,
+    });
+    if (err) throw new Error(err.message);
+    await fetchChallenges();
+  }
+
   return {
     challenges,
     incoming,
     outgoing,
     active,
+    disputed,
     history,
     loading,
     error,
@@ -90,5 +125,9 @@ export function useChallenges(userId, circleId = null) {
     acceptChallenge,
     declineChallenge,
     cancelChallenge,
+    declareResult,
+    confirmResult,
+    disputeResult,
+    arbitrateResult,
   };
 }
