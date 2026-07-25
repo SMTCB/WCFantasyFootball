@@ -4,6 +4,7 @@ import { useAuth } from '../hooks/useAuth';
 import { useChallenges } from '../hooks/useChallenges';
 import { useWallet } from '../hooks/useWallet';
 import { useIsMobile } from '../hooks/useViewport';
+import { useClubhouseContext } from '../context/ClubhouseContext';
 import PrimaryActionBar from '../components/shared/PrimaryActionBar';
 import { supabase } from '../lib/supabase';
 
@@ -438,34 +439,146 @@ function WalletTabContent({ wallet, walletLoading }) {
   );
 }
 
+// ── Member avatar (colored initial circle, matches ClubhouseScreen pattern) ───
+const MEMBER_COLORS = ['var(--accent)', 'var(--f1)', 'var(--ten)', 'var(--gold)', '#7C3AED', '#4B5568'];
+
+function MemberAvatar({ username, index, size = 28 }) {
+  return (
+    <div style={{
+      width: size, height: size, borderRadius: '50%', flexShrink: 0,
+      background: MEMBER_COLORS[index % MEMBER_COLORS.length],
+      display: 'grid', placeItems: 'center',
+      ...HEAD, fontSize: size * 0.4, color: '#fff',
+    }}>
+      {(username?.[0] ?? '?').toUpperCase()}
+    </div>
+  );
+}
+
+function RadioDot({ selected }) {
+  return (
+    <span style={{
+      width: 16, height: 16, borderRadius: '50%', flexShrink: 0,
+      border: `1.5px solid ${selected ? 'var(--gold)' : 'var(--rule)'}`,
+      display: 'grid', placeItems: 'center',
+    }}>
+      {selected && <span style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--gold)' }} />}
+    </span>
+  );
+}
+
+function PickerRow({ selected, onClick, children }) {
+  return (
+    <button
+      onClick={onClick}
+      style={{
+        display: 'flex', alignItems: 'center', gap: 10, width: '100%',
+        padding: '9px 11px', borderRadius: 6, cursor: 'pointer', textAlign: 'left',
+        background: selected ? 'var(--gbg)' : 'var(--elev)',
+        border: `1px solid ${selected ? 'var(--gold)' : 'var(--rule)'}`,
+      }}
+    >
+      {children}
+    </button>
+  );
+}
+
+function Chip({ selected, onClick, children }) {
+  return (
+    <button
+      onClick={onClick}
+      style={{
+        padding: '7px 13px', borderRadius: 100, cursor: 'pointer',
+        background: selected ? 'var(--gold)' : 'var(--elev)',
+        border: `1px solid ${selected ? 'var(--gold)' : 'var(--rule)'}`,
+        color: selected ? '#fff' : 'var(--text)',
+        ...MONO, fontSize: 10.5, fontWeight: 600, whiteSpace: 'nowrap',
+      }}
+    >
+      {children}
+    </button>
+  );
+}
+
+// Current/next gameweek for a league's tournament — same matchday_deadlines pattern
+// BetCreatorPanel.jsx uses for its own gameweek picker.
+function useGameweekOptions(leagueId) {
+  const [current, setCurrent] = useState(null);
+  const [next, setNext]       = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (!leagueId) { setCurrent(null); setNext(null); return; }
+    let cancelled = false;
+    setLoading(true);
+    (async () => {
+      const { data: league } = await supabase.from('leagues').select('tournament_id').eq('id', leagueId).single();
+      const tournamentId = league?.tournament_id;
+      if (!tournamentId) {
+        if (!cancelled) { setCurrent(null); setNext(null); setLoading(false); }
+        return;
+      }
+      const now = new Date().toISOString();
+      const [{ data: nextRows }, { data: currentRows }] = await Promise.all([
+        supabase.from('matchday_deadlines').select('matchday_id, deadline_at').eq('tournament_id', tournamentId).gt('deadline_at', now).order('deadline_at', { ascending: true }).limit(1),
+        supabase.from('matchday_deadlines').select('matchday_id, deadline_at').eq('tournament_id', tournamentId).lte('deadline_at', now).order('deadline_at', { ascending: false }).limit(1),
+      ]);
+      if (!cancelled) {
+        setCurrent(currentRows?.[0] ?? null);
+        setNext(nextRows?.[0] ?? null);
+        setLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [leagueId]);
+
+  return { current, next, loading };
+}
+
 // ── Create challenge drawer (slide-in via createPortal) ───────────────────────
-function CreateChallengeModal({ onClose, onCreate, wallet, leagueId, leagueMatchdayId }) {
-  const [opponentId, setOpponentId] = useState('');
-  const [matchdayId, setMatchdayId] = useState(leagueMatchdayId ?? '');
+function CreateChallengeModal({ onClose, onCreate, wallet, circleId, circleName, currentUserId, members, footballLeagues }) {
+  const opponents = (members ?? []).filter(m => m.user_id !== currentUserId);
+  const hasOpponents    = opponents.length > 0;
+  const hasCompetitions = (footballLeagues ?? []).length > 0;
+  const blocked = !circleId || !hasOpponents || !hasCompetitions;
+
+  const [opponentId, setOpponentId] = useState(null);
+  const [leagueId, setLeagueId]     = useState(null);
+  const [gw, setGw]                 = useState(null); // 'current' | 'next'
   const [stakeCoins, setStakeCoins] = useState(100);
   const [message, setMessage]       = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError]           = useState(null);
 
-  const balance   = wallet?.balance ?? 0;
-  const prizePool = Math.floor(stakeCoins * 2 * 0.95);
+  const { current, next, loading: gwLoading } = useGameweekOptions(leagueId);
+  const matchdayId = gw === 'current' ? current?.matchday_id : gw === 'next' ? next?.matchday_id : null;
+
+  const balance    = wallet?.balance ?? 0;
+  const prizePool  = Math.floor(stakeCoins * 2 * 0.95);
+  const netWin     = Math.max(0, prizePool - stakeCoins);
   const overBudget = stakeCoins > balance;
 
   async function handleSubmit() {
-    if (!opponentId.trim()) { setError('Enter opponent user ID'); return; }
-    if (!matchdayId.trim()) { setError('Enter matchday ID'); return; }
-    if (stakeCoins < 10)    { setError('Minimum stake is 10 coins'); return; }
-    if (overBudget)         { setError('Insufficient balance'); return; }
+    if (!opponentId) { setError('Pick an opponent'); return; }
+    if (!leagueId)   { setError('Pick a competition'); return; }
+    if (!matchdayId) { setError('Pick a gameweek'); return; }
+    if (stakeCoins < 10) { setError('Minimum stake is 10 coins'); return; }
+    if (overBudget)  { setError('Insufficient balance'); return; }
     setSubmitting(true); setError(null);
     try {
-      await onCreate({ leagueId, opponentId, matchdayId, stakeCoins, message: message || null });
+      await onCreate({ circleId, betType: 'gw_total', opponentId, leagueId, matchdayId, stakeCoins, message: message || null });
       onClose();
     } catch (e) {
       const friendly = {
-        DAILY_STAKE_CAP_EXCEEDED: 'Daily stake limit reached (1,000 coins / 24h)',
-        DUPLICATE_CHALLENGE:      'A challenge already exists between you two for this GW',
-        OPPONENT_NOT_MEMBER:      'That user is not a member of this league',
-        INSUFFICIENT_BALANCE:     'Insufficient coins',
+        DAILY_STAKE_CAP_EXCEEDED:   'Daily stake limit reached (1,000 coins / 24h)',
+        DAILY_LIMIT_REACHED:        'Daily challenge limit reached for this competition',
+        DUPLICATE_CHALLENGE:        'A challenge already exists between you two for this GW',
+        NOT_CIRCLE_MEMBER:          'You are not a member of this Clubhouse',
+        OPPONENT_NOT_CIRCLE_MEMBER: 'That member has left this Clubhouse',
+        LEAGUE_NOT_IN_CIRCLE:       'That competition is not linked to this Clubhouse',
+        NOT_LEAGUE_MEMBER:          'You are not a member of that league',
+        OPPONENT_NOT_MEMBER:        'That member is not in that league',
+        INSUFFICIENT_BALANCE:       'Insufficient coins',
       }[e.message] ?? e.message;
       setError(friendly);
     }
@@ -495,89 +608,134 @@ function CreateChallengeModal({ onClose, onCreate, wallet, leagueId, leagueMatch
           >×</button>
         </div>
 
-        {/* Opponent ID */}
-        <label style={{ display: 'block', marginBottom: 12 }}>
-          <span style={{ ...MONO, fontSize: 9, letterSpacing: '.12em', textTransform: 'uppercase', color: 'var(--mute)', display: 'block', marginBottom: 6 }}>Opponent User ID</span>
-          <input
-            value={opponentId} onChange={e => setOpponentId(e.target.value)}
-            placeholder="paste user id…"
-            style={{ width: '100%', boxSizing: 'border-box', padding: '10px 12px', borderRadius: 6, background: 'var(--elev)', border: '1px solid var(--rule)', color: 'var(--text)', ...BODY, fontSize: 13 }}
-          />
-        </label>
-
-        {/* Matchday */}
-        <label style={{ display: 'block', marginBottom: 12 }}>
-          <span style={{ ...MONO, fontSize: 9, letterSpacing: '.12em', textTransform: 'uppercase', color: 'var(--mute)', display: 'block', marginBottom: 6 }}>Gameweek (matchday ID)</span>
-          <input
-            value={matchdayId} onChange={e => setMatchdayId(e.target.value)}
-            placeholder="e.g. 429-r3"
-            style={{ width: '100%', boxSizing: 'border-box', padding: '10px 12px', borderRadius: 6, background: 'var(--elev)', border: '1px solid var(--rule)', color: 'var(--text)', ...BODY, fontSize: 13 }}
-          />
-        </label>
-
-        {/* Stake */}
-        <div style={{ marginBottom: 12 }}>
-          <div style={{ ...MONO, fontSize: 9, letterSpacing: '.12em', textTransform: 'uppercase', color: 'var(--mute)', marginBottom: 6 }}>
-            Stake (balance: <span style={{ color: 'var(--gold)' }}>{balance.toLocaleString()} coins</span>)
+        {blocked ? (
+          <div style={{ padding: '30px 6px 12px', textAlign: 'center' }}>
+            {!circleId ? (
+              <>
+                <div style={{ ...HEAD, fontSize: 16, color: 'var(--text)', marginBottom: 8 }}>No Clubhouse selected</div>
+                <div style={{ fontSize: 13, color: 'var(--text2)', lineHeight: 1.5 }}>Join or create a Clubhouse before starting a challenge.</div>
+              </>
+            ) : !hasOpponents ? (
+              <>
+                <div style={{ ...HEAD, fontSize: 16, color: 'var(--text)', marginBottom: 8 }}>Nobody to challenge yet</div>
+                <div style={{ fontSize: 13, color: 'var(--text2)', lineHeight: 1.5 }}>
+                  Invite more managers to {circleName ?? 'this Clubhouse'} before you can send a challenge.
+                </div>
+              </>
+            ) : (
+              <>
+                <div style={{ ...HEAD, fontSize: 16, color: 'var(--text)', marginBottom: 8 }}>No competitions yet</div>
+                <div style={{ fontSize: 13, color: 'var(--text2)', lineHeight: 1.5 }}>
+                  Link a football league to this Clubhouse in Settings to start Competitor challenges.
+                </div>
+              </>
+            )}
           </div>
-          <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
-            {[50, 100, 250, 500].map(v => (
-              <button key={v} onClick={() => setStakeCoins(v)} style={{
-                flex: 1, padding: '8px 4px', borderRadius: 6, cursor: 'pointer',
-                background: stakeCoins === v ? 'var(--gold)' : 'var(--elev)',
-                border: `1px solid ${stakeCoins === v ? 'var(--gold)' : 'var(--rule)'}`,
-                color: stakeCoins === v ? '#fff' : 'var(--text)',
-                ...MONO, fontSize: 11, fontWeight: 700,
-              }}>{v}</button>
-            ))}
-          </div>
-          <input
-            type="number" min={10} max={balance} value={stakeCoins}
-            onChange={e => setStakeCoins(Math.max(10, parseInt(e.target.value) || 0))}
-            style={{
-              width: '100%', boxSizing: 'border-box', padding: '10px 12px', borderRadius: 6,
-              background: 'var(--elev)', border: `1px solid ${overBudget ? 'var(--neg)' : 'var(--rule)'}`,
-              color: overBudget ? 'var(--neg)' : 'var(--text)', ...MONO, fontSize: 13,
-            }}
-          />
-          <div style={{ ...MONO, fontSize: 9, color: 'var(--mute)', marginTop: 5 }}>
-            Net win if you win: <span style={{ color: 'var(--pos)' }}>{Math.floor(prizePool - challenge_stake(stakeCoins)).toLocaleString()} coins</span> after 5% rake
-          </div>
-        </div>
+        ) : (
+          <>
+            {/* Opponent picker */}
+            <div style={{ marginBottom: 14 }}>
+              <span style={{ ...MONO, fontSize: 9, letterSpacing: '.12em', textTransform: 'uppercase', color: 'var(--mute)', display: 'block', marginBottom: 6 }}>Opponent</span>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6, maxHeight: 180, overflowY: 'auto' }}>
+                {opponents.map((m, i) => (
+                  <PickerRow key={m.user_id} selected={opponentId === m.user_id} onClick={() => setOpponentId(m.user_id)}>
+                    <MemberAvatar username={m.username} index={i} />
+                    <span style={{ flex: 1, fontSize: 13, color: 'var(--text)', fontWeight: 600 }}>{m.username}</span>
+                    <RadioDot selected={opponentId === m.user_id} />
+                  </PickerRow>
+                ))}
+              </div>
+            </div>
 
-        {/* Message */}
-        <label style={{ display: 'block', marginBottom: 16 }}>
-          <span style={{ ...MONO, fontSize: 9, letterSpacing: '.12em', textTransform: 'uppercase', color: 'var(--mute)', display: 'block', marginBottom: 6 }}>
-            Message (optional · {140 - message.length} chars)
-          </span>
-          <input
-            maxLength={140} value={message} onChange={e => setMessage(e.target.value)}
-            placeholder="trash talk here…"
-            style={{ width: '100%', boxSizing: 'border-box', padding: '10px 12px', borderRadius: 6, background: 'var(--elev)', border: '1px solid var(--rule)', color: 'var(--text)', ...BODY, fontSize: 13 }}
-          />
-        </label>
+            {/* Competition picker */}
+            <div style={{ marginBottom: 14 }}>
+              <span style={{ ...MONO, fontSize: 9, letterSpacing: '.12em', textTransform: 'uppercase', color: 'var(--mute)', display: 'block', marginBottom: 6 }}>Competition</span>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                {footballLeagues.map(l => (
+                  <Chip key={l.id} selected={leagueId === l.id} onClick={() => { setLeagueId(l.id); setGw(null); }}>{l.name}</Chip>
+                ))}
+              </div>
+            </div>
 
-        {error && <div style={{ ...MONO, fontSize: 11, color: 'var(--neg)', marginBottom: 12 }}>{error}</div>}
+            {/* Gameweek picker */}
+            {leagueId && (
+              <div style={{ marginBottom: 14 }}>
+                <span style={{ ...MONO, fontSize: 9, letterSpacing: '.12em', textTransform: 'uppercase', color: 'var(--mute)', display: 'block', marginBottom: 6 }}>Gameweek</span>
+                {gwLoading ? (
+                  <div style={{ ...MONO, fontSize: 11, color: 'var(--mute)' }}>Loading…</div>
+                ) : !current && !next ? (
+                  <div style={{ ...MONO, fontSize: 11, color: 'var(--mute)' }}>No upcoming gameweeks found.</div>
+                ) : (
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    {current && <Chip selected={gw === 'current'} onClick={() => setGw('current')}>Current · {gwLabel(current.matchday_id)}</Chip>}
+                    {next    && <Chip selected={gw === 'next'}    onClick={() => setGw('next')}>Next · {gwLabel(next.matchday_id)}</Chip>}
+                  </div>
+                )}
+              </div>
+            )}
 
-        <button
-          onClick={handleSubmit} disabled={submitting || overBudget}
-          style={{
-            width: '100%', padding: '12px', borderRadius: 6, border: 'none', cursor: (submitting || overBudget) ? 'not-allowed' : 'pointer',
-            background: overBudget ? 'var(--elev)' : 'var(--gold)', color: overBudget ? 'var(--mute)' : '#fff',
-            ...MONO, fontSize: 9, letterSpacing: '.14em', textTransform: 'uppercase', fontWeight: 600,
-            opacity: submitting ? 0.7 : 1,
-          }}
-        >
-          {submitting ? 'Sending…' : '⚔ Send Challenge'}
-        </button>
+            {/* Stake */}
+            <div style={{ marginBottom: 12 }}>
+              <div style={{ ...MONO, fontSize: 9, letterSpacing: '.12em', textTransform: 'uppercase', color: 'var(--mute)', marginBottom: 6 }}>
+                Stake (balance: <span style={{ color: 'var(--gold)' }}>{balance.toLocaleString()} coins</span>)
+              </div>
+              <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
+                {[50, 100, 250, 500].map(v => (
+                  <button key={v} onClick={() => setStakeCoins(v)} style={{
+                    flex: 1, padding: '8px 4px', borderRadius: 6, cursor: 'pointer',
+                    background: stakeCoins === v ? 'var(--gold)' : 'var(--elev)',
+                    border: `1px solid ${stakeCoins === v ? 'var(--gold)' : 'var(--rule)'}`,
+                    color: stakeCoins === v ? '#fff' : 'var(--text)',
+                    ...MONO, fontSize: 11, fontWeight: 700,
+                  }}>{v}</button>
+                ))}
+              </div>
+              <input
+                type="number" min={10} max={balance} value={stakeCoins}
+                onChange={e => setStakeCoins(Math.max(10, parseInt(e.target.value) || 0))}
+                style={{
+                  width: '100%', boxSizing: 'border-box', padding: '10px 12px', borderRadius: 6,
+                  background: 'var(--elev)', border: `1px solid ${overBudget ? 'var(--neg)' : 'var(--rule)'}`,
+                  color: overBudget ? 'var(--neg)' : 'var(--text)', ...MONO, fontSize: 13,
+                }}
+              />
+              <div style={{ ...MONO, fontSize: 9, color: 'var(--mute)', marginTop: 5 }}>
+                Net win if you win: <span style={{ color: 'var(--pos)' }}>{netWin.toLocaleString()} coins</span> after 5% rake
+              </div>
+            </div>
+
+            {/* Message */}
+            <label style={{ display: 'block', marginBottom: 16 }}>
+              <span style={{ ...MONO, fontSize: 9, letterSpacing: '.12em', textTransform: 'uppercase', color: 'var(--mute)', display: 'block', marginBottom: 6 }}>
+                Message (optional · {140 - message.length} chars)
+              </span>
+              <input
+                maxLength={140} value={message} onChange={e => setMessage(e.target.value)}
+                placeholder="trash talk here…"
+                style={{ width: '100%', boxSizing: 'border-box', padding: '10px 12px', borderRadius: 6, background: 'var(--elev)', border: '1px solid var(--rule)', color: 'var(--text)', ...BODY, fontSize: 13 }}
+              />
+            </label>
+
+            {error && <div style={{ ...MONO, fontSize: 11, color: 'var(--neg)', marginBottom: 12 }}>{error}</div>}
+
+            <button
+              onClick={handleSubmit} disabled={submitting || overBudget}
+              style={{
+                width: '100%', padding: '12px', borderRadius: 6, border: 'none', cursor: (submitting || overBudget) ? 'not-allowed' : 'pointer',
+                background: overBudget ? 'var(--elev)' : 'var(--gold)', color: overBudget ? 'var(--mute)' : '#fff',
+                ...MONO, fontSize: 9, letterSpacing: '.14em', textTransform: 'uppercase', fontWeight: 600,
+                opacity: submitting ? 0.7 : 1,
+              }}
+            >
+              {submitting ? 'Sending…' : '⚔ Send Challenge'}
+            </button>
+          </>
+        )}
       </div>
     </div>,
     document.body,
   );
 }
-
-// helper to avoid inline fn expression error
-function challenge_stake(stake) { return stake; }
 
 // ── Sidebar content (shared between desktop sidebar and mobile inline) ────────
 function SidebarContent({ balance, escrow, netWL, history, userId, onNewChallenge, onGoToWallet, isMobile }) {
@@ -681,10 +839,11 @@ export default function ChallengeScreen() {
   const { user } = useAuth();
   const isMobile = useIsMobile();
   const { wallet, loading: walletLoading } = useWallet(user?.id);
+  const { activeCircleId, activeCircle, members, competitions } = useClubhouseContext();
   const {
     incoming, outgoing, active, history, loading,
     createChallenge, acceptChallenge, declineChallenge, cancelChallenge,
-  } = useChallenges(user?.id);
+  } = useChallenges(user?.id, activeCircleId);
 
   const [outerTab, setOuterTab] = useState('challenges');
   const [showCreate, setShowCreate] = useState(false);
@@ -950,8 +1109,11 @@ export default function ChallengeScreen() {
           onClose={() => setShowCreate(false)}
           onCreate={createChallenge}
           wallet={wallet}
-          leagueId={null}
-          leagueMatchdayId={null}
+          circleId={activeCircleId}
+          circleName={activeCircle?.name}
+          currentUserId={user?.id}
+          members={members}
+          footballLeagues={competitions.football}
         />
       )}
     </div>

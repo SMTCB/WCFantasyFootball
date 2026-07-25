@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
 
-export function useChallenges(userId, leagueId = null) {
+export function useChallenges(userId, circleId = null) {
   const [challenges, setChallenges] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -10,12 +10,12 @@ export function useChallenges(userId, leagueId = null) {
     if (!userId) { setLoading(false); return; }
     setLoading(true);
     const { data, error: err } = await supabase.rpc('get_my_challenges', {
-      p_league_id: leagueId ?? null,
+      p_circle_id: circleId ?? null,
     });
     if (err) setError(err.message);
     else setChallenges(Array.isArray(data) ? data : []);
     setLoading(false);
-  }, [userId, leagueId]);
+  }, [userId, circleId]);
 
   useEffect(() => { fetchChallenges(); }, [fetchChallenges]);
 
@@ -44,13 +44,15 @@ export function useChallenges(userId, leagueId = null) {
     c => ['resolved', 'expired', 'declined', 'cancelled'].includes(c.status),
   );
 
-  async function createChallenge({ leagueId: lid, opponentId, matchdayId, stakeCoins, message }) {
+  async function createChallenge({ circleId: cid, betType, opponentId, leagueId, matchdayId, stakeCoins, message }) {
     const { data, error: err } = await supabase.rpc('create_p2p_challenge', {
-      p_league_id:   lid,
+      p_circle_id:   cid,
       p_opponent_id: opponentId,
-      p_matchday_id: matchdayId,
+      p_bet_type:    betType,
       p_stake_coins: stakeCoins,
       p_message:     message ?? null,
+      p_league_id:   leagueId ?? null,
+      p_matchday_id: matchdayId ?? null,
     });
     if (err) throw new Error(err.message);
     await fetchChallenges();
