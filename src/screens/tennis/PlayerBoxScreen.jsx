@@ -93,9 +93,9 @@ export default function PlayerBoxScreen() {
               flex: 1, padding: '12px 0',
               fontFamily: 'Archivo, sans-serif', fontSize: 13, fontWeight: 600,
               cursor: 'pointer', border: 'none',
-              borderBottom: tab === t.key ? '2px solid var(--accent)' : '2px solid transparent',
+              borderBottom: tab === t.key ? '2px solid var(--ten)' : '2px solid transparent',
               background: 'transparent',
-              color: tab === t.key ? 'var(--accent)' : 'var(--mute)',
+              color: tab === t.key ? 'var(--ten)' : 'var(--mute)',
               marginBottom: -1,
             }}
           >
@@ -121,7 +121,7 @@ export default function PlayerBoxScreen() {
                 </p>
                 <button
                   onClick={() => setTab('create')}
-                  style={{ padding: '10px 24px', background: 'var(--accent)', color: '#fff', border: 'none', borderRadius: 6, fontFamily: 'Archivo, sans-serif', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}
+                  style={{ padding: '10px 24px', background: 'var(--ten)', color: '#fff', border: 'none', borderRadius: 6, fontFamily: 'Archivo, sans-serif', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}
                 >
                   Create your first box
                 </button>
@@ -143,7 +143,7 @@ export default function PlayerBoxScreen() {
                       </div>
                       <button
                         onClick={() => enterBox(b.player_box_id)}
-                        style={{ padding: '8px 16px', background: 'var(--accent)', color: '#fff', border: 'none', borderRadius: 6, fontFamily: 'Archivo, sans-serif', fontSize: 13, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}
+                        style={{ padding: '8px 16px', background: 'var(--ten)', color: '#fff', border: 'none', borderRadius: 6, fontFamily: 'Archivo, sans-serif', fontSize: 13, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}
                       >
                         Enter →
                       </button>
@@ -212,7 +212,7 @@ export default function PlayerBoxScreen() {
             <button
               type="submit"
               disabled={busy || !name.trim() || !selectedCircleId}
-              style={{ padding: '13px', background: busy || !name.trim() || !selectedCircleId ? 'var(--mute)' : 'var(--accent)', color: '#fff', border: 'none', borderRadius: 6, fontFamily: 'Archivo, sans-serif', fontSize: 14, fontWeight: 600, cursor: busy || !name.trim() || !selectedCircleId ? 'default' : 'pointer' }}
+              style={{ padding: '13px', background: busy || !name.trim() || !selectedCircleId ? 'var(--mute)' : 'var(--ten)', color: '#fff', border: 'none', borderRadius: 6, fontFamily: 'Archivo, sans-serif', fontSize: 14, fontWeight: 600, cursor: busy || !name.trim() || !selectedCircleId ? 'default' : 'pointer' }}
             >
               {busy ? 'Creating…' : 'Create Player\'s Box →'}
             </button>
@@ -239,7 +239,7 @@ export default function PlayerBoxScreen() {
             <button
               type="submit"
               disabled={busy || code.trim().length < 6}
-              style={{ padding: '13px', background: busy || code.trim().length < 6 ? 'var(--mute)' : 'var(--accent)', color: '#fff', border: 'none', borderRadius: 6, fontFamily: 'Archivo, sans-serif', fontSize: 14, fontWeight: 600, cursor: busy || code.trim().length < 6 ? 'default' : 'pointer' }}
+              style={{ padding: '13px', background: busy || code.trim().length < 6 ? 'var(--mute)' : 'var(--ten)', color: '#fff', border: 'none', borderRadius: 6, fontFamily: 'Archivo, sans-serif', fontSize: 14, fontWeight: 600, cursor: busy || code.trim().length < 6 ? 'default' : 'pointer' }}
             >
               {busy ? 'Joining…' : 'Join Player\'s Box →'}
             </button>
