@@ -180,7 +180,7 @@ function RailListItem({ label, active, onClick }) {
 }
 
 // ── Main component ────────────────────────────────────────────────────────────
-export default function ClubhouseChat({ circleId, members, activeCircle, layout = 'panes' }) {
+export default function ClubhouseChat({ circleId, members, activeCircle, layout = 'full', onExpand }) {
   const { user } = useAuth();
   const [channels, setChannels] = useState([]);
   const [chatMode, setChatMode] = useState('channel');
@@ -285,7 +285,18 @@ export default function ClubhouseChat({ circleId, members, activeCircle, layout 
       <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
         {/* Header + mode toggle */}
         <div style={{ padding: '14px 16px 10px', borderBottom: '1px solid var(--rule)', flexShrink: 0 }}>
-          <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 14, color: 'var(--paper)', marginBottom: 10 }}>Chat</div>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+            <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 14, color: 'var(--paper)' }}>Chat</div>
+            {onExpand && (
+              <button
+                onClick={onExpand}
+                title="Expand chat"
+                style={{ background: 'transparent', border: 'none', color: 'var(--mute)', fontSize: 13, cursor: 'pointer', padding: '2px 4px', lineHeight: 1 }}
+              >
+                ⤢
+              </button>
+            )}
+          </div>
           <div style={{ display: 'flex', gap: 6 }}>
             {['channel', 'dm'].map(mode => (
               <button
@@ -343,80 +354,52 @@ export default function ClubhouseChat({ circleId, members, activeCircle, layout 
     );
   }
 
+  // layout === 'full' — the S-06 full-width screen: the S-01 rail's markup, expanded
   return (
     <div style={{ display: 'flex', height: 'calc(100vh - 220px)', minHeight: 400, overflow: 'hidden' }}>
 
-      {/* ── Left panel: channel/DM list ─────────────────────────── */}
+      {/* ── Left column: channel/DM list ─────────────────────────── */}
       {showList && (
-        <div style={{ width: 180, flexShrink: 0, display: 'flex', flexDirection: 'column', borderRight: '1px solid var(--rule)', overflow: 'hidden' }}>
+        <div style={{ width: 290, flexShrink: 0, display: 'flex', flexDirection: 'column', borderRight: '1px solid var(--rule)', background: 'var(--card)', overflow: 'hidden' }}>
 
-          {/* Mode tabs */}
-          <div style={{ display: 'flex', borderBottom: '1px solid var(--rule)', flexShrink: 0 }}>
-            {['channel', 'dm'].map(mode => (
-              <button
-                key={mode}
-                onClick={() => switchMode(mode)}
-                style={{
-                  flex: 1,
-                  padding: '10px 0',
-                  background: 'transparent',
-                  border: 'none',
-                  borderBottom: chatMode === mode ? '2px solid var(--accent)' : '2px solid transparent',
-                  color: chatMode === mode ? 'var(--accent)' : 'var(--mute)',
-                  ...MONO,
-                  fontSize: 9,
-                  fontWeight: 700,
-                  letterSpacing: '0.12em',
-                  cursor: 'pointer',
-                  marginBottom: -1,
-                }}
-              >
-                {mode === 'channel' ? 'CHANNELS' : 'DMS'}
-              </button>
-            ))}
+          {/* Header + mode toggle */}
+          <div style={{ padding: '14px 16px 10px', borderBottom: '1px solid var(--rule)', flexShrink: 0 }}>
+            <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 14, color: 'var(--paper)', marginBottom: 10 }}>Chat</div>
+            <div style={{ display: 'flex', gap: 6 }}>
+              {['channel', 'dm'].map(mode => (
+                <button
+                  key={mode}
+                  onClick={() => switchMode(mode)}
+                  style={{
+                    padding: '4px 10px', borderRadius: 100,
+                    background: chatMode === mode ? 'var(--accent-bg)' : 'transparent',
+                    border: 'none', cursor: 'pointer',
+                    ...MONO, fontSize: 10, fontWeight: chatMode === mode ? 700 : 400,
+                    letterSpacing: '0.06em',
+                    color: chatMode === mode ? 'var(--accent)' : 'var(--mute)',
+                  }}
+                >
+                  {mode === 'channel' ? 'Channels' : 'DMs'}
+                </button>
+              ))}
+            </div>
           </div>
 
           {/* List items */}
-          <div style={{ flex: 1, overflowY: 'auto', padding: '6px 0' }}>
+          <div style={{ flex: 1, overflowY: 'auto', padding: '8px 8px', display: 'flex', flexDirection: 'column', gap: 1 }}>
 
             {chatMode === 'channel' && (
               <>
                 {channels.map(ch => (
-                  <button
-                    key={ch.id}
-                    onClick={() => setSelectedChannelId(ch.id)}
-                    style={{
-                      width: '100%',
-                      textAlign: 'left',
-                      padding: '7px 14px',
-                      background: selectedChannelId === ch.id ? 'rgba(26,111,168,0.14)' : 'transparent',
-                      border: 'none',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 5,
-                      overflow: 'hidden',
-                    }}
-                  >
-                    <span style={{ ...MONO, fontSize: 11, color: 'var(--mute)', flexShrink: 0 }}>#</span>
-                    <span style={{ ...MONO, fontSize: 11, fontWeight: selectedChannelId === ch.id ? 700 : 400, color: selectedChannelId === ch.id ? 'var(--accent)' : 'var(--paper)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {ch.name}
-                    </span>
-                  </button>
+                  <RailListItem key={ch.id} label={`# ${ch.name}`} active={selectedChannelId === ch.id} onClick={() => setSelectedChannelId(ch.id)} />
                 ))}
 
                 {isOwner && !showNewChannel && (
-                  <button
-                    onClick={() => setShowNewChannel(true)}
-                    style={{ width: '100%', textAlign: 'left', padding: '7px 14px', background: 'transparent', border: 'none', color: 'var(--mute)', ...MONO, fontSize: 10, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5 }}
-                  >
-                    <span>+</span>
-                    <span style={{ letterSpacing: '0.08em' }}>NEW CHANNEL</span>
-                  </button>
+                  <RailListItem label="+ NEW CHANNEL" onClick={() => setShowNewChannel(true)} />
                 )}
 
                 {showNewChannel && (
-                  <div style={{ padding: '8px 10px', display: 'flex', flexDirection: 'column', gap: 5 }}>
+                  <div style={{ padding: '8px 8px', display: 'flex', flexDirection: 'column', gap: 5 }}>
                     <input
                       autoFocus
                       value={newChannelName}
@@ -450,43 +433,17 @@ export default function ClubhouseChat({ circleId, members, activeCircle, layout 
             )}
 
             {chatMode === 'dm' && otherMembers.length === 0 && (
-              <div style={{ padding: '20px 14px', ...MONO, fontSize: 10, color: 'var(--mute)', lineHeight: 1.6 }}>
-                No other members yet.
-              </div>
+              <div style={{ padding: '6px 8px', ...MONO, fontSize: 10, color: 'var(--mute)' }}>No other members yet.</div>
             )}
 
             {chatMode === 'dm' && otherMembers.map(m => (
-              <button
-                key={m.user_id}
-                onClick={() => setSelectedDmUserId(m.user_id)}
-                style={{
-                  width: '100%',
-                  textAlign: 'left',
-                  padding: '7px 12px',
-                  background: selectedDmUserId === m.user_id ? 'rgba(26,111,168,0.14)' : 'transparent',
-                  border: 'none',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 8,
-                  overflow: 'hidden',
-                }}
-              >
-                <div style={{ width: 24, height: 24, borderRadius: '50%', background: 'var(--elev)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                  <span style={{ ...MONO, fontSize: 10, fontWeight: 700, color: '#fff' }}>
-                    {(m.username?.[0] ?? '?').toUpperCase()}
-                  </span>
-                </div>
-                <span style={{ ...MONO, fontSize: 11, fontWeight: selectedDmUserId === m.user_id ? 700 : 400, color: selectedDmUserId === m.user_id ? 'var(--accent)' : 'var(--paper)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                  {m.username}
-                </span>
-              </button>
+              <RailListItem key={m.user_id} label={m.username} active={selectedDmUserId === m.user_id} onClick={() => setSelectedDmUserId(m.user_id)} />
             ))}
           </div>
         </div>
       )}
 
-      {/* ── Right panel: message thread ─────────────────────────── */}
+      {/* ── Right pane: message thread ─────────────────────────── */}
       {showThread && (
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, overflow: 'hidden' }}>
           {!hasSelection ? (
