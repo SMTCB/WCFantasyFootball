@@ -259,7 +259,7 @@ export default function TennisTournamentScreen() {
             <button
               type="submit"
               disabled={busy}
-              style={{ padding: '13px', background: busy ? 'var(--mute)' : 'var(--accent)', color: '#fff', border: 'none', borderRadius: 6, fontFamily: 'Archivo, sans-serif', fontSize: 14, fontWeight: 600, cursor: busy ? 'default' : 'pointer' }}
+              style={{ padding: '13px', background: busy ? 'var(--mute)' : 'var(--ten)', color: '#fff', border: 'none', borderRadius: 6, fontFamily: 'Archivo, sans-serif', fontSize: 14, fontWeight: 600, cursor: busy ? 'default' : 'pointer' }}
             >
               {busy ? 'Locking squad…' : roster ? 'Update squad →' : 'Lock squad →'}
             </button>

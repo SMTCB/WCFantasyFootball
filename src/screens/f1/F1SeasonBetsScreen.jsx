@@ -106,7 +106,7 @@ export default function F1SeasonBetsScreen() {
   if (loading) return <div style={{ textAlign: 'center', padding: 40, color: 'var(--mute)', fontFamily: 'JetBrains Mono, monospace', fontSize: 11 }}>LOADING…</div>;
 
   return (
-    <div style={{ background: 'var(--ink)', minHeight: '100vh', paddingBottom: 40 }}>
+    <div style={{ background: 'var(--bg)', minHeight: '100vh', paddingBottom: 40 }}>
       {/* Header */}
       <div style={{ background: 'var(--shell)', padding: '16px 16px 12px' }}>
         <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 9, letterSpacing: '0.18em', color: 'rgba(255,255,255,0.45)', marginBottom: 4 }}>
@@ -125,25 +125,34 @@ export default function F1SeasonBetsScreen() {
       )}
 
       <form onSubmit={handleSubmit} style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: 10 }}>
-        {SEASON_FIELDS.map(field => (
-          <div key={field.key} style={{ background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 8, padding: '12px 14px' }}>
-            <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 10, letterSpacing: '0.12em', color: 'var(--mute)', marginBottom: 8, textTransform: 'uppercase' }}>
-              {field.label}
+        {SEASON_FIELDS.map(field => {
+          const isCorrect = yearResults?.[field.key] && bet[field.key] === yearResults[field.key];
+          return (
+            <div key={field.key} style={{ position: 'relative', background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 8, padding: '12px 14px' }}>
               {yearResults?.[field.key] && (
-                <span style={{ marginLeft: 8, color: bet[field.key] === yearResults[field.key] ? 'var(--positive)' : 'var(--danger)' }}>
-                  {bet[field.key] === yearResults[field.key] ? '✓ +10' : `✗ (${yearResults[field.key]})`}
+                <span style={{
+                  position: 'absolute', top: 10, right: 12,
+                  fontFamily: 'JetBrains Mono, monospace', fontSize: 9, fontWeight: 700, letterSpacing: '0.08em',
+                  padding: '2px 7px', borderRadius: 3,
+                  background: isCorrect ? 'rgba(21,128,61,0.12)' : 'rgba(185,28,28,0.1)',
+                  color: isCorrect ? 'var(--positive)' : 'var(--danger)',
+                }}>
+                  {isCorrect ? '✓ +10' : `✗ ${yearResults[field.key]}`}
                 </span>
               )}
+              <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 10, letterSpacing: '0.12em', color: 'var(--mute)', marginBottom: 8, textTransform: 'uppercase', paddingRight: yearResults?.[field.key] ? 90 : 0 }}>
+                {field.label}
+              </div>
+              <FieldInput
+                field={field}
+                value={bet[field.key]}
+                onChange={val => setField(field.key, val)}
+                disabled={isLocked}
+                races={races}
+              />
             </div>
-            <FieldInput
-              field={field}
-              value={bet[field.key]}
-              onChange={val => setField(field.key, val)}
-              disabled={isLocked}
-              races={races}
-            />
-          </div>
-        ))}
+          );
+        })}
 
         {err && <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 11, color: 'var(--danger)', padding: '8px 12px', background: 'rgba(185,28,28,0.06)', borderRadius: 6 }}>{err}</div>}
 
@@ -151,7 +160,7 @@ export default function F1SeasonBetsScreen() {
           <button
             type="submit"
             disabled={saving}
-            style={{ padding: '14px', background: saved ? 'var(--positive)' : saving ? 'var(--mute)' : 'var(--accent)', color: '#fff', border: 'none', borderRadius: 6, fontFamily: 'JetBrains Mono, monospace', fontSize: 11, fontWeight: 700, letterSpacing: '0.14em', cursor: saving ? 'default' : 'pointer', transition: 'background 0.2s', marginTop: 4 }}
+            style={{ padding: '14px', background: saved ? 'var(--positive)' : saving ? 'var(--gold)' : 'var(--f1)', color: '#fff', border: 'none', borderRadius: 6, fontFamily: 'JetBrains Mono, monospace', fontSize: 11, fontWeight: 700, letterSpacing: '0.14em', cursor: saving ? 'default' : 'pointer', transition: 'background 0.2s', marginTop: 4 }}
           >
             {saved ? '✓ SEASON BETS SAVED' : saving ? 'SAVING…' : 'SAVE SEASON BETS'}
           </button>

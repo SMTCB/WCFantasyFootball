@@ -259,7 +259,7 @@ function AdminBtn({ label, onClick, disabled, accent }) {
     <button
       onClick={onClick}
       disabled={disabled}
-      style={{ padding: '10px 18px', background: disabled ? 'var(--mute)' : accent ? 'var(--accent)' : 'var(--elev)', color: disabled ? '#fff' : accent ? '#fff' : 'var(--paper)', border: `1px solid ${accent ? 'var(--accent)' : 'var(--rule)'}`, borderRadius: 6, fontFamily: 'Archivo, sans-serif', fontSize: 13, fontWeight: 600, cursor: disabled ? 'default' : 'pointer' }}
+      style={{ padding: '10px 18px', background: disabled ? 'var(--mute)' : accent ? 'var(--ten)' : 'var(--elev)', color: disabled ? '#fff' : accent ? '#fff' : 'var(--paper)', border: `1px solid ${accent ? 'var(--ten)' : 'var(--rule)'}`, borderRadius: 6, fontFamily: 'Archivo, sans-serif', fontSize: 13, fontWeight: 600, cursor: disabled ? 'default' : 'pointer' }}
     >
       {label}
     </button>

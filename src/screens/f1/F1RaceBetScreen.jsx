@@ -127,7 +127,7 @@ export default function F1RaceBetScreen() {
                 fontSize: 10,
                 fontWeight: 700,
                 cursor: 'pointer',
-                background: r.round_number === selectedRound ? 'var(--cyan)' : r.status === 'finished' ? 'rgba(255,255,255,0.06)' : 'rgba(255,255,255,0.1)',
+                background: r.round_number === selectedRound ? 'var(--f1)' : r.status === 'finished' ? 'rgba(255,255,255,0.06)' : 'rgba(255,255,255,0.1)',
                 color: r.round_number === selectedRound ? '#fff' : r.status === 'finished' ? 'rgba(255,255,255,0.3)' : 'rgba(255,255,255,0.65)',
                 letterSpacing: '0.1em',
               }}
@@ -183,7 +183,9 @@ export default function F1RaceBetScreen() {
               <div style={{ background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 8, padding: '14px' }}>
                 <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 10, letterSpacing: '0.14em', color: 'var(--mute)', marginBottom: 12 }}>🏆 PODIUM PREDICTIONS</div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                  <DriverSelect label="P1 — Race Winner" value={p1} onChange={setP1} exclude={[p2, p3].filter(Boolean)} disabled={isLocked} />
+                  <div style={{ borderLeft: '3px solid var(--f1)', paddingLeft: 10, marginLeft: -13 }}>
+                    <DriverSelect label="P1 — Race Winner" value={p1} onChange={setP1} exclude={[p2, p3].filter(Boolean)} disabled={isLocked} />
+                  </div>
                   <DriverSelect label="P2 — Second Place" value={p2} onChange={setP2} exclude={[p1, p3].filter(Boolean)} disabled={isLocked} />
                   <DriverSelect label="P3 — Third Place" value={p3} onChange={setP3} exclude={[p1, p2].filter(Boolean)} disabled={isLocked} />
                 </div>
@@ -221,7 +223,7 @@ export default function F1RaceBetScreen() {
                           key={opt}
                           type="button"
                           onClick={() => !isLocked && setSpecial(special === opt ? null : opt)}
-                          style={{ padding: '10px 8px', border: `1px solid ${special === opt ? 'var(--accent)' : 'var(--rule)'}`, borderRadius: 6, background: special === opt ? 'rgba(26,111,168,0.1)' : 'transparent', fontFamily: 'Archivo, sans-serif', fontSize: 13, color: special === opt ? 'var(--accent)' : 'var(--paper)', cursor: isLocked ? 'default' : 'pointer', opacity: isLocked ? 0.6 : 1 }}
+                          style={{ padding: '10px 8px', border: `1px solid ${special === opt ? 'var(--f1)' : 'var(--rule)'}`, borderRadius: 6, background: special === opt ? 'var(--f1-bg)' : 'transparent', fontFamily: 'Archivo, sans-serif', fontSize: 13, color: special === opt ? 'var(--f1)' : 'var(--paper)', cursor: isLocked ? 'default' : 'pointer', opacity: isLocked ? 0.6 : 1 }}
                         >
                           {opt}
                         </button>
@@ -244,12 +246,12 @@ export default function F1RaceBetScreen() {
               )}
 
               {/* Scoring legend */}
-              <div style={{ padding: '10px 12px', background: 'var(--elev)', borderRadius: 6, borderLeft: '3px solid var(--accent)' }}>
+              <div style={{ padding: '10px 12px', background: 'var(--elev)', borderRadius: 6, borderLeft: '3px solid var(--f1)' }}>
                 <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 9, letterSpacing: '0.1em', color: 'var(--mute)', marginBottom: 6 }}>SCORING GUIDE</div>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px 16px' }}>
                   {[['P1 exact','10 pts'],['P2 exact','8 pts'],['P3 exact','6 pts'],['Wrong podium spot','3 pts'],['DNF correct','5 pts'],['Team correct','5 pts'],['Special correct','5 pts'],['All correct bonus','3 pts']].map(([l, v]) => (
                     <div key={l} style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 9, color: 'var(--paper)' }}>
-                      {l} <span style={{ color: 'var(--accent)', fontWeight: 700 }}>{v}</span>
+                      {l} <span style={{ color: 'var(--f1)', fontWeight: 700 }}>{v}</span>
                     </div>
                   ))}
                 </div>
@@ -261,7 +263,7 @@ export default function F1RaceBetScreen() {
                 <button
                   type="submit"
                   disabled={saving || !p1 || !p2 || !p3}
-                  style={{ padding: '14px', background: saved ? 'var(--positive)' : (saving || !p1 || !p2 || !p3) ? 'var(--mute)' : 'var(--accent)', color: '#fff', border: 'none', borderRadius: 6, fontFamily: 'JetBrains Mono, monospace', fontSize: 11, fontWeight: 700, letterSpacing: '0.14em', cursor: (saving || !p1 || !p2 || !p3) ? 'default' : 'pointer', transition: 'background 0.2s' }}
+                  style={{ padding: '14px', background: saved ? 'var(--positive)' : saving ? 'var(--gold)' : (!p1 || !p2 || !p3) ? 'var(--mute)' : 'var(--f1)', color: '#fff', border: 'none', borderRadius: 6, fontFamily: 'JetBrains Mono, monospace', fontSize: 11, fontWeight: 700, letterSpacing: '0.14em', cursor: (saving || !p1 || !p2 || !p3) ? 'default' : 'pointer', transition: 'background 0.2s' }}
                 >
                   {saved ? '✓ PICKS SAVED' : saving ? 'SAVING…' : 'SAVE PICKS'}
                 </button>

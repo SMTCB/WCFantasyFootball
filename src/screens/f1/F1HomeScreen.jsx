@@ -3,7 +3,24 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 import { usePaddock } from '../../hooks/f1/usePaddock';
 import { useSport } from '../../context/SportContext';
+import { useAuth } from '../../hooks/useAuth';
 import { getFlag } from '../../lib/f1/f1-data';
+
+// Checkered-flag motif — pure CSS checkerboard, no image asset. Recurs sparingly
+// as a decorative divider under the F1 Home header (and above Report's podium viz).
+function CheckeredStrip() {
+  return (
+    <div
+      aria-hidden="true"
+      style={{
+        height: 6,
+        backgroundImage:
+          'repeating-conic-gradient(#0A0A0A 0% 25%, #FFFFFF 0% 50%)',
+        backgroundSize: '12px 12px',
+      }}
+    />
+  );
+}
 
 function useCountdown(targetDate) {
   const [diff, setDiff] = useState(null);
@@ -24,9 +41,20 @@ function useCountdown(targetDate) {
   return diff;
 }
 
-function RaceStatusBadge({ race }) {
-  const isUpcoming = race.status === 'scheduled';
-  const isPast = race.status === 'finished';
+// Status pill vocabulary: upcoming=grey, open (next race)=solid f1-red "Picks open",
+// live=gold, quali=blue-tinted "Qualifying" — the one place blue survives inside F1,
+// since it's state signaling (a session type), not brand identity.
+function RaceStatusBadge({ race, isNext }) {
+  let bg, color, label;
+  if (race.status === 'race') {
+    bg = 'var(--gold)'; color = '#fff'; label = '🔴 LIVE';
+  } else if (race.status === 'qualifying') {
+    bg = 'rgba(26,111,168,0.12)'; color = 'var(--accent)'; label = 'QUALIFYING';
+  } else if (isNext) {
+    bg = 'var(--f1)'; color = '#fff'; label = 'PICKS OPEN';
+  } else {
+    bg = 'var(--elev)'; color = 'var(--mute)'; label = 'UPCOMING';
+  }
   return (
     <span style={{
       fontFamily: 'JetBrains Mono, monospace',
@@ -35,10 +63,10 @@ function RaceStatusBadge({ race }) {
       letterSpacing: '0.12em',
       padding: '2px 7px',
       borderRadius: 3,
-      background: isPast ? 'var(--elev)' : isUpcoming ? 'rgba(26,111,168,0.12)' : 'rgba(185,28,28,0.12)',
-      color: isPast ? 'var(--mute)' : isUpcoming ? 'var(--accent)' : 'var(--danger)',
+      background: bg,
+      color,
     }}>
-      {isPast ? 'FT' : race.status === 'race' ? '🔴 LIVE' : race.status === 'qualifying' ? 'QUALI' : 'UPCOMING'}
+      {label}
     </span>
   );
 }
@@ -46,6 +74,7 @@ function RaceStatusBadge({ race }) {
 export default function F1HomeScreen() {
   const { paddockId } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const { setActivePaddockId } = useSport();
   const { myPaddocks, activePaddock, setActivePaddockId: switchPaddock } = usePaddock();
 
@@ -137,7 +166,7 @@ export default function F1HomeScreen() {
               <button
                 key={p.paddock_id}
                 onClick={() => { switchPaddock(p.paddock_id); navigate(`/f1/${p.paddock_id}`); setShowSelector(false); }}
-                style={{ display: 'block', width: '100%', textAlign: 'left', padding: '11px 14px', background: p.paddock_id === paddockId ? 'rgba(26,111,168,0.2)' : 'transparent', border: 'none', borderBottom: '1px solid rgba(255,255,255,0.06)', cursor: 'pointer', fontFamily: 'Archivo, sans-serif', fontSize: 14, color: p.paddock_id === paddockId ? 'var(--accent)' : 'rgba(255,255,255,0.8)' }}
+                style={{ display: 'block', width: '100%', textAlign: 'left', padding: '11px 14px', background: p.paddock_id === paddockId ? 'rgba(225,6,0,0.2)' : 'transparent', border: 'none', borderBottom: '1px solid rgba(255,255,255,0.06)', cursor: 'pointer', fontFamily: 'Archivo, sans-serif', fontSize: 14, color: p.paddock_id === paddockId ? 'var(--f1)' : 'rgba(255,255,255,0.8)' }}
               >
                 {p.name}
                 <span style={{ ...MONO, fontSize: 9, color: 'rgba(255,255,255,0.35)', marginLeft: 8 }}>{p.member_count}m</span>
@@ -153,6 +182,8 @@ export default function F1HomeScreen() {
         )}
       </div>
 
+      <CheckeredStrip />
+
       {/* CALENDAR | PADDOCKS section bar */}
       <div style={{ display: 'flex', borderBottom: '1px solid var(--rule)', background: 'var(--elev)' }}>
         {[['calendar', 'CALENDAR'], ['paddocks', 'PADDOCKS']].map(([key, label]) => (
@@ -164,13 +195,13 @@ export default function F1HomeScreen() {
               padding: '11px 0',
               background: 'none',
               border: 'none',
-              borderBottom: section === key ? '2px solid var(--accent)' : '2px solid transparent',
+              borderBottom: section === key ? '2px solid var(--f1)' : '2px solid transparent',
               cursor: 'pointer',
               ...MONO,
               fontSize: 10,
               fontWeight: 700,
               letterSpacing: '0.14em',
-              color: section === key ? 'var(--accent)' : 'var(--mute)',
+              color: section === key ? 'var(--f1)' : 'var(--mute)',
             }}
           >
             {label}
@@ -181,33 +212,33 @@ export default function F1HomeScreen() {
       {/* ── CALENDAR section ──────────────────────────────────────── */}
       {section === 'calendar' && (
         <div style={{ padding: '16px 16px 0' }}>
-          {/* Next Race countdown */}
+          {/* Next Race countdown — solid f1-red fill, the module's single highest-priority element */}
           {nextRace && nextRace.status !== 'finished' && (
-            <div style={{ background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 10, padding: '14px 16px', marginBottom: 20 }}>
-              <div style={{ ...MONO, fontSize: 9, letterSpacing: '0.14em', color: 'var(--mute)', textTransform: 'uppercase', marginBottom: 8 }}>
-                Next Race
+            <div style={{ background: 'var(--f1)', borderRadius: 10, padding: '14px 16px', marginBottom: 20 }}>
+              <div style={{ ...MONO, fontSize: 9, letterSpacing: '0.14em', color: 'rgba(255,255,255,0.75)', textTransform: 'uppercase', marginBottom: 8 }}>
+                R{nextRace.round_number} · Next Race
               </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12, flexWrap: 'wrap', gap: 8 }}>
                 <div>
-                  <div style={{ ...HEAD, fontSize: 17, color: 'var(--paper)' }}>
+                  <div style={{ ...HEAD, fontSize: 19, color: '#fff' }}>
                     {getFlag(nextRace.gp_name)} {nextRace.gp_name}
                   </div>
-                  <div style={{ ...MONO, fontSize: 10, color: 'var(--mute)', marginTop: 3 }}>
-                    R{nextRace.round_number} · {nextRace.circuit}
+                  <div style={{ ...MONO, fontSize: 10, color: 'rgba(255,255,255,0.75)', marginTop: 3 }}>
+                    {nextRace.circuit}
                   </div>
                 </div>
                 {countdown && (
                   <div style={{ textAlign: 'right' }}>
-                    <div style={{ ...HEAD, fontSize: 18, color: 'var(--accent)' }}>
+                    <div style={{ ...HEAD, fontSize: 24, color: '#fff' }}>
                       {countdown.d > 0 ? `${countdown.d}d ${countdown.h}h` : `${countdown.h}h ${countdown.m}m`}
                     </div>
-                    <div style={{ ...MONO, fontSize: 8, color: 'var(--mute)', letterSpacing: '0.12em' }}>TO RACE</div>
+                    <div style={{ ...MONO, fontSize: 8, color: 'rgba(255,255,255,0.75)', letterSpacing: '0.12em' }}>TO RACE</div>
                   </div>
                 )}
               </div>
               <button
                 onClick={() => navigate(`/f1/${paddockId}/picks/${nextRace.round_number}`)}
-                style={{ display: 'block', width: '100%', padding: '10px', background: 'var(--accent)', color: '#fff', borderRadius: 6, ...MONO, fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textAlign: 'center', border: 'none', cursor: 'pointer', boxSizing: 'border-box' }}
+                style={{ display: 'block', width: '100%', padding: '10px', background: '#fff', color: 'var(--f1)', borderRadius: 6, ...MONO, fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textAlign: 'center', border: 'none', cursor: 'pointer', boxSizing: 'border-box' }}
               >
                 SUBMIT PICKS FOR R{nextRace.round_number} →
               </button>
@@ -221,18 +252,21 @@ export default function F1HomeScreen() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
             {races.map(race => {
               const isNext = race.id === nextRace?.id;
+              // Only genuinely-upcoming rows past the next race dim; finished races stay full opacity.
+              const isDimmed = race.status === 'scheduled' && !isNext;
               return (
                 <button
                   key={race.id}
-                  onClick={() => navigate(`/f1/${paddockId}/picks/${race.round_number}`)}
-                  style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', background: isNext ? 'rgba(26,111,168,0.06)' : 'var(--card)', border: `1px solid ${isNext ? 'var(--accent)' : 'var(--rule)'}`, borderRadius: 6, cursor: 'pointer', opacity: race.status === 'finished' ? 0.65 : 1, textAlign: 'left', width: '100%' }}
+                  onClick={() => !isDimmed && navigate(`/f1/${paddockId}/picks/${race.round_number}`)}
+                  disabled={isDimmed}
+                  style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', background: isNext ? 'var(--f1-bg)' : 'var(--card)', border: `1px solid ${isNext ? 'var(--f1)' : 'var(--rule)'}`, borderLeft: isNext ? '3px solid var(--f1)' : `1px solid var(--rule)`, borderRadius: 6, cursor: isDimmed ? 'default' : 'pointer', opacity: isDimmed ? 0.42 : 1, textAlign: 'left', width: '100%' }}
                 >
                   <span style={{ ...MONO, fontSize: 10, color: 'var(--mute)', minWidth: 24, textAlign: 'right' }}>
                     R{race.round_number}
                   </span>
                   <span style={{ fontSize: 16 }}>{getFlag(race.gp_name)}</span>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontFamily: 'Archivo, sans-serif', fontSize: 13, color: 'var(--paper)', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 13, color: 'var(--paper)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                       {race.gp_name}
                     </div>
                     <div style={{ ...MONO, fontSize: 9, color: 'var(--mute)', marginTop: 1 }}>
@@ -242,10 +276,10 @@ export default function F1HomeScreen() {
                   </div>
                   {race.status === 'finished' && race.result_p1 ? (
                     <span style={{ ...MONO, fontSize: 10, color: 'var(--mute)', textAlign: 'right' }}>
-                      {race.result_p1.split(' ').pop()}
+                      🏆 {race.result_p1.split(' ').pop()}
                     </span>
                   ) : (
-                    <RaceStatusBadge race={race} />
+                    <RaceStatusBadge race={race} isNext={isNext} />
                   )}
                 </button>
               );
@@ -261,7 +295,7 @@ export default function F1HomeScreen() {
           {/* My Picks shortcut */}
           <button
             onClick={() => navigate(`/f1/${paddockId}/picks`)}
-            style={{ display: 'block', width: '100%', marginBottom: 20, padding: '13px 16px', background: 'var(--accent)', color: '#fff', border: 'none', borderRadius: 8, cursor: 'pointer', ...MONO, fontSize: 11, fontWeight: 700, letterSpacing: '0.14em', textAlign: 'center', boxSizing: 'border-box' }}
+            style={{ display: 'block', width: '100%', marginBottom: 20, padding: '13px 16px', background: 'var(--f1)', color: '#fff', border: 'none', borderRadius: 8, cursor: 'pointer', ...MONO, fontSize: 11, fontWeight: 700, letterSpacing: '0.14em', textAlign: 'center', boxSizing: 'border-box' }}
           >
             MY PICKS →
           </button>
@@ -278,7 +312,7 @@ export default function F1HomeScreen() {
                 <span style={{ ...MONO, fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', color: 'var(--paper)', whiteSpace: 'pre-line' }}>
                   {card.label}
                 </span>
-                <span style={{ ...MONO, fontSize: 9, color: 'var(--accent)', letterSpacing: '0.08em' }}>VIEW →</span>
+                <span style={{ ...MONO, fontSize: 9, color: 'var(--f1)', letterSpacing: '0.08em' }}>VIEW →</span>
               </button>
             ))}
           </div>
@@ -290,22 +324,25 @@ export default function F1HomeScreen() {
                 Top of the Paddock
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                {leaderboard.slice(0, 5).map(m => (
-                  <div key={m.user_id} style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 6, padding: '10px 12px' }}>
-                    <span style={{ ...HEAD, fontSize: 14, color: m.rank <= 3 ? 'var(--gold)' : 'var(--mute)', minWidth: 20 }}>
-                      {m.rank <= 3 ? ['🥇','🥈','🥉'][m.rank - 1] : m.rank}
-                    </span>
-                    <span style={{ fontFamily: 'Archivo, sans-serif', fontSize: 14, color: 'var(--paper)', flex: 1 }}>
-                      {m.display_name}
-                    </span>
-                    <span style={{ ...HEAD, fontSize: 15, color: 'var(--paper)' }}>{m.total_points}</span>
-                    <span style={{ ...MONO, fontSize: 9, color: 'var(--mute)' }}>PTS</span>
-                  </div>
-                ))}
+                {leaderboard.slice(0, 5).map(m => {
+                  const isMe = user && m.user_id === user.id;
+                  return (
+                    <div key={m.user_id} style={{ display: 'flex', alignItems: 'center', gap: 10, background: isMe ? 'var(--f1-bg)' : 'var(--card)', border: `1px solid ${isMe ? 'var(--f1)' : 'var(--rule)'}`, borderRadius: 6, padding: '10px 12px' }}>
+                      <span style={{ ...HEAD, fontSize: 14, color: m.rank <= 3 ? 'var(--gold)' : 'var(--mute)', minWidth: 20 }}>
+                        {m.rank <= 3 ? ['🥇','🥈','🥉'][m.rank - 1] : m.rank}
+                      </span>
+                      <span style={{ fontFamily: 'Archivo, sans-serif', fontSize: 14, color: isMe ? 'var(--f1)' : 'var(--paper)', fontWeight: isMe ? 700 : 400, flex: 1 }}>
+                        {m.display_name}{isMe ? ' (You)' : ''}
+                      </span>
+                      <span style={{ ...HEAD, fontSize: 15, color: isMe ? 'var(--f1)' : 'var(--paper)' }}>{m.total_points}</span>
+                      <span style={{ ...MONO, fontSize: 9, color: 'var(--mute)' }}>PTS</span>
+                    </div>
+                  );
+                })}
               </div>
               <button
                 onClick={() => navigate(`/f1/${paddockId}/standings`)}
-                style={{ display: 'block', width: '100%', marginTop: 10, padding: '10px 0', background: 'none', border: 'none', cursor: 'pointer', ...MONO, fontSize: 10, color: 'var(--accent)', letterSpacing: '0.12em', textAlign: 'center' }}
+                style={{ display: 'block', width: '100%', marginTop: 10, padding: '10px 0', background: 'none', border: 'none', cursor: 'pointer', ...MONO, fontSize: 10, color: 'var(--f1)', letterSpacing: '0.12em', textAlign: 'center' }}
               >
                 FULL STANDINGS →
               </button>

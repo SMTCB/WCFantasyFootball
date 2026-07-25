@@ -138,7 +138,7 @@ export default function TennisAtpFinalsScreen() {
                 <button
                   type="submit"
                   disabled={busy || !allGroupPicked}
-                  style={{ marginTop: 16, width: '100%', padding: '13px', background: busy || !allGroupPicked ? 'var(--mute)' : 'var(--accent)', color: '#fff', border: 'none', borderRadius: 6, fontFamily: 'Archivo, sans-serif', fontSize: 14, fontWeight: 600, cursor: busy || !allGroupPicked ? 'default' : 'pointer' }}
+                  style={{ marginTop: 16, width: '100%', padding: '13px', background: busy || !allGroupPicked ? 'var(--mute)' : 'var(--ten)', color: '#fff', border: 'none', borderRadius: 6, fontFamily: 'Archivo, sans-serif', fontSize: 14, fontWeight: 600, cursor: busy || !allGroupPicked ? 'default' : 'pointer' }}
                 >
                   {busy ? 'Saving…' : 'Lock group picks →'}
                 </button>
@@ -149,7 +149,7 @@ export default function TennisAtpFinalsScreen() {
 
         {/* Knockout Picks */}
         {(isKnockoutOpen || isCompleted) && knockoutMatches.length > 0 && (
-          <div style={{ background: 'var(--card)', border: `2px solid ${isKnockoutOpen ? 'var(--accent)' : 'var(--rule)'}`, borderRadius: 6, padding: '16px' }}>
+          <div style={{ background: 'var(--card)', border: `2px solid ${isKnockoutOpen ? 'var(--ten)' : 'var(--rule)'}`, borderRadius: 6, padding: '16px' }}>
             <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 14, color: 'var(--paper)', marginBottom: 4 }}>
               Login 2 — Knockouts (3 matches)
             </div>
@@ -217,9 +217,9 @@ function MatchPickRow({ match, label, current, locked, onChange }) {
               style={{
                 flex: 1, padding: '12px 10px', border: 'none', borderRight: '1px solid var(--rule)',
                 cursor: locked ? 'default' : 'pointer',
-                background: correctPick ? 'rgba(22,101,52,0.1)' : wrongPick ? 'rgba(185,28,28,0.07)' : isPicked ? 'var(--accent-bg)' : 'var(--card)',
+                background: correctPick ? 'rgba(22,101,52,0.1)' : wrongPick ? 'rgba(185,28,28,0.07)' : isPicked ? 'var(--tenbg)' : 'var(--card)',
                 fontFamily: 'Archivo, sans-serif', fontSize: 14, fontWeight: isPicked ? 600 : 400,
-                color: correctPick ? 'var(--pos)' : wrongPick ? 'var(--neg)' : isPicked ? 'var(--accent)' : 'var(--paper)',
+                color: correctPick ? 'var(--pos)' : wrongPick ? 'var(--neg)' : isPicked ? 'var(--ten)' : 'var(--paper)',
                 transition: 'background 0.1s',
                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
               }}

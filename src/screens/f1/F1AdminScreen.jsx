@@ -136,7 +136,7 @@ export default function F1AdminScreen() {
     padding: '11px 18px', border: 'none', borderRadius: 6,
     fontFamily: 'JetBrains Mono, monospace', fontSize: 10, fontWeight: 700, letterSpacing: '0.12em',
     cursor: busy ? 'default' : 'pointer',
-    background: variant === 'primary' ? 'var(--accent)' : variant === 'danger' ? 'var(--danger)' : 'var(--elev)',
+    background: variant === 'primary' ? 'var(--f1)' : variant === 'danger' ? 'var(--danger)' : 'var(--elev)',
     color: variant === 'elev' ? 'var(--paper)' : '#fff',
     opacity: busy ? 0.7 : 1,
   });
@@ -144,7 +144,7 @@ export default function F1AdminScreen() {
   const selectStyle = { width: '100%', padding: '10px 12px', border: '1px solid var(--rule)', borderRadius: 6, fontFamily: 'Archivo, sans-serif', fontSize: 13, color: 'var(--paper)', background: 'var(--card)', outline: 'none', boxSizing: 'border-box' };
 
   return (
-    <div style={{ background: 'var(--ink)', minHeight: '100vh', paddingBottom: 40 }}>
+    <div style={{ background: 'var(--bg)', minHeight: '100vh', paddingBottom: 40 }}>
       <div style={{ background: 'var(--shell)', padding: '16px 16px 12px' }}>
         <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 9, letterSpacing: '0.18em', color: 'rgba(255,255,255,0.45)', marginBottom: 4 }}>⚡ ADMIN PANEL</div>
         <h1 style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 22, color: 'var(--on-shell)', margin: 0 }}>F1 ADMIN</h1>
@@ -153,7 +153,7 @@ export default function F1AdminScreen() {
       {/* Section tabs */}
       <div style={{ display: 'flex', borderBottom: '1px solid var(--rule)' }}>
         {[['race', 'RACE RESULTS'], ['season', 'SEASON BETS']].map(([k, l]) => (
-          <button key={k} onClick={() => setActiveSection(k)} style={{ flex: 1, padding: '11px 0', fontFamily: 'JetBrains Mono, monospace', fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', cursor: 'pointer', border: 'none', borderBottom: activeSection === k ? '2px solid var(--accent)' : '2px solid transparent', background: 'transparent', color: activeSection === k ? 'var(--accent)' : 'var(--mute)', marginBottom: -1 }}>
+          <button key={k} onClick={() => setActiveSection(k)} style={{ flex: 1, padding: '11px 0', fontFamily: 'JetBrains Mono, monospace', fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', cursor: 'pointer', border: 'none', borderBottom: activeSection === k ? '2px solid var(--f1)' : '2px solid transparent', background: 'transparent', color: activeSection === k ? 'var(--f1)' : 'var(--mute)', marginBottom: -1 }}>
             {l}
           </button>
         ))}

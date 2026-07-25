@@ -4,17 +4,17 @@ import { usePlayerBox } from '../../hooks/tennis/usePlayerBox';
 import { useTennisLeaderboard } from '../../hooks/tennis/useTennisLeaderboard';
 
 const STATUS_LABEL = {
-  upcoming:         { label: 'Upcoming',       color: 'var(--mute)' },
-  roster_open:      { label: 'Pick your squad', color: 'var(--pos)' },
-  in_progress:      { label: 'In Progress',    color: 'var(--accent)' },
-  qf_captain_open:  { label: 'Pick Captain',   color: 'var(--gold)' },
-  completed:        { label: 'Completed',       color: 'var(--mute)' },
+  upcoming:         { label: 'Upcoming',        color: 'var(--mute)', bg: 'transparent', outline: true },
+  roster_open:      { label: 'Pick your squad', color: '#fff', bg: 'var(--ten)' },
+  in_progress:      { label: 'In Progress',     color: '#fff', bg: 'var(--accent)' },
+  qf_captain_open:  { label: 'Pick Captain',    color: '#fff', bg: 'var(--gold)' },
+  completed:        { label: 'Completed',       color: 'var(--mute)', bg: 'transparent', outline: true },
 };
 
 const TYPE_BADGE = {
-  grand_slam:  { label: 'Grand Slam', color: 'var(--gold)' },
-  masters_1000: { label: 'Masters 1000', color: 'var(--accent)' },
-  atp_finals:  { label: 'ATP Finals', color: 'var(--purple)' },
+  grand_slam:  { label: 'Grand Slam', color: 'var(--gold)', bg: 'rgba(184,114,14,0.1)' },
+  masters_1000: { label: 'Masters 1000', color: 'var(--mute)', bg: 'var(--elev)' },
+  atp_finals:  { label: 'Season Finale', color: 'var(--ten)', bg: 'var(--tenbg)' },
 };
 
 const SURFACE_ICON = { hard: '🎾', clay: '🟤', grass: '🌿', hard_indoor: '🏟️' };
@@ -36,7 +36,7 @@ export default function TennisHomeScreen() {
     <div style={{ background: 'var(--bg)', minHeight: '100vh', paddingBottom: 32 }}>
 
       {/* Header */}
-      <div style={{ background: 'var(--shell)', padding: '24px 20px 20px' }}>
+      <div style={{ background: 'var(--shell)', borderLeft: '4px solid var(--ten)', padding: '24px 20px 20px 16px' }}>
         <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 10, letterSpacing: '0.18em', color: 'rgba(255,255,255,0.45)', textTransform: 'uppercase', marginBottom: 6 }}>
           🎾 Tennis · 2026 ATP Season
         </div>
@@ -86,7 +86,7 @@ export default function TennisHomeScreen() {
 
         {/* Action banner — active tournament */}
         {activeOrNext && (activeOrNext.status === 'roster_open' || activeOrNext.status === 'qf_captain_open') && (
-          <div style={{ background: activeOrNext.status === 'qf_captain_open' ? 'var(--gold)' : 'var(--accent)', borderRadius: 6, padding: '14px 16px', marginBottom: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div style={{ background: activeOrNext.status === 'qf_captain_open' ? 'var(--gold)' : 'var(--ten)', borderRadius: 6, padding: '14px 16px', marginBottom: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div>
               <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 9, color: 'rgba(255,255,255,0.7)', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 4 }}>
                 {activeOrNext.status === 'qf_captain_open' ? 'QF Captain window open' : 'Roster selection open'}
@@ -159,7 +159,7 @@ export default function TennisHomeScreen() {
                     background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 6,
                     padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 12,
                     cursor: isClickable ? 'pointer' : 'default',
-                    opacity: t.status === 'upcoming' ? 0.75 : 1,
+                    opacity: t.status === 'upcoming' ? 0.42 : 1,
                   }}
                 >
                   <span style={{ fontSize: 20 }}>{SURFACE_ICON[t.surface] ?? '🎾'}</span>
@@ -168,7 +168,7 @@ export default function TennisHomeScreen() {
                       <span style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 14, color: 'var(--paper)' }}>
                         {t.name}
                       </span>
-                      <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 9, color: tb.color, letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+                      <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 9, color: tb.color, background: tb.bg, borderRadius: 3, padding: '2px 6px', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
                         {tb.label}
                       </span>
                     </div>
@@ -184,7 +184,11 @@ export default function TennisHomeScreen() {
                     </div>
                   </div>
                   <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                    <div style={{ fontFamily: 'Archivo, sans-serif', fontSize: 12, fontWeight: 600, color: st.color }}>
+                    <div style={{
+                      fontFamily: 'Archivo, sans-serif', fontSize: 11, fontWeight: 600, color: st.color,
+                      background: st.bg, display: 'inline-block', padding: st.outline ? '3px 9px' : '4px 10px',
+                      borderRadius: 4, border: st.outline ? '1px solid var(--rule)' : 'none',
+                    }}>
                       {st.label}
                     </div>
                     {t.has_my_roster && (
