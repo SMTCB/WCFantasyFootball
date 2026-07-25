@@ -565,13 +565,59 @@ function FindTab({ searchClubhouses, joinCircleByCode }) {
 }
 
 // ── Notification bell + dropdown (S-08) ───────────────────────────────────────
-function NotifBell({ notifications, unreadCount, onMarkRead, onMarkAll, onNavigate }) {
+const NOTIF_TYPE_META = {
+  frontpage_edition: { badge: 'TIMES',    color: 'var(--accent)' },
+  breaking_news:     { badge: 'NEWS',     color: 'var(--danger)' },
+  direct_message:    { badge: 'DM',       color: 'var(--cyan)'   },
+};
+
+function NotifList({ notifications, onMarkRead, onNavigate, onNavigated }) {
+  if (notifications.length === 0) {
+    return (
+      <div style={{ textAlign: 'center', padding: '32px 0', ...MONO, fontSize: 11, color: 'var(--mute)' }}>
+        No notifications yet.
+      </div>
+    );
+  }
+  return notifications.map(n => {
+    const meta   = NOTIF_TYPE_META[n.type] ?? { badge: n.type.toUpperCase(), color: 'var(--mute)' };
+    const isNew  = !n.read_at;
+    const canNav = n.source_type === 'league' && n.source_id;
+    return (
+      <div
+        key={n.id}
+        role={canNav ? 'button' : undefined}
+        tabIndex={canNav ? 0 : undefined}
+        onClick={() => {
+          if (isNew) onMarkRead(n.id);
+          if (canNav) { onNavigate(n.source_id); onNavigated?.(); }
+        }}
+        style={{
+          display: 'flex', gap: 8, alignItems: 'flex-start', padding: '10px 14px',
+          borderBottom: '1px solid var(--rule)',
+          background: isNew ? 'var(--accent-bg)' : 'transparent',
+          cursor: canNav ? 'pointer' : 'default',
+        }}
+      >
+        <div style={{ paddingTop: 5, flexShrink: 0, width: 6 }}>
+          {isNew && <div style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--accent)' }} />}
+        </div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 3 }}>
+            <span style={{ ...MONO, fontSize: 9, fontWeight: 700, letterSpacing: '0.1em', color: meta.color }}>{meta.badge}</span>
+            <span style={{ ...MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '0.07em' }}>{timeAgo(n.created_at)}</span>
+          </div>
+          <div style={{ ...BODY, fontSize: 12.5, color: 'var(--paper)', lineHeight: 1.4 }}>
+            {n.payload?.headline ?? n.payload?.preview ?? n.type}
+          </div>
+        </div>
+      </div>
+    );
+  });
+}
+
+function NotifBell({ notifications, unreadCount, onMarkRead, onMarkAll, onNavigate, isDesktop }) {
   const [open, setOpen] = useState(false);
-  const TYPE_META = {
-    frontpage_edition: { badge: 'TIMES',    color: 'var(--accent)' },
-    breaking_news:     { badge: 'NEWS',     color: 'var(--danger)' },
-    direct_message:    { badge: 'DM',       color: 'var(--cyan)'   },
-  };
 
   return (
     <div style={{ position: 'relative', flexShrink: 0 }}>
@@ -599,11 +645,38 @@ function NotifBell({ notifications, unreadCount, onMarkRead, onMarkAll, onNaviga
         )}
       </button>
 
-      {open && (
+      {open && !isDesktop && (
+        // Mobile: dedicated full screen with a back button (S-08) — no room for a dropdown at this width
+        <div style={{ position: 'fixed', inset: 0, zIndex: 100, background: 'var(--card)', display: 'flex', flexDirection: 'column' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '14px 16px', borderBottom: '1px solid var(--rule)', flexShrink: 0 }}>
+            <button
+              onClick={() => setOpen(false)}
+              style={{ background: 'transparent', border: 'none', color: 'var(--paper)', fontSize: 18, cursor: 'pointer', padding: '2px 4px 2px 0', lineHeight: 1 }}
+              aria-label="Back"
+            >
+              ←
+            </button>
+            <span style={{ ...HEAD, fontSize: 15, color: 'var(--paper)', flex: 1 }}>Notifications</span>
+            {unreadCount > 0 && (
+              <button
+                onClick={onMarkAll}
+                style={{ ...MONO, fontSize: 9, fontWeight: 700, letterSpacing: '0.08em', color: 'var(--accent)', background: 'transparent', border: 'none', cursor: 'pointer' }}
+              >
+                MARK ALL READ
+              </button>
+            )}
+          </div>
+          <div style={{ flex: 1, overflowY: 'auto' }}>
+            <NotifList notifications={notifications} onMarkRead={onMarkRead} onNavigate={onNavigate} onNavigated={() => setOpen(false)} />
+          </div>
+        </div>
+      )}
+
+      {open && isDesktop && (
         <>
           <div onClick={() => setOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 40 }} />
           <div style={{
-            position: 'absolute', top: 40, right: 0, width: 340, maxWidth: '90vw', zIndex: 41,
+            position: 'absolute', top: 40, right: 0, width: 360, maxWidth: '90vw', zIndex: 41,
             background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 10,
             boxShadow: '0 8px 28px rgba(0,0,0,0.18)', overflow: 'hidden',
           }}>
@@ -619,45 +692,7 @@ function NotifBell({ notifications, unreadCount, onMarkRead, onMarkAll, onNaviga
               )}
             </div>
             <div style={{ maxHeight: 360, overflowY: 'auto' }}>
-              {notifications.length === 0 ? (
-                <div style={{ textAlign: 'center', padding: '32px 0', ...MONO, fontSize: 11, color: 'var(--mute)' }}>
-                  No notifications yet.
-                </div>
-              ) : notifications.map(n => {
-                const meta   = TYPE_META[n.type] ?? { badge: n.type.toUpperCase(), color: 'var(--mute)' };
-                const isNew  = !n.read_at;
-                const canNav = n.source_type === 'league' && n.source_id;
-                return (
-                  <div
-                    key={n.id}
-                    role={canNav ? 'button' : undefined}
-                    tabIndex={canNav ? 0 : undefined}
-                    onClick={() => {
-                      if (isNew) onMarkRead(n.id);
-                      if (canNav) { onNavigate(n.source_id); setOpen(false); }
-                    }}
-                    style={{
-                      display: 'flex', gap: 8, alignItems: 'flex-start', padding: '10px 14px',
-                      borderBottom: '1px solid var(--rule)',
-                      background: isNew ? 'var(--accent-bg)' : 'transparent',
-                      cursor: canNav ? 'pointer' : 'default',
-                    }}
-                  >
-                    <div style={{ paddingTop: 5, flexShrink: 0, width: 6 }}>
-                      {isNew && <div style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--accent)' }} />}
-                    </div>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 3 }}>
-                        <span style={{ ...MONO, fontSize: 9, fontWeight: 700, letterSpacing: '0.1em', color: meta.color }}>{meta.badge}</span>
-                        <span style={{ ...MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '0.07em' }}>{timeAgo(n.created_at)}</span>
-                      </div>
-                      <div style={{ ...BODY, fontSize: 12.5, color: 'var(--paper)', lineHeight: 1.4 }}>
-                        {n.payload?.headline ?? n.payload?.preview ?? n.type}
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
+              <NotifList notifications={notifications} onMarkRead={onMarkRead} onNavigate={onNavigate} onNavigated={() => setOpen(false)} />
             </div>
           </div>
         </>
@@ -847,6 +882,7 @@ export default function ClubhouseScreen() {
               unreadCount={unreadCount}
               onMarkRead={markRead}
               onMarkAll={() => markAllRead(activeCircleId)}
+              isDesktop={isDesktop}
               onNavigate={(leagueId) => navigate(`/league/${leagueId}`)}
             />
           </div>
