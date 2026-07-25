@@ -93,9 +93,9 @@ export default function PaddockLobbyScreen() {
               letterSpacing: '0.14em',
               cursor: 'pointer',
               border: 'none',
-              borderBottom: tab === t.key ? '2px solid var(--accent)' : '2px solid transparent',
+              borderBottom: tab === t.key ? '2px solid var(--f1)' : '2px solid transparent',
               background: 'transparent',
-              color: tab === t.key ? 'var(--accent)' : 'var(--mute)',
+              color: tab === t.key ? 'var(--f1)' : 'var(--mute)',
               marginBottom: -1,
             }}
           >
@@ -121,7 +121,7 @@ export default function PaddockLobbyScreen() {
                 </p>
                 <button
                   onClick={() => setTab('create')}
-                  style={{ marginTop: 16, padding: '10px 24px', background: 'var(--accent)', color: '#fff', border: 'none', borderRadius: 6, fontFamily: 'JetBrains Mono, monospace', fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', cursor: 'pointer' }}
+                  style={{ marginTop: 16, padding: '10px 24px', background: 'var(--f1)', color: '#fff', border: 'none', borderRadius: 6, fontFamily: 'JetBrains Mono, monospace', fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', cursor: 'pointer' }}
                 >
                   CREATE YOUR FIRST PADDOCK
                 </button>
@@ -143,7 +143,7 @@ export default function PaddockLobbyScreen() {
                             {p.member_count} {p.member_count === 1 ? 'member' : 'members'}
                           </span>
                           {p.role === 'owner' && (
-                            <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 9, color: 'var(--accent)', letterSpacing: '0.12em', fontWeight: 700 }}>
+                            <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 9, color: 'var(--f1)', letterSpacing: '0.12em', fontWeight: 700 }}>
                               OWNER
                             </span>
                           )}
@@ -151,7 +151,7 @@ export default function PaddockLobbyScreen() {
                       </div>
                       <button
                         onClick={() => enterPaddock(p.paddock_id)}
-                        style={{ padding: '8px 16px', background: 'var(--accent)', color: '#fff', border: 'none', borderRadius: 6, fontFamily: 'JetBrains Mono, monospace', fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', cursor: 'pointer', whiteSpace: 'nowrap' }}
+                        style={{ padding: '8px 16px', background: 'var(--f1)', color: '#fff', border: 'none', borderRadius: 6, fontFamily: 'JetBrains Mono, monospace', fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', cursor: 'pointer', whiteSpace: 'nowrap' }}
                       >
                         ENTER →
                       </button>
@@ -217,7 +217,7 @@ export default function PaddockLobbyScreen() {
             <button
               type="submit"
               disabled={busy || !name.trim()}
-              style={{ padding: '13px', background: busy || !name.trim() ? 'var(--mute)' : 'var(--accent)', color: '#fff', border: 'none', borderRadius: 6, fontFamily: 'JetBrains Mono, monospace', fontSize: 11, fontWeight: 700, letterSpacing: '0.14em', cursor: busy || !name.trim() ? 'default' : 'pointer' }}
+              style={{ padding: '13px', background: busy || !name.trim() ? 'var(--mute)' : 'var(--f1)', color: '#fff', border: 'none', borderRadius: 6, fontFamily: 'JetBrains Mono, monospace', fontSize: 11, fontWeight: 700, letterSpacing: '0.14em', cursor: busy || !name.trim() ? 'default' : 'pointer' }}
             >
               {busy ? 'CREATING…' : 'CREATE PADDOCK →'}
             </button>
@@ -243,7 +243,7 @@ export default function PaddockLobbyScreen() {
             <button
               type="submit"
               disabled={busy || code.trim().length < 6}
-              style={{ padding: '13px', background: busy || code.trim().length < 6 ? 'var(--mute)' : 'var(--accent)', color: '#fff', border: 'none', borderRadius: 6, fontFamily: 'JetBrains Mono, monospace', fontSize: 11, fontWeight: 700, letterSpacing: '0.14em', cursor: busy || code.trim().length < 6 ? 'default' : 'pointer' }}
+              style={{ padding: '13px', background: busy || code.trim().length < 6 ? 'var(--mute)' : 'var(--f1)', color: '#fff', border: 'none', borderRadius: 6, fontFamily: 'JetBrains Mono, monospace', fontSize: 11, fontWeight: 700, letterSpacing: '0.14em', cursor: busy || code.trim().length < 6 ? 'default' : 'pointer' }}
             >
               {busy ? 'JOINING…' : 'JOIN PADDOCK →'}
             </button>

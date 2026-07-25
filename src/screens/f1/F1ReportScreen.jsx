@@ -79,7 +79,7 @@ export default function F1ReportScreen() {
                   <div style={{ textAlign: 'right' }}>
                     {score ? (
                       <>
-                        <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 18, color: 'var(--paper)' }}>{score.total_points}</div>
+                        <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 18, color: 'var(--f1)' }}>{score.total_points}</div>
                         <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 8, color: 'var(--mute)' }}>PTS</div>
                       </>
                     ) : (
@@ -92,14 +92,21 @@ export default function F1ReportScreen() {
                 {/* Expanded breakdown */}
                 {isOpen && (
                   <div style={{ borderTop: '1px solid var(--rule)', padding: '12px 14px' }}>
-                    {/* Results */}
+                    {/* Results — podium bar-chart viz: P1 tallest/red, P2 mid/slate, P3 shortest/bronze */}
                     <div style={{ marginBottom: 12 }}>
                       <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 9, letterSpacing: '0.12em', color: 'var(--mute)', marginBottom: 6 }}>RACE RESULT</div>
-                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 6 }}>
-                        {[['🥇 P1', race.result_p1], ['🥈 P2', race.result_p2], ['🥉 P3', race.result_p3]].map(([label, val]) => (
-                          <div key={label} style={{ padding: '8px 10px', background: 'var(--elev)', borderRadius: 6 }}>
-                            <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 8, color: 'var(--mute)', marginBottom: 3 }}>{label}</div>
-                            <div style={{ fontFamily: 'Archivo, sans-serif', fontSize: 12, fontWeight: 600, color: 'var(--paper)' }}>{val ?? '—'}</div>
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 6, alignItems: 'end' }}>
+                        {[
+                          ['🥇 P1', race.result_p1, 'var(--f1)', 44],
+                          ['🥈 P2', race.result_p2, '#4A4A52', 32],
+                          ['🥉 P3', race.result_p3, '#B08D57', 22],
+                        ].map(([label, val, barColor, barHeight]) => (
+                          <div key={label} style={{ display: 'flex', flexDirection: 'column' }}>
+                            <div style={{ height: barHeight, background: barColor, borderRadius: '4px 4px 0 0' }} />
+                            <div style={{ padding: '8px 10px', background: 'var(--elev)', borderRadius: '0 0 6px 6px' }}>
+                              <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 8, color: 'var(--mute)', marginBottom: 3 }}>{label}</div>
+                              <div style={{ fontFamily: 'Archivo, sans-serif', fontSize: 12, fontWeight: 600, color: 'var(--paper)' }}>{val ?? '—'}</div>
+                            </div>
                           </div>
                         ))}
                       </div>
@@ -121,8 +128,8 @@ export default function F1ReportScreen() {
                             <div key={row.key} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '7px 10px', background: row.pts > 0 ? 'rgba(22,101,52,0.06)' : 'rgba(185,28,28,0.04)', borderRadius: 6, border: `1px solid ${row.pts > 0 ? 'rgba(22,101,52,0.2)' : 'rgba(185,28,28,0.1)'}` }}>
                               <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 9, color: 'var(--mute)', minWidth: 52 }}>{row.label}</span>
                               <span style={{ fontFamily: 'Archivo, sans-serif', fontSize: 13, color: 'var(--paper)', flex: 1 }}>{row.pick}</span>
-                              <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 10, fontWeight: 700, color: row.pts > 0 ? 'var(--positive)' : 'var(--mute)' }}>
-                                {row.pts > 0 ? `+${row.pts}` : '—'}
+                              <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 10, fontWeight: 700, color: row.pts > 0 ? 'var(--positive)' : 'var(--danger)' }}>
+                                {row.pts > 0 ? `+${row.pts}` : '+0'}
                               </span>
                             </div>
                           ))}
@@ -131,7 +138,7 @@ export default function F1ReportScreen() {
                               ⭐ All Correct Bonus +{breakdown.bonus}
                             </div>
                           )}
-                          <div style={{ padding: '8px 10px', background: 'var(--elev)', borderRadius: 6, display: 'flex', justifyContent: 'space-between', fontFamily: 'Archivo Black, sans-serif', fontSize: 16, color: 'var(--paper)' }}>
+                          <div style={{ padding: '8px 10px', background: 'var(--elev)', borderRadius: 6, display: 'flex', justifyContent: 'space-between', fontFamily: 'Archivo Black, sans-serif', fontSize: 16, color: 'var(--f1)' }}>
                             <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 10, color: 'var(--mute)', alignSelf: 'center' }}>TOTAL</span>
                             <span>{score.total_points} pts</span>
                           </div>
