@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { useClubhouseFrontpage, FT_EMOJIS } from '../hooks/useClubhouseFrontpage';
 import { ReactionStrip, LettersPanel } from './league/FrontpageInteractive';
@@ -19,15 +19,29 @@ const FT_MONO   = 'JetBrains Mono, monospace';
 const FT_SERIF  = 'var(--font-serif)';  // Georgia — registered token, Clubhouse-only
 const FT_SLAB   = 'Archivo Black, Impact, sans-serif';
 const FT_BODY   = 'Archivo, sans-serif';
+const FT_SECTION_TEXT = '#4a4436';   // warm section-body tone, distinct from full-ink lead
 
-function Divider() {
-  return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 8, margin: '16px 0' }}>
-      <div style={{ flex: 1, height: 1, background: FT_RULE }} />
-      <div style={{ width: 4, height: 4, borderRadius: '50%', background: FT_RULE }} />
-      <div style={{ flex: 1, height: 1, background: FT_RULE }} />
-    </div>
-  );
+const REGEN_COOLDOWN_MS = 4 * 60 * 60 * 1000;
+
+// generated_at + 4h cooldown, ticking every 30s — used to show "next in Xh Ym" inline
+// in the masthead instead of a separate bottom button, per the S-04 spec markup.
+function useRegenCooldown(generatedAt) {
+  const [label, setLabel] = useState(null);
+  useEffect(() => {
+    if (!generatedAt) { setLabel(null); return; }
+    const nextAt = new Date(generatedAt).getTime() + REGEN_COOLDOWN_MS;
+    function tick() {
+      const remaining = nextAt - Date.now();
+      if (remaining <= 0) { setLabel(null); return; }
+      const h = Math.floor(remaining / 3600000);
+      const m = Math.floor((remaining % 3600000) / 60000);
+      setLabel(`${h}h${String(m).padStart(2, '0')}m`);
+    }
+    tick();
+    const id = setInterval(tick, 30000);
+    return () => clearInterval(id);
+  }, [generatedAt]);
+  return label;
 }
 
 function FtSection({ label, content, sectionKey, ft }) {
@@ -37,7 +51,7 @@ function FtSection({ label, content, sectionKey, ft }) {
       <div style={{ fontFamily: FT_MONO, fontSize: 8, letterSpacing: '.2em', color: FT_MUTE, textTransform: 'uppercase', marginBottom: 6 }}>
         {label}
       </div>
-      <p style={{ fontFamily: FT_BODY, fontSize: 14, color: FT_INK, lineHeight: 1.65, margin: '0 0 8px' }}>
+      <p style={{ fontFamily: FT_BODY, fontSize: 14, color: FT_SECTION_TEXT, lineHeight: 1.65, margin: '0 0 8px' }}>
         {content}
       </p>
       <ReactionStrip
@@ -66,33 +80,52 @@ function EditionView({ edition, ft, circleName, isOwner, onGenerate, generating,
   const dateLabel = new Date(edition.edition_date).toLocaleDateString('en-GB', {
     weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
   });
+  const cooldownLabel = useRegenCooldown(edition.generated_at);
 
   return (
     <div style={{ background: FT_PAPER, color: FT_INK, fontFamily: FT_BODY, padding: '24px 20px 32px' }}>
 
-      {/* Masthead */}
-      <div style={{ textAlign: 'center', paddingBottom: 14, marginBottom: 4 }}>
-        <div style={{ fontFamily: FT_MONO, fontSize: 8, letterSpacing: '.22em', color: FT_MUTE, marginBottom: 6, textTransform: 'uppercase' }}>
-          {circleName} · The Clubhouse
-        </div>
-        <div style={{ fontFamily: FT_SLAB, fontSize: 28, letterSpacing: '.04em', color: FT_INK, lineHeight: 1, marginBottom: 4 }}>
+      {/* Masthead — single combined meta line with inline regenerate control, double-rule close */}
+      <div style={{ textAlign: 'center', paddingBottom: 14, marginBottom: 18, borderBottom: `3px double ${FT_INK}` }}>
+        <div style={{ fontFamily: FT_SERIF, fontWeight: 700, fontSize: 28, letterSpacing: '-0.01em', color: FT_INK, lineHeight: 1, marginBottom: 6 }}>
           FORZA TIMES
         </div>
-        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 12 }}>
-          <div style={{ flex: 1, height: 2, background: FT_INK }} />
-          <div style={{ fontFamily: FT_MONO, fontSize: 8, letterSpacing: '.16em', color: FT_MUTE, whiteSpace: 'nowrap' }}>
-            EDITION #{edition.edition_number} · {dateLabel.toUpperCase()}
-          </div>
-          <div style={{ flex: 1, height: 2, background: FT_INK }} />
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', flexWrap: 'wrap', gap: 8, fontFamily: FT_MONO, fontSize: 8, letterSpacing: '.16em', color: FT_MUTE, textTransform: 'uppercase' }}>
+          <span>EDITION #{edition.edition_number} · {dateLabel.toUpperCase()} · {circleName}</span>
+          {isOwner && (
+            cooldownLabel ? (
+              <span>↻ Regenerate (owner · next in {cooldownLabel})</span>
+            ) : (
+              <button
+                onClick={onGenerate}
+                disabled={generating}
+                style={{
+                  border: 'none',
+                  background: 'transparent',
+                  color: FT_GOLD,
+                  fontFamily: FT_MONO,
+                  fontSize: 8,
+                  fontWeight: 700,
+                  letterSpacing: '.16em',
+                  textTransform: 'uppercase',
+                  cursor: generating ? 'default' : 'pointer',
+                  padding: 0,
+                }}
+              >
+                {generating ? '↻ Generating…' : '↻ Regenerate (owner)'}
+              </button>
+            )
+          )}
         </div>
+        {genError && (
+          <div style={{ fontFamily: FT_MONO, fontSize: 10, color: 'var(--danger)', marginTop: 8 }}>{genError}</div>
+        )}
       </div>
-
-      <div style={{ height: 3, background: FT_INK, marginBottom: 18 }} />
 
       {/* Lead story */}
       {edition.headline && (
         <div style={{ marginBottom: 20 }}>
-          <h2 style={{ fontFamily: FT_SLAB, fontSize: 22, lineHeight: 1.15, color: FT_INK, margin: '0 0 10px', textTransform: 'uppercase' }}>
+          <h2 style={{ fontFamily: FT_SERIF, fontWeight: 700, fontSize: 22, lineHeight: 1.2, color: FT_INK, margin: '0 0 10px' }}>
             {edition.headline}
           </h2>
           {edition.deck && (
@@ -124,57 +157,18 @@ function EditionView({ edition, ft, circleName, isOwner, onGenerate, generating,
         </div>
       )}
 
-      <Divider />
-
-      {/* Hot take + wooden spoon — two column on wide */}
-      <div style={{ display: 'flex', gap: 20, flexWrap: 'wrap', marginBottom: 4 }}>
+      {/* Hot Take / Wooden Spoon / Transfer Desk — 3-column grid on wide, stacked on narrow */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 20, borderTop: `1px solid ${FT_RULE}`, paddingTop: 18 }}>
         {edition.hot_take && (
-          <div style={{ flex: '1 1 200px' }}>
-            <FtSection label="🔥 Hot Take" content={edition.hot_take} sectionKey="hot_take" ft={ft} />
-          </div>
+          <FtSection label="🔥 Hot Take" content={edition.hot_take} sectionKey="hot_take" ft={ft} />
         )}
         {edition.wooden_spoon && (
-          <div style={{ flex: '1 1 200px' }}>
-            <FtSection label="🥄 Wooden Spoon" content={edition.wooden_spoon} sectionKey="scores" ft={ft} />
-          </div>
+          <FtSection label="🥄 Wooden Spoon" content={edition.wooden_spoon} sectionKey="scores" ft={ft} />
+        )}
+        {edition.transfer_rumour && (
+          <FtSection label="📰 Transfer Desk" content={edition.transfer_rumour} sectionKey="transfers" ft={ft} />
         )}
       </div>
-
-      {edition.transfer_rumour && (
-        <>
-          <Divider />
-          <FtSection label="📰 Transfer Desk" content={edition.transfer_rumour} sectionKey="transfers" ft={ft} />
-        </>
-      )}
-
-      {/* Owner generate button */}
-      {isOwner && (
-        <>
-          <Divider />
-          <div style={{ textAlign: 'center' }}>
-            <button
-              onClick={onGenerate}
-              disabled={generating}
-              style={{
-                padding: '9px 20px',
-                border: `1px solid ${FT_GOLD}`,
-                background: 'transparent',
-                color: generating ? FT_MUTE : FT_GOLD,
-                fontFamily: FT_MONO,
-                fontSize: 9,
-                fontWeight: 700,
-                letterSpacing: '.16em',
-                cursor: generating ? 'default' : 'pointer',
-              }}
-            >
-              {generating ? 'GENERATING…' : 'REGENERATE SPECIAL EDITION →'}
-            </button>
-            {genError && (
-              <div style={{ fontFamily: FT_MONO, fontSize: 10, color: 'var(--danger)', marginTop: 8 }}>{genError}</div>
-            )}
-          </div>
-        </>
-      )}
     </div>
   );
 }
