@@ -63,6 +63,64 @@ function NavSectionLabel({ children }) {
   );
 }
 
+const IDENTITY_COLORS = ['var(--accent)', 'var(--gold)', 'var(--f1)', 'var(--positive)', 'var(--danger)'];
+const STOPWORDS = new Set(['the', 'a', 'an']);
+
+function circleInitials(name) {
+  const words = (name ?? '').trim().split(/\s+/).filter(w => w && !STOPWORDS.has(w.toLowerCase()));
+  if (words.length >= 2) return (words[0][0] + words[1][0]).toUpperCase();
+  if (words.length === 1) return words[0].slice(0, 2).toUpperCase();
+  return '??';
+}
+
+function ClubhouseSwitcher({ circles, activeCircleId, onSelect, onAdd }) {
+  if (circles.length <= 1) return null;
+  const activeCircle = circles.find(c => c.id === activeCircleId);
+  return (
+    <>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7, padding: '0 6px 12px' }}>
+        {circles.map((c, i) => {
+          const isActive = c.id === activeCircleId;
+          return (
+            <button
+              key={c.id}
+              onClick={() => onSelect(c.id)}
+              title={c.name}
+              style={{
+                width: 30, height: 30, borderRadius: 9,
+                display: 'grid', placeItems: 'center',
+                fontFamily: 'Archivo Black, sans-serif', fontSize: 11, color: '#fff',
+                background: IDENTITY_COLORS[i % IDENTITY_COLORS.length],
+                border: 'none', cursor: 'pointer', flexShrink: 0,
+                boxShadow: isActive ? '0 0 0 2px var(--shell), 0 0 0 3.5px var(--accent)' : 'none',
+              }}
+            >
+              {circleInitials(c.name)}
+            </button>
+          );
+        })}
+        <button
+          onClick={onAdd}
+          aria-label="Find or create a Clubhouse"
+          style={{
+            width: 30, height: 30, borderRadius: 9,
+            border: '1.5px dashed rgba(255,255,255,.25)',
+            display: 'grid', placeItems: 'center',
+            color: 'rgba(255,255,255,.4)', fontSize: 14,
+            background: 'transparent', cursor: 'pointer', flexShrink: 0,
+          }}
+        >
+          +
+        </button>
+      </div>
+      <div style={{ padding: '0 6px 14px', fontSize: 12, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 5, color: 'rgba(255,255,255,.85)' }}>
+        {activeCircle?.name ?? ''}
+        <span aria-hidden="true" style={{ fontSize: 10, opacity: 0.6 }}>⌄</span>
+      </div>
+    </>
+  );
+}
+
 function NavItem({ label, path, active, dotColor, tag, tagStyle, sub, onClick, badge }) {
   const [hovered, setHovered] = useState(false);
   const style = {
@@ -121,7 +179,7 @@ export default function AppLayout({ children }) {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { unreadCount } = useContext(ClubhouseNotifContext);
-  const { competitions, activeCircleId, refreshCompetitions } = useClubhouseContext();
+  const { myCircles, competitions, activeCircleId, setActiveCircleId, refreshCompetitions } = useClubhouseContext();
   const { sport, competitionId } = useActiveCompetition();
   const [showNewCompFlow, setShowNewCompFlow] = useState(false);
 
@@ -168,14 +226,17 @@ export default function AppLayout({ children }) {
         style={{ background: 'var(--shell)', borderRight: '1px solid rgba(255,255,255,0.08)' }}
       >
         {/* Brand */}
-        <div style={{ padding: '16px 14px 13px', borderBottom: '1px solid rgba(255,255,255,.07)', display: 'flex', alignItems: 'center', gap: 9 }}>
-          <div style={{ width: 24, height: 24, borderRadius: 5, background: 'var(--accent)', display: 'grid', placeItems: 'center', fontFamily: 'Archivo Black, sans-serif', fontSize: 11, color: '#fff', flexShrink: 0 }}>
-            K
-          </div>
-          <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 13, color: '#fff', letterSpacing: '-0.01em' }}>
-            Fantasy<span style={{ color: 'rgba(255,255,255,.32)' }}>Kit</span>
-          </div>
+        <div style={{ padding: '16px 14px 13px', borderBottom: '1px solid rgba(255,255,255,.07)' }}>
+          <BrandMark theme="dark" compact />
         </div>
+
+        {/* Multi-Clubhouse switcher — only renders for users in >1 Clubhouse */}
+        <ClubhouseSwitcher
+          circles={myCircles}
+          activeCircleId={activeCircleId}
+          onSelect={(id) => { setActiveCircleId(id); navigate(`/clubhouse/${id}`); }}
+          onAdd={() => navigate('/clubhouse?tab=find')}
+        />
 
         {/* Nav — clubhouse-centric, never morphs */}
         <div style={{ padding: '8px 6px', flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 0, scrollbarWidth: 'none' }}>

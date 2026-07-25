@@ -16,9 +16,20 @@ function extractActiveCompId(pathname) {
   return null;
 }
 
+const PILL_STYLE = {
+  display: 'flex', alignItems: 'center', gap: 7,
+  fontSize: 12, fontWeight: 600,
+  padding: '0 10px', height: '100%',
+  border: 'none', borderBottom: '2px solid transparent',
+  background: 'transparent', cursor: 'pointer',
+  whiteSpace: 'nowrap', flexShrink: 0,
+  transition: 'color .12s, border-color .12s',
+};
+
 export function CompetitionTopBar({ competitions, pathname, onAdd }) {
   const navigate = useNavigate();
   const active = extractActiveCompId(pathname);
+  const isClubhouseHome = /^\/clubhouse(\/[^/]+)?$/.test(pathname);
 
   const allComps = [
     ...(competitions.football ?? []).map(c => ({ ...c, sport: 'football', href: `/league/${c.id}` })),
@@ -26,20 +37,31 @@ export function CompetitionTopBar({ competitions, pathname, onAdd }) {
     ...(competitions.tennis  ?? []).map(c => ({ ...c, sport: 'tennis',   href: `/tennis/tournament/${c.id}` })),
   ];
 
-  if (allComps.length === 0) return null;
-
   return (
     <div
       role="navigation"
       aria-label="Competitions"
       style={{
-        display: 'flex', alignItems: 'stretch',
+        display: 'flex', alignItems: 'stretch', gap: 6,
         borderBottom: '1px solid var(--rule)',
         background: 'var(--card)',
+        padding: '0 16px',
         overflowX: 'auto', scrollbarWidth: 'none',
         minHeight: 40, flexShrink: 0,
       }}
     >
+      <button
+        onClick={() => navigate('/clubhouse')}
+        style={{
+          ...PILL_STYLE,
+          padding: '0 10px 0 0',
+          color: isClubhouseHome ? 'var(--accent)' : 'var(--mute)',
+          borderBottomColor: isClubhouseHome ? 'var(--accent)' : 'transparent',
+        }}
+      >
+        <span aria-hidden="true">🏠</span>Clubhouse
+      </button>
+
       {allComps.map(comp => {
         const isActive = active?.id === comp.id && active?.sport === comp.sport;
         const color = SPORT_COLOR[comp.sport] ?? 'var(--mute)';
@@ -48,26 +70,14 @@ export function CompetitionTopBar({ competitions, pathname, onAdd }) {
             key={`${comp.sport}-${comp.id}`}
             onClick={() => navigate(comp.href)}
             style={{
-              flexShrink: 0,
-              padding: '0 16px',
-              borderRight: '1px solid var(--rule)',
-              borderBottom: isActive ? `2px solid ${color}` : '2px solid transparent',
-              borderTop: 'none', borderLeft: 'none',
-              background: 'transparent',
-              cursor: 'pointer',
-              fontFamily: 'JetBrains Mono, monospace',
-              fontSize: 10,
-              fontWeight: 700,
-              letterSpacing: '0.1em',
-              color: isActive ? color : 'var(--mute)',
-              whiteSpace: 'nowrap',
-              transition: 'color .12s',
-              display: 'flex', alignItems: 'center', gap: 6,
+              ...PILL_STYLE,
+              color: isActive ? 'var(--paper)' : 'var(--mute)',
+              borderBottomColor: isActive ? color : 'transparent',
             }}
           >
             <span style={{
-              display: 'inline-block', width: 5, height: 5, borderRadius: '50%',
-              background: color, opacity: isActive ? 1 : 0.5, flexShrink: 0,
+              display: 'inline-block', width: 6, height: 6, borderRadius: '50%',
+              background: color, flexShrink: 0,
             }} />
             {comp.name}
           </button>
@@ -79,14 +89,14 @@ export function CompetitionTopBar({ competitions, pathname, onAdd }) {
         onClick={onAdd}
         title="Add competition"
         style={{
+          marginLeft: 'auto',
           flexShrink: 0,
-          padding: '0 14px',
+          padding: '0 0 0 10px',
           background: 'transparent',
           border: 'none',
-          borderBottom: '2px solid transparent',
           cursor: 'pointer',
-          fontFamily: 'JetBrains Mono, monospace',
           fontSize: 16,
+          fontWeight: 700,
           color: 'var(--mute)',
           lineHeight: 1,
           transition: 'color .12s',
