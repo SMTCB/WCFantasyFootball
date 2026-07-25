@@ -2,33 +2,43 @@ import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
+import { useIsDesktop } from '../hooks/useViewport';
 
 const SPORT_COLOR = { football: 'var(--accent)', f1: 'var(--f1)', tennis: 'var(--ten)' };
+const SPORT_EMOJI = { football: '⚽', f1: '🏁', tennis: '🎾' };
+
+const SPORTS = [
+  { sport: 'football', label: 'Football', icon: '/brand/frontrow-football-normal.svg' },
+  { sport: 'tennis',   label: 'Tennis',   icon: '/brand/frontrow-tennis-normal.svg' },
+  { sport: 'f1',       label: 'F1',       icon: '/brand/frontrow-f1-normal.svg' },
+];
 
 const FORMATS = [
-  { value: 'noduplicate', label: 'Classic' },
-  { value: 'draft',       label: 'Draft'   },
+  { value: 'noduplicate', label: 'Classic — season-long points' },
+  { value: 'draft',       label: 'Draft' },
 ];
 
 // Avoids importing useAuth or useClubhouseContext (both imported by AppLayout — TDZ guard).
-// circleId, onCreated, onClose come in as props from AppLayout.
-export default function NewCompetitionFlow({ circleId, onCreated, onClose }) {
+// circleId, clubhouseName, onCreated, onClose come in as props from AppLayout.
+export default function NewCompetitionFlow({ circleId, clubhouseName, onCreated, onClose }) {
   const navigate = useNavigate();
+  const isDesktop = useIsDesktop();
 
-  const [step, setStep]               = useState('pick');
+  const [sport, setSport]             = useState('football');
   const [name, setName]               = useState('');
   const [format, setFormat]           = useState('noduplicate');
   const [h2h, setH2h]                 = useState(false);
   const [tournaments, setTournaments] = useState([]);
   const [tournamentId, setTournamentId] = useState('');
+  const [showJoin, setShowJoin]       = useState(false);
   const [joinCode, setJoinCode]       = useState('');
   const [joinSport, setJoinSport]     = useState('football');
   const [loading, setLoading]         = useState(false);
   const [error, setError]             = useState(null);
 
-  // Fetch tournament list the moment the football create step mounts
+  // Fetch the real-world tournament list whenever football is the selected sport
   useEffect(() => {
-    if (step !== 'create-football') return;
+    if (sport !== 'football') return;
     supabase
       .from('tournaments')
       .select('id, name')
@@ -36,20 +46,13 @@ export default function NewCompetitionFlow({ circleId, onCreated, onClose }) {
       .then(({ data }) => {
         const list = data ?? [];
         setTournaments(list);
-        // Only auto-select if the user hasn't already chosen one
         if (list.length > 0) setTournamentId(prev => prev || list[0].id);
       });
-  }, [step]);
+  }, [sport]);
 
-  function resetForm() {
-    setName(''); setFormat('noduplicate'); setH2h(false);
-    setTournamentId(''); setJoinCode(''); setError(null);
-  }
+  function close() { onClose(); }
 
-  function back()  { resetForm(); setStep('pick'); }
-  function close() { resetForm(); setStep('pick'); onClose(); }
-
-  async function handleCreate(sport) {
+  async function handleCreate() {
     if (!name.trim()) { setError('Name is required'); return; }
     if (sport === 'football' && !tournamentId) { setError('Select a tournament'); return; }
     setLoading(true); setError(null);
@@ -140,320 +143,228 @@ export default function NewCompetitionFlow({ circleId, onCreated, onClose }) {
   }
 
   // ── Shared styles ────────────────────────────────────────────────────────────
-  const INPUT_STYLE = {
-    width: '100%', padding: '9px 12px', borderRadius: 6,
-    background: 'var(--elev)', border: '1px solid var(--rule)',
-    color: 'var(--paper)', fontFamily: 'inherit', fontSize: 14,
-    outline: 'none', boxSizing: 'border-box',
-  };
   const LABEL_STYLE = {
-    display: 'block', marginBottom: 5,
+    display: 'block', marginBottom: 6,
     fontFamily: 'JetBrains Mono, monospace',
-    fontSize: 9, letterSpacing: '0.14em',
+    fontSize: 9.5, letterSpacing: '0.1em',
     textTransform: 'uppercase', color: 'var(--mute)',
   };
-  const PRIMARY_BTN = (color = 'var(--accent)') => ({
-    width: '100%', padding: '11px 16px', borderRadius: 6,
-    background: color, border: 'none', cursor: loading ? 'not-allowed' : 'pointer',
-    color: '#fff', fontFamily: 'Archivo Black, sans-serif',
-    fontSize: 12, letterSpacing: '0.06em', textTransform: 'uppercase',
-    opacity: loading ? 0.6 : 1,
+  const INPUT_STYLE = {
+    width: '100%', padding: '11px 13px', borderRadius: 6,
+    background: 'var(--elev)', border: 'none',
+    color: 'var(--paper)', fontFamily: 'inherit', fontSize: 13,
+    outline: 'none', boxSizing: 'border-box',
+  };
+  const SPORT_TILE = (active) => ({
+    flex: 1, border: `1.5px solid ${active ? 'var(--accent)' : 'var(--rule)'}`,
+    background: active ? 'var(--accent-bg)' : 'transparent',
+    borderRadius: 6, padding: '14px 8px', textAlign: 'center',
+    cursor: 'pointer', transition: 'all .12s',
   });
-  const SPORT_BTN = (sport) => ({
-    flex: 1, padding: '14px 10px', borderRadius: 8,
-    border: `1.5px solid ${SPORT_COLOR[sport]}22`,
-    background: `${SPORT_COLOR[sport]}0d`,
-    cursor: 'pointer', textAlign: 'center',
-    transition: 'all .12s',
-  });
-  const SPORT_BTN_LABEL = (sport) => ({
-    display: 'block', marginTop: 6,
-    fontFamily: 'Archivo Black, sans-serif',
-    fontSize: 11, letterSpacing: '0.05em',
-    textTransform: 'uppercase', color: SPORT_COLOR[sport],
-  });
-
-  // ── Render ───────────────────────────────────────────────────────────────────
-  const renderStep = () => {
-    // ── Pick step ─────────────────────────────────────────────────────────────
-    if (step === 'pick') return (
-      <div>
-        <div style={{ marginBottom: 20 }}>
-          <div style={LABEL_STYLE}>Create</div>
-          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-            {[
-              { sport: 'football', emoji: '⚽', label: 'Football' },
-              { sport: 'f1',       emoji: '🏁', label: 'F1'       },
-              { sport: 'tennis',   emoji: '🎾', label: 'Tennis'   },
-            ].map(({ sport, emoji, label }) => (
-              <button
-                key={sport}
-                onClick={() => setStep(`create-${sport}`)}
-                style={SPORT_BTN(sport)}
-              >
-                <span style={{ fontSize: 22 }}>{emoji}</span>
-                <span style={SPORT_BTN_LABEL(sport)}>{label}</span>
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '18px 0' }}>
-          <div style={{ flex: 1, height: 1, background: 'var(--rule)' }} />
-          <span style={{ ...LABEL_STYLE, margin: 0 }}>or join by code</span>
-          <div style={{ flex: 1, height: 1, background: 'var(--rule)' }} />
-        </div>
-
-        <div>
-          <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
-            {['football', 'f1', 'tennis'].map(s => (
-              <button
-                key={s}
-                onClick={() => setJoinSport(s)}
-                style={{
-                  flex: 1, padding: '7px 4px', borderRadius: 5,
-                  border: `1.5px solid ${joinSport === s ? SPORT_COLOR[s] : 'var(--rule)'}`,
-                  background: joinSport === s ? `${SPORT_COLOR[s]}18` : 'transparent',
-                  cursor: 'pointer',
-                  fontFamily: 'JetBrains Mono, monospace',
-                  fontSize: 9, letterSpacing: '0.1em',
-                  textTransform: 'uppercase',
-                  color: joinSport === s ? SPORT_COLOR[s] : 'var(--mute)',
-                  transition: 'all .1s',
-                }}
-              >
-                {s === 'football' ? '⚽' : s === 'f1' ? '🏁' : '🎾'}
-              </button>
-            ))}
-          </div>
-          <div style={{ display: 'flex', gap: 8 }}>
-            <input
-              style={{ ...INPUT_STYLE, flex: 1 }}
-              placeholder="Invite code"
-              value={joinCode}
-              onChange={e => setJoinCode(e.target.value)}
-              onKeyDown={e => e.key === 'Enter' && handleJoin()}
-              maxLength={12}
-            />
-            <button
-              onClick={handleJoin}
-              disabled={loading || !joinCode.trim()}
-              style={{
-                padding: '9px 16px', borderRadius: 6, border: 'none',
-                background: SPORT_COLOR[joinSport], color: '#fff',
-                fontFamily: 'Archivo Black, sans-serif', fontSize: 13,
-                cursor: loading || !joinCode.trim() ? 'not-allowed' : 'pointer',
-                opacity: loading || !joinCode.trim() ? 0.5 : 1,
-                flexShrink: 0,
-              }}
-            >
-              →
-            </button>
-          </div>
-        </div>
-
-        {error && <div style={{ marginTop: 12, color: 'var(--danger)', fontSize: 12 }}>{error}</div>}
-      </div>
-    );
-
-    // ── Football create step ───────────────────────────────────────────────────
-    if (step === 'create-football') return (
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-        <div>
-          <label style={LABEL_STYLE}>League name</label>
-          <input
-            autoFocus
-            style={INPUT_STYLE}
-            placeholder="e.g. The Premier League"
-            value={name}
-            onChange={e => setName(e.target.value)}
-            maxLength={60}
-          />
-        </div>
-
-        <div>
-          <label style={LABEL_STYLE}>Tournament</label>
-          <select
-            style={{ ...INPUT_STYLE, cursor: 'pointer' }}
-            value={tournamentId}
-            onChange={e => setTournamentId(e.target.value)}
-          >
-            {tournaments.length === 0 && <option value="">Loading...</option>}
-            {tournaments.map(t => (
-              <option key={t.id} value={t.id}>{t.name}</option>
-            ))}
-          </select>
-        </div>
-
-        <div>
-          <label style={LABEL_STYLE}>Format</label>
-          <div style={{ display: 'flex', gap: 8 }}>
-            {FORMATS.map(({ value, label }) => (
-              <button
-                key={value}
-                onClick={() => setFormat(value)}
-                style={{
-                  flex: 1, padding: '9px 10px', borderRadius: 6,
-                  border: `1.5px solid ${format === value ? 'var(--accent)' : 'var(--rule)'}`,
-                  background: format === value ? 'rgba(0,180,216,0.1)' : 'transparent',
-                  cursor: 'pointer',
-                  fontFamily: 'JetBrains Mono, monospace', fontSize: 10,
-                  letterSpacing: '0.1em', textTransform: 'uppercase',
-                  color: format === value ? 'var(--accent)' : 'var(--mute)',
-                  transition: 'all .1s',
-                }}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <label style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' }}>
-          <input
-            type="checkbox"
-            checked={h2h}
-            onChange={e => setH2h(e.target.checked)}
-            style={{ width: 15, height: 15, accentColor: 'var(--accent)' }}
-          />
-          <span style={{ fontSize: 13, color: 'var(--text-2)' }}>Head-to-Head mode</span>
-        </label>
-
-        {error && <div style={{ color: 'var(--danger)', fontSize: 12 }}>{error}</div>}
-
-        <button
-          onClick={() => handleCreate('football')}
-          disabled={loading}
-          style={PRIMARY_BTN('var(--accent)')}
-        >
-          {loading ? 'Creating…' : 'Create League'}
-        </button>
-      </div>
-    );
-
-    // ── F1 create step ────────────────────────────────────────────────────────
-    if (step === 'create-f1') return (
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-        <div>
-          <label style={LABEL_STYLE}>Paddock name</label>
-          <input
-            autoFocus
-            style={INPUT_STYLE}
-            placeholder="e.g. Scuderia Friends"
-            value={name}
-            onChange={e => setName(e.target.value)}
-            maxLength={60}
-          />
-        </div>
-        {error && <div style={{ color: 'var(--danger)', fontSize: 12 }}>{error}</div>}
-        <button
-          onClick={() => handleCreate('f1')}
-          disabled={loading}
-          style={PRIMARY_BTN('var(--f1)')}
-        >
-          {loading ? 'Creating…' : 'Create Paddock'}
-        </button>
-      </div>
-    );
-
-    // ── Tennis create step ────────────────────────────────────────────────────
-    if (step === 'create-tennis') return (
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-        <div>
-          <label style={LABEL_STYLE}>Player Box name</label>
-          <input
-            autoFocus
-            style={INPUT_STYLE}
-            placeholder="e.g. Grand Slam HQ"
-            value={name}
-            onChange={e => setName(e.target.value)}
-            maxLength={60}
-          />
-        </div>
-        {error && <div style={{ color: 'var(--danger)', fontSize: 12 }}>{error}</div>}
-        <button
-          onClick={() => handleCreate('tennis')}
-          disabled={loading}
-          style={PRIMARY_BTN('var(--ten)')}
-        >
-          {loading ? 'Creating…' : 'Create Player Box'}
-        </button>
-      </div>
-    );
-
-    return null;
+  const GHOST_BTN = {
+    flex: 1, textAlign: 'center', padding: 12, borderRadius: 6,
+    border: '1px solid var(--rule)', background: 'transparent', color: 'var(--mute)',
+    fontFamily: 'JetBrains Mono, monospace', fontSize: 10.5, letterSpacing: '0.1em',
+    textTransform: 'uppercase', fontWeight: 600, cursor: 'pointer',
+  };
+  const PRIMARY_BTN = {
+    flex: 1, textAlign: 'center', padding: 12, borderRadius: 6,
+    border: 'none', background: 'var(--accent)', color: '#fff',
+    fontFamily: 'JetBrains Mono, monospace', fontSize: 10.5, letterSpacing: '0.1em',
+    textTransform: 'uppercase', fontWeight: 600,
+    cursor: loading ? 'default' : 'pointer', opacity: loading ? 0.6 : 1,
   };
 
-  const SPORT_HEADER = { 'create-football': '⚽ Football League', 'create-f1': '🏁 F1 Paddock', 'create-tennis': '🎾 Tennis Player Box' };
-  const HEADER_COLOR = { 'create-football': 'var(--accent)', 'create-f1': 'var(--f1)', 'create-tennis': 'var(--ten)' };
-
-  return createPortal(
+  const formContent = (
     <>
-      {/* Backdrop */}
+      <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 18, color: 'var(--paper)', marginBottom: 4 }}>
+        Create a competition
+      </div>
+      <div style={{ fontSize: 12.5, color: 'var(--mute)', marginBottom: 18 }}>
+        {clubhouseName ? `Adds to ${clubhouseName} — every member gets access` : 'Every member of this Clubhouse gets access'}
+      </div>
+
+      <div style={LABEL_STYLE}>Sport</div>
+      <div style={{ display: 'flex', gap: 12, marginBottom: 18 }}>
+        {SPORTS.map(({ sport: s, label, icon }) => (
+          <button key={s} onClick={() => setSport(s)} style={SPORT_TILE(s === sport)}>
+            <img src={icon} alt="" style={{ width: 48, height: 48, marginBottom: 8, display: 'block', marginInline: 'auto' }} />
+            <span style={{ fontSize: 11.5, fontWeight: 600, color: 'var(--paper)' }}>{label}</span>
+          </button>
+        ))}
+      </div>
+
+      <div style={{ marginBottom: 14 }}>
+        <label style={LABEL_STYLE}>Competition name</label>
+        <input
+          autoFocus
+          style={INPUT_STYLE}
+          placeholder="e.g. Sunday League Redux"
+          value={name}
+          onChange={e => setName(e.target.value)}
+          maxLength={60}
+        />
+      </div>
+
+      {sport === 'football' && (
+        <>
+          <div style={{ marginBottom: 14 }}>
+            <label style={LABEL_STYLE}>Tournament</label>
+            <select
+              style={{ ...INPUT_STYLE, cursor: 'pointer' }}
+              value={tournamentId}
+              onChange={e => setTournamentId(e.target.value)}
+            >
+              {tournaments.length === 0 && <option value="">Loading...</option>}
+              {tournaments.map(t => (
+                <option key={t.id} value={t.id}>{t.name}</option>
+              ))}
+            </select>
+          </div>
+
+          <div style={{ marginBottom: 14 }}>
+            <label style={LABEL_STYLE}>Format</label>
+            <select
+              style={{ ...INPUT_STYLE, cursor: 'pointer' }}
+              value={format}
+              onChange={e => setFormat(e.target.value)}
+            >
+              {FORMATS.map(f => (
+                <option key={f.value} value={f.value}>{f.label}</option>
+              ))}
+            </select>
+          </div>
+
+          <label style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer', marginBottom: 6 }}>
+            <input
+              type="checkbox"
+              checked={h2h}
+              onChange={e => setH2h(e.target.checked)}
+              style={{ width: 15, height: 15, accentColor: 'var(--accent)' }}
+            />
+            <span style={{ fontSize: 13, color: 'var(--mute)' }}>Head-to-Head mode</span>
+          </label>
+        </>
+      )}
+
+      {error && <div style={{ color: 'var(--danger)', fontSize: 12, marginTop: 8 }}>{error}</div>}
+
+      <div style={{ display: 'flex', gap: 10, marginTop: 20 }}>
+        <button onClick={close} style={GHOST_BTN}>Cancel</button>
+        <button onClick={handleCreate} disabled={loading} style={PRIMARY_BTN}>
+          {loading ? 'Creating…' : 'Create competition'}
+        </button>
+      </div>
+
+      <div style={{ marginTop: 18 }}>
+        {!showJoin ? (
+          <button
+            onClick={() => setShowJoin(true)}
+            style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontFamily: 'JetBrains Mono, monospace', fontSize: 10.5, letterSpacing: '0.08em', color: 'var(--accent)' }}
+          >
+            Have an invite code instead? →
+          </button>
+        ) : (
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '4px 0 12px' }}>
+              <div style={{ flex: 1, height: 1, background: 'var(--rule)' }} />
+              <span style={{ ...LABEL_STYLE, margin: 0 }}>join by code</span>
+              <div style={{ flex: 1, height: 1, background: 'var(--rule)' }} />
+            </div>
+            <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
+              {['football', 'f1', 'tennis'].map(s => (
+                <button
+                  key={s}
+                  onClick={() => setJoinSport(s)}
+                  style={{
+                    flex: 1, padding: '7px 4px', borderRadius: 5,
+                    border: `1.5px solid ${joinSport === s ? SPORT_COLOR[s] : 'var(--rule)'}`,
+                    background: joinSport === s ? `${SPORT_COLOR[s]}18` : 'transparent',
+                    cursor: 'pointer', fontSize: 14,
+                  }}
+                >
+                  {SPORT_EMOJI[s]}
+                </button>
+              ))}
+            </div>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <input
+                style={{ ...INPUT_STYLE, flex: 1 }}
+                placeholder="Invite code"
+                value={joinCode}
+                onChange={e => setJoinCode(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && handleJoin()}
+                maxLength={12}
+              />
+              <button
+                onClick={handleJoin}
+                disabled={loading || !joinCode.trim()}
+                style={{
+                  padding: '9px 16px', borderRadius: 6, border: 'none',
+                  background: SPORT_COLOR[joinSport], color: '#fff',
+                  fontFamily: 'Archivo Black, sans-serif', fontSize: 13,
+                  cursor: loading || !joinCode.trim() ? 'not-allowed' : 'pointer',
+                  opacity: loading || !joinCode.trim() ? 0.5 : 1,
+                  flexShrink: 0,
+                }}
+              >
+                →
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    </>
+  );
+
+  if (isDesktop) {
+    return createPortal(
       <div
         onClick={close}
         style={{
           position: 'fixed', inset: 0, zIndex: 1000,
-          background: 'rgba(0,0,0,0.6)',
-          backdropFilter: 'blur(4px)',
-          WebkitBackdropFilter: 'blur(4px)',
+          background: 'rgba(24,32,46,0.55)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
         }}
-      />
-
-      {/* Modal */}
-      <div
-        style={{
-          position: 'fixed', zIndex: 1001,
-          top: '50%', left: '50%',
-          transform: 'translate(-50%, -50%)',
-          width: 'min(420px, 92vw)',
-          maxHeight: '85vh', overflowY: 'auto',
-          background: 'var(--card)',
-          border: '1px solid var(--rule)',
-          borderRadius: 12,
-          boxShadow: '0 24px 80px rgba(0,0,0,0.5)',
-        }}
-        onClick={e => e.stopPropagation()}
       >
-        {/* Header */}
-        <div style={{
-          padding: '16px 20px 14px',
-          borderBottom: '1px solid var(--rule)',
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            {step !== 'pick' && (
-              <button
-                onClick={back}
-                style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0 8px 0 0', color: 'var(--mute)', fontSize: 16, lineHeight: 1 }}
-              >
-                ←
-              </button>
-            )}
-            <div>
-              <div style={{
-                fontFamily: 'Archivo Black, sans-serif', fontSize: 14,
-                color: step === 'pick' ? 'var(--paper)' : HEADER_COLOR[step],
-                letterSpacing: '-0.01em',
-              }}>
-                {step === 'pick' ? 'New Competition' : SPORT_HEADER[step]}
-              </div>
-            </div>
-          </div>
-          <button
-            onClick={close}
-            style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--mute)', fontSize: 18, lineHeight: 1, padding: 4 }}
-          >
-            ×
-          </button>
+        <div
+          onClick={e => e.stopPropagation()}
+          style={{
+            width: 460, maxWidth: '92vw', maxHeight: '85vh', overflowY: 'auto',
+            background: 'var(--card)', borderRadius: 12,
+            padding: '26px 26px 22px',
+            boxShadow: '0 30px 60px -20px rgba(0,0,0,0.4)',
+          }}
+        >
+          {formContent}
         </div>
+      </div>,
+      document.body
+    );
+  }
 
-        {/* Body */}
-        <div style={{ padding: 20 }}>
-          {renderStep()}
-        </div>
+  // Mobile — bottom sheet
+  return createPortal(
+    <div
+      onClick={close}
+      style={{
+        position: 'fixed', inset: 0, zIndex: 1000,
+        background: 'rgba(24,32,46,0.55)',
+        display: 'flex', alignItems: 'flex-end',
+      }}
+    >
+      <div
+        onClick={e => e.stopPropagation()}
+        style={{
+          width: '100%', maxHeight: '90vh', overflowY: 'auto',
+          background: 'var(--card)', borderRadius: '18px 18px 0 0',
+          padding: '18px 20px 24px',
+        }}
+      >
+        <div style={{ width: 36, height: 4, background: 'var(--rule)', borderRadius: 100, margin: '0 auto 16px' }} />
+        {formContent}
       </div>
-    </>,
+    </div>,
     document.body
   );
 }

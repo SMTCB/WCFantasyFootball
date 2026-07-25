@@ -365,6 +365,7 @@ export default function AppLayout({ children }) {
       {showNewCompFlow && (
         <NewCompetitionFlow
           circleId={activeCircleId}
+          clubhouseName={myCircles.find(c => c.id === activeCircleId)?.name}
           onCreated={refreshCompetitions}
           onClose={() => setShowNewCompFlow(false)}
         />
