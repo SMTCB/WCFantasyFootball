@@ -178,6 +178,10 @@ export function useCommissioner(leagueId, tournamentId, onLeagueUpdated) {
   const triggerDraftAllocation = useCallback(() => commAction(async () => {
     const { data, error } = await invokeEdgeFunction('run-draft-lottery', { league_id: leagueId });
     if (error) throw new Error(error.message);
+    if (data?.skipped) {
+      setCommMsg({ type: 'ok', text: 'Draft already processed — no new allocation needed.' });
+      return;
+    }
     const managed = data?.managersProcessed ?? 0;
     const contested = data?.contestedPlayers ?? 0;
     const incomplete = data?.incomplete?.length ?? 0;
@@ -191,6 +195,10 @@ export function useCommissioner(leagueId, tournamentId, onLeagueUpdated) {
   const triggerKnockoutAllocation = useCallback(() => commAction(async () => {
     const { data, error } = await invokeEdgeFunction('run-draft-lottery', { league_id: leagueId, phase: 'knockout' });
     if (error) throw new Error(error.message);
+    if (data?.skipped) {
+      setCommMsg({ type: 'ok', text: 'Knockout draft already processed — no new allocation needed.' });
+      return;
+    }
     const managed = data?.managersProcessed ?? 0;
     const contested = data?.contestedPlayers ?? 0;
     const incomplete = data?.incomplete?.length ?? 0;
