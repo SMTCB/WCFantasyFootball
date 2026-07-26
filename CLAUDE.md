@@ -770,7 +770,7 @@ vercel inspect wc-fantasy-football.vercel.app  # deployment details
 
 5. **After merge:** update [BACKLOG.md](BACKLOG.md) (and `TRACKER.md` if the work touched platform-revision modules) and move the Notion card to Done.
 
-6. **Before any DB migration** — save a backup of affected rows first (Docker unavailable, so `SELECT` the rows and save to `backups/*.json`; see [Pilot Safeguards](#️-pilot-safeguards--read-before-every-db-operation))
+6. **Before any DB migration** — dump a full backup first: `npx supabase db dump --linked > backups/pre_migration_$(date +%Y%m%d_%H%M%S).sql` (Docker is available on this machine). If Docker is ever down, fall back to `SELECT`ing the affected rows and saving to `backups/*.json`; see [Pilot Safeguards](#️-pilot-safeguards--read-before-every-db-operation)
 
 7. **Dev server:** `npm run dev` → http://localhost:5173
 
