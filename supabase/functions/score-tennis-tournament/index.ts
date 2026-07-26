@@ -285,7 +285,15 @@ Deno.serve(async (req) => {
 
     const winnerName = (winnerProfile as { username?: string } | null)?.username ?? 'A manager';
 
-    await supabase.from('gazette_entries').upsert({
+    // Idempotent: delete existing gazette entry for this tournament, then reinsert
+    // (no unique constraint on gazette_entries(entry_type,headline) exists — upsert
+    // with onConflict silently fails with 42P10, so delete-then-insert like calculate-scores)
+    await supabase.from('gazette_entries')
+      .delete()
+      .eq('entry_type', 'tennis_result')
+      .filter('full_data->>tournament_id', 'eq', tournament_id);
+
+    await supabase.from('gazette_entries').insert({
       entry_type: 'tennis_result',
       headline: `${tournament.name} complete — ${winnerName} leads with ${winner?.total ?? 0} pts`,
       bullets: leaderboard.slice(0, 5).map((e, i) =>
@@ -296,7 +304,7 @@ Deno.serve(async (req) => {
         season_year: tournament.season_year,
         matchday_id: `tennis-${tournament.season_year}`,
       },
-    }, { onConflict: 'entry_type,headline' });
+    });
 
     // ── 8. Mark tournament completed ─────────────────────────────────────────
     if (tournament.status !== 'completed') {
