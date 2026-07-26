@@ -108,7 +108,7 @@ async function runLottery(leagueId, phase = 'group') {
       .eq('phase', phase),
   ]);
 
-  if (!submissions?.length) return { message: 'No pending submissions', leagueId };
+  if (!submissions?.length) return { message: 'No pending submissions', leagueId, skipped: true };
 
   // P1-2: only draft (no-duplicate) leagues run a lottery. A classic league that somehow
   // has a draft_deadline + pending submissions must never be allocated by the lottery.
@@ -131,6 +131,8 @@ async function runLottery(leagueId, phase = 'group') {
   // not duplicated on the recovery run.
   const isReEntry = (existingAllocations?.length ?? 0) > 0;
   let allocations;
+  // Set inside the fresh-run branch below; stays 0 on a re-entry (no new lottery ran).
+  let contestedPlayers = 0;
 
   if (isReEntry) {
     // Phase 1 already committed — rebuild from DB rows, no re-randomization.
@@ -251,6 +253,10 @@ async function runLottery(leagueId, phase = 'group') {
 
     const maxRounds = Math.max(...submissions.map(s => s.player_ids.length), 0);
 
+    // Count players skipped because an earlier manager in the snake order
+    // already took them — i.e. genuine wishlist conflicts the lottery resolved.
+    // (contestedPlayers declared in the outer scope so the final return can see it.)
+
     for (let round = 0; round < maxRounds; round++) {
       const roundOrder = round % 2 === 0 ? [...snakeOrder] : [...snakeOrder].reverse();
 
@@ -265,7 +271,7 @@ async function runLottery(leagueId, phase = 'group') {
           const pid = list[pointers[uid]];
           pointers[uid]++;
 
-          if (taken.has(pid)) continue;
+          if (taken.has(pid)) { contestedPlayers++; continue; }
 
           const player = playerMap[pid];
           if (!player) continue;
@@ -450,6 +456,7 @@ async function runLottery(leagueId, phase = 'group') {
   return {
     leagueId,
     managersProcessed: submissions.length,
+    contestedPlayers,
     snakeOrder: (runLottery._lastSnakeOrder ?? []),
     incomplete,
   };
