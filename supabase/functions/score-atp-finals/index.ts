@@ -176,14 +176,22 @@ Deno.serve(async (req) => {
 
     const winnerName = (winnerProfile as { username?: string } | null)?.username ?? 'A manager';
 
-    await supabase.from('gazette_entries').upsert({
+    // Idempotent: delete existing gazette entry for this tournament, then reinsert
+    // (no unique constraint on gazette_entries(entry_type,headline) exists — upsert
+    // with onConflict silently fails with 42P10, so delete-then-insert like calculate-scores)
+    await supabase.from('gazette_entries')
+      .delete()
+      .eq('entry_type', 'tennis_result')
+      .filter('full_data->>tournament_id', 'eq', tournament.id);
+
+    await supabase.from('gazette_entries').insert({
       entry_type: 'tennis_result',
       headline: `ATP Finals ${season_year} — ${winnerName} leads with ${winner?.total ?? 0} pts (${winner?.correct ?? 0}/15 correct)`,
       bullets: leaderboard.slice(0, 5).map((e, i) =>
         `${['🥇','🥈','🥉','4.','5.'][i]} ${e.user_id} — ${e.total} pts (${e.correct}/15)`,
       ),
       full_data: { season_year, tournament_id: tournament.id },
-    }, { onConflict: 'entry_type,headline' });
+    });
 
     // ── 7. Mark ATP Finals completed ─────────────────────────────────────────
     const allSettled = settledMatches.length >= 15;
