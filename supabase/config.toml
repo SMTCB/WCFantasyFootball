@@ -22,6 +22,9 @@ verify_jwt = false
 [functions.score-f1-race]
 verify_jwt = false
 
+[functions.check-cron-health]
+verify_jwt = false
+
 [functions.discover-tournament]
 entrypoint = "./functions/discover-tournament/index.js"
 verify_jwt = false
