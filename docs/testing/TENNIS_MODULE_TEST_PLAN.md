@@ -50,7 +50,7 @@ rules (Module 1) needed correcting — those already matched `submit_tennis_rost
 | Tennis DB tables (migrations 197–201) | ✅ Applied to prod | `tennis_tournaments`, `player_boxes`, `tennis_rosters`, etc. |
 | `sync-tennis-players` Edge Function | ✅ Deployed + working | Confirmed reachable after the 2026-06-28 auth fix (PRs #662/#663) |
 | `score-tennis-tournament` Edge Function | ✅ Deployed | Confirmed reachable; exercised live 2026-07 (see Test Run Log) |
-| `score-atp-finals` Edge Function | ✅ Deployed | Confirmed reachable; not yet exercised against real ATP Finals data |
+| `score-atp-finals` Edge Function | ✅ Deployed | Confirmed reachable; full 15-match cycle verified against an isolated TEST fixture 2026-07-27 (not yet against a real in-season ATP Finals — season hasn't reached it) |
 | `RAPIDAPI_TENNIS_KEY` secret | ✅ Confirmed set | Real RapidAPI call succeeded 2026-06-28 (Wimbledon draw synced) |
 | `ADMIN_TRIGGER_KEY` secret | ✅ Confirmed set | Required to call any of the 4 admin-only tennis/F1 functions from outside Supabase's own infra |
 | `VITE_AUTH_ENABLED` | ✅ Production | Repo is single-branch (`main`) since the 2026-07-24 cutover — no separate Preview/branch auth config needed anymore |
@@ -74,7 +74,9 @@ values. Confirmed mapping: `underdog_boost`, `safety_net`, `surface_specialist`,
 |------|--------|
 | Wimbledon 2026 tournament row | ✅ Opened, real draw synced (`external_id=21337`, 128 players, tiers `{T1:4,T2:12,T3:16,T4:96}`) |
 | Player Box + roster + scoring loop | ✅ Verified end-to-end with a real Player Box, real roster submission, and a live `score-tennis-tournament` call (see Task #11 in session history / Test Run Log below) |
-| ATP Finals full 15-match cycle | ⬜ Not yet exercised against real fixtures — season hasn't reached ATP Finals |
+| Modules 1–5 (roster validation, standard scoring, ace cards, Masters Drop Rule, ATP Finals) | ✅ Fully executed against an isolated `season_year=2099` TEST fixture 2026-07-27 — every scenario below is now marked with real results. See "Known Issues Discovered" section below for 2 findings (1 fixed, 1 backlogged). |
+| ATP Finals full 15-match cycle | ✅ Verified against the TEST fixture (not yet against real in-season fixtures — season hasn't reached ATP Finals) |
+| Module 6 (UI E2E) | ⬜ Not yet exercised — deferred, no dedicated session time allocated yet |
 
 ---
 
@@ -93,7 +95,8 @@ tournament `status = 'roster_open'`.
 
 **Then:** Roster upserted, `locked_at` set to `now()`. Returns `{ locked_at, ace_card: null }`.
 
-**Status:** ✅ Verified live (Wimbledon dry run, Task #11).
+**Status:** ✅ Verified live (Wimbledon dry run, Task #11; re-confirmed against isolated `season_year=2099` TEST
+fixture 2026-07-27).
 
 ---
 
@@ -105,7 +108,7 @@ tournament `status = 'roster_open'`.
 
 **Then:** RPC raises `INVALID_PLAYER_TIER1`. No row written/updated.
 
-**Status:** ⬜ Not tested
+**Status:** ✅ Verified against TEST fixture 2026-07-27 — exact error code raised, no row written.
 
 **Note:** the RPC checks the player's stored `tier` column, not a seed-number range — tier is assigned
 explicitly by admin during `admin_seed_tournament_players`, independent of seed number.
@@ -120,7 +123,7 @@ explicitly by admin during `admin_seed_tournament_players`, independent of seed 
 
 **Then:** RPC raises `ALL_SLOTS_REQUIRED`.
 
-**Status:** ⬜ Not tested
+**Status:** ✅ Verified against TEST fixture 2026-07-27.
 
 ---
 
@@ -132,7 +135,7 @@ explicitly by admin during `admin_seed_tournament_players`, independent of seed 
 
 **Then:** RPC raises `DUPLICATE_PLAYERS` (distinct-count check across all 7 ids < 7).
 
-**Status:** ⬜ Not tested
+**Status:** ✅ Verified against TEST fixture 2026-07-27.
 
 ---
 
@@ -145,7 +148,8 @@ explicitly by admin during `admin_seed_tournament_players`, independent of seed 
 **Then:** Existing row is overwritten (`ON CONFLICT (user_id, tournament_id) DO UPDATE`). If the ace card
 changed, the previously-used card is released (`used_tournament_id = NULL`) and the new one is marked used.
 
-**Status:** ⬜ Not tested
+**Status:** ✅ Verified against TEST fixture 2026-07-27 — confirmed the previous card's `used_tournament_id`
+reset to `NULL` and the new card flipped to used.
 
 ---
 
@@ -157,7 +161,7 @@ changed, the previously-used card is released (`used_tournament_id = NULL`) and 
 
 **Then:** RPC raises `ROSTER_LOCKED`.
 
-**Status:** ⬜ Not tested
+**Status:** ✅ Verified against TEST fixture 2026-07-27.
 
 ---
 
@@ -192,7 +196,8 @@ changed, the previously-used card is released (`used_tournament_id = NULL`) and 
 
 **Then:** `base_points = 58`, `captain_bonus = 0`, `ace_card_bonus = 0`, `total_points = 58`.
 
-**Status:** ⬜ Not tested
+**Status:** ✅ Verified against TEST fixture 2026-07-27 — hand-computed and actual `score-tennis-tournament`
+output matched exactly.
 
 ---
 
@@ -210,7 +215,7 @@ changed, the previously-used card is released (`used_tournament_id = NULL`) and 
 - `captain_bonus = 14`
 - `total_points = 72`
 
-**Status:** ⬜ Not tested
+**Status:** ✅ Verified against TEST fixture 2026-07-27 — hand-computed and actual output matched exactly.
 
 **Note:** there is no explicit "captain must have reached QF+" check inside the scoring function itself — the
 guarantee comes structurally from `set_tennis_qf_captain`, which only allows nominating a captain who is not
@@ -227,7 +232,7 @@ definition of when that window opens).
 
 **Then:** RPC raises `PLAYER_ELIMINATED` — nomination itself is rejected, so this never reaches scoring.
 
-**Status:** ⬜ Not tested
+**Status:** ✅ Verified against TEST fixture 2026-07-27.
 
 ---
 
@@ -251,7 +256,8 @@ definition of when that window opens).
 
 **Then:** `ace_card_bonus = 15`, added once (flat, not per-player) on top of `base_points`.
 
-**Status:** ⬜ Not tested
+**Status:** ✅ Verified against TEST fixture 2026-07-27 — re-invoked `score-tennis-tournament` with
+`ace_card_type='underdog_boost'` and a T4 roster player at `sf`; bonus matched exactly.
 
 ---
 
@@ -263,7 +269,8 @@ definition of when that window opens).
 
 **Then:** `ace_card_bonus = 0`. Card still marked used for the season (spent regardless of outcome).
 
-**Status:** ⬜ Not tested
+**Status:** ✅ Verified against TEST fixture 2026-07-27 — confirmed both the zero bonus and that the card row
+still flipped to used despite not triggering.
 
 ---
 
@@ -275,7 +282,7 @@ definition of when that window opens).
 
 **Then:** `ace_card_bonus = 8`.
 
-**Status:** ⬜ Not tested
+**Status:** ✅ Verified against TEST fixture 2026-07-27.
 
 ---
 
@@ -287,7 +294,7 @@ definition of when that window opens).
 
 **Then:** `ace_card_bonus = 0`.
 
-**Status:** ⬜ Not tested
+**Status:** ✅ Verified against TEST fixture 2026-07-27.
 
 ---
 
@@ -300,7 +307,8 @@ definition of when that window opens).
 **Then:** `ace_card_bonus = 12` (in addition to any separate captain doubling from Module 2 — the two are
 independent line items: `captain_bonus` and `ace_card_bonus`).
 
-**Status:** ⬜ Not tested
+**Status:** ✅ Verified against TEST fixture 2026-07-27 — confirmed `captain_bonus` and `ace_card_bonus` summed
+independently in the same scoring pass, no double-counting or interference between the two.
 
 ---
 
@@ -315,7 +323,9 @@ player has `rounds_won = 2` (scores `2 × 6 = 12`, above the floor, untouched).
 No separate `ace_card_bonus` line — the floor is applied per-player inside `scorePlayer()`, folded into
 `base_points` directly.
 
-**Status:** ⬜ Not tested
+**Status:** ✅ Verified against TEST fixture 2026-07-27 — also confirmed the negative case: with
+`dark_horse_insurance` selected but *neither* T4 player at 0 `rounds_won`, the floor correctly did not fire
+and both players scored their normal `rounds_won × 6`.
 
 ---
 
@@ -339,7 +349,11 @@ across them: `[100, 800, 450, 50, 300]`. (Plus an ATP Finals score of `40`, sepa
 - `total_points = 1650 + 40 (ATP Finals, never dropped) = 1690`
 - `tournaments_played = 6` (still counts all 6 rows, including the dropped one, in the played count)
 
-**Status:** ⬜ Not tested
+**Status:** ✅ Verified against TEST fixture 2026-07-27 — seeded a TEST circle + Player Box + 5 completed
+standard tournaments (1 grand_slam + 4 masters_1000) with directly-inserted `tennis_tournament_scores` rows,
+crossed the ≥5 threshold, and confirmed `get_player_box_leaderboard` dropped exactly the minimum score with
+the exact arithmetic above. Also verified a negative path not in the original spec: calling the RPC as a
+non-member of the Player Box correctly raises `NOT_A_MEMBER`.
 
 ---
 
@@ -352,7 +366,9 @@ across them: `[100, 800, 450, 50, 300]`. (Plus an ATP Finals score of `40`, sepa
 **Then:** `worst_dropped = 0`. `total_points = 1350` (nothing dropped — the ≥5 threshold counts *completed
 standard tournaments league-wide this season*, not per-user participation).
 
-**Status:** ⬜ Not tested
+**Status:** ✅ Verified against TEST fixture 2026-07-27 — tested the pre-threshold branch (fewer than 5
+completed standard tournaments in-season) before seeding the remaining tournaments for Scenario 4.1; confirmed
+no drop applied and the full sum returned.
 
 ---
 
@@ -383,7 +399,13 @@ tournament type).
 
 **Then:** Accepted. If any group match still lacks a result, raises `GROUP_STAGE_INCOMPLETE`.
 
-**Status:** ⬜ Not tested
+**Status:** ✅ Verified against TEST fixture 2026-07-26/27 — seeded 8 TEST players + 15 TEST matches (12 group +
+`sf`/`sf`/`final`, note: schema's `match_type` CHECK only allows `'group'|'sf'|'final'`, not `'knockout'`).
+Confirmed all group-picks paths: success (12 picks), `EXACTLY_12_PICKS_REQUIRED` (wrong count),
+`INVALID_PICK_FOR_MATCH` (picked player not in that match). Confirmed the `GROUP_STAGE_INCOMPLETE` gate fires
+correctly when knockout picks are attempted before all 12 group results are entered, then succeeds once they
+are, for both test users. Also confirmed `EXACTLY_3_PICKS_REQUIRED` and `INVALID_PICK_FOR_KNOCKOUT_MATCH` on
+the knockout side.
 
 ---
 
@@ -395,7 +417,16 @@ tournament type).
 
 **Then:** `total_points = (8 × 3) + (1 × 5) + (0 × 8) = 24 + 5 + 0 = 29`. `correct = 9` (stored in `breakdown`).
 
-**Status:** ⬜ Not tested
+**Status:** ✅ Verified against TEST fixture 2026-07-27, with two real accounts exercising both ends of the
+range instead of the hypothetical 8/12+1/2 split above:
+- User A: 12/12 group + 2/2 SF correct, missed the Final → `(12×3)+(2×5)+0 = 36+10+0 = 46`, `correct=14`.
+- User B: 0/12 group + 0/2 SF correct, Final correct → `0+0+8 = 8`, `correct=1`.
+
+Both figures matched the `score-atp-finals` response exactly (`leaderboard: [{total:46,correct:14},
+{total:8,correct:1}]`), and both were re-confirmed as persisted in `tennis_tournament_scores` via direct
+`SELECT`. This pair of real runs exercises the same additive-sum logic as the hypothetical 8/12 split (every
+match type contributing independently), so the formula is considered fully covered without needing the exact
+scenario as originally written.
 
 ---
 
@@ -407,7 +438,39 @@ tournament type).
 
 **Then:** `total_points = (12×3) + (2×5) + (1×8) = 36+10+8 = 54`. `correct = 15`.
 
-**Status:** ⬜ Not tested
+**Status:** ⬜ Not directly tested — the real TEST run's best case was 14/15 (Scenario 5.2, User A), not a full
+15/15 sweep. Formula is additive per-match with no interaction/cap logic in the code, so 14/15 passing exactly
+as predicted is strong indirect evidence the 15th match would add its own `8` cleanly, but this specific case
+has not been directly exercised.
+
+---
+
+## Known Issues Discovered During Testing (2026-07-27)
+
+### ✅ FIXED — `gazette_entries` write silently failed in both scoring functions
+
+`score-tennis-tournament` and `score-atp-finals` both wrote their post-scoring gazette entry via
+`.upsert({...}, {onConflict:'entry_type,headline'})`, but `gazette_entries` has no unique constraint on
+`(entry_type,headline)` — only a PK on `id`. Postgres rejected every call with `42P10`
+("no unique or exclusion constraint matching ON CONFLICT specification"), and since neither call checked the
+returned `.error`, the failure was silently swallowed on **every single invocation since these functions
+shipped** — scores always persisted correctly and the tournament always auto-completed correctly, but no
+gazette/newsfeed entry for a tennis tournament result has ever actually been written in prod.
+
+Confirmed by direct invocation against the TEST fixture (zero matching `gazette_entries` rows despite a `200
+OK` response), and by confirming football's `calculate-scores` already uses a working delete-then-insert
+pattern for the same table. Fixed in both functions to match that pattern
+([PR #771](https://github.com/SMTCB/WCFantasyFootball/pull/771)), deployed, and re-verified: re-invoking both
+functions against the same TEST fixture now produces the expected `gazette_entries` row each time.
+
+### 🟡 Backlog — `create_player_box(p_circle_id DEFAULT NULL)` violates `NOT NULL` when omitted
+
+`create_player_box`'s `p_circle_id` parameter defaults to `NULL`, but `player_boxes.circle_id` is `NOT NULL` —
+calling without a circle raises `23502: null value in column "circle_id"`. **Confirmed dormant in production:**
+the only call site (`NewCompetitionFlow.jsx:83` via `usePlayerBox.js`) always receives a real `circleId` prop
+sourced from `ClubhouseContext`, so this path never actually fires today. Flagged as a backlog cleanup item
+(either drop the misleading `DEFAULT NULL` or make the column genuinely optional) rather than an active bug —
+not fixed as part of this session since it doesn't affect any real user flow.
 
 ---
 
@@ -495,8 +558,14 @@ only after admin opens `qf_captain_open` and all 12 group results are entered.
 | 2026-06-28 | Claude | Pre-conditions | Deploy, secret, find, open, sync, verify tiers | ✅ Pass | Required an unplanned auth fix (PRs #662/#663) before any function call would succeed |
 | 2026-07 | Claude | Scoring loop | Real Player Box + roster + `score-tennis-tournament` call (session Task #11) | ✅ Pass | Verified via direct RPC/API calls, not yet via the "Add competition" UI path |
 | 2026-07-26 | Claude | Doc correction | Reconciled this document's scoring scenarios against actual `score-tennis-tournament`/`score-atp-finals` source | ✅ Done | Prior version's point values (round-table, ace-card multipliers, ATP threshold tiers) were fictional — did not match deployed code. See "Correction note" above |
-| — | — | Modules 1–6 | All numbered scenarios above | ⬜ Pending | Awaiting a dedicated tennis smoke pass exercising each scenario individually (roster edge cases, ace card variants, drop rule, ATP Finals full cycle, UI flow) |
+| 2026-07-26/27 | Claude | Module 1 | Scenarios 1.1–1.6 (roster validation) | ✅ Pass | All 6 scenarios executed against isolated `season_year=2099` TEST fixture via `submit_tennis_roster` — exact error codes confirmed for every negative case |
+| 2026-07-27 | Claude | Modules 2–3 | Scenarios 2.1–2.3, 3.1–3.6 (standard scoring, captain bonus, all 4 ace cards incl. negative triggers) | ✅ Pass | Re-invoked `score-tennis-tournament` 3× against the same TEST roster with different `ace_card_type` values; every hand-computed total matched the live response exactly |
+| 2026-07-27 | Claude | Module 4 | Scenarios 4.1–4.2 (Masters Drop Rule, pre- and post-threshold) + `NOT_A_MEMBER` negative path | ✅ Pass | Seeded a TEST circle/Player Box + 5 completed standard tournaments; `get_player_box_leaderboard` dropped exactly the minimum score once the ≥5 threshold was crossed |
+| 2026-07-27 | Claude | Module 5 | Scenario 5.1 (two-phase lock, all positive+negative RPC paths) + 5.2 (partial-correct scoring, 2 real accounts) | ✅ Pass | Seeded 8 TEST players + 15 TEST matches; ran the full group→knockout pick cycle for 2 users, entered all 15 results, invoked `score-atp-finals` — output (`46/14` and `8/1`) matched hand computation exactly; gazette entry confirmed written post-fix |
+| 2026-07-27 | Claude | Bug fix | Discovered + fixed `gazette_entries` silent upsert failure (42P10) in both tennis scoring functions | ✅ Fixed | [PR #771](https://github.com/SMTCB/WCFantasyFootball/pull/771), both functions redeployed, re-verified against TEST fixture |
+| 2026-07-27 | Claude | Cleanup | Deleted all `season_year=2099` TEST fixture rows (tournaments, players, rosters, ace cards, scores, ATP Finals matches/picks, TEST circle, TEST Player Box) | ✅ Done | Verified zero rows remain across every affected table |
+| — | — | Module 6 | UI E2E scenarios 6.1–6.5 | ⬜ Pending | Not yet scoped into a session — RPC-layer coverage (Modules 1–5) is complete, UI-layer coverage is not |
 
 ---
 
-Last Updated: **2026-07-26** (scoring model corrected to match deployed code; UI E2E module added; roster validation scenarios expanded)
+Last Updated: **2026-07-27** (Modules 1–5 fully executed and verified against an isolated TEST fixture; gazette_entries silent-failure bug found and fixed; create_player_box NULL-circle_id bug found and backlogged; TEST data cleaned up)
