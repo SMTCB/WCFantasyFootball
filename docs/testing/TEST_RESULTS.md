@@ -1,5 +1,7 @@
 # E2E Test Results
 
+> **Correction (2026-07-27)**: Sessions 70/72 below mark the F-2 "click-to-detail scoring breakdown" as not implemented / `ScoringBreakdown.jsx` missing. That gap is resolved — the breakdown now ships via `FormStrip.jsx`/`usePlayerStats.js` (PR #301) + `PlayerStatsPanel.jsx` (PR #533). Session entries left as-written for historical accuracy; see `E2E_TEST_PLAYBOOK.md`'s F-2 status note for the current state.
+
 ---
 
 ## Session 72 — F-2 UI, E-4 Knockout Draft, D-3 Squad Recovery (2026-06-02)

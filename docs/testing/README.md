@@ -10,7 +10,7 @@ The project uses a **three-tier testing strategy**:
 
 | Tier | Tool | Scope | Trigger | Coverage |
 |------|------|-------|---------|----------|
-| **Unit** | Vitest (planned) | Functions, hooks, utilities | Local dev + PR check | Individual module logic |
+| **Unit** | Vitest | Functions, hooks, utilities | Local dev + PR check | Individual module logic — `tests/unit/` (13 cases: transfer/bet/coins/lineup/auction), PR #694 (2026-07-01) |
 | **Integration** | Playwright | User flows (auth, squad, league, chat, live) | Local dev + PR check | Multi-component interactions |
 | **E2E** | Playwright (CI subset) | Full user journeys (login → squad → league → live) | CI auto-run | End-to-end critical paths |
 
@@ -75,10 +75,9 @@ e2e/
 Run manually: `npx playwright test e2e/<spec>.spec.js`  
 (These specs query live production data and are not suitable for automated CI)
 
-### ❌ Unit Tests (Planned)
-- Not yet implemented
-- Target: Vitest (lightweight, Vite-native)
-- Priority: Hooks (useAuth, useSquad, useTransfer) + utility functions
+### ✅ Unit Tests
+- `tests/unit/` — Vitest, 13 test cases across transfer/bet/coins/lineup/auction (PR #694, 2026-07-01), CI job runs against an ephemeral Postgres
+- Hook-level coverage (useAuth, useSquad, useTransfer) not yet added — activates further once `supabase/schema.sql` lands
 
 ---
 

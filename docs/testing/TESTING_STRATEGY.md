@@ -252,7 +252,7 @@ npm run lint && npm run build && npx playwright test e2e/tests/platform.spec.js
 | Lineup lock cron (5-min interval) | Starting XI tests | Mark fixture as `live` in SQL directly to trigger lock |
 | process-transfer JWT requirement | Buy transfer | Use user's JWT from `localStorage` (not anon key) if direct fetch needed |
 | Player prices not from Forza API | Any budget test | Seed with random £4–£7 before running |
-| No unit tests | Hooks, utilities | Planned (Vitest) |
+| ~~No unit tests~~ | Hooks, utilities | ✅ Resolved 2026-07-27 — `tests/unit/` (Vitest, 13 cases: transfer/bet/coins/lineup/auction), PR #694 (2026-07-01) |
 
 ---
 
