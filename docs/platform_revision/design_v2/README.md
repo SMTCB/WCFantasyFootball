@@ -53,5 +53,7 @@ Typography: **Archivo Black** (display/headlines/wordmark), **Archivo** (body/UI
 
 This repo is single-branch (`main` only, since the 2026-07-24 cutover) — branch from `main`, PR back into `main`, same as every other session.
 
+**Known follow-up across modules:** admin ownership for non-football competitions (Tennis, F1) was never designed — see `ADMIN-1` in [BACKLOG.md](../../../BACKLOG.md) for the decided direction (Clubhouse owner = default admin of every competition in the Clubhouse; competition creator = admin of their own competition; central Clubhouse-level panel to assign/reassign) and the concrete gap it closes (`TennisAdminScreen.jsx`'s admin RPCs currently 403 for every real user). Not yet built.
+
 ---
-Last Updated: 2026-07-26 (migration 239 applied to prod — all four design_v2 modules now fully live, not just code-complete)
+Last Updated: 2026-07-27 (documentation consolidation — BACKLOG.md is once again the single source of truth for open items; added ADMIN-1 follow-up pointer)

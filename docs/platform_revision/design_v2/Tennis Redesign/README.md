@@ -93,3 +93,5 @@ No raster assets. Surface indicators, seed badges, medals, and round-reached tag
 
 ## Related
 This bundle assumes the Clubhouse Core handoff (sidebar, top bar, card system, Frontrow rebrand) is already implemented — Tennis screens sit inside that same shell and do not redefine it.
+
+**Known follow-up (not covered by this handoff):** the Tennis admin screen (`TennisAdminScreen.jsx`, not part of these 7 mockups) currently 403s for every real user — its admin RPCs are `service_role`-only with no admin-role check wired up. Tracked as `ADMIN-1` in [BACKLOG.md](../../../../BACKLOG.md): decided direction is Clubhouse-owner-as-default-admin + competition-creator-as-admin + a central Clubhouse-level reassignment panel, not yet built.
