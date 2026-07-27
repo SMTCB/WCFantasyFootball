@@ -769,6 +769,8 @@ vercel inspect wc-fantasy-football.vercel.app  # deployment details
    ```
 
 5. **After merge:** update [BACKLOG.md](BACKLOG.md) (and `TRACKER.md` if the work touched platform-revision modules) and move the Notion card to Done.
+   - **If BACKLOG.md changed:** regenerate `BACKLOG.html` in the same PR by running `python scripts/generate_backlog_html.py` and committing the result — the two must never drift apart. If it's not feasible in-session, say so explicitly rather than leaving it stale.
+   - **If root files, `src/` structure, `supabase/functions/`, or `docs/` were added/removed/materially changed:** check whether [DOCS_INDEX.html](DOCS_INDEX.html) needs a corresponding card added/updated/removed (it's hand-authored, not generated — use judgment on section/tags/description) and update it in the same PR.
 
 6. **Before any DB migration** — dump a full backup first: `npx supabase db dump --linked > backups/pre_migration_$(date +%Y%m%d_%H%M%S).sql` (Docker is available on this machine). If Docker is ever down, fall back to `SELECT`ing the affected rows and saving to `backups/*.json`; see [Pilot Safeguards](#️-pilot-safeguards--read-before-every-db-operation)
 
