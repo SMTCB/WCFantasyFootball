@@ -25,6 +25,35 @@ TYPE_MAP = {
     "BUSINESS": "business",
 }
 
+PRIORITY_COLORS = {"p0": "#7a1414", "p1": "#b23b3b", "p2": "#b8720e", "p3": "#5b7285"}
+PRIORITY_COLOR_DEFAULT = "#5b7285"
+
+KIND_LABELS = {
+    "done": ("SHIPPED", "k-done"),
+    "resolved": ("RESOLVED", "k-done"),
+    "session": ("SESSION LOG", "k-session"),
+    "audit": ("AUDIT", "k-audit"),
+    "planning": ("PLANNING SNAPSHOT", "k-planning"),
+    "other": ("NOTE", "k-other"),
+}
+KIND_COLORS = {
+    "done": "#1f7a4d",
+    "resolved": "#1f7a4d",
+    "session": "#1a6fa8",
+    "audit": "#b23b3b",
+    "planning": "#5b7285",
+    "other": "#5b7285",
+}
+KIND_GROUP_ORDER = ["done", "resolved", "session", "audit", "planning", "other"]
+KIND_GROUP_LABELS = {
+    "done": "Shipped",
+    "resolved": "Resolved backlog items",
+    "session": "Session logs",
+    "audit": "Audits",
+    "planning": "Planning snapshots",
+    "other": "Notes",
+}
+
 # ---------------------------------------------------------------------------
 # Tiny markdown -> HTML converter, scoped to the subset BACKLOG.md actually
 # uses (headers, bold, inline code, links, strikethrough, lists, tables,
@@ -165,6 +194,18 @@ def markdown_to_html(md_text):
     return "\n".join(out)
 
 
+def strip_tags(s):
+    return re.sub(r"<[^>]+>", " ", s or "")
+
+
+def make_summary(text, limit=170):
+    text = re.sub(r"\s+", " ", html.unescape(text or "")).strip()
+    if len(text) > limit:
+        cut = text[:limit].rsplit(" ", 1)[0]
+        text = cut + "…"
+    return text
+
+
 # ---------------------------------------------------------------------------
 # BACKLOG.md structural parsing
 # ---------------------------------------------------------------------------
@@ -193,7 +234,7 @@ def parse_open_table(table_lines):
             "id": item_id.replace("~~", "").strip(),
             "title": title,
             "effort": effort,
-            "notes": notes,
+            "notes": re.sub(r"~~", "", notes).strip(),
             "resolved": resolved,
             "type_label": type_label,
             "type_class": type_class,
@@ -203,7 +244,7 @@ def parse_open_table(table_lines):
 
 def parse_open_section(body):
     """Split a body into ### priority subsections, each with a table, plus
-    any #### detail subsections (returned separately, keyed by id prefix)."""
+    any #### detail subsections (returned separately, keyed by heading text)."""
     priorities = []
     detail_blocks = {}
     intro_lines = []
@@ -259,7 +300,7 @@ def parse_backlog(md_text):
     history_entries = []
 
     for heading, content in sections:
-        if heading.startswith("🌐") or heading.startswith("🚀 Open Backlog"):
+        if heading.startswith("\U0001F310") or heading.startswith("\U0001F680 Open Backlog"):
             intro_html, priorities, detail_blocks = parse_open_section(content)
             open_items_sections.append({
                 "heading": heading,
@@ -289,15 +330,15 @@ def parse_backlog(md_text):
 
         if heading.startswith("✅"):
             kind = "done"
-        elif heading.startswith("📊"):
+        elif heading.startswith("\U0001F4CA"):
             kind = "session"
-        elif heading.startswith("🔍"):
+        elif heading.startswith("\U0001F50D"):
             kind = "audit"
-        elif heading.startswith("🚨"):
+        elif heading.startswith("\U0001F6A8"):
             kind = "audit"
-        elif heading.startswith("🧹"):
+        elif heading.startswith("\U0001F9F9"):
             kind = "session"
-        elif heading.startswith("🚀"):
+        elif heading.startswith("\U0001F680"):
             kind = "planning"
         else:
             kind = "other"
@@ -316,84 +357,191 @@ def parse_backlog(md_text):
 
 
 # ---------------------------------------------------------------------------
+# Unified "pocket jira" item model — every open-backlog row AND every history
+# entry gets normalized onto one schema so they can render as one card grid
+# with one common detail-drawer structure (Description / Why it's necessary /
+# Where it came from / Date / Technical solution). Fields that genuinely
+# don't exist for a given source shape render as an honest "—" rather than
+# being fabricated.
+# ---------------------------------------------------------------------------
+
+def section_label_for(heading):
+    return re.sub(r"^[^\w]+", "", heading).split("(")[0].strip()
+
+
+def priority_slug_and_label(raw_priority):
+    m = re.match(r"P(\d)", raw_priority.strip())
+    slug = f"p{m.group(1)}" if m else "p9"
+    label = re.sub(r"\s*\([^)]*\)\s*$", "", raw_priority).strip()
+    return slug, label
+
+
+def find_detail_body(detail_blocks, item_id):
+    for key, body in detail_blocks.items():
+        first_token = key.split()[0] if key.split() else ""
+        if first_token == item_id:
+            return body
+    return None
+
+
+def build_unified_items(open_items_sections, history_entries):
+    open_out = []
+    closed_out = []
+    uid_counter = [0]
+
+    def next_uid():
+        uid_counter[0] += 1
+        return f"i{uid_counter[0]}"
+
+    for sec in open_items_sections:
+        sec_label = section_label_for(sec["heading"])
+        for raw_priority, rows in sec["priorities"]:
+            pr_slug, pr_label = priority_slug_and_label(raw_priority)
+            for row in rows:
+                detail_body = find_detail_body(sec["detail_blocks"], row["id"])
+                technical_html = markdown_to_html(detail_body) if detail_body else None
+                why_html = f"<p>{inline_md(row['notes'])}</p>" if row["notes"] else None
+                description_html = f"<p>{inline_md(row['title'])}</p>"
+                summary_text = row["notes"] or row["title"]
+                search_text = " ".join([row["id"], row["title"], row["notes"], sec_label, pr_label]).lower()
+
+                item = {
+                    "uid": next_uid(),
+                    "title": row["title"],
+                    "summary_text": summary_text,
+                    "id_label": row["id"],
+                    "effort": row["effort"],
+                    "type_label": row["type_label"],
+                    "type_class": row["type_class"],
+                    "date": None,
+                    "refs": None,
+                    "description_html": description_html,
+                    "why_html": why_html,
+                    "technical_html": technical_html,
+                    "search_text": search_text,
+                }
+
+                if row["resolved"]:
+                    item.update({
+                        "status": "closed",
+                        "kind": "resolved",
+                        "kind_label": KIND_LABELS["resolved"][0],
+                        "kind_class": KIND_LABELS["resolved"][1],
+                        "priority": None,
+                        "where_from": f"Resolved backlog item · {sec_label} · {pr_label}",
+                    })
+                    closed_out.append(item)
+                else:
+                    item.update({
+                        "status": "open",
+                        "priority": pr_slug,
+                        "priority_label": pr_label,
+                        "where_from": f"{sec_label} · {pr_label}",
+                    })
+                    open_out.append(item)
+
+    for e in history_entries:
+        label, cls = KIND_LABELS[e["kind"]]
+        summary_text = make_summary(strip_tags(e["body_html"]))
+        where_from = label if not e["refs"] else f"{label} · {e['refs']}"
+        item = {
+            "uid": next_uid(),
+            "status": "closed",
+            "title": e["title"],
+            "summary_text": summary_text,
+            "id_label": None,
+            "effort": None,
+            "type_label": None,
+            "type_class": None,
+            "priority": None,
+            "kind": e["kind"],
+            "kind_label": label,
+            "kind_class": cls,
+            "date": e["date"],
+            "refs": e["refs"],
+            "where_from": where_from,
+            "description_html": f"<p>{inline_md(summary_text)}</p>" if summary_text else "<p class=\"muted\">No summary available.</p>",
+            "why_html": None,
+            "technical_html": e["body_html"],
+            "search_text": e["search_text"],
+        }
+        closed_out.append(item)
+
+    return open_out, closed_out
+
+
+# ---------------------------------------------------------------------------
 # HTML rendering
 # ---------------------------------------------------------------------------
 
-KIND_LABELS = {
-    "done": ("SHIPPED", "k-done"),
-    "session": ("SESSION LOG", "k-session"),
-    "audit": ("AUDIT", "k-audit"),
-    "planning": ("PLANNING SNAPSHOT", "k-planning"),
-    "other": ("NOTE", "k-other"),
-}
+def esc(s):
+    return html.escape(s or "", quote=True)
 
 
-def render_open_row(row, section_slug, priority_slug):
-    resolved_cls = " resolved" if row["resolved"] else ""
-    type_badge = f'<span class="tbadge t-{row["type_class"]}">{html.escape(row["type_label"] or "—")}</span>' if row["type_label"] else ""
-    detail_link = ""
-    detail_key = row["id"]
+def render_card(item):
+    status = item["status"]
+    if status == "open":
+        tab_color = PRIORITY_COLORS.get(item["priority"], PRIORITY_COLOR_DEFAULT)
+        top_badge = f'<span class="badge-mini pr-{esc(item["priority"])}">{esc(item["priority_label"])}</span>'
+        stamp_attr = ""
+        priority_attr = item["priority"]
+        kind_attr = "none"
+    else:
+        tab_color = KIND_COLORS.get(item["kind"], PRIORITY_COLOR_DEFAULT)
+        top_badge = f'<span class="badge-mini {item["kind_class"]}">{esc(item["kind_label"])}</span>'
+        stamp_attr = f' data-stamp="{esc(item["kind_label"])}"'
+        priority_attr = "none"
+        kind_attr = item["kind"]
+
+    type_html = f'<span class="type-tag t-{item["type_class"]}">{esc(item["type_label"])}</span>' if item.get("type_label") else ""
+
+    foot_bits = []
+    if item.get("id_label"):
+        foot_bits.append(f'<span class="foot-id">{esc(item["id_label"])}</span>')
+    if item.get("effort"):
+        foot_bits.append(f'<span class="foot-effort">{inline_md(item["effort"])}</span>')
+    if item.get("date"):
+        foot_bits.append(f'<span class="foot-date">{esc(item["date"])}</span>')
+    if item.get("refs"):
+        foot_bits.append(f'<span class="foot-refs">{inline_md(item["refs"])}</span>')
+    foot_html = "".join(foot_bits)
+
+    detail_html = render_detail(item, top_badge, type_html)
+
     return f"""
-      <div class="open-row{resolved_cls}" data-search="{html.escape((row['id']+' '+row['title']+' '+row['notes']).lower())}" data-priority="{priority_slug}" data-section="{section_slug}" data-id="{html.escape(row['id'])}">
-        <div class="open-row-top">
-          <span class="open-id">{html.escape(row['id'])}</span>
-          {type_badge}
-          <span class="open-title">{inline_md(row['title'])}</span>
-          <span class="open-effort">{inline_md(row['effort'])}</span>
-        </div>
-        <div class="open-notes">{inline_md(row['notes'])}</div>
-      </div>"""
+      <article class="card" data-status="{status}" data-priority="{priority_attr}" data-kind="{kind_attr}" data-search="{esc(item['search_text'][:2000])}" style="--tab-color:{tab_color}" tabindex="0"{stamp_attr}>
+        <div class="card-top">{top_badge}{type_html}</div>
+        <h3 class="card-title">{inline_md(item['title'])}</h3>
+        <p class="card-summary">{inline_md(item['summary_text'])}</p>
+        <div class="card-foot">{foot_html}</div>
+        <template>{detail_html}</template>
+      </article>"""
 
 
-def slugify(text):
-    return re.sub(r"[^a-z0-9]+", "-", text.lower()).strip("-")
+def render_detail(item, top_badge, type_html):
+    date_html = f'<p>{esc(item["date"])}</p>' if item.get("date") else '<p class="muted">Not dated.</p>'
+    why_html = item.get("why_html") or '<p class="muted">Not recorded for this item.</p>'
+    technical_html = item.get("technical_html") or '<p class="muted">No implementation write-up recorded.</p>'
+    return f"""
+      <div class="drawer-badges">{top_badge}{type_html}</div>
+      <h2 class="drawer-title">{inline_md(item['title'])}</h2>
+      <dl class="drawer-fields">
+        <div class="field"><dt>Description</dt><dd>{item['description_html']}</dd></div>
+        <div class="field"><dt>Why it's necessary</dt><dd>{why_html}</dd></div>
+        <div class="field"><dt>Where it came from</dt><dd><p>{inline_md(item['where_from'])}</p></dd></div>
+        <div class="field"><dt>Date</dt><dd>{date_html}</dd></div>
+        <div class="field"><dt>Technical solution</dt><dd>{technical_html}</dd></div>
+      </dl>"""
 
 
-def render_open_items(open_items_sections):
-    out = []
-    for sec in open_items_sections:
-        sec_slug = slugify(sec["heading"])[:40]
-        out.append(f'<section class="open-section" id="sec-{sec_slug}">')
-        out.append(f'<h2 class="open-section-title">{inline_md(sec["heading"])}</h2>')
-        if sec["intro_html"].strip():
-            out.append(f'<div class="open-intro">{sec["intro_html"]}</div>')
-        for priority, rows in sec["priorities"]:
-            pr_slug = slugify(priority)[:6]
-            out.append(f'<div class="priority-block" data-priority-block="{pr_slug}">')
-            out.append(f'<h3 class="priority-title pr-{pr_slug}">{inline_md(priority)}</h3>')
-            out.append('<div class="open-rows">')
-            for row in rows:
-                out.append(render_open_row(row, sec_slug, pr_slug))
-            out.append('</div></div>')
-        if sec["detail_blocks"]:
-            out.append('<div class="detail-blocks">')
-            for key, detail_body in sec["detail_blocks"].items():
-                out.append(f'<details class="detail-block" data-search="{html.escape(key.lower())}">')
-                out.append(f'<summary>{inline_md(key)}</summary>')
-                out.append(f'<div class="detail-body">{markdown_to_html(detail_body)}</div>')
-                out.append('</details>')
-            out.append('</div>')
-        out.append('</section>')
-    return "\n".join(out)
-
-
-def render_history(history_entries):
-    out = []
-    for idx, e in enumerate(history_entries):
-        label, cls = KIND_LABELS[e["kind"]]
-        date_html = f'<span class="hist-date">{html.escape(e["date"])}</span>' if e["date"] else ""
-        refs_html = f'<span class="hist-refs">{inline_md(e["refs"])}</span>' if e["refs"] else ""
-        out.append(f"""
-      <details class="hist-entry" data-kind="{e['kind']}" data-search="{html.escape(e['search_text'][:4000])}">
-        <summary>
-          <span class="hist-badge {cls}">{label}</span>
-          {date_html}
-          <span class="hist-title">{inline_md(e['title'])}</span>
-          {refs_html}
-        </summary>
-        <div class="hist-body">{e['body_html']}</div>
-      </details>""")
-    return "\n".join(out)
+def render_group(slug, label, count, color, cards_html):
+    if count == 0:
+        return ""
+    return f"""
+    <section class="item-group" id="group-{slug}" data-group="{slug}">
+      <h2 class="group-title" style="--tab-color:{color}">{esc(label)} <span class="group-count">{count}</span></h2>
+      <div class="card-grid">{cards_html}</div>
+    </section>"""
 
 
 def render_preamble_badges(preamble):
@@ -406,17 +554,6 @@ def render_preamble_badges(preamble):
     if m:
         badges.append(f'<span class="badge badge-blue">{html.escape(re.sub(r"[`*]", "", m.group(1))[:70])}</span>')
     return "\n".join(badges)
-
-
-def render_priority_counts(open_items_sections):
-    counts = {"p1": 0, "p2": 0, "p3": 0}
-    for sec in open_items_sections:
-        for priority, rows in sec["priorities"]:
-            key = slugify(priority)[:2]
-            live_rows = [r for r in rows if not r["resolved"]]
-            if key in counts:
-                counts[key] += len(live_rows)
-    return counts
 
 
 PAGE_TEMPLATE = """<!DOCTYPE html>
@@ -437,9 +574,9 @@ PAGE_TEMPLATE = """<!DOCTYPE html>
     <div class="badge-bar">{badges}</div>
   </div>
   <div class="header-right">
-    <div class="tabs">
-      <button class="tab-btn active" data-tab="open">Open Items <span class="tab-count">{open_count}</span></button>
-      <button class="tab-btn" data-tab="history">History <span class="tab-count">{history_count}</span></button>
+    <div class="totals">
+      <div class="total-pill"><strong>{open_count}</strong><span>open</span></div>
+      <div class="total-pill"><strong>{closed_count}</strong><span>closed</span></div>
     </div>
   </div>
 </header>
@@ -447,47 +584,53 @@ PAGE_TEMPLATE = """<!DOCTYPE html>
 <div class="controls">
   <div class="search-wrap">
     <span class="search-icon">&#128269;</span>
-    <input id="search" type="text" placeholder="Search open items and history…">
+    <input id="search" type="text" placeholder="Search all items…">
   </div>
   <div class="filter-chips" id="open-chips">
     <span class="chip active" data-filter-priority="all">All priorities</span>
-    <span class="chip" data-filter-priority="p1">P1 — HIGH ({p1_count})</span>
-    <span class="chip" data-filter-priority="p2">P2 — MEDIUM ({p2_count})</span>
-    <span class="chip" data-filter-priority="p3">P3 — LOW ({p3_count})</span>
+    {priority_chips}
   </div>
-  <div class="filter-chips" id="history-chips" style="display:none">
-    <span class="chip active" data-filter-kind="all">All history</span>
-    <span class="chip" data-filter-kind="done">Shipped</span>
-    <span class="chip" data-filter-kind="session">Session logs</span>
-    <span class="chip" data-filter-kind="audit">Audits</span>
-    <span class="chip" data-filter-kind="planning">Planning snapshots</span>
+  <div class="filter-chips" id="closed-chips" style="display:none">
+    <span class="chip active" data-filter-kind="all">All closed</span>
+    {kind_chips}
   </div>
   <span id="result-count"></span>
 </div>
 
 <div class="layout">
-  <div class="sidebar" id="sidebar-open">
-    <h3>Jump to</h3>
-    {sidebar_open}
-  </div>
-  <div class="sidebar" id="sidebar-history" style="display:none">
-    <h3>Filter</h3>
-    <div class="sidebar-item" data-jump-kind="all">All entries<span class="sidebar-count">{history_count}</span></div>
-    <div class="sidebar-item" data-jump-kind="done">Shipped work</div>
-    <div class="sidebar-item" data-jump-kind="session">Session logs</div>
-    <div class="sidebar-item" data-jump-kind="audit">Audits</div>
-    <div class="sidebar-item" data-jump-kind="planning">Planning snapshots</div>
-  </div>
-  <div class="main">
-    <div id="view-open" class="view">
-      {open_items_html}
+  <nav class="sidebar">
+    <div class="status-toggle">
+      <button class="status-btn active" data-status="open">Open <span class="status-count">{open_count}</span></button>
+      <button class="status-btn" data-status="closed">Closed <span class="status-count">{closed_count}</span></button>
     </div>
-    <div id="view-history" class="view" style="display:none">
-      <p class="hist-hint">Newest first, exactly as they appear in BACKLOG.md. Click any row to expand its full write-up.</p>
-      {history_html}
+    <div class="sidebar-group" id="sidebar-open">
+      <h3>Jump to priority</h3>
+      {sidebar_open}
     </div>
-  </div>
+    <div class="sidebar-group" id="sidebar-closed" style="display:none">
+      <h3>Jump to category</h3>
+      {sidebar_closed}
+    </div>
+  </nav>
+  <main class="main">
+    <div id="view-open" class="grid-view">
+      {open_groups_html}
+    </div>
+    <div id="view-closed" class="grid-view" style="display:none">
+      {closed_groups_html}
+    </div>
+    <div class="no-results" id="no-results">
+      <h3>No items found</h3>
+      <p>Try a different search term or clear the active filter.</p>
+    </div>
+  </main>
 </div>
+
+<div class="drawer-backdrop" id="drawer-backdrop"></div>
+<aside class="drawer" id="drawer">
+  <button class="drawer-close" id="drawer-close" aria-label="Close">&times;</button>
+  <div class="drawer-body" id="drawer-body"></div>
+</aside>
 
 <script>
 {js}
@@ -511,7 +654,7 @@ def build_css():
     --text2: #64748b;
     --border: #e2e8f0;
     --danger: #b91c1c;
-    --radius: 8px;
+    --radius: 10px;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: 'Inter', system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--paper); min-height: 100vh; }
@@ -526,11 +669,10 @@ def build_css():
   .badge-blue  { background: #1a6fa8; color: #e8f3fb; }
   .badge-amber { background: #92400e; color: #fef9ed; }
 
-  .tabs { display: flex; gap: 6px; margin-top: 4px; }
-  .tab-btn { background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.7); border: 1px solid rgba(255,255,255,0.15); padding: 8px 16px; border-radius: 20px; font-size: 12px; font-weight: 700; letter-spacing: 0.03em; cursor: pointer; display: flex; align-items: center; gap: 6px; }
-  .tab-btn.active { background: var(--gold); color: #1a1200; border-color: var(--gold); }
-  .tab-count { background: rgba(0,0,0,0.15); border-radius: 10px; padding: 1px 6px; font-size: 10px; }
-  .tab-btn.active .tab-count { background: rgba(0,0,0,0.2); }
+  .totals { display: flex; gap: 8px; }
+  .total-pill { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); border-radius: 10px; padding: 6px 14px; text-align: center; min-width: 64px; }
+  .total-pill strong { display: block; font-size: 17px; font-weight: 800; }
+  .total-pill span { font-size: 9px; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(255,255,255,0.55); }
 
   .controls { background: var(--card); border-bottom: 1px solid var(--border); padding: 10px 32px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; position: sticky; top: 0; z-index: 100; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
   .search-wrap { position: relative; flex: 1; min-width: 220px; }
@@ -544,83 +686,82 @@ def build_css():
   #result-count { font-size: 11px; color: var(--text2); white-space: nowrap; margin-left: 4px; }
 
   .layout { display: flex; min-height: calc(100vh - 130px); }
-  .sidebar { width: 220px; min-width: 220px; background: white; border-right: 1px solid var(--border); padding: 12px 0; position: sticky; top: 49px; height: calc(100vh - 49px); overflow-y: auto; flex-shrink: 0; }
+  .sidebar { width: 230px; min-width: 230px; background: white; border-right: 1px solid var(--border); padding: 12px 0; position: sticky; top: 49px; height: calc(100vh - 49px); overflow-y: auto; flex-shrink: 0; }
+  .status-toggle { display: flex; gap: 4px; padding: 0 14px 12px; border-bottom: 1px solid var(--border); margin-bottom: 10px; }
+  .status-btn { flex: 1; background: var(--bg); border: 1px solid var(--border); color: var(--text2); font-size: 12px; font-weight: 700; padding: 8px 6px; border-radius: 8px; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 2px; }
+  .status-btn .status-count { font-size: 14px; font-weight: 800; }
+  .status-btn.active { background: var(--shell); color: white; border-color: var(--shell); }
   .sidebar h3 { font-size: 9px; font-weight: 700; letter-spacing: 0.1em; color: var(--text2); padding: 10px 14px 4px; text-transform: uppercase; }
-  .sidebar-item { padding: 7px 14px; font-size: 12px; color: #475569; cursor: pointer; display: flex; align-items: center; gap: 6px; border-left: 2px solid transparent; transition: all 0.1s; user-select: none; }
-  .sidebar-item:hover { background: var(--accent-light); color: var(--accent); border-left-color: var(--accent); }
+  .sidebar-item { padding: 7px 14px; font-size: 12px; color: #475569; cursor: pointer; display: flex; align-items: center; gap: 8px; border-left: 3px solid transparent; transition: all 0.1s; user-select: none; }
+  .sidebar-item .swatch { width: 8px; height: 8px; border-radius: 2px; flex-shrink: 0; background: var(--tab-color, var(--text2)); }
+  .sidebar-item:hover { background: var(--accent-light); color: var(--accent); }
   .sidebar-item.active { background: var(--accent-light); color: var(--accent); border-left-color: var(--accent); font-weight: 600; }
   .sidebar-count { margin-left: auto; font-size: 10px; background: #f1f5f9; border-radius: 10px; padding: 1px 6px; color: var(--text2); min-width: 20px; text-align: center; }
 
-  .main { flex: 1; padding: 22px 28px; min-width: 0; max-width: 980px; }
+  .main { flex: 1; padding: 22px 28px; min-width: 0; }
 
-  .open-section { margin-bottom: 32px; }
-  .open-section-title { font-size: 16px; font-weight: 800; margin-bottom: 10px; padding-bottom: 8px; border-bottom: 2px solid var(--shell); }
-  .open-intro { font-size: 12.5px; color: var(--text2); background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 10px 14px; margin-bottom: 16px; line-height: 1.6; }
-  .open-intro p { margin-bottom: 6px; }
-  .open-intro blockquote { border-left: 3px solid var(--gold); padding-left: 10px; color: #92400e; margin: 8px 0; }
+  .item-group { margin-bottom: 28px; }
+  .group-title { font-size: 13px; font-weight: 800; letter-spacing: 0.03em; text-transform: uppercase; color: var(--shell); padding-left: 12px; border-left: 4px solid var(--tab-color, var(--accent)); margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+  .group-count { font-size: 11px; font-weight: 700; color: white; background: var(--tab-color, var(--text2)); border-radius: 10px; padding: 1px 8px; }
 
-  .priority-block { margin-bottom: 18px; }
-  .priority-title { font-size: 12px; font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase; padding: 5px 10px; border-radius: 5px; display: inline-block; margin-bottom: 8px; }
+  .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 10px; }
+  .card { position: relative; background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px 14px 10px; cursor: pointer; overflow: hidden; transition: transform 0.12s, box-shadow 0.12s; }
+  .card::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: var(--tab-color, var(--text2)); }
+  .card:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(24,32,46,0.1); border-color: var(--tab-color, var(--accent)); }
+  .card:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .card[data-status="closed"]::after { content: attr(data-stamp); position: absolute; top: 10px; right: -30px; font-size: 9px; font-weight: 800; letter-spacing: 0.08em; color: var(--tab-color, var(--text2)); opacity: 0.35; transform: rotate(28deg); white-space: nowrap; pointer-events: none; }
+  .card-top { display: flex; gap: 5px; flex-wrap: wrap; margin-bottom: 6px; padding-right: 34px; }
+  .badge-mini { font-size: 9px; font-weight: 800; letter-spacing: 0.04em; padding: 2px 7px; border-radius: 4px; text-transform: uppercase; white-space: nowrap; }
+  .pr-p0 { background: #fee2e2; color: #7a1414; }
   .pr-p1 { background: #fee2e2; color: #991b1b; }
   .pr-p2 { background: #fef3c7; color: #92400e; }
   .pr-p3 { background: #e0f2fe; color: #075985; }
-
-  .open-rows { display: flex; flex-direction: column; gap: 6px; }
-  .open-row { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 9px 12px; }
-  .open-row.resolved { opacity: 0.55; background: #f8fafc; }
-  .open-row-top { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
-  .open-id { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: var(--accent); background: var(--accent-light); padding: 1px 6px; border-radius: 4px; }
-  .open-title { font-size: 13px; font-weight: 600; flex: 1; min-width: 160px; }
-  .open-effort { font-size: 11px; color: var(--text2); font-style: italic; white-space: nowrap; }
-  .open-notes { font-size: 12px; color: #475569; margin-top: 4px; line-height: 1.55; }
-  .open-notes code { background: #f1f5f9; padding: 0 4px; border-radius: 3px; font-size: 11px; }
-
-  .tbadge { font-size: 9px; font-weight: 800; letter-spacing: 0.04em; padding: 2px 6px; border-radius: 4px; text-transform: uppercase; }
+  .k-done { background: #dcfce7; color: #166534; }
+  .k-session { background: #e0f2fe; color: #075985; }
+  .k-audit { background: #fee2e2; color: #991b1b; }
+  .k-planning { background: #f1f5f9; color: #475569; }
+  .k-other { background: #f1f5f9; color: #475569; }
+  .card-title { font-size: 13.5px; font-weight: 700; line-height: 1.35; margin-bottom: 5px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .card-summary { font-size: 11.5px; color: #475569; line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; margin-bottom: 8px; min-height: 17px; }
+  .card-foot { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; font-size: 10.5px; color: var(--text2); }
+  .foot-id { font-family: 'JetBrains Mono', monospace; font-weight: 700; color: var(--accent); background: var(--accent-light); padding: 1px 6px; border-radius: 4px; }
+  .foot-effort { font-style: italic; }
+  .foot-date { font-family: 'JetBrains Mono', monospace; }
+  .foot-refs { color: var(--gold); font-weight: 600; }
+  .type-tag { font-size: 9px; font-weight: 800; letter-spacing: 0.04em; padding: 2px 6px; border-radius: 4px; text-transform: uppercase; }
   .t-feature { background: #dcfce7; color: #166534; }
   .t-bug { background: #fee2e2; color: #991b1b; }
   .t-techdebt { background: #e0e7ff; color: #3730a3; }
   .t-docs { background: #f1f5f9; color: #475569; }
   .t-business { background: var(--gold-light); color: var(--gold); }
   .t-other { background: #f1f5f9; color: #475569; }
+  .card template { display: none; }
 
-  .detail-blocks { margin-top: 14px; }
-  .detail-block { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 8px; padding: 4px 4px; }
-  .detail-block summary { cursor: pointer; font-size: 12.5px; font-weight: 700; padding: 8px 10px; color: var(--shell); }
-  .detail-block summary:hover { color: var(--accent); }
-  .detail-body { padding: 4px 16px 14px; font-size: 12.5px; line-height: 1.65; color: #334155; }
-  .detail-body h4 { font-size: 13px; margin: 10px 0 4px; color: var(--shell); }
-  .detail-body h5 { font-size: 12.5px; margin: 8px 0 4px; color: var(--accent); }
-  .detail-body ul, .detail-body ol { margin: 4px 0 8px 20px; }
-  .detail-body li { margin-bottom: 3px; }
-  .detail-body code { background: #f1f5f9; padding: 0 4px; border-radius: 3px; font-size: 11.5px; }
-  .detail-body pre { background: #0f172a; color: #e2e8f0; padding: 10px 12px; border-radius: 6px; overflow-x: auto; font-size: 11.5px; margin: 8px 0; }
-  .detail-body pre code { background: none; color: inherit; padding: 0; }
-  .detail-body p { margin-bottom: 8px; }
+  .no-results { display: none; text-align: center; padding: 60px 20px; color: var(--text2); }
+  .no-results.visible { display: block; }
+  .no-results h3 { font-size: 15px; margin-bottom: 6px; color: var(--shell); }
 
-  .hist-hint { font-size: 12px; color: var(--text2); margin-bottom: 14px; }
-  .hist-entry { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 7px; }
-  .hist-entry summary { cursor: pointer; padding: 10px 14px; display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; list-style: none; }
-  .hist-entry summary::-webkit-details-marker { display: none; }
-  .hist-entry summary::before { content: '▸'; color: var(--text2); font-size: 10px; margin-right: 2px; }
-  .hist-entry[open] summary::before { content: '▾'; }
-  .hist-badge { font-size: 9px; font-weight: 800; letter-spacing: 0.05em; padding: 2px 7px; border-radius: 4px; white-space: nowrap; }
-  .k-done { background: #dcfce7; color: #166534; }
-  .k-session { background: #e0f2fe; color: #075985; }
-  .k-audit { background: #fee2e2; color: #991b1b; }
-  .k-planning { background: #f1f5f9; color: #475569; }
-  .k-other { background: #f1f5f9; color: #475569; }
-  .hist-date { font-size: 11px; color: var(--text2); font-family: 'JetBrains Mono', monospace; }
-  .hist-title { font-size: 13px; font-weight: 600; flex: 1; min-width: 160px; }
-  .hist-refs { font-size: 11px; color: var(--gold); font-weight: 600; }
-  .hist-body { padding: 2px 18px 16px 30px; font-size: 12.5px; line-height: 1.65; color: #334155; border-top: 1px solid var(--border); }
-  .hist-body h4 { font-size: 13px; margin: 10px 0 4px; color: var(--shell); }
-  .hist-body h5 { font-size: 12.5px; margin: 8px 0 4px; color: var(--accent); }
-  .hist-body ul, .hist-body ol { margin: 6px 0 8px 20px; }
-  .hist-body li { margin-bottom: 3px; }
-  .hist-body code { background: #f1f5f9; padding: 0 4px; border-radius: 3px; font-size: 11.5px; }
-  .hist-body pre { background: #0f172a; color: #e2e8f0; padding: 10px 12px; border-radius: 6px; overflow-x: auto; font-size: 11.5px; margin: 8px 0; }
-  .hist-body pre code { background: none; color: inherit; padding: 0; }
-  .hist-body p { margin-bottom: 8px; }
+  .drawer-backdrop { position: fixed; inset: 0; background: rgba(15,20,30,0.45); opacity: 0; pointer-events: none; transition: opacity 0.2s; z-index: 200; }
+  .drawer-backdrop.open { opacity: 1; pointer-events: auto; }
+  .drawer { position: fixed; top: 0; right: 0; bottom: 0; width: min(480px, 92vw); background: var(--card); box-shadow: -8px 0 30px rgba(0,0,0,0.18); transform: translateX(100%); transition: transform 0.25s cubic-bezier(.22,1,.36,1); z-index: 201; overflow-y: auto; padding: 22px 24px 40px; }
+  .drawer.open { transform: translateX(0); }
+  .drawer-close { position: absolute; top: 14px; right: 16px; background: var(--bg); border: 1px solid var(--border); border-radius: 50%; width: 30px; height: 30px; font-size: 18px; line-height: 1; cursor: pointer; color: var(--text2); }
+  .drawer-close:hover { color: var(--danger); border-color: var(--danger); }
+  .drawer-badges { display: flex; gap: 6px; flex-wrap: wrap; margin: 4px 30px 10px 0; }
+  .drawer-title { font-size: 18px; font-weight: 800; line-height: 1.3; margin-bottom: 16px; padding-right: 20px; }
+  .drawer-fields { display: flex; flex-direction: column; gap: 14px; }
+  .field dt { font-size: 10px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: var(--gold); margin-bottom: 4px; }
+  .field dd { font-size: 13px; line-height: 1.65; color: #334155; }
+  .field dd .muted { color: var(--text2); font-style: italic; }
+  .field dd h4 { font-size: 13.5px; margin: 10px 0 4px; color: var(--shell); }
+  .field dd h5 { font-size: 13px; margin: 8px 0 4px; color: var(--accent); }
+  .field dd ul, .field dd ol { margin: 4px 0 8px 20px; }
+  .field dd li { margin-bottom: 3px; }
+  .field dd code { background: #f1f5f9; padding: 0 4px; border-radius: 3px; font-size: 11.5px; }
+  .field dd pre { background: #0f172a; color: #e2e8f0; padding: 10px 12px; border-radius: 6px; overflow-x: auto; font-size: 11.5px; margin: 8px 0; }
+  .field dd pre code { background: none; color: inherit; padding: 0; }
+  .field dd p { margin-bottom: 8px; }
+  .field dd p:last-child { margin-bottom: 0; }
   .md-table-wrap { overflow-x: auto; margin: 8px 0; }
   .md-table { border-collapse: collapse; width: 100%; font-size: 11.5px; }
   .md-table th, .md-table td { border: 1px solid var(--border); padding: 5px 8px; text-align: left; vertical-align: top; }
@@ -632,6 +773,7 @@ def build_css():
     .sidebar { display: none !important; }
     .main { padding: 16px; }
     header { padding: 16px; }
+    .drawer { width: 100vw; }
   }
 """
 
@@ -639,31 +781,40 @@ def build_css():
 def build_js():
     return """
 document.addEventListener('DOMContentLoaded', () => {
-  const tabBtns = document.querySelectorAll('.tab-btn');
+  const statusBtns = document.querySelectorAll('.status-btn');
   const viewOpen = document.getElementById('view-open');
-  const viewHistory = document.getElementById('view-history');
+  const viewClosed = document.getElementById('view-closed');
   const sidebarOpen = document.getElementById('sidebar-open');
-  const sidebarHistory = document.getElementById('sidebar-history');
+  const sidebarClosed = document.getElementById('sidebar-closed');
   const openChips = document.getElementById('open-chips');
-  const historyChips = document.getElementById('history-chips');
+  const closedChips = document.getElementById('closed-chips');
   const search = document.getElementById('search');
   const resultCount = document.getElementById('result-count');
-  let activeTab = 'open';
+  const noResults = document.getElementById('no-results');
+  const drawer = document.getElementById('drawer');
+  const drawerBackdrop = document.getElementById('drawer-backdrop');
+  const drawerBody = document.getElementById('drawer-body');
+  const drawerClose = document.getElementById('drawer-close');
+
+  let activeStatus = 'open';
   let activePriority = 'all';
   let activeKind = 'all';
 
-  tabBtns.forEach(btn => btn.addEventListener('click', () => {
-    tabBtns.forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    activeTab = btn.dataset.tab;
-    viewOpen.style.display = activeTab === 'open' ? '' : 'none';
-    viewHistory.style.display = activeTab === 'history' ? '' : 'none';
-    sidebarOpen.style.display = activeTab === 'open' ? '' : 'none';
-    sidebarHistory.style.display = activeTab === 'history' ? '' : 'none';
-    openChips.style.display = activeTab === 'open' ? '' : 'none';
-    historyChips.style.display = activeTab === 'history' ? '' : 'none';
+  function norm(s) { return (s || '').toLowerCase(); }
+
+  function setStatus(status) {
+    activeStatus = status;
+    statusBtns.forEach(b => b.classList.toggle('active', b.dataset.status === status));
+    viewOpen.style.display = status === 'open' ? '' : 'none';
+    viewClosed.style.display = status === 'closed' ? '' : 'none';
+    sidebarOpen.style.display = status === 'open' ? '' : 'none';
+    sidebarClosed.style.display = status === 'closed' ? '' : 'none';
+    openChips.style.display = status === 'open' ? '' : 'none';
+    closedChips.style.display = status === 'closed' ? '' : 'none';
     applyFilters();
-  }));
+  }
+
+  statusBtns.forEach(btn => btn.addEventListener('click', () => setStatus(btn.dataset.status)));
 
   openChips.querySelectorAll('.chip').forEach(chip => chip.addEventListener('click', () => {
     openChips.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
@@ -672,61 +823,84 @@ document.addEventListener('DOMContentLoaded', () => {
     applyFilters();
   }));
 
-  historyChips.querySelectorAll('.chip').forEach(chip => chip.addEventListener('click', () => {
-    historyChips.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+  closedChips.querySelectorAll('.chip').forEach(chip => chip.addEventListener('click', () => {
+    closedChips.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
     chip.classList.add('active');
     activeKind = chip.dataset.filterKind;
     applyFilters();
   }));
 
-  document.querySelectorAll('[data-jump-kind]').forEach(el => el.addEventListener('click', () => {
-    document.querySelectorAll('[data-jump-kind]').forEach(e => e.classList.remove('active'));
+  document.querySelectorAll('[data-jump-priority]').forEach(el => el.addEventListener('click', () => {
+    const val = el.dataset.jumpPriority;
+    activePriority = val;
+    openChips.querySelectorAll('.chip').forEach(c => c.classList.toggle('active', c.dataset.filterPriority === val));
+    document.querySelectorAll('#sidebar-open .sidebar-item').forEach(e => e.classList.remove('active'));
     el.classList.add('active');
-    activeKind = el.dataset.jumpKind;
-    historyChips.querySelectorAll('.chip').forEach(c => c.classList.toggle('active', c.dataset.filterKind === activeKind));
     applyFilters();
+    const target = document.getElementById('group-' + val);
+    if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }));
 
-  document.querySelectorAll('[data-jump-to]').forEach(el => el.addEventListener('click', () => {
-    const target = document.getElementById(el.dataset.jumpTo);
-    if (target) target.scrollIntoView({behavior: 'smooth', block: 'start'});
+  document.querySelectorAll('[data-jump-kind]').forEach(el => el.addEventListener('click', () => {
+    const val = el.dataset.jumpKind;
+    activeKind = val;
+    closedChips.querySelectorAll('.chip').forEach(c => c.classList.toggle('active', c.dataset.filterKind === val));
+    document.querySelectorAll('#sidebar-closed .sidebar-item').forEach(e => e.classList.remove('active'));
+    el.classList.add('active');
+    applyFilters();
+    const target = document.getElementById('group-' + val);
+    if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }));
-
-  function norm(s) { return (s || '').toLowerCase(); }
 
   function applyFilters() {
     const q = norm(search.value);
+    const activeView = activeStatus === 'open' ? viewOpen : viewClosed;
     let visible = 0, total = 0;
-    if (activeTab === 'open') {
-      document.querySelectorAll('.open-row').forEach(row => {
-        total++;
-        const matchesQ = !q || row.dataset.search.includes(q);
-        const matchesP = activePriority === 'all' || row.dataset.priority === activePriority;
-        const show = matchesQ && matchesP;
-        row.classList.toggle('hidden', !show);
-        if (show) visible++;
-      });
-      document.querySelectorAll('.priority-block').forEach(block => {
-        const anyVisible = block.querySelectorAll('.open-row:not(.hidden)').length > 0;
-        block.classList.toggle('hidden', !anyVisible);
-      });
-      document.querySelectorAll('.detail-block').forEach(d => {
-        d.classList.toggle('hidden', !!q && !d.dataset.search.includes(q));
-      });
-    } else {
-      document.querySelectorAll('.hist-entry').forEach(entry => {
-        total++;
-        const matchesQ = !q || entry.dataset.search.includes(q);
-        const matchesK = activeKind === 'all' || entry.dataset.kind === activeKind;
-        const show = matchesQ && matchesK;
-        entry.classList.toggle('hidden', !show);
-        if (show) visible++;
-      });
-    }
-    resultCount.textContent = q || (activeTab === 'open' ? activePriority !== 'all' : activeKind !== 'all')
-      ? visible + ' / ' + total + ' shown'
-      : total + ' items';
+
+    activeView.querySelectorAll('.card').forEach(card => {
+      total++;
+      const matchesQ = !q || card.dataset.search.includes(q);
+      const matchesP = activeStatus === 'closed' || activePriority === 'all' || card.dataset.priority === activePriority;
+      const matchesK = activeStatus === 'open' || activeKind === 'all' || card.dataset.kind === activeKind;
+      const show = matchesQ && matchesP && matchesK;
+      card.classList.toggle('hidden', !show);
+      if (show) visible++;
+    });
+
+    activeView.querySelectorAll('.item-group').forEach(group => {
+      const anyVisible = group.querySelectorAll('.card:not(.hidden)').length > 0;
+      group.classList.toggle('hidden', !anyVisible);
+    });
+
+    resultCount.textContent = visible + ' / ' + total + ' shown';
+    noResults.classList.toggle('visible', visible === 0);
   }
+
+  document.querySelectorAll('.card').forEach(card => {
+    card.addEventListener('click', () => openDrawer(card));
+    card.addEventListener('keydown', (ev) => {
+      if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); openDrawer(card); }
+    });
+  });
+
+  function openDrawer(card) {
+    const tpl = card.querySelector('template');
+    if (!tpl) return;
+    drawerBody.innerHTML = '';
+    drawerBody.appendChild(tpl.content.cloneNode(true));
+    drawer.classList.add('open');
+    drawerBackdrop.classList.add('open');
+    drawerClose.focus();
+  }
+
+  function closeDrawer() {
+    drawer.classList.remove('open');
+    drawerBackdrop.classList.remove('open');
+  }
+
+  drawerClose.addEventListener('click', closeDrawer);
+  drawerBackdrop.addEventListener('click', closeDrawer);
+  document.addEventListener('keydown', (ev) => { if (ev.key === 'Escape') closeDrawer(); });
 
   search.addEventListener('input', applyFilters);
   applyFilters();
@@ -737,33 +911,77 @@ document.addEventListener('DOMContentLoaded', () => {
 def main():
     md_text = MD_PATH.read_text(encoding="utf-8")
     preamble, open_items_sections, history_entries = parse_backlog(md_text)
+    open_items, closed_items = build_unified_items(open_items_sections, history_entries)
 
-    counts = render_priority_counts(open_items_sections)
-    total_open = sum(counts.values())
+    # ---- Priority groups (open) ----
+    priority_meta = {}
+    for item in open_items:
+        slug = item["priority"]
+        priority_meta.setdefault(slug, {"label": item["priority_label"], "items": []})
+        priority_meta[slug]["items"].append(item)
+    priority_slugs = sorted(priority_meta.keys())
 
-    sidebar_open_items = []
-    for sec in open_items_sections:
-        sec_slug = slugify(sec["heading"])[:40]
-        label = re.sub(r"^[^\w]+", "", sec["heading"]).split("(")[0].strip()
-        sidebar_open_items.append(f'<div class="sidebar-item" data-jump-to="sec-{sec_slug}">{html.escape(label)}</div>')
+    priority_chips = "\n".join(
+        f'<span class="chip" data-filter-priority="{slug}">{esc(priority_meta[slug]["label"])} ({len(priority_meta[slug]["items"])})</span>'
+        for slug in priority_slugs
+    )
+    sidebar_open = "\n".join(
+        f'<div class="sidebar-item" data-jump-priority="{slug}"><span class="swatch" style="--tab-color:{PRIORITY_COLORS.get(slug, PRIORITY_COLOR_DEFAULT)}"></span>{esc(priority_meta[slug]["label"])}<span class="sidebar-count">{len(priority_meta[slug]["items"])}</span></div>'
+        for slug in priority_slugs
+    )
+    open_groups_html = "\n".join(
+        render_group(
+            slug,
+            priority_meta[slug]["label"],
+            len(priority_meta[slug]["items"]),
+            PRIORITY_COLORS.get(slug, PRIORITY_COLOR_DEFAULT),
+            "\n".join(render_card(it) for it in priority_meta[slug]["items"]),
+        )
+        for slug in priority_slugs
+    )
+
+    # ---- Kind groups (closed) ----
+    kind_meta = {}
+    for item in closed_items:
+        slug = item["kind"]
+        kind_meta.setdefault(slug, []).append(item)
+
+    kind_chips = "\n".join(
+        f'<span class="chip" data-filter-kind="{slug}">{esc(KIND_GROUP_LABELS[slug])} ({len(kind_meta[slug])})</span>'
+        for slug in KIND_GROUP_ORDER if slug in kind_meta
+    )
+    sidebar_closed = "\n".join(
+        f'<div class="sidebar-item" data-jump-kind="{slug}"><span class="swatch" style="--tab-color:{KIND_COLORS.get(slug, PRIORITY_COLOR_DEFAULT)}"></span>{esc(KIND_GROUP_LABELS[slug])}<span class="sidebar-count">{len(kind_meta[slug])}</span></div>'
+        for slug in KIND_GROUP_ORDER if slug in kind_meta
+    )
+    closed_groups_html = "\n".join(
+        render_group(
+            slug,
+            KIND_GROUP_LABELS[slug],
+            len(kind_meta[slug]),
+            KIND_COLORS.get(slug, PRIORITY_COLOR_DEFAULT),
+            "\n".join(render_card(it) for it in kind_meta[slug]),
+        )
+        for slug in KIND_GROUP_ORDER if slug in kind_meta
+    )
 
     page = PAGE_TEMPLATE.format(
         css=build_css(),
         js=build_js(),
         generated_at=datetime.now().strftime("%Y-%m-%d"),
         badges=render_preamble_badges(preamble),
-        open_count=total_open,
-        history_count=len(history_entries),
-        p1_count=counts.get("p1", 0),
-        p2_count=counts.get("p2", 0),
-        p3_count=counts.get("p3", 0),
-        sidebar_open="\n".join(sidebar_open_items),
-        open_items_html=render_open_items(open_items_sections),
-        history_html=render_history(history_entries),
+        open_count=len(open_items),
+        closed_count=len(closed_items),
+        priority_chips=priority_chips,
+        kind_chips=kind_chips,
+        sidebar_open=sidebar_open,
+        sidebar_closed=sidebar_closed,
+        open_groups_html=open_groups_html,
+        closed_groups_html=closed_groups_html,
     )
 
     HTML_PATH.write_text(page, encoding="utf-8")
-    print(f"Wrote {HTML_PATH} ({len(page):,} bytes) — {total_open} open items, {len(history_entries)} history entries.")
+    print(f"Wrote {HTML_PATH} ({len(page):,} bytes) — {len(open_items)} open items, {len(closed_items)} closed items.")
 
 
 if __name__ == "__main__":

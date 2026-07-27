@@ -189,18 +189,120 @@
 
   .hidden { display: none !important; }
 
-  /* ── Repo tree ── */
-  .tree-section { margin-bottom: 8px; }
-  .tree-block { font-family: 'Cascadia Code','JetBrains Mono',monospace; font-size: 11.5px; background: white; border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 18px; line-height: 2; overflow-x: auto; }
-  .tree-root { font-weight: 800; font-size: 13px; color: var(--shell); margin-bottom: 2px; }
-  .tr { display: flex; gap: 6px; align-items: baseline; }
+  /* ── Repo tree (split-screen side panel) ── */
+  .tree-panel {
+    width: 360px;
+    min-width: 360px;
+    background: white;
+    border-left: 1px solid var(--border);
+    position: sticky;
+    top: 49px;
+    height: calc(100vh - 49px);
+    overflow-y: auto;
+    flex-shrink: 0;
+    transition: width 0.18s ease, min-width 0.18s ease;
+  }
+  .tree-panel.collapsed { width: 38px; min-width: 38px; overflow: hidden; }
+  .tree-panel-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 11px 12px;
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    background: white;
+    z-index: 2;
+  }
+  .tree-panel-head h3 { font-size: 11px; font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase; color: var(--shell); white-space: nowrap; }
+  .tree-toggle-btn {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    width: 24px;
+    height: 24px;
+    font-size: 12px;
+    line-height: 1;
+    cursor: pointer;
+    color: var(--text2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .tree-toggle-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .tree-panel.collapsed .tree-panel-head h3,
+  .tree-panel.collapsed .tree-panel-body { display: none; }
+  .tree-panel-body { padding: 12px; }
+  .tree-block { font-family: 'Cascadia Code','JetBrains Mono',monospace; font-size: 11px; line-height: 1.9; }
+  .tree-root { font-weight: 800; font-size: 12.5px; color: var(--shell); margin-bottom: 2px; }
+  .tr { display: flex; gap: 6px; align-items: baseline; flex-wrap: wrap; }
   .tc { color: #94a3b8; user-select: none; flex-shrink: 0; white-space: pre; }
   .tn { font-weight: 700; color: var(--shell); flex-shrink: 0; cursor: pointer; }
   .tn:hover { color: var(--accent); text-decoration: underline; }
-  .td { color: var(--text2); font-size: 10.5px; }
+  .td { color: var(--text2); font-size: 10px; }
   .ti1 { padding-left: 16px; }
   .ti2 { padding-left: 32px; }
   .ti3 { padding-left: 48px; }
+
+  /* ── Card detail drawer ── */
+  .drawer-backdrop {
+    position: fixed; inset: 0;
+    background: rgba(15,23,42,0.35);
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.2s ease;
+    z-index: 200;
+  }
+  .drawer-backdrop.open { opacity: 1; pointer-events: auto; }
+  .doc-drawer {
+    position: fixed; top: 0; right: 0; height: 100vh;
+    width: min(440px, 92vw);
+    background: white;
+    box-shadow: -10px 0 28px rgba(0,0,0,0.14);
+    transform: translateX(100%);
+    transition: transform 0.22s ease;
+    z-index: 201;
+    display: flex;
+    flex-direction: column;
+  }
+  .doc-drawer.open { transform: translateX(0); }
+  .doc-drawer-head {
+    padding: 18px 20px 14px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .doc-drawer-head-text h2 { font-size: 15px; font-weight: 800; line-height: 1.35; margin-bottom: 6px; }
+  .doc-drawer-close {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    width: 26px; height: 26px;
+    cursor: pointer;
+    font-size: 14px;
+    color: var(--text2);
+    flex-shrink: 0;
+  }
+  .doc-drawer-close:hover { border-color: var(--accent); color: var(--accent); }
+  .doc-drawer-body { padding: 18px 20px; overflow-y: auto; flex: 1; }
+  .doc-drawer-label { font-size: 9px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text2); margin-bottom: 6px; }
+  .doc-drawer-path-row { display: flex; align-items: center; gap: 8px; background: var(--bg); border: 1px solid var(--border); border-radius: 6px; padding: 9px 10px; margin-bottom: 18px; }
+  .doc-drawer-path-text { flex: 1; font-family: 'Cascadia Code','JetBrains Mono',monospace; font-size: 11.5px; color: var(--shell); word-break: break-all; }
+  .doc-drawer-copy { background: var(--accent); color: white; border: none; border-radius: 5px; padding: 6px 11px; font-size: 11px; font-weight: 700; cursor: pointer; flex-shrink: 0; white-space: nowrap; transition: background 0.15s; }
+  .doc-drawer-copy:hover { background: #15597f; }
+  .doc-drawer-copy.copied { background: #166534; }
+  .doc-drawer-desc { font-size: 13px; line-height: 1.65; color: #334155; margin-bottom: 18px; }
+  .doc-drawer-tags { display: flex; flex-wrap: wrap; gap: 5px; }
+
+  .card { cursor: pointer; }
+  .card:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  @media (max-width: 1100px) {
+    .tree-panel { display: none; }
+  }
 
   @media (max-width: 768px) {
     .sidebar { display: none; }
@@ -271,71 +373,6 @@
 
   <!-- ── Main content ── -->
   <main class="main">
-
-    <!-- ── MINE MAP TREE (always visible, not filtered) ── -->
-    <div class="tree-section">
-      <div class="section-header" id="mine-map-tree" style="margin-top:0">
-        <span class="section-title">🗺️ Repo Mine Map</span>
-        <span class="section-badge t-ref">Full Directory Tree · click a folder to jump</span>
-      </div>
-      <div class="tree-block">
-        <div class="tree-root">📦 forza-fantasy-league/</div>
-        <div class="tr"><span class="tc">├──</span><span class="tn">📋 CLAUDE.md</span><span class="td">Session instructions for Claude Code — read every session</span></div>
-        <div class="tr"><span class="tc">├──</span><span class="tn">📋 BACKLOG.md</span><span class="td">Live session log — every PR, migration, and bug fix</span></div>
-        <div class="tr"><span class="tc">├──</span><span class="tn">📋 README.md</span><span class="td">Project overview and quick-start guide</span></div>
-        <div class="tr"><span class="tc">├──</span><span class="tn">📋 GEMINI.md</span><span class="td">Google Antigravity (mobile AI) instructions</span></div>
-        <div class="tr"><span class="tc">├──</span><span class="tn">🗺️ DOCS_INDEX.html</span><span class="td">← You are here — interactive repository mine map</span></div>
-        <div class="tr"><span class="tc">├──</span><span class="tn">⚙️ package.json</span><span class="td">npm dependencies and build scripts</span></div>
-        <div class="tr"><span class="tc">├──</span><span class="tn">⚙️ vite.config.js</span><span class="td">Vite bundler configuration (Rolldown/v8)</span></div>
-        <div class="tr"><span class="tc">├──</span><span class="tn">⚙️ eslint.config.js</span><span class="td">ESLint flat config v9</span></div>
-        <div class="tr"><span class="tc">├──</span><span class="tn">⚙️ playwright.config.js</span><span class="td">E2E test runner config</span></div>
-        <div class="tr"><span class="tc">├──</span><span class="tn">⚙️ capacitor.config.ts</span><span class="td">Capacitor native app config (app ID, plugins)</span></div>
-        <div class="tr"><span class="tc">├──</span><span class="tn">⚙️ vercel.json</span><span class="td">Vercel deployment settings and security headers</span></div>
-        <div class="tr"><span class="tc">├──</span><span class="tn">🐳 Dockerfile</span><span class="td">Multi-stage build: Vite → nginx static (production)</span></div>
-        <div class="tr"><span class="tc">├──</span><span class="tn">🐳 docker-compose.yml</span><span class="td">Local dev topology: app + postgres + Edge Functions</span></div>
-        <div class="tr"><span class="tc">│</span><span class="tc"></span></div>
-        <div class="tr"><span class="tc">├──</span><span class="tn" onclick="jumpTo('src-code')">📁 src/</span><span class="td">React application source (client-side)</span></div>
-        <div class="tr ti1"><span class="tc">├──</span><span class="tn">screens/</span><span class="td">17 route-level page components (football + F1 + Tennis + Clubhouse)</span></div>
-        <div class="tr ti1"><span class="tc">├──</span><span class="tn">components/</span><span class="td">50 reusable UI components</span></div>
-        <div class="tr ti1"><span class="tc">├──</span><span class="tn">hooks/</span><span class="td">39 custom React hooks (business logic)</span></div>
-        <div class="tr ti1"><span class="tc">├──</span><span class="tn">lib/</span><span class="td">supabase.js · capacitor.js · api.js · utils.js · players.js</span></div>
-        <div class="tr ti1"><span class="tc">└──</span><span class="tn">context/</span><span class="td">AuthContext.jsx — global auth state</span></div>
-        <div class="tr"><span class="tc">│</span><span class="tc"></span></div>
-        <div class="tr"><span class="tc">├──</span><span class="tn" onclick="jumpTo('backend')">🗄️ supabase/</span><span class="td">Backend infrastructure</span></div>
-        <div class="tr ti1"><span class="tc">├──</span><span class="tn">migrations/</span><span class="td">264 SQL migration files (append-only numbered sequence)</span></div>
-        <div class="tr ti1"><span class="tc">└──</span><span class="tn">functions/</span><span class="td">20 Deno Edge Functions (deployed serverless; _shared/ is helper code, not a function)</span></div>
-        <div class="tr ti2"><span class="tc">├──</span><span class="tn">calculate-scores/</span><span class="td">Weekly fantasy points v32 — live + post-match + late-finishers crons</span></div>
-        <div class="tr ti2"><span class="tc">├──</span><span class="tn">process-transfer/</span><span class="td">Squad transfer: window, budget, club cap, limits</span></div>
-        <div class="tr ti2"><span class="tc">├──</span><span class="tn">ingest-match-events/</span><span class="td">Live event ingestion (every 5 min)</span></div>
-        <div class="tr ti2"><span class="tc">├──</span><span class="tn">sync-fixtures/</span><span class="td">Forza API fixture sync (every 30 min)</span></div>
-        <div class="tr ti2"><span class="tc">├──</span><span class="tn">score-f1-race/</span><span class="td">F1 race scoring</span></div>
-        <div class="tr ti2"><span class="tc">├──</span><span class="tn">score-tennis-tournament/</span><span class="td">Tennis scoring + Ace Cards</span></div>
-        <div class="tr ti2"><span class="tc">├──</span><span class="tn">generate-frontpage-edition/</span><span class="td">AI Forza Times via Groq llama-3.1-8b-instant</span></div>
-        <div class="tr ti2"><span class="tc">├──</span><span class="tn">check-cron-health/</span><span class="td">Cron job health monitor (added migration 240/241)</span></div>
-        <div class="tr ti2"><span class="tc">└──</span><span class="tn">… 12 more</span><span class="td">resolve-bets · run-draft-lottery · sync-players · purchase-coins · etc.</span></div>
-        <div class="tr"><span class="tc">│</span><span class="tc"></span></div>
-        <div class="tr"><span class="tc">├──</span><span class="tn" onclick="jumpTo('testing')">🧪 e2e/</span><span class="td">Playwright end-to-end tests</span></div>
-        <div class="tr ti1"><span class="tc">├──</span><span class="tn">tests/</span><span class="td">platform.spec.js (CI, 36 tests × 2 browsers) + 8 integration specs</span></div>
-        <div class="tr ti1"><span class="tc">└──</span><span class="tn">fixtures/</span><span class="td">SQL seed files for E2E test runs</span></div>
-        <div class="tr"><span class="tc">│</span><span class="tc"></span></div>
-        <div class="tr"><span class="tc">├──</span><span class="tn" onclick="jumpTo('mobile')">📱 ios/</span><span class="td">Capacitor iOS (Xcode) — target iOS 15.0</span></div>
-        <div class="tr"><span class="tc">├──</span><span class="tn" onclick="jumpTo('mobile')">📱 android/</span><span class="td">Capacitor Android (Studio) — minSdk 26, targetSdk 36</span></div>
-        <div class="tr"><span class="tc">├──</span><span class="tn">🛠️ scripts/</span><span class="td">Developer utility scripts (10 files)</span></div>
-        <div class="tr"><span class="tc">├──</span><span class="tn">🌐 public/</span><span class="td">Static assets (SVG logo, nav icons, favicon)</span></div>
-        <div class="tr"><span class="tc">├──</span><span class="tn">🏗️ infra/</span><span class="td">Infrastructure config — nginx.conf (SPA routing + cache headers)</span></div>
-        <div class="tr"><span class="tc">├──</span><span class="tn">💾 backups/</span><span class="td">Pre-migration row snapshots (gitignored)</span></div>
-        <div class="tr"><span class="tc">│</span><span class="tc"></span></div>
-        <div class="tr"><span class="tc">└──</span><span class="tn" onclick="jumpTo('platform_revision')">📚 docs/</span><span class="td">All documentation</span></div>
-        <div class="tr ti1"><span class="tc">├──</span><span class="tn" onclick="jumpTo('platform_revision')">platform_revision/</span><span class="td">DD, architecture, modules, design (Kit Light), design_v2 (shipped redesigns) — see BACKLOG.md for open items</span></div>
-        <div class="tr ti1"><span class="tc">├──</span><span class="tn" onclick="jumpTo('platform_revision')">brand/</span><span class="td">FORZAKIT design exploration — League Hub, Live Centre, Scores (distinct from Kit Light)</span></div>
-        <div class="tr ti1"><span class="tc">├──</span><span class="tn" onclick="jumpTo('architecture')">architecture/</span><span class="td">Football platform system design (15 docs)</span></div>
-        <div class="tr ti1"><span class="tc">├──</span><span class="tn" onclick="jumpTo('api')">api/</span><span class="td">Forza Football API integration (4 docs)</span></div>
-        <div class="tr ti1"><span class="tc">├──</span><span class="tn" onclick="jumpTo('deployment')">deployment/</span><span class="td">Runbooks and DevOps guides (6 docs)</span></div>
-        <div class="tr ti1"><span class="tc">├──</span><span class="tn" onclick="jumpTo('reference')">reference/</span><span class="td">Developer setup and conventions (4 docs)</span></div>
-        <div class="tr ti1"><span class="tc">├──</span><span class="tn" onclick="jumpTo('testing')">testing/</span><span class="td">Test strategy and results (6 docs)</span></div>
-        <div class="tr ti1"><span class="tc">└──</span><span class="tn" onclick="jumpTo('archive')">archive/</span><span class="td">Historical reference — 7 subdirs: brand-forza-dark, sprint plans, session audits, legacy configs, superseded DD</span></div>
-      </div>
-    </div>
 
     <!-- START HERE -->
     <div class="section-header" id="section-critical">
@@ -1186,7 +1223,83 @@
     </div>
 
   </main>
+
+  <!-- ── Repo tree side panel ── -->
+  <aside class="tree-panel" id="tree-panel">
+    <div class="tree-panel-head">
+      <h3>🗺️ Repo Mine Map</h3>
+      <button class="tree-toggle-btn" id="tree-toggle-btn" title="Collapse/expand tree" aria-label="Collapse/expand repo tree">◀</button>
+    </div>
+    <div class="tree-panel-body">
+      <div class="tree-block">
+        <div class="tree-root">📦 forza-fantasy-league/</div>
+
+        <div class="tr"><span class="tc">├─</span><span class="tn" onclick="jumpTo('critical')">CLAUDE.md</span><span class="td">— session instructions</span></div>
+        <div class="tr"><span class="tc">├─</span><span class="tn" onclick="jumpTo('critical')">BACKLOG.md</span><span class="td">— source of truth</span></div>
+        <div class="tr"><span class="tc">├─</span><span class="tn" onclick="jumpTo('root')">README.md</span></div>
+        <div class="tr"><span class="tc">├─</span><span class="tn" onclick="jumpTo('root')">GEMINI.md</span></div>
+        <div class="tr"><span class="tc">├─</span><span class="tn" onclick="jumpTo('root')">DOCS_INDEX.html</span><span class="td">— this file</span></div>
+        <div class="tr"><span class="tc">├─</span><span class="tn" onclick="jumpTo('root')">package.json · vite.config.js</span></div>
+        <div class="tr"><span class="tc">├─</span><span class="tn" onclick="jumpTo('root')">eslint.config.js · playwright.config.js</span></div>
+        <div class="tr"><span class="tc">├─</span><span class="tn" onclick="jumpTo('root')">capacitor.config.ts · vercel.json</span></div>
+        <div class="tr"><span class="tc">├─</span><span class="tn" onclick="jumpTo('root')">Dockerfile · docker-compose.yml</span></div>
+
+        <div class="tr"><span class="tc">├─</span><span class="tn" onclick="jumpTo('src-code')">src/</span></div>
+        <div class="tr ti1"><span class="tc">│&nbsp;&nbsp;├─</span><span class="tn" onclick="jumpTo('src-code')">screens/</span><span class="td">17 route components</span></div>
+        <div class="tr ti1"><span class="tc">│&nbsp;&nbsp;├─</span><span class="tn" onclick="jumpTo('src-code')">components/</span><span class="td">50 components</span></div>
+        <div class="tr ti1"><span class="tc">│&nbsp;&nbsp;├─</span><span class="tn" onclick="jumpTo('src-code')">hooks/</span><span class="td">39 hooks</span></div>
+        <div class="tr ti1"><span class="tc">│&nbsp;&nbsp;├─</span><span class="tn" onclick="jumpTo('src-code')">lib/</span><span class="td">supabase, api, capacitor, utils</span></div>
+        <div class="tr ti1"><span class="tc">│&nbsp;&nbsp;└─</span><span class="tn" onclick="jumpTo('src-code')">context/ · App.jsx · main.jsx</span></div>
+
+        <div class="tr"><span class="tc">├─</span><span class="tn" onclick="jumpTo('backend')">supabase/</span></div>
+        <div class="tr ti1"><span class="tc">│&nbsp;&nbsp;├─</span><span class="tn" onclick="jumpTo('backend')">migrations/</span><span class="td">264 files, 01_→241_</span></div>
+        <div class="tr ti1"><span class="tc">│&nbsp;&nbsp;└─</span><span class="tn" onclick="jumpTo('backend')">functions/</span><span class="td">20 Edge Functions</span></div>
+        <div class="tr ti2"><span class="tc">│&nbsp;&nbsp;&nbsp;&nbsp;├─</span><span class="tn" onclick="jumpTo('backend')">calculate-scores · process-transfer</span></div>
+        <div class="tr ti2"><span class="tc">│&nbsp;&nbsp;&nbsp;&nbsp;├─</span><span class="tn" onclick="jumpTo('backend')">ingest-match-events · sync-fixtures</span></div>
+        <div class="tr ti2"><span class="tc">│&nbsp;&nbsp;&nbsp;&nbsp;├─</span><span class="tn" onclick="jumpTo('backend')">score-f1-race · score-tennis-tournament</span></div>
+        <div class="tr ti2"><span class="tc">│&nbsp;&nbsp;&nbsp;&nbsp;└─</span><span class="tn" onclick="jumpTo('backend')">check-cron-health · … 12 more</span></div>
+
+        <div class="tr"><span class="tc">├─</span><span class="tn" onclick="jumpTo('root')">e2e/</span><span class="td">Playwright specs + fixtures/</span></div>
+        <div class="tr"><span class="tc">├─</span><span class="tn" onclick="jumpTo('mobile')">ios/</span></div>
+        <div class="tr"><span class="tc">├─</span><span class="tn" onclick="jumpTo('mobile')">android/</span></div>
+        <div class="tr"><span class="tc">├─</span><span class="tn" onclick="jumpTo('root')">scripts/</span></div>
+        <div class="tr"><span class="tc">├─</span><span class="tn" onclick="jumpTo('root')">public/ · infra/ · backups/</span></div>
+
+        <div class="tr"><span class="tc">└─</span><span class="tn" onclick="jumpTo('platform_revision')">docs/</span></div>
+        <div class="tr ti1"><span class="tc">&nbsp;&nbsp;&nbsp;├─</span><span class="tn" onclick="jumpTo('platform_revision')">platform_revision/</span><span class="td">DD, module plans, design_v2</span></div>
+        <div class="tr ti1"><span class="tc">&nbsp;&nbsp;&nbsp;├─</span><span class="tn" onclick="jumpTo('platform_revision')">brand/</span><span class="td">FORZAKIT tokens</span></div>
+        <div class="tr ti1"><span class="tc">&nbsp;&nbsp;&nbsp;├─</span><span class="tn" onclick="jumpTo('architecture')">architecture/</span></div>
+        <div class="tr ti1"><span class="tc">&nbsp;&nbsp;&nbsp;├─</span><span class="tn" onclick="jumpTo('api')">api/</span></div>
+        <div class="tr ti1"><span class="tc">&nbsp;&nbsp;&nbsp;├─</span><span class="tn" onclick="jumpTo('deployment')">deployment/</span></div>
+        <div class="tr ti1"><span class="tc">&nbsp;&nbsp;&nbsp;├─</span><span class="tn" onclick="jumpTo('reference')">reference/</span></div>
+        <div class="tr ti1"><span class="tc">&nbsp;&nbsp;&nbsp;├─</span><span class="tn" onclick="jumpTo('testing')">testing/</span></div>
+        <div class="tr ti1"><span class="tc">&nbsp;&nbsp;&nbsp;└─</span><span class="tn" onclick="jumpTo('archive')">archive/</span></div>
+      </div>
+    </div>
+  </aside>
 </div>
+
+<!-- ── Card detail drawer ── -->
+<div class="drawer-backdrop" id="drawer-backdrop"></div>
+<aside class="doc-drawer" id="doc-drawer" role="dialog" aria-modal="true" aria-labelledby="doc-drawer-title">
+  <div class="doc-drawer-head">
+    <div class="doc-drawer-head-text">
+      <h2 id="doc-drawer-title"></h2>
+      <span class="card-type" id="doc-drawer-type"></span>
+    </div>
+    <button class="doc-drawer-close" id="doc-drawer-close" aria-label="Close">✕</button>
+  </div>
+  <div class="doc-drawer-body">
+    <div class="doc-drawer-label">Path</div>
+    <div class="doc-drawer-path-row">
+      <span class="doc-drawer-path-text" id="doc-drawer-path"></span>
+      <button class="doc-drawer-copy" id="doc-drawer-copy">Copy</button>
+    </div>
+    <div class="doc-drawer-label">Description</div>
+    <p class="doc-drawer-desc" id="doc-drawer-desc"></p>
+    <div class="doc-drawer-tags" id="doc-drawer-tags"></div>
+  </div>
+</aside>
 
 <script>
   // ── Constants ─────────────────────────────────────────────────────────────
@@ -1269,12 +1382,22 @@
   // ── Jump-to section ───────────────────────────────────────────────────────
   // NOTE: named jumpTo (not scrollTo) to avoid conflict with window.scrollTo
   function jumpTo(sectionId) {
-    const el = document.getElementById('section-' + sectionId);
-    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    // Sync the active filter chip first — otherwise a chip filter can be
+    // hiding the target section and the sidebar click looks like it does nothing.
+    const matchingChip = document.querySelector(`.chip[data-filter="${sectionId}"]`);
+    if (matchingChip) {
+      chips.forEach(c => c.classList.remove('active'));
+      matchingChip.classList.add('active');
+      activeFilter = sectionId;
+      updateDisplay();
+    }
 
     document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active'));
     const target = document.querySelector(`.sidebar-item[data-section="${sectionId}"]`);
     if (target) target.classList.add('active');
+
+    const el = document.getElementById('section-' + sectionId);
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
   // ── Chip filter ───────────────────────────────────────────────────────────
@@ -1305,6 +1428,87 @@
   SECTIONS.forEach(id => {
     const el = document.getElementById('section-' + id);
     if (el) observer.observe(el);
+  });
+
+  // ── Tree panel collapse toggle ───────────────────────────────────────────
+  const treePanel     = document.getElementById('tree-panel');
+  const treeToggleBtn = document.getElementById('tree-toggle-btn');
+  const TREE_COLLAPSE_KEY = 'docsIndexTreeCollapsed';
+
+  function setTreeCollapsed(collapsed) {
+    treePanel.classList.toggle('collapsed', collapsed);
+    treeToggleBtn.textContent = collapsed ? '▶' : '◀';
+    localStorage.setItem(TREE_COLLAPSE_KEY, collapsed ? '1' : '0');
+  }
+
+  treeToggleBtn.addEventListener('click', () => {
+    setTreeCollapsed(!treePanel.classList.contains('collapsed'));
+  });
+
+  setTreeCollapsed(localStorage.getItem(TREE_COLLAPSE_KEY) === '1');
+
+  // ── Card detail drawer ────────────────────────────────────────────────────
+  const drawerBackdrop = document.getElementById('drawer-backdrop');
+  const docDrawer       = document.getElementById('doc-drawer');
+  const drawerTitle     = document.getElementById('doc-drawer-title');
+  const drawerType      = document.getElementById('doc-drawer-type');
+  const drawerPath      = document.getElementById('doc-drawer-path');
+  const drawerDesc      = document.getElementById('doc-drawer-desc');
+  const drawerTags      = document.getElementById('doc-drawer-tags');
+  const drawerCopyBtn   = document.getElementById('doc-drawer-copy');
+  const drawerCloseBtn  = document.getElementById('doc-drawer-close');
+
+  function openDrawer(card) {
+    const typeEl = card.querySelector('.card-type');
+    const pathEl = card.querySelector('.card-path');
+    const tagsEl = card.querySelector('.card-tags');
+
+    drawerTitle.textContent = card.dataset.name || '';
+    drawerType.className = 'card-type ' + (typeEl ? typeEl.className.replace('card-type', '').trim() : '');
+    drawerType.textContent = typeEl ? typeEl.textContent : '';
+    drawerPath.textContent = pathEl ? pathEl.textContent.trim() : '';
+    drawerDesc.textContent = card.dataset.desc || '';
+    drawerTags.innerHTML = tagsEl ? tagsEl.innerHTML : '';
+
+    drawerCopyBtn.textContent = 'Copy';
+    drawerCopyBtn.classList.remove('copied');
+
+    drawerBackdrop.classList.add('open');
+    docDrawer.classList.add('open');
+  }
+
+  function closeDrawer() {
+    drawerBackdrop.classList.remove('open');
+    docDrawer.classList.remove('open');
+  }
+
+  allCards.forEach(card => {
+    card.setAttribute('tabindex', '0');
+    card.setAttribute('role', 'button');
+    card.addEventListener('click', () => openDrawer(card));
+    card.addEventListener('keydown', e => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        openDrawer(card);
+      }
+    });
+  });
+
+  drawerCloseBtn.addEventListener('click', closeDrawer);
+  drawerBackdrop.addEventListener('click', closeDrawer);
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') closeDrawer();
+  });
+
+  drawerCopyBtn.addEventListener('click', () => {
+    navigator.clipboard.writeText(drawerPath.textContent).then(() => {
+      drawerCopyBtn.textContent = 'Copied!';
+      drawerCopyBtn.classList.add('copied');
+      setTimeout(() => {
+        drawerCopyBtn.textContent = 'Copy';
+        drawerCopyBtn.classList.remove('copied');
+      }, 1500);
+    });
   });
 
   // ── Init ──────────────────────────────────────────────────────────────────
