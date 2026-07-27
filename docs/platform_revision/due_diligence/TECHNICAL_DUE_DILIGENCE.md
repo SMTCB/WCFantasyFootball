@@ -29,7 +29,7 @@ The original DD documents predate (or only partially reflect) a large remediatio
 | **Test coverage (TEST-1)** | open | ◐ `tests/unit/` skeleton ✅ PR #694 — 13 test cases (transfer/bet/coins), CI ephemeral Postgres job; activates fully once A1 ships `schema.sql` | **Skeleton done, full activation blocked on DATA-1** |
 | **Data-fetching layer (CODE-3)** | open | ❌ Still raw Supabase (117 `.from` / 76 `.rpc` in `src/`) | **Unchanged** |
 | **PITR / staging / backups (OPS-1)** | open | ❌ Unchanged (single env, no PITR, manual JSON backups) | **Unchanged** |
-| **Sentry / alerting (OPS-2)** | ◐ FE done | ◐ FE `captureException` ✅ PR #695; Edge `_shared/log.ts` envelope ✅ PR #696; `logError` wired into all 6 remaining fns ✅ PR #698; **not active** — `VITE_SENTRY_DSN` + `SENTRY_DSN` secrets not yet set (rows 11, 20–25); cron alerting (part c) not built | **Code complete, activation + cron-alerting pending** |
+| **Sentry / alerting (OPS-2)** | ◐ near-done | ◐ FE `captureException` ✅ PR #695; Edge `_shared/log.ts` envelope ✅ PR #696; `logError` wired into all 6 remaining fns ✅ PR #698; `VITE_SENTRY_DSN` ✅ set and live on Vercel; `check-cron-health` fn ✅ built (PR referenced in BACKLOG.md `OPS-SENTRY`) but not scheduled; **remaining** — backend `SENTRY_DSN` Supabase secret not yet set, cron-health job not yet scheduled | **Code complete; only the backend secret + one cron entry remain (both approval-gated, see BACKLOG.md `OPS-SENTRY`)** |
 
 **Net assessment:** the deal-blocking Phase 0 security gate is **closed**, and the two structural buyer-DD blockers the B2B report called fatal (no containerization, provider lock-in) are **closed / substantially de-risked**. The remaining open items are concentrated in **data-layer reproducibility, automated testing, observability activation, and operational DR** — exactly the "transition-to-scale" cluster, none of which require re-architecture.
 
@@ -48,7 +48,7 @@ Items are ordered **in the sequence they should be tackled** (Section 1 = do fir
 | Order | Phase | Items | Status | Rationale |
 |-------|-------|-------|--------|-----------|
 | 1 | **Phase 0 — Pre-close security gate** | SEC-1, SEC-2, SEC-3, MONEY-1 | ✅ **DONE** | Closed in code + applied to prod. SEC-4 (PAT rotation) still open. |
-| 2 | **Phase 1 — Stabilize foundations** | DATA-1, OPS-1, DEPLOY-1, CI-1, DEPS-1, OPS-2, CODE-1 | ◐ **Mostly done** | DEPLOY-1/CI-1/DEPS-1/CODE-1 ✅. DATA-1, OPS-1 still open; OPS-2 code ✅, activation pending (2 secrets). |
+| 2 | **Phase 1 — Stabilize foundations** | DATA-1, OPS-1, DEPLOY-1, CI-1, DEPS-1, OPS-2, CODE-1 | ◐ **Mostly done** | DEPLOY-1/CI-1/DEPS-1/CODE-1 ✅. DATA-1, OPS-1 still open; OPS-2 code ✅, FE Sentry active — 1 backend secret + 1 cron entry pending (`OPS-SENTRY` in BACKLOG.md). |
 | 3 | **Phase 2 — De-risk core logic** | TEST-1, DATA-2, DATA-3, DATA-RECON, CODE-3 | ◐ **Partial** | DATA-3 ✅ (mig 209 applied) + `DATA_CLASSIFICATION.md` ✅ (PR #697). LEGAL-1 ✅ (mig 218, named constraint, PR #694). DATA-2 (GDPR `delete_user_data`) code ✅ PR #697 (apply pending row 19). TEST-1 skeleton ✅ PR #694 (blocks on DATA-1 for full activation). DATA-RECON (repo↔prod RPC diff), CODE-3 open. |
 | 4 | **Phase 3 — Team-ready & scale** | CODE-2, CODE-4, CODE-5, DEPS-2, BUILD-1, INFRA-1, polish | ◐ **Partial** | CODE-5/BUILD-1 ✅ PR #694. CODE-2 improved. INFRA-1 partly done (project-ref externalized). |
 
@@ -118,13 +118,14 @@ Items are ordered **in the sequence they should be tackled** (Section 1 = do fir
 - **Verified:** `npm audit` reports **0 vulnerabilities** (was 8 / 4 high). `npm audit --audit-level=high` is a blocking CI gate.
 - **Done-when:** ✅ 0 high/critical.
 
-## OPS-2 — Production error tracking & alerting 🟠 HIGH ◐ CODE DONE, ACTIVATION PENDING
-- **Estimate:** M (remaining: approval-gated secrets + 6 fn wires + cron alerting)
+## OPS-2 — Production error tracking & alerting 🟢 HIGH ◐ CODE DONE, ONE SECRET + ONE CRON ENTRY REMAINING
+- **Estimate:** S (remaining: 1 approval-gated secret + 1 approval-gated cron entry)
 - **Where:** `src/main.jsx:13-22` — `Sentry.init()` present, guarded by `VITE_SENTRY_DSN`, `tracesSampleRate: 0.1`, `browserTracingIntegration()`. `@sentry/react ^10.62.0` in deps.
 - **PR #695 (2026-07-01):** `ErrorBoundary.componentDidCatch` now calls `Sentry.captureException` (gated on `VITE_SENTRY_DSN`); `AppLayout` wrapped with shell-level `variant="shell"` boundary; Kit Light token fixes. FE capture code is complete.
 - **PR #696 (2026-07-01):** `_shared/log.ts` `logError()` now calls `reportToSentry()` — Sentry envelope HTTP API (no SDK, no Deno dep issues), fires for `error`/`critical` severity only, gated on `SENTRY_DSN` Supabase secret. Never throws.
-- **⚠️ Still not active in production:** (1) `VITE_SENTRY_DSN` not yet set in Vercel (TRACKER row 11 = ⬜) — FE `init()` is still a no-op; (2) `SENTRY_DSN` Supabase secret not yet set (🔴 approval-gated) — edge envelope calls will no-op; (3) 6 functions still missing `logError` import: `purchase-coins`, `discover-tournament`, `sync-tennis-players`, `score-atp-finals`, `score-f1-race`, `score-tennis-tournament`; (4) failed-cron alerting not yet built.
-- **Fix:** Set the two secrets (approval-gated). Wire `logError` into the 6 remaining fns + deploy. Build cron alerting (extend `cron_job_status()` to alert on failures).
+- **PR #698:** `logError` wired into all 6 previously-missing functions: `purchase-coins`, `discover-tournament`, `sync-tennis-players`, `score-atp-finals`, `score-f1-race`, `score-tennis-tournament`.
+- **Updated 2026-07-27 — status now:** (1) `VITE_SENTRY_DSN` ✅ set and live on Vercel — FE capture is active; (2) `SENTRY_DSN` Supabase secret still not set (🔴 approval-gated) — edge envelope calls still no-op, tracked as `OPS-SENTRY` in BACKLOG.md; (3) `check-cron-health` Edge Function ✅ built (calls `get_cron_failure_streaks()`, migration 223, routes through `logError()`) but **not yet scheduled** — callable manually only.
+- **Fix:** Set the `SENTRY_DSN` secret (approval-gated). Add a pg_cron entry for `check-cron-health` (approval-gated).
 - **Done-when:** A deliberately-failed cron and a frontend crash both surface as alerts.
 
 ## CODE-1 — Rolldown (Vite 8) TDZ trap CI guard 🟠 HIGH ✅ DONE

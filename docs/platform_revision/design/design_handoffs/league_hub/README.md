@@ -6,7 +6,7 @@
 >
 > **Three things that changed in the Kit Light redesign:**
 > 1. **`HubActionBar` (MANAGE SQUAD + MARKET strip) is removed.** Do not implement. These are top-level nav destinations — no dual CTA bar inside the league hub. See BRIEF.md.
-> 2. **Tab count is TBD.** The dark handoff shows 7 tabs + Admin. Kit Light targets fewer tabs, but the exact count and consolidation of Auctions/Chat/Stats is an open product decision pending multi-sport and P2P architecture. Build structure to accommodate a variable number of tabs. Do not hardcode 7 or 8.
+> 2. **Tab count is TBD.** ~~The dark handoff shows 7 tabs + Admin. Kit Light targets fewer tabs, but the exact count and consolidation of Auctions/Chat/Stats is an open product decision pending multi-sport and P2P architecture.~~ **Moot as of 2026-07-27** — this decision was resolved by the shipped Clubhouse/Home redesign (multi-sport nav via Clubhouse tabs, not a variable league-hub tab count) and by Coin Challenges landing as a separate circle-scoped screen rather than a league-hub tab. This handoff predates that architecture; treat the rest of this document as historical structural reference only, not as an open question to resolve. Build structure to accommodate a variable number of tabs. Do not hardcode 7 or 8.
 > 3. **DeltaPill colours:** the spec below references `#22C55E` (positive) and `#EF4444` (danger) — these are the old neon dark-background values. In Kit Light use `var(--pos)` (`#166534`) and `var(--neg)` (`#B91C1C`) on light surfaces. On `--shell` dark surfaces use `#4ADE80` / `#F87171`.
 
 ## Overview
