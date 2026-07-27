@@ -1,4 +1,4 @@
--- ⚠️ NOT APPLIED TO PRODUCTION — code-only on v2, awaiting explicit approval (see TRACKER.md)
+-- ✅ APPLIED TO PRODUCTION — confirmed live 2026-07-27 via pg_get_functiondef (see TRACKER.md)
 -- Migration 224: fix resolve_p2p_challenge() coin-movement bug (migration 205)
 --
 -- migration 205's resolve_p2p_challenge had two live bugs in the same function,
