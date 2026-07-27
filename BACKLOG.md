@@ -1,11 +1,11 @@
 # Forza Fantasy League - Open Issues & Backlog
 
-**Last Updated**: 2026-07-26 (Coin Challenges Redesign complete — PR D freeform bets, PR #764; all four `design_v2` modules now code-complete)  
-**E2E Test Suite**: full `e2e/` suite passing on v2 ✅ — 262 passed / 33 conditionally-skipped, 2026-07-17; `platform.spec.js` (36 tests × 2 browsers) passing in CI ✅
+**Last Updated**: 2026-07-27 (Single-backlog consolidation — this file is once again the sole source of truth for all open items, including platform-revision/v2 work previously tracked in `docs/platform_revision/TRACKER.md`. See the [🌐 Platform Revision — Consolidated Open Items](#-platform-revision--consolidated-open-items-merged-2026-07-27) section below.)
+**Session start rule**: read `CLAUDE.md`, then this file. `TRACKER.md`/`CUTOVER_PLAN.md` are historical/audit-trail only — check them only if a task needs migration-by-migration cutover history, not for "what's open."
+**E2E Test Suite**: full `e2e/` suite passing ✅ — 262 passed / 33 conditionally-skipped, 2026-07-17; `platform.spec.js` (36 tests × 2 browsers) passing in CI ✅ (⚠️ see B-10 below — CI's `Security` gate has been failing since ~2026-07-24, which silently skips the `E2E Tests` job on `main` merges)
 **Full Playbook Run**: `E2E_TEST_PLAYBOOK.md` v2.0 — all flows confirmed  
-**🟢 LAUNCH READY**: No critical (P0/P1) bugs open. All game mechanics functional. WC kick-off 2026-06-11.  
-**Live App**: https://wc-fantasy-football.vercel.app  
-**WC Kick-off**: 2026-06-11 19:00 UTC (Mexico vs South Africa)  
+**🟢 LAUNCH READY (pilot)**: No critical (P0/P1) bugs open on the football pilot game mechanics. The V2 cutover (multi-sport platform) is fully merged to `main` but the site remains deliberately walled behind `MAINTENANCE_MODE=true` — see [CUTOVER_PLAN.md](docs/platform_revision/CUTOVER_PLAN.md) status banner. Do not touch that flag without an explicit user ask in the current session.
+**Live App**: https://wc-fantasy-football.vercel.app (currently behind maintenance wall)
 **Supabase PostgREST max_rows**: 10,000 (raised from default 1,000 — 2026-06-08)
 
 ---
@@ -1100,6 +1100,52 @@ Group-stage rounds (r1–r3) now reopen the transfer window 3h after the last ki
 
 ---
 
+## 🌐 Platform Revision — Consolidated Open Items (merged 2026-07-27)
+
+Everything below was migrated out of `docs/platform_revision/TRACKER.md` and `docs/platform_revision/CUTOVER_PLAN.md` so this file is once again the single source of truth per CLAUDE.md ("if it's not in BACKLOG.md, it doesn't exist"). Those two files remain in the repo as historical/audit-trail records (migration-by-migration verification logs, the cutover runbook, revert playbook) — check them only when a task needs that history, not for "what's open." **Confirmed done and deliberately excluded from this list**: the F1 data migration (`f1_races` holds the full 24-row season calendar, confirmed live) and migration 217 + the clubhouse-pilot-league mapping (both applied to prod 2026-07-26, see [CUTOVER_PLAN.md](docs/platform_revision/CUTOVER_PLAN.md)).
+
+### P1 — HIGH (platform)
+
+| # | Item | Effort | Notes |
+|---|------|--------|-------|
+| ADMIN-1 | **[FEATURE] Clubhouse/competition admin ownership model + central reassignment panel** | TBD — schema + RPC + UI | **Decided direction (2026-07-27), not yet built.** Model: (1) the Clubhouse creator/owner is, by default, always an admin of every competition inside that Clubhouse; (2) a competition's creator is admin of that specific competition; (3) a central panel at Clubhouse-admin level lets the Clubhouse owner view/assign/remove the admin on every competition in the Clubhouse. This resolves the open "Clubhouse admin responsibility scope" product decision and unblocks **TENNIS-ADMIN-GAP**: `TennisAdminScreen.jsx`'s 9 admin RPCs (`admin_open_tournament`, `admin_start_tournament`, `admin_seed_tournament_players`, `admin_enter_round_results`, `admin_open_qf_window`, `admin_set_champion`, `admin_complete_tournament`, `admin_seed_atp_finals_matches`, `admin_enter_atp_finals_result`) are `REVOKE`d from `public`/`authenticated`/`anon` and `GRANT`ed only to `service_role` (migration `200_tennis_admin_rpcs.sql`) — every admin action 403s for any real logged-in user today, however privileged. Implementation needs: (a) a per-competition admin/creator column on `tennis_tournaments` and the F1 paddock table (football leagues already have an equivalent concept via the commissioner pattern in `CommissionerPanel.jsx`); (b) a real admin-check in each RPC (Clubhouse owner OR that competition's admin) before broadening the grant beyond `service_role`; (c) the central "manage competition admins" panel UI, surfaced from Clubhouse settings. Precedent already shipped in this codebase: `circle_members.role='owner'` already gates `arbitrate_freeform_result` (Coin Challenges freeform-bet dispute arbitration, migration 239) — proves "Clubhouse owner has special cross-competition authority" is an established pattern, not a new concept. |
+| OPS-SENTRY | **[TECH DEBT] Backend `SENTRY_DSN` Supabase secret not set** | ~15 min | Frontend `VITE_SENTRY_DSN` is set and live on Vercel; the backend/Edge-Function-side `SENTRY_DSN` Supabase secret is still unset, so Edge Function errors aren't reaching Sentry. The one remaining gap in OPS-2. |
+| SEC-4 | **[TECH DEBT] Rotate the GitHub PAT embedded in the git remote URL; switch to SSH** | TBD (5-step plan already drafted in TRACKER.md history) | The PAT-in-remote-URL pattern (used for the `gh`-CLI-not-installed PR workflow, see CLAUDE.md's GitHub API Fallback section) is a standing credential-hygiene risk. |
+
+### P2 — MEDIUM (platform)
+
+| # | Item | Effort | Notes |
+|---|------|--------|-------|
+| DATA-1 | **[TECH DEBT] Full schema baseline** | ~1–1.5 wk | Keystone item — blocks OPS-1 and DATA-RECON below. |
+| OPS-1 | **[TECH DEBT] Staging environment (second Supabase project) + PITR** | Blocked on DATA-1 | Needed for buyer demos and safe migration rehearsal without touching the pilot DB directly. |
+| DATA-RECON | **[TECH DEBT] RPC repo-vs-prod diff/reconciliation** | Blocked on DATA-1 | |
+| ARCH-1 | **[TECH DEBT] Trophy emission** | TBD | Modifies the live `calculate-scores` Edge Function — was tagged 🔴 pilot-impacting while the WC pilot was live; the pilot has since ended, so that risk tag is worth re-assessing before scheduling, not necessarily still blocking. |
+| ARCH-2 | **[TECH DEBT] `forza_id` → `provider_key` rename (code + DB halves)** | Migration 220 (DB half) drafted | Code half is zero-risk; DB half was tagged 🔴 pilot-impacting for the same reason as ARCH-1 — re-assess now the pilot has ended. |
+| GDPR-2 | **[FEATURE] Data portability export** | TBD | |
+| GDPR-3 | **[FEATURE] Objection-to-processing automation** | TBD | |
+| ADMIN-TAB-1 | **[FEATURE] "Other / write-in" affordance for commissioner bet resolution** | Small | `docs/platform_revision/design/design_handoffs/admin_tab/LOGIC.md:106` — open TODO: add a free-text input that treats the result as a custom void/split-payout for the football-league commissioner's manual bet-resolution UI (distinct system from Coin Challenges/P2P). |
+| BIZ-1 | **[BUSINESS] Bundle of deferred product/business decisions** | — | Staging environment for buyer demos (see OPS-1); meta-league scoring formula (trophy count vs Olympic points vs hybrid — ledger is built, formula is a swappable function, not urgent); non-playing-member UX (a user in a Clubhouse with no leagues — needs design); F1 scoring weights (points per correct round pick — F1-4 deferred); Stripe account confirmation (blocks P2P real-money sprint, currently coins-only and shipped); football competition expansion (EPL/Champions League/La Liga — Phase 4+ revenue decision); Forza API licence transferability (sale-close/buyer-diligence, business/legal); Tennis future scope (WTA module, multi-season points carryover, push notification on QF window — deferred future scope); Tennis data-automation provider choice (TheSportsDB vs alternative — deferred). |
+
+### P3 — LOW (platform)
+
+| # | Item | Effort | Notes |
+|---|------|--------|-------|
+| CODE-2 | **[TECH DEBT] TypeScript migration** | TBD | |
+| CODE-4 | **[TECH DEBT] Component test coverage** | TBD | |
+| CODE-5 | **[TECH DEBT] Analytics instrumentation** | TBD | TODO already marked in `src/hooks/useOnboarding.js:36`. |
+| CODE-6 | **[TECH DEBT] Consolidate shared UI primitives** | TBD | |
+| M0-BOTTOMSHEET | **[TECH DEBT] Extract a shared `BottomSheet` component** | TBD | Currently duplicated per-screen. |
+| DEPS-2 | **[TECH DEBT] Supply-chain hardening** | TBD | |
+| INFRA-1 | **[DOCS] Multi-region infra documentation** | TBD | |
+| LOW-2 | **[TECH DEBT] Storybook / Ladle component catalogue** | TBD | |
+| LOW-3 | **[TECH DEBT] Rate-limit headers** | Code done (🟢), deploy deferred | |
+| LOW-6 | **[FEATURE] Mobile push notifications** | TBD | |
+| LOW-9 | **[TECH DEBT] Accessibility audit** | TBD | |
+| UX-DESKTOP-1 | **[FEATURE] Desktop scale-up for multi-sport screens** | TBD | |
+| GDPR-1 | **[DOCS] Groq DPA review** | TBD | |
+
+---
+
 ## 🚀 Open Backlog — Prioritised
 
 ### P1 — HIGH
@@ -1218,6 +1264,8 @@ Group-stage rounds (r1–r3) now reopen the transfer window 3h after the last ki
 ---
 
 ## 🪙 P2P COIN BETTING — Full Design Package (2026-06-20)
+
+> ⚠️ **SUPERSEDED (2026-07-27).** This Stripe-based, real-money design was never built. What actually shipped is the coins-only, circle-scoped **Coin Challenges Redesign** (migrations 235–239, PRs #760–#762/#764) — see the entry near the top of this file (`## ✅ Coin Challenges Redesign — circle-scoped P2P challenges + freeform bets`). Kept below for historical/design-reference context only — do not use this section to scope new P2P work.
 
 **Status**: Design complete. No code shipped yet. Three documents are ready to hand off when development starts.
 

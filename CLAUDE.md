@@ -747,8 +747,8 @@ vercel inspect wc-fantasy-football.vercel.app  # deployment details
 
 1. **Orient yourself:**
    - This file (CLAUDE.md) ✓
-   - [BACKLOG.md](BACKLOG.md) — open work
-   - If the task touches the platform-revision modules (P2P, F1, Tennis, Clubhouse) or the design redesign, also check [TRACKER.md](docs/platform_revision/TRACKER.md) and [CUTOVER_PLAN.md](docs/platform_revision/CUTOVER_PLAN.md) for current state
+   - [BACKLOG.md](BACKLOG.md) — the single source of truth for open work, including platform-revision items (P2P, F1, Tennis, Clubhouse) and the design redesign, see its "🌐 Platform Revision — Consolidated Open Items" section. If a session has no specific task handed to it, default to BACKLOG.md for "what's open."
+   - [TRACKER.md](docs/platform_revision/TRACKER.md) and [CUTOVER_PLAN.md](docs/platform_revision/CUTOVER_PLAN.md) are historical/audit-trail records (migration-by-migration verification logs, session notes, the cutover runbook) — **not** required per-session reading anymore. Open them only when a task specifically needs that history (e.g. "why was migration 224 written this way," "what's the maintenance-mode revert playbook").
 
 2. **Sync and branch from `main`:**
    ```bash
