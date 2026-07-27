@@ -93,7 +93,7 @@ export default function NewCompetitionFlow({ circleId, clubhouseName, onCreated,
       onCreated();
       if (sport === 'football' && newId) navigate(`/league/${newId}`);
       else if (sport === 'f1'      && newId) navigate(`/f1/${newId}`);
-      else if (sport === 'tennis'  && newId) navigate(`/tennis/tournament/${newId}`);
+      else if (sport === 'tennis'  && newId) navigate('/tennis');
       close();
     } catch (e) {
       setError(e.message ?? 'Something went wrong');

@@ -484,17 +484,38 @@ A tennis Player Box is created the same way an F1 paddock is (verified 2026-07-2
 "Add competition" → SPORT selector → **Tennis** → simplified form (name only, no tournament/format dropdowns
 for non-football sports) → "Create competition".
 
+**Methodology note (2026-07-27):** Live, logged-in browser click-through for Module 6 turned out to be
+unreachable this session — driving it would have required creating and/or authenticating as a test Supabase
+user, which is a categorically prohibited action (account creation / password entry) that no session-level
+authorization can override. The 5 scenarios below were instead verified by **static code review**: every
+screen (`TennisHomeScreen`, `TennisTournamentScreen`, `PlayerBoxScreen`, `TennisAdminScreen`,
+`TennisAtpFinalsScreen`, `TennisProfileView`, `TennisLeaderboardScreen`) and its backing hook
+(`usePlayerBox`, `useTennisTournament`, `useTennisLeaderboard`, `useAtpFinalsPicks`) was read in full and
+cross-checked against the RPC contracts already confirmed live in Modules 1–5, plus the actual `App.jsx`
+routes and the migration files granting each RPC. This is real verification of what the shipped code does,
+but it is **not** a substitute for a human clicking through the flows — labeled honestly as such rather than
+reported as a live pass.
+
 ### Scenario 6.1: Create a Player Box
 
 **Given:** User is a Clubhouse member, on `/clubhouse`.
 
 **When:** Click "Add competition" → select Tennis → enter a name → "Create competition".
 
-**Then:** `create_player_box` RPC (migration 197) fires; user is routed into `PlayerBoxScreen`/`TennisHomeScreen`
+**Then:** `create_player_box` RPC (migration 197/215) fires; user is routed into `PlayerBoxScreen`/`TennisHomeScreen`
 for the new box; box appears in the Clubhouse's competition list.
 
-**Status:** ⬜ Not tested (F1 equivalent verified 2026-07-26; tennis not yet exercised via this exact UI path —
-prior tennis verification in Task #11 used direct RPC calls, not the "Add competition" modal)
+**Status:** 🟡 Static review — bug found and fixed. `create_player_box` returns `{player_box_id, invite_code}`
+only (no tournament id — confirmed in `215_clubhouse_centric_model.sql`), but
+`NewCompetitionFlow.jsx` was navigating to `/tennis/tournament/${newId}` using that `player_box_id` as if it
+were a tournament id. `TennisTournamentScreen` requires a real `tennis_tournament.id` and renders
+`"Tournament not found."` for anything else (`TennisTournamentScreen.jsx:36`) — so every tennis box created
+through the Clubhouse "Add competition" flow landed the user on a dead-end error screen immediately after
+creation, even though the box itself was created correctly server-side. **Fixed this session**: the tennis
+branch now navigates to `/tennis` (`TennisHomeScreen`), which auto-selects the new box via
+`usePlayerBox()`/`SportContext` without needing a query param — same outcome `PlayerBoxScreen`'s own
+create flow already achieved via `/tennis?box=${id}`. Not independently re-verified live (same account-
+creation blocker), but the fix is a one-line routing change reviewed against the confirmed hook behavior.
 
 ---
 
@@ -508,7 +529,14 @@ card, save.
 **Then:** `submit_tennis_roster` fires; UI reflects "roster locked" state; re-opening the screen shows the
 saved picks via `get_tennis_tournament_for_user`.
 
-**Status:** ⬜ Not tested
+**Status:** 🟢 Static review — pass. `TensionTournamentScreen`'s `TIER_SLOTS` (1×tier1, 2×tier2, 2×tier3,
+2×tier4) matches the roster shape exactly; `handleSubmit` validates all 7 slots filled then calls
+`submitRoster(slots, selectedAce)`. `useTennisTournament.js` wraps this as
+`supabase.rpc('submit_tennis_roster', { p_tournament_id, p_tier1, p_tier2a, p_tier2b, p_tier3a, p_tier3b,
+p_tier4a, p_tier4b, p_ace_card })` — params match the RPC signature confirmed in Module 2. After submit, the
+hook re-`fetch()`s `get_tennis_tournament_for_user`, and the screen renders the read-only "locked" view
+whenever `roster` is non-null, showing the saved picks. Duplicate-player selection across slots is blocked
+client-side (`selectedIds` set check).
 
 ---
 
@@ -521,7 +549,25 @@ saved picks via `get_tennis_tournament_for_user`.
 **Then:** `set_tennis_qf_captain` fires; UI shows the captain badge; picker excludes eliminated players
 (via `surviving_players` from `get_tennis_tournament_for_user`).
 
-**Status:** ⬜ Not tested
+**Status:** 🟡 Static review — screen logic passes, but a separate gap blocks reaching this state via the UI
+at all. `TennisTournamentScreen`'s captain picker correctly renders only `survivingPlayers` (from
+`get_tennis_tournament_for_user`'s `surviving_players`), and `handleCaptain` calls
+`setQfCaptain(playerId)` → `supabase.rpc('set_tennis_qf_captain', { p_tournament_id, p_captain_player_id
+})`, matching the confirmed Module 3 signature. **New finding, not previously documented**: the transition
+into `qf_captain_open` (`admin_open_qf_window`) — along with every other admin RPC `TennisAdminScreen.jsx`
+calls (`admin_open_tournament`, `admin_start_tournament`, `admin_seed_tournament_players`,
+`admin_enter_round_results`, `admin_set_champion`, `admin_complete_tournament`,
+`admin_seed_atp_finals_matches`, `admin_enter_atp_finals_result`) — is `REVOKE`d from `authenticated`/`anon`
+and granted only to `service_role` (`200_tennis_admin_rpcs.sql:295-315`). `TennisAdminScreen.jsx` calls these
+via the normal browser client (the logged-in user's `authenticated` role), so **every button on the tennis
+admin screen will fail with a Postgres permission-denied error for any real user, no matter how privileged**
+— there is no admin-role check gating access to the screen or its actions; the functions simply aren't
+reachable from a browser session at all today. This is why Module 1–5 verification (Task #11/#15) had to use
+direct `db query --linked` calls instead of the admin UI — not a testing shortcut, but the only way these
+functions are currently callable. **Not fixed this session** — granting these to `authenticated` needs an
+actual admin/owner-role check (not a blanket grant, which would let any logged-in user open tournaments,
+force-complete them, or enter match results), and that's a product/security decision, not a one-line fix.
+Flagged for the user as an open gap.
 
 ---
 
@@ -534,7 +580,11 @@ saved picks via `get_tennis_tournament_for_user`.
 **Then:** Standings render via `get_player_box_leaderboard`; per-tournament breakdown via
 `get_tennis_season_summary` matches the `tennis_tournament_scores` rows.
 
-**Status:** ⬜ Not tested
+**Status:** 🟢 Static review — pass. `useTennisLeaderboard.js` fires both RPCs in parallel
+(`get_player_box_leaderboard` and `get_tennis_season_summary`, both keyed on `p_player_box_id`/
+`p_season_year`) exactly as documented. The screen handles all states: loading, no active box, RPC error,
+zero standings ("No scores yet"), and the populated table — with a responsive split (desktop wide table vs.
+mobile per-manager cards) for the per-tournament breakdown.
 
 ---
 
@@ -547,7 +597,13 @@ saved picks via `get_tennis_tournament_for_user`.
 **Then:** UI locks the 12 group picks as read-only once phase changes to knockout; 3 knockout pickers unlock
 only after admin opens `qf_captain_open` and all 12 group results are entered.
 
-**Status:** ⬜ Not tested
+**Status:** 🟡 Static review — screen logic passes, blocked by the same admin-RPC gap as 6.3.
+`useAtpFinalsPicks.js` calls `submit_atp_finals_group_picks`/`submit_atp_finals_knockout_picks` with the
+expected `{ p_season_year, p_picks }` shape; `TennisAtpFinalsScreen` correctly derives `isGroupOpen`
+(`status==='roster_open'`) and `isKnockoutOpen` (`status==='qf_captain_open'`) and locks each picker's
+buttons/inputs accordingly, showing per-pick correct/wrong coloring once `winner_player_id` is set. The
+"Then" clause's admin-side conditions (`admin_open_qf_window`, `admin_enter_atp_finals_result`) are subject
+to the same Scenario 6.3 finding — an admin cannot drive this transition from the browser today.
 
 ---
 
@@ -564,7 +620,9 @@ only after admin opens `qf_captain_open` and all 12 group results are entered.
 | 2026-07-27 | Claude | Module 5 | Scenario 5.1 (two-phase lock, all positive+negative RPC paths) + 5.2 (partial-correct scoring, 2 real accounts) | ✅ Pass | Seeded 8 TEST players + 15 TEST matches; ran the full group→knockout pick cycle for 2 users, entered all 15 results, invoked `score-atp-finals` — output (`46/14` and `8/1`) matched hand computation exactly; gazette entry confirmed written post-fix |
 | 2026-07-27 | Claude | Bug fix | Discovered + fixed `gazette_entries` silent upsert failure (42P10) in both tennis scoring functions | ✅ Fixed | [PR #771](https://github.com/SMTCB/WCFantasyFootball/pull/771), both functions redeployed, re-verified against TEST fixture |
 | 2026-07-27 | Claude | Cleanup | Deleted all `season_year=2099` TEST fixture rows (tournaments, players, rosters, ace cards, scores, ATP Finals matches/picks, TEST circle, TEST Player Box) | ✅ Done | Verified zero rows remain across every affected table |
-| — | — | Module 6 | UI E2E scenarios 6.1–6.5 | ⬜ Pending | Not yet scoped into a session — RPC-layer coverage (Modules 1–5) is complete, UI-layer coverage is not |
+| 2026-07-27 | Claude | Module 6 | UI scenarios 6.1–6.5, static code review (live click-through blocked — see methodology note above) | 🟡 Reviewed | 6.2/6.4 pass as-shipped; 6.1 had a routing bug (fixed, see below); 6.3/6.5 pass at the screen level but are blocked end-to-end by a separate finding: every `TennisAdminScreen` RPC is `service_role`-only and unreachable from a real browser session |
+| 2026-07-27 | Claude | Bug fix | Fixed tennis "Add competition" flow navigating to `/tennis/tournament/{player_box_id}` (wrong ID type — 404s every time) instead of `/tennis` | ✅ Fixed | [NewCompetitionFlow.jsx](../../src/components/NewCompetitionFlow.jsx) — see PR link once merged |
+| 2026-07-27 | Claude | Open finding | `TennisAdminScreen.jsx`'s 9 RPCs are all `REVOKE`d from `authenticated`/`anon`, granted only to `service_role` (`200_tennis_admin_rpcs.sql`) — no admin-role check exists, so the screen cannot be used by any real logged-in user today | 🔴 Not fixed | Needs a product decision (who counts as "admin," how they're identified) before a migration adds a scoped grant — flagged to the user, not resolved unilaterally this session |
 
 ---
 
