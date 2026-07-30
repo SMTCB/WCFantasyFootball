@@ -153,6 +153,7 @@ jobs:
       - name: Load schema (skip if schema.sql not yet generated — Phase A1)
         run: |
           if [ -f supabase/schema.sql ]; then
+            psql "$TEST_DATABASE_URL" < tests/unit/bootstrap.sql
             psql "$TEST_DATABASE_URL" < supabase/schema.sql
             echo "✅ schema.sql loaded"
           else
