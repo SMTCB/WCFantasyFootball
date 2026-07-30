@@ -279,7 +279,7 @@ test.describe('MarketScreen', () => {
     if (REAL_PLAYERS && REAL_PLAYERS.length > 0) {
       // Check if any real player name appears in the page
       const hasPlayerName = REAL_PLAYERS.some(p => bodyText.includes(p.name));
-      expect(hasPlayerName || bodyText.toMatch(/GK|DEF|MID|FWD/), 'No player data found').toBe(true);
+      expect(hasPlayerName || /GK|DEF|MID|FWD/.test(bodyText), 'No player data found').toBe(true);
     } else {
       // If no players available, verify market page still loads
       expect(bodyText.toUpperCase()).toContain('MARKET');
