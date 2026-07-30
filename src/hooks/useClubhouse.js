@@ -200,6 +200,39 @@ export function useClubhouse() {
     return Array.isArray(data) ? data : [];
   }, []);
 
+  const getCircleCompetitionAdmins = useCallback(async (circleId) => {
+    const { data, error: err } = await supabase.rpc('get_circle_competition_admins', {
+      p_circle_id: circleId,
+    });
+    if (err) throw err;
+    if (data?.error) throw new Error(data.error);
+    return data ?? { leagues: [], f1: [], tennis: [] };
+  }, []);
+
+  const setCompetitionAdmin = useCallback(async (circleId, competitionType, competitionId, userId) => {
+    const { data, error: err } = await supabase.rpc('set_competition_admin', {
+      p_circle_id: circleId,
+      p_competition_type: competitionType,
+      p_competition_id: competitionId,
+      p_user_id: userId,
+    });
+    if (err) throw err;
+    if (data?.error) throw new Error(data.error);
+    return data;
+  }, []);
+
+  const removeCompetitionAdmin = useCallback(async (circleId, competitionType, competitionId, userId) => {
+    const { data, error: err } = await supabase.rpc('remove_competition_admin', {
+      p_circle_id: circleId,
+      p_competition_type: competitionType,
+      p_competition_id: competitionId,
+      p_user_id: userId,
+    });
+    if (err) throw err;
+    if (data?.error) throw new Error(data.error);
+    return data;
+  }, []);
+
   const markRead = useCallback(async (notifId) => {
     const now = new Date().toISOString();
     setNotifications(prev =>
@@ -250,6 +283,9 @@ export function useClubhouse() {
     kickMember,
     linkLeague,
     getOwnerLinkableLeagues,
+    getCircleCompetitionAdmins,
+    setCompetitionAdmin,
+    removeCompetitionAdmin,
     markRead,
     markAllRead,
     refresh: fetchMyCircles,

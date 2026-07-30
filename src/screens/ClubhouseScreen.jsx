@@ -355,7 +355,7 @@ function MembersTab({ members, isOwner, currentUserId, onKick, metaStandings }) 
 }
 
 // ── Settings tab (owner only) ─────────────────────────────────────────────────
-function SettingsTab({ circle, activeCircleId, onUpdateSettings, onLinkLeague, getOwnerLinkableLeagues }) {
+function SettingsTab({ circle, activeCircleId, members, onUpdateSettings, onLinkLeague, getOwnerLinkableLeagues, getCircleCompetitionAdmins, onSetCompetitionAdmin, onRemoveCompetitionAdmin }) {
   const [name,        setName]        = useState(circle.name);
   const [isPublic,    setIsPublic]    = useState(circle.is_public);
   const [p2pEnabled,  setP2pEnabled]  = useState(circle.p2p_betting_enabled);
@@ -365,6 +365,11 @@ function SettingsTab({ circle, activeCircleId, onUpdateSettings, onLinkLeague, g
   const [loadingLeagues,  setLoadingLeagues]  = useState(false);
   const [linkingId,       setLinkingId]       = useState(null);
   const [linkMsg,         setLinkMsg]         = useState('');
+  const [competitionAdmins, setCompetitionAdmins] = useState(null);
+  const [loadingAdmins,     setLoadingAdmins]     = useState(false);
+  const [adminMsg,          setAdminMsg]          = useState('');
+  const [pendingKey,         setPendingKey]        = useState(null);
+  const [assignPicks,       setAssignPicks]       = useState({});
 
   async function saveName(e) {
     e.preventDefault();
@@ -418,6 +423,47 @@ function SettingsTab({ circle, activeCircleId, onUpdateSettings, onLinkLeague, g
       setLinkMsg(err.message === 'NOT_COMMISSIONER' ? 'You must be commissioner of that league.' : err.message);
     } finally {
       setLinkingId(null);
+    }
+  }
+
+  async function loadCompetitionAdmins() {
+    setLoadingAdmins(true); setAdminMsg('');
+    try {
+      const result = await getCircleCompetitionAdmins(activeCircleId);
+      setCompetitionAdmins(result);
+    } catch (err) {
+      setAdminMsg(err.message);
+    } finally {
+      setLoadingAdmins(false);
+    }
+  }
+
+  async function handleAssignAdmin(competitionType, competitionId) {
+    const userId = assignPicks[competitionId];
+    if (!userId) return;
+    const key = `assign-${competitionId}`;
+    setPendingKey(key); setAdminMsg('');
+    try {
+      await onSetCompetitionAdmin(competitionType, competitionId, userId);
+      await loadCompetitionAdmins();
+      setAssignPicks(prev => ({ ...prev, [competitionId]: '' }));
+    } catch (err) {
+      setAdminMsg(err.message);
+    } finally {
+      setPendingKey(null);
+    }
+  }
+
+  async function handleRemoveAdmin(competitionType, competitionId, userId) {
+    const key = `remove-${competitionId}-${userId}`;
+    setPendingKey(key); setAdminMsg('');
+    try {
+      await onRemoveCompetitionAdmin(competitionType, competitionId, userId);
+      await loadCompetitionAdmins();
+    } catch (err) {
+      setAdminMsg(err.message);
+    } finally {
+      setPendingKey(null);
     }
   }
 
@@ -512,6 +558,82 @@ function SettingsTab({ circle, activeCircleId, onUpdateSettings, onLinkLeague, g
         </div>
       )}
       {linkMsg && <div style={{ ...MONO, fontSize: 10, color: linkMsg.includes('✓') ? 'var(--positive)' : 'var(--danger)', marginTop: 8 }}>{linkMsg}</div>}
+
+      {sectionLabel('Competition Admins')}
+      {competitionAdmins === null ? (
+        <button
+          onClick={loadCompetitionAdmins}
+          disabled={loadingAdmins}
+          style={{ width: '100%', padding: 12, border: '1px dashed var(--rule)', borderRadius: 8, background: 'transparent', color: loadingAdmins ? 'var(--mute)' : 'var(--accent)', ...MONO, fontSize: 10, letterSpacing: '0.1em', cursor: 'pointer' }}
+        >
+          {loadingAdmins ? 'LOADING…' : '+ MANAGE COMPETITION ADMINS →'}
+        </button>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          {[
+            { label: 'Leagues',      type: 'league',     list: competitionAdmins.leagues ?? [] },
+            { label: 'F1 Paddocks',  type: 'paddock',     list: competitionAdmins.f1 ?? [] },
+            { label: 'Tennis Boxes', type: 'player_box',  list: competitionAdmins.tennis ?? [] },
+          ].map(group => group.list.length === 0 ? null : (
+            <div key={group.type}>
+              <div style={{ ...MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '0.1em', marginBottom: 6, textTransform: 'uppercase' }}>{group.label}</div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {group.list.map(comp => (
+                  <div key={comp.id} style={{ padding: '10px 14px', background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 8 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
+                      <div style={{ ...HEAD, fontSize: 13, color: 'var(--paper)' }}>{comp.name}</div>
+                      <div style={{ ...MONO, fontSize: 9, color: 'var(--mute)', whiteSpace: 'nowrap' }}>Creator: {comp.creator_username ?? '—'}</div>
+                    </div>
+                    {comp.assigned_admins.length > 0 && (
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 8 }}>
+                        {comp.assigned_admins.map(a => (
+                          <div key={a.user_id} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '4px 8px', background: 'var(--elev)', borderRadius: 6, ...MONO, fontSize: 10, color: 'var(--paper)' }}>
+                            {a.username}
+                            <button
+                              onClick={() => handleRemoveAdmin(group.type, comp.id, a.user_id)}
+                              disabled={pendingKey === `remove-${comp.id}-${a.user_id}`}
+                              style={{ background: 'none', border: 'none', color: 'var(--danger)', cursor: 'pointer', padding: 0, fontSize: 12, lineHeight: 1 }}
+                            >
+                              ×
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+                      <select
+                        value={assignPicks[comp.id] ?? ''}
+                        onChange={e => setAssignPicks(prev => ({ ...prev, [comp.id]: e.target.value }))}
+                        style={{ flex: 1, padding: '6px 10px', border: '1px solid var(--rule)', borderRadius: 6, ...BODY, fontSize: 12, color: 'var(--paper)', background: 'var(--card)', outline: 'none' }}
+                      >
+                        <option value="">Assign admin…</option>
+                        {(members ?? [])
+                          .filter(m => !comp.assigned_admins.some(a => a.user_id === m.user_id))
+                          .map(m => (
+                            <option key={m.user_id} value={m.user_id}>{m.username}</option>
+                          ))}
+                      </select>
+                      <button
+                        onClick={() => handleAssignAdmin(group.type, comp.id)}
+                        disabled={!assignPicks[comp.id] || pendingKey === `assign-${comp.id}`}
+                        style={{ padding: '6px 12px', background: !assignPicks[comp.id] ? 'var(--mute)' : 'var(--accent)', color: '#fff', border: 'none', borderRadius: 6, ...MONO, fontSize: 10, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}
+                      >
+                        {pendingKey === `assign-${comp.id}` ? '…' : 'ADD'}
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+          {(competitionAdmins.leagues ?? []).length === 0 && (competitionAdmins.f1 ?? []).length === 0 && (competitionAdmins.tennis ?? []).length === 0 && (
+            <div style={{ ...MONO, fontSize: 11, color: 'var(--mute)', textAlign: 'center', padding: '16px 0' }}>
+              No competitions linked to this Clubhouse yet.
+            </div>
+          )}
+        </div>
+      )}
+      {adminMsg && <div style={{ ...MONO, fontSize: 10, color: 'var(--danger)', marginTop: 8 }}>{adminMsg}</div>}
     </div>
   );
 }
@@ -768,6 +890,9 @@ export default function ClubhouseScreen() {
     kickMember,
     linkLeague,
     getOwnerLinkableLeagues,
+    getCircleCompetitionAdmins,
+    setCompetitionAdmin,
+    removeCompetitionAdmin,
     markRead,
     markAllRead,
   } = useClubhouseContext();
@@ -1109,9 +1234,13 @@ export default function ClubhouseScreen() {
                 <SettingsTab
                   circle={activeCircle}
                   activeCircleId={activeCircleId}
+                  members={members}
                   onUpdateSettings={(patch) => updateSettings(activeCircleId, patch)}
                   onLinkLeague={(leagueId) => linkLeague(activeCircleId, leagueId)}
                   getOwnerLinkableLeagues={getOwnerLinkableLeagues}
+                  getCircleCompetitionAdmins={getCircleCompetitionAdmins}
+                  onSetCompetitionAdmin={(type, competitionId, userId) => setCompetitionAdmin(activeCircleId, type, competitionId, userId)}
+                  onRemoveCompetitionAdmin={(type, competitionId, userId) => removeCompetitionAdmin(activeCircleId, type, competitionId, userId)}
                 />
               )}
             </div>
