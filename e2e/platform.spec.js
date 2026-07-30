@@ -192,7 +192,16 @@ test.describe('SquadScreen', () => {
   });
 
   test('shows budget in header', async ({ page }) => {
-    await expect(page.getByText(/budget|\$\d+M/i).first()).toBeVisible();
+    // B-11: the "Budget" label only renders once fetchSquad()'s Supabase round-trips
+    // resolve — unlike the loading-spinner state, which happens to also say "MY SQUAD"
+    // and so satisfies the sibling "shows My Squad heading" test even while still
+    // loading. Default expect.toBeVisible() poll is 5s; that's occasionally not enough
+    // margin for real network variance against the live pilot DB in CI, so this one
+    // assertion (only) gets a longer explicit window rather than a fixed extra sleep.
+    // Also raise the test's own timeout so that window has real headroom on top of
+    // beforeEach's own (league-picker click + squad load) network waits.
+    test.setTimeout(45000);
+    await expect(page.getByText(/budget|\$\d+M/i).first()).toBeVisible({ timeout: 15000 });
   });
 
   test('chips tab is hidden (pilot mode)', async ({ page }) => {
