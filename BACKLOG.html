@@ -146,14 +146,14 @@
 <header>
   <div class="header-left">
     <h1>Forza Fantasy League — Backlog</h1>
-    <p>Generated from <code>BACKLOG.md</code> — 2026-07-27. Do not hand-edit; re-run <code>scripts/generate_backlog_html.py</code>.</p>
+    <p>Generated from <code>BACKLOG.md</code> — 2026-07-30. Do not hand-edit; re-run <code>scripts/generate_backlog_html.py</code>.</p>
     <div class="badge-bar"><span class="badge badge-green">LAUNCH READY (pilot)</span>
 <span class="badge badge-amber">SITE WALLED — MAINTENANCE MODE</span>
 <span class="badge badge-blue">full e2e/ suite passing ✅ — 262 passed / 33 conditionally-skipped, 202</span></div>
   </div>
   <div class="header-right">
     <div class="totals">
-      <div class="total-pill"><strong>38</strong><span>open</span></div>
+      <div class="total-pill"><strong>39</strong><span>open</span></div>
       <div class="total-pill"><strong>153</strong><span>closed</span></div>
     </div>
   </div>
@@ -166,7 +166,7 @@
   </div>
   <div class="filter-chips" id="open-chips">
     <span class="chip active" data-filter-priority="all">All priorities</span>
-    <span class="chip" data-filter-priority="p1">P1 — HIGH (6)</span>
+    <span class="chip" data-filter-priority="p1">P1 — HIGH (7)</span>
 <span class="chip" data-filter-priority="p2">P2 — MEDIUM (16)</span>
 <span class="chip" data-filter-priority="p3">P3 — LOW (16)</span>
   </div>
@@ -184,12 +184,12 @@
 <div class="layout">
   <nav class="sidebar">
     <div class="status-toggle">
-      <button class="status-btn active" data-status="open">Open <span class="status-count">38</span></button>
+      <button class="status-btn active" data-status="open">Open <span class="status-count">39</span></button>
       <button class="status-btn" data-status="closed">Closed <span class="status-count">153</span></button>
     </div>
     <div class="sidebar-group" id="sidebar-open">
       <h3>Jump to priority</h3>
-      <div class="sidebar-item" data-jump-priority="p1"><span class="swatch" style="--tab-color:#b23b3b"></span>P1 — HIGH<span class="sidebar-count">6</span></div>
+      <div class="sidebar-item" data-jump-priority="p1"><span class="swatch" style="--tab-color:#b23b3b"></span>P1 — HIGH<span class="sidebar-count">7</span></div>
 <div class="sidebar-item" data-jump-priority="p2"><span class="swatch" style="--tab-color:#b8720e"></span>P2 — MEDIUM<span class="sidebar-count">16</span></div>
 <div class="sidebar-item" data-jump-priority="p3"><span class="swatch" style="--tab-color:#5b7285"></span>P3 — LOW<span class="sidebar-count">16</span></div>
     </div>
@@ -206,7 +206,7 @@
     <div id="view-open" class="grid-view">
       
     <section class="item-group" id="group-p1" data-group="p1">
-      <h2 class="group-title" style="--tab-color:#b23b3b">P1 — HIGH <span class="group-count">6</span></h2>
+      <h2 class="group-title" style="--tab-color:#b23b3b">P1 — HIGH <span class="group-count">7</span></h2>
       <div class="card-grid">
       <article class="card" data-status="open" data-priority="p1" data-kind="none" data-search="admin-1 clubhouse/competition admin ownership model + central reassignment panel **decided direction (2026-07-27), not yet built.** model: (1) the clubhouse creator/owner is, by default, always an admin of every competition inside that clubhouse; (2) a competition&#x27;s creator is admin of that specific competition; (3) a central panel at clubhouse-admin level lets the clubhouse owner view/assign/remove the admin on every competition in the clubhouse. this resolves the open &quot;clubhouse admin responsibility scope&quot; product decision and unblocks **tennis-admin-gap**: `tennisadminscreen.jsx`&#x27;s 9 admin rpcs (`admin_open_tournament`, `admin_start_tournament`, `admin_seed_tournament_players`, `admin_enter_round_results`, `admin_open_qf_window`, `admin_set_champion`, `admin_complete_tournament`, `admin_seed_atp_finals_matches`, `admin_enter_atp_finals_result`) are `revoke`d from `public`/`authenticated`/`anon` and `grant`ed only to `service_role` (migration `200_tennis_admin_rpcs.sql`) — every admin action 403s for any real logged-in user today, however privileged. implementation needs: (a) a per-competition admin/creator column on `tennis_tournaments` and the f1 paddock table (football leagues already have an equivalent concept via the commissioner pattern in `commissionerpanel.jsx`); (b) a real admin-check in each rpc (clubhouse owner or that competition&#x27;s admin) before broadening the grant beyond `service_role`; (c) the central &quot;manage competition admins&quot; panel ui, surfaced from clubhouse settings. precedent already shipped in this codebase: `circle_members.role=&#x27;owner&#x27;` already gates `arbitrate_freeform_result` (coin challenges freeform-bet dispute arbitration, migration 239) — proves &quot;clubhouse owner has special cross-competition authority&quot; is an established pattern, not a new concept. platform revision — consolidated open items p1 — high" style="--tab-color:#b23b3b" tabindex="0">
         <div class="card-top"><span class="badge-mini pr-p1">P1 — HIGH</span><span class="type-tag t-feature">FEATURE</span></div>
@@ -253,6 +253,23 @@
       <dl class="drawer-fields">
         <div class="field"><dt>Description</dt><dd><p>Rotate the GitHub PAT embedded in the git remote URL; switch to SSH</p></dd></div>
         <div class="field"><dt>Why it's necessary</dt><dd><p>The PAT-in-remote-URL pattern (used for the <code>gh</code>-CLI-not-installed PR workflow, see CLAUDE.md's GitHub API Fallback section) is a standing credential-hygiene risk.</p></dd></div>
+        <div class="field"><dt>Where it came from</dt><dd><p>Platform Revision — Consolidated Open Items · P1 — HIGH</p></dd></div>
+        <div class="field"><dt>Date</dt><dd><p class="muted">Not dated.</p></dd></div>
+        <div class="field"><dt>Technical solution</dt><dd><p class="muted">No implementation write-up recorded.</p></dd></div>
+      </dl></template>
+      </article>
+
+      <article class="card" data-status="open" data-priority="p1" data-kind="none" data-search="data-3 split the shared &quot;world cup pilot&quot; clubhouse back into one clubhouse per league confirmed via db query 2026-07-30: all 7 real wc-pilot leagues (`draft mundial 26`, `fixo draft mundial 26`, `miami wc fantasy testers`, `munaial &#x27;26`, `mundial do eder`, `mundial gordo vai a baliza`, `ranks fc world cup fantasy`) still share one clubhouse (circle `b379c63e-809f-4dc7-9de1-0fff52f989b8`, name &quot;world cup pilot&quot;, ~30 members, single owner `tommyazcue`). this is a migration-217 artifact, not a deliberate grouping — 217&#x27;s pre-flight check (2026-06-29) found these 7 leagues orphaned (`circle_id is null`) and they were bulk-parked in one placeholder clubhouse purely so the `not null` constraint could be applied without corrupting live pilot data (see `217_circle_id_not_null.sql` header comment). 6 of the 7 leagues are commissioned by `tommyazcue`, 1 (`munaial &#x27;26`) by `sb7` — genuinely separate groups, not one community. **why this outranks pure tidiness**: clubhouse scope now gates real shipped functionality — coin challenges/p2p (migrations 235–239) and clubhouse chat/notifications are all `circle`-scoped (`is_circle_member(circle_id)`), so today any member of any of these 7 leagues can see and p2p-challenge any member of the other 6, none of whom they actually play with. confirmed zero `p2p_challenges`/`clubhouse_notifications` rows exist yet under the shared circle (2026-07-30) — a clean split, nothing in-flight to reconcile. **open product decision before implementation** (needs a quick user confirm, not an engineering call): one clubhouse per league (7 new clubhouses, literal reading of the ask) vs. one clubhouse per commissioner (2 clubhouses — `tommyazcue` keeps his 6 leagues together, only `munaial &#x27;26` splits out) — cheaper and may better match how these groups actually socialize. **implementation sketch**: per new clubhouse, `insert into circles` (owner = that league&#x27;s commissioner) → `update leagues set circle_id=...` for the league(s) moving → re-home only t" style="--tab-color:#b23b3b" tabindex="0">
+        <div class="card-top"><span class="badge-mini pr-p1">P1 — HIGH</span><span class="type-tag t-techdebt">TECH DEBT</span></div>
+        <h3 class="card-title">Split the shared "World Cup Pilot" clubhouse back into one clubhouse per league</h3>
+        <p class="card-summary">Confirmed via DB query 2026-07-30: all 7 real WC-pilot leagues (<code>Draft Mundial 26</code>, <code>FIXO DRAFT MUNDIAL 26</code>, <code>Miami WC Fantasy Testers</code>, <code>Munaial '26</code>, <code>Mundial do Eder</code>, <code>Mundial Gordo Vai a Baliza</code>, <code>RANKS FC World Cup Fantasy</code>) still share one clubhouse (circle <code>b379c63e-809f-4dc7-9de1-0fff52f989b8</code>, name "World Cup Pilot", ~30 members, single owner <code>tommyazcue</code>). This is a migration-217 artifact, not a deliberate grouping — 217's pre-flight check (2026-06-29) found these 7 leagues orphaned (<code>circle_id IS NULL</code>) and they were bulk-parked in one placeholder clubhouse purely so the <code>NOT NULL</code> constraint could be applied without corrupting live pilot data (see <code>217_circle_id_not_null.sql</code> header comment). 6 of the 7 leagues are commissioned by <code>tommyazcue</code>, 1 (<code>Munaial '26</code>) by <code>SB7</code> — genuinely separate groups, not one community. <strong>Why this outranks pure tidiness</strong>: Clubhouse scope now gates real shipped functionality — Coin Challenges/P2P (migrations 235–239) and clubhouse chat/notifications are all <code>circle</code>-scoped (<code>is_circle_member(circle_id)</code>), so today any member of any of these 7 leagues can see and P2P-challenge any member of the other 6, none of whom they actually play with. Confirmed zero <code>p2p_challenges</code>/<code>clubhouse_notifications</code> rows exist yet under the shared circle (2026-07-30) — a clean split, nothing in-flight to reconcile. <strong>Open product decision before implementation</strong> (needs a quick user confirm, not an engineering call): one clubhouse per league (7 new clubhouses, literal reading of the ask) vs. one clubhouse per commissioner (2 clubhouses — <code>tommyazcue</code> keeps his 6 leagues together, only <code>Munaial '26</code> splits out) — cheaper and may better match how these groups actually socialize. <strong>Implementation sketch</strong>: per new clubhouse, <code>INSERT INTO circles</code> (owner = that league's commissioner) → <code>UPDATE leagues SET circle_id=...</code> for the league(s) moving → re-home only that league's own <code>league_members</code> into the new circle's <code>circle_members</code> (not the full shared 30-person roster) → confirm the old shared circle is left with 0 leagues (delete or repurpose, TBD). Live-DB write — SELECT-before-UPDATE + backup per Pilot Safeguards, needs explicit in-session approval before executing.</p>
+        <div class="card-foot"><span class="foot-id">DATA-3</span><span class="foot-effort">~1–2h (data migration + verification, no app-code changes)</span></div>
+        <template>
+      <div class="drawer-badges"><span class="badge-mini pr-p1">P1 — HIGH</span><span class="type-tag t-techdebt">TECH DEBT</span></div>
+      <h2 class="drawer-title">Split the shared "World Cup Pilot" clubhouse back into one clubhouse per league</h2>
+      <dl class="drawer-fields">
+        <div class="field"><dt>Description</dt><dd><p>Split the shared "World Cup Pilot" clubhouse back into one clubhouse per league</p></dd></div>
+        <div class="field"><dt>Why it's necessary</dt><dd><p>Confirmed via DB query 2026-07-30: all 7 real WC-pilot leagues (<code>Draft Mundial 26</code>, <code>FIXO DRAFT MUNDIAL 26</code>, <code>Miami WC Fantasy Testers</code>, <code>Munaial '26</code>, <code>Mundial do Eder</code>, <code>Mundial Gordo Vai a Baliza</code>, <code>RANKS FC World Cup Fantasy</code>) still share one clubhouse (circle <code>b379c63e-809f-4dc7-9de1-0fff52f989b8</code>, name "World Cup Pilot", ~30 members, single owner <code>tommyazcue</code>). This is a migration-217 artifact, not a deliberate grouping — 217's pre-flight check (2026-06-29) found these 7 leagues orphaned (<code>circle_id IS NULL</code>) and they were bulk-parked in one placeholder clubhouse purely so the <code>NOT NULL</code> constraint could be applied without corrupting live pilot data (see <code>217_circle_id_not_null.sql</code> header comment). 6 of the 7 leagues are commissioned by <code>tommyazcue</code>, 1 (<code>Munaial '26</code>) by <code>SB7</code> — genuinely separate groups, not one community. <strong>Why this outranks pure tidiness</strong>: Clubhouse scope now gates real shipped functionality — Coin Challenges/P2P (migrations 235–239) and clubhouse chat/notifications are all <code>circle</code>-scoped (<code>is_circle_member(circle_id)</code>), so today any member of any of these 7 leagues can see and P2P-challenge any member of the other 6, none of whom they actually play with. Confirmed zero <code>p2p_challenges</code>/<code>clubhouse_notifications</code> rows exist yet under the shared circle (2026-07-30) — a clean split, nothing in-flight to reconcile. <strong>Open product decision before implementation</strong> (needs a quick user confirm, not an engineering call): one clubhouse per league (7 new clubhouses, literal reading of the ask) vs. one clubhouse per commissioner (2 clubhouses — <code>tommyazcue</code> keeps his 6 leagues together, only <code>Munaial '26</code> splits out) — cheaper and may better match how these groups actually socialize. <strong>Implementation sketch</strong>: per new clubhouse, <code>INSERT INTO circles</code> (owner = that league's commissioner) → <code>UPDATE leagues SET circle_id=...</code> for the league(s) moving → re-home only that league's own <code>league_members</code> into the new circle's <code>circle_members</code> (not the full shared 30-person roster) → confirm the old shared circle is left with 0 leagues (delete or repurpose, TBD). Live-DB write — SELECT-before-UPDATE + backup per Pilot Safeguards, needs explicit in-session approval before executing.</p></dd></div>
         <div class="field"><dt>Where it came from</dt><dd><p>Platform Revision — Consolidated Open Items · P1 — HIGH</p></dd></div>
         <div class="field"><dt>Date</dt><dd><p class="muted">Not dated.</p></dd></div>
         <div class="field"><dt>Technical solution</dt><dd><p class="muted">No implementation write-up recorded.</p></dd></div>
