@@ -1,12 +1,10 @@
 // @ts-check
 // Feature-specific E2E tests for critical workflows
 // Tests: Joker chip, betting, transfers, chat
-// Uses real Supabase data from production database
+// Uses real Supabase data — target set explicitly via SUPABASE_URL/SUPABASE_ANON_KEY (see supabase-target.js)
 
 import { test, expect } from '@playwright/test';
-
-const SUPABASE_URL = process.env.SUPABASE_URL || 'https://sssmvihxtqtohisghjet.supabase.co';
-const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNzc212aWh4dHF0b2hpc2doamV0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MDgyOTc5ODcsImV4cCI6MTcyMzg3Mzk4N30.LAeWx39REi6K2L46bY2g3PlvEaWM7p7TJdEZxtvXq8c';
+import { SUPABASE_URL, SUPABASE_ANON_KEY } from './supabase-target.js';
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 

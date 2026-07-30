@@ -14,9 +14,8 @@
 
 import { test, expect } from '@playwright/test';
 import { createClient } from '@supabase/supabase-js';
+import { SUPABASE_URL, SUPABASE_ANON_KEY as SUPABASE_ANON } from './supabase-target.js';
 
-const SUPABASE_URL     = process.env.SUPABASE_URL     || 'https://sssmvihxtqtohisghjet.supabase.co';
-const SUPABASE_ANON    = process.env.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNzc212aWh4dHF0b2hpc2doamV0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MDgyOTc5ODcsImV4cCI6MTcyMzg3Mzk4N30.LAeWx39REi6K2L46bY2g3PlvEaWM7p7TJdEZxtvXq8c';
 const SERVICE_KEY      = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 const anonDb    = createClient(SUPABASE_URL, SUPABASE_ANON);

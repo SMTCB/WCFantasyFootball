@@ -13,6 +13,7 @@
 
 import { test, expect } from '@playwright/test';
 import { createClient } from '@supabase/supabase-js';
+import { SUPABASE_URL, SUPABASE_ANON_KEY } from './supabase-target.js';
 
 // Disable retries for this file: each test is stateful (module-level league IDs).
 // Retries cause beforeAll to re-run which invalidates JWTs mid-test.
@@ -20,8 +21,6 @@ test.describe.configure({ retries: 0 });
 
 // ── Config ────────────────────────────────────────────────────────────────────
 
-const SUPABASE_URL      = process.env.SUPABASE_URL || 'https://sssmvihxtqtohisghjet.supabase.co';
-const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY || 'sb_publishable_IQF1vJEiydutRmDa6XgDUA_FHTlWX0b';
 const E2E_SECRET        = 'forzakit-e2e-2026';
 
 const EPL_TOURNAMENT  = '426'; // Premier League 2025-26
