@@ -31,9 +31,22 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      # Fail CI on high or critical npm vulnerabilities (CI-1)
+      # Fail CI on high or critical npm vulnerabilities (CI-1).
+      # --production: devDependency-only findings (currently: brace-expansion via
+      # eslint's minimatch chain) don't block CI — fixing that one requires a
+      # major eslint 9→10 bump risking the flat-config setup, for a DoS-class
+      # issue in build-time tooling with no attacker-controlled input. Tracked
+      # separately, not release-blocking.
+      # -x 1124282: GHSA-qwww-vcr4-c8h2 (react-router "RSC Mode CSRF Bypass").
+      # Confirmed 2026-07-30 not exploitable here — this app uses standard
+      # client-side BrowserRouter/HashRouter only, zero RSC APIs anywhere in
+      # src/ (grepped). No patched version is published yet (first_patched
+      # 8.3.0 doesn't exist on npm); the only "fix" npm offers is downgrading
+      # react-router-dom 3 minor versions to 7.11.0, a bigger regression risk
+      # than the inapplicable vuln. Revisit/remove this exclusion once 8.3.0+
+      # ships.
       - name: npm audit
-        run: npm audit --audit-level=high
+        run: npx better-npm-audit audit --level high --production --exclude 1124282
 
       # Detect Rolldown TDZ trap — circular imports that cause production crashes (CODE-1)
       - name: Circular dependency check
@@ -140,6 +153,7 @@ jobs:
       - name: Load schema (skip if schema.sql not yet generated — Phase A1)
         run: |
           if [ -f supabase/schema.sql ]; then
+            psql "$TEST_DATABASE_URL" < tests/unit/bootstrap.sql
             psql "$TEST_DATABASE_URL" < supabase/schema.sql
             echo "✅ schema.sql loaded"
           else

@@ -18,6 +18,7 @@ const DB_URL =
   process.env.TEST_DATABASE_URL ||
   'postgresql://postgres:postgres@localhost:5432/postgres';
 
+const BOOTSTRAP_PATH = 'tests/unit/bootstrap.sql';
 const SCHEMA_PATH = 'supabase/schema.sql';
 const SEED_PATH = 'tests/unit/seed.sql';
 
@@ -37,6 +38,11 @@ async function run() {
         );
         process.exit(1);
       }
+
+      console.log('Loading auth stub…');
+      const bootstrap = readFileSync(BOOTSTRAP_PATH, 'utf8');
+      await client.query(bootstrap);
+      console.log('✅  Auth stub loaded');
 
       console.log('Loading schema…');
       const schema = readFileSync(SCHEMA_PATH, 'utf8');
