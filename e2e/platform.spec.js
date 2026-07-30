@@ -5,9 +5,24 @@ import { createClient } from '@supabase/supabase-js';
 const ROUTES = ['/', '/squad', '/league', '/live', '/market', '/recap', '/bracket'];
 
 // ── Real Supabase Client ─────────────────────────────────────────────────────
+// Reuses the VITE_SUPABASE_URL/VITE_SUPABASE_ANON_KEY that CI already exports
+// for the Vite build (ci.yml's `e2e` job) — no separate SUPABASE_URL/
+// SUPABASE_ANON_KEY secret to keep in sync. This spec only does a read-only
+// SELECT (see beforeAll below); no hardcoded fallback (B-12 follow-up — a
+// hardcoded prod fallback here meant every CI run silently read real prod
+// data with no way to point it elsewhere).
 
-const SUPABASE_URL = process.env.SUPABASE_URL || 'https://sssmvihxtqtohisghjet.supabase.co';
-const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNzc212aWh4dHF0b2hpc2doamV0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MDgyOTc5ODcsImV4cCI6MTcyMzg3Mzk4N30.LAeWx39REi6K2L46bY2g3PlvEaWM7p7TJdEZxtvXq8c';
+const SUPABASE_URL = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
+const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY;
+
+if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+  throw new Error(
+    '\n\n🛑 platform.spec.js requires SUPABASE_URL/SUPABASE_ANON_KEY or ' +
+    'VITE_SUPABASE_URL/VITE_SUPABASE_ANON_KEY to be set (used for a read-only ' +
+    'players SELECT in beforeAll). Copy values from .env.local, e.g.:\n' +
+    '  VITE_SUPABASE_URL=... VITE_SUPABASE_ANON_KEY=... npx playwright test e2e/platform.spec.js\n'
+  );
+}
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
