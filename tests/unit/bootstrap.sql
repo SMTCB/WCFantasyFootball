@@ -37,3 +37,28 @@ CREATE TABLE IF NOT EXISTS auth.users (
   raw_user_meta_data jsonb DEFAULT '{}'::jsonb NOT NULL,
   created_at timestamptz DEFAULT now() NOT NULL
 );
+
+-- tests/unit/helpers.js's callRpc() sets request.jwt.claim.sub /
+-- request.jwt.claims via set_config() to mirror how PostgREST/Supabase
+-- populate them from the caller's JWT for each request. These are the real
+-- Supabase auth.uid()/auth.role() definitions (not a dumbed-down stand-in),
+-- so acting-as-a-specific-user tests behave identically to prod; when
+-- callRpc() is called with no actingUserId (simulating cron/service-role),
+-- both settings are cleared and these correctly resolve to NULL.
+CREATE OR REPLACE FUNCTION auth.uid() RETURNS uuid
+  LANGUAGE sql STABLE
+  AS $$
+    SELECT COALESCE(
+      NULLIF(current_setting('request.jwt.claim.sub', true), ''),
+      (NULLIF(current_setting('request.jwt.claims', true), '')::jsonb ->> 'sub')
+    )::uuid
+  $$;
+
+CREATE OR REPLACE FUNCTION auth.role() RETURNS text
+  LANGUAGE sql STABLE
+  AS $$
+    SELECT COALESCE(
+      NULLIF(current_setting('request.jwt.claim.role', true), ''),
+      (NULLIF(current_setting('request.jwt.claims', true), '')::jsonb ->> 'role')
+    )::text
+  $$;
