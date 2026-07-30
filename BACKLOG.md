@@ -1169,6 +1169,7 @@ Everything below was migrated out of `docs/platform_revision/TRACKER.md` and `do
 | GDPR-1 | **[DOCS] Groq DPA review** | TBD | |
 | MOBILE-1 | **[FEATURE] App-store launch checklist bundle** | Multi-week | Found 2026-07-27 (GEMINI.md, MOBILE_DEVELOPMENT.md). App icon (1024×1024), splash asset, Apple Developer + Google Play Console accounts, code-signing certs, Privacy Policy/ToS, Firebase project, TestFlight + Play Store internal testing, store listing copy/screenshots, mobile CI/CD workflow. Only push notifications overlaps `LOW-6` — rest is net-new. Not urgent while the site is walled. |
 | LEGAL-1 | **[TECH DEBT] Make no-cash-out a positive schema constraint** | TBD | Found 2026-07-27 (`B2B_BUYOUT_TECHNICAL_DUE_DILIGENCE.md`). Today the no-cash-out invariant is convention/code-review only, not enforced in schema. Only matters before any real-money expansion, which isn't currently planned (P2P is coins-only, Stripe deferred per `BIZ-1`). |
+| DOCS-1 | **[DOCS] CLAUDE.md's "`gh` CLI is not installed" note is stale** | XS | Found 2026-07-31 (ADMIN-1 session). CLAUDE.md's GitHub API Fallback section states `gh` isn't installed and directs sessions to a Python `urllib` workaround — but `gh` is in fact installed (`/c/Program Files/GitHub CLI/gh`) and authenticated as `SMTCB` (`repo`/`workflow` scopes confirmed). PRs #791/#792 used `gh pr create`/`gh pr merge` directly instead. CLAUDE.md itself needs the stale note corrected so future sessions don't take the slower fallback path unnecessarily. |
 
 ---
 
