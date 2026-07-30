@@ -1,15 +1,18 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTennisCalendar } from '../../hooks/tennis/useTennisCalendar';
 import { supabase } from '../../lib/supabase';
+import { useAuth } from '../../hooks/useAuth';
 
 const STATUS_ORDER = ['upcoming', 'roster_open', 'in_progress', 'qf_captain_open', 'completed'];
 const ROUND_REACHED_OPTIONS = ['r128', 'r64', 'r32', 'r16', 'qf', 'sf', 'runner_up', 'champion'];
 
 export default function TennisAdminScreen() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const { tournaments, loading, refresh } = useTennisCalendar(2026);
 
+  const [isAdmin, setIsAdmin] = useState(false);
   const [selected, setSelected] = useState(null);
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState('');
@@ -26,6 +29,12 @@ export default function TennisAdminScreen() {
   const [atpWinnerId, setAtpWinnerId] = useState('');
   // Score trigger
   const [scoringBusy, setScoringBusy] = useState(false);
+
+  useEffect(() => {
+    if (!user?.id) return;
+    supabase.from('users').select('is_admin').eq('id', user.id).maybeSingle()
+      .then(({ data }) => setIsAdmin(data?.is_admin ?? false));
+  }, [user?.id]);
 
   const t = tournaments.find(x => (x.tournament_id ?? x.id) === selected);
   const isAtp = t?.tournament_type === 'atp_finals';
@@ -92,6 +101,17 @@ export default function TennisAdminScreen() {
     } catch (e) {
       setErr(e.message);
     } finally { setScoringBusy(false); }
+  }
+
+  if (!isAdmin) {
+    return (
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '60vh' }}>
+        <div style={{ textAlign: 'center' }}>
+          <div style={{ fontSize: 32, marginBottom: 12 }}>🔒</div>
+          <p style={{ fontFamily: 'JetBrains Mono, monospace', color: 'var(--mute)', fontSize: 12 }}>ADMIN ACCESS REQUIRED</p>
+        </div>
+      </div>
+    );
   }
 
   return (
