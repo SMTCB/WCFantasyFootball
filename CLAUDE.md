@@ -532,6 +532,7 @@ e2e-report/                     # Test artifacts
 **Architecture Docs** (`docs/architecture/`):
 | File | Purpose |
 |------|---------|
+| `COMPETITION_MODEL.md` | **Read before touching F1/tennis competition logic.** League (⚽) / Paddock (🏁) / Player Box (🎾) are the same concept, sport-flavored name — each is a real, circle-scoped container with its own membership + invite flow, not a "global" competition. Covers the membership-filtered-leaderboard pattern, `trophy_ledger`'s sport-polymorphic columns, and per-sport RPC auth.uid()-under-service-role gotchas |
 | `DRAFT_SYSTEM_DESIGN.md` | Draft lottery & transfer window rules |
 | `FANTASY_POINTS_SCORING_LAYER.md` | Scoring formula & database schema |
 | `APP_DYNAMICS.md` | Live-match, real-time, Realtime subscriptions |

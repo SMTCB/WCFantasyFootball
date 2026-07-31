@@ -153,8 +153,8 @@
   </div>
   <div class="header-right">
     <div class="totals">
-      <div class="total-pill"><strong>32</strong><span>open</span></div>
-      <div class="total-pill"><strong>167</strong><span>closed</span></div>
+      <div class="total-pill"><strong>31</strong><span>open</span></div>
+      <div class="total-pill"><strong>169</strong><span>closed</span></div>
     </div>
   </div>
 </header>
@@ -167,13 +167,13 @@
   <div class="filter-chips" id="open-chips">
     <span class="chip active" data-filter-priority="all">All priorities</span>
     <span class="chip" data-filter-priority="p1">P1 — HIGH (2)</span>
-<span class="chip" data-filter-priority="p2">P2 — MEDIUM (13)</span>
+<span class="chip" data-filter-priority="p2">P2 — MEDIUM (12)</span>
 <span class="chip" data-filter-priority="p3">P3 — LOW (17)</span>
   </div>
   <div class="filter-chips" id="closed-chips" style="display:none">
     <span class="chip active" data-filter-kind="all">All closed</span>
-    <span class="chip" data-filter-kind="done">Shipped (104)</span>
-<span class="chip" data-filter-kind="resolved">Resolved backlog items (14)</span>
+    <span class="chip" data-filter-kind="done">Shipped (105)</span>
+<span class="chip" data-filter-kind="resolved">Resolved backlog items (15)</span>
 <span class="chip" data-filter-kind="session">Session logs (43)</span>
 <span class="chip" data-filter-kind="audit">Audits (4)</span>
 <span class="chip" data-filter-kind="planning">Planning snapshots (2)</span>
@@ -184,19 +184,19 @@
 <div class="layout">
   <nav class="sidebar">
     <div class="status-toggle">
-      <button class="status-btn active" data-status="open">Open <span class="status-count">32</span></button>
-      <button class="status-btn" data-status="closed">Closed <span class="status-count">167</span></button>
+      <button class="status-btn active" data-status="open">Open <span class="status-count">31</span></button>
+      <button class="status-btn" data-status="closed">Closed <span class="status-count">169</span></button>
     </div>
     <div class="sidebar-group" id="sidebar-open">
       <h3>Jump to priority</h3>
       <div class="sidebar-item" data-jump-priority="p1"><span class="swatch" style="--tab-color:#b23b3b"></span>P1 — HIGH<span class="sidebar-count">2</span></div>
-<div class="sidebar-item" data-jump-priority="p2"><span class="swatch" style="--tab-color:#b8720e"></span>P2 — MEDIUM<span class="sidebar-count">13</span></div>
+<div class="sidebar-item" data-jump-priority="p2"><span class="swatch" style="--tab-color:#b8720e"></span>P2 — MEDIUM<span class="sidebar-count">12</span></div>
 <div class="sidebar-item" data-jump-priority="p3"><span class="swatch" style="--tab-color:#5b7285"></span>P3 — LOW<span class="sidebar-count">17</span></div>
     </div>
     <div class="sidebar-group" id="sidebar-closed" style="display:none">
       <h3>Jump to category</h3>
-      <div class="sidebar-item" data-jump-kind="done"><span class="swatch" style="--tab-color:#1f7a4d"></span>Shipped<span class="sidebar-count">104</span></div>
-<div class="sidebar-item" data-jump-kind="resolved"><span class="swatch" style="--tab-color:#1f7a4d"></span>Resolved backlog items<span class="sidebar-count">14</span></div>
+      <div class="sidebar-item" data-jump-kind="done"><span class="swatch" style="--tab-color:#1f7a4d"></span>Shipped<span class="sidebar-count">105</span></div>
+<div class="sidebar-item" data-jump-kind="resolved"><span class="swatch" style="--tab-color:#1f7a4d"></span>Resolved backlog items<span class="sidebar-count">15</span></div>
 <div class="sidebar-item" data-jump-kind="session"><span class="swatch" style="--tab-color:#1a6fa8"></span>Session logs<span class="sidebar-count">43</span></div>
 <div class="sidebar-item" data-jump-kind="audit"><span class="swatch" style="--tab-color:#b23b3b"></span>Audits<span class="sidebar-count">4</span></div>
 <div class="sidebar-item" data-jump-kind="planning"><span class="swatch" style="--tab-color:#5b7285"></span>Planning snapshots<span class="sidebar-count">2</span></div>
@@ -244,7 +244,7 @@
     </section>
 
     <section class="item-group" id="group-p2" data-group="p2">
-      <h2 class="group-title" style="--tab-color:#b8720e">P2 — MEDIUM <span class="group-count">13</span></h2>
+      <h2 class="group-title" style="--tab-color:#b8720e">P2 — MEDIUM <span class="group-count">12</span></h2>
       <div class="card-grid">
       <article class="card" data-status="open" data-priority="p2" data-kind="none" data-search="data-1 full schema baseline keystone item — blocks ops-1 and data-recon below. platform revision — consolidated open items p2 — medium" style="--tab-color:#b8720e" tabindex="0">
         <div class="card-top"><span class="badge-mini pr-p2">P2 — MEDIUM</span><span class="type-tag t-techdebt">TECH DEBT</span></div>
@@ -291,23 +291,6 @@
       <dl class="drawer-fields">
         <div class="field"><dt>Description</dt><dd><p>RPC repo-vs-prod diff/reconciliation</p></dd></div>
         <div class="field"><dt>Why it's necessary</dt><dd><p class="muted">Not recorded for this item.</p></dd></div>
-        <div class="field"><dt>Where it came from</dt><dd><p>Platform Revision — Consolidated Open Items · P2 — MEDIUM</p></dd></div>
-        <div class="field"><dt>Date</dt><dd><p class="muted">Not dated.</p></dd></div>
-        <div class="field"><dt>Technical solution</dt><dd><p class="muted">No implementation write-up recorded.</p></dd></div>
-      </dl></template>
-      </article>
-
-      <article class="card" data-status="open" data-priority="p2" data-kind="none" data-search="arch-1 trophy emission modifies the live `calculate-scores` edge function — was tagged 🔴 pilot-impacting while the wc pilot was live; the pilot has since ended, so that risk tag is worth re-assessing before scheduling, not necessarily still blocking. platform revision — consolidated open items p2 — medium" style="--tab-color:#b8720e" tabindex="0">
-        <div class="card-top"><span class="badge-mini pr-p2">P2 — MEDIUM</span><span class="type-tag t-techdebt">TECH DEBT</span></div>
-        <h3 class="card-title">Trophy emission</h3>
-        <p class="card-summary">Modifies the live <code>calculate-scores</code> Edge Function — was tagged 🔴 pilot-impacting while the WC pilot was live; the pilot has since ended, so that risk tag is worth re-assessing before scheduling, not necessarily still blocking.</p>
-        <div class="card-foot"><span class="foot-id">ARCH-1</span><span class="foot-effort">TBD</span></div>
-        <template>
-      <div class="drawer-badges"><span class="badge-mini pr-p2">P2 — MEDIUM</span><span class="type-tag t-techdebt">TECH DEBT</span></div>
-      <h2 class="drawer-title">Trophy emission</h2>
-      <dl class="drawer-fields">
-        <div class="field"><dt>Description</dt><dd><p>Trophy emission</p></dd></div>
-        <div class="field"><dt>Why it's necessary</dt><dd><p>Modifies the live <code>calculate-scores</code> Edge Function — was tagged 🔴 pilot-impacting while the WC pilot was live; the pilot has since ended, so that risk tag is worth re-assessing before scheduling, not necessarily still blocking.</p></dd></div>
         <div class="field"><dt>Where it came from</dt><dd><p>Platform Revision — Consolidated Open Items · P2 — MEDIUM</p></dd></div>
         <div class="field"><dt>Date</dt><dd><p class="muted">Not dated.</p></dd></div>
         <div class="field"><dt>Technical solution</dt><dd><p class="muted">No implementation write-up recorded.</p></dd></div>
@@ -764,8 +747,43 @@
     <div id="view-closed" class="grid-view" style="display:none">
       
     <section class="item-group" id="group-done" data-group="done">
-      <h2 class="group-title" style="--tab-color:#1f7a4d">Shipped <span class="group-count">104</span></h2>
+      <h2 class="group-title" style="--tab-color:#1f7a4d">Shipped <span class="group-count">105</span></h2>
       <div class="card-grid">
+      <article class="card" data-status="closed" data-priority="none" data-kind="done" data-search="✅ arch-1 — trophy emission wired end-to-end (2026-07-31) — pr #807, migrations 248–249 
+
+`trophy_ledger` + `get_circle_meta_standings()` have existed since migration 189, but nothing ever called `award_trophy` — the cross-sport meta-standing was permanently empty — and `trophycabinetscreen.jsx` queried columns (`label`, `reason`, `league_name`, `sport_type`) that didn&#x27;t exist on the table, so even a manually-inserted row wouldn&#x27;t have rendered. built in the order set out in the session plan: cron freeze first (neutralizes the 🔴 pilot-impacting risk tag — see the cron freeze section below), then the trophy plumbing, deployed once frozen.
+
+- **migration 248** — made `trophy_ledger.tournament_id`/`league_id` sport-polymorphic (still `uuid`, no longer hard-fk&#x27;d to `tournaments`/`leagues`, since f1/tennis have no such rows) and added `f1_seasons` (f1 previously had no season-level identity at all, only a raw `season integer` on `f1_year_results`). added the `award_trophy()` `security definer` helper — idempotent via a partial unique index, populates `meta` (`label`, `reason`, `league_name`, `sport_type`) at insert time so the frontend never needs extra joins. fixed `trophycabinetscreen.jsx` to select `meta` (+ `id`, `tier`, `awarded_at`) instead of the nonexistent flat columns.
+- **arch-1a/1b** (football `round_win`, resolved in an earlier session) — hooked into `resolveh2hmatchday` in `calculate-scores`, scoped to h2h-enabled leagues.
+- **arch-1c** (f1/tennis `event_win`) — hooked into `score-f1-race` (race winner) and `score-tennis-tournament` (tournament winner) at their existing leaderboard-computation points.
+- **arch-1d** (`season_win`) — new `award-season-trophies` edge function, reimplementing each sport&#x27;s season-boundary/champion logic inline (football via `get_h2h_standings`/cumulative points per `tournaments.starts_at`/`ends_at`; f1 via the new `f1_seasons`; tennis via last-completed-tournament-by-`end_date` as a season anchor, since tennis has no season-level" style="--tab-color:#1f7a4d" tabindex="0" data-stamp="SHIPPED">
+        <div class="card-top"><span class="badge-mini k-done">SHIPPED</span></div>
+        <h3 class="card-title">ARCH-1 — trophy emission wired end-to-end</h3>
+        <p class="card-summary">trophy_ledger + get_circle_meta_standings() have existed since migration 189, but nothing ever called award_trophy — the cross-sport meta-standing was permanently empty…</p>
+        <div class="card-foot"><span class="foot-date">2026-07-31</span><span class="foot-refs">PR #807, migrations 248–249</span></div>
+        <template>
+      <div class="drawer-badges"><span class="badge-mini k-done">SHIPPED</span></div>
+      <h2 class="drawer-title">ARCH-1 — trophy emission wired end-to-end</h2>
+      <dl class="drawer-fields">
+        <div class="field"><dt>Description</dt><dd><p>trophy_ledger + get_circle_meta_standings() have existed since migration 189, but nothing ever called award_trophy — the cross-sport meta-standing was permanently empty…</p></dd></div>
+        <div class="field"><dt>Why it's necessary</dt><dd><p class="muted">Not recorded for this item.</p></dd></div>
+        <div class="field"><dt>Where it came from</dt><dd><p>SHIPPED · PR #807, migrations 248–249</p></dd></div>
+        <div class="field"><dt>Date</dt><dd><p>2026-07-31</p></dd></div>
+        <div class="field"><dt>Technical solution</dt><dd><p><code>trophy_ledger</code> + <code>get_circle_meta_standings()</code> have existed since migration 189, but nothing ever called <code>award_trophy</code> — the cross-sport meta-standing was permanently empty — and <code>TrophyCabinetScreen.jsx</code> queried columns (<code>label</code>, <code>reason</code>, <code>league_name</code>, <code>sport_type</code>) that didn't exist on the table, so even a manually-inserted row wouldn't have rendered. Built in the order set out in the session plan: cron freeze first (neutralizes the 🔴 pilot-impacting risk tag — see the Cron freeze section below), then the trophy plumbing, deployed once frozen.</p>
+<ul>
+<li><strong>Migration 248</strong> — made <code>trophy_ledger.tournament_id</code>/<code>league_id</code> sport-polymorphic (still <code>uuid</code>, no longer hard-FK'd to <code>tournaments</code>/<code>leagues</code>, since F1/tennis have no such rows) and added <code>f1_seasons</code> (F1 previously had no season-level identity at all, only a raw <code>season integer</code> on <code>f1_year_results</code>). Added the <code>award_trophy()</code> <code>SECURITY DEFINER</code> helper — idempotent via a partial unique index, populates <code>meta</code> (<code>label</code>, <code>reason</code>, <code>league_name</code>, <code>sport_type</code>) at insert time so the frontend never needs extra joins. Fixed <code>TrophyCabinetScreen.jsx</code> to select <code>meta</code> (+ <code>id</code>, <code>tier</code>, <code>awarded_at</code>) instead of the nonexistent flat columns.</li>
+<li><strong>ARCH-1a/1b</strong> (football <code>round_win</code>, resolved in an earlier session) — hooked into <code>resolveH2HMatchday</code> in <code>calculate-scores</code>, scoped to H2H-enabled leagues.</li>
+<li><strong>ARCH-1c</strong> (F1/tennis <code>event_win</code>) — hooked into <code>score-f1-race</code> (race winner) and <code>score-tennis-tournament</code> (tournament winner) at their existing leaderboard-computation points.</li>
+<li><strong>ARCH-1d</strong> (<code>season_win</code>) — new <code>award-season-trophies</code> Edge Function, reimplementing each sport's season-boundary/champion logic inline (football via <code>get_h2h_standings</code>/cumulative points per <code>tournaments.starts_at</code>/<code>ends_at</code>; F1 via the new <code>f1_seasons</code>; tennis via last-completed-tournament-by-<code>end_date</code> as a season anchor, since tennis has no season-level table — see gotcha below). <strong>Migration 249</strong> registers it as a <code>pg_cron</code> job (<code>0 6 * * *</code>), created <code>active=false</code> to match the existing freeze (re-enables alongside the other 21 at Phase 4 reopen, not before).</li>
+<li><strong>Deploys</strong> (all three, this session, post-freeze so zero live-scoring risk): <code>score-f1-race</code>, <code>score-tennis-tournament</code>, <code>award-season-trophies</code> (new). <code>calculate-scores</code> (round_win) had already been deployed in the ARCH-1a/1b session.</li>
+<li><strong>Cron-registration gotcha hit and fixed</strong>: migration 249's original all-in-one-transaction form used a raw <code>UPDATE cron.job SET active = false ...</code> to deactivate the new job post-creation — failed with <code>permission denied for table job</code> (42501), same class of issue the cron-freeze work below had already documented (<code>db query --linked</code>'s role has no <code>UPDATE</code> grant on <code>cron.job</code>; <code>cron.alter_job()</code> is <code>SECURITY DEFINER</code> and is the supported path). The failing statement rolled back atomically (verified zero rows existed after), so nothing was left orphaned; re-ran as two separate statements (<code>cron.schedule(...)</code> then <code>cron.alter_job(..., active := false)</code>), then corrected the migration file itself to match — not an edit to a successfully-applied migration, since the original file never applied as a whole.</li>
+<li><strong>Documentation</strong> (the user's explicit ask, alongside the code): new <a href="docs/architecture/COMPETITION_MODEL.md" target="_blank" rel="noopener"><code>docs/architecture/COMPETITION_MODEL.md</code></a> — the canonical reference that League (⚽) / Paddock (🏁) / Player Box (🎾) are the same concept, sport-flavored name, each a real circle-scoped container with its own membership + invite flow, not a "global" competition. Covers the membership-filtered-leaderboard pattern, <code>trophy_ledger</code>'s sport-polymorphism, and per-sport RPC <code>auth.uid()</code>-under-service-role gotchas (notably <code>get_player_box_leaderboard</code> can never be called from a cron/edge-function context — it unconditionally raises <code>NOT_A_MEMBER</code> under a null <code>auth.uid()</code>). Cross-linked from <code>CLUBHOUSE_CENTRIC_REDESIGN.md</code>, <code>MULTI_SPORT_PLATFORM_ARCHITECTURE.md</code>, <code>docs/DOCS_MAP.md</code>, <code>DOCS_INDEX.html</code>, and this file's own root <code>CLAUDE.md</code> architecture-docs table — written specifically so the "F1/tennis are global, only football has leagues" confusion that nearly shipped wrong <code>trophy_ledger</code> changes earlier in the week can't recur silently.</li>
+<li>Verification: PR #807 CI green (Security, Lint, Build, Unit Tests, E2E Tests, iOS/Android builds, Vercel preview). Live-fire verification (a real trophy actually being awarded) isn't possible pre-reopen — no live competition is running behind the maintenance wall — so this is code/schema/deploy-verified, not yet outcome-verified; that will happen naturally once Phase 4 reopens and crons resume.</li>
+</ul>
+<hr></dd></div>
+      </dl></template>
+      </article>
+
       <article class="card" data-status="closed" data-priority="none" data-kind="done" data-search="✅ data-3 — split shared &quot;world cup pilot&quot; clubhouse into 7 (2026-07-31) — live data fix, no pr 
 
 all 7 real wc-pilot leagues had been sharing one clubhouse (circle `b379c63e-809f-4dc7-9de1-0fff52f989b8`, &quot;world cup pilot&quot;, ~30 members) since migration 217 bulk-parked them there to safely apply a `not null` constraint on `leagues.circle_id` — never a deliberate grouping. since coin challenges/p2p and clubhouse chat are `circle`-scoped, this meant members of any of the 7 leagues could see and p2p-challenge members of the other 6, none of whom they actually play with.
@@ -6121,7 +6139,7 @@ npx supabase link --project-ref sssmvihxtqtohisghjet     # link this project</co
     </section>
 
     <section class="item-group" id="group-resolved" data-group="resolved">
-      <h2 class="group-title" style="--tab-color:#1f7a4d">Resolved backlog items <span class="group-count">14</span></h2>
+      <h2 class="group-title" style="--tab-color:#1f7a4d">Resolved backlog items <span class="group-count">15</span></h2>
       <div class="card-grid">
       <article class="card" data-status="closed" data-priority="none" data-kind="resolved" data-search="admin-1 clubhouse/competition admin ownership model + central reassignment panel **✅ resolved 2026-07-31 — pr #791, migration 243.** new `competition_admins` table + `is_competition_admin()` helper; owner-gated `get_circle_competition_admins`/`set_competition_admin`/`remove_competition_admin` rpcs cover `leagues`/`paddocks`/`player_boxes` (all three already had `created_by`+`circle_id`); new &quot;competition admins&quot; section added to clubhouse settings (`clubhousescreen.jsx`). unblocked **tennis-admin-gap** by gating the 9 tennis admin rpcs on `users.is_admin` (mirroring `f1adminscreen.jsx`&#x27;s existing platform-admin pattern) instead of forcing the new per-clubhouse model onto `tennis_tournaments`, which is shared global data with no owning circle — confirmed with user during planning. `tennisadminscreen.jsx` got the matching client-side lock screen. verification gap: the assign/remove round-trip in the new settings ui wasn&#x27;t exercised in a live logged-in browser session this session (no pilot credentials available) — lint/build/`platform.spec.js` (84/84) all green. platform revision — consolidated open items p1 — high" style="--tab-color:#1f7a4d" tabindex="0" data-stamp="RESOLVED">
         <div class="card-top"><span class="badge-mini k-done">RESOLVED</span><span class="type-tag t-feature">FEATURE</span></div>
@@ -6152,6 +6170,23 @@ npx supabase link --project-ref sssmvihxtqtohisghjet     # link this project</co
         <div class="field"><dt>Description</dt><dd><p>Split the shared "World Cup Pilot" clubhouse back into one clubhouse per league</p></dd></div>
         <div class="field"><dt>Why it's necessary</dt><dd><p>✅ <strong>RESOLVED 2026-07-31 — live data fix, no PR (no app-code change).</strong> Split confirmed via DB query 2026-07-30: all 7 real WC-pilot leagues (<code>Draft Mundial 26</code>, <code>FIXO DRAFT MUNDIAL 26</code>, <code>Miami WC Fantasy Testers</code>, <code>Munaial '26</code>, <code>Mundial do Eder</code>, <code>Mundial Gordo Vai a Baliza</code>, <code>RANKS FC World Cup Fantasy</code>) were sharing one clubhouse (circle <code>b379c63e-809f-4dc7-9de1-0fff52f989b8</code>, "World Cup Pilot", ~30 members) as a migration-217 artifact — 217's pre-flight (2026-06-29) found them <code>circle_id IS NULL</code> and bulk-parked them in one placeholder clubhouse to apply the <code>NOT NULL</code> constraint safely, not as a deliberate grouping. User confirmed the literal reading of the ask: one new clubhouse per league (7 total), not per-commissioner. Backed up full DB (<code>backups/pre_data3_clubhouse_split_20260731_124223.sql</code>) then, per league, ran an atomic <code>INSERT circles</code> (owner = that league's commissioner) → <code>UPDATE leagues SET circle_id=...</code> → re-homed only that league's own <code>league_members</code> into the new circle's <code>circle_members</code> (commissioner gets <code>role='owner'</code>, matching the existing convention), wrapped in one <code>BEGIN</code>/<code>COMMIT</code> transaction across all 7 leagues. Verified post-write: each of the 7 leagues has a distinct <code>circle_id</code> with <code>circle_members</code> count exactly matching <code>league_members</code> count; 0 leagues still reference the old shared circle; exactly 7 owners exist across the 7 new circles (1 each). Old shared circle left in place (orphaned, not deleted — reversible, matches Pilot Safeguards' no-DROP-without-confirmation stance). This also closes the P2P/Coin Challenges cross-league leak the item was raised for — members of one of these leagues can no longer see or challenge members of the other 6 via clubhouse scope.</p></dd></div>
         <div class="field"><dt>Where it came from</dt><dd><p>Resolved backlog item · Platform Revision — Consolidated Open Items · P1 — HIGH</p></dd></div>
+        <div class="field"><dt>Date</dt><dd><p class="muted">Not dated.</p></dd></div>
+        <div class="field"><dt>Technical solution</dt><dd><p class="muted">No implementation write-up recorded.</p></dd></div>
+      </dl></template>
+      </article>
+
+      <article class="card" data-status="closed" data-priority="none" data-kind="resolved" data-search="arch-1 trophy emission ✅ **resolved 2026-07-31 — pr #807, migrations 248–249.** `award_trophy()` helper + sport-polymorphic `trophy_ledger` (migration 248) wired into `calculate-scores` (`round_win`, earlier session), `score-f1-race`/`score-tennis-tournament` (`event_win`), and new `award-season-trophies` function + cron (`season_win`, migration 249, registered inactive to match the freeze). `trophycabinetscreen.jsx` fixed to read the real `meta` column instead of nonexistent flat columns. all three functions deployed post-cron-freeze (zero live-scoring risk). new `docs/architecture/competition_model.md` documents the league/paddock/player box equivalence for future sessions. see the `arch-1` narrative section above for full detail. platform revision — consolidated open items p2 — medium" style="--tab-color:#1f7a4d" tabindex="0" data-stamp="RESOLVED">
+        <div class="card-top"><span class="badge-mini k-done">RESOLVED</span><span class="type-tag t-techdebt">TECH DEBT</span></div>
+        <h3 class="card-title">Trophy emission</h3>
+        <p class="card-summary">✅ <strong>RESOLVED 2026-07-31 — PR #807, migrations 248–249.</strong> <code>award_trophy()</code> helper + sport-polymorphic <code>trophy_ledger</code> (migration 248) wired into <code>calculate-scores</code> (<code>round_win</code>, earlier session), <code>score-f1-race</code>/<code>score-tennis-tournament</code> (<code>event_win</code>), and new <code>award-season-trophies</code> function + cron (<code>season_win</code>, migration 249, registered inactive to match the freeze). <code>TrophyCabinetScreen.jsx</code> fixed to read the real <code>meta</code> column instead of nonexistent flat columns. All three functions deployed post-cron-freeze (zero live-scoring risk). New <code>docs/architecture/COMPETITION_MODEL.md</code> documents the League/Paddock/Player Box equivalence for future sessions. See the <code>ARCH-1</code> narrative section above for full detail.</p>
+        <div class="card-foot"><span class="foot-id">ARCH-1</span><span class="foot-effort">—</span></div>
+        <template>
+      <div class="drawer-badges"><span class="badge-mini k-done">RESOLVED</span><span class="type-tag t-techdebt">TECH DEBT</span></div>
+      <h2 class="drawer-title">Trophy emission</h2>
+      <dl class="drawer-fields">
+        <div class="field"><dt>Description</dt><dd><p>Trophy emission</p></dd></div>
+        <div class="field"><dt>Why it's necessary</dt><dd><p>✅ <strong>RESOLVED 2026-07-31 — PR #807, migrations 248–249.</strong> <code>award_trophy()</code> helper + sport-polymorphic <code>trophy_ledger</code> (migration 248) wired into <code>calculate-scores</code> (<code>round_win</code>, earlier session), <code>score-f1-race</code>/<code>score-tennis-tournament</code> (<code>event_win</code>), and new <code>award-season-trophies</code> function + cron (<code>season_win</code>, migration 249, registered inactive to match the freeze). <code>TrophyCabinetScreen.jsx</code> fixed to read the real <code>meta</code> column instead of nonexistent flat columns. All three functions deployed post-cron-freeze (zero live-scoring risk). New <code>docs/architecture/COMPETITION_MODEL.md</code> documents the League/Paddock/Player Box equivalence for future sessions. See the <code>ARCH-1</code> narrative section above for full detail.</p></dd></div>
+        <div class="field"><dt>Where it came from</dt><dd><p>Resolved backlog item · Platform Revision — Consolidated Open Items · P2 — MEDIUM</p></dd></div>
         <div class="field"><dt>Date</dt><dd><p class="muted">Not dated.</p></dd></div>
         <div class="field"><dt>Technical solution</dt><dd><p class="muted">No implementation write-up recorded.</p></dd></div>
       </dl></template>
