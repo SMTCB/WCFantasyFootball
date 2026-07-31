@@ -153,8 +153,8 @@
   </div>
   <div class="header-right">
     <div class="totals">
-      <div class="total-pill"><strong>37</strong><span>open</span></div>
-      <div class="total-pill"><strong>159</strong><span>closed</span></div>
+      <div class="total-pill"><strong>36</strong><span>open</span></div>
+      <div class="total-pill"><strong>160</strong><span>closed</span></div>
     </div>
   </div>
 </header>
@@ -167,13 +167,13 @@
   <div class="filter-chips" id="open-chips">
     <span class="chip active" data-filter-priority="all">All priorities</span>
     <span class="chip" data-filter-priority="p1">P1 — HIGH (3)</span>
-<span class="chip" data-filter-priority="p2">P2 — MEDIUM (17)</span>
+<span class="chip" data-filter-priority="p2">P2 — MEDIUM (16)</span>
 <span class="chip" data-filter-priority="p3">P3 — LOW (17)</span>
   </div>
   <div class="filter-chips" id="closed-chips" style="display:none">
     <span class="chip active" data-filter-kind="all">All closed</span>
     <span class="chip" data-filter-kind="done">Shipped (101)</span>
-<span class="chip" data-filter-kind="resolved">Resolved backlog items (9)</span>
+<span class="chip" data-filter-kind="resolved">Resolved backlog items (10)</span>
 <span class="chip" data-filter-kind="session">Session logs (43)</span>
 <span class="chip" data-filter-kind="audit">Audits (4)</span>
 <span class="chip" data-filter-kind="planning">Planning snapshots (2)</span>
@@ -184,19 +184,19 @@
 <div class="layout">
   <nav class="sidebar">
     <div class="status-toggle">
-      <button class="status-btn active" data-status="open">Open <span class="status-count">37</span></button>
-      <button class="status-btn" data-status="closed">Closed <span class="status-count">159</span></button>
+      <button class="status-btn active" data-status="open">Open <span class="status-count">36</span></button>
+      <button class="status-btn" data-status="closed">Closed <span class="status-count">160</span></button>
     </div>
     <div class="sidebar-group" id="sidebar-open">
       <h3>Jump to priority</h3>
       <div class="sidebar-item" data-jump-priority="p1"><span class="swatch" style="--tab-color:#b23b3b"></span>P1 — HIGH<span class="sidebar-count">3</span></div>
-<div class="sidebar-item" data-jump-priority="p2"><span class="swatch" style="--tab-color:#b8720e"></span>P2 — MEDIUM<span class="sidebar-count">17</span></div>
+<div class="sidebar-item" data-jump-priority="p2"><span class="swatch" style="--tab-color:#b8720e"></span>P2 — MEDIUM<span class="sidebar-count">16</span></div>
 <div class="sidebar-item" data-jump-priority="p3"><span class="swatch" style="--tab-color:#5b7285"></span>P3 — LOW<span class="sidebar-count">17</span></div>
     </div>
     <div class="sidebar-group" id="sidebar-closed" style="display:none">
       <h3>Jump to category</h3>
       <div class="sidebar-item" data-jump-kind="done"><span class="swatch" style="--tab-color:#1f7a4d"></span>Shipped<span class="sidebar-count">101</span></div>
-<div class="sidebar-item" data-jump-kind="resolved"><span class="swatch" style="--tab-color:#1f7a4d"></span>Resolved backlog items<span class="sidebar-count">9</span></div>
+<div class="sidebar-item" data-jump-kind="resolved"><span class="swatch" style="--tab-color:#1f7a4d"></span>Resolved backlog items<span class="sidebar-count">10</span></div>
 <div class="sidebar-item" data-jump-kind="session"><span class="swatch" style="--tab-color:#1a6fa8"></span>Session logs<span class="sidebar-count">43</span></div>
 <div class="sidebar-item" data-jump-kind="audit"><span class="swatch" style="--tab-color:#b23b3b"></span>Audits<span class="sidebar-count">4</span></div>
 <div class="sidebar-item" data-jump-kind="planning"><span class="swatch" style="--tab-color:#5b7285"></span>Planning snapshots<span class="sidebar-count">2</span></div>
@@ -261,7 +261,7 @@
     </section>
 
     <section class="item-group" id="group-p2" data-group="p2">
-      <h2 class="group-title" style="--tab-color:#b8720e">P2 — MEDIUM <span class="group-count">17</span></h2>
+      <h2 class="group-title" style="--tab-color:#b8720e">P2 — MEDIUM <span class="group-count">16</span></h2>
       <div class="card-grid">
       <article class="card" data-status="open" data-priority="p2" data-kind="none" data-search="data-1 full schema baseline keystone item — blocks ops-1 and data-recon below. platform revision — consolidated open items p2 — medium" style="--tab-color:#b8720e" tabindex="0">
         <div class="card-top"><span class="badge-mini pr-p2">P2 — MEDIUM</span><span class="type-tag t-techdebt">TECH DEBT</span></div>
@@ -444,23 +444,6 @@
       <dl class="drawer-fields">
         <div class="field"><dt>Description</dt><dd><p>Automated RPC test harness for money/game-logic</p></dd></div>
         <div class="field"><dt>Why it's necessary</dt><dd><p>Found 2026-07-27. Dedicated test harness for the RPCs that move money or decide game outcomes: <code>execute_transfer_atomic</code>, <code>resolve_bet</code>, <code>set_lineup</code>, <code>place_bid</code>, <code>confirm_auction_win</code>, the coin RPCs, <code>calculate-scores</code>. <code>CODE-4</code> only covers frontend component tests — this is backend/money-logic coverage, currently untracked.</p></dd></div>
-        <div class="field"><dt>Where it came from</dt><dd><p>Platform Revision — Consolidated Open Items · P2 — MEDIUM</p></dd></div>
-        <div class="field"><dt>Date</dt><dd><p class="muted">Not dated.</p></dd></div>
-        <div class="field"><dt>Technical solution</dt><dd><p class="muted">No implementation write-up recorded.</p></dd></div>
-      </dl></template>
-      </article>
-
-      <article class="card" data-status="open" data-priority="p2" data-kind="none" data-search="bug-rb1 `resolve_bet` refreshes points-type winners&#x27; `total_points` before flipping `bet_instances.status` to `&#x27;resolved&#x27;` found 2026-07-30 by code-7&#x27;s first real unit test (`tests/unit/bet.test.js` — &quot;updates league_members.total_points for the winning manager&quot;, currently `it.todo` so it documents without failing ci). `aggregate_league_member_points()` sums bet rewards `where bi.status = &#x27;resolved&#x27;`, but `resolve_bet()`&#x27;s immediate points-refresh loop runs *before* the `update bet_instances set status = &#x27;resolved&#x27;` statement — so the first refresh silently sums 0 and a winner&#x27;s leaderboard total doesn&#x27;t move until some unrelated later event (next scoring pass, `set_captain`, `set_lineup`) happens to re-aggregate them. confirmed via direct read of the live function body in `supabase/schema.sql`; low real-world impact so far because the pilot is walled and no bet has needed an isolated immediate refresh, but is a genuine correctness bug the moment betting is live again. **fix drafted, not applied**: `supabase/migrations/242_resolve_bet_status_order.sql` — reorders the existing statements only (moves the status-flip update earlier), no new columns/logic. needs explicit in-session &quot;yes, run it&quot; per claude.md before applying to the live pilot db; once applied, flip `bet.test.js`&#x27;s `it.todo` back to a normal `it`. platform revision — consolidated open items p2 — medium" style="--tab-color:#b8720e" tabindex="0">
-        <div class="card-top"><span class="badge-mini pr-p2">P2 — MEDIUM</span><span class="type-tag t-bug">BUG</span></div>
-        <h3 class="card-title"><code>resolve_bet</code> refreshes points-type winners' <code>total_points</code> before flipping <code>bet_instances.status</code> to <code>'resolved'</code></h3>
-        <p class="card-summary">Found 2026-07-30 by CODE-7's first real unit test (<code>tests/unit/bet.test.js</code> — "updates league_members.total_points for the winning manager", currently <code>it.todo</code> so it documents without failing CI). <code>aggregate_league_member_points()</code> sums bet rewards <code>WHERE bi.status = 'resolved'</code>, but <code>resolve_bet()</code>'s immediate points-refresh loop runs *before* the <code>UPDATE bet_instances SET status = 'resolved'</code> statement — so the first refresh silently sums 0 and a winner's leaderboard total doesn't move until some unrelated later event (next scoring pass, <code>set_captain</code>, <code>set_lineup</code>) happens to re-aggregate them. Confirmed via direct read of the live function body in <code>supabase/schema.sql</code>; low real-world impact so far because the pilot is walled and no bet has needed an isolated immediate refresh, but is a genuine correctness bug the moment betting is live again. <strong>Fix drafted, not applied</strong>: <code>supabase/migrations/242_resolve_bet_status_order.sql</code> — reorders the existing statements only (moves the status-flip UPDATE earlier), no new columns/logic. Needs explicit in-session "yes, run it" per CLAUDE.md before applying to the live pilot DB; once applied, flip <code>bet.test.js</code>'s <code>it.todo</code> back to a normal <code>it</code>.</p>
-        <div class="card-foot"><span class="foot-id">BUG-RB1</span><span class="foot-effort">XS (migration drafted, not applied)</span></div>
-        <template>
-      <div class="drawer-badges"><span class="badge-mini pr-p2">P2 — MEDIUM</span><span class="type-tag t-bug">BUG</span></div>
-      <h2 class="drawer-title"><code>resolve_bet</code> refreshes points-type winners' <code>total_points</code> before flipping <code>bet_instances.status</code> to <code>'resolved'</code></h2>
-      <dl class="drawer-fields">
-        <div class="field"><dt>Description</dt><dd><p><code>resolve_bet</code> refreshes points-type winners' <code>total_points</code> before flipping <code>bet_instances.status</code> to <code>'resolved'</code></p></dd></div>
-        <div class="field"><dt>Why it's necessary</dt><dd><p>Found 2026-07-30 by CODE-7's first real unit test (<code>tests/unit/bet.test.js</code> — "updates league_members.total_points for the winning manager", currently <code>it.todo</code> so it documents without failing CI). <code>aggregate_league_member_points()</code> sums bet rewards <code>WHERE bi.status = 'resolved'</code>, but <code>resolve_bet()</code>'s immediate points-refresh loop runs *before* the <code>UPDATE bet_instances SET status = 'resolved'</code> statement — so the first refresh silently sums 0 and a winner's leaderboard total doesn't move until some unrelated later event (next scoring pass, <code>set_captain</code>, <code>set_lineup</code>) happens to re-aggregate them. Confirmed via direct read of the live function body in <code>supabase/schema.sql</code>; low real-world impact so far because the pilot is walled and no bet has needed an isolated immediate refresh, but is a genuine correctness bug the moment betting is live again. <strong>Fix drafted, not applied</strong>: <code>supabase/migrations/242_resolve_bet_status_order.sql</code> — reorders the existing statements only (moves the status-flip UPDATE earlier), no new columns/logic. Needs explicit in-session "yes, run it" per CLAUDE.md before applying to the live pilot DB; once applied, flip <code>bet.test.js</code>'s <code>it.todo</code> back to a normal <code>it</code>.</p></dd></div>
         <div class="field"><dt>Where it came from</dt><dd><p>Platform Revision — Consolidated Open Items · P2 — MEDIUM</p></dd></div>
         <div class="field"><dt>Date</dt><dd><p class="muted">Not dated.</p></dd></div>
         <div class="field"><dt>Technical solution</dt><dd><p class="muted">No implementation write-up recorded.</p></dd></div>
@@ -6165,7 +6148,7 @@ npx supabase link --project-ref sssmvihxtqtohisghjet     # link this project</co
     </section>
 
     <section class="item-group" id="group-resolved" data-group="resolved">
-      <h2 class="group-title" style="--tab-color:#1f7a4d">Resolved backlog items <span class="group-count">9</span></h2>
+      <h2 class="group-title" style="--tab-color:#1f7a4d">Resolved backlog items <span class="group-count">10</span></h2>
       <div class="card-grid">
       <article class="card" data-status="closed" data-priority="none" data-kind="resolved" data-search="admin-1 clubhouse/competition admin ownership model + central reassignment panel **✅ resolved 2026-07-31 — pr #791, migration 243.** new `competition_admins` table + `is_competition_admin()` helper; owner-gated `get_circle_competition_admins`/`set_competition_admin`/`remove_competition_admin` rpcs cover `leagues`/`paddocks`/`player_boxes` (all three already had `created_by`+`circle_id`); new &quot;competition admins&quot; section added to clubhouse settings (`clubhousescreen.jsx`). unblocked **tennis-admin-gap** by gating the 9 tennis admin rpcs on `users.is_admin` (mirroring `f1adminscreen.jsx`&#x27;s existing platform-admin pattern) instead of forcing the new per-clubhouse model onto `tennis_tournaments`, which is shared global data with no owning circle — confirmed with user during planning. `tennisadminscreen.jsx` got the matching client-side lock screen. verification gap: the assign/remove round-trip in the new settings ui wasn&#x27;t exercised in a live logged-in browser session this session (no pilot credentials available) — lint/build/`platform.spec.js` (84/84) all green. platform revision — consolidated open items p1 — high" style="--tab-color:#1f7a4d" tabindex="0" data-stamp="RESOLVED">
         <div class="card-top"><span class="badge-mini k-done">RESOLVED</span><span class="type-tag t-feature">FEATURE</span></div>
@@ -6179,6 +6162,23 @@ npx supabase link --project-ref sssmvihxtqtohisghjet     # link this project</co
         <div class="field"><dt>Description</dt><dd><p>Clubhouse/competition admin ownership model + central reassignment panel</p></dd></div>
         <div class="field"><dt>Why it's necessary</dt><dd><p><strong>✅ RESOLVED 2026-07-31 — PR #791, migration 243.</strong> New <code>competition_admins</code> table + <code>is_competition_admin()</code> helper; owner-gated <code>get_circle_competition_admins</code>/<code>set_competition_admin</code>/<code>remove_competition_admin</code> RPCs cover <code>leagues</code>/<code>paddocks</code>/<code>player_boxes</code> (all three already had <code>created_by</code>+<code>circle_id</code>); new "Competition Admins" section added to Clubhouse Settings (<code>ClubhouseScreen.jsx</code>). Unblocked <strong>TENNIS-ADMIN-GAP</strong> by gating the 9 tennis admin RPCs on <code>users.is_admin</code> (mirroring <code>F1AdminScreen.jsx</code>'s existing platform-admin pattern) instead of forcing the new per-Clubhouse model onto <code>tennis_tournaments</code>, which is shared global data with no owning circle — confirmed with user during planning. <code>TennisAdminScreen.jsx</code> got the matching client-side lock screen. Verification gap: the assign/remove round-trip in the new Settings UI wasn't exercised in a live logged-in browser session this session (no pilot credentials available) — lint/build/<code>platform.spec.js</code> (84/84) all green.</p></dd></div>
         <div class="field"><dt>Where it came from</dt><dd><p>Resolved backlog item · Platform Revision — Consolidated Open Items · P1 — HIGH</p></dd></div>
+        <div class="field"><dt>Date</dt><dd><p class="muted">Not dated.</p></dd></div>
+        <div class="field"><dt>Technical solution</dt><dd><p class="muted">No implementation write-up recorded.</p></dd></div>
+      </dl></template>
+      </article>
+
+      <article class="card" data-status="closed" data-priority="none" data-kind="resolved" data-search="bug-rb1 `resolve_bet` refreshes points-type winners&#x27; `total_points` before flipping `bet_instances.status` to `&#x27;resolved&#x27;` ✅ **resolved 2026-07-31 — no migration needed.** investigation found the live pilot db was never actually broken: migration `232_fix_resolve_bet_points_ordering.sql` had already applied this exact statement reordering to prod. the bug only *looked* live because `supabase/schema.sql` (the tracked schema snapshot used to seed local dev/ci test dbs) was never regenerated after 232 shipped, so it still carried the pre-232 buggy order — that&#x27;s what code-7&#x27;s new unit test and the since-deleted draft `supabase/migrations/242_resolve_bet_status_order.sql` were reacting to, not a real prod bug. fix: corrected `resolve_bet`&#x27;s statement order directly in `supabase/schema.sql` to match the already-live version, deleted the now-redundant (never-applied) migration 242 draft, and flipped `tests/unit/bet.test.js`&#x27;s `it.todo` back to a normal `it`. verified locally: fresh `docker compose up -d db` → `bootstrap.sql` + corrected `schema.sql` + `seed.sql` → full `npm run test:unit` suite (32/32 tests, 0 failures, 0 todos). no live db write, no migration approval needed — this was a docs/schema-drift fix only. platform revision — consolidated open items p2 — medium" style="--tab-color:#1f7a4d" tabindex="0" data-stamp="RESOLVED">
+        <div class="card-top"><span class="badge-mini k-done">RESOLVED</span><span class="type-tag t-bug">BUG</span></div>
+        <h3 class="card-title"><code>resolve_bet</code> refreshes points-type winners' <code>total_points</code> before flipping <code>bet_instances.status</code> to <code>'resolved'</code></h3>
+        <p class="card-summary">✅ <strong>RESOLVED 2026-07-31 — no migration needed.</strong> Investigation found the live pilot DB was never actually broken: migration <code>232_fix_resolve_bet_points_ordering.sql</code> had already applied this exact statement reordering to prod. The bug only *looked* live because <code>supabase/schema.sql</code> (the tracked schema snapshot used to seed local dev/CI test DBs) was never regenerated after 232 shipped, so it still carried the pre-232 buggy order — that's what CODE-7's new unit test and the since-deleted draft <code>supabase/migrations/242_resolve_bet_status_order.sql</code> were reacting to, not a real prod bug. Fix: corrected <code>resolve_bet</code>'s statement order directly in <code>supabase/schema.sql</code> to match the already-live version, deleted the now-redundant (never-applied) migration 242 draft, and flipped <code>tests/unit/bet.test.js</code>'s <code>it.todo</code> back to a normal <code>it</code>. Verified locally: fresh <code>docker compose up -d db</code> → <code>bootstrap.sql</code> + corrected <code>schema.sql</code> + <code>seed.sql</code> → full <code>npm run test:unit</code> suite (32/32 tests, 0 failures, 0 todos). No live DB write, no migration approval needed — this was a docs/schema-drift fix only.</p>
+        <div class="card-foot"><span class="foot-id">BUG-RB1</span><span class="foot-effort">—</span></div>
+        <template>
+      <div class="drawer-badges"><span class="badge-mini k-done">RESOLVED</span><span class="type-tag t-bug">BUG</span></div>
+      <h2 class="drawer-title"><code>resolve_bet</code> refreshes points-type winners' <code>total_points</code> before flipping <code>bet_instances.status</code> to <code>'resolved'</code></h2>
+      <dl class="drawer-fields">
+        <div class="field"><dt>Description</dt><dd><p><code>resolve_bet</code> refreshes points-type winners' <code>total_points</code> before flipping <code>bet_instances.status</code> to <code>'resolved'</code></p></dd></div>
+        <div class="field"><dt>Why it's necessary</dt><dd><p>✅ <strong>RESOLVED 2026-07-31 — no migration needed.</strong> Investigation found the live pilot DB was never actually broken: migration <code>232_fix_resolve_bet_points_ordering.sql</code> had already applied this exact statement reordering to prod. The bug only *looked* live because <code>supabase/schema.sql</code> (the tracked schema snapshot used to seed local dev/CI test DBs) was never regenerated after 232 shipped, so it still carried the pre-232 buggy order — that's what CODE-7's new unit test and the since-deleted draft <code>supabase/migrations/242_resolve_bet_status_order.sql</code> were reacting to, not a real prod bug. Fix: corrected <code>resolve_bet</code>'s statement order directly in <code>supabase/schema.sql</code> to match the already-live version, deleted the now-redundant (never-applied) migration 242 draft, and flipped <code>tests/unit/bet.test.js</code>'s <code>it.todo</code> back to a normal <code>it</code>. Verified locally: fresh <code>docker compose up -d db</code> → <code>bootstrap.sql</code> + corrected <code>schema.sql</code> + <code>seed.sql</code> → full <code>npm run test:unit</code> suite (32/32 tests, 0 failures, 0 todos). No live DB write, no migration approval needed — this was a docs/schema-drift fix only.</p></dd></div>
+        <div class="field"><dt>Where it came from</dt><dd><p>Resolved backlog item · Platform Revision — Consolidated Open Items · P2 — MEDIUM</p></dd></div>
         <div class="field"><dt>Date</dt><dd><p class="muted">Not dated.</p></dd></div>
         <div class="field"><dt>Technical solution</dt><dd><p class="muted">No implementation write-up recorded.</p></dd></div>
       </dl></template>
