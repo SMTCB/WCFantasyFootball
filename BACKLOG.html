@@ -154,7 +154,7 @@
   <div class="header-right">
     <div class="totals">
       <div class="total-pill"><strong>33</strong><span>open</span></div>
-      <div class="total-pill"><strong>163</strong><span>closed</span></div>
+      <div class="total-pill"><strong>165</strong><span>closed</span></div>
     </div>
   </div>
 </header>
@@ -172,7 +172,7 @@
   </div>
   <div class="filter-chips" id="closed-chips" style="display:none">
     <span class="chip active" data-filter-kind="all">All closed</span>
-    <span class="chip" data-filter-kind="done">Shipped (101)</span>
+    <span class="chip" data-filter-kind="done">Shipped (103)</span>
 <span class="chip" data-filter-kind="resolved">Resolved backlog items (13)</span>
 <span class="chip" data-filter-kind="session">Session logs (43)</span>
 <span class="chip" data-filter-kind="audit">Audits (4)</span>
@@ -185,7 +185,7 @@
   <nav class="sidebar">
     <div class="status-toggle">
       <button class="status-btn active" data-status="open">Open <span class="status-count">33</span></button>
-      <button class="status-btn" data-status="closed">Closed <span class="status-count">163</span></button>
+      <button class="status-btn" data-status="closed">Closed <span class="status-count">165</span></button>
     </div>
     <div class="sidebar-group" id="sidebar-open">
       <h3>Jump to priority</h3>
@@ -195,7 +195,7 @@
     </div>
     <div class="sidebar-group" id="sidebar-closed" style="display:none">
       <h3>Jump to category</h3>
-      <div class="sidebar-item" data-jump-kind="done"><span class="swatch" style="--tab-color:#1f7a4d"></span>Shipped<span class="sidebar-count">101</span></div>
+      <div class="sidebar-item" data-jump-kind="done"><span class="swatch" style="--tab-color:#1f7a4d"></span>Shipped<span class="sidebar-count">103</span></div>
 <div class="sidebar-item" data-jump-kind="resolved"><span class="swatch" style="--tab-color:#1f7a4d"></span>Resolved backlog items<span class="sidebar-count">13</span></div>
 <div class="sidebar-item" data-jump-kind="session"><span class="swatch" style="--tab-color:#1a6fa8"></span>Session logs<span class="sidebar-count">43</span></div>
 <div class="sidebar-item" data-jump-kind="audit"><span class="swatch" style="--tab-color:#b23b3b"></span>Audits<span class="sidebar-count">4</span></div>
@@ -781,8 +781,67 @@
     <div id="view-closed" class="grid-view" style="display:none">
       
     <section class="item-group" id="group-done" data-group="done">
-      <h2 class="group-title" style="--tab-color:#1f7a4d">Shipped <span class="group-count">101</span></h2>
+      <h2 class="group-title" style="--tab-color:#1f7a4d">Shipped <span class="group-count">103</span></h2>
       <div class="card-grid">
+      <article class="card" data-status="closed" data-priority="none" data-kind="done" data-search="✅ cron freeze — all 21 pg_cron jobs paused (2026-07-31) — operational, no pr 
+
+the site has been walled behind `maintenance_mode=true` since the 2026-07-24 cutover (`v2 cutover plan`) with no live competition running, but all 21 pg_cron jobs (`calculate-scores-live` every 2 min, fixture/player syncs, bet/auction resolution, etc.) were still firing on schedule against an inactive site — pure wasted compute/api-quota against the forza football provider, no functional benefit.
+
+- confirmed live via `select jobname, schedule, active from cron.job` — 20 active + 1 (`run-draft-lottery`) already inactive from earlier. froze the 20 via `select cron.alter_job(job_id := jobid, active := false) from cron.job where jobname in (...)` (direct `update cron.job` is blocked — `db query --linked`&#x27;s role has no `update` grant on `cron.job`, `cron.alter_job()` is the supported path). verified all 21 now `active=false`.
+- user-approved this session (freeze scope expanded from the original &quot;19&quot; figure to the actual live count of 20, since `check-cron-health` had gained a schedule since that number was last checked).
+- reversible: `select cron.alter_job(job_id := jobid, active := true) from cron.job where jobname in (...)`. added a reminder to re-enable at reopen to `cutover_plan.md`&#x27;s phase 4 checklist.
+- this also neutralizes the 🔴 pilot-impacting risk tag that had been blocking `arch-1` and `arch-2` — no live cron can invoke `calculate-scores`/`score-f1-race`/`score-tennis-tournament` until crons are explicitly re-enabled, so deploying changes to those functions now carries no live-scoring risk.
+
+---
+
+" style="--tab-color:#1f7a4d" tabindex="0" data-stamp="SHIPPED">
+        <div class="card-top"><span class="badge-mini k-done">SHIPPED</span></div>
+        <h3 class="card-title">Cron freeze — all 21 pg_cron jobs paused</h3>
+        <p class="card-summary">The site has been walled behind MAINTENANCE_MODE=true since the 2026-07-24 cutover ( v2 Cutover Plan ) with no live competition running, but all 21 pg_cron jobs (…</p>
+        <div class="card-foot"><span class="foot-date">2026-07-31</span><span class="foot-refs">operational, no PR</span></div>
+        <template>
+      <div class="drawer-badges"><span class="badge-mini k-done">SHIPPED</span></div>
+      <h2 class="drawer-title">Cron freeze — all 21 pg_cron jobs paused</h2>
+      <dl class="drawer-fields">
+        <div class="field"><dt>Description</dt><dd><p>The site has been walled behind MAINTENANCE_MODE=true since the 2026-07-24 cutover ( v2 Cutover Plan ) with no live competition running, but all 21 pg_cron jobs (…</p></dd></div>
+        <div class="field"><dt>Why it's necessary</dt><dd><p class="muted">Not recorded for this item.</p></dd></div>
+        <div class="field"><dt>Where it came from</dt><dd><p>SHIPPED · operational, no PR</p></dd></div>
+        <div class="field"><dt>Date</dt><dd><p>2026-07-31</p></dd></div>
+        <div class="field"><dt>Technical solution</dt><dd><p>The site has been walled behind <code>MAINTENANCE_MODE=true</code> since the 2026-07-24 cutover (<code>v2 Cutover Plan</code>) with no live competition running, but all 21 pg_cron jobs (<code>calculate-scores-live</code> every 2 min, fixture/player syncs, bet/auction resolution, etc.) were still firing on schedule against an inactive site — pure wasted compute/API-quota against the Forza Football provider, no functional benefit.</p>
+<ul>
+<li>Confirmed live via <code>SELECT jobname, schedule, active FROM cron.job</code> — 20 active + 1 (<code>run-draft-lottery</code>) already inactive from earlier. Froze the 20 via <code>SELECT cron.alter_job(job_id := jobid, active := false) FROM cron.job WHERE jobname IN (...)</code> (direct <code>UPDATE cron.job</code> is blocked — <code>db query --linked</code>'s role has no <code>UPDATE</code> grant on <code>cron.job</code>, <code>cron.alter_job()</code> is the supported path). Verified all 21 now <code>active=false</code>.</li>
+<li>User-approved this session (freeze scope expanded from the original "19" figure to the actual live count of 20, since <code>check-cron-health</code> had gained a schedule since that number was last checked).</li>
+<li>Reversible: <code>SELECT cron.alter_job(job_id := jobid, active := true) FROM cron.job WHERE jobname IN (...)</code>. Added a reminder to re-enable at reopen to <code>CUTOVER_PLAN.md</code>'s Phase 4 checklist.</li>
+<li>This also neutralizes the 🔴 pilot-impacting risk tag that had been blocking <code>ARCH-1</code> and <code>ARCH-2</code> — no live cron can invoke <code>calculate-scores</code>/<code>score-f1-race</code>/<code>score-tennis-tournament</code> until crons are explicitly re-enabled, so deploying changes to those functions now carries no live-scoring risk.</li>
+</ul>
+<hr></dd></div>
+      </dl></template>
+      </article>
+
+      <article class="card" data-status="closed" data-priority="none" data-kind="done" data-search="✅ code-7 — extract &amp; unit-test calculate-scores pure scoring logic (2026-07-31) — pr #801 
+
+see the resolved `code-7` row in the p2 table below for the full writeup — audit found the rpc test harness it originally asked for already existed (pr #694); the real gap was `calculate-scores`, now covered by `tests/unit/scoring-logic.test.js` (24 assertions) against a new pure `scoring-logic.js` sibling module (no behavior change). also extended `check-function-drift.js`/`update-function-checksums.js` to hash every file in a function&#x27;s own directory, not just `index.*`.
+
+---
+
+" style="--tab-color:#1f7a4d" tabindex="0" data-stamp="SHIPPED">
+        <div class="card-top"><span class="badge-mini k-done">SHIPPED</span></div>
+        <h3 class="card-title">CODE-7 — extract &amp; unit-test calculate-scores pure scoring logic</h3>
+        <p class="card-summary">See the resolved CODE-7 row in the P2 table below for the full writeup — audit found the RPC test harness it originally asked for already existed (PR #694); the real gap…</p>
+        <div class="card-foot"><span class="foot-date">2026-07-31</span><span class="foot-refs">PR #801</span></div>
+        <template>
+      <div class="drawer-badges"><span class="badge-mini k-done">SHIPPED</span></div>
+      <h2 class="drawer-title">CODE-7 — extract &amp; unit-test calculate-scores pure scoring logic</h2>
+      <dl class="drawer-fields">
+        <div class="field"><dt>Description</dt><dd><p>See the resolved CODE-7 row in the P2 table below for the full writeup — audit found the RPC test harness it originally asked for already existed (PR #694); the real gap…</p></dd></div>
+        <div class="field"><dt>Why it's necessary</dt><dd><p class="muted">Not recorded for this item.</p></dd></div>
+        <div class="field"><dt>Where it came from</dt><dd><p>SHIPPED · PR #801</p></dd></div>
+        <div class="field"><dt>Date</dt><dd><p>2026-07-31</p></dd></div>
+        <div class="field"><dt>Technical solution</dt><dd><p>See the resolved <code>CODE-7</code> row in the P2 table below for the full writeup — audit found the RPC test harness it originally asked for already existed (PR #694); the real gap was <code>calculate-scores</code>, now covered by <code>tests/unit/scoring-logic.test.js</code> (24 assertions) against a new pure <code>scoring-logic.js</code> sibling module (no behavior change). Also extended <code>check-function-drift.js</code>/<code>update-function-checksums.js</code> to hash every file in a function's own directory, not just <code>index.*</code>.</p>
+<hr></dd></div>
+      </dl></template>
+      </article>
+
       <article class="card" data-status="closed" data-priority="none" data-kind="done" data-search="✅ admin-1 — clubhouse/competition admin ownership model (2026-07-31) — pr #791, migration 243 
 
 built the product decision locked in 2026-07-27: (1) a clubhouse owner is always admin of every competition inside that clubhouse; (2) a competition&#x27;s creator is admin of that specific competition; (3) a central panel lets the clubhouse owner view/assign/remove admins across every competition in the clubhouse.
