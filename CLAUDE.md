@@ -208,43 +208,17 @@ npx supabase functions deploy <function-name> --project-ref sssmvihxtqtohisghjet
 
 Steps 5 and 6 must happen **every time**. Unmerged PRs = app doesn't update on Vercel. Undeleted branches = repo accumulates junk.
 
-### GitHub API Fallback (when `gh` CLI is not installed)
+### GitHub Auth — `gh` CLI + credential helper (current, since 2026-07-31)
 
-`gh` CLI is **not installed** on this machine. Always use the Python urllib pattern below instead of `gh pr create` / `gh pr merge`. The token is embedded in the git remote URL — retrieve it with `git remote get-url origin`.
+`gh` CLI **is installed** (`/c/Program Files/GitHub CLI/gh`, authenticated as `SMTCB`) — use `gh pr create` / `gh pr merge` directly, per the Session Pattern above. There is no Python urllib fallback anymore and no PAT embedded in the remote URL.
 
-```python
-python3 -c "
-import urllib.request, json
-token = '<PAT>'  # retrieve with: git remote get-url origin | grep -oP '(?<=https://).*(?=@)'
-repo  = 'SMTCB/WCFantasyFootball'
-branch = 'claude/your-branch-name'
-
-# 1. Create PR
-data = json.dumps({'title': 'your title', 'head': branch, 'base': 'main', 'body': 'description'}).encode()
-req = urllib.request.Request(f'https://api.github.com/repos/{repo}/pulls', data=data,
-  headers={'Authorization': f'Bearer {token}', 'Accept': 'application/vnd.github+json', 'Content-Type': 'application/json'})
-with urllib.request.urlopen(req) as r:
-    n = json.loads(r.read())['number']; print('PR #', n)
-
-# 2. Merge (squash)
-data = json.dumps({'merge_method': 'squash', 'commit_title': f'your title (#{n})'}).encode()
-req = urllib.request.Request(f'https://api.github.com/repos/{repo}/pulls/{n}/merge', data=data, method='PUT',
-  headers={'Authorization': f'Bearer {token}', 'Accept': 'application/vnd.github+json', 'Content-Type': 'application/json'})
-with urllib.request.urlopen(req) as r: print('Merged:', json.loads(r.read()).get('merged'))
-
-# 3. Delete remote branch
-req = urllib.request.Request(f'https://api.github.com/repos/{repo}/git/refs/heads/{branch}',
-  method='DELETE', headers={'Authorization': f'Bearer {token}', 'Accept': 'application/vnd.github+json'})
-urllib.request.urlopen(req); print('Branch deleted')
-"
+Git push/fetch auth also runs through `gh`: `gh auth setup-git` registered `gh` as the `credential.https://github.com.helper` for `github.com` (global git config), so `origin` is a plain URL —
 ```
-
-Then clean up locally:
-```bash
-git checkout main
-git pull origin main
-git branch -D claude/your-branch-name
+https://github.com/SMTCB/WCFantasyFootball.git
 ```
+— with no token in it. `git push`/`git fetch`/`git clone` transparently use `gh`'s stored OAuth token; nothing else needs configuring. This replaced the previous long-lived classic PAT embedded in the remote URL (`SEC-4`, closed 2026-07-31) — that PAT existed only to serve the now-removed urllib fallback. Classic PATs have no revocation API, so the old token still needs manually revoking at https://github.com/settings/tokens if that hasn't been done yet — check `SEC-4`'s row in BACKLOG.md for status.
+
+If a fresh machine ever needs this set up again: `gh auth login` (interactive) → `gh auth setup-git`.
 
 ### Commit Message Format
 
