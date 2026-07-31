@@ -94,13 +94,21 @@ export default function TrophyCabinetScreen() {
     if (!user?.id || !activeCircleId) return;
     supabase
       .from('trophy_ledger')
-      .select('id, tier, label, reason, league_name, sport_type, awarded_at')
+      .select('id, tier, awarded_at, meta')
       .eq('circle_id', activeCircleId)
       .eq('user_id', user.id)
       .order('awarded_at', { ascending: false })
       .limit(50)
       .then(({ data, error }) => {
-        if (!error) setTrophies(data ?? []);
+        if (!error) {
+          setTrophies((data ?? []).map(t => ({
+            ...t,
+            label: t.meta?.label,
+            reason: t.meta?.reason,
+            league_name: t.meta?.league_name,
+            sport_type: t.meta?.sport_type,
+          })));
+        }
       }, () => {});
   }, [user?.id, activeCircleId]);
 
