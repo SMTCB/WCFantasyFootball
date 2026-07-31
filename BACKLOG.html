@@ -154,7 +154,7 @@
   <div class="header-right">
     <div class="totals">
       <div class="total-pill"><strong>31</strong><span>open</span></div>
-      <div class="total-pill"><strong>169</strong><span>closed</span></div>
+      <div class="total-pill"><strong>170</strong><span>closed</span></div>
     </div>
   </div>
 </header>
@@ -172,7 +172,7 @@
   </div>
   <div class="filter-chips" id="closed-chips" style="display:none">
     <span class="chip active" data-filter-kind="all">All closed</span>
-    <span class="chip" data-filter-kind="done">Shipped (105)</span>
+    <span class="chip" data-filter-kind="done">Shipped (106)</span>
 <span class="chip" data-filter-kind="resolved">Resolved backlog items (15)</span>
 <span class="chip" data-filter-kind="session">Session logs (43)</span>
 <span class="chip" data-filter-kind="audit">Audits (4)</span>
@@ -185,7 +185,7 @@
   <nav class="sidebar">
     <div class="status-toggle">
       <button class="status-btn active" data-status="open">Open <span class="status-count">31</span></button>
-      <button class="status-btn" data-status="closed">Closed <span class="status-count">169</span></button>
+      <button class="status-btn" data-status="closed">Closed <span class="status-count">170</span></button>
     </div>
     <div class="sidebar-group" id="sidebar-open">
       <h3>Jump to priority</h3>
@@ -195,7 +195,7 @@
     </div>
     <div class="sidebar-group" id="sidebar-closed" style="display:none">
       <h3>Jump to category</h3>
-      <div class="sidebar-item" data-jump-kind="done"><span class="swatch" style="--tab-color:#1f7a4d"></span>Shipped<span class="sidebar-count">105</span></div>
+      <div class="sidebar-item" data-jump-kind="done"><span class="swatch" style="--tab-color:#1f7a4d"></span>Shipped<span class="sidebar-count">106</span></div>
 <div class="sidebar-item" data-jump-kind="resolved"><span class="swatch" style="--tab-color:#1f7a4d"></span>Resolved backlog items<span class="sidebar-count">15</span></div>
 <div class="sidebar-item" data-jump-kind="session"><span class="swatch" style="--tab-color:#1a6fa8"></span>Session logs<span class="sidebar-count">43</span></div>
 <div class="sidebar-item" data-jump-kind="audit"><span class="swatch" style="--tab-color:#b23b3b"></span>Audits<span class="sidebar-count">4</span></div>
@@ -747,8 +747,40 @@
     <div id="view-closed" class="grid-view" style="display:none">
       
     <section class="item-group" id="group-done" data-group="done">
-      <h2 class="group-title" style="--tab-color:#1f7a4d">Shipped <span class="group-count">105</span></h2>
+      <h2 class="group-title" style="--tab-color:#1f7a4d">Shipped <span class="group-count">106</span></h2>
       <div class="card-grid">
+      <article class="card" data-status="closed" data-priority="none" data-kind="done" data-search="✅ docker schema-rehearsal workflow + full tennis pipeline test vs. real wimbledon field (2026-07-31) — no pr yet (pending) 
+
+addressed the standing &quot;i want real tests in case we need to adjust the schema&quot; want (a lightweight substitute for the full data-1/ops-1 staging-environment backlog items) and closed the gap between &quot;tennis tested against synthetic `season_year=2099` fixture data&quot; (2026-07-27 session) and &quot;tennis tested against the shape/scale of a real tournament draw.&quot;
+
+- **local docker permission bug found and fixed**: the local supabase replica returned `42501 permission denied` from postgrest on every `public` table (confirmed via a `leagues` control check, not tennis-specific). root cause: an earlier-session raw-`psql` continue-on-error migration replay (used to work around a migration-filename lexicographic-sort-order bug — 100+ sorts before 90–99, so `db reset` aborts on `09_sprint1_schema.sql`&#x27;s known bug even though `10_sprint1_fixes.sql` fixes it) bypassed the step `supabase db reset` normally runs afterward to re-grant crud to `anon`/`authenticated`/`service_role`. fixed locally with a direct `grant all` + `alter default privileges` + `notify pgrst, &#x27;reload schema&#x27;`.
+- **formalized as `scripts/rehearse-schema.sh`** — tries a normal `supabase db reset` first, falls back to a continue-on-error raw-`psql` replay (logging exactly which files failed, most as ordering artifacts) only if that fails, and always finishes by restoring the crud grants above. documented in a new [schema rehearsal workflow](docs/deployment/docker_local_dev.md#schema-rehearsal-workflow) section.
+- **full tennis pipeline verified against the real wimbledon 2026 field**: pulled the real 128-player draw (`external_id=21337`) read-only from prod (`db query --linked` select, no write) and re-inserted it locally. ran roster submission → qf captain → ace card → admin round results → `score-tennis-tournament` invocation → scores/gazette/trophy writes → tournament completion for 2 roster" style="--tab-color:#1f7a4d" tabindex="0" data-stamp="SHIPPED">
+        <div class="card-top"><span class="badge-mini k-done">SHIPPED</span></div>
+        <h3 class="card-title">Docker schema-rehearsal workflow + full tennis pipeline test vs. real Wimbledon field</h3>
+        <p class="card-summary">Addressed the standing "I want real tests in case we need to adjust the schema" want (a lightweight substitute for the full DATA-1/OPS-1 staging-environment backlog…</p>
+        <div class="card-foot"><span class="foot-date">2026-07-31</span><span class="foot-refs">no PR yet (pending)</span></div>
+        <template>
+      <div class="drawer-badges"><span class="badge-mini k-done">SHIPPED</span></div>
+      <h2 class="drawer-title">Docker schema-rehearsal workflow + full tennis pipeline test vs. real Wimbledon field</h2>
+      <dl class="drawer-fields">
+        <div class="field"><dt>Description</dt><dd><p>Addressed the standing "I want real tests in case we need to adjust the schema" want (a lightweight substitute for the full DATA-1/OPS-1 staging-environment backlog…</p></dd></div>
+        <div class="field"><dt>Why it's necessary</dt><dd><p class="muted">Not recorded for this item.</p></dd></div>
+        <div class="field"><dt>Where it came from</dt><dd><p>SHIPPED · no PR yet (pending)</p></dd></div>
+        <div class="field"><dt>Date</dt><dd><p>2026-07-31</p></dd></div>
+        <div class="field"><dt>Technical solution</dt><dd><p>Addressed the standing "I want real tests in case we need to adjust the schema" want (a lightweight substitute for the full DATA-1/OPS-1 staging-environment backlog items) and closed the gap between "tennis tested against synthetic <code>season_year=2099</code> fixture data" (2026-07-27 session) and "tennis tested against the shape/scale of a real tournament draw."</p>
+<ul>
+<li><strong>Local Docker permission bug found and fixed</strong>: the local Supabase replica returned <code>42501 permission denied</code> from PostgREST on every <code>public</code> table (confirmed via a <code>leagues</code> control check, not tennis-specific). Root cause: an earlier-session raw-<code>psql</code> continue-on-error migration replay (used to work around a migration-filename lexicographic-sort-order bug — 100+ sorts before 90–99, so <code>db reset</code> aborts on <code>09_sprint1_schema.sql</code>'s known bug even though <code>10_sprint1_fixes.sql</code> fixes it) bypassed the step <code>supabase db reset</code> normally runs afterward to re-grant CRUD to <code>anon</code>/<code>authenticated</code>/<code>service_role</code>. Fixed locally with a direct <code>GRANT ALL</code> + <code>ALTER DEFAULT PRIVILEGES</code> + <code>NOTIFY pgrst, 'reload schema'</code>.</li>
+<li><strong>Formalized as <code>scripts/rehearse-schema.sh</code></strong> — tries a normal <code>supabase db reset</code> first, falls back to a continue-on-error raw-<code>psql</code> replay (logging exactly which files failed, most as ordering artifacts) only if that fails, and always finishes by restoring the CRUD grants above. Documented in a new <a href="docs/deployment/DOCKER_LOCAL_DEV.md#schema-rehearsal-workflow" target="_blank" rel="noopener">Schema Rehearsal Workflow</a> section.</li>
+<li><strong>Full tennis pipeline verified against the real Wimbledon 2026 field</strong>: pulled the real 128-player draw (<code>external_id=21337</code>) read-only from prod (<code>db query --linked</code> SELECT, no write) and re-inserted it locally. Ran roster submission → QF captain → ace card → admin round results → <code>score-tennis-tournament</code> invocation → scores/gazette/trophy writes → tournament completion for 2 rosters built from real drawn players. Output (<code>leaderboard: [{total:107},{total:54}]</code>) matched hand-calculated expectations exactly; downstream <code>tennis_tournament_scores</code>/<code>gazette_entries</code> writes and the tournament-completion status flip were spot-checked directly. <code>sync-tennis-players</code>'s live RapidAPI call was <strong>not</strong> re-exercised — no plaintext access to <code>RAPIDAPI_TENNIS_KEY</code>/<code>ADMIN_TRIGGER_KEY</code> this session, so the already-synced real draw was reused instead of a fresh live sync.</li>
+<li><strong><code>supabase/schema.sql</code> refresh</strong>: regenerated via a read-only <code>npx supabase db dump --linked</code> (was missing ~30 migrations' worth of schema, including <code>award_trophy</code> from the ARCH-1 session). Refreshing it surfaced that <code>tests/unit/seed.sql</code> had drifted from the current schema (missing <code>leagues.circle_id</code>, a stale now-nonexistent <code>squads.tournament_id</code> column, and a missing <code>on_auth_user_created</code> trigger recreation — that trigger lives on <code>auth.users</code>, migration 77, so a public-schema-only dump never captures it). Fixed all three; confirmed clean with a full fresh-DB CI-equivalent load (<code>bootstrap.sql</code> → <code>schema.sql</code> → <code>seed.sql</code>, zero unexpected errors) and a full local <code>npm run test:unit</code> run (56/56 passing, 0 failures).</li>
+<li><strong>Docs updated</strong>: <a href="docs/testing/TENNIS_MODULE_TEST_PLAN.md" target="_blank" rel="noopener"><code>TENNIS_MODULE_TEST_PLAN.md</code></a>'s real-data status table and Test Run Log; <a href="docs/platform_revision/TRACKER.md" target="_blank" rel="noopener"><code>TRACKER.md</code></a>'s Phase 3B tennis smoke-test checkbox flipped to done with the real-data caveat spelled out (Module 6 UI still static-review-only; <code>sync-tennis-players</code> live call still unexercised).</li>
+<li>Not yet committed/PR'd — see git status. Everything above is local-verified only; no write touched the live pilot DB.</li>
+</ul>
+<hr></dd></div>
+      </dl></template>
+      </article>
+
       <article class="card" data-status="closed" data-priority="none" data-kind="done" data-search="✅ arch-1 — trophy emission wired end-to-end (2026-07-31) — pr #807, migrations 248–249 
 
 `trophy_ledger` + `get_circle_meta_standings()` have existed since migration 189, but nothing ever called `award_trophy` — the cross-sport meta-standing was permanently empty — and `trophycabinetscreen.jsx` queried columns (`label`, `reason`, `league_name`, `sport_type`) that didn&#x27;t exist on the table, so even a manually-inserted row wouldn&#x27;t have rendered. built in the order set out in the session plan: cron freeze first (neutralizes the 🔴 pilot-impacting risk tag — see the cron freeze section below), then the trophy plumbing, deployed once frozen.

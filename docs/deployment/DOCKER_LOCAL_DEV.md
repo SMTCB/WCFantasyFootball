@@ -9,6 +9,7 @@
 - [Option A — Docker (frontend only)](#option-a--docker-frontend-only) — fastest, no Supabase account needed
 - [Option B — Docker Compose (full local topology)](#option-b--docker-compose-full-local-topology) — frontend + Postgres + Deno function runner
 - [Option C — Supabase CLI (full feature parity)](#option-c--supabase-cli-full-feature-parity) — includes Auth, Realtime, pgcron, Edge Functions
+- [Schema Rehearsal Workflow](#schema-rehearsal-workflow) — rehearse a migration/schema change against a real replica before touching the live pilot DB
 
 ---
 
@@ -146,6 +147,35 @@ npx supabase functions serve sync-fixtures --env-file .env.local
 
 ---
 
+## Schema Rehearsal Workflow
+
+**When to use:** you're about to change the schema (a new migration, an RLS policy tweak, an RPC signature change) and want to rehearse it against a real replica of the current 271-migration history before it touches the live pilot DB. This is a lightweight substitute for a dedicated staging environment (see [Provisioning a Staging Environment](#provisioning-a-staging-environment) below for the heavier option) — it satisfies "I want real tests in case we need to adjust the schema" without standing up a second Supabase project.
+
+**Known limitation — plain `db reset` can fail partway on this repo.** `supabase db reset` applies every file in `supabase/migrations/` in pure lexicographic filename order. Because ASCII sorts `'1'` before `'9'`, files numbered **100+ sort before files numbered 90–99** — the apply order does not match numeric/chronological order. Combined with one genuine latent bug in an early migration (`09_sprint1_schema.sql` declares a `uuid` foreign key against a column that has always been `TEXT`; the real fix lives in `10_sprint1_fixes.sql`, which drops and recreates the table correctly), a plain `db reset` hard-fails and aborts the entire run — even though the fix migration would have resolved it had the CLI kept going.
+
+**The fix:** [`scripts/rehearse-schema.sh`](../../scripts/rehearse-schema.sh) tries a normal `supabase db reset` first, and only falls back if that fails. The fallback re-applies every remaining migration file individually via raw `psql`, continuing past failures instead of aborting, then logs exactly which files failed so they can be spot-checked (most turn out to be ordering artifacts — a later-numbered fix ran before the migration it targets and found nothing to do — or expected-empty-local-DB conditions, not real problems). It finishes by re-granting `SELECT/INSERT/UPDATE/DELETE` to `anon`/`authenticated`/`service_role` on the `public` schema: the raw-`psql` fallback path bypasses a grant-restoration step the CLI normally runs after migrations, and without it PostgREST returns `42501 permission denied` on every table touched by the fallback — including for the `service_role` key that Edge Functions use.
+
+```bash
+npx supabase start                    # once, if the local stack isn't already up
+bash scripts/rehearse-schema.sh
+```
+
+Logs land in `.rehearsal/` (gitignored): `db-reset.log` (the initial attempt), `replay.log` + `replay.log.failures` (the fallback, if triggered), `grants.log`.
+
+Once rehearsed, serve the function(s) you're testing and exercise them exactly as they'd run in prod:
+
+```bash
+npx supabase functions serve <function-name>
+curl -X POST http://127.0.0.1:54321/functions/v1/<function-name> \
+  -H "Authorization: Bearer <local service_role key printed by 'supabase start'>" \
+  -H "Content-Type: application/json" \
+  -d '{...}'
+```
+
+For read-only reference data (e.g. a real tournament draw) that a local rehearsal needs but shouldn't fabricate, pull it from prod with a `SELECT`-only `npx supabase db query --linked` and re-insert it locally via generated `INSERT` statements — no write ever touches the live DB, consistent with the Pilot Safeguards "SELECT before any write" pattern.
+
+---
+
 ## Environment Variables Reference
 
 | Variable | Required | Scope | Description |
@@ -189,9 +219,10 @@ npx supabase functions serve sync-fixtures --env-file .env.local
 - [`Dockerfile`](../../Dockerfile) — multi-stage build (node:20-alpine → nginx:alpine)
 - [`docker-compose.yml`](../../docker-compose.yml) — full local topology
 - [`nginx.conf`](../../nginx.conf) — SPA routing + security headers
+- [`scripts/rehearse-schema.sh`](../../scripts/rehearse-schema.sh) — schema rehearsal script (see above)
 - [`DATA_PIPELINE_RUNBOOK.md`](DATA_PIPELINE_RUNBOOK.md) — cron setup and data activation
 - [`SERVICE_KEY_ROTATION_RUNBOOK.md`](SERVICE_KEY_ROTATION_RUNBOOK.md) — secret rotation procedure
 
 ---
 
-Last Updated: **2026-06-25**
+Last Updated: **2026-07-31**
