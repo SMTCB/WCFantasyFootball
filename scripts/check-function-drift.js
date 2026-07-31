@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // check-function-drift.js
-// Compares SHA-256 of each supabase/functions/*/index.{ts,js} against
-// the committed .function-checksums.json baseline.
+// Compares SHA-256 of each supabase/functions/*/**.{ts,js} (all files in the
+// function's own dir) against the committed .function-checksums.json baseline.
 //
 // Exits 1 (CI-blocking) when:
 //   - a function's code changed but checksums weren't updated (deploy pending)
@@ -25,10 +25,6 @@ function normalizedBytes(p) {
   return readFileSync(p, 'utf8').replace(/\r\n/g, '\n');
 }
 
-function hashFile(p) {
-  return createHash('sha256').update(normalizedBytes(p)).digest('hex');
-}
-
 // Hash all _shared/**/*.ts files combined (recursive — includes providers/) —
 // changing any shared module bumps this and causes CI to flag every function
 // for redeployment (they bundle _shared at deploy).
@@ -46,16 +42,28 @@ function hashShared() {
   return h.digest('hex');
 }
 
+// Hash every .ts/.js file directly inside a function's own directory (not just
+// index.*) so sibling modules (e.g. calculate-scores/scoring-logic.js) are covered —
+// otherwise a change to a sibling file would go undetected by drift checking.
+function hashFunctionDir(dir) {
+  const files = readdirSync(dir)
+    .filter((f) => /\.(ts|js)$/.test(f))
+    .sort();
+  const h = createHash('sha256');
+  for (const f of files) {
+    h.update(f).update(normalizedBytes(join(dir, f)));
+  }
+  return h.digest('hex');
+}
+
 function discoverFunctions() {
   const entries = {};
   for (const fn of readdirSync(functionsDir)) {
     if (fn.startsWith('_')) continue;
     const dir = join(functionsDir, fn);
     if (!statSync(dir).isDirectory()) continue;
-    for (const ext of ['index.ts', 'index.js']) {
-      const p = join(dir, ext);
-      if (existsSync(p)) { entries[fn] = p; break; }
-    }
+    const hasIndex = ['index.ts', 'index.js'].some((ext) => existsSync(join(dir, ext)));
+    if (hasIndex) entries[fn] = dir;
   }
   return entries;
 }
@@ -72,9 +80,9 @@ const current = discoverFunctions();
 const drifted = [];
 const added   = [];
 
-// Check per-function index files
-for (const [fn, p] of Object.entries(current)) {
-  const hash = hashFile(p);
+// Check per-function directories
+for (const [fn, dir] of Object.entries(current)) {
+  const hash = hashFunctionDir(dir);
   if (!(fn in committed)) {
     added.push(fn);
   } else if (committed[fn] !== hash) {
