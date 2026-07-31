@@ -244,39 +244,54 @@ def parse_open_table(table_lines):
 
 def parse_open_section(body):
     """Split a body into ### priority subsections, each with a table, plus
-    any #### detail subsections (returned separately, keyed by heading text)."""
+    any #### detail subsections (returned separately, keyed by heading text).
+
+    #### detail blocks can appear *between* ### priority tables (e.g. a
+    detail block for a P2 item, followed by a ### P3 table) — a detail
+    block must end at the next #### OR ### heading, not just the next ####,
+    or it silently swallows every priority section that follows it."""
     priorities = []
     detail_blocks = {}
     intro_lines = []
 
-    # Split off #### detail blocks first (they trail the priority tables).
-    parts = re.split(r"(?m)^#### ", body)
-    main_body = parts[0]
-    for chunk in parts[1:]:
-        head_line, _, rest = chunk.partition("\n")
-        detail_blocks[head_line.strip()] = rest.strip("\n")
-
-    lines = main_body.split("\n")
     current_priority = None
     current_table = []
-    i = 0
-    while i < len(lines):
-        line = lines[i]
-        m = re.match(r"^### (P\d[^\n]*)", line.strip())
-        if m:
-            if current_priority is not None:
-                priorities.append((current_priority, parse_open_table(current_table)))
-            current_priority = m.group(1).strip()
-            current_table = []
-            i += 1
+    current_detail_heading = None
+    current_detail_lines = []
+
+    def flush_detail():
+        if current_detail_heading is not None:
+            detail_blocks[current_detail_heading] = "\n".join(current_detail_lines).strip("\n")
+
+    def flush_priority():
+        if current_priority is not None:
+            priorities.append((current_priority, parse_open_table(current_table)))
+
+    for line in body.split("\n"):
+        stripped = line.strip()
+        m4 = re.match(r"^#### (.+)", stripped)
+        m3 = re.match(r"^### (P\d[^\n]*)", stripped)
+        if m4:
+            flush_detail()
+            current_detail_heading = m4.group(1).strip()
+            current_detail_lines = []
             continue
-        if current_priority is not None and line.strip().startswith("|"):
+        if m3:
+            flush_detail()
+            current_detail_heading = None
+            current_detail_lines = []
+            flush_priority()
+            current_priority = m3.group(1).strip()
+            current_table = []
+            continue
+        if current_detail_heading is not None:
+            current_detail_lines.append(line)
+        elif current_priority is not None and stripped.startswith("|"):
             current_table.append(line)
         elif current_priority is None:
             intro_lines.append(line)
-        i += 1
-    if current_priority is not None:
-        priorities.append((current_priority, parse_open_table(current_table)))
+    flush_detail()
+    flush_priority()
 
     intro_html = markdown_to_html("\n".join(intro_lines))
     return intro_html, priorities, detail_blocks
