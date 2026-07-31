@@ -40,6 +40,7 @@ import { useEliminatedClubs } from '../hooks/useEliminatedClubs';
 import FormStrip from '../components/FormStrip';
 import SelectLeaguePicker from '../components/league/SelectLeaguePicker';
 import { deriveLeagueType } from '../components/league/LeagueBadgeHelpers';
+import { useShowArchived } from '../hooks/useShowArchived';
 import { useIsMobile } from '../hooks/useViewport';
 import PrimaryActionBar from '../components/shared/PrimaryActionBar';
 
@@ -90,7 +91,7 @@ export default function SquadScreen() {
       }
       const { data } = await supabase
         .from('league_members')
-        .select('league_id, rank, total_points, leagues(id, name, tournament_id, format, h2h_enabled, league_mode)')
+        .select('league_id, rank, total_points, leagues(id, name, tournament_id, format, h2h_enabled, league_mode, archived)')
         .eq('user_id', user?.id);
       const rows = data ?? [];
       let memberCounts = {};
@@ -113,6 +114,7 @@ export default function SquadScreen() {
           rank: r.rank,
           totalPoints: r.total_points,
           members: memberCounts[r.league_id],
+          archived: r.leagues?.archived ?? false,
           type, format,
         };
       });
@@ -133,6 +135,9 @@ export default function SquadScreen() {
       .maybeSingle()
       .then(({ data }) => { if (data?.tournament_id) setTournamentId(data.tournament_id); });
   }, [activeLeague]);
+
+  // B-13: shared "show archived leagues" toggle for the league picker/selector
+  const [showArchived, setShowArchived] = useShowArchived();
 
   // Competition-agnostic config from the selected league row
   const cfg = useLeagueConfig(activeLeague);
@@ -829,6 +834,8 @@ export default function SquadScreen() {
       <SelectLeaguePicker
         leagues={leagues}
         eyebrow="MY SQUAD"
+        showArchived={showArchived}
+        onToggleShowArchived={setShowArchived}
         onSelect={l => { setActiveLeague(l.id); if (l.tournament_id) setTournamentId(l.tournament_id); }}
       />
     );
@@ -880,7 +887,7 @@ export default function SquadScreen() {
               <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 34, color: 'var(--on-shell)', lineHeight: 1.05, letterSpacing: '-0.01em' }}>
                 My Squad
               </div>
-              <LeagueSelector value={activeLeague} onChange={setActiveLeague} />
+              <LeagueSelector value={activeLeague} showArchived={showArchived} onChange={setActiveLeague} />
             </div>
           </div>
           <div className="text-right">
@@ -1313,7 +1320,7 @@ export default function SquadScreen() {
             <div className="text-[22px] lg:text-[34px]" style={{ fontFamily: 'Archivo Black, sans-serif', color: 'var(--on-shell)', lineHeight: 1.05, letterSpacing: '-0.01em' }}>
               My Squad
             </div>
-            <LeagueSelector value={activeLeague} onChange={setActiveLeague} />
+            <LeagueSelector value={activeLeague} showArchived={showArchived} onChange={setActiveLeague} />
             <button
               onClick={() => setShowScoringModal(true)}
               title="Scoring & game rules"
@@ -1603,7 +1610,7 @@ export default function SquadScreen() {
                   <div style={{ flex: 1 }}>
                     <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 28, color: 'var(--paper)', lineHeight: 1, letterSpacing: '-0.01em' }}>MY SQUAD</div>
                   </div>
-                  <LeagueSelector value={activeLeague} onChange={setActiveLeague} />
+                  <LeagueSelector value={activeLeague} showArchived={showArchived} onChange={setActiveLeague} />
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
                   <div />

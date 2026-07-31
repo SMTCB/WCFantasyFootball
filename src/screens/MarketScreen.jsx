@@ -27,6 +27,7 @@ import TransferWindowBanner from '../components/TransferWindowBanner';
 import RelaxationBanner from '../components/RelaxationBanner';
 import PlayerStatsDashboard from '../components/player/PlayerStatsDashboard';
 import { useLeagueOwnership } from '../hooks/useLeagueOwnership';
+import { useShowArchived } from '../hooks/useShowArchived';
 import SelectLeaguePicker from '../components/league/SelectLeaguePicker';
 import { deriveLeagueType } from '../components/league/LeagueBadgeHelpers';
 import { usePlayerCards } from '../hooks/usePlayerCards';
@@ -204,6 +205,9 @@ export default function MarketScreen() {
   // League ownership % per player — used in full stats dashboard
   const { ownershipMap } = useLeagueOwnership(activeLeague);
 
+  // B-13: shared "show archived leagues" toggle for the league picker/selector
+  const [showArchived, setShowArchived] = useShowArchived();
+
   // Full stats dashboard modal — set to a player object to open
   const [statsDashboardPlayer, setStatsDashboardPlayer] = useState(null);
 
@@ -299,7 +303,7 @@ export default function MarketScreen() {
       // No leagueId in URL — fetch user's leagues
       const { data } = await supabase
         .from('league_members')
-        .select('league_id, rank, total_points, leagues(id, name, tournament_id, format, h2h_enabled, league_mode)')
+        .select('league_id, rank, total_points, leagues(id, name, tournament_id, format, h2h_enabled, league_mode, archived)')
         .eq('user_id', user?.id);
       const rows = data ?? [];
       if (rows.length === 1) {
@@ -330,6 +334,7 @@ export default function MarketScreen() {
             rank: r.rank,
             totalPoints: r.total_points,
             members: memberCounts[r.league_id],
+            archived: r.leagues?.archived ?? false,
             type, format,
           };
         });
@@ -678,6 +683,8 @@ export default function MarketScreen() {
       <SelectLeaguePicker
         leagues={leagues}
         eyebrow="TRANSFER MARKET"
+        showArchived={showArchived}
+        onToggleShowArchived={setShowArchived}
         onSelect={l => {
           setActiveLeague(l.id);
           if (l.rawFormat) setLeagueFormat(l.rawFormat);
@@ -773,7 +780,7 @@ export default function MarketScreen() {
                   flexShrink: 0,
                 }}
               >?</button>
-              <LeagueSelector value={activeLeague} onChange={(lid) => {
+              <LeagueSelector value={activeLeague} showArchived={showArchived} onChange={(lid) => {
                 setActiveLeague(lid);
                 const found = leagues?.find(l => l.id === lid);
                 if (found?.rawFormat) setLeagueFormat(found.rawFormat);

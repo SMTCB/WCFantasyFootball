@@ -20,6 +20,24 @@ export function TypeChip({ type, format }) {
   );
 }
 
+export function ArchivedBadge() {
+  return (
+    <span
+      style={{
+        display: 'inline-flex', alignItems: 'center', gap: 4,
+        padding: '2px 7px',
+        border: '1px solid var(--rule)',
+        background: 'rgba(255,255,255,0.03)',
+        color: 'var(--mute)',
+        fontFamily: "'JetBrains Mono', monospace", fontSize: 9, letterSpacing: '.16em', fontWeight: 600,
+        textTransform: 'uppercase', whiteSpace: 'nowrap',
+      }}
+    >
+      Archived
+    </span>
+  );
+}
+
 export function RankBadge({ rank, size = 'sm' }) {
   const medal = rank === 1 ? 'var(--gold)' : rank === 2 ? '#C0C0C0' : rank === 3 ? '#CD7F32' : 'var(--mute)';
   const big = size === 'lg';

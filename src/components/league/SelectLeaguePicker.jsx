@@ -1,24 +1,41 @@
-import { TypeChip, RankBadge } from './LeagueBadges';
+import { TypeChip, RankBadge, ArchivedBadge } from './LeagueBadges';
 import { TYPE_COLOR } from './LeagueBadgeHelpers';
 
 const DISPLAY = "'Archivo Black', sans-serif";
 const MONO = "'JetBrains Mono', monospace";
 
+const archiveToggleStyle = {
+  display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer',
+  fontFamily: MONO, fontSize: 9, letterSpacing: '.14em', textTransform: 'uppercase', color: 'var(--mute)',
+};
+
 // "Select a League" picker shown on Squad/Market when the user has multiple
 // leagues and none is active yet. Renders a desktop table and a mobile card list.
-export default function SelectLeaguePicker({ leagues, onSelect, eyebrow }) {
-  const sortedLeagues = [...leagues].sort((a, b) => (a.name ?? '').localeCompare(b.name ?? ''));
+export default function SelectLeaguePicker({ leagues, onSelect, eyebrow, showArchived = false, onToggleShowArchived }) {
+  const archivedCount = leagues.filter(l => l.archived).length;
+  const visibleLeagues = showArchived ? leagues : leagues.filter(l => !l.archived);
+  const sortedLeagues = [...visibleLeagues].sort((a, b) => (a.name ?? '').localeCompare(b.name ?? ''));
+
+  const archiveToggle = archivedCount > 0 && onToggleShowArchived && (
+    <label style={archiveToggleStyle}>
+      <input type="checkbox" checked={showArchived} onChange={e => onToggleShowArchived(e.target.checked)} />
+      Show archived ({archivedCount})
+    </label>
+  );
   return (
     <div className="min-h-screen bg-bg" style={{ color: 'var(--paper)' }}>
       {/* Desktop */}
       <div className="hidden lg:flex flex-col">
-        <div style={{ padding: '28px 40px 20px', borderBottom: '1px solid var(--rule)' }}>
-          {eyebrow && (
-            <div className="fk-eyebrow" style={{ marginBottom: 6 }}>{eyebrow}</div>
-          )}
-          <div style={{ fontFamily: DISPLAY, fontWeight: 900, fontSize: 30, textTransform: 'uppercase', letterSpacing: '-0.02em' }}>
-            Select a League
+        <div style={{ padding: '28px 40px 20px', borderBottom: '1px solid var(--rule)', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+          <div>
+            {eyebrow && (
+              <div className="fk-eyebrow" style={{ marginBottom: 6 }}>{eyebrow}</div>
+            )}
+            <div style={{ fontFamily: DISPLAY, fontWeight: 900, fontSize: 30, textTransform: 'uppercase', letterSpacing: '-0.02em' }}>
+              Select a League
+            </div>
           </div>
+          {archiveToggle}
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 140px 100px 90px 100px', gap: 0, padding: '10px 0 10px 40px', borderBottom: '1px solid var(--rule)' }}>
           <span style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.16em', textTransform: 'uppercase' }}>League</span>
@@ -49,8 +66,9 @@ export default function SelectLeaguePicker({ leagues, onSelect, eyebrow }) {
                   {l.name}
                 </div>
               </div>
-              <div style={{ padding: '18px 0', display: 'flex', justifyContent: 'center' }}>
+              <div style={{ padding: '18px 0', display: 'flex', justifyContent: 'center', gap: 6 }}>
                 <TypeChip type={l.type} format={l.format} />
+                {l.archived && <ArchivedBadge />}
               </div>
               <div style={{ padding: '18px 0', textAlign: 'center' }}>
                 <span style={{ fontFamily: MONO, fontSize: 12, color: 'var(--mute)' }}>{l.members ?? '—'}</span>
@@ -78,8 +96,11 @@ export default function SelectLeaguePicker({ leagues, onSelect, eyebrow }) {
               Select a League
             </div>
           </div>
-          <div style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.16em', textTransform: 'uppercase' }}>
-            {sortedLeagues.length} {sortedLeagues.length === 1 ? 'LEAGUE' : 'LEAGUES'}
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6 }}>
+            <div style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.16em', textTransform: 'uppercase' }}>
+              {sortedLeagues.length} {sortedLeagues.length === 1 ? 'LEAGUE' : 'LEAGUES'}
+            </div>
+            {archiveToggle}
           </div>
         </div>
         {sortedLeagues.map(l => {
@@ -104,6 +125,7 @@ export default function SelectLeaguePicker({ leagues, onSelect, eyebrow }) {
                 </div>
                 <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginTop: 4 }}>
                   <TypeChip type={l.type} format={l.format} />
+                  {l.archived && <ArchivedBadge />}
                   <span style={{ fontFamily: MONO, fontSize: 9, color: 'var(--mute)', letterSpacing: '.1em', textTransform: 'uppercase' }}>
                     {l.members ?? '—'} members
                   </span>

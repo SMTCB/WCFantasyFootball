@@ -7,28 +7,31 @@ import { useAuth } from '../hooks/useAuth';
  * styled <select>. Calls onChange(leagueId) when the selection changes.
  * Auto-selects if the user is in only one league.
  */
-export default function LeagueSelector({ value, onChange }) {
+export default function LeagueSelector({ value, onChange, showArchived = false }) {
   const { user } = useAuth();
-  const [leagues, setLeagues] = useState([]);
+  const [rawLeagues, setRawLeagues] = useState([]);
 
   useEffect(() => {
     if (!user?.id) return;
     supabase
       .from('league_members')
-      .select('league_id, leagues(id, name)')
+      .select('league_id, leagues(id, name, archived)')
       .eq('user_id', user.id)
       .then(({ data }) => {
         const list = (data ?? []).map(r => ({
           id:   r.league_id,
           name: r.leagues?.name ?? r.league_id,
+          archived: r.leagues?.archived ?? false,
         })).sort((a, b) => a.name.localeCompare(b.name));
-        setLeagues(list);
+        setRawLeagues(list);
         if (!value && list.length === 1) onChange(list[0].id);
       });
   // onChange/value are parent-provided callbacks — adding them would re-fetch on every parent render.
   // This effect only needs to re-run when the authenticated user changes.
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id]);
+
+  const leagues = showArchived ? rawLeagues : rawLeagues.filter(l => !l.archived);
 
   if (leagues.length === 0) return null;
   if (leagues.length === 1) {
@@ -37,7 +40,7 @@ export default function LeagueSelector({ value, onChange }) {
         className="text-[11px] font-black uppercase tracking-wide px-2 py-1 rounded"
         style={{ background: 'rgba(0,196,232,0.10)', color: 'var(--cyan)', fontFamily: 'Archivo Black, sans-serif' }}
       >
-        {leagues[0].name}
+        {leagues[0].name}{leagues[0].archived ? ' (Archived)' : ''}
       </span>
     );
   }
@@ -59,7 +62,7 @@ export default function LeagueSelector({ value, onChange }) {
       <option value="" disabled style={{ background: 'var(--ink-2)' }}>Select league…</option>
       {leagues.map(l => (
         <option key={l.id} value={l.id} style={{ background: 'var(--ink-2)', color: 'var(--paper)' }}>
-          {l.name}
+          {l.name}{l.archived ? ' (Archived)' : ''}
         </option>
       ))}
     </select>
