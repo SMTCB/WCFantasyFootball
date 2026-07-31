@@ -153,8 +153,8 @@
   </div>
   <div class="header-right">
     <div class="totals">
-      <div class="total-pill"><strong>34</strong><span>open</span></div>
-      <div class="total-pill"><strong>162</strong><span>closed</span></div>
+      <div class="total-pill"><strong>33</strong><span>open</span></div>
+      <div class="total-pill"><strong>163</strong><span>closed</span></div>
     </div>
   </div>
 </header>
@@ -167,13 +167,13 @@
   <div class="filter-chips" id="open-chips">
     <span class="chip active" data-filter-priority="all">All priorities</span>
     <span class="chip" data-filter-priority="p1">P1 — HIGH (3)</span>
-<span class="chip" data-filter-priority="p2">P2 — MEDIUM (14)</span>
+<span class="chip" data-filter-priority="p2">P2 — MEDIUM (13)</span>
 <span class="chip" data-filter-priority="p3">P3 — LOW (17)</span>
   </div>
   <div class="filter-chips" id="closed-chips" style="display:none">
     <span class="chip active" data-filter-kind="all">All closed</span>
     <span class="chip" data-filter-kind="done">Shipped (101)</span>
-<span class="chip" data-filter-kind="resolved">Resolved backlog items (12)</span>
+<span class="chip" data-filter-kind="resolved">Resolved backlog items (13)</span>
 <span class="chip" data-filter-kind="session">Session logs (43)</span>
 <span class="chip" data-filter-kind="audit">Audits (4)</span>
 <span class="chip" data-filter-kind="planning">Planning snapshots (2)</span>
@@ -184,19 +184,19 @@
 <div class="layout">
   <nav class="sidebar">
     <div class="status-toggle">
-      <button class="status-btn active" data-status="open">Open <span class="status-count">34</span></button>
-      <button class="status-btn" data-status="closed">Closed <span class="status-count">162</span></button>
+      <button class="status-btn active" data-status="open">Open <span class="status-count">33</span></button>
+      <button class="status-btn" data-status="closed">Closed <span class="status-count">163</span></button>
     </div>
     <div class="sidebar-group" id="sidebar-open">
       <h3>Jump to priority</h3>
       <div class="sidebar-item" data-jump-priority="p1"><span class="swatch" style="--tab-color:#b23b3b"></span>P1 — HIGH<span class="sidebar-count">3</span></div>
-<div class="sidebar-item" data-jump-priority="p2"><span class="swatch" style="--tab-color:#b8720e"></span>P2 — MEDIUM<span class="sidebar-count">14</span></div>
+<div class="sidebar-item" data-jump-priority="p2"><span class="swatch" style="--tab-color:#b8720e"></span>P2 — MEDIUM<span class="sidebar-count">13</span></div>
 <div class="sidebar-item" data-jump-priority="p3"><span class="swatch" style="--tab-color:#5b7285"></span>P3 — LOW<span class="sidebar-count">17</span></div>
     </div>
     <div class="sidebar-group" id="sidebar-closed" style="display:none">
       <h3>Jump to category</h3>
       <div class="sidebar-item" data-jump-kind="done"><span class="swatch" style="--tab-color:#1f7a4d"></span>Shipped<span class="sidebar-count">101</span></div>
-<div class="sidebar-item" data-jump-kind="resolved"><span class="swatch" style="--tab-color:#1f7a4d"></span>Resolved backlog items<span class="sidebar-count">12</span></div>
+<div class="sidebar-item" data-jump-kind="resolved"><span class="swatch" style="--tab-color:#1f7a4d"></span>Resolved backlog items<span class="sidebar-count">13</span></div>
 <div class="sidebar-item" data-jump-kind="session"><span class="swatch" style="--tab-color:#1a6fa8"></span>Session logs<span class="sidebar-count">43</span></div>
 <div class="sidebar-item" data-jump-kind="audit"><span class="swatch" style="--tab-color:#b23b3b"></span>Audits<span class="sidebar-count">4</span></div>
 <div class="sidebar-item" data-jump-kind="planning"><span class="swatch" style="--tab-color:#5b7285"></span>Planning snapshots<span class="sidebar-count">2</span></div>
@@ -261,7 +261,7 @@
     </section>
 
     <section class="item-group" id="group-p2" data-group="p2">
-      <h2 class="group-title" style="--tab-color:#b8720e">P2 — MEDIUM <span class="group-count">14</span></h2>
+      <h2 class="group-title" style="--tab-color:#b8720e">P2 — MEDIUM <span class="group-count">13</span></h2>
       <div class="card-grid">
       <article class="card" data-status="open" data-priority="p2" data-kind="none" data-search="data-1 full schema baseline keystone item — blocks ops-1 and data-recon below. platform revision — consolidated open items p2 — medium" style="--tab-color:#b8720e" tabindex="0">
         <div class="card-top"><span class="badge-mini pr-p2">P2 — MEDIUM</span><span class="type-tag t-techdebt">TECH DEBT</span></div>
@@ -410,23 +410,6 @@
       <dl class="drawer-fields">
         <div class="field"><dt>Description</dt><dd><p>Provider-adapter completion</p></dd></div>
         <div class="field"><dt>Why it's necessary</dt><dd><p>Found 2026-07-27 (<code>B2B_BUYOUT_TECHNICAL_DUE_DILIGENCE.md</code>). Route the 4 sync functions through <code>adapter.listEvents()</code>/<code>getPlayerStats()</code> + write an adapter-conformance test suite, so a future owner can plug in a different data provider (e.g. <code>opta.ts</code>) without touching the sync functions themselves. Distinct from <code>ARCH-2</code>, which only covers the <code>forza_id</code>→<code>provider_key</code> rename.</p></dd></div>
-        <div class="field"><dt>Where it came from</dt><dd><p>Platform Revision — Consolidated Open Items · P2 — MEDIUM</p></dd></div>
-        <div class="field"><dt>Date</dt><dd><p class="muted">Not dated.</p></dd></div>
-        <div class="field"><dt>Technical solution</dt><dd><p class="muted">No implementation write-up recorded.</p></dd></div>
-      </dl></template>
-      </article>
-
-      <article class="card" data-status="open" data-priority="p2" data-kind="none" data-search="code-7 automated rpc test harness for money/game-logic found 2026-07-27. dedicated test harness for the rpcs that move money or decide game outcomes: `execute_transfer_atomic`, `resolve_bet`, `set_lineup`, `place_bid`, `confirm_auction_win`, the coin rpcs, `calculate-scores`. `code-4` only covers frontend component tests — this is backend/money-logic coverage, currently untracked. platform revision — consolidated open items p2 — medium" style="--tab-color:#b8720e" tabindex="0">
-        <div class="card-top"><span class="badge-mini pr-p2">P2 — MEDIUM</span><span class="type-tag t-techdebt">TECH DEBT</span></div>
-        <h3 class="card-title">Automated RPC test harness for money/game-logic</h3>
-        <p class="card-summary">Found 2026-07-27. Dedicated test harness for the RPCs that move money or decide game outcomes: <code>execute_transfer_atomic</code>, <code>resolve_bet</code>, <code>set_lineup</code>, <code>place_bid</code>, <code>confirm_auction_win</code>, the coin RPCs, <code>calculate-scores</code>. <code>CODE-4</code> only covers frontend component tests — this is backend/money-logic coverage, currently untracked.</p>
-        <div class="card-foot"><span class="foot-id">CODE-7</span><span class="foot-effort">TBD</span></div>
-        <template>
-      <div class="drawer-badges"><span class="badge-mini pr-p2">P2 — MEDIUM</span><span class="type-tag t-techdebt">TECH DEBT</span></div>
-      <h2 class="drawer-title">Automated RPC test harness for money/game-logic</h2>
-      <dl class="drawer-fields">
-        <div class="field"><dt>Description</dt><dd><p>Automated RPC test harness for money/game-logic</p></dd></div>
-        <div class="field"><dt>Why it's necessary</dt><dd><p>Found 2026-07-27. Dedicated test harness for the RPCs that move money or decide game outcomes: <code>execute_transfer_atomic</code>, <code>resolve_bet</code>, <code>set_lineup</code>, <code>place_bid</code>, <code>confirm_auction_win</code>, the coin RPCs, <code>calculate-scores</code>. <code>CODE-4</code> only covers frontend component tests — this is backend/money-logic coverage, currently untracked.</p></dd></div>
         <div class="field"><dt>Where it came from</dt><dd><p>Platform Revision — Consolidated Open Items · P2 — MEDIUM</p></dd></div>
         <div class="field"><dt>Date</dt><dd><p class="muted">Not dated.</p></dd></div>
         <div class="field"><dt>Technical solution</dt><dd><p class="muted">No implementation write-up recorded.</p></dd></div>
@@ -6057,7 +6040,7 @@ npx supabase link --project-ref sssmvihxtqtohisghjet     # link this project</co
     </section>
 
     <section class="item-group" id="group-resolved" data-group="resolved">
-      <h2 class="group-title" style="--tab-color:#1f7a4d">Resolved backlog items <span class="group-count">12</span></h2>
+      <h2 class="group-title" style="--tab-color:#1f7a4d">Resolved backlog items <span class="group-count">13</span></h2>
       <div class="card-grid">
       <article class="card" data-status="closed" data-priority="none" data-kind="resolved" data-search="admin-1 clubhouse/competition admin ownership model + central reassignment panel **✅ resolved 2026-07-31 — pr #791, migration 243.** new `competition_admins` table + `is_competition_admin()` helper; owner-gated `get_circle_competition_admins`/`set_competition_admin`/`remove_competition_admin` rpcs cover `leagues`/`paddocks`/`player_boxes` (all three already had `created_by`+`circle_id`); new &quot;competition admins&quot; section added to clubhouse settings (`clubhousescreen.jsx`). unblocked **tennis-admin-gap** by gating the 9 tennis admin rpcs on `users.is_admin` (mirroring `f1adminscreen.jsx`&#x27;s existing platform-admin pattern) instead of forcing the new per-clubhouse model onto `tennis_tournaments`, which is shared global data with no owning circle — confirmed with user during planning. `tennisadminscreen.jsx` got the matching client-side lock screen. verification gap: the assign/remove round-trip in the new settings ui wasn&#x27;t exercised in a live logged-in browser session this session (no pilot credentials available) — lint/build/`platform.spec.js` (84/84) all green. platform revision — consolidated open items p1 — high" style="--tab-color:#1f7a4d" tabindex="0" data-stamp="RESOLVED">
         <div class="card-top"><span class="badge-mini k-done">RESOLVED</span><span class="type-tag t-feature">FEATURE</span></div>
@@ -6087,6 +6070,23 @@ npx supabase link --project-ref sssmvihxtqtohisghjet     # link this project</co
       <dl class="drawer-fields">
         <div class="field"><dt>Description</dt><dd><p>"Other / write-in" affordance for commissioner bet resolution</p></dd></div>
         <div class="field"><dt>Why it's necessary</dt><dd><p>✅ <strong>RESOLVED 2026-07-31.</strong> Added a "+ OTHER / WRITE-IN" chip to <code>ResolvePendingBets</code> (<code>src/components/league/CommissionerPanel.jsx</code>) that reveals a text input when predefined bet options exist; the value feeds into the same <code>betResolutionAnswers</code> array already used by chip-toggle, so no backend/RPC change was needed (<code>resolve_bet</code> already accepts arbitrary answer text). Composes with chip picks for a split payout, or stands alone as a de-facto void. Lint + build clean; not exercised live in-browser (no pilot login credentials this session).</p></dd></div>
+        <div class="field"><dt>Where it came from</dt><dd><p>Resolved backlog item · Platform Revision — Consolidated Open Items · P2 — MEDIUM</p></dd></div>
+        <div class="field"><dt>Date</dt><dd><p class="muted">Not dated.</p></dd></div>
+        <div class="field"><dt>Technical solution</dt><dd><p class="muted">No implementation write-up recorded.</p></dd></div>
+      </dl></template>
+      </article>
+
+      <article class="card" data-status="closed" data-priority="none" data-kind="resolved" data-search="code-7 automated rpc test harness for money/game-logic ✅ **resolved 2026-07-31 — pr #801.** found 2026-07-27 asking for a dedicated test harness for the rpcs that move money or decide game outcomes. audit found most of that already existed and was ci-gated: `tests/unit/{transfer,bet,lineup,auction,coins}.test.js` (pr #694, 2026-07-01) covers `execute_transfer_atomic`, `resolve_bet`, `set_lineup`, `place_bid`/`confirm_auction_win`, and the coin rpcs. the one real gap was `calculate-scores`, which had zero automated coverage — its 6 pure, dependency-free scoring functions (`calcbps`, `assignbonus`, `scoreplayer`, `buildbreakdown`, `isvalidformation`, `applyautosubs`) were extracted verbatim into a new sibling module `supabase/functions/calculate-scores/scoring-logic.js` (no behavior change) and covered by 24 assertions in `tests/unit/scoring-logic.test.js`, runnable with plain `node:test` (no db needed). also extended `check-function-drift.js`/`update-function-checksums.js` to hash every file in a function&#x27;s own directory, not just `index.*`, since `calculate-scores` is now the first multi-file function. no edge function deploy in this pr — refactor only, zero runtime behavior change; deploy remains approval-gated separately. platform revision — consolidated open items p2 — medium" style="--tab-color:#1f7a4d" tabindex="0" data-stamp="RESOLVED">
+        <div class="card-top"><span class="badge-mini k-done">RESOLVED</span><span class="type-tag t-techdebt">TECH DEBT</span></div>
+        <h3 class="card-title">Automated RPC test harness for money/game-logic</h3>
+        <p class="card-summary">✅ <strong>RESOLVED 2026-07-31 — PR #801.</strong> Found 2026-07-27 asking for a dedicated test harness for the RPCs that move money or decide game outcomes. Audit found most of that already existed and was CI-gated: <code>tests/unit/{transfer,bet,lineup,auction,coins}.test.js</code> (PR #694, 2026-07-01) covers <code>execute_transfer_atomic</code>, <code>resolve_bet</code>, <code>set_lineup</code>, <code>place_bid</code>/<code>confirm_auction_win</code>, and the coin RPCs. The one real gap was <code>calculate-scores</code>, which had zero automated coverage — its 6 pure, dependency-free scoring functions (<code>calcBPS</code>, <code>assignBonus</code>, <code>scorePlayer</code>, <code>buildBreakdown</code>, <code>isValidFormation</code>, <code>applyAutoSubs</code>) were extracted verbatim into a new sibling module <code>supabase/functions/calculate-scores/scoring-logic.js</code> (no behavior change) and covered by 24 assertions in <code>tests/unit/scoring-logic.test.js</code>, runnable with plain <code>node:test</code> (no DB needed). Also extended <code>check-function-drift.js</code>/<code>update-function-checksums.js</code> to hash every file in a function's own directory, not just <code>index.*</code>, since <code>calculate-scores</code> is now the first multi-file function. No Edge Function deploy in this PR — refactor only, zero runtime behavior change; deploy remains approval-gated separately.</p>
+        <div class="card-foot"><span class="foot-id">CODE-7</span><span class="foot-effort">—</span></div>
+        <template>
+      <div class="drawer-badges"><span class="badge-mini k-done">RESOLVED</span><span class="type-tag t-techdebt">TECH DEBT</span></div>
+      <h2 class="drawer-title">Automated RPC test harness for money/game-logic</h2>
+      <dl class="drawer-fields">
+        <div class="field"><dt>Description</dt><dd><p>Automated RPC test harness for money/game-logic</p></dd></div>
+        <div class="field"><dt>Why it's necessary</dt><dd><p>✅ <strong>RESOLVED 2026-07-31 — PR #801.</strong> Found 2026-07-27 asking for a dedicated test harness for the RPCs that move money or decide game outcomes. Audit found most of that already existed and was CI-gated: <code>tests/unit/{transfer,bet,lineup,auction,coins}.test.js</code> (PR #694, 2026-07-01) covers <code>execute_transfer_atomic</code>, <code>resolve_bet</code>, <code>set_lineup</code>, <code>place_bid</code>/<code>confirm_auction_win</code>, and the coin RPCs. The one real gap was <code>calculate-scores</code>, which had zero automated coverage — its 6 pure, dependency-free scoring functions (<code>calcBPS</code>, <code>assignBonus</code>, <code>scorePlayer</code>, <code>buildBreakdown</code>, <code>isValidFormation</code>, <code>applyAutoSubs</code>) were extracted verbatim into a new sibling module <code>supabase/functions/calculate-scores/scoring-logic.js</code> (no behavior change) and covered by 24 assertions in <code>tests/unit/scoring-logic.test.js</code>, runnable with plain <code>node:test</code> (no DB needed). Also extended <code>check-function-drift.js</code>/<code>update-function-checksums.js</code> to hash every file in a function's own directory, not just <code>index.*</code>, since <code>calculate-scores</code> is now the first multi-file function. No Edge Function deploy in this PR — refactor only, zero runtime behavior change; deploy remains approval-gated separately.</p></dd></div>
         <div class="field"><dt>Where it came from</dt><dd><p>Resolved backlog item · Platform Revision — Consolidated Open Items · P2 — MEDIUM</p></dd></div>
         <div class="field"><dt>Date</dt><dd><p class="muted">Not dated.</p></dd></div>
         <div class="field"><dt>Technical solution</dt><dd><p class="muted">No implementation write-up recorded.</p></dd></div>
