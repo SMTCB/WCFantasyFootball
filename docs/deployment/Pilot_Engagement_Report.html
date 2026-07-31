@@ -1,0 +1,358 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Forza Fantasy League — Pilot Engagement Report</title>
+<style>
+  :root{color-scheme:light dark}
+  html, body { margin: 0; padding: 0; }
+
+  :root {
+    --bg:         #080A0E;
+    --surface:    #0F1218;
+    --surface-2:  #161B25;
+    --text:       #F2EEE5;
+    --text-mute:  #8B95A1;
+    --accent:     #00B4D8;
+    --accent-ink: #06121A;
+    --rule:       rgba(242,238,229,0.09);
+    --shadow:     rgba(0,0,0,0.45);
+  }
+
+  @media (prefers-color-scheme: light) {
+    :root {
+      --bg:         #F2EEE5;
+      --surface:    #FBF9F3;
+      --surface-2:  #EAE4D4;
+      --text:       #10131A;
+      --text-mute:  #5B6472;
+      --accent:     #007A94;
+      --accent-ink: #FFFFFF;
+      --rule:       rgba(16,19,26,0.10);
+      --shadow:     rgba(16,19,26,0.10);
+    }
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: clamp(12px, 3vw, 36px);
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+
+  .slide {
+    width: 100%;
+    max-width: 1280px;
+    aspect-ratio: 16 / 9;
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+    box-shadow: 0 24px 60px var(--shadow);
+    padding: clamp(20px, 3.2vw, 44px) clamp(24px, 3.6vw, 52px);
+    display: flex;
+    flex-direction: column;
+    gap: clamp(10px, 1.6vh, 18px);
+    overflow: hidden;
+  }
+
+  /* ---------- header ---------- */
+  .head {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--rule);
+    padding-bottom: clamp(10px, 1.6vh, 16px);
+    flex-shrink: 0;
+  }
+
+  .mark {
+    display: flex;
+    align-items: baseline;
+  }
+  .mark .word {
+    font-weight: 900;
+    font-style: italic;
+    text-transform: uppercase;
+    letter-spacing: -0.02em;
+    font-size: clamp(20px, 2.4vw, 30px);
+    line-height: 1;
+    color: var(--text);
+  }
+  .mark .cut {
+    width: 3px;
+    height: clamp(18px, 2vw, 26px);
+    background: var(--accent);
+    transform: rotate(14deg);
+    margin: 0 9px;
+    flex-shrink: 0;
+    align-self: center;
+  }
+  .mark .stack {
+    display: flex;
+    flex-direction: column;
+    line-height: 0.92;
+  }
+  .mark .stack span {
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.01em;
+    font-size: clamp(9px, 1vw, 12px);
+    color: var(--text-mute);
+  }
+
+  .head-right {
+    text-align: right;
+  }
+  .eyebrow {
+    font-family: ui-monospace, "SF Mono", "Cascadia Code", monospace;
+    font-size: clamp(9px, 0.85vw, 11px);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin: 0 0 4px;
+  }
+  .title {
+    margin: 0;
+    font-weight: 800;
+    font-size: clamp(15px, 1.7vw, 20px);
+    letter-spacing: -0.01em;
+  }
+  .window {
+    margin: 3px 0 0;
+    font-family: ui-monospace, "SF Mono", "Cascadia Code", monospace;
+    font-size: clamp(9px, 0.85vw, 11px);
+    color: var(--text-mute);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ---------- stat columns ---------- */
+  .cols {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: clamp(10px, 1.4vw, 20px);
+    flex: 0 0 auto;
+  }
+
+  .col {
+    background: var(--surface-2);
+    border-left: 3px solid var(--accent);
+    border-radius: 3px;
+    padding: clamp(10px, 1.4vw, 16px) clamp(12px, 1.6vw, 18px);
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .col-label {
+    font-family: ui-monospace, "SF Mono", "Cascadia Code", monospace;
+    font-size: clamp(9px, 0.82vw, 10.5px);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-mute);
+  }
+
+  .hero {
+    font-weight: 900;
+    font-style: italic;
+    font-size: clamp(30px, 4vw, 46px);
+    line-height: 0.95;
+    letter-spacing: -0.02em;
+    font-variant-numeric: tabular-nums;
+    color: var(--text);
+  }
+  .hero small {
+    font-style: normal;
+    font-weight: 700;
+    font-size: 0.4em;
+    letter-spacing: 0;
+    color: var(--text-mute);
+    margin-left: 4px;
+  }
+
+  .col-sub {
+    font-size: clamp(11px, 1vw, 12.5px);
+    color: var(--text-mute);
+    line-height: 1.5;
+  }
+  .col-sub b {
+    color: var(--text);
+    font-variant-numeric: tabular-nums;
+    font-weight: 700;
+  }
+
+  /* ---------- bar breakdown ---------- */
+  .bars {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: clamp(6px, 1vh, 9px);
+    min-height: 0;
+  }
+
+  .bars-label {
+    font-family: ui-monospace, "SF Mono", "Cascadia Code", monospace;
+    font-size: clamp(9px, 0.82vw, 10.5px);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-mute);
+    margin-bottom: 2px;
+  }
+
+  .bar-row {
+    display: grid;
+    grid-template-columns: 132px 1fr 76px;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .bar-name {
+    font-size: clamp(10.5px, 1vw, 12px);
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .bar-track {
+    background: var(--rule);
+    border-radius: 2px;
+    height: 9px;
+    overflow: hidden;
+  }
+  .bar-fill {
+    height: 100%;
+    background: var(--accent);
+    border-radius: 2px;
+  }
+
+  .bar-val {
+    font-family: ui-monospace, "SF Mono", "Cascadia Code", monospace;
+    font-size: clamp(10px, 0.95vw, 12px);
+    font-variant-numeric: tabular-nums;
+    color: var(--text-mute);
+    text-align: right;
+    white-space: nowrap;
+  }
+  .bar-val b {
+    color: var(--text);
+    font-weight: 700;
+  }
+
+  /* ---------- footer takeaway ---------- */
+  .foot {
+    flex-shrink: 0;
+    border-top: 1px solid var(--rule);
+    padding-top: clamp(10px, 1.6vh, 14px);
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .foot-bar {
+    width: 3px;
+    align-self: stretch;
+    background: var(--accent);
+    border-radius: 2px;
+    flex-shrink: 0;
+  }
+  .foot p {
+    margin: 0;
+    font-size: clamp(12.5px, 1.15vw, 15px);
+    line-height: 1.45;
+    text-wrap: balance;
+    color: var(--text);
+  }
+  .foot p b {
+    color: var(--accent);
+    font-variant-numeric: tabular-nums;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .slide { animation: rise 0.5s ease-out; }
+    @keyframes rise {
+      from { opacity: 0; transform: translateY(6px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+  }
+</style>
+</head>
+<body>
+
+<div class="slide">
+
+  <div class="head">
+    <div class="mark">
+      <span class="word">Forza</span>
+      <div class="cut"></div>
+      <div class="stack"><span>Fantasy</span><span>League</span></div>
+    </div>
+    <div class="head-right">
+      <p class="eyebrow">World Cup Pilot &middot; Results</p>
+      <h1 class="title">Pilot Engagement Report</h1>
+      <p class="window">18 Apr &ndash; 19 Jul 2026 &middot; 54 signups &middot; 7 live leagues</p>
+    </div>
+  </div>
+
+  <div class="cols">
+    <div class="col">
+      <span class="col-label">Reach</span>
+      <div class="hero">54<small>signups</small></div>
+      <p class="col-sub"><b>53</b> logged in at least once &middot; <b>9</b> active in the last 30 days</p>
+    </div>
+    <div class="col">
+      <span class="col-label">Squad management</span>
+      <div class="hero">20<small>/ 54 managers</small></div>
+      <p class="col-sub"><b>2,469</b> transfer, lineup &amp; captaincy actions logged across the tournament</p>
+    </div>
+    <div class="col">
+      <span class="col-label">P2P betting</span>
+      <div class="hero">14<small>bettors</small></div>
+      <p class="col-sub"><b>259</b> submissions on <b>51</b> bets &middot; <b>57%</b> answered correctly</p>
+    </div>
+  </div>
+
+  <div class="bars">
+    <span class="bars-label">Squad activity by type &middot; 2,469 events total</span>
+    <div class="bar-row">
+      <span class="bar-name">Lineup swaps</span>
+      <div class="bar-track"><div class="bar-fill" style="width:100%"></div></div>
+      <span class="bar-val"><b>726</b> &middot; 18 users</span>
+    </div>
+    <div class="bar-row">
+      <span class="bar-name">Transfers &mdash; buy</span>
+      <div class="bar-track"><div class="bar-fill" style="width:89.8%"></div></div>
+      <span class="bar-val"><b>652</b> &middot; 19 users</span>
+    </div>
+    <div class="bar-row">
+      <span class="bar-name">Transfers &mdash; sell</span>
+      <div class="bar-track"><div class="bar-fill" style="width:84%"></div></div>
+      <span class="bar-val"><b>610</b> &middot; 18 users</span>
+    </div>
+    <div class="bar-row">
+      <span class="bar-name">Captain changes</span>
+      <div class="bar-track"><div class="bar-fill" style="width:44.6%"></div></div>
+      <span class="bar-val"><b>324</b> &middot; 16 users</span>
+    </div>
+    <div class="bar-row">
+      <span class="bar-name">Trades &amp; auction</span>
+      <div class="bar-track"><div class="bar-fill" style="width:2.8%"></div></div>
+      <span class="bar-val"><b>20</b> &middot; 4 users</span>
+    </div>
+  </div>
+
+  <div class="foot">
+    <div class="foot-bar"></div>
+    <p><b>37%</b> of signups actively managed a squad through the tournament, and <b>26%</b> engaged the P2P betting feature within weeks of its mid-pilot launch &mdash; a strong signal for the multi-sport, P2P-first platform in v2.</p>
+  </div>
+
+</div>
+
+</body>
+</html>
