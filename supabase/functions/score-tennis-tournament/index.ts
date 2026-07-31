@@ -86,6 +86,66 @@ function scorePlayer(player: PlayerRow, aceCard: string | null, isT4DarkHorse: b
   return pts;
 }
 
+// Awards an event_win trophy to the top scorer within each player box for
+// this tournament's season — player boxes are tennis's league-equivalent
+// (own circle_id, own membership), so "the winner" is scoped per box, not
+// platform-wide. Ties at the top are skipped (no clear winner).
+// Non-fatal: award_trophy() itself swallows errors, and the caller wraps
+// this whole call so a trophy failure never blocks tournament scoring.
+async function awardEventWinTrophies(supabase, tournament, leaderboard) {
+  if (leaderboard.length === 0) return;
+  const scoreByUser = new Map(leaderboard.map(e => [e.user_id, e.total]));
+
+  const { data: sport } = await supabase
+    .from('sports').select('id').eq('name', 'Tennis').maybeSingle();
+  if (!sport?.id) return;
+
+  const { data: boxes } = await supabase
+    .from('player_boxes').select('id, name, circle_id').eq('season_year', tournament.season_year);
+  if (!boxes?.length) return;
+
+  const { data: members } = await supabase
+    .from('player_box_members').select('player_box_id, user_id')
+    .in('player_box_id', boxes.map(b => b.id));
+
+  const membersByBox = new Map();
+  for (const m of (members ?? [])) {
+    if (!membersByBox.has(m.player_box_id)) membersByBox.set(m.player_box_id, []);
+    membersByBox.get(m.player_box_id).push(m.user_id);
+  }
+
+  for (const box of boxes) {
+    const boxMembers = membersByBox.get(box.id) ?? [];
+    let topUser = null;
+    let topPts = -1;
+    let tie = false;
+    for (const uid of boxMembers) {
+      const pts = scoreByUser.get(uid);
+      if (pts === undefined) continue;
+      if (pts > topPts) { topPts = pts; topUser = uid; tie = false; }
+      else if (pts === topPts) { tie = true; }
+    }
+    if (!topUser || tie || topPts <= 0) continue;
+
+    await supabase.rpc('award_trophy', {
+      p_circle_id:     box.circle_id,
+      p_league_id:     box.id,
+      p_user_id:       topUser,
+      p_sport_id:      sport.id,
+      p_tournament_id: tournament.id,
+      p_trophy_type:   'event_win',
+      p_tier:          'gold',
+      p_meta: {
+        event_key:   tournament.id,
+        label:       'Tournament Win',
+        reason:      `${tournament.name} — ${topPts} pts`,
+        league_name: box.name,
+        sport_type:  'tennis',
+      },
+    });
+  }
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
@@ -275,6 +335,16 @@ Deno.serve(async (req) => {
     // ── 7. Write gazette entry ────────────────────────────────────────────────
     leaderboard.sort((a, b) => b.total - a.total);
     const winner = leaderboard[0];
+
+    // event_win trophies — per-player-box winner (membership-filtered over
+    // the just-computed global scores), not the single cross-platform top
+    // scorer above. Mirrors get_player_box_leaderboard()'s membership-filter
+    // pattern.
+    try {
+      await awardEventWinTrophies(supabase, tournament, leaderboard);
+    } catch (e) {
+      console.warn('[score-tennis-tournament] award_trophy (event_win) failed (non-critical):', e.message);
+    }
 
     // Fetch winner username for headline
     const { data: winnerProfile } = await supabase
