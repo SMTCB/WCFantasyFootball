@@ -68,15 +68,47 @@ values. Confirmed mapping: `underdog_boost`, `safety_net`, `surface_specialist`,
 
 ---
 
-## Real-data status (as of 2026-07-26)
+## Real-data status (as of 2026-07-31)
 
 | Item | Status |
 |------|--------|
 | Wimbledon 2026 tournament row | ✅ Opened, real draw synced (`external_id=21337`, 128 players, tiers `{T1:4,T2:12,T3:16,T4:96}`) |
 | Player Box + roster + scoring loop | ✅ Verified end-to-end with a real Player Box, real roster submission, and a live `score-tennis-tournament` call (see Task #11 in session history / Test Run Log below) |
 | Modules 1–5 (roster validation, standard scoring, ace cards, Masters Drop Rule, ATP Finals) | ✅ Fully executed against an isolated `season_year=2099` TEST fixture 2026-07-27 — every scenario below is now marked with real results. See "Known Issues Discovered" section below for 2 findings (1 fixed, 1 backlogged). |
+| Full pipeline against the real 128-player Wimbledon field (local, not prod) | ✅ Executed 2026-07-31 against a local Docker replica seeded with real Wimbledon player rows pulled read-only from prod — roster submission → QF captain → ace card → admin round results → `score-tennis-tournament` invocation → scores/gazette/trophy writes → tournament completion, for 2 test rosters built from real drawn players (not synthetic TEST players). Output matched hand-calculated expectations exactly (`leaderboard: [{total:107},{total:54}]`). See "Local Docker rehearsal — real Wimbledon field" below. **Not** re-run against prod itself — the pipeline was exercised locally, at rest, with no writes to the live pilot DB. |
+| `sync-tennis-players` live RapidAPI call | ⬜ Not re-exercised this session — no plaintext access to `RAPIDAPI_TENNIS_KEY`/`ADMIN_TRIGGER_KEY` in this session. The 2026-07-31 test reused the real draw already synced to prod on 2026-06-28 rather than making a fresh live API call. |
 | ATP Finals full 15-match cycle | ✅ Verified against the TEST fixture (not yet against real in-season fixtures — season hasn't reached ATP Finals) |
-| Module 6 (UI E2E) | ⬜ Not yet exercised — deferred, no dedicated session time allocated yet |
+| Module 6 (UI E2E) | ⬜ Not yet exercised — deferred, no dedicated session time allocated yet. Standing prohibition on creating/logging in as a test account against the real deployed app still applies (see Module 6 methodology note) — local Docker dev fixtures are exempt from that prohibition, but no UI-layer verification was attempted this session either way. |
+
+### Local Docker rehearsal — real Wimbledon field (2026-07-31)
+
+Ran the full tennis scoring pipeline against a local Docker Supabase replica (`supabase start`), seeded with
+the real 128-player Wimbledon draw pulled read-only from prod (`external_id=21337`) rather than synthetic
+`season_year=2099` TEST players — closing the gap between "tested against fixture data" and "tested against
+the shape and scale of a real tournament draw."
+
+**What was found and fixed first:** the local replica initially returned `42501 permission denied` from
+PostgREST for every tennis table (and, on a control check, every other table too — confirmed via `leagues`).
+Root cause: an earlier-session raw-`psql` migration replay (worked around a lexicographic filename-sort-order
+bug — see [Schema Rehearsal Workflow](../deployment/DOCKER_LOCAL_DEV.md#schema-rehearsal-workflow)) bypassed
+the step `supabase db reset` normally runs after migrations to re-grant `SELECT/INSERT/UPDATE/DELETE` on
+`public` schema objects to `anon`/`authenticated`/`service_role`. Fixed locally with a direct `GRANT ALL` +
+`ALTER DEFAULT PRIVILEGES` + `NOTIFY pgrst, 'reload schema'` — this is exactly what
+`scripts/rehearse-schema.sh`'s fallback path now does automatically (formalized as part of this same session).
+
+**What was run:** 2 test rosters built from real Wimbledon players (not TEST fixture players) — captain
+nominated, ace card selected, admin round results entered, then `score-tennis-tournament` invoked via
+`curl` against the local Edge Runtime. Response:
+`{"ok":true,"tournament":"Wimbledon","scored":2,"leaderboard":[{"user_id":"11111111-...","total":107},{"user_id":"22222222-...","total":54}]}`
+— matched hand-calculated expectations exactly. Downstream writes spot-checked directly:
+`tennis_tournament_scores` (correct `base_points`/`captain_bonus`/`ace_card_bonus` breakdown per user),
+`gazette_entries` (`entry_type='tennis_result'` row present), and tournament `status` correctly flipped to
+completed via `admin_complete_tournament`.
+
+This is local-only verification — no write ever touched the live pilot DB (the real draw was pulled via a
+read-only `db query --linked` SELECT and re-inserted locally, per the Pilot Safeguards "SELECT before any
+write" pattern). It substitutes for a fresh live RapidAPI sync (not possible this session — see the
+`sync-tennis-players` row above) by reusing the real draw already synced to prod on 2026-06-28.
 
 ---
 
@@ -623,7 +655,9 @@ to the same Scenario 6.3 finding — an admin cannot drive this transition from 
 | 2026-07-27 | Claude | Module 6 | UI scenarios 6.1–6.5, static code review (live click-through blocked — see methodology note above) | 🟡 Reviewed | 6.2/6.4 pass as-shipped; 6.1 had a routing bug (fixed, see below); 6.3/6.5 pass at the screen level but are blocked end-to-end by a separate finding: every `TennisAdminScreen` RPC is `service_role`-only and unreachable from a real browser session |
 | 2026-07-27 | Claude | Bug fix | Fixed tennis "Add competition" flow navigating to `/tennis/tournament/{player_box_id}` (wrong ID type — 404s every time) instead of `/tennis` | ✅ Fixed | [NewCompetitionFlow.jsx](../../src/components/NewCompetitionFlow.jsx) — see PR link once merged |
 | 2026-07-27 | Claude | Open finding | `TennisAdminScreen.jsx`'s 9 RPCs are all `REVOKE`d from `authenticated`/`anon`, granted only to `service_role` (`200_tennis_admin_rpcs.sql`) — no admin-role check exists, so the screen cannot be used by any real logged-in user today | 🔴 Not fixed | Needs a product decision (who counts as "admin," how they're identified) before a migration adds a scoped grant — flagged to the user, not resolved unilaterally this session |
+| 2026-07-31 | Claude | Bug fix | Diagnosed + fixed local Docker `42501 permission denied` on every `public` table via PostgREST/service_role, caused by an earlier raw-`psql` migration replay bypassing the CLI's post-migration grant-restoration step | ✅ Fixed | Local-only fix; formalized into `scripts/rehearse-schema.sh`'s fallback path + [Schema Rehearsal Workflow](../deployment/DOCKER_LOCAL_DEV.md#schema-rehearsal-workflow) doc so future sessions don't rediscover it |
+| 2026-07-31 | Claude | Real-data pipeline | Full roster→captain→ace-card→round-results→`score-tennis-tournament` pipeline run locally against the real 128-player Wimbledon 2026 field (`external_id=21337`, pulled read-only from prod, not synthetic TEST players) | ✅ Pass | 2 real-player rosters; output (`leaderboard: [{total:107},{total:54}]`) matched hand-calculated expectations exactly; `tennis_tournament_scores`/`gazette_entries`/tournament-completion writes spot-checked directly. `sync-tennis-players`'s live RapidAPI call was NOT re-exercised (no key access this session) — see "Local Docker rehearsal" note above |
 
 ---
 
-Last Updated: **2026-07-27** (Modules 1–5 fully executed and verified against an isolated TEST fixture; gazette_entries silent-failure bug found and fixed; create_player_box NULL-circle_id bug found and backlogged; TEST data cleaned up)
+Last Updated: **2026-07-31** (Local Docker permission bug found and fixed; full scoring pipeline re-verified against the real 128-player Wimbledon field rather than synthetic TEST fixture data; schema-rehearsal workflow formalized as a reusable script)

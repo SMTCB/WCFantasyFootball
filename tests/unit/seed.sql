@@ -39,6 +39,16 @@
 
 -- ── Auth users (coin_wallets.user_id and others FK to auth.users, not public.users) ──
 
+-- public.handle_new_user() is captured by the public-schema-only schema.sql dump,
+-- but its trigger lives on auth.users (migration 77) and is therefore NOT captured —
+-- a pg_dump scoped to public never includes objects attached to auth-schema tables.
+-- Recreate it here (after schema.sql has defined the function) so inserting into the
+-- auth.users stub below populates public.users exactly like it does in prod.
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+CREATE TRIGGER on_auth_user_created
+  AFTER INSERT ON auth.users
+  FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
+
 -- handle_new_user() trigger fires on insert and creates the matching public.users
 -- row itself (username from raw_user_meta_data) — do not also INSERT INTO users below.
 INSERT INTO auth.users (id, raw_user_meta_data)
@@ -55,14 +65,21 @@ VALUES
   ('TEST_429', 'Test World Cup 2026', 'test-world-cup-2026', 'forza')
 ON CONFLICT (forza_id) DO NOTHING;
 
+-- ── Circle (leagues.circle_id is NOT NULL — one shared clubhouse for the seed) ──
+
+INSERT INTO circles (id, name, created_by, invite_code)
+VALUES
+  ('ffffffff-0000-4000-f000-000000000001', 'TEST_Circle', 'aaaaaaaa-0000-4000-a000-000000000099', 'TEST-CIR-001')
+ON CONFLICT (id) DO NOTHING;
+
 -- ── Leagues ───────────────────────────────────────────────────────────────────
 
-INSERT INTO leagues (id, name, format, tournament_id, created_by, league_mode, join_code)
+INSERT INTO leagues (id, name, format, tournament_id, created_by, league_mode, join_code, circle_id)
 VALUES
   ('bbbbbbbb-0000-4000-b000-000000000001', 'TEST_Classic_League', 'classic', 'TEST_429',
-   'aaaaaaaa-0000-4000-a000-000000000099', 'classic', 'TEST-CLS-001'),
+   'aaaaaaaa-0000-4000-a000-000000000099', 'classic', 'TEST-CLS-001', 'ffffffff-0000-4000-f000-000000000001'),
   ('bbbbbbbb-0000-4000-b000-000000000002', 'TEST_Draft_League', 'noduplicate', 'TEST_429',
-   'aaaaaaaa-0000-4000-a000-000000000099', 'draft', 'TEST-DRF-001')
+   'aaaaaaaa-0000-4000-a000-000000000099', 'draft', 'TEST-DRF-001', 'ffffffff-0000-4000-f000-000000000001')
 ON CONFLICT (id) DO NOTHING;
 
 -- ── League members ────────────────────────────────────────────────────────────
@@ -139,7 +156,7 @@ ON CONFLICT (id) DO NOTHING;
 -- captain: test-fwd-eng-01
 
 INSERT INTO squads (
-  id, league_id, user_id, matchday_id, tournament_id,
+  id, league_id, user_id, matchday_id,
   players, starting_xi, captain_id,
   budget_remaining, initial_build_complete, round_transfers
 )
@@ -148,7 +165,6 @@ VALUES (
   'bbbbbbbb-0000-4000-b000-000000000001',
   'aaaaaaaa-0000-4000-a000-000000000001',
   'TEST_429-r1',
-  'TEST_429',
   ARRAY[
     'test-gk-arg-01','test-def-arg-01','test-def-arg-02',
     'test-def-bra-01','test-mid-bra-01','test-mid-bra-02',
@@ -170,7 +186,7 @@ ON CONFLICT (id) DO NOTHING;
 
 -- SQUAD_B_CLASSIC: user B, 11 players, budget 45.5
 INSERT INTO squads (
-  id, league_id, user_id, matchday_id, tournament_id,
+  id, league_id, user_id, matchday_id,
   players, starting_xi, captain_id,
   budget_remaining, initial_build_complete, round_transfers
 )
@@ -179,7 +195,6 @@ VALUES (
   'bbbbbbbb-0000-4000-b000-000000000001',
   'aaaaaaaa-0000-4000-a000-000000000002',
   'TEST_429-r1',
-  'TEST_429',
   ARRAY[
     'test-gk-arg-01','test-def-arg-01','test-def-bra-01',
     'test-mid-bra-01','test-mid-bra-02','test-mid-eng-01',
@@ -201,7 +216,7 @@ ON CONFLICT (id) DO NOTHING;
 
 -- SQUAD_A_DRAFT: user A, draft league, 8 players (incomplete — initial_build_complete false)
 INSERT INTO squads (
-  id, league_id, user_id, matchday_id, tournament_id,
+  id, league_id, user_id, matchday_id,
   players, starting_xi, captain_id,
   budget_remaining, initial_build_complete, round_transfers
 )
@@ -210,7 +225,6 @@ VALUES (
   'bbbbbbbb-0000-4000-b000-000000000002',
   'aaaaaaaa-0000-4000-a000-000000000001',
   'TEST_429-r1',
-  'TEST_429',
   ARRAY[
     'test-gk-arg-01','test-def-arg-01','test-def-arg-02',
     'test-def-bra-01','test-mid-bra-01','test-mid-bra-02',

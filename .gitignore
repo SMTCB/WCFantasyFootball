@@ -86,3 +86,4 @@ backend/.env
 .env*
 backups/
 docs/architecture/VALUATION_ANALYSIS.md
+.rehearsal/

@@ -20,25 +20,18 @@ CREATE EXTENSION IF NOT EXISTS "pg_cron" WITH SCHEMA "pg_catalog";
 
 
 
-CREATE EXTENSION IF NOT EXISTS "pg_net" WITH SCHEMA "extensions";
-
-
-
-
-
-
 COMMENT ON SCHEMA "public" IS 'standard public schema';
 
 
 
+CREATE EXTENSION IF NOT EXISTS "pg_net" WITH SCHEMA "public";
+
+
+
+
+
+
 CREATE EXTENSION IF NOT EXISTS "http" WITH SCHEMA "public";
-
-
-
-
-
-
-CREATE EXTENSION IF NOT EXISTS "pg_graphql" WITH SCHEMA "graphql";
 
 
 
@@ -113,9 +106,10 @@ CREATE TYPE "public"."event_type" AS ENUM (
     'sub',
     'var',
     'assist',
-    'own_goal',
-    'penalty_saved',
+    'penalty_scored',
     'penalty_missed',
+    'penalty_saved',
+    'own_goal',
     'sub_off'
 );
 
@@ -206,7 +200,13 @@ ALTER TYPE "public"."transfer_window_type" OWNER TO "postgres";
 CREATE OR REPLACE FUNCTION "public"."_create_user_wallet"() RETURNS "trigger"
     LANGUAGE "plpgsql" SECURITY DEFINER
     SET "search_path" TO 'public'
-    AS $$ BEGIN PERFORM credit_coins(NEW.id, 500, 'admin', NULL, '{"reason":"welcome_bonus"}'::jsonb); RETURN NEW; END; $$;
+    AS $$
+BEGIN
+  PERFORM credit_coins(NEW.id, 500, 'admin', NULL,
+    '{"reason":"welcome_bonus"}'::jsonb);
+  RETURN NEW;
+END;
+$$;
 
 
 ALTER FUNCTION "public"."_create_user_wallet"() OWNER TO "postgres";
@@ -536,8 +536,15 @@ ALTER FUNCTION "public"."activate_chip"("p_user_id" "uuid", "p_league_id" "uuid"
 
 CREATE OR REPLACE FUNCTION "public"."admin_complete_tournament"("p_tournament_id" "uuid") RETURNS "jsonb"
     LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
     AS $$
 BEGIN
+  IF NOT (auth.role() = 'service_role' OR EXISTS (
+    SELECT 1 FROM users WHERE id = auth.uid() AND is_admin = true
+  )) THEN
+    RAISE EXCEPTION 'UNAUTHORIZED';
+  END IF;
+
   UPDATE tennis_tournaments
   SET status = 'completed'
   WHERE id = p_tournament_id AND status IN ('qf_captain_open', 'in_progress');
@@ -556,8 +563,15 @@ ALTER FUNCTION "public"."admin_complete_tournament"("p_tournament_id" "uuid") OW
 
 CREATE OR REPLACE FUNCTION "public"."admin_enter_atp_finals_result"("p_season_year" integer, "p_match_number" integer, "p_winner_player_id" "uuid") RETURNS "jsonb"
     LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
     AS $$
 BEGIN
+  IF NOT (auth.role() = 'service_role' OR EXISTS (
+    SELECT 1 FROM users WHERE id = auth.uid() AND is_admin = true
+  )) THEN
+    RAISE EXCEPTION 'UNAUTHORIZED';
+  END IF;
+
   UPDATE tennis_atp_finals_matches
   SET
     winner_player_id  = p_winner_player_id,
@@ -579,6 +593,7 @@ ALTER FUNCTION "public"."admin_enter_atp_finals_result"("p_season_year" integer,
 
 CREATE OR REPLACE FUNCTION "public"."admin_enter_round_results"("p_tournament_id" "uuid", "p_eliminations" "jsonb") RETURNS "jsonb"
     LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
     AS $$
 DECLARE
   v_entry      jsonb;
@@ -587,6 +602,12 @@ DECLARE
   v_rounds_won int;
   v_count      int := 0;
 BEGIN
+  IF NOT (auth.role() = 'service_role' OR EXISTS (
+    SELECT 1 FROM users WHERE id = auth.uid() AND is_admin = true
+  )) THEN
+    RAISE EXCEPTION 'UNAUTHORIZED';
+  END IF;
+
   IF NOT EXISTS (
     SELECT 1 FROM tennis_tournaments
     WHERE id = p_tournament_id AND status IN ('in_progress', 'qf_captain_open')
@@ -609,8 +630,6 @@ BEGIN
     v_count := v_count + 1;
   END LOOP;
 
-  -- Mark champion (rounds_won highest player, not eliminated)
-  -- Champion is set separately by admin_set_champion when tournament ends
   RETURN jsonb_build_object('ok', true, 'eliminations_recorded', v_count);
 END;
 $$;
@@ -638,8 +657,15 @@ ALTER FUNCTION "public"."admin_grant_coins"("p_user_id" "uuid", "p_amount" integ
 
 CREATE OR REPLACE FUNCTION "public"."admin_open_qf_window"("p_tournament_id" "uuid", "p_opens_at" timestamp with time zone, "p_closes_at" timestamp with time zone) RETURNS "jsonb"
     LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
     AS $$
 BEGIN
+  IF NOT (auth.role() = 'service_role' OR EXISTS (
+    SELECT 1 FROM users WHERE id = auth.uid() AND is_admin = true
+  )) THEN
+    RAISE EXCEPTION 'UNAUTHORIZED';
+  END IF;
+
   UPDATE tennis_tournaments
   SET
     status              = 'qf_captain_open',
@@ -662,10 +688,17 @@ ALTER FUNCTION "public"."admin_open_qf_window"("p_tournament_id" "uuid", "p_open
 
 CREATE OR REPLACE FUNCTION "public"."admin_open_tournament"("p_tournament_id" "uuid", "p_roster_lock_at" timestamp with time zone, "p_external_id" integer DEFAULT NULL::integer) RETURNS "jsonb"
     LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
     AS $$
 DECLARE
   v_name text;
 BEGIN
+  IF NOT (auth.role() = 'service_role' OR EXISTS (
+    SELECT 1 FROM users WHERE id = auth.uid() AND is_admin = true
+  )) THEN
+    RAISE EXCEPTION 'UNAUTHORIZED';
+  END IF;
+
   SELECT name INTO v_name
   FROM tennis_tournaments
   WHERE id = p_tournament_id AND status = 'upcoming';
@@ -691,11 +724,18 @@ ALTER FUNCTION "public"."admin_open_tournament"("p_tournament_id" "uuid", "p_ros
 
 CREATE OR REPLACE FUNCTION "public"."admin_seed_atp_finals_matches"("p_season_year" integer, "p_matches" "jsonb") RETURNS "jsonb"
     LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
     AS $$
 DECLARE
   v_entry   jsonb;
   v_count   int := 0;
 BEGIN
+  IF NOT (auth.role() = 'service_role' OR EXISTS (
+    SELECT 1 FROM users WHERE id = auth.uid() AND is_admin = true
+  )) THEN
+    RAISE EXCEPTION 'UNAUTHORIZED';
+  END IF;
+
   IF NOT EXISTS (SELECT 1 FROM tennis_seasons WHERE year = p_season_year) THEN
     RAISE EXCEPTION 'SEASON_NOT_FOUND';
   END IF;
@@ -728,12 +768,19 @@ ALTER FUNCTION "public"."admin_seed_atp_finals_matches"("p_season_year" integer,
 
 CREATE OR REPLACE FUNCTION "public"."admin_seed_tournament_players"("p_tournament_id" "uuid", "p_players" "jsonb") RETURNS "jsonb"
     LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
     AS $$
 DECLARE
   v_count   int := 0;
   v_player  jsonb;
   v_tid     uuid := p_tournament_id;
 BEGIN
+  IF NOT (auth.role() = 'service_role' OR EXISTS (
+    SELECT 1 FROM users WHERE id = auth.uid() AND is_admin = true
+  )) THEN
+    RAISE EXCEPTION 'UNAUTHORIZED';
+  END IF;
+
   IF NOT EXISTS (SELECT 1 FROM tennis_tournaments WHERE id = v_tid AND status != 'completed') THEN
     RAISE EXCEPTION 'TOURNAMENT_COMPLETED_OR_NOT_FOUND';
   END IF;
@@ -768,10 +815,17 @@ ALTER FUNCTION "public"."admin_seed_tournament_players"("p_tournament_id" "uuid"
 
 CREATE OR REPLACE FUNCTION "public"."admin_set_champion"("p_tournament_id" "uuid", "p_player_id" "uuid", "p_rounds_won" integer) RETURNS "jsonb"
     LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
     AS $$
 DECLARE
   v_name text;
 BEGIN
+  IF NOT (auth.role() = 'service_role' OR EXISTS (
+    SELECT 1 FROM users WHERE id = auth.uid() AND is_admin = true
+  )) THEN
+    RAISE EXCEPTION 'UNAUTHORIZED';
+  END IF;
+
   UPDATE tennis_tournament_players
   SET
     round_reached = 'champion',
@@ -794,8 +848,15 @@ ALTER FUNCTION "public"."admin_set_champion"("p_tournament_id" "uuid", "p_player
 
 CREATE OR REPLACE FUNCTION "public"."admin_start_tournament"("p_tournament_id" "uuid") RETURNS "jsonb"
     LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
     AS $$
 BEGIN
+  IF NOT (auth.role() = 'service_role' OR EXISTS (
+    SELECT 1 FROM users WHERE id = auth.uid() AND is_admin = true
+  )) THEN
+    RAISE EXCEPTION 'UNAUTHORIZED';
+  END IF;
+
   UPDATE tennis_tournaments
   SET status = 'in_progress'
   WHERE id = p_tournament_id AND status = 'roster_open';
@@ -907,6 +968,81 @@ $$;
 ALTER FUNCTION "public"."apply_relaxation_state"("p_league_id" "uuid") OWNER TO "postgres";
 
 
+CREATE OR REPLACE FUNCTION "public"."arbitrate_freeform_result"("p_challenge_id" "uuid", "p_winner_id" "uuid" DEFAULT NULL::"uuid") RETURNS "jsonb"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
+    AS $$
+DECLARE
+  v_uid           uuid := auth.uid();
+  v_ch            p2p_challenges;
+  v_loser_id      uuid;
+  v_total_pot     int;
+  v_rake          int;
+  v_prize         int;
+  v_loser_escrow  int;
+BEGIN
+  IF v_uid IS NULL THEN RAISE EXCEPTION 'UNAUTHORIZED'; END IF;
+
+  SELECT * INTO v_ch FROM p2p_challenges WHERE id = p_challenge_id FOR UPDATE;
+  IF NOT FOUND THEN RAISE EXCEPTION 'CHALLENGE_NOT_FOUND'; END IF;
+  IF v_ch.bet_type <> 'freeform' THEN RAISE EXCEPTION 'NOT_FREEFORM'; END IF;
+  IF v_ch.status <> 'disputed' THEN RAISE EXCEPTION 'INVALID_STATUS (status=%)', v_ch.status; END IF;
+  IF NOT EXISTS (
+    SELECT 1 FROM circle_members
+    WHERE circle_id = v_ch.circle_id AND user_id = v_uid AND role = 'owner'
+  ) THEN
+    RAISE EXCEPTION 'NOT_CIRCLE_OWNER';
+  END IF;
+  IF p_winner_id IS NOT NULL AND p_winner_id NOT IN (v_ch.challenger_id, v_ch.opponent_id) THEN
+    RAISE EXCEPTION 'INVALID_WINNER';
+  END IF;
+
+  v_total_pot := v_ch.stake_coins * 2;
+
+  IF p_winner_id IS NULL THEN
+    -- Void: each party's own stake goes back to their own balance.
+    PERFORM release_escrow(v_ch.challenger_id, v_ch.stake_coins, p_challenge_id,
+      jsonb_build_object('reason', 'freeform_voided'));
+    PERFORM release_escrow(v_ch.opponent_id, v_ch.stake_coins, p_challenge_id,
+      jsonb_build_object('reason', 'freeform_voided'));
+  ELSE
+    v_loser_id := CASE WHEN p_winner_id = v_ch.challenger_id THEN v_ch.opponent_id ELSE v_ch.challenger_id END;
+    v_rake     := FLOOR(v_total_pot * 0.05);
+    v_prize    := v_total_pot - v_rake;
+
+    PERFORM release_escrow(p_winner_id, v_ch.stake_coins, p_challenge_id,
+      jsonb_build_object('reason', 'freeform_arbitrated'));
+    PERFORM credit_coins(p_winner_id, v_prize - v_ch.stake_coins, 'win', p_challenge_id,
+      jsonb_build_object('reason', 'freeform_arbitrated_win', 'stake', v_ch.stake_coins, 'prize', v_prize, 'rake', v_rake));
+
+    SELECT escrow INTO v_loser_escrow FROM coin_wallets WHERE user_id = v_loser_id FOR UPDATE;
+    IF NOT FOUND THEN RAISE EXCEPTION 'WALLET_NOT_FOUND'; END IF;
+    IF v_loser_escrow < v_ch.stake_coins THEN RAISE EXCEPTION 'INSUFFICIENT_ESCROW'; END IF;
+
+    UPDATE coin_wallets
+    SET escrow = escrow - v_ch.stake_coins, updated_at = now()
+    WHERE user_id = v_loser_id;
+
+    INSERT INTO coin_transactions (user_id, type, amount, challenge_id, meta)
+    VALUES (v_loser_id, 'loss', v_ch.stake_coins, p_challenge_id,
+      jsonb_build_object('reason', 'freeform_arbitrated_loss', 'stake_lost', v_ch.stake_coins));
+  END IF;
+
+  UPDATE p2p_challenges
+  SET status      = 'resolved',
+      winner_id   = p_winner_id,
+      resolved_at = now(),
+      updated_at  = now()
+  WHERE id = p_challenge_id;
+
+  RETURN jsonb_build_object('status', 'resolved', 'winner_id', p_winner_id);
+END;
+$$;
+
+
+ALTER FUNCTION "public"."arbitrate_freeform_result"("p_challenge_id" "uuid", "p_winner_id" "uuid") OWNER TO "postgres";
+
+
 CREATE OR REPLACE FUNCTION "public"."auto_resolve_p2p_challenges"() RETURNS integer
     LANGUAGE "plpgsql" SECURITY DEFINER
     SET "search_path" TO 'public'
@@ -917,9 +1053,10 @@ DECLARE
   v_result jsonb;
 BEGIN
   FOR v_ch IN
-    SELECT DISTINCT c.*
+    SELECT c.*
     FROM p2p_challenges c
     WHERE c.status = 'accepted'
+      AND c.resolution_mode = 'auto'
       AND EXISTS (
         -- Matchday settled for this league
         SELECT 1 FROM gazette_entries ge
@@ -944,6 +1081,74 @@ $$;
 
 
 ALTER FUNCTION "public"."auto_resolve_p2p_challenges"() OWNER TO "postgres";
+
+
+CREATE OR REPLACE FUNCTION "public"."auto_void_stale_disputes"() RETURNS integer
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
+    AS $$
+DECLARE
+  v_ch    p2p_challenges;
+  v_count int := 0;
+BEGIN
+  IF auth.uid() IS NOT NULL THEN
+    RAISE EXCEPTION 'ADMIN_ONLY';
+  END IF;
+
+  FOR v_ch IN
+    SELECT * FROM p2p_challenges
+    WHERE status = 'disputed'
+      AND dispute_deadline < now()
+    ORDER BY created_at
+    FOR UPDATE SKIP LOCKED
+  LOOP
+    BEGIN
+      PERFORM release_escrow(v_ch.challenger_id, v_ch.stake_coins, v_ch.id,
+        jsonb_build_object('reason', 'freeform_dispute_timeout'));
+      PERFORM release_escrow(v_ch.opponent_id, v_ch.stake_coins, v_ch.id,
+        jsonb_build_object('reason', 'freeform_dispute_timeout'));
+
+      UPDATE p2p_challenges
+      SET status      = 'resolved',
+          winner_id   = NULL,
+          resolved_at = now(),
+          updated_at  = now()
+      WHERE id = v_ch.id;
+
+      v_count := v_count + 1;
+    EXCEPTION WHEN OTHERS THEN
+      RAISE WARNING 'auto_void_stale_disputes: failed for challenge %: %', v_ch.id, SQLERRM;
+    END;
+  END LOOP;
+
+  RETURN v_count;
+END;
+$$;
+
+
+ALTER FUNCTION "public"."auto_void_stale_disputes"() OWNER TO "postgres";
+
+
+CREATE OR REPLACE FUNCTION "public"."award_trophy"("p_circle_id" "uuid", "p_league_id" "uuid", "p_user_id" "uuid", "p_sport_id" "uuid", "p_tournament_id" "uuid", "p_trophy_type" "text", "p_tier" "text", "p_meta" "jsonb" DEFAULT '{}'::"jsonb") RETURNS "uuid"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
+    AS $$
+DECLARE
+  v_id uuid;
+BEGIN
+  INSERT INTO trophy_ledger (circle_id, league_id, user_id, sport_id, tournament_id, trophy_type, tier, meta)
+  VALUES (p_circle_id, p_league_id, p_user_id, p_sport_id, p_tournament_id, p_trophy_type, p_tier, p_meta)
+  ON CONFLICT DO NOTHING
+  RETURNING id INTO v_id;
+
+  RETURN v_id;
+EXCEPTION WHEN OTHERS THEN
+  RETURN NULL;  -- non-fatal: trophy emission failure must never block scoring
+END;
+$$;
+
+
+ALTER FUNCTION "public"."award_trophy"("p_circle_id" "uuid", "p_league_id" "uuid", "p_user_id" "uuid", "p_sport_id" "uuid", "p_tournament_id" "uuid", "p_trophy_type" "text", "p_tier" "text", "p_meta" "jsonb") OWNER TO "postgres";
 
 
 CREATE OR REPLACE FUNCTION "public"."calculate_relaxation_state"("p_league_id" "uuid") RETURNS json
@@ -1045,17 +1250,10 @@ BEGIN
   IF v_ch.challenger_id <> v_user_id THEN RAISE EXCEPTION 'NOT_CHALLENGER'; END IF;
   IF v_ch.status NOT IN ('pending') THEN RAISE EXCEPTION 'CANNOT_CANCEL'; END IF;
 
-  -- Refund challenger's stake
+  -- Refund challenger's stake (release_escrow logs its own 'refund' transaction)
   PERFORM release_escrow(
     v_ch.challenger_id,
     v_ch.stake_coins,
-    p_challenge_id,
-    jsonb_build_object('reason', 'challenge_cancelled')
-  );
-  PERFORM credit_coins(
-    v_ch.challenger_id,
-    v_ch.stake_coins,
-    'refund',
     p_challenge_id,
     jsonb_build_object('reason', 'challenge_cancelled')
   );
@@ -1444,6 +1642,79 @@ $$;
 ALTER FUNCTION "public"."confirm_auction_win"("p_listing_id" "uuid") OWNER TO "postgres";
 
 
+CREATE OR REPLACE FUNCTION "public"."confirm_freeform_result"("p_challenge_id" "uuid") RETURNS "jsonb"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
+    AS $$
+DECLARE
+  v_uid           uuid := auth.uid();
+  v_ch            p2p_challenges;
+  v_winner_id     uuid;
+  v_loser_id      uuid;
+  v_total_pot     int;
+  v_rake          int;
+  v_prize         int;
+  v_loser_escrow  int;
+BEGIN
+  IF v_uid IS NULL THEN RAISE EXCEPTION 'UNAUTHORIZED'; END IF;
+
+  SELECT * INTO v_ch FROM p2p_challenges WHERE id = p_challenge_id FOR UPDATE;
+  IF NOT FOUND THEN RAISE EXCEPTION 'CHALLENGE_NOT_FOUND'; END IF;
+  IF v_ch.bet_type <> 'freeform' THEN RAISE EXCEPTION 'NOT_FREEFORM'; END IF;
+  IF v_ch.status <> 'accepted' THEN RAISE EXCEPTION 'INVALID_STATUS (status=%)', v_ch.status; END IF;
+  IF v_ch.proposed_by IS NULL THEN RAISE EXCEPTION 'NO_PROPOSAL'; END IF;
+  IF v_uid = v_ch.proposed_by THEN RAISE EXCEPTION 'CANNOT_CONFIRM_OWN_PROPOSAL'; END IF;
+  IF v_uid NOT IN (v_ch.challenger_id, v_ch.opponent_id) THEN
+    RAISE EXCEPTION 'NOT_PARTICIPANT';
+  END IF;
+
+  v_winner_id := v_ch.proposed_winner_id;
+  v_total_pot := v_ch.stake_coins * 2;
+
+  IF v_winner_id IS NULL THEN
+    -- Push: each party's own stake goes back to their own balance.
+    PERFORM release_escrow(v_ch.challenger_id, v_ch.stake_coins, p_challenge_id,
+      jsonb_build_object('reason', 'freeform_push'));
+    PERFORM release_escrow(v_ch.opponent_id, v_ch.stake_coins, p_challenge_id,
+      jsonb_build_object('reason', 'freeform_push'));
+  ELSE
+    v_loser_id := CASE WHEN v_winner_id = v_ch.challenger_id THEN v_ch.opponent_id ELSE v_ch.challenger_id END;
+    v_rake     := FLOOR(v_total_pot * 0.05);
+    v_prize    := v_total_pot - v_rake;
+
+    PERFORM release_escrow(v_winner_id, v_ch.stake_coins, p_challenge_id,
+      jsonb_build_object('reason', 'freeform_resolved'));
+    PERFORM credit_coins(v_winner_id, v_prize - v_ch.stake_coins, 'win', p_challenge_id,
+      jsonb_build_object('reason', 'freeform_won', 'stake', v_ch.stake_coins, 'prize', v_prize, 'rake', v_rake));
+
+    SELECT escrow INTO v_loser_escrow FROM coin_wallets WHERE user_id = v_loser_id FOR UPDATE;
+    IF NOT FOUND THEN RAISE EXCEPTION 'WALLET_NOT_FOUND'; END IF;
+    IF v_loser_escrow < v_ch.stake_coins THEN RAISE EXCEPTION 'INSUFFICIENT_ESCROW'; END IF;
+
+    UPDATE coin_wallets
+    SET escrow = escrow - v_ch.stake_coins, updated_at = now()
+    WHERE user_id = v_loser_id;
+
+    INSERT INTO coin_transactions (user_id, type, amount, challenge_id, meta)
+    VALUES (v_loser_id, 'loss', v_ch.stake_coins, p_challenge_id,
+      jsonb_build_object('reason', 'freeform_lost', 'stake_lost', v_ch.stake_coins));
+  END IF;
+
+  UPDATE p2p_challenges
+  SET status      = 'resolved',
+      winner_id   = v_winner_id,
+      resolved_at = now(),
+      updated_at  = now()
+  WHERE id = p_challenge_id;
+
+  RETURN jsonb_build_object('status', 'resolved', 'winner_id', v_winner_id);
+END;
+$$;
+
+
+ALTER FUNCTION "public"."confirm_freeform_result"("p_challenge_id" "uuid") OWNER TO "postgres";
+
+
 CREATE OR REPLACE FUNCTION "public"."create_circle"("p_name" "text") RETURNS json
     LANGUAGE "plpgsql" SECURITY DEFINER
     SET "search_path" TO 'public'
@@ -1488,46 +1759,7 @@ ALTER FUNCTION "public"."create_circle"("p_name" "text") OWNER TO "postgres";
 
 CREATE OR REPLACE FUNCTION "public"."create_late_joiner_allocation"("p_league_id" "uuid") RETURNS "void"
     LANGUAGE "plpgsql" SECURITY DEFINER
-    AS $$
-DECLARE
-  v_caller       uuid := auth.uid();
-  v_list_size    int;
-BEGIN
-  IF v_caller IS NULL THEN
-    RAISE EXCEPTION 'UNAUTHORIZED';
-  END IF;
-
-  -- Must be a league member
-  IF NOT EXISTS (
-    SELECT 1 FROM league_members WHERE league_id = p_league_id AND user_id = v_caller
-  ) THEN
-    RAISE EXCEPTION 'NOT_MEMBER';
-  END IF;
-
-  -- Lottery must have already run for at least one other member
-  IF NOT EXISTS (
-    SELECT 1 FROM draft_allocations
-    WHERE league_id = p_league_id AND allocated_players IS NOT NULL
-  ) THEN
-    RAISE EXCEPTION 'LOTTERY_NOT_RUN';
-  END IF;
-
-  -- No-op if this user already has an allocation
-  IF EXISTS (
-    SELECT 1 FROM draft_allocations WHERE league_id = p_league_id AND user_id = v_caller
-  ) THEN
-    RETURN;
-  END IF;
-
-  -- Read draft_list_size from league config; default 30
-  SELECT COALESCE((config->>'draft_list_size')::int, 30)
-  INTO v_list_size
-  FROM leagues WHERE id = p_league_id;
-
-  INSERT INTO draft_allocations (league_id, user_id, unresolved_slots, allocated_players, phase)
-  VALUES (p_league_id, v_caller, v_list_size, '{}', 'group');
-END;
-$$;
+    AS $$ DECLARE v_caller uuid := auth.uid(); v_list_size int; BEGIN IF v_caller IS NULL THEN RAISE EXCEPTION 'UNAUTHORIZED'; END IF; IF NOT EXISTS (SELECT 1 FROM league_members WHERE league_id = p_league_id AND user_id = v_caller) THEN RAISE EXCEPTION 'NOT_MEMBER'; END IF; IF NOT EXISTS (SELECT 1 FROM draft_allocations WHERE league_id = p_league_id AND allocated_players IS NOT NULL) THEN RAISE EXCEPTION 'LOTTERY_NOT_RUN'; END IF; IF EXISTS (SELECT 1 FROM draft_allocations WHERE league_id = p_league_id AND user_id = v_caller) THEN RETURN; END IF; SELECT COALESCE((config->>'draft_list_size')::int, 30) INTO v_list_size FROM leagues WHERE id = p_league_id; INSERT INTO draft_allocations (league_id, user_id, unresolved_slots, allocated_players, phase) VALUES (p_league_id, v_caller, v_list_size, '{}', 'group'); END; $$;
 
 
 ALTER FUNCTION "public"."create_late_joiner_allocation"("p_league_id" "uuid") OWNER TO "postgres";
@@ -1561,59 +1793,6 @@ $$;
 
 
 ALTER FUNCTION "public"."create_league"("p_name" "text", "p_format" "text", "p_user_id" "uuid") OWNER TO "postgres";
-
-
-CREATE OR REPLACE FUNCTION "public"."create_league"("p_name" "text", "p_format" "text", "p_user_id" "uuid", "p_tournament_id" "text", "p_h2h_enabled" boolean DEFAULT false) RETURNS json
-    LANGUAGE "plpgsql" SECURITY DEFINER
-    AS $$
-DECLARE
-  v_caller    uuid := auth.uid();
-  v_league    leagues%ROWTYPE;
-  v_join_code text;
-BEGIN
-  IF v_caller IS NULL THEN
-    RAISE EXCEPTION 'UNAUTHORIZED: must be authenticated to create a league';
-  END IF;
-
-  IF NOT EXISTS (SELECT 1 FROM tournaments WHERE forza_id = p_tournament_id) THEN
-    RAISE EXCEPTION 'TOURNAMENT_NOT_FOUND: tournament % does not exist', p_tournament_id;
-  END IF;
-
-  v_join_code := upper(substring(md5(random()::text) for 6));
-
-  INSERT INTO leagues (name, format, tournament_id, created_by, join_code, h2h_enabled)
-  VALUES (p_name, p_format::league_format, p_tournament_id, v_caller, v_join_code, p_h2h_enabled)
-  RETURNING * INTO v_league;
-
-  INSERT INTO league_members (league_id, user_id, role)
-  VALUES (v_league.id, v_caller, 'commissioner')
-  ON CONFLICT (league_id, user_id) DO NOTHING;
-
-  -- Seed league_config defaults (existing keys + H2H scoring keys)
-  INSERT INTO league_config (league_id, config_key, config_value)
-  VALUES
-    (v_league.id, 'transfers_per_round',      CASE WHEN p_format = 'noduplicate' THEN '3'::jsonb ELSE '6'::jsonb END),
-    (v_league.id, 'transfer_reopen_hours',    '6'::jsonb),
-    (v_league.id, 'transfer_wildcard_round',  'null'::jsonb),
-    (v_league.id, 'club_cap_default',         '3'::jsonb),
-    (v_league.id, 'club_cap_tier1_threshold', '8'::jsonb),
-    (v_league.id, 'club_cap_tier1_value',     '4'::jsonb),
-    (v_league.id, 'club_cap_tier2_threshold', '4'::jsonb),
-    (v_league.id, 'club_cap_tier2_value',     '5'::jsonb),
-    (v_league.id, 'club_cap_tier3_threshold', '2'::jsonb),
-    (v_league.id, 'club_cap_tier3_value',     'null'::jsonb),
-    (v_league.id, 'lineup_lock_per_fixture',  'true'::jsonb),
-    (v_league.id, 'h2h_win_pts',              '5'::jsonb),
-    (v_league.id, 'h2h_draw_pts',             '2'::jsonb),
-    (v_league.id, 'h2h_loss_pts',             '0'::jsonb)
-  ON CONFLICT (league_id, config_key) DO NOTHING;
-
-  RETURN row_to_json(v_league);
-END;
-$$;
-
-
-ALTER FUNCTION "public"."create_league"("p_name" "text", "p_format" "text", "p_user_id" "uuid", "p_tournament_id" "text", "p_h2h_enabled" boolean) OWNER TO "postgres";
 
 
 CREATE OR REPLACE FUNCTION "public"."create_league"("p_name" "text", "p_format" "text", "p_user_id" "uuid", "p_tournament_id" "text", "p_h2h_enabled" boolean DEFAULT false, "p_circle_id" "uuid" DEFAULT NULL::"uuid") RETURNS json
@@ -1676,35 +1855,145 @@ $$;
 ALTER FUNCTION "public"."create_league"("p_name" "text", "p_format" "text", "p_user_id" "uuid", "p_tournament_id" "text", "p_h2h_enabled" boolean, "p_circle_id" "uuid") OWNER TO "postgres";
 
 
-CREATE OR REPLACE FUNCTION "public"."create_p2p_challenge"("p_league_id" "uuid", "p_opponent_id" "uuid", "p_matchday_id" "text", "p_stake_coins" integer, "p_message" "text" DEFAULT NULL::"text") RETURNS "jsonb"
+CREATE OR REPLACE FUNCTION "public"."create_p2p_challenge"("p_circle_id" "uuid", "p_opponent_id" "uuid", "p_bet_type" "text", "p_stake_coins" integer, "p_message" "text" DEFAULT NULL::"text", "p_league_id" "uuid" DEFAULT NULL::"uuid", "p_matchday_id" "text" DEFAULT NULL::"text", "p_question" "text" DEFAULT NULL::"text") RETURNS "jsonb"
     LANGUAGE "plpgsql" SECURITY DEFINER
     SET "search_path" TO 'public'
     AS $$
 DECLARE
-  v_challenger_id uuid := auth.uid();
-  v_challenge_id  uuid;
-  v_min_stake     int  := 10;
-  v_max_stake     int  := 500;
-  v_enabled       boolean := true;
-  v_daily_limit   int  := 5;
-  v_today_count   int  := 0;
-  v_cfg           p2p_config;
+  v_challenger_id   uuid := auth.uid();
+  v_challenge_id    uuid;
+  v_min_stake       int  := 10;
+  v_max_stake       int  := 500;
+  v_enabled         boolean := true;
+  v_daily_limit     int  := 5;
+  v_today_count     int  := 0;
+  v_cfg             p2p_config;
+  v_resolution_mode text;
 BEGIN
   IF v_challenger_id IS NULL THEN
     RAISE EXCEPTION 'UNAUTHORIZED';
   END IF;
 
-  -- Load league p2p config (use defaults if no row)
-  SELECT * INTO v_cfg FROM p2p_config WHERE league_id = p_league_id;
-  IF FOUND THEN
-    v_min_stake   := v_cfg.min_stake;
-    v_max_stake   := v_cfg.max_stake;
-    v_daily_limit := v_cfg.daily_challenge_limit;
-    v_enabled     := v_cfg.challenges_enabled;
+  IF p_bet_type NOT IN ('gw_total', 'freeform') THEN
+    RAISE EXCEPTION 'BET_TYPE_NOT_SUPPORTED';
   END IF;
 
-  IF NOT v_enabled THEN
-    RAISE EXCEPTION 'CHALLENGES_DISABLED';
+  -- Both parties must be members of the circle (shared by both bet types)
+  IF NOT is_circle_member(p_circle_id) THEN
+    RAISE EXCEPTION 'NOT_CIRCLE_MEMBER';
+  END IF;
+  IF NOT EXISTS (
+    SELECT 1 FROM circle_members
+    WHERE circle_id = p_circle_id AND user_id = p_opponent_id
+  ) THEN
+    RAISE EXCEPTION 'OPPONENT_NOT_CIRCLE_MEMBER';
+  END IF;
+
+  IF p_bet_type = 'gw_total' THEN
+    v_resolution_mode := 'auto';
+    p_question := NULL;
+
+    IF p_league_id IS NULL OR p_matchday_id IS NULL THEN
+      RAISE EXCEPTION 'LEAGUE_AND_MATCHDAY_REQUIRED';
+    END IF;
+
+    -- The league must actually belong to this circle
+    IF NOT EXISTS (
+      SELECT 1 FROM leagues WHERE id = p_league_id AND circle_id = p_circle_id
+    ) THEN
+      RAISE EXCEPTION 'LEAGUE_NOT_IN_CIRCLE';
+    END IF;
+
+    -- Load league p2p config (use defaults if no row)
+    SELECT * INTO v_cfg FROM p2p_config WHERE league_id = p_league_id;
+    IF FOUND THEN
+      v_min_stake   := v_cfg.min_stake;
+      v_max_stake   := v_cfg.max_stake;
+      v_daily_limit := v_cfg.daily_challenge_limit;
+      v_enabled     := v_cfg.challenges_enabled;
+    END IF;
+
+    IF NOT v_enabled THEN
+      RAISE EXCEPTION 'CHALLENGES_DISABLED';
+    END IF;
+
+    -- Daily challenge limit (challenges created today by this user in this league)
+    SELECT COUNT(*) INTO v_today_count
+    FROM p2p_challenges
+    WHERE challenger_id = v_challenger_id
+      AND league_id     = p_league_id
+      AND created_at    > now() - interval '24 hours';
+
+    IF v_today_count >= v_daily_limit THEN
+      RAISE EXCEPTION 'DAILY_LIMIT_REACHED (limit=%)', v_daily_limit;
+    END IF;
+
+    -- Both parties must also be members of the specific league this bet is on
+    IF NOT EXISTS (
+      SELECT 1 FROM league_members
+      WHERE league_id = p_league_id AND user_id = v_challenger_id
+    ) THEN
+      RAISE EXCEPTION 'NOT_LEAGUE_MEMBER';
+    END IF;
+    IF NOT EXISTS (
+      SELECT 1 FROM league_members
+      WHERE league_id = p_league_id AND user_id = p_opponent_id
+    ) THEN
+      RAISE EXCEPTION 'OPPONENT_NOT_MEMBER';
+    END IF;
+
+    -- No duplicate pending/accepted challenge between same pair in same matchday
+    IF EXISTS (
+      SELECT 1 FROM p2p_challenges
+      WHERE league_id = p_league_id
+        AND matchday_id = p_matchday_id
+        AND status IN ('pending', 'accepted')
+        AND (
+          (challenger_id = v_challenger_id AND opponent_id = p_opponent_id)
+          OR (challenger_id = p_opponent_id AND opponent_id = v_challenger_id)
+        )
+    ) THEN
+      RAISE EXCEPTION 'DUPLICATE_CHALLENGE';
+    END IF;
+  ELSE
+    -- freeform: no league/matchday, no per-league config -- just circle-scoped
+    -- daily limit + a matching question required.
+    v_resolution_mode := 'manual';
+    p_league_id   := NULL;
+    p_matchday_id := NULL;
+
+    IF p_question IS NULL OR char_length(trim(p_question)) = 0 THEN
+      RAISE EXCEPTION 'QUESTION_REQUIRED';
+    END IF;
+    IF char_length(p_question) > 140 THEN
+      RAISE EXCEPTION 'QUESTION_TOO_LONG';
+    END IF;
+
+    SELECT COUNT(*) INTO v_today_count
+    FROM p2p_challenges
+    WHERE challenger_id = v_challenger_id
+      AND circle_id     = p_circle_id
+      AND bet_type      = 'freeform'
+      AND created_at    > now() - interval '24 hours';
+
+    IF v_today_count >= v_daily_limit THEN
+      RAISE EXCEPTION 'DAILY_LIMIT_REACHED (limit=%)', v_daily_limit;
+    END IF;
+
+    -- No duplicate pending/accepted identical-question challenge between same pair
+    IF EXISTS (
+      SELECT 1 FROM p2p_challenges
+      WHERE circle_id = p_circle_id
+        AND bet_type  = 'freeform'
+        AND question  = p_question
+        AND status IN ('pending', 'accepted')
+        AND (
+          (challenger_id = v_challenger_id AND opponent_id = p_opponent_id)
+          OR (challenger_id = p_opponent_id AND opponent_id = v_challenger_id)
+        )
+    ) THEN
+      RAISE EXCEPTION 'DUPLICATE_CHALLENGE';
+    END IF;
   END IF;
 
   IF p_stake_coins < v_min_stake THEN
@@ -1715,59 +2004,20 @@ BEGIN
     RAISE EXCEPTION 'STAKE_TOO_HIGH (max=%)', v_max_stake;
   END IF;
 
-  -- Daily challenge limit (challenges created today by this user in this league)
-  SELECT COUNT(*) INTO v_today_count
-  FROM p2p_challenges
-  WHERE challenger_id = v_challenger_id
-    AND league_id     = p_league_id
-    AND created_at    > now() - interval '24 hours';
-
-  IF v_today_count >= v_daily_limit THEN
-    RAISE EXCEPTION 'DAILY_LIMIT_REACHED (limit=%)', v_daily_limit;
-  END IF;
-
-  -- Both parties must be league members
-  IF NOT EXISTS (
-    SELECT 1 FROM league_members
-    WHERE league_id = p_league_id AND user_id = v_challenger_id
-  ) THEN
-    RAISE EXCEPTION 'NOT_LEAGUE_MEMBER';
-  END IF;
-  IF NOT EXISTS (
-    SELECT 1 FROM league_members
-    WHERE league_id = p_league_id AND user_id = p_opponent_id
-  ) THEN
-    RAISE EXCEPTION 'OPPONENT_NOT_MEMBER';
-  END IF;
-
-  -- No duplicate pending/accepted challenge between same pair in same matchday
-  IF EXISTS (
-    SELECT 1 FROM p2p_challenges
-    WHERE league_id = p_league_id
-      AND matchday_id = p_matchday_id
-      AND status IN ('pending', 'accepted')
-      AND (
-        (challenger_id = v_challenger_id AND opponent_id = p_opponent_id)
-        OR (challenger_id = p_opponent_id AND opponent_id = v_challenger_id)
-      )
-  ) THEN
-    RAISE EXCEPTION 'DUPLICATE_CHALLENGE';
-  END IF;
-
   -- Deduct challenger stake to escrow
   PERFORM debit_coins_to_escrow(
     v_challenger_id,
     p_stake_coins,
     NULL,
-    jsonb_build_object('reason', 'challenge_stake', 'matchday_id', p_matchday_id)
+    jsonb_build_object('reason', 'challenge_stake', 'bet_type', p_bet_type, 'matchday_id', p_matchday_id)
   );
 
   INSERT INTO p2p_challenges (
-    league_id, challenger_id, opponent_id, matchday_id,
-    stake_coins, message, status
+    circle_id, league_id, challenger_id, opponent_id, matchday_id,
+    bet_type, resolution_mode, stake_coins, message, question, status
   ) VALUES (
-    p_league_id, v_challenger_id, p_opponent_id, p_matchday_id,
-    p_stake_coins, p_message, 'pending'
+    p_circle_id, p_league_id, v_challenger_id, p_opponent_id, p_matchday_id,
+    p_bet_type, v_resolution_mode, p_stake_coins, p_message, p_question, 'pending'
   )
   RETURNING id INTO v_challenge_id;
 
@@ -1784,7 +2034,7 @@ END;
 $$;
 
 
-ALTER FUNCTION "public"."create_p2p_challenge"("p_league_id" "uuid", "p_opponent_id" "uuid", "p_matchday_id" "text", "p_stake_coins" integer, "p_message" "text") OWNER TO "postgres";
+ALTER FUNCTION "public"."create_p2p_challenge"("p_circle_id" "uuid", "p_opponent_id" "uuid", "p_bet_type" "text", "p_stake_coins" integer, "p_message" "text", "p_league_id" "uuid", "p_matchday_id" "text", "p_question" "text") OWNER TO "postgres";
 
 
 CREATE OR REPLACE FUNCTION "public"."create_paddock"("p_name" "text", "p_circle_id" "uuid" DEFAULT NULL::"uuid") RETURNS "uuid"
@@ -1917,6 +2167,44 @@ $$;
 ALTER FUNCTION "public"."debit_coins_to_escrow"("p_user_id" "uuid", "p_amount" integer, "p_challenge_id" "uuid", "p_meta" "jsonb") OWNER TO "postgres";
 
 
+CREATE OR REPLACE FUNCTION "public"."declare_freeform_result"("p_challenge_id" "uuid", "p_winner_id" "uuid" DEFAULT NULL::"uuid") RETURNS "jsonb"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
+    AS $$
+DECLARE
+  v_uid uuid := auth.uid();
+  v_ch  p2p_challenges;
+BEGIN
+  IF v_uid IS NULL THEN RAISE EXCEPTION 'UNAUTHORIZED'; END IF;
+
+  SELECT * INTO v_ch FROM p2p_challenges WHERE id = p_challenge_id FOR UPDATE;
+  IF NOT FOUND THEN RAISE EXCEPTION 'CHALLENGE_NOT_FOUND'; END IF;
+  IF v_ch.bet_type <> 'freeform' THEN RAISE EXCEPTION 'NOT_FREEFORM'; END IF;
+  IF v_ch.status <> 'accepted' THEN RAISE EXCEPTION 'INVALID_STATUS (status=%)', v_ch.status; END IF;
+  IF v_uid NOT IN (v_ch.challenger_id, v_ch.opponent_id) THEN
+    RAISE EXCEPTION 'NOT_PARTICIPANT';
+  END IF;
+  IF p_winner_id IS NOT NULL AND p_winner_id NOT IN (v_ch.challenger_id, v_ch.opponent_id) THEN
+    RAISE EXCEPTION 'INVALID_WINNER';
+  END IF;
+
+  -- p_winner_id NULL = proposing a push (both stakes returned, no winner)
+  UPDATE p2p_challenges
+  SET proposed_winner_id = p_winner_id,
+      proposed_by        = v_uid,
+      proposed_at         = now(),
+      dispute_deadline    = now() + interval '7 days',
+      updated_at          = now()
+  WHERE id = p_challenge_id;
+
+  RETURN jsonb_build_object('ok', true);
+END;
+$$;
+
+
+ALTER FUNCTION "public"."declare_freeform_result"("p_challenge_id" "uuid", "p_winner_id" "uuid") OWNER TO "postgres";
+
+
 CREATE OR REPLACE FUNCTION "public"."decline_p2p_challenge"("p_challenge_id" "uuid") RETURNS "jsonb"
     LANGUAGE "plpgsql" SECURITY DEFINER
     SET "search_path" TO 'public'
@@ -1932,18 +2220,10 @@ BEGIN
   IF v_ch.opponent_id <> v_user_id THEN RAISE EXCEPTION 'NOT_OPPONENT'; END IF;
   IF v_ch.status <> 'pending' THEN RAISE EXCEPTION 'CHALLENGE_NOT_PENDING'; END IF;
 
-  -- Refund challenger's stake from escrow
+  -- Refund challenger's stake from escrow (release_escrow logs its own 'refund' transaction)
   PERFORM release_escrow(
     v_ch.challenger_id,
     v_ch.stake_coins,
-    p_challenge_id,
-    jsonb_build_object('reason', 'challenge_declined')
-  );
-  -- Log refund transaction
-  PERFORM credit_coins(
-    v_ch.challenger_id,
-    v_ch.stake_coins,
-    'refund',
     p_challenge_id,
     jsonb_build_object('reason', 'challenge_declined')
   );
@@ -2211,6 +2491,51 @@ $_$;
 ALTER FUNCTION "public"."derive_fixture_round_number"() OWNER TO "postgres";
 
 
+CREATE OR REPLACE FUNCTION "public"."dispute_freeform_result"("p_challenge_id" "uuid") RETURNS "jsonb"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
+    AS $$
+DECLARE
+  v_uid uuid := auth.uid();
+  v_ch  p2p_challenges;
+BEGIN
+  IF v_uid IS NULL THEN RAISE EXCEPTION 'UNAUTHORIZED'; END IF;
+
+  SELECT * INTO v_ch FROM p2p_challenges WHERE id = p_challenge_id FOR UPDATE;
+  IF NOT FOUND THEN RAISE EXCEPTION 'CHALLENGE_NOT_FOUND'; END IF;
+  IF v_ch.bet_type <> 'freeform' THEN RAISE EXCEPTION 'NOT_FREEFORM'; END IF;
+  IF v_ch.status <> 'accepted' THEN RAISE EXCEPTION 'INVALID_STATUS (status=%)', v_ch.status; END IF;
+  IF v_ch.proposed_by IS NULL THEN RAISE EXCEPTION 'NO_PROPOSAL'; END IF;
+  IF v_uid = v_ch.proposed_by THEN RAISE EXCEPTION 'CANNOT_DISPUTE_OWN_PROPOSAL'; END IF;
+  IF v_uid NOT IN (v_ch.challenger_id, v_ch.opponent_id) THEN
+    RAISE EXCEPTION 'NOT_PARTICIPANT';
+  END IF;
+
+  UPDATE p2p_challenges
+  SET status           = 'disputed',
+      dispute_deadline = now() + interval '7 days',
+      updated_at       = now()
+  WHERE id = p_challenge_id;
+
+  INSERT INTO clubhouse_notifications (circle_id, user_id, source_type, source_id, type, payload)
+  SELECT
+    v_ch.circle_id,
+    cm.user_id,
+    'p2p_challenge',
+    p_challenge_id,
+    'arbitration_needed',
+    jsonb_build_object('question', v_ch.question, 'stake_coins', v_ch.stake_coins)
+  FROM circle_members cm
+  WHERE cm.circle_id = v_ch.circle_id AND cm.role = 'owner';
+
+  RETURN jsonb_build_object('ok', true);
+END;
+$$;
+
+
+ALTER FUNCTION "public"."dispute_freeform_result"("p_challenge_id" "uuid") OWNER TO "postgres";
+
+
 CREATE OR REPLACE FUNCTION "public"."edit_chat_message"("p_message_id" "uuid", "p_new_text" "text") RETURNS boolean
     LANGUAGE "plpgsql" SECURITY DEFINER
     AS $$
@@ -2259,11 +2584,9 @@ DECLARE
   pos_count INT;
   cap       INT;
 BEGIN
-  -- Get player_in position, scoped to this transfer's tournament
+  -- Get player_in position
   SELECT UPPER(TRIM(position)) INTO in_pos
-  FROM   players
-  WHERE  id            = NEW.player_in
-    AND  tournament_id = NEW.tournament_id;
+  FROM   players WHERE id = NEW.player_in;
 
   -- Normalise FW → FWD
   IF in_pos = 'FW' THEN in_pos := 'FWD'; END IF;
@@ -2275,13 +2598,12 @@ BEGIN
 
   IF cur_squad IS NULL THEN RETURN NEW; END IF;
 
-  -- Count existing players of the same position, excluding the player going out,
-  -- filtered by tournament_id to avoid cross-competition conflicts
+  -- Remove player_out from squad for counting
   SELECT COUNT(*) INTO pos_count
   FROM   unnest(cur_squad) pid
-  JOIN   players p ON p.id = pid AND p.tournament_id = NEW.tournament_id
+  JOIN   players p ON p.id = pid
   WHERE  UPPER(TRIM(p.position)) IN (in_pos, REPLACE(in_pos,'FWD','FW'))
-    AND  pid <> NEW.player_out;
+  AND    pid <> NEW.player_out;
 
   cap := (pos_caps ->> in_pos)::int;
 
@@ -2356,7 +2678,6 @@ DECLARE
   v_new_players uuid[];
   v_new_budget  numeric;
 BEGIN
-  -- Acquire row lock; blocks any concurrent transfer on the same squad.
   SELECT * INTO v_squad FROM squads WHERE id = p_squad_id FOR UPDATE;
 
   IF NOT FOUND THEN
@@ -2364,7 +2685,6 @@ BEGIN
   END IF;
 
   IF p_action = 'buy' THEN
-    -- Re-validate inside the lock (guard against double-spend).
     IF v_squad.players @> ARRAY[p_player_id] THEN
       RETURN jsonb_build_object('ok', false, 'code', 'ALREADY_OWNED',
                                 'error', 'You already own this player');
@@ -2414,33 +2734,23 @@ DECLARE
   v_player_pos   text;
   v_pos_count    int;
 BEGIN
-  -- Acquire row lock; blocks any concurrent transfer on the same squad.
   SELECT * INTO v_squad FROM squads WHERE id = p_squad_id FOR UPDATE;
-
   IF NOT FOUND THEN
     RETURN jsonb_build_object('ok', false, 'error', 'Squad not found');
   END IF;
-
   IF p_action = 'buy' THEN
-    -- Re-validate inside the lock (guard against all concurrent-buy races).
     IF v_squad.players @> ARRAY[p_player_id] THEN
-      RETURN jsonb_build_object('ok', false, 'code', 'ALREADY_OWNED',
-                                'error', 'You already own this player');
+      RETURN jsonb_build_object('ok', false, 'code', 'ALREADY_OWNED', 'error', 'You already own this player');
     END IF;
     IF array_length(v_squad.players, 1) >= p_squad_max THEN
-      RETURN jsonb_build_object('ok', false, 'code', 'SQUAD_FULL',
-                                'error', 'Squad is full — sell a player first');
+      RETURN jsonb_build_object('ok', false, 'code', 'SQUAD_FULL', 'error', 'Squad is full — sell a player first');
     END IF;
     IF v_squad.budget_remaining < p_price THEN
-      RETURN jsonb_build_object('ok', false, 'code', 'INSUFFICIENT_BUDGET',
-                                'error', 'Insufficient budget');
+      RETURN jsonb_build_object('ok', false, 'code', 'INSUFFICIENT_BUDGET', 'error', 'Insufficient budget');
     END IF;
-    -- Position cap check (only when a meaningful cap is passed).
     IF p_pos_limit < 99 THEN
       SELECT p.position INTO v_player_pos FROM players p WHERE p.id = p_player_id;
-      SELECT COUNT(*) INTO v_pos_count
-        FROM players p
-        WHERE p.id = ANY(v_squad.players) AND p.position = v_player_pos;
+      SELECT COUNT(*) INTO v_pos_count FROM players p WHERE p.id = ANY(v_squad.players) AND p.position = v_player_pos;
       IF v_pos_count >= p_pos_limit THEN
         RETURN jsonb_build_object('ok', false, 'code', 'POSITION_LIMIT',
           'error', 'Maximum ' || v_player_pos || ' players reached (' || p_pos_limit || ')');
@@ -2448,28 +2758,17 @@ BEGIN
     END IF;
     v_new_players := array_append(v_squad.players, p_player_id);
     v_new_budget  := round((v_squad.budget_remaining - p_price)::numeric, 1);
-
   ELSIF p_action = 'sell' THEN
     IF NOT (v_squad.players @> ARRAY[p_player_id]) THEN
       RETURN jsonb_build_object('ok', false, 'error', 'Player not in your squad');
     END IF;
     v_new_players := array_remove(v_squad.players, p_player_id);
     v_new_budget  := round((v_squad.budget_remaining + p_price)::numeric, 1);
-
   ELSE
     RETURN jsonb_build_object('ok', false, 'error', 'Unknown action');
   END IF;
-
-  UPDATE squads
-    SET players          = v_new_players,
-        budget_remaining = v_new_budget
-  WHERE id = p_squad_id;
-
-  RETURN jsonb_build_object(
-    'ok',              true,
-    'players',         to_jsonb(v_new_players),
-    'budget_remaining', v_new_budget
-  );
+  UPDATE squads SET players = v_new_players, budget_remaining = v_new_budget WHERE id = p_squad_id;
+  RETURN jsonb_build_object('ok', true, 'players', to_jsonb(v_new_players), 'budget_remaining', v_new_budget);
 END;
 $$;
 
@@ -2485,63 +2784,43 @@ DECLARE
   v_new_players   uuid[];
   v_new_budget    numeric;
   v_player_pos    text;
-  v_player_team   text;   -- forza_team_id of the incoming player
+  v_player_team   text;
   v_pos_count     int;
   v_club_count    int;
 BEGIN
-  -- Acquire row lock; blocks any concurrent transfer on the same squad.
   SELECT * INTO v_squad FROM squads WHERE id = p_squad_id FOR UPDATE;
-
   IF NOT FOUND THEN
     RETURN jsonb_build_object('ok', false, 'error', 'Squad not found');
   END IF;
 
   IF p_action = 'buy' THEN
-    -- ── Already owned ──────────────────────────────────────────────────────────
     IF v_squad.players @> ARRAY[p_player_id] THEN
-      RETURN jsonb_build_object('ok', false, 'code', 'ALREADY_OWNED',
-                                'error', 'You already own this player');
+      RETURN jsonb_build_object('ok', false, 'code', 'ALREADY_OWNED', 'error', 'You already own this player');
     END IF;
-
-    -- ── Squad size ─────────────────────────────────────────────────────────────
     IF array_length(v_squad.players, 1) >= p_squad_max THEN
-      RETURN jsonb_build_object('ok', false, 'code', 'SQUAD_FULL',
-                                'error', 'Squad is full — sell a player first');
+      RETURN jsonb_build_object('ok', false, 'code', 'SQUAD_FULL', 'error', 'Squad is full — sell a player first');
     END IF;
-
-    -- ── Budget ─────────────────────────────────────────────────────────────────
     IF v_squad.budget_remaining < p_price THEN
-      RETURN jsonb_build_object('ok', false, 'code', 'INSUFFICIENT_BUDGET',
-                                'error', 'Insufficient budget');
+      RETURN jsonb_build_object('ok', false, 'code', 'INSUFFICIENT_BUDGET', 'error', 'Insufficient budget');
     END IF;
-
-    -- ── Position cap (inside lock to block concurrent same-position buys) ──────
     IF p_pos_limit < 99 THEN
       SELECT p.position INTO v_player_pos FROM players p WHERE p.id = p_player_id;
-      SELECT COUNT(*) INTO v_pos_count
-        FROM players p
-        WHERE p.id = ANY(v_squad.players) AND p.position = v_player_pos;
+      SELECT COUNT(*) INTO v_pos_count FROM players p WHERE p.id = ANY(v_squad.players) AND p.position = v_player_pos;
       IF v_pos_count >= p_pos_limit THEN
         RETURN jsonb_build_object('ok', false, 'code', 'POSITION_LIMIT',
           'error', 'Maximum ' || v_player_pos || ' players reached (' || p_pos_limit || ')');
       END IF;
     END IF;
-
-    -- ── Club cap (inside lock to block concurrent same-club buys) ──────────────
     IF p_club_max < 99 THEN
       SELECT p.forza_team_id INTO v_player_team FROM players p WHERE p.id = p_player_id;
       IF v_player_team IS NOT NULL THEN
-        SELECT COUNT(*) INTO v_club_count
-          FROM players p
-          WHERE p.id = ANY(v_squad.players)
-            AND p.forza_team_id = v_player_team;
+        SELECT COUNT(*) INTO v_club_count FROM players p WHERE p.id = ANY(v_squad.players) AND p.forza_team_id = v_player_team;
         IF v_club_count >= p_club_max THEN
           RETURN jsonb_build_object('ok', false, 'code', 'CLUB_LIMIT',
             'error', 'Maximum ' || p_club_max || ' players from the same club');
         END IF;
       END IF;
     END IF;
-
     v_new_players := array_append(v_squad.players, p_player_id);
     v_new_budget  := round((v_squad.budget_remaining - p_price)::numeric, 1);
 
@@ -2551,21 +2830,12 @@ BEGIN
     END IF;
     v_new_players := array_remove(v_squad.players, p_player_id);
     v_new_budget  := round((v_squad.budget_remaining + p_price)::numeric, 1);
-
   ELSE
     RETURN jsonb_build_object('ok', false, 'error', 'Unknown action');
   END IF;
 
-  UPDATE squads
-    SET players          = v_new_players,
-        budget_remaining = v_new_budget
-  WHERE id = p_squad_id;
-
-  RETURN jsonb_build_object(
-    'ok',              true,
-    'players',         to_jsonb(v_new_players),
-    'budget_remaining', v_new_budget
-  );
+  UPDATE squads SET players = v_new_players, budget_remaining = v_new_budget WHERE id = p_squad_id;
+  RETURN jsonb_build_object('ok', true, 'players', to_jsonb(v_new_players), 'budget_remaining', v_new_budget);
 END;
 $$;
 
@@ -2771,18 +3041,11 @@ BEGIN
     WHERE status = 'pending' AND expires_at < now()
     FOR UPDATE SKIP LOCKED
   LOOP
-    -- Refund challenger stake
+    -- Refund challenger stake (release_escrow logs its own 'refund' transaction)
     BEGIN
       PERFORM release_escrow(
         v_ch.challenger_id,
         v_ch.stake_coins,
-        v_ch.id,
-        jsonb_build_object('reason', 'challenge_expired')
-      );
-      PERFORM credit_coins(
-        v_ch.challenger_id,
-        v_ch.stake_coins,
-        'refund',
         v_ch.id,
         jsonb_build_object('reason', 'challenge_expired')
       );
@@ -3222,6 +3485,87 @@ $$;
 ALTER FUNCTION "public"."get_active_transfer_window"("p_league_id" "uuid", "p_at" timestamp with time zone) OWNER TO "postgres";
 
 
+CREATE OR REPLACE FUNCTION "public"."get_circle_competition_admins"("p_circle_id" "uuid") RETURNS json
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
+    AS $$
+DECLARE
+  v_user_id uuid := auth.uid();
+BEGIN
+  IF v_user_id IS NULL THEN
+    RETURN json_build_object('error', 'UNAUTHENTICATED');
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1 FROM circle_members
+    WHERE circle_id = p_circle_id AND user_id = v_user_id AND role = 'owner'
+  ) THEN
+    RETURN json_build_object('error', 'NOT_OWNER');
+  END IF;
+
+  RETURN json_build_object(
+    'leagues', (
+      SELECT COALESCE(json_agg(json_build_object(
+        'id', l.id,
+        'name', l.name,
+        'creator_id', l.created_by,
+        'creator_username', cu.username,
+        'assigned_admins', (
+          SELECT COALESCE(json_agg(json_build_object('user_id', au.id, 'username', au.username) ORDER BY au.username), '[]'::json)
+          FROM competition_admins ca
+          JOIN users au ON au.id = ca.user_id
+          WHERE ca.competition_type = 'league' AND ca.competition_id = l.id
+        )
+      ) ORDER BY l.name), '[]'::json)
+      FROM circle_leagues cl
+      JOIN leagues l ON l.id = cl.league_id
+      LEFT JOIN users cu ON cu.id = l.created_by
+      WHERE cl.circle_id = p_circle_id
+    ),
+    'f1', (
+      SELECT COALESCE(json_agg(json_build_object(
+        'id', p.id,
+        'name', p.name,
+        'creator_id', p.created_by,
+        'creator_username', cu.username,
+        'assigned_admins', (
+          SELECT COALESCE(json_agg(json_build_object('user_id', au.id, 'username', au.username) ORDER BY au.username), '[]'::json)
+          FROM competition_admins ca
+          JOIN users au ON au.id = ca.user_id
+          WHERE ca.competition_type = 'paddock' AND ca.competition_id = p.id
+        )
+      ) ORDER BY p.name), '[]'::json)
+      FROM circle_paddocks cp
+      JOIN paddocks p ON p.id = cp.paddock_id
+      LEFT JOIN users cu ON cu.id = p.created_by
+      WHERE cp.circle_id = p_circle_id
+    ),
+    'tennis', (
+      SELECT COALESCE(json_agg(json_build_object(
+        'id', pb.id,
+        'name', pb.name,
+        'creator_id', pb.created_by,
+        'creator_username', cu.username,
+        'assigned_admins', (
+          SELECT COALESCE(json_agg(json_build_object('user_id', au.id, 'username', au.username) ORDER BY au.username), '[]'::json)
+          FROM competition_admins ca
+          JOIN users au ON au.id = ca.user_id
+          WHERE ca.competition_type = 'player_box' AND ca.competition_id = pb.id
+        )
+      ) ORDER BY pb.name), '[]'::json)
+      FROM circle_player_boxes cpb
+      JOIN player_boxes pb ON pb.id = cpb.player_box_id
+      LEFT JOIN users cu ON cu.id = pb.created_by
+      WHERE cpb.circle_id = p_circle_id
+    )
+  );
+END;
+$$;
+
+
+ALTER FUNCTION "public"."get_circle_competition_admins"("p_circle_id" "uuid") OWNER TO "postgres";
+
+
 CREATE OR REPLACE FUNCTION "public"."get_circle_feed"("p_circle_id" "uuid", "p_limit" integer DEFAULT 50) RETURNS TABLE("id" "uuid", "league_id" "uuid", "league_name" "text", "entry_type" "public"."gazette_entry_type", "headline" "text", "bullets" "jsonb", "full_data" "jsonb", "created_at" timestamp with time zone)
     LANGUAGE "plpgsql" SECURITY DEFINER
     SET "search_path" TO 'public'
@@ -3354,70 +3698,7 @@ ALTER FUNCTION "public"."get_club_cap"("p_league_id" "uuid") OWNER TO "postgres"
 
 CREATE OR REPLACE FUNCTION "public"."get_club_cap"("p_league_id" "uuid", "p_matchday_id" "text" DEFAULT NULL::"text") RETURNS integer
     LANGUAGE "plpgsql" STABLE
-    AS $$
-DECLARE
-  v_tournament_id  TEXT;
-  v_round_suffix   TEXT;
-  v_cap            INT;
-  v_active_count   INT;
-  v_default_cap    INT := 3;
-  v_t1_threshold   INT := 8;
-  v_t1_value       INT := 4;
-  v_t2_threshold   INT := 4;
-  v_t2_value       INT := 5;
-  v_t3_threshold   INT := 2;
-BEGIN
-  -- ── Path A: table-driven per-round cap ──────────────────────────────────────
-  IF p_matchday_id IS NOT NULL THEN
-    SELECT tournament_id INTO v_tournament_id
-      FROM leagues WHERE id = p_league_id;
-
-    -- matchday_id format: '{tournament_id}-{round_suffix}' e.g. '623-r4'
-    v_round_suffix := split_part(p_matchday_id, '-', 2);
-
-    SELECT cap INTO v_cap
-      FROM club_cap_rules
-     WHERE tournament_id = v_tournament_id
-       AND round_suffix  = v_round_suffix;
-
-    IF v_cap IS NOT NULL THEN
-      RETURN v_cap;
-    END IF;
-  END IF;
-
-  -- ── Path B: legacy cup-based logic (fallback) ───────────────────────────────
-  SELECT (config_value #>> '{}')::int INTO v_default_cap    FROM league_config WHERE league_id = p_league_id AND config_key = 'club_cap_default';
-  SELECT (config_value #>> '{}')::int INTO v_t1_threshold   FROM league_config WHERE league_id = p_league_id AND config_key = 'club_cap_tier1_threshold';
-  SELECT (config_value #>> '{}')::int INTO v_t1_value       FROM league_config WHERE league_id = p_league_id AND config_key = 'club_cap_tier1_value';
-  SELECT (config_value #>> '{}')::int INTO v_t2_threshold   FROM league_config WHERE league_id = p_league_id AND config_key = 'club_cap_tier2_threshold';
-  SELECT (config_value #>> '{}')::int INTO v_t2_value       FROM league_config WHERE league_id = p_league_id AND config_key = 'club_cap_tier2_value';
-  SELECT (config_value #>> '{}')::int INTO v_t3_threshold   FROM league_config WHERE league_id = p_league_id AND config_key = 'club_cap_tier3_threshold';
-
-  IF v_default_cap  IS NULL THEN v_default_cap  := 3; END IF;
-  IF v_t1_threshold IS NULL THEN v_t1_threshold := 8; END IF;
-  IF v_t1_value     IS NULL THEN v_t1_value     := 4; END IF;
-  IF v_t2_threshold IS NULL THEN v_t2_threshold := 4; END IF;
-  IF v_t2_value     IS NULL THEN v_t2_value     := 5; END IF;
-  IF v_t3_threshold IS NULL THEN v_t3_threshold := 2; END IF;
-
-  SELECT COUNT(*) INTO v_active_count
-    FROM cup_active_clubs
-   WHERE league_id = p_league_id
-     AND eliminated_at IS NULL;
-
-  IF v_active_count = 0 THEN
-    RETURN v_default_cap;
-  ELSIF v_active_count > v_t1_threshold THEN
-    RETURN v_default_cap;
-  ELSIF v_active_count > v_t2_threshold THEN
-    RETURN v_t1_value;
-  ELSIF v_active_count > v_t3_threshold THEN
-    RETURN v_t2_value;
-  ELSE
-    RETURN NULL;  -- final: no cap
-  END IF;
-END;
-$$;
+    AS $$ DECLARE v_tournament_id TEXT; v_round_suffix TEXT; v_cap INT; v_active_count INT; v_default_cap INT := 3; v_t1_threshold INT := 8; v_t1_value INT := 4; v_t2_threshold INT := 4; v_t2_value INT := 5; v_t3_threshold INT := 2; BEGIN IF p_matchday_id IS NOT NULL THEN SELECT tournament_id INTO v_tournament_id FROM leagues WHERE id = p_league_id; v_round_suffix := split_part(p_matchday_id, '-', 2); SELECT cap INTO v_cap FROM club_cap_rules WHERE tournament_id = v_tournament_id AND round_suffix = v_round_suffix; IF v_cap IS NOT NULL THEN RETURN v_cap; END IF; END IF; SELECT (config_value #>> '{}')::int INTO v_default_cap FROM league_config WHERE league_id = p_league_id AND config_key = 'club_cap_default'; SELECT (config_value #>> '{}')::int INTO v_t1_threshold FROM league_config WHERE league_id = p_league_id AND config_key = 'club_cap_tier1_threshold'; SELECT (config_value #>> '{}')::int INTO v_t1_value FROM league_config WHERE league_id = p_league_id AND config_key = 'club_cap_tier1_value'; SELECT (config_value #>> '{}')::int INTO v_t2_threshold FROM league_config WHERE league_id = p_league_id AND config_key = 'club_cap_tier2_threshold'; SELECT (config_value #>> '{}')::int INTO v_t2_value FROM league_config WHERE league_id = p_league_id AND config_key = 'club_cap_tier2_value'; SELECT (config_value #>> '{}')::int INTO v_t3_threshold FROM league_config WHERE league_id = p_league_id AND config_key = 'club_cap_tier3_threshold'; IF v_default_cap IS NULL THEN v_default_cap := 3; END IF; IF v_t1_threshold IS NULL THEN v_t1_threshold := 8; END IF; IF v_t1_value IS NULL THEN v_t1_value := 4; END IF; IF v_t2_threshold IS NULL THEN v_t2_threshold := 4; END IF; IF v_t2_value IS NULL THEN v_t2_value := 5; END IF; IF v_t3_threshold IS NULL THEN v_t3_threshold := 2; END IF; SELECT COUNT(*) INTO v_active_count FROM cup_active_clubs WHERE league_id = p_league_id AND eliminated_at IS NULL; IF v_active_count = 0 THEN RETURN v_default_cap; ELSIF v_active_count > v_t1_threshold THEN RETURN v_default_cap; ELSIF v_active_count > v_t2_threshold THEN RETURN v_t1_value; ELSIF v_active_count > v_t3_threshold THEN RETURN v_t2_value; ELSE RETURN NULL; END IF; END; $$;
 
 
 ALTER FUNCTION "public"."get_club_cap"("p_league_id" "uuid", "p_matchday_id" "text") OWNER TO "postgres";
@@ -3618,12 +3899,12 @@ CREATE TABLE IF NOT EXISTS "public"."players" (
     "club" "text",
     "price" numeric(4,1),
     "photo_url" "text",
-    "season_avg" numeric(5,2),
     "forza_player_id" "text",
     "forza_team_id" "text",
     "tournament_id" "text",
     "birthdate" "date",
     "height" integer,
+    "season_avg" numeric(5,2),
     "is_active" boolean DEFAULT true NOT NULL
 );
 
@@ -3633,42 +3914,7 @@ ALTER TABLE "public"."players" OWNER TO "postgres";
 
 CREATE OR REPLACE FUNCTION "public"."get_cup_available_players"("p_league_id" "uuid") RETURNS SETOF "public"."players"
     LANGUAGE "plpgsql" STABLE SECURITY DEFINER
-    AS $$
-DECLARE
-  cup_rows        INT;
-  v_tournament_id TEXT;
-BEGIN
-  -- Always resolve the league's tournament first (needed in both paths)
-  SELECT tournament_id INTO v_tournament_id FROM leagues WHERE id = p_league_id;
-
-  SELECT COUNT(*) INTO cup_rows
-  FROM   cup_active_clubs
-  WHERE  league_id = p_league_id;
-
-  IF cup_rows = 0 THEN
-    -- Non-cup league: return full tournament player pool
-    IF v_tournament_id IS NOT NULL THEN
-      RETURN QUERY
-        SELECT * FROM players
-        WHERE  tournament_id = v_tournament_id
-        ORDER  BY price DESC;
-    ELSE
-      RETURN QUERY SELECT * FROM players ORDER BY price DESC;
-    END IF;
-    RETURN;
-  END IF;
-
-  -- Cup league: restrict to active clubs AND this tournament's players
-  RETURN QUERY
-    SELECT p.*
-    FROM   players p
-    JOIN   cup_active_clubs cac ON cac.club_id = p.club
-    WHERE  cac.league_id     = p_league_id
-    AND    cac.eliminated_at IS NULL
-    AND    p.tournament_id   = v_tournament_id
-    ORDER  BY p.price DESC;
-END;
-$$;
+    AS $$ DECLARE cup_rows INT; v_tournament_id TEXT; BEGIN SELECT tournament_id INTO v_tournament_id FROM leagues WHERE id = p_league_id; SELECT COUNT(*) INTO cup_rows FROM cup_active_clubs WHERE league_id = p_league_id; IF cup_rows = 0 THEN IF v_tournament_id IS NOT NULL THEN RETURN QUERY SELECT * FROM players WHERE tournament_id = v_tournament_id ORDER BY price DESC; ELSE RETURN QUERY SELECT * FROM players ORDER BY price DESC; END IF; RETURN; END IF; RETURN QUERY SELECT p.* FROM players p JOIN cup_active_clubs cac ON cac.club_id = p.club WHERE cac.league_id = p_league_id AND cac.eliminated_at IS NULL AND p.tournament_id = v_tournament_id ORDER BY p.price DESC; END; $$;
 
 
 ALTER FUNCTION "public"."get_cup_available_players"("p_league_id" "uuid") OWNER TO "postgres";
@@ -3701,30 +3947,6 @@ $$;
 
 
 ALTER FUNCTION "public"."get_cup_pool_stats"("p_league_id" "uuid") OWNER TO "postgres";
-
-
-CREATE OR REPLACE FUNCTION "public"."get_event_points"("p_tournament_id" "text", "p_position" "text", "p_event_type" "text") RETURNS integer
-    LANGUAGE "plpgsql"
-    AS $$
-DECLARE
-  v_points INT;
-BEGIN
-  -- First try position-specific rule
-  SELECT points INTO v_points
-  FROM public.scoring_templates
-  WHERE tournament_id = p_tournament_id
-    AND (position = p_position OR position = 'ANY')
-    AND event_type = p_event_type
-  ORDER BY CASE WHEN position = p_position THEN 0 ELSE 1 END
-  LIMIT 1;
-
-  -- Return the points, or 0 if no rule found
-  RETURN COALESCE(v_points, 0);
-END;
-$$;
-
-
-ALTER FUNCTION "public"."get_event_points"("p_tournament_id" "text", "p_position" "text", "p_event_type" "text") OWNER TO "postgres";
 
 
 CREATE OR REPLACE FUNCTION "public"."get_h2h_standings"("p_league_id" "uuid") RETURNS TABLE("user_id" "uuid", "username" "text", "wins" integer, "draws" integer, "losses" integer, "total_h2h_pts" integer, "h2h_rank" integer)
@@ -3823,7 +4045,7 @@ $$;
 ALTER FUNCTION "public"."get_league_stats"("p_league_id" "uuid") OWNER TO "postgres";
 
 
-CREATE OR REPLACE FUNCTION "public"."get_my_challenges"("p_league_id" "uuid" DEFAULT NULL::"uuid") RETURNS "jsonb"
+CREATE OR REPLACE FUNCTION "public"."get_my_challenges"("p_circle_id" "uuid" DEFAULT NULL::"uuid") RETURNS "jsonb"
     LANGUAGE "plpgsql" SECURITY DEFINER
     SET "search_path" TO 'public'
     AS $$
@@ -3835,24 +4057,32 @@ BEGIN
 
   SELECT jsonb_agg(
     jsonb_build_object(
-      'id',                   c.id,
-      'league_id',            c.league_id,
-      'challenger_id',        c.challenger_id,
-      'challenger_username',  cu.username,
-      'opponent_id',          c.opponent_id,
-      'opponent_username',    ou.username,
-      'bet_type',             c.bet_type,
-      'matchday_id',          c.matchday_id,
-      'stake_coins',          c.stake_coins,
-      'message',              c.message,
-      'status',               c.status,
-      'winner_id',            c.winner_id,
-      'challenger_pts',       c.challenger_pts,
-      'opponent_pts',         c.opponent_pts,
-      'expires_at',           c.expires_at,
-      'resolved_at',          c.resolved_at,
-      'created_at',           c.created_at,
-      'updated_at',           c.updated_at
+      'id',                       c.id,
+      'circle_id',                c.circle_id,
+      'league_id',                c.league_id,
+      'challenger_id',            c.challenger_id,
+      'challenger_username',      cu.username,
+      'opponent_id',              c.opponent_id,
+      'opponent_username',        ou.username,
+      'bet_type',                 c.bet_type,
+      'resolution_mode',          c.resolution_mode,
+      'matchday_id',              c.matchday_id,
+      'question',                 c.question,
+      'stake_coins',              c.stake_coins,
+      'message',                  c.message,
+      'status',                   c.status,
+      'winner_id',                c.winner_id,
+      'challenger_pts',           c.challenger_pts,
+      'opponent_pts',             c.opponent_pts,
+      'proposed_winner_id',       c.proposed_winner_id,
+      'proposed_winner_username', pu.username,
+      'proposed_by',              c.proposed_by,
+      'proposed_at',              c.proposed_at,
+      'dispute_deadline',         c.dispute_deadline,
+      'expires_at',               c.expires_at,
+      'resolved_at',              c.resolved_at,
+      'created_at',               c.created_at,
+      'updated_at',               c.updated_at
     )
     ORDER BY c.created_at DESC
   )
@@ -3860,10 +4090,24 @@ BEGIN
   FROM p2p_challenges c
   LEFT JOIN users cu ON cu.id = c.challenger_id
   LEFT JOIN users ou ON ou.id = c.opponent_id
-  WHERE (c.challenger_id = v_user_id OR c.opponent_id = v_user_id)
-    AND (p_league_id IS NULL OR c.league_id = p_league_id)
+  LEFT JOIN users pu ON pu.id = c.proposed_winner_id
+  WHERE (
+      c.challenger_id = v_user_id
+      OR c.opponent_id = v_user_id
+      -- Circle owners can also see disputed freeform bets they're not a party
+      -- to, so they can arbitrate. Everything else stays participant-only.
+      OR (
+        c.status = 'disputed'
+        AND c.bet_type = 'freeform'
+        AND EXISTS (
+          SELECT 1 FROM circle_members cm
+          WHERE cm.circle_id = c.circle_id AND cm.user_id = v_user_id AND cm.role = 'owner'
+        )
+      )
+    )
+    AND (p_circle_id IS NULL OR c.circle_id = p_circle_id)
     AND (
-      c.status IN ('pending', 'accepted')
+      c.status IN ('pending', 'accepted', 'disputed')
       OR c.created_at > now() - interval '30 days'
     );
 
@@ -3872,7 +4116,22 @@ END;
 $$;
 
 
-ALTER FUNCTION "public"."get_my_challenges"("p_league_id" "uuid") OWNER TO "postgres";
+ALTER FUNCTION "public"."get_my_challenges"("p_circle_id" "uuid") OWNER TO "postgres";
+
+
+CREATE OR REPLACE FUNCTION "public"."get_my_circles"() RETURNS TABLE("id" "uuid", "name" "text")
+    LANGUAGE "sql" STABLE SECURITY DEFINER
+    SET "search_path" TO 'public'
+    AS $$
+  SELECT c.id, c.name
+  FROM circles c
+  JOIN circle_members cm ON cm.circle_id = c.id
+  WHERE cm.user_id = auth.uid()
+  ORDER BY c.name;
+$$;
+
+
+ALTER FUNCTION "public"."get_my_circles"() OWNER TO "postgres";
 
 
 CREATE OR REPLACE FUNCTION "public"."get_my_paddocks"() RETURNS TABLE("paddock_id" "uuid", "name" "text", "invite_code" "text", "role" "text", "member_count" bigint, "season" integer)
@@ -3958,52 +4217,6 @@ $$;
 ALTER FUNCTION "public"."get_my_wallet"() OWNER TO "postgres";
 
 
-CREATE OR REPLACE FUNCTION "public"."get_owner_linkable_leagues"("p_circle_id" "uuid") RETURNS json
-    LANGUAGE "plpgsql" SECURITY DEFINER
-    SET "search_path" TO 'public'
-    AS $$
-DECLARE
-  v_user_id uuid := auth.uid();
-BEGIN
-  IF v_user_id IS NULL THEN
-    RETURN json_build_object('error', 'UNAUTHENTICATED');
-  END IF;
-
-  IF NOT EXISTS (
-    SELECT 1 FROM circle_members
-    WHERE circle_id = p_circle_id
-      AND user_id   = v_user_id
-      AND role      = 'owner'
-  ) THEN
-    RETURN json_build_object('error', 'NOT_OWNER');
-  END IF;
-
-  RETURN COALESCE(
-    (
-      SELECT json_agg(json_build_object(
-        'id',     l.id,
-        'name',   l.name,
-        'format', l.format
-      ) ORDER BY l.name)
-      FROM leagues l
-      JOIN league_members lm ON lm.league_id = l.id
-      WHERE lm.user_id = v_user_id
-        AND lm.role    = 'commissioner'
-        AND NOT EXISTS (
-          SELECT 1 FROM circle_leagues cl
-          WHERE cl.circle_id = p_circle_id
-            AND cl.league_id  = l.id
-        )
-    ),
-    '[]'::json
-  );
-END;
-$$;
-
-
-ALTER FUNCTION "public"."get_owner_linkable_leagues"("p_circle_id" "uuid") OWNER TO "postgres";
-
-
 CREATE OR REPLACE FUNCTION "public"."get_p2p_config"("p_league_id" "uuid") RETURNS "jsonb"
     LANGUAGE "plpgsql" SECURITY DEFINER
     SET "search_path" TO 'public'
@@ -4085,12 +4298,12 @@ DECLARE
   v_completed_standard_count int;
 BEGIN
   IF NOT EXISTS (
-    SELECT 1 FROM player_box_members WHERE player_box_id = p_player_box_id AND user_id = auth.uid()
+    SELECT 1 FROM player_box_members pbm
+    WHERE pbm.player_box_id = p_player_box_id AND pbm.user_id = auth.uid()
   ) THEN
     RAISE EXCEPTION 'NOT_A_MEMBER';
   END IF;
 
-  -- Count completed standard tournaments this season
   SELECT COUNT(*) INTO v_completed_standard_count
   FROM tennis_tournaments
   WHERE season_year = p_season_year
@@ -4108,10 +4321,9 @@ BEGIN
       bm.user_id,
       tt.tournament_type,
       tts.total_points,
-      -- rank of score per user: 1 = highest (best), N = lowest (worst to drop)
       ROW_NUMBER() OVER (
         PARTITION BY bm.user_id
-        ORDER BY tts.total_points ASC   -- ASC so rank 1 = worst score
+        ORDER BY tts.total_points ASC
       ) AS score_rank_asc
     FROM box_members bm
     JOIN tennis_tournament_scores tts ON tts.user_id = bm.user_id
@@ -4123,7 +4335,6 @@ BEGIN
       us.user_id,
       COUNT(*)::int                                     AS tournaments_played,
       MAX(us.total_points)                              AS best_tournament_pts,
-      -- Drop worst standard tournament if ≥ 5 completed standard events
       CASE
         WHEN v_completed_standard_count >= 5 THEN
           MIN(CASE WHEN us.tournament_type != 'atp_finals' THEN us.total_points END)
@@ -4156,30 +4367,10 @@ $$;
 ALTER FUNCTION "public"."get_player_box_leaderboard"("p_player_box_id" "uuid", "p_season_year" integer) OWNER TO "postgres";
 
 
-CREATE OR REPLACE FUNCTION "public"."get_scoring_template"("p_tournament_id" "text") RETURNS TABLE("position" "text", "event_type" "text", "points" integer, "multiplier" numeric)
-    LANGUAGE "plpgsql"
-    AS $$
-BEGIN
-  RETURN QUERY
-  SELECT
-    st.position,
-    st.event_type,
-    st.points,
-    st.multiplier
-  FROM public.scoring_templates st
-  WHERE st.tournament_id = p_tournament_id
-  ORDER BY st.position, st.event_type;
-END;
-$$;
-
-
-ALTER FUNCTION "public"."get_scoring_template"("p_tournament_id" "text") OWNER TO "postgres";
-
-
 CREATE OR REPLACE FUNCTION "public"."get_server_time"() RETURNS timestamp with time zone
     LANGUAGE "sql" STABLE
     AS $$
-  select now();
+  SELECT NOW();
 $$;
 
 
@@ -4204,7 +4395,8 @@ CREATE OR REPLACE FUNCTION "public"."get_tennis_season_summary"("p_player_box_id
     AS $$
 BEGIN
   IF NOT EXISTS (
-    SELECT 1 FROM player_box_members WHERE player_box_id = p_player_box_id AND user_id = auth.uid()
+    SELECT 1 FROM player_box_members pbm
+    WHERE pbm.player_box_id = p_player_box_id AND pbm.user_id = auth.uid()
   ) THEN
     RAISE EXCEPTION 'NOT_A_MEMBER';
   END IF;
@@ -4348,36 +4540,7 @@ ALTER FUNCTION "public"."get_tennis_tournament_for_user"("p_tournament_id" "uuid
 
 CREATE OR REPLACE FUNCTION "public"."get_tennis_tournament_list"("p_season_year" integer DEFAULT 2026) RETURNS TABLE("tournament_id" "uuid", "name" "text", "tournament_type" "text", "surface" "text", "draw_size" integer, "start_date" "date", "end_date" "date", "roster_lock_at" timestamp with time zone, "status" "text", "sort_order" integer, "player_count" bigint, "has_my_roster" boolean)
     LANGUAGE "plpgsql" SECURITY DEFINER
-    AS $$
-BEGIN
-  IF auth.uid() IS NULL THEN
-    RAISE EXCEPTION 'UNAUTHENTICATED';
-  END IF;
-
-  RETURN QUERY
-  SELECT
-    tt.id,
-    tt.name,
-    tt.tournament_type::text,
-    tt.surface::text,
-    tt.draw_size,
-    tt.start_date,
-    tt.end_date,
-    tt.roster_lock_at,
-    tt.status,
-    tt.sort_order,
-    COUNT(DISTINCT ttp.id)                               AS player_count,
-    EXISTS (
-      SELECT 1 FROM tennis_rosters tr
-      WHERE tr.tournament_id = tt.id AND tr.user_id = auth.uid()
-    )                                                    AS has_my_roster
-  FROM tennis_tournaments tt
-  LEFT JOIN tennis_tournament_players ttp ON ttp.tournament_id = tt.id
-  WHERE tt.season_year = p_season_year
-  GROUP BY tt.id
-  ORDER BY tt.sort_order;
-END;
-$$;
+    AS $$ BEGIN IF auth.uid() IS NULL THEN RAISE EXCEPTION 'UNAUTHENTICATED'; END IF; RETURN QUERY SELECT tt.id, tt.name, tt.tournament_type::text, tt.surface::text, tt.draw_size, tt.start_date, tt.end_date, tt.roster_lock_at, tt.status, tt.sort_order, COUNT(DISTINCT ttp.id) AS player_count, EXISTS (SELECT 1 FROM tennis_rosters tr WHERE tr.tournament_id = tt.id AND tr.user_id = auth.uid()) AS has_my_roster FROM tennis_tournaments tt LEFT JOIN tennis_tournament_players ttp ON ttp.tournament_id = tt.id WHERE tt.season_year = p_season_year GROUP BY tt.id ORDER BY tt.sort_order; END; $$;
 
 
 ALTER FUNCTION "public"."get_tennis_tournament_list"("p_season_year" integer) OWNER TO "postgres";
@@ -4747,12 +4910,89 @@ $$;
 ALTER FUNCTION "public"."handle_new_user"() OWNER TO "postgres";
 
 
+CREATE OR REPLACE FUNCTION "public"."is_circle_member"("p_circle_id" "uuid") RETURNS boolean
+    LANGUAGE "sql" STABLE SECURITY DEFINER
+    SET "search_path" TO 'public'
+    AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM public.circle_members
+    WHERE circle_id = p_circle_id
+      AND user_id   = auth.uid()
+  );
+$$;
 
--- Not present in the `public`-schema-only dump this file was generated from —
--- the real trigger lives on auth.users in prod. Added here so the local test
--- harness replicates the auth.users → public.users sync that handle_new_user()
--- implements but that nothing in this file otherwise invokes.
-CREATE TRIGGER "on_auth_user_created" AFTER INSERT ON "auth"."users" FOR EACH ROW EXECUTE FUNCTION "public"."handle_new_user"();
+
+ALTER FUNCTION "public"."is_circle_member"("p_circle_id" "uuid") OWNER TO "postgres";
+
+
+CREATE OR REPLACE FUNCTION "public"."is_competition_admin"("p_competition_type" "text", "p_competition_id" "uuid") RETURNS boolean
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
+    AS $$
+DECLARE
+  v_user_id uuid := auth.uid();
+BEGIN
+  IF v_user_id IS NULL THEN
+    RETURN false;
+  END IF;
+
+  IF EXISTS (
+    SELECT 1 FROM competition_admins
+    WHERE competition_type = p_competition_type
+      AND competition_id   = p_competition_id
+      AND user_id          = v_user_id
+  ) THEN
+    RETURN true;
+  END IF;
+
+  IF p_competition_type = 'league' THEN
+    RETURN EXISTS (
+      SELECT 1 FROM leagues l
+      WHERE l.id = p_competition_id
+        AND (
+          l.created_by = v_user_id
+          OR EXISTS (
+            SELECT 1 FROM league_members lm
+            WHERE lm.league_id = l.id AND lm.user_id = v_user_id AND lm.role = 'commissioner'
+          )
+          OR (l.circle_id IS NOT NULL AND EXISTS (
+            SELECT 1 FROM circle_members cm
+            WHERE cm.circle_id = l.circle_id AND cm.user_id = v_user_id AND cm.role = 'owner'
+          ))
+        )
+    );
+  ELSIF p_competition_type = 'paddock' THEN
+    RETURN EXISTS (
+      SELECT 1 FROM paddocks p
+      WHERE p.id = p_competition_id
+        AND (
+          p.created_by = v_user_id
+          OR (p.circle_id IS NOT NULL AND EXISTS (
+            SELECT 1 FROM circle_members cm
+            WHERE cm.circle_id = p.circle_id AND cm.user_id = v_user_id AND cm.role = 'owner'
+          ))
+        )
+    );
+  ELSIF p_competition_type = 'player_box' THEN
+    RETURN EXISTS (
+      SELECT 1 FROM player_boxes pb
+      WHERE pb.id = p_competition_id
+        AND (
+          pb.created_by = v_user_id
+          OR (pb.circle_id IS NOT NULL AND EXISTS (
+            SELECT 1 FROM circle_members cm
+            WHERE cm.circle_id = pb.circle_id AND cm.user_id = v_user_id AND cm.role = 'owner'
+          ))
+        )
+    );
+  END IF;
+
+  RETURN false;
+END;
+$$;
+
+
+ALTER FUNCTION "public"."is_competition_admin"("p_competition_type" "text", "p_competition_id" "uuid") OWNER TO "postgres";
 
 
 CREATE OR REPLACE FUNCTION "public"."is_league_member"("p_league_id" "uuid") RETURNS boolean
@@ -5017,48 +5257,6 @@ $$;
 ALTER FUNCTION "public"."join_player_box_by_code"("p_invite_code" "text") OWNER TO "postgres";
 
 
-CREATE OR REPLACE FUNCTION "public"."kick_circle_member"("p_circle_id" "uuid", "p_user_id" "uuid") RETURNS json
-    LANGUAGE "plpgsql" SECURITY DEFINER
-    SET "search_path" TO 'public'
-    AS $$
-DECLARE
-  v_caller uuid := auth.uid();
-BEGIN
-  IF v_caller IS NULL THEN
-    RETURN json_build_object('error', 'UNAUTHENTICATED');
-  END IF;
-
-  IF NOT EXISTS (
-    SELECT 1 FROM circle_members
-    WHERE circle_id = p_circle_id
-      AND user_id   = v_caller
-      AND role      = 'owner'
-  ) THEN
-    RETURN json_build_object('error', 'NOT_OWNER');
-  END IF;
-
-  IF v_caller = p_user_id THEN
-    RETURN json_build_object('error', 'CANNOT_KICK_SELF');
-  END IF;
-
-  IF NOT EXISTS (
-    SELECT 1 FROM circle_members
-    WHERE circle_id = p_circle_id AND user_id = p_user_id
-  ) THEN
-    RETURN json_build_object('error', 'NOT_MEMBER');
-  END IF;
-
-  DELETE FROM circle_members
-  WHERE circle_id = p_circle_id AND user_id = p_user_id;
-
-  RETURN json_build_object('ok', true);
-END;
-$$;
-
-
-ALTER FUNCTION "public"."kick_circle_member"("p_circle_id" "uuid", "p_user_id" "uuid") OWNER TO "postgres";
-
-
 CREATE OR REPLACE FUNCTION "public"."link_competition_to_clubhouse"("p_circle_id" "uuid", "p_type" "text", "p_competition_id" "uuid") RETURNS json
     LANGUAGE "plpgsql" SECURITY DEFINER
     SET "search_path" TO 'public'
@@ -5101,45 +5299,26 @@ $$;
 ALTER FUNCTION "public"."link_competition_to_clubhouse"("p_circle_id" "uuid", "p_type" "text", "p_competition_id" "uuid") OWNER TO "postgres";
 
 
-CREATE OR REPLACE FUNCTION "public"."link_league_to_circle"("p_circle_id" "uuid", "p_league_id" "uuid") RETURNS json
-    LANGUAGE "plpgsql" SECURITY DEFINER
-    SET "search_path" TO 'public'
+CREATE OR REPLACE FUNCTION "public"."load_wc_teams"() RETURNS "void"
+    LANGUAGE "plpgsql"
     AS $$
 DECLARE
-  v_user_id uuid := auth.uid();
+  base_url TEXT := 'https://sssmvihxtqtohisghjet.supabase.co';
+  auth_hdr JSONB := jsonb_build_object(
+    'Content-Type', 'application/json',
+    'Authorization', 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNzc212aWh4dHF0b2hpc2doamV0Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NjQ4OTIyNywiZXhwIjoyMDkyMDY1MjI3fQ.rJZLTLnrgTjwMv3vHgUIyY48GrJ7dp5vhjWlkpWyWzg'
+  );
 BEGIN
-  IF v_user_id IS NULL THEN
-    RETURN json_build_object('error', 'UNAUTHENTICATED');
-  END IF;
-
-  IF NOT EXISTS (
-    SELECT 1 FROM circle_members
-    WHERE circle_id = p_circle_id
-      AND user_id   = v_user_id
-      AND role      = 'owner'
-  ) THEN
-    RETURN json_build_object('error', 'NOT_OWNER');
-  END IF;
-
-  IF NOT EXISTS (
-    SELECT 1 FROM league_members
-    WHERE league_id = p_league_id
-      AND user_id   = v_user_id
-      AND role      = 'commissioner'
-  ) THEN
-    RETURN json_build_object('error', 'NOT_COMMISSIONER');
-  END IF;
-
-  INSERT INTO circle_leagues (circle_id, league_id)
-  VALUES (p_circle_id, p_league_id)
-  ON CONFLICT DO NOTHING;
-
-  RETURN json_build_object('ok', true);
+  PERFORM net.http_post(
+    url := base_url || '/functions/v1/sync-players',
+    headers := auth_hdr,
+    body := '{"forza_id":"429"}'
+  );
 END;
 $$;
 
 
-ALTER FUNCTION "public"."link_league_to_circle"("p_circle_id" "uuid", "p_league_id" "uuid") OWNER TO "postgres";
+ALTER FUNCTION "public"."load_wc_teams"() OWNER TO "postgres";
 
 
 CREATE OR REPLACE FUNCTION "public"."lock_lineups_for_fixture"("p_fixture_id" "text") RETURNS "void"
@@ -5241,7 +5420,6 @@ CREATE OR REPLACE FUNCTION "public"."mark_mention_read"("p_message_id" "uuid") R
     LANGUAGE "plpgsql" SECURITY DEFINER
     AS $$
 BEGIN
-  -- Update the message to remove current user from mentioned_user_ids
   UPDATE chat_messages
   SET mentioned_user_ids = array_remove(mentioned_user_ids, auth.uid())
   WHERE id = p_message_id;
@@ -5299,86 +5477,6 @@ $$;
 
 
 ALTER FUNCTION "public"."notify_league_on_bet_creation"() OWNER TO "postgres";
-
-
-CREATE OR REPLACE FUNCTION "public"."notify_on_direct_message"() RETURNS "trigger"
-    LANGUAGE "plpgsql"
-    SET "search_path" TO 'public'
-    AS $$
-BEGIN
-  INSERT INTO clubhouse_notifications (circle_id, user_id, source_type, source_id, type, payload)
-  VALUES (
-    NEW.circle_id,
-    NEW.to_user_id,
-    'clubhouse',
-    NEW.circle_id,
-    'direct_message',
-    jsonb_build_object(
-      'from_user_id', NEW.from_user_id,
-      'preview',      left(NEW.content, 100)
-    )
-  );
-
-  RETURN NEW;
-END;
-$$;
-
-
-ALTER FUNCTION "public"."notify_on_direct_message"() OWNER TO "postgres";
-
-
-CREATE OR REPLACE FUNCTION "public"."notify_on_frontpage_edition"() RETURNS "trigger"
-    LANGUAGE "plpgsql"
-    SET "search_path" TO 'public'
-    AS $$
-BEGIN
-  IF NEW.circle_id IS NULL THEN RETURN NEW; END IF;
-
-  INSERT INTO clubhouse_notifications (circle_id, user_id, source_type, source_id, type, payload)
-  SELECT
-    NEW.circle_id,
-    cm.user_id,
-    'clubhouse',
-    NEW.circle_id,
-    'frontpage_edition',
-    jsonb_build_object('edition_date', NEW.edition_date, 'headline', NEW.headline)
-  FROM circle_members cm
-  WHERE cm.circle_id = NEW.circle_id;
-
-  RETURN NEW;
-END;
-$$;
-
-
-ALTER FUNCTION "public"."notify_on_frontpage_edition"() OWNER TO "postgres";
-
-
-CREATE OR REPLACE FUNCTION "public"."notify_on_gazette_breaking_news"() RETURNS "trigger"
-    LANGUAGE "plpgsql"
-    SET "search_path" TO 'public'
-    AS $$
-BEGIN
-  IF NEW.entry_type <> 'breaking_news' THEN RETURN NEW; END IF;
-  IF NEW.league_id IS NULL THEN RETURN NEW; END IF;
-
-  INSERT INTO clubhouse_notifications (circle_id, user_id, source_type, source_id, type, payload)
-  SELECT DISTINCT
-    cl.circle_id,
-    cm.user_id,
-    'league',
-    NEW.league_id,
-    'breaking_news',
-    jsonb_build_object('headline', NEW.headline, 'league_id', NEW.league_id)
-  FROM circle_leagues cl
-  JOIN circle_members cm ON cm.circle_id = cl.circle_id
-  WHERE cl.league_id = NEW.league_id;
-
-  RETURN NEW;
-END;
-$$;
-
-
-ALTER FUNCTION "public"."notify_on_gazette_breaking_news"() OWNER TO "postgres";
 
 
 CREATE OR REPLACE FUNCTION "public"."place_bid"("p_listing_id" "uuid", "p_bid_amount" numeric) RETURNS "jsonb"
@@ -5574,6 +5672,50 @@ $$;
 ALTER FUNCTION "public"."release_escrow"("p_user_id" "uuid", "p_amount" integer, "p_challenge_id" "uuid", "p_meta" "jsonb") OWNER TO "postgres";
 
 
+CREATE OR REPLACE FUNCTION "public"."remove_competition_admin"("p_circle_id" "uuid", "p_competition_type" "text", "p_competition_id" "uuid", "p_user_id" "uuid") RETURNS json
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
+    AS $$
+DECLARE
+  v_user_id uuid := auth.uid();
+  v_linked  boolean := false;
+BEGIN
+  IF v_user_id IS NULL THEN
+    RETURN json_build_object('error', 'UNAUTHENTICATED');
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1 FROM circle_members
+    WHERE circle_id = p_circle_id AND user_id = v_user_id AND role = 'owner'
+  ) THEN
+    RETURN json_build_object('error', 'NOT_OWNER');
+  END IF;
+
+  IF p_competition_type = 'league' THEN
+    v_linked := EXISTS (SELECT 1 FROM circle_leagues WHERE circle_id = p_circle_id AND league_id = p_competition_id);
+  ELSIF p_competition_type = 'paddock' THEN
+    v_linked := EXISTS (SELECT 1 FROM circle_paddocks WHERE circle_id = p_circle_id AND paddock_id = p_competition_id);
+  ELSIF p_competition_type = 'player_box' THEN
+    v_linked := EXISTS (SELECT 1 FROM circle_player_boxes WHERE circle_id = p_circle_id AND player_box_id = p_competition_id);
+  END IF;
+
+  IF NOT v_linked THEN
+    RETURN json_build_object('error', 'NOT_LINKED_TO_CIRCLE');
+  END IF;
+
+  DELETE FROM competition_admins
+  WHERE competition_type = p_competition_type
+    AND competition_id   = p_competition_id
+    AND user_id          = p_user_id;
+
+  RETURN json_build_object('ok', true);
+END;
+$$;
+
+
+ALTER FUNCTION "public"."remove_competition_admin"("p_circle_id" "uuid", "p_competition_type" "text", "p_competition_id" "uuid", "p_user_id" "uuid") OWNER TO "postgres";
+
+
 CREATE OR REPLACE FUNCTION "public"."report_client_error"("p_message" "text", "p_stack" "text" DEFAULT NULL::"text", "p_url" "text" DEFAULT NULL::"text", "p_user_agent" "text" DEFAULT NULL::"text", "p_context" "jsonb" DEFAULT '{}'::"jsonb") RETURNS "void"
     LANGUAGE "plpgsql" SECURITY DEFINER
     AS $$
@@ -5730,7 +5872,8 @@ BEGIN
   -- Mark the bet resolved BEFORE distributing/aggregating rewards below, so
   -- aggregate_league_member_points (which only sums bet rewards from bets
   -- with status = 'resolved') picks up this bet's reward on the very first
-  -- pass instead of silently no-opping.
+  -- pass instead of silently no-opping. This is the actual fix for the bug
+  -- documented above.
   UPDATE bet_instances
      SET status            = 'resolved',
          correct_answer    = CASE WHEN v_no_winner THEN NULL ELSE p_answers[1] END,
@@ -6121,7 +6264,6 @@ BEGIN
     RETURN jsonb_build_object('ok', false, 'error', 'Auction is not open.');
   END IF;
 
-  -- Caller must own the seller squad
   IF NOT EXISTS (
     SELECT 1 FROM squads WHERE id = v_listing.seller_id AND user_id = auth.uid()
   ) THEN
@@ -6251,6 +6393,60 @@ $_$;
 
 
 ALTER FUNCTION "public"."set_captain"("p_squad_id" "uuid", "p_player_id" "text") OWNER TO "postgres";
+
+
+CREATE OR REPLACE FUNCTION "public"."set_competition_admin"("p_circle_id" "uuid", "p_competition_type" "text", "p_competition_id" "uuid", "p_user_id" "uuid") RETURNS json
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
+    AS $$
+DECLARE
+  v_user_id uuid := auth.uid();
+  v_linked  boolean := false;
+BEGIN
+  IF v_user_id IS NULL THEN
+    RETURN json_build_object('error', 'UNAUTHENTICATED');
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1 FROM circle_members
+    WHERE circle_id = p_circle_id AND user_id = v_user_id AND role = 'owner'
+  ) THEN
+    RETURN json_build_object('error', 'NOT_OWNER');
+  END IF;
+
+  IF p_competition_type NOT IN ('league', 'paddock', 'player_box') THEN
+    RETURN json_build_object('error', 'INVALID_TYPE');
+  END IF;
+
+  IF p_competition_type = 'league' THEN
+    v_linked := EXISTS (SELECT 1 FROM circle_leagues WHERE circle_id = p_circle_id AND league_id = p_competition_id);
+  ELSIF p_competition_type = 'paddock' THEN
+    v_linked := EXISTS (SELECT 1 FROM circle_paddocks WHERE circle_id = p_circle_id AND paddock_id = p_competition_id);
+  ELSE
+    v_linked := EXISTS (SELECT 1 FROM circle_player_boxes WHERE circle_id = p_circle_id AND player_box_id = p_competition_id);
+  END IF;
+
+  IF NOT v_linked THEN
+    RETURN json_build_object('error', 'NOT_LINKED_TO_CIRCLE');
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1 FROM circle_members
+    WHERE circle_id = p_circle_id AND user_id = p_user_id
+  ) THEN
+    RETURN json_build_object('error', 'TARGET_NOT_CIRCLE_MEMBER');
+  END IF;
+
+  INSERT INTO competition_admins (competition_type, competition_id, user_id, assigned_by)
+  VALUES (p_competition_type, p_competition_id, p_user_id, v_user_id)
+  ON CONFLICT (competition_type, competition_id, user_id) DO NOTHING;
+
+  RETURN json_build_object('ok', true);
+END;
+$$;
+
+
+ALTER FUNCTION "public"."set_competition_admin"("p_circle_id" "uuid", "p_competition_type" "text", "p_competition_id" "uuid", "p_user_id" "uuid") OWNER TO "postgres";
 
 
 CREATE OR REPLACE FUNCTION "public"."set_lineup"("p_squad_id" "uuid", "p_player_out" "text", "p_player_in" "text") RETURNS "jsonb"
@@ -6891,111 +7087,7 @@ ALTER FUNCTION "public"."submit_knockout_keeps"("p_league_id" "uuid", "p_player_
 
 CREATE OR REPLACE FUNCTION "public"."submit_tennis_roster"("p_tournament_id" "uuid", "p_tier1" "uuid", "p_tier2a" "uuid", "p_tier2b" "uuid", "p_tier3a" "uuid", "p_tier3b" "uuid", "p_tier4a" "uuid", "p_tier4b" "uuid", "p_ace_card" "text" DEFAULT NULL::"text") RETURNS "jsonb"
     LANGUAGE "plpgsql" SECURITY DEFINER
-    AS $$
-DECLARE
-  v_uid           uuid := auth.uid();
-  v_tournament    tennis_tournaments%ROWTYPE;
-  v_player_ids    uuid[];
-  v_existing_card text;
-BEGIN
-  IF v_uid IS NULL THEN RAISE EXCEPTION 'UNAUTHENTICATED'; END IF;
-
-  SELECT * INTO v_tournament FROM tennis_tournaments WHERE id = p_tournament_id;
-  IF NOT FOUND THEN RAISE EXCEPTION 'TOURNAMENT_NOT_FOUND'; END IF;
-  IF v_tournament.tournament_type = 'atp_finals' THEN
-    RAISE EXCEPTION 'USE_ATP_FINALS_SUBMISSION';
-  END IF;
-  IF v_tournament.status <> 'roster_open' THEN
-    RAISE EXCEPTION 'ROSTER_LOCKED';
-  END IF;
-
-  -- All 7 slots required
-  IF p_tier1 IS NULL OR p_tier2a IS NULL OR p_tier2b IS NULL
-     OR p_tier3a IS NULL OR p_tier3b IS NULL
-     OR p_tier4a IS NULL OR p_tier4b IS NULL
-  THEN
-    RAISE EXCEPTION 'ALL_SLOTS_REQUIRED';
-  END IF;
-
-  -- No duplicate players across the 7 slots
-  v_player_ids := ARRAY[p_tier1, p_tier2a, p_tier2b, p_tier3a, p_tier3b, p_tier4a, p_tier4b];
-  IF (SELECT COUNT(DISTINCT x) FROM UNNEST(v_player_ids) AS t(x)) < 7 THEN
-    RAISE EXCEPTION 'DUPLICATE_PLAYERS';
-  END IF;
-
-  -- Tier validation: each player must belong to this tournament AND the expected tier
-  IF NOT EXISTS (SELECT 1 FROM tennis_tournament_players WHERE id = p_tier1  AND tournament_id = p_tournament_id AND tier = 1) THEN RAISE EXCEPTION 'INVALID_PLAYER_TIER1';  END IF;
-  IF NOT EXISTS (SELECT 1 FROM tennis_tournament_players WHERE id = p_tier2a AND tournament_id = p_tournament_id AND tier = 2) THEN RAISE EXCEPTION 'INVALID_PLAYER_TIER2A'; END IF;
-  IF NOT EXISTS (SELECT 1 FROM tennis_tournament_players WHERE id = p_tier2b AND tournament_id = p_tournament_id AND tier = 2) THEN RAISE EXCEPTION 'INVALID_PLAYER_TIER2B'; END IF;
-  IF NOT EXISTS (SELECT 1 FROM tennis_tournament_players WHERE id = p_tier3a AND tournament_id = p_tournament_id AND tier = 3) THEN RAISE EXCEPTION 'INVALID_PLAYER_TIER3A'; END IF;
-  IF NOT EXISTS (SELECT 1 FROM tennis_tournament_players WHERE id = p_tier3b AND tournament_id = p_tournament_id AND tier = 3) THEN RAISE EXCEPTION 'INVALID_PLAYER_TIER3B'; END IF;
-  IF NOT EXISTS (SELECT 1 FROM tennis_tournament_players WHERE id = p_tier4a AND tournament_id = p_tournament_id AND tier = 4) THEN RAISE EXCEPTION 'INVALID_PLAYER_TIER4A'; END IF;
-  IF NOT EXISTS (SELECT 1 FROM tennis_tournament_players WHERE id = p_tier4b AND tournament_id = p_tournament_id AND tier = 4) THEN RAISE EXCEPTION 'INVALID_PLAYER_TIER4B'; END IF;
-
-  -- Ace card validation
-  IF p_ace_card IS NOT NULL THEN
-    IF p_ace_card NOT IN ('underdog_boost','safety_net','surface_specialist','dark_horse_insurance') THEN
-      RAISE EXCEPTION 'INVALID_ACE_CARD_TYPE';
-    END IF;
-    -- Card is available if unused OR already used for THIS tournament (re-submit idempotency)
-    IF NOT EXISTS (
-      SELECT 1 FROM tennis_ace_cards
-      WHERE user_id = v_uid AND season_year = v_tournament.season_year
-        AND card_type = p_ace_card
-        AND (used_tournament_id IS NULL OR used_tournament_id = p_tournament_id)
-    ) THEN
-      RAISE EXCEPTION 'ACE_CARD_UNAVAILABLE';
-    END IF;
-  END IF;
-
-  -- If re-submitting with a different ace card, release the previously-used card first
-  SELECT ace_card_type INTO v_existing_card
-  FROM tennis_rosters
-  WHERE user_id = v_uid AND tournament_id = p_tournament_id;
-
-  IF v_existing_card IS NOT NULL AND v_existing_card IS DISTINCT FROM p_ace_card THEN
-    UPDATE tennis_ace_cards
-    SET used_tournament_id = NULL, used_at = NULL
-    WHERE user_id = v_uid AND season_year = v_tournament.season_year
-      AND card_type = v_existing_card;
-  END IF;
-
-  -- Mark new ace card as used
-  IF p_ace_card IS NOT NULL THEN
-    UPDATE tennis_ace_cards
-    SET used_tournament_id = p_tournament_id, used_at = now()
-    WHERE user_id = v_uid AND season_year = v_tournament.season_year
-      AND card_type = p_ace_card;
-  END IF;
-
-  -- Upsert roster
-  INSERT INTO tennis_rosters (
-    user_id, tournament_id,
-    tier1_player_id, tier2a_player_id, tier2b_player_id,
-    tier3a_player_id, tier3b_player_id,
-    tier4a_player_id, tier4b_player_id,
-    ace_card_type, locked_at
-  ) VALUES (
-    v_uid, p_tournament_id,
-    p_tier1, p_tier2a, p_tier2b,
-    p_tier3a, p_tier3b,
-    p_tier4a, p_tier4b,
-    p_ace_card, now()
-  )
-  ON CONFLICT (user_id, tournament_id) DO UPDATE SET
-    tier1_player_id  = EXCLUDED.tier1_player_id,
-    tier2a_player_id = EXCLUDED.tier2a_player_id,
-    tier2b_player_id = EXCLUDED.tier2b_player_id,
-    tier3a_player_id = EXCLUDED.tier3a_player_id,
-    tier3b_player_id = EXCLUDED.tier3b_player_id,
-    tier4a_player_id = EXCLUDED.tier4a_player_id,
-    tier4b_player_id = EXCLUDED.tier4b_player_id,
-    ace_card_type    = EXCLUDED.ace_card_type,
-    locked_at        = EXCLUDED.locked_at;
-
-  RETURN jsonb_build_object('locked_at', now(), 'ace_card', p_ace_card);
-END;
-$$;
+    AS $$ DECLARE v_uid uuid := auth.uid(); v_tournament tennis_tournaments%ROWTYPE; v_player_ids uuid[]; v_existing_card text; BEGIN IF v_uid IS NULL THEN RAISE EXCEPTION 'UNAUTHENTICATED'; END IF; SELECT * INTO v_tournament FROM tennis_tournaments WHERE id = p_tournament_id; IF NOT FOUND THEN RAISE EXCEPTION 'TOURNAMENT_NOT_FOUND'; END IF; IF v_tournament.tournament_type = 'atp_finals' THEN RAISE EXCEPTION 'USE_ATP_FINALS_SUBMISSION'; END IF; IF v_tournament.status <> 'roster_open' THEN RAISE EXCEPTION 'ROSTER_LOCKED'; END IF; IF p_tier1 IS NULL OR p_tier2a IS NULL OR p_tier2b IS NULL OR p_tier3a IS NULL OR p_tier3b IS NULL OR p_tier4a IS NULL OR p_tier4b IS NULL THEN RAISE EXCEPTION 'ALL_SLOTS_REQUIRED'; END IF; v_player_ids := ARRAY[p_tier1,p_tier2a,p_tier2b,p_tier3a,p_tier3b,p_tier4a,p_tier4b]; IF (SELECT COUNT(DISTINCT x) FROM UNNEST(v_player_ids) AS t(x)) < 7 THEN RAISE EXCEPTION 'DUPLICATE_PLAYERS'; END IF; IF NOT EXISTS (SELECT 1 FROM tennis_tournament_players WHERE id=p_tier1  AND tournament_id=p_tournament_id AND tier=1) THEN RAISE EXCEPTION 'INVALID_PLAYER_TIER1';  END IF; IF NOT EXISTS (SELECT 1 FROM tennis_tournament_players WHERE id=p_tier2a AND tournament_id=p_tournament_id AND tier=2) THEN RAISE EXCEPTION 'INVALID_PLAYER_TIER2A'; END IF; IF NOT EXISTS (SELECT 1 FROM tennis_tournament_players WHERE id=p_tier2b AND tournament_id=p_tournament_id AND tier=2) THEN RAISE EXCEPTION 'INVALID_PLAYER_TIER2B'; END IF; IF NOT EXISTS (SELECT 1 FROM tennis_tournament_players WHERE id=p_tier3a AND tournament_id=p_tournament_id AND tier=3) THEN RAISE EXCEPTION 'INVALID_PLAYER_TIER3A'; END IF; IF NOT EXISTS (SELECT 1 FROM tennis_tournament_players WHERE id=p_tier3b AND tournament_id=p_tournament_id AND tier=3) THEN RAISE EXCEPTION 'INVALID_PLAYER_TIER3B'; END IF; IF NOT EXISTS (SELECT 1 FROM tennis_tournament_players WHERE id=p_tier4a AND tournament_id=p_tournament_id AND tier=4) THEN RAISE EXCEPTION 'INVALID_PLAYER_TIER4A'; END IF; IF NOT EXISTS (SELECT 1 FROM tennis_tournament_players WHERE id=p_tier4b AND tournament_id=p_tournament_id AND tier=4) THEN RAISE EXCEPTION 'INVALID_PLAYER_TIER4B'; END IF; IF p_ace_card IS NOT NULL THEN IF p_ace_card NOT IN ('underdog_boost','safety_net','surface_specialist','dark_horse_insurance') THEN RAISE EXCEPTION 'INVALID_ACE_CARD_TYPE'; END IF; IF NOT EXISTS (SELECT 1 FROM tennis_ace_cards WHERE user_id=v_uid AND season_year=v_tournament.season_year AND card_type=p_ace_card AND (used_tournament_id IS NULL OR used_tournament_id=p_tournament_id)) THEN RAISE EXCEPTION 'ACE_CARD_UNAVAILABLE'; END IF; END IF; SELECT ace_card_type INTO v_existing_card FROM tennis_rosters WHERE user_id=v_uid AND tournament_id=p_tournament_id; IF v_existing_card IS NOT NULL AND v_existing_card IS DISTINCT FROM p_ace_card THEN UPDATE tennis_ace_cards SET used_tournament_id=NULL,used_at=NULL WHERE user_id=v_uid AND season_year=v_tournament.season_year AND card_type=v_existing_card; END IF; IF p_ace_card IS NOT NULL THEN UPDATE tennis_ace_cards SET used_tournament_id=p_tournament_id,used_at=now() WHERE user_id=v_uid AND season_year=v_tournament.season_year AND card_type=p_ace_card; END IF; INSERT INTO tennis_rosters(user_id,tournament_id,tier1_player_id,tier2a_player_id,tier2b_player_id,tier3a_player_id,tier3b_player_id,tier4a_player_id,tier4b_player_id,ace_card_type,locked_at) VALUES(v_uid,p_tournament_id,p_tier1,p_tier2a,p_tier2b,p_tier3a,p_tier3b,p_tier4a,p_tier4b,p_ace_card,now()) ON CONFLICT(user_id,tournament_id) DO UPDATE SET tier1_player_id=EXCLUDED.tier1_player_id,tier2a_player_id=EXCLUDED.tier2a_player_id,tier2b_player_id=EXCLUDED.tier2b_player_id,tier3a_player_id=EXCLUDED.tier3a_player_id,tier3b_player_id=EXCLUDED.tier3b_player_id,tier4a_player_id=EXCLUDED.tier4a_player_id,tier4b_player_id=EXCLUDED.tier4b_player_id,ace_card_type=EXCLUDED.ace_card_type,locked_at=EXCLUDED.locked_at; RETURN jsonb_build_object('locked_at',now(),'ace_card',p_ace_card); END; $$;
 
 
 ALTER FUNCTION "public"."submit_tennis_roster"("p_tournament_id" "uuid", "p_tier1" "uuid", "p_tier2a" "uuid", "p_tier2b" "uuid", "p_tier3a" "uuid", "p_tier3b" "uuid", "p_tier4a" "uuid", "p_tier4b" "uuid", "p_ace_card" "text") OWNER TO "postgres";
@@ -7143,52 +7235,6 @@ $$;
 ALTER FUNCTION "public"."sweep_void_auction_confirmations"() OWNER TO "postgres";
 
 
-CREATE OR REPLACE FUNCTION "public"."sync_all_active_tournaments"() RETURNS "void"
-    LANGUAGE "plpgsql"
-    AS $$
-DECLARE
-  t          RECORD;
-  base_url   TEXT;
-  auth_hdr   JSONB;
-  body_text  TEXT;
-BEGIN
-  base_url := current_setting('app.supabase_url');
-  auth_hdr := jsonb_build_object(
-    'Content-Type',  'application/json',
-    'Authorization', 'Bearer ' || current_setting('app.service_role_key')
-  );
-
-  FOR t IN SELECT forza_id FROM tournaments WHERE sync_enabled = true LOOP
-    body_text := '{"forza_id":"' || t.forza_id || '"}';
-
-    -- Sync player availability (injuries, suspensions)
-    PERFORM net.http_post(
-      url     := base_url || '/functions/v1/sync-player-status',
-      headers := auth_hdr,
-      body    := body_text
-    );
-
-    -- Sync player master data (squads, valuations)
-    PERFORM net.http_post(
-      url     := base_url || '/functions/v1/sync-players',
-      headers := auth_hdr,
-      body    := body_text
-    );
-
-    -- Sync fixtures and matchday deadlines
-    PERFORM net.http_post(
-      url     := base_url || '/functions/v1/sync-fixtures',
-      headers := auth_hdr,
-      body    := body_text
-    );
-  END LOOP;
-END;
-$$;
-
-
-ALTER FUNCTION "public"."sync_all_active_tournaments"() OWNER TO "postgres";
-
-
 CREATE OR REPLACE FUNCTION "public"."sync_cup_eliminations"("p_league_id" "uuid") RETURNS integer
     LANGUAGE "plpgsql" SECURITY DEFINER
     AS $$
@@ -7334,57 +7380,32 @@ ALTER FUNCTION "public"."sync_league_mode"() OWNER TO "postgres";
 
 CREATE OR REPLACE FUNCTION "public"."sync_squad_matchdays"() RETURNS "void"
     LANGUAGE "plpgsql"
-    AS $_$
-DECLARE
-  v_tournament_id  text;
-  v_active_round   int;
-  v_active_md      text;
-BEGIN
-  FOR v_tournament_id IN
-    SELECT DISTINCT tournament_id FROM leagues WHERE tournament_id IS NOT NULL
-  LOOP
-    -- Active round = lowest round with a fixture still scheduled or live.
-    SELECT MIN(f.round_number) INTO v_active_round
-    FROM fixtures f
-    WHERE f.tournament_id = v_tournament_id
-      AND f.status IN ('scheduled', 'live')
-      AND f.round_number IS NOT NULL;
-
-    -- Everything finished -> active round is the last one played.
-    IF v_active_round IS NULL THEN
-      SELECT MAX(f.round_number) INTO v_active_round
-      FROM fixtures f
-      WHERE f.tournament_id = v_tournament_id
-        AND f.round_number IS NOT NULL;
-    END IF;
-
-    IF v_active_round IS NULL THEN
-      CONTINUE;
-    END IF;
-
-    v_active_md := v_tournament_id || '-r' || v_active_round::text;
-
-    -- Only advance squads to a matchday that's an actual configured round.
-    IF NOT EXISTS (
-      SELECT 1 FROM matchday_deadlines
-      WHERE tournament_id = v_tournament_id AND matchday_id = v_active_md
-    ) THEN
-      CONTINUE;
-    END IF;
-
-    UPDATE squads s
-    SET matchday_id = v_active_md
-    FROM leagues l
-    WHERE s.league_id = l.id
-      AND l.tournament_id = v_tournament_id
-      AND s.matchday_id ~ ('^' || v_tournament_id || '-r[0-9]+$')
-      AND (regexp_match(s.matchday_id, '-r([0-9]+)$'))[1]::int < v_active_round;
-  END LOOP;
-END;
-$_$;
+    AS $_$ DECLARE v_tournament_id text; v_active_round int; v_active_md text; BEGIN FOR v_tournament_id IN SELECT DISTINCT tournament_id FROM leagues WHERE tournament_id IS NOT NULL LOOP SELECT MIN(f.round_number) INTO v_active_round FROM fixtures f WHERE f.tournament_id = v_tournament_id AND f.status IN ('scheduled', 'live') AND f.round_number IS NOT NULL; IF v_active_round IS NULL THEN SELECT MAX(f.round_number) INTO v_active_round FROM fixtures f WHERE f.tournament_id = v_tournament_id AND f.round_number IS NOT NULL; END IF; IF v_active_round IS NULL THEN CONTINUE; END IF; v_active_md := v_tournament_id || '-r' || v_active_round::text; IF NOT EXISTS (SELECT 1 FROM matchday_deadlines WHERE tournament_id = v_tournament_id AND matchday_id = v_active_md) THEN CONTINUE; END IF; UPDATE squads s SET matchday_id = v_active_md FROM leagues l WHERE s.league_id = l.id AND l.tournament_id = v_tournament_id AND l.archived = false AND s.matchday_id ~ ('^' || v_tournament_id || '-r[0-9]+$') AND (regexp_match(s.matchday_id, '-r([0-9]+)$'))[1]::int < v_active_round; END LOOP; END; $_$;
 
 
 ALTER FUNCTION "public"."sync_squad_matchdays"() OWNER TO "postgres";
+
+
+CREATE OR REPLACE FUNCTION "public"."sync_wc_players"() RETURNS "void"
+    LANGUAGE "plpgsql"
+    AS $$
+DECLARE
+  base_url TEXT := 'https://sssmvihxtqtohisghjet.supabase.co';
+  auth_hdr JSONB := jsonb_build_object(
+    'Content-Type', 'application/json',
+    'Authorization', 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNzc212aWh4dHF0b2hpc2doamV0Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NjQ4OTIyNywiZXhwIjoyMDkyMDY1MjI3fQ.rJZLTLnrgTjwMv3vHgUIyY48GrJ7dp5vhjWlkpWyWzg'
+  );
+BEGIN
+  PERFORM net.http_post(
+    url := base_url || '/functions/v1/sync-players',
+    headers := auth_hdr,
+    body := '{"forza_id":"429"}'
+  );
+END;
+$$;
+
+
+ALTER FUNCTION "public"."sync_wc_players"() OWNER TO "postgres";
 
 
 CREATE OR REPLACE FUNCTION "public"."tg_recompute_ranks"() RETURNS "trigger"
@@ -7403,77 +7424,77 @@ ALTER FUNCTION "public"."tg_recompute_ranks"() OWNER TO "postgres";
 CREATE OR REPLACE FUNCTION "public"."trg_fn_snapshot_squads_on_kickoff"() RETURNS "trigger"
     LANGUAGE "plpgsql" SECURITY DEFINER
     SET "search_path" TO 'public'
-    AS $$
-BEGIN
-  IF OLD.status = 'scheduled'
-     AND NEW.status = 'live'
-     AND NEW.matchday_id IS NOT NULL THEN
-    PERFORM snapshot_squads_for_matchday(NEW.matchday_id, 'fixture_live');
-  END IF;
-  RETURN NEW;
-END;
-$$;
+    AS $$ BEGIN IF OLD.status = 'scheduled' AND NEW.status = 'live' AND NEW.matchday_id IS NOT NULL THEN PERFORM snapshot_squads_for_matchday(NEW.matchday_id, 'fixture_live'); END IF; RETURN NEW; END; $$;
 
 
 ALTER FUNCTION "public"."trg_fn_snapshot_squads_on_kickoff"() OWNER TO "postgres";
 
 
-CREATE OR REPLACE FUNCTION "public"."trigger_bet_reward_update"() RETURNS "trigger"
-    LANGUAGE "plpgsql" SECURITY DEFINER
+CREATE OR REPLACE FUNCTION "public"."trigger_update_league_member_points"() RETURNS "trigger"
+    LANGUAGE "plpgsql"
     AS $$
 DECLARE
   v_league_id UUID;
+  v_user_id UUID;
+  v_new_points NUMERIC;
 BEGIN
   -- Get league_id from bet_instance
   SELECT league_id INTO v_league_id
   FROM bet_instances
   WHERE id = NEW.bet_instance_id;
 
-  -- Trigger aggregation for this user in this league
-  PERFORM aggregate_league_member_points(v_league_id, NEW.user_id);
+  -- Get user_id from squad
+  SELECT user_id INTO v_user_id
+  FROM squads
+  WHERE id = NEW.squad_id;
+
+  -- Calculate aggregated points
+  v_new_points := aggregate_league_member_points(v_league_id, v_user_id);
+
+  -- Update league_members.total_points
+  UPDATE league_members
+  SET total_points = v_new_points
+  WHERE league_id = v_league_id
+    AND user_id = v_user_id;
 
   RETURN NEW;
 END;
 $$;
 
 
-ALTER FUNCTION "public"."trigger_bet_reward_update"() OWNER TO "postgres";
+ALTER FUNCTION "public"."trigger_update_league_member_points"() OWNER TO "postgres";
 
 
-CREATE OR REPLACE FUNCTION "public"."update_circle_settings"("p_circle_id" "uuid", "p_name" "text" DEFAULT NULL::"text", "p_is_public" boolean DEFAULT NULL::boolean, "p_p2p_enabled" boolean DEFAULT NULL::boolean) RETURNS json
-    LANGUAGE "plpgsql" SECURITY DEFINER
-    SET "search_path" TO 'public'
+CREATE OR REPLACE FUNCTION "public"."trigger_wc2026_sync"() RETURNS "void"
+    LANGUAGE "plpgsql"
     AS $$
 DECLARE
-  v_user_id uuid := auth.uid();
+  base_url TEXT := 'https://sssmvihxtqtohisghjet.supabase.co';
+  auth_hdr JSONB := jsonb_build_object(
+    'Content-Type', 'application/json',
+    'Authorization', 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNzc212aWh4dHF0b2hpc2doamV0Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NjQ4OTIyNywiZXhwIjoyMDkyMDY1MjI3fQ.rJZLTLnrgTjwMv3vHgUIyY48GrJ7dp5vhjWlkpWyWzg'
+  );
 BEGIN
-  IF v_user_id IS NULL THEN
-    RETURN json_build_object('error', 'UNAUTHENTICATED');
-  END IF;
-
-  IF NOT EXISTS (
-    SELECT 1 FROM circle_members
-    WHERE circle_id = p_circle_id
-      AND user_id   = v_user_id
-      AND role      = 'owner'
-  ) THEN
-    RETURN json_build_object('error', 'NOT_OWNER');
-  END IF;
-
-  -- Only update columns whose parameter was supplied (non-NULL).
-  UPDATE circles
-  SET
-    name               = COALESCE(NULLIF(trim(p_name), ''),   name),
-    is_public          = COALESCE(p_is_public,                is_public),
-    p2p_betting_enabled= COALESCE(p_p2p_enabled,             p2p_betting_enabled)
-  WHERE id = p_circle_id;
-
-  RETURN json_build_object('ok', true);
+  PERFORM net.http_post(
+    url := base_url || '/functions/v1/sync-fixtures',
+    headers := auth_hdr,
+    body := '{"forza_id":"429"}'
+  );
+  PERFORM net.http_post(
+    url := base_url || '/functions/v1/sync-players',
+    headers := auth_hdr,
+    body := '{"forza_id":"429"}'
+  );
+  PERFORM net.http_post(
+    url := base_url || '/functions/v1/sync-player-status',
+    headers := auth_hdr,
+    body := '{"forza_id":"429"}'
+  );
 END;
 $$;
 
 
-ALTER FUNCTION "public"."update_circle_settings"("p_circle_id" "uuid", "p_name" "text", "p_is_public" boolean, "p_p2p_enabled" boolean) OWNER TO "postgres";
+ALTER FUNCTION "public"."trigger_wc2026_sync"() OWNER TO "postgres";
 
 
 CREATE OR REPLACE FUNCTION "public"."update_p2p_config"("p_league_id" "uuid", "p_min_stake" integer DEFAULT NULL::integer, "p_max_stake" integer DEFAULT NULL::integer, "p_daily_challenge_limit" integer DEFAULT NULL::integer, "p_challenges_enabled" boolean DEFAULT NULL::boolean) RETURNS "jsonb"
@@ -7526,49 +7547,14 @@ $$;
 ALTER FUNCTION "public"."update_p2p_config"("p_league_id" "uuid", "p_min_stake" integer, "p_max_stake" integer, "p_daily_challenge_limit" integer, "p_challenges_enabled" boolean) OWNER TO "postgres";
 
 
-CREATE OR REPLACE FUNCTION "public"."upsert_scoring_rules"("p_tournament_id" "text", "p_rules" "jsonb") RETURNS TABLE("tournament_id" "text", "rules_count" integer)
-    LANGUAGE "plpgsql" SECURITY DEFINER
+CREATE OR REPLACE FUNCTION "public"."update_scoring_rules_updated_at"() RETURNS "trigger"
+    LANGUAGE "plpgsql"
     AS $$
-DECLARE
-  v_rule JSONB;
-  v_position TEXT;
-  v_event_type TEXT;
-  v_points INT;
-  v_multiplier DECIMAL;
-  v_count INT := 0;
-BEGIN
-  -- Verify user is admin (basic check)
-  IF NOT (auth.jwt() ->> 'role' = 'authenticated') THEN
-    RAISE EXCEPTION 'Only authenticated users can upsert scoring rules';
-  END IF;
-
-  -- Iterate through rules array and upsert each one
-  FOR v_rule IN
-    SELECT jsonb_array_elements(p_rules)
-  LOOP
-    v_position := v_rule ->> 'position';
-    v_event_type := v_rule ->> 'event_type';
-    v_points := (v_rule ->> 'points')::INT;
-    v_multiplier := COALESCE((v_rule ->> 'multiplier')::DECIMAL, 1.0);
-
-    INSERT INTO public.scoring_templates (tournament_id, position, event_type, points, multiplier)
-    VALUES (p_tournament_id, v_position, v_event_type, v_points, v_multiplier)
-    ON CONFLICT (tournament_id, position, event_type)
-    DO UPDATE SET
-      points = EXCLUDED.points,
-      multiplier = EXCLUDED.multiplier,
-      updated_at = NOW();
-
-    v_count := v_count + 1;
-  END LOOP;
-
-  RETURN QUERY
-  SELECT p_tournament_id, v_count;
-END;
+BEGIN NEW.updated_at = now(); RETURN NEW; END;
 $$;
 
 
-ALTER FUNCTION "public"."upsert_scoring_rules"("p_tournament_id" "text", "p_rules" "jsonb") OWNER TO "postgres";
+ALTER FUNCTION "public"."update_scoring_rules_updated_at"() OWNER TO "postgres";
 
 
 CREATE OR REPLACE FUNCTION "public"."void_bet"("p_instance_id" "uuid") RETURNS "jsonb"
@@ -7614,8 +7600,9 @@ CREATE TABLE IF NOT EXISTS "public"."auction_bids" (
     "listing_id" "uuid" NOT NULL,
     "league_id" "uuid" NOT NULL,
     "bidder_id" "uuid" NOT NULL,
-    "amount" numeric(6,2) NOT NULL,
-    "placed_at" timestamp with time zone DEFAULT "now"() NOT NULL
+    "amount" numeric(5,1) NOT NULL,
+    "placed_at" timestamp with time zone DEFAULT "now"() NOT NULL,
+    CONSTRAINT "auction_bids_amount_check" CHECK (("amount" >= (0)::numeric))
 );
 
 
@@ -7947,6 +7934,20 @@ COMMENT ON TABLE "public"."coin_wallets" IS 'Per-user Frontrow Coin balance. FRC
 
 
 
+CREATE TABLE IF NOT EXISTS "public"."competition_admins" (
+    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
+    "competition_type" "text" NOT NULL,
+    "competition_id" "uuid" NOT NULL,
+    "user_id" "uuid" NOT NULL,
+    "assigned_by" "uuid",
+    "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
+    CONSTRAINT "competition_admins_competition_type_check" CHECK (("competition_type" = ANY (ARRAY['league'::"text", 'paddock'::"text", 'player_box'::"text"])))
+);
+
+
+ALTER TABLE "public"."competition_admins" OWNER TO "postgres";
+
+
 CREATE TABLE IF NOT EXISTS "public"."cup_active_clubs" (
     "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
     "league_id" "uuid",
@@ -8024,12 +8025,25 @@ CREATE TABLE IF NOT EXISTS "public"."edge_function_errors" (
     "severity" "text" DEFAULT 'error'::"text" NOT NULL,
     "message" "text" NOT NULL,
     "context" "jsonb",
-    "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
-    CONSTRAINT "edge_function_errors_severity_check" CHECK (("severity" = ANY (ARRAY['warning'::"text", 'error'::"text", 'critical'::"text"])))
+    "created_at" timestamp with time zone DEFAULT "now"() NOT NULL
 );
 
 
 ALTER TABLE "public"."edge_function_errors" OWNER TO "postgres";
+
+
+CREATE TABLE IF NOT EXISTS "public"."error_logs" (
+    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
+    "screen" "text",
+    "message" "text",
+    "stack" "text",
+    "component" "text",
+    "user_agent" "text",
+    "occurred_at" timestamp with time zone DEFAULT "now"()
+);
+
+
+ALTER TABLE "public"."error_logs" OWNER TO "postgres";
 
 
 CREATE TABLE IF NOT EXISTS "public"."f1_bets_race" (
@@ -8125,6 +8139,18 @@ CREATE TABLE IF NOT EXISTS "public"."f1_scores" (
 ALTER TABLE "public"."f1_scores" OWNER TO "postgres";
 
 
+CREATE TABLE IF NOT EXISTS "public"."f1_seasons" (
+    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
+    "season" integer NOT NULL,
+    "starts_at" timestamp with time zone NOT NULL,
+    "ends_at" timestamp with time zone NOT NULL,
+    "created_at" timestamp with time zone DEFAULT "now"() NOT NULL
+);
+
+
+ALTER TABLE "public"."f1_seasons" OWNER TO "postgres";
+
+
 CREATE TABLE IF NOT EXISTS "public"."f1_year_results" (
     "id" integer NOT NULL,
     "season" integer NOT NULL,
@@ -8169,7 +8195,7 @@ CREATE TABLE IF NOT EXISTS "public"."fantasy_points" (
     "player_id" "text",
     "points_breakdown" "jsonb" DEFAULT '{}'::"jsonb",
     "total" numeric DEFAULT 0,
-    "matchday_id" "text",
+    "matchday_id" "text" DEFAULT 'current'::"text" NOT NULL,
     CONSTRAINT "fantasy_points_matchday_id_format" CHECK (("matchday_id" ~ '^[0-9]+-r[0-9]+$'::"text"))
 );
 
@@ -8185,16 +8211,16 @@ CREATE TABLE IF NOT EXISTS "public"."fixtures" (
     "competition" "text" NOT NULL,
     "status" "public"."match_status" DEFAULT 'scheduled'::"public"."match_status",
     "minute" "text",
+    "home_score" integer,
+    "away_score" integer,
+    "matchday_id" "text",
     "forza_match_id" "text",
     "tournament_id" "text",
     "round_number" integer,
     "home_team_forza_id" "text",
     "away_team_forza_id" "text",
     "scores" "jsonb",
-    "status_detail" "text",
-    "home_score" integer,
-    "away_score" integer,
-    "matchday_id" "text"
+    "status_detail" "text"
 );
 
 
@@ -8211,14 +8237,12 @@ COMMENT ON COLUMN "public"."fixtures"."away_score" IS 'Final score for away team
 
 CREATE TABLE IF NOT EXISTS "public"."frontpage_comments" (
     "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
-    "league_id" "uuid",
+    "league_id" "uuid" NOT NULL,
     "edition_date" "date" DEFAULT CURRENT_DATE NOT NULL,
     "section_key" "text" NOT NULL,
     "user_id" "uuid" NOT NULL,
     "text" "text" NOT NULL,
     "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
-    "circle_id" "uuid",
-    CONSTRAINT "comments_scope_check" CHECK ((("league_id" IS NOT NULL) OR ("circle_id" IS NOT NULL))),
     CONSTRAINT "frontpage_comments_section_key_check" CHECK (("section_key" = ANY (ARRAY['lead'::"text", 'hot_take'::"text", 'transfers'::"text", 'scores'::"text", 'commissioner'::"text"]))),
     CONSTRAINT "frontpage_comments_text_check" CHECK ((("char_length"("text") >= 1) AND ("char_length"("text") <= 140)))
 );
@@ -8229,7 +8253,7 @@ ALTER TABLE "public"."frontpage_comments" OWNER TO "postgres";
 
 CREATE TABLE IF NOT EXISTS "public"."frontpage_editions" (
     "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
-    "league_id" "uuid",
+    "league_id" "uuid" NOT NULL,
     "edition_date" "date" DEFAULT CURRENT_DATE NOT NULL,
     "edition_number" integer DEFAULT 1 NOT NULL,
     "headline" "text",
@@ -8239,9 +8263,7 @@ CREATE TABLE IF NOT EXISTS "public"."frontpage_editions" (
     "transfer_rumour" "text",
     "raw_input" "jsonb",
     "is_manual" boolean DEFAULT false NOT NULL,
-    "generated_at" timestamp with time zone DEFAULT "now"() NOT NULL,
-    "circle_id" "uuid",
-    CONSTRAINT "editions_scope_check" CHECK ((("league_id" IS NOT NULL) OR ("circle_id" IS NOT NULL)))
+    "generated_at" timestamp with time zone DEFAULT "now"() NOT NULL
 );
 
 
@@ -8250,16 +8272,14 @@ ALTER TABLE "public"."frontpage_editions" OWNER TO "postgres";
 
 CREATE TABLE IF NOT EXISTS "public"."frontpage_reactions" (
     "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
-    "league_id" "uuid",
+    "league_id" "uuid" NOT NULL,
     "edition_date" "date" DEFAULT CURRENT_DATE NOT NULL,
     "section_key" "text" NOT NULL,
     "user_id" "uuid" NOT NULL,
     "emoji" "text" NOT NULL,
     "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
-    "circle_id" "uuid",
     CONSTRAINT "frontpage_reactions_emoji_check" CHECK (("emoji" = ANY (ARRAY['🔥'::"text", '💀'::"text", '😂'::"text", '👑'::"text", '😤'::"text"]))),
-    CONSTRAINT "frontpage_reactions_section_key_check" CHECK (("section_key" = ANY (ARRAY['lead'::"text", 'hot_take'::"text", 'transfers'::"text", 'scores'::"text", 'commissioner'::"text"]))),
-    CONSTRAINT "reactions_scope_check" CHECK ((("league_id" IS NOT NULL) OR ("circle_id" IS NOT NULL)))
+    CONSTRAINT "frontpage_reactions_section_key_check" CHECK (("section_key" = ANY (ARRAY['lead'::"text", 'hot_take'::"text", 'transfers'::"text", 'scores'::"text", 'commissioner'::"text"])))
 );
 
 
@@ -8359,12 +8379,16 @@ CREATE TABLE IF NOT EXISTS "public"."league_members" (
     "rank" integer DEFAULT 1,
     "total_points" numeric(10,2) DEFAULT 0,
     "joined_at" timestamp with time zone DEFAULT "now"(),
-    "role" "text" DEFAULT 'member'::"text",
+    "role" "text" DEFAULT 'member'::"text" NOT NULL,
     CONSTRAINT "league_members_role_check" CHECK (("role" = ANY (ARRAY['member'::"text", 'admin'::"text", 'commissioner'::"text"])))
 );
 
 
 ALTER TABLE "public"."league_members" OWNER TO "postgres";
+
+
+COMMENT ON TABLE "public"."league_members" IS 'League membership. RLS: users can read their own membership; admins can manage.';
+
 
 
 CREATE TABLE IF NOT EXISTS "public"."league_notifications" (
@@ -8396,23 +8420,31 @@ CREATE TABLE IF NOT EXISTS "public"."leagues" (
     "tournament_id" "text" DEFAULT '426'::"text" NOT NULL,
     "created_by" "uuid",
     "created_at" timestamp with time zone DEFAULT "now"(),
+    "join_code" "text",
     "cup_phase" "public"."cup_phase" DEFAULT 'pre_cup'::"public"."cup_phase",
     "draft_deadline" timestamp with time zone,
     "is_dry_run" boolean DEFAULT false NOT NULL,
+    "transfers_open" boolean DEFAULT false,
+    "budget_total" numeric(6,1) DEFAULT 100.0,
     "squad_size" integer DEFAULT 15,
     "draft_list_size" integer DEFAULT 45,
-    "draft_position_caps" "jsonb" DEFAULT '{"GK": 6, "DEF": 15, "FWD": 9, "MID": 15}'::"jsonb",
     "position_limits" "jsonb" DEFAULT '{"GK": 2, "DEF": 5, "FWD": 3, "MID": 5}'::"jsonb",
+    "draft_position_caps" "jsonb" DEFAULT '{"GK": 6, "DEF": 15, "FWD": 9, "MID": 15}'::"jsonb",
     "min_formation" "jsonb" DEFAULT '{"GK": 1, "DEF": 3, "FWD": 1, "MID": 2}'::"jsonb",
     "league_mode" "text" DEFAULT 'draft'::"text" NOT NULL,
     "knockout_draft_deadline" timestamp with time zone,
     "h2h_enabled" boolean DEFAULT false NOT NULL,
-    "circle_id" "uuid",
-    "join_code" "text"
+    "circle_id" "uuid" NOT NULL,
+    "archived" boolean DEFAULT false NOT NULL,
+    "archived_at" timestamp with time zone
 );
 
 
 ALTER TABLE "public"."leagues" OWNER TO "postgres";
+
+
+COMMENT ON TABLE "public"."leagues" IS 'Leagues. RLS: members can read their league; admins can update.';
+
 
 
 CREATE TABLE IF NOT EXISTS "public"."match_events" (
@@ -8422,7 +8454,8 @@ CREATE TABLE IF NOT EXISTS "public"."match_events" (
     "player_id" "text",
     "minute" "text" NOT NULL,
     "team" "text" NOT NULL,
-    "created_at" timestamp with time zone DEFAULT "now"()
+    "created_at" timestamp with time zone DEFAULT "now"(),
+    "outcome" "jsonb"
 );
 
 
@@ -8432,7 +8465,6 @@ ALTER TABLE "public"."match_events" OWNER TO "postgres";
 CREATE TABLE IF NOT EXISTS "public"."matchday_deadlines" (
     "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
     "matchday_id" "text" NOT NULL,
-    "label" "text",
     "deadline_at" timestamp with time zone NOT NULL,
     "unlocks_at" timestamp with time zone,
     "created_at" timestamp with time zone DEFAULT "now"(),
@@ -8456,20 +8488,35 @@ CREATE TABLE IF NOT EXISTS "public"."matchday_recaps" (
     "joker_player_id" "text",
     "transfers_made" integer DEFAULT 0,
     "image_url" "text",
-    "created_at" timestamp with time zone DEFAULT "now"()
+    "created_at" timestamp with time zone DEFAULT "now"(),
+    "matchday_number" integer DEFAULT 5 NOT NULL
 );
 
 
 ALTER TABLE "public"."matchday_recaps" OWNER TO "postgres";
 
 
-CREATE TABLE IF NOT EXISTS "public"."p2p_challenges" (
+CREATE TABLE IF NOT EXISTS "public"."matchday_scores" (
     "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
     "league_id" "uuid" NOT NULL,
+    "user_id" "uuid" NOT NULL,
+    "matchday_id" "text" NOT NULL,
+    "total_points" integer DEFAULT 0 NOT NULL,
+    "breakdown" "jsonb",
+    "scored_at" timestamp with time zone DEFAULT "now"() NOT NULL
+);
+
+
+ALTER TABLE "public"."matchday_scores" OWNER TO "postgres";
+
+
+CREATE TABLE IF NOT EXISTS "public"."p2p_challenges" (
+    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
+    "league_id" "uuid",
     "challenger_id" "uuid" NOT NULL,
     "opponent_id" "uuid" NOT NULL,
     "bet_type" "text" DEFAULT 'gw_total'::"text" NOT NULL,
-    "matchday_id" "text" NOT NULL,
+    "matchday_id" "text",
     "stake_coins" integer NOT NULL,
     "message" "text",
     "status" "text" DEFAULT 'pending'::"text" NOT NULL,
@@ -8480,11 +8527,23 @@ CREATE TABLE IF NOT EXISTS "public"."p2p_challenges" (
     "updated_at" timestamp with time zone DEFAULT "now"() NOT NULL,
     "challenger_pts" numeric,
     "opponent_pts" numeric,
+    "circle_id" "uuid" NOT NULL,
+    "paddock_id" "uuid",
+    "player_box_id" "uuid",
+    "resolution_mode" "text" DEFAULT 'auto'::"text" NOT NULL,
+    "question" "text",
+    "proposed_winner_id" "uuid",
+    "proposed_by" "uuid",
+    "proposed_at" timestamp with time zone,
+    "dispute_deadline" timestamp with time zone,
     CONSTRAINT "no_self_challenge" CHECK (("challenger_id" <> "opponent_id")),
-    CONSTRAINT "p2p_challenges_bet_type_check" CHECK (("bet_type" = 'gw_total'::"text")),
+    CONSTRAINT "p2p_challenges_bet_type_check" CHECK (("bet_type" = ANY (ARRAY['gw_total'::"text", 'freeform'::"text"]))),
     CONSTRAINT "p2p_challenges_message_check" CHECK (("char_length"("message") <= 140)),
+    CONSTRAINT "p2p_challenges_question_check" CHECK (("char_length"("question") <= 140)),
+    CONSTRAINT "p2p_challenges_resolution_mode_check" CHECK (("resolution_mode" = ANY (ARRAY['auto'::"text", 'manual'::"text"]))),
     CONSTRAINT "p2p_challenges_stake_coins_check" CHECK (("stake_coins" > 0)),
-    CONSTRAINT "p2p_challenges_status_check" CHECK (("status" = ANY (ARRAY['pending'::"text", 'accepted'::"text", 'declined'::"text", 'cancelled'::"text", 'resolved'::"text", 'expired'::"text"])))
+    CONSTRAINT "p2p_challenges_status_check" CHECK (("status" = ANY (ARRAY['pending'::"text", 'accepted'::"text", 'declined'::"text", 'cancelled'::"text", 'resolved'::"text", 'expired'::"text", 'disputed'::"text"]))),
+    CONSTRAINT "p2p_competition_shape" CHECK (((("bet_type" = 'gw_total'::"text") AND ("question" IS NULL) AND ("league_id" IS NOT NULL) AND ("matchday_id" IS NOT NULL)) OR (("bet_type" = 'freeform'::"text") AND ("question" IS NOT NULL) AND ("league_id" IS NULL) AND ("matchday_id" IS NULL) AND ("paddock_id" IS NULL) AND ("player_box_id" IS NULL))))
 );
 
 
@@ -8528,7 +8587,7 @@ CREATE TABLE IF NOT EXISTS "public"."paddocks" (
     "created_by" "uuid" NOT NULL,
     "sport_id" "uuid" NOT NULL,
     "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
-    "circle_id" "uuid"
+    "circle_id" "uuid" NOT NULL
 );
 
 
@@ -8567,11 +8626,24 @@ CREATE TABLE IF NOT EXISTS "public"."player_boxes" (
     "created_by" "uuid" NOT NULL,
     "season_year" integer NOT NULL,
     "created_at" timestamp with time zone DEFAULT "now"(),
-    "circle_id" "uuid"
+    "circle_id" "uuid" NOT NULL
 );
 
 
 ALTER TABLE "public"."player_boxes" OWNER TO "postgres";
+
+
+CREATE TABLE IF NOT EXISTS "public"."player_match_points" (
+    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
+    "fixture_id" "text" NOT NULL,
+    "player_id" "text" NOT NULL,
+    "points" integer DEFAULT 0 NOT NULL,
+    "breakdown" "jsonb",
+    "scored_at" timestamp with time zone DEFAULT "now"() NOT NULL
+);
+
+
+ALTER TABLE "public"."player_match_points" OWNER TO "postgres";
 
 
 CREATE TABLE IF NOT EXISTS "public"."player_match_stats" (
@@ -8601,9 +8673,9 @@ CREATE TABLE IF NOT EXISTS "public"."player_match_stats" (
     "xg" numeric(6,4) DEFAULT 0 NOT NULL,
     "xa" numeric(6,4) DEFAULT 0 NOT NULL,
     "goals_conceded" integer DEFAULT 0 NOT NULL,
-    "penalty_scored" integer DEFAULT 0,
     "accurate_passes" integer DEFAULT 0 NOT NULL,
     "total_passes" integer DEFAULT 0 NOT NULL,
+    "penalty_scored" smallint DEFAULT 0 NOT NULL,
     "key_passes" integer DEFAULT 0 NOT NULL,
     "big_chances_created" integer DEFAULT 0 NOT NULL,
     "shootout_scored" integer DEFAULT 0,
@@ -8733,12 +8805,11 @@ CREATE TABLE IF NOT EXISTS "public"."squads" (
     "players" "text"[] DEFAULT '{}'::"text"[],
     "captain_id" "text",
     "joker_player_id" "text",
-    "is_wildcard" boolean DEFAULT false,
-    "is_triple_captain" boolean DEFAULT false,
     "locked_at" timestamp with time zone,
     "created_at" timestamp with time zone DEFAULT "now"(),
-    "budget_remaining" numeric(6,1) DEFAULT 100,
-    "tournament_id" "text" NOT NULL,
+    "is_wildcard" boolean DEFAULT false NOT NULL,
+    "is_triple_captain" boolean DEFAULT false NOT NULL,
+    "budget_remaining" numeric DEFAULT 100,
     "round_transfers" "jsonb" DEFAULT '{}'::"jsonb" NOT NULL,
     "starting_xi" "text"[] DEFAULT '{}'::"text"[] NOT NULL,
     "lineup_locks" "jsonb" DEFAULT '{}'::"jsonb" NOT NULL,
@@ -8749,6 +8820,10 @@ CREATE TABLE IF NOT EXISTS "public"."squads" (
 
 
 ALTER TABLE "public"."squads" OWNER TO "postgres";
+
+
+COMMENT ON TABLE "public"."squads" IS 'Fantasy squads. RLS: users can read/update only their own squad.';
+
 
 
 CREATE TABLE IF NOT EXISTS "public"."teams" (
@@ -8945,7 +9020,13 @@ CREATE TABLE IF NOT EXISTS "public"."trade_listings" (
     "league_id" "uuid",
     "user_id" "uuid",
     "player_id" "text",
-    "listed_at" timestamp with time zone DEFAULT "now"()
+    "listed_at" timestamp with time zone DEFAULT "now"(),
+    "status" "text" DEFAULT 'trade'::"text" NOT NULL,
+    "min_bid" numeric(5,1) DEFAULT 0 NOT NULL,
+    "auction_closes_at" timestamp with time zone,
+    "winner_id" "uuid",
+    "winning_bid" numeric(5,1),
+    CONSTRAINT "trade_listings_status_check" CHECK (("status" = ANY (ARRAY['trade'::"text", 'auction'::"text", 'sold'::"text", 'expired'::"text", 'cancelled'::"text"])))
 );
 
 
@@ -8980,8 +9061,7 @@ CREATE TABLE IF NOT EXISTS "public"."transfers" (
     "round_number" integer NOT NULL,
     "player_out" "text",
     "player_in" "text",
-    "transferred_at" timestamp with time zone DEFAULT "now"(),
-    "tournament_id" "text"
+    "transferred_at" timestamp with time zone DEFAULT "now"()
 );
 
 
@@ -9007,6 +9087,14 @@ CREATE TABLE IF NOT EXISTS "public"."trophy_ledger" (
 ALTER TABLE "public"."trophy_ledger" OWNER TO "postgres";
 
 
+COMMENT ON COLUMN "public"."trophy_ledger"."league_id" IS 'Sport-scoped, not FK-enforced (relaxed in migration 248). Interpreted by sport_id: football -> leagues.id, f1 -> paddocks.id, tennis -> player_boxes.id.';
+
+
+
+COMMENT ON COLUMN "public"."trophy_ledger"."tournament_id" IS 'Sport-scoped, not FK-enforced (relaxed in migration 248). Interpreted by sport_id: football -> tournaments.id, f1 -> f1_seasons.id, tennis -> tennis_tournaments.id.';
+
+
+
 CREATE TABLE IF NOT EXISTS "public"."users" (
     "id" "uuid" NOT NULL,
     "username" "text" NOT NULL,
@@ -9019,6 +9107,10 @@ CREATE TABLE IF NOT EXISTS "public"."users" (
 
 
 ALTER TABLE "public"."users" OWNER TO "postgres";
+
+
+COMMENT ON TABLE "public"."users" IS 'User accounts. RLS: users can read/update only their own record.';
+
 
 
 CREATE OR REPLACE VIEW "public"."user_profiles" AS
@@ -9042,6 +9134,11 @@ ALTER TABLE ONLY "public"."f1_year_results" ALTER COLUMN "id" SET DEFAULT "nextv
 
 
 ALTER TABLE ONLY "public"."auction_bids"
+    ADD CONSTRAINT "auction_bids_listing_id_bidder_id_key" UNIQUE ("listing_id", "bidder_id");
+
+
+
+ALTER TABLE ONLY "public"."auction_bids"
     ADD CONSTRAINT "auction_bids_pkey" PRIMARY KEY ("id");
 
 
@@ -9058,11 +9155,6 @@ ALTER TABLE ONLY "public"."bet_instances"
 
 ALTER TABLE ONLY "public"."bet_submissions"
     ADD CONSTRAINT "bet_submissions_pkey" PRIMARY KEY ("id");
-
-
-
-ALTER TABLE ONLY "public"."bet_submissions"
-    ADD CONSTRAINT "bet_submissions_unique_squad_bet" UNIQUE ("bet_instance_id", "squad_id");
 
 
 
@@ -9176,6 +9268,16 @@ ALTER TABLE ONLY "public"."coin_wallets"
 
 
 
+ALTER TABLE ONLY "public"."competition_admins"
+    ADD CONSTRAINT "competition_admins_competition_type_competition_id_user_id_key" UNIQUE ("competition_type", "competition_id", "user_id");
+
+
+
+ALTER TABLE ONLY "public"."competition_admins"
+    ADD CONSTRAINT "competition_admins_pkey" PRIMARY KEY ("id");
+
+
+
 ALTER TABLE ONLY "public"."cup_active_clubs"
     ADD CONSTRAINT "cup_active_clubs_league_id_club_id_key" UNIQUE ("league_id", "club_id");
 
@@ -9221,6 +9323,11 @@ ALTER TABLE ONLY "public"."edge_function_errors"
 
 
 
+ALTER TABLE ONLY "public"."error_logs"
+    ADD CONSTRAINT "error_logs_pkey" PRIMARY KEY ("id");
+
+
+
 ALTER TABLE ONLY "public"."f1_bets_race"
     ADD CONSTRAINT "f1_bets_race_pkey" PRIMARY KEY ("id");
 
@@ -9258,6 +9365,16 @@ ALTER TABLE ONLY "public"."f1_scores"
 
 ALTER TABLE ONLY "public"."f1_scores"
     ADD CONSTRAINT "f1_scores_user_id_season_round_number_score_type_key" UNIQUE ("user_id", "season", "round_number", "score_type");
+
+
+
+ALTER TABLE ONLY "public"."f1_seasons"
+    ADD CONSTRAINT "f1_seasons_pkey" PRIMARY KEY ("id");
+
+
+
+ALTER TABLE ONLY "public"."f1_seasons"
+    ADD CONSTRAINT "f1_seasons_season_key" UNIQUE ("season");
 
 
 
@@ -9367,6 +9484,11 @@ ALTER TABLE ONLY "public"."league_notifications"
 
 
 ALTER TABLE ONLY "public"."leagues"
+    ADD CONSTRAINT "leagues_join_code_key" UNIQUE ("join_code");
+
+
+
+ALTER TABLE ONLY "public"."leagues"
     ADD CONSTRAINT "leagues_pkey" PRIMARY KEY ("id");
 
 
@@ -9393,6 +9515,16 @@ ALTER TABLE ONLY "public"."matchday_recaps"
 
 ALTER TABLE ONLY "public"."matchday_recaps"
     ADD CONSTRAINT "matchday_recaps_user_id_league_id_matchday_id_key" UNIQUE ("user_id", "league_id", "matchday_id");
+
+
+
+ALTER TABLE ONLY "public"."matchday_scores"
+    ADD CONSTRAINT "matchday_scores_league_id_user_id_matchday_id_key" UNIQUE ("league_id", "user_id", "matchday_id");
+
+
+
+ALTER TABLE ONLY "public"."matchday_scores"
+    ADD CONSTRAINT "matchday_scores_pkey" PRIMARY KEY ("id");
 
 
 
@@ -9438,6 +9570,16 @@ ALTER TABLE ONLY "public"."player_boxes"
 
 ALTER TABLE ONLY "public"."player_boxes"
     ADD CONSTRAINT "player_boxes_pkey" PRIMARY KEY ("id");
+
+
+
+ALTER TABLE ONLY "public"."player_match_points"
+    ADD CONSTRAINT "player_match_points_fixture_id_player_id_key" UNIQUE ("fixture_id", "player_id");
+
+
+
+ALTER TABLE ONLY "public"."player_match_points"
+    ADD CONSTRAINT "player_match_points_pkey" PRIMARY KEY ("id");
 
 
 
@@ -9518,6 +9660,11 @@ ALTER TABLE ONLY "public"."squad_matchday_snapshots"
 
 ALTER TABLE ONLY "public"."squad_matchday_snapshots"
     ADD CONSTRAINT "squad_matchday_snapshots_pkey" PRIMARY KEY ("id");
+
+
+
+ALTER TABLE ONLY "public"."squads"
+    ADD CONSTRAINT "squads_league_id_user_id_matchday_id_key" UNIQUE ("league_id", "user_id", "matchday_id");
 
 
 
@@ -9666,11 +9813,7 @@ ALTER TABLE ONLY "public"."users"
 
 
 
-CREATE INDEX "idx_auction_listings_league_status" ON "public"."auction_listings" USING "btree" ("league_id", "status");
-
-
-
-CREATE UNIQUE INDEX "auction_bids_listing_id_bidder_id_key" ON "public"."auction_bids" USING "btree" ("listing_id", "bidder_id");
+CREATE INDEX "auction_bids_listing_idx" ON "public"."auction_bids" USING "btree" ("listing_id");
 
 
 
@@ -9679,6 +9822,10 @@ CREATE INDEX "bet_instances_league_status" ON "public"."bet_instances" USING "bt
 
 
 CREATE INDEX "bet_submissions_instance" ON "public"."bet_submissions" USING "btree" ("bet_instance_id");
+
+
+
+CREATE UNIQUE INDEX "bet_submissions_unique_squad_bet" ON "public"."bet_submissions" USING "btree" ("squad_id", "bet_instance_id");
 
 
 
@@ -9714,15 +9861,7 @@ CREATE UNIQUE INDEX "fixtures_forza_match_id_idx" ON "public"."fixtures" USING "
 
 
 
-CREATE INDEX "frontpage_comments_circle_lookup" ON "public"."frontpage_comments" USING "btree" ("circle_id", "edition_date", "section_key", "created_at") WHERE ("circle_id" IS NOT NULL);
-
-
-
 CREATE INDEX "frontpage_comments_lookup" ON "public"."frontpage_comments" USING "btree" ("league_id", "edition_date", "section_key", "created_at");
-
-
-
-CREATE UNIQUE INDEX "frontpage_editions_circle_date" ON "public"."frontpage_editions" USING "btree" ("circle_id", "edition_date") WHERE ("circle_id" IS NOT NULL);
 
 
 
@@ -9730,19 +9869,11 @@ CREATE INDEX "frontpage_editions_league_date" ON "public"."frontpage_editions" U
 
 
 
-CREATE INDEX "frontpage_reactions_circle_lookup" ON "public"."frontpage_reactions" USING "btree" ("circle_id", "edition_date", "section_key") WHERE ("circle_id" IS NOT NULL);
-
-
-
-CREATE UNIQUE INDEX "frontpage_reactions_circle_unique" ON "public"."frontpage_reactions" USING "btree" ("circle_id", "edition_date", "section_key", "user_id", "emoji") WHERE ("circle_id" IS NOT NULL);
-
-
-
-CREATE UNIQUE INDEX "frontpage_reactions_league_unique" ON "public"."frontpage_reactions" USING "btree" ("league_id", "edition_date", "section_key", "user_id", "emoji") WHERE ("league_id" IS NOT NULL);
-
-
-
 CREATE INDEX "frontpage_reactions_lookup" ON "public"."frontpage_reactions" USING "btree" ("league_id", "edition_date", "section_key");
+
+
+
+CREATE INDEX "idx_auction_listings_league_status" ON "public"."auction_listings" USING "btree" ("league_id", "status");
 
 
 
@@ -9806,19 +9937,15 @@ CREATE INDEX "idx_league_notifications_user_league" ON "public"."league_notifica
 
 
 
-CREATE INDEX "idx_match_events_fixture_player" ON "public"."match_events" USING "btree" ("fixture_id", "player_id");
-
-
-
-CREATE INDEX "idx_matchday_deadlines_deadline" ON "public"."matchday_deadlines" USING "btree" ("deadline_at" DESC);
-
-
-
 CREATE INDEX "idx_matchday_deadlines_tournament" ON "public"."matchday_deadlines" USING "btree" ("tournament_id");
 
 
 
 CREATE INDEX "idx_p2p_challenges_challenger" ON "public"."p2p_challenges" USING "btree" ("challenger_id");
+
+
+
+CREATE INDEX "idx_p2p_challenges_dispute_deadline" ON "public"."p2p_challenges" USING "btree" ("dispute_deadline") WHERE ("status" = 'disputed'::"text");
 
 
 
@@ -9894,7 +10021,27 @@ CREATE INDEX "idx_trophy_ledger_circle_user" ON "public"."trophy_ledger" USING "
 
 
 
+CREATE UNIQUE INDEX "idx_trophy_ledger_event_win_unique" ON "public"."trophy_ledger" USING "btree" ("league_id", "user_id", "tournament_id", (("meta" ->> 'event_key'::"text"))) WHERE ("trophy_type" = 'event_win'::"text");
+
+
+
+CREATE UNIQUE INDEX "idx_trophy_ledger_round_win_unique" ON "public"."trophy_ledger" USING "btree" ("league_id", "user_id", "tournament_id", (("meta" ->> 'round_key'::"text"))) WHERE ("trophy_type" = 'round_win'::"text");
+
+
+
+CREATE UNIQUE INDEX "idx_trophy_ledger_season_win_unique" ON "public"."trophy_ledger" USING "btree" ("league_id", "user_id", "tournament_id") WHERE ("trophy_type" = 'season_win'::"text");
+
+
+
 CREATE UNIQUE INDEX "match_events_ingest_unique" ON "public"."match_events" USING "btree" ("fixture_id", "type", "minute", "player_id") WHERE ("player_id" IS NOT NULL);
+
+
+
+CREATE INDEX "matchday_scores_league_md_idx" ON "public"."matchday_scores" USING "btree" ("league_id", "matchday_id");
+
+
+
+CREATE INDEX "player_match_points_player_idx" ON "public"."player_match_points" USING "btree" ("player_id");
 
 
 
@@ -9926,15 +10073,15 @@ CREATE INDEX "squad_events_user_idx" ON "public"."squad_events" USING "btree" ("
 
 
 
-CREATE UNIQUE INDEX "squads_league_tournament_user_matchday_unique" ON "public"."squads" USING "btree" ("league_id", "tournament_id", "user_id", "matchday_id");
-
-
-
 CREATE UNIQUE INDEX "tennis_ttp_external_id_idx" ON "public"."tennis_tournament_players" USING "btree" ("tournament_id", "external_player_id") WHERE ("external_player_id" IS NOT NULL);
 
 
 
-CREATE OR REPLACE TRIGGER "bet_submissions_reward_update" AFTER UPDATE OF "reward_awarded" ON "public"."bet_submissions" FOR EACH ROW WHEN ((("new"."reward_awarded" IS NOT NULL) AND ("old"."reward_awarded" IS NULL))) EXECUTE FUNCTION "public"."trigger_bet_reward_update"();
+CREATE INDEX "trade_listings_league_status_idx" ON "public"."trade_listings" USING "btree" ("league_id", "status");
+
+
+
+CREATE OR REPLACE TRIGGER "bet_resolution_update_points" AFTER UPDATE OF "reward_awarded" ON "public"."bet_submissions" FOR EACH ROW WHEN ((("new"."reward_awarded" IS NOT NULL) AND ("old"."reward_awarded" IS NULL))) EXECUTE FUNCTION "public"."trigger_update_league_member_points"();
 
 
 
@@ -9982,18 +10129,6 @@ CREATE OR REPLACE TRIGGER "trg_guard_squad_protected_columns" BEFORE INSERT OR U
 
 
 
-CREATE OR REPLACE TRIGGER "trg_notify_direct_message" AFTER INSERT ON "public"."direct_messages" FOR EACH ROW EXECUTE FUNCTION "public"."notify_on_direct_message"();
-
-
-
-CREATE OR REPLACE TRIGGER "trg_notify_frontpage_edition" AFTER INSERT ON "public"."frontpage_editions" FOR EACH ROW EXECUTE FUNCTION "public"."notify_on_frontpage_edition"();
-
-
-
-CREATE OR REPLACE TRIGGER "trg_notify_gazette_breaking_news" AFTER INSERT ON "public"."gazette_entries" FOR EACH ROW EXECUTE FUNCTION "public"."notify_on_gazette_breaking_news"();
-
-
-
 CREATE OR REPLACE TRIGGER "trg_preserve_manual_matchday_id" BEFORE UPDATE ON "public"."fixtures" FOR EACH ROW EXECUTE FUNCTION "public"."preserve_manual_matchday_id"();
 
 
@@ -10030,7 +10165,7 @@ ALTER TABLE ONLY "public"."auction_bids"
 
 
 ALTER TABLE ONLY "public"."auction_listings"
-    ADD CONSTRAINT "auction_listings_highest_bidder_id_fkey" FOREIGN KEY ("highest_bidder_id") REFERENCES "auth"."users"("id");
+    ADD CONSTRAINT "auction_listings_highest_bidder_id_fkey" FOREIGN KEY ("highest_bidder_id") REFERENCES "auth"."users"("id") ON DELETE SET NULL;
 
 
 
@@ -10184,6 +10319,16 @@ ALTER TABLE ONLY "public"."coin_wallets"
 
 
 
+ALTER TABLE ONLY "public"."competition_admins"
+    ADD CONSTRAINT "competition_admins_assigned_by_fkey" FOREIGN KEY ("assigned_by") REFERENCES "auth"."users"("id");
+
+
+
+ALTER TABLE ONLY "public"."competition_admins"
+    ADD CONSTRAINT "competition_admins_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "auth"."users"("id") ON DELETE CASCADE;
+
+
+
 ALTER TABLE ONLY "public"."cup_active_clubs"
     ADD CONSTRAINT "cup_active_clubs_league_id_fkey" FOREIGN KEY ("league_id") REFERENCES "public"."leagues"("id") ON DELETE CASCADE;
 
@@ -10275,11 +10420,6 @@ ALTER TABLE ONLY "public"."coin_transactions"
 
 
 ALTER TABLE ONLY "public"."frontpage_comments"
-    ADD CONSTRAINT "frontpage_comments_circle_id_fkey" FOREIGN KEY ("circle_id") REFERENCES "public"."circles"("id") ON DELETE CASCADE;
-
-
-
-ALTER TABLE ONLY "public"."frontpage_comments"
     ADD CONSTRAINT "frontpage_comments_league_id_fkey" FOREIGN KEY ("league_id") REFERENCES "public"."leagues"("id") ON DELETE CASCADE;
 
 
@@ -10290,17 +10430,7 @@ ALTER TABLE ONLY "public"."frontpage_comments"
 
 
 ALTER TABLE ONLY "public"."frontpage_editions"
-    ADD CONSTRAINT "frontpage_editions_circle_id_fkey" FOREIGN KEY ("circle_id") REFERENCES "public"."circles"("id") ON DELETE CASCADE;
-
-
-
-ALTER TABLE ONLY "public"."frontpage_editions"
     ADD CONSTRAINT "frontpage_editions_league_id_fkey" FOREIGN KEY ("league_id") REFERENCES "public"."leagues"("id") ON DELETE CASCADE;
-
-
-
-ALTER TABLE ONLY "public"."frontpage_reactions"
-    ADD CONSTRAINT "frontpage_reactions_circle_id_fkey" FOREIGN KEY ("circle_id") REFERENCES "public"."circles"("id") ON DELETE CASCADE;
 
 
 
@@ -10464,8 +10594,23 @@ ALTER TABLE ONLY "public"."matchday_recaps"
 
 
 
+ALTER TABLE ONLY "public"."matchday_scores"
+    ADD CONSTRAINT "matchday_scores_league_id_fkey" FOREIGN KEY ("league_id") REFERENCES "public"."leagues"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."matchday_scores"
+    ADD CONSTRAINT "matchday_scores_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "auth"."users"("id");
+
+
+
 ALTER TABLE ONLY "public"."p2p_challenges"
     ADD CONSTRAINT "p2p_challenges_challenger_id_fkey" FOREIGN KEY ("challenger_id") REFERENCES "auth"."users"("id");
+
+
+
+ALTER TABLE ONLY "public"."p2p_challenges"
+    ADD CONSTRAINT "p2p_challenges_circle_id_fkey" FOREIGN KEY ("circle_id") REFERENCES "public"."circles"("id") ON DELETE CASCADE;
 
 
 
@@ -10476,6 +10621,26 @@ ALTER TABLE ONLY "public"."p2p_challenges"
 
 ALTER TABLE ONLY "public"."p2p_challenges"
     ADD CONSTRAINT "p2p_challenges_opponent_id_fkey" FOREIGN KEY ("opponent_id") REFERENCES "auth"."users"("id");
+
+
+
+ALTER TABLE ONLY "public"."p2p_challenges"
+    ADD CONSTRAINT "p2p_challenges_paddock_id_fkey" FOREIGN KEY ("paddock_id") REFERENCES "public"."paddocks"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."p2p_challenges"
+    ADD CONSTRAINT "p2p_challenges_player_box_id_fkey" FOREIGN KEY ("player_box_id") REFERENCES "public"."player_boxes"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."p2p_challenges"
+    ADD CONSTRAINT "p2p_challenges_proposed_by_fkey" FOREIGN KEY ("proposed_by") REFERENCES "auth"."users"("id");
+
+
+
+ALTER TABLE ONLY "public"."p2p_challenges"
+    ADD CONSTRAINT "p2p_challenges_proposed_winner_id_fkey" FOREIGN KEY ("proposed_winner_id") REFERENCES "auth"."users"("id");
 
 
 
@@ -10554,6 +10719,11 @@ ALTER TABLE ONLY "public"."player_boxes"
 
 
 
+ALTER TABLE ONLY "public"."player_match_points"
+    ADD CONSTRAINT "player_match_points_fixture_id_fkey" FOREIGN KEY ("fixture_id") REFERENCES "public"."fixtures"("id") ON DELETE CASCADE;
+
+
+
 ALTER TABLE ONLY "public"."player_match_stats"
     ADD CONSTRAINT "player_match_stats_fixture_id_fkey" FOREIGN KEY ("fixture_id") REFERENCES "public"."fixtures"("id") ON DELETE CASCADE;
 
@@ -10566,11 +10736,6 @@ ALTER TABLE ONLY "public"."player_match_stats"
 
 ALTER TABLE ONLY "public"."player_status"
     ADD CONSTRAINT "player_status_player_id_fkey" FOREIGN KEY ("player_id") REFERENCES "public"."players"("id") ON DELETE CASCADE;
-
-
-
-ALTER TABLE ONLY "public"."players"
-    ADD CONSTRAINT "players_forza_team_id_fkey" FOREIGN KEY ("forza_team_id") REFERENCES "public"."teams"("forza_team_id");
 
 
 
@@ -10626,11 +10791,6 @@ ALTER TABLE ONLY "public"."squads"
 
 ALTER TABLE ONLY "public"."squads"
     ADD CONSTRAINT "squads_league_id_fkey" FOREIGN KEY ("league_id") REFERENCES "public"."leagues"("id") ON DELETE CASCADE;
-
-
-
-ALTER TABLE ONLY "public"."squads"
-    ADD CONSTRAINT "squads_tournament_id_fkey" FOREIGN KEY ("tournament_id") REFERENCES "public"."tournaments"("forza_id");
 
 
 
@@ -10804,6 +10964,11 @@ ALTER TABLE ONLY "public"."trade_listings"
 
 
 
+ALTER TABLE ONLY "public"."trade_listings"
+    ADD CONSTRAINT "trade_listings_winner_id_fkey" FOREIGN KEY ("winner_id") REFERENCES "auth"."users"("id");
+
+
+
 ALTER TABLE ONLY "public"."trade_proposals"
     ADD CONSTRAINT "trade_proposals_league_id_fkey" FOREIGN KEY ("league_id") REFERENCES "public"."leagues"("id") ON DELETE CASCADE;
 
@@ -10850,11 +11015,6 @@ ALTER TABLE ONLY "public"."transfers"
 
 
 ALTER TABLE ONLY "public"."transfers"
-    ADD CONSTRAINT "transfers_tournament_id_fkey" FOREIGN KEY ("tournament_id") REFERENCES "public"."tournaments"("forza_id");
-
-
-
-ALTER TABLE ONLY "public"."transfers"
     ADD CONSTRAINT "transfers_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE CASCADE;
 
 
@@ -10865,17 +11025,7 @@ ALTER TABLE ONLY "public"."trophy_ledger"
 
 
 ALTER TABLE ONLY "public"."trophy_ledger"
-    ADD CONSTRAINT "trophy_ledger_league_id_fkey" FOREIGN KEY ("league_id") REFERENCES "public"."leagues"("id");
-
-
-
-ALTER TABLE ONLY "public"."trophy_ledger"
     ADD CONSTRAINT "trophy_ledger_sport_id_fkey" FOREIGN KEY ("sport_id") REFERENCES "public"."sports"("id");
-
-
-
-ALTER TABLE ONLY "public"."trophy_ledger"
-    ADD CONSTRAINT "trophy_ledger_tournament_id_fkey" FOREIGN KEY ("tournament_id") REFERENCES "public"."tournaments"("id");
 
 
 
@@ -10884,7 +11034,23 @@ ALTER TABLE ONLY "public"."trophy_ledger"
 
 
 
+CREATE POLICY "Authenticated Read Users" ON "public"."users" FOR SELECT USING (("auth"."role"() = 'authenticated'::"text"));
+
+
+
+CREATE POLICY "Authenticated can create leagues" ON "public"."leagues" FOR INSERT WITH CHECK (("auth"."role"() = 'authenticated'::"text"));
+
+
+
 CREATE POLICY "Authenticated users can read tournaments" ON "public"."tournaments" FOR SELECT TO "authenticated" USING (true);
+
+
+
+CREATE POLICY "Bidder inserts own bids" ON "public"."auction_bids" FOR INSERT WITH CHECK (("auth"."uid"() = "bidder_id"));
+
+
+
+CREATE POLICY "Bidder updates own bids" ON "public"."auction_bids" FOR UPDATE USING (("auth"."uid"() = "bidder_id"));
 
 
 
@@ -10906,9 +11072,49 @@ CREATE POLICY "Insert own chat read status" ON "public"."league_chat_read_status
 
 
 
+CREATE POLICY "League members can read all allocations in their league" ON "public"."draft_allocations" FOR SELECT TO "authenticated" USING (("league_id" IN ( SELECT "league_members"."league_id"
+   FROM "public"."league_members"
+  WHERE ("league_members"."user_id" = "auth"."uid"()))));
+
+
+
+CREATE POLICY "League members can read bids" ON "public"."auction_bids" FOR SELECT USING (true);
+
+
+
+CREATE POLICY "League members view listings" ON "public"."auction_listings" FOR SELECT USING ((EXISTS ( SELECT 1
+   FROM "public"."league_members" "lm"
+  WHERE (("lm"."league_id" = "auction_listings"."league_id") AND ("lm"."user_id" = "auth"."uid"())))));
+
+
+
+CREATE POLICY "Members can view leagues" ON "public"."leagues" FOR SELECT USING (("auth"."role"() = 'authenticated'::"text"));
+
+
+
+CREATE POLICY "Members can view membership" ON "public"."league_members" FOR SELECT USING (("auth"."role"() = 'authenticated'::"text"));
+
+
+
 CREATE POLICY "Members read snapshots" ON "public"."squad_matchday_snapshots" FOR SELECT USING ((EXISTS ( SELECT 1
    FROM "public"."league_members" "lm"
   WHERE (("lm"."league_id" = "squad_matchday_snapshots"."league_id") AND ("lm"."user_id" = "auth"."uid"())))));
+
+
+
+CREATE POLICY "Public Read Fixtures" ON "public"."fixtures" FOR SELECT USING (true);
+
+
+
+CREATE POLICY "Public Read Players" ON "public"."players" FOR SELECT USING (true);
+
+
+
+CREATE POLICY "Public read points" ON "public"."player_match_points" FOR SELECT USING (true);
+
+
+
+CREATE POLICY "Public read scores" ON "public"."matchday_scores" FOR SELECT USING (true);
 
 
 
@@ -10918,7 +11124,39 @@ CREATE POLICY "Seller can cancel own listing (no bids)" ON "public"."auction_lis
 
 
 
+CREATE POLICY "Squad owners can list players for auction" ON "public"."auction_listings" FOR INSERT WITH CHECK ((("auth"."uid"() IS NOT NULL) AND (EXISTS ( SELECT 1
+   FROM "public"."squads" "s"
+  WHERE (("s"."id" = "auction_listings"."seller_id") AND ("s"."user_id" = "auth"."uid"()))))));
+
+
+
 CREATE POLICY "Update own chat read status" ON "public"."league_chat_read_status" FOR UPDATE USING (("user_id" = "auth"."uid"())) WITH CHECK (("user_id" = "auth"."uid"()));
+
+
+
+CREATE POLICY "Users can delete their own draft submission" ON "public"."draft_submissions" FOR DELETE TO "authenticated" USING (("user_id" = "auth"."uid"()));
+
+
+
+CREATE POLICY "Users can insert their own draft submission" ON "public"."draft_submissions" FOR INSERT TO "authenticated" WITH CHECK (("user_id" = "auth"."uid"()));
+
+
+
+CREATE POLICY "Users can join leagues" ON "public"."league_members" FOR INSERT WITH CHECK (("auth"."uid"() = "user_id"));
+
+
+
+CREATE POLICY "Users can manage own squad" ON "public"."squads" USING (("auth"."uid"() = "user_id"));
+
+
+
+CREATE POLICY "Users can read submissions for their leagues" ON "public"."draft_submissions" FOR SELECT TO "authenticated" USING (("league_id" IN ( SELECT "league_members"."league_id"
+   FROM "public"."league_members"
+  WHERE ("league_members"."user_id" = "auth"."uid"()))));
+
+
+
+CREATE POLICY "Users can read their own allocation" ON "public"."draft_allocations" FOR SELECT TO "authenticated" USING (("user_id" = "auth"."uid"()));
 
 
 
@@ -10926,7 +11164,19 @@ CREATE POLICY "Users can update own notification read status" ON "public"."leagu
 
 
 
+CREATE POLICY "Users can update their own draft submission" ON "public"."draft_submissions" FOR UPDATE TO "authenticated" USING (("user_id" = "auth"."uid"()));
+
+
+
+CREATE POLICY "Users can view all squads in their league" ON "public"."squads" FOR SELECT USING (("auth"."role"() = 'authenticated'::"text"));
+
+
+
 CREATE POLICY "Users can view own notifications" ON "public"."league_notifications" FOR SELECT USING (("auth"."uid"() = "user_id"));
+
+
+
+CREATE POLICY "Users update own profile" ON "public"."users" FOR UPDATE USING (("auth"."uid"() = "id"));
 
 
 
@@ -10940,11 +11190,10 @@ CREATE POLICY "View own chat read status" ON "public"."league_chat_read_status" 
 
 
 
+ALTER TABLE "public"."auction_bids" ENABLE ROW LEVEL SECURITY;
+
+
 ALTER TABLE "public"."auction_listings" ENABLE ROW LEVEL SECURITY;
-
-
-CREATE POLICY "authenticated members read gazette_entries" ON "public"."gazette_entries" FOR SELECT USING ((("auth"."role"() = 'authenticated'::"text") AND "public"."is_league_member"("league_id")));
-
 
 
 CREATE POLICY "authenticated read match_events" ON "public"."match_events" FOR SELECT TO "authenticated" USING (true);
@@ -10967,14 +11216,6 @@ CREATE POLICY "authenticated read teams" ON "public"."teams" FOR SELECT TO "auth
 
 
 
-CREATE POLICY "authenticated users can read fixtures" ON "public"."fixtures" FOR SELECT TO "authenticated" USING (true);
-
-
-
-CREATE POLICY "authenticated users can read players" ON "public"."players" FOR SELECT TO "authenticated" USING (true);
-
-
-
 CREATE POLICY "authenticated users view bet templates" ON "public"."bet_templates" FOR SELECT USING (("auth"."uid"() IS NOT NULL));
 
 
@@ -10988,9 +11229,7 @@ ALTER TABLE "public"."bet_submissions" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "public"."bet_templates" ENABLE ROW LEVEL SECURITY;
 
 
-CREATE POLICY "ch_channels_member_read" ON "public"."clubhouse_channels" FOR SELECT USING ((EXISTS ( SELECT 1
-   FROM "public"."circle_members"
-  WHERE (("circle_members"."circle_id" = "clubhouse_channels"."circle_id") AND ("circle_members"."user_id" = "auth"."uid"())))));
+CREATE POLICY "ch_channels_member_read" ON "public"."clubhouse_channels" FOR SELECT USING ("public"."is_circle_member"("circle_id"));
 
 
 
@@ -11029,6 +11268,9 @@ CREATE POLICY "ch_notif_own_update" ON "public"."clubhouse_notifications" FOR UP
 ALTER TABLE "public"."chat_messages" ENABLE ROW LEVEL SECURITY;
 
 
+ALTER TABLE "public"."chips_used" ENABLE ROW LEVEL SECURITY;
+
+
 ALTER TABLE "public"."circle_leagues" ENABLE ROW LEVEL SECURITY;
 
 
@@ -11041,9 +11283,7 @@ CREATE POLICY "circle_leagues_member_read" ON "public"."circle_leagues" FOR SELE
 ALTER TABLE "public"."circle_members" ENABLE ROW LEVEL SECURITY;
 
 
-CREATE POLICY "circle_members_member_read" ON "public"."circle_members" FOR SELECT USING ((EXISTS ( SELECT 1
-   FROM "public"."circle_members" "cm"
-  WHERE (("cm"."circle_id" = "circle_members"."circle_id") AND ("cm"."user_id" = "auth"."uid"())))));
+CREATE POLICY "circle_members_member_read" ON "public"."circle_members" FOR SELECT USING ("public"."is_circle_member"("circle_id"));
 
 
 
@@ -11068,9 +11308,7 @@ CREATE POLICY "circle_player_boxes_select" ON "public"."circle_player_boxes" FOR
 ALTER TABLE "public"."circles" ENABLE ROW LEVEL SECURITY;
 
 
-CREATE POLICY "circles_member_read" ON "public"."circles" FOR SELECT USING ((EXISTS ( SELECT 1
-   FROM "public"."circle_members"
-  WHERE (("circle_members"."circle_id" = "circles"."id") AND ("circle_members"."user_id" = "auth"."uid"())))));
+CREATE POLICY "circles_member_read" ON "public"."circles" FOR SELECT USING ("public"."is_circle_member"("id"));
 
 
 
@@ -11146,8 +11384,7 @@ CREATE POLICY "commissioners can update transfer_windows" ON "public"."transfer_
 
 
 
-CREATE POLICY "creator can update league" ON "public"."leagues" FOR UPDATE TO "authenticated" USING (("created_by" = "auth"."uid"())) WITH CHECK (("created_by" = "auth"."uid"()));
-
+ALTER TABLE "public"."competition_admins" ENABLE ROW LEVEL SECURITY;
 
 
 ALTER TABLE "public"."cup_active_clubs" ENABLE ROW LEVEL SECURITY;
@@ -11186,6 +11423,17 @@ CREATE POLICY "draft_submissions_public_read" ON "public"."draft_submissions" FO
 
 
 ALTER TABLE "public"."edge_function_errors" ENABLE ROW LEVEL SECURITY;
+
+
+ALTER TABLE "public"."error_logs" ENABLE ROW LEVEL SECURITY;
+
+
+CREATE POLICY "error_logs: anyone can insert" ON "public"."error_logs" FOR INSERT WITH CHECK (true);
+
+
+
+COMMENT ON POLICY "error_logs: anyone can insert" ON "public"."error_logs" IS 'Intentionally permissive: app error handlers and middleware log errors from any context. No PII stored.';
+
 
 
 ALTER TABLE "public"."f1_bets_race" ENABLE ROW LEVEL SECURITY;
@@ -11262,7 +11510,15 @@ CREATE POLICY "f1_year_results_public_read" ON "public"."f1_year_results" FOR SE
 ALTER TABLE "public"."fantasy_points" ENABLE ROW LEVEL SECURITY;
 
 
+CREATE POLICY "fantasy_points: public read" ON "public"."fantasy_points" FOR SELECT USING (true);
+
+
+
 ALTER TABLE "public"."fixtures" ENABLE ROW LEVEL SECURITY;
+
+
+CREATE POLICY "fixtures: public read" ON "public"."fixtures" FOR SELECT USING (true);
+
 
 
 CREATE POLICY "flag_own_players" ON "public"."player_availability_flags" FOR INSERT WITH CHECK ((("created_by" = "auth"."uid"()) AND ("squad_id" IN ( SELECT "squads"."id"
@@ -11272,24 +11528,6 @@ CREATE POLICY "flag_own_players" ON "public"."player_availability_flags" FOR INS
 
 
 ALTER TABLE "public"."frontpage_comments" ENABLE ROW LEVEL SECURITY;
-
-
-CREATE POLICY "frontpage_comments_circle_delete" ON "public"."frontpage_comments" FOR DELETE USING ((("circle_id" IS NULL) OR ("auth"."uid"() = "user_id") OR (EXISTS ( SELECT 1
-   FROM "public"."circle_members" "cm"
-  WHERE (("cm"."circle_id" = "frontpage_comments"."circle_id") AND ("cm"."user_id" = "auth"."uid"()) AND ("cm"."role" = 'owner'::"text"))))));
-
-
-
-CREATE POLICY "frontpage_comments_circle_insert" ON "public"."frontpage_comments" FOR INSERT WITH CHECK ((("circle_id" IS NULL) OR (("auth"."uid"() = "user_id") AND (EXISTS ( SELECT 1
-   FROM "public"."circle_members" "cm"
-  WHERE (("cm"."circle_id" = "frontpage_comments"."circle_id") AND ("cm"."user_id" = "auth"."uid"())))))));
-
-
-
-CREATE POLICY "frontpage_comments_circle_select" ON "public"."frontpage_comments" FOR SELECT USING ((("circle_id" IS NULL) OR (EXISTS ( SELECT 1
-   FROM "public"."circle_members" "cm"
-  WHERE (("cm"."circle_id" = "frontpage_comments"."circle_id") AND ("cm"."user_id" = "auth"."uid"()))))));
-
 
 
 CREATE POLICY "frontpage_comments_delete" ON "public"."frontpage_comments" FOR DELETE USING ((("auth"."uid"() = "user_id") OR (EXISTS ( SELECT 1
@@ -11313,12 +11551,6 @@ CREATE POLICY "frontpage_comments_select" ON "public"."frontpage_comments" FOR S
 ALTER TABLE "public"."frontpage_editions" ENABLE ROW LEVEL SECURITY;
 
 
-CREATE POLICY "frontpage_editions_circle_select" ON "public"."frontpage_editions" FOR SELECT USING ((("circle_id" IS NULL) OR (EXISTS ( SELECT 1
-   FROM "public"."circle_members" "cm"
-  WHERE (("cm"."circle_id" = "frontpage_editions"."circle_id") AND ("cm"."user_id" = "auth"."uid"()))))));
-
-
-
 CREATE POLICY "frontpage_editions_member_select" ON "public"."frontpage_editions" FOR SELECT USING ((EXISTS ( SELECT 1
    FROM "public"."league_members" "lm"
   WHERE (("lm"."league_id" = "frontpage_editions"."league_id") AND ("lm"."user_id" = "auth"."uid"())))));
@@ -11326,18 +11558,6 @@ CREATE POLICY "frontpage_editions_member_select" ON "public"."frontpage_editions
 
 
 ALTER TABLE "public"."frontpage_reactions" ENABLE ROW LEVEL SECURITY;
-
-
-CREATE POLICY "frontpage_reactions_circle_insert" ON "public"."frontpage_reactions" FOR INSERT WITH CHECK ((("circle_id" IS NULL) OR (("auth"."uid"() = "user_id") AND (EXISTS ( SELECT 1
-   FROM "public"."circle_members" "cm"
-  WHERE (("cm"."circle_id" = "frontpage_reactions"."circle_id") AND ("cm"."user_id" = "auth"."uid"())))))));
-
-
-
-CREATE POLICY "frontpage_reactions_circle_select" ON "public"."frontpage_reactions" FOR SELECT USING ((("circle_id" IS NULL) OR (EXISTS ( SELECT 1
-   FROM "public"."circle_members" "cm"
-  WHERE (("cm"."circle_id" = "frontpage_reactions"."circle_id") AND ("cm"."user_id" = "auth"."uid"()))))));
-
 
 
 CREATE POLICY "frontpage_reactions_delete" ON "public"."frontpage_reactions" FOR DELETE USING (("auth"."uid"() = "user_id"));
@@ -11357,6 +11577,13 @@ CREATE POLICY "frontpage_reactions_select" ON "public"."frontpage_reactions" FOR
 
 
 ALTER TABLE "public"."gazette_entries" ENABLE ROW LEVEL SECURITY;
+
+
+ALTER TABLE "public"."h2h_records" ENABLE ROW LEVEL SECURITY;
+
+
+CREATE POLICY "h2h_records: participants read" ON "public"."h2h_records" FOR SELECT USING ((("auth"."uid"() = "user_a_id") OR ("auth"."uid"() = "user_b_id") OR ("auth"."role"() = 'anon'::"text")));
+
 
 
 ALTER TABLE "public"."h2h_schedule" ENABLE ROW LEVEL SECURITY;
@@ -11383,10 +11610,6 @@ CREATE POLICY "keep_submissions_update" ON "public"."knockout_keep_submissions" 
 
 
 ALTER TABLE "public"."knockout_keep_submissions" ENABLE ROW LEVEL SECURITY;
-
-
-CREATE POLICY "league members can read squads in their leagues" ON "public"."squads" FOR SELECT TO "authenticated" USING ("public"."is_league_member"("league_id"));
-
 
 
 CREATE POLICY "league members manage trade_listings" ON "public"."trade_listings" TO "authenticated" USING ("public"."is_league_member"("league_id")) WITH CHECK ("public"."is_league_member"("league_id"));
@@ -11420,12 +11643,6 @@ CREATE POLICY "league members read transfer_windows" ON "public"."transfer_windo
 
 
 
-CREATE POLICY "league members view auctions" ON "public"."auction_listings" FOR SELECT USING ((EXISTS ( SELECT 1
-   FROM "public"."league_members" "lm"
-  WHERE (("lm"."league_id" = "auction_listings"."league_id") AND ("lm"."user_id" = "auth"."uid"())))));
-
-
-
 CREATE POLICY "league members view bet instances" ON "public"."bet_instances" FOR SELECT USING ((EXISTS ( SELECT 1
    FROM "public"."league_members" "lm"
   WHERE (("lm"."league_id" = "bet_instances"."league_id") AND ("lm"."user_id" = "auth"."uid"())))));
@@ -11440,6 +11657,9 @@ CREATE POLICY "league members view submissions" ON "public"."bet_submissions" FO
 
 
 ALTER TABLE "public"."league_chat_read_status" ENABLE ROW LEVEL SECURITY;
+
+
+ALTER TABLE "public"."league_config" ENABLE ROW LEVEL SECURITY;
 
 
 CREATE POLICY "league_config_commissioner_write" ON "public"."league_config" USING ((EXISTS ( SELECT 1
@@ -11459,6 +11679,18 @@ CREATE POLICY "league_config_member_read" ON "public"."league_config" FOR SELECT
 ALTER TABLE "public"."league_members" ENABLE ROW LEVEL SECURITY;
 
 
+CREATE POLICY "league_members: public read" ON "public"."league_members" FOR SELECT USING (true);
+
+
+
+CREATE POLICY "league_members: self delete" ON "public"."league_members" FOR DELETE USING (("auth"."uid"() = "user_id"));
+
+
+
+CREATE POLICY "league_members: self insert" ON "public"."league_members" FOR INSERT WITH CHECK (("auth"."uid"() = "user_id"));
+
+
+
 ALTER TABLE "public"."league_notifications" ENABLE ROW LEVEL SECURITY;
 
 
@@ -11471,18 +11703,44 @@ CREATE POLICY "leagues: commissioner update" ON "public"."leagues" FOR UPDATE US
 
 
 
+CREATE POLICY "leagues: creator delete" ON "public"."leagues" FOR DELETE USING (("auth"."uid"() = "created_by"));
+
+
+
+CREATE POLICY "leagues: creator insert" ON "public"."leagues" FOR INSERT WITH CHECK (("auth"."uid"() = "created_by"));
+
+
+
+CREATE POLICY "leagues: creator update" ON "public"."leagues" FOR UPDATE USING (("auth"."uid"() = "created_by"));
+
+
+
+CREATE POLICY "leagues: public read" ON "public"."leagues" FOR SELECT USING (true);
+
+
+
 ALTER TABLE "public"."match_events" ENABLE ROW LEVEL SECURITY;
+
+
+CREATE POLICY "match_events: public read" ON "public"."match_events" FOR SELECT USING (true);
+
 
 
 ALTER TABLE "public"."matchday_deadlines" ENABLE ROW LEVEL SECURITY;
 
 
-CREATE POLICY "members can read league rosters" ON "public"."league_members" FOR SELECT TO "authenticated" USING ((("user_id" = "auth"."uid"()) OR "public"."is_league_member"("league_id")));
+CREATE POLICY "matchday_deadlines: public read" ON "public"."matchday_deadlines" FOR SELECT USING (true);
 
 
 
-CREATE POLICY "members can read their leagues" ON "public"."leagues" FOR SELECT TO "authenticated" USING ("public"."is_league_member"("id"));
+ALTER TABLE "public"."matchday_recaps" ENABLE ROW LEVEL SECURITY;
 
+
+CREATE POLICY "matchday_recaps: owner read" ON "public"."matchday_recaps" FOR SELECT USING ((("auth"."uid"() = "user_id") OR (("auth"."role"() = 'anon'::"text") AND ("user_id" = '00000000-0000-0000-0000-000000000000'::"uuid"))));
+
+
+
+ALTER TABLE "public"."matchday_scores" ENABLE ROW LEVEL SECURITY;
 
 
 CREATE POLICY "no client access to error log" ON "public"."edge_function_errors" USING (false);
@@ -11496,9 +11754,7 @@ CREATE POLICY "no client reads" ON "public"."client_errors" USING (false);
 ALTER TABLE "public"."p2p_challenges" ENABLE ROW LEVEL SECURITY;
 
 
-CREATE POLICY "p2p_challenges_select" ON "public"."p2p_challenges" FOR SELECT USING ((EXISTS ( SELECT 1
-   FROM "public"."league_members"
-  WHERE (("league_members"."league_id" = "p2p_challenges"."league_id") AND ("league_members"."user_id" = "auth"."uid"())))));
+CREATE POLICY "p2p_challenges_select" ON "public"."p2p_challenges" FOR SELECT USING ("public"."is_circle_member"("circle_id"));
 
 
 
@@ -11556,10 +11812,31 @@ CREATE POLICY "player_boxes_update" ON "public"."player_boxes" FOR UPDATE TO "au
 
 
 
+ALTER TABLE "public"."player_match_points" ENABLE ROW LEVEL SECURITY;
+
+
 ALTER TABLE "public"."player_match_stats" ENABLE ROW LEVEL SECURITY;
 
 
+ALTER TABLE "public"."player_status" ENABLE ROW LEVEL SECURITY;
+
+
+CREATE POLICY "player_status: public read" ON "public"."player_status" FOR SELECT USING (true);
+
+
+
 ALTER TABLE "public"."players" ENABLE ROW LEVEL SECURITY;
+
+
+CREATE POLICY "players: public read" ON "public"."players" FOR SELECT USING (true);
+
+
+
+ALTER TABLE "public"."projection_snapshots" ENABLE ROW LEVEL SECURITY;
+
+
+CREATE POLICY "projection_snapshots: owner read" ON "public"."projection_snapshots" FOR SELECT USING ((("auth"."uid"() = "user_id") OR (("auth"."role"() = 'anon'::"text") AND ("user_id" = '00000000-0000-0000-0000-000000000000'::"uuid"))));
+
 
 
 CREATE POLICY "remove_own_flags" ON "public"."player_availability_flags" FOR DELETE USING (("created_by" = "auth"."uid"()));
@@ -11570,14 +11847,6 @@ ALTER TABLE "public"."round_backups" ENABLE ROW LEVEL SECURITY;
 
 
 ALTER TABLE "public"."scoring_rules" ENABLE ROW LEVEL SECURITY;
-
-
-CREATE POLICY "seller owns squad and is league member" ON "public"."auction_listings" FOR INSERT WITH CHECK ((("auth"."uid"() IS NOT NULL) AND (EXISTS ( SELECT 1
-   FROM "public"."squads" "s"
-  WHERE (("s"."id" = "auction_listings"."seller_id") AND ("s"."user_id" = "auth"."uid"())))) AND (EXISTS ( SELECT 1
-   FROM "public"."league_members" "lm"
-  WHERE (("lm"."league_id" = "auction_listings"."league_id") AND ("lm"."user_id" = "auth"."uid"()))))));
-
 
 
 ALTER TABLE "public"."sports" ENABLE ROW LEVEL SECURITY;
@@ -11618,6 +11887,22 @@ ALTER TABLE "public"."squad_matchday_snapshots" ENABLE ROW LEVEL SECURITY;
 
 
 ALTER TABLE "public"."squads" ENABLE ROW LEVEL SECURITY;
+
+
+CREATE POLICY "squads: owner delete" ON "public"."squads" FOR DELETE USING ((("auth"."uid"() = "user_id") OR (("auth"."role"() = 'anon'::"text") AND ("user_id" = '00000000-0000-0000-0000-000000000000'::"uuid"))));
+
+
+
+CREATE POLICY "squads: owner insert" ON "public"."squads" FOR INSERT WITH CHECK ((("auth"."uid"() = "user_id") OR (("auth"."role"() = 'anon'::"text") AND ("user_id" = '00000000-0000-0000-0000-000000000000'::"uuid"))));
+
+
+
+CREATE POLICY "squads: owner read" ON "public"."squads" FOR SELECT USING ((("auth"."uid"() = "user_id") OR (("auth"."role"() = 'anon'::"text") AND ("user_id" = '00000000-0000-0000-0000-000000000000'::"uuid"))));
+
+
+
+CREATE POLICY "squads: owner update" ON "public"."squads" FOR UPDATE USING ((("auth"."uid"() = "user_id") OR (("auth"."role"() = 'anon'::"text") AND ("user_id" = '00000000-0000-0000-0000-000000000000'::"uuid"))));
+
 
 
 CREATE POLICY "squads_update_safe" ON "public"."squads" FOR UPDATE TO "authenticated" USING (("user_id" = "auth"."uid"())) WITH CHECK (("user_id" = "auth"."uid"()));
@@ -11694,6 +11979,20 @@ CREATE POLICY "tennis_tournaments_service_update" ON "public"."tennis_tournament
 
 
 
+ALTER TABLE "public"."top_scorer_predictions" ENABLE ROW LEVEL SECURITY;
+
+
+CREATE POLICY "top_scorer_predictions: owner insert" ON "public"."top_scorer_predictions" FOR INSERT WITH CHECK ((("auth"."uid"() = "user_id") OR (("auth"."role"() = 'anon'::"text") AND ("user_id" = '00000000-0000-0000-0000-000000000000'::"uuid"))));
+
+
+
+CREATE POLICY "top_scorer_predictions: owner read" ON "public"."top_scorer_predictions" FOR SELECT USING ((("auth"."uid"() = "user_id") OR (("auth"."role"() = 'anon'::"text") AND ("user_id" = '00000000-0000-0000-0000-000000000000'::"uuid"))));
+
+
+
+ALTER TABLE "public"."tournaments" ENABLE ROW LEVEL SECURITY;
+
+
 CREATE POLICY "tournaments_public_read" ON "public"."tournaments" FOR SELECT USING (true);
 
 
@@ -11740,22 +12039,6 @@ CREATE POLICY "ttp_select" ON "public"."tennis_tournament_players" FOR SELECT TO
 ALTER TABLE "public"."users" ENABLE ROW LEVEL SECURITY;
 
 
-CREATE POLICY "users can create own profile" ON "public"."users" FOR INSERT TO "authenticated" WITH CHECK (("id" = "auth"."uid"()));
-
-
-
-CREATE POLICY "users can create own squad" ON "public"."squads" FOR INSERT TO "authenticated" WITH CHECK (("user_id" = "auth"."uid"()));
-
-
-
-CREATE POLICY "users can join leagues as themselves" ON "public"."league_members" FOR INSERT TO "authenticated" WITH CHECK (("user_id" = "auth"."uid"()));
-
-
-
-CREATE POLICY "users can update own profile" ON "public"."users" FOR UPDATE TO "authenticated" USING (("id" = "auth"."uid"())) WITH CHECK (("id" = "auth"."uid"()));
-
-
-
 CREATE POLICY "users manage own bet_submissions" ON "public"."bet_submissions" TO "authenticated" USING (("user_id" = "auth"."uid"())) WITH CHECK (("user_id" = "auth"."uid"()));
 
 
@@ -11776,6 +12059,18 @@ CREATE POLICY "users read own transfers" ON "public"."transfers" FOR SELECT TO "
 
 
 
+CREATE POLICY "users: public read" ON "public"."users" FOR SELECT USING (true);
+
+
+
+CREATE POLICY "users: self insert" ON "public"."users" FOR INSERT WITH CHECK (("auth"."uid"() = "id"));
+
+
+
+CREATE POLICY "users: self update" ON "public"."users" FOR UPDATE USING (("auth"."uid"() = "id"));
+
+
+
 CREATE POLICY "view_league_flags" ON "public"."player_availability_flags" FOR SELECT USING (("league_id" IN ( SELECT DISTINCT "lm"."league_id"
    FROM "public"."league_members" "lm"
   WHERE ("lm"."user_id" = "auth"."uid"()))));
@@ -11787,10 +12082,15 @@ CREATE POLICY "view_league_flags" ON "public"."player_availability_flags" FOR SE
 ALTER PUBLICATION "supabase_realtime" OWNER TO "postgres";
 
 
+
+
+
+
 ALTER PUBLICATION "supabase_realtime" ADD TABLE ONLY "public"."chat_messages";
 
 
 
+ALTER PUBLICATION "supabase_realtime" ADD TABLE ONLY "public"."clubhouse_messages";
 
 
 
@@ -11975,12 +12275,6 @@ GRANT USAGE ON SCHEMA "public" TO "service_role";
 
 
 
-
-
-
-
-
-
 GRANT ALL ON FUNCTION "public"."_create_user_wallet"() TO "anon";
 GRANT ALL ON FUNCTION "public"."_create_user_wallet"() TO "authenticated";
 GRANT ALL ON FUNCTION "public"."_create_user_wallet"() TO "service_role";
@@ -11988,15 +12282,13 @@ GRANT ALL ON FUNCTION "public"."_create_user_wallet"() TO "service_role";
 
 
 REVOKE ALL ON FUNCTION "public"."_debit_entry_fee"("p_user_id" "uuid", "p_amount" integer, "p_league_id" "uuid") FROM PUBLIC;
-GRANT ALL ON FUNCTION "public"."_debit_entry_fee"("p_user_id" "uuid", "p_amount" integer, "p_league_id" "uuid") TO "anon";
-GRANT ALL ON FUNCTION "public"."_debit_entry_fee"("p_user_id" "uuid", "p_amount" integer, "p_league_id" "uuid") TO "authenticated";
 GRANT ALL ON FUNCTION "public"."_debit_entry_fee"("p_user_id" "uuid", "p_amount" integer, "p_league_id" "uuid") TO "service_role";
 
 
 
-GRANT ALL ON FUNCTION "public"."_log_squad_event"("p_event_type" "text", "p_league_id" "uuid", "p_user_id" "uuid", "p_squad_id" "uuid", "p_matchday_id" "text", "p_player_in" "text", "p_player_out" "text", "p_meta" "jsonb") TO "service_role";
 GRANT ALL ON FUNCTION "public"."_log_squad_event"("p_event_type" "text", "p_league_id" "uuid", "p_user_id" "uuid", "p_squad_id" "uuid", "p_matchday_id" "text", "p_player_in" "text", "p_player_out" "text", "p_meta" "jsonb") TO "anon";
 GRANT ALL ON FUNCTION "public"."_log_squad_event"("p_event_type" "text", "p_league_id" "uuid", "p_user_id" "uuid", "p_squad_id" "uuid", "p_matchday_id" "text", "p_player_in" "text", "p_player_out" "text", "p_meta" "jsonb") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."_log_squad_event"("p_event_type" "text", "p_league_id" "uuid", "p_user_id" "uuid", "p_squad_id" "uuid", "p_matchday_id" "text", "p_player_in" "text", "p_player_out" "text", "p_meta" "jsonb") TO "service_role";
 
 
 
@@ -12007,9 +12299,8 @@ GRANT ALL ON FUNCTION "public"."_trigger_seed_cup_clubs"() TO "service_role";
 
 
 REVOKE ALL ON FUNCTION "public"."accept_p2p_challenge"("p_challenge_id" "uuid") FROM PUBLIC;
-GRANT ALL ON FUNCTION "public"."accept_p2p_challenge"("p_challenge_id" "uuid") TO "authenticated";
-GRANT ALL ON FUNCTION "public"."accept_p2p_challenge"("p_challenge_id" "uuid") TO "anon";
 GRANT ALL ON FUNCTION "public"."accept_p2p_challenge"("p_challenge_id" "uuid") TO "service_role";
+GRANT ALL ON FUNCTION "public"."accept_p2p_challenge"("p_challenge_id" "uuid") TO "authenticated";
 
 
 
@@ -12027,70 +12318,59 @@ GRANT ALL ON FUNCTION "public"."activate_chip"("p_user_id" "uuid", "p_league_id"
 
 REVOKE ALL ON FUNCTION "public"."admin_complete_tournament"("p_tournament_id" "uuid") FROM PUBLIC;
 GRANT ALL ON FUNCTION "public"."admin_complete_tournament"("p_tournament_id" "uuid") TO "service_role";
-GRANT ALL ON FUNCTION "public"."admin_complete_tournament"("p_tournament_id" "uuid") TO "anon";
 GRANT ALL ON FUNCTION "public"."admin_complete_tournament"("p_tournament_id" "uuid") TO "authenticated";
 
 
 
 REVOKE ALL ON FUNCTION "public"."admin_enter_atp_finals_result"("p_season_year" integer, "p_match_number" integer, "p_winner_player_id" "uuid") FROM PUBLIC;
 GRANT ALL ON FUNCTION "public"."admin_enter_atp_finals_result"("p_season_year" integer, "p_match_number" integer, "p_winner_player_id" "uuid") TO "service_role";
-GRANT ALL ON FUNCTION "public"."admin_enter_atp_finals_result"("p_season_year" integer, "p_match_number" integer, "p_winner_player_id" "uuid") TO "anon";
 GRANT ALL ON FUNCTION "public"."admin_enter_atp_finals_result"("p_season_year" integer, "p_match_number" integer, "p_winner_player_id" "uuid") TO "authenticated";
 
 
 
 REVOKE ALL ON FUNCTION "public"."admin_enter_round_results"("p_tournament_id" "uuid", "p_eliminations" "jsonb") FROM PUBLIC;
 GRANT ALL ON FUNCTION "public"."admin_enter_round_results"("p_tournament_id" "uuid", "p_eliminations" "jsonb") TO "service_role";
-GRANT ALL ON FUNCTION "public"."admin_enter_round_results"("p_tournament_id" "uuid", "p_eliminations" "jsonb") TO "anon";
 GRANT ALL ON FUNCTION "public"."admin_enter_round_results"("p_tournament_id" "uuid", "p_eliminations" "jsonb") TO "authenticated";
 
 
 
 REVOKE ALL ON FUNCTION "public"."admin_grant_coins"("p_user_id" "uuid", "p_amount" integer, "p_reason" "text") FROM PUBLIC;
-GRANT ALL ON FUNCTION "public"."admin_grant_coins"("p_user_id" "uuid", "p_amount" integer, "p_reason" "text") TO "anon";
-GRANT ALL ON FUNCTION "public"."admin_grant_coins"("p_user_id" "uuid", "p_amount" integer, "p_reason" "text") TO "authenticated";
 GRANT ALL ON FUNCTION "public"."admin_grant_coins"("p_user_id" "uuid", "p_amount" integer, "p_reason" "text") TO "service_role";
 
 
 
 REVOKE ALL ON FUNCTION "public"."admin_open_qf_window"("p_tournament_id" "uuid", "p_opens_at" timestamp with time zone, "p_closes_at" timestamp with time zone) FROM PUBLIC;
 GRANT ALL ON FUNCTION "public"."admin_open_qf_window"("p_tournament_id" "uuid", "p_opens_at" timestamp with time zone, "p_closes_at" timestamp with time zone) TO "service_role";
-GRANT ALL ON FUNCTION "public"."admin_open_qf_window"("p_tournament_id" "uuid", "p_opens_at" timestamp with time zone, "p_closes_at" timestamp with time zone) TO "anon";
 GRANT ALL ON FUNCTION "public"."admin_open_qf_window"("p_tournament_id" "uuid", "p_opens_at" timestamp with time zone, "p_closes_at" timestamp with time zone) TO "authenticated";
 
 
 
 REVOKE ALL ON FUNCTION "public"."admin_open_tournament"("p_tournament_id" "uuid", "p_roster_lock_at" timestamp with time zone, "p_external_id" integer) FROM PUBLIC;
 GRANT ALL ON FUNCTION "public"."admin_open_tournament"("p_tournament_id" "uuid", "p_roster_lock_at" timestamp with time zone, "p_external_id" integer) TO "service_role";
-GRANT ALL ON FUNCTION "public"."admin_open_tournament"("p_tournament_id" "uuid", "p_roster_lock_at" timestamp with time zone, "p_external_id" integer) TO "anon";
 GRANT ALL ON FUNCTION "public"."admin_open_tournament"("p_tournament_id" "uuid", "p_roster_lock_at" timestamp with time zone, "p_external_id" integer) TO "authenticated";
 
 
 
 REVOKE ALL ON FUNCTION "public"."admin_seed_atp_finals_matches"("p_season_year" integer, "p_matches" "jsonb") FROM PUBLIC;
 GRANT ALL ON FUNCTION "public"."admin_seed_atp_finals_matches"("p_season_year" integer, "p_matches" "jsonb") TO "service_role";
-GRANT ALL ON FUNCTION "public"."admin_seed_atp_finals_matches"("p_season_year" integer, "p_matches" "jsonb") TO "anon";
 GRANT ALL ON FUNCTION "public"."admin_seed_atp_finals_matches"("p_season_year" integer, "p_matches" "jsonb") TO "authenticated";
 
 
 
 REVOKE ALL ON FUNCTION "public"."admin_seed_tournament_players"("p_tournament_id" "uuid", "p_players" "jsonb") FROM PUBLIC;
 GRANT ALL ON FUNCTION "public"."admin_seed_tournament_players"("p_tournament_id" "uuid", "p_players" "jsonb") TO "service_role";
-GRANT ALL ON FUNCTION "public"."admin_seed_tournament_players"("p_tournament_id" "uuid", "p_players" "jsonb") TO "anon";
 GRANT ALL ON FUNCTION "public"."admin_seed_tournament_players"("p_tournament_id" "uuid", "p_players" "jsonb") TO "authenticated";
 
 
 
 REVOKE ALL ON FUNCTION "public"."admin_set_champion"("p_tournament_id" "uuid", "p_player_id" "uuid", "p_rounds_won" integer) FROM PUBLIC;
 GRANT ALL ON FUNCTION "public"."admin_set_champion"("p_tournament_id" "uuid", "p_player_id" "uuid", "p_rounds_won" integer) TO "service_role";
-GRANT ALL ON FUNCTION "public"."admin_set_champion"("p_tournament_id" "uuid", "p_player_id" "uuid", "p_rounds_won" integer) TO "anon";
 GRANT ALL ON FUNCTION "public"."admin_set_champion"("p_tournament_id" "uuid", "p_player_id" "uuid", "p_rounds_won" integer) TO "authenticated";
 
 
 
 REVOKE ALL ON FUNCTION "public"."admin_start_tournament"("p_tournament_id" "uuid") FROM PUBLIC;
 GRANT ALL ON FUNCTION "public"."admin_start_tournament"("p_tournament_id" "uuid") TO "service_role";
-GRANT ALL ON FUNCTION "public"."admin_start_tournament"("p_tournament_id" "uuid") TO "anon";
 GRANT ALL ON FUNCTION "public"."admin_start_tournament"("p_tournament_id" "uuid") TO "authenticated";
 
 
@@ -12107,10 +12387,24 @@ GRANT ALL ON FUNCTION "public"."apply_relaxation_state"("p_league_id" "uuid") TO
 
 
 
+REVOKE ALL ON FUNCTION "public"."arbitrate_freeform_result"("p_challenge_id" "uuid", "p_winner_id" "uuid") FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."arbitrate_freeform_result"("p_challenge_id" "uuid", "p_winner_id" "uuid") TO "service_role";
+GRANT ALL ON FUNCTION "public"."arbitrate_freeform_result"("p_challenge_id" "uuid", "p_winner_id" "uuid") TO "authenticated";
+
+
+
 REVOKE ALL ON FUNCTION "public"."auto_resolve_p2p_challenges"() FROM PUBLIC;
-GRANT ALL ON FUNCTION "public"."auto_resolve_p2p_challenges"() TO "anon";
-GRANT ALL ON FUNCTION "public"."auto_resolve_p2p_challenges"() TO "authenticated";
 GRANT ALL ON FUNCTION "public"."auto_resolve_p2p_challenges"() TO "service_role";
+
+
+
+REVOKE ALL ON FUNCTION "public"."auto_void_stale_disputes"() FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."auto_void_stale_disputes"() TO "service_role";
+
+
+
+REVOKE ALL ON FUNCTION "public"."award_trophy"("p_circle_id" "uuid", "p_league_id" "uuid", "p_user_id" "uuid", "p_sport_id" "uuid", "p_tournament_id" "uuid", "p_trophy_type" "text", "p_tier" "text", "p_meta" "jsonb") FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."award_trophy"("p_circle_id" "uuid", "p_league_id" "uuid", "p_user_id" "uuid", "p_sport_id" "uuid", "p_tournament_id" "uuid", "p_trophy_type" "text", "p_tier" "text", "p_meta" "jsonb") TO "service_role";
 
 
 
@@ -12128,9 +12422,8 @@ GRANT ALL ON FUNCTION "public"."calculate_relaxation_state"("p_league_id" "uuid"
 
 
 REVOKE ALL ON FUNCTION "public"."cancel_p2p_challenge"("p_challenge_id" "uuid") FROM PUBLIC;
-GRANT ALL ON FUNCTION "public"."cancel_p2p_challenge"("p_challenge_id" "uuid") TO "authenticated";
-GRANT ALL ON FUNCTION "public"."cancel_p2p_challenge"("p_challenge_id" "uuid") TO "anon";
 GRANT ALL ON FUNCTION "public"."cancel_p2p_challenge"("p_challenge_id" "uuid") TO "service_role";
+GRANT ALL ON FUNCTION "public"."cancel_p2p_challenge"("p_challenge_id" "uuid") TO "authenticated";
 
 
 
@@ -12153,7 +12446,6 @@ GRANT ALL ON FUNCTION "public"."check_draft_submission_deadline"() TO "service_r
 
 
 GRANT ALL ON FUNCTION "public"."claim_draft_player"("p_league_id" "uuid", "p_player_id" "text", "p_phase" "text") TO "authenticated";
-GRANT ALL ON FUNCTION "public"."claim_draft_player"("p_league_id" "uuid", "p_player_id" "text", "p_phase" "text") TO "anon";
 GRANT ALL ON FUNCTION "public"."claim_draft_player"("p_league_id" "uuid", "p_player_id" "text", "p_phase" "text") TO "service_role";
 
 
@@ -12164,14 +12456,20 @@ GRANT ALL ON FUNCTION "public"."confirm_auction_win"("p_listing_id" "uuid") TO "
 
 
 
+REVOKE ALL ON FUNCTION "public"."confirm_freeform_result"("p_challenge_id" "uuid") FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."confirm_freeform_result"("p_challenge_id" "uuid") TO "service_role";
+GRANT ALL ON FUNCTION "public"."confirm_freeform_result"("p_challenge_id" "uuid") TO "authenticated";
+
+
+
 GRANT ALL ON FUNCTION "public"."create_circle"("p_name" "text") TO "anon";
 GRANT ALL ON FUNCTION "public"."create_circle"("p_name" "text") TO "authenticated";
 GRANT ALL ON FUNCTION "public"."create_circle"("p_name" "text") TO "service_role";
 
 
 
-GRANT ALL ON FUNCTION "public"."create_late_joiner_allocation"("p_league_id" "uuid") TO "authenticated";
 GRANT ALL ON FUNCTION "public"."create_late_joiner_allocation"("p_league_id" "uuid") TO "anon";
+GRANT ALL ON FUNCTION "public"."create_late_joiner_allocation"("p_league_id" "uuid") TO "authenticated";
 GRANT ALL ON FUNCTION "public"."create_late_joiner_allocation"("p_league_id" "uuid") TO "service_role";
 
 
@@ -12182,27 +12480,20 @@ GRANT ALL ON FUNCTION "public"."create_league"("p_name" "text", "p_format" "text
 
 
 
-GRANT ALL ON FUNCTION "public"."create_league"("p_name" "text", "p_format" "text", "p_user_id" "uuid", "p_tournament_id" "text", "p_h2h_enabled" boolean) TO "anon";
-GRANT ALL ON FUNCTION "public"."create_league"("p_name" "text", "p_format" "text", "p_user_id" "uuid", "p_tournament_id" "text", "p_h2h_enabled" boolean) TO "authenticated";
-GRANT ALL ON FUNCTION "public"."create_league"("p_name" "text", "p_format" "text", "p_user_id" "uuid", "p_tournament_id" "text", "p_h2h_enabled" boolean) TO "service_role";
-
-
-
 GRANT ALL ON FUNCTION "public"."create_league"("p_name" "text", "p_format" "text", "p_user_id" "uuid", "p_tournament_id" "text", "p_h2h_enabled" boolean, "p_circle_id" "uuid") TO "anon";
 GRANT ALL ON FUNCTION "public"."create_league"("p_name" "text", "p_format" "text", "p_user_id" "uuid", "p_tournament_id" "text", "p_h2h_enabled" boolean, "p_circle_id" "uuid") TO "authenticated";
 GRANT ALL ON FUNCTION "public"."create_league"("p_name" "text", "p_format" "text", "p_user_id" "uuid", "p_tournament_id" "text", "p_h2h_enabled" boolean, "p_circle_id" "uuid") TO "service_role";
 
 
 
-REVOKE ALL ON FUNCTION "public"."create_p2p_challenge"("p_league_id" "uuid", "p_opponent_id" "uuid", "p_matchday_id" "text", "p_stake_coins" integer, "p_message" "text") FROM PUBLIC;
-GRANT ALL ON FUNCTION "public"."create_p2p_challenge"("p_league_id" "uuid", "p_opponent_id" "uuid", "p_matchday_id" "text", "p_stake_coins" integer, "p_message" "text") TO "authenticated";
-GRANT ALL ON FUNCTION "public"."create_p2p_challenge"("p_league_id" "uuid", "p_opponent_id" "uuid", "p_matchday_id" "text", "p_stake_coins" integer, "p_message" "text") TO "anon";
-GRANT ALL ON FUNCTION "public"."create_p2p_challenge"("p_league_id" "uuid", "p_opponent_id" "uuid", "p_matchday_id" "text", "p_stake_coins" integer, "p_message" "text") TO "service_role";
+REVOKE ALL ON FUNCTION "public"."create_p2p_challenge"("p_circle_id" "uuid", "p_opponent_id" "uuid", "p_bet_type" "text", "p_stake_coins" integer, "p_message" "text", "p_league_id" "uuid", "p_matchday_id" "text", "p_question" "text") FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."create_p2p_challenge"("p_circle_id" "uuid", "p_opponent_id" "uuid", "p_bet_type" "text", "p_stake_coins" integer, "p_message" "text", "p_league_id" "uuid", "p_matchday_id" "text", "p_question" "text") TO "service_role";
+GRANT ALL ON FUNCTION "public"."create_p2p_challenge"("p_circle_id" "uuid", "p_opponent_id" "uuid", "p_bet_type" "text", "p_stake_coins" integer, "p_message" "text", "p_league_id" "uuid", "p_matchday_id" "text", "p_question" "text") TO "authenticated";
 
 
 
-GRANT ALL ON FUNCTION "public"."create_paddock"("p_name" "text", "p_circle_id" "uuid") TO "authenticated";
 GRANT ALL ON FUNCTION "public"."create_paddock"("p_name" "text", "p_circle_id" "uuid") TO "anon";
+GRANT ALL ON FUNCTION "public"."create_paddock"("p_name" "text", "p_circle_id" "uuid") TO "authenticated";
 GRANT ALL ON FUNCTION "public"."create_paddock"("p_name" "text", "p_circle_id" "uuid") TO "service_role";
 
 
@@ -12214,23 +12505,24 @@ GRANT ALL ON FUNCTION "public"."create_player_box"("p_name" "text", "p_season_ye
 
 
 REVOKE ALL ON FUNCTION "public"."credit_coins"("p_user_id" "uuid", "p_amount" integer, "p_type" "text", "p_challenge_id" "uuid", "p_meta" "jsonb", "p_currency" character, "p_reference_id" "text") FROM PUBLIC;
-GRANT ALL ON FUNCTION "public"."credit_coins"("p_user_id" "uuid", "p_amount" integer, "p_type" "text", "p_challenge_id" "uuid", "p_meta" "jsonb", "p_currency" character, "p_reference_id" "text") TO "anon";
-GRANT ALL ON FUNCTION "public"."credit_coins"("p_user_id" "uuid", "p_amount" integer, "p_type" "text", "p_challenge_id" "uuid", "p_meta" "jsonb", "p_currency" character, "p_reference_id" "text") TO "authenticated";
 GRANT ALL ON FUNCTION "public"."credit_coins"("p_user_id" "uuid", "p_amount" integer, "p_type" "text", "p_challenge_id" "uuid", "p_meta" "jsonb", "p_currency" character, "p_reference_id" "text") TO "service_role";
 
 
 
 REVOKE ALL ON FUNCTION "public"."debit_coins_to_escrow"("p_user_id" "uuid", "p_amount" integer, "p_challenge_id" "uuid", "p_meta" "jsonb") FROM PUBLIC;
-GRANT ALL ON FUNCTION "public"."debit_coins_to_escrow"("p_user_id" "uuid", "p_amount" integer, "p_challenge_id" "uuid", "p_meta" "jsonb") TO "anon";
-GRANT ALL ON FUNCTION "public"."debit_coins_to_escrow"("p_user_id" "uuid", "p_amount" integer, "p_challenge_id" "uuid", "p_meta" "jsonb") TO "authenticated";
 GRANT ALL ON FUNCTION "public"."debit_coins_to_escrow"("p_user_id" "uuid", "p_amount" integer, "p_challenge_id" "uuid", "p_meta" "jsonb") TO "service_role";
 
 
 
+REVOKE ALL ON FUNCTION "public"."declare_freeform_result"("p_challenge_id" "uuid", "p_winner_id" "uuid") FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."declare_freeform_result"("p_challenge_id" "uuid", "p_winner_id" "uuid") TO "service_role";
+GRANT ALL ON FUNCTION "public"."declare_freeform_result"("p_challenge_id" "uuid", "p_winner_id" "uuid") TO "authenticated";
+
+
+
 REVOKE ALL ON FUNCTION "public"."decline_p2p_challenge"("p_challenge_id" "uuid") FROM PUBLIC;
-GRANT ALL ON FUNCTION "public"."decline_p2p_challenge"("p_challenge_id" "uuid") TO "authenticated";
-GRANT ALL ON FUNCTION "public"."decline_p2p_challenge"("p_challenge_id" "uuid") TO "anon";
 GRANT ALL ON FUNCTION "public"."decline_p2p_challenge"("p_challenge_id" "uuid") TO "service_role";
+GRANT ALL ON FUNCTION "public"."decline_p2p_challenge"("p_challenge_id" "uuid") TO "authenticated";
 
 
 
@@ -12243,13 +12535,18 @@ GRANT ALL ON FUNCTION "public"."delete_chat_message"("p_message_id" "uuid") TO "
 REVOKE ALL ON FUNCTION "public"."delete_user_data"("p_user_id" "uuid") FROM PUBLIC;
 GRANT ALL ON FUNCTION "public"."delete_user_data"("p_user_id" "uuid") TO "authenticated";
 GRANT ALL ON FUNCTION "public"."delete_user_data"("p_user_id" "uuid") TO "service_role";
-GRANT ALL ON FUNCTION "public"."delete_user_data"("p_user_id" "uuid") TO "anon";
 
 
 
 GRANT ALL ON FUNCTION "public"."derive_fixture_round_number"() TO "anon";
 GRANT ALL ON FUNCTION "public"."derive_fixture_round_number"() TO "authenticated";
 GRANT ALL ON FUNCTION "public"."derive_fixture_round_number"() TO "service_role";
+
+
+
+REVOKE ALL ON FUNCTION "public"."dispute_freeform_result"("p_challenge_id" "uuid") FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."dispute_freeform_result"("p_challenge_id" "uuid") TO "service_role";
+GRANT ALL ON FUNCTION "public"."dispute_freeform_result"("p_challenge_id" "uuid") TO "authenticated";
 
 
 
@@ -12278,32 +12575,22 @@ GRANT ALL ON FUNCTION "public"."enforce_transfer_window"() TO "service_role";
 
 
 GRANT ALL ON FUNCTION "public"."execute_transfer_atomic"("p_squad_id" "uuid", "p_action" "text", "p_player_id" "uuid", "p_price" numeric) TO "service_role";
-GRANT ALL ON FUNCTION "public"."execute_transfer_atomic"("p_squad_id" "uuid", "p_action" "text", "p_player_id" "uuid", "p_price" numeric) TO "anon";
-GRANT ALL ON FUNCTION "public"."execute_transfer_atomic"("p_squad_id" "uuid", "p_action" "text", "p_player_id" "uuid", "p_price" numeric) TO "authenticated";
 
 
 
 GRANT ALL ON FUNCTION "public"."execute_transfer_atomic"("p_squad_id" "uuid", "p_action" "text", "p_player_id" "uuid", "p_price" numeric, "p_pos_limit" integer, "p_squad_max" integer) TO "service_role";
-GRANT ALL ON FUNCTION "public"."execute_transfer_atomic"("p_squad_id" "uuid", "p_action" "text", "p_player_id" "uuid", "p_price" numeric, "p_pos_limit" integer, "p_squad_max" integer) TO "anon";
-GRANT ALL ON FUNCTION "public"."execute_transfer_atomic"("p_squad_id" "uuid", "p_action" "text", "p_player_id" "uuid", "p_price" numeric, "p_pos_limit" integer, "p_squad_max" integer) TO "authenticated";
 
 
 
 GRANT ALL ON FUNCTION "public"."execute_transfer_atomic"("p_squad_id" "uuid", "p_action" "text", "p_player_id" "uuid", "p_price" numeric, "p_pos_limit" integer, "p_squad_max" integer, "p_club_max" integer) TO "service_role";
-GRANT ALL ON FUNCTION "public"."execute_transfer_atomic"("p_squad_id" "uuid", "p_action" "text", "p_player_id" "uuid", "p_price" numeric, "p_pos_limit" integer, "p_squad_max" integer, "p_club_max" integer) TO "anon";
-GRANT ALL ON FUNCTION "public"."execute_transfer_atomic"("p_squad_id" "uuid", "p_action" "text", "p_player_id" "uuid", "p_price" numeric, "p_pos_limit" integer, "p_squad_max" integer, "p_club_max" integer) TO "authenticated";
 
 
 
 GRANT ALL ON FUNCTION "public"."execute_transfer_atomic"("p_squad_id" "uuid", "p_action" "text", "p_player_id" "text", "p_price" numeric, "p_pos_limit" integer, "p_squad_max" integer, "p_club_max" integer, "p_league_id" "uuid", "p_matchday_id" "text") TO "service_role";
-GRANT ALL ON FUNCTION "public"."execute_transfer_atomic"("p_squad_id" "uuid", "p_action" "text", "p_player_id" "text", "p_price" numeric, "p_pos_limit" integer, "p_squad_max" integer, "p_club_max" integer, "p_league_id" "uuid", "p_matchday_id" "text") TO "anon";
-GRANT ALL ON FUNCTION "public"."execute_transfer_atomic"("p_squad_id" "uuid", "p_action" "text", "p_player_id" "text", "p_price" numeric, "p_pos_limit" integer, "p_squad_max" integer, "p_club_max" integer, "p_league_id" "uuid", "p_matchday_id" "text") TO "authenticated";
 
 
 
 REVOKE ALL ON FUNCTION "public"."expire_stale_challenges"() FROM PUBLIC;
-GRANT ALL ON FUNCTION "public"."expire_stale_challenges"() TO "anon";
-GRANT ALL ON FUNCTION "public"."expire_stale_challenges"() TO "authenticated";
 GRANT ALL ON FUNCTION "public"."expire_stale_challenges"() TO "service_role";
 
 
@@ -12311,12 +12598,11 @@ GRANT ALL ON FUNCTION "public"."expire_stale_challenges"() TO "service_role";
 REVOKE ALL ON FUNCTION "public"."export_user_data"("p_user_id" "uuid") FROM PUBLIC;
 GRANT ALL ON FUNCTION "public"."export_user_data"("p_user_id" "uuid") TO "authenticated";
 GRANT ALL ON FUNCTION "public"."export_user_data"("p_user_id" "uuid") TO "service_role";
-GRANT ALL ON FUNCTION "public"."export_user_data"("p_user_id" "uuid") TO "anon";
 
 
 
-GRANT ALL ON FUNCTION "public"."generate_h2h_schedule"("p_league_id" "uuid", "p_start_matchday_id" "text") TO "authenticated";
 GRANT ALL ON FUNCTION "public"."generate_h2h_schedule"("p_league_id" "uuid", "p_start_matchday_id" "text") TO "anon";
+GRANT ALL ON FUNCTION "public"."generate_h2h_schedule"("p_league_id" "uuid", "p_start_matchday_id" "text") TO "authenticated";
 GRANT ALL ON FUNCTION "public"."generate_h2h_schedule"("p_league_id" "uuid", "p_start_matchday_id" "text") TO "service_role";
 
 
@@ -12336,6 +12622,12 @@ GRANT ALL ON TABLE "public"."transfer_windows" TO "service_role";
 GRANT ALL ON FUNCTION "public"."get_active_transfer_window"("p_league_id" "uuid", "p_at" timestamp with time zone) TO "anon";
 GRANT ALL ON FUNCTION "public"."get_active_transfer_window"("p_league_id" "uuid", "p_at" timestamp with time zone) TO "authenticated";
 GRANT ALL ON FUNCTION "public"."get_active_transfer_window"("p_league_id" "uuid", "p_at" timestamp with time zone) TO "service_role";
+
+
+
+REVOKE ALL ON FUNCTION "public"."get_circle_competition_admins"("p_circle_id" "uuid") FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."get_circle_competition_admins"("p_circle_id" "uuid") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."get_circle_competition_admins"("p_circle_id" "uuid") TO "service_role";
 
 
 
@@ -12371,7 +12663,6 @@ GRANT ALL ON FUNCTION "public"."get_clubhouse_competitions"("p_circle_id" "uuid"
 
 REVOKE ALL ON FUNCTION "public"."get_coin_economy_stats"() FROM PUBLIC;
 GRANT ALL ON FUNCTION "public"."get_coin_economy_stats"() TO "authenticated";
-GRANT ALL ON FUNCTION "public"."get_coin_economy_stats"() TO "anon";
 GRANT ALL ON FUNCTION "public"."get_coin_economy_stats"() TO "service_role";
 
 
@@ -12382,8 +12673,8 @@ GRANT ALL ON FUNCTION "public"."get_cron_failure_streaks"("p_threshold" integer)
 
 
 
-GRANT ALL ON FUNCTION "public"."get_cron_status"() TO "authenticated";
 GRANT ALL ON FUNCTION "public"."get_cron_status"() TO "anon";
+GRANT ALL ON FUNCTION "public"."get_cron_status"() TO "authenticated";
 GRANT ALL ON FUNCTION "public"."get_cron_status"() TO "service_role";
 
 
@@ -12406,33 +12697,32 @@ GRANT ALL ON FUNCTION "public"."get_cup_pool_stats"("p_league_id" "uuid") TO "se
 
 
 
-GRANT ALL ON FUNCTION "public"."get_event_points"("p_tournament_id" "text", "p_position" "text", "p_event_type" "text") TO "anon";
-GRANT ALL ON FUNCTION "public"."get_event_points"("p_tournament_id" "text", "p_position" "text", "p_event_type" "text") TO "authenticated";
-GRANT ALL ON FUNCTION "public"."get_event_points"("p_tournament_id" "text", "p_position" "text", "p_event_type" "text") TO "service_role";
-
-
-
-GRANT ALL ON FUNCTION "public"."get_h2h_standings"("p_league_id" "uuid") TO "authenticated";
 GRANT ALL ON FUNCTION "public"."get_h2h_standings"("p_league_id" "uuid") TO "anon";
+GRANT ALL ON FUNCTION "public"."get_h2h_standings"("p_league_id" "uuid") TO "authenticated";
 GRANT ALL ON FUNCTION "public"."get_h2h_standings"("p_league_id" "uuid") TO "service_role";
 
 
 
-GRANT ALL ON FUNCTION "public"."get_league_stats"("p_league_id" "uuid") TO "authenticated";
 GRANT ALL ON FUNCTION "public"."get_league_stats"("p_league_id" "uuid") TO "anon";
+GRANT ALL ON FUNCTION "public"."get_league_stats"("p_league_id" "uuid") TO "authenticated";
 GRANT ALL ON FUNCTION "public"."get_league_stats"("p_league_id" "uuid") TO "service_role";
 
 
 
-REVOKE ALL ON FUNCTION "public"."get_my_challenges"("p_league_id" "uuid") FROM PUBLIC;
-GRANT ALL ON FUNCTION "public"."get_my_challenges"("p_league_id" "uuid") TO "authenticated";
-GRANT ALL ON FUNCTION "public"."get_my_challenges"("p_league_id" "uuid") TO "anon";
-GRANT ALL ON FUNCTION "public"."get_my_challenges"("p_league_id" "uuid") TO "service_role";
+REVOKE ALL ON FUNCTION "public"."get_my_challenges"("p_circle_id" "uuid") FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."get_my_challenges"("p_circle_id" "uuid") TO "service_role";
+GRANT ALL ON FUNCTION "public"."get_my_challenges"("p_circle_id" "uuid") TO "authenticated";
 
 
 
-GRANT ALL ON FUNCTION "public"."get_my_paddocks"() TO "authenticated";
+GRANT ALL ON FUNCTION "public"."get_my_circles"() TO "anon";
+GRANT ALL ON FUNCTION "public"."get_my_circles"() TO "authenticated";
+GRANT ALL ON FUNCTION "public"."get_my_circles"() TO "service_role";
+
+
+
 GRANT ALL ON FUNCTION "public"."get_my_paddocks"() TO "anon";
+GRANT ALL ON FUNCTION "public"."get_my_paddocks"() TO "authenticated";
 GRANT ALL ON FUNCTION "public"."get_my_paddocks"() TO "service_role";
 
 
@@ -12443,27 +12733,20 @@ GRANT ALL ON FUNCTION "public"."get_my_player_boxes"("p_season_year" integer) TO
 
 
 
-GRANT ALL ON FUNCTION "public"."get_my_wallet"() TO "authenticated";
 GRANT ALL ON FUNCTION "public"."get_my_wallet"() TO "anon";
+GRANT ALL ON FUNCTION "public"."get_my_wallet"() TO "authenticated";
 GRANT ALL ON FUNCTION "public"."get_my_wallet"() TO "service_role";
 
 
 
-GRANT ALL ON FUNCTION "public"."get_owner_linkable_leagues"("p_circle_id" "uuid") TO "anon";
-GRANT ALL ON FUNCTION "public"."get_owner_linkable_leagues"("p_circle_id" "uuid") TO "authenticated";
-GRANT ALL ON FUNCTION "public"."get_owner_linkable_leagues"("p_circle_id" "uuid") TO "service_role";
-
-
-
 REVOKE ALL ON FUNCTION "public"."get_p2p_config"("p_league_id" "uuid") FROM PUBLIC;
-GRANT ALL ON FUNCTION "public"."get_p2p_config"("p_league_id" "uuid") TO "authenticated";
-GRANT ALL ON FUNCTION "public"."get_p2p_config"("p_league_id" "uuid") TO "anon";
 GRANT ALL ON FUNCTION "public"."get_p2p_config"("p_league_id" "uuid") TO "service_role";
+GRANT ALL ON FUNCTION "public"."get_p2p_config"("p_league_id" "uuid") TO "authenticated";
 
 
 
-GRANT ALL ON FUNCTION "public"."get_paddock_leaderboard"("p_paddock_id" "uuid") TO "authenticated";
 GRANT ALL ON FUNCTION "public"."get_paddock_leaderboard"("p_paddock_id" "uuid") TO "anon";
+GRANT ALL ON FUNCTION "public"."get_paddock_leaderboard"("p_paddock_id" "uuid") TO "authenticated";
 GRANT ALL ON FUNCTION "public"."get_paddock_leaderboard"("p_paddock_id" "uuid") TO "service_role";
 
 
@@ -12474,20 +12757,14 @@ GRANT ALL ON FUNCTION "public"."get_player_box_leaderboard"("p_player_box_id" "u
 
 
 
-GRANT ALL ON FUNCTION "public"."get_scoring_template"("p_tournament_id" "text") TO "anon";
-GRANT ALL ON FUNCTION "public"."get_scoring_template"("p_tournament_id" "text") TO "authenticated";
-GRANT ALL ON FUNCTION "public"."get_scoring_template"("p_tournament_id" "text") TO "service_role";
-
-
-
 GRANT ALL ON FUNCTION "public"."get_server_time"() TO "anon";
 GRANT ALL ON FUNCTION "public"."get_server_time"() TO "authenticated";
 GRANT ALL ON FUNCTION "public"."get_server_time"() TO "service_role";
 
 
 
-GRANT ALL ON FUNCTION "public"."get_snapshot_bench"("p_starting_xi" "text"[], "p_players" "text"[]) TO "authenticated";
 GRANT ALL ON FUNCTION "public"."get_snapshot_bench"("p_starting_xi" "text"[], "p_players" "text"[]) TO "anon";
+GRANT ALL ON FUNCTION "public"."get_snapshot_bench"("p_starting_xi" "text"[], "p_players" "text"[]) TO "authenticated";
 GRANT ALL ON FUNCTION "public"."get_snapshot_bench"("p_starting_xi" "text"[], "p_players" "text"[]) TO "service_role";
 
 
@@ -12668,6 +12945,18 @@ GRANT ALL ON FUNCTION "public"."http_set_curlopt"("curlopt" character varying, "
 
 
 
+GRANT ALL ON FUNCTION "public"."is_circle_member"("p_circle_id" "uuid") TO "anon";
+GRANT ALL ON FUNCTION "public"."is_circle_member"("p_circle_id" "uuid") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."is_circle_member"("p_circle_id" "uuid") TO "service_role";
+
+
+
+REVOKE ALL ON FUNCTION "public"."is_competition_admin"("p_competition_type" "text", "p_competition_id" "uuid") FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."is_competition_admin"("p_competition_type" "text", "p_competition_id" "uuid") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."is_competition_admin"("p_competition_type" "text", "p_competition_id" "uuid") TO "service_role";
+
+
+
 GRANT ALL ON FUNCTION "public"."is_league_member"("p_league_id" "uuid") TO "anon";
 GRANT ALL ON FUNCTION "public"."is_league_member"("p_league_id" "uuid") TO "authenticated";
 GRANT ALL ON FUNCTION "public"."is_league_member"("p_league_id" "uuid") TO "service_role";
@@ -12676,8 +12965,6 @@ GRANT ALL ON FUNCTION "public"."is_league_member"("p_league_id" "uuid") TO "serv
 
 REVOKE ALL ON FUNCTION "public"."issue_season_ace_cards"("p_season_year" integer) FROM PUBLIC;
 GRANT ALL ON FUNCTION "public"."issue_season_ace_cards"("p_season_year" integer) TO "service_role";
-GRANT ALL ON FUNCTION "public"."issue_season_ace_cards"("p_season_year" integer) TO "anon";
-GRANT ALL ON FUNCTION "public"."issue_season_ace_cards"("p_season_year" integer) TO "authenticated";
 
 
 
@@ -12688,9 +12975,8 @@ GRANT ALL ON FUNCTION "public"."join_circle_by_code"("p_code" "text") TO "servic
 
 
 REVOKE ALL ON FUNCTION "public"."join_league_by_code"("p_code" "text") FROM PUBLIC;
-GRANT ALL ON FUNCTION "public"."join_league_by_code"("p_code" "text") TO "authenticated";
-GRANT ALL ON FUNCTION "public"."join_league_by_code"("p_code" "text") TO "anon";
 GRANT ALL ON FUNCTION "public"."join_league_by_code"("p_code" "text") TO "service_role";
+GRANT ALL ON FUNCTION "public"."join_league_by_code"("p_code" "text") TO "authenticated";
 
 
 
@@ -12700,8 +12986,8 @@ GRANT ALL ON FUNCTION "public"."join_league_by_code"("p_code" "text", "p_user_id
 
 
 
-GRANT ALL ON FUNCTION "public"."join_paddock_by_code"("p_code" "text") TO "authenticated";
 GRANT ALL ON FUNCTION "public"."join_paddock_by_code"("p_code" "text") TO "anon";
+GRANT ALL ON FUNCTION "public"."join_paddock_by_code"("p_code" "text") TO "authenticated";
 GRANT ALL ON FUNCTION "public"."join_paddock_by_code"("p_code" "text") TO "service_role";
 
 
@@ -12712,27 +12998,21 @@ GRANT ALL ON FUNCTION "public"."join_player_box_by_code"("p_invite_code" "text")
 
 
 
-GRANT ALL ON FUNCTION "public"."kick_circle_member"("p_circle_id" "uuid", "p_user_id" "uuid") TO "anon";
-GRANT ALL ON FUNCTION "public"."kick_circle_member"("p_circle_id" "uuid", "p_user_id" "uuid") TO "authenticated";
-GRANT ALL ON FUNCTION "public"."kick_circle_member"("p_circle_id" "uuid", "p_user_id" "uuid") TO "service_role";
-
-
-
 GRANT ALL ON FUNCTION "public"."link_competition_to_clubhouse"("p_circle_id" "uuid", "p_type" "text", "p_competition_id" "uuid") TO "anon";
 GRANT ALL ON FUNCTION "public"."link_competition_to_clubhouse"("p_circle_id" "uuid", "p_type" "text", "p_competition_id" "uuid") TO "authenticated";
 GRANT ALL ON FUNCTION "public"."link_competition_to_clubhouse"("p_circle_id" "uuid", "p_type" "text", "p_competition_id" "uuid") TO "service_role";
 
 
 
-GRANT ALL ON FUNCTION "public"."link_league_to_circle"("p_circle_id" "uuid", "p_league_id" "uuid") TO "anon";
-GRANT ALL ON FUNCTION "public"."link_league_to_circle"("p_circle_id" "uuid", "p_league_id" "uuid") TO "authenticated";
-GRANT ALL ON FUNCTION "public"."link_league_to_circle"("p_circle_id" "uuid", "p_league_id" "uuid") TO "service_role";
+GRANT ALL ON FUNCTION "public"."load_wc_teams"() TO "anon";
+GRANT ALL ON FUNCTION "public"."load_wc_teams"() TO "authenticated";
+GRANT ALL ON FUNCTION "public"."load_wc_teams"() TO "service_role";
 
 
 
-GRANT ALL ON FUNCTION "public"."lock_lineups_for_fixture"("p_fixture_id" "text") TO "service_role";
 GRANT ALL ON FUNCTION "public"."lock_lineups_for_fixture"("p_fixture_id" "text") TO "anon";
 GRANT ALL ON FUNCTION "public"."lock_lineups_for_fixture"("p_fixture_id" "text") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."lock_lineups_for_fixture"("p_fixture_id" "text") TO "service_role";
 
 
 
@@ -12763,24 +13043,6 @@ GRANT ALL ON FUNCTION "public"."mark_notification_read"("p_notification_id" "uui
 GRANT ALL ON FUNCTION "public"."notify_league_on_bet_creation"() TO "anon";
 GRANT ALL ON FUNCTION "public"."notify_league_on_bet_creation"() TO "authenticated";
 GRANT ALL ON FUNCTION "public"."notify_league_on_bet_creation"() TO "service_role";
-
-
-
-GRANT ALL ON FUNCTION "public"."notify_on_direct_message"() TO "anon";
-GRANT ALL ON FUNCTION "public"."notify_on_direct_message"() TO "authenticated";
-GRANT ALL ON FUNCTION "public"."notify_on_direct_message"() TO "service_role";
-
-
-
-GRANT ALL ON FUNCTION "public"."notify_on_frontpage_edition"() TO "anon";
-GRANT ALL ON FUNCTION "public"."notify_on_frontpage_edition"() TO "authenticated";
-GRANT ALL ON FUNCTION "public"."notify_on_frontpage_edition"() TO "service_role";
-
-
-
-GRANT ALL ON FUNCTION "public"."notify_on_gazette_breaking_news"() TO "anon";
-GRANT ALL ON FUNCTION "public"."notify_on_gazette_breaking_news"() TO "authenticated";
-GRANT ALL ON FUNCTION "public"."notify_on_gazette_breaking_news"() TO "service_role";
 
 
 
@@ -12815,9 +13077,13 @@ GRANT ALL ON FUNCTION "public"."reject_trade_proposal"("p_proposal_id" "uuid") T
 
 
 REVOKE ALL ON FUNCTION "public"."release_escrow"("p_user_id" "uuid", "p_amount" integer, "p_challenge_id" "uuid", "p_meta" "jsonb") FROM PUBLIC;
-GRANT ALL ON FUNCTION "public"."release_escrow"("p_user_id" "uuid", "p_amount" integer, "p_challenge_id" "uuid", "p_meta" "jsonb") TO "anon";
-GRANT ALL ON FUNCTION "public"."release_escrow"("p_user_id" "uuid", "p_amount" integer, "p_challenge_id" "uuid", "p_meta" "jsonb") TO "authenticated";
 GRANT ALL ON FUNCTION "public"."release_escrow"("p_user_id" "uuid", "p_amount" integer, "p_challenge_id" "uuid", "p_meta" "jsonb") TO "service_role";
+
+
+
+REVOKE ALL ON FUNCTION "public"."remove_competition_admin"("p_circle_id" "uuid", "p_competition_type" "text", "p_competition_id" "uuid", "p_user_id" "uuid") FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."remove_competition_admin"("p_circle_id" "uuid", "p_competition_type" "text", "p_competition_id" "uuid", "p_user_id" "uuid") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."remove_competition_admin"("p_circle_id" "uuid", "p_competition_type" "text", "p_competition_id" "uuid", "p_user_id" "uuid") TO "service_role";
 
 
 
@@ -12833,21 +13099,19 @@ GRANT ALL ON FUNCTION "public"."resolve_auction_listing"("p_listing_id" "uuid") 
 
 
 
-GRANT ALL ON FUNCTION "public"."resolve_bet"("p_instance_id" "uuid", "p_answers" "text"[]) TO "service_role";
-GRANT ALL ON FUNCTION "public"."resolve_bet"("p_instance_id" "uuid", "p_answers" "text"[]) TO "authenticated";
 GRANT ALL ON FUNCTION "public"."resolve_bet"("p_instance_id" "uuid", "p_answers" "text"[]) TO "anon";
+GRANT ALL ON FUNCTION "public"."resolve_bet"("p_instance_id" "uuid", "p_answers" "text"[]) TO "authenticated";
+GRANT ALL ON FUNCTION "public"."resolve_bet"("p_instance_id" "uuid", "p_answers" "text"[]) TO "service_role";
 
 
 
-GRANT ALL ON FUNCTION "public"."resolve_bet"("p_instance_id" "uuid", "p_answer" "text") TO "service_role";
-GRANT ALL ON FUNCTION "public"."resolve_bet"("p_instance_id" "uuid", "p_answer" "text") TO "authenticated";
 GRANT ALL ON FUNCTION "public"."resolve_bet"("p_instance_id" "uuid", "p_answer" "text") TO "anon";
+GRANT ALL ON FUNCTION "public"."resolve_bet"("p_instance_id" "uuid", "p_answer" "text") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."resolve_bet"("p_instance_id" "uuid", "p_answer" "text") TO "service_role";
 
 
 
 REVOKE ALL ON FUNCTION "public"."resolve_p2p_challenge"("p_challenge_id" "uuid") FROM PUBLIC;
-GRANT ALL ON FUNCTION "public"."resolve_p2p_challenge"("p_challenge_id" "uuid") TO "anon";
-GRANT ALL ON FUNCTION "public"."resolve_p2p_challenge"("p_challenge_id" "uuid") TO "authenticated";
 GRANT ALL ON FUNCTION "public"."resolve_p2p_challenge"("p_challenge_id" "uuid") TO "service_role";
 
 
@@ -12888,15 +13152,21 @@ GRANT ALL ON FUNCTION "public"."sell_now"("p_listing_id" "uuid") TO "service_rol
 
 
 
-GRANT ALL ON FUNCTION "public"."set_captain"("p_squad_id" "uuid", "p_player_id" "text") TO "authenticated";
 GRANT ALL ON FUNCTION "public"."set_captain"("p_squad_id" "uuid", "p_player_id" "text") TO "anon";
+GRANT ALL ON FUNCTION "public"."set_captain"("p_squad_id" "uuid", "p_player_id" "text") TO "authenticated";
 GRANT ALL ON FUNCTION "public"."set_captain"("p_squad_id" "uuid", "p_player_id" "text") TO "service_role";
 
 
 
+REVOKE ALL ON FUNCTION "public"."set_competition_admin"("p_circle_id" "uuid", "p_competition_type" "text", "p_competition_id" "uuid", "p_user_id" "uuid") FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."set_competition_admin"("p_circle_id" "uuid", "p_competition_type" "text", "p_competition_id" "uuid", "p_user_id" "uuid") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."set_competition_admin"("p_circle_id" "uuid", "p_competition_type" "text", "p_competition_id" "uuid", "p_user_id" "uuid") TO "service_role";
+
+
+
+GRANT ALL ON FUNCTION "public"."set_lineup"("p_squad_id" "uuid", "p_player_out" "text", "p_player_in" "text") TO "anon";
 GRANT ALL ON FUNCTION "public"."set_lineup"("p_squad_id" "uuid", "p_player_out" "text", "p_player_in" "text") TO "authenticated";
 GRANT ALL ON FUNCTION "public"."set_lineup"("p_squad_id" "uuid", "p_player_out" "text", "p_player_in" "text") TO "service_role";
-GRANT ALL ON FUNCTION "public"."set_lineup"("p_squad_id" "uuid", "p_player_out" "text", "p_player_in" "text") TO "anon";
 
 
 
@@ -12906,9 +13176,9 @@ GRANT ALL ON FUNCTION "public"."set_tennis_qf_captain"("p_tournament_id" "uuid",
 
 
 
-GRANT ALL ON FUNCTION "public"."snapshot_squads_for_matchday"("p_matchday_id" "text", "p_reason" "text") TO "service_role";
 GRANT ALL ON FUNCTION "public"."snapshot_squads_for_matchday"("p_matchday_id" "text", "p_reason" "text") TO "anon";
 GRANT ALL ON FUNCTION "public"."snapshot_squads_for_matchday"("p_matchday_id" "text", "p_reason" "text") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."snapshot_squads_for_matchday"("p_matchday_id" "text", "p_reason" "text") TO "service_role";
 
 
 
@@ -12924,14 +13194,13 @@ GRANT ALL ON FUNCTION "public"."submit_atp_finals_knockout_picks"("p_season_year
 
 
 
-GRANT ALL ON FUNCTION "public"."submit_bet"("p_squad_id" "uuid", "p_instance_id" "uuid", "p_answer" "text") TO "authenticated";
 GRANT ALL ON FUNCTION "public"."submit_bet"("p_squad_id" "uuid", "p_instance_id" "uuid", "p_answer" "text") TO "anon";
+GRANT ALL ON FUNCTION "public"."submit_bet"("p_squad_id" "uuid", "p_instance_id" "uuid", "p_answer" "text") TO "authenticated";
 GRANT ALL ON FUNCTION "public"."submit_bet"("p_squad_id" "uuid", "p_instance_id" "uuid", "p_answer" "text") TO "service_role";
 
 
 
 GRANT ALL ON FUNCTION "public"."submit_knockout_keeps"("p_league_id" "uuid", "p_player_ids" "text"[]) TO "authenticated";
-GRANT ALL ON FUNCTION "public"."submit_knockout_keeps"("p_league_id" "uuid", "p_player_ids" "text"[]) TO "anon";
 GRANT ALL ON FUNCTION "public"."submit_knockout_keeps"("p_league_id" "uuid", "p_player_ids" "text"[]) TO "service_role";
 
 
@@ -12954,15 +13223,9 @@ GRANT ALL ON FUNCTION "public"."sweep_void_auction_confirmations"() TO "service_
 
 
 
-GRANT ALL ON FUNCTION "public"."sync_all_active_tournaments"() TO "anon";
-GRANT ALL ON FUNCTION "public"."sync_all_active_tournaments"() TO "authenticated";
-GRANT ALL ON FUNCTION "public"."sync_all_active_tournaments"() TO "service_role";
-
-
-
-GRANT ALL ON FUNCTION "public"."sync_cup_eliminations"("p_league_id" "uuid") TO "service_role";
 GRANT ALL ON FUNCTION "public"."sync_cup_eliminations"("p_league_id" "uuid") TO "anon";
 GRANT ALL ON FUNCTION "public"."sync_cup_eliminations"("p_league_id" "uuid") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."sync_cup_eliminations"("p_league_id" "uuid") TO "service_role";
 
 
 
@@ -12975,6 +13238,12 @@ GRANT ALL ON FUNCTION "public"."sync_league_mode"() TO "service_role";
 GRANT ALL ON FUNCTION "public"."sync_squad_matchdays"() TO "anon";
 GRANT ALL ON FUNCTION "public"."sync_squad_matchdays"() TO "authenticated";
 GRANT ALL ON FUNCTION "public"."sync_squad_matchdays"() TO "service_role";
+
+
+
+GRANT ALL ON FUNCTION "public"."sync_wc_players"() TO "anon";
+GRANT ALL ON FUNCTION "public"."sync_wc_players"() TO "authenticated";
+GRANT ALL ON FUNCTION "public"."sync_wc_players"() TO "service_role";
 
 
 
@@ -12997,28 +13266,27 @@ GRANT ALL ON FUNCTION "public"."trg_fn_snapshot_squads_on_kickoff"() TO "service
 
 
 
-GRANT ALL ON FUNCTION "public"."trigger_bet_reward_update"() TO "anon";
-GRANT ALL ON FUNCTION "public"."trigger_bet_reward_update"() TO "authenticated";
-GRANT ALL ON FUNCTION "public"."trigger_bet_reward_update"() TO "service_role";
+GRANT ALL ON FUNCTION "public"."trigger_update_league_member_points"() TO "anon";
+GRANT ALL ON FUNCTION "public"."trigger_update_league_member_points"() TO "authenticated";
+GRANT ALL ON FUNCTION "public"."trigger_update_league_member_points"() TO "service_role";
 
 
 
-GRANT ALL ON FUNCTION "public"."update_circle_settings"("p_circle_id" "uuid", "p_name" "text", "p_is_public" boolean, "p_p2p_enabled" boolean) TO "anon";
-GRANT ALL ON FUNCTION "public"."update_circle_settings"("p_circle_id" "uuid", "p_name" "text", "p_is_public" boolean, "p_p2p_enabled" boolean) TO "authenticated";
-GRANT ALL ON FUNCTION "public"."update_circle_settings"("p_circle_id" "uuid", "p_name" "text", "p_is_public" boolean, "p_p2p_enabled" boolean) TO "service_role";
+GRANT ALL ON FUNCTION "public"."trigger_wc2026_sync"() TO "anon";
+GRANT ALL ON FUNCTION "public"."trigger_wc2026_sync"() TO "authenticated";
+GRANT ALL ON FUNCTION "public"."trigger_wc2026_sync"() TO "service_role";
 
 
 
 REVOKE ALL ON FUNCTION "public"."update_p2p_config"("p_league_id" "uuid", "p_min_stake" integer, "p_max_stake" integer, "p_daily_challenge_limit" integer, "p_challenges_enabled" boolean) FROM PUBLIC;
-GRANT ALL ON FUNCTION "public"."update_p2p_config"("p_league_id" "uuid", "p_min_stake" integer, "p_max_stake" integer, "p_daily_challenge_limit" integer, "p_challenges_enabled" boolean) TO "authenticated";
-GRANT ALL ON FUNCTION "public"."update_p2p_config"("p_league_id" "uuid", "p_min_stake" integer, "p_max_stake" integer, "p_daily_challenge_limit" integer, "p_challenges_enabled" boolean) TO "anon";
 GRANT ALL ON FUNCTION "public"."update_p2p_config"("p_league_id" "uuid", "p_min_stake" integer, "p_max_stake" integer, "p_daily_challenge_limit" integer, "p_challenges_enabled" boolean) TO "service_role";
+GRANT ALL ON FUNCTION "public"."update_p2p_config"("p_league_id" "uuid", "p_min_stake" integer, "p_max_stake" integer, "p_daily_challenge_limit" integer, "p_challenges_enabled" boolean) TO "authenticated";
 
 
 
-GRANT ALL ON FUNCTION "public"."upsert_scoring_rules"("p_tournament_id" "text", "p_rules" "jsonb") TO "anon";
-GRANT ALL ON FUNCTION "public"."upsert_scoring_rules"("p_tournament_id" "text", "p_rules" "jsonb") TO "authenticated";
-GRANT ALL ON FUNCTION "public"."upsert_scoring_rules"("p_tournament_id" "text", "p_rules" "jsonb") TO "service_role";
+GRANT ALL ON FUNCTION "public"."update_scoring_rules_updated_at"() TO "anon";
+GRANT ALL ON FUNCTION "public"."update_scoring_rules_updated_at"() TO "authenticated";
+GRANT ALL ON FUNCTION "public"."update_scoring_rules_updated_at"() TO "service_role";
 
 
 
@@ -13196,6 +13464,12 @@ GRANT ALL ON TABLE "public"."coin_wallets" TO "service_role";
 
 
 
+GRANT ALL ON TABLE "public"."competition_admins" TO "anon";
+GRANT ALL ON TABLE "public"."competition_admins" TO "authenticated";
+GRANT ALL ON TABLE "public"."competition_admins" TO "service_role";
+
+
+
 GRANT ALL ON TABLE "public"."cup_active_clubs" TO "anon";
 GRANT ALL ON TABLE "public"."cup_active_clubs" TO "authenticated";
 GRANT ALL ON TABLE "public"."cup_active_clubs" TO "service_role";
@@ -13232,6 +13506,12 @@ GRANT ALL ON TABLE "public"."edge_function_errors" TO "service_role";
 
 
 
+GRANT ALL ON TABLE "public"."error_logs" TO "anon";
+GRANT ALL ON TABLE "public"."error_logs" TO "authenticated";
+GRANT ALL ON TABLE "public"."error_logs" TO "service_role";
+
+
+
 GRANT ALL ON TABLE "public"."f1_bets_race" TO "anon";
 GRANT ALL ON TABLE "public"."f1_bets_race" TO "authenticated";
 GRANT ALL ON TABLE "public"."f1_bets_race" TO "service_role";
@@ -13253,6 +13533,12 @@ GRANT ALL ON TABLE "public"."f1_races" TO "service_role";
 GRANT ALL ON TABLE "public"."f1_scores" TO "anon";
 GRANT ALL ON TABLE "public"."f1_scores" TO "authenticated";
 GRANT ALL ON TABLE "public"."f1_scores" TO "service_role";
+
+
+
+GRANT ALL ON TABLE "public"."f1_seasons" TO "anon";
+GRANT ALL ON TABLE "public"."f1_seasons" TO "authenticated";
+GRANT ALL ON TABLE "public"."f1_seasons" TO "service_role";
 
 
 
@@ -13370,6 +13656,12 @@ GRANT ALL ON TABLE "public"."matchday_recaps" TO "service_role";
 
 
 
+GRANT ALL ON TABLE "public"."matchday_scores" TO "anon";
+GRANT ALL ON TABLE "public"."matchday_scores" TO "authenticated";
+GRANT ALL ON TABLE "public"."matchday_scores" TO "service_role";
+
+
+
 GRANT ALL ON TABLE "public"."p2p_challenges" TO "anon";
 GRANT ALL ON TABLE "public"."p2p_challenges" TO "authenticated";
 GRANT ALL ON TABLE "public"."p2p_challenges" TO "service_role";
@@ -13409,6 +13701,12 @@ GRANT ALL ON TABLE "public"."player_box_members" TO "service_role";
 GRANT ALL ON TABLE "public"."player_boxes" TO "anon";
 GRANT ALL ON TABLE "public"."player_boxes" TO "authenticated";
 GRANT ALL ON TABLE "public"."player_boxes" TO "service_role";
+
+
+
+GRANT ALL ON TABLE "public"."player_match_points" TO "anon";
+GRANT ALL ON TABLE "public"."player_match_points" TO "authenticated";
+GRANT ALL ON TABLE "public"."player_match_points" TO "service_role";
 
 
 
@@ -13585,9 +13883,9 @@ GRANT ALL ON TABLE "public"."user_profiles" TO "service_role";
 
 
 ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON SEQUENCES TO "postgres";
-ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT UPDATE ON SEQUENCES TO "anon";
-ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT UPDATE ON SEQUENCES TO "authenticated";
-ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT UPDATE ON SEQUENCES TO "service_role";
+ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON SEQUENCES TO "anon";
+ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON SEQUENCES TO "authenticated";
+ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON SEQUENCES TO "service_role";
 
 
 
@@ -13595,6 +13893,9 @@ ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT UPDATE ON 
 
 
 ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON FUNCTIONS TO "postgres";
+ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON FUNCTIONS TO "anon";
+ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON FUNCTIONS TO "authenticated";
+ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON FUNCTIONS TO "service_role";
 
 
 
