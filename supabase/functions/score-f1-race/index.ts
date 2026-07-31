@@ -95,6 +95,68 @@ function scoreRaceBet(bet, race) {
   return { total, breakdown };
 }
 
+// Awards an event_win trophy to the top scorer within each paddock that's
+// racing this season — paddocks are F1's league-equivalent (own circle_id,
+// own membership), so "the winner" is scoped per paddock, not platform-wide.
+// Ties at the top are skipped (no clear winner), matching round_win's
+// draws-are-skipped precedent in calculate-scores.
+async function awardEventWinTrophies(supabase, race, scoreByUser) {
+  if (scoreByUser.size === 0) return;
+
+  const { data: sport } = await supabase
+    .from('sports').select('id').eq('name', 'Formula 1').maybeSingle();
+  if (!sport?.id) return;
+
+  const { data: season } = await supabase
+    .from('f1_seasons').select('id').eq('season', race.season).maybeSingle();
+  if (!season?.id) return;
+
+  const { data: paddocks } = await supabase
+    .from('paddocks').select('id, name, circle_id').eq('season', race.season).eq('sport_id', sport.id);
+  if (!paddocks?.length) return;
+
+  const { data: members } = await supabase
+    .from('paddock_members').select('paddock_id, user_id')
+    .in('paddock_id', paddocks.map(p => p.id));
+
+  const membersByPaddock = new Map();
+  for (const m of (members ?? [])) {
+    if (!membersByPaddock.has(m.paddock_id)) membersByPaddock.set(m.paddock_id, []);
+    membersByPaddock.get(m.paddock_id).push(m.user_id);
+  }
+
+  for (const paddock of paddocks) {
+    const paddockMembers = membersByPaddock.get(paddock.id) ?? [];
+    let topUser = null;
+    let topPts = -1;
+    let tie = false;
+    for (const uid of paddockMembers) {
+      const pts = scoreByUser.get(uid);
+      if (pts === undefined) continue;
+      if (pts > topPts) { topPts = pts; topUser = uid; tie = false; }
+      else if (pts === topPts) { tie = true; }
+    }
+    if (!topUser || tie || topPts <= 0) continue;
+
+    await supabase.rpc('award_trophy', {
+      p_circle_id:     paddock.circle_id,
+      p_league_id:     paddock.id,
+      p_user_id:       topUser,
+      p_sport_id:      sport.id,
+      p_tournament_id: season.id,
+      p_trophy_type:   'event_win',
+      p_tier:          'gold',
+      p_meta: {
+        event_key:   race.id,
+        label:       'Race Win',
+        reason:      `${race.gp_name} — ${topPts} pts`,
+        league_name: paddock.name,
+        sport_type:  'f1',
+      },
+    });
+  }
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
@@ -130,6 +192,7 @@ Deno.serve(async (req) => {
     let scored = 0;
     let winner = null;
     let winnerPts = 0;
+    const scoreByUser = new Map();
 
     for (const bet of (bets ?? [])) {
       const { total, breakdown } = scoreRaceBet(bet, race);
@@ -146,6 +209,7 @@ Deno.serve(async (req) => {
       }, { onConflict: 'user_id,season,round_number,score_type' });
       if (scoreErr) throw scoreErr;
 
+      scoreByUser.set(bet.user_id, total);
       if (total > winnerPts) {
         winnerPts = total;
         winner = bet.user_id;
@@ -157,6 +221,17 @@ Deno.serve(async (req) => {
     const { error: markErr } = await supabase
       .from('f1_races').update({ is_scored: true }).eq('id', race_id);
     if (markErr) throw markErr;
+
+    // event_win trophies — per-paddock winner (membership-filtered over the
+    // just-computed global scores), not the single cross-platform top scorer
+    // above. Mirrors get_paddock_leaderboard()'s membership-filter pattern.
+    // Non-fatal: award_trophy() itself swallows errors, and this whole block
+    // is best-effort so a trophy failure never blocks race scoring.
+    try {
+      await awardEventWinTrophies(supabase, race, scoreByUser);
+    } catch (e) {
+      console.warn('[score-f1-race] award_trophy (event_win) failed (non-critical):', e.message);
+    }
 
     // Resolve winner display name
     let winnerName = null;
