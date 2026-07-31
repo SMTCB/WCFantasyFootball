@@ -149,18 +149,23 @@ npx supabase functions serve sync-fixtures --env-file .env.local
 
 ## Schema Rehearsal Workflow
 
-**When to use:** you're about to change the schema (a new migration, an RLS policy tweak, an RPC signature change) and want to rehearse it against a real replica of the current 271-migration history before it touches the live pilot DB. This is a lightweight substitute for a dedicated staging environment (see [Provisioning a Staging Environment](#provisioning-a-staging-environment) below for the heavier option) — it satisfies "I want real tests in case we need to adjust the schema" without standing up a second Supabase project.
+**When to use:** you're about to change the schema (a new migration, an RLS policy tweak, an RPC signature change) and want to rehearse it against a real replica of prod's actual schema before it touches the live pilot DB. This is a lightweight substitute for a dedicated staging environment (see [Provisioning a Staging Environment](#provisioning-a-staging-environment) below for the heavier option) — it satisfies "I want real tests in case we need to adjust the schema" without standing up a second Supabase project.
 
-**Known limitation — plain `db reset` can fail partway on this repo.** `supabase db reset` applies every file in `supabase/migrations/` in pure lexicographic filename order. Because ASCII sorts `'1'` before `'9'`, files numbered **100+ sort before files numbered 90–99** — the apply order does not match numeric/chronological order. Combined with one genuine latent bug in an early migration (`09_sprint1_schema.sql` declares a `uuid` foreign key against a column that has always been `TEXT`; the real fix lives in `10_sprint1_fixes.sql`, which drops and recreates the table correctly), a plain `db reset` hard-fails and aborts the entire run — even though the fix migration would have resolved it had the CLI kept going.
+**Corrected 2026-08-01 — replaying `supabase/migrations/*.sql` from scratch does not reproduce prod.** An earlier version of this workflow rebuilt the local schema by replaying every file in `supabase/migrations/` in order (falling back to a continue-on-error raw-`psql` replay when `supabase db reset` hard-failed). A direct structural diff against a real prod dump (2026-08-01, prompted by a user question: "does docker schema match prod, did you double-check?") found this genuinely does **not** reproduce prod — 75 of ~271 migration files fail to apply cleanly on a from-scratch replay, leaving 8 tables, 14 functions, and 63 RLS policies missing or mismatched.
 
-**The fix:** [`scripts/rehearse-schema.sh`](../../scripts/rehearse-schema.sh) tries a normal `supabase db reset` first, and only falls back if that fails. The fallback re-applies every remaining migration file individually via raw `psql`, continuing past failures instead of aborting, then logs exactly which files failed so they can be spot-checked (most turn out to be ordering artifacts — a later-numbered fix ran before the migration it targets and found nothing to do — or expected-empty-local-DB conditions, not real problems). It finishes by re-granting `SELECT/INSERT/UPDATE/DELETE` to `anon`/`authenticated`/`service_role` on the `public` schema: the raw-`psql` fallback path bypasses a grant-restoration step the CLI normally runs after migrations, and without it PostgREST returns `42501 permission denied` on every table touched by the fallback — including for the `service_role` key that Edge Functions use.
+Root cause of the largest chunk: `27_auction_listings.sql` declares `player_id UUID NOT NULL REFERENCES players(id)`, but `players.id` has always been `TEXT` in both prod and local — an immediate FK-type error that aborts a from-scratch replay and cascades into every later migration that touches `auction_listings`. Prod's actual live `auction_listings.player_id` column is `TEXT`, and no migration file in the repo's history ever corrects the mismatch — meaning a fix was applied directly to prod at some point without ever being captured as a committed migration. **The migrations directory is therefore an incomplete historical record of prod's schema**, and replaying it from scratch cannot be trusted as a rehearsal baseline.
+
+**The fix:** [`scripts/rehearse-schema.sh`](../../scripts/rehearse-schema.sh) was rewritten to abandon migration replay entirely. It now rebuilds the local `public` schema by loading [`supabase/schema.sql`](../../supabase/schema.sql) directly — a `pg_dump` snapshot of prod's actual live schema (refresh it first if it might be stale: `npx supabase db dump --linked --schema public > supabase/schema.sql`). This mirrors the approach `tests/unit/` already uses successfully (`bootstrap.sql` → `schema.sql` → `seed.sql`), and was re-verified via a fresh structural diff after the rewrite: zero drift across tables, functions, policies, triggers, indexes, and views.
 
 ```bash
-npx supabase start                    # once, if the local stack isn't already up
-bash scripts/rehearse-schema.sh
+npx supabase start                                          # once, if the local stack isn't already up
+bash scripts/rehearse-schema.sh                              # rebuild local schema from schema.sql as-is
+bash scripts/rehearse-schema.sh path/to/new_migration.sql    # + apply ONE new migration on top, to rehearse it
 ```
 
-Logs land in `.rehearsal/` (gitignored): `db-reset.log` (the initial attempt), `replay.log` + `replay.log.failures` (the fallback, if triggered), `grants.log`.
+Logs land in `.rehearsal/` (gitignored): `reset-public.log`, `schema-load.log`, `new-migration.log` (only if a migration path is passed), `grants.log`.
+
+The script always re-grants `SELECT/INSERT/UPDATE/DELETE` to `anon`/`authenticated`/`service_role` on the `public` schema as its final step (`GRANT ALL` + `ALTER DEFAULT PRIVILEGES` + `NOTIFY pgrst, 'reload schema'`) — this replaces an earlier ad-hoc fix for a `42501 permission denied` PostgREST error that the old replay-based approach could trigger; the new script runs this unconditionally rather than only as a fallback.
 
 Once rehearsed, serve the function(s) you're testing and exercise them exactly as they'd run in prod:
 
@@ -225,4 +230,4 @@ For read-only reference data (e.g. a real tournament draw) that a local rehearsa
 
 ---
 
-Last Updated: **2026-07-31**
+Last Updated: **2026-08-01**
