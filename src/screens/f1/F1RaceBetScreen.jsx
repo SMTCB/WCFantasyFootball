@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../hooks/useAuth';
+import { usePaddock } from '../../hooks/f1/usePaddock';
 import { DRIVERS, TEAMS, SPECIAL_OPTIONS, getFlag } from '../../lib/f1/f1-data';
 
 function DriverSelect({ label, value, onChange, exclude = [], disabled }) {
@@ -29,6 +30,8 @@ export default function F1RaceBetScreen() {
   const { paddockId, round } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { myPaddocks } = usePaddock();
+  const paddock = myPaddocks.find(p => p.paddock_id === paddockId);
 
   const [races, setRaces] = useState([]);
   const [selectedRound, setSelectedRound] = useState(round ? parseInt(round, 10) : null);
@@ -152,6 +155,11 @@ export default function F1RaceBetScreen() {
               {race.circuit}{race.is_saturday ? ' · SPRINT WEEKEND' : ''}
             </div>
 
+            {paddock?.archived && (
+              <div style={{ marginTop: 10, padding: '8px 12px', background: 'rgba(255,255,255,0.04)', borderRadius: 6, border: '1px solid var(--rule)', fontFamily: 'JetBrains Mono, monospace', fontSize: 10, letterSpacing: '0.1em', color: 'var(--mute)' }}>
+                ARCHIVED — this paddock is inactive.
+              </div>
+            )}
             {isLocked && (
               <div style={{ marginTop: 10, padding: '8px 12px', background: 'rgba(185,28,28,0.08)', borderRadius: 6, border: '1px solid rgba(185,28,28,0.2)', fontFamily: 'JetBrains Mono, monospace', fontSize: 11, color: 'var(--danger)' }}>
                 🔒 Picks locked — qualifying has started

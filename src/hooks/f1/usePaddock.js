@@ -15,10 +15,11 @@ export function usePaddock() {
       const { data, error: err } = await supabase.rpc('get_my_paddocks');
       if (err) throw err;
       setMyPaddocks(data ?? []);
-      // Auto-select first paddock if active one is gone
+      // Auto-select first paddock if active one is gone — prefer a non-archived
+      // one so a user isn't silently dropped onto a dormant paddock (B-13-F1).
       if (data?.length > 0) {
         const stillExists = data.some(p => p.paddock_id === activePaddockId);
-        if (!stillExists) setActivePaddockId(data[0].paddock_id);
+        if (!stillExists) setActivePaddockId((data.find(p => !p.archived) ?? data[0]).paddock_id);
       }
     } catch (e) {
       setError(e.message);

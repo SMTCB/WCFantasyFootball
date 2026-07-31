@@ -9,6 +9,7 @@ import { useClubhouseFrontpage } from '../hooks/useClubhouseFrontpage';
 import ClubhouseChat from '../components/ClubhouseChat';
 import ClubhouseFrontpage from '../components/ClubhouseFrontpage';
 import TabStrip from '../components/shared/TabStrip';
+import { ArchivedBadge } from '../components/league/LeagueBadges';
 
 const MONO = { fontFamily: 'JetBrains Mono, monospace' };
 const HEAD = { fontFamily: 'Archivo Black, sans-serif' };
@@ -194,7 +195,10 @@ function AllCompetitions({ competitions, onEnter }) {
               <div style={{ height: 3, background: meta.color, flexShrink: 0 }} />
               <div style={{ padding: '13px 15px', flex: 1, display: 'flex', flexDirection: 'column' }}>
                 <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8, marginBottom: 6 }}>
-                  <div style={{ ...HEAD, fontSize: 14, color: 'var(--paper)', lineHeight: 1.25 }}>{item.name}</div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 }}>
+                    <div style={{ ...HEAD, fontSize: 14, color: 'var(--paper)', lineHeight: 1.25 }}>{item.name}</div>
+                    {item.archived && <ArchivedBadge />}
+                  </div>
                   <span style={{
                     flexShrink: 0,
                     ...MONO, fontSize: 8, fontWeight: 700, letterSpacing: '0.1em',

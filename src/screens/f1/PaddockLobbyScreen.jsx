@@ -2,10 +2,13 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { usePaddock } from '../../hooks/f1/usePaddock';
 import { supabase } from '../../lib/supabase';
+import { useShowArchived } from '../../hooks/useShowArchived';
+import { ArchivedBadge } from '../../components/league/LeagueBadges';
+import CompetitionSettingsModal from '../../components/shared/CompetitionSettingsModal';
 
 export default function PaddockLobbyScreen() {
   const navigate = useNavigate();
-  const { myPaddocks, loading, createPaddock, joinPaddockByCode, setActivePaddockId } = usePaddock();
+  const { myPaddocks, loading, createPaddock, joinPaddockByCode, setActivePaddockId, refresh: refreshPaddocks } = usePaddock();
 
   const [tab, setTab] = useState('my');   // 'my' | 'create' | 'join'
   const [name, setName] = useState('');
@@ -15,6 +18,11 @@ export default function PaddockLobbyScreen() {
   const [copied, setCopied] = useState(null);
   const [myCircles, setMyCircles] = useState([]);
   const [selectedCircleId, setSelectedCircleId] = useState(null);
+  const [showArchived, setShowArchived] = useShowArchived('ffl_show_archived_paddocks');
+  const [settingsPaddock, setSettingsPaddock] = useState(null);
+
+  const archivedCount = myPaddocks.filter(p => p.archived).length;
+  const visiblePaddocks = showArchived ? myPaddocks : myPaddocks.filter(p => !p.archived);
 
   useEffect(() => {
     supabase.rpc('get_my_circles').then(({ data }) => {
@@ -128,15 +136,18 @@ export default function PaddockLobbyScreen() {
               </div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                {myPaddocks.map(p => (
+                {visiblePaddocks.map(p => (
                   <div
                     key={p.paddock_id}
-                    style={{ background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 8, padding: '14px 16px' }}
+                    style={{ background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 8, padding: '14px 16px', opacity: p.archived ? 0.7 : 1 }}
                   >
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
                       <div>
-                        <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 16, color: 'var(--paper)', marginBottom: 4 }}>
-                          {p.name}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                          <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 16, color: 'var(--paper)' }}>
+                            {p.name}
+                          </div>
+                          {p.archived && <ArchivedBadge />}
                         </div>
                         <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
                           <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 10, color: 'var(--mute)', letterSpacing: '0.1em' }}>
@@ -149,12 +160,23 @@ export default function PaddockLobbyScreen() {
                           )}
                         </div>
                       </div>
-                      <button
-                        onClick={() => enterPaddock(p.paddock_id)}
-                        style={{ padding: '8px 16px', background: 'var(--f1)', color: '#fff', border: 'none', borderRadius: 6, fontFamily: 'JetBrains Mono, monospace', fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', cursor: 'pointer', whiteSpace: 'nowrap' }}
-                      >
-                        ENTER →
-                      </button>
+                      <div style={{ display: 'flex', gap: 6 }}>
+                        {p.role === 'owner' && (
+                          <button
+                            onClick={() => setSettingsPaddock(p)}
+                            aria-label="Paddock settings"
+                            style={{ padding: '8px 10px', background: 'var(--elev)', border: '1px solid var(--rule)', borderRadius: 6, cursor: 'pointer', fontFamily: 'JetBrains Mono, monospace', fontSize: 12, color: 'var(--mute)' }}
+                          >
+                            ⚙
+                          </button>
+                        )}
+                        <button
+                          onClick={() => enterPaddock(p.paddock_id)}
+                          style={{ padding: '8px 16px', background: 'var(--f1)', color: '#fff', border: 'none', borderRadius: 6, fontFamily: 'JetBrains Mono, monospace', fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', cursor: 'pointer', whiteSpace: 'nowrap' }}
+                        >
+                          ENTER →
+                        </button>
+                      </div>
                     </div>
                     {/* Invite code strip */}
                     <div
@@ -170,6 +192,14 @@ export default function PaddockLobbyScreen() {
                     </div>
                   </div>
                 ))}
+                {archivedCount > 0 && (
+                  <button
+                    onClick={() => setShowArchived(v => !v)}
+                    style={{ padding: '10px', border: 'none', background: 'transparent', color: 'var(--mute)', fontFamily: 'JetBrains Mono, monospace', fontSize: 10, letterSpacing: '0.12em', cursor: 'pointer' }}
+                  >
+                    {showArchived ? '▾ HIDE ARCHIVED' : `▸ SHOW ARCHIVED (${archivedCount})`}
+                  </button>
+                )}
                 <button
                   onClick={() => setTab('create')}
                   style={{ marginTop: 4, padding: '12px', border: '1px dashed var(--rule)', borderRadius: 8, background: 'transparent', color: 'var(--mute)', fontFamily: 'JetBrains Mono, monospace', fontSize: 10, letterSpacing: '0.12em', cursor: 'pointer' }}
@@ -177,6 +207,17 @@ export default function PaddockLobbyScreen() {
                   + CREATE ANOTHER PADDOCK
                 </button>
               </div>
+            )}
+            {settingsPaddock && (
+              <CompetitionSettingsModal
+                competitionType="paddock"
+                competitionId={settingsPaddock.paddock_id}
+                name={settingsPaddock.name}
+                archived={settingsPaddock.archived}
+                archivedAt={settingsPaddock.archived_at}
+                onUpdated={refreshPaddocks}
+                onClose={() => setSettingsPaddock(null)}
+              />
             )}
           </div>
         )}

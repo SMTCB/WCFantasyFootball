@@ -5,6 +5,9 @@ import { usePaddock } from '../../hooks/f1/usePaddock';
 import { useSport } from '../../context/SportContext';
 import { useAuth } from '../../hooks/useAuth';
 import { getFlag } from '../../lib/f1/f1-data';
+import { useShowArchived } from '../../hooks/useShowArchived';
+import { ArchivedBadge } from '../../components/league/LeagueBadges';
+import CompetitionSettingsModal from '../../components/shared/CompetitionSettingsModal';
 
 // Checkered-flag motif — pure CSS checkerboard, no image asset. Recurs sparingly
 // as a decorative divider under the F1 Home header (and above Report's podium viz).
@@ -76,13 +79,18 @@ export default function F1HomeScreen() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { setActivePaddockId } = useSport();
-  const { myPaddocks, activePaddock, setActivePaddockId: switchPaddock } = usePaddock();
+  const { myPaddocks, activePaddock, setActivePaddockId: switchPaddock, refresh: refreshPaddocks } = usePaddock();
 
   const [races, setRaces] = useState([]);
   const [leaderboard, setLeaderboard] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showSelector, setShowSelector] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
   const [section, setSection] = useState('calendar'); // 'calendar' | 'paddocks'
+  const [showArchived, setShowArchived] = useShowArchived('ffl_show_archived_paddocks');
+
+  const archivedPaddockCount = myPaddocks.filter(p => p.archived).length;
+  const visiblePaddocks = showArchived ? myPaddocks : myPaddocks.filter(p => !p.archived);
 
   useEffect(() => {
     if (paddockId) setActivePaddockId(paddockId);
@@ -140,38 +148,60 @@ export default function F1HomeScreen() {
               onClick={() => setShowSelector(s => !s)}
               style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', textAlign: 'left' }}
             >
-              <div style={{ ...HEAD, fontSize: 20, color: 'var(--on-shell)', lineHeight: 1.1 }}>
+              <div style={{ ...HEAD, fontSize: 20, color: 'var(--on-shell)', lineHeight: 1.1, display: 'flex', alignItems: 'center', gap: 8 }}>
                 {activePaddock?.name ?? 'SELECT PADDOCK'} <span style={{ fontSize: 12, opacity: 0.5 }}>▾</span>
+                {activePaddock?.archived && <ArchivedBadge />}
               </div>
             </button>
             <div style={{ ...MONO, fontSize: 9, color: 'var(--on-shell-dim)', letterSpacing: '0.12em', marginTop: 2 }}>
               {activePaddock?.member_count ?? 0} members · {finished.length}/{races.length} races
             </div>
           </div>
-          {/* Admin button — always visible; AdminScreen handles access control */}
-          {paddockId && (
-            <button
-              onClick={() => navigate(`/f1/${paddockId}/admin`)}
-              style={{ padding: '8px 14px', background: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.2)', borderRadius: 6, cursor: 'pointer', ...MONO, fontSize: 9, fontWeight: 700, letterSpacing: '0.12em', color: 'var(--on-shell)', whiteSpace: 'nowrap' }}
-            >
-              ADMIN
-            </button>
-          )}
+          <div style={{ display: 'flex', gap: 8 }}>
+            {/* Settings (archive toggle) — owner only */}
+            {paddockId && activePaddock?.role === 'owner' && (
+              <button
+                onClick={() => setShowSettings(true)}
+                aria-label="Paddock settings"
+                style={{ padding: '8px 10px', background: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.2)', borderRadius: 6, cursor: 'pointer', ...MONO, fontSize: 12, color: 'var(--on-shell)' }}
+              >
+                ⚙
+              </button>
+            )}
+            {/* Admin button — always visible; AdminScreen handles access control */}
+            {paddockId && (
+              <button
+                onClick={() => navigate(`/f1/${paddockId}/admin`)}
+                style={{ padding: '8px 14px', background: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.2)', borderRadius: 6, cursor: 'pointer', ...MONO, fontSize: 9, fontWeight: 700, letterSpacing: '0.12em', color: 'var(--on-shell)', whiteSpace: 'nowrap' }}
+              >
+                ADMIN
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Paddock switcher dropdown */}
         {showSelector && myPaddocks.length > 1 && (
           <div style={{ marginTop: 10, background: 'rgba(0,0,0,0.25)', borderRadius: 8, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.1)' }}>
-            {myPaddocks.map(p => (
+            {visiblePaddocks.map(p => (
               <button
                 key={p.paddock_id}
                 onClick={() => { switchPaddock(p.paddock_id); navigate(`/f1/${p.paddock_id}`); setShowSelector(false); }}
-                style={{ display: 'block', width: '100%', textAlign: 'left', padding: '11px 14px', background: p.paddock_id === paddockId ? 'rgba(225,6,0,0.2)' : 'transparent', border: 'none', borderBottom: '1px solid rgba(255,255,255,0.06)', cursor: 'pointer', fontFamily: 'Archivo, sans-serif', fontSize: 14, color: p.paddock_id === paddockId ? 'var(--f1)' : 'rgba(255,255,255,0.8)' }}
+                style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', textAlign: 'left', padding: '11px 14px', background: p.paddock_id === paddockId ? 'rgba(225,6,0,0.2)' : 'transparent', border: 'none', borderBottom: '1px solid rgba(255,255,255,0.06)', cursor: 'pointer', fontFamily: 'Archivo, sans-serif', fontSize: 14, color: p.paddock_id === paddockId ? 'var(--f1)' : 'rgba(255,255,255,0.8)' }}
               >
                 {p.name}
-                <span style={{ ...MONO, fontSize: 9, color: 'rgba(255,255,255,0.35)', marginLeft: 8 }}>{p.member_count}m</span>
+                <span style={{ ...MONO, fontSize: 9, color: 'rgba(255,255,255,0.35)' }}>{p.member_count}m</span>
+                {p.archived && <ArchivedBadge />}
               </button>
             ))}
+            {archivedPaddockCount > 0 && (
+              <button
+                onClick={() => setShowArchived(v => !v)}
+                style={{ display: 'block', width: '100%', textAlign: 'left', padding: '10px 14px', background: 'transparent', border: 'none', borderBottom: '1px solid rgba(255,255,255,0.06)', cursor: 'pointer', ...MONO, fontSize: 9, color: 'rgba(255,255,255,0.5)', letterSpacing: '0.1em' }}
+              >
+                {showArchived ? '▾ HIDE' : '▸ SHOW'} ARCHIVED ({archivedPaddockCount})
+              </button>
+            )}
             <button
               onClick={() => { navigate('/f1'); setShowSelector(false); }}
               style={{ display: 'block', width: '100%', textAlign: 'left', padding: '10px 14px', background: 'transparent', border: 'none', cursor: 'pointer', ...MONO, fontSize: 9, color: 'rgba(255,255,255,0.35)', letterSpacing: '0.1em' }}
@@ -181,6 +211,18 @@ export default function F1HomeScreen() {
           </div>
         )}
       </div>
+
+      {showSettings && activePaddock && (
+        <CompetitionSettingsModal
+          competitionType="paddock"
+          competitionId={activePaddock.paddock_id}
+          name={activePaddock.name}
+          archived={activePaddock.archived}
+          archivedAt={activePaddock.archived_at}
+          onUpdated={refreshPaddocks}
+          onClose={() => setShowSettings(false)}
+        />
+      )}
 
       <CheckeredStrip />
 

@@ -2,12 +2,15 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { usePlayerBox } from '../../hooks/tennis/usePlayerBox';
 import { supabase } from '../../lib/supabase';
+import { useShowArchived } from '../../hooks/useShowArchived';
+import { ArchivedBadge } from '../../components/league/LeagueBadges';
+import CompetitionSettingsModal from '../../components/shared/CompetitionSettingsModal';
 
 const SURFACE_ICON = { hard: '🎾', clay: '🟫', grass: '🌿', hard_indoor: '🏟️' };
 
 export default function PlayerBoxScreen() {
   const navigate = useNavigate();
-  const { myBoxes, loading, createPlayerBox, joinByCode, setActivePlayerBoxId } = usePlayerBox();
+  const { myBoxes, loading, createPlayerBox, joinByCode, setActivePlayerBoxId, refresh: refreshBoxes } = usePlayerBox();
 
   const [tab, setTab] = useState('my');
   const [name, setName] = useState('');
@@ -17,6 +20,11 @@ export default function PlayerBoxScreen() {
   const [copied, setCopied] = useState(null);
   const [myCircles, setMyCircles] = useState([]);
   const [selectedCircleId, setSelectedCircleId] = useState(null);
+  const [showArchived, setShowArchived] = useShowArchived('ffl_show_archived_player_boxes');
+  const [settingsBox, setSettingsBox] = useState(null);
+
+  const archivedCount = myBoxes.filter(b => b.archived).length;
+  const visibleBoxes = showArchived ? myBoxes : myBoxes.filter(b => !b.archived);
 
   useEffect(() => {
     supabase.rpc('get_my_circles').then(({ data }) => {
@@ -128,12 +136,15 @@ export default function PlayerBoxScreen() {
               </div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                {myBoxes.map(b => (
-                  <div key={b.player_box_id} style={{ background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 6, padding: '14px 16px' }}>
+                {visibleBoxes.map(b => (
+                  <div key={b.player_box_id} style={{ background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 6, padding: '14px 16px', opacity: b.archived ? 0.7 : 1 }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
                       <div>
-                        <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 16, color: 'var(--paper)', marginBottom: 4 }}>
-                          {b.name}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                          <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 16, color: 'var(--paper)' }}>
+                            {b.name}
+                          </div>
+                          {b.archived && <ArchivedBadge />}
                         </div>
                         <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
                           <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 10, color: 'var(--mute)', letterSpacing: '0.1em' }}>
@@ -141,12 +152,23 @@ export default function PlayerBoxScreen() {
                           </span>
                         </div>
                       </div>
-                      <button
-                        onClick={() => enterBox(b.player_box_id)}
-                        style={{ padding: '8px 16px', background: 'var(--ten)', color: '#fff', border: 'none', borderRadius: 6, fontFamily: 'Archivo, sans-serif', fontSize: 13, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}
-                      >
-                        Enter →
-                      </button>
+                      <div style={{ display: 'flex', gap: 6 }}>
+                        {b.is_owner && (
+                          <button
+                            onClick={() => setSettingsBox(b)}
+                            aria-label="Player's Box settings"
+                            style={{ padding: '8px 10px', background: 'var(--elev)', border: '1px solid var(--rule)', borderRadius: 6, cursor: 'pointer', fontFamily: 'JetBrains Mono, monospace', fontSize: 12, color: 'var(--mute)' }}
+                          >
+                            ⚙
+                          </button>
+                        )}
+                        <button
+                          onClick={() => enterBox(b.player_box_id)}
+                          style={{ padding: '8px 16px', background: 'var(--ten)', color: '#fff', border: 'none', borderRadius: 6, fontFamily: 'Archivo, sans-serif', fontSize: 13, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}
+                        >
+                          Enter →
+                        </button>
+                      </div>
                     </div>
                     <div
                       style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 10, padding: '8px 10px', background: 'var(--elev)', borderRadius: 6, cursor: 'pointer' }}
@@ -161,6 +183,14 @@ export default function PlayerBoxScreen() {
                     </div>
                   </div>
                 ))}
+                {archivedCount > 0 && (
+                  <button
+                    onClick={() => setShowArchived(v => !v)}
+                    style={{ padding: '10px', border: 'none', background: 'transparent', color: 'var(--mute)', fontFamily: 'Archivo, sans-serif', fontSize: 12, cursor: 'pointer' }}
+                  >
+                    {showArchived ? 'Hide archived' : `Show archived (${archivedCount})`}
+                  </button>
+                )}
                 <button
                   onClick={() => setTab('create')}
                   style={{ marginTop: 4, padding: '12px', border: '1px dashed var(--rule)', borderRadius: 6, background: 'transparent', color: 'var(--mute)', fontFamily: 'Archivo, sans-serif', fontSize: 13, cursor: 'pointer' }}
@@ -168,6 +198,17 @@ export default function PlayerBoxScreen() {
                   + Create another box
                 </button>
               </div>
+            )}
+            {settingsBox && (
+              <CompetitionSettingsModal
+                competitionType="player_box"
+                competitionId={settingsBox.player_box_id}
+                name={settingsBox.name}
+                archived={settingsBox.archived}
+                archivedAt={settingsBox.archived_at}
+                onUpdated={refreshBoxes}
+                onClose={() => setSettingsBox(null)}
+              />
             )}
           </div>
         )}
