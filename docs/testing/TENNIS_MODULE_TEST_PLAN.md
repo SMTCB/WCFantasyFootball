@@ -89,12 +89,26 @@ the shape and scale of a real tournament draw."
 
 **What was found and fixed first:** the local replica initially returned `42501 permission denied` from
 PostgREST for every tennis table (and, on a control check, every other table too — confirmed via `leagues`).
-Root cause: an earlier-session raw-`psql` migration replay (worked around a lexicographic filename-sort-order
-bug — see [Schema Rehearsal Workflow](../deployment/DOCKER_LOCAL_DEV.md#schema-rehearsal-workflow)) bypassed
-the step `supabase db reset` normally runs after migrations to re-grant `SELECT/INSERT/UPDATE/DELETE` on
-`public` schema objects to `anon`/`authenticated`/`service_role`. Fixed locally with a direct `GRANT ALL` +
-`ALTER DEFAULT PRIVILEGES` + `NOTIFY pgrst, 'reload schema'` — this is exactly what
-`scripts/rehearse-schema.sh`'s fallback path now does automatically (formalized as part of this same session).
+At the time, root cause was diagnosed as: a raw-`psql` migration replay (`scripts/rehearse-schema.sh`'s
+original design, which replayed every file in `supabase/migrations/` from scratch) bypassed the
+grant-restoration step `supabase db reset` normally runs after migrations. Fixed locally that session with a
+direct `GRANT ALL` + `ALTER DEFAULT PRIVILEGES` + `NOTIFY pgrst, 'reload schema'`.
+
+**Superseded 2026-08-01:** a from-scratch migration replay was subsequently found to not reproduce prod at
+all — 75 of ~271 migration files fail to apply cleanly (root cause: `27_auction_listings.sql` declares a
+`UUID` FK against `players.id`, which has always been `TEXT` in both prod and local; no later migration file
+ever fixes it, meaning prod's live schema and a clean replay of this repo's migration history have already
+diverged — most likely a fix applied directly to prod at some point without ever being captured as a
+committed migration). `scripts/rehearse-schema.sh` was rewritten to abandon migration replay entirely and
+instead load `supabase/schema.sql` (a verified `pg_dump` snapshot of prod) directly, mirroring the approach
+`tests/unit/` already uses. The permission-denied bug above turned out to be a symptom of the replay approach
+generally, not something that needed its own dedicated "fallback path" — the new script's Step 4 grants
+(`GRANT ALL` + `ALTER DEFAULT PRIVILEGES` + schema reload) supersede the old ad-hoc fix and run every time,
+unconditionally. See [Schema Rehearsal Workflow](../deployment/DOCKER_LOCAL_DEV.md#schema-rehearsal-workflow)
+for the corrected mechanism. The tennis-specific schema objects exercised in this test run were confirmed
+unaffected by the drift (scoped diff showed no tennis table/function/policy differences either before or
+after the rewrite), so the pipeline results and hand-calculated verification below stand as originally
+recorded.
 
 **What was run:** 2 test rosters built from real Wimbledon players (not TEST fixture players) — captain
 nominated, ace card selected, admin round results entered, then `score-tennis-tournament` invoked via
@@ -655,9 +669,10 @@ to the same Scenario 6.3 finding — an admin cannot drive this transition from 
 | 2026-07-27 | Claude | Module 6 | UI scenarios 6.1–6.5, static code review (live click-through blocked — see methodology note above) | 🟡 Reviewed | 6.2/6.4 pass as-shipped; 6.1 had a routing bug (fixed, see below); 6.3/6.5 pass at the screen level but are blocked end-to-end by a separate finding: every `TennisAdminScreen` RPC is `service_role`-only and unreachable from a real browser session |
 | 2026-07-27 | Claude | Bug fix | Fixed tennis "Add competition" flow navigating to `/tennis/tournament/{player_box_id}` (wrong ID type — 404s every time) instead of `/tennis` | ✅ Fixed | [NewCompetitionFlow.jsx](../../src/components/NewCompetitionFlow.jsx) — see PR link once merged |
 | 2026-07-27 | Claude | Open finding | `TennisAdminScreen.jsx`'s 9 RPCs are all `REVOKE`d from `authenticated`/`anon`, granted only to `service_role` (`200_tennis_admin_rpcs.sql`) — no admin-role check exists, so the screen cannot be used by any real logged-in user today | 🔴 Not fixed | Needs a product decision (who counts as "admin," how they're identified) before a migration adds a scoped grant — flagged to the user, not resolved unilaterally this session |
-| 2026-07-31 | Claude | Bug fix | Diagnosed + fixed local Docker `42501 permission denied` on every `public` table via PostgREST/service_role, caused by an earlier raw-`psql` migration replay bypassing the CLI's post-migration grant-restoration step | ✅ Fixed | Local-only fix; formalized into `scripts/rehearse-schema.sh`'s fallback path + [Schema Rehearsal Workflow](../deployment/DOCKER_LOCAL_DEV.md#schema-rehearsal-workflow) doc so future sessions don't rediscover it |
+| 2026-07-31 | Claude | Bug fix | Diagnosed + fixed local Docker `42501 permission denied` on every `public` table via PostgREST/service_role, caused by an earlier raw-`psql` migration replay bypassing the CLI's post-migration grant-restoration step | ✅ Fixed | Local-only fix at the time; the underlying migration-replay mechanism was itself superseded 2026-08-01 (see row below) — see [Schema Rehearsal Workflow](../deployment/DOCKER_LOCAL_DEV.md#schema-rehearsal-workflow) doc for the current mechanism |
 | 2026-07-31 | Claude | Real-data pipeline | Full roster→captain→ace-card→round-results→`score-tennis-tournament` pipeline run locally against the real 128-player Wimbledon 2026 field (`external_id=21337`, pulled read-only from prod, not synthetic TEST players) | ✅ Pass | 2 real-player rosters; output (`leaderboard: [{total:107},{total:54}]`) matched hand-calculated expectations exactly; `tennis_tournament_scores`/`gazette_entries`/tournament-completion writes spot-checked directly. `sync-tennis-players`'s live RapidAPI call was NOT re-exercised (no key access this session) — see "Local Docker rehearsal" note above |
+| 2026-08-01 | Claude | Bug fix | User asked "does docker schema match prod, did you double-check?" — actual structural diff (not a theoretical claim) found local Docker had drifted from prod: 75 of ~271 migration files fail on a from-scratch replay (8 tables, 14 functions, 63 policies missing/mismatched). Root cause: `27_auction_listings.sql` declares a `UUID` FK against `players.id` (always `TEXT`); prod's live schema doesn't have this bug and no migration file ever fixes it — meaning prod was patched directly at some point without the fix ever being committed | ✅ Fixed | Rewrote `scripts/rehearse-schema.sh` to build the local schema from `supabase/schema.sql` (verified prod snapshot) instead of replaying migration history; re-verified via fresh structural diff — zero drift across tables/functions/policies/triggers/indexes/views. Tennis-specific objects confirmed unaffected by the original drift either way, so the 2026-07-31 pipeline results above stand |
 
 ---
 
-Last Updated: **2026-07-31** (Local Docker permission bug found and fixed; full scoring pipeline re-verified against the real 128-player Wimbledon field rather than synthetic TEST fixture data; schema-rehearsal workflow formalized as a reusable script)
+Last Updated: **2026-08-01** (Schema-rehearsal mechanism corrected after a real drift was found between local Docker and prod — see 2026-08-01 row above; tennis-specific test results from 2026-07-31 unaffected and stand as recorded)
