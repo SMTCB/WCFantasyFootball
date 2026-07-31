@@ -26,8 +26,9 @@ Deno.serve(async (req) => {
       // Find all leagues that have at least one active cup_active_clubs row.
       const { data: cupLeagues } = await supabase
         .from('cup_active_clubs')
-        .select('league_id')
-        .is('eliminated_at', null);
+        .select('league_id, leagues!inner(archived)')
+        .is('eliminated_at', null)
+        .eq('leagues.archived', false);
 
       const leagueIds = [...new Set((cupLeagues ?? []).map(r => r.league_id))];
 

@@ -508,8 +508,9 @@ async function rollupSquads(fixture_id, pointsLookup, tournament_id) {
 
   const { data: allSquadRows } = await supabase
     .from('squads')
-    .select('id, user_id, league_id, matchday_id, players, starting_xi, captain_id, created_at, penalty_transfers, budget_remaining, round_transfers, initial_build_complete, leagues!inner(tournament_id)')
+    .select('id, user_id, league_id, matchday_id, players, starting_xi, captain_id, created_at, penalty_transfers, budget_remaining, round_transfers, initial_build_complete, leagues!inner(tournament_id, archived)')
     .eq('leagues.tournament_id', tournament_id)
+    .eq('leagues.archived', false)
     .order('created_at', { ascending: false });
 
   if (!allSquadRows?.length) return 0;

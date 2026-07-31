@@ -54,10 +54,11 @@ Deno.serve(async (req) => {
     // the elimination draft never ran automatically.
     const { data: pendingLeagues } = await supabase
       .from('draft_submissions')
-      .select('league_id, leagues!inner(cup_phase, knockout_draft_deadline)')
+      .select('league_id, leagues!inner(cup_phase, knockout_draft_deadline, archived)')
       .eq('phase', 'knockout')
       .eq('status', 'pending')
       .eq('leagues.cup_phase', 'group_stage')
+      .eq('leagues.archived', false)
       .lte('leagues.knockout_draft_deadline', new Date().toISOString());
 
     const leagueIds = [...new Set((pendingLeagues ?? []).map(r => r.league_id))];
