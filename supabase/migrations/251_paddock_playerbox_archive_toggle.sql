@@ -84,7 +84,11 @@ REVOKE ALL ON FUNCTION set_competition_archived(text, uuid, boolean) FROM public
 GRANT EXECUTE ON FUNCTION set_competition_archived(text, uuid, boolean) TO authenticated;
 
 -- ─── 3. get_my_paddocks — add archived/archived_at ─────────────────────────
--- Full re-issue from migration 192 (append-only convention).
+-- Full re-issue from migration 192 (append-only convention). DROP first since
+-- adding OUT columns changes the function's row type, which CREATE OR REPLACE
+-- cannot do in place.
+
+DROP FUNCTION IF EXISTS get_my_paddocks();
 
 CREATE OR REPLACE FUNCTION get_my_paddocks()
 RETURNS TABLE (
@@ -117,7 +121,10 @@ $$;
 GRANT EXECUTE ON FUNCTION get_my_paddocks() TO authenticated;
 
 -- ─── 4. get_my_player_boxes — add archived/archived_at ─────────────────────
--- Full re-issue from migration 197 (append-only convention).
+-- Full re-issue from migration 197 (append-only convention). DROP first, same
+-- reason as get_my_paddocks above.
+
+DROP FUNCTION IF EXISTS get_my_player_boxes(int);
 
 CREATE OR REPLACE FUNCTION get_my_player_boxes(p_season_year int DEFAULT NULL)
 RETURNS TABLE (
