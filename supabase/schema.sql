@@ -5725,7 +5725,21 @@ BEGIN
        SET is_correct     = (answer = ANY(p_answers)),
            reward_awarded = CASE WHEN answer = ANY(p_answers) THEN v_reward_value ELSE NULL END
      WHERE bet_instance_id = p_instance_id;
+  END IF;
 
+  -- Mark the bet resolved BEFORE distributing/aggregating rewards below, so
+  -- aggregate_league_member_points (which only sums bet rewards from bets
+  -- with status = 'resolved') picks up this bet's reward on the very first
+  -- pass instead of silently no-opping.
+  UPDATE bet_instances
+     SET status            = 'resolved',
+         correct_answer    = CASE WHEN v_no_winner THEN NULL ELSE p_answers[1] END,
+         correct_answers   = COALESCE(p_answers, '{}'),
+         winners_count     = v_winners,
+         total_submissions = v_total
+   WHERE id = p_instance_id;
+
+  IF NOT v_no_winner THEN
     IF v_reward_type = 'budget' THEN
       UPDATE squads
          SET budget_remaining = budget_remaining + v_reward_value
@@ -5734,7 +5748,8 @@ BEGIN
           WHERE bet_instance_id = p_instance_id AND answer = ANY(p_answers)
        );
     ELSIF v_reward_type = 'points' THEN
-      -- Refresh total_points for new winners immediately
+      -- Refresh total_points for new winners immediately — now correctly
+      -- picks up this bet's reward since bet_instances.status is 'resolved'.
       FOR v_user_id IN
         SELECT DISTINCT s.user_id
           FROM bet_submissions bs
@@ -5770,14 +5785,6 @@ BEGIN
       );
     END LOOP;
   END IF;
-
-  UPDATE bet_instances
-     SET status            = 'resolved',
-         correct_answer    = CASE WHEN v_no_winner THEN NULL ELSE p_answers[1] END,
-         correct_answers   = COALESCE(p_answers, '{}'),
-         winners_count     = v_winners,
-         total_submissions = v_total
-   WHERE id = p_instance_id;
 
   -- Commissioner override: after the new correct_answers are written and status
   -- is back to 'resolved', re-aggregate old points-type winners so that managers

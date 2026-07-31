@@ -101,26 +101,15 @@ describe('resolve_bet', () => {
   });
 
   // ── 4. Points re-aggregated on resolve ──────────────────────────────────────
-  // KNOWN BUG (confirmed against supabase/schema.sql, matches migration 167's
-  // original code exactly): resolve_bet calls aggregate_league_member_points()
-  // for each new winner BEFORE it UPDATEs bet_instances.status to 'resolved'.
-  // aggregate_league_member_points sums bet rewards WHERE bi.status='resolved',
-  // so at call time the bet is still 'open'/'closed' and the SUM is 0 — the
-  // immediate refresh silently no-ops. total_points only picks up the reward
-  // later, whenever some other event (next scoring pass, set_captain,
-  // set_lineup) happens to re-aggregate this user. This test intentionally
-  // encodes the CORRECT/intended behavior (per migration 167's own stated
-  // purpose) and is expected to FAIL until resolve_bet's statement order is
-  // fixed (move the UPDATE bet_instances status='resolved' before the winner
-  // aggregation loop). Do not "fix" this by weakening the assertion.
-  // TODO(BUG-RB1): fails against real prod schema — confirmed statement-order
-  // bug in resolve_bet (supabase/schema.sql), not a test-harness artifact.
-  // Draft fix: supabase/migrations/242_resolve_bet_status_order.sql (NOT yet
-  // applied to prod — needs explicit migration approval per CLAUDE.md).
-  // .todo: runs the assertion and reports it, but does not fail the suite —
-  // keep this, don't weaken the assert, until the migration ships and this
-  // flips back to a normal `it`.
-  it.todo('updates league_members.total_points for the winning manager', async () => {
+  // BUG-RB1 (fixed): resolve_bet used to call aggregate_league_member_points()
+  // for each new winner BEFORE UPDATEing bet_instances.status to 'resolved',
+  // so the immediate refresh silently summed 0 (aggregate_league_member_points
+  // only counts bet rewards WHERE bi.status='resolved'). Already fixed live by
+  // migration 232 (232_fix_resolve_bet_points_ordering.sql); supabase/schema.sql
+  // just hadn't been regenerated to match until 2026-07-31, which is why this
+  // was still marked `.todo`. Flipped back to a normal `it` now that schema.sql
+  // reflects the corrected statement order.
+  it('updates league_members.total_points for the winning manager', async () => {
     await seedSubmission(USER_A, 'England');
 
     // Seed has no fantasy_points rows for SQUAD_A, so aggregate_league_member_points
