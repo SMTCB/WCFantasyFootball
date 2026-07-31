@@ -5,6 +5,8 @@
 > Scope note: this is the **infrastructure** design. It specifies the containers, contracts, seams, and data model that let any sport plug in. It deliberately does **not** specify game dynamics (scoring weights, prediction categories, pick counts, captain rules) — those are tuned per sport in dedicated sessions. It also stops at the data/contract/routing level: a parallel **design revamp** owns all component and visual decisions, so this document only defines the seams the UI must hang on.
 >
 > Read [the technical assessment](MULTI_SPORT_TECHNICAL_ASSESSMENT.md) first for the current-state grounding this builds on.
+>
+> **Written before Paddocks (F1) and Player Boxes (tennis) existed as implemented tables.** For the current-schema reality of how League/Paddock/Player Box relate to each other (they're the same concept, sport-flavored name — not "F1 and tennis are global, only football has leagues"), read [COMPETITION_MODEL.md](../../architecture/COMPETITION_MODEL.md) instead or alongside this doc.
 
 ---
 

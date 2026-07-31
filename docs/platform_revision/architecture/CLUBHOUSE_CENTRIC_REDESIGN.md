@@ -201,6 +201,7 @@ Each phase ships as its own PR(s) into `v2`, lint + build + `platform.spec.js` g
 
 ## Related Documents
 
+- [COMPETITION_MODEL.md](../../architecture/COMPETITION_MODEL.md) — **read this if you're ever unsure whether Paddock/Player Box are "different" from League.** They aren't — same concept, sport-flavored name, own `circle_id`/membership/invite flow each. Covers the schema-level detail this doc's taxonomy table only summarizes.
 - [TRACKER.md](../TRACKER.md) — open-items source of truth; this redesign is a tracked workstream
 - [MULTI_SPORT_PLATFORM_ARCHITECTURE.md](MULTI_SPORT_PLATFORM_ARCHITECTURE.md) — existing multi-sport architecture
 - [design/screens/Multi-Sport - Coin Challenges v2.html](../design/screens/Multi-Sport%20-%20Coin%20Challenges%20v2.html) — reference mock (Screen 7 = Clubhouse overview; canonical accent system)

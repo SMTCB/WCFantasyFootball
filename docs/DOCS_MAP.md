@@ -33,4 +33,4 @@ This `.md` file exists as a plain-text pointer for terminal/CLI contexts where H
 | `docs/brand/` | FORZAKIT design exploration (League Hub, Live Centre, Scores) — distinct lineage from Kit Light and archived Forza Dark |
 | `docs/archive/` | Historical reference only (7 subdirs: brand-forza-dark, completed-sprint-plans, stale-launch-docs, stale-product-plans, legacy-configs, session-audits, superseded-dd-2026-06-30) |
 
-Last updated: 2026-07-27
+Last updated: 2026-07-31
