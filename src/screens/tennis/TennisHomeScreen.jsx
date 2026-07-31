@@ -1,7 +1,10 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTennisCalendar } from '../../hooks/tennis/useTennisCalendar';
 import { usePlayerBox } from '../../hooks/tennis/usePlayerBox';
 import { useTennisLeaderboard } from '../../hooks/tennis/useTennisLeaderboard';
+import { useShowArchived } from '../../hooks/useShowArchived';
+import CompetitionSettingsModal from '../../components/shared/CompetitionSettingsModal';
 
 const STATUS_LABEL = {
   upcoming:         { label: 'Upcoming',        color: 'var(--mute)', bg: 'transparent', outline: true },
@@ -27,10 +30,14 @@ function formatDate(d) {
 export default function TennisHomeScreen() {
   const navigate = useNavigate();
   const { tournaments, activeOrNext, loading: calLoading } = useTennisCalendar(2026);
-  const { myBoxes, activeBox, setActivePlayerBoxId, loading: boxLoading } = usePlayerBox();
+  const { myBoxes, activeBox, setActivePlayerBoxId, loading: boxLoading, refresh: refreshBoxes } = usePlayerBox();
   const { standings, loading: lbLoading } = useTennisLeaderboard(activeBox?.player_box_id, 2026);
+  const [showArchived, setShowArchived] = useShowArchived('ffl_show_archived_player_boxes');
+  const [showSettings, setShowSettings] = useState(false);
 
   const noBox = !boxLoading && myBoxes.length === 0;
+  const archivedBoxCount = myBoxes.filter(b => b.archived).length;
+  const visibleBoxes = showArchived ? myBoxes : myBoxes.filter(b => !b.archived);
 
   return (
     <div style={{ background: 'var(--bg)', minHeight: '100vh', paddingBottom: 32 }}>
@@ -42,26 +49,62 @@ export default function TennisHomeScreen() {
         </div>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
           <h1 style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 26, color: 'var(--on-shell)', margin: 0 }}>
-            {activeBox ? activeBox.name : 'Tennis'}
+            {activeBox ? activeBox.name : 'Tennis'}{activeBox?.archived ? ' (Archived)' : ''}
           </h1>
-          {myBoxes.length > 1 && (
-            <select
-              value={activeBox?.player_box_id ?? ''}
-              onChange={e => setActivePlayerBoxId(e.target.value)}
-              style={{ background: 'rgba(255,255,255,0.1)', color: '#fff', border: '1px solid rgba(255,255,255,0.2)', borderRadius: 6, padding: '6px 10px', fontFamily: 'Archivo, sans-serif', fontSize: 12, cursor: 'pointer' }}
-            >
-              {myBoxes.map(b => (
-                <option key={b.player_box_id} value={b.player_box_id}>{b.name}</option>
-              ))}
-            </select>
-          )}
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+            {activeBox?.is_owner && (
+              <button
+                onClick={() => setShowSettings(true)}
+                aria-label="Player's Box settings"
+                style={{ padding: '6px 9px', background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', borderRadius: 6, cursor: 'pointer', fontFamily: 'JetBrains Mono, monospace', fontSize: 12, color: '#fff' }}
+              >
+                ⚙
+              </button>
+            )}
+            {myBoxes.length > 1 && (
+              <select
+                value={activeBox?.player_box_id ?? ''}
+                onChange={e => setActivePlayerBoxId(e.target.value)}
+                style={{ background: 'rgba(255,255,255,0.1)', color: '#fff', border: '1px solid rgba(255,255,255,0.2)', borderRadius: 6, padding: '6px 10px', fontFamily: 'Archivo, sans-serif', fontSize: 12, cursor: 'pointer' }}
+              >
+                {visibleBoxes.map(b => (
+                  <option key={b.player_box_id} value={b.player_box_id}>{b.name}{b.archived ? ' (Archived)' : ''}</option>
+                ))}
+              </select>
+            )}
+          </div>
         </div>
         {activeBox && (
           <p style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 10, color: 'rgba(255,255,255,0.4)', margin: '6px 0 0', letterSpacing: '0.1em' }}>
             {activeBox.member_count} {activeBox.member_count === 1 ? 'member' : 'members'} · CODE: {activeBox.invite_code}
           </p>
         )}
+        {archivedBoxCount > 0 && (
+          <button
+            onClick={() => setShowArchived(v => !v)}
+            style={{ marginTop: 6, padding: 0, background: 'transparent', border: 'none', cursor: 'pointer', fontFamily: 'JetBrains Mono, monospace', fontSize: 9, letterSpacing: '0.1em', color: 'rgba(255,255,255,0.4)' }}
+          >
+            {showArchived ? 'HIDE' : 'SHOW'} ARCHIVED BOXES ({archivedBoxCount})
+          </button>
+        )}
+        {activeBox?.archived && (
+          <div style={{ marginTop: 10, padding: '8px 12px', background: 'rgba(255,255,255,0.06)', borderRadius: 6, fontFamily: 'JetBrains Mono, monospace', fontSize: 10, letterSpacing: '0.1em', color: 'rgba(255,255,255,0.6)' }}>
+            ARCHIVED — this player's box is inactive.
+          </div>
+        )}
       </div>
+
+      {showSettings && activeBox && (
+        <CompetitionSettingsModal
+          competitionType="player_box"
+          competitionId={activeBox.player_box_id}
+          name={activeBox.name}
+          archived={activeBox.archived}
+          archivedAt={activeBox.archived_at}
+          onUpdated={refreshBoxes}
+          onClose={() => setShowSettings(false)}
+        />
+      )}
 
       <div style={{ padding: '16px', maxWidth: 700, margin: '0 auto' }}>
 

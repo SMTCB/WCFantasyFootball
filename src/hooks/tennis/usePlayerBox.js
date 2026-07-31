@@ -20,9 +20,11 @@ export function usePlayerBox() {
       if (err) throw err;
       const boxes = data ?? [];
       setMyBoxes(boxes);
+      // Prefer a non-archived box so a user isn't silently dropped onto a
+      // dormant one (B-13-TENNIS).
       if (boxes.length > 0) {
         const stillExists = boxes.some(b => b.player_box_id === activePlayerBoxId);
-        if (!stillExists) setActivePlayerBoxId(boxes[0].player_box_id);
+        if (!stillExists) setActivePlayerBoxId((boxes.find(b => !b.archived) ?? boxes[0]).player_box_id);
       }
     } catch (e) {
       setError(e.message);

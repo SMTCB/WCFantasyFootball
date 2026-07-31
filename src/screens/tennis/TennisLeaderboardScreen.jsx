@@ -36,6 +36,12 @@ export default function TennisLeaderboardScreen() {
         </p>
       </div>
 
+      {activeBox?.archived && (
+        <div style={{ padding: '8px 16px', background: 'rgba(255,255,255,0.04)', borderBottom: '1px solid var(--rule)', fontFamily: 'JetBrains Mono, monospace', fontSize: 9, letterSpacing: '0.1em', color: 'var(--mute)' }}>
+          ARCHIVED — this player's box is inactive.
+        </div>
+      )}
+
       <div style={{ padding: '16px', maxWidth: 700, margin: '0 auto' }}>
 
         {boxLoading || loading ? (

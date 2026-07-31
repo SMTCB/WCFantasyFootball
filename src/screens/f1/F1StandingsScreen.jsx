@@ -2,14 +2,18 @@ import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../hooks/useAuth';
+import { usePaddock } from '../../hooks/f1/usePaddock';
 import { CompetitionResultsHeader } from '../../components/competition/CompetitionResultsHeader';
 
 export default function F1StandingsScreen() {
   const { paddockId } = useParams();
   const { user } = useAuth();
+  const { myPaddocks } = usePaddock();
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
   const [view, setView] = useState('total'); // total | race | year
+
+  const paddock = myPaddocks.find(p => p.paddock_id === paddockId);
 
   useEffect(() => {
     supabase.rpc('get_paddock_leaderboard', { p_paddock_id: paddockId })
@@ -31,6 +35,12 @@ export default function F1StandingsScreen() {
         </div>
         <h1 style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 22, color: 'var(--on-shell)', margin: 0 }}>STANDINGS</h1>
       </div>
+
+      {paddock?.archived && (
+        <div style={{ padding: '8px 16px', background: 'rgba(255,255,255,0.04)', borderBottom: '1px solid var(--rule)', fontFamily: 'JetBrains Mono, monospace', fontSize: 9, letterSpacing: '0.1em', color: 'var(--mute)' }}>
+          ARCHIVED — this paddock is inactive.
+        </div>
+      )}
 
       {/* View toggle */}
       <div style={{ display: 'flex', gap: 0, borderBottom: '1px solid var(--rule)' }}>
