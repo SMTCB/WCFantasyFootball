@@ -942,11 +942,19 @@ async function resolveH2HMatchday(roundMatchdayId, squads, fantasyPointsUpserts)
     // Check h2h_enabled for this league
     const { data: league } = await supabase
       .from('leagues')
-      .select('h2h_enabled')
+      .select('name, h2h_enabled, circle_id, tournament_id')
       .eq('id', leagueId)
       .single();
 
     if (!league?.h2h_enabled) continue;
+
+    // leagues.tournament_id is the Forza forza_id (text) — resolve the
+    // tournaments table's internal uuid PK + sport_id for trophy emission.
+    const { data: tournament } = await supabase
+      .from('tournaments')
+      .select('id, sport_id')
+      .eq('forza_id', league.tournament_id)
+      .maybeSingle();
 
     // Load H2H scoring config (defaults: 5/2/0)
     const { data: cfgRows } = await supabase
@@ -1011,12 +1019,41 @@ async function resolveH2HMatchday(roundMatchdayId, squads, fantasyPointsUpserts)
     }
 
     if (gazetteLines.length) {
-      await writeH2HGazette(leagueId, roundMatchdayId, gazetteLines, leagueSquads, winPts);
+      await writeH2HGazette(leagueId, roundMatchdayId, gazetteLines, leagueSquads, winPts, league, tournament);
     }
   }
 }
 
-async function writeH2HGazette(leagueId, roundMatchdayId, gazetteLines, leagueSquads, winPts) {
+// Awards a round_win trophy to the pairing's winner (byes count as a win;
+// draws are skipped — there's no winner to award). Non-fatal — award_trophy()
+// itself already swallows errors, this try/catch guards the RPC call/network
+// layer so a trophy failure never blocks gazette writes.
+async function awardRoundWinTrophy(leagueId, winnerUid, league, tournament, roundMatchdayId, reason) {
+  if (!league?.circle_id || !tournament?.id || !tournament?.sport_id) return;
+  try {
+    await supabase.rpc('award_trophy', {
+      p_circle_id:     league.circle_id,
+      p_league_id:     leagueId,
+      p_user_id:       winnerUid,
+      p_sport_id:      tournament.sport_id,
+      p_tournament_id: tournament.id,
+      p_trophy_type:   'round_win',
+      p_tier:          null,
+      p_meta: {
+        round_key:   roundMatchdayId,
+        matchday_id: roundMatchdayId,
+        label:       'Matchday Win',
+        reason,
+        league_name: league.name,
+        sport_type:  'football',
+      },
+    });
+  } catch (e) {
+    console.warn('[calculate-scores] award_trophy (round_win) failed (non-critical):', e.message);
+  }
+}
+
+async function writeH2HGazette(leagueId, roundMatchdayId, gazetteLines, leagueSquads, winPts, league, tournament) {
   const userIds = [...new Set(leagueSquads.map(s => s.user_id))];
   const { data: users } = await supabase
     .from('users').select('id, username').in('id', userIds);
@@ -1042,6 +1079,20 @@ async function writeH2HGazette(leagueId, roundMatchdayId, gazetteLines, leagueSq
     }
     return `${winner} ${wScore} pts beat ${loser} ${lScore} pts  +${winPts}`;
   });
+
+  for (const line of gazetteLines) {
+    if (line.type === 'bye') {
+      await awardRoundWinTrophy(leagueId, line.userId, league, tournament, roundMatchdayId, `Matchday ${roundNum} bye`);
+      continue;
+    }
+    if (line.homeH2h === line.awayH2h) continue; // draw — no winner to award
+    const homeWon = line.homeH2h === winPts;
+    const winnerUid = homeWon ? line.homeUid : line.awayUid;
+    const loserUid  = homeWon ? line.awayUid : line.homeUid;
+    const wScore = homeWon ? line.homeScore : line.awayScore;
+    const lScore = homeWon ? line.awayScore : line.homeScore;
+    await awardRoundWinTrophy(leagueId, winnerUid, league, tournament, roundMatchdayId, `Beat ${nameOf(loserUid)} ${wScore}-${lScore} in Matchday ${roundNum}`);
+  }
 
   // Idempotent: delete existing H2H gazette entry for this matchday, then reinsert
   await supabase.from('gazette_entries')
